@@ -102,6 +102,49 @@ test.describe('Login', () => {
 		expect(refreshRequests).toHaveLength(1)
 	})
 
+	for (const failure of ['network', '503'] as const) {
+		test(`Should recover an expired session after a transient ${failure} refresh failure without reloading`, async ({page}) => {
+			await page.goto('/login')
+			await login(page)
+			await expect(page.locator('main h1')).toContainText(credentials.username)
+
+			const payload = Buffer.from(JSON.stringify({
+				id: 1,
+				type: 1,
+				exp: Math.floor(1625656161057 / 1000) - 3600,
+			})).toString('base64')
+			const expiredToken = `header.${payload}.signature`
+			await page.evaluate(token => localStorage.setItem('token', token), expiredToken)
+
+			let failedRefreshes = 0
+			await page.route('**/api/v2/user/token/refresh', async route => {
+				failedRefreshes++
+				if (failure === 'network') {
+					await route.abort('failed')
+				} else {
+					await route.fulfill({status: 503, json: {status: 503, detail: 'Service unavailable'}})
+				}
+			})
+
+			await page.reload()
+			await expect(page).toHaveURL(/\/login/)
+			await expect(page.locator('input[id=username]')).toBeVisible()
+			expect(failedRefreshes).toBeGreaterThanOrEqual(2)
+			expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(expiredToken)
+
+			await page.unroute('**/api/v2/user/token/refresh')
+			const refreshResponse = page.waitForResponse(response =>
+				response.url().includes('/api/v2/user/token/refresh') && response.status() === 200,
+			)
+			await page.locator('.reset-password-link').click()
+			await refreshResponse
+			await page.getByRole('link', {name: 'Login', exact: true}).click()
+			await expect(page).toHaveURL('/')
+			await expect(page.locator('main h1')).toContainText(credentials.username)
+			expect(await page.evaluate(() => localStorage.getItem('token'))).not.toBe(expiredToken)
+		})
+	}
+
 	test('Should not show login form inside authenticated app shell after login', async ({page}) => {
 		await page.goto('/login')
 

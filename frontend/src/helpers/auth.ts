@@ -31,6 +31,11 @@ export const getToken = (): string | null => {
 	return savedToken
 }
 
+// Adopting a stored token must not remeasure clock skew from its old iat.
+export function adoptStoredToken(token: string): void {
+	savedToken = token
+}
+
 function getTokenPayload(token: string | null): Record<string, unknown> | null {
 	if (!token) return null
 	try {

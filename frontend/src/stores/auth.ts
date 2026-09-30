@@ -18,7 +18,8 @@ import {invalidateAvatarQueries} from '@/client/queries/avatars'
 import type {RegisterUserRequestWritable, UserInfoBody, VikunjaErrorModel} from '@/client/generated'
 import {registerViaInviteLink} from '@/client/inviteLink'
 import {parseValidationErrors} from '@/helpers/parseValidationErrors'
-import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {getToken, refreshToken, removeToken, saveToken, adoptStoredToken} from '@/helpers/auth'
+import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 import {serverNowSeconds} from '@/helpers/serverClock'
 import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
@@ -57,6 +58,23 @@ type JwtClaims = SessionClaims & {
 	username?: string,
 	is_admin?: boolean,
 	sid?: string,
+}
+
+function parseUnexpiredUserToken(token: string): JwtClaims | null {
+	try {
+		const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+		const claims = JSON.parse(atob(base64)) as JwtClaims
+		if (
+			claims?.type === AUTH_TYPES.USER &&
+			typeof claims.id === 'number' && Number.isFinite(claims.id) &&
+			Number.isFinite(claims.exp) && claims.exp >= serverNowSeconds()
+		) {
+			return claims
+		}
+	} catch {
+		// Another tab may have stored a malformed token.
+	}
+	return null
 }
 
 // is_admin is deliberately absent: it comes from GET /user, never from the unverified JWT.
@@ -118,9 +136,11 @@ function refreshFailureProblem(e: unknown) {
 // logout. Exactly one retry: a genuinely dead session still logs out, no loop.
 // Without a cookie there is nothing another caller could have rotated.
 async function refreshTokenWithRetry(persist: boolean): Promise<void> {
+	const context = captureClientRequestContext()
 	try {
 		await refreshToken(persist)
 	} catch (e) {
+		assertClientRequestContext(context)
 		if (refreshFailureProblem(e)?.code === ERROR_CODE_NO_REFRESH_TOKEN) {
 			throw e
 		}
@@ -163,7 +183,7 @@ export const useAuthStore = defineStore('auth', () => {
 	
 	const currentSessionId = ref<string | null>(null)
 	const lastUserInfoRefresh = ref<Date | null>(null)
-	// Stops every navigation of this boot from re-refreshing a token whose refresh already failed.
+	// Avoid repeating a rejected refresh on every navigation.
 	let jwtWithFailedRefresh: string | null = null
 	const isLoading = ref(false)
 
@@ -396,8 +416,10 @@ export const useAuthStore = defineStore('auth', () => {
 					// JWT expired but this is a user session — attempt a cookie-based
 					// refresh before giving up. This lets users who reopen the app
 					// after the short JWT TTL seamlessly resume their session.
+					const context = captureClientRequestContext()
 					try {
 						await refreshTokenWithRetry(true)
+						if (!isClientRequestContextCurrent(context)) return
 						const freshJwt = getToken()
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
@@ -408,11 +430,20 @@ export const useAuthStore = defineStore('auth', () => {
 							setSession(p)
 						}
 					} catch (e) {
-						jwtWithFailedRefresh = jwt
-						// A kept stale JWT makes every later page load refresh again.
-						// Skip the removal if another tab stored a fresh token meanwhile.
-						if (refreshFailureProblem(e)?.status === 401 && localStorage.getItem('token') === jwt) {
-							removeToken()
+						if (!isClientRequestContextCurrent(context)) return
+						const storedJwt = localStorage.getItem('token')
+						if (refreshFailureProblem(e)?.status === 401) {
+							jwtWithFailedRefresh = jwt
+							if (storedJwt === jwt) removeToken()
+						}
+						if (storedJwt && storedJwt !== jwt) {
+							const storedUser = parseUnexpiredUserToken(storedJwt)
+							if (storedUser) {
+								adoptStoredToken(storedJwt)
+								isAuthenticated = true
+								currentSessionId.value = storedUser.sid ?? null
+								setSession(storedUser)
+							}
 						}
 					}
 				}

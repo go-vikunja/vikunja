@@ -25,7 +25,8 @@ const {queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock} = v
 	getTokenMock: vi.fn(() => null as string | null),
 }))
 
-vi.mock('@/helpers/auth', () => ({
+vi.mock('@/helpers/auth', async (importOriginal) => ({
+	...await importOriginal<typeof import('@/helpers/auth')>(),
 	refreshToken: refreshTokenMock,
 	getToken: getTokenMock,
 	saveToken: vi.fn(),
