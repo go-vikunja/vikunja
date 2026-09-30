@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, nextTick, watch, computed} from 'vue'
+import {ref, nextTick, watch, computed, type PropType} from 'vue'
 import {onClickOutside} from '@vueuse/core'
 import {computePosition, autoPlacement, offset, shift} from '@floating-ui/dom'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
@@ -49,12 +49,9 @@ import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
-withDefaults(defineProps<{
-	triggerIcon?: IconProp
-	triggerLabel?: string
-}>(), {
-	triggerIcon: 'ellipsis-h',
-	triggerLabel: undefined,
+defineProps({
+	triggerIcon: {type: [String, Array, Object] as PropType<IconProp>, default: 'ellipsis-h'},
+	triggerLabel: {type: String, default: undefined},
 })
 
 const emit = defineEmits<{

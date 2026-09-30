@@ -37,7 +37,7 @@
 					<XButton
 						v-if="hasPrimaryAction"
 						variant="primary"
-						:icon="primaryIcon"
+						:icon="primaryIcon || undefined"
 						:disabled="isBusy"
 						class="mis-2"
 						:loading="currentLoading"
@@ -54,24 +54,17 @@
 <script setup lang="ts">
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
-import {computed, ref, toRef, watch} from 'vue'
+import {computed, ref, toRef, watch, type PropType} from 'vue'
 
-const props = withDefaults(defineProps<{
-	title: string,
-	primaryLabel?: string,
-	primaryIcon?: IconProp,
-	primaryDisabled?: boolean,
-	hasPrimaryAction?: boolean,
-	tertiary?: string,
-	wide?: boolean,
-	loading?: boolean,
-}>(), {
-	primaryLabel: '',
-	primaryIcon: 'plus',
-	primaryDisabled: false,
-	hasPrimaryAction: true,
-	tertiary: '',
-	wide: false,
+const props = defineProps({
+	title: {type: String, required: true},
+	primaryLabel: {type: String, default: ''},
+	primaryIcon: {type: [String, Array, Object] as PropType<IconProp | ''>, default: 'plus'},
+	primaryDisabled: {type: Boolean, default: false},
+	hasPrimaryAction: {type: Boolean, default: true},
+	tertiary: {type: String, default: ''},
+	wide: {type: Boolean, default: false},
+	loading: {type: Boolean, default: undefined},
 })
 
 const emit = defineEmits<{
