@@ -100,9 +100,7 @@ const editor = useEditor({
 		},
 	},
 	extensions: [
-		StarterKit.configure({
-			history: false, // We'll handle history ourselves
-		}),
+		StarterKit,
 		Placeholder.configure({
 			placeholder: t('filters.query.placeholder'),
 		}),
