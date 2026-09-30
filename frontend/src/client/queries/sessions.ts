@@ -9,6 +9,7 @@ import {
 	type Session,
 } from '@/client/generated'
 import {
+	toPaginated,
 	totalPagesFor,
 	type Paginated,
 } from './pagination'
@@ -30,13 +31,7 @@ export function sessionsQuery(page: number) {
 				query: {page},
 				signal,
 			})
-			return {
-				items: data.items ?? [],
-				page: data.page ?? page,
-				per_page: data.per_page ?? 0,
-				total: data.total ?? 0,
-				total_pages: data.total_pages ?? 0,
-			}
+			return toPaginated(data, page)
 		},
 		placeholderData: keepPreviousData,
 		staleTime: 0,
