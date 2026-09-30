@@ -135,3 +135,11 @@ describe('getAuthForRoute email confirmation', () => {
 		expect(authStore.verifyEmail).not.toHaveBeenCalled()
 	})
 })
+
+
+describe('scroll restoration', () => {
+	it('scrolls a new route to the top left', () => {
+		const route = router.currentRoute.value
+		expect(router.options.scrollBehavior?.(route, route, null)).toEqual({left: 0, top: 0})
+	})
+})
