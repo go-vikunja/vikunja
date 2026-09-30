@@ -513,7 +513,8 @@ export const useAuthStore = defineStore('auth', () => {
 			// If the JWT is still valid, the proactive refresh failure is harmless
 			// — the 401 interceptor will handle it when the token really expires.
 			const isExpired = !session.value?.exp || session.value.exp < serverNowSeconds()
-			const status = e?.cause?.status
+			const cause = e !== null && typeof e === 'object' && 'cause' in e ? e.cause : undefined
+			const status = cause && typeof cause === 'object' && 'status' in cause ? cause.status : undefined
 			if (isExpired && status && status !== 429) {
 				await logout()
 			}
