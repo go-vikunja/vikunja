@@ -523,6 +523,7 @@ async function addImage(event: Event) {
 		return
 	}
 
+	if (!(event.target instanceof Element)) return
 	const url = await inputPrompt(event.target.getBoundingClientRect(), t('input.editor.urlPlaceholder'), '', editor.value)
 
 	if (url) {
@@ -661,7 +662,8 @@ defineExpose({setReplyContent})
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function setFocusToEditor(event: KeyboardEvent) {
-	const target = event.target as HTMLElement
+	const target = event.target
+	if (!(target instanceof HTMLElement)) return
 	if (target.shadowRoot) {
 		return
 	}
@@ -669,9 +671,9 @@ function setFocusToEditor(event: KeyboardEvent) {
 	const shortcutString = eventToShortcutString(event)
 	if (!shortcutString) return
 	if (shortcutString !== props.editShortcut ||
-		event.target.tagName.toLowerCase() === 'input' ||
-		event.target.tagName.toLowerCase() === 'textarea' ||
-		event.target.contentEditable === 'true') {
+		target.tagName.toLowerCase() === 'input' ||
+		target.tagName.toLowerCase() === 'textarea' ||
+		target.contentEditable === 'true') {
 		return
 	}
 
@@ -740,15 +742,17 @@ function handleEscapeKey(event: KeyboardEvent) {
 	// Don't preventDefault - let ProseMirror's extension handle the actual exit
 }
 
-function clickTasklistCheckbox(event: MouseEvent) {
+function clickTasklistCheckbox(event: Event) {
 	event.stopImmediatePropagation()
 
-	const target = event.target as HTMLElement
+	const target = event.target
+	if (!(target instanceof HTMLElement)) return
 	if (target.localName !== 'p') {
 		return
 	}
 
-	event.target.parentNode.parentNode.firstChild.click()
+	const label = target.parentElement?.parentElement?.firstElementChild
+	if (label instanceof HTMLElement) label.click()
 }
 
 watch(
