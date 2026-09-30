@@ -86,62 +86,66 @@
 				role="listbox"
 				:aria-label="accessibleName"
 			>
-				<BaseButton
-					v-for="(data, index) in filteredSearchResults"
-					:key="index"
-					:ref="(el) => setResult(el, index)"
-					class="search-result-button is-fullwidth"
-					role="option"
-					@keydown.up.prevent="() => preSelect(index - 1)"
-					@keydown.down.prevent="() => preSelect(index + 1)"
-					@keydown.esc="closeAndRefocus"
-					@click.prevent.stop="() => select(data)"
+				<template
+					v-for="(option, index) in options"
+					:key="option.type === 'create' ? 'create' : `result${index}`"
 				>
-					<span>
-						<slot
-							name="searchResult"
-							:option="data"
-						>
-							<span class="search-result">{{ label !== '' ? data[label] : data }}</span>
-						</slot>
-					</span>
-					<span
-						v-if="selectPlaceholder.trim()"
-						class="hint-text"
+					<BaseButton
+						v-if="option.type === 'result'"
+						:ref="(el) => setResult(el, index)"
+						class="search-result-button is-fullwidth"
+						role="option"
+						@keydown.up.prevent="() => preSelect(index - 1)"
+						@keydown.down.prevent="() => preSelect(index + 1)"
+						@keydown.esc="closeAndRefocus"
+						@click.prevent.stop="() => select(option.data)"
 					>
-						{{ selectPlaceholder }}
-					</span>
-				</BaseButton>
-
-				<BaseButton
-					v-if="creatableAvailable"
-					:ref="(el) => setResult(el, filteredSearchResults.length)"
-					class="search-result-button is-fullwidth is-create-option"
-					role="option"
-					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
-					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
-					@keydown.esc="closeAndRefocus"
-					@keyup.enter.prevent="create"
-					@click.prevent.stop="create"
-				>
-					<span>
-						<Icon
-							icon="plus"
-							class="create-icon"
-						/>
-						<slot
-							name="createOption"
-							:query="query"
+						<span>
+							<slot
+								name="searchResult"
+								:option="option.data"
+							>
+								<span class="search-result">{{ label !== '' ? option.data[label] : option.data }}</span>
+							</slot>
+						</span>
+						<span
+							v-if="selectPlaceholder.trim()"
+							class="hint-text"
 						>
-							<span class="search-result">
-								{{ query }}
-							</span>
-						</slot>
-					</span>
-					<span class="hint-text is-always-visible">
-						{{ createPlaceholder }}
-					</span>
-				</BaseButton>
+							{{ selectPlaceholder }}
+						</span>
+					</BaseButton>
+
+					<BaseButton
+						v-else
+						:ref="(el) => setResult(el, index)"
+						class="search-result-button is-fullwidth is-create-option"
+						role="option"
+						@keydown.up.prevent="() => preSelect(index - 1)"
+						@keydown.down.prevent="() => preSelect(index + 1)"
+						@keydown.esc="closeAndRefocus"
+						@keyup.enter.prevent="create"
+						@click.prevent.stop="create"
+					>
+						<span>
+							<Icon
+								icon="plus"
+								class="create-icon"
+							/>
+							<slot
+								name="createOption"
+								:query="query"
+							>
+								<span class="search-result">
+									{{ query }}
+								</span>
+							</slot>
+						</span>
+						<span class="hint-text is-always-visible">
+							{{ createPlaceholder }}
+						</span>
+					</BaseButton>
+				</template>
 
 				<div
 					v-if="moreResultsHintVisible"
@@ -193,6 +197,8 @@ const props = withDefaults(defineProps<{
 	name?: string
 	/** If true, will provide an 'add this as a new value' entry which  fires an @create event when clicking on it. */
 	creatable?: boolean
+	/** If true (and `creatable` is true), the create option is always shown as the first entry, even if a result matches the query exactly. Useful where duplicate names are legitimate (e.g. tasks). */
+	createAlwaysFirst?: boolean
 	/** When set and `creatable` is false, shows a non-interactive hint row explaining why a non-matching query can't be added. */
 	creationDisabledMessage?: string
 	/** The text shown next to the new value option. */
@@ -223,6 +229,7 @@ const props = withDefaults(defineProps<{
 	searchResults: () => [] as T[],
 	label: '',
 	creatable: false,
+	createAlwaysFirst: false,
 	creationDisabledMessage: '',
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
 	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
@@ -250,7 +257,7 @@ const emit = defineEmits<{
 	 */
 	'select': [value: T],
 	/**
-	 * If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
+	 * If nothing or no exact match was found (or `createAlwaysFirst` is set) and `creatable` is true, this event is triggered with the current value of the search query.
 	 */
 	'create': [query: string],
 	/**
@@ -329,7 +336,7 @@ const queryHasExactMatch = computed(() => {
 	return hasResult || hasQueryAlreadyAdded
 })
 
-const creatableAvailable = computed(() => props.creatable && query.value !== '' && !queryHasExactMatch.value)
+const creatableAvailable = computed(() => props.creatable && query.value !== '' && (props.createAlwaysFirst || !queryHasExactMatch.value))
 
 // Shown in place of the create option when creation is disabled and the query matches nothing, so the field doesn't look dead.
 const creationHintVisible = computed(() => props.creationDisabledMessage !== '' && !props.creatable && query.value !== '' && !queryHasExactMatch.value)
@@ -344,6 +351,20 @@ const filteredSearchResults = computed<T[]>(() => {
 	}
 
 	return searchResults.value
+})
+
+type Option = {type: 'result', data: T} | {type: 'create'}
+
+// The rendered option rows in display order; the index doubles as the keyboard navigation index.
+const options = computed<Option[]>(() => {
+	const resultOptions: Option[] = filteredSearchResults.value.map((data: T) => ({type: 'result', data}))
+	if (!creatableAvailable.value) {
+		return resultOptions
+	}
+
+	return props.createAlwaysFirst
+		? [{type: 'create'}, ...resultOptions]
+		: [...resultOptions, {type: 'create'}]
 })
 
 const hasMultiple = computed(() => {
@@ -470,7 +491,7 @@ function select(object: T | null) {
 	}
 
 	emit('select', object)
-	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && !creatableAvailable.value) {
+	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && (!creatableAvailable.value || props.createAlwaysFirst)) {
 		closeSearchResults()
 	}
 	refocusInput()
