@@ -5,6 +5,11 @@ import {ProjectFactory} from '../../factories/project'
 import {setupApiUrl} from '../../support/authenticateUser'
 import {TEST_PASSWORD} from '../../support/constants'
 
+type LoginFlashWindow = Window & {
+	__loginFormFlashDetected: boolean
+	__loginFormFlashObserver: MutationObserver
+}
+
 interface LoginCredentials {
 	username: string
 	password: string
@@ -33,12 +38,16 @@ const credentials: LoginCredentials = {
 async function login(page: Page): Promise<void> {
 	await page.locator('input[id=username]').fill(credentials.username)
 	await page.locator('input[id=password]').fill(credentials.password)
+	const loginResponse = page.waitForResponse(response =>
+		response.url().includes('/login') && response.request().method() === 'POST',
+	)
 	await page.locator('.button').filter({hasText: 'Login'}).click()
+	await loginResponse
 	await expect(page).toHaveURL('/')
 }
 
 test.describe('Login', () => {
-	test.beforeEach(async ({page, apiContext}) => {
+	test.beforeEach(async ({page}) => {
 		await setupApiUrl(page)
 		await UserFactory.create(1, {username: credentials.username})
 		await page.clock.setFixedTime(new Date(1625656161057)) // 13:00
@@ -150,23 +159,25 @@ test.describe('Login', () => {
 
 		// Set up a flag that tracks if login form and navbar are ever visible simultaneously
 		await page.evaluate(() => {
-			(window as any).__loginFormFlashDetected = false
+			const testWindow = window as LoginFlashWindow
+			testWindow.__loginFormFlashDetected = false
 			const observer = new MutationObserver(() => {
 				const hasLoginForm = !!document.querySelector('#loginform')
 				const hasNavbar = !!document.querySelector('nav[aria-label="main navigation"]')
 				if (hasLoginForm && hasNavbar) {
-					(window as any).__loginFormFlashDetected = true
+					testWindow.__loginFormFlashDetected = true
 				}
 			})
 			observer.observe(document.body, {childList: true, subtree: true, attributes: true})
-			;(window as any).__loginFormFlashObserver = observer
+			testWindow.__loginFormFlashObserver = observer
 		})
 
 		await login(page)
 
 		const flashDetected = await page.evaluate(() => {
-			(window as any).__loginFormFlashObserver.disconnect()
-			return (window as any).__loginFormFlashDetected
+			const testWindow = window as LoginFlashWindow
+			testWindow.__loginFormFlashObserver.disconnect()
+			return testWindow.__loginFormFlashDetected
 		})
 
 		expect(flashDetected).toBe(false)
