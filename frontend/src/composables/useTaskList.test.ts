@@ -116,6 +116,13 @@ async function mountTaskList(query: Record<string, string>): Promise<Router> {
 }
 
 describe('useTaskList sort handling for relevance ranking', () => {
+	it('moves the id sort behind other fields without dropping them', async () => {
+		await mountTaskList({sort: 'title:asc,id:desc,priority:desc'})
+
+		expect(lastQuery().sort_by).toEqual(['title', 'priority', 'id'])
+		expect(lastQuery().order_by).toEqual(['asc', 'desc', 'desc'])
+	})
+
 	it('omits the sort while searching with the default sort so the backend ranks by relevance', async () => {
 		await mountTaskList({s: 'find me'})
 
