@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
-import {normalizePageNumber, normalizeTask, taskKeys, taskQuery, tasksQuery, allTasksQuery} from './tasks'
+import {normalizeTask, taskKeys, taskQuery, tasksQuery, allTasksQuery} from './tasks'
 import {bucketHasMore, bucketKeys, bucketsQuery, kanbanKeys, kanbanQuery, TASKS_PER_BUCKET} from './kanban'
 const sdk = vi.hoisted(() => ({
 	tasksRead: vi.fn(),
@@ -113,20 +113,6 @@ describe('task queries', () => {
 		expect(options.queryKey).toEqual(taskKeys.list({}, 1))
 		await new QueryClient().fetchQuery(options)
 		expect(sdk.tasksList).toHaveBeenCalledWith(expect.objectContaining({query: {page: 1}}))
-	})
-	it.each([
-		['2', 2],
-		['abc', 1],
-		['0', 1],
-		['-3', 1],
-		['1.5', 1],
-		[undefined, 1],
-		[7, 7],
-		[null, 1],
-		['', 1],
-		[['1', '2'], 1],
-	])('normalizes page %s to %i', (raw, expected) => {
-		expect(normalizePageNumber(raw)).toBe(expected)
 	})
 	it('retains paging metadata separately for each bucket on pseudo projects', async () => {
 		sdk.projectViewBucketsTasksList.mockResolvedValue({

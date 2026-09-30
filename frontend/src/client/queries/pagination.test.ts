@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest'
 import {
 	API_MAX_PER_PAGE,
+	normalizePageNumber,
 	pageSizeFor,
 	toPaginated,
 	totalPagesFor,
@@ -43,5 +44,22 @@ describe('toPaginated', () => {
 			total: 0,
 			total_pages: 0,
 		})
+	})
+})
+
+describe('normalizePageNumber', () => {
+	it.each([
+		['2', 2],
+		['abc', 1],
+		['0', 1],
+		['-3', 1],
+		['1.5', 1],
+		[undefined, 1],
+		[7, 7],
+		[null, 1],
+		['', 1],
+		[['1', '2'], 1],
+	])('normalizes page %s to %i', (raw, expected) => {
+		expect(normalizePageNumber(raw)).toBe(expected)
 	})
 })

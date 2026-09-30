@@ -37,3 +37,8 @@ export function toPaginated<T>(data: PaginatedResponse<T>, page: number): Pagina
 		total_pages: data.total_pages ?? 0,
 	}
 }
+
+export function normalizePageNumber(page: unknown): number {
+	const parsed = Number(page)
+	return Number.isInteger(parsed) && parsed >= 1 ? parsed : 1
+}

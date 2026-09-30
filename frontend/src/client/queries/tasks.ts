@@ -12,7 +12,11 @@ import type {
 	User,
 } from '@/client/generated'
 import {fetchAllPages} from './fetchAllPages'
-import {API_MAX_PER_PAGE, type Paginated} from './pagination'
+import {
+	API_MAX_PER_PAGE,
+	normalizePageNumber,
+	type Paginated,
+} from './pagination'
 import {queryClient} from '@/client/queryClient'
 
 export type TaskFilterParams = Omit<NonNullable<TasksListData['query']>, 'format' | 'page'>
@@ -134,11 +138,6 @@ function normalizeTaskList(page: PaginatedTask): PaginatedTaskResponse {
 		per_page: page.per_page ?? 0,
 		total_pages: page.total_pages ?? 0,
 	}
-}
-
-export function normalizePageNumber(page: unknown): number {
-	const parsed = Number(page)
-	return Number.isInteger(parsed) && parsed >= 1 ? parsed : 1
 }
 
 const taskKeyRoot = ['tasks'] as const

@@ -5,10 +5,10 @@ import {useRouteQuery} from '@vueuse/router'
 
 import {
 	getDefaultTaskFilterParams,
-	normalizePageNumber,
 	type TaskExpansion,
 	type TaskFilterParams,
 } from '@/client/queries/tasks'
+import {normalizePageNumber} from '@/client/queries/pagination'
 import {isRequestContextAbort} from '@/client/requestContext'
 import {useTasks} from '@/composables/useTasks'
 import {error} from '@/message'
