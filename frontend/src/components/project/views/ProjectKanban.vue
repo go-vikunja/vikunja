@@ -558,7 +558,7 @@ function updateTasks(bucketId: number, tasks: BucketResponse['tasks']) {
 		: bucket)
 }
 
-async function updateTaskPosition(e) {
+async function updateTaskPosition(e: SortableEvent & {originalEvent?: MouseEvent}) {
 	const project = projectId.value
 	const view = props.viewId
 	drag.value = false
@@ -758,7 +758,7 @@ async function saveBucketLimit(bucketId: number, limit: number) {
 	}, saveBucketLimitMutation)
 }
 
-const setBucketLimitCancel = ref<number | null>(null)
+const setBucketLimitCancel = ref<ReturnType<typeof setTimeout> | null>(null)
 
 async function setBucketLimit(bucketId: number, now: boolean = false) {
 	const limit = parseInt(bucketLimitInputRef.value?.value || '')
@@ -790,9 +790,9 @@ function dragstart(bucket: BucketResponse) {
 	sourceBucket.value = bucket.id
 }
 
-function handleTaskDragStart(e) {
-	const taskId = parseInt(e.item.dataset.taskId, 10)
-	const bucketIndex = parseInt(e.from.dataset.bucketIndex, 10)
+function handleTaskDragStart(e: SortableEvent) {
+	const taskId = Number(e.item.dataset.taskId)
+	const bucketIndex = Number(e.from.dataset.bucketIndex)
 	const bucket = buckets.value[bucketIndex]
 	const task = bucket?.tasks.find(t => t.id === taskId)
 
