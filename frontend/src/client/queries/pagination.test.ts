@@ -1,5 +1,10 @@
 import {describe, expect, it} from 'vitest'
-import {API_MAX_PER_PAGE, pageSizeFor, totalPagesFor} from './pagination'
+import {
+	API_MAX_PER_PAGE,
+	pageSizeFor,
+	toPaginated,
+	totalPagesFor,
+} from './pagination'
 
 describe('totalPagesFor', () => {
 	it('rounds a partial page up', () => {
@@ -26,5 +31,17 @@ describe('pageSizeFor', () => {
 
 	it('clamps above the api maximum', () => {
 		expect(pageSizeFor(5000)).toBe(API_MAX_PER_PAGE)
+	})
+})
+
+describe('toPaginated', () => {
+	it('fills missing envelope fields and falls back to the requested page', () => {
+		expect(toPaginated({items: null}, 3)).toEqual({
+			items: [],
+			page: 3,
+			per_page: 0,
+			total: 0,
+			total_pages: 0,
+		})
 	})
 })
