@@ -78,25 +78,16 @@ export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
 	return query
 }
 
-// This makes sure an id sort order is always sorted last.
-// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
-// precedence over everything else, making any other sort columns pretty useless.
-function formatSortOrder(sortBy, params) {
-	let hasIdFilter = false
-	const sortKeys = Object.keys(sortBy)
-	for (const s of sortKeys) {
-		if (s === 'id') {
-			sortKeys.splice(s, 1)
-			hasIdFilter = true
-			break
-		}
-	}
-	if (hasIdFilter) {
+// The id is only a tie-breaker for the explicitly selected sort fields.
+function formatSortOrder(sortBy: SortBy, params: TaskFilterParams): TaskFilterParams {
+	const sortKeys = Object.keys(sortBy) as (keyof SortBy)[]
+	const idIndex = sortKeys.indexOf('id')
+	if (idIndex >= 0) {
+		sortKeys.splice(idIndex, 1)
 		sortKeys.push('id')
 	}
 	params.sort_by = sortKeys
-	params.order_by = sortKeys.map(s => sortBy[s])
-
+	params.order_by = sortKeys.map(key => sortBy[key] ?? 'none')
 	return params
 }
 
