@@ -18,6 +18,7 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -194,11 +195,14 @@ func DeleteUserAsAdmin(s *xorm.Session, doer *user.User, id int64, mode string) 
 func ListUsersAsAdmin(s *xorm.Session, doer *user.User, search string, page, perPage int) ([]*user.User, int64, error) {
 	events.DispatchOnCommit(s, &AdminUsersListedEvent{Doer: doer})
 
-	query := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
+	query := s.Limit(perPage, (page-1)*perPage)
 	if search != "" {
 		q := "%" + search + "%"
 		query = query.Where("username LIKE ? OR email LIKE ?", q, q)
+		order, args := db.SearchRelevanceOrder(search, "username", "email")
+		query = query.OrderBy(order, args...)
 	}
+	query = query.OrderBy("id ASC")
 
 	var users []*user.User
 	total, err := query.FindAndCount(&users)
