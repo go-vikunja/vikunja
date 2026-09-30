@@ -37,7 +37,7 @@
 					:key="p.id"
 				>
 					<a
-						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
+						v-if="typeof router.options.history.state.back === 'string' && router.options.history.state.back.includes('/projects/'+p.id+'/')"
 						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject : ''"
 						@click="router.back()"
 					>
@@ -662,7 +662,7 @@ import {createTaskDraft, mergeTask} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
 import type {ProjectResponse} from '@/client/queries/projects'
 
-import {PRIORITIES, type Priority} from '@/constants/priorities'
+import {PRIORITIES} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
 import {PRO_FEATURE} from '@/constants/proFeatures'
 import {SHORTCUTS} from '@/constants/shortcuts'
@@ -761,7 +761,7 @@ const taskQuery = useTask(
 		...(timeTrackingEnabled.value ? ['time_entries_count' as const] : []),
 	],
 )
-const task = ref<ITask>(createTaskDraft())
+const task = ref(createTaskDraft())
 
 // Only fields edited here stay local; the rest follows the cache.
 function followServerFields(loaded: ITask) {
@@ -1228,7 +1228,7 @@ async function duplicateCurrentTask() {
 	}
 }
 
-async function setPriority(priority: Priority) {
+async function setPriority(priority: number) {
 	const newTask: ITask = {
 		...task.value,
 		priority,
