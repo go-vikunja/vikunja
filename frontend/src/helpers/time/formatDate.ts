@@ -37,7 +37,8 @@ export const formatDate = (date: Date | string | null | undefined, f: string) =>
 }
 
 export function formatDateLong(date: Date | string | null | undefined) {
-	return formatDate(date, 'LLLL')
+	const {store: timeFormat} = useTimeFormat()
+	return formatDisplayDateFormat(date, DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR, timeFormat.value)
 }
 
 export function formatDateShort(date: Date | string | null | undefined) {

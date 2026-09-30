@@ -5,6 +5,7 @@ import {TaskFactory} from '../../factories/task'
 import {login} from '../../support/authenticateUser'
 import {DATE_DISPLAY} from '../../../src/constants/dateDisplay'
 import {TIME_FORMAT} from '../../../src/constants/timeFormat'
+import {createDefaultViews} from '../project/prepareProjects'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
 
@@ -109,4 +110,37 @@ test.describe('Date display setting', () => {
 			await expect(page.locator('.task-view .created time span')).toContainText(expected)
 		})
 	})
+})
+
+test.describe('Due date tooltip time format', () => {
+	test.use({timezoneId: 'UTC', locale: 'en-GB'})
+
+	for (const language of ['en', 'de-DE']) {
+		for (const timeFormat of [TIME_FORMAT.HOURS_12, TIME_FORMAT.HOURS_24]) {
+			test(`respects ${timeFormat} in ${language}`, async ({page, apiContext}) => {
+				const user = (await UserFactory.create(1, {
+					language,
+					frontend_settings: JSON.stringify({time_format: timeFormat}),
+				}))[0]
+				const project = (await ProjectFactory.create(1, {owner_id: user.id}))[0]
+				const views = await createDefaultViews(project.id)
+				await TaskFactory.create(1, {
+					project_id: project.id,
+					created_by_id: user.id,
+					due_date: '2026-10-01T17:30:00Z',
+				})
+
+				await login(page, apiContext, user)
+				await page.goto(`/projects/${project.id}/${views[0].id}`)
+				await page.locator('.task .dueDate').hover()
+				const tooltip = page.locator('.v-popper--theme-tooltip.v-popper__popper--shown')
+				await expect(tooltip).toContainText(timeFormat === TIME_FORMAT.HOURS_24 ? '17:30' : '5:30')
+				if (timeFormat === TIME_FORMAT.HOURS_24) {
+					await expect(tooltip).not.toContainText(/AM|PM/)
+				} else {
+					await expect(tooltip).toContainText('PM')
+				}
+			})
+		}
+	}
 })
