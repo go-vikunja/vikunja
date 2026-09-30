@@ -68,6 +68,7 @@ func (b *BotUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	if search != "" {
 		q = q.And("(username LIKE ? OR name LIKE ?)", "%"+search+"%", "%"+search+"%")
 	}
+	q = q.OrderBy("id ASC")
 	if limit > 0 {
 		q = q.Limit(limit, start)
 	}

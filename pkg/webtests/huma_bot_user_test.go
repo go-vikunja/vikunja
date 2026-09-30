@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -79,6 +80,15 @@ func TestHumaBotUser(t *testing.T) {
 			require.NoError(t, err)
 			ids := botIDsFromReadAll(t, rec.Body.Bytes())
 			assert.Empty(t, ids, "a non-matching search must return no bots; body: %s", rec.Body.String())
+		})
+		t.Run("Pages are ordered by id", func(t *testing.T) {
+			rec, err := h.testReadAllWithUser(url.Values{"page": {"1"}, "per_page": {"1"}}, nil)
+			require.NoError(t, err)
+			assert.Equal(t, []int64{23}, botIDsFromReadAll(t, rec.Body.Bytes()), "body: %s", rec.Body.String())
+
+			rec, err = h.testReadAllWithUser(url.Values{"page": {"2"}, "per_page": {"1"}}, nil)
+			require.NoError(t, err)
+			assert.Equal(t, []int64{25}, botIDsFromReadAll(t, rec.Body.Bytes()), "body: %s", rec.Body.String())
 		})
 	})
 
