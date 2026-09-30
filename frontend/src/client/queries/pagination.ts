@@ -1,3 +1,9 @@
+import {
+	hashKey,
+	type QueryClient,
+	type QueryKey,
+} from '@tanstack/vue-query'
+
 export type Paginated<T> = {
 	items: T[],
 	page: number,
@@ -41,4 +47,23 @@ export function toPaginated<T>(data: PaginatedResponse<T>, page: number): Pagina
 export function normalizePageNumber(page: unknown): number {
 	const parsed = Number(page)
 	return Number.isInteger(parsed) && parsed >= 1 ? parsed : 1
+}
+
+// Keys end in the page number; only scopes (key minus page) that held the item lose one from total.
+export function removeFromPages<T>(client: QueryClient, queryKey: QueryKey, matches: (item: T) => boolean) {
+	const cached = client.getQueriesData<Paginated<T>>({queryKey})
+	const scopeOf = (key: QueryKey) => hashKey(key.slice(0, -1))
+	const hitScopes = new Set(cached
+		.filter(([, page]) => page?.items.some(matches))
+		.map(([key]) => scopeOf(key)))
+	for (const [key, page] of cached) {
+		if (!page || !hitScopes.has(scopeOf(key))) continue
+		const total = Math.max(0, page.total - 1)
+		client.setQueryData<Paginated<T>>(key, {
+			...page,
+			items: page.items.filter(item => !matches(item)),
+			total,
+			total_pages: totalPagesFor(page, total),
+		})
+	}
 }

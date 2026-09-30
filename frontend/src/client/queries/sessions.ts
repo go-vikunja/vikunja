@@ -9,8 +9,8 @@ import {
 	type Session,
 } from '@/client/generated'
 import {
+	removeFromPages,
 	toPaginated,
-	totalPagesFor,
 	type Paginated,
 } from './pagination'
 import {contextMutationOptions} from './contextMutation'
@@ -43,16 +43,7 @@ export function deleteSessionMutationOptions() {
 		mutationFn: async (id: string) => {
 			await sessionsDelete({path: {session: id}})
 		},
-		onSuccess: (_data, id, client) => client.setQueriesData<SessionPage>({queryKey: sessionKeys.all}, current => {
-			if (!current) return current
-			const total = Math.max(0, current.total - 1)
-			return {
-				...current,
-				items: current.items.filter(session => session.id !== id),
-				total,
-				total_pages: totalPagesFor(current, total),
-			}
-		}),
+		onSuccess: (_data, id, client) => removeFromPages<Session>(client, sessionKeys.all, session => session.id === id),
 		onSettled: (_id, client) => client.invalidateQueries({queryKey: sessionKeys.all}),
 		successMessage: () => i18n.global.t('user.settings.sessions.deleteSuccess'),
 	})
