@@ -20,34 +20,35 @@
 	</template>
 	<section v-else-if="baseStore.error !== ''">
 		<NoAuthWrapper>
-			<p v-if="baseStore.error === ERROR_NO_API_URL">
-				{{ $t('ready.noApiUrlConfigured') }}
-			</p>
 			<Message
-				v-else-if="baseStore.error === ERROR_RATE_LIMITED"
+				v-if="baseStore.error === ERROR_RATE_LIMITED"
 				variant="danger"
 				class="mbe-4"
 			>
 				{{ $t('ready.rateLimited') }}
 			</Message>
-			<Message
-				v-else
-				variant="danger"
-				class="mbe-4"
-			>
-				<p>
-					{{ $t('ready.errorOccured') }}<br>
-					{{ baseStore.error }}
+			<template v-else>
+				<p v-if="baseStore.error === ERROR_NO_API_URL">
+					{{ $t('ready.noApiUrlConfigured') }}
 				</p>
-				<p>
-					{{ $t('ready.checkApiUrl') }}
-				</p>
-			</Message>
-			<ApiConfig
-				v-if="baseStore.error !== ERROR_RATE_LIMITED"
-				:configure-open="true"
-				@foundApi="baseStore.loadApp()"
-			/>
+				<Message
+					v-else
+					variant="danger"
+					class="mbe-4"
+				>
+					<p>
+						{{ $t('ready.errorOccured') }}<br>
+						{{ baseStore.error }}
+					</p>
+					<p>
+						{{ $t('ready.checkApiUrl') }}
+					</p>
+				</Message>
+				<ApiConfig
+					:configure-open="true"
+					@foundApi="baseStore.loadApp()"
+				/>
+			</template>
 		</NoAuthWrapper>
 	</section>
 	<CustomTransition name="fade">
