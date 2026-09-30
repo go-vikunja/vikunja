@@ -10,7 +10,8 @@ import {
 	type Token,
 } from '@/client/generated'
 import {
-	totalPagesFor,
+	removeFromPages,
+	toPaginated,
 	type Paginated,
 } from './pagination'
 import {contextMutationOptions} from './contextMutation'
@@ -21,7 +22,7 @@ export type CaldavTokenPage = Paginated<Token>
 
 export const caldavTokenKeys = {
 	all: ['caldav-tokens'] as const,
-	list: (page: number) => ['caldav-tokens', page] as const,
+	list: (page: number) => ['caldav-tokens', 'list', page] as const,
 }
 
 export function caldavTokensQuery(page: number) {
@@ -32,13 +33,7 @@ export function caldavTokensQuery(page: number) {
 				query: {page},
 				signal,
 			})
-			return {
-				items: data.items ?? [],
-				page: data.page ?? page,
-				per_page: data.per_page ?? 0,
-				total: data.total ?? 0,
-				total_pages: data.total_pages ?? 0,
-			}
+			return toPaginated(data, page)
 		},
 		placeholderData: keepPreviousData,
 	})
@@ -58,16 +53,7 @@ export function useCreateCaldavTokenMutation() {
 export function deleteCaldavTokenMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => (await caldavTokensDelete({path: {id}})).data,
-		onSuccess: (_data, id, client) => client.setQueriesData<CaldavTokenPage>({queryKey: caldavTokenKeys.all}, current => {
-			if (!current) return current
-			const total = Math.max(0, current.total - 1)
-			return {
-				...current,
-				items: current.items.filter(token => token.id !== id),
-				total,
-				total_pages: totalPagesFor(current, total),
-			}
-		}),
+		onSuccess: (_data, id, client) => removeFromPages<Token>(client, caldavTokenKeys.all, token => token.id === id),
 		onSettled: (_input, client) => client.invalidateQueries({queryKey: caldavTokenKeys.all}),
 		successMessage: () => i18n.global.t('user.settings.caldav.deleteSuccess'),
 	})
