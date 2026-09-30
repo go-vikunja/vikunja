@@ -1,11 +1,17 @@
+import {SENSITIVE_QUERY_PARAMS} from '@/helpers/sensitiveQueryParams'
+
 const LAST_VISITED_KEY = 'lastVisited'
 
 export const saveLastVisited = (name: string | undefined, params: object, query: object) => {
 	if (typeof name === 'undefined') {
 		return
 	}
-	
-	localStorage.setItem(LAST_VISITED_KEY, JSON.stringify({name, params, query}))
+
+	const safeQuery = Object.fromEntries(
+		Object.entries(query).filter(([key]) => !SENSITIVE_QUERY_PARAMS.includes(key)),
+	)
+
+	localStorage.setItem(LAST_VISITED_KEY, JSON.stringify({name, params, query: safeQuery}))
 }
 
 export const getLastVisited = () => {
