@@ -1,7 +1,6 @@
 import {describe, expect, it} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {
-	API_MAX_PER_PAGE,
 	normalizePageNumber,
 	pageSizeFor,
 	removeFromPages,
@@ -32,8 +31,8 @@ describe('pageSizeFor', () => {
 		expect(pageSizeFor(50)).toBe(50)
 	})
 
-	it('clamps above the api maximum', () => {
-		expect(pageSizeFor(5000)).toBe(API_MAX_PER_PAGE)
+	it('leaves capping a large size to the server', () => {
+		expect(pageSizeFor(5000)).toBe(5000)
 	})
 })
 

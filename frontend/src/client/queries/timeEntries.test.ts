@@ -118,21 +118,21 @@ it('fills in the page envelope with the requested size when the server omits it'
 	})
 })
 
-it('clamps per_page to the v2 maximum', async () => {
+it('raises per_page below 1 to 1', async () => {
 	sdk.timeEntriesList.mockResolvedValue({data: {
 		items: [],
 		page: 1,
-		per_page: 1000,
+		per_page: 1,
 		total: 0,
 		total_pages: 0,
 	}})
-	await client.fetchQuery(timeEntriesQuery('', 'UTC', 1, 5000))
+	await client.fetchQuery(timeEntriesQuery('', 'UTC', 1, 0))
 	expect(sdk.timeEntriesList).toHaveBeenCalledWith({
 		query: {
 			filter: '',
 			filter_timezone: 'UTC',
 			page: 1,
-			per_page: 1000,
+			per_page: 1,
 		},
 		signal: expect.any(AbortSignal),
 	})
