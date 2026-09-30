@@ -1036,19 +1036,9 @@
                     "comment": "The timeout in seconds until a webhook request fails when no response has been received."
                 },
                 {
-                    "key": "proxyurl",
-                    "default_value": "",
-                    "comment": "Deprecated: use outgoingrequests.proxyurl instead. The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing webhook requests. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `webhooks.password` (see below)."
-                },
-                {
                     "key": "proxypassword",
                     "default_value": "",
                     "comment": "Deprecated: use outgoingrequests.proxypassword instead. The proxy password to use when authenticating against the proxy."
-                },
-                {
-                    "key": "allownonroutableips",
-                    "default_value": "false",
-                    "comment": "Deprecated: use outgoingrequests.allownonroutableips instead. If set to true, webhook target URLs may resolve to non-globally-routable IP addresses (private networks, loopback, link-local, etc). When false (the default), Vikunja blocks outgoing webhook requests to these addresses to prevent SSRF attacks. Set this to true if you need webhooks to reach services on your internal network."
                 }
             ]
         },
