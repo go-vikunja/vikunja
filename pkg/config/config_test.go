@@ -151,27 +151,53 @@ func TestResolvePath(t *testing.T) {
 }
 
 func TestDeprecatedWebhookKeysMigration(t *testing.T) {
-	t.Run("migrates webhooks.* from the config file", func(t *testing.T) {
-		initConfigFromYAML(t, "webhooks:\n  proxyurl: http://mole:8080\n  proxypassword: secret\n  allownonroutableips: true\n")
+	t.Run("migrates webhooks.proxypassword from the config file", func(t *testing.T) {
+		initConfigFromYAML(t, "webhooks:\n  proxypassword: secret\n")
 
-		assert.Equal(t, "http://mole:8080", OutgoingRequestsProxyURL.GetString())
 		assert.Equal(t, "secret", OutgoingRequestsProxyPassword.GetString())
-		assert.True(t, OutgoingRequestsAllowNonRoutableIPs.GetBool())
 	})
-	t.Run("migrates webhooks.* from the environment", func(t *testing.T) {
-		t.Setenv("VIKUNJA_WEBHOOKS_PROXYURL", "http://mole:8080")
+	t.Run("migrates webhooks.proxypassword from the environment", func(t *testing.T) {
 		t.Setenv("VIKUNJA_WEBHOOKS_PROXYPASSWORD", "secret")
-		t.Setenv("VIKUNJA_WEBHOOKS_ALLOWNONROUTABLEIPS", "true")
 		initConfigFromYAML(t, "")
 
-		assert.Equal(t, "http://mole:8080", OutgoingRequestsProxyURL.GetString())
 		assert.Equal(t, "secret", OutgoingRequestsProxyPassword.GetString())
-		assert.True(t, OutgoingRequestsAllowNonRoutableIPs.GetBool())
 	})
-	t.Run("outgoingrequests.* wins over webhooks.*", func(t *testing.T) {
-		initConfigFromYAML(t, "webhooks:\n  proxyurl: http://old:8080\n  proxypassword: old\noutgoingrequests:\n  proxyurl: http://new:8080\n  proxypassword: new\n")
+	t.Run("outgoingrequests.proxypassword wins over webhooks.proxypassword", func(t *testing.T) {
+		initConfigFromYAML(t, "webhooks:\n  proxypassword: old\noutgoingrequests:\n  proxypassword: new\n")
 
-		assert.Equal(t, "http://new:8080", OutgoingRequestsProxyURL.GetString())
 		assert.Equal(t, "new", OutgoingRequestsProxyPassword.GetString())
+	})
+}
+
+func TestCheckRemovedConfigKeys(t *testing.T) {
+	for key, replacement := range map[string]string{
+		"webhooks.proxyurl":            "outgoingrequests.proxyurl",
+		"webhooks.allownonroutableips": "outgoingrequests.allownonroutableips",
+	} {
+		t.Run(key+" is rejected", func(t *testing.T) {
+			viper.Reset()
+			t.Cleanup(viper.Reset)
+			viper.Set(key, "false")
+
+			err := checkRemovedConfigKeys()
+			require.ErrorContains(t, err, key)
+			assert.ErrorContains(t, err, replacement)
+		})
+	}
+	t.Run("removed keys are rejected from the environment", func(t *testing.T) {
+		viper.Reset()
+		t.Cleanup(viper.Reset)
+		t.Setenv("VIKUNJA_WEBHOOKS_PROXYURL", "http://mole:8080")
+		require.NoError(t, setConfigFromEnv())
+
+		assert.ErrorContains(t, checkRemovedConfigKeys(), "webhooks.proxyurl")
+	})
+	t.Run("passes without removed keys", func(t *testing.T) {
+		viper.Reset()
+		t.Cleanup(viper.Reset)
+		viper.Set("outgoingrequests.proxyurl", "http://mole:8080")
+		viper.Set("webhooks.enabled", true)
+
+		assert.NoError(t, checkRemovedConfigKeys())
 	})
 }

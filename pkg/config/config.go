@@ -224,11 +224,9 @@ const (
 	DefaultSettingsTimezone                    Key = `defaultsettings.timezone`
 	DefaultSettingsOverdueTaskRemindersTime    Key = `defaultsettings.overdue_tasks_reminders_time`
 
-	WebhooksEnabled             Key = `webhooks.enabled`
-	WebhooksTimeoutSeconds      Key = `webhooks.timeoutseconds`
-	WebhooksProxyURL            Key = `webhooks.proxyurl`
-	WebhooksProxyPassword       Key = `webhooks.proxypassword`
-	WebhooksAllowNonRoutableIPs Key = `webhooks.allownonroutableips`
+	WebhooksEnabled        Key = `webhooks.enabled`
+	WebhooksTimeoutSeconds Key = `webhooks.timeoutseconds`
+	WebhooksProxyPassword  Key = `webhooks.proxypassword`
 
 	AuditEnabled           Key = `audit.enabled`
 	AuditLogfile           Key = `audit.logfile`
@@ -523,7 +521,6 @@ func initDefaultConfig() {
 	// Webhook
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)
-	WebhooksAllowNonRoutableIPs.setDefault(false)
 	// Audit
 	AuditEnabled.setDefault(false)
 	AuditLogfile.setDefault("") // empty means <log.path>/audit.log, resolved at init
@@ -546,18 +543,28 @@ func initDefaultConfig() {
 // migrateDeprecatedWebhookKeys must run after the config file and env are
 // loaded, before that only defaults are visible.
 func migrateDeprecatedWebhookKeys() {
-	if WebhooksAllowNonRoutableIPs.GetBool() && !OutgoingRequestsAllowNonRoutableIPs.GetBool() {
-		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksAllowNonRoutableIPs, OutgoingRequestsAllowNonRoutableIPs)
-		OutgoingRequestsAllowNonRoutableIPs.Set("true")
-	}
-	if proxyURL := WebhooksProxyURL.GetString(); proxyURL != "" && OutgoingRequestsProxyURL.GetString() == "" {
-		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyURL, OutgoingRequestsProxyURL)
-		OutgoingRequestsProxyURL.Set(proxyURL)
-	}
 	if proxyPassword := WebhooksProxyPassword.GetString(); proxyPassword != "" && OutgoingRequestsProxyPassword.GetString() == "" {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyPassword, OutgoingRequestsProxyPassword)
 		OutgoingRequestsProxyPassword.Set(proxyPassword)
 	}
+}
+
+// Silently ignoring these could drop a proxy or an SSRF setting.
+var removedConfigKeys = []struct {
+	key         string
+	replacement Key
+}{
+	{"webhooks.proxyurl", OutgoingRequestsProxyURL},
+	{"webhooks.allownonroutableips", OutgoingRequestsAllowNonRoutableIPs},
+}
+
+func checkRemovedConfigKeys() error {
+	for _, removed := range removedConfigKeys {
+		if viper.IsSet(removed.key) {
+			return fmt.Errorf("config key %q was removed, use %q instead", removed.key, removed.replacement)
+		}
+	}
+	return nil
 }
 
 // generateServiceSecretIfEmpty sets a random service.secret when none was configured.
@@ -776,6 +783,10 @@ func InitConfig() {
 	}
 
 	migrateDeprecatedWebhookKeys()
+
+	if err := checkRemovedConfigKeys(); err != nil {
+		log.Fatal(err.Error())
+	}
 
 	generateServiceSecretIfEmpty()
 
