@@ -1022,6 +1022,26 @@ test.describe('Task', () => {
 			await expect(reopened.getByRole('textbox', {name: 'Minutes', exact: true})).toHaveValue('37')
 		})
 
+		for (const field of ['Hours', 'Minutes']) {
+			test(`Confirms typed due date ${field} with Enter`, async ({authenticatedPage: page}) => {
+				const task = (await TaskFactory.create(1, {
+					due_date: '2026-10-01T12:00:00Z',
+				}))[0]
+				await page.goto(`/tasks/${task.id}`)
+				const popup = await openDueDatePopupWithShortcut(page)
+				const input = popup.getByRole('textbox', {name: field, exact: true})
+				const value = field === 'Hours' ? '09' : '37'
+				await input.fill(value)
+				await input.press('Enter')
+				await expect(popup).not.toBeVisible()
+				await expect(page.locator('.global-notification')).toContainText('Success')
+
+				await page.reload()
+				const reopened = await openDueDatePopupWithShortcut(page)
+				await expect(reopened.getByRole('textbox', {name: field, exact: true})).toHaveValue(value)
+			})
+		}
+
 		test('Can reopen the due date popup after confirming or dismissing it', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {id: 1, done: false})
 			await page.goto(`/tasks/${tasks[0].id}`)

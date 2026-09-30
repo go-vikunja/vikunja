@@ -45,7 +45,7 @@
 						:large="isMobile"
 						:min-date="minDate"
 						@update:modelValue="updateData"
-						@quickSelectConfirmed="close"
+						@confirm="close"
 					/>
 
 					<div class="datepicker-popup__footer">
