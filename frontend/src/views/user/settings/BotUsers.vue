@@ -144,7 +144,10 @@ async function deleteToken(token: ApiToken) {
 </script>
 
 <template>
-	<div class="content">
+	<div
+		class="content loader-container"
+		:class="{'is-loading': isPlaceholderData}"
+	>
 		<h2>{{ $t('user.settings.bots.title') }}</h2>
 		<p>{{ $t('user.settings.bots.description') }}</p>
 
