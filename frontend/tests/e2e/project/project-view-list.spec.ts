@@ -27,8 +27,8 @@ test.describe('Project View List', () => {
 		const newTaskTitle = 'New task'
 
 		await page.goto('/projects/1/1')
-		await page.locator('.task-add textarea').fill(newTaskTitle)
-		await page.locator('.task-add textarea').press('Enter')
+		await page.locator('.task-add .add-task-textarea').fill(newTaskTitle)
+		await page.locator('.task-add .add-task-textarea').press('Enter')
 		await expect(page.locator('.tasks')).toContainText(newTaskTitle)
 	})
 
@@ -41,8 +41,8 @@ test.describe('Project View List', () => {
 		const titles = ['first multi task', 'second multi task', 'third multi task', 'fourth multi task']
 
 		await page.goto('/projects/1/1')
-		await page.locator('.task-add textarea').fill(titles.join('\n'))
-		await page.locator('.task-add textarea').press('Enter')
+		await page.locator('.task-add .add-task-textarea').fill(titles.join('\n'))
+		await page.locator('.task-add .add-task-textarea').press('Enter')
 
 		await expect(page.locator('.tasks')).toContainText(titles[3])
 		await expect(page.locator('.tasks .task .tasktext')).toContainText(titles)
@@ -59,8 +59,8 @@ test.describe('Project View List', () => {
 		})
 
 		await page.goto('/projects/1/1')
-		await page.locator('.task-add textarea').fill('Parent multi task\n  Sub multi task')
-		await page.locator('.task-add textarea').press('Enter')
+		await page.locator('.task-add .add-task-textarea').fill('Parent multi task\n  Sub multi task')
+		await page.locator('.task-add .add-task-textarea').press('Enter')
 
 		await expect(page.locator('.tasks')).toContainText('Sub multi task')
 

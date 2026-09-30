@@ -205,7 +205,7 @@ test.describe('Team permission tiers on shared projects', () => {
 		await page.goto('/projects/1/1')
 
 		await expect(page.locator('.project-title')).toContainText('First Project')
-		await expect(page.locator('.task-add textarea')).toBeVisible()
+		await expect(page.locator('.task-add .add-task-textarea')).toBeVisible()
 	})
 
 	test('owner can revoke team share and member loses access', async ({page, apiContext}) => {

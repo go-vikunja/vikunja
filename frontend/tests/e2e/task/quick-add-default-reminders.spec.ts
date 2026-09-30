@@ -25,7 +25,7 @@ test.describe('Quick add default reminders', () => {
 		await login(page, apiContext, user)
 		await page.goto(`/projects/${project.id}/1`)
 
-		await page.locator('.input[placeholder="Add a task…"]').fill('Buy milk tomorrow')
+		await page.locator('.task-add .add-task-textarea').fill('Buy milk tomorrow')
 
 		const createTaskPromise = page.waitForResponse(response =>
 			response.url().includes('/api/v2/projects/') &&

@@ -100,7 +100,7 @@ test.describe('Task', () => {
 
 	test('Should be created new', async ({authenticatedPage: page}) => {
 		await page.goto('/projects/1/1')
-		await page.locator('.input[placeholder="Add a task…"]').fill('New Task')
+		await page.locator('.task-add .add-task-textarea').fill('New Task')
 		await page.locator('.button').filter({hasText: 'Add'}).click()
 		await expect(page.locator('.tasks .task .tasktext').first()).toContainText('New Task')
 	})
@@ -110,7 +110,7 @@ test.describe('Task', () => {
 
 		await page.goto('/projects/1/1')
 		await expect(page.locator('.project-is-empty-notice')).not.toBeVisible()
-		await page.locator('.input[placeholder="Add a task…"]').fill('New Task')
+		await page.locator('.task-add .add-task-textarea').fill('New Task')
 		await page.locator('.button').filter({hasText: 'Add'}).click()
 
 		await page.waitForTimeout(1000) // Wait for the request

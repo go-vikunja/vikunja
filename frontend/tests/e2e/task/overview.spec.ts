@@ -99,8 +99,8 @@ test.describe('Home Page Task Overview', () => {
 			response.url().includes('/tasks/bulk') &&
 			response.request().method() === 'POST',
 		)
-		await page.locator('.task-add textarea').fill(newTaskTitle)
-		await page.locator('.task-add textarea').press('Enter')
+		await page.locator('.task-add .add-task-textarea').fill(newTaskTitle)
+		await page.locator('.task-add .add-task-textarea').press('Enter')
 		await taskResponsePromise
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')

@@ -6,12 +6,24 @@ import {getRepeats} from './repeatParser'
 import {cleanupItemText, cleanupResult} from './textCleanup'
 import type {ParsedTaskText} from './types'
 
+export interface ParserMatches {
+	repeat: string | null,
+	date: string[],
+}
+
 /**
  * Parses task text for dates, assignees, labels, projects, priorities and returns an object with all found intents.
  *
  * @param text
  */
-export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMode.Default, now: Date = new Date()): ParsedTaskText => {
+export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMode.Default, now: Date = new Date()): ParsedTaskText =>
+	parseTaskTextWithMatches(text, prefixesMode, now).result
+
+export const parseTaskTextWithMatches = (
+	text: string,
+	prefixesMode: PrefixMode = PrefixMode.Default,
+	now: Date = new Date(),
+): {result: ParsedTaskText, matches: ParserMatches} => {
 	const result: ParsedTaskText = {
 		text: text,
 		date: null,
@@ -21,6 +33,7 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 		assignees: [],
 		repeats: null,
 	}
+	const matches: ParserMatches = {repeat: null, date: []}
 
 	// If the entire text is wrapped in quotes, strip them and skip all parsing
 	if (
@@ -29,12 +42,12 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 			|| (text.startsWith('\'') && text.endsWith('\'')))
 	) {
 		result.text = text.slice(1, -1)
-		return result
+		return {result, matches}
 	}
 
 	const prefixes = PREFIXES[prefixesMode]
 	if (prefixes === undefined) {
-		return result
+		return {result, matches}
 	}
 
 	result.labels = getLabelsFromPrefix(text, prefixesMode) ?? []
@@ -48,13 +61,15 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 
 	result.assignees = getItemsFromPrefix(result.text, prefixes.assignee)
 
-	const {textWithoutMatched, repeats} = getRepeats(result.text)
+	const {textWithoutMatched, repeats, matchedText} = getRepeats(result.text)
 	result.text = textWithoutMatched
 	result.repeats = repeats
+	matches.repeat = matchedText
 
-	const {newText, date} = parseDate(result.text, now)
+	const {newText, date, removed} = parseDate(result.text, now)
 	result.text = newText
 	result.date = date
+	matches.date = removed
 
-	return cleanupResult(result, prefixes)
+	return {result: cleanupResult(result, prefixes), matches}
 }
