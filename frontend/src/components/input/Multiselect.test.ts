@@ -337,3 +337,66 @@ describe('Multiselect.vue — creation-disabled hint', () => {
 		wrapper.unmount()
 	})
 })
+
+describe('Multiselect.vue — capped results hint', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	function mountWithTotal(totalResults?: number, props: Record<string, unknown> = {}) {
+		return mount(Multiselect, {
+			attachTo: document.body,
+			props: {
+				modelValue: null,
+				searchResults,
+				label: 'title',
+				createPlaceholder: 'create',
+				selectPlaceholder: 'select',
+				totalResults,
+				...props,
+			},
+			global: {
+				mocks: {$t: (key: string, params?: Record<string, unknown>) => `${key} ${JSON.stringify(params)}`},
+			},
+		})
+	}
+
+	it('shows a non-selectable hint with the counts when the total exceeds the results', async () => {
+		const wrapper = mountWithTotal(57)
+		await openResults(wrapper)
+
+		const hint = wrapper.find('[role="listbox"] .search-result-hint')
+		expect(hint.text()).toBe('input.multiselect.moreResultsHint {"shown":2,"total":57}')
+		expect(hint.attributes('aria-disabled')).toBe('true')
+		expect(hint.element.hasAttribute('tabindex')).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('does not show the hint when every match is listed', async () => {
+		const wrapper = mountWithTotal(2)
+		await openResults(wrapper)
+
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(true)
+		expect(wrapper.find('.search-result-hint').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('does not show the hint without results', async () => {
+		const wrapper = mountWithTotal(57, {
+			searchResults: [],
+			creationDisabledMessage: 'cannot create here',
+		})
+		await openResults(wrapper)
+
+		expect(wrapper.find('[role="listbox"]').text()).toBe('cannot create here')
+
+		wrapper.unmount()
+	})
+})

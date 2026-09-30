@@ -990,7 +990,8 @@
       "createPlaceholder": "Create",
       "selectPlaceholder": "Click or press enter to select",
       "removeItem": "Remove this item",
-      "clear": "Clear selection"
+      "clear": "Clear selection",
+      "moreResultsHint": "Showing the first {shown} of {total} matches. Refine your search to find the rest."
     },
     "datepickerRange": {
       "to": "To",
