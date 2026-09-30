@@ -6,7 +6,7 @@ import {secondsToPeriod, periodToSeconds} from '@/helpers/time/period'
 import {getDateWithTime} from '@/helpers/time/getDateWithTime'
 import {cleanupItemText, PREFIXES, type ParsedTaskText, type PrefixMode} from '@/modules/quickAddMagic'
 
-export function createTaskDraft(data: Partial<Task> = {}): Task {
+export function createTaskDraft(data: Partial<Task> = {}) {
 	return {
 		...data,
 		id: data.id ?? 0,
