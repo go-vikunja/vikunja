@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import {useUpdateTaskPositionMutation} from '@/client/queries/taskMutations'
 import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
-import draggable from 'zhyswan-vuedraggable'
+import {draggableFor} from '@/components/base/Draggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
@@ -131,6 +131,8 @@ const props = defineProps<{
 	projectId: number,
 	viewId: number,
 }>()
+
+const draggable = draggableFor<TaskResponse>()
 
 const projectId = toRef(props, 'projectId')
 

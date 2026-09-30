@@ -35,7 +35,7 @@
 
 <script lang="ts" setup>
 import {ref, watch} from 'vue'
-import draggable from 'zhyswan-vuedraggable'
+import {draggableFor} from '@/components/base/Draggable'
 import type {SortableEvent} from 'sortablejs'
 
 import ProjectsNavigationItem from '@/components/home/ProjectsNavigationItem.vue'
@@ -51,9 +51,12 @@ const props = defineProps<{
 	canEditOrder: boolean,
 	canCollapse?: boolean,
 }>()
+
 const emit = defineEmits<{
 	(e: 'update:modelValue', projects: ProjectResponse[]): void
 }>()
+
+const draggable = draggableFor<ProjectResponse>()
 
 const {isDraggingProject} = useProjectDragState()
 
