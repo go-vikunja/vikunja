@@ -3508,7 +3508,7 @@ export const patchBotsRead = <ThrowOnError extends boolean = true>(options: Opti
 /**
  * Update a bot user
  *
- * Updates an owned bot user's name, status, and username. Only the owner may update it. Use PATCH for a partial update.
+ * Replaces an owned bot user's name, status, and username; status is required. Only the owner may update it. Use PATCH for a partial update.
  */
 export const botsUpdate = <ThrowOnError extends boolean = true>(options: Options<BotsUpdateData, ThrowOnError>): RequestResult<BotsUpdateResponses, BotsUpdateErrors, ThrowOnError> => (options.client ?? client).put<BotsUpdateResponses, BotsUpdateErrors, ThrowOnError>({
     security: [{

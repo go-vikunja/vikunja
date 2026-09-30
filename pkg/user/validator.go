@@ -58,4 +58,15 @@ func init() {
 	}
 
 	govalidator.TagMap["language"] = i18n.HasLanguage
+
+	// Custom type validator: TagMap validators see Status.String(), not the number.
+	govalidator.CustomTypeTagMap.Set("bot_status", func(i, _ any) bool {
+		switch s := i.(type) {
+		case Status:
+			return s == StatusActive || s == StatusDisabled
+		case *Status:
+			return s == nil || *s == StatusActive || *s == StatusDisabled
+		}
+		return false
+	})
 }

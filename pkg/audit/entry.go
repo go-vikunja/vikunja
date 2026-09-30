@@ -108,6 +108,7 @@ const (
 
 	ActionUserCreated             = "user.created"
 	ActionUserDataExportRequested = "user.data_export.requested"
+	ActionBotStatusChanged        = "bot.status.changed"
 
 	ActionTaskCreated           = "task.created"
 	ActionTaskUpdated           = "task.updated"
