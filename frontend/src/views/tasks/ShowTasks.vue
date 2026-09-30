@@ -147,8 +147,8 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'tasksLoaded': true,
-	'clearLabelFilter': void,
+	'tasksLoaded': [loaded: true],
+	'clearLabelFilter': [],
 }>()
 
 const authStore = useAuthStore()
@@ -209,16 +209,18 @@ const loading = taskQuery.isFetching
 const filterIdUsedOnOverview = computed(() => authStore.settings?.frontend_settings?.filter_id_used_on_overview)
 
 interface dateStrings {
-	dateFrom: string,
-	dateTo: string,
+	dateFrom: Date | string | null,
+	dateTo: Date | string | null,
 }
 
 function setDate(dates: dateStrings) {
+	const from = dates.dateFrom ?? props.dateFrom
+	const to = dates.dateTo ?? props.dateTo
 	router.push({
 		name: route.name as string,
 		query: {
-			from: dates.dateFrom ?? props.dateFrom,
-			to: dates.dateTo ?? props.dateTo,
+			from: from instanceof Date ? from.toISOString() : from,
+			to: to instanceof Date ? to.toISOString() : to,
 			showOverdue: props.showOverdue ? 'true' : 'false',
 			showNulls: props.showNulls ? 'true' : 'false',
 		},
@@ -249,7 +251,7 @@ function clearLabelFilter() {
 	emit('clearLabelFilter')
 }
 
-async function loadPendingTasks(from: Date|string, to: Date|string, filterId: number | null | undefined) {
+async function loadPendingTasks(from: Date|string|undefined, to: Date|string|undefined, filterId: number | null | undefined) {
 	// FIXME: HACK! This should never happen.
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 	// Since this component is mounted as the home page before unauthenticated users get redirected
