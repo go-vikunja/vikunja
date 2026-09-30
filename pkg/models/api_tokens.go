@@ -134,12 +134,8 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	if t.OwnerID == 0 {
 		t.OwnerID = caller.ID
 	} else if t.OwnerID != caller.ID {
-		botUser, err := getBotManagementUser(s, t.OwnerID)
-		if err != nil {
+		if _, err := getOwnedBot(s, t.OwnerID, caller); err != nil {
 			return err
-		}
-		if !botUser.IsBotOwnedBy(caller) {
-			return &user.ErrBotNotOwned{UserID: t.OwnerID}
 		}
 	}
 
@@ -197,12 +193,8 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 
 	ownerID := caller.ID
 	if t.OwnerID != 0 && t.OwnerID != caller.ID {
-		botUser, lookupErr := getBotManagementUser(s, t.OwnerID)
-		if lookupErr != nil {
-			return nil, 0, 0, lookupErr
-		}
-		if !botUser.IsBotOwnedBy(caller) {
-			return nil, 0, 0, &user.ErrBotNotOwned{UserID: t.OwnerID}
+		if _, err := getOwnedBot(s, t.OwnerID, caller); err != nil {
+			return nil, 0, 0, err
 		}
 		ownerID = t.OwnerID
 	}

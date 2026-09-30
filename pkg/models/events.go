@@ -500,6 +500,19 @@ func (e *AdminUserStatusChangedEvent) Name() string {
 	return "admin.user.status.changed"
 }
 
+// BotStatusChangedEvent represents a bot's status being changed by its owner
+type BotStatusChangedEvent struct {
+	Bot       *user.User  `json:"bot"`
+	Doer      *user.User  `json:"doer"`
+	OldStatus user.Status `json:"old_status"`
+	NewStatus user.Status `json:"new_status"`
+}
+
+// Name defines the name for BotStatusChangedEvent
+func (e *BotStatusChangedEvent) Name() string {
+	return "bot.status.changed"
+}
+
 // AdminUserPasswordSetEvent represents an admin setting a user's password.
 // It carries no password material.
 type AdminUserPasswordSetEvent struct {

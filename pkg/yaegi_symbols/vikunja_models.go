@@ -436,6 +436,7 @@ func init() {
 		"AdminUserStatusChangedEvent":                  reflect.ValueOf((*models.AdminUserStatusChangedEvent)(nil)),
 		"AdminUsersListedEvent":                        reflect.ValueOf((*models.AdminUsersListedEvent)(nil)),
 		"AttachmentToUpload":                           reflect.ValueOf((*models.AttachmentToUpload)(nil)),
+		"BotStatusChangedEvent":                        reflect.ValueOf((*models.BotStatusChangedEvent)(nil)),
 		"BotUser":                                      reflect.ValueOf((*models.BotUser)(nil)),
 		"Bucket":                                       reflect.ValueOf((*models.Bucket)(nil)),
 		"BucketConfigurationModeKind":                  reflect.ValueOf((*models.BucketConfigurationModeKind)(nil)),

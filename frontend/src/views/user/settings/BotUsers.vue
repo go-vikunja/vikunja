@@ -15,7 +15,7 @@ import type {ApiToken, BotUser} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {getErrorText} from '@/message'
 
-type Bot = BotUser & Required<Pick<BotUser, 'id'>>
+type Bot = BotUser & Required<Pick<BotUser, 'id' | 'status'>>
 
 const STATUS_ACTIVE = 0
 const STATUS_DISABLED = 2
@@ -28,7 +28,7 @@ const createMutation = useCreateBotMutation()
 const updateMutation = useUpdateBotMutation()
 const deleteMutation = useDeleteBotMutation()
 const deleteTokenMutation = useDeleteApiTokenMutation()
-const bots = computed(() => (botData.value ?? []).filter((bot): bot is Bot => typeof bot.id === 'number' && bot.id > 0))
+const bots = computed(() => (botData.value ?? []).filter((bot): bot is Bot => typeof bot.id === 'number' && bot.id > 0 && typeof bot.status === 'number'))
 const newBotUsername = ref('')
 const newBotName = ref('')
 const createError = ref<string | null>(null)

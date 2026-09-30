@@ -374,6 +374,17 @@ func registerEventsForAuditLogging() {
 			},
 		}
 	})
+	audit.RegisterEventForAudit(func(e *BotStatusChangedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionBotStatusChanged,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.Bot.ID),
+			Metadata: map[string]any{
+				"old_status": e.OldStatus,
+				"new_status": e.NewStatus,
+			},
+		}
+	})
 	audit.RegisterEventForAudit(func(e *AdminUserPasswordSetEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionAdminUserPasswordSet,

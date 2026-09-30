@@ -6,7 +6,7 @@ import {
 	botsDelete,
 	type BotUser,
 	type BotUserWritable,
-	type BotUserReadBodyWritable,
+	type BotUserUpdateBodyWritable,
 } from '@/client/generated'
 import {fetchAllPages} from './fetchAllPages'
 import {contextMutationOptions} from './contextMutation'
@@ -30,7 +30,7 @@ export function updateBotMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({id, body}: {
 			id: number,
-			body: BotUserReadBodyWritable,
+			body: BotUserUpdateBodyWritable,
 		}) => (await botsUpdate({path: {bot: id}, body})).data,
 		onSuccess: (updated, {id}, client) => client.setQueryData<BotUser[]>(
 			botKeys.all,

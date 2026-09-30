@@ -310,6 +310,46 @@ export type BotUserReadBody = {
     username?: string;
 };
 
+export type BotUserUpdateBody = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The id of the owning (human) user. Set by the server on creation; a non-zero value means this user is a bot.
+     */
+    readonly bot_owner_id?: number;
+    /**
+     * A timestamp when this user was created. You cannot change this value.
+     */
+    readonly created?: string;
+    /**
+     * The user's email address. Always empty for bot users.
+     */
+    email?: string;
+    /**
+     * The unique, numeric id of this user.
+     */
+    readonly id?: number;
+    readonly max_permission?: number;
+    /**
+     * The full name of the user.
+     */
+    name?: string;
+    /**
+     * The bot's status: 0=active, 2=disabled.
+     */
+    status: number;
+    /**
+     * A timestamp when this user was last updated. You cannot change this value.
+     */
+    readonly updated?: string;
+    /**
+     * The username of the user. Is always unique. For bot users it must start with the 'bot-' prefix.
+     */
+    username?: string;
+};
+
 export type Bucket = {
     /**
      * A URL to the JSON Schema for this object.
@@ -3597,6 +3637,25 @@ export type BotUserReadBodyWritable = {
      * The bot's status: 0=active, 2=disabled. Set to 2 to disable the bot, 0 to re-enable it.
      */
     status?: number;
+    /**
+     * The username of the user. Is always unique. For bot users it must start with the 'bot-' prefix.
+     */
+    username?: string;
+};
+
+export type BotUserUpdateBodyWritable = {
+    /**
+     * The user's email address. Always empty for bot users.
+     */
+    email?: string;
+    /**
+     * The full name of the user.
+     */
+    name?: string;
+    /**
+     * The bot's status: 0=active, 2=disabled.
+     */
+    status: number;
     /**
      * The username of the user. Is always unique. For bot users it must start with the 'bot-' prefix.
      */
@@ -10606,7 +10665,7 @@ export type PatchBotsReadResponses = {
 export type PatchBotsReadResponse = PatchBotsReadResponses[keyof PatchBotsReadResponses];
 
 export type BotsUpdateData = {
-    body: BotUserReadBodyWritable;
+    body: BotUserUpdateBodyWritable;
     path: {
         bot: number;
     };

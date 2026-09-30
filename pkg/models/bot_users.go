@@ -19,6 +19,7 @@ package models
 import (
 	"strings"
 
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -30,8 +31,8 @@ import (
 // no separate table.
 type BotUser struct {
 	// Status shadows user.User.Status so it is included in JSON responses
-	// (the original has json:"-").
-	Status user.Status `xorm:"-" json:"status" doc:"The bot's status: 0=active, 2=disabled. Set to 2 to disable the bot, 0 to re-enable it."`
+	// (the original has json:"-"). nil on update keeps the current status.
+	Status *user.Status `xorm:"-" json:"status" nullable:"false" valid:"bot_status" doc:"The bot's status: 0=active, 2=disabled. Set to 2 to disable the bot, 0 to re-enable it."`
 
 	user.User `xorm:"extends"`
 
@@ -51,7 +52,7 @@ func (b *BotUser) Create(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 	b.User = *created
-	b.Status = created.Status
+	b.Status = &b.User.Status
 	return nil
 }
 
@@ -75,27 +76,29 @@ func (b *BotUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		return nil, 0, 0, err
 	}
 	for _, bot := range bots {
-		bot.Status = bot.User.Status
+		bot.Status = &bot.User.Status
 	}
 	return bots, len(bots), total, nil
 }
 
 // ReadOne returns a single bot user.
-// Ownership is verified in CanRead.
-func (b *BotUser) ReadOne(s *xorm.Session, _ web.Auth) error {
-	u, err := getBotManagementUser(s, b.ID)
+func (b *BotUser) ReadOne(s *xorm.Session, a web.Auth) error {
+	u, err := getOwnedBotFromAuth(s, b.ID, a)
 	if err != nil {
 		return err
 	}
 	b.User = *u
-	b.Status = u.Status
+	b.Status = &b.User.Status
 	return nil
 }
 
 // Update allows a narrow set of fields to be changed on an owned bot.
-// Ownership is verified in CanUpdate.
-func (b *BotUser) Update(s *xorm.Session, _ web.Auth) error {
-	existing, err := getBotManagementUser(s, b.ID)
+func (b *BotUser) Update(s *xorm.Session, a web.Auth) error {
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return err
+	}
+	existing, err := getOwnedBot(s, b.ID, doer)
 	if err != nil {
 		return err
 	}
@@ -103,11 +106,9 @@ func (b *BotUser) Update(s *xorm.Session, _ web.Auth) error {
 	cols := []string{"name"}
 	existing.Name = b.Name
 
-	if b.Status == user.StatusDisabled {
-		existing.Status = b.Status
-		cols = append(cols, "status")
-	} else if b.Status == user.StatusActive && existing.Status != user.StatusActive {
-		existing.Status = b.Status
+	oldStatus := existing.Status
+	if b.Status != nil && *b.Status != oldStatus {
+		existing.Status = *b.Status
 		cols = append(cols, "status")
 	}
 	if b.Username != "" && b.Username != existing.Username {
@@ -118,29 +119,48 @@ func (b *BotUser) Update(s *xorm.Session, _ web.Auth) error {
 		cols = append(cols, "username")
 	}
 
-	if len(cols) > 0 {
-		_, err = s.ID(existing.ID).Cols(cols...).Update(existing)
+	if _, err = s.ID(existing.ID).Cols(cols...).Update(existing); err != nil {
+		return err
+	}
+	if existing.Status != oldStatus {
+		events.DispatchOnCommit(s, &BotStatusChangedEvent{
+			Bot:       existing,
+			Doer:      doer,
+			OldStatus: oldStatus,
+			NewStatus: existing.Status,
+		})
 	}
 	b.User = *existing
-	b.Status = existing.Status
-	return err
+	b.Status = &b.User.Status
+	return nil
 }
 
 // Delete completely removes the bot user and all associated data.
-// Ownership is verified in CanDelete.
-func (b *BotUser) Delete(s *xorm.Session, _ web.Auth) error {
-	existing, err := getBotManagementUser(s, b.ID)
+func (b *BotUser) Delete(s *xorm.Session, a web.Auth) error {
+	existing, err := getOwnedBotFromAuth(s, b.ID, a)
 	if err != nil {
 		return err
 	}
 	return DeleteUser(s, existing)
 }
 
-// Disabled bots remain manageable by their owner; authentication still rejects them.
-func getBotManagementUser(s *xorm.Session, id int64) (*user.User, error) {
-	u, err := user.GetUserByID(s, id)
-	if user.IsErrAccountDisabled(err) && u.IsBot() {
-		return u, nil
+// getOwnedBot loads a bot in any status, so owners can manage disabled or
+// locked bots. Missing, non-bot and foreign ids are indistinguishable.
+func getOwnedBot(s *xorm.Session, id int64, owner *user.User) (*user.User, error) {
+	bot, err := loadAdminTargetUser(s, id)
+	if err != nil {
+		return nil, err
 	}
-	return u, err
+	if !bot.IsBotOwnedBy(owner) {
+		return nil, user.ErrUserDoesNotExist{UserID: id}
+	}
+	return bot, nil
+}
+
+func getOwnedBotFromAuth(s *xorm.Session, id int64, a web.Auth) (*user.User, error) {
+	owner, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, err
+	}
+	return getOwnedBot(s, id, owner)
 }
