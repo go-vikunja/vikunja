@@ -12,6 +12,7 @@ const auth = vi.hoisted(() => ({
 const sdk = vi.hoisted(() => ({
 	projectsBackgroundGet: vi.fn(),
 	projectsRead: vi.fn(),
+	userShow: vi.fn(),
 }))
 
 vi.mock('@/client/generated', async (importOriginal) => ({
@@ -76,7 +77,7 @@ vi.mock('@/composables/useMenuActive', async () => {
 })
 
 import {useAuthStore} from './auth'
-import {useBaseStore} from './base'
+import {ERROR_RATE_LIMITED, useBaseStore} from './base'
 
 function project(id: number): ProjectResponse {
 	return {
@@ -180,5 +181,19 @@ describe('base store identity reset', () => {
 		expect(baseStore.currentProjectId).toBe(0)
 		expect(baseStore.hasTasks).toBe(false)
 		await vi.waitFor(() => expect(baseStore.background).toBe(''))
+	})
+
+	it('shows the rate limit error when the first user request is rate limited', async () => {
+		auth.token = `header.${btoa(JSON.stringify({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: Math.floor(Date.now() / 1000) + 3600,
+		}))}.signature`
+		sdk.userShow.mockRejectedValue({status: 429})
+
+		const store = useBaseStore()
+		await store.appReady
+
+		expect(store.error).toBe(ERROR_RATE_LIMITED)
 	})
 })

@@ -52,6 +52,7 @@
     "loading": "Vikunja is loading…",
     "errorOccured": "An error occurred:",
     "checkApiUrl": "Please check if the api url is correct.",
+    "rateLimited": "The server received too many requests. Please wait a moment and reload the page.",
     "noApiUrlConfigured": "No API url was configured. Please set one below:"
   },
   "offline": {

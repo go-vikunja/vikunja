@@ -15,6 +15,12 @@ import {queryClient} from '@/client/queryClient'
 import {projectQuery, type ProjectResponse} from '@/client/queries/projects'
 import {useProjectBackground} from '@/composables/useProjectBackground'
 
+export const ERROR_RATE_LIMITED = 'rateLimited'
+
+function isRateLimited(e: unknown) {
+	return (e as {cause?: {status?: number}} | undefined)?.cause?.status === 429
+}
+
 export const useBaseStore = defineStore('base', () => {
 	const authStore = useAuthStore()
 
@@ -109,6 +115,10 @@ export const useBaseStore = defineStore('base', () => {
 			}
 			if (e instanceof InvalidApiUrlProvidedError) {
 				error.value = t('apiConfig.error')
+				return
+			}
+			if (isRateLimited(e)) {
+				error.value = ERROR_RATE_LIMITED
 				return
 			}
 			error.value = String(e instanceof Error ? e.message : e)
