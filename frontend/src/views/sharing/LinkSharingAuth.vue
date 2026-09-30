@@ -116,7 +116,7 @@ function useAuth() {
 
 		try {
 			const {project_id: projectId} = await authStore.linkShareAuth({
-				hash: route.params.share,
+				hash: String(route.params.share),
 				password: password.value,
 			})
 			const logoVisible = route.query.logoVisible
