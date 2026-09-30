@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -326,4 +327,38 @@ func TestCreateUserAsAdmin_Events(t *testing.T) {
 
 		assert.Zero(t, events.CountDispatchedEvents((&AdminUserCreatedEvent{}).Name()))
 	})
+}
+
+func TestListUsersAsAdmin_RelevanceOrder(t *testing.T) {
+	adminActionsSetup(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	for i := range 21 {
+		_, err := s.Insert(&user.User{
+			Username: fmt.Sprintf("zz-relq-%02d", i),
+			Email:    fmt.Sprintf("relevance-substring-%02d@example.com", i),
+		})
+		require.NoError(t, err)
+	}
+	prefix := &user.User{
+		Username: "relq-prefix",
+		Email:    "relevance-prefix@example.com",
+	}
+	_, err := s.Insert(prefix)
+	require.NoError(t, err)
+	exact := &user.User{
+		Username: "relq",
+		Email:    "relevance-exact@example.com",
+	}
+	_, err = s.Insert(exact)
+	require.NoError(t, err)
+
+	users, total, err := ListUsersAsAdmin(s, &user.User{ID: 1}, "relq", 1, 20)
+	require.NoError(t, err)
+	assert.EqualValues(t, 23, total)
+	require.Len(t, users, 20)
+	assert.Equal(t, exact.ID, users[0].ID)
+	assert.Equal(t, prefix.ID, users[1].ID)
+	assert.Less(t, users[2].ID, users[3].ID)
 }
