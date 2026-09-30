@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -197,8 +198,10 @@ func ListUsersAsAdmin(s *xorm.Session, doer *user.User, search string, page, per
 
 	query := s.Limit(perPage, (page-1)*perPage)
 	if search != "" {
-		q := "%" + search + "%"
-		query = query.Where("username LIKE ? OR email LIKE ?", q, q)
+		query = query.Where(builder.Or(
+			db.ILIKE("username", search),
+			db.ILIKE("email", search),
+		))
 		order, args := db.SearchRelevanceOrder(search, "username", "email")
 		query = query.OrderBy(order, args...)
 	}

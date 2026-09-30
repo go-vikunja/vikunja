@@ -362,3 +362,38 @@ func TestListUsersAsAdmin_RelevanceOrder(t *testing.T) {
 	assert.Equal(t, prefix.ID, users[1].ID)
 	assert.Less(t, users[2].ID, users[3].ID)
 }
+
+func TestListUsersAsAdmin_CaseInsensitive(t *testing.T) {
+	adminActionsSetup(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	mixed := &user.User{
+		Username: "MixedCaseAdminSearch",
+		Email:    "Mixed.Case@Example.com",
+	}
+	_, err := s.Insert(mixed)
+	require.NoError(t, err)
+
+	t.Run("upper case query finds lower case username", func(t *testing.T) {
+		users, total, err := ListUsersAsAdmin(s, &user.User{ID: 1}, "USER10", 1, 20)
+		require.NoError(t, err)
+		assert.EqualValues(t, 1, total)
+		require.Len(t, users, 1)
+		assert.Equal(t, "user10", users[0].Username)
+	})
+	t.Run("lower case query finds mixed case username", func(t *testing.T) {
+		users, total, err := ListUsersAsAdmin(s, &user.User{ID: 1}, "mixedcaseadmin", 1, 20)
+		require.NoError(t, err)
+		assert.EqualValues(t, 1, total)
+		require.Len(t, users, 1)
+		assert.Equal(t, mixed.ID, users[0].ID)
+	})
+	t.Run("lower case query finds mixed case email", func(t *testing.T) {
+		users, total, err := ListUsersAsAdmin(s, &user.User{ID: 1}, "mixed.case@example", 1, 20)
+		require.NoError(t, err)
+		assert.EqualValues(t, 1, total)
+		require.Len(t, users, 1)
+		assert.Equal(t, mixed.ID, users[0].ID)
+	})
+}
