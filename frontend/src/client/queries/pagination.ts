@@ -15,6 +15,8 @@ export type Paginated<T> = {
 // Request size for full-list sweeps; the server caps it at service.maxitemsperpage.
 export const API_MAX_PER_PAGE = 1000
 
+export const PICKER_PAGE_SIZE = 20
+
 export function totalPagesFor(
 	page: Pick<Paginated<unknown>, 'per_page' | 'total_pages'>,
 	total: number,
