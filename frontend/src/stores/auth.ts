@@ -419,7 +419,13 @@ export const useAuthStore = defineStore('auth', () => {
 					const context = captureClientRequestContext()
 					try {
 						await refreshTokenWithRetry(true)
-						if (!isClientRequestContextCurrent(context)) return
+						const refreshedContext = captureClientRequestContext()
+						// The shared cookie may now belong to another user.
+						if (
+							refreshedContext.authSessionEpoch !== context.authSessionEpoch ||
+							refreshedContext.apiBaseUrl !== context.apiBaseUrl ||
+							refreshedContext.identity?.type !== AUTH_TYPES.USER
+						) return
 						const freshJwt = getToken()
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')

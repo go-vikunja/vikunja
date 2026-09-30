@@ -119,7 +119,12 @@ async function doRefresh(persist: boolean): Promise<void> {
 	// Snapshot the epoch so we can tell if a logout happened while we awaited.
 	const epochAtStart = authEpoch
 	const serverAtStart = getApiBaseUrl()
-	const loggedOutSinceStart = () => authEpoch !== epochAtStart || getApiBaseUrl() !== serverAtStart
+	const identityAtStart = getTokenIdentity(getToken())
+	const sessionChangedSinceStart = () => {
+		const identity = getTokenIdentity(getToken())
+		return authEpoch !== epochAtStart || getApiBaseUrl() !== serverAtStart ||
+			identity?.id !== identityAtStart?.id || identity?.type !== identityAtStart?.type
+	}
 
 	// Capture the tokens before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
@@ -129,7 +134,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 	const refreshUnderLock = async () => {
 		// A logout may have happened while we waited for the lock — don't
 		// re-adopt or re-fetch a token after the user signed out.
-		if (loggedOutSinceStart()) {
+		if (sessionChangedSinceStart()) {
 			return
 		}
 
@@ -151,7 +156,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 
 			try {
 				const tokens = await refreshDesktopToken(window.API_URL, storedRefreshToken)
-				if (loggedOutSinceStart()) {
+				if (sessionChangedSinceStart()) {
 					return
 				}
 				saveToken(tokens.access_token, persist)
@@ -174,7 +179,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 		try {
 			const baseUrl = canonicalApiBaseUrl(getApiBaseUrl())
 			const response = await authRefreshToken({client: publicClient, baseUrl})
-			if (loggedOutSinceStart()) {
+			if (sessionChangedSinceStart()) {
 				return
 			}
 			if (!response.data.token) throw new Error('Refresh response has no token')

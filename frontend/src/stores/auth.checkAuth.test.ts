@@ -4,20 +4,22 @@ import {setActivePinia, createPinia} from 'pinia'
 import {useAuthStore} from './auth'
 import {getToken, removeToken, saveToken} from '@/helpers/auth'
 import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 import {recordServerClock, serverNowSeconds} from '@/helpers/serverClock'
 import {AUTH_TYPES} from '@/constants/auth'
 
 // Real @/helpers/auth so the counts cover its dedupe; only the transport is mocked.
-const {postMock, openidCallbackMock} = vi.hoisted(() => ({
+const {postMock, openidCallbackMock, userShowMock} = vi.hoisted(() => ({
 	postMock: vi.fn(),
 	openidCallbackMock: vi.fn(),
+	userShowMock: vi.fn(),
 }))
 
 vi.mock('@/client/generated', async (importOriginal) => ({
 	...await importOriginal<typeof import('@/client/generated')>(),
 	authRefreshToken: postMock,
 	authOpenidCallback: openidCallbackMock,
-	userShow: async () => ({data: {id: 1, username: 'user1'}}),
+	userShow: userShowMock,
 }))
 
 vi.mock('@/router', () => ({
@@ -69,6 +71,7 @@ describe('auth store checkAuth refresh (issue #4023)', () => {
 		setActivePinia(createPinia())
 		queryClient.clear()
 		postMock.mockReset()
+		userShowMock.mockReset().mockResolvedValue({data: {id: 1, username: 'user1'}})
 		removeToken()
 		localStorage.clear()
 	})
@@ -167,6 +170,53 @@ describe('auth store checkAuth refresh (issue #4023)', () => {
 
 		expect(store.authenticated).toBe(true)
 		expect(refreshCalls()).toBe(callsAfterRecovery)
+	})
+
+	it('reconciles the account and clears old data when refresh returns another user', async () => {
+		localStorage.setItem('token', STALE_JWT)
+		const otherUserJwt = `header.${btoa(JSON.stringify({
+			id: 2, type: AUTH_TYPES.USER, exp: Math.floor(Date.now() / 1000) + 3600,
+			sid: 'other-session',
+		}))}.signature`
+		postMock.mockResolvedValue({data: {token: otherUserJwt}})
+		userShowMock.mockResolvedValue({data: {id: 2, username: 'user2'}})
+		const store = useAuthStore()
+		store.setSession({id: 1, type: AUTH_TYPES.USER, exp: 1})
+		store.setAuthenticated(true)
+		queryClient.setQueryData(accountKeys.user(1), {id: 1, username: 'user1'})
+		queryClient.setQueryData(['private-projects'], [{id: 123, title: 'Private to user1'}])
+
+		await store.checkAuth()
+
+		expect(getToken()).toBe(otherUserJwt)
+		expect(store.authenticated).toBe(true)
+		expect(store.identityKey).toBe(`2:${AUTH_TYPES.USER}`)
+		expect(store.currentSessionId).toBe('other-session')
+		expect(store.info).toMatchObject({id: 2, username: 'user2'})
+		expect(queryClient.getQueryData(accountKeys.user(1))).toBeUndefined()
+		expect(queryClient.getQueryData(['private-projects'])).toBeUndefined()
+	})
+
+	it('preserves a link share opened before a successful refresh resolves', async () => {
+		localStorage.setItem('token', STALE_JWT)
+		const linkToken = `header.${btoa(JSON.stringify({
+			id: 2, type: AUTH_TYPES.LINK_SHARE, exp: 9999999999,
+		}))}.signature`
+		const store = useAuthStore()
+		postMock.mockImplementation(async () => {
+			saveToken(linkToken, false)
+			store.setSession({id: 2, type: AUTH_TYPES.LINK_SHARE, exp: 9999999999})
+			store.setAuthenticated(true)
+			queryClient.setQueryData(['link-projects'], [{id: 456}])
+			return {data: {token: FRESH_JWT}}
+		})
+
+		await store.checkAuth()
+
+		expect(getToken()).toBe(linkToken)
+		expect(store.authLinkShare).toBe(true)
+		expect(queryClient.getQueryData(['link-projects'])).toEqual([{id: 456}])
+		expect(userShowMock).not.toHaveBeenCalled()
 	})
 
 	it.each([
