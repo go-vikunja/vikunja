@@ -57,6 +57,19 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		require.Len(t, notifications, 1)
 		assert.Equal(t, int64(27), notifications[0].Task.ID)
 	})
+	t.Run("completed task is excluded", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(27).Cols("done").Update(&Task{Done: true})
+		require.NoError(t, err)
+
+		now := time.Date(2018, 12, 1, 1, 12, 0, 0, time.UTC)
+		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Eq{"users.email_reminders_enabled": true})
+		require.NoError(t, err)
+		assert.Empty(t, notifications)
+	})
 	t.Run("Found No Tasks", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
