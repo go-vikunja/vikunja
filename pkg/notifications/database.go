@@ -54,6 +54,7 @@ type DatabaseNotification struct {
 	// is committed. Unexported, so neither xorm nor json touch them.
 	notification Notification
 	notifiable   Notifiable
+	sendMail     bool
 }
 
 // AfterInsert is called by XORM after the row is inserted. For transactional
@@ -61,6 +62,7 @@ type DatabaseNotification struct {
 // the event fires and the mail is queued. A rolled-back transaction therefore
 // sends no mail, which keeps event-handler retries from duplicating it (#2971).
 func (d *DatabaseNotification) AfterInsert() {
+	wakeWebPushWorker()
 	if err := events.Dispatch(&NotificationCreatedEvent{
 		NotificationID: d.ID,
 		UserID:         d.NotifiableID,
@@ -68,7 +70,7 @@ func (d *DatabaseNotification) AfterInsert() {
 		log.Errorf("Failed to dispatch notification created event for notification %d: %v", d.ID, err)
 	}
 
-	if d.notification == nil || d.notifiable == nil {
+	if !d.sendMail || d.notification == nil || d.notifiable == nil {
 		return
 	}
 	if err := notifyMail(d.notifiable, d.notification); err != nil {

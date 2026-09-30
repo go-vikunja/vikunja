@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"xorm.io/xorm"
@@ -236,6 +237,10 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 		}
 	}
 
+	if err := notifications.DeleteWebPushSubscriptionsForSession(s, sid); err != nil {
+		_ = s.Rollback()
+		return "", err
+	}
 	if _, err := s.Where("id = ?", sid).Delete(&models.Session{}); err != nil {
 		_ = s.Rollback()
 		return "", err

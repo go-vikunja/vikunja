@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
@@ -175,8 +176,11 @@ func (sess *Session) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, pe
 
 // Delete deletes a session by ID, scoped to the owning user.
 func (sess *Session) Delete(s *xorm.Session, a web.Auth) error {
-	_, err := s.Where("id = ? AND user_id = ?", sess.ID, a.GetID()).Delete(&Session{})
-	return err
+	deleted, err := s.Where("id = ? AND user_id = ?", sess.ID, a.GetID()).Delete(&Session{})
+	if err != nil || deleted == 0 {
+		return err
+	}
+	return notifications.DeleteWebPushSubscriptionsForSession(s, sess.ID)
 }
 
 // UpdateSessionLastActive updates the last_active timestamp of a session.
@@ -212,6 +216,9 @@ func RotateRefreshToken(s *xorm.Session, session *Session) (newRawToken string, 
 
 // DeleteAllUserSessions removes all sessions for a user (e.g., on password change).
 func DeleteAllUserSessions(s *xorm.Session, userID int64) error {
+	if err := notifications.DeleteWebPushSubscriptionsForUser(s, userID); err != nil {
+		return err
+	}
 	_, err := s.Where("user_id = ?", userID).Delete(&Session{})
 	return err
 }
@@ -230,8 +237,12 @@ func RegisterSessionCleanupCron() {
 		shortMaxAge := time.Duration(config.ServiceJWTTTL.GetInt64()) * time.Second
 		longMaxAge := time.Duration(config.ServiceJWTTTLLong.GetInt64()) * time.Second
 
-		// Delete short sessions older than ServiceJWTTTL
-		// and long sessions older than ServiceJWTTTLLong
+		// Delete short sessions older than ServiceJWTTTL and long sessions
+		// older than ServiceJWTTTLLong. Web Push subscriptions are deliberately
+		// NOT removed here: they outlive the login session and are revoked only
+		// on explicit logout, account deletion, disabling push, or a Gone
+		// response from the push service, so an installed app keeps receiving
+		// notifications while it is closed.
 		deleted, err := s.
 			Where("(is_long_session = ? AND last_active < ?) OR (is_long_session = ? AND last_active < ?)",
 				false, now.Add(-shortMaxAge),
