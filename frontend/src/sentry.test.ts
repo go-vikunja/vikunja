@@ -6,6 +6,7 @@ const captureMessage = vi.fn()
 
 vi.mock('@sentry/vue', () => ({
 	init: vi.fn(),
+	addEventProcessor: vi.fn(),
 	captureMessage,
 	makeBrowserOfflineTransport: vi.fn(),
 	makeFetchTransport: vi.fn(),

@@ -1,6 +1,6 @@
 import type {App} from 'vue'
 import type {Router} from 'vue-router'
-import {shouldDropEvent, stripNavigationFragment} from './helpers/sentryFilters'
+import {redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './helpers/sentryFilters'
 import {VERSION} from './version.json'
 
 function withoutFragment(url: string) {
@@ -30,7 +30,7 @@ export default async function setupSentry(app: App, router: Router) {
 					if (event.type === 5 && event.data.tag === 'performanceSpan') {
 						event.data.payload = stripNavigationFragment(event.data.payload)
 					}
-					return event
+					return redactSensitiveParams(event)
 				},
 			}),
 		],
@@ -63,7 +63,7 @@ export default async function setupSentry(app: App, router: Router) {
 		],
 
 
-		beforeSendSpan: stripNavigationFragment,
+		beforeSendSpan: span => redactSensitiveParams(stripNavigationFragment(span)),
 		beforeSend(event, hint) {
 			if (shouldDropEvent(hint.originalException, event)) {
 				return null
@@ -72,6 +72,9 @@ export default async function setupSentry(app: App, router: Router) {
 			return event
 		},
 	})
+
+	// Unlike beforeSend, this also runs for transactions and replay events.
+	Sentry.addEventProcessor(event => redactSensitiveParams(event))
 
 	// from https://docs.sentry.io/platforms/javascript/guides/vue/troubleshooting/
 	// under "Capturing resource 404s"
