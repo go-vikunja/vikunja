@@ -1135,11 +1135,6 @@
                     "key": "dir",
                     "default_value": "<rootpath>plugins",
                     "comment": "The directory where plugins are stored."
-                },
-                {
-                    "key": "loader",
-                    "default_value": "native",
-                    "comment": "The plugin loader to use. \"yaegi\" loads plugins from Go source files (directories of .go files). \"native\" (deprecated) loads compiled Go plugin shared libraries (.so files)."
                 }
             ]
         },
