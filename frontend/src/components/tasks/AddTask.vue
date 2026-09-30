@@ -230,7 +230,7 @@ async function addTask() {
 		}
 	} catch (e) {
 		newTaskTitle.value = taskTitleBackup
-		if (e?.message === 'NO_PROJECT') {
+		if (e instanceof Error && e.message === 'NO_PROJECT') {
 			errorMessage.value = t('project.create.addProjectRequired')
 			return
 		}
