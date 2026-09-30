@@ -17,6 +17,8 @@ test('manages a bot and its scoped token across reloads', async ({authenticatedP
 	await page.reload()
 	await expect(card).toContainText('Renamed bot')
 	await expect(card.locator('.status')).toHaveText('Disabled')
+	await expect(card.getByRole('button', {name: 'Create token', exact: true})).toHaveCount(0)
+	await expect(card).toContainText('API tokens of a disabled bot are rejected')
 	await card.getByRole('button', {name: 'Enable', exact: true}).click()
 	await expect(card.locator('.status')).toHaveText('Active')
 	await page.reload()
