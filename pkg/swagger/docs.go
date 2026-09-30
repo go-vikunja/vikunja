@@ -8699,7 +8699,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Invalid or expired refresh token.",
+                        "description": "Invalid or expired refresh token, or no refresh token cookie sent (code 16005).",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
