@@ -195,7 +195,7 @@ function globalKeydownHandler(event: KeyboardEvent) {
 	if (event.repeat) return
 
 	const target = (event as KeyboardEvent & {explicitOriginalTarget?: EventTarget}).explicitOriginalTarget || event.target
-	if (target?.shadowRoot) return
+	if (target instanceof Element && target.shadowRoot) return
 	if (isFormField(target)) return
 
 	// If sequences are in progress, only advance those — skip single-key shortcuts
