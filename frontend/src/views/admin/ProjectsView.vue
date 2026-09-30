@@ -238,7 +238,7 @@ const {data: searchData, isFetching: userSearchLoading} = useQuery(computed(() =
 	...adminUserSearchQuery(userSearch.value),
 	enabled: userSearch.value.length >= 2,
 })))
-const userResults = computed(() => userSearch.value.length >= 2 ? searchData.value ?? [] : [])
+const userResults = computed(() => userSearch.value.length >= 2 ? searchData.value?.items ?? [] : [])
 const reassignMutation = useReassignAdminProjectMutation()
 const {isPending: reassigning} = reassignMutation
 const showReassigning = useDelayedLoading(reassigning)

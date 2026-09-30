@@ -40,8 +40,20 @@ it('uses server pagination and search and invalidates all user pages after a par
 })
 it('user picker fetches only the first page of matches', async () => {
 	const client = new QueryClient()
-	sdk.adminUsersList.mockResolvedValue({data: {items: [{id: 1}], total: 100, total_pages: 5}})
-	expect(await client.fetchQuery(adminUserSearchQuery('name'))).toEqual([{id: 1}])
+	sdk.adminUsersList.mockResolvedValue({data: {
+		items: [{id: 1}],
+		page: 1,
+		per_page: PICKER_PAGE_SIZE,
+		total: 100,
+		total_pages: 5,
+	}})
+	expect(await client.fetchQuery(adminUserSearchQuery('name'))).toEqual({
+		items: [{id: 1}],
+		page: 1,
+		per_page: PICKER_PAGE_SIZE,
+		total: 100,
+		total_pages: 5,
+	})
 	expect(sdk.adminUsersList).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
 		query: {
 			page: 1,
@@ -52,7 +64,13 @@ it('user picker fetches only the first page of matches', async () => {
 })
 it('updating a user stales the user picker results', async () => {
 	const client = new QueryClient()
-	client.setQueryData(adminKeys.userSearch('name'), [{id: 1}])
+	client.setQueryData(adminKeys.userSearch('name'), {
+		items: [{id: 1}],
+		page: 1,
+		per_page: PICKER_PAGE_SIZE,
+		total: 1,
+		total_pages: 1,
+	})
 	sdk.adminUsersPatchAdmin.mockResolvedValue({data: {id: 1, is_admin: true}})
 	await client.getMutationCache().build(client, updateAdminUserMutationOptions())
 		.execute({id: 1, is_admin: true})
@@ -60,8 +78,20 @@ it('updating a user stales the user picker results', async () => {
 })
 it('team picker fetches only the first page of matches', async () => {
 	const client = new QueryClient()
-	sdk.adminTeamsList.mockResolvedValue({data: {items: [{id: 1}], total: 100, total_pages: 5}})
-	expect(await client.fetchQuery(adminTeamsQuery('team'))).toEqual([{id: 1}])
+	sdk.adminTeamsList.mockResolvedValue({data: {
+		items: [{id: 1}],
+		page: 1,
+		per_page: PICKER_PAGE_SIZE,
+		total: 100,
+		total_pages: 5,
+	}})
+	expect(await client.fetchQuery(adminTeamsQuery('team'))).toEqual({
+		items: [{id: 1}],
+		page: 1,
+		per_page: PICKER_PAGE_SIZE,
+		total: 100,
+		total_pages: 5,
+	})
 	expect(sdk.adminTeamsList).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
 		query: {
 			page: 1,

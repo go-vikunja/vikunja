@@ -246,7 +246,7 @@ const {data: teamData, isFetching: loadingTeams} = useQuery(computed(() => ({
 	...adminTeamsQuery(teamSearch.value),
 	enabled: createOpen.value,
 })))
-const teamResults = computed(() => teamData.value ?? [])
+const teamResults = computed(() => teamData.value?.items ?? [])
 const minimumExpiry = ref('')
 const form = reactive({name: '', maxUses: '' as string | number, expiresAt: '', skipEmailConfirm: false})
 
