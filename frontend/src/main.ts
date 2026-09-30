@@ -78,7 +78,7 @@ setLanguage(browserLanguage).then(() => {
 	app.directive('cy', testid)
 
 	app.component('Icon', FontAwesomeIcon)
-	app.component('XButton', Button)
+	app.component('XButton', Button as import('vue').Component)
 	app.component('Modal', Modal)
 	app.component('Card', Card)
 

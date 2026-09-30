@@ -23,7 +23,7 @@ export const setupVue3 = defineSetupVue3(({ app }) => {
 	app.directive('cy', testid)
 
 	app.component('Icon', FontAwesomeIcon)
-	app.component('XButton', XButton)
+	app.component('XButton', XButton as import('vue').Component)
 	app.component('Modal', Modal)
 	app.component('Card', Card)
 })
