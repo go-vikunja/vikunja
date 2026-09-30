@@ -175,7 +175,16 @@ importers:
       vuemoji-picker:
         specifier: 0.3.2
         version: 0.3.2(vue@3.5.42(typescript@6.0.3))
+      workbox-core:
+        specifier: 7.4.1
+        version: 7.4.1
       workbox-precaching:
+        specifier: 7.4.1
+        version: 7.4.1
+      workbox-routing:
+        specifier: 7.4.1
+        version: 7.4.1
+      workbox-strategies:
         specifier: 7.4.1
         version: 7.4.1
       zhyswan-vuedraggable:

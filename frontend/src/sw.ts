@@ -1,6 +1,15 @@
 import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 
-declare let self: ServiceWorkerGlobalScope
+declare let self: ServiceWorkerGlobalScope & {
+	__precacheManifest?: Parameters<typeof precacheAndRoute>[0],
+}
+declare const workbox: {
+	core: typeof import('workbox-core'),
+	routing: typeof import('workbox-routing'),
+	strategies: typeof import('workbox-strategies'),
+	precaching: typeof import('workbox-precaching'),
+	setConfig(options: {modulePathPrefix: string}): void,
+}
 declare const __WORKBOX_VERSION__: string
 
 const fullBaseUrl = getFullBaseUrl()
@@ -56,13 +65,13 @@ self.addEventListener('notificationclick', function (event) {
 
 	switch (event.action) {
 		case 'show-task':
-			clients.openWindow(`${fullBaseUrl}tasks/${taskId}`)
+			self.clients.openWindow(`${fullBaseUrl}tasks/${taskId}`)
 			break
 	}
 })
 
 workbox.core.clientsClaim()
 // The precaching code provided by Workbox.
-self.__precacheManifest = [].concat(self.__precacheManifest || [])
+self.__precacheManifest = [...(self.__precacheManifest ?? [])]
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {})
 
