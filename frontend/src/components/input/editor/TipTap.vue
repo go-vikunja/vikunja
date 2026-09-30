@@ -210,6 +210,7 @@ import XButton from '@/components/input/Button.vue'
 
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
+import {getScrollParent} from '@/helpers/getScrollParent'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
 import {error} from '@/message'
@@ -434,12 +435,24 @@ function exitEditMode() {
 	}
 }
 
-function setEditIfApplicable(event: MouseEvent) {
+async function setEditIfApplicable(event: MouseEvent) {
 	if (!props.isEditEnabled) return
 	if (isEditing.value) return
 	if (getLightboxImage(event.target) !== null) return
 
-	setEdit()
+	const view = editor.value?.view
+	const pos = view?.posAtCoords({left: event.clientX, top: event.clientY})?.pos
+	if (view === undefined || pos === undefined) {
+		setEdit()
+		return
+	}
+
+	// The toolbar appearing above pushes the content down; scroll it back so the clicked text stays under the pointer.
+	const topBefore = view.coordsAtPos(pos).top
+	internalMode.value = 'edit'
+	await nextTick()
+	getScrollParent(view.dom).scrollBy(0, view.coordsAtPos(pos).top - topBefore)
+	editor.value?.commands.focus(pos)
 }
 
 function setEdit(focus: boolean = true) {
