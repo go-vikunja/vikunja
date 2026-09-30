@@ -294,6 +294,12 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 		query = query.Where(isMember)
 	}
 
+	if search != "" {
+		order, args := db.SearchRelevanceOrder(search, "teams.name")
+		query = query.OrderBy(order, args...)
+	}
+	query = query.OrderBy("teams.id ASC")
+
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

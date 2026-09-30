@@ -201,6 +201,60 @@ func TestTeam_ReadAll(t *testing.T) {
 		ts = teams.([]*Team)
 		assert.Len(t, ts, 7)
 	})
+	t.Run("pages are ordered by id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		var pages [][]int64
+		for page := 1; page <= 3; page++ {
+			teams, _, _, err := (&Team{}).ReadAll(s, doer, "", page, 2)
+			require.NoError(t, err)
+			pages = append(pages, teamIDs(teams.([]*Team)))
+		}
+		assert.Equal(t, [][]int64{
+			{1, 2},
+			{3, 4},
+			{8},
+		}, pages)
+	})
+	t.Run("search ranks exact and prefix matches first", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		created := map[string]int64{}
+		for _, name := range []string{
+			"has zzq inside",
+			"zzq prefix",
+			"ZZQ",
+		} {
+			team := &Team{Name: name}
+			require.NoError(t, team.CreateNewTeam(s, &user.User{ID: 1, Username: "user1"}, true))
+			created[name] = team.ID
+		}
+
+		teams, _, _, err := (&Team{}).ReadAll(s, doer, "zzq", 1, 2)
+		require.NoError(t, err)
+		assert.Equal(t, []int64{
+			created["ZZQ"],
+			created["zzq prefix"],
+		}, teamIDs(teams.([]*Team)))
+
+		teams, _, _, err = (&Team{}).ReadAll(s, doer, "zzq", 2, 2)
+		require.NoError(t, err)
+		assert.Equal(t, []int64{
+			created["has zzq inside"],
+		}, teamIDs(teams.([]*Team)))
+	})
+}
+
+func teamIDs(teams []*Team) []int64 {
+	ids := make([]int64, 0, len(teams))
+	for _, team := range teams {
+		ids = append(ids, team.ID)
+	}
+	return ids
 }
 
 func TestTeamListPreservesMembersForSharedUsers(t *testing.T) {
