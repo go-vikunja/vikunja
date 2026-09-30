@@ -383,11 +383,12 @@ var userChangeStatusCmd = &cobra.Command{
 		initialize.FullInit()
 	},
 	Args: cobra.ExactArgs(1),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		s := db.NewSession()
 		defer s.Close()
 
 		u := getUserFromArg(s, args[0])
+		oldStatus := u.Status
 
 		var status user.Status
 		if userFlagEnableUser {
@@ -406,10 +407,17 @@ var userChangeStatusCmd = &cobra.Command{
 			_ = s.Rollback()
 			log.Fatalf("Could not enable the user")
 		}
+		events.DispatchOnCommit(s, &models.AdminUserStatusChangedEvent{
+			User:      u,
+			OldStatus: oldStatus,
+			NewStatus: status,
+		})
 
 		if err := s.Commit(); err != nil {
 			log.Fatalf("Error saving everything: %s", err)
 		}
+
+		events.DispatchPending(cmd.Context(), s)
 
 		fmt.Printf("User status successfully changed, status is now \"%s\"\n", status)
 	},
