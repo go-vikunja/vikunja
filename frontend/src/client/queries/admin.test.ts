@@ -9,6 +9,7 @@ import {
 	deleteAdminUserMutationOptions,
 } from './admin'
 import {accountKeys, currentUserQuery} from './account'
+import {PICKER_PAGE_SIZE} from './pagination'
 const sdk = vi.hoisted(() => ({
 	adminUsersList: vi.fn(),
 	adminUsersPatchAdmin: vi.fn(),
@@ -44,7 +45,7 @@ it('user picker fetches only the first page of matches', async () => {
 	expect(sdk.adminUsersList).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
 		query: {
 			page: 1,
-			per_page: 20,
+			per_page: PICKER_PAGE_SIZE,
 			q: 'name',
 		},
 	}))
@@ -64,7 +65,7 @@ it('team picker fetches only the first page of matches', async () => {
 	expect(sdk.adminTeamsList).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
 		query: {
 			page: 1,
-			per_page: 20,
+			per_page: PICKER_PAGE_SIZE,
 			q: 'team',
 		},
 	}))

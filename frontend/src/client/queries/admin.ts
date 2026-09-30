@@ -25,14 +25,13 @@ import type {
 import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
 import {contextMutationOptions} from './contextMutation'
 import {useSecretMutation} from './secretMutation'
+import {PICKER_PAGE_SIZE} from './pagination'
 import {projectKeys} from './projects'
 import {accountKeys, type UserInfoResponse} from './account'
 import {i18n} from '@/i18n'
 
 export type DeleteUserMode = 'now' | 'scheduled'
 export type AdminProjectsQuery = NonNullable<AdminProjectsListData['query']>
-
-const PICKER_PAGE_SIZE = 20
 
 export const adminKeys = {
 	all: ['admin'] as const,
