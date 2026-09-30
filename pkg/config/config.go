@@ -551,12 +551,21 @@ func initDefaultConfig() {
 	LicenseKey.setDefault("")
 }
 
-// checkRemovedConfigKeys fails instead of ignoring the proxy password, which
-// would leave the proxy rejecting every request with a 407.
+// Silently ignoring these would leave the proxy rejecting every request with a 407.
+var removedConfigKeys = []struct {
+	key  string
+	hint string
+}{
+	{"outgoingrequests.proxypassword", proxyCredentialsHint},
+	{"webhooks.proxypassword", proxyCredentialsHint},
+}
+
+const proxyCredentialsHint = "put the proxy credentials into " + string(OutgoingRequestsProxyURL) + " instead, like http://vikunja:<url-encoded password>@mole:8080"
+
 func checkRemovedConfigKeys() error {
-	for _, key := range []string{"outgoingrequests.proxypassword", "webhooks.proxypassword"} {
-		if viper.GetString(key) != "" {
-			return fmt.Errorf("config key %q was removed, put the proxy credentials into %q instead, like http://vikunja:<url-encoded password>@mole:8080", key, OutgoingRequestsProxyURL)
+	for _, removed := range removedConfigKeys {
+		if viper.IsSet(removed.key) {
+			return fmt.Errorf("config key %q was removed, %s", removed.key, removed.hint)
 		}
 	}
 	return nil
