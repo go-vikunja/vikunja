@@ -695,6 +695,7 @@ import Reactions from '@/components/input/Reactions.vue'
 
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
+import {getScrollParent} from '@/helpers/getScrollParent'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
@@ -911,18 +912,7 @@ function resolveScrollContainer() {
 		return
 	}
 
-	let el: HTMLElement | null = taskViewContainer.value
-
-	while (el) {
-		const overflowY = getComputedStyle(el).overflowY
-		if (['auto', 'scroll', 'overlay'].includes(overflowY)) {
-			scrollContainer.value = el
-			return
-		}
-		el = el.parentElement
-	}
-
-	scrollContainer.value = (document.scrollingElement as HTMLElement | null) ?? document.documentElement
+	scrollContainer.value = getScrollParent(taskViewContainer.value)
 }
 
 function updateScrollable() {
