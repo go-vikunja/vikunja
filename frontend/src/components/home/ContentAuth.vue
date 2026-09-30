@@ -18,7 +18,7 @@
 				class="app-container-background background-fade-in d-print-none"
 				:style="{
 					'background-image': background && `url(${background})`,
-					'filter': backgroundBrightness && `brightness(${backgroundBrightness}%)`
+					'filter': backgroundBrightness ? `brightness(${backgroundBrightness}%)` : undefined
 				}"
 			/>
 			<Navigation class="d-print-none" />
