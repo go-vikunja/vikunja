@@ -61,6 +61,12 @@ func TestCropAvatarTo1x1(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 4, img.Bounds().Dx())
 		assert.Equal(t, 4, img.Bounds().Dy())
+		assert.Equal(t, color.RGBA{
+			R: 2,
+			G: 0,
+			B: 42,
+			A: 255,
+		}, color.RGBAModel.Convert(img.At(0, 0)))
 	})
 
 	t.Run("already square image is returned as-is", func(t *testing.T) {
