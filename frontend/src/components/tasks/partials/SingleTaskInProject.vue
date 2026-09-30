@@ -85,7 +85,7 @@
 				/>
 
 				<Popup
-					v-if="+new Date(task.due_date) > 0"
+					v-if="task.due_date && +new Date(task.due_date) > 0"
 					placement="bottom-start"
 					:anchor="dueDateTriggerEl"
 					sheet-on-mobile
@@ -376,10 +376,10 @@ async function toggleFavorite() {
 const taskRoot = ref<HTMLElement | null>(null)
 const dueDateTrigger = ref<InstanceType<typeof BaseButton> | null>(null)
 const dueDateTriggerEl = computed<HTMLElement | null>(() => dueDateTrigger.value?.$el ?? null)
-const taskLinkRef = ref<HTMLElement | null>(null)
+const taskLinkRef = ref<InstanceType<typeof BaseButton> | null>(null)
 
 function hasTextSelected() {
-	const isTextSelected = window.getSelection().toString()
+	const isTextSelected = window.getSelection()?.toString()
 	return !(typeof isTextSelected === 'undefined' || isTextSelected === '' || isTextSelected === '\n')
 }
 
