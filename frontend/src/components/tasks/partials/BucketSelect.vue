@@ -107,7 +107,7 @@ const currentBucket = computed(() => {
 	if (!kanbanView.value) {
 		return undefined
 	}
-	return props.task.buckets?.find(b => b.project_view_id === kanbanView.value.id)
+	return props.task.buckets?.find(b => b.project_view_id === kanbanView.value?.id)
 })
 
 const currentBucketTitle = computed(() => {
