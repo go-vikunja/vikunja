@@ -144,6 +144,15 @@
 				</BaseButton>
 
 				<div
+					v-if="moreResultsHintVisible"
+					class="search-result-hint"
+					role="option"
+					aria-disabled="true"
+				>
+					{{ $t('input.multiselect.moreResultsHint', {shown: searchResults.length, total: totalResults}) }}
+				</div>
+
+				<div
 					v-if="creationHintVisible"
 					class="search-result-hint"
 					role="option"
@@ -206,6 +215,8 @@ const props = withDefaults(defineProps<{
 	disabled?: boolean
 	/** Accessible name for the search input and result list. Falls back to the placeholder. */
 	ariaLabel?: string
+	/** Total number of matches when `searchResults` holds only the first of them; shows a hint to refine the search. */
+	totalResults?: number
 }>(), {
 	loading: false,
 	placeholder: '',
@@ -225,6 +236,7 @@ const props = withDefaults(defineProps<{
 	id: undefined,
 	name: undefined,
 	ariaLabel: undefined,
+	totalResults: undefined,
 })
 
 const emit = defineEmits<{
@@ -321,6 +333,10 @@ const creatableAvailable = computed(() => props.creatable && query.value !== '' 
 
 // Shown in place of the create option when creation is disabled and the query matches nothing, so the field doesn't look dead.
 const creationHintVisible = computed(() => props.creationDisabledMessage !== '' && !props.creatable && query.value !== '' && !queryHasExactMatch.value)
+
+const moreResultsHintVisible = computed(() => searchResults.value.length > 0
+	&& props.totalResults !== undefined
+	&& props.totalResults > searchResults.value.length)
 
 const filteredSearchResults = computed<T[]>(() => {
 	if (props.multiple) {
