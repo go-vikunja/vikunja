@@ -71,6 +71,16 @@ func TestHumaAPIToken(t *testing.T) {
 			assert.Equal(t, int64(6), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
 			assert.NotContains(t, ids, int64(3), "token #3 (owned by user2) must be hidden")
 		})
+		t.Run("Pagination - pages are ordered by id and disjoint", func(t *testing.T) {
+			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens?page=1&per_page=4", "", user1Token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, []int64{1, 2, 9, 10}, apiTokenIDsFromReadAll(t, rec.Body.Bytes()))
+			assert.Equal(t, int64(6), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
+
+			rec = humaRequest(t, e, http.MethodGet, "/api/v2/tokens?page=2&per_page=4", "", user1Token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, []int64{11, 12}, apiTokenIDsFromReadAll(t, rec.Body.Bytes()))
+		})
 		t.Run("Isolation - user2 sees only its own token", func(t *testing.T) {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens", "", user2Token, "")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
