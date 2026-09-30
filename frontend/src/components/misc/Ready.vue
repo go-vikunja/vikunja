@@ -24,6 +24,13 @@
 				{{ $t('ready.noApiUrlConfigured') }}
 			</p>
 			<Message
+				v-else-if="baseStore.error === ERROR_RATE_LIMITED"
+				variant="danger"
+				class="mbe-4"
+			>
+				{{ $t('ready.rateLimited') }}
+			</Message>
+			<Message
 				v-else
 				variant="danger"
 				class="mbe-4"
@@ -37,6 +44,7 @@
 				</p>
 			</Message>
 			<ApiConfig
+				v-if="baseStore.error !== ERROR_RATE_LIMITED"
 				:configure-open="true"
 				@foundApi="baseStore.loadApp()"
 			/>
@@ -66,7 +74,7 @@ import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
 import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
 
 import {useOnline} from '@/composables/useOnline'
-import {useBaseStore} from '@/stores/base'
+import {ERROR_RATE_LIMITED, useBaseStore} from '@/stores/base'
 
 const online = useOnline()
 const baseStore = useBaseStore()
