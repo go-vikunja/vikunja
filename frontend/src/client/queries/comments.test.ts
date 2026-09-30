@@ -65,21 +65,21 @@ it('requests the selected task, order, page and page size', async () => {
 	})
 })
 
-it('clamps per_page to the v2 maximum', async () => {
+it('raises per_page below 1 to 1', async () => {
 	sdk.taskCommentsList.mockResolvedValue({data: {
 		items: [],
 		page: 1,
 		total: 0,
 		total_pages: 0,
-		per_page: 1000,
+		per_page: 1,
 	}})
-	await client.fetchQuery(commentsQuery(1, 'desc', 1, 5000))
+	await client.fetchQuery(commentsQuery(1, 'desc', 1, 0))
 	expect(sdk.taskCommentsList).toHaveBeenCalledWith({
 		path: {task: 1},
 		query: {
 			order_by: 'desc',
 			page: 1,
-			per_page: 1000,
+			per_page: 1,
 		},
 		signal: expect.any(AbortSignal),
 	})

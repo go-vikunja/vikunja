@@ -12,9 +12,6 @@ export type Paginated<T> = {
 	total_pages: number,
 }
 
-// Request size for full-list sweeps; the server caps it at service.maxitemsperpage.
-export const API_MAX_PER_PAGE = 1000
-
 export const PICKER_PAGE_SIZE = 20
 
 export function totalPagesFor(
@@ -24,8 +21,9 @@ export function totalPagesFor(
 	return page.per_page > 0 ? Math.ceil(total / page.per_page) : page.total_pages
 }
 
+// The server caps per_page itself; it only rejects values below 1.
 export function pageSizeFor(configured: number): number {
-	return Math.min(Math.max(configured, 1), API_MAX_PER_PAGE)
+	return Math.max(configured, 1)
 }
 
 type PaginatedResponse<T> = {
