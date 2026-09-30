@@ -67,3 +67,24 @@ test('pages through bots and leaves an emptied last page', async ({authenticated
 	await expect(cards).toHaveCount(pageSize)
 	await expect(page.getByRole('link', {name: 'Goto page 2'})).toHaveCount(0)
 })
+
+test('shows a bot created past the first page on its page', async ({authenticatedPage: page, apiContext, userToken}) => {
+	const pageSize = await serverPageSize(apiContext)
+	for (let i = 1; i <= pageSize; i++) {
+		const response = await apiContext.post('/api/v2/user/bots', {
+			headers: {Authorization: `Bearer ${userToken}`},
+			data: {username: `bot-full-${i}`},
+		})
+		expect(response.ok()).toBe(true)
+	}
+	await gotoUserSettings(page, 'bots')
+	const cards = page.locator('.bot-card')
+	await expect(cards).toHaveCount(pageSize)
+	await page.getByRole('button', {name: 'Create bot', exact: true}).click()
+	await page.getByPlaceholder('bot-myassistant').fill('overflow')
+	await page.getByRole('button', {name: 'Create bot', exact: true}).click()
+	await expect(page.locator('.global-notification')).toContainText('bot-overflow')
+	await expect(page).toHaveURL(/[?&]page=2/)
+	await expect(cards).toHaveCount(1)
+	await expect(cards).toContainText('bot-overflow')
+})

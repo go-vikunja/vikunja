@@ -116,6 +116,7 @@
         "description": "Bot users are API-only users you own. They can be added to projects, assigned tasks, and authenticated with API tokens. They cannot log in interactively.",
         "namePlaceholder": "My Assistant",
         "create": "Create bot",
+        "createSuccess": "The bot \"{username}\" was created.",
         "enable": "Enable",
         "tokensInactive": "API tokens of a disabled bot are rejected. Enable the bot to create or use tokens.",
         "badge": "Bot",

@@ -18,7 +18,7 @@ import {useQueries, useQuery} from '@tanstack/vue-query'
 import {botApiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
 import type {ApiToken, BotUser} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
-import {getErrorText} from '@/message'
+import {getErrorText, success} from '@/message'
 
 type Bot = BotUser & Required<Pick<BotUser, 'id' | 'status'>>
 
@@ -74,11 +74,16 @@ async function createBot() {
 	if (trimmedName !== '') {
 		payload.name = trimmedName
 	}
+	const before = botPage.value
 	try {
-		await createMutation.mutateAsync(payload)
+		const created = await createMutation.mutateAsync(payload)
 		newBotUsername.value = ''
 		newBotName.value = ''
 		showCreateForm.value = false
+		success({message: t('user.settings.bots.createSuccess', {username: created.username})})
+		if (before && before.per_page > 0) {
+			page.value = Math.ceil((before.total + 1) / before.per_page)
+		}
 	} catch (e: unknown) {
 		createError.value = getErrorText(e)
 	}
