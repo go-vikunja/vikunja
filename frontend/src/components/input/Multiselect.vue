@@ -320,7 +320,7 @@ const creatableAvailable = computed(() => props.creatable && query.value !== '' 
 // Shown in place of the create option when creation is disabled and the query matches nothing, so the field doesn't look dead.
 const creationHintVisible = computed(() => props.creationDisabledMessage !== '' && !props.creatable && query.value !== '' && !queryHasExactMatch.value)
 
-const filteredSearchResults = computed(() => {
+const filteredSearchResults = computed<T[]>(() => {
 	if (props.multiple) {
 		return searchResults.value.filter((item: T) => !selectedItems.value.some((e: T) => e === item))
 	}
