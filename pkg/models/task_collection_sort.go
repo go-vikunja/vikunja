@@ -36,6 +36,7 @@ const (
 	taskPropertyCreatedByID   string = "created_by_id"
 	taskPropertyProjectID     string = "project_id"
 	taskPropertyRepeatAfter   string = "repeat_after"
+	taskPropertyRepeatMode    string = "repeat_mode"
 	taskPropertyPriority      string = "priority"
 	taskPropertyStartDate     string = "start_date"
 	taskPropertyEndDate       string = "end_date"
@@ -107,6 +108,7 @@ func validateTaskFieldForSorting(fieldName string) error {
 		taskPropertyCreatedByID,
 		taskPropertyProjectID,
 		taskPropertyRepeatAfter,
+		taskPropertyRepeatMode,
 		taskPropertyPriority,
 		taskPropertyStartDate,
 		taskPropertyEndDate,

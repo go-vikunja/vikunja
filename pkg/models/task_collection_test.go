@@ -2559,3 +2559,38 @@ func TestTaskCollection_DateFilterTimezoneBoundary(t *testing.T) {
 	}
 	assert.Truef(t, found, "task due %s (one hour before local midnight) should match", task.DueDate)
 }
+
+func TestTaskCollection_ReadAll_FilterByRepeatMode(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	_, err := s.ID(28).Cols("repeat_mode").Update(&Task{RepeatMode: TaskRepeatModeMonth})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	taskIDs := func(filter string) []int64 {
+		s := db.NewSession()
+		defer s.Close()
+
+		c := &TaskCollection{Filter: filter}
+		res, _, _, err := c.ReadAll(s, u, "", 0, 250)
+		require.NoError(t, err)
+		tasks, ok := res.([]*Task)
+		require.True(t, ok)
+
+		ids := make([]int64, 0, len(tasks))
+		for _, tsk := range tasks {
+			ids = append(ids, tsk.ID)
+		}
+		return ids
+	}
+
+	assert.Equal(t, []int64{28}, taskIDs("repeat_mode = 1"))
+	defaultMode := taskIDs("repeat_mode = 0")
+	assert.Contains(t, defaultMode, int64(1))
+	assert.NotContains(t, defaultMode, int64(28))
+	assert.NotContains(t, taskIDs("repeat_mode != 1"), int64(28))
+}

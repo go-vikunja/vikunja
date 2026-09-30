@@ -677,6 +677,8 @@
           "done": "Whether the task is completed or not",
           "priority": "The priority level of the task (1-5)",
           "percentDone": "The percentage of completion for the task (0-100)",
+          "repeatAfter": "The repeat interval of the task in seconds (0 = no interval)",
+          "repeatMode": "How the task repeats: 0 = after the interval, 1 = monthly, 2 = from the completion date",
           "dueDate": "The due date of the task",
           "startDate": "The start date of the task",
           "endDate": "The end date of the task",

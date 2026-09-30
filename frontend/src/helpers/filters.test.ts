@@ -9,6 +9,8 @@ describe('Filter Transformation', () => {
 		'done': 'done',
 		'priority': 'priority',
 		'percentDone': 'percent_done',
+		'repeatAfter': 'repeat_after',
+		'repeatMode': 'repeat_mode',
 		'dueDate': 'due_date',
 		'startDate': 'start_date',
 		'endDate': 'end_date',
