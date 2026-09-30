@@ -271,9 +271,15 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 	limit, start := getLimitFromPageIndex(page, perPage)
 	all := []*Team{}
 
-	query := s.Distinct("teams.*").
+	isMember := builder.In(
+		"teams.id",
+		builder.Select("team_id").
+			From("team_members").
+			Where(builder.Eq{"user_id": a.GetID()}),
+	)
+
+	query := s.
 		Table("teams").
-		Join("INNER", "team_members", "team_members.team_id = teams.id").
 		Where(db.ILIKE("teams.name", search))
 
 	// If public teams are enabled, we want to include them in the result
@@ -281,11 +287,11 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 		query = query.Where(
 			builder.Or(
 				builder.Eq{"teams.is_public": true},
-				builder.Eq{"team_members.user_id": a.GetID()},
+				isMember,
 			),
 		)
 	} else {
-		query = query.Where("team_members.user_id = ?", a.GetID())
+		query = query.Where(isMember)
 	}
 
 	if limit > 0 {
