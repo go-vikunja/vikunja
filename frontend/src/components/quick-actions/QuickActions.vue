@@ -397,7 +397,7 @@ const hintText = computed(() => {
 	}
 	const prefixes =
 		PREFIXES[authStore.settings.frontend_settings.quick_add_magic_mode] ?? PREFIXES[PrefixMode.Default]
-	return t('quickActions.hint', prefixes)
+	return t('quickActions.hint', {...prefixes})
 })
 
 const availableCmds = computed(() => {
