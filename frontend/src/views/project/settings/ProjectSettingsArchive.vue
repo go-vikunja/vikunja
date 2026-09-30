@@ -32,7 +32,7 @@ const updateMutation = useUpdateProjectMutation(t('project.archive.success'))
 const router = useRouter()
 const route = useRoute()
 
-const project = computed(() => projectList.projects[route.params.projectId])
+const project = computed(() => projectList.projects[Number(route.params.projectId)])
 useTitle(() => project.value?.title ? t('project.archive.title', {project: project.value.title}) : '')
 
 async function archiveProject() {

@@ -49,7 +49,7 @@ const router = useRouter()
 
 
 
-const project = computed(() => projectList.projects[route.params.projectId])
+const project = computed(() => projectList.projects[Number(route.params.projectId)])
 const projectIdsToDelete = ref<number[]>([])
 
 watchEffect(
@@ -59,10 +59,10 @@ watchEffect(
 		}
 
 		projectIdsToDelete.value = projectList
-			.getChildProjects(parseInt(route.params.projectId))
+			.getChildProjects(Number(route.params.projectId))
 			.map(p => p.id)
 
-		projectIdsToDelete.value.push(parseInt(route.params.projectId))
+		projectIdsToDelete.value.push(Number(route.params.projectId))
 
 
 	},

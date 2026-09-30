@@ -62,7 +62,7 @@ const isSubmitting = ref(false)
 
 watch(
 	() => props.parentProjectId,
-	() => parentProject.value = projectList.projects[props.parentProjectId],
+	() => parentProject.value = projectList.projects[props.parentProjectId ?? 0],
 	{immediate: true},
 )
 
