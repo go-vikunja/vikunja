@@ -538,9 +538,6 @@ func initDefaultConfig() {
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
 	PluginsLoader.setDefault("native")
-
-	// License
-	LicenseKey.setDefault("")
 }
 
 // migrateDeprecatedWebhookKeys must run after the config file and env are
