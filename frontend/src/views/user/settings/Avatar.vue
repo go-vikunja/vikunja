@@ -155,8 +155,8 @@ function cropAvatar() {
 
 	loading.value = true
 	const reader = new FileReader()
-	reader.onload = e => {
-		avatarToCrop.value = e.target.result
+	reader.onload = () => {
+		avatarToCrop.value = reader.result
 		isCropAvatar.value = true
 		// Note: loading stays true until Cropper's @ready event fires
 		// This ensures the canvas is ready before allowing upload
