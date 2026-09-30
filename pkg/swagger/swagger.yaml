@@ -169,20 +169,6 @@ definitions:
       url:
         type: string
     type: object
-  license.Feature:
-    enum:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
-    type: integer
-    x-enum-varnames:
-    - FeatureUnknown
-    - FeatureAdminPanel
-    - FeatureTimeTracking
-    - FeatureAuditLogs
-    - FeatureUserInvites
   license.Info:
     properties:
       expires_at:
@@ -1632,7 +1618,7 @@ definitions:
         type: array
       enabled_pro_features:
         items:
-          $ref: '#/definitions/license.Feature'
+          type: string
         type: array
       frontend_url:
         type: string

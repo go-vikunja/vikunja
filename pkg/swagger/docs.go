@@ -9277,23 +9277,6 @@ const docTemplate = `{
                 }
             }
         },
-        "license.Feature": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2,
-                3,
-                4
-            ],
-            "x-enum-varnames": [
-                "FeatureUnknown",
-                "FeatureAdminPanel",
-                "FeatureTimeTracking",
-                "FeatureAuditLogs",
-                "FeatureUserInvites"
-            ]
-        },
         "license.Info": {
             "type": "object",
             "properties": {
@@ -11180,7 +11163,7 @@ const docTemplate = `{
                 "enabled_pro_features": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/license.Feature"
+                        "type": "string"
                     }
                 },
                 "frontend_url": {
