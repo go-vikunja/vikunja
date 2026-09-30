@@ -95,7 +95,7 @@ async function updateDueDate() {
 		return
 	}
 
-	if (+new Date(dueDate.value) === +lastValue.value) {
+	if (lastValue.value != null && +new Date(dueDate.value) === +lastValue.value) {
 		return
 	}
 
