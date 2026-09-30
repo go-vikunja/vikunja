@@ -44,19 +44,26 @@ test.describe('Team', () => {
 		await TeamMemberFactory.create(pageSize + 5, {
 			team_id: '{increment}',
 		})
-		await TeamFactory.create(pageSize + 5, {
+		const teams = await TeamFactory.create(pageSize + 5, {
 			id: '{increment}',
+			name: (i: number) => `paged team ${i}`,
 		})
+		const rows = page.locator('ul.teams li')
 
 		await page.goto('/teams')
-		await expect(page.locator('ul.teams li')).toHaveCount(pageSize)
+		await expect(rows).toHaveCount(pageSize)
+		const firstPage = await rows.allTextContents()
 
 		await page.getByRole('link', {name: 'Goto page 2'}).click()
 		await expect(page).toHaveURL(/[?&]page=2/)
-		await expect(page.locator('ul.teams li')).toHaveCount(5)
+		await expect(rows).toHaveCount(5)
+		const secondPage = await rows.allTextContents()
+
+		expect([...firstPage, ...secondPage].map(name => name.trim()).sort())
+			.toEqual(teams.map(team => team.name).sort())
 
 		await page.reload()
-		await expect(page.locator('ul.teams li')).toHaveCount(5)
+		await expect(rows).toHaveCount(5)
 	})
 
 	test('Allows an admin to edit the team', async ({authenticatedPage: page}) => {
