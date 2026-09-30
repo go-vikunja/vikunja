@@ -138,7 +138,6 @@ func init() {
 		"MigrationVikunjaFileMaxSize":                reflect.ValueOf(config.MigrationVikunjaFileMaxSize),
 		"MigrationVikunjaFileMaxUserStorage":         reflect.ValueOf(config.MigrationVikunjaFileMaxUserStorage),
 		"OutgoingRequestsAllowNonRoutableIPs":        reflect.ValueOf(config.OutgoingRequestsAllowNonRoutableIPs),
-		"OutgoingRequestsProxyPassword":              reflect.ValueOf(config.OutgoingRequestsProxyPassword),
 		"OutgoingRequestsProxyURL":                   reflect.ValueOf(config.OutgoingRequestsProxyURL),
 		"OutgoingRequestsTimeoutSeconds":             reflect.ValueOf(config.OutgoingRequestsTimeoutSeconds),
 		"PluginsDir":                                 reflect.ValueOf(config.PluginsDir),
@@ -198,7 +197,6 @@ func init() {
 		"SetMaxFileSizeMBytesFromString":             reflect.ValueOf(config.SetMaxFileSizeMBytesFromString),
 		"WebhooksAllowNonRoutableIPs":                reflect.ValueOf(config.WebhooksAllowNonRoutableIPs),
 		"WebhooksEnabled":                            reflect.ValueOf(config.WebhooksEnabled),
-		"WebhooksProxyPassword":                      reflect.ValueOf(config.WebhooksProxyPassword),
 		"WebhooksProxyURL":                           reflect.ValueOf(config.WebhooksProxyURL),
 		"WebhooksTimeoutSeconds":                     reflect.ValueOf(config.WebhooksTimeoutSeconds),
 
