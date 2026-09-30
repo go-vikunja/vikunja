@@ -37,6 +37,26 @@ func ILIKE(column, search string) builder.Cond {
 	return &builder.Like{column, "%" + search + "%"}
 }
 
+// SearchRelevanceOrder returns an ORDER BY expression and its args ranking rows
+// whose columns equal search first, then rows where one starts with it.
+func SearchRelevanceOrder(search string, columns ...string) (string, []any) {
+	exact := make([]string, 0, len(columns))
+	prefix := make([]string, 0, len(columns))
+	args := make([]any, 0, len(columns)*2)
+	for _, column := range columns {
+		exact = append(exact, "LOWER("+column+") = LOWER(?)")
+		args = append(args, search)
+	}
+	for _, column := range columns {
+		prefix = append(prefix, "LOWER("+column+") LIKE LOWER(?)")
+		args = append(args, search+"%")
+	}
+	order := "CASE WHEN " + strings.Join(exact, " OR ") +
+		" THEN 0 WHEN " + strings.Join(prefix, " OR ") +
+		" THEN 1 ELSE 2 END"
+	return order, args
+}
+
 func ParadeDBAvailable() bool {
 	return Type() == schemas.POSTGRES && paradedbInstalled
 }
