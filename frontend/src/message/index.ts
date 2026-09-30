@@ -1,32 +1,31 @@
 import {i18n} from '@/i18n'
 import {notify} from '@kyvg/vue3-notification'
 
-export function getErrorText(r): string {
-	// The dev unhandledrejection handler passes the PromiseRejectionEvent.
-	const data = r?.reason ?? r
+function errorRecord(value: unknown): Record<string, unknown> {
+	return value !== null && typeof value === 'object' ? value as Record<string, unknown> : {}
+}
 
-	if (data?.code) {
-		const path = `error.${data.code}`
-		let message = i18n.global.t(path, data.i18n_params ?? {})
+export function getErrorText(reason: unknown): string {
+	const original = errorRecord(reason)
+	// The dev rejection handler passes the event rather than its reason.
+	const data = errorRecord(original.reason ?? reason)
+	const code = data.code
 
-		if (data?.code && data?.message && (data.code === 4016 || data.code === 4017 || data.code === 4018 || data.code === 4019 || data.code === 4024)) {
+	if (typeof code === 'number' && code) {
+		const path = `error.${code}`
+		let message = i18n.global.t(path, errorRecord(data.i18n_params))
+		if (typeof data.message === 'string' && [4016, 4017, 4018, 4019, 4024].includes(code)) {
 			message += '\n' + data.message
 		}
-
-		// If message and path are equal no translation exists for that error code
-		if (path !== message) {
-			return message
-		}
-	}
-	
-	// v2 errors are RFC 9457 problem+json, which carries `detail` instead of `message`.
-	let message = data?.message || data?.detail || r.message
-	
-	const causeMessage = r.cause?.detail ?? r.cause?.message
-	if (typeof causeMessage !== 'undefined') {
-		message += ' ' + causeMessage
+		if (path !== message) return message
 	}
 
+	// v2 problem responses carry detail instead of message.
+	const fallback = data.message || data.detail || original.message || original.reason || reason
+	let message = typeof fallback === 'string' ? fallback : ''
+	const cause = errorRecord(original.cause)
+	const causeMessage = cause.detail ?? cause.message
+	if (typeof causeMessage === 'string') message += ' ' + causeMessage
 	return message
 }
 
@@ -39,7 +38,7 @@ export interface Action {
 	callback: () => void,
 }
 
-export function error(e, actions: Action[] = []) {
+export function error(e: unknown, actions: Action[] = []) {
 	notify({
 		type: 'error',
 		title: i18n.global.t('error.error'),
@@ -51,7 +50,7 @@ export function error(e, actions: Action[] = []) {
 	})
 }
 
-export function success(e, actions: Action[] = []) {
+export function success(e: unknown, actions: Action[] = []) {
 	notify({
 		type: 'success',
 		title: i18n.global.t('error.success'),
