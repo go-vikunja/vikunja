@@ -10,7 +10,7 @@ import {createPinia} from 'pinia'
 import testid from '@/directives/testid'
 
 import FontAwesomeIcon from '@/components/misc/Icon'
-import XButton from '@/components/input/button.vue'
+import XButton from '@/components/input/Button.vue'
 import Modal from '@/components/misc/Modal.vue'
 import Card from '@/components/misc/Card.vue'
 
