@@ -6,7 +6,7 @@ export type Paginated<T> = {
 	total_pages: number,
 }
 
-// The v2 schema maximum; a larger per_page is rejected with 422.
+// Request size for full-list sweeps; the server caps it at service.maxitemsperpage.
 export const API_MAX_PER_PAGE = 1000
 
 export function totalPagesFor(
