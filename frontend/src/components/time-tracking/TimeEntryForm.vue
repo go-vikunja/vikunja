@@ -19,7 +19,7 @@
 				<Multiselect
 					v-model="selectedTask"
 					:placeholder="$t('timeTracking.form.taskSearch')"
-					:loading="taskSearchLoading"
+					:loading="taskQuery.isFetching.value"
 					:search-results="foundTasks"
 					label="title"
 					@search="findTasks"
@@ -76,7 +76,7 @@
 				<XButton
 					v-cy="'updateTimeEntry'"
 					:aria-disabled="!canSubmit || undefined"
-					:loading="showSaving"
+					:loading="isSaving"
 					@click="saveEntry"
 				>
 					{{ $t('timeTracking.form.update') }}
@@ -92,7 +92,7 @@
 				<XButton
 					v-cy="'saveTimeEntry'"
 					:aria-disabled="!canSubmit || undefined"
-					:loading="showSaving"
+					:loading="isSaving"
 					@click="saveEntry"
 				>
 					{{ $t('timeTracking.form.save') }}
@@ -101,7 +101,7 @@
 					v-cy="'startTimer'"
 					variant="secondary"
 					:aria-disabled="!canSubmit || undefined"
-					:loading="showSaving"
+					:loading="isSaving"
 					@click="startTimer"
 				>
 					{{ $t('timeTracking.form.startTimer') }}
@@ -128,7 +128,6 @@ import type {TimeEntryWritable} from '@/client/generated'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useAuthStore} from '@/stores/auth'
 import {useProjects} from '@/composables/useProjects'
-import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import type {TaskResponse} from '@/client/queries/tasks'
@@ -166,7 +165,6 @@ const from = ref<Date | null>(new Date())
 const to = ref<Date | null>(null)
 const comment = ref('')
 const isSaving = ref(false)
-const showSaving = useDelayedLoading(isSaving)
 
 // Task and project are mutually exclusive (XOR) — selecting one clears the other,
 // so applyTarget never picks a stale target the user has since changed.
@@ -187,7 +185,6 @@ const taskQuery = useTasks(
 	{enabled: () => taskSearch.value !== ''},
 )
 const foundTasks = taskQuery.tasks
-const taskSearchLoading = useDelayedLoading(taskQuery.isFetching)
 function findTasks(query: string) { taskSearch.value = query }
 
 

@@ -4,7 +4,7 @@
 		:class="[
 			variantClass,
 			{
-				'is-loading': loading,
+				'is-loading': showLoading,
 				'has-no-shadow': !shadow || variant === 'tertiary',
 				'is-danger': danger,
 			}
@@ -40,6 +40,7 @@
 <script setup lang="ts">
 import {computed, type PropType} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 export type ButtonTypes = 'primary' | 'secondary' | 'tertiary'
@@ -67,6 +68,7 @@ const VARIANT_CLASS_MAP: Record<ButtonTypes, string> = {
 }
 
 const variantClass = computed<string>(() => VARIANT_CLASS_MAP[props.variant])
+const showLoading = useDelayedLoading(() => props.loading)
 </script>
 
 <style lang="scss" scoped>

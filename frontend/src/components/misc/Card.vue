@@ -25,7 +25,7 @@
 			class="card-content loader-container"
 			:class="{
 				'p-0': !padding,
-				'is-loading': loading
+				'is-loading': showLoading
 			}"
 		>
 			<div :class="{'content': hasContent}">
@@ -44,8 +44,9 @@
 
 <script setup lang="ts">
 import BaseButton from '@/components/base/BaseButton.vue'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
 	title?: string
 	padding?: boolean
 	shadow?: boolean
@@ -60,6 +61,8 @@ withDefaults(defineProps<{
 	loading: false,
 	showClose: false,
 })
+
+const showLoading = useDelayedLoading(() => props.loading)
 
 defineEmits<{
 	'close': []
