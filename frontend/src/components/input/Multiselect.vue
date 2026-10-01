@@ -9,7 +9,7 @@
 	>
 		<div
 			class="control"
-			:class="{'is-loading': loading || localLoading}"
+			:class="{'is-loading': showLoading || localLoading}"
 		>
 			<div
 				class="input-wrapper input"
@@ -161,6 +161,7 @@ import {computed, onBeforeUnmount, onMounted, ref, toRefs, useId, watch, type Co
 import {useI18n} from 'vue-i18n'
 
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
@@ -269,6 +270,7 @@ function elementInResults(elem: string | T, label: string, query: string): boole
 const query = ref('')
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const localLoading = ref(false)
+const showLoading = useDelayedLoading(() => props.loading)
 const showSearchResults = ref(false)
 
 // Split by `multiple` so the multiple value can never hold a single item or the query text.
