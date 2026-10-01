@@ -44,6 +44,7 @@ vi.mock('@/client/requestContext', () => ({
 	captureClientRequestContext: () => 1,
 	assertClientRequestContext: vi.fn(),
 	isClientRequestContextCurrent: vi.fn(() => true),
+	isRequestContextAbort: () => false,
 }))
 
 async function seedScrolledBoard() {
