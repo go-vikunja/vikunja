@@ -122,6 +122,36 @@ func TestRateLimitUnauthenticated(t *testing.T) {
 	})
 }
 
+// TestTooManyRequestsRetryAfter makes sure Retry-After rounds up and never drops below one second.
+func TestTooManyRequestsRetryAfter(t *testing.T) {
+	e := echo.New()
+	now := time.Unix(1000, 900_000_000)
+
+	for _, tc := range []struct {
+		name  string
+		reset int64
+		want  string
+	}{
+		{
+			name:  "rounds up past the reset second",
+			reset: 1030,
+			want:  "31",
+		},
+		{
+			name:  "reset already passed",
+			reset: 990,
+			want:  "1",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, rec := newRateLimitTestContext(e, "1.2.3.4:1234")
+			err := tooManyRequests(c, tc.reset, now)
+			assert.Equal(t, http.StatusTooManyRequests, echo.StatusCode(err))
+			assert.Equal(t, tc.want, rec.Header().Get(echo.HeaderRetryAfter))
+		})
+	}
+}
+
 // TestRateLimitUser makes sure authenticated requests are still keyed by user id.
 func TestRateLimitUser(t *testing.T) {
 	log.InitLogger()
@@ -229,6 +259,27 @@ func TestBasicAuthRateLimitBoundsConcurrentAuthentication(t *testing.T) {
 
 	assert.LessOrEqual(t, calls.Load(), int32(2))
 	assert.Equal(t, http.StatusTooManyRequests, thirdStatus)
+}
+
+// TestBasicAuthRateLimitRetryAfterUsesBucketEnd makes sure Retry-After counts down to the aligned bucket end.
+func TestBasicAuthRateLimitRetryAfterUsesBucketEnd(t *testing.T) {
+	log.InitLogger()
+	e := echo.New()
+	rateLimiter := limiter.New(memory.NewStore(), limiter.Rate{Period: time.Minute, Limit: 1})
+	// Bucket 16 spans 960s-1020s; the store's own reset would be a full period after the first hit.
+	now := func() time.Time { return time.Unix(1000, 900_000_000) }
+	h := basicAuthRateLimitWithClock(rateLimiter, now)(func(_ *echo.Context) error {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	})
+
+	first, _ := newRateLimitTestContext(e, "1.2.3.4:1234")
+	first.Request().SetBasicAuth("user", "wrong-password")
+	assert.Equal(t, http.StatusUnauthorized, echo.StatusCode(h(first)))
+
+	second, rec := newRateLimitTestContext(e, "1.2.3.4:1234")
+	second.Request().SetBasicAuth("user", "wrong-password")
+	assert.Equal(t, http.StatusTooManyRequests, echo.StatusCode(h(second)))
+	assert.Equal(t, "21", rec.Header().Get(echo.HeaderRetryAfter))
 }
 
 func TestBasicAuthRateLimitDoesNotRefundAnExpiredReservation(t *testing.T) {
