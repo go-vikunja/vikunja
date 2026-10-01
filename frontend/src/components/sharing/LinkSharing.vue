@@ -62,7 +62,7 @@
 				/>
 				<XButton
 					icon="plus"
-					:loading="isMutating"
+					:loading="showMutating"
 					:disabled="isMutating"
 					@click="add(projectId)"
 				>
@@ -208,6 +208,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {getDisplayName} from '@/helpers/user'
 import {useConfigStore} from '@/stores/config'
 import {useProjectViews} from '@/composables/useProjectViews'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const props = withDefaults(defineProps<{projectId?: number}>(), {projectId: 0})
 const sharesQuery = useQuery(computed(() => ({...linkSharesQuery(props.projectId), enabled: props.projectId > 0})))
@@ -216,6 +217,7 @@ const linkShares = computed(() => (sharesQuery.data.value ?? []).filter((share):
 const createMutation = useCreateLinkShareMutation()
 const deleteMutation = useDeleteLinkShareMutation()
 const isMutating = computed(() => createMutation.isPending.value || deleteMutation.isPending.value)
+const showMutating = useDelayedLoading(isMutating)
 const draft = ref(createLinkShareDraft())
 const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
