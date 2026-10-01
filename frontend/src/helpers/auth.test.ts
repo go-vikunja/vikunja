@@ -5,8 +5,11 @@ import {
 	getToken,
 	getTokenIdentity,
 	getTokenType,
+	MAX_RETRY_AFTER_MS,
 	refreshToken,
+	RefreshTokenError,
 	removeToken,
+	type RefreshFailure,
 } from './auth'
 
 let resolvePost: ((value: unknown) => void) | null = null
@@ -77,6 +80,19 @@ describe('getAuthSessionEpoch', () => {
 
 function settlePost() {
 	resolvePost?.({data: {token: FAKE_TOKEN}})
+}
+
+function rateLimitedResponse(headers: Record<string, string>) {
+	return {
+		error: {message: 'Too Many Requests'},
+		response: new Response(null, {status: 429, headers}),
+	}
+}
+
+// A fresh module, like a page load: the rate-limit gate deliberately survives removeToken().
+async function loadFreshAuth() {
+	vi.resetModules()
+	return import('./auth')
 }
 
 describe('refreshToken in-flight dedup', () => {
@@ -236,14 +252,121 @@ describe('refreshToken failure', () => {
 		localStorage.clear()
 	})
 
-	it('rejects after the single v2 request fails', async () => {
-		post.mockRejectedValueOnce({status: 401})
+	const bodyErrorCases: [string, Error, RefreshFailure | undefined][] = [
+		['a body parse', new SyntaxError('bad json'), undefined],
+		['a mid-body network', new TypeError('network'), {kind: 'network'}],
+	]
 
-		await expect(refreshToken(true)).rejects.toThrow('Error renewing token')
+	it.each(bodyErrorCases)('rethrows %s error unchanged instead of stamping the 200 status', async (_, err, failure) => {
+		post.mockResolvedValueOnce({error: err, response: new Response(null, {status: 200})})
 
+		const caught = await refreshToken(true).catch((e: unknown) => e)
+
+		expect((caught as Error).cause).toBe(err)
+		expect((caught as Partial<RefreshTokenError>).failure).toEqual(failure)
+	})
+
+	const statusCases: [string, number, unknown, RefreshFailure, Record<string, string>?][] = [
+		['a rejected refresh token', 401, {code: 16002, detail: 'gone'}, {kind: 'rejected', status: 401, code: 16002}],
+		['a proxy error page', 400, '<html>400</html>', {kind: 'rejected', status: 400}],
+		['a rate limit', 429, {message: 'Too Many Requests'}, {kind: 'rate-limited'}],
+		['a rate limit with an HTTP-date Retry-After', 429, {message: 'Too Many Requests'}, {kind: 'rate-limited'}, {'Retry-After': 'Wed, 21 Oct 2015 07:28:00 GMT'}],
+		['a server error', 502, {}, {kind: 'server', status: 502}],
+	]
+
+	it.each(statusCases)('classifies %s by the response status', async (_, status, body, failure, headers) => {
+		post.mockResolvedValueOnce({error: body, response: new Response(null, {status, headers})})
+
+		const caught = await refreshToken(true).catch((e: unknown) => e)
+
+		expect(post).toHaveBeenCalledWith(expect.objectContaining({
+			baseUrl: 'http://localhost:3000/api/v2',
+			throwOnError: false,
+		}))
+		expect(caught).toBeInstanceOf(RefreshTokenError)
+		expect((caught as RefreshTokenError).failure).toEqual(failure)
+		expect((caught as RefreshTokenError).cause).toMatchObject({status})
+	})
+	describe('Retry-After on a rate limit', () => {
+		const NOW = Date.parse('2015-10-21T07:27:00Z')
+		let auth: typeof import('./auth')
+
+		beforeEach(async () => {
+			vi.useFakeTimers({toFake: ['Date'], now: NOW})
+			auth = await loadFreshAuth()
+		})
+
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+
+		async function rateLimitedRetryAt(headers: Record<string, string>) {
+			post.mockResolvedValueOnce(rateLimitedResponse(headers))
+			const caught = await auth.refreshToken(true).catch((e: unknown) => e)
+			expect(caught).toBeInstanceOf(auth.RefreshTokenError)
+			const {failure} = caught as RefreshTokenError
+			expect(failure.kind).toBe('rate-limited')
+			return failure.kind === 'rate-limited' ? failure.retryAt : 'not rate-limited'
+		}
+
+		it.each([
+			['an hour', '3600'],
+			['an overflowing value', '9'.repeat(400)],
+		])('caps %s', async (_, value) => {
+			expect(await rateLimitedRetryAt({'Retry-After': value})).toBe(NOW + MAX_RETRY_AFTER_MS)
+		})
+	})
+})
+
+describe('refreshToken after a rate limit with Retry-After', () => {
+	const NOW = Date.parse('2015-10-21T07:27:00Z')
+	let auth: typeof import('./auth')
+
+	beforeEach(async () => {
+		vi.useFakeTimers({toFake: ['Date'], now: NOW})
+		resolvePost = null
+		post.mockClear()
+		localStorage.clear()
+		auth = await loadFreshAuth()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		apiUrls.base = '/api/v2'
+	})
+
+	it('rethrows the rate limit without a request until Retry-After passed, across a logout', async () => {
+		post.mockResolvedValueOnce(rateLimitedResponse({'Retry-After': '30'}))
+		const rateLimit = await auth.refreshToken(true).catch((e: unknown) => e)
+		expect(rateLimit).toBeInstanceOf(auth.RefreshTokenError)
+
+		vi.setSystemTime(NOW + 29_999)
+		auth.removeToken()
+
+		await expect(auth.refreshToken(true)).rejects.toBe(rateLimit)
 		expect(post).toHaveBeenCalledOnce()
-		expect(post).toHaveBeenCalledWith(expect.objectContaining({baseUrl: 'http://localhost:3000/api/v2'}))
-		expect(localStorage.getItem('token')).toBeNull()
+
+		vi.setSystemTime(NOW + 30_000)
+		post.mockResolvedValueOnce({data: {token: FAKE_TOKEN}})
+
+		await auth.refreshToken(true)
+
+		expect(post).toHaveBeenCalledTimes(2)
+		expect(auth.getToken()).toBe(FAKE_TOKEN)
+	})
+
+	it('refreshes against another API server before Retry-After passed', async () => {
+		apiUrls.base = 'http://first/api/v2'
+		post.mockResolvedValueOnce(rateLimitedResponse({'Retry-After': '30'}))
+		await auth.refreshToken(true).catch(() => {})
+
+		apiUrls.base = 'http://second/api/v2'
+		post.mockResolvedValueOnce({data: {token: FAKE_TOKEN}})
+
+		await auth.refreshToken(true)
+
+		expect(post).toHaveBeenCalledTimes(2)
+		expect(auth.getToken()).toBe(FAKE_TOKEN)
 	})
 })
 

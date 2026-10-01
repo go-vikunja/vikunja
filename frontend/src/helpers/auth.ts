@@ -4,6 +4,7 @@ import {authRefreshToken} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 import {clearServerClock, recordServerClock} from '@/helpers/serverClock'
+import {MILLISECONDS_A_MINUTE, MILLISECONDS_A_SECOND} from '@/constants/date'
 
 let savedToken: string | null = null
 
@@ -85,6 +86,55 @@ export function getAuthSessionEpoch(): number {
 	return authEpoch
 }
 
+// The backend's refresh limit window is a minute; this caps a bogus Retry-After.
+export const MAX_RETRY_AFTER_MS = 10 * MILLISECONDS_A_MINUTE
+
+export type RefreshFailure =
+	| {kind: 'network'}
+	| {kind: 'server', status: number}
+	| {kind: 'rate-limited', retryAt?: number}
+	| {kind: 'rejected', status: number, code?: number}
+
+// Desktop IPC failures and unusable 200 responses stay plain Errors: no HTTP status to classify.
+export class RefreshTokenError extends Error {
+	readonly failure: RefreshFailure
+
+	constructor(failure: RefreshFailure, cause: unknown) {
+		super('Error renewing token: ', {cause})
+		this.failure = failure
+	}
+}
+
+type TimedRateLimitError = RefreshTokenError & {readonly failure: {kind: 'rate-limited', retryAt: number}}
+
+function isTimedRateLimit(e: RefreshTokenError): e is TimedRateLimitError {
+	return e.failure.kind === 'rate-limited' && e.failure.retryAt !== undefined
+}
+
+// Not cleared on logout: the backend limits refreshes per IP, not per session.
+let rateLimit: {error: TimedRateLimitError, apiBase: string} | null = null
+
+function retryAtFromHeader(value: string | null): number | undefined {
+	if (value === null || !/^\d+$/.test(value)) {
+		return undefined
+	}
+	return Date.now() + Math.min(Number(value) * MILLISECONDS_A_SECOND, MAX_RETRY_AFTER_MS)
+}
+
+function httpRefreshFailure({status, code}: {status: number, code?: unknown}, headers: Headers): RefreshFailure {
+	if (status >= 500) {
+		return {kind: 'server', status}
+	}
+	if (status === 429) {
+		return {kind: 'rate-limited', retryAt: retryAtFromHeader(headers.get('Retry-After'))}
+	}
+	return {
+		kind: 'rejected',
+		status,
+		code: typeof code === 'number' ? code : undefined,
+	}
+}
+
 /**
  * Refreshes an auth token while ensuring it is updated everywhere.
  * The refresh token is sent automatically as an HttpOnly cookie.
@@ -96,6 +146,9 @@ export function getAuthSessionEpoch(): number {
 export async function refreshToken(persist: boolean): Promise<void> {
 	if (inFlightRefresh) {
 		return inFlightRefresh
+	}
+	if (rateLimit?.apiBase === getApiBaseUrl() && Date.now() < rateLimit.error.failure.retryAt) {
+		throw rateLimit.error
 	}
 	const p = doRefresh(persist)
 	inFlightRefresh = p
@@ -168,14 +221,41 @@ async function doRefresh(persist: boolean): Promise<void> {
 		// We hold the lock and no one else refreshed — make the API call.
 		try {
 			const baseUrl = canonicalApiBaseUrl(getApiBaseUrl())
-			const response = await authRefreshToken({client: publicClient, baseUrl})
+			const {data, error, response} = await authRefreshToken({client: publicClient, baseUrl, throwOnError: false})
+			if (error) {
+				const body: unknown = error
+				// fetch and body reads reject with a TypeError when the connection drops.
+				if (body instanceof TypeError) {
+					throw new RefreshTokenError({kind: 'network'}, body)
+				}
+				// hey-api sets `response` before reading the body, so body read/parse errors arrive with a 200 status.
+				if (!response || body instanceof Error) {
+					throw body
+				}
+				// Proxy error pages aren't JSON, so the status comes from the response.
+				const problem = typeof body === 'object'
+					? {...body, status: response.status}
+					: {status: response.status, detail: String(body)}
+				const failure = httpRefreshFailure(problem, response.headers)
+				const refreshError = new RefreshTokenError(failure, problem)
+				if (isTimedRateLimit(refreshError)) {
+					rateLimit = {error: refreshError, apiBase: serverAtStart}
+				}
+				throw refreshError
+			}
 			if (loggedOutSinceStart()) {
 				return
 			}
-			if (!response.data.token) throw new Error('Refresh response has no token')
-			saveToken(response.data.token, persist)
+			if (!data?.token) throw new Error('Refresh response has no token')
+			saveToken(data.token, persist)
 		} catch (e) {
-			throw new Error('Error renewing token: ', {cause: e})
+			// Another tab's refresh can land while our POST is in flight.
+			const storedToken = localStorage.getItem('token')
+			if (!loggedOutSinceStart() && storedToken && storedToken !== tokenBeforeLock) {
+				savedToken = storedToken
+				return
+			}
+			throw e instanceof RefreshTokenError ? e : new Error('Error renewing token: ', {cause: e})
 		}
 	}
 

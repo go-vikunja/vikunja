@@ -4,12 +4,13 @@ vi.mock('@/client/generated', () => ({
 	tokenRenew: sdk.tokenRenew,
 	userShow: sdk.userShow,
 }))
-import {describe, it, expect, beforeEach, vi} from 'vitest'
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
 import {nextTick} from 'vue'
 
 import {useAuthStore} from './auth'
 import {AUTH_TYPES} from '@/constants/auth'
+import {RefreshTokenError, type RefreshFailure} from '@/helpers/auth'
 
 const sdk = vi.hoisted(() => ({
 	authLogin: vi.fn(),
@@ -25,7 +26,9 @@ const {queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock} = v
 	getTokenMock: vi.fn(() => null as string | null),
 }))
 
-vi.mock('@/helpers/auth', () => ({
+vi.mock('@/helpers/auth', async (importOriginal) => ({
+	RefreshTokenError: (await importOriginal<typeof import('@/helpers/auth')>()).RefreshTokenError,
+	getAuthSessionEpoch: () => 0,
 	refreshToken: refreshTokenMock,
 	getToken: getTokenMock,
 	saveToken: vi.fn(),
@@ -64,12 +67,8 @@ function resetSdkMocks() {
 	}
 }
 
-// A refresh failure that looks like a real network/HTTP error so renewToken's
-// "is this a genuine logout?" check (it inspects the error cause's status) fires.
-function refreshError() {
-	return new Error('Error renewing token: ', {
-		cause: {status: 401},
-	})
+function refreshError(failure: RefreshFailure = {kind: 'rejected', status: 401}) {
+	return new RefreshTokenError(failure, undefined)
 }
 
 // A JWT carrying a not-yet-expired user session, so the checkAuth() call that
@@ -128,13 +127,11 @@ describe('auth store renewToken retry (issue #2863)', () => {
 		expect(routerPushMock).not.toHaveBeenCalledWith({name: 'user.login'})
 	})
 
-	it('logs out when BOTH the refresh and its retry fail', async () => {
+	it('logs out without looping when BOTH the refresh and its retry are rejected', async () => {
 		const store = useAuthStore()
 		setupExpiredUserSession(store)
 
-		refreshTokenMock
-			.mockRejectedValueOnce(refreshError())
-			.mockRejectedValueOnce(refreshError())
+		refreshTokenMock.mockRejectedValue(refreshError({kind: 'rejected', status: 401}))
 
 		await store.renewToken()
 
@@ -142,31 +139,64 @@ describe('auth store renewToken retry (issue #2863)', () => {
 		expect(routerPushMock).toHaveBeenCalledWith({name: 'user.login'})
 	})
 
-	it('does not log out when the refresh of an expired session is rate limited', async () => {
+	it('does not log out or retry immediately when the refresh of an expired session is rate limited', async () => {
 		const store = useAuthStore()
 		setupExpiredUserSession(store)
 
-		refreshTokenMock.mockRejectedValue(new Error('Error renewing token: ', {
-			cause: {status: 429, detail: 'rate limit exceeded'},
-		}))
+		refreshTokenMock.mockRejectedValue(refreshError({kind: 'rate-limited'}))
 
 		await store.renewToken()
 
-		expect(refreshTokenMock).toHaveBeenCalledTimes(2)
+		expect(refreshTokenMock).toHaveBeenCalledTimes(1)
 		expect(store.authenticated).toBe(true)
 		expect(routerPushMock).not.toHaveBeenCalled()
 	})
 
-	it('retries exactly once (no infinite loop) when the session is genuinely dead', async () => {
+	describe('with Retry-After', () => {
+		beforeEach(() => {
+			vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'Date']})
+		})
+
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+
+		it('renews again once Retry-After passed', async () => {
+			const store = useAuthStore()
+			setupExpiredUserSession(store)
+			refreshTokenMock
+				.mockRejectedValueOnce(refreshError({kind: 'rate-limited', retryAt: Date.now() + 30_000}))
+				.mockImplementationOnce(async () => {
+					getTokenMock.mockReturnValue(freshUserJwt())
+				})
+
+			await store.renewToken()
+			await vi.advanceTimersByTimeAsync(29_999)
+
+			expect(refreshTokenMock).toHaveBeenCalledTimes(1)
+
+			await vi.advanceTimersByTimeAsync(1)
+
+			expect(refreshTokenMock).toHaveBeenCalledTimes(2)
+			expect(store.authenticated).toBe(true)
+			expect(routerPushMock).not.toHaveBeenCalled()
+		})
+	})
+
+	it.each([
+		['a 5xx', refreshError({kind: 'server', status: 502})],
+		['an unclassified failure', new Error('No desktop OAuth refresh token available')],
+	])('does not log out an expired session when the refresh hits %s', async (_, error) => {
 		const store = useAuthStore()
 		setupExpiredUserSession(store)
 
-		refreshTokenMock.mockRejectedValue(refreshError())
+		refreshTokenMock.mockRejectedValue(error)
 
 		await store.renewToken()
 
-		// Initial attempt + exactly one retry — never more.
-		expect(refreshTokenMock).toHaveBeenCalledTimes(2)
+		expect(sdk.authLogout).not.toHaveBeenCalled()
+		expect(store.authenticated).toBe(true)
+		expect(routerPushMock).not.toHaveBeenCalled()
 	})
 })
 

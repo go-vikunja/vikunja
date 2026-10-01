@@ -18,9 +18,18 @@ import {invalidateAvatarQueries} from '@/client/queries/avatars'
 import type {RegisterUserRequestWritable, UserInfoBody, VikunjaErrorModel} from '@/client/generated'
 import {registerViaInviteLink} from '@/client/inviteLink'
 import {parseValidationErrors} from '@/helpers/parseValidationErrors'
-import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {
+	getAuthSessionEpoch,
+	getToken,
+	refreshToken,
+	RefreshTokenError,
+	removeToken,
+	saveToken,
+} from '@/helpers/auth'
+import {MILLISECONDS_A_SECOND} from '@/constants/date'
 import {serverNowSeconds} from '@/helpers/serverClock'
 import {useWebSocket} from '@/composables/useWebSocket'
+import {redirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {setModuleLoading} from '@/stores/helper'
 import {
 	getRedirectUrlFromCurrentFrontendPath,
@@ -102,26 +111,22 @@ function redirectToSpecifiedProvider() {
 // pkg/models ErrCodeNoRefreshToken
 const ERROR_CODE_NO_REFRESH_TOKEN = 16005
 
-interface RefreshFailure {
-	cause?: {
-		status?: number
-		code?: number
-	}
+function refreshFailure(e: unknown) {
+	return e instanceof RefreshTokenError ? e.failure : undefined
 }
 
-function refreshFailureProblem(e: unknown) {
-	return (e as RefreshFailure | undefined)?.cause
-}
-
-// A race-loser's refresh fails but the rotated cookie is already valid, so a
-// second attempt succeeds — recovering what would otherwise be a spurious
-// logout. Exactly one retry: a genuinely dead session still logs out, no loop.
-// Without a cookie there is nothing another caller could have rotated.
+// A race-loser's rotated cookie makes a second attempt succeed, and a one-off 5xx
+// often clears too. Exactly one retry so a dead session still logs out; network
+// errors, rate limits and a missing cookie won't clear in milliseconds.
 async function refreshTokenWithRetry(persist: boolean): Promise<void> {
 	try {
 		await refreshToken(persist)
 	} catch (e) {
-		if (refreshFailureProblem(e)?.code === ERROR_CODE_NO_REFRESH_TOKEN) {
+		const failure = refreshFailure(e)
+		const retryable = !failure
+			|| failure.kind === 'server'
+			|| (failure.kind === 'rejected' && failure.code !== ERROR_CODE_NO_REFRESH_TOKEN)
+		if (!retryable) {
 			throw e
 		}
 		await refreshToken(persist)
@@ -163,8 +168,9 @@ export const useAuthStore = defineStore('auth', () => {
 	
 	const currentSessionId = ref<string | null>(null)
 	const lastUserInfoRefresh = ref<Date | null>(null)
-	// Stops every navigation of this boot from re-refreshing a token whose refresh already failed.
-	let jwtWithFailedRefresh: string | null = null
+	// The JWT whose refresh failed for good this boot.
+	let failedRefresh: string | null = null
+	let refreshRetryTimer: ReturnType<typeof setTimeout> | undefined
 	const isLoading = ref(false)
 
 	const authUser = computed(() => authenticated.value && session.value?.type === AUTH_TYPES.USER)
@@ -208,6 +214,39 @@ export const useAuthStore = defineStore('auth', () => {
 
 	function updateLastUserRefresh() {
 		lastUserInfoRefresh.value = new Date()
+	}
+
+	function cancelRefreshRetry() {
+		clearTimeout(refreshRetryTimer)
+		refreshRetryTimer = undefined
+	}
+
+	function scheduleRefreshRetry(retryAt: number, epoch: number, retry: () => Promise<unknown>) {
+		if (getAuthSessionEpoch() !== epoch) {
+			return
+		}
+		cancelRefreshRetry()
+		refreshRetryTimer = setTimeout(() => {
+			if (getAuthSessionEpoch() !== epoch) {
+				return
+			}
+			retry().catch(error => console.error('Scheduled token refresh failed:', error))
+		}, Math.max(retryAt - Date.now(), MILLISECONDS_A_SECOND))
+	}
+
+	// Every attempt replaces the pending retry, so a success leaves none behind.
+	async function refreshUserToken(retry: () => Promise<unknown>) {
+		cancelRefreshRetry()
+		const epoch = getAuthSessionEpoch()
+		try {
+			await refreshTokenWithRetry(true)
+		} catch (e) {
+			const failure = refreshFailure(e)
+			if (failure?.kind === 'rate-limited' && failure.retryAt !== undefined) {
+				scheduleRefreshRetry(failure.retryAt, epoch, retry)
+			}
+			throw e
+		}
 	}
 
 	// The debounce reset makes the following checkAuth() parse the new JWT instead of returning early.
@@ -350,6 +389,20 @@ export const useAuthStore = defineStore('auth', () => {
 		return {...response.data, project_id: response.data.project_id}
 	}
 
+	// The guard sent the user to the login page when the original check failed.
+	// A login meanwhile does its own redirect.
+	async function retryCheckAuth() {
+		const epoch = getAuthSessionEpoch()
+		await checkAuth()
+		if (
+			getAuthSessionEpoch() === epoch
+			&& authenticated.value
+			&& router.currentRoute.value.name === 'user.login'
+		) {
+			await redirectToLastVisited(router)
+		}
+	}
+
 	/**
 	 * Populates user information from jwt token saved in local storage in store
 	 */
@@ -392,12 +445,12 @@ export const useAuthStore = defineStore('auth', () => {
 					// `authLinkShare` to true, causing the router guard to bounce
 					// between /share/:hash/auth and the project view forever.
 					setSession(payload)
-				} else if (payload.type === AUTH_TYPES.USER && jwt !== jwtWithFailedRefresh) {
+				} else if (payload.type === AUTH_TYPES.USER && failedRefresh !== jwt) {
 					// JWT expired but this is a user session — attempt a cookie-based
 					// refresh before giving up. This lets users who reopen the app
 					// after the short JWT TTL seamlessly resume their session.
 					try {
-						await refreshTokenWithRetry(true)
+						await refreshUserToken(retryCheckAuth)
 						const freshJwt = getToken()
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
@@ -408,10 +461,18 @@ export const useAuthStore = defineStore('auth', () => {
 							setSession(p)
 						}
 					} catch (e) {
-						jwtWithFailedRefresh = jwt
+						const failure = refreshFailure(e)
+						// Outages may clear by the next navigation; refreshToken() gates a timed rate limit.
+						const retriesLater = failure?.kind === 'network'
+							|| failure?.kind === 'server'
+							|| (failure?.kind === 'rate-limited' && failure.retryAt !== undefined)
+						if (!retriesLater) {
+							failedRefresh = jwt
+						}
 						// A kept stale JWT makes every later page load refresh again.
 						// Skip the removal if another tab stored a fresh token meanwhile.
-						if (refreshFailureProblem(e)?.status === 401 && localStorage.getItem('token') === jwt) {
+						const rejected401 = failure?.kind === 'rejected' && failure.status === 401
+						if (rejected401 && localStorage.getItem('token') === jwt) {
 							removeToken()
 						}
 					}
@@ -510,7 +571,7 @@ export const useAuthStore = defineStore('auth', () => {
 				saveToken(response.data.token, false)
 			} else {
 				// User sessions renew via the refresh-token cookie.
-				await refreshTokenWithRetry(true)
+				await refreshUserToken(renewToken)
 			}
 			await checkAuth()
 		} catch (e) {
@@ -518,9 +579,7 @@ export const useAuthStore = defineStore('auth', () => {
 			// If the JWT is still valid, the proactive refresh failure is harmless
 			// — the 401 interceptor will handle it when the token really expires.
 			const isExpired = !session.value?.exp || session.value.exp < serverNowSeconds()
-			const cause = e !== null && typeof e === 'object' && 'cause' in e ? e.cause : undefined
-			const status = cause && typeof cause === 'object' && 'status' in cause ? cause.status : undefined
-			if (isExpired && status && status !== 429) {
+			if (isExpired && refreshFailure(e)?.kind === 'rejected') {
 				await logout()
 			}
 		}
@@ -529,6 +588,7 @@ export const useAuthStore = defineStore('auth', () => {
 	async function logout() {
 		const {disconnect} = useWebSocket()
 		disconnect()
+		cancelRefreshRetry()
 
 		// Revoke the server session so the refresh token can't be reused.
 		// Best-effort: if the network call fails, still clean up locally.
