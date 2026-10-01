@@ -1,5 +1,6 @@
 import {queryOptions, mutationOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import type {DeepReadonly} from 'vue'
+import isEqual from 'fast-deep-equal'
 import {
 	userShow,
 	userUpdateSettings,
@@ -13,6 +14,7 @@ import type {
 } from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
 import {contextMutationOptions} from './contextMutation'
+import {assertClientRequestContext, type ClientRequestContext} from '@/client/requestContext'
 import {AUTH_TYPES, type AuthType} from '@/constants/auth'
 import {invalidateAvatarQueries} from './avatars'
 import {
@@ -99,6 +101,36 @@ export function createUserSettingsDraft(settings: DeepReadonly<UserSettings>): U
 	}
 }
 
+export type UserSettingsEdits = Partial<Omit<UserSettings, 'frontend_settings'>> & {
+	frontend_settings?: Partial<FrontendSettings>
+}
+
+function changedEntries<T extends object>(initial: T, edited: T): Partial<T> {
+	return Object.fromEntries(Object.entries(edited)
+		.filter(([key, value]) => !isEqual(value, initial[key as keyof T]))) as Partial<T>
+}
+
+export function diffUserSettings(initial: UserSettings, edited: UserSettings): UserSettingsEdits {
+	const {frontend_settings: initialFrontend, ...initialRest} = initial
+	const {frontend_settings: editedFrontend, ...editedRest} = edited
+	return {
+		...changedEntries(initialRest, editedRest),
+		frontend_settings: changedEntries(initialFrontend, editedFrontend),
+	}
+}
+
+export function withSettingsEdits(settings: DeepReadonly<UserSettings>, edits: UserSettingsEdits): UserSettings {
+	const draft = createUserSettingsDraft(settings)
+	return {
+		...draft,
+		...edits,
+		frontend_settings: {
+			...draft.frontend_settings,
+			...edits.frontend_settings,
+		},
+	}
+}
+
 export function currentUserQuery(id: number, type: AuthType = AUTH_TYPES.USER) {
 	return queryOptions({
 		queryKey: accountKeys.user(id, type),
@@ -106,13 +138,17 @@ export function currentUserQuery(id: number, type: AuthType = AUTH_TYPES.USER) {
 	})
 }
 
-// checkAuth has to see a fresh /user before the first navigation decides on it.
-export function refreshCurrentUser(id: number, type: AuthType = AUTH_TYPES.USER) {
-	return queryClient.fetchQuery({
+function freshCurrentUserQuery(id: number, type: AuthType) {
+	return {
 		...currentUserQuery(id, type),
 		staleTime: 0,
 		retry: false,
-	})
+	}
+}
+
+// checkAuth has to see a fresh /user before the first navigation decides on it.
+export function refreshCurrentUser(id: number, type: AuthType = AUTH_TYPES.USER) {
+	return queryClient.fetchQuery(freshCurrentUserQuery(id, type))
 }
 
 export function timezonesQuery() {
@@ -151,39 +187,42 @@ function applySettingsUpdate(
 // The account query is mounted for every user session, so the invalidation actually refetches.
 export function reconcileAccount({id, type}: AccountIdentity, client: QueryClient) {
 	return client.fetchQuery({
-		...currentUserQuery(id, type),
-		staleTime: 0,
-		retry: false,
+		...freshCurrentUserQuery(id, type),
+		meta: {handlesError: true},
 	}).catch(() => client.invalidateQueries({queryKey: accountKeys.user(id, type)}))
 }
 
 // Overlapping full-replacement PUTs would let the slower one revert the faster.
 const ACCOUNT_SETTINGS_SCOPE = {id: 'account-settings'}
 
-function withFrontendSettings(
-	settings: UserGeneralSettings | undefined,
-	frontendSettings: Partial<FrontendSettings>,
-): UserGeneralSettingsWritable {
-	const stored = normalizeUserSettings(settings)
-	return {
-		...stored,
-		frontend_settings: {
-			...stored.frontend_settings,
-			...frontendSettings,
-		},
+async function saveSettingsEdits(
+	{id, type, edits, omitLanguage}: AccountIdentity & {
+		edits: UserSettingsEdits
+		omitLanguage?: boolean
+	},
+	{request}: {request: ClientRequestContext},
+) {
+	if (request.identity?.id !== id || request.identity.type !== type) {
+		throw new DOMException('Account changed', 'AbortError')
 	}
+	// Direct read: an account query fetch would overwrite optimistic cache values.
+	const {data: account} = await userShow()
+	assertClientRequestContext(request)
+	const merged = withSettingsEdits(normalizeUserSettings(account.settings), edits)
+	const {language: _language, ...withoutLanguage} = merged
+	const settings = omitLanguage ? withoutLanguage : merged
+	await userUpdateSettings({body: settings})
+	return settings
 }
 
 export function updateSettingsMutationOptions() {
 	return mutationOptions({
 		...contextMutationOptions({
-			mutationFn: async ({settings}: AccountIdentity & {
-				settings: UserGeneralSettingsWritable
+			mutationFn: (input: AccountIdentity & {
+				edits: UserSettingsEdits
+				omitLanguage?: boolean
 				showMessage?: boolean
-			}) => {
-				await userUpdateSettings({body: settings})
-				return settings
-			},
+			}, context) => saveSettingsEdits(input, context),
 			onSuccess: (settings, input, client) => applySettingsUpdate(settings, input, client),
 			onSettled: reconcileAccount,
 			successMessage: (_data, {showMessage}) => showMessage === false
@@ -203,17 +242,13 @@ export function useUpdateSettingsMutation() {
 export function updateFrontendSettingsMutationOptions() {
 	return mutationOptions({
 		...contextMutationOptions({
-			mutationFn: async ({id, type, frontendSettings}: AccountIdentity & {
+			mutationFn: ({id, type, frontendSettings}: AccountIdentity & {
 				frontendSettings: Partial<FrontendSettings>
-			}) => {
-				const current = queryClient.getQueryData<UserInfoResponse>(accountKeys.user(id, type))
-				if (!current) {
-					throw new Error('Cannot store a frontend setting before the account is loaded')
-				}
-				const settings = withFrontendSettings(current.settings, frontendSettings)
-				await userUpdateSettings({body: settings})
-				return settings
-			},
+			}, context) => saveSettingsEdits({
+				id,
+				type,
+				edits: {frontend_settings: frontendSettings},
+			}, context),
 			optimistic: {
 				queryKeys: ({id, type}) => [accountKeys.user(id, type)],
 				update: ({id, type, frontendSettings}, client) => {
@@ -221,7 +256,10 @@ export function updateFrontendSettingsMutationOptions() {
 						...current,
 						settings: {
 							...current.settings,
-							...withFrontendSettings(current.settings, frontendSettings),
+							...withSettingsEdits(
+								normalizeUserSettings(current.settings),
+								{frontend_settings: frontendSettings},
+							),
 						},
 					} : current)
 				},
