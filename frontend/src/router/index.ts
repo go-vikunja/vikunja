@@ -249,6 +249,9 @@ const router = createRouter({
 			path: '/projects',
 			name: 'projects.index',
 			component: () => import('@/views/project/ListProjects.vue'),
+			meta: {
+				title: 'project.projects',
+			},
 		},
 		{
 			path: '/projects/new',
