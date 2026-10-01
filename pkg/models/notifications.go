@@ -73,6 +73,10 @@ func (n *ReminderDueNotification) ToTitle(lang string) string {
 
 // ToMail returns the mail notification for ReminderDueNotification
 func (n *ReminderDueNotification) ToMail(lang string) *notifications.Mail {
+	if !config.ServiceEnableEmailReminders.GetBool() || n.User == nil || !n.User.EmailRemindersEnabled {
+		return nil
+	}
+
 	return notifications.NewMail().
 		IncludeLinkToSettings(lang).
 		To(n.User.Email).
