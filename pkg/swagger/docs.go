@@ -8699,9 +8699,9 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Invalid or expired refresh token, or no refresh token cookie sent (code 16005).",
+                        "description": "Invalid, expired or already-used refresh token, or no refresh token cookie sent (codes 16002-16005).",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/web.HTTPError"
                         }
                     }
                 }
