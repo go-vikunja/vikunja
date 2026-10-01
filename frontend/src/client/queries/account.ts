@@ -3,18 +3,18 @@ import type {DeepReadonly} from 'vue'
 import isEqual from 'fast-deep-equal'
 import {
 	userShow,
-	userUpdateSettings,
+	patchUserSettingsRead,
 	userTimezones,
 	userGetAvatarProvider,
 } from '@/client/generated'
 import type {
+	JsonPatchOp,
 	UserGeneralSettings,
-	UserGeneralSettingsWritable,
 	UserInfoBody,
 } from '@/client/generated'
 import {queryClient} from '@/client/queryClient'
 import {contextMutationOptions} from './contextMutation'
-import {assertClientRequestContext, type ClientRequestContext} from '@/client/requestContext'
+import type {ClientRequestContext} from '@/client/requestContext'
 import {AUTH_TYPES, type AuthType} from '@/constants/auth'
 import {invalidateAvatarQueries} from './avatars'
 import {
@@ -119,7 +119,7 @@ export function diffUserSettings(initial: UserSettings, edited: UserSettings): U
 	}
 }
 
-export function withSettingsEdits(settings: DeepReadonly<UserSettings>, edits: UserSettingsEdits): UserSettings {
+function withSettingsEdits(settings: DeepReadonly<UserSettings>, edits: UserSettingsEdits): UserSettings {
 	const draft = createUserSettingsDraft(settings)
 	return {
 		...draft,
@@ -159,23 +159,27 @@ export function timezonesQuery() {
 	})
 }
 
+function withAccountSettingsEdits(account: UserInfoResponse, edits: UserSettingsEdits): UserInfoResponse {
+	return {
+		...account,
+		name: edits.name ?? account.name,
+		settings: {
+			...account.settings,
+			...withSettingsEdits(normalizeUserSettings(account.settings), edits),
+		},
+	}
+}
+
 function applySettingsUpdate(
-	settings: UserGeneralSettingsWritable,
+	edits: UserSettingsEdits,
 	{id, type}: AccountIdentity,
 	client: QueryClient,
 ) {
 	const key = accountKeys.user(id, type)
 	const previous = client.getQueryData<UserInfoResponse>(key)
-	client.setQueryData<UserInfoResponse>(key, current => current ? {
-		...current,
-		name: settings.name ?? current.name,
-		settings: {
-			...current.settings,
-			...settings,
-		},
-	} : current)
-	if (settings.language) setLanguage(settings.language as SupportedLocale).catch(error)
-	if (previous?.username && previous.name !== settings.name) {
+	client.setQueryData<UserInfoResponse>(key, current => current ? withAccountSettingsEdits(current, edits) : current)
+	if (edits.language) setLanguage(edits.language).catch(error)
+	if (previous?.username && edits.name !== undefined && previous.name !== edits.name) {
 		const {username} = previous
 		void userGetAvatarProvider().then(({data}) => {
 			if (data.avatar_provider === 'initials') invalidateAvatarQueries(username)
@@ -192,27 +196,37 @@ export function reconcileAccount({id, type}: AccountIdentity, client: QueryClien
 	}).catch(() => client.invalidateQueries({queryKey: accountKeys.user(id, type)}))
 }
 
-// Overlapping full-replacement PUTs would let the slower one revert the faster.
+// The server applies a PATCH as read, merge, write, so overlapping ones could revert each other.
 const ACCOUNT_SETTINGS_SCOPE = {id: 'account-settings'}
 
+function definedEntries<T extends object>(value: T): Partial<T> {
+	return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Partial<T>
+}
+
+function settingsMergePatch({frontend_settings: frontend, ...rest}: UserSettingsEdits): UserSettingsEdits {
+	const patch: UserSettingsEdits = definedEntries(rest)
+	const frontendPatch = definedEntries(frontend ?? {})
+	if (Object.keys(frontendPatch).length > 0) patch.frontend_settings = frontendPatch
+	return patch
+}
+
 async function saveSettingsEdits(
-	{id, type, edits, omitLanguage}: AccountIdentity & {
-		edits: UserSettingsEdits
-		omitLanguage?: boolean
-	},
+	{id, type, edits}: AccountIdentity & {edits: UserSettingsEdits},
 	{request}: {request: ClientRequestContext},
 ) {
 	if (request.identity?.id !== id || request.identity.type !== type) {
 		throw new DOMException('Account changed', 'AbortError')
 	}
-	// Direct read: an account query fetch would overwrite optimistic cache values.
-	const {data: account} = await userShow()
-	assertClientRequestContext(request)
-	const merged = withSettingsEdits(normalizeUserSettings(account.settings), edits)
-	const {language: _language, ...withoutLanguage} = merged
-	const settings = omitLanguage ? withoutLanguage : merged
-	await userUpdateSettings({body: settings})
-	return settings
+	const patch = settingsMergePatch(edits)
+	const {error: patchError, response} = await patchUserSettingsRead({
+		// Typed as JSON Patch only, which cannot add a key below a null frontend_settings.
+		body: patch as unknown as JsonPatchOp[],
+		headers: {'Content-Type': 'application/merge-patch+json'},
+		throwOnError: false,
+	})
+	// A patch that changes nothing gets an empty 304.
+	if (patchError !== undefined && response?.status !== 304) throw patchError
+	return patch
 }
 
 export function updateSettingsMutationOptions() {
@@ -220,10 +234,9 @@ export function updateSettingsMutationOptions() {
 		...contextMutationOptions({
 			mutationFn: (input: AccountIdentity & {
 				edits: UserSettingsEdits
-				omitLanguage?: boolean
 				showMessage?: boolean
 			}, context) => saveSettingsEdits(input, context),
-			onSuccess: (settings, input, client) => applySettingsUpdate(settings, input, client),
+			onSuccess: (patch, input, client) => applySettingsUpdate(patch, input, client),
 			onSettled: reconcileAccount,
 			successMessage: (_data, {showMessage}) => showMessage === false
 				? undefined
@@ -237,8 +250,6 @@ export function useUpdateSettingsMutation() {
 	return useMutation(updateSettingsMutationOptions())
 }
 
-// PUT /user/settings/general is a full replace, so one frontend flag can only be stored together
-// with every other setting the server currently holds.
 export function updateFrontendSettingsMutationOptions() {
 	return mutationOptions({
 		...contextMutationOptions({
@@ -252,19 +263,12 @@ export function updateFrontendSettingsMutationOptions() {
 			optimistic: {
 				queryKeys: ({id, type}) => [accountKeys.user(id, type)],
 				update: ({id, type, frontendSettings}, client) => {
-					client.setQueryData<UserInfoResponse>(accountKeys.user(id, type), current => current ? {
-						...current,
-						settings: {
-							...current.settings,
-							...withSettingsEdits(
-								normalizeUserSettings(current.settings),
-								{frontend_settings: frontendSettings},
-							),
-						},
-					} : current)
+					client.setQueryData<UserInfoResponse>(accountKeys.user(id, type), current => current
+						? withAccountSettingsEdits(current, {frontend_settings: frontendSettings})
+						: current)
 				},
 			},
-			onSuccess: (settings, input, client) => applySettingsUpdate(settings, input, client),
+			onSuccess: (patch, input, client) => applySettingsUpdate(patch, input, client),
 			onSettled: reconcileAccount,
 		}),
 		scope: ACCOUNT_SETTINGS_SCOPE,

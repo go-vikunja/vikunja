@@ -15,7 +15,7 @@ import en from '@/i18n/lang/en.json'
 
 const sdk = vi.hoisted(() => ({
 	userTimezones: vi.fn(async () => ({data: []})),
-	userUpdateSettings: vi.fn(),
+	patchUserSettingsRead: vi.fn(),
 	userShow: vi.fn(),
 	userGetAvatarProvider: vi.fn(),
 }))
@@ -119,6 +119,19 @@ describe('General user settings', () => {
 		expect(wrapper?.find('.sticky-save button').exists()).toBe(true)
 	})
 
+	it('sends only what changed since the last save', async () => {
+		const {nameInput, release} = await startPendingSave()
+		await wrapper!.find('input[type="time"]').setValue('17:30')
+		release()
+		await flushPromises()
+
+		await nameInput.trigger('keyup.enter')
+		await flushPromises()
+
+		expect(sdk.patchUserSettingsRead).toHaveBeenCalledTimes(2)
+		expect(sdk.patchUserSettingsRead.mock.calls[1][0].body).toStrictEqual({frontend_settings: {default_due_time: '17:30'}})
+	})
+
 	it('ignores a submit while a save is in flight', async () => {
 		const {nameInput, release} = await startPendingSave()
 		await nameInput.setValue('Old')
@@ -127,7 +140,7 @@ describe('General user settings', () => {
 		release()
 		await flushPromises()
 
-		expect(sdk.userUpdateSettings).toHaveBeenCalledOnce()
+		expect(sdk.patchUserSettingsRead).toHaveBeenCalledOnce()
 		expect((nameInput.element as HTMLInputElement).value).toBe('Old')
 		expect(wrapper?.find('.sticky-save button').exists()).toBe(true)
 	})
@@ -162,8 +175,11 @@ function seedAccount() {
 async function startPendingSave() {
 	seedAccount()
 	let release = () => {}
-	sdk.userUpdateSettings.mockImplementation(() => new Promise(resolve => {
-		release = () => resolve({data: {}})
+	sdk.patchUserSettingsRead.mockImplementation(() => new Promise(resolve => {
+		release = () => resolve({
+			data: {},
+			response: {status: 200},
+		})
 	}))
 	wrapper = await mountComponent()
 	await flushPromises()
@@ -172,7 +188,8 @@ async function startPendingSave() {
 	await nameInput.setValue('New')
 	await nameInput.trigger('keyup.enter')
 	await flushPromises()
-	expect(sdk.userUpdateSettings).toHaveBeenCalledOnce()
+	expect(sdk.patchUserSettingsRead).toHaveBeenCalledOnce()
+	expect(sdk.patchUserSettingsRead.mock.calls[0][0].body).toStrictEqual({name: 'New'})
 	return {
 		nameInput,
 		release: () => release(),
