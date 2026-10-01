@@ -81,7 +81,7 @@
 						<CustomTransition name="fade">
 							<span
 								v-if="
-									loading &&
+									showLoading &&
 										saving === c.id
 								"
 								class="is-inline-flex"
@@ -91,7 +91,7 @@
 							</span>
 							<span
 								v-else-if="
-									!loading &&
+									!showLoading &&
 										saved === c.id
 								"
 								class="has-text-success"
@@ -154,7 +154,7 @@
 					<div class="form">
 						<CustomTransition name="fade">
 							<span
-								v-if="loading && creating"
+								v-if="showLoading && creating"
 								class="is-inline-flex"
 							>
 								<span class="loader is-inline-block mie-2" />
@@ -169,7 +169,7 @@
 								v-model="newCommentText"
 								:class="{
 									'is-loading':
-										loading &&
+										showLoading &&
 										!isCommentEdit,
 								}"
 								:upload-callback="attachmentUpload"
@@ -245,6 +245,7 @@ import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {commentReplyContextKey, scrollAndHighlightComment} from '@/components/tasks/partials/commentReplyContext'
 
 const props = withDefaults(defineProps<{
@@ -275,8 +276,9 @@ const totalPages = computed(() => commentQuery.data.value?.total_pages ?? 0)
 const createMutation = useCreateCommentMutation()
 const updateMutation = useUpdateCommentMutation()
 const deleteMutation = useDeleteCommentMutation()
-const listPending = computed(() => commentQuery.isLoading.value)
+const listPending = useDelayedLoading(commentQuery.isLoading)
 const loading = computed(() => createMutation.isPending.value || updateMutation.isPending.value)
+const showLoading = useDelayedLoading(loading)
 const commentDrafts = ref<Record<number, string>>({})
 
 const showDeleteModal = ref(false)

@@ -72,6 +72,7 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Done from '@/components/misc/Done.vue'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 
 import type {Task as ITask} from '@/client/generated'
@@ -100,7 +101,7 @@ async function copyUrl() {
 }
 
 const updateTask = useUpdateTaskMutation()
-const loading = updateTask.isPending
+const loading = useDelayedLoading(updateTask.isPending)
 
 const textIdentifier = computed(() => getTaskIdentifier(props.task))
 

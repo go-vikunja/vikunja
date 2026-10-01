@@ -189,6 +189,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 
 import {useTasks} from '@/composables/useTasks'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useCreateTaskRelationMutation, useDeleteTaskRelationMutation, useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import {createTaskDraft, getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
@@ -230,7 +231,7 @@ type TaskRelation = {kind: IRelationKind, task: ITask}
 
 const createRelation = useCreateTaskRelationMutation()
 const deleteRelation = useDeleteTaskRelationMutation()
-const isSaving = computed(() => createRelation.isPending.value || deleteRelation.isPending.value)
+const isSaving = useDelayedLoading(() => createRelation.isPending.value || deleteRelation.isPending.value)
 
 const relatedTasks = computed(() => props.initialRelatedTasks ?? {})
 
