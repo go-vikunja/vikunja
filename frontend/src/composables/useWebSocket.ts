@@ -34,12 +34,12 @@ const mayHaveMissedEvents = ref(false)
 const subscribedAt = ref(0)
 let manuallyDisconnected = false
 const firstConnectionSettled = ref(false)
-let firstConnectionTimer: ReturnType<typeof setTimeout> | null = null
+let firstConnectionTimer: ReturnType<typeof setTimeout> | undefined
 
 function setFirstConnectionSettled(settled: boolean) {
 	firstConnectionSettled.value = settled
 	clearTimeout(firstConnectionTimer)
-	firstConnectionTimer = null
+	firstConnectionTimer = undefined
 }
 
 function getWebSocketUrl(): string {
