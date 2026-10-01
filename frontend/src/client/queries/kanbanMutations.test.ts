@@ -21,6 +21,7 @@ vi.mock('@/client/requestContext', () => ({
 	captureClientRequestContext: () => 1,
 	assertClientRequestContext: vi.fn(),
 	isClientRequestContextCurrent: () => true,
+	isRequestContextAbort: () => false,
 }))
 
 describe('board mutations', () => {
