@@ -567,6 +567,7 @@ func init() {
 		"LabelTaskBulk":                                reflect.ValueOf((*models.LabelTaskBulk)(nil)),
 		"LabelWithTaskID":                              reflect.ValueOf((*models.LabelWithTaskID)(nil)),
 		"LinkSharing":                                  reflect.ValueOf((*models.LinkSharing)(nil)),
+		"ListAllProjectsOptions":                       reflect.ValueOf((*models.ListAllProjectsOptions)(nil)),
 		"MarkTaskUnreadOnComment":                      reflect.ValueOf((*models.MarkTaskUnreadOnComment)(nil)),
 		"Message":                                      reflect.ValueOf((*models.Message)(nil)),
 		"OAuthCode":                                    reflect.ValueOf((*models.OAuthCode)(nil)),
