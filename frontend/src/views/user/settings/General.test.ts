@@ -8,11 +8,18 @@ import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import General from './General.vue'
 import {AUTH_TYPES} from '@/constants/auth'
+import {removeToken, saveToken} from '@/helpers/auth'
 import testid from '@/directives/testid'
 import {useAuthStore} from '@/stores/auth'
 import en from '@/i18n/lang/en.json'
 
-vi.mock('@/client/generated', () => ({userTimezones: vi.fn(async () => ({data: []}))}))
+const sdk = vi.hoisted(() => ({
+	userTimezones: vi.fn(async () => ({data: []})),
+	userUpdateSettings: vi.fn(),
+	userShow: vi.fn(),
+	userGetAvatarProvider: vi.fn(),
+}))
+vi.mock('@/client/generated', () => sdk)
 
 vi.mock('@/message', () => ({
 	success: vi.fn(),
@@ -44,7 +51,8 @@ async function mountComponent() {
 				FormCheckbox: true,
 				ShortcutRecorder: true,
 				Reminders: true,
-				CustomTransition: true,
+				CustomTransition: {template: '<div><slot /></div>'},
+				XButton: {template: '<button><slot /></button>'},
 			},
 			config: {
 				errorHandler(err) {
@@ -57,8 +65,12 @@ async function mountComponent() {
 
 describe('General user settings', () => {
 	beforeEach(() => {
+		vi.clearAllMocks()
+		queryClient.clear()
 		setActivePinia(createPinia())
+		removeToken()
 		errors = []
+		sdk.userGetAvatarProvider.mockResolvedValue({data: {avatar_provider: 'default'}})
 	})
 
 	afterEach(() => {
@@ -96,4 +108,73 @@ describe('General user settings', () => {
 		expect(errors).toEqual([])
 		expect(wrapper.text()).toContain('keycloak')
 	})
+
+	it('keeps edits made while a save is in flight', async () => {
+		const {nameInput, release} = await startPendingSave()
+		await nameInput.setValue('Newer')
+		release()
+		await flushPromises()
+
+		expect((nameInput.element as HTMLInputElement).value).toBe('Newer')
+		expect(wrapper?.find('.sticky-save button').exists()).toBe(true)
+	})
+
+	it('ignores a submit while a save is in flight', async () => {
+		const {nameInput, release} = await startPendingSave()
+		await nameInput.setValue('Old')
+		await nameInput.trigger('keyup.enter')
+		await flushPromises()
+		release()
+		await flushPromises()
+
+		expect(sdk.userUpdateSettings).toHaveBeenCalledOnce()
+		expect((nameInput.element as HTMLInputElement).value).toBe('Old')
+		expect(wrapper?.find('.sticky-save button').exists()).toBe(true)
+	})
 })
+
+function seedAccount() {
+	saveToken(`header.${btoa(JSON.stringify({id: 1, type: AUTH_TYPES.USER}))}.signature`, false)
+	useAuthStore().setSession({
+		id: 1,
+		type: AUTH_TYPES.USER,
+		exp: 0,
+	})
+	queryClient.setQueryData(accountKeys.user(1), {
+		id: 1,
+		username: 'user1',
+		is_local_user: true,
+		settings: {
+			name: 'Old',
+			frontend_settings: {sidebar_width: 376},
+		},
+	})
+	sdk.userShow.mockResolvedValue({
+		data: {
+			id: 1,
+			username: 'user1',
+			is_local_user: true,
+			settings: {name: 'Old'},
+		},
+	})
+}
+
+async function startPendingSave() {
+	seedAccount()
+	let release = () => {}
+	sdk.userUpdateSettings.mockImplementation(() => new Promise(resolve => {
+		release = () => resolve({data: {}})
+	}))
+	wrapper = await mountComponent()
+	await flushPromises()
+
+	const nameInput = wrapper.find('input[type="text"]')
+	await nameInput.setValue('New')
+	await nameInput.trigger('keyup.enter')
+	await flushPromises()
+	expect(sdk.userUpdateSettings).toHaveBeenCalledOnce()
+	return {
+		nameInput,
+		release: () => release(),
+	}
+}

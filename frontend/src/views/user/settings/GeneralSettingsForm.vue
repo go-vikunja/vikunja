@@ -306,8 +306,14 @@
 
 
 <script setup lang="ts">
-import {createUserSettingsDraft, useUpdateSettingsMutation, type AccountIdentity} from '@/client/queries/account'
-import {computed, watch, ref, onBeforeMount, type Ref} from 'vue'
+import {
+	createUserSettingsDraft,
+	diffUserSettings,
+	useUpdateSettingsMutation,
+	withSettingsEdits,
+	type AccountIdentity,
+} from '@/client/queries/account'
+import {computed, ref, type Ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import isEqual from 'fast-deep-equal'
 
@@ -440,21 +446,8 @@ const quickAddDefaultReminders = computed({
 	},
 })
 
-const initialSettings = ref<UserSettings>()
-const isDirty = ref(false)
-
-onBeforeMount(() => {
-	initialSettings.value = JSON.parse(JSON.stringify(settings.value))
-	isDirty.value = false
-})
-
-watch(
-	() => settings.value,
-	() => {
-		isDirty.value = !isEqual(settings.value, initialSettings.value)
-	},
-	{deep: true},
-)
+const initialSettings = ref(createUserSettingsDraft(authStore.settings))
+const isDirty = computed(() => !isEqual(settings.value, initialSettings.value))
 
 function enforceBackgroundBrightnessBounds() {
 	const value = Number(settings.value.frontend_settings.background_brightness)
@@ -530,17 +523,22 @@ const hasFilters = computed(() => projectList.projectsArray.some(isSavedFilterPr
 const loading = updateUserSettings.isPending
 
 async function updateSettings() {
-	const {language, ...withoutLanguage} = settings.value
-	try {
-		await updateUserSettings.mutateAsync({
-			id: props.identity.id,
-			type: props.identity.type,
-			settings: configStore.demo_mode_enabled ? withoutLanguage : settings.value,
-		})
-		if (configStore.demo_mode_enabled) setLanguage(language).catch(error)
-	} catch { return }
-	initialSettings.value = JSON.parse(JSON.stringify(settings.value))
-	isDirty.value = false
+	if (loading.value) return
+	const submitted = createUserSettingsDraft(settings.value)
+	const saved = await updateUserSettings.mutateAsync({
+		id: props.identity.id,
+		type: props.identity.type,
+		edits: diffUserSettings(initialSettings.value, submitted),
+		omitLanguage: configStore.demo_mode_enabled,
+	}).catch(() => null)
+	if (!saved) return
+	if (configStore.demo_mode_enabled) setLanguage(submitted.language).catch(error)
+	const editedSinceSubmit = diffUserSettings(submitted, settings.value)
+	initialSettings.value = createUserSettingsDraft({
+		language: submitted.language,
+		...saved,
+	})
+	settings.value = withSettingsEdits(initialSettings.value, editedSinceSubmit)
 }
 </script>
 
