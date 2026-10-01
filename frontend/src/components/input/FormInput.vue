@@ -14,11 +14,10 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
 	modelModifiers: () => ({}),
 })
-const showLoading = useDelayedLoading(() => props.loading)
 const emit = defineEmits<{
 	'update:modelValue': [value: string | number]
 }>()
-
+const showLoading = useDelayedLoading(() => props.loading)
 
 defineOptions({inheritAttrs: false})
 
