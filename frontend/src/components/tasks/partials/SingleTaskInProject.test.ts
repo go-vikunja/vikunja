@@ -62,7 +62,7 @@ describe('SingleTaskInProject', () => {
 		wrapper.getComponent({name: 'FancyCheckbox'}).vm.$emit('update:modelValue', false)
 		await flushPromises()
 
-		expect(wrapper.get('.task').classes()).toContain('is-loading')
+		await vi.waitFor(() => expect(wrapper.get('.task').classes()).toContain('is-loading'))
 
 		update.resolve({data: {...theTask, done: false}})
 		await flushPromises()
@@ -82,7 +82,7 @@ describe('SingleTaskInProject', () => {
 			path: {task: 7},
 			body: [expect.objectContaining({path: '/is_favorite', value: true})],
 		}))
-		expect(wrapper.get('.task').classes()).toContain('is-loading')
+		await vi.waitFor(() => expect(wrapper.get('.task').classes()).toContain('is-loading'))
 
 		favorite.resolve({data: {...theTask, is_favorite: true}})
 		await flushPromises()
