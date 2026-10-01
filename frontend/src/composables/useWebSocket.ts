@@ -21,6 +21,7 @@ interface WebSocketEvent {
 
 const RECONNECT_BASE_DELAY = 1000
 const RECONNECT_MAX_DELAY = 30000
+const FIRST_CONNECTION_TIMEOUT = 5000
 
 let socket: WebSocket | null = null
 let socketContext: ClientRequestContext | null = null
@@ -32,6 +33,14 @@ const authenticated = computed(() => status.value === 'authenticated')
 const mayHaveMissedEvents = ref(false)
 const subscribedAt = ref(0)
 let manuallyDisconnected = false
+const firstConnectionSettled = ref(false)
+let firstConnectionTimer: ReturnType<typeof setTimeout> | null = null
+
+function setFirstConnectionSettled(settled: boolean) {
+	firstConnectionSettled.value = settled
+	clearTimeout(firstConnectionTimer)
+	firstConnectionTimer = null
+}
 
 function getWebSocketUrl(): string {
 	const url = new URL(`${getApiBaseUrl()}/ws`, window.location.origin)
@@ -87,6 +96,7 @@ function handleMessage(event: MessageEvent) {
 		resubscribeAll()
 		// The server never acks a subscribe, so the send time is the earliest point events can reach us.
 		subscribedAt.value = Date.now()
+		setFirstConnectionSettled(true)
 		return
 	}
 
@@ -96,6 +106,7 @@ function handleMessage(event: MessageEvent) {
 		console.warn('WebSocket: auth failed:', msg.error)
 		manuallyDisconnected = true
 		closeSocket()
+		setFirstConnectionSettled(true)
 		return
 	}
 
@@ -142,10 +153,16 @@ function mayOpenSocket(): boolean {
 	return getTokenType(getToken()) === AUTH_TYPES.USER
 }
 
+// Not a computed: the token isn't reactive, so it would cache a link share's false across login.
+function isAwaitingFirstConnection(): boolean {
+	return !firstConnectionSettled.value && mayOpenSocket()
+}
+
 function connect() {
 	// A connection stays authenticated as whoever opened it, so a session change must tear it down, never adopt it.
 	if (socketContext && !isClientRequestContextCurrent(socketContext)) {
 		closeSocket()
+		setFirstConnectionSettled(false)
 	}
 
 	if (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING) {
@@ -165,11 +182,15 @@ function connect() {
 	} catch (e) {
 		console.warn('WebSocket: failed to create connection', e)
 		status.value = 'idle'
+		setFirstConnectionSettled(true)
 		scheduleReconnect()
 		return
 	}
 	socketContext = context
 	status.value = 'connecting'
+	if (!firstConnectionSettled.value && !firstConnectionTimer) {
+		firstConnectionTimer = setTimeout(() => setFirstConnectionSettled(true), FIRST_CONNECTION_TIMEOUT)
+	}
 
 	const connection = socket
 	const isCurrent = () => socket === connection && isClientRequestContextCurrent(context)
@@ -180,6 +201,7 @@ function connect() {
 			return
 		}
 		closeSocket()
+		setFirstConnectionSettled(false)
 		scheduleReconnect()
 	}
 
@@ -208,6 +230,7 @@ function connect() {
 			return
 		}
 		closeSocket()
+		setFirstConnectionSettled(true)
 		scheduleReconnect()
 	}
 
@@ -223,12 +246,16 @@ function closeStaleConnection() {
 		return
 	}
 	closeSocket()
+	setFirstConnectionSettled(false)
+	// Nothing else reconnects: ContentAuth connects only on mount.
+	connect()
 }
 
 function disconnect() {
 	manuallyDisconnected = true
 	reconnectAttempt = 0
 	closeSocket()
+	setFirstConnectionSettled(false)
 	subscriptions.clear()
 }
 
@@ -264,6 +291,7 @@ export function useWebSocket() {
 		subscribe,
 		status: readonly(status),
 		authenticated,
+		isAwaitingFirstConnection,
 		mayHaveMissedEvents: readonly(mayHaveMissedEvents),
 		subscribedAt: readonly(subscribedAt),
 	}
