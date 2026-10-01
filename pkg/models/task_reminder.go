@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -245,7 +246,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	return
 }
 
-func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond builder.Cond) (reminderNotifications []*ReminderDueNotification, err error) {
+func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (reminderNotifications []*ReminderDueNotification, err error) {
 	now = utils.GetTimeWithoutNanoSeconds(now)
 	reminderNotifications = []*ReminderDueNotification{}
 
@@ -280,7 +281,7 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond 
 		return
 	}
 
-	usersWithReminders, err := getTaskUsersForTasks(s, taskIDs, cond)
+	usersWithReminders, err := getTaskUsersForTasks(s, taskIDs, nil)
 	if err != nil {
 		return
 	}
@@ -347,17 +348,49 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond 
 	return
 }
 
-// RegisterReminderCron registers a cron function which runs every minute to check if any reminders are due the
-// next minute to send emails.
-func RegisterReminderCron() {
-	webhookEnabled := config.WebhooksEnabled.GetBool()
-	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
-
-	if !emailEnabled && !webhookEnabled {
-		return
+// The in-app notification is always stored; ReminderDueNotification.ToMail decides about mail.
+func sendDueReminders(s *xorm.Session, now time.Time, webhookEnabled bool) error {
+	reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now)
+	if err != nil {
+		return fmt.Errorf("could not get tasks with reminders in the next minute: %w", err)
 	}
 
-	if !emailEnabled {
+	if len(reminders) == 0 {
+		return nil
+	}
+
+	log.Debugf("[Task Reminder Cron] Sending %d reminders", len(reminders))
+
+	for _, n := range reminders {
+		err = notifications.Notify(n.User, n, s)
+		if err != nil {
+			return fmt.Errorf("could not notify user %d: %w", n.User.ID, err)
+		}
+
+		if webhookEnabled {
+			err = events.Dispatch(&TaskReminderFiredEvent{
+				Task:     n.Task,
+				User:     n.User,
+				Project:  n.Project,
+				Reminder: n.TaskReminder,
+			})
+			if err != nil {
+				log.Errorf("[Task Reminder Cron] Could not dispatch reminder event for task %d: %s", n.Task.ID, err)
+			}
+		}
+
+		log.Debugf("[Task Reminder Cron] Sent reminder for task %d to user %d", n.Task.ID, n.User.ID)
+	}
+
+	return nil
+}
+
+// RegisterReminderCron registers a cron function which runs every minute to check if any reminders are due the
+// next minute to send notifications.
+func RegisterReminderCron() {
+	webhookEnabled := config.WebhooksEnabled.GetBool()
+
+	if !config.ServiceEnableEmailReminders.GetBool() || !config.MailerEnabled.GetBool() {
 		log.Info("Mailer is disabled, not sending reminders per mail")
 	}
 
@@ -368,50 +401,10 @@ func RegisterReminderCron() {
 		s := db.NewSession()
 		defer s.Close()
 
-		now := time.Now()
-
-		// When only email is enabled, filter to email-enabled users for efficiency.
-		// When webhooks are enabled, we need all users so the event system can
-		// look up matching webhooks.
-		var cond builder.Cond
-		if emailEnabled && !webhookEnabled {
-			cond = builder.Eq{"users.email_reminders_enabled": true}
-		}
-
-		reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now, cond)
-		if err != nil {
-			log.Errorf("[Task Reminder Cron] Could not get tasks with reminders in the next minute: %s", err)
+		if err := sendDueReminders(s, time.Now(), webhookEnabled); err != nil {
+			log.Errorf("[Task Reminder Cron] %s", err)
+			_ = s.Rollback()
 			return
-		}
-
-		if len(reminders) == 0 {
-			return
-		}
-
-		log.Debugf("[Task Reminder Cron] Sending %d reminders", len(reminders))
-
-		for _, n := range reminders {
-			if emailEnabled && n.User.EmailRemindersEnabled {
-				err = notifications.Notify(n.User, n, s)
-				if err != nil {
-					log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
-					return
-				}
-			}
-
-			if webhookEnabled {
-				err = events.Dispatch(&TaskReminderFiredEvent{
-					Task:     n.Task,
-					User:     n.User,
-					Project:  n.Project,
-					Reminder: n.TaskReminder,
-				})
-				if err != nil {
-					log.Errorf("[Task Reminder Cron] Could not dispatch reminder event for task %d: %s", n.Task.ID, err)
-				}
-			}
-
-			log.Debugf("[Task Reminder Cron] Sent reminder for task %d to user %d", n.Task.ID, n.User.ID)
 		}
 
 		if err := s.Commit(); err != nil {

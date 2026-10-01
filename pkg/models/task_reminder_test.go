@@ -17,13 +17,15 @@
 package models
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
-
-	"xorm.io/builder"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,7 +39,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
 		require.NoError(t, err)
-		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Eq{"users.email_reminders_enabled": true})
+		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		require.NoError(t, err)
 		assert.Len(t, notifications, 1)
 		assert.Equal(t, int64(27), notifications[0].Task.ID)
@@ -52,7 +54,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		_, err := s.ID(1).Cols("reminder").Update(&TaskReminder{Reminder: now})
 		require.NoError(t, err)
 
-		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Eq{"users.email_reminders_enabled": true})
+		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		require.NoError(t, err)
 		require.Len(t, notifications, 1)
 		assert.Equal(t, int64(27), notifications[0].Task.ID)
@@ -66,7 +68,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		require.NoError(t, err)
 
 		now := time.Date(2018, 12, 1, 1, 12, 0, 0, time.UTC)
-		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Eq{"users.email_reminders_enabled": true})
+		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		require.NoError(t, err)
 		assert.Empty(t, notifications)
 	})
@@ -77,7 +79,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-02T01:13:00Z")
 		require.NoError(t, err)
-		taskIDs, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Eq{"users.email_reminders_enabled": true})
+		taskIDs, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		require.NoError(t, err)
 		assert.Empty(t, taskIDs)
 	})
@@ -400,5 +402,132 @@ func TestGetTaskUsersForTasksIsAssignee(t *testing.T) {
 		tu := findTaskUser(taskUsers, task.ID, 2)
 		require.NotNil(t, tu)
 		assert.True(t, tu.IsAssignee)
+	})
+}
+
+func TestSendDueReminders(t *testing.T) {
+	t.Run("stores in-app notification when mailer is disabled", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		oldMailer := config.MailerEnabled.GetBool()
+		config.MailerEnabled.Set(false)
+		t.Cleanup(func() { config.MailerEnabled.Set(oldMailer) })
+
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("email_reminders_enabled").Update(&user.User{EmailRemindersEnabled: false})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
+		require.NoError(t, err)
+		err = sendDueReminders(s, now, false)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		assertSingleReminderNotification(t, 1, 27, 1)
+	})
+	t.Run("queues mail only after commit when email reminders are on", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enableReminderMail(t)
+
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("email_reminders_enabled").Update(&user.User{EmailRemindersEnabled: true})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
+		require.NoError(t, err)
+		err = sendDueReminders(s, now, false)
+		require.NoError(t, err)
+		assert.Empty(t, mail.SentMails())
+		require.NoError(t, s.Commit())
+
+		sent := mail.SentMails()
+		require.Len(t, sent, 1)
+		assert.Equal(t, "user1@example.com", sent[0].To)
+		assertSingleReminderNotification(t, 1, 27, 1)
+	})
+	t.Run("stores in-app notification without mail when the user disabled email reminders", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enableReminderMail(t)
+
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("email_reminders_enabled").Update(&user.User{EmailRemindersEnabled: false})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
+		require.NoError(t, err)
+		err = sendDueReminders(s, now, false)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		assert.Empty(t, mail.SentMails())
+		assertSingleReminderNotification(t, 1, 27, 1)
+	})
+}
+
+func enableReminderMail(t *testing.T) {
+	t.Helper()
+
+	oldMailer := config.MailerEnabled.GetBool()
+	oldReminders := config.ServiceEnableEmailReminders.GetBool()
+	config.MailerEnabled.Set(true)
+	config.ServiceEnableEmailReminders.Set(true)
+	mail.ResetSent()
+	t.Cleanup(func() {
+		config.MailerEnabled.Set(oldMailer)
+		config.ServiceEnableEmailReminders.Set(oldReminders)
+		mail.ResetSent()
+	})
+}
+
+func assertSingleReminderNotification(t *testing.T, userID, taskID, projectID int64) {
+	t.Helper()
+
+	s := db.NewSession()
+	defer s.Close()
+
+	rows := []*notifications.DatabaseNotification{}
+	err := s.Where("notifiable_id = ? AND name = ?", userID, "task.reminder").Find(&rows)
+	require.NoError(t, err)
+	require.Len(t, rows, 1)
+	assert.Equal(t, projectID, rows[0].ProjectID)
+
+	payload, err := json.Marshal(rows[0].Notification)
+	require.NoError(t, err)
+	var parsed struct {
+		Task struct {
+			ID int64 `json:"id"`
+		} `json:"task"`
+	}
+	require.NoError(t, json.Unmarshal(payload, &parsed))
+	assert.Equal(t, taskID, parsed.Task.ID)
+}
+
+func TestReminderDueNotificationToMail(t *testing.T) {
+	n := &ReminderDueNotification{
+		User:    &user.User{ID: 1, Name: "alice"},
+		Task:    &Task{ID: 27, Title: "task"},
+		Project: &Project{ID: 1, Title: "proj"},
+	}
+
+	t.Run("nil when user disabled email reminders", func(t *testing.T) {
+		n.User.EmailRemindersEnabled = false
+		assert.Nil(t, n.ToMail("en"))
+	})
+	t.Run("nil when email reminders disabled instance-wide", func(t *testing.T) {
+		old := config.ServiceEnableEmailReminders.GetBool()
+		config.ServiceEnableEmailReminders.Set(false)
+		t.Cleanup(func() { config.ServiceEnableEmailReminders.Set(old) })
+
+		n.User.EmailRemindersEnabled = true
+		assert.Nil(t, n.ToMail("en"))
+	})
+	t.Run("mail when enabled", func(t *testing.T) {
+		n.User.EmailRemindersEnabled = true
+		assert.NotNil(t, n.ToMail("en"))
 	})
 }
