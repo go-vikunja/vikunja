@@ -143,7 +143,7 @@ test.describe('User Settings', () => {
 
 		// Intercept the API request to verify it contains the correct setting
 		const settingsUpdatePromise = page.waitForResponse(response =>
-			response.url().includes('/api/v2/user/settings/general') && response.request().method() === 'PUT',
+			response.url().includes('/api/v2/user/settings/general') && response.request().method() === 'PATCH',
 		)
 
 		await saveButton.click()

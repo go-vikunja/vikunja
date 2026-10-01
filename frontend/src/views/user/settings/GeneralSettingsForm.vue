@@ -310,7 +310,6 @@ import {
 	createUserSettingsDraft,
 	diffUserSettings,
 	useUpdateSettingsMutation,
-	withSettingsEdits,
 	type AccountIdentity,
 } from '@/client/queries/account'
 import {computed, ref, type Ref} from 'vue'
@@ -525,20 +524,19 @@ const loading = updateUserSettings.isPending
 async function updateSettings() {
 	if (loading.value) return
 	const submitted = createUserSettingsDraft(settings.value)
-	const saved = await updateUserSettings.mutateAsync({
-		id: props.identity.id,
-		type: props.identity.type,
-		edits: diffUserSettings(initialSettings.value, submitted),
-		omitLanguage: configStore.demo_mode_enabled,
-	}).catch(() => null)
-	if (!saved) return
+	const edits = diffUserSettings(initialSettings.value, submitted)
+	if (configStore.demo_mode_enabled) delete edits.language
+	try {
+		await updateUserSettings.mutateAsync({
+			id: props.identity.id,
+			type: props.identity.type,
+			edits,
+		})
+	} catch {
+		return
+	}
 	if (configStore.demo_mode_enabled) setLanguage(submitted.language).catch(error)
-	const editedSinceSubmit = diffUserSettings(submitted, settings.value)
-	initialSettings.value = createUserSettingsDraft({
-		language: submitted.language,
-		...saved,
-	})
-	settings.value = withSettingsEdits(initialSettings.value, editedSinceSubmit)
+	initialSettings.value = submitted
 }
 </script>
 
