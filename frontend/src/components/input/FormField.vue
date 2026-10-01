@@ -15,10 +15,10 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
 	layout: 'stacked',
 })
-const showLoading = useDelayedLoading(() => props.loading)
 const emit = defineEmits<{
 	'update:modelValue': [value: string | number]
 }>()
+const showLoading = useDelayedLoading(() => props.loading)
 
 function handleInput(event: Event) {
 	const value = (event.target as HTMLInputElement).value

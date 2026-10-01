@@ -62,11 +62,11 @@ const props = withDefaults(defineProps<{
 	showClose: false,
 })
 
-const showLoading = useDelayedLoading(() => props.loading)
-
 defineEmits<{
 	'close': []
 }>()
+
+const showLoading = useDelayedLoading(() => props.loading)
 </script>
 
 <style lang="scss" scoped>
