@@ -297,33 +297,21 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 
 // Descendants the auth cannot access are skipped rather than failing the request.
 func getAccessibleSubprojectIDs(s *xorm.Session, a web.Auth, parentProjectID int64) (ids []int64, err error) {
-	accessible, err := accessibleProjectIDsCond(s, a, "d.id")
+	accessible, err := accessibleProjectIDsCond(s, a, "projects.id")
 	if err != nil {
 		return nil, err
 	}
-
-	accessibleSQL, accessibleArgs, err := builder.ToSQL(accessible)
-	if err != nil {
-		return nil, err
-	}
-
-	args := append([]interface{}{parentProjectID}, accessibleArgs...)
 
 	ids = []int64{}
-	err = s.SQL(`
-WITH RECURSIVE descendant_ids (id) AS (
-    SELECT id
-    FROM projects
-    WHERE parent_project_id = ? AND is_archived = false
-    UNION ALL
-    SELECT p.id
-    FROM projects p
-    INNER JOIN descendant_ids di ON p.parent_project_id = di.id
-    WHERE p.is_archived = false
-)
-SELECT d.id
-FROM descendant_ids d
-WHERE `+accessibleSQL, args...).Find(&ids)
+	err = s.
+		Table(&ProjectAncestor{}).
+		Join("INNER", "projects", "projects.id = project_ancestors.project_id").
+		Where(builder.Eq{"project_ancestors.ancestor_id": parentProjectID}.
+			And(builder.Gt{"project_ancestors.depth": 0}).
+			And(builder.Eq{"projects.is_archived": false}).
+			And(accessible)).
+		Cols("project_ancestors.project_id").
+		Find(&ids)
 
 	return ids, err
 }
