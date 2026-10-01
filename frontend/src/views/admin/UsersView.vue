@@ -286,7 +286,7 @@
 						<XButton
 							variant="secondary"
 							:loading="deleting && deleteMode === 'scheduled'"
-							:disabled="deleting"
+							:disabled="showDeleting"
 							@click="doDelete('scheduled')"
 						>
 							{{ $t('admin.users.deleteModeScheduled') }}
@@ -295,7 +295,7 @@
 							variant="primary"
 							:danger="true"
 							:loading="deleting && deleteMode === 'now'"
-							:disabled="deleting"
+							:disabled="showDeleting"
 							@click="doDelete('now')"
 						>
 							{{ $t('admin.users.deleteModeNow') }}
@@ -323,6 +323,7 @@ import {
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
@@ -353,6 +354,7 @@ const {isPending: saving} = updateMutation
 const {isPending: settingPassword} = passwordMutation
 const {isPending: sendingResetEmail} = resetMutation
 const {isPending: deleting} = deleteMutation
+const showDeleting = useDelayedLoading(deleting)
 const detailTarget = ref<AdminUserRow | null>(null)
 const pendingDelete = ref<AdminUserRow | null>(null)
 const deleteMode = ref<DeleteUserMode | null>(null)

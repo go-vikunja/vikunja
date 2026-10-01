@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="content loader-container is-max-width-desktop"
-		:class="{ 'is-loading': isFetching}"
+		:class="{ 'is-loading': loading}"
 	>
 		<XButton
 			:to="{name:'teams.create'}"
@@ -48,11 +48,13 @@ import { useI18n } from 'vue-i18n'
 import Card from '@/components/misc/Card.vue'
 import {useTeams} from '@/composables/useTeams'
 import { useTitle } from '@/composables/useTitle'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('team.title'))
 
 const {teams, isFetching} = useTeams()
+const loading = useDelayedLoading(isFetching)
 </script>
 
 <style lang="scss" scoped>

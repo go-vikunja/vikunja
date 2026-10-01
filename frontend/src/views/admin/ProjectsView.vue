@@ -42,7 +42,7 @@
 			<template v-else>
 				<div
 					class="loader-container"
-					:class="{'is-loading': reloading}"
+					:class="{'is-loading': showReloading}"
 					:aria-busy="reloading"
 				>
 					<table class="table has-actions is-striped is-hoverable is-fullwidth">
@@ -175,7 +175,7 @@
 						</XButton>
 						<XButton
 							variant="primary"
-							:disabled="!selectedUser || reassigning"
+							:disabled="!selectedUser || showReassigning"
 							:loading="reassigning"
 							@click="doReassign()"
 						>
@@ -208,6 +208,7 @@ import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdow
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 import {useTableSort, type SortOrder, type TableSortState} from '@/composables/useTableSort'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 type SortField = 'id' | 'title' | 'owner' | 'created' | 'updated'
 const currentPage = ref(1)
 const searchTerm = ref('')
@@ -226,6 +227,7 @@ const {data, isPending: loading, isFetching: reloading} = useQuery(computed(() =
 		order_by: sortFields.map(field => sortBy.value[field] as SortOrder),
 	})
 }))
+const showReloading = useDelayedLoading(reloading)
 type AdminProject = Project & {id: number}
 const projects = computed(() => (data.value?.items ?? []).filter((p): p is AdminProject => p.id !== undefined))
 const totalPages = computed(() => data.value?.total_pages ?? 1)
@@ -239,6 +241,7 @@ const {data: searchData, isFetching: userSearchLoading} = useQuery(computed(() =
 const userResults = computed(() => userSearch.value.length >= 2 ? searchData.value ?? [] : [])
 const reassignMutation = useReassignAdminProjectMutation()
 const {isPending: reassigning} = reassignMutation
+const showReassigning = useDelayedLoading(reassigning)
 function goToPage(page: number) { currentPage.value = page }
 // Reset to page 1 so a narrower filter doesn't strand the UI on an empty page.
 function resetPage() { currentPage.value = 1 }

@@ -1,6 +1,6 @@
 <template>
 	<div
-		:class="{ 'is-loading': loading}"
+		:class="{ 'is-loading': showLoading}"
 		class="loader-container"
 	>
 		<XButton
@@ -133,6 +133,7 @@ import {useAuthStore} from '@/stores/auth'
 import { useTitle } from '@/composables/useTitle'
 import {useLabelStyles} from '@/composables/useLabelStyles'
 import {useLabels} from '@/composables/useLabels'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {
 	type UpdateLabelInput,
 	useDeleteLabelMutation,
@@ -157,6 +158,7 @@ const {labels, isPending} = useLabels()
 const updateLabelMutation = useUpdateLabelMutation()
 const deleteLabelMutation = useDeleteLabelMutation()
 const loading = computed(() => isPending.value || updateLabelMutation.isPending.value || deleteLabelMutation.isPending.value)
+const showLoading = useDelayedLoading(loading)
 const {getLabelStyles} = useLabelStyles()
 
 function deleteLabel(label?: Label) {
