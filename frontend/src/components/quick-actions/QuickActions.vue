@@ -141,6 +141,7 @@ import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useQuickAddTask} from '@/composables/useQuickAddTask'
 import {useAuthStore} from '@/stores/auth'
 import {useLabels} from '@/composables/useLabels'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
@@ -340,12 +341,6 @@ function isDone(item: QuickActionItem): boolean {
 	return 'done' in item && Boolean(item.done)
 }
 
-const loading = computed(() =>
-	taskQuery.isFetching.value ||
-	projectList.isLoading ||
-	teamSearchLoading.value || createTeamMutation.isPending.value,
-)
-
 interface Command {
 	type: COMMAND_TYPE
 	title: string
@@ -508,6 +503,11 @@ const teamQueries = useQueries({
 })
 const foundTeams = computed(() => teamQueries.value.flatMap(result => result.data ?? []).map(team => ({...team, title: team.name ?? ''})))
 const teamSearchLoading = computed(() => teamQueries.value.some(result => result.isFetching))
+const loading = useDelayedLoading(() =>
+	taskQuery.isFetching.value ||
+	projectList.isLoading ||
+	teamSearchLoading.value || createTeamMutation.isPending.value,
+)
 
 function search() {
 	searchTasks()
