@@ -18,6 +18,7 @@
 					:placeholder="$t('admin.projects.filterByOwner')"
 					:aria-label="$t('admin.projects.filterByOwner')"
 					:search-results="userResults"
+					:total-results="searchData?.total"
 					label="username"
 					@search="searchUsers"
 				>
