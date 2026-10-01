@@ -279,6 +279,7 @@ func RegisterRoutes(e *echo.Echo) {
 				return matchCORSOrigin(origin, allowedOrigins)
 			},
 			AllowCredentials: true,
+			ExposeHeaders:    []string{echo.HeaderRetryAfter},
 			MaxAge:           config.CorsMaxAge.GetInt(),
 			Skipper: func(context *echo.Context) bool {
 				// Since it is not possible to register this middleware just for the api group,

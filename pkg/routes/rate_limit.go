@@ -69,13 +69,20 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 
 			if limiterCtx.Reached {
 				log.Infof("Too Many Requests from %s on %s", rateLimitKey, c.Request().URL)
-				return echo.NewHTTPError(http.StatusTooManyRequests, "Too Many Requests")
+				return tooManyRequests(c, limiterCtx.Reset, time.Now())
 			}
 
 			// log.Printf("%s request continue", c.RealIP())
 			return next(c)
 		}
 	}
+}
+
+func tooManyRequests(c *echo.Context, reset int64, now time.Time) error {
+	// reset is a truncated unix second; +1 keeps a client from retrying just before the window ends.
+	retryAfter := max(reset-now.Unix()+1, 1)
+	c.Response().Header().Set(echo.HeaderRetryAfter, strconv.FormatInt(retryAfter, 10))
+	return echo.NewHTTPError(http.StatusTooManyRequests, "Too Many Requests")
 }
 
 // createRateLimiter builds a limiter with its own counters. The prefix keeps
@@ -147,7 +154,10 @@ func basicAuthRateLimitWithClock(rateLimiter *limiter.Limiter, now func() time.T
 				return next(c)
 			}
 
-			key := basicAuthRateLimitKey(c.RealIP(), rateLimiter.Rate.Period, now())
+			requestTime := now()
+			period := rateLimiter.Rate.Period
+			bucket := requestTime.UnixNano() / period.Nanoseconds()
+			key := basicAuthRateLimitKey(c.RealIP(), bucket)
 			// Reserve before authentication so concurrent guesses cannot bypass the limit.
 			limiterCtx, err := rateLimiter.Increment(c.Request().Context(), key, 1)
 			if err != nil {
@@ -160,7 +170,9 @@ func basicAuthRateLimitWithClock(rateLimiter *limiter.Limiter, now func() time.T
 					return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(ierr)
 				}
 				log.Infof("Too many failed basic auth attempts from %s on %s", key, c.Request().URL)
-				return echo.NewHTTPError(http.StatusTooManyRequests, "Too Many Requests")
+				// Reset is a period past the first hit, but the key's bucket ends at the aligned boundary.
+				bucketEnd := (requestTime.UnixNano()/rateLimiter.Rate.Period.Nanoseconds() + 1) * rateLimiter.Rate.Period.Nanoseconds()
+				return tooManyRequests(c, bucketEnd/int64(time.Second), now())
 			}
 
 			err = next(c)
@@ -196,9 +208,9 @@ func refundBasicAuthReservation(rateLimiter *limiter.Limiter, key string, reset 
 	return err
 }
 
-func basicAuthRateLimitKey(ip string, period time.Duration, now time.Time) string {
+func basicAuthRateLimitKey(ip string, bucket int64) string {
 	// A late refund must never decrement a newer window.
-	return ip + ":" + strconv.FormatInt(now.UnixNano()/period.Nanoseconds(), 10)
+	return ip + ":" + strconv.FormatInt(bucket, 10)
 }
 
 func setupRateLimit(a *echo.Group, rateLimitKind string) {
