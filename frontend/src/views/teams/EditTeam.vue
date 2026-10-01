@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="loader-container is-max-width-desktop"
-		:class="{ 'is-loading': teamLoading }"
+		:class="{ 'is-loading': showTeamLoading }"
 	>
 		<EditTeamForm
 			v-if="team && userIsAdmin && !team.external_id"
@@ -193,6 +193,7 @@ import {getDisplayName} from '@/helpers/user'
 import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
 import {useTeam} from '@/composables/useTeams'
 import {useUserSearch} from '@/composables/useUserSearch'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {PERMISSIONS} from '@/constants/permissions'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
@@ -215,6 +216,7 @@ const removeMemberMutation = useRemoveTeamMemberMutation()
 const leaveMutation = useLeaveTeamMutation()
 const toggleAdminMutation = useToggleTeamMemberAdminMutation()
 const teamLoading = computed(() => isFetching.value || updateMutation.isPending.value || deleteMutation.isPending.value)
+const showTeamLoading = useDelayedLoading(teamLoading)
 const membersLoading = computed(() => addMemberMutation.isPending.value || removeMemberMutation.isPending.value || toggleAdminMutation.isPending.value)
 const userSearch = ref('')
 const {users: userResults, isFetching: usersLoading} = useUserSearch(userSearch)

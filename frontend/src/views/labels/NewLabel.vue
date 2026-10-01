@@ -10,7 +10,7 @@
 			v-model="label.title"
 			v-focus
 			:label="$t('label.attributes.title')"
-			:disabled="loading"
+			:disabled="showLoading"
 			:loading="loading"
 			:placeholder="$t('label.attributes.titlePlaceholder')"
 			type="text"
@@ -33,6 +33,7 @@ import ColorPicker from '@/components/input/ColorPicker.vue'
 import FormField from '@/components/input/FormField.vue'
 
 import {useTitle} from '@/composables/useTitle'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {success} from '@/message'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
 import {createLabelDraft, useCreateLabelMutation} from '@/client/queries/labels'
@@ -47,6 +48,7 @@ const createLabelMutation = useCreateLabelMutation()
 
 const showError = ref(false)
 const loading = computed(() => createLabelMutation.isPending.value)
+const showLoading = useDelayedLoading(loading)
 const isSubmitting = ref(false)
 
 const loadingModel = computed({

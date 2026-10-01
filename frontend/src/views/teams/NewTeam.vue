@@ -10,7 +10,7 @@
 			v-model="team.name"
 			v-focus
 			:label="$t('team.attributes.name')"
-			:disabled="createTeamMutation.isPending.value"
+			:disabled="creating"
 			:loading="createTeamMutation.isPending.value"
 			:placeholder="$t('team.attributes.namePlaceholder')"
 			type="text"
@@ -23,8 +23,8 @@
 		>
 			<FancyCheckbox
 				v-model="team.is_public"
-				:class="{ 'disabled': createTeamMutation.isPending.value }"
-				:disabled="createTeamMutation.isPending.value"
+				:class="{ 'disabled': creating }"
+				:disabled="creating"
 			>
 				{{ $t('team.attributes.isPublicDescription') }}
 			</FancyCheckbox>
@@ -43,6 +43,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FormField from '@/components/input/FormField.vue'
 
 import {useTitle} from '@/composables/useTitle'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useRouter} from 'vue-router'
 
 import {useConfigStore} from '@/stores/config'
@@ -55,6 +56,7 @@ useTitle(title)
 const router = useRouter()
 
 const createTeamMutation = useCreateTeamMutation()
+const creating = useDelayedLoading(createTeamMutation.isPending)
 const team = reactive(createTeamDraft())
 const showError = ref(false)
 const isSubmitting = ref(false)

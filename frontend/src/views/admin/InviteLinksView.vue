@@ -164,7 +164,7 @@
 				<template #footer>
 					<XButton
 						variant="tertiary"
-						:disabled="creating"
+						:disabled="showCreating"
 						@click="closeCreate"
 					>
 						{{ $t(createdUrl ? 'misc.close' : 'misc.cancel') }}
@@ -221,6 +221,7 @@ import {
 import type {UserInviteLink, InviteLinkTeam} from '@/client/generated'
 import {useConfigStore} from '@/stores/config'
 import {useTitle} from '@/composables/useTitle'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {error} from '@/message'
 
 const {t} = useI18n()
@@ -234,6 +235,7 @@ const totalPages = computed(() => data.value?.total_pages ?? 0)
 const createOpen = ref(false)
 const createMutation = useCreateAdminInviteMutation()
 const {isPending: creating} = createMutation
+const showCreating = useDelayedLoading(creating)
 const createdUrl = ref('')
 const pendingDelete = ref<UserInviteLink | null>(null)
 const deleteMutation = useDeleteAdminInviteMutation()

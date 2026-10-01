@@ -8,6 +8,7 @@ import {useRouteQuery} from '@vueuse/router'
 
 import {useTitle} from '@/composables/useTitle'
 import {useClampedPage} from '@/composables/useClampedPage'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useAuthStore} from '@/stores/auth'
 import {formatDateSince} from '@/helpers/time/formatDate'
 import {useQuery} from '@tanstack/vue-query'
@@ -26,6 +27,7 @@ const sessionQuery = useQuery(computed(() => sessionsQuery(page.value)))
 const sessions = computed(() => sessionQuery.data.value?.items ?? [])
 const totalPages = computed(() => sessionQuery.data.value?.total_pages ?? 0)
 useClampedPage(page, sessionQuery)
+const reloading = useDelayedLoading(sessionQuery.isPlaceholderData)
 const deleteMutation = useDeleteSessionMutation()
 
 const showDeleteModal = ref(false)
@@ -62,7 +64,7 @@ async function deleteSession() {
 		<div
 			v-if="sessions.length > 0"
 			class="has-horizontal-overflow loader-container"
-			:class="{'is-loading': sessionQuery.isPlaceholderData.value}"
+			:class="{'is-loading': reloading}"
 		>
 			<table class="table">
 				<thead>
