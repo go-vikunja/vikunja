@@ -363,6 +363,7 @@ import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
 import type {TaskResponse} from '@/client/queries/tasks'
 import {useTableSort} from '@/composables/useTableSort'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {getTaskIdentifier} from '@/helpers/task'
 import { camelCase } from 'change-case'
@@ -414,12 +415,12 @@ const taskList = useTaskList(
 )
 
 const {
-	loading,
 	params,
 	totalPages,
 	currentPage,
 	sortByParam,
 } = taskList
+const loading = useDelayedLoading(taskList.loading)
 const tasks: Ref<TaskResponse[]> = taskList.tasks
 
 watch(

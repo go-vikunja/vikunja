@@ -83,7 +83,7 @@
 			:padding="false"
 			class="has-overflow"
 			:has-content="false"
-			:loading="loading"
+			:loading="showLoading"
 		>
 			<ul class="p-2 tasks">
 				<li
@@ -101,7 +101,7 @@
 		</Card>
 		<div
 			v-else
-			:class="{ 'is-loading': loading}"
+			:class="{ 'is-loading': showLoading}"
 			class="spinner"
 		/>
 	</div>
@@ -129,6 +129,7 @@ import {useProjects} from '@/composables/useProjects'
 import {useLabels} from '@/composables/useLabels'
 import type {TaskFilterParams} from '@/client/queries/tasks'
 import {useTasks} from '@/composables/useTasks'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import type {TaskScope} from '@/client/queries/tasks'
 import {PERMISSIONS} from '@/constants/permissions'
 
@@ -206,6 +207,7 @@ const pageTitle = computed(() => {
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
 const loading = taskQuery.isFetching
+const showLoading = useDelayedLoading(loading)
 const filterIdUsedOnOverview = computed(() => authStore.settings?.frontend_settings?.filter_id_used_on_overview)
 
 interface dateStrings {

@@ -2,7 +2,7 @@
 	<div
 		class="task loader-container draggable"
 		:class="{
-			'is-loading': loadingInternal,
+			'is-loading': showLoading,
 			'draggable': !loadingInternal,
 			'has-light-text': !colorIsDark(color),
 			'has-custom-background-color': color ?? undefined,
@@ -147,6 +147,7 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {useProjects} from '@/composables/useProjects'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 const props = defineProps<{
@@ -162,6 +163,7 @@ const router = useRouter()
 const updateTask = useUpdateTaskMutation()
 
 const loadingInternal = ref(false)
+const showLoading = useDelayedLoading(loadingInternal)
 
 const color = computed(() => getHexColor(props.task.hex_color))
 
