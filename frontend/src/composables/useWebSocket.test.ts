@@ -46,6 +46,10 @@ function authSuccessFrame() {
 	})})
 }
 
+function authErrorFrame() {
+	return new MessageEvent('message', {data: JSON.stringify({error: 'invalid_token'})})
+}
+
 afterEach(() => {
 	useWebSocket().disconnect()
 	vi.useRealTimers()
@@ -148,7 +152,7 @@ it('tears down a socket opened by a previous session instead of reusing it', () 
 	expect(stale.send).not.toHaveBeenCalled()
 })
 
-it('closes a socket whose session changed without waiting for a frame, keeping subscriptions', () => {
+it('replaces a socket whose session changed without waiting for a frame, keeping subscriptions', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
 	window.API_URL = 'http://localhost'
 	const ws = useWebSocket()
@@ -163,12 +167,11 @@ it('closes a socket whose session changed without waiting for a frame, keeping s
 	ws.closeStaleConnection()
 
 	expect(stale.close).toHaveBeenCalledTimes(1)
-	expect(FakeSocket.instances).toHaveLength(1)
-	expect(ws.status.value).toBe('idle')
+	expect(FakeSocket.instances).toHaveLength(2)
+	expect(ws.status.value).toBe('connecting')
 	expect(ws.authenticated.value).toBe(false)
 
 	session.current = true
-	ws.connect()
 	const current = FakeSocket.instances[1]
 	current.onopen?.()
 	current.send.mockClear()
@@ -197,6 +200,144 @@ it('flags possibly missed events only while a dropped connection is pending a re
 	expect(ws.mayHaveMissedEvents.value).toBe(false)
 })
 
+it('awaits the first connection of a user session until it authenticates', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	expect(ws.isAwaitingFirstConnection()).toBe(true)
+	ws.connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	expect(ws.isAwaitingFirstConnection()).toBe(true)
+	socket.onmessage?.(authSuccessFrame())
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+})
+
+it('stops awaiting the first connection when it closes before auth', () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	FakeSocket.instances[0].onclose?.()
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+
+	vi.runOnlyPendingTimers()
+	expect(FakeSocket.instances).toHaveLength(2)
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+})
+
+it('stops awaiting the first connection when the socket cannot be created', () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', class {
+		static OPEN = 1
+		static CONNECTING = 0
+		constructor() { throw new Error('blocked') }
+	})
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+	expect(ws.status.value).toBe('idle')
+})
+
+it('does not settle the first connection after disconnecting before the timeout', () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	ws.disconnect()
+	vi.advanceTimersByTime(5000)
+	expect(ws.isAwaitingFirstConnection()).toBe(true)
+})
+
+it('stops awaiting the first connection when authentication fails', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	socket.onmessage?.(authErrorFrame())
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+})
+
+it('stops awaiting the first connection 5 seconds after connecting if auth never answers', () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	FakeSocket.instances[0].onopen?.()
+	vi.advanceTimersByTime(4999)
+	expect(ws.isAwaitingFirstConnection()).toBe(true)
+	vi.advanceTimersByTime(1)
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+	expect(ws.status.value).toBe('authenticating')
+})
+
+it('awaits the first connection again after the session changes until the new socket authenticates', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	const stale = FakeSocket.instances[0]
+	stale.onopen?.()
+	stale.onmessage?.(authSuccessFrame())
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+
+	session.current = false
+	ws.closeStaleConnection()
+	session.current = true
+	expect(FakeSocket.instances).toHaveLength(2)
+	expect(ws.status.value).toBe('connecting')
+	expect(ws.isAwaitingFirstConnection()).toBe(true)
+
+	const current = FakeSocket.instances[1]
+	current.onopen?.()
+	expect(ws.isAwaitingFirstConnection()).toBe(true)
+	current.onmessage?.(authSuccessFrame())
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+	expect(ws.status.value).toBe('authenticated')
+})
+
+it('awaits the first connection again when a frame reveals the session changed', () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	const stale = FakeSocket.instances[0]
+	stale.onopen?.()
+	stale.onmessage?.(authSuccessFrame())
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+
+	session.current = false
+	stale.onmessage?.(timerFrame())
+	expect(ws.isAwaitingFirstConnection()).toBe(true)
+})
+
+it('stops awaiting the re-armed first connection 5 seconds after the session changes if auth never answers', () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	FakeSocket.instances[0].onopen?.()
+	FakeSocket.instances[0].onmessage?.(authSuccessFrame())
+
+	session.current = false
+	ws.closeStaleConnection()
+	session.current = true
+	FakeSocket.instances[1].onopen?.()
+	vi.advanceTimersByTime(4999)
+	expect(ws.isAwaitingFirstConnection()).toBe(true)
+	vi.advanceTimersByTime(1)
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
+	expect(ws.status.value).toBe('authenticating')
+})
+
 it('leaves a current or absent connection alone', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
 	window.API_URL = 'http://localhost'
@@ -216,8 +357,10 @@ it('does not open a socket for a link share session', () => {
 	vi.stubGlobal('WebSocket', FakeSocket)
 	window.API_URL = 'http://localhost'
 	auth.tokenType = AUTH_TYPES.LINK_SHARE
-	useWebSocket().connect()
+	const ws = useWebSocket()
+	ws.connect()
 	expect(FakeSocket.instances).toHaveLength(0)
+	expect(ws.isAwaitingFirstConnection()).toBe(false)
 })
 
 it.each([
