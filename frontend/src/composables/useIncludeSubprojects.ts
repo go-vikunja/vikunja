@@ -2,8 +2,7 @@ import {computed, type ComputedGetter, type DeepReadonly, type WritableComputedR
 import {useRouteQuery} from '@vueuse/router'
 
 import type {ProjectView} from '@/client/generated'
-
-export const INCLUDE_SUBPROJECTS_QUERY_PARAM = 'include_subprojects'
+import {INCLUDE_SUBPROJECTS_QUERY_PARAM} from '@/constants/projectView'
 
 // The view's own flag is only the default; toggling writes a query param instead.
 export function useIncludeSubprojects(
