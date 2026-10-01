@@ -67,6 +67,7 @@ func init() {
 		"ErrorCodeUsernameReserved":            reflect.ValueOf(constant.MakeFromLiteral("1026", token.INT, 0)),
 		"GenerateNewCaldavToken":               reflect.ValueOf(user.GenerateNewCaldavToken),
 		"GetCaldavTokens":                      reflect.ValueOf(user.GetCaldavTokens),
+		"GetCaldavTokensPage":                  reflect.ValueOf(user.GetCaldavTokensPage),
 		"GetCaldavTokensWithSession":           reflect.ValueOf(user.GetCaldavTokensWithSession),
 		"GetCurrentUser":                       reflect.ValueOf(user.GetCurrentUser),
 		"GetCurrentUserFromDB":                 reflect.ValueOf(user.GetCurrentUserFromDB),

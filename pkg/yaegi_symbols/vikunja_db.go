@@ -41,6 +41,7 @@ func init() {
 		"ResolvedDatabasePath":           reflect.ValueOf(db.ResolvedDatabasePath),
 		"Restore":                        reflect.ValueOf(db.Restore),
 		"RestoreAndTruncate":             reflect.ValueOf(db.RestoreAndTruncate),
+		"SearchRelevanceOrder":           reflect.ValueOf(db.SearchRelevanceOrder),
 		"SetSessionContext":              reflect.ValueOf(db.SetSessionContext),
 		"TruncateAllTables":              reflect.ValueOf(db.TruncateAllTables),
 		"Type":                           reflect.ValueOf(db.Type),
