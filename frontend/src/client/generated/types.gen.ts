@@ -11189,6 +11189,56 @@ export type UserResendEmailConfirmationResponses = {
 
 export type UserResendEmailConfirmationResponse = UserResendEmailConfirmationResponses[keyof UserResendEmailConfirmationResponses];
 
+export type UserSettingsReadData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/user/settings/general';
+};
+
+export type UserSettingsReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type UserSettingsReadError = UserSettingsReadErrors[keyof UserSettingsReadErrors];
+
+export type UserSettingsReadResponses = {
+    /**
+     * OK
+     */
+    200: UserGeneralSettings;
+};
+
+export type UserSettingsReadResponse = UserSettingsReadResponses[keyof UserSettingsReadResponses];
+
+export type PatchUserSettingsReadData = {
+    body: Array<JsonPatchOp> | null;
+    path?: never;
+    query?: never;
+    url: '/user/settings/general';
+};
+
+export type PatchUserSettingsReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type PatchUserSettingsReadError = PatchUserSettingsReadErrors[keyof PatchUserSettingsReadErrors];
+
+export type PatchUserSettingsReadResponses = {
+    /**
+     * OK
+     */
+    200: UserActionMessageBody;
+};
+
+export type PatchUserSettingsReadResponse = PatchUserSettingsReadResponses[keyof PatchUserSettingsReadResponses];
+
 export type UserUpdateSettingsData = {
     body: UserGeneralSettingsWritable;
     path?: never;
