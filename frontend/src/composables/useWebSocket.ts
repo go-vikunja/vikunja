@@ -1,4 +1,4 @@
-import {ref, readonly} from 'vue'
+import {computed, ref, readonly} from 'vue'
 
 import {getToken, getTokenType} from '@/helpers/auth'
 import {getApiBaseUrl} from '@/helpers/apiUrl'
@@ -27,8 +27,8 @@ let socketContext: ClientRequestContext | null = null
 let reconnectAttempt = 0
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 const subscriptions = new Map<string, Set<MessageCallback>>()
-const connected = ref(false)
-const authenticated = ref(false)
+const status = ref<'idle' | 'connecting' | 'authenticating' | 'authenticated'>('idle')
+const authenticated = computed(() => status.value === 'authenticated')
 const mayHaveMissedEvents = ref(false)
 const subscribedAt = ref(0)
 let manuallyDisconnected = false
@@ -62,8 +62,7 @@ function closeSocket() {
 	socket?.close()
 	socket = null
 	socketContext = null
-	connected.value = false
-	authenticated.value = false
+	status.value = 'idle'
 	mayHaveMissedEvents.value = false
 	subscribedAt.value = 0
 	if (reconnectTimer) {
@@ -83,7 +82,7 @@ function handleMessage(event: MessageEvent) {
 
 	// Handle auth success
 	if (msg.action === 'auth.success' && msg.success) {
-		authenticated.value = true
+		status.value = 'authenticated'
 		console.debug('WebSocket: authenticated')
 		resubscribeAll()
 		// The server never acks a subscribe, so the send time is the earliest point events can reach us.
@@ -158,7 +157,6 @@ function connect() {
 	}
 
 	manuallyDisconnected = false
-	authenticated.value = false
 	const url = getWebSocketUrl()
 
 	const context = captureClientRequestContext()
@@ -166,10 +164,12 @@ function connect() {
 		socket = new WebSocket(url)
 	} catch (e) {
 		console.warn('WebSocket: failed to create connection', e)
+		status.value = 'idle'
 		scheduleReconnect()
 		return
 	}
 	socketContext = context
+	status.value = 'connecting'
 
 	const connection = socket
 	const isCurrent = () => socket === connection && isClientRequestContextCurrent(context)
@@ -188,7 +188,7 @@ function connect() {
 			dropStaleConnection()
 			return
 		}
-		connected.value = true
+		status.value = 'authenticating'
 		reconnectAttempt = 0
 		console.debug('WebSocket: connected, sending auth')
 		sendAuth()
@@ -262,8 +262,8 @@ export function useWebSocket() {
 		disconnect,
 		closeStaleConnection,
 		subscribe,
-		connected: readonly(connected),
-		authenticated: readonly(authenticated),
+		status: readonly(status),
+		authenticated,
 		mayHaveMissedEvents: readonly(mayHaveMissedEvents),
 		subscribedAt: readonly(subscribedAt),
 	}

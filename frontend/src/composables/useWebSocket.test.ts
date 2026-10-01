@@ -87,7 +87,7 @@ it('ignores messages and close callbacks from a replaced connection', () => {
 	old.onmessage?.(timerFrame())
 	old.onclose?.()
 	expect(onTimer).not.toHaveBeenCalled()
-	expect(ws.connected.value).toBe(true)
+	expect(ws.status.value).toBe('authenticating')
 })
 
 it('closes the socket and reconnects after the authenticated session changes', () => {
@@ -104,7 +104,7 @@ it('closes the socket and reconnects after the authenticated session changes', (
 	stale.onmessage?.(timerFrame())
 	expect(onTimer).not.toHaveBeenCalled()
 	expect(stale.close).toHaveBeenCalledTimes(1)
-	expect(ws.connected.value).toBe(false)
+	expect(ws.status.value).toBe('idle')
 	expect(ws.authenticated.value).toBe(false)
 
 	session.current = true
@@ -130,7 +130,7 @@ it('tears down a socket opened by a previous session instead of reusing it', () 
 	expect(stale.close).toHaveBeenCalledTimes(1)
 	expect(FakeSocket.instances).toHaveLength(2)
 	expect(FakeSocket.instances[1]).not.toBe(stale)
-	expect(ws.connected.value).toBe(false)
+	expect(ws.status.value).toBe('connecting')
 	expect(ws.authenticated.value).toBe(false)
 
 	session.current = true
@@ -164,7 +164,7 @@ it('closes a socket whose session changed without waiting for a frame, keeping s
 
 	expect(stale.close).toHaveBeenCalledTimes(1)
 	expect(FakeSocket.instances).toHaveLength(1)
-	expect(ws.connected.value).toBe(false)
+	expect(ws.status.value).toBe('idle')
 	expect(ws.authenticated.value).toBe(false)
 
 	session.current = true
@@ -209,7 +209,7 @@ it('leaves a current or absent connection alone', () => {
 	socket.onopen?.()
 	ws.closeStaleConnection()
 	expect(socket.close).not.toHaveBeenCalled()
-	expect(ws.connected.value).toBe(true)
+	expect(ws.status.value).toBe('authenticating')
 })
 
 it('does not open a socket for a link share session', () => {
