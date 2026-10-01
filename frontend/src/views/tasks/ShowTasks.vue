@@ -83,7 +83,7 @@
 			:padding="false"
 			class="has-overflow"
 			:has-content="false"
-			:loading="showLoading"
+			:loading="loading"
 		>
 			<ul class="p-2 tasks">
 				<li

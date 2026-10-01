@@ -45,7 +45,7 @@
 
 			<template #footer>
 				<XButton
-					:loading="showLoading"
+					:loading="isLoading"
 					:disabled="showLoading || !titleValid"
 					class="is-fullwidth"
 					@click="create()"

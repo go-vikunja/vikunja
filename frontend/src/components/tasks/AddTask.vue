@@ -36,7 +36,7 @@
 					class="add-task-button"
 					:disabled="newTaskTitle === '' || showLoading || undefined"
 					icon="plus"
-					:loading="showLoading"
+					:loading="loading"
 					:aria-label="$t('project.list.add')"
 					@click="addTask()"
 				>
