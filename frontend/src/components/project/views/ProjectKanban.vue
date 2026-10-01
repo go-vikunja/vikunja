@@ -20,7 +20,7 @@
 		<template #default>
 			<div class="kanban-view">
 				<div
-					:class="{ 'is-loading': initialLoading }"
+					:class="{ 'is-loading': showInitialLoading }"
 					class="kanban kanban-bucket-container loader-container"
 				>
 					<BucketDraggable
@@ -175,13 +175,13 @@
 											>
 												<div
 													class="control"
-													:class="{'is-loading': initialLoading || taskLoading}"
+													:class="{'is-loading': showTaskLoading}"
 												>
 													<input
 														v-model="newTaskText"
 														v-focus.always
 														class="input"
-														:disabled="initialLoading || taskLoading || undefined"
+														:disabled="showTaskLoading || undefined"
 														:placeholder="$t('project.kanban.addTaskPlaceholder')"
 														type="text"
 														@focusout="toggleShowNewTaskInput(bucket.id)"
@@ -247,8 +247,8 @@
 							v-if="showNewBucketInput"
 							v-model="newBucketTitle"
 							v-focus.always
-							:class="{'is-loading': initialLoading}"
-							:disabled="initialLoading || undefined"
+							:class="{'is-loading': showInitialLoading}"
+							:disabled="showInitialLoading || undefined"
 							class="input"
 							:placeholder="$t('project.kanban.addBucketPlaceholder')"
 							type="text"
@@ -312,6 +312,7 @@ import type {SortableEvent} from 'sortablejs'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 
 import {useQuickAddTask} from '@/composables/useQuickAddTask'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useTaskDragState} from '@/composables/useTaskDragState'
 import {useAuthStore} from '@/stores/auth'
 
@@ -512,6 +513,8 @@ const initialLoading = board.isLoading
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
 
 const taskLoading = computed(() => quickAddLoading.value || positionMutation.isPending.value)
+const showInitialLoading = useDelayedLoading(initialLoading)
+const showTaskLoading = useDelayedLoading(() => initialLoading.value || taskLoading.value)
 
 watch(
 	projectId,

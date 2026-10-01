@@ -34,9 +34,9 @@
 			<p class="control">
 				<XButton
 					class="add-task-button"
-					:disabled="newTaskTitle === '' || loading || undefined"
+					:disabled="newTaskTitle === '' || showLoading || undefined"
 					icon="plus"
-					:loading="loading"
+					:loading="showLoading"
 					:aria-label="$t('project.list.add')"
 					@click="addTask()"
 				>
@@ -80,6 +80,7 @@ import {useConfigStore} from '@/stores/config'
 import {reportSkippedLabels, useQuickAddTask} from '@/composables/useQuickAddTask'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const emit = defineEmits<{
 	tasksAdded: [tasks: ITask[]],
@@ -94,6 +95,7 @@ const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const {createNewTasksBulk, findProjectId, ensureLabelsExist, isLoading: loading} = useQuickAddTask()
+const showLoading = useDelayedLoading(loading)
 const createRelationMutation = useCreateTaskRelationMutation()
 const router = useRouter()
 

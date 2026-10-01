@@ -3,7 +3,7 @@
 		ref="taskViewContainer"
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskLoading || taskMutating || !visible,
+			'is-loading': taskBusy || !visible,
 			'is-modal': isModal,
 		}"
 	>
@@ -133,7 +133,7 @@
 										v-model="dueDateInput"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
 										:title="$t('task.attributes.dueDate')"
-										:disabled="taskLoading || taskMutating || !canWrite"
+										:disabled="taskBusy || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -189,7 +189,7 @@
 										v-model="startDateInput"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
 										:title="$t('task.attributes.startDate')"
-										:disabled="taskLoading || taskMutating || !canWrite"
+										:disabled="taskBusy || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -224,7 +224,7 @@
 										v-model="endDateInput"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
 										:title="$t('task.attributes.endDate')"
-										:disabled="taskLoading || taskMutating || !canWrite"
+										:disabled="taskBusy || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
@@ -714,6 +714,7 @@ import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
@@ -981,7 +982,7 @@ onMounted(async () => {
 	updateScrollable()
 })
 
-const taskLoading = taskQuery.isFetching
+const taskBusy = useDelayedLoading(() => taskQuery.isFetching.value || taskMutating.value)
 
 
 type FieldType =

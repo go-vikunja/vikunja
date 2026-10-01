@@ -22,7 +22,7 @@
 
 		<template #default>
 			<div
-				:class="{ 'is-loading': loading }"
+				:class="{ 'is-loading': showLoading }"
 				class="loader-container is-max-width-desktop list-view"
 			>
 				<Card
@@ -124,6 +124,7 @@ import {isSavedFilterProject} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskDragState} from '@/composables/useTaskDragState'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 
 const props = defineProps<{
@@ -158,6 +159,7 @@ const {
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
 )
+const showLoading = useDelayedLoading(loading)
 
 const positionMutation = useUpdateTaskPositionMutation()
 
