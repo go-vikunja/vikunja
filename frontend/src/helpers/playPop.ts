@@ -10,7 +10,7 @@ export function playPopSound() {
 
 	try {
 		const popSound = new Audio(popSoundFile)
-		popSound.play()
+		popSound.play().catch(() => {})
 	} catch (e) {
 		console.error('Could not play pop sound:', e)
 	}
