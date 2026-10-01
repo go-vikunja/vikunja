@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"slices"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 
@@ -156,6 +157,10 @@ func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.
 }
 
 func notifyMail(notifiable Notifiable, notification Notification) error {
+	if !config.MailerEnabled.GetBool() {
+		return nil
+	}
+
 	mail := notification.ToMail(notifiable.Lang())
 	if mail == nil {
 		return nil
