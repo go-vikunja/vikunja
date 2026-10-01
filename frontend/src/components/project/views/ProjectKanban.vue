@@ -181,7 +181,7 @@
 														v-model="newTaskText"
 														v-focus.always
 														class="input"
-														:disabled="showTaskLoading || undefined"
+														:disabled="initialLoading || taskLoading || undefined"
 														:placeholder="$t('project.kanban.addTaskPlaceholder')"
 														type="text"
 														@focusout="toggleShowNewTaskInput(bucket.id)"
