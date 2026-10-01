@@ -138,11 +138,13 @@ import {useAuthStore} from '@/stores/auth'
 import {useWebSocket} from '@/composables/useWebSocket'
 import XButton from '@/components/input/Button.vue'
 
-const {authenticated} = useWebSocket()
+const {authenticated, isAwaitingFirstConnection} = useWebSocket()
 const authStore = useAuthStore()
 const router = useRouter()
 const inbox = useInfiniteQuery(computed(() => ({
 	...notificationsQuery(),
+	// A fetch before the socket subscribes would be refetched by the subscribe sweep.
+	enabled: !isAwaitingFirstConnection(),
 	refetchInterval: authenticated.value ? false : 10_000,
 })))
 const readMutation = useMarkNotificationReadMutation()
