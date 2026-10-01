@@ -31,7 +31,7 @@
 			<template v-if="unsplashBackgroundEnabled">
 				<input
 					v-model="backgroundSearchInput"
-					:class="{'is-loading': backgroundSearchQuery.isFetching.value}"
+					:class="{'is-loading': searching}"
 					class="input is-expanded"
 					:placeholder="$t('project.background.searchPlaceholder')"
 					type="text"
@@ -83,7 +83,7 @@
 					variant="secondary"
 					@click="backgroundSearchQuery.fetchNextPage()"
 				>
-					{{ backgroundSearchQuery.isFetchingNextPage.value ? $t('misc.loading') : $t('project.background.loadMore') }}
+					{{ loadingMore ? $t('misc.loading') : $t('project.background.loadMore') }}
 				</XButton>
 			</template>
 		</template>
@@ -135,6 +135,7 @@ import {PERMISSIONS} from '@/constants/permissions'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
@@ -179,6 +180,8 @@ const backgroundMutationLoading = computed(() =>
 	uploadBackgroundMutation.isPending.value ||
 	deleteBackgroundMutation.isPending.value,
 )
+const searching = useDelayedLoading(backgroundSearchQuery.isFetching)
+const loadingMore = useDelayedLoading(backgroundSearchQuery.isFetchingNextPage)
 
 async function setBackground(backgroundId: string) {
 	if (setBackgroundMutation.isPending.value) {

@@ -18,11 +18,13 @@ import Expandable from '@/components/base/Expandable.vue'
 import User from '@/components/misc/User.vue'
 import {formatDateShort} from '@/helpers/time/formatDate'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const props = defineProps<{scope: WebhookScope}>()
 const {data: webhookData, isFetching, isPending} = useQuery(computed(() => webhooksQuery(props.scope)))
 const {data: eventData, isPending: isEventsPending} = useQuery(computed(() => webhookEventsQuery(props.scope.kind)))
 const isLoadingInitial = computed(() => isPending.value || isEventsPending.value)
+const showInitialLoader = useDelayedLoading(isLoadingInitial)
 const webhooks = computed(() => webhookData.value ?? [])
 const availableEvents = computed(() => eventData.value ?? [])
 const createMutation = useCreateWebhookMutation()
@@ -110,7 +112,7 @@ function doDelete() {
 <template>
 	<div
 		class="loader-container"
-		:class="{'is-loading': isLoadingInitial}"
+		:class="{'is-loading': showInitialLoader}"
 	>
 		<XButton
 			v-if="!(webhooks.length === 0 || showNewForm)"

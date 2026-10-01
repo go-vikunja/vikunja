@@ -7,7 +7,7 @@
 			<div class="field has-addons">
 				<p
 					class="control is-expanded"
-					:class="{ 'is-loading': searchLoading }"
+					:class="{ 'is-loading': showSearchLoading }"
 				>
 					<Multiselect
 						v-model="selected"
@@ -28,7 +28,7 @@
 				</p>
 				<p class="control">
 					<XButton
-						:class="{'is-loading': isMutating}"
+						:loading="isMutating"
 						:aria-disabled="!selected || isMutating || undefined"
 						@click="addSelected()"
 					>
@@ -141,6 +141,7 @@
 import {computed, ref, watch, type Ref} from 'vue'
 import {normalizeSharePermission} from '@/client/queries/projectShares'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 
@@ -161,6 +162,8 @@ const props = defineProps<{
 	updatePermission: (projectId: number, share: Identified<Share>, permission: Permission) => Promise<unknown>
 	remove: (projectId: number, share: Identified<Share>) => Promise<unknown>
 }>()
+
+const showSearchLoading = useDelayedLoading(() => props.searchLoading)
 
 const search = defineModel<string>('search', {required: true})
 
