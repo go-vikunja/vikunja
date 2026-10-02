@@ -88,12 +88,26 @@ func SetUserStatusAsAdmin(s *xorm.Session, doer *user.User, id int64, status use
 		}
 	}
 
-	oldStatus := target.Status
-	if err := user.SetUserStatus(s, target, status); err != nil {
+	if err := ChangeUserStatus(s, doer, target, status); err != nil {
 		return nil, err
 	}
-	// Reflect the change on the returned struct; GetUserByID refuses disabled accounts.
+	return target, nil
+}
+
+// ChangeUserStatus skips the last-admin guard.
+func ChangeUserStatus(s *xorm.Session, doer *user.User, target *user.User, status user.Status) error {
+	oldStatus := target.Status
+	if err := user.SetUserStatus(s, target, status); err != nil {
+		return err
+	}
+	// Reflect the change on the caller's struct; GetUserByID refuses disabled accounts.
 	target.Status = status
+
+	if status != user.StatusActive {
+		if err := DeleteAllUserSessions(s, target.ID); err != nil {
+			return err
+		}
+	}
 
 	events.DispatchOnCommit(s, &AdminUserStatusChangedEvent{
 		User:      target,
@@ -101,7 +115,7 @@ func SetUserStatusAsAdmin(s *xorm.Session, doer *user.User, id int64, status use
 		OldStatus: oldStatus,
 		NewStatus: status,
 	})
-	return target, nil
+	return nil
 }
 
 // SetUserPasswordAsAdmin sets a new password for a local account and

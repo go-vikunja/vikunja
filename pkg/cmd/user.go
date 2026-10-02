@@ -388,7 +388,6 @@ var userChangeStatusCmd = &cobra.Command{
 		defer s.Close()
 
 		u := getUserFromArg(s, args[0])
-		oldStatus := u.Status
 
 		var status user.Status
 		if userFlagEnableUser {
@@ -402,16 +401,10 @@ var userChangeStatusCmd = &cobra.Command{
 				status = user.StatusActive
 			}
 		}
-		err := user.SetUserStatus(s, u, status)
-		if err != nil {
+		if err := models.ChangeUserStatus(s, nil, u, status); err != nil {
 			_ = s.Rollback()
-			log.Fatalf("Could not enable the user")
+			log.Fatalf("Could not change the user status: %s", err)
 		}
-		events.DispatchOnCommit(s, &models.AdminUserStatusChangedEvent{
-			User:      u,
-			OldStatus: oldStatus,
-			NewStatus: status,
-		})
 
 		if err := s.Commit(); err != nil {
 			log.Fatalf("Error saving everything: %s", err)
@@ -431,7 +424,7 @@ var userDeleteCmd = &cobra.Command{
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		if userFlagDeleteNow && !userFlagDeleteConfirm {
 			fmt.Println("You requested to delete the user immediately. Are you sure?")
 			fmt.Println(`To confirm, please type "yes, I confirm" in all uppercase:`)
@@ -480,6 +473,8 @@ var userDeleteCmd = &cobra.Command{
 		if err := s.Commit(); err != nil {
 			log.Fatalf("Error saving everything: %s", err)
 		}
+
+		events.DispatchPending(cmd.Context(), s)
 
 		if userFlagDeleteNow {
 			fmt.Println("User deleted successfully.")
