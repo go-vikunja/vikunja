@@ -81,9 +81,20 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (u
 		}
 
 		// If it is time for that current user, add the task to their project of overdue tasks
-		tm, err := time.Parse("15:04", t.User.OverdueTasksRemindersTime)
+		remindersTime := t.User.OverdueTasksRemindersTime
+		if remindersTime == "" {
+			remindersTime = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
+		}
+		if remindersTime == "" {
+			remindersTime = "9:00"
+		}
+		tm, err := time.Parse("15:04", remindersTime)
 		if err != nil {
-			return nil, err
+			tm, err = time.Parse("3:04", remindersTime)
+			if err != nil {
+				log.Errorf("[Undone Overdue Tasks Reminder] Could not parse reminder time %q for user %d: %v", t.User.OverdueTasksRemindersTime, t.User.ID, err)
+				continue
+			}
 		}
 		overdueMailTime := time.Date(now.Year(), now.Month(), now.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
 		isTimeForReminder := overdueMailTime.After(now) || overdueMailTime.Equal(now.In(tz))

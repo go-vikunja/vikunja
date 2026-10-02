@@ -164,6 +164,25 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 	bot.Issuer = IssuerLocal
 	bot.Password = ""
 	bot.Email = ""
+	bot.AvatarProvider = config.DefaultSettingsAvatarProvider.GetString()
+	bot.AvatarFileID = config.DefaultSettingsAvatarFileID.GetInt64()
+	bot.EmailRemindersEnabled = false
+	bot.DiscoverableByName = false
+	bot.DiscoverableByEmail = false
+	bot.OverdueTasksRemindersEnabled = false
+	bot.OverdueTasksRemindersTime = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
+	if bot.OverdueTasksRemindersTime == "" {
+		bot.OverdueTasksRemindersTime = "9:00"
+	}
+	bot.DefaultProjectID = 0
+	bot.WeekStart = config.DefaultSettingsWeekStart.GetInt()
+	bot.Timezone = config.DefaultSettingsTimezone.GetString()
+	if bot.Timezone == "" {
+		bot.Timezone = config.GetTimeZone().String()
+	}
+	if bot.Language == "" {
+		bot.Language = config.DefaultSettingsLanguage.GetString()
+	}
 
 	if _, err := s.Insert(bot); err != nil {
 		return nil, err
