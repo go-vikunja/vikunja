@@ -1419,10 +1419,13 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 	return fullProject.ReadOne(s, a)
 }
 
+// Others' defaults don't count: anyone with write access can set one.
 func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
 	return s.
-		Where("default_project_id = ?", p.ID).
-		Exist(&user.User{})
+		Table("users").
+		Join("INNER", "projects", "projects.id = users.default_project_id AND projects.owner_id = users.id").
+		Where("projects.id = ?", p.ID).
+		Exist()
 }
 
 // Delete implements the delete method of CRUDable
@@ -1480,14 +1483,11 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	// If we're deleting a default project, remove it as default
-	if isDefaultProject {
-		_, err = s.Where("default_project_id = ?", p.ID).
-			Cols("default_project_id").
-			Update(&user.User{DefaultProjectID: 0})
-		if err != nil {
-			return
-		}
+	_, err = s.Where("default_project_id = ?", p.ID).
+		Cols("default_project_id").
+		Update(&user.User{DefaultProjectID: 0})
+	if err != nil {
+		return
 	}
 
 	// Delete related project entities
