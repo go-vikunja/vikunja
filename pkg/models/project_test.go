@@ -824,6 +824,36 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(-1), ls[26].ID)
 		assert.Equal(t, int64(-2), ls[27].ID)
 	})
+	t.Run("with task counts", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		u := &user.User{ID: 1}
+		project := Project{Expand: []ProjectExpandable{ProjectExpandableTaskCounts}}
+		result, _, _, err := project.ReadAll(s, u, "", 1, 50)
+		require.NoError(t, err)
+
+		byID := map[int64]*Project{}
+		for _, p := range result.([]*Project) {
+			byID[p.ID] = p
+		}
+		assert.Equal(t, &ProjectTaskCounts{Undone: 20, Done: 1}, byID[1].TaskCounts)
+		assert.Equal(t, &ProjectTaskCounts{}, byID[12].TaskCounts, "project without tasks")
+		assert.Nil(t, byID[FavoritesPseudoProjectID].TaskCounts)
+		assert.Nil(t, byID[-2].TaskCounts)
+	})
+	t.Run("without task counts", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		u := &user.User{ID: 1}
+		result, _, _, err := (&Project{}).ReadAll(s, u, "", 1, 50)
+		require.NoError(t, err)
+
+		for _, p := range result.([]*Project) {
+			assert.Nil(t, p.TaskCounts)
+		}
+	})
 	t.Run("projects for nonexistent user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
