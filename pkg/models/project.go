@@ -1441,13 +1441,18 @@ func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [delete]
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
+	// The handler passes a stub without owner_id.
+	fullProject, err := GetProjectSimpleByID(s, p.ID)
+	if err != nil {
+		return
+	}
 
 	isDefaultProject, err := p.isDefaultProject(s)
 	if err != nil {
 		return err
 	}
 	// Owners should be allowed to delete the default project
-	if isDefaultProject && p.OwnerID != a.GetID() {
+	if isDefaultProject && fullProject.OwnerID != a.GetID() {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
@@ -1471,11 +1476,6 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
-	}
-
-	fullProject, err := GetProjectSimpleByID(s, p.ID)
-	if err != nil {
-		return
 	}
 
 	err = fullProject.DeleteBackgroundFileIfExists(s)
