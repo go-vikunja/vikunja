@@ -18,6 +18,7 @@ package user
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -26,6 +27,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
@@ -259,6 +261,7 @@ func HandleFailedTOTPAuth(user *User) {
 	log.Infof("Blocking user account %d after 10 failed TOTP password attempts", user.ID)
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	if err := RequestUserPasswordResetToken(s, user); err != nil {
 		log.Errorf("Could not issue password reset token for user %d after 10 failed TOTP attempts: %s", user.ID, err)
@@ -275,7 +278,10 @@ func HandleFailedTOTPAuth(user *User) {
 		_ = s.Rollback()
 		return
 	}
+	events.DispatchOnCommit(s, &AccountLockedEvent{UserID: user.ID})
 	if err := s.Commit(); err != nil {
 		log.Errorf("Could not commit lockout for user %d: %s", user.ID, err)
+		return
 	}
+	events.DispatchPending(context.Background(), s)
 }
