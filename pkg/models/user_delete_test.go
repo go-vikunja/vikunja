@@ -17,12 +17,15 @@
 package models
 
 import (
+	"context"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -166,4 +169,24 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertMissing(t, "subscriptions", map[string]interface{}{"user_id": 4})
 		db.AssertMissing(t, "team_members", map[string]interface{}{"user_id": 4})
 	})
+}
+
+// GHSA-4hv6-xc92-j86g
+func TestDeleteUser_RevokesSessions(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	events.ClearDispatchedEvents()
+
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	require.NoError(t, DeleteUser(s, u))
+	assert.Zero(t, events.CountDispatchedEvents((&SessionsRevokedEvent{}).Name()))
+	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
+
+	db.AssertMissing(t, "sessions", map[string]interface{}{"user_id": 1})
+	revoked := events.GetDispatchedEvents((&SessionsRevokedEvent{}).Name())
+	require.Len(t, revoked, 1)
+	require.Equal(t, &SessionsRevokedEvent{UserID: 1}, revoked[0])
 }

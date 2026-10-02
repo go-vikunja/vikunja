@@ -302,33 +302,72 @@ func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, e
 	return token, u, nil
 }
 
-// GetUserIDFromToken parses a raw JWT token string and returns the user ID.
-// Only regular user tokens are accepted (not link shares).
-// Returns 0 and an error if the token is invalid.
-func GetUserIDFromToken(tokenString string) (int64, error) {
+type UserTokenClaims struct {
+	UserID    int64
+	SessionID string
+	ExpiresAt time.Time
+}
+
+// ErrUserTokenRejected marks errors that retrying cannot fix.
+var ErrUserTokenRejected = errors.New("user token rejected")
+
+// ParseUserToken skips the session check: a valid result may belong to a revoked session.
+func ParseUserToken(tokenString string) (*UserTokenClaims, error) {
 	token, err := jwt.Parse(tokenString, func(_ *jwt.Token) (any, error) {
 		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	if err != nil {
-		return 0, err
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return 0, jwt.ErrTokenInvalidClaims
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
 	typ, ok := claims["type"].(float64)
 	if !ok || int(typ) != AuthTypeUser {
-		return 0, jwt.ErrTokenInvalidClaims
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
-	userIDFloat, ok := claims["id"].(float64)
+	userID, ok := claims["id"].(float64)
 	if !ok {
-		return 0, jwt.ErrTokenInvalidClaims
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
-	return int64(userIDFloat), nil
+	sid, _ := claims["sid"].(string)
+	exp, err := claims.GetExpirationTime()
+	if err != nil || exp == nil || sid == "" {
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
+	}
+
+	return &UserTokenClaims{
+		UserID:    int64(userID),
+		SessionID: sid,
+		ExpiresAt: exp.Time,
+	}, nil
+}
+
+func CheckUserTokenSession(claims *UserTokenClaims) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	session, err := models.GetSessionByID(s, claims.SessionID)
+	if err == nil && session.UserID != claims.UserID {
+		err = &models.ErrSessionNotFound{}
+	}
+	if models.IsErrSessionNotFound(err) {
+		return fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = user.GetUserByID(s, claims.UserID)
+	if user.IsErrUserDoesNotExist(err) || user.IsErrUserStatusError(err) {
+		return fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
+	}
+	return err
 }
 
 func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User, err error) {

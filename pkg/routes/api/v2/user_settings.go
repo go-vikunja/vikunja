@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
@@ -234,6 +235,7 @@ func runUserAction(ctx context.Context, action func(*xorm.Session, *user.User) e
 
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	if err := action(s, doer); err != nil {
 		_ = s.Rollback()
@@ -243,6 +245,7 @@ func runUserAction(ctx context.Context, action func(*xorm.Session, *user.User) e
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 
 	return &singleBody[userActionMessageBody]{Body: &userActionMessageBody{Message: message}}, nil
 }

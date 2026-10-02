@@ -61,6 +61,24 @@ func (h *Hub) Unregister(conn *Connection) {
 	log.Debugf("WebSocket: unregistered connection for user %d (remaining: %d)", conn.userID, remaining)
 }
 
+func (h *Hub) DisconnectSession(userID int64, sessionID string) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for _, conn := range h.connections[userID] {
+		if conn.SessionID() == sessionID {
+			conn.close("session revoked")
+		}
+	}
+}
+
+func (h *Hub) DisconnectUser(userID int64) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for _, conn := range h.connections[userID] {
+		conn.close("session revoked")
+	}
+}
+
 // PublishForUser sends an event to all connections of a specific user that are subscribed to the given event.
 func (h *Hub) PublishForUser(userID int64, event string, data any) {
 	h.mu.RLock()

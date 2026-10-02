@@ -116,6 +116,29 @@ func (l *TimeEntryListener) Handle(msg *message.Message) error {
 	return nil
 }
 
+type SessionsRevokedListener struct{}
+
+// Name defines the name for the SessionsRevokedListener listener
+func (l *SessionsRevokedListener) Name() string { return "websocket.sessions.revoked" }
+
+// Handle is executed when the event SessionsRevokedListener listens on is fired
+func (l *SessionsRevokedListener) Handle(msg *message.Message) error {
+	var event models.SessionsRevokedEvent
+	if err := json.Unmarshal(msg.Payload, &event); err != nil {
+		return err
+	}
+	hub := GetHub()
+	if hub == nil {
+		return nil
+	}
+	if event.SessionID == "" {
+		hub.DisconnectUser(event.UserID)
+		return nil
+	}
+	hub.DisconnectSession(event.UserID, event.SessionID)
+	return nil
+}
+
 // RegisterListeners registers WebSocket event listeners.
 func RegisterListeners() {
 	events.RegisterListener(
@@ -125,4 +148,5 @@ func RegisterListeners() {
 	events.RegisterListener((&models.TimeEntryCreatedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.created"})
 	events.RegisterListener((&models.TimeEntryUpdatedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.updated"})
 	events.RegisterListener((&models.TimeEntryDeletedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.deleted"})
+	events.RegisterListener((&models.SessionsRevokedEvent{}).Name(), &SessionsRevokedListener{})
 }

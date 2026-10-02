@@ -215,36 +215,35 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
-	// Read before deleting so the stored id_token survives for the logout URL.
 	// A missing session just means there is nothing to log out.
-	session, err := models.GetSessionByID(s, sid)
-	if err != nil && !models.IsErrSessionNotFound(err) {
+	session, err := models.DeleteSessionByID(s, sid)
+	if models.IsErrSessionNotFound(err) {
+		return "", nil
+	}
+	if err != nil {
 		_ = s.Rollback()
 		return "", err
 	}
-	if session != nil && session.OIDCProviderKey != "" {
+	if session.OIDCProviderKey != "" {
 		url, buildErr := openid.BuildEndSessionURL(session.OIDCProviderKey, &models.SessionOIDCData{
 			IDToken:     session.OIDCIDToken,
 			ProviderKey: session.OIDCProviderKey,
 		})
 		if buildErr != nil {
-			// A failed URL build must not block logout; the session is still deleted below.
+			// A failed URL build must not block logout.
 			log.Errorf("Could not build OIDC end-session URL for session %s: %v", sid, buildErr)
 		} else {
 			endSessionURL = url
 		}
 	}
 
-	if _, err := s.Where("id = ?", sid).Delete(&models.Session{}); err != nil {
-		_ = s.Rollback()
-		return "", err
-	}
-
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return "", err
 	}
+	events.DispatchPending(context.Background(), s)
 
 	return endSessionURL, nil
 }
@@ -255,6 +254,7 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 func ResetPassword(reset *user.PasswordReset) error {
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	userID, err := user.ResetPassword(s, reset)
 	if err != nil {
@@ -267,7 +267,11 @@ func ResetPassword(reset *user.PasswordReset) error {
 		return err
 	}
 
-	return s.Commit()
+	if err := s.Commit(); err != nil {
+		return err
+	}
+	events.DispatchPending(context.Background(), s)
+	return nil
 }
 
 // RequestPasswordResetToken issues a password-reset token for the account with

@@ -487,6 +487,17 @@ func (e *AdminUserAdminRevokedEvent) Name() string {
 	return "admin.user.admin.revoked"
 }
 
+// SessionsRevokedEvent represents sessions of a user being deleted. An empty SessionID means all of them.
+type SessionsRevokedEvent struct {
+	UserID    int64  `json:"user_id"`
+	SessionID string `json:"session_id"`
+}
+
+// Name defines the name for SessionsRevokedEvent
+func (e *SessionsRevokedEvent) Name() string {
+	return "user.sessions.revoked"
+}
+
 // AdminUserStatusChangedEvent represents a user's account status being changed by an admin
 type AdminUserStatusChangedEvent struct {
 	User      *user.User  `json:"user"`

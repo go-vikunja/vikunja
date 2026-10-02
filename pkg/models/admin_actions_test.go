@@ -136,6 +136,50 @@ func TestSetUserStatusAsAdmin_Events(t *testing.T) {
 	})
 }
 
+// GHSA-4hv6-xc92-j86g
+func TestSetUserStatusAsAdmin_RevokesSessions(t *testing.T) {
+	doer := &user.User{ID: 1}
+
+	t.Run("a non-active status deletes the user's sessions", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := SetUserStatusAsAdmin(s, doer, 2, user.StatusDisabled)
+		require.NoError(t, err)
+		assert.Zero(t, events.CountDispatchedEvents((&SessionsRevokedEvent{}).Name()))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		db.AssertMissing(t, "sessions", map[string]interface{}{"user_id": 2})
+		db.AssertExists(t, "sessions", map[string]interface{}{"user_id": 1}, false)
+		assert.Equal(t, &SessionsRevokedEvent{UserID: 2}, singleDispatchedEvent[*SessionsRevokedEvent](t))
+	})
+
+	t.Run("activating keeps the user's sessions", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		const sid = "550e8400-e29b-41d4-a716-446655440017"
+		_, err := s.Insert(&Session{
+			ID:         sid,
+			UserID:     17,
+			TokenHash:  "disabled",
+			LastActive: time.Now(),
+		})
+		require.NoError(t, err)
+
+		_, err = SetUserStatusAsAdmin(s, doer, 17, user.StatusActive)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		db.AssertExists(t, "sessions", map[string]interface{}{"id": sid}, false)
+		assert.Zero(t, events.CountDispatchedEvents((&SessionsRevokedEvent{}).Name()))
+	})
+}
+
 func TestSetUserPasswordAsAdmin_Events(t *testing.T) {
 	doer := &user.User{ID: 1}
 
