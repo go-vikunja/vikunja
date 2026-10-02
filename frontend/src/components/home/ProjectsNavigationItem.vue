@@ -51,6 +51,14 @@
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
+				<span
+					v-if="undoneTaskCount"
+					class="project-task-count"
+					:title="$t('navigation.undoneTaskCount', undoneTaskCount)"
+				>
+					<span aria-hidden="true">{{ undoneTaskCount }}</span>
+					<span class="is-sr-only">{{ $t('navigation.undoneTaskCount', undoneTaskCount) }}</span>
+				</span>
 			</BaseButton>
 			<BaseButton
 				v-if="canToggleFavorite"
@@ -112,6 +120,7 @@ import {
 	usePatchProjectFavoriteMutation,
 } from '@/client/queries/projects'
 import {usePatchSavedFilterFavoriteMutation} from '@/client/queries/savedFilters'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps<{
 	project: ProjectResponse,
@@ -180,6 +189,11 @@ const projectList = useProjects()
 const projectFavoriteMutation = usePatchProjectFavoriteMutation()
 const savedFilterFavoriteMutation = usePatchSavedFilterFavoriteMutation()
 const {currentProject} = useCurrentProject()
+const authStore = useAuthStore()
+
+const undoneTaskCount = computed(() => authStore.settings.frontend_settings.show_project_task_count
+	? props.project.task_counts?.undone ?? 0
+	: 0)
 
 // Persist open state across browser reloads. Using a separate ref for the state 
 // allows us to use only one entry in local storage instead of one for every project id.
@@ -299,6 +313,14 @@ async function toggleProjectFavorite() {
 .project-menu-title {
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.project-task-count {
+	margin-inline-start: auto;
+	padding-inline-start: .5rem;
+	color: var(--grey-500);
+	font-size: .75rem;
+	font-variant-numeric: tabular-nums;
 }
 
 .saved-filter-icon {

@@ -155,6 +155,7 @@
         "playSoundWhenDone": "Play a sound when marking tasks as done",
         "allowIconChanges": "Show special logos during certain times",
         "alwaysShowBucketTaskCount": "Always show task count on Kanban buckets",
+        "showProjectTaskCount": "Show the number of undone tasks next to projects in the sidebar",
         "defaultTaskRelationType": "Default task relation type",
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",
@@ -849,7 +850,8 @@
     "home": "Vikunja home",
     "toggleChildProjects": "Toggle sub-projects",
     "main": "Main navigation",
-    "savedFilters": "Saved filters"
+    "savedFilters": "Saved filters",
+    "undoneTaskCount": "{count} undone task | {count} undone tasks"
   },
   "misc": {
     "loading": "Loading…",

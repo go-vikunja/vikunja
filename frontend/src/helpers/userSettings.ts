@@ -26,6 +26,7 @@ export interface FrontendSettings {
 	default_task_relation_type: IRelationKind
 	background_brightness: number | null
 	always_show_bucket_task_count: boolean
+	show_project_task_count: boolean
 	show_last_viewed: boolean
 	sidebar_width: number | null
 	comment_sort_order: 'asc' | 'desc'
@@ -81,6 +82,7 @@ export function defaultFrontendSettings(): FrontendSettings {
 		default_task_relation_type: RELATION_KIND.RELATED,
 		background_brightness: null,
 		always_show_bucket_task_count: false,
+		show_project_task_count: false,
 		show_last_viewed: true,
 		sidebar_width: null,
 		comment_sort_order: 'asc',
