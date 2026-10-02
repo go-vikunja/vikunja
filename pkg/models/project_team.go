@@ -175,6 +175,15 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
+	memberIDs, err := teamMemberIDs(s, tl.TeamID)
+	if err != nil {
+		return err
+	}
+	err = cleanupAfterProjectAccessLossForUsers(s, memberIDs, []int64{tl.ProjectID})
+	if err != nil {
+		return err
+	}
+
 	err = updateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
 	return
 }

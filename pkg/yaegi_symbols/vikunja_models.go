@@ -445,7 +445,6 @@ func init() {
 		"BulkAssignees":                                reflect.ValueOf((*models.BulkAssignees)(nil)),
 		"BulkTask":                                     reflect.ValueOf((*models.BulkTask)(nil)),
 		"BulkTaskCreation":                             reflect.ValueOf((*models.BulkTaskCreation)(nil)),
-		"CleanupTaskAssignmentsAfterTeamRemoval":       reflect.ValueOf((*models.CleanupTaskAssignmentsAfterTeamRemoval)(nil)),
 		"CreateInviteLinkBody":                         reflect.ValueOf((*models.CreateInviteLinkBody)(nil)),
 		"CreateUserBody":                               reflect.ValueOf((*models.CreateUserBody)(nil)),
 		"DataExportReadyNotification":                  reflect.ValueOf((*models.DataExportReadyNotification)(nil)),

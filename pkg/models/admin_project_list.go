@@ -56,6 +56,12 @@ func ReassignProjectOwner(s *xorm.Session, doer *user.User, projectID, newOwnerI
 	}
 	p.Owner = newOwner
 
+	if oldOwnerID != newOwnerID {
+		if err := cleanupAfterProjectAccessLoss(s, oldOwnerID, []int64{p.ID}); err != nil {
+			return nil, err
+		}
+	}
+
 	events.DispatchOnCommit(s, &AdminProjectOwnerChangedEvent{
 		Project:    p,
 		Doer:       doer,
