@@ -47,9 +47,9 @@ export function getTokenType(token: string | null): number | null {
 	return typeof payload?.type === 'number' ? payload.type : null
 }
 
-export function isTokenExpired(token: string | null): boolean {
+export function isTokenExpired(token: string | null, marginSeconds = 0): boolean {
 	const exp = getTokenPayload(token)?.exp
-	return typeof exp !== 'number' || exp <= serverNowSeconds()
+	return typeof exp !== 'number' || exp <= serverNowSeconds() + marginSeconds
 }
 
 export function getTokenIdentity(token: string | null): {id: number; type: number} | null {
@@ -81,6 +81,18 @@ export const removeToken = () => {
 // without this guard, refreshes firing close together each spend the single-use
 // cookie and all but one get a 401.
 let inFlightRefresh: Promise<void> | null = null
+
+const refreshListeners: (() => void)[] = []
+
+export function onTokenRefreshed(listener: () => void) {
+	refreshListeners.push(listener)
+	return () => {
+		const index = refreshListeners.indexOf(listener)
+		if (index !== -1) {
+			refreshListeners.splice(index, 1)
+		}
+	}
+}
 
 // Incremented on every removeToken()/logout. A refresh captures the epoch when
 // it starts and only persists its result if the epoch is unchanged, so a
@@ -165,6 +177,15 @@ export async function refreshToken(persist: boolean): Promise<void> {
 			inFlightRefresh = null
 		}
 	}).catch(() => {})
+	p.then(() => {
+		for (const listener of [...refreshListeners]) {
+			try {
+				listener()
+			} catch (e) {
+				console.error('Token refresh listener failed', e)
+			}
+		}
+	}, () => {})
 	return p
 }
 

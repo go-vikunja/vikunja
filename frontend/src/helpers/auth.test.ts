@@ -5,7 +5,9 @@ import {
 	getToken,
 	getTokenIdentity,
 	getTokenType,
+	isTokenExpired,
 	MAX_RETRY_AFTER_MS,
+	onTokenRefreshed,
 	refreshToken,
 	RefreshTokenError,
 	removeToken,
@@ -65,6 +67,23 @@ describe('getTokenIdentity', () => {
 
 		expect(getTokenIdentity(`header.${payload}.signature`)).toBeNull()
 		expect(getTokenIdentity(null)).toBeNull()
+	})
+})
+
+describe('isTokenExpired', () => {
+	function tokenExpiringIn(seconds: number) {
+		const payload = btoa(JSON.stringify({exp: Date.now() / 1000 + seconds}))
+		return `header.${payload}.signature`
+	}
+
+	it('treats a token as valid until its exp', () => {
+		expect(isTokenExpired(tokenExpiringIn(1))).toBe(false)
+		expect(isTokenExpired(tokenExpiringIn(-1))).toBe(true)
+	})
+
+	it('treats a token expiring within the margin as expired', () => {
+		expect(isTokenExpired(tokenExpiringIn(1), 5)).toBe(true)
+		expect(isTokenExpired(tokenExpiringIn(10), 5)).toBe(false)
 	})
 })
 
@@ -215,6 +234,71 @@ describe('refreshToken in-flight dedup', () => {
 
 		resolveB?.({data: {token: FAKE_TOKEN}})
 		await Promise.all([pB, pB2])
+	})
+})
+
+describe('onTokenRefreshed', () => {
+	const listener = vi.fn()
+	let unsubscribe: () => void
+
+	beforeEach(() => {
+		unsubscribe = onTokenRefreshed(listener)
+		post.mockClear()
+		listener.mockClear()
+		removeToken()
+		localStorage.clear()
+	})
+
+	afterEach(() => {
+		unsubscribe()
+	})
+
+	it('notifies once per coalesced refresh after the new token is saved', async () => {
+		const seenTokens: (string | null)[] = []
+		listener.mockImplementation(() => seenTokens.push(getToken()))
+		const p1 = refreshToken(true)
+		const p2 = refreshToken(true)
+		settlePost()
+		await Promise.all([p1, p2])
+
+		expect(listener).toHaveBeenCalledTimes(1)
+		expect(seenTokens).toEqual([FAKE_TOKEN])
+	})
+
+	it('keeps notifying other listeners when one throws', async () => {
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+		const unsubscribeThrowing = onTokenRefreshed(() => {
+			throw new Error('boom')
+		})
+		try {
+			const p = refreshToken(true)
+			settlePost()
+			await p
+			await Promise.resolve()
+
+			expect(errorSpy).toHaveBeenCalledTimes(1)
+			expect(listener).toHaveBeenCalledTimes(1)
+		} finally {
+			unsubscribeThrowing()
+			errorSpy.mockRestore()
+		}
+	})
+
+	it('does not notify after unsubscribing', async () => {
+		unsubscribe()
+		const p = refreshToken(true)
+		settlePost()
+		await p
+
+		expect(listener).not.toHaveBeenCalled()
+	})
+
+	it('does not notify when the refresh fails', async () => {
+		post.mockResolvedValueOnce({error: {}, response: new Response(null, {status: 401})})
+
+		await refreshToken(true).catch(() => {})
+
+		expect(listener).not.toHaveBeenCalled()
 	})
 })
 

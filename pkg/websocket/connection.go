@@ -188,15 +188,14 @@ func (c *Connection) handleMessage(ctx context.Context, msg IncomingMessage) boo
 }
 
 func (c *Connection) handleAuth(ctx context.Context, token string) bool {
-	if c.IsAuthenticated() {
-		c.sendError("already_authenticated", "")
-		return true
-	}
-
 	claims, err := auth.ParseUserToken(token)
 	if err != nil {
 		c.failAuth(ctx, err)
 		return false
+	}
+
+	if c.IsAuthenticated() {
+		return c.reauth(ctx, claims)
 	}
 
 	userID := claims.UserID
@@ -204,10 +203,7 @@ func (c *Connection) handleAuth(ctx context.Context, token string) bool {
 	c.userID = userID
 	c.sessionID = claims.SessionID
 	c.authenticated = true
-	// Revocation events may not reach this node.
-	c.expiryTimer = time.AfterFunc(time.Until(claims.ExpiresAt), func() {
-		c.close("token expired")
-	})
+	c.expiryTimer = c.expireAt(claims.ExpiresAt)
 	c.mu.Unlock()
 
 	// After Register, so a concurrent revocation can't slip between check and registration.
@@ -217,15 +213,49 @@ func (c *Connection) handleAuth(ctx context.Context, token string) bool {
 		return false
 	}
 
-	// Send auth success
+	c.sendAuthSuccess()
+	log.Debugf("WebSocket: user %d authenticated", userID)
+	return true
+}
+
+// Switching sessions would escape DisconnectSession, which matches on the session the socket registered with.
+func (c *Connection) reauth(ctx context.Context, claims *auth.UserTokenClaims) bool {
+	if claims.UserID != c.UserID() || claims.SessionID != c.SessionID() {
+		c.failAuth(ctx, auth.ErrUserTokenRejected)
+		return false
+	}
+	if err := checkUserTokenSession(claims); err != nil {
+		c.failAuth(ctx, err)
+		return false
+	}
+
+	c.mu.Lock()
+	// A fired timer is already closing the socket.
+	if !c.expiryTimer.Stop() {
+		c.mu.Unlock()
+		return false
+	}
+	c.expiryTimer = c.expireAt(claims.ExpiresAt)
+	c.mu.Unlock()
+
+	c.sendAuthSuccess()
+	log.Debugf("WebSocket: user %d re-authenticated", claims.UserID)
+	return true
+}
+
+// Revocation events may not reach this node.
+func (c *Connection) expireAt(exp time.Time) *time.Timer {
+	return time.AfterFunc(time.Until(exp), func() {
+		c.close("token expired")
+	})
+}
+
+func (c *Connection) sendAuthSuccess() {
 	select {
 	case c.send <- OutgoingMessage{Action: ActionAuthSuccess, Success: true}:
 	default:
-		log.Warningf("WebSocket: send buffer full for user %d", userID)
+		log.Warningf("WebSocket: send buffer full for user %d", c.UserID())
 	}
-
-	log.Debugf("WebSocket: user %d authenticated", userID)
-	return true
 }
 
 // failAuth sends invalid_token only when retrying cannot help; the client stops reconnecting on it.

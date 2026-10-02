@@ -6,18 +6,25 @@ import {
 } from 'vitest'
 import {useWebSocket} from './useWebSocket'
 import {AUTH_TYPES} from '@/constants/auth'
-const auth = vi.hoisted(() => ({tokenType: 1, token: 'token', expired: false}))
+// expired: null defers to the real expiry check against the token's exp claim.
+const auth = vi.hoisted(() => ({tokenType: 1, token: 'token', expired: false as boolean | null}))
 const refreshToken = vi.hoisted(() => vi.fn())
+const refreshListeners = vi.hoisted(() => [] as (() => void)[])
 const RefreshTokenError = vi.hoisted(() => class extends Error {
 	constructor(public failure: {kind: string}) { super() }
 })
-vi.mock('@/helpers/auth', () => ({
-	getToken: () => auth.token,
-	getTokenType: () => auth.tokenType,
-	isTokenExpired: () => auth.expired,
-	refreshToken,
-	RefreshTokenError,
-}))
+vi.mock('@/helpers/auth', async importOriginal => {
+	const actual = await importOriginal<typeof import('@/helpers/auth')>()
+	return {
+		getToken: () => auth.token,
+		getTokenType: () => auth.tokenType,
+		isTokenExpired: (token: string | null, marginSeconds?: number) =>
+			auth.expired ?? actual.isTokenExpired(token, marginSeconds),
+		refreshToken,
+		RefreshTokenError,
+		onTokenRefreshed: (listener: () => void) => refreshListeners.push(listener),
+	}
+})
 const session = vi.hoisted(() => ({current: true}))
 vi.mock('@/client/requestContext', () => ({
 	captureClientRequestContext: () => ({}),
@@ -57,6 +64,23 @@ function authErrorFrame() {
 	return new MessageEvent('message', {data: JSON.stringify({error: 'invalid_token'})})
 }
 
+function tokenRefreshed(token: string) {
+	auth.token = token
+	refreshListeners.forEach(listener => listener())
+}
+
+function authenticatedSocket() {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	socket.onmessage?.(authSuccessFrame())
+	socket.send.mockClear()
+	return {ws, socket}
+}
+
 afterEach(() => {
 	useWebSocket().disconnect()
 	vi.useRealTimers()
@@ -77,6 +101,23 @@ it('refreshes an expired token before authenticating', async () => {
 	refreshToken.mockImplementation(async () => {
 		auth.token = 'fresh'
 		auth.expired = false
+	})
+	useWebSocket().connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	await vi.waitFor(() => expect(socket.send).toHaveBeenCalled())
+
+	expect(refreshToken).toHaveBeenCalledTimes(1)
+	expect(socket.send).toHaveBeenCalledWith(JSON.stringify({action: 'auth', token: 'fresh'}))
+})
+
+it('refreshes a token that expires within a second before authenticating', async () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	auth.expired = null
+	auth.token = `header.${btoa(JSON.stringify({exp: Date.now() / 1000 + 1}))}.signature`
+	refreshToken.mockImplementation(async () => {
+		auth.token = 'fresh'
 	})
 	useWebSocket().connect()
 	const socket = FakeSocket.instances[0]
@@ -493,4 +534,65 @@ it('restarts the backoff after a terminal auth failure', () => {
 	FakeSocket.instances[2].onclose?.()
 	vi.advanceTimersByTime(1000)
 	expect(FakeSocket.instances).toHaveLength(4)
+})
+
+it('re-authenticates the open socket with the refreshed token', () => {
+	const {ws, socket} = authenticatedSocket()
+
+	tokenRefreshed('fresh')
+
+	expect(socket.send).toHaveBeenCalledTimes(1)
+	expect(socket.send).toHaveBeenCalledWith(JSON.stringify({action: 'auth', token: 'fresh'}))
+	expect(FakeSocket.instances).toHaveLength(1)
+	expect(ws.status.value).toBe('authenticated')
+})
+
+it('does not resubscribe when a re-auth succeeds', () => {
+	const {ws, socket} = authenticatedSocket()
+	ws.subscribe('timer.created', vi.fn())
+	tokenRefreshed('fresh')
+	socket.send.mockClear()
+
+	socket.onmessage?.(authSuccessFrame())
+
+	expect(socket.send).not.toHaveBeenCalled()
+	expect(ws.status.value).toBe('authenticated')
+})
+
+it('does not re-authenticate while not yet authenticated', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	tokenRefreshed('fresh')
+	expect(FakeSocket.instances).toHaveLength(0)
+
+	useWebSocket().connect()
+	const socket = FakeSocket.instances[0]
+	tokenRefreshed('fresher')
+	socket.onopen?.()
+	tokenRefreshed('freshest')
+
+	expect(socket.send).toHaveBeenCalledTimes(1)
+	expect(socket.send).toHaveBeenCalledWith(JSON.stringify({action: 'auth', token: 'fresher'}))
+})
+
+it('does not re-authenticate with a non-user token', () => {
+	const {socket} = authenticatedSocket()
+	auth.tokenType = AUTH_TYPES.LINK_SHARE
+
+	tokenRefreshed('share')
+
+	expect(socket.send).not.toHaveBeenCalled()
+})
+
+it('stops the socket when the server rejects a re-auth', () => {
+	vi.useFakeTimers()
+	const {ws, socket} = authenticatedSocket()
+	tokenRefreshed('fresh')
+
+	socket.onmessage?.(authErrorFrame())
+
+	vi.runOnlyPendingTimers()
+	expect(socket.close).toHaveBeenCalled()
+	expect(FakeSocket.instances).toHaveLength(1)
+	expect(ws.status.value).toBe('idle')
 })
