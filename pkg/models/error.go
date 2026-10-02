@@ -621,6 +621,33 @@ func (err ErrParentProjectIsArchived) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeParentProjectIsArchived, Message: "The parent project is archived. Un-archive the parent project first."}
 }
 
+// ErrInvalidDefaultProject represents an error where a user sets a default project they cannot write to
+type ErrInvalidDefaultProject struct {
+	ProjectID int64
+}
+
+// IsErrInvalidDefaultProject checks if an error is ErrInvalidDefaultProject.
+func IsErrInvalidDefaultProject(err error) bool {
+	_, ok := err.(*ErrInvalidDefaultProject)
+	return ok
+}
+
+func (err *ErrInvalidDefaultProject) Error() string {
+	return fmt.Sprintf("Invalid default project [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeInvalidDefaultProject holds the unique world-error code of this error
+const ErrCodeInvalidDefaultProject = 3017
+
+// HTTPError holds the http error description
+func (err *ErrInvalidDefaultProject) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidDefaultProject,
+		Message:  "The default project must be a project you can write to.",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
