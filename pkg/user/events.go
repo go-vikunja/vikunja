@@ -56,3 +56,13 @@ type LogoutEvent struct {
 func (t *LogoutEvent) Name() string {
 	return "user.logout"
 }
+
+// AccountLockedEvent is fired when an account is locked after too many failed TOTP attempts.
+type AccountLockedEvent struct {
+	UserID int64 `json:"user_id"`
+}
+
+// Name defines the name for AccountLockedEvent
+func (t *AccountLockedEvent) Name() string {
+	return "user.account.locked"
+}

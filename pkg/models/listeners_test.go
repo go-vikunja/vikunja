@@ -34,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -803,4 +804,28 @@ func TestUpdateTasksInSavedFilterViews_DoneBucket(t *testing.T) {
 
 		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": view.ID, "bucket_id": defaultBucket.ID}, false)
 	})
+}
+
+// GHSA-4hv6-xc92-j86g
+func TestTOTPAccountLockRevokesSessions(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	events.ClearDispatchedEvents()
+	u := &user.User{ID: 2}
+	// keyvalue store is process-global; reset counter between runs.
+	_ = keyvalue.Del(u.GetFailedTOTPAttemptsKey())
+
+	for i := 0; i < 10; i++ {
+		user.HandleFailedTOTPAuth(u)
+	}
+
+	locked := events.GetDispatchedEvents((&user.AccountLockedEvent{}).Name())
+	require.Len(t, locked, 1)
+	assert.Equal(t, &user.AccountLockedEvent{UserID: 2}, locked[0])
+	db.AssertExists(t, "sessions", map[string]interface{}{"user_id": 2}, false)
+
+	events.TestListener(t, locked[0], &RevokeSessionsOnAccountLock{})
+
+	db.AssertMissing(t, "sessions", map[string]interface{}{"user_id": 2})
+	db.AssertExists(t, "sessions", map[string]interface{}{"user_id": 1}, false)
+	assert.Equal(t, &SessionsRevokedEvent{UserID: 2}, singleDispatchedEvent[*SessionsRevokedEvent](t))
 }

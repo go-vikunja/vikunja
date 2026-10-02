@@ -59,6 +59,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TasksBatchCreatedEvent{}).Name(), &UpdateTasksBatchInSavedFilterViews{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &MarkTaskUnreadOnComment{})
+	events.RegisterListener((&user.AccountLockedEvent{}).Name(), &RevokeSessionsOnAccountLock{})
 	if config.WebhooksEnabled.GetBool() {
 		RegisterEventForWebhook(&TaskCreatedEvent{})
 		RegisterEventForWebhook(&TaskUpdatedEvent{})
@@ -1818,4 +1819,36 @@ func (s *MarkTaskUnreadOnComment) Handle(msg *message.Message) (err error) {
 	}
 
 	return sess.Commit()
+}
+
+// RevokeSessionsOnAccountLock deletes all sessions of a locked account.
+type RevokeSessionsOnAccountLock struct {
+}
+
+// Name defines the name for the RevokeSessionsOnAccountLock listener
+func (s *RevokeSessionsOnAccountLock) Name() string {
+	return "user.account.locked.revoke.sessions"
+}
+
+// Handle is executed when the event RevokeSessionsOnAccountLock listens on is fired
+func (s *RevokeSessionsOnAccountLock) Handle(msg *message.Message) (err error) {
+	event := &user.AccountLockedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+	defer events.CleanupPending(sess)
+
+	if err := DeleteAllUserSessions(sess, event.UserID); err != nil {
+		_ = sess.Rollback()
+		return err
+	}
+	if err := sess.Commit(); err != nil {
+		return err
+	}
+	events.DispatchPending(msg.Context(), sess)
+	return nil
 }

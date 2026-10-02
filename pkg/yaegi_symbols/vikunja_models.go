@@ -606,6 +606,7 @@ func init() {
 		"ReminderRelation":                             reflect.ValueOf((*models.ReminderRelation)(nil)),
 		"RepairOrphanedProjectsResult":                 reflect.ValueOf((*models.RepairOrphanedProjectsResult)(nil)),
 		"RepairResult":                                 reflect.ValueOf((*models.RepairResult)(nil)),
+		"RevokeSessionsOnAccountLock":                  reflect.ValueOf((*models.RevokeSessionsOnAccountLock)(nil)),
 		"RouteDetail":                                  reflect.ValueOf((*models.RouteDetail)(nil)),
 		"SavedFilter":                                  reflect.ValueOf((*models.SavedFilter)(nil)),
 		"SendProjectCreatedNotification":               reflect.ValueOf((*models.SendProjectCreatedNotification)(nil)),
