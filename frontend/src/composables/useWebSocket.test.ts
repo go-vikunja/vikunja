@@ -6,10 +6,17 @@ import {
 } from 'vitest'
 import {useWebSocket} from './useWebSocket'
 import {AUTH_TYPES} from '@/constants/auth'
-const auth = vi.hoisted(() => ({tokenType: 1}))
+const auth = vi.hoisted(() => ({tokenType: 1, token: 'token', expired: false}))
+const refreshToken = vi.hoisted(() => vi.fn())
+const RefreshTokenError = vi.hoisted(() => class extends Error {
+	constructor(public failure: {kind: string}) { super() }
+})
 vi.mock('@/helpers/auth', () => ({
-	getToken: () => 'token',
+	getToken: () => auth.token,
 	getTokenType: () => auth.tokenType,
+	isTokenExpired: () => auth.expired,
+	refreshToken,
+	RefreshTokenError,
 }))
 const session = vi.hoisted(() => ({current: true}))
 vi.mock('@/client/requestContext', () => ({
@@ -54,9 +61,76 @@ afterEach(() => {
 	useWebSocket().disconnect()
 	vi.useRealTimers()
 	vi.unstubAllGlobals()
+	vi.restoreAllMocks()
 	FakeSocket.instances = []
 	session.current = true
 	auth.tokenType = AUTH_TYPES.USER
+	auth.token = 'token'
+	auth.expired = false
+	refreshToken.mockReset()
+})
+
+it('refreshes an expired token before authenticating', async () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	auth.expired = true
+	refreshToken.mockImplementation(async () => {
+		auth.token = 'fresh'
+		auth.expired = false
+	})
+	useWebSocket().connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	await vi.waitFor(() => expect(socket.send).toHaveBeenCalled())
+
+	expect(refreshToken).toHaveBeenCalledTimes(1)
+	expect(socket.send).toHaveBeenCalledWith(JSON.stringify({action: 'auth', token: 'fresh'}))
+})
+
+it('reconnects instead of sending the expired token when the refresh fails transiently', async () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	auth.expired = true
+	refreshToken.mockRejectedValue(new RefreshTokenError({kind: 'network'}))
+	useWebSocket().connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	await vi.waitFor(() => expect(socket.close).toHaveBeenCalled())
+	socket.onclose?.()
+
+	expect(socket.send).not.toHaveBeenCalled()
+	vi.runOnlyPendingTimers()
+	expect(FakeSocket.instances).toHaveLength(2)
+})
+
+it('gives up when the refresh is rejected', async () => {
+	vi.useFakeTimers()
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	auth.expired = true
+	refreshToken.mockRejectedValue(new RefreshTokenError({kind: 'rejected'}))
+	const ws = useWebSocket()
+	ws.connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+	await vi.waitFor(() => expect(socket.send).toHaveBeenCalled())
+	socket.onmessage?.(authErrorFrame())
+
+	vi.runOnlyPendingTimers()
+	expect(FakeSocket.instances).toHaveLength(1)
+	expect(ws.status.value).toBe('idle')
+})
+
+it('authenticates with a valid token without refreshing it', () => {
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	useWebSocket().connect()
+	const socket = FakeSocket.instances[0]
+	socket.onopen?.()
+
+	expect(refreshToken).not.toHaveBeenCalled()
+	expect(socket.send).toHaveBeenCalledWith(JSON.stringify({action: 'auth', token: 'token'}))
 })
 
 it('routes messages from the current connection to subscribers', () => {
@@ -373,4 +447,50 @@ it.each([
 	window.API_URL = apiUrl
 	useWebSocket().connect()
 	expect(FakeSocket.instances.map(socket => socket.url)).toEqual([socketUrl])
+})
+
+it('backs off further on each connection that closes before authenticating, and resets after auth succeeds', () => {
+	vi.useFakeTimers()
+	vi.spyOn(Math, 'random').mockReturnValue(0.5)
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	useWebSocket().connect()
+
+	for (const delay of [1000, 2000, 4000]) {
+		const socket = FakeSocket.instances[FakeSocket.instances.length - 1]
+		const count = FakeSocket.instances.length
+		socket.onopen?.()
+		socket.onclose?.()
+		vi.advanceTimersByTime(delay - 1)
+		expect(FakeSocket.instances).toHaveLength(count)
+		vi.advanceTimersByTime(1)
+		expect(FakeSocket.instances).toHaveLength(count + 1)
+	}
+
+	const socket = FakeSocket.instances[FakeSocket.instances.length - 1]
+	const count = FakeSocket.instances.length
+	socket.onopen?.()
+	socket.onmessage?.(authSuccessFrame())
+	socket.onclose?.()
+	vi.advanceTimersByTime(1000)
+	expect(FakeSocket.instances).toHaveLength(count + 1)
+})
+
+it('restarts the backoff after a terminal auth failure', () => {
+	vi.useFakeTimers()
+	vi.spyOn(Math, 'random').mockReturnValue(0.5)
+	vi.stubGlobal('WebSocket', FakeSocket)
+	window.API_URL = 'http://localhost'
+	const ws = useWebSocket()
+	ws.connect()
+	FakeSocket.instances[0].onclose?.()
+	vi.advanceTimersByTime(1000)
+	const rejected = FakeSocket.instances[1]
+	rejected.onopen?.()
+	rejected.onmessage?.(authErrorFrame())
+
+	ws.connect()
+	FakeSocket.instances[2].onclose?.()
+	vi.advanceTimersByTime(1000)
+	expect(FakeSocket.instances).toHaveLength(4)
 })
