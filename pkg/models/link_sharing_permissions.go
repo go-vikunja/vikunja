@@ -28,30 +28,15 @@ func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error
 		return false, 0, nil
 	}
 
-	// A by-id read carries the parent project but no hash, so resolve the
-	// project from ProjectID; only fall back to the hash lookup when ProjectID
-	// is absent (e.g. resolving a share purely by its public hash).
-	var project *Project
 	if share.ProjectID != 0 {
-		var err error
-		project, err = GetProjectSimpleByID(s, share.ProjectID)
-		if err != nil {
+		can, err := share.canDoLinkShare(s, a)
+		if err != nil || !can {
 			return false, 0, err
 		}
-
-		// A by-ID read discloses the access-bearing hash (GHSA-qfwc-vx6f-3g6g).
-		isAdmin, err := project.IsAdmin(s, a)
-		if err != nil {
-			return false, 0, err
-		}
-		if !isAdmin {
-			return false, 0, nil
-		}
-		return true, 2, nil
+		return true, int(PermissionAdmin), nil
 	}
 
-	var err error
-	project, err = GetProjectByShareHash(s, share.Hash)
+	project, err := GetProjectByShareHash(s, share.Hash)
 	if err != nil {
 		return false, 0, err
 	}
@@ -73,21 +58,15 @@ func (share *LinkSharing) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	return share.canDoLinkShare(s, a)
 }
 
+// Not tier-based: the tier isn't bound on delete, so checking it would fail open.
 func (share *LinkSharing) canDoLinkShare(s *xorm.Session, a web.Auth) (bool, error) {
-	// Don't allow creating link shares if the user itself authenticated with a link share
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
 	}
 
-	l, err := GetProjectSimpleByID(s, share.ProjectID)
+	p, err := GetProjectSimpleByID(s, share.ProjectID)
 	if err != nil {
 		return false, err
 	}
-
-	// Check if the user is admin when the link permission is admin
-	if share.Permission == PermissionAdmin {
-		return l.IsAdmin(s, a)
-	}
-
-	return l.CanWrite(s, a)
+	return p.IsAdmin(s, a)
 }
