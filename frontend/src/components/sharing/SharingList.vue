@@ -132,6 +132,7 @@
 			</template>
 			<template #text>
 				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.list.title')}) }}</p>
+				<ProjectAccessCleanupList :intro="$t('project.share.userTeam.removeCleanupText')" />
 			</template>
 		</Modal>
 	</div>
@@ -144,6 +145,7 @@ import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/Nothing.vue'
+import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
 
 type Identified<T extends {id?: number}> = T & {id: number}
 
