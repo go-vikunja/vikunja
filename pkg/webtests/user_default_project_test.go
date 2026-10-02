@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,7 +45,7 @@ func TestUserSettingsDefaultProject(t *testing.T) {
 				if len(stored) > 0 {
 					s := db.NewSession()
 					defer s.Close()
-					_, err = s.Exec("UPDATE users SET default_project_id = ? WHERE id = 1", stored[0])
+					_, err = s.ID(1).Cols("default_project_id").Update(&user.User{DefaultProjectID: stored[0]})
 					require.NoError(t, err)
 					require.NoError(t, s.Commit())
 				}
