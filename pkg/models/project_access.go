@@ -41,10 +41,7 @@ func (pa *projectAccess) permission(projectID int64) (Permission, bool) {
 	return p, has
 }
 
-// Joined against project_ancestors this yields one row per project and granting
-// ancestor-or-self, so MAX over a project's rows is the greatest of its own grant and
-// everything it inherits: a grant on a descendant can raise an inherited permission,
-// never lower it. Binds the user id three times.
+// Binds the user id three times.
 const projectAccessCTE = `
 WITH grants (project_id, permission) AS (
     SELECT project_id, MAX(permission)
@@ -61,11 +58,19 @@ WITH grants (project_id, permission) AS (
     GROUP BY project_id
 )`
 
+// Inherited admin is sticky (it could unshare the parent anyway); below that the nearest grant wins.
 const projectAccessQuery = projectAccessCTE + `
-SELECT pa.project_id AS id, MAX(g.permission) AS permission
-FROM grants g
-INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id
-GROUP BY pa.project_id`
+SELECT id,
+    CASE WHEN MAX(permission) = 2 THEN 2
+         ELSE MAX(CASE WHEN nearest = 1 THEN permission END)
+    END AS permission
+FROM (
+    SELECT pa.project_id AS id, g.permission,
+        ROW_NUMBER() OVER (PARTITION BY pa.project_id ORDER BY pa.depth) AS nearest
+    FROM grants g
+    INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id
+) ranked
+GROUP BY id`
 
 const projectAccessIDsQuery = projectAccessCTE + `
 SELECT DISTINCT pa.project_id AS id
