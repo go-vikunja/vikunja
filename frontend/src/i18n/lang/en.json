@@ -507,6 +507,7 @@
         "you": "You",
         "notShared": "Not shared with any {type} yet.",
         "remove": "Remove this {type}",
+        "sharable": "project",
         "removeHeader": "Remove a {type} from the {sharable}",
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
         "removeCleanupText": "Anyone who loses access to this project, or the projects under it, through this will also lose:",

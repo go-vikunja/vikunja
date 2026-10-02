@@ -127,11 +127,11 @@
 		>
 			<template #header>
 				<span>{{
-					$t('project.share.userTeam.removeHeader', {type: typeName, sharable: $t('project.list.title')})
+					$t('project.share.userTeam.removeHeader', {type: typeName, sharable: $t('project.share.userTeam.sharable')})
 				}}</span>
 			</template>
 			<template #text>
-				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.list.title')}) }}</p>
+				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}</p>
 				<ProjectAccessCleanupList :intro="$t('project.share.userTeam.removeCleanupText')" />
 			</template>
 		</Modal>
