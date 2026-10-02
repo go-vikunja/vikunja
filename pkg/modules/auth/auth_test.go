@@ -19,6 +19,8 @@ package auth
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -27,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,6 +37,36 @@ import (
 func TestGetAuthFromContext_NoEchoContext(t *testing.T) {
 	_, err := GetAuthFromContext(context.Background())
 	assert.Error(t, err, "should fail when echo.Context isn't stashed on ctx")
+}
+
+// GHSA-m687-p538-r5hp
+func TestSetRefreshTokenCookie(t *testing.T) {
+	original := config.ServicePublicURL.GetString()
+	t.Cleanup(func() { config.ServicePublicURL.Set(original) })
+
+	for _, tt := range []struct {
+		publicURL string
+		secure    bool
+	}{
+		{"https://vikunja.example.com/", true},
+		{"http://vikunja.example.com/", false},
+	} {
+		t.Run(tt.publicURL, func(t *testing.T) {
+			config.ServicePublicURL.Set(tt.publicURL)
+			rec := httptest.NewRecorder()
+			c := echo.New().NewContext(httptest.NewRequest(http.MethodPost, "/", nil), rec)
+
+			SetRefreshTokenCookie(c, "token", 60)
+
+			cookies := rec.Result().Cookies()
+			require.Len(t, cookies, 2)
+			for _, cookie := range cookies {
+				assert.Equal(t, http.SameSiteLaxMode, cookie.SameSite)
+				assert.Equal(t, tt.secure, cookie.Secure)
+				assert.True(t, cookie.HttpOnly)
+			}
+		})
+	}
 }
 
 func TestGetRefreshTokenCookiePaths(t *testing.T) {
