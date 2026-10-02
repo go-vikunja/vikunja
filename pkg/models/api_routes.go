@@ -263,6 +263,9 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		routeGroupName == "oauth_authorize" ||
 		routeGroupName == "mcp" ||
 		strings.HasPrefix(routeGroupName, "mcp_") ||
+		// The people area is for logged-in admins only, never for API tokens (see gateV2ManageRoutes).
+		routeGroupName == "manage" ||
+		strings.HasPrefix(routeGroupName, "manage_") ||
 		strings.HasPrefix(routeGroupName, "user_") {
 		return
 	}

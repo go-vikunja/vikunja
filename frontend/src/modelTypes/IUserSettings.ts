@@ -59,4 +59,7 @@ export interface IUserSettings extends IAbstract {
 	language: SupportedLocale | null
 	frontendSettings: IFrontendSettings
 	extraSettingsLinks: IExtraSettingsLinks
+	// Maintained by the scheduled user list import. Read-only: the server ignores them on save.
+	jobTitle: string
+	department: string
 }

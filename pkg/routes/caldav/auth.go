@@ -92,6 +92,13 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 			return false, nil
 		}
 
+		// A password somebody else chose (the default admin, an admin reset) must not work here
+		// before its owner has replaced it. CalDAV tokens cannot exist for such an account yet.
+		if u.MustChangePassword {
+			log.Warningf("CalDAV basic auth rejected for user %d: the password has to be changed first", u.ID)
+			return false, nil
+		}
+
 		// If the user has TOTP enabled, reject password-based basic auth.
 		// They must use a CalDAV token instead.
 		totpEnabled, terr := user.TOTPEnabledForUser(s, u)

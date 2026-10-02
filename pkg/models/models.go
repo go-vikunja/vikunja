@@ -48,6 +48,8 @@ func GetTables() []interface{} {
 		&Task{},
 		&ProjectTaskCounter{},
 		&TaskIndexAlias{},
+		&TaskExternalRef{},
+		&TaskBaseline{},
 		&Team{},
 		&TeamMember{},
 		&TeamProject{},

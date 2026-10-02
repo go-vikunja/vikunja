@@ -5,6 +5,8 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 
 import GanttChart from './GanttChart.vue'
 import GanttTimelineHeader from './GanttTimelineHeader.vue'
+import GanttTaskPane from './GanttTaskPane.vue'
+import {ZOOM_DAY_WIDTH} from '@/helpers/ganttZoom'
 import en from '@/i18n/lang/en.json'
 import {i18n as globalI18n} from '@/i18n'
 import type {TaskResponse} from '@/client/queries/tasks'
@@ -48,5 +50,33 @@ describe('GanttChart.vue', () => {
 		await wrapper.setProps({isLoading: false})
 
 		expect(wrapper.findComponent(GanttTimelineHeader).props('dayWidthPixels')).toBeGreaterThan(0)
+	})
+
+	it('uses a fixed day width for a fixed zoom and hands the zoom to the header', async () => {
+		const wrapper = mountChart(false)
+		await wrapper.setProps({zoom: 'week'})
+		await wrapper.vm.$nextTick()
+
+		const header = wrapper.findComponent(GanttTimelineHeader)
+		expect(header.props('zoom')).toBe('week')
+		expect(header.props('dayWidthPixels')).toBe(ZOOM_DAY_WIDTH.week)
+	})
+
+	it('shows the task table by default and hides it on request', async () => {
+		const wrapper = mountChart(false)
+		expect(wrapper.findComponent(GanttTaskPane).exists()).toBe(true)
+
+		await wrapper.setProps({showPane: false})
+
+		expect(wrapper.findComponent(GanttTaskPane).exists()).toBe(false)
+	})
+
+	it('passes the editing right on to the task table', async () => {
+		const wrapper = mountChart(false)
+		expect(wrapper.findComponent(GanttTaskPane).props('editable')).toBe(false)
+
+		await wrapper.setProps({editable: true})
+
+		expect(wrapper.findComponent(GanttTaskPane).props('editable')).toBe(true)
 	})
 })

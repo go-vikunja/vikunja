@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Vaš će račun biti izbrisan, uključujući sve projekte, zadatke i privitke koje ste izradili."
 	},
 	"ready": {
-		"loading": "Vikunja se učitava…",
+		"loading": "Vika se učitava…",
 		"errorOccured": "Dogodila se pogreška:",
 		"checkApiUrl": "Provjerite je li api url točan.",
 		"noApiUrlConfigured": "Api url nije konfiguriran. Postavite jedan ispod:"
@@ -112,7 +112,7 @@
 			"quickAddMagic": {
 				"title": "Brzo dodavanje čarobnog načina rada",
 				"disabled": "Onemogućeno",
-				"vikunja": "Vikunja"
+				"vikunja": "Vika"
 			},
 			"appearance": {
 				"title": "Paleta boja",
@@ -150,7 +150,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Izbrišite svoj Vikunja račun",
+			"title": "Izbrišite svoj Vika račun",
 			"text1": "Brisanje vašeg računa je trajno i ne može se poništiti. Izbrisat ćemo sve vaše projekte, zadatke i sve što je povezano s tim.",
 			"text2": "Za nastavak molimo unesite svoju lozinku. Primit ćete e-poruku s daljnjim uputama.",
 			"text3": "Za nastavak pritisnite gumb ispod. Primit ćete e-poruku s daljnjim uputama.",
@@ -158,7 +158,7 @@
 			"requestSuccess": "Zahtjev je bio uspješan. Primit ćete e-poruku s daljnjim uputama.",
 			"passwordRequired": "Molimo unesite vašu lozinku.",
 			"confirmSuccess": "Uspješno ste potvrdili brisanje svog računa. Izbrisat ćemo vaš račun za tri dana.",
-			"scheduled": "Izbrisat ćemo vaš Vikunja račun na {date} ({dateSince}).",
+			"scheduled": "Izbrisat ćemo vaš Vika račun na {date} ({dateSince}).",
 			"scheduledCancel": "Za poništenje brisanja računa kliknite ovdje.",
 			"scheduledCancelText": "Da biste poništili brisanje svog računa, unesite svoju zaporku ispod:",
 			"scheduledCancelButton": "Da biste poništili brisanje svog računa, pritisnite gumb u nastavku:",
@@ -166,12 +166,12 @@
 			"scheduledCancelSuccess": "Nećemo izbrisati vaš račun."
 		},
 		"export": {
-			"title": "Izvezite svoje Vikunja podatke",
-			"description": "Možete zatražiti kopiju svih svojih Vikunja podataka. To uključuje projekte, zadatke i sve što je s njima povezano. Ove podatke možete uvesti u bilo koju instancu Vikunje putem funkcije migracije.",
+			"title": "Izvezite svoje Vika podatke",
+			"description": "Možete zatražiti kopiju svih svojih Vika podataka. To uključuje projekte, zadatke i sve što je s njima povezano. Ove podatke možete uvesti u bilo koju instancu Vikunje putem funkcije migracije.",
 			"descriptionPasswordRequired": "Molimo unesite svoju lozinku za nastavak:",
-			"request": "Zatraži kopiju mojih Vikunja podataka",
-			"success": "Uspješno ste zatražili svoje Vikunja podatke! Poslat ćemo vam e-poruku kada bude spreman za preuzimanje.",
-			"downloadTitle": "Preuzmite svoje izvezene Vikunja podatke"
+			"request": "Zatraži kopiju mojih Vika podataka",
+			"success": "Uspješno ste zatražili svoje Vika podatke! Poslat ćemo vam e-poruku kada bude spreman za preuzimanje.",
+			"downloadTitle": "Preuzmite svoje izvezene Vika podatke"
 		}
 	},
 	"project": {
@@ -379,7 +379,7 @@
 		"title": "Uvoz iz drugih servisa",
 		"titleService": "Uvezite svoje podatke iz {name} u Vikunju",
 		"description": "Za početak kliknite na logotip jedne od usluga trećih strana u nastavku.",
-		"descriptionDo": "Vikunja će uvesti sve popise, zadatke, bilješke, podsjetnike i datoteke kojima imate pristup.",
+		"descriptionDo": "Vika će uvesti sve popise, zadatke, bilješke, podsjetnike i datoteke kojima imate pristup.",
 		"authorize": "Da biste ovlastili Vikunju za pristup vašem {name} računu, kliknite gumb ispod.",
 		"getStarted": "Započnite",
 		"inProgress": "Uvoz u tijeku…",
@@ -388,7 +388,7 @@
 		"confirm": "Siguran sam, počnite s migracijom sada!",
 		"importUpload": "Za uvoz podataka iz {name} u Vikunju, kliknite gumb ispod za odabir datoteke.",
 		"upload": "Učitaj datoteku",
-		"migrationStartedWillReciveEmail": "Vikunja će sada uvesti vaše popise/projekte, zadatke, bilješke, podsjetnike i datoteke iz {service}. Budući da će ovo potrajati neko vrijeme, poslat ćemo vam e-poruku kada završimo. Sada možete zatvoriti ovaj prozor.",
+		"migrationStartedWillReciveEmail": "Vika će sada uvesti vaše popise/projekte, zadatke, bilješke, podsjetnike i datoteke iz {service}. Budući da će ovo potrajati neko vrijeme, poslat ćemo vam e-poruku kada završimo. Sada možete zatvoriti ovaj prozor.",
 		"migrationInProgress": "Trenutno je u tijeku migracija. Pričekajte dok ne bude gotovo."
 	},
 	"label": {
@@ -439,7 +439,7 @@
 		"searchPlaceholder": "Unesi za pretraživanje…",
 		"previous": "Prethodna",
 		"next": "Sljedeća",
-		"poweredBy": "Powered by Vikunja",
+		"poweredBy": "Powered by Vika",
 		"create": "Kreiraj",
 		"doit": "Pokreni!",
 		"saving": "Spremanje…",
@@ -560,7 +560,7 @@
 			"canuse": "Možete koristiti matematiku datuma za filtriranje relativnih datuma.",
 			"learnhow": "Provjerite kako radi",
 			"title": "Matematika Datuma",
-			"intro": "Navedite relativne datume koje Vikunja rješava u hodu prilikom primjene filtra.",
+			"intro": "Navedite relativne datume koje Vika rješava u hodu prilikom primjene filtra.",
 			"expression": "Svaki izraz Date Math počinje korijenskim datumom, koji može biti {0} ili datumski niz koji završava s {1}. Ovaj korijenski datum po izboru može biti praćen jednim ili više matematičkih izraza.",
 			"similar": "Ovi su izrazi slični onima koje pružaju {0} i {1}.",
 			"add1Day": "Dodaj jedan dan",

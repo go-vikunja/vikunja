@@ -17,7 +17,6 @@
 package user
 
 import (
-	"regexp"
 	"strings"
 
 	"code.vikunja.io/api/pkg/i18n"
@@ -45,8 +44,7 @@ func init() {
 		}
 
 		// Check if username matches the reserved link-share pattern
-		linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
-		return !linkSharePattern.MatchString(i)
+		return !isLinkShareUsername(i)
 	}
 
 	govalidator.TagMap["bcrypt_password"] = func(str string) bool {

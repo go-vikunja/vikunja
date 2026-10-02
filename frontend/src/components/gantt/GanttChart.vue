@@ -5,23 +5,42 @@
 	/>
 	<div
 		v-else
-		ref="ganttContainer"
-		class="gantt-container"
-		role="application"
-		:aria-label="$t('project.gantt.chartLabel')"
+		class="gantt-layout"
 	>
-		<div class="gantt-chart-wrapper">
-			<GanttTimelineHeader
-				:timeline-data="timelineData"
-				:day-width-pixels="dayWidthPixels"
-			/>
+		<GanttTaskPane
+			v-if="showPane"
+			:rows="paneRows"
+			:editable="editable"
+			:width="paneWidth"
+			:show-variance="showBaseline && (baseline?.size ?? 0) > 0"
+			@update:width="emit('update:paneWidth', $event)"
+			@update:task="emit('update:task', $event)"
+			@changeDates="onPaneDates"
+			@deleteDependency="(from, to) => emit('deleteDependency', from, to)"
+			@openTask="openTaskById"
+		/>
+		<div
+			ref="ganttContainer"
+			class="gantt-container"
+			role="application"
+			:aria-label="$t('project.gantt.chartLabel')"
+		>
+			<div class="gantt-chart-wrapper">
+				<GanttTimelineHeader
+					:timeline-data="timelineData"
+					:day-width-pixels="dayWidthPixels"
+					:zoom="zoom"
+				/>
 
-			<GanttVerticalGridLines
-				:timeline-data="timelineData"
-				:total-width="totalWidth"
-				:height="ganttRows.length * 40"
-				:day-width-pixels="dayWidthPixels"
-			/>
+				<GanttVerticalGridLines
+					:timeline-data="timelineData"
+					:total-width="totalWidth"
+					:height="ganttRows.length * 40"
+					:day-width-pixels="dayWidthPixels"
+					:zoom="zoom"
+					:weekend-bands="weekendBandsData"
+					:today-x="todayXValue"
+				/>
 
 			<GanttChartBody
 				ref="ganttChartBodyRef"
@@ -31,7 +50,10 @@
 				@enterPressed="handleEnterPressed"
 			>
 				<template #default="{ focusedRow, focusedCell }">
-					<div class="gantt-rows-container">
+					<div
+						ref="rowsContainer"
+						class="gantt-rows-container"
+					>
 						<!-- Group background bands for parent-child visual grouping -->
 						<div
 							v-for="(band, bandIndex) in parentGroupBands"
@@ -66,6 +88,8 @@
 										:row-id="rowId"
 										:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
 										:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
+										:can-link="editable"
+										@startLink="startLink"
 										@barPointerDown="handleBarPointerDown"
 										@startResize="startResize"
 										@updateTask="updateGanttTask"
@@ -80,10 +104,37 @@
 							:width="totalWidth"
 							:height="totalHeight"
 							:row-height="ROW_HEIGHT"
+							:deletable="editable"
+							@deleteArrow="(from, to) => emit('deleteDependency', from, to)"
 						/>
+						<!-- The line that follows the pointer while a dependency is being drawn -->
+						<svg
+							v-if="linkState"
+							class="gantt-link-preview"
+							:width="totalWidth"
+							:height="totalHeight"
+							aria-hidden="true"
+						>
+							<line
+								:x1="linkState.x1"
+								:y1="linkState.y1"
+								:x2="linkState.x2"
+								:y2="linkState.y2"
+								stroke="var(--primary)"
+								stroke-width="2"
+								stroke-dasharray="5 4"
+							/>
+							<circle
+								:cx="linkState.x2"
+								:cy="linkState.y2"
+								r="4"
+								fill="var(--primary)"
+							/>
+						</svg>
 					</div>
 				</template>
 			</GanttChartBody>
+			</div>
 		</div>
 	</div>
 </template>
@@ -98,6 +149,11 @@ import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 import {getHexColor} from '@/helpers/task'
 import {buildGanttTaskTree, type GanttTaskTreeNode} from '@/helpers/ganttTaskTree'
 import {buildRelationArrows, type GanttBarPosition, type GanttArrow} from '@/helpers/ganttRelationArrows'
+import {resolveDayWidth, todayX, weekendBands, type GanttZoom} from '@/helpers/ganttZoom'
+import {buildWbs, criticalPath, criticalPathInput, durationInDays, taskSpan} from '@/helpers/ganttSchedule'
+import {useGlobalNow} from '@/composables/useGlobalNow'
+import GanttTaskPane from '@/components/gantt/GanttTaskPane.vue'
+import type {GanttPaneRow} from '@/components/gantt/ganttPaneTypes'
 
 import type {Task as ITask} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
@@ -117,19 +173,40 @@ import Loading from '@/components/misc/Loading.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
 	tasks: Map<number, TaskResponse>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-}>()
+	zoom?: GanttZoom
+	// Whether the user may change dates, progress and dependencies.
+	editable?: boolean
+	showPane?: boolean
+	paneWidth?: number
+	showCritical?: boolean
+	showBaseline?: boolean
+	// The saved plan by task id, empty or missing without a baseline.
+	baseline?: Map<number, {start: Date | null, end: Date | null}>
+}>(), {
+	zoom: 'fit',
+	editable: false,
+	showPane: true,
+	paneWidth: 520,
+	showCritical: false,
+	showBaseline: false,
+	baseline: undefined,
+})
 
 const emit = defineEmits<{
-  (e: 'update:task', task: ITaskPartialWithId): void
+	(e: 'update:task', task: {id: number, title?: string, percent_done?: number} & Partial<ITaskPartialWithId>): void
+	(e: 'update:paneWidth', width: number): void
+	// A date change of one task. The server moves the tasks that depend on it.
+	(e: 'changeDates', id: number, start: Date | null, end: Date | null): void
+	(e: 'createDependency', predecessorId: number, successorId: number): void
+	(e: 'deleteDependency', predecessorId: number, successorId: number): void
 }>()
 
-const DAY_WIDTH_PIXELS_MIN = 30
 const dayWidthPixels = ref(0)
 let resizeObserver: ResizeObserver | undefined
 
@@ -248,9 +325,47 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
+// Dependencies between the loaded tasks, as predecessor -> successor, with the dates the tasks have.
+const criticalResult = computed(() => {
+	if (!props.showCritical) {
+		return {taskIds: new Set<number>(), edges: new Set<string>()}
+	}
+	// The same dates and the same input as the PDF and the Excel export use.
+	const input = criticalPathInput(
+		allNodes.value.map(node => ({task: node.task, span: taskSpan(node)})),
+		tasks.value.values(),
+	)
+	return criticalPath(input.tasks, input.edges)
+})
+
 function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 	const t = node.task
 	const DEFAULT_SPAN_DAYS = 7
+
+	if (t.is_milestone) {
+		const at = parseDateOrNull(t.end_date) || parseDateOrNull(t.due_date) || parseDateOrNull(t.start_date)
+			|| new Date(props.defaultTaskStartDate)
+		return {
+			id: String(t.id),
+			start: getRoundedDate(at, at, true),
+			end: getRoundedDate(at, at, false),
+			meta: {
+				label: t.title,
+				task: t,
+				color: getHexColor(t.hex_color),
+				hasActualDates: Boolean(parseDateOrNull(t.end_date) || parseDateOrNull(t.due_date)),
+				dateType: 'both',
+				isDone: t.done,
+				isParent: false,
+				hasDerivedDates: false,
+				indentLevel: node.indentLevel,
+				isMilestone: true,
+				percentDone: t.done ? 1 : t.percent_done,
+				isCritical: criticalResult.value.taskIds.has(t.id),
+				baseline: baselineOf(t.id),
+			},
+		}
+	}
 
 	// Use derived dates for dateless parents
 	const effectiveEndDate = parseDateOrNull(t.end_date)
@@ -303,8 +418,23 @@ function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 			isParent: node.isParent,
 			hasDerivedDates: node.hasDerivedDates,
 			indentLevel: node.indentLevel,
+			percentDone: t.done ? 1 : t.percent_done,
+			isCritical: criticalResult.value.taskIds.has(t.id),
+			baseline: baselineOf(t.id),
 		},
 	}
+}
+
+// The baseline of a task as a bar, only while it is shown and the task had both dates.
+function baselineOf(taskId: number): {start: Date, end: Date} | undefined {
+	if (!props.showBaseline) {
+		return undefined
+	}
+	const saved = props.baseline?.get(taskId)
+	if (!saved || !saved.start || !saved.end) {
+		return undefined
+	}
+	return {start: roundToNaturalDayBoundary(saved.start, true), end: roundToNaturalDayBoundary(saved.end)}
 }
 
 function updateDayWidthPixels() {
@@ -324,11 +454,10 @@ function updateDayWidthPixels() {
 		(dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY,
 	)
 
-	dayWidthPixels.value = Math.max(
-		maxWidth / dayCount,
-		DAY_WIDTH_PIXELS_MIN,
-	)
+	dayWidthPixels.value = resolveDayWidth(props.zoom, maxWidth / dayCount)
 }
+
+watch(() => props.zoom, () => updateDayWidthPixels())
 
 // The container only exists once loading finished, so measure and observe when the element appears
 // instead of on mount - otherwise the day width stays 0 until the next window resize.
@@ -372,7 +501,7 @@ watch(
 
 // Derive bars, rows, and cells from visible nodes
 watch(
-	[visibleNodes, filters],
+	[visibleNodes, filters, criticalResult, () => props.showBaseline, () => props.baseline],
 	() => {
 		const bars: GanttBarModel[] = []
 		const rows: string[] = []
@@ -468,7 +597,7 @@ function computeBarWidth(bar: GanttBarModel): number {
 
 // Compute relation arrows
 const relationArrows = computed<GanttArrow[]>(() => {
-	return buildRelationArrows(tasks.value, barPositions.value, hiddenToAncestor.value)
+	return buildRelationArrows(tasks.value, barPositions.value, hiddenToAncestor.value, criticalResult.value.edges)
 })
 
 const totalHeight = computed(() => ganttRows.value.length * ROW_HEIGHT)
@@ -524,6 +653,121 @@ const parentGroupBands = computed(() => {
 	return bands
 })
 
+const {now} = useGlobalNow()
+const weekendBandsData = computed(() => weekendBands(timelineData.value, dayWidthPixels.value, props.zoom))
+const todayXValue = computed(() => todayX(timelineData.value, dayWidthPixels.value, now.value))
+
+// ---- Task table pane ----------------------------------------------------------------------------
+
+const wbsById = computed(() => buildWbs(allNodes.value))
+const nodeById = computed(() => new Map(allNodes.value.map(node => [node.task.id, node])))
+
+function toDateOrNull(value: unknown): Date | null {
+	return parseDateOrNull(value as string | undefined)
+}
+
+const paneRows = computed<GanttPaneRow[]>(() => {
+	const rows: GanttPaneRow[] = []
+	for (const group of ganttBars.value) {
+		const bar = group[0]
+		const task = bar?.meta?.task as TaskResponse | undefined
+		if (!bar || !task) continue
+
+		const node = nodeById.value.get(task.id)
+		const {start, end} = node ? taskSpan(node) : {start: toDateOrNull(task.start_date), end: toDateOrNull(task.end_date)}
+		const saved = props.baseline?.get(task.id)
+		let variance: number | null = null
+		if (props.showBaseline && saved?.end && end) {
+			variance = Math.round((end.getTime() - saved.end.getTime()) / MILLISECONDS_A_DAY)
+		}
+
+		rows.push({
+			id: task.id,
+			wbs: wbsById.value.get(task.id) ?? '',
+			title: task.title,
+			indent: bar.meta?.indentLevel ?? 0,
+			isParent: Boolean(bar.meta?.isParent),
+			isMilestone: Boolean(task.is_milestone),
+			isCritical: Boolean(bar.meta?.isCritical),
+			isDone: task.done,
+			start,
+			end,
+			duration: durationInDays(start, end, Boolean(task.is_milestone)),
+			percent: Math.round((task.done ? 1 : task.percent_done) * 100),
+			predecessors: (task.related_tasks.follows ?? []).map(p => ({
+				id: p.id,
+				label: wbsById.value.get(p.id) ?? `#${p.id}`,
+			})),
+			assignees: task.assignees.map(a => a.name || a.username).join(', '),
+			variance,
+		})
+	}
+	return rows
+})
+
+function onPaneDates(id: number, start: Date | null, end: Date | null) {
+	emit('changeDates', id, start, end)
+}
+
+function openTaskById(id: number) {
+	router.push({
+		name: 'task.detail',
+		params: {id},
+		state: {backdropView: router.currentRoute.value.fullPath},
+	})
+}
+
+// ---- Drawing a dependency -----------------------------------------------------------------------
+
+const rowsContainer = ref<HTMLElement | null>(null)
+const linkState = ref<{x1: number, y1: number, x2: number, y2: number} | null>(null)
+let linkCleanup: (() => void) | null = null
+
+// Drag from the handle at the end of a bar onto another task: that task now waits for this one.
+function startLink(bar: GanttBarModel) {
+	const origin = barPositions.value.get(Number(bar.id))
+	const container = rowsContainer.value
+	if (!origin || !container) return
+
+	linkCleanup?.()
+	const predecessorId = Number(bar.id)
+	const x1 = origin.x + origin.width
+	const y1 = origin.y
+
+	const toLocal = (e: PointerEvent) => {
+		const rect = container.getBoundingClientRect()
+		return {x: e.clientX - rect.left, y: e.clientY - rect.top}
+	}
+	linkState.value = {x1, y1, x2: x1, y2: y1}
+	setCursor('crosshair')
+
+	const move = (e: PointerEvent) => {
+		const p = toLocal(e)
+		linkState.value = {x1, y1, x2: p.x, y2: p.y}
+	}
+	const stop = (e: PointerEvent) => {
+		const p = toLocal(e)
+		const row = Math.floor(p.y / ROW_HEIGHT)
+		const target = ganttBars.value[row]?.[0]
+		cleanup()
+		if (target && Number(target.id) !== predecessorId && !target.meta?.isParent) {
+			emit('createDependency', predecessorId, Number(target.id))
+		}
+	}
+	const cleanup = () => {
+		document.removeEventListener('pointermove', move)
+		document.removeEventListener('pointerup', stop)
+		linkState.value = null
+		clearCursor()
+		linkCleanup = null
+	}
+	linkCleanup = cleanup
+	document.addEventListener('pointermove', move)
+	document.addEventListener('pointerup', stop)
+}
+
+onBeforeUnmount(() => linkCleanup?.())
+
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 	const task = tasks.value.get(Number(id))
 	if (!task) return
@@ -559,6 +803,21 @@ function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 		// No dates at all — update both (existing behavior for dateless tasks)
 		update.start_date = roundToNaturalDayBoundary(newStart, true).toISOString()
 		update.end_date = roundToNaturalDayBoundary(newEnd).toISOString()
+	}
+
+	// A move of the end goes to the reschedule endpoint, which also moves what depends on the task.
+	// Tasks without an end date have nothing to depend on, they keep the normal update.
+	if (update.end_date !== undefined) {
+		const start = parseDateOrNull(update.start_date ?? task.start_date)
+		const end = parseDateOrNull(update.end_date)
+		emit('changeDates', Number(id), task.is_milestone ? end : start, end)
+
+		// The reschedule only knows start and end: a due date that moves along has to be saved too,
+		// or the bar snaps back to the old one.
+		if (update.due_date !== undefined) {
+			emit('update:task', {id: Number(id), due_date: update.due_date})
+		}
+		return
 	}
 
 	emit('update:task', update)
@@ -818,9 +1077,24 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+.gantt-layout {
+	display: flex;
+	align-items: flex-start;
+	inline-size: 100%;
+}
+
 .gantt-container {
 	overflow-x: auto;
-	min-inline-size: 100%;
+	flex: 1 1 0;
+	min-inline-size: 0;
+}
+
+.gantt-link-preview {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	pointer-events: none;
+	z-index: 6;
 }
 
 .gantt-chart-wrapper {

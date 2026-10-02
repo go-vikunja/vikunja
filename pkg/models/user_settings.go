@@ -44,6 +44,9 @@ type UserGeneralSettings struct {
 	FrontendSettings             any    `json:"frontend_settings" doc:"Arbitrary settings used only by the frontend. Any JSON value; stored and returned verbatim."`
 	// Server/OpenID-provided; populated on read, ignored on write.
 	ExtraSettingsLinks map[string]any `json:"extra_settings_links" readOnly:"true" doc:"Additional settings links provided by the OpenID provider. Server-controlled."`
+	// Maintained by the scheduled user list import; populated on read, ignored on write.
+	JobTitle   string `json:"job_title" readOnly:"true" doc:"The user's job title, maintained by the scheduled user list import. Read-only."`
+	Department string `json:"department" readOnly:"true" doc:"The user's department, maintained by the scheduled user list import. Read-only."`
 }
 
 // NewUserGeneralSettings projects a user's stored settings into the shared wire
@@ -62,6 +65,8 @@ func NewUserGeneralSettings(u *user.User) *UserGeneralSettings {
 		Timezone:                     u.Timezone,
 		FrontendSettings:             u.FrontendSettings,
 		ExtraSettingsLinks:           u.ExtraSettingsLinks,
+		JobTitle:                     u.JobTitle,
+		Department:                   u.Department,
 	}
 }
 
@@ -75,6 +80,11 @@ func ChangeUserPassword(ctx context.Context, s *xorm.Session, u *user.User, oldP
 
 	if _, err := user.CheckUserCredentials(ctx, s, &user.Login{Username: u.Username, Password: oldPassword}); err != nil {
 		return err
+	}
+
+	// Replacing a password with itself would end a forced change without changing anything.
+	if oldPassword == newPassword {
+		return ErrInvalidData{Message: "the new password must differ from the current one"}
 	}
 
 	return setUserPasswordAndInvalidateSessions(s, u, newPassword)
@@ -95,9 +105,19 @@ func setUserPasswordAndInvalidateSessions(s *xorm.Session, u *user.User, newPass
 // Lives here (not in pkg/user) because the avatar flush needs pkg/modules/avatar,
 // which pkg/user cannot import.
 func UpdateUserGeneralSettings(s *xorm.Session, u *user.User, settings *UserGeneralSettings) error {
-	invalidateAvatar := u.AvatarProvider == "initials" && u.Name != settings.Name
+	// The name of a user whose account is managed by a third-party provider (Entra, LDAP, ...) comes
+	// from there, or from the scheduled user list import. It is kept as stored instead of
+	// failing the save: the import can change it between loading the form and saving it, and a
+	// stale form must not break saving unrelated preferences. Job title and department are never
+	// copied from settings at all.
+	name := settings.Name
+	if !u.IsLocalUser() {
+		name = u.Name
+	}
 
-	u.Name = settings.Name
+	invalidateAvatar := u.AvatarProvider == "initials" && u.Name != name
+
+	u.Name = name
 	u.EmailRemindersEnabled = settings.EmailRemindersEnabled
 	u.DiscoverableByEmail = settings.DiscoverableByEmail
 	u.DiscoverableByName = settings.DiscoverableByName

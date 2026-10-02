@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -270,6 +271,84 @@ func TestCreateUser(t *testing.T) {
 		})
 		require.Error(t, err)
 		assert.True(t, IsErrUsernameReserved(err))
+	})
+	t.Run("username of a disabled user is reported as taken", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user17 is disabled. Without this, the status error leaked out of the existence check
+		// and callers that retry on "username exists" (random username fallback) gave up.
+		_, err := CreateUser(s, &User{
+			Username: "user17",
+			Issuer:   "https://login.microsoftonline.com/tenant/v2.0",
+			Subject:  "sub-new",
+			Email:    "new@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameExists(err), "got %v", err)
+	})
+	t.Run("username of a locked user is reported as taken", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user18 is locked.
+		_, err := CreateUser(s, &User{
+			Username: "user18",
+			Issuer:   "https://login.microsoftonline.com/tenant/v2.0",
+			Subject:  "sub-new",
+			Email:    "new@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameExists(err), "got %v", err)
+	})
+}
+
+func TestUsernameHelpers(t *testing.T) {
+	t.Run("UsernameFromLogin", func(t *testing.T) {
+		assert.Equal(t, "jane.doe", UsernameFromLogin("jane.doe@contoso.com"))
+		assert.Equal(t, "Jane-Doe", UsernameFromLogin("Jane Doe"))
+		assert.Equal(t, "jane_ext.com", UsernameFromLogin("jane_ext.com#EXT#@tenant.onmicrosoft.com"))
+		assert.Empty(t, UsernameFromLogin("@contoso.com"))
+	})
+	t.Run("IsReservedUsername agrees with what CreateUser refuses", func(t *testing.T) {
+		for name, reserved := range map[string]bool{
+			"link-share-1":   true,
+			"link-share-123": true,
+			"link-share-x":   false,
+			"bot-helper":     true,
+			"robot-fan":      false,
+			"jane":           false,
+			"":               false,
+		} {
+			assert.Equal(t, reserved, IsReservedUsername(name), name)
+		}
+	})
+	t.Run("IsEntraIssuer", func(t *testing.T) {
+		assert.True(t, IsEntraIssuer("https://login.microsoftonline.com/3fa85f64/v2.0"))
+		assert.False(t, IsEntraIssuer("https://accounts.google.com"))
+		assert.False(t, IsEntraIssuer(IssuerLocal))
+		assert.False(t, IsEntraIssuer(IssuerImport))
+		assert.False(t, IsEntraIssuer(""))
+	})
+	t.Run("IsImportedEntraIssuer without a tenant id accepts any Entra tenant", func(t *testing.T) {
+		config.UserImportTenantID.Set("")
+		assert.True(t, IsImportedEntraIssuer("https://login.microsoftonline.com/3fa85f64/v2.0"))
+		assert.True(t, IsImportedEntraIssuer("https://login.microsoftonline.com/other/v2.0"))
+		assert.False(t, IsImportedEntraIssuer("https://accounts.google.com"))
+		assert.False(t, IsImportedEntraIssuer(IssuerImport))
+	})
+	t.Run("IsImportedEntraIssuer with a tenant id accepts exactly that tenant", func(t *testing.T) {
+		config.UserImportTenantID.Set("3fa85f64")
+		t.Cleanup(func() { config.UserImportTenantID.Set("") })
+
+		assert.True(t, IsImportedEntraIssuer("https://login.microsoftonline.com/3fa85f64/v2.0"))
+		assert.True(t, IsImportedEntraIssuer("https://login.microsoftonline.com/3FA85F64/v2.0"), "GUIDs are case-insensitive")
+		assert.False(t, IsImportedEntraIssuer("https://login.microsoftonline.com/other/v2.0"))
+		assert.False(t, IsImportedEntraIssuer("https://login.microsoftonline.com/3fa85f64/v2.0/extra"))
+		assert.False(t, IsImportedEntraIssuer("https://login.microsoftonline.com/3fa85f64-evil/v2.0"))
+		assert.False(t, IsImportedEntraIssuer("https://accounts.google.com"))
 	})
 }
 

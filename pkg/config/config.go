@@ -57,6 +57,9 @@ const (
 	ServiceMotd                           Key = `service.motd`
 	ServiceEnableLinkSharing              Key = `service.enablelinksharing`
 	ServiceEnableRegistration             Key = `service.enableregistration`
+	ServiceCreateDefaultAdmin             Key = `service.createdefaultadmin`
+	ServiceDefaultAdminPassword           Key = `service.defaultadminpassword`
+	ServiceDefaultAdminEmail              Key = `service.defaultadminemail`
 	ServiceEnableTaskAttachments          Key = `service.enabletaskattachments`
 	ServiceTimeZone                       Key = `service.timezone`
 	ServiceEnableTaskComments             Key = `service.enabletaskcomments`
@@ -248,6 +251,14 @@ const (
 	PluginsDir     Key = `plugins.dir`
 	PluginsLoader  Key = `plugins.loader`
 
+	UserImportEnabled           Key = `userimport.enabled`
+	UserImportFile              Key = `userimport.file`
+	UserImportSchedule          Key = `userimport.schedule`
+	UserImportMaxDisablePercent Key = `userimport.maxdisablepercent`
+	UserImportMaxFileAgeHours   Key = `userimport.maxfileageh`
+	UserImportDryRun            Key = `userimport.dryrun`
+	UserImportTenantID          Key = `userimport.tenantid`
+
 	// LicenseKey gates optional paid features and funds Vikunja's development.
 	// See the package comment in pkg/license/license.go before removing.
 	LicenseKey Key = `license.key`
@@ -386,6 +397,9 @@ func initDefaultConfig() {
 	ServiceMotd.setDefault("")
 	ServiceEnableLinkSharing.setDefault(true)
 	ServiceEnableRegistration.setDefault(true)
+	ServiceCreateDefaultAdmin.setDefault(true)
+	ServiceDefaultAdminPassword.setDefault("admin123")
+	ServiceDefaultAdminEmail.setDefault("admin@vika.local")
 	ServiceEnableTaskAttachments.setDefault(true)
 	ServiceTimeZone.setDefault("GMT")
 	ServiceEnableTaskComments.setDefault(true)
@@ -538,6 +552,16 @@ func initDefaultConfig() {
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
 	PluginsLoader.setDefault("native")
+
+	// User import
+	UserImportEnabled.setDefault(false)
+	UserImportFile.setDefault("/data/vika/import/user_list.csv")
+	UserImportSchedule.setDefault("30 7 * * *")
+	UserImportMaxDisablePercent.setDefault(20)
+	UserImportMaxFileAgeHours.setDefault(26)
+	UserImportTenantID.setDefault("")
+	// Going live has to be a deliberate second step: every user that is not in the file is deactivated.
+	UserImportDryRun.setDefault(true)
 
 	// Migrate deprecated webhook config keys to outgoingrequests.*
 	// This allows removing the old keys in a single place later.
@@ -788,6 +812,11 @@ func InitConfig() {
 
 	if loader := PluginsLoader.GetString(); loader != "yaegi" && loader != "native" {
 		log.Fatalf("Invalid value for plugins.loader: %q (must be \"yaegi\" or \"native\")", loader)
+	}
+
+	// The tenant is compared against the issuer of the ID tokens. A URL here would silently match nothing.
+	if tenant := UserImportTenantID.GetString(); strings.ContainsAny(tenant, "/: ") {
+		log.Fatalf("Invalid value for userimport.tenantid: %q (use the tenant id only, not a URL)", tenant)
 	}
 
 	if CorsEnable.GetBool() && ServicePublicURL.GetString() == "" {

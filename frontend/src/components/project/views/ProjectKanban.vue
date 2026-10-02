@@ -14,6 +14,13 @@
 					:project-id="projectId"
 					@update:modelValue="updateFilters"
 				/>
+				<ViewExportMenu
+					kind="kanban"
+					:project-id="projectId"
+					:view-id="viewId"
+					:params="params"
+					:buckets="exportBuckets"
+				/>
 			</div>
 		</template>
 
@@ -316,6 +323,7 @@ import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import ViewExportMenu from '@/components/project/partials/ViewExportMenu.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
@@ -485,6 +493,7 @@ const boardParams = computed(() => ({...params.value, filter_timezone: authStore
 const board = useKanban(projectId, () => props.viewId, boardParams)
 const queryClient = useQueryClient()
 const buckets = board.buckets
+const exportBuckets = computed(() => buckets.value.map(bucket => ({id: bucket.id as number, title: bucket.title ?? ''})))
 const createBucketMutation = useCreateBucketMutation()
 const deleteBucketMutation = useDeleteBucketMutation(t('project.kanban.deleteBucketSuccess'))
 const updateBucketMutation = useUpdateBucketMutation()

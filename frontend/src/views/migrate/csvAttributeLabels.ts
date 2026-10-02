@@ -10,5 +10,8 @@ export const CSV_ATTRIBUTE_LABEL_KEYS: Record<string, string> = {
 	labels: 'task.attributes.labels',
 	reminder: 'task.attributes.reminders',
 	project: 'task.attributes.project',
+	assignee: 'migrate.csv.assignee',
+	assignor: 'task.attributes.createdBy',
+	project_id: 'migrate.csv.projectId',
 	ignore: 'migrate.csv.ignore',
 }

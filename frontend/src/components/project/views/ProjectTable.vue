@@ -85,6 +85,14 @@
 					:project-id="projectId"
 					@update:modelValue="taskList.loadTasks()"
 				/>
+				<ViewExportMenu
+					kind="table"
+					:project-id="projectId"
+					:view-id="viewId"
+					:params="params"
+					:sort-by="sortBy"
+					:columns="exportColumns"
+				/>
 			</div>
 		</template>
 
@@ -368,6 +376,8 @@ import {getTaskIdentifier} from '@/helpers/task'
 import { camelCase } from 'change-case'
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {useProjects} from '@/composables/useProjects'
+import ViewExportMenu from '@/components/project/partials/ViewExportMenu.vue'
+import type {ExportColumnKey} from '@/helpers/export/taskExport'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
@@ -405,6 +415,29 @@ const SORT_BY_DEFAULT: SortBy = {
 
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
+
+// The export has the columns that are visible, as far as the export knows them.
+const exportColumns = computed<ExportColumnKey[]>(() => {
+	const columns: ExportColumnKey[] = []
+	const a = activeColumns.value
+	if (a.index) columns.push('identifier')
+	if (a.done) columns.push('done')
+	if (a.title) columns.push('title')
+	if (a.project) columns.push('project')
+	if (a.priority) columns.push('priority')
+	if (a.labels) columns.push('labels')
+	if (a.assignees) columns.push('assignees')
+	if (a.dueDate) columns.push('due')
+	if (a.startDate) columns.push('start')
+	if (a.endDate) columns.push('end')
+	if (a.percentDone) columns.push('percent')
+	if (a.created) columns.push('created')
+	if (a.updated) columns.push('updated')
+	if (a.createdBy) columns.push('assignor')
+	if (a.doneAt) columns.push('doneAt')
+	// A table with only unknown columns still exports the title.
+	return columns.length > 0 ? columns : ['title']
+})
 
 const taskList = useTaskList(
 	() => props.projectId, 

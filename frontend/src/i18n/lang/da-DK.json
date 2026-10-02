@@ -39,8 +39,8 @@
 		"addToHomeScreen": "Føj denne app til din startskærm for at få hurtigere adgang og en bedre oplevelse.",
 		"goToOverview": "Gå til oversigt",
 		"project": {
-			"importText": "Importer dine projekter og opgaver fra andre tjenester til Vikunja:",
-			"import": "Importer dine data til Vikunja"
+			"importText": "Importer dine projekter og opgaver fra andre tjenester til Vika:",
+			"import": "Importer dine data til Vika"
 		}
 	},
 	"demo": {
@@ -49,7 +49,7 @@
 		"accountWillBeDeleted": "Din konto vil blive slettet, herunder alle projekter, opgaver og vedhæftede filer, du måtte have oprettet."
 	},
 	"ready": {
-		"loading": "Vikunja er ved at indlæse…",
+		"loading": "Vika er ved at indlæse…",
 		"errorOccured": "Der opstod en fejl:",
 		"checkApiUrl": "Tjek venligst om api url er korrekt.",
 		"noApiUrlConfigured": "Ingen API url er konfigureret. Angiv venligst en nedenfor:"
@@ -85,7 +85,7 @@
 			"oauthRedirectedToApp": "Du er blevet omdirigeret til appen. Du kan nu lukke denne fane.",
 			"desktopTryDemo": "Prøv demoen",
 			"desktopCustomServer": "Brugerdefineret server-URL",
-			"desktopCustomServerDescription": "Indtast URL-adressen til din Vikunja-server for at komme i gang.",
+			"desktopCustomServerDescription": "Indtast URL-adressen til din Vika-server for at komme i gang.",
 			"desktopWaitingForAuth": "Venter på godkendelse…",
 			"desktopOAuthError": "Godkendelse mislykkedes: {error}",
 			"logout": "Log ud",
@@ -218,8 +218,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kan forbinde Vikunja med CalDAV klienter for at se, og administrere alle dine opgaver fra forskellige klienter. Indtast denne URL i din klient:",
-				"more": "Mere information om CalDAV i Vikunja",
+				"howTo": "Du kan forbinde Vika med CalDAV klienter for at se, og administrere alle dine opgaver fra forskellige klienter. Indtast denne URL i din klient:",
+				"more": "Mere information om CalDAV i Vika",
 				"tokens": "CalDAV Tokens",
 				"tokensHowTo": "Til CalDAV godkendelse kan du enten bruge din normale kontoadgangskode eller et særligt CalDAV token.",
 				"createToken": "Opret et CalDAV token",
@@ -231,7 +231,7 @@
 			},
 			"feeds": {
 				"title": "Atom feed",
-				"howTo": "Du kan abonnere på dine Vikunja notifikationer fra enhver Atom kompatibel feedlæser. Anvend følgende URL:",
+				"howTo": "Du kan abonnere på dine Vika notifikationer fra enhver Atom kompatibel feedlæser. Anvend følgende URL:",
 				"usernameIs": "Dit brugernavn til feedet er: {0}",
 				"apiTokenHint": "Godkend med et API token som har {scope} rettigheden. Opret en i {link}.",
 				"tokenTitle": "Atom feed"
@@ -252,7 +252,7 @@
 				"title": "Hurtigtilføjelsemagi Tilstand",
 				"disabled": "Deaktiveret",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "Vika"
 			},
 			"appearance": {
 				"title": "Farvetema",
@@ -290,7 +290,7 @@
 			},
 			"mcp": {
 				"intro": "Forbind en AI assistent til dine opgaver, projekter, og labels med Model Context Protocol (MCP).",
-				"more": "Mere information om MCP i Vikunja",
+				"more": "Mere information om MCP i Vika",
 				"endpoint": "MCP endpoint",
 				"tokens": "MCP tokens",
 				"manageTokens": "Administrer alle API tokens",
@@ -314,7 +314,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Slet din Vikunja konto",
+			"title": "Slet din Vika konto",
 			"text1": "Sletningen af din konto er permanent og kan ikke fortrydes. Vi sletter alle dine projekter, opgaver og alt, hvad der er knyttet hertil.",
 			"text2": "For at fortsætte, skal du indtaste din adgangskode. Du vil modtage en e-mail med yderligere instruktioner.",
 			"text3": "Klik på knappen nedenfor for at fortsætte. Du vil modtage en e-mail med yderligere instruktioner.",
@@ -322,7 +322,7 @@
 			"requestSuccess": "Anmodningen blev gennemført. Du vil modtage en e-mail med yderligere instruktioner.",
 			"passwordRequired": "Indtast venligst din adgangskode.",
 			"confirmSuccess": "Du har bekræftet sletningen af din konto. Vi vil slette din konto om tre dage.",
-			"scheduled": "Vi sletter din Vikunja-konto {date} ({dateSince}).",
+			"scheduled": "Vi sletter din Vika-konto {date} ({dateSince}).",
 			"scheduledCancel": "Klik her for at annullere sletningen af din konto.",
 			"scheduledCancelText": "For at annullere sletningen af din konto, skal du indtaste din adgangskode nedenfor:",
 			"scheduledCancelButton": "Hvis du vil annullere sletningen af din konto, skal du klikke på knappen nedenfor:",
@@ -330,11 +330,11 @@
 			"scheduledCancelSuccess": "Vi sletter ikke din konto."
 		},
 		"export": {
-			"title": "Eksporter dine Vikunja-data",
+			"title": "Eksporter dine Vika-data",
 			"descriptionPasswordRequired": "Indtast venligst din adgangskode for at fortsætte:",
-			"request": "Anmod om en kopi af mine Vikunja-data",
-			"success": "Du har anmodet om dine Vikunja-data! Vi sender dig en e-mail, når den er klar til hentning.",
-			"downloadTitle": "Download dine eksporterede Vikunja-data",
+			"request": "Anmod om en kopi af mine Vika-data",
+			"success": "Du har anmodet om dine Vika-data! Vi sender dig en e-mail, når den er klar til hentning.",
+			"downloadTitle": "Download dine eksporterede Vika-data",
 			"ready": "Din eksport er klar til download. Du kan downloade den indtil kl. {0}.",
 			"requestNew": "Anmod om en ny eksport"
 		}
@@ -394,7 +394,7 @@
 			"links": {
 				"title": "Del links",
 				"what": "Hvad er et delingslink?",
-				"explanation": "Med delingslinks kan du nemt dele et projekt med andre brugere, der ikke har en konto på Vikunja.",
+				"explanation": "Med delingslinks kan du nemt dele et projekt med andre brugere, der ikke har en konto på Vika.",
 				"create": "Opret et link til deling",
 				"name": "Navn (valgfrit)",
 				"namePlaceholder": "f.eks. Lorem Ipsum",
@@ -544,16 +544,16 @@
 	},
 	"migrate": {
 		"title": "Import fra andre tjenester",
-		"titleService": "Importer dine data fra {name} til Vikunja",
+		"titleService": "Importer dine data fra {name} til Vika",
 		"description": "Klik på logoet for en af de tredjeparts tjenester nedenfor for at komme i gang.",
-		"descriptionDo": "Vikunja vil importere alle lister, opgaver, noter, påmindelser og filer, du har adgang til.",
-		"authorize": "For at give Vikunja tilladelse til at tilgå din {name} konto, klik på knappen nedenfor.",
+		"descriptionDo": "Vika vil importere alle lister, opgaver, noter, påmindelser og filer, du har adgang til.",
+		"authorize": "For at give Vika tilladelse til at tilgå din {name} konto, klik på knappen nedenfor.",
 		"getStarted": "Kom i gang",
 		"inProgress": "Importerer…",
 		"alreadyMigrated1": "Det ser ud til, at du allerede har importeret dine ting fra {name} på {date}.",
 		"alreadyMigrated2": "Du kan godt importere igen, men kan der kan opstå dubletter. Er du sikker?",
 		"confirm": "Jeg er sikker, start migreringen nu!",
-		"importUpload": "For at importere data fra {name} til Vikunja, skal du klikke på knappen nedenfor for at vælge en fil.",
+		"importUpload": "For at importere data fra {name} til Vika, skal du klikke på knappen nedenfor for at vælge en fil.",
 		"upload": "Upload fil"
 	},
 	"label": {
@@ -600,7 +600,7 @@
 		"searchPlaceholder": "Skriv for at søge…",
 		"previous": "Forrige",
 		"next": "Næste",
-		"poweredBy": "Drevet af Vikunja",
+		"poweredBy": "Drevet af Vika",
 		"create": "Opret",
 		"doit": "Gør det!",
 		"saving": "Gemmer…",
@@ -869,7 +869,7 @@
 			"intro": "Når du opretter en opgave, kan du bruge specielle søgeord til direkte at tilføje attributter til den nyoprettede opgave. Dette giver muligheden for at tilføje almindeligt anvendte attributter til opgaver meget hurtigere.",
 			"multiple": "Du kan bruge dette flere gange.",
 			"label1": "For at tilføje en etiket, skal du blot præfikse navnet på etiketten med {prefix}.",
-			"label2": "Vikunja vil først kontrollere, om etiketten allerede findes, og oprette den hvis ikke.",
+			"label2": "Vika vil først kontrollere, om etiketten allerede findes, og oprette den hvis ikke.",
 			"label3": "For at bruge mellemrum, skal du blot tilføje \" eller ' omkring etikettens navn.",
 			"label4": "For eksempel: {prefix}\"Etiket med mellemrum\".",
 			"priority1": "For at sætte en opgaves prioritet, tilføj et nummer 1-5, præfikset med {prefix}.",
@@ -968,11 +968,11 @@
 		"share": "Del"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "Vika URL",
 		"urlPlaceholder": "f.eks. https://localhost:3456",
 		"change": "ændr",
-		"use": "Brug Vikunja-installationen på {0}",
-		"success": "Bruger Vikunja-installationen på \"{domain}\".",
+		"use": "Brug Vika-installationen på {0}",
+		"success": "Bruger Vika-installationen på \"{domain}\".",
 		"urlRequired": "En url er påkrævet."
 	},
 	"loadingError": {

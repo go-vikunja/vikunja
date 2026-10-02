@@ -41,6 +41,7 @@ import (
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/labstack/echo/v5"
 	"golang.org/x/oauth2"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -106,6 +107,8 @@ type claims struct {
 	VikunjaGroups      []map[string]interface{} `json:"vikunja_groups"`
 	Picture            string                   `json:"picture"`
 	ExtraSettingsLinks map[string]any           `json:"extra_settings_links"`
+	// OID is the Microsoft Entra object id. It is only trusted for Entra issuers (see user.IsEntraIssuer).
+	OID string `json:"oid"`
 }
 
 func init() {
@@ -437,11 +440,111 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 	return searches
 }
 
+// usernameFromPreferred derives the username for a newly created user from the
+// preferred_username claim. Some providers (Microsoft Entra ID) send an email-style
+// UPN there, and a username containing "@" can never be @mentioned because the
+// mention parser stops at it, so only the local part is kept. Entra guest UPNs
+// carry a "#EXT#" marker in the local part, which is dropped as well. An empty
+// result makes the caller generate a random username.
+//
+// A name that CreateUser would refuse as reserved (a bot- prefix or the link share pattern) yields
+// an empty result too, so the caller generates a random username instead of failing the login.
+//
+// Only for new users: fallbackSearchUsers must keep matching the raw claim.
+func usernameFromPreferred(preferred string) string {
+	name := user.UsernameFromLogin(preferred)
+	if user.IsReservedUsername(name) {
+		return ""
+	}
+	return name
+}
+
+// findUnclaimedImportedUser looks for a user row created by the scheduled user import that has
+// not been claimed by a login yet (issuer is still user.IssuerImport). Only for Entra logins.
+//
+// It matches on the Entra object id (oid claim) only. The email and preferred_username claims are
+// deliberately not used: they are not verified proof of who the caller is (Entra sends no
+// email_verified, and a guest account can carry any mail), and claiming binds the row to the
+// caller's subject for good. Entra v2 ID tokens always carry an oid, and a login without one simply
+// creates a new user, which the scheduled import later adopts by mail.
+func findUnclaimedImportedUser(s *xorm.Session, cl *claims, idToken *oidc.IDToken) (*user.User, error) {
+	if !user.IsImportedEntraIssuer(idToken.Issuer) || cl.OID == "" {
+		return nil, nil
+	}
+
+	u := &user.User{}
+	found, err := s.
+		Where(builder.And(builder.Eq{"issuer": user.IssuerImport}, builder.Eq{"import_id": cl.OID})).
+		OrderBy("id").
+		Get(u)
+	if err != nil || !found {
+		return nil, err
+	}
+	return u, nil
+}
+
+// claimImportedUser binds an imported user row to the identity of the Entra login. The update
+// only applies while the row is still unclaimed, so two logins can never both claim it.
+func claimImportedUser(s *xorm.Session, u *user.User, idToken *oidc.IDToken) error {
+	u.Issuer = idToken.Issuer
+	u.Subject = idToken.Subject
+
+	affected, err := s.
+		Where("id = ? AND issuer = ?", u.ID, user.IssuerImport).
+		Cols("issuer", "subject").
+		Update(u)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return fmt.Errorf("imported user %d was claimed by another login, please retry", u.ID)
+	}
+	return nil
+}
+
+// importIDTaken reports whether a user other than exceptUserID already carries the import id.
+func importIDTaken(s *xorm.Session, importID string, exceptUserID int64) (bool, error) {
+	return s.
+		Where("import_id = ? AND id <> ?", importID, exceptUserID).
+		Exist(&user.User{})
+}
+
+// stampImportID stores the Entra object id on a user that has none yet, so the scheduled import can
+// keep matching the person when their token email differs from the file's mail column. It is a no-op
+// when another user already carries that id, to never end up with two rows for one id.
+func stampImportID(s *xorm.Session, u *user.User, oid string) error {
+	if oid == "" || u.ImportID != "" {
+		return nil
+	}
+
+	taken, err := importIDTaken(s, oid, u.ID)
+	if err != nil {
+		return err
+	}
+	if taken {
+		return nil
+	}
+
+	_, err = s.ID(u.ID).Cols("import_id").Update(&user.User{ImportID: oid})
+	if err != nil {
+		return err
+	}
+	u.ImportID = oid
+	return nil
+}
+
 func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
 
 	// set defaults
 	fallbackMatchFound := false
 	alreadyCreatedFromIssuer := false
+
+	// The oid claim is only trusted for the Entra tenant the user list belongs to: an object id is
+	// unique per tenant, so an oid from another tenant must never be matched against the list.
+	entraOID := ""
+	if user.IsImportedEntraIssuer(idToken.Issuer) {
+		entraOID = cl.OID
+	}
 
 	// first check if the user already signed up using the provider
 
@@ -458,6 +561,30 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 	// HandleCallback will reject the auth attempt.
 	if alreadyCreatedFromIssuer && user.IsErrUserStatusError(err) {
 		return u, nil
+	}
+
+	// Not seen before: this may be a person the scheduled user import already created.
+	if !alreadyCreatedFromIssuer {
+		var imported *user.User
+		imported, err = findUnclaimedImportedUser(s, cl, idToken)
+		if err != nil {
+			return nil, err
+		}
+		if imported != nil {
+			err = claimImportedUser(s, imported, idToken)
+			if err != nil {
+				return nil, err
+			}
+			u = imported
+			alreadyCreatedFromIssuer = true
+
+			// A disabled or locked imported user is returned as is, so the login never creates a
+			// duplicate account. AuthenticateCallback rejects the login and rolls the claim back,
+			// the row stays unclaimed and is matched again once the user is active.
+			if u.Status == user.StatusDisabled || u.Status == user.StatusAccountLocked {
+				return u, nil
+			}
+		}
 	}
 
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
@@ -486,15 +613,29 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
 
+		// Never hand the same import id to two rows.
+		importID := entraOID
+		if importID != "" {
+			var taken bool
+			taken, err = importIDTaken(s, importID, 0)
+			if err != nil {
+				return nil, err
+			}
+			if taken {
+				importID = ""
+			}
+		}
+
 		// If no user exists, create one with the preferred username if it is not already taken
 		uu := &user.User{
-			Username:           strings.ReplaceAll(cl.PreferredUsername, " ", "-"),
+			Username:           usernameFromPreferred(cl.PreferredUsername),
 			Email:              cl.Email,
 			Name:               cl.Name,
 			Status:             user.StatusActive,
 			Issuer:             idToken.Issuer,
 			Subject:            idToken.Subject,
 			ExtraSettingsLinks: cl.ExtraSettingsLinks,
+			ImportID:           importID,
 		}
 
 		u, err = auth.CreateUserWithRandomUsername(s, uu)
@@ -503,11 +644,22 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	} else if alreadyCreatedFromIssuer {
 
+		// The scheduled import owns the display name of users that already have an import id,
+		// otherwise login and the import would overwrite each other. It does not manage admins, so
+		// they keep taking the name from the token. Decided before stamping: the login that stamps
+		// the id still refreshes the name once, and the import takes over from the next run.
+		takeTokenName := u.ImportID == "" || u.IsAdmin
+
+		err = stampImportID(s, u, entraOID)
+		if err != nil {
+			return nil, err
+		}
+
 		// try updating user.Name and/or user.Email if necessary
 		if cl.Email != u.Email {
 			u.Email = cl.Email
 		}
-		if cl.Name != u.Name {
+		if cl.Name != u.Name && takeTokenName {
 			u.Name = cl.Name
 		}
 

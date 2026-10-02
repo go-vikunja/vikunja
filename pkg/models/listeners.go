@@ -407,6 +407,24 @@ func registerEventsForAuditLogging() {
 			},
 		}
 	})
+	audit.RegisterEventForAudit(func(e *ManageUserProfileUpdatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionManageUserProfileUpdated,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.UserTarget(e.User.ID),
+			Metadata: map[string]any{"fields": e.Fields},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *ManageUserImportEvent) *audit.Entry {
+		action := audit.ActionManageUserImportStarted
+		if e.Action == "uploaded" {
+			action = audit.ActionManageUserImportUploaded
+		}
+		return &audit.Entry{
+			Action: action,
+			Actor:  auditActorFromUser(e.Doer),
+		}
+	})
 	audit.RegisterEventForAudit(func(e *AdminUsersListedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionAdminUsersListed,

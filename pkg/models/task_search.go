@@ -435,6 +435,12 @@ func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (bui
 		predicates = append(predicates, searchCond)
 	}
 
+	// A parent that the assignment filter would not return is not in the result either, so it must not
+	// hide its children from the roots.
+	if cond := assignmentConditionFor("parent_tasks", opts.assignment, opts.assignmentUserID); cond != nil {
+		predicates = append(predicates, cond)
+	}
+
 	sub := builder.
 		Select("1").
 		From("task_relations").
@@ -629,7 +635,8 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
+	// The assignment condition only ever narrows the result, it is ANDed with the project access.
+	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond, assignmentCondition(opts.assignment, opts.assignmentUserID))
 
 	// When the favorites arm is still part of the query (Favorites view, or
 	// out-of-scope favorites exist), its shape is unsupported — stay unranked.

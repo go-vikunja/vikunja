@@ -31,7 +31,31 @@ import (
 const (
 	IssuerLocal = `local`
 	IssuerLDAP  = `ldap`
+
+	// IssuerImport marks a user created by the scheduled user list import that has not logged in
+	// yet. The first Entra login replaces it with the real issuer.
+	IssuerImport = `import`
+
+	// issuerEntraPrefix is the issuer prefix of Microsoft Entra ID v2 tokens.
+	issuerEntraPrefix = `https://login.microsoftonline.com/`
 )
+
+// IsEntraIssuer reports whether an OpenID issuer is a Microsoft Entra ID (v2) tenant.
+func IsEntraIssuer(issuer string) bool {
+	return strings.HasPrefix(issuer, issuerEntraPrefix)
+}
+
+// IsImportedEntraIssuer reports whether an issuer belongs to the Entra tenant the scheduled user
+// import manages, and whose `oid` claims it may trust. With userimport.tenantid set that is exactly
+// that tenant's v2 issuer. Without it, any Entra tenant qualifies, which is only safe with a single
+// Entra provider: an object id is unique per tenant, not globally.
+func IsImportedEntraIssuer(issuer string) bool {
+	tenant := config.UserImportTenantID.GetString()
+	if tenant == "" {
+		return IsEntraIssuer(issuer)
+	}
+	return strings.EqualFold(issuer, issuerEntraPrefix+tenant+"/v2.0")
+}
 
 type CreateUserOptions struct {
 	SkipEmailConfirm bool
@@ -145,7 +169,7 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 	if err := checkUsernameFormat(bot.Username); err != nil {
 		return nil, err
 	}
-	if !strings.HasPrefix(bot.Username, "bot-") {
+	if !hasBotUsernamePrefix(bot.Username) {
 		return nil, &ErrBotUsernameMustHavePrefix{Username: bot.Username}
 	}
 
@@ -181,6 +205,41 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
+// UsernameFromLogin derives a username from an external login name such as a preferred_username
+// claim or a userPrincipalName. Spaces become dashes, an email-style value keeps only the part before
+// the "@" (a username containing "@" can never be @mentioned because the mention parser stops
+// there), and the "#EXT#" marker of Microsoft Entra guest accounts is dropped. An empty result means
+// the caller should generate a random username.
+func UsernameFromLogin(login string) string {
+	name := strings.ReplaceAll(login, " ", "-")
+	if at := strings.Index(name, "@"); at >= 0 {
+		name = name[:at]
+	}
+	return strings.TrimSuffix(name, "#EXT#")
+}
+
+// botUsernamePrefix is reserved for bot users, which are created via CreateBotUser.
+const botUsernamePrefix = "bot-"
+
+var linkSharePattern = regexp.MustCompile(`^link-share-\d+$`)
+
+// isLinkShareUsername reports whether a username looks like the name of a link share.
+// The single definition of that rule, used by every username check in this package.
+func isLinkShareUsername(username string) bool {
+	return linkSharePattern.MatchString(username)
+}
+
+// hasBotUsernamePrefix reports whether a username uses the prefix reserved for bots.
+func hasBotUsernamePrefix(username string) bool {
+	return strings.HasPrefix(username, botUsernamePrefix)
+}
+
+// IsReservedUsername reports whether CreateUser refuses a username as reserved: the link share
+// pattern and the bot- prefix. It is built from the same predicates CreateUser uses.
+func IsReservedUsername(username string) bool {
+	return isLinkShareUsername(username) || hasBotUsernamePrefix(username)
+}
+
 // checkUsernameFormat validates username format rules shared by regular and bot users.
 func checkUsernameFormat(username string) error {
 	if username == "" {
@@ -194,8 +253,7 @@ func checkUsernameFormat(username string) error {
 	}
 
 	// Check if username matches the reserved link-share pattern
-	linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
-	if linkSharePattern.MatchString(username) {
+	if isLinkShareUsername(username) {
 		return ErrUsernameReserved{
 			Username: username,
 		}
@@ -217,7 +275,7 @@ func checkIfUserIsValid(user *User) error {
 	}
 
 	// Reserve the bot- prefix for bot users (created via CreateBotUser)
-	if strings.HasPrefix(user.Username, "bot-") {
+	if hasBotUsernamePrefix(user.Username) {
 		return ErrUsernameReserved{
 			Username: user.Username,
 		}
@@ -230,9 +288,13 @@ func checkIfUserExists(s *xorm.Session, user *User) (err error) {
 	exists := true
 	_, err = GetUserByUsername(s, user.Username)
 	if err != nil {
-		if IsErrUserDoesNotExist(err) {
+		switch {
+		case IsErrUserDoesNotExist(err):
 			exists = false
-		} else {
+		case IsErrUserStatusError(err):
+			// A disabled or locked user still owns their username. Reporting it as taken lets
+			// callers such as CreateUserWithRandomUsername pick another one instead of failing.
+		default:
 			return err
 		}
 	}

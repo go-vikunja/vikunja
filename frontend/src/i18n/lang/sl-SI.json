@@ -22,7 +22,7 @@
 		"accountWillBeDeleted": "Vaš račun bo izbrisan, vključno z vsemi projekti, nalogami in prilogami, ki ste jih morda ustvarili."
 	},
 	"ready": {
-		"loading": "Vikunja se nalaga…",
+		"loading": "Vika se nalaga…",
 		"errorOccured": "Prišlo je do napake:",
 		"checkApiUrl": "Prosim preverite, ali je API naslov pravilen.",
 		"noApiUrlConfigured": "API URL ni nastavljen. Nastavite ga spodaj:"
@@ -128,7 +128,7 @@
 				"title": "Hitro dodaj čarobni način",
 				"disabled": "Onemogočeno",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "Vika"
 			},
 			"appearance": {
 				"title": "Barvna shema",
@@ -167,7 +167,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Izbrišite vaš Vikunja račun",
+			"title": "Izbrišite vaš Vika račun",
 			"text1": "Izbris vašega računa je trajen in ga ni mogoče razveljaviti. Izbrisali bomo vse vaše projekte, naloge in vse, kar je še povezano z njim.",
 			"text2": "Za nadaljevanje vnesite svoje geslo. Prejeli boste e-pošto z nadaljnjimi navodili.",
 			"text3": "Za nadaljevanje pritisnite spodnji gumb. Prejeli boste e-pošto z nadaljnjimi navodili.",
@@ -175,7 +175,7 @@
 			"requestSuccess": "Zahteva je bila uspešna. Prejeli boste e-pošto z nadaljnjimi navodili.",
 			"passwordRequired": "Prosim, vnesite vaše geslo.",
 			"confirmSuccess": "Uspešno ste potrdili izbris vašega računa. Vaš račun bomo izbrisali v treh dneh.",
-			"scheduled": "Vaš Vikunja račun bomo izbrisali dne {date} ({dateSince}).",
+			"scheduled": "Vaš Vika račun bomo izbrisali dne {date} ({dateSince}).",
 			"scheduledCancel": "Kliknite tukaj, če želite preklicati izbris računa.",
 			"scheduledCancelText": "Če želite preklicati izbris računa, spodaj vnesite vaše geslo:",
 			"scheduledCancelButton": "Če želite preklicati izbris računa, pritisnite spodnji gumb:",
@@ -183,12 +183,12 @@
 			"scheduledCancelSuccess": "Vašega računa ne bomo izbrisali."
 		},
 		"export": {
-			"title": "Izvozite svoje Vikunja podatke",
-			"description": "Zahtevate lahko kopijo vseh svojih Vikunja podatkov. To vključuje projekte, naloge in vse, kar je z njimi povezano. Te podatke lahko uvozite v katero kolo Vikunja namestitev prek funkcije migracije.",
+			"title": "Izvozite svoje Vika podatke",
+			"description": "Zahtevate lahko kopijo vseh svojih Vika podatkov. To vključuje projekte, naloge in vse, kar je z njimi povezano. Te podatke lahko uvozite v katero kolo Vika namestitev prek funkcije migracije.",
 			"descriptionPasswordRequired": "Za nadaljevanje prosim vnesite vaše geslo:",
-			"request": "Zahtevaj kopijo mojih Vikunja podatkov",
-			"success": "Uspešno ste zahtevali Vikunja podatke! Ko bodo pripravljeni za prenos, vam bomo poslali e-pošto.",
-			"downloadTitle": "Prenesite izvožene Vikunja podatke"
+			"request": "Zahtevaj kopijo mojih Vika podatkov",
+			"success": "Uspešno ste zahtevali Vika podatke! Ko bodo pripravljeni za prenos, vam bomo poslali e-pošto.",
+			"downloadTitle": "Prenesite izvožene Vika podatke"
 		}
 	},
 	"project": {
@@ -461,7 +461,7 @@
 		"title": "Uvoz iz drugih storitev",
 		"titleService": "Uvozi svoje podatke v Vikunjo iz {name}",
 		"description": "Klikni na logotip ene od spodnjih storitev, da začneš.",
-		"descriptionDo": "Vikunja bo uvozil vse sezname, naloge, opombe, opomnike in datoteke, do katerih imate dostop.",
+		"descriptionDo": "Vika bo uvozil vse sezname, naloge, opombe, opomnike in datoteke, do katerih imate dostop.",
 		"authorize": "Če želite pooblastiti Vikunjo za dostop do vašega računa {name}, kliknite spodnji gumb.",
 		"getStarted": "Začnimo",
 		"inProgress": "Uvažam…",
@@ -470,7 +470,7 @@
 		"confirm": "Prepričan sem, prosim takoj začnimo uvažati!",
 		"importUpload": "Kliknite spodnji gumb, da izberete datoteko za uvoz podatkov iz {name} v Vikunjo.",
 		"upload": "Naloži datoteko",
-		"migrationStartedWillReciveEmail": "Vikunja bo uvozil vaše sezname/projekte, naloge, zapiske, opomnike in datoteke iz {service}. Ker bo to trajalo nekaj časa, vam bomo, ko bo končano, poslali e-pošto. To okno lahko zdaj zaprete.",
+		"migrationStartedWillReciveEmail": "Vika bo uvozil vaše sezname/projekte, naloge, zapiske, opomnike in datoteke iz {service}. Ker bo to trajalo nekaj časa, vam bomo, ko bo končano, poslali e-pošto. To okno lahko zdaj zaprete.",
 		"migrationInProgress": "Uvoz je trenutno v teku. Počakajte, da se konča."
 	},
 	"label": {
@@ -521,7 +521,7 @@
 		"searchPlaceholder": "Začnite tipkati za iskanje…",
 		"previous": "Prejšnji",
 		"next": "Naslednji",
-		"poweredBy": "Poganja jo Vikunja",
+		"poweredBy": "Poganja jo Vika",
 		"create": "Ustvari",
 		"doit": "Naredi!",
 		"saving": "Shranjujem…",
@@ -652,7 +652,7 @@
 			"canuse": "Za filtriranje relativnih datumov lahko uporabite računanje datumov.",
 			"learnhow": "Preverite, kako to deluje",
 			"title": "Računanje datumov",
-			"intro": "Določite relativne datume, ki jih Vikunja preračuna sproti ob uporabi filtra.",
+			"intro": "Določite relativne datume, ki jih Vika preračuna sproti ob uporabi filtra.",
 			"expression": "Vsak izraz datumske matematike se začne s sidrnim datumom, ki je lahko {0} ali datumski niz, ki se konča z {1}. Temu sidrnemu datumu lahko po želji sledi eden ali več matematičnih izrazov.",
 			"similar": "Ti izrazi so podobni tistim, ki jih ponujata {0} in {1}.",
 			"add1Day": "Dodaj en dan",
@@ -888,7 +888,7 @@
 			"intro": "Pri ustvarjanju naloge lahko uporabite posebne ključne besede za neposredno dodajanje atributov novo ustvarjeni nalogi. To omogoča veliko hitrejše dodajanje pogosto uporabljenih atributov nalog.",
 			"multiple": "To lahko uporabiš večkrat.",
 			"label1": "Če želite dodati oznako, preprosto pred ime oznake dodajte {prefix}.",
-			"label2": "Vikunja bo najprej preverila, ali oznaka že obstaja in jo ustvarila, če ne.",
+			"label2": "Vika bo najprej preverila, ali oznaka že obstaja in jo ustvarila, če ne.",
 			"label3": "Če želite uporabiti presledke, okrog imena oznake preprosto dodajte \" ali '.",
 			"label4": "Na primer: {prefix}\"Oznaka s presledki\".",
 			"priority1": "Če želite nalogi nastaviti prioriteto, dodajte številko 1-5 s predpono {prefix}.",
@@ -1017,12 +1017,12 @@
 		"views": "Pogledi"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "Vika URL",
 		"urlPlaceholder": "npr. https://localhost:3456",
 		"change": "spremeni",
-		"use": "Uporabljam namestitev Vikunja na {0}",
-		"error": "Ni bilo mogoče najti ali uporabiti namestitve Vikunja na \"{domain}\". Prosimo, preverite, ali ima URL pravilno obliko in ali ga lahko dosežete, ko do njega dostopate neposredno in poskusite znova.",
-		"success": "Uporabljam namestitev Vikunja na \"{domain}\".",
+		"use": "Uporabljam namestitev Vika na {0}",
+		"error": "Ni bilo mogoče najti ali uporabiti namestitve Vika na \"{domain}\". Prosimo, preverite, ali ima URL pravilno obliko in ali ga lahko dosežete, ko do njega dostopate neposredno in poskusite znova.",
+		"success": "Uporabljam namestitev Vika na \"{domain}\".",
 		"urlRequired": "URL je obvezen."
 	},
 	"loadingError": {

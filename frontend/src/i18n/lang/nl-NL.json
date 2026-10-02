@@ -39,8 +39,8 @@
 		"addToHomeScreen": "Voeg deze app toe aan je startscherm voor snellere toegang en verbeterde ervaring.",
 		"goToOverview": "Ga naar overzicht",
 		"project": {
-			"importText": "Importeer je projecten en taken van andere diensten naar Vikunja:",
-			"import": "Importeer je gegevens in Vikunja"
+			"importText": "Importeer je projecten en taken van andere diensten naar Vika:",
+			"import": "Importeer je gegevens in Vika"
 		}
 	},
 	"demo": {
@@ -49,7 +49,7 @@
 		"accountWillBeDeleted": "Je account zal worden verwijderd, inclusief alle projecten, taken en bijlagen."
 	},
 	"ready": {
-		"loading": "Vikunja is aan het laden…",
+		"loading": "Vika is aan het laden…",
 		"errorOccured": "Er is een fout opgetreden:",
 		"checkApiUrl": "Controleer of de API URL juist is.",
 		"noApiUrlConfigured": "Er is geen API URL geconfigureerd. Stel er hieronder een in:"
@@ -85,7 +85,7 @@
 			"oauthRedirectedToApp": "Je bent doorgestuurd naar de app. Je kunt dit tabblad nu sluiten.",
 			"desktopTryDemo": "Probeer de demo",
 			"desktopCustomServer": "Aangepaste server-URL",
-			"desktopCustomServerDescription": "Voer de URL in van je Vikunja server om te beginnen.",
+			"desktopCustomServerDescription": "Voer de URL in van je Vika server om te beginnen.",
 			"desktopWaitingForAuth": "Wachten op authenticatie…",
 			"desktopOAuthError": "Authenticatie mislukt: {error}",
 			"logout": "Uitloggen",
@@ -217,8 +217,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Je kunt Vikunja verbinden met CalDAV-clients om taken te bekijken en beheren vanuit verschillende clients. Voer deze url in bij je client:",
-				"more": "Meer informatie over CalDAV in Vikunja",
+				"howTo": "Je kunt Vika verbinden met CalDAV-clients om taken te bekijken en beheren vanuit verschillende clients. Voer deze url in bij je client:",
+				"more": "Meer informatie over CalDAV in Vika",
 				"tokens": "CalDAV tokens",
 				"tokensHowTo": "Voor CalDAV-authenticatie gebruik je jouw normale accountwachtwoord of een speciaal CalDAV-token.",
 				"createToken": "Maak een CalDAV-token",
@@ -230,7 +230,7 @@
 			},
 			"feeds": {
 				"title": "Atom Feed",
-				"howTo": "Je kunt je abonneren op je Vikunja meldingen met elke Atom-compatibele feedlezer. Gebruik deze URL:",
+				"howTo": "Je kunt je abonneren op je Vika meldingen met elke Atom-compatibele feedlezer. Gebruik deze URL:",
 				"usernameIs": "Je gebruikersnaam voor de feed is: {0}",
 				"apiTokenHint": "Authenticeer met een API-token die {scope} permissies heeft. Maak er een aan in {link}.",
 				"tokenTitle": "Atom feed"
@@ -251,7 +251,7 @@
 				"title": "Magische Modus Snel Toevoegen",
 				"disabled": "Uitgeschakeld",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "Vika"
 			},
 			"appearance": {
 				"title": "Kleurenschema",
@@ -270,7 +270,7 @@
 			},
 			"apiTokens": {
 				"title": "API tokens",
-				"general": "Met API tokens kun je Vikunja's API gebruiken zonder gebruikersnaam en wachtwoord.",
+				"general": "Met API tokens kun je Vika's API gebruiken zonder gebruikersnaam en wachtwoord.",
 				"apiDocs": "Bekijk de API-documentatie",
 				"createAToken": "Token aanmaken",
 				"createToken": "Token aanmaken",
@@ -318,7 +318,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Verwijder je Vikunja account",
+			"title": "Verwijder je Vika account",
 			"text1": "Het verwijderen van je account is permanent en kan niet ongedaan worden gemaakt. We zullen al je projecten, lijsten, taken en alles wat ermee verbonden is verwijderen.",
 			"text2": "Graag je wachtwoord invullen om verder te gaan. Je zult een e-mail ontvangen met verdere instructies.",
 			"text3": "Druk op de knop hieronder om verder te gaan. Je ontvangt een e-mail met instructies.",
@@ -326,7 +326,7 @@
 			"requestSuccess": "Het verzoek was succesvol. Je ontvangt een e-mail met verdere instructies.",
 			"passwordRequired": "Voer alsjeblieft je wachtwoord in.",
 			"confirmSuccess": "Je hebt de verwijdering van je account met succes bevestigd. We verwijderen je account over drie dagen.",
-			"scheduled": "We zullen je Vikunja account op {date} ({dateSince}) verwijderen.",
+			"scheduled": "We zullen je Vika account op {date} ({dateSince}) verwijderen.",
 			"scheduledCancel": "Klik hier om de verwijdering van je account te annuleren.",
 			"scheduledCancelText": "Om het verwijderen van je account te annuleren, voer hieronder je wachtwoord in:",
 			"scheduledCancelButton": "Om het verwijderen van je account te annuleren, druk op onderstaande knop:",
@@ -334,12 +334,12 @@
 			"scheduledCancelSuccess": "We zullen je account niet verwijderen."
 		},
 		"export": {
-			"title": "Je Vikunja gegevens exporteren",
-			"description": "Je kunt een kopie van al je Vikunja-gegevens opvragen. Dit omvat projecten, taken en alles wat eraan verbonden is. Je kunt deze gegevens importeren in elke Vikunja-instantie via de migratiefunctie.",
+			"title": "Je Vika gegevens exporteren",
+			"description": "Je kunt een kopie van al je Vika-gegevens opvragen. Dit omvat projecten, taken en alles wat eraan verbonden is. Je kunt deze gegevens importeren in elke Vika-instantie via de migratiefunctie.",
 			"descriptionPasswordRequired": "Voer je wachtwoord in om door te gaan:",
-			"request": "Een kopie van mijn Vikunja gegevens opvragen",
-			"success": "Je hebt met succes je Vikunja Data aangevraagd! We sturen je een e-mail zodra het klaar is om te downloaden.",
-			"downloadTitle": "Download je geëxporteerde Vikunja gegevens",
+			"request": "Een kopie van mijn Vika gegevens opvragen",
+			"success": "Je hebt met succes je Vika Data aangevraagd! We sturen je een e-mail zodra het klaar is om te downloaden.",
+			"downloadTitle": "Download je geëxporteerde Vika gegevens",
 			"ready": "Je export is klaar om te downloaden. Je kunt deze downloaden tot {0}.",
 			"requestNew": "Een andere export aanvragen"
 		}
@@ -424,7 +424,7 @@
 			"links": {
 				"title": "Deelbare koppelingen",
 				"what": "Wat is een deelbare koppeling?",
-				"explanation": "Met deelbare koppelingen kun je gemakkelijk een project delen met andere gebruikers die geen account hebben op Vikunja.",
+				"explanation": "Met deelbare koppelingen kun je gemakkelijk een project delen met andere gebruikers die geen account hebben op Vika.",
 				"create": "Nieuwe deelbare koppeling maken",
 				"name": "Naam (optioneel)",
 				"namePlaceholder": "bv. Lorem Ipsum",
@@ -684,21 +684,21 @@
 	},
 	"migrate": {
 		"title": "Importeer vanuit een andere dienst",
-		"titleService": "Importeer je gegevens van {name} naar Vikunja",
+		"titleService": "Importeer je gegevens van {name} naar Vika",
 		"description": "Klik op het logo van een van de externe diensten hieronder om te beginnen.",
-		"descriptionDo": "Vikunja zal alle lijsten, taken, notities, herinneringen en bestanden importeren waar je toegang toe hebt.",
-		"authorize": "Om Vikunja toegang te geven tot je {name} -account, klik op de knop hieronder.",
+		"descriptionDo": "Vika zal alle lijsten, taken, notities, herinneringen en bestanden importeren waar je toegang toe hebt.",
+		"authorize": "Om Vika toegang te geven tot je {name} -account, klik op de knop hieronder.",
 		"getStarted": "Aan de slag",
 		"inProgress": "Bezig met importeren…",
 		"alreadyMigrated1": "Het lijkt erop dat je je spullen van {name} al hebt geïmporteerd op {date}.",
 		"alreadyMigrated2": "Opnieuw importeren is mogelijk, maar kan duplicaten maken. Weet je het zeker?",
 		"confirm": "Ik weet het zeker, begin nu met migreren!",
-		"importUpload": "Om gegevens van {name} te importeren in Vikunja, klik je op de knop hieronder om een bestand te kiezen.",
+		"importUpload": "Om gegevens van {name} te importeren in Vika, klik je op de knop hieronder om een bestand te kiezen.",
 		"upload": "Bestand uploaden",
-		"migrationStartedWillReciveEmail": "Vikunja gaat nu je lijsten/projecten, taken, notities, herinneringen en bestanden van {service} importeren. Omdat dit een tijdje zal duren, sturen we je een e-mail zodra het klaar is. Je kunt dit venster nu sluiten.",
+		"migrationStartedWillReciveEmail": "Vika gaat nu je lijsten/projecten, taken, notities, herinneringen en bestanden van {service} importeren. Omdat dit een tijdje zal duren, sturen we je een e-mail zodra het klaar is. Je kunt dit venster nu sluiten.",
 		"migrationInProgress": "Er is momenteel een migratie aan de gang. Wacht tot dit voltooid is.",
 		"credentials": {
-			"description": "Voer het adres van je {name}-instantie in en hoe Vikunja moet inloggen. Vikunja importeert alle projecten en borden waartoe je toegang hebt; de inloggegevens worden alleen gebruikt voor deze import en worden niet opgeslagen.",
+			"description": "Voer het adres van je {name}-instantie in en hoe Vika moet inloggen. Vika importeert alle projecten en borden waartoe je toegang hebt; de inloggegevens worden alleen gebruikt voor deze import en worden niet opgeslagen.",
 			"url": "{name} URL",
 			"authMethod": "Inloggen met",
 			"apiKey": "API-sleutel",
@@ -714,7 +714,7 @@
 			"description": "Importeer taken uit een CSV-bestand met aangepaste kolomtoewijzing.",
 			"uploadDescription": "Kies een CSV-bestand om te importeren. Het bestand moet taakgegevens bevatten met kolomkoppen in de eerste rij.",
 			"selectFile": "Kies CSV-bestand",
-			"columnMappingDescription": "Wijs elke kolom in je CSV-bestand toe aan een taakattribuut. Vikunja heeft de meest waarschijnlijke toewijzingen automatisch gedetecteerd. Het voorbeeld hieronder wordt automatisch bijgewerkt wanneer je de instellingen aanpast.",
+			"columnMappingDescription": "Wijs elke kolom in je CSV-bestand toe aan een taakattribuut. Vika heeft de meest waarschijnlijke toewijzingen automatisch gedetecteerd. Het voorbeeld hieronder wordt automatisch bijgewerkt wanneer je de instellingen aanpast.",
 			"parsingOptions": "Opties voor verwerking",
 			"delimiter": "Scheidingsteken",
 			"dateFormat": "Datumnotatie",
@@ -774,7 +774,7 @@
 		"imprint": "Imprint",
 		"privacy": "Privacybeleid",
 		"closeSidebar": "Zijbalk sluiten",
-		"home": "Vikunja home",
+		"home": "Vika home",
 		"toggleChildProjects": "Subprojecten in-/uitklappen",
 		"main": "Hoofdnavigatie",
 		"savedFilters": "Opgeslagen filters"
@@ -791,7 +791,7 @@
 		"searchPlaceholder": "Typ om te zoeken…",
 		"previous": "Vorige",
 		"next": "Volgende",
-		"poweredBy": "Mogelijk gemaakt door Vikunja",
+		"poweredBy": "Mogelijk gemaakt door Vika",
 		"create": "Creëren",
 		"doit": "Doe het!",
 		"saving": "Opslaan…",
@@ -943,7 +943,7 @@
 			"canuse": "Je kunt datumberekeningen gebruiken om te filteren op relatieve datums.",
 			"learnhow": "Bekijk hoe het werkt",
 			"title": "Datumberekeningen",
-			"intro": "Geef relatieve datums op die door Vikunja direct worden omgezet wanneer het filter wordt toegepast.",
+			"intro": "Geef relatieve datums op die door Vika direct worden omgezet wanneer het filter wordt toegepast.",
 			"expression": "Elke uitdrukking voor een datumberekening begint met een ankerdatum, dit kan zijn {0} of een datumstring die eindigt met {1}. Deze ankerdatum kan optioneel gevolgd worden door één of meer rekenkundige uitdrukkingen.",
 			"similar": "Deze uitdrukkingen zijn vergelijkbaar met die van {0} en {1}.",
 			"add1Day": "Eén dag optellen",
@@ -1218,12 +1218,12 @@
 		},
 		"quickAddMagic": {
 			"hint": "Gebruik magische prefixes om vervaldata, toegewezen personen en andere taakeigenschappen te definiëren.",
-			"quickEntryHint": "Gebruik magische voorvoegsels voor datums, labels en meer. Open de Vikunja hoofd-app en bekijk de tooltip op de taakinvoer voor meer details.",
+			"quickEntryHint": "Gebruik magische voorvoegsels voor datums, labels en meer. Open de Vika hoofd-app en bekijk de tooltip op de taakinvoer voor meer details.",
 			"title": "Snel-toevoegen magie",
 			"intro": "Bij het aanmaken van een taak kun je speciale trefwoorden gebruiken om direct kenmerken toe te voegen aan de nieuwe taak. Hiermee kun je veelgebruikte kenmerken veel sneller toevoegen aan taken.",
 			"multiple": "Je kan dit meerdere keren gebruiken.",
 			"label1": "Om een label toe te voegen, prefix de naam van het label met {prefix}.",
-			"label2": "Vikunja zal eerst controleren of het label al bestaat en maakt het aan als dat niet zo is.",
+			"label2": "Vika zal eerst controleren of het label al bestaat en maakt het aan als dat niet zo is.",
 			"label3": "Om spaties te gebruiken gebruik je \" of ' rond de naam van het label.",
 			"label4": "Bijvoorbeeld: {prefix}\"Label met spaties\".",
 			"priority1": "Om prioriteit aan een taak te geven voeg je een nummer tussen 1-5 toe, beginnend met een {prefix}.",
@@ -1373,12 +1373,12 @@
 		"views": "Weergaven"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "Vika URL",
 		"urlPlaceholder": "bv. https://localhost:3456",
 		"change": "wijzigen",
-		"use": "Gebruikt Vikunja-installatie op {0}",
-		"error": "Kon Vikunja-installatie niet vinden of gebruiken op \"{domain}\". Controleer of de URL het juiste formaat heeft en het rechtstreeks te benaderen is. Probeer het opnieuw.",
-		"success": "Gebruikt Vikunja installatie op \"{domain}\".",
+		"use": "Gebruikt Vika-installatie op {0}",
+		"error": "Kon Vika-installatie niet vinden of gebruiken op \"{domain}\". Controleer of de URL het juiste formaat heeft en het rechtstreeks te benaderen is. Probeer het opnieuw.",
+		"success": "Gebruikt Vika installatie op \"{domain}\".",
 		"urlRequired": "Een URL is vereist."
 	},
 	"loadingError": {
@@ -1396,7 +1396,7 @@
 	},
 	"quickActions": {
 		"title": "Zoeken en snelle acties",
-		"notLoggedIn": "Log eerst in op het Vikunja hoofdscherm.",
+		"notLoggedIn": "Log eerst in op het Vika hoofdscherm.",
 		"commands": "Opdrachten",
 		"placeholder": "Typ een opdracht of zoek…",
 		"hint": "Je kunt {project} gebruiken om het zoeken te beperken tot een project. Combineer {project} of {label} (labels) met een zoekopdracht om te zoeken naar een taak met deze labels of op dat project. Gebruik {assignee} om alleen te zoeken naar teams.",
@@ -1514,7 +1514,7 @@
 		"14201": "Planka heeft de opgegeven inloggegevens geweigerd. Controleer de URL en de API-sleutel of gebruikersnaam en wachtwoord.",
 		"14202": "Het Planka-account vereist een extra inlogstap (twee-factorcode of het accepteren van de voorwaarden). Log eenmalig in op Planka in de browser, of gebruik een API-sleutel in plaats van gebruikersnaam en wachtwoord.",
 		"14203": "Een Planka-URL en een API-sleutel of een gebruikersnaam en wachtwoord zijn vereist.",
-		"14204": "Kon geen Planka-API bereiken op de opgegeven URL. Controleer de URL en dat Vikunja de instantie kan bereiken.",
+		"14204": "Kon geen Planka-API bereiken op de opgegeven URL. Controleer de URL en dat Vika de instantie kan bereiken.",
 		"error": "Fout",
 		"success": "Succes",
 		"0001": "Je hebt geen toestemming om dat te doen."

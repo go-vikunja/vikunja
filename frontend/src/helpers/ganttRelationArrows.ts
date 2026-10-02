@@ -16,6 +16,8 @@ export interface GanttArrow {
 	endY: number
 	color: string
 	relationKind: 'blocking' | 'precedes'
+	// A dependency on the critical path.
+	critical?: boolean
 }
 
 const ARROW_COLORS: Record<string, string> = {
@@ -31,6 +33,8 @@ export function buildRelationArrows(
 	tasks: Map<number, TaskResponse>,
 	positions: Map<number, GanttBarPosition>,
 	hiddenToAncestor: Map<number, number>,
+	// "predecessor-successor" keys of the dependencies on the critical path
+	criticalEdges: Set<string> = new Set(),
 ): GanttArrow[] {
 	const arrows: GanttArrow[] = []
 	const seen = new Set<string>()
@@ -66,6 +70,7 @@ export function buildRelationArrows(
 
 				const fromPos = positions.get(fromId)!
 				const toPos = positions.get(toId)!
+				const critical = kind === 'precedes' && criticalEdges.has(`${fromId}-${toId}`)
 
 				arrows.push({
 					fromTaskId: fromId,
@@ -74,8 +79,9 @@ export function buildRelationArrows(
 					startY: fromPos.y,
 					endX: toPos.x,
 					endY: toPos.y,
-					color: ARROW_COLORS[kind],
+					color: critical ? 'var(--danger)' : ARROW_COLORS[kind],
 					relationKind: kind,
+					critical,
 				})
 			}
 		}

@@ -96,6 +96,12 @@
 					{{ $t('user.settings.title') }}
 				</DropdownItem>
 				<DropdownItem
+					v-if="authStore.info?.isAdmin"
+					:to="{ name: 'manage.users' }"
+				>
+					{{ $t('manage.title') }}
+				</DropdownItem>
+				<DropdownItem
 					v-if="adminPanelEnabled && authStore.info?.isAdmin"
 					:to="{ name: 'admin.overview' }"
 				>

@@ -101,12 +101,24 @@ type User struct {
 
 	IsAdmin bool `xorm:"not null default false" json:"-"`
 
+	// MustChangePassword forces the user to set a new password before they can do anything else.
+	// It is set together with a password that somebody else chose (the seeded default admin, an
+	// admin resetting a password) and cleared by any password change.
+	MustChangePassword bool `xorm:"bool not null default false" json:"-"`
+
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
 	AvatarFileID   int64  `xorm:"null" json:"-"`
 
 	// Issuer and Subject contain the issuer and subject from the source the user authenticated with.
 	Issuer  string `xorm:"text null" json:"-"`
 	Subject string `xorm:"text null" json:"-"`
+
+	// ImportID is the identity (Entra object id) from the scheduled user list import.
+	// JobTitle and Department are refreshed by the same import. They are storage only and
+	// deliberately not part of the API. UpdateUser never writes them (see baseUserUpdateColumns).
+	ImportID   string `xorm:"varchar(64) null index" json:"-"`
+	JobTitle   string `xorm:"varchar(250) null" json:"-"`
+	Department string `xorm:"varchar(250) null" json:"-"`
 
 	EmailRemindersEnabled        bool   `xorm:"bool default true" json:"-"`
 	DiscoverableByName           bool   `xorm:"bool default false index" json:"-"`
@@ -807,15 +819,31 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 	}
 	theUser.Password = hashed
 
-	// Update it
+	// Update it. A password somebody chose themselves ends a forced change, so the flag is
+	// written explicitly: xorm skips zero values unless the column is named.
 	_, err = s.
 		Where("id = ?", user.ID).
-		Update(&User{Password: hashed})
+		Cols("password", "must_change_password").
+		Update(&User{Password: hashed, MustChangePassword: false})
 	if err != nil {
 		return err
 	}
+	user.MustChangePassword = false
 
 	return err
+}
+
+// SetMustChangePassword flags a user so they have to choose a new password at the next login.
+func SetMustChangePassword(s *xorm.Session, u *User, must bool) error {
+	_, err := s.
+		Where("id = ?", u.ID).
+		Cols("must_change_password").
+		Update(&User{MustChangePassword: must})
+	if err != nil {
+		return err
+	}
+	u.MustChangePassword = must
+	return nil
 }
 
 // SetStatus sets a users status in the database

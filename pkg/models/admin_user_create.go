@@ -42,6 +42,13 @@ type CreateUserBody struct {
 // public-registration toggle. It commits s and returns the persisted user reloaded
 // so the status reflects what was actually stored.
 func CreateUserAsAdmin(s *xorm.Session, doer *user.User, body *CreateUserBody) (*user.User, error) {
+	return CreateUserAsAdminWithOptions(s, doer, body, false)
+}
+
+// CreateUserAsAdminWithOptions is CreateUserAsAdmin that can also make the new user choose a new
+// password at the first login. The flag is written in the same transaction as the account, so
+// there is no moment where the account exists with a password somebody else chose and no forced change.
+func CreateUserAsAdminWithOptions(s *xorm.Session, doer *user.User, body *CreateUserBody, mustChangePassword bool) (*user.User, error) {
 	newUser, err := RegisterUser(s, &user.User{
 		Username: body.Username,
 		Password: body.Password,
@@ -58,6 +65,12 @@ func CreateUserAsAdmin(s *xorm.Session, doer *user.User, body *CreateUserBody) (
 			return nil, err
 		}
 		newUser.IsAdmin = true
+	}
+
+	if mustChangePassword {
+		if err := user.SetMustChangePassword(s, newUser, true); err != nil {
+			return nil, err
+		}
 	}
 
 	// Queued alongside the user.created event RegisterUser dispatched; both

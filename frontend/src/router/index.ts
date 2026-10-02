@@ -453,6 +453,53 @@ const router = createRouter({
 			},
 		},
 		{
+			// The people area. Instance admins only, and deliberately NOT behind the admin panel
+			// license: the server gates /api/v2/manage on the admin flag alone.
+			path: '/manage',
+			component: () => import('@/views/manage/ManageShell.vue'),
+			meta: {
+				requiresInstanceAdmin: true,
+			},
+			children: [
+				{
+					path: '',
+					redirect: {name: 'manage.users'},
+				},
+				{
+					path: 'users',
+					name: 'manage.users',
+					component: () => import('@/views/manage/UsersView.vue'),
+				},
+				{
+					path: 'user-import',
+					name: 'manage.import',
+					component: () => import('@/views/manage/ImportView.vue'),
+				},
+			],
+		},
+		{
+			// The printable version of a view. It sits outside the app shell, so the page holds only the
+			// content, and the browser's print dialog turns it into a PDF.
+			path: '/projects/:projectId/views/:viewId/print',
+			name: 'project.print',
+			component: () => import('@/views/project/ProjectPrint.vue'),
+			props: route => ({
+				projectId: Number(route.params.projectId),
+				viewId: Number(route.params.viewId),
+			}),
+		},
+		{
+			// A user who has to change their password sees only this. It sits outside the app
+			// shell on purpose: the shell's start-up requests are all refused by the server until
+			// the password was changed.
+			path: '/user/change-password',
+			name: 'user.change-password',
+			component: () => import('@/views/user/ForcePasswordChange.vue'),
+			meta: {
+				showAsModal: false,
+			},
+		},
+		{
 			path: '/admin',
 			component: () => import('@/views/admin/AdminShell.vue'),
 			meta: {
@@ -591,6 +638,27 @@ router.beforeEach(async (to, from) => {
 	const authStore = useAuthStore()
 
 	await authStore.checkAuth()
+
+	// A user who has to choose a new password gets nothing else: the server refuses every other
+	// request until then, so the rest of the app would only produce errors.
+	if (authStore.authUser && authStore.info?.mustChangePassword) {
+		if (to.name !== 'user.change-password' && to.name !== 'user.login') {
+			return {name: 'user.change-password'}
+		}
+		return
+	}
+
+	if (to.meta?.requiresInstanceAdmin) {
+		const baseStore = useBaseStore()
+		await baseStore.appReady
+		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
+		if (authStore.info?.isAdmin === undefined) {
+			await authStore.refreshUserInfo()
+		}
+		if (authStore.info?.isAdmin !== true) {
+			return {name: 'not-found'}
+		}
+	}
 
 	if (to.meta?.requiresAdminPanel) {
 		// Await config/auth hydration so the license check doesn't race the empty default

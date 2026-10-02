@@ -18,9 +18,11 @@ package csv
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 	"strconv"
@@ -28,6 +30,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
@@ -92,6 +95,12 @@ const (
 	AttrProject     TaskAttribute = "project"
 	AttrReminder    TaskAttribute = "reminder"
 	AttrIgnore      TaskAttribute = "ignore"
+	// AttrAssignee is the email address of the user the task is assigned to.
+	AttrAssignee TaskAttribute = "assignee"
+	// AttrAssignor is the email address of the user who assigns the task (stored as its creator).
+	AttrAssignor TaskAttribute = "assignor"
+	// AttrProjectID is the numeric id of an existing project to put the task into.
+	AttrProjectID TaskAttribute = "project_id"
 )
 
 // AllTaskAttributes returns all available task attributes for mapping
@@ -106,6 +115,9 @@ var AllTaskAttributes = []TaskAttribute{
 	AttrLabels,
 	AttrProject,
 	AttrReminder,
+	AttrAssignee,
+	AttrAssignor,
+	AttrProjectID,
 	AttrIgnore,
 }
 
@@ -113,7 +125,7 @@ var AllTaskAttributes = []TaskAttribute{
 type ColumnMapping struct {
 	ColumnIndex int           `json:"column_index" doc:"The zero-based index of the CSV column this mapping applies to."`
 	ColumnName  string        `json:"column_name" doc:"The header name of the CSV column, for display."`
-	Attribute   TaskAttribute `json:"attribute" enum:"title,description,due_date,start_date,end_date,done,priority,labels,project,reminder,ignore" doc:"The task attribute the column maps to. Use \"ignore\" to drop the column."`
+	Attribute   TaskAttribute `json:"attribute" enum:"title,description,due_date,start_date,end_date,done,priority,labels,project,reminder,assignee,assignor,project_id,ignore" doc:"The task attribute the column maps to. assignee and assignor are email addresses, project_id is the id of an existing project. Use \"ignore\" to drop the column."`
 }
 
 // DetectionResult contains the auto-detected CSV structure
@@ -649,9 +661,91 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 		return &migration.ErrFileIsEmpty{}
 	}
 
+	// Any of the assignment columns switches to the per-row import, which can target existing
+	// projects and other users. Without them the import behaves exactly as before.
+	if hasAssignmentMapping(config) {
+		return importAssigned(u, rows, config)
+	}
+
 	vikunjaTasks := convertToVikunja(rows, config)
 
 	return migration.InsertFromStructure(vikunjaTasks, u)
+}
+
+// hasAssignmentMapping returns true if any column is mapped to assignee, assignor or project_id.
+func hasAssignmentMapping(config *ImportConfig) bool {
+	for _, mapping := range config.Mapping {
+		switch mapping.Attribute {
+		case AttrAssignee, AttrAssignor, AttrProjectID:
+			return true
+		}
+	}
+	return false
+}
+
+// importAssigned imports every row on its own, so a rejected row does not stop the others. It
+// returns an error naming the rejected rows when there were any, after the others went in.
+func importAssigned(u *user.User, rows [][]string, config *ImportConfig) error {
+	if hasProjectMapping(config) {
+		for _, mapping := range config.Mapping {
+			if mapping.Attribute == AttrProjectID {
+				return &migration.ErrInvalidCSVImportConfig{Err: errors.New("map either a project name column or a project_id column, not both")}
+			}
+		}
+	}
+
+	importRows := make([]*models.ImportAssignedRow, 0, len(rows))
+	for i, row := range rows {
+		importRow := &models.ImportAssignedRow{Number: i + 1, Task: rowToTask(row, config, 0)}
+		importRow.Task.ID = 0
+
+		for _, mapping := range config.Mapping {
+			if mapping.ColumnIndex < 0 || mapping.ColumnIndex >= len(row) {
+				continue
+			}
+			value := strings.TrimSpace(row[mapping.ColumnIndex])
+			if value == "" {
+				continue
+			}
+			switch mapping.Attribute {
+			case AttrAssignee:
+				importRow.AssigneeEmail = value
+			case AttrAssignor:
+				importRow.AssignorEmail = value
+			case AttrProjectID:
+				id, err := strconv.ParseInt(value, 10, 64)
+				if err != nil || id <= 0 {
+					// Not a project id: reject the row below instead of guessing.
+					importRow.ProjectID = -1
+				} else {
+					importRow.ProjectID = id
+				}
+			}
+		}
+		importRows = append(importRows, importRow)
+	}
+
+	results := models.ImportAssignedRows(context.Background(), u, importRows)
+
+	var failures []string
+	imported := 0
+	for i, res := range results {
+		if res.Err == nil && importRows[i].ProjectID != -1 {
+			imported++
+			continue
+		}
+		reason := "invalid project_id"
+		if res.Err != nil {
+			reason = res.Err.Error()
+		}
+		failures = append(failures, fmt.Sprintf("row %d: %s", res.Number, reason))
+	}
+
+	log.Infof("[CSV import] %d rows imported, %d rejected", imported, len(failures))
+	if len(failures) > 0 {
+		return &migration.ErrCSVRowsRejected{Imported: imported, Rejected: failures}
+	}
+	return nil
 }
 
 // hasProjectMapping returns true if any column is mapped to the project attribute

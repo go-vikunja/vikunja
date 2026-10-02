@@ -17,6 +17,13 @@
 					:project-id="projectId"
 					@update:modelValue="loadTasks()"
 				/>
+				<ViewExportMenu
+					kind="list"
+					:project-id="projectId"
+					:view-id="viewId"
+					:params="params"
+					:sort-by="sortByParam"
+				/>
 			</div>
 		</template>
 
@@ -109,6 +116,7 @@ import ButtonLink from '@/components/misc/ButtonLink.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import ViewExportMenu from '@/components/project/partials/ViewExportMenu.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import SortPopup from '@/components/project/partials/SortPopup.vue'

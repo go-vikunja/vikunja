@@ -112,6 +112,10 @@ type Task struct {
 	// Determines how far a task is left from being done
 	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done" doc:"How far the task is from done, between 0 and 1."`
 
+	// A milestone is drawn as a diamond at its end date in the Gantt chart and has no duration.
+	// omitempty keeps the JSON of ordinary tasks unchanged: absent means false.
+	IsMilestone bool `xorm:"bool not null default false" json:"is_milestone,omitempty" doc:"Whether the task is a milestone: a point in time at its end date, shown as a diamond in the Gantt chart. Omitted when false."`
+
 	// The task identifier, based on the project identifier and the task's index
 	Identifier string `xorm:"-" json:"identifier" readOnly:"true" doc:"The textual task identifier, derived from the project identifier and the task index (e.g. \"PROJ-12\")."`
 	// The task index, calculated per project
@@ -119,6 +123,10 @@ type Task struct {
 
 	// The UID is currently not used for anything other than CalDAV, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
+
+	// assignorOverride makes createTasks store somebody other than the acting user as creator.
+	// Never set from request data, only by the integration endpoint and the importers.
+	assignorOverride *user.User
 
 	// All related tasks, grouped by their relation kind
 	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks" readOnly:"true" doc:"Related tasks grouped by relation kind. Read-only here; use the task-relation endpoints to change relations."`
@@ -216,6 +224,15 @@ func (t *Task) GetFrontendURL() string {
 	return config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(t.ID, 10)
 }
 
+// isOwnInbox reports whether the project is the inbox of the user: a project they own and have as
+// their default project. Link shares (negative ids) and bots never have one.
+func isOwnInbox(p *Project, u *user.User) bool {
+	if p == nil || u == nil || u.ID <= 0 || u.IsBot() {
+		return false
+	}
+	return p.OwnerID == u.ID && u.DefaultProjectID == p.ID
+}
+
 func (t *Task) isRepeating() bool {
 	return t.RepeatAfter > 0 ||
 		t.RepeatMode == TaskRepeatModeMonth
@@ -241,6 +258,10 @@ type taskSearchOptions struct {
 	projectIDs         []int64
 	expand             []TaskCollectionExpandable
 	projectViewID      int64
+
+	// assignment narrows the result to the tasks assigned to, or assigned by, assignmentUserID.
+	assignment       TaskAssignmentFilter
+	assignmentUserID int64
 
 	// userProvidedSort distinguishes an explicit sort_by from the id/position
 	// defaults appended later, so relevance ordering only replaces the default sort.
@@ -1041,8 +1062,52 @@ func resolveProvidedBuckets(s *xorm.Session, a web.Auth, projectID int64, tasks 
 	return taskProvidedBucket, nil
 }
 
+// taskCreateOptions carries what only internal callers (integrations, imports) may set.
+type taskCreateOptions struct {
+	// Assignor is stored as the task creator instead of the acting user. Only bots and instance
+	// admins may name somebody other than themselves, see canSetAssignor. The acting user stays the
+	// doer of every event, so webhooks and the audit log still record who really did it.
+	Assignor *user.User
+}
+
+// isPrivilegedActor reports whether the actor may act in the name of other people and write into
+// their inboxes: an instance admin, or a bot that an active instance admin owns. A bot of an ordinary
+// user is not trusted with that: anybody can create bots, so "is a bot" proves nothing about who
+// controls it. The plain admin flag is used on purpose, not isInstanceAdmin: that one is tied to the
+// admin panel license, and admins are trusted here by the operator's decision, like in the people area.
+func isPrivilegedActor(s *xorm.Session, actor *user.User) (bool, error) {
+	if actor == nil {
+		return false, nil
+	}
+	if !actor.IsBot() {
+		return actor.IsAdmin, nil
+	}
+
+	owner := &user.User{}
+	has, err := s.Where("id = ?", actor.BotOwnerID).Get(owner)
+	if err != nil || !has {
+		return false, err
+	}
+	return owner.IsAdmin && !owner.IsBot() && owner.Status == user.StatusActive, nil
+}
+
+// canSetAssignor reports whether the actor may create tasks in the name of somebody else.
+func canSetAssignor(s *xorm.Session, actor, assignor *user.User) (bool, error) {
+	if actor == nil || assignor == nil {
+		return false, nil
+	}
+	if actor.ID == assignor.ID {
+		return true, nil
+	}
+	return isPrivilegedActor(s, actor)
+}
+
 // createTasks inserts row by row because multi-row inserts don't reliably return autoincrement ids on all supported databases.
 func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, updateAssignees bool, setBucket, preserveIndexes bool) (err error) {
+	return createTasksWithOptions(s, projectID, tasks, a, updateAssignees, setBucket, preserveIndexes, taskCreateOptions{})
+}
+
+func createTasksWithOptions(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, updateAssignees bool, setBucket, preserveIndexes bool, opts taskCreateOptions) (err error) {
 	if len(tasks) == 0 {
 		return nil
 	}
@@ -1066,9 +1131,36 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		return err
 	}
 
+	// createdBy is the acting user: the doer of the events, who may favorite and is implicitly subscribed.
 	createdBy, err := GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return err
+	}
+
+	// The assignor of a task is who it is stored as created by, normally the acting user. A task
+	// may carry its own (imports), otherwise the call's option applies. Naming somebody else is
+	// checked for every task before anything is written.
+	for _, t := range tasks {
+		if t.assignorOverride == nil {
+			t.assignorOverride = opts.Assignor
+		}
+		// A permission problem, not a validation one: it is a 403, whichever task of the batch it was.
+		if t.assignorOverride != nil && t.assignorOverride.ID != createdBy.ID {
+			var allowed bool
+			allowed, err = canSetAssignor(s, createdBy, t.assignorOverride)
+			if err != nil {
+				return err
+			}
+			if !allowed {
+				return ErrGenericForbidden{}
+			}
+		}
+	}
+	assignorOf := func(t *Task) *user.User {
+		if t.assignorOverride != nil {
+			return t.assignorOverride
+		}
+		return createdBy
 	}
 
 	err = setNewTaskIndexes(s, projectID, tasks)
@@ -1077,7 +1169,7 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 	}
 
 	for _, t := range tasks {
-		t.CreatedByID = createdBy.ID
+		t.CreatedByID = assignorOf(t).ID
 
 		// Generate a uuid if we don't already have one
 		if t.UID == "" {
@@ -1139,7 +1231,17 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 	_, creatorIsUser := a.(*user.User)
 
 	for _, t := range tasks {
-		t.CreatedBy = createdBy
+		assignor := assignorOf(t)
+		t.CreatedBy = assignor
+
+		// A task created in its creator's own inbox without an assignee is theirs to do: otherwise
+		// it would show up on no list of "my tasks". The doer is skipped by the assignment
+		// notification, so this sends nothing to anybody.
+		// Only for the acting user's own task: when an admin or bot creates a task in somebody's
+		// name, the doer is not the assignor, and the assignment would notify them.
+		if updateAssignees && len(t.Assignees) == 0 && assignor.ID == createdBy.ID && isOwnInbox(p, assignor) {
+			t.Assignees = []*user.User{assignor}
+		}
 
 		// Update the assignees
 		if updateAssignees {
@@ -1162,7 +1264,13 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		}
 
 		if creatorIsUser {
-			if err := subscribeUserImplicitly(s, SubscriptionEntityTask, t.ID, createdBy); err != nil {
+			// The assignor wants to hear about the progress of what they handed out. A bot
+			// acting for somebody is not subscribed.
+			subscriber := createdBy
+			if assignor.ID != createdBy.ID {
+				subscriber = assignor
+			}
+			if err := subscribeUserImplicitly(s, SubscriptionEntityTask, t.ID, subscriber); err != nil {
 				return err
 			}
 		}
@@ -1327,6 +1435,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		"end_date",
 		"hex_color",
 		"percent_done",
+		"is_milestone",
 		"project_id",
 		"bucket_id",
 		"repeat_mode",
@@ -1380,6 +1489,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 		if !fieldSet["percent_done"] {
 			t.PercentDone = ot.PercentDone
+		}
+		if !fieldSet["is_milestone"] {
+			t.IsMilestone = ot.IsMilestone
 		}
 		if !fieldSet["project_id"] {
 			t.ProjectID = ot.ProjectID
@@ -1635,6 +1747,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// Percent Done
 	if t.PercentDone == 0 {
 		ot.PercentDone = 0
+	}
+	// Is milestone
+	if !t.IsMilestone {
+		ot.IsMilestone = false
 	}
 	// Repeat from current date
 	if t.RepeatMode == TaskRepeatModeDefault {
@@ -2250,6 +2366,16 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 
 	// Delete all relations
 	_, err = s.Where("task_id = ? OR other_task_id = ?", t.ID, t.ID).Delete(&TaskRelation{})
+	if err != nil {
+		return
+	}
+
+	// The Gantt baseline and the reference an integration created the task with
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBaseline{})
+	if err != nil {
+		return
+	}
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskExternalRef{})
 	if err != nil {
 		return
 	}

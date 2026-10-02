@@ -26,4 +26,6 @@ export interface IUser extends IAbstract {
 	deletionScheduledAt: string | Date | null
 	isAdmin?: boolean
 	botOwnerId?: number
+	// True while the user has to choose a new password before anything else (e.g. the default admin).
+	mustChangePassword?: boolean
 }

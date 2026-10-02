@@ -139,6 +139,12 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
+	// References this user (a bot) created tasks with for an integration. The tasks themselves belong
+	// to their projects and are not touched.
+	if _, err = s.Where("bot_id = ?", u.ID).Delete(&TaskExternalRef{}); err != nil {
+		return err
+	}
+
 	projectsToDelete, err := getProjectsToDelete(s, u)
 	if err != nil {
 		return err

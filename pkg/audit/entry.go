@@ -144,6 +144,9 @@ const (
 	ActionAdminUserDeleted           = "admin.user.deleted"
 	ActionAdminProjectOwnerChanged   = "admin.project.owner.changed"
 	ActionAdminUsersListed           = "admin.users.listed"
+	ActionManageUserProfileUpdated   = "manage.user.profile.updated"
+	ActionManageUserImportUploaded   = "manage.user_import.uploaded"
+	ActionManageUserImportStarted    = "manage.user_import.started"
 	ActionAdminAccessDenied          = "admin.access.denied"
 )
 

@@ -52,9 +52,25 @@
 				</linearGradient>
 			</defs>
 
+			<!-- Milestone: a diamond at its end date -->
+			<polygon
+				v-if="bar.meta?.isMilestone"
+				v-tooltip="bar.meta?.label || bar.id"
+				:points="getMilestonePoints(bar)"
+				:fill="getBarFill(bar)"
+				:opacity="bar.meta?.isDone ? 0.5 : 1"
+				:stroke="bar.meta?.isCritical ? 'var(--danger)' : 'var(--white)'"
+				stroke-width="2"
+				class="gantt-bar gantt-milestone"
+				role="button"
+				:aria-label="getBarAriaLabel(bar)"
+				:aria-pressed="isRowFocused"
+				@pointerdown="handleBarPointerDown(bar, $event)"
+			/>
+
 			<!-- Main bar (regular task) -->
 			<rect
-				v-if="!bar.meta?.isParent"
+				v-if="!bar.meta?.isParent && !bar.meta?.isMilestone"
 				v-tooltip="getBarTooltip(bar)"
 				:x="getBarX(bar)"
 				:y="4"
@@ -113,9 +129,34 @@
 				/>
 			</g>
 
-			<!-- Left resize handle (hidden for endOnly bars) -->
+			<!-- Progress: the part of the bar that is done -->
 			<rect
-				v-if="bar.meta?.dateType !== 'endOnly'"
+				v-if="!bar.meta?.isMilestone && (bar.meta?.percentDone ?? 0) > 0"
+				:x="getBarX(bar)"
+				:y="4"
+				:width="getBarWidth(bar) * Math.min(bar.meta?.percentDone ?? 0, 1)"
+				:height="32"
+				:rx="4"
+				fill="rgba(0, 0, 0, 0.28)"
+				class="gantt-progress"
+				aria-hidden="true"
+			/>
+
+			<!-- Baseline: the plan when it was saved, as a thin bar under the task -->
+			<rect
+				v-if="bar.meta?.baseline"
+				:x="computeBarX(bar.meta.baseline.start)"
+				:y="37"
+				:width="Math.max(getDaysDifference(bar.meta.baseline.start, bar.meta.baseline.end) * dayWidthPixels, 3)"
+				:height="3"
+				fill="var(--grey-600)"
+				class="gantt-baseline"
+				aria-hidden="true"
+			/>
+
+			<!-- Left resize handle (hidden for endOnly bars and milestones) -->
+			<rect
+				v-if="bar.meta?.dateType !== 'endOnly' && !bar.meta?.isMilestone"
 				:x="getBarX(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
@@ -130,9 +171,9 @@
 				@pointerdown="startResize(bar, 'start', $event)"
 			/>
 
-			<!-- Right resize handle (hidden for startOnly bars) -->
+			<!-- Right resize handle (hidden for startOnly bars and milestones) -->
 			<rect
-				v-if="bar.meta?.dateType !== 'startOnly'"
+				v-if="bar.meta?.dateType !== 'startOnly' && !bar.meta?.isMilestone"
 				:x="getBarX(bar) + getBarWidth(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
@@ -145,6 +186,21 @@
 				role="button"
 				:aria-label="$t('project.gantt.resizeEndDate', { task: bar.meta?.label || bar.id })"
 				@pointerdown="startResize(bar, 'end', $event)"
+			/>
+
+			<!-- Dependency handle: drag it onto another task to make that task wait for this one -->
+			<circle
+				v-if="canLink && !bar.meta?.isParent"
+				:cx="getBarX(bar) + getBarWidth(bar) + 12"
+				:cy="20"
+				:r="5"
+				fill="var(--white)"
+				stroke="var(--primary)"
+				stroke-width="1.5"
+				class="gantt-link-handle"
+				role="button"
+				:aria-label="$t('project.gantt.createDependency', { task: bar.meta?.label || bar.id })"
+				@pointerdown.stop.prevent="emit('startLink', bar, $event)"
 			/>
 
 			<!-- Task label with clipping -->
@@ -166,7 +222,7 @@
 				class="gantt-bar-text"
 				:fill="getBarTextColor(bar)"
 				:text-decoration="bar.meta?.isDone ? 'line-through' : 'none'"
-				:clip-path="`url(#clip-${bar.id})`"
+				:clip-path="bar.meta?.isMilestone ? undefined : `url(#clip-${bar.id})`"
 				aria-hidden="true"
 			>
 				{{ bar.meta?.label || bar.id }}
@@ -219,7 +275,7 @@ import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundar
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	bars: GanttBarModel[]
 	totalWidth: number
 	dateFromDate: Date
@@ -240,10 +296,15 @@ const props = defineProps<{
 	rowId: string
 	isParent: boolean
 	isCollapsed: boolean
-}>()
+	// Show the handle that links this task to a successor.
+	canLink?: boolean
+}>(), {
+	canLink: false,
+})
 
 const emit = defineEmits<{
 	(e: 'barPointerDown', bar: GanttBarModel, event: PointerEvent): void
+	(e: 'startLink', bar: GanttBarModel, event: PointerEvent): void
 	(e: 'startResize', bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent): void
 	(e: 'updateTask', id: string, newStart: Date, newEnd: Date): void
 	(e: 'toggleCollapse'): void
@@ -339,7 +400,19 @@ const getBarWidth = computed(() => (bar: GanttBarModel) => {
 	return computeBarWidth(bar)
 })
 
+const MILESTONE_HALF = 11
+
+// The diamond sits in the middle of the day the milestone falls on.
+function getMilestonePoints(bar: GanttBarModel): string {
+	const cx = getBarX.value(bar) + getBarWidth.value(bar) / 2
+	const cy = 20
+	return `${cx - MILESTONE_HALF},${cy} ${cx},${cy - MILESTONE_HALF} ${cx + MILESTONE_HALF},${cy} ${cx},${cy + MILESTONE_HALF}`
+}
+
 const getBarTextX = computed(() => (bar: GanttBarModel) => {
+	if (bar.meta?.isMilestone) {
+		return getBarX.value(bar) + getBarWidth.value(bar) / 2 + MILESTONE_HALF + 6
+	}
 	if (bar.meta?.dateType === 'endOnly') {
 		return getBarX.value(bar) + getBarWidth.value(bar) - 8
 	}
@@ -406,6 +479,9 @@ function getBarFillAttr(bar: GanttBarModel): string {
 }
 
 function getBarStroke(bar: GanttBarModel) {
+	if (bar.meta?.isCritical) {
+		return 'var(--danger)'
+	}
 	if (isDateless(bar)) {
 		return 'var(--grey-300)' // Gray for dashed border
 	}
@@ -413,14 +489,14 @@ function getBarStroke(bar: GanttBarModel) {
 }
 
 function getBarStrokeWidth(bar: GanttBarModel) {
-	if (isDateless(bar)) {
+	if (bar.meta?.isCritical || isDateless(bar)) {
 		return '2'
 	}
 	return '0'
 }
 
 function getBarTextColor(bar: GanttBarModel) {
-	if (isDateless(bar)) {
+	if (isDateless(bar) || bar.meta?.isMilestone) {
 		return 'var(--grey-800)'
 	}
 
@@ -529,6 +605,26 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 		opacity: 1;
 		cursor: inherit; // Use the specific cursor defined above
 	}
+}
+
+:deep(.gantt-link-handle) {
+	cursor: crosshair;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	pointer-events: all;
+}
+
+:deep(g:hover) .gantt-link-handle {
+	opacity: 0.9;
+}
+
+.gantt-progress,
+.gantt-baseline {
+	pointer-events: none;
+}
+
+.gantt-milestone {
+	cursor: grab;
 }
 
 // Focus styles for task bars

@@ -39,8 +39,8 @@
 		"addToHomeScreen": "ホーム画面に追加すると、すぐにアクセスできて使いやすくなります。",
 		"goToOverview": "概要に移動",
 		"project": {
-			"importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
-			"import": "Vikunjaへのデータのインポート"
+			"importText": "他のサービスからVikaにプロジェクトやタスクをインポートします:",
+			"import": "Vikaへのデータのインポート"
 		}
 	},
 	"demo": {
@@ -49,7 +49,7 @@
 		"accountWillBeDeleted": "あなたのアカウントとともに、作成したすべてのプロジェクト、タスク、添付ファイルも削除されます。"
 	},
 	"ready": {
-		"loading": "Vikunjaを読み込み中…",
+		"loading": "Vikaを読み込み中…",
 		"errorOccured": "エラーが発生しました:",
 		"checkApiUrl": "API URLをご確認ください",
 		"noApiUrlConfigured": "API URLが設定されていません。以下の項目を設定してください:"
@@ -85,7 +85,7 @@
 			"oauthRedirectedToApp": "アプリにリダイレクトされました。このタブは閉じて構いません。",
 			"desktopTryDemo": "デモを試す",
 			"desktopCustomServer": "カスタムサーバーURL",
-			"desktopCustomServerDescription": "使用するVikunjaサーバーのURLを入力して始めましょう。",
+			"desktopCustomServerDescription": "使用するVikaサーバーのURLを入力して始めましょう。",
 			"desktopWaitingForAuth": "認証を待機中…",
 			"desktopOAuthError": "認証に失敗しました: {error}",
 			"logout": "ログアウト",
@@ -206,8 +206,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "VikunjaをCalDAVクライアントに接続すると、さまざまなクライアントからすべてのタスクを表示・管理できます。以下のURLをクライアントに入力してください:",
-				"more": "VikunjaのCalDAVに関する詳細情報",
+				"howTo": "VikaをCalDAVクライアントに接続すると、さまざまなクライアントからすべてのタスクを表示・管理できます。以下のURLをクライアントに入力してください:",
+				"more": "VikaのCalDAVに関する詳細情報",
 				"tokens": "CalDAVトークン",
 				"tokensHowTo": "CalDAV認証には、通常のアカウントパスワードかCalDAV専用トークンのいずれかを利用できます。",
 				"createToken": "CalDAVトークンを作成",
@@ -219,7 +219,7 @@
 			},
 			"feeds": {
 				"title": "Atom フィード",
-				"howTo": "Atom 対応のフィードリーダーから Vikunja の通知を購読できます。以下の URL を使用してください:",
+				"howTo": "Atom 対応のフィードリーダーから Vika の通知を購読できます。以下の URL を使用してください:",
 				"usernameIs": "フィード用のユーザー名: {0}",
 				"apiTokenHint": "{scope} 権限を持つ API トークンで認証してください。{link} で作成できます。",
 				"tokenTitle": "Atom フィード"
@@ -240,7 +240,7 @@
 				"title": "クイック追加",
 				"disabled": "無効",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "Vika"
 			},
 			"appearance": {
 				"title": "カラースキーム",
@@ -259,7 +259,7 @@
 			},
 			"apiTokens": {
 				"title": "APIトークン",
-				"general": "APIトークンを使うとログインせずにVikunjaのAPIを利用できます。",
+				"general": "APIトークンを使うとログインせずにVikaのAPIを利用できます。",
 				"apiDocs": "詳しくはAPIドキュメントをご確認ください",
 				"createAToken": "トークンの生成",
 				"createToken": "トークンの生成",
@@ -307,7 +307,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Vikunjaアカウントの削除",
+			"title": "Vikaアカウントの削除",
 			"text1": "アカウント削除は恒久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてを削除します。",
 			"text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
 			"text3": "続行するには以下のボタンを押してください。詳しい案内を記載したメールを送信します。",
@@ -315,7 +315,7 @@
 			"requestSuccess": "リクエストは成功しました。詳しい案内はメールでお知らせします。",
 			"passwordRequired": "パスワードを入力してください。",
 			"confirmSuccess": "アカウントの削除を承認しました。3日後にアカウントは削除されます。",
-			"scheduled": "{date} ({dateSince}) にVikunjaアカウントは削除されます。",
+			"scheduled": "{date} ({dateSince}) にVikaアカウントは削除されます。",
 			"scheduledCancel": "アカウントの削除を取り消す場合はこちらをご覧ください。",
 			"scheduledCancelText": "アカウントの削除を取り消すにはパスワードを入力してください:",
 			"scheduledCancelButton": "アカウントの削除を取り消すには以下のボタンを押してください：",
@@ -323,12 +323,12 @@
 			"scheduledCancelSuccess": "アカウント削除は行われません。"
 		},
 		"export": {
-			"title": "Vikunjaデータのエクスポート",
-			"description": "利用しているVikunjaの全データのダウンロードをリクエストできます。これにはプロジェクト、タスク、およびそれらに関連するすべてを含みます。このデータはどのVikunjaインスタンスでもインポートすることができます。",
+			"title": "Vikaデータのエクスポート",
+			"description": "利用しているVikaの全データのダウンロードをリクエストできます。これにはプロジェクト、タスク、およびそれらに関連するすべてを含みます。このデータはどのVikaインスタンスでもインポートすることができます。",
 			"descriptionPasswordRequired": "続行するにはパスワードを入力してください:",
-			"request": "Vikunjaデータのリクエスト",
-			"success": "Vikunjaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
-			"downloadTitle": "エクスポートされたVikunjaデータのダウンロード",
+			"request": "Vikaデータのリクエスト",
+			"success": "Vikaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
+			"downloadTitle": "エクスポートされたVikaデータのダウンロード",
 			"ready": "エクスポートの準備が完了しました。{0} までダウンロードできます。",
 			"requestNew": "新しいエクスポートをリクエスト"
 		}
@@ -411,7 +411,7 @@
 			"links": {
 				"title": "リンクの共有",
 				"what": "共有リンクとは何ですか？",
-				"explanation": "共有リンクとは、Vikunjaのアカウントを持たない他のユーザーとプロジェクトを簡単に共有することができる機能です。",
+				"explanation": "共有リンクとは、Vikaのアカウントを持たない他のユーザーとプロジェクトを簡単に共有することができる機能です。",
 				"create": "共有リンクの作成",
 				"name": "名前 (オプション)",
 				"namePlaceholder": "例: Lorem Ipsum",
@@ -665,24 +665,24 @@
 	},
 	"migrate": {
 		"title": "他のサービスからのインポート",
-		"titleService": "{name}からVikunjaへのデータのインポート",
+		"titleService": "{name}からVikaへのデータのインポート",
 		"description": "以下のいずれかのサービスのロゴをクリックして始めましょう。",
-		"descriptionDo": "アクセス可能なリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。",
-		"authorize": "Vikunjaはあなたの{name}アカウントにアクセスします。よろしければ以下のボタンをクリックして許可してください。",
+		"descriptionDo": "アクセス可能なリスト、タスク、メモ、リマインダー、ファイルをすべてVikaにインポートします。",
+		"authorize": "Vikaはあなたの{name}アカウントにアクセスします。よろしければ以下のボタンをクリックして許可してください。",
 		"getStarted": "さっそく始めましょう",
 		"inProgress": "インポート中…",
 		"alreadyMigrated1": "すでに{name}からは{date}にインポート済みのようです。",
 		"alreadyMigrated2": "再びインポートすることも可能ですが、重複する可能性があります。インポートして本当によろしいですか？",
 		"confirm": "了解！インポート開始なのだ！",
-		"importUpload": "{name}からVikunjaにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
+		"importUpload": "{name}からVikaにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
 		"upload": "ファイルのアップロード",
-		"migrationStartedWillReciveEmail": "{service}のリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。完了までしばらくお待ちください。メールでお知らせします。このウィンドウは閉じても構いません。",
+		"migrationStartedWillReciveEmail": "{service}のリスト、タスク、メモ、リマインダー、ファイルをすべてVikaにインポートします。完了までしばらくお待ちください。メールでお知らせします。このウィンドウは閉じても構いません。",
 		"migrationInProgress": "現在移行中です。完了するまでしばらくお待ちください。",
 		"csv": {
 			"description": "カスタム列マッピングでCSVファイルからタスクをインポートします。",
 			"uploadDescription": "インポートするCSVファイルを選択してください。ファイルの1行目はヘッダーで、タスクデータを含んでいる必要があります。",
 			"selectFile": "CSVファイルを選択",
-			"columnMappingDescription": "CSVファイルの各列をタスク属性にマッピングします。Vikunjaが最も可能性の高いマッピングを自動検出しています。設定を変更すると、下部のプレビューが自動更新されます。",
+			"columnMappingDescription": "CSVファイルの各列をタスク属性にマッピングします。Vikaが最も可能性の高いマッピングを自動検出しています。設定を変更すると、下部のプレビューが自動更新されます。",
 			"parsingOptions": "解析オプション",
 			"delimiter": "区切り文字",
 			"dateFormat": "日付形式",
@@ -742,7 +742,7 @@
 		"imprint": "運営情報",
 		"privacy": "プライバシーポリシー",
 		"closeSidebar": "サイドバーを閉じる",
-		"home": "Vikunja ホーム"
+		"home": "Vika ホーム"
 	},
 	"misc": {
 		"loading": "読み込み中…",
@@ -756,7 +756,7 @@
 		"searchPlaceholder": "キーワードを入力…",
 		"previous": "前へ",
 		"next": "次へ",
-		"poweredBy": "Powered by Vikunja",
+		"poweredBy": "Powered by Vika",
 		"create": "作成",
 		"doit": "続行",
 		"saving": "保存中…",
@@ -898,7 +898,7 @@
 			"canuse": "日付計算による絞り込みが可能です。",
 			"learnhow": "使用方法",
 			"title": "日付計算",
-			"intro": "相対日付を指定すると絞り込み条件を適用する際にVikunjaによって評価されます。",
+			"intro": "相対日付を指定すると絞り込み条件を適用する際にVikaによって評価されます。",
 			"expression": "それぞれの日付計算式は基準日から始まります。この基準日には {0} か、{1} で区切られた複数の日付を使用できます。",
 			"similar": "{0} や {1} のような形式です。",
 			"add1Day": "1日加える",
@@ -1156,12 +1156,12 @@
 		},
 		"quickAddMagic": {
 			"hint": "期日、担当者、その他の項目を追加するキーワードが使用できます。",
-			"quickEntryHint": "日付やラベルなどに使えるマジックプレフィックスを利用できます。詳細はVikunja本体のアプリを開き、タスク入力欄のツールチップをご確認ください。",
+			"quickEntryHint": "日付やラベルなどに使えるマジックプレフィックスを利用できます。詳細はVika本体のアプリを開き、タスク入力欄のツールチップをご確認ください。",
 			"title": "クイック追加",
 			"intro": "タスクを作成する際に特定のキーワードを使うことで項目を直接追加できます。よく使う項目とともにタスクをすぐ追加できます。",
 			"multiple": "複数使用できます。",
 			"label1": "ラベルを付けるには、ラベル名の前に {prefix} を入力します。",
-			"label2": "Vikunja はそのラベルがすでに存在するか確認し、存在しなければ作成します。",
+			"label2": "Vika はそのラベルがすでに存在するか確認し、存在しなければ作成します。",
 			"label3": "空白を含む場合、ラベル名を \" \" または ' ' で囲みます。",
 			"label4": "例: {prefix}\"とある ラベル\"",
 			"priority1": "優先度を設定するには、{prefix} と 1〜5 の数字を入力します。",
@@ -1311,12 +1311,12 @@
 		"views": "ビュー"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "Vika URL",
 		"urlPlaceholder": "例: https://localhost:3456",
 		"change": "変更",
-		"use": "{0} に設置されたVikunjaを使用します。",
-		"error": "\"{domain}\" にはVikunjaは存在しないか使用できない状態です。URLの形式が正しいかどうか、そして直接アクセスして到達できるかどうかを確認し、もう一度お試しください。",
-		"success": "\"{domain}\" に設置されたVikunjaを使用します。",
+		"use": "{0} に設置されたVikaを使用します。",
+		"error": "\"{domain}\" にはVikaは存在しないか使用できない状態です。URLの形式が正しいかどうか、そして直接アクセスして到達できるかどうかを確認し、もう一度お試しください。",
+		"success": "\"{domain}\" に設置されたVikaを使用します。",
 		"urlRequired": "URLを入力してください。"
 	},
 	"loadingError": {
@@ -1333,7 +1333,7 @@
 		"subscribeFeed": "Atom フィードで通知を購読"
 	},
 	"quickActions": {
-		"notLoggedIn": "まずVikunja本体のウィンドウにログインしてください。",
+		"notLoggedIn": "まずVika本体のウィンドウにログインしてください。",
 		"commands": "コマンド",
 		"placeholder": "コマンドまたはキーワードを入力…",
 		"hint": "{project} を使うとプロジェクトを検索対象にできます。{project} または {label} (ラベル) を検索条件と組み合わせて使うとプロジェクト内のタスクやラベルの付いたタスクを検索できます。{assignee} を使うとチームを検索対象にできます。",
@@ -1448,7 +1448,7 @@
 		"0001": "その操作を行う権限がありません。"
 	},
 	"about": {
-		"title": "Vikunjaについて",
+		"title": "Vikaについて",
 		"version": "バージョン: {version}",
 		"frontendVersion": "フロントエンドのバージョン: {version}",
 		"apiVersion": "APIのバージョン: {version}"

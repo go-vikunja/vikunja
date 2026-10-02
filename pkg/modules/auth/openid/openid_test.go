@@ -31,6 +31,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestUsernameFromPreferred(t *testing.T) {
+	tests := []struct {
+		name      string
+		preferred string
+		want      string
+	}{
+		{"plain username is unchanged", "someUserWhoDoesNotExistYet", "someUserWhoDoesNotExistYet"},
+		{"spaces become dashes", "Jane Doe", "Jane-Doe"},
+		{"upn keeps the local part", "jane.doe@contoso.com", "jane.doe"},
+		{"upn with spaces", "Jane Doe@contoso.com", "Jane-Doe"},
+		{"entra guest upn drops the #EXT# marker", "jane_ext.com#EXT#@tenant.onmicrosoft.com", "jane_ext.com"},
+		{"only the first @ splits", "a@b@c", "a"},
+		{"leading @ yields empty so a random name is generated", "@contoso.com", ""},
+		{"empty stays empty", "", ""},
+		{"a reserved bot- name yields empty so a random one is generated", "bot-helper@contoso.com", ""},
+		{"a reserved link share name yields empty", "link-share-12", ""},
+		{"a name that only contains bot- later is fine", "robot-fan@contoso.com", "robot-fan"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, usernameFromPreferred(tt.preferred))
+		})
+	}
+}
+
 func TestGetOrCreateUser(t *testing.T) {
 	t.Run("new user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -77,6 +103,77 @@ func TestGetOrCreateUser(t *testing.T) {
 			"id":    u.ID,
 			"email": cl.Email,
 		}, false)
+	})
+	t.Run("new user, email-style preferred_username keeps only the local part", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:             "jane.doe@contoso.com",
+			PreferredUsername: "jane.doe@contoso.com",
+		}
+		provider := &Provider{}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "entra-sub-1"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":       u.ID,
+			"email":    cl.Email,
+			"username": "jane.doe",
+		}, false)
+	})
+	t.Run("new user, local part already taken gets a different username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// "user1" is a fixture user, so the derived local part collides.
+		cl := &claims{
+			Email:             "someone.else@contoso.com",
+			PreferredUsername: "user1@contoso.com",
+		}
+		provider := &Provider{}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "entra-sub-2"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.NotEmpty(t, u.Username)
+		assert.NotEqual(t, "user1", u.Username)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":    u.ID,
+			"email": cl.Email,
+		}, false)
+	})
+	t.Run("existing user keeps their username on a later login", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "entra-sub-3"}
+		provider := &Provider{}
+
+		first, err := getOrCreateUser(s, &claims{
+			Email:             "sam@contoso.com",
+			PreferredUsername: "sam@contoso.com",
+		}, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, "sam", first.Username)
+
+		second, err := getOrCreateUser(s, &claims{
+			Email:             "sam@contoso.com",
+			PreferredUsername: "sam@contoso.com",
+		}, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, first.ID, second.ID)
+		assert.Equal(t, "sam", second.Username)
 	})
 	t.Run("new user, no email address", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

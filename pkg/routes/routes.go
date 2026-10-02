@@ -460,12 +460,40 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 	)
 }
 
+const v2ManagePathPrefix = "/api/v2/manage"
+
+// gateV2ManageRoutes gates the people area. It checks the instance-admin flag only and is
+// intentionally independent of pkg/license: that is the operator's decision, so that user
+// management works without an admin panel license. The licensed /api/v2/admin routes keep their
+// own gate and are not affected.
+//
+// Like the admin gate it answers 404 on failure. API tokens are refused too: they resolve to their
+// owner, so an admin's token would otherwise inherit the area, and tokens are meant for projects
+// and tasks, not for managing people.
+func gateV2ManageRoutes() echo.MiddlewareFunc {
+	admin := RequireInstanceAdmin()
+	return pathScoped(
+		func(p string) bool { return p == v2ManagePathPrefix || strings.HasPrefix(p, v2ManagePathPrefix+"/") },
+		func(next echo.HandlerFunc) echo.HandlerFunc {
+			gated := admin(next)
+			return func(c *echo.Context) error {
+				if c.Get("api_token") != nil {
+					return echo.ErrNotFound
+				}
+				return gated(c)
+			}
+		},
+	)
+}
+
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
+	// Also covers the MCP endpoint, which is registered on this group.
+	a.Use(RequirePasswordChange())
 	a.Use(pathScoped(v2SessionRenewalPaths.has, refreshRateLimit))
 	a.Use(pathScoped(v2CredentialPaths.has, noAuthRateLimit))
 	// Match the authenticated v1 group: rate limiting and route metrics
@@ -475,6 +503,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	// Must come after rate limiting: the gate does a per-request admin DB read,
 	// so an unauthenticated flood to /api/v2/admin/* would otherwise be unbounded.
 	a.Use(gateV2AdminRoutes())
+	a.Use(gateV2ManageRoutes())
 
 	api := apiv2.NewAPI(e, a)
 
@@ -569,6 +598,7 @@ func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.Mid
 
 	// ===== Routes with Authentication =====
 	a.Use(SetupTokenMiddleware())
+	a.Use(RequirePasswordChange())
 
 	// Rate limit
 	setupRateLimit(a, config.RateLimitKind.GetString())

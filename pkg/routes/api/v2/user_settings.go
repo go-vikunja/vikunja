@@ -41,6 +41,7 @@ type userInfoBody struct {
 	AuthProvider        string                      `json:"auth_provider" readOnly:"true" doc:"The name of the source the user authenticated with: 'local', 'ldap', or the configured OpenID provider name."`
 	IsAdmin             bool                        `json:"is_admin" readOnly:"true" doc:"True if the user is an instance administrator."`
 	PendingEmail        string                      `json:"pending_email,omitempty" readOnly:"true" doc:"A new email address waiting for confirmation, if the user requested a change. Empty otherwise."`
+	MustChangePassword  bool                        `json:"must_change_password" readOnly:"true" doc:"True if the user has to choose a new password before they can do anything else."`
 }
 
 // userAvatarProviderBody is the get/set body for the user's avatar provider.
@@ -171,6 +172,7 @@ func userShow(ctx context.Context, _ *struct{}) (*singleBody[userInfoBody], erro
 		IsLocalUser:         u.Issuer == user.IssuerLocal,
 		IsAdmin:             u.IsAdmin,
 		PendingEmail:        u.PendingEmail,
+		MustChangePassword:  u.MustChangePassword,
 	}
 
 	// nolint:contextcheck // openid.GetAllProviders/Issuer (called via shared) take

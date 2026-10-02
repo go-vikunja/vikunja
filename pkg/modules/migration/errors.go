@@ -19,6 +19,7 @@ package migration
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/web"
@@ -93,6 +94,36 @@ func (err *ErrMigrationAlreadyRunning) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeMigrationAlreadyRunning,
+		Message:  err.Error(),
+	}
+}
+
+// ErrCSVRowsRejected reports that a CSV import with assignment columns imported some rows and
+// rejected others. The rows that were fine are in; each rejected row is listed with its reason.
+type ErrCSVRowsRejected struct {
+	Imported int
+	Rejected []string
+}
+
+func (err *ErrCSVRowsRejected) Error() string {
+	shown := err.Rejected
+	const maxShown = 20
+	more := ""
+	if len(shown) > maxShown {
+		more = fmt.Sprintf(" (and %d more)", len(shown)-maxShown)
+		shown = shown[:maxShown]
+	}
+	return fmt.Sprintf("%d rows were imported, %d were rejected: %s%s", err.Imported, len(err.Rejected), strings.Join(shown, "; "), more)
+}
+
+// ErrCodeCSVRowsRejected holds the unique world-error code of this error
+const ErrCodeCSVRowsRejected = 14020
+
+// HTTPError holds the http error description
+func (err *ErrCSVRowsRejected) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnprocessableEntity,
+		Code:     ErrCodeCSVRowsRejected,
 		Message:  err.Error(),
 	}
 }

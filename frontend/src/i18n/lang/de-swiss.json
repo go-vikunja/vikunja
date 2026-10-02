@@ -39,8 +39,8 @@
 		"addToHomeScreen": "Füge diese App deinem Startbildschirm hinzu, um schneller darauf zuzugreifen und das Erlebnis zu verbessern.",
 		"goToOverview": "Zur Übersicht",
 		"project": {
-			"importText": "Importiere deine Projekte und Aufgaben aus anderen Diensten in Vikunja:",
-			"import": "Importiere deine Daten in Vikunja"
+			"importText": "Importiere deine Projekte und Aufgaben aus anderen Diensten in Vika:",
+			"import": "Importiere deine Daten in Vika"
 		}
 	},
 	"demo": {
@@ -49,7 +49,7 @@
 		"accountWillBeDeleted": "Dein Account wird gelöscht, einschließlich aller Projekte, Aufgaben und Anhänge, die du möglicherweise erstellst."
 	},
 	"ready": {
-		"loading": "Vikunja wird geladen…",
+		"loading": "Vika wird geladen…",
 		"errorOccured": "Es ist ein Fehler aufgetreten:",
 		"checkApiUrl": "Bitte überprüfe, ob die API-Url stimmt.",
 		"noApiUrlConfigured": "Es wurde keine API-Url konfiguriert. Bitte stelle unten eine ein:"
@@ -86,7 +86,7 @@
 			"oauthRedirectedToApp": "Du wurdest zur App weitergeleitet. Du kannst diesen Tab jetzt schließen.",
 			"desktopTryDemo": "Demo ausprobieren",
 			"desktopCustomServer": "Eigene Server-URL",
-			"desktopCustomServerDescription": "Gib die URL deines Vikunja Servers ein, um loszulegen.",
+			"desktopCustomServerDescription": "Gib die URL deines Vika Servers ein, um loszulegen.",
 			"desktopWaitingForAuth": "Warte auf Authentifizierung…",
 			"desktopOAuthError": "Authentifizierung fehlgeschlagen: {error}",
 			"logout": "Uuslogge",
@@ -223,8 +223,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
-				"more": "Weitere Informationen über CalDAV in Vikunja",
+				"howTo": "Du kannst Vika mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
+				"more": "Weitere Informationen über CalDAV in Vika",
 				"tokens": "CalDAV-Token",
 				"tokensHowTo": "Für die CalDAV-Authentifizierung kannst du entweder dein normales Passwort oder einen CalDAV-Token verwenden.",
 				"createToken": "CalDAV-Token erstellen",
@@ -236,7 +236,7 @@
 			},
 			"feeds": {
 				"title": "Atom-Feed",
-				"howTo": "Du kannst deine Vikunja-Benachrichtigungen von jedem Atom-kompatiblen Feed-Reader abonnieren. Benutze die folgende URL:",
+				"howTo": "Du kannst deine Vika-Benachrichtigungen von jedem Atom-kompatiblen Feed-Reader abonnieren. Benutze die folgende URL:",
 				"usernameIs": "Dein Anmeldename für das Feed lautet: {0}",
 				"apiTokenHint": "Authentifiziere dich mit einem API-Token mit der {scope} Berechtigung. Erstellen eins unter {link}.",
 				"tokenTitle": "Atom-Feed"
@@ -257,7 +257,7 @@
 				"title": "Quick Add Magic Modus",
 				"disabled": "Deaktiviert",
 				"todoist": "Todoist",
-				"vikunja": "Vikunja"
+				"vikunja": "Vika"
 			},
 			"appearance": {
 				"title": "Farbschema",
@@ -276,7 +276,7 @@
 			},
 			"apiTokens": {
 				"title": "API-Tokens",
-				"general": "Mit API-Token kannst du die API von Vikunja ohne Login-Daten verwenden.",
+				"general": "Mit API-Token kannst du die API von Vika ohne Login-Daten verwenden.",
 				"apiDocs": "Schaue dir die API-Dokumentation an",
 				"createAToken": "Token erstellen",
 				"createToken": "Token erstellen",
@@ -325,7 +325,7 @@
 			},
 			"mcp": {
 				"intro": "Verbinde einen KI-Assistenten mit deinen Aufgaben, Projekten und Labels über das Model Context Protocol (MCP).",
-				"more": "Weitere Informationen zu MCP in Vikunja",
+				"more": "Weitere Informationen zu MCP in Vika",
 				"endpoint": "MCP-Endpunkt",
 				"tokens": "MCP-Tokens",
 				"manageTokens": "Alle API-Tokens verwalten",
@@ -347,18 +347,18 @@
 					},
 					"claudeDesktop": {
 						"open": "Öffne „Anpassen“ → „Connectors“ → „Benutzerdefinierten Connector hinzufügen“. Bei Team oder Enterprise fügt ein Owner ihn unter „Organisationseinstellungen“ → „Connectors“ hinzu.",
-						"url": "Benenne den Connector \"Vikunja\" und gib diese URL ein: {value}",
+						"url": "Benenne den Connector \"Vika\" und gib diese URL ein: {value}",
 						"auth": "Setze die Authentifizierung auf „Keine Anmeldung“.",
 						"header": "Wähle unter Request Headers „authorization“ aus und füge diesen vollständigen Wert ein, einschließlich Bearer und des Leerzeichens, und füge dann den Connector hinzu: {value}",
-						"beta": "Anfrage-Header sind für einen begrenzten Kreis von Organisationen in der Beta. Wenn dieser Abschnitt fehlt, kannst du Vikunja noch nicht mit Claude verbinden."
+						"beta": "Anfrage-Header sind für einen begrenzten Kreis von Organisationen in der Beta. Wenn dieser Abschnitt fehlt, kannst du Vika noch nicht mit Claude verbinden."
 					},
 					"mistral": {
 						"open": "Öffne in der Seitenleiste links Kontext → Konnektoren → Connector hinzufügen → Benutzerdefinierten Connector hinzufügen.",
-						"url": "Benenne den Connector „Vikunja“, gib diese URL ein und wähle „Connect“: {value}",
+						"url": "Benenne den Connector „Vika“, gib diese URL ein und wähle „Connect“: {value}",
 						"token": "Wähle die HTTP-Bearer-Authentifizierung aus und füge dieses Token ein: {value}"
 					},
 					"chatgpt": {
-						"unavailable": "ChatGPT benötigt OAuth, um eine Verbindung zu Vikunja herzustellen. MCP OAuth wird noch nicht unterstützt, daher kann dieses Token nicht in ChatGPT verwendet werden."
+						"unavailable": "ChatGPT benötigt OAuth, um eine Verbindung zu Vika herzustellen. MCP OAuth wird noch nicht unterstützt, daher kann dieses Token nicht in ChatGPT verwendet werden."
 					},
 					"other": {
 						"title": "Andere",
@@ -369,7 +369,7 @@
 			}
 		},
 		"deletion": {
-			"title": "Lösche deinen Vikunja-Account",
+			"title": "Lösche deinen Vika-Account",
 			"text1": "Das Löschen deines Accounts ist dauerhaft und unwiderruflich. Alle Projekte, Aufgaben und zugehörige Daten werden gelöscht.",
 			"text2": "Zum Fortfahren gib bitte dein Passwort ein. Du erhältst eine E-Mail mit weiteren Anweisungen.",
 			"text3": "Klicks zum Fortfahren auf den Button unten. Du erhältst eine E-Mail mit weiteren Anweisungen.",
@@ -377,7 +377,7 @@
 			"requestSuccess": "Die Anfrage war erfolgreich. Du erhältst eine E-Mail mit weiteren Anweisungen.",
 			"passwordRequired": "Bitte gib dein Passwort ein.",
 			"confirmSuccess": "Du hast erfolgreich die Löschung deines Accounts bestätigt. Wir werden deinen Account innerhalb von drei Tagen löschen.",
-			"scheduled": "Wir werden deinen Vikunja-Account am {date} ({dateSince}) löschen.",
+			"scheduled": "Wir werden deinen Vika-Account am {date} ({dateSince}) löschen.",
 			"scheduledCancel": "Um die Löschung deines Accounts abzubrechen, klicke hier.",
 			"scheduledCancelText": "Um die Löschung deines Accounts abzubrechen, gib bitte dein Passwort unten ein:",
 			"scheduledCancelButton": "Um die Löschung deines Accounts abzubrechen, klicke unten auf den Button:",
@@ -385,12 +385,12 @@
 			"scheduledCancelSuccess": "Wir werden deinen Account nicht löschen."
 		},
 		"export": {
-			"title": "Exportiere deine Vikunja-Daten",
-			"description": "Du kannst eine Kopie deiner Daten bei Vikunja anfordern. Dazu gehören Projekte, Aufgaben und alles, was damit zusammenhängt. Du kannst diese Daten dann in jeder Vikunja-Instanz über die Migrationsfunktion importieren.",
+			"title": "Exportiere deine Vika-Daten",
+			"description": "Du kannst eine Kopie deiner Daten bei Vika anfordern. Dazu gehören Projekte, Aufgaben und alles, was damit zusammenhängt. Du kannst diese Daten dann in jeder Vika-Instanz über die Migrationsfunktion importieren.",
 			"descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
-			"request": "Eine Kopie meiner Vikunja Daten anfordern",
-			"success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
-			"downloadTitle": "Lade deine exportierten Vikunja-Daten herunter",
+			"request": "Eine Kopie meiner Vika Daten anfordern",
+			"success": "Du hast deine Daten bei Vika erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
+			"downloadTitle": "Lade deine exportierten Vika-Daten herunter",
 			"ready": "Dein Export steht zum Download bereit. Du kannst ihn bis {0} herunterladen.",
 			"requestNew": "Einen weiteren Export anfordern"
 		}
@@ -480,7 +480,7 @@
 			"links": {
 				"title": "Linkfreigaben",
 				"what": "Was ist eine Linkfreigabe?",
-				"explanation": "Mit Linkfreigaben kannst du Projekte mit Benutzer:innen ohne Vikunja-Account teilen.",
+				"explanation": "Mit Linkfreigaben kannst du Projekte mit Benutzer:innen ohne Vika-Account teilen.",
 				"create": "Erstelle eine Linkfreigabe",
 				"name": "Name (optional)",
 				"namePlaceholder": "z.B. Lorem Ipsum",
@@ -742,18 +742,18 @@
 	},
 	"migrate": {
 		"title": "Aus anderen Diensten importieren",
-		"titleService": "Dini Date vo {name} in Vikunja importiere",
+		"titleService": "Dini Date vo {name} in Vika importiere",
 		"description": "Klick ufs Logo une vo eine vo de Drittabüüter um aahzfange.",
-		"descriptionDo": "Vikunja importiert alli Liste, Uufgabe, Notize, Erinnerige und Dateie, wo du Zuegriff druff hesch.",
-		"authorize": "Gib Vikunja zuegriff uf din {name} Account, idem du une uf de Chnopf drucksch.",
+		"descriptionDo": "Vika importiert alli Liste, Uufgabe, Notize, Erinnerige und Dateie, wo du Zuegriff druff hesch.",
+		"authorize": "Gib Vika zuegriff uf din {name} Account, idem du une uf de Chnopf drucksch.",
 		"getStarted": "Loslah",
 		"inProgress": "Importierä…",
 		"alreadyMigrated1": "Gseht so us als hettisch du scho alles vo {name} am {datum} importiert.",
 		"alreadyMigrated2": "Es erneuts Importiere isch scho mögli, aber chenti Duplikaat erstelle. Bisch der sicher?",
 		"confirm": "Ich bin sicher, fang mit de Migration ah!",
-		"importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
+		"importUpload": "Um Daten von {name} in Vika zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
 		"upload": "Datei hochladen",
-		"migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
+		"migrationStartedWillReciveEmail": "Vika wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
 		"migrationFinished": "Der Import von {service} ist abgeschlossen. Alles, was importiert wurde, ist jetzt in deinen Projekten verfügbar.",
 		"migrationFailed": "Der Import von {service} ist fehlgeschlagen: {reason}",
 		"failure": {
@@ -765,7 +765,7 @@
 		},
 		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist.",
 		"credentials": {
-			"description": "Gib die Adresse deiner {name}-Instanz ein und lege fest, wie Vikunja sich anmelden soll. Vikunja importiert alle Projekte und Boards, auf die du Zugriff hast; die Anmeldedaten werden nur für diesen Import verwendet und nicht gespeichert.",
+			"description": "Gib die Adresse deiner {name}-Instanz ein und lege fest, wie Vika sich anmelden soll. Vika importiert alle Projekte und Boards, auf die du Zugriff hast; die Anmeldedaten werden nur für diesen Import verwendet und nicht gespeichert.",
 			"url": "{name}-URL",
 			"authMethod": "Anmelden mit",
 			"apiKey": "API-Schlüssel",
@@ -781,7 +781,7 @@
 			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
 			"uploadDescription": "Wähle eine CSV-Datei, um sie zu importieren. Die Datei sollte Aufgabendaten mit Kopfzeilen in der ersten Zeile enthalten.",
 			"selectFile": "CSV-Datei auswählen",
-			"columnMappingDescription": "Du kannst jede Spalte in der CSV-Datei einem Task-Attribut zu. Vikunja hat die wahrscheinlichsten Zuordnungen automatisch erkannt. Die Vorschau unten wird automatisch aktualisiert, wenn Du die Einstellungen änderst.",
+			"columnMappingDescription": "Du kannst jede Spalte in der CSV-Datei einem Task-Attribut zu. Vika hat die wahrscheinlichsten Zuordnungen automatisch erkannt. Die Vorschau unten wird automatisch aktualisiert, wenn Du die Einstellungen änderst.",
 			"parsingOptions": "Parsing-Optionen",
 			"delimiter": "Trennzeichen",
 			"dateFormat": "Datumsformat",
@@ -841,7 +841,7 @@
 		"imprint": "Immpressum",
 		"privacy": "Dateschutzerchlärig",
 		"closeSidebar": "Seitenleiste schließen",
-		"home": "Vikunja Startseite",
+		"home": "Vika Startseite",
 		"toggleChildProjects": "Unterprojekte ein-/ausschalten",
 		"main": "Hauptnavigation",
 		"savedFilters": "Gespeicherte Filter"
@@ -858,7 +858,7 @@
 		"searchPlaceholder": "Schriib zum sueche…",
 		"previous": "Vorherige",
 		"next": "Wiiter",
-		"poweredBy": "Unterstützt vo Vikunja",
+		"poweredBy": "Unterstützt vo Vika",
 		"create": "Erstellä",
 		"doit": "Machs!",
 		"saving": "Speichere…",
@@ -1036,7 +1036,7 @@
 			"canuse": "Du kannst Datumsberechnung verwenden, um nach relativen Daten zu filtern.",
 			"learnhow": "Sieh dir an, wie es funktioniert",
 			"title": "Datumsberechnung",
-			"intro": "Du kannst relative Daten angeben, die bei der Anwendung des Filters von Vikunja aufgelöst werden.",
+			"intro": "Du kannst relative Daten angeben, die bei der Anwendung des Filters von Vika aufgelöst werden.",
 			"expression": "Jeder Ausdruck der Datumsberechnung beginnt mit einem Datumswert, welcher entweder {0} sein kann oder mit {1} endet. Auf diesen Datumswert kann optional ein oder mehrere mathematische Ausdrücke folgen.",
 			"similar": "Diese Ausdrücke ähneln denen von {0} und {1}.",
 			"add1Day": "Einen Tag hinzufügen",
@@ -1316,12 +1316,12 @@
 		},
 		"quickAddMagic": {
 			"hint": "Verwende magische Präfixe, um Fälligkeitsdaten, Zuweisungen und andere Aufgabeneigenschaften zu definieren.",
-			"quickEntryHint": "Verwende magische Präfixe für Datum, Labels & mehr. Öffne die Hauptanwendung von Vikunja und überprüfe den Tooltip bei der Aufgabeneingabe für weitere Details.",
+			"quickEntryHint": "Verwende magische Präfixe für Datum, Labels & mehr. Öffne die Hauptanwendung von Vika und überprüfe den Tooltip bei der Aufgabeneingabe für weitere Details.",
 			"title": "Quick Add Magic",
 			"intro": "Bim erstelle vonere Uufgab, chasch du spezielli Schlüsselwörter verwende, umm Attribute direkt zu dere Uufgab hinzuezfüege. Das Erlaubts, um pblichi Attribute schneller zu Uufgabe hinzuezfüege.",
 			"multiple": "Du chasch da mehrmals mache.",
 			"label1": "Um es Label hinzuezfüege, schriib eifach es {prefix} vorne ane.",
-			"label2": "Vikunja prüeft z'ersch, obs da Label bereits git und machst neu, falls nööd.",
+			"label2": "Vika prüeft z'ersch, obs da Label bereits git und machst neu, falls nööd.",
 			"label3": "Um Leerzeichen zu verwenden, füge einfach ein \" oder ' um den Namen des Labels hinzu.",
 			"label4": "Zum Blaistift: {prefix}\"Label mit Leerschlag\".",
 			"priority1": "Um e Task Priorität z'setze: füeg e nummere zwüsched 1 und 5, mit em {prefix} als Prefix iih.",
@@ -1471,12 +1471,12 @@
 		"views": "Ansichten"
 	},
 	"apiConfig": {
-		"url": "Vikunja URL",
+		"url": "Vika URL",
 		"urlPlaceholder": "z.B. https://localhost:3456",
 		"change": "ändere",
-		"use": "Verwende die Vikunja-Installation unter „{0}“",
-		"error": "Vikunja Installation unter \"{domain}\" konnte nicht gefunden oder verwendet werden. Bitte prüfe, ob die URL das richtige Format hat und direkt darauf zugreifen kannst und versuche es erneut.",
-		"success": "Benutze d'Vikunja Installation uf \"{domain}\".",
+		"use": "Verwende die Vika-Installation unter „{0}“",
+		"error": "Vika Installation unter \"{domain}\" konnte nicht gefunden oder verwendet werden. Bitte prüfe, ob die URL das richtige Format hat und direkt darauf zugreifen kannst und versuche es erneut.",
+		"success": "Benutze d'Vika Installation uf \"{domain}\".",
 		"urlRequired": "Eine Url ist erforderlich."
 	},
 	"loadingError": {
@@ -1496,7 +1496,7 @@
 	},
 	"quickActions": {
 		"title": "Suchen und Quick Actions",
-		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
+		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vika an.",
 		"commands": "Befehl",
 		"placeholder": "Schriib en Befehl oder suech…",
 		"hint": "Du kannst {project} verwenden, um die Suche auf ein Projekt zu beschränken. Kombiniere {project} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf diesem Projekt zu suchen. Verwende {assignee}, um nur nach Teams zu suchen.",
@@ -1626,16 +1626,16 @@
 		"14001": "Das API-Token ist ungültig.",
 		"14002": "Die Berechtigung {permission} der Gruppe {group} ist ungültig.",
 		"14005": "Eine Migration von diesem Dienst läuft bereits. Bitte warte, bis sie fertig ist.",
-		"14009": "Die angegebene Zip-Datei enthält keine Vikunja-Datendatei. Stelle sicher, dass du einen Vikunja-Export hochlädst.",
+		"14009": "Die angegebene Zip-Datei enthält keine Vika-Datendatei. Stelle sicher, dass du einen Vika-Export hochlädst.",
 		"14010": "Die bereitgestellte Datei konnte nicht geparst werden. Bitte stelle sicher, dass es sich um eine gültige Exportdatei handelt.",
 		"14011": "Die angegebene Datei ist keine gültige Zip-Datei.",
 		"14012": "Die angegebene Datei enthält keine Daten.",
-		"14013": "Der Export wurde mit einer Vikunja-Version erstellt, die zu alt für den Import ist. Bitte erstelle einen neuen Export mit einer aktuelleren Version.",
+		"14013": "Der Export wurde mit einer Vika-Version erstellt, die zu alt für den Import ist. Bitte erstelle einen neuen Export mit einer aktuelleren Version.",
 		"14016": "Die Importkonfiguration konnte nicht geparst werden. Bitte stellen Sie sicher, dass es sich um ein gültiges JSON-Objekt handelt.",
 		"14201": "Planka hat die angegebenen Anmeldedaten abgelehnt. Überprüfe die URL und den API-Schlüssel oder den Benutzernamen und das Passwort.",
 		"14202": "Das Planka-Konto erfordert einen zusätzlichen Anmeldeschritt (Zwei-Faktor-Code oder das Akzeptieren der Nutzungsbedingungen). Melde dich einmal im Browser bei Planka an oder verwende stattdessen einen API-Schlüssel anstelle von Benutzername und Passwort.",
 		"14203": "Eine Planka-URL und entweder ein API-Schlüssel oder Benutzername und Passwort sind erforderlich.",
-		"14204": "Die Planka-API konnte unter der angegebenen URL nicht erreicht werden. Prüfe die URL und ob Vikunja die Instanz erreichen kann.",
+		"14204": "Die Planka-API konnte unter der angegebenen URL nicht erreicht werden. Prüfe die URL und ob Vika die Instanz erreichen kann.",
 		"error": "Fähler",
 		"success": "Erfolg",
 		"0001": "Du komsch hier ned rein."

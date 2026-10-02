@@ -104,4 +104,44 @@ describe('General user settings', () => {
 		expect(errors).toEqual([])
 		expect(wrapper.text()).toContain('keycloak')
 	})
+
+	it('shows job title and department read-only when the user has them', async () => {
+		useAuthStore().setUser({
+			id: 1,
+			username: 'user1',
+			isLocalUser: false,
+			authProvider: 'Microsoft Entra ID',
+			settings: {jobTitle: 'Engineer', department: 'Information Technology'},
+		} as never)
+
+		wrapper = await mountComponent()
+		await flushPromises()
+
+		expect(errors).toEqual([])
+		expect(wrapper.text()).toContain('Job title')
+		expect(wrapper.text()).toContain('Department')
+		const values = wrapper.findAll('input').map(input => (input.element as HTMLInputElement).value)
+		expect(values).toContain('Engineer')
+		expect(values).toContain('Information Technology')
+		// The fields are display-only: nobody can type into them.
+		const titleInput = wrapper.findAll('input').find(input => (input.element as HTMLInputElement).value === 'Engineer')
+		expect(titleInput?.attributes('disabled')).toBeDefined()
+		expect(titleInput?.attributes('readonly')).toBeDefined()
+	})
+
+	it('hides the job title and department fields when there is nothing to show', async () => {
+		useAuthStore().setUser({
+			id: 2,
+			username: 'user2',
+			isLocalUser: true,
+			settings: {jobTitle: '', department: ''},
+		} as never)
+
+		wrapper = await mountComponent()
+		await flushPromises()
+
+		expect(errors).toEqual([])
+		expect(wrapper.text()).not.toContain('Job title')
+		expect(wrapper.text()).not.toContain('Department')
+	})
 })

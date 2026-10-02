@@ -35,28 +35,57 @@
 			</marker>
 		</defs>
 
-		<path
+		<template
 			v-for="(arrow, index) in arrows"
 			:key="`arrow-${index}`"
-			:d="computePath(arrow)"
-			:stroke="arrow.color"
-			stroke-width="1.5"
-			fill="none"
-			:stroke-dasharray="arrow.relationKind === 'precedes' ? '6,4' : 'none'"
-			:marker-end="getMarkerEnd(arrow)"
-			class="gantt-arrow"
-		/>
+		>
+			<path
+				:d="computePath(arrow)"
+				:stroke="arrow.color"
+				:stroke-width="arrow.critical ? 2.5 : 1.5"
+				fill="none"
+				:stroke-dasharray="arrow.relationKind === 'precedes' && !arrow.critical ? '6,4' : 'none'"
+				:marker-end="getMarkerEnd(arrow)"
+				class="gantt-arrow"
+				:class="{'is-critical': arrow.critical}"
+			/>
+			<!-- A wide invisible line to click: only dependencies can be removed from here -->
+			<path
+				v-if="deletable && arrow.relationKind === 'precedes'"
+				:d="computePath(arrow)"
+				stroke="transparent"
+				stroke-width="12"
+				fill="none"
+				class="gantt-arrow-hit"
+				role="button"
+				tabindex="0"
+				:aria-label="$t('project.gantt.removeDependency')"
+				@click.stop="emit('deleteArrow', arrow.fromTaskId, arrow.toTaskId)"
+				@keydown.enter.stop="emit('deleteArrow', arrow.fromTaskId, arrow.toTaskId)"
+			>
+				<title>{{ $t('project.gantt.removeDependency') }}</title>
+			</path>
+		</template>
 	</svg>
 </template>
 
 <script setup lang="ts">
 import type {GanttArrow} from '@/helpers/ganttRelationArrows'
 
-defineProps<{
+withDefaults(defineProps<{
 	arrows: GanttArrow[]
 	width: number
 	height: number
 	rowHeight: number
+	// Whether a dependency arrow can be clicked to remove it.
+	deletable?: boolean
+}>(), {
+	deletable: false,
+})
+
+const emit = defineEmits<{
+	// predecessor, successor
+	(e: 'deleteArrow', fromTaskId: number, toTaskId: number): void
 }>()
 
 /**
@@ -105,7 +134,7 @@ function computePath(arrow: GanttArrow): string {
 }
 
 function getMarkerEnd(arrow: GanttArrow): string {
-	return arrow.relationKind === 'blocking'
+	return arrow.relationKind === 'blocking' || arrow.critical
 		? 'url(#arrowhead-danger)'
 		: 'url(#arrowhead-grey)'
 }
@@ -122,6 +151,20 @@ function getMarkerEnd(arrow: GanttArrow): string {
 
 .gantt-arrow {
 	opacity: 0.7;
+
+	&.is-critical {
+		opacity: 1;
+	}
+}
+
+.gantt-arrow-hit {
+	pointer-events: stroke;
+	cursor: pointer;
+
+	&:hover + .gantt-arrow,
+	&:focus {
+		outline: none;
+	}
 }
 </style>
 

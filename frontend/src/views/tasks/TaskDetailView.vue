@@ -493,6 +493,14 @@
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
+							variant="secondary"
+							icon="flag-checkered"
+							:aria-pressed="Boolean((task as {is_milestone?: boolean}).is_milestone)"
+							@click="toggleMilestone"
+						>
+							{{ (task as {is_milestone?: boolean}).is_milestone ? $t('task.detail.actions.unsetMilestone') : $t('task.detail.actions.milestone') }}
+						</XButton>
+						<XButton
 							v-shortcut="SHORTCUTS.taskDetail.color"
 							variant="secondary"
 							icon="fill-drip"
@@ -1122,6 +1130,17 @@ function openAttachments() {
 		}
 		attachmentsRef.value?.openFilePicker()
 	})
+}
+
+// A milestone is a point in time at its end date, shown as a diamond in the Gantt chart.
+async function toggleMilestone() {
+	const next = !(task.value as {is_milestone?: boolean}).is_milestone
+	;(task.value as {is_milestone?: boolean}).is_milestone = next
+	// A milestone sits on one day: give it that day from what the task already has.
+	if (next && !task.value.end_date) {
+		task.value.end_date = task.value.due_date || task.value.start_date || new Date().toISOString()
+	}
+	await saveTask()
 }
 
 async function saveTask(

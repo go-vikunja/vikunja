@@ -24,6 +24,36 @@
 				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.authProvider}) }}
 			</p>
 			<FormField
+				v-if="settings.jobTitle"
+				:label="$t('user.settings.general.jobTitle')"
+				layout="two-col"
+			>
+				<FormInput
+					:model-value="settings.jobTitle"
+					disabled
+					readonly
+					type="text"
+				/>
+			</FormField>
+			<FormField
+				v-if="settings.department"
+				:label="$t('user.settings.general.department')"
+				layout="two-col"
+			>
+				<FormInput
+					:model-value="settings.department"
+					disabled
+					readonly
+					type="text"
+				/>
+			</FormField>
+			<p
+				v-if="settings.jobTitle || settings.department"
+				class="help"
+			>
+				{{ $t('user.settings.general.managedByCompanyDirectory') }}
+			</p>
+			<FormField
 				:label="$t('user.settings.general.defaultProject')"
 				layout="two-col"
 			>

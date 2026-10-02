@@ -16,7 +16,9 @@
 			>
 				{{ $t('misc.skipToContent') }}
 			</a>
-			<template v-if="showAuthLayout">
+			<!-- Print views: only the content, no header or sidebar, so the browser prints just that -->
+			<RouterView v-if="showBareRoute" />
+			<template v-else-if="showAuthLayout">
 				<AppHeader />
 				<ContentAuth />
 			</template>
@@ -67,7 +69,7 @@ import {useBodyClass} from '@/composables/useBodyClass'
 import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
-import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
+import {AUTH_ROUTE_NAMES, BARE_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 
 const importAccountDeleteService = () => import('@/services/accountDelete')
@@ -92,6 +94,7 @@ if (isQuickAddMode) {
 
 const route = useRoute()
 
+const showBareRoute = computed(() => Boolean(authStore.authUser) && typeof route.name === 'string' && BARE_ROUTE_NAMES.has(route.name))
 const showAuthLayout = computed(() => authStore.authUser && typeof route.name === 'string' && !AUTH_ROUTE_NAMES.has(route.name))
 
 // The router guard bounces every other route to /login while logged out, so anything

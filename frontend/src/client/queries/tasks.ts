@@ -16,6 +16,16 @@ import {API_MAX_PER_PAGE, type Paginated} from './pagination'
 import {queryClient} from '@/client/queryClient'
 
 export type TaskFilterParams = Omit<NonNullable<TasksListData['query']>, 'format' | 'page'>
+// The home page lists: 'mine' = tasks I am an assignee of, 'assigned_by_me' = tasks I created that
+// are assigned to somebody else. Only the all-projects list endpoint understands it.
+export type TaskAssignment = 'mine' | 'assigned_by_me'
+
+export function withAssignment(params: TaskFilterParams, assignment: TaskAssignment): TaskFilterParams {
+	// `assignment` is part of the v2 API but not of the generated types until
+	// `mage generate:frontend-client` was run; drop the cast then.
+	return {...params, assignment} as TaskFilterParams
+}
+
 export type TaskExpansion = NonNullable<NonNullable<TasksReadData['query']>['expand']>
 export type TaskScope = {
 	project?: number | null,
@@ -70,6 +80,8 @@ export type TaskResponse = Omit<TaskReadOneBody,
 	attachments: TaskAttachment[]
 	related_tasks: Record<string, TaskResponse[]>
 	reactions: Record<string, User[]>
+	// Not in the generated types until `mage generate:frontend-client` was run; absent means false.
+	is_milestone?: boolean
 }
 
 export type PaginatedTaskResponse = Omit<PaginatedTask, keyof Paginated<unknown>> & Paginated<TaskResponse>

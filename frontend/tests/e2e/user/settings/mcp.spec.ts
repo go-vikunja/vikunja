@@ -4,7 +4,7 @@ import {gotoUserSettings} from '../../../support/userSettings'
 test('creates a scoped MCP token and shows connection instructions once', async ({authenticatedPage: page}) => {
 	await gotoUserSettings(page, 'mcp')
 	await expect(page.locator('.card-header-title')).toBeVisible()
-	await expect(page.getByRole('link', {name: 'More information about MCP in Vikunja'})).toHaveAttribute('href', 'https://vikunja.io/help/mcp/')
+	await expect(page.getByRole('link', {name: 'More information about MCP in Vika'})).toHaveAttribute('href', 'https://vikunja.io/help/mcp/')
 	await expect(page.getByLabel('Which client do you use?')).toHaveCount(0)
 	const endpoint = await page.getByLabel('MCP endpoint').inputValue()
 	await page.getByRole('button', {name: 'Create a token'}).click()

@@ -40,6 +40,7 @@ type UserWithSettings struct {
 	AuthProvider        string                      `json:"auth_provider"`
 	IsAdmin             bool                        `json:"is_admin"`
 	PendingEmail        string                      `json:"pending_email,omitempty"`
+	MustChangePassword  bool                        `json:"must_change_password"`
 }
 
 // UserShow gets all information about the current user
@@ -74,6 +75,7 @@ func UserShow(c *echo.Context) error {
 		IsLocalUser:         u.Issuer == user.IssuerLocal,
 		IsAdmin:             u.IsAdmin,
 		PendingEmail:        u.PendingEmail,
+		MustChangePassword:  u.MustChangePassword,
 	}
 
 	us.AuthProvider, err = shared.GetAuthProviderName(u)

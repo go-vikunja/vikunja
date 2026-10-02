@@ -240,8 +240,10 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		RelationKind: getInverseRelation(rel.RelationKind),
 	}
 
-	// If we're creating a subtask relation, check if we're about to create a cycle
-	if rel.RelationKind == RelationKindSubtask || rel.RelationKind == RelationKindParenttask {
+	// If we're creating a subtask or scheduling (precedes/follows) relation, check if we're about to
+	// create a cycle. A scheduling cycle could never be rescheduled, every task would wait for itself.
+	if rel.RelationKind == RelationKindSubtask || rel.RelationKind == RelationKindParenttask ||
+		rel.RelationKind == RelationKindPreceeds || rel.RelationKind == RelationKindFollows {
 		err = checkTaskRelationCycle(s, rel, rel.OtherTaskID, nil, nil)
 		if err != nil {
 			return err

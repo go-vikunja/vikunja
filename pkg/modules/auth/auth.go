@@ -196,11 +196,25 @@ func NewUserJWTAuthtoken(u *user.User, sessionID string) (token string, err erro
 	claims["id"] = u.ID
 	claims["username"] = u.Username
 	claims["is_admin"] = u.IsAdmin
+	if u.MustChangePassword {
+		claims[claimMustChangePassword] = true
+	}
 	claims["exp"] = exp
 	claims["sid"] = sessionID
 	claims["jti"] = uuid.New().String()
 
 	return t.SignedString([]byte(config.ServiceSecret.GetString()))
+}
+
+// claimMustChangePassword is set on access tokens of users who have to choose a new password
+// before they can do anything else. See routes.RequirePasswordChange.
+const claimMustChangePassword = "must_change_password"
+
+// ClaimsRequirePasswordChange reports whether the claims belong to a token that is limited to
+// changing the password.
+func ClaimsRequirePasswordChange(claims jwt.MapClaims) bool {
+	must, _ := claims[claimMustChangePassword].(bool)
+	return must
 }
 
 // NewLinkShareJWTAuthtoken creates a new jwt token from a link share
@@ -317,6 +331,12 @@ func GetUserIDFromToken(tokenString string) (int64, error) {
 
 	typ, ok := claims["type"].(float64)
 	if !ok || int(typ) != AuthTypeUser {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	// This parses the token on its own, outside the HTTP middleware, so a token that is limited
+	// to changing the password has to be refused here as well.
+	if ClaimsRequirePasswordChange(claims) {
 		return 0, jwt.ErrTokenInvalidClaims
 	}
 

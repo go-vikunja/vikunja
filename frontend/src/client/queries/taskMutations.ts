@@ -67,6 +67,10 @@ export function taskWriteBody(task: Task): TaskWritable {
 			.filter(field => task[field] !== undefined)
 			.map(field => [field, task[field]]),
 	)
+	// is_milestone is not in the generated types until `mage generate:frontend-client` was run, move it
+	// into writableFields then.
+	const isMilestone = (task as {is_milestone?: boolean}).is_milestone
+	if (isMilestone !== undefined) (body as Record<string, unknown>).is_milestone = isMilestone
 	if (body.title !== undefined) body.title = body.title.trim()
 	if (body.hex_color !== undefined) body.hex_color = colorFromHex(body.hex_color)
 	for (const field of ['due_date', 'start_date', 'end_date'] as const) {

@@ -66,6 +66,8 @@ type TaskListQueryParams struct {
 
 type taskListAllInput struct {
 	TaskListQueryParams
+	// Declared directly on the input, not in the shared block: it only makes sense across all projects.
+	Assignment string `query:"assignment" enum:"mine,assigned_by_me" doc:"Narrow the list by assignment, for the signed-in user only. 'mine' returns tasks you are one of the assignees of, 'assigned_by_me' returns tasks you created that are assigned to somebody other than you. Combines with filter and sorting; never shows tasks from projects you cannot read."`
 }
 
 type taskListProjectInput struct {
@@ -89,18 +91,19 @@ type taskListFilters struct {
 	SortBy             []string
 	OrderBy            []string
 	Expand             []string
+	Assignment         string
 }
 
 func (in taskListAllInput) filters() taskListFilters {
-	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.SortBy, in.OrderBy, in.Expand}
+	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.SortBy, in.OrderBy, in.Expand, in.Assignment}
 }
 
 func (in taskListProjectInput) filters() taskListFilters {
-	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.SortBy, in.OrderBy, in.Expand}
+	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.SortBy, in.OrderBy, in.Expand, ""}
 }
 
 func (in taskListViewInput) filters() taskListFilters {
-	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.SortBy, in.OrderBy, in.Expand}
+	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.SortBy, in.OrderBy, in.Expand, ""}
 }
 
 // collection turns the bound query into a TaskCollection. The search term
@@ -124,6 +127,12 @@ func (f taskListFilters) collection(projectID, viewID int64, forceFlat bool) (*m
 	}
 	if forceFlat {
 		tc.SetForceFlatTasks()
+	}
+	if f.Assignment != "" {
+		err = tc.SetAssignmentFilter(models.TaskAssignmentFilter(f.Assignment))
+		if err != nil {
+			return nil, translateDomainError(err)
+		}
 	}
 	return tc, nil
 }

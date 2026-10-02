@@ -184,6 +184,11 @@ func sendEmailConfirmation(s *xorm.Session, u *User) (err error) {
 	return keyvalue.Put(cooldownKey, time.Now().Unix())
 }
 
+// CheckEmailNotTaken returns ErrUserEmailExists when another user already uses the address.
+func CheckEmailNotTaken(s *xorm.Session, email string) error {
+	return checkEmailNotTaken(s, email)
+}
+
 func checkEmailNotTaken(s *xorm.Session, email string) error {
 	user := &User{}
 	has, err := s.Where("email = ?", email).Get(user)

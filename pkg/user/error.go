@@ -942,6 +942,60 @@ func (err ErrNoPendingEmail) Error() string {
 	return fmt.Sprintf("User has no pending email change [UserID: %d]", err.UserID)
 }
 
+// ErrPasswordChangeRequired is returned for every request of a user who has to choose a new
+// password first (see User.MustChangePassword).
+type ErrPasswordChangeRequired struct{}
+
+// IsErrPasswordChangeRequired checks if an error is a ErrPasswordChangeRequired.
+func IsErrPasswordChangeRequired(err error) bool {
+	_, ok := err.(ErrPasswordChangeRequired)
+	return ok
+}
+
+func (err ErrPasswordChangeRequired) Error() string {
+	return "The password has to be changed before anything else can be done"
+}
+
+// ErrCodePasswordChangeRequired holds the unique world-error code of this error
+const ErrCodePasswordChangeRequired = 1041
+
+// HTTPError holds the http error description
+func (err ErrPasswordChangeRequired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodePasswordChangeRequired,
+		Message:  "You have to change your password before you can continue.",
+	}
+}
+
+// ErrProfileManagedExternally is returned when someone tries to edit the identity fields (name,
+// email, job title, department) of a user whose account is managed by a third-party provider.
+type ErrProfileManagedExternally struct {
+	UserID int64
+}
+
+// IsErrProfileManagedExternally checks if an error is a ErrProfileManagedExternally.
+func IsErrProfileManagedExternally(err error) bool {
+	_, ok := err.(*ErrProfileManagedExternally)
+	return ok
+}
+
+func (err *ErrProfileManagedExternally) Error() string {
+	return fmt.Sprintf("The profile of this user is managed by a third-party provider [UserID: %d]", err.UserID)
+}
+
+// ErrCodeProfileManagedExternally holds the unique world-error code of this error
+const ErrCodeProfileManagedExternally = 1042
+
+// HTTPError holds the http error description
+func (err *ErrProfileManagedExternally) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeProfileManagedExternally,
+		Message:  "The profile of this user is managed by a third-party authentication provider and cannot be changed here.",
+	}
+}
+
 // ErrCodeNoPendingEmail holds the unique world-error code of this error
 const ErrCodeNoPendingEmail = 1035
 

@@ -79,6 +79,21 @@
                     "comment": "Whether to let new users registering themselves or not"
                 },
                 {
+                    "key": "createdefaultadmin",
+                    "default_value": "true",
+                    "comment": "If true and local login is enabled, `web` creates a local admin user named `admin` on the very first start, when the users table is empty. Existing installations are never changed. The account has to change its password at the first login. Set to false to never create it."
+                },
+                {
+                    "key": "defaultadminpassword",
+                    "default_value": "admin123",
+                    "comment": "The initial password of the default admin account. It is public knowledge, so set your own before the first start and do not expose the instance before the password was changed. Must be at least 8 characters."
+                },
+                {
+                    "key": "defaultadminemail",
+                    "default_value": "admin@vika.local",
+                    "comment": "The email address of the default admin account. It does not need a mailbox."
+                },
+                {
                     "key": "enabletaskattachments",
                     "default_value": "true",
                     "comment": "Whether to enable task attachments or not"
@@ -1140,6 +1155,47 @@
                     "key": "loader",
                     "default_value": "native",
                     "comment": "The plugin loader to use. \"yaegi\" loads plugins from Go source files (directories of .go files). \"native\" (deprecated) loads compiled Go plugin shared libraries (.so files)."
+                }
+            ]
+        },
+        {
+            "key": "userimport",
+            "comment": "Refreshes the users table from a CSV file on a schedule. People in the file are created or updated (name, job title, department) by matching the `mail` column against the user's email, and every other user that signs in through Microsoft Entra ID is deactivated. Admins, bots and accounts of any other login method (local, LDAP, other OpenID providers) are never touched. The file needs the header columns `id` (Entra object id), `mail` and `displayName`; `jobTitle`, `department`, `userPrincipalName` and `accountEnabled` are optional. Run it on a single instance only.",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "Whether to run the scheduled user import. It starts in dry run mode, see `dryrun`."
+                },
+                {
+                    "key": "file",
+                    "default_value": "/data/vika/import/user_list.csv",
+                    "comment": "The path of the CSV file to import. The first row must be the header. Replace the file atomically (write a temporary file, then rename it into place): a run skips a file that was modified within the last minute or that changes while it is read."
+                },
+                {
+                    "key": "schedule",
+                    "default_value": "30 7 * * *",
+                    "comment": "A cron expression (minute hour day-of-month month day-of-week) in the server's local time. The default runs every day at 07:30."
+                },
+                {
+                    "key": "maxdisablepercent",
+                    "default_value": "20",
+                    "comment": "A run that would deactivate more than this percentage of the active users is aborted without changing anything. Protects against a truncated or wrong file. With fewer than 10 eligible users at most one user can be deactivated per run."
+                },
+                {
+                    "key": "maxfileageh",
+                    "default_value": "26",
+                    "comment": "A run is skipped when the file was last modified more than this many hours ago, so a stale file cannot deactivate people who joined since."
+                },
+                {
+                    "key": "tenantid",
+                    "default_value": "",
+                    "comment": "The Microsoft Entra tenant id (the GUID also used in the provider's `authurl`) the user list belongs to. If set, the import only manages accounts of that tenant, and only trusts the Entra object id (`oid` claim) of tokens issued by it. Leave empty if you have a single Entra provider; set it when several Entra tenants are configured."
+                },
+                {
+                    "key": "dryrun",
+                    "default_value": "true",
+                    "comment": "If true, the import only logs what it would do and changes nothing. Read the `[User Import Cron] Done` log line of a dry run first, then set this to false: a wrong or incomplete file would otherwise deactivate people who should keep access."
                 }
             ]
         },

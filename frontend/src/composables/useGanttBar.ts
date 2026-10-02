@@ -16,6 +16,14 @@ export interface GanttBarModel {
 		isParent?: boolean
 		hasDerivedDates?: boolean
 		indentLevel?: number
+		// A milestone is a point at its end date, drawn as a diamond.
+		isMilestone?: boolean
+		// 0 to 1, drawn as a darker fill inside the bar.
+		percentDone?: number
+		// On the critical path: drawn with a red outline.
+		isCritical?: boolean
+		// The plan when the baseline was saved, drawn as a thin bar under the task.
+		baseline?: {start: Date, end: Date}
 	}
 }
 export interface UseGanttBarOptions {

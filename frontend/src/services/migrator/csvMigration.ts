@@ -18,6 +18,9 @@ export type TaskAttribute =
 	| 'labels'
 	| 'project'
 	| 'reminder'
+	| 'assignee'
+	| 'assignor'
+	| 'project_id'
 	| 'ignore'
 
 export const TASK_ATTRIBUTES: TaskAttribute[] = [
@@ -31,6 +34,9 @@ export const TASK_ATTRIBUTES: TaskAttribute[] = [
 	'labels',
 	'project',
 	'reminder',
+	'assignee',
+	'assignor',
+	'project_id',
 	'ignore',
 ]
 

@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -57,6 +58,9 @@ type TaskCollection struct {
 	Expand []TaskCollectionExpandable `query:"expand" json:"-"`
 
 	isSavedFilter bool
+
+	// assignment is set through SetAssignmentFilter by the v2 endpoint only.
+	assignment TaskAssignmentFilter
 
 	// forceFlatTasks makes ReadAll always return []*Task, never []*Bucket, even
 	// for a kanban view. v1's single tasks endpoint is polymorphic; v2 splits it
@@ -155,6 +159,72 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 
 	opts.parsedFilters, err = getTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
 	return opts, err
+}
+
+// TaskAssignmentFilter narrows a task list by who it is assigned to or assigned by.
+type TaskAssignmentFilter string
+
+// The assignment filters of the home page lists.
+const (
+	// TaskAssignmentNone applies no assignment filter.
+	TaskAssignmentNone TaskAssignmentFilter = ""
+	// TaskAssignmentMine keeps the tasks the user is one of the assignees of.
+	TaskAssignmentMine TaskAssignmentFilter = "mine"
+	// TaskAssignmentAssignedByMe keeps the tasks the user created that have an assignee other than the user.
+	TaskAssignmentAssignedByMe TaskAssignmentFilter = "assigned_by_me"
+)
+
+// Validate checks the value.
+func (f TaskAssignmentFilter) Validate() error {
+	switch f {
+	case TaskAssignmentNone, TaskAssignmentMine, TaskAssignmentAssignedByMe:
+		return nil
+	}
+	return ErrInvalidData{Message: "assignment must be mine or assigned_by_me"}
+}
+
+// SetAssignmentFilter restricts the list to the tasks assigned to, or assigned by, the user making
+// the request. The user is taken from the authentication, never from the request.
+func (tf *TaskCollection) SetAssignmentFilter(f TaskAssignmentFilter) error {
+	if err := f.Validate(); err != nil {
+		return err
+	}
+	tf.assignment = f
+	return nil
+}
+
+// assignmentCondition builds the condition of a TaskAssignmentFilter. Plain EXISTS subqueries work
+// the same on SQLite, MySQL and PostgreSQL. Without a user (a link share) nothing matches.
+func assignmentCondition(f TaskAssignmentFilter, userID int64) builder.Cond {
+	return assignmentConditionFor("tasks", f, userID)
+}
+
+// assignmentConditionFor is assignmentCondition for a task table under another name, such as the
+// parent_tasks alias of the subtask root condition. table is a fixed identifier, never request data.
+func assignmentConditionFor(table string, f TaskAssignmentFilter, userID int64) builder.Cond {
+	if f == TaskAssignmentNone {
+		return nil
+	}
+	if userID <= 0 {
+		return builder.Expr("1 = 0")
+	}
+
+	switch f {
+	case TaskAssignmentMine:
+		return builder.Expr(
+			"EXISTS (SELECT 1 FROM task_assignees WHERE task_assignees.task_id = "+table+".id AND task_assignees.user_id = ?)",
+			userID,
+		)
+	case TaskAssignmentAssignedByMe:
+		return builder.And(
+			builder.Eq{table + ".created_by_id": userID},
+			builder.Expr(
+				"EXISTS (SELECT 1 FROM task_assignees WHERE task_assignees.task_id = "+table+".id AND task_assignees.user_id <> ?)",
+				userID,
+			),
+		)
+	}
+	return builder.Expr("1 = 0")
 }
 
 // SetForceFlatTasks makes ReadAll return a flat []*Task even for a kanban view.
@@ -372,6 +442,11 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.perPage = perPage
 	opts.expand = tf.Expand
 	opts.isSavedFilter = tf.isSavedFilter
+	opts.assignment = tf.assignment
+	// A link share has no user id of its own, so it matches nothing (see assignmentCondition).
+	if _, isShare := a.(*LinkSharing); !isShare {
+		opts.assignmentUserID = a.GetID()
+	}
 
 	if view != nil {
 		var hasOrderByPosition bool

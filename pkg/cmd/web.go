@@ -34,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/utils"
@@ -139,6 +140,9 @@ var webCmd = &cobra.Command{
 	Short: "Starts the rest api web server",
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
+		// Only the web server seeds the default admin: the other commands that run FullInit (user
+		// management, restore, dump, repair) must not create accounts as a side effect.
+		models.SeedDefaultAdmin()
 	},
 	Run: func(_ *cobra.Command, _ []string) {
 

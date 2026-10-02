@@ -41,6 +41,8 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		defaultDueTime: undefined,
 	}
 	extraSettingsLinks = {}
+	jobTitle = ''
+	department = ''
 
 	constructor(data: Partial<IUserSettings> = {}) {
 		super()

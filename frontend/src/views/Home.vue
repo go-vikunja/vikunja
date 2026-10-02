@@ -39,9 +39,15 @@
 			v-if="projectList.hasProjects"
 			:key="showTasksKey"
 			:label-ids="labelIds"
+			assignment="mine"
 			class="show-tasks"
 			@tasksLoaded="tasksLoaded = true"
 			@clearLabelFilter="handleClearLabelFilter"
+		/>
+		<AssignedByMeList
+			v-if="projectList.hasProjects"
+			:key="'assigned-' + showTasksKey"
+			class="show-tasks"
 		/>
 	</div>
 </template>
@@ -52,6 +58,7 @@ import {useRoute, useRouter} from 'vue-router'
 
 import Message from '@/components/misc/Message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
+import AssignedByMeList from '@/components/tasks/AssignedByMeList.vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
 import ImportHint from '@/components/home/ImportHint.vue'

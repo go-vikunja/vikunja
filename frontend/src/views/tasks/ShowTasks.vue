@@ -96,6 +96,12 @@
 						:can-mark-as-done="(projectList.projects[task.project_id]?.max_permission ?? 0) > PERMISSIONS.READ"
 						@taskUpdated="updateTasks"
 					/>
+					<span
+						v-if="assignorHint(task)"
+						class="assignor-hint"
+					>
+						{{ $t('task.show.assignedBy', {name: assignorHint(task)}) }}
+					</span>
 				</li>
 			</ul>
 		</Card>
@@ -127,7 +133,8 @@ import LlamaCool from '@/assets/llama-cool.svg?component'
 import {useAuthStore} from '@/stores/auth'
 import {useProjects} from '@/composables/useProjects'
 import {useLabels} from '@/composables/useLabels'
-import type {TaskFilterParams} from '@/client/queries/tasks'
+import type {TaskAssignment, TaskFilterParams} from '@/client/queries/tasks'
+import {withAssignment} from '@/client/queries/tasks'
 import {useTasks} from '@/composables/useTasks'
 import type {TaskScope} from '@/client/queries/tasks'
 import {PERMISSIONS} from '@/constants/permissions'
@@ -138,12 +145,15 @@ const props = withDefaults(defineProps<{
 	showNulls?: boolean,
 	showOverdue?: boolean,
 	labelIds?: string[],
+	// 'mine' restricts the list to the tasks the user is an assignee of (the home page "My tasks").
+	assignment?: TaskAssignment,
 }>(), {
 	showNulls: false,
 	showOverdue: false,
 	dateFrom: undefined,
 	dateTo: undefined,
 	labelIds: undefined,
+	assignment: undefined,
 })
 
 const emit = defineEmits<{
@@ -196,6 +206,10 @@ const pageTitle = computed(() => {
 		return t(`input.datepickerRange.ranges.${predefinedRange}`)
 	}
 
+	if (props.assignment === 'mine' && showAll.value) {
+		return t('task.show.myTasks')
+	}
+
 	return showAll.value
 		? t('task.show.titleCurrent')
 		: t('task.show.fromuntil', {
@@ -203,6 +217,18 @@ const pageTitle = computed(() => {
 			until: formatDate(props.dateTo, 'LL'),
 		})
 })
+// Who handed the task over, shown only in "My tasks" and only when it was somebody else.
+function assignorHint(task: {created_by?: {id?: number, name?: string, username?: string}}): string {
+	if (props.assignment !== 'mine') {
+		return ''
+	}
+	const assignor = task.created_by
+	if (!assignor || !assignor.id || assignor.id === authStore.info?.id) {
+		return ''
+	}
+	return assignor.name || assignor.username || ''
+}
+
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
 const loading = taskQuery.isFetching
@@ -286,12 +312,18 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 	}
 
 	let projectId = null
-	if (showAll.value && filterId && typeof projectList.projects[filterId] !== 'undefined'
+	// "My tasks" spans every readable project; a saved filter or project chosen for the overview
+	// would narrow it to that one, which is not what the list promises.
+	if (!props.assignment && showAll.value && filterId && typeof projectList.projects[filterId] !== 'undefined'
 		&& (!props.labelIds || props.labelIds.length === 0)) {
 		projectId = filterId
 	}
 
-	taskScope.value = {project: projectId, params: {...params, filter_timezone: authStore.settings.timezone}}
+	const scopedParams = {...params, filter_timezone: authStore.settings.timezone}
+	taskScope.value = {
+		project: projectId,
+		params: props.assignment ? withAssignment(scopedParams, props.assignment) : scopedParams,
+	}
 }
 
 watch(taskQuery.data, data => { if (data) emit('tasksLoaded', true) })
@@ -323,6 +355,14 @@ watchEffect(() => setTitle(pageTitle.value))
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;
+}
+
+.assignor-hint {
+	display: block;
+	margin-inline-start: 2.5rem;
+	margin-block-end: 0.25rem;
+	font-size: 0.8rem;
+	color: var(--grey-500);
 }
 
 .llama-cool {

@@ -4,26 +4,45 @@
 		role="columnheader"
 		:aria-label="$t('project.gantt.timelineHeader')"
 	>
-		<!-- Upper timeunit for months -->
+		<!-- Upper timeunit: months, or years at the coarser zooms -->
 		<div
 			class="gantt-timeline-months"
 			role="row"
 			:aria-label="$t('project.gantt.monthsRow')"
 		>
 			<div
-				v-for="monthGroup in monthGroups"
-				:key="monthGroup.key"
+				v-for="group in tiers.upper"
+				:key="group.key"
 				class="timeunit-month"
-				:style="{ width: `${monthGroup.width}px` }"
+				:style="{ width: `${group.width}px` }"
 				role="columnheader"
-				:aria-label="$t('project.gantt.monthLabel', {month: monthGroup.label})"
+				:aria-label="$t('project.gantt.monthLabel', {month: group.label})"
 			>
-				{{ monthGroup.label }}
+				{{ group.label }}
 			</div>
 		</div>
-        
+
+		<!-- Lower timeunit for weeks, months or quarters -->
+		<div
+			v-if="tiers.lower.length > 0"
+			class="gantt-timeline-days gantt-timeline-coarse"
+			role="row"
+		>
+			<div
+				v-for="cell in tiers.lower"
+				:key="cell.key"
+				class="timeunit-coarse"
+				:class="{'today': coarseCellIsToday(cell)}"
+				:style="{ width: `${cell.width}px` }"
+				role="columnheader"
+			>
+				{{ cell.label }}
+			</div>
+		</div>
+
 		<!-- Lower timeunit for days -->
 		<div
+			v-else
 			class="gantt-timeline-days"
 			role="row"
 			:aria-label="$t('project.gantt.daysRow')"
@@ -63,11 +82,15 @@ import {computed} from 'vue'
 import {useGlobalNow} from '@/composables/useGlobalNow'
 import {useWeekDayFromDate} from '@/helpers/time/formatDate'
 import dayjs from 'dayjs'
+import {buildTimelineTiers, type GanttZoom, type TierUnit, type TimelineCell} from '@/helpers/ganttZoom'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     timelineData: Date[]
     dayWidthPixels: number
-}>()
+    zoom?: GanttZoom
+}>(), {
+	zoom: 'day',
+})
 
 const weekDayFromDate = useWeekDayFromDate()
 const { now: today } = useGlobalNow()
@@ -77,34 +100,29 @@ const dateIsToday = computed(() => {
 	return (date: Date) => date.toDateString() === todayStr
 })
 
-const monthGroups = computed(() => {
-	const groups = props.timelineData.reduce(
-		(groups, date) => {
-			const month = date.getMonth()
-			const year = date.getFullYear()
-			const key = `${year}-${month}`
+function formatCell(date: Date, unit: TierUnit): string {
+	switch (unit) {
+		case 'year': return dayjs(date).format('YYYY')
+		case 'quarter': return `Q${Math.floor(date.getMonth() / 3) + 1}`
+		case 'month': return dayjs(date).format(props.zoom === 'month' ? 'MMM' : 'MMMM YYYY')
+		case 'week': return dayjs(date).format('D MMM')
+	}
+}
 
-			const lastGroup = groups[groups.length - 1]
-			if (lastGroup?.key === key) {
-				lastGroup.width += props.dayWidthPixels
-			} else {
-				groups.push({
-					key,
-					label: dayjs(date).format('MMMM YYYY'),
-					width: props.dayWidthPixels,
-				})
-			}
+const tiers = computed(() => buildTimelineTiers(props.timelineData, props.dayWidthPixels, props.zoom, formatCell))
 
-			return groups
-		},
-		[] as Array<{key: string; label: string; width: number}>,
-	)
-
-	return groups
-})
+// The cell that contains today gets the same highlight the day cell has.
+function coarseCellIsToday(cell: TimelineCell): boolean {
+	const now = today.value
+	const start = cell.start.getTime()
+	const end = start + (cell.width / props.dayWidthPixels) * 24 * 60 * 60 * 1000
+	return now.getTime() >= start && now.getTime() < end
+}
 </script>
 
 <style scoped lang="scss">
+// The task table next to the chart uses the same two heights, keep them in sync with
+// GANTT_HEADER_TIER_PX in GanttTaskPane.vue.
 .gantt-timeline {
 	background: var(--white);
 	border-block-end: 1px solid var(--grey-200);
@@ -115,14 +133,18 @@ const monthGroups = computed(() => {
 
 .gantt-timeline-months {
 	display: flex;
+	block-size: 32px;
 
 	.timeunit-month {
 		background: var(--white);
 		font-family: $vikunja-font;
 		font-weight: bold;
 		border-inline-end: 1px solid var(--grey-200);
-		padding: 0.5rem 0;
-		text-align: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		white-space: nowrap;
 		font-size: 1rem;
 		color: var(--grey-800);
 	}
@@ -130,10 +152,11 @@ const monthGroups = computed(() => {
 
 .gantt-timeline-days {
 	display: flex;
+	block-size: 52px;
 
 	.timeunit {
 		.timeunit-wrapper {
-			padding: 0.5rem 0;
+			padding: 0.35rem 0;
 			font-size: 1rem;
 			display: flex;
 			flex-direction: column;
@@ -151,6 +174,24 @@ const monthGroups = computed(() => {
 			.weekday {
 				font-size: 0.8rem;
 			}
+		}
+	}
+
+	.timeunit-coarse {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		white-space: nowrap;
+		font-family: $vikunja-font;
+		font-size: 0.85rem;
+		color: var(--grey-700);
+		border-inline-end: 1px solid var(--grey-200);
+
+		&.today {
+			background: var(--primary);
+			color: var(--white);
+			font-weight: bold;
 		}
 	}
 }

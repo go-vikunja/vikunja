@@ -551,6 +551,31 @@ func (e *AdminProjectOwnerChangedEvent) Name() string {
 	return "admin.project.owner.changed"
 }
 
+// ManageUserProfileUpdatedEvent represents an admin editing the profile of a local user in the
+// people area. It carries no values, only which fields were written.
+type ManageUserProfileUpdatedEvent struct {
+	User   *user.User `json:"user"`
+	Doer   *user.User `json:"doer"`
+	Fields []string   `json:"fields"`
+}
+
+// Name defines the name for ManageUserProfileUpdatedEvent
+func (e *ManageUserProfileUpdatedEvent) Name() string {
+	return "manage.user.profile.updated"
+}
+
+// ManageUserImportEvent represents an admin uploading a new user list or starting an import run.
+type ManageUserImportEvent struct {
+	Doer *user.User `json:"doer"`
+	// Action is "uploaded" or "started".
+	Action string `json:"action"`
+}
+
+// Name defines the name for ManageUserImportEvent
+func (e *ManageUserImportEvent) Name() string {
+	return "manage.user_import"
+}
+
 // AdminUsersListedEvent represents an admin reading the full user list,
 // which exposes every user's email address.
 type AdminUsersListedEvent struct {
