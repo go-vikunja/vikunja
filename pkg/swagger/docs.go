@@ -4106,7 +4106,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Share a project via link. The user needs to have write-access to the project to be able do this.",
+                "description": "Share a project via link. The user needs to be admin of the project to be able do this.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4236,7 +4236,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Remove a link share. The user needs to have write-access to the project to be able do this.",
+                "description": "Remove a link share. The user needs to be admin of the project to be able do this.",
                 "consumes": [
                     "application/json"
                 ],
