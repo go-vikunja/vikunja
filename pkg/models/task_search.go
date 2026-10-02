@@ -630,6 +630,11 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		}
 	}
 
+	// xorm drops nil conds, so without either arm the query would span every task.
+	if projectIDCond == nil && favoritesCond == nil {
+		return []*Task{}, 0, nil
+	}
+
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
 
