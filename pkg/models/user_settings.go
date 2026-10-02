@@ -95,6 +95,13 @@ func setUserPasswordAndInvalidateSessions(s *xorm.Session, u *user.User, newPass
 // Lives here (not in pkg/user) because the avatar flush needs pkg/modules/avatar,
 // which pkg/user cannot import.
 func UpdateUserGeneralSettings(s *xorm.Session, u *user.User, settings *UserGeneralSettings) error {
+	// Unchanged, so a default the user lost access to doesn't block saving.
+	if settings.DefaultProjectID != 0 && settings.DefaultProjectID != u.DefaultProjectID {
+		if err := checkDefaultProject(s, u, settings.DefaultProjectID); err != nil {
+			return err
+		}
+	}
+
 	invalidateAvatar := u.AvatarProvider == "initials" && u.Name != settings.Name
 
 	u.Name = settings.Name
@@ -115,6 +122,27 @@ func UpdateUserGeneralSettings(s *xorm.Session, u *user.User, settings *UserGene
 
 	if invalidateAvatar {
 		avatar.FlushAllCaches(u)
+	}
+	return nil
+}
+
+func checkDefaultProject(s *xorm.Session, u *user.User, projectID int64) error {
+	p, err := GetProjectSimpleByID(s, projectID)
+	if IsErrProjectDoesNotExist(err) {
+		return &ErrInvalidDefaultProject{ProjectID: projectID}
+	}
+	if err != nil {
+		return err
+	}
+	can, err := p.CanWrite(s, u)
+	if IsErrProjectIsArchived(err) {
+		return &ErrInvalidDefaultProject{ProjectID: projectID}
+	}
+	if err != nil {
+		return err
+	}
+	if !can {
+		return &ErrInvalidDefaultProject{ProjectID: projectID}
 	}
 	return nil
 }
