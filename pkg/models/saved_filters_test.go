@@ -392,3 +392,38 @@ func TestSavedFilter_Permissions(t *testing.T) {
 		})
 	})
 }
+
+// GHSA-fprf-r6rv-xg99
+func TestSavedFilter_ZeroProjectUserGetsNoTaskPositions(t *testing.T) {
+	for _, filter := range []string{"", "done = false"} {
+		t.Run("filter "+filter, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			u := &user.User{Username: "no-projects", Email: "no-projects@example.com", Status: user.StatusActive}
+			_, err := s.Insert(u)
+			require.NoError(t, err)
+
+			sf := &SavedFilter{Title: "test", Filters: &TaskCollection{Filter: filter}}
+			require.NoError(t, sf.Create(s, u))
+
+			projectID := getProjectIDFromSavedFilterID(sf.ID)
+			viewIDs := func() []int64 {
+				var ids []int64
+				require.NoError(t, s.Table("project_views").Where("project_id = ?", projectID).Cols("id").Find(&ids))
+				return ids
+			}
+			positions := func() int64 {
+				count, err := s.In("project_view_id", viewIDs()).Count(&TaskPosition{})
+				require.NoError(t, err)
+				return count
+			}
+			assert.Zero(t, positions())
+
+			view := &ProjectView{ProjectID: projectID, Title: "extra", ViewKind: ProjectViewKindList}
+			require.NoError(t, view.Create(s, u))
+			assert.Zero(t, positions())
+		})
+	}
+}
