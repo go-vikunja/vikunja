@@ -111,29 +111,42 @@ func removeUserFromTeamsByIDs(s *xorm.Session, u *user.User, teamIDs []int64) (e
 	}
 
 	log.Debugf("Removing team_member with user_id %v from team_ids %v", u.ID, teamIDs)
-	_, err = s.
-		In("team_id", teamIDs).
-		And("user_id = ?", u.ID).
-		Delete(&TeamMember{})
-	return err
+	return removeUserFromTeams(s, u, teamIDs)
 }
 
 func removeUserFromAllTeamsForThisIssuer(s *xorm.Session, u *user.User, issuer string) (err error) {
 	teamIDs := []int64{}
 	err = s.
 		Table("teams").
-		Where("issuer = ?", issuer).
-		Cols("id").
+		Join("INNER", "team_members", "team_members.team_id = teams.id").
+		Where("teams.issuer = ? AND team_members.user_id = ?", issuer, u.ID).
+		Cols("teams.id").
 		Find(&teamIDs)
 	if err != nil {
 		return
 	}
 
-	_, err = s.
+	return removeUserFromTeams(s, u, teamIDs)
+}
+
+func removeUserFromTeams(s *xorm.Session, u *user.User, teamIDs []int64) error {
+	if len(teamIDs) == 0 {
+		return nil
+	}
+
+	_, err := s.
 		In("team_id", teamIDs).
 		And("user_id = ?", u.ID).
 		Delete(&TeamMember{})
-	return err
+	if err != nil {
+		return err
+	}
+
+	projectIDs, err := teamProjectIDs(s, teamIDs...)
+	if err != nil {
+		return err
+	}
+	return cleanupAfterProjectAccessLoss(s, u.ID, projectIDs)
 }
 
 // getOrCreateTeamsByIssuer returns a slice of teams which were generated from the external provider data.

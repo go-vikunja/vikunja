@@ -165,6 +165,11 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
+	err = cleanupAfterProjectAccessLoss(s, lu.UserID, []int64{lu.ProjectID})
+	if err != nil {
+		return err
+	}
+
 	err = updateProjectLastUpdated(s, &Project{ID: lu.ProjectID})
 	return
 }
