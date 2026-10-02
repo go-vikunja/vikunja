@@ -45,6 +45,7 @@ export function useRenewTokenOnFocus() {
 	watch(
 		() => session.value?.exp,
 		() => scheduleProactiveRefresh(),
+		{immediate: true},
 	)
 
 	// Also re-schedule when authentication state changes (e.g. logout clears it).

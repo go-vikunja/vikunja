@@ -78,6 +78,21 @@ describe('useRenewTokenOnFocus', () => {
 		expect(authStore.renewToken).toHaveBeenCalledTimes(2)
 	})
 
+	it('schedules the proactive refresh for a session that existed before mount', async () => {
+		scope.stop()
+		authStore.renewToken.mockClear()
+		authStore.session = sessionExpiringIn(600)
+		scope = effectScope()
+		scope.run(() => useRenewTokenOnFocus())
+		await nextTick()
+
+		vi.advanceTimersByTime(539_000)
+		expect(authStore.renewToken).toHaveBeenCalledTimes(1)
+
+		vi.advanceTimersByTime(1_000)
+		expect(authStore.renewToken).toHaveBeenCalledTimes(2)
+	})
+
 	it('reschedules when a refresh moves the session expiry', async () => {
 		authStore.session = sessionExpiringIn(600)
 		await nextTick()

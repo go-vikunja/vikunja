@@ -232,6 +232,109 @@ func TestConnectionAuth(t *testing.T) {
 	})
 }
 
+func reauth(t *testing.T, c *websocket.Conn, token string) (OutgoingMessage, error) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	require.NoError(t, wsjson.Write(ctx, c, IncomingMessage{Action: ActionAuth, Token: token}))
+	var reply OutgoingMessage
+	err := wsjson.Read(ctx, c, &reply)
+	return reply, err
+}
+
+func assertGone(t *testing.T, c *websocket.Conn) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, _, err := c.Read(ctx)
+	require.Error(t, err)
+}
+
+func setJWTTTL(t *testing.T, seconds int64) {
+	t.Helper()
+	ttl := config.ServiceJWTTTLShort.GetInt64()
+	config.ServiceJWTTTLShort.Set(seconds)
+	t.Cleanup(func() { config.ServiceJWTTTLShort.Set(ttl) })
+}
+
+func TestConnectionReauth(t *testing.T) {
+	t.Run("a fresh token of the same session extends the socket", func(t *testing.T) {
+		setupDBTest(t)
+		url := startSocketServer(t)
+		setJWTTTL(t, 2)
+		c, reply := dialAndAuth(t, url, userToken(t, 1, sessionUser1A))
+		require.Equal(t, ActionAuthSuccess, reply.Action)
+
+		setJWTTTL(t, 4)
+		reply, err := reauth(t, c, userToken(t, 1, sessionUser1A))
+		require.NoError(t, err)
+		assert.Equal(t, ActionAuthSuccess, reply.Action)
+
+		time.Sleep(2500 * time.Millisecond)
+		assertOpen(t, c, 1)
+		assertClosed(t, c)
+	})
+	t.Run("rejects a token of another session", func(t *testing.T) {
+		setupDBTest(t)
+		url := startSocketServer(t)
+		c, _ := dialAndAuth(t, url, userToken(t, 1, sessionUser1A))
+
+		reply, err := reauth(t, c, userToken(t, 1, sessionUser1B))
+		require.NoError(t, err)
+		assert.Equal(t, "invalid_token", reply.Error)
+		assertGone(t, c)
+		assertUnregistered(t, 1)
+	})
+	t.Run("rejects a token of another user", func(t *testing.T) {
+		setupDBTest(t)
+		url := startSocketServer(t)
+		c, _ := dialAndAuth(t, url, userToken(t, 1, sessionUser1A))
+
+		reply, err := reauth(t, c, userToken(t, 2, sessionUser2))
+		require.NoError(t, err)
+		assert.Equal(t, "invalid_token", reply.Error)
+		assertGone(t, c)
+		assertUnregistered(t, 1)
+	})
+	t.Run("rejects a token of a deleted session", func(t *testing.T) {
+		s := setupDBTest(t)
+		url := startSocketServer(t)
+		c, _ := dialAndAuth(t, url, userToken(t, 1, sessionUser1A))
+		_, err := s.Where("id = ?", sessionUser1A).Delete(&models.Session{})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		reply, err := reauth(t, c, userToken(t, 1, sessionUser1A))
+		require.NoError(t, err)
+		assert.Equal(t, "invalid_token", reply.Error)
+		assertGone(t, c)
+		assertUnregistered(t, 1)
+	})
+	t.Run("rejects a malformed token", func(t *testing.T) {
+		setupDBTest(t)
+		url := startSocketServer(t)
+		c, _ := dialAndAuth(t, url, userToken(t, 1, sessionUser1A))
+
+		reply, err := reauth(t, c, "not-a-jwt")
+		require.NoError(t, err)
+		assert.Equal(t, "invalid_token", reply.Error)
+		assertGone(t, c)
+		assertUnregistered(t, 1)
+	})
+	t.Run("a transient failure closes without invalid_token", func(t *testing.T) {
+		setupDBTest(t)
+		url := startSocketServer(t)
+		c, _ := dialAndAuth(t, url, userToken(t, 1, sessionUser1A))
+		stubCheckUserTokenSession(t, func(*auth.UserTokenClaims) error {
+			return errors.New("database unavailable")
+		})
+
+		reply, err := reauth(t, c, userToken(t, 1, sessionUser1A))
+		require.Error(t, err, "got reply %+v", reply)
+		assert.Equal(t, websocket.StatusTryAgainLater, websocket.CloseStatus(err), "unexpected close: %v", err)
+	})
+}
+
 // GHSA-4hv6-xc92-j86g
 func TestConnectionRevocation(t *testing.T) {
 	t.Run("deleting a session closes only its socket", func(t *testing.T) {
