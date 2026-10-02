@@ -224,11 +224,13 @@
 			"caldav": {
 				"title": "CalDAV",
 				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
+				"urlLabel": "CalDAV URL",
 				"more": "Weitere Informationen über CalDAV in Vikunja",
 				"tokens": "CalDAV-Token",
 				"tokensHowTo": "Für die CalDAV-Authentifizierung kannst du entweder dein normales Passwort oder einen CalDAV-Token verwenden.",
 				"createToken": "CalDAV-Token erstellen",
 				"tokenCreated": "Hier ist dein neues Token: {token}",
+				"deleteSuccess": "Das CalDAV-Token wurde erfolgreich gelöscht.",
 				"wontSeeItAgain": "Schreib es auf oder speicher es sicher — du wirst es nicht nochmal sehen können.",
 				"mustUseToken": "Du musst einen CalDAV Token erstellen, um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
 				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}",
@@ -1193,6 +1195,7 @@
 			"delete": "Aahhang lösche",
 			"deleteTooltip": "De Aahhang lösche",
 			"deleteText1": "Bisch du dir sicher, dass du de Aahang {filename} lösche wetsch?",
+			"deleteSuccess": "Der Anhang wurde erfolgreich gelöscht.",
 			"copyUrlTooltip": "D'Url vo dem Aahang kopiere, um sie im Text zbruuche",
 			"setAsCover": "Als Titelbild setzen",
 			"unsetAsCover": "Titelbild entfernen",
@@ -1488,11 +1491,14 @@
 		"title": "Benachrichtigunge",
 		"none": "Du hesch kei neui Benachrichtunge. Heb e schös Tägli!",
 		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
+		"read": "Gelesen",
+		"unread": "Ungelesen",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
 		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert.",
 		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren",
 		"clearAll": "Benachrichtigungen leeren",
-		"clearAllSuccess": "Alle Benachrichtigungen wurden geleert."
+		"clearAllSuccess": "Alle Benachrichtigungen wurden geleert.",
+		"loadMore": "Ältere Benachrichtigungen laden"
 	},
 	"quickActions": {
 		"title": "Suchen und Quick Actions",
@@ -1665,6 +1671,7 @@
 			"emptyTask": "Noch keine Zeit für diese Aufgabe getrackt.",
 			"emptyFiltered": "Keine Zeiterfassung innerhalb der ausgewählten Filter.",
 			"total": "Gesamt",
+			"pageTotal": "Gesamt auf dieser Seite",
 			"time": "Uhrzeit",
 			"duration": "Dauer"
 		},
@@ -1768,7 +1775,8 @@
 			"deleteConfirm": "„{name}“ löschen? Dann kann sich niemand mehr über diesen Link registrieren. Bestehende Accounts bleiben aktiv.",
 			"deleted": "Einladungslink gelöscht.",
 			"empty": "Noch keine Einladungslinks. Erstelle einen Link, um jemanden in diese Instanz einzuladen.",
-			"futureExpiry": "Wähle ein Ablaufdatum, das in der Zukunft liegt."
+			"futureExpiry": "Wähle ein Ablaufdatum, das in der Zukunft liegt.",
+			"creatorDeleted": "Gelöschter Account"
 		}
 	}
 }
