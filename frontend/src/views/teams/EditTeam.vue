@@ -141,6 +141,10 @@
 					{{ $t('team.edit.leave.text1') }}<br>
 					{{ $t('team.edit.leave.text2') }}
 				</p>
+				<ProjectAccessCleanupList
+					:intro="$t('team.edit.leave.cleanupText')"
+					perspective="self"
+				/>
 			</template>
 		</Modal>
 
@@ -159,6 +163,7 @@
 					{{ $t('team.edit.delete.text1') }}<br>
 					{{ $t('team.edit.delete.text2') }}
 				</p>
+				<ProjectAccessCleanupList :intro="$t('team.edit.delete.cleanupText')" />
 			</template>
 		</Modal>
 
@@ -177,6 +182,7 @@
 					{{ $t('team.edit.deleteUser.text1') }}<br>
 					{{ $t('team.edit.deleteUser.text2') }}
 				</p>
+				<ProjectAccessCleanupList :intro="$t('team.edit.deleteUser.cleanupText')" />
 			</template>
 		</Modal>
 	</div>
@@ -188,6 +194,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
+import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
 import EditTeamForm from '@/components/teams/EditTeamForm.vue'
 import {getDisplayName} from '@/helpers/user'
 import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
