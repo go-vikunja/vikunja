@@ -29,7 +29,7 @@ async function invalidateShares(client: QueryClient, projectId: number, kind: 'u
 function shareSuccess(kind: 'users' | 'teams', action: 'addedSuccess' | 'updatedSuccess' | 'removeSuccess') {
 	return i18n.global.t(`project.share.userTeam.${action}`, {
 		type: i18n.global.t(kind === 'users' ? 'project.share.userTeam.typeUser' : 'project.share.userTeam.typeTeam', 1),
-		sharable: i18n.global.t('project.list.title'),
+		sharable: i18n.global.t('project.share.userTeam.sharable'),
 	})
 }
 
