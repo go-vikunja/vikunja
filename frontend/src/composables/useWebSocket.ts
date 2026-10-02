@@ -1,6 +1,6 @@
 import {computed, ref, readonly} from 'vue'
 
-import {getToken, getTokenType} from '@/helpers/auth'
+import {getToken, getTokenType, isTokenExpired, refreshToken, RefreshTokenError} from '@/helpers/auth'
 import {getApiBaseUrl} from '@/helpers/apiUrl'
 import {AUTH_TYPES} from '@/constants/auth'
 import {
@@ -54,9 +54,21 @@ function sendMessage(msg: object) {
 	}
 }
 
-function sendAuth() {
+async function sendAuth(connection: WebSocket) {
+	// The server closes the socket on token expiry, so reconnects start stale.
+	if (isTokenExpired(getToken())) {
+		try {
+			await refreshToken(true)
+		} catch (e) {
+			// A rejected refresh means the session is gone; the stale token's invalid_token stops retries.
+			if (!(e instanceof RefreshTokenError && e.failure.kind === 'rejected')) {
+				connection.close()
+				return
+			}
+		}
+	}
 	const token = getToken()
-	if (token) {
+	if (token && socket === connection) {
 		sendMessage({action: 'auth', token})
 	}
 }
@@ -92,6 +104,7 @@ function handleMessage(event: MessageEvent) {
 	// Handle auth success
 	if (msg.action === 'auth.success' && msg.success) {
 		status.value = 'authenticated'
+		reconnectAttempt = 0
 		console.debug('WebSocket: authenticated')
 		resubscribeAll()
 		// The server never acks a subscribe, so the send time is the earliest point events can reach us.
@@ -105,6 +118,7 @@ function handleMessage(event: MessageEvent) {
 	if (msg.error === 'invalid_token' || msg.error === 'auth_required') {
 		console.warn('WebSocket: auth failed:', msg.error)
 		manuallyDisconnected = true
+		reconnectAttempt = 0
 		closeSocket()
 		setFirstConnectionSettled(true)
 		return
@@ -211,9 +225,8 @@ function connect() {
 			return
 		}
 		status.value = 'authenticating'
-		reconnectAttempt = 0
 		console.debug('WebSocket: connected, sending auth')
-		sendAuth()
+		void sendAuth(connection)
 	}
 
 	socket.onmessage = event => {

@@ -3,7 +3,7 @@ import {canonicalApiBaseUrl} from '@/client/requestContext'
 import {authRefreshToken} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
-import {clearServerClock, recordServerClock} from '@/helpers/serverClock'
+import {clearServerClock, recordServerClock, serverNowSeconds} from '@/helpers/serverClock'
 import {MILLISECONDS_A_MINUTE, MILLISECONDS_A_SECOND} from '@/constants/date'
 
 let savedToken: string | null = null
@@ -45,6 +45,11 @@ function getTokenPayload(token: string | null): Record<string, unknown> | null {
 export function getTokenType(token: string | null): number | null {
 	const payload = getTokenPayload(token)
 	return typeof payload?.type === 'number' ? payload.type : null
+}
+
+export function isTokenExpired(token: string | null): boolean {
+	const exp = getTokenPayload(token)?.exp
+	return typeof exp !== 'number' || exp <= serverNowSeconds()
 }
 
 export function getTokenIdentity(token: string | null): {id: number; type: number} | null {
