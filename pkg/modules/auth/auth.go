@@ -81,24 +81,19 @@ func getRefreshTokenCookiePaths() []string {
 // path-scoped so the browser only sends it on refresh requests. A single
 // cookie at Path=/api would ship the long-lived token on every API request.
 // Browsers match cookie paths by prefix, so each endpoint needs its own.
+//
+// SameSite=Lax, not None: CORS allows localhost origins by default.
 func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	secure := strings.HasPrefix(config.ServicePublicURL.GetString(), "https")
-	// SameSite=None so the cookie survives split-origin deployments where the
-	// frontend and API are on different hosts, but browsers only accept that
-	// with Secure=true; fall back to Lax on plain HTTP (local dev, E2E tests).
-	sameSite := http.SameSiteLaxMode
-	if secure {
-		sameSite = http.SameSiteNoneMode
-	}
 	for _, path := range getRefreshTokenCookiePaths() {
-		c.SetCookie(&http.Cookie{ //nolint:gosec // G124: Secure/SameSite are intentionally conditional on the https scheme (see above); HttpOnly is always set.
+		c.SetCookie(&http.Cookie{ //nolint:gosec // G124: plain-http instances need the cookie too.
 			Name:     RefreshTokenCookieName,
 			Value:    token,
 			Path:     path,
 			MaxAge:   maxAge,
 			HttpOnly: true,
 			Secure:   secure,
-			SameSite: sameSite,
+			SameSite: http.SameSiteLaxMode,
 		})
 	}
 }
