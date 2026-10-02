@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,13 +33,18 @@ import (
 
 func insertTestShare(t *testing.T, id, projectID int64) {
 	t.Helper()
+	insertTestShareWithPermission(t, id, projectID, models.PermissionRead)
+}
+
+func insertTestShareWithPermission(t *testing.T, id, projectID int64, perm models.Permission) {
+	t.Helper()
 	s := db.NewSession()
 	defer s.Close()
 	_, err := s.Insert(&models.LinkSharing{
 		ID:          id,
 		Hash:        "ghsa-qfwc-" + strconv.FormatInt(id, 10),
 		ProjectID:   projectID,
-		Permission:  models.PermissionRead,
+		Permission:  perm,
 		SharingType: models.SharingTypeWithoutPassword,
 		SharedByID:  6,
 	})
@@ -81,23 +87,12 @@ func TestHumaLinkSharing(t *testing.T) {
 			}
 		})
 		t.Run("Write access", func(t *testing.T) {
-			t.Run("read only", func(t *testing.T) {
-				rec, err := onProjectAs("10").testCreateWithUser(nil, nil, `{"permission":0}`)
-				require.NoError(t, err)
-				assert.Equal(t, http.StatusCreated, rec.Code)
-				assert.Contains(t, rec.Body.String(), `"hash":`)
-			})
-			t.Run("write", func(t *testing.T) {
-				rec, err := onProjectAs("10").testCreateWithUser(nil, nil, `{"permission":1}`)
-				require.NoError(t, err)
-				assert.Equal(t, http.StatusCreated, rec.Code)
-				assert.Contains(t, rec.Body.String(), `"hash":`)
-			})
-			t.Run("admin", func(t *testing.T) {
-				_, err := onProjectAs("10").testCreateWithUser(nil, nil, `{"permission":2}`)
+			// GHSA-fmmf-xq98-g327: managing link shares requires project admin.
+			for _, perm := range []string{"0", "1", "2"} {
+				_, err := onProjectAs("10").testCreateWithUser(nil, nil, `{"permission":`+perm+`}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
-			})
+			}
 		})
 		t.Run("Admin access", func(t *testing.T) {
 			for _, perm := range []string{"0", "1", "2"} {
@@ -201,11 +196,58 @@ func TestHumaLinkSharing(t *testing.T) {
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		t.Run("Nonexisting is idempotent", func(t *testing.T) {
-			// Authorized deletion is idempotent.
-			rec, err := onProjectAs("1").testDeleteWithUser(nil, map[string]string{"share": "9999999"})
+		t.Run("Nonexisting", func(t *testing.T) {
+			_, err := onProjectAs("1").testDeleteWithUser(nil, map[string]string{"share": "9999999"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
+			assertHandlerErrorCode(t, err, models.ErrCodeProjectShareDoesNotExist)
+		})
+		t.Run("Share from another project", func(t *testing.T) {
+			_, err := onProjectAs("1").testDeleteWithUser(nil, map[string]string{"share": "2"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
+			db.AssertExists(t, "link_shares", map[string]interface{}{"id": 2}, false)
+		})
+		// GHSA-fmmf-xq98-g327: the delete body carries no tier.
+		t.Run("Forbidden write member, every tier", func(t *testing.T) {
+			for i, perm := range []models.Permission{models.PermissionRead, models.PermissionWrite, models.PermissionAdmin} {
+				id := int64(40 + i)
+				insertTestShareWithPermission(t, id, 10, perm)
+				_, err := onProjectAs("10").testDeleteWithUser(nil, map[string]string{"share": strconv.FormatInt(id, 10)})
+				require.Error(t, err)
+				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+				db.AssertExists(t, "link_shares", map[string]interface{}{"id": id}, false)
+			}
+		})
+		t.Run("Forbidden read member", func(t *testing.T) {
+			insertTestShare(t, 43, 9)
+			_, err := onProjectAs("9").testDeleteWithUser(nil, map[string]string{"share": "43"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+		t.Run("Forbidden link share principal", func(t *testing.T) {
+			jwt, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{
+				ID:          3,
+				Hash:        "test3",
+				ProjectID:   3,
+				Permission:  models.PermissionAdmin,
+				SharingType: models.SharingTypeWithoutPassword,
+				SharedByID:  1,
+			})
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusNoContent, rec.Code)
+			rec := apiTokenReq(base.e, http.MethodDelete, "/api/v2/projects/3/shares/3", jwt, "")
+			assert.Equal(t, http.StatusForbidden, rec.Code)
+			db.AssertExists(t, "link_shares", map[string]interface{}{"id": 3}, false)
+		})
+		t.Run("Admin deletes every tier", func(t *testing.T) {
+			for i, perm := range []models.Permission{models.PermissionRead, models.PermissionWrite, models.PermissionAdmin} {
+				id := int64(50 + i)
+				insertTestShareWithPermission(t, id, 11, perm)
+				rec, err := onProjectAs("11").testDeleteWithUser(nil, map[string]string{"share": strconv.FormatInt(id, 10)})
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusNoContent, rec.Code)
+				db.AssertMissing(t, "link_shares", map[string]interface{}{"id": id})
+			}
 		})
 		t.Run("Forbidden read-only", func(t *testing.T) {
 			h := onProjectAs("1")
