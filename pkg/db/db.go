@@ -219,12 +219,14 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 		dbParam = "&"
 	}
 	host, port := parsePostgreSQLHostPort(dbHost)
+	// PathEscape leaves '@' and ':' alone, which pgx then reads as userinfo delimiters.
+	userInfo := url.UserPassword(dbUser, dbPasswd).String()
 	if host[0] == '/' { // looks like a unix socket
-		connStr = fmt.Sprintf("postgres://%s:%s@:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s&host=%s",
-			url.PathEscape(dbUser), url.PathEscape(dbPasswd), port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, host)
+		connStr = fmt.Sprintf("postgres://%s@:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s&host=%s",
+			userInfo, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, host)
 	} else {
-		connStr = fmt.Sprintf("postgres://%s:%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
-			url.PathEscape(dbUser), url.PathEscape(dbPasswd), host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
+		connStr = fmt.Sprintf("postgres://%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
+			userInfo, host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
 	}
 	// Pin search_path so raw SQL resolves to the same schema as xorm-built statements (#3118).
 	// Quoting preserves case; public stays so extension operators (e.g. ParadeDB's |||) keep resolving.
