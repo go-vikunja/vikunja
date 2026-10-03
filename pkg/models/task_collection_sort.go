@@ -52,6 +52,9 @@ const (
 	taskPropertyLabels        string = "labels"
 	taskPropertyReminders     string = "reminders"
 	taskPropertyCreatedBy     string = "created_by"
+	// Not task columns: match against the task_relations table, filterable only.
+	taskPropertyRelations     string = "relations"
+	taskPropertyOpenRelations string = "open_relations"
 	// Not a task column: sorts by search relevance on ParadeDB. Valid for
 	// sorting only, silently skipped when the database or query cannot score.
 	taskPropertyRelevance string = "relevance"
