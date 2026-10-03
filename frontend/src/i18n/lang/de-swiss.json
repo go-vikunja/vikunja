@@ -52,6 +52,7 @@
 		"loading": "Vikunja wird geladen…",
 		"errorOccured": "Es ist ein Fehler aufgetreten:",
 		"checkApiUrl": "Bitte überprüfe, ob die API-Url stimmt.",
+		"rateLimited": "Der Server hat zu viele Anfragen erhalten. Bitte warte einen Moment und lade die Seite neu.",
 		"noApiUrlConfigured": "Es wurde keine API-Url konfiguriert. Bitte stelle unten eine ein:"
 	},
 	"offline": {
@@ -116,7 +117,9 @@
 				"description": "Bot-Accounts gehören zu dir und können nur die API nutzen. Sie können zu Projekten, zugewiesenen Aufgaben hinzugefügt und mit API-Token authentifiziert werden und sich nicht selbst anmelden.",
 				"namePlaceholder": "Mein Assistent",
 				"create": "Bot Erstellen",
+				"createSuccess": "Der Bot \"{username}\" wurde erstellt.",
 				"enable": "Aktivieren",
+				"tokensInactive": "API-Token eines deaktivierten Bots werden abgelehnt. Aktiviere den Bot, um Token zu erstellen oder zu verwenden.",
 				"badge": "Bot",
 				"delete": {
 					"header": "Diesen Bot-Account löschen",
@@ -989,7 +992,8 @@
 			"createPlaceholder": "Erstellen",
 			"selectPlaceholder": "Druck uf Enter zum uuswähle",
 			"removeItem": "Dieses Element entfernen",
-			"clear": "Auswahl leeren"
+			"clear": "Auswahl leeren",
+			"moreResultsHint": "Die ersten {shown} von {total} werden angezeigt. Verfeinere deine Suche, um den Rest zu finden."
 		},
 		"datepickerRange": {
 			"to": "Bis",
@@ -1753,7 +1757,10 @@
 			"reassignOwner": "Eigentümer:in neu zuweisen",
 			"reassignTitle": "{title} erneut zuweisen",
 			"reassignedSuccess": "Projekteigentümer:in neu zugewiesen.",
-			"newOwnerLabel": "Neu:e Eigentümer:in"
+			"newOwnerLabel": "Neu:e Eigentümer:in",
+			"searchPlaceholder": "Projekte durchsuchen…",
+			"filterByOwner": "Filter nach Eigentümer:in",
+			"hideDefaultProjects": "Standardprojekte verstecken"
 		},
 		"inviteLinks": {
 			"title": "Einladungslinks",
