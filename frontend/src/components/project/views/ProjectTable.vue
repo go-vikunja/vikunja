@@ -364,11 +364,13 @@ import {useTaskList} from '@/composables/useTaskList'
 import type {TaskResponse} from '@/client/queries/tasks'
 import {useTableSort} from '@/composables/useTableSort'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {getTaskIdentifier} from '@/helpers/task'
 import { camelCase } from 'change-case'
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {useProjects} from '@/composables/useProjects'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
@@ -377,6 +379,8 @@ const props = defineProps<{
 }>()
 
 const projectList = useProjects()
+const {currentProject} = useCurrentProject()
+const currentView = computed(() => currentProject.value?.views.find(v => v.id === props.viewId))
 
 const columnsTrigger = ref<ComponentPublicInstance | null>(null)
 const columnsTriggerEl = computed<HTMLElement | null>(() => (columnsTrigger.value?.$el as HTMLElement) ?? null)
@@ -407,11 +411,14 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+
 const taskList = useTaskList(
 	() => props.projectId, 
 	() => props.viewId, 
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
+	() => includeSubprojects.value,
 )
 
 const {
