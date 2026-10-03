@@ -356,7 +356,7 @@ func TestProjectReadAllReportsFavoritesPermission(t *testing.T) {
 
 	u := &user.User{ID: 1, Username: "user1"}
 
-	all, _, _, err := (&Project{Expand: ProjectExpandableRights}).ReadAll(s, u, "", 1, 500)
+	all, _, _, err := (&Project{Expand: []ProjectExpandable{ProjectExpandableRights}}).ReadAll(s, u, "", 1, 500)
 	require.NoError(t, err)
 
 	seen := false

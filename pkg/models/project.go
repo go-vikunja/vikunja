@@ -18,6 +18,7 @@ package models
 
 import (
 	"fmt"
+	"maps"
 	"math"
 	"slices"
 	"strconv"
@@ -78,8 +79,9 @@ type Project struct {
 
 	Views []*ProjectView `xorm:"-" json:"views" readOnly:"true" doc:"The views configured for this project. Managed through the project view endpoints."`
 
-	Expand        ProjectExpandable `xorm:"-" json:"-" query:"expand"`
-	MaxPermission *Permission       `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response."`
+	Expand        []ProjectExpandable `xorm:"-" json:"-" query:"expand"`
+	MaxPermission *Permission         `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response."`
+	TaskCounts    *ProjectTaskCounts  `xorm:"-" json:"task_counts" readOnly:"true" doc:"How many tasks are directly in this project, excluding child projects. Null unless requested via expand=task_counts, and always null for pseudo projects (favorites, saved filters)."`
 
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this project was created. You cannot change this value."`
@@ -93,6 +95,12 @@ type Project struct {
 type ProjectExpandable string
 
 const ProjectExpandableRights = `permissions`
+const ProjectExpandableTaskCounts ProjectExpandable = `task_counts`
+
+type ProjectTaskCounts struct {
+	Undone int64 `json:"undone"`
+	Done   int64 `json:"done"`
+}
 
 type ProjectWithTasksAndBuckets struct {
 	Project
@@ -232,13 +240,20 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		return
 	}
 
-	if p.Expand == ProjectExpandableRights {
+	if slices.Contains(p.Expand, ProjectExpandableRights) {
 		var doer *user.User
 		doer, err = user.GetFromAuth(a)
 		if err != nil {
 			return
 		}
 		err = addMaxPermissionToProjects(s, prs, doer)
+		if err != nil {
+			return
+		}
+	}
+
+	if slices.Contains(p.Expand, ProjectExpandableTaskCounts) {
+		err = addTaskCountsToProjects(s, prs)
 		if err != nil {
 			return
 		}
@@ -879,6 +894,46 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	}
 
 	return
+}
+
+func addTaskCountsToProjects(s *xorm.Session, projects []*Project) error {
+	byID := make(map[int64]*Project, len(projects))
+	for _, project := range projects {
+		// Pseudo projects have negative IDs and own no task rows, so zero counts would be wrong.
+		if project.ID > 0 {
+			project.TaskCounts = &ProjectTaskCounts{}
+			byID[project.ID] = project
+		}
+	}
+	if len(byID) == 0 {
+		return nil
+	}
+
+	rows := []struct {
+		ProjectID int64 `xorm:"project_id"`
+		Done      bool  `xorm:"done"`
+		TaskCount int64 `xorm:"task_count"`
+	}{}
+	err := s.
+		Table("tasks").
+		Select("project_id, done, COUNT(*) AS task_count").
+		In("project_id", slices.Collect(maps.Keys(byID))).
+		GroupBy("project_id, done").
+		Find(&rows)
+	if err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		counts := byID[row.ProjectID].TaskCounts
+		if row.Done {
+			counts.Done += row.TaskCount
+		} else {
+			counts.Undone += row.TaskCount
+		}
+	}
+
+	return nil
 }
 
 // CheckIsArchived returns an ErrProjectIsArchived if the project is archived.

@@ -1540,6 +1540,10 @@ export type Project = {
      */
     readonly subscription?: Subscription;
     /**
+     * How many tasks are directly in this project, excluding child projects. Null unless requested via expand=task_counts, and always null for pseudo projects (favorites, saved filters).
+     */
+    readonly task_counts?: ProjectTaskCounts;
+    /**
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
@@ -1634,6 +1638,10 @@ export type ProjectReadBody = {
      */
     readonly subscription?: Subscription;
     /**
+     * How many tasks are directly in this project, excluding child projects. Null unless requested via expand=task_counts, and always null for pseudo projects (favorites, saved filters).
+     */
+    readonly task_counts?: ProjectTaskCounts;
+    /**
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
@@ -1645,6 +1653,11 @@ export type ProjectReadBody = {
      * The views configured for this project. Managed through the project view endpoints.
      */
     readonly views?: Array<ProjectView> | null;
+};
+
+export type ProjectTaskCounts = {
+    done?: number;
+    undone?: number;
 };
 
 export type ProjectUser = {
@@ -6989,9 +7002,9 @@ export type ProjectsListData = {
          */
         q?: string;
         /**
-         * If set to "permissions", each returned project includes the max permission the requesting user has on it (max_permission). Currently only "permissions" is supported.
+         * Embed extra data per project. Repeatable. permissions fills max_permission; task_counts fills task_counts.
          */
-        expand?: 'permissions';
+        expand?: Array<'permissions' | 'task_counts'> | null;
         /**
          * If true, also returns archived projects.
          */
