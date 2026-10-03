@@ -11,7 +11,7 @@ After=network.target
 [Service]
 RestartSec=2s
 Type=simple
-WorkingDirectory=/opt/vikunja
+WorkingDirectory=/var/lib/vikunja
 ExecStart=/usr/local/bin/vikunja
 Restart=always
 
