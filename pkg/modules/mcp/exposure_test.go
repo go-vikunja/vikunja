@@ -81,6 +81,8 @@ func TestExposure(t *testing.T) {
 		"health",
 		"info",
 		"notifications-atom-feed",
+		"projects-calendar-feed",
+		"user-calendar-feed",
 	} {
 		_, ok := exposure(id, &huma.Operation{
 			OperationID: id,
