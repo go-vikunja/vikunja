@@ -928,6 +928,11 @@
                                     "key": "memberid",
                                     "default_value": "member",
                                     "comment": "The LDAP attribute used to check group membership of a team in Vikunja. Only used when groups are synced to Vikunja and `groupsyncfilter` contains neither `{userdn}` nor `{username}`."
+                                },
+                                {
+                                    "key": "id",
+                                    "default_value": "",
+                                    "comment": "An immutable LDAP attribute used to match LDAP users to Vikunja accounts and LDAP groups to Vikunja teams, so renaming a user's login name or moving or renaming a group in the directory keeps the account or team and its shares. Use `objectGUID` for Active Directory or `entryUUID` for OpenLDAP. If empty, users are matched by `attribute.username` and groups by their DN.\nWhen set on an existing installation, existing accounts and teams are migrated gradually, each on the next login of that user or of a member of that group. The switch is one-way: unsetting or changing this attribute later creates new accounts and teams, and the old ones keep their data and shares but no longer match. While this is set, users must not be able to edit their own `attribute.username` value: a user who sets it to another user's id value could take over that user's migrated account."
                                 }
                             ]
                         }
