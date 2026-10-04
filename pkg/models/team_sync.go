@@ -206,3 +206,64 @@ func createExternalTeam(s *xorm.Session, teamData *Team, u *user.User, issuer, t
 func getExternalTeamName(name, suffix string) string {
 	return name + " (" + suffix + ")"
 }
+
+// MigrateExternalTeamIDs moves teams of an issuer from an old external id to a
+// new one. Teams whose new id is already taken by another team are left alone.
+func MigrateExternalTeamIDs(s *xorm.Session, issuer string, newIDsByOldID map[string]string) error {
+	if len(newIDsByOldID) == 0 {
+		return nil
+	}
+
+	oldIDs := make([]string, 0, len(newIDsByOldID))
+	for oldID := range newIDsByOldID {
+		oldIDs = append(oldIDs, oldID)
+	}
+
+	teams := []*Team{}
+	err := s.
+		Where("issuer = ?", issuer).
+		In("external_id", oldIDs).
+		Find(&teams)
+	if err != nil || len(teams) == 0 {
+		return err
+	}
+
+	newIDs := make([]string, 0, len(teams))
+	for _, t := range teams {
+		newIDs = append(newIDs, newIDsByOldID[t.ExternalID])
+	}
+
+	takenIDs := []string{}
+	err = s.
+		Table("teams").
+		Where("issuer = ?", issuer).
+		In("external_id", newIDs).
+		Cols("external_id").
+		Find(&takenIDs)
+	if err != nil {
+		return err
+	}
+	taken := make(map[string]bool, len(takenIDs))
+	for _, id := range takenIDs {
+		taken[id] = true
+	}
+
+	for _, t := range teams {
+		newID := newIDsByOldID[t.ExternalID]
+		if taken[newID] {
+			continue
+		}
+
+		log.Debugf("Migrating external id of team %d from %s to %s", t.ID, t.ExternalID, newID)
+		_, err = s.
+			Where("id = ?", t.ID).
+			Cols("external_id").
+			Update(&Team{ExternalID: newID})
+		if err != nil {
+			return err
+		}
+		taken[newID] = true
+	}
+
+	return nil
+}
