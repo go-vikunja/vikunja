@@ -267,7 +267,8 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 		}
 	}
 
-	err = syncUserGroups(s, l, u, userdn)
+	ldapUsername := sr.Entries[0].GetAttributeValue(config.AuthLdapAttributeUsername.GetString())
+	err = syncUserGroups(s, l, u, userdn, ldapUsername)
 
 	return u, err
 }
@@ -331,44 +332,73 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 	return
 }
 
-func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn string) (err error) {
+const (
+	groupSyncFilterUserDN   = "{userdn}"
+	groupSyncFilterUsername = "{username}"
+)
+
+// Below AD's default MaxPageSize of 1000.
+var groupSearchPageSize uint32 = 500
+
+// buildGroupSyncFilter returns perUser = true when the template references the
+// user, in which case every group matching the filter is a membership.
+func buildGroupSyncFilter(template, userDN, username string) (filter string, perUser bool) {
+	if !strings.Contains(template, groupSyncFilterUserDN) && !strings.Contains(template, groupSyncFilterUsername) {
+		return template, false
+	}
+
+	return strings.NewReplacer(
+		groupSyncFilterUserDN, ldap.EscapeFilter(userDN),
+		groupSyncFilterUsername, ldap.EscapeFilter(username),
+	).Replace(template), true
+}
+
+func isGroupMember(group *ldap.Entry, memberAttribute, userdn, username string) bool {
+	for _, member := range group.GetAttributeValues(memberAttribute) {
+		if member == userdn || member == username {
+			return true
+		}
+	}
+	return false
+}
+
+func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUsername string) (err error) {
+	filter, perUser := buildGroupSyncFilter(config.AuthLdapGroupSyncFilter.GetString(), userdn, ldapUsername)
+	memberAttribute := config.AuthLdapAttributeMemberID.GetString()
+
+	attributes := []string{"cn", "description"}
+	if !perUser {
+		attributes = append(attributes, memberAttribute)
+	}
+
 	searchRequest := ldap.NewSearchRequest(
 		config.AuthLdapBaseDN.GetString(),
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		config.AuthLdapGroupSyncFilter.GetString(),
-		[]string{
-			"dn",
-			"cn",
-			config.AuthLdapAttributeMemberID.GetString(),
-			"description",
-		},
+		filter,
+		attributes,
 		nil,
 	)
 
-	sr, err := l.Search(searchRequest)
+	sr, err := l.SearchWithPaging(searchRequest, groupSearchPageSize)
 	if err != nil {
 		log.Errorf("Error searching for LDAP groups: %v", err)
 		return err
 	}
 
+	log.Debugf("Found %d LDAP groups for user %s (per-user filter: %t)", len(sr.Entries), userdn, perUser)
+
 	var teams []*models.Team
 
 	for _, group := range sr.Entries {
-		groupName := group.GetAttributeValue("cn")
-		members := group.GetAttributeValues(config.AuthLdapAttributeMemberID.GetString())
-		description := group.GetAttributeValue("description")
-
-		log.Debugf("Group %s has %d members", groupName, len(members))
-
-		for _, member := range members {
-			if member == userdn || member == u.Username {
-				teams = append(teams, &models.Team{
-					Name:        groupName,
-					ExternalID:  group.DN,
-					Description: description,
-				})
-			}
+		if !perUser && !isGroupMember(group, memberAttribute, userdn, u.Username) {
+			continue
 		}
+
+		teams = append(teams, &models.Team{
+			Name:        group.GetAttributeValue("cn"),
+			ExternalID:  group.DN,
+			Description: group.GetAttributeValue("description"),
+		})
 	}
 
 	err = models.SyncExternalTeamsForUser(s, u, teams, user.IssuerLDAP, "LDAP")

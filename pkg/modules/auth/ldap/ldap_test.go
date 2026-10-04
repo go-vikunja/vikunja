@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	user2 "code.vikunja.io/api/pkg/user"
 
+	"github.com/go-ldap/ldap/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -160,6 +161,86 @@ func TestLdapLogin(t *testing.T) {
 			"issuer":      "ldap",
 			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
 		}, false)
+	})
+
+	t.Run("should sync groups with per-user filter", func(t *testing.T) {
+		origFilter := config.AuthLdapGroupSyncFilter.GetString()
+		config.AuthLdapGroupSyncFilter.Set("(&(objectclass=groupOfNames)(member={userdn}))")
+		defer config.AuthLdapGroupSyncFilter.Set(origFilter)
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "admin_staff (LDAP)",
+			"issuer":      "ldap",
+			"external_id": "cn=admin_staff,ou=people,dc=planetexpress,dc=com",
+		}, false)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "git (LDAP)",
+			"issuer":      "ldap",
+			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
+		}, false)
+		assertLdapTeamCount(t, user.ID, 2)
+	})
+
+	t.Run("should sync groups with per-user filter for non-ascii dn", func(t *testing.T) {
+		origFilter := config.AuthLdapGroupSyncFilter.GetString()
+		config.AuthLdapGroupSyncFilter.Set("(&(objectclass=groupOfNames)(member={userdn}))")
+		defer config.AuthLdapGroupSyncFilter.Set(origFilter)
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// cn=Bender Bending Rodríguez,...
+		user, err := AuthenticateUserInLDAP(s, "bender", "bender", true, "")
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "ship_crew (LDAP)",
+			"issuer":      "ldap",
+			"external_id": "cn=ship_crew,ou=people,dc=planetexpress,dc=com",
+		}, false)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "git (LDAP)",
+			"issuer":      "ldap",
+			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
+		}, false)
+		assertLdapTeamCount(t, user.ID, 2)
+	})
+
+	t.Run("should page through groups", func(t *testing.T) {
+		origPageSize := groupSearchPageSize
+		groupSearchPageSize = 1
+		defer func() { groupSearchPageSize = origPageSize }()
+
+		for _, filter := range []string{
+			config.AuthLdapGroupSyncFilter.GetString(),
+			"(&(objectclass=groupOfNames)(member={userdn}))",
+		} {
+			t.Run(filter, func(t *testing.T) {
+				origFilter := config.AuthLdapGroupSyncFilter.GetString()
+				config.AuthLdapGroupSyncFilter.Set(filter)
+				defer config.AuthLdapGroupSyncFilter.Set(origFilter)
+
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+
+				user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+
+				require.NoError(t, err)
+				require.NoError(t, s.Commit())
+				assertLdapTeamCount(t, user.ID, 2)
+			})
+		}
 	})
 
 	t.Run("should sync avatar when enabled", func(t *testing.T) {
@@ -431,6 +512,121 @@ func TestSanitizedUserQueryPreventsInjection(t *testing.T) {
 			if strings.Contains(attempt, "=") {
 				assert.Contains(t, result, `\3d`, "Should contain escaped equals")
 			}
+		})
+	}
+}
+
+func assertLdapTeamCount(t *testing.T, userID int64, expected int64) {
+	s := db.NewSession()
+	defer s.Close()
+
+	count, err := s.
+		Table("teams").
+		Join("INNER", "team_members", "team_members.team_id = teams.id").
+		Where("teams.issuer = ? AND team_members.user_id = ?", user2.IssuerLDAP, userID).
+		Count()
+	require.NoError(t, err)
+	assert.Equal(t, expected, count)
+}
+
+func TestBuildGroupSyncFilter(t *testing.T) {
+	tests := []struct {
+		name            string
+		template        string
+		userDN          string
+		username        string
+		expectedFilter  string
+		expectedPerUser bool
+	}{
+		{
+			name:           "no placeholder",
+			template:       "(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
+			userDN:         "cn=professor,ou=people,dc=planetexpress,dc=com",
+			username:       "professor",
+			expectedFilter: "(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
+		},
+		{
+			name:            "userdn",
+			template:        "(&(objectclass=groupOfNames)(member={userdn}))",
+			userDN:          "cn=professor,ou=people,dc=planetexpress,dc=com",
+			expectedFilter:  "(&(objectclass=groupOfNames)(member=cn=professor,ou=people,dc=planetexpress,dc=com))",
+			expectedPerUser: true,
+		},
+		{
+			name:            "ad matching rule in chain",
+			template:        "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={userdn}))",
+			userDN:          "CN=Jane Doe,OU=Users,DC=example,DC=com",
+			expectedFilter:  "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:=CN=Jane Doe,OU=Users,DC=example,DC=com))",
+			expectedPerUser: true,
+		},
+		{
+			name:            "username",
+			template:        "(&(objectclass=posixGroup)(memberUid={username}))",
+			username:        "professor",
+			expectedFilter:  "(&(objectclass=posixGroup)(memberUid=professor))",
+			expectedPerUser: true,
+		},
+		{
+			name:            "both placeholders, repeated",
+			template:        "(|(member={userdn})(memberUid={username})(uniqueMember={userdn}))",
+			userDN:          "cn=a,dc=b",
+			username:        "a",
+			expectedFilter:  "(|(member=cn=a,dc=b)(memberUid=a)(uniqueMember=cn=a,dc=b))",
+			expectedPerUser: true,
+		},
+		{
+			name:            "dn with escaped comma",
+			template:        "(member={userdn})",
+			userDN:          `CN=Doe\, John,OU=Users,DC=example,DC=com`,
+			expectedFilter:  `(member=CN=Doe\5c, John,OU=Users,DC=example,DC=com)`,
+			expectedPerUser: true,
+		},
+		{
+			name:            "dn with parentheses",
+			template:        "(member={userdn})",
+			userDN:          "CN=John (Admin),OU=Users,DC=example,DC=com",
+			expectedFilter:  `(member=CN=John \28Admin\29,OU=Users,DC=example,DC=com)`,
+			expectedPerUser: true,
+		},
+		{
+			name:            "dn with asterisk",
+			template:        "(member={userdn})",
+			userDN:          "CN=*,DC=example,DC=com",
+			expectedFilter:  `(member=CN=\2a,DC=example,DC=com)`,
+			expectedPerUser: true,
+		},
+		{
+			name:            "dn with non-ascii characters",
+			template:        "(member={userdn})",
+			userDN:          "CN=Jörg,DC=example,DC=com",
+			expectedFilter:  `(member=CN=J\c3\b6rg,DC=example,DC=com)`,
+			expectedPerUser: true,
+		},
+		{
+			name:            "injection attempt in username",
+			template:        "(&(objectclass=posixGroup)(memberUid={username}))",
+			username:        "x)(|(objectclass=*",
+			expectedFilter:  `(&(objectclass=posixGroup)(memberUid=x\29\28|\28objectclass=\2a))`,
+			expectedPerUser: true,
+		},
+		{
+			name:            "placeholder in value is not substituted again",
+			template:        "(|(member={userdn})(memberUid={username}))",
+			userDN:          "cn={username},dc=example",
+			username:        "professor",
+			expectedFilter:  "(|(member=cn={username},dc=example)(memberUid=professor))",
+			expectedPerUser: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filter, perUser := buildGroupSyncFilter(tt.template, tt.userDN, tt.username)
+			assert.Equal(t, tt.expectedFilter, filter)
+			assert.Equal(t, tt.expectedPerUser, perUser)
+
+			_, err := ldap.CompileFilter(filter)
+			require.NoError(t, err)
 		})
 	}
 }
