@@ -162,6 +162,25 @@ func registerEventsForAuditLogging() {
 		}
 	})
 
+	// Risks
+	audit.RegisterEventForAudit(func(e *RiskCreatedEvent) *audit.Entry {
+		return &audit.Entry{Action: audit.ActionRiskCreated, Actor: auditActorFromUser(e.Doer), Target: audit.RiskTarget(e.Risk.ID)}
+	})
+	audit.RegisterEventForAudit(func(e *RiskUpdatedEvent) *audit.Entry {
+		return &audit.Entry{Action: audit.ActionRiskUpdated, Actor: auditActorFromUser(e.Doer), Target: audit.RiskTarget(e.Risk.ID)}
+	})
+	audit.RegisterEventForAudit(func(e *RiskDeletedEvent) *audit.Entry {
+		return &audit.Entry{Action: audit.ActionRiskDeleted, Actor: auditActorFromUser(e.Doer), Target: audit.RiskTarget(e.Risk.ID)}
+	})
+	audit.RegisterEventForAudit(func(e *RiskStatusChangedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionRiskStatusChanged,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.RiskTarget(e.Risk.ID),
+			Metadata: map[string]any{"from": e.FromStatus, "to": e.ToStatus},
+		}
+	})
+
 	// Tasks
 	audit.RegisterEventForAudit(func(e *TaskCreatedEvent) *audit.Entry {
 		return &audit.Entry{

@@ -1,0 +1,13 @@
+# A risk of project 1 (owned by user1). Tests that need more create them.
+- id: 1
+  project_id: 1
+  title: Fixture risk
+  description: Lorem Ipsum
+  category: Schedule
+  probability: 3
+  impact: 4
+  owner_id: 0
+  status: open
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12

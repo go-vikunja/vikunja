@@ -158,6 +158,50 @@ func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
 	assert.Equal(t, "DELETE", te["delete"].Method)
 }
 
+// TestCollectRoutes_RisksV2 pins the group and permission names of the v2-only risks
+// resource: CRUD under "risks", the per-project list and create under "projects", the
+// status and history operations as extra permissions of "risks". Token scopes are saved
+// by these names, so a change here would silently revoke or widen existing tokens.
+func TestCollectRoutes_RisksV2(t *testing.T) {
+	resetAPITokenRoutes(t)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/risks"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/risks/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/risks/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/risks/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "DELETE", Path: "/api/v2/risks/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/risks/:id/status"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/risks/:id/history"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/projects/:project_id/risks"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/projects/:project_id/risks"}, true)
+
+	assert.Empty(t, apiTokenRoutes, "v2 routes must not land in the v1 table")
+
+	_, isOther := apiTokenRoutesV2["other"]
+	assert.False(t, isOther, "risks must not fall into the 'other' bucket")
+
+	risks, has := apiTokenRoutesV2["risks"]
+	require.True(t, has, "risks group should exist in the v2 table")
+	assert.Equal(t, "/api/v2/risks", risks["read_all"].Path)
+	assert.Equal(t, "GET", risks["read_one"].Method)
+	assert.Equal(t, "PUT", risks["update"].Method, "PUT is the authoritative update verb")
+	assert.Equal(t, "DELETE", risks["delete"].Method)
+	require.Contains(t, risks, "status")
+	assert.Equal(t, "POST", risks["status"].Method)
+	assert.Equal(t, "/api/v2/risks/:id/status", risks["status"].Path)
+	require.Contains(t, risks, "history")
+	assert.Equal(t, "GET", risks["history"].Method)
+
+	// The per-project list and create sit with the other project routes.
+	projects, has := apiTokenRoutesV2["projects"]
+	require.True(t, has, "the per-project risk routes are filed under projects")
+	require.Contains(t, projects, "risks")
+	assert.Equal(t, "GET", projects["risks"].Method)
+	assert.Equal(t, "/api/v2/projects/:project_id/risks", projects["risks"].Path)
+	require.Contains(t, projects, "risks_post")
+	assert.Equal(t, "POST", projects["risks_post"].Method)
+}
+
 // TestGetAPITokenRoutes_ExposesV2Only verifies the /routes payload merges
 // v2-only groups (time_entries has no v1 counterpart) so token clients can
 // discover and grant them, without mutating the v1 table itself.

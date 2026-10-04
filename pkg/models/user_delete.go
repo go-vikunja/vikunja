@@ -163,6 +163,11 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
+	// Risks of other people's projects this user owned have no owner any more
+	if err = clearRiskOwner(s, u.ID); err != nil {
+		return err
+	}
+
 	// Delete all related entities
 	relatedEntities := []struct {
 		column string

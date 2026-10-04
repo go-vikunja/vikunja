@@ -1,0 +1,7 @@
+- id: 1
+  risk_id: 1
+  from_status: ''
+  to_status: open
+  note: ''
+  changed_by_id: 1
+  created: 2018-12-01 15:13:12

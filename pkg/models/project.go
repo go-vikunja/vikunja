@@ -1502,6 +1502,12 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	// The risk register of the project, with the history of every risk
+	err = deleteRisksOfProject(s, p.ID)
+	if err != nil {
+		return
+	}
+
 	// Delete the project
 	_, err = s.ID(p.ID).Delete(&Project{})
 	if err != nil {

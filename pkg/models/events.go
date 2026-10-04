@@ -406,6 +406,52 @@ func (e *TimeEntryDeletedEvent) Name() string {
 	return "time-entry.deleted"
 }
 
+// RiskCreatedEvent represents a risk being created
+type RiskCreatedEvent struct {
+	Risk *Risk      `json:"risk"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for RiskCreatedEvent
+func (e *RiskCreatedEvent) Name() string {
+	return "risk.created"
+}
+
+// RiskUpdatedEvent represents a risk being edited
+type RiskUpdatedEvent struct {
+	Risk *Risk      `json:"risk"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for RiskUpdatedEvent
+func (e *RiskUpdatedEvent) Name() string {
+	return "risk.updated"
+}
+
+// RiskDeletedEvent represents a risk being deleted
+type RiskDeletedEvent struct {
+	Risk *Risk      `json:"risk"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for RiskDeletedEvent
+func (e *RiskDeletedEvent) Name() string {
+	return "risk.deleted"
+}
+
+// RiskStatusChangedEvent represents the status of a risk changing, including closing and reopening it
+type RiskStatusChangedEvent struct {
+	Risk       *Risk      `json:"risk"`
+	Doer       *user.User `json:"doer"`
+	FromStatus string     `json:"from_status"`
+	ToStatus   string     `json:"to_status"`
+}
+
+// Name defines the name for RiskStatusChangedEvent
+func (e *RiskStatusChangedEvent) Name() string {
+	return "risk.status.changed"
+}
+
 ////////////////////
 // API Token Events
 

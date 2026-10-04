@@ -122,6 +122,11 @@ const (
 	ActionTaskRelationCreated   = "task.relation.created"
 	ActionTaskRelationDeleted   = "task.relation.deleted"
 
+	ActionRiskCreated       = "risk.created"
+	ActionRiskUpdated       = "risk.updated"
+	ActionRiskDeleted       = "risk.deleted"
+	ActionRiskStatusChanged = "risk.status.changed"
+
 	ActionProjectCreated        = "project.created"
 	ActionProjectUpdated        = "project.updated"
 	ActionProjectDeleted        = "project.deleted"
@@ -167,6 +172,7 @@ func ActorFromDoerID(id int64) Actor {
 }
 
 func TaskTarget(id int64) Target     { return Target{Type: "task", ID: id} }
+func RiskTarget(id int64) Target     { return Target{Type: "risk", ID: id} }
 func ProjectTarget(id int64) Target  { return Target{Type: "project", ID: id} }
 func UserTarget(id int64) Target     { return Target{Type: "user", ID: id} }
 func TeamTarget(id int64) Target     { return Target{Type: "team", ID: id} }

@@ -63,6 +63,8 @@ func SetupTests() {
 		"task_reminders",
 		"tasks",
 		"time_entries",
+		"risks",
+		"risk_status_history",
 		"team_projects",
 		"team_members",
 		"teams",
