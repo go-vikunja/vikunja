@@ -250,7 +250,6 @@ function getBuildConfig(env: Record<string, string>) {
 			},
 		},
 		build: {
-			target: 'esnext',
 			// required for sentry debugging: tells vite to create source maps
 			sourcemap: Boolean(env.SENTRY_AUTH_TOKEN),
 			rollupOptions: {
