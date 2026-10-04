@@ -66,7 +66,18 @@
 					{{ getViewTitle(view) }}
 				</BaseButton>
 			</div>
-			<slot name="header" />
+			<div class="switch-view-end">
+				<!-- Saved filters and Favorites have no real project id, so they have no risks. -->
+				<BaseButton
+					v-if="projectId > 0"
+					class="risks-link"
+					:to="{name: 'project.risks', params: {projectId}}"
+				>
+					<Icon icon="exclamation-circle" />
+					{{ $t('risks.title') }}
+				</BaseButton>
+				<slot name="header" />
+			</div>
 		</div>
 		<CustomTransition name="fade">
 			<Message
@@ -192,6 +203,28 @@ function getViewRoute(view: ProjectView) {
 	@media screen and (max-width: $tablet) {
 		justify-content: center;
 		flex-direction: column;
+	}
+}
+
+.switch-view-end {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	margin-inline-start: auto;
+}
+
+.risks-link {
+	display: inline-flex;
+	align-items: center;
+	gap: .25rem;
+	padding: .25rem .5rem;
+	border-radius: $radius;
+	font-size: .75rem;
+	white-space: nowrap;
+
+	&:hover {
+		color: var(--switch-view-color);
+		background: var(--switch-view-active-background);
 	}
 }
 

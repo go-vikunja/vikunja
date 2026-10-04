@@ -12,6 +12,10 @@ export type XlsxStyle =
 	| 'barSummary'
 	| 'barMilestone'
 	| 'barCritical'
+	| 'ratingLow'
+	| 'ratingMedium'
+	| 'ratingHigh'
+	| 'ratingCritical'
 
 export type XlsxValue = string | number | boolean | Date | null | undefined
 
@@ -42,6 +46,10 @@ const STYLE_INDEX: Record<XlsxStyle, number> = {
 	barSummary: 6,
 	barMilestone: 7,
 	barCritical: 8,
+	ratingLow: 9,
+	ratingMedium: 10,
+	ratingHigh: 11,
+	ratingCritical: 12,
 }
 
 export const MAX_SHEET_COLUMNS = 16384
@@ -172,7 +180,7 @@ const STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
 	'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
 	'<numFmts count="2"><numFmt numFmtId="164" formatCode="yyyy\\-mm\\-dd"/><numFmt numFmtId="165" formatCode="yyyy\\-mm\\-dd\\ hh:mm"/></numFmts>' +
 	'<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
-	'<fills count="7">' +
+	'<fills count="11">' +
 	'<fill><patternFill patternType="none"/></fill>' +
 	'<fill><patternFill patternType="gray125"/></fill>' +
 	'<fill><patternFill patternType="solid"><fgColor rgb="FFD9D9D9"/><bgColor indexed="64"/></patternFill></fill>' +
@@ -180,10 +188,15 @@ const STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
 	'<fill><patternFill patternType="solid"><fgColor rgb="FF374151"/><bgColor indexed="64"/></patternFill></fill>' +
 	'<fill><patternFill patternType="solid"><fgColor rgb="FFF59E0B"/><bgColor indexed="64"/></patternFill></fill>' +
 	'<fill><patternFill patternType="solid"><fgColor rgb="FFEF4444"/><bgColor indexed="64"/></patternFill></fill>' +
+	// Risk ratings, same colours as the print view (low, medium, high, critical).
+	'<fill><patternFill patternType="solid"><fgColor rgb="FF8BC34A"/><bgColor indexed="64"/></patternFill></fill>' +
+	'<fill><patternFill patternType="solid"><fgColor rgb="FFFFC107"/><bgColor indexed="64"/></patternFill></fill>' +
+	'<fill><patternFill patternType="solid"><fgColor rgb="FFFB8C00"/><bgColor indexed="64"/></patternFill></fill>' +
+	'<fill><patternFill patternType="solid"><fgColor rgb="FFE53935"/><bgColor indexed="64"/></patternFill></fill>' +
 	'</fills>' +
 	'<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
 	'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-	'<cellXfs count="9">' +
+	'<cellXfs count="13">' +
 	'<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
 	'<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
 	'<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
@@ -193,6 +206,10 @@ const STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
 	'<xf numFmtId="0" fontId="0" fillId="4" borderId="0" xfId="0" applyFill="1"/>' +
 	'<xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1"/>' +
 	'<xf numFmtId="0" fontId="0" fillId="6" borderId="0" xfId="0" applyFill="1"/>' +
+	'<xf numFmtId="0" fontId="0" fillId="7" borderId="0" xfId="0" applyFill="1"/>' +
+	'<xf numFmtId="0" fontId="0" fillId="8" borderId="0" xfId="0" applyFill="1"/>' +
+	'<xf numFmtId="0" fontId="0" fillId="9" borderId="0" xfId="0" applyFill="1"/>' +
+	'<xf numFmtId="0" fontId="0" fillId="10" borderId="0" xfId="0" applyFill="1"/>' +
 	'</cellXfs>' +
 	'<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
 	'</styleSheet>'

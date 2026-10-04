@@ -196,9 +196,9 @@ describe('buildXlsx', () => {
 
 	it('declares the number formats and the fills it uses', () => {
 		const styles = readZip(buildXlsx([sheet])).get('xl/styles.xml') as string
-		expect(styles).toContain('<cellXfs count="9">')
+		expect(styles).toContain('<cellXfs count="13">')
 		expect(styles).toContain('numFmtId="164"')
-		expect(styles).toContain('<fills count="7">')
+		expect(styles).toContain('<fills count="11">')
 	})
 
 	it('writes text in any script', () => {

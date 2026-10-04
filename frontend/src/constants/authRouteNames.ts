@@ -17,4 +17,4 @@ export const AUTH_ROUTE_NAMES = new Set([
 ])
 
 // Pages that render alone, without the app shell. Used by the print view.
-export const BARE_ROUTE_NAMES = new Set<string>(['project.print'])
+export const BARE_ROUTE_NAMES = new Set<string>(['project.print', 'risks.print'])

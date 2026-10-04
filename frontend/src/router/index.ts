@@ -381,6 +381,16 @@ const router = createRouter({
 			},
 		},
 		{
+			// A static segment wins over the :viewId catch-all below, whatever the order.
+			path: '/projects/:projectId/risks',
+			name: 'project.risks',
+			component: () => import('@/views/risks/ProjectRisks.vue'),
+			props: route => ({projectId: Number(route.params.projectId)}),
+			meta: {
+				title: 'risks.title',
+			},
+		},
+		{
 			path: '/projects/:projectId/:viewId',
 			name: 'project.view',
 			component: () => import('@/views/project/ProjectView.vue'),
@@ -442,6 +452,21 @@ const router = createRouter({
 			path: '/about',
 			name: 'about',
 			component: () => import('@/views/About.vue'),
+		},
+		{
+			// Not license gated: the register is part of the core product.
+			path: '/risks',
+			name: 'risks',
+			component: () => import('@/views/risks/RiskRegister.vue'),
+			meta: {
+				title: 'risks.register',
+			},
+		},
+		{
+			// The printable register. Outside the app shell, like project.print.
+			path: '/risks/print',
+			name: 'risks.print',
+			component: () => import('@/views/risks/RisksPrint.vue'),
 		},
 		{
 			path: '/time-tracking',
