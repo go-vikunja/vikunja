@@ -24,12 +24,75 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
+	"xorm.io/xorm"
 )
+
+const professorDN = "cn=Hubert J. Farnsworth,ou=people,dc=planetexpress,dc=com"
+
+func useEntryUUID(t *testing.T, key config.Key) {
+	orig := key.GetString()
+	key.Set("entryUUID")
+	t.Cleanup(func() { key.Set(orig) })
+}
+
+func getLdapTeam(t *testing.T, s *xorm.Session, externalID string) *models.Team {
+	team, err := models.GetTeamByExternalIDAndIssuer(s, externalID, user2.IssuerLDAP)
+	require.NoError(t, err)
+	return team
+}
+
+func ldapEntryUUID(t *testing.T, dn string) string {
+	l, err := ConnectAndBindToLDAPDirectory()
+	require.NoError(t, err)
+	defer l.Close()
+
+	sr, err := l.Search(ldap.NewSearchRequest(dn, ldap.ScopeBaseObject, ldap.NeverDerefAliases, 0, 0, false,
+		"(objectClass=*)", []string{"entryUUID"}, nil))
+	require.NoError(t, err)
+	require.Len(t, sr.Entries, 1)
+	return sr.Entries[0].GetAttributeValue("entryUUID")
+}
+
+// Admin of the gitea/test-openldap image.
+func bindLdapAdmin(t *testing.T) *ldap.Conn {
+	l, err := ConnectAndBindToLDAPDirectory()
+	require.NoError(t, err)
+	require.NoError(t, l.Bind("cn=admin,dc=planetexpress,dc=com", "GoodNewsEveryone"))
+	return l
+}
+
+func renameLdapEntry(t *testing.T, dn, newRDN string) {
+	l := bindLdapAdmin(t)
+	defer l.Close()
+
+	oldRDN, parent, _ := strings.Cut(dn, ",")
+	require.NoError(t, l.ModifyDN(ldap.NewModifyDNRequest(dn, newRDN, true, "")))
+	t.Cleanup(func() {
+		l := bindLdapAdmin(t)
+		defer l.Close()
+		require.NoError(t, l.ModifyDN(ldap.NewModifyDNRequest(newRDN+","+parent, oldRDN, true, "")))
+	})
+}
+
+func setLdapAttribute(t *testing.T, dn, attribute, oldValue, newValue string) {
+	replace := func(value string) {
+		l := bindLdapAdmin(t)
+		defer l.Close()
+		req := ldap.NewModifyRequest(dn, nil)
+		req.Replace(attribute, []string{value})
+		require.NoError(t, l.Modify(req))
+	}
+
+	replace(newValue)
+	t.Cleanup(func() { replace(oldValue) })
+}
 
 func TestLdapLogin(t *testing.T) {
 	if os.Getenv("VIKUNJA_TESTS_USE_CONFIG") != "1" || !config.AuthLdapEnabled.GetBool() {
@@ -51,6 +114,7 @@ func TestLdapLogin(t *testing.T) {
 		db.AssertExists(t, "users", map[string]interface{}{
 			"username": "professor",
 			"issuer":   "ldap",
+			"subject":  "professor",
 		}, false)
 		db.AssertMissing(t, "teams", map[string]interface{}{
 			"issuer": "ldap",
@@ -186,7 +250,7 @@ func TestLdapLogin(t *testing.T) {
 			"issuer":      "ldap",
 			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
 		}, false)
-		assertLdapTeamCount(t, user.ID, 2)
+		assert.EqualValues(t, 2, ldapTeamCount(t, user.ID))
 	})
 
 	t.Run("should sync groups with per-user filter for non-ascii dn", func(t *testing.T) {
@@ -213,7 +277,7 @@ func TestLdapLogin(t *testing.T) {
 			"issuer":      "ldap",
 			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
 		}, false)
-		assertLdapTeamCount(t, user.ID, 2)
+		assert.EqualValues(t, 2, ldapTeamCount(t, user.ID))
 	})
 
 	t.Run("should page through groups", func(t *testing.T) {
@@ -238,9 +302,114 @@ func TestLdapLogin(t *testing.T) {
 
 				require.NoError(t, err)
 				require.NoError(t, s.Commit())
-				assertLdapTeamCount(t, user.ID, 2)
+				assert.EqualValues(t, 2, ldapTeamCount(t, user.ID))
 			})
 		}
+	})
+
+	t.Run("should switch existing user and teams to stable ids", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		before, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+		require.NoError(t, err)
+		gitTeam := getLdapTeam(t, s, "cn=git,ou=people,dc=planetexpress,dc=com")
+		_, err = s.Insert(&models.TeamProject{TeamID: gitTeam.ID, ProjectID: 1})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		useEntryUUID(t, config.AuthLdapAttributeGroupID)
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		after, err := AuthenticateUserInLDAP(s2, "professor", "professor", true, "")
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		assert.Equal(t, before.ID, after.ID)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      before.ID,
+			"subject": ldapEntryUUID(t, professorDN),
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
+
+		gitUUID := ldapEntryUUID(t, "cn=git,ou=people,dc=planetexpress,dc=com")
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":          gitTeam.ID,
+			"external_id": gitUUID,
+		}, false)
+		db.AssertExists(t, "team_projects", map[string]interface{}{
+			"team_id":    gitTeam.ID,
+			"project_id": 1,
+		}, false)
+		db.AssertCount(t, "teams", builder.Eq{"issuer": "ldap"}, 2)
+		assert.EqualValues(t, 2, ldapTeamCount(t, after.ID))
+	})
+
+	t.Run("should keep team when group dn changes", func(t *testing.T) {
+		useEntryUUID(t, config.AuthLdapAttributeGroupID)
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+		require.NoError(t, err)
+		gitUUID := ldapEntryUUID(t, "cn=git,ou=people,dc=planetexpress,dc=com")
+		gitTeam := getLdapTeam(t, s, gitUUID)
+		_, err = s.Insert(&models.TeamProject{TeamID: gitTeam.ID, ProjectID: 1})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		renameLdapEntry(t, "cn=git,ou=people,dc=planetexpress,dc=com", "cn=git_renamed")
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		u, err := AuthenticateUserInLDAP(s2, "professor", "professor", true, "")
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":          gitTeam.ID,
+			"name":        "git_renamed (LDAP)",
+			"external_id": gitUUID,
+		}, false)
+		db.AssertExists(t, "team_projects", map[string]interface{}{
+			"team_id":    gitTeam.ID,
+			"project_id": 1,
+		}, false)
+		db.AssertCount(t, "teams", builder.Eq{"issuer": "ldap"}, 2)
+		assert.EqualValues(t, 2, ldapTeamCount(t, u.ID))
+	})
+
+	t.Run("should keep account when username changes", func(t *testing.T) {
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		before, err := AuthenticateUserInLDAP(s, "professor", "professor", false, "")
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		setLdapAttribute(t, professorDN, "uid", "professor", "farnsworth")
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		after, err := AuthenticateUserInLDAP(s2, "farnsworth", "professor", false, "")
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		assert.Equal(t, before.ID, after.ID)
+		assert.Equal(t, "professor", after.Username)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      before.ID,
+			"subject": ldapEntryUUID(t, professorDN),
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
 	})
 
 	t.Run("should sync avatar when enabled", func(t *testing.T) {
@@ -516,7 +685,7 @@ func TestSanitizedUserQueryPreventsInjection(t *testing.T) {
 	}
 }
 
-func assertLdapTeamCount(t *testing.T, userID int64, expected int64) {
+func ldapTeamCount(t *testing.T, userID int64) int64 {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -526,7 +695,7 @@ func assertLdapTeamCount(t *testing.T, userID int64, expected int64) {
 		Where("teams.issuer = ? AND team_members.user_id = ?", user2.IssuerLDAP, userID).
 		Count()
 	require.NoError(t, err)
-	assert.Equal(t, expected, count)
+	return count
 }
 
 func TestBuildGroupSyncFilter(t *testing.T) {
@@ -629,4 +798,50 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestFormatObjectGUID(t *testing.T) {
+	// {6f9619ff-8b86-d011-b42d-00c04fc964ff} as AD stores it.
+	raw := []byte{0xff, 0x19, 0x96, 0x6f, 0x86, 0x8b, 0x11, 0xd0, 0xb4, 0x2d, 0x00, 0xc0, 0x4f, 0xc9, 0x64, 0xff}
+
+	guid, err := formatObjectGUID(raw)
+	require.NoError(t, err)
+	assert.Equal(t, "6f9619ff-8b86-d011-b42d-00c04fc964ff", guid)
+
+	_, err = formatObjectGUID(raw[:15])
+	require.Error(t, err)
+}
+
+func TestDirectoryID(t *testing.T) {
+	guid := []byte{0xff, 0x19, 0x96, 0x6f, 0x86, 0x8b, 0x11, 0xd0, 0xb4, 0x2d, 0x00, 0xc0, 0x4f, 0xc9, 0x64, 0xff}
+	entry := &ldap.Entry{
+		DN: "cn=test,dc=example,dc=com",
+		Attributes: []*ldap.EntryAttribute{
+			{Name: "objectGUID", ByteValues: [][]byte{guid}},
+			{Name: "entryUUID", ByteValues: [][]byte{[]byte("597ae2f6-16a6-1027-98f4-d28b5365dc14")}},
+			{Name: "GUID", ByteValues: [][]byte{{0xff, 0x00, 0x10}}},
+		},
+	}
+
+	tests := []struct {
+		attribute string
+		expected  string
+	}{
+		{attribute: "objectGUID", expected: "6f9619ff-8b86-d011-b42d-00c04fc964ff"},
+		{attribute: "objectguid", expected: "6f9619ff-8b86-d011-b42d-00c04fc964ff"},
+		{attribute: "entryUUID", expected: "597ae2f6-16a6-1027-98f4-d28b5365dc14"},
+		{attribute: "GUID", expected: "ff0010"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.attribute, func(t *testing.T) {
+			id, err := directoryID(entry, tt.attribute)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, id)
+		})
+	}
+
+	t.Run("missing attribute", func(t *testing.T) {
+		_, err := directoryID(entry, "uid")
+		require.Error(t, err)
+	})
 }

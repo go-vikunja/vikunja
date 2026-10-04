@@ -101,6 +101,8 @@ const (
 	AuthLdapAttributeEmail             Key = `auth.ldap.attribute.email`
 	AuthLdapAttributeDisplayname       Key = `auth.ldap.attribute.displayname`
 	AuthLdapAttributeMemberID          Key = `auth.ldap.attribute.memberid`
+	AuthLdapAttributeUserID            Key = `auth.ldap.attribute.userid`
+	AuthLdapAttributeGroupID           Key = `auth.ldap.attribute.groupid`
 
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
