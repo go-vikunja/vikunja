@@ -1703,6 +1703,7 @@
     }
   },
   "time": {
+    "justNow": "just now",
     "units": {
       "seconds": "second|seconds",
       "minutes": "minute|minutes",
