@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -1673,4 +1674,55 @@ func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	afterWrite, err := GetTaskByIDSimple(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
+}
+
+func TestAddOneMonthToDate(t *testing.T) {
+	// addOneMonthToDate returns times in the configured time zone
+	loc := config.GetTimeZone()
+	tests := []struct {
+		name string
+		in   time.Time
+		want time.Time
+	}{
+		{
+			name: "regular day",
+			in:   time.Date(2027, time.January, 15, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.February, 15, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "january 31 clamps to february 28 in a non-leap year",
+			in:   time.Date(2027, time.January, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.February, 28, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "january 31 clamps to february 29 in a leap year",
+			in:   time.Date(2028, time.January, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2028, time.February, 29, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "march 31 clamps to april 30",
+			in:   time.Date(2027, time.March, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.April, 30, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "october 31 clamps to november 30",
+			in:   time.Date(2027, time.October, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.November, 30, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "december rolls into january of the next year",
+			in:   time.Date(2027, time.December, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2028, time.January, 31, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "february 28 advances to march 28",
+			in:   time.Date(2027, time.February, 28, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.March, 28, 9, 0, 0, 0, loc),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, addOneMonthToDate(tt.in))
+		})
+	}
 }

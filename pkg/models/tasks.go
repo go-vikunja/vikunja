@@ -1800,7 +1800,20 @@ func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*Pr
 }
 
 func addOneMonthToDate(d time.Time) time.Time {
-	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
+	year, month := d.Year(), d.Month()+1
+	if month > time.December {
+		month = time.January
+		year++
+	}
+	// Clamp the day to the number of days in the target month: building the
+	// date with the original day would let time.Date normalize a nonexistent
+	// day into the month after (e.g. February 31 becomes March 3), skipping
+	// a month and losing the original day for all later occurrences.
+	day := d.Day()
+	if lastDay := time.Date(year, month+1, 0, 0, 0, 0, 0, time.UTC).Day(); day > lastDay {
+		day = lastDay
+	}
+	return time.Date(year, month, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
 
 // addRepeatIntervalToTime advances t by whole multiples of duration until
