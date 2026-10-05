@@ -629,10 +629,14 @@ onMounted(async () => {
 		if (draft && isEditorContentEmpty(modelValue.value)) {
 			// Only load draft if current content is empty
 			// Set content and force edit mode for immediate editing
-			editor.value?.commands.setContent(draft, {emitUpdate: false})
+			editor.value?.commands.setContent(draft, {
+				...defaultSetContentOptions,
+				emitUpdate: false,
+			})
 			internalMode.value = 'edit'
-			// Update the model so parent sees the restored content
-			modelValue.value = draft
+			// The normalized HTML, not the raw draft: a mismatch would make the
+			// modelValue watcher reset the editor into preview mode.
+			modelValue.value = editor.value?.getHTML() ?? draft
 			return
 		}
 	}
