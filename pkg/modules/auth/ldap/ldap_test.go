@@ -256,17 +256,12 @@ func TestLdapLogin(t *testing.T) {
 		require.NoError(t, s.Commit())
 		assert.NotEqual(t, "professor", user.Username)
 
-		var teamID int64
-		has, err := s.Table("teams").
-			Where("name = ? AND issuer = ?", "posix_crew (LDAP)", user2.IssuerLDAP).
-			Cols("id").
-			Get(&teamID)
-		require.NoError(t, err)
-		require.True(t, has)
-		db.AssertExists(t, "team_members", map[string]interface{}{
-			"team_id": teamID,
-			"user_id": user.ID,
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "posix_crew (LDAP)",
+			"issuer":      "ldap",
+			"external_id": groupDN,
 		}, false)
+		assertLdapTeamCount(t, user.ID, 1)
 	})
 
 	t.Run("should sync avatar when enabled", func(t *testing.T) {
