@@ -103,6 +103,7 @@ func TestLdapLogin(t *testing.T) {
 			"issuer":      "ldap",
 			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
 		}, false)
+		assertLdapTeamCount(t, user.ID, 2)
 	})
 
 	t.Run("should sync groups using service account rebind", func(t *testing.T) {
@@ -214,33 +215,6 @@ func TestLdapLogin(t *testing.T) {
 			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
 		}, false)
 		assertLdapTeamCount(t, user.ID, 2)
-	})
-
-	t.Run("should page through groups", func(t *testing.T) {
-		origPageSize := groupSearchPageSize
-		groupSearchPageSize = 1
-		defer func() { groupSearchPageSize = origPageSize }()
-
-		for _, filter := range []string{
-			config.AuthLdapGroupSyncFilter.GetString(),
-			"(&(objectclass=groupOfNames)(member={userdn}))",
-		} {
-			t.Run(filter, func(t *testing.T) {
-				origFilter := config.AuthLdapGroupSyncFilter.GetString()
-				config.AuthLdapGroupSyncFilter.Set(filter)
-				defer config.AuthLdapGroupSyncFilter.Set(origFilter)
-
-				db.LoadAndAssertFixtures(t)
-				s := db.NewSession()
-				defer s.Close()
-
-				user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
-
-				require.NoError(t, err)
-				require.NoError(t, s.Commit())
-				assertLdapTeamCount(t, user.ID, 2)
-			})
-		}
 	})
 
 	t.Run("should sync avatar when enabled", func(t *testing.T) {

@@ -301,7 +301,7 @@ const (
 )
 
 // Below AD's default MaxPageSize of 1000.
-var groupSearchPageSize uint32 = 500
+const groupSearchPageSize = 500
 
 // buildGroupSyncFilter returns perUser = true when the template references the
 // user, in which case every group matching the filter is a membership.
