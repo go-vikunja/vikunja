@@ -207,8 +207,7 @@ func getExternalTeamName(name, suffix string) string {
 	return name + " (" + suffix + ")"
 }
 
-// MigrateExternalTeamIDs moves teams of an issuer from an old external id to a
-// new one. Teams whose new id is already taken by another team are left alone.
+// MigrateExternalTeamIDs leaves teams whose new id is already taken alone.
 func MigrateExternalTeamIDs(s *xorm.Session, issuer string, newIDsByOldID map[string]string) error {
 	if len(newIDsByOldID) == 0 {
 		return nil
