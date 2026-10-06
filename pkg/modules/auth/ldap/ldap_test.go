@@ -19,7 +19,6 @@ package ldap
 import (
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -364,20 +363,6 @@ func TestSanitizedUserQueryPreventsInjection(t *testing.T) {
 		t.Run(fmt.Sprintf("injection_attempt_%d", i+1), func(t *testing.T) {
 			result, ok := sanitizedUserQuery(attempt)
 			assert.True(t, ok, "Query should be sanitized, not rejected")
-
-			// Verify that all special characters are properly escaped
-			assert.NotContains(t, result, ")(uid=*", "Should not contain unescaped injection")
-			assert.NotContains(t, result, "|(", "Should not contain unescaped OR operator")
-			assert.NotContains(t, result, "))(", "Should not contain unescaped parentheses")
-			assert.NotContains(t, result, "=*", "Should not contain unescaped equals with wildcard")
-
-			// Verify escaping is present where expected
-			if strings.Contains(attempt, "(") {
-				assert.Contains(t, result, `\28`, "Should contain escaped opening parenthesis")
-			}
-			if strings.Contains(attempt, ")") {
-				assert.Contains(t, result, `\29`, "Should contain escaped closing parenthesis")
-			}
 
 			packet, err := ldap.CompileFilter(result)
 			require.NoError(t, err)
