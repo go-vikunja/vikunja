@@ -66,6 +66,9 @@ func tasksBulkCreate(ctx context.Context, in *struct {
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	if err := addPositionsToTasks(in.Body.Tasks...); err != nil {
+		return nil, translateDomainError(err)
+	}
 
 	convertTasksToMarkdown(ctx, in.Body.Tasks...)
 	return &singleBody[models.BulkTaskCreation]{Body: &in.Body}, nil

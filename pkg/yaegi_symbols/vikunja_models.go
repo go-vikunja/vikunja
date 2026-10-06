@@ -14,6 +14,7 @@ func init() {
 		// function, constant and variable definitions
 		"APITokenAuthorization":                            reflect.ValueOf(models.APITokenAuthorization),
 		"APITokenPrefix":                                   reflect.ValueOf(constant.MakeFromLiteral("\"tk_\"", token.STRING, 0)),
+		"AddPositionsToTasks":                              reflect.ValueOf(models.AddPositionsToTasks),
 		"BucketConfigurationModeFilter":                    reflect.ValueOf(models.BucketConfigurationModeFilter),
 		"BucketConfigurationModeManual":                    reflect.ValueOf(models.BucketConfigurationModeManual),
 		"BucketConfigurationModeNone":                      reflect.ValueOf(models.BucketConfigurationModeNone),

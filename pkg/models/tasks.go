@@ -171,6 +171,8 @@ type Task struct {
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
 	Position float64 `xorm:"-" json:"position" readOnly:"true" doc:"The task's position, saved per view. Only non-zero when the task is fetched through a view endpoint; use the task-position endpoint to change it."`
 
+	Positions []*TaskPosition `xorm:"-" json:"positions,omitempty" readOnly:"true" doc:"The task's stored position in each view of its project. Only present in create and duplicate responses."`
+
 	// Reactions on that task.
 	Reactions ReactionMap `xorm:"-" json:"reactions" readOnly:"true" doc:"Reactions on this task. Only present when requested via the reactions expand option."`
 
