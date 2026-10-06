@@ -272,6 +272,14 @@ describe('generated transport errors', () => {
 		})).toBe(true)
 	})
 
+	it('drops a plain-text 4xx once the client turned it into a problem body', () => {
+		expect(shouldDropEvent({status: 404, detail: '404 page not found'})).toBe(true)
+	})
+
+	it('reports a plain-text 5xx once the client turned it into a problem body', () => {
+		expect(shouldDropEvent({status: 502, detail: 'Bad Gateway'})).toBe(false)
+	})
+
 	it('reports 5xx v2 problems', () => {
 		expect(shouldDropEvent({status: 500, detail: 'Unavailable'})).toBe(false)
 	})
