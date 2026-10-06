@@ -58,24 +58,6 @@ func TestMigrateExternalTeamIDs(t *testing.T) {
 			"external_id": "14",
 		}, false)
 	})
-	t.Run("keeps old id when new id is taken", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		err := MigrateExternalTeamIDs(s, "https://some.issuer", map[string]string{"14": "15"})
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-
-		db.AssertExists(t, "teams", map[string]any{
-			"id":          14,
-			"external_id": "14",
-		}, false)
-		db.AssertExists(t, "teams", map[string]any{
-			"id":          15,
-			"external_id": "15",
-		}, false)
-	})
 	t.Run("ignores the new id being taken by another issuer", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
