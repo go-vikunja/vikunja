@@ -617,13 +617,37 @@ describe('configureApiClient', () => {
 		})
 	})
 
-	it('leaves a non-object error body untouched', async () => {
-		responses = [new Response('<html>gateway down</html>', {
+	it('turns a plain-text proxy error into a problem body', async () => {
+		responses = [new Response('Bad Gateway', {
 			status: 502,
-			headers: {'Content-Type': 'text/html'},
+			headers: {'Content-Type': 'text/plain; charset=utf-8'},
 		})]
 
-		await expect(client.get({url: '/probe'})).rejects.toBe('<html>gateway down</html>')
+		await expect(client.get({url: '/probe'})).rejects.toEqual({
+			status: 502,
+			detail: 'Bad Gateway',
+		})
+	})
+
+	it('turns a plain-text 404 into a problem body', async () => {
+		responses = [new Response('404 page not found\n', {
+			status: 404,
+			headers: {'Content-Type': 'text/plain; charset=utf-8'},
+		})]
+
+		await expect(client.get({url: '/probe'})).rejects.toEqual({
+			status: 404,
+			detail: '404 page not found',
+		})
+	})
+
+	it('falls back to the status text for an empty error body', async () => {
+		responses = [new Response('', {status: 503, statusText: 'Service Unavailable'})]
+
+		await expect(client.get({url: '/probe'})).rejects.toEqual({
+			status: 503,
+			detail: 'Service Unavailable',
+		})
 	})
 
 	it('leaves a transport failure untouched', async () => {
