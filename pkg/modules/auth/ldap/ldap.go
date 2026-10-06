@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
@@ -315,15 +316,6 @@ func buildGroupSyncFilter(template, userDN, username string) (filter string, per
 	).Replace(template), true
 }
 
-func isGroupMember(group *ldap.Entry, memberAttribute, userdn, username string) bool {
-	for _, member := range group.GetAttributeValues(memberAttribute) {
-		if member == userdn || member == username {
-			return true
-		}
-	}
-	return false
-}
-
 func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUsername string) (err error) {
 	filter, perUser := buildGroupSyncFilter(config.AuthLdapGroupSyncFilter.GetString(), userdn, ldapUsername)
 	memberAttribute := config.AuthLdapAttributeMemberID.GetString()
@@ -352,7 +344,9 @@ func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUse
 	var teams []*models.Team
 
 	for _, group := range sr.Entries {
-		if !perUser && !isGroupMember(group, memberAttribute, userdn, u.Username) {
+		if !perUser && !slices.ContainsFunc(group.GetAttributeValues(memberAttribute), func(member string) bool {
+			return member == userdn || member == u.Username
+		}) {
 			continue
 		}
 
