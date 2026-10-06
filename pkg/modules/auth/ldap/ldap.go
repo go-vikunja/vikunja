@@ -256,8 +256,12 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 			return nil, err
 		}
 	}
+	// An empty subject would match any LDAP user.
+	if subject == "" {
+		return nil, errors.New("ldap user has no value for the configured username or id attribute")
+	}
 
-	u, err = findLdapUser(s, subject, username)
+	u, err = findOrMigrateLdapUser(s, subject, username)
 	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 		return nil, err
 	}
@@ -308,20 +312,19 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 	return
 }
 
-// findLdapUser falls back to an account still matched by username and moves
-// it to the new subject.
-func findLdapUser(s *xorm.Session, subject, username string) (*user.User, error) {
-	// An empty subject would match any LDAP user.
-	if subject == "" {
-		return nil, fmt.Errorf("ldap user has no value for the configured username or id attribute")
-	}
-
-	u, err := user.GetUserWithEmail(s, &user.User{Issuer: user.IssuerLDAP, Subject: subject})
+func findOrMigrateLdapUser(s *xorm.Session, subject, username string) (*user.User, error) {
+	u, err := user.GetUserWithEmail(s, &user.User{
+		Issuer:  user.IssuerLDAP,
+		Subject: subject,
+	})
 	if subject == username || username == "" || !user.IsErrUserDoesNotExist(err) {
 		return u, err
 	}
 
-	u, err = user.GetUserWithEmail(s, &user.User{Issuer: user.IssuerLDAP, Subject: username})
+	u, err = user.GetUserWithEmail(s, &user.User{
+		Issuer:  user.IssuerLDAP,
+		Subject: username,
+	})
 	if err != nil && !user.IsErrUserStatusError(err) {
 		return u, err
 	}
