@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
@@ -109,44 +110,6 @@ func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 	return
 }
 
-// escapeLDAPFilterValue escapes special characters in LDAP filter values according to RFC 4515.
-// This prevents LDAP injection attacks by properly escaping all special characters.
-func escapeLDAPFilterValue(value string) string {
-	var buf strings.Builder
-	buf.Grow(len(value) * 2) // Pre-allocate to avoid reallocations
-
-	for _, r := range value {
-		switch r {
-		case 0x00: // NULL
-			buf.WriteString(`\00`)
-		case '(':
-			buf.WriteString(`\28`)
-		case ')':
-			buf.WriteString(`\29`)
-		case '*':
-			buf.WriteString(`\2a`)
-		case '\\':
-			buf.WriteString(`\5c`)
-		case '&':
-			buf.WriteString(`\26`)
-		case '|':
-			buf.WriteString(`\7c`)
-		case '=':
-			buf.WriteString(`\3d`)
-		case '<':
-			buf.WriteString(`\3c`)
-		case '>':
-			buf.WriteString(`\3e`)
-		case '~':
-			buf.WriteString(`\7e`)
-		default:
-			buf.WriteRune(r)
-		}
-	}
-
-	return buf.String()
-}
-
 // Adjusted from https://github.com/go-gitea/gitea/blob/6ca91f555ab9778310ac46cbbe33849c59286793/services/auth/source/ldap/source_search.go#L34
 func sanitizedUserQuery(username string) (string, bool) {
 	// Validate username is not empty and doesn't contain control characters
@@ -164,7 +127,7 @@ func sanitizedUserQuery(username string) (string, bool) {
 	}
 
 	// Escape the username according to RFC 4515 to prevent LDAP injection
-	escapedUsername := escapeLDAPFilterValue(username)
+	escapedUsername := ldap.EscapeFilter(username)
 
 	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), escapedUsername), true
 }
@@ -417,32 +380,36 @@ const (
 )
 
 // Below AD's default MaxPageSize of 1000.
-var groupSearchPageSize uint32 = 500
+const groupSearchPageSize = 500
 
 // buildGroupSyncFilter returns perUser = true when the template references the
 // user, in which case every group matching the filter is a membership.
-func buildGroupSyncFilter(template, userDN, username string) (filter string, perUser bool) {
-	if !strings.Contains(template, groupSyncFilterUserDN) && !strings.Contains(template, groupSyncFilterUsername) {
-		return template, false
+func buildGroupSyncFilter(template, userDN, username string) (filter string, perUser bool, err error) {
+	hasUserDN := strings.Contains(template, groupSyncFilterUserDN)
+	hasUsername := strings.Contains(template, groupSyncFilterUsername)
+	if !hasUserDN && !hasUsername {
+		return template, false, nil
+	}
+
+	// An empty value would turn e.g. (memberUid={username}*) into (memberUid=*) and grant every group.
+	if hasUserDN && userDN == "" {
+		return "", false, fmt.Errorf("group sync filter uses %s but the user DN is empty", groupSyncFilterUserDN)
+	}
+	if hasUsername && username == "" {
+		return "", false, fmt.Errorf("group sync filter uses %s but the user has no %s attribute", groupSyncFilterUsername, config.AuthLdapAttributeUsername.GetString())
 	}
 
 	return strings.NewReplacer(
 		groupSyncFilterUserDN, ldap.EscapeFilter(userDN),
 		groupSyncFilterUsername, ldap.EscapeFilter(username),
-	).Replace(template), true
-}
-
-func isGroupMember(group *ldap.Entry, memberAttribute, userdn, username string) bool {
-	for _, member := range group.GetAttributeValues(memberAttribute) {
-		if member == userdn || member == username {
-			return true
-		}
-	}
-	return false
+	).Replace(template), true, nil
 }
 
 func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUsername string) (err error) {
-	filter, perUser := buildGroupSyncFilter(config.AuthLdapGroupSyncFilter.GetString(), userdn, ldapUsername)
+	filter, perUser, err := buildGroupSyncFilter(config.AuthLdapGroupSyncFilter.GetString(), userdn, ldapUsername)
+	if err != nil {
+		return err
+	}
 	memberAttribute := config.AuthLdapAttributeMemberID.GetString()
 	idAttribute := config.AuthLdapAttributeGroupID.GetString()
 
@@ -468,13 +435,15 @@ func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUse
 		return err
 	}
 
-	log.Debugf("Found %d LDAP groups for user %s (per-user filter: %t)", len(sr.Entries), userdn, perUser)
+	log.Debugf("Found %d LDAP groups for user %s with filter %s", len(sr.Entries), userdn, filter)
 
 	var teams []*models.Team
 	newIDsByDN := map[string]string{}
 
 	for _, group := range sr.Entries {
-		if !perUser && !isGroupMember(group, memberAttribute, userdn, u.Username) {
+		if !perUser && !slices.ContainsFunc(group.GetAttributeValues(memberAttribute), func(member string) bool {
+			return member == userdn || member == ldapUsername
+		}) {
 			continue
 		}
 

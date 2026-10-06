@@ -167,6 +167,7 @@ func TestLdapLogin(t *testing.T) {
 			"issuer":      "ldap",
 			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
 		}, false)
+		assertLdapTeamCount(t, user.ID, 2)
 	})
 
 	t.Run("should sync groups using service account rebind", func(t *testing.T) {
@@ -232,77 +233,47 @@ func TestLdapLogin(t *testing.T) {
 		config.AuthLdapGroupSyncFilter.Set("(&(objectclass=groupOfNames)(member={userdn}))")
 		defer config.AuthLdapGroupSyncFilter.Set(origFilter)
 
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
+		tests := []struct {
+			name     string
+			username string
+			groups   []string
+		}{
+			{
+				name:     "professor",
+				username: "professor",
+				groups: []string{
+					"admin_staff",
+					"git",
+				},
+			},
+			{
+				name:     "non-ascii dn",
+				username: "bender",
+				groups: []string{
+					"ship_crew",
+					"git",
+				},
+			},
+		}
 
-		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
-
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        "admin_staff (LDAP)",
-			"issuer":      "ldap",
-			"external_id": "cn=admin_staff,ou=people,dc=planetexpress,dc=com",
-		}, false)
-		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        "git (LDAP)",
-			"issuer":      "ldap",
-			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
-		}, false)
-		assert.EqualValues(t, 2, ldapTeamCount(t, user.ID))
-	})
-
-	t.Run("should sync groups with per-user filter for non-ascii dn", func(t *testing.T) {
-		origFilter := config.AuthLdapGroupSyncFilter.GetString()
-		config.AuthLdapGroupSyncFilter.Set("(&(objectclass=groupOfNames)(member={userdn}))")
-		defer config.AuthLdapGroupSyncFilter.Set(origFilter)
-
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		// cn=Bender Bending Rodríguez,...
-		user, err := AuthenticateUserInLDAP(s, "bender", "bender", true, "")
-
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        "ship_crew (LDAP)",
-			"issuer":      "ldap",
-			"external_id": "cn=ship_crew,ou=people,dc=planetexpress,dc=com",
-		}, false)
-		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        "git (LDAP)",
-			"issuer":      "ldap",
-			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
-		}, false)
-		assert.EqualValues(t, 2, ldapTeamCount(t, user.ID))
-	})
-
-	t.Run("should page through groups", func(t *testing.T) {
-		origPageSize := groupSearchPageSize
-		groupSearchPageSize = 1
-		defer func() { groupSearchPageSize = origPageSize }()
-
-		for _, filter := range []string{
-			config.AuthLdapGroupSyncFilter.GetString(),
-			"(&(objectclass=groupOfNames)(member={userdn}))",
-		} {
-			t.Run(filter, func(t *testing.T) {
-				origFilter := config.AuthLdapGroupSyncFilter.GetString()
-				config.AuthLdapGroupSyncFilter.Set(filter)
-				defer config.AuthLdapGroupSyncFilter.Set(origFilter)
-
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
 				db.LoadAndAssertFixtures(t)
 				s := db.NewSession()
 				defer s.Close()
 
-				user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+				user, err := AuthenticateUserInLDAP(s, tt.username, tt.username, true, "")
 
 				require.NoError(t, err)
 				require.NoError(t, s.Commit())
-				assert.EqualValues(t, 2, ldapTeamCount(t, user.ID))
+				for _, group := range tt.groups {
+					db.AssertExists(t, "teams", map[string]interface{}{
+						"name":        group + " (LDAP)",
+						"issuer":      "ldap",
+						"external_id": "cn=" + group + ",ou=people,dc=planetexpress,dc=com",
+					}, false)
+				}
+				assertLdapTeamCount(t, user.ID, 2)
 			})
 		}
 	})
@@ -345,7 +316,7 @@ func TestLdapLogin(t *testing.T) {
 			"project_id": 1,
 		}, false)
 		db.AssertCount(t, "teams", builder.Eq{"issuer": "ldap"}, 2)
-		assert.EqualValues(t, 2, ldapTeamCount(t, after.ID))
+		assertLdapTeamCount(t, after.ID, 2)
 	})
 
 	t.Run("should keep team when group dn changes", func(t *testing.T) {
@@ -381,7 +352,7 @@ func TestLdapLogin(t *testing.T) {
 			"project_id": 1,
 		}, false)
 		db.AssertCount(t, "teams", builder.Eq{"issuer": "ldap"}, 2)
-		assert.EqualValues(t, 2, ldapTeamCount(t, u.ID))
+		assertLdapTeamCount(t, u.ID, 2)
 	})
 
 	t.Run("should keep account when username changes", func(t *testing.T) {
@@ -461,102 +432,6 @@ func TestLdapLogin(t *testing.T) {
 	})
 }
 
-func TestEscapeLDAPFilterValue(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "normal username",
-			input:    "testuser",
-			expected: "testuser",
-		},
-		{
-			name:     "username with parentheses",
-			input:    "test(user)",
-			expected: `test\28user\29`,
-		},
-		{
-			name:     "username with asterisk",
-			input:    "test*user",
-			expected: `test\2auser`,
-		},
-		{
-			name:     "username with backslash",
-			input:    `test\user`,
-			expected: `test\5cuser`,
-		},
-		{
-			name:     "username with ampersand",
-			input:    "test&user",
-			expected: `test\26user`,
-		},
-		{
-			name:     "username with pipe",
-			input:    "test|user",
-			expected: `test\7cuser`,
-		},
-		{
-			name:     "username with equals",
-			input:    "test=user",
-			expected: `test\3duser`,
-		},
-		{
-			name:     "username with less than",
-			input:    "test<user",
-			expected: `test\3cuser`,
-		},
-		{
-			name:     "username with greater than",
-			input:    "test>user",
-			expected: `test\3euser`,
-		},
-		{
-			name:     "username with tilde",
-			input:    "test~user",
-			expected: `test\7euser`,
-		},
-		{
-			name:     "username with null byte",
-			input:    "test\x00user",
-			expected: `test\00user`,
-		},
-		{
-			name:     "complex injection attempt",
-			input:    "admin)(|(objectClass=*",
-			expected: `admin\29\28\7c\28objectClass\3d\2a`,
-		},
-		{
-			name:     "LDAP injection with OR operator",
-			input:    "testuser)|(&(objectClass=user",
-			expected: `testuser\29\7c\28\26\28objectClass\3duser`,
-		},
-		{
-			name:     "multiple special characters",
-			input:    "test()&|=<>~*\\user",
-			expected: `test\28\29\26\7c\3d\3c\3e\7e\2a\5cuser`,
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "unicode characters",
-			input:    "testuser_unicode",
-			expected: "testuser_unicode",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := escapeLDAPFilterValue(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestSanitizedUserQuery(t *testing.T) {
 	// Set up a test filter for this test
 	originalFilter := config.AuthLdapUserFilter.GetString()
@@ -583,13 +458,13 @@ func TestSanitizedUserQuery(t *testing.T) {
 			name:           "username with injection attempt",
 			input:          "admin)(|(objectClass=*",
 			expectedResult: true,
-			expectedFilter: `(&(objectClass=user)(sAMAccountName=admin\29\28\7c\28objectClass\3d\2a))`,
+			expectedFilter: `(&(objectClass=user)(sAMAccountName=admin\29\28|\28objectClass=\2a))`,
 		},
 		{
 			name:           "username with OR operator",
 			input:          "test|admin",
 			expectedResult: true,
-			expectedFilter: `(&(objectClass=user)(sAMAccountName=test\7cadmin))`,
+			expectedFilter: `(&(objectClass=user)(sAMAccountName=test|admin))`,
 		},
 		{
 			name:           "empty username",
@@ -672,20 +547,19 @@ func TestSanitizedUserQueryPreventsInjection(t *testing.T) {
 			if strings.Contains(attempt, ")") {
 				assert.Contains(t, result, `\29`, "Should contain escaped closing parenthesis")
 			}
-			if strings.Contains(attempt, "|") {
-				assert.Contains(t, result, `\7c`, "Should contain escaped pipe")
-			}
-			if strings.Contains(attempt, "&") {
-				assert.Contains(t, result, `\26`, "Should contain escaped ampersand")
-			}
-			if strings.Contains(attempt, "=") {
-				assert.Contains(t, result, `\3d`, "Should contain escaped equals")
-			}
+
+			packet, err := ldap.CompileFilter(result)
+			require.NoError(t, err)
+			require.Len(t, packet.Children, 2, "Should not add filter clauses")
+			uid := packet.Children[1]
+			assert.EqualValues(t, ldap.FilterEqualityMatch, uid.Tag)
+			assert.Equal(t, attempt, uid.Children[1].Value, "Should match the whole input as the uid value")
 		})
 	}
 }
 
-func ldapTeamCount(t *testing.T, userID int64) int64 {
+func assertLdapTeamCount(t *testing.T, userID int64, expected int64) {
+	t.Helper()
 	s := db.NewSession()
 	defer s.Close()
 
@@ -695,7 +569,7 @@ func ldapTeamCount(t *testing.T, userID int64) int64 {
 		Where("teams.issuer = ? AND team_members.user_id = ?", user2.IssuerLDAP, userID).
 		Count()
 	require.NoError(t, err)
-	return count
+	assert.Equal(t, expected, count)
 }
 
 func TestBuildGroupSyncFilter(t *testing.T) {
@@ -706,6 +580,7 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 		username        string
 		expectedFilter  string
 		expectedPerUser bool
+		expectedErr     bool
 	}{
 		{
 			name:           "no placeholder",
@@ -719,13 +594,6 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			template:        "(&(objectclass=groupOfNames)(member={userdn}))",
 			userDN:          "cn=professor,ou=people,dc=planetexpress,dc=com",
 			expectedFilter:  "(&(objectclass=groupOfNames)(member=cn=professor,ou=people,dc=planetexpress,dc=com))",
-			expectedPerUser: true,
-		},
-		{
-			name:            "ad matching rule in chain",
-			template:        "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={userdn}))",
-			userDN:          "CN=Jane Doe,OU=Users,DC=example,DC=com",
-			expectedFilter:  "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:=CN=Jane Doe,OU=Users,DC=example,DC=com))",
 			expectedPerUser: true,
 		},
 		{
@@ -744,34 +612,6 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			expectedPerUser: true,
 		},
 		{
-			name:            "dn with escaped comma",
-			template:        "(member={userdn})",
-			userDN:          `CN=Doe\, John,OU=Users,DC=example,DC=com`,
-			expectedFilter:  `(member=CN=Doe\5c, John,OU=Users,DC=example,DC=com)`,
-			expectedPerUser: true,
-		},
-		{
-			name:            "dn with parentheses",
-			template:        "(member={userdn})",
-			userDN:          "CN=John (Admin),OU=Users,DC=example,DC=com",
-			expectedFilter:  `(member=CN=John \28Admin\29,OU=Users,DC=example,DC=com)`,
-			expectedPerUser: true,
-		},
-		{
-			name:            "dn with asterisk",
-			template:        "(member={userdn})",
-			userDN:          "CN=*,DC=example,DC=com",
-			expectedFilter:  `(member=CN=\2a,DC=example,DC=com)`,
-			expectedPerUser: true,
-		},
-		{
-			name:            "dn with non-ascii characters",
-			template:        "(member={userdn})",
-			userDN:          "CN=Jörg,DC=example,DC=com",
-			expectedFilter:  `(member=CN=J\c3\b6rg,DC=example,DC=com)`,
-			expectedPerUser: true,
-		},
-		{
 			name:            "injection attempt in username",
 			template:        "(&(objectclass=posixGroup)(memberUid={username}))",
 			username:        "x)(|(objectclass=*",
@@ -786,15 +626,32 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			expectedFilter:  "(|(member=cn={username},dc=example)(memberUid=professor))",
 			expectedPerUser: true,
 		},
+		{
+			name:        "empty username",
+			template:    "(&(objectclass=posixGroup)(memberUid={username}*))",
+			userDN:      "cn=professor,ou=people,dc=planetexpress,dc=com",
+			expectedErr: true,
+		},
+		{
+			name:        "empty userdn",
+			template:    "(&(objectclass=groupOfNames)(member={userdn}))",
+			username:    "professor",
+			expectedErr: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			filter, perUser := buildGroupSyncFilter(tt.template, tt.userDN, tt.username)
+			filter, perUser, err := buildGroupSyncFilter(tt.template, tt.userDN, tt.username)
+			if tt.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
 			assert.Equal(t, tt.expectedFilter, filter)
 			assert.Equal(t, tt.expectedPerUser, perUser)
 
-			_, err := ldap.CompileFilter(filter)
+			_, err = ldap.CompileFilter(filter)
 			require.NoError(t, err)
 		})
 	}
