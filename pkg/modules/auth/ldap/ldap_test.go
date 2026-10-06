@@ -169,52 +169,49 @@ func TestLdapLogin(t *testing.T) {
 		config.AuthLdapGroupSyncFilter.Set("(&(objectclass=groupOfNames)(member={userdn}))")
 		defer config.AuthLdapGroupSyncFilter.Set(origFilter)
 
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
+		tests := []struct {
+			name     string
+			username string
+			groups   []string
+		}{
+			{
+				name:     "professor",
+				username: "professor",
+				groups: []string{
+					"admin_staff",
+					"git",
+				},
+			},
+			{
+				name:     "non-ascii dn",
+				username: "bender",
+				groups: []string{
+					"ship_crew",
+					"git",
+				},
+			},
+		}
 
-		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
 
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        "admin_staff (LDAP)",
-			"issuer":      "ldap",
-			"external_id": "cn=admin_staff,ou=people,dc=planetexpress,dc=com",
-		}, false)
-		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        "git (LDAP)",
-			"issuer":      "ldap",
-			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
-		}, false)
-		assertLdapTeamCount(t, user.ID, 2)
-	})
+				user, err := AuthenticateUserInLDAP(s, tt.username, tt.username, true, "")
 
-	t.Run("should sync groups with per-user filter for non-ascii dn", func(t *testing.T) {
-		origFilter := config.AuthLdapGroupSyncFilter.GetString()
-		config.AuthLdapGroupSyncFilter.Set("(&(objectclass=groupOfNames)(member={userdn}))")
-		defer config.AuthLdapGroupSyncFilter.Set(origFilter)
-
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		// cn=Bender Bending Rodríguez,...
-		user, err := AuthenticateUserInLDAP(s, "bender", "bender", true, "")
-
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        "ship_crew (LDAP)",
-			"issuer":      "ldap",
-			"external_id": "cn=ship_crew,ou=people,dc=planetexpress,dc=com",
-		}, false)
-		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        "git (LDAP)",
-			"issuer":      "ldap",
-			"external_id": "cn=git,ou=people,dc=planetexpress,dc=com",
-		}, false)
-		assertLdapTeamCount(t, user.ID, 2)
+				require.NoError(t, err)
+				require.NoError(t, s.Commit())
+				for _, group := range tt.groups {
+					db.AssertExists(t, "teams", map[string]interface{}{
+						"name":        group + " (LDAP)",
+						"issuer":      "ldap",
+						"external_id": "cn=" + group + ",ou=people,dc=planetexpress,dc=com",
+					}, false)
+				}
+				assertLdapTeamCount(t, user.ID, 2)
+			})
+		}
 	})
 
 	t.Run("should sync avatar when enabled", func(t *testing.T) {
@@ -393,6 +390,7 @@ func TestSanitizedUserQueryPreventsInjection(t *testing.T) {
 }
 
 func assertLdapTeamCount(t *testing.T, userID int64, expected int64) {
+	t.Helper()
 	s := db.NewSession()
 	defer s.Close()
 
