@@ -158,10 +158,11 @@ function insertTaskIntoBoards(client: QueryClient, created: Task) {
 				? getDefaultBucketId(view, board.buckets)
 				: undefined
 		if (target === undefined) continue
+		const position = task.positions?.find(item => item.project_view_id === viewId)?.position ?? task.position
 		client.setQueryData(key, {
 			...board,
 			buckets: board.buckets.map(bucket => bucket.id === target
-				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target}, ...bucket.tasks]}
+				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target, position}, ...bucket.tasks]}
 				: bucket),
 		})
 	}

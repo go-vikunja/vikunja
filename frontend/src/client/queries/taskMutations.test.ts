@@ -432,6 +432,19 @@ describe('task mutations', () => {
 			.map(task => task.id)).toEqual([9])
 	})
 
+	it('caches a created card with its stored position in each view', async () => {
+		const client = await seedDefaultBucketBoards()
+		sdk.tasksCreate.mockResolvedValue({data: {id: 9, project_id: 1, position: 0, positions: [
+			{task_id: 9, project_view_id: 2, position: 250},
+			{task_id: 9, project_view_id: 5, position: 100},
+		]}})
+		await client.getMutationCache()
+			.build(client, createTaskMutationOptions())
+			.execute({title: 'new', project_id: 1})
+		expect(client.getQueryData<BoardData>(kanbanKeys.board(1, 2))?.buckets[1].tasks[0].position).toBe(250)
+		expect(client.getQueryData<BoardData>(kanbanKeys.board(1, 5))?.buckets[0].tasks[0].position).toBe(100)
+	})
+
 	it('keeps the input order of a bulk batch by inserting it back to front', async () => {
 		const client = await seedDefaultBucketBoards()
 		sdk.tasksBulkCreate.mockImplementation(({body}) => ({
