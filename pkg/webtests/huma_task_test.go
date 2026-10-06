@@ -187,6 +187,19 @@ func TestHumaTask_Create(t *testing.T) {
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), next))
 		assert.Equal(t, int64(36), next.Index)
 	})
+	t.Run("Returns the stored position for every view", func(t *testing.T) {
+		rec := create("1", `{"title":"positioned"}`)
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		created := &models.Task{}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), created))
+
+		s := db.NewSession()
+		defer s.Close()
+		stored := []*models.TaskPosition{}
+		require.NoError(t, s.Where("task_id = ?", created.ID).OrderBy("project_view_id asc").Find(&stored))
+		require.NotEmpty(t, stored)
+		assertPositionsMatch(t, stored, created.Positions)
+	})
 	t.Run("Nonexisting project", func(t *testing.T) {
 		rec := create("9999", `{"title":"x"}`)
 		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
@@ -209,6 +222,18 @@ func TestHumaTask_Create(t *testing.T) {
 		rec := create("1", `{"title":""}`)
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
 	})
+}
+
+func assertPositionsMatch(t *testing.T, stored, returned []*models.TaskPosition) {
+	t.Helper()
+	byView := func(positions []*models.TaskPosition) map[int64]float64 {
+		m := make(map[int64]float64, len(positions))
+		for _, p := range positions {
+			m[p.ProjectViewID] = p.Position
+		}
+		return m
+	}
+	assert.Equal(t, byView(stored), byView(returned))
 }
 
 // TestHumaTask_ReadByIndex covers the by-index route, including the textual

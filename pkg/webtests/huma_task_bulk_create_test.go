@@ -61,6 +61,21 @@ func TestHumaTaskBulkCreate(t *testing.T) {
 		assert.Equal(t, "bulk c", result.Tasks[2].Title)
 	})
 
+	t.Run("Returns the stored positions for every view", func(t *testing.T) {
+		result, err := bulkPost("1", &testuser1, `{"tasks":[{"title":"positioned a"},{"title":"positioned b"}]}`)
+		require.NoError(t, err)
+		require.Len(t, result.Tasks, 2)
+
+		s := db.NewSession()
+		defer s.Close()
+		for _, task := range result.Tasks {
+			stored := []*models.TaskPosition{}
+			require.NoError(t, s.Where("task_id = ?", task.ID).Find(&stored))
+			require.NotEmpty(t, stored)
+			assertPositionsMatch(t, stored, task.Positions)
+		}
+	})
+
 	t.Run("URL project wins over body project_id", func(t *testing.T) {
 		result, err := bulkPost("1", &testuser1, `{"tasks":[{"title":"body project ignored","project_id":2}]}`)
 		require.NoError(t, err)

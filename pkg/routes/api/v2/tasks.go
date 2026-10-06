@@ -258,8 +258,17 @@ func tasksCreate(ctx context.Context, in *struct {
 	if err := handler.DoCreate(ctx, task, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	if err := addPositionsToTasks(task); err != nil {
+		return nil, translateDomainError(err)
+	}
 	convertTasksToMarkdown(ctx, task)
 	return &singleBody[models.Task]{Body: task}, nil
+}
+
+func addPositionsToTasks(tasks ...*models.Task) error {
+	s := db.NewSession()
+	defer s.Close()
+	return models.AddPositionsToTasks(s, tasks)
 }
 
 // Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.

@@ -470,6 +470,33 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 	return
 }
 
+// AddPositionsToTasks fills Positions with each task's stored position in every view.
+func AddPositionsToTasks(s *xorm.Session, tasks []*Task) error {
+	taskMap := make(map[int64]*Task, len(tasks))
+	ids := make([]int64, 0, len(tasks))
+	for _, t := range tasks {
+		if t == nil {
+			continue
+		}
+		taskMap[t.ID] = t
+		ids = append(ids, t.ID)
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	positions := []*TaskPosition{}
+	err := s.In("task_id", ids).Find(&positions)
+	if err != nil {
+		return err
+	}
+	for _, p := range positions {
+		if t := taskMap[p.TaskID]; t != nil {
+			t.Positions = append(t.Positions, p)
+		}
+	}
+	return nil
+}
+
 // recalculateTaskPositionsForRepair recalculates positions for all tasks in a view
 // without requiring auth. Used by CLI repair when localized repair fails.
 // Unlike RecalculateTaskPositions, this only operates on tasks that already have
