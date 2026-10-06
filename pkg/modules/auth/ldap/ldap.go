@@ -352,7 +352,7 @@ func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUse
 		return err
 	}
 
-	log.Debugf("Found %d LDAP groups for user %s (per-user filter: %t)", len(sr.Entries), userdn, perUser)
+	log.Debugf("Found %d LDAP groups for user %s with filter %s", len(sr.Entries), userdn, filter)
 
 	var teams []*models.Team
 
