@@ -27,6 +27,9 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
@@ -154,12 +157,29 @@ type PreviewResult struct {
 	TotalRows int           `json:"total_rows" doc:"The total number of data rows in the file."`
 }
 
-// stripBOM removes the UTF-8 BOM from the beginning of a reader
-func stripBOM(data []byte) []byte {
-	if len(data) >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
-		return data[3:]
+// toUTF8 decodes a BOM-marked UTF-16 file (Excel's "Unicode Text" export) and drops
+// what Postgres text columns reject: NUL bytes and invalid UTF-8.
+func toUTF8(data []byte) []byte {
+	if decoded, _, err := transform.Bytes(unicode.BOMOverride(transform.Nop), data); err == nil {
+		data = decoded
 	}
-	return data
+	return bytes.ToValidUTF8(bytes.ReplaceAll(data, []byte{0}, nil), []byte("\uFFFD"))
+}
+
+func readCSVFile(file io.ReaderAt, size int64) ([]byte, error) {
+	if size == 0 {
+		return nil, &migration.ErrFileIsEmpty{}
+	}
+	if size > maxImportFileBytes() {
+		return nil, &migration.ErrNotACSVFile{}
+	}
+
+	data := make([]byte, size)
+	_, err := file.ReadAt(data, 0)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return nil, err
+	}
+	return toUTF8(data), nil
 }
 
 // detectDelimiter attempts to auto-detect the CSV delimiter
@@ -284,8 +304,6 @@ func suggestMapping(columns []string) []ColumnMapping {
 
 // One lookahead record detects migration.maxcsvrows overflow without retaining it (GHSA-pqf9-h8g4-8gmh).
 func parseCSV(data []byte, delimiter string) (headers []string, dataRows [][]string, err error) {
-	data = stripBOM(data)
-
 	// Go's csv.Reader only supports double-quote as the quote character.
 	// LazyQuotes mode handles most edge cases including unescaped quotes
 	// in fields. We intentionally do not replace non-standard quote chars
@@ -340,17 +358,8 @@ func maxImportFileBytes() int64 {
 
 // DetectCSVStructure analyzes a CSV file and returns detection results
 func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) {
-	if size == 0 {
-		return nil, &migration.ErrFileIsEmpty{}
-	}
-	if size > maxImportFileBytes() {
-		return nil, &migration.ErrNotACSVFile{}
-	}
-
-	// Read the entire file
-	data := make([]byte, size)
-	_, err := file.ReadAt(data, 0)
-	if err != nil && !errors.Is(err, io.EOF) {
+	data, err := readCSVFile(file, size)
+	if err != nil {
 		return nil, err
 	}
 
@@ -410,16 +419,8 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 
 // PreviewImport generates a preview of the import based on current mapping
 func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*PreviewResult, error) {
-	if size == 0 {
-		return nil, &migration.ErrFileIsEmpty{}
-	}
-	if size > maxImportFileBytes() {
-		return nil, &migration.ErrNotACSVFile{}
-	}
-
-	data := make([]byte, size)
-	_, err := file.ReadAt(data, 0)
-	if err != nil && !errors.Is(err, io.EOF) {
+	data, err := readCSVFile(file, size)
+	if err != nil {
 		return nil, err
 	}
 
@@ -610,30 +611,30 @@ func (m *Migrator) SetOptions(options []byte) error {
 
 // MigrateWithConfig imports CSV data into Vikunja with the provided configuration
 func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
-	if size == 0 {
-		return &migration.ErrFileIsEmpty{}
-	}
-	if size > maxImportFileBytes() {
-		return &migration.ErrNotACSVFile{}
-	}
-
-	data := make([]byte, size)
-	_, err := file.ReadAt(data, 0)
-	if err != nil && !errors.Is(err, io.EOF) {
+	projects, err := projectsFromCSV(file, size, config)
+	if err != nil {
 		return err
+	}
+	return migration.InsertFromStructure(projects, u)
+}
+
+func projectsFromCSV(file io.ReaderAt, size int64, config *ImportConfig) ([]*models.ProjectWithTasksAndBuckets, error) {
+	data, err := readCSVFile(file, size)
+	if err != nil {
+		return nil, err
 	}
 
 	_, rows, err := parseCSV(data, config.Delimiter)
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
-			return err
+			return nil, err
 		}
 		var limitErr *migration.ErrImportRowLimitExceeded
 		if errors.As(err, &limitErr) {
-			return err
+			return nil, err
 		}
-		return &migration.ErrNotACSVFile{}
+		return nil, &migration.ErrNotACSVFile{}
 	}
 
 	// Skip rows if configured
@@ -646,12 +647,10 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 	}
 
 	if len(rows) == 0 {
-		return &migration.ErrFileIsEmpty{}
+		return nil, &migration.ErrFileIsEmpty{}
 	}
 
-	vikunjaTasks := convertToVikunja(rows, config)
-
-	return migration.InsertFromStructure(vikunjaTasks, u)
+	return convertToVikunja(rows, config), nil
 }
 
 // hasProjectMapping returns true if any column is mapped to the project attribute

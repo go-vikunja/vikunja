@@ -98,7 +98,7 @@ func TestCSVRowLimit(t *testing.T) {
 
 	t.Run("BOM handling still works", func(t *testing.T) {
 		content := append([]byte{0xEF, 0xBB, 0xBF}, []byte("Title,Description\nTask,Description\n")...)
-		headers, _, err := parseCSV(content, ",")
+		headers, _, err := parseCSV(toUTF8(content), ",")
 		require.NoError(t, err)
 		assert.Equal(t, []string{"Title", "Description"}, headers)
 	})
