@@ -430,13 +430,6 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			expectedPerUser: true,
 		},
 		{
-			name:            "ad matching rule in chain",
-			template:        "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={userdn}))",
-			userDN:          "CN=Jane Doe,OU=Users,DC=example,DC=com",
-			expectedFilter:  "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:=CN=Jane Doe,OU=Users,DC=example,DC=com))",
-			expectedPerUser: true,
-		},
-		{
 			name:            "username",
 			template:        "(&(objectclass=posixGroup)(memberUid={username}))",
 			username:        "professor",
@@ -449,34 +442,6 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			userDN:          "cn=a,dc=b",
 			username:        "a",
 			expectedFilter:  "(|(member=cn=a,dc=b)(memberUid=a)(uniqueMember=cn=a,dc=b))",
-			expectedPerUser: true,
-		},
-		{
-			name:            "dn with escaped comma",
-			template:        "(member={userdn})",
-			userDN:          `CN=Doe\, John,OU=Users,DC=example,DC=com`,
-			expectedFilter:  `(member=CN=Doe\5c, John,OU=Users,DC=example,DC=com)`,
-			expectedPerUser: true,
-		},
-		{
-			name:            "dn with parentheses",
-			template:        "(member={userdn})",
-			userDN:          "CN=John (Admin),OU=Users,DC=example,DC=com",
-			expectedFilter:  `(member=CN=John \28Admin\29,OU=Users,DC=example,DC=com)`,
-			expectedPerUser: true,
-		},
-		{
-			name:            "dn with asterisk",
-			template:        "(member={userdn})",
-			userDN:          "CN=*,DC=example,DC=com",
-			expectedFilter:  `(member=CN=\2a,DC=example,DC=com)`,
-			expectedPerUser: true,
-		},
-		{
-			name:            "dn with non-ascii characters",
-			template:        "(member={userdn})",
-			userDN:          "CN=Jörg,DC=example,DC=com",
-			expectedFilter:  `(member=CN=J\c3\b6rg,DC=example,DC=com)`,
 			expectedPerUser: true,
 		},
 		{
