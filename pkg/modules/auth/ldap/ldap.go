@@ -356,10 +356,9 @@ func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUse
 
 	var teams []*models.Team
 
+	isUser := func(member string) bool { return member == userdn || member == ldapUsername }
 	for _, group := range sr.Entries {
-		if !perUser && !slices.ContainsFunc(group.GetAttributeValues(memberAttribute), func(member string) bool {
-			return member == userdn || member == ldapUsername
-		}) {
+		if !perUser && !slices.ContainsFunc(group.GetAttributeValues(memberAttribute), isUser) {
 			continue
 		}
 
