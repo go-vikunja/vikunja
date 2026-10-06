@@ -357,6 +357,11 @@ func TestSanitizedUserQueryPreventsInjection(t *testing.T) {
 		"admin<admin",                     // Less than injection
 		"admin>admin",                     // Greater than injection
 		"admin~admin",                     // Approximate match injection
+		`admin\29(uid=*`,
+		`\2a`,
+		"Jörg",
+		`x\`,
+		"a\x80b",
 	}
 
 	for i, attempt := range injectionAttempts {
