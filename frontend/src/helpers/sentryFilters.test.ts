@@ -1,5 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
+import {ApiError} from '@/client/problem'
 import {isReportableResourceUrl, redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './sentryFilters'
 
 // Object.assign instead of `new Error(msg, {cause})`: the vitest tsconfig
@@ -270,6 +271,26 @@ describe('generated transport errors', () => {
 			status: 429,
 			detail: 'rate limit exceeded',
 		})).toBe(true)
+	})
+
+	it('drops a 4xx ApiError', () => {
+		expect(shouldDropEvent(new ApiError({status: 404, detail: '404 page not found'}))).toBe(true)
+	})
+
+	it('drops a 4xx ApiError without a code', () => {
+		expect(shouldDropEvent(new ApiError({status: 403, detail: 'Forbidden'}))).toBe(true)
+	})
+
+	it('reports a 5xx ApiError', () => {
+		expect(shouldDropEvent(new ApiError({status: 502, detail: 'Bad Gateway'}))).toBe(false)
+	})
+
+	it('reports a 5xx ApiError with a code', () => {
+		expect(shouldDropEvent(new ApiError({status: 500, code: 1, detail: 'Internal'}))).toBe(false)
+	})
+
+	it('drops an error wrapping a 4xx ApiError as cause', () => {
+		expect(shouldDropEvent(errorWithCause('outer', new ApiError({status: 404, detail: 'Not found'})))).toBe(true)
 	})
 
 	it('reports 5xx v2 problems', () => {

@@ -2,6 +2,7 @@ import {getApiBaseUrl} from '@/helpers/apiUrl'
 import {canonicalApiBaseUrl} from '@/client/requestContext'
 import {authRefreshToken} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
+import {ApiError} from '@/client/problem'
 import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 import {clearServerClock, recordServerClock, serverNowSeconds} from '@/helpers/serverClock'
 import {MILLISECONDS_A_MINUTE, MILLISECONDS_A_SECOND} from '@/constants/date'
@@ -255,7 +256,7 @@ async function doRefresh(persist: boolean): Promise<void> {
 					throw new RefreshTokenError({kind: 'network'}, body)
 				}
 				// hey-api sets `response` before reading the body, so body read/parse errors arrive with a 200 status.
-				if (!response || body instanceof Error) {
+				if (!response || (body instanceof Error && !(body instanceof ApiError))) {
 					throw body
 				}
 				// Proxy error pages aren't JSON, so the status comes from the response.
