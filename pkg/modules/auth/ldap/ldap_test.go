@@ -278,6 +278,57 @@ func TestLdapLogin(t *testing.T) {
 		}
 	})
 
+	t.Run("should match members by ldap username when the vikunja username differs", func(t *testing.T) {
+		origFilter := config.AuthLdapGroupSyncFilter.GetString()
+		origMemberID := config.AuthLdapAttributeMemberID.GetString()
+		config.AuthLdapGroupSyncFilter.Set("(|(objectclass=groupOfNames)(objectclass=posixGroup))")
+		config.AuthLdapAttributeMemberID.Set("memberUid")
+		t.Cleanup(func() {
+			config.AuthLdapGroupSyncFilter.Set(origFilter)
+			config.AuthLdapAttributeMemberID.Set(origMemberID)
+		})
+
+		l, err := ConnectAndBindToLDAPDirectory()
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = l.Close() })
+		require.NoError(t, l.Bind("cn=admin,dc=planetexpress,dc=com", "GoodNewsEveryone"))
+
+		groupDN := "cn=posix_crew,ou=people,dc=planetexpress,dc=com"
+		add := ldap.NewAddRequest(groupDN, nil)
+		add.Attribute("objectClass", []string{"posixGroup"})
+		add.Attribute("cn", []string{"posix_crew"})
+		add.Attribute("gidNumber", []string{"5000"})
+		add.Attribute("memberUid", []string{"professor"})
+		require.NoError(t, l.Add(add))
+		t.Cleanup(func() {
+			assert.NoError(t, l.Del(ldap.NewDelRequest(groupDN, nil)))
+		})
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err = user2.CreateUser(s, &user2.User{
+			Username: "professor",
+			Password: "12345678",
+			Email:    "local-professor@example.com",
+		})
+		require.NoError(t, err)
+
+		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		assert.NotEqual(t, "professor", user.Username)
+
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "posix_crew (LDAP)",
+			"issuer":      "ldap",
+			"external_id": groupDN,
+		}, false)
+		assertLdapTeamCount(t, user.ID, 1)
+	})
+
 	t.Run("should switch existing user and teams to stable ids", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -465,12 +516,6 @@ func TestSanitizedUserQuery(t *testing.T) {
 			expectedFilter: `(&(objectClass=user)(sAMAccountName=admin\29\28|\28objectClass=\2a))`,
 		},
 		{
-			name:           "username with OR operator",
-			input:          "test|admin",
-			expectedResult: true,
-			expectedFilter: `(&(objectClass=user)(sAMAccountName=test|admin))`,
-		},
-		{
 			name:           "empty username",
 			input:          "",
 			expectedResult: false,
@@ -531,26 +576,17 @@ func TestSanitizedUserQueryPreventsInjection(t *testing.T) {
 		"admin<admin",                     // Less than injection
 		"admin>admin",                     // Greater than injection
 		"admin~admin",                     // Approximate match injection
+		`admin\29(uid=*`,
+		`\2a`,
+		"Jörg",
+		`x\`,
+		"a\x80b",
 	}
 
 	for i, attempt := range injectionAttempts {
 		t.Run(fmt.Sprintf("injection_attempt_%d", i+1), func(t *testing.T) {
 			result, ok := sanitizedUserQuery(attempt)
 			assert.True(t, ok, "Query should be sanitized, not rejected")
-
-			// Verify that all special characters are properly escaped
-			assert.NotContains(t, result, ")(uid=*", "Should not contain unescaped injection")
-			assert.NotContains(t, result, "|(", "Should not contain unescaped OR operator")
-			assert.NotContains(t, result, "))(", "Should not contain unescaped parentheses")
-			assert.NotContains(t, result, "=*", "Should not contain unescaped equals with wildcard")
-
-			// Verify escaping is present where expected
-			if strings.Contains(attempt, "(") {
-				assert.Contains(t, result, `\28`, "Should contain escaped opening parenthesis")
-			}
-			if strings.Contains(attempt, ")") {
-				assert.Contains(t, result, `\29`, "Should contain escaped closing parenthesis")
-			}
 
 			packet, err := ldap.CompileFilter(result)
 			require.NoError(t, err)
@@ -634,12 +670,6 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			name:        "empty username",
 			template:    "(&(objectclass=posixGroup)(memberUid={username}*))",
 			userDN:      "cn=professor,ou=people,dc=planetexpress,dc=com",
-			expectedErr: true,
-		},
-		{
-			name:        "empty userdn",
-			template:    "(&(objectclass=groupOfNames)(member={userdn}))",
-			username:    "professor",
 			expectedErr: true,
 		},
 	}

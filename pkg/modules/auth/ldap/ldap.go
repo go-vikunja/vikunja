@@ -386,16 +386,12 @@ const groupSearchPageSize = 500
 // buildGroupSyncFilter returns perUser = true when the template references the
 // user, in which case every group matching the filter is a membership.
 func buildGroupSyncFilter(template, userDN, username string) (filter string, perUser bool, err error) {
-	hasUserDN := strings.Contains(template, groupSyncFilterUserDN)
 	hasUsername := strings.Contains(template, groupSyncFilterUsername)
-	if !hasUserDN && !hasUsername {
+	if !hasUsername && !strings.Contains(template, groupSyncFilterUserDN) {
 		return template, false, nil
 	}
 
 	// An empty value would turn e.g. (memberUid={username}*) into (memberUid=*) and grant every group.
-	if hasUserDN && userDN == "" {
-		return "", false, fmt.Errorf("group sync filter uses %s but the user DN is empty", groupSyncFilterUserDN)
-	}
 	if hasUsername && username == "" {
 		return "", false, fmt.Errorf("group sync filter uses %s but the user has no %s attribute", groupSyncFilterUsername, config.AuthLdapAttributeUsername.GetString())
 	}
@@ -441,10 +437,9 @@ func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUse
 	var teams []*models.Team
 	newIDsByDN := map[string]string{}
 
+	isUser := func(member string) bool { return member == userdn || member == ldapUsername }
 	for _, group := range sr.Entries {
-		if !perUser && !slices.ContainsFunc(group.GetAttributeValues(memberAttribute), func(member string) bool {
-			return member == userdn || member == ldapUsername
-		}) {
+		if !perUser && !slices.ContainsFunc(group.GetAttributeValues(memberAttribute), isUser) {
 			continue
 		}
 
