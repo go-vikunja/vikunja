@@ -106,44 +106,6 @@ func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 	return
 }
 
-// escapeLDAPFilterValue escapes special characters in LDAP filter values according to RFC 4515.
-// This prevents LDAP injection attacks by properly escaping all special characters.
-func escapeLDAPFilterValue(value string) string {
-	var buf strings.Builder
-	buf.Grow(len(value) * 2) // Pre-allocate to avoid reallocations
-
-	for _, r := range value {
-		switch r {
-		case 0x00: // NULL
-			buf.WriteString(`\00`)
-		case '(':
-			buf.WriteString(`\28`)
-		case ')':
-			buf.WriteString(`\29`)
-		case '*':
-			buf.WriteString(`\2a`)
-		case '\\':
-			buf.WriteString(`\5c`)
-		case '&':
-			buf.WriteString(`\26`)
-		case '|':
-			buf.WriteString(`\7c`)
-		case '=':
-			buf.WriteString(`\3d`)
-		case '<':
-			buf.WriteString(`\3c`)
-		case '>':
-			buf.WriteString(`\3e`)
-		case '~':
-			buf.WriteString(`\7e`)
-		default:
-			buf.WriteRune(r)
-		}
-	}
-
-	return buf.String()
-}
-
 // Adjusted from https://github.com/go-gitea/gitea/blob/6ca91f555ab9778310ac46cbbe33849c59286793/services/auth/source/ldap/source_search.go#L34
 func sanitizedUserQuery(username string) (string, bool) {
 	// Validate username is not empty and doesn't contain control characters
@@ -161,7 +123,7 @@ func sanitizedUserQuery(username string) (string, bool) {
 	}
 
 	// Escape the username according to RFC 4515 to prevent LDAP injection
-	escapedUsername := escapeLDAPFilterValue(username)
+	escapedUsername := ldap.EscapeFilter(username)
 
 	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), escapedUsername), true
 }
