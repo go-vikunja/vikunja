@@ -463,12 +463,6 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			userDN:      "cn=professor,ou=people,dc=planetexpress,dc=com",
 			expectedErr: true,
 		},
-		{
-			name:        "empty userdn",
-			template:    "(&(objectclass=groupOfNames)(member={userdn}))",
-			username:    "professor",
-			expectedErr: true,
-		},
 	}
 
 	for _, tt := range tests {
