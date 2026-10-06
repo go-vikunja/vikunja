@@ -292,102 +292,6 @@ func TestLdapLogin(t *testing.T) {
 	})
 }
 
-func TestEscapeLDAPFilterValue(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "normal username",
-			input:    "testuser",
-			expected: "testuser",
-		},
-		{
-			name:     "username with parentheses",
-			input:    "test(user)",
-			expected: `test\28user\29`,
-		},
-		{
-			name:     "username with asterisk",
-			input:    "test*user",
-			expected: `test\2auser`,
-		},
-		{
-			name:     "username with backslash",
-			input:    `test\user`,
-			expected: `test\5cuser`,
-		},
-		{
-			name:     "username with ampersand",
-			input:    "test&user",
-			expected: `test\26user`,
-		},
-		{
-			name:     "username with pipe",
-			input:    "test|user",
-			expected: `test\7cuser`,
-		},
-		{
-			name:     "username with equals",
-			input:    "test=user",
-			expected: `test\3duser`,
-		},
-		{
-			name:     "username with less than",
-			input:    "test<user",
-			expected: `test\3cuser`,
-		},
-		{
-			name:     "username with greater than",
-			input:    "test>user",
-			expected: `test\3euser`,
-		},
-		{
-			name:     "username with tilde",
-			input:    "test~user",
-			expected: `test\7euser`,
-		},
-		{
-			name:     "username with null byte",
-			input:    "test\x00user",
-			expected: `test\00user`,
-		},
-		{
-			name:     "complex injection attempt",
-			input:    "admin)(|(objectClass=*",
-			expected: `admin\29\28\7c\28objectClass\3d\2a`,
-		},
-		{
-			name:     "LDAP injection with OR operator",
-			input:    "testuser)|(&(objectClass=user",
-			expected: `testuser\29\7c\28\26\28objectClass\3duser`,
-		},
-		{
-			name:     "multiple special characters",
-			input:    "test()&|=<>~*\\user",
-			expected: `test\28\29\26\7c\3d\3c\3e\7e\2a\5cuser`,
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "unicode characters",
-			input:    "testuser_unicode",
-			expected: "testuser_unicode",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := escapeLDAPFilterValue(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestSanitizedUserQuery(t *testing.T) {
 	// Set up a test filter for this test
 	originalFilter := config.AuthLdapUserFilter.GetString()
@@ -414,13 +318,13 @@ func TestSanitizedUserQuery(t *testing.T) {
 			name:           "username with injection attempt",
 			input:          "admin)(|(objectClass=*",
 			expectedResult: true,
-			expectedFilter: `(&(objectClass=user)(sAMAccountName=admin\29\28\7c\28objectClass\3d\2a))`,
+			expectedFilter: `(&(objectClass=user)(sAMAccountName=admin\29\28|\28objectClass=\2a))`,
 		},
 		{
 			name:           "username with OR operator",
 			input:          "test|admin",
 			expectedResult: true,
-			expectedFilter: `(&(objectClass=user)(sAMAccountName=test\7cadmin))`,
+			expectedFilter: `(&(objectClass=user)(sAMAccountName=test|admin))`,
 		},
 		{
 			name:           "empty username",
@@ -503,15 +407,13 @@ func TestSanitizedUserQueryPreventsInjection(t *testing.T) {
 			if strings.Contains(attempt, ")") {
 				assert.Contains(t, result, `\29`, "Should contain escaped closing parenthesis")
 			}
-			if strings.Contains(attempt, "|") {
-				assert.Contains(t, result, `\7c`, "Should contain escaped pipe")
-			}
-			if strings.Contains(attempt, "&") {
-				assert.Contains(t, result, `\26`, "Should contain escaped ampersand")
-			}
-			if strings.Contains(attempt, "=") {
-				assert.Contains(t, result, `\3d`, "Should contain escaped equals")
-			}
+
+			packet, err := ldap.CompileFilter(result)
+			require.NoError(t, err)
+			require.Len(t, packet.Children, 2, "Should not add filter clauses")
+			uid := packet.Children[1]
+			assert.EqualValues(t, ldap.FilterEqualityMatch, uid.Tag)
+			assert.Equal(t, attempt, uid.Children[1].Value, "Should match the whole input as the uid value")
 		})
 	}
 }
