@@ -6,6 +6,7 @@ import {
 	tasksBulkCreate,
 	tasksDuplicate,
 	tasksMarkRead,
+	taskAssigneesBulk,
 	taskAssigneesCreate,
 	taskAssigneesDelete,
 	taskLabelsCreate,
@@ -26,14 +27,22 @@ import {
 } from '@/client/generated'
 import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
 import {contextMutationOptions} from './contextMutation'
-import {normalizeTask, taskKeys, type PaginatedTaskResponse, type TaskResponse} from './tasks'
+import {
+	normalizeTask,
+	taskKeys,
+	type PaginatedTaskResponse,
+	type TaskFilterParams,
+	type TaskResponse,
+} from './tasks'
 import {bucketKeys, kanbanKeys, normalizeBucket, type BoardData} from './kanban'
 import {
 	invalidateTaskMembership,
 	mapTaskEverywhere,
+	placeTaskInFilterBuckets,
 	removeTaskEverywhere,
 	replaceTaskEverywhere,
 	taskQueryKeys,
+	type FilterBucketPlacement,
 } from './taskCache'
 import {getCachedProject, projectKeys} from './projects'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
@@ -281,15 +290,32 @@ export function markTaskReadMutationOptions() {
 	})
 }
 
-type AssigneeInput = {taskId: number, user: User & Required<Pick<User, 'id'>>}
+type UserWithId = User & Required<Pick<User, 'id'>>
+type LabelWithId = Label & Required<Pick<Label, 'id'>>
+
+function withAssignee(task: TaskResponse, user: UserWithId, add: boolean): TaskResponse {
+	const assignees = task.assignees.filter(item => item.id !== user.id)
+	return {
+		...task,
+		assignees: add ? [...assignees, user] : assignees,
+	}
+}
+
+function withLabel(task: TaskResponse, label: LabelWithId, add: boolean): TaskResponse {
+	const labels = task.labels.filter(item => item.id !== label.id)
+	return {
+		...task,
+		labels: add ? [...labels, label] : labels,
+	}
+}
+
+type AssigneeInput = {taskId: number, user: UserWithId}
 export function addTaskAssigneeMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, user}: AssigneeInput) =>
 			(await taskAssigneesCreate({path: {task: taskId}, body: {user_id: user.id}})).data,
-		onSuccess: (_data, {taskId, user}, client) => mapTaskEverywhere(client, taskId, task => ({
-			...task,
-			assignees: [...task.assignees.filter(item => item.id !== user.id), user],
-		})),
+		onSuccess: (_data, {taskId, user}, client) =>
+			mapTaskEverywhere(client, taskId, task => withAssignee(task, user, true)),
 		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId),
 	})
 }
@@ -298,23 +324,19 @@ export function removeTaskAssigneeMutationOptions() {
 		mutationFn: async ({taskId, user}: AssigneeInput) => {
 			await taskAssigneesDelete({path: {task: taskId, user: user.id}})
 		},
-		onSuccess: (_data, {taskId, user}, client) => mapTaskEverywhere(client, taskId, task => ({
-			...task,
-			assignees: task.assignees.filter(item => item.id !== user.id),
-		})),
+		onSuccess: (_data, {taskId, user}, client) =>
+			mapTaskEverywhere(client, taskId, task => withAssignee(task, user, false)),
 		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId),
 	})
 }
 
-type LabelInput = {taskId: number, label: Label & Required<Pick<Label, 'id'>>}
+type LabelInput = {taskId: number, label: LabelWithId}
 export function addTaskLabelMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, label}: LabelInput) =>
 			(await taskLabelsCreate({path: {task: taskId}, body: {label_id: label.id}})).data,
-		onSuccess: (_data, {taskId, label}, client) => mapTaskEverywhere(client, taskId, task => ({
-			...task,
-			labels: [...task.labels.filter(item => item.id !== label.id), label],
-		})),
+		onSuccess: (_data, {taskId, label}, client) =>
+			mapTaskEverywhere(client, taskId, task => withLabel(task, label, true)),
 		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId),
 	})
 }
@@ -323,10 +345,8 @@ export function removeTaskLabelMutationOptions() {
 		mutationFn: async ({taskId, label}: LabelInput) => {
 			await taskLabelsDelete({path: {task: taskId, label: label.id}})
 		},
-		onSuccess: (_data, {taskId, label}, client) => mapTaskEverywhere(client, taskId, task => ({
-			...task,
-			labels: task.labels.filter(item => item.id !== label.id),
-		})),
+		onSuccess: (_data, {taskId, label}, client) =>
+			mapTaskEverywhere(client, taskId, task => withLabel(task, label, false)),
 		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId),
 	})
 }
@@ -353,39 +373,42 @@ export function deleteTaskRelationMutationOptions() {
 	})
 }
 
+function patchTaskPosition(client: QueryClient, taskId: number, project_view_id?: number, position?: number) {
+	for (const [key, list] of client.getQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists})) {
+		const params = taskKeys.paramsOf(key)
+		if (!list || !params || taskKeys.viewOf(key) !== project_view_id) continue
+		const direction = params.order_by?.[0] === 'desc' ? -1 : 1
+		const items = list.items.map(task => task.id === taskId
+			? {...task, position: position ?? task.position}
+			: task)
+		client.setQueryData(key, {
+			...list,
+			items: params.sort_by?.[0] === 'position'
+				? items.sort((a, b) => direction * (a.position - b.position))
+				: items,
+		})
+	}
+	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
+		if (board && kanbanKeys.viewOf(key) === project_view_id) client.setQueryData(key, {
+			...board,
+			buckets: board.buckets.map(bucket => ({
+				...bucket,
+				tasks: bucket.tasks
+					.map(task => task.id === taskId
+						? {...task, position: position ?? task.position}
+						: task)
+					.sort((a, b) => a.position - b.position),
+			})),
+		})
+	}
+}
+
 export function updateTaskPositionMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({taskId, ...body}: TaskPositionWritable & {taskId: number}) =>
 			(await tasksPositionUpdate({path: {task: taskId}, body})).data,
-		onSuccess: (data, {taskId, project_view_id}, client) => {
-			for (const [key, list] of client.getQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists})) {
-				const params = taskKeys.paramsOf(key)
-				if (!list || !params || taskKeys.viewOf(key) !== project_view_id) continue
-				const direction = params.order_by?.[0] === 'desc' ? -1 : 1
-				const items = list.items.map(task => task.id === taskId
-					? {...task, position: data.position ?? task.position}
-					: task)
-				client.setQueryData(key, {
-					...list,
-					items: params.sort_by?.[0] === 'position'
-						? items.sort((a, b) => direction * (a.position - b.position))
-						: items,
-				})
-			}
-			for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
-				if (board && kanbanKeys.viewOf(key) === project_view_id) client.setQueryData(key, {
-					...board,
-					buckets: board.buckets.map(bucket => ({
-						...bucket,
-						tasks: bucket.tasks
-							.map(task => task.id === taskId
-								? {...task, position: data.position ?? task.position}
-								: task)
-							.sort((a, b) => a.position - b.position),
-					})),
-				})
-			}
-		},
+		onSuccess: (data, {taskId, project_view_id}, client) =>
+			patchTaskPosition(client, taskId, project_view_id, data.position),
 		onSettled: ({taskId}, client) => invalidateTaskMembership(client, taskId),
 	})
 }
@@ -443,6 +466,62 @@ export function moveTaskMutationOptions() {
 			if (id !== undefined) reconcileTaskBuckets(client, {project, view, bucket: target, task: id})
 		},
 		onSettled: ({task}, client) => invalidateTaskMembership(client, task.id),
+	})
+}
+
+export type FilterBucketLabelWrite = {
+	add: boolean
+	label: LabelWithId
+}
+
+export type FilterBucketMoveInput = {
+	project: number
+	view: number
+	params: TaskFilterParams
+	taskId: number
+	labels: FilterBucketLabelWrite[]
+	assignees: UserWithId[] | null
+	position: number
+	placement: FilterBucketPlacement | null
+}
+
+export function moveTaskBetweenFilterBucketsMutationOptions() {
+	const placed = new WeakSet<FilterBucketMoveInput>()
+	return contextMutationOptions({
+		mutationFn: async ({taskId: task, view, labels, assignees, position}: FilterBucketMoveInput) => {
+			for (const {add, label} of labels) {
+				await (add
+					? taskLabelsCreate({path: {task}, body: {label_id: label.id}})
+					: taskLabelsDelete({path: {task, label: label.id}}))
+			}
+			const saved = (await tasksPositionUpdate({path: {task}, body: {project_view_id: view, position}})).data
+			if (assignees) await taskAssigneesBulk({path: {task}, body: {assignees}})
+			return saved
+		},
+		onSuccess: (data, input, client) => {
+			mapTaskEverywhere(client, input.taskId, task => {
+				const labelled = input.labels.reduce((current, {add, label}) => withLabel(current, label, add), task)
+				return input.assignees
+					? {
+						...labelled,
+						assignees: input.assignees,
+					}
+					: labelled
+			})
+			if (input.placement) {
+				const key = kanbanKeys.board(input.project, input.view, input.params)
+				placeTaskInFilterBuckets(client, key, input.taskId, input.placement)
+				placed.add(input)
+			}
+			patchTaskPosition(client, input.taskId, input.view, data.position ?? input.position)
+		},
+		onSettled: async (input, client) => {
+			const patched = placed.has(input)
+			await invalidateTaskMembership(client, input.taskId, patched ? 'none' : 'active')
+			if (!patched) {
+				await client.invalidateQueries({queryKey: kanbanKeys.board(input.project, input.view, input.params)})
+			}
+		},
 	})
 }
 
@@ -504,4 +583,8 @@ export function useUpdateTaskPositionMutation() {
 
 export function useMoveTaskMutation() {
 	return useMutation(moveTaskMutationOptions())
+}
+
+export function useMoveTaskBetweenFilterBucketsMutation() {
+	return useMutation(moveTaskBetweenFilterBucketsMutationOptions())
 }

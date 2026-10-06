@@ -194,6 +194,10 @@ export function ensureTask(id: number, expand: TaskExpansion = []) {
 	return queryClient.ensureQueryData(taskQuery(id, expand))
 }
 
+export function refreshTask(id: number) {
+	return queryClient.fetchQuery({...taskQuery(id), staleTime: 0})
+}
+
 export function allTasksQuery(scope: TaskScope) {
 	return queryOptions({
 		queryKey: taskKeys.allList(scope),
