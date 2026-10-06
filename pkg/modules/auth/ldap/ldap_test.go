@@ -286,7 +286,10 @@ func TestLdapLogin(t *testing.T) {
 		before, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
 		require.NoError(t, err)
 		gitTeam := getLdapTeam(t, s, "cn=git,ou=people,dc=planetexpress,dc=com")
-		_, err = s.Insert(&models.TeamProject{TeamID: gitTeam.ID, ProjectID: 1})
+		_, err = s.Insert(&models.TeamProject{
+			TeamID:    gitTeam.ID,
+			ProjectID: 1,
+		})
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
@@ -330,7 +333,10 @@ func TestLdapLogin(t *testing.T) {
 		require.NoError(t, err)
 		gitUUID := ldapEntryUUID(t, "cn=git,ou=people,dc=planetexpress,dc=com")
 		gitTeam := getLdapTeam(t, s, gitUUID)
-		_, err = s.Insert(&models.TeamProject{TeamID: gitTeam.ID, ProjectID: 1})
+		_, err = s.Insert(&models.TeamProject{
+			TeamID:    gitTeam.ID,
+			ProjectID: 1,
+		})
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
