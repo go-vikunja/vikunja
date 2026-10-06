@@ -342,7 +342,6 @@ func findOrMigrateLdapUser(s *xorm.Session, subject, username string) (*user.Use
 	return u, err
 }
 
-// objectGUID is formatted the way AD tools show it.
 func directoryID(entry *ldap.Entry, attribute string) (string, error) {
 	raw := entry.GetEqualFoldRawAttributeValue(attribute)
 	if len(raw) == 0 {
