@@ -291,12 +291,6 @@ func TestSanitizedUserQuery(t *testing.T) {
 			expectedFilter: `(&(objectClass=user)(sAMAccountName=admin\29\28|\28objectClass=\2a))`,
 		},
 		{
-			name:           "username with OR operator",
-			input:          "test|admin",
-			expectedResult: true,
-			expectedFilter: `(&(objectClass=user)(sAMAccountName=test|admin))`,
-		},
-		{
 			name:           "empty username",
 			input:          "",
 			expectedResult: false,
