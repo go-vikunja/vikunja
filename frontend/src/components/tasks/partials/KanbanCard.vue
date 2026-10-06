@@ -238,7 +238,11 @@ async function maybeDownloadCoverImage() {
 		return
 	}
 
-	showCoverImage(await fetchAttachmentUrl({id: attachment.id!, task_id: props.task.id}, 'lg'))
+	try {
+		showCoverImage(await fetchAttachmentUrl({id: attachment.id!, task_id: props.task.id}, 'lg'))
+	} catch {
+		// the cover is decorative, the card works without it
+	}
 }
 
 watch(
