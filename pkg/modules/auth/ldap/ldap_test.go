@@ -439,6 +439,7 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 		username        string
 		expectedFilter  string
 		expectedPerUser bool
+		expectedErr     bool
 	}{
 		{
 			name:           "no placeholder",
@@ -519,15 +520,32 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			expectedFilter:  "(|(member=cn={username},dc=example)(memberUid=professor))",
 			expectedPerUser: true,
 		},
+		{
+			name:        "empty username",
+			template:    "(&(objectclass=posixGroup)(memberUid={username}*))",
+			userDN:      "cn=professor,ou=people,dc=planetexpress,dc=com",
+			expectedErr: true,
+		},
+		{
+			name:        "empty userdn",
+			template:    "(&(objectclass=groupOfNames)(member={userdn}))",
+			username:    "professor",
+			expectedErr: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			filter, perUser := buildGroupSyncFilter(tt.template, tt.userDN, tt.username)
+			filter, perUser, err := buildGroupSyncFilter(tt.template, tt.userDN, tt.username)
+			if tt.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
 			assert.Equal(t, tt.expectedFilter, filter)
 			assert.Equal(t, tt.expectedPerUser, perUser)
 
-			_, err := ldap.CompileFilter(filter)
+			_, err = ldap.CompileFilter(filter)
 			require.NoError(t, err)
 		})
 	}
