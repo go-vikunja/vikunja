@@ -213,6 +213,57 @@ func TestLdapLogin(t *testing.T) {
 		}
 	})
 
+	t.Run("should match members by ldap username when the vikunja username differs", func(t *testing.T) {
+		origFilter := config.AuthLdapGroupSyncFilter.GetString()
+		origMemberID := config.AuthLdapAttributeMemberID.GetString()
+		config.AuthLdapGroupSyncFilter.Set("(|(objectclass=groupOfNames)(objectclass=posixGroup))")
+		config.AuthLdapAttributeMemberID.Set("memberUid")
+		t.Cleanup(func() {
+			config.AuthLdapGroupSyncFilter.Set(origFilter)
+			config.AuthLdapAttributeMemberID.Set(origMemberID)
+		})
+
+		l, err := ConnectAndBindToLDAPDirectory()
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = l.Close() })
+		require.NoError(t, l.Bind("cn=admin,dc=planetexpress,dc=com", "GoodNewsEveryone"))
+
+		groupDN := "cn=posix_crew,ou=people,dc=planetexpress,dc=com"
+		add := ldap.NewAddRequest(groupDN, nil)
+		add.Attribute("objectClass", []string{"posixGroup"})
+		add.Attribute("cn", []string{"posix_crew"})
+		add.Attribute("gidNumber", []string{"5000"})
+		add.Attribute("memberUid", []string{"professor"})
+		require.NoError(t, l.Add(add))
+		t.Cleanup(func() {
+			assert.NoError(t, l.Del(ldap.NewDelRequest(groupDN, nil)))
+		})
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err = user2.CreateUser(s, &user2.User{
+			Username: "professor",
+			Password: "12345678",
+			Email:    "local-professor@example.com",
+		})
+		require.NoError(t, err)
+
+		user, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		assert.NotEqual(t, "professor", user.Username)
+
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "posix_crew (LDAP)",
+			"issuer":      "ldap",
+			"external_id": groupDN,
+		}, false)
+		assertLdapTeamCount(t, user.ID, 1)
+	})
+
 	t.Run("should sync avatar when enabled", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
