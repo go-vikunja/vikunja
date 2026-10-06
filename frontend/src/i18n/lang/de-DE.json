@@ -507,13 +507,27 @@
 				"you": "Du",
 				"notShared": "Noch nicht mit einem {type} geteilt.",
 				"remove": "Dieses {type} entfernen",
+				"sharable": "Projekt",
 				"removeHeader": "Einen {type} von {sharable} entfernen",
 				"removeText": "Diesen {sharable} von {type} entfernen? Dies kann nicht rückgängig gemacht werden!",
+				"removeCleanupText": "Alle, die den Zugang zu diesem Projekt oder den darunterliegenden Projekten verlieren, verlieren dann auch:",
 				"removeSuccess": "{sharable} wurde erfolgreich von {type} entfernt.",
 				"addedSuccess": "{type} wurde erfolgreich hinzugefügt.",
 				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt.",
 				"search": "Suche nach einem {type} um dieses Projekt zu teilen",
 				"permissionFor": "Berechtigung für {sharable}"
+			},
+			"accessCleanup": {
+				"others": {
+					"assignments": "ihre Aufgabenzuweisungen",
+					"subscriptions": "ihre Abonnements für Aufgaben und Projekte",
+					"webhooks": "webhooks, die sie erstellt haben"
+				},
+				"self": {
+					"assignments": "deine zugewiesenen Aufgaben",
+					"subscriptions": "deine Abonnements für Aufgaben und Projekte",
+					"webhooks": "webhooks, die du erstellt hast"
+				}
 			},
 			"permission": {
 				"title": "Berechtigung",
@@ -1287,8 +1301,8 @@
 				"duplicates": "Dupliziert | Duplizierte",
 				"blocking": "Blockiert | Blockiert",
 				"blocked": "Blockiert von | Blockiert von",
-				"precedes": "Vorgänger | Vorgänger",
-				"follows": "Folgt | Folgen",
+				"precedes": "Vorgänger von | Vorgänger von",
+				"follows": "Folgt | Folgt",
 				"copiedfrom": "Kopiert von | Kopiert von",
 				"copiedto": "Kopiert nach | Kopiert nach"
 			}
@@ -1371,18 +1385,21 @@
 				"header": "Team löschen",
 				"text1": "Bist du sicher, dass du dieses Team und alle seine Mitglieder löschen willst?",
 				"text2": "Alle Teammitglieder verlieren den Zugriff auf Projekte, die mit diesem Team geteilt sind. Dies KANN NICHT rückgängig gemacht werden!",
+				"cleanupText": "Bei Projekten, deren Zugriff Teammitglieder verlieren, wird auch Folgendes gelöscht:",
 				"success": "Das Team wurde erfolgreich gelöscht."
 			},
 			"deleteUser": {
 				"header": "Benutzer:innen aus dem Team entfernen",
 				"text1": "Bist du sicher, dass du diese:n Benutzer:in aus dem Team entfernen willst?",
 				"text2": "Diese:r Benutzer:in verliert den Zugriff auf alle Projekte, auf die dieses Team Zugriff hat. Dies kann nicht rückgängig gemacht werden!",
+				"cleanupText": "Bei Projekten, deren Zugriff diese:r Benutzer:in verliert, wird auch Folgendes gelöscht:",
 				"success": "Der:die Benutzer:in wurde erfolgreich aus dem Team gelöscht."
 			},
 			"leave": {
 				"title": "Team verlassen",
 				"text1": "Bist du sicher, dass du dieses Team verlassen willst?",
 				"text2": "Du wirst Zugriff auf alle Projekte verlieren, auf die dieses Team Zugriff hat. Wenn du deine Meinung änderst, musst du durch einen Team-Admin wieder hinzugefügt werden.",
+				"cleanupText": "Bei Projekten, deren Zugriff zu verlierst, verlierst du auch Zugriff auf:",
 				"success": "Du hast das Team erfolgreich verlassen."
 			}
 		},
@@ -1581,6 +1598,7 @@
 		"3007": "Ein Projekt mit diesem Bezeichner existiert bereits.",
 		"3008": "Dieses Projekt ist archiviert und kann deshalb nur gelesen werden. Dies gilt auch für alle Aufgaben, die mit diesem Projekt verbunden sind.",
 		"3016": "Das übergeordnete Projekt ist archiviert. Un-Archiviere es erst.",
+		"3017": "Das Standardprojekt muss ein Projekt sein, in das du schreiben kannst.",
 		"4001": "Der Titel darf nicht leer sein.",
 		"4002": "Diese Aufgabe existiert nicht.",
 		"4003": "Alle Massenbearbeitungen an Aufgaben müssen zum selben Projekt gehören.",

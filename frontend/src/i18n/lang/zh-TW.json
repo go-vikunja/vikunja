@@ -43,6 +43,7 @@
 			"email": "電子郵箱地址",
 			"emailPlaceholder": "例如：frederic{'@'}vikunja.io",
 			"password": "密碼",
+			"passwordPlaceholder": "密碼",
 			"forgotPassword": "忘記密碼？",
 			"resetPassword": "重置密碼",
 			"resetPasswordAction": "發送密碼重置鏈接",
@@ -115,6 +116,7 @@
 					"yyyy/mm/dd": "年/月/日"
 				},
 				"timeFormat": "時間格式",
+				"defaultDueTime": "預設到期時間",
 				"timeFormatOptions": {
 					"12h": "12小時制 (AM/PM)",
 					"24h": "24小時制 (HH:mm)"
@@ -175,6 +177,9 @@
 			"backgroundBrightness": {
 				"title": "背景亮度"
 			},
+			"webhooks": {
+				"title": "Webhook 通知"
+			},
 			"apiTokens": {
 				"title": "API 令牌",
 				"general": "API 令牌允許您在無需用户憑據的情況下使用 Vikunja 的 API。",
@@ -201,6 +206,12 @@
 					"expiresAt": "過期於",
 					"permissions": "權限"
 				}
+			},
+			"sessions": {
+				"title": "工作階段",
+				"deviceInfo": "裝置",
+				"ipAddress": "IP地址",
+				"lastActive": "活耀時間"
 			}
 		},
 		"deletion": {
@@ -445,6 +456,7 @@
 			"createSuccess": "視圖建立成功。",
 			"titleRequired": "請提供標題。",
 			"delete": "刪除此視圖",
+			"edit": "編輯此視圖",
 			"deleteText": "您確定要移除此視圖嗎？移除後將無法再用它來查看此專案的任務。此操作不會刪除任何任務。此操作無法復原！",
 			"deleteSuccess": "視圖刪除成功。",
 			"onlyAdminsCanEdit": "只有專案管理員才能編輯視圖。",
@@ -616,18 +628,26 @@
 		"createdBy": "由 {0} 建立",
 		"actions": "操作",
 		"cannotBeUndone": "此操作無法復原！",
-		"avatarOfUser": "{user} 頭像"
+		"avatarOfUser": "{user} 頭像",
+		"dateRange": "日期區間"
 	},
 	"input": {
 		"resetColor": "重置顏色",
 		"datepicker": {
 			"today": "今天",
 			"tomorrow": "明天",
-			"nextMonday": "下星期一",
+			"nextMonday": "下週一",
 			"thisWeekend": "本週末",
-			"laterThisWeek": "本週稍後",
+			"laterThisWeek": "後天",
 			"nextWeek": "下週",
-			"chooseDate": "選擇日期"
+			"nextWeekend": "下週六",
+			"endOfMonth": "本月底",
+			"chooseDate": "選擇日期",
+			"quickSelect": "快速選擇",
+			"clear": "清除",
+			"noDate": "尚未設定日期",
+			"previousMonth": "上個月",
+			"nextMonth": "下個月"
 		},
 		"editor": {
 			"edit": "編輯",
@@ -815,6 +835,7 @@
 				"attachments": "新增附件",
 				"relatedTasks": "新增關聯",
 				"moveProject": "移動",
+				"duplicate": "複製",
 				"color": "設定顏色",
 				"delete": "刪除",
 				"favorite": "收藏",
@@ -881,7 +902,10 @@
 			"deleteText1": "確定要刪除此評論嗎？",
 			"deleteSuccess": "已成功刪除評論。",
 			"addedSuccess": "已成功新增評論。",
-			"permalink": "複製此評論的永久連結"
+			"permalink": "複製此評論的永久連結",
+			"sortNewestFirst": "由新到舊",
+			"sortOldestFirst": "由舊到新",
+			"reply": "回覆"
 		},
 		"mention": {
 			"noUsersFound": "找不到使用者"
@@ -920,11 +944,21 @@
 			"urgent": "緊急"
 		},
 		"relation": {
-			"differentProject": "此任務屬於另一個專案。"
+			"differentProject": "此任務屬於另一個專案。",
+			"kinds": {
+				"copiedfrom": "複製自 | 複製自",
+				"copiedto": "複製自 | 複製自"
+			}
 		},
 		"reminder": {
 			"custom": "自定義",
 			"dateAndTime": "日期與時間"
+		},
+		"repeat": {
+			"everyDay": "每天",
+			"everyWeek": "每週",
+			"every30d": "每 30 天",
+			"monthly": "每月"
 		},
 		"quickAddMagic": {
 			"intro": "建立任務時，您可以使用特殊關鍵字直接為新建立的任務添加屬性。這可以讓您更快速地為任務加入常用屬性。",
@@ -990,6 +1024,7 @@
 	},
 	"keyboardShortcuts": {
 		"title": "鍵盤快捷鍵",
+		"toggleMenu": "切換選單",
 		"task": {
 			"title": "任務頁面",
 			"assign": "分配此任務給一個用户",
@@ -1020,13 +1055,15 @@
 	"menu": {
 		"edit": "編輯",
 		"archive": "封存",
+		"duplicate": "複製",
 		"delete": "刪除",
 		"unarchive": "取消封存",
 		"setBackground": "背景設定",
 		"share": "共享",
 		"createProject": "建立專案",
 		"cantArchiveIsDefault": "您無法封存此專案，因為它是您的預設專案。",
-		"cantDeleteIsDefault": "您無法刪除此專案，因為它是您的預設專案。"
+		"cantDeleteIsDefault": "您無法刪除此專案，因為它是您的預設專案。",
+		"views": "視圖"
 	},
 	"apiConfig": {
 		"urlPlaceholder": "例如： https://localhost:3456"
@@ -1035,9 +1072,12 @@
 		"contact": "聯繫我們"
 	},
 	"notification": {
+		"title": "通知",
 		"explainer": "當您訂閱的動作、專案或任務發生時，通知將會顯示在此處。"
 	},
 	"quickActions": {
+		"commands": "命令",
+		"placeholder": "輸入指令或搜尋……",
 		"hint": "您可以使用 {project} 將搜尋範圍限制在特定專案。將 {project} 或 {label}（標籤）與搜尋查詢結合，可搜尋具有這些標籤或屬於該專案的任務。使用 {assignee} 則僅搜尋團隊。",
 		"tasks": "任務",
 		"projects": "項目",
@@ -1046,6 +1086,9 @@
 		"newProject": "輸入新專案的標題…",
 		"createTask": "在目前專案（{title}）中建立任務",
 		"createProject": "建立專案",
+		"resultTypes": {
+			"command": "指令"
+		},
 		"cmds": {
 			"newTask": "新增任務",
 			"newProject": "新專案",
@@ -1103,5 +1146,15 @@
 		"version": "版本：{version}",
 		"frontendVersion": "前端版本: {version}",
 		"apiVersion": "API 版本: {version}"
+	},
+	"time": {
+		"units": {
+			"seconds": "秒|秒",
+			"minutes": "分鐘|分鐘",
+			"hours": "小時|小時",
+			"days": "天|天",
+			"weeks": "周|周",
+			"years": "年|年"
+		}
 	}
 }
