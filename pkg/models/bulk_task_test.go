@@ -119,6 +119,55 @@ func TestBulkTask_Update(t *testing.T) {
 		assert.NotZero(t, bt.Tasks[1].DoneAt)
 	})
 
+	t.Run("bulk update without assignees field keeps assignees", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Task 30 has users 1 and 2 assigned in the fixtures. A bulk update
+		// that only names "priority" in fields must not touch them (#4109).
+		bt := &BulkTask{
+			TaskIDs: []int64{30},
+			Fields:  []string{"priority"},
+			Values:  &Task{Priority: 3},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		err = bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 30, "priority": 3}, false)
+		db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": 30, "user_id": 1}, false)
+		db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": 30, "user_id": 2}, false)
+	})
+
+	t.Run("bulk update with assignees field replaces assignees", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bt := &BulkTask{
+			TaskIDs: []int64{30},
+			Fields:  []string{"assignees"},
+			Values:  &Task{Assignees: []*user.User{{ID: 1}}},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		err = bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": 30, "user_id": 1}, false)
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": 30, "user_id": 2})
+	})
+
 	t.Run("don't update done_at when bulk marking tasks done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
