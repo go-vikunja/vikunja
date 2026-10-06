@@ -732,3 +732,128 @@ func TestDirectoryID(t *testing.T) {
 		})
 	}
 }
+
+func TestGetOrCreateLdapUser(t *testing.T) {
+	const dn = "uid=jdoe,ou=people,dc=example,dc=com"
+	usernameAttribute := config.AuthLdapAttributeUsername.GetString()
+
+	insertLdapUser := func(t *testing.T, s *xorm.Session, u *user2.User) {
+		u.Issuer = user2.IssuerLDAP
+		_, err := s.Insert(u)
+		require.NoError(t, err)
+	}
+
+	t.Run("prefers the id account over a legacy username account", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		byID := &user2.User{
+			Username: "ldap-by-id",
+			Subject:  "uuid-1",
+		}
+		insertLdapUser(t, s, byID)
+		legacy := &user2.User{
+			Username: "ldap-legacy",
+			Subject:  "jdoe",
+		}
+		insertLdapUser(t, s, legacy)
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			usernameAttribute: {"jdoe"},
+			"entryUUID":       {"uuid-1"},
+		}))
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		assert.Equal(t, byID.ID, u.ID)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      legacy.ID,
+			"subject": "jdoe",
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 2)
+	})
+
+	t.Run("errors when the entry has no id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			usernameAttribute: {"jdoe"},
+		}))
+		require.Error(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 0)
+	})
+
+	t.Run("errors when the entry has no username and no id is configured", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			"mail": {"jdoe@example.com"},
+		}))
+		require.Error(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 0)
+	})
+
+	t.Run("creates a user with the id as subject", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			usernameAttribute:                         {"jdoe"},
+			config.AuthLdapAttributeEmail.GetString(): {"jdoe@example.com"},
+			"entryUUID":                               {"uuid-1"},
+		}))
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":       u.ID,
+			"username": "jdoe",
+			"issuer":   "ldap",
+			"subject":  "uuid-1",
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
+	})
+
+	t.Run("migrates a disabled legacy account", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		legacy := &user2.User{
+			Username: "jdoe",
+			Subject:  "jdoe",
+			Status:   user2.StatusDisabled,
+		}
+		insertLdapUser(t, s, legacy)
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			usernameAttribute: {"jdoe"},
+			"entryUUID":       {"uuid-1"},
+		}))
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		assert.Equal(t, legacy.ID, u.ID)
+		assert.Equal(t, user2.StatusDisabled, u.Status)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      legacy.ID,
+			"subject": "uuid-1",
+			"status":  user2.StatusDisabled,
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
+	})
+}
