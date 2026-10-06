@@ -1,5 +1,6 @@
 import {afterEach, describe, expect, it, vi} from 'vitest'
 
+import {ApiError} from './problem'
 import {publicClient} from './publicClient'
 
 describe('publicClient', () => {
@@ -13,7 +14,9 @@ describe('publicClient', () => {
 			headers: {'Content-Type': 'application/json'},
 		})))
 
-		await expect(publicClient.get({url: 'https://api.example.com/api/v2/token'})).rejects.toEqual({
+		const rejection = await publicClient.get({url: 'https://api.example.com/api/v2/token'}).then(() => undefined, (e: unknown) => e)
+		expect(rejection).toBeInstanceOf(ApiError)
+		expect(rejection).toMatchObject({
 			message: 'Too Many Requests',
 			detail: 'Too Many Requests',
 			status: 429,
