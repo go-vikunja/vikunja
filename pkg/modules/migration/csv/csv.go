@@ -162,6 +162,22 @@ func stripBOM(data []byte) []byte {
 	return data
 }
 
+func readCSVFile(file io.ReaderAt, size int64) ([]byte, error) {
+	if size == 0 {
+		return nil, &migration.ErrFileIsEmpty{}
+	}
+	if size > maxImportFileBytes() {
+		return nil, &migration.ErrNotACSVFile{}
+	}
+
+	data := make([]byte, size)
+	_, err := file.ReadAt(data, 0)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return nil, err
+	}
+	return data, nil
+}
+
 // detectDelimiter attempts to auto-detect the CSV delimiter
 func detectDelimiter(data []byte) string {
 	content := string(data)
@@ -340,17 +356,8 @@ func maxImportFileBytes() int64 {
 
 // DetectCSVStructure analyzes a CSV file and returns detection results
 func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) {
-	if size == 0 {
-		return nil, &migration.ErrFileIsEmpty{}
-	}
-	if size > maxImportFileBytes() {
-		return nil, &migration.ErrNotACSVFile{}
-	}
-
-	// Read the entire file
-	data := make([]byte, size)
-	_, err := file.ReadAt(data, 0)
-	if err != nil && !errors.Is(err, io.EOF) {
+	data, err := readCSVFile(file, size)
+	if err != nil {
 		return nil, err
 	}
 
@@ -410,16 +417,8 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 
 // PreviewImport generates a preview of the import based on current mapping
 func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*PreviewResult, error) {
-	if size == 0 {
-		return nil, &migration.ErrFileIsEmpty{}
-	}
-	if size > maxImportFileBytes() {
-		return nil, &migration.ErrNotACSVFile{}
-	}
-
-	data := make([]byte, size)
-	_, err := file.ReadAt(data, 0)
-	if err != nil && !errors.Is(err, io.EOF) {
+	data, err := readCSVFile(file, size)
+	if err != nil {
 		return nil, err
 	}
 
@@ -610,30 +609,30 @@ func (m *Migrator) SetOptions(options []byte) error {
 
 // MigrateWithConfig imports CSV data into Vikunja with the provided configuration
 func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
-	if size == 0 {
-		return &migration.ErrFileIsEmpty{}
-	}
-	if size > maxImportFileBytes() {
-		return &migration.ErrNotACSVFile{}
-	}
-
-	data := make([]byte, size)
-	_, err := file.ReadAt(data, 0)
-	if err != nil && !errors.Is(err, io.EOF) {
+	projects, err := projectsFromCSV(file, size, config)
+	if err != nil {
 		return err
+	}
+	return migration.InsertFromStructure(projects, u)
+}
+
+func projectsFromCSV(file io.ReaderAt, size int64, config *ImportConfig) ([]*models.ProjectWithTasksAndBuckets, error) {
+	data, err := readCSVFile(file, size)
+	if err != nil {
+		return nil, err
 	}
 
 	_, rows, err := parseCSV(data, config.Delimiter)
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
-			return err
+			return nil, err
 		}
 		var limitErr *migration.ErrImportRowLimitExceeded
 		if errors.As(err, &limitErr) {
-			return err
+			return nil, err
 		}
-		return &migration.ErrNotACSVFile{}
+		return nil, &migration.ErrNotACSVFile{}
 	}
 
 	// Skip rows if configured
@@ -646,12 +645,10 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 	}
 
 	if len(rows) == 0 {
-		return &migration.ErrFileIsEmpty{}
+		return nil, &migration.ErrFileIsEmpty{}
 	}
 
-	vikunjaTasks := convertToVikunja(rows, config)
-
-	return migration.InsertFromStructure(vikunjaTasks, u)
+	return convertToVikunja(rows, config), nil
 }
 
 // hasProjectMapping returns true if any column is mapped to the project attribute
