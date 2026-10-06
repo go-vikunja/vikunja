@@ -342,8 +342,7 @@ func findOrMigrateLdapUser(s *xorm.Session, subject, username string) (*user.Use
 	return u, err
 }
 
-// directoryID reads an immutable identifier of an entry. AD's binary objectGUID
-// is formatted like AD tools show it.
+// objectGUID is formatted the way AD tools show it.
 func directoryID(entry *ldap.Entry, attribute string) (string, error) {
 	raw := entry.GetEqualFoldRawAttributeValue(attribute)
 	if len(raw) == 0 {
