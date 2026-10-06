@@ -785,13 +785,24 @@ func TestGetOrCreateLdapUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+		victim := &user2.User{
+			Username: "victim",
+			Subject:  "victim",
+		}
+		insertLdapUser(t, s, victim)
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
 			usernameAttribute: {"jdoe"},
 		}))
 		require.Error(t, err)
+		assert.Nil(t, u)
 		require.NoError(t, s.Commit())
 
-		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 0)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      victim.ID,
+			"subject": "victim",
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
 	})
 
 	t.Run("errors when the entry has no username and no id is configured", func(t *testing.T) {
@@ -799,13 +810,24 @@ func TestGetOrCreateLdapUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+		victim := &user2.User{
+			Username: "victim",
+			Subject:  "victim",
+		}
+		insertLdapUser(t, s, victim)
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
 			"mail": {"jdoe@example.com"},
 		}))
 		require.Error(t, err)
+		assert.Nil(t, u)
 		require.NoError(t, s.Commit())
 
-		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 0)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      victim.ID,
+			"subject": "victim",
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
 	})
 
 	t.Run("creates a user with the id as subject", func(t *testing.T) {
