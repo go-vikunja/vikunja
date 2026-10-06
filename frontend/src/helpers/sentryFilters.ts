@@ -1,3 +1,4 @@
+import {ApiError} from '@/client/problem'
 import {SENSITIVE_QUERY_PARAMS} from '@/helpers/sensitiveQueryParams'
 
 // Failed requests are surfaced to the user through the UI already, and an
@@ -69,12 +70,17 @@ function isRequestError(e: unknown): boolean {
 		return true
 	}
 
+	// 5xx are server bugs we want to see.
+	if (e instanceof ApiError) {
+		return e.status < 500
+	}
+
 	return isApiErrorBody(e)
 }
 
-// API error bodies are thrown as parsed JSON, so they are always plain objects.
-// Requiring that keeps out DOMException and other Error subclasses, which also
-// carry a `code` and a `message`.
+// Problem bodies copied out of an ApiError, e.g. RefreshTokenError's cause.
+// Requiring a plain object keeps out DOMException and other Error subclasses,
+// which also carry a `code` and a `message`.
 function isApiErrorBody(e: unknown): boolean {
 	if (typeof e !== 'object' || e === null || Object.getPrototypeOf(e) !== Object.prototype) {
 		return false

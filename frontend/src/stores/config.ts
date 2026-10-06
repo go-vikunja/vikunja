@@ -5,6 +5,7 @@ import {getApiBaseUrl, getApiRootUrl, InvalidApiUrlProvidedError} from '@/helper
 import {canonicalApiBaseUrl} from '@/client/requestContext'
 import {info, type VikunjaInfos, type AuthInfo} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
+import {ApiError} from '@/client/problem'
 import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
 
 import type {IProvider} from '@/types/IProvider'
@@ -139,7 +140,7 @@ export const useConfigStore = defineStore('config', () => {
 			})
 			config = response.data
 		} catch (e) {
-			throw e instanceof Error ? e : new InvalidApiUrlProvidedError()
+			throw e instanceof Error && !(e instanceof ApiError) ? e : new InvalidApiUrlProvidedError()
 		}
 
 		if (typeof config.version === 'undefined') {

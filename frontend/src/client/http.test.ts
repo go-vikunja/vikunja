@@ -3,6 +3,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {client} from './generated/client.gen'
 import {configureApiClient} from './http'
 import {InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
+import {ApiError} from './problem'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
@@ -38,6 +39,12 @@ const ok = () => new Response(JSON.stringify({ok: true}), {
 	status: 200,
 	headers: {'Content-Type': 'application/json'},
 })
+
+async function expectApiError(request: Promise<unknown>, fields: Record<string, unknown>) {
+	const rejection = await request.then(() => undefined, (e: unknown) => e)
+	expect(rejection).toBeInstanceOf(ApiError)
+	expect(rejection).toMatchObject(fields)
+}
 
 const BrowserRequest = globalThis.Request
 
@@ -579,7 +586,7 @@ describe('configureApiClient', () => {
 	it('stamps the response status onto an Echo error body', async () => {
 		responses = [echoError(429, {message: 'Too Many Requests'})]
 
-		await expect(client.get({url: '/probe'})).rejects.toEqual({
+		await expectApiError(client.get({url: '/probe'}), {
 			message: 'Too Many Requests',
 			detail: 'Too Many Requests',
 			status: 429,
@@ -592,7 +599,7 @@ describe('configureApiClient', () => {
 			message: 'missing, malformed, expired or otherwise invalid token provided',
 		})]
 
-		await expect(client.get({url: '/probe'})).rejects.toEqual({
+		await expectApiError(client.get({url: '/probe'}), {
 			code: 11,
 			message: 'missing, malformed, expired or otherwise invalid token provided',
 			detail: 'missing, malformed, expired or otherwise invalid token provided',
@@ -600,7 +607,27 @@ describe('configureApiClient', () => {
 		})
 	})
 
-	it('leaves a problem body that already carries a status untouched', async () => {
+	it('throws a problem body as an ApiError', async () => {
+		responses = [new Response(JSON.stringify({
+			$schema: 'https://example.com/schemas/ErrorModel.json',
+			status: 500,
+			title: 'Internal Server Error',
+			detail: 'Oo',
+		}), {
+			status: 500,
+			headers: {'Content-Type': 'application/problem+json'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			name: 'ApiError',
+			message: 'Oo',
+			status: 500,
+			title: 'Internal Server Error',
+			detail: 'Oo',
+		})
+	})
+
+	it('keeps the code of a problem body', async () => {
 		responses = [new Response(JSON.stringify({
 			status: 403,
 			code: 4004,
@@ -610,32 +637,33 @@ describe('configureApiClient', () => {
 			headers: {'Content-Type': 'application/problem+json'},
 		})]
 
-		await expect(client.get({url: '/probe'})).rejects.toEqual({
+		await expectApiError(client.get({url: '/probe'}), {
 			status: 403,
 			code: 4004,
 			detail: 'forbidden',
 		})
 	})
 
-	it('turns a plain-text proxy error into a problem body', async () => {
+	it('turns a plain-text proxy error into an ApiError', async () => {
 		responses = [new Response('Bad Gateway', {
 			status: 502,
 			headers: {'Content-Type': 'text/plain; charset=utf-8'},
 		})]
 
-		await expect(client.get({url: '/probe'})).rejects.toEqual({
+		await expectApiError(client.get({url: '/probe'}), {
+			message: 'Bad Gateway',
 			status: 502,
 			detail: 'Bad Gateway',
 		})
 	})
 
-	it('turns a plain-text 404 into a problem body', async () => {
+	it('turns a plain-text 404 into an ApiError', async () => {
 		responses = [new Response('404 page not found\n', {
 			status: 404,
 			headers: {'Content-Type': 'text/plain; charset=utf-8'},
 		})]
 
-		await expect(client.get({url: '/probe'})).rejects.toEqual({
+		await expectApiError(client.get({url: '/probe'}), {
 			status: 404,
 			detail: '404 page not found',
 		})
@@ -644,7 +672,7 @@ describe('configureApiClient', () => {
 	it('falls back to the status text for an empty error body', async () => {
 		responses = [new Response('', {status: 503, statusText: 'Service Unavailable'})]
 
-		await expect(client.get({url: '/probe'})).rejects.toEqual({
+		await expectApiError(client.get({url: '/probe'}), {
 			status: 503,
 			detail: 'Service Unavailable',
 		})
