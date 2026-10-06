@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStripBOM(t *testing.T) {
+func TestToUTF8(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    []byte
@@ -54,7 +54,7 @@ func TestStripBOM(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result := stripBOM(tc.input)
+			result := toUTF8(tc.input)
 			assert.Equal(t, tc.expected, result)
 		})
 	}
@@ -265,7 +265,7 @@ func TestParseCSV(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			headers, rows, err := parseCSV([]byte(tc.input), tc.delimiter)
+			headers, rows, err := parseCSV(toUTF8([]byte(tc.input)), tc.delimiter)
 
 			if tc.expectedError {
 				require.Error(t, err)
