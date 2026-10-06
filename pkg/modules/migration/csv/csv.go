@@ -27,6 +27,9 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
@@ -154,12 +157,13 @@ type PreviewResult struct {
 	TotalRows int           `json:"total_rows" doc:"The total number of data rows in the file."`
 }
 
-// stripBOM removes the UTF-8 BOM from the beginning of a reader
-func stripBOM(data []byte) []byte {
-	if len(data) >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
-		return data[3:]
+// toUTF8 decodes a BOM-marked UTF-16 file (Excel's "Unicode Text" export) and drops
+// what Postgres text columns reject: NUL bytes and invalid UTF-8.
+func toUTF8(data []byte) []byte {
+	if decoded, _, err := transform.Bytes(unicode.BOMOverride(transform.Nop), data); err == nil {
+		data = decoded
 	}
-	return data
+	return bytes.ToValidUTF8(bytes.ReplaceAll(data, []byte{0}, nil), []byte("\uFFFD"))
 }
 
 func readCSVFile(file io.ReaderAt, size int64) ([]byte, error) {
@@ -175,7 +179,7 @@ func readCSVFile(file io.ReaderAt, size int64) ([]byte, error) {
 	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, err
 	}
-	return data, nil
+	return toUTF8(data), nil
 }
 
 // detectDelimiter attempts to auto-detect the CSV delimiter
@@ -300,8 +304,6 @@ func suggestMapping(columns []string) []ColumnMapping {
 
 // One lookahead record detects migration.maxcsvrows overflow without retaining it (GHSA-pqf9-h8g4-8gmh).
 func parseCSV(data []byte, delimiter string) (headers []string, dataRows [][]string, err error) {
-	data = stripBOM(data)
-
 	// Go's csv.Reader only supports double-quote as the quote character.
 	// LazyQuotes mode handles most edge cases including unescaped quotes
 	// in fields. We intentionally do not replace non-standard quote chars
