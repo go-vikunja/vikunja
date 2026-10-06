@@ -20,11 +20,11 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"slices"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/config"
@@ -340,7 +340,7 @@ func findLdapUser(s *xorm.Session, subject, username string) (*user.User, error)
 }
 
 // directoryID reads an immutable identifier of an entry. AD's binary objectGUID
-// is formatted like AD tools show it, other binary values are hex-encoded.
+// is formatted like AD tools show it.
 func directoryID(entry *ldap.Entry, attribute string) (string, error) {
 	raw := entry.GetEqualFoldRawAttributeValue(attribute)
 	if len(raw) == 0 {
@@ -351,11 +351,11 @@ func directoryID(entry *ldap.Entry, attribute string) (string, error) {
 		return formatObjectGUID(raw)
 	}
 
-	if utf8.Valid(raw) {
-		return string(raw), nil
+	if !utf8.Valid(raw) || bytes.ContainsFunc(raw, unicode.IsControl) {
+		return "", fmt.Errorf("ldap entry %s has a binary value for attribute %s, only objectGUID is supported as a binary id", entry.DN, attribute)
 	}
 
-	return hex.EncodeToString(raw), nil
+	return string(raw), nil
 }
 
 // formatObjectGUID decodes AD's mixed-endian layout: the first three groups

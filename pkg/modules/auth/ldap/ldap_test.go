@@ -670,35 +670,71 @@ func TestFormatObjectGUID(t *testing.T) {
 }
 
 func TestDirectoryID(t *testing.T) {
+	// {6f9619ff-8b86-d011-b42d-00c04fc964ff} as AD stores it.
 	guid := []byte{0xff, 0x19, 0x96, 0x6f, 0x86, 0x8b, 0x11, 0xd0, 0xb4, 0x2d, 0x00, 0xc0, 0x4f, 0xc9, 0x64, 0xff}
-	entry := &ldap.Entry{
-		DN: "cn=test,dc=example,dc=com",
-		Attributes: []*ldap.EntryAttribute{
-			{Name: "objectGUID", ByteValues: [][]byte{guid}},
-			{Name: "entryUUID", ByteValues: [][]byte{[]byte("597ae2f6-16a6-1027-98f4-d28b5365dc14")}},
-			{Name: "GUID", ByteValues: [][]byte{{0xff, 0x00, 0x10}}},
-		},
-	}
 
 	tests := []struct {
-		attribute string
-		expected  string
+		name        string
+		attribute   string
+		value       []byte
+		expected    string
+		expectedErr bool
 	}{
-		{attribute: "objectGUID", expected: "6f9619ff-8b86-d011-b42d-00c04fc964ff"},
-		{attribute: "objectguid", expected: "6f9619ff-8b86-d011-b42d-00c04fc964ff"},
-		{attribute: "entryUUID", expected: "597ae2f6-16a6-1027-98f4-d28b5365dc14"},
-		{attribute: "GUID", expected: "ff0010"},
+		{
+			name:      "objectGUID",
+			attribute: "objectGUID",
+			value:     guid,
+			expected:  "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+		},
+		{
+			name:      "objectGUID lowercase",
+			attribute: "objectguid",
+			value:     guid,
+			expected:  "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+		},
+		{
+			name:      "text",
+			attribute: "entryUUID",
+			value:     []byte("597ae2f6-16a6-1027-98f4-d28b5365dc14"),
+			expected:  "597ae2f6-16a6-1027-98f4-d28b5365dc14",
+		},
+		{
+			name:        "binary, invalid utf-8",
+			attribute:   "GUID",
+			value:       []byte{0xff, 0x00, 0x10},
+			expectedErr: true,
+		},
+		{
+			name:        "binary, valid utf-8",
+			attribute:   "GUID",
+			value:       []byte{0x41, 0x00, 0x10},
+			expectedErr: true,
+		},
+		{
+			name:        "missing",
+			attribute:   "uid",
+			expectedErr: true,
+		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.attribute, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
+			entry := &ldap.Entry{
+				DN: "cn=test,dc=example,dc=com",
+				Attributes: []*ldap.EntryAttribute{
+					{
+						Name:       tt.attribute,
+						ByteValues: [][]byte{tt.value},
+					},
+				},
+			}
+
 			id, err := directoryID(entry, tt.attribute)
+			if tt.expectedErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, id)
 		})
 	}
-
-	t.Run("missing attribute", func(t *testing.T) {
-		_, err := directoryID(entry, "uid")
-		require.Error(t, err)
-	})
 }
