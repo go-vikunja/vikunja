@@ -323,9 +323,8 @@ func TestLdapLogin(t *testing.T) {
 	})
 
 	t.Run("should keep team when group dn changes", func(t *testing.T) {
-		useEntryUUID(t, config.AuthLdapAttributeGroupID)
-
 		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeGroupID)
 		s := db.NewSession()
 		defer s.Close()
 
@@ -362,9 +361,8 @@ func TestLdapLogin(t *testing.T) {
 	})
 
 	t.Run("should keep account when username changes", func(t *testing.T) {
-		useEntryUUID(t, config.AuthLdapAttributeUserID)
-
 		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
 		s := db.NewSession()
 		defer s.Close()
 
