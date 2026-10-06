@@ -657,18 +657,6 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 	}
 }
 
-func TestFormatObjectGUID(t *testing.T) {
-	// {6f9619ff-8b86-d011-b42d-00c04fc964ff} as AD stores it.
-	raw := []byte{0xff, 0x19, 0x96, 0x6f, 0x86, 0x8b, 0x11, 0xd0, 0xb4, 0x2d, 0x00, 0xc0, 0x4f, 0xc9, 0x64, 0xff}
-
-	guid, err := formatObjectGUID(raw)
-	require.NoError(t, err)
-	assert.Equal(t, "6f9619ff-8b86-d011-b42d-00c04fc964ff", guid)
-
-	_, err = formatObjectGUID(raw[:15])
-	require.Error(t, err)
-}
-
 func TestDirectoryID(t *testing.T) {
 	// {6f9619ff-8b86-d011-b42d-00c04fc964ff} as AD stores it.
 	guid := []byte{0xff, 0x19, 0x96, 0x6f, 0x86, 0x8b, 0x11, 0xd0, 0xb4, 0x2d, 0x00, 0xc0, 0x4f, 0xc9, 0x64, 0xff}
@@ -691,6 +679,12 @@ func TestDirectoryID(t *testing.T) {
 			attribute: "objectguid",
 			value:     guid,
 			expected:  "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+		},
+		{
+			name:        "objectGUID too short",
+			attribute:   "objectGUID",
+			value:       guid[:15],
+			expectedErr: true,
 		},
 		{
 			name:      "text",
