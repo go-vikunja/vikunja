@@ -293,7 +293,7 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 	// If no user exists, create one with the preferred username if it is not already taken
 	if user.IsErrUserDoesNotExist(err) {
 		uu := &user.User{
-			Username: strings.ReplaceAll(username, " ", "-"),
+			Username: strings.TrimLeft(strings.ReplaceAll(username, " ", "-"), "@"),
 			Email:    email,
 			Name:     name,
 			Status:   user.StatusActive,
@@ -361,7 +361,7 @@ func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn string) 
 		log.Debugf("Group %s has %d members", groupName, len(members))
 
 		for _, member := range members {
-			if member == userdn || member == u.Username {
+			if member == userdn || member == u.Username || (u.Subject != "" && member == u.Subject) || (strings.HasPrefix(member, "@") && strings.TrimPrefix(member, "@") == u.Username) {
 				teams = append(teams, &models.Team{
 					Name:        groupName,
 					ExternalID:  group.DN,

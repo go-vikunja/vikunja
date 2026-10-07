@@ -44,6 +44,10 @@ func init() {
 			return false
 		}
 
+		if strings.HasPrefix(i, "@") {
+			return false
+		}
+
 		// Check if username matches the reserved link-share pattern
 		linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
 		return !linkSharePattern.MatchString(i)
