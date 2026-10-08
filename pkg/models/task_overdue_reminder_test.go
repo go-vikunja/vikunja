@@ -95,8 +95,9 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// User 1 has valid overdue tasks. Set user 2 (or another user) with malformed/empty reminder time.
-		_, err := s.Exec("UPDATE users SET overdue_tasks_reminders_time = 'invalid:time' WHERE id = ?", 2)
+		_, err := s.ID(2).Cols("overdue_tasks_reminders_time").Update(&user.User{
+			OverdueTasksRemindersTime: "xx:yy",
+		})
 		require.NoError(t, err)
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
