@@ -1800,7 +1800,26 @@ func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*Pr
 }
 
 func addOneMonthToDate(d time.Time) time.Time {
-	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
+	if d.IsZero() {
+		return d
+	}
+	loc := config.GetTimeZone()
+	if loc == nil {
+		loc = d.Location()
+	}
+	d = d.In(loc)
+	year, month, day := d.Date()
+	targetMonth := month + 1
+	targetYear := year
+	if targetMonth > 12 {
+		targetYear++
+		targetMonth = 1
+	}
+	lastDay := time.Date(targetYear, targetMonth+1, 0, 0, 0, 0, 0, loc).Day()
+	if day > lastDay {
+		day = lastDay
+	}
+	return time.Date(targetYear, targetMonth, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), loc)
 }
 
 // addRepeatIntervalToTime advances t by whole multiples of duration until
