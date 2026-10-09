@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -1129,6 +1130,24 @@ func TestUpdateDone(t *testing.T) {
 				assert.NotEqual(t, oldDueDate.Month(), newTask.DueDate.Month())
 				assert.False(t, newTask.Done)
 			})
+			t.Run("due date on month end clamping", func(t *testing.T) {
+				oldTask := &Task{
+					Done:       false,
+					RepeatMode: TaskRepeatModeMonth,
+					DueDate:    time.Date(2027, time.January, 31, 9, 0, 0, 0, config.GetTimeZone()),
+				}
+				newTask := &Task{
+					Done: true,
+				}
+
+				updateDone(oldTask, newTask)
+
+				assert.Equal(t, 2027, newTask.DueDate.Year())
+				assert.Equal(t, time.February, newTask.DueDate.Month())
+				assert.Equal(t, 28, newTask.DueDate.Day())
+				assert.Equal(t, 9, newTask.DueDate.Hour())
+				assert.False(t, newTask.Done)
+			})
 			t.Run("reminders", func(t *testing.T) {
 				oldTask := &Task{
 					Done:       false,
@@ -1673,4 +1692,72 @@ func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	afterWrite, err := GetTaskByIDSimple(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
+}
+
+func TestAddOneMonthToDate(t *testing.T) {
+	loc := config.GetTimeZone()
+
+	cases := []struct {
+		name     string
+		input    time.Time
+		expected time.Time
+	}{
+		{
+			name:     "Jan 31 non-leap year to Feb 28",
+			input:    time.Date(2027, time.January, 31, 10, 30, 0, 0, loc),
+			expected: time.Date(2027, time.February, 28, 10, 30, 0, 0, loc),
+		},
+		{
+			name:     "Jan 31 leap year to Feb 29",
+			input:    time.Date(2024, time.January, 31, 10, 30, 0, 0, loc),
+			expected: time.Date(2024, time.February, 29, 10, 30, 0, 0, loc),
+		},
+		{
+			name:     "Jan 30 non-leap year to Feb 28",
+			input:    time.Date(2027, time.January, 30, 10, 30, 0, 0, loc),
+			expected: time.Date(2027, time.February, 28, 10, 30, 0, 0, loc),
+		},
+		{
+			name:     "March 31 to April 30",
+			input:    time.Date(2027, time.March, 31, 14, 0, 0, 0, loc),
+			expected: time.Date(2027, time.April, 30, 14, 0, 0, 0, loc),
+		},
+		{
+			name:     "May 31 to June 30",
+			input:    time.Date(2027, time.May, 31, 8, 0, 0, 0, loc),
+			expected: time.Date(2027, time.June, 30, 8, 0, 0, 0, loc),
+		},
+		{
+			name:     "August 31 to September 30",
+			input:    time.Date(2027, time.August, 31, 12, 0, 0, 0, loc),
+			expected: time.Date(2027, time.September, 30, 12, 0, 0, 0, loc),
+		},
+		{
+			name:     "October 31 to November 30",
+			input:    time.Date(2027, time.October, 31, 16, 0, 0, 0, loc),
+			expected: time.Date(2027, time.November, 30, 16, 0, 0, 0, loc),
+		},
+		{
+			name:     "December 31 to January 31 next year",
+			input:    time.Date(2027, time.December, 31, 23, 59, 0, 0, loc),
+			expected: time.Date(2028, time.January, 31, 23, 59, 0, 0, loc),
+		},
+		{
+			name:     "Mid-month preserves day",
+			input:    time.Date(2027, time.January, 15, 10, 0, 0, 0, loc),
+			expected: time.Date(2027, time.February, 15, 10, 0, 0, 0, loc),
+		},
+		{
+			name:     "Zero time returns zero time",
+			input:    time.Time{},
+			expected: time.Time{},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := addOneMonthToDate(tc.input)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
 }
