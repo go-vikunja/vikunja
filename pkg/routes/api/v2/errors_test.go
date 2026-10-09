@@ -99,6 +99,15 @@ func TestNewError_StripsServerErrorDetail(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, vm.Status)
 		assert.NotZero(t, vm.Code, "the Vikunja numeric error code must stay on the body")
 	})
+
+	t.Run("api token does not exist domain error maps to 404", func(t *testing.T) {
+		se := translateDomainError(models.ErrAPITokenDoesNotExist{TokenID: 999})
+		vm, ok := se.(*vikunjaErrorModel)
+		require.True(t, ok)
+		assert.Equal(t, http.StatusNotFound, vm.Status)
+		assert.Equal(t, models.ErrCodeAPITokenDoesNotExist, vm.Code)
+		assert.Equal(t, "This API token does not exist.", vm.Detail)
+	})
 }
 
 // The schema huma derives at registration time comes from NewError(0, ""), so

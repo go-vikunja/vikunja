@@ -99,8 +99,14 @@ func (*APIToken) TableName() string {
 
 func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
 	token = &APIToken{}
-	_, err = s.Where("id = ?", id).
+	has, err := s.Where("id = ?", id).
 		Get(token)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, ErrAPITokenDoesNotExist{TokenID: id}
+	}
 	return
 }
 
