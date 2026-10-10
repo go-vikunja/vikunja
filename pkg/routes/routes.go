@@ -54,6 +54,7 @@ package routes
 import (
 	"context"
 	"log/slog"
+	"net/url"
 	"strings"
 	"time"
 
@@ -171,7 +172,7 @@ func NewEcho() *echo.Echo {
 				attrs := []slog.Attr{
 					slog.String("remote_ip", v.RemoteIP),
 					slog.String("method", v.Method),
-					slog.String("uri", v.URI),
+					slog.String("uri", redactQueryToken(v.URI)),
 					slog.Int("status", v.Status),
 					slog.Duration("latency", v.Latency),
 					slog.String("user_agent", v.UserAgent),
@@ -359,6 +360,11 @@ var unauthenticatedAPIPaths = map[string]bool{
 	// feeds-scoped API token), like its /feeds counterpart, not a JWT.
 	"/api/v2/notifications.atom": true,
 
+	// iCalendar feeds (Huma ops) authenticate themselves with a feeds-scoped
+	// API token in the query string, which calendar apps can carry.
+	"/api/v2/projects/:project/calendar.ics": true,
+	"/api/v2/user/calendar.ics":              true,
+
 	// WebSocket upgrade (a raw echo route — OpenAPI can't model WebSockets);
 	// it authenticates via its first message, so the upgrade needs no JWT.
 	"/api/v2/ws": true,
@@ -380,6 +386,25 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 
 		models.CollectRoutesForAPITokenUsage(route, requiresJWT)
 	}
+}
+
+// redactQueryToken keeps the calendar feeds' query-string API token out of the request log.
+func redactQueryToken(uri string) string {
+	if !strings.Contains(uri, apiv2.CalendarFeedTokenParam+"=") {
+		return uri
+	}
+	u, err := url.ParseRequestURI(uri)
+	if err != nil {
+		path, _, _ := strings.Cut(uri, "?")
+		return path
+	}
+	q := u.Query()
+	if !q.Has(apiv2.CalendarFeedTokenParam) {
+		return uri
+	}
+	q.Set(apiv2.CalendarFeedTokenParam, "REDACTED")
+	u.RawQuery = q.Encode()
+	return u.String()
 }
 
 // noStoreCacheControl returns middleware that sets `Cache-Control: no-store`
