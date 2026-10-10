@@ -2390,7 +2390,7 @@ func (err ErrAPITokenDoesNotExist) Error() string {
 }
 
 // ErrCodeAPITokenDoesNotExist holds the unique world-error code of this error
-const ErrCodeAPITokenDoesNotExist = 14003
+const ErrCodeAPITokenDoesNotExist = 14017
 
 // HTTPError holds the http error description
 func (err ErrAPITokenDoesNotExist) HTTPError() web.HTTPError {
