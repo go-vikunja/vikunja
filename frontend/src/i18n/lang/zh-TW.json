@@ -4,14 +4,37 @@
 		"text": "您請求的頁面不存在。"
 	},
 	"home": {
-		"welcomeNight": "晚上好，{username}！",
-		"welcomeNightOwl": "夜貓子 {username}，哈囉",
-		"welcomeNightBurning": "{username}，還在熬夜打拼嗎？",
-		"welcomeNightQuiet": "{username}，勿擾模式時段",
-		"welcomeNightLate": "{username}，時間不早了",
+		"welcomeNight": "{username}，晚安！",
+		"welcomeNightOwl": "哈囉，夜貓子 {username}",
+		"welcomeNightBurning": "{username}，還在奮戰嗎？",
+		"welcomeNightQuiet": "靜謐的深夜時分，{username}",
+		"welcomeNightLate": "時間不早了，{username}",
+		"welcomeNightMoonlit": "{username}，月夜的時間規劃呢？",
 		"welcomeMorning": "早安，{username}！",
-		"welcomeDay": "嗨~，{username}！",
-		"welcomeEvening": "午安，{username}！",
+		"welcomeMorningHey": "嘿 {username}，準備好出發了嗎？",
+		"welcomeMorningFresh": "全新的開始，{username}",
+		"welcomeMorningCoffee": "{username}，來杯咖啡再開始處理任務吧？",
+		"welcomeMorningRise": "精神飽滿地開始規劃吧，{username}",
+		"welcomeMorningBack": "歡迎回來，{username}",
+		"welcomeMondayFresh": "嶄新的一週，{username}",
+		"welcomeTuesday": "週二愉快，{username}",
+		"welcomeWednesdayMid": "一週過一半了呢，{username}",
+		"welcomeThursday": "再堅持一下，{username}",
+		"welcomeFridayPush": "{username}，週五最後衝刺？",
+		"welcomeSaturday": "開啟週末模式，{username}",
+		"welcomeSundaySession": "{username}，週日規劃時間？",
+		"welcomeDay": "{username}，嗨！",
+		"welcomeDayBack": "繼續加油，{username}",
+		"welcomeDayFocus": "專注投入，{username}",
+		"welcomeDayKeepGoing": "持續前進，{username}",
+		"welcomeDayWhatsNext": "{username}，下一步是什麼呢？",
+		"welcomeDayGood": "{username}，午安",
+		"welcomeEvening": "{username}，晚安！",
+		"welcomeEveningWind": "{username}，準備收尾了嗎？",
+		"welcomeEveningReturns": "{username}，歡迎回來",
+		"welcomeEveningWrap": "{username}，該準備收工囉？",
+		"welcomeEveningOneMore": "{username}，再處理一件事就好？",
+		"welcomeEveningStill": "{username}，還在忙碌嗎？",
 		"lastViewed": "最近查看",
 		"addToHomeScreen": "將此應用程序添加到您的主屏幕以便更快地訪問和改善體驗。",
 		"goToOverview": "轉到概覽",
@@ -26,9 +49,10 @@
 		"accountWillBeDeleted": "您的帳戶將被刪除，包括您創建的所有項目、任務和附件。"
 	},
 	"ready": {
-		"loading": "Vikunja 正在加載…",
+		"loading": "Vikunja 正在讀取中……",
 		"errorOccured": "發生錯誤：",
 		"checkApiUrl": "請檢查 API 網址是否正確。",
+		"rateLimited": "伺服器目前接收到過多請求，請稍等片刻後再重新整理頁面。",
 		"noApiUrlConfigured": "未配置 API 網址，請在下框中設置："
 	},
 	"offline": {
@@ -104,6 +128,7 @@
 				"timezone": "時區",
 				"overdueTasksRemindersTime": "逾期任務提醒郵件時間",
 				"filterUsedOnOverview": "在總覽頁面中使用的已儲存篩選器",
+				"showLastViewed": "在概覽頁面顯示最近檢視的專案",
 				"minimumPriority": "最低可見任務優先級",
 				"dateDisplay": "時間顯示格式",
 				"dateDisplayOptions": {
@@ -933,7 +958,8 @@
 			"addCreateSuccess": "標籤已成功建立並新增完成。",
 			"delete": {
 				"header": "刪除此標籤",
-				"text1": "確定要刪除此標籤嗎？"
+				"text1": "確定要刪除此標籤嗎？",
+				"text2": "這將從所有任務中移除此項目，且無法復原。"
 			}
 		},
 		"priority": {
@@ -941,11 +967,24 @@
 			"low": "低",
 			"medium": "中",
 			"high": "高",
-			"urgent": "緊急"
+			"urgent": "緊急",
+			"doNow": "立即執行"
 		},
 		"relation": {
+			"add": "新增任務關聯",
+			"new": "新的任務關聯",
+			"searchPlaceholder": "輸入關鍵字以搜尋要新增關聯的任務……",
+			"createPlaceholder": "將此新增為任務關聯",
 			"differentProject": "此任務屬於另一個專案。",
+			"noneYet": "還沒有任務關聯。",
+			"delete": "刪除任務關聯",
+			"deleteText1": "確定要刪除此任務關聯嗎？",
+			"select": "請選擇關聯類型",
+			"taskRequired": "請選擇一個任務或輸入一個新的任務標題。",
 			"kinds": {
+				"subtask": "子任務 | 所有子任務",
+				"parenttask": "上層任務 | 所有上層任務",
+				"related": "相關任務 | 所有相關任務",
 				"copiedfrom": "複製自 | 複製自",
 				"copiedto": "複製自 | 複製自"
 			}
@@ -958,7 +997,11 @@
 			"everyDay": "每天",
 			"everyWeek": "每週",
 			"every30d": "每 30 天",
-			"monthly": "每月"
+			"monthly": "每月",
+			"hours": "小時",
+			"days": "天",
+			"weeks": "周",
+			"invalidAmount": "請輸入大於 0 的數值。"
 		},
 		"quickAddMagic": {
 			"intro": "建立任務時，您可以使用特殊關鍵字直接為新建立的任務添加屬性。這可以讓您更快速地為任務加入常用屬性。",
@@ -1024,6 +1067,7 @@
 	},
 	"keyboardShortcuts": {
 		"title": "鍵盤快捷鍵",
+		"general": "一般",
 		"toggleMenu": "切換選單",
 		"task": {
 			"title": "任務頁面",
@@ -1073,7 +1117,9 @@
 	},
 	"notification": {
 		"title": "通知",
-		"explainer": "當您訂閱的動作、專案或任務發生時，通知將會顯示在此處。"
+		"explainer": "當您訂閱的動作、專案或任務發生時，通知將會顯示在此處。",
+		"markAllRead": "將所有通知標記為已讀",
+		"markAllReadSuccess": "成功標記所有通知為已讀。"
 	},
 	"quickActions": {
 		"commands": "命令",
@@ -1112,8 +1158,10 @@
 		"1018": "用户頭像設定無效。",
 		"1019": "OpenID提供商沒有提供電子郵件地址。請確保OpenID提供商公開為您的帳户提供電子郵件地址。",
 		"1020": "此帳户被禁用。請檢查您的電子郵件或詢問您的管理員。",
+		"1022": "用户名稱不能包含空格或空白。",
 		"1023": "您無法以分享連結方式執行此操作。",
 		"1025": "時區「{timezone}」無效。請從清單中選擇有效的時區。",
+		"2001": "ID 不能為空或 0。",
 		"3001": "專案不存在。",
 		"3004": "您需要對該專案具有讀取權限才能執行此操作。",
 		"3005": "清單標題不能為空。",
@@ -1138,6 +1186,7 @@
 		"13001": "此鏈接共享需要密碼進行身份驗證，但沒有提供密碼。",
 		"13002": "提供的鏈接共享密碼無效。",
 		"13003": "提供的分享連結令牌無效。",
+		"14001": "提供的 api token 無效。",
 		"error": "錯誤",
 		"success": "成功"
 	},
