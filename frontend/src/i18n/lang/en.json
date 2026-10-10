@@ -623,6 +623,7 @@
       "events": "Events",
       "eventsHint": "Select all events this webhook should receive updates for (within the current project).",
       "mustSelectEvents": "You must select at least one event.",
+      "selectAllEvents": "Select all",
       "delete": "Delete this webhook",
       "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
       "deleteSuccess": "The webhook was successfully deleted.",
