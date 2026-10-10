@@ -2371,6 +2371,36 @@ func (err *ErrInvalidAPITokenPermission) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrAPITokenDoesNotExist represents an error where an api token does not exist
+type ErrAPITokenDoesNotExist struct {
+	TokenID int64
+}
+
+// IsErrAPITokenDoesNotExist checks if an error is ErrAPITokenDoesNotExist.
+func IsErrAPITokenDoesNotExist(err error) bool {
+	if _, ok := err.(ErrAPITokenDoesNotExist); ok {
+		return true
+	}
+	_, ok := err.(*ErrAPITokenDoesNotExist)
+	return ok
+}
+
+func (err ErrAPITokenDoesNotExist) Error() string {
+	return fmt.Sprintf("API token does not exist [TokenID: %v]", err.TokenID)
+}
+
+// ErrCodeAPITokenDoesNotExist holds the unique world-error code of this error
+const ErrCodeAPITokenDoesNotExist = 14017
+
+// HTTPError holds the http error description
+func (err ErrAPITokenDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeAPITokenDoesNotExist,
+		Message:  "This API token does not exist.",
+	}
+}
+
 // OIDC errors
 const ErrCodeOpenIDError = 15001
 
