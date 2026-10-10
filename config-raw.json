@@ -892,7 +892,7 @@
                         {
                             "key": "groupsyncfilter",
                             "default_value": "(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
-                            "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`."
+                            "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`.\nMay contain `{userdn}` (the user's DN) and `{username}` (the user's `attribute.username` value), both escaped. With a placeholder, every matching group is a membership and `attribute.memberid` is ignored; login fails if the value is empty.\nExample (OpenLDAP, direct membership): `(&(objectclass=groupOfNames)(member={userdn}))`\nExample (Active Directory, including nested groups): `(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={userdn}))`\nWithout a placeholder, Vikunja fetches all matching groups and checks their `attribute.memberid` values, which is slow on large directories and misses members of Active Directory groups with more than 1500 members."
                         },
                         {
                             "key": "groupsyncuseserviceaccount",
@@ -927,7 +927,7 @@
                                 {
                                     "key": "memberid",
                                     "default_value": "member",
-                                    "comment": "The LDAP attribute used to check group membership of a team in Vikunja. Only used when groups are synced to Vikunja."
+                                    "comment": "The LDAP attribute used to check group membership of a team in Vikunja. Only used when groups are synced to Vikunja and `groupsyncfilter` contains neither `{userdn}` nor `{username}`."
                                 }
                             ]
                         }
