@@ -90,6 +90,23 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
 	})
+	t.Run("unparseable reminder time does not fail for other users", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(2).Cols("overdue_tasks_reminders_time").Update(&user.User{
+			OverdueTasksRemindersTime: "xx:yy",
+		})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
+		require.NoError(t, err)
+
+		uts, err := getUndoneOverdueTasks(s, now, nil)
+		require.NoError(t, err)
+		require.Contains(t, uts, int64(1))
+	})
 }
 
 func TestGetTaskUsersForTasksPermissionFiltering(t *testing.T) {
