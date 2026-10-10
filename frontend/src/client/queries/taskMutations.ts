@@ -35,7 +35,7 @@ import {
 	replaceTaskEverywhere,
 	taskQueryKeys,
 } from './taskCache'
-import {getCachedProject, projectKeys} from './projects'
+import {getCachedProject, projectKeys, refreshProjectTaskCounts} from './projects'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {getDefaultBucketId, moveTaskToBucket} from '@/helpers/task'
 import {translatedError} from '@/message'
@@ -174,7 +174,10 @@ export function createTaskMutationOptions() {
 			body: taskWriteBody(task),
 		})).data,
 		onSuccess: (task, _input, client) => insertTaskIntoBoards(client, task),
-		onSettled: (_task, client) => invalidateTaskMembership(client, undefined, 'active'),
+		onSettled: (_task, client) => {
+			refreshProjectTaskCounts(client)
+			return invalidateTaskMembership(client, undefined, 'active')
+		},
 	})
 }
 
@@ -192,7 +195,10 @@ export function updateTaskMutationOptions(optimistic = false) {
 			replaceTaskEverywhere(client, task)
 			reconcileDoneBuckets(client, normalizeTask({...task, id: input.id}))
 		},
-		onSettled: ({id}, client) => invalidateTaskMembership(client, id),
+		onSettled: ({id}, client) => {
+			refreshProjectTaskCounts(client)
+			return invalidateTaskMembership(client, id)
+		},
 	})
 }
 
@@ -200,7 +206,10 @@ export function deleteTaskMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => { await tasksDelete({path: {task: id}}) },
 		onSuccess: (_data, id, client) => removeTaskEverywhere(client, id),
-		onSettled: (_id, client) => invalidateTaskMembership(client, undefined, 'active'),
+		onSettled: (_id, client) => {
+			refreshProjectTaskCounts(client)
+			return invalidateTaskMembership(client, undefined, 'active')
+		},
 	})
 }
 
@@ -240,7 +249,10 @@ export function bulkCreateTasksMutationOptions() {
 		onSuccess: ({tasks}, _input, client) => [...tasks].reverse().forEach(task => {
 			if (task) insertTaskIntoBoards(client, task)
 		}),
-		onSettled: (_input, client) => invalidateTaskMembership(client, undefined, 'active'),
+		onSettled: (_input, client) => {
+			refreshProjectTaskCounts(client)
+			return invalidateTaskMembership(client, undefined, 'active')
+		},
 	})
 }
 
@@ -248,7 +260,10 @@ export function duplicateTaskMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => (await tasksDuplicate({path: {task: id}})).data.duplicated_task!,
 		onSuccess: (task, _id, client) => insertTaskIntoBoards(client, task),
-		onSettled: (_id, client) => invalidateTaskMembership(client, undefined, 'active'),
+		onSettled: (_id, client) => {
+			refreshProjectTaskCounts(client)
+			return invalidateTaskMembership(client, undefined, 'active')
+		},
 	})
 }
 
@@ -442,7 +457,11 @@ export function moveTaskMutationOptions() {
 			const id = data.task?.id ?? task.id
 			if (id !== undefined) reconcileTaskBuckets(client, {project, view, bucket: target, task: id})
 		},
-		onSettled: ({task}, client) => invalidateTaskMembership(client, task.id),
+		// Moving into a done bucket marks the task done.
+		onSettled: ({task}, client) => {
+			refreshProjectTaskCounts(client)
+			return invalidateTaskMembership(client, task.id)
+		},
 	})
 }
 
