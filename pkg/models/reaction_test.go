@@ -46,6 +46,30 @@ func TestReaction_ReadAll(t *testing.T) {
 		assert.Len(t, reactionMap["👋"], 1)
 		assert.Equal(t, int64(1), reactionMap["👋"][0].ID)
 	})
+	t.Run("skips reactions of users who no longer exist", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(
+			&Reaction{UserID: 9999999, EntityID: 1, EntityKind: ReactionKindTask, Value: "👋"},
+			&Reaction{UserID: 9999999, EntityID: 1, EntityKind: ReactionKindTask, Value: "🦙"},
+		)
+		require.NoError(t, err)
+
+		r := &Reaction{
+			EntityID:         1,
+			EntityKindString: "tasks",
+		}
+
+		reactions, _, _, err := r.ReadAll(s, &user.User{ID: 1}, "", 0, 0)
+		require.NoError(t, err)
+
+		reactionMap := reactions.(ReactionMap)
+		require.Len(t, reactionMap["👋"], 1)
+		assert.Equal(t, int64(1), reactionMap["👋"][0].ID)
+		assert.NotContains(t, reactionMap, "🦙")
+	})
 	t.Run("invalid entity", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

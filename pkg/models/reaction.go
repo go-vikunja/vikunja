@@ -123,15 +123,17 @@ func getReactionsForEntityIDs(s *xorm.Session, entityKind ReactionKind, entityID
 
 	reactionsWithTasks = make(map[int64]ReactionMap)
 	for _, reaction := range reactions {
+		// Rows written before user deletion cleaned up reactions, or by link shares, point at no user.
+		u, userExists := users[reaction.UserID]
+		if !userExists {
+			continue
+		}
+
 		if _, taskExists := reactionsWithTasks[reaction.EntityID]; !taskExists {
 			reactionsWithTasks[reaction.EntityID] = make(ReactionMap)
 		}
 
-		if _, has := reactionsWithTasks[reaction.EntityID][reaction.Value]; !has {
-			reactionsWithTasks[reaction.EntityID][reaction.Value] = []*user.User{}
-		}
-
-		reactionsWithTasks[reaction.EntityID][reaction.Value] = append(reactionsWithTasks[reaction.EntityID][reaction.Value], users[reaction.UserID])
+		reactionsWithTasks[reaction.EntityID][reaction.Value] = append(reactionsWithTasks[reaction.EntityID][reaction.Value], u)
 	}
 
 	return
