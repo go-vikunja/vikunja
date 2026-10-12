@@ -253,6 +253,28 @@ func TestTask_Update(t *testing.T) {
 			"project_id":  1,
 		}, false)
 	})
+	t.Run("hex color with leading #", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:        1,
+			Title:     "test",
+			ProjectID: 1,
+			HexColor:  "#f0f0f0",
+		}
+		err := task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.Equal(t, "f0f0f0", task.HexColor)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        1,
+			"hex_color": "f0f0f0",
+		}, false)
+	})
 	t.Run("nonexistant task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

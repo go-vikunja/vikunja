@@ -1592,11 +1592,12 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 	// Which is why we merge the actual task struct with the one we got from the db
 	// The user struct overrides values in the actual one.
+	// Must happen before the merge, ot is what gets saved.
+	t.HexColor = utils.NormalizeHex(t.HexColor)
+
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
 		return err
 	}
-
-	t.HexColor = utils.NormalizeHex(t.HexColor)
 
 	//////
 	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
