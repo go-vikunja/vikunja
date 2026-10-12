@@ -190,3 +190,20 @@ func TestDeleteUser_RevokesSessions(t *testing.T) {
 	require.Len(t, revoked, 1)
 	require.Equal(t, &SessionsRevokedEvent{UserID: 1}, revoked[0])
 }
+
+func TestDeleteUser_RemovesReactions(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+
+	db.AssertExists(t, "reactions", map[string]interface{}{"user_id": 1}, false)
+
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	require.NoError(t, DeleteUser(s, u))
+	require.NoError(t, s.Commit())
+
+	db.AssertMissing(t, "reactions", map[string]interface{}{"user_id": 1})
+}
