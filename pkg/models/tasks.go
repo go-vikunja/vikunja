@@ -108,7 +108,7 @@ type Task struct {
 	// An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.
 	Labels []*Label `xorm:"-" json:"labels" readOnly:"true" doc:"The labels on this task. Read-only here; use the label-task endpoints to add or remove labels."`
 	// The task color in hex
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The task color as a hex string without the leading '#'."`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"hexcolor" maxLength:"7" doc:"The task color as a hex string without the leading '#'."`
 	// Determines how far a task is left from being done
 	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done" doc:"How far the task is from done, between 0 and 1."`
 
