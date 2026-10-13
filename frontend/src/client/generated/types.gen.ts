@@ -9290,7 +9290,7 @@ export type TaskAttachmentsDownloadData = {
     };
     query?: {
         /**
-         * If set and the attachment is an image, return a downscaled PNG preview instead of the original: sm=100px, md=200px, lg=400px, xl=800px. Ignored for non-image attachments.
+         * If set and the attachment is an image, return a downscaled preview instead of the original: sm=100px, md=200px, lg=400px, xl=800px. The preview is a JPEG, or a PNG when the image has transparency. Ignored for non-image attachments.
          */
         preview_size?: 'sm' | 'md' | 'lg' | 'xl';
     };
