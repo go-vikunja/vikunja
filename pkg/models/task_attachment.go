@@ -143,7 +143,8 @@ func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []
 }
 
 // GetTaskAttachmentForDownload returns preview bytes instead of the file when previewSize
-// is set and the attachment is an image. Returns ErrGenericForbidden on denied access.
+// is set and the attachment is an image; the file is only opened when there is no preview.
+// Returns ErrGenericForbidden on denied access.
 // Owns its own session and commits it before touching storage so no pool connection is held.
 func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
 	s := db.NewSession()
@@ -170,7 +171,7 @@ func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attac
 		return nil, nil, err
 	}
 
-	preview, err = ta.loadFileAndPreview(ctx, previewSize)
+	preview, err = ta.loadPreviewOrFile(ctx, previewSize)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -178,25 +179,17 @@ func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attac
 	return ta, preview, nil
 }
 
-func (ta *TaskAttachment) loadFileAndPreview(ctx context.Context, previewSize PreviewSize) (preview []byte, err error) {
-	if err := ta.File.LoadFileByID(); err != nil {
-		return nil, err
+func (ta *TaskAttachment) loadPreviewOrFile(ctx context.Context, previewSize PreviewSize) (preview []byte, err error) {
+	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
+		preview, err = ta.GetPreview(ctx, previewSize)
+		if err == nil {
+			return preview, nil
+		}
+		if !IsErrTaskAttachmentNotPreviewable(err) {
+			return nil, err
+		}
 	}
 
-	if previewSize == PreviewSizeUnknown || !strings.HasPrefix(ta.File.Mime, "image") {
-		return nil, nil
-	}
-
-	preview, err = ta.GetPreview(ctx, previewSize)
-	if err == nil {
-		return preview, nil
-	}
-
-	// GetPreview consumed the reader; close it before re-opening so it doesn't leak.
-	_ = ta.File.File.Close()
-	if !IsErrTaskAttachmentNotPreviewable(err) {
-		return nil, err
-	}
 	return nil, ta.File.LoadFileByID()
 }
 
@@ -342,9 +335,9 @@ func (ta *TaskAttachment) GetPreview(_ context.Context, previewSize PreviewSize)
 		return preview, nil
 	}
 
-	preview, err := renderPreview(ta.File.File, previewSize)
+	preview, err := generatePreview(fileOpener(ta.File.ID), previewSize)
 	if err != nil {
-		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
+		return nil, err
 	}
 
 	cacheTaskAttachmentPreview(cacheKey, preview)
@@ -352,21 +345,47 @@ func (ta *TaskAttachment) GetPreview(_ context.Context, previewSize PreviewSize)
 	return preview, nil
 }
 
-func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
-	// Read all bytes up front so we can inspect dimensions without seeking.
-	// The file is an io.ReadCloser (no Seek), so we buffer it once.
-	data, err := io.ReadAll(src)
+type sourceOpener func() (io.ReadCloser, error)
+
+func fileOpener(fileID int64) sourceOpener {
+	return func() (io.ReadCloser, error) {
+		file := &files.File{ID: fileID}
+		if err := file.LoadFileByID(); err != nil {
+			return nil, err
+		}
+		return file.File, nil
+	}
+}
+
+// generatePreview opens the source twice because the stream cannot be rewound after
+// reading the header, and buffering it would hold the whole file in memory.
+func generatePreview(open sourceOpener, previewSize PreviewSize) ([]byte, error) {
+	header, err := open()
 	if err != nil {
 		return nil, err
 	}
-
-	// Check image dimensions before full decode to prevent DoS
-	// from decompression bombs (small file, huge pixel dimensions)
-	if _, err := imageutils.ValidateReader(bytes.NewReader(data)); err != nil {
-		return nil, err
+	// Rejects decompression bombs (small file, huge pixel dimensions) before the full decode.
+	_, err = imageutils.ValidateReader(header)
+	_ = header.Close()
+	if err != nil {
+		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
 	}
 
-	img, _, err := image.Decode(bytes.NewReader(data))
+	src, err := open()
+	if err != nil {
+		return nil, err
+	}
+	defer src.Close()
+
+	preview, err := renderPreview(src, previewSize)
+	if err != nil {
+		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
+	}
+	return preview, nil
+}
+
+func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
+	img, _, err := image.Decode(src)
 	if err != nil {
 		return nil, err
 	}
