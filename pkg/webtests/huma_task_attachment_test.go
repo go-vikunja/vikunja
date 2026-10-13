@@ -20,6 +20,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"image"
+	"image/color"
+	"image/draw"
+	_ "image/jpeg"
 	"image/png"
 	"mime/multipart"
 	"net/http"
@@ -262,28 +265,56 @@ func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 		assert.Equal(t, content, rec.Body.Bytes())
 	})
 
-	t.Run("image returns a downscaled png", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		token := humaTokenFor(t, &testuser1)
+	transparent := image.NewNRGBA(image.Rect(0, 0, 400, 300))
+	opaque := image.NewNRGBA(image.Rect(0, 0, 400, 300))
+	draw.Draw(opaque, opaque.Bounds(), image.NewUniform(color.NRGBA{
+		R: 200,
+		G: 100,
+		B: 50,
+		A: 255,
+	}), image.Point{}, draw.Src)
 
-		var content bytes.Buffer
-		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
-		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
-
-		// The second request is served from the stored preview.
-		for range 2 {
-			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
-			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-			assert.Equal(t, "image/png", rec.Header().Get("Content-Type"))
-			assert.Equal(t, strconv.Itoa(rec.Body.Len()), rec.Header().Get("Content-Length"))
-
-			cfg, err := png.DecodeConfig(rec.Body)
+	previews := map[string]struct {
+		source      image.Image
+		contentType string
+		format      string
+	}{
+		"image with transparency returns a downscaled png": {
+			source:      transparent,
+			contentType: "image/png",
+			format:      "png",
+		},
+		"opaque image returns a downscaled jpeg": {
+			source:      opaque,
+			contentType: "image/jpeg",
+			format:      "jpeg",
+		},
+	}
+	for name, tc := range previews {
+		t.Run(name, func(t *testing.T) {
+			e, err := setupTestEnv()
 			require.NoError(t, err)
-			assert.Equal(t, 200, cfg.Width)
-			assert.Equal(t, 150, cfg.Height)
-		}
-	})
+			token := humaTokenFor(t, &testuser1)
+
+			var content bytes.Buffer
+			require.NoError(t, png.Encode(&content, tc.source))
+			id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+			// The second request is served from the stored preview.
+			for range 2 {
+				rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+				require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+				assert.Equal(t, tc.contentType, rec.Header().Get("Content-Type"))
+				assert.Equal(t, strconv.Itoa(rec.Body.Len()), rec.Header().Get("Content-Length"))
+
+				cfg, format, err := image.DecodeConfig(rec.Body)
+				require.NoError(t, err)
+				assert.Equal(t, tc.format, format)
+				assert.Equal(t, 200, cfg.Width)
+				assert.Equal(t, 150, cfg.Height)
+			}
+		})
+	}
 
 	t.Run("undecodable image returns the original file", func(t *testing.T) {
 		e, err := setupTestEnv()

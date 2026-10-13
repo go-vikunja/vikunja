@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/jpeg"
 	"image/png"
 	"io"
 	"io/fs"
@@ -574,8 +575,23 @@ func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
 		return nil, err
 	}
 
+	return encodePreview(resizeImage(img, previewSize.GetSize()))
+}
+
+const previewJPEGQuality = 85
+
+// encodePreview alone decides the format of a preview; its mime type is read back from the bytes.
+func encodePreview(img *image.NRGBA) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	if err := png.Encode(buf, resizeImage(img, previewSize.GetSize())); err != nil {
+
+	// JPEG is much smaller for photos but has no alpha channel.
+	var err error
+	if img.Opaque() {
+		err = jpeg.Encode(buf, img, &jpeg.Options{Quality: previewJPEGQuality})
+	} else {
+		err = png.Encode(buf, img)
+	}
+	if err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
