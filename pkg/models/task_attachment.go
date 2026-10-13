@@ -19,6 +19,7 @@ package models
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
@@ -36,6 +37,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/disintegration/imaging"
+	"golang.org/x/sync/semaphore"
 	"xorm.io/xorm"
 )
 
@@ -328,14 +330,35 @@ func cacheTaskAttachmentPreview(cacheKey string, preview []byte) {
 	}
 }
 
+const (
+	// Has to stay at or above imageutils.MaxPixels, or the largest allowed image could never be generated.
+	previewPixelBudget  = 2 * imageutils.MaxPixels
+	previewQueueTimeout = 30 * time.Second
+)
+
+var attachmentPreviews = newPreviewGenerator(previewPixelBudget, previewQueueTimeout)
+
+// previewGenerator bounds the memory used by concurrent generations through the pixels they decode.
+type previewGenerator struct {
+	slots        *semaphore.Weighted
+	queueTimeout time.Duration
+}
+
+func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *previewGenerator {
+	return &previewGenerator{
+		slots:        semaphore.NewWeighted(pixelBudget),
+		queueTimeout: queueTimeout,
+	}
+}
+
 // GetPreview returns ErrTaskAttachmentNotPreviewable when the original should be served instead.
-func (ta *TaskAttachment) GetPreview(_ context.Context, previewSize PreviewSize) ([]byte, error) {
+func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) ([]byte, error) {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
 		return preview, nil
 	}
 
-	preview, err := generatePreview(fileOpener(ta.File.ID), previewSize)
+	preview, err := attachmentPreviews.generate(ctx, fileOpener(ta.File.ID), previewSize)
 	if err != nil {
 		return nil, err
 	}
@@ -357,19 +380,18 @@ func fileOpener(fileID int64) sourceOpener {
 	}
 }
 
-// generatePreview opens the source twice because the stream cannot be rewound after
+// generate opens the source twice because the stream cannot be rewound after
 // reading the header, and buffering it would hold the whole file in memory.
-func generatePreview(open sourceOpener, previewSize PreviewSize) ([]byte, error) {
-	header, err := open()
+func (g *previewGenerator) generate(ctx context.Context, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
+	pixels, err := sourcePixels(open)
 	if err != nil {
 		return nil, err
 	}
-	// Rejects decompression bombs (small file, huge pixel dimensions) before the full decode.
-	_, err = imageutils.ValidateReader(header)
-	_ = header.Close()
-	if err != nil {
-		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
+
+	if err := g.acquire(ctx, pixels); err != nil {
+		return nil, err
 	}
+	defer g.slots.Release(pixels)
 
 	src, err := open()
 	if err != nil {
@@ -382,6 +404,34 @@ func generatePreview(open sourceOpener, previewSize PreviewSize) ([]byte, error)
 		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
 	}
 	return preview, nil
+}
+
+func sourcePixels(open sourceOpener) (int64, error) {
+	header, err := open()
+	if err != nil {
+		return 0, err
+	}
+	defer header.Close()
+
+	// Rejects decompression bombs (small file, huge pixel dimensions) before the full decode.
+	cfg, err := imageutils.ValidateReader(header)
+	if err != nil {
+		return 0, ErrTaskAttachmentNotPreviewable{Err: err}
+	}
+	return int64(cfg.Width) * int64(cfg.Height), nil
+}
+
+func (g *previewGenerator) acquire(ctx context.Context, pixels int64) error {
+	queueCtx, cancel := context.WithTimeout(ctx, g.queueTimeout)
+	defer cancel()
+
+	if err := g.slots.Acquire(queueCtx, pixels); err != nil {
+		if ctx.Err() != nil {
+			return fmt.Errorf("waiting to generate attachment preview: %w", context.Cause(ctx))
+		}
+		return ErrTaskAttachmentPreviewBusy{}
+	}
+	return nil
 }
 
 func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {

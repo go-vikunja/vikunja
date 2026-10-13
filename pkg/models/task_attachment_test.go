@@ -18,15 +18,19 @@ package models
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"errors"
 	"hash/crc32"
 	"image"
 	"image/png"
 	"io"
+	"net/http"
 	"os"
+	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -269,6 +273,40 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		assert.True(t, files.IsErrFileDoesNotExist(err))
 	})
 
+	t.Run("busy server returns an error instead of the original", func(t *testing.T) {
+		ta := imageAttachment(t, 910006, testPNG(t, 400, 300))
+		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
+
+		preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskAttachmentPreviewBusy(err), "err: %v", err)
+		assert.Nil(t, preview)
+		assert.Nil(t, ta.File.File, "the original must not be opened")
+	})
+
+	t.Run("cancelled caller gets an error instead of the original", func(t *testing.T) {
+		ta := imageAttachment(t, 910007, testPNG(t, 400, 300))
+		exhaustAttachmentPreviewBudget(t, time.Minute)
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		preview, err := ta.loadPreviewOrFile(ctx, PreviewMedium)
+		require.ErrorIs(t, err, context.Canceled)
+		assert.Nil(t, preview)
+		assert.Nil(t, ta.File.File, "the original must not be opened")
+	})
+
+	t.Run("cached preview needs no capacity", func(t *testing.T) {
+		ta := imageAttachment(t, 910008, testPNG(t, 400, 300))
+		generated, err := ta.GetPreview(t.Context(), PreviewMedium)
+		require.NoError(t, err)
+		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
+
+		cached, err := ta.GetPreview(t.Context(), PreviewMedium)
+		require.NoError(t, err)
+		assert.Equal(t, generated, cached)
+	})
+
 	fallbacks := map[string]struct {
 		id      int64
 		content []byte
@@ -298,6 +336,16 @@ func TestTaskAttachment_Preview(t *testing.T) {
 	}
 }
 
+// Leaves no capacity for any generation until the test ends.
+func exhaustAttachmentPreviewBudget(t *testing.T, queueTimeout time.Duration) {
+	t.Helper()
+	original := attachmentPreviews
+	t.Cleanup(func() { attachmentPreviews = original })
+
+	attachmentPreviews = newPreviewGenerator(1, queueTimeout)
+	require.True(t, attachmentPreviews.slots.TryAcquire(1))
+}
+
 type trackedSource struct {
 	content []byte
 	opened  atomic.Int32
@@ -322,7 +370,7 @@ func (r *trackedReader) Close() error {
 	return nil
 }
 
-func TestGeneratePreview_ClosesEverySourceHandle(t *testing.T) {
+func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
 	tests := map[string]struct {
 		content        []byte
 		opened         int32
@@ -347,7 +395,7 @@ func TestGeneratePreview_ClosesEverySourceHandle(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			source := &trackedSource{content: tc.content}
 
-			_, err := generatePreview(source.open, PreviewMedium)
+			_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), source.open, PreviewMedium)
 
 			assert.Equal(t, tc.notPreviewable, IsErrTaskAttachmentNotPreviewable(err), "err: %v", err)
 			assert.Equal(t, tc.opened, source.opened.Load())
@@ -358,10 +406,182 @@ func TestGeneratePreview_ClosesEverySourceHandle(t *testing.T) {
 	t.Run("source that cannot be opened is an error", func(t *testing.T) {
 		openErr := errors.New("storage unavailable")
 
-		_, err := generatePreview(func() (io.ReadCloser, error) { return nil, openErr }, PreviewMedium)
+		open := func() (io.ReadCloser, error) { return nil, openErr }
+		_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), open, PreviewMedium)
 
 		require.ErrorIs(t, err, openErr)
 		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
+	})
+}
+
+// decodeTracker measures the source pixels being decoded at once, independently of the generator's own bookkeeping.
+type decodeTracker struct {
+	gate chan struct{}
+
+	mu       sync.Mutex
+	inFlight int64
+	peak     int64
+}
+
+func newDecodeTracker() *decodeTracker {
+	return &decodeTracker{gate: make(chan struct{})}
+}
+
+func (d *decodeTracker) add(pixels int64) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.inFlight += pixels
+	d.peak = max(d.peak, d.inFlight)
+}
+
+func (d *decodeTracker) pixelsInFlight() int64 {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.inFlight
+}
+
+func (d *decodeTracker) peakPixels() int64 {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.peak
+}
+
+// source returns an opener whose decodes block until the gate is closed.
+func (d *decodeTracker) source(t *testing.T, content []byte) sourceOpener {
+	t.Helper()
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(content))
+	require.NoError(t, err)
+	pixels := int64(cfg.Width) * int64(cfg.Height)
+
+	var opened atomic.Int32
+	return func() (io.ReadCloser, error) {
+		// The first open only reads the header, the second one decodes.
+		if opened.Add(1) == 1 {
+			return io.NopCloser(bytes.NewReader(content)), nil
+		}
+		d.add(pixels)
+		return &gatedDecode{
+			Reader:  bytes.NewReader(content),
+			tracker: d,
+			pixels:  pixels,
+		}, nil
+	}
+}
+
+type gatedDecode struct {
+	io.Reader
+	tracker *decodeTracker
+	pixels  int64
+}
+
+func (r *gatedDecode) Read(p []byte) (int, error) {
+	<-r.tracker.gate
+	return r.Reader.Read(p)
+}
+
+func (r *gatedDecode) Close() error {
+	r.tracker.add(-r.pixels)
+	return nil
+}
+
+func TestPreviewGenerator_BoundsDecodedPixels(t *testing.T) {
+	const (
+		small  = 100 * 100
+		budget = 2 * small
+	)
+
+	t.Run("distinct images in parallel stay within the budget", func(t *testing.T) {
+		g := newPreviewGenerator(budget, time.Minute)
+		tracker := newDecodeTracker()
+		content := testPNG(t, 100, 100)
+
+		const callers = 6
+		results := make(chan error, callers)
+		for range callers {
+			source := tracker.source(t, content)
+			go func() {
+				_, err := g.generate(t.Context(), source, PreviewSmall)
+				results <- err
+			}()
+		}
+
+		require.Eventually(t, func() bool { return tracker.pixelsInFlight() >= budget }, 5*time.Second, time.Millisecond)
+		assert.Never(t, func() bool { return tracker.peakPixels() > budget }, 200*time.Millisecond, 5*time.Millisecond)
+
+		close(tracker.gate)
+		for range callers {
+			require.NoError(t, <-results)
+		}
+		assert.Equal(t, int64(budget), tracker.peakPixels())
+	})
+
+	t.Run("a larger image takes more of the budget", func(t *testing.T) {
+		g := newPreviewGenerator(budget, time.Minute)
+		tracker := newDecodeTracker()
+
+		results := make(chan error, 2)
+		generate := func(source sourceOpener) {
+			_, err := g.generate(t.Context(), source, PreviewSmall)
+			results <- err
+		}
+
+		large := tracker.source(t, testPNG(t, 200, 100))
+		go generate(large)
+		require.Eventually(t, func() bool { return tracker.pixelsInFlight() == budget }, 5*time.Second, time.Millisecond)
+
+		smallSource := tracker.source(t, testPNG(t, 100, 100))
+		go generate(smallSource)
+		assert.Never(t, func() bool { return tracker.peakPixels() > budget }, 200*time.Millisecond, 5*time.Millisecond)
+
+		close(tracker.gate)
+		require.NoError(t, <-results)
+		require.NoError(t, <-results)
+		assert.Equal(t, int64(budget), tracker.peakPixels())
+	})
+}
+
+func TestPreviewGenerator_Queue(t *testing.T) {
+	const pixels = 100 * 100
+
+	t.Run("cancelled caller leaves the queue with an error", func(t *testing.T) {
+		g := newPreviewGenerator(pixels, time.Minute)
+		require.True(t, g.slots.TryAcquire(pixels))
+		source := &trackedSource{content: testPNG(t, 100, 100)}
+		ctx, cancel := context.WithCancel(t.Context())
+
+		result := make(chan error, 1)
+		go func() {
+			_, err := g.generate(ctx, source.open, PreviewSmall)
+			result <- err
+		}()
+		require.Eventually(t, func() bool { return source.opened.Load() == 1 }, 5*time.Second, time.Millisecond)
+		cancel()
+
+		select {
+		case err := <-result:
+			require.ErrorIs(t, err, context.Canceled)
+			assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
+		case <-time.After(5 * time.Second):
+			require.FailNow(t, "cancelled caller is still queued")
+		}
+		assert.Equal(t, int32(1), source.opened.Load(), "the source must not be opened for decoding")
+
+		g.slots.Release(pixels)
+		assert.True(t, g.slots.TryAcquire(pixels), "the cancelled caller must not hold any budget")
+	})
+
+	t.Run("gives up with a 503 when no capacity frees up", func(t *testing.T) {
+		g := newPreviewGenerator(pixels, 10*time.Millisecond)
+		require.True(t, g.slots.TryAcquire(pixels))
+		source := &trackedSource{content: testPNG(t, 100, 100)}
+
+		_, err := g.generate(t.Context(), source.open, PreviewSmall)
+
+		var busy ErrTaskAttachmentPreviewBusy
+		require.ErrorAs(t, err, &busy)
+		assert.Equal(t, http.StatusServiceUnavailable, busy.HTTPError().HTTPCode)
+		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
+		assert.Equal(t, int32(1), source.opened.Load(), "the source must not be opened for decoding")
 	})
 }
 

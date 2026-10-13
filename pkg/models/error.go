@@ -1079,6 +1079,31 @@ func (err ErrTaskAttachmentNotPreviewable) Unwrap() error {
 	return err.Err
 }
 
+// ErrTaskAttachmentPreviewBusy represents an error where a preview waited too long for other previews to finish generating.
+type ErrTaskAttachmentPreviewBusy struct{}
+
+// IsErrTaskAttachmentPreviewBusy checks if an error is ErrTaskAttachmentPreviewBusy.
+func IsErrTaskAttachmentPreviewBusy(err error) bool {
+	var busy ErrTaskAttachmentPreviewBusy
+	return errors.As(err, &busy)
+}
+
+func (err ErrTaskAttachmentPreviewBusy) Error() string {
+	return "Timed out waiting for capacity to generate a task attachment preview"
+}
+
+// ErrCodeTaskAttachmentPreviewBusy holds the unique world-error code of this error
+const ErrCodeTaskAttachmentPreviewBusy = 4036
+
+// HTTPError holds the http error description
+func (err ErrTaskAttachmentPreviewBusy) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusServiceUnavailable,
+		Code:     ErrCodeTaskAttachmentPreviewBusy,
+		Message:  "The server is busy generating other previews, please try again later.",
+	}
+}
+
 // ErrInvalidSortParam represents an error where the provided sort param is invalid
 type ErrInvalidSortParam struct {
 	SortBy string
