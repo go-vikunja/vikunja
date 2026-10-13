@@ -23,6 +23,8 @@ import (
 	"errors"
 	"hash/crc32"
 	"image"
+	"image/color"
+	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -253,6 +255,88 @@ func testJPEGWithMetadata(t *testing.T, width, height, segments int) []byte {
 		out = append(out, segment...)
 	}
 	return append(out, encoded[2:]...)
+}
+
+func opaqueImage(width, height int) *image.NRGBA {
+	img := image.NewNRGBA(image.Rect(0, 0, width, height))
+	draw.Draw(img, img.Bounds(), image.NewUniform(color.NRGBA{
+		R: 200,
+		G: 100,
+		B: 50,
+		A: 255,
+	}), image.Point{}, draw.Src)
+	return img
+}
+
+func encodedImage(t *testing.T, encode func(io.Writer, image.Image) error, img image.Image) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	require.NoError(t, encode(&buf, img))
+	return buf.Bytes()
+}
+
+func TestPreviewFormat(t *testing.T) {
+	transparentCorner := opaqueImage(400, 300)
+	transparentCorner.SetNRGBA(0, 0, color.NRGBA{})
+	encodeJPEG := func(w io.Writer, img image.Image) error { return jpeg.Encode(w, img, nil) }
+
+	tests := map[string]struct {
+		source []byte
+		format string
+		mime   string
+	}{
+		"opaque png becomes a jpeg": {
+			source: encodedImage(t, png.Encode, opaqueImage(400, 300)),
+			format: "jpeg",
+			mime:   "image/jpeg",
+		},
+		"jpeg stays a jpeg": {
+			source: encodedImage(t, encodeJPEG, opaqueImage(400, 300)),
+			format: "jpeg",
+			mime:   "image/jpeg",
+		},
+		"fully transparent png stays a png": {
+			source: testPNG(t, 400, 300),
+			format: "png",
+			mime:   "image/png",
+		},
+		"png with a single transparent pixel stays a png": {
+			source: encodedImage(t, png.Encode, transparentCorner),
+			format: "png",
+			mime:   "image/png",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fileID := uniquePreviewFileID()
+			source := &trackedSource{content: tc.source}
+			g := newPreviewGenerator(previewPixelBudget, time.Minute)
+
+			// The first preview is the generated one, the second the stored one.
+			for range 2 {
+				preview, err := g.get(t.Context(), fileID, source.open, PreviewMedium)
+				require.NoError(t, err)
+				assert.Equal(t, tc.mime, preview.Mime)
+
+				cfg, format, err := image.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
+				require.NoError(t, err)
+				assert.Equal(t, tc.format, format)
+				assert.Equal(t, PreviewMedium.GetSize(), cfg.Width)
+				assert.Equal(t, 150, cfg.Height)
+			}
+			assert.Equal(t, int32(2), source.opened.Load())
+		})
+	}
+
+	t.Run("transparency survives", func(t *testing.T) {
+		preview, err := renderPreview(bytes.NewReader(encodedImage(t, png.Encode, transparentCorner)), PreviewMedium)
+		require.NoError(t, err)
+
+		img, err := png.Decode(bytes.NewReader(preview))
+		require.NoError(t, err)
+		_, _, _, alpha := img.At(0, 0).RGBA()
+		assert.Less(t, alpha, uint32(0xffff))
+	})
 }
 
 // Only signature + IHDR: enough for image.DecodeConfig without allocating the pixels.
@@ -982,7 +1066,7 @@ func TestRenderPreview_NeverUpscales(t *testing.T) {
 			preview, err := renderPreview(bytes.NewReader(testPNG(t, tc.width, tc.height)), PreviewExtraLarge)
 			require.NoError(t, err)
 
-			cfg, err := png.DecodeConfig(bytes.NewReader(preview))
+			cfg, _, err := image.DecodeConfig(bytes.NewReader(preview))
 			require.NoError(t, err)
 			assert.Equal(t, tc.width, cfg.Width)
 			assert.Equal(t, tc.height, cfg.Height)

@@ -101,7 +101,7 @@ func UploadTaskAttachment(c *echo.Context) error {
 // @Produce octet-stream
 // @Param id path int true "Task ID"
 // @Param attachmentID path int true "Attachment ID"
-// @Param preview_size query string false "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image will be returned if the attachment is an image."
+// @Param preview_size query string false "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image will be returned if the attachment is an image: a JPEG, or a PNG when the image has transparency."
 // @Security JWTKeyAuth
 // @Success 200 {file} blob "The attachment file."
 // @Failure 403 {object} models.Message "No access to this task."
