@@ -23,8 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/jpeg"
-	"image/png"
 	"io"
 	"io/fs"
 	"strconv"
@@ -42,6 +40,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/gabriel-vasile/mimetype"
+	"github.com/gen2brain/gav1d/avif"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/sync/singleflight"
 	"xorm.io/xorm"
@@ -587,19 +586,15 @@ func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
 	return encodePreview(resizeImage(img, previewSize.GetSize()))
 }
 
-const previewJPEGQuality = 85
+const (
+	previewAVIFQuality = 70
+	previewAVIFSpeed   = 6
+)
 
 // encodePreview alone decides the format of a preview; its mime type is read back from the bytes.
 func encodePreview(img *image.NRGBA) ([]byte, error) {
 	buf := &bytes.Buffer{}
-
-	// JPEG is much smaller for photos but has no alpha channel.
-	var err error
-	if img.Opaque() {
-		err = jpeg.Encode(buf, img, &jpeg.Options{Quality: previewJPEGQuality})
-	} else {
-		err = png.Encode(buf, img)
-	}
+	err := avif.Encode(buf, img, avif.EncodeOptions{Quality: previewAVIFQuality, Speed: previewAVIFSpeed})
 	if err != nil {
 		return nil, err
 	}

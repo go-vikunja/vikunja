@@ -22,7 +22,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	_ "image/jpeg"
 	"image/png"
 	"mime/multipart"
 	"net/http"
@@ -279,15 +278,15 @@ func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 		contentType string
 		format      string
 	}{
-		"image with transparency returns a downscaled png": {
+		"image with transparency returns a downscaled avif": {
 			source:      transparent,
-			contentType: "image/png",
-			format:      "png",
+			contentType: "image/avif",
+			format:      "avif",
 		},
-		"opaque image returns a downscaled jpeg": {
+		"opaque image returns a downscaled avif": {
 			source:      opaque,
-			contentType: "image/jpeg",
-			format:      "jpeg",
+			contentType: "image/avif",
+			format:      "avif",
 		},
 	}
 	for name, tc := range previews {
