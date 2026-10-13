@@ -18,6 +18,7 @@ package files
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -43,6 +44,59 @@ func TestLocalStorage_WriteAndOpen(t *testing.T) {
 	got, err := io.ReadAll(rc)
 	require.NoError(t, err)
 	assert.Equal(t, content, got)
+}
+
+type failingReader struct {
+	io.ReadSeeker
+}
+
+func (failingReader) Read([]byte) (int, error) {
+	return 0, errors.New("read failed")
+}
+
+func TestLocalStorage_WriteIsAtomic(t *testing.T) {
+	t.Run("a failed write leaves no file", func(t *testing.T) {
+		dir := t.TempDir()
+		s := newLocalStorage(dir)
+
+		err := s.Write("testfile", failingReader{ReadSeeker: bytes.NewReader([]byte("content"))}, 7)
+		require.Error(t, err)
+
+		entries, err := os.ReadDir(dir)
+		require.NoError(t, err)
+		assert.Empty(t, entries)
+	})
+
+	t.Run("a failed write keeps the previous content", func(t *testing.T) {
+		s := newLocalStorage(t.TempDir())
+		content := []byte("previous")
+		require.NoError(t, s.Write("testfile", bytes.NewReader(content), uint64(len(content))))
+
+		err := s.Write("testfile", failingReader{ReadSeeker: bytes.NewReader([]byte("new"))}, 3)
+		require.Error(t, err)
+
+		rc, err := s.Open("testfile")
+		require.NoError(t, err)
+		defer rc.Close()
+		got, err := io.ReadAll(rc)
+		require.NoError(t, err)
+		assert.Equal(t, content, got)
+	})
+
+	t.Run("overwrites and leaves no temporary file", func(t *testing.T) {
+		dir := t.TempDir()
+		s := newLocalStorage(dir)
+		require.NoError(t, s.Write("testfile", bytes.NewReader([]byte("previous")), 8))
+		require.NoError(t, s.Write("testfile", bytes.NewReader([]byte("new")), 3))
+
+		got, err := os.ReadFile(filepath.Join(dir, "testfile"))
+		require.NoError(t, err)
+		assert.Equal(t, []byte("new"), got)
+
+		entries, err := os.ReadDir(dir)
+		require.NoError(t, err)
+		assert.Len(t, entries, 1)
+	})
 }
 
 func TestLocalStorage_Stat(t *testing.T) {

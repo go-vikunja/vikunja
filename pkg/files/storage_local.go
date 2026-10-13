@@ -17,6 +17,7 @@
 package files
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
@@ -42,18 +43,30 @@ func (l *localStorage) Open(name string) (io.ReadCloser, error) {
 	return os.Open(l.path(name))
 }
 
+// Write goes through a temporary file so a reader or a failed write never leaves a partial file under name.
 func (l *localStorage) Write(name string, content io.ReadSeeker, _ uint64) error {
 	if _, err := content.Seek(0, io.SeekStart); err != nil {
 		return err
 	}
 
-	f, err := os.Create(l.path(name))
+	target := l.path(name)
+	tmp := target + ".tmp-" + rand.Text()
+	// Not os.CreateTemp: its 0600 would change the mode of stored files.
+	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
 	_, err = io.Copy(f, content)
+	if closeErr := f.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Rename(tmp, target)
+	}
+	if err != nil {
+		_ = os.Remove(tmp)
+	}
 	return err
 }
 
