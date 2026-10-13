@@ -149,9 +149,13 @@ func checkFileStats(basePath string) CheckResult {
 	var totalFiles int
 	var totalSize int64
 
-	err := filepath.WalkDir(basePath, func(_ string, d fs.DirEntry, err error) error {
+	tempDir := filepath.Join(basePath, files.LocalTempDir)
+	err := filepath.WalkDir(basePath, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
+		}
+		if p == tempDir {
+			return fs.SkipDir
 		}
 		if !d.IsDir() {
 			totalFiles++
