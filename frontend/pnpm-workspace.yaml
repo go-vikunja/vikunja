@@ -9,7 +9,7 @@ catalog:
 overrides:
   minimatch: 10.2.6
   rollup: 'catalog:'
-  basic-ftp: 6.2.1
+  basic-ftp: 6.2.3
   serialize-javascript: 7.1.2
   flatted: 3.4.4
   ip-address: 10.7.2
