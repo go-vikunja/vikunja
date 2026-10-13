@@ -207,7 +207,9 @@ func TestAttachmentPreviewRejectsLargeImages(t *testing.T) {
 		},
 	}
 
-	result := attachment.GetPreview(t.Context(), PreviewMedium)
+	result, err := attachment.GetPreview(t.Context(), PreviewMedium)
+	require.Error(t, err)
+	assert.True(t, IsErrTaskAttachmentNotPreviewable(err))
 	assert.Nil(t, result, "Preview should be nil for images exceeding max pixel count")
 }
 
