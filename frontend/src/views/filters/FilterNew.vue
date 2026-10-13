@@ -1,7 +1,7 @@
 <template>
 	<Modal
 		variant="hint-modal"
-		@close="$router.back()"
+		@close="goBack()"
 	>
 		<Card
 			class="has-no-shadow"
@@ -66,11 +66,13 @@ import Filters from '@/components/project/partials/Filters.vue'
 
 import {getProjectIdFromSavedFilterId} from '@/client/queries/projects'
 import {useIsAlive} from '@/composables/useIsAlive'
+import {useGoBack} from '@/composables/useGoBack'
 import {useSavedFilterDraft} from '@/composables/useSavedFilter'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useCreateSavedFilterMutation} from '@/client/queries/savedFilters'
 
 const router = useRouter()
+const goBack = useGoBack()
 
 const alive = useIsAlive()
 

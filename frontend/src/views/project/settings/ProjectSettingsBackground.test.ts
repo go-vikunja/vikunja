@@ -20,7 +20,7 @@ const state = vi.hoisted(() => ({
 
 const refetchSearch = vi.hoisted(() => vi.fn())
 
-const routerBack = vi.hoisted(() => vi.fn())
+const goBack = vi.hoisted(() => vi.fn())
 const success = vi.hoisted(() => vi.fn())
 const backgrounds = vi.hoisted(() => ({
 	deleteProjectBackground: vi.fn(),
@@ -70,9 +70,9 @@ vi.mock('vue-router', async () => {
 	state.routeParams = reactive({projectId: '7'})
 	return {
 		useRoute: () => ({params: state.routeParams}),
-		useRouter: () => ({back: routerBack}),
 	}
 })
+vi.mock('@/composables/useGoBack', () => ({useGoBack: () => goBack}))
 vi.mock('vue-i18n', async importOriginal => ({
 	...await importOriginal<typeof import('vue-i18n')>(),
 	useI18n: () => ({t: (key: string) => key}),
@@ -101,7 +101,7 @@ function mountView() {
 		global: {
 			plugins: [[VueQueryPlugin, {queryClient}]],
 			stubs: {BaseButton: BaseButtonStub, CreateEdit: CreateEditStub, XButton: XButtonStub},
-			mocks: {$t: (key: string) => key, $router: {back: routerBack}},
+			mocks: {$t: (key: string) => key},
 			directives: {focus: () => {}, tooltip: () => {}},
 		},
 	})
@@ -126,7 +126,7 @@ describe('ProjectSettingsBackground', () => {
 		state.projectIsError = ref(false)
 		state.searchData = ref({pages: []})
 		state.searchIsError = ref(false)
-		routerBack.mockClear()
+		goBack.mockClear()
 		refetchSearch.mockClear()
 		success.mockClear()
 		backgrounds.deleteProjectBackground.mockReset()
@@ -144,7 +144,7 @@ describe('ProjectSettingsBackground', () => {
 		expect(queryClient.getQueryData<ProjectResponse>(projectKeys.detail(7)))
 			.toMatchObject({background_information: null, background_blur_hash: ''})
 		expect(success).toHaveBeenCalled()
-		expect(routerBack).toHaveBeenCalled()
+		expect(goBack).toHaveBeenCalled()
 	})
 
 	it('does nothing when the route left the project while removing', async () => {
@@ -158,7 +158,7 @@ describe('ProjectSettingsBackground', () => {
 
 		expect(backgrounds.deleteProjectBackground).toHaveBeenCalledWith(7)
 		expect(success).not.toHaveBeenCalled()
-		expect(routerBack).not.toHaveBeenCalled()
+		expect(goBack).not.toHaveBeenCalled()
 	})
 
 	it.each([0, null])('hides every background action for max_permission %s', maxPermission => {

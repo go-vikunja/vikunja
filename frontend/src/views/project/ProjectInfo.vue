@@ -1,13 +1,13 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
 	<Modal
-		@close="$router.back()"
+		@close="goBack()"
 	>
 		<Card
 			:title="project?.title"
 			class="is-justify-content-start"
 			:show-close="true"
-			@close="$router.back()"
+			@close="goBack()"
 		>
 			<div
 				v-if="htmlDescription !== ''"
@@ -29,6 +29,7 @@
 import {computed} from 'vue'
 import DOMPurify from 'dompurify'
 import {useProjects} from '@/composables/useProjects'
+import {useGoBack} from '@/composables/useGoBack'
 import {useI18n} from 'vue-i18n'
 
 const props = defineProps<{
@@ -36,6 +37,7 @@ const props = defineProps<{
 }>()
 
 const {t} = useI18n()
+const goBack = useGoBack()
 
 // ADD_ATTR re-permits target, which lets a link hand the opened page a live
 // window.opener back to this tab. rel must be forced here rather than allowed,

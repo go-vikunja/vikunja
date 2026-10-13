@@ -103,7 +103,7 @@
 			</XButton>
 			<XButton
 				variant="secondary"
-				@click.prevent.stop="$router.back()"
+				@click.prevent.stop="goBack()"
 			>
 				{{ $t('misc.close') }}
 			</XButton>
@@ -116,7 +116,7 @@
 import {computed, ref} from 'vue'
 import {useInfiniteQuery, useQuery} from '@tanstack/vue-query'
 import {useI18n} from 'vue-i18n'
-import {useRoute, useRouter} from 'vue-router'
+import {useRoute} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import type {Image} from '@/client/generated'
@@ -136,6 +136,7 @@ import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {useGoBack} from '@/composables/useGoBack'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
@@ -146,7 +147,7 @@ const SEARCH_DEBOUNCE = 300
 
 const {t} = useI18n({useScope: 'global'})
 const route = useRoute()
-const router = useRouter()
+const goBack = useGoBack()
 const configStore = useConfigStore()
 
 useTitle(() => t('project.background.title'))
@@ -208,7 +209,7 @@ async function removeBackground() {
 	const id = projectId.value
 	const updated = await deleteBackgroundMutation.mutateAsync({projectId: id}).catch(() => undefined)
 	if (updated && isCurrentProject(id)) {
-		router.back()
+		goBack()
 	}
 }
 </script>
