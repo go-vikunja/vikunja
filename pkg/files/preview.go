@@ -18,10 +18,14 @@ package files
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"path"
 	"slices"
+
+	"code.vikunja.io/api/pkg/log"
 )
 
 type PreviewSize string
@@ -97,4 +101,14 @@ func (f *File) SavePreview(size PreviewSize, preview []byte) error {
 		return fmt.Errorf("failed to save the %s preview of file %d: %w", size, f.ID, err)
 	}
 	return nil
+}
+
+// removePreviews only logs failures: previews are derived data and must not fail what happens to their file.
+func (f *File) removePreviews() {
+	for _, size := range storedPreviewSizes {
+		err := storage.Remove(f.previewPath(size))
+		if err != nil && !errors.Is(err, fs.ErrNotExist) {
+			log.Errorf("Could not remove the %s preview of file %d: %v", size, f.ID, err)
+		}
+	}
 }

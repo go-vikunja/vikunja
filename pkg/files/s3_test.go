@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/fs"
 	"os"
 	"testing"
 	"time"
@@ -180,6 +181,27 @@ func TestFileStorageIntegration(t *testing.T) {
 
 	t.Run("Store previews with s3", func(t *testing.T) {
 		assertStoresPreviews(t, storage)
+	})
+
+	t.Run("Remove previews with a file with s3", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		file, err := Create(bytes.NewReader([]byte("content")), "previewed.txt", 7, &testauth{id: 1})
+		require.NoError(t, err)
+		without, err := Create(bytes.NewReader([]byte("content")), "not-previewed.txt", 7, &testauth{id: 1})
+		require.NoError(t, err)
+		require.NoError(t, file.SavePreview(PreviewSmall, []byte("preview")))
+		require.NoError(t, file.SavePreview(PreviewExtraLarge, []byte("preview")))
+
+		require.NoError(t, file.Delete(s))
+		require.NoError(t, without.Delete(s))
+
+		for _, size := range storedPreviewSizes {
+			_, _, err := file.OpenPreview(size)
+			require.ErrorIs(t, err, fs.ErrNotExist, "size %s", size)
+		}
 	})
 
 	t.Run("File not found with s3", func(t *testing.T) {
