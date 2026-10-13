@@ -42,6 +42,24 @@ func TestMemStorage_WriteAndOpen(t *testing.T) {
 	assert.Equal(t, content, got)
 }
 
+func TestMemStorage_OpenWithSize(t *testing.T) {
+	s := newMemStorage()
+	content := []byte("hello world")
+	require.NoError(t, s.Write("testfile", bytes.NewReader(content), uint64(len(content))))
+
+	rc, size, err := s.OpenWithSize("testfile")
+	require.NoError(t, err)
+	defer rc.Close()
+
+	got, err := io.ReadAll(rc)
+	require.NoError(t, err)
+	assert.Equal(t, content, got)
+	assert.Equal(t, int64(len(content)), size)
+
+	_, _, err = s.OpenWithSize("nonexistent")
+	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
 func TestMemStorage_Stat(t *testing.T) {
 	s := newMemStorage()
 	content := []byte("hello world")
