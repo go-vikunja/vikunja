@@ -209,6 +209,8 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 	}
 
 	err = storage.Remove(f.fileID())
+	// After the file, so a request racing the delete has nothing left to generate a new preview from.
+	f.removePreviews()
 	if err != nil {
 		var perr *os.PathError
 		if errors.As(err, &perr) {
@@ -229,5 +231,7 @@ func (f *File) Save(fcontent io.ReadSeeker) error {
 	if err != nil {
 		return fmt.Errorf("failed to save file: %w", err)
 	}
+	// They were generated from the previous content, or belong to a deleted file whose id got reused.
+	f.removePreviews()
 	return nil
 }
