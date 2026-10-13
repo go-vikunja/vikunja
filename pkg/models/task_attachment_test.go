@@ -42,6 +42,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/gen2brain/gav1d/avif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -284,25 +285,25 @@ func TestPreviewFormat(t *testing.T) {
 		format string
 		mime   string
 	}{
-		"opaque png becomes a jpeg": {
+		"opaque png becomes an avif": {
 			source: encodedImage(t, png.Encode, opaqueImage(400, 300)),
-			format: "jpeg",
-			mime:   "image/jpeg",
+			format: "avif",
+			mime:   "image/avif",
 		},
-		"jpeg stays a jpeg": {
+		"jpeg becomes an avif": {
 			source: encodedImage(t, encodeJPEG, opaqueImage(400, 300)),
-			format: "jpeg",
-			mime:   "image/jpeg",
+			format: "avif",
+			mime:   "image/avif",
 		},
-		"fully transparent png stays a png": {
+		"fully transparent png becomes an avif": {
 			source: testPNG(t, 400, 300),
-			format: "png",
-			mime:   "image/png",
+			format: "avif",
+			mime:   "image/avif",
 		},
-		"png with a single transparent pixel stays a png": {
+		"png with a single transparent pixel becomes an avif": {
 			source: encodedImage(t, png.Encode, transparentCorner),
-			format: "png",
-			mime:   "image/png",
+			format: "avif",
+			mime:   "image/avif",
 		},
 	}
 	for name, tc := range tests {
@@ -331,10 +332,21 @@ func TestPreviewFormat(t *testing.T) {
 		preview, err := renderPreview(bytes.NewReader(encodedImage(t, png.Encode, transparentCorner)), PreviewMedium)
 		require.NoError(t, err)
 
-		img, err := png.Decode(bytes.NewReader(preview))
+		img, err := avif.Decode(bytes.NewReader(preview))
 		require.NoError(t, err)
 		_, _, _, alpha := img.At(0, 0).RGBA()
 		assert.Less(t, alpha, uint32(0xffff))
+	})
+
+	t.Run("an opaque image stays opaque", func(t *testing.T) {
+		preview, err := renderPreview(bytes.NewReader(encodedImage(t, png.Encode, opaqueImage(800, 600))), PreviewMedium)
+		require.NoError(t, err)
+
+		img, err := avif.Decode(bytes.NewReader(preview))
+		require.NoError(t, err)
+		opaque, isOpaque := img.(interface{ Opaque() bool })
+		require.True(t, isOpaque, "got %T", img)
+		assert.True(t, opaque.Opaque())
 	})
 }
 
@@ -382,11 +394,11 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		require.NoError(t, err)
 		preview, isPreview := download.(*TaskAttachmentPreview)
 		require.True(t, isPreview, "got %T", download)
-		assert.Equal(t, "image/png", preview.Mime)
+		assert.Equal(t, "image/avif", preview.Mime)
 
 		cfg, format, err := image.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
 		require.NoError(t, err)
-		assert.Equal(t, "png", format)
+		assert.Equal(t, "avif", format)
 		assert.Equal(t, PreviewMedium.GetSize(), cfg.Width)
 		assert.Equal(t, 150, cfg.Height)
 		assert.Nil(t, ta.File.File, "the original must not be opened when a preview is served")
@@ -848,7 +860,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 
 		require.NoError(t, err)
 		generated := readPreview(t, preview)
-		_, err = png.DecodeConfig(bytes.NewReader(generated))
+		_, err = avif.DecodeConfig(bytes.NewReader(generated))
 		require.NoError(t, err)
 		assert.Equal(t, generated, storedPreview(t, fileID, PreviewSmall))
 		assert.Equal(t, store.opened.Load(), store.closed.Load())
@@ -886,7 +898,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		for _, size := range []PreviewSize{PreviewSmall, PreviewMedium} {
 			preview, err := g.get(t.Context(), fileID, source.open, size)
 			require.NoError(t, err)
-			cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
+			cfg, err := avif.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
 			require.NoError(t, err)
 			assert.Equal(t, size.GetSize(), cfg.Width)
 		}
@@ -904,7 +916,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
 
 		require.NoError(t, err)
-		cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
+		cfg, err := avif.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
 		require.NoError(t, err)
 		assert.Equal(t, PreviewSmall.GetSize(), cfg.Width)
 		_, _, err = (&files.File{ID: fileID}).OpenPreview(PreviewSmall)
@@ -924,7 +936,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
 
 		require.NoError(t, err)
-		cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
+		cfg, err := avif.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
 		require.NoError(t, err)
 		assert.Equal(t, 75, cfg.Height, "the preview must come from the source, not the storage")
 		assert.Equal(t, int32(2), source.opened.Load())
@@ -964,7 +976,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 			r := <-results
 			require.NoError(t, r.err)
 			// Every caller reads the whole preview although they share one flight.
-			_, err := png.Decode(bytes.NewReader(readPreview(t, r.preview)))
+			_, err := avif.Decode(bytes.NewReader(readPreview(t, r.preview)))
 			require.NoError(t, err)
 		}
 		assert.Equal(t, 1, tracker.startedDecodes())
@@ -1010,7 +1022,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		g.slots.Release(pixels)
 		r := <-follower
 		require.NoError(t, r.err)
-		_, err := png.DecodeConfig(bytes.NewReader(readPreview(t, r.preview)))
+		_, err := avif.DecodeConfig(bytes.NewReader(readPreview(t, r.preview)))
 		require.NoError(t, err)
 		assert.Zero(t, followerSource.opened.Load(), "the follower must share the flight instead of generating itself")
 	})
