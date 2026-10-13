@@ -24,11 +24,12 @@
 				</div>
 				<input
 					ref="searchInput"
-					v-model="query"
 					v-focus
+					:value="query"
 					class="input"
 					:class="{'is-loading': loading}"
 					:placeholder="placeholder"
+					@input="updateQuery"
 					@keyup="search"
 					@keydown.down.prevent="select(0, 0)"
 					@keyup.prevent.delete="unselectCmd"
@@ -508,6 +509,13 @@ const loading = useDelayedLoading(() =>
 	projectList.isLoading ||
 	teamSearchLoading.value || createTeamMutation.isPending.value,
 )
+
+// Not v-model: it ignores input during IME composition, and Android keyboards
+// compose every word. The query would lag behind and the results re-render
+// under the finger once tapping one commits the composition.
+function updateQuery(event: Event) {
+	query.value = (event.target as HTMLInputElement).value
+}
 
 function search() {
 	searchTasks()
