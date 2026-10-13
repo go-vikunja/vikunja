@@ -49,15 +49,24 @@ func (s *s3Storage) key(name string) string {
 }
 
 func (s *s3Storage) Open(name string) (io.ReadCloser, error) {
+	content, _, err := s.OpenWithSize(name)
+	return content, err
+}
+
+func (s *s3Storage) OpenWithSize(name string) (io.ReadCloser, int64, error) {
 	key := s.key(name)
 	out, err := s.client.GetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return nil, s3ToPathError("open", name, err)
+		return nil, 0, s3ToPathError("open", name, err)
 	}
-	return out.Body, nil
+	if out.ContentLength == nil {
+		_ = out.Body.Close()
+		return nil, 0, &os.PathError{Op: "open", Path: name, Err: errors.New("S3 returned no content length")}
+	}
+	return out.Body, *out.ContentLength, nil
 }
 
 func (s *s3Storage) Write(name string, content io.ReadSeeker, size uint64) error {

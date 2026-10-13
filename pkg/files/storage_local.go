@@ -45,7 +45,21 @@ func (l *localStorage) Open(name string) (io.ReadCloser, error) {
 	return os.Open(l.path(name))
 }
 
-// Write goes through a temporary file so a reader or a failed write never leaves a partial file under name.
+func (l *localStorage) OpenWithSize(name string) (io.ReadCloser, int64, error) {
+	f, err := os.Open(l.path(name))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	info, err := f.Stat()
+	if err != nil {
+		_ = f.Close()
+		return nil, 0, err
+	}
+	return f, info.Size(), nil
+}
+
+// Write goes through a temporary file, so no reader sees a partial file and a failed write leaves none behind.
 func (l *localStorage) Write(name string, content io.ReadSeeker, _ uint64) error {
 	if _, err := content.Seek(0, io.SeekStart); err != nil {
 		return err
