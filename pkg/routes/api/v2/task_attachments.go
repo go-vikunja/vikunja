@@ -174,7 +174,7 @@ func taskAttachmentsDownload(ctx context.Context, in *struct {
 	}
 
 	previewSize := models.GetPreviewSizeFromString(in.PreviewSize)
-	ta, preview, err := models.GetTaskAttachmentForDownload(a, in.TaskID, in.AttachmentID, previewSize)
+	ta, preview, err := models.GetTaskAttachmentForDownload(ctx, a, in.TaskID, in.AttachmentID, previewSize)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

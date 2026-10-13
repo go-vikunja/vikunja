@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"image/png"
 	"io"
@@ -144,7 +145,7 @@ func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []
 // GetTaskAttachmentForDownload returns preview bytes instead of the file when previewSize
 // is set and the attachment is an image. Returns ErrGenericForbidden on denied access.
 // Owns its own session and commits it before touching storage so no pool connection is held.
-func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
+func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -169,7 +170,7 @@ func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64, previe
 		return nil, nil, err
 	}
 
-	preview, err = ta.loadFileAndPreview(previewSize)
+	preview, err = ta.loadFileAndPreview(ctx, previewSize)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -177,13 +178,13 @@ func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64, previe
 	return ta, preview, nil
 }
 
-func (ta *TaskAttachment) loadFileAndPreview(previewSize PreviewSize) (preview []byte, err error) {
+func (ta *TaskAttachment) loadFileAndPreview(ctx context.Context, previewSize PreviewSize) (preview []byte, err error) {
 	if err := ta.File.LoadFileByID(); err != nil {
 		return nil, err
 	}
 
 	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
-		preview = ta.GetPreview(previewSize)
+		preview = ta.GetPreview(ctx, previewSize)
 		if preview == nil {
 			// GetPreview consumed the reader; close it before re-opening so it doesn't leak.
 			_ = ta.File.File.Close()
@@ -316,7 +317,7 @@ func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
 	return "task_attachment_preview_" + strconv.FormatInt(id, 10) + "_size_" + string(size)
 }
 
-func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
+func (ta *TaskAttachment) GetPreview(_ context.Context, previewSize PreviewSize) []byte {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 
 	result, err := keyvalue.RememberValue(cacheKey, func() ([]byte, error) {
