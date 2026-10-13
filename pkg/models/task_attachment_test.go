@@ -229,6 +229,15 @@ func pngHeader(width, height uint32) []byte {
 	return binary.BigEndian.AppendUint32(header, crc32.ChecksumIEEE(ihdr))
 }
 
+func readPreview(t *testing.T, preview *TaskAttachmentPreview) []byte {
+	t.Helper()
+	content, err := io.ReadAll(preview)
+	require.NoError(t, err)
+	require.NoError(t, preview.Close())
+	assert.Equal(t, int64(len(content)), preview.Size)
+	return content
+}
+
 func imageAttachment(t *testing.T, id int64, content []byte) *TaskAttachment {
 	t.Helper()
 	file := &files.File{
@@ -247,10 +256,13 @@ func TestTaskAttachment_Preview(t *testing.T) {
 	t.Run("image", func(t *testing.T) {
 		ta := imageAttachment(t, 910001, testPNG(t, 400, 300))
 
-		preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+		download, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
 		require.NoError(t, err)
+		preview, isPreview := download.(*TaskAttachmentPreview)
+		require.True(t, isPreview, "got %T", download)
+		assert.Equal(t, "image/png", preview.Mime)
 
-		cfg, format, err := image.DecodeConfig(bytes.NewReader(preview))
+		cfg, format, err := image.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
 		require.NoError(t, err)
 		assert.Equal(t, "png", format)
 		assert.Equal(t, PreviewMedium.GetSize(), cfg.Width)
@@ -267,7 +279,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 			},
 		}
 
-		_, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+		_, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
 		require.Error(t, err)
 		assert.True(t, files.IsErrFileDoesNotExist(err))
 	})
@@ -276,10 +288,10 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		ta := imageAttachment(t, 910006, testPNG(t, 400, 300))
 		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
 
-		preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+		download, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
 		require.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentPreviewBusy(err), "err: %v", err)
-		assert.Nil(t, preview)
+		assert.Nil(t, download)
 		assert.Nil(t, ta.File.File, "the original must not be opened")
 	})
 
@@ -289,9 +301,9 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
-		preview, err := ta.loadPreviewOrFile(ctx, PreviewMedium)
+		download, err := ta.openPreviewOrFile(ctx, PreviewMedium)
 		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, preview)
+		assert.Nil(t, download)
 		assert.Nil(t, ta.File.File, "the original must not be opened")
 	})
 
@@ -303,7 +315,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 
 		stored, err := ta.GetPreview(t.Context(), PreviewMedium)
 		require.NoError(t, err)
-		assert.Equal(t, generated, stored)
+		assert.Equal(t, readPreview(t, generated), readPreview(t, stored))
 	})
 
 	fallbacks := map[string]struct {
@@ -330,14 +342,15 @@ func TestTaskAttachment_Preview(t *testing.T) {
 			ta := imageAttachment(t, tc.id, tc.content)
 			ta.File.Size = tc.size
 
-			preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+			download, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
 			require.NoError(t, err)
-			assert.Nil(t, preview)
+			original, isOriginal := download.(*TaskAttachmentOriginal)
+			require.True(t, isOriginal, "got %T", download)
 
-			original, err := io.ReadAll(ta.File.File)
+			content, err := io.ReadAll(original.File.File)
 			require.NoError(t, err)
-			require.NoError(t, ta.File.File.Close())
-			assert.Equal(t, tc.content, original)
+			require.NoError(t, original.Close())
+			assert.Equal(t, tc.content, content)
 		})
 	}
 }
