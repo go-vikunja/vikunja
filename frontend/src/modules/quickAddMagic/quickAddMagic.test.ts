@@ -486,6 +486,34 @@ describe('Parse Task Text', () => {
 				expect(result.date).toBeNull()
 			})
 		})
+		describe('Should not parse dates which are part of a date range', () => {
+			const cases = [
+				'31.12.2026 - 01.01.2027 Happy new year',
+				'Happy new year 31.12.2026 - 01.01.2027',
+				'31.12.2026 – 01.01.2027 Happy new year',
+				'12/31/2026 - 01/01/2027 Happy new year',
+				'2026-12-31 - 2027-01-01 Happy new year',
+				'31.12 - 01.01 Happy new year',
+			]
+
+			cases.forEach(c => {
+				it(`should not parse a date from '${c}'`, () => {
+					const result = parseTaskText(c)
+
+					expect(result.text).toBe(c)
+					expect(result.date).toBeNull()
+				})
+			})
+
+			it('should still parse a date after a dash which is not a range', () => {
+				const result = parseTaskText('Meeting - 31.12.2026')
+
+				expect(result.text).toBe('Meeting -')
+				expect(result.date?.getFullYear()).toBe(2026)
+				expect(result.date?.getMonth()).toBe(11)
+				expect(result.date?.getDate()).toBe(31)
+			})
+		})
 		describe('Should still parse dates at text boundaries', () => {
 			const now = new Date()
 			now.setFullYear(2021, 5, 24)

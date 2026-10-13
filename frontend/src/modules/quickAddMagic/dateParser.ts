@@ -30,6 +30,11 @@ function matchDateAtBoundary(text: string, pattern: string): RegExpExecArray | n
 		const isAtStart = result.index === 0
 		const isAtEnd = matchEnd >= text.length
 
+		// A range like "31.12.2026 - 01.01.2027" describes the task, it is not a due date
+		const isRangeStart = /^[-–—] ?[0-9]+[./-][0-9]/.test(text.substring(matchEnd))
+		const isRangeEnd = /[0-9][./-][0-9]+\.? [-–—]$/.test(text.substring(0, result.index))
+		if (isRangeStart || isRangeEnd) continue
+
 		if (isAtStart || isAtEnd) return result
 
 		// Allow middle-of-text matches when followed by a time expression
