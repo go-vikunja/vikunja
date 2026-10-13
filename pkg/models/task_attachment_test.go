@@ -18,6 +18,8 @@ package models
 
 import (
 	"bytes"
+	"encoding/binary"
+	"hash/crc32"
 	"image"
 	"image/png"
 	"io"
@@ -207,6 +209,83 @@ func TestAttachmentPreviewRejectsLargeImages(t *testing.T) {
 
 	result := attachment.GetPreview(PreviewMedium)
 	assert.Nil(t, result, "Preview should be nil for images exceeding max pixel count")
+}
+
+func testPNG(t *testing.T, width, height int) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	require.NoError(t, png.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, width, height))))
+	return buf.Bytes()
+}
+
+// Only signature + IHDR: enough for image.DecodeConfig without allocating the pixels.
+func pngHeader(width, height uint32) []byte {
+	ihdr := []byte("IHDR")
+	ihdr = binary.BigEndian.AppendUint32(ihdr, width)
+	ihdr = binary.BigEndian.AppendUint32(ihdr, height)
+	ihdr = append(ihdr, 8, 6, 0, 0, 0)
+
+	header := []byte("\x89PNG\r\n\x1a\n")
+	header = binary.BigEndian.AppendUint32(header, 13)
+	header = append(header, ihdr...)
+	return binary.BigEndian.AppendUint32(header, crc32.ChecksumIEEE(ihdr))
+}
+
+func imageAttachment(t *testing.T, id int64, content []byte) *TaskAttachment {
+	t.Helper()
+	file := &files.File{
+		ID:   id,
+		Mime: "image/png",
+	}
+	require.NoError(t, file.Save(bytes.NewReader(content)))
+	return &TaskAttachment{
+		ID:     id,
+		FileID: id,
+		File:   file,
+	}
+}
+
+func TestTaskAttachment_Preview(t *testing.T) {
+	t.Run("image", func(t *testing.T) {
+		ta := imageAttachment(t, 910001, testPNG(t, 400, 300))
+
+		preview, err := ta.loadFileAndPreview(PreviewMedium)
+		require.NoError(t, err)
+
+		cfg, format, err := image.DecodeConfig(bytes.NewReader(preview))
+		require.NoError(t, err)
+		assert.Equal(t, "png", format)
+		assert.Equal(t, PreviewMedium.GetSize(), cfg.Width)
+		assert.Equal(t, 150, cfg.Height)
+	})
+
+	fallbacks := map[string]struct {
+		id      int64
+		content []byte
+	}{
+		"undecodable image falls back to the original": {
+			id:      910002,
+			content: append(pngHeader(400, 300), []byte("not image data")...),
+		},
+		"image over the pixel limit falls back to the original": {
+			id:      910003,
+			content: pngHeader(10000, 10000),
+		},
+	}
+	for name, tc := range fallbacks {
+		t.Run(name, func(t *testing.T) {
+			ta := imageAttachment(t, tc.id, tc.content)
+
+			preview, err := ta.loadFileAndPreview(PreviewMedium)
+			require.NoError(t, err)
+			assert.Nil(t, preview)
+
+			original, err := io.ReadAll(ta.File.File)
+			require.NoError(t, err)
+			require.NoError(t, ta.File.File.Close())
+			assert.Equal(t, tc.content, original)
+		})
+	}
 }
 
 func TestTaskAttachment_Permissions(t *testing.T) {

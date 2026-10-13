@@ -19,9 +19,12 @@ package webtests
 import (
 	"bytes"
 	"encoding/json"
+	"image"
+	"image/png"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -243,19 +246,61 @@ func TestTaskAttachmentsV2(t *testing.T) {
 	})
 }
 
-// TestTaskAttachmentsV2_PreviewSize covers the preview_size query param: a non-image
-// attachment ignores it and returns the original bytes (the v1 behaviour).
+// TestTaskAttachmentsV2_PreviewSize covers the preview_size query param: only an image
+// that can be decoded gets a preview, everything else returns the original bytes.
 func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
-	e, err := setupTestEnv()
-	require.NoError(t, err)
-	token := humaTokenFor(t, &testuser1)
+	t.Run("non-image returns the original file", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
 
-	content := []byte("not an image, just text")
-	id := uploadOneAttachment(t, e, token, "notimage.txt", content)
+		content := []byte("not an image, just text")
+		id := uploadOneAttachment(t, e, token, "notimage.txt", content)
 
-	rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
-	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-	assert.Equal(t, content, rec.Body.Bytes(), "preview_size on a non-image must return the original file")
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, content, rec.Body.Bytes())
+	})
+
+	t.Run("image returns a downscaled png", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		var content bytes.Buffer
+		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+		// The second request is served from the preview cache.
+		for range 2 {
+			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, "image/png", rec.Header().Get("Content-Type"))
+			assert.Equal(t, strconv.Itoa(rec.Body.Len()), rec.Header().Get("Content-Length"))
+
+			cfg, err := png.DecodeConfig(rec.Body)
+			require.NoError(t, err)
+			assert.Equal(t, 200, cfg.Width)
+			assert.Equal(t, 150, cfg.Height)
+		}
+	})
+
+	t.Run("undecodable image returns the original file", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		var valid bytes.Buffer
+		require.NoError(t, png.Encode(&valid, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+		// Keeps the header so the mime type is still detected as an image.
+		content := slices.Concat(valid.Bytes()[:40], []byte("not image data"))
+		id := uploadOneAttachment(t, e, token, "broken.png", content)
+
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, content, rec.Body.Bytes())
+		assert.Contains(t, rec.Header().Get("Content-Disposition"), "broken.png")
+	})
 }
 
 // TestTaskAttachmentsV2_Disabled proves the resource is absent when the
