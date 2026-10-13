@@ -271,7 +271,7 @@ func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
 		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
 
-		// The second request is served from the preview cache.
+		// The second request is served from the stored preview.
 		for range 2 {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
