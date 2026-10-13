@@ -1081,6 +1081,25 @@ func (err ErrTaskAttachmentIsTooLarge) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskAttachmentNotPreviewable means the attachment has no preview and the original should be served instead.
+type ErrTaskAttachmentNotPreviewable struct {
+	Err error
+}
+
+// IsErrTaskAttachmentNotPreviewable checks if an error is ErrTaskAttachmentNotPreviewable.
+func IsErrTaskAttachmentNotPreviewable(err error) bool {
+	var notPreviewable ErrTaskAttachmentNotPreviewable
+	return errors.As(err, &notPreviewable)
+}
+
+func (err ErrTaskAttachmentNotPreviewable) Error() string {
+	return fmt.Sprintf("Task attachment is not previewable: %v", err.Err)
+}
+
+func (err ErrTaskAttachmentNotPreviewable) Unwrap() error {
+	return err.Err
+}
+
 // ErrInvalidSortParam represents an error where the provided sort param is invalid
 type ErrInvalidSortParam struct {
 	SortBy string

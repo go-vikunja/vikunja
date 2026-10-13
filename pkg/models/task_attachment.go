@@ -183,18 +183,21 @@ func (ta *TaskAttachment) loadFileAndPreview(ctx context.Context, previewSize Pr
 		return nil, err
 	}
 
-	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
-		preview = ta.GetPreview(ctx, previewSize)
-		if preview == nil {
-			// GetPreview consumed the reader; close it before re-opening so it doesn't leak.
-			_ = ta.File.File.Close()
-			if err := ta.File.LoadFileByID(); err != nil {
-				return nil, err
-			}
-		}
+	if previewSize == PreviewSizeUnknown || !strings.HasPrefix(ta.File.Mime, "image") {
+		return nil, nil
 	}
 
-	return preview, nil
+	preview, err = ta.GetPreview(ctx, previewSize)
+	if err == nil {
+		return preview, nil
+	}
+
+	// GetPreview consumed the reader; close it before re-opening so it doesn't leak.
+	_ = ta.File.File.Close()
+	if !IsErrTaskAttachmentNotPreviewable(err) {
+		return nil, err
+	}
+	return nil, ta.File.LoadFileByID()
 }
 
 // ReadOne returns a task attachment
@@ -332,20 +335,21 @@ func cacheTaskAttachmentPreview(cacheKey string, preview []byte) {
 	}
 }
 
-func (ta *TaskAttachment) GetPreview(_ context.Context, previewSize PreviewSize) []byte {
+// GetPreview returns ErrTaskAttachmentNotPreviewable when the original should be served instead.
+func (ta *TaskAttachment) GetPreview(_ context.Context, previewSize PreviewSize) ([]byte, error) {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
-		return preview
+		return preview, nil
 	}
 
 	preview, err := renderPreview(ta.File.File, previewSize)
 	if err != nil {
-		return nil
+		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
 	}
 
 	cacheTaskAttachmentPreview(cacheKey, preview)
 	log.Infof("Attachment image preview for task attachment %v of size %v created and cached", ta.ID, previewSize)
-	return preview
+	return preview, nil
 }
 
 func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
