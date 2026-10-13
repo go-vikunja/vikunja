@@ -317,53 +317,61 @@ func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
 	return "task_attachment_preview_" + strconv.FormatInt(id, 10) + "_size_" + string(size)
 }
 
+func cachedTaskAttachmentPreview(cacheKey string) (preview []byte, cached bool) {
+	cached, err := keyvalue.GetWithValue(cacheKey, &preview)
+	if err != nil {
+		log.Errorf("Could not read attachment preview %s from the cache: %v", cacheKey, err)
+		return nil, false
+	}
+	return preview, cached
+}
+
+func cacheTaskAttachmentPreview(cacheKey string, preview []byte) {
+	if err := keyvalue.Put(cacheKey, preview); err != nil {
+		log.Errorf("Could not cache attachment preview %s: %v", cacheKey, err)
+	}
+}
+
 func (ta *TaskAttachment) GetPreview(_ context.Context, previewSize PreviewSize) []byte {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
+	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
+		return preview
+	}
 
-	result, err := keyvalue.RememberValue(cacheKey, func() ([]byte, error) {
-		// Read all bytes up front so we can inspect dimensions without seeking.
-		// The file is an io.ReadCloser (no Seek), so we buffer it once.
-		data, err := io.ReadAll(ta.File.File)
-		if err != nil {
-			return nil, err
-		}
-
-		// Check image dimensions before full decode to prevent DoS
-		// from decompression bombs (small file, huge pixel dimensions)
-		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
-		if err != nil {
-			return nil, err
-		}
-		if err := imageutils.ValidateConfig(cfg); err != nil {
-			return nil, err
-		}
-
-		img, _, err := image.Decode(bytes.NewReader(data))
-		if err != nil {
-			return nil, err
-		}
-
-		// Scale down the image to a minimum size
-		resizedImg := resizeImage(img, previewSize.GetSize())
-
-		// Get the raw bytes of the resized image
-		buf := &bytes.Buffer{}
-		if err := png.Encode(buf, resizedImg); err != nil {
-			return nil, err
-		}
-		previewImage, err := io.ReadAll(buf)
-		if err != nil {
-			return nil, err
-		}
-
-		log.Infof("Attachment image preview for task attachment %v of size %v created and cached", ta.ID, previewSize)
-		return previewImage, nil
-	})
+	preview, err := renderPreview(ta.File.File, previewSize)
 	if err != nil {
 		return nil
 	}
 
-	return result
+	cacheTaskAttachmentPreview(cacheKey, preview)
+	log.Infof("Attachment image preview for task attachment %v of size %v created and cached", ta.ID, previewSize)
+	return preview
+}
+
+func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
+	// Read all bytes up front so we can inspect dimensions without seeking.
+	// The file is an io.ReadCloser (no Seek), so we buffer it once.
+	data, err := io.ReadAll(src)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check image dimensions before full decode to prevent DoS
+	// from decompression bombs (small file, huge pixel dimensions)
+	if _, err := imageutils.ValidateReader(bytes.NewReader(data)); err != nil {
+		return nil, err
+	}
+
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
+	buf := &bytes.Buffer{}
+	if err := png.Encode(buf, resizeImage(img, previewSize.GetSize())); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 type PreviewSize string
