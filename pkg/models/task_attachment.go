@@ -484,32 +484,15 @@ func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-type PreviewSize string
+type PreviewSize = files.PreviewSize
 
 const (
-	PreviewSizeUnknown PreviewSize = "unknown"
-	PreviewSmall       PreviewSize = "sm"
-	PreviewMedium      PreviewSize = "md"
-	PreviewLarge       PreviewSize = "lg"
-	PreviewExtraLarge  PreviewSize = "xl"
+	PreviewSizeUnknown = files.PreviewSizeUnknown
+	PreviewSmall       = files.PreviewSmall
+	PreviewMedium      = files.PreviewMedium
+	PreviewLarge       = files.PreviewLarge
+	PreviewExtraLarge  = files.PreviewExtraLarge
 )
-
-func (previewSize PreviewSize) GetSize() int {
-	switch previewSize {
-	case PreviewSmall:
-		return 100
-	case PreviewMedium:
-		return 200
-	case PreviewLarge:
-		return 400
-	case PreviewExtraLarge:
-		return 800
-	case PreviewSizeUnknown:
-		return 0
-	default:
-		return 200
-	}
-}
 
 func GetPreviewSizeFromString(size string) PreviewSize {
 	switch size {
