@@ -16,6 +16,14 @@
 
 package files
 
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"path"
+	"slices"
+)
+
 type PreviewSize string
 
 const (
@@ -41,4 +49,52 @@ func (previewSize PreviewSize) GetSize() int {
 	default:
 		return 200
 	}
+}
+
+const previewDir = "previews"
+
+// Listed so all previews of a file can be removed without listing the storage.
+var storedPreviewSizes = []PreviewSize{
+	PreviewSmall,
+	PreviewMedium,
+	PreviewLarge,
+	PreviewExtraLarge,
+}
+
+func (f *File) previewPath(size PreviewSize) string {
+	return path.Join(previewDir, f.fileID()+"_"+string(size))
+}
+
+func checkStoredPreviewSize(size PreviewSize) error {
+	if !slices.Contains(storedPreviewSizes, size) {
+		return fmt.Errorf("previews of size %q are not stored", size)
+	}
+	return nil
+}
+
+// OpenPreview returns an error wrapping fs.ErrNotExist when no preview of that size is stored.
+func (f *File) OpenPreview(size PreviewSize) (preview io.ReadCloser, length int64, err error) {
+	if err := checkStoredPreviewSize(size); err != nil {
+		return nil, 0, err
+	}
+
+	preview, length, err = storage.OpenWithSize(f.previewPath(size))
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to open the %s preview of file %d: %w", size, f.ID, err)
+	}
+	return preview, length, nil
+}
+
+func (f *File) SavePreview(size PreviewSize, preview []byte) error {
+	if err := checkStoredPreviewSize(size); err != nil {
+		return err
+	}
+
+	if err := storage.MkdirAll(previewDir, 0755); err != nil {
+		return fmt.Errorf("failed to create the preview directory: %w", err)
+	}
+	if err := storage.Write(f.previewPath(size), bytes.NewReader(preview), uint64(len(preview))); err != nil {
+		return fmt.Errorf("failed to save the %s preview of file %d: %w", size, f.ID, err)
+	}
+	return nil
 }
