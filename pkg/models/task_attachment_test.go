@@ -39,6 +39,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/modules/imageutils"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -254,6 +255,21 @@ func encodedImage(t *testing.T, encode func(io.Writer, image.Image) error, img i
 	var buf bytes.Buffer
 	require.NoError(t, encode(&buf, img))
 	return buf.Bytes()
+}
+
+func TestRemoveLegacyTaskAttachmentPreviews(t *testing.T) {
+	require.NoError(t, keyvalue.Put("task_attachment_preview_1_size_md", []byte("preview")))
+	require.NoError(t, keyvalue.Put("task_attachment_other", "kept"))
+	t.Cleanup(func() { _ = keyvalue.Del("task_attachment_other") })
+
+	RemoveLegacyTaskAttachmentPreviews()
+
+	_, exists, err := keyvalue.Get("task_attachment_preview_1_size_md")
+	require.NoError(t, err)
+	assert.False(t, exists)
+	_, exists, err = keyvalue.Get("task_attachment_other")
+	require.NoError(t, err)
+	assert.True(t, exists)
 }
 
 func TestPreviewFormat(t *testing.T) {
