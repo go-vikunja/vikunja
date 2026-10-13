@@ -38,6 +38,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/disintegration/imaging"
+	"github.com/gabriel-vasile/mimetype"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/sync/singleflight"
 	"xorm.io/xorm"
@@ -146,46 +147,68 @@ func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []
 	return success, failures, nil
 }
 
-// GetTaskAttachmentForDownload returns preview bytes instead of the file when previewSize
-// is set and the attachment is an image; the file is only opened when there is no preview.
-// Returns ErrGenericForbidden on denied access.
+// TaskAttachmentDownload is what a download is answered with. The caller must close it.
+//
+//sumtype:decl
+type TaskAttachmentDownload interface {
+	io.Closer
+	taskAttachmentDownload()
+}
+
+// TaskAttachmentPreview is an encoded preview image.
+type TaskAttachmentPreview struct {
+	io.ReadCloser
+	Mime string
+	Size int64
+}
+
+func (*TaskAttachmentPreview) taskAttachmentDownload() {}
+
+// TaskAttachmentOriginal is the uploaded file, opened for reading.
+type TaskAttachmentOriginal struct {
+	File *files.File
+}
+
+func (original *TaskAttachmentOriginal) Close() error {
+	return original.File.File.Close()
+}
+
+func (*TaskAttachmentOriginal) taskAttachmentDownload() {}
+
+// GetTaskAttachmentForDownload returns a preview instead of the file when previewSize
+// is set and the attachment is an image. Returns ErrGenericForbidden on denied access.
 // Owns its own session and commits it before touching storage so no pool connection is held.
-func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
+func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (TaskAttachmentDownload, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	ta = &TaskAttachment{ID: attachmentID, TaskID: taskID}
+	ta := &TaskAttachment{ID: attachmentID, TaskID: taskID}
 	can, _, err := ta.CanRead(s, a)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, nil, err
+		return nil, err
 	}
 	if !can {
 		_ = s.Rollback()
-		return nil, nil, ErrGenericForbidden{}
+		return nil, ErrGenericForbidden{}
 	}
 
 	if err := ta.ReadOne(s, a); err != nil {
 		_ = s.Rollback()
-		return nil, nil, err
+		return nil, err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return nil, nil, err
+		return nil, err
 	}
 
-	preview, err = ta.loadPreviewOrFile(ctx, previewSize)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return ta, preview, nil
+	return ta.openPreviewOrFile(ctx, previewSize)
 }
 
-func (ta *TaskAttachment) loadPreviewOrFile(ctx context.Context, previewSize PreviewSize) (preview []byte, err error) {
+func (ta *TaskAttachment) openPreviewOrFile(ctx context.Context, previewSize PreviewSize) (TaskAttachmentDownload, error) {
 	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
-		preview, err = ta.GetPreview(ctx, previewSize)
+		preview, err := ta.GetPreview(ctx, previewSize)
 		if err == nil {
 			return preview, nil
 		}
@@ -194,7 +217,10 @@ func (ta *TaskAttachment) loadPreviewOrFile(ctx context.Context, previewSize Pre
 		}
 	}
 
-	return nil, ta.File.LoadFileByID()
+	if err := ta.File.LoadFileByID(); err != nil {
+		return nil, err
+	}
+	return &TaskAttachmentOriginal{File: ta.File}, nil
 }
 
 // ReadOne returns a task attachment
@@ -355,8 +381,20 @@ func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *preview
 }
 
 // GetPreview returns ErrTaskAttachmentNotPreviewable when the original should be served instead.
-func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) ([]byte, error) {
-	return attachmentPreviews.get(ctx, ta.File.ID, fileOpener(ta.File.ID), previewSize)
+func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
+	preview, err := attachmentPreviews.get(ctx, ta.File.ID, fileOpener(ta.File.ID), previewSize)
+	if err != nil {
+		return nil, err
+	}
+	return newTaskAttachmentPreview(preview), nil
+}
+
+func newTaskAttachmentPreview(preview []byte) *TaskAttachmentPreview {
+	return &TaskAttachmentPreview{
+		ReadCloser: io.NopCloser(bytes.NewReader(preview)),
+		Mime:       mimetype.Detect(preview).String(),
+		Size:       int64(len(preview)),
+	}
 }
 
 // get generates a preview that is not stored once for all concurrent callers of the same file and size.

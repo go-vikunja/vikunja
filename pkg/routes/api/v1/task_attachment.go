@@ -121,11 +121,11 @@ func GetTaskAttachment(c *echo.Context) error {
 	}
 
 	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
-	attachment, preview, err := models.GetTaskAttachmentForDownload(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
+	download, err := models.GetTaskAttachmentForDownload(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
 	if err != nil {
 		return err
 	}
 
-	webfiles.WriteAttachmentDownload(c.Response(), c.Request(), attachment, preview)
+	webfiles.WriteAttachmentDownload(c.Response(), c.Request(), download)
 	return nil
 }
