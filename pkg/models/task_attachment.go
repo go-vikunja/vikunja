@@ -36,6 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/imageutils"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -339,6 +340,14 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page in
 		Where("task_id = ?", ta.TaskID).
 		Count(&TaskAttachment{})
 	return attachments, len(attachments), numberOfTotalItems, err
+}
+
+// RemoveLegacyTaskAttachmentPreviews drops the previews older versions put into keyvalue without a TTL,
+// which Redis would keep forever. Not a migration: instances still running the old version keep writing them.
+func RemoveLegacyTaskAttachmentPreviews() {
+	if err := keyvalue.DelPrefix("task_attachment_preview_"); err != nil {
+		log.Errorf("Could not remove the attachment previews left in keyvalue: %v", err)
+	}
 }
 
 // previewStore keeps generated previews, in the file storage outside of tests.

@@ -150,6 +150,8 @@ func FullInit() {
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
 	openid.RegisterProviderAvailabilityCron()
 	models.RegisterAPITokenExpiryCheckCron()
+	// Scans every key in Redis, which must not hold up the start.
+	go models.RemoveLegacyTaskAttachmentPreviews()
 
 	// Initialize WebSocket hub
 	ws.InitHub()
