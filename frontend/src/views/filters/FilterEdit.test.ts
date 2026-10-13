@@ -11,7 +11,7 @@ const savedFilter = vi.hoisted(() => ({
 	validate: vi.fn(),
 	update: vi.fn(),
 }))
-const router = vi.hoisted(() => ({back: vi.fn(), push: vi.fn()}))
+const goBack = vi.hoisted(() => vi.fn())
 const messages = vi.hoisted(() => ({success: vi.fn(), error: vi.fn()}))
 
 vi.mock('@/composables/useSavedFilter', () => ({
@@ -31,10 +31,7 @@ vi.mock('@/client/generated', async importOriginal => ({
 vi.mock('@/message', () => messages)
 // Stubbing the async editor still fires its loader; TipTap then imports after teardown.
 vi.mock('@/components/input/AsyncEditor', () => ({default: {name: 'Editor', render: () => null}}))
-vi.mock('vue-router', async importOriginal => ({
-	...await importOriginal<typeof import('vue-router')>(),
-	useRouter: () => router,
-}))
+vi.mock('@/composables/useGoBack', () => ({useGoBack: () => goBack}))
 vi.mock('vue-i18n', async importOriginal => ({
 	...await importOriginal<typeof import('vue-i18n')>(),
 	useI18n: () => ({t: (key: string) => key}),
@@ -57,7 +54,7 @@ function filterResponse(id: number): SavedFilterResponse {
 
 const globalOptions = {
 	plugins: [VueQueryPlugin],
-	mocks: {$t: (key: string) => key, $router: router},
+	mocks: {$t: (key: string) => key, $router: {push: vi.fn()}},
 	directives: {focus: () => {}, tooltip: () => {}},
 }
 
@@ -67,7 +64,7 @@ describe('FilterEdit', () => {
 	beforeEach(() => {
 		savedFilter.validate.mockReset().mockReturnValue({...newSavedFilterDraft(), title: 'Filter', is_favorite: false})
 		savedFilter.update.mockReset()
-		router.back.mockReset()
+		goBack.mockReset()
 		messages.success.mockReset()
 	})
 
@@ -109,7 +106,7 @@ describe('FilterEdit', () => {
 		await saving
 
 		expect(messages.success).not.toHaveBeenCalled()
-		expect(router.back).not.toHaveBeenCalled()
+		expect(goBack).not.toHaveBeenCalled()
 		wrapper.unmount()
 	})
 
@@ -123,7 +120,7 @@ describe('FilterEdit', () => {
 		await (wrapper.vm as unknown as {save: () => Promise<void>}).save()
 
 		expect(messages.success).toHaveBeenCalledWith({message: i18n.global.t('filters.edit.success')})
-		expect(router.back).toHaveBeenCalledOnce()
+		expect(goBack).toHaveBeenCalledOnce()
 		wrapper.unmount()
 	})
 })
