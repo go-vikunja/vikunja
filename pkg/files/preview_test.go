@@ -17,9 +17,12 @@
 package files
 
 import (
+	"bytes"
 	"io"
 	"io/fs"
 	"testing"
+
+	"code.vikunja.io/api/pkg/db"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -93,4 +96,73 @@ func assertStoresPreviews(t *testing.T, backend FileStorage) {
 
 	_, _, err = (&File{ID: 43}).OpenPreview(PreviewMedium)
 	require.ErrorIs(t, err, fs.ErrNotExist, "previews are stored per file")
+}
+
+func TestFilePreview_Cleanup(t *testing.T) {
+	backends := map[string]func(t *testing.T) FileStorage{
+		"local":  func(t *testing.T) FileStorage { return newLocalStorage(t.TempDir()) },
+		"memory": func(*testing.T) FileStorage { return newMemStorage() },
+	}
+
+	savePreviews := func(t *testing.T, file *File) {
+		t.Helper()
+		for _, size := range storedPreviewSizes {
+			require.NoError(t, file.SavePreview(size, []byte("preview")))
+		}
+	}
+	assertPreviews := func(t *testing.T, file *File, stored bool) {
+		t.Helper()
+		for _, size := range storedPreviewSizes {
+			preview, _, err := file.OpenPreview(size)
+			if !stored {
+				require.ErrorIs(t, err, fs.ErrNotExist, "size %s", size)
+				continue
+			}
+			require.NoError(t, err, "size %s", size)
+			require.NoError(t, preview.Close())
+		}
+	}
+
+	for name, newBackend := range backends {
+		t.Run(name, func(t *testing.T) {
+			t.Run("deleting a file removes its previews", func(t *testing.T) {
+				useStorage(t, newBackend(t))
+				initFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				file := &File{ID: 1}
+				other := &File{ID: 11}
+				savePreviews(t, file)
+				savePreviews(t, other)
+
+				require.NoError(t, file.Delete(s))
+
+				assertPreviews(t, file, false)
+				assertPreviews(t, other, true)
+			})
+
+			t.Run("deleting a file without previews is not an error", func(t *testing.T) {
+				useStorage(t, newBackend(t))
+				initFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+
+				require.NoError(t, (&File{ID: 1}).Delete(s))
+			})
+
+			t.Run("overwriting the content of a file removes its previews", func(t *testing.T) {
+				useStorage(t, newBackend(t))
+				file := &File{ID: 1}
+				other := &File{ID: 11}
+				require.NoError(t, file.Save(bytes.NewReader([]byte("content"))))
+				savePreviews(t, file)
+				savePreviews(t, other)
+
+				require.NoError(t, file.Save(bytes.NewReader([]byte("new content"))))
+
+				assertPreviews(t, file, false)
+				assertPreviews(t, other, true)
+			})
+		})
+	}
 }
