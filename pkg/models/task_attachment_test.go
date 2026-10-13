@@ -421,6 +421,7 @@ type decodeTracker struct {
 	mu       sync.Mutex
 	inFlight int64
 	peak     int64
+	decodes  int
 }
 
 func newDecodeTracker() *decodeTracker {
@@ -432,6 +433,15 @@ func (d *decodeTracker) add(pixels int64) {
 	defer d.mu.Unlock()
 	d.inFlight += pixels
 	d.peak = max(d.peak, d.inFlight)
+	if pixels > 0 {
+		d.decodes++
+	}
+}
+
+func (d *decodeTracker) startedDecodes() int {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.decodes
 }
 
 func (d *decodeTracker) pixelsInFlight() int64 {
@@ -582,6 +592,97 @@ func TestPreviewGenerator_Queue(t *testing.T) {
 		assert.Equal(t, http.StatusServiceUnavailable, busy.HTTPError().HTTPCode)
 		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
 		assert.Equal(t, int32(1), source.opened.Load(), "the source must not be opened for decoding")
+	})
+}
+
+func TestPreviewGenerator_SharesGeneration(t *testing.T) {
+	const pixels = 100 * 100
+
+	t.Run("parallel calls for the same preview generate once", func(t *testing.T) {
+		g := newPreviewGenerator(previewPixelBudget, time.Minute)
+		tracker := newDecodeTracker()
+		source := tracker.source(t, testPNG(t, 100, 100))
+
+		const callers = 6
+		type result struct {
+			preview []byte
+			err     error
+		}
+		results := make(chan result, callers)
+		for range callers {
+			go func() {
+				preview, err := g.get(t.Context(), t.Name(), source, PreviewSmall)
+				results <- result{
+					preview: preview,
+					err:     err,
+				}
+			}()
+		}
+
+		require.Eventually(t, func() bool { return tracker.startedDecodes() > 0 }, 5*time.Second, time.Millisecond)
+		assert.Never(t, func() bool { return tracker.startedDecodes() > 1 }, 200*time.Millisecond, 5*time.Millisecond)
+
+		close(tracker.gate)
+		for range callers {
+			r := <-results
+			require.NoError(t, r.err)
+			_, err := png.DecodeConfig(bytes.NewReader(r.preview))
+			require.NoError(t, err)
+		}
+		assert.Equal(t, 1, tracker.startedDecodes())
+	})
+
+	t.Run("a caller cancelling does not fail another caller of the same flight", func(t *testing.T) {
+		g := newPreviewGenerator(pixels, time.Minute)
+		require.True(t, g.slots.TryAcquire(pixels))
+		content := testPNG(t, 100, 100)
+		leaderSource := &trackedSource{content: content}
+		followerSource := &trackedSource{content: content}
+
+		leaderCtx, cancelLeader := context.WithCancel(t.Context())
+		leader := make(chan error, 1)
+		go func() {
+			_, err := g.get(leaderCtx, t.Name(), leaderSource.open, PreviewSmall)
+			leader <- err
+		}()
+		require.Eventually(t, func() bool { return leaderSource.opened.Load() == 1 }, 5*time.Second, time.Millisecond)
+
+		type result struct {
+			preview []byte
+			err     error
+		}
+		follower := make(chan result, 1)
+		go func() {
+			preview, err := g.get(t.Context(), t.Name(), followerSource.open, PreviewSmall)
+			follower <- result{
+				preview: preview,
+				err:     err,
+			}
+		}()
+
+		cancelLeader()
+		select {
+		case err := <-leader:
+			require.ErrorIs(t, err, context.Canceled)
+		case <-time.After(5 * time.Second):
+			require.FailNow(t, "cancelled caller is still waiting")
+		}
+
+		g.slots.Release(pixels)
+		r := <-follower
+		require.NoError(t, r.err)
+		_, err := png.DecodeConfig(bytes.NewReader(r.preview))
+		require.NoError(t, err)
+		assert.Zero(t, followerSource.opened.Load(), "the follower must share the flight instead of generating itself")
+	})
+
+	t.Run("a panicking decode is an error", func(t *testing.T) {
+		g := newPreviewGenerator(pixels, time.Minute)
+
+		_, err := g.get(t.Context(), t.Name(), func() (io.ReadCloser, error) { panic("broken decoder") }, PreviewSmall)
+
+		require.ErrorContains(t, err, "broken decoder")
+		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
 	})
 }
 
