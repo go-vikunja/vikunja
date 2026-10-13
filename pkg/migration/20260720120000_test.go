@@ -253,6 +253,41 @@ func TestRecreateMissingIndexesSkipsWhenNameCollidesOnAnyDialect20260720120000(t
 	require.NoError(t, recreateMissingIndexes20260720120000(x))
 }
 
+// A users.username column which drifted to TEXT on mysql cannot be indexed
+// without a key length, so the migration must warn and move on (#4102).
+func TestRecreateMissingIndexesSkipsMysqlTextColumn20260720120000(t *testing.T) {
+	x, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	if x.Dialect().URI().DBType != schemas.MYSQL {
+		t.Skip("mysql-specific key length restriction")
+	}
+	require.NoError(t, x.Sync2(user.GetTables()...))
+
+	require.NoError(t, x.Sync(usersPartial20260720120000{}))
+	require.Nil(t, usersIndexOnUsername20260720120000(t, x))
+
+	_, err = x.Exec("ALTER TABLE users MODIFY username TEXT NOT NULL")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		// x is the process-global test engine; the column type leaks into later tests.
+		_, err := x.Exec("ALTER TABLE users MODIFY username VARCHAR(250) NOT NULL")
+		require.NoError(t, err)
+		// The partial sync above dropped the model indexes on users.
+		require.NoError(t, x.Sync2(user.GetTables()...))
+	})
+
+	require.NoError(t, recreateMissingIndexes20260720120000(x))
+	require.Nil(t, usersIndexOnUsername20260720120000(t, x))
+}
+
+func TestFirstUnindexableCol20260720120000(t *testing.T) {
+	unindexable := map[string]bool{"username": true}
+
+	require.Equal(t, "Username", firstUnindexableCol20260720120000(unindexable, []string{"id", "Username"}))
+	require.Empty(t, firstUnindexableCol20260720120000(unindexable, []string{"id", "email"}))
+	require.Empty(t, firstUnindexableCol20260720120000(nil, []string{"username"}))
+}
+
 // Upgrades from before v2.5.0 run this migration before 20260829190000, which
 // removes the duplicate subscriptions the model's unique index trips over (#3882).
 func TestRecreateMissingIndexesLeavesSubscriptionUniqueToLaterMigration20260720120000(t *testing.T) {
