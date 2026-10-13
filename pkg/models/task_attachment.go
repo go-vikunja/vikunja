@@ -19,10 +19,12 @@ package models
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/png"
 	"io"
+	"io/fs"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -33,7 +35,6 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/imageutils"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -313,23 +314,21 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page in
 	return attachments, len(attachments), numberOfTotalItems, err
 }
 
-func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
-	return "task_attachment_preview_" + strconv.FormatInt(id, 10) + "_size_" + string(size)
+// previewStore keeps generated previews, in the file storage outside of tests.
+type previewStore interface {
+	// open returns an error wrapping fs.ErrNotExist when the preview is not stored.
+	open(fileID int64, size PreviewSize) (preview io.ReadCloser, length int64, err error)
+	save(fileID int64, size PreviewSize, preview []byte) error
 }
 
-func cachedTaskAttachmentPreview(cacheKey string) (preview []byte, cached bool) {
-	cached, err := keyvalue.GetWithValue(cacheKey, &preview)
-	if err != nil {
-		log.Errorf("Could not read attachment preview %s from the cache: %v", cacheKey, err)
-		return nil, false
-	}
-	return preview, cached
+type filePreviewStore struct{}
+
+func (filePreviewStore) open(fileID int64, size PreviewSize) (io.ReadCloser, int64, error) {
+	return (&files.File{ID: fileID}).OpenPreview(size)
 }
 
-func cacheTaskAttachmentPreview(cacheKey string, preview []byte) {
-	if err := keyvalue.Put(cacheKey, preview); err != nil {
-		log.Errorf("Could not cache attachment preview %s: %v", cacheKey, err)
-	}
+func (filePreviewStore) save(fileID int64, size PreviewSize, preview []byte) error {
+	return (&files.File{ID: fileID}).SavePreview(size, preview)
 }
 
 const (
@@ -346,12 +345,14 @@ type previewGenerator struct {
 	slots        *semaphore.Weighted
 	queueTimeout time.Duration
 	flights      singleflight.Group
+	store        previewStore
 }
 
 func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *previewGenerator {
 	return &previewGenerator{
 		slots:        semaphore.NewWeighted(pixelBudget),
 		queueTimeout: queueTimeout,
+		store:        filePreviewStore{},
 	}
 }
 
@@ -360,18 +361,18 @@ func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSiz
 	if ta.File.Size > maxPreviewSourceBytes {
 		return nil, ErrTaskAttachmentNotPreviewable{Err: fmt.Errorf("file is %d bytes, previews are limited to %d", ta.File.Size, maxPreviewSourceBytes)}
 	}
-	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
-	return attachmentPreviews.get(ctx, cacheKey, fileOpener(ta.File.ID), previewSize)
+	return attachmentPreviews.get(ctx, ta.File.ID, fileOpener(ta.File.ID), previewSize)
 }
 
-func (g *previewGenerator) get(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
-	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
+func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
+	if preview, stored := g.stored(fileID, previewSize); stored {
 		return preview, nil
 	}
 
-	flight := g.flights.DoChan(cacheKey, func() (any, error) {
+	flightKey := strconv.FormatInt(fileID, 10) + "_" + string(previewSize)
+	flight := g.flights.DoChan(flightKey, func() (any, error) {
 		// Detached: the flight is shared, so the caller who started it leaving must not fail the others.
-		return g.generateAndCache(context.WithoutCancel(ctx), cacheKey, open, previewSize)
+		return g.generateAndStore(context.WithoutCancel(ctx), fileID, open, previewSize)
 	})
 
 	select {
@@ -386,17 +387,36 @@ func (g *previewGenerator) get(ctx context.Context, cacheKey string, open source
 	}
 }
 
-func (g *previewGenerator) generateAndCache(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) (preview []byte, err error) {
+// stored treats a preview that cannot be read as missing, so it is generated instead of failing the request.
+func (g *previewGenerator) stored(fileID int64, previewSize PreviewSize) (preview []byte, stored bool) {
+	content, _, err := g.store.open(fileID, previewSize)
+	if err != nil {
+		if !errors.Is(err, fs.ErrNotExist) {
+			log.Errorf("Could not open the stored %s preview of file %d: %v", previewSize, fileID, err)
+		}
+		return nil, false
+	}
+	defer content.Close()
+
+	preview, err = io.ReadAll(content)
+	if err != nil {
+		log.Errorf("Could not read the stored %s preview of file %d: %v", previewSize, fileID, err)
+		return nil, false
+	}
+	return preview, true
+}
+
+func (g *previewGenerator) generateAndStore(ctx context.Context, fileID int64, open sourceOpener, previewSize PreviewSize) (preview []byte, err error) {
 	// singleflight re-panics a DoChan callback on its own goroutine, which would crash the whole API.
 	defer func() {
 		if r := recover(); r != nil {
-			log.Errorf("Panic while generating attachment preview %s: %v\n%s", cacheKey, r, debug.Stack())
-			err = fmt.Errorf("panic while generating attachment preview %s: %v", cacheKey, r)
+			log.Errorf("Panic while generating the %s preview of file %d: %v\n%s", previewSize, fileID, r, debug.Stack())
+			err = fmt.Errorf("panic while generating the %s preview of file %d: %v", previewSize, fileID, r)
 		}
 	}()
 
-	// A flight that just finished may have cached it after this caller's lookup.
-	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
+	// A flight that just finished may have stored it after this caller's lookup.
+	if preview, stored := g.stored(fileID, previewSize); stored {
 		return preview, nil
 	}
 
@@ -405,8 +425,11 @@ func (g *previewGenerator) generateAndCache(ctx context.Context, cacheKey string
 		return nil, err
 	}
 
-	cacheTaskAttachmentPreview(cacheKey, preview)
-	log.Infof("Attachment image preview %s created and cached", cacheKey)
+	if err := g.store.save(fileID, previewSize, preview); err != nil {
+		log.Errorf("Could not store the %s preview of file %d: %v", previewSize, fileID, err)
+		return preview, nil
+	}
+	log.Infof("Created and stored the %s preview of file %d", previewSize, fileID)
 	return preview, nil
 }
 
