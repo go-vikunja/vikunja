@@ -23,6 +23,7 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -38,6 +39,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"golang.org/x/sync/semaphore"
+	"golang.org/x/sync/singleflight"
 	"xorm.io/xorm"
 )
 
@@ -331,7 +333,7 @@ func cacheTaskAttachmentPreview(cacheKey string, preview []byte) {
 }
 
 const (
-	// Has to stay at or above imageutils.MaxPixels, or the largest allowed image could never be generated.
+	// Below imageutils.MaxPixels the largest allowed image could never acquire.
 	previewPixelBudget  = 2 * imageutils.MaxPixels
 	previewQueueTimeout = 30 * time.Second
 )
@@ -342,6 +344,7 @@ var attachmentPreviews = newPreviewGenerator(previewPixelBudget, previewQueueTim
 type previewGenerator struct {
 	slots        *semaphore.Weighted
 	queueTimeout time.Duration
+	flights      singleflight.Group
 }
 
 func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *previewGenerator {
@@ -354,17 +357,53 @@ func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *preview
 // GetPreview returns ErrTaskAttachmentNotPreviewable when the original should be served instead.
 func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) ([]byte, error) {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
+	return attachmentPreviews.get(ctx, cacheKey, fileOpener(ta.File.ID), previewSize)
+}
+
+// get generates an uncached preview once for all concurrent callers of the same cacheKey.
+func (g *previewGenerator) get(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
 	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
 		return preview, nil
 	}
 
-	preview, err := attachmentPreviews.generate(ctx, fileOpener(ta.File.ID), previewSize)
+	flight := g.flights.DoChan(cacheKey, func() (any, error) {
+		// Detached: the flight is shared, so the caller who started it leaving must not fail the others.
+		return g.generateAndCache(context.WithoutCancel(ctx), cacheKey, open, previewSize)
+	})
+
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("waiting for attachment preview: %w", context.Cause(ctx))
+	case result := <-flight:
+		if result.Err != nil {
+			return nil, result.Err
+		}
+		preview, _ := result.Val.([]byte)
+		return preview, nil
+	}
+}
+
+func (g *previewGenerator) generateAndCache(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) (preview []byte, err error) {
+	// singleflight re-panics a DoChan callback on its own goroutine, which would crash the whole API.
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("Panic while generating attachment preview %s: %v\n%s", cacheKey, r, debug.Stack())
+			err = fmt.Errorf("panic while generating attachment preview %s: %v", cacheKey, r)
+		}
+	}()
+
+	// A flight that just finished may have cached it after this caller's lookup.
+	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
+		return preview, nil
+	}
+
+	preview, err = g.generate(ctx, open, previewSize)
 	if err != nil {
 		return nil, err
 	}
 
 	cacheTaskAttachmentPreview(cacheKey, preview)
-	log.Infof("Attachment image preview for task attachment %v of size %v created and cached", ta.ID, previewSize)
+	log.Infof("Attachment image preview %s created and cached", cacheKey)
 	return preview, nil
 }
 
