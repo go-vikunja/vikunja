@@ -80,7 +80,7 @@ func RegisterTaskAttachmentRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "task-attachments-download",
 		Summary:     "Download a task attachment",
-		Description: "Returns the raw bytes of one attachment. Requires read access to the task. Pass preview_size to get a downscaled PNG preview instead — only for image attachments; for non-images or an unknown size the original file is returned. The Content-Type header carries the file's real mime type.",
+		Description: "Returns the raw bytes of one attachment. Requires read access to the task. Pass preview_size to get a downscaled preview instead, as a JPEG or, when the image has transparency, as a PNG — only for image attachments; for non-images or an unknown size the original file is returned. The Content-Type header carries the mime type of the bytes that are returned.",
 		Method:      http.MethodGet,
 		Path:        "/tasks/{task}/attachments/{attachment}",
 		Tags:        tags,
@@ -166,7 +166,7 @@ func taskAttachmentsUpload(ctx context.Context, in *taskAttachmentUploadInput) (
 func taskAttachmentsDownload(ctx context.Context, in *struct {
 	TaskID       int64  `path:"task" doc:"The id of the task the attachment belongs to."`
 	AttachmentID int64  `path:"attachment" doc:"The id of the attachment to download."`
-	PreviewSize  string `query:"preview_size" enum:"sm,md,lg,xl" doc:"If set and the attachment is an image, return a downscaled PNG preview instead of the original: sm=100px, md=200px, lg=400px, xl=800px. Ignored for non-image attachments."`
+	PreviewSize  string `query:"preview_size" enum:"sm,md,lg,xl" doc:"If set and the attachment is an image, return a downscaled preview instead of the original: sm=100px, md=200px, lg=400px, xl=800px. The preview is a JPEG, or a PNG when the image has transparency. Ignored for non-image attachments."`
 }) (*huma.StreamResponse, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {

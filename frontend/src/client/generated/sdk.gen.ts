@@ -2623,7 +2623,7 @@ export const taskAttachmentsDelete = <ThrowOnError extends boolean = true>(optio
 /**
  * Download a task attachment
  *
- * Returns the raw bytes of one attachment. Requires read access to the task. Pass preview_size to get a downscaled PNG preview instead — only for image attachments; for non-images or an unknown size the original file is returned. The Content-Type header carries the file's real mime type.
+ * Returns the raw bytes of one attachment. Requires read access to the task. Pass preview_size to get a downscaled preview instead, as a JPEG or, when the image has transparency, as a PNG — only for image attachments; for non-images or an unknown size the original file is returned. The Content-Type header carries the mime type of the bytes that are returned.
  */
 export const taskAttachmentsDownload = <ThrowOnError extends boolean = true>(options: Options<TaskAttachmentsDownloadData, ThrowOnError>): RequestResult<TaskAttachmentsDownloadResponses, TaskAttachmentsDownloadErrors, ThrowOnError> => (options.client ?? client).get<TaskAttachmentsDownloadResponses, TaskAttachmentsDownloadErrors, ThrowOnError>({
     security: [{
