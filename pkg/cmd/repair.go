@@ -35,6 +35,7 @@ Available repair operations:
   projects         - Fix orphaned projects with missing parents
   file-mime-types  - Detect and set MIME types for files
   orphan-positions - Remove orphaned task position records
+  attachment-previews - Remove legacy attachment previews from the keyvalue store
 
 Most subcommands support --dry-run to preview changes without applying them.`,
 }
