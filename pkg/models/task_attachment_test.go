@@ -207,7 +207,7 @@ func TestAttachmentPreviewRejectsLargeImages(t *testing.T) {
 		},
 	}
 
-	result := attachment.GetPreview(PreviewMedium)
+	result := attachment.GetPreview(t.Context(), PreviewMedium)
 	assert.Nil(t, result, "Preview should be nil for images exceeding max pixel count")
 }
 
@@ -249,7 +249,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 	t.Run("image", func(t *testing.T) {
 		ta := imageAttachment(t, 910001, testPNG(t, 400, 300))
 
-		preview, err := ta.loadFileAndPreview(PreviewMedium)
+		preview, err := ta.loadFileAndPreview(t.Context(), PreviewMedium)
 		require.NoError(t, err)
 
 		cfg, format, err := image.DecodeConfig(bytes.NewReader(preview))
@@ -276,7 +276,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ta := imageAttachment(t, tc.id, tc.content)
 
-			preview, err := ta.loadFileAndPreview(PreviewMedium)
+			preview, err := ta.loadFileAndPreview(t.Context(), PreviewMedium)
 			require.NoError(t, err)
 			assert.Nil(t, preview)
 
