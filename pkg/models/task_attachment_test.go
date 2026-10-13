@@ -179,6 +179,25 @@ func TestTaskAttachment_Delete(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, os.IsNotExist(err))
 	})
+	t.Run("removes the previews", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		content := testPNG(t, 400, 300)
+		ta := &TaskAttachment{TaskID: 1}
+		require.NoError(t, ta.NewAttachment(s, bytes.NewReader(content), "image.png", uint64(len(content)), u))
+		preview, err := ta.GetPreview(t.Context(), PreviewMedium)
+		require.NoError(t, err)
+		require.NoError(t, preview.Close())
+		storedPreview(t, ta.FileID, PreviewMedium)
+
+		require.NoError(t, ta.Delete(s, u))
+
+		_, _, err = ta.File.OpenPreview(PreviewMedium)
+		require.ErrorIs(t, err, fs.ErrNotExist)
+	})
 	t.Run("Nonexisting", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		db.LoadAndAssertFixtures(t)
@@ -798,7 +817,10 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 
-		for _, size := range []PreviewSize{PreviewSmall, PreviewMedium} {
+		for _, size := range []PreviewSize{
+			PreviewSmall,
+			PreviewMedium,
+		} {
 			preview, err := g.get(t.Context(), fileID, source.open, size)
 			require.NoError(t, err)
 			cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
