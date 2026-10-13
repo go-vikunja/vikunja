@@ -1,6 +1,6 @@
 <template>
 	<Modal
-		@close="$router.back()"
+		@close="goBack()"
 		@submit="deleteProject()"
 	>
 		<template #header>
@@ -38,6 +38,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import {useDeleteProjectMutation} from '@/client/queries/projects'
 import Loading from '@/components/misc/Loading.vue'
+import {useGoBack} from '@/composables/useGoBack'
 import {useProjects} from '@/composables/useProjects'
 import {useTasks} from '@/composables/useTasks'
 
@@ -46,6 +47,7 @@ const projectList = useProjects()
 const deleteMutation = useDeleteProjectMutation()
 const route = useRoute()
 const router = useRouter()
+const goBack = useGoBack()
 
 
 

@@ -3,7 +3,7 @@
 		:overflow="true"
 		:wide="wide"
 		:aria-label="title"
-		@close="$router.back()"
+		@close="goBack()"
 	>
 		<Card
 			:title="title"
@@ -12,7 +12,7 @@
 			class="has-text-start"
 			:loading="currentLoading"
 			:show-close="true"
-			@close="$router.back()"
+			@close="goBack()"
 		>
 			<div class="p-4">
 				<slot />
@@ -30,7 +30,7 @@
 					</XButton>
 					<XButton
 						variant="secondary"
-						@click.prevent.stop="$router.back()"
+						@click.prevent.stop="goBack()"
 					>
 						{{ $t('misc.cancel') }}
 					</XButton>
@@ -56,6 +56,8 @@ import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import {computed, ref, toRef, watch, type PropType} from 'vue'
 
+import {useGoBack} from '@/composables/useGoBack'
+
 const props = defineProps({
 	title: {type: String, required: true},
 	primaryLabel: {type: String, default: ''},
@@ -73,6 +75,8 @@ const emit = defineEmits<{
 	'tertiary': [event: MouseEvent],
 	'update:loading': [value: boolean],
 }>()
+
+const goBack = useGoBack()
 
 const loadingProp = toRef(props, 'loading')
 const currentLoading = ref(false)
