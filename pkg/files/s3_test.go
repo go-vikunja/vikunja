@@ -178,6 +178,10 @@ func TestFileStorageIntegration(t *testing.T) {
 		require.NoError(t, err, "Failed to delete large file")
 	})
 
+	t.Run("Store previews with s3", func(t *testing.T) {
+		assertStoresPreviews(t, storage)
+	})
+
 	t.Run("File not found with s3", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
