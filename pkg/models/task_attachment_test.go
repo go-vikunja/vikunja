@@ -19,15 +19,18 @@ package models
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"hash/crc32"
 	"image"
 	"image/png"
 	"io"
 	"os"
+	"sync/atomic"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -193,23 +196,13 @@ func TestTaskAttachment_Delete(t *testing.T) {
 }
 
 func TestAttachmentPreviewRejectsLargeImages(t *testing.T) {
-	// Create a 10000x10000 pixel image (100M pixels, well above the 50M limit)
-	// As a PNG this is small on disk but huge when decoded into memory
-	img := image.NewNRGBA(image.Rect(0, 0, 10000, 10000))
-	var buf bytes.Buffer
-	err := png.Encode(&buf, img)
-	require.NoError(t, err)
-
-	attachment := &TaskAttachment{
-		ID: 999999,
-		File: &files.File{
-			File: io.NopCloser(bytes.NewReader(buf.Bytes())),
-		},
-	}
+	// 100M pixels, well above the 50M limit: small on disk but huge when decoded into memory
+	attachment := imageAttachment(t, 910004, pngHeader(10000, 10000))
 
 	result, err := attachment.GetPreview(t.Context(), PreviewMedium)
 	require.Error(t, err)
 	assert.True(t, IsErrTaskAttachmentNotPreviewable(err))
+	assert.True(t, imageutils.IsErrImageTooLarge(err))
 	assert.Nil(t, result, "Preview should be nil for images exceeding max pixel count")
 }
 
@@ -251,7 +244,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 	t.Run("image", func(t *testing.T) {
 		ta := imageAttachment(t, 910001, testPNG(t, 400, 300))
 
-		preview, err := ta.loadFileAndPreview(t.Context(), PreviewMedium)
+		preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
 		require.NoError(t, err)
 
 		cfg, format, err := image.DecodeConfig(bytes.NewReader(preview))
@@ -259,6 +252,21 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		assert.Equal(t, "png", format)
 		assert.Equal(t, PreviewMedium.GetSize(), cfg.Width)
 		assert.Equal(t, 150, cfg.Height)
+		assert.Nil(t, ta.File.File, "the original must not be opened when a preview is served")
+	})
+
+	t.Run("missing file is an error", func(t *testing.T) {
+		ta := &TaskAttachment{
+			ID: 910005,
+			File: &files.File{
+				ID:   910005,
+				Mime: "image/png",
+			},
+		}
+
+		_, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+		require.Error(t, err)
+		assert.True(t, files.IsErrFileDoesNotExist(err))
 	})
 
 	fallbacks := map[string]struct {
@@ -278,7 +286,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ta := imageAttachment(t, tc.id, tc.content)
 
-			preview, err := ta.loadFileAndPreview(t.Context(), PreviewMedium)
+			preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
 			require.NoError(t, err)
 			assert.Nil(t, preview)
 
@@ -288,6 +296,73 @@ func TestTaskAttachment_Preview(t *testing.T) {
 			assert.Equal(t, tc.content, original)
 		})
 	}
+}
+
+type trackedSource struct {
+	content []byte
+	opened  atomic.Int32
+	closed  atomic.Int32
+}
+
+func (s *trackedSource) open() (io.ReadCloser, error) {
+	s.opened.Add(1)
+	return &trackedReader{
+		Reader: bytes.NewReader(s.content),
+		source: s,
+	}, nil
+}
+
+type trackedReader struct {
+	io.Reader
+	source *trackedSource
+}
+
+func (r *trackedReader) Close() error {
+	r.source.closed.Add(1)
+	return nil
+}
+
+func TestGeneratePreview_ClosesEverySourceHandle(t *testing.T) {
+	tests := map[string]struct {
+		content        []byte
+		opened         int32
+		notPreviewable bool
+	}{
+		"image": {
+			content: testPNG(t, 400, 300),
+			opened:  2,
+		},
+		"undecodable image": {
+			content:        append(pngHeader(400, 300), []byte("not image data")...),
+			opened:         2,
+			notPreviewable: true,
+		},
+		"image over the pixel limit is never opened for decoding": {
+			content:        pngHeader(10000, 10000),
+			opened:         1,
+			notPreviewable: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			source := &trackedSource{content: tc.content}
+
+			_, err := generatePreview(source.open, PreviewMedium)
+
+			assert.Equal(t, tc.notPreviewable, IsErrTaskAttachmentNotPreviewable(err), "err: %v", err)
+			assert.Equal(t, tc.opened, source.opened.Load())
+			assert.Equal(t, source.opened.Load(), source.closed.Load())
+		})
+	}
+
+	t.Run("source that cannot be opened is an error", func(t *testing.T) {
+		openErr := errors.New("storage unavailable")
+
+		_, err := generatePreview(func() (io.ReadCloser, error) { return nil, openErr }, PreviewMedium)
+
+		require.ErrorIs(t, err, openErr)
+		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
+	})
 }
 
 func TestTaskAttachment_Permissions(t *testing.T) {
