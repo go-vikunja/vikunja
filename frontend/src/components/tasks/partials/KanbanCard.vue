@@ -1,5 +1,6 @@
 <template>
 	<div
+		ref="card"
 		class="task loader-container draggable"
 		:class="{
 			'is-loading': showLoading,
@@ -122,7 +123,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import {useGlobalNow} from '@/composables/useGlobalNow'
@@ -245,13 +246,47 @@ async function maybeDownloadCoverImage() {
 	}
 }
 
+const card = useTemplateRef<HTMLElement>('card')
+const hasBeenVisible = ref(false)
+let visibilityObserver: IntersectionObserver | undefined
+
+// rootMargin only grows the viewport; buckets scroll on their own and need scrollMargin
+const COVER_PRELOAD_MARGIN = '200px'
+
+onMounted(() => {
+	if (!card.value) {
+		return
+	}
+
+	visibilityObserver = new IntersectionObserver(
+		entries => {
+			if (!entries.some(entry => entry.isIntersecting)) {
+				return
+			}
+			hasBeenVisible.value = true
+			visibilityObserver?.disconnect()
+		},
+		{
+			rootMargin: COVER_PRELOAD_MARGIN,
+			scrollMargin: COVER_PRELOAD_MARGIN,
+		},
+	)
+	visibilityObserver.observe(card.value)
+})
+
 watch(
-	() => props.task.cover_image_attachment_id,
-	maybeDownloadCoverImage,
-	{immediate: true},
+	[hasBeenVisible, () => props.task.cover_image_attachment_id],
+	([visible]) => {
+		if (visible) {
+			maybeDownloadCoverImage()
+		}
+	},
 )
 
-onBeforeUnmount(() => showCoverImage(null))
+onBeforeUnmount(() => {
+	visibilityObserver?.disconnect()
+	showCoverImage(null)
+})
 </script>
 
 <style lang="scss" scoped>
