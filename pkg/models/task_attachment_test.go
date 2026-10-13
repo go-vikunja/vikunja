@@ -27,6 +27,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -595,6 +596,12 @@ func TestPreviewGenerator_Queue(t *testing.T) {
 	})
 }
 
+// The preview cache outlives a test, so a fixed key would be a cache hit when the test runs again.
+func uniquePreviewCacheKey(t *testing.T) string {
+	t.Helper()
+	return t.Name() + "_" + strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
 func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 	const pixels = 100 * 100
 
@@ -602,6 +609,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 		tracker := newDecodeTracker()
 		source := tracker.source(t, testPNG(t, 100, 100))
+		cacheKey := uniquePreviewCacheKey(t)
 
 		const callers = 6
 		type result struct {
@@ -611,7 +619,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		results := make(chan result, callers)
 		for range callers {
 			go func() {
-				preview, err := g.get(t.Context(), t.Name(), source, PreviewSmall)
+				preview, err := g.get(t.Context(), cacheKey, source, PreviewSmall)
 				results <- result{
 					preview: preview,
 					err:     err,
@@ -638,11 +646,12 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		content := testPNG(t, 100, 100)
 		leaderSource := &trackedSource{content: content}
 		followerSource := &trackedSource{content: content}
+		cacheKey := uniquePreviewCacheKey(t)
 
 		leaderCtx, cancelLeader := context.WithCancel(t.Context())
 		leader := make(chan error, 1)
 		go func() {
-			_, err := g.get(leaderCtx, t.Name(), leaderSource.open, PreviewSmall)
+			_, err := g.get(leaderCtx, cacheKey, leaderSource.open, PreviewSmall)
 			leader <- err
 		}()
 		require.Eventually(t, func() bool { return leaderSource.opened.Load() == 1 }, 5*time.Second, time.Millisecond)
@@ -653,7 +662,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		}
 		follower := make(chan result, 1)
 		go func() {
-			preview, err := g.get(t.Context(), t.Name(), followerSource.open, PreviewSmall)
+			preview, err := g.get(t.Context(), cacheKey, followerSource.open, PreviewSmall)
 			follower <- result{
 				preview: preview,
 				err:     err,
@@ -679,7 +688,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 	t.Run("a panicking decode is an error", func(t *testing.T) {
 		g := newPreviewGenerator(pixels, time.Minute)
 
-		_, err := g.get(t.Context(), t.Name(), func() (io.ReadCloser, error) { panic("broken decoder") }, PreviewSmall)
+		_, err := g.get(t.Context(), uniquePreviewCacheKey(t), func() (io.ReadCloser, error) { panic("broken decoder") }, PreviewSmall)
 
 		require.ErrorContains(t, err, "broken decoder")
 		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
