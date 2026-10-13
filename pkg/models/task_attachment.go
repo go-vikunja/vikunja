@@ -150,7 +150,7 @@ func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []
 	return success, failures, nil
 }
 
-// TaskAttachmentDownload is what a download is answered with. The caller must close it.
+// TaskAttachmentDownload is either a *TaskAttachmentPreview or a *TaskAttachmentOriginal. The caller must close it.
 //
 //sumtype:decl
 type TaskAttachmentDownload interface {
