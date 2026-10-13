@@ -17,6 +17,7 @@
 package models
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
@@ -387,11 +388,7 @@ func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSiz
 	if ta.File.Size > maxPreviewSourceBytes {
 		return nil, ErrTaskAttachmentNotPreviewable{Err: fmt.Errorf("file is %d bytes, previews are limited to %d", ta.File.Size, maxPreviewSourceBytes)}
 	}
-	preview, err := attachmentPreviews.get(ctx, ta.File.ID, fileOpener(ta.File.ID), previewSize)
-	if err != nil {
-		return nil, err
-	}
-	return newTaskAttachmentPreview(preview), nil
+	return attachmentPreviews.get(ctx, ta.File.ID, fileOpener(ta.File.ID), previewSize)
 }
 
 func newTaskAttachmentPreview(preview []byte) *TaskAttachmentPreview {
@@ -402,8 +399,8 @@ func newTaskAttachmentPreview(preview []byte) *TaskAttachmentPreview {
 	}
 }
 
-func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
-	if preview, stored := g.stored(fileID, previewSize); stored {
+func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpener, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
+	if preview, stored := g.openStored(fileID, previewSize); stored {
 		return preview, nil
 	}
 
@@ -420,23 +417,61 @@ func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpe
 		if result.Err != nil {
 			return nil, result.Err
 		}
+		// The flight is shared, so it hands out bytes and every caller gets its own reader.
 		preview, _ := result.Val.([]byte)
-		return preview, nil
+		return newTaskAttachmentPreview(preview), nil
 	}
 }
 
-// stored treats a preview that cannot be read as missing, so it is generated instead of failing the request.
-func (g *previewGenerator) stored(fileID int64, previewSize PreviewSize) (preview []byte, stored bool) {
-	content, _, err := g.store.open(fileID, previewSize)
+// Enough for every image format's magic number.
+const previewHeaderLength = 512
+
+// openStored treats a preview that cannot be read as missing, so it is generated instead of failing the request.
+func (g *previewGenerator) openStored(fileID int64, previewSize PreviewSize) (preview *TaskAttachmentPreview, stored bool) {
+	content, length, err := g.store.open(fileID, previewSize)
 	if err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
 			log.Errorf("Could not open the stored %s preview of file %d: %v", previewSize, fileID, err)
 		}
 		return nil, false
 	}
+
+	buffered := bufio.NewReaderSize(content, previewHeaderLength)
+	header, err := buffered.Peek(previewHeaderLength)
+	if err != nil && !errors.Is(err, io.EOF) {
+		_ = content.Close()
+		log.Errorf("Could not read the stored %s preview of file %d: %v", previewSize, fileID, err)
+		return nil, false
+	}
+
+	mime := mimetype.Detect(header).String()
+	if !strings.HasPrefix(mime, "image/") {
+		_ = content.Close()
+		log.Errorf("The stored %s preview of file %d is not an image but %s", previewSize, fileID, mime)
+		return nil, false
+	}
+
+	return &TaskAttachmentPreview{
+		ReadCloser: struct {
+			io.Reader
+			io.Closer
+		}{
+			Reader: buffered,
+			Closer: content,
+		},
+		Mime: mime,
+		Size: length,
+	}, true
+}
+
+func (g *previewGenerator) readStored(fileID int64, previewSize PreviewSize) (preview []byte, stored bool) {
+	content, stored := g.openStored(fileID, previewSize)
+	if !stored {
+		return nil, false
+	}
 	defer content.Close()
 
-	preview, err = io.ReadAll(content)
+	preview, err := io.ReadAll(content)
 	if err != nil {
 		log.Errorf("Could not read the stored %s preview of file %d: %v", previewSize, fileID, err)
 		return nil, false
@@ -454,7 +489,7 @@ func (g *previewGenerator) generateAndStore(ctx context.Context, fileID int64, o
 	}()
 
 	// A flight that just finished may have stored it after this caller's lookup.
-	if preview, stored := g.stored(fileID, previewSize); stored {
+	if preview, stored := g.readStored(fileID, previewSize); stored {
 		return preview, nil
 	}
 
