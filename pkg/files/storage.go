@@ -25,6 +25,8 @@ import (
 // FileStorage abstracts file storage operations across local, S3, and in-memory backends.
 type FileStorage interface {
 	Open(path string) (io.ReadCloser, error)
+	// OpenWithSize saves the Stat round trip when the length is needed as well.
+	OpenWithSize(path string) (content io.ReadCloser, size int64, err error)
 	Write(path string, content io.ReadSeeker, size uint64) error
 	Stat(path string) (os.FileInfo, error)
 	Remove(path string) error
