@@ -47,6 +47,42 @@ describe('Parse Task Text', () => {
 		expect(result.date?.getMinutes()).toBe(30)
 	})
 
+	it.each([
+		'Epic test task 2026-10-13',
+		'Epic test task 13.10.2026',
+		'Epic test task oct 13',
+		'Epic test task friday',
+		'Epic test task 17th',
+	])('uses the configured default due time for date-only text "%s"', text => {
+		setDefaultDueTime('23:59')
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate(text)
+
+		expect(result.date).not.toBeNull()
+		expect(result.date?.getHours()).toBe(23)
+		expect(result.date?.getMinutes()).toBe(59)
+	})
+
+	it('prefers an explicit time over the configured default due time', () => {
+		setDefaultDueTime('23:59')
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate('Epic test task 2026-10-13 at 15:00')
+
+		expect(result.date?.getHours()).toBe(15)
+		expect(result.date?.getMinutes()).toBe(0)
+	})
+
+	it('keeps midnight for explicit dates when no default due time is configured', () => {
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate('Epic test task 2026-10-13')
+
+		expect(result.date?.getHours()).toBe(0)
+		expect(result.date?.getMinutes()).toBe(0)
+	})
+
 	it('falls back to the existing default due time when no user value is configured', () => {
 		vi.setSystemTime(new Date(2026, 7, 4, 10, 15))
 
