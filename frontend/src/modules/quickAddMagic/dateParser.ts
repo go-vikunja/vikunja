@@ -1,5 +1,5 @@
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
-import {getDateWithTime} from '@/helpers/time/getDateWithTime'
+import {getDateWithTime, getUserDefaultTimeParts} from '@/helpers/time/getDateWithTime'
 import {replaceAll} from '@/helpers/replaceAll'
 
 export interface dateParseResult {
@@ -87,13 +87,13 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 
 	let parsed = getDateFromWeekday(text, now)
 	if (parsed.date !== null) {
-		return addTimeToDate(text, parsed.date, parsed.foundText)
+		return addTimeToDate(text, parsed.date, parsed.foundText, true)
 	}
 
 	parsed = getDayFromText(text, now)
 	if (parsed.date !== null) {
 		const month = getMonthFromText(text, parsed.date)
-		return addTimeToDate(month.newText, month.date, parsed.foundText)
+		return addTimeToDate(month.newText, month.date, parsed.foundText, true)
 	}
 
 	parsed = getDateFromTextIn(text, now)
@@ -116,10 +116,10 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		}
 	}
 
-	return addTimeToDate(text, parsed.date, parsed.foundText)
+	return addTimeToDate(text, parsed.date, parsed.foundText, true)
 }
 
-const addTimeToDate = (text: string, date: Date, previousMatch: string | null): dateParseResult => {
+const addTimeToDate = (text: string, date: Date, previousMatch: string | null, useDefaultTime = false): dateParseResult => {
 	previousMatch = previousMatch?.trim() || ''
 	text = replaceAll(text, previousMatch, '')
 	if (previousMatch === null) {
@@ -153,6 +153,12 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		date.setMinutes(minutes)
 		date.setSeconds(0)
 		date.setMilliseconds(0)
+	} else if (useDefaultTime) {
+		// Only a configured default applies, otherwise the time stays as parsed
+		const defaultTime = getUserDefaultTimeParts()
+		if (defaultTime !== null) {
+			date.setHours(defaultTime.hours, defaultTime.minutes, 0, 0)
+		}
 	}
 
 	const replace = results !== null ? results[0] : previousMatch
