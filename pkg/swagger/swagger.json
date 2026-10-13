@@ -10254,6 +10254,12 @@
                     "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via views with buckets, this is primarily used to sort them based on a range.\nPositions are always saved per view. They will automatically be set if you request the tasks through a view\nendpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.",
                     "type": "number"
                 },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskPosition"
+                    }
+                },
                 "priority": {
                     "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
                     "type": "integer"

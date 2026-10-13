@@ -935,6 +935,10 @@ definitions:
           Positions are always saved per view. They will automatically be set if you request the tasks through a view
           endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
         type: number
+      positions:
+        items:
+          $ref: '#/definitions/models.TaskPosition'
+        type: array
       priority:
         description: The task priority. Can be anything you want, it is possible to
           sort by this later.
