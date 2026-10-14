@@ -918,7 +918,10 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 
-		for _, size := range []PreviewSize{PreviewSmall, PreviewMedium} {
+		for _, size := range []PreviewSize{
+			PreviewSmall,
+			PreviewMedium,
+		} {
 			preview, err := g.get(t.Context(), fileID, source.open, size)
 			require.NoError(t, err)
 			cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))

@@ -36,12 +36,15 @@ func useStorage(t *testing.T, s FileStorage) {
 }
 
 // The S3 backend is covered by TestFileStorageIntegration.
-func TestFilePreview(t *testing.T) {
-	backends := map[string]func(t *testing.T) FileStorage{
+func previewBackends() map[string]func(t *testing.T) FileStorage {
+	return map[string]func(t *testing.T) FileStorage{
 		"local":  func(t *testing.T) FileStorage { return newLocalStorage(t.TempDir()) },
 		"memory": func(*testing.T) FileStorage { return newMemStorage() },
 	}
-	for name, newBackend := range backends {
+}
+
+func TestFilePreview(t *testing.T) {
+	for name, newBackend := range previewBackends() {
 		t.Run(name, func(t *testing.T) {
 			assertStoresPreviews(t, newBackend(t))
 		})
@@ -51,7 +54,10 @@ func TestFilePreview(t *testing.T) {
 		useStorage(t, newMemStorage())
 		file := &File{ID: 1}
 
-		for _, size := range []PreviewSize{PreviewSizeUnknown, "../1"} {
+		for _, size := range []PreviewSize{
+			PreviewSizeUnknown,
+			"../1",
+		} {
 			require.Error(t, file.SavePreview(size, []byte("preview")))
 			_, _, err := file.OpenPreview(size)
 			require.Error(t, err)
@@ -99,11 +105,6 @@ func assertStoresPreviews(t *testing.T, backend FileStorage) {
 }
 
 func TestFilePreview_Cleanup(t *testing.T) {
-	backends := map[string]func(t *testing.T) FileStorage{
-		"local":  func(t *testing.T) FileStorage { return newLocalStorage(t.TempDir()) },
-		"memory": func(*testing.T) FileStorage { return newMemStorage() },
-	}
-
 	savePreviews := func(t *testing.T, file *File) {
 		t.Helper()
 		for _, size := range storedPreviewSizes {
@@ -123,7 +124,7 @@ func TestFilePreview_Cleanup(t *testing.T) {
 		}
 	}
 
-	for name, newBackend := range backends {
+	for name, newBackend := range previewBackends() {
 		t.Run(name, func(t *testing.T) {
 			t.Run("deleting a file removes its previews", func(t *testing.T) {
 				useStorage(t, newBackend(t))
