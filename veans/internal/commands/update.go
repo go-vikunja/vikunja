@@ -69,6 +69,7 @@ func newUpdateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			rt.withURLs(task)
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}

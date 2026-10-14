@@ -63,6 +63,7 @@ Filters can be combined; they're AND-ed together:
 			if err != nil {
 				return err
 			}
+			rt.withURLs(tasks...)
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(tasks)
 		},
 	}
