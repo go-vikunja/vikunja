@@ -44,6 +44,8 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - name: Git describe
         id: ghd
@@ -103,6 +105,18 @@ jobs:
         run: |
           cosign sign --yes --recursive "vikunja/vikunja@${DIGEST}"
           cosign sign --yes --recursive "ghcr.io/go-vikunja/vikunja@${DIGEST}"
+      - name: Attest build provenance (Docker Hub)
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: docker.io/vikunja/vikunja
+          subject-digest: ${{ steps.build-version.outputs.digest || steps.build-unstable.outputs.digest }}
+          push-to-registry: true
+      - name: Attest build provenance (GHCR)
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ghcr.io/go-vikunja/vikunja
+          subject-digest: ${{ steps.build-version.outputs.digest || steps.build-unstable.outputs.digest }}
+          push-to-registry: true
 
   binaries:
     runs-on: blacksmith-8vcpu-ubuntu-2204
