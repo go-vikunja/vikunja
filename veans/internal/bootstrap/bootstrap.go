@@ -269,6 +269,7 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	// 12. Write .veans.yml.
 	cfg := &config.Config{
 		Server:            opts.Server,
+		FrontendURL:       info.FrontendURL,
 		ProjectID:         project.ID,
 		ProjectIdentifier: project.Identifier,
 		ViewID:            view.ID,
