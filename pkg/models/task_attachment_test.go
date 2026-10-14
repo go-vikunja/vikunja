@@ -25,6 +25,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -863,6 +864,29 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, generated, storedPreview(t, fileID, PreviewSmall))
 		assert.Equal(t, store.opened.Load(), store.closed.Load())
+	})
+
+	t.Run("a stored preview that is neither jpeg nor png is generated again", func(t *testing.T) {
+		svg := []byte(`<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>`)
+		var gifPreview bytes.Buffer
+		require.NoError(t, gif.Encode(&gifPreview, image.NewGray(image.Rect(0, 0, 100, 100)), nil))
+		stored := map[string][]byte{
+			"svg": svg,
+			"gif": gifPreview.Bytes(),
+		}
+		for name, content := range stored {
+			t.Run(name, func(t *testing.T) {
+				fileID := uniquePreviewFileID()
+				require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, content))
+				source := &trackedSource{content: testPNG(t, 400, 300)}
+
+				preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+
+				require.NoError(t, err)
+				assert.Equal(t, "image/png", preview.Mime)
+				assert.Equal(t, readPreview(t, preview), storedPreview(t, fileID, PreviewSmall))
+			})
+		}
 	})
 
 	t.Run("a generated preview is not generated again, even after a restart", func(t *testing.T) {

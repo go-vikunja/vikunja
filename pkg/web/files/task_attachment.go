@@ -73,6 +73,7 @@ func WriteAttachmentDownload(w http.ResponseWriter, r *http.Request, download mo
 	case *models.TaskAttachmentPreview:
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Content-Type", d.Mime)
+		w.Header().Set("X-Content-Type-Options", "nosniff")
 		if d.Size >= 0 {
 			w.Header().Set("Content-Length", strconv.FormatInt(d.Size, 10))
 		}

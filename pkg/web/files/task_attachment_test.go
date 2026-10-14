@@ -94,6 +94,7 @@ func TestWriteAttachmentDownload(t *testing.T) {
 		assert.Equal(t, "image/jpeg", rec.Header().Get("Content-Type"))
 		assert.Equal(t, "7", rec.Header().Get("Content-Length"))
 		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
+		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
 		assert.Equal(t, 1, content.closed)
 	})
 
