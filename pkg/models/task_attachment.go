@@ -619,18 +619,7 @@ const (
 )
 
 func GetPreviewSizeFromString(size string) PreviewSize {
-	switch size {
-	case "sm":
-		return PreviewSmall
-	case "md":
-		return PreviewMedium
-	case "lg":
-		return PreviewLarge
-	case "xl":
-		return PreviewExtraLarge
-	}
-
-	return PreviewSizeUnknown
+	return files.GetPreviewSizeFromString(size)
 }
 
 func resizeImage(img image.Image, width int) *image.NRGBA {
