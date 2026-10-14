@@ -287,7 +287,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 
 	t.Run("cancelled caller gets an error instead of the original", func(t *testing.T) {
 		ta := imageAttachment(t, 910007, testPNG(t, 400, 300))
-		exhaustAttachmentPreviewBudget(t, time.Minute)
+		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
