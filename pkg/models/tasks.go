@@ -180,6 +180,10 @@ type Task struct {
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who created this task. Set by the server."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
 
+	// Null for tasks soft-deleted before this was tracked.
+	DeletedBy   *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded."`
+	DeletedByID int64      `xorm:"bigint null 'deleted_by_id'" json:"-"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
