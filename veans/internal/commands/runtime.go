@@ -69,6 +69,18 @@ func loadRuntime() (*runtime, error) {
 	}, nil
 }
 
+// withURLs sets URL on tasks and their related tasks for agent output.
+func (r *runtime) withURLs(tasks ...*client.Task) {
+	for _, t := range tasks {
+		t.URL = r.cfg.TaskURL(t.ID)
+		for _, related := range t.RelatedTasks {
+			for _, task := range related {
+				task.URL = r.cfg.TaskURL(task.ID)
+			}
+		}
+	}
+}
+
 // resolveTaskID accepts PROJ-NN, #NN, or a bare integer and returns the
 // numeric task ID. The project identifier from .veans.yml is used to verify
 // the prefix matches; mismatches error out so an agent can't accidentally
