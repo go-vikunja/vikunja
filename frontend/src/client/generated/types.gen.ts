@@ -2136,6 +2136,10 @@ export type Task = {
      * When this task was soft-deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
      */
     readonly deleted_at?: string;
+    /**
+     * The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded.
+     */
+    readonly deleted_by?: User;
     description?: string;
     done?: boolean;
     /**
@@ -2473,6 +2477,10 @@ export type TaskReadOneBody = {
      * When this task was soft-deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
      */
     readonly deleted_at?: string;
+    /**
+     * The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded.
+     */
+    readonly deleted_by?: User;
     description?: string;
     done?: boolean;
     /**
@@ -2831,6 +2839,10 @@ export type TimeEntry = {
      */
     readonly id?: number;
     /**
+     * Whether the entry's task is in the trash. Such entries are read-only.
+     */
+    readonly in_trash?: boolean;
+    /**
      * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
      */
     project_id?: number;
@@ -2873,6 +2885,10 @@ export type TimeEntryReadBody = {
      * The unique, numeric id of this time entry.
      */
     readonly id?: number;
+    /**
+     * Whether the entry's task is in the trash. Such entries are read-only.
+     */
+    readonly in_trash?: boolean;
     /**
      * The maximum permission the requesting user has on this time entry (0=read, 1=read/write, 2=admin).
      */
@@ -3354,6 +3370,10 @@ export type VikunjaErrorModel = {
      * A human-readable explanation specific to this occurrence of the problem.
      */
     detail?: string;
+    /**
+     * Error-specific data; its shape depends on code.
+     */
+    readonly details?: unknown;
     /**
      * Optional list of individual error details
      */
@@ -8862,6 +8882,73 @@ export type TasksBulkUpdateResponses = {
 
 export type TasksBulkUpdateResponse = TasksBulkUpdateResponses[keyof TasksBulkUpdateResponses];
 
+export type TasksTrashEmptyData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/tasks/deleted';
+};
+
+export type TasksTrashEmptyErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksTrashEmptyError = TasksTrashEmptyErrors[keyof TasksTrashEmptyErrors];
+
+export type TasksTrashEmptyResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type TasksTrashEmptyResponse = TasksTrashEmptyResponses[keyof TasksTrashEmptyResponses];
+
+export type TasksTrashListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number.
+         */
+        page?: number;
+        /**
+         * Items per page. Defaults to the instance's configured maximum (service.maxitemsperpage, reported as max_items_per_page by /info) and is silently capped at it; asking for more is not an error.
+         */
+        per_page?: number;
+        /**
+         * Search query; filters the list to items matching this string.
+         */
+        q?: string;
+        /**
+         * How rich-text fields are exchanged. See the API description.
+         */
+        format?: 'html' | 'markdown';
+    };
+    url: '/tasks/deleted';
+};
+
+export type TasksTrashListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksTrashListError = TasksTrashListErrors[keyof TasksTrashListErrors];
+
+export type TasksTrashListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedTask;
+};
+
+export type TasksTrashListResponse = TasksTrashListResponses[keyof TasksTrashListResponses];
+
 export type TaskTimeEntriesListData = {
     body?: never;
     path: {
@@ -9690,6 +9777,36 @@ export type TaskLabelsDeleteResponses = {
 
 export type TaskLabelsDeleteResponse = TaskLabelsDeleteResponses[keyof TaskLabelsDeleteResponses];
 
+export type TasksDeletePermanentlyData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/permanent';
+};
+
+export type TasksDeletePermanentlyErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksDeletePermanentlyError = TasksDeletePermanentlyErrors[keyof TasksDeletePermanentlyErrors];
+
+export type TasksDeletePermanentlyResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type TasksDeletePermanentlyResponse = TasksDeletePermanentlyResponses[keyof TasksDeletePermanentlyResponses];
+
 export type TasksPositionUpdateData = {
     body: TaskPositionWritable;
     path: {
@@ -9817,6 +9934,41 @@ export type TasksRelationsDeleteResponses = {
 };
 
 export type TasksRelationsDeleteResponse = TasksRelationsDeleteResponses[keyof TasksRelationsDeleteResponses];
+
+export type TasksRestoreData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        task: number;
+    };
+    query?: {
+        /**
+         * How rich-text fields are exchanged. See the API description.
+         */
+        format?: 'html' | 'markdown';
+    };
+    url: '/tasks/{task}/restore';
+};
+
+export type TasksRestoreErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksRestoreError = TasksRestoreErrors[keyof TasksRestoreErrors];
+
+export type TasksRestoreResponses = {
+    /**
+     * OK
+     */
+    200: Task;
+};
+
+export type TasksRestoreResponse = TasksRestoreResponses[keyof TasksRestoreResponses];
 
 export type TeamsListData = {
     body?: never;
