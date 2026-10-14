@@ -410,8 +410,12 @@ func newTaskAttachmentPreview(preview []byte) *TaskAttachmentPreview {
 }
 
 func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpener, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
-	if preview, stored := g.openStored(fileID, previewSize); stored {
+	preview, err := g.openStored(fileID, previewSize)
+	if err == nil {
 		return preview, nil
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		log.Errorf("Could not use the stored %s preview of file %d: %v", previewSize, fileID, err)
 	}
 
 	flightKey := strconv.FormatInt(fileID, 10) + "_" + string(previewSize)
@@ -436,29 +440,24 @@ func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpe
 // Enough for every image format's magic number.
 const previewHeaderLength = 512
 
-// openStored treats a preview that cannot be read as missing, so it is generated instead of failing the request.
-func (g *previewGenerator) openStored(fileID int64, previewSize PreviewSize) (preview *TaskAttachmentPreview, stored bool) {
+// Any error means the preview is generated instead of failing the request.
+func (g *previewGenerator) openStored(fileID int64, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
 	content, length, err := g.store.open(fileID, previewSize)
 	if err != nil {
-		if !errors.Is(err, fs.ErrNotExist) {
-			log.Errorf("Could not open the stored %s preview of file %d: %v", previewSize, fileID, err)
-		}
-		return nil, false
+		return nil, err
 	}
 
 	buffered := bufio.NewReaderSize(content, previewHeaderLength)
 	header, err := buffered.Peek(previewHeaderLength)
 	if err != nil && !errors.Is(err, io.EOF) {
 		_ = content.Close()
-		log.Errorf("Could not read the stored %s preview of file %d: %v", previewSize, fileID, err)
-		return nil, false
+		return nil, fmt.Errorf("reading its header: %w", err)
 	}
 
 	mime := mimetype.Detect(header).String()
 	if !strings.HasPrefix(mime, "image/") {
 		_ = content.Close()
-		log.Errorf("The stored %s preview of file %d is not an image but %s", previewSize, fileID, mime)
-		return nil, false
+		return nil, fmt.Errorf("not an image but %s", mime)
 	}
 
 	return &TaskAttachmentPreview{
@@ -471,17 +470,18 @@ func (g *previewGenerator) openStored(fileID int64, previewSize PreviewSize) (pr
 		},
 		Mime: mime,
 		Size: length,
-	}, true
+	}, nil
 }
 
+// The caller's own lookup already logged why the stored preview is unusable.
 func (g *previewGenerator) readStored(fileID int64, previewSize PreviewSize) (preview []byte, stored bool) {
-	content, stored := g.openStored(fileID, previewSize)
-	if !stored {
+	content, err := g.openStored(fileID, previewSize)
+	if err != nil {
 		return nil, false
 	}
 	defer content.Close()
 
-	preview, err := io.ReadAll(content)
+	preview, err = io.ReadAll(content)
 	if err != nil {
 		log.Errorf("Could not read the stored %s preview of file %d: %v", previewSize, fileID, err)
 		return nil, false
