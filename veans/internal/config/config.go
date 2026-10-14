@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,6 +46,10 @@ type Config struct {
 	ViewID            int64   `yaml:"view_id"`
 	Buckets           Buckets `yaml:"buckets"`
 	Bot               Bot     `yaml:"bot"`
+
+	// FrontendURL can differ from Server when the API sits behind another
+	// origin. Empty in configs written before it existed; TaskURL falls back.
+	FrontendURL string `yaml:"frontend_url,omitempty"`
 
 	// HTTPTimeout overrides the default 30s HTTP client timeout when
 	// non-zero. Accepts Go duration syntax in YAML ("60s", "5m", "1h30m").
@@ -80,6 +85,16 @@ func (c *Config) FormatTaskID(index int64) string {
 		return fmt.Sprintf("%s-%d", c.ProjectIdentifier, index)
 	}
 	return fmt.Sprintf("#%d", index)
+}
+
+// TaskURL is the web UI link to a task. The frontend renders it as a task
+// pill when it appears as an anchor whose text equals its href.
+func (c *Config) TaskURL(id int64) string {
+	base := c.FrontendURL
+	if base == "" {
+		base = c.Server
+	}
+	return strings.TrimRight(base, "/") + "/tasks/" + strconv.FormatInt(id, 10)
 }
 
 // Find walks upward from cwd looking for .veans.yml. Returns ErrNotFound if

@@ -50,6 +50,25 @@ func TestFormatTaskID(t *testing.T) {
 	}
 }
 
+func TestTaskURL(t *testing.T) {
+	cases := []struct {
+		name string
+		cfg  Config
+		want string
+	}{
+		{"frontend url wins", Config{Server: "https://api.example.com", FrontendURL: "https://vikunja.example.com/"}, "https://vikunja.example.com/tasks/42"},
+		{"falls back to server", Config{Server: "https://vikunja.example.com"}, "https://vikunja.example.com/tasks/42"},
+		{"keeps subpath", Config{FrontendURL: "https://example.com/vikunja/"}, "https://example.com/vikunja/tasks/42"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.cfg.TaskURL(42); got != tc.want {
+				t.Errorf("got %q want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestFindAndLoadRoundtrip(t *testing.T) {
 	dir := t.TempDir()
 	deeper := filepath.Join(dir, "a", "b", "c")
