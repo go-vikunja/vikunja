@@ -23,6 +23,7 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -386,6 +387,7 @@ func (g *previewGenerator) generateAndCache(ctx context.Context, cacheKey string
 	// singleflight re-panics a DoChan callback on its own goroutine, which would crash the whole API.
 	defer func() {
 		if r := recover(); r != nil {
+			log.Errorf("Panic while generating attachment preview %s: %v\n%s", cacheKey, r, debug.Stack())
 			err = fmt.Errorf("panic while generating attachment preview %s: %v", cacheKey, r)
 		}
 	}()
