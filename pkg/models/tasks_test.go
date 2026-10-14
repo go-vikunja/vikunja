@@ -855,6 +855,24 @@ func TestTask_Delete(t *testing.T) {
 
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 13, "deleted_by_id": -2}, false)
 	})
+	t.Run("stops running timers on the task", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := (&Task{ID: 1}).Delete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Fixture 4 is user 1's running timer on task 1
+		s2 := db.NewSession()
+		defer s2.Close()
+		entry := &TimeEntry{}
+		has, err := s2.Where("id = ?", 4).Get(entry)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.NotNil(t, entry.EndTime)
+	})
 }
 
 func TestHardDeleteTask(t *testing.T) {
@@ -882,7 +900,7 @@ func TestHardDeleteTask(t *testing.T) {
 	_, err = s.Insert(&Reaction{EntityID: 1, EntityKind: ReactionKindComment, UserID: 1, Value: "👍"})
 	require.NoError(t, err)
 
-	err = hardDeleteTask(s, &Task{ID: 1})
+	err = hardDeleteTask(s, &Task{ID: 1, ProjectID: 1})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 
@@ -908,6 +926,10 @@ func TestHardDeleteTask(t *testing.T) {
 	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindComment})
 	// The attachment files are gone too
 	db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+	// Time entries 1 and 4 move to the task's project
+	db.AssertMissing(t, "time_entries", map[string]interface{}{"task_id": 1})
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 1, "task_id": 0, "project_id": 1}, false)
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 4, "task_id": 0, "project_id": 1}, false)
 }
 
 func TestUpdateTasksHelper(t *testing.T) {
