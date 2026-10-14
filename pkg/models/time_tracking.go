@@ -124,6 +124,21 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) 
 	return running, nil
 }
 
+// Stops every user's running timer on the task, not just the doer's.
+func stopRunningTimersOnTask(s *xorm.Session, taskID int64, doer *user.User) error {
+	running := []*TimeEntry{}
+	if err := s.Where("task_id = ? AND end_time IS NULL", taskID).Find(&running); err != nil {
+		return err
+	}
+	for _, entry := range running {
+		if err := entry.stop(s); err != nil {
+			return err
+		}
+		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: entry, Doer: doer})
+	}
+	return nil
+}
+
 // StopRunningTimer stops the authenticated user's active timer and returns it,
 // or ErrNoRunningTimer when none is running. The stop time is the server's now.
 func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {

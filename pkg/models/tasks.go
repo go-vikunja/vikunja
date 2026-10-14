@@ -2167,6 +2167,10 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	doer := doerFromAuth(s, a)
 
+	if err = stopRunningTimersOnTask(s, t.ID, doer); err != nil {
+		return err
+	}
+
 	_, err = s.ID(t.ID).Cols("deleted_by_id").NoAutoTime().Update(&Task{DeletedByID: doer.ID})
 	if err != nil {
 		return err

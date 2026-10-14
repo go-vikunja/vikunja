@@ -801,6 +801,24 @@ func TestTask_Delete(t *testing.T) {
 
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 13, "deleted_by_id": -2}, false)
 	})
+	t.Run("stops running timers on the task", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := (&Task{ID: 1}).Delete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Fixture 4 is user 1's running timer on task 1
+		s2 := db.NewSession()
+		defer s2.Close()
+		entry := &TimeEntry{}
+		has, err := s2.Where("id = ?", 4).Get(entry)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.NotNil(t, entry.EndTime)
+	})
 }
 
 func TestHardDeleteTask(t *testing.T) {
