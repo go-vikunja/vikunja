@@ -97,6 +97,19 @@ func TestWriteAttachmentDownload(t *testing.T) {
 		assert.Equal(t, 1, content.closed)
 	})
 
+	t.Run("preview of unknown size", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+
+		WriteAttachmentDownload(rec, httptest.NewRequest(http.MethodGet, "/", nil), &models.TaskAttachmentPreview{
+			ReadCloser: io.NopCloser(bytes.NewReader([]byte("preview"))),
+			Mime:       "image/jpeg",
+			Size:       -1,
+		})
+
+		assert.Equal(t, "preview", rec.Body.String())
+		assert.Empty(t, rec.Header().Get("Content-Length"))
+	})
+
 	t.Run("original", func(t *testing.T) {
 		content := &trackedCloser{Reader: bytes.NewReader([]byte("original"))}
 		rec := httptest.NewRecorder()
