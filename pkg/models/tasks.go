@@ -412,13 +412,19 @@ func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 // GetTaskByProjectAndIndex returns a task by its per-project index.
 // Returns ErrTaskDoesNotExist if nothing matches.
 func GetTaskByProjectAndIndex(s *xorm.Session, projectID, index int64) (task Task, err error) {
+	return getTaskByProjectAndIndex(s, projectID, index, false)
+}
+
+func getTaskByProjectAndIndex(s *xorm.Session, projectID, index int64, unscoped bool) (task Task, err error) {
 	if projectID < 1 || index < 1 {
 		return Task{}, ErrTaskDoesNotExist{}
 	}
 
-	has, err := s.
-		Where("project_id = ? AND `index` = ?", projectID, index).
-		Get(&task)
+	q := s.Where("project_id = ? AND `index` = ?", projectID, index)
+	if unscoped {
+		q = q.Unscoped()
+	}
+	has, err := q.Get(&task)
 	if err != nil {
 		return Task{}, err
 	}
@@ -436,7 +442,8 @@ func (t *Task) resolveIDFromProjectAndIndex(s *xorm.Session) error {
 	if t.ID != 0 || t.ProjectID < 1 || t.Index < 1 {
 		return nil
 	}
-	resolved, err := GetTaskByProjectAndIndex(s, t.ProjectID, t.Index)
+	// Unscoped so a trashed task resolves and CanRead can report it as in the trash.
+	resolved, err := getTaskByProjectAndIndex(s, t.ProjectID, t.Index, true)
 	if err != nil {
 		return err
 	}
@@ -728,6 +735,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		if i.CreatedByID != 0 {
 			userIDs = append(userIDs, i.CreatedByID)
 		}
+		if i.DeletedByID != 0 {
+			userIDs = append(userIDs, i.DeletedByID)
+		}
 		projectIDs = append(projectIDs, i.ProjectID)
 	}
 
@@ -830,6 +840,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		// Make created by user objects
 		if createdBy, has := users[task.CreatedByID]; has {
 			task.CreatedBy = createdBy
+		}
+		if deletedBy, has := users[task.DeletedByID]; has {
+			task.DeletedBy = deletedBy
 		}
 
 		// Add the reminders
@@ -2200,9 +2213,9 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// Bucket and position rows are removed right away because bucket counts
-	// don't join the tasks table and would leak soft-deleted tasks; the heal
-	// routines re-create them on restore. All other related data is kept until
-	// the cleanup cron permanently deletes the task.
+	// don't join the tasks table and would leak soft-deleted tasks; Restore
+	// places the task again. All other related data is kept until the cleanup
+	// cron permanently deletes the task.
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
 	if err != nil {
 		return
@@ -2274,7 +2287,7 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 		if attachment.File == nil {
 			continue
 		}
-		err = attachment.File.Delete(s)
+		err = attachment.File.DeleteOnCommit(s)
 		if err != nil && !files.IsErrFileDoesNotExist(err) {
 			return err
 		}
@@ -2350,7 +2363,10 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 	// Tracked time outlives the task
 	_, err = s.Table("time_entries").
 		Where("task_id = ?", t.ID).
-		Update(map[string]any{"task_id": 0, "project_id": t.ProjectID})
+		Update(map[string]any{
+			"task_id":    0,
+			"project_id": t.ProjectID,
+		})
 	if err != nil {
 		return
 	}

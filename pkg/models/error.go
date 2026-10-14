@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -817,6 +819,54 @@ const ErrCodeTaskDoesNotExist = 4002
 // HTTPError holds the http error description
 func (err ErrTaskDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTaskDoesNotExist, Message: "This task does not exist"}
+}
+
+// ErrTaskIsInTrash is returned instead of ErrTaskDoesNotExist to callers who can read the trashed task's project.
+type ErrTaskIsInTrash struct {
+	ID        int64      `json:"-"`
+	ProjectID int64      `json:"project_id"`
+	DeletedAt time.Time  `json:"deleted_at"`
+	DeletedBy *user.User `json:"deleted_by,omitempty"`
+}
+
+func (err ErrTaskIsInTrash) Error() string {
+	return fmt.Sprintf("The task is in the trash. [ID: %d]", err.ID)
+}
+
+// ErrCodeTaskIsInTrash holds the unique world-error code of this error
+const ErrCodeTaskIsInTrash = 4040
+
+// HTTPError holds the http error description
+func (err ErrTaskIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTaskIsInTrash,
+		Message:  "This task is in the trash.",
+		Details:  err,
+	}
+}
+
+type ErrTaskIsNotInTrash struct {
+	ID int64
+}
+
+func IsErrTaskIsNotInTrash(err error) bool {
+	_, ok := err.(ErrTaskIsNotInTrash)
+	return ok
+}
+
+func (err ErrTaskIsNotInTrash) Error() string {
+	return fmt.Sprintf("The task is not in the trash. [ID: %d]", err.ID)
+}
+
+const ErrCodeTaskIsNotInTrash = 4042
+
+func (err ErrTaskIsNotInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskIsNotInTrash,
+		Message:  "This task is not in the trash.",
+	}
 }
 
 // ErrBulkTasksMustBeInSameProject represents a "ErrBulkTasksMustBeInSameProject" kind of error.

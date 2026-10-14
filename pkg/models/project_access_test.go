@@ -172,6 +172,7 @@ func TestGetProjectAccessForUser_OutOfEnumGrantIsNoGrant(t *testing.T) {
 			_, has := access.permission(2)
 			assert.False(t, has)
 			assert.NotContains(t, access.sortedIDs, int64(2))
+			assert.NotContains(t, projectIDsMatching(t, s, access.condViaSubquery("id", PermissionRead)), int64(2))
 		})
 	}
 }
@@ -197,16 +198,30 @@ func TestProjectAccessCond(t *testing.T) {
 
 	t.Run("no access matches nothing", func(t *testing.T) {
 		empty := &projectAccess{userID: 1}
-		assert.Empty(t, projectIDsMatching(t, s, empty.cond("id")))
+		assert.Empty(t, projectIDsMatching(t, s, empty.cond("id", PermissionRead)))
 	})
 
-	t.Run("subquery fallback matches the same projects with bounded parameters", func(t *testing.T) {
-		fallback := access.condViaSubquery("id")
-		assert.Equal(t, projectIDsMatching(t, s, access.cond("id")), projectIDsMatching(t, s, fallback))
+	minPermissions := map[string]Permission{
+		"read":  PermissionRead,
+		"write": PermissionWrite,
+		"admin": PermissionAdmin,
+	}
+	for name, minPermission := range minPermissions {
+		t.Run("subquery fallback matches the list with bounded parameters at "+name, func(t *testing.T) {
+			ids := projectIDsMatching(t, s, access.cond("id", minPermission))
+			assert.NotEmpty(t, ids)
+			fallback := access.condViaSubquery("id", minPermission)
+			assert.Equal(t, ids, projectIDsMatching(t, s, fallback))
 
-		_, args, err := builder.ToSQL(fallback)
-		require.NoError(t, err)
-		assert.Len(t, args, 3)
+			_, args, err := builder.ToSQL(fallback)
+			require.NoError(t, err)
+			assert.Len(t, args, 5)
+		})
+	}
+
+	t.Run("min permission narrows the list", func(t *testing.T) {
+		writable := projectIDsMatching(t, s, access.cond("id", PermissionWrite))
+		assert.Less(t, len(writable), len(access.sortedIDs))
 	})
 
 	t.Run("link share is confined to its project", func(t *testing.T) {
