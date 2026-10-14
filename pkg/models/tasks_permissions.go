@@ -44,7 +44,11 @@ func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission
 	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
 		return
 	}
-	*t, err = GetTaskByIDSimple(s, t.ID)
+	taskID := t.ID
+	*t, err = GetTaskByIDSimple(s, taskID)
+	if IsErrTaskDoesNotExist(err) {
+		return false, 0, trashedTaskReadError(s, a, taskID, err)
+	}
 	if err != nil {
 		return
 	}
