@@ -695,6 +695,34 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 	})
 }
 
+func TestRenderPreview_NeverUpscales(t *testing.T) {
+	tests := map[string]struct {
+		width  int
+		height int
+	}{
+		"small image": {
+			width:  50,
+			height: 40,
+		},
+		// Upscaled to xl this would be 800x16,000,000 pixels.
+		"tall one pixel wide image": {
+			width:  1,
+			height: 20000,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			preview, err := renderPreview(bytes.NewReader(testPNG(t, tc.width, tc.height)), PreviewExtraLarge)
+			require.NoError(t, err)
+
+			cfg, err := png.DecodeConfig(bytes.NewReader(preview))
+			require.NoError(t, err)
+			assert.Equal(t, tc.width, cfg.Width)
+			assert.Equal(t, tc.height, cfg.Height)
+		})
+	}
+}
+
 func TestTaskAttachment_Permissions(t *testing.T) {
 	u := &user.User{ID: 1}
 	t.Run("Can Read", func(t *testing.T) {
