@@ -68,6 +68,17 @@ func (t *TaskDeletedEvent) Name() string {
 	return "task.deleted"
 }
 
+// TaskRestoredEvent fires when a task is restored from the trash.
+type TaskRestoredEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskRestoredEvent
+func (t *TaskRestoredEvent) Name() string {
+	return "task.restored"
+}
+
 // TaskAssigneeCreatedEvent represents an event where a task has been assigned to a user
 type TaskAssigneeCreatedEvent struct {
 	Task     *Task      `json:"task"`
