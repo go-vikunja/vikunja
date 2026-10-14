@@ -254,10 +254,6 @@ let visibilityObserver: IntersectionObserver | undefined
 const COVER_PRELOAD_MARGIN = '200px'
 
 onMounted(() => {
-	if (!card.value) {
-		return
-	}
-
 	visibilityObserver = new IntersectionObserver(
 		entries => {
 			if (!entries.some(entry => entry.isIntersecting)) {
@@ -271,7 +267,7 @@ onMounted(() => {
 			scrollMargin: COVER_PRELOAD_MARGIN,
 		},
 	)
-	visibilityObserver.observe(card.value)
+	visibilityObserver.observe(card.value!)
 })
 
 watch(
