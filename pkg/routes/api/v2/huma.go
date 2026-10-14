@@ -116,6 +116,13 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		Scheme:      "basic",
 		Description: "HTTP Basic auth used by the notifications Atom feed: the username is the token owner and the password is a feeds-scoped Vikunja API token (tk_ prefix).",
 	}
+	// Calendar apps can only subscribe to a bare URL. See calendar_feeds.go.
+	oapi.Components.SecuritySchemes["FeedTokenQuery"] = &huma.SecurityScheme{
+		Type:        "apiKey",
+		In:          "query",
+		Name:        CalendarFeedTokenParam,
+		Description: "A feeds-scoped Vikunja API token (tk_ prefix) in the query string, accepted only by the iCalendar feeds.",
+	}
 	// Applied globally; public endpoints (spec, docs) opt out with an empty Security list.
 	oapi.Security = []map[string][]string{
 		{"JWTKeyAuth": {}},

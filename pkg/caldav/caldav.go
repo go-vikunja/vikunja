@@ -152,13 +152,30 @@ func getRruleFromInterval(interval int64) (freq string, newInterval int64) {
 	}
 }
 
-// ParseTodos returns a caldav vcalendar string with todos.
-func ParseTodos(config *Config, todos []*Todo) (caldavtodos string) {
-	caldavtodos = `BEGIN:VCALENDAR
+// calendarHeader opens a VCALENDAR; the caller appends its components and END:VCALENDAR.
+func calendarHeader(config *Config) string {
+	return `BEGIN:VCALENDAR
 VERSION:2.0
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:` + escapeICalText(config.Name) + `
 PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color)
+}
+
+// descriptionToPlainText converts a stored HTML description to markdown, which
+// calendar clients show as plain text. On the near-impossible conversion error,
+// log it and keep the stored value rather than drop the description.
+func descriptionToPlainText(uid, description string) string {
+	converted, err := richtext.HTMLToMarkdown(description)
+	if err != nil {
+		log.Errorf("[CALDAV] Failed to convert description to markdown for task %q: %v", uid, err)
+		return description
+	}
+	return converted
+}
+
+// ParseTodos returns a caldav vcalendar string with todos.
+func ParseTodos(config *Config, todos []*Todo) (caldavtodos string) {
+	caldavtodos = calendarHeader(config)
 
 	for _, t := range todos {
 		if t.UID == "" {
@@ -184,14 +201,7 @@ DURATION:PT` + formatDuration(t.Duration)
 DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
 		}
 		if t.Description != "" {
-			// CalDAV clients show plain text, so emit markdown. On the near-impossible
-			// conversion error, log it and keep the stored value (GetContent can't
-			// return an error) rather than drop the description.
-			description, err := richtext.HTMLToMarkdown(t.Description)
-			if err != nil {
-				log.Errorf("[CALDAV] Failed to convert description to markdown for task %q: %v", t.UID, err)
-				description = t.Description
-			}
+			description := descriptionToPlainText(t.UID, t.Description)
 			if description != "" {
 				caldavtodos += `
 DESCRIPTION:` + escapeICalText(description)
