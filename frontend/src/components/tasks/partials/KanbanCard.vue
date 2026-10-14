@@ -228,7 +228,10 @@ function showCoverImage(url: string | null) {
 	coverImageBlobUrl.value = url
 }
 
+let coverRequest = 0
+
 async function maybeDownloadCoverImage() {
+	const request = ++coverRequest
 	if (!props.task.cover_image_attachment_id) {
 		showCoverImage(null)
 		return
@@ -240,7 +243,12 @@ async function maybeDownloadCoverImage() {
 	}
 
 	try {
-		showCoverImage(await fetchAttachmentUrl({id: attachment.id!, task_id: props.task.id}, 'lg'))
+		const url = await fetchAttachmentUrl({id: attachment.id!, task_id: props.task.id}, 'lg')
+		if (request !== coverRequest) {
+			releaseAttachmentUrl(url)
+			return
+		}
+		showCoverImage(url)
 	} catch {
 		// the cover is decorative, the card works without it
 	}
@@ -281,6 +289,7 @@ watch(
 
 onBeforeUnmount(() => {
 	visibilityObserver?.disconnect()
+	coverRequest++
 	showCoverImage(null)
 })
 </script>

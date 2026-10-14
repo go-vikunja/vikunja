@@ -97,6 +97,7 @@ describe('KanbanCard', () => {
 		setActivePinia(createPinia())
 		sdk.patchTasksRead.mockReset()
 		attachments.fetchAttachmentUrl.mockReset()
+		attachments.releaseAttachmentUrl.mockReset()
 		errorHandler.mockReset()
 		FakeIntersectionObserver.instances = []
 		vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver)
@@ -173,6 +174,39 @@ describe('KanbanCard', () => {
 		await scrollCard(true)
 
 		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledExactlyOnceWith({id: 4, task_id: 8}, 'lg')
+	})
+
+	it('drops a cover that resolves after the cover changed', async () => {
+		const pending = new Map<number, (url: string) => void>()
+		attachments.fetchAttachmentUrl.mockImplementation(({id}: {id: number}) => new Promise(resolve => {
+			pending.set(id, resolve)
+		}))
+		const wrapper = mountCard(taskWithCover)
+		await scrollCard(true)
+
+		await wrapper.setProps({task: {...taskWithCover, cover_image_attachment_id: 4}})
+		pending.get(4)!('blob:cover-4')
+		await flushPromises()
+		pending.get(3)!('blob:cover-3')
+		await flushPromises()
+
+		expect(wrapper.get('img').attributes('src')).toBe('blob:cover-4')
+		expect(attachments.releaseAttachmentUrl).toHaveBeenCalledWith('blob:cover-3')
+	})
+
+	it('releases a cover that resolves after it is unmounted', async () => {
+		let resolveCover: (url: string) => void = () => {}
+		attachments.fetchAttachmentUrl.mockImplementation(() => new Promise(resolve => {
+			resolveCover = resolve
+		}))
+		const wrapper = mountCard(taskWithCover)
+		await scrollCard(true)
+
+		wrapper.unmount()
+		resolveCover('blob:cover-3')
+		await flushPromises()
+
+		expect(attachments.releaseAttachmentUrl).toHaveBeenCalledWith('blob:cover-3')
 	})
 
 	it('shows no cover when the cover image fails to load', async () => {
