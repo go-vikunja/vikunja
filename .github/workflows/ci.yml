@@ -35,6 +35,8 @@ jobs:
       contents: write
       packages: write
       id-token: write
+      attestations: write
+      artifact-metadata: write
     needs:
       - test
     secrets: inherit
