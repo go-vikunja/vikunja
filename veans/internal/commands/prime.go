@@ -42,6 +42,7 @@ type primeContext struct {
 	Buckets           config.Buckets
 	BotUsername       string
 	TaskIDExample     string
+	TaskURLExample    string
 }
 
 func newPrimeCmd() *cobra.Command {
@@ -91,6 +92,7 @@ silently with status 0 — that makes the hook safe to install globally.`,
 				Buckets:           cfg.Buckets,
 				BotUsername:       cfg.Bot.Username,
 				TaskIDExample:     cfg.FormatTaskID(1),
+				TaskURLExample:    cfg.TaskURL(123),
 			}
 
 			tpl, err := template.New("prime").Parse(promptTemplate)
