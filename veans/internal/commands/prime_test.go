@@ -35,6 +35,7 @@ func TestPrimeTemplate_RendersAnchors(t *testing.T) {
 		Buckets:           config.Buckets{Todo: 11, InProgress: 12, InReview: 13, Done: 14, Scrapped: 15},
 		BotUsername:       "bot-myrepo",
 		TaskIDExample:     "PROJ-1",
+		TaskURLExample:    "https://vikunja.example.com/tasks/123",
 	}
 	tpl, err := template.New("prime").Parse(promptTemplate)
 	if err != nil {
@@ -68,6 +69,7 @@ func TestPrimeTemplate_RendersAnchors(t *testing.T) {
 		`data-checked="false"`,
 		"<h2>",
 		"<pre><code",
+		`<a href="https://vikunja.example.com/tasks/123">https://vikunja.example.com/tasks/123</a>`,
 	}
 	for _, s := range mustContain {
 		if !strings.Contains(out, s) {
