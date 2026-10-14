@@ -30,6 +30,11 @@ jobs:
     name: Release
     if: ${{ github.ref_type == 'tag' || github.ref_name == 'main' }}
     uses: ./.github/workflows/release.yml
+    # Called workflows can only narrow these, never widen them.
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
     needs:
       - test
     secrets: inherit
