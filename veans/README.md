@@ -95,6 +95,7 @@ identifiers and bot username are for human-readable output.
 
 ```yaml
 server: https://vikunja.example.com
+frontend_url: https://vikunja.example.com/  # from /info; backfilled if missing
 project_id: 42
 project_identifier: PROJ        # may be "" — task IDs render as #NN then
 view_id: 7

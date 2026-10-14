@@ -54,7 +54,7 @@ func newUpdateCmd() *cobra.Command {
 		Short:   "Update a task by PROJ-NN, #NN, or numeric ID",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rt, err := loadRuntime()
+			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
 			}
