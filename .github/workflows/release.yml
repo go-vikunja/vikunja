@@ -40,6 +40,10 @@ jobs:
 
   docker:
     runs-on: namespace-profile-default
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     steps:
       - name: Git describe
         id: ghd
@@ -69,6 +73,7 @@ jobs:
             type=semver,pattern={{major}}
       - name: Build and push unstable
         if: ${{ github.ref_type != 'tag' }}
+        id: build-unstable
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
@@ -80,6 +85,7 @@ jobs:
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
       - name: Build and push version
         if: ${{ github.ref_type == 'tag' }}
+        id: build-version
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
@@ -88,6 +94,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      # Both registries receive the same build, so they share one digest.
+      - name: Sign images
+        env:
+          DIGEST: ${{ steps.build-version.outputs.digest || steps.build-unstable.outputs.digest }}
+        run: |
+          cosign sign --yes --recursive "vikunja/vikunja@${DIGEST}"
+          cosign sign --yes --recursive "ghcr.io/go-vikunja/vikunja@${DIGEST}"
 
   binaries:
     runs-on: blacksmith-8vcpu-ubuntu-2204
