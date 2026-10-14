@@ -453,9 +453,9 @@ func (g *previewGenerator) openStored(fileID int64, previewSize PreviewSize) (*T
 	}
 
 	mime := mimetype.Detect(header).String()
-	if !strings.HasPrefix(mime, "image/") {
+	if mime != "image/jpeg" && mime != "image/png" {
 		_ = content.Close()
-		return nil, fmt.Errorf("not an image but %s", mime)
+		return nil, fmt.Errorf("not a jpeg or png but %s", mime)
 	}
 
 	return &TaskAttachmentPreview{
