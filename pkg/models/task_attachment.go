@@ -163,7 +163,7 @@ type TaskAttachmentDownload interface {
 type TaskAttachmentPreview struct {
 	io.ReadCloser
 	Mime string
-	Size int64
+	Size int64 // -1 when the storage did not report it
 }
 
 func (*TaskAttachmentPreview) taskAttachmentDownload() {}
