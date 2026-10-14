@@ -190,7 +190,10 @@ func stopRunningTimersOnTrashedTask(s *xorm.Session, taskID int64, doer *user.Us
 			return err
 		}
 		entry.InTrash = true
-		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: entry, Doer: doer})
+		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{
+			TimeEntry: entry,
+			Doer:      doer,
+		})
 	}
 	return nil
 }

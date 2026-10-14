@@ -646,7 +646,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 		return nil, 0, nil
 	}
 
-	conds := []builder.Cond{access.cond("id")}
+	conds := []builder.Cond{access.cond("id", PermissionRead)}
 	if !opts.getArchived {
 		conds = append(conds, builder.Eq{"is_archived": false})
 	}
