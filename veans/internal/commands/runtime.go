@@ -17,11 +17,13 @@
 package commands
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.vikunja.io/veans/internal/client"
 	"code.vikunja.io/veans/internal/config"
@@ -38,7 +40,7 @@ type runtime struct {
 	client *client.Client
 }
 
-func loadRuntime() (*runtime, error) {
+func loadRuntime(ctx context.Context) (*runtime, error) {
 	path, err := config.Find("")
 	if err != nil {
 		if errors.Is(err, config.ErrNotFound) {
@@ -62,11 +64,28 @@ func loadRuntime() (*runtime, error) {
 	if cfg.HTTPTimeout > 0 {
 		c.HTTPClient.Timeout = cfg.HTTPTimeout
 	}
-	return &runtime{
+	rt := &runtime{
 		cfg:    cfg,
 		store:  store,
 		client: c,
-	}, nil
+	}
+	if cfg.FrontendURL == "" {
+		rt.backfillFrontendURL(ctx)
+	}
+	return rt, nil
+}
+
+// backfillFrontendURL migrates configs written before frontend_url existed.
+// Best-effort: on failure TaskURL falls back to Server and the next run retries.
+func (r *runtime) backfillFrontendURL(ctx context.Context) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	info, err := r.client.Info(ctx)
+	if err != nil {
+		return
+	}
+	r.cfg.FrontendURL = cmp.Or(info.FrontendURL, r.cfg.Server)
+	_ = r.cfg.SaveAs(r.cfg.Path())
 }
 
 // withURLs sets URL on tasks and their related tasks for agent output.
