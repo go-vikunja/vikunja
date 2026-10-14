@@ -9,6 +9,8 @@
 		class="gantt-container"
 		role="application"
 		:aria-label="$t('project.gantt.chartLabel')"
+		@wheel="onWheel"
+		@keydown="onKeyDown"
 	>
 		<div class="gantt-chart-wrapper">
 			<GanttTimelineHeader
@@ -17,10 +19,9 @@
 			/>
 
 			<GanttVerticalGridLines
-				:timeline-data="timelineData"
+				:positions="gridLinePositions"
 				:total-width="totalWidth"
 				:height="ganttRows.length * 40"
-				:day-width-pixels="dayWidthPixels"
 			/>
 
 			<GanttChartBody
@@ -115,6 +116,17 @@ import GanttRelationArrows from '@/components/gantt/GanttRelationArrows.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
+import {
+	GANTT_ZOOM_MAX,
+	GANTT_ZOOM_MIN,
+	GANTT_ZOOM_STEP,
+	clampGanttZoom,
+	groupTimelineDates,
+	scaleGanttZoom,
+	stepGanttZoom,
+	timelineGroupOffsets,
+	timelineUnitsForDayWidth,
+} from '@/helpers/time/ganttTimeline'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
 const props = defineProps<{
@@ -127,10 +139,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
+  (e: 'update:zoom', zoom: number): void
 }>()
 
-const DAY_WIDTH_PIXELS_MIN = 30
-const dayWidthPixels = ref(0)
+const containerWidth = ref(0)
 let resizeObserver: ResizeObserver | undefined
 
 const {tasks, filters} = toRefs(props)
@@ -161,10 +173,18 @@ let dragStopHandler: (() => void) | null = null
 const dateFromDate = computed(() => dayjs(filters.value.dateFrom).startOf('day').toDate())
 const dateToDate = computed(() => dayjs(filters.value.dateTo).endOf('day').toDate())
 
-const totalWidth = computed(() => {
-	const dateDiff = Math.ceil((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY)
-	return dateDiff * dayWidthPixels.value
-})
+const dayCount = computed(() => Math.max(
+	1,
+	Math.ceil((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY),
+))
+
+const fitDayWidthPixels = computed(() => containerWidth.value / dayCount.value)
+
+const dayWidthPixels = computed(() => Math.max(fitDayWidthPixels.value, filters.value.zoom))
+
+const timelineUnits = computed(() => timelineUnitsForDayWidth(dayWidthPixels.value))
+
+const totalWidth = computed(() => dayCount.value * dayWidthPixels.value)
 
 const timelineData = computed(() => {
 	const dates: Date[] = []
@@ -177,6 +197,11 @@ const timelineData = computed(() => {
 	
 	return dates
 })
+
+const gridLinePositions = computed(() => timelineGroupOffsets(
+	groupTimelineDates(timelineData.value, timelineUnits.value.lower),
+	dayWidthPixels.value,
+))
 
 const ganttBars = ref<GanttBarModel[][]>([])
 const ganttRows = ref<string[]>([])
@@ -307,7 +332,7 @@ function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 	}
 }
 
-function updateDayWidthPixels() {
+function updateContainerWidth() {
 	const node = ganttContainer.value
 	if (!node) return
 
@@ -317,17 +342,7 @@ function updateDayWidthPixels() {
 	const marginLeft = parseFloat(styles.marginLeft) || 0
 	const marginRight = parseFloat(styles.marginRight) || 0
 
-	// max width without overflow
-	const maxWidth = rect.width - marginLeft - marginRight
-
-	const dayCount = Math.ceil(
-		(dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY,
-	)
-
-	dayWidthPixels.value = Math.max(
-		maxWidth / dayCount,
-		DAY_WIDTH_PIXELS_MIN,
-	)
+	containerWidth.value = rect.width - marginLeft - marginRight
 }
 
 // The container only exists once loading finished, so measure and observe when the element appears
@@ -340,26 +355,115 @@ watch(ganttContainer, el => {
 		return
 	}
 
-	updateDayWidthPixels()
-	resizeObserver = new ResizeObserver(updateDayWidthPixels)
+	updateContainerWidth()
+	resizeObserver = new ResizeObserver(updateContainerWidth)
 	resizeObserver.observe(el)
 }, {flush: 'post', immediate: true})
 
-onMounted(() => window.addEventListener('resize', updateDayWidthPixels))
+onMounted(() => window.addEventListener('resize', updateContainerWidth))
 
 onBeforeUnmount(() => {
 	resizeObserver?.disconnect()
-	window.removeEventListener('resize', updateDayWidthPixels)
+	window.removeEventListener('resize', updateContainerWidth)
 })
 
-watch(
-	[dateFromDate, dateToDate],
-	async () => {
-		await nextTick()
-		updateDayWidthPixels()
-	},
-	{flush: 'post'},
-)
+const canZoomIn = computed(() => dayWidthPixels.value < GANTT_ZOOM_MAX)
+const canZoomOut = computed(() => dayWidthPixels.value > fitDayWidthPixels.value && dayWidthPixels.value > GANTT_ZOOM_MIN)
+
+// Keeps the date under the pointer (or the viewport centre) in place while the day width changes.
+let zoomAnchor: {days: number, offset: number} | null = null
+
+function applyZoom(zoom: number, clientX?: number) {
+	const next = clampGanttZoom(zoom)
+	if (next === filters.value.zoom) return
+
+	const el = ganttContainer.value
+	if (el) {
+		const offset = clientX === undefined
+			? el.clientWidth / 2
+			: clientX - el.getBoundingClientRect().left
+		zoomAnchor = {days: (el.scrollLeft + offset) / dayWidthPixels.value, offset}
+	}
+
+	emit('update:zoom', next)
+}
+
+watch(dayWidthPixels, async () => {
+	if (!zoomAnchor) return
+	const anchor = zoomAnchor
+	zoomAnchor = null
+
+	await nextTick()
+	const el = ganttContainer.value
+	if (!el) return
+	el.scrollLeft = anchor.days * dayWidthPixels.value - anchor.offset
+}, {flush: 'post'})
+
+// Steps start from the rendered day width, not the stored zoom: when the range fits the container
+// the stored floor can be far below what is on screen and stepping it would show no change.
+function zoomIn(clientX?: number) {
+	applyZoom(stepGanttZoom(dayWidthPixels.value, 1), clientX)
+}
+
+function zoomOut(clientX?: number) {
+	if (!canZoomOut.value) return
+	applyZoom(stepGanttZoom(dayWidthPixels.value, -1), clientX)
+}
+
+function zoomToFit() {
+	applyZoom(GANTT_ZOOM_MIN)
+}
+
+function onWheel(e: WheelEvent) {
+	if (!e.ctrlKey && !e.metaKey) return
+	e.preventDefault()
+
+	const lineDelta = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 16 : e.deltaY
+	const delta = Math.max(-100, Math.min(100, lineDelta))
+	const factor = Math.pow(GANTT_ZOOM_STEP, -delta / 100)
+	const target = scaleGanttZoom(dayWidthPixels.value, factor)
+
+	if (target < dayWidthPixels.value && !canZoomOut.value) return
+	applyZoom(target, e.clientX)
+}
+
+function onKeyDown(e: KeyboardEvent) {
+	const target = e.target as HTMLElement | null
+	if (target?.closest('input, textarea, [contenteditable="true"]')) return
+	if (e.ctrlKey || e.metaKey || e.altKey) return
+
+	switch (e.key) {
+		case '+':
+		case '=':
+			zoomIn()
+			break
+		case '-':
+			zoomOut()
+			break
+		case '0':
+			zoomToFit()
+			break
+		default:
+			return
+	}
+	e.preventDefault()
+}
+
+function scrollToDate(date: Date) {
+	const el = ganttContainer.value
+	if (!el) return
+	const left = computeBarX(date) - el.clientWidth / 2 + dayWidthPixels.value / 2
+	el.scrollTo({left: Math.max(0, left), behavior: 'smooth'})
+}
+
+defineExpose({
+	canZoomIn,
+	canZoomOut,
+	zoomIn,
+	zoomOut,
+	zoomToFit,
+	scrollToDate,
+})
 
 // Build the task tree when tasks change
 watch(
