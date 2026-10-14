@@ -21,6 +21,8 @@ import (
 	"context"
 	"io"
 	"io/fs"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
@@ -346,4 +348,36 @@ func TestS3Storage_EnsureAndValidateBasePath(t *testing.T) {
 
 	require.NoError(t, s.Ensure())
 	require.NoError(t, s.ValidateBasePath())
+}
+
+func TestS3Storage_OpenWithoutContentLength(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("chunked"))
+		// Flushing before the handler returns makes net/http send it chunked, without a Content-Length.
+		w.(http.Flusher).Flush()
+	}))
+	t.Cleanup(server.Close)
+
+	s := newS3Storage("bucket", "", s3.New(s3.Options{
+		Region:       "us-east-1",
+		BaseEndpoint: aws.String(server.URL),
+		UsePathStyle: true,
+		Credentials:  aws.AnonymousCredentials{},
+	}))
+
+	t.Run("Open", func(t *testing.T) {
+		content, err := s.Open("file")
+		require.NoError(t, err)
+		defer content.Close()
+		body, err := io.ReadAll(content)
+		require.NoError(t, err)
+		assert.Equal(t, "chunked", string(body))
+	})
+
+	t.Run("OpenWithSize", func(t *testing.T) {
+		content, size, err := s.OpenWithSize("file")
+		require.NoError(t, err)
+		defer content.Close()
+		assert.Equal(t, int64(-1), size)
+	})
 }

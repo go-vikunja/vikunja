@@ -63,8 +63,7 @@ func (s *s3Storage) OpenWithSize(name string) (io.ReadCloser, int64, error) {
 		return nil, 0, s3ToPathError("open", name, err)
 	}
 	if out.ContentLength == nil {
-		_ = out.Body.Close()
-		return nil, 0, &os.PathError{Op: "open", Path: name, Err: errors.New("S3 returned no content length")}
+		return out.Body, -1, nil
 	}
 	return out.Body, *out.ContentLength, nil
 }
