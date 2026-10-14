@@ -200,17 +200,6 @@ func TestTaskAttachment_Delete(t *testing.T) {
 	})
 }
 
-func TestAttachmentPreviewRejectsLargeImages(t *testing.T) {
-	// 100M pixels, well above the 50M limit: small on disk but huge when decoded into memory
-	attachment := imageAttachment(t, 910004, pngHeader(10000, 10000))
-
-	result, err := attachment.GetPreview(t.Context(), PreviewMedium)
-	require.Error(t, err)
-	assert.True(t, IsErrTaskAttachmentNotPreviewable(err))
-	assert.True(t, imageutils.IsErrImageTooLarge(err))
-	assert.Nil(t, result, "Preview should be nil for images exceeding max pixel count")
-}
-
 func testPNG(t *testing.T, width, height int) []byte {
 	t.Helper()
 	var buf bytes.Buffer
@@ -376,6 +365,7 @@ func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
 		content        []byte
 		opened         int32
 		notPreviewable bool
+		tooLarge       bool
 	}{
 		"image": {
 			content: testPNG(t, 400, 300),
@@ -390,6 +380,7 @@ func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
 			content:        pngHeader(10000, 10000),
 			opened:         1,
 			notPreviewable: true,
+			tooLarge:       true,
 		},
 	}
 	for name, tc := range tests {
@@ -399,6 +390,7 @@ func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
 			_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), source.open, PreviewMedium)
 
 			assert.Equal(t, tc.notPreviewable, IsErrTaskAttachmentNotPreviewable(err), "err: %v", err)
+			assert.Equal(t, tc.tooLarge, imageutils.IsErrImageTooLarge(err), "err: %v", err)
 			assert.Equal(t, tc.opened, source.opened.Load())
 			assert.Equal(t, source.opened.Load(), source.closed.Load())
 		})
