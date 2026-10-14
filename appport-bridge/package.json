@@ -1,0 +1,19 @@
+{
+  "name": "vikunja-appport-bridge",
+  "private": true,
+  "description": "Opt-in AppPort bridge for Vikunja: capabilities over Vikunja's own API, using the caller's own API token.",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node bridge.mjs",
+    "test": "node --no-warnings --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "dependencies": {
+    "@appport/sdk": "1.2.2"
+  },
+  "devDependencies": {
+    "@appport/integration": "1.1.0",
+    "@appport/protocol": "1.1.0"
+  }
+}

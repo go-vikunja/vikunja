@@ -1,0 +1,36 @@
+name: AppPort bridge
+
+on:
+  pull_request:
+    paths:
+      - "appport-bridge/**"
+      - ".github/workflows/appport-bridge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  consumer-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build Vikunja API (frontend placeholder, as mage and CI do)
+        run: |
+          mkdir -p frontend/dist && [ -f frontend/dist/index.html ] || echo '<!doctype html>' > frontend/dist/index.html
+          go build -tags osusergo -o "$RUNNER_TEMP/vikunja" .
+      - name: Install bridge (published @appport packages, exact pins)
+        working-directory: appport-bridge
+        run: npm ci
+      - name: Independent consumer test against a real Vikunja server
+        working-directory: appport-bridge
+        env:
+          VIKUNJA_BIN: ${{ runner.temp }}/vikunja
+        run: npm test
