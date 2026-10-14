@@ -326,7 +326,6 @@ func TestTaskAttachment_Preview(t *testing.T) {
 	}
 }
 
-// Leaves no capacity for any generation until the test ends.
 func exhaustAttachmentPreviewBudget(t *testing.T, queueTimeout time.Duration) {
 	t.Helper()
 	original := attachmentPreviews
@@ -407,7 +406,7 @@ func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
 	})
 }
 
-// decodeTracker measures the source pixels being decoded at once, independently of the generator's own bookkeeping.
+// Measures decoding pixels independently of the generator's own semaphore.
 type decodeTracker struct {
 	gate chan struct{}
 
@@ -449,7 +448,6 @@ func (d *decodeTracker) peakPixels() int64 {
 	return d.peak
 }
 
-// source returns an opener whose decodes block until the gate is closed.
 func (d *decodeTracker) source(t *testing.T, content []byte) sourceOpener {
 	t.Helper()
 	cfg, _, err := image.DecodeConfig(bytes.NewReader(content))

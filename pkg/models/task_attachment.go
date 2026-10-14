@@ -340,7 +340,6 @@ const (
 
 var attachmentPreviews = newPreviewGenerator(previewPixelBudget, previewQueueTimeout)
 
-// previewGenerator bounds the memory used by concurrent generations through the pixels they decode.
 type previewGenerator struct {
 	slots        *semaphore.Weighted
 	queueTimeout time.Duration
@@ -360,7 +359,6 @@ func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSiz
 	return attachmentPreviews.get(ctx, cacheKey, fileOpener(ta.File.ID), previewSize)
 }
 
-// get generates an uncached preview once for all concurrent callers of the same cacheKey.
 func (g *previewGenerator) get(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
 	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
 		return preview, nil
@@ -419,8 +417,7 @@ func fileOpener(fileID int64) sourceOpener {
 	}
 }
 
-// generate opens the source twice because the stream cannot be rewound after
-// reading the header, and buffering it would hold the whole file in memory.
+// Opens the source twice so callers queued for capacity hold no storage handle or S3 body while waiting.
 func (g *previewGenerator) generate(ctx context.Context, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
 	pixels, err := sourcePixels(open)
 	if err != nil {
