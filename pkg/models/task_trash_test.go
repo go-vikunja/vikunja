@@ -274,3 +274,38 @@ func TestEmptyTaskTrash(t *testing.T) {
 	db.AssertExists(t, "tasks", map[string]interface{}{"id": 36}, false)
 	db.AssertExists(t, "tasks", map[string]interface{}{"id": 32}, false)
 }
+
+func TestTask_CanRead_Trashed(t *testing.T) {
+	t.Run("reader learns the task is in the trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		trashTaskForTest(t, 1, &user.User{ID: 1})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, err := (&Task{ID: 1}).CanRead(s, &user.User{ID: 1})
+		var inTrash ErrTaskIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		assert.Equal(t, int64(1), inTrash.ProjectID)
+		assert.False(t, inTrash.DeletedAt.IsZero())
+		require.NotNil(t, inTrash.DeletedBy)
+		assert.Equal(t, int64(1), inTrash.DeletedBy.ID)
+	})
+	t.Run("unknown deleter", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, err := (&Task{ID: 51}).CanRead(s, &user.User{ID: 1})
+		var inTrash ErrTaskIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		assert.Nil(t, inTrash.DeletedBy)
+	})
+	t.Run("no access hides that the task exists", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, err := (&Task{ID: 51}).CanRead(s, &user.User{ID: 2})
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+}
