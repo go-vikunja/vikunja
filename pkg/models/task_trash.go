@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/builder"
@@ -87,4 +88,110 @@ func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
 	})
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+}
+
+// CanDeletePermanently checks whether the auth may purge the trashed task.
+// Link shares have no trash, so they can't.
+func (t *Task) CanDeletePermanently(s *xorm.Session, a web.Auth) (bool, error) {
+	if _, isShare := a.(*LinkSharing); isShare {
+		return false, nil
+	}
+	return t.canDoTrashedTask(s, a)
+}
+
+// DeletePermanently purges a trashed task right away instead of waiting for the retention period.
+func (t *Task) DeletePermanently(s *xorm.Session) error {
+	return hardDeleteTask(s, t)
+}
+
+// Trashed tasks in non-archived projects the user can write to.
+func trashedTasksCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
+	if _, isShare := a.(*LinkSharing); isShare {
+		return nil, ErrGenericForbidden{}
+	}
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, err
+	}
+	access, err := getProjectAccessForUser(s, u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	writable := []int64{}
+	for _, id := range access.sortedIDs {
+		if access.permissions[id] >= PermissionWrite {
+			writable = append(writable, id)
+		}
+	}
+
+	return builder.And(
+		builder.NotNull{"tasks.deleted_at"},
+		builder.In("tasks.project_id", writable),
+		builder.In("tasks.project_id", builder.Select("id").From("projects").Where(builder.Eq{"is_archived": false})),
+	), nil
+}
+
+// GetTrashedTasks returns the trash of the auth, newest first.
+func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (tasks []*Task, total int64, err error) {
+	cond, err := trashedTasksCond(s, a)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total, err = s.Unscoped().Where(cond).Count(&Task{})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	tasks = []*Task{}
+	err = s.Unscoped().
+		Where(cond).
+		OrderBy("tasks.deleted_at DESC, tasks.id DESC").
+		Limit(getLimitFromPageIndex(page, perPage)).
+		Find(&tasks)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	taskMap := make(map[int64]*Task, len(tasks))
+	deleterIDs := []int64{}
+	for _, task := range tasks {
+		taskMap[task.ID] = task
+		if task.DeletedByID != 0 {
+			deleterIDs = append(deleterIDs, task.DeletedByID)
+		}
+	}
+	if err = addMoreInfoToTasks(s, taskMap, a, nil, nil); err != nil {
+		return nil, 0, err
+	}
+
+	deleters, err := getUsersOrLinkSharesFromIDs(s, deleterIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+	for _, task := range tasks {
+		task.DeletedBy = deleters[task.DeletedByID]
+	}
+
+	return tasks, total, nil
+}
+
+// EmptyTaskTrash purges every task in the auth's trash, including ones others deleted.
+func EmptyTaskTrash(s *xorm.Session, a web.Auth) (purged int, err error) {
+	cond, err := trashedTasksCond(s, a)
+	if err != nil {
+		return 0, err
+	}
+
+	tasks := []*Task{}
+	if err = s.Unscoped().Where(cond).Find(&tasks); err != nil {
+		return 0, err
+	}
+	for _, task := range tasks {
+		if err = hardDeleteTask(s, task); err != nil {
+			return 0, err
+		}
+	}
+	return len(tasks), nil
 }
