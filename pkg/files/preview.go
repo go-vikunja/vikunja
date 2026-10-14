@@ -65,6 +65,13 @@ var storedPreviewSizes = []PreviewSize{
 	PreviewExtraLarge,
 }
 
+func GetPreviewSizeFromString(size string) PreviewSize {
+	if slices.Contains(storedPreviewSizes, PreviewSize(size)) {
+		return PreviewSize(size)
+	}
+	return PreviewSizeUnknown
+}
+
 func (f *File) previewPath(size PreviewSize) string {
 	return path.Join(previewDir, f.fileID()+"_"+string(size))
 }
