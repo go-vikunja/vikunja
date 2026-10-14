@@ -728,3 +728,81 @@ func TestTimeEntry_TaskCount(t *testing.T) {
 		assert.Nil(t, task1.TimeEntriesCount, "an unlicensed instance must not expose counts")
 	})
 }
+
+// Task 51 is soft-deleted in the fixtures and lives in project 1.
+func TestTimeEntry_TrashedTask(t *testing.T) {
+	setup := func(t *testing.T) *TimeEntry {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    1,
+			TaskID:    51,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+		return entry
+	}
+
+	t.Run("listed and flagged", func(t *testing.T) {
+		entry := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+		require.NoError(t, err)
+		inTrash := map[int64]bool{}
+		for _, e := range result.([]*TimeEntry) {
+			inTrash[e.ID] = e.InTrash
+		}
+		require.Contains(t, inTrash, entry.ID)
+		assert.True(t, inTrash[entry.ID])
+		assert.False(t, inTrash[1])
+	})
+	t.Run("readable by project readers only", func(t *testing.T) {
+		entry := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		read := &TimeEntry{ID: entry.ID}
+		can, _, err := read.CanRead(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.True(t, can)
+		assert.True(t, read.InTrash)
+
+		can, _, err = (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 2})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("read-only", func(t *testing.T) {
+		entry := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+		u := &user.User{ID: 1}
+
+		can, err := (&TimeEntry{ID: entry.ID}).CanDelete(s, u)
+		require.NoError(t, err)
+		assert.False(t, can, "delete")
+
+		can, err = (&TimeEntry{ID: entry.ID, Comment: "edited", StartTime: entry.StartTime}).CanUpdate(s, u)
+		require.NoError(t, err)
+		assert.False(t, can, "update in place")
+
+		can, err = (&TimeEntry{ID: 1, TaskID: 51}).CanUpdate(s, u)
+		require.NoError(t, err)
+		assert.False(t, can, "move onto a trashed task")
+
+		can, err = (&TimeEntry{TaskID: 51}).CanCreate(s, u)
+		require.NoError(t, err)
+		assert.False(t, can, "create")
+	})
+	t.Run("purging the task moves entries to its project", func(t *testing.T) {
+		entry := setup(t)
+
+		deleteExpiredTasks(time.Now())
+
+		db.AssertExists(t, "time_entries", map[string]interface{}{"id": entry.ID, "task_id": 0, "project_id": 1}, false)
+	})
+}

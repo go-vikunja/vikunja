@@ -846,7 +846,7 @@ func TestHardDeleteTask(t *testing.T) {
 	_, err = s.Insert(&Reaction{EntityID: 1, EntityKind: ReactionKindComment, UserID: 1, Value: "👍"})
 	require.NoError(t, err)
 
-	err = hardDeleteTask(s, &Task{ID: 1})
+	err = hardDeleteTask(s, &Task{ID: 1, ProjectID: 1})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 
@@ -872,6 +872,10 @@ func TestHardDeleteTask(t *testing.T) {
 	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindComment})
 	// The attachment files are gone too
 	db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+	// Time entries 1 and 4 move to the task's project
+	db.AssertMissing(t, "time_entries", map[string]interface{}{"task_id": 1})
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 1, "task_id": 0, "project_id": 1}, false)
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 4, "task_id": 0, "project_id": 1}, false)
 }
 
 func TestUpdateTasksHelper(t *testing.T) {
