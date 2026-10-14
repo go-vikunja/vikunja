@@ -529,7 +529,7 @@ func GetPreviewSizeFromString(size string) PreviewSize {
 }
 
 func resizeImage(img image.Image, width int) *image.NRGBA {
-	resizedImg := imaging.Resize(img, width, 0, imaging.Lanczos)
+	resizedImg := imaging.Resize(img, min(width, img.Bounds().Dx()), 0, imaging.Lanczos)
 	log.Debugf(
 		"Resized attachment image from %vx%v to %vx%v for a preview",
 		img.Bounds().Size().X,
