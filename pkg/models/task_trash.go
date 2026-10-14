@@ -41,6 +41,35 @@ func getTrashedTask(s *xorm.Session, taskID int64) (*Task, error) {
 	return task, nil
 }
 
+// Readers of the project get ErrTaskIsInTrash; everyone else keeps notFound so the task's existence doesn't leak.
+func trashedTaskReadError(s *xorm.Session, a web.Auth, taskID int64, notFound error) error {
+	trashed, err := getTrashedTask(s, taskID)
+	if IsErrTaskDoesNotExist(err) {
+		return notFound
+	}
+	if err != nil {
+		return err
+	}
+
+	canRead, _, err := (&Project{ID: trashed.ProjectID}).CanRead(s, a)
+	if err != nil {
+		return err
+	}
+	if !canRead {
+		return notFound
+	}
+
+	inTrash := ErrTaskIsInTrash{ID: trashed.ID, ProjectID: trashed.ProjectID, DeletedAt: trashed.DeletedAt}
+	if trashed.DeletedByID != 0 {
+		deleters, err := getUsersOrLinkSharesFromIDs(s, []int64{trashed.DeletedByID})
+		if err != nil {
+			return err
+		}
+		inTrash.DeletedBy = deleters[trashed.DeletedByID]
+	}
+	return inTrash
+}
+
 // canDoTrashedTask loads the trashed task into t and checks write access to its project.
 func (t *Task) canDoTrashedTask(s *xorm.Session, a web.Auth) (bool, error) {
 	trashed, err := getTrashedTask(s, t.ID)
