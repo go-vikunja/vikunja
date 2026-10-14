@@ -27,13 +27,18 @@ import KanbanCard from './KanbanCard.vue'
 class FakeIntersectionObserver {
 	static instances: FakeIntersectionObserver[] = []
 	observing = false
+	target: Element | undefined
 
-	constructor(private callback: IntersectionObserverCallback) {
+	constructor(
+		private callback: IntersectionObserverCallback,
+		public options?: IntersectionObserverInit,
+	) {
 		FakeIntersectionObserver.instances.push(this)
 	}
 
-	observe() {
+	observe(target: Element) {
 		this.observing = true
+		this.target = target
 	}
 
 	disconnect() {
@@ -184,6 +189,11 @@ describe('KanbanCard', () => {
 		const wrapper = mountCard(taskWithCover)
 		const [observer] = FakeIntersectionObserver.instances
 		expect(observer.observing).toBe(true)
+		expect(observer.target).toBe(wrapper.element)
+		expect(observer.options).toEqual({
+			rootMargin: '200px',
+			scrollMargin: '200px',
+		})
 
 		wrapper.unmount()
 		await scrollCard(true)
