@@ -166,3 +166,16 @@ func TestFilePreview_Cleanup(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPreviewSizeFromString(t *testing.T) {
+	for _, size := range storedPreviewSizes {
+		assert.Equal(t, size, GetPreviewSizeFromString(string(size)))
+	}
+	for _, size := range []string{
+		"",
+		string(PreviewSizeUnknown),
+		"../1",
+	} {
+		assert.Equal(t, PreviewSizeUnknown, GetPreviewSizeFromString(size), "size %q", size)
+	}
+}
