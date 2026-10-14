@@ -164,7 +164,7 @@ func (s *Storage) DelPrefix(prefix string) error {
 	pattern := globEscaper.Replace(prefix) + "*"
 	var cursor uint64
 
-	// Per page and with UNLINK so a large prefix neither blocks Redis nor piles up in memory here.
+	// UNLINK per page so a large prefix neither blocks Redis nor piles up in memory here.
 	for {
 		keys, next, err := s.client.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {

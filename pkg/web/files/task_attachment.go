@@ -64,8 +64,7 @@ func toAttachmentUploadError(err error) AttachmentUploadError {
 }
 
 // WriteAttachmentDownload streams the attachment or its inline image preview to
-// the response and closes it. WriteFileDownload sets Cache-Control: no-cache for
-// the original, the preview branch sets the same header itself.
+// the response and closes it.
 func WriteAttachmentDownload(w http.ResponseWriter, r *http.Request, download models.TaskAttachmentDownload) {
 	defer func() { _ = download.Close() }()
 

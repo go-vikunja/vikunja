@@ -353,7 +353,7 @@ func TestS3Storage_EnsureAndValidateBasePath(t *testing.T) {
 func TestS3Storage_OpenWithoutContentLength(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte("chunked"))
-		// Flushing before the handler returns makes net/http send it chunked, without a Content-Length.
+		// Flushing early makes net/http respond chunked, without a Content-Length.
 		w.(http.Flusher).Flush()
 	}))
 	t.Cleanup(server.Close)

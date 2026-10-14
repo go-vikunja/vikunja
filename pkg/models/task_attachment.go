@@ -343,13 +343,11 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page in
 	return attachments, len(attachments), numberOfTotalItems, err
 }
 
-// RemoveLegacyTaskAttachmentPreviews drops the previews older versions put into keyvalue without a TTL,
-// which Redis would keep forever. Not a migration: instances still running the old version keep writing them.
+// Redis kept these forever, and instances on the old version keep writing them.
 func RemoveLegacyTaskAttachmentPreviews() error {
 	return keyvalue.DelPrefix("task_attachment_preview_")
 }
 
-// previewStore keeps generated previews, in the file storage outside of tests.
 type previewStore interface {
 	// open returns an error wrapping fs.ErrNotExist when the preview is not stored.
 	open(fileID int64, size PreviewSize) (preview io.ReadCloser, length int64, err error)
@@ -429,7 +427,6 @@ func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpe
 		if result.Err != nil {
 			return nil, result.Err
 		}
-		// The flight is shared, so it hands out bytes and every caller gets its own reader.
 		preview, _ := result.Val.([]byte)
 		return newTaskAttachmentPreview(preview), nil
 	}
