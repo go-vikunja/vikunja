@@ -246,8 +246,6 @@ func TestTaskAttachmentsV2(t *testing.T) {
 	})
 }
 
-// TestTaskAttachmentsV2_PreviewSize covers the preview_size query param: only an image
-// that can be decoded gets a preview, everything else returns the original bytes.
 func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 	t.Run("non-image returns the original file", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -271,7 +269,6 @@ func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
 		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
 
-		// The second request is served from the preview cache.
 		for range 2 {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
