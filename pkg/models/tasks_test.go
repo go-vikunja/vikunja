@@ -788,6 +788,18 @@ func TestTask_Delete(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, has)
 		assert.True(t, project.Updated.After(deletedTask.Created))
+		assert.Equal(t, int64(1), deletedTask.DeletedByID)
+	})
+	t.Run("link share is recorded as deleter", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := (&Task{ID: 13}).Delete(s, &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 13, "deleted_by_id": -2}, false)
 	})
 }
 
