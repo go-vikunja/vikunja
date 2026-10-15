@@ -40,6 +40,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/image/tiff"
 )
 
 func TestTaskAttachment_ReadOne(t *testing.T) {
@@ -204,6 +205,14 @@ func testPNG(t *testing.T, width, height int) []byte {
 	t.Helper()
 	var buf bytes.Buffer
 	require.NoError(t, png.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, width, height))))
+	return buf.Bytes()
+}
+
+// x/image/tiff writes the IFD, and with it the dimensions, after the pixel data.
+func testTIFF(t *testing.T, width, height int) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	require.NoError(t, tiff.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, width, height)), nil))
 	return buf.Bytes()
 }
 
@@ -387,6 +396,11 @@ func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
 			opened:         1,
 			notPreviewable: true,
 			tooLarge:       true,
+		},
+		"image whose header is past the read limit is never opened for decoding": {
+			content:        testTIFF(t, 1024, 512),
+			opened:         1,
+			notPreviewable: true,
 		},
 	}
 	for name, tc := range tests {
