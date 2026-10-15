@@ -300,6 +300,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 	fallbacks := map[string]struct {
 		id      int64
 		content []byte
+		size    uint64
 	}{
 		"undecodable image falls back to the original": {
 			id:      910002,
@@ -309,10 +310,16 @@ func TestTaskAttachment_Preview(t *testing.T) {
 			id:      910003,
 			content: pngHeader(10000, 10000),
 		},
+		"file over the size limit falls back to the original": {
+			id:      910004,
+			content: testPNG(t, 400, 300),
+			size:    maxPreviewSourceBytes + 1,
+		},
 	}
 	for name, tc := range fallbacks {
 		t.Run(name, func(t *testing.T) {
 			ta := imageAttachment(t, tc.id, tc.content)
+			ta.File.Size = tc.size
 
 			preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
 			require.NoError(t, err)
