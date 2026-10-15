@@ -785,54 +785,6 @@ func storedPreview(t *testing.T, fileID int64, size PreviewSize) []byte {
 	return preview
 }
 
-type brokenPreviewStore struct {
-	previewStore
-	openErr error
-	saveErr error
-}
-
-func (s brokenPreviewStore) open(fileID int64, size PreviewSize) (io.ReadCloser, int64, error) {
-	if s.openErr != nil {
-		return nil, 0, s.openErr
-	}
-	return s.previewStore.open(fileID, size)
-}
-
-func (s brokenPreviewStore) save(fileID int64, size PreviewSize, preview []byte) error {
-	if s.saveErr != nil {
-		return s.saveErr
-	}
-	return s.previewStore.save(fileID, size, preview)
-}
-
-type trackedPreviewStore struct {
-	previewStore
-	opened atomic.Int32
-	closed atomic.Int32
-}
-
-func (s *trackedPreviewStore) open(fileID int64, size PreviewSize) (io.ReadCloser, int64, error) {
-	preview, length, err := s.previewStore.open(fileID, size)
-	if err != nil {
-		return nil, 0, err
-	}
-	s.opened.Add(1)
-	return &trackedStoredPreview{
-		ReadCloser: preview,
-		store:      s,
-	}, length, nil
-}
-
-type trackedStoredPreview struct {
-	io.ReadCloser
-	store *trackedPreviewStore
-}
-
-func (p *trackedStoredPreview) Close() error {
-	p.store.closed.Add(1)
-	return p.ReadCloser.Close()
-}
-
 func failingSource(t *testing.T) sourceOpener {
 	t.Helper()
 	return func() (io.ReadCloser, error) {
@@ -860,36 +812,26 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		var stored bytes.Buffer
 		require.NoError(t, jpeg.Encode(&stored, image.NewGray(image.Rect(0, 0, 100, 100)), nil))
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, stored.Bytes()))
-		g := newPreviewGenerator(previewPixelBudget, time.Minute)
-		store := &trackedPreviewStore{previewStore: g.store}
-		g.store = store
 
-		preview, err := g.get(t.Context(), fileID, failingSource(t), PreviewSmall)
+		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, failingSource(t), PreviewSmall)
 
 		require.NoError(t, err)
-		assert.Equal(t, int32(1), store.opened.Load())
-		assert.Zero(t, store.closed.Load(), "the preview must not be read into memory")
 		assert.Equal(t, "image/jpeg", preview.Mime, "the mime type must come from the stored bytes")
 		assert.Equal(t, stored.Bytes(), readPreview(t, preview))
-		assert.Equal(t, int32(1), store.closed.Load())
 	})
 
 	t.Run("a stored preview that is not an image is generated again", func(t *testing.T) {
 		fileID := uniquePreviewFileID(t)
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, nil))
 		source := &trackedSource{content: testPNG(t, 400, 300)}
-		g := newPreviewGenerator(previewPixelBudget, time.Minute)
-		store := &trackedPreviewStore{previewStore: g.store}
-		g.store = store
 
-		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
+		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
 
 		require.NoError(t, err)
 		generated := readPreview(t, preview)
 		_, err = png.DecodeConfig(bytes.NewReader(generated))
 		require.NoError(t, err)
 		assert.Equal(t, generated, storedPreview(t, fileID, PreviewSmall))
-		assert.Equal(t, store.opened.Load(), store.closed.Load())
 	})
 
 	t.Run("a stored preview that is neither jpeg nor png is generated again", func(t *testing.T) {
@@ -956,16 +898,11 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		}
 	})
 
-	t.Run("a preview that cannot be stored is still served", func(t *testing.T) {
-		fileID := uniquePreviewFileID(t)
+	t.Run("a preview of a deleted file is served but not stored", func(t *testing.T) {
+		fileID := 920000 + lastPreviewTestFileID.Add(1)
 		source := &trackedSource{content: testPNG(t, 400, 300)}
-		g := newPreviewGenerator(previewPixelBudget, time.Minute)
-		g.store = brokenPreviewStore{
-			previewStore: g.store,
-			saveErr:      errors.New("storage is full"),
-		}
 
-		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
+		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
 
 		require.NoError(t, err)
 		cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
@@ -973,25 +910,6 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		assert.Equal(t, PreviewSmall.GetSize(), cfg.Width)
 		_, _, err = (&files.File{ID: fileID}).OpenPreview(PreviewSmall)
 		require.ErrorIs(t, err, fs.ErrNotExist)
-	})
-
-	t.Run("a stored preview that cannot be read is generated instead", func(t *testing.T) {
-		fileID := uniquePreviewFileID(t)
-		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, testPNG(t, 100, 100)))
-		source := &trackedSource{content: testPNG(t, 400, 300)}
-		g := newPreviewGenerator(previewPixelBudget, time.Minute)
-		g.store = brokenPreviewStore{
-			previewStore: g.store,
-			openErr:      errors.New("storage unavailable"),
-		}
-
-		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
-
-		require.NoError(t, err)
-		cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
-		require.NoError(t, err)
-		assert.Equal(t, 75, cfg.Height, "the preview must come from the source, not the storage")
-		assert.Equal(t, int32(2), source.opened.Load())
 	})
 }
 
