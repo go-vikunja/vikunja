@@ -276,6 +276,10 @@ jobs:
           PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "ALTER SYSTEM SET synchronous_commit = off;"
           # Reload the configuration
           PGPASSWORD=vikunjatest psql -h localhost ${{ matrix.db == 'paradedb' && ' -p 5433' || '' }} -U postgres -d vikunjatest -c "SELECT pg_reload_conf();"
+      - name: Enable unaccent
+        # paradedb stays without it to keep the accent-sensitive path covered
+        if: matrix.db == 'postgres'
+        run: PGPASSWORD=vikunjatest psql -h localhost -U postgres -d vikunjatest -c "CREATE EXTENSION IF NOT EXISTS unaccent;"
       - name: test
         env:
           VIKUNJA_TESTS_USE_CONFIG: ${{ matrix.db != 'sqlite-in-memory' && 1 || 0 }}
