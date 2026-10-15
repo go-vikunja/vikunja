@@ -25,6 +25,8 @@ import (
 	"path/filepath"
 )
 
+const LocalTempDir = ".tmp"
+
 // localStorage implements FileStorage using the OS filesystem.
 // All paths are resolved relative to basePath.
 type localStorage struct {
@@ -63,8 +65,10 @@ func (l *localStorage) Write(name string, content io.ReadSeeker, _ uint64) error
 		return err
 	}
 
-	target := l.path(name)
-	tmp := target + ".tmp-" + rand.Text()
+	if err := os.MkdirAll(l.path(LocalTempDir), 0755); err != nil {
+		return err
+	}
+	tmp := filepath.Join(l.path(LocalTempDir), rand.Text())
 	// Not os.CreateTemp: its 0600 would change the mode of stored files.
 	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
@@ -76,7 +80,7 @@ func (l *localStorage) Write(name string, content io.ReadSeeker, _ uint64) error
 		err = closeErr
 	}
 	if err == nil {
-		err = os.Rename(tmp, target)
+		err = os.Rename(tmp, l.path(name))
 	}
 	if err != nil {
 		_ = os.Remove(tmp)
@@ -97,15 +101,21 @@ func (l *localStorage) MkdirAll(p string, perm os.FileMode) error {
 }
 
 func (l *localStorage) Ensure() error {
-	// Anything other than "not there" is left to ValidateBasePath to report.
-	if _, err := os.Stat(l.basePath); !errors.Is(err, os.ErrNotExist) {
+	info, statErr := os.Stat(l.basePath)
+	if errors.Is(statErr, os.ErrNotExist) {
+		if err := os.MkdirAll(l.basePath, 0755); err != nil {
+			return fmt.Errorf("failed to create file storage directory at %s: %w%s", l.basePath, err, storageDiagSuffix(l.basePath))
+		}
 		return nil
 	}
 
-	if err := os.MkdirAll(l.basePath, 0755); err != nil {
-		return fmt.Errorf("failed to create file storage directory at %s: %w%s", l.basePath, err, storageDiagSuffix(l.basePath))
+	// Anything else is left to ValidateBasePath to report.
+	if statErr == nil && info.IsDir() {
+		// Left behind by writes interrupted by a crash.
+		if err := os.RemoveAll(l.path(LocalTempDir)); err != nil {
+			return fmt.Errorf("failed to remove temporary files at %s: %w", l.path(LocalTempDir), err)
+		}
 	}
-
 	return nil
 }
 
