@@ -5,11 +5,13 @@
 				:icon="['far', 'clock']"
 				class="time-control__icon"
 			/>
+			<!-- Step buttons are mouse-only so Tab goes hours → minutes; arrow keys step the inputs. -->
 			<div class="time-control__segment">
 				<button
 					v-tooltip="$t('input.datepicker.time.hourUp')"
 					type="button"
 					class="time-control__step"
+					tabindex="-1"
 					:aria-label="$t('input.datepicker.time.hourUp')"
 					@click.stop="step('hours', 1)"
 				>
@@ -30,6 +32,7 @@
 					v-tooltip="$t('input.datepicker.time.hourDown')"
 					type="button"
 					class="time-control__step"
+					tabindex="-1"
 					:aria-label="$t('input.datepicker.time.hourDown')"
 					@click.stop="step('hours', -1)"
 				>
@@ -42,6 +45,7 @@
 					v-tooltip="$t('input.datepicker.time.minuteUp')"
 					type="button"
 					class="time-control__step"
+					tabindex="-1"
 					:aria-label="$t('input.datepicker.time.minuteUp')"
 					@click.stop="step('minutes', 5)"
 				>
@@ -62,6 +66,7 @@
 					v-tooltip="$t('input.datepicker.time.minuteDown')"
 					type="button"
 					class="time-control__step"
+					tabindex="-1"
 					:aria-label="$t('input.datepicker.time.minuteDown')"
 					@click.stop="step('minutes', -5)"
 				>
