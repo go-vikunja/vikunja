@@ -5,6 +5,7 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 import {normalizeTask, type TaskResponse} from '@/client/queries/tasks'
+import {ApiError} from '@/client/problem'
 
 const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
@@ -105,6 +106,7 @@ describe('KanbanCard', () => {
 
 	afterEach(() => {
 		vi.unstubAllGlobals()
+		vi.useRealTimers()
 	})
 
 	// The ctrl click itself is covered by e2e project-view-kanban.spec.ts, which reads the task back from the API.
@@ -210,13 +212,68 @@ describe('KanbanCard', () => {
 	})
 
 	it('shows no cover when the cover image fails to load', async () => {
-		attachments.fetchAttachmentUrl.mockRejectedValue({status: 502, detail: 'Bad Gateway'})
+		vi.useFakeTimers()
+		attachments.fetchAttachmentUrl.mockRejectedValue(new ApiError({
+			status: 502,
+			detail: 'Bad Gateway',
+		}))
 		const wrapper = mountCard(taskWithCover)
 		await scrollCard(true)
+		await vi.runAllTimersAsync()
 
 		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledOnce()
 		expect(errorHandler).not.toHaveBeenCalled()
 		expect(wrapper.find('img').exists()).toBe(false)
+	})
+
+	it('retries a cover once when the server is busy', async () => {
+		vi.useFakeTimers()
+		const busy = new ApiError({
+			status: 503,
+			detail: 'Too many previews are being generated',
+		})
+		attachments.fetchAttachmentUrl
+			.mockRejectedValueOnce(busy)
+			.mockResolvedValueOnce('blob:cover-3')
+		const wrapper = mountCard(taskWithCover)
+		await scrollCard(true)
+
+		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledOnce()
+		expect(wrapper.find('img').exists()).toBe(false)
+
+		await vi.runAllTimersAsync()
+
+		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledTimes(2)
+		expect(wrapper.get('img').attributes('src')).toBe('blob:cover-3')
+	})
+
+	it('gives up on a cover that is still busy after the retry', async () => {
+		vi.useFakeTimers()
+		attachments.fetchAttachmentUrl.mockRejectedValue(new ApiError({
+			status: 503,
+			detail: 'Too many previews are being generated',
+		}))
+		const wrapper = mountCard(taskWithCover)
+		await scrollCard(true)
+		await vi.runAllTimersAsync()
+
+		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledTimes(2)
+		expect(wrapper.find('img').exists()).toBe(false)
+	})
+
+	it('does not retry a busy cover after it is unmounted', async () => {
+		vi.useFakeTimers()
+		attachments.fetchAttachmentUrl.mockRejectedValue(new ApiError({
+			status: 503,
+			detail: 'Too many previews are being generated',
+		}))
+		const wrapper = mountCard(taskWithCover)
+		await scrollCard(true)
+
+		wrapper.unmount()
+		await vi.runAllTimersAsync()
+
+		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledOnce()
 	})
 
 	it('stops watching for visibility when it is unmounted', async () => {

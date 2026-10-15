@@ -140,6 +140,7 @@ import type {Task as ITask} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/helpers/attachmentPreview'
 import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
+import {ApiError} from '@/client/problem'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -229,8 +230,12 @@ function showCoverImage(url: string | null) {
 }
 
 let coverRequest = 0
+let coverRetry: ReturnType<typeof setTimeout> | undefined
+// the server answers 503 while its preview queue is full
+const COVER_RETRY_DELAY = 5000
 
-async function maybeDownloadCoverImage() {
+async function maybeDownloadCoverImage(retryWhenBusy = true) {
+	clearTimeout(coverRetry)
 	const request = ++coverRequest
 	if (!props.task.cover_image_attachment_id) {
 		showCoverImage(null)
@@ -249,8 +254,11 @@ async function maybeDownloadCoverImage() {
 			return
 		}
 		showCoverImage(url)
-	} catch {
+	} catch (error) {
 		// the cover is decorative, the card works without it
+		if (retryWhenBusy && request === coverRequest && error instanceof ApiError && error.status === 503) {
+			coverRetry = setTimeout(() => maybeDownloadCoverImage(false), COVER_RETRY_DELAY)
+		}
 	}
 }
 
@@ -289,6 +297,7 @@ watch(
 
 onBeforeUnmount(() => {
 	visibilityObserver?.disconnect()
+	clearTimeout(coverRetry)
 	coverRequest++
 	showCoverImage(null)
 })
