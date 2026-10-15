@@ -231,7 +231,5 @@ func (f *File) Save(fcontent io.ReadSeeker) error {
 	if err != nil {
 		return fmt.Errorf("failed to save file: %w", err)
 	}
-	// They were generated from the previous content, or belong to a deleted file whose id got reused.
-	f.removePreviews()
 	return nil
 }

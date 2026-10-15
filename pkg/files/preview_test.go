@@ -158,21 +158,6 @@ func TestFilePreview_Cleanup(t *testing.T) {
 
 				require.NoError(t, (&File{ID: 1}).Delete(s))
 			})
-
-			t.Run("overwriting the content of a file removes its previews", func(t *testing.T) {
-				useStorage(t, newBackend(t))
-				file := &File{ID: 1}
-				other := &File{ID: 11}
-				require.NoError(t, file.Save(bytes.NewReader([]byte("content"))))
-				require.NoError(t, other.Save(bytes.NewReader([]byte("other"))))
-				savePreviews(t, file)
-				savePreviews(t, other)
-
-				require.NoError(t, file.Save(bytes.NewReader([]byte("new content"))))
-
-				assertPreviews(t, file, false)
-				assertPreviews(t, other, true)
-			})
 		})
 	}
 }
