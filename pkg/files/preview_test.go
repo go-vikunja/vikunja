@@ -72,10 +72,12 @@ func assertStoresPreviews(t *testing.T, backend FileStorage) {
 	file := &File{ID: 42}
 	// A real bucket outlives the test run.
 	t.Cleanup(func() {
+		_ = backend.Remove(file.fileID())
 		for _, size := range storedPreviewSizes {
 			_ = backend.Remove(file.previewPath(size))
 		}
 	})
+	require.NoError(t, file.Save(bytes.NewReader([]byte("original"))))
 
 	_, _, err := file.OpenPreview(PreviewMedium)
 	require.ErrorIs(t, err, fs.ErrNotExist)
@@ -102,6 +104,11 @@ func assertStoresPreviews(t *testing.T, backend FileStorage) {
 
 	_, _, err = (&File{ID: 43}).OpenPreview(PreviewMedium)
 	require.ErrorIs(t, err, fs.ErrNotExist, "previews are stored per file")
+
+	require.NoError(t, backend.Remove(file.fileID()))
+	require.ErrorAs(t, file.SavePreview(PreviewSmall, []byte("too late")), &ErrFileDoesNotExist{})
+	_, _, err = file.OpenPreview(PreviewSmall)
+	require.ErrorIs(t, err, fs.ErrNotExist, "a preview stored after its file was deleted must be removed")
 }
 
 func TestFilePreview_Cleanup(t *testing.T) {
@@ -133,6 +140,7 @@ func TestFilePreview_Cleanup(t *testing.T) {
 				defer s.Close()
 				file := &File{ID: 1}
 				other := &File{ID: 11}
+				require.NoError(t, other.Save(bytes.NewReader([]byte("other"))))
 				savePreviews(t, file)
 				savePreviews(t, other)
 
@@ -156,6 +164,7 @@ func TestFilePreview_Cleanup(t *testing.T) {
 				file := &File{ID: 1}
 				other := &File{ID: 11}
 				require.NoError(t, file.Save(bytes.NewReader([]byte("content"))))
+				require.NoError(t, other.Save(bytes.NewReader([]byte("other"))))
 				savePreviews(t, file)
 				savePreviews(t, other)
 
