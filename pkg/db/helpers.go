@@ -44,11 +44,11 @@ func SearchRelevanceOrder(search string, columns ...string) (string, []any) {
 	prefix := make([]string, 0, len(columns))
 	args := make([]any, 0, len(columns)*2)
 	for _, column := range columns {
-		exact = append(exact, "LOWER("+column+") = LOWER(?)")
+		exact = append(exact, "LOWER("+foldAccents(column)+") = LOWER("+foldAccents("?")+")")
 		args = append(args, search)
 	}
 	for _, column := range columns {
-		prefix = append(prefix, "LOWER("+column+") LIKE LOWER(?)")
+		prefix = append(prefix, "LOWER("+foldAccents(column)+") LIKE LOWER("+foldAccents("?")+")")
 		args = append(args, search+"%")
 	}
 	order := "CASE WHEN " + strings.Join(exact, " OR ") +
