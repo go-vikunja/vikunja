@@ -31,7 +31,7 @@ import (
 // See https://stackoverflow.com/q/7005302/10924593
 func ILIKE(column, search string) builder.Cond {
 	if Type() == schemas.POSTGRES {
-		return builder.Expr(column+" ILIKE ?", "%"+search+"%")
+		return builder.Expr(foldAccents(column)+" ILIKE "+foldAccents("?"), "%"+search+"%")
 	}
 
 	return &builder.Like{column, "%" + search + "%"}
@@ -55,6 +55,17 @@ func SearchRelevanceOrder(search string, columns ...string) (string, []any) {
 		" THEN 0 WHEN " + strings.Join(prefix, " OR ") +
 		" THEN 1 ELSE 2 END"
 	return order, args
+}
+
+func UnaccentAvailable() bool {
+	return Type() == schemas.POSTGRES && unaccentAvailable
+}
+
+func foldAccents(expr string) string {
+	if UnaccentAvailable() {
+		return "unaccent(" + expr + ")"
+	}
+	return expr
 }
 
 func ParadeDBAvailable() bool {
