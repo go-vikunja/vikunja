@@ -17,5 +17,5 @@ CI tests only the newest versions: MySQL 8, MariaDB 12, Postgres 18, bundled SQL
 - If raising a minimum is unavoidable: update the table here, call it out as a breaking change in the PR description, and flag that the website docs (supported databases section) need the same change.
 - MySQL has no partial indexes and no `CREATE INDEX IF NOT EXISTS`. Skip it there (see `pkg/migration/20260906010000.go`).
 - `ON DUPLICATE KEY UPDATE x = VALUES(x)` is deprecated since MySQL 8.0.20. Keep it anyway: the replacement row alias syntax (`AS new ... new.x`) doesn't exist on MariaDB, and both share the `mysql` dialect.
-- Case-insensitive search goes through `db.ILIKE` (ILIKE on Postgres, LIKE elsewhere).
+- Case-insensitive search goes through `db.ILIKE` (ILIKE on Postgres, LIKE elsewhere). On Postgres it also ignores accents when the optional `unaccent` extension is callable; MySQL gets that from its collation, SQLite not at all.
 - ParadeDB `bm25` indexes (`pkg/db/db.go`) are optional and only created when the extension is present.
