@@ -97,7 +97,7 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filt
 
 	query := s.Where("owner_id = ?", auth.GetID())
 	if search != "" {
-		query = query.And("title LIKE ?", "%"+search+"%")
+		query = query.And(db.ILIKE("title", search))
 	}
 	err = query.Find(&filters)
 	return

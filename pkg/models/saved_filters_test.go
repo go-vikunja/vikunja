@@ -115,6 +115,19 @@ func TestSavedFilter_ReadOne(t *testing.T) {
 	assert.NotNil(t, sf.Owner)
 }
 
+func TestSavedFilter_getSavedFiltersForUser(t *testing.T) {
+	t.Run("search is case-insensitive", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		filters, err := getSavedFiltersForUser(s, &user.User{ID: 1}, "TESTFILTER1")
+		require.NoError(t, err)
+		require.Len(t, filters, 1)
+		assert.Equal(t, int64(1), filters[0].ID)
+	})
+}
+
 func TestSavedFilter_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
