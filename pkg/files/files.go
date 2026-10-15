@@ -209,7 +209,7 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 	}
 
 	err = storage.Remove(f.fileID())
-	// After the file, so a request racing the delete has nothing left to generate a new preview from.
+	// After the file, so SavePreview catches a preview stored in between.
 	f.removePreviews()
 	if err != nil {
 		var perr *os.PathError

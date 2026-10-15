@@ -325,7 +325,7 @@ func TestPreviewFormat(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			fileID := uniquePreviewFileID()
+			fileID := uniquePreviewFileID(t)
 			source := &trackedSource{content: tc.source}
 			g := newPreviewGenerator(previewPixelBudget, time.Minute)
 
@@ -767,8 +767,11 @@ func TestPreviewGenerator_Queue(t *testing.T) {
 var lastPreviewTestFileID atomic.Int64
 
 // Stored previews outlive a test, so a fixed file would already have one when the test runs again.
-func uniquePreviewFileID() int64 {
-	return 920000 + lastPreviewTestFileID.Add(1)
+func uniquePreviewFileID(t *testing.T) int64 {
+	t.Helper()
+	fileID := 920000 + lastPreviewTestFileID.Add(1)
+	require.NoError(t, (&files.File{ID: fileID}).Save(bytes.NewReader([]byte("original"))))
+	return fileID
 }
 
 func storedPreview(t *testing.T, fileID int64, size PreviewSize) []byte {
@@ -840,7 +843,7 @@ func failingSource(t *testing.T) sourceOpener {
 
 func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	t.Run("a stored preview is served without generating", func(t *testing.T) {
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 		stored := testPNG(t, 100, 100)
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, stored))
 		source := &trackedSource{content: testPNG(t, 400, 300)}
@@ -853,7 +856,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	})
 
 	t.Run("a stored preview is streamed and closed by the caller", func(t *testing.T) {
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 		var stored bytes.Buffer
 		require.NoError(t, jpeg.Encode(&stored, image.NewGray(image.Rect(0, 0, 100, 100)), nil))
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, stored.Bytes()))
@@ -872,7 +875,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	})
 
 	t.Run("a stored preview that is not an image is generated again", func(t *testing.T) {
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, nil))
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
@@ -899,7 +902,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		}
 		for name, content := range stored {
 			t.Run(name, func(t *testing.T) {
-				fileID := uniquePreviewFileID()
+				fileID := uniquePreviewFileID(t)
 				require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, content))
 				source := &trackedSource{content: testPNG(t, 400, 300)}
 
@@ -913,7 +916,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	})
 
 	t.Run("a generated preview is not generated again, even after a restart", func(t *testing.T) {
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 
@@ -937,7 +940,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	})
 
 	t.Run("previews are stored per size", func(t *testing.T) {
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 
@@ -954,7 +957,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	})
 
 	t.Run("a preview that cannot be stored is still served", func(t *testing.T) {
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 		g.store = brokenPreviewStore{
@@ -973,7 +976,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	})
 
 	t.Run("a stored preview that cannot be read is generated instead", func(t *testing.T) {
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, testPNG(t, 100, 100)))
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
@@ -999,7 +1002,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 		tracker := newDecodeTracker()
 		source := tracker.source(t, testPNG(t, 100, 100))
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 
 		const callers = 6
 		type result struct {
@@ -1037,7 +1040,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		content := testPNG(t, 100, 100)
 		leaderSource := &trackedSource{content: content}
 		followerSource := &trackedSource{content: content}
-		fileID := uniquePreviewFileID()
+		fileID := uniquePreviewFileID(t)
 
 		leaderCtx, cancelLeader := context.WithCancel(t.Context())
 		leader := make(chan error, 1)
@@ -1079,7 +1082,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 	t.Run("a panicking decode is an error", func(t *testing.T) {
 		g := newPreviewGenerator(pixels, time.Minute)
 
-		_, err := g.get(t.Context(), uniquePreviewFileID(), func() (io.ReadCloser, error) { panic("broken decoder") }, PreviewSmall)
+		_, err := g.get(t.Context(), uniquePreviewFileID(t), func() (io.ReadCloser, error) { panic("broken decoder") }, PreviewSmall)
 
 		require.ErrorContains(t, err, "broken decoder")
 		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
