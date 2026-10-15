@@ -350,22 +350,6 @@ func RemoveLegacyTaskAttachmentPreviews() {
 	}
 }
 
-type previewStore interface {
-	// open returns an error wrapping fs.ErrNotExist when the preview is not stored.
-	open(fileID int64, size PreviewSize) (preview io.ReadCloser, length int64, err error)
-	save(fileID int64, size PreviewSize, preview []byte) error
-}
-
-type filePreviewStore struct{}
-
-func (filePreviewStore) open(fileID int64, size PreviewSize) (io.ReadCloser, int64, error) {
-	return (&files.File{ID: fileID}).OpenPreview(size)
-}
-
-func (filePreviewStore) save(fileID int64, size PreviewSize, preview []byte) error {
-	return (&files.File{ID: fileID}).SavePreview(size, preview)
-}
-
 const (
 	// Below imageutils.MaxPixels the largest allowed image could never acquire.
 	previewPixelBudget    = 2 * imageutils.MaxPixels
@@ -380,14 +364,12 @@ type previewGenerator struct {
 	slots        *semaphore.Weighted
 	queueTimeout time.Duration
 	flights      singleflight.Group
-	store        previewStore
 }
 
 func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *previewGenerator {
 	return &previewGenerator{
 		slots:        semaphore.NewWeighted(pixelBudget),
 		queueTimeout: queueTimeout,
-		store:        filePreviewStore{},
 	}
 }
 
@@ -439,7 +421,7 @@ const previewHeaderLength = 512
 
 // Any error means the preview is generated instead of failing the request.
 func (g *previewGenerator) openStored(fileID int64, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
-	content, length, err := g.store.open(fileID, previewSize)
+	content, length, err := (&files.File{ID: fileID}).OpenPreview(previewSize)
 	if err != nil {
 		return nil, err
 	}
@@ -505,7 +487,7 @@ func (g *previewGenerator) generateAndStore(ctx context.Context, fileID int64, o
 		return nil, err
 	}
 
-	if err := g.store.save(fileID, previewSize, preview); err != nil {
+	if err := (&files.File{ID: fileID}).SavePreview(previewSize, preview); err != nil {
 		log.Errorf("Could not store the %s preview of file %d: %v", previewSize, fileID, err)
 		return preview, nil
 	}
