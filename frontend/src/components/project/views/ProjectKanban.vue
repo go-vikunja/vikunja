@@ -20,7 +20,7 @@
 		<template #default>
 			<div class="kanban-view">
 				<div
-					:class="{ 'is-loading': showInitialLoading }"
+					:class="{ 'is-loading': showInitialLoading, 'is-dragging': drag || dragBucket }"
 					class="kanban kanban-bucket-container loader-container"
 				>
 					<BucketDraggable
@@ -890,6 +890,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		block-size: calc(#{$crazy-height-calculation} - #{$filter-container-height} + 9px);
 		scroll-snap-type: x mandatory;
 		margin: 0 -0.5rem;
+
+		// Snapping undoes sortable's small auto-scroll steps, so the board never scrolls while dragging.
+		&.is-dragging {
+			scroll-snap-type: none;
+		}
 	}
 
 	&-bucket-container {

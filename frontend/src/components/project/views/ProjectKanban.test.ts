@@ -195,6 +195,31 @@ describe('ProjectKanban', () => {
 		expect(loadBucketPage).not.toHaveBeenCalled()
 	})
 
+	it('marks the board as dragging while a task is dragged', async () => {
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
+		const event = taskDragEndEvent(11)
+
+		taskDraggable(wrapper).vm.$emit('start', event)
+		await nextTick()
+		expect(wrapper.find('.kanban').classes()).toContain('is-dragging')
+
+		taskDraggable(wrapper).vm.$emit('end', event)
+		await flushPromises()
+		expect(wrapper.find('.kanban').classes()).not.toContain('is-dragging')
+	})
+
+	it('marks the board as dragging while a bucket is dragged', async () => {
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
+
+		wrapper.findAllComponents(draggable)[0].vm.$emit('start')
+		await nextTick()
+		expect(wrapper.find('.kanban').classes()).toContain('is-dragging')
+
+		wrapper.findAllComponents(draggable)[0].vm.$emit('end', dragEndEvent('2'))
+		await flushPromises()
+		expect(wrapper.find('.kanban').classes()).not.toContain('is-dragging')
+	})
+
 	it('does not refetch the board after a task was dropped on another project', async () => {
 		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 		drop.result = {moved: true, targetProjectId: 2}
