@@ -403,7 +403,7 @@
                 {
                     "key": "level",
                     "default_value": "INFO",
-                    "comment": "Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
+                    "comment": "Change the log level. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO."
                 },
                 {
                     "key": "format",
@@ -418,7 +418,7 @@
                 {
                     "key": "databaselevel",
                     "default_value": "",
-                    "comment": "The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG. Defaults to the value of `log.level`."
+                    "comment": "The log level for database log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "http",
@@ -428,7 +428,7 @@
                 {
                     "key": "httplevel",
                     "default_value": "",
-                    "comment": "The log level for http request log messages. Requests are logged at INFO, requests failing with a 4xx status at WARNING and requests failing with a 5xx status at ERROR. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG. Defaults to the value of `log.level`."
+                    "comment": "The log level for http request log messages. Requests are logged at INFO, requests failing with a 4xx status at WARNING and requests failing with a 5xx status at ERROR. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "events",
