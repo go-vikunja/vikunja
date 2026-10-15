@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
+	"xorm.io/xorm/schemas"
 )
 
 // isParadeDB returns true when the test engine is running with ParadeDB.
@@ -244,4 +245,23 @@ func TestIsUniqueConstraintError(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestILIKE(t *testing.T) {
+	if x == nil {
+		t.Skip("requires initialized database engine")
+	}
+
+	w := builder.NewWriter()
+	require.NoError(t, ILIKE("title", "agua").WriteTo(w))
+
+	switch {
+	case UnaccentAvailable():
+		assert.Equal(t, "unaccent(title) ILIKE unaccent(?)", w.String())
+	case Type() == schemas.POSTGRES:
+		assert.Equal(t, "title ILIKE ?", w.String())
+	default:
+		assert.Equal(t, "title LIKE ?", w.String())
+	}
+	assert.Equal(t, []interface{}{"%agua%"}, w.Args())
 }
