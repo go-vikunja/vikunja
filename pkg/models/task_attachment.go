@@ -334,8 +334,9 @@ func cacheTaskAttachmentPreview(cacheKey string, preview []byte) {
 
 const (
 	// Below imageutils.MaxPixels the largest allowed image could never acquire.
-	previewPixelBudget  = 2 * imageutils.MaxPixels
-	previewQueueTimeout = 30 * time.Second
+	previewPixelBudget    = 2 * imageutils.MaxPixels
+	previewQueueTimeout   = 30 * time.Second
+	maxPreviewSourceBytes = 50 << 20
 )
 
 var attachmentPreviews = newPreviewGenerator(previewPixelBudget, previewQueueTimeout)
@@ -355,6 +356,9 @@ func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *preview
 
 // GetPreview returns ErrTaskAttachmentNotPreviewable when the original should be served instead.
 func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) ([]byte, error) {
+	if ta.File.Size > maxPreviewSourceBytes {
+		return nil, ErrTaskAttachmentNotPreviewable{Err: fmt.Errorf("file is %d bytes, previews are limited to %d", ta.File.Size, maxPreviewSourceBytes)}
+	}
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 	return attachmentPreviews.get(ctx, cacheKey, fileOpener(ta.File.ID), previewSize)
 }
