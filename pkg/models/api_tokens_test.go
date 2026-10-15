@@ -64,7 +64,7 @@ func TestAPIToken_CanDelete(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, can)
 	})
-	t.Run("noneixsting token", func(t *testing.T) {
+	t.Run("nonexisting token", func(t *testing.T) {
 		u := &user.User{ID: 1}
 		token := &APIToken{ID: 999}
 		s := db.NewSession()
@@ -72,7 +72,8 @@ func TestAPIToken_CanDelete(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		can, err := token.CanDelete(s, u)
-		require.NoError(t, err)
+		require.Error(t, err)
+		assert.True(t, IsErrAPITokenDoesNotExist(err))
 		assert.False(t, can)
 	})
 	t.Run("token of another user", func(t *testing.T) {
