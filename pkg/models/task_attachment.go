@@ -337,6 +337,7 @@ const (
 	previewPixelBudget    = 2 * imageutils.MaxPixels
 	previewQueueTimeout   = 30 * time.Second
 	maxPreviewSourceBytes = 50 << 20
+	maxPreviewHeaderBytes = 12 << 20
 )
 
 var attachmentPreviews = newPreviewGenerator(previewPixelBudget, previewQueueTimeout)
@@ -454,7 +455,8 @@ func sourcePixels(open sourceOpener) (int64, error) {
 	defer header.Close()
 
 	// Rejects decompression bombs (small file, huge pixel dimensions) before the full decode.
-	cfg, err := imageutils.ValidateReader(header)
+	// DecodeConfig buffers the whole file for formats whose metadata may sit at the end, like TIFF.
+	cfg, err := imageutils.ValidateReader(io.LimitReader(header, maxPreviewHeaderBytes))
 	if err != nil {
 		return 0, ErrTaskAttachmentNotPreviewable{Err: err}
 	}
