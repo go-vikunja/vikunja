@@ -237,6 +237,27 @@ func TestInviteLinkAdminTeamsRelevanceOrder(t *testing.T) {
 	require.Less(t, teams[2].ID, teams[3].ID)
 }
 
+func TestInviteLinkAdminTeamsRelevanceOrderIgnoresAccents(t *testing.T) {
+	s, _ := inviteLinkSetup(t)
+	if !db.UnaccentAvailable() {
+		t.Skip("requires the unaccent extension")
+	}
+	substring := &Team{Name: "zz-água-mineral"}
+	_, err := s.Insert(substring)
+	require.NoError(t, err)
+	prefix := &Team{Name: "água-viva"}
+	_, err = s.Insert(prefix)
+	require.NoError(t, err)
+	exact := &Team{Name: "Água"}
+	_, err = s.Insert(exact)
+	require.NoError(t, err)
+
+	teams, total, err := ListTeamsAsAdmin(s, "agua", 1, 20)
+	require.NoError(t, err)
+	require.EqualValues(t, 3, total)
+	require.Equal(t, []int64{exact.ID, prefix.ID, substring.ID}, []int64{teams[0].ID, teams[1].ID, teams[2].ID})
+}
+
 func TestInviteLinkRegistration(t *testing.T) {
 	s, _ := inviteLinkSetup(t)
 	link, err := GetInviteLinkByToken(s, "unlimited")
