@@ -107,15 +107,25 @@ func (f *File) SavePreview(size PreviewSize, preview []byte) error {
 	if err := storage.Write(f.previewPath(size), bytes.NewReader(preview), uint64(len(preview))); err != nil {
 		return fmt.Errorf("failed to save the %s preview of file %d: %w", size, f.ID, err)
 	}
+
+	// A Delete racing this write has already removed the previews.
+	if _, err := storage.Stat(f.fileID()); errors.Is(err, fs.ErrNotExist) {
+		f.removePreview(size)
+		return ErrFileDoesNotExist{FileID: f.ID}
+	}
 	return nil
 }
 
 // removePreviews only logs failures: previews are derived data and must not fail what happens to their file.
 func (f *File) removePreviews() {
 	for _, size := range storedPreviewSizes {
-		err := storage.Remove(f.previewPath(size))
-		if err != nil && !errors.Is(err, fs.ErrNotExist) {
-			log.Errorf("Could not remove the %s preview of file %d: %v", size, f.ID, err)
-		}
+		f.removePreview(size)
+	}
+}
+
+func (f *File) removePreview(size PreviewSize) {
+	err := storage.Remove(f.previewPath(size))
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		log.Errorf("Could not remove the %s preview of file %d: %v", size, f.ID, err)
 	}
 }
