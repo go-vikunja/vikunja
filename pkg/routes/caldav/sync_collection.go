@@ -178,7 +178,7 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 	// Tokens older than the soft-delete retention window cannot see deletions
 	// whose tasks were already purged — force a full resync instead of
 	// silently serving an incomplete delta.
-	if time.Since(tokenTS) > models.TaskDeleteRetention {
+	if time.Since(tokenTS) > models.TrashRetention {
 		log.Debugf("[CALDAV sync-collection] project=%d token %q older than retention → 403 valid-sync-token", projectID, rawToken)
 		return writeForbiddenValidSyncToken(c)
 	}

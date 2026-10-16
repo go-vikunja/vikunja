@@ -409,7 +409,7 @@ func init() {
 		"TaskCollectionExpandReactions":                    reflect.ValueOf(models.TaskCollectionExpandReactions),
 		"TaskCollectionExpandSubtasks":                     reflect.ValueOf(models.TaskCollectionExpandSubtasks),
 		"TaskCollectionExpandTimeEntriesCount":             reflect.ValueOf(models.TaskCollectionExpandTimeEntriesCount),
-		"TaskDeleteRetention":                              reflect.ValueOf(models.TaskDeleteRetention),
+		"TrashRetention":                              reflect.ValueOf(models.TrashRetention),
 		"TaskRepeatModeDefault":                            reflect.ValueOf(models.TaskRepeatModeDefault),
 		"TaskRepeatModeFromCurrentDate":                    reflect.ValueOf(models.TaskRepeatModeFromCurrentDate),
 		"TaskRepeatModeMonth":                              reflect.ValueOf(models.TaskRepeatModeMonth),
