@@ -51,6 +51,21 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 10}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 11}, false)
 	})
+	t.Run("purges the user's trashed projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		_, err := s.Table("projects").In("id", []int64{45, 46}).Update(map[string]any{"owner_id": 6})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+	})
 	t.Run("user with no projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
