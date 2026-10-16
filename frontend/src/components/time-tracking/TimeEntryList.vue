@@ -37,6 +37,13 @@
 						v-cy="'timeEntry'"
 					>
 						<td v-if="!hideLabelColumn">
+							<span
+								v-if="row.entry.task_id === 0 && row.entry.project_id === 0"
+								v-cy="'timeEntryNoProject'"
+								class="has-text-grey is-italic"
+							>
+								{{ $t('timeTracking.noProject') }}
+							</span>
 							<template
 								v-for="(project, i) in row.projectChain"
 								:key="project.id"

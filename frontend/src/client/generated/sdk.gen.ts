@@ -3237,7 +3237,7 @@ export const timeEntriesList = <ThrowOnError extends boolean = true>(options?: O
 /**
  * Create a time entry
  *
- * Logs a manual time entry for the authenticated user. Exactly one of task_id / project_id must be set.
+ * Logs a manual time entry for the authenticated user. Set task_id or project_id, or neither for an entry only you can see.
  */
 export const timeEntriesCreate = <ThrowOnError extends boolean = true>(options: Options<TimeEntriesCreateData, ThrowOnError>): RequestResult<TimeEntriesCreateResponses, TimeEntriesCreateErrors, ThrowOnError> => (options.client ?? client).post<TimeEntriesCreateResponses, TimeEntriesCreateErrors, ThrowOnError>({
     security: [{
@@ -3340,7 +3340,7 @@ export const patchTimeEntriesRead = <ThrowOnError extends boolean = true>(option
 /**
  * Update a time entry
  *
- * Updates a time entry. Only the author may update it. The entry can be moved between a task and a project — exactly one of task_id / project_id must be set, and you need read access to the new one. PUT replaces all editable fields; use PATCH for a partial update.
+ * Updates a time entry. Only the author may update it. The entry can be moved between a task, a project and neither — at most one of task_id / project_id may be set, and you need read access to the new one. Omitting both keeps the current container; sending either, even as null, replaces it, so null for both detaches the entry. PUT replaces all editable fields; use PATCH for a partial update.
  */
 export const timeEntriesUpdate = <ThrowOnError extends boolean = true>(options: Options<TimeEntriesUpdateData, ThrowOnError>): RequestResult<TimeEntriesUpdateResponses, TimeEntriesUpdateErrors, ThrowOnError> => (options.client ?? client).put<TimeEntriesUpdateResponses, TimeEntriesUpdateErrors, ThrowOnError>({
     security: [{
