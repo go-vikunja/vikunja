@@ -20,6 +20,9 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/fs"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
@@ -178,6 +181,31 @@ func TestFileStorageIntegration(t *testing.T) {
 		require.NoError(t, err, "Failed to delete large file")
 	})
 
+	t.Run("Store previews with s3", func(t *testing.T) {
+		assertStoresPreviews(t, storage)
+	})
+
+	t.Run("Remove previews with a file with s3", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		file, err := Create(bytes.NewReader([]byte("content")), "previewed.txt", 7, &testauth{id: 1})
+		require.NoError(t, err)
+		without, err := Create(bytes.NewReader([]byte("content")), "not-previewed.txt", 7, &testauth{id: 1})
+		require.NoError(t, err)
+		require.NoError(t, file.SavePreview(PreviewSmall, []byte("preview")))
+		require.NoError(t, file.SavePreview(PreviewExtraLarge, []byte("preview")))
+
+		require.NoError(t, file.Delete(s))
+		require.NoError(t, without.Delete(s))
+
+		for _, size := range storedPreviewSizes {
+			_, _, err := file.OpenPreview(size)
+			require.ErrorIs(t, err, fs.ErrNotExist, "size %s", size)
+		}
+	})
+
 	t.Run("File not found with s3", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
@@ -320,4 +348,36 @@ func TestS3Storage_EnsureAndValidateBasePath(t *testing.T) {
 
 	require.NoError(t, s.Ensure())
 	require.NoError(t, s.ValidateBasePath())
+}
+
+func TestS3Storage_OpenWithoutContentLength(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("chunked"))
+		// Flushing early makes net/http respond chunked, without a Content-Length.
+		w.(http.Flusher).Flush()
+	}))
+	t.Cleanup(server.Close)
+
+	s := newS3Storage("bucket", "", s3.New(s3.Options{
+		Region:       "us-east-1",
+		BaseEndpoint: aws.String(server.URL),
+		UsePathStyle: true,
+		Credentials:  aws.AnonymousCredentials{},
+	}))
+
+	t.Run("Open", func(t *testing.T) {
+		content, err := s.Open("file")
+		require.NoError(t, err)
+		defer content.Close()
+		body, err := io.ReadAll(content)
+		require.NoError(t, err)
+		assert.Equal(t, "chunked", string(body))
+	})
+
+	t.Run("OpenWithSize", func(t *testing.T) {
+		content, size, err := s.OpenWithSize("file")
+		require.NoError(t, err)
+		defer content.Close()
+		assert.Equal(t, int64(-1), size)
+	})
 }

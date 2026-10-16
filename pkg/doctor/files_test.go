@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -88,6 +89,10 @@ func TestCheckFiles_ExistingBasePath(t *testing.T) {
 
 	entries, err := os.ReadDir(basePath)
 	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	assert.Equal(t, files.LocalTempDir, entries[0].Name())
+	entries, err = os.ReadDir(filepath.Join(basePath, files.LocalTempDir))
+	require.NoError(t, err)
 	assert.Empty(t, entries, "the writability probe must clean up after itself")
 }
 
@@ -103,4 +108,16 @@ func TestCheckFiles_BasePathIsAFile(t *testing.T) {
 	assert.Equal(t, "Directory exists", group.Results[1].Name)
 	assert.False(t, group.Results[1].Passed)
 	assert.Contains(t, group.Results[1].Error, "exists but is not a directory")
+}
+
+func TestCheckFileStats_SkipsTemporaryFiles(t *testing.T) {
+	basePath := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(basePath, "1"), []byte("stored"), 0600))
+	require.NoError(t, os.MkdirAll(filepath.Join(basePath, files.LocalTempDir), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(basePath, files.LocalTempDir, "partial"), []byte("partial"), 0600))
+
+	result := checkFileStats(basePath)
+
+	assert.True(t, result.Passed, result.Error)
+	assert.Equal(t, "1 files, 6 B total", result.Value)
 }

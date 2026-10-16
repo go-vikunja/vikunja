@@ -23,11 +23,15 @@ import (
 	"errors"
 	"hash/crc32"
 	"image"
+	"image/color"
+	"image/draw"
+	"image/gif"
+	"image/jpeg"
 	"image/png"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -36,6 +40,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/modules/imageutils"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -178,6 +183,25 @@ func TestTaskAttachment_Delete(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, os.IsNotExist(err))
 	})
+	t.Run("removes the previews", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		content := testPNG(t, 400, 300)
+		ta := &TaskAttachment{TaskID: 1}
+		require.NoError(t, ta.NewAttachment(s, bytes.NewReader(content), "image.png", uint64(len(content)), u))
+		preview, err := ta.GetPreview(t.Context(), PreviewMedium)
+		require.NoError(t, err)
+		require.NoError(t, preview.Close())
+		storedPreview(t, ta.FileID, PreviewMedium)
+
+		require.NoError(t, ta.Delete(s, u))
+
+		_, _, err = ta.File.OpenPreview(PreviewMedium)
+		require.ErrorIs(t, err, fs.ErrNotExist)
+	})
 	t.Run("Nonexisting", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		db.LoadAndAssertFixtures(t)
@@ -216,6 +240,103 @@ func testTIFF(t *testing.T, width, height int) []byte {
 	return buf.Bytes()
 }
 
+func opaqueImage(width, height int) *image.NRGBA {
+	img := image.NewNRGBA(image.Rect(0, 0, width, height))
+	draw.Draw(img, img.Bounds(), image.NewUniform(color.NRGBA{
+		R: 200,
+		G: 100,
+		B: 50,
+		A: 255,
+	}), image.Point{}, draw.Src)
+	return img
+}
+
+func encodedImage(t *testing.T, encode func(io.Writer, image.Image) error, img image.Image) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	require.NoError(t, encode(&buf, img))
+	return buf.Bytes()
+}
+
+func TestRemoveLegacyTaskAttachmentPreviews(t *testing.T) {
+	require.NoError(t, keyvalue.Put("task_attachment_preview_1_size_md", []byte("preview")))
+	require.NoError(t, keyvalue.Put("task_attachment_other", "kept"))
+	t.Cleanup(func() { _ = keyvalue.Del("task_attachment_other") })
+
+	RemoveLegacyTaskAttachmentPreviews()
+
+	_, exists, err := keyvalue.Get("task_attachment_preview_1_size_md")
+	require.NoError(t, err)
+	assert.False(t, exists)
+	_, exists, err = keyvalue.Get("task_attachment_other")
+	require.NoError(t, err)
+	assert.True(t, exists)
+}
+
+func TestPreviewFormat(t *testing.T) {
+	transparentCorner := opaqueImage(400, 300)
+	transparentCorner.SetNRGBA(0, 0, color.NRGBA{})
+	encodeJPEG := func(w io.Writer, img image.Image) error { return jpeg.Encode(w, img, nil) }
+
+	tests := map[string]struct {
+		source []byte
+		format string
+		mime   string
+	}{
+		"opaque png becomes a jpeg": {
+			source: encodedImage(t, png.Encode, opaqueImage(400, 300)),
+			format: "jpeg",
+			mime:   "image/jpeg",
+		},
+		"jpeg stays a jpeg": {
+			source: encodedImage(t, encodeJPEG, opaqueImage(400, 300)),
+			format: "jpeg",
+			mime:   "image/jpeg",
+		},
+		"fully transparent png stays a png": {
+			source: testPNG(t, 400, 300),
+			format: "png",
+			mime:   "image/png",
+		},
+		"png with a single transparent pixel stays a png": {
+			source: encodedImage(t, png.Encode, transparentCorner),
+			format: "png",
+			mime:   "image/png",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fileID := uniquePreviewFileID(t)
+			source := &trackedSource{content: tc.source}
+			g := newPreviewGenerator(previewPixelBudget, time.Minute)
+
+			// The first preview is the generated one, the second the stored one.
+			for range 2 {
+				preview, err := g.get(t.Context(), fileID, source.open, PreviewMedium)
+				require.NoError(t, err)
+				assert.Equal(t, tc.mime, preview.Mime)
+
+				cfg, format, err := image.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
+				require.NoError(t, err)
+				assert.Equal(t, tc.format, format)
+				assert.Equal(t, PreviewMedium.GetSize(), cfg.Width)
+				assert.Equal(t, 150, cfg.Height)
+			}
+			assert.Equal(t, int32(2), source.opened.Load())
+		})
+	}
+
+	t.Run("transparency survives", func(t *testing.T) {
+		preview, err := renderPreview(bytes.NewReader(encodedImage(t, png.Encode, transparentCorner)), PreviewMedium)
+		require.NoError(t, err)
+
+		img, err := png.Decode(bytes.NewReader(preview))
+		require.NoError(t, err)
+		_, _, _, alpha := img.At(0, 0).RGBA()
+		assert.Less(t, alpha, uint32(0xffff))
+	})
+}
+
 // Only signature + IHDR: enough for image.DecodeConfig without allocating the pixels.
 func pngHeader(width, height uint32) []byte {
 	ihdr := []byte("IHDR")
@@ -227,6 +348,15 @@ func pngHeader(width, height uint32) []byte {
 	header = binary.BigEndian.AppendUint32(header, 13)
 	header = append(header, ihdr...)
 	return binary.BigEndian.AppendUint32(header, crc32.ChecksumIEEE(ihdr))
+}
+
+func readPreview(t *testing.T, preview *TaskAttachmentPreview) []byte {
+	t.Helper()
+	content, err := io.ReadAll(preview)
+	require.NoError(t, err)
+	require.NoError(t, preview.Close())
+	assert.Equal(t, int64(len(content)), preview.Size)
+	return content
 }
 
 func imageAttachment(t *testing.T, id int64, content []byte) *TaskAttachment {
@@ -247,10 +377,13 @@ func TestTaskAttachment_Preview(t *testing.T) {
 	t.Run("image", func(t *testing.T) {
 		ta := imageAttachment(t, 910001, testPNG(t, 400, 300))
 
-		preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+		download, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
 		require.NoError(t, err)
+		preview, isPreview := download.(*TaskAttachmentPreview)
+		require.True(t, isPreview, "got %T", download)
+		assert.Equal(t, "image/png", preview.Mime)
 
-		cfg, format, err := image.DecodeConfig(bytes.NewReader(preview))
+		cfg, format, err := image.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
 		require.NoError(t, err)
 		assert.Equal(t, "png", format)
 		assert.Equal(t, PreviewMedium.GetSize(), cfg.Width)
@@ -267,7 +400,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 			},
 		}
 
-		_, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+		_, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
 		require.Error(t, err)
 		assert.True(t, files.IsErrFileDoesNotExist(err))
 	})
@@ -276,10 +409,10 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		ta := imageAttachment(t, 910006, testPNG(t, 400, 300))
 		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
 
-		preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+		download, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
 		require.Error(t, err)
 		assert.True(t, IsErrTaskAttachmentPreviewBusy(err), "err: %v", err)
-		assert.Nil(t, preview)
+		assert.Nil(t, download)
 		assert.Nil(t, ta.File.File, "the original must not be opened")
 	})
 
@@ -289,21 +422,21 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
-		preview, err := ta.loadPreviewOrFile(ctx, PreviewMedium)
+		download, err := ta.openPreviewOrFile(ctx, PreviewMedium)
 		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, preview)
+		assert.Nil(t, download)
 		assert.Nil(t, ta.File.File, "the original must not be opened")
 	})
 
-	t.Run("cached preview needs no capacity", func(t *testing.T) {
+	t.Run("stored preview needs no capacity", func(t *testing.T) {
 		ta := imageAttachment(t, 910008, testPNG(t, 400, 300))
 		generated, err := ta.GetPreview(t.Context(), PreviewMedium)
 		require.NoError(t, err)
 		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
 
-		cached, err := ta.GetPreview(t.Context(), PreviewMedium)
+		stored, err := ta.GetPreview(t.Context(), PreviewMedium)
 		require.NoError(t, err)
-		assert.Equal(t, generated, cached)
+		assert.Equal(t, readPreview(t, generated), readPreview(t, stored))
 	})
 
 	fallbacks := map[string]struct {
@@ -330,14 +463,15 @@ func TestTaskAttachment_Preview(t *testing.T) {
 			ta := imageAttachment(t, tc.id, tc.content)
 			ta.File.Size = tc.size
 
-			preview, err := ta.loadPreviewOrFile(t.Context(), PreviewMedium)
+			download, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
 			require.NoError(t, err)
-			assert.Nil(t, preview)
+			original, isOriginal := download.(*TaskAttachmentOriginal)
+			require.True(t, isOriginal, "got %T", download)
 
-			original, err := io.ReadAll(ta.File.File)
+			content, err := io.ReadAll(original.File.File)
 			require.NoError(t, err)
-			require.NoError(t, ta.File.File.Close())
-			assert.Equal(t, tc.content, original)
+			require.NoError(t, original.Close())
+			assert.Equal(t, tc.content, content)
 		})
 	}
 }
@@ -607,10 +741,153 @@ func TestPreviewGenerator_Queue(t *testing.T) {
 	})
 }
 
-// The preview cache outlives a test, so a fixed key would be a cache hit when the test runs again.
-func uniquePreviewCacheKey(t *testing.T) string {
+var lastPreviewTestFileID atomic.Int64
+
+// Stored previews outlive a test, so a fixed file would already have one when the test runs again.
+func uniquePreviewFileID(t *testing.T) int64 {
 	t.Helper()
-	return t.Name() + "_" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	fileID := 920000 + lastPreviewTestFileID.Add(1)
+	require.NoError(t, (&files.File{ID: fileID}).Save(bytes.NewReader([]byte("original"))))
+	return fileID
+}
+
+func storedPreview(t *testing.T, fileID int64, size PreviewSize) []byte {
+	t.Helper()
+	content, length, err := (&files.File{ID: fileID}).OpenPreview(size)
+	require.NoError(t, err)
+	preview, err := io.ReadAll(content)
+	require.NoError(t, err)
+	require.NoError(t, content.Close())
+	assert.Equal(t, int64(len(preview)), length)
+	return preview
+}
+
+func failingSource(t *testing.T) sourceOpener {
+	t.Helper()
+	return func() (io.ReadCloser, error) {
+		assert.Fail(t, "the source must not be opened")
+		return nil, errors.New("source opened")
+	}
+}
+
+func TestPreviewGenerator_StoresPreviews(t *testing.T) {
+	t.Run("a stored preview is served without generating", func(t *testing.T) {
+		fileID := uniquePreviewFileID(t)
+		stored := testPNG(t, 100, 100)
+		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, stored))
+		source := &trackedSource{content: testPNG(t, 400, 300)}
+
+		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+
+		require.NoError(t, err)
+		assert.Equal(t, stored, readPreview(t, preview))
+		assert.Zero(t, source.opened.Load())
+	})
+
+	t.Run("a stored preview is streamed and closed by the caller", func(t *testing.T) {
+		fileID := uniquePreviewFileID(t)
+		var stored bytes.Buffer
+		require.NoError(t, jpeg.Encode(&stored, image.NewGray(image.Rect(0, 0, 100, 100)), nil))
+		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, stored.Bytes()))
+
+		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, failingSource(t), PreviewSmall)
+
+		require.NoError(t, err)
+		assert.Equal(t, "image/jpeg", preview.Mime, "the mime type must come from the stored bytes")
+		assert.Equal(t, stored.Bytes(), readPreview(t, preview))
+	})
+
+	t.Run("a stored preview that is not an image is generated again", func(t *testing.T) {
+		fileID := uniquePreviewFileID(t)
+		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, nil))
+		source := &trackedSource{content: testPNG(t, 400, 300)}
+
+		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+
+		require.NoError(t, err)
+		generated := readPreview(t, preview)
+		_, err = png.DecodeConfig(bytes.NewReader(generated))
+		require.NoError(t, err)
+		assert.Equal(t, generated, storedPreview(t, fileID, PreviewSmall))
+	})
+
+	t.Run("a stored preview that is neither jpeg nor png is generated again", func(t *testing.T) {
+		svg := []byte(`<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>`)
+		var gifPreview bytes.Buffer
+		require.NoError(t, gif.Encode(&gifPreview, image.NewGray(image.Rect(0, 0, 100, 100)), nil))
+		stored := map[string][]byte{
+			"svg": svg,
+			"gif": gifPreview.Bytes(),
+		}
+		for name, content := range stored {
+			t.Run(name, func(t *testing.T) {
+				fileID := uniquePreviewFileID(t)
+				require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, content))
+				source := &trackedSource{content: testPNG(t, 400, 300)}
+
+				preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+
+				require.NoError(t, err)
+				assert.Equal(t, "image/png", preview.Mime)
+				assert.Equal(t, readPreview(t, preview), storedPreview(t, fileID, PreviewSmall))
+			})
+		}
+	})
+
+	t.Run("a generated preview is not generated again, even after a restart", func(t *testing.T) {
+		fileID := uniquePreviewFileID(t)
+		source := &trackedSource{content: testPNG(t, 400, 300)}
+		g := newPreviewGenerator(previewPixelBudget, time.Minute)
+
+		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
+		require.NoError(t, err)
+		generated := readPreview(t, preview)
+		require.Equal(t, int32(2), source.opened.Load())
+		assert.Equal(t, generated, storedPreview(t, fileID, PreviewSmall))
+
+		// A restart only keeps what is in the storage.
+		generators := map[string]*previewGenerator{
+			"same generator":          g,
+			"generator after restart": newPreviewGenerator(previewPixelBudget, time.Minute),
+		}
+		for name, generator := range generators {
+			preview, err := generator.get(t.Context(), fileID, source.open, PreviewSmall)
+			require.NoError(t, err, name)
+			assert.Equal(t, generated, readPreview(t, preview), name)
+			assert.Equal(t, int32(2), source.opened.Load(), name)
+		}
+	})
+
+	t.Run("previews are stored per size", func(t *testing.T) {
+		fileID := uniquePreviewFileID(t)
+		source := &trackedSource{content: testPNG(t, 400, 300)}
+		g := newPreviewGenerator(previewPixelBudget, time.Minute)
+
+		for _, size := range []PreviewSize{
+			PreviewSmall,
+			PreviewMedium,
+		} {
+			preview, err := g.get(t.Context(), fileID, source.open, size)
+			require.NoError(t, err)
+			cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
+			require.NoError(t, err)
+			assert.Equal(t, size.GetSize(), cfg.Width)
+		}
+	})
+
+	t.Run("a preview of a deleted file is served but not stored", func(t *testing.T) {
+		fileID := 920000 + lastPreviewTestFileID.Add(1)
+		source := &trackedSource{content: testPNG(t, 400, 300)}
+
+		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+
+		require.NoError(t, err)
+		cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
+		require.NoError(t, err)
+		assert.Equal(t, PreviewSmall.GetSize(), cfg.Width)
+		_, _, err = (&files.File{ID: fileID}).OpenPreview(PreviewSmall)
+		require.ErrorIs(t, err, fs.ErrNotExist)
+	})
 }
 
 func TestPreviewGenerator_SharesGeneration(t *testing.T) {
@@ -620,17 +897,17 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 		tracker := newDecodeTracker()
 		source := tracker.source(t, testPNG(t, 100, 100))
-		cacheKey := uniquePreviewCacheKey(t)
+		fileID := uniquePreviewFileID(t)
 
 		const callers = 6
 		type result struct {
-			preview []byte
+			preview *TaskAttachmentPreview
 			err     error
 		}
 		results := make(chan result, callers)
 		for range callers {
 			go func() {
-				preview, err := g.get(t.Context(), cacheKey, source, PreviewSmall)
+				preview, err := g.get(t.Context(), fileID, source, PreviewSmall)
 				results <- result{
 					preview: preview,
 					err:     err,
@@ -645,7 +922,8 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		for range callers {
 			r := <-results
 			require.NoError(t, r.err)
-			_, err := png.DecodeConfig(bytes.NewReader(r.preview))
+			// Every caller reads the whole preview although they share one flight.
+			_, err := png.Decode(bytes.NewReader(readPreview(t, r.preview)))
 			require.NoError(t, err)
 		}
 		assert.Equal(t, 1, tracker.startedDecodes())
@@ -657,23 +935,23 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		content := testPNG(t, 100, 100)
 		leaderSource := &trackedSource{content: content}
 		followerSource := &trackedSource{content: content}
-		cacheKey := uniquePreviewCacheKey(t)
+		fileID := uniquePreviewFileID(t)
 
 		leaderCtx, cancelLeader := context.WithCancel(t.Context())
 		leader := make(chan error, 1)
 		go func() {
-			_, err := g.get(leaderCtx, cacheKey, leaderSource.open, PreviewSmall)
+			_, err := g.get(leaderCtx, fileID, leaderSource.open, PreviewSmall)
 			leader <- err
 		}()
 		require.Eventually(t, func() bool { return leaderSource.opened.Load() == 1 }, 5*time.Second, time.Millisecond)
 
 		type result struct {
-			preview []byte
+			preview *TaskAttachmentPreview
 			err     error
 		}
 		follower := make(chan result, 1)
 		go func() {
-			preview, err := g.get(t.Context(), cacheKey, followerSource.open, PreviewSmall)
+			preview, err := g.get(t.Context(), fileID, followerSource.open, PreviewSmall)
 			follower <- result{
 				preview: preview,
 				err:     err,
@@ -691,7 +969,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 		g.slots.Release(pixels)
 		r := <-follower
 		require.NoError(t, r.err)
-		_, err := png.DecodeConfig(bytes.NewReader(r.preview))
+		_, err := png.DecodeConfig(bytes.NewReader(readPreview(t, r.preview)))
 		require.NoError(t, err)
 		assert.Zero(t, followerSource.opened.Load(), "the follower must share the flight instead of generating itself")
 	})
@@ -699,7 +977,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 	t.Run("a panicking decode is an error", func(t *testing.T) {
 		g := newPreviewGenerator(pixels, time.Minute)
 
-		_, err := g.get(t.Context(), uniquePreviewCacheKey(t), func() (io.ReadCloser, error) { panic("broken decoder") }, PreviewSmall)
+		_, err := g.get(t.Context(), uniquePreviewFileID(t), func() (io.ReadCloser, error) { panic("broken decoder") }, PreviewSmall)
 
 		require.ErrorContains(t, err, "broken decoder")
 		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
@@ -726,7 +1004,7 @@ func TestRenderPreview_NeverUpscales(t *testing.T) {
 			preview, err := renderPreview(bytes.NewReader(testPNG(t, tc.width, tc.height)), PreviewExtraLarge)
 			require.NoError(t, err)
 
-			cfg, err := png.DecodeConfig(bytes.NewReader(preview))
+			cfg, _, err := image.DecodeConfig(bytes.NewReader(preview))
 			require.NoError(t, err)
 			assert.Equal(t, tc.width, cfg.Width)
 			assert.Equal(t, tc.height, cfg.Height)

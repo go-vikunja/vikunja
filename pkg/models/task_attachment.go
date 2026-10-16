@@ -17,12 +17,16 @@
 package models
 
 import (
+	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
+	"image/jpeg"
 	"image/png"
 	"io"
+	"io/fs"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -38,6 +42,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/disintegration/imaging"
+	"github.com/gabriel-vasile/mimetype"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/sync/singleflight"
 	"xorm.io/xorm"
@@ -146,46 +151,68 @@ func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []
 	return success, failures, nil
 }
 
-// GetTaskAttachmentForDownload returns preview bytes instead of the file when previewSize
-// is set and the attachment is an image; the file is only opened when there is no preview.
-// Returns ErrGenericForbidden on denied access.
+// TaskAttachmentDownload is either a *TaskAttachmentPreview or a *TaskAttachmentOriginal. The caller must close it.
+//
+//sumtype:decl
+type TaskAttachmentDownload interface {
+	io.Closer
+	taskAttachmentDownload()
+}
+
+// TaskAttachmentPreview is an encoded preview image.
+type TaskAttachmentPreview struct {
+	io.ReadCloser
+	Mime string
+	Size int64 // -1 when the storage did not report it
+}
+
+func (*TaskAttachmentPreview) taskAttachmentDownload() {}
+
+// TaskAttachmentOriginal is the uploaded file, opened for reading.
+type TaskAttachmentOriginal struct {
+	File *files.File
+}
+
+func (original *TaskAttachmentOriginal) Close() error {
+	return original.File.File.Close()
+}
+
+func (*TaskAttachmentOriginal) taskAttachmentDownload() {}
+
+// GetTaskAttachmentForDownload returns a preview instead of the file when previewSize
+// is set and the attachment is an image. Returns ErrGenericForbidden on denied access.
 // Owns its own session and commits it before touching storage so no pool connection is held.
-func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
+func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (TaskAttachmentDownload, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	ta = &TaskAttachment{ID: attachmentID, TaskID: taskID}
+	ta := &TaskAttachment{ID: attachmentID, TaskID: taskID}
 	can, _, err := ta.CanRead(s, a)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, nil, err
+		return nil, err
 	}
 	if !can {
 		_ = s.Rollback()
-		return nil, nil, ErrGenericForbidden{}
+		return nil, ErrGenericForbidden{}
 	}
 
 	if err := ta.ReadOne(s, a); err != nil {
 		_ = s.Rollback()
-		return nil, nil, err
+		return nil, err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return nil, nil, err
+		return nil, err
 	}
 
-	preview, err = ta.loadPreviewOrFile(ctx, previewSize)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return ta, preview, nil
+	return ta.openPreviewOrFile(ctx, previewSize)
 }
 
-func (ta *TaskAttachment) loadPreviewOrFile(ctx context.Context, previewSize PreviewSize) (preview []byte, err error) {
+func (ta *TaskAttachment) openPreviewOrFile(ctx context.Context, previewSize PreviewSize) (TaskAttachmentDownload, error) {
 	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
-		preview, err = ta.GetPreview(ctx, previewSize)
+		preview, err := ta.GetPreview(ctx, previewSize)
 		if err == nil {
 			return preview, nil
 		}
@@ -194,7 +221,10 @@ func (ta *TaskAttachment) loadPreviewOrFile(ctx context.Context, previewSize Pre
 		}
 	}
 
-	return nil, ta.File.LoadFileByID()
+	if err := ta.File.LoadFileByID(); err != nil {
+		return nil, err
+	}
+	return &TaskAttachmentOriginal{File: ta.File}, nil
 }
 
 // ReadOne returns a task attachment
@@ -313,22 +343,10 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page in
 	return attachments, len(attachments), numberOfTotalItems, err
 }
 
-func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
-	return "task_attachment_preview_" + strconv.FormatInt(id, 10) + "_size_" + string(size)
-}
-
-func cachedTaskAttachmentPreview(cacheKey string) (preview []byte, cached bool) {
-	cached, err := keyvalue.GetWithValue(cacheKey, &preview)
-	if err != nil {
-		log.Errorf("Could not read attachment preview %s from the cache: %v", cacheKey, err)
-		return nil, false
-	}
-	return preview, cached
-}
-
-func cacheTaskAttachmentPreview(cacheKey string, preview []byte) {
-	if err := keyvalue.Put(cacheKey, preview); err != nil {
-		log.Errorf("Could not cache attachment preview %s: %v", cacheKey, err)
+// Redis kept these forever, and instances on the old version keep writing them.
+func RemoveLegacyTaskAttachmentPreviews() {
+	if err := keyvalue.DelPrefix("task_attachment_preview_"); err != nil {
+		log.Errorf("Could not remove the attachment previews left in keyvalue: %v", err)
 	}
 }
 
@@ -356,22 +374,34 @@ func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *preview
 }
 
 // GetPreview returns ErrTaskAttachmentNotPreviewable when the original should be served instead.
-func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) ([]byte, error) {
+func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
 	if ta.File.Size > maxPreviewSourceBytes {
 		return nil, ErrTaskAttachmentNotPreviewable{Err: fmt.Errorf("file is %d bytes, previews are limited to %d", ta.File.Size, maxPreviewSourceBytes)}
 	}
-	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
-	return attachmentPreviews.get(ctx, cacheKey, fileOpener(ta.File.ID), previewSize)
+	return attachmentPreviews.get(ctx, ta.File.ID, fileOpener(ta.File.ID), previewSize)
 }
 
-func (g *previewGenerator) get(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
-	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
+func newTaskAttachmentPreview(preview []byte) *TaskAttachmentPreview {
+	return &TaskAttachmentPreview{
+		ReadCloser: io.NopCloser(bytes.NewReader(preview)),
+		Mime:       mimetype.Detect(preview).String(),
+		Size:       int64(len(preview)),
+	}
+}
+
+func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpener, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
+	preview, err := g.openStored(fileID, previewSize)
+	if err == nil {
 		return preview, nil
 	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		log.Errorf("Could not use the stored %s preview of file %d: %v", previewSize, fileID, err)
+	}
 
-	flight := g.flights.DoChan(cacheKey, func() (any, error) {
+	flightKey := strconv.FormatInt(fileID, 10) + "_" + string(previewSize)
+	flight := g.flights.DoChan(flightKey, func() (any, error) {
 		// Detached: the flight is shared, so the caller who started it leaving must not fail the others.
-		return g.generateAndCache(context.WithoutCancel(ctx), cacheKey, open, previewSize)
+		return g.generateAndStore(context.WithoutCancel(ctx), fileID, open, previewSize)
 	})
 
 	select {
@@ -382,21 +412,73 @@ func (g *previewGenerator) get(ctx context.Context, cacheKey string, open source
 			return nil, result.Err
 		}
 		preview, _ := result.Val.([]byte)
-		return preview, nil
+		return newTaskAttachmentPreview(preview), nil
 	}
 }
 
-func (g *previewGenerator) generateAndCache(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) (preview []byte, err error) {
+// Enough for every image format's magic number.
+const previewHeaderLength = 512
+
+// Any error means the preview is generated instead of failing the request.
+func (g *previewGenerator) openStored(fileID int64, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
+	content, length, err := (&files.File{ID: fileID}).OpenPreview(previewSize)
+	if err != nil {
+		return nil, err
+	}
+
+	buffered := bufio.NewReaderSize(content, previewHeaderLength)
+	header, err := buffered.Peek(previewHeaderLength)
+	if err != nil && !errors.Is(err, io.EOF) {
+		_ = content.Close()
+		return nil, fmt.Errorf("reading its header: %w", err)
+	}
+
+	mime := mimetype.Detect(header).String()
+	if mime != "image/jpeg" && mime != "image/png" {
+		_ = content.Close()
+		return nil, fmt.Errorf("not a jpeg or png but %s", mime)
+	}
+
+	return &TaskAttachmentPreview{
+		ReadCloser: struct {
+			io.Reader
+			io.Closer
+		}{
+			Reader: buffered,
+			Closer: content,
+		},
+		Mime: mime,
+		Size: length,
+	}, nil
+}
+
+// The caller's own lookup already logged why the stored preview is unusable.
+func (g *previewGenerator) readStored(fileID int64, previewSize PreviewSize) (preview []byte, stored bool) {
+	content, err := g.openStored(fileID, previewSize)
+	if err != nil {
+		return nil, false
+	}
+	defer content.Close()
+
+	preview, err = io.ReadAll(content)
+	if err != nil {
+		log.Errorf("Could not read the stored %s preview of file %d: %v", previewSize, fileID, err)
+		return nil, false
+	}
+	return preview, true
+}
+
+func (g *previewGenerator) generateAndStore(ctx context.Context, fileID int64, open sourceOpener, previewSize PreviewSize) (preview []byte, err error) {
 	// singleflight re-panics a DoChan callback on its own goroutine, which would crash the whole API.
 	defer func() {
 		if r := recover(); r != nil {
-			log.Errorf("Panic while generating attachment preview %s: %v\n%s", cacheKey, r, debug.Stack())
-			err = fmt.Errorf("panic while generating attachment preview %s: %v", cacheKey, r)
+			log.Errorf("Panic while generating the %s preview of file %d: %v\n%s", previewSize, fileID, r, debug.Stack())
+			err = fmt.Errorf("panic while generating the %s preview of file %d: %v", previewSize, fileID, r)
 		}
 	}()
 
-	// A flight that just finished may have cached it after this caller's lookup.
-	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
+	// A flight that just finished may have stored it after this caller's lookup.
+	if preview, stored := g.readStored(fileID, previewSize); stored {
 		return preview, nil
 	}
 
@@ -405,8 +487,11 @@ func (g *previewGenerator) generateAndCache(ctx context.Context, cacheKey string
 		return nil, err
 	}
 
-	cacheTaskAttachmentPreview(cacheKey, preview)
-	log.Infof("Attachment image preview %s created and cached", cacheKey)
+	if err := (&files.File{ID: fileID}).SavePreview(previewSize, preview); err != nil {
+		log.Errorf("Could not store the %s preview of file %d: %v", previewSize, fileID, err)
+		return preview, nil
+	}
+	log.Infof("Created and stored the %s preview of file %d", previewSize, fileID)
 	return preview, nil
 }
 
@@ -482,53 +567,40 @@ func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
 		return nil, err
 	}
 
+	return encodePreview(resizeImage(img, previewSize.GetSize()))
+}
+
+const previewJPEGQuality = 85
+
+// encodePreview alone decides the format of a preview; its mime type is read back from the bytes.
+func encodePreview(img *image.NRGBA) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	if err := png.Encode(buf, resizeImage(img, previewSize.GetSize())); err != nil {
+
+	// JPEG is much smaller for photos but has no alpha channel.
+	var err error
+	if img.Opaque() {
+		err = jpeg.Encode(buf, img, &jpeg.Options{Quality: previewJPEGQuality})
+	} else {
+		err = png.Encode(buf, img)
+	}
+	if err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
-type PreviewSize string
+type PreviewSize = files.PreviewSize
 
 const (
-	PreviewSizeUnknown PreviewSize = "unknown"
-	PreviewSmall       PreviewSize = "sm"
-	PreviewMedium      PreviewSize = "md"
-	PreviewLarge       PreviewSize = "lg"
-	PreviewExtraLarge  PreviewSize = "xl"
+	PreviewSizeUnknown = files.PreviewSizeUnknown
+	PreviewSmall       = files.PreviewSmall
+	PreviewMedium      = files.PreviewMedium
+	PreviewLarge       = files.PreviewLarge
+	PreviewExtraLarge  = files.PreviewExtraLarge
 )
 
-func (previewSize PreviewSize) GetSize() int {
-	switch previewSize {
-	case PreviewSmall:
-		return 100
-	case PreviewMedium:
-		return 200
-	case PreviewLarge:
-		return 400
-	case PreviewExtraLarge:
-		return 800
-	case PreviewSizeUnknown:
-		return 0
-	default:
-		return 200
-	}
-}
-
 func GetPreviewSizeFromString(size string) PreviewSize {
-	switch size {
-	case "sm":
-		return PreviewSmall
-	case "md":
-		return PreviewMedium
-	case "lg":
-		return PreviewLarge
-	case "xl":
-		return PreviewExtraLarge
-	}
-
-	return PreviewSizeUnknown
+	return files.GetPreviewSizeFromString(size)
 }
 
 func resizeImage(img image.Image, width int) *image.NRGBA {

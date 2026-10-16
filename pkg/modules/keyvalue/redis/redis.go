@@ -160,12 +160,24 @@ func (s *Storage) ListKeys(prefix string) ([]string, error) {
 
 // DelPrefix removes all keys in redis which start with the given prefix
 func (s *Storage) DelPrefix(prefix string) error {
-	keys, err := s.ListKeys(prefix)
-	if err != nil {
-		return err
+	ctx := context.Background()
+	pattern := globEscaper.Replace(prefix) + "*"
+	var cursor uint64
+
+	// UNLINK per page so a large prefix neither blocks Redis nor piles up in memory here.
+	for {
+		keys, next, err := s.client.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return err
+		}
+		if len(keys) > 0 {
+			if err := s.client.Unlink(ctx, keys...).Err(); err != nil {
+				return err
+			}
+		}
+		cursor = next
+		if cursor == 0 {
+			return nil
+		}
 	}
-	if len(keys) == 0 {
-		return nil
-	}
-	return s.client.Del(context.Background(), keys...).Err()
 }
