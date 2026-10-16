@@ -261,6 +261,10 @@ export function emptyProjectTrashMutationOptions() {
 	})
 }
 
+export function useDeleteProjectMutation() {
+	return useMutation(deleteProjectMutationOptions())
+}
+
 export function useRestoreProjectMutation() {
 	return useMutation(restoreProjectMutationOptions())
 }

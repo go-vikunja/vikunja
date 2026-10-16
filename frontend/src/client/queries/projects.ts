@@ -1,4 +1,3 @@
-import {deleteProjectMutationOptions} from './trash'
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
@@ -18,7 +17,6 @@ import type {
 import {queryClient} from '@/client/queryClient'
 import {PERMISSIONS} from '@/constants/permissions'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
-import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
 
 import {contextMutationOptions} from './contextMutation'
@@ -483,10 +481,6 @@ export function usePatchProjectFavoriteMutation() {
 
 export function useSetProjectSubscriptionMutation() {
 	return useMutation(setProjectSubscriptionMutationOptions())
-}
-
-export function useDeleteProjectMutation() {
-	return useMutation(deleteProjectMutationOptions())
 }
 
 export function useDuplicateProjectMutation() {

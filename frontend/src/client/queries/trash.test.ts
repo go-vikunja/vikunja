@@ -1,6 +1,7 @@
 import {describe, it, expect, vi} from 'vitest'
 import {QueryClient, QueryObserver} from '@tanstack/vue-query'
 import {
+	deleteProjectMutationOptions,
 	deleteTaskPermanentlyMutationOptions,
 	emptyTaskTrashMutationOptions,
 	projectInTrashFromError,
@@ -13,10 +14,15 @@ import {
 	trashKeys,
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
-import {error} from '@/message'
 import {kanbanKeys, normalizeBucket, type BoardData} from './kanban'
-import {projectKeys} from './projects'
+import {taskKeys} from './tasks'
+import {
+	normalizeProject,
+	projectKeys,
+	type ProjectListResult,
+} from './projects'
 import {ApiError} from '@/client/problem'
+import {error} from '@/message'
 
 const sdk = vi.hoisted(() => ({
 	tasksTrashList: vi.fn(),
@@ -24,6 +30,7 @@ const sdk = vi.hoisted(() => ({
 	tasksRead: vi.fn(),
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
+	projectsDelete: vi.fn(),
 	projectsRestore: vi.fn(),
 	projectsTrashList: vi.fn(),
 }))
@@ -314,6 +321,51 @@ it('drops a restored project from the trash and marks time entries stale', async
 	expect(client.getQueryData(trashKeys.projectList(1))).toMatchObject({items: [{id: 1}], total: 2})
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(taskKeys.detail(5))?.isInvalidated).toBe(true)
+})
+
+describe('deleteProjectMutationOptions', () => {
+	const project = (id: number, parent_project_id = 0) => normalizeProject({id, title: 'Project', parent_project_id})
+
+	it('removes a deleted project, all descendants, and their detail entries', async () => {
+		const client = new QueryClient()
+		client.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [
+				project(1),
+				project(2, 1),
+				project(3, 2),
+				project(4),
+			],
+			favoriteProject: null,
+			savedFilterProjects: [project(-2)],
+		})
+		for (const id of [1, 2, 3, 4]) {
+			client.setQueryData(projectKeys.detail(id), project(id))
+		}
+		sdk.projectsDelete.mockResolvedValue({data: undefined})
+
+		await client.getMutationCache().build(client, deleteProjectMutationOptions()).execute(1)
+
+		expect(sdk.projectsDelete).toHaveBeenCalledWith({path: {id: 1}})
+		expect(client.getQueryData<ProjectListResult>(projectKeys.list())?.projects.map(p => p.id)).toEqual([4])
+		expect(client.getQueryData(projectKeys.detail(1))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(2))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(3))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(4))).toBeDefined()
+	})
+
+	it('marks time entries, task lists and task details stale', async () => {
+		const client = new QueryClient()
+		seedTrash(client)
+		client.setQueryData(taskKeys.list({}), [])
+		client.setQueryData(taskKeys.detail(5), {id: 5})
+		sdk.projectsDelete.mockResolvedValue({data: undefined})
+
+		await client.getMutationCache().build(client, deleteProjectMutationOptions()).execute(1)
+
+		expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(taskKeys.list({}))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(taskKeys.detail(5))?.isInvalidated).toBe(true)
+	})
 })
 
 describe('taskInTrashFromError', () => {
