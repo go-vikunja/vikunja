@@ -1339,8 +1339,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 		// Not task columns; written separately below.
 		relationFields := map[string]bool{
-			"assignees": true,
-			"reminders": true,
+			"assignees":   true,
+			"reminders":   true,
+			"is_favorite": true,
 		}
 		cols := []string{}
 		for _, f := range fields {
@@ -1570,6 +1571,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	wasFavorite, err := isFavorite(s, t.ID, a, FavoriteKindTask)
 	if err != nil {
 		return
+	}
+	if len(fields) > 0 && !fieldSet["is_favorite"] {
+		t.IsFavorite = wasFavorite
 	}
 	if t.IsFavorite && !wasFavorite {
 		if err := addToFavorites(s, t.ID, a, FavoriteKindTask); err != nil {
