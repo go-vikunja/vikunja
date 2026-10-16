@@ -1,5 +1,6 @@
 <template>
 	<div
+		ref="card"
 		class="task loader-container draggable"
 		:class="{
 			'is-loading': showLoading,
@@ -122,7 +123,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import {useGlobalNow} from '@/composables/useGlobalNow'
@@ -139,6 +140,7 @@ import type {Task as ITask} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
 import {SUPPORTED_IMAGE_SUFFIX} from '@/helpers/attachmentPreview'
 import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
+import {ApiError} from '@/client/problem'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
@@ -227,7 +229,14 @@ function showCoverImage(url: string | null) {
 	coverImageBlobUrl.value = url
 }
 
-async function maybeDownloadCoverImage() {
+let coverRequest = 0
+let coverRetry: ReturnType<typeof setTimeout> | undefined
+// the server answers 503 while its preview queue is full
+const COVER_RETRY_DELAY = 5000
+
+async function maybeDownloadCoverImage(retryWhenBusy = true) {
+	clearTimeout(coverRetry)
+	const request = ++coverRequest
 	if (!props.task.cover_image_attachment_id) {
 		showCoverImage(null)
 		return
@@ -239,19 +248,59 @@ async function maybeDownloadCoverImage() {
 	}
 
 	try {
-		showCoverImage(await fetchAttachmentUrl({id: attachment.id!, task_id: props.task.id}, 'lg'))
-	} catch {
+		const url = await fetchAttachmentUrl({id: attachment.id!, task_id: props.task.id}, 'lg')
+		if (request !== coverRequest) {
+			releaseAttachmentUrl(url)
+			return
+		}
+		showCoverImage(url)
+	} catch (error) {
 		// the cover is decorative, the card works without it
+		if (retryWhenBusy && request === coverRequest && error instanceof ApiError && error.status === 503) {
+			coverRetry = setTimeout(() => maybeDownloadCoverImage(false), COVER_RETRY_DELAY)
+		}
 	}
 }
 
+const card = useTemplateRef<HTMLElement>('card')
+const hasBeenVisible = ref(false)
+let visibilityObserver: IntersectionObserver | undefined
+
+// rootMargin only grows the viewport; buckets scroll on their own and need scrollMargin
+const COVER_PRELOAD_MARGIN = '200px'
+
+onMounted(() => {
+	visibilityObserver = new IntersectionObserver(
+		entries => {
+			if (!entries.some(entry => entry.isIntersecting)) {
+				return
+			}
+			hasBeenVisible.value = true
+			visibilityObserver?.disconnect()
+		},
+		{
+			rootMargin: COVER_PRELOAD_MARGIN,
+			scrollMargin: COVER_PRELOAD_MARGIN,
+		},
+	)
+	visibilityObserver.observe(card.value!)
+})
+
 watch(
-	() => props.task.cover_image_attachment_id,
-	maybeDownloadCoverImage,
-	{immediate: true},
+	[hasBeenVisible, () => props.task.cover_image_attachment_id],
+	([visible]) => {
+		if (visible) {
+			maybeDownloadCoverImage()
+		}
+	},
 )
 
-onBeforeUnmount(() => showCoverImage(null))
+onBeforeUnmount(() => {
+	visibilityObserver?.disconnect()
+	clearTimeout(coverRetry)
+	coverRequest++
+	showCoverImage(null)
+})
 </script>
 
 <style lang="scss" scoped>

@@ -1,3 +1,4 @@
+import {readFile} from 'node:fs/promises'
 import {test, expect} from '../../support/fixtures'
 import {BucketFactory} from '../../factories/bucket'
 import {ProjectFactory} from '../../factories/project'
@@ -63,6 +64,58 @@ test.describe('Project View Kanban', () => {
 		buckets = await BucketFactory.create(2, {
 			project_view_id: 4,
 		})
+	})
+
+	test('Loads card covers only once they scroll into view', async ({authenticatedPage: page, apiContext, userToken}) => {
+		const tasks = await createTaskWithBuckets(buckets, 20)
+		const image = await readFile('tests/fixtures/image-blue.png')
+		const coverIds: number[] = []
+		for (const task of tasks) {
+			const upload = await apiContext.put(`tasks/${task.id}/attachments`, {
+				multipart: {
+					files: {
+						name: 'cover.png',
+						mimeType: 'image/png',
+						buffer: image,
+					},
+				},
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(upload.ok()).toBe(true)
+			coverIds.push((await upload.json()).success[0].id)
+		}
+		await TaskFactory.create(tasks.length, {
+			cover_image_attachment_id: (i: number) => coverIds[i - 1],
+		})
+
+		const coverRequests = new Map<number, number>()
+		page.on('request', request => {
+			const url = new URL(request.url())
+			const taskId = url.pathname.match(/\/api\/v2\/tasks\/(\d+)\/attachments\/\d+$/)?.[1]
+			if (taskId && url.searchParams.get('preview_size') === 'lg') {
+				coverRequests.set(Number(taskId), (coverRequests.get(Number(taskId)) ?? 0) + 1)
+			}
+		})
+		const everyCoverOnce = new Map(tasks.map(task => [task.id, 1]))
+
+		await page.setViewportSize({
+			width: 1280,
+			height: 500,
+		})
+		await page.goto('/projects/1/4')
+
+		const cards = page.locator('.kanban .bucket .tasks .task')
+		await expect(cards).toHaveCount(tasks.length)
+		await expect(cards.first().locator('img')).toBeVisible()
+		expect(coverRequests.size).toBeGreaterThan(0)
+		expect(coverRequests.size).toBeLessThan(tasks.length)
+
+		// Jumping straight to the bottom would skip the cards in between.
+		for (let i = 0; i < tasks.length; i++) {
+			await cards.nth(i).scrollIntoViewIfNeeded()
+			await expect(cards.nth(i).locator('img')).toBeVisible()
+		}
+		expect(coverRequests).toEqual(everyCoverOnce)
 	})
 
 	test('Shows all buckets with their tasks', async ({authenticatedPage: page}) => {
