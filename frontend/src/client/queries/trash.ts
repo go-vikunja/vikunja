@@ -14,7 +14,7 @@ import {
 	tasksRestore,
 	tasksTrashEmpty,
 	tasksTrashList,
-	type Project,
+	type TrashedSubProject,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
