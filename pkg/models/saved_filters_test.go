@@ -126,6 +126,26 @@ func TestSavedFilter_getSavedFiltersForUser(t *testing.T) {
 		require.Len(t, filters, 1)
 		assert.Equal(t, int64(1), filters[0].ID)
 	})
+	t.Run("search ignores accents with unaccent", func(t *testing.T) {
+		if db.Type() != schemas.POSTGRES {
+			t.Skip("accent folding depends on the collation outside postgres")
+		}
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(1).Cols("title").Update(&SavedFilter{Title: "Manutenção"})
+		require.NoError(t, err)
+
+		filters, err := getSavedFiltersForUser(s, &user.User{ID: 1}, "manutencao")
+		require.NoError(t, err)
+		if !db.UnaccentAvailable() {
+			assert.Empty(t, filters)
+			return
+		}
+		require.Len(t, filters, 1)
+		assert.Equal(t, int64(1), filters[0].ID)
+	})
 }
 
 func TestSavedFilter_Update(t *testing.T) {

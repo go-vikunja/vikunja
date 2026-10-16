@@ -49,6 +49,8 @@ var (
 	// paradedbInstalled marks whether the paradedb extension is available
 	// and can be used for full text search.
 	paradedbInstalled bool
+	// unaccentAvailable makes ILIKE accent-insensitive on postgres.
+	unaccentAvailable bool
 )
 
 var postgresConnectionCredentials = regexp.MustCompile(`(?i)(postgres(?:ql)?://)[^@\s"]+@`)
@@ -264,6 +266,7 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 	}
 
 	checkParadeDB(engine)
+	checkUnaccent(engine)
 	if !paradedbInstalled {
 		return engine, nil
 	}
@@ -659,6 +662,23 @@ func checkParadeDB(engine *xorm.Engine) {
 
 	paradedbInstalled = true
 	log.Debug("ParadeDB extension detected, using @@@ search operator")
+}
+
+// checkUnaccent calls unaccent() instead of querying pg_extension so an
+// extension outside the search_path counts as unavailable.
+func checkUnaccent(engine *xorm.Engine) {
+	if engine.Dialect().URI().DBType != schemas.POSTGRES {
+		return
+	}
+
+	var result string
+	if _, err := engine.SQL("SELECT unaccent('a')").Get(&result); err != nil {
+		log.Debugf("unaccent extension not available, search stays accent-sensitive: %v", err)
+		return
+	}
+
+	unaccentAvailable = true
+	log.Info("unaccent extension detected, search is accent-insensitive")
 }
 
 func CreateParadeDBIndexes() error {
