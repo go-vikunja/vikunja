@@ -400,3 +400,98 @@ describe('Multiselect.vue — capped results hint', () => {
 		wrapper.unmount()
 	})
 })
+
+describe('Multiselect.vue — createAlwaysFirst', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	const duplicates = [{title: 'Alpha'}, {title: 'Alpha'}]
+
+	async function typeQuery(wrapper: VueWrapper, value: string) {
+		const input = wrapper.find('input[role="combobox"]')
+		await input.setValue(value)
+		await input.trigger('keyup')
+		vi.advanceTimersByTime(300)
+		await nextTick()
+		return input
+	}
+
+	it('shows the create option first even when the query matches an existing option exactly', async () => {
+		const wrapper = mountMultiselect({creatable: true, createAlwaysFirst: true, searchResults: duplicates})
+		await typeQuery(wrapper, 'Alpha')
+
+		const options = wrapper.findAll('[role="option"]')
+		expect(options).toHaveLength(3)
+		expect(options[0].classes()).toContain('is-create-option')
+
+		wrapper.unmount()
+	})
+
+	it('hides the create option on an exact match without createAlwaysFirst', async () => {
+		const wrapper = mountMultiselect({creatable: true, searchResults: duplicates})
+		await typeQuery(wrapper, 'Alpha')
+
+		expect(wrapper.find('.is-create-option').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('keeps the create option last without createAlwaysFirst', async () => {
+		const wrapper = mountMultiselect({creatable: true, searchResults: duplicates})
+		await typeQuery(wrapper, 'Alp')
+
+		const options = wrapper.findAll('[role="option"]')
+		expect(options[options.length - 1].classes()).toContain('is-create-option')
+
+		wrapper.unmount()
+	})
+
+	it('creates on Enter even when the query matches an existing option exactly', async () => {
+		const wrapper = mountMultiselect({creatable: true, createAlwaysFirst: true, searchResults: [{title: 'Alpha'}]})
+		const input = await typeQuery(wrapper, 'Alpha')
+
+		await input.trigger('keyup', {key: 'Enter'})
+
+		expect(wrapper.emitted('create')).toEqual([['Alpha']])
+		expect(wrapper.emitted('select')).toBeUndefined()
+
+		wrapper.unmount()
+	})
+
+	it('ArrowDown moves from the input to the create option, then to the results', async () => {
+		const wrapper = mountMultiselect({creatable: true, createAlwaysFirst: true, searchResults: duplicates})
+		const input = await typeQuery(wrapper, 'Alpha')
+		const options = wrapper.findAll('[role="option"]')
+
+		await input.trigger('keydown', {key: 'ArrowDown'})
+		expect(document.activeElement).toBe(options[0].element)
+
+		await options[0].trigger('keydown', {key: 'ArrowDown'})
+		expect(document.activeElement).toBe(options[1].element)
+
+		await options[1].trigger('keydown', {key: 'ArrowUp'})
+		expect(document.activeElement).toBe(options[0].element)
+
+		wrapper.unmount()
+	})
+
+	it('closes the list after selecting an existing option', async () => {
+		const wrapper = mountMultiselect({creatable: true, createAlwaysFirst: true, multiple: false, modelValue: null, searchResults: duplicates})
+		await typeQuery(wrapper, 'Alpha')
+
+		await wrapper.findAll('[role="option"]')[1].trigger('click')
+		vi.advanceTimersByTime(300)
+		await nextTick()
+
+		expect(wrapper.emitted('select')).toEqual([[{title: 'Alpha'}]])
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+})

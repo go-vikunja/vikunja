@@ -47,6 +47,7 @@
 						:search-results="mappedFoundTasks"
 						label="title"
 						:creatable="true"
+						:create-always-first="true"
 						:create-placeholder="$t('task.relation.createPlaceholder')"
 						@search="findTasks"
 						@create="createAndRelateTask"
