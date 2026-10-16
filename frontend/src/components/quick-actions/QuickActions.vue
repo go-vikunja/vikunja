@@ -250,9 +250,6 @@ watchEffect(() => {
 	}
 })
 
-// Bound to the Escape keydown (not keyup): browsers leave fullscreen as the
-// Escape keydown default action, so `.prevent` must run on keydown to close the
-// palette without also dropping the window out of fullscreen.
 function closeQuickActions() {
 	baseStore.setQuickActionsActive(false)
 }
