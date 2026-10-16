@@ -922,3 +922,14 @@ func TestRepairOrphanedProjects_Trashed(t *testing.T) {
 	require.True(t, has)
 	assert.Equal(t, int64(0), repaired.parentID())
 }
+
+func TestBuildOverview_SkipsTrashedProjects(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	overview, err := BuildOverview(s)
+	require.NoError(t, err)
+	// 46 fixtures, 45 and 46 trashed
+	assert.Equal(t, int64(44), overview.Projects)
+}
