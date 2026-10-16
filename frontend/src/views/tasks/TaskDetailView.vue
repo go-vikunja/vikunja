@@ -3,13 +3,30 @@
 		ref="taskViewContainer"
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskBusy || !visible,
+			'is-loading': taskBusy || (!visible && !trashedTask),
 			'is-modal': isModal,
 		}"
 	>
+		<div
+			v-if="trashedTask"
+			class="task-view"
+		>
+			<BaseButton
+				v-if="isModal"
+				class="is-pulled-end"
+				:aria-label="$t('misc.close')"
+				@click="$emit('close')"
+			>
+				<Icon icon="times" />
+			</BaseButton>
+			<TaskInTrashNotice
+				:task-id="taskId"
+				:in-trash="trashedTask"
+			/>
+		</div>
 		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
 		<div
-			v-if="visible"
+			v-else-if="visible"
 			class="task-view"
 		>
 			<BaseButton
@@ -681,6 +698,7 @@ import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 import {taskLoadErrorAction} from './taskDetailError'
+import TaskInTrashNotice from '@/components/tasks/partials/TaskInTrashNotice.vue'
 
 import {
 	useUpdateTaskMutation,
@@ -800,8 +818,15 @@ const remindersDefaultRelativeTo = computed(() => {
 	}
 	return null
 })
-const taskNotFound = ref(false)
-const taskTitle = computed(() => task.value.title)
+const taskLoadError = computed(() => taskQuery.error.value ? taskLoadErrorAction(taskQuery.error.value) : null)
+const trashedTask = computed(() => taskLoadError.value?.action === 'inTrash'
+	? taskLoadError.value.inTrash
+	: null)
+const taskNotFound = computed(() => taskLoadError.value?.action === 'inTrash'
+	|| taskLoadError.value?.action === 'notFound')
+const taskTitle = computed(() => trashedTask.value
+	? t('trash.taskInTrashTitle')
+	: task.value.title)
 useTitle(taskTitle)
 
 const lastProject = computed(() => {
@@ -1024,16 +1049,13 @@ watch(taskQuery.task, async (loaded, previous) => {
 	updateScrollable()
 	visible.value = true
 }, {immediate: true})
-watch(taskQuery.error, cause => {
-	if (!cause) return
-	const action = taskLoadErrorAction(cause)
-	if (action === 'ignore') return
-	if (action === 'notFound') {
-		taskNotFound.value = true
+watch(taskLoadError, loadError => {
+	if (!loadError || loadError.action === 'ignore' || loadError.action === 'inTrash') return
+	if (loadError.action === 'notFound') {
 		router.replace({name: 'not-found'})
 		return
 	}
-	error(cause)
+	error(taskQuery.error.value)
 	visible.value = true
 })
 
@@ -1151,7 +1173,11 @@ useTaskDetailShortcuts({
 async function deleteTask() {
 	const id = task.value.id!
 	const projectId = task.value.project_id
-	await deleteTaskMutation.mutateAsync(id)
+	try {
+		await deleteTaskMutation.mutateAsync(id)
+	} catch {
+		return
+	}
 	// Works after unmount: the view navigates away before anyone clicks undo
 	success({message: t('task.detail.deleteSuccess')}, [{
 		title: t('task.undo'),

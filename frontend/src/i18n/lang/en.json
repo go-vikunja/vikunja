@@ -1824,7 +1824,6 @@
     "restoreSuccess": "The task has been restored.",
     "deleteForeverSuccess": "The task has been deleted permanently.",
     "emptySuccess": "The trash has been emptied.",
-    "inTrash": "In trash",
     "title": "Trash",
     "restore": "Restore",
     "deleteForever": "Delete forever",
@@ -1840,6 +1839,11 @@
     "emptyModal": {
       "text": "There are no tasks to delete. | This permanently deletes 1 task, including tasks other people moved to the trash. This cannot be undone. | This permanently deletes {count} tasks, including tasks other people moved to the trash. This cannot be undone."
     },
+    "open": "Open trash",
+    "taskInTrash": "This task is in the trash. It was deleted {since}.",
+    "taskInTrashBy": "This task is in the trash. {user} deleted it {since}.",
+    "taskInTrashTitle": "Task in the trash",
+    "inTrash": "In trash",
     "daysLeftShort": "deleted permanently today | {count} day left | {count} days left",
     "deletedByYou": "Deleted by you {since}",
     "taskInTrashByYou": "This task is in the trash. You deleted it {since}.",

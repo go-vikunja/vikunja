@@ -13,6 +13,7 @@ import {timeEntryKeys} from './timeEntries'
 import {error} from '@/message'
 import {kanbanKeys, normalizeBucket, type BoardData} from './kanban'
 import {projectKeys} from './projects'
+import {ApiError} from '@/client/problem'
 
 const sdk = vi.hoisted(() => ({
 	tasksTrashList: vi.fn(),
@@ -291,11 +292,23 @@ it('marks the trash and time entries stale after emptying the trash', async () =
 
 describe('taskInTrashFromError', () => {
 	it('reads the details of a trashed task', () => {
-		const details = {project_id: 1, deleted_at: '2026-01-01T00:00:00Z'}
-		expect(taskInTrashFromError({status: 404, code: 4040, details})).toEqual(details)
+		const details = {
+			project_id: 1,
+			deleted_at: '2026-01-01T00:00:00Z',
+		}
+		expect(taskInTrashFromError(new ApiError({
+			status: 404,
+			code: 4040,
+			detail: 'in trash',
+			details,
+		}))).toEqual(details)
 	})
 	it('ignores a plain not found', () => {
-		expect(taskInTrashFromError({status: 404, code: 4002})).toBeNull()
+		expect(taskInTrashFromError(new ApiError({
+			status: 404,
+			code: 4002,
+			detail: 'not found',
+		}))).toBeNull()
 	})
 })
 
