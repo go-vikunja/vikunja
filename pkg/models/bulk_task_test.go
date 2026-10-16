@@ -216,6 +216,52 @@ func TestBulkTask_Update(t *testing.T) {
 		db.AssertMissing(t, "task_reminders", map[string]interface{}{"task_id": 27, "relative_to": "start_date"})
 	})
 
+	t.Run("bulk update without is_favorite field keeps favorites", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bt := &BulkTask{
+			TaskIDs: []int64{1, 2},
+			Fields:  []string{"priority"},
+			Values:  &Task{Priority: 3, IsFavorite: true},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		err = bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "favorites", map[string]interface{}{"entity_id": 1, "user_id": 1, "kind": FavoriteKindTask}, false)
+		db.AssertMissing(t, "favorites", map[string]interface{}{"entity_id": 2, "user_id": 1, "kind": FavoriteKindTask})
+	})
+
+	t.Run("bulk update with is_favorite field sets favorites", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bt := &BulkTask{
+			TaskIDs: []int64{1, 2},
+			Fields:  []string{"is_favorite"},
+			Values:  &Task{IsFavorite: false},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		err = bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "favorites", map[string]interface{}{"entity_id": 1, "user_id": 1, "kind": FavoriteKindTask})
+		db.AssertMissing(t, "favorites", map[string]interface{}{"entity_id": 2, "user_id": 1, "kind": FavoriteKindTask})
+	})
+
 	t.Run("don't update done_at when bulk marking tasks done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
