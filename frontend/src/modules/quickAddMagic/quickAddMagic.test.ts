@@ -811,6 +811,16 @@ describe('Parse Task Text', () => {
 				'in 4 weeks': '2021-7-22 12:0',
 				'in 1 month': '2021-7-24 12:0',
 				'in 3 months': '2021-9-24 12:0',
+				'in 30 minutes': '2021-6-24 12:30',
+				'in 1 year': '2022-6-24 12:0',
+				'in two weeks': '2021-7-8 12:0',
+				'in Two Weeks': '2021-7-8 12:0',
+				'in three days': '2021-6-27 12:0',
+				'in twelve months': '2022-6-24 12:0',
+				'in a week': '2021-7-1 12:0',
+				'in an hour': '2021-6-24 13:0',
+				'in a year': '2022-6-24 12:0',
+				'Something in two days at 10:00': '2021-6-26 10:0',
 				'Something in 5 days at 10:00': '2021-6-29 10:0',
 				'Something 17th at 10:00': '2021-7-17 10:0',
 				'Something sep 17 at 10:00': '2021-9-17 10:0',
@@ -854,6 +864,19 @@ describe('Parse Task Text', () => {
 				assert.isNotNull(date)
 				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
 				expect(newText).toBe('Some task')
+			})
+
+			it('should remove a spelled out relative date from the text', () => {
+				const {date, newText} = parseDate('Call mom in two weeks', now)
+
+				assert.isNotNull(date)
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`).toBe('2021-7-8')
+				expect(newText).toBe('Call mom')
+			})
+
+			it('should not parse a relative date from inside a word', () => {
+				expect(parseDate('Meet in a weekend', now).date).toBeNull()
+				expect(parseDate('Check plugin 2 days', now).date).toBeNull()
 			})
 		})
 	})
