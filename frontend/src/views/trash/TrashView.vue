@@ -13,6 +13,13 @@
 				>
 					{{ $t('quickActions.tasks') }}
 				</BaseButton>
+				<BaseButton
+					class="trash-tab"
+					:class="{'is-active': route.name === 'trash.projects'}"
+					:to="{name: 'trash.projects'}"
+				>
+					{{ $t('quickActions.projects') }}
+				</BaseButton>
 			</nav>
 			<!-- TrashTasks teleports its actions here -->
 			<div id="trash-actions" />
