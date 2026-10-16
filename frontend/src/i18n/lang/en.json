@@ -1809,6 +1809,21 @@
   "trash": {
     "restoreSuccess": "The task has been restored.",
     "deleteForeverSuccess": "The task has been deleted permanently.",
-    "emptySuccess": "The trash has been emptied."
+    "emptySuccess": "The trash has been emptied.",
+    "title": "Trash",
+    "restore": "Restore",
+    "deleteForever": "Delete forever",
+    "empty": "Empty trash",
+    "noTasks": "There are no tasks in the trash.",
+    "deletedBy": "Deleted by {user} {since}",
+    "deleted": "Deleted {since}",
+    "daysLeft": "Deleted permanently today | Deleted permanently in {count} day | Deleted permanently in {count} days",
+    "deleteForeverModal": {
+      "header": "Delete this task forever",
+      "text": "This permanently deletes \"{task}\" with its comments, attachments, reminders and relations. Its time entries stay with the project. This cannot be undone."
+    },
+    "emptyModal": {
+      "text": "There are no tasks to delete. | This permanently deletes 1 task, including tasks other people moved to the trash. This cannot be undone. | This permanently deletes {count} tasks, including tasks other people moved to the trash. This cannot be undone."
+    }
   }
 }
