@@ -18,7 +18,7 @@
 			>
 				<FancyCheckbox
 					:model-value="task.done ?? false"
-					:disabled="isArchived || disabled || !canMarkAsDone"
+					:disabled="isArchived || disabled || readonly || !canMarkAsDone"
 					:aria-label="$t('task.detail.markAsDone', {task: task.title})"
 					@update:modelValue="markAsDone"
 					@click.stop
@@ -59,7 +59,16 @@
 						class="pis-2 mie-1"
 					/>
 
-					<TaskGlanceTooltip :task="task">
+					<span
+						v-if="readonly"
+						class="task-link"
+					>
+						{{ task.title }}
+					</span>
+					<TaskGlanceTooltip
+						v-else
+						:task="task"
+					>
 						<RouterLink
 							ref="taskLinkRef"
 							:to="taskDetailRoute"
@@ -84,8 +93,15 @@
 					:inline="true"
 				/>
 
+				<time
+					v-if="readonly && task.due_date && +new Date(task.due_date) > 0"
+					:datetime="formatISO(task.due_date)"
+					class="dueDate is-italic"
+				>
+					– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
+				</time>
 				<Popup
-					v-if="task.due_date && +new Date(task.due_date) > 0"
+					v-else-if="task.due_date && +new Date(task.due_date) > 0"
 					placement="bottom-start"
 					:anchor="dueDateTriggerEl"
 					sheet-on-mobile
@@ -168,6 +184,7 @@
 			</RouterLink>
 
 			<BaseButton
+				v-if="!readonly"
 				:class="{'is-favorite': task.is_favorite}"
 				class="favorite"
 				@click.stop="toggleFavorite"
@@ -245,12 +262,15 @@ const props = withDefaults(defineProps<{
 	disabled?: boolean,
 	canMarkAsDone?: boolean,
 	allTasks?: ITask[],
+	// No links or inline edits, e.g. for trashed tasks
+	readonly?: boolean,
 }>(), {
 	isArchived: false,
 	showProject: false,
 	disabled: false,
 	canMarkAsDone: true,
 	allTasks: () => [],
+	readonly: false,
 })
 
 const emit = defineEmits<{
@@ -385,6 +405,9 @@ function hasTextSelected() {
 }
 
 function openTaskDetail(event: MouseEvent | KeyboardEvent) {
+	if (props.readonly) {
+		return
+	}
 	if (event.target instanceof HTMLElement) {
 		const isInteractiveElement = event.target.closest('a, button, label, input[type="checkbox"], .favorite, [role="button"]')
 		if (isInteractiveElement || hasTextSelected()) {
