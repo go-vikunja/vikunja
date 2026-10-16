@@ -1819,6 +1819,9 @@
     },
     "emptyModal": {
       "text": "There are no tasks to delete. | This permanently deletes 1 task, including tasks other people moved to the trash. This cannot be undone. | This permanently deletes {count} tasks, including tasks other people moved to the trash. This cannot be undone."
-    }
+    },
+    "open": "Open trash",
+    "taskInTrash": "This task is in the trash. It was deleted {since}.",
+    "taskInTrashBy": "This task is in the trash. {user} deleted it {since}."
   }
 }
