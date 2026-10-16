@@ -164,7 +164,11 @@ import {usePendingRows} from '@/composables/usePendingRows'
 import {getHexColor} from '@/helpers/task'
 import {formatDateLong} from '@/helpers/time/formatDate'
 
-const deletedLabel = useDeletedLabel('trash.deleted')
+const deletedLabel = useDeletedLabel({
+	unknown: 'trash.deleted',
+	by: 'trash.deletedBy',
+	byYou: 'trash.deletedByYou',
+})
 
 const currentPage = ref(1)
 const query = useQuery(computed(() => trashedProjectsQuery(currentPage.value)))
