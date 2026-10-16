@@ -262,6 +262,26 @@ func TestBulkTask_Update(t *testing.T) {
 		db.AssertMissing(t, "favorites", map[string]interface{}{"entity_id": 2, "user_id": 1, "kind": FavoriteKindTask})
 	})
 
+	t.Run("empty fields is rejected", func(t *testing.T) {
+		for name, fields := range map[string][]string{"nil": nil, "empty": {}} {
+			t.Run(name, func(t *testing.T) {
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+
+				bt := &BulkTask{
+					TaskIDs: []int64{1},
+					Fields:  fields,
+					Values:  &Task{Title: "bulkupdated"},
+				}
+
+				_, err := bt.CanUpdate(s, u)
+				require.Error(t, err)
+				assert.ErrorAs(t, err, &ErrBulkTaskFieldsRequired{})
+			})
+		}
+	})
+
 	t.Run("don't update done_at when bulk marking tasks done", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

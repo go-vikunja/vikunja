@@ -836,6 +836,27 @@ func (err ErrBulkTasksNeedAtLeastOne) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTasksNeedAtLeastOne, Message: "Need at least one tasks to do bulk editing."}
 }
 
+// ErrBulkTaskFieldsRequired represents an error where a bulk task update names no fields to update.
+type ErrBulkTaskFieldsRequired struct{}
+
+// IsErrBulkTaskFieldsRequired checks if an error is a ErrBulkTaskFieldsRequired.
+func IsErrBulkTaskFieldsRequired(err error) bool {
+	_, ok := err.(ErrBulkTaskFieldsRequired)
+	return ok
+}
+
+func (err ErrBulkTaskFieldsRequired) Error() string {
+	return "Need at least one field when bulk editing tasks"
+}
+
+// ErrCodeBulkTaskFieldsRequired holds the unique world-error code of this error
+const ErrCodeBulkTaskFieldsRequired = 4036
+
+// HTTPError holds the http error description
+func (err ErrBulkTaskFieldsRequired) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTaskFieldsRequired, Message: "Need at least one field to do bulk editing."}
+}
+
 // ErrNoPermissionToSeeTask represents an error where a user does not have the permission to see a task
 type ErrNoPermissionToSeeTask struct {
 	TaskID int64
