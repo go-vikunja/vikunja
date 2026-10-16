@@ -1,8 +1,9 @@
+import {deleteProjectMutationOptions} from './trash'
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
+	projectsCount,
 	projectsCreate,
-	projectsDelete,
 	projectsDuplicate,
 	projectsList,
 	projectsRead,
@@ -24,6 +25,7 @@ import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {setSubscription} from './subscriptionRequests'
 import {taskKeys} from './tasks'
+import {trashKeys} from './trashShared'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -277,7 +279,7 @@ function mergeProjectMetadata(previous: ProjectResponse, updated: ProjectRespons
 }
 
 // Project callers let failures reach the global Vue error handler, which toasts them.
-const toastError = () => false
+export const toastError = () => false
 
 export function createProjectMutationOptions() {
 	return contextMutationOptions({
@@ -418,30 +420,13 @@ function descendantIds(projects: readonly ProjectResponse[], projectId: number):
 	return [projectId, ...children.flatMap(project => descendantIds(projects, project.id))]
 }
 
-export function deleteProjectMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (id: number) => {
-			await projectsDelete({path: {id}})
-		},
-		optimistic: {
-			queryKeys: () => [projectKeys.list()],
-			update: (id, client) => {
-				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
-				const ids = new Set(list ? descendantIds(list.projects, id) : [id])
-				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-					current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
-				)
-				return ids
-			},
-		},
-		onSuccess: (_data, id, client, ids) => {
-			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
-			removeProjectFromHistory({id})
-		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
-		successMessage: () => i18n.global.t('project.delete.success'),
-		toastError,
-	})
+export function removeProjectSubtree(client: QueryClient, id: number): Set<number> {
+	const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+	const ids = new Set(list ? descendantIds(list.projects, id) : [id])
+	client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+		current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
+	)
+	return ids
 }
 
 export function projectCountQuery(id: number) {
