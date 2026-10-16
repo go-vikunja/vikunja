@@ -19,16 +19,80 @@ package ldap
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
+	"xorm.io/xorm"
 )
+
+const professorDN = "cn=Hubert J. Farnsworth,ou=people,dc=planetexpress,dc=com"
+
+func useEntryUUID(t *testing.T, key config.Key) {
+	orig := key.GetString()
+	key.Set("entryUUID")
+	t.Cleanup(func() { key.Set(orig) })
+}
+
+func getLdapTeam(t *testing.T, s *xorm.Session, externalID string) *models.Team {
+	team, err := models.GetTeamByExternalIDAndIssuer(s, externalID, user2.IssuerLDAP)
+	require.NoError(t, err)
+	return team
+}
+
+func ldapEntryUUID(t *testing.T, dn string) string {
+	l, err := ConnectAndBindToLDAPDirectory()
+	require.NoError(t, err)
+	defer l.Close()
+
+	sr, err := l.Search(ldap.NewSearchRequest(dn, ldap.ScopeBaseObject, ldap.NeverDerefAliases, 0, 0, false,
+		"(objectClass=*)", []string{"entryUUID"}, nil))
+	require.NoError(t, err)
+	require.Len(t, sr.Entries, 1)
+	return sr.Entries[0].GetAttributeValue("entryUUID")
+}
+
+// Admin of the gitea/test-openldap image.
+func bindLdapAdmin(t *testing.T) *ldap.Conn {
+	l, err := ConnectAndBindToLDAPDirectory()
+	require.NoError(t, err)
+	require.NoError(t, l.Bind("cn=admin,dc=planetexpress,dc=com", "GoodNewsEveryone"))
+	return l
+}
+
+func renameLdapEntry(t *testing.T, dn, newRDN string) {
+	l := bindLdapAdmin(t)
+	defer l.Close()
+
+	oldRDN, parent, _ := strings.Cut(dn, ",")
+	require.NoError(t, l.ModifyDN(ldap.NewModifyDNRequest(dn, newRDN, true, "")))
+	t.Cleanup(func() {
+		l := bindLdapAdmin(t)
+		defer l.Close()
+		require.NoError(t, l.ModifyDN(ldap.NewModifyDNRequest(newRDN+","+parent, oldRDN, true, "")))
+	})
+}
+
+func setLdapAttribute(t *testing.T, dn, attribute, oldValue, newValue string) {
+	replace := func(value string) {
+		l := bindLdapAdmin(t)
+		defer l.Close()
+		req := ldap.NewModifyRequest(dn, nil)
+		req.Replace(attribute, []string{value})
+		require.NoError(t, l.Modify(req))
+	}
+
+	replace(newValue)
+	t.Cleanup(func() { replace(oldValue) })
+}
 
 func TestLdapLogin(t *testing.T) {
 	if os.Getenv("VIKUNJA_TESTS_USE_CONFIG") != "1" || !config.AuthLdapEnabled.GetBool() {
@@ -50,6 +114,7 @@ func TestLdapLogin(t *testing.T) {
 		db.AssertExists(t, "users", map[string]interface{}{
 			"username": "professor",
 			"issuer":   "ldap",
+			"subject":  "professor",
 		}, false)
 		db.AssertMissing(t, "teams", map[string]interface{}{
 			"issuer": "ldap",
@@ -262,6 +327,115 @@ func TestLdapLogin(t *testing.T) {
 			"external_id": groupDN,
 		}, false)
 		assertLdapTeamCount(t, user.ID, 1)
+	})
+
+	t.Run("should switch existing user and teams to stable ids", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		before, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+		require.NoError(t, err)
+		gitTeam := getLdapTeam(t, s, "cn=git,ou=people,dc=planetexpress,dc=com")
+		_, err = s.Insert(&models.TeamProject{
+			TeamID:    gitTeam.ID,
+			ProjectID: 1,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		useEntryUUID(t, config.AuthLdapAttributeGroupID)
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		after, err := AuthenticateUserInLDAP(s2, "professor", "professor", true, "")
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		assert.Equal(t, before.ID, after.ID)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      before.ID,
+			"subject": ldapEntryUUID(t, professorDN),
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
+
+		gitUUID := ldapEntryUUID(t, "cn=git,ou=people,dc=planetexpress,dc=com")
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":          gitTeam.ID,
+			"external_id": gitUUID,
+		}, false)
+		db.AssertExists(t, "team_projects", map[string]interface{}{
+			"team_id":    gitTeam.ID,
+			"project_id": 1,
+		}, false)
+		db.AssertCount(t, "teams", builder.Eq{"issuer": "ldap"}, 2)
+		assertLdapTeamCount(t, after.ID, 2)
+	})
+
+	t.Run("should keep team when group dn changes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeGroupID)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
+		require.NoError(t, err)
+		gitUUID := ldapEntryUUID(t, "cn=git,ou=people,dc=planetexpress,dc=com")
+		gitTeam := getLdapTeam(t, s, gitUUID)
+		_, err = s.Insert(&models.TeamProject{
+			TeamID:    gitTeam.ID,
+			ProjectID: 1,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		renameLdapEntry(t, "cn=git,ou=people,dc=planetexpress,dc=com", "cn=git_renamed")
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		u, err := AuthenticateUserInLDAP(s2, "professor", "professor", true, "")
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":          gitTeam.ID,
+			"name":        "git_renamed (LDAP)",
+			"external_id": gitUUID,
+		}, false)
+		db.AssertExists(t, "team_projects", map[string]interface{}{
+			"team_id":    gitTeam.ID,
+			"project_id": 1,
+		}, false)
+		db.AssertCount(t, "teams", builder.Eq{"issuer": "ldap"}, 2)
+		assertLdapTeamCount(t, u.ID, 2)
+	})
+
+	t.Run("should keep account when username changes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		before, err := AuthenticateUserInLDAP(s, "professor", "professor", false, "")
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		setLdapAttribute(t, professorDN, "uid", "professor", "farnsworth")
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		after, err := AuthenticateUserInLDAP(s2, "farnsworth", "professor", false, "")
+		require.NoError(t, err)
+		require.NoError(t, s2.Commit())
+
+		assert.Equal(t, before.ID, after.ID)
+		assert.Equal(t, "professor", after.Username)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      before.ID,
+			"subject": ldapEntryUUID(t, professorDN),
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
 	})
 
 	t.Run("should sync avatar when enabled", func(t *testing.T) {
@@ -515,4 +689,227 @@ func TestBuildGroupSyncFilter(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestDirectoryID(t *testing.T) {
+	// {6f9619ff-8b86-d011-b42d-00c04fc964ff} as AD stores it.
+	guid := []byte{0xff, 0x19, 0x96, 0x6f, 0x86, 0x8b, 0x11, 0xd0, 0xb4, 0x2d, 0x00, 0xc0, 0x4f, 0xc9, 0x64, 0xff}
+
+	tests := []struct {
+		name        string
+		attribute   string
+		value       []byte
+		expected    string
+		expectedErr bool
+	}{
+		{
+			name:      "objectGUID",
+			attribute: "objectGUID",
+			value:     guid,
+			expected:  "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+		},
+		{
+			name:      "objectGUID lowercase",
+			attribute: "objectguid",
+			value:     guid,
+			expected:  "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+		},
+		{
+			name:        "objectGUID too short",
+			attribute:   "objectGUID",
+			value:       guid[:15],
+			expectedErr: true,
+		},
+		{
+			name:      "text",
+			attribute: "entryUUID",
+			value:     []byte("597ae2f6-16a6-1027-98f4-d28b5365dc14"),
+			expected:  "597ae2f6-16a6-1027-98f4-d28b5365dc14",
+		},
+		{
+			name:        "binary, invalid utf-8",
+			attribute:   "GUID",
+			value:       []byte{0xff, 0x00, 0x10},
+			expectedErr: true,
+		},
+		{
+			name:        "binary, valid utf-8",
+			attribute:   "GUID",
+			value:       []byte{0x41, 0x00, 0x10},
+			expectedErr: true,
+		},
+		{
+			name:        "missing",
+			attribute:   "uid",
+			expectedErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			entry := &ldap.Entry{
+				DN: "cn=test,dc=example,dc=com",
+				Attributes: []*ldap.EntryAttribute{
+					{
+						Name:       tt.attribute,
+						ByteValues: [][]byte{tt.value},
+					},
+				},
+			}
+
+			id, err := directoryID(entry, tt.attribute)
+			if tt.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, id)
+		})
+	}
+}
+
+func TestGetOrCreateLdapUser(t *testing.T) {
+	const dn = "uid=jdoe,ou=people,dc=example,dc=com"
+	usernameAttribute := config.AuthLdapAttributeUsername.GetString()
+
+	insertLdapUser := func(t *testing.T, s *xorm.Session, u *user2.User) {
+		u.Issuer = user2.IssuerLDAP
+		_, err := s.Insert(u)
+		require.NoError(t, err)
+	}
+
+	t.Run("prefers the id account over a legacy username account", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		byID := &user2.User{
+			Username: "ldap-by-id",
+			Subject:  "uuid-1",
+		}
+		insertLdapUser(t, s, byID)
+		legacy := &user2.User{
+			Username: "ldap-legacy",
+			Subject:  "jdoe",
+		}
+		insertLdapUser(t, s, legacy)
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			usernameAttribute: {"jdoe"},
+			"entryUUID":       {"uuid-1"},
+		}))
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		assert.Equal(t, byID.ID, u.ID)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      legacy.ID,
+			"subject": "jdoe",
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 2)
+	})
+
+	t.Run("errors when the entry has no id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		victim := &user2.User{
+			Username: "victim",
+			Subject:  "victim",
+		}
+		insertLdapUser(t, s, victim)
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			usernameAttribute: {"jdoe"},
+		}))
+		require.Error(t, err)
+		assert.Nil(t, u)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      victim.ID,
+			"subject": "victim",
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
+	})
+
+	t.Run("errors when the entry has no username and no id is configured", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		victim := &user2.User{
+			Username: "victim",
+			Subject:  "victim",
+		}
+		insertLdapUser(t, s, victim)
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			"mail": {"jdoe@example.com"},
+		}))
+		require.Error(t, err)
+		assert.Nil(t, u)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      victim.ID,
+			"subject": "victim",
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
+	})
+
+	t.Run("creates a user with the id as subject", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			usernameAttribute:                         {"jdoe"},
+			config.AuthLdapAttributeEmail.GetString(): {"jdoe@example.com"},
+			"entryUUID":                               {"uuid-1"},
+		}))
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":       u.ID,
+			"username": "jdoe",
+			"issuer":   "ldap",
+			"subject":  "uuid-1",
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
+	})
+
+	t.Run("migrates a disabled legacy account", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		useEntryUUID(t, config.AuthLdapAttributeUserID)
+		s := db.NewSession()
+		defer s.Close()
+
+		legacy := &user2.User{
+			Username: "jdoe",
+			Subject:  "jdoe",
+			Status:   user2.StatusDisabled,
+		}
+		insertLdapUser(t, s, legacy)
+
+		u, err := getOrCreateLdapUser(s, ldap.NewEntry(dn, map[string][]string{
+			usernameAttribute: {"jdoe"},
+			"entryUUID":       {"uuid-1"},
+		}))
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		assert.Equal(t, legacy.ID, u.ID)
+		assert.Equal(t, user2.StatusDisabled, u.Status)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":      legacy.ID,
+			"subject": "uuid-1",
+			"status":  user2.StatusDisabled,
+		}, false)
+		db.AssertCount(t, "users", builder.Eq{"issuer": "ldap"}, 1)
+	})
 }
