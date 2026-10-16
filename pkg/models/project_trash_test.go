@@ -356,3 +356,18 @@ func TestBuildOverview_SkipsTrashedProjects(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, live, overview.Projects)
 }
+
+func TestCleanupAfterProjectAccessLoss_KeepsTrashedProjectsWithAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.Insert(&TaskAssginee{TaskID: 54, UserID: 1})
+	require.NoError(t, err)
+
+	// User 1 still owns trashed project 45 and its child 46
+	require.NoError(t, cleanupAfterProjectAccessLossForUsers(s, []int64{1}, []int64{45}))
+	require.NoError(t, s.Commit())
+
+	db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": 54, "user_id": 1}, false)
+}
