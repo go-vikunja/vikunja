@@ -469,6 +469,11 @@ const router = createRouter({
 					name: 'trash.tasks',
 					component: () => import('@/views/trash/TrashTasks.vue'),
 				},
+				{
+					path: 'projects',
+					name: 'trash.projects',
+					component: () => import('@/views/trash/TrashProjects.vue'),
+				},
 			],
 		},
 		{
