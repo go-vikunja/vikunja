@@ -2765,7 +2765,7 @@ func (err ErrTimeEntryDoesNotExist) HTTPError() web.HTTPError {
 }
 
 // ErrTimeEntryInvalidContainer represents an error where a time entry is attached
-// to both a task and a project, or to neither (violating the XOR invariant).
+// to both a task and a project.
 type ErrTimeEntryInvalidContainer struct {
 	TaskID    int64
 	ProjectID int64
@@ -2778,7 +2778,7 @@ func IsErrTimeEntryInvalidContainer(err error) bool {
 }
 
 func (err ErrTimeEntryInvalidContainer) Error() string {
-	return fmt.Sprintf("Time entry must be attached to exactly one of task or project [TaskID: %v, ProjectID: %v]", err.TaskID, err.ProjectID)
+	return fmt.Sprintf("Time entry can be attached to a task or a project, not both [TaskID: %v, ProjectID: %v]", err.TaskID, err.ProjectID)
 }
 
 // ErrCodeTimeEntryInvalidContainer holds the unique world-error code of this error
@@ -2789,7 +2789,7 @@ func (err ErrTimeEntryInvalidContainer) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeTimeEntryInvalidContainer,
-		Message:  "A time entry must be attached to exactly one of a task or a project.",
+		Message:  "A time entry can be attached to a task or a project, not both.",
 	}
 }
 

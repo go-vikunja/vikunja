@@ -86,7 +86,7 @@ func TestTimeEntry_CanCreate(t *testing.T) {
 		{"on a readable project", &TimeEntry{ProjectID: 3}, &user.User{ID: 1}, true, nil},
 		{"stranger denied", &TimeEntry{ProjectID: 1}, &user.User{ID: 4}, false, nil},
 		{"both task and project is invalid", &TimeEntry{TaskID: 1, ProjectID: 1}, &user.User{ID: 1}, false, IsErrTimeEntryInvalidContainer},
-		{"neither task nor project is invalid", &TimeEntry{}, &user.User{ID: 1}, false, IsErrTimeEntryInvalidContainer},
+		{"without task or project", &TimeEntry{}, &user.User{ID: 1}, true, nil},
 		{"link share denied", &TimeEntry{ProjectID: 1}, &LinkSharing{ID: 1, ProjectID: 1}, false, nil},
 	}
 	for _, tt := range tests {
@@ -804,5 +804,107 @@ func TestTimeEntry_TrashedTask(t *testing.T) {
 		deleteExpiredTasks(time.Now())
 
 		db.AssertExists(t, "time_entries", map[string]interface{}{"id": entry.ID, "task_id": 0, "project_id": 1}, false)
+	})
+}
+
+func TestTimeEntry_WithoutContainer(t *testing.T) {
+	u1 := &user.User{ID: 1}
+	insert := func(t *testing.T) *TimeEntry {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    1,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+			Comment:   "no container",
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+		return entry
+	}
+
+	t.Run("only the author sees it", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		can, _, err := (&TimeEntry{ID: entry.ID}).CanRead(s, u1)
+		require.NoError(t, err)
+		assert.True(t, can)
+		can, _, err = (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 3})
+		require.NoError(t, err)
+		assert.False(t, can)
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 3}, "", 1, 50)
+		require.NoError(t, err)
+		for _, e := range result.([]*TimeEntry) {
+			assert.NotEqual(t, entry.ID, e.ID)
+		}
+	})
+	t.Run("only the author modifies it", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		can, err := (&TimeEntry{ID: entry.ID}).CanDelete(s, u1)
+		require.NoError(t, err)
+		assert.True(t, can)
+		can, err = (&TimeEntry{ID: entry.ID}).CanDelete(s, &user.User{ID: 3})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("project_id = null filter", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		result, _, _, err := (&TimeEntry{Filter: "project_id = null"}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		entries := result.([]*TimeEntry)
+		require.Len(t, entries, 1)
+		assert.Equal(t, entry.ID, entries[0].ID)
+
+		result, _, _, err = (&TimeEntry{Filter: "project_id != null"}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		ids := []int64{}
+		for _, e := range result.([]*TimeEntry) {
+			ids = append(ids, e.ID)
+		}
+		assert.ElementsMatch(t, []int64{1, 2, 3, 4}, ids)
+	})
+}
+
+func TestTimeEntry_UpdateDetachesWithExplicitNull(t *testing.T) {
+	update := func(t *testing.T, body string) {
+		s := db.NewSession()
+		defer s.Close()
+		a := &user.User{ID: 1}
+
+		te := &TimeEntry{}
+		require.NoError(t, json.Unmarshal([]byte(body), te))
+		te.ID = 2
+		can, err := te.CanUpdate(s, a)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, te.Update(s, a))
+		require.NoError(t, s.Commit())
+	}
+	times := `"start_time":"2018-12-01T12:00:00Z","end_time":"2018-12-01T13:00:00Z"`
+
+	t.Run("explicit null detaches", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		update(t, `{"task_id":null,"project_id":null,`+times+`}`)
+		db.AssertExists(t, "time_entries", map[string]interface{}{"id": 2, "task_id": 0, "project_id": 0}, false)
+	})
+	t.Run("one explicit null is enough", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		update(t, `{"project_id":null,`+times+`}`)
+		db.AssertExists(t, "time_entries", map[string]interface{}{"id": 2, "task_id": 0, "project_id": 0}, false)
+	})
+	t.Run("omitted keeps the container", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		update(t, `{"comment":"kept",`+times+`}`)
+		db.AssertExists(t, "time_entries", map[string]interface{}{"id": 2, "project_id": 1, "comment": "kept"}, false)
 	})
 }
