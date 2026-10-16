@@ -1627,6 +1627,7 @@
     "4023": "Cannot create a task relation cycle.",
     "4034": "The file does not exist.",
     "4035": "The uploaded file exceeds the maximum configured file size.",
+    "4036": "This task is in the trash.",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that project.",
@@ -1804,5 +1805,10 @@
       "futureExpiry": "Choose an expiry in the future.",
       "creatorDeleted": "Deleted user"
     }
+  },
+  "trash": {
+    "restoreSuccess": "The task has been restored.",
+    "deleteForeverSuccess": "The task has been deleted permanently.",
+    "emptySuccess": "The trash has been emptied."
   }
 }
