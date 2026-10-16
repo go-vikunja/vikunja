@@ -8,11 +8,13 @@ import {useAuthStore} from '@/stores/auth'
 
 import {saveProjectView} from '@/helpers/projectView'
 import {projectQuery} from '@/client/queries/projects'
+import {projectInTrashFromError} from '@/client/queries/trash'
 
 import ProjectList from '@/components/project/views/ProjectList.vue'
 import ProjectGantt from '@/components/project/views/ProjectGantt.vue'
 import ProjectTable from '@/components/project/views/ProjectTable.vue'
 import ProjectKanban from '@/components/project/views/ProjectKanban.vue'
+import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {saveProjectToHistory} from '@/modules/projectHistory'
@@ -28,6 +30,7 @@ const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const project = useQuery(computed(() => projectQuery(props.projectId)))
 const currentProject = computed(() => project.data.value)
+const projectInTrash = computed(() => projectInTrashFromError(project.error.value))
 
 const currentView = computed(() => {
 	return currentProject.value?.views.find(v => v.id === props.viewId)
@@ -103,8 +106,14 @@ watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
 </script>
 
 <template>
+	<div
+		v-if="projectInTrash"
+		class="content is-max-width-desktop"
+	>
+		<ProjectInTrashNotice :in-trash="projectInTrash" />
+	</div>
 	<ProjectList
-		v-if="currentView?.view_kind === 'list'"
+		v-else-if="currentView?.view_kind === 'list'"
 		:project-id="projectId"
 		:is-loading-project="isLoadingProject"
 		:view-id
