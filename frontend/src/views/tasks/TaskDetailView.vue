@@ -3,13 +3,31 @@
 		ref="taskViewContainer"
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskBusy || !visible,
+			'is-loading': taskBusy || (!visible && !trashedTask),
 			'is-modal': isModal,
 		}"
 	>
+		<div
+			v-if="trashedTask"
+			class="task-view"
+		>
+			<BaseButton
+				v-if="isModal"
+				class="is-pulled-end"
+				:aria-label="$t('misc.close')"
+				@click="$emit('close')"
+			>
+				<Icon icon="times" />
+			</BaseButton>
+			<TaskInTrashNotice
+				:task-id="taskId"
+				:in-trash="trashedTask"
+				@restored="trashedTask = null"
+			/>
+		</div>
 		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
 		<div
-			v-if="visible"
+			v-else-if="visible"
 			class="task-view"
 		>
 			<BaseButton
@@ -681,6 +699,7 @@ import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 import {taskLoadErrorAction} from './taskDetailError'
+import TaskInTrashNotice from '@/components/tasks/partials/TaskInTrashNotice.vue'
 
 import {
 	useUpdateTaskMutation,
@@ -701,7 +720,7 @@ import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 import {useSetTaskSubscriptionMutation} from '@/client/queries/subscriptions'
-import {useRestoreTaskMutation} from '@/client/queries/trash'
+import {taskInTrashFromError, useRestoreTaskMutation, type TaskInTrash} from '@/client/queries/trash'
 
 const props = defineProps<{
 	taskId: number,
@@ -801,6 +820,10 @@ const remindersDefaultRelativeTo = computed(() => {
 	return null
 })
 const taskNotFound = ref(false)
+const trashedTask = ref<TaskInTrash | null>(null)
+watch(() => props.taskId, () => {
+	trashedTask.value = null
+})
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
@@ -1028,6 +1051,11 @@ watch(taskQuery.error, cause => {
 	if (!cause) return
 	const action = taskLoadErrorAction(cause)
 	if (action === 'ignore') return
+	if (action === 'inTrash') {
+		taskNotFound.value = true
+		trashedTask.value = taskInTrashFromError(cause)
+		return
+	}
 	if (action === 'notFound') {
 		taskNotFound.value = true
 		router.replace({name: 'not-found'})
