@@ -151,13 +151,34 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 
 	for _, p := range projectsToDelete {
 		if p.parentID() != 0 {
-			// Child projects are deleted by p.Delete
+			// Child projects are deleted with their parent
 			continue
 		}
-		err = p.Delete(s, u)
-		// If the user is the owner of the default project it will be deleted, if they are not the owner
-		// we can ignore the error as the project was shared in that case.
-		if err != nil && !IsErrCannotDeleteDefaultProject(err) {
+		// Someone else's default project was only shared with the user
+		isDefault, err := p.isDefaultProject(s)
+		if err != nil {
+			return err
+		}
+		if isDefault && p.OwnerID != u.ID {
+			continue
+		}
+		if err = hardDeleteProject(s, p); err != nil {
+			return err
+		}
+	}
+
+	// Trashed projects are invisible to getProjectsToDelete
+	trashed := []*Project{}
+	err = s.Unscoped().Where(builder.And(builder.Eq{"owner_id": u.ID}, builder.NotNull{"deleted_at"})).Find(&trashed)
+	if err != nil {
+		return err
+	}
+	for _, p := range trashed {
+		// Gone already when its parent was purged first
+		if _, err := getTrashedProject(s, p.ID); IsErrProjectDoesNotExist(err) {
+			continue
+		}
+		if err = hardDeleteProject(s, p); err != nil {
 			return err
 		}
 	}

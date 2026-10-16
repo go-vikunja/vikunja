@@ -180,7 +180,8 @@ func RebuildProjectAncestors(s *xorm.Session) error {
 	}
 
 	projects := []*Project{}
-	if err := s.Table(&Project{}).Cols("id", "parent_project_id").Find(&projects); err != nil {
+	// Trashed projects keep their place in the tree for a restore.
+	if err := s.Unscoped().Table(&Project{}).Cols("id", "parent_project_id").Find(&projects); err != nil {
 		return fmt.Errorf("could not get projects: %w", err)
 	}
 

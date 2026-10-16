@@ -193,6 +193,9 @@ func requireProjectsByIDs(s *xorm.Session, projectIDs []int64) (map[int64]*Proje
 // CanRead checks if a user has read access to a project
 func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	permissions, err := checkReadPermissionsForProjects(s, a, []int64{p.ID})
+	if IsErrProjectDoesNotExist(err) {
+		return false, 0, trashedProjectReadError(s, a, p.ID, err)
+	}
 	if err != nil {
 		return false, 0, err
 	}

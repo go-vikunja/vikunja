@@ -260,6 +260,17 @@ func (p *ProjectUpdatedEvent) Name() string {
 	return "project.updated"
 }
 
+// ProjectRestoredEvent fires when a project is restored from the trash.
+type ProjectRestoredEvent struct {
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
+}
+
+// Name defines the name for ProjectRestoredEvent
+func (p *ProjectRestoredEvent) Name() string {
+	return "project.restored"
+}
+
 // ProjectDeletedEvent represents an event where a project has been deleted
 type ProjectDeletedEvent struct {
 	Project *Project   `json:"project"`
