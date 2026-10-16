@@ -13,6 +13,6 @@ export const NUMBER_WORDS: Record<string, number> = {
 	twelve: 12,
 }
 
-export const numberWordsRegexGroup = `(${Object.keys(NUMBER_WORDS).join('|')})`
+export const numberWordsRegexGroup = `(?:${Object.keys(NUMBER_WORDS).join('|')})`
 
 export const parseAmount = (amount: string): number => NUMBER_WORDS[amount.toLowerCase()] ?? parseInt(amount)
