@@ -335,10 +335,8 @@ test.describe('Project View Kanban', () => {
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
 		await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'})).toBeVisible()
 		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
-		await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
-		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 
-		await expect(page.locator('.global-notification')).toContainText('Success')
+		await expect(page.locator('.global-notification')).toContainText('The task has been moved to the trash.')
 
 		await page.goBack()
 		const bucketCount = await page.locator('.kanban .bucket').count()
