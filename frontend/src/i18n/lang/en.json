@@ -1597,6 +1597,8 @@
     "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
     "3016": "The parent project is archived. Un-archive the parent project first.",
     "3017": "The default project must be a project you can write to.",
+    "3018": "This project is in the trash. Restore it first.",
+    "3019": "The parent project is in the trash. Restore it first.",
     "4001": "The task title cannot be empty.",
     "4002": "The task does not exist.",
     "4003": "All bulk editing tasks must belong to the same project.",
@@ -1825,6 +1827,8 @@
     "open": "Open trash",
     "taskInTrash": "This task is in the trash. It was deleted {since}.",
     "taskInTrashBy": "This task is in the trash. {user} deleted it {since}.",
-    "inTrash": "In trash"
+    "inTrash": "In trash",
+    "restoreProjectSuccess": "The project has been restored.",
+    "deleteProjectForeverSuccess": "The project has been deleted permanently."
   }
 }

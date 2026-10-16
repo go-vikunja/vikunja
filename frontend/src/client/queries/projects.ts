@@ -1,6 +1,7 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
+	projectsCount,
 	projectsCreate,
 	projectsDelete,
 	projectsDuplicate,
@@ -24,6 +25,7 @@ import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {setSubscription} from './subscriptionRequests'
 import {taskKeys} from './tasks'
+import {trashKeys} from './trashShared'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -437,9 +439,23 @@ export function deleteProjectMutationOptions() {
 			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
 			removeProjectFromHistory({id})
 		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
-		successMessage: () => i18n.global.t('project.delete.success'),
+		// The view toasts with an undo action
+		onSettled: (_input, client) => Promise.all([
+			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
+			client.invalidateQueries({queryKey: trashKeys.all}),
+			// Tasks of trashed projects drop out of every list
+			client.invalidateQueries({queryKey: taskKeys.all}),
+		]),
 		toastError,
+	})
+}
+
+export function projectCountQuery(id: number) {
+	return queryOptions({
+		queryKey: [...projectKeys.detail(id), 'count'] as const,
+		queryFn: async ({signal}) => (await projectsCount({path: {id}, signal})).data,
+		staleTime: 0,
+		enabled: id > 0,
 	})
 }
 
