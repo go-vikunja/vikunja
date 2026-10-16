@@ -85,6 +85,13 @@ type Project struct {
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this project was created. You cannot change this value."`
 	// A timestamp when this project was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this project was last updated. You cannot change this value."`
+	// omitzero: only trashed projects carry it.
+	DeletedAt time.Time `xorm:"deleted datetime null INDEX 'deleted_at'" json:"deleted_at,omitzero" readOnly:"true" doc:"When this project was moved to the trash. Trashed projects are removed permanently 30 days later."`
+	// Null for projects trashed by the system.
+	DeletedBy   *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this project to the trash. Only present on trashed projects."`
+	DeletedByID int64      `xorm:"bigint null 'deleted_by_id'" json:"-"`
+	// Only set in the trash listing.
+	TrashedSubProjects int64 `xorm:"-" json:"trashed_sub_projects,omitempty" readOnly:"true" doc:"How many trashed sub-projects restoring this project brings back. Only present in the trash listing."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`

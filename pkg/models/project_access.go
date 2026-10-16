@@ -58,8 +58,17 @@ WITH grants (project_id, permission) AS (
     GROUP BY project_id
 )`
 
+// Trashed projects never have live descendants, so dropping trashed targets is enough.
+const liveProjectTargetJoin = `
+    INNER JOIN projects target ON target.id = pa.project_id AND target.deleted_at IS NULL`
+
 // Inherited admin is sticky (it could unshare the parent anyway); below that the nearest grant wins.
-const projectAccessQuery = projectAccessCTE + `
+func projectAccessQuery(includeTrashed bool) string {
+	targetJoin := liveProjectTargetJoin
+	if includeTrashed {
+		targetJoin = ""
+	}
+	return projectAccessCTE + `
 SELECT id,
     CASE WHEN MAX(permission) = 2 THEN 2
          ELSE MAX(CASE WHEN nearest = 1 THEN permission END)
@@ -68,25 +77,39 @@ FROM (
     SELECT pa.project_id AS id, g.permission,
         ROW_NUMBER() OVER (PARTITION BY pa.project_id ORDER BY pa.depth) AS nearest
     FROM grants g
-    INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id
+    INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id` + targetJoin + `
 ) ranked
 GROUP BY id`
+}
 
 const projectAccessIDsQuery = projectAccessCTE + `
 SELECT DISTINCT pa.project_id AS id
 FROM grants g
-INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id`
+INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id` + liveProjectTargetJoin
 
 type projectAccessRow struct {
 	ID         int64 `xorm:"id"`
 	Permission int64 `xorm:"permission"`
 }
 
-// Resolves the whole reachable tree in one query, memoized per session.
+// Resolves the whole reachable tree in one query, memoized per session. Trashed projects are left out.
 func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, error) {
-	return db.Remember(s, "project-access-"+strconv.FormatInt(userID, 10), func() (*projectAccess, error) {
+	return getProjectAccess(s, userID, false)
+}
+
+// Only for trash operations, which act on projects nobody can otherwise reach.
+func getProjectAccessIncludingTrash(s *xorm.Session, userID int64) (*projectAccess, error) {
+	return getProjectAccess(s, userID, true)
+}
+
+func getProjectAccess(s *xorm.Session, userID int64, includeTrashed bool) (*projectAccess, error) {
+	key := "project-access-" + strconv.FormatInt(userID, 10)
+	if includeTrashed {
+		key = "project-access-with-trash-" + strconv.FormatInt(userID, 10)
+	}
+	return db.Remember(s, key, func() (*projectAccess, error) {
 		rows := []*projectAccessRow{}
-		err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
+		err := s.SQL(projectAccessQuery(includeTrashed), userID, userID, userID).Find(&rows)
 		if err != nil {
 			return nil, err
 		}
