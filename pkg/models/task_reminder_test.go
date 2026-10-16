@@ -45,6 +45,23 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		assert.Equal(t, int64(27), notifications[0].Task.ID)
 		assert.Equal(t, "TEST1-18", notifications[0].Task.Identifier)
 	})
+	t.Run("skips tasks in trashed projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		now := time.Date(2018, 12, 1, 1, 12, 0, 0, time.UTC)
+		_, err := s.Insert(&TaskReminder{TaskID: 53, Reminder: now})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskAssginee{TaskID: 53, UserID: 1})
+		require.NoError(t, err)
+
+		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)
+		require.NoError(t, err)
+		for _, n := range notifications {
+			assert.NotEqual(t, int64(53), n.Task.ID)
+		}
+	})
 	t.Run("reminder at window start", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
