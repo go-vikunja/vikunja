@@ -8,87 +8,64 @@
 		</template>
 
 		<template #text>
-			<p>
-				{{ $t('project.delete.text1') }}
-			</p>
-
-			<p
-				v-if="tasksLoaded"
-				class="has-text-weight-bold"
-			>
-				{{ deleteNotice }}
-			</p>
+			<template v-if="count">
+				<p
+					v-cy="'projectDeleteNotice'"
+					class="tw:text-balance"
+				>
+					{{ trashNotice }}
+				</p>
+				<p
+					v-if="count.time_entries"
+					v-cy="'projectDeleteTimeEntries'"
+					class="tw:text-balance has-text-weight-bold"
+				>
+					{{ $t('project.delete.timeEntries', {entries: count.time_entries, people: count.time_entry_authors}) }}
+				</p>
+			</template>
 			<Loading
 				v-else
 				class="is-loading-small"
 				variant="default"
 			/>
-
-			<p>
-				{{ $t('misc.cannotBeUndone') }}
-			</p>
 		</template>
 	</Modal>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
-import {useTitle} from '@/composables/useTitle'
+import {computed} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
-import {useDeleteProjectMutation} from '@/client/queries/projects'
+
 import Loading from '@/components/misc/Loading.vue'
+import {projectCountQuery, useDeleteProjectMutation} from '@/client/queries/projects'
+import {useRestoreProjectMutation} from '@/client/queries/trash'
 import {useGoBack} from '@/composables/useGoBack'
 import {useProjects} from '@/composables/useProjects'
-import {useTasks} from '@/composables/useTasks'
+import {useTitle} from '@/composables/useTitle'
+import {success} from '@/message'
 
 const {t} = useI18n({useScope: 'global'})
 const projectList = useProjects()
 const deleteMutation = useDeleteProjectMutation()
+const restoreMutation = useRestoreProjectMutation()
 const route = useRoute()
 const router = useRouter()
 const goBack = useGoBack()
 
-
-
-const project = computed(() => projectList.projects[Number(route.params.projectId)])
-const projectIdsToDelete = ref<number[]>([])
-
-watchEffect(
-	async () => {
-		if (!route.params.projectId) {
-			return
-		}
-
-		projectIdsToDelete.value = projectList
-			.getChildProjects(Number(route.params.projectId))
-			.map(p => p.id)
-
-		projectIdsToDelete.value.push(Number(route.params.projectId))
-
-
-	},
-)
-
-const taskQuery = useTasks(
-	() => ({params: {filter: `project in ${projectIdsToDelete.value.join(',')}`, per_page: 1}}),
-	{enabled: () => projectIdsToDelete.value.length > 0},
-)
-const totalTasks = taskQuery.total
-const tasksLoaded = taskQuery.isSuccess
+const projectId = computed(() => Number(route.params.projectId))
+const project = computed(() => projectList.projects[projectId.value])
+const count = useQuery(computed(() => projectCountQuery(projectId.value))).data
 
 useTitle(() => t('project.delete.title', {project: project?.value?.title}))
 
-const deleteNotice = computed(() => {
-	if(totalTasks.value && totalTasks.value > 0) {
-		if (projectIdsToDelete.value.length <= 1) {
-			return t('project.delete.tasksToDelete', {count: totalTasks.value})
-		} else if (projectIdsToDelete.value.length > 1) {
-			return t('project.delete.tasksAndChildProjectsToDelete', {tasks: totalTasks.value, projects: projectIdsToDelete.value.length})
-		}
-	}
-
-	return t('project.delete.noTasksToDelete')
+const trashNotice = computed(() => {
+	const subProjects = count.value?.sub_projects ?? 0
+	const tasks = t('project.delete.tasks', count.value?.tasks ?? 0)
+	return subProjects > 0
+		? t('project.delete.toTrashWithSubProjects', {subProjects: t('project.delete.subProjects', subProjects), tasks})
+		: t('project.delete.toTrash', {tasks})
 })
 
 async function deleteProject() {
@@ -96,7 +73,13 @@ async function deleteProject() {
 		return
 	}
 
-	await deleteMutation.mutateAsync(project.value.id)
+	const id = project.value.id
+	await deleteMutation.mutateAsync(id)
+	// Works after unmount: the view navigates away before anyone clicks undo
+	success({message: t('project.delete.success')}, [{
+		title: t('task.undo'),
+		callback: () => restoreMutation.mutate(id),
+	}])
 	router.push({name: 'home'})
 }
 </script>

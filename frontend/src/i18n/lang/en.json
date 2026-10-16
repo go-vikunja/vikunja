@@ -452,12 +452,12 @@
     "delete": {
       "title": "Delete \"{project}\"",
       "header": "Delete this project",
-      "text1": "Are you sure you want to delete this project and all of its contents?",
-      "text2": "This includes all tasks and CANNOT BE UNDONE!",
-      "success": "The project was successfully deleted.",
-      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
-      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
+      "success": "The project has been moved to the trash.",
+      "toTrash": "Moves this project and {tasks} to the trash. They are deleted permanently after 30 days.",
+      "toTrashWithSubProjects": "Moves this project, {subProjects} and {tasks} to the trash. They are deleted permanently after 30 days.",
+      "subProjects": "{count} sub-project | {count} sub-projects",
+      "tasks": "no tasks | {count} task | {count} tasks",
+      "timeEntries": "{entries} time entries from {people} people will be kept but detached from the project after 30 days."
     },
     "duplicate": {
       "title": "Duplicate this project",
