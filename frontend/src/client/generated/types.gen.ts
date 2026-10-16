@@ -396,7 +396,7 @@ export type BulkTask = {
      */
     readonly $schema?: string;
     /**
-     * The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched.
+     * The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched. Besides the task columns, assignees, reminders and is_favorite may be named. At least one field is required.
      */
     fields?: Array<string> | null;
     /**
@@ -3700,7 +3700,7 @@ export type BulkAssigneesWritable = {
 
 export type BulkTaskWritable = {
     /**
-     * The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched.
+     * The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched. Besides the task columns, assignees, reminders and is_favorite may be named. At least one field is required.
      */
     fields?: Array<string> | null;
     /**
