@@ -270,7 +270,8 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 
 	t.Run("tolerates legacy null on PUT", func(t *testing.T) {
 		e, token := setup(t)
-		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"task_id":null,"project_id":null,`+times+`}`, token, "")
+		body := `{"task_id":null,"project_id":null,` + times + `}`
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", body, token, "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
 	})
