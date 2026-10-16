@@ -974,7 +974,9 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 
 	// Check if the identifier is unique and not empty
 	if project.Identifier != "" {
+		// Trashed projects keep theirs so a restore can't collide
 		exists, err := s.
+			Unscoped().
 			Where("identifier = ?", project.Identifier).
 			And("id != ?", project.ID).
 			Exist(&Project{})
