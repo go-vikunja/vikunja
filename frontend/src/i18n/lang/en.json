@@ -1125,7 +1125,7 @@
       "doneAt": "Done {0}",
       "titleRequired": "The task title can't be empty.",
       "updateSuccess": "The task was saved successfully.",
-      "deleteSuccess": "The task has been deleted successfully.",
+      "deleteSuccess": "The task has been moved to the trash.",
       "duplicateSuccess": "The task was duplicated successfully.",
       "noBucket": "No bucket",
       "bucketSelectLabel": "Kanban bucket: {bucket}",
@@ -1140,11 +1140,6 @@
       "organization": "Organization",
       "management": "Management",
       "dateAndTime": "Date and time",
-      "delete": {
-        "header": "Delete this task",
-        "text1": "Are you sure you want to remove this task?",
-        "text2": "This will also remove all attachments, reminders and relations associated with this task and cannot be undone!"
-      },
       "actions": {
         "assign": "Assign to User",
         "label": "Add Labels",
@@ -1627,6 +1622,7 @@
     "4023": "Cannot create a task relation cycle.",
     "4034": "The file does not exist.",
     "4035": "The uploaded file exceeds the maximum configured file size.",
+    "4036": "This task is in the trash.",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that project.",
@@ -1804,5 +1800,29 @@
       "futureExpiry": "Choose an expiry in the future.",
       "creatorDeleted": "Deleted user"
     }
+  },
+  "trash": {
+    "restoreSuccess": "The task has been restored.",
+    "deleteForeverSuccess": "The task has been deleted permanently.",
+    "emptySuccess": "The trash has been emptied.",
+    "title": "Trash",
+    "restore": "Restore",
+    "deleteForever": "Delete forever",
+    "empty": "Empty trash",
+    "noTasks": "There are no tasks in the trash.",
+    "deletedBy": "Deleted by {user} {since}",
+    "deleted": "Deleted {since}",
+    "daysLeft": "Deleted permanently today | Deleted permanently in {count} day | Deleted permanently in {count} days",
+    "deleteForeverModal": {
+      "header": "Delete this task forever",
+      "text": "This permanently deletes \"{task}\" with its comments, attachments, reminders and relations. Its time entries stay with the project. This cannot be undone."
+    },
+    "emptyModal": {
+      "text": "There are no tasks to delete. | This permanently deletes 1 task, including tasks other people moved to the trash. This cannot be undone. | This permanently deletes {count} tasks, including tasks other people moved to the trash. This cannot be undone."
+    },
+    "open": "Open trash",
+    "taskInTrash": "This task is in the trash. It was deleted {since}.",
+    "taskInTrashBy": "This task is in the trash. {user} deleted it {since}.",
+    "inTrash": "In trash"
   }
 }

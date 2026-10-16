@@ -434,7 +434,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
-		test('Can delete a task', async ({authenticatedPage: page}) => {
+		test('Can delete a task', async ({authenticatedPage: page, apiContext, userToken}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				project_id: 1,
@@ -443,11 +443,15 @@ test.describe('Task', () => {
 
 			await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'})).toBeVisible()
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
-			await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
-			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 
-			await expect(page.locator('.global-notification')).toContainText('Success')
+			await expect(page.locator('.global-notification')).toContainText('The task has been moved to the trash.')
 			await expect(page).toHaveURL(new RegExp(`/projects/${tasks[0].project_id}/`))
+
+			const stored = await apiContext.get(`tasks/${tasks[0].id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(stored.status()).toBe(404)
+			expect((await stored.json()).code).toBe(4036)
 		})
 
 		test('an edit in the task detail shows in the list and the kanban board without a reload', async ({authenticatedPage: page, apiContext, userToken}) => {
@@ -513,9 +517,7 @@ test.describe('Task', () => {
 			await card.click()
 
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
-			await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
-			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
-			await expect(page.locator('.global-notification')).toContainText('Success')
+			await expect(page.locator('.global-notification')).toContainText('The task has been moved to the trash.')
 
 			await expect(page).toHaveURL(/\/projects\/1\/\d+/)
 			await page.locator(`.switch-view-button[href^="/projects/${projects[0].id}/4"]`).click()

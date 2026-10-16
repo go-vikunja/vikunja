@@ -7,6 +7,10 @@ describe('taskLoadErrorAction', () => {
 		expect(taskLoadErrorAction(new DOMException('Client request context changed', 'AbortError'))).toBe('ignore')
 	})
 
+	it('keeps trashed tasks in place', () => {
+		expect(taskLoadErrorAction({status: 404, code: 4036, details: {project_id: 1, deleted_at: '2026-01-01T00:00:00Z'}})).toBe('inTrash')
+	})
+
 	it('sends 403 and 404 to not found', () => {
 		expect(taskLoadErrorAction({status: 403})).toBe('notFound')
 		expect(taskLoadErrorAction({status: 404})).toBe('notFound')
