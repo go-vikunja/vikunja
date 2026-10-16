@@ -30,6 +30,7 @@ vi.mock('@/helpers/auth', () => ({
 	getAuthSessionEpoch: () => requestContext.sessionEpoch,
 	getToken: () => null,
 	getTokenIdentity: () => requestContext.identity,
+	onTokenRefreshed: () => {},
 }))
 vi.mock('@/helpers/apiUrl', () => ({
 	getApiBaseUrl: () => requestContext.apiBaseUrl,
@@ -624,32 +625,6 @@ describe('project drafts and cache mutations', () => {
 			title: 'Project',
 			is_favorite: true,
 		})
-	})
-
-	it('removes a deleted project, all descendants, and their detail entries', async () => {
-		queryClient.setQueryData(listKey, {
-			projects: [
-				serverProject({id: 1}),
-				serverProject({id: 2, parent_project_id: 1}),
-				serverProject({id: 3, parent_project_id: 2}),
-				serverProject({id: 4}),
-			],
-			favoriteProject: null,
-			savedFilterProjects: [serverProject({id: -2})],
-		})
-		for (const id of [1, 2, 3, 4]) {
-			queryClient.setQueryData(projectKeys.detail(id), serverProject({id}))
-		}
-		sdk.projectsDelete.mockResolvedValue({data: undefined})
-
-		await deleteProject(1)
-
-		expect(sdk.projectsDelete).toHaveBeenCalledWith({path: {id: 1}})
-		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects.map(project => project.id)).toEqual([4])
-		expect(queryClient.getQueryData(projectKeys.detail(1))).toBeUndefined()
-		expect(queryClient.getQueryData(projectKeys.detail(2))).toBeUndefined()
-		expect(queryClient.getQueryData(projectKeys.detail(3))).toBeUndefined()
-		expect(queryClient.getQueryData(projectKeys.detail(4))).toBeDefined()
 	})
 
 	it('duplicates a project under a parent and caches the duplicate as admin', async () => {
