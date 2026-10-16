@@ -85,4 +85,16 @@ describe('QuickActions', () => {
 		expect(errors).toEqual([])
 		expect(wrapper.find('.quick-actions').exists()).toBe(true)
 	})
+
+	it('prevents the Escape keydown default so closing does not leave fullscreen', async () => {
+		const {wrapper, errors} = await mountQuickActions(null)
+
+		const event = new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true})
+		wrapper.get('input.input').element.dispatchEvent(event)
+		await flushPromises()
+
+		expect(errors).toEqual([])
+		expect(event.defaultPrevented).toBe(true)
+		expect(useBaseStore().quickActionsActive).toBe(false)
+	})
 })
