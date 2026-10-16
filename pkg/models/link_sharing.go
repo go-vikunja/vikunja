@@ -333,10 +333,23 @@ func GetLinkShareByHash(s *xorm.Session, hash string) (share *LinkSharing, err e
 	if err != nil {
 		return
 	}
+	if has {
+		has, err = linkShareProjectIsLive(s, share)
+		if err != nil {
+			return
+		}
+	}
 	if !has {
 		return share, ErrProjectShareDoesNotExist{Hash: hash}
 	}
 	return
+}
+
+// Shares of a trashed project stop working until it is restored.
+func linkShareProjectIsLive(s *xorm.Session, share *LinkSharing) (bool, error) {
+	return s.Table("projects").
+		Where(builder.And(builder.Eq{"id": share.ProjectID}, builder.IsNull{"deleted_at"})).
+		Exist()
 }
 
 // GetProjectByShareHash returns a link share by its hash
@@ -356,6 +369,12 @@ func GetLinkShareByID(s *xorm.Session, id int64) (share *LinkSharing, err error)
 	has, err := s.Where("id = ?", id).Get(share)
 	if err != nil {
 		return
+	}
+	if has {
+		has, err = linkShareProjectIsLive(s, share)
+		if err != nil {
+			return
+		}
 	}
 	if !has {
 		return share, ErrProjectShareDoesNotExist{ID: id}

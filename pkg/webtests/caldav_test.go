@@ -1392,7 +1392,7 @@ END:VCALENDAR`
 	})
 
 	t.Run("Token older than the retention window returns 403 valid-sync-token", func(t *testing.T) {
-		staleToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-models.TaskDeleteRetention-time.Hour).Unix())
+		staleToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-models.TrashRetention-time.Hour).Unix())
 		rec := doSyncReport(t, staleToken)
 		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "valid-sync-token")

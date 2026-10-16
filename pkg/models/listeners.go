@@ -78,6 +78,7 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&TaskRelationDeletedEvent{})
 		RegisterEventForWebhook(&ProjectUpdatedEvent{})
 		RegisterEventForWebhook(&ProjectDeletedEvent{})
+		RegisterEventForWebhook(&ProjectRestoredEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithUserEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithTeamEvent{})
 		RegisterUserDirectedEventForWebhook(&TaskReminderFiredEvent{})
@@ -292,6 +293,13 @@ func registerEventsForAuditLogging() {
 	audit.RegisterEventForAudit(func(e *ProjectDeletedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionProjectDeleted,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.ProjectTarget(e.Project.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectRestoredEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionProjectRestored,
 			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.ProjectTarget(e.Project.ID),
 		}

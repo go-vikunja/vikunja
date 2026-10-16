@@ -179,3 +179,12 @@
 - project_id: 44
   ancestor_id: 44
   depth: 0
+- project_id: 45
+  ancestor_id: 45
+  depth: 0
+- project_id: 46
+  ancestor_id: 46
+  depth: 0
+- project_id: 46
+  ancestor_id: 45
+  depth: 1

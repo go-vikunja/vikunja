@@ -77,6 +77,9 @@ func (t *Task) canDoTrashedTask(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 	*t = *trashed
+	if _, err := getTrashedProject(s, t.ProjectID); err == nil {
+		return false, trashedProjectReadError(s, a, t.ProjectID, ErrProjectDoesNotExist{ID: t.ProjectID})
+	}
 	return (&Project{ID: t.ProjectID}).CanWrite(s, a)
 }
 

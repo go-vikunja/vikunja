@@ -49,7 +49,7 @@ type TimeEntry struct {
 
 	Comment string `xorm:"text null" json:"comment" doc:"An optional comment describing the logged time."`
 
-	InTrash bool `xorm:"-" json:"in_trash" readOnly:"true" doc:"Whether the entry's task is in the trash. Such entries are read-only."`
+	InTrash bool `xorm:"-" json:"in_trash" readOnly:"true" doc:"Whether the entry's task or project is in the trash. Such entries are read-only; while a project is in the trash, only their author sees them."`
 
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this time entry was created. You cannot change this value."`
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this time entry was last updated. You cannot change this value."`
@@ -191,7 +191,10 @@ func readableTimeEntriesCond(s *xorm.Session, a web.Auth) (builder.Cond, error) 
 	}
 	return builder.Or(
 		entriesForProjectCond(accessible),
-		builder.And(timeEntryWithoutContainerCond(), builder.Eq{"user_id": a.GetID()}),
+		builder.And(
+			builder.Eq{"user_id": a.GetID()},
+			builder.Or(timeEntryWithoutContainerCond(), timeEntryInTrashedProjectCond()),
+		),
 	), nil
 }
 
@@ -351,6 +354,9 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 		if !has {
 			return entry, false, -1, ErrTaskDoesNotExist{ID: entry.TaskID}
 		}
+		if done, can, err := entry.inTrashedProject(s, a, task.ProjectID, fetch); done || err != nil {
+			return entry, can, int(PermissionRead), err
+		}
 		entry.InTrash = !task.DeletedAt.IsZero()
 		can, maxPerm, err := (&Project{ID: task.ProjectID}).CanRead(s, a)
 		if entry.InTrash {
@@ -358,6 +364,9 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 		}
 		return entry, can, maxPerm, err
 	case entry.ProjectID != 0:
+		if done, can, err := entry.inTrashedProject(s, a, entry.ProjectID, fetch); done || err != nil {
+			return entry, can, int(PermissionRead), err
+		}
 		project, _, err := getProjectSimple(s, builder.Eq{"id": entry.ProjectID})
 		if err != nil {
 			return entry, false, -1, err
@@ -431,8 +440,7 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if existing.UserID != a.GetID() {
 		return false, nil
 	}
-	existingInTrash, err := isTaskTrashed(s, existing.TaskID)
-	if err != nil || existingInTrash {
+	if err := markTimeEntriesInTrash(s, []*TimeEntry{existing}); err != nil || existing.InTrash {
 		return false, err
 	}
 
@@ -471,38 +479,56 @@ func (te *TimeEntry) canModify(s *xorm.Session, a web.Auth) (bool, error) {
 	return entry.UserID == a.GetID() && !entry.InTrash, nil
 }
 
-func isTaskTrashed(s *xorm.Session, taskID int64) (bool, error) {
-	if taskID == 0 {
-		return false, nil
+// inTrashedProject reports done when the project is in the trash: then only the author may read the entry.
+func (te *TimeEntry) inTrashedProject(s *xorm.Session, a web.Auth, projectID int64, fetch bool) (done, can bool, err error) {
+	trashed, err := s.Table("projects").Where(builder.And(builder.Eq{"id": projectID}, builder.NotNull{"deleted_at"})).Exist()
+	if err != nil || !trashed {
+		return false, false, err
 	}
-	return s.Table("tasks").Where(builder.And(builder.Eq{"id": taskID}, builder.NotNull{"deleted_at"})).Exist()
+	te.InTrash = true
+	return true, fetch && te.UserID == a.GetID(), nil
+}
+
+func trashedProjectIDsQuery() *builder.Builder {
+	return builder.Select("id").From("projects").Where(builder.NotNull{"deleted_at"})
+}
+
+func timeEntryInTrashedProjectCond() builder.Cond {
+	return builder.Or(
+		builder.In("project_id", trashedProjectIDsQuery()),
+		builder.In("task_id", builder.Select("id").From("tasks").Where(builder.In("project_id", trashedProjectIDsQuery()))),
+	)
 }
 
 func markTimeEntriesInTrash(s *xorm.Session, entries []*TimeEntry) error {
-	taskIDs := []int64{}
+	ids := make([]int64, 0, len(entries))
 	for _, e := range entries {
-		if e.TaskID != 0 {
-			taskIDs = append(taskIDs, e.TaskID)
-		}
+		ids = append(ids, e.ID)
 	}
-	if len(taskIDs) == 0 {
+	if len(ids) == 0 {
 		return nil
 	}
 
-	trashedIDs := []int64{}
-	err := s.Table("tasks").
+	inTrashIDs := []int64{}
+	err := s.Table("time_entries").
 		Cols("id").
-		Where(builder.And(builder.In("id", taskIDs), builder.NotNull{"deleted_at"})).
-		Find(&trashedIDs)
+		Where(builder.And(
+			builder.In("id", ids),
+			builder.Or(
+				builder.In("task_id", builder.Select("id").From("tasks").Where(builder.NotNull{"deleted_at"})),
+				timeEntryInTrashedProjectCond(),
+			),
+		)).
+		Find(&inTrashIDs)
 	if err != nil {
 		return err
 	}
-	trashed := make(map[int64]bool, len(trashedIDs))
-	for _, id := range trashedIDs {
-		trashed[id] = true
+	inTrash := make(map[int64]bool, len(inTrashIDs))
+	for _, id := range inTrashIDs {
+		inTrash[id] = true
 	}
 	for _, e := range entries {
-		e.InTrash = trashed[e.TaskID]
+		e.InTrash = inTrash[e.ID]
 	}
 	return nil
 }
