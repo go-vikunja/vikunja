@@ -7,385 +7,206 @@
 		@keydown="onToolbarKeydown"
 		@focusin="onToolbarFocusin"
 	>
-		<div class="editor-toolbar__segment">
+		<div
+			ref="rowRef"
+			class="editor-toolbar__row"
+		>
 			<BaseButton
-				v-tooltip="$t('input.editor.heading1')"
+				v-for="(action, index) in actions"
+				:key="action.label"
+				v-tooltip="$t(action.label)"
 				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
-				:aria-pressed="editor.isActive('heading', { level: 1 })"
-				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
+				:class="{
+					'is-active': action.isActive?.(),
+					'is-group-start': action.startsGroup && index > 0,
+					'is-overflowing': index >= firstOverflowIndex,
+				}"
+				:aria-pressed="action.isActive?.()"
+				@click="action.run"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'header']" />
+					<Icon :icon="action.icon" />
 					<span
+						v-if="action.headingLevel"
 						class="icon__lower-text"
 						aria-hidden="true"
-					>1</span>
+					>{{ action.headingLevel }}</span>
 				</span>
-				<span class="is-sr-only">{{ $t('input.editor.heading1') }}</span>
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.heading2')"
-				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
-				:aria-pressed="editor.isActive('heading', { level: 2 })"
-				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'header']" />
-					<span
-						class="icon__lower-text"
-						aria-hidden="true"
-					>2</span>
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.heading2') }}</span>
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.heading3')"
-				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
-				:aria-pressed="editor.isActive('heading', { level: 3 })"
-				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'header']" />
-					<span
-						class="icon__lower-text"
-						aria-hidden="true"
-					>3</span>
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.heading3') }}</span>
+				<span class="is-sr-only">{{ $t(action.label) }}</span>
 			</BaseButton>
 		</div>
 
-		<div class="editor-toolbar__segment">
-			<BaseButton
-				v-tooltip="$t('input.editor.bold')"
-				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('bold') }"
-				:aria-pressed="editor.isActive('bold')"
-				@click="editor.chain().focus().toggleBold().run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'bold']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.bold') }}</span>
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.italic')"
-				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('italic') }"
-				:aria-pressed="editor.isActive('italic')"
-				@click="editor.chain().focus().toggleItalic().run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'italic']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.italic') }}</span>
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.underline')"
-				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('underline') }"
-				:aria-pressed="editor.isActive('underline')"
-				@click="editor.chain().focus().toggleUnderline().run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'underline']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.underline') }}</span>
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.strikethrough')"
-				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('strike') }"
-				:aria-pressed="editor.isActive('strike')"
-				@click="editor.chain().focus().toggleStrike().run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'strikethrough']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.strikethrough') }}</span>
-			</BaseButton>
-		</div>
+		<Dropdown
+			class="editor-toolbar__more"
+			:class="{'is-hidden-more': overflowingActions.length === 0}"
+		>
+			<template #trigger="{toggleOpen, open}">
+				<BaseButton
+					v-tooltip="$t('input.editor.more')"
+					class="editor-toolbar__button"
+					aria-haspopup="true"
+					:aria-expanded="open"
+					@click="(event: MouseEvent) => onMoreClick(event, toggleOpen, open)"
+					@keydown.down.prevent="() => onMoreClick(undefined, toggleOpen, open)"
+				>
+					<span class="icon">
+						<Icon icon="ellipsis-h" />
+					</span>
+					<span class="is-sr-only">{{ $t('input.editor.more') }}</span>
+				</BaseButton>
+			</template>
+			<template #default="{close}">
+				<template
+					v-for="(action, index) in overflowingActions"
+					:key="action.label"
+				>
+					<hr
+						v-if="action.startsGroup && index > 0"
+						class="editor-toolbar__menu-divider"
+					>
+					<DropdownItem
+						:icon="action.icon"
+						:aria-pressed="action.isActive?.()"
+						@click="(event: MouseEvent) => { action.run(event); close() }"
+					>
+						{{ $t(action.label) }}
+						<Icon
+							v-if="action.isActive?.()"
+							icon="check"
+							class="editor-toolbar__menu-check"
+						/>
+					</DropdownItem>
+				</template>
+			</template>
+		</Dropdown>
 
-		<div class="editor-toolbar__segment">
+		<div
+			v-if="tableMode"
+			class="editor-toolbar__table-buttons"
+		>
 			<BaseButton
-				v-tooltip="$t('input.editor.code')"
 				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('codeBlock') }"
-				:aria-pressed="editor.isActive('codeBlock')"
-				@click="editor.chain().focus().toggleCodeBlock().run()"
+				@click="
+					editor
+						.chain()
+						.focus()
+						.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+						.run()
+				"
 			>
-				<span class="icon">
-					<Icon :icon="['fas', 'code']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.code') }}</span>
+				{{ $t('input.editor.table.insert') }}
 			</BaseButton>
 			<BaseButton
-				v-tooltip="$t('input.editor.quote')"
 				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('blockquote') }"
-				:aria-pressed="editor.isActive('blockquote')"
-				@click="editor.chain().focus().toggleBlockquote().run()"
+				:disabled="!editor.can().addColumnBefore()"
+				@click="editor.chain().focus().addColumnBefore().run()"
 			>
-				<span class="icon">
-					<Icon :icon="['fas', 'quote-right']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.quote') }}</span>
-			</BaseButton>
-		</div>
-
-		<div class="editor-toolbar__segment">
-			<BaseButton
-				v-tooltip="$t('input.editor.bulletList')"
-				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('bulletList') }"
-				:aria-pressed="editor.isActive('bulletList')"
-				@click="editor.chain().focus().toggleBulletList().run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'list-ul']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.bulletList') }}</span>
+				{{ $t('input.editor.table.addColumnBefore') }}
 			</BaseButton>
 			<BaseButton
-				v-tooltip="$t('input.editor.orderedList')"
 				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('orderedList') }"
-				:aria-pressed="editor.isActive('orderedList')"
-				@click="editor.chain().focus().toggleOrderedList().run()"
+				:disabled="!editor.can().addColumnAfter()"
+				@click="editor.chain().focus().addColumnAfter().run()"
 			>
-				<span class="icon">
-					<Icon :icon="['fas', 'list-ol']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.orderedList') }}</span>
+				{{ $t('input.editor.table.addColumnAfter') }}
 			</BaseButton>
 			<BaseButton
-				v-tooltip="$t('input.editor.taskList')"
 				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('taskList') }"
-				:aria-pressed="editor.isActive('taskList')"
-				@click="editor.chain().focus().toggleTaskList().run()"
+				:disabled="!editor.can().deleteColumn()"
+				@click="editor.chain().focus().deleteColumn().run()"
 			>
-				<span class="icon">
-					<Icon icon="list-check" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.taskList') }}</span>
-			</BaseButton>
-		</div>
-
-		<div class="editor-toolbar__segment">
-			<BaseButton
-				v-tooltip="$t('input.editor.image')"
-				class="editor-toolbar__button"
-				@click="e => emit('imageUploadClicked', e)"
-			>
-				<span class="icon">
-					<Icon icon="image" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.image') }}</span>
-			</BaseButton>
-		</div>
-
-		<div class="editor-toolbar__segment">
-			<BaseButton
-				v-tooltip="$t('input.editor.link')"
-				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('link') }"
-				title="set link"
-				@click="setLink"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'link']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.link') }}</span>
+				{{ $t('input.editor.table.deleteColumn') }}
 			</BaseButton>
 			<BaseButton
-				v-tooltip="$t('input.editor.text')"
 				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('paragraph') }"
-				title="paragraph"
-				@click="editor.chain().focus().setParagraph().run()"
+				:disabled="!editor.can().addRowBefore()"
+				@click="editor.chain().focus().addRowBefore().run()"
 			>
-				<span class="icon">
-					<Icon :icon="['fas', 'paragraph']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.text') }}</span>
-			</BaseButton>
-
-			<BaseButton
-				v-tooltip="$t('input.editor.horizontalRule')"
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().setHorizontalRule().run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'ruler-horizontal']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.horizontalRule') }}</span>
-			</BaseButton>
-		</div>
-
-		<div class="editor-toolbar__segment">
-			<BaseButton
-				v-tooltip="$t('input.editor.undo')"
-				class="editor-toolbar__button"
-				@click="editor.chain().focus().undo().run()"
-			>
-				<span class="icon">
-					<Icon :icon="['fas', 'undo']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.undo') }}</span>
+				{{ $t('input.editor.table.addRowBefore') }}
 			</BaseButton>
 			<BaseButton
-				v-tooltip="$t('input.editor.redo')"
 				class="editor-toolbar__button"
-				@click="editor.chain().focus().redo().run()"
+				:disabled="!editor.can().addRowAfter()"
+				@click="editor.chain().focus().addRowAfter().run()"
 			>
-				<span class="icon">
-					<Icon :icon="['fas', 'redo']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.redo') }}</span>
+				{{ $t('input.editor.table.addRowAfter') }}
 			</BaseButton>
-		</div>
-
-		<div class="editor-toolbar__segment">
-			<!-- table -->
 			<BaseButton
-				v-tooltip="$t('input.editor.table.title')"
 				class="editor-toolbar__button"
-				:class="{ 'is-active': editor.isActive('table') }"
-				@click="toggleTableMode"
+				:disabled="!editor.can().deleteRow()"
+				@click="editor.chain().focus().deleteRow().run()"
 			>
-				<span class="icon">
-					<Icon :icon="['fas', 'table']" />
-				</span>
-				<span class="is-sr-only">{{ $t('input.editor.table.title') }}</span>
+				{{ $t('input.editor.table.deleteRow') }}
 			</BaseButton>
-			<div
-				v-if="tableMode"
-				class="editor-toolbar__table-buttons"
+			<BaseButton
+				class="editor-toolbar__button"
+				:disabled="!editor.can().deleteTable()"
+				@click="editor.chain().focus().deleteTable().run()"
 			>
-				<BaseButton
-					class="editor-toolbar__button"
-					@click="
-						editor
-							.chain()
-							.focus()
-							.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-							.run()
-					"
-				>
-					{{ $t('input.editor.table.insert') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().addColumnBefore()"
-					@click="editor.chain().focus().addColumnBefore().run()"
-				>
-					{{ $t('input.editor.table.addColumnBefore') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().addColumnAfter()"
-					@click="editor.chain().focus().addColumnAfter().run()"
-				>
-					{{ $t('input.editor.table.addColumnAfter') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().deleteColumn()"
-					@click="editor.chain().focus().deleteColumn().run()"
-				>
-					{{ $t('input.editor.table.deleteColumn') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().addRowBefore()"
-					@click="editor.chain().focus().addRowBefore().run()"
-				>
-					{{ $t('input.editor.table.addRowBefore') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().addRowAfter()"
-					@click="editor.chain().focus().addRowAfter().run()"
-				>
-					{{ $t('input.editor.table.addRowAfter') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().deleteRow()"
-					@click="editor.chain().focus().deleteRow().run()"
-				>
-					{{ $t('input.editor.table.deleteRow') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().deleteTable()"
-					@click="editor.chain().focus().deleteTable().run()"
-				>
-					{{ $t('input.editor.table.deleteTable') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().mergeCells()"
-					@click="editor.chain().focus().mergeCells().run()"
-				>
-					{{ $t('input.editor.table.mergeCells') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().splitCell()"
-					@click="editor.chain().focus().splitCell().run()"
-				>
-					{{ $t('input.editor.table.splitCell') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().toggleHeaderColumn()"
-					@click="editor.chain().focus().toggleHeaderColumn().run()"
-				>
-					{{ $t('input.editor.table.toggleHeaderColumn') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().toggleHeaderRow()"
-					@click="editor.chain().focus().toggleHeaderRow().run()"
-				>
-					{{ $t('input.editor.table.toggleHeaderRow') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().toggleHeaderCell()"
-					@click="editor.chain().focus().toggleHeaderCell().run()"
-				>
-					{{ $t('input.editor.table.toggleHeaderCell') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().mergeOrSplit()"
-					@click="editor.chain().focus().mergeOrSplit().run()"
-				>
-					{{ $t('input.editor.table.mergeOrSplit') }}
-				</BaseButton>
-				<BaseButton
-					class="editor-toolbar__button"
-					:disabled="!editor.can().fixTables()"
-					@click="editor.chain().focus().fixTables().run()"
-				>
-					{{ $t('input.editor.table.fixTables') }}
-				</BaseButton>
-			</div>
+				{{ $t('input.editor.table.deleteTable') }}
+			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
+				:disabled="!editor.can().mergeCells()"
+				@click="editor.chain().focus().mergeCells().run()"
+			>
+				{{ $t('input.editor.table.mergeCells') }}
+			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
+				:disabled="!editor.can().splitCell()"
+				@click="editor.chain().focus().splitCell().run()"
+			>
+				{{ $t('input.editor.table.splitCell') }}
+			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
+				:disabled="!editor.can().toggleHeaderColumn()"
+				@click="editor.chain().focus().toggleHeaderColumn().run()"
+			>
+				{{ $t('input.editor.table.toggleHeaderColumn') }}
+			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
+				:disabled="!editor.can().toggleHeaderRow()"
+				@click="editor.chain().focus().toggleHeaderRow().run()"
+			>
+				{{ $t('input.editor.table.toggleHeaderRow') }}
+			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
+				:disabled="!editor.can().toggleHeaderCell()"
+				@click="editor.chain().focus().toggleHeaderCell().run()"
+			>
+				{{ $t('input.editor.table.toggleHeaderCell') }}
+			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
+				:disabled="!editor.can().mergeOrSplit()"
+				@click="editor.chain().focus().mergeOrSplit().run()"
+			>
+				{{ $t('input.editor.table.mergeOrSplit') }}
+			</BaseButton>
+			<BaseButton
+				class="editor-toolbar__button"
+				:disabled="!editor.can().fixTables()"
+				@click="editor.chain().focus().fixTables().run()"
+			>
+				{{ $t('input.editor.table.fixTables') }}
+			</BaseButton>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, onBeforeUnmount} from 'vue'
+import {ref, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
+import {useResizeObserver} from '@vueuse/core'
 import type {Editor} from '@tiptap/vue-3'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import Dropdown from '@/components/misc/Dropdown.vue'
+import DropdownItem from '@/components/misc/DropdownItem.vue'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 
 const props = defineProps<{
@@ -400,17 +221,178 @@ function toggleTableMode() {
 	tableMode.value = !tableMode.value
 }
 
+interface ToolbarAction {
+	label: string
+	icon: IconProp
+	headingLevel?: 1 | 2 | 3
+	startsGroup?: boolean
+	isActive?: () => boolean
+	run: (event: MouseEvent) => void
+}
+
+const actions: ToolbarAction[] = [
+	...([1, 2, 3] as const).map((level): ToolbarAction => ({
+		label: `input.editor.heading${level}`,
+		icon: ['fas', 'header'],
+		headingLevel: level,
+		startsGroup: level === 1,
+		isActive: () => props.editor.isActive('heading', {level}),
+		run: () => props.editor.chain().focus().toggleHeading({level}).run(),
+	})),
+	{
+		label: 'input.editor.bold',
+		icon: ['fas', 'bold'],
+		startsGroup: true,
+		isActive: () => props.editor.isActive('bold'),
+		run: () => props.editor.chain().focus().toggleBold().run(),
+	},
+	{
+		label: 'input.editor.italic',
+		icon: ['fas', 'italic'],
+		isActive: () => props.editor.isActive('italic'),
+		run: () => props.editor.chain().focus().toggleItalic().run(),
+	},
+	{
+		label: 'input.editor.underline',
+		icon: ['fas', 'underline'],
+		isActive: () => props.editor.isActive('underline'),
+		run: () => props.editor.chain().focus().toggleUnderline().run(),
+	},
+	{
+		label: 'input.editor.strikethrough',
+		icon: ['fas', 'strikethrough'],
+		isActive: () => props.editor.isActive('strike'),
+		run: () => props.editor.chain().focus().toggleStrike().run(),
+	},
+	{
+		label: 'input.editor.code',
+		icon: ['fas', 'code'],
+		startsGroup: true,
+		isActive: () => props.editor.isActive('codeBlock'),
+		run: () => props.editor.chain().focus().toggleCodeBlock().run(),
+	},
+	{
+		label: 'input.editor.quote',
+		icon: ['fas', 'quote-right'],
+		isActive: () => props.editor.isActive('blockquote'),
+		run: () => props.editor.chain().focus().toggleBlockquote().run(),
+	},
+	{
+		label: 'input.editor.bulletList',
+		icon: ['fas', 'list-ul'],
+		startsGroup: true,
+		isActive: () => props.editor.isActive('bulletList'),
+		run: () => props.editor.chain().focus().toggleBulletList().run(),
+	},
+	{
+		label: 'input.editor.orderedList',
+		icon: ['fas', 'list-ol'],
+		isActive: () => props.editor.isActive('orderedList'),
+		run: () => props.editor.chain().focus().toggleOrderedList().run(),
+	},
+	{
+		label: 'input.editor.taskList',
+		icon: 'list-check',
+		isActive: () => props.editor.isActive('taskList'),
+		run: () => props.editor.chain().focus().toggleTaskList().run(),
+	},
+	{
+		label: 'input.editor.image',
+		icon: 'image',
+		startsGroup: true,
+		run: event => emit('imageUploadClicked', event),
+	},
+	{
+		label: 'input.editor.link',
+		icon: ['fas', 'link'],
+		startsGroup: true,
+		isActive: () => props.editor.isActive('link'),
+		run: event => setLinkInEditor((event.currentTarget as HTMLElement).getBoundingClientRect(), props.editor),
+	},
+	{
+		label: 'input.editor.text',
+		icon: ['fas', 'paragraph'],
+		isActive: () => props.editor.isActive('paragraph'),
+		run: () => props.editor.chain().focus().setParagraph().run(),
+	},
+	{
+		label: 'input.editor.horizontalRule',
+		icon: ['fas', 'ruler-horizontal'],
+		run: () => props.editor.chain().focus().setHorizontalRule().run(),
+	},
+	{
+		label: 'input.editor.undo',
+		icon: ['fas', 'undo'],
+		startsGroup: true,
+		run: () => props.editor.chain().focus().undo().run(),
+	},
+	{
+		label: 'input.editor.redo',
+		icon: ['fas', 'redo'],
+		run: () => props.editor.chain().focus().redo().run(),
+	},
+	{
+		label: 'input.editor.table.title',
+		icon: ['fas', 'table'],
+		startsGroup: true,
+		isActive: () => props.editor.isActive('table'),
+		run: toggleTableMode,
+	},
+]
+
+// Overflowing buttons wrap onto clipped rows but keep their slot, so hiding them
+// can't change how many fit.
+const rowRef = ref<HTMLElement | null>(null)
+const firstOverflowIndex = ref(actions.length)
+const overflowingActions = computed(() => actions.slice(firstOverflowIndex.value))
+
+function updateOverflow() {
+	const buttons = Array.from(rowRef.value?.children ?? []) as HTMLElement[]
+	const firstRowTop = buttons[0]?.offsetTop
+	const index = buttons.findIndex(button => button.offsetTop > firstRowTop)
+	firstOverflowIndex.value = index === -1 ? actions.length : index
+}
+
+useResizeObserver(rowRef, updateOverflow)
+
+watch(firstOverflowIndex, async () => {
+	await nextTick()
+	setRovingTabindex(document.activeElement as HTMLElement)
+})
+
+function menuItems(): HTMLButtonElement[] {
+	return Array.from(toolbarRef.value?.querySelectorAll<HTMLButtonElement>('.dropdown-menu button:not(:disabled)') ?? [])
+}
+
+async function onMoreClick(event: MouseEvent | undefined, toggleOpen: () => void, open: boolean) {
+	if (event === undefined && open) {
+		menuItems()[0]?.focus()
+		return
+	}
+	toggleOpen()
+	// detail is 0 for keyboard clicks
+	if (!open && (event === undefined || event.detail === 0)) {
+		await nextTick()
+		menuItems()[0]?.focus()
+	}
+}
+
 // Roving tabindex: the toolbar is a single Tab stop and arrow keys move between
 // buttons, so Tab always leaves the toolbar (to the editor content) instead of
 // walking through every button.
 const toolbarRef = ref<HTMLElement | null>(null)
 
-function toolbarButtons(): HTMLButtonElement[] {
+function allToolbarButtons(): HTMLButtonElement[] {
 	if (!toolbarRef.value) {
 		return []
 	}
 	return Array.from(toolbarRef.value.querySelectorAll<HTMLButtonElement>('button'))
-		.filter(button => !button.disabled)
+		.filter(button => !button.closest('.dropdown-menu'))
+}
+
+function toolbarButtons(): HTMLButtonElement[] {
+	return allToolbarButtons()
+		.filter(button => !button.disabled && getComputedStyle(button).visibility !== 'hidden')
 }
 
 function setRovingTabindex(active: HTMLElement | null) {
@@ -419,51 +401,57 @@ function setRovingTabindex(active: HTMLElement | null) {
 		return
 	}
 	const target = active && buttons.includes(active as HTMLButtonElement) ? active : buttons[0]
-	buttons.forEach(button => {
+	allToolbarButtons().forEach(button => {
 		button.tabIndex = button === target ? 0 : -1
 	})
 }
 
 function onToolbarFocusin(event: FocusEvent) {
 	const target = event.target as HTMLElement
-	if (target.tagName === 'BUTTON') {
+	if (target.tagName === 'BUTTON' && !target.closest('.dropdown-menu')) {
 		setRovingTabindex(target)
 	}
 }
 
+function nextIndex(key: string, index: number, length: number, forward: string, backward: string): number | null {
+	switch (key) {
+		case forward:
+			return (index + 1) % length
+		case backward:
+			return (index - 1 + length) % length
+		case 'Home':
+			return 0
+		case 'End':
+			return length - 1
+	}
+	return null
+}
+
 function onToolbarKeydown(event: KeyboardEvent) {
-	if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) {
+	const inMenu = (event.target as HTMLElement).closest('.dropdown-menu') !== null
+	const buttons = inMenu ? menuItems() : toolbarButtons()
+	if (buttons.length === 0) {
 		return
 	}
 
-	const buttons = toolbarButtons()
-	if (buttons.length === 0) {
+	const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement)
+	const next = nextIndex(
+		event.key,
+		currentIndex === -1 ? 0 : currentIndex,
+		buttons.length,
+		inMenu ? 'ArrowDown' : 'ArrowRight',
+		inMenu ? 'ArrowUp' : 'ArrowLeft',
+	)
+	if (next === null) {
 		return
 	}
 
 	event.preventDefault()
 
-	const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement)
-	const index = currentIndex === -1 ? 0 : currentIndex
-
-	let next = index
-	switch (event.key) {
-		case 'ArrowRight':
-			next = (index + 1) % buttons.length
-			break
-		case 'ArrowLeft':
-			next = (index - 1 + buttons.length) % buttons.length
-			break
-		case 'Home':
-			next = 0
-			break
-		case 'End':
-			next = buttons.length - 1
-			break
-	}
-
 	const nextButton = buttons[next]
-	setRovingTabindex(nextButton)
+	if (!inMenu) {
+		setRovingTabindex(nextButton)
+	}
 	nextButton.focus()
 }
 
@@ -487,13 +475,12 @@ onBeforeUnmount(() => {
 	observer?.disconnect()
 	observer = null
 })
-
-function setLink(event: MouseEvent) {
-	setLinkInEditor((event.target as HTMLElement).getBoundingClientRect(), props.editor)
-}
 </script>
 
 <style lang="scss" scoped>
+// Keeps the focus ring inside the clipped row
+$focus-ring-room: 2px;
+
 .editor-toolbar {
 	background: var(--white);
 	border: 1px solid var(--grey-200);
@@ -502,12 +489,24 @@ function setLink(event: MouseEvent) {
 	border-radius: $radius;
 	display: flex;
 	flex-wrap: wrap;
+	align-items: flex-start;
+}
 
-	> * + * {
-		border-inline-start: 1px solid var(--grey-200);
-		margin-inline-start: 6px;
-		padding-inline-start: 6px;
-	}
+.editor-toolbar__row {
+	flex: 1 1 0;
+	min-inline-size: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	position: relative;
+	overflow: hidden;
+	block-size: calc(2rem + #{$focus-ring-room * 2});
+	padding: $focus-ring-room;
+	margin: -$focus-ring-room;
+}
+
+.editor-toolbar__more.is-hidden-more {
+	visibility: hidden;
 }
 
 .editor-toolbar__button {
@@ -519,10 +518,27 @@ function setLink(event: MouseEvent) {
 	transition: all $transition;
 	background: transparent;
 	margin-inline-end: .25rem;
+	position: relative;
 
 	&:hover {
 		background: var(--grey-100);
 		border-color: var(--grey-200);
+	}
+
+	&.is-group-start {
+		margin-inline-start: 13px;
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset-block: -1px;
+			inset-inline-start: -8px;
+			border-inline-start: 1px solid var(--grey-200);
+		}
+	}
+
+	&.is-overflowing {
+		visibility: hidden;
 	}
 
 	.icon {
@@ -538,7 +554,20 @@ function setLink(event: MouseEvent) {
 	}
 }
 
+.editor-toolbar__menu-divider {
+	background-color: var(--border-light);
+	border: none;
+	block-size: 1px;
+	margin: .5rem 0;
+}
+
+.editor-toolbar__menu-check {
+	margin-inline-start: .5rem;
+	color: var(--primary);
+}
+
 .editor-toolbar__table-buttons {
+	flex-basis: 100%;
 	margin-block-start: .5rem;
 
 	> .editor-toolbar__button {
