@@ -8,6 +8,7 @@ import {parseDateProp} from '@/helpers/time/parseDateProp'
 import {parseBooleanProp} from '@/helpers/time/parseBooleanProp'
 import {useRouteFilters, type UseRouteFiltersReturn} from '@/composables/useRouteFilters'
 import {useGanttTaskList, type UseGanttTaskListReturn} from './useGanttTaskList'
+import {INCLUDE_SUBPROJECTS_QUERY_PARAM} from '@/constants/projectView'
 
 import type {TaskFilterParams} from '@/client/queries/tasks'
 
@@ -80,11 +81,31 @@ function ganttFiltersToRoute(filters: GanttFilters) {
 	}
 }
 
-function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
+const GANTT_QUERY_PARAMS = ['dateFrom', 'dateTo', 'showTasksWithoutDates']
+
+// useRouteFilters rebuilds the url from gantt filters alone; carry the rest over, in place.
+function ganttFiltersToRoutePreservingQuery(
+	filters: GanttFilters,
+	currentQuery: RouteLocationNormalized['query'],
+) {
+	const routeLocation = ganttFiltersToRoute(filters)
+	const ganttQuery = routeLocation.query
+	const query: LocationQueryRaw = {...currentQuery, ...ganttQuery}
+	for (const key of GANTT_QUERY_PARAMS) {
+		if (!(key in ganttQuery)) {
+			delete query[key]
+		}
+	}
+
+	return {...routeLocation, query}
+}
+
+function ganttFiltersToApiParams(filters: GanttFilters, includeSubprojects: boolean): TaskFilterParams {
 	const dateFrom = isoToKebabDate(filters.dateFrom)
 	const dateTo = isoToKebabDate(filters.dateTo)
 
 	return {
+		include_subprojects: includeSubprojects,
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
 		filter: '(' +
@@ -106,6 +127,7 @@ export function useGanttFilters(
 	route: Ref<RouteLocationNormalized>,
 	projectId: Ref<number>,
 	viewId: Ref<number>,
+	includeSubprojects: Ref<boolean>,
 ): UseGanttFiltersReturn {
 	const viewFiltersStore = useViewFiltersStore()
 
@@ -119,17 +141,22 @@ export function useGanttFilters(
 		route,
 		() => ganttGetDefaultFilters(projectId.value, viewId.value),
 		r => ganttRouteToFilters(r, projectId.value, viewId.value),
-		ganttFiltersToRoute,
+		filters => ganttFiltersToRoutePreservingQuery(filters, route.value.query),
 		['project.view'],
 	)
 
 	// Sync filters to store whenever they change (for view tab navigation)
 	watch(
-		filters,
-		(newFilters) => {
+		[filters, includeSubprojects],
+		([newFilters]) => {
 			const routeLocation = ganttFiltersToRoute(newFilters)
-			const query = routeLocation.query as LocationQueryRaw
-			if (query && Object.keys(query).length > 0) {
+			const query = {...routeLocation.query} as LocationQueryRaw
+			// Gantt owns only its own params, but the stored query is the whole view state.
+			const includeParam = route.value.query[INCLUDE_SUBPROJECTS_QUERY_PARAM]
+			if (typeof includeParam === 'string') {
+				query[INCLUDE_SUBPROJECTS_QUERY_PARAM] = includeParam
+			}
+			if (Object.keys(query).length > 0) {
 				viewFiltersStore.setViewQuery(viewId.value, query)
 			} else {
 				viewFiltersStore.clearViewQuery(viewId.value)
@@ -145,7 +172,11 @@ export function useGanttFilters(
 		isLoading,
 		addTask,
 		updateTask,
-	} = useGanttTaskList<GanttFilters>(filters, ganttFiltersToApiParams, viewId)
+	} = useGanttTaskList<GanttFilters>(
+		filters,
+		currentFilters => ganttFiltersToApiParams(currentFilters, includeSubprojects.value),
+		viewId,
+	)
 
 	return {
 		filters,
