@@ -18,9 +18,12 @@ package models
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +38,8 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/disintegration/imaging"
+	"golang.org/x/sync/semaphore"
+	"golang.org/x/sync/singleflight"
 	"xorm.io/xorm"
 )
 
@@ -142,9 +147,10 @@ func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []
 }
 
 // GetTaskAttachmentForDownload returns preview bytes instead of the file when previewSize
-// is set and the attachment is an image. Returns ErrGenericForbidden on denied access.
+// is set and the attachment is an image; the file is only opened when there is no preview.
+// Returns ErrGenericForbidden on denied access.
 // Owns its own session and commits it before touching storage so no pool connection is held.
-func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
+func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -169,7 +175,7 @@ func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64, previe
 		return nil, nil, err
 	}
 
-	preview, err = ta.loadFileAndPreview(previewSize)
+	preview, err = ta.loadPreviewOrFile(ctx, previewSize)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -177,23 +183,18 @@ func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64, previe
 	return ta, preview, nil
 }
 
-func (ta *TaskAttachment) loadFileAndPreview(previewSize PreviewSize) (preview []byte, err error) {
-	if err := ta.File.LoadFileByID(); err != nil {
-		return nil, err
-	}
-
+func (ta *TaskAttachment) loadPreviewOrFile(ctx context.Context, previewSize PreviewSize) (preview []byte, err error) {
 	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
-		preview = ta.GetPreview(previewSize)
-		if preview == nil {
-			// GetPreview consumed the reader; close it before re-opening so it doesn't leak.
-			_ = ta.File.File.Close()
-			if err := ta.File.LoadFileByID(); err != nil {
-				return nil, err
-			}
+		preview, err = ta.GetPreview(ctx, previewSize)
+		if err == nil {
+			return preview, nil
+		}
+		if !IsErrTaskAttachmentNotPreviewable(err) {
+			return nil, err
 		}
 	}
 
-	return preview, nil
+	return nil, ta.File.LoadFileByID()
 }
 
 // ReadOne returns a task attachment
@@ -316,53 +317,176 @@ func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
 	return "task_attachment_preview_" + strconv.FormatInt(id, 10) + "_size_" + string(size)
 }
 
-func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
-	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
-
-	result, err := keyvalue.RememberValue(cacheKey, func() ([]byte, error) {
-		// Read all bytes up front so we can inspect dimensions without seeking.
-		// The file is an io.ReadCloser (no Seek), so we buffer it once.
-		data, err := io.ReadAll(ta.File.File)
-		if err != nil {
-			return nil, err
-		}
-
-		// Check image dimensions before full decode to prevent DoS
-		// from decompression bombs (small file, huge pixel dimensions)
-		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
-		if err != nil {
-			return nil, err
-		}
-		if err := imageutils.ValidateConfig(cfg); err != nil {
-			return nil, err
-		}
-
-		img, _, err := image.Decode(bytes.NewReader(data))
-		if err != nil {
-			return nil, err
-		}
-
-		// Scale down the image to a minimum size
-		resizedImg := resizeImage(img, previewSize.GetSize())
-
-		// Get the raw bytes of the resized image
-		buf := &bytes.Buffer{}
-		if err := png.Encode(buf, resizedImg); err != nil {
-			return nil, err
-		}
-		previewImage, err := io.ReadAll(buf)
-		if err != nil {
-			return nil, err
-		}
-
-		log.Infof("Attachment image preview for task attachment %v of size %v created and cached", ta.ID, previewSize)
-		return previewImage, nil
-	})
+func cachedTaskAttachmentPreview(cacheKey string) (preview []byte, cached bool) {
+	cached, err := keyvalue.GetWithValue(cacheKey, &preview)
 	if err != nil {
-		return nil
+		log.Errorf("Could not read attachment preview %s from the cache: %v", cacheKey, err)
+		return nil, false
+	}
+	return preview, cached
+}
+
+func cacheTaskAttachmentPreview(cacheKey string, preview []byte) {
+	if err := keyvalue.Put(cacheKey, preview); err != nil {
+		log.Errorf("Could not cache attachment preview %s: %v", cacheKey, err)
+	}
+}
+
+const (
+	// Below imageutils.MaxPixels the largest allowed image could never acquire.
+	previewPixelBudget    = 2 * imageutils.MaxPixels
+	previewQueueTimeout   = 30 * time.Second
+	maxPreviewSourceBytes = 50 << 20
+	maxPreviewHeaderBytes = 1 << 20
+)
+
+var attachmentPreviews = newPreviewGenerator(previewPixelBudget, previewQueueTimeout)
+
+type previewGenerator struct {
+	slots        *semaphore.Weighted
+	queueTimeout time.Duration
+	flights      singleflight.Group
+}
+
+func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *previewGenerator {
+	return &previewGenerator{
+		slots:        semaphore.NewWeighted(pixelBudget),
+		queueTimeout: queueTimeout,
+	}
+}
+
+// GetPreview returns ErrTaskAttachmentNotPreviewable when the original should be served instead.
+func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) ([]byte, error) {
+	if ta.File.Size > maxPreviewSourceBytes {
+		return nil, ErrTaskAttachmentNotPreviewable{Err: fmt.Errorf("file is %d bytes, previews are limited to %d", ta.File.Size, maxPreviewSourceBytes)}
+	}
+	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
+	return attachmentPreviews.get(ctx, cacheKey, fileOpener(ta.File.ID), previewSize)
+}
+
+func (g *previewGenerator) get(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
+	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
+		return preview, nil
 	}
 
-	return result
+	flight := g.flights.DoChan(cacheKey, func() (any, error) {
+		// Detached: the flight is shared, so the caller who started it leaving must not fail the others.
+		return g.generateAndCache(context.WithoutCancel(ctx), cacheKey, open, previewSize)
+	})
+
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("waiting for attachment preview: %w", context.Cause(ctx))
+	case result := <-flight:
+		if result.Err != nil {
+			return nil, result.Err
+		}
+		preview, _ := result.Val.([]byte)
+		return preview, nil
+	}
+}
+
+func (g *previewGenerator) generateAndCache(ctx context.Context, cacheKey string, open sourceOpener, previewSize PreviewSize) (preview []byte, err error) {
+	// singleflight re-panics a DoChan callback on its own goroutine, which would crash the whole API.
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("Panic while generating attachment preview %s: %v\n%s", cacheKey, r, debug.Stack())
+			err = fmt.Errorf("panic while generating attachment preview %s: %v", cacheKey, r)
+		}
+	}()
+
+	// A flight that just finished may have cached it after this caller's lookup.
+	if preview, cached := cachedTaskAttachmentPreview(cacheKey); cached {
+		return preview, nil
+	}
+
+	preview, err = g.generate(ctx, open, previewSize)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheTaskAttachmentPreview(cacheKey, preview)
+	log.Infof("Attachment image preview %s created and cached", cacheKey)
+	return preview, nil
+}
+
+type sourceOpener func() (io.ReadCloser, error)
+
+func fileOpener(fileID int64) sourceOpener {
+	return func() (io.ReadCloser, error) {
+		file := &files.File{ID: fileID}
+		if err := file.LoadFileByID(); err != nil {
+			return nil, err
+		}
+		return file.File, nil
+	}
+}
+
+// Opens the source twice so callers queued for capacity hold no storage handle or S3 body while waiting.
+func (g *previewGenerator) generate(ctx context.Context, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
+	pixels, err := sourcePixels(open)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := g.acquire(ctx, pixels); err != nil {
+		return nil, err
+	}
+	defer g.slots.Release(pixels)
+
+	src, err := open()
+	if err != nil {
+		return nil, err
+	}
+	defer src.Close()
+
+	preview, err := renderPreview(src, previewSize)
+	if err != nil {
+		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
+	}
+	return preview, nil
+}
+
+func sourcePixels(open sourceOpener) (int64, error) {
+	header, err := open()
+	if err != nil {
+		return 0, err
+	}
+	defer header.Close()
+
+	// Rejects decompression bombs (small file, huge pixel dimensions) before the full decode.
+	// DecodeConfig buffers the whole file for formats whose metadata may sit at the end, like TIFF.
+	cfg, err := imageutils.ValidateReader(io.LimitReader(header, maxPreviewHeaderBytes))
+	if err != nil {
+		return 0, ErrTaskAttachmentNotPreviewable{Err: err}
+	}
+	return int64(cfg.Width) * int64(cfg.Height), nil
+}
+
+func (g *previewGenerator) acquire(ctx context.Context, pixels int64) error {
+	queueCtx, cancel := context.WithTimeout(ctx, g.queueTimeout)
+	defer cancel()
+
+	if err := g.slots.Acquire(queueCtx, pixels); err != nil {
+		if ctx.Err() != nil {
+			return fmt.Errorf("waiting to generate attachment preview: %w", context.Cause(ctx))
+		}
+		return ErrTaskAttachmentPreviewBusy{}
+	}
+	return nil
+}
+
+func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
+	img, _, err := image.Decode(src)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := &bytes.Buffer{}
+	if err := png.Encode(buf, resizeImage(img, previewSize.GetSize())); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 type PreviewSize string
@@ -408,7 +532,7 @@ func GetPreviewSizeFromString(size string) PreviewSize {
 }
 
 func resizeImage(img image.Image, width int) *image.NRGBA {
-	resizedImg := imaging.Resize(img, width, 0, imaging.Lanczos)
+	resizedImg := imaging.Resize(img, min(width, img.Bounds().Dx()), 0, imaging.Lanczos)
 	log.Debugf(
 		"Resized attachment image from %vx%v to %vx%v for a preview",
 		img.Bounds().Size().X,

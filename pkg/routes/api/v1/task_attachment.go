@@ -107,6 +107,7 @@ func UploadTaskAttachment(c *echo.Context) error {
 // @Failure 403 {object} models.Message "No access to this task."
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
+// @Failure 503 {object} models.Message "Too many previews are being generated, try again later."
 // @Router /tasks/{id}/attachments/{attachmentID} [get]
 func GetTaskAttachment(c *echo.Context) error {
 
@@ -121,7 +122,7 @@ func GetTaskAttachment(c *echo.Context) error {
 	}
 
 	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
-	attachment, preview, err := models.GetTaskAttachmentForDownload(auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
+	attachment, preview, err := models.GetTaskAttachmentForDownload(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
 	if err != nil {
 		return err
 	}
