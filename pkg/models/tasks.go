@@ -1337,15 +1337,17 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		for _, c := range colsToUpdate {
 			allowed[c] = true
 		}
-		// Assignees are not a task column, but a bulk update may name them in
-		// fields to replace them explicitly.
-		allowed["assignees"] = true
+		// Not task columns; written separately below.
+		relationFields := map[string]bool{
+			"assignees": true,
+			"reminders": true,
+		}
 		cols := []string{}
 		for _, f := range fields {
-			if !allowed[f] {
+			if !allowed[f] && !relationFields[f] {
 				return ErrInvalidTaskColumn{Column: f}
 			}
-			if f != "assignees" {
+			if !relationFields[f] {
 				cols = append(cols, f)
 			}
 			fieldSet[f] = true
@@ -1395,12 +1397,11 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		if !fieldSet["cover_image_attachment_id"] {
 			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
 		}
+		if !fieldSet["reminders"] {
+			t.Reminders = ot.Reminders
+		}
 	}
 
-	// Update the assignees. When a field list is provided (bulk updates), the
-	// rest of the task must be left untouched, so assignees are only replaced
-	// when they are named in fields. Without a field list (single-task
-	// updates), the passed assignees are applied as before.
 	if len(fields) == 0 || fieldSet["assignees"] {
 		if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
 			return err
