@@ -1,6 +1,7 @@
 import {CancelledError, QueryCache, QueryClient} from '@tanstack/vue-query'
 
 import {isRequestContextAbort} from '@/client/requestContext'
+import {isInTrashError} from '@/client/queries/trashShared'
 import {error} from '@/message'
 
 export const queryClient = new QueryClient({
@@ -8,6 +9,7 @@ export const queryClient = new QueryClient({
 		onError: (cause, query) => {
 			if (query.meta?.handlesError) return
 			if (cause instanceof CancelledError || isRequestContextAbort(cause)) return
+			if (isInTrashError(cause)) return
 			error(cause)
 		},
 	}),
