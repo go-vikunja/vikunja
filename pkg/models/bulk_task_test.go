@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 func TestBulkTask_Update(t *testing.T) {
@@ -166,6 +167,53 @@ func TestBulkTask_Update(t *testing.T) {
 
 		db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": 30, "user_id": 1}, false)
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": 30, "user_id": 2})
+	})
+
+	t.Run("bulk update without reminders field keeps reminders", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bt := &BulkTask{
+			TaskIDs: []int64{27},
+			Fields:  []string{"priority"},
+			Values:  &Task{Priority: 3},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		err = bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 27}, 2)
+		db.AssertExists(t, "task_reminders", map[string]interface{}{"task_id": 27, "relative_to": "start_date", "relative_period": -3600}, false)
+	})
+
+	t.Run("bulk update with reminders field replaces reminders", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		reminder := time.Date(2030, 1, 1, 12, 0, 0, 0, time.UTC)
+		bt := &BulkTask{
+			TaskIDs: []int64{27},
+			Fields:  []string{"reminders"},
+			Values:  &Task{Reminders: []*TaskReminder{{Reminder: reminder}}},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		err = bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "task_reminders", builder.Eq{"task_id": 27}, 1)
+		db.AssertMissing(t, "task_reminders", map[string]interface{}{"task_id": 27, "relative_to": "start_date"})
 	})
 
 	t.Run("don't update done_at when bulk marking tasks done", func(t *testing.T) {
