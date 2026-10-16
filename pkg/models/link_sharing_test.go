@@ -291,6 +291,21 @@ func TestGetLinkShareFromClaims(t *testing.T) {
 		assert.Equal(t, dbShare.SharedByID, got.SharedByID)
 	})
 
+	t.Run("share of a trashed project is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		dbShare, err := GetLinkShareByID(s, 1)
+		require.NoError(t, err)
+		require.NoError(t, (&Project{ID: dbShare.ProjectID}).Delete(s, &user.User{ID: 1}))
+
+		_, err = GetLinkShareFromClaims(s, buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, dbShare.Permission, dbShare.SharedByID))
+		require.Error(t, err)
+		_, err = GetLinkShareByHash(s, dbShare.Hash)
+		assert.True(t, IsErrProjectShareDoesNotExist(err))
+	})
+
 	t.Run("deleted share is rejected", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
