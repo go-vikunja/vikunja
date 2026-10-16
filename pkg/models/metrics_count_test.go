@@ -51,7 +51,7 @@ func TestMetricsCountFromDatabase(t *testing.T) {
 			require.NoError(t, metrics.InvalidateCount(key))
 
 			query := s.Table(table)
-			if key == metrics.TaskCountKey {
+			if key == metrics.TaskCountKey || key == metrics.ProjectCountKey {
 				query = query.Where("deleted_at IS NULL")
 			}
 			expected, err := query.Count()

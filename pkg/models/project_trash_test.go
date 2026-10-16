@@ -340,3 +340,19 @@ func TestTimeEntry_TrashedProject(t *testing.T) {
 
 	db.AssertCount(t, "time_entries", builder.Eq{"project_id": 45}, 1)
 }
+
+func TestBuildOverview_SkipsTrashedProjects(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	live, err := s.Table("projects").Where("deleted_at IS NULL").Count()
+	require.NoError(t, err)
+	all, err := s.Table("projects").Count()
+	require.NoError(t, err)
+	require.Greater(t, all, live)
+
+	overview, err := BuildOverview(s)
+	require.NoError(t, err)
+	assert.Equal(t, live, overview.Projects)
+}
