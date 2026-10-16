@@ -1125,7 +1125,7 @@
       "doneAt": "Done {0}",
       "titleRequired": "The task title can't be empty.",
       "updateSuccess": "The task was saved successfully.",
-      "deleteSuccess": "The task has been deleted successfully.",
+      "deleteSuccess": "The task has been moved to the trash.",
       "duplicateSuccess": "The task was duplicated successfully.",
       "noBucket": "No bucket",
       "bucketSelectLabel": "Kanban bucket: {bucket}",
@@ -1140,11 +1140,6 @@
       "organization": "Organization",
       "management": "Management",
       "dateAndTime": "Date and time",
-      "delete": {
-        "header": "Delete this task",
-        "text1": "Are you sure you want to remove this task?",
-        "text2": "This will also remove all attachments, reminders and relations associated with this task and cannot be undone!"
-      },
       "actions": {
         "assign": "Assign to User",
         "label": "Add Labels",

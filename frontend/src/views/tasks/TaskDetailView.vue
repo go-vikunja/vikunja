@@ -599,7 +599,7 @@
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
-							@click="showDeleteModal = true"
+							@click="deleteTask()"
 						>
 							{{ $t('task.detail.actions.delete') }}
 						</XButton>
@@ -625,25 +625,6 @@
 		>
 			<Icon icon="chevron-down" />
 		</BaseButton>
-
-		<Modal
-			:enabled="showDeleteModal"
-			@close="showDeleteModal = false"
-			@submit="deleteTask()"
-		>
-			<template #header>
-				<span>{{ $t('task.detail.delete.header') }}</span>
-			</template>
-
-			<template #text>
-				<p class="tw:text-balance">
-					{{ $t('task.detail.delete.text1') }}
-				</p>
-				<p class="tw:text-balance">
-					{{ $t('task.detail.delete.text2') }}
-				</p>
-			</template>
-		</Modal>
 	</div>
 </template>
 
@@ -720,6 +701,7 @@ import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 import {useSetTaskSubscriptionMutation} from '@/client/queries/subscriptions'
+import {useRestoreTaskMutation} from '@/client/queries/trash'
 
 const props = defineProps<{
 	taskId: number,
@@ -737,6 +719,7 @@ const {t} = useI18n({useScope: 'global'})
 const projectList = useProjects()
 const updateTask = useUpdateTaskMutation()
 const deleteTaskMutation = useDeleteTaskMutation()
+const restoreTaskMutation = useRestoreTaskMutation()
 const favoriteTask = useFavoriteTaskMutation()
 const duplicateTask = useDuplicateTaskMutation()
 const markTaskRead = useMarkTaskReadMutation()
@@ -1164,12 +1147,16 @@ useTaskDetailShortcuts({
 	onSave: saveTask,
 })
 
-const showDeleteModal = ref(false)
-
 async function deleteTask() {
-	await deleteTaskMutation.mutateAsync(task.value.id!)
-	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'project.index', params: {projectId: task.value.project_id}})
+	const id = task.value.id!
+	const projectId = task.value.project_id
+	await deleteTaskMutation.mutateAsync(id)
+	// Works after unmount: the view navigates away before anyone clicks undo
+	success({message: t('task.detail.deleteSuccess')}, [{
+		title: t('task.undo'),
+		callback: () => restoreTaskMutation.mutate(id),
+	}])
+	router.push({name: 'project.index', params: {projectId}})
 }
 
 async function toggleTaskDone() {
