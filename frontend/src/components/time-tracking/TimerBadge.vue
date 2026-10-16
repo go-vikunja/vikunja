@@ -24,30 +24,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {ref} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import {useTimeTracking} from '@/composables/useTimeTracking'
+import {useElapsed, useTimeTracking} from '@/composables/useTimeTracking'
 import {useStopTimerMutation} from '@/client/queries/timeEntries'
-import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 const {activeTimer, hasActiveTimer} = useTimeTracking()
 const stopMutation = useStopTimerMutation()
-
-const now = ref(new Date())
-let interval: ReturnType<typeof setInterval> | undefined
-
-const elapsed = computed(() => {
-	const start = parseDateOrNull(activeTimer.value?.start_time)
-	if (start === null) {
-		return ''
-	}
-	const seconds = Math.max(0, Math.floor((now.value.getTime() - start.getTime()) / 1000))
-	const pad = (n: number) => n.toString().padStart(2, '0')
-	const hours = Math.floor(seconds / 3600)
-	const mmss = `${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`
-	return hours >= 1 ? `${hours}:${mmss}` : mmss
-})
+const elapsed = useElapsed(() => activeTimer.value?.start_time)
 
 const isStopping = ref(false)
 async function stop() {
@@ -63,18 +48,6 @@ async function stop() {
 		isStopping.value = false
 	}
 }
-
-onMounted(() => {
-	interval = setInterval(() => {
-		now.value = new Date()
-	}, 1000)
-})
-
-onUnmounted(() => {
-	if (interval !== undefined) {
-		clearInterval(interval)
-	}
-})
 </script>
 
 <style lang="scss" scoped>
