@@ -467,3 +467,20 @@
   index: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
+# Live tasks in trashed projects 45 and 46
+- id: 53
+  title: 'task #53 in trashed project'
+  done: false
+  created_by_id: 1
+  project_id: 45
+  index: 1
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+- id: 54
+  title: 'task #54 in trashed sub-project'
+  done: false
+  created_by_id: 1
+  project_id: 46
+  index: 1
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
