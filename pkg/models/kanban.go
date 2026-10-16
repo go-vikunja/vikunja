@@ -281,6 +281,14 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 		return nil, err
 	}
 
+	for _, t := range tasks {
+		if enriched := taskMap[t.ID]; enriched != t {
+			bucketID := t.BucketID
+			*t = *enriched
+			t.BucketID = bucketID
+		}
+	}
+
 	// Put all tasks in their buckets.
 	// Tasks without a bucket association are not returned by the query above
 	// and therefore will not be part of any bucket in the result.
