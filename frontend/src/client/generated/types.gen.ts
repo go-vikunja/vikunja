@@ -1496,6 +1496,14 @@ export type Project = {
      */
     readonly created?: string;
     /**
+     * When this project was moved to the trash. Trashed projects are removed permanently 30 days later.
+     */
+    readonly deleted_at?: string;
+    /**
+     * The user who moved this project to the trash. Only present on trashed projects.
+     */
+    readonly deleted_by?: User;
+    /**
      * The description of the project.
      */
     description?: string;
@@ -1544,6 +1552,10 @@ export type Project = {
      */
     title?: string;
     /**
+     * How many trashed sub-projects restoring this project brings back. Only present in the trash listing.
+     */
+    readonly trashed_sub_projects?: number;
+    /**
      * A timestamp when this project was last updated. You cannot change this value.
      */
     readonly updated?: string;
@@ -1551,6 +1563,29 @@ export type Project = {
      * The views configured for this project. Managed through the project view endpoints.
      */
     readonly views?: Array<ProjectView> | null;
+};
+
+export type ProjectCount = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Live sub-projects at any depth, which move to the trash with the project.
+     */
+    sub_projects?: number;
+    /**
+     * Tasks in the project and its sub-projects, not counting tasks already in the trash.
+     */
+    tasks?: number;
+    /**
+     * Time entries on the project, its sub-projects or their tasks.
+     */
+    time_entries?: number;
+    /**
+     * How many people logged those time entries.
+     */
+    time_entry_authors?: number;
 };
 
 export type ProjectDuplicate = {
@@ -1590,6 +1625,14 @@ export type ProjectReadBody = {
      */
     readonly created?: string;
     /**
+     * When this project was moved to the trash. Trashed projects are removed permanently 30 days later.
+     */
+    readonly deleted_at?: string;
+    /**
+     * The user who moved this project to the trash. Only present on trashed projects.
+     */
+    readonly deleted_by?: User;
+    /**
      * The description of the project.
      */
     description?: string;
@@ -1637,6 +1680,10 @@ export type ProjectReadBody = {
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
+    /**
+     * How many trashed sub-projects restoring this project brings back. Only present in the trash listing.
+     */
+    readonly trashed_sub_projects?: number;
     /**
      * A timestamp when this project was last updated. You cannot change this value.
      */
@@ -2839,7 +2886,7 @@ export type TimeEntry = {
      */
     readonly id?: number;
     /**
-     * Whether the entry's task is in the trash. Such entries are read-only.
+     * Whether the entry's task or project is in the trash. Such entries are read-only; while a project is in the trash, only their author sees them.
      */
     readonly in_trash?: boolean;
     /**
@@ -2886,7 +2933,7 @@ export type TimeEntryReadBody = {
      */
     readonly id?: number;
     /**
-     * Whether the entry's task is in the trash. Such entries are read-only.
+     * Whether the entry's task or project is in the trash. Such entries are read-only; while a project is in the trash, only their author sees them.
      */
     readonly in_trash?: boolean;
     /**
@@ -4266,6 +4313,25 @@ export type ProjectWritable = {
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
+};
+
+export type ProjectCountWritable = {
+    /**
+     * Live sub-projects at any depth, which move to the trash with the project.
+     */
+    sub_projects?: number;
+    /**
+     * Tasks in the project and its sub-projects, not counting tasks already in the trash.
+     */
+    tasks?: number;
+    /**
+     * Time entries on the project, its sub-projects or their tasks.
+     */
+    time_entries?: number;
+    /**
+     * How many people logged those time entries.
+     */
+    time_entry_authors?: number;
 };
 
 export type ProjectDuplicateWritable = {
@@ -7080,6 +7146,69 @@ export type ProjectsCreateResponses = {
 
 export type ProjectsCreateResponse = ProjectsCreateResponses[keyof ProjectsCreateResponses];
 
+export type ProjectsTrashEmptyData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/projects/deleted';
+};
+
+export type ProjectsTrashEmptyErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsTrashEmptyError = ProjectsTrashEmptyErrors[keyof ProjectsTrashEmptyErrors];
+
+export type ProjectsTrashEmptyResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ProjectsTrashEmptyResponse = ProjectsTrashEmptyResponses[keyof ProjectsTrashEmptyResponses];
+
+export type ProjectsTrashListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number.
+         */
+        page?: number;
+        /**
+         * Items per page. Defaults to the instance's configured maximum (service.maxitemsperpage, reported as max_items_per_page by /info) and is silently capped at it; asking for more is not an error.
+         */
+        per_page?: number;
+        /**
+         * Search query; filters the list to items matching this string.
+         */
+        q?: string;
+    };
+    url: '/projects/deleted';
+};
+
+export type ProjectsTrashListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsTrashListError = ProjectsTrashListErrors[keyof ProjectsTrashListErrors];
+
+export type ProjectsTrashListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedProject;
+};
+
+export type ProjectsTrashListResponse = ProjectsTrashListResponses[keyof ProjectsTrashListResponses];
+
 export type ProjectsDeleteData = {
     body?: never;
     path: {
@@ -7197,6 +7326,96 @@ export type ProjectsUpdateResponses = {
 };
 
 export type ProjectsUpdateResponse = ProjectsUpdateResponses[keyof ProjectsUpdateResponses];
+
+export type ProjectsCountData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/projects/{id}/count';
+};
+
+export type ProjectsCountErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsCountError = ProjectsCountErrors[keyof ProjectsCountErrors];
+
+export type ProjectsCountResponses = {
+    /**
+     * OK
+     */
+    200: ProjectCount;
+};
+
+export type ProjectsCountResponse = ProjectsCountResponses[keyof ProjectsCountResponses];
+
+export type ProjectsDeletePermanentlyData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/projects/{id}/permanent';
+};
+
+export type ProjectsDeletePermanentlyErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsDeletePermanentlyError = ProjectsDeletePermanentlyErrors[keyof ProjectsDeletePermanentlyErrors];
+
+export type ProjectsDeletePermanentlyResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ProjectsDeletePermanentlyResponse = ProjectsDeletePermanentlyResponses[keyof ProjectsDeletePermanentlyResponses];
+
+export type ProjectsRestoreData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the project.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/projects/{id}/restore';
+};
+
+export type ProjectsRestoreErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type ProjectsRestoreError = ProjectsRestoreErrors[keyof ProjectsRestoreErrors];
+
+export type ProjectsRestoreResponses = {
+    /**
+     * OK
+     */
+    200: Project;
+};
+
+export type ProjectsRestoreResponse = ProjectsRestoreResponses[keyof ProjectsRestoreResponses];
 
 export type ProjectTimeEntriesListData = {
     body?: never;
