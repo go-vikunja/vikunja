@@ -1838,6 +1838,8 @@
     },
     "emptyProjectsModal": {
       "text": "There are no projects to delete. | This permanently deletes 1 project with everything in it, including projects other people moved to the trash. This cannot be undone. | This permanently deletes {count} projects with everything in them, including projects other people moved to the trash. This cannot be undone."
-    }
+    },
+    "projectInTrash": "This project is in the trash. It was deleted {since}.",
+    "projectInTrashBy": "This project is in the trash. {user} deleted it {since}."
   }
 }

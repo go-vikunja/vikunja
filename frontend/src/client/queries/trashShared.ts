@@ -22,6 +22,7 @@ export type ProjectInTrash = {
 	id: number
 	deleted_at: string
 	deleted_by?: User
+	can_restore: boolean
 }
 
 function trashDetailsFromError(cause: unknown, errorCode: number): unknown {
