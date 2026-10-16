@@ -599,6 +599,44 @@ func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectIsInTrash is returned instead of ErrProjectDoesNotExist to callers who could reach the trashed project.
+type ErrProjectIsInTrash struct {
+	ID         int64      `json:"id"`
+	DeletedAt  time.Time  `json:"deleted_at"`
+	DeletedBy  *user.User `json:"deleted_by,omitempty"`
+	CanRestore bool       `json:"can_restore"`
+}
+
+func (err ErrProjectIsInTrash) Error() string {
+	return fmt.Sprintf("The project is in the trash. [ID: %d]", err.ID)
+}
+
+// ErrCodeProjectIsInTrash holds the unique world-error code of this error
+const ErrCodeProjectIsInTrash = 3018
+
+// HTTPError holds the http error description
+func (err ErrProjectIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeProjectIsInTrash, Message: "This project is in the trash. Restore it first.", Details: err}
+}
+
+// ErrParentProjectIsInTrash is returned when restoring a project whose parent is still in the trash.
+type ErrParentProjectIsInTrash struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+func (err ErrParentProjectIsInTrash) Error() string {
+	return fmt.Sprintf("Parent project is in the trash [ProjectID: %d, ParentProjectID: %d]", err.ProjectID, err.ParentProjectID)
+}
+
+// ErrCodeParentProjectIsInTrash holds the unique world-error code of this error
+const ErrCodeParentProjectIsInTrash = 3019
+
+// HTTPError holds the http error description
+func (err ErrParentProjectIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeParentProjectIsInTrash, Message: "The parent project is in the trash. Restore it first."}
+}
+
 // ErrParentProjectIsArchived represents an error, where a project's parent is archived
 type ErrParentProjectIsArchived struct {
 	ProjectID       int64

@@ -34,3 +34,22 @@
   comment: Running timer
   created: 2018-12-01 15:13:12
   updated: 2018-12-02 15:13:12
+# By user3 in trashed project 45: only user3 may still see them.
+- id: 5
+  user_id: 3
+  task_id: 0
+  project_id: 45
+  start_time: 2018-12-01 12:00:00
+  end_time: 2018-12-01 13:00:00
+  comment: Entry on trashed project 45
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
+- id: 6
+  user_id: 3
+  task_id: 53
+  project_id: 0
+  start_time: 2018-12-01 12:00:00
+  end_time: 2018-12-01 13:00:00
+  comment: Entry on a task in trashed project 45
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
