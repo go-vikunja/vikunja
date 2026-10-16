@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
@@ -106,44 +107,6 @@ func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 	return
 }
 
-// escapeLDAPFilterValue escapes special characters in LDAP filter values according to RFC 4515.
-// This prevents LDAP injection attacks by properly escaping all special characters.
-func escapeLDAPFilterValue(value string) string {
-	var buf strings.Builder
-	buf.Grow(len(value) * 2) // Pre-allocate to avoid reallocations
-
-	for _, r := range value {
-		switch r {
-		case 0x00: // NULL
-			buf.WriteString(`\00`)
-		case '(':
-			buf.WriteString(`\28`)
-		case ')':
-			buf.WriteString(`\29`)
-		case '*':
-			buf.WriteString(`\2a`)
-		case '\\':
-			buf.WriteString(`\5c`)
-		case '&':
-			buf.WriteString(`\26`)
-		case '|':
-			buf.WriteString(`\7c`)
-		case '=':
-			buf.WriteString(`\3d`)
-		case '<':
-			buf.WriteString(`\3c`)
-		case '>':
-			buf.WriteString(`\3e`)
-		case '~':
-			buf.WriteString(`\7e`)
-		default:
-			buf.WriteRune(r)
-		}
-	}
-
-	return buf.String()
-}
-
 // Adjusted from https://github.com/go-gitea/gitea/blob/6ca91f555ab9778310ac46cbbe33849c59286793/services/auth/source/ldap/source_search.go#L34
 func sanitizedUserQuery(username string) (string, bool) {
 	// Validate username is not empty and doesn't contain control characters
@@ -161,7 +124,7 @@ func sanitizedUserQuery(username string) (string, bool) {
 	}
 
 	// Escape the username according to RFC 4515 to prevent LDAP injection
-	escapedUsername := escapeLDAPFilterValue(username)
+	escapedUsername := ldap.EscapeFilter(username)
 
 	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), escapedUsername), true
 }
@@ -267,7 +230,8 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 		}
 	}
 
-	err = syncUserGroups(s, l, u, userdn)
+	ldapUsername := sr.Entries[0].GetAttributeValue(config.AuthLdapAttributeUsername.GetString())
+	err = syncUserGroups(s, l, u, userdn, ldapUsername)
 
 	return u, err
 }
@@ -331,44 +295,74 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 	return
 }
 
-func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn string) (err error) {
+const (
+	groupSyncFilterUserDN   = "{userdn}"
+	groupSyncFilterUsername = "{username}"
+)
+
+// Below AD's default MaxPageSize of 1000.
+const groupSearchPageSize = 500
+
+// buildGroupSyncFilter returns perUser = true when the template references the
+// user, in which case every group matching the filter is a membership.
+func buildGroupSyncFilter(template, userDN, username string) (filter string, perUser bool, err error) {
+	hasUsername := strings.Contains(template, groupSyncFilterUsername)
+	if !hasUsername && !strings.Contains(template, groupSyncFilterUserDN) {
+		return template, false, nil
+	}
+
+	// An empty value would turn e.g. (memberUid={username}*) into (memberUid=*) and grant every group.
+	if hasUsername && username == "" {
+		return "", false, fmt.Errorf("group sync filter uses %s but the user has no %s attribute", groupSyncFilterUsername, config.AuthLdapAttributeUsername.GetString())
+	}
+
+	return strings.NewReplacer(
+		groupSyncFilterUserDN, ldap.EscapeFilter(userDN),
+		groupSyncFilterUsername, ldap.EscapeFilter(username),
+	).Replace(template), true, nil
+}
+
+func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn, ldapUsername string) (err error) {
+	filter, perUser, err := buildGroupSyncFilter(config.AuthLdapGroupSyncFilter.GetString(), userdn, ldapUsername)
+	if err != nil {
+		return err
+	}
+	memberAttribute := config.AuthLdapAttributeMemberID.GetString()
+
+	attributes := []string{"cn", "description"}
+	if !perUser {
+		attributes = append(attributes, memberAttribute)
+	}
+
 	searchRequest := ldap.NewSearchRequest(
 		config.AuthLdapBaseDN.GetString(),
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		config.AuthLdapGroupSyncFilter.GetString(),
-		[]string{
-			"dn",
-			"cn",
-			config.AuthLdapAttributeMemberID.GetString(),
-			"description",
-		},
+		filter,
+		attributes,
 		nil,
 	)
 
-	sr, err := l.Search(searchRequest)
+	sr, err := l.SearchWithPaging(searchRequest, groupSearchPageSize)
 	if err != nil {
 		log.Errorf("Error searching for LDAP groups: %v", err)
 		return err
 	}
 
+	log.Debugf("Found %d LDAP groups for user %s with filter %s", len(sr.Entries), userdn, filter)
+
 	var teams []*models.Team
 
+	isUser := func(member string) bool { return member == userdn || member == ldapUsername }
 	for _, group := range sr.Entries {
-		groupName := group.GetAttributeValue("cn")
-		members := group.GetAttributeValues(config.AuthLdapAttributeMemberID.GetString())
-		description := group.GetAttributeValue("description")
-
-		log.Debugf("Group %s has %d members", groupName, len(members))
-
-		for _, member := range members {
-			if member == userdn || member == u.Username {
-				teams = append(teams, &models.Team{
-					Name:        groupName,
-					ExternalID:  group.DN,
-					Description: description,
-				})
-			}
+		if !perUser && !slices.ContainsFunc(group.GetAttributeValues(memberAttribute), isUser) {
+			continue
 		}
+
+		teams = append(teams, &models.Team{
+			Name:        group.GetAttributeValue("cn"),
+			ExternalID:  group.DN,
+			Description: group.GetAttributeValue("description"),
+		})
 	}
 
 	err = models.SyncExternalTeamsForUser(s, u, teams, user.IssuerLDAP, "LDAP")
