@@ -1678,6 +1678,7 @@
   "timeTracking": {
     "title": "Time tracking",
     "stop": "Stop timer",
+    "running": "Timer running",
     "logTime": "Log time",
     "editEntry": "Edit entry",
     "form": {
