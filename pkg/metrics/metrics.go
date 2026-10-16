@@ -118,8 +118,8 @@ func countFromDatabase(key string) (int64, error) {
 	defer s.Close()
 
 	query := s.Table(table)
-	if key == TaskCountKey {
-		// Exclude soft-deleted tasks; no bean here, so the xorm deleted tag doesn't apply
+	if key == TaskCountKey || key == ProjectCountKey {
+		// Exclude trashed rows; no bean here, so the xorm deleted tag doesn't apply
 		query = query.Where("deleted_at IS NULL")
 	}
 
