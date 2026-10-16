@@ -154,7 +154,7 @@ function partitionProjects(projects: Project[]): ProjectListResult {
 
 async function fetchAllProjects(): Promise<ProjectListResult> {
 	const projects = await fetchAllPages(async page => (await projectsList({
-		query: {is_archived: true, expand: 'permissions', page},
+		query: {is_archived: true, expand: ['permissions', 'task_counts'], page},
 	})).data)
 	return partitionProjects(projects)
 }
@@ -176,6 +176,11 @@ export function projectQuery(id: number) {
 		},
 		enabled: id !== 0,
 	})
+}
+
+// Task counts ride on the project list, so task writes leave them stale.
+export function refreshProjectTaskCounts(client: QueryClient) {
+	void client.invalidateQueries({queryKey: projectKeys.list()})
 }
 
 export function ensureProjects(): Promise<ProjectListResult> {
@@ -271,6 +276,7 @@ function mergeProjectMetadata(previous: ProjectResponse, updated: ProjectRespons
 		...previous,
 		...updated,
 		max_permission: updated.max_permission ?? previous.max_permission,
+		task_counts: updated.task_counts ?? previous.task_counts,
 		views: updated.views.length ? updated.views : previous.views,
 	}
 }

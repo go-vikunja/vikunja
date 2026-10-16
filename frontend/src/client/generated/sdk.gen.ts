@@ -1288,7 +1288,7 @@ export const oauthToken = <ThrowOnError extends boolean = true>(options: Options
 /**
  * List projects
  *
- * Returns the projects the authenticated user has access to (owned plus shared, with child projects of accessible parents), paginated. Archived projects are excluded unless is_archived=true. Pass expand=permissions to include each project's max_permission for the caller.
+ * Returns the projects the authenticated user has access to (owned plus shared, with child projects of accessible parents), paginated. Archived projects are excluded unless is_archived=true. Pass expand=permissions to include each project's max_permission for the caller, and expand=task_counts to include each project's done and undone task counts.
  */
 export const projectsList = <ThrowOnError extends boolean = true>(options?: Options<ProjectsListData, ThrowOnError>): RequestResult<ProjectsListResponses, ProjectsListErrors, ThrowOnError> => (options?.client ?? client).get<ProjectsListResponses, ProjectsListErrors, ThrowOnError>({
     security: [{

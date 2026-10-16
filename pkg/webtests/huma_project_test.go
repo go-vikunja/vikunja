@@ -136,6 +136,36 @@ func TestHumaProject(t *testing.T) {
 			// User 1 owns Test1 → admin (2). With expand the field carries a real value.
 			assert.Contains(t, rec.Body.String(), `"max_permission":2`)
 		})
+		t.Run("Expand permissions and task counts", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
+			rec, err := testHandler.testReadAllWithUser(url.Values{"expand": []string{"permissions", "task_counts"}}, nil)
+			require.NoError(t, err)
+			var paginated struct {
+				Items []models.Project `json:"items"`
+			}
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &paginated))
+			found1 := false
+			for _, p := range paginated.Items {
+				if p.ID == 1 {
+					found1 = true
+					require.NotNil(t, p.MaxPermission)
+					assert.Equal(t, &models.ProjectTaskCounts{Undone: 20, Done: 1}, p.TaskCounts)
+				}
+			}
+			assert.True(t, found1)
+		})
+		t.Run("Without task counts expand", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
+			rec, err := testHandler.testReadAllWithUser(nil, nil)
+			require.NoError(t, err)
+			assert.NotContains(t, rec.Body.String(), `"task_counts":{`)
+		})
+		t.Run("Invalid expand", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
+			_, err := testHandler.testReadAllWithUser(url.Values{"expand": []string{"nope"}}, nil)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
+		})
 	})
 
 	t.Run("ReadOne", func(t *testing.T) {
