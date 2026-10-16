@@ -371,3 +371,36 @@ func TestCleanupAfterProjectAccessLoss_KeepsTrashedProjectsWithAccess(t *testing
 
 	db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": 54, "user_id": 1}, false)
 }
+
+func TestProject_TrashedIdentifierStaysReserved(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.Table("projects").Where("id = ?", 45).Update(map[string]any{"identifier": "TRASHED"})
+	require.NoError(t, err)
+
+	err = CreateProject(s, &Project{Title: "new", Identifier: "trashed"}, &user.User{ID: 1}, false, false)
+	assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
+}
+
+func TestRepairOrphanedProjects_Trashed(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(45).Unscoped().Delete(&Project{})
+	require.NoError(t, err)
+
+	_, err = RepairOrphanedProjects(s, false)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+	repaired := &Project{}
+	has, err := s2.Unscoped().ID(46).Get(repaired)
+	require.NoError(t, err)
+	require.True(t, has)
+	assert.Equal(t, int64(0), repaired.parentID())
+}
