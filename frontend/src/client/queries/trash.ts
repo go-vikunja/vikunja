@@ -11,6 +11,7 @@ import {
 	tasksTrashList,
 	type User,
 } from '@/client/generated'
+import {ApiError} from '@/client/problem'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
 import {normalizeTask, taskQuery, type TaskResponse} from './tasks'
@@ -38,10 +39,8 @@ export type TaskInTrash = {
 }
 
 export function taskInTrashFromError(cause: unknown): TaskInTrash | null {
-	if (typeof cause !== 'object' || cause === null) return null
-	const {code, details} = cause as {code?: number, details?: unknown}
-	if (code !== ERROR_CODE_TASK_IS_IN_TRASH || typeof details !== 'object' || details === null) return null
-	return details as TaskInTrash
+	if (!(cause instanceof ApiError) || cause.code !== ERROR_CODE_TASK_IS_IN_TRASH) return null
+	return (cause.details as TaskInTrash | undefined) ?? null
 }
 
 export function trashDaysLeft(deletedAt: string | Date, now = new Date()): number {
