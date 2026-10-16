@@ -1822,6 +1822,7 @@
     },
     "open": "Open trash",
     "taskInTrash": "This task is in the trash. It was deleted {since}.",
-    "taskInTrashBy": "This task is in the trash. {user} deleted it {since}."
+    "taskInTrashBy": "This task is in the trash. {user} deleted it {since}.",
+    "inTrash": "In trash"
   }
 }

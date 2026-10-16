@@ -57,6 +57,13 @@
 							>
 								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
+							<span
+								v-if="row.entry.in_trash"
+								v-cy="'timeEntryInTrash'"
+								class="tag mis-1"
+							>
+								{{ $t('trash.inTrash') }}
+							</span>
 						</td>
 						<td class="has-text-grey">
 							{{ row.entry.comment }}
@@ -68,7 +75,7 @@
 							{{ row.seconds === null ? '' : formatDuration(row.seconds) }}
 						</td>
 						<td class="nowrap has-text-right">
-							<template v-if="row.entry.user_id === currentUserId">
+							<template v-if="row.entry.user_id === currentUserId && !row.entry.in_trash">
 								<BaseButton
 									v-tooltip="$t('menu.edit')"
 									v-cy="'editTimeEntry'"
@@ -162,7 +169,8 @@ const currentUserId = computed(() => authStore.authUser ? authStore.info?.id : u
 
 const taskIds = computed(() => props.hideLabelColumn
 	? []
-	: [...new Set(props.entries.map(entry => entry.task_id).filter(id => id > 0))])
+	// Trashed tasks can't be loaded
+	: [...new Set(props.entries.filter(entry => !entry.in_trash).map(entry => entry.task_id).filter(id => id > 0))])
 
 // Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
 const taskQueries = useQueries({
