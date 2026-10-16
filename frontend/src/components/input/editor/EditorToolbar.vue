@@ -62,7 +62,7 @@
 				>
 					<hr
 						v-if="action.startsGroup && index > 0"
-						class="dropdown-divider"
+						class="editor-toolbar__menu-divider"
 					>
 					<DropdownItem
 						:icon="action.icon"
@@ -552,6 +552,13 @@ $focus-ring-room: 2px;
 			font-weight: bold;
 		}
 	}
+}
+
+.editor-toolbar__menu-divider {
+	background-color: var(--border-light);
+	border: none;
+	block-size: 1px;
+	margin: .5rem 0;
 }
 
 .editor-toolbar__menu-check {
