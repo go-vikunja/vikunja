@@ -91,7 +91,7 @@ type Project struct {
 	DeletedBy   *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this project to the trash. Only present on trashed projects."`
 	DeletedByID int64      `xorm:"bigint null 'deleted_by_id'" json:"-"`
 	// Only set in the trash listing.
-	TrashedSubProjects int64 `xorm:"-" json:"trashed_sub_projects,omitempty" readOnly:"true" doc:"How many trashed sub-projects restoring this project brings back. Only present in the trash listing."`
+	TrashedSubProjects []*TrashedSubProject `xorm:"-" json:"trashed_sub_projects,omitempty" readOnly:"true" doc:"The trashed sub-projects at any depth that restoring this project brings back, shallowest first. Only present in the trash listing."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -1437,7 +1437,7 @@ func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
 
 // Delete implements the delete method of CRUDable
 // @Summary Deletes a project
-// @Description Delets a project
+// @Description Moves a project and all its sub-projects to the trash. They are deleted permanently after 30 days.
 // @tags project
 // @Produce json
 // @Security JWTKeyAuth
@@ -1463,120 +1463,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
-	// Lock first: the task loop below deletes task_positions rows before the views are dropped further down.
-	_, err = lockProjectViewsForPositionUpdate(s, p.ID)
-	if err != nil {
-		return err
-	}
-
-	// Hard-delete all tasks on that project, including soft-deleted ones —
-	// there is nothing to restore them into once the project is gone.
-	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks := []*Task{}
-	err = s.Unscoped().Where("project_id = ?", p.ID).Find(&tasks)
-	if err != nil {
-		return
-	}
-
-	for _, task := range tasks {
-		err = hardDeleteTask(s, task)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = fullProject.DeleteBackgroundFileIfExists(s)
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("default_project_id = ?", p.ID).
-		Cols("default_project_id").
-		Update(&user.User{DefaultProjectID: 0})
-	if err != nil {
-		return
-	}
-
-	// Delete related project entities
-	views, err := getViewsForProject(s, p.ID)
-	if err != nil {
-		return
-	}
-	viewIDs := []int64{}
-	for _, v := range views {
-		viewIDs = append(viewIDs, v.ID)
-	}
-
-	_, err = s.In("project_view_id", viewIDs).Delete(&Bucket{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.In("id", viewIDs).Delete(&ProjectView{})
-	if err != nil {
-		return
-	}
-
-	err = removeFromFavorite(s, p.ID, a, FavoriteKindProject)
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&LinkSharing{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&ProjectUser{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&TeamProject{})
-	if err != nil {
-		return
-	}
-
-	err = deleteProjectAncestors(s, p.ID)
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&TaskIndexAlias{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.ID(p.ID).Delete(&ProjectTaskCounter{})
-	if err != nil {
-		return
-	}
-
-	// Delete the project
-	_, err = s.ID(p.ID).Delete(&Project{})
-	if err != nil {
-		return
-	}
-
-	events.DispatchOnCommit(s, &ProjectDeletedEvent{
-		Project: fullProject,
-		Doer:    doerFromAuth(s, a),
-	})
-
-	childProjects := []*Project{}
-	err = s.Where("parent_project_id = ?", fullProject.ID).Find(&childProjects)
-	if err != nil {
-		return
-	}
-
-	for _, child := range childProjects {
-		err = child.Delete(s, a)
-		if err != nil {
-			return
-		}
-	}
-
-	return
+	return trashProject(s, fullProject, a)
 }
 
 // DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
