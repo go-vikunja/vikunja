@@ -17,6 +17,7 @@
 package models
 
 import (
+	"slices"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -120,6 +121,24 @@ func (ut *userWithTasks) allTasks() []*Task {
 	return append(mapToSlice(ut.assigned), mapToSlice(ut.followed)...)
 }
 
+// subscribedOverdueWebhookEvents lets the cron skip dispatching events nobody listens to,
+// since each dispatched event costs the webhook listener a db session.
+func subscribedOverdueWebhookEvents(s *xorm.Session) (single, batch bool, err error) {
+	webhooks := []*Webhook{}
+	err = s.Cols("events").Find(&webhooks)
+	if err != nil {
+		return
+	}
+
+	singleName := (&TaskOverdueEvent{}).Name()
+	batchName := (&TasksOverdueEvent{}).Name()
+	for _, w := range webhooks {
+		single = single || slices.Contains(w.Events, singleName)
+		batch = batch || slices.Contains(w.Events, batchName)
+	}
+	return
+}
+
 // RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
 func RegisterOverdueReminderCron() {
 	webhookEnabled := config.WebhooksEnabled.GetBool()
@@ -139,8 +158,22 @@ func RegisterOverdueReminderCron() {
 
 		now := time.Now()
 
+		var dispatchSingle, dispatchBatch bool
+		if webhookEnabled {
+			var err error
+			dispatchSingle, dispatchBatch, err = subscribedOverdueWebhookEvents(s)
+			if err != nil {
+				log.Errorf("[Undone Overdue Tasks Reminder] Could not check for overdue webhooks: %s", err)
+				return
+			}
+		}
+
+		if !emailEnabled && !dispatchSingle && !dispatchBatch {
+			return
+		}
+
 		var cond builder.Cond
-		if emailEnabled && !webhookEnabled {
+		if !dispatchSingle && !dispatchBatch {
 			cond = builder.Eq{"users.overdue_tasks_reminders_enabled": true}
 		}
 
@@ -195,9 +228,7 @@ func RegisterOverdueReminderCron() {
 				}
 			}
 
-			// Dispatch webhook events
-			if webhookEnabled {
-				// Per-task events
+			if dispatchSingle {
 				for _, t := range tasks {
 					err = events.Dispatch(&TaskOverdueEvent{
 						Task:    t,
@@ -208,8 +239,9 @@ func RegisterOverdueReminderCron() {
 						log.Errorf("[Undone Overdue Tasks Reminder] Could not dispatch overdue event for task %d: %s", t.ID, err)
 					}
 				}
+			}
 
-				// Batch event
+			if dispatchBatch {
 				err = events.Dispatch(&TasksOverdueEvent{
 					Tasks:    tasks,
 					User:     ut.user,
