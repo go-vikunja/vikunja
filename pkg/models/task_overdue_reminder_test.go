@@ -481,3 +481,34 @@ func TestOverdueTaskNotificationsIncludeSubscribers(t *testing.T) {
 		assert.False(t, hasSubscriber, "subscriber without project access should not receive notification")
 	})
 }
+
+func TestSubscribedOverdueWebhookEvents(t *testing.T) {
+	t.Run("no webhook subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		single, batch, err := subscribedOverdueWebhookEvents(s)
+		require.NoError(t, err)
+		assert.False(t, single)
+		assert.False(t, batch)
+	})
+	t.Run("batch event subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&Webhook{
+			TargetURL:   "https://example.com/overdue",
+			Events:      []string{"task.updated", (&TasksOverdueEvent{}).Name()},
+			UserID:      1,
+			CreatedByID: 1,
+		})
+		require.NoError(t, err)
+
+		single, batch, err := subscribedOverdueWebhookEvents(s)
+		require.NoError(t, err)
+		assert.False(t, single)
+		assert.True(t, batch)
+	})
+}
