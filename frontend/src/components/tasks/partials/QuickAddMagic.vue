@@ -80,7 +80,8 @@
 						<li>Next week</li>
 						<li>Next month</li>
 						<li>End of month</li>
-						<li>In 5 days [hours/weeks/months]</li>
+						<li>In 5 days [minutes/hours/weeks/months/years]</li>
+						<li>In two weeks, in a month</li>
 						<li>Tuesday ({{ $t('task.quickAddMagic.dateWeekday') }})</li>
 						<li>02/17/2021</li>
 						<li>2021-02-17</li>
