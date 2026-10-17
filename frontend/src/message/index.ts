@@ -61,3 +61,16 @@ export function success(e: unknown, actions: Action[] = []) {
 		},
 	})
 }
+
+export function warning(e, actions: Action[] = []) {
+	notify({
+		type: 'warn',
+		title: i18n.global.t('error.warning'),
+		text: typeof e === 'string' ? e : getErrorText(e),
+		ignoreDuplicates: true,
+		data: {
+			actions: actions,
+		},
+	})
+}
+

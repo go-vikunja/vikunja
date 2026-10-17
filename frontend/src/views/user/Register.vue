@@ -226,6 +226,11 @@ const validateUsername = useDebounceFn(() => {
 		return
 	}
 
+	if (credentials.username.startsWith('@')) {
+		usernameValid.value = t('user.auth.usernameMustNotStartWithAt')
+		return
+	}
+
 	usernameValid.value = true
 }, DEBOUNCE_TIME)
 
