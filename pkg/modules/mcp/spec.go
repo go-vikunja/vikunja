@@ -41,6 +41,11 @@ func falseSchema() *jsonschema.Schema { return &jsonschema.Schema{Not: &jsonsche
 
 func (s *toolSpec) hasFormatArg() bool { return s.schema.Properties[formatParam] != nil }
 
+// Saved filters nest the query under "filters".
+func (s *toolSpec) takesFilter() bool {
+	return s.schema.Properties["filter"] != nil || s.schema.Properties["filters"] != nil
+}
+
 const maxInlineDepth = 8
 
 const formatParam = "format"
