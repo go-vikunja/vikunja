@@ -40,7 +40,7 @@ type TaskCollection struct {
 	OrderBy []string `query:"order_by" json:"order_by" doc:"The order for each sort_by field, either asc or desc. Defaults to asc."`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
-	Filter string `query:"filter" json:"filter" doc:"The filter query to match tasks by. See https://vikunja.io/docs/filters."`
+	Filter string `query:"filter" json:"filter" doc:"The filter query to match tasks by, e.g. \"done = false && due_date < now+7d\". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters."`
 	// The time zone which should be used for date match (statements like "now" resolve to different actual times)
 	FilterTimezone string `query:"filter_timezone" json:"-"`
 
