@@ -151,7 +151,7 @@ func (*BucketConfigurationModeKind) Schema(_ huma.Registry) *huma.Schema {
 
 type ProjectViewBucketConfiguration struct {
 	Title  string          `json:"title" doc:"The title of the bucket this configuration creates."`
-	Filter *TaskCollection `json:"filter" doc:"The filter query that decides which tasks land in this bucket. See https://vikunja.io/docs/filters."`
+	Filter *TaskCollection `json:"filter" doc:"The filter query that decides which tasks land in this bucket. Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters."`
 }
 
 type ProjectView struct {
@@ -165,7 +165,7 @@ type ProjectView struct {
 	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind" swaggertype:"string" enums:"list,gantt,table,kanban" doc:"The kind of this view. One of list, gantt, table or kanban."`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
-	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter" doc:"The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters."`
+	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter" doc:"The filter query used to match tasks shown in this view. Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters."`
 	// The position of this view in the list. The list of all views will be sorted by this parameter.
 	Position float64 `xorm:"double null" json:"position" doc:"The position of this view in the project's list of views. Views are sorted ascending by this value."`
 
