@@ -62,6 +62,10 @@ func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMess
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
 	}
+	fields, err := takeFields(args)
+	if err != nil {
+		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
+	}
 	req, err := t.newRequest(ctx, ec, args)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
@@ -75,7 +79,11 @@ func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMess
 			log.Errorf("[mcp] could not dispatch api token used event: %s", err)
 		}
 	}
-	return parseResponse(rec)
+	result, err := parseResponse(rec)
+	if err != nil {
+		return nil, err
+	}
+	return t.spec.projection.apply(fields, result), nil
 }
 func (t *tool) newRequest(ctx context.Context, ec *echo.Context, args map[string]json.RawMessage) (*http.Request, error) {
 	caller := ec.Request()

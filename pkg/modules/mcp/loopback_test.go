@@ -35,7 +35,10 @@ import (
 
 func newTestCaller(t *testing.T) (*Module, context.Context) {
 	t.Helper()
-	m := newTestModule(t)
+	return newTestCallerFor(t, newTestModule(t))
+}
+func newTestCallerFor(t *testing.T, m *Module) (*Module, context.Context) {
+	t.Helper()
 	m.authorize = func(*models.APIToken, string, string) bool { return true }
 	caller := httptest.NewRequest(http.MethodPost, "/api/v2/mcp", nil)
 	caller.Header.Set("Authorization", "Bearer tk_test")

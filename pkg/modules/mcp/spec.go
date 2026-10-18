@@ -30,10 +30,11 @@ import (
 )
 
 type toolSpec struct {
-	schema   *jsonschema.Schema
-	resolved *jsonschema.Resolved
-	params   map[string]*huma.Param
-	hasBody  bool
+	schema     *jsonschema.Schema
+	resolved   *jsonschema.Resolved
+	params     map[string]*huma.Param
+	hasBody    bool
+	projection projection
 }
 
 func falseSchema() *jsonschema.Schema { return &jsonschema.Schema{Not: &jsonschema.Schema{}} }
@@ -48,7 +49,8 @@ const formatParamDescription = "Rich-text format for description fields: html (d
 
 const formatArgHint = "Pass format=markdown to exchange rich-text fields as Markdown."
 
-const serverInstructions = `Rich-text fields (task and project descriptions, comments) are HTML by default. Pass format: "markdown" on read, list and update tools to exchange them as GFM Markdown.`
+const serverInstructions = `Rich-text fields (task and project descriptions, comments) are HTML by default. Pass format: "markdown" on read, list and update tools to exchange them as GFM Markdown.
+Read and list tools return every field by default; pass fields to get only the ones you need.`
 
 func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	props := map[string]*jsonschema.Schema{}
@@ -118,6 +120,13 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 			}
 		}
 	}
+	proj := projectionFor(oapi, op)
+	if proj != noProjection {
+		if _, clash := props[fieldsParam]; clash {
+			return nil, fmt.Errorf("mcp: %s: %q collides with the response projection argument", op.OperationID, fieldsParam)
+		}
+		props[fieldsParam] = fieldsSchema()
+	}
 	required = slices.DeleteFunc(required, func(name string) bool { return props[name] == nil })
 	sort.Strings(required)
 	schema := &jsonschema.Schema{
@@ -131,10 +140,11 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		return nil, fmt.Errorf("mcp: resolve schema for %s: %w", op.OperationID, err)
 	}
 	return &toolSpec{
-		schema:   schema,
-		resolved: resolved,
-		params:   params,
-		hasBody:  hasBody,
+		schema:     schema,
+		resolved:   resolved,
+		params:     params,
+		hasBody:    hasBody,
+		projection: proj,
 	}, nil
 }
 
