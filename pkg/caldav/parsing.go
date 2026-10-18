@@ -306,12 +306,16 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 	task := make(map[string]ics.IANAProperty)
 
 	var relations []ics.IANAProperty
+	var categoryProps []ics.IANAProperty
 	var color string
 	var hasColor bool
 	for _, c := range vTodo.UnknownPropertiesIANAProperties() {
 		task[c.IANAToken] = c
 		if strings.HasPrefix(c.IANAToken, "RELATED-TO") {
 			relations = append(relations, c)
+		}
+		if c.IANAToken == "CATEGORIES" {
+			categoryProps = append(categoryProps, c)
 		}
 		if c.IANAToken == "X-APPLE-CALENDAR-COLOR" {
 			color = c.Value
@@ -363,17 +367,23 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 	}
 
 	var labels []*models.Label
-	if val, ok := task["CATEGORIES"]; ok {
-		if val.Value == "" {
-			// Empty clears labels, absent leaves them untouched.
-			labels = []*models.Label{}
-		} else {
-			categories := strings.Split(val.Value, ",")
-			labels = make([]*models.Label, 0, len(categories))
-			for _, category := range categories {
-				labels = append(labels, &models.Label{
-					Title: category,
-				})
+	if len(categoryProps) > 0 {
+		labels = make([]*models.Label, 0, len(categoryProps))
+		seen := make(map[string]struct{}, len(categoryProps))
+		for _, prop := range categoryProps {
+			if prop.Value == "" {
+				labels = []*models.Label{}
+				break
+			}
+			for _, category := range strings.Split(prop.Value, ",") {
+				if category == "" {
+					continue
+				}
+				if _, ok := seen[category]; ok {
+					continue
+				}
+				seen[category] = struct{}{}
+				labels = append(labels, &models.Label{Title: category})
 			}
 		}
 	}
