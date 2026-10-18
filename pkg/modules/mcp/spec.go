@@ -55,7 +55,8 @@ const formatParamDescription = "Rich-text format for description fields: html (d
 const formatArgHint = "Pass format=markdown to exchange rich-text fields as Markdown."
 
 const serverInstructions = `Rich-text fields (task and project descriptions, comments) are HTML by default. Pass format: "markdown" on read, list and update tools to exchange them as GFM Markdown.
-Read and list tools return every field by default; pass fields to get only the ones you need.`
+Read and list tools return every field by default; pass fields to get only the ones you need.
+Filter queries combine conditions with && and ||, not "and"/"or". Call ` + toolFilterSyntax + ` for the full filter syntax.`
 
 func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	props := map[string]*jsonschema.Schema{}
@@ -75,6 +76,9 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 		// The API description this parameter refers to is not reachable over MCP.
 		if p.In == "query" && p.Name == formatParam {
 			ps.Description = formatParamDescription
+		}
+		if p.In == "query" && p.Name == "filter" {
+			ps.Description += " Full syntax: call " + toolFilterSyntax + "."
 		}
 		props[p.Name] = ps
 		params[p.Name] = p

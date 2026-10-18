@@ -168,6 +168,16 @@ func TestMCP_Tools_ListEnvelopeAndFilter(t *testing.T) {
 	}
 	assert.LessOrEqual(t, len(env["items"].([]any)), 2)
 }
+func TestMCP_Tools_WordConcatenatorFilterPointsToSyntax(t *testing.T) {
+	c := newMCPClient(t, mcpFullToken)
+	res := c.callTool("tasks_list", map[string]any{
+		"filter": "done = false and due_date >= 2026-01-01",
+	})
+	assert.Equal(t, true, res["isError"])
+	text := toolResultText(t, res)
+	assert.Contains(t, text, "&&")
+	assert.Contains(t, text, "filter_syntax")
+}
 func TestMCP_Tools_CommentLifecycle(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
 	var comment map[string]any

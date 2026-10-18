@@ -18,6 +18,9 @@ package mcp
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"slices"
 	"testing"
 
@@ -92,4 +95,26 @@ func TestFilterSyntaxResource(t *testing.T) {
 	require.Len(t, res.Contents, 1)
 	assert.Equal(t, filterSyntax, res.Contents[0].Text)
 	assert.Equal(t, "text/markdown", res.Contents[0].MIMEType)
+}
+
+func TestErrorText_FilterErrorPointsToFilterSyntax(t *testing.T) {
+	for name, tc := range map[string]struct {
+		body string
+		hint bool
+	}{
+		"filter error": {fmt.Sprintf(`{"title":"Bad Request","detail":"invalid filter","code":%d}`, models.ErrCodeInvalidTaskFilterValue), true},
+		"other error":  {`{"title":"Bad Request","detail":"nope","code":1}`, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			rec.Code = http.StatusBadRequest
+			rec.Body.WriteString(tc.body)
+			text := errorText(rec)
+			if tc.hint {
+				assert.Contains(t, text, toolFilterSyntax)
+			} else {
+				assert.NotContains(t, text, toolFilterSyntax)
+			}
+		})
+	}
 }

@@ -82,6 +82,7 @@ func TestBuildToolSpec_ListParams(t *testing.T) {
 	}, spec.schema.Properties["expand"].Types)
 	assert.NotContains(t, spec.schema.Properties, "Authorization")
 	assert.Equal(t, formatParamDescription, spec.schema.Properties["format"].Description)
+	assert.Equal(t, "Filter things. Full syntax: call filter_syntax.", spec.schema.Properties["filter"].Description)
 	assert.False(t, spec.hasBody)
 }
 func TestBuildToolSpec_Patch(t *testing.T) {
