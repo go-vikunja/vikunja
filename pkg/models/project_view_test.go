@@ -17,6 +17,7 @@
 package models
 
 import (
+	"encoding/json"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -611,4 +612,51 @@ func TestProjectView_Create(t *testing.T) {
 			"done_bucket_id":    0,
 		}, false)
 	})
+
+	t.Run("creating a venn view stores it without buckets", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		view := &ProjectView{
+			ProjectID: 1,
+			Title:     "Labels",
+			ViewKind:  ProjectViewKindVenn,
+		}
+		err := view.Create(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		assert.Equal(t, BucketConfigurationModeNone, view.BucketConfigurationMode)
+		db.AssertExists(t, "project_views", map[string]interface{}{
+			"id":        view.ID,
+			"view_kind": ProjectViewKindVenn,
+		}, false)
+		db.AssertMissing(t, "buckets", map[string]interface{}{
+			"project_view_id": view.ID,
+		})
+	})
+}
+
+func TestProjectViewKind_JSON(t *testing.T) {
+	for _, kind := range []ProjectViewKind{
+		ProjectViewKindList,
+		ProjectViewKindGantt,
+		ProjectViewKindTable,
+		ProjectViewKindKanban,
+		ProjectViewKindVenn,
+	} {
+		raw, err := json.Marshal(&kind)
+		require.NoError(t, err)
+		assert.NotEqual(t, "null", string(raw))
+
+		var decoded ProjectViewKind
+		require.NoError(t, json.Unmarshal(raw, &decoded))
+		assert.Equal(t, kind, decoded)
+	}
+
+	venn := ProjectViewKindVenn
+	raw, err := json.Marshal(&venn)
+	require.NoError(t, err)
+	assert.JSONEq(t, `"venn"`, string(raw))
 }
