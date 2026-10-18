@@ -249,7 +249,10 @@ const maxErrorTextRunes = 2000
 const scopeHint = "the API token lacks a scope required by this call (check route and expand scopes)"
 
 func errorText(rec *httptest.ResponseRecorder) string {
-	text, isProblem := problemText(rec)
+	text, code, isProblem := problemText(rec)
+	if filterErrorCodes[code] {
+		return truncateRunes(text, maxErrorTextRunes) + " — " + filterErrorHint
+	}
 	if rec.Code != http.StatusUnauthorized {
 		return truncateRunes(text, maxErrorTextRunes)
 	}
@@ -259,10 +262,11 @@ func errorText(rec *httptest.ResponseRecorder) string {
 	}
 	return truncateRunes(text, maxErrorTextRunes) + " — " + scopeHint
 }
-func problemText(rec *httptest.ResponseRecorder) (text string, isProblem bool) {
+func problemText(rec *httptest.ResponseRecorder) (text string, code int, isProblem bool) {
 	var problem struct {
 		Title  string `json:"title"`
 		Detail string `json:"detail"`
+		Code   int    `json:"code"`
 		Errors []struct {
 			Location string `json:"location"`
 			Message  string `json:"message"`
@@ -270,7 +274,7 @@ func problemText(rec *httptest.ResponseRecorder) (text string, isProblem bool) {
 	}
 	body := rec.Body.Bytes()
 	if err := json.Unmarshal(body, &problem); err != nil || problem.Title == "" {
-		return fmt.Sprintf("%d: %s", rec.Code, strings.TrimSpace(string(body))), false
+		return fmt.Sprintf("%d: %s", rec.Code, strings.TrimSpace(string(body))), 0, false
 	}
 	var b strings.Builder
 	fmt.Fprintf(&b, "%d %s", rec.Code, problem.Title)
@@ -291,7 +295,7 @@ func problemText(rec *httptest.ResponseRecorder) (text string, isProblem bool) {
 			b.WriteString(")")
 		}
 	}
-	return b.String(), true
+	return b.String(), problem.Code, true
 }
 func truncateRunes(s string, limit int) string {
 	if len(s) <= limit {

@@ -20,6 +20,8 @@ import (
 	"context"
 	_ "embed"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -33,6 +35,16 @@ const (
 )
 
 const filterSyntaxDescription = "Reference for the filter query syntax used by task list, project view and saved filter tools: fields, operators, date math and examples."
+
+var filterErrorCodes = map[int]bool{
+	models.ErrCodeInvalidFilterExpression:       true,
+	models.ErrCodeInvalidTaskFilterValue:        true,
+	models.ErrCodeInvalidTaskFilterConcatinator: true,
+	models.ErrCodeInvalidTaskFilterComparator:   true,
+	models.ErrCodeInvalidTaskField:              true,
+}
+
+const filterErrorHint = "call " + toolFilterSyntax + " for the filter syntax"
 
 // Exposed as a tool too: many clients never hand resources to the model.
 func installDocs(srv *mcp.Server) {
