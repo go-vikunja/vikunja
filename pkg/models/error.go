@@ -1268,8 +1268,17 @@ func (err ErrInvalidTaskFilterValue) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidTaskFilterValue,
-		Message:  fmt.Sprintf("The task filter value '%s' for field '%s' is invalid.", err.Value, err.Field),
+		Message:  fmt.Sprintf("The task filter value '%s' for field '%s' is invalid.", err.Value, err.Field) + wordConcatenatorHint(err.Value),
 	}
+}
+
+// The value regex runs up to the next & or |, so `a = 1 and b = 2` lands here as one value.
+func wordConcatenatorHint(value any) string {
+	padded := " " + strings.ToLower(fmt.Sprint(value)) + " "
+	if strings.Contains(padded, " and ") || strings.Contains(padded, " or ") {
+		return " Combine conditions with && and ||, not 'and' and 'or'."
+	}
+	return ""
 }
 
 // ErrAttachmentDoesNotBelongToTask represents an error where the provided task cover attachment does not belong to the same task
