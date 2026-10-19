@@ -46,7 +46,7 @@ import {
 } from '@/constants/auth'
 
 import router from '@/router'
-import {useConfigStore} from '@/stores/config'
+import {navigableUrl, useConfigStore} from '@/stores/config'
 import type {IProvider} from '@/types/IProvider'
 import {queryClient} from '@/client/queryClient'
 
@@ -595,7 +595,7 @@ export const useAuthStore = defineStore('auth', () => {
 		let oidcLogoutUrl = ''
 		try {
 			const {data} = await authLogout()
-			oidcLogoutUrl = data?.oidc_logout_url ?? ''
+			oidcLogoutUrl = navigableUrl(data?.oidc_logout_url)
 		} catch (_e) {
 			// Ignore — session will expire naturally
 		}
