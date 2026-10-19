@@ -66,19 +66,37 @@ describe('KanbanCard', () => {
 		expect(wrapper.emitted('taskCompletedRecurring')).toHaveLength(1)
 	})
 
-	it('shows no cover when the cover image fails to load', async () => {
-		attachments.fetchAttachmentUrl.mockRejectedValue({status: 502, detail: 'Bad Gateway'})
-		const wrapper = mountCard(normalizeTask({
+	function taskWithCover(file: {name: string, mime: string}) {
+		return normalizeTask({
 			id: 8,
 			project_id: 1,
 			title: 'Has a cover',
 			cover_image_attachment_id: 3,
-			attachments: [{id: 3, task_id: 8, file: {name: 'cover.jpg'}}],
+			attachments: [{id: 3, task_id: 8, file}],
+		})
+	}
+
+	it('shows no cover when the cover image fails to load', async () => {
+		attachments.fetchAttachmentUrl.mockRejectedValue({status: 502, detail: 'Bad Gateway'})
+		const wrapper = mountCard(taskWithCover({
+			name: 'cover.jpg',
+			mime: 'image/jpeg',
 		}))
 		await flushPromises()
 
 		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledOnce()
 		expect(errorHandler).not.toHaveBeenCalled()
+		expect(wrapper.find('img').exists()).toBe(false)
+	})
+
+	it('does not request a cover preview for a file that is not an image', async () => {
+		const wrapper = mountCard(taskWithCover({
+			name: 'cover.jpg',
+			mime: 'text/plain',
+		}))
+		await flushPromises()
+
+		expect(attachments.fetchAttachmentUrl).not.toHaveBeenCalled()
 		expect(wrapper.find('img').exists()).toBe(false)
 	})
 })
