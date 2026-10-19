@@ -194,6 +194,12 @@ export function isReportableResourceUrl(url: string, pageUrl: string): boolean {
 		return false
 	}
 
+	// API images arrive as blob: or data: urls, so a cross-origin one comes from
+	// user content, a custom logo or a browser extension, never from our bundle.
+	if (resource.origin !== page.origin) {
+		return false
+	}
+
 	// An empty, blank or fragment-only src resolves to the page itself, which is never a resource.
 	resource.hash = ''
 	page.hash = ''
