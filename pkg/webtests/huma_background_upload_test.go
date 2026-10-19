@@ -91,6 +91,18 @@ func TestHumaProjectBackgroundUpload(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 	})
 
+	t.Run("Truncated image rejected with 400", func(t *testing.T) {
+		// Signature and IHDR intact, pixel data cut off.
+		body, contentType := multipartFileBody(t, "background", "truncated.png", pngBytes(t)[:40])
+		rec := uploadBackgroundRequest(t, e, "1", humaTokenFor(t, &testuser1), body, contentType)
+		require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+		var problem struct {
+			Detail string `json:"detail"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &problem))
+		assert.Contains(t, problem.Detail, "file is not a supported image format")
+	})
+
 	t.Run("Read-only user is forbidden", func(t *testing.T) {
 		body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
 		rec := uploadBackgroundRequest(t, e, "35", humaTokenFor(t, &testuser15), body, contentType)
