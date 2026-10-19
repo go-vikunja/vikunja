@@ -200,7 +200,7 @@ func TestFileStorageIntegration(t *testing.T) {
 		require.NoError(t, file.Delete(s))
 		require.NoError(t, without.Delete(s))
 
-		for _, size := range storedPreviewSizes {
+		for _, size := range StoredPreviewSizes {
 			_, _, err := file.OpenPreview(size)
 			require.ErrorIs(t, err, fs.ErrNotExist, "size %s", size)
 		}

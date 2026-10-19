@@ -58,7 +58,7 @@ func (previewSize PreviewSize) GetSize() int {
 const previewDir = "previews"
 
 // Listed so all previews of a file can be removed without listing the storage.
-var storedPreviewSizes = []PreviewSize{
+var StoredPreviewSizes = []PreviewSize{
 	PreviewSmall,
 	PreviewMedium,
 	PreviewLarge,
@@ -66,7 +66,7 @@ var storedPreviewSizes = []PreviewSize{
 }
 
 func GetPreviewSizeFromString(size string) PreviewSize {
-	if slices.Contains(storedPreviewSizes, PreviewSize(size)) {
+	if slices.Contains(StoredPreviewSizes, PreviewSize(size)) {
 		return PreviewSize(size)
 	}
 	return PreviewSizeUnknown
@@ -77,7 +77,7 @@ func (f *File) previewPath(size PreviewSize) string {
 }
 
 func checkStoredPreviewSize(size PreviewSize) error {
-	if !slices.Contains(storedPreviewSizes, size) {
+	if !slices.Contains(StoredPreviewSizes, size) {
 		return fmt.Errorf("previews of size %q are not stored", size)
 	}
 	return nil
@@ -118,7 +118,7 @@ func (f *File) SavePreview(size PreviewSize, preview []byte) error {
 
 // removePreviews only logs failures: previews are derived data and must not fail what happens to their file.
 func (f *File) removePreviews() {
-	for _, size := range storedPreviewSizes {
+	for _, size := range StoredPreviewSizes {
 		f.removePreview(size)
 	}
 }

@@ -73,7 +73,7 @@ func assertStoresPreviews(t *testing.T, backend FileStorage) {
 	// A real bucket outlives the test run.
 	t.Cleanup(func() {
 		_ = backend.Remove(file.fileID())
-		for _, size := range storedPreviewSizes {
+		for _, size := range StoredPreviewSizes {
 			_ = backend.Remove(file.previewPath(size))
 		}
 	})
@@ -82,12 +82,12 @@ func assertStoresPreviews(t *testing.T, backend FileStorage) {
 	_, _, err := file.OpenPreview(PreviewMedium)
 	require.ErrorIs(t, err, fs.ErrNotExist)
 
-	for _, size := range storedPreviewSizes {
+	for _, size := range StoredPreviewSizes {
 		require.NoError(t, file.SavePreview(size, []byte("preview "+size)))
 	}
 	require.NoError(t, file.SavePreview(PreviewMedium, []byte("overwritten")))
 
-	for _, size := range storedPreviewSizes {
+	for _, size := range StoredPreviewSizes {
 		want := []byte("preview " + size)
 		if size == PreviewMedium {
 			want = []byte("overwritten")
@@ -114,13 +114,13 @@ func assertStoresPreviews(t *testing.T, backend FileStorage) {
 func TestFilePreview_Cleanup(t *testing.T) {
 	savePreviews := func(t *testing.T, file *File) {
 		t.Helper()
-		for _, size := range storedPreviewSizes {
+		for _, size := range StoredPreviewSizes {
 			require.NoError(t, file.SavePreview(size, []byte("preview")))
 		}
 	}
 	assertPreviews := func(t *testing.T, file *File, stored bool) {
 		t.Helper()
-		for _, size := range storedPreviewSizes {
+		for _, size := range StoredPreviewSizes {
 			preview, _, err := file.OpenPreview(size)
 			if !stored {
 				require.ErrorIs(t, err, fs.ErrNotExist, "size %s", size)
@@ -163,7 +163,7 @@ func TestFilePreview_Cleanup(t *testing.T) {
 }
 
 func TestGetPreviewSizeFromString(t *testing.T) {
-	for _, size := range storedPreviewSizes {
+	for _, size := range StoredPreviewSizes {
 		assert.Equal(t, size, GetPreviewSizeFromString(string(size)))
 	}
 	for _, size := range []string{
