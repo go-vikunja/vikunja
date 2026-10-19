@@ -9319,6 +9319,49 @@ export type TaskAttachmentsDownloadResponses = {
 
 export type TaskAttachmentsDownloadResponse = TaskAttachmentsDownloadResponses[keyof TaskAttachmentsDownloadResponses];
 
+export type TaskAttachmentsPreviewData = {
+    body?: never;
+    path: {
+        /**
+         * The id of the task the attachment belongs to.
+         */
+        task: number;
+        /**
+         * The id of the attachment to preview.
+         */
+        attachment: number;
+    };
+    query: {
+        /**
+         * The width of the preview: sm=100px, md=200px, lg=400px, xl=800px. Smaller images are not upscaled.
+         */
+        size: 'sm' | 'md' | 'lg' | 'xl';
+    };
+    url: '/tasks/{task}/attachments/{attachment}/preview';
+};
+
+export type TaskAttachmentsPreviewErrors = {
+    /**
+     * The attachment has no preview (code 4038), or size is missing or invalid.
+     */
+    422: VikunjaErrorModel;
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TaskAttachmentsPreviewError = TaskAttachmentsPreviewErrors[keyof TaskAttachmentsPreviewErrors];
+
+export type TaskAttachmentsPreviewResponses = {
+    /**
+     * The preview image bytes.
+     */
+    200: Blob | File;
+};
+
+export type TaskAttachmentsPreviewResponse = TaskAttachmentsPreviewResponses[keyof TaskAttachmentsPreviewResponses];
+
 export type TaskCommentsListData = {
     body?: never;
     path: {
