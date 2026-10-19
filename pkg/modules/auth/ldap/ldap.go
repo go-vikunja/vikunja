@@ -18,6 +18,7 @@ package ldap
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/binary"
 	"errors"
@@ -132,7 +133,7 @@ func sanitizedUserQuery(username string) (string, bool) {
 	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), escapedUsername), true
 }
 
-func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGroups bool, avatarSyncAttribute string) (u *user.User, err error) {
+func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, password string, syncGroups bool, avatarSyncAttribute string) (u *user.User, err error) {
 	if password == "" || username == "" {
 		return nil, user.ErrNoUsernamePassword{}
 	}
@@ -204,12 +205,12 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 		u.AvatarProvider = "ldap"
 
 		// Process the avatar image to ensure 1:1 aspect ratio
-		processedAvatar, err := utils.CropAvatarTo1x1(raw)
+		processedAvatar, err := utils.CropAvatarTo1x1(ctx, raw)
 		if err != nil {
 			log.Debugf("Error processing LDAP avatar: %v", err)
 			// Continue without avatar if processing fails
 		} else {
-			err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
+			err = upload.StoreAvatarFile(ctx, s, u, bytes.NewReader(processedAvatar))
 			if err != nil {
 				return nil, err
 			}

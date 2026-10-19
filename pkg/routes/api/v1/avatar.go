@@ -108,7 +108,7 @@ func UploadAvatar(c *echo.Context) (err error) {
 	}
 	defer src.Close()
 
-	if err := avatar.StoreUploadedAvatar(s, u, src); err != nil {
+	if err := avatar.StoreUploadedAvatar(c.Request().Context(), s, u, src); err != nil {
 		_ = s.Rollback()
 		if errors.Is(err, avatar.ErrNotAnImage) {
 			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})

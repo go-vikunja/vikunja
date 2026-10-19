@@ -17,6 +17,7 @@
 package avatar
 
 import (
+	"context"
 	"errors"
 	"image"
 	"io"
@@ -150,7 +151,7 @@ func GetProvider(u *user.User) Provider {
 // StoreUploadedAvatar validates that src is an image, switches the user's avatar
 // provider to "upload", stores the image as the user's avatar and flushes all
 // cached avatars for the user. It returns ErrNotAnImage if src is not an image.
-func StoreUploadedAvatar(s *xorm.Session, u *user.User, src io.ReadSeeker) error {
+func StoreUploadedAvatar(ctx context.Context, s *xorm.Session, u *user.User, src io.ReadSeeker) error {
 	mime, err := mimetype.DetectReader(src)
 	if err != nil {
 		return err
@@ -181,7 +182,7 @@ func StoreUploadedAvatar(s *xorm.Session, u *user.User, src io.ReadSeeker) error
 	}
 
 	u.AvatarProvider = "upload"
-	if err := upload.StoreAvatarFile(s, u, src); err != nil {
+	if err := upload.StoreAvatarFile(ctx, s, u, src); err != nil {
 		return err
 	}
 

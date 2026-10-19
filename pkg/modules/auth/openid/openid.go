@@ -252,7 +252,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	defer events.CleanupPending(s)
 
 	// Check if we have seen this user before
-	u, err := getOrCreateUser(s, cl, provider, idToken) //nolint:contextcheck
+	u, err := getOrCreateUser(ctx, s, cl, provider, idToken)
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
@@ -356,7 +356,7 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 }
 
 // Download and store a user's avatar from an OpenID provider
-func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) (err error) {
+func syncUserAvatarFromOpenID(ctx context.Context, s *xorm.Session, u *user.User, pictureURL string) (err error) {
 	// If no picture URL is provided, reset the avatar provider if it was set to openid
 	if pictureURL == "" {
 		if u.AvatarProvider == "openid" {
@@ -373,13 +373,13 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
 
 	// Download avatar
-	avatarData, err := utils.DownloadImage(pictureURL)
+	avatarData, err := utils.DownloadImage(ctx, pictureURL)
 	if err != nil {
 		return fmt.Errorf("error downloading avatar: %w", err)
 	}
 
 	// Process avatar, ensure 1:1 ratio
-	processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
+	processedAvatar, err := utils.CropAvatarTo1x1(ctx, avatarData)
 	if err != nil {
 		return fmt.Errorf("error processing avatar: %w", err)
 	}
@@ -388,7 +388,7 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	u.AvatarProvider = "openid"
 
 	// Store avatar and update user
-	err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
+	err = upload.StoreAvatarFile(ctx, s, u, bytes.NewReader(processedAvatar))
 	if err != nil {
 		return fmt.Errorf("error storing avatar: %w", err)
 	}
@@ -437,7 +437,7 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 	return searches
 }
 
-func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
+func getOrCreateUser(ctx context.Context, s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
 
 	// set defaults
 	fallbackMatchFound := false
@@ -520,7 +520,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 	}
 
 	// Try sync avatar if available
-	err = syncUserAvatarFromOpenID(s, u, cl.Picture)
+	err = syncUserAvatarFromOpenID(ctx, s, u, cl.Picture)
 	if err != nil {
 		log.Errorf("Error syncing avatar for user %s: %v", u.Username, err)
 	}

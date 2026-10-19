@@ -34,13 +34,13 @@ import (
 )
 
 // CropAvatarTo1x1 crops the avatar image to a 1:1 aspect ratio, centered on the image
-func CropAvatarTo1x1(imageData []byte) ([]byte, error) {
+func CropAvatarTo1x1(ctx context.Context, imageData []byte) ([]byte, error) {
 	if len(imageData) == 0 {
 		return nil, errors.New("empty image data")
 	}
 
 	var cropped []byte
-	err := imageutils.Decode(context.Background(), imageutils.BytesOpener(imageData), func(img image.Image, format string) error {
+	err := imageutils.Decode(ctx, imageutils.BytesOpener(imageData), func(img image.Image, format string) error {
 		var err error
 		cropped, err = cropTo1x1(imageData, img, format)
 		return err
@@ -102,9 +102,9 @@ func cropTo1x1(imageData []byte, img image.Image, format string) ([]byte, error)
 }
 
 // DownloadImage downloads an image from a URL and returns the image data
-func DownloadImage(url string) ([]byte, error) {
+func DownloadImage(ctx context.Context, url string) ([]byte, error) {
 	// 3 seconds is enough for downloading an avatar
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

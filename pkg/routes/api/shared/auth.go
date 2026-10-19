@@ -141,7 +141,7 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 // password hash.
 func resolveLoginUser(ctx context.Context, s *xorm.Session, login *user.Login) (*user.User, error) {
 	if config.AuthLdapEnabled.GetBool() {
-		u, err := ldap.AuthenticateUserInLDAP(s, login.Username, login.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
+		u, err := ldap.AuthenticateUserInLDAP(ctx, s, login.Username, login.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
 		if err != nil && !user.IsErrWrongUsernameOrPassword(err) {
 			return nil, err
 		}
