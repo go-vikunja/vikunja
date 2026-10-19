@@ -312,12 +312,30 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 	return
 }
 
-func getTaskIndexFromSearchString(s string) (index int64) {
-	re := regexp.MustCompile("#([0-9]+)")
-	in := re.FindString(s)
+var (
+	taskIndexSearchRegex   = regexp.MustCompile(`#([0-9]+)`)
+	plainNumberSearchRegex = regexp.MustCompile(`^\s*([0-9]+)\s*$`)
+)
 
-	stringIndex := strings.ReplaceAll(in, "#", "")
-	index, _ = strconv.ParseInt(stringIndex, 10, 64)
+func getTaskIndexFromSearchString(s string) (index int64) {
+	match := taskIndexSearchRegex.FindStringSubmatch(s)
+	if match == nil {
+		return getTaskIDFromSearchString(s)
+	}
+
+	index, _ = strconv.ParseInt(match[1], 10, 64)
+	return
+}
+
+// A plain number may be the index shown in the UI or the id in the task URL, so it
+// matches both. "#12" is only ever an index.
+func getTaskIDFromSearchString(s string) (id int64) {
+	match := plainNumberSearchRegex.FindStringSubmatch(s)
+	if match == nil {
+		return 0
+	}
+
+	id, _ = strconv.ParseInt(match[1], 10, 64)
 	return
 }
 

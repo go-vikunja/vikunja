@@ -32,7 +32,7 @@ type TaskCollection struct {
 	ProjectID     int64 `param:"project" json:"-"`
 	ProjectViewID int64 `param:"view" json:"-"`
 
-	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
+	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title or description. A plain number also matches a task's number: either the index shown in the UI or the id from the task URL. \"#12\" only matches the index."`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
 	SortBy []string `query:"sort_by" json:"sort_by" doc:"The fields to sort by, for example done or priority. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query)."`
