@@ -30,8 +30,10 @@ import (
 	"net/http/httptest"
 	"net/textproto"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
@@ -259,5 +261,45 @@ func TestAvatarUploadImageBounds(t *testing.T) {
 			assert.Equal(t, 64, img.Bounds().Dx(), "Fit must not upscale a small source")
 			assert.Equal(t, 64, img.Bounds().Dy())
 		})
+	})
+}
+
+func TestAvatarDecodeIsBounded(t *testing.T) {
+	t.Run("busy upload is a 503 and keeps the previous avatar", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		rec := uploadAvatarRequest(t, e, body, contentType, token)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		release := imageutils.ExhaustBudgetForTests(10 * time.Millisecond)
+		t.Cleanup(release)
+		body, contentType = multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		rec = uploadAvatarRequest(t, e, body, contentType, token)
+		assert.Equal(t, http.StatusServiceUnavailable, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeDecodeBusy))
+
+		release()
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/avatar/"+testuser1.Username+"?size=7", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		_, _, err = image.Decode(bytes.NewReader(rec.Body.Bytes()))
+		require.NoError(t, err, "the previous avatar must still be readable")
+	})
+
+	t.Run("busy avatar read is a 503", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		rec := uploadAvatarRequest(t, e, body, contentType, token)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/avatar/"+testuser1.Username+"?size=6", "", token, "")
+		assert.Equal(t, http.StatusServiceUnavailable, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeDecodeBusy))
 	})
 }
