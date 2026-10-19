@@ -215,7 +215,7 @@ func TestConvertPlankaToVikunja(t *testing.T) {
 
 	t.Run("checklist", func(t *testing.T) {
 		desc := tasksByTitle["Card with checklist"].Description
-		assert.Contains(t, desc, "Steps")
+		assert.Contains(t, desc, "<h2>Steps &lt;1&gt;</h2>")
 		assert.Contains(t, desc, `data-type="taskList"`)
 		assert.Contains(t, desc, `data-checked="true"`)
 		assert.Contains(t, desc, `data-checked="false"`)
@@ -225,11 +225,11 @@ func TestConvertPlankaToVikunja(t *testing.T) {
 	t.Run("custom fields and links", func(t *testing.T) {
 		assert.Contains(t, first.Description, "<h2>Details</h2>")
 		assert.Contains(t, first.Description, "<td>Priority</td>")
-		assert.Contains(t, first.Description, "<td>High</td>")
+		assert.Contains(t, first.Description, "<td>High &amp; &lt;b&gt;urgent&lt;/b&gt;</td>")
 		assert.Contains(t, first.Description, "<h2>Base Group</h2>", "group name derived from base group")
 		assert.Contains(t, first.Description, "<td>Estimate</td>")
 		assert.Contains(t, first.Description, "<td>3d</td>")
-		assert.Contains(t, first.Description, `<a href="https://vikunja.io">Vikunja</a>`)
+		assert.Contains(t, first.Description, `<a href="https://vikunja.io/a_(b)%20c">Vikunja &lt;docs&gt; [1]</a>`)
 	})
 
 	t.Run("attachments and cover", func(t *testing.T) {
