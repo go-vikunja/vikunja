@@ -18,6 +18,7 @@ package upload
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/gob"
 	"fmt"
@@ -86,18 +87,11 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 			return CachedAvatar{}, err
 		}
 
-		// Reject hostile dimensions before decoding (GHSA-4vh2-39rq-rq8j).
-		if _, err := imageutils.ValidateReader(bytes.NewReader(data)); err != nil {
-			return CachedAvatar{}, err
-		}
-		img, _, err := image.Decode(bytes.NewReader(data))
-		if err != nil {
-			return CachedAvatar{}, err
-		}
-		// Fit bounds both dimensions without upscaling.
-		resizedImg := imaging.Fit(img, int(size), int(size), imaging.Lanczos)
 		buf := &bytes.Buffer{}
-		if err := png.Encode(buf, resizedImg); err != nil {
+		err = imageutils.Decode(context.Background(), imageutils.BytesOpener(data), func(img image.Image, _ string) error {
+			return png.Encode(buf, imaging.Fit(img, int(size), int(size), imaging.Lanczos))
+		})
+		if err != nil {
 			return CachedAvatar{}, err
 		}
 
@@ -133,8 +127,19 @@ func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
 }
 
 func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
+	data, err := io.ReadAll(src)
+	if err != nil {
+		return
+	}
+	buf := &bytes.Buffer{}
+	err = imageutils.Decode(context.Background(), imageutils.BytesOpener(data), func(img image.Image, _ string) error {
+		return png.Encode(buf, imaging.Fit(img, 1024, 1024, imaging.Lanczos))
+	})
+	if err != nil {
+		return
+	}
 
-	// Remove the old file if one exists
+	// Only now: storage deletes are not rolled back with the session.
 	if u.AvatarFileID != 0 {
 		f := &files.File{ID: u.AvatarFileID}
 		if err := f.Delete(s); err != nil {
@@ -143,25 +148,6 @@ func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
 			}
 		}
 		u.AvatarFileID = 0
-	}
-
-	data, err := io.ReadAll(src)
-	if err != nil {
-		return
-	}
-	if _, err := imageutils.ValidateReader(bytes.NewReader(data)); err != nil {
-		return err
-	}
-	img, _, err := image.Decode(bytes.NewReader(data))
-	if err != nil {
-		return
-	}
-	// Fit bounds both dimensions without upscaling.
-	resizedImg := imaging.Fit(img, 1024, 1024, imaging.Lanczos)
-	buf := &bytes.Buffer{}
-	err = png.Encode(buf, resizedImg)
-	if err != nil {
-		return
 	}
 
 	err = (&Provider{}).FlushCache(u)
