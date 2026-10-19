@@ -18,6 +18,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	_ "image/gif"  // To make sure the decoder used for generating blurHashes recognizes gifs
 	_ "image/jpeg" // To make sure the decoder used for generating blurHashes recognizes jpgs
 	_ "image/png"  // To make sure the decoder used for generating blurHashes recognizes pngs
@@ -171,16 +172,6 @@ func (bp *BackgroundProvider) SetBackground(c *echo.Context) error {
 	return c.JSON(http.StatusOK, project)
 }
 
-func CreateBlurHash(srcf io.Reader) (hash string, err error) {
-	src, _, err := image.Decode(srcf)
-	if err != nil {
-		return "", err
-	}
-
-	return CreateBlurHashFromImage(src)
-}
-
-// CreateBlurHashFromImage avoids decoding uploads twice.
 func CreateBlurHashFromImage(src image.Image) (hash string, err error) {
 	dst := image.NewRGBA(image.Rect(0, 0, 32, 32))
 	draw.NearestNeighbor.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
@@ -264,39 +255,31 @@ func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *mo
 
 func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string) (storedSize int64, err error) {
 	mime, _ := mimetype.DetectReader(srcf)
-	_, _ = srcf.Seek(0, io.SeekStart)
-
-	// Reject hostile dimensions before decoding (GHSA-4vh2-39rq-rq8j).
-	if _, err := imageutils.ValidateReader(srcf); err != nil {
-		if !imageutils.IsErrImageTooLarge(err) && strings.Contains(err.Error(), "unknown format") {
-			return 0, ErrFileUnsupportedImageFormat{Mime: mime.String()}
+	open := func() (io.ReadCloser, error) {
+		if _, err := srcf.Seek(0, io.SeekStart); err != nil {
+			return nil, err
 		}
-		return 0, err
+		return io.NopCloser(srcf), nil
 	}
-	_, _ = srcf.Seek(0, io.SeekStart)
-	src, err := imaging.Decode(srcf)
+	buf := bytes.Buffer{}
+	err = imageutils.Decode(context.Background(), open, func(src image.Image, _ string) error {
+		dst := imaging.Fit(src, background.MaxBackgroundImageHeight, background.MaxBackgroundImageHeight, imaging.Lanczos)
+		if err := imaging.Encode(&buf, dst, imaging.JPEG, imaging.JPEGQuality(80)); err != nil {
+			return err
+		}
+		hash, err := CreateBlurHashFromImage(src)
+		project.BackgroundBlurHash = hash
+		return err
+	})
 	if err != nil {
 		if strings.Contains(err.Error(), "unknown format") {
 			return 0, ErrFileUnsupportedImageFormat{Mime: mime.String()}
 		}
 		return 0, err
 	}
-
-	buf := bytes.Buffer{}
-	// Fit bounds both dimensions without upscaling.
-	dst := imaging.Fit(src, background.MaxBackgroundImageHeight, background.MaxBackgroundImageHeight, imaging.Lanczos)
-	err = imaging.Encode(&buf, dst, imaging.JPEG, imaging.JPEGQuality(80))
-	if err != nil {
-		return 0, err
-	}
 	storedSize = int64(buf.Len())
 
 	f, err := files.CreateWithSession(s, bytes.NewReader(buf.Bytes()), filename, uint64(storedSize), auth)
-	if err != nil {
-		return 0, err
-	}
-
-	project.BackgroundBlurHash, err = CreateBlurHashFromImage(src)
 	if err != nil {
 		return 0, err
 	}
