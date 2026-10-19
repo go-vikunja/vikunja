@@ -35,7 +35,7 @@ const NAVIGABLE_URL_SCHEMES = [
 	'https:',
 ]
 
-function navigableUrl(url: string | undefined): string {
+export function navigableUrl(url: string | undefined): string {
 	if (!url) {
 		return ''
 	}
