@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/imageutils"
@@ -85,6 +86,13 @@ func TestCropAvatarTo1x1(t *testing.T) {
 		_, err := CropAvatarTo1x1(data)
 		require.Error(t, err)
 		assert.True(t, imageutils.IsErrImageTooLarge(err))
+	})
+
+	t.Run("busy server is reported", func(t *testing.T) {
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+
+		_, err := CropAvatarTo1x1(pngBytesForAvatar(t, 8, 4))
+		assert.True(t, imageutils.IsErrDecodeBusy(err), "err: %v", err)
 	})
 }
 

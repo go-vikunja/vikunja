@@ -39,17 +39,19 @@ func CropAvatarTo1x1(imageData []byte) ([]byte, error) {
 		return nil, errors.New("empty image data")
 	}
 
-	// Reject hostile identity-provider dimensions before decoding (GHSA-4vh2-39rq-rq8j).
-	if _, err := imageutils.ValidateReader(bytes.NewReader(imageData)); err != nil {
+	var cropped []byte
+	err := imageutils.Decode(context.Background(), imageutils.BytesOpener(imageData), func(img image.Image, format string) error {
+		var err error
+		cropped, err = cropTo1x1(imageData, img, format)
+		return err
+	})
+	if err != nil {
 		return nil, err
 	}
+	return cropped, nil
+}
 
-	// Decode the image
-	img, format, err := image.Decode(bytes.NewReader(imageData))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
-	}
-
+func cropTo1x1(imageData []byte, img image.Image, format string) ([]byte, error) {
 	// Get image dimensions
 	bounds := img.Bounds()
 	width := bounds.Dx()
@@ -83,6 +85,7 @@ func CropAvatarTo1x1(imageData []byte) ([]byte, error) {
 
 	// Encode the result
 	var buf bytes.Buffer
+	var err error
 	switch format {
 	case "jpeg":
 		err = jpeg.Encode(&buf, croppedImg, nil)

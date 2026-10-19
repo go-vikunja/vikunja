@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"bytes"
 	"context"
 	"crypto"
 	"crypto/rand"
@@ -24,6 +25,8 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"image"
+	"image/png"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -34,6 +37,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -735,6 +739,41 @@ func TestSyncUserAvatarFromOpenID(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, updatedUser.AvatarProvider, "avatar provider should remain empty for non-openid user")
 	})
+}
+
+func TestGetOrCreateUserSkipsAvatarWhenDecodingIsBusy(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	t.Cleanup(func() { config.OutgoingRequestsAllowNonRoutableIPs.Set("false") })
+
+	picture := &bytes.Buffer{}
+	require.NoError(t, png.Encode(picture, image.NewNRGBA(image.Rect(0, 0, 8, 4))))
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		_, _ = w.Write(picture.Bytes())
+	}))
+	t.Cleanup(srv.Close)
+	t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+
+	s := db.NewSession()
+	defer s.Close()
+	cl := &claims{
+		Email:             "busy-avatar@example.com",
+		PreferredUsername: "busyAvatarUser",
+		Picture:           srv.URL,
+	}
+	idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "busy-avatar"}
+
+	u, err := getOrCreateUser(s, cl, &Provider{}, idToken)
+	require.NoError(t, err, "a busy server must not fail the login")
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+	stored, err := user.GetUserByID(s2, u.ID)
+	require.NoError(t, err)
+	assert.Zero(t, stored.AvatarFileID)
+	assert.Equal(t, config.DefaultSettingsAvatarProvider.GetString(), stored.AvatarProvider)
 }
 
 func TestEmailVerifiedClaimDecoding(t *testing.T) {
