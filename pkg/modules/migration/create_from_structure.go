@@ -271,7 +271,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
 
-		_, err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "")
+		_, err = handler.SaveBackgroundFile(context.Background(), s, user, &project.Project, backgroundFile, "")
 		if err != nil {
 			log.Errorf("[creating structure] Could not create background for project %d, error was %v", project.ID, err)
 		} else {
@@ -288,7 +288,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
 
 			var storedSize int64
-			storedSize, err = handler.SaveBackgroundFile(s, user, &project.Project, backgroundFile, "")
+			storedSize, err = handler.SaveBackgroundFile(context.Background(), s, user, &project.Project, backgroundFile, "")
 			closeErr := backgroundFile.Close()
 			if err != nil {
 				return err

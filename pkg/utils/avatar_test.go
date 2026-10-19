@@ -55,7 +55,7 @@ func pngBytesForAvatar(t *testing.T, width int, height ...int) []byte {
 // Covers identity-provider image bounds (GHSA-4vh2-39rq-rq8j).
 func TestCropAvatarTo1x1(t *testing.T) {
 	t.Run("normal non-square image is cropped centered", func(t *testing.T) {
-		cropped, err := CropAvatarTo1x1(pngBytesForAvatar(t, 8, 4))
+		cropped, err := CropAvatarTo1x1(t.Context(), pngBytesForAvatar(t, 8, 4))
 		require.NoError(t, err)
 
 		img, _, err := image.Decode(bytes.NewReader(cropped))
@@ -72,7 +72,7 @@ func TestCropAvatarTo1x1(t *testing.T) {
 
 	t.Run("already square image is returned as-is", func(t *testing.T) {
 		original := pngBytesForAvatar(t, 4, 4)
-		cropped, err := CropAvatarTo1x1(original)
+		cropped, err := CropAvatarTo1x1(t.Context(), original)
 		require.NoError(t, err)
 		assert.Equal(t, original, cropped)
 	})
@@ -83,7 +83,7 @@ func TestCropAvatarTo1x1(t *testing.T) {
 		binary.BigEndian.PutUint32(data[20:24], uint32(8000))
 		binary.BigEndian.PutUint32(data[29:33], crc32.ChecksumIEEE(data[12:29]))
 
-		_, err := CropAvatarTo1x1(data)
+		_, err := CropAvatarTo1x1(t.Context(), data)
 		require.Error(t, err)
 		assert.True(t, imageutils.IsErrImageTooLarge(err))
 	})
@@ -91,7 +91,7 @@ func TestCropAvatarTo1x1(t *testing.T) {
 	t.Run("busy server is reported", func(t *testing.T) {
 		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
 
-		_, err := CropAvatarTo1x1(pngBytesForAvatar(t, 8, 4))
+		_, err := CropAvatarTo1x1(t.Context(), pngBytesForAvatar(t, 8, 4))
 		assert.True(t, imageutils.IsErrDecodeBusy(err), "err: %v", err)
 	})
 }
@@ -110,7 +110,7 @@ func TestDownloadImageIsBounded(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := DownloadImage(srv.URL)
+	_, err := DownloadImage(t.Context(), srv.URL)
 	require.Error(t, err, "a response larger than the max file size must not be buffered in full")
 
 	small := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -119,7 +119,7 @@ func TestDownloadImageIsBounded(t *testing.T) {
 	}))
 	t.Cleanup(small.Close)
 
-	data, err := DownloadImage(small.URL)
+	data, err := DownloadImage(t.Context(), small.URL)
 	require.NoError(t, err)
 	assert.NotEmpty(t, data)
 }

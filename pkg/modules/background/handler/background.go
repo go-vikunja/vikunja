@@ -203,7 +203,7 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	}
 	defer srcf.Close()
 
-	if err := ValidateAndSaveBackgroundUpload(s, auth, project, srcf, file.Filename, uint64(file.Size)); err != nil {
+	if err := ValidateAndSaveBackgroundUpload(c.Request().Context(), s, auth, project, srcf, file.Filename, uint64(file.Size)); err != nil {
 		_ = s.Rollback()
 		if IsErrFileIsNoImage(err) {
 			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
@@ -226,7 +226,7 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 }
 
 // ValidateAndSaveBackgroundUpload is shared by the v1 and v2 upload handlers.
-func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, _ uint64) error {
+func ValidateAndSaveBackgroundUpload(ctx context.Context, s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, _ uint64) error {
 	mime, err := mimetype.DetectReader(srcf)
 	if err != nil {
 		return err
@@ -245,15 +245,14 @@ func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *mo
 		return ErrFileUnsupportedImageFormat{Mime: mime.String()}
 	}
 
-	// SaveBackgroundFile rewinds after DetectReader.
-	if _, err := SaveBackgroundFile(s, auth, project, srcf, filename); err != nil {
+	if _, err := SaveBackgroundFile(ctx, s, auth, project, srcf, filename); err != nil {
 		return err
 	}
 
 	return project.ReadOne(s, auth)
 }
 
-func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string) (storedSize int64, err error) {
+func SaveBackgroundFile(ctx context.Context, s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string) (storedSize int64, err error) {
 	mime, _ := mimetype.DetectReader(srcf)
 	open := func() (io.ReadCloser, error) {
 		if _, err := srcf.Seek(0, io.SeekStart); err != nil {
@@ -262,7 +261,7 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 		return io.NopCloser(srcf), nil
 	}
 	buf := bytes.Buffer{}
-	err = imageutils.Decode(context.Background(), open, func(src image.Image, _ string) error {
+	err = imageutils.Decode(ctx, open, func(src image.Image, _ string) error {
 		dst := imaging.Fit(src, background.MaxBackgroundImageHeight, background.MaxBackgroundImageHeight, imaging.Lanczos)
 		if err := imaging.Encode(&buf, dst, imaging.JPEG, imaging.JPEGQuality(80)); err != nil {
 			return err

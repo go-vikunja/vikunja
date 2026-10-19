@@ -81,7 +81,7 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 	src := in.RawBody.Data().Avatar
 	defer func() { _ = src.Close() }()
 
-	if err := avatar.StoreUploadedAvatar(s, u, src); err != nil {
+	if err := avatar.StoreUploadedAvatar(ctx, s, u, src); err != nil {
 		_ = s.Rollback()
 		if errors.Is(err, avatar.ErrNotAnImage) {
 			return nil, huma.Error400BadRequest("Uploaded file is no image.")
