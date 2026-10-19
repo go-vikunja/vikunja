@@ -4,7 +4,13 @@ import {fetchAttachmentBlob, fetchAttachmentUrl, generateAttachmentUrl, releaseA
 import {queryClient} from '@/client/queryClient'
 import {attachmentKeys} from '@/client/queries/attachments'
 
-const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
+const {
+	getBlobUrl,
+	getPreview,
+} = vi.hoisted(() => ({
+	getBlobUrl: vi.fn(),
+	getPreview: vi.fn(),
+}))
 
 const requestContext = vi.hoisted(() => ({
 	identity: {id: 1, type: 1} as {id: number, type: number} | null,
@@ -12,7 +18,10 @@ const requestContext = vi.hoisted(() => ({
 	apiBaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
-vi.mock('@/client/generated', () => ({taskAttachmentsDownload: getBlobUrl}))
+vi.mock('@/client/generated', () => ({
+	taskAttachmentsDownload: getBlobUrl,
+	taskAttachmentsPreview: getPreview,
+}))
 vi.mock('@/message', () => ({
 	error: vi.fn(),
 	success: vi.fn(),
@@ -39,6 +48,7 @@ beforeEach(() => {
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 	getBlobUrl.mockReset()
+	getPreview.mockReset()
 	window.URL.revokeObjectURL = vi.fn()
 })
 
@@ -171,9 +181,9 @@ describe('fetchAttachmentBlob', () => {
 		expect(getBlobUrl).toHaveBeenCalledTimes(2)
 	})
 
-	it('caches every preview size separately', async () => {
+	it('requests previews from the preview route and caches every size separately', async () => {
 		getBlobUrl.mockResolvedValueOnce({data: new Blob(['original'])})
-			.mockResolvedValueOnce({data: new Blob(['md'])})
+		getPreview.mockResolvedValueOnce({data: new Blob(['md'])})
 			.mockResolvedValueOnce({data: new Blob(['lg'])})
 
 		expect(await (await fetchAttachmentBlob(attachment)).text()).toBe('original')
@@ -181,7 +191,17 @@ describe('fetchAttachmentBlob', () => {
 		expect(await (await fetchAttachmentBlob(attachment, 'lg')).text()).toBe('lg')
 		expect(await (await fetchAttachmentBlob(attachment, 'md')).text()).toBe('md')
 
-		expect(getBlobUrl).toHaveBeenCalledTimes(3)
+		expect(getBlobUrl).toHaveBeenCalledOnce()
+		expect(getBlobUrl).toHaveBeenCalledWith(expect.not.objectContaining({query: expect.anything()}))
+		expect(getPreview).toHaveBeenCalledTimes(2)
+		expect(getPreview).toHaveBeenNthCalledWith(1, expect.objectContaining({
+			path: {
+				task: 5,
+				attachment: 9,
+			},
+			query: {size: 'md'},
+		}))
+		expect(getPreview).toHaveBeenNthCalledWith(2, expect.objectContaining({query: {size: 'lg'}}))
 	})
 
 	it('caches every attachment separately', async () => {
