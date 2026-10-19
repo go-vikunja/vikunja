@@ -151,38 +151,38 @@ func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []
 	return success, failures, nil
 }
 
-// TaskAttachmentDownload is either a *TaskAttachmentPreview or a *TaskAttachmentOriginal. The caller must close it.
-//
-//sumtype:decl
-type TaskAttachmentDownload interface {
-	io.Closer
-	taskAttachmentDownload()
-}
-
-// TaskAttachmentPreview is an encoded preview image.
+// TaskAttachmentPreview is an encoded preview image. The caller must close it.
 type TaskAttachmentPreview struct {
 	io.ReadCloser
 	Mime string
 	Size int64 // -1 when the storage did not report it
 }
 
-func (*TaskAttachmentPreview) taskAttachmentDownload() {}
-
-// TaskAttachmentOriginal is the uploaded file, opened for reading.
-type TaskAttachmentOriginal struct {
-	File *files.File
-}
-
-func (original *TaskAttachmentOriginal) Close() error {
-	return original.File.File.Close()
-}
-
-func (*TaskAttachmentOriginal) taskAttachmentDownload() {}
-
-// GetTaskAttachmentForDownload returns the preview when previewSize is set, otherwise the file.
+// GetTaskAttachmentForDownload returns the attachment's file, opened for reading. The caller must close it.
 // Returns ErrGenericForbidden on denied access.
-// Owns its own session and commits it before touching storage so no pool connection is held.
-func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (TaskAttachmentDownload, error) {
+func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64) (*files.File, error) {
+	ta, err := readTaskAttachment(a, taskID, attachmentID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ta.File.LoadFileByID(); err != nil {
+		return nil, err
+	}
+	return ta.File, nil
+}
+
+// GetTaskAttachmentPreview returns ErrTaskAttachmentNotPreviewable when no preview can be made of the attachment.
+// Returns ErrGenericForbidden on denied access.
+func GetTaskAttachmentPreview(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
+	ta, err := readTaskAttachment(a, taskID, attachmentID)
+	if err != nil {
+		return nil, err
+	}
+	return ta.GetPreview(ctx, previewSize)
+}
+
+// Owns its own session and commits it before the caller touches storage so no pool connection is held.
+func readTaskAttachment(a web.Auth, taskID, attachmentID int64) (*TaskAttachment, error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -206,23 +206,7 @@ func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attac
 		_ = s.Rollback()
 		return nil, err
 	}
-
-	return ta.openPreviewOrFile(ctx, previewSize)
-}
-
-func (ta *TaskAttachment) openPreviewOrFile(ctx context.Context, previewSize PreviewSize) (TaskAttachmentDownload, error) {
-	if previewSize != PreviewSizeUnknown {
-		preview, err := ta.GetPreview(ctx, previewSize)
-		if err != nil {
-			return nil, err
-		}
-		return preview, nil
-	}
-
-	if err := ta.File.LoadFileByID(); err != nil {
-		return nil, err
-	}
-	return &TaskAttachmentOriginal{File: ta.File}, nil
+	return ta, nil
 }
 
 // ReadOne returns a task attachment

@@ -21,11 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
@@ -79,12 +77,12 @@ func (c *trackedCloser) Close() error {
 	return nil
 }
 
-func TestWriteAttachmentDownload(t *testing.T) {
+func TestWriteAttachmentPreview(t *testing.T) {
 	t.Run("preview", func(t *testing.T) {
 		content := &trackedCloser{Reader: bytes.NewReader([]byte("preview"))}
 		rec := httptest.NewRecorder()
 
-		WriteAttachmentDownload(rec, httptest.NewRequest(http.MethodGet, "/", nil), &models.TaskAttachmentPreview{
+		WriteAttachmentPreview(rec, &models.TaskAttachmentPreview{
 			ReadCloser: content,
 			Mime:       "image/jpeg",
 			Size:       7,
@@ -101,7 +99,7 @@ func TestWriteAttachmentDownload(t *testing.T) {
 	t.Run("preview of unknown size", func(t *testing.T) {
 		rec := httptest.NewRecorder()
 
-		WriteAttachmentDownload(rec, httptest.NewRequest(http.MethodGet, "/", nil), &models.TaskAttachmentPreview{
+		WriteAttachmentPreview(rec, &models.TaskAttachmentPreview{
 			ReadCloser: io.NopCloser(bytes.NewReader([]byte("preview"))),
 			Mime:       "image/jpeg",
 			Size:       -1,
@@ -109,24 +107,5 @@ func TestWriteAttachmentDownload(t *testing.T) {
 
 		assert.Equal(t, "preview", rec.Body.String())
 		assert.Empty(t, rec.Header().Get("Content-Length"))
-	})
-
-	t.Run("original", func(t *testing.T) {
-		content := &trackedCloser{Reader: bytes.NewReader([]byte("original"))}
-		rec := httptest.NewRecorder()
-
-		WriteAttachmentDownload(rec, httptest.NewRequest(http.MethodGet, "/", nil), &models.TaskAttachmentOriginal{
-			File: &files.File{
-				Name: "original.txt",
-				Mime: "text/plain",
-				Size: 8,
-				File: content,
-			},
-		})
-
-		assert.Equal(t, "original", rec.Body.String())
-		assert.Equal(t, "text/plain", rec.Header().Get("Content-Type"))
-		assert.Contains(t, rec.Header().Get("Content-Disposition"), "original.txt")
-		assert.Equal(t, 1, content.closed)
 	})
 }

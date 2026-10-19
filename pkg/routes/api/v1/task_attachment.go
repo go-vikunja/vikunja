@@ -122,14 +122,23 @@ func GetTaskAttachment(c *echo.Context) error {
 	}
 
 	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
-	download, err := models.GetTaskAttachmentForDownload(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
-	if models.IsErrTaskAttachmentNotPreviewable(err) {
-		download, err = models.GetTaskAttachmentForDownload(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, models.PreviewSizeUnknown)
+	if previewSize != models.PreviewSizeUnknown {
+		preview, err := models.GetTaskAttachmentPreview(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
+		if err == nil {
+			webfiles.WriteAttachmentPreview(c.Response(), preview)
+			return nil
+		}
+		if !models.IsErrTaskAttachmentNotPreviewable(err) {
+			return err
+		}
 	}
+
+	file, err := models.GetTaskAttachmentForDownload(auth, taskAttachment.TaskID, taskAttachment.ID)
 	if err != nil {
 		return err
 	}
+	defer func() { _ = file.File.Close() }()
 
-	webfiles.WriteAttachmentDownload(c.Response(), c.Request(), download)
+	webfiles.WriteFileDownload(c.Response(), c.Request(), file)
 	return nil
 }

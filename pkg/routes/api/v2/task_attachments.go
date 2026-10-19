@@ -178,16 +178,26 @@ func taskAttachmentsDownload(ctx context.Context, in *struct {
 		return nil, err
 	}
 
-	previewSize := models.GetPreviewSizeFromString(in.PreviewSize)
-	download, err := models.GetTaskAttachmentForDownload(ctx, a, in.TaskID, in.AttachmentID, previewSize)
+	if in.PreviewSize != "" {
+		preview, err := models.GetTaskAttachmentPreview(ctx, a, in.TaskID, in.AttachmentID, models.GetPreviewSizeFromString(in.PreviewSize))
+		if err != nil {
+			return nil, translateDomainError(err)
+		}
+		return &huma.StreamResponse{Body: func(hctx huma.Context) {
+			webfiles.WriteAttachmentPreview((*humaecho.Unwrap(hctx)).Response(), preview)
+		}}, nil
+	}
+
+	file, err := models.GetTaskAttachmentForDownload(a, in.TaskID, in.AttachmentID)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	// Reader is independent of the session; stays valid for the StreamResponse callback.
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
+		defer func() { _ = file.File.Close() }()
 		c := humaecho.Unwrap(hctx)
-		webfiles.WriteAttachmentDownload((*c).Response(), (*c).Request(), download)
+		webfiles.WriteFileDownload((*c).Response(), (*c).Request(), file)
 	}}, nil
 }
 

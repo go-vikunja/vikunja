@@ -63,21 +63,15 @@ func toAttachmentUploadError(err error) AttachmentUploadError {
 	return AttachmentUploadError{Message: err.Error()}
 }
 
-// WriteAttachmentDownload streams the attachment or its inline image preview to
-// the response and closes it.
-func WriteAttachmentDownload(w http.ResponseWriter, r *http.Request, download models.TaskAttachmentDownload) {
-	defer func() { _ = download.Close() }()
+// WriteAttachmentPreview streams an inline image preview to the response and closes it.
+func WriteAttachmentPreview(w http.ResponseWriter, preview *models.TaskAttachmentPreview) {
+	defer func() { _ = preview.Close() }()
 
-	switch d := download.(type) {
-	case *models.TaskAttachmentPreview:
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Content-Type", d.Mime)
-		w.Header().Set("X-Content-Type-Options", "nosniff")
-		if d.Size >= 0 {
-			w.Header().Set("Content-Length", strconv.FormatInt(d.Size, 10))
-		}
-		_, _ = io.Copy(w, d)
-	case *models.TaskAttachmentOriginal:
-		WriteFileDownload(w, r, d.File)
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Type", preview.Mime)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if preview.Size >= 0 {
+		w.Header().Set("Content-Length", strconv.FormatInt(preview.Size, 10))
 	}
+	_, _ = io.Copy(w, preview)
 }
