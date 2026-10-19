@@ -79,10 +79,10 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 								},
 								{
 									ID:       "7cc71b16f0c7a57bed3c94e9",
-									Name:     "Website",
+									Name:     "Website <docs> & more",
 									IsUpload: false,
 									MimeType: "",
-									URL:      "https://vikunja.io",
+									URL:      `https://vikunja.io/?a=1&b="x"`,
 								},
 							},
 						},
@@ -289,7 +289,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 						Task: models.Task{
 							Title: "Test Card 1",
 							Description: "<p>Card Description <strong>bold</strong></p>\n" +
-								"<p><a href=\"https://vikunja.io\">Website</a></p>\n",
+								"<p><a href=\"https://vikunja.io/?a=1&amp;b=&#34;x&#34;\">Website &lt;docs&gt; &amp; more</a></p>\n",
 							BucketID: 1,
 							DueDate:  time1,
 							Labels: []*models.Label{
