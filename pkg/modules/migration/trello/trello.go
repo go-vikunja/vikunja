@@ -366,7 +366,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 					}
 
 					// Other links are not attachments in Vikunja, but we can add them to the description
-					task.Description += `<p><a href="` + attachment.URL + `">` + attachment.Name + "</a></p>\n"
+					task.Description += `<p><a href="` + html.EscapeString(attachment.URL) + `">` + html.EscapeString(attachment.Name) + "</a></p>\n"
 				}
 
 				// When the cover image was set manually, we need to add it as an attachment
