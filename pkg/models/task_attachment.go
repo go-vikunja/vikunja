@@ -396,10 +396,9 @@ func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpe
 		log.Errorf("Could not use the stored %s preview of file %d: %v", previewSize, fileID, err)
 	}
 
-	flightKey := strconv.FormatInt(fileID, 10) + "_" + string(previewSize)
-	flight := g.flights.DoChan(flightKey, func() (any, error) {
+	flight := g.flights.DoChan(strconv.FormatInt(fileID, 10), func() (any, error) {
 		// Detached: the flight is shared, so the caller who started it leaving must not fail the others.
-		return g.generateAndStore(context.WithoutCancel(ctx), fileID, open, previewSize)
+		return g.generateAndStore(context.WithoutCancel(ctx), fileID, open)
 	})
 
 	select {
@@ -409,7 +408,11 @@ func (g *previewGenerator) get(ctx context.Context, fileID int64, open sourceOpe
 		if result.Err != nil {
 			return nil, result.Err
 		}
-		preview, _ := result.Val.([]byte)
+		previews, _ := result.Val.(map[PreviewSize][]byte)
+		preview, exists := previews[previewSize]
+		if !exists {
+			return nil, fmt.Errorf("previews of size %q are not generated", previewSize)
+		}
 		return newTaskAttachmentPreview(preview), nil
 	}
 }
@@ -466,31 +469,42 @@ func (g *previewGenerator) readStored(fileID int64, previewSize PreviewSize) (pr
 	return preview, true
 }
 
-func (g *previewGenerator) generateAndStore(ctx context.Context, fileID int64, open sourceOpener, previewSize PreviewSize) (preview []byte, err error) {
+func (g *previewGenerator) readAllStored(fileID int64) (previews map[PreviewSize][]byte, stored bool) {
+	previews = make(map[PreviewSize][]byte, len(files.StoredPreviewSizes))
+	for _, size := range files.StoredPreviewSizes {
+		if previews[size], stored = g.readStored(fileID, size); !stored {
+			return nil, false
+		}
+	}
+	return previews, true
+}
+
+func (g *previewGenerator) generateAndStore(ctx context.Context, fileID int64, open sourceOpener) (previews map[PreviewSize][]byte, err error) {
 	// singleflight re-panics a DoChan callback on its own goroutine, which would crash the whole API.
 	defer func() {
 		if r := recover(); r != nil {
-			log.Errorf("Panic while generating the %s preview of file %d: %v\n%s", previewSize, fileID, r, debug.Stack())
-			err = fmt.Errorf("panic while generating the %s preview of file %d: %v", previewSize, fileID, r)
+			log.Errorf("Panic while generating the previews of file %d: %v\n%s", fileID, r, debug.Stack())
+			err = fmt.Errorf("panic while generating the previews of file %d: %v", fileID, r)
 		}
 	}()
 
-	// A flight that just finished may have stored it after this caller's lookup.
-	if preview, stored := g.readStored(fileID, previewSize); stored {
-		return preview, nil
+	// A flight that just finished may have stored them after this caller's lookup.
+	if previews, stored := g.readAllStored(fileID); stored {
+		return previews, nil
 	}
 
-	preview, err = g.generate(ctx, open, previewSize)
+	previews, err = g.generate(ctx, open)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := (&files.File{ID: fileID}).SavePreview(previewSize, preview); err != nil {
-		log.Errorf("Could not store the %s preview of file %d: %v", previewSize, fileID, err)
-		return preview, nil
+	for _, size := range files.StoredPreviewSizes {
+		if err := (&files.File{ID: fileID}).SavePreview(size, previews[size]); err != nil {
+			log.Errorf("Could not store the %s preview of file %d: %v", size, fileID, err)
+		}
 	}
-	log.Infof("Created and stored the %s preview of file %d", previewSize, fileID)
-	return preview, nil
+	log.Infof("Created the previews of file %d", fileID)
+	return previews, nil
 }
 
 type sourceOpener func() (io.ReadCloser, error)
@@ -506,7 +520,7 @@ func fileOpener(fileID int64) sourceOpener {
 }
 
 // Opens the source twice so callers queued for capacity hold no storage handle or S3 body while waiting.
-func (g *previewGenerator) generate(ctx context.Context, open sourceOpener, previewSize PreviewSize) ([]byte, error) {
+func (g *previewGenerator) generate(ctx context.Context, open sourceOpener) (map[PreviewSize][]byte, error) {
 	pixels, err := sourcePixels(open)
 	if err != nil {
 		return nil, err
@@ -523,11 +537,11 @@ func (g *previewGenerator) generate(ctx context.Context, open sourceOpener, prev
 	}
 	defer src.Close()
 
-	preview, err := renderPreview(src, previewSize)
+	previews, err := renderPreviews(src)
 	if err != nil {
 		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
 	}
-	return preview, nil
+	return previews, nil
 }
 
 func sourcePixels(open sourceOpener) (int64, error) {
@@ -559,13 +573,20 @@ func (g *previewGenerator) acquire(ctx context.Context, pixels int64) error {
 	return nil
 }
 
-func renderPreview(src io.Reader, previewSize PreviewSize) ([]byte, error) {
+func renderPreviews(src io.Reader) (map[PreviewSize][]byte, error) {
 	img, _, err := image.Decode(src)
 	if err != nil {
 		return nil, err
 	}
 
-	return encodePreview(resizeImage(img, previewSize.GetSize()))
+	previews := make(map[PreviewSize][]byte, len(files.StoredPreviewSizes))
+	for _, size := range files.StoredPreviewSizes {
+		previews[size], err = encodePreview(resizeImage(img, size.GetSize()))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return previews, nil
 }
 
 const previewJPEGQuality = 85
