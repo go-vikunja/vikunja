@@ -1527,7 +1527,7 @@
     "notLoggedIn": "Please log in to the main Vikunja window first.",
     "commands": "Commands",
     "placeholder": "Type a command or search…",
-    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
+    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams. Searching for a number finds the task with that number, either the one shown on the task or the one in its URL.",
     "tasks": "Tasks",
     "projects": "Projects",
     "teams": "Teams",
