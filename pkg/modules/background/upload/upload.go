@@ -50,6 +50,7 @@ func (p *Provider) Search(_ *xorm.Session, _ string, _ int64) (result []*backgro
 // @Failure 403 {object} models.Message "No access to the project."
 // @Failure 403 {object} models.Message "File too large."
 // @Failure 404 {object} models.Message "The project does not exist."
+// @Failure 503 {object} models.Message "The server is busy decoding other images."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/backgrounds/upload [put]
 func (p *Provider) Set(s *xorm.Session, img *background.Image, project *models.Project, _ web.Auth) (err error) {

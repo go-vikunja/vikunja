@@ -1517,7 +1517,7 @@ export const projectsBackgroundUnsplashSet = <ThrowOnError extends boolean = tru
 /**
  * Upload a project background
  *
- * Uploads an image via multipart/form-data under the "background" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project.
+ * Uploads an image via multipart/form-data under the "background" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project. A file that is not a decodable image of a supported format fails with 400, an image over the pixel limit fails with 400 and code 4032, and the request fails with 503 and code 4040 when the server is too busy decoding other images.
  */
 export const projectsBackgroundUpload = <ThrowOnError extends boolean = true>(options: Options<ProjectsBackgroundUploadData, ThrowOnError>): RequestResult<ProjectsBackgroundUploadResponses, ProjectsBackgroundUploadErrors, ThrowOnError> => (options.client ?? client).put<ProjectsBackgroundUploadResponses, ProjectsBackgroundUploadErrors, ThrowOnError>({
     ...formDataBodySerializer,
@@ -3787,7 +3787,7 @@ export const sessionsDelete = <ThrowOnError extends boolean = true>(options: Opt
 /**
  * Upload your avatar
  *
- * Uploads an image as the authenticated user's avatar and switches their avatar provider to "upload". The image is validated to be an image, resized server-side, and stored as PNG. Replaces any previously uploaded avatar (idempotent replace, hence PUT).
+ * Uploads an image as the authenticated user's avatar and switches their avatar provider to "upload". The image is validated to be an image, resized server-side, and stored as PNG. Replaces any previously uploaded avatar (idempotent replace, hence PUT). An image the server cannot decode fails with 400, an image over the pixel limit fails with 400 and code 4032, and the request fails with 503 and code 4040 when the server is too busy decoding other images.
  */
 export const userAvatarUpload = <ThrowOnError extends boolean = true>(options: Options<UserAvatarUploadData, ThrowOnError>): RequestResult<UserAvatarUploadResponses, UserAvatarUploadErrors, ThrowOnError> => (options.client ?? client).put<UserAvatarUploadResponses, UserAvatarUploadErrors, ThrowOnError>({
     ...formDataBodySerializer,

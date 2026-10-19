@@ -78,6 +78,7 @@ func GetAvatar(c *echo.Context) error {
 // @Success 200 {object} models.Message "The avatar was set successfully."
 // @Failure 400 {object} models.Message "File is no image."
 // @Failure 403 {object} models.Message "File too large."
+// @Failure 503 {object} models.Message "The server is busy decoding other images."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/settings/avatar/upload [put]
 func UploadAvatar(c *echo.Context) (err error) {
