@@ -28,6 +28,7 @@ import (
 	"io"
 	"io/fs"
 	"runtime/debug"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -174,6 +175,10 @@ func GetTaskAttachmentForDownload(a web.Auth, taskID, attachmentID int64) (*file
 // GetTaskAttachmentPreview returns ErrTaskAttachmentNotPreviewable when no preview can be made of the attachment.
 // Returns ErrGenericForbidden on denied access.
 func GetTaskAttachmentPreview(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
+	if !slices.Contains(files.StoredPreviewSizes, previewSize) {
+		return nil, ErrInvalidPreviewSize{}
+	}
+
 	ta, err := readTaskAttachment(a, taskID, attachmentID)
 	if err != nil {
 		return nil, err

@@ -1091,6 +1091,31 @@ func (err ErrTaskAttachmentNotPreviewable) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidPreviewSize represents an error where a preview was requested in a size that does not exist.
+type ErrInvalidPreviewSize struct{}
+
+// IsErrInvalidPreviewSize checks if an error is ErrInvalidPreviewSize.
+func IsErrInvalidPreviewSize(err error) bool {
+	var invalid ErrInvalidPreviewSize
+	return errors.As(err, &invalid)
+}
+
+func (err ErrInvalidPreviewSize) Error() string {
+	return "Invalid task attachment preview size"
+}
+
+// ErrCodeInvalidPreviewSize holds the unique world-error code of this error
+const ErrCodeInvalidPreviewSize = 4039
+
+// HTTPError holds the http error description
+func (err ErrInvalidPreviewSize) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnprocessableEntity,
+		Code:     ErrCodeInvalidPreviewSize,
+		Message:  "The preview size must be one of sm, md, lg or xl.",
+	}
+}
+
 // ErrTaskAttachmentPreviewBusy represents an error where a preview waited too long for other previews to finish generating.
 type ErrTaskAttachmentPreviewBusy struct{}
 
