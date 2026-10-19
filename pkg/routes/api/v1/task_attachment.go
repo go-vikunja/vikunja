@@ -123,6 +123,9 @@ func GetTaskAttachment(c *echo.Context) error {
 
 	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
 	download, err := models.GetTaskAttachmentForDownload(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
+	if models.IsErrTaskAttachmentNotPreviewable(err) {
+		download, err = models.GetTaskAttachmentForDownload(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, models.PreviewSizeUnknown)
+	}
 	if err != nil {
 		return err
 	}

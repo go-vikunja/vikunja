@@ -1081,7 +1081,7 @@ func (err ErrTaskAttachmentIsTooLarge) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrTaskAttachmentNotPreviewable means the attachment has no preview and the original should be served instead.
+// ErrTaskAttachmentNotPreviewable represents an error where a preview was requested for an attachment that has none.
 type ErrTaskAttachmentNotPreviewable struct {
 	Err error
 }
@@ -1098,6 +1098,18 @@ func (err ErrTaskAttachmentNotPreviewable) Error() string {
 
 func (err ErrTaskAttachmentNotPreviewable) Unwrap() error {
 	return err.Err
+}
+
+// ErrCodeTaskAttachmentNotPreviewable holds the unique world-error code of this error
+const ErrCodeTaskAttachmentNotPreviewable = 4038
+
+// HTTPError holds the http error description
+func (err ErrTaskAttachmentNotPreviewable) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnprocessableEntity,
+		Code:     ErrCodeTaskAttachmentNotPreviewable,
+		Message:  "This attachment has no preview.",
+	}
 }
 
 // ErrTaskAttachmentPreviewBusy represents an error where a preview waited too long for other previews to finish generating.
