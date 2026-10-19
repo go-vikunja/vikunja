@@ -257,7 +257,11 @@ func brokenPNG(t *testing.T) []byte {
 	return slices.Concat(valid.Bytes()[:40], []byte("not image data"))
 }
 
-func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
+func previewURL(taskID string, attachmentID int64, query string) string {
+	return "/api/v2/tasks/" + taskID + "/attachments/" + strconv.FormatInt(attachmentID, 10) + "/preview" + query
+}
+
+func TestTaskAttachmentsV2_Preview(t *testing.T) {
 	notPreviewable := map[string]struct {
 		filename string
 		content  []byte
@@ -279,13 +283,9 @@ func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 
 			id := uploadOneAttachment(t, e, token, tc.filename, tc.content)
 
-			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+			rec := humaRequest(t, e, http.MethodGet, previewURL("1", id, "?size=md"), "", token, "")
 			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
 			assert.Contains(t, rec.Body.String(), `"code":`+strconv.Itoa(models.ErrCodeTaskAttachmentNotPreviewable))
-
-			rec = humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10), "", token, "")
-			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-			assert.Equal(t, tc.content, rec.Body.Bytes())
 		})
 	}
 
@@ -325,10 +325,12 @@ func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 			id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
 
 			for range 2 {
-				rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+				rec := humaRequest(t, e, http.MethodGet, previewURL("1", id, "?size=md"), "", token, "")
 				require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 				assert.Equal(t, tc.contentType, rec.Header().Get("Content-Type"))
 				assert.Equal(t, strconv.Itoa(rec.Body.Len()), rec.Header().Get("Content-Length"))
+				assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
+				assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
 
 				cfg, format, err := image.DecodeConfig(rec.Body)
 				require.NoError(t, err)
@@ -339,6 +341,61 @@ func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 		})
 	}
 
+	invalidSizes := map[string]string{
+		"missing size": "",
+		"empty size":   "?size=",
+		"invalid size": "?size=huge",
+	}
+	for name, query := range invalidSizes {
+		t.Run(name+" is rejected", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			var content bytes.Buffer
+			require.NoError(t, png.Encode(&content, opaque))
+			id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+			rec := humaRequest(t, e, http.MethodGet, previewURL("1", id, query), "", token, "")
+			assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+		})
+	}
+
+	t.Run("nonexistent attachment", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodGet, previewURL("1", 99999, "?size=md"), "", token, "")
+		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("attachment that does not belong to the task in the path", func(t *testing.T) {
+		// Attachment 4 belongs to task 34, not task 1.
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodGet, previewURL("1", 4, "?size=md"), "", token, "")
+		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("forbidden on inaccessible task", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodGet, previewURL("34", 4, "?size=md"), "", token, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("unauthenticated", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		rec := humaRequest(t, e, http.MethodGet, previewURL("1", 1, "?size=md"), "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+	})
 }
 
 func TestTaskAttachmentsV1_PreviewSize(t *testing.T) {
