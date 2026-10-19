@@ -17,6 +17,8 @@
 package trello
 
 import (
+	"html"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -295,14 +297,14 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 
 				// Checklists (as markdown in description)
 				for _, checklist := range card.Checklists {
-					task.Description += "\n\n<h2> " + checklist.Name + "</h2>\n\n" + `<ul data-type="taskList">`
+					task.Description += "\n\n<h2> " + html.EscapeString(checklist.Name) + "</h2>\n\n" + `<ul data-type="taskList">`
 
 					for _, item := range checklist.CheckItems {
 						task.Description += "\n"
 						if item.State == "complete" {
-							task.Description += `<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + item.Name + `</p></div></li>`
+							task.Description += `<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + html.EscapeString(item.Name) + `</p></div></li>`
 						} else {
-							task.Description += `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + item.Name + `</p></div></li>`
+							task.Description += `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + html.EscapeString(item.Name) + `</p></div></li>`
 						}
 					}
 					task.Description += "</ul>"

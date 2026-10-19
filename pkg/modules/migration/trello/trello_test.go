@@ -104,7 +104,7 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 									},
 								},
 								{
-									Name: "Checkproject 2",
+									Name: "Checkproject <2> & more",
 									CheckItems: []trello.CheckItem{
 										{
 											State: "pending",
@@ -112,7 +112,7 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 										},
 										{
 											State: "pending",
-											Name:  "Another Pending Task",
+											Name:  "Another <b>Pending</b> & Task",
 										},
 									},
 								},
@@ -325,11 +325,11 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 <li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Pending Task</p></div></li>
 <li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Completed Task</p></div></li></ul>
 
-<h2> Checkproject 2</h2>
+<h2> Checkproject &lt;2&gt; &amp; more</h2>
 
 <ul data-type="taskList">
 <li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Pending Task</p></div></li>
-<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Another Pending Task</p></div></li></ul>`,
+<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Another &lt;b&gt;Pending&lt;/b&gt; &amp; Task</p></div></li></ul>`,
 							BucketID: 1,
 						},
 					},
