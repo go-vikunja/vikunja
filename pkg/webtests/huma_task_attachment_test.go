@@ -414,6 +414,63 @@ func TestTaskAttachmentsV2_Preview(t *testing.T) {
 }
 
 func TestTaskAttachmentsV1_PreviewSize(t *testing.T) {
+	v1URL := func(id int64, query string) string {
+		return "/api/v1/tasks/1/attachments/" + strconv.FormatInt(id, 10) + query
+	}
+
+	t.Run("no preview size returns the original file", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		var content bytes.Buffer
+		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+		rec := humaRequest(t, e, http.MethodGet, v1URL(id, ""), "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, content.Bytes(), rec.Body.Bytes())
+		assert.Contains(t, rec.Header().Get("Content-Disposition"), "image.png")
+	})
+
+	t.Run("valid preview size returns a downscaled preview", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		var content bytes.Buffer
+		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+		rec := humaRequest(t, e, http.MethodGet, v1URL(id, "?preview_size=md"), "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, "image/png", rec.Header().Get("Content-Type"))
+		cfg, err := png.DecodeConfig(rec.Body)
+		require.NoError(t, err)
+		assert.Equal(t, 200, cfg.Width)
+		assert.Equal(t, 150, cfg.Height)
+	})
+
+	invalidSizes := map[string]string{
+		"empty":   "?preview_size=",
+		"invalid": "?preview_size=huge",
+	}
+	for name, query := range invalidSizes {
+		t.Run(name+" preview size is rejected", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			var content bytes.Buffer
+			require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+			id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+			rec := humaRequest(t, e, http.MethodGet, v1URL(id, query), "", token, "")
+			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"code":`+strconv.Itoa(models.ErrCodeInvalidPreviewSize))
+		})
+	}
+
 	notPreviewable := map[string]struct {
 		filename string
 		content  []byte
@@ -428,17 +485,16 @@ func TestTaskAttachmentsV1_PreviewSize(t *testing.T) {
 		},
 	}
 	for name, tc := range notPreviewable {
-		t.Run(name+" returns the original file", func(t *testing.T) {
+		t.Run(name+" fails instead of returning the original file", func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
 			token := humaTokenFor(t, &testuser1)
 
 			id := uploadOneAttachment(t, e, token, tc.filename, tc.content)
 
-			rec := humaRequest(t, e, http.MethodGet, "/api/v1/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
-			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-			assert.Equal(t, tc.content, rec.Body.Bytes())
-			assert.Contains(t, rec.Header().Get("Content-Disposition"), tc.filename)
+			rec := humaRequest(t, e, http.MethodGet, v1URL(id, "?preview_size=md"), "", token, "")
+			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"code":`+strconv.Itoa(models.ErrCodeTaskAttachmentNotPreviewable))
 		})
 	}
 }

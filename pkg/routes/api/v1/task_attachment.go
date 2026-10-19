@@ -101,11 +101,12 @@ func UploadTaskAttachment(c *echo.Context) error {
 // @Produce octet-stream
 // @Param id path int true "Task ID"
 // @Param attachmentID path int true "Attachment ID"
-// @Param preview_size query string false "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image will be returned if the attachment is an image: a JPEG, or a PNG when the image has transparency."
+// @Param preview_size query string false "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image is returned instead of the attachment: a JPEG, or a PNG when the image has transparency."
 // @Security JWTKeyAuth
-// @Success 200 {file} blob "The attachment file."
+// @Success 200 {file} blob "The attachment file, or its preview when preview_size is provided."
 // @Failure 403 {object} models.Message "No access to this task."
 // @Failure 404 {object} models.Message "The task does not exist."
+// @Failure 422 {object} models.Message "preview_size is invalid (code 4039), or the attachment has no preview (code 4038)."
 // @Failure 500 {object} models.Message "Internal error"
 // @Failure 503 {object} models.Message "Too many previews are being generated, try again later."
 // @Router /tasks/{id}/attachments/{attachmentID} [get]
@@ -121,16 +122,14 @@ func GetTaskAttachment(c *echo.Context) error {
 		return err
 	}
 
-	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
-	if previewSize != models.PreviewSizeUnknown {
+	if c.QueryParams().Has("preview_size") {
+		previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
 		preview, err := models.GetTaskAttachmentPreview(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
-		if err == nil {
-			webfiles.WriteAttachmentPreview(c.Response(), preview)
-			return nil
-		}
-		if !models.IsErrTaskAttachmentNotPreviewable(err) {
+		if err != nil {
 			return err
 		}
+		webfiles.WriteAttachmentPreview(c.Response(), preview)
+		return nil
 	}
 
 	file, err := models.GetTaskAttachmentForDownload(auth, taskAttachment.TaskID, taskAttachment.ID)
