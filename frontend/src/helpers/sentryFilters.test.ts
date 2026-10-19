@@ -346,10 +346,19 @@ describe('isReportableResourceUrl', () => {
 
 	it.each([
 		'https://app.vikunja.cloud/assets/logo.png',
-		'http://127.0.0.1:8080/assets/logo.png',
 		'https://app.vikunja.cloud/tasks/395132/cover.png',
 	])('reports %s, which the browser fetched over the network', url => {
 		expect(isReportableResourceUrl(url, page)).toBe(true)
+	})
+
+	it.each([
+		// FRONTEND-OSS-263: favicons a browser extension injected into /register
+		'https://news.search.yahoo.co.jp/favicon.ico',
+		'https://auctions.search.yahoo.co.jp/favicon.ico',
+		'http://app.vikunja.cloud/assets/logo.png',
+		'https://app.vikunja.cloud:8443/assets/logo.png',
+	])('skips %s, which is not served from our origin', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
 	})
 
 	it.each([
