@@ -19,6 +19,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"errors"
 	_ "image/gif"  // To make sure the decoder used for generating blurHashes recognizes gifs
 	_ "image/jpeg" // To make sure the decoder used for generating blurHashes recognizes jpgs
 	_ "image/png"  // To make sure the decoder used for generating blurHashes recognizes pngs
@@ -271,7 +272,7 @@ func SaveBackgroundFile(ctx context.Context, s *xorm.Session, auth web.Auth, pro
 		return err
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), "unknown format") {
+		if errors.Is(err, imageutils.ErrUndecodable) {
 			return 0, ErrFileUnsupportedImageFormat{Mime: mime.String()}
 		}
 		return 0, err
