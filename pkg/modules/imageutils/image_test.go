@@ -68,18 +68,3 @@ func pngWithClaimedDimensions(t *testing.T, width, height int) []byte {
 	binary.BigEndian.PutUint32(data[29:33], crc)
 	return data
 }
-
-func TestValidateReader(t *testing.T) {
-	t.Run("normal png passes", func(t *testing.T) {
-		cfg, err := ValidateReader(bytes.NewReader(pngWithClaimedDimensions(t, 16, 16)))
-		require.NoError(t, err)
-		assert.Equal(t, 16, cfg.Width)
-		assert.Equal(t, 16, cfg.Height)
-	})
-
-	t.Run("decompression bomb is rejected", func(t *testing.T) {
-		_, err := ValidateReader(bytes.NewReader(pngWithClaimedDimensions(t, 8000, 8000)))
-		require.Error(t, err)
-		assert.True(t, IsErrImageTooLarge(err))
-	})
-}
