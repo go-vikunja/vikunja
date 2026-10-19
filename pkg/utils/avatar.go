@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -31,7 +30,11 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/imageutils"
+
+	"github.com/disintegration/imaging"
 )
+
+const avatarMaxSide = 1024
 
 // CropAvatarTo1x1 crops the avatar image to a 1:1 aspect ratio, centered on the image
 func CropAvatarTo1x1(ctx context.Context, imageData []byte) ([]byte, error) {
@@ -52,48 +55,26 @@ func CropAvatarTo1x1(ctx context.Context, imageData []byte) ([]byte, error) {
 }
 
 func cropTo1x1(imageData []byte, img image.Image, format string) ([]byte, error) {
-	// Get image dimensions
 	bounds := img.Bounds()
 	width := bounds.Dx()
 	height := bounds.Dy()
 
-	// If already square, return original
 	if width == height {
 		return imageData, nil
 	}
 
-	// Determine the crop size (use the smaller dimension)
-	size := width
-	if height < width {
-		size = height
-	}
+	// Scaling here avoids a full-resolution copy outside the decode budget.
+	side := min(width, height, avatarMaxSide)
+	square := imaging.Fill(img, side, side, imaging.Center, imaging.Lanczos)
 
-	// Calculate crop coordinates to center the image
-	x0 := (width - size) / 2
-	y0 := (height - size) / 2
-	x1 := x0 + size
-	y1 := y0 + size
-
-	// Create the cropping rectangle
-	cropRect := image.Rect(x0, y0, x1, y1)
-
-	// Create a new RGBA image
-	croppedImg := image.NewRGBA(image.Rect(0, 0, size, size))
-
-	// Copy the cropped portion
-	draw.Draw(croppedImg, croppedImg.Bounds(), img, cropRect.Min, draw.Src)
-
-	// Encode the result
 	var buf bytes.Buffer
 	var err error
 	switch format {
 	case "jpeg":
-		err = jpeg.Encode(&buf, croppedImg, nil)
+		err = jpeg.Encode(&buf, square, nil)
 	default:
-		// Default to PNG if format is unknown
-		err = png.Encode(&buf, croppedImg)
+		err = png.Encode(&buf, square)
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode cropped image: %w", err)
 	}

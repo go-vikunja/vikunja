@@ -70,6 +70,26 @@ func TestCropAvatarTo1x1(t *testing.T) {
 		}, color.RGBAModel.Convert(img.At(0, 0)))
 	})
 
+	t.Run("large non-square image is scaled down to 1024", func(t *testing.T) {
+		cropped, err := CropAvatarTo1x1(t.Context(), pngBytesForAvatar(t, 3000, 2000))
+		require.NoError(t, err)
+
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(cropped))
+		require.NoError(t, err)
+		assert.Equal(t, 1024, cfg.Width)
+		assert.Equal(t, 1024, cfg.Height)
+	})
+
+	t.Run("small non-square image is never upscaled", func(t *testing.T) {
+		cropped, err := CropAvatarTo1x1(t.Context(), pngBytesForAvatar(t, 300, 200))
+		require.NoError(t, err)
+
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(cropped))
+		require.NoError(t, err)
+		assert.Equal(t, 200, cfg.Width)
+		assert.Equal(t, 200, cfg.Height)
+	})
+
 	t.Run("already square image is returned as-is", func(t *testing.T) {
 		original := pngBytesForAvatar(t, 4, 4)
 		cropped, err := CropAvatarTo1x1(t.Context(), original)
