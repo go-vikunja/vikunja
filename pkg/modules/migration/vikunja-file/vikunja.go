@@ -19,6 +19,7 @@ package vikunjafile
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,6 +32,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -525,11 +527,18 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		err = f.Create(s, user)
 		if err != nil {
 			_ = s.Rollback()
+			events.CleanupPending(s)
 			return err
 		}
 	}
 
-	return s.Commit()
+	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
+		return err
+	}
+
+	events.DispatchPending(context.Background(), s)
+	return nil
 }
 
 func addDetailsToProjectAndChildren(p *models.ProjectWithTasksAndBuckets, storedFiles map[int64]*zip.File, provider *lazyFileProvider) (err error) {
