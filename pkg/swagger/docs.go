@@ -5443,14 +5443,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image will be returned if the attachment is an image.",
+                        "description": "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image is returned instead of the attachment: a JPEG, or a PNG when the image has transparency.",
                         "name": "preview_size",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The attachment file.",
+                        "description": "The attachment file, or its preview when preview_size is provided.",
                         "schema": {
                             "type": "file"
                         }
@@ -5467,8 +5467,20 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.Message"
                         }
                     },
+                    "422": {
+                        "description": "preview_size is invalid (code 4039), or the attachment has no preview (code 4038).",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
                     "500": {
                         "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "503": {
+                        "description": "Too many previews are being generated, try again later.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
