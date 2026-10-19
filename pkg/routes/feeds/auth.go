@@ -28,7 +28,7 @@ import (
 	"xorm.io/xorm"
 )
 
-func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) {
+func checkAPIToken(s *xorm.Session, token string) (*user.User, error) {
 	apiToken, u, err := models.ValidateTokenAndGetOwner(s, token)
 	if err != nil {
 		return nil, err
@@ -42,11 +42,6 @@ func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) 
 		return nil, nil
 	}
 
-	if u.Username != username {
-		log.Debugf("[feeds auth] API token %d owner %s does not match provided username %s", apiToken.ID, u.Username, username)
-		return nil, nil
-	}
-
 	return u, nil
 }
 
@@ -56,18 +51,35 @@ func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) 
 // readers. It returns the authenticated user, or nil for any rejection so
 // callers can treat "invalid" and "unknown" identically.
 func AuthenticateFeedToken(s *xorm.Session, username, password string) (*user.User, error) {
-	if !strings.HasPrefix(password, models.APITokenPrefix) {
-		return nil, nil
+	u, err := AuthenticateFeedURLToken(s, password)
+	if err != nil || u == nil {
+		return nil, err
 	}
-	// GetTokenFromTokenString slices password[len-8:] without a length check,
-	// so a stray "tk_" or other short prefix-only string would panic before
-	// the credentials could be rejected. Real tokens are far longer than
-	// prefix+8, so anything shorter is invalid by construction.
-	if len(password) < len(models.APITokenPrefix)+8 {
+
+	if u.Username != username {
+		log.Debugf("[feeds auth] API token owner %s does not match provided username %s", u.Username, username)
 		return nil, nil
 	}
 
-	u, err := checkAPIToken(s, username, password)
+	return u, nil
+}
+
+// AuthenticateFeedURLToken validates a feeds-scoped API token on its own, for
+// feeds whose clients can only carry credentials in the URL (calendar
+// subscriptions). Same rejection semantics as AuthenticateFeedToken.
+func AuthenticateFeedURLToken(s *xorm.Session, token string) (*user.User, error) {
+	if !strings.HasPrefix(token, models.APITokenPrefix) {
+		return nil, nil
+	}
+	// GetTokenFromTokenString slices token[len-8:] without a length check,
+	// so a stray "tk_" or other short prefix-only string would panic before
+	// the credentials could be rejected. Real tokens are far longer than
+	// prefix+8, so anything shorter is invalid by construction.
+	if len(token) < len(models.APITokenPrefix)+8 {
+		return nil, nil
+	}
+
+	u, err := checkAPIToken(s, token)
 	if err != nil {
 		log.Errorf("Error during API token auth for feeds: %v", err)
 		return nil, nil
