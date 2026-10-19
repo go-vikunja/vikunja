@@ -35,6 +35,7 @@ func init() {
 		// type definitions
 		"MailLogger":      reflect.ValueOf((*log.MailLogger)(nil)),
 		"NoopBackend":     reflect.ValueOf((*log.NoopBackend)(nil)),
+		"SafeHeaders":     reflect.ValueOf((*log.SafeHeaders)(nil)),
 		"WatermillLogger": reflect.ValueOf((*log.WatermillLogger)(nil)),
 		"XormLogger":      reflect.ValueOf((*log.XormLogger)(nil)),
 	}

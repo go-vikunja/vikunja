@@ -25,6 +25,7 @@ func init() {
 		"GetDispatchedEvents":        reflect.ValueOf(events.GetDispatchedEvents),
 		"InitEvents":                 reflect.ValueOf(events.InitEvents),
 		"InitEventsForTesting":       reflect.ValueOf(events.InitEventsForTesting),
+		"ListenersFor":               reflect.ValueOf(events.ListenersFor),
 		"MetadataKeyIP":              reflect.ValueOf(constant.MakeFromLiteral("\"request_ip\"", token.STRING, 0)),
 		"MetadataKeyRequestID":       reflect.ValueOf(constant.MakeFromLiteral("\"request_id\"", token.STRING, 0)),
 		"MetadataKeyUserAgent":       reflect.ValueOf(constant.MakeFromLiteral("\"request_user_agent\"", token.STRING, 0)),
