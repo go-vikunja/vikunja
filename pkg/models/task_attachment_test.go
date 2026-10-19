@@ -346,10 +346,10 @@ func TestPreviewFormat(t *testing.T) {
 	}
 
 	t.Run("transparency survives", func(t *testing.T) {
-		preview, err := renderPreview(bytes.NewReader(encodedImage(t, png.Encode, transparentCorner)), PreviewMedium)
+		previews, err := renderPreviews(bytes.NewReader(encodedImage(t, png.Encode, transparentCorner)))
 		require.NoError(t, err)
 
-		img, err := png.Decode(bytes.NewReader(preview))
+		img, err := png.Decode(bytes.NewReader(previews[PreviewMedium]))
 		require.NoError(t, err)
 		_, _, _, alpha := img.At(0, 0).RGBA()
 		assert.Less(t, alpha, uint32(0xffff))
@@ -564,7 +564,7 @@ func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			source := &trackedSource{content: tc.content}
 
-			_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), source.open, PreviewMedium)
+			_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), source.open)
 
 			assert.Equal(t, tc.notPreviewable, IsErrTaskAttachmentNotPreviewable(err), "err: %v", err)
 			assert.Equal(t, tc.tooLarge, imageutils.IsErrImageTooLarge(err), "err: %v", err)
@@ -577,7 +577,7 @@ func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
 		openErr := errors.New("storage unavailable")
 
 		open := func() (io.ReadCloser, error) { return nil, openErr }
-		_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), open, PreviewMedium)
+		_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), open)
 
 		require.ErrorIs(t, err, openErr)
 		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
@@ -679,7 +679,7 @@ func TestPreviewGenerator_BoundsDecodedPixels(t *testing.T) {
 		for range callers {
 			source := tracker.source(t, content)
 			go func() {
-				_, err := g.generate(t.Context(), source, PreviewSmall)
+				_, err := g.generate(t.Context(), source)
 				results <- err
 			}()
 		}
@@ -700,7 +700,7 @@ func TestPreviewGenerator_BoundsDecodedPixels(t *testing.T) {
 
 		results := make(chan error, 2)
 		generate := func(source sourceOpener) {
-			_, err := g.generate(t.Context(), source, PreviewSmall)
+			_, err := g.generate(t.Context(), source)
 			results <- err
 		}
 
@@ -730,7 +730,7 @@ func TestPreviewGenerator_Queue(t *testing.T) {
 
 		result := make(chan error, 1)
 		go func() {
-			_, err := g.generate(ctx, source.open, PreviewSmall)
+			_, err := g.generate(ctx, source.open)
 			result <- err
 		}()
 		require.Eventually(t, func() bool { return source.opened.Load() == 1 }, 5*time.Second, time.Millisecond)
@@ -754,7 +754,7 @@ func TestPreviewGenerator_Queue(t *testing.T) {
 		require.True(t, g.slots.TryAcquire(pixels))
 		source := &trackedSource{content: testPNG(t, 100, 100)}
 
-		_, err := g.generate(t.Context(), source.open, PreviewSmall)
+		_, err := g.generate(t.Context(), source.open)
 
 		var busy ErrTaskAttachmentPreviewBusy
 		require.ErrorAs(t, err, &busy)
@@ -881,20 +881,32 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		}
 	})
 
-	t.Run("previews are stored per size", func(t *testing.T) {
+	t.Run("one request stores every size", func(t *testing.T) {
 		fileID := uniquePreviewFileID(t)
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 
-		for _, size := range []PreviewSize{
-			PreviewSmall,
-			PreviewMedium,
-		} {
-			preview, err := g.get(t.Context(), fileID, source.open, size)
-			require.NoError(t, err)
-			cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
-			require.NoError(t, err)
-			assert.Equal(t, size.GetSize(), cfg.Width)
+		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
+		require.NoError(t, err)
+		assert.Equal(t, storedPreview(t, fileID, PreviewSmall), readPreview(t, preview))
+		require.Equal(t, int32(2), source.opened.Load())
+
+		dimensions := map[PreviewSize]image.Point{
+			PreviewSmall:      {X: 100, Y: 75},
+			PreviewMedium:     {X: 200, Y: 150},
+			PreviewLarge:      {X: 400, Y: 300},
+			PreviewExtraLarge: {X: 400, Y: 300},
+		}
+		require.Len(t, dimensions, len(files.StoredPreviewSizes))
+		for size, want := range dimensions {
+			stored := storedPreview(t, fileID, size)
+			cfg, err := png.DecodeConfig(bytes.NewReader(stored))
+			require.NoError(t, err, size)
+			assert.Equal(t, want, image.Point{X: cfg.Width, Y: cfg.Height}, size)
+
+			preview, err := g.get(t.Context(), fileID, failingSource(t), size)
+			require.NoError(t, err, size)
+			assert.Equal(t, stored, readPreview(t, preview), size)
 		}
 	})
 
@@ -908,30 +920,38 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
 		require.NoError(t, err)
 		assert.Equal(t, PreviewSmall.GetSize(), cfg.Width)
-		_, _, err = (&files.File{ID: fileID}).OpenPreview(PreviewSmall)
-		require.ErrorIs(t, err, fs.ErrNotExist)
+		for _, size := range files.StoredPreviewSizes {
+			_, _, err = (&files.File{ID: fileID}).OpenPreview(size)
+			require.ErrorIs(t, err, fs.ErrNotExist, size)
+		}
 	})
 }
 
 func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 	const pixels = 100 * 100
 
-	t.Run("parallel calls for the same preview generate once", func(t *testing.T) {
+	t.Run("parallel calls for any size of the same file generate once", func(t *testing.T) {
 		g := newPreviewGenerator(previewPixelBudget, time.Minute)
 		tracker := newDecodeTracker()
-		source := tracker.source(t, testPNG(t, 100, 100))
+		source := tracker.source(t, testPNG(t, 400, 300))
 		fileID := uniquePreviewFileID(t)
 
 		const callers = 6
 		type result struct {
+			size    PreviewSize
 			preview *TaskAttachmentPreview
 			err     error
 		}
 		results := make(chan result, callers)
-		for range callers {
+		for i := range callers {
+			size := []PreviewSize{
+				PreviewSmall,
+				PreviewLarge,
+			}[i%2]
 			go func() {
-				preview, err := g.get(t.Context(), fileID, source, PreviewSmall)
+				preview, err := g.get(t.Context(), fileID, source, size)
 				results <- result{
+					size:    size,
 					preview: preview,
 					err:     err,
 				}
@@ -946,8 +966,9 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 			r := <-results
 			require.NoError(t, r.err)
 			// Every caller reads the whole preview although they share one flight.
-			_, err := png.Decode(bytes.NewReader(readPreview(t, r.preview)))
+			img, err := png.Decode(bytes.NewReader(readPreview(t, r.preview)))
 			require.NoError(t, err)
+			assert.Equal(t, r.size.GetSize(), img.Bounds().Dx())
 		}
 		assert.Equal(t, 1, tracker.startedDecodes())
 	})
@@ -1024,10 +1045,10 @@ func TestRenderPreview_NeverUpscales(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			preview, err := renderPreview(bytes.NewReader(testPNG(t, tc.width, tc.height)), PreviewExtraLarge)
+			previews, err := renderPreviews(bytes.NewReader(testPNG(t, tc.width, tc.height)))
 			require.NoError(t, err)
 
-			cfg, _, err := image.DecodeConfig(bytes.NewReader(preview))
+			cfg, _, err := image.DecodeConfig(bytes.NewReader(previews[PreviewExtraLarge]))
 			require.NoError(t, err)
 			assert.Equal(t, tc.width, cfg.Width)
 			assert.Equal(t, tc.height, cfg.Height)
