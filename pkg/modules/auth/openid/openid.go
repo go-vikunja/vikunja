@@ -622,7 +622,10 @@ func exchangeOidcTokens(ctx context.Context, cb *Callback, providerKey string) (
 
 	log.Debugf("Trying to authenticate user using provider: %s", provider.Key)
 
-	provider.Oauth2Config.RedirectURL = cb.RedirectURL
+	// Oauth2Config is shared with the cached provider and concurrent callbacks.
+	oauth2Config := *provider.Oauth2Config
+	oauth2Config.RedirectURL = cb.RedirectURL
+	provider.Oauth2Config = &oauth2Config
 	// Parse the access & ID token
 	oauth2Token, err := provider.Oauth2Config.Exchange(withHTTPClient(ctx), cb.Code)
 	if err != nil {
