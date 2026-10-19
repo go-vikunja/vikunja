@@ -119,6 +119,26 @@ describe('task mutations', () => {
 		expect(client.getQueryData<Task>(taskKeys.detail(1))?.title).toBe('new')
 	})
 
+	it('invalidates the project list so its task counts refresh', async () => {
+		const {projectKeys} = await import('./projects')
+		const client = new QueryClient()
+		const emptyList = {projects: [], favoriteProject: null, savedFilterProjects: []}
+		sdk.patchTasksRead.mockResolvedValue({data: {id: 1, done: true}})
+		sdk.tasksDelete.mockResolvedValue({})
+
+		client.setQueryData(projectKeys.list(), emptyList)
+		await client.getMutationCache()
+			.build(client, updateTaskMutationOptions())
+			.execute({id: 1, done: true})
+		expect(client.getQueryState(projectKeys.list())?.isInvalidated).toBe(true)
+
+		client.setQueryData(projectKeys.list(), emptyList)
+		await client.getMutationCache()
+			.build(client, deleteTaskMutationOptions())
+			.execute(1)
+		expect(client.getQueryState(projectKeys.list())?.isInvalidated).toBe(true)
+	})
+
 	it('addresses the delete endpoint by task id', async () => {
 		const client = new QueryClient()
 		sdk.tasksDelete.mockResolvedValue({})

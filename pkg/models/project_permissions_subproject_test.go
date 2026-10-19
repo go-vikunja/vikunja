@@ -62,7 +62,7 @@ func TestProjectPermissions_OwnerOfParentOnMemberCreatedSubproject(t *testing.T)
 			assert.True(t, isAdmin, "%s: IsAdmin", project.Title)
 		}
 
-		all, _, _, err := (&Project{Expand: ProjectExpandableRights}).ReadAll(s, owner, "", 1, 500)
+		all, _, _, err := (&Project{Expand: []ProjectExpandable{ProjectExpandableRights}}).ReadAll(s, owner, "", 1, 500)
 		require.NoError(t, err)
 		seen := 0
 		for _, project := range all.([]*Project) {
@@ -85,7 +85,7 @@ func TestProjectPermissions_OwnerOfParentOnMemberCreatedSubproject(t *testing.T)
 			assert.False(t, isAdmin, "%s: IsAdmin for unrelated user", project.Title)
 		}
 
-		allUnrelated, _, _, err := (&Project{Expand: ProjectExpandableRights}).ReadAll(s, unrelated, "", 1, 500)
+		allUnrelated, _, _, err := (&Project{Expand: []ProjectExpandable{ProjectExpandableRights}}).ReadAll(s, unrelated, "", 1, 500)
 		require.NoError(t, err)
 		for _, project := range allUnrelated.([]*Project) {
 			assert.NotEqual(t, sub.ID, project.ID, "sub should not show up in an unrelated user's project list")

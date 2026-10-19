@@ -152,7 +152,7 @@ describe('project queries', () => {
 		expect(result.favoriteProject?.id).toBe(-1)
 		expect(result.savedFilterProjects.map(project => project.id)).toEqual([-2, -3])
 		expect(sdk.projectsList).toHaveBeenCalledExactlyOnceWith({
-			query: {is_archived: true, expand: 'permissions', page: 1},
+			query: {is_archived: true, expand: ['permissions', 'task_counts'], page: 1},
 		})
 	})
 
@@ -555,12 +555,13 @@ describe('project drafts and cache mutations', () => {
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
-	it('preserves list-only permission and views when the update response is sparse', async () => {
+	it('preserves list-only permission, task counts and views when the update response is sparse', async () => {
 		const views = [{id: 12, project_id: 1, title: 'List', view_kind: 'list'}] as const
-		const cached = serverProject({id: 1, title: 'Before', max_permission: 2, views: [...views]})
+		const taskCounts = {undone: 3, done: 1}
+		const cached = serverProject({id: 1, title: 'Before', max_permission: 2, task_counts: taskCounts, views: [...views]})
 		queryClient.setQueryData(listKey, {projects: [cached], favoriteProject: null, savedFilterProjects: []})
 		sdk.projectsUpdate.mockResolvedValue({
-			data: {id: 1, title: 'After', max_permission: null, views: null},
+			data: {id: 1, title: 'After', max_permission: null, task_counts: null, views: null},
 		})
 
 		const updated = await updateProject({...cached, title: 'After'})
@@ -570,6 +571,7 @@ describe('project drafts and cache mutations', () => {
 		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects[0]).toMatchObject({
 			title: 'After',
 			max_permission: 2,
+			task_counts: taskCounts,
 			views,
 		})
 	})

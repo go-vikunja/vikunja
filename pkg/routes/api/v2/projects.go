@@ -40,7 +40,7 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-list",
 		Summary:     "List projects",
-		Description: "Returns the projects the authenticated user has access to (owned plus shared, with child projects of accessible parents), paginated. Archived projects are excluded unless is_archived=true. Pass expand=permissions to include each project's max_permission for the caller.",
+		Description: "Returns the projects the authenticated user has access to (owned plus shared, with child projects of accessible parents), paginated. Archived projects are excluded unless is_archived=true. Pass expand=permissions to include each project's max_permission for the caller, and expand=task_counts to include each project's done and undone task counts.",
 		Method:      http.MethodGet,
 		Path:        "/projects",
 		Tags:        tags,
@@ -87,17 +87,20 @@ func init() { AddRouteRegistrar(RegisterProjectRoutes) }
 
 func projectsList(ctx context.Context, in *struct {
 	ListParams
-	Expand     string `query:"expand" enum:"permissions" doc:"If set to \"permissions\", each returned project includes the max permission the requesting user has on it (max_permission). Currently only \"permissions\" is supported."`
-	IsArchived bool   `query:"is_archived" doc:"If true, also returns archived projects."`
-	Format     string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Expand     []string `query:"expand,explode" enum:"permissions,task_counts" doc:"Embed extra data per project. Repeatable. permissions fills max_permission; task_counts fills task_counts."`
+	IsArchived bool     `query:"is_archived" doc:"If true, also returns archived projects."`
+	Format     string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 }) (*projectListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	p := &models.Project{
-		Expand:     models.ProjectExpandable(in.Expand),
+		Expand:     make([]models.ProjectExpandable, 0, len(in.Expand)),
 		IsArchived: in.IsArchived,
+	}
+	for _, e := range in.Expand {
+		p.Expand = append(p.Expand, models.ProjectExpandable(e))
 	}
 	result, _, total, err := handler.DoReadAll(ctx, p, a, in.Q, in.Page, in.PerPage)
 	if err != nil {
