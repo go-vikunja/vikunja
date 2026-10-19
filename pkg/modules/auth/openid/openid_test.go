@@ -891,3 +891,38 @@ func TestOIDCIDTokenVerificationUsesConfiguredProxy(t *testing.T) {
 	defer mu.Unlock()
 	assert.Contains(t, proxiedPaths, "/jwks")
 }
+
+// The memory keyvalue store shallow-copies Provider, so Oauth2Config is shared across requests.
+func TestExchangeOidcTokensDoesNotMutateCachedRedirectURL(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	var receivedRedirectURI string
+	server := newMockOIDCServerWithAuthMethods([]string{authMethodPost}, func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		receivedRedirectURI = r.PostForm.Get("redirect_uri")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"invalid_client"}`))
+	})
+	defer server.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	_, _, _, _, err := exchangeOidcTokens(context.Background(), &Callback{Code: "code", RedirectURL: "https://example.com/callback"}, "provider1")
+	require.Error(t, err)
+	assert.Equal(t, "https://example.com/callback", receivedRedirectURI)
+
+	cached, err := getCachedProvider("provider1")
+	require.NoError(t, err)
+	assert.Empty(t, cached.Oauth2Config.RedirectURL)
+}
