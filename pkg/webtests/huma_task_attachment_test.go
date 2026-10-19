@@ -249,19 +249,45 @@ func TestTaskAttachmentsV2(t *testing.T) {
 	})
 }
 
+func brokenPNG(t *testing.T) []byte {
+	t.Helper()
+	var valid bytes.Buffer
+	require.NoError(t, png.Encode(&valid, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+	// Keeps the header so the mime type is still detected as an image.
+	return slices.Concat(valid.Bytes()[:40], []byte("not image data"))
+}
+
 func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
-	t.Run("non-image returns the original file", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		token := humaTokenFor(t, &testuser1)
+	notPreviewable := map[string]struct {
+		filename string
+		content  []byte
+	}{
+		"non-image": {
+			filename: "notimage.txt",
+			content:  []byte("not an image, just text"),
+		},
+		"undecodable image": {
+			filename: "broken.png",
+			content:  brokenPNG(t),
+		},
+	}
+	for name, tc := range notPreviewable {
+		t.Run(name+" fails instead of returning the original file", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
 
-		content := []byte("not an image, just text")
-		id := uploadOneAttachment(t, e, token, "notimage.txt", content)
+			id := uploadOneAttachment(t, e, token, tc.filename, tc.content)
 
-		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
-		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-		assert.Equal(t, content, rec.Body.Bytes())
-	})
+			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"code":`+strconv.Itoa(models.ErrCodeTaskAttachmentNotPreviewable))
+
+			rec = humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10), "", token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, tc.content, rec.Body.Bytes())
+		})
+	}
 
 	transparent := image.NewNRGBA(image.Rect(0, 0, 400, 300))
 	opaque := image.NewNRGBA(image.Rect(0, 0, 400, 300))
@@ -313,22 +339,36 @@ func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
 		})
 	}
 
-	t.Run("undecodable image returns the original file", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		token := humaTokenFor(t, &testuser1)
+}
 
-		var valid bytes.Buffer
-		require.NoError(t, png.Encode(&valid, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
-		// Keeps the header so the mime type is still detected as an image.
-		content := slices.Concat(valid.Bytes()[:40], []byte("not image data"))
-		id := uploadOneAttachment(t, e, token, "broken.png", content)
+func TestTaskAttachmentsV1_PreviewSize(t *testing.T) {
+	notPreviewable := map[string]struct {
+		filename string
+		content  []byte
+	}{
+		"non-image": {
+			filename: "notimage.txt",
+			content:  []byte("not an image, just text"),
+		},
+		"undecodable image": {
+			filename: "broken.png",
+			content:  brokenPNG(t),
+		},
+	}
+	for name, tc := range notPreviewable {
+		t.Run(name+" returns the original file", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
 
-		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
-		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-		assert.Equal(t, content, rec.Body.Bytes())
-		assert.Contains(t, rec.Header().Get("Content-Disposition"), "broken.png")
-	})
+			id := uploadOneAttachment(t, e, token, tc.filename, tc.content)
+
+			rec := humaRequest(t, e, http.MethodGet, "/api/v1/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, tc.content, rec.Body.Bytes())
+			assert.Contains(t, rec.Header().Get("Content-Disposition"), tc.filename)
+		})
+	}
 }
 
 // TestTaskAttachmentsV2_Disabled proves the resource is absent when the

@@ -179,8 +179,8 @@ func (original *TaskAttachmentOriginal) Close() error {
 
 func (*TaskAttachmentOriginal) taskAttachmentDownload() {}
 
-// GetTaskAttachmentForDownload returns a preview instead of the file when previewSize
-// is set and the attachment is an image. Returns ErrGenericForbidden on denied access.
+// GetTaskAttachmentForDownload returns the preview when previewSize is set, otherwise the file.
+// Returns ErrGenericForbidden on denied access.
 // Owns its own session and commits it before touching storage so no pool connection is held.
 func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (TaskAttachmentDownload, error) {
 	s := db.NewSession()
@@ -211,14 +211,12 @@ func GetTaskAttachmentForDownload(ctx context.Context, a web.Auth, taskID, attac
 }
 
 func (ta *TaskAttachment) openPreviewOrFile(ctx context.Context, previewSize PreviewSize) (TaskAttachmentDownload, error) {
-	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
+	if previewSize != PreviewSizeUnknown {
 		preview, err := ta.GetPreview(ctx, previewSize)
-		if err == nil {
-			return preview, nil
-		}
-		if !IsErrTaskAttachmentNotPreviewable(err) {
+		if err != nil {
 			return nil, err
 		}
+		return preview, nil
 	}
 
 	if err := ta.File.LoadFileByID(); err != nil {
@@ -371,8 +369,11 @@ func newPreviewGenerator(pixelBudget int64, queueTimeout time.Duration) *preview
 	}
 }
 
-// GetPreview returns ErrTaskAttachmentNotPreviewable when the original should be served instead.
+// GetPreview returns ErrTaskAttachmentNotPreviewable when no preview can be made of the file.
 func (ta *TaskAttachment) GetPreview(ctx context.Context, previewSize PreviewSize) (*TaskAttachmentPreview, error) {
+	if !strings.HasPrefix(ta.File.Mime, "image") {
+		return nil, ErrTaskAttachmentNotPreviewable{Err: fmt.Errorf("file is a %q, not an image", ta.File.Mime)}
+	}
 	if ta.File.Size > maxPreviewSourceBytes {
 		return nil, ErrTaskAttachmentNotPreviewable{Err: fmt.Errorf("file is %d bytes, previews are limited to %d", ta.File.Size, maxPreviewSourceBytes)}
 	}

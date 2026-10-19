@@ -458,39 +458,59 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		assert.Equal(t, readPreview(t, generated), readPreview(t, stored))
 	})
 
-	fallbacks := map[string]struct {
+	t.Run("no preview size returns the original", func(t *testing.T) {
+		content := testPNG(t, 400, 300)
+		ta := imageAttachment(t, 910009, content)
+
+		download, err := ta.openPreviewOrFile(t.Context(), PreviewSizeUnknown)
+		require.NoError(t, err)
+		original, isOriginal := download.(*TaskAttachmentOriginal)
+		require.True(t, isOriginal, "got %T", download)
+
+		read, err := io.ReadAll(original.File.File)
+		require.NoError(t, err)
+		require.NoError(t, original.Close())
+		assert.Equal(t, content, read)
+	})
+
+	notPreviewable := map[string]struct {
 		id      int64
+		mime    string
 		content []byte
 		size    uint64
 	}{
-		"undecodable image falls back to the original": {
+		"non-image": {
+			id:      910010,
+			mime:    "text/plain",
+			content: []byte("not an image"),
+		},
+		"undecodable image": {
 			id:      910002,
 			content: append(pngHeader(400, 300), []byte("not image data")...),
 		},
-		"image over the pixel limit falls back to the original": {
+		"image over the pixel limit": {
 			id:      910003,
 			content: pngHeader(10000, 10000),
 		},
-		"file over the size limit falls back to the original": {
+		"file over the size limit": {
 			id:      910004,
 			content: testPNG(t, 400, 300),
 			size:    maxPreviewSourceBytes + 1,
 		},
 	}
-	for name, tc := range fallbacks {
-		t.Run(name, func(t *testing.T) {
+	for name, tc := range notPreviewable {
+		t.Run(name+" is not previewable instead of returning the original", func(t *testing.T) {
 			ta := imageAttachment(t, tc.id, tc.content)
 			ta.File.Size = tc.size
+			if tc.mime != "" {
+				ta.File.Mime = tc.mime
+			}
 
 			download, err := ta.openPreviewOrFile(t.Context(), PreviewMedium)
-			require.NoError(t, err)
-			original, isOriginal := download.(*TaskAttachmentOriginal)
-			require.True(t, isOriginal, "got %T", download)
-
-			content, err := io.ReadAll(original.File.File)
-			require.NoError(t, err)
-			require.NoError(t, original.Close())
-			assert.Equal(t, tc.content, content)
+			require.Error(t, err)
+			assert.True(t, IsErrTaskAttachmentNotPreviewable(err), "err: %v", err)
+			assert.Nil(t, download)
+			assert.Nil(t, ta.File.File, "the original must not be opened")
 		})
 	}
 }
