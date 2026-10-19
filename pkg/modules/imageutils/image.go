@@ -18,7 +18,6 @@ package imageutils
 
 import (
 	"image"
-	"io"
 )
 
 // MaxPixels bounds allocations from attacker-controlled dimensions.
@@ -33,15 +32,4 @@ func ValidateConfig(cfg image.Config) error {
 		return &ErrImageTooLarge{Width: cfg.Width, Height: cfg.Height}
 	}
 	return nil
-}
-
-func ValidateReader(r io.Reader) (image.Config, error) {
-	cfg, _, err := image.DecodeConfig(r)
-	if err != nil {
-		return image.Config{}, err
-	}
-	if err := ValidateConfig(cfg); err != nil {
-		return image.Config{}, err
-	}
-	return cfg, nil
 }
