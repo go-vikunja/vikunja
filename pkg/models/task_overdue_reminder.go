@@ -132,17 +132,32 @@ func (ut *userWithTasks) allTasks() []*Task {
 	return append(mapToSlice(ut.assigned), mapToSlice(ut.followed)...)
 }
 
-// subscribedOverdueWebhookEvents lets the cron skip dispatching events nobody listens to,
+// hasNonWebhookListener catches listeners registered by plugins.
+func hasNonWebhookListener(eventName string) bool {
+	return slices.ContainsFunc(events.ListenersFor(eventName), func(l events.Listener) bool {
+		_, isWebhook := l.(*WebhookListener)
+		return !isWebhook
+	})
+}
+
+// overdueEventsWithListeners lets the cron skip dispatching events nobody handles,
 // since each dispatched event costs the webhook listener a db session.
-func subscribedOverdueWebhookEvents(s *xorm.Session) (single, batch bool, err error) {
+func overdueEventsWithListeners(s *xorm.Session) (single, batch bool, err error) {
+	singleName := (&TaskOverdueEvent{}).Name()
+	batchName := (&TasksOverdueEvent{}).Name()
+
+	single = hasNonWebhookListener(singleName)
+	batch = hasNonWebhookListener(batchName)
+	if single && batch {
+		return
+	}
+
 	webhooks := []*Webhook{}
 	err = s.Cols("events").Find(&webhooks)
 	if err != nil {
 		return
 	}
 
-	singleName := (&TaskOverdueEvent{}).Name()
-	batchName := (&TasksOverdueEvent{}).Name()
 	for _, w := range webhooks {
 		single = single || slices.Contains(w.Events, singleName)
 		batch = batch || slices.Contains(w.Events, batchName)
@@ -172,9 +187,9 @@ func RegisterOverdueReminderCron() {
 		var dispatchSingle, dispatchBatch bool
 		if webhookEnabled {
 			var err error
-			dispatchSingle, dispatchBatch, err = subscribedOverdueWebhookEvents(s)
+			dispatchSingle, dispatchBatch, err = overdueEventsWithListeners(s)
 			if err != nil {
-				log.Errorf("[Undone Overdue Tasks Reminder] Could not check for overdue webhooks: %s", err)
+				log.Errorf("[Undone Overdue Tasks Reminder] Could not check for overdue event listeners: %s", err)
 				return
 			}
 		}
