@@ -32,7 +32,6 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -45,7 +44,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/image/tiff"
 )
 
 func TestTaskAttachment_ReadOne(t *testing.T) {
@@ -232,33 +230,6 @@ func testPNG(t *testing.T, width, height int) []byte {
 	return buf.Bytes()
 }
 
-// x/image/tiff writes the IFD, and with it the dimensions, after the pixel data.
-func testTIFF(t *testing.T, width, height int) []byte {
-	t.Helper()
-	var buf bytes.Buffer
-	require.NoError(t, tiff.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, width, height)), nil))
-	return buf.Bytes()
-}
-
-// Google Camera portraits carry a depth map in extended XMP before the image data.
-func testJPEGWithMetadata(t *testing.T, width, height, segments int) []byte {
-	t.Helper()
-	var buf bytes.Buffer
-	require.NoError(t, jpeg.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, width, height)), nil))
-	encoded := buf.Bytes()
-
-	const maxSegmentPayload = 0xffff - 2
-	segment := binary.BigEndian.AppendUint16([]byte{0xff, 0xe1}, 0xffff)
-	segment = append(segment, make([]byte, maxSegmentPayload)...)
-
-	// Insert right after the SOI marker.
-	out := append([]byte{}, encoded[:2]...)
-	for range segments {
-		out = append(out, segment...)
-	}
-	return append(out, encoded[2:]...)
-}
-
 func opaqueImage(width, height int) *image.NRGBA {
 	img := image.NewNRGBA(image.Rect(0, 0, width, height))
 	draw.Draw(img, img.Bounds(), image.NewUniform(color.NRGBA{
@@ -327,7 +298,7 @@ func TestPreviewFormat(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			fileID := uniquePreviewFileID(t)
 			source := &trackedSource{content: tc.source}
-			g := newPreviewGenerator(previewPixelBudget, time.Minute)
+			g := &previewGenerator{}
 
 			// The first preview is the generated one, the second the stored one.
 			for range 2 {
@@ -346,7 +317,7 @@ func TestPreviewFormat(t *testing.T) {
 	}
 
 	t.Run("transparency survives", func(t *testing.T) {
-		previews, err := renderPreviews(bytes.NewReader(encodedImage(t, png.Encode, transparentCorner)))
+		previews, err := generatePreviews(t.Context(), imageutils.BytesOpener(encodedImage(t, png.Encode, transparentCorner)))
 		require.NoError(t, err)
 
 		img, err := png.Decode(bytes.NewReader(previews[PreviewMedium]))
@@ -424,18 +395,20 @@ func TestTaskAttachment_Preview(t *testing.T) {
 
 	t.Run("busy server returns an error instead of the original", func(t *testing.T) {
 		ta := imageAttachment(t, 910006, testPNG(t, 400, 300))
-		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
 
 		preview, err := ta.GetPreview(t.Context(), PreviewMedium)
-		require.Error(t, err)
-		assert.True(t, IsErrTaskAttachmentPreviewBusy(err), "err: %v", err)
+		var busy ErrTaskAttachmentPreviewBusy
+		require.ErrorAs(t, err, &busy)
+		assert.Equal(t, http.StatusServiceUnavailable, busy.HTTPError().HTTPCode)
+		assert.Equal(t, ErrCodeTaskAttachmentPreviewBusy, busy.HTTPError().Code)
 		assert.Nil(t, preview)
 		assert.Nil(t, ta.File.File, "the original must not be opened")
 	})
 
 	t.Run("cancelled caller gets an error instead of the original", func(t *testing.T) {
 		ta := imageAttachment(t, 910007, testPNG(t, 400, 300))
-		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
@@ -449,7 +422,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		ta := imageAttachment(t, 910008, testPNG(t, 400, 300))
 		generated, err := ta.GetPreview(t.Context(), PreviewMedium)
 		require.NoError(t, err)
-		exhaustAttachmentPreviewBudget(t, 10*time.Millisecond)
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
 
 		stored, err := ta.GetPreview(t.Context(), PreviewMedium)
 		require.NoError(t, err)
@@ -461,6 +434,7 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		mime    string
 		content []byte
 		size    uint64
+		cause   func(error) bool
 	}{
 		"non-image": {
 			id:      910010,
@@ -470,10 +444,12 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		"undecodable image": {
 			id:      910002,
 			content: append(pngHeader(400, 300), []byte("not image data")...),
+			cause:   func(err error) bool { return errors.Is(err, imageutils.ErrUndecodable) },
 		},
 		"image over the pixel limit": {
 			id:      910003,
 			content: pngHeader(10000, 10000),
+			cause:   imageutils.IsErrImageTooLarge,
 		},
 		"file over the size limit": {
 			id:      910004,
@@ -492,279 +468,99 @@ func TestTaskAttachment_Preview(t *testing.T) {
 			preview, err := ta.GetPreview(t.Context(), PreviewMedium)
 			require.Error(t, err)
 			assert.True(t, IsErrTaskAttachmentNotPreviewable(err), "err: %v", err)
+			if tc.cause != nil {
+				assert.True(t, tc.cause(err), "err: %v", err)
+			}
 			assert.Nil(t, preview)
 			assert.Nil(t, ta.File.File, "the original must not be opened")
 		})
 	}
 }
 
-func exhaustAttachmentPreviewBudget(t *testing.T, queueTimeout time.Duration) {
-	t.Helper()
-	original := attachmentPreviews
-	t.Cleanup(func() { attachmentPreviews = original })
-
-	attachmentPreviews = newPreviewGenerator(1, queueTimeout)
-	require.True(t, attachmentPreviews.slots.TryAcquire(1))
-}
-
 type trackedSource struct {
 	content []byte
 	opened  atomic.Int32
-	closed  atomic.Int32
 }
 
 func (s *trackedSource) open() (io.ReadCloser, error) {
 	s.opened.Add(1)
-	return &trackedReader{
-		Reader: bytes.NewReader(s.content),
-		source: s,
-	}, nil
+	return io.NopCloser(bytes.NewReader(s.content)), nil
 }
 
-type trackedReader struct {
-	io.Reader
-	source *trackedSource
-}
-
-func (r *trackedReader) Close() error {
-	r.source.closed.Add(1)
-	return nil
-}
-
-func TestPreviewGenerator_ClosesEverySourceHandle(t *testing.T) {
-	tests := map[string]struct {
-		content        []byte
-		opened         int32
-		notPreviewable bool
-		tooLarge       bool
-	}{
-		"image": {
-			content: testPNG(t, 400, 300),
-			opened:  2,
-		},
-		"image with more than 1 MiB of metadata before the image data": {
-			content: testJPEGWithMetadata(t, 400, 300, 24),
-			opened:  2,
-		},
-		"undecodable image": {
-			content:        append(pngHeader(400, 300), []byte("not image data")...),
-			opened:         2,
-			notPreviewable: true,
-		},
-		"image over the pixel limit is never opened for decoding": {
-			content:        pngHeader(10000, 10000),
-			opened:         1,
-			notPreviewable: true,
-			tooLarge:       true,
-		},
-		"image whose header is past the read limit is never opened for decoding": {
-			content:        testTIFF(t, 1024, maxPreviewHeaderBytes/(4*1024)+1),
-			opened:         1,
-			notPreviewable: true,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			source := &trackedSource{content: tc.content}
-
-			_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), source.open)
-
-			assert.Equal(t, tc.notPreviewable, IsErrTaskAttachmentNotPreviewable(err), "err: %v", err)
-			assert.Equal(t, tc.tooLarge, imageutils.IsErrImageTooLarge(err), "err: %v", err)
-			assert.Equal(t, tc.opened, source.opened.Load())
-			assert.Equal(t, source.opened.Load(), source.closed.Load())
-		})
-	}
-
+func TestGeneratePreviews(t *testing.T) {
 	t.Run("source that cannot be opened is an error", func(t *testing.T) {
 		openErr := errors.New("storage unavailable")
 
-		open := func() (io.ReadCloser, error) { return nil, openErr }
-		_, err := newPreviewGenerator(previewPixelBudget, time.Minute).generate(t.Context(), open)
+		_, err := generatePreviews(t.Context(), func() (io.ReadCloser, error) { return nil, openErr })
 
 		require.ErrorIs(t, err, openErr)
 		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
 	})
-}
 
-// Measures decoding pixels independently of the generator's own semaphore.
-type decodeTracker struct {
-	gate chan struct{}
+	neverUpscaled := map[string]struct {
+		width  int
+		height int
+	}{
+		"small image": {
+			width:  50,
+			height: 40,
+		},
+		// Upscaled to xl this would be 800x16,000,000 pixels.
+		"tall one pixel wide image": {
+			width:  1,
+			height: 20000,
+		},
+	}
+	for name, tc := range neverUpscaled {
+		t.Run(name+" is never upscaled", func(t *testing.T) {
+			previews, err := generatePreviews(t.Context(), imageutils.BytesOpener(testPNG(t, tc.width, tc.height)))
+			require.NoError(t, err)
 
-	mu       sync.Mutex
-	inFlight int64
-	peak     int64
-	decodes  int
-}
-
-func newDecodeTracker() *decodeTracker {
-	return &decodeTracker{gate: make(chan struct{})}
-}
-
-func (d *decodeTracker) add(pixels int64) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.inFlight += pixels
-	d.peak = max(d.peak, d.inFlight)
-	if pixels > 0 {
-		d.decodes++
+			cfg, _, err := image.DecodeConfig(bytes.NewReader(previews[PreviewExtraLarge]))
+			require.NoError(t, err)
+			assert.Equal(t, tc.width, cfg.Width)
+			assert.Equal(t, tc.height, cfg.Height)
+		})
 	}
 }
 
-func (d *decodeTracker) startedDecodes() int {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	return d.decodes
+// Blocks the decode of a source until the gate is closed.
+type gatedSource struct {
+	content []byte
+	gate    chan struct{}
+	opened  atomic.Int32
 }
 
-func (d *decodeTracker) pixelsInFlight() int64 {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	return d.inFlight
-}
-
-func (d *decodeTracker) peakPixels() int64 {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	return d.peak
-}
-
-func (d *decodeTracker) source(t *testing.T, content []byte) sourceOpener {
-	t.Helper()
-	cfg, _, err := image.DecodeConfig(bytes.NewReader(content))
-	require.NoError(t, err)
-	pixels := int64(cfg.Width) * int64(cfg.Height)
-
-	var opened atomic.Int32
-	return func() (io.ReadCloser, error) {
-		// The first open only reads the header, the second one decodes.
-		if opened.Add(1) == 1 {
-			return io.NopCloser(bytes.NewReader(content)), nil
-		}
-		d.add(pixels)
-		return &gatedDecode{
-			Reader:  bytes.NewReader(content),
-			tracker: d,
-			pixels:  pixels,
-		}, nil
+func newGatedSource(content []byte) *gatedSource {
+	return &gatedSource{
+		content: content,
+		gate:    make(chan struct{}),
 	}
 }
 
-type gatedDecode struct {
+func (s *gatedSource) open() (io.ReadCloser, error) {
+	// The first open only reads the header, the second one decodes.
+	if s.opened.Add(1) == 1 {
+		return io.NopCloser(bytes.NewReader(s.content)), nil
+	}
+	return io.NopCloser(&gatedReader{
+		Reader: bytes.NewReader(s.content),
+		gate:   s.gate,
+	}), nil
+}
+
+func (s *gatedSource) decodes() int32 {
+	return max(s.opened.Load()-1, 0)
+}
+
+type gatedReader struct {
 	io.Reader
-	tracker *decodeTracker
-	pixels  int64
+	gate chan struct{}
 }
 
-func (r *gatedDecode) Read(p []byte) (int, error) {
-	<-r.tracker.gate
+func (r *gatedReader) Read(p []byte) (int, error) {
+	<-r.gate
 	return r.Reader.Read(p)
-}
-
-func (r *gatedDecode) Close() error {
-	r.tracker.add(-r.pixels)
-	return nil
-}
-
-func TestPreviewGenerator_BoundsDecodedPixels(t *testing.T) {
-	const (
-		small  = 100 * 100
-		budget = 2 * small
-	)
-
-	t.Run("distinct images in parallel stay within the budget", func(t *testing.T) {
-		g := newPreviewGenerator(budget, time.Minute)
-		tracker := newDecodeTracker()
-		content := testPNG(t, 100, 100)
-
-		const callers = 6
-		results := make(chan error, callers)
-		for range callers {
-			source := tracker.source(t, content)
-			go func() {
-				_, err := g.generate(t.Context(), source)
-				results <- err
-			}()
-		}
-
-		require.Eventually(t, func() bool { return tracker.pixelsInFlight() >= budget }, 5*time.Second, time.Millisecond)
-		assert.Never(t, func() bool { return tracker.peakPixels() > budget }, 200*time.Millisecond, 5*time.Millisecond)
-
-		close(tracker.gate)
-		for range callers {
-			require.NoError(t, <-results)
-		}
-		assert.Equal(t, int64(budget), tracker.peakPixels())
-	})
-
-	t.Run("a larger image takes more of the budget", func(t *testing.T) {
-		g := newPreviewGenerator(budget, time.Minute)
-		tracker := newDecodeTracker()
-
-		results := make(chan error, 2)
-		generate := func(source sourceOpener) {
-			_, err := g.generate(t.Context(), source)
-			results <- err
-		}
-
-		large := tracker.source(t, testPNG(t, 200, 100))
-		go generate(large)
-		require.Eventually(t, func() bool { return tracker.pixelsInFlight() == budget }, 5*time.Second, time.Millisecond)
-
-		smallSource := tracker.source(t, testPNG(t, 100, 100))
-		go generate(smallSource)
-		assert.Never(t, func() bool { return tracker.peakPixels() > budget }, 200*time.Millisecond, 5*time.Millisecond)
-
-		close(tracker.gate)
-		require.NoError(t, <-results)
-		require.NoError(t, <-results)
-		assert.Equal(t, int64(budget), tracker.peakPixels())
-	})
-}
-
-func TestPreviewGenerator_Queue(t *testing.T) {
-	const pixels = 100 * 100
-
-	t.Run("cancelled caller leaves the queue with an error", func(t *testing.T) {
-		g := newPreviewGenerator(pixels, time.Minute)
-		require.True(t, g.slots.TryAcquire(pixels))
-		source := &trackedSource{content: testPNG(t, 100, 100)}
-		ctx, cancel := context.WithCancel(t.Context())
-
-		result := make(chan error, 1)
-		go func() {
-			_, err := g.generate(ctx, source.open)
-			result <- err
-		}()
-		require.Eventually(t, func() bool { return source.opened.Load() == 1 }, 5*time.Second, time.Millisecond)
-		cancel()
-
-		select {
-		case err := <-result:
-			require.ErrorIs(t, err, context.Canceled)
-			assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
-		case <-time.After(5 * time.Second):
-			require.FailNow(t, "cancelled caller is still queued")
-		}
-		assert.Equal(t, int32(1), source.opened.Load(), "the source must not be opened for decoding")
-
-		g.slots.Release(pixels)
-		assert.True(t, g.slots.TryAcquire(pixels), "the cancelled caller must not hold any budget")
-	})
-
-	t.Run("gives up with a 503 when no capacity frees up", func(t *testing.T) {
-		g := newPreviewGenerator(pixels, 10*time.Millisecond)
-		require.True(t, g.slots.TryAcquire(pixels))
-		source := &trackedSource{content: testPNG(t, 100, 100)}
-
-		_, err := g.generate(t.Context(), source.open)
-
-		var busy ErrTaskAttachmentPreviewBusy
-		require.ErrorAs(t, err, &busy)
-		assert.Equal(t, http.StatusServiceUnavailable, busy.HTTPError().HTTPCode)
-		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
-		assert.Equal(t, int32(1), source.opened.Load(), "the source must not be opened for decoding")
-	})
 }
 
 var lastPreviewTestFileID atomic.Int64
@@ -788,7 +584,7 @@ func storedPreview(t *testing.T, fileID int64, size PreviewSize) []byte {
 	return preview
 }
 
-func failingSource(t *testing.T) sourceOpener {
+func failingSource(t *testing.T) imageutils.Opener {
 	t.Helper()
 	return func() (io.ReadCloser, error) {
 		assert.Fail(t, "the source must not be opened")
@@ -803,7 +599,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, stored))
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 
-		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+		preview, err := (&previewGenerator{}).get(t.Context(), fileID, source.open, PreviewSmall)
 
 		require.NoError(t, err)
 		assert.Equal(t, stored, readPreview(t, preview))
@@ -816,7 +612,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		require.NoError(t, jpeg.Encode(&stored, image.NewGray(image.Rect(0, 0, 100, 100)), nil))
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, stored.Bytes()))
 
-		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, failingSource(t), PreviewSmall)
+		preview, err := (&previewGenerator{}).get(t.Context(), fileID, failingSource(t), PreviewSmall)
 
 		require.NoError(t, err)
 		assert.Equal(t, "image/jpeg", preview.Mime, "the mime type must come from the stored bytes")
@@ -828,7 +624,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, nil))
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 
-		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+		preview, err := (&previewGenerator{}).get(t.Context(), fileID, source.open, PreviewSmall)
 
 		require.NoError(t, err)
 		generated := readPreview(t, preview)
@@ -851,7 +647,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 				require.NoError(t, (&files.File{ID: fileID}).SavePreview(PreviewSmall, content))
 				source := &trackedSource{content: testPNG(t, 400, 300)}
 
-				preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+				preview, err := (&previewGenerator{}).get(t.Context(), fileID, source.open, PreviewSmall)
 
 				require.NoError(t, err)
 				assert.Equal(t, "image/png", preview.Mime)
@@ -863,7 +659,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	t.Run("a generated preview is not generated again, even after a restart", func(t *testing.T) {
 		fileID := uniquePreviewFileID(t)
 		source := &trackedSource{content: testPNG(t, 400, 300)}
-		g := newPreviewGenerator(previewPixelBudget, time.Minute)
+		g := &previewGenerator{}
 
 		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
 		require.NoError(t, err)
@@ -874,7 +670,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		// A restart only keeps what is in the storage.
 		generators := map[string]*previewGenerator{
 			"same generator":          g,
-			"generator after restart": newPreviewGenerator(previewPixelBudget, time.Minute),
+			"generator after restart": {},
 		}
 		for name, generator := range generators {
 			preview, err := generator.get(t.Context(), fileID, source.open, PreviewSmall)
@@ -887,7 +683,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 	t.Run("one request stores every size", func(t *testing.T) {
 		fileID := uniquePreviewFileID(t)
 		source := &trackedSource{content: testPNG(t, 400, 300)}
-		g := newPreviewGenerator(previewPixelBudget, time.Minute)
+		g := &previewGenerator{}
 
 		preview, err := g.get(t.Context(), fileID, source.open, PreviewSmall)
 		require.NoError(t, err)
@@ -917,7 +713,7 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 		fileID := 920000 + lastPreviewTestFileID.Add(1)
 		source := &trackedSource{content: testPNG(t, 400, 300)}
 
-		preview, err := newPreviewGenerator(previewPixelBudget, time.Minute).get(t.Context(), fileID, source.open, PreviewSmall)
+		preview, err := (&previewGenerator{}).get(t.Context(), fileID, source.open, PreviewSmall)
 
 		require.NoError(t, err)
 		cfg, err := png.DecodeConfig(bytes.NewReader(readPreview(t, preview)))
@@ -931,12 +727,9 @@ func TestPreviewGenerator_StoresPreviews(t *testing.T) {
 }
 
 func TestPreviewGenerator_SharesGeneration(t *testing.T) {
-	const pixels = 100 * 100
-
 	t.Run("parallel calls for any size of the same file generate once", func(t *testing.T) {
-		g := newPreviewGenerator(previewPixelBudget, time.Minute)
-		tracker := newDecodeTracker()
-		source := tracker.source(t, testPNG(t, 400, 300))
+		g := &previewGenerator{}
+		source := newGatedSource(testPNG(t, 400, 300))
 		fileID := uniquePreviewFileID(t)
 
 		const callers = 6
@@ -952,7 +745,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 				PreviewLarge,
 			}[i%2]
 			go func() {
-				preview, err := g.get(t.Context(), fileID, source, size)
+				preview, err := g.get(t.Context(), fileID, source.open, size)
 				results <- result{
 					size:    size,
 					preview: preview,
@@ -961,10 +754,10 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 			}()
 		}
 
-		require.Eventually(t, func() bool { return tracker.startedDecodes() > 0 }, 5*time.Second, time.Millisecond)
-		assert.Never(t, func() bool { return tracker.startedDecodes() > 1 }, 200*time.Millisecond, 5*time.Millisecond)
+		require.Eventually(t, func() bool { return source.decodes() > 0 }, 5*time.Second, time.Millisecond)
+		assert.Never(t, func() bool { return source.opened.Load() > 2 }, 200*time.Millisecond, 5*time.Millisecond)
 
-		close(tracker.gate)
+		close(source.gate)
 		for range callers {
 			r := <-results
 			require.NoError(t, r.err)
@@ -973,12 +766,13 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, r.size.GetSize(), img.Bounds().Dx())
 		}
-		assert.Equal(t, 1, tracker.startedDecodes())
+		assert.Equal(t, int32(1), source.decodes())
 	})
 
 	t.Run("a caller cancelling does not fail another caller of the same flight", func(t *testing.T) {
-		g := newPreviewGenerator(pixels, time.Minute)
-		require.True(t, g.slots.TryAcquire(pixels))
+		g := &previewGenerator{}
+		release := imageutils.ExhaustBudgetForTests(time.Minute)
+		t.Cleanup(release)
 		content := testPNG(t, 100, 100)
 		leaderSource := &trackedSource{content: content}
 		followerSource := &trackedSource{content: content}
@@ -1013,7 +807,7 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 			require.FailNow(t, "cancelled caller is still waiting")
 		}
 
-		g.slots.Release(pixels)
+		release()
 		r := <-follower
 		require.NoError(t, r.err)
 		_, err := png.DecodeConfig(bytes.NewReader(readPreview(t, r.preview)))
@@ -1022,41 +816,13 @@ func TestPreviewGenerator_SharesGeneration(t *testing.T) {
 	})
 
 	t.Run("a panicking decode is an error", func(t *testing.T) {
-		g := newPreviewGenerator(pixels, time.Minute)
+		g := &previewGenerator{}
 
 		_, err := g.get(t.Context(), uniquePreviewFileID(t), func() (io.ReadCloser, error) { panic("broken decoder") }, PreviewSmall)
 
 		require.ErrorContains(t, err, "broken decoder")
 		assert.False(t, IsErrTaskAttachmentNotPreviewable(err))
 	})
-}
-
-func TestRenderPreview_NeverUpscales(t *testing.T) {
-	tests := map[string]struct {
-		width  int
-		height int
-	}{
-		"small image": {
-			width:  50,
-			height: 40,
-		},
-		// Upscaled to xl this would be 800x16,000,000 pixels.
-		"tall one pixel wide image": {
-			width:  1,
-			height: 20000,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			previews, err := renderPreviews(bytes.NewReader(testPNG(t, tc.width, tc.height)))
-			require.NoError(t, err)
-
-			cfg, _, err := image.DecodeConfig(bytes.NewReader(previews[PreviewExtraLarge]))
-			require.NoError(t, err)
-			assert.Equal(t, tc.width, cfg.Width)
-			assert.Equal(t, tc.height, cfg.Height)
-		})
-	}
 }
 
 func TestTaskAttachment_Permissions(t *testing.T) {
