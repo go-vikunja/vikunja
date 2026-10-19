@@ -18,7 +18,7 @@ import type {TaskAttachment as IAttachment} from '@/client/generated'
 
 const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
 
-vi.mock('@/client/generated', () => ({taskAttachmentsDownload: getBlobUrl}))
+vi.mock('@/client/generated', () => ({taskAttachmentsPreview: getBlobUrl}))
 
 function attachment(): IAttachment {
 	return {
@@ -78,7 +78,7 @@ describe('FilePreview.vue', () => {
 				task: 1,
 				attachment: 1,
 			},
-			query: {preview_size: 'md'},
+			query: {size: 'md'},
 		}))
 		expect(window.URL.revokeObjectURL).not.toHaveBeenCalled()
 
