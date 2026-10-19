@@ -175,4 +175,16 @@ test.describe('Editor toolbar overflow menu', () => {
 			await expect(item).toBeInViewport({ratio: 0.9})
 		}
 	})
+
+	test('the menu opens below the fixed navbar', async ({authenticatedPage: page}) => {
+		const {toolbar, moreButton} = await openNarrowEditor(page)
+
+		await moreButton.click()
+		const menu = toolbar.locator('.dropdown-menu .dropdown-content')
+		await expect(menu).toBeVisible()
+
+		const navbarBottom = await page.locator('.navbar').evaluate(el => el.getBoundingClientRect().bottom)
+		const menuTop = await menu.evaluate(el => el.getBoundingClientRect().top)
+		expect(menuTop).toBeGreaterThanOrEqual(navbarBottom)
+	})
 })

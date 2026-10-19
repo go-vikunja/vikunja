@@ -79,12 +79,23 @@ function close() {
 	open.value = false
 }
 
+// Menus in a dialog render in the top layer, above the navbar.
+function fixedNavbarBottom(trigger: HTMLElement): number {
+	const navbar = document.querySelector<HTMLElement>('.navbar')
+	if (!navbar || trigger.closest('dialog[open]') || getComputedStyle(navbar).position !== 'fixed') {
+		return 0
+	}
+	return navbar.getBoundingClientRect().bottom
+}
+
 async function updatePosition() {
 	if (!dropdown.value || !dropdownMenu.value) {
 		return
 	}
 
 	await nextTick()
+
+	const padding = {top: fixedNavbarBottom(dropdown.value) + 8, right: 8, bottom: 8, left: 8}
 
 	const {x, y} = await computePosition(dropdown.value, dropdownMenu.value, {
 		placement: 'bottom-end',
@@ -93,11 +104,11 @@ async function updatePosition() {
 			offset(dropdownMenuOffset.value),
 			autoPlacement({
 				allowedPlacements: ['bottom-end', 'top-end', 'bottom-start', 'top-start'],
-				padding: 8,
+				padding,
 			}),
-			shift({padding: 8}),
+			shift({padding}),
 			size({
-				padding: 8,
+				padding,
 				// Set synchronously so floating-ui re-measures the capped menu before placing it.
 				apply({availableHeight, elements}) {
 					elements.floating.style.setProperty('--dropdown-max-height', `${availableHeight}px`)
