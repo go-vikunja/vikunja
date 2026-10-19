@@ -215,18 +215,40 @@ export function stripNavigationFragment<T>(span: T): T {
 const SENSITIVE_PARAM_PATTERN = new RegExp(`((?:^|[?&#]|%3F|%26)(?:${SENSITIVE_QUERY_PARAMS.join('|')})(?:=|%3D))[^&#\\s"']*`, 'gi')
 
 export function redactSensitiveParams<T>(value: T): T {
+	return redact(value, new WeakMap())
+}
+
+// Events can hold cycles: console breadcrumbs keep the raw logged arguments
+// until Sentry normalizes the event, which happens after our event processor.
+function redact<T>(value: T, copies: WeakMap<object, unknown>): T {
 	if (typeof value === 'string') {
 		return value.replace(SENSITIVE_PARAM_PATTERN, '$1[Filtered]') as T
 	}
 
-	if (Array.isArray(value)) {
-		return value.map(redactSensitiveParams) as T
+	if (!value || typeof value !== 'object') {
+		return value
 	}
 
-	if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
-		return Object.fromEntries(
-			Object.entries(value).map(([key, v]) => [key, redactSensitiveParams(v)]),
-		) as T
+	if (copies.has(value)) {
+		return copies.get(value) as T
+	}
+
+	if (Array.isArray(value)) {
+		const copy: unknown[] = []
+		copies.set(value, copy)
+		for (const item of value) {
+			copy.push(redact(item, copies))
+		}
+		return copy as T
+	}
+
+	if (Object.getPrototypeOf(value) === Object.prototype) {
+		const copy: Record<string, unknown> = {}
+		copies.set(value, copy)
+		for (const [key, v] of Object.entries(value)) {
+			copy[key] = redact(v, copies)
+		}
+		return copy as T
 	}
 
 	return value
