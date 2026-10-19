@@ -17,10 +17,12 @@
 package models
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -70,6 +72,32 @@ func TestBulkTask_Update(t *testing.T) {
 		allowed, err := bt.CanUpdate(s, u)
 		require.NoError(t, err)
 		assert.False(t, allowed)
+	})
+
+	t.Run("duplicate ids update the task once", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		bt := &BulkTask{
+			TaskIDs: []int64{1, 1, 1},
+			Fields:  []string{"title"},
+			Values:  &Task{Title: "bulkupdated"},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		err = bt.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		require.Len(t, bt.Tasks, 1)
+		assert.Equal(t, 1, events.CountDispatchedEvents("task.updated"))
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "title": "bulkupdated"}, false)
 	})
 
 	t.Run("invalid field", func(t *testing.T) {

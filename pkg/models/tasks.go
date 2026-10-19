@@ -1695,6 +1695,17 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 // updateTasks updates multiple tasks with the same payload.
 // If fields is nil, it updates the default set of columns.
 func updateTasks(s *xorm.Session, a web.Auth, t *Task, ids []int64, fields []string) (tasks []*Task, err error) {
+	seen := make(map[int64]struct{}, len(ids))
+	uniqueIDs := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		uniqueIDs = append(uniqueIDs, id)
+	}
+	ids = uniqueIDs
+
 	// Ids may span projects; per-task locking would follow caller order, not view order.
 	existing := []*Task{}
 	err = s.Table(&Task{}).Where(builder.In("id", ids)).Distinct("project_id").Find(&existing)
