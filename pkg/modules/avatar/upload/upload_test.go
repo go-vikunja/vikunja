@@ -17,10 +17,16 @@
 package upload
 
 import (
+	"bytes"
+	"image"
+	"image/png"
+	"math/rand"
 	"os"
 	"strconv"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -33,6 +39,13 @@ import (
 func TestMain(m *testing.M) {
 	// Initialize logger for tests
 	log.InitLogger()
+
+	files.InitTests()
+	user.InitTests()
+	// Both Init*Tests replace the fixture set; we need users and files.
+	if err := db.InitTestFixtures("users", "files"); err != nil {
+		log.Fatal(err)
+	}
 
 	os.Exit(m.Run())
 }
@@ -121,5 +134,69 @@ func TestGetAvatar(t *testing.T) {
 		_, _, err := provider.GetAvatar(testUser, 32)
 		require.Error(t, err)
 		assert.True(t, files.IsErrFileDoesNotExist(err))
+	})
+}
+
+func TestStoreAvatarFile(t *testing.T) {
+	// Incompressible, so the encoded avatar exceeds the 1MB limit below.
+	noise := image.NewNRGBA(image.Rect(0, 0, 1024, 1024))
+	rng := rand.New(rand.NewSource(1)) //nolint:gosec // deterministic test data
+	_, err := rng.Read(noise.Pix)
+	require.NoError(t, err)
+	for i := 3; i < len(noise.Pix); i += 4 {
+		noise.Pix[i] = 255
+	}
+	src := &bytes.Buffer{}
+	require.NoError(t, png.Encode(src, noise))
+
+	t.Run("keeps the old avatar when creating the new file fails", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+
+		s := db.NewSession()
+		defer s.Close()
+
+		// File 1 is a fixture with content in storage.
+		_, err := s.ID(1).Cols("avatar_file_id").Update(&user.User{AvatarFileID: 1})
+		require.NoError(t, err)
+		u := &user.User{ID: 1}
+		_, err = s.ID(1).Get(u)
+		require.NoError(t, err)
+		require.Equal(t, int64(1), u.AvatarFileID)
+
+		oldMax := config.FilesMaxSize.GetString()
+		require.NoError(t, config.SetMaxFileSizeMBytesFromString("1MB"))
+		t.Cleanup(func() { _ = config.SetMaxFileSizeMBytesFromString(oldMax) })
+
+		err = StoreAvatarFile(t.Context(), s, u, bytes.NewReader(src.Bytes()))
+		require.Error(t, err)
+		assert.True(t, files.IsErrFileIsTooLarge(err))
+
+		assert.Equal(t, int64(1), u.AvatarFileID)
+		_, err = files.FileStat(&files.File{ID: 1})
+		require.NoError(t, err, "old avatar blob must still exist")
+	})
+
+	t.Run("replaces the old avatar on success", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(1).Cols("avatar_file_id").Update(&user.User{AvatarFileID: 1})
+		require.NoError(t, err)
+		u := &user.User{ID: 1}
+		_, err = s.ID(1).Get(u)
+		require.NoError(t, err)
+
+		small := &bytes.Buffer{}
+		require.NoError(t, png.Encode(small, image.NewNRGBA(image.Rect(0, 0, 8, 8))))
+
+		require.NoError(t, StoreAvatarFile(t.Context(), s, u, small))
+		assert.NotEqual(t, int64(1), u.AvatarFileID)
+		assert.NotZero(t, u.AvatarFileID)
+		_, err = files.FileStat(&files.File{ID: 1})
+		require.Error(t, err, "old avatar blob must be gone")
 	})
 }
