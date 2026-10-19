@@ -164,6 +164,21 @@ func TestTaskAttachmentsV2(t *testing.T) {
 		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
 	})
 
+	t.Run("Download returns the original even when a preview size is passed", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		var content bytes.Buffer
+		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, content.Bytes(), rec.Body.Bytes())
+		assert.Contains(t, rec.Header().Get("Content-Disposition"), "image.png")
+	})
+
 	t.Run("Delete", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)

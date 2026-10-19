@@ -9288,20 +9288,11 @@ export type TaskAttachmentsDownloadData = {
          */
         attachment: number;
     };
-    query?: {
-        /**
-         * If set, return a downscaled preview instead of the original: sm=100px, md=200px, lg=400px, xl=800px. The preview is a JPEG, or a PNG when the image has transparency. Fails with 422 for attachments that have no preview, like non-images.
-         */
-        preview_size?: 'sm' | 'md' | 'lg' | 'xl';
-    };
+    query?: never;
     url: '/tasks/{task}/attachments/{attachment}';
 };
 
 export type TaskAttachmentsDownloadErrors = {
-    /**
-     * preview_size was set but the attachment has no preview (code 4038), or preview_size is invalid.
-     */
-    422: VikunjaErrorModel;
     /**
      * Error
      */
