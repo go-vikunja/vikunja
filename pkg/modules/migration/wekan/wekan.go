@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"html"
 	"io"
 	"sort"
 	"time"
@@ -261,13 +262,13 @@ func convertWekanToVikunja(board *wekanBoard) []*models.ProjectWithTasksAndBucke
 				if !hasItems || len(items) == 0 {
 					continue
 				}
-				task.Description += "\n\n<h2> " + cl.Title + "</h2>\n\n" + `<ul data-type="taskList">`
+				task.Description += "\n\n<h2> " + html.EscapeString(cl.Title) + "</h2>\n\n" + `<ul data-type="taskList">`
 				for _, item := range items {
 					task.Description += "\n"
 					if item.IsFinished {
-						task.Description += `<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + item.Title + `</p></div></li>`
+						task.Description += `<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + html.EscapeString(item.Title) + `</p></div></li>`
 					} else {
-						task.Description += `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + item.Title + `</p></div></li>`
+						task.Description += `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + html.EscapeString(item.Title) + `</p></div></li>`
 					}
 				}
 				task.Description += "</ul>"
