@@ -45,9 +45,6 @@ func StoreImportUpload(status *Status, u *user.User, src io.ReaderAt, size int64
 	stored, err := files.CreateWithMimeAndSession(s, io.NewSectionReader(src, 0, size), status.MigratorName+"-import", 0, u, "application/octet-stream", false)
 	if err != nil {
 		_ = s.Rollback()
-		if stored != nil && stored.ID != 0 {
-			removeOrphanedBlob(stored.ID)
-		}
 		return fmt.Errorf("could not store the import upload: %w", err)
 	}
 

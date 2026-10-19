@@ -194,7 +194,14 @@ func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string,
 
 	// Save the file to storage with its new ID as path
 	err = file.Save(f)
-	return
+	if err != nil {
+		// Callers may still commit the session, which would persist a blobless row.
+		if _, delErr := s.Where("id = ?", file.ID).Delete(&File{}); delErr != nil {
+			err = errors.Join(err, fmt.Errorf("failed to remove file row after save error: %w", delErr))
+		}
+		return nil, err
+	}
+	return file, nil
 }
 
 // Delete removes a file from the DB and the file system.
