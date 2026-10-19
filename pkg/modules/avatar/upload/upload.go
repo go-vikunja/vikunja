@@ -48,6 +48,8 @@ type Provider struct {
 
 const CacheKeyPrefix = "avatar_upload_"
 
+const maxAvatarSide = 1024
+
 // FlushCache removes cached avatars for a user
 func (p *Provider) FlushCache(u *user.User) error {
 	return keyvalue.DelPrefix(CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_")
@@ -126,33 +128,62 @@ func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
 	return dataURI, nil
 }
 
-func StoreAvatarFile(ctx context.Context, s *xorm.Session, u *user.User, src io.Reader) (err error) {
+func StoreAvatarFile(ctx context.Context, s *xorm.Session, u *user.User, provider string, src io.Reader) error {
 	data, err := io.ReadAll(src)
 	if err != nil {
-		return
+		return err
 	}
+	return storeAvatar(ctx, s, u, provider, data, func(img image.Image) image.Image { return img })
+}
+
+func StoreSyncedAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider string, raw []byte) error {
+	return storeAvatar(ctx, s, u, provider, raw, centeredSquare)
+}
+
+// Zero-copy where possible: a full-resolution copy would escape the decode budget.
+func centeredSquare(img image.Image) image.Image {
+	b := img.Bounds()
+	side := min(b.Dx(), b.Dy())
+	sub, ok := img.(interface {
+		SubImage(image.Rectangle) image.Image
+	})
+	if !ok {
+		return imaging.CropCenter(img, side, side)
+	}
+	topLeft := b.Min.Add(image.Pt((b.Dx()-side)/2, (b.Dy()-side)/2))
+	return sub.SubImage(image.Rectangle{Min: topLeft, Max: topLeft.Add(image.Pt(side, side))})
+}
+
+func storeAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider string, data []byte, crop func(image.Image) image.Image) (err error) {
 	buf := &bytes.Buffer{}
 	err = imageutils.Decode(ctx, imageutils.BytesOpener(data), func(img image.Image, _ string) error {
-		return png.Encode(buf, imaging.Fit(img, 1024, 1024, imaging.Lanczos))
+		return png.Encode(buf, imaging.Fit(crop(img), maxAvatarSide, maxAvatarSide, imaging.Lanczos))
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	oldAvatarFileID := u.AvatarFileID
+	oldProvider := u.AvatarProvider
+	defer func() {
+		if err != nil {
+			u.AvatarFileID = oldAvatarFileID
+			u.AvatarProvider = oldProvider
+		}
+	}()
 
 	err = (&Provider{}).FlushCache(u)
 	if err != nil {
 		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
 	}
 
-	// Save the file
 	f, err := files.CreateWithMimeAndSession(s, bytes.NewReader(buf.Bytes()), "avatar.png", uint64(buf.Len()), u, "image/png", true)
 	if err != nil {
 		return err
 	}
 
 	u.AvatarFileID = f.ID
+	u.AvatarProvider = provider
 
 	_, err = user.UpdateUser(s, u, false)
 	if err != nil {

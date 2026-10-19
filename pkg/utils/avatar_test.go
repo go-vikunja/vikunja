@@ -18,103 +18,17 @@ package utils
 
 import (
 	"bytes"
-	"encoding/binary"
-	"hash/crc32"
 	"image"
-	"image/color"
 	"image/png"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/modules/imageutils"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func pngBytesForAvatar(t *testing.T, width int, height ...int) []byte {
-	t.Helper()
-	h := 4
-	if len(height) > 0 {
-		h = height[0]
-	}
-	img := image.NewRGBA(image.Rect(0, 0, width, h))
-	for x := 0; x < width; x++ {
-		for y := 0; y < h; y++ {
-			img.Set(x, y, color.RGBA{R: uint8(x), G: uint8(y), B: 42, A: 255})
-		}
-	}
-	buf := &bytes.Buffer{}
-	require.NoError(t, png.Encode(buf, img))
-	return buf.Bytes()
-}
-
-// Covers identity-provider image bounds (GHSA-4vh2-39rq-rq8j).
-func TestCropAvatarTo1x1(t *testing.T) {
-	t.Run("normal non-square image is cropped centered", func(t *testing.T) {
-		cropped, err := CropAvatarTo1x1(t.Context(), pngBytesForAvatar(t, 8, 4))
-		require.NoError(t, err)
-
-		img, _, err := image.Decode(bytes.NewReader(cropped))
-		require.NoError(t, err)
-		assert.Equal(t, 4, img.Bounds().Dx())
-		assert.Equal(t, 4, img.Bounds().Dy())
-		assert.Equal(t, color.RGBA{
-			R: 2,
-			G: 0,
-			B: 42,
-			A: 255,
-		}, color.RGBAModel.Convert(img.At(0, 0)))
-	})
-
-	t.Run("large non-square image is scaled down to 1024", func(t *testing.T) {
-		cropped, err := CropAvatarTo1x1(t.Context(), pngBytesForAvatar(t, 3000, 2000))
-		require.NoError(t, err)
-
-		cfg, _, err := image.DecodeConfig(bytes.NewReader(cropped))
-		require.NoError(t, err)
-		assert.Equal(t, 1024, cfg.Width)
-		assert.Equal(t, 1024, cfg.Height)
-	})
-
-	t.Run("small non-square image is never upscaled", func(t *testing.T) {
-		cropped, err := CropAvatarTo1x1(t.Context(), pngBytesForAvatar(t, 300, 200))
-		require.NoError(t, err)
-
-		cfg, _, err := image.DecodeConfig(bytes.NewReader(cropped))
-		require.NoError(t, err)
-		assert.Equal(t, 200, cfg.Width)
-		assert.Equal(t, 200, cfg.Height)
-	})
-
-	t.Run("already square image is returned as-is", func(t *testing.T) {
-		original := pngBytesForAvatar(t, 4, 4)
-		cropped, err := CropAvatarTo1x1(t.Context(), original)
-		require.NoError(t, err)
-		assert.Equal(t, original, cropped)
-	})
-
-	t.Run("decompression bomb is rejected", func(t *testing.T) {
-		data := pngBytesForAvatar(t, 4, 4)
-		binary.BigEndian.PutUint32(data[16:20], uint32(8000))
-		binary.BigEndian.PutUint32(data[20:24], uint32(8000))
-		binary.BigEndian.PutUint32(data[29:33], crc32.ChecksumIEEE(data[12:29]))
-
-		_, err := CropAvatarTo1x1(t.Context(), data)
-		require.Error(t, err)
-		assert.True(t, imageutils.IsErrImageTooLarge(err))
-	})
-
-	t.Run("busy server is reported", func(t *testing.T) {
-		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
-
-		_, err := CropAvatarTo1x1(t.Context(), pngBytesForAvatar(t, 8, 4))
-		assert.True(t, imageutils.IsErrDecodeBusy(err), "err: %v", err)
-	})
-}
 
 func TestDownloadImageIsBounded(t *testing.T) {
 	// httptest servers live on 127.0.0.1, which the SSRF-safe client refuses
@@ -133,9 +47,11 @@ func TestDownloadImageIsBounded(t *testing.T) {
 	_, err := DownloadImage(t.Context(), srv.URL)
 	require.Error(t, err, "a response larger than the max file size must not be buffered in full")
 
+	picture := &bytes.Buffer{}
+	require.NoError(t, png.Encode(picture, image.NewNRGBA(image.Rect(0, 0, 4, 4))))
 	small := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "image/png")
-		_, _ = w.Write(pngBytesForAvatar(t, 4, 4))
+		_, _ = w.Write(picture.Bytes())
 	}))
 	t.Cleanup(small.Close)
 

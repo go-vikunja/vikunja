@@ -162,11 +162,20 @@ func StoreUploadedAvatar(ctx context.Context, s *xorm.Session, u *user.User, src
 		return err
 	}
 
-	u.AvatarProvider = "upload"
-	if err := upload.StoreAvatarFile(ctx, s, u, src); err != nil {
+	if err := upload.StoreAvatarFile(ctx, s, u, "upload", src); err != nil {
 		if errors.Is(err, imageutils.ErrUndecodable) {
 			return ErrNotAnImage
 		}
+		return err
+	}
+
+	FlushAllCaches(u)
+
+	return nil
+}
+
+func StoreSyncedAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider string, raw []byte) error {
+	if err := upload.StoreSyncedAvatar(ctx, s, u, provider, raw); err != nil {
 		return err
 	}
 
