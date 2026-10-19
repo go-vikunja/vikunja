@@ -18,6 +18,7 @@ package files
 
 import (
 	"bytes"
+	"errors"
 	"image"
 	"image/png"
 	"io"
@@ -207,6 +208,29 @@ func TestFileSave_UsesStorage(t *testing.T) {
 	written, err := io.ReadAll(rc)
 	require.NoError(t, err)
 	assert.Equal(t, content, written)
+}
+
+type failingWriteStorage struct {
+	*memStorage
+}
+
+func (failingWriteStorage) Write(string, io.ReadSeeker, uint64) error {
+	return errors.New("write failed")
+}
+
+func TestCreateWithMimeAndSession_RemovesRowWhenSaveFails(t *testing.T) {
+	initFixtures(t)
+	useStorage(t, failingWriteStorage{newMemStorage()})
+
+	s := db.NewSession()
+	defer s.Close()
+
+	file, err := CreateWithMimeAndSession(s, bytes.NewReader([]byte("content")), "failing.txt", 0, &testauth{id: 1}, "text/plain", true)
+	require.Error(t, err)
+	assert.Nil(t, file)
+
+	require.NoError(t, s.Commit())
+	db.AssertMissing(t, "files", map[string]interface{}{"name": "failing.txt"})
 }
 
 func TestFile_LoadFileMetaByID(t *testing.T) {
