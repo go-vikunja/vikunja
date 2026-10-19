@@ -149,11 +149,7 @@ func TestAvatarUpload(t *testing.T) {
 	})
 
 	t.Run("Undecodable image (SVG) rejected with 400", func(t *testing.T) {
-		// SVG sniffs as image/svg+xml, passing the mimetype prefix check, but
-		// image.Decode/DecodeConfig has no SVG decoder. Sent as octet-stream it
-		// bypasses the part content-type allow-list, so the byte-level decode
-		// validation in StoreUploadedAvatar is what must reject it. This must be
-		// a 400 (ErrNotAnImage), not a 500 from a failed decode deeper in storage.
+		// Sniffs as image/svg+xml but has no decoder: 400, not 500.
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 		token := humaTokenFor(t, &testuser1)
@@ -229,6 +225,7 @@ func TestAvatarUploadImageBounds(t *testing.T) {
 		body, contentType := multipartAvatarBody(t, "avatar", "bomb.png", pngWithClaimedDimensionsPatch(t, 8000, 8000))
 		rec := uploadAvatarRequest(t, e, body, contentType, token)
 		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeImageTooLarge))
 	})
 
 	t.Run("avatar reads are fitted, never upscaled", func(t *testing.T) {
