@@ -80,7 +80,7 @@ func RegisterTaskAttachmentRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "task-attachments-download",
 		Summary:     "Download a task attachment",
-		Description: "Returns the raw bytes of one attachment. Requires read access to the task. Pass preview_size to get a downscaled preview instead, as a JPEG or, when the image has transparency, as a PNG. When no preview can be made of the attachment (not an image, undecodable, or too large) the request fails with 422 and code 4038 instead of returning the original. The Content-Type header carries the mime type of the bytes that are returned.",
+		Description: "Returns the raw bytes of one attachment. Requires read access to the task. For a downscaled image, use the preview endpoint.",
 		Method:      http.MethodGet,
 		Path:        "/tasks/{task}/attachments/{attachment}",
 		Tags:        tags,
@@ -95,10 +95,6 @@ func RegisterTaskAttachmentRoutes(api huma.API) {
 						Schema: &huma.Schema{Type: huma.TypeString, Format: "binary"},
 					},
 				},
-			},
-			"422": {
-				Description: "preview_size was set but the attachment has no preview (code 4038), or preview_size is invalid.",
-				Content:     defaultErrorResponse(api).Content,
 			},
 		},
 	}, taskAttachmentsDownload)
@@ -196,23 +192,12 @@ func taskAttachmentsUpload(ctx context.Context, in *taskAttachmentUploadInput) (
 // taskAttachmentsDownload exists because no handler.Do* fits a file body; bytes
 // stream from the StreamResponse callback without buffering — attachments can be large.
 func taskAttachmentsDownload(ctx context.Context, in *struct {
-	TaskID       int64  `path:"task" doc:"The id of the task the attachment belongs to."`
-	AttachmentID int64  `path:"attachment" doc:"The id of the attachment to download."`
-	PreviewSize  string `query:"preview_size" enum:"sm,md,lg,xl" doc:"If set, return a downscaled preview instead of the original: sm=100px, md=200px, lg=400px, xl=800px. The preview is a JPEG, or a PNG when the image has transparency. Fails with 422 for attachments that have no preview, like non-images."`
+	TaskID       int64 `path:"task" doc:"The id of the task the attachment belongs to."`
+	AttachmentID int64 `path:"attachment" doc:"The id of the attachment to download."`
 }) (*huma.StreamResponse, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
-	}
-
-	if in.PreviewSize != "" {
-		preview, err := models.GetTaskAttachmentPreview(ctx, a, in.TaskID, in.AttachmentID, models.GetPreviewSizeFromString(in.PreviewSize))
-		if err != nil {
-			return nil, translateDomainError(err)
-		}
-		return &huma.StreamResponse{Body: func(hctx huma.Context) {
-			webfiles.WriteAttachmentPreview((*humaecho.Unwrap(hctx)).Response(), preview)
-		}}, nil
 	}
 
 	file, err := models.GetTaskAttachmentForDownload(a, in.TaskID, in.AttachmentID)
