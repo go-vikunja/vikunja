@@ -16,6 +16,7 @@ func init() {
 		"AuditRotationMaxSizeMB":                     reflect.ValueOf(config.AuditRotationMaxSizeMB),
 		"AuthLdapAttributeDisplayname":               reflect.ValueOf(config.AuthLdapAttributeDisplayname),
 		"AuthLdapAttributeEmail":                     reflect.ValueOf(config.AuthLdapAttributeEmail),
+		"AuthLdapAttributeID":                        reflect.ValueOf(config.AuthLdapAttributeID),
 		"AuthLdapAttributeMemberID":                  reflect.ValueOf(config.AuthLdapAttributeMemberID),
 		"AuthLdapAttributeUsername":                  reflect.ValueOf(config.AuthLdapAttributeUsername),
 		"AuthLdapAvatarSyncAttribute":                reflect.ValueOf(config.AuthLdapAvatarSyncAttribute),

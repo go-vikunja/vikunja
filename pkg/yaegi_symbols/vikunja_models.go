@@ -327,6 +327,7 @@ func init() {
 		"ListUsersFromProject":                             reflect.ValueOf(models.ListUsersFromProject),
 		"MaxTaskRepeatAfterSeconds":                        reflect.ValueOf(models.MaxTaskRepeatAfterSeconds),
 		"MaxTasksPerBulkCreation":                          reflect.ValueOf(constant.MakeFromLiteral("100", token.INT, 0)),
+		"MigrateExternalTeamIDs":                           reflect.ValueOf(models.MigrateExternalTeamIDs),
 		"MinPositionSpacing":                               reflect.ValueOf(constant.MakeFromLiteral("0.009999999999999999999796712092658967918623602599836885929107666016", token.FLOAT, 0)),
 		"NewUserGeneralSettings":                           reflect.ValueOf(models.NewUserGeneralSettings),
 		"NotificationProjectFilter":                        reflect.ValueOf(models.NotificationProjectFilter),
