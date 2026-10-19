@@ -63,7 +63,7 @@ test.describe('Editor toolbar overflow menu', () => {
 	})
 
 	async function openNarrowEditor(page: Page) {
-		await page.setViewportSize({width: 375, height: 800})
+		await page.setViewportSize({width: 375, height: 667})
 		const tasks = await TaskFactory.create(1, {
 			id: 1,
 			description: '<p>some text</p>',
@@ -161,5 +161,18 @@ test.describe('Editor toolbar overflow menu', () => {
 		await moreButton.click()
 		await expect(bulletList).toHaveAttribute('aria-pressed', 'true')
 		await expect(bulletList.locator('.editor-toolbar__menu-check')).toBeVisible()
+	})
+
+	test('every menu item can be scrolled into view on a phone', async ({authenticatedPage: page}) => {
+		const {toolbar, moreButton} = await openNarrowEditor(page)
+
+		await moreButton.click()
+		const menuItems = toolbar.locator('.dropdown-menu .dropdown-item')
+		await expect(menuItems.first()).toBeVisible()
+
+		for (const item of await menuItems.all()) {
+			await item.scrollIntoViewIfNeeded()
+			await expect(item).toBeInViewport({ratio: 0.9})
+		}
 	})
 })

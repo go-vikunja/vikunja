@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import {ref, nextTick, watch, computed, type PropType} from 'vue'
 import {onClickOutside} from '@vueuse/core'
-import {computePosition, autoPlacement, offset, shift} from '@floating-ui/dom'
+import {computePosition, autoPlacement, offset, shift, size} from '@floating-ui/dom'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
@@ -96,6 +96,13 @@ async function updatePosition() {
 				padding: 8,
 			}),
 			shift({padding: 8}),
+			size({
+				padding: 8,
+				// Set synchronously so floating-ui re-measures the capped menu before placing it.
+				apply({availableHeight, elements}) {
+					elements.floating.style.setProperty('--dropdown-max-height', `${availableHeight}px`)
+				},
+			}),
 		],
 	})
 
@@ -168,6 +175,8 @@ onClickOutside(dropdown, (e) => {
 }
 
 .dropdown-content {
+	max-block-size: var(--dropdown-max-height, none);
+	overflow-y: auto;
 	background-color: var(--scheme-main);
 	border-radius: $radius;
 	padding-block-end: .5rem;
