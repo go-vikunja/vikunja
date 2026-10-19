@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"hash/crc32"
 	"image"
 	"io"
@@ -27,11 +28,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/routes"
 
 	"github.com/labstack/echo/v5"
@@ -184,4 +187,26 @@ func TestHumaProjectBackgroundUploadImageBounds(t *testing.T) {
 		assert.Equal(t, 8, img.Bounds().Dx(), "a small background must keep its native size")
 		assert.Equal(t, 8, img.Bounds().Dy())
 	})
+}
+
+func TestHumaProjectBackgroundUploadDecodeIsBounded(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	backgroundFileID := func() int64 {
+		s := db.NewSession()
+		defer s.Close()
+		project := models.Project{ID: 1}
+		has, err := s.Get(&project)
+		require.NoError(t, err)
+		require.True(t, has)
+		return project.BackgroundFileID
+	}
+	before := backgroundFileID()
+	t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+
+	body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
+	rec := uploadBackgroundRequest(t, e, "1", humaTokenFor(t, &testuser1), body, contentType)
+	assert.Equal(t, http.StatusServiceUnavailable, rec.Code, "body: %s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeDecodeBusy))
+	assert.Equal(t, before, backgroundFileID())
 }
