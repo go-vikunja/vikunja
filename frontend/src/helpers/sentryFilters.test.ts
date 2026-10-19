@@ -1,4 +1,5 @@
 import {describe, it, expect} from 'vitest'
+import {reactive} from 'vue'
 
 import {ApiError} from '@/client/problem'
 import {isReportableResourceUrl, redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './sentryFilters'
@@ -338,6 +339,29 @@ describe('redactSensitiveParams', () => {
 			level: 'error',
 			count: 1,
 		})
+	})
+
+	// Console breadcrumbs carry the raw logged arguments until Sentry normalizes
+	// the event, which happens after our event processor.
+	it('handles a cyclic object', () => {
+		const route: Record<string, unknown> = {path: '/?userPasswordReset=abc123'}
+		route.children = [{parent: route}]
+
+		const redacted = redactSensitiveParams({breadcrumbs: [{data: {arguments: [route]}}]})
+		const copy = redacted.breadcrumbs[0].data.arguments[0]
+
+		expect(copy.path).toBe('/?userPasswordReset=[Filtered]')
+		expect((copy.children as {parent: unknown}[])[0].parent).toBe(copy)
+	})
+
+	it('handles a cyclic reactive object', () => {
+		const project = reactive<Record<string, unknown>>({title: '/?accountDeletionConfirm=abc123', childProjects: []})
+		;(project.childProjects as unknown[]).push({parentProject: project})
+
+		const redacted = redactSensitiveParams({extra: {project}})
+
+		expect(redacted.extra.project.title).toBe('/?accountDeletionConfirm=[Filtered]')
+		expect((redacted.extra.project.childProjects as {parentProject: unknown}[])[0].parentProject).toBe(redacted.extra.project)
 	})
 })
 
