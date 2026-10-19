@@ -367,15 +367,14 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 	}
 
 	var labels []*models.Label
-	if len(categoryProps) > 0 {
+	if len(categoryProps) == 1 && strings.TrimSpace(categoryProps[0].Value) == "" {
+		labels = []*models.Label{}
+	} else if len(categoryProps) > 0 {
 		labels = make([]*models.Label, 0, len(categoryProps))
 		seen := make(map[string]struct{}, len(categoryProps))
 		for _, prop := range categoryProps {
 			value := strings.TrimSpace(prop.Value)
 			if value == "" {
-				if len(categoryProps) == 1 {
-					labels = []*models.Label{}
-				}
 				continue
 			}
 			for _, category := range strings.Split(value, ",") {
