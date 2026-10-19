@@ -403,6 +403,34 @@ func TestGetTaskUsersForTasksIsAssignee(t *testing.T) {
 		require.NotNil(t, tu)
 		assert.True(t, tu.IsAssignee)
 	})
+
+	t.Run("bot users are excluded", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			Title:       "Bot involved",
+			CreatedByID: 1,
+			ProjectID:   1,
+		}
+		err := task.Create(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		_, err = s.ID(task.ID).Cols("created_by_id").Update(&Task{CreatedByID: 23})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&ProjectUser{UserID: 23, ProjectID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskAssginee{TaskID: task.ID, UserID: 23})
+		require.NoError(t, err)
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 23})
+		require.NoError(t, err)
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+
+		assert.Nil(t, findTaskUser(taskUsers, task.ID, 23))
+	})
 }
 
 func TestSendDueReminders(t *testing.T) {

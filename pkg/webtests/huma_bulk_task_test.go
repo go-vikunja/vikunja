@@ -71,4 +71,22 @@ func TestBulkTaskV2(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeBulkTasksNeedAtLeastOne), "body: %s", rec.Body.String())
 	})
+
+	t.Run("missing or empty fields is rejected", func(t *testing.T) {
+		for name, body := range map[string]string{
+			"missing": `{"task_ids":[1],"values":{"priority":3}}`,
+			"empty":   `{"task_ids":[1],"fields":[],"values":{"priority":3}}`,
+		} {
+			t.Run(name, func(t *testing.T) {
+				e, err := setupTestEnv()
+				require.NoError(t, err)
+				token := humaTokenFor(t, &testuser1)
+
+				rec := humaRequest(t, e, http.MethodPut, "/api/v2/tasks/bulk", body, token, "")
+				require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+				assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeBulkTaskFieldsRequired), "body: %s", rec.Body.String())
+				db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "description": "Lorem Ipsum"}, false)
+			})
+		}
+	})
 }

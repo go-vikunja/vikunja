@@ -396,7 +396,7 @@ export type BulkTask = {
      */
     readonly $schema?: string;
     /**
-     * The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched.
+     * The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched. Besides the task columns, assignees, reminders and is_favorite may be named. At least one field is required.
      */
     fields?: Array<string> | null;
     /**
@@ -1700,7 +1700,7 @@ export type ProjectView = {
      */
     done_bucket_id?: number;
     /**
-     * The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters.
+     * The filter query used to match tasks shown in this view. Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
      */
     filter?: TaskCollection;
     /**
@@ -1731,7 +1731,7 @@ export type ProjectView = {
 
 export type ProjectViewBucketConfiguration = {
     /**
-     * The filter query that decides which tasks land in this bucket. See https://vikunja.io/docs/filters.
+     * The filter query that decides which tasks land in this bucket. Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
      */
     filter?: TaskCollection;
     /**
@@ -1766,7 +1766,7 @@ export type ProjectViewReadBody = {
      */
     done_bucket_id?: number;
     /**
-     * The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters.
+     * The filter query used to match tasks shown in this view. Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
      */
     filter?: TaskCollection;
     /**
@@ -2296,7 +2296,7 @@ export type TaskBucket = {
 
 export type TaskCollection = {
     /**
-     * The filter query to match tasks by. See https://vikunja.io/docs/filters.
+     * The filter query to match tasks by, e.g. "done = false && due_date < now+7d". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
      */
     filter?: string;
     /**
@@ -3700,7 +3700,7 @@ export type BulkAssigneesWritable = {
 
 export type BulkTaskWritable = {
     /**
-     * The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched.
+     * The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched. Besides the task columns, assignees, reminders and is_favorite may be named. At least one field is required.
      */
     fields?: Array<string> | null;
     /**
@@ -4323,7 +4323,7 @@ export type ProjectViewWritable = {
      */
     done_bucket_id?: number;
     /**
-     * The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters.
+     * The filter query used to match tasks shown in this view. Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
      */
     filter?: TaskCollection;
     /**
@@ -4358,7 +4358,7 @@ export type ProjectViewReadBodyWritable = {
      */
     done_bucket_id?: number;
     /**
-     * The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters.
+     * The filter query used to match tasks shown in this view. Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
      */
     filter?: TaskCollection;
     /**
@@ -7530,7 +7530,7 @@ export type ProjectTasksListData = {
          */
         q?: string;
         /**
-         * Filter query to match tasks by. See https://vikunja.io/docs/filters.
+         * Filter query to match tasks by, e.g. "done = false && due_date < now+7d". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
          */
         filter?: string;
         /**
@@ -8280,7 +8280,7 @@ export type ProjectViewBucketsTasksListData = {
          */
         q?: string;
         /**
-         * Filter query to match tasks by. See https://vikunja.io/docs/filters.
+         * Filter query to match tasks by, e.g. "done = false && due_date < now+7d". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
          */
         filter?: string;
         /**
@@ -8442,7 +8442,7 @@ export type ProjectViewTasksListData = {
          */
         q?: string;
         /**
-         * Filter query to match tasks by. See https://vikunja.io/docs/filters.
+         * Filter query to match tasks by, e.g. "done = false && due_date < now+7d". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
          */
         filter?: string;
         /**
@@ -8783,7 +8783,7 @@ export type TasksListData = {
          */
         q?: string;
         /**
-         * Filter query to match tasks by. See https://vikunja.io/docs/filters.
+         * Filter query to match tasks by, e.g. "done = false && due_date < now+7d". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters.
          */
         filter?: string;
         /**

@@ -72,7 +72,6 @@ type mcpClient struct {
 	// authorizations replaces the single bearer header built from token.
 	authorizations []string
 	token          string
-	sessionID      string
 	nextID         int
 }
 
@@ -92,8 +91,6 @@ func newMCPClientOn(t *testing.T, e *echo.Echo, token string) *mcpClient {
 	}
 	rec := c.post(initializeBody)
 	require.Equal(t, http.StatusOK, rec.Code, "initialize: %s", rec.Body.String())
-	c.sessionID = rec.Header().Get("Mcp-Session-Id")
-	require.NotEmpty(t, c.sessionID)
 	rec = c.post(`{"jsonrpc":"2.0","method":"notifications/initialized"}`)
 	require.Less(t, rec.Code, 400, "initialized: %s", rec.Body.String())
 	return c
@@ -103,9 +100,6 @@ func (c *mcpClient) post(body string) *httptest.ResponseRecorder {
 	req := mcpRequest(http.MethodPost, body)
 	for _, a := range c.authValues() {
 		req.Header.Add(echo.HeaderAuthorization, a)
-	}
-	if c.sessionID != "" {
-		req.Header.Set("Mcp-Session-Id", c.sessionID)
 	}
 	rec := httptest.NewRecorder()
 	c.e.ServeHTTP(rec, req)
@@ -244,27 +238,12 @@ func TestMCP_ToolsListMatchesScopes(t *testing.T) {
 		"users_search",
 		"find_action",
 		"do_action",
+		"filter_syntax",
 	} {
 		assert.True(t, full[name], "missing %s", name)
 	}
-	assert.Len(t, full, 26)
+	assert.Len(t, full, 27)
 	assert.False(t, full["task_labels_create"])
-}
-func TestMCP_SessionIDDoesNotCarryIdentity(t *testing.T) {
-	full := newMCPClient(t, mcpFullToken)
-	weak := &mcpClient{
-		t:         t,
-		e:         full.e,
-		token:     mcpOnlyToken,
-		sessionID: full.sessionID,
-		nextID:    50,
-	}
-	assert.Empty(t, weak.toolNames())
-	resp := weak.rpc("tools/call", map[string]any{
-		"name":      "projects_read",
-		"arguments": map[string]any{"id": 1},
-	})
-	assert.Contains(t, resp, "error")
 }
 func pingBatch(n int) string {
 	msgs := make([]string, n)

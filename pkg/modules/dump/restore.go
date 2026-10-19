@@ -511,8 +511,10 @@ func restoreConfig(configFile, dotEnvFile *zip.File, stdin *bufio.Reader) error 
 			return err
 		}
 
-		log.Warningf("Please make sure the following settings are properly configured in your instance:\n%s", buf.String())
-		log.Warning("Make sure your current config matches the following env variables, confirm by pressing enter when done.")
+		// Values are secrets and logs may be persisted, so only name the keys.
+		log.Warningf("Please make sure the following settings are properly configured in your instance:\n%s", strings.Join(dotEnvKeys(buf.String()), "\n"))
+		log.Warning("Their values are in the .env file inside the dump.")
+		log.Warning("Make sure your current config matches these env variables, confirm by pressing enter when done.")
 		log.Warning("If your config does not match, you'll have to make the changes and restart the restoring process afterwards.")
 		if _, err := stdin.ReadString('\n'); err != nil {
 			return fmt.Errorf("could not read from stdin: %w", err)
@@ -520,6 +522,17 @@ func restoreConfig(configFile, dotEnvFile *zip.File, stdin *bufio.Reader) error 
 	}
 
 	return nil
+}
+
+func dotEnvKeys(dotEnv string) []string {
+	keys := []string{}
+	for line := range strings.SplitSeq(dotEnv, "\n") {
+		key, _, _ := strings.Cut(line, "=")
+		if key = strings.TrimSpace(key); key != "" {
+			keys = append(keys, key)
+		}
+	}
+	return keys
 }
 
 func checkVikunjaVersion(versionFile *zip.File) error {

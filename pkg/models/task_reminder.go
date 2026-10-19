@@ -151,9 +151,15 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		user.User `xorm:"extends"`
 	}
 
+	notBot := builder.Or(
+		builder.IsNull{"users.bot_owner_id"},
+		builder.Eq{"users.bot_owner_id": 0},
+	)
+
 	conditions := []builder.Cond{
 		builder.In("tasks.id", taskIDs),
 		builder.Eq{"users.status": user.StatusActive},
+		notBot,
 		taskNotDeletedCond("tasks"),
 	}
 	if cond != nil {
@@ -163,6 +169,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	assigneeConds := []builder.Cond{
 		builder.In("task_assignees.task_id", taskIDs),
 		builder.Eq{"users.status": user.StatusActive},
+		notBot,
 	}
 	if cond != nil {
 		assigneeConds = append(assigneeConds, cond)
@@ -220,6 +227,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 
 	subscriberCond := []builder.Cond{
 		builder.In("id", subscriberIDs),
+		notBot,
 	}
 	if cond != nil {
 		subscriberCond = append(subscriberCond, cond)

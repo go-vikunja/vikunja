@@ -25,6 +25,7 @@
 package bootstrap
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -269,6 +270,7 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	// 12. Write .veans.yml.
 	cfg := &config.Config{
 		Server:            opts.Server,
+		FrontendURL:       cmp.Or(info.FrontendURL, opts.Server),
 		ProjectID:         project.ID,
 		ProjectIdentifier: project.Identifier,
 		ViewID:            view.ID,

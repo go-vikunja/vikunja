@@ -48,7 +48,7 @@ Examples:
   veans api GET /tasks --query expand=reactions --query per_page=100`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rt, err := loadRuntime()
+			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
 			}

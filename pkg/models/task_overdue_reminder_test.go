@@ -21,7 +21,9 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
@@ -89,6 +91,23 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		tasks, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
+	})
+	t.Run("unparseable reminder time does not fail for other users", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(2).Cols("overdue_tasks_reminders_time").Update(&user.User{
+			OverdueTasksRemindersTime: "xx:yy",
+		})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
+		require.NoError(t, err)
+
+		uts, err := getUndoneOverdueTasks(s, now, nil)
+		require.NoError(t, err)
+		require.Contains(t, uts, int64(1))
 	})
 }
 
@@ -462,5 +481,56 @@ func TestOverdueTaskNotificationsIncludeSubscribers(t *testing.T) {
 		}
 
 		assert.False(t, hasSubscriber, "subscriber without project access should not receive notification")
+	})
+}
+
+func TestOverdueEventsWithListeners(t *testing.T) {
+	t.Run("no webhook subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		single, batch, err := overdueEventsWithListeners(s)
+		require.NoError(t, err)
+		assert.False(t, single)
+		assert.False(t, batch)
+	})
+	t.Run("batch event subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&Webhook{
+			TargetURL:   "https://example.com/overdue",
+			Events:      []string{"task.updated", (&TasksOverdueEvent{}).Name()},
+			UserID:      1,
+			CreatedByID: 1,
+		})
+		require.NoError(t, err)
+
+		single, batch, err := overdueEventsWithListeners(s)
+		require.NoError(t, err)
+		assert.False(t, single)
+		assert.True(t, batch)
+	})
+}
+
+type testOverdueListener struct{}
+
+func (*testOverdueListener) Handle(*message.Message) error { return nil }
+func (*testOverdueListener) Name() string                  { return "testOverdueListener" }
+
+func TestHasNonWebhookListener(t *testing.T) {
+	// Unique names: the listener registry is global and has no unregister.
+	t.Run("webhook listener only", func(t *testing.T) {
+		name := "test.overdue.webhook-only"
+		events.RegisterListener(name, &WebhookListener{EventName: name})
+		assert.False(t, hasNonWebhookListener(name))
+	})
+	t.Run("plugin listener", func(t *testing.T) {
+		name := "test.overdue.plugin"
+		events.RegisterListener(name, &WebhookListener{EventName: name})
+		events.RegisterListener(name, &testOverdueListener{})
+		assert.True(t, hasNonWebhookListener(name))
 	})
 }

@@ -380,9 +380,12 @@ func pingbackByPhotoID(photoID string) {
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
-	_, err = utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
+	} else {
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
 	}
 	log.Debugf("Pinged unsplash for photo %s", photoID)
 }

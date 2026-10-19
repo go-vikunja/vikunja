@@ -100,11 +100,13 @@ func tokenFrom(ec *echo.Context) *models.APIToken {
 
 func (m *Module) addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
 	var catalog []*tool
+	takesFilter := false
 	for _, t := range m.order {
-		switch {
-		case !m.authorized(t, token):
+		if !m.authorized(t, token) {
 			continue
-		case !t.typed:
+		}
+		takesFilter = takesFilter || t.spec.takesFilter()
+		if !t.typed {
 			catalog = append(catalog, t)
 			continue
 		}
@@ -115,6 +117,9 @@ func (m *Module) addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
 		}, m.rawToolHandler(t.name))
 	}
 	m.installCatalogTools(srv, catalog)
+	if takesFilter {
+		installDocs(srv)
+	}
 }
 
 func (m *Module) rawToolHandler(name string) mcp.ToolHandler {

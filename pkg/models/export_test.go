@@ -18,8 +18,10 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -55,5 +57,31 @@ func TestGetUserDataExportStatus(t *testing.T) {
 		status, err := GetUserDataExportStatus(s, &user.User{ID: 15, ExportFileID: 9999})
 		require.NoError(t, err)
 		assert.Nil(t, status)
+	})
+}
+
+func TestCleanupOldUserExports(t *testing.T) {
+	t.Run("keeps fresh exports", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fresh := &files.File{Name: "fresh", Size: 100, Created: time.Now(), CreatedByID: 2}
+		_, err := s.Insert(fresh)
+		require.NoError(t, err)
+
+		// File 1 from the fixtures is from 2019 and therefore expired.
+		_, err = s.ID(1).Cols("export_file_id").Update(&user.User{ExportFileID: 1})
+		require.NoError(t, err)
+		_, err = s.ID(2).Cols("export_file_id").Update(&user.User{ExportFileID: fresh.ID})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		cleanupOldUserExports()
+
+		db.AssertMissing(t, "users", map[string]interface{}{"id": 1, "export_file_id": 1})
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		db.AssertExists(t, "users", map[string]interface{}{"id": 2, "export_file_id": fresh.ID}, false)
+		db.AssertExists(t, "files", map[string]interface{}{"id": fresh.ID}, false)
 	})
 }

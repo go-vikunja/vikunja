@@ -42,6 +42,7 @@ type primeContext struct {
 	Buckets           config.Buckets
 	BotUsername       string
 	TaskIDExample     string
+	TaskURLExample    string
 }
 
 func newPrimeCmd() *cobra.Command {
@@ -74,7 +75,8 @@ silently with status 0 — that makes the hook safe to install globally.`,
 			// Cap the lookup at 10s so a wedged server can't hold the
 			// SessionStart hook hostage.
 			projectTitle := "(unknown)"
-			if rt, err := loadRuntime(); err == nil {
+			if rt, err := loadRuntime(cmd.Context()); err == nil {
+				cfg = rt.cfg // may carry a backfilled frontend_url
 				ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Second)
 				if p, err := rt.client.GetProject(ctx, cfg.ProjectID); err == nil {
 					projectTitle = p.Title
@@ -91,6 +93,7 @@ silently with status 0 — that makes the hook safe to install globally.`,
 				Buckets:           cfg.Buckets,
 				BotUsername:       cfg.Bot.Username,
 				TaskIDExample:     cfg.FormatTaskID(1),
+				TaskURLExample:    cfg.TaskURL(123),
 			}
 
 			tpl, err := template.New("prime").Parse(promptTemplate)

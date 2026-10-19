@@ -16,7 +16,11 @@
 
 package events
 
-import "github.com/ThreeDotsLabs/watermill/message"
+import (
+	"slices"
+
+	"github.com/ThreeDotsLabs/watermill/message"
+)
 
 // Listener represents something that listens to events
 type Listener interface {
@@ -33,4 +37,9 @@ func init() {
 // RegisterListener is used to register a listener when a specific event happens
 func RegisterListener(name string, listener Listener) {
 	listeners[name] = append(listeners[name], listener)
+}
+
+// ListenersFor returns the listeners registered for an event.
+func ListenersFor(name string) []Listener {
+	return slices.Clone(listeners[name])
 }

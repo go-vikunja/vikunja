@@ -10,12 +10,13 @@
 		
 		<div class="picker">
 			<input
-				v-model="color"
+				:value="color"
 				class="picker__input"
 				type="color"
 				:list="colorListID"
 				:class="{'is-empty': isEmpty}"
 				:aria-label="$t('input.projectColor')"
+				@input="onInput"
 			>
 			<svg
 				v-show="isEmpty"
@@ -103,9 +104,13 @@ watch(
 	{immediate: true},
 )
 
-watch(color, () => update())
-
 const isEmpty = computed(() => color.value === '')
+
+// Not a watcher on color: that would echo parent model changes back as updates (#4156)
+function onInput(e: Event) {
+	color.value = (e.target as HTMLInputElement).value
+	update()
+}
 
 function update(force = false) {
 	if(isEmpty.value && !force) {

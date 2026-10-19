@@ -464,58 +464,62 @@ type UserExportStatus struct {
 }
 
 func RegisterOldExportCleanupCron() {
-	const logPrefix = "[User Export Cleanup Cron] "
-
-	err := cron.Schedule("0 * * * *", func() {
-		s := db.NewSession()
-		defer s.Close()
-
-		users := []*user.User{}
-		err := s.Where("export_file_id IS NOT NULL AND export_file_id != ?", 0).Find(&users)
-		if err != nil {
-			log.Errorf(logPrefix+"Could not get users with export files: %s", err)
-			return
-		}
-
-		fileIDs := []int64{}
-		for _, u := range users {
-			fileIDs = append(fileIDs, u.ExportFileID)
-		}
-
-		fs := []*files.File{}
-		err = s.Where("created < ?", time.Now().Add(-time.Hour*24*7)).In("id", fileIDs).Find(&fs)
-		if err != nil {
-			log.Errorf(logPrefix+"Could not get users with export files: %s", err)
-			return
-		}
-
-		if len(fs) == 0 {
-			return
-		}
-
-		log.Debugf(logPrefix+"Removing %d old user data exports...", len(fs))
-
-		for _, f := range fs {
-			err = f.Delete(s)
-			if err != nil {
-				log.Errorf(logPrefix+"Could not remove user export file %d: %s", f.ID, err)
-				return
-			}
-		}
-
-		_, err = s.In("export_file_id", fileIDs).Cols("export_file_id").Update(&user.User{})
-		if err != nil {
-			log.Errorf(logPrefix+"Could not update user export file state: %s", err)
-			return
-		}
-
-		log.Debugf(logPrefix+"Removed %d old user data exports...", len(fs))
-
-		if err := s.Commit(); err != nil {
-			log.Errorf(logPrefix+"Error committing export cleanup: %s", err)
-		}
-	})
+	err := cron.Schedule("0 * * * *", cleanupOldUserExports)
 	if err != nil {
 		log.Fatalf("Could not register old export cleanup cron: %s", err)
+	}
+}
+
+func cleanupOldUserExports() {
+	const logPrefix = "[User Export Cleanup Cron] "
+
+	s := db.NewSession()
+	defer s.Close()
+
+	users := []*user.User{}
+	err := s.Where("export_file_id IS NOT NULL AND export_file_id != ?", 0).Find(&users)
+	if err != nil {
+		log.Errorf(logPrefix+"Could not get users with export files: %s", err)
+		return
+	}
+
+	fileIDs := []int64{}
+	for _, u := range users {
+		fileIDs = append(fileIDs, u.ExportFileID)
+	}
+
+	fs := []*files.File{}
+	err = s.Where("created < ?", time.Now().Add(-time.Hour*24*7)).In("id", fileIDs).Find(&fs)
+	if err != nil {
+		log.Errorf(logPrefix+"Could not get users with export files: %s", err)
+		return
+	}
+
+	if len(fs) == 0 {
+		return
+	}
+
+	log.Debugf(logPrefix+"Removing %d old user data exports...", len(fs))
+
+	expiredIDs := make([]int64, 0, len(fs))
+	for _, f := range fs {
+		expiredIDs = append(expiredIDs, f.ID)
+		err = f.Delete(s)
+		if err != nil {
+			log.Errorf(logPrefix+"Could not remove user export file %d: %s", f.ID, err)
+			return
+		}
+	}
+
+	_, err = s.In("export_file_id", expiredIDs).Cols("export_file_id").Update(&user.User{})
+	if err != nil {
+		log.Errorf(logPrefix+"Could not update user export file state: %s", err)
+		return
+	}
+
+	log.Debugf(logPrefix+"Removed %d old user data exports...", len(fs))
+
+	if err := s.Commit(); err != nil {
+		log.Errorf(logPrefix+"Error committing export cleanup: %s", err)
 	}
 }

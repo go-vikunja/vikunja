@@ -34,7 +34,7 @@
 					@keydown.down.prevent="select(0, 0)"
 					@keyup.prevent.delete="unselectCmd"
 					@keydown.prevent.enter="onEnter"
-					@keyup.prevent.esc="closeQuickActions"
+					@keydown.prevent.esc="closeQuickActions"
 				>
 				<QuickAddMagic
 					v-if="isNewTaskCommand"
@@ -86,7 +86,7 @@
 							@keydown.down.prevent="select(k, key + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
 							@keyup.prevent.enter="doAction(r.type, i)"
-							@keyup.prevent.esc="searchInput?.focus()"
+							@keydown.prevent.esc="searchInput?.focus()"
 						>
 							<template v-if="r.type === ACTION_TYPE.LABELS">
 								<XLabel :label="i" />
