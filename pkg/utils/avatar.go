@@ -17,70 +17,14 @@
 package utils
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"image"
-	"image/jpeg"
-	"image/png"
 	"io"
 	"net/http"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/modules/imageutils"
-
-	"github.com/disintegration/imaging"
 )
-
-const avatarMaxSide = 1024
-
-// CropAvatarTo1x1 crops the avatar image to a 1:1 aspect ratio, centered on the image
-func CropAvatarTo1x1(ctx context.Context, imageData []byte) ([]byte, error) {
-	if len(imageData) == 0 {
-		return nil, errors.New("empty image data")
-	}
-
-	var cropped []byte
-	err := imageutils.Decode(ctx, imageutils.BytesOpener(imageData), func(img image.Image, format string) error {
-		var err error
-		cropped, err = cropTo1x1(imageData, img, format)
-		return err
-	})
-	if err != nil {
-		return nil, err
-	}
-	return cropped, nil
-}
-
-func cropTo1x1(imageData []byte, img image.Image, format string) ([]byte, error) {
-	bounds := img.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
-
-	if width == height {
-		return imageData, nil
-	}
-
-	// Scaling here avoids a full-resolution copy outside the decode budget.
-	side := min(width, height, avatarMaxSide)
-	square := imaging.Fill(img, side, side, imaging.Center, imaging.Lanczos)
-
-	var buf bytes.Buffer
-	var err error
-	switch format {
-	case "jpeg":
-		err = jpeg.Encode(&buf, square, nil)
-	default:
-		err = png.Encode(&buf, square)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to encode cropped image: %w", err)
-	}
-
-	return buf.Bytes(), nil
-}
 
 // DownloadImage downloads an image from a URL and returns the image data
 func DownloadImage(ctx context.Context, url string) ([]byte, error) {

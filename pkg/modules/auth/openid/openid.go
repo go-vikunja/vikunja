@@ -17,7 +17,6 @@
 package openid
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -33,7 +32,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -378,22 +376,10 @@ func syncUserAvatarFromOpenID(ctx context.Context, s *xorm.Session, u *user.User
 		return fmt.Errorf("error downloading avatar: %w", err)
 	}
 
-	// Process avatar, ensure 1:1 ratio
-	processedAvatar, err := utils.CropAvatarTo1x1(ctx, avatarData)
-	if err != nil {
-		return fmt.Errorf("error processing avatar: %w", err)
-	}
-
-	// Set avatar provider to openid
-	u.AvatarProvider = "openid"
-
-	// Store avatar and update user
-	err = upload.StoreAvatarFile(ctx, s, u, bytes.NewReader(processedAvatar))
+	err = avatar.StoreSyncedAvatar(ctx, s, u, "openid", avatarData)
 	if err != nil {
 		return fmt.Errorf("error storing avatar: %w", err)
 	}
-
-	avatar.FlushAllCaches(u)
 
 	return nil
 }
