@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -150,13 +151,16 @@ func taskAttachmentsUpload(ctx context.Context, in *taskAttachmentUploadInput) (
 	success, failures, err := models.UploadTaskAttachments(s, a, in.TaskID, uploads)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 
 	return &taskAttachmentUploadBody{Body: webfiles.BuildUploadResult(success, failures)}, nil
 }

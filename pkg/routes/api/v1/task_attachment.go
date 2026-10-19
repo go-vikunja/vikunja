@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	webfiles "code.vikunja.io/api/pkg/web/files"
@@ -61,6 +62,7 @@ func UploadTaskAttachment(c *echo.Context) error {
 	form, err := c.MultipartForm()
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		if errors.Is(err, http.ErrNotMultipart) {
 			return echo.NewHTTPError(http.StatusBadRequest, "No multipart form provided").Wrap(err)
 		}
@@ -83,13 +85,16 @@ func UploadTaskAttachment(c *echo.Context) error {
 	success, failures, err := models.UploadTaskAttachments(s, auth, taskAttachment.TaskID, uploads)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
 	return c.JSON(http.StatusOK, webfiles.BuildUploadResult(success, append(openErrors, failures...)))
 }

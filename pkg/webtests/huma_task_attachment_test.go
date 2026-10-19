@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 
@@ -86,6 +87,16 @@ func uploadOneAttachment(t *testing.T, e *echo.Echo, token, filename string, con
 	return resp.Body.Success[0].ID
 }
 
+func assertAttachmentCreatedDispatched(t *testing.T, taskID, attachmentID int64) {
+	t.Helper()
+	dispatched := events.GetDispatchedEvents((&models.TaskAttachmentCreatedEvent{}).Name())
+	require.Len(t, dispatched, 1)
+	created, ok := dispatched[0].(*models.TaskAttachmentCreatedEvent)
+	require.True(t, ok, "dispatched %T", dispatched[0])
+	assert.Equal(t, attachmentID, created.Attachment.ID)
+	assert.Equal(t, taskID, created.Task.ID)
+}
+
 func TestTaskAttachmentsV2(t *testing.T) {
 	t.Run("Upload single file", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -97,6 +108,15 @@ func TestTaskAttachmentsV2(t *testing.T) {
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), "hello.txt")
 		assert.Contains(t, rec.Body.String(), `"success"`)
+	})
+
+	t.Run("Upload dispatches the attachment created event", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		id := uploadOneAttachment(t, e, token, "event.txt", []byte("event"))
+		assertAttachmentCreatedDispatched(t, 1, id)
 	})
 
 	t.Run("Upload multiple files", func(t *testing.T) {
