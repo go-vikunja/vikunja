@@ -100,7 +100,7 @@ func TestHumaProjectBackgroundUpload(t *testing.T) {
 			Detail string `json:"detail"`
 		}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &problem))
-		assert.Contains(t, problem.Detail, "file is not a supported image format")
+		assert.Equal(t, "file is not a supported image format [Mime: image/png]", problem.Detail)
 	})
 
 	t.Run("Read-only user is forbidden", func(t *testing.T) {

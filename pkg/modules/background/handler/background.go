@@ -254,6 +254,9 @@ func ValidateAndSaveBackgroundUpload(ctx context.Context, s *xorm.Session, auth 
 }
 
 func SaveBackgroundFile(ctx context.Context, s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string) (storedSize int64, err error) {
+	if _, err := srcf.Seek(0, io.SeekStart); err != nil {
+		return 0, err
+	}
 	mime, _ := mimetype.DetectReader(srcf)
 	open := func() (io.ReadCloser, error) {
 		if _, err := srcf.Seek(0, io.SeekStart); err != nil {
