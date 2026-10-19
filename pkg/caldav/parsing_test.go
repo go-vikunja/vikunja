@@ -160,6 +160,60 @@ END:VCALENDAR`,
 			wantProps: ParsedVTODOProperties{Title: true},
 		},
 		{
+			name: "With multiple CATEGORIES properties including empty line",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+CATEGORIES:irl
+CATEGORIES:
+CATEGORIES:this-week
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title: "Todo #1",
+				UID:   "randomuid",
+				Labels: []*models.Label{
+					{Title: "irl"},
+					{Title: "this-week"},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true},
+		},
+		{
+			name: "With trimmed category values",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Todo #1
+CATEGORIES: cat1 , cat2
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title: "Todo #1",
+				UID:   "randomuid",
+				Labels: []*models.Label{
+					{Title: "cat1"},
+					{Title: "cat2"},
+				},
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true},
+		},
+		{
 			name: "With empty categories (explicit clear, not omission)",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
