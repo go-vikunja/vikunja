@@ -137,7 +137,7 @@ import CommentCount from './CommentCount.vue'
 import {getHexColor, getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
-import {SUPPORTED_IMAGE_SUFFIX} from '@/helpers/attachmentPreview'
+import {canPreviewImage} from '@/helpers/attachmentPreview'
 import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
@@ -234,7 +234,7 @@ async function maybeDownloadCoverImage() {
 	}
 
 	const attachment = props.task.attachments.find(a => a.id === props.task.cover_image_attachment_id)
-	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => (attachment.file?.name ?? '').toLowerCase().endsWith(suffix))) {
+	if (!attachment || !canPreviewImage(attachment)) {
 		return
 	}
 
