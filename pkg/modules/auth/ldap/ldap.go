@@ -202,7 +202,6 @@ func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, pass
 
 	if avatarSyncAttribute != "" {
 		raw := sr.Entries[0].GetRawAttributeValue(avatarSyncAttribute)
-		u.AvatarProvider = "ldap"
 
 		// Process the avatar image to ensure 1:1 aspect ratio
 		processedAvatar, err := utils.CropAvatarTo1x1(ctx, raw)
@@ -210,11 +209,15 @@ func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, pass
 			log.Debugf("Error processing LDAP avatar: %v", err)
 			// Continue without avatar if processing fails
 		} else {
+			previousProvider := u.AvatarProvider
+			u.AvatarProvider = "ldap"
 			err = upload.StoreAvatarFile(ctx, s, u, bytes.NewReader(processedAvatar))
 			if err != nil {
-				return nil, err
+				u.AvatarProvider = previousProvider
+				log.Errorf("Error storing LDAP avatar for user %s: %v", u.Username, err)
+			} else {
+				avatar.FlushAllCaches(u)
 			}
-			avatar.FlushAllCaches(u)
 		}
 	}
 
