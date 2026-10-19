@@ -700,6 +700,7 @@ func RegisterAddTaskToFilterViewCron() {
 					continue
 				}
 				tasks = resultTasks.([]*Task)
+				filterTasksCache[filterID] = tasks
 			}
 
 			// Get saved tasks in task_buckets and task_positions
