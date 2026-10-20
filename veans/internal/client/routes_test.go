@@ -65,26 +65,22 @@ func TestPermissionsForBot_EmptyWhenServerIsEmpty(t *testing.T) {
 	}
 }
 
-// TestPermissionsForBot_ProjectsBucketScopes pins the project-group scopes the
-// bot needs for the v2 kanban-bucket calls: list/create/update/delete buckets
-// plus the bucket-task MOVE. The MOVE and the buckets-with-tasks LIST collide
-// on the `views_buckets_tasks` subkey and the bare-vs-_put assignment depends
-// on unspecified route-init order, so the bot must request BOTH keys; the
-// runtime intersection keeps whichever the server actually exposes.
+// Pins current (create/update/tasks_update) and legacy (post/put/tasks_put) bucket keys.
 func TestPermissionsForBot_ProjectsBucketScopes(t *testing.T) {
-	// A server that registered the move under the bare key and the list under
-	// the _put key (one of the two possible orderings).
 	server := map[string]RouteGroup{
 		"projects": {
-			"read_one":                {},
-			"read_all":                {},
-			"tasks_by-index":          {},
-			"views_buckets":           {}, // list buckets
-			"views_buckets_post":      {}, // create bucket
-			"views_buckets_put":       {}, // update bucket
-			"views_buckets_delete":    {}, // delete bucket
-			"views_buckets_tasks":     {}, // bucket-task move OR buckets-with-tasks list
-			"views_buckets_tasks_put": {}, // the other of the colliding pair
+			"read_one":                   {},
+			"read_all":                   {},
+			"tasks_by-index":             {},
+			"views_buckets":              {}, // list buckets
+			"views_buckets_post":         {}, // create bucket
+			"views_buckets_put":          {}, // update bucket
+			"views_buckets_delete":       {}, // delete bucket
+			"views_buckets_tasks":        {}, // buckets-with-tasks list
+			"views_buckets_tasks_put":    {}, // legacy move
+			"views_buckets_create":       {},
+			"views_buckets_update":       {},
+			"views_buckets_tasks_update": {}, // move
 		},
 	}
 	got := PermissionsForBot(server)
@@ -96,6 +92,7 @@ func TestPermissionsForBot_ProjectsBucketScopes(t *testing.T) {
 		"read_one", "read_all", "tasks_by-index",
 		"views_buckets", "views_buckets_post", "views_buckets_put",
 		"views_buckets_delete", "views_buckets_tasks", "views_buckets_tasks_put",
+		"views_buckets_create", "views_buckets_update", "views_buckets_tasks_update",
 	}
 	for _, w := range want {
 		if !slices.Contains(projects, w) {
