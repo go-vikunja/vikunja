@@ -57,7 +57,7 @@ type Webhook struct {
 	// The webhook events which should fire this webhook target
 	Events []string `xorm:"JSON not null" valid:"required" json:"events" doc:"The webhook events which should fire this webhook target. Get the available events from /api/v1/webhooks/events."`
 	// The project ID of the project this webhook target belongs to
-	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project" readOnly:"true" doc:"The id of the project this webhook target belongs to. Set from the URL, not the body."`
+	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project" readOnly:"true" doc:"The id of the project this webhook target belongs to."`
 	// The user ID if this is a user-level webhook (mutually exclusive with ProjectID)
 	UserID int64 `xorm:"bigint null index" json:"user_id" readOnly:"true" doc:"The id of the user if this is a user-level webhook (mutually exclusive with project_id). Set from the route, not the body."`
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
