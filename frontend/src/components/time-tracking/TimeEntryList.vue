@@ -121,10 +121,9 @@ import {useAuthStore} from '@/stores/auth'
 import {taskQuery} from '@/client/queries/tasks'
 import {useQueries} from '@tanstack/vue-query'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import {formatDate} from '@/helpers/time/formatDate'
+import {formatTimeRange} from '@/helpers/time/formatTimeRange'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTimeFormat} from '@/composables/useTimeFormat'
-import {TIME_FORMAT} from '@/constants/timeFormat'
 
 import type {TaskResponse} from '@/client/queries/tasks'
 import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
@@ -206,17 +205,9 @@ function formatDuration(seconds: number): string {
 	return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
 }
 
-function formatTime(date: Date): string {
-	return formatDate(date, timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
-}
-
 function timeRange(entry: ITimeEntry): string {
 	const start = parseDateOrNull(entry.start_time)
-	if (start === null) {
-		return ''
-	}
-	const end = parseDateOrNull(entry.end_time)
-	return end === null ? `${formatTime(start)} – …` : `${formatTime(start)} – ${formatTime(end)}`
+	return start === null ? '' : formatTimeRange(start, parseDateOrNull(entry.end_time), timeFormat.value)
 }
 </script>
 
