@@ -476,12 +476,33 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		return fmt.Errorf("could not read data file: %w", err)
 	}
 
+	if err := checkDataItemCount(bufData.Bytes()); err != nil {
+		return err
+	}
 	projects := []*models.ProjectWithTasksAndBuckets{}
 	if err := json.Unmarshal(bufData.Bytes(), &projects); err != nil {
 		return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read data: %w", err)}
 	}
-	if err := migration.CheckItemLimit(projects); err != nil {
-		return err
+
+	var filters []*models.SavedFilter
+	if filterFile != nil {
+		ff, err := filterFile.Open()
+		if err != nil {
+			return fmt.Errorf("could not open filters file: %w", err)
+		}
+		defer ff.Close()
+
+		bufFilter, err := readZipEntry(ff, budget)
+		if err != nil {
+			return fmt.Errorf("could not read filters file: %w", err)
+		}
+
+		if err := json.Unmarshal(bufFilter.Bytes(), &filters); err != nil {
+			return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read filter data: %w", err)}
+		}
+		if err := migration.CheckItemCount(int64(len(filters))); err != nil {
+			return err
+		}
 	}
 
 	provider := &lazyFileProvider{
@@ -502,27 +523,9 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 		return fmt.Errorf("could not insert data: %w", err)
 	}
 
-	if filterFile == nil {
-		log.Debugf(logPrefix + "No filter file found")
+	if len(filters) == 0 {
+		log.Debugf(logPrefix + "No filters to import")
 		return nil
-	}
-
-	///////
-	// Import filters
-	ff, err := filterFile.Open()
-	if err != nil {
-		return fmt.Errorf("could not open filters file: %w", err)
-	}
-	defer ff.Close()
-
-	bufFilter, err := readZipEntry(ff, budget)
-	if err != nil {
-		return fmt.Errorf("could not read filters file: %w", err)
-	}
-
-	filters := []*models.SavedFilter{}
-	if err := json.Unmarshal(bufFilter.Bytes(), &filters); err != nil {
-		return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read filter data: %w", err)}
 	}
 
 	log.Debugf(logPrefix+"Importing %d saved filters", len(filters))
