@@ -30,7 +30,7 @@ import (
 )
 
 type avatarUploadInput struct {
-	// Allow-list mirrors the image formats avatar.StoreUploadedAvatar can actually decode (the decoders registered process-wide by the imaging package: png, jpeg, gif, tiff, bmp); octet-stream covers programmatic clients. Huma's MimeTypeValidator rejects the part pre-handler, so anything advertised here must also pass the byte-level image check in avatar.StoreUploadedAvatar. Formats without a registered decoder (e.g. svg, webp) are intentionally excluded.
+	// Allow-list mirrors the image formats avatar.PrepareUpload can actually decode (the decoders registered process-wide by the imaging package: png, jpeg, gif, tiff, bmp); octet-stream covers programmatic clients. Huma's MimeTypeValidator rejects the part pre-handler, so anything advertised here must also pass the byte-level image check in avatar.PrepareUpload. Formats without a registered decoder (e.g. svg, webp) are intentionally excluded.
 	RawBody huma.MultipartFormFiles[struct {
 		Avatar huma.FormFile `form:"avatar" contentType:"image/png,image/jpeg,image/gif,image/tiff,image/bmp,application/octet-stream" required:"true" doc:"The avatar image to upload. Must be a decodable raster image (PNG, JPEG, GIF, TIFF or BMP); it is resized server-side and re-encoded as PNG."`
 	}]
@@ -68,6 +68,17 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 		return nil, huma.Error403Forbidden("only users can upload an avatar")
 	}
 
+	src := in.RawBody.Data().Avatar
+	defer func() { _ = src.Close() }()
+
+	prepared, err := avatar.PrepareUpload(ctx, src)
+	if errors.Is(err, avatar.ErrNotAnImage) {
+		return nil, huma.Error400BadRequest("Uploaded file is no image.")
+	}
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
@@ -78,14 +89,8 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 		return nil, translateDomainError(err)
 	}
 
-	src := in.RawBody.Data().Avatar
-	defer func() { _ = src.Close() }()
-
-	if err := avatar.StoreUploadedAvatar(ctx, s, u, src); err != nil {
+	if err := avatar.SaveUploaded(s, u, prepared); err != nil {
 		_ = s.Rollback()
-		if errors.Is(err, avatar.ErrNotAnImage) {
-			return nil, huma.Error400BadRequest("Uploaded file is no image.")
-		}
 		return nil, translateDomainError(err)
 	}
 

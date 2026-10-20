@@ -45,9 +45,6 @@ func GetAvatar(c *echo.Context) error {
 	// Get the username
 	username := c.Param("username")
 
-	s := db.NewSession()
-	defer s.Close()
-
 	size := c.QueryParam("size")
 	var sizeInt int64 = 250 // Default size of 250
 	if size != "" {
@@ -59,7 +56,7 @@ func GetAvatar(c *echo.Context) error {
 		}
 	}
 
-	a, mimeType, err := avatar.GetAvatarForUsername(s, username, sizeInt)
+	a, mimeType, err := avatar.GetAvatarForUsername(username, sizeInt)
 	if err != nil {
 		return err
 	}
@@ -82,38 +79,40 @@ func GetAvatar(c *echo.Context) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/settings/avatar/upload [put]
 func UploadAvatar(c *echo.Context) (err error) {
-
-	s := db.NewSession()
-	defer s.Close()
-
 	uc, err := user.GetCurrentUser(c)
 	if err != nil {
 		return err
 	}
+
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	a, err := avatar.PrepareUpload(c.Request().Context(), src)
+	if errors.Is(err, avatar.ErrNotAnImage) {
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
+	}
+	if err != nil {
+		return err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
 	u, err := user.GetUserByID(s, uc.ID)
 	if err != nil {
 		_ = s.Rollback()
 		return err
 	}
 
-	// Get + upload the image
-	file, err := c.FormFile("avatar")
-	if err != nil {
+	if err := avatar.SaveUploaded(s, u, a); err != nil {
 		_ = s.Rollback()
-		return err
-	}
-	src, err := file.Open()
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	defer src.Close()
-
-	if err := avatar.StoreUploadedAvatar(c.Request().Context(), s, u, src); err != nil {
-		_ = s.Rollback()
-		if errors.Is(err, avatar.ErrNotAnImage) {
-			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
-		}
 		return err
 	}
 

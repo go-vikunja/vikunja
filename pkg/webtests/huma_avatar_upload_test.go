@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -29,6 +30,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/textproto"
+	"sync"
 	"testing"
 	"time"
 
@@ -285,6 +287,44 @@ func TestAvatarDecodeIsBounded(t *testing.T) {
 		require.NoError(t, err, "the previous avatar must still be readable")
 	})
 
+	t.Run("queued upload holds no transaction", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		release := imageutils.ExhaustBudgetForTests(time.Minute)
+		t.Cleanup(release)
+
+		ctx := &doneSignalCtx{Context: t.Context(), waiting: make(chan struct{})}
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		req := httptest.NewRequest(http.MethodPut, avatarUploadPath, body).WithContext(ctx)
+		req.Header.Set("Content-Type", contentType)
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		finished := make(chan struct{})
+		go func() {
+			defer close(finished)
+			e.ServeHTTP(rec, req)
+		}()
+
+		<-ctx.waiting
+		s := db.NewSession()
+		_, err = s.ID(testuser2.ID).Cols("name").Update(&user.User{Name: "written while an upload is queued"})
+		if err == nil {
+			err = s.Commit()
+		}
+		s.Close()
+		require.NoError(t, err)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":   testuser2.ID,
+			"name": "written while an upload is queued",
+		}, false)
+
+		release()
+		<-finished
+		assert.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	})
+
 	t.Run("busy avatar read is a 503", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
@@ -299,4 +339,16 @@ func TestAvatarDecodeIsBounded(t *testing.T) {
 		assert.Equal(t, http.StatusServiceUnavailable, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeDecodeBusy))
 	})
+}
+
+// Signals the first Done call, which is the decode queue waiting on the request.
+type doneSignalCtx struct {
+	context.Context
+	once    sync.Once
+	waiting chan struct{}
+}
+
+func (c *doneSignalCtx) Done() <-chan struct{} {
+	c.once.Do(func() { close(c.waiting) })
+	return c.Context.Done()
 }

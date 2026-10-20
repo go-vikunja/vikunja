@@ -164,7 +164,7 @@ func newUserWithAvatarFile(t *testing.T) (*xorm.Session, *user.User) {
 	return s, u
 }
 
-func TestStoreAvatarFile(t *testing.T) {
+func TestSaveAvatar(t *testing.T) {
 	t.Run("keeps the old avatar when creating the new file fails", func(t *testing.T) {
 		// Incompressible, so the encoded avatar exceeds the 1MB limit below.
 		noise := image.NewNRGBA(image.Rect(0, 0, 1024, 1024))
@@ -183,7 +183,10 @@ func TestStoreAvatarFile(t *testing.T) {
 		require.NoError(t, config.SetMaxFileSizeMBytesFromString("1MB"))
 		t.Cleanup(func() { _ = config.SetMaxFileSizeMBytesFromString(oldMax) })
 
-		err = StoreAvatarFile(t.Context(), s, u, "upload", src)
+		prepared, err := PrepareAvatar(t.Context(), src.Bytes())
+		require.NoError(t, err)
+
+		err = SaveAvatar(s, u, "upload", prepared)
 		require.Error(t, err)
 		assert.True(t, files.IsErrFileIsTooLarge(err))
 
@@ -197,7 +200,7 @@ func TestStoreAvatarFile(t *testing.T) {
 	t.Run("stores a non-square upload as a centered square", func(t *testing.T) {
 		s, u := newUserWithAvatarFile(t)
 
-		require.NoError(t, StoreAvatarFile(t.Context(), s, u, "upload", bytes.NewReader(encodePNG(t, gradient(300, 200)))))
+		require.NoError(t, SaveAvatar(s, u, "upload", prepare(t, encodePNG(t, gradient(300, 200)))))
 		require.NoError(t, s.Commit())
 
 		f := &files.File{ID: u.AvatarFileID}
@@ -211,10 +214,7 @@ func TestStoreAvatarFile(t *testing.T) {
 	t.Run("replaces the old avatar on success", func(t *testing.T) {
 		s, u := newUserWithAvatarFile(t)
 
-		small := &bytes.Buffer{}
-		require.NoError(t, png.Encode(small, image.NewNRGBA(image.Rect(0, 0, 8, 8))))
-
-		require.NoError(t, StoreAvatarFile(t.Context(), s, u, "upload", small))
+		require.NoError(t, SaveAvatar(s, u, "upload", prepare(t, encodePNG(t, image.NewNRGBA(image.Rect(0, 0, 8, 8))))))
 		assert.NotEqual(t, int64(1), u.AvatarFileID)
 		assert.NotZero(t, u.AvatarFileID)
 		require.NoError(t, s.Commit())
@@ -224,6 +224,31 @@ func TestStoreAvatarFile(t *testing.T) {
 		require.Error(t, err, "old avatar blob must be gone")
 		assert.True(t, os.IsNotExist(err))
 	})
+
+	t.Run("restores the user when the update fails", func(t *testing.T) {
+		s, u := newUserWithAvatarFile(t)
+		oldFileID, oldProvider := u.AvatarFileID, u.AvatarProvider
+
+		err := SaveAvatar(s, u, "bogus", prepare(t, encodePNG(t, gradient(2, 2))))
+		var invalid *user.ErrInvalidAvatarProvider
+		require.ErrorAs(t, err, &invalid)
+		assert.Equal(t, oldFileID, u.AvatarFileID)
+		assert.Equal(t, oldProvider, u.AvatarProvider)
+
+		require.NoError(t, s.Rollback())
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":              1,
+			"avatar_file_id":  oldFileID,
+			"avatar_provider": oldProvider,
+		}, false)
+	})
+}
+
+func prepare(t *testing.T, raw []byte) *EncodedAvatar {
+	t.Helper()
+	prepared, err := PrepareAvatar(t.Context(), raw)
+	require.NoError(t, err)
+	return prepared
 }
 
 func encodePNG(t *testing.T, img image.Image) []byte {
@@ -250,6 +275,7 @@ func gradient(width, height int) *image.NRGBA {
 
 func syncAvatar(t *testing.T, raw []byte) image.Image {
 	t.Helper()
+	prepared := prepare(t, raw)
 	db.LoadAndAssertFixtures(t)
 	files.InitTestFileFixtures(t)
 
@@ -258,7 +284,7 @@ func syncAvatar(t *testing.T, raw []byte) image.Image {
 	u, err := user.GetUserByID(s, 1)
 	require.NoError(t, err)
 
-	require.NoError(t, StoreSyncedAvatar(t.Context(), s, u, "ldap", raw))
+	require.NoError(t, SaveAvatar(s, u, "ldap", prepared))
 	require.NoError(t, s.Commit())
 
 	require.NotZero(t, u.AvatarFileID)
@@ -276,7 +302,7 @@ func syncAvatar(t *testing.T, raw []byte) image.Image {
 	return img
 }
 
-func TestStoreSyncedAvatar(t *testing.T) {
+func TestPrepareAvatar(t *testing.T) {
 	t.Run("crops a non-square image centered", func(t *testing.T) {
 		img := syncAvatar(t, encodePNG(t, gradient(8, 4)))
 
@@ -314,29 +340,9 @@ func TestStoreSyncedAvatar(t *testing.T) {
 		binary.BigEndian.PutUint32(bomb[20:24], uint32(8000))
 		binary.BigEndian.PutUint32(bomb[29:33], crc32.ChecksumIEEE(bomb[12:29]))
 
-		s := db.NewSession()
-		defer s.Close()
-		err := StoreSyncedAvatar(t.Context(), s, &user.User{ID: 1}, "ldap", bomb)
+		_, err := PrepareAvatar(t.Context(), bomb)
 		require.Error(t, err)
 		assert.True(t, imageutils.IsErrImageTooLarge(err), "err: %v", err)
-	})
-
-	t.Run("restores the user when the update fails", func(t *testing.T) {
-		s, u := newUserWithAvatarFile(t)
-		oldFileID, oldProvider := u.AvatarFileID, u.AvatarProvider
-
-		err := StoreSyncedAvatar(t.Context(), s, u, "bogus", encodePNG(t, gradient(2, 2)))
-		var invalid *user.ErrInvalidAvatarProvider
-		require.ErrorAs(t, err, &invalid)
-		assert.Equal(t, oldFileID, u.AvatarFileID)
-		assert.Equal(t, oldProvider, u.AvatarProvider)
-
-		require.NoError(t, s.Rollback())
-		db.AssertExists(t, "users", map[string]interface{}{
-			"id":              1,
-			"avatar_file_id":  oldFileID,
-			"avatar_provider": oldProvider,
-		}, false)
 	})
 }
 
