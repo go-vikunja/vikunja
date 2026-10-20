@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -116,4 +117,49 @@ func TestWebhook_ProjectReadNeedsWrite(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, result, 1)
 	})
+}
+
+func TestWebhook_JSONNeverSetsOwnership(t *testing.T) {
+	w := &Webhook{ProjectID: 3}
+	err := json.Unmarshal([]byte(`{"target_url":"https://example.com/x","user_id":1,"project_id":5}`), w)
+	require.NoError(t, err)
+	assert.Equal(t, "https://example.com/x", w.TargetURL)
+	assert.Equal(t, int64(3), w.ProjectID)
+	assert.Zero(t, w.UserID)
+}
+
+func TestWebhook_CanUpdateAndDeleteRouteClass(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	for _, tc := range []struct {
+		name    string
+		webhook Webhook
+		can     bool
+	}{
+		{name: "project webhook via its project", webhook: Webhook{ID: 1, ProjectID: 1}, can: true},
+		// Webhook 3 lives in project 10, which user 1 can write too.
+		{name: "project webhook via another writable project", webhook: Webhook{ID: 3, ProjectID: 1}, can: false},
+		// Webhook 8 is user 1's own user-level webhook.
+		{name: "user webhook via project 0", webhook: Webhook{ID: 8}, can: false},
+		{name: "user webhook via a project", webhook: Webhook{ID: 8, ProjectID: 1}, can: false},
+		{name: "own user webhook via user route", webhook: Webhook{ID: 8, UserID: 1}, can: true},
+		{name: "other user's webhook via user route", webhook: Webhook{ID: 6, UserID: 1}, can: false},
+		{name: "project webhook via user route", webhook: Webhook{ID: 1, UserID: 1}, can: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			w := tc.webhook
+			can, err := w.CanUpdate(s, u)
+			require.NoError(t, err)
+			assert.Equal(t, tc.can, can, "CanUpdate")
+
+			w = tc.webhook
+			can, err = w.CanDelete(s, u)
+			require.NoError(t, err)
+			assert.Equal(t, tc.can, can, "CanDelete")
+		})
+	}
 }
