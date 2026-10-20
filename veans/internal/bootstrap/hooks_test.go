@@ -112,7 +112,7 @@ func TestEnsureClaudeHook_PreservesOtherHooks(t *testing.T) {
 
 func TestInstallClaudeCodeHook_CreatesFile(t *testing.T) {
 	dir := t.TempDir()
-	path, action, err := installClaudeCodeHook(dir)
+	path, action, err := installClaudeCodeHook(openRoot(t, dir))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,10 +140,10 @@ func TestInstallClaudeCodeHook_CreatesFile(t *testing.T) {
 
 func TestInstallClaudeCodeHook_IdempotentRerun(t *testing.T) {
 	dir := t.TempDir()
-	if _, _, err := installClaudeCodeHook(dir); err != nil {
+	if _, _, err := installClaudeCodeHook(openRoot(t, dir)); err != nil {
 		t.Fatal(err)
 	}
-	path, action, err := installClaudeCodeHook(dir)
+	path, action, err := installClaudeCodeHook(openRoot(t, dir))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,7 +175,7 @@ func TestInstallClaudeCodeHook_MergesWithUserSettings(t *testing.T) {
 	if err := os.WriteFile(settingsPath, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	_, action, err := installClaudeCodeHook(dir)
+	_, action, err := installClaudeCodeHook(openRoot(t, dir))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +193,7 @@ func TestInstallClaudeCodeHook_MergesWithUserSettings(t *testing.T) {
 
 func TestInstallOpenCodeHook_CreatesAndIdempotent(t *testing.T) {
 	dir := t.TempDir()
-	path, action, err := installOpenCodeHook(dir)
+	path, action, err := installOpenCodeHook(openRoot(t, dir))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +211,7 @@ func TestInstallOpenCodeHook_CreatesAndIdempotent(t *testing.T) {
 	}
 
 	// Re-run leaves the file alone — we don't merge TS by hand.
-	_, action2, err := installOpenCodeHook(dir)
+	_, action2, err := installOpenCodeHook(openRoot(t, dir))
 	if err != nil {
 		t.Fatal(err)
 	}

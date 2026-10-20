@@ -124,20 +124,20 @@ func offerAgentHooks(p auth.Prompter, w io.Writer, choices AgentHookChoice, clau
 	return choices, nil
 }
 
-// installAgentHooks writes the requested integrations to disk relative to
-// repoRoot. Each install is idempotent: if the hook entry is already there,
-// it's left alone; if the settings file is missing, it's created with a
-// fresh skeleton.
-func installAgentHooks(repoRoot string, choices AgentHookChoice, w io.Writer) error {
+// installAgentHooks writes inside root so repo symlinks can't redirect the
+// hooks to e.g. ~/.claude. Each install is idempotent: if the hook entry is
+// already there, it's left alone; if the settings file is missing, it's
+// created with a fresh skeleton.
+func installAgentHooks(root *os.Root, choices AgentHookChoice, w io.Writer) error {
 	if choices.ClaudeCode {
-		path, action, err := installClaudeCodeHook(repoRoot)
+		path, action, err := installClaudeCodeHook(root)
 		if err != nil {
 			return output.Wrap(output.CodeUnknown, err, "install Claude Code hook: %v", err)
 		}
 		progress(w, "%s Claude Code hook in %s", action, path)
 	}
 	if choices.OpenCode {
-		path, action, err := installOpenCodeHook(repoRoot)
+		path, action, err := installOpenCodeHook(root)
 		if err != nil {
 			return output.Wrap(output.CodeUnknown, err, "install OpenCode hook: %v", err)
 		}
@@ -150,9 +150,10 @@ func installAgentHooks(repoRoot string, choices AgentHookChoice, w io.Writer) er
 // so SessionStart and PreCompact invoke `veans prime`. Returns the path,
 // a human verb describing what happened ("Wrote", "Updated", "Already
 // configured"), and any error.
-func installClaudeCodeHook(repoRoot string) (string, string, error) {
-	path := filepath.Join(repoRoot, filepath.FromSlash(ClaudeCodeSettingsRelPath))
-	settings, existed, err := readJSONOrEmpty(path)
+func installClaudeCodeHook(root *os.Root) (string, string, error) {
+	rel := filepath.FromSlash(ClaudeCodeSettingsRelPath)
+	path := filepath.Join(root.Name(), rel)
+	settings, existed, err := readJSONOrEmpty(root, rel)
 	if err != nil {
 		return path, "", err
 	}
@@ -165,7 +166,7 @@ func installClaudeCodeHook(repoRoot string) (string, string, error) {
 	if !changed {
 		return path, "Already configured", nil
 	}
-	if err := writeJSON(path, settings); err != nil {
+	if err := writeJSON(root, rel, settings); err != nil {
 		return path, "", err
 	}
 	if existed {
@@ -221,28 +222,29 @@ func ensureClaudeHook(settings map[string]any, event string) bool {
 // installOpenCodeHook writes `<repoRoot>/.opencode/plugin/veans-prime.ts`
 // if missing. Existing files are left alone (TypeScript merging is out of
 // scope; the user can edit by hand).
-func installOpenCodeHook(repoRoot string) (string, string, error) {
-	path := filepath.Join(repoRoot, filepath.FromSlash(OpenCodePluginRelPath))
-	if _, err := os.Stat(path); err == nil {
+func installOpenCodeHook(root *os.Root) (string, string, error) {
+	rel := filepath.FromSlash(OpenCodePluginRelPath)
+	path := filepath.Join(root.Name(), rel)
+	if _, err := root.Lstat(rel); err == nil {
 		return path, "Already configured", nil
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return path, "", err
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := root.MkdirAll(filepath.Dir(rel), 0o755); err != nil {
 		return path, "", err
 	}
-	if err := os.WriteFile(path, []byte(OpenCodePluginSnippet), 0o644); err != nil {
+	if err := root.WriteFile(rel, []byte(OpenCodePluginSnippet), 0o644); err != nil {
 		return path, "", err
 	}
 	return path, "Wrote", nil
 }
 
-// readJSONOrEmpty reads `path` as JSON or returns an empty object if the
+// readJSONOrEmpty reads `rel` as JSON or returns an empty object if the
 // file doesn't exist. The `existed` flag tells the caller whether the
 // resulting object was loaded from disk (so it can decide between
 // "Wrote" and "Updated").
-func readJSONOrEmpty(path string) (out map[string]any, existed bool, err error) {
-	buf, err := os.ReadFile(path)
+func readJSONOrEmpty(root *os.Root, rel string) (out map[string]any, existed bool, err error) {
+	buf, err := root.ReadFile(rel)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return map[string]any{}, false, nil
@@ -254,7 +256,7 @@ func readJSONOrEmpty(path string) (out map[string]any, existed bool, err error) 
 		return out, true, nil
 	}
 	if err := json.Unmarshal(buf, &out); err != nil {
-		return nil, true, fmt.Errorf("parse %s: %w", path, err)
+		return nil, true, fmt.Errorf("parse %s: %w", rel, err)
 	}
 	return out, true, nil
 }
@@ -265,8 +267,8 @@ func readJSONOrEmpty(path string) (out map[string]any, existed bool, err error) 
 // default new files to 0o600 and preserve the existing mode on update so a
 // user who has tightened the file (e.g. to 0o600 explicitly, or chmod'd it
 // further) doesn't see their permissions widened on the next write.
-func writeJSON(path string, data map[string]any) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+func writeJSON(root *os.Root, rel string, data map[string]any) error {
+	if err := root.MkdirAll(filepath.Dir(rel), 0o755); err != nil {
 		return err
 	}
 	buf, err := json.MarshalIndent(data, "", "  ")
@@ -275,10 +277,10 @@ func writeJSON(path string, data map[string]any) error {
 	}
 	buf = append(buf, '\n')
 	mode := os.FileMode(0o600)
-	if info, err := os.Stat(path); err == nil {
+	if info, err := root.Stat(rel); err == nil {
 		mode = info.Mode().Perm()
 	}
-	return os.WriteFile(path, buf, mode)
+	return root.WriteFile(rel, buf, mode)
 }
 
 // mapAt returns the map at key `k` on `m`, creating it if missing or if
