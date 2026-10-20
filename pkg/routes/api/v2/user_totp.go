@@ -134,7 +134,7 @@ func init() { AddRouteRegistrar(RegisterTOTPRoutes) }
 
 // localUserFromCtx resolves the authenticated user and refuses anything that is
 // not a local account, mirroring v1's getLocalUserFromContext. The caller owns
-// the returned session. CheckUserPassword and IsLocalUser need the full DB
+// the returned session. CheckReauthPassword and IsLocalUser need the full DB
 // record (password hash, issuer), so this loads it rather than trusting the
 // token claims.
 func localUserFromCtx(ctx context.Context) (*user.User, *xorm.Session, error) {
@@ -225,7 +225,7 @@ func totpDisable(ctx context.Context, in *totpDisableBody) (*totpMessageBody, er
 	}
 	defer s.Close()
 
-	if err := user.CheckUserPassword(u, in.Body.Password); err != nil {
+	if err := user.CheckReauthPassword(u, in.Body.Password); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
