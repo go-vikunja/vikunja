@@ -4078,7 +4078,7 @@ export const totpGet = <ThrowOnError extends boolean = true>(options?: Options<T
 /**
  * Disable totp
  *
- * Removes all totp settings for the authenticated user. Requires the current password for confirmation. Local accounts only.
+ * Removes all totp settings for the authenticated user. Requires the current password and a current totp passcode. Wrong passwords and passcodes are throttled per user (429). Local accounts only.
  */
 export const totpDisable = <ThrowOnError extends boolean = true>(options: Options<TotpDisableData, ThrowOnError>): RequestResult<TotpDisableResponses, TotpDisableErrors, ThrowOnError> => (options.client ?? client).post<TotpDisableResponses, TotpDisableErrors, ThrowOnError>({
     security: [{

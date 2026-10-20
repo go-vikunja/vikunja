@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -87,5 +88,44 @@ func TestUserTOTPSecretHiddenWhenEnabled(t *testing.T) {
 		assert.Equal(t, "JBSWY3DPEHPK3PXP", tt.Secret, "GetTOTPForUser must keep returning the full object")
 		_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{User: &user.User{ID: 10}, Passcode: passcode})
 		require.NoError(t, err)
+	})
+}
+
+// GHSA-49pj-52x6-8gpj: the password alone must not strip the second factor.
+func TestUserTOTPDisable(t *testing.T) {
+	t.Run("password and passcode", func(t *testing.T) {
+		passcode, err := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now())
+		require.NoError(t, err)
+		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPDisable, &testuser10,
+			fmt.Sprintf(`{"password":"12345678","totp_passcode":%q}`, passcode), nil, nil)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		db.AssertMissing(t, "totp", map[string]interface{}{"user_id": 10})
+	})
+
+	t.Run("password without passcode", func(t *testing.T) {
+		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPDisable, &testuser10,
+			`{"password":"12345678"}`, nil, nil)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
+		db.AssertExists(t, "totp", map[string]interface{}{"user_id": 10, "enabled": true}, false)
+	})
+
+	t.Run("wrong passcode", func(t *testing.T) {
+		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPDisable, &testuser10,
+			`{"password":"12345678","totp_passcode":"000000"}`, nil, nil)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
+		db.AssertExists(t, "totp", map[string]interface{}{"user_id": 10, "enabled": true}, false)
+	})
+
+	t.Run("wrong password", func(t *testing.T) {
+		passcode, err := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now())
+		require.NoError(t, err)
+		_, err = newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPDisable, &testuser10,
+			fmt.Sprintf(`{"password":"wrong","totp_passcode":%q}`, passcode), nil, nil)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		db.AssertExists(t, "totp", map[string]interface{}{"user_id": 10, "enabled": true}, false)
 	})
 }

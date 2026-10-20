@@ -42,7 +42,8 @@ type totpEnableBody struct {
 
 type totpDisableBody struct {
 	Body struct {
-		Password string `json:"password" doc:"The current user's password, required to disable totp."`
+		Password     string `json:"password" doc:"The current user's password, required to disable totp."`
+		TOTPPasscode string `json:"totp_passcode" doc:"A current passcode from the user's authenticator, required to disable totp."`
 	}
 }
 
@@ -101,7 +102,7 @@ func RegisterTOTPRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID:   "totp-disable",
 		Summary:       "Disable totp",
-		Description:   "Removes all totp settings for the authenticated user. Requires the current password for confirmation. Local accounts only.",
+		Description:   "Removes all totp settings for the authenticated user. Requires the current password and a current totp passcode. Wrong passwords and passcodes are throttled per user (429). Local accounts only.",
 		Method:        http.MethodPost,
 		Path:          "/user/settings/totp/disable",
 		DefaultStatus: http.StatusOK,
@@ -225,11 +226,7 @@ func totpDisable(ctx context.Context, in *totpDisableBody) (*totpMessageBody, er
 	}
 	defer s.Close()
 
-	if err := user.CheckReauthPassword(u, in.Body.Password); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-	if err := user.DisableTOTP(s, u); err != nil {
+	if err := user.DisableTOTPWithReauth(s, u, in.Body.Password, in.Body.TOTPPasscode); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}

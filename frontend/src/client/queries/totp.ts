@@ -73,7 +73,7 @@ export function useEnableTotpMutation() {
 
 export function disableTotpMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (password: string) => (await totpDisable({body: {password}})).data,
+		mutationFn: async (body: {password: string, totp_passcode: string}) => (await totpDisable({body})).data,
 		onSuccess: (_data, _input, client) => {
 			client.setQueryData<Totp>(totpKeys.current, current => current ? {enabled: false} : current)
 			client.removeQueries({queryKey: totpKeys.qr})

@@ -141,6 +141,30 @@ func DisableTOTP(s *xorm.Session, user *User) (err error) {
 	return
 }
 
+// Needs a passcode so a stolen session plus the password can't strip the second factor. Rolls s back on failure.
+func DisableTOTPWithReauth(s *xorm.Session, u *User, password, passcode string) error {
+	err := ThrottleReauth(u.ID, func() error {
+		if err := CheckUserPassword(u, password); err != nil {
+			return err
+		}
+		if passcode == "" {
+			return ErrInvalidTOTPPasscode{}
+		}
+		_, err := ValidateTOTPPasscode(s, &TOTPPasscode{User: u, Passcode: passcode})
+		return err
+	})
+	if err != nil {
+		// Rolled back first: HandleFailedTOTPAuth needs its own write lock on SQLite.
+		_ = s.Rollback()
+		if passcode != "" && IsErrInvalidTOTPPasscode(err) {
+			HandleFailedTOTPAuth(u)
+		}
+		return err
+	}
+
+	return DisableTOTP(s, u)
+}
+
 // ValidateTOTPPasscode validated totp codes of users.
 func ValidateTOTPPasscode(s *xorm.Session, passcode *TOTPPasscode) (t *TOTP, err error) {
 	t, err = GetTOTPForUser(s, passcode.User)
