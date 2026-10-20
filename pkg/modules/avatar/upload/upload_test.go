@@ -194,6 +194,20 @@ func TestStoreAvatarFile(t *testing.T) {
 		require.NoError(t, err, "old avatar blob must still exist")
 	})
 
+	t.Run("stores a non-square upload as a centered square", func(t *testing.T) {
+		s, u := newUserWithAvatarFile(t)
+
+		require.NoError(t, StoreAvatarFile(t.Context(), s, u, "upload", bytes.NewReader(encodePNG(t, gradient(300, 200)))))
+		require.NoError(t, s.Commit())
+
+		f := &files.File{ID: u.AvatarFileID}
+		require.NoError(t, f.LoadFileByID())
+		defer f.File.Close()
+		img, _, err := image.Decode(f.File)
+		require.NoError(t, err)
+		assert.Equal(t, image.Rect(0, 0, 200, 200), img.Bounds())
+	})
+
 	t.Run("replaces the old avatar on success", func(t *testing.T) {
 		s, u := newUserWithAvatarFile(t)
 

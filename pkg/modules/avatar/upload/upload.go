@@ -133,11 +133,11 @@ func StoreAvatarFile(ctx context.Context, s *xorm.Session, u *user.User, provide
 	if err != nil {
 		return err
 	}
-	return storeAvatar(ctx, s, u, provider, data, func(img image.Image) image.Image { return img })
+	return storeAvatar(ctx, s, u, provider, data)
 }
 
 func StoreSyncedAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider string, raw []byte) error {
-	return storeAvatar(ctx, s, u, provider, raw, centeredSquare)
+	return storeAvatar(ctx, s, u, provider, raw)
 }
 
 // Zero-copy where possible: a full-resolution copy would escape the decode budget.
@@ -154,10 +154,10 @@ func centeredSquare(img image.Image) image.Image {
 	return sub.SubImage(image.Rectangle{Min: topLeft, Max: topLeft.Add(image.Pt(side, side))})
 }
 
-func storeAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider string, data []byte, crop func(image.Image) image.Image) (err error) {
+func storeAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider string, data []byte) (err error) {
 	buf := &bytes.Buffer{}
 	err = imageutils.Decode(ctx, imageutils.BytesOpener(data), func(img image.Image, _ string) error {
-		return png.Encode(buf, imaging.Fit(crop(img), maxAvatarSide, maxAvatarSide, imaging.Lanczos))
+		return png.Encode(buf, imaging.Fit(centeredSquare(img), maxAvatarSide, maxAvatarSide, imaging.Lanczos))
 	})
 	if err != nil {
 		return err
