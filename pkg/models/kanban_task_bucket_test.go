@@ -17,10 +17,12 @@
 package models
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,6 +61,51 @@ func TestTaskBucket_Update(t *testing.T) {
 		}
 		err := tb.Update(s, u)
 		require.NoError(t, err)
+	})
+	t.Run("no-op move ignores a task from the body", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		tb := &TaskBucket{
+			TaskID:        4,
+			BucketID:      2, // Task 4 is already in bucket 2
+			ProjectViewID: 4,
+			ProjectID:     1,
+			Task:          &Task{ID: 34, ProjectID: 1}, // Not readable by user 1
+		}
+		err := tb.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		assert.Nil(t, tb.Task)
+		assert.Zero(t, events.CountDispatchedEvents((&TaskUpdatedEvent{}).Name()))
+	})
+	t.Run("move dispatches the stored task, not the body's", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		tb := &TaskBucket{
+			TaskID:        1,
+			BucketID:      3,
+			ProjectViewID: 4,
+			ProjectID:     1,
+			Task:          &Task{ID: 34, ProjectID: 1},
+		}
+		err := tb.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		require.NotNil(t, tb.Task)
+		assert.Equal(t, int64(1), tb.Task.ID)
+		dispatched := events.GetDispatchedEvents((&TaskUpdatedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		assert.Equal(t, int64(1), dispatched[0].(*TaskUpdatedEvent).Task.ID)
 	})
 	t.Run("bucket on other project view", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

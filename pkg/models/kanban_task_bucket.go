@@ -255,6 +255,9 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{view}/buckets/{bucket}/tasks [post]
 func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
+	// Bound from the body; a no-op move would otherwise dispatch the client's task object.
+	b.Task = nil
+	b.Bucket = nil
 	err = updateTaskBucket(s, a, b)
 	if err != nil {
 		return err
