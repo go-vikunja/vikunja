@@ -31,9 +31,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+// The dump holds secrets and every blob; O_EXCL keeps it from following or clobbering an existing path.
+func createDumpFile(filename string) (*os.File, error) {
+	return os.OpenFile(filename, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+}
+
 // Dump creates a zip file with all vikunja files at filename
 func Dump(filename string) error {
-	dumpFile, err := os.Create(filename)
+	dumpFile, err := createDumpFile(filename)
 	if err != nil {
 		return fmt.Errorf("error opening dump file: %w", err)
 	}
