@@ -17,6 +17,7 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"testing"
@@ -125,18 +126,21 @@ func TestHandleUserDataExport(t *testing.T) {
 	})
 	t.Run("removes the new blob when the export fails", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-
-		s := db.NewSession()
-		var maxID int64
-		_, err := s.Table("files").Select("MAX(id)").Get(&maxID)
-		require.NoError(t, err)
-		_ = s.Close()
+		// Empty storage, so any blob found below is the failed export's.
+		files.InitTestFileHandler()
+		t.Cleanup(func() { files.InitTestFileFixtures(t) })
 
 		// Notifying a user that doesn't exist fails after the blob was stored.
-		err = handleUserDataExport(t, &user.User{ID: 9999, Username: "ghost"})
+		err := handleUserDataExport(t, &user.User{ID: 9999, Username: "ghost"})
 		require.Error(t, err)
 
-		db.AssertMissing(t, "files", map[string]interface{}{"id": maxID + 1})
-		assertBlobMissing(t, maxID+1)
+		// Ids aren't reused on every db, so a probe bounds the id the export got.
+		s := db.NewSession()
+		defer s.Close()
+		probe, err := files.CreateWithSession(s, bytes.NewReader([]byte("probe")), "probe", 5, &user.User{ID: 1})
+		require.NoError(t, err)
+		for id := int64(1); id < probe.ID; id++ {
+			assertBlobMissing(t, id)
+		}
 	})
 }
