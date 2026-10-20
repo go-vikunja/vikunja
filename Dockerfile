@@ -14,7 +14,7 @@ COPY frontend/ ./
 ARG RELEASE_VERSION=dev
 RUN echo "{\"VERSION\": \"${RELEASE_VERSION/-g/-}\"}" > src/version.json && pnpm run build
 
-FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.27.x@sha256:783cf55bdb2d7e24d30758465f7b3c820328e0a4414f8ebe2f924dc882895b52 AS apibuilder
+FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.27.x@sha256:7d5cab968132bf21285686bde17e902e0af080a16d08b439deb7265b276ac6f9 AS apibuilder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
