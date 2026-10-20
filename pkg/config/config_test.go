@@ -197,3 +197,49 @@ func TestTimezoneFallback(t *testing.T) {
 		assert.Equal(t, "Europe/Berlin", DefaultSettingsTimezone.GetString())
 	})
 }
+
+func TestPathsFollowRootpath(t *testing.T) {
+	assertPathsUnder := func(t *testing.T, root string) {
+		t.Helper()
+		assert.Equal(t, filepath.Join(root, "vikunja.db"), DatabasePath.GetString())
+		assert.Equal(t, filepath.Join(root, "logs"), LogPath.GetString())
+		assert.Equal(t, filepath.Join(root, "plugins"), PluginsDir.GetString())
+	}
+
+	t.Run("rootpath from a search-path config file", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\n")
+
+		assertPathsUnder(t, "/pinned/root")
+	})
+	t.Run("rootpath from the environment", func(t *testing.T) {
+		t.Setenv("VIKUNJA_SERVICE_ROOTPATH", "/env/root")
+		initConfigFromYAML(t, "")
+
+		assertPathsUnder(t, "/env/root")
+	})
+	t.Run("rootpath from a pinned config file", func(t *testing.T) {
+		dir := t.TempDir()
+		configPath := filepath.Join(dir, "config.yml")
+		require.NoError(t, os.WriteFile(configPath, []byte("cors:\n  enable: false\nservice:\n  rootpath: /pinned/root\n"), 0600))
+		SetConfigFile(configPath)
+		t.Cleanup(func() {
+			SetConfigFile("")
+			viper.Reset()
+		})
+
+		viper.Reset()
+		InitConfig()
+
+		assertPathsUnder(t, "/pinned/root")
+	})
+	t.Run("explicit paths win", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\nlog:\n  path: /var/log/vikunja\n")
+
+		assert.Equal(t, "/var/log/vikunja", LogPath.GetString())
+	})
+	t.Run("relative plugins.dir is resolved against rootpath", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\nplugins:\n  dir: custom-plugins\n")
+
+		assert.Equal(t, "/pinned/root/custom-plugins", PluginsDir.GetString())
+	})
+}

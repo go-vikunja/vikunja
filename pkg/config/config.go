@@ -693,12 +693,14 @@ func anchorRootpathToConfigFile() {
 	if rootpath := ServiceRootpath.GetString(); !filepath.IsAbs(rootpath) {
 		ServiceRootpath.Set(filepath.Join(configDir, rootpath))
 	}
+}
 
-	// The default baked in initDefaultConfig() points at the caller's cwd, which
-	// would split the database off from the rest of the pinned install.
-	if !viper.InConfig(string(DatabasePath)) {
-		DatabasePath.setDefault(ResolvePath("vikunja.db"))
-	}
+// initDefaultConfig computed these before the config file and env could change the rootpath.
+func anchorPathsToRootpath() {
+	DatabasePath.setDefault(ResolvePath("vikunja.db"))
+	LogPath.setDefault(ResolvePath("logs"))
+	PluginsDir.setDefault(ResolvePath("plugins"))
+	PluginsDir.Set(ResolvePath(PluginsDir.GetString()))
 }
 
 // InitConfig initializes the config, sets defaults etc.
@@ -744,25 +746,26 @@ func InitConfig() {
 
 	anchorRootpathToConfigFile()
 
+	envErr := setConfigFromEnv()
+	readConfigValuesFromFiles()
+	anchorPathsToRootpath()
+
+	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
+
 	if viper.ConfigFileUsed() != "" {
 		log.Infof("Using config file: %s", viper.ConfigFileUsed())
 
 		if err != nil {
 			log.Warning(err.Error())
 			log.Warning("Using default config.")
-		} else {
-			log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 		}
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")
 	}
 
-	err = setConfigFromEnv()
-	if err != nil {
-		log.Warningf("Failed to set config from environment variables: %s", err.Error())
+	if envErr != nil {
+		log.Warningf("Failed to set config from environment variables: %s", envErr.Error())
 	}
-
-	readConfigValuesFromFiles()
 
 	// Deprecation: migrate service.JWTSecret → service.secret only when the
 	// user has not explicitly set service.secret (so the new key takes precedence).
