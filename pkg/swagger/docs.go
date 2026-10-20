@@ -2717,6 +2717,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
+                    },
+                    "503": {
+                        "description": "The server is busy decoding other images.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
                     }
                 }
             }
@@ -7919,6 +7925,12 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "503": {
+                        "description": "The server is busy decoding other images.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
