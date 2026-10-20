@@ -14,6 +14,7 @@ const sdk = vi.hoisted(() => ({
 	migrationPlankaStatus: vi.fn(),
 	migrationTodoistStatus: vi.fn(),
 	migrationTodoistAuth: vi.fn(),
+	migrationTodoistMigrate: vi.fn(),
 }))
 
 vi.mock('@/client/generated', async importOriginal => ({
@@ -86,5 +87,23 @@ describe('MigrationHandler', () => {
 		settleStatus({})
 		await flushPromises()
 		expect(wrapper.find(action).attributes('loading')).toBe('false')
+	})
+
+	it('hands the callback state back with the code', async () => {
+		sdk.migrationTodoistStatus.mockResolvedValue({data: {}})
+		sdk.migrationTodoistAuth.mockResolvedValue({data: {url: 'https://todoist.example/auth'}})
+		sdk.migrationTodoistMigrate.mockResolvedValue({data: {message: 'started'}})
+		wrapper = mount(MigrationHandler, {
+			props: {service: 'todoist', code: 'the-code', state: 'the-state'},
+			global: {
+				plugins: [i18n, [VueQueryPlugin, {queryClient}]],
+				stubs: {XButton: true},
+			},
+		})
+		await flushPromises()
+
+		expect(sdk.migrationTodoistMigrate).toHaveBeenCalledWith(expect.objectContaining({
+			body: {code: 'the-code', state: 'the-state'},
+		}))
 	})
 })
