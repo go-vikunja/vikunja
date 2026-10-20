@@ -106,9 +106,7 @@ func TestHumaMigrationFile(t *testing.T) {
 		}
 	})
 
-	// vikunja-file is the only migrator still validating in the request: reading
-	// the zip central directory is cheap, while ticktick and wekan would have to
-	// parse the whole upload to say anything about it.
+	// Only vikunja-file validates in the request; ticktick would have to parse the whole upload.
 	t.Run("vikunja-file rejects a non-zip upload", func(t *testing.T) {
 		e := setupMigrationTestEnv(t)
 		token := humaTokenFor(t, &testuser1)
@@ -117,6 +115,29 @@ func TestHumaMigrationFile(t *testing.T) {
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
 		require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), strconv.Itoa(migration.ErrCodeNotAZipFile), "body: %s", rec.Body.String())
+	})
+
+	t.Run("wekan rejects duplicate card ids", func(t *testing.T) {
+		board := []byte(`{"title":"dup","cards":[{"_id":"dup","title":"a"},{"_id":"dup","title":"b"}]}`)
+		for _, method := range []string{http.MethodPost, http.MethodPut} {
+			e := setupMigrationTestEnv(t)
+			token := humaTokenFor(t, &testuser1)
+			events.ClearDispatchedEvents()
+
+			path := "/api/v2/migration/wekan/migrate"
+			if method == http.MethodPut {
+				path = "/api/v1/migration/wekan/migrate"
+			}
+			body, contentType := multipartImportBody(t, "board.json", board, nil)
+			req := httptest.NewRequest(method, path, body)
+			req.Header.Set("Content-Type", contentType)
+			req.Header.Set("Authorization", "Bearer "+token)
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, req)
+
+			require.Equal(t, http.StatusBadRequest, rec.Code, "%s body: %s", path, rec.Body.String())
+			assert.Empty(t, events.GetDispatchedEvents((&migrationHandler.FileMigrationRequestedEvent{}).Name()))
+		}
 	})
 
 	// payload is shaped to hit a *domain* rejection once parsed: a ticktick CSV

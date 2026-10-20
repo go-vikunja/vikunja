@@ -21,9 +21,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"html"
 	"io"
 	"sort"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/files"
@@ -257,22 +259,25 @@ func convertWekanToVikunja(board *wekanBoard) []*models.ProjectWithTasksAndBucke
 		// Checklists → append to description as HTML task list
 		// This follows the same pattern as the Trello importer.
 		if checklists, ok := checklistsByCardID[card.ID]; ok {
+			var desc strings.Builder
+			desc.WriteString(task.Description)
 			for _, cl := range checklists {
 				items, hasItems := checklistItemsByChecklistID[cl.ID]
 				if !hasItems || len(items) == 0 {
 					continue
 				}
-				task.Description += "\n\n<h2> " + html.EscapeString(cl.Title) + "</h2>\n\n" + `<ul data-type="taskList">`
+				desc.WriteString("\n\n<h2> " + html.EscapeString(cl.Title) + "</h2>\n\n" + `<ul data-type="taskList">`)
 				for _, item := range items {
-					task.Description += "\n"
+					desc.WriteString("\n")
 					if item.IsFinished {
-						task.Description += `<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + html.EscapeString(item.Title) + `</p></div></li>`
+						desc.WriteString(`<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + html.EscapeString(item.Title) + `</p></div></li>`)
 					} else {
-						task.Description += `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + html.EscapeString(item.Title) + `</p></div></li>`
+						desc.WriteString(`<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + html.EscapeString(item.Title) + `</p></div></li>`)
 					}
 				}
-				task.Description += "</ul>"
+				desc.WriteString("</ul>")
 			}
+			task.Description = desc.String()
 		}
 
 		// Comments
@@ -354,8 +359,70 @@ func skipUTF8BOM(r io.Reader) io.Reader {
 	return br
 }
 
+type wekanBoardShape struct {
+	Labels         []struct{}       `json:"labels"`
+	Lists          []struct{}       `json:"lists"`
+	Cards          []wekanCardShape `json:"cards"`
+	Checklists     []wekanEntityID  `json:"checklists"`
+	ChecklistItems []struct{}       `json:"checklistItems"`
+	Comments       []wekanEntityID  `json:"comments"`
+	Attachments    []struct{}       `json:"attachments"`
+}
+
+type wekanEntityID struct {
+	ID string `json:"_id"`
+}
+
+type wekanCardShape struct {
+	wekanEntityID
+	LabelIDs []wekanIgnored `json:"labelIds"`
+}
+
+// wekanIgnored accepts any JSON value without allocating, so counting ids stays cheap.
+type wekanIgnored struct{}
+
+func (*wekanIgnored) UnmarshalJSON([]byte) error { return nil }
+
+func checkUniqueIDs(kind string, entities []wekanEntityID) error {
+	seen := make(map[string]struct{}, len(entities))
+	for _, e := range entities {
+		if _, exists := seen[e.ID]; exists {
+			return &migration.ErrInvalidImportFile{Err: fmt.Errorf("duplicate %s id %q", kind, e.ID)}
+		}
+		seen[e.ID] = struct{}{}
+	}
+	return nil
+}
+
 // Migrator is the WeKan migration struct.
 type Migrator struct{}
+
+// convertWekanToVikunja replays checklists and comments into every card sharing an id.
+func (m *Migrator) ValidateFile(file io.ReaderAt, size int64) error {
+	var shape wekanBoardShape
+	if err := json.NewDecoder(skipUTF8BOM(io.NewSectionReader(file, 0, size))).Decode(&shape); err != nil {
+		return nil //nolint:nilerr // the import job reports parse errors
+	}
+
+	count := len(shape.Labels) + len(shape.Lists) + len(shape.Cards) + len(shape.Checklists) +
+		len(shape.ChecklistItems) + len(shape.Comments) + len(shape.Attachments)
+	cardIDs := make([]wekanEntityID, 0, len(shape.Cards))
+	for _, card := range shape.Cards {
+		count += len(card.LabelIDs)
+		cardIDs = append(cardIDs, card.wekanEntityID)
+	}
+	if err := migration.CheckItemCount(int64(count)); err != nil {
+		return err
+	}
+
+	if err := checkUniqueIDs("card", cardIDs); err != nil {
+		return err
+	}
+	if err := checkUniqueIDs("checklist", shape.Checklists); err != nil {
+		return err
+	}
+	return checkUniqueIDs("comment", shape.Comments)
+}
 
 // Name is used to identify the wekan migration.
 // @Summary Get migration status
@@ -384,6 +451,10 @@ func (m *Migrator) Name() string {
 func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
 	if size == 0 {
 		return &migration.ErrFileIsEmpty{}
+	}
+
+	if err := m.ValidateFile(file, size); err != nil {
+		return err
 	}
 
 	board, err := parseWekanJSON(io.NewSectionReader(file, 0, size))
