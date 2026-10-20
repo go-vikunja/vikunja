@@ -176,15 +176,14 @@ func PrepareUpload(ctx context.Context, src io.Reader) (*upload.EncodedAvatar, e
 }
 
 func SaveUploaded(s *xorm.Session, u *user.User, a *upload.EncodedAvatar) error {
-	return SaveSynced(s, u, "upload", a)
-}
-
-func SaveSynced(s *xorm.Session, u *user.User, provider string, a *upload.EncodedAvatar) error {
-	if err := upload.SaveAvatar(s, u, provider, a); err != nil {
+	if err := upload.SaveAvatar(s, u, "upload", a); err != nil {
 		return err
 	}
 
-	FlushAllCaches(u)
+	events.OnCommit(s, func() error {
+		FlushAllCaches(u)
+		return nil
+	})
 
 	return nil
 }

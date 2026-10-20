@@ -62,13 +62,13 @@ func TestFlushCache(t *testing.T) {
 	provider := &Provider{}
 
 	testUser := &user.User{
-		ID: 777777,
+		ID:           777777,
+		AvatarFileID: 5,
 	}
 
-	// Populate cache with multiple size variants (matching the real key format from line 65)
 	sizes := []int64{32, 64, 128, 250}
 	for _, size := range sizes {
-		cacheKey := CacheKeyPrefix + strconv.Itoa(int(testUser.ID)) + "_" + strconv.FormatInt(size, 10)
+		cacheKey := CacheKeyPrefix + "777777_5_" + strconv.FormatInt(size, 10)
 		err := keyvalue.Put(cacheKey, CachedAvatar{
 			Content:  []byte("fake_avatar_data"),
 			MimeType: "image/png",
@@ -78,7 +78,7 @@ func TestFlushCache(t *testing.T) {
 
 	// Verify all entries exist before flush
 	for _, size := range sizes {
-		cacheKey := CacheKeyPrefix + strconv.Itoa(int(testUser.ID)) + "_" + strconv.FormatInt(size, 10)
+		cacheKey := CacheKeyPrefix + "777777_5_" + strconv.FormatInt(size, 10)
 		_, exists, err := keyvalue.Get(cacheKey)
 		require.NoError(t, err)
 		assert.True(t, exists, "cache entry for size %d should exist before flush", size)
@@ -90,7 +90,7 @@ func TestFlushCache(t *testing.T) {
 
 	// Verify ALL size variants are removed
 	for _, size := range sizes {
-		cacheKey := CacheKeyPrefix + strconv.Itoa(int(testUser.ID)) + "_" + strconv.FormatInt(size, 10)
+		cacheKey := CacheKeyPrefix + "777777_5_" + strconv.FormatInt(size, 10)
 		_, exists, err := keyvalue.Get(cacheKey)
 		require.NoError(t, err)
 		assert.False(t, exists, "cache entry for size %d should be removed after flush", size)
@@ -111,7 +111,7 @@ func TestGetAvatar(t *testing.T) {
 		}
 
 		// Store a valid cached avatar
-		cacheKey := CacheKeyPrefix + "888888_32"
+		cacheKey := CacheKeyPrefix + "888888_0_32"
 		validCachedAvatar := CachedAvatar{
 			Content:  []byte("fake_image_data"),
 			MimeType: "image/png",
@@ -126,6 +126,37 @@ func TestGetAvatar(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, []byte("fake_image_data"), avatar)
 		assert.Equal(t, "image/png", mimeType)
+	})
+
+	t.Run("does not serve an avatar cached for the replaced file", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		provider := &Provider{}
+		u := &user.User{ID: 1}
+		require.NoError(t, provider.FlushCache(u))
+
+		square := encodePNG(t, gradient(8, 8))
+		old, err := files.Create(bytes.NewReader(square), "old.png", uint64(len(square)), u)
+		require.NoError(t, err)
+		wide := encodePNG(t, gradient(4, 2))
+		replacement, err := files.Create(bytes.NewReader(wide), "new.png", uint64(len(wide)), u)
+		require.NoError(t, err)
+
+		u.AvatarFileID = old.ID
+		data, _, err := provider.GetAvatar(u, 32)
+		require.NoError(t, err)
+		cfg, err := png.DecodeConfig(bytes.NewReader(data))
+		require.NoError(t, err)
+		assert.Equal(t, 8, cfg.Width)
+		assert.Equal(t, 8, cfg.Height)
+
+		u.AvatarFileID = replacement.ID
+		data, _, err = provider.GetAvatar(u, 32)
+		require.NoError(t, err)
+		cfg, err = png.DecodeConfig(bytes.NewReader(data))
+		require.NoError(t, err)
+		assert.Equal(t, 4, cfg.Width)
+		assert.Equal(t, 2, cfg.Height)
 	})
 
 	t.Run("avatar file missing from storage", func(t *testing.T) {
