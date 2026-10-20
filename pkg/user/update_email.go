@@ -50,7 +50,11 @@ func EmailUpdateMessage() string {
 // (kicking off confirmation when the mailer is enabled). Shared by the v1 and
 // v2 email-update handlers; only HTTP input binding stays in the handlers.
 func ChangeUserEmail(ctx context.Context, s *xorm.Session, u *User, password, newEmail string) error {
-	verified, err := CheckUserCredentials(ctx, s, &Login{Username: u.Username, Password: password})
+	var verified *User
+	err := ThrottleReauth(u.ID, func() (err error) {
+		verified, err = CheckUserCredentials(ctx, s, &Login{Username: u.Username, Password: password})
+		return err
+	})
 	if err != nil {
 		return err
 	}

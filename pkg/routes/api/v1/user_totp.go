@@ -166,7 +166,7 @@ func UserTOTPDisable(c *echo.Context) error {
 	}
 	defer s.Close()
 
-	err = user.CheckUserPassword(u, login.Password)
+	err = user.CheckReauthPassword(u, login.Password)
 	if err != nil {
 		_ = s.Rollback()
 		return err

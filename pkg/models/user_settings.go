@@ -73,7 +73,11 @@ func ChangeUserPassword(ctx context.Context, s *xorm.Session, u *user.User, oldP
 		return user.ErrEmptyOldPassword{}
 	}
 
-	if _, err := user.CheckUserCredentials(ctx, s, &user.Login{Username: u.Username, Password: oldPassword}); err != nil {
+	err := user.ThrottleReauth(u.ID, func() error {
+		_, err := user.CheckUserCredentials(ctx, s, &user.Login{Username: u.Username, Password: oldPassword})
+		return err
+	})
+	if err != nil {
 		return err
 	}
 
