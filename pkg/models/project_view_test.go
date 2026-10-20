@@ -612,3 +612,29 @@ func TestProjectView_Create(t *testing.T) {
 		}, false)
 	})
 }
+
+func TestValidateProjectViewFilters(t *testing.T) {
+	filterView := func(configs ...*ProjectViewBucketConfiguration) *ProjectView {
+		return &ProjectView{
+			ViewKind:                ProjectViewKindKanban,
+			BucketConfigurationMode: BucketConfigurationModeFilter,
+			BucketConfiguration:     configs,
+		}
+	}
+	validConfig := func() *ProjectViewBucketConfiguration {
+		return &ProjectViewBucketConfiguration{Title: "b", Filter: &TaskCollection{Filter: "done = true"}}
+	}
+
+	t.Run("valid configuration", func(t *testing.T) {
+		require.NoError(t, validateProjectViewFilters(filterView(validConfig())))
+	})
+	// GHSA-hm4w-h7v8-ch43
+	t.Run("nil entry", func(t *testing.T) {
+		err := validateProjectViewFilters(filterView(validConfig(), nil))
+		assert.ErrorAs(t, err, &ValidationHTTPError{})
+	})
+	t.Run("nil filter", func(t *testing.T) {
+		err := validateProjectViewFilters(filterView(&ProjectViewBucketConfiguration{Title: "no filter"}))
+		assert.ErrorAs(t, err, &ValidationHTTPError{})
+	})
+}

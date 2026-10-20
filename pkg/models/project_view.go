@@ -324,10 +324,10 @@ func validateProjectViewFilters(p *ProjectView) (err error) {
 
 	if p.BucketConfigurationMode == BucketConfigurationModeFilter {
 		for _, configuration := range p.BucketConfiguration {
-			if configuration == nil {
-				continue
+			if configuration == nil || configuration.Filter == nil {
+				return InvalidFieldErrorWithMessage([]string{"bucket_configuration"}, "Every bucket configuration needs a filter.")
 			}
-			if configuration.Filter != nil && configuration.Filter.Filter != "" {
+			if configuration.Filter.Filter != "" {
 				_, err = getTaskFiltersFromFilterString(configuration.Filter.Filter, configuration.Filter.FilterTimezone)
 				if err != nil {
 					return
