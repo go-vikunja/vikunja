@@ -54,6 +54,8 @@ package routes
 import (
 	"context"
 	"log/slog"
+	"mime"
+	"net/http"
 	"strings"
 	"time"
 
@@ -372,6 +374,24 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
+// Cross-site <form>s skip CORS preflight (GHSA-frf4-3prf-3vch); RFC 6749 requires them on the token endpoint.
+var formBodyAllowedPaths = map[string]bool{
+	"/api/v1/oauth/token": true,
+	"/api/v2/oauth/token": true,
+}
+
+func rejectFormBodies() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			mediaType, _, _ := mime.ParseMediaType(c.Request().Header.Get(echo.HeaderContentType))
+			if mediaType == echo.MIMEApplicationForm && !formBodyAllowedPaths[c.Path()] {
+				return echo.NewHTTPError(http.StatusUnsupportedMediaType, "application/x-www-form-urlencoded bodies are not accepted")
+			}
+			return next(c)
+		}
+	}
+}
+
 // match receives the matched echo route template, not the request URL.
 // v2 can't use an Echo sub-group here: that would split the Huma API and drop
 // the scoped ops from the OpenAPI spec.
@@ -442,6 +462,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
+	a.Use(rejectFormBodies())
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
 	a.Use(pathScoped(v2SessionRenewalPaths.has, refreshRateLimit))
@@ -484,6 +505,7 @@ func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.Mid
 	// which causes stale data (e.g. newly team-shared projects not appearing
 	// until a hard refresh).
 	a.Use(noStoreCacheControl())
+	a.Use(rejectFormBodies())
 
 	// This is the group with no auth
 	// It is its own group to be able to rate limit this based on different heuristics
