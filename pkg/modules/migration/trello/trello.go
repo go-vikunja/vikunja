@@ -17,7 +17,10 @@
 package trello
 
 import (
+	"bytes"
+	"fmt"
 	"html"
+	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
@@ -106,6 +109,21 @@ func (m *Migration) AuthURL() string {
 		"&name=Vikunja%20Migration" +
 		"&key=" + config.MigrationTrelloKey.GetString() +
 		"&return_url=" + config.MigrationTrelloRedirectURL.GetString()
+}
+
+// downloadAttachment hands the oauth token only to the url trello returned, not to wherever it redirects.
+func downloadAttachment(url, token string) (*bytes.Buffer, error) {
+	hc := utils.NewSSRFSafeHTTPClient()
+	hc.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return fmt.Errorf("%w: too many redirects", migration.ErrRedirectRefused)
+		}
+		req.Header.Del("Authorization")
+		return nil
+	}
+	return migration.DownloadFileWithHeadersLimited(hc, url, http.Header{
+		"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + token + `"`},
+	}, migration.MaxDownloadSize())
 }
 
 func getTrelloBoards(client *trello.Client) (trelloData []*trello.Board, err error) {
@@ -257,11 +275,15 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 		if board.Prefs.BackgroundImage != "" {
 			log.Debugf("[Trello Migration] Downloading background %s for board %s", board.Prefs.BackgroundImage, board.ID)
 			buf, err := migration.DownloadFile(board.Prefs.BackgroundImage)
-			if err != nil {
+			switch {
+			case files.IsErrFileIsTooLarge(err):
+				log.Warningf("[Trello Migration] Background of board %s is too large, skipping it", board.ID)
+			case err != nil:
 				return nil, err
+			default:
+				log.Debugf("[Trello Migration] Downloaded background %s for board %s", board.Prefs.BackgroundImage, board.ID)
+				project.BackgroundInformation = buf
 			}
-			log.Debugf("[Trello Migration] Downloaded background %s for board %s", board.Prefs.BackgroundImage, board.ID)
-			project.BackgroundInformation = buf
 		} else {
 			log.Debugf("[Trello Migration] Board %s does not have a background image, not copying...", board.ID)
 		}
@@ -338,9 +360,11 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 						// Download file and add it as attachment
 						log.Debugf("[Trello Migration] Downloading card attachment %s", attachment.ID)
 
-						buf, err := migration.DownloadFileWithHeaders(attachment.URL, map[string][]string{
-							"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + client.Token + `"`},
-						})
+						buf, err := downloadAttachment(attachment.URL, client.Token)
+						if files.IsErrFileIsTooLarge(err) {
+							log.Warningf("[Trello Migration] Card attachment %s is too large, skipping it", attachment.ID)
+							continue
+						}
 						if err != nil {
 							return nil, err
 						}
@@ -375,22 +399,25 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 					cover := card.Cover.Scaled[len(card.Cover.Scaled)-1]
 
 					buf, err := migration.DownloadFile(cover.URL)
-					if err != nil {
+					switch {
+					case files.IsErrFileIsTooLarge(err):
+						log.Warningf("[Trello Migration] Cover of card %s is too large, skipping it", card.ID)
+					case err != nil:
 						return nil, err
-					}
+					default:
+						coverAttachment := &models.TaskAttachment{
+							ID: 43,
+							File: &files.File{
+								Name:        cover.ID + ".jpg",
+								Mime:        "image/jpg", // Seems to always return jpg
+								Size:        uint64(buf.Len()),
+								FileContent: buf.Bytes(),
+							},
+						}
 
-					coverAttachment := &models.TaskAttachment{
-						ID: 43,
-						File: &files.File{
-							Name:        cover.ID + ".jpg",
-							Mime:        "image/jpg", // Seems to always return jpg
-							Size:        uint64(buf.Len()),
-							FileContent: buf.Bytes(),
-						},
+						task.Attachments = append(task.Attachments, coverAttachment)
+						task.CoverImageAttachmentID = coverAttachment.ID
 					}
-
-					task.Attachments = append(task.Attachments, coverAttachment)
-					task.CoverImageAttachmentID = coverAttachment.ID
 				}
 
 				for _, action := range card.Actions {
