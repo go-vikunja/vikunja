@@ -3002,6 +3002,21 @@ export type TotpEnableBodyBody = {
      * The current totp passcode, used to confirm the authenticator is set up correctly.
      */
     passcode?: string;
+    /**
+     * The current user's password, required to enable totp.
+     */
+    password?: string;
+};
+
+export type TotpEnrollBodyBody = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The current user's password, required to enroll into totp.
+     */
+    password?: string;
 };
 
 export type User = {
@@ -4771,6 +4786,17 @@ export type TotpEnableBodyBodyWritable = {
      * The current totp passcode, used to confirm the authenticator is set up correctly.
      */
     passcode?: string;
+    /**
+     * The current user's password, required to enable totp.
+     */
+    password?: string;
+};
+
+export type TotpEnrollBodyBodyWritable = {
+    /**
+     * The current user's password, required to enroll into totp.
+     */
+    password?: string;
 };
 
 export type UserWritable = {
@@ -11495,7 +11521,7 @@ export type TotpEnableResponses = {
 export type TotpEnableResponse = TotpEnableResponses[keyof TotpEnableResponses];
 
 export type TotpEnrollData = {
-    body?: never;
+    body: TotpEnrollBodyBodyWritable;
     path?: never;
     query?: never;
     url: '/user/settings/totp/enroll';

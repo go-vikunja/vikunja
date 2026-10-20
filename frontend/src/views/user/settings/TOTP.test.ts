@@ -135,6 +135,7 @@ describe('TOTP settings', () => {
 		await flushPromises()
 
 		expect(enroll).toHaveBeenCalledTimes(1)
+		expect(enroll).toHaveBeenCalledWith({body: {password: ''}})
 		expect(w.text()).toContain('SHAREDSECRET')
 		await vi.waitFor(() => expect(queryClient.getMutationCache().getAll()).toEqual([]))
 	})

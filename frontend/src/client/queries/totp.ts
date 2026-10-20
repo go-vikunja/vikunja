@@ -41,7 +41,7 @@ export function totpQrQuery() {
 
 export function enrollTotpMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async () => (await totpEnroll()).data,
+		mutationFn: async (password: string) => (await totpEnroll({body: {password}})).data,
 		onSuccess: (data, _input, client) => {
 			client.removeQueries({queryKey: totpKeys.qr})
 			client.setQueryData<Totp>(totpKeys.current, current => current ? data : current)
@@ -56,7 +56,7 @@ export function useEnrollTotpMutation() {
 
 export function enableTotpMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (passcode: string) => (await totpEnable({body: {passcode}})).data,
+		mutationFn: async (body: {passcode: string, password: string}) => (await totpEnable({body})).data,
 		onSuccess: (_data, _input, client) => {
 			client.setQueryData<Totp>(totpKeys.current, current => current ? {enabled: true} : current)
 			client.removeQueries({queryKey: totpKeys.qr})
