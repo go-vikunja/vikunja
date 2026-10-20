@@ -32,7 +32,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -251,7 +250,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	defer events.CleanupPending(s)
 
 	// Check if we have seen this user before
-	u, err := getOrCreateUser(ctx, s, cl, provider, idToken)
+	u, err := getOrCreateUser(s, cl, provider, idToken)
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
@@ -295,6 +294,12 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	}
 
 	events.DispatchPending(ctx, s)
+
+	if cl.Picture != "" {
+		if err := syncUserAvatarFromOpenID(ctx, u.ID, cl.Picture); err != nil {
+			log.Errorf("Error syncing avatar for user %s: %v", u.Username, err)
+		}
+	}
 
 	return u, oidcData, nil
 }
@@ -354,40 +359,29 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 	return teamData
 }
 
-// Download and store a user's avatar from an OpenID provider
-func syncUserAvatarFromOpenID(ctx context.Context, s *xorm.Session, u *user.User, pictureURL string) (err error) {
-	// If no picture URL is provided, reset the avatar provider if it was set to openid
-	if pictureURL == "" {
-		if u.AvatarProvider == "openid" {
-			u.AvatarProvider = "default"
-			_, err = s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
-			if err != nil {
-				return fmt.Errorf("error resetting avatar provider: %w", err)
-			}
-			avatar.FlushAllCaches(u)
-		}
+func resetOpenIDAvatar(s *xorm.Session, u *user.User) error {
+	if u.AvatarProvider != "openid" {
 		return nil
 	}
 
-	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
+	u.AvatarProvider = "default"
+	_, err := s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
+	if err != nil {
+		return fmt.Errorf("error resetting avatar provider: %w", err)
+	}
+	avatar.FlushAllCaches(u)
+	return nil
+}
 
-	// Download avatar
+func syncUserAvatarFromOpenID(ctx context.Context, userID int64, pictureURL string) error {
+	log.Debugf("Found avatar URL for user %d: %s", userID, pictureURL)
+
 	avatarData, err := utils.DownloadImage(ctx, pictureURL)
 	if err != nil {
 		return fmt.Errorf("error downloading avatar: %w", err)
 	}
 
-	prepared, err := upload.PrepareAvatar(ctx, avatarData)
-	if err != nil {
-		return fmt.Errorf("error decoding avatar: %w", err)
-	}
-
-	err = avatar.SaveSynced(s, u, "openid", prepared)
-	if err != nil {
-		return fmt.Errorf("error storing avatar: %w", err)
-	}
-
-	return nil
+	return avatar.SyncFromProvider(ctx, userID, "openid", avatarData)
 }
 
 // fallbackSearchUsers builds the ordered list of local-user lookups used to link an OIDC
@@ -429,7 +423,7 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 	return searches
 }
 
-func getOrCreateUser(ctx context.Context, s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
+func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
 
 	// set defaults
 	fallbackMatchFound := false
@@ -511,10 +505,11 @@ func getOrCreateUser(ctx context.Context, s *xorm.Session, cl *claims, provider 
 		}
 	}
 
-	// Try sync avatar if available
-	err = syncUserAvatarFromOpenID(ctx, s, u, cl.Picture)
-	if err != nil {
-		log.Errorf("Error syncing avatar for user %s: %v", u.Username, err)
+	// A picture is synced by AuthenticateCallback once the login committed.
+	if cl.Picture == "" {
+		if err := resetOpenIDAvatar(s, u); err != nil {
+			log.Errorf("Error resetting avatar for user %s: %v", u.Username, err)
+		}
 	}
 
 	return u, nil

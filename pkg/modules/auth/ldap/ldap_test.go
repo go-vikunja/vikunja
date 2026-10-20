@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	user2 "code.vikunja.io/api/pkg/user"
 
 	"github.com/go-ldap/ldap/v3"
@@ -106,7 +107,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		user, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", false, "")
+		user, _, err := AuthenticateUserInLDAP(s, "professor", "professor", false, "")
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
@@ -126,7 +127,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "wrongpassword", false, "")
+		_, _, err := AuthenticateUserInLDAP(s, "professor", "wrongpassword", false, "")
 
 		require.Error(t, err)
 		assert.True(t, user2.IsErrWrongUsernameOrPassword(err))
@@ -137,7 +138,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := AuthenticateUserInLDAP(t.Context(), s, "gnome", "professor", false, "")
+		_, _, err := AuthenticateUserInLDAP(s, "gnome", "professor", false, "")
 
 		require.Error(t, err)
 		assert.True(t, user2.IsErrWrongUsernameOrPassword(err))
@@ -148,7 +149,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		user, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", true, "")
+		user, _, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
@@ -182,7 +183,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		user, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", true, "")
+		user, _, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
@@ -211,7 +212,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		user, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", true, "")
+		user, _, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
@@ -262,7 +263,7 @@ func TestLdapLogin(t *testing.T) {
 				s := db.NewSession()
 				defer s.Close()
 
-				user, err := AuthenticateUserInLDAP(t.Context(), s, tt.username, tt.username, true, "")
+				user, _, err := AuthenticateUserInLDAP(s, tt.username, tt.username, true, "")
 
 				require.NoError(t, err)
 				require.NoError(t, s.Commit())
@@ -315,7 +316,7 @@ func TestLdapLogin(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		user, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", true, "")
+		user, _, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
 
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
@@ -334,7 +335,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		before, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", true, "")
+		before, _, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
 		require.NoError(t, err)
 		gitTeam := getLdapTeam(t, s, "cn=git,ou=people,dc=planetexpress,dc=com")
 		_, err = s.Insert(&models.TeamProject{
@@ -348,7 +349,7 @@ func TestLdapLogin(t *testing.T) {
 
 		s2 := db.NewSession()
 		defer s2.Close()
-		after, err := AuthenticateUserInLDAP(t.Context(), s2, "professor", "professor", true, "")
+		after, _, err := AuthenticateUserInLDAP(s2, "professor", "professor", true, "")
 		require.NoError(t, err)
 		require.NoError(t, s2.Commit())
 
@@ -378,7 +379,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", true, "")
+		_, _, err := AuthenticateUserInLDAP(s, "professor", "professor", true, "")
 		require.NoError(t, err)
 		gitUUID := ldapEntryUUID(t, "cn=git,ou=people,dc=planetexpress,dc=com")
 		gitTeam := getLdapTeam(t, s, gitUUID)
@@ -393,7 +394,7 @@ func TestLdapLogin(t *testing.T) {
 
 		s2 := db.NewSession()
 		defer s2.Close()
-		u, err := AuthenticateUserInLDAP(t.Context(), s2, "professor", "professor", true, "")
+		u, _, err := AuthenticateUserInLDAP(s2, "professor", "professor", true, "")
 		require.NoError(t, err)
 		require.NoError(t, s2.Commit())
 
@@ -416,7 +417,7 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		before, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", false, "")
+		before, _, err := AuthenticateUserInLDAP(s, "professor", "professor", false, "")
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
@@ -424,7 +425,7 @@ func TestLdapLogin(t *testing.T) {
 
 		s2 := db.NewSession()
 		defer s2.Close()
-		after, err := AuthenticateUserInLDAP(t.Context(), s2, "farnsworth", "professor", false, "")
+		after, _, err := AuthenticateUserInLDAP(s2, "farnsworth", "professor", false, "")
 		require.NoError(t, err)
 		require.NoError(t, s2.Commit())
 
@@ -442,11 +443,13 @@ func TestLdapLogin(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		user, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", false, "jpegPhoto")
+		user, avatarRaw, err := AuthenticateUserInLDAP(s, "professor", "professor", false, "jpegPhoto")
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
+		require.NotEmpty(t, avatarRaw)
 		require.NoError(t, s.Commit())
+		require.NoError(t, avatar.SyncFromProvider(t.Context(), user.ID, "ldap", avatarRaw))
 		db.AssertExists(t, "users", map[string]interface{}{
 			"username":        "professor",
 			"issuer":          "ldap",
@@ -474,7 +477,7 @@ func TestLdapLogin(t *testing.T) {
 		// Attempt to authenticate
 		// Note: This test might fail if the test LDAP server doesn't support anonymous bind,
 		// but it verifies the code path executes
-		user, err := AuthenticateUserInLDAP(t.Context(), s, "professor", "professor", false, "")
+		user, _, err := AuthenticateUserInLDAP(s, "professor", "professor", false, "")
 
 		// We mainly want to ensure we don't panic or error out due to missing config
 		if err != nil {

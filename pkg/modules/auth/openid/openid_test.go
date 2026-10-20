@@ -32,6 +32,7 @@ import (
 	"net/http/httptest"
 	"net/http/httputil"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -62,7 +63,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -85,7 +86,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.NotEmpty(t, u.Username)
 		err = s.Commit()
@@ -107,7 +108,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
 
-		_, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		_, err := getOrCreateUser(s, cl, provider, idToken)
 		require.Error(t, err)
 	})
 	t.Run("existing user, different email address", func(t *testing.T) {
@@ -121,7 +122,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -148,7 +149,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		require.NoError(t, err)
@@ -185,7 +186,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", provider.Name)
@@ -267,7 +268,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, idToken.Subject, u.Username, "subject match username")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -287,7 +288,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		// PocketID-style: the subject is an opaque UUID that does not match any local username.
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000011"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -315,7 +316,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000023"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		assert.True(t, user.IsErrAccountIsBot(err))
 		assert.Nil(t, u)
 	})
@@ -332,7 +333,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, idToken.Subject, u.Username, "subject should match username")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -355,7 +356,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, cl.Email, u.Email, "email should match")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -383,7 +384,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -406,7 +407,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -433,7 +434,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "opaque-subject-no-email"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		// Must not have linked an existing local user.
 		require.Error(t, err, "an empty email must not silently link an existing local user")
 		assert.Nil(t, u, "no existing local user should be returned for an empty email claim")
@@ -458,7 +459,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, cl.Email, u.Email, "email should match")
 		assert.Equal(t, idToken.Subject, u.Username, "subject match username")
@@ -484,7 +485,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000011"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -509,7 +510,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
 
-		u, err := getOrCreateUser(t.Context(), s, cl, provider, idToken)
+		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -695,44 +696,36 @@ func TestEnforceTOTPIfRequired(t *testing.T) {
 	})
 }
 
-func TestSyncUserAvatarFromOpenID(t *testing.T) {
-	t.Run("empty picture URL resets openid provider to default", func(t *testing.T) {
+func TestResetOpenIDAvatar(t *testing.T) {
+	t.Run("resets openid provider to default", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		// Use the fixture user that has avatar_provider = "openid"
 		u, err := user.GetUserByID(s, 19)
 		require.NoError(t, err)
 		assert.Equal(t, "openid", u.AvatarProvider, "precondition: user should have openid avatar provider")
 
-		err = syncUserAvatarFromOpenID(t.Context(), s, u, "")
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		require.NoError(t, resetOpenIDAvatar(s, u))
+		require.NoError(t, s.Commit())
 
-		// Verify the avatar provider was reset to default in the database
 		db.AssertExists(t, "users", map[string]interface{}{
 			"id":              19,
 			"avatar_provider": "default",
 		}, false)
 	})
 
-	t.Run("empty picture URL does not reset non-openid provider", func(t *testing.T) {
+	t.Run("does not reset non-openid provider", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		// Use a regular user (avatar_provider is empty/"default")
 		u, err := user.GetUserByID(s, 1)
 		require.NoError(t, err)
 
-		err = syncUserAvatarFromOpenID(t.Context(), s, u, "")
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		require.NoError(t, resetOpenIDAvatar(s, u))
+		require.NoError(t, s.Commit())
 
-		// Verify the avatar provider was NOT changed to "default" or anything else
 		s2 := db.NewSession()
 		defer s2.Close()
 		updatedUser, err := user.GetUserByID(s2, 1)
@@ -741,39 +734,82 @@ func TestSyncUserAvatarFromOpenID(t *testing.T) {
 	})
 }
 
-func TestGetOrCreateUserSkipsAvatarWhenDecodingIsBusy(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
+func servePicture(t *testing.T) (url string, hits *atomic.Int32) {
+	t.Helper()
 	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 	t.Cleanup(func() { config.OutgoingRequestsAllowNonRoutableIPs.Set("false") })
 
 	picture := &bytes.Buffer{}
 	require.NoError(t, png.Encode(picture, image.NewNRGBA(image.Rect(0, 0, 8, 4))))
+	hits = &atomic.Int32{}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits.Add(1)
 		w.Header().Set("Content-Type", "image/png")
 		_, _ = w.Write(picture.Bytes())
 	}))
 	t.Cleanup(srv.Close)
-	t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+	return srv.URL, hits
+}
+
+func TestGetOrCreateUserLeavesPictureToTheCaller(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	pictureURL, hits := servePicture(t)
 
 	s := db.NewSession()
 	defer s.Close()
 	cl := &claims{
-		Email:             "busy-avatar@example.com",
-		PreferredUsername: "busyAvatarUser",
-		Picture:           srv.URL,
+		Email:             "picture-later@example.com",
+		PreferredUsername: "pictureLaterUser",
+		Picture:           pictureURL,
 	}
-	idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "busy-avatar"}
+	idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "picture-later"}
 
-	u, err := getOrCreateUser(t.Context(), s, cl, &Provider{}, idToken)
-	require.NoError(t, err, "a busy server must not fail the login")
+	u, err := getOrCreateUser(s, cl, &Provider{}, idToken)
+	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 
+	assert.Equal(t, int32(0), hits.Load())
 	s2 := db.NewSession()
 	defer s2.Close()
 	stored, err := user.GetUserByID(s2, u.ID)
 	require.NoError(t, err)
-	assert.Zero(t, stored.AvatarFileID)
+	assert.Equal(t, int64(0), stored.AvatarFileID)
 	assert.Equal(t, config.DefaultSettingsAvatarProvider.GetString(), stored.AvatarProvider)
+}
+
+func TestSyncUserAvatarFromOpenID(t *testing.T) {
+	t.Run("stores the downloaded picture", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		pictureURL, hits := servePicture(t)
+
+		require.NoError(t, syncUserAvatarFromOpenID(t.Context(), 1, pictureURL))
+
+		assert.Equal(t, int32(1), hits.Load())
+		s := db.NewSession()
+		defer s.Close()
+		stored, err := user.GetUserByID(s, 1)
+		require.NoError(t, err)
+		assert.Equal(t, "openid", stored.AvatarProvider)
+		assert.NotZero(t, stored.AvatarFileID)
+	})
+
+	t.Run("busy decoder leaves the avatar unchanged", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		pictureURL, hits := servePicture(t)
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+
+		err := syncUserAvatarFromOpenID(t.Context(), 19, pictureURL)
+		require.Error(t, err)
+		assert.True(t, imageutils.IsErrDecodeBusy(err))
+
+		assert.Equal(t, int32(1), hits.Load())
+		s := db.NewSession()
+		defer s.Close()
+		stored, err := user.GetUserByID(s, 19)
+		require.NoError(t, err)
+		assert.Equal(t, "openid", stored.AvatarProvider)
+		assert.Equal(t, int64(0), stored.AvatarFileID)
+	})
 }
 
 func TestEmailVerifiedClaimDecoding(t *testing.T) {

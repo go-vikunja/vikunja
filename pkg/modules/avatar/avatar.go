@@ -19,6 +19,7 @@ package avatar
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -180,6 +181,36 @@ func SaveUploaded(s *xorm.Session, u *user.User, a *upload.EncodedAvatar) error 
 func SaveSynced(s *xorm.Session, u *user.User, provider string, a *upload.EncodedAvatar) error {
 	if err := upload.SaveAvatar(s, u, provider, a); err != nil {
 		return err
+	}
+
+	FlushAllCaches(u)
+
+	return nil
+}
+
+// Own session: decoding may queue and must not hold the login transaction.
+func SyncFromProvider(ctx context.Context, userID int64, provider string, raw []byte) error {
+	prepared, err := upload.PrepareAvatar(ctx, raw)
+	if err != nil {
+		return fmt.Errorf("error decoding avatar: %w", err)
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := user.GetUserByID(s, userID)
+	if err != nil {
+		_ = s.Rollback()
+		return fmt.Errorf("error loading user: %w", err)
+	}
+
+	if err := upload.SaveAvatar(s, u, provider, prepared); err != nil {
+		_ = s.Rollback()
+		return fmt.Errorf("error storing avatar: %w", err)
+	}
+
+	if err := s.Commit(); err != nil {
+		return fmt.Errorf("error committing avatar: %w", err)
 	}
 
 	FlushAllCaches(u)
