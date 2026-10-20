@@ -276,7 +276,7 @@ func GetUserByIDForAuth(s *xorm.Session, id int64) (*User, error) {
 	if err != nil {
 		return u, err
 	}
-	return u, CheckUserCanAuthenticate(u)
+	return u, checkUserAndBotOwnerCanAuthenticate(s, u)
 }
 
 func GetUserByUsernameForAuth(s *xorm.Session, username string) (*User, error) {
@@ -284,7 +284,16 @@ func GetUserByUsernameForAuth(s *xorm.Session, username string) (*User, error) {
 	if err != nil {
 		return u, err
 	}
-	return u, CheckUserCanAuthenticate(u)
+	return u, checkUserAndBotOwnerCanAuthenticate(s, u)
+}
+
+// Disabling an owner doesn't touch their bots' status, so a bot inherits the owner's gate.
+func checkUserAndBotOwnerCanAuthenticate(s *xorm.Session, u *User) error {
+	if err := CheckUserCanAuthenticate(u); err != nil || !u.IsBot() {
+		return err
+	}
+	_, err := GetUserByIDForAuth(s, u.BotOwnerID)
+	return err
 }
 
 func CheckUserCanAuthenticate(u *User) error {

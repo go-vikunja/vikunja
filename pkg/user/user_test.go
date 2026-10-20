@@ -1040,3 +1040,20 @@ func TestGetUserForAuth(t *testing.T) {
 		})
 	}
 }
+
+// TOK-BOT-01
+func TestGetUserForAuthChecksBotOwner(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := GetUserByIDForAuth(s, 23)
+	require.NoError(t, err)
+
+	require.NoError(t, SetUserStatus(s, &User{ID: 21}, StatusDisabled))
+
+	_, err = GetUserByIDForAuth(s, 23)
+	assert.True(t, IsErrAccountDisabled(err), "by id: got %v", err)
+	_, err = GetUserByUsernameForAuth(s, "bot-owner-a-assistant")
+	assert.True(t, IsErrAccountDisabled(err), "by username: got %v", err)
+}
