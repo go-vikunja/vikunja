@@ -480,6 +480,9 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	if err := json.Unmarshal(bufData.Bytes(), &projects); err != nil {
 		return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read data: %w", err)}
 	}
+	if err := migration.CheckItemLimit(projects); err != nil {
+		return err
+	}
 
 	provider := &lazyFileProvider{
 		attachments: map[*models.TaskAttachment]*zip.File{},
