@@ -65,6 +65,10 @@ func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// Callers act on the URL view (last-bucket count, default/done ids), so it must be the bucket's own.
+	if bb.ProjectViewID != b.ProjectViewID {
+		return false, ErrBucketDoesNotBelongToProjectView{BucketID: bb.ID, ProjectViewID: b.ProjectViewID}
+	}
 
 	return canWriteBucketProject(s, pv.ProjectID, a)
 }
