@@ -179,6 +179,17 @@ oddly, suspect one of these:
   stays untouched. Don't bypass the credentials package in tests —
   leaks between tests will surface as the wrong bot token.
 
+## Trust gate
+
+- `.veans.yml` is repo-controlled, so `internal/trust` gates `cfg.Server`
+  before any credential or request goes out (`newRuntime`, `runLogin`).
+  Trusted origins live in `~/.config/veans/trusted.json` (no XDG override),
+  keyed by `trust.Origin` (scheme + host + port; userinfo rejected).
+- No terminal → no prompt, fail closed. `VEANS_SERVER` with the same origin
+  counts as trusted (CI). `init` records the server the user typed.
+- Tests build a `trust.Gate` on a temp store; never let one write to the
+  real `~/.config/veans`.
+
 ## Project identifiers and bot usernames
 
 - Project `Identifier` is `runelength(0|10)`, can be empty. When empty,
