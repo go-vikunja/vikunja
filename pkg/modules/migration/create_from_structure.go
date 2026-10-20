@@ -271,7 +271,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 
 		log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
 
-		_, err = handler.SaveBackgroundFile(context.Background(), s, user, &project.Project, backgroundFile, "")
+		_, err = saveBackground(s, user, &project.Project, backgroundFile)
 		if err != nil {
 			log.Errorf("[creating structure] Could not create background for project %d, error was %v", project.ID, err)
 		} else {
@@ -288,7 +288,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			log.Debugf("[creating structure] Creating a background file for project %d", project.ID)
 
 			var storedSize int64
-			storedSize, err = handler.SaveBackgroundFile(context.Background(), s, user, &project.Project, backgroundFile, "")
+			storedSize, err = saveBackground(s, user, &project.Project, backgroundFile)
 			closeErr := backgroundFile.Close()
 			if err != nil {
 				return err
@@ -804,4 +804,15 @@ func remapAssignees(assignees []*user.User, importer *user.User) []*user.User {
 		}
 	}
 	return nil
+}
+
+func saveBackground(s *xorm.Session, u *user.User, project *models.Project, src io.ReadSeeker) (storedSize int64, err error) {
+	bg, err := handler.PrepareBackground(context.Background(), src, "")
+	if err != nil {
+		return 0, err
+	}
+	if err := handler.SaveBackground(s, u, project, bg); err != nil {
+		return 0, err
+	}
+	return bg.Size(), nil
 }

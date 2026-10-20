@@ -222,3 +222,50 @@ func TestHumaProjectBackgroundUploadDecodeIsBounded(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeDecodeBusy))
 	assert.Equal(t, before, backgroundFileID())
 }
+
+func TestHumaProjectBackgroundUploadHoldsNoTransactionWhileQueued(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	release := imageutils.ExhaustBudgetForTests(time.Minute)
+	t.Cleanup(release)
+
+	ctx := &doneSignalCtx{Context: t.Context(), waiting: make(chan struct{})}
+	body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
+	req := httptest.NewRequest(http.MethodPut, "/api/v2/projects/1/backgrounds/upload", body).WithContext(ctx)
+	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("Authorization", "Bearer "+humaTokenFor(t, &testuser1))
+	rec := httptest.NewRecorder()
+	finished := make(chan struct{})
+	go func() {
+		defer close(finished)
+		e.ServeHTTP(rec, req)
+	}()
+
+	select {
+	case <-ctx.waiting:
+	case <-time.After(5 * time.Second):
+		require.FailNow(t, "the upload never queued for decode capacity")
+	}
+
+	// A transaction left open by the queued upload table-locks the shared-cache SQLite test db.
+	s := db.NewSession()
+	defer s.Close()
+	_, err = s.ID(2).Cols("title").Update(&models.Project{Title: "written while the upload is queued"})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	release()
+	select {
+	case <-finished:
+	case <-time.After(10 * time.Second):
+		require.FailNow(t, "the upload did not finish after the budget was released")
+	}
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	project := models.Project{ID: 1}
+	has, err := s.Get(&project)
+	require.NoError(t, err)
+	require.True(t, has)
+	assert.NotZero(t, project.BackgroundFileID)
+	assert.NotEmpty(t, project.BackgroundBlurHash)
+}

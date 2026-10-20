@@ -18,7 +18,6 @@ package webtests
 
 import (
 	"bytes"
-	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -30,7 +29,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/textproto"
-	"sync"
 	"testing"
 	"time"
 
@@ -339,16 +337,4 @@ func TestAvatarDecodeIsBounded(t *testing.T) {
 		assert.Equal(t, http.StatusServiceUnavailable, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeDecodeBusy))
 	})
-}
-
-// Signals the first Done call, which is the decode queue waiting on the request.
-type doneSignalCtx struct {
-	context.Context
-	once    sync.Once
-	waiting chan struct{}
-}
-
-func (c *doneSignalCtx) Done() <-chan struct{} {
-	c.once.Do(func() { close(c.waiting) })
-	return c.Context.Done()
 }
