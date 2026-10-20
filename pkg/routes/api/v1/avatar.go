@@ -36,7 +36,7 @@ import (
 // @tags user
 // @Produce octet-stream
 // @Param username path string true "The username of the user who's avatar you want to get"
-// @Param size query int false "The size of the avatar you want to get. If bigger than the max configured size this will be adjusted to the maximum size."
+// @Param size query int false "The size of the avatar you want to get. Rounded up to 16, 32, 48, 64, 128, 256, 512 or 1024 and capped at the max configured size."
 // @Success 200 {file} blob "The avatar"
 // @Failure 404 {object} models.Message "The user does not exist."
 // @Failure 500 {object} models.Message "Internal error"

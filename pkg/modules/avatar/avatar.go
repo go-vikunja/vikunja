@@ -76,7 +76,7 @@ func FlushAllCaches(u *user.User) {
 // tolerates an unknown/disabled user (returning the default placeholder rather
 // than an error, since avatars are loaded via <img> tags), picks the right
 // provider (empty for unknown users, botmarble for bots, otherwise the user's
-// configured provider) and clamps the size to the server's configured maximum.
+// configured provider) and normalizes the size.
 func GetAvatarForUsername(s *xorm.Session, username string, size int64) (data []byte, mime string, err error) {
 	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
 	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
@@ -95,17 +95,31 @@ func GetAvatarForUsername(s *xorm.Session, username string, size int64) (data []
 		provider = &botmarble.Provider{}
 	}
 
-	if size > config.ServiceMaxAvatarSize.GetInt64() {
-		size = config.ServiceMaxAvatarSize.GetInt64()
-	}
-
-	data, mime, err = provider.GetAvatar(u, size)
+	data, mime, err = provider.GetAvatar(u, normalizeAvatarSize(size))
 	if err != nil {
 		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
 		return nil, "", err
 	}
 
 	return data, mime, nil
+}
+
+// Providers cache per size without eviction, so only a fixed set of sizes may reach them.
+var avatarSizes = []int64{16, 32, 48, 64, 128, 256, 512, 1024}
+
+const defaultAvatarSize = 250
+
+func normalizeAvatarSize(size int64) int64 {
+	maxSize := config.ServiceMaxAvatarSize.GetInt64()
+	if size <= 0 {
+		size = defaultAvatarSize
+	}
+	for _, allowed := range avatarSizes {
+		if allowed >= size {
+			return min(allowed, maxSize)
+		}
+	}
+	return maxSize
 }
 
 // GetProvider returns the appropriate avatar provider for a user
