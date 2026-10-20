@@ -109,7 +109,7 @@ func (r *runtime) backfillFrontendURL(ctx context.Context) {
 		return
 	}
 	r.cfg.FrontendURL = cmp.Or(info.FrontendURL, r.cfg.Server)
-	_ = r.cfg.SaveAs(r.cfg.Path())
+	_ = r.cfg.Save()
 }
 
 // withURLs sets URL on tasks and their related tasks for agent output.
