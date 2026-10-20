@@ -21,7 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"runtime/debug"
 	"strings"
+	"sync"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -222,4 +224,42 @@ func SyncFromProvider(ctx context.Context, userID int64, provider string, raw []
 	FlushAllCaches(u)
 
 	return nil
+}
+
+var providerSyncs sync.WaitGroup
+
+// SyncFromProviderAsync fetches and stores a provider avatar in the background; failures are only logged.
+func SyncFromProviderAsync(ctx context.Context, userID int64, provider string, fetch func(context.Context) ([]byte, error)) {
+	// Fetch and decode carry their own timeouts, so the sync stays bounded without the request's cancellation.
+	ctx = context.WithoutCancel(ctx)
+	providerSyncs.Add(1)
+	go func() {
+		defer providerSyncs.Done()
+		err := fetchAndSyncFromProvider(ctx, userID, provider, fetch)
+		switch {
+		case err == nil:
+		case imageutils.IsErrDecodeBusy(err):
+			log.Warningf("Error syncing %s avatar for user %d: %v", provider, userID, err)
+		default:
+			log.Errorf("Error syncing %s avatar for user %d: %v", provider, userID, err)
+		}
+	}()
+}
+
+func fetchAndSyncFromProvider(ctx context.Context, userID int64, provider string, fetch func(context.Context) ([]byte, error)) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v\n%s", r, debug.Stack())
+		}
+	}()
+
+	raw, err := fetch(ctx)
+	if err != nil {
+		return fmt.Errorf("error fetching avatar: %w", err)
+	}
+	return SyncFromProvider(ctx, userID, provider, raw)
+}
+
+func WaitForProviderSyncsForTests() {
+	providerSyncs.Wait()
 }

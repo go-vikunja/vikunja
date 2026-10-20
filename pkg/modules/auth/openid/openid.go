@@ -296,9 +296,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	events.DispatchPending(ctx, s)
 
 	if cl.Picture != "" {
-		if err := syncUserAvatarFromOpenID(ctx, u.ID, cl.Picture); err != nil {
-			log.Errorf("Error syncing avatar for user %s: %v", u.Username, err)
-		}
+		syncUserAvatarFromOpenID(ctx, u.ID, cl.Picture)
 	}
 
 	return u, oidcData, nil
@@ -373,15 +371,12 @@ func resetOpenIDAvatar(s *xorm.Session, u *user.User) error {
 	return nil
 }
 
-func syncUserAvatarFromOpenID(ctx context.Context, userID int64, pictureURL string) error {
+func syncUserAvatarFromOpenID(ctx context.Context, userID int64, pictureURL string) {
 	log.Debugf("Found avatar URL for user %d: %s", userID, pictureURL)
 
-	avatarData, err := utils.DownloadImage(ctx, pictureURL)
-	if err != nil {
-		return fmt.Errorf("error downloading avatar: %w", err)
-	}
-
-	return avatar.SyncFromProvider(ctx, userID, "openid", avatarData)
+	avatar.SyncFromProviderAsync(ctx, userID, "openid", func(ctx context.Context) ([]byte, error) {
+		return utils.DownloadImage(ctx, pictureURL)
+	})
 }
 
 // fallbackSearchUsers builds the ordered list of local-user lookups used to link an OIDC

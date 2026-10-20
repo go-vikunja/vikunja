@@ -18,6 +18,7 @@ package avatar
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"image/png"
 	"io/fs"
@@ -139,6 +140,74 @@ func TestSyncFromProvider(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "openid", stored.AvatarProvider)
 		assert.Equal(t, int64(0), stored.AvatarFileID)
+	})
+}
+
+func TestSyncFromProviderAsync(t *testing.T) {
+	raw := &bytes.Buffer{}
+	require.NoError(t, png.Encode(raw, image.NewNRGBA(image.Rect(0, 0, 8, 4))))
+
+	storedUser := func(t *testing.T) *user.User {
+		t.Helper()
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByID(s, 1)
+		require.NoError(t, err)
+		return u
+	}
+
+	t.Run("stores provider and file", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		SyncFromProviderAsync(t.Context(), 1, "ldap", func(context.Context) ([]byte, error) {
+			return raw.Bytes(), nil
+		})
+		WaitForProviderSyncsForTests()
+
+		stored := storedUser(t)
+		assert.Equal(t, "ldap", stored.AvatarProvider)
+		require.NotZero(t, stored.AvatarFileID)
+		db.AssertExists(t, "files", map[string]interface{}{
+			"id":            stored.AvatarFileID,
+			"name":          "avatar.png",
+			"created_by_id": 1,
+		}, false)
+	})
+
+	t.Run("recovers a panicking fetch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		panicking := func(context.Context) ([]byte, error) {
+			panic("boom")
+		}
+
+		SyncFromProviderAsync(t.Context(), 1, "ldap", panicking)
+		WaitForProviderSyncsForTests()
+
+		stored := storedUser(t)
+		assert.NotEqual(t, "ldap", stored.AvatarProvider)
+		assert.Zero(t, stored.AvatarFileID)
+
+		err := fetchAndSyncFromProvider(t.Context(), 1, "ldap", panicking)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "panic: boom")
+	})
+
+	t.Run("outlives the request context", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		ctx, cancel := context.WithCancel(t.Context())
+		release := make(chan struct{})
+
+		SyncFromProviderAsync(ctx, 1, "ldap", func(ctx context.Context) ([]byte, error) {
+			<-release
+			return raw.Bytes(), ctx.Err()
+		})
+		cancel()
+		close(release)
+		WaitForProviderSyncsForTests()
+
+		stored := storedUser(t)
+		assert.Equal(t, "ldap", stored.AvatarProvider)
+		assert.NotZero(t, stored.AvatarFileID)
 	})
 }
 

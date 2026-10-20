@@ -38,6 +38,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/utils"
@@ -782,7 +783,8 @@ func TestSyncUserAvatarFromOpenID(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		pictureURL, hits := servePicture(t)
 
-		require.NoError(t, syncUserAvatarFromOpenID(t.Context(), 1, pictureURL))
+		syncUserAvatarFromOpenID(t.Context(), 1, pictureURL)
+		avatar.WaitForProviderSyncsForTests()
 
 		assert.Equal(t, int32(1), hits.Load())
 		s := db.NewSession()
@@ -798,9 +800,8 @@ func TestSyncUserAvatarFromOpenID(t *testing.T) {
 		pictureURL, hits := servePicture(t)
 		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
 
-		err := syncUserAvatarFromOpenID(t.Context(), 19, pictureURL)
-		require.Error(t, err)
-		assert.True(t, imageutils.IsErrDecodeBusy(err))
+		syncUserAvatarFromOpenID(t.Context(), 19, pictureURL)
+		avatar.WaitForProviderSyncsForTests()
 
 		assert.Equal(t, int32(1), hits.Load())
 		s := db.NewSession()

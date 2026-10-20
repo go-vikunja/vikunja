@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
@@ -308,7 +309,9 @@ func TestAuthenticateUserCredentialsLdapAvatarSync(t *testing.T) {
 	t.Cleanup(func() { config.AuthLdapAvatarSyncAttribute.Set(orig) })
 
 	login := func(password string) (*user.User, error) {
-		return shared.AuthenticateUserCredentials(t.Context(), &user.Login{Username: "professor", Password: password})
+		u, err := shared.AuthenticateUserCredentials(t.Context(), &user.Login{Username: "professor", Password: password})
+		avatar.WaitForProviderSyncsForTests()
+		return u, err
 	}
 	storedUser := func() *user.User {
 		s := db.NewSession()
