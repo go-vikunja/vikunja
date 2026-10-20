@@ -1647,6 +1647,7 @@
     "10003": "You cannot remove the last bucket on a project.",
     "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
     "10005": "There can be only one done bucket per project.",
+    "10007": "A project view can have at most 100 buckets.",
     "11001": "The saved filter does not exist.",
     "11002": "Saved filters are not available for link shares.",
     "12001": "The subscription entity type is invalid.",

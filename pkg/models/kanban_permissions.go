@@ -28,7 +28,21 @@ func (b *Bucket) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	return canWriteBucketProject(s, pv.ProjectID, a)
+	can, err := canWriteBucketProject(s, pv.ProjectID, a)
+	if err != nil || !can {
+		return false, err
+	}
+
+	// Capped here rather than in Create so imports and duplication can copy larger boards.
+	count, err := s.Where("project_view_id = ?", pv.ID).Count(&Bucket{})
+	if err != nil {
+		return false, err
+	}
+	if count >= maxBucketsPerView {
+		return false, ErrTooManyBuckets{ProjectViewID: pv.ID, Max: maxBucketsPerView}
+	}
+
+	return true, nil
 }
 
 // CanUpdate checks if a user can update an existing bucket

@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -163,6 +164,33 @@ func TestHumaBucket(t *testing.T) {
 			_, err := owned.testCreateWithUser(nil, nil, `{"title":""}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
+		})
+		t.Run("At the bucket cap", func(t *testing.T) {
+			s := db.NewSession()
+			defer s.Close()
+			t.Cleanup(func() {
+				cs := db.NewSession()
+				defer cs.Close()
+				_, err := cs.Where("title = ?", "cap filler").Delete(&models.Bucket{})
+				require.NoError(t, err)
+				require.NoError(t, cs.Commit())
+			})
+			count, err := s.Where("project_view_id = ?", 4).Count(&models.Bucket{})
+			require.NoError(t, err)
+			for range 100 - int(count) {
+				_, err = s.Insert(&models.Bucket{
+					Title:         "cap filler",
+					ProjectViewID: 4,
+					CreatedByID:   testuser1.ID,
+				})
+				require.NoError(t, err)
+			}
+			require.NoError(t, s.Commit())
+
+			_, err = owned.testCreateWithUser(nil, nil, `{"title":"One too many"}`)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
+			assertHandlerErrorCode(t, err, models.ErrCodeTooManyBuckets)
 		})
 	})
 

@@ -2194,6 +2194,30 @@ func (err ErrTaskAlreadyExistsInBucket) HTTPError() web.HTTPError {
 	}
 }
 
+type ErrTooManyBuckets struct {
+	ProjectViewID int64
+	Max           int
+}
+
+func IsErrTooManyBuckets(err error) bool {
+	_, ok := err.(ErrTooManyBuckets)
+	return ok
+}
+
+func (err ErrTooManyBuckets) Error() string {
+	return fmt.Sprintf("Project view has too many buckets [ProjectViewID: %d, Max: %d]", err.ProjectViewID, err.Max)
+}
+
+const ErrCodeTooManyBuckets = 10007
+
+func (err ErrTooManyBuckets) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTooManyBuckets,
+		Message:  fmt.Sprintf("A project view can have at most %d buckets.", err.Max),
+	}
+}
+
 // =============
 // Saved Filters
 // =============
