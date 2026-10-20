@@ -179,3 +179,32 @@ func TestTeamMember_Update(t *testing.T) {
 		}, false)
 	})
 }
+
+func TestTeamMember_CanDelete(t *testing.T) {
+	tests := []struct {
+		name   string
+		teamID int64
+		target string
+		doer   *user.User
+		want   bool
+	}{
+		{name: "member removes themselves", teamID: 1, target: "user2", doer: &user.User{ID: 2}, want: true},
+		{name: "team admin removes another member", teamID: 1, target: "user2", doer: &user.User{ID: 1}, want: true},
+		{name: "non-admin removes another member", teamID: 1, target: "user1", doer: &user.User{ID: 2}, want: false},
+		{name: "non-member removes themselves", teamID: 1, target: "user3", doer: &user.User{ID: 3}, want: false},
+		{name: "non-member removes themselves from external team", teamID: 14, target: "user3", doer: &user.User{ID: 3}, want: false},
+		{name: "self-removal from nonexistent team", teamID: 9999, target: "user3", doer: &user.User{ID: 3}, want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			tm := &TeamMember{TeamID: tt.teamID, Username: tt.target}
+			can, err := tm.CanDelete(s, tt.doer)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, can)
+		})
+	}
+}

@@ -40,7 +40,11 @@ func (tm *TeamMember) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 	if u.ID == a.GetID() {
-		return true, nil
+		// Otherwise Delete's errors leak whether a foreign team exists, is external, or has one member.
+		isMember, err := s.Where("team_id = ? AND user_id = ?", tm.TeamID, u.ID).Exist(&TeamMember{})
+		if err != nil || isMember {
+			return isMember, err
+		}
 	}
 	return tm.IsAdmin(s, a)
 }
