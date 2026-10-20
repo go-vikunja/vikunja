@@ -5,6 +5,12 @@ You are working in a repository configured to track tasks in Vikunja via the
 Project: {{ .ProjectTitle }}{{ if .ProjectIdentifier }} ({{ .ProjectIdentifier }}){{ end }}
 Bot identity: `{{ .BotUsername }}` — your actions in Vikunja appear as this user.
 Server: {{ .Server }}
+{{- if .UntrustedServer }}
+
+veans has not been told to trust {{ .UntrustedServer }}, so no project data
+was loaded and veans commands fail with AUTH_ERROR. Ask the user to run any
+veans command (e.g. `veans list`) once in a terminal to confirm the server.
+{{- end }}
 </EXTREMELY_IMPORTANT>
 
 # Workflow

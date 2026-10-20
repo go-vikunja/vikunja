@@ -21,14 +21,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"golang.org/x/term"
+
+	"code.vikunja.io/veans/internal/auth"
 	"code.vikunja.io/veans/internal/client"
 	"code.vikunja.io/veans/internal/config"
 	"code.vikunja.io/veans/internal/credentials"
 	"code.vikunja.io/veans/internal/output"
+	"code.vikunja.io/veans/internal/trust"
 )
 
 // runtime bundles the artifacts every non-init command needs: parsed config,
@@ -53,7 +58,14 @@ func loadRuntime(ctx context.Context) (*runtime, error) {
 	if err != nil {
 		return nil, err
 	}
-	store := credentials.Default()
+	return newRuntime(ctx, cfg, trust.Default(interactive(auth.NewStdPrompter())), credentials.Default())
+}
+
+func newRuntime(ctx context.Context, cfg *config.Config, gate *trust.Gate, store credentials.Store) (*runtime, error) {
+	// Before store.Get: VEANS_TOKEN matches any server.
+	if err := gate.Check(cfg.Server); err != nil {
+		return nil, err
+	}
 	tok, err := store.Get(cfg.Server, cfg.Bot.Username)
 	if err != nil {
 		return nil, output.Wrap(output.CodeAuth, err,
@@ -73,6 +85,14 @@ func loadRuntime(ctx context.Context) (*runtime, error) {
 		rt.backfillFrontendURL(ctx)
 	}
 	return rt, nil
+}
+
+// nil without a terminal, so the trust gate fails closed for hooks, agents and CI.
+func interactive(p *auth.StdPrompter) trust.Prompter {
+	if term.IsTerminal(int(os.Stdin.Fd())) && term.IsTerminal(int(os.Stderr.Fd())) {
+		return p
+	}
+	return nil
 }
 
 // backfillFrontendURL migrates configs written before frontend_url existed.

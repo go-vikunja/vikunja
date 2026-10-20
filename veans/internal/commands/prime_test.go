@@ -108,3 +108,17 @@ func TestPrimeTemplate_NoIdentifierFallback(t *testing.T) {
 		t.Errorf("expected #NN format mention in fallback")
 	}
 }
+
+func TestPrimeTemplate_UntrustedHint(t *testing.T) {
+	tpl, err := template.New("prime").Parse(promptTemplate)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	if err := tpl.Execute(&buf, primeContext{UntrustedServer: "https://vikunja.example.com:443"}); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "not been told to trust https://vikunja.example.com:443") {
+		t.Errorf("missing untrusted hint:\n%s", buf.String())
+	}
+}
