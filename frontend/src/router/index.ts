@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
+import {getSensitiveParam} from '@/helpers/sensitiveQueryParams'
 
 import {getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
@@ -502,9 +503,8 @@ export async function getAuthForRoute(to: RouteLocation, authStore: {
 		: ''
 
 	// Signed-in browsers bounce off the login page, so the token has to be redeemed here.
-	const rawConfirmToken = to.query.userEmailConfirm
-	const confirmToken = Array.isArray(rawConfirmToken) ? rawConfirmToken[0] : rawConfirmToken
-	if (typeof confirmToken === 'string' && confirmToken !== '' && authStore.authUser) {
+	const confirmToken = getSensitiveParam(to, 'userEmailConfirm')
+	if (confirmToken && authStore.authUser) {
 		try {
 			// info may predate a change requested in another session; re-read before judging.
 			await authStore.refreshUserInfo()
@@ -532,20 +532,17 @@ export async function getAuthForRoute(to: RouteLocation, authStore: {
 		return
 	}
 
-	// Check if password reset token is in query params
-	const resetToken = to.query.userPasswordReset as string | undefined
+	const resetToken = getSensitiveParam(to, 'userPasswordReset')
 	
-	// Redirect to password reset page if we have a token stored
 	if (resetToken && to.name !== 'user.password-reset.reset') {
-		return {name: 'user.password-reset.reset', query: { userPasswordReset: resetToken }}
+		return {name: 'user.password-reset.reset', hash: '#userPasswordReset=' + resetToken}
 	}
 
 	if (typeof resetToken === 'undefined' && to.name === 'user.password-reset.reset') {
 		return {name: 'user.login'}
 	}
 
-	// Check if email confirmation token is in query params
-	const emailConfirmToken = to.query.userEmailConfirm as string | undefined
+	const emailConfirmToken = getSensitiveParam(to, 'userEmailConfirm')
 	if (emailConfirmToken) {
 		// Save token to localStorage before redirecting
 		localStorage.setItem('emailConfirmToken', emailConfirmToken)
@@ -673,5 +670,6 @@ router.beforeEach(async (to, from) => {
 		return to.fullPath + to.hash
 	}
 })
+
 
 export default router

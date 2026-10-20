@@ -42,10 +42,10 @@ describe('settings route matching', () => {
 	})
 })
 
-function route(query: RouteLocation['query'] = {}) {
+function route(query: RouteLocation['query'] = {}, hash = '', name = 'home') {
 	return {
-		name: 'home',
-		hash: '',
+		name,
+		hash,
 		query,
 		params: {},
 		fullPath: '/',
@@ -136,6 +136,49 @@ describe('getAuthForRoute email confirmation', () => {
 	})
 })
 
+describe('getAuthForRoute account tokens in the fragment', () => {
+	const loggedOut = () => authStoreStub({authUser: false})
+
+	beforeEach(() => {
+		localStorage.clear()
+	})
+
+	it('redeems an email confirmation token for a signed-in user', async () => {
+		const authStore = authStoreStub()
+
+		await getAuthForRoute(route({}, '#userEmailConfirm=token-123'), authStore)
+
+		expect(authStore.verifyEmail).toHaveBeenCalledWith('token-123')
+	})
+
+	it('stores an email confirmation token for the login page', async () => {
+		const result = await getAuthForRoute(route({}, '#userEmailConfirm=token-123'), loggedOut())
+
+		expect(localStorage.getItem('emailConfirmToken')).toBe('token-123')
+		expect(result).toEqual({name: 'user.login'})
+	})
+
+	it.each([
+		['fragment', {}, '#userPasswordReset=token-123'],
+		['query', {userPasswordReset: 'token-123'}, ''],
+	])('moves a password reset token from the %s to the reset page fragment', async (_, query, hash) => {
+		const result = await getAuthForRoute(route(query, hash), loggedOut())
+
+		expect(result).toEqual({name: 'user.password-reset.reset', hash: '#userPasswordReset=token-123'})
+	})
+
+	it('stays on the reset page when the fragment carries the token', async () => {
+		const result = await getAuthForRoute(route({}, '#userPasswordReset=token-123', 'user.password-reset.reset'), loggedOut())
+
+		expect(result).toBeUndefined()
+	})
+
+	it('leaves the reset page without a token', async () => {
+		const result = await getAuthForRoute(route({}, '', 'user.password-reset.reset'), loggedOut())
+
+		expect(result).toEqual({name: 'user.login'})
+	})
+})
 
 describe('scroll restoration', () => {
 	it('scrolls a new route to the top left', () => {

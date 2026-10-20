@@ -71,6 +71,7 @@ import {AUTH_TYPES} from '@/constants/auth'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 
 import {useConfirmDeletionMutation} from '@/client/queries/accountDeletion'
+import {getSensitiveParam} from '@/helpers/sensitiveQueryParams'
 
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
@@ -107,8 +108,8 @@ const confirmDeletion = useConfirmDeletionMutation()
 
 // Without a session the token would burn on an unauthenticated request, so keep it in the URL until login lands.
 const accountDeletionToken = computed(() => {
-	const token = route.query.accountDeletionConfirm
-	return authStore.authUser && typeof token === 'string' ? token : ''
+	const token = getSensitiveParam(route, 'accountDeletionConfirm')
+	return authStore.authUser && token ? token : ''
 })
 
 watch(accountDeletionToken, async token => {
@@ -116,8 +117,9 @@ watch(accountDeletionToken, async token => {
 	// The URL reaches Sentry replays and lastVisited, so drop the single-use token before spending it.
 	const query = {...route.query}
 	delete query.accountDeletionConfirm
+	const hash = new URLSearchParams(route.hash.slice(1)).has('accountDeletionConfirm') ? '' : route.hash
 	// A failed strip must not skip spending the token.
-	await router.replace({path: route.path, query, hash: route.hash}).catch(() => {})
+	await router.replace({path: route.path, query, hash}).catch(() => {})
 	confirmDeletion.mutate({
 		id: authStore.session?.id ?? 0,
 		type: authStore.session?.type ?? AUTH_TYPES.USER,
