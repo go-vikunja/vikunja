@@ -134,9 +134,9 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 	events.DispatchPending(ctx, s)
 
 	if len(ldapAvatar) > 0 {
-		if err := avatar.SyncFromProvider(ctx, u.ID, "ldap", ldapAvatar); err != nil {
-			log.Errorf("Error storing LDAP avatar for user %s: %v", u.Username, err)
-		}
+		avatar.SyncFromProviderAsync(ctx, u.ID, "ldap", func(context.Context) ([]byte, error) {
+			return ldapAvatar, nil
+		})
 	}
 
 	return u, nil
