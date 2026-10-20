@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
@@ -104,6 +105,7 @@ func UploadAvatar(c *echo.Context) (err error) {
 
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	u, err := user.GetUserByID(s, uc.ID)
 	if err != nil {
@@ -120,6 +122,7 @@ func UploadAvatar(c *echo.Context) (err error) {
 		_ = s.Rollback()
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Avatar was uploaded successfully."})
 }

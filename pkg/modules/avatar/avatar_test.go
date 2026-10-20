@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"image"
 	"image/png"
+	"io/fs"
 	"testing"
 	"time"
 
@@ -98,6 +99,27 @@ func TestSyncFromProvider(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 4, cfg.Width)
 		assert.Equal(t, 4, cfg.Height)
+	})
+
+	t.Run("removes the replaced avatar file and blob", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+
+		setup := db.NewSession()
+		_, err := setup.ID(1).Cols("avatar_file_id", "avatar_provider").Update(&user.User{AvatarFileID: 1, AvatarProvider: "upload"})
+		require.NoError(t, err)
+		require.NoError(t, setup.Commit())
+		setup.Close()
+
+		_, err = files.FileStat(&files.File{ID: 1})
+		require.NoError(t, err)
+
+		require.NoError(t, SyncFromProvider(t.Context(), 1, "ldap", raw.Bytes()))
+
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		_, err = files.FileStat(&files.File{ID: 1})
+		require.Error(t, err)
+		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
 
 	t.Run("busy decoder leaves the avatar unchanged", func(t *testing.T) {

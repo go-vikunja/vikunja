@@ -25,6 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
@@ -197,6 +198,7 @@ func SyncFromProvider(ctx context.Context, userID int64, provider string, raw []
 
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	u, err := user.GetUserByID(s, userID)
 	if err != nil {
@@ -212,6 +214,7 @@ func SyncFromProvider(ctx context.Context, userID int64, provider string, raw []
 	if err := s.Commit(); err != nil {
 		return fmt.Errorf("error committing avatar: %w", err)
 	}
+	events.DispatchPending(ctx, s)
 
 	FlushAllCaches(u)
 

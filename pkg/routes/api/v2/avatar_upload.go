@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/user"
@@ -81,6 +82,7 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	// Re-fetch the full user: the auth user from the JWT claims is partial.
 	u, err := user.GetUserByID(s, authUser.ID)
@@ -98,6 +100,7 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 
 	return &avatarUploadBody{Body: &models.Message{Message: "Avatar was uploaded successfully."}}, nil
 }
