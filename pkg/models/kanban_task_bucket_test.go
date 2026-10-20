@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestTaskBucket_Update(t *testing.T) {
@@ -459,5 +460,83 @@ func TestTaskBucket_Update(t *testing.T) {
 			assert.True(t, task.Done)
 			assert.WithinDuration(t, doneAt, task.DoneAt, time.Second)
 		}()
+	})
+}
+
+func TestTaskBucket_CanUpdate(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	t.Run("task of the view's project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tb := &TaskBucket{TaskID: 1, BucketID: 1, ProjectViewID: 4, ProjectID: 1}
+		can, err := tb.CanUpdate(s, u)
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+	t.Run("task of another writable project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 1 can write project 10 (bucket 10, view 40) and task 1 (project 1).
+		tb := &TaskBucket{TaskID: 1, BucketID: 10, ProjectViewID: 40, ProjectID: 10}
+		can, err := tb.CanUpdate(s, u)
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("no write access to the bucket's project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tb := &TaskBucket{TaskID: 1, BucketID: 1, ProjectViewID: 4, ProjectID: 1}
+		can, err := tb.CanUpdate(s, &user.User{ID: 15})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+
+	savedFilterKanban := func(t *testing.T, s *xorm.Session) (bucket *Bucket) {
+		sf := &SavedFilter{
+			Title:   "undone",
+			Filters: &TaskCollection{Filter: "done = false"},
+		}
+		require.NoError(t, sf.Create(s, u))
+
+		filterProjectID := getProjectIDFromSavedFilterID(sf.ID)
+		view := &ProjectView{}
+		exists, err := s.Where("project_id = ? AND view_kind = ?", filterProjectID, ProjectViewKindKanban).Get(view)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		bucket = &Bucket{Title: "target", ProjectViewID: view.ID, ProjectID: filterProjectID}
+		require.NoError(t, bucket.Create(s, u))
+		return bucket
+	}
+
+	t.Run("saved filter: task matching the filter", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bucket := savedFilterKanban(t, s)
+		tb := &TaskBucket{TaskID: 1, BucketID: bucket.ID, ProjectViewID: bucket.ProjectViewID, ProjectID: bucket.ProjectID}
+		can, err := tb.CanUpdate(s, u)
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+	t.Run("saved filter: task not matching the filter", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bucket := savedFilterKanban(t, s)
+		// Task 2 is done.
+		tb := &TaskBucket{TaskID: 2, BucketID: bucket.ID, ProjectViewID: bucket.ProjectViewID, ProjectID: bucket.ProjectID}
+		can, err := tb.CanUpdate(s, u)
+		require.NoError(t, err)
+		assert.False(t, can)
 	})
 }
