@@ -17,6 +17,7 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -24,10 +25,12 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
 )
@@ -54,18 +57,45 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			return checkAPITokenAndPutItInContext(authHeader, c, shouldSkipRouteCheck(c)) == nil
 		},
+		SuccessHandler: checkUserJWTSession,
 		ErrorHandler: func(c *echo.Context, err error) error {
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, web.HTTPError{
-					HTTPCode: http.StatusUnauthorized,
-					Code:     ErrCodeInvalidToken,
-					Message:  "missing, malformed, expired or otherwise invalid token provided",
-				})
+				return c.JSON(http.StatusUnauthorized, errInvalidToken{}.HTTPError())
 			}
 
 			return nil
 		},
 	})
+}
+
+type errInvalidToken struct{}
+
+func (errInvalidToken) Error() string { return "invalid token" }
+
+func (errInvalidToken) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeInvalidToken,
+		Message:  "missing, malformed, expired or otherwise invalid token provided",
+	}
+}
+
+// A valid signature outlives logout, password changes and account freezes; the session doesn't.
+func checkUserJWTSession(c *echo.Context) error {
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok || !auth.IsUserToken(token) {
+		return nil
+	}
+
+	claims, err := auth.UserTokenClaimsFromJWT(token)
+	if err == nil {
+		err = auth.CheckUserTokenSession(claims)
+	}
+	if errors.Is(err, auth.ErrUserTokenRejected) {
+		log.Debugf("[auth] Rejected user token: %v", err)
+		return errInvalidToken{}
+	}
+	return err
 }
 
 // An autopatch leg inherits the client PATCH's authorisation only as long as it

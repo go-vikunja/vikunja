@@ -789,7 +789,10 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 	_, err = s.Where("id = ?", user.ID).
 		Cols("status").
 		Update(&User{Status: status})
-	return
+	if err != nil {
+		return err
+	}
+	return InvalidateSessionAuthCacheOnCommit(s, user.ID)
 }
 
 // GuardLastAdmin refuses demoting or deleting the last reachable admin; only active, non-deletion-scheduled admins count since the rest cannot log in.
@@ -859,5 +862,8 @@ func (u *User) SetStatus(s *xorm.Session, status Status) (err error) {
 		Where("id = ?", u.ID).
 		Cols("status").
 		Update(u)
-	return
+	if err != nil {
+		return err
+	}
+	return InvalidateSessionAuthCacheOnCommit(s, u.ID)
 }

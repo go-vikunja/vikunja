@@ -18,7 +18,10 @@ package events
 
 import (
 	"context"
+	"errors"
 	"testing"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
@@ -91,6 +94,52 @@ func TestDispatchPendingNoEvents(t *testing.T) {
 
 	// Verify no events were dispatched
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
+}
+
+func TestOnCommit(t *testing.T) {
+	log.InitLogger()
+
+	t.Run("runs on DispatchPending before events", func(t *testing.T) {
+		Fake()
+		key := new(int)
+		var calls []int
+		var dispatchedBeforeCallback int
+
+		OnCommit(key, func() error {
+			dispatchedBeforeCallback = CountDispatchedEvents("test.event")
+			calls = append(calls, 1)
+			return errors.New("failing callback must not stop the others")
+		})
+		DispatchOnCommit(key, &testEvent{})
+		OnCommit(key, func() error {
+			calls = append(calls, 2)
+			return nil
+		})
+		assert.Empty(t, calls)
+
+		DispatchPending(context.Background(), key)
+
+		assert.Equal(t, []int{1, 2}, calls)
+		assert.Zero(t, dispatchedBeforeCallback)
+		assert.Equal(t, 1, CountDispatchedEvents("test.event"))
+
+		DispatchPending(context.Background(), key)
+		assert.Equal(t, []int{1, 2}, calls, "must run only once")
+	})
+	t.Run("dropped by CleanupPending", func(t *testing.T) {
+		Fake()
+		key := new(int)
+		called := false
+
+		OnCommit(key, func() error {
+			called = true
+			return nil
+		})
+		CleanupPending(key)
+		DispatchPending(context.Background(), key)
+
+		assert.False(t, called)
+	})
 }
 
 func TestShouldReportPoisonedMessage(t *testing.T) {

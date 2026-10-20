@@ -98,7 +98,7 @@ func TestTaskAttachmentUploadSize(t *testing.T) {
 			req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
 
 			// Add JWT token to request header for authentication
-			token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+			token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 			require.NoError(t, err)
 			req.Header.Set("Authorization", "Bearer "+token)
 
@@ -126,7 +126,7 @@ func TestTaskAttachmentUploadDispatchesCreatedEvent(t *testing.T) {
 	body, contentType := multipartFilesBody(t, map[string][]byte{"event.txt": []byte("event")})
 	req := httptest.NewRequest(http.MethodPut, "/api/v1/tasks/1/attachments", body)
 	req.Header.Set(echo.HeaderContentType, contentType)
-	token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+	token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 	require.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
