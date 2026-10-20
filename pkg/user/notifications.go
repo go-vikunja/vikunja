@@ -49,7 +49,7 @@ func (n *EmailConfirmNotification) ToMail(lang string) *notifications.Mail {
 
 	return nn.
 		Line(i18n.T(lang, "notifications.email_confirm.confirm")).
-		Action(i18n.T(lang, "notifications.common.actions.confirm_email"), config.ServicePublicURL.GetString()+"?userEmailConfirm="+n.ConfirmToken).
+		Action(i18n.T(lang, "notifications.common.actions.confirm_email"), config.ServicePublicURL.GetString()+"#userEmailConfirm="+n.ConfirmToken).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
@@ -125,7 +125,7 @@ func (n *ResetPasswordNotification) ToMail(lang string) *notifications.Mail {
 		Subject(i18n.T(lang, "notifications.password.reset.subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.password.reset.instructions")).
-		Action(i18n.T(lang, "notifications.common.actions.reset_password"), config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.ClearTextToken).
+		Action(i18n.T(lang, "notifications.common.actions.reset_password"), config.ServicePublicURL.GetString()+"#userPasswordReset="+n.Token.ClearTextToken).
 		Line(i18n.T(lang, "notifications.password.reset.valid_duration")).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -229,7 +229,7 @@ func (n *AccountDeletionConfirmNotification) ToMail(lang string) *notifications.
 		Subject(i18n.T(lang, "notifications.account.deletion.confirm.subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.request")).
-		Action(i18n.T(lang, "notifications.common.actions.confirm_account_deletion"), config.ServicePublicURL.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
+		Action(i18n.T(lang, "notifications.common.actions.confirm_account_deletion"), config.ServicePublicURL.GetString()+"#accountDeletionConfirm="+n.ConfirmToken).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.valid_duration")).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.schedule_info")).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.consequences")).
