@@ -143,18 +143,11 @@ func emailConfirmationCooldownKey(userID int64) string {
 func sendEmailConfirmation(s *xorm.Session, u *User) (err error) {
 	// Kept outside the db so the cooldown survives cancelling the change or rotating tokens.
 	cooldownKey := emailConfirmationCooldownKey(u.ID)
-	lastSent, exists, err := keyvalue.Get(cooldownKey)
+	sentAt, exists, err := keyvalue.GetInt64(cooldownKey)
 	if err != nil {
 		return
 	}
 	if exists {
-		var sentAt int64
-		switch v := lastSent.(type) {
-		case int64:
-			sentAt = v
-		case float64:
-			sentAt = int64(v)
-		}
 		if time.Since(time.Unix(sentAt, 0)) < emailConfirmationResendCooldown {
 			return ErrEmailConfirmationCooldown{UserID: u.ID}
 		}
