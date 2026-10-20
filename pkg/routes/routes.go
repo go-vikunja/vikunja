@@ -159,30 +159,7 @@ func NewEcho() *echo.Echo {
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogHTTPLevel.GetString(), config.LogFormat.GetString())
-		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-			LogStatus:    true,
-			LogURI:       true,
-			LogMethod:    true,
-			LogLatency:   true,
-			LogRemoteIP:  true,
-			LogUserAgent: true,
-			HandleError:  true,
-			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
-				attrs := []slog.Attr{
-					slog.String("remote_ip", v.RemoteIP),
-					slog.String("method", v.Method),
-					slog.String("uri", v.URI),
-					slog.Int("status", v.Status),
-					slog.Duration("latency", v.Latency),
-					slog.String("user_agent", v.UserAgent),
-				}
-				if v.Error != nil {
-					attrs = append(attrs, slog.String("err", v.Error.Error()))
-				}
-				httpLogger.LogAttrs(context.Background(), httpLogLevel(v.Status), "", attrs...)
-				return nil
-			},
-		}))
+		e.Use(httpRequestLogger(httpLogger))
 	}
 
 	// panic recover
@@ -1081,6 +1058,33 @@ func registerCalDavRoutes(c *echo.Group) {
 	c.Any("/projects/:project", caldav.ProjectHandler)
 	c.Any("/projects/:project/", caldav.ProjectHandler)
 	c.Any("/projects/:project/:task", caldav.TaskHandler) // Mostly used for editing
+}
+
+// Never the raw URI: share hashes ride in the path and reset/confirm tokens in the query.
+func httpRequestLogger(httpLogger *slog.Logger) echo.MiddlewareFunc {
+	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogStatus:    true,
+		LogMethod:    true,
+		LogLatency:   true,
+		LogRemoteIP:  true,
+		LogUserAgent: true,
+		HandleError:  true,
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			attrs := []slog.Attr{
+				slog.String("remote_ip", v.RemoteIP),
+				slog.String("method", v.Method),
+				slog.String("route", c.Path()),
+				slog.Int("status", v.Status),
+				slog.Duration("latency", v.Latency),
+				slog.String("user_agent", v.UserAgent),
+			}
+			if v.Error != nil {
+				attrs = append(attrs, slog.String("err", v.Error.Error()))
+			}
+			httpLogger.LogAttrs(context.Background(), httpLogLevel(v.Status), "", attrs...)
+			return nil
+		},
+	})
 }
 
 // Level by status so log.httplevel can filter successful requests out
