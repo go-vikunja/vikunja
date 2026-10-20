@@ -34,12 +34,42 @@ import (
 func TestUserTOTPLocalUser(t *testing.T) {
 	t.Run("Enroll TOTP for local user", func(t *testing.T) {
 		// Use testuser15 who has no TOTP enrollment in fixtures
-		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPEnroll, &testuser15, "", nil, nil)
+		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPEnroll, &testuser15, `{"password":"12345678"}`, nil, nil)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"secret"`)
 		assert.Contains(t, rec.Body.String(), `"url"`)
 		assert.Contains(t, rec.Body.String(), `"enabled":false`)
+	})
+
+	// GHSA-h4q3-mc9r-q7vv: a stolen session alone must not enroll the attacker's authenticator.
+	t.Run("Enroll without the password is refused", func(t *testing.T) {
+		for _, body := range []string{"", `{"password":"wrong"}`} {
+			_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPEnroll, &testuser15, body, nil, nil)
+			require.Error(t, err, "body %q", body)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err), "body %q", body)
+			db.AssertMissing(t, "totp", map[string]interface{}{"user_id": 15})
+		}
+	})
+
+	t.Run("Enable with the password", func(t *testing.T) {
+		passcode, err := totp.GenerateCode("HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ", time.Now())
+		require.NoError(t, err)
+		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPEnable, &testuser1,
+			fmt.Sprintf(`{"passcode":%q,"password":"12345678"}`, passcode), nil, nil)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		db.AssertExists(t, "totp", map[string]interface{}{"user_id": 1, "enabled": true}, false)
+	})
+
+	t.Run("Enable without the password is refused", func(t *testing.T) {
+		passcode, err := totp.GenerateCode("HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ", time.Now())
+		require.NoError(t, err)
+		_, err = newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPEnable, &testuser1,
+			fmt.Sprintf(`{"passcode":%q}`, passcode), nil, nil)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		db.AssertExists(t, "totp", map[string]interface{}{"user_id": 1, "enabled": false}, false)
 	})
 
 	t.Run("Get TOTP QR Code for enrolled local user", func(t *testing.T) {

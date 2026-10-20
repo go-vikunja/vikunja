@@ -34,9 +34,16 @@ type totpStatusBody struct {
 	Body *user.TOTP
 }
 
+type totpEnrollBody struct {
+	Body struct {
+		Password string `json:"password" doc:"The current user's password, required to enroll into totp."`
+	}
+}
+
 type totpEnableBody struct {
 	Body struct {
 		Passcode string `json:"passcode" doc:"The current totp passcode, used to confirm the authenticator is set up correctly."`
+		Password string `json:"password" doc:"The current user's password, required to enable totp."`
 	}
 }
 
@@ -80,7 +87,7 @@ func RegisterTOTPRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "totp-enroll",
 		Summary:     "Enroll into totp",
-		Description: "Creates the totp secret for the authenticated user. The setup must still be confirmed via the enable endpoint before it takes effect. Local accounts only.",
+		Description: "Creates the totp secret for the authenticated user. Requires the current password; wrong passwords are throttled per user (429). The setup must still be confirmed via the enable endpoint before it takes effect. Local accounts only.",
 		Method:      http.MethodPost,
 		Path:        "/user/settings/totp/enroll",
 		// v1 returns 200 here, not 201: enrollment is an inactive draft, not a usable resource yet.
@@ -91,7 +98,7 @@ func RegisterTOTPRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "totp-enable",
 		Summary:     "Enable totp",
-		Description: "Activates a previously enrolled totp setting by confirming a passcode. All existing sessions are invalidated. Local accounts only.",
+		Description: "Activates a previously enrolled totp setting by confirming a passcode. Requires the current password; wrong passwords are throttled per user (429). All existing sessions are invalidated. Local accounts only.",
 		Method:      http.MethodPost,
 		Path:        "/user/settings/totp/enable",
 		// Confirms an existing enrollment; creates no new resource.
@@ -135,7 +142,7 @@ func init() { AddRouteRegistrar(RegisterTOTPRoutes) }
 
 // localUserFromCtx resolves the authenticated user and refuses anything that is
 // not a local account, mirroring v1's getLocalUserFromContext. The caller owns
-// the returned session. CheckReauthPassword and IsLocalUser need the full DB
+// the returned session. The reauth password check and IsLocalUser need the full DB
 // record (password hash, issuer), so this loads it rather than trusting the
 // token claims.
 func localUserFromCtx(ctx context.Context) (*user.User, *xorm.Session, error) {
@@ -178,14 +185,14 @@ func totpGet(ctx context.Context, _ *struct{}) (*totpStatusBody, error) {
 	return &totpStatusBody{Body: t.APICopy()}, nil
 }
 
-func totpEnroll(ctx context.Context, _ *struct{}) (*totpStatusBody, error) {
+func totpEnroll(ctx context.Context, in *totpEnrollBody) (*totpStatusBody, error) {
 	u, s, err := localUserFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer s.Close()
 
-	t, err := user.EnrollTOTP(s, u)
+	t, err := user.EnrollTOTP(s, u, in.Body.Password)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -204,7 +211,7 @@ func totpEnable(ctx context.Context, in *totpEnableBody) (*totpMessageBody, erro
 	defer s.Close()
 	defer events.CleanupPending(s)
 
-	if err := user.EnableTOTP(s, &user.TOTPPasscode{User: u, Passcode: in.Body.Passcode}); err != nil {
+	if err := user.EnableTOTP(s, u, in.Body.Password, in.Body.Passcode); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}

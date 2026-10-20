@@ -8,6 +8,7 @@ test.describe('TOTP', () => {
 	test('enrolls TOTP and forces re-login', async ({authenticatedPage: page}) => {
 		await gotoUserSettings(page, 'totp')
 
+		await page.locator('#totpEnrollPassword').fill(TEST_PASSWORD)
 		await page.getByRole('button', {name: 'Enroll'}).click()
 
 		// Secret is rendered in <strong> after enroll()
@@ -53,8 +54,19 @@ test.describe('TOTP', () => {
 		await expect(page.getByText("You've successfully set up two factor authentication!")).toBeVisible()
 	})
 
+	test('refuses to enroll without the password', async ({authenticatedPage: page, apiContext, userToken}) => {
+		await gotoUserSettings(page, 'totp')
+		await page.locator('#totpEnrollPassword').fill('wrong password')
+		await page.getByRole('button', {name: 'Enroll'}).click()
+
+		await expect(page.locator('.global-notification .vue-notification.error')).toBeVisible()
+		const status = await apiContext.get('user/settings/totp', {headers: {Authorization: `Bearer ${userToken}`}})
+		expect(status.status()).toBe(412)
+	})
+
 	test('rejects wrong passcode during enrollment', async ({authenticatedPage: page}) => {
 		await gotoUserSettings(page, 'totp')
+		await page.locator('#totpEnrollPassword').fill(TEST_PASSWORD)
 		await page.getByRole('button', {name: 'Enroll'}).click()
 		await page.locator('#totpConfirmPasscode').fill('000000')
 		await page.getByRole('button', {name: 'Confirm'}).click()

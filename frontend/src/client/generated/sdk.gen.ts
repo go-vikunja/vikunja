@@ -4101,7 +4101,7 @@ export const totpDisable = <ThrowOnError extends boolean = true>(options: Option
 /**
  * Enable totp
  *
- * Activates a previously enrolled totp setting by confirming a passcode. All existing sessions are invalidated. Local accounts only.
+ * Activates a previously enrolled totp setting by confirming a passcode. Requires the current password; wrong passwords are throttled per user (429). All existing sessions are invalidated. Local accounts only.
  */
 export const totpEnable = <ThrowOnError extends boolean = true>(options: Options<TotpEnableData, ThrowOnError>): RequestResult<TotpEnableResponses, TotpEnableErrors, ThrowOnError> => (options.client ?? client).post<TotpEnableResponses, TotpEnableErrors, ThrowOnError>({
     security: [{
@@ -4124,9 +4124,9 @@ export const totpEnable = <ThrowOnError extends boolean = true>(options: Options
 /**
  * Enroll into totp
  *
- * Creates the totp secret for the authenticated user. The setup must still be confirmed via the enable endpoint before it takes effect. Local accounts only.
+ * Creates the totp secret for the authenticated user. Requires the current password; wrong passwords are throttled per user (429). The setup must still be confirmed via the enable endpoint before it takes effect. Local accounts only.
  */
-export const totpEnroll = <ThrowOnError extends boolean = true>(options?: Options<TotpEnrollData, ThrowOnError>): RequestResult<TotpEnrollResponses, TotpEnrollErrors, ThrowOnError> => (options?.client ?? client).post<TotpEnrollResponses, TotpEnrollErrors, ThrowOnError>({
+export const totpEnroll = <ThrowOnError extends boolean = true>(options: Options<TotpEnrollData, ThrowOnError>): RequestResult<TotpEnrollResponses, TotpEnrollErrors, ThrowOnError> => (options.client ?? client).post<TotpEnrollResponses, TotpEnrollErrors, ThrowOnError>({
     security: [{
             key: 'JWTKeyAuth',
             scheme: 'bearer',
@@ -4137,7 +4137,11 @@ export const totpEnroll = <ThrowOnError extends boolean = true>(options?: Option
             type: 'http'
         }],
     url: '/user/settings/totp/enroll',
-    ...options
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

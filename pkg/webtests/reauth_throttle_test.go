@@ -33,6 +33,10 @@ func TestReauthThrottle(t *testing.T) {
 	}{
 		{"v1 totp disable", http.MethodPost, "/api/v1/user/settings/totp/disable", `{"password":"wrong"}`, `{"password":"12345678"}`},
 		{"v2 totp disable", http.MethodPost, "/api/v2/user/settings/totp/disable", `{"password":"wrong"}`, `{"password":"12345678"}`},
+		{"v1 totp enroll", http.MethodPost, "/api/v1/user/settings/totp/enroll", `{"password":"wrong"}`, `{"password":"12345678"}`},
+		{"v2 totp enroll", http.MethodPost, "/api/v2/user/settings/totp/enroll", `{"password":"wrong"}`, `{"password":"12345678"}`},
+		{"v1 totp enable", http.MethodPost, "/api/v1/user/settings/totp/enable", `{"passcode":"000000","password":"wrong"}`, `{"passcode":"000000","password":"12345678"}`},
+		{"v2 totp enable", http.MethodPost, "/api/v2/user/settings/totp/enable", `{"passcode":"000000","password":"wrong"}`, `{"passcode":"000000","password":"12345678"}`},
 		{"v1 deletion request", http.MethodPost, "/api/v1/user/deletion/request", `{"password":"wrong"}`, `{"password":"12345678"}`},
 		{"v2 deletion request", http.MethodPost, "/api/v2/user/deletion/request", `{"password":"wrong"}`, `{"password":"12345678"}`},
 		{"v1 deletion cancel", http.MethodPost, "/api/v1/user/deletion/cancel", `{"password":"wrong"}`, `{"password":"12345678"}`},

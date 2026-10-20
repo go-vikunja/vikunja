@@ -131,3 +131,43 @@ func TestHandleFailedTOTPAuthLockoutCanBeUnlockedByPasswordReset(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, StatusActive, unlocked.Status)
 }
+
+func TestEnrollTOTPRequiresPassword(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := GetUserByID(s, 2)
+	require.NoError(t, err)
+	_ = keyvalue.Del(reauthAttemptsKey(u.ID))
+
+	_, err = EnrollTOTP(s, u, "wrong")
+	assert.True(t, IsErrWrongUsernameOrPassword(err), "got %v", err)
+	db.AssertMissing(t, "totp", map[string]any{"user_id": u.ID})
+
+	enrolled, err := EnrollTOTP(s, u, "12345678")
+	require.NoError(t, err)
+	assert.False(t, enrolled.Enabled)
+}
+
+func TestEnableTOTPRequiresPassword(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	_ = keyvalue.Del(reauthAttemptsKey(u.ID))
+
+	passcode, err := totp.GenerateCode("HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ", time.Now())
+	require.NoError(t, err)
+
+	err = EnableTOTP(s, u, "wrong", passcode)
+	assert.True(t, IsErrWrongUsernameOrPassword(err), "got %v", err)
+
+	err = EnableTOTP(s, u, "12345678", passcode)
+	require.NoError(t, err)
+	enabled, err := TOTPEnabledForUser(s, u)
+	require.NoError(t, err)
+	assert.True(t, enabled)
+}

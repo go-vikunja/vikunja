@@ -49,26 +49,54 @@ func getLocalUserFromContext(c *echo.Context) (*user.User, *xorm.Session, error)
 	return u, s, nil
 }
 
+// UserTOTPEnableRequest holds the body of the totp enable request.
+type UserTOTPEnableRequest struct {
+	// A passcode generated from the enrolled secret.
+	Passcode string `json:"passcode"`
+	// The current user's password.
+	Password string `json:"password"`
+}
+
+func bindInvalidModel(c *echo.Context, v any) error {
+	if err := c.Bind(v); err != nil {
+		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
+		var he *echo.HTTPError
+		if errors.As(err, &he) {
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
+		}
+		return models.ErrInvalidModel{Err: err}
+	}
+	return nil
+}
+
 // UserTOTPEnroll is the handler to enroll a user into totp
 // @Summary Enroll a user into totp
-// @Description Creates an initial setup for the user in the db. After this step, the user needs to verify they have a working totp setup with the "enable totp" endpoint.
+// @Description Creates an initial setup for the user in the db. After this step, the user needs to verify they have a working totp setup with the "enable totp" endpoint. Requires the current password.
 // @tags user
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
+// @Param password body v1.UserPasswordConfirmation true "The current user's password."
 // @Success 200 {object} user.TOTP
 // @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 403 {object} web.HTTPError "Wrong password."
 // @Failure 404 {object} web.HTTPError "User does not exist."
+// @Failure 429 {object} web.HTTPError "Too many failed attempts."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enroll [post]
 func UserTOTPEnroll(c *echo.Context) error {
+	var pass UserPasswordConfirmation
+	if err := bindInvalidModel(c, &pass); err != nil {
+		return err
+	}
+
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
 		return err
 	}
 	defer s.Close()
 
-	t, err := user.EnrollTOTP(s, u)
+	t, err := user.EnrollTOTP(s, u, pass.Password)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -84,19 +112,26 @@ func UserTOTPEnroll(c *echo.Context) error {
 
 // UserTOTPEnable is the handler to enable totp for a user
 // @Summary Enable a previously enrolled totp setting.
-// @Description Enables a previously enrolled totp setting by providing a totp passcode.
+// @Description Enables a previously enrolled totp setting by providing a totp passcode and the current password.
 // @tags user
 // @Accept json
 // @Produce json
-// @Param totp body user.TOTPPasscode true "The totp passcode."
+// @Param totp body v1.UserTOTPEnableRequest true "The totp passcode and the current password."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Message "Successfully enabled"
 // @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 403 {object} web.HTTPError "Wrong password."
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 412 {object} web.HTTPError "TOTP is not enrolled."
+// @Failure 429 {object} web.HTTPError "Too many failed attempts."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enable [post]
 func UserTOTPEnable(c *echo.Context) error {
+	var body UserTOTPEnableRequest
+	if err := bindInvalidModel(c, &body); err != nil {
+		return err
+	}
+
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
 		return err
@@ -104,19 +139,7 @@ func UserTOTPEnable(c *echo.Context) error {
 	defer s.Close()
 	defer events.CleanupPending(s)
 
-	passcode := &user.TOTPPasscode{
-		User: u,
-	}
-	if err := c.Bind(passcode); err != nil {
-		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
-		var he *echo.HTTPError
-		if errors.As(err, &he) {
-			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
-		}
-		return models.ErrInvalidModel{Err: err}
-	}
-
-	err = user.EnableTOTP(s, passcode)
+	err = user.EnableTOTP(s, u, body.Password, body.Passcode)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -154,13 +177,8 @@ func UserTOTPEnable(c *echo.Context) error {
 // @Router /user/settings/totp/disable [post]
 func UserTOTPDisable(c *echo.Context) error {
 	login := &user.Login{}
-	if err := c.Bind(login); err != nil {
-		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
-		var he *echo.HTTPError
-		if errors.As(err, &he) {
-			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
-		}
-		return models.ErrInvalidModel{Err: err}
+	if err := bindInvalidModel(c, login); err != nil {
+		return err
 	}
 
 	u, s, err := getLocalUserFromContext(c)
