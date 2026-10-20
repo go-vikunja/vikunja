@@ -17,16 +17,20 @@
 package models
 
 import (
+	"bytes"
 	"context"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestDeleteUser(t *testing.T) {
@@ -248,4 +252,68 @@ func TestDeleteUser_DoesNotPromoteSharesOnProjectsNotOwned(t *testing.T) {
 		db.AssertExists(t, "projects", map[string]interface{}{"id": project.ID, "owner_id": 1}, false)
 		db.AssertExists(t, "team_projects", map[string]interface{}{"project_id": project.ID, "team_id": 9, "permission": PermissionRead}, false)
 	})
+}
+
+// GHSA-7gmh-4fw6-8xc5
+func TestDeleteUser_RemovesExportAndAvatarFiles(t *testing.T) {
+	setup := func(t *testing.T) (s *xorm.Session, avatar *files.File) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		s = db.NewSession()
+		t.Cleanup(func() {
+			events.CleanupPending(s)
+			_ = s.Close()
+		})
+		avatar, err := files.CreateWithSession(s, bytes.NewReader([]byte("avatar")), "avatar.png", 6, &user.User{ID: 4})
+		require.NoError(t, err)
+		_, err = s.ID(4).Cols("export_file_id", "avatar_file_id").Update(&user.User{ExportFileID: 1, AvatarFileID: avatar.ID})
+		require.NoError(t, err)
+		return s, avatar
+	}
+
+	t.Run("removes both", func(t *testing.T) {
+		s, avatar := setup(t)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		assertBlobExists(t, 1)
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		db.AssertMissing(t, "files", map[string]interface{}{"id": avatar.ID})
+		assertBlobMissing(t, 1)
+		assertBlobMissing(t, avatar.ID)
+	})
+	t.Run("keeps the shared default avatar", func(t *testing.T) {
+		s, avatar := setup(t)
+		config.DefaultSettingsAvatarFileID.Set(avatar.ID)
+		t.Cleanup(func() { config.DefaultSettingsAvatarFileID.Set(0) })
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		db.AssertExists(t, "files", map[string]interface{}{"id": avatar.ID}, false)
+		_, err := files.FileStat(avatar)
+		require.NoError(t, err)
+	})
+	t.Run("keeps files when the deletion rolls back", func(t *testing.T) {
+		s, _ := setup(t)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		require.NoError(t, s.Rollback())
+		events.CleanupPending(s)
+
+		db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+		assertBlobExists(t, 1)
+	})
+}
+
+func assertBlobExists(t *testing.T, fileID int64) {
+	t.Helper()
+	_, err := files.FileStat(&files.File{ID: fileID})
+	require.NoError(t, err)
 }

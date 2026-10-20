@@ -20,6 +20,7 @@ import (
 	"context"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -162,6 +163,11 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
+	err = deleteUserFiles(s, u.ID)
+	if err != nil {
+		return err
+	}
+
 	// Delete all related entities
 	relatedEntities := []struct {
 		column string
@@ -201,6 +207,30 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 
 	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
 	return err
+}
+
+func deleteUserFiles(s *xorm.Session, userID int64) error {
+	u := &user.User{}
+	has, err := s.Where("id = ?", userID).Cols("export_file_id", "avatar_file_id").Get(u)
+	if err != nil || !has {
+		return err
+	}
+
+	fileIDs := []int64{u.ExportFileID}
+	// The default avatar file is shared by every user.
+	if u.AvatarFileID != config.DefaultSettingsAvatarFileID.GetInt64() {
+		fileIDs = append(fileIDs, u.AvatarFileID)
+	}
+
+	// Blob removal can't roll back, so it waits for the commit.
+	for _, id := range fileIDs {
+		events.OnCommit(s, func() error {
+			deleteFileInNewSession(id)
+			return nil
+		})
+	}
+
+	return nil
 }
 
 func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err error) {

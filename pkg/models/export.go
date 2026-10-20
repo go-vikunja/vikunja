@@ -135,9 +135,8 @@ func ExportUserData(s *xorm.Session, u *user.User) (previousExportFileID int64, 
 	return current.ExportFileID, nil
 }
 
-// deleteExportFile removes an export that is no longer referenced. Errors are only logged since
-// the new export already succeeded.
-func deleteExportFile(fileID int64) {
+// Only logs errors: the caller's change is already committed.
+func deleteFileInNewSession(fileID int64) {
 	if fileID == 0 {
 		return
 	}
@@ -145,15 +144,25 @@ func deleteExportFile(fileID int64) {
 	s := db.NewSession()
 	defer s.Close()
 
-	err := (&files.File{ID: fileID}).Delete(s)
-	if err != nil && !files.IsErrFileDoesNotExist(err) {
+	if err := deleteFileIfExists(s, fileID); err != nil {
 		_ = s.Rollback()
-		log.Errorf("Could not remove previous export file %d: %s", fileID, err)
+		log.Errorf("Could not remove file %d: %s", fileID, err)
 		return
 	}
 	if err := s.Commit(); err != nil {
-		log.Errorf("Could not remove previous export file %d: %s", fileID, err)
+		log.Errorf("Could not remove file %d: %s", fileID, err)
 	}
+}
+
+func deleteFileIfExists(s *xorm.Session, fileID int64) error {
+	if fileID == 0 {
+		return nil
+	}
+	err := (&files.File{ID: fileID}).Delete(s)
+	if err != nil && !files.IsErrFileDoesNotExist(err) {
+		return err
+	}
+	return nil
 }
 
 func getRawTasksForExport(s *xorm.Session, projectIDs []int64, a web.Auth) (tasks []*Task, err error) {
@@ -544,7 +553,7 @@ func cleanupOldUserExports() {
 	expiredIDs := make([]int64, 0, len(fs))
 	for _, f := range fs {
 		expiredIDs = append(expiredIDs, f.ID)
-		err = f.Delete(s)
+		err = deleteFileIfExists(s, f.ID)
 		if err != nil {
 			log.Errorf(logPrefix+"Could not remove user export file %d: %s", f.ID, err)
 			return
