@@ -17,6 +17,7 @@
 package initials
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"html"
@@ -52,7 +53,7 @@ var avatarTextColors = []string{
 }
 
 // GetAvatar returns an initials avatar for a user as SVG
-func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+func (p *Provider) GetAvatar(_ context.Context, u *user.User, size int64) (avatar []byte, mimeType string, err error) {
 	// Get the text to display
 	avatarText := u.Name
 	if avatarText == "" {
@@ -84,8 +85,8 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 }
 
 // AsDataURI returns a data URI for the SVG avatar
-func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
-	avatarData, mimeType, err := p.GetAvatar(u, size)
+func (p *Provider) AsDataURI(ctx context.Context, u *user.User, size int64) (string, error) {
+	avatarData, mimeType, err := p.GetAvatar(ctx, u, size)
 	if err != nil {
 		return "", err
 	}

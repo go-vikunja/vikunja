@@ -120,7 +120,7 @@ func TestGetAvatar(t *testing.T) {
 		require.NoError(t, err)
 
 		// This should work correctly with the valid cached data
-		avatar, mimeType, err := provider.GetAvatar(testUser, 32)
+		avatar, mimeType, err := provider.GetAvatar(t.Context(), testUser, 32)
 
 		// Should return the cached data successfully
 		require.NoError(t, err)
@@ -143,7 +143,7 @@ func TestGetAvatar(t *testing.T) {
 		require.NoError(t, err)
 
 		u.AvatarFileID = old.ID
-		data, _, err := provider.GetAvatar(u, 32)
+		data, _, err := provider.GetAvatar(t.Context(), u, 32)
 		require.NoError(t, err)
 		cfg, err := png.DecodeConfig(bytes.NewReader(data))
 		require.NoError(t, err)
@@ -151,7 +151,7 @@ func TestGetAvatar(t *testing.T) {
 		assert.Equal(t, 8, cfg.Height)
 
 		u.AvatarFileID = replacement.ID
-		data, _, err = provider.GetAvatar(u, 32)
+		data, _, err = provider.GetAvatar(t.Context(), u, 32)
 		require.NoError(t, err)
 		cfg, err = png.DecodeConfig(bytes.NewReader(data))
 		require.NoError(t, err)
@@ -168,7 +168,7 @@ func TestGetAvatar(t *testing.T) {
 			AvatarFileID: 424242,
 		}
 
-		_, _, err := provider.GetAvatar(testUser, 32)
+		_, _, err := provider.GetAvatar(t.Context(), testUser, 32)
 		require.Error(t, err)
 		assert.True(t, files.IsErrFileDoesNotExist(err))
 	})
