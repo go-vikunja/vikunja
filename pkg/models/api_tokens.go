@@ -21,6 +21,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -345,28 +346,32 @@ func backfillTokenSha256(id int64, hash string) {
 	}
 }
 
-// ValidateTokenAndGetOwner looks up a raw token string, checks it is not expired,
-// and returns both the APIToken and its owner. Callers are responsible for checking
-// permissions on the returned token (e.g. CanDoAPIRoute or HasCaldavAccess).
-// Returns (nil, nil, nil) if the token is invalid or expired, or if the owner
-// account is disabled/locked.
-func ValidateTokenAndGetOwner(s *xorm.Session, rawToken string) (*APIToken, *user.User, error) {
-	apiToken, err := GetTokenFromTokenString(s, rawToken)
-	if err != nil {
-		if IsErrAPITokenInvalid(err) {
+// Callers still check the token's permissions (CanDoAPIRoute, HasCaldavAccess).
+// softFail turns a rejected token into (nil, nil, nil); other errors are returned either way.
+func ValidateTokenAndGetOwner(s *xorm.Session, rawToken string, softFail bool) (*APIToken, *user.User, error) {
+	reject := func(err error) (*APIToken, *user.User, error) {
+		if softFail {
 			return nil, nil, nil
 		}
 		return nil, nil, err
 	}
 
-	if time.Now().After(apiToken.ExpiresAt) {
-		return nil, nil, nil
+	apiToken, err := GetTokenFromTokenString(s, rawToken)
+	if err != nil {
+		if IsErrAPITokenInvalid(err) {
+			return reject(err)
+		}
+		return nil, nil, err
 	}
 
-	u, err := user.GetUserByID(s, apiToken.OwnerID)
+	if time.Now().After(apiToken.ExpiresAt) {
+		return reject(fmt.Errorf("API token %d expired on %s", apiToken.ID, apiToken.ExpiresAt.String()))
+	}
+
+	u, err := user.GetUserByIDForAuth(s, apiToken.OwnerID)
 	if err != nil {
-		if user.IsErrUserStatusError(err) {
-			return nil, nil, nil
+		if user.IsErrUserCannotAuthenticate(err) {
+			return reject(fmt.Errorf("API token %d owner cannot authenticate: %w", apiToken.ID, err))
 		}
 		return nil, nil, err
 	}

@@ -270,6 +270,40 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 	return &u, finishLoadedUser(&u)
 }
 
+// Unlike GetUserByID, also refuses accounts awaiting email confirmation, which is how admins freeze one.
+func GetUserByIDForAuth(s *xorm.Session, id int64) (*User, error) {
+	u, err := GetUserByID(s, id)
+	if err != nil {
+		return u, err
+	}
+	return u, CheckUserCanAuthenticate(u)
+}
+
+func GetUserByUsernameForAuth(s *xorm.Session, username string) (*User, error) {
+	u, err := GetUserByUsername(s, username)
+	if err != nil {
+		return u, err
+	}
+	return u, CheckUserCanAuthenticate(u)
+}
+
+func CheckUserCanAuthenticate(u *User) error {
+	switch u.Status {
+	case StatusEmailConfirmationRequired:
+		return ErrEmailNotConfirmed{UserID: u.ID}
+	case StatusDisabled:
+		return &ErrAccountDisabled{UserID: u.ID}
+	case StatusAccountLocked:
+		return &ErrAccountLocked{UserID: u.ID}
+	case StatusActive:
+	}
+	return nil
+}
+
+func IsErrUserCannotAuthenticate(err error) bool {
+	return IsErrUserStatusError(err) || IsErrEmailNotConfirmed(err)
+}
+
 // GetUserByUsername gets a user from its username. This is an extra function to be able to add an extra error check.
 func GetUserByUsername(s *xorm.Session, username string) (user *User, err error) {
 	if username == "" {

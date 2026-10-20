@@ -21,9 +21,9 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/web"
@@ -91,7 +91,9 @@ func shouldSkipRouteCheck(c *echo.Context) bool {
 }
 
 func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, skipRouteCheck bool) error {
-	token, u, err := auth.ValidateAPITokenString(strings.TrimPrefix(tokenHeaderValue, "Bearer "))
+	s := db.NewReadSession()
+	token, u, err := models.ValidateTokenAndGetOwner(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "), false)
+	s.Close()
 	if err != nil {
 		log.Debugf("[auth] API token validation failed: %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
