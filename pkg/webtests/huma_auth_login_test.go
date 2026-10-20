@@ -272,3 +272,26 @@ func TestHumaOpenIDGating(t *testing.T) {
 		assert.NotEqual(t, http.StatusUnauthorized, rec.Code)
 	})
 }
+
+func TestHumaLoginLdapEmailUnconfirmedAccount(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	if !config.AuthLdapEnabled.GetBool() {
+		t.Skip("Skipping LDAP tests because ldap is not configured")
+	}
+
+	const body = `{"username":"professor","password":"professor"}`
+	rec := humaRequest(t, e, http.MethodPost, "/api/v2/login", body, "", "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+
+	s := db.NewSession()
+	u, err := user.GetUserByUsername(s, "professor")
+	s.Close()
+	require.NoError(t, err)
+	setUserStatus(t, u.ID, user.StatusEmailConfirmationRequired)
+
+	rec = humaRequest(t, e, http.MethodPost, "/api/v2/login", body, "", "")
+	assert.Equal(t, http.StatusPreconditionFailed, rec.Code, rec.Body.String())
+	assert.Equal(t, user.ErrCodeEmailNotConfirmed, problemCode(t, rec))
+	assert.Nil(t, refreshCookie(rec))
+}

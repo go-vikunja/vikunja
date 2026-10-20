@@ -1007,3 +1007,36 @@ func TestGetUserByID_AfterBatchLoadKeepsStatusCheck(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "behind the back", afterWrite.Username)
 }
+
+func TestGetUserForAuth(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	for _, tc := range []struct {
+		name     string
+		id       int64
+		username string
+		wantErr  func(error) bool
+	}{
+		{"active", 1, "user1", nil},
+		{"email confirmation required", 4, "user4", IsErrEmailNotConfirmed},
+		{"disabled", 17, "user17", IsErrAccountDisabled},
+		{"locked", 18, "user18", IsErrAccountLocked},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			byID, err := GetUserByIDForAuth(s, tc.id)
+			byName, nameErr := GetUserByUsernameForAuth(s, tc.username)
+			if tc.wantErr == nil {
+				require.NoError(t, err)
+				require.NoError(t, nameErr)
+				assert.Equal(t, tc.id, byID.ID)
+				assert.Equal(t, tc.id, byName.ID)
+				return
+			}
+			assert.True(t, tc.wantErr(err), "by id: got %v", err)
+			assert.True(t, tc.wantErr(nameErr), "by username: got %v", nameErr)
+			assert.True(t, IsErrUserCannotAuthenticate(err))
+		})
+	}
+}

@@ -259,13 +259,9 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 		return nil, nil, err
 	}
 
-	if u.Status == user.StatusDisabled {
+	if err := user.CheckUserCanAuthenticate(u); err != nil {
 		_ = s.Rollback()
-		return nil, nil, &user.ErrAccountDisabled{UserID: u.ID}
-	}
-	if u.Status == user.StatusAccountLocked {
-		_ = s.Rollback()
-		return nil, nil, &user.ErrAccountLocked{UserID: u.ID}
+		return nil, nil, err
 	}
 
 	// Must run before team sync so a failed 2FA attempt cannot mutate team
