@@ -17,7 +17,9 @@
 package models
 
 import (
+	"cmp"
 	"net/http"
+	"slices"
 	"strings"
 
 	"code.vikunja.io/api/pkg/license"
@@ -278,6 +280,13 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		}
 	}
 
+	// Both versions would otherwise file it under the single-notification key.
+	if route.Method == http.MethodPost && stripAPIVersion(route.Path) == "notifications" {
+		ensureAPITokenRoutesGroup(target, "notifications")
+		target["notifications"]["mark_all_as_read"] = &RouteDetail{Path: route.Path, Method: route.Method}
+		return
+	}
+
 	// Check if this is a standard CRUD route using path-based heuristics
 	// In Echo v5, we can no longer rely on route.Name containing "(*WebHandler)"
 	isCRUD := isStandardCRUDRoute(routeGroupName, routeParts, route.Method)
@@ -286,45 +295,11 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 	isAttachmentRoute := routeGroupName == "tasks_attachments"
 
 	if !isCRUD && !isAttachmentRoute {
-		routeDetail := &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-		// We're trying to add routes to the routes of a matching "parent" - for
-		// example, projects_background should show up under "projects".
-		// To do this, we check if the route is a sub route of some other route
-		// and if that's the case, add it to its parent instead.
-		// Otherwise, we add it to the "other" key.
 		if len(routeParts) == 1 {
-			if routeGroupName == "notifications" && route.Method == http.MethodPost {
-				ensureAPITokenRoutesGroup(target, "notifications")
-
-				target["notifications"]["mark_all_as_read"] = routeDetail
-				return
-			}
-
-			ensureAPITokenRoutesGroup(target, "other")
-
-			_, exists := target["other"][routeGroupName]
-			if exists {
-				routeGroupName += "_" + strings.ToLower(route.Method)
-			}
-			target["other"][routeGroupName] = routeDetail
+			addNonCRUDRoute("other", routeGroupName, route)
 			return
 		}
-
-		subkey := strings.Join(routeParts[1:], "_")
-
-		if _, has := target[routeParts[0]]; !has {
-			target[routeParts[0]] = make(APITokenRoute)
-		}
-
-		if _, has := target[routeParts[0]][subkey]; has {
-			subkey += "_" + strings.ToLower(route.Method)
-		}
-
-		target[routeParts[0]][subkey] = routeDetail
-
+		addNonCRUDRoute(routeParts[0], strings.Join(routeParts[1:], "_"), route)
 		return
 	}
 
@@ -364,6 +339,112 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		}
 	}
 
+}
+
+// Keys derive from all v1 and v2 routes, not registration order (GHSA-j5v7-qcwp-5g32).
+var nonCRUDRoutes = map[string]map[string][]*RouteDetail{}
+
+// Routes whose verb breaks their version's create/update convention.
+var routeActionOverrides = map[string]string{
+	"POST /api/v1/admin/users":                            "create",
+	"POST /api/v1/:entitykind/:entityid/reactions/delete": "delete",
+	"POST /api/v2/:entitykind/:entityid/reactions/delete": "delete",
+	"PUT /api/v2/projects/:project/backgrounds/upload":    "create",
+	"POST /api/v2/teams/:team/members/:user/admin":        "update",
+}
+
+func routeAction(rd *RouteDetail) string {
+	if action, has := routeActionOverrides[rd.Method+" "+rd.Path]; has {
+		return action
+	}
+	v2 := isV2Path(rd.Path)
+	switch rd.Method {
+	case http.MethodGet:
+		return "read"
+	case http.MethodDelete:
+		return "delete"
+	case http.MethodPatch:
+		return "update"
+	case http.MethodPut:
+		if v2 {
+			return "update"
+		}
+		return "create"
+	case http.MethodPost:
+		if v2 {
+			return "create"
+		}
+		return "update"
+	}
+	return strings.ToLower(rd.Method)
+}
+
+func isPluginPath(path string) bool {
+	p := stripAPIVersion(path)
+	return p == "plugins" || strings.HasPrefix(p, "plugins/")
+}
+
+// Mixed actions get subkey_<action>, except read stays bare so existing read scopes stay valid.
+func addNonCRUDRoute(group, subkey string, route echo.RouteInfo) {
+	if nonCRUDRoutes[group] == nil {
+		nonCRUDRoutes[group] = make(map[string][]*RouteDetail)
+	}
+	routes := nonCRUDRoutes[group][subkey]
+	for _, rd := range routes {
+		if rd.Method == route.Method && rd.Path == route.Path {
+			return
+		}
+	}
+	added := &RouteDetail{Path: route.Path, Method: route.Method}
+	routes = append(routes, added)
+	nonCRUDRoutes[group][subkey] = routes
+
+	actions := make(map[string]bool)
+	for _, rd := range routes {
+		actions[routeAction(rd)] = true
+	}
+
+	for _, table := range []map[string]APITokenRoute{apiTokenRoutes, apiTokenRoutesV2} {
+		delete(table[group], subkey)
+	}
+	// Sorted (core before plugin) so a collision's winner doesn't depend on registration order.
+	slices.SortFunc(routes, func(a, b *RouteDetail) int {
+		if aPlugin := isPluginPath(a.Path); aPlugin != isPluginPath(b.Path) {
+			if aPlugin {
+				return 1
+			}
+			return -1
+		}
+		return cmp.Or(strings.Compare(a.Path, b.Path), strings.Compare(a.Method, b.Method))
+	})
+	assigned := map[bool]map[string]*RouteDetail{false: {}, true: {}}
+	for _, rd := range routes {
+		v2 := isV2Path(rd.Path)
+		key := subkey
+		if action := routeAction(rd); len(actions) > 1 && action != "read" {
+			key += "_" + action
+		}
+		if other := assigned[v2][key]; other != nil {
+			msg := "API token permission " + group + "." + key + " would cover both " +
+				other.Method + " " + other.Path + " and " + rd.Method + " " + rd.Path
+			if !isPluginPath(rd.Path) {
+				panic(msg)
+			}
+			// Every later route on this subkey re-runs the loop.
+			if rd == added || other == added {
+				log.Errorf("%s; %s %s is not available to API tokens", msg, rd.Method, rd.Path)
+			}
+			continue
+		}
+		assigned[v2][key] = rd
+
+		table := apiTokenRoutes
+		if v2 {
+			table = apiTokenRoutesV2
+		}
+		ensureAPITokenRoutesGroup(table, group)
+		table[group][key] = rd
+	}
 }
 
 // Keep discovery in sync with the request-time license gates.
