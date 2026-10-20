@@ -252,24 +252,10 @@ func HandleFailedTOTPAuth(user *User) {
 		return
 	}
 
-	a, _, err := keyvalue.Get(key)
+	attempts, _, err := keyvalue.GetInt64(key)
 	if err != nil {
 		log.Errorf("Could not get failed TOTP attempts for user %d: %s", user.ID, err)
 		return
-	}
-	// Redis backend returns the counter as a string; in-memory as int64.
-	attempts, ok := a.(int64)
-	if !ok {
-		attemptsStr, ok := a.(string)
-		if !ok {
-			log.Errorf("Unexpected type for failed TOTP attempts for user %d: %T", user.ID, a)
-			return
-		}
-		attempts, err = strconv.ParseInt(attemptsStr, 10, 64)
-		if err != nil {
-			log.Errorf("Could not convert failed TOTP attempts to int64 for user %d: %v, value: %s", user.ID, err, attemptsStr)
-			return
-		}
 	}
 
 	if attempts == 3 {
