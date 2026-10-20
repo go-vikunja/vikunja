@@ -36,7 +36,7 @@ type avatarResponse struct {
 
 type avatarInput struct {
 	Username string `path:"username" doc:"The username of the user whose avatar to fetch."`
-	Size     int64  `query:"size" default:"250" minimum:"1" doc:"Desired avatar edge length in pixels. Clamped to the server's configured maximum if larger; providers that render fixed-size images may ignore it."`
+	Size     int64  `query:"size" default:"250" minimum:"1" doc:"Desired avatar edge length in pixels. Rounded up to 16, 32, 48, 64, 128, 256, 512 or 1024 and capped at the server's configured maximum; providers that render fixed-size images may ignore it."`
 }
 
 // RegisterAvatarRoutes wires the avatar binary endpoint onto the Huma API.

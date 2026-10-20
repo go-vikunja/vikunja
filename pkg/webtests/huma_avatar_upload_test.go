@@ -234,7 +234,10 @@ func TestAvatarUploadImageBounds(t *testing.T) {
 		require.NoError(t, err)
 		token := humaTokenFor(t, &testuser1)
 
-		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		// Larger than the smallest allowed avatar size (16), so a fit is observable.
+		src := &bytes.Buffer{}
+		require.NoError(t, png.Encode(src, image.NewRGBA(image.Rect(0, 0, 64, 64))))
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", src.Bytes())
 		rec := uploadAvatarRequest(t, e, body, contentType, token)
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 
@@ -247,14 +250,14 @@ func TestAvatarUploadImageBounds(t *testing.T) {
 		}
 
 		t.Run("smaller size scales down", func(t *testing.T) {
-			img := get(t, "4")
-			assert.Equal(t, 4, img.Bounds().Dx())
-			assert.Equal(t, 4, img.Bounds().Dy())
+			img := get(t, "16")
+			assert.Equal(t, 16, img.Bounds().Dx())
+			assert.Equal(t, 16, img.Bounds().Dy())
 		})
 		t.Run("larger size keeps the native size", func(t *testing.T) {
 			img := get(t, "1024")
-			assert.Equal(t, 8, img.Bounds().Dx(), "Fit must not upscale a small source")
-			assert.Equal(t, 8, img.Bounds().Dy())
+			assert.Equal(t, 64, img.Bounds().Dx(), "Fit must not upscale a small source")
+			assert.Equal(t, 64, img.Bounds().Dy())
 		})
 	})
 }
