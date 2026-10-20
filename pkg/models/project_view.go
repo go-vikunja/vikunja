@@ -314,7 +314,14 @@ func (pv *ProjectView) Create(s *xorm.Session, a web.Auth) (err error) {
 	return createProjectView(s, pv, a, true, true)
 }
 
+// Each filter bucket costs one task query per kanban read.
+const maxBucketConfigurations = 50
+
 func validateProjectViewFilters(p *ProjectView) (err error) {
+	if len(p.BucketConfiguration) > maxBucketConfigurations {
+		return InvalidFieldErrorWithMessage([]string{"bucket_configuration"}, fmt.Sprintf("A view can have at most %d bucket configurations.", maxBucketConfigurations))
+	}
+
 	if p.Filter != nil && p.Filter.Filter != "" {
 		_, err = getTaskFiltersFromFilterString(p.Filter.Filter, p.Filter.FilterTimezone)
 		if err != nil {

@@ -637,4 +637,15 @@ func TestValidateProjectViewFilters(t *testing.T) {
 		err := validateProjectViewFilters(filterView(&ProjectViewBucketConfiguration{Title: "no filter"}))
 		assert.ErrorAs(t, err, &ValidationHTTPError{})
 	})
+	// GHSA-p697-wq4x-grpj
+	t.Run("too many bucket configurations", func(t *testing.T) {
+		configs := make([]*ProjectViewBucketConfiguration, 0, maxBucketConfigurations+1)
+		for range maxBucketConfigurations {
+			configs = append(configs, validConfig())
+		}
+		require.NoError(t, validateProjectViewFilters(filterView(configs...)))
+
+		err := validateProjectViewFilters(filterView(append(configs, validConfig())...))
+		assert.ErrorAs(t, err, &ValidationHTTPError{})
+	})
 }
