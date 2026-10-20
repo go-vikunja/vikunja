@@ -101,7 +101,7 @@ func (f *File) SavePreview(size PreviewSize, preview []byte) error {
 		return err
 	}
 
-	if err := storage.MkdirAll(previewDir, 0755); err != nil {
+	if err := storage.MkdirAll(previewDir, 0700); err != nil {
 		return fmt.Errorf("failed to create the preview directory: %w", err)
 	}
 	if err := storage.Write(f.previewPath(size), bytes.NewReader(preview), uint64(len(preview))); err != nil {

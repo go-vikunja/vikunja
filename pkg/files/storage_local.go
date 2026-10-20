@@ -65,12 +65,11 @@ func (l *localStorage) Write(name string, content io.ReadSeeker, _ uint64) error
 		return err
 	}
 
-	if err := os.MkdirAll(l.path(LocalTempDir), 0755); err != nil {
+	if err := os.MkdirAll(l.path(LocalTempDir), 0700); err != nil {
 		return err
 	}
 	tmp := filepath.Join(l.path(LocalTempDir), rand.Text())
-	// Not os.CreateTemp: its 0600 would change the mode of stored files.
-	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return err
 	}
@@ -103,7 +102,7 @@ func (l *localStorage) MkdirAll(p string, perm os.FileMode) error {
 func (l *localStorage) Ensure() error {
 	info, statErr := os.Stat(l.basePath)
 	if errors.Is(statErr, os.ErrNotExist) {
-		if err := os.MkdirAll(l.basePath, 0755); err != nil {
+		if err := os.MkdirAll(l.basePath, 0700); err != nil {
 			return fmt.Errorf("failed to create file storage directory at %s: %w%s", l.basePath, err, storageDiagSuffix(l.basePath))
 		}
 		return nil

@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,6 +45,28 @@ func TestLocalStorage_WriteAndOpen(t *testing.T) {
 	got, err := io.ReadAll(rc)
 	require.NoError(t, err)
 	assert.Equal(t, content, got)
+}
+
+// GHSA-9rfw-7hv4-3vv3
+func TestLocalStorage_Permissions(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unix permissions")
+	}
+
+	basePath := filepath.Join(t.TempDir(), "files")
+	s := newLocalStorage(basePath)
+	require.NoError(t, s.Ensure())
+	require.NoError(t, s.Write("testfile", bytes.NewReader([]byte("secret")), 6))
+
+	for path, want := range map[string]os.FileMode{
+		basePath:                              0700,
+		filepath.Join(basePath, LocalTempDir): 0700,
+		filepath.Join(basePath, "testfile"):   0600,
+	} {
+		info, err := os.Stat(path)
+		require.NoError(t, err)
+		assert.Equal(t, want, info.Mode().Perm(), path)
+	}
 }
 
 func TestLocalStorage_OpenWithSize(t *testing.T) {
