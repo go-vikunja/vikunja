@@ -304,6 +304,11 @@ func openArchive(file io.ReaderAt, size int64) (*zip.Reader, error) {
 func scanArchive(r *zip.Reader) (*archive, error) {
 	log.Debugf(logPrefix+"Importing a zip file containing %d files", len(r.File))
 
+	// files/ entries plus data.json, filters.json and VERSION
+	if int64(len(r.File)) > config.MigrationVikunjaFileMaxFiles.GetInt64()+3 {
+		return nil, &ErrVikunjaFileImportTooLarge{Reason: "it contains too many entries for migration.vikunjafile.maxfiles"}
+	}
+
 	a := &archive{storedFiles: make(map[int64]*zip.File)}
 	var storedFileCount int64
 	for _, f := range r.File {
