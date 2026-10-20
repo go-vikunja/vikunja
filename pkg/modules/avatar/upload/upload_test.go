@@ -230,6 +230,26 @@ func TestSaveAvatar(t *testing.T) {
 		assert.True(t, os.IsNotExist(err))
 	})
 
+	t.Run("keeps the shared default avatar", func(t *testing.T) {
+		s, u := newUserWithAvatarFile(t)
+		oldDefault := config.DefaultSettingsAvatarFileID.GetInt64()
+		config.DefaultSettingsAvatarFileID.Set(int64(1))
+		t.Cleanup(func() { config.DefaultSettingsAvatarFileID.Set(oldDefault) })
+
+		require.NoError(t, SaveAvatar(s, u, "upload", prepare(t, encodePNG(t, gradient(2, 2)))))
+		assert.NotEqual(t, int64(1), u.AvatarFileID)
+		require.NoError(t, s.Commit())
+		events.DispatchPending(t.Context(), s)
+
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":             1,
+			"avatar_file_id": u.AvatarFileID,
+		}, false)
+		db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+		_, err := files.FileStat(&files.File{ID: 1})
+		require.NoError(t, err, "default avatar blob must still exist")
+	})
+
 	t.Run("keeps the old avatar when the session rolls back", func(t *testing.T) {
 		s, u := newUserWithAvatarFile(t)
 

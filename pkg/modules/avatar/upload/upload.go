@@ -161,6 +161,7 @@ func centeredSquare(img image.Image) image.Image {
 // SaveAvatar removes the replaced avatar blob in events.DispatchPending(s).
 func SaveAvatar(s *xorm.Session, u *user.User, provider string, a *EncodedAvatar) (err error) {
 	oldAvatarFileID := u.AvatarFileID
+	ownsOldAvatar := u.OwnsAvatarFile()
 	oldProvider := u.AvatarProvider
 	defer func() {
 		if err != nil {
@@ -188,7 +189,7 @@ func SaveAvatar(s *xorm.Session, u *user.User, provider string, a *EncodedAvatar
 	}
 
 	// Log only: the new avatar is already persisted.
-	if oldAvatarFileID != 0 {
+	if ownsOldAvatar {
 		old := &files.File{ID: oldAvatarFileID}
 		if delErr := old.DeleteOnCommit(s); delErr != nil && !files.IsErrFileDoesNotExist(delErr) {
 			log.Errorf("Could not delete old avatar file %d of user %d: %s", oldAvatarFileID, u.ID, delErr)

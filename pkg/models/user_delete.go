@@ -20,7 +20,6 @@ import (
 	"context"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -217,8 +216,7 @@ func deleteUserFiles(s *xorm.Session, userID int64) error {
 	}
 
 	fileIDs := []int64{u.ExportFileID}
-	// The default avatar file is shared by every user.
-	if u.AvatarFileID != config.DefaultSettingsAvatarFileID.GetInt64() {
+	if u.OwnsAvatarFile() {
 		fileIDs = append(fileIDs, u.AvatarFileID)
 	}
 
