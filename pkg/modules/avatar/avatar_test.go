@@ -26,8 +26,11 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/modules/imageutils"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -136,5 +139,70 @@ func TestSyncFromProvider(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "openid", stored.AvatarProvider)
 		assert.Equal(t, int64(0), stored.AvatarFileID)
+	})
+}
+
+func TestSaveUploaded(t *testing.T) {
+	raw := &bytes.Buffer{}
+	require.NoError(t, png.Encode(raw, image.NewNRGBA(image.Rect(0, 0, 4, 4))))
+	prepared, err := PrepareUpload(t.Context(), raw)
+	require.NoError(t, err)
+
+	const cacheKey = upload.CacheKeyPrefix + "1_1_32"
+
+	setup := func(t *testing.T) *user.User {
+		t.Helper()
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		keyvalue.InitStorage()
+
+		s := db.NewSession()
+		defer s.Close()
+		_, err := s.ID(1).Cols("avatar_file_id", "avatar_provider").Update(&user.User{AvatarFileID: 1, AvatarProvider: "upload"})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		u, err := user.GetUserByID(s, 1)
+		require.NoError(t, err)
+		require.Equal(t, int64(1), u.AvatarFileID)
+
+		require.NoError(t, keyvalue.Put(cacheKey, upload.CachedAvatar{
+			Content:  []byte("old"),
+			MimeType: "image/png",
+		}))
+		return u
+	}
+
+	cached := func(t *testing.T) bool {
+		t.Helper()
+		_, exists, err := keyvalue.Get(cacheKey)
+		require.NoError(t, err)
+		return exists
+	}
+
+	t.Run("keeps the cache when the session rolls back", func(t *testing.T) {
+		u := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, SaveUploaded(s, u, prepared))
+		assert.True(t, cached(t))
+		require.NoError(t, s.Rollback())
+		events.CleanupPending(s)
+		events.DispatchPending(t.Context(), s)
+
+		assert.True(t, cached(t))
+	})
+
+	t.Run("flushes the cache once the commit is dispatched", func(t *testing.T) {
+		u := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, SaveUploaded(s, u, prepared))
+		require.NoError(t, s.Commit())
+		assert.True(t, cached(t))
+		events.DispatchPending(t.Context(), s)
+
+		assert.False(t, cached(t))
 	})
 }

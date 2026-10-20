@@ -69,7 +69,8 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 		return nil, "", fmt.Errorf("invalid avatar size %d", size)
 	}
 
-	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(size, 10)
+	// The file id keeps a late write from a request that loaded the replaced file off the current key.
+	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(u.AvatarFileID, 10) + "_" + strconv.FormatInt(size, 10)
 
 	cachedAvatar, err := keyvalue.RememberValue(cacheKey, func() (CachedAvatar, error) {
 		log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)
@@ -169,11 +170,6 @@ func SaveAvatar(s *xorm.Session, u *user.User, provider string, a *EncodedAvatar
 			u.AvatarProvider = oldProvider
 		}
 	}()
-
-	err = (&Provider{}).FlushCache(u)
-	if err != nil {
-		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
-	}
 
 	f, err := files.CreateWithMimeAndSession(s, bytes.NewReader(a.png), "avatar.png", uint64(len(a.png)), u, "image/png", true)
 	if err != nil {
