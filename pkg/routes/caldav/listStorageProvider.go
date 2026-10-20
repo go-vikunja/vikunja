@@ -984,6 +984,9 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 	return
 }
 
+// Bounds the tasks a single VTODO can mint via unknown RELATED-TO UIDs.
+const maxPlaceholdersPerVTODO = 50
+
 // Persist new relations provided by the VTODO entry:
 func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
 
@@ -994,10 +997,19 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 
 	// Inaccessible and missing UIDs must remain indistinguishable.
 	allUIDs := make([]string, 0)
-	for _, relatedTasksInVTODO := range newRelations {
+	dedupedRelations := make(map[models.RelationKind][]*models.Task, len(newRelations))
+	for relationType, relatedTasksInVTODO := range newRelations {
+		seen := make(map[string]bool, len(relatedTasksInVTODO))
+		deduped := make([]*models.Task, 0, len(relatedTasksInVTODO))
 		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
+			if seen[relatedTaskInVTODO.UID] {
+				continue
+			}
+			seen[relatedTaskInVTODO.UID] = true
+			deduped = append(deduped, relatedTaskInVTODO)
 			allUIDs = append(allUIDs, relatedTaskInVTODO.UID)
 		}
+		dedupedRelations[relationType] = deduped
 	}
 	accessibleTasksByUID := make(map[string]*models.Task)
 	if len(allUIDs) > 0 {
@@ -1010,8 +1022,10 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 		}
 	}
 
+	placeholders := 0
+
 	// Ensure the current relations exist:
-	for relationType, relatedTasksInVTODO := range newRelations {
+	for relationType, relatedTasksInVTODO := range dedupedRelations {
 		// Persist each relation independently:
 		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
 
@@ -1028,6 +1042,11 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 
 			// Placeholders stay in the caller's project so CanCreate applies.
 			if createDummy {
+				// Dropped, not rejected: the client keeps syncing the rest of the VTODO.
+				if placeholders >= maxPlaceholdersPerVTODO {
+					continue
+				}
+				placeholders++
 				relatedTask = &models.Task{
 					ProjectID: task.ProjectID,
 					Title:     "DUMMY-UID-" + relatedTaskInVTODO.UID,
