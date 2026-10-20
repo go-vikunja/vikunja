@@ -103,7 +103,7 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 	}
 
 	for _, l := range projects {
-		if l.ID < 0 {
+		if l.ID < 0 || l.OwnerID != u.ID {
 			continue
 		}
 
@@ -170,6 +170,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		{"user_id", &TaskAssginee{}},
 		{"user_id", &Subscription{}},
 		{"user_id", &TeamMember{}},
+		{"user_id", &ProjectUser{}},
 		{"owner_id", &SavedFilter{}},
 		{"user_id", &Reaction{}},
 		{"user_id", &Favorite{}},
