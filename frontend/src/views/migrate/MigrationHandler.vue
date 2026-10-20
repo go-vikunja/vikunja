@@ -169,6 +169,7 @@ import {getErrorText} from '@/message'
 const props = defineProps<{
 	service: string,
 	code?: string,
+	state?: string,
 }>()
 
 const PROGRESS_DOTS_COUNT = 8
@@ -272,7 +273,7 @@ async function migrate(credentialsConfig?: PlankaCredentials) {
 			await startMigration.mutateAsync({kind: 'credentials', provider, body: credentialsConfig})
 		} else if (isMigratorOfKind(provider, 'oauth')) {
 			if (!migratorAuthCode.value) return
-			await startMigration.mutateAsync({kind: 'oauth', provider, body: {code: migratorAuthCode.value}})
+			await startMigration.mutateAsync({kind: 'oauth', provider, body: {code: migratorAuthCode.value, state: props.state}})
 		} else return
 		migrationStore.start(provider)
 		if (provider === migrator.value.id) startedHere.value = true

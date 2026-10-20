@@ -200,6 +200,7 @@ const router = createRouter({
 					props: route => ({
 						service: route.params.service as string,
 						code: route.query.code as string,
+						state: route.query.state as string,
 					}),
 				},
 			],
