@@ -41,15 +41,22 @@
 				params: { projectId: project.id}
 			}"
 		/>
-		<BaseButton
-			v-if="!project.is_archived && project.id > -1"
-			class="favorite"
-			:aria-label="project.is_favorite ? $t('project.unfavorite') : $t('project.favorite')"
-			:class="{'is-favorite': project.is_favorite}"
-			@click.prevent.stop="toggleProjectFavorite"
-		>
-			<Icon :icon="project.is_favorite ? 'star' : ['far', 'star']" />
-		</BaseButton>
+		<div class="project-actions">
+			<BaseButton
+				v-if="!project.is_archived && project.id > -1"
+				class="favorite"
+				:aria-label="project.is_favorite ? $t('project.unfavorite') : $t('project.favorite')"
+				:class="{'is-favorite': project.is_favorite}"
+				@click.prevent.stop="toggleProjectFavorite"
+			>
+				<Icon :icon="project.is_favorite ? 'star' : ['far', 'star']" />
+			</BaseButton>
+			<ProjectSettingsDropdown
+				v-if="typeof project.max_permission === 'number' && project.max_permission > PERMISSIONS.READ"
+				class="settings-dropdown"
+				:project="project"
+			/>
+		</div>
 	</div>
 </template>
 
@@ -58,6 +65,8 @@ import {computed} from 'vue'
 import {usePatchProjectFavoriteMutation, type ProjectResponse} from '@/client/queries/projects'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
+import {PERMISSIONS} from '@/constants/permissions'
 
 import {useProjectBackground} from '@/composables/useProjectBackground'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
@@ -91,7 +100,6 @@ const textOnlyDescription = computed(() => {
 	box-shadow: var(--shadow-sm);
 	transition: box-shadow $transition;
 	position: relative;
-	overflow: hidden; // hide background
 
 	display: flex;
 	justify-content: space-between;
@@ -117,6 +125,11 @@ const textOnlyDescription = computed(() => {
 	background-size: cover;
 	background-repeat: no-repeat;
 	background-position: center;
+}
+
+// Clip here instead of on the card so the settings dropdown can overflow it.
+.project-background {
+	border-radius: inherit;
 }
 
 .project-background,
@@ -164,10 +177,17 @@ const textOnlyDescription = computed(() => {
 	color: var(--white);
 }
 
-.favorite {
+.project-actions {
 	position: absolute;
 	inset-block-start: var(--project-card-padding);
 	inset-inline-end: var(--project-card-padding);
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+}
+
+.favorite,
+.settings-dropdown {
 	transition: opacity $transition, color $transition;
 	opacity: 1;
 
@@ -183,11 +203,15 @@ const textOnlyDescription = computed(() => {
 }
 
 @media(hover: hover) and (pointer: fine) {
-	.project-card .favorite {
+	.project-card .favorite,
+	.project-card .settings-dropdown {
 		opacity: 0;
 	}
 
-	.project-card:hover .favorite {
+	.project-card:hover .favorite,
+	.project-card:hover .settings-dropdown,
+	.project-card:focus-within .settings-dropdown,
+	.settings-dropdown:has([aria-expanded="true"]) {
 		opacity: 1;
 	}
 }
