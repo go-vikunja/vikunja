@@ -80,6 +80,13 @@ export interface EditorExtensionDeps {
 	uploadAndInsertFiles: (files: File[] | FileList) => void
 }
 
+// the value lands in a style attribute, anything beyond a plain color allows CSS injection
+const SAFE_CSS_COLOR = /^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\([\d\s.,%]+\)|[a-z]+)$/i
+
+function safeCssColor(value: unknown): string | null {
+	return typeof value === 'string' && SAFE_CSS_COLOR.test(value.trim()) ? value.trim() : null
+}
+
 const CustomTableCell = TableCell.extend({
 	addAttributes() {
 		return {
@@ -89,11 +96,15 @@ const CustomTableCell = TableCell.extend({
 			// and add a new one …
 			backgroundColor: {
 				default: null,
-				parseHTML: (element: HTMLElement) => element.getAttribute('data-background-color'),
+				parseHTML: (element: HTMLElement) => safeCssColor(element.getAttribute('data-background-color')),
 				renderHTML: (attributes) => {
+					const color = safeCssColor(attributes.backgroundColor)
+					if (color === null) {
+						return {}
+					}
 					return {
-						'data-background-color': attributes.backgroundColor,
-						style: `background-color: ${attributes.backgroundColor}`,
+						'data-background-color': color,
+						style: `background-color: ${color}`,
 					}
 				},
 			},
