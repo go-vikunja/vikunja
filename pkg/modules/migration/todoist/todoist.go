@@ -33,7 +33,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 )
 
 const paginationLimit = 200
@@ -46,7 +45,12 @@ var (
 
 // Migration is the todoist migration struct
 type Migration struct {
-	Code string `json:"code"`
+	Code  string `json:"code"`
+	State string `json:"state"`
+}
+
+func (m *Migration) OAuthState() string {
+	return m.State
 }
 
 type apiTokenResponse struct {
@@ -233,15 +237,11 @@ func (m *Migration) Name() string {
 // @Success 200 {object} handler.AuthURL "The auth url."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/todoist/auth [get]
-func (m *Migration) AuthURL() string {
-	state, err := utils.CryptoRandomString(32)
-	if err != nil {
-		state = "todoist-migration"
-	}
+func (m *Migration) AuthURL(state string) string {
 	return "https://todoist.com/oauth/authorize" +
 		"?client_id=" + config.MigrationTodoistClientID.GetString() +
 		"&scope=data:read" +
-		"&state=" + state
+		"&state=" + url.QueryEscape(state)
 }
 
 func parseDate(dateString string) (date time.Time, err error) {

@@ -136,6 +136,22 @@ func (err *ErrImportItemLimitExceeded) HTTPError() web.HTTPError {
 	}
 }
 
+type ErrInvalidOAuthState struct{}
+
+func (err *ErrInvalidOAuthState) Error() string {
+	return "The migration state is missing, expired or belongs to someone else"
+}
+
+const ErrCodeInvalidOAuthState = 14019
+
+func (err *ErrInvalidOAuthState) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidOAuthState,
+		Message:  "The migration state is invalid or expired. Please start the migration again.",
+	}
+}
+
 // ErrNotAZipFile represents a "ErrNotAZipFile" kind of error.
 type ErrNotAZipFile struct{}
 

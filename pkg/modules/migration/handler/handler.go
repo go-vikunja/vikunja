@@ -27,15 +27,15 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-var registeredMigrators map[string]*MigrationWeb
+var registeredMigrators map[string]func() migration.Migrator
 
 func init() {
-	registeredMigrators = make(map[string]*MigrationWeb)
+	registeredMigrators = make(map[string]func() migration.Migrator)
 }
 
 // MigrationWeb holds the web migration handler
 type MigrationWeb struct {
-	MigrationStruct func() migration.Migrator
+	MigrationStruct func() migration.OAuthMigrator
 }
 
 // AuthURL is returned to the user when requesting the auth url
@@ -49,22 +49,35 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
 	g.GET("/"+ms.Name()+"/status", mw.Status)
 	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
-	RegisterMigratorForEvents(mw.MigrationStruct)
+	RegisterMigratorForEvents(func() migration.Migrator { return mw.MigrationStruct() })
 }
 
 // RegisterMigratorForEvents makes a migrator known to the migration listener without exposing v1 routes.
 func RegisterMigratorForEvents(factory func() migration.Migrator) {
-	registeredMigrators[factory().Name()] = &MigrationWeb{MigrationStruct: factory}
+	registeredMigrators[factory().Name()] = factory
 }
 
 // AuthURL is the web handler to get the auth url
 func (mw *MigrationWeb) AuthURL(c *echo.Context) error {
-	ms := mw.MigrationStruct()
-	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
+	u, err := user2.GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+	authURL, err := migration.AuthURLForUser(mw.MigrationStruct(), u.ID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, &AuthURL{URL: authURL})
 }
 
 // StartMigration validates credentials and dispatches a migration while holding its claim.
 func StartMigration(ms migration.Migrator, u *user2.User) error {
+	if om, ok := ms.(migration.OAuthMigrator); ok {
+		if err := migration.ConsumeOAuthState(om, u.ID); err != nil {
+			return err
+		}
+	}
+
 	status, err := migration.ClaimMigration(ms, u)
 	if err != nil {
 		return err

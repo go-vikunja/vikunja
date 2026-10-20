@@ -1009,7 +1009,7 @@ func registerMigrations(m *echo.Group) {
 	// Todoist
 	if config.MigrationTodoistEnable.GetBool() {
 		todoistMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
+			MigrationStruct: func() migration.OAuthMigrator {
 				return &todoist.Migration{}
 			},
 		}
@@ -1019,7 +1019,7 @@ func registerMigrations(m *echo.Group) {
 	// Trello
 	if config.MigrationTrelloEnable.GetBool() {
 		trelloMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
+			MigrationStruct: func() migration.OAuthMigrator {
 				return &trello.Migration{}
 			},
 		}
@@ -1029,7 +1029,7 @@ func registerMigrations(m *echo.Group) {
 	// Microsoft Todo
 	if config.MigrationMicrosoftTodoEnable.GetBool() {
 		microsoftTodoMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
+			MigrationStruct: func() migration.OAuthMigrator {
 				return &microsofttodo.Migration{}
 			},
 		}

@@ -106,7 +106,7 @@ func (s *MigrationListener) Handle(msg *message.Message) (err error) {
 		log.Errorf("[Migration] No migrator registered for kind %s, discarding event", event.MigratorKind)
 		return nil
 	}
-	event.Migrator = mstr.MigrationStruct()
+	event.Migrator = mstr()
 
 	// unmarshalling again to make sure the migrator has the correct type now
 	err = json.Unmarshal(msg.Payload, event)

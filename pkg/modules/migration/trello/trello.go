@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"html"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
@@ -37,6 +39,11 @@ import (
 // Migration represents the trello migration struct
 type Migration struct {
 	Token string `json:"code"`
+	State string `json:"state"`
+}
+
+func (m *Migration) OAuthState() string {
+	return m.State
 }
 
 var trelloColorMap map[string]string
@@ -100,7 +107,13 @@ func (m *Migration) Name() string {
 // @Success 200 {object} handler.AuthURL "The auth url."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/trello/auth [get]
-func (m *Migration) AuthURL() string {
+func (m *Migration) AuthURL(state string) string {
+	// The implicit flow returns no state parameter, so it rides in return_url's query.
+	returnURL := config.MigrationTrelloRedirectURL.GetString()
+	sep := "?"
+	if strings.Contains(returnURL, "?") {
+		sep = "&"
+	}
 	return "https://trello.com/1/authorize" +
 		"?expiration=never" +
 		"&scope=read" +
@@ -108,7 +121,7 @@ func (m *Migration) AuthURL() string {
 		"&response_type=token" +
 		"&name=Vikunja%20Migration" +
 		"&key=" + config.MigrationTrelloKey.GetString() +
-		"&return_url=" + config.MigrationTrelloRedirectURL.GetString()
+		"&return_url=" + url.QueryEscape(returnURL+sep+"state="+url.QueryEscape(state))
 }
 
 // downloadAttachment hands the oauth token only to the url trello returned, not to wherever it redirects.

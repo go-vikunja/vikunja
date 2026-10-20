@@ -41,7 +41,12 @@ const apiScopes = `tasks.read tasks.read.shared`
 var apiPrefix = `https://graph.microsoft.com/v1.0/me/todo/`
 
 type Migration struct {
-	Code string `json:"code"`
+	Code  string `json:"code"`
+	State string `json:"state"`
+}
+
+func (m *Migration) OAuthState() string {
+	return m.State
 }
 
 type apiTokenResponse struct {
@@ -135,13 +140,14 @@ func (dtt *dateTimeTimeZone) toTime() (t time.Time, err error) {
 // @Success 200 {object} handler.AuthURL "The auth url."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/microsoft-todo/auth [get]
-func (m *Migration) AuthURL() string {
+func (m *Migration) AuthURL(state string) string {
 	return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize" +
 		"?client_id=" + config.MigrationMicrosoftTodoClientID.GetString() +
 		"&response_type=code" +
 		"&redirect_uri=" + config.MigrationMicrosoftTodoRedirectURL.GetString() +
 		"&response_mode=query" +
-		"&scope=" + apiScopes
+		"&scope=" + apiScopes +
+		"&state=" + url.QueryEscape(state)
 }
 
 // Name is used to get the name of the Microsoft Todo migration - we're using the docs here to annotate the status route.
