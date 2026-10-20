@@ -30,6 +30,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/imageutils"
@@ -221,8 +222,26 @@ func TestSaveAvatar(t *testing.T) {
 		db.AssertExists(t, "users", map[string]interface{}{"id": 1, "avatar_file_id": u.AvatarFileID}, false)
 		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
 		_, err := files.FileStat(&files.File{ID: 1})
+		require.NoError(t, err, "old avatar blob must survive until the commit is dispatched")
+
+		events.DispatchPending(t.Context(), s)
+		_, err = files.FileStat(&files.File{ID: 1})
 		require.Error(t, err, "old avatar blob must be gone")
 		assert.True(t, os.IsNotExist(err))
+	})
+
+	t.Run("keeps the old avatar when the session rolls back", func(t *testing.T) {
+		s, u := newUserWithAvatarFile(t)
+
+		require.NoError(t, SaveAvatar(s, u, "upload", prepare(t, encodePNG(t, gradient(2, 2)))))
+		require.NoError(t, s.Rollback())
+		events.CleanupPending(s)
+		events.DispatchPending(t.Context(), s)
+
+		db.AssertExists(t, "users", map[string]interface{}{"id": 1, "avatar_file_id": 1}, false)
+		db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+		_, err := files.FileStat(&files.File{ID: 1})
+		require.NoError(t, err, "old avatar blob must still exist")
 	})
 
 	t.Run("restores the user when the update fails", func(t *testing.T) {

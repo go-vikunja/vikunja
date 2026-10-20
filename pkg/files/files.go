@@ -28,6 +28,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/web"
@@ -206,7 +207,23 @@ func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string,
 
 // Delete removes a file from the DB and the file system.
 // The caller is responsible for committing or rolling back the session.
-func (f *File) Delete(s *xorm.Session) (err error) {
+func (f *File) Delete(s *xorm.Session) error {
+	if err := f.deleteRow(s); err != nil {
+		return err
+	}
+	return f.removeBlob()
+}
+
+// The blob goes in events.DispatchPending(s), so a rolled back session keeps it.
+func (f *File) DeleteOnCommit(s *xorm.Session) error {
+	if err := f.deleteRow(s); err != nil {
+		return err
+	}
+	events.OnCommit(s, f.removeBlob)
+	return nil
+}
+
+func (f *File) deleteRow(s *xorm.Session) error {
 	deleted, err := s.Where("id = ?", f.ID).Delete(&File{})
 	if err != nil {
 		return err
@@ -214,8 +231,11 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 	if deleted == 0 {
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
+	return nil
+}
 
-	err = storage.Remove(f.fileID())
+func (f *File) removeBlob() error {
+	err := storage.Remove(f.fileID())
 	// After the file, so SavePreview catches a preview stored in between.
 	f.removePreviews()
 	if err != nil {

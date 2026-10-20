@@ -25,6 +25,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"io/fs"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -33,6 +34,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/user"
 
@@ -215,6 +217,43 @@ func pngWithClaimedDimensionsPatch(t *testing.T, width, height int) []byte {
 	return data
 }
 
+func TestAvatarUploadRemovesReplacedFile(t *testing.T) {
+	for _, path := range []string{avatarUploadPath, "/api/v1/user/settings/avatar/upload"} {
+		t.Run(path, func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			upload := func() int64 {
+				body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+				req := httptest.NewRequest(http.MethodPut, path, body)
+				req.Header.Set("Content-Type", contentType)
+				req.Header.Set("Authorization", "Bearer "+token)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+				require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+				s := db.NewSession()
+				defer s.Close()
+				u, err := user.GetUserByID(s, testuser1.ID)
+				require.NoError(t, err)
+				return u.AvatarFileID
+			}
+
+			oldID := upload()
+			require.NotZero(t, oldID)
+			_, err = files.FileStat(&files.File{ID: oldID})
+			require.NoError(t, err)
+
+			newID := upload()
+			require.NotEqual(t, oldID, newID)
+			db.AssertMissing(t, "files", map[string]interface{}{"id": oldID})
+			_, err = files.FileStat(&files.File{ID: oldID})
+			require.ErrorIs(t, err, fs.ErrNotExist)
+		})
+	}
+}
+
 // Guards image allocation bounds (GHSA-4vh2-39rq-rq8j).
 func TestAvatarUploadImageBounds(t *testing.T) {
 	t.Run("8000 by 8000 avatar upload is rejected", func(t *testing.T) {
@@ -305,7 +344,11 @@ func TestAvatarDecodeIsBounded(t *testing.T) {
 			e.ServeHTTP(rec, req)
 		}()
 
-		<-ctx.waiting
+		select {
+		case <-ctx.waiting:
+		case <-time.After(5 * time.Second):
+			require.FailNow(t, "the upload never queued for decode capacity")
+		}
 		s := db.NewSession()
 		_, err = s.ID(testuser2.ID).Cols("name").Update(&user.User{Name: "written while an upload is queued"})
 		if err == nil {
@@ -319,7 +362,11 @@ func TestAvatarDecodeIsBounded(t *testing.T) {
 		}, false)
 
 		release()
-		<-finished
+		select {
+		case <-finished:
+		case <-time.After(10 * time.Second):
+			require.FailNow(t, "the upload did not finish after the budget was released")
+		}
 		assert.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 	})
 

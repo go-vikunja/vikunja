@@ -22,11 +22,13 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"io/fs"
 	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -165,6 +167,51 @@ func TestFile_Delete(t *testing.T) {
 
 		err := f.Delete(s)
 		require.Error(t, err)
+		assert.True(t, IsErrFileDoesNotExist(err))
+	})
+}
+
+func TestFile_DeleteOnCommit(t *testing.T) {
+	t.Run("removes the blob and previews once dispatched", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		initFixtures(t)
+		f := &File{ID: 1}
+		require.NoError(t, f.SavePreview(PreviewMedium, []byte("preview")))
+
+		require.NoError(t, f.DeleteOnCommit(s))
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		_, err := FileStat(f)
+		require.NoError(t, err)
+
+		events.DispatchPending(t.Context(), s)
+		_, err = FileStat(f)
+		require.ErrorIs(t, err, fs.ErrNotExist)
+		_, _, err = f.OpenPreview(PreviewMedium)
+		require.ErrorIs(t, err, fs.ErrNotExist)
+	})
+	t.Run("keeps row and blob on rollback", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		initFixtures(t)
+		f := &File{ID: 1}
+
+		require.NoError(t, f.DeleteOnCommit(s))
+		require.NoError(t, s.Rollback())
+		events.CleanupPending(s)
+		events.DispatchPending(t.Context(), s)
+
+		db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+		_, err := FileStat(f)
+		require.NoError(t, err)
+	})
+	t.Run("Nonexisting", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		initFixtures(t)
+
+		err := (&File{ID: 9999}).DeleteOnCommit(s)
 		assert.True(t, IsErrFileDoesNotExist(err))
 	})
 }
