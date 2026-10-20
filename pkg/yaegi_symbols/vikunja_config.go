@@ -124,6 +124,7 @@ func init() {
 		"MetricsUsername":                            reflect.ValueOf(config.MetricsUsername),
 		"MigrationClaimTimeout":                      reflect.ValueOf(config.MigrationClaimTimeout),
 		"MigrationMaxCSVRows":                        reflect.ValueOf(config.MigrationMaxCSVRows),
+		"MigrationMaxItems":                          reflect.ValueOf(config.MigrationMaxItems),
 		"MigrationMicrosoftTodoClientID":             reflect.ValueOf(config.MigrationMicrosoftTodoClientID),
 		"MigrationMicrosoftTodoClientSecret":         reflect.ValueOf(config.MigrationMicrosoftTodoClientSecret),
 		"MigrationMicrosoftTodoEnable":               reflect.ValueOf(config.MigrationMicrosoftTodoEnable),

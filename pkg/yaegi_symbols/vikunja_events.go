@@ -30,6 +30,7 @@ func init() {
 		"MetadataKeyRequestID":       reflect.ValueOf(constant.MakeFromLiteral("\"request_id\"", token.STRING, 0)),
 		"MetadataKeyUserAgent":       reflect.ValueOf(constant.MakeFromLiteral("\"request_user_agent\"", token.STRING, 0)),
 		"MetadataSkipErrorReporting": reflect.ValueOf(constant.MakeFromLiteral("\"skip_error_reporting\"", token.STRING, 0)),
+		"OnCommit":                   reflect.ValueOf(events.OnCommit),
 		"RegisterListener":           reflect.ValueOf(events.RegisterListener),
 		"RequestMetaFromContext":     reflect.ValueOf(events.RequestMetaFromContext),
 		"TestListener":               reflect.ValueOf(events.TestListener),
