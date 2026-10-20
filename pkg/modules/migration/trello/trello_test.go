@@ -507,3 +507,28 @@ func TestCreateOrganizationMap(t *testing.T) {
 		t.Errorf("converted organization map = %v,\nwant %v,\ndiff: %v", organizationMap, expectedMap, diff)
 	}
 }
+
+func TestDownloadAttachmentDropsTokenOnRedirect(t *testing.T) {
+	prevAllowNonRoutable := config.OutgoingRequestsAllowNonRoutableIPs.GetBool()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	t.Cleanup(func() { config.OutgoingRequestsAllowNonRoutableIPs.Set(prevAllowNonRoutable) })
+
+	var redirectedAuth string
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		redirectedAuth = r.Header.Get("Authorization")
+		_, _ = w.Write([]byte("file"))
+	}))
+	t.Cleanup(target.Close)
+	var originAuth string
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		originAuth = r.Header.Get("Authorization")
+		http.Redirect(w, r, target.URL+"/file", http.StatusFound)
+	}))
+	t.Cleanup(origin.Close)
+
+	buf, err := downloadAttachment(origin.URL, "secret-token")
+	require.NoError(t, err)
+	assert.Equal(t, "file", buf.String())
+	assert.Contains(t, originAuth, "secret-token")
+	assert.Empty(t, redirectedAuth, "the oauth token must not follow a redirect")
+}

@@ -27,9 +27,12 @@ import (
 	"net/url"
 	"strings"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
+
+	"github.com/c2h5oh/datasize"
 )
 
 const (
@@ -47,22 +50,16 @@ func truncateForLog(body []byte) string {
 	return string(body)
 }
 
-// DownloadFile downloads a file and returns its contents
-func DownloadFile(url string) (buf *bytes.Buffer, err error) {
-	return DownloadFileWithHeaders(url, nil)
+// Per decoded source API response; a var so tests can lower it.
+var MaxResponseBytes int64 = 64 << 20
+
+// Anything above files.maxsize would be skipped on import anyway.
+func MaxDownloadSize() int64 {
+	return int64(config.GetMaxFileSizeInMBytes()) * int64(datasize.MB) //nolint:gosec // config value is small
 }
 
-// DownloadFileWithHeaders downloads a file and allows you to pass in headers
-func DownloadFileWithHeaders(url string, headers http.Header) (buf *bytes.Buffer, err error) {
-	resp, err := getFile(utils.NewSSRFSafeHTTPClient(), url, headers)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	buf = &bytes.Buffer{}
-	_, err = buf.ReadFrom(resp.Body)
-
-	return
+func DownloadFile(url string) (*bytes.Buffer, error) {
+	return DownloadFileWithHeadersLimited(utils.NewSSRFSafeHTTPClient(), url, nil, MaxDownloadSize())
 }
 
 // Pass a client with a redirect policy when the headers carry credentials: go replays them across hosts.
