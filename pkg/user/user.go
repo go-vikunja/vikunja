@@ -193,6 +193,11 @@ func (u *User) IsBot() bool {
 	return u.BotOwnerID > 0
 }
 
+// OwnsAvatarFile is false for the default avatar file, which every new account shares.
+func (u *User) OwnsAvatarFile() bool {
+	return u.AvatarFileID != 0 && u.AvatarFileID != config.DefaultSettingsAvatarFileID.GetInt64()
+}
+
 // TableName returns the table name for users
 func (*User) TableName() string {
 	return "users"
