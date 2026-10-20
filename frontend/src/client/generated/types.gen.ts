@@ -3522,7 +3522,7 @@ export type Webhook = {
      */
     readonly id?: number;
     /**
-     * The id of the project this webhook target belongs to. Set from the URL, not the body.
+     * The id of the project this webhook target belongs to.
      */
     readonly project_id?: number;
     /**
@@ -3534,7 +3534,7 @@ export type Webhook = {
      */
     readonly updated?: string;
     /**
-     * The id of the user if this is a user-level webhook (mutually exclusive with project_id).
+     * The id of the user if this is a user-level webhook (mutually exclusive with project_id). Set from the route, not the body.
      */
     readonly user_id?: number;
 };
@@ -5626,7 +5626,7 @@ export type AvatarGetData = {
     };
     query?: {
         /**
-         * Desired avatar edge length in pixels. Clamped to the server's configured maximum if larger; providers that render fixed-size images may ignore it.
+         * Desired avatar edge length in pixels. Rounded up to 16, 32, 48, 64, 128, 256, 512 or 1024 and capped at the server's configured maximum; providers that render fixed-size images may ignore it.
          */
         size?: number;
     };
