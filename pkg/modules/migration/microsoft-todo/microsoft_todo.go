@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -179,7 +180,7 @@ func getMicrosoftGraphAuthToken(code string) (accessToken string, err error) {
 	}
 
 	token := &apiTokenResponse{}
-	err = json.NewDecoder(resp.Body).Decode(token)
+	err = migration.DecodeJSONLimited(resp.Body, token, migration.MaxResponseBytes)
 	return token.AccessToken, err
 }
 
@@ -197,9 +198,12 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	defer resp.Body.Close()
 
 	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(resp.Body)
+	read, err := buf.ReadFrom(io.LimitReader(resp.Body, migration.MaxResponseBytes+1))
 	if err != nil {
 		return err
+	}
+	if read > migration.MaxResponseBytes {
+		return migration.ErrResponseTooLarge
 	}
 
 	if resp.StatusCode > 399 {
@@ -229,6 +233,11 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 
 	log.Debugf("[Microsoft Todo Migration] Got %d projects", len(projects.Value))
 
+	itemCount := int64(len(projects.Value))
+	if err = migration.CheckItemCount(itemCount); err != nil {
+		return
+	}
+
 	for _, project := range projects.Value {
 		link := "lists/" + project.ID + "/tasks"
 		project.Tasks = []*task{}
@@ -246,6 +255,10 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 			log.Debugf("[Microsoft Todo Migration] Got %d tasks for project %s", len(tr.Value), project.ID)
 
 			project.Tasks = append(project.Tasks, tr.Value...)
+			itemCount += int64(len(tr.Value))
+			if err = migration.CheckItemCount(itemCount); err != nil {
+				return
+			}
 
 			if tr.Nextlink == "" {
 				break
