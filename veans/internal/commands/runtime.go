@@ -58,7 +58,7 @@ func loadRuntime(ctx context.Context) (*runtime, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newRuntime(ctx, cfg, trust.Default(interactive(auth.NewStdPrompter())), credentials.Default())
+	return newRuntime(ctx, cfg, defaultGate(auth.NewStdPrompter()), credentials.Default())
 }
 
 func newRuntime(ctx context.Context, cfg *config.Config, gate *trust.Gate, store credentials.Store) (*runtime, error) {
@@ -93,6 +93,10 @@ func interactive(p *auth.StdPrompter) trust.Prompter {
 		return p
 	}
 	return nil
+}
+
+func defaultGate(p *auth.StdPrompter) *trust.Gate {
+	return trust.Default(interactive(p))
 }
 
 // backfillFrontendURL migrates configs written before frontend_url existed.
