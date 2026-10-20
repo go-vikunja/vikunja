@@ -1753,7 +1753,7 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
-	deleteExportFile(previousExportFileID)
+	deleteFileInNewSession(previousExportFileID)
 	return nil
 }
 
