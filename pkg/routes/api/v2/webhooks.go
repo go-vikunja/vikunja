@@ -113,6 +113,7 @@ func webhooksCreate(ctx context.Context, in *struct {
 		return nil, err
 	}
 	in.Body.ProjectID = in.ProjectID // URL wins over body
+	in.Body.UserID = 0
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
@@ -133,6 +134,7 @@ func webhooksUpdate(ctx context.Context, in *struct {
 	// right webhook under the right project.
 	in.Body.ID = in.ID
 	in.Body.ProjectID = in.ProjectID
+	in.Body.UserID = 0
 	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}

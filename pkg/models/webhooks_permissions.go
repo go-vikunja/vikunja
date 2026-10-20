@@ -64,7 +64,6 @@ func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	// Load the webhook from DB to check ownership
 	if w.ID > 0 {
 		existing := &Webhook{ID: w.ID}
 		has, err := s.Get(existing)
@@ -74,8 +73,13 @@ func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
 		if !has {
 			return false, nil
 		}
-		w.UserID = existing.UserID
-		w.ProjectID = existing.ProjectID
+		// User routes set UserID, project routes the URL project.
+		if w.UserID > 0 {
+			return existing.ProjectID == 0 && existing.UserID == w.UserID && w.UserID == a.GetID(), nil
+		}
+		if existing.ProjectID == 0 || existing.ProjectID != w.ProjectID {
+			return false, nil
+		}
 	}
 
 	// User-level webhook: user owns it or is creating new

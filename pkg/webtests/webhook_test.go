@@ -19,6 +19,7 @@ package webtests
 import (
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -53,5 +54,27 @@ func TestWebhook(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `webhook-write-share`)
 		})
+	})
+	// Project routes must never reach user-level webhooks, which token scopes exclude.
+	t.Run("Project route ignores user_id from body", func(t *testing.T) {
+		models.RegisterEventForWebhook(&models.TaskUpdatedEvent{})
+		rec, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "1"},
+			`{"target_url":"https://example.com/body-user","events":["task.updated"],"user_id":1}`)
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"project_id":1`)
+		assert.Contains(t, rec.Body.String(), `"user_id":0`)
+	})
+	t.Run("Project 0 cannot create a user webhook", func(t *testing.T) {
+		models.RegisterUserDirectedEventForWebhook(&models.TaskReminderFiredEvent{})
+		_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "0"},
+			`{"target_url":"https://example.com/pwned","events":["task.reminder.fired"],"user_id":1,"project_id":0}`)
+		require.Error(t, err)
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"target_url": "https://example.com/pwned"})
+	})
+	t.Run("Project route cannot delete a user webhook", func(t *testing.T) {
+		// Webhook 8 is user 1's own user-level webhook.
+		_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "1", "webhook": "8"})
+		require.Error(t, err)
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": 8}, false)
 	})
 }
