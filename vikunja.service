@@ -14,6 +14,8 @@ Type=simple
 WorkingDirectory=/opt/vikunja
 ExecStart=/usr/local/bin/vikunja
 Restart=always
+# Keeps the SQLite database and stored files private to the service user.
+UMask=0077
 
 # Hardening
 NoNewPrivileges=yes
