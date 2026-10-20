@@ -396,7 +396,7 @@ func TestBucket_CanUpdate(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		b := &Bucket{ID: 19, ProjectID: 21}
+		b := &Bucket{ID: 19, ProjectID: 21, ProjectViewID: 84}
 		_, err := b.CanUpdate(s, &user.User{ID: 1})
 		assert.True(t, IsErrProjectIsArchived(err))
 	})
@@ -405,7 +405,7 @@ func TestBucket_CanUpdate(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		b := &Bucket{ID: 20, ProjectID: 22}
+		b := &Bucket{ID: 20, ProjectID: 22, ProjectViewID: 88}
 		_, err := b.CanUpdate(s, &user.User{ID: 1})
 		assert.True(t, IsErrProjectIsArchived(err))
 	})
@@ -414,9 +414,55 @@ func TestBucket_CanUpdate(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		b := &Bucket{ID: 1, ProjectID: 1}
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 4}
 		can, err := b.CanUpdate(s, &user.User{ID: 1})
 		require.NoError(t, err)
 		assert.True(t, can)
+	})
+	t.Run("bucket of another view in the same project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Bucket 1 lives on view 4; view 1 is another view of project 1.
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 1}
+		can, err := b.CanUpdate(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrBucketDoesNotBelongToProject(err))
+		assert.False(t, can)
+	})
+}
+
+func TestBucket_CanDelete(t *testing.T) {
+	t.Run("bucket of the url view", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 4}
+		can, err := b.CanDelete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+	t.Run("bucket of another view in the same project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 1}
+		can, err := b.CanDelete(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrBucketDoesNotBelongToProject(err))
+		assert.False(t, can)
+	})
+	t.Run("no write access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 4}
+		can, err := b.CanDelete(s, &user.User{ID: 15})
+		require.NoError(t, err)
+		assert.False(t, can)
 	})
 }

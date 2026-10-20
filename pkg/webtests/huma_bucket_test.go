@@ -269,6 +269,20 @@ func TestHumaBucket(t *testing.T) {
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 		})
+		t.Run("Bucket of another view in the same project", func(t *testing.T) {
+			// bucket 1 belongs to view 4; view 1 is another view of project 1.
+			otherView := webHandlerTestV2{
+				user:     &testuser1,
+				basePath: "/api/v2/projects/1/views/1/buckets",
+				idParam:  "bucket",
+				t:        t,
+				e:        owned.e,
+			}
+			_, err := otherView.testDeleteWithUser(nil, map[string]string{"bucket": "1"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusBadRequest, getHTTPErrorCode(err))
+			db.AssertExists(t, "buckets", map[string]interface{}{"id": 1, "project_view_id": 4}, false)
+		})
 	})
 }
 
