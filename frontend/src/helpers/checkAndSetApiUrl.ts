@@ -1,4 +1,6 @@
 import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
+import {removeToken} from '@/helpers/auth'
 import {configureApiClient} from '@/client/http'
 import {queryClient} from '@/client/queryClient'
 import {
@@ -37,6 +39,14 @@ function candidateUrls(pUrl: string): string[] {
 	return candidates
 }
 
+function resolveApiRoot(url: string): string | null {
+	try {
+		return new URL(normalizeApiUrl(url) || '/', window.location.href).href
+	} catch {
+		return null
+	}
+}
+
 export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<string> => {
 	if (pUrl === null || typeof pUrl === 'undefined') {
 		throw new NoApiUrlProvidedError()
@@ -66,6 +76,14 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 				if (getApiBaseUrl() !== oldApiBase) {
 					configureApiClient()
 					queryClient.clear()
+				}
+				// Tokens belong to the stored server. Not oldUrl: boot starts from index.html's value.
+				const storedUrl = localStorage.getItem('API_URL')
+				if (storedUrl !== null && resolveApiRoot(storedUrl) !== resolveApiRoot(window.API_URL)) {
+					removeToken()
+					const authStore = useAuthStore()
+					authStore.setAuthenticated(false)
+					authStore.setSession(null)
 				}
 				localStorage.setItem('API_URL', window.API_URL)
 				return window.API_URL
