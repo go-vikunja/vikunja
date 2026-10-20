@@ -436,6 +436,10 @@ const (
 	// the dist/ directory at the repo root, not under build/. The CI
 	// populates dist/repo-work/incoming with packages from every project.
 	repoRootDist = "../dist"
+
+	xgoModule = "src.techknowlogick.com/xgo@v1.9.0"
+	// Same digest as the apibuilder stage in Dockerfile; keep them in sync.
+	xgoImage = "ghcr.io/techknowlogick/xgo@sha256:8cc742b41f043a4fd45d2f63f1fcd12cb27949342df09efb5561f2aadfbe6da3"
 )
 
 func projectDist(p *project, sub string) string {
@@ -453,13 +457,13 @@ func releaseDirs(p *project) error {
 
 func prepareXgo(_ context.Context) error {
 	if _, err := exec.LookPath("xgo"); err != nil {
-		fmt.Println("xgo not found, installing src.techknowlogick.com/xgo...")
-		if err := sh.RunV("go", "install", "src.techknowlogick.com/xgo@latest"); err != nil {
+		fmt.Println("xgo not found, installing " + xgoModule + "...")
+		if err := sh.RunV("go", "install", xgoModule); err != nil {
 			return fmt.Errorf("installing xgo: %w", err)
 		}
 	}
-	fmt.Println("Pulling latest xgo docker image...")
-	return sh.RunV("docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
+	fmt.Println("Pulling xgo docker image...")
+	return sh.RunV("docker", "pull", xgoImage)
 }
 
 func xgoOutName(p *project, version string) string {
@@ -490,6 +494,7 @@ func runXgo(ctx context.Context, p *project, version, targets string) error {
 	}
 	//nolint:gosec // mage helper; args are derived from the static project table above.
 	cmd := exec.CommandContext(ctx, "xgo",
+		"-image", xgoImage,
 		"-dest", absDest,
 		"-tags", p.BuildTags,
 		"-ldflags", extraLdflags+p.Ldflags(version),
