@@ -28,13 +28,11 @@ func TestServerCandidates(t *testing.T) {
 		want  []string
 	}{
 		{
-			name:  "bare hostname → https first, then http, with default-port fallbacks",
+			name:  "bare hostname → https only, with default-port fallback",
 			input: "vikunja.example.com",
 			want: []string{
 				"https://vikunja.example.com",
 				"https://vikunja.example.com:3456",
-				"http://vikunja.example.com",
-				"http://vikunja.example.com:3456",
 			},
 		},
 		{
@@ -53,8 +51,6 @@ func TestServerCandidates(t *testing.T) {
 			want: []string{
 				"https://vikunja.example.com",
 				"https://vikunja.example.com:3456",
-				"http://vikunja.example.com",
-				"http://vikunja.example.com:3456",
 			},
 		},
 		{
@@ -62,7 +58,6 @@ func TestServerCandidates(t *testing.T) {
 			input: "https://vikunja.example.com:8443",
 			want: []string{
 				"https://vikunja.example.com:8443",
-				"http://vikunja.example.com:8443",
 			},
 		},
 		{
@@ -71,8 +66,6 @@ func TestServerCandidates(t *testing.T) {
 			want: []string{
 				"https://example.com/vikunja",
 				"https://example.com:3456/vikunja",
-				"http://example.com/vikunja",
-				"http://example.com:3456/vikunja",
 			},
 		},
 		{
@@ -84,13 +77,36 @@ func TestServerCandidates(t *testing.T) {
 			},
 		},
 		{
+			name:  "explicit https on loopback is never downgraded",
+			input: "https://127.0.0.1:3456",
+			want: []string{
+				"https://127.0.0.1:3456",
+			},
+		},
+		{
+			name:  "explicit http keeps http and may upgrade to https",
+			input: "http://vikunja.example.com",
+			want: []string{
+				"http://vikunja.example.com",
+				"http://vikunja.example.com:3456",
+				"https://vikunja.example.com",
+				"https://vikunja.example.com:3456",
+			},
+		},
+		{
+			name:  "bare ipv6 loopback defaults to http",
+			input: "[::1]:3456",
+			want: []string{
+				"http://[::1]:3456",
+				"https://[::1]:3456",
+			},
+		},
+		{
 			name:  "trailing slash trimmed",
 			input: "https://vikunja.example.com/",
 			want: []string{
 				"https://vikunja.example.com",
 				"https://vikunja.example.com:3456",
-				"http://vikunja.example.com",
-				"http://vikunja.example.com:3456",
 			},
 		},
 	}
