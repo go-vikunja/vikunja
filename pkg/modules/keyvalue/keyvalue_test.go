@@ -206,3 +206,34 @@ func TestPutWithTTL(t *testing.T) {
 		assert.Equal(t, int64(1), val)
 	})
 }
+
+func TestIncrByWithTTL(t *testing.T) {
+	t.Run("returns the running count", func(t *testing.T) {
+		store = memory.NewStorage()
+
+		v, err := IncrByWithTTL("c", 1, time.Minute)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), v)
+		v, err = IncrByWithTTL("c", 1, time.Minute)
+		require.NoError(t, err)
+		assert.Equal(t, int64(2), v)
+		v, err = IncrByWithTTL("c", -1, time.Minute)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), v)
+	})
+
+	t.Run("window starts at the first increment", func(t *testing.T) {
+		store = memory.NewStorage()
+
+		_, err := IncrByWithTTL("c", 1, 50*time.Millisecond)
+		require.NoError(t, err)
+		time.Sleep(30 * time.Millisecond)
+		_, err = IncrByWithTTL("c", 1, 50*time.Millisecond)
+		require.NoError(t, err)
+		time.Sleep(30 * time.Millisecond)
+
+		_, exists, err := Get("c")
+		require.NoError(t, err)
+		assert.False(t, exists)
+	})
+}

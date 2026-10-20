@@ -34,6 +34,7 @@ type Storage interface {
 	Del(key string) (err error)
 	IncrBy(key string, update int64) (err error)
 	DecrBy(key string, update int64) (err error)
+	IncrByWithTTL(key string, update int64, ttl time.Duration) (int64, error)
 	ListKeys(prefix string) ([]string, error)
 	DelPrefix(prefix string) error
 }
@@ -91,6 +92,11 @@ func IncrBy(key string, update int64) (err error) {
 // DecrBy increases a value at key by the amount in update
 func DecrBy(key string, update int64) (err error) {
 	return store.DecrBy(key, update)
+}
+
+// A key without an expiry gets ttl, so a counter's window starts at its first increment.
+func IncrByWithTTL(key string, update int64, ttl time.Duration) (int64, error) {
+	return store.IncrByWithTTL(key, update, ttl)
 }
 
 // ListKeys returns all keys beginning with prefix from the configured backend
