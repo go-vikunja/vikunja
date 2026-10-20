@@ -17,13 +17,17 @@
 package models
 
 import (
+	"encoding/json"
+	"os"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -83,5 +87,56 @@ func TestCleanupOldUserExports(t *testing.T) {
 		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
 		db.AssertExists(t, "users", map[string]interface{}{"id": 2, "export_file_id": fresh.ID}, false)
 		db.AssertExists(t, "files", map[string]interface{}{"id": fresh.ID}, false)
+	})
+}
+
+func handleUserDataExport(t *testing.T, u *user.User) error {
+	payload, err := json.Marshal(&UserDataExportRequestedEvent{User: u})
+	require.NoError(t, err)
+	return (&HandleUserDataExport{}).Handle(message.NewMessage("test", payload))
+}
+
+func assertBlobMissing(t *testing.T, id int64) {
+	_, err := files.FileStat(&files.File{ID: id})
+	assert.True(t, os.IsNotExist(err), "blob %d should be gone, stat err: %v", id, err)
+}
+
+// GHSA-7gmh-4fw6-8xc5
+func TestHandleUserDataExport(t *testing.T) {
+	t.Run("removes the previous export", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		s := db.NewSession()
+		_, err := s.ID(4).Cols("export_file_id").Update(&user.User{ExportFileID: 1})
+		require.NoError(t, err)
+		u, err := user.GetUserByID(s, 4)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		require.NoError(t, handleUserDataExport(t, u))
+
+		db.AssertMissing(t, "users", map[string]interface{}{"id": 4, "export_file_id": 1})
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		assertBlobMissing(t, 1)
+	})
+	t.Run("removes the new blob when the export fails", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		s := db.NewSession()
+		var maxID int64
+		_, err := s.Table("files").Select("MAX(id)").Get(&maxID)
+		require.NoError(t, err)
+		_ = s.Close()
+
+		// Notifying a user that doesn't exist fails after the blob was stored.
+		err = handleUserDataExport(t, &user.User{ID: 9999, Username: "ghost"})
+		require.Error(t, err)
+
+		db.AssertMissing(t, "files", map[string]interface{}{"id": maxID + 1})
+		assertBlobMissing(t, maxID+1)
 	})
 }
