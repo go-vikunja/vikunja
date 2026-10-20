@@ -1363,43 +1363,57 @@ func reloadDoerInEvent(s *xorm.Session, event map[string]interface{}) (doerID in
 	return doerID, nil
 }
 
-func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, doerID int64) error {
-	task, has := event["task"]
-	if !has || task == nil || doerID == 0 {
-		return nil
-	}
-
-	// guard the type assertion for task as well
-	t, ok := task.(map[string]interface{})
+func getTaskIDFromEvent(event map[string]interface{}) int64 {
+	t, ok := event["task"].(map[string]interface{})
 	if !ok {
-		return nil
+		return 0
 	}
+	return getIDAsInt64(t["id"])
+}
 
-	taskID, has := t["id"]
-	if !has || taskID == nil {
-		return nil
+// The payload's project_id is not trusted for routing; a stored task's project wins.
+func getProjectIDForEvent(s *xorm.Session, event map[string]interface{}) (int64, error) {
+	if id := getTaskIDFromEvent(event); id > 0 {
+		t, err := GetTaskByIDSimple(s, id)
+		if err == nil {
+			return t.ProjectID, nil
+		}
+		if !IsErrTaskDoesNotExist(err) {
+			return 0, err
+		}
 	}
+	return getProjectIDFromAnyEvent(event), nil
+}
 
-	id := getIDAsInt64(taskID)
+// Loads as the webhook creator since ReadOne never checks what relations, buckets and the subscription expose.
+func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, creatorID int64) (canRead bool, err error) {
+	id := getTaskIDFromEvent(event)
 	if id <= 0 {
-		return nil
+		return true, nil
 	}
 
+	creator := &user.User{ID: creatorID}
 	fullTask := Task{
 		ID: id,
 		Expand: []TaskCollectionExpandable{
 			TaskCollectionExpandBuckets,
 		},
 	}
-	err := fullTask.ReadOne(s, &user.User{ID: doerID})
-	if err != nil && !IsErrTaskDoesNotExist(err) {
-		return err
+	canRead, _, err = fullTask.CanRead(s, creator)
+	if IsErrTaskDoesNotExist(err) {
+		// Already gone (task.deleted), keep the event's copy.
+		return true, nil
 	}
-	if err == nil {
-		event["task"] = fullTask
+	if err != nil || !canRead {
+		return false, err
 	}
 
-	return nil
+	err = fullTask.ReadOne(s, creator)
+	if err != nil {
+		return false, err
+	}
+	event["task"] = fullTask
+	return true, nil
 }
 
 func reloadProjectInEvent(s *xorm.Session, event map[string]interface{}, projectID, doerID int64) error {
@@ -1488,11 +1502,6 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 	doerID, err = reloadDoerInEvent(s, event)
 	if err != nil {
 		return nil, 0, err
-	}
-
-	err = reloadTaskInEvent(s, event, doerID)
-	if err != nil {
-		return nil, doerID, err
 	}
 
 	err = reloadProjectInEvent(s, event, projectID, doerID)
@@ -1592,7 +1601,10 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	projectID := getProjectIDFromAnyEvent(event)
+	projectID, err := getProjectIDForEvent(s, event)
+	if err != nil {
+		return err
+	}
 	isUserDirected := IsUserDirectedEvent(wl.EventName)
 
 	// For non-user-directed events, we need a project ID
@@ -1648,6 +1660,18 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		perWebhookEvent := make(map[string]interface{}, len(event)+1)
 		for k, v := range event {
 			perWebhookEvent[k] = v
+		}
+
+		// Doer-less events (reminders, overdue) carry a server-built task and were never reloaded.
+		if doerID != 0 {
+			canRead, err := reloadTaskInEvent(s, perWebhookEvent, webhook.CreatedByID)
+			if err != nil {
+				log.Errorf("Could not load task for webhook %d: %s", webhook.ID, err)
+				continue
+			}
+			if !canRead {
+				continue
+			}
 		}
 
 		if _, has := perWebhookEvent["project"]; !has && webhook.ProjectID > 0 {
