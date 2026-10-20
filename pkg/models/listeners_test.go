@@ -829,3 +829,68 @@ func TestTOTPAccountLockRevokesSessions(t *testing.T) {
 	db.AssertExists(t, "sessions", map[string]interface{}{"user_id": 1}, false)
 	assert.Equal(t, &SessionsRevokedEvent{UserID: 2}, singleDispatchedEvent[*SessionsRevokedEvent](t))
 }
+
+func webhookDeliveriesByID(t *testing.T) map[int64]*WebhookDeliveryEvent {
+	t.Helper()
+	delivered := map[int64]*WebhookDeliveryEvent{}
+	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
+		d := e.(*WebhookDeliveryEvent)
+		delivered[d.WebhookID] = d
+	}
+	return delivered
+}
+
+func TestWebhookListener_RoutesByStoredTaskProject(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	events.ClearDispatchedEvents()
+
+	// Task 13 lives in project 2, which user 1 can't read.
+	forged := &TaskUpdatedEvent{
+		Task: &Task{ID: 13, ProjectID: 1},
+		Doer: &user.User{ID: 1},
+	}
+	events.TestListener(t, forged, &WebhookListener{EventName: "task.updated"})
+
+	delivered := webhookDeliveriesByID(t)
+	assert.NotContains(t, delivered, int64(1))
+	assert.Contains(t, delivered, int64(5), "project 2's own webhook should get the event")
+}
+
+func TestWebhookListener_TaskPayloadUsesCreatorAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// User 15 reads project 1 but not project 10 (related task 19); user 1 reads both.
+	_, err := s.Insert(&ProjectUser{UserID: 15, ProjectID: 1, Permission: PermissionRead})
+	require.NoError(t, err)
+	readerHook := &Webhook{
+		TargetURL:   "https://example.com/reader",
+		Events:      []string{"task.updated"},
+		ProjectID:   1,
+		CreatedByID: 15,
+	}
+	_, err = s.Insert(readerHook)
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskRelation{TaskID: 1, OtherTaskID: 19, RelationKind: RelationKindRelated, CreatedByID: 1})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	events.ClearDispatchedEvents()
+	events.TestListener(t, &TaskUpdatedEvent{Task: &Task{ID: 1, ProjectID: 1}, Doer: &user.User{ID: 1}}, &WebhookListener{EventName: "task.updated"})
+
+	relatedIDs := func(d *WebhookDeliveryEvent) []int64 {
+		require.NotNil(t, d)
+		task, ok := d.Payload.Data.(map[string]interface{})["task"].(Task)
+		require.True(t, ok, "task should be reloaded")
+		ids := []int64{}
+		for _, related := range task.RelatedTasks[RelationKindRelated] {
+			ids = append(ids, related.ID)
+		}
+		return ids
+	}
+
+	delivered := webhookDeliveriesByID(t)
+	assert.Contains(t, relatedIDs(delivered[1]), int64(19))
+	assert.NotContains(t, relatedIDs(delivered[readerHook.ID]), int64(19))
+}
