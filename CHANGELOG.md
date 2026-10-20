@@ -7,6 +7,288 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.7.1] - 2026-10-20
+
+### Bug Fixes
+
+* *(api)* Treat page=0 as the first page on v1 list endpoints
+* *(api-tokens)* Name non-CRUD permission keys by action across v1 and v2
+* *(attachments)* Decode previews from the stream instead of buffering the file
+* *(attachments)* Bound concurrent preview generation by decoded pixels
+* *(attachments)* Generate a preview once for concurrent requests
+* *(attachments)* Never upscale image previews
+* *(attachments)* Skip previews of very large files
+* *(attachments)* Bound how much of a file is read for the image header
+* *(attachments)* Keep previews in the file storage instead of keyvalue
+* *(attachments)* Only serve stored previews as jpeg or png
+* *(attachments)* Drop a preview stored after its file was deleted
+* *(attachments)* Reject v1 preview requests that cannot return a preview
+* *(attachments)* Dispatch events after uploading attachments
+* *(auth)* Drop stored tokens when the api server changes
+* *(auth)* Read email link tokens from the url fragment
+* *(auth)* Refuse email-unconfirmed accounts on every credential path
+* *(auth)* Reject user JWTs whose session was revoked on the HTTP path
+* *(auth)* Reject bot credentials while the bot's owner can't authenticate
+* *(auth)* Sync OIDC and LDAP avatars after the login commits
+* *(avatar)* Round requested size up to a fixed allowlist
+* *(avatar)* Bound decode memory
+* *(avatar)* Scale synced avatars while cropping them
+* *(avatar)* Delete the old avatar only after the new one is saved
+* *(avatar)* Answer 400 for uploads the decoder rejects
+* *(avatar)* Sync LDAP and OIDC avatars through one decode
+* *(avatar)* Decode avatars before opening a database session
+* *(avatar)* Remove a replaced avatar's blob only after commit
+* *(avatar)* Keep the shared default avatar when replacing it
+* *(avatar)* Flush avatar caches only after the replacement commits
+* *(avatar)* Cancel an avatar decode when the client goes away
+* *(background)* Bound decode memory
+* *(background)* Answer 400 for any image the decoder rejects
+* *(background)* Name the right mime type when rejecting an image
+* *(background)* Decode backgrounds before opening the write session
+* *(build)* Pin xgo module version and docker image digest
+* *(caldav)* Bound PROPPATCH response size
+* *(caldav)* Redact credential headers and truncate body in debug logs
+* *(caldav)* Merge multiple CATEGORIES properties into labels (#4183)
+* *(caldav)* Cap and dedupe RELATED-TO placeholders per VTODO
+* *(client)* Turn non-JSON error bodies into problem bodies
+* *(client)* Throw failed responses as ApiError
+* *(config)* Re-anchor database, log and plugin paths to the final rootpath
+* *(datepicker)* Skip time step buttons when tabbing
+* *(db)* Percent-encode postgres credentials in the connection URL
+* *(desktop)* Restrict remote images to https in the CSP
+* *(dump)* Log only env variable names on restore, not their values
+* *(dump)* Create the dump archive 0600 and refuse existing paths
+* *(editor)* Keep restored comment draft in edit mode
+* *(editor)* Allowlist table cell background colors
+* *(export)* Only detach expired exports in cleanup cron
+* *(export)* Remove replaced and failed export archives
+* *(files)* Write local files through a temporary file
+* *(files)* Remove the previews of a file with it
+* *(files)* Open s3 files without requiring a content length
+* *(files)* Store local blobs 0600 in 0700 directories
+* *(files)* Drop the file row when storing its content fails
+* *(filters)* Hint at && and || when a filter value contains and/or
+* *(filters)* Populate task cache in filter view cron
+* *(frontend)* Show 'just now' for timestamps within the last minute
+* *(frontend)* Cache created tasks with their view position
+* *(frontend)* Close project settings dialogs opened without history
+* *(frontend)* Apply the history fallback to the remaining route dialogs
+* *(frontend)* Stop color picker from echoing model changes as updates
+* *(frontend)* Handle Escape on keydown in Quick Actions (#4129)
+* *(frontend)* Hide PWA banners until the user is logged in (#3964)
+* *(frontend)* Validate oidc logout url scheme
+* *(frontend)* Keep dropdown menus within the viewport
+* *(frontend)* Keep dropdown menus clear of the fixed navbar
+* *(frontend)* Send the oauth callback state with the migration request
+* *(gantt)* Always draw bars at least one day wide (#4116)
+* *(kanban)* Show no cover when the cover image fails to load
+* *(kanban)* Allow auto-scrolling between buckets while dragging on mobile
+* *(kanban)* Only request a cover preview for image attachments
+* *(kanban)* Load cover images only when the card is visible
+* *(kanban)* Drop cover fetches that resolve after the card moved on
+* *(kanban)* Retry a cover once when the server is busy
+* *(kanban)* Cap manual buckets at 100 per view
+* *(kanban)* Reject bucket actions through another view's url
+* *(kanban)* Only move tasks into buckets of their own project's view
+* *(kanban)* Never dispatch the task object bound from a bucket move body
+* *(ldap)* Match legacy group members against the ldap username
+* *(ldap)* Keep the login when storing the synced avatar fails
+* *(migration)* Skip indexes on mysql text columns instead of aborting
+* *(migration)* Decode utf-16 and drop nul bytes in csv imports
+* *(migration)* Escape checklist titles in trello and wekan imports
+* *(migration)* Escape trello link attachment url and name
+* *(migration)* Escape planka names in generated markdown
+* *(migration)* Dispatch events after importing saved filters
+* *(migration)* Cap the entry count of vikunja export archives
+* *(migration)* Cap the number of items one import may create
+* *(migration)* Reject wekan boards with duplicate ids or too many items
+* *(migration)* Cap trello and todoist downloads at files.maxsize
+* *(migration)* Bound todoist and microsoft todo api responses and item counts
+* *(migration)* Bind oauth migration callbacks to the user who requested the auth url
+* *(migration)* Rename stored API token permission keys
+* *(migration)* Count vikunja export items before decoding data.json
+* *(models)* Return 404 for missing api tokens on delete (#3944) (#4119)
+* *(notifications)* Escape user input in conversational email header
+* *(oidc)* Bound avatar decode memory
+* *(openid)* Reject non-http(s) end_session_endpoint
+* *(openid)* Copy oauth2 config before setting per-request redirect URL
+* *(packaging)* Persist a service secret on package install
+* *(project)* Strip styles and form elements from project descriptions
+* *(quick-actions)* Update the search query during IME composition
+* *(quick-add)* Apply default due time to dates without a time
+* *(quick-add-magic)* Do not parse date ranges as due date
+* *(reactions)* Never return a null user in a reaction list
+* *(reactions)* Remove reactions whose user does not exist
+* *(reminders)* Exclude bot users from task reminder recipients
+* *(reminders)* Skip overdue webhook events when no webhook subscribes to them
+* *(reminders)* Keep dispatching overdue events to plugin listeners
+* *(routes)* Log route template instead of raw request URI
+* *(routes)* Reject form-encoded bodies outside the OAuth token endpoint
+* *(saved-filters)* Search titles case-insensitively on postgres
+* *(sentry)* Handle cyclic objects when redacting events
+* *(sentry)* Only report resource load failures from our own origin
+* *(systemd)* Set UMask=0077 in vikunja.service
+* *(tasks)* Strip the leading # from hex_color before saving an update
+* *(tasks)* Don't clear assignees on bulk updates that don't name them
+* *(tasks)* Don't clear reminders on bulk updates that don't name them
+* *(tasks)* Don't change favorites on bulk updates that don't name them
+* *(tasks)* Reject bulk updates without fields
+* *(tasks)* Clamp day when advancing a monthly repeating task by one month (#4107)
+* *(tasks)* Dedup task ids in bulk update
+* *(teams)* Ignore client-set external_id on team create and update
+* *(teams)* Require membership for team self-removal
+* *(time-tracking)* Start timer at chosen start time
+* *(totp)* Require a current passcode to disable totp
+* *(totp)* Require the current password to enroll and enable totp
+* *(unsplash)* Close pingback response body
+* *(user)* Set default reminder settings on bot users and guard reminder parser (#4007)
+* *(user)* Only reassign owned projects on account deletion
+* *(user)* Remove export and avatar files on account deletion
+* *(user)* Put account tokens in the email link fragment
+* *(user)* Throttle password re-checks per user on sensitive account actions
+* *(user)* Enforce the email confirmation cooldown on redis
+* *(veans)* Never downgrade server discovery to http
+* *(veans)* Gate repo-configured server before sending credentials
+* *(veans)* Fence remote project metadata in the agent prompt
+* *(veans)* Keep init writes inside the repo root
+* *(veans)* Request renamed bucket permission keys for bot tokens
+* *(views)* Reject bucket configurations without a filter
+* *(views)* Cap filter bucket configurations at 50
+* *(webhooks)* Route task events by the stored task and load payloads as the webhook creator
+* *(webhooks)* Require project write access to list webhook targets
+* *(webhooks)* Derive user- vs project-level webhooks from the route, never the body
+* Use vite default build target ([0437395](04373954353c22b78f552044ad551e1407a92f24))
+* Reject hex_color values that are not hex colors ([9125e1a](9125e1a93a282e53819c30884c6bef8f9a6be5c4))
+
+### Dependencies
+
+* *(deps)* Update module go.opentelemetry.io/otel to v1.42.0 [security]
+* *(deps)* Bump brace-expansion from 5.0.9 to 5.0.12 in /frontend
+* *(deps)* Update docker/dockerfile:1 docker digest to 4edf897
+* *(deps)* Update module golang.org/x/net to v0.60.0 [security]
+* *(deps)* Bump joi from 18.2.3 to 18.2.9 in /frontend
+* *(deps)* Update postgres:18 docker digest to 74935e7
+* *(deps)* Update axllent/mailpit docker tag to v1.31.5
+* *(deps)* Update dependency @babel/core to v8.0.7
+* *(deps)* Update dependency basic-ftp to v6.2.3
+* *(deps)* Update dependency ip-address to v10.7.3
+* *(deps)* Bump shell-quote from 1.10.0 to 1.12.0 in /frontend
+* *(deps)* Bump proxy-addr from 2.0.7 to 2.0.8 in /desktop
+* *(deps)* Bump js-yaml from 3.15.1 to 3.15.2 in /frontend
+* *(deps)* Bump qs from 6.15.3 to 6.16.0 in /desktop
+* *(deps)* Update module github.com/modelcontextprotocol/go-sdk to v1.8.0
+* *(deps)* Update dependency launch-editor to v2.14.2
+* *(deps)* Update dependency ip-address to v10.7.4
+* *(deps)* Update dependency go to v1.27.2
+* *(deps)* Update axllent/mailpit docker tag to v1.31.6
+* *(deps)* Lock file maintenance
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.27.x docker digest to 783cf55
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.27.x docker digest to 7d5cab9
+* *(deps)* Update go to 1.27.3 in mise
+
+### Documentation
+
+* *(agents)* Document supported database versions
+* *(api)* Document decode failures on avatar and background uploads
+* *(config)* Clarify CRITICAL and NOTICE log level aliases
+* *(config)* Document group sync filter placeholders
+* *(config)* Document the ldap id attribute
+* *(filters)* Describe the filter grammar in filter parameter docs
+* *(veans)* Document the server trust gate
+* Docs(agents): point migration skill at minimum database versions [skip ci] ([fe4d602](fe4d602b372eeb737a3b598ac8f8fb66d5bcae8e))
+
+### Features
+
+* *(api)* Return per-view positions from task create
+* *(attachments)* Encode opaque previews as jpeg
+* *(attachments)* Add a repair command for the previews older versions left in keyvalue
+* *(attachments)* Fail a v2 preview request that cannot produce a preview
+* *(attachments)* Serve v2 previews from their own route
+* *(attachments)* Always return the original from the v2 download route
+- **BREAKING**: the v2 attachment download route ignores preview_size. Request previews from GET /tasks/{task}/attachments/{attachment}/preview?size= instead.
+* *(auth)* Sync provider avatars in the background after login
+* *(avatar)* Store every avatar as a centered square
+- **BREAKING**: store every avatar as a centered square
+* *(ci)* Add agentscan to check new PRs for automation signals
+* *(datepicker)* Advance to minutes after typing the hour
+* *(files)* Open a stored file together with its size
+* *(files)* Store previews of a file in the file storage
+* *(frontend)* Move editor toolbar buttons that don't fit into a More menu
+* *(frontend)* Add project settings dropdown to project cards
+* *(keyvalue)* Add atomic IncrByWithTTL for windowed counters
+* *(ldap)* Query only the user's groups during group sync
+* *(ldap)* Match users and groups by an immutable directory id
+* *(log)* Add SafeHeaders to mask credential headers in logs
+* *(mcp)* Let read tools return only requested fields
+* *(mcp)* Add filter_syntax tool and resource
+* *(mcp)* Point filter params, errors and instructions at filter_syntax
+* *(models)* Migrate external team ids to a new identifier
+* *(time-tracking)* Add formatTimeRange helper
+* *(time-tracking)* Show date in time entry list
+* *(veans)* Store frontend url in .veans.yml
+* *(veans)* Include web ui url in task output
+* *(veans)* Teach agents to reference tasks as pill links
+* *(veans)* Backfill frontend_url in existing .veans.yml
+* *(veans)* Add trust store and gate for server origins
+* *(veans)* Trust the server typed during init
+
+### Miscellaneous Tasks
+
+* *(ci)* Bump golangci-lint to v2.14.0
+* *(frontend)* Regenerate API client for bulk task fields doc
+* *(frontend)* Regenerate API client for filter docs
+* *(frontend)* Regenerate api client
+* *(i18n)* Update translations via Crowdin
+* Better wording ([e5a9631](e5a9631be1428bc12af8eb6674fa2b1c32c2c10f))
+
+### Other
+
+* *(lint)* Forbid logging raw http headers and env variables
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Sign release docker images with cosign
+* *(other)* Attest build provenance for release docker images
+* *(other)* [skip ci] Updated yaegi symbols
+
+### Performance
+
+* *(attachments)* Stream stored previews instead of buffering them
+* *(attachments)* Generate every preview size from one decode
+* *(keyvalue)* Unlink keys per scan page when deleting a prefix
+
+### Refactor
+
+* *(attachments)* Thread a context into preview generation (mechanical)
+* *(attachments)* Split preview rendering from the cache lookup
+* *(attachments)* Return why a preview could not be generated
+* *(attachments)* Cut comment noise
+* *(attachments)* Answer a download with either a preview or the original
+* *(attachments)* Test previews against the real file storage
+* *(attachments)* Split attachment downloads from previews
+* *(attachments)* Request previews from the preview route
+* *(files)* Move the preview sizes to the files package (mechanical)
+* *(files)* Parse preview sizes from the stored size list
+* *(files)* Export the stored preview size list
+* *(imageutils)* Move pixel-weighted decode semaphore
+* *(imageutils)* Drop ValidateReader
+* *(imageutils)* Queue decodes on the caller's context
+* *(imageutils)* Answer every busy decode with code 4037
+- **BREAKING**: answer every busy decode with code 4037
+* *(ldap)* Use go-ldap filter escaping for the user filter
+* *(migration)* Read csv imports through one helper
+* *(user)* Use keyvalue.GetInt64 for failed login and TOTP counters
+
+### Testing
+
+* *(attachments)* Pin image preview and fallback to the original
+* *(attachments)* Fold the large-image test into the generator table
+* *(e2e)* Cover closing directly opened project settings dialogs
+* *(e2e)* Cover keyboard navigation of the editor toolbar overflow menu
+* *(export)* Don't assume sequential file ids in the failed export test
+* *(log)* Cover log level aliases
+* *(mcp)* Drop session ID handling from stateless MCP test client
+* *(models)* Fit invalid reminder time in column
+* *(user)* Assert deleting a user removes their reactions
+
 ## [2.7.0] - 2026-10-02
 
 ### Bug Fixes
