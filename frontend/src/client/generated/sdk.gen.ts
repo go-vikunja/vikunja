@@ -2163,7 +2163,7 @@ export const projectViewTasksList = <ThrowOnError extends boolean = true>(option
 /**
  * List a project's webhooks
  *
- * Returns the webhook targets configured for the given project, paginated. Requires read access to the project. Secret and basic-auth credentials are never included.
+ * Returns the webhook targets configured for the given project, paginated. Requires write access to the project, because target URLs often carry the receiver's credential. Secret and basic-auth credentials are never included.
  */
 export const webhooksList = <ThrowOnError extends boolean = true>(options: Options<WebhooksListData, ThrowOnError>): RequestResult<WebhooksListResponses, WebhooksListErrors, ThrowOnError> => (options.client ?? client).get<WebhooksListResponses, WebhooksListErrors, ThrowOnError>({
     security: [{
