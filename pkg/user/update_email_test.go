@@ -32,7 +32,7 @@ import (
 	"xorm.io/xorm"
 )
 
-var emailConfirmTokenRegex = regexp.MustCompile(`\?userEmailConfirm=([^"'\s<&]+)`)
+var emailConfirmTokenRegex = regexp.MustCompile(`#userEmailConfirm=([^"'\s<&]+)`)
 
 // confirmTokenFromSentMail returns the clear text token from the confirmation link of the
 // sent mails. It is only available there, the db only holds its hash.
