@@ -43,5 +43,15 @@ func TestWebhook(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `webhook-password`)
 			assert.NotContains(t, rec.Body.String(), `webhook-secret-fixture`)
 		})
+		t.Run("Read-only share cannot list", func(t *testing.T) {
+			_, err := testHandler.testReadAllWithUser(nil, map[string]string{"project": "9"})
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrorCodeGenericForbidden)
+		})
+		t.Run("Write share can list", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(nil, map[string]string{"project": "10"})
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `webhook-write-share`)
+		})
 	})
 }

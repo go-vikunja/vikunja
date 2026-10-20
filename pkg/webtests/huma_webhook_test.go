@@ -93,11 +93,10 @@ func TestHumaWebhook(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `webhook-password`)
 			assert.NotContains(t, rec.Body.String(), `webhook-secret-fixture`)
 		})
-		t.Run("Read-only share can list", func(t *testing.T) {
-			rec, err := readShared.testReadAllWithUser(nil, nil)
-			require.NoError(t, err)
-			ids := webhookIDsFromReadAll(t, rec.Body.Bytes())
-			assert.ElementsMatch(t, []int64{2}, ids, "body: %s", rec.Body.String())
+		t.Run("Read-only share cannot list", func(t *testing.T) {
+			_, err := readShared.testReadAllWithUser(nil, nil)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Write share can list", func(t *testing.T) {
 			rec, err := writeShared.testReadAllWithUser(nil, nil)
