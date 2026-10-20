@@ -1740,7 +1740,7 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
-	err = ExportUserData(sess, event.User)
+	previousExportFileID, err := ExportUserData(sess, event.User)
 	if err != nil {
 		_ = sess.Rollback()
 		return
@@ -1748,7 +1748,13 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 
 	log.Debugf("Done exporting user data for user %d...", event.User.ID)
 
-	return sess.Commit()
+	err = sess.Commit()
+	if err != nil {
+		return err
+	}
+
+	deleteExportFile(previousExportFileID)
+	return nil
 }
 
 type MarkTaskUnreadOnComment struct {
