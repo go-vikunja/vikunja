@@ -31,9 +31,19 @@ func (w *Webhook) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 		return w.UserID == a.GetID(), int(PermissionRead), nil
 	}
 
-	// Project-level webhook: delegate to project
-	p := &Project{ID: w.ProjectID}
-	return p.CanRead(s, a)
+	can, err := canReadProjectWebhooks(s, w.ProjectID, a)
+	return can, int(PermissionWrite), err
+}
+
+// Target URLs often embed the receiver's credential, so reading them needs write.
+// Archived projects stay listable.
+func canReadProjectWebhooks(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	p := &Project{ID: projectID}
+	can, err := p.CanWrite(s, a)
+	if IsErrProjectIsArchived(err) {
+		return can, nil
+	}
+	return can, err
 }
 
 func (w *Webhook) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {

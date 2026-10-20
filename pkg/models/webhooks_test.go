@@ -26,7 +26,9 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,4 +70,50 @@ func TestWebhookErrorResponseBodyIsTruncated(t *testing.T) {
 	loggedBodyBytes := strings.Count(string(logged), bodyMarker)
 	assert.Positive(t, loggedBodyBytes, "the response body should still be logged for diagnostics")
 	assert.LessOrEqual(t, loggedBodyBytes, maxWebhookErrorBodySize, "the response body must not be read and logged unbounded")
+}
+
+// Target URLs often embed the receiver's credential, so reading them needs write access.
+func TestWebhook_ProjectReadNeedsWrite(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	for _, tc := range []struct {
+		name      string
+		projectID int64
+		can       bool
+	}{
+		{name: "owner", projectID: 1, can: true},
+		{name: "read share", projectID: 9, can: false},
+		{name: "write share", projectID: 10, can: true},
+		{name: "no access", projectID: 2, can: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			can, _, err := (&Webhook{ProjectID: tc.projectID}).CanRead(s, u)
+			require.NoError(t, err)
+			assert.Equal(t, tc.can, can, "CanRead")
+
+			_, _, _, err = (&Webhook{ProjectID: tc.projectID}).ReadAll(s, u, "", 1, 50)
+			if tc.can {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				assert.True(t, IsErrGenericForbidden(err), "ReadAll: %v", err)
+			}
+		})
+	}
+
+	t.Run("archived project stays listable", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&Webhook{TargetURL: "https://example.com/archived", Events: []string{"task.updated"}, ProjectID: 22, CreatedByID: 1})
+		require.NoError(t, err)
+		result, _, _, err := (&Webhook{ProjectID: 22}).ReadAll(s, u, "", 1, 50)
+		require.NoError(t, err)
+		assert.Len(t, result, 1)
+	})
 }

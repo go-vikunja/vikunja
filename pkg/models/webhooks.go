@@ -226,8 +226,7 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 	}
 
 	// w.UserID set selects the user-level list: a user may only see their own
-	// webhooks. The project list (w.UserID == 0) delegates to the project's read
-	// permission instead.
+	// webhooks. The project list (w.UserID == 0) needs project write access.
 	var listCond builder.Cond
 	if w.UserID > 0 {
 		if w.UserID != a.GetID() {
@@ -235,8 +234,7 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 		}
 		listCond = builder.Eq{"user_id": w.UserID}
 	} else {
-		p := &Project{ID: w.ProjectID}
-		can, _, cerr := p.CanRead(s, a)
+		can, cerr := canReadProjectWebhooks(s, w.ProjectID, a)
 		if cerr != nil {
 			return nil, 0, 0, cerr
 		}
