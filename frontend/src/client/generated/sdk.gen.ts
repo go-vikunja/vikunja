@@ -805,7 +805,7 @@ export const migrationCsvStatus = <ThrowOnError extends boolean = true>(options?
 /**
  * Get the auth url for microsoft-todo
  *
- * Returns the OAuth url the user needs to authenticate against. The code obtained there is passed back to the migrate endpoint.
+ * Returns the OAuth url the user needs to authenticate against. The url embeds a fresh state bound to the authenticated user; the code and state obtained there are passed back to the migrate endpoint.
  */
 export const migrationMicrosoftTodoAuth = <ThrowOnError extends boolean = true>(options?: Options<MigrationMicrosoftTodoAuthData, ThrowOnError>): RequestResult<MigrationMicrosoftTodoAuthResponses, MigrationMicrosoftTodoAuthErrors, ThrowOnError> => (options?.client ?? client).get<MigrationMicrosoftTodoAuthResponses, MigrationMicrosoftTodoAuthErrors, ThrowOnError>({
     security: [{
@@ -824,7 +824,7 @@ export const migrationMicrosoftTodoAuth = <ThrowOnError extends boolean = true>(
 /**
  * Migrate from microsoft-todo
  *
- * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 412 if a migration for this service is already running.
+ * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 400 if the state is missing, expired, already used or was issued to another user, and with 412 if a migration for this service is already running.
  */
 export const migrationMicrosoftTodoMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationMicrosoftTodoMigrateData, ThrowOnError>): RequestResult<MigrationMicrosoftTodoMigrateResponses, MigrationMicrosoftTodoMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationMicrosoftTodoMigrateResponses, MigrationMicrosoftTodoMigrateErrors, ThrowOnError>({
     security: [{
@@ -951,7 +951,7 @@ export const migrationTicktickStatus = <ThrowOnError extends boolean = true>(opt
 /**
  * Get the auth url for todoist
  *
- * Returns the OAuth url the user needs to authenticate against. The code obtained there is passed back to the migrate endpoint.
+ * Returns the OAuth url the user needs to authenticate against. The url embeds a fresh state bound to the authenticated user; the code and state obtained there are passed back to the migrate endpoint.
  */
 export const migrationTodoistAuth = <ThrowOnError extends boolean = true>(options?: Options<MigrationTodoistAuthData, ThrowOnError>): RequestResult<MigrationTodoistAuthResponses, MigrationTodoistAuthErrors, ThrowOnError> => (options?.client ?? client).get<MigrationTodoistAuthResponses, MigrationTodoistAuthErrors, ThrowOnError>({
     security: [{
@@ -970,7 +970,7 @@ export const migrationTodoistAuth = <ThrowOnError extends boolean = true>(option
 /**
  * Migrate from todoist
  *
- * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 412 if a migration for this service is already running.
+ * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 400 if the state is missing, expired, already used or was issued to another user, and with 412 if a migration for this service is already running.
  */
 export const migrationTodoistMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationTodoistMigrateData, ThrowOnError>): RequestResult<MigrationTodoistMigrateResponses, MigrationTodoistMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationTodoistMigrateResponses, MigrationTodoistMigrateErrors, ThrowOnError>({
     security: [{
@@ -1012,7 +1012,7 @@ export const migrationTodoistStatus = <ThrowOnError extends boolean = true>(opti
 /**
  * Get the auth url for trello
  *
- * Returns the OAuth url the user needs to authenticate against. The code obtained there is passed back to the migrate endpoint.
+ * Returns the OAuth url the user needs to authenticate against. The url embeds a fresh state bound to the authenticated user; the code and state obtained there are passed back to the migrate endpoint.
  */
 export const migrationTrelloAuth = <ThrowOnError extends boolean = true>(options?: Options<MigrationTrelloAuthData, ThrowOnError>): RequestResult<MigrationTrelloAuthResponses, MigrationTrelloAuthErrors, ThrowOnError> => (options?.client ?? client).get<MigrationTrelloAuthResponses, MigrationTrelloAuthErrors, ThrowOnError>({
     security: [{
@@ -1031,7 +1031,7 @@ export const migrationTrelloAuth = <ThrowOnError extends boolean = true>(options
 /**
  * Migrate from trello
  *
- * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 412 if a migration for this service is already running.
+ * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 400 if the state is missing, expired, already used or was issued to another user, and with 412 if a migration for this service is already running.
  */
 export const migrationTrelloMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationTrelloMigrateData, ThrowOnError>): RequestResult<MigrationTrelloMigrateResponses, MigrationTrelloMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationTrelloMigrateResponses, MigrationTrelloMigrateErrors, ThrowOnError>({
     security: [{

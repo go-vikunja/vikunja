@@ -34,10 +34,13 @@ type Migrator interface {
 	// Migrate is the interface used to migrate a user's tasks from another platform to vikunja.
 	// The user object is the user who's tasks will be migrated.
 	Migrate(user *user.User) error
-	// AuthURL returns a url for clients to authenticate against.
-	// The use case for this are Oauth flows, where the server token should remain hidden and not
-	// known to the frontend.
-	AuthURL() string
+}
+
+type OAuthMigrator interface {
+	Migrator
+	// The source must hand state back to the callback.
+	AuthURL(state string) string
+	OAuthState() string
 }
 
 // CredentialsChecker is implemented by migrators that authenticate with credentials passed in the

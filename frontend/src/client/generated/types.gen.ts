@@ -1109,6 +1109,10 @@ export type MigrationMigrateBody = {
      * The OAuth code obtained after authorizing against the auth url.
      */
     code?: string;
+    /**
+     * The state the service handed back to the callback. It is single-use, expires after 10 minutes and only works for the user who requested the auth url.
+     */
+    state?: string;
 };
 
 export type MigrationStartedBodyBody = {
@@ -4007,6 +4011,10 @@ export type MigrationMigrateBodyWritable = {
      * The OAuth code obtained after authorizing against the auth url.
      */
     code?: string;
+    /**
+     * The state the service handed back to the callback. It is single-use, expires after 10 minutes and only works for the user who requested the auth url.
+     */
+    state?: string;
 };
 
 export type OverviewWritable = {

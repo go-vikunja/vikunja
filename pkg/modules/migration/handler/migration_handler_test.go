@@ -45,8 +45,7 @@ type stubMigrator struct {
 	Panic      bool     `json:"panic"`
 }
 
-func (m *stubMigrator) Name() string    { return m.NameValue }
-func (m *stubMigrator) AuthURL() string { return "" }
+func (m *stubMigrator) Name() string { return m.NameValue }
 
 func (m *stubMigrator) CheckCredentials() error {
 	if m.CheckErr != nil {
