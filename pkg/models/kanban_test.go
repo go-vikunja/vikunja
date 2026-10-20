@@ -226,6 +226,83 @@ func TestBucket_Delete(t *testing.T) {
 	})
 }
 
+// GHSA-p697-wq4x-grpj
+func TestBucket_Create(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	fillView := func(t *testing.T, s *xorm.Session, viewID int64, upTo int) {
+		t.Helper()
+		existing, err := s.Where("project_view_id = ?", viewID).Count(&Bucket{})
+		require.NoError(t, err)
+		for i := int(existing); i < upTo; i++ {
+			_, err = s.Insert(&Bucket{Title: "filler", ProjectViewID: viewID, CreatedByID: u.ID})
+			require.NoError(t, err)
+		}
+	}
+
+	t.Run("below the cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fillView(t, s, 4, maxBucketsPerView-1)
+		b := &Bucket{
+			Title:         "last one",
+			ProjectID:     1,
+			ProjectViewID: 4,
+		}
+		can, err := b.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, b.Create(s, u))
+	})
+	t.Run("at the cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fillView(t, s, 4, maxBucketsPerView)
+		b := &Bucket{
+			Title:         "one too many",
+			ProjectID:     1,
+			ProjectViewID: 4,
+		}
+		can, err := b.CanCreate(s, u)
+		require.Error(t, err)
+		assert.True(t, IsErrTooManyBuckets(err))
+		assert.False(t, can)
+	})
+	t.Run("at the cap without permission", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fillView(t, s, 4, maxBucketsPerView)
+		b := &Bucket{
+			ProjectID:     1,
+			ProjectViewID: 4,
+		}
+		can, err := b.CanCreate(s, &user.User{ID: 2})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("create itself is uncapped for import and duplication", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fillView(t, s, 4, maxBucketsPerView)
+		b := &Bucket{
+			Title:         "imported",
+			ProjectViewID: 4,
+		}
+		require.NoError(t, b.Create(s, u))
+		count, err := s.Where("project_view_id = ?", 4).Count(&Bucket{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(maxBucketsPerView+1), count)
+	})
+}
+
 func TestBucket_Update(t *testing.T) {
 
 	testAndAssertBucketUpdate := func(t *testing.T, b *Bucket, s *xorm.Session) {
