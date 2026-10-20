@@ -160,6 +160,28 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 	return nil
 }
 
+func (s *Storage) IncrByWithTTL(key string, update int64, ttl time.Duration) (int64, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.expiredLocked(key)
+
+	current, exists := s.store[key]
+	if !exists {
+		current = int64(0)
+	}
+	val, is := current.(int64)
+	if !is {
+		return 0, &e.ErrValueHasWrongType{Key: key, ExpectedValue: "int64"}
+	}
+
+	if _, has := s.expires[key]; !has {
+		s.expires[key] = time.Now().Add(ttl)
+	}
+	s.store[key] = val + update
+	return val + update, nil
+}
+
 // DecrBy decreases the value saved at key by the amount provided through update
 // It assumes the value saved for the key either does not exist or has a type of int64
 func (s *Storage) DecrBy(key string, update int64) (err error) {

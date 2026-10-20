@@ -120,6 +120,19 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 	return s.client.IncrBy(context.Background(), key, update).Err()
 }
 
+var incrByWithTTLScript = redis.NewScript(`
+local v = redis.call('INCRBY', KEYS[1], ARGV[1])
+if redis.call('PTTL', KEYS[1]) == -1 then
+	redis.call('PEXPIRE', KEYS[1], ARGV[2])
+end
+return v
+`)
+
+// Scripted so a concurrent first increment can't lose the ttl.
+func (s *Storage) IncrByWithTTL(key string, update int64, ttl time.Duration) (int64, error) {
+	return incrByWithTTLScript.Run(context.Background(), s.client, []string{key}, update, ttl.Milliseconds()).Int64()
+}
+
 // DecrBy decreases the value saved at key by the amount provided through update
 func (s *Storage) DecrBy(key string, update int64) (err error) {
 	return s.client.DecrBy(context.Background(), key, update).Err()
