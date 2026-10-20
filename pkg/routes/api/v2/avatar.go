@@ -20,7 +20,6 @@ import (
 	"context"
 	"net/http"
 
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/modules/avatar"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -75,12 +74,9 @@ func avatarGet(ctx context.Context, in *avatarInput) (*avatarResponse, error) {
 		return nil, err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
 	// Avatar resolution (user lookup, provider selection, size clamping) is
 	// shared with the v1 handler; only the transport differs.
-	a, mimeType, err := avatar.GetAvatarForUsername(s, in.Username, in.Size)
+	a, mimeType, err := avatar.GetAvatarForUsername(in.Username, in.Size)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

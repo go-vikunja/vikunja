@@ -128,16 +128,20 @@ func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
 	return dataURI, nil
 }
 
-func StoreAvatarFile(ctx context.Context, s *xorm.Session, u *user.User, provider string, src io.Reader) error {
-	data, err := io.ReadAll(src)
-	if err != nil {
-		return err
-	}
-	return storeAvatar(ctx, s, u, provider, data)
+type EncodedAvatar struct {
+	png []byte
 }
 
-func StoreSyncedAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider string, raw []byte) error {
-	return storeAvatar(ctx, s, u, provider, raw)
+// May queue for decode capacity; call outside a transaction.
+func PrepareAvatar(ctx context.Context, raw []byte) (*EncodedAvatar, error) {
+	buf := &bytes.Buffer{}
+	err := imageutils.Decode(ctx, imageutils.BytesOpener(raw), func(img image.Image, _ string) error {
+		return png.Encode(buf, imaging.Fit(centeredSquare(img), maxAvatarSide, maxAvatarSide, imaging.Lanczos))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &EncodedAvatar{png: buf.Bytes()}, nil
 }
 
 // Zero-copy where possible: a full-resolution copy would escape the decode budget.
@@ -154,15 +158,7 @@ func centeredSquare(img image.Image) image.Image {
 	return sub.SubImage(image.Rectangle{Min: topLeft, Max: topLeft.Add(image.Pt(side, side))})
 }
 
-func storeAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider string, data []byte) (err error) {
-	buf := &bytes.Buffer{}
-	err = imageutils.Decode(ctx, imageutils.BytesOpener(data), func(img image.Image, _ string) error {
-		return png.Encode(buf, imaging.Fit(centeredSquare(img), maxAvatarSide, maxAvatarSide, imaging.Lanczos))
-	})
-	if err != nil {
-		return err
-	}
-
+func SaveAvatar(s *xorm.Session, u *user.User, provider string, a *EncodedAvatar) (err error) {
 	oldAvatarFileID := u.AvatarFileID
 	oldProvider := u.AvatarProvider
 	defer func() {
@@ -177,7 +173,7 @@ func storeAvatar(ctx context.Context, s *xorm.Session, u *user.User, provider st
 		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
 	}
 
-	f, err := files.CreateWithMimeAndSession(s, bytes.NewReader(buf.Bytes()), "avatar.png", uint64(buf.Len()), u, "image/png", true)
+	f, err := files.CreateWithMimeAndSession(s, bytes.NewReader(a.png), "avatar.png", uint64(len(a.png)), u, "image/png", true)
 	if err != nil {
 		return err
 	}
