@@ -17,6 +17,7 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -28,6 +29,7 @@ import (
 	"code.vikunja.io/veans/internal/config"
 	"code.vikunja.io/veans/internal/credentials"
 	"code.vikunja.io/veans/internal/output"
+	"code.vikunja.io/veans/internal/trust"
 )
 
 func newLoginCmd() *cobra.Command {
@@ -66,48 +68,15 @@ you want to rotate.`,
 				return err
 			}
 
-			human := client.New(cfg.Server, "")
-			tok, err := auth.AcquireHumanToken(cmd.Context(), human, auth.LoginOptions{
+			p := auth.NewStdPrompter()
+			return runLogin(cmd.Context(), cfg, trust.Default(interactive(p)), auth.LoginOptions{
 				Token:       token,
 				UsePassword: usePassword,
 				Username:    username,
 				Password:    password,
 				TOTP:        totp,
 				Out:         os.Stderr,
-			}, auth.NewStdPrompter())
-			if err != nil {
-				return err
-			}
-			human.Token = tok
-
-			routes, err := human.Routes(cmd.Context())
-			if err != nil {
-				return output.Wrap(output.CodeUnknown, err, "fetch /routes: %v", err)
-			}
-			perms := client.PermissionsForBot(routes)
-			if len(perms) == 0 {
-				return output.New(output.CodeUnknown, "no API token permissions available")
-			}
-
-			minted, err := human.CreateToken(cmd.Context(), &client.APIToken{
-				Title:       "veans (rotated)",
-				Permissions: perms,
-				ExpiresAt:   client.FarFuture,
-				OwnerID:     cfg.Bot.UserID,
-			})
-			if err != nil {
-				return err
-			}
-			if minted.Token == "" {
-				return output.New(output.CodeUnknown, "POST /tokens did not return token plaintext")
-			}
-
-			if err := credentials.Default().Set(cfg.Server, cfg.Bot.Username, minted.Token); err != nil {
-				return err
-			}
-
-			fmt.Fprintf(os.Stderr, "Rotated token for %s on %s\n", cfg.Bot.Username, cfg.Server)
-			return nil
+			}, p)
 		},
 	}
 	cmd.Flags().StringVar(&token, "token", "", "JWT or personal API token (skips OAuth/password)")
@@ -116,4 +85,47 @@ you want to rotate.`,
 	cmd.Flags().StringVar(&password, "password", "", "your Vikunja password (implies --use-password; prompted if empty)")
 	cmd.Flags().StringVar(&totp, "totp", "", "TOTP code if your account requires 2FA")
 	return cmd
+}
+
+func runLogin(ctx context.Context, cfg *config.Config, gate *trust.Gate, opts auth.LoginOptions, p auth.Prompter) error {
+	// Before any credential leaves: the server comes from the repo.
+	if err := gate.Check(cfg.Server); err != nil {
+		return err
+	}
+
+	human := client.New(cfg.Server, "")
+	tok, err := auth.AcquireHumanToken(ctx, human, opts, p)
+	if err != nil {
+		return err
+	}
+	human.Token = tok
+
+	routes, err := human.Routes(ctx)
+	if err != nil {
+		return output.Wrap(output.CodeUnknown, err, "fetch /routes: %v", err)
+	}
+	perms := client.PermissionsForBot(routes)
+	if len(perms) == 0 {
+		return output.New(output.CodeUnknown, "no API token permissions available")
+	}
+
+	minted, err := human.CreateToken(ctx, &client.APIToken{
+		Title:       "veans (rotated)",
+		Permissions: perms,
+		ExpiresAt:   client.FarFuture,
+		OwnerID:     cfg.Bot.UserID,
+	})
+	if err != nil {
+		return err
+	}
+	if minted.Token == "" {
+		return output.New(output.CodeUnknown, "POST /tokens did not return token plaintext")
+	}
+
+	if err := credentials.Default().Set(cfg.Server, cfg.Bot.Username, minted.Token); err != nil {
+		return err
+	}
+
+	fmt.Fprintf(os.Stderr, "Rotated token for %s on %s\n", cfg.Bot.Username, cfg.Server)
+	return nil
 }

@@ -26,7 +26,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"code.vikunja.io/veans/internal/auth"
 	"code.vikunja.io/veans/internal/config"
+	"code.vikunja.io/veans/internal/credentials"
+	"code.vikunja.io/veans/internal/trust"
 )
 
 //go:embed prompt.tmpl
@@ -43,6 +46,7 @@ type primeContext struct {
 	BotUsername       string
 	TaskIDExample     string
 	TaskURLExample    string
+	UntrustedServer   string
 }
 
 func newPrimeCmd() *cobra.Command {
@@ -69,32 +73,8 @@ silently with status 0 — that makes the hook safe to install globally.`,
 				return err
 			}
 
-			// Fetch the project title for nicer prompt copy. Best-effort —
-			// if the API call fails (network blip, expired token), we fall
-			// back to "(unknown)" rather than aborting the prompt render.
-			// Cap the lookup at 10s so a wedged server can't hold the
-			// SessionStart hook hostage.
-			projectTitle := "(unknown)"
-			if rt, err := loadRuntime(cmd.Context()); err == nil {
-				cfg = rt.cfg // may carry a backfilled frontend_url
-				ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Second)
-				if p, err := rt.client.GetProject(ctx, cfg.ProjectID); err == nil {
-					projectTitle = p.Title
-				}
-				cancel()
-			}
-
-			data := primeContext{
-				Server:            cfg.Server,
-				ProjectID:         cfg.ProjectID,
-				ProjectTitle:      projectTitle,
-				ProjectIdentifier: cfg.ProjectIdentifier,
-				ViewID:            cfg.ViewID,
-				Buckets:           cfg.Buckets,
-				BotUsername:       cfg.Bot.Username,
-				TaskIDExample:     cfg.FormatTaskID(1),
-				TaskURLExample:    cfg.TaskURL(123),
-			}
+			data := buildPrimeContext(cmd.Context(), cfg,
+				trust.Default(interactive(auth.NewStdPrompter())), credentials.Default())
 
 			tpl, err := template.New("prime").Parse(promptTemplate)
 			if err != nil {
@@ -102,5 +82,36 @@ silently with status 0 — that makes the hook safe to install globally.`,
 			}
 			return tpl.Execute(cmd.OutOrStdout(), data)
 		},
+	}
+}
+
+func buildPrimeContext(ctx context.Context, cfg *config.Config, gate *trust.Gate, store credentials.Store) primeContext {
+	// Best-effort; the 10s cap keeps a wedged server from holding the SessionStart hook hostage.
+	projectTitle := "(unknown)"
+	var untrusted string
+	rt, err := newRuntime(ctx, cfg, gate, store)
+	switch {
+	case err == nil:
+		cfg = rt.cfg // may carry a backfilled frontend_url
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		if p, err := rt.client.GetProject(ctx, cfg.ProjectID); err == nil {
+			projectTitle = p.Title
+		}
+		cancel()
+	case errors.Is(err, trust.ErrUntrusted):
+		untrusted, _ = trust.Origin(cfg.Server)
+	}
+
+	return primeContext{
+		Server:            cfg.Server,
+		ProjectID:         cfg.ProjectID,
+		ProjectTitle:      projectTitle,
+		ProjectIdentifier: cfg.ProjectIdentifier,
+		ViewID:            cfg.ViewID,
+		Buckets:           cfg.Buckets,
+		BotUsername:       cfg.Bot.Username,
+		TaskIDExample:     cfg.FormatTaskID(1),
+		TaskURLExample:    cfg.TaskURL(123),
+		UntrustedServer:   untrusted,
 	}
 }
