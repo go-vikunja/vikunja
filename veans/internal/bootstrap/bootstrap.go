@@ -42,6 +42,7 @@ import (
 	"code.vikunja.io/veans/internal/output"
 	"code.vikunja.io/veans/internal/picker"
 	"code.vikunja.io/veans/internal/status"
+	"code.vikunja.io/veans/internal/trust"
 )
 
 // Options configures Init. All fields are optional unless noted; missing
@@ -93,6 +94,8 @@ type Options struct {
 
 	// RepoRoot, if empty, is detected via git rev-parse from cwd.
 	RepoRoot string
+
+	Trust *trust.Gate
 
 	// Prompter is the seam tests use to script prompt answers. Defaults
 	// to auth.NewStdPrompter() (reads stdin, writes prompts to stderr)
@@ -174,6 +177,13 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	// probes the plausible variants and returns the canonical base.
 	canonical, info, err := client.DiscoverServer(ctx, opts.Server)
 	if err != nil {
+		return nil, err
+	}
+	gate := opts.Trust
+	if gate == nil {
+		gate = trust.Default(nil)
+	}
+	if err := trustServer(gate, opts.Server, canonical); err != nil {
 		return nil, err
 	}
 	opts.Server = canonical
@@ -307,6 +317,16 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 		BotUser:      bot,
 		AgentChoices: choices,
 	}, nil
+}
+
+// Only an origin the user typed is trusted without asking.
+func trustServer(gate *trust.Gate, typed, canonical string) error {
+	typedScheme, _, explicit := strings.Cut(strings.TrimSpace(typed), "://")
+	canonicalScheme, _, _ := strings.Cut(canonical, "://")
+	if explicit && !strings.EqualFold(typedScheme, canonicalScheme) {
+		return gate.Check(canonical)
+	}
+	return gate.Record(canonical)
 }
 
 // confirmOverwriteExistingConfig refuses to silently clobber an existing

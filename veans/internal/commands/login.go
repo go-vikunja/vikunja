@@ -69,7 +69,7 @@ you want to rotate.`,
 			}
 
 			p := auth.NewStdPrompter()
-			return runLogin(cmd.Context(), cfg, trust.Default(interactive(p)), auth.LoginOptions{
+			return runLogin(cmd.Context(), cfg, defaultGate(p), auth.LoginOptions{
 				Token:       token,
 				UsePassword: usePassword,
 				Username:    username,

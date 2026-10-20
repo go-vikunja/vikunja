@@ -74,7 +74,7 @@ silently with status 0 — that makes the hook safe to install globally.`,
 			}
 
 			data := buildPrimeContext(cmd.Context(), cfg,
-				trust.Default(interactive(auth.NewStdPrompter())), credentials.Default())
+				defaultGate(auth.NewStdPrompter()), credentials.Default())
 
 			tpl, err := template.New("prime").Parse(promptTemplate)
 			if err != nil {
