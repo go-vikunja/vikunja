@@ -354,7 +354,7 @@ func TestMCP_Tools_LoopbackUsesTheAuthorisedToken(t *testing.T) {
 	defer s.Close()
 	u, err := user.GetUserByID(s, 1)
 	require.NoError(t, err)
-	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	jwt, err := auth.NewUserJWTAuthtoken(u, testSessionID(u))
 	require.NoError(t, err)
 	c.authorizations = []string{
 		"Bearer " + jwt,

@@ -65,6 +65,7 @@ func TestHandleFailedTOTPAuthLocksAccount(t *testing.T) {
 
 	// keyvalue store is process-global; reset counter between runs.
 	_ = keyvalue.Del(user.GetFailedTOTPAttemptsKey())
+	gen := sessionAuthGeneration(t, user.ID)
 
 	for i := 0; i < 10; i++ {
 		s := db.NewSession()
@@ -79,6 +80,7 @@ func TestHandleFailedTOTPAuthLocksAccount(t *testing.T) {
 	require.Error(t, err)
 	assert.True(t, IsErrAccountLocked(err), "expected ErrAccountLocked, got: %v", err)
 	assert.Equal(t, StatusAccountLocked, fresh.Status)
+	assert.Equal(t, gen+2, sessionAuthGeneration(t, user.ID), "must invalidate before and after commit")
 }
 
 func TestHandleFailedTOTPAuthLockoutCanBeUnlockedByPasswordReset(t *testing.T) {

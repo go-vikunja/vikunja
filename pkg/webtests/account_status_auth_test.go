@@ -17,12 +17,14 @@
 package webtests
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -35,6 +37,7 @@ func setUserStatus(t *testing.T, id int64, status user.Status) {
 	defer s.Close()
 	require.NoError(t, user.SetUserStatus(s, &user.User{ID: id}, status))
 	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
 }
 
 // Admins freeze accounts by requiring email confirmation.

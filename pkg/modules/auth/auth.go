@@ -31,6 +31,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -287,14 +288,25 @@ func ParseUserToken(tokenString string) (*UserTokenClaims, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
 	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
+	if !token.Valid || !IsUserToken(token) {
 		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
+	return UserTokenClaimsFromJWT(token)
+}
+
+func IsUserToken(token *jwt.Token) bool {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return false
+	}
 	typ, ok := claims["type"].(float64)
-	if !ok || int(typ) != AuthTypeUser {
+	return ok && int(typ) == AuthTypeUser
+}
+
+func UserTokenClaimsFromJWT(token *jwt.Token) (*UserTokenClaims, error) {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
 		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
@@ -316,8 +328,29 @@ func ParseUserToken(tokenString string) (*UserTokenClaims, error) {
 	}, nil
 }
 
+// Successes are cached for user.SessionAuthCacheTTL; session deletions and status changes bust the cache.
 func CheckUserTokenSession(claims *UserTokenClaims) error {
-	s := db.NewSession()
+	key, err := user.SessionAuthCacheKey(claims.UserID, claims.SessionID)
+	if err != nil {
+		log.Errorf("Could not read session check cache for user %d: %s", claims.UserID, err)
+		return checkUserTokenSessionInDB(claims)
+	}
+	if _, cached, err := keyvalue.Get(key); err == nil && cached {
+		return nil
+	}
+
+	if err := checkUserTokenSessionInDB(claims); err != nil {
+		return err
+	}
+
+	if err := keyvalue.PutWithTTL(key, true, user.SessionAuthCacheTTL); err != nil {
+		log.Errorf("Could not cache session check for user %d: %s", claims.UserID, err)
+	}
+	return nil
+}
+
+func checkUserTokenSessionInDB(claims *UserTokenClaims) error {
+	s := db.NewReadSession()
 	defer s.Close()
 
 	session, err := models.GetSessionByID(s, claims.SessionID)
