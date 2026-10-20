@@ -207,3 +207,45 @@ func TestDeleteUser_RemovesReactions(t *testing.T) {
 
 	db.AssertMissing(t, "reactions", map[string]interface{}{"user_id": 1})
 }
+
+// GHSA-hq66-9qg8-jwqg
+func TestDeleteUser_DoesNotPromoteSharesOnProjectsNotOwned(t *testing.T) {
+	t.Run("user share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		project := &Project{Title: "owned by user1", OwnerID: 1}
+		insertTestProject(t, s, project)
+		_, err := s.Insert(&ProjectUser{ProjectID: project.ID, UserID: 4, Permission: PermissionRead})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "projects", map[string]interface{}{"id": project.ID, "owner_id": 1}, false)
+		db.AssertMissing(t, "users_projects", map[string]interface{}{"user_id": 4})
+	})
+	t.Run("team share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		project := &Project{Title: "owned by user1", OwnerID: 1}
+		insertTestProject(t, s, project)
+		_, err := s.Insert(&TeamProject{ProjectID: project.ID, TeamID: 9, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&TeamMember{TeamID: 9, UserID: 4})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "projects", map[string]interface{}{"id": project.ID, "owner_id": 1}, false)
+		db.AssertExists(t, "team_projects", map[string]interface{}{"project_id": project.ID, "team_id": 9, "permission": PermissionRead}, false)
+	})
+}
