@@ -116,10 +116,20 @@ Resolved in order on every command:
 
 1. **OS keychain** (macOS Keychain, Windows Credential Manager,
    libsecret/gnome-keyring on Linux), via `github.com/zalando/go-keyring`.
-2. **`VEANS_TOKEN`** env var (read-only). Optionally pin to a server with
-   `VEANS_SERVER`. Intended for CI / containers.
+2. **`VEANS_TOKEN`** env var (read-only). Intended for CI / containers.
 3. **`~/.config/veans/credentials.yml`** (mode 0600) — automatic fallback
-   when the keychain is unavailable. Honors `XDG_CONFIG_HOME`.
+   when the keychain is unavailable.
+
+## Trusted servers
+
+`.veans.yml` is checked into the repo, so veans only talks to its `server`
+once you trust it. `veans init` trusts the server you typed. Any other
+command run in a terminal shows the server's origin and asks once; the
+answer is stored in `~/.config/veans/trusted.json`.
+
+Without a terminal (agent hooks, CI) veans never asks: it refuses to send
+credentials, and `veans prime` renders without project data. In CI, set
+`VEANS_SERVER` to the server URL to declare it trusted.
 
 ## Mage targets
 
