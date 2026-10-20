@@ -118,6 +118,24 @@ func (err *ErrImportRowLimitExceeded) HTTPError() web.HTTPError {
 	}
 }
 
+type ErrImportItemLimitExceeded struct {
+	MaxItems int64
+}
+
+func (err *ErrImportItemLimitExceeded) Error() string {
+	return fmt.Sprintf("The import contains more than %d items", err.MaxItems)
+}
+
+const ErrCodeImportItemLimitExceeded = 14018
+
+func (err *ErrImportItemLimitExceeded) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeImportItemLimitExceeded,
+		Message:  "The import contains more items than the configured maximum.",
+	}
+}
+
 // ErrNotAZipFile represents a "ErrNotAZipFile" kind of error.
 type ErrNotAZipFile struct{}
 

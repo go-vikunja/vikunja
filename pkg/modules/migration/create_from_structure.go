@@ -61,6 +61,10 @@ func InsertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBucket
 }
 
 func insertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBuckets, u *user.User, provider FileProvider) (err error) {
+	if err := CheckItemLimit(str); err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 

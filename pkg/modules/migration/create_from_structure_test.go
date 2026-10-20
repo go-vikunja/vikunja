@@ -28,6 +28,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
@@ -764,4 +765,26 @@ func TestInsertFromStructureFileProvider(t *testing.T) {
 		_, err = files.FileStat(replacement)
 		require.NoError(t, err, "replacement blob must remain after cleanup")
 	})
+}
+
+func TestInsertFromStructureItemLimit(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	config.MigrationMaxItems.Set(3)
+	t.Cleanup(func() { config.MigrationMaxItems.Set(100000) })
+
+	str := []*models.ProjectWithTasksAndBuckets{{
+		Project: models.Project{Title: "item limit project"},
+		ChildProjects: []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{Title: "item limit child"},
+			Tasks: []*models.TaskWithComments{
+				{Task: models.Task{Title: "one"}},
+				{Task: models.Task{Title: "two"}},
+			},
+		}},
+	}}
+
+	err := InsertFromStructure(str, &user.User{ID: 1})
+	var limitErr *ErrImportItemLimitExceeded
+	require.ErrorAs(t, err, &limitErr)
+	db.AssertMissing(t, "projects", map[string]interface{}{"title": "item limit project"})
 }

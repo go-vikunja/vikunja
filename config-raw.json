@@ -568,6 +568,11 @@
                     "comment": "The maximum number of data rows parsed from one CSV import, including generic CSV and TickTick backup files."
                 },
                 {
+                    "key": "maxitems",
+                    "default_value": "100000",
+                    "comment": "The maximum number of projects, buckets, tasks, comments and attachments one import may contain, across all migrators."
+                },
+                {
                     "key": "vikunjafile",
                     "children": [
                         {

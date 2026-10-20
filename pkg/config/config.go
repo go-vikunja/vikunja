@@ -189,6 +189,7 @@ const (
 	MigrationMicrosoftTodoRedirectURL  Key = `migration.microsofttodo.redirecturl`
 	MigrationClaimTimeout              Key = `migration.claimtimeout`
 	MigrationMaxCSVRows                Key = `migration.maxcsvrows`
+	MigrationMaxItems                  Key = `migration.maxitems`
 	MigrationVikunjaFileMaxSize        Key = `migration.vikunjafile.maxsize`
 	MigrationVikunjaFileMaxFiles       Key = `migration.vikunjafile.maxfiles`
 	MigrationVikunjaFileMaxUserStorage Key = `migration.vikunjafile.maxuserstorage`
@@ -502,6 +503,7 @@ func initDefaultConfig() {
 	MigrationMicrosoftTodoEnable.setDefault(false)
 	MigrationClaimTimeout.setDefault("5m")
 	MigrationMaxCSVRows.setDefault(100000)
+	MigrationMaxItems.setDefault(100000)
 	MigrationVikunjaFileMaxSize.setDefault("256MB")
 	MigrationVikunjaFileMaxFiles.setDefault(10000)
 	MigrationVikunjaFileMaxUserStorage.setDefault("1GB")
