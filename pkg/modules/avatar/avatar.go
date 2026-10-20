@@ -47,9 +47,9 @@ var ErrNotAnImage = errors.New("uploaded file is no image")
 // Provider defines the avatar provider interface
 type Provider interface {
 	// GetAvatar is the method used to get an actual avatar for a user
-	GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error)
+	GetAvatar(ctx context.Context, user *user.User, size int64) (avatar []byte, mimeType string, err error)
 	// AsDataURI returns a base64-encoded string representation of the avatar suitable for inline use
-	AsDataURI(user *user.User, size int64) (inlineData string, err error)
+	AsDataURI(ctx context.Context, user *user.User, size int64) (inlineData string, err error)
 	// FlushCache removes cached avatar data for the user
 	FlushCache(u *user.User) error
 }
@@ -79,7 +79,7 @@ func FlushAllCaches(u *user.User) {
 // than an error, since avatars are loaded via <img> tags), picks the right
 // provider (empty for unknown users, botmarble for bots, otherwise the user's
 // configured provider) and normalizes the size.
-func GetAvatarForUsername(username string, size int64) (data []byte, mime string, err error) {
+func GetAvatarForUsername(ctx context.Context, username string, size int64) (data []byte, mime string, err error) {
 	u, found, err := avatarUser(username)
 	if err != nil {
 		return nil, "", err
@@ -94,9 +94,13 @@ func GetAvatarForUsername(username string, size int64) (data []byte, mime string
 		provider = &botmarble.Provider{}
 	}
 
-	data, mime, err = provider.GetAvatar(u, normalizeAvatarSize(size))
+	data, mime, err = provider.GetAvatar(ctx, u, normalizeAvatarSize(size))
 	if err != nil {
-		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
+		if imageutils.IsErrDecodeBusy(err) {
+			log.Warningf("Error getting avatar for user %d: %v", u.ID, err)
+		} else {
+			log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
+		}
 		return nil, "", err
 	}
 

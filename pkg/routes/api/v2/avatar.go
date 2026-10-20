@@ -76,7 +76,7 @@ func avatarGet(ctx context.Context, in *avatarInput) (*avatarResponse, error) {
 
 	// Avatar resolution (user lookup, provider selection, size clamping) is
 	// shared with the v1 handler; only the transport differs.
-	a, mimeType, err := avatar.GetAvatarForUsername(in.Username, in.Size)
+	a, mimeType, err := avatar.GetAvatarForUsername(ctx, in.Username, in.Size)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

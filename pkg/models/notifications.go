@@ -17,6 +17,7 @@
 package models
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strconv"
@@ -46,7 +47,7 @@ func init() {
 // getDoerAvatarDataURI returns the avatar data URI for a user, for use in email headers.
 func getDoerAvatarDataURI(doer *user.User) string {
 	provider := avatar.GetProvider(doer)
-	dataURI, err := provider.AsDataURI(doer, 20)
+	dataURI, err := provider.AsDataURI(context.Background(), doer, 20)
 	if err != nil {
 		return ""
 	}

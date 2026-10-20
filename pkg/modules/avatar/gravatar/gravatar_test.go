@@ -64,7 +64,7 @@ func TestGetAvatarSSRF(t *testing.T) {
 		u, cleanup := setup("false")
 		defer cleanup()
 
-		_, _, err := (&Provider{}).GetAvatar(u, 64)
+		_, _, err := (&Provider{}).GetAvatar(t.Context(), u, 64)
 		require.Error(t, err)
 	})
 
@@ -72,7 +72,7 @@ func TestGetAvatarSSRF(t *testing.T) {
 		u, cleanup := setup("true")
 		defer cleanup()
 
-		content, mimeType, err := (&Provider{}).GetAvatar(u, 64)
+		content, mimeType, err := (&Provider{}).GetAvatar(t.Context(), u, 64)
 		require.NoError(t, err)
 		assert.Equal(t, "not-really-an-image", string(content))
 		assert.Equal(t, "image/png", mimeType)

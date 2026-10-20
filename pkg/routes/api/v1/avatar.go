@@ -57,7 +57,7 @@ func GetAvatar(c *echo.Context) error {
 		}
 	}
 
-	a, mimeType, err := avatar.GetAvatarForUsername(username, sizeInt)
+	a, mimeType, err := avatar.GetAvatarForUsername(c.Request().Context(), username, sizeInt)
 	if err != nil {
 		return err
 	}
