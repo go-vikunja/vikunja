@@ -17,10 +17,12 @@
 package keyvalue
 
 import (
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
 	"code.vikunja.io/api/pkg/modules/keyvalue/redis"
 )
@@ -77,6 +79,24 @@ func Get(key string) (value interface{}, exists bool, err error) {
 
 func GetWithValue(key string, value interface{}) (exists bool, err error) {
 	return store.GetWithValue(key, value)
+}
+
+// Redis returns IncrBy counters as decimal strings, which GetWithValue would try to gob-decode.
+func GetInt64(key string) (value int64, exists bool, err error) {
+	raw, exists, err := store.Get(key)
+	if err != nil || !exists {
+		return 0, exists, err
+	}
+	switch v := raw.(type) {
+	case int64:
+		return v, true, nil
+	case string:
+		value, err = strconv.ParseInt(v, 10, 64)
+		if err == nil {
+			return value, true, nil
+		}
+	}
+	return 0, true, &e.ErrValueHasWrongType{Key: key, ExpectedValue: "int64"}
 }
 
 // Del removes a save value from a storage backend
