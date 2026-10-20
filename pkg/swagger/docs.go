@@ -8221,7 +8221,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Disables any totp settings for the current user.",
+                "description": "Disables any totp settings for the current user. Requires the current password and a current totp passcode.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8234,7 +8234,7 @@ const docTemplate = `{
                 "summary": "Disable totp settings",
                 "parameters": [
                     {
-                        "description": "The current user's password (only password is enough).",
+                        "description": "The current user's password and a current totp passcode (totp_passcode).",
                         "name": "totp",
                         "in": "body",
                         "required": true,
@@ -8256,8 +8256,26 @@ const docTemplate = `{
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Wrong password.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "412": {
+                        "description": "Invalid totp passcode.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many failed attempts.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -8278,7 +8296,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Enables a previously enrolled totp setting by providing a totp passcode.",
+                "description": "Enables a previously enrolled totp setting by providing a totp passcode and the current password.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8291,12 +8309,12 @@ const docTemplate = `{
                 "summary": "Enable a previously enrolled totp setting.",
                 "parameters": [
                     {
-                        "description": "The totp passcode.",
+                        "description": "The totp passcode and the current password.",
                         "name": "totp",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.TOTPPasscode"
+                            "$ref": "#/definitions/v1.UserTOTPEnableRequest"
                         }
                     }
                 ],
@@ -8313,6 +8331,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Wrong password.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "User does not exist.",
                         "schema": {
@@ -8321,6 +8345,12 @@ const docTemplate = `{
                     },
                     "412": {
                         "description": "TOTP is not enrolled.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many failed attempts.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -8341,7 +8371,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Creates an initial setup for the user in the db. After this step, the user needs to verify they have a working totp setup with the \"enable totp\" endpoint.",
+                "description": "Creates an initial setup for the user in the db. After this step, the user needs to verify they have a working totp setup with the \"enable totp\" endpoint. Requires the current password.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8352,6 +8382,17 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "Enroll a user into totp",
+                "parameters": [
+                    {
+                        "description": "The current user's password.",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserPasswordConfirmation"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -8365,8 +8406,20 @@ const docTemplate = `{
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Wrong password.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many failed attempts.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -9014,7 +9067,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "The size of the avatar you want to get. If bigger than the max configured size this will be adjusted to the maximum size.",
+                        "description": "The size of the avatar you want to get. Rounded up to 16, 32, 48, 64, 128, 256, 512 or 1024 and capped at the max configured size.",
                         "name": "size",
                         "in": "query"
                     }
@@ -9322,6 +9375,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "state": {
                     "type": "string"
                 }
             }
@@ -11230,6 +11286,9 @@ const docTemplate = `{
             "properties": {
                 "code": {
                     "type": "string"
+                },
+                "state": {
+                    "type": "string"
                 }
             }
         },
@@ -11237,6 +11296,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "state": {
                     "type": "string"
                 }
             }
@@ -11335,14 +11397,6 @@ const docTemplate = `{
                 },
                 "url": {
                     "description": "The totp url used to be able to enroll the user later",
-                    "type": "string"
-                }
-            }
-        },
-        "user.TOTPPasscode": {
-            "type": "object",
-            "properties": {
-                "passcode": {
                     "type": "string"
                 }
             }
@@ -11478,6 +11532,19 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 3
+                }
+            }
+        },
+        "v1.UserTOTPEnableRequest": {
+            "type": "object",
+            "properties": {
+                "passcode": {
+                    "description": "A passcode generated from the enrolled secret.",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "The current user's password.",
+                    "type": "string"
                 }
             }
         },

@@ -192,6 +192,8 @@ definitions:
     properties:
       code:
         type: string
+      state:
+        type: string
     type: object
   migration.ErrorKind:
     enum:
@@ -1655,10 +1657,14 @@ definitions:
     properties:
       code:
         type: string
+      state:
+        type: string
     type: object
   trello.Migration:
     properties:
       code:
+        type: string
+      state:
         type: string
     type: object
   user.EmailConfirm:
@@ -1731,11 +1737,6 @@ definitions:
         type: string
       url:
         description: The totp url used to be able to enroll the user later
-        type: string
-    type: object
-  user.TOTPPasscode:
-    properties:
-      passcode:
         type: string
     type: object
   user.Token:
@@ -1843,6 +1844,15 @@ definitions:
           an url or whitespaces.
         maxLength: 250
         minLength: 3
+        type: string
+    type: object
+  v1.UserTOTPEnableRequest:
+    properties:
+      passcode:
+        description: A passcode generated from the enrolled secret.
+        type: string
+      password:
+        description: The current user's password.
         type: string
     type: object
   v1.UserWithSettings:
@@ -2063,8 +2073,8 @@ paths:
         name: username
         required: true
         type: string
-      - description: The size of the avatar you want to get. If bigger than the max
-          configured size this will be adjusted to the maximum size.
+      - description: The size of the avatar you want to get. Rounded up to 16, 32,
+          48, 64, 128, 256, 512 or 1024 and capped at the max configured size.
         in: query
         name: size
         type: integer
@@ -7538,9 +7548,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Disables any totp settings for the current user.
+      description: Disables any totp settings for the current user. Requires the current
+        password and a current totp passcode.
       parameters:
-      - description: The current user's password (only password is enough).
+      - description: The current user's password and a current totp passcode (totp_passcode).
         in: body
         name: totp
         required: true
@@ -7557,8 +7568,20 @@ paths:
           description: Something's invalid.
           schema:
             $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Wrong password.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
         "404":
           description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "412":
+          description: Invalid totp passcode.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "429":
+          description: Too many failed attempts.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -7575,14 +7598,14 @@ paths:
       consumes:
       - application/json
       description: Enables a previously enrolled totp setting by providing a totp
-        passcode.
+        passcode and the current password.
       parameters:
-      - description: The totp passcode.
+      - description: The totp passcode and the current password.
         in: body
         name: totp
         required: true
         schema:
-          $ref: '#/definitions/user.TOTPPasscode'
+          $ref: '#/definitions/v1.UserTOTPEnableRequest'
       produces:
       - application/json
       responses:
@@ -7594,12 +7617,20 @@ paths:
           description: Something's invalid.
           schema:
             $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Wrong password.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
         "404":
           description: User does not exist.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "412":
           description: TOTP is not enrolled.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "429":
+          description: Too many failed attempts.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -7617,7 +7648,14 @@ paths:
       - application/json
       description: Creates an initial setup for the user in the db. After this step,
         the user needs to verify they have a working totp setup with the "enable totp"
-        endpoint.
+        endpoint. Requires the current password.
+      parameters:
+      - description: The current user's password.
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
       produces:
       - application/json
       responses:
@@ -7629,8 +7667,16 @@ paths:
           description: Something's invalid.
           schema:
             $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Wrong password.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
         "404":
           description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "429":
+          description: Too many failed attempts.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
