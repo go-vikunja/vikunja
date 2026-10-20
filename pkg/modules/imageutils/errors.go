@@ -55,7 +55,7 @@ func (err ErrDecodeBusy) Error() string {
 	return "Timed out waiting for capacity to decode an image"
 }
 
-const ErrCodeDecodeBusy = 4040
+const ErrCodeDecodeBusy = 4037
 
 func (err ErrDecodeBusy) HTTPError() web.HTTPError {
 	return web.HTTPError{

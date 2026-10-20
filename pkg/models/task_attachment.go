@@ -500,8 +500,6 @@ func generatePreviews(ctx context.Context, open imageutils.Opener) (map[PreviewS
 	switch {
 	case err == nil:
 		return previews, nil
-	case imageutils.IsErrDecodeBusy(err):
-		return nil, ErrTaskAttachmentPreviewBusy{}
 	case errors.Is(err, imageutils.ErrUndecodable), imageutils.IsErrImageTooLarge(err):
 		return nil, ErrTaskAttachmentNotPreviewable{Err: err}
 	default:

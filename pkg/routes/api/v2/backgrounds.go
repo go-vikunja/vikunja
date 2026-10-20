@@ -82,7 +82,7 @@ func RegisterBackgroundRoutes(api huma.API) {
 		Register(api, withUploadLimits(huma.Operation{
 			OperationID: "projects-background-upload",
 			Summary:     "Upload a project background",
-			Description: "Uploads an image via multipart/form-data under the \"background\" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project. A file that is not a decodable image of a supported format fails with 400, an image over the pixel limit fails with 400 and code 4032, and the request fails with 503 and code 4040 when the server is too busy decoding other images.",
+			Description: "Uploads an image via multipart/form-data under the \"background\" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project. A file that is not a decodable image of a supported format fails with 400, an image over the pixel limit fails with 400 and code 4032, and the request fails with 503 and code 4037 when the server is too busy decoding other images.",
 			Method:      http.MethodPut,
 			Path:        "/projects/{project}/backgrounds/upload",
 			// Return the updated project with 200, the natural code for an idempotent PUT.

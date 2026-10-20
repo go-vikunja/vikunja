@@ -398,10 +398,10 @@ func TestTaskAttachment_Preview(t *testing.T) {
 		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
 
 		preview, err := ta.GetPreview(t.Context(), PreviewMedium)
-		var busy ErrTaskAttachmentPreviewBusy
+		var busy imageutils.ErrDecodeBusy
 		require.ErrorAs(t, err, &busy)
 		assert.Equal(t, http.StatusServiceUnavailable, busy.HTTPError().HTTPCode)
-		assert.Equal(t, ErrCodeTaskAttachmentPreviewBusy, busy.HTTPError().Code)
+		assert.Equal(t, imageutils.ErrCodeDecodeBusy, busy.HTTPError().Code)
 		assert.Nil(t, preview)
 		assert.Nil(t, ta.File.File, "the original must not be opened")
 	})
