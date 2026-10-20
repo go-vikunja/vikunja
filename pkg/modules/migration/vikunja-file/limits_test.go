@@ -222,6 +222,25 @@ func TestVikunjaFileLimits(t *testing.T) {
 		assertTooLarge(t, err)
 	})
 
+	t.Run("entries outside files/ count against the entry cap", func(t *testing.T) {
+		setLimits(t, "256MB", "1GB", 2)
+		entries := []struct {
+			name    string
+			content []byte
+		}{}
+		for i := range 4 {
+			entries = append(entries, struct {
+				name    string
+				content []byte
+			}{name: fmt.Sprintf("e%d", i)})
+		}
+		export := buildExportWithFiles(t, testLimitsDataJSON, entries)
+
+		err := (&FileMigrator{}).ValidateFile(bytes.NewReader(export), int64(len(export)))
+		assertTooLarge(t, err)
+		assert.Contains(t, err.Error(), "many")
+	})
+
 	t.Run("duplicate file ids are rejected", func(t *testing.T) {
 		setLimits(t, "256MB", "1GB", 10000)
 		export := buildExportWithFiles(t, testLimitsDataJSON, []struct {
