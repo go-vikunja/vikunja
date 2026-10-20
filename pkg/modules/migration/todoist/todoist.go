@@ -18,7 +18,6 @@ package todoist
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -38,6 +37,12 @@ import (
 )
 
 const paginationLimit = 200
+
+// vars, not consts, so tests can point them at a local server
+var (
+	oauthTokenURL = "https://todoist.com/oauth/access_token" //nolint:gosec // an endpoint, not a credential
+	apiPrefix     = "https://api.todoist.com/api/v1/"
+)
 
 // Migration is the todoist migration struct
 type Migration struct {
@@ -171,6 +176,10 @@ type sync struct {
 	ProjectNotes []*projectNote `json:"project_notes"`
 	Reminders    []*reminder    `json:"reminders"`
 	Sections     []*section     `json:"sections"`
+}
+
+func (s *sync) itemCount() int64 {
+	return int64(len(s.Projects) + len(s.Items) + len(s.Labels) + len(s.Notes) + len(s.ProjectNotes) + len(s.Reminders) + len(s.Sections))
 }
 
 var todoistColors = map[string]string{}
@@ -584,7 +593,7 @@ func getAccessTokenFromAuthToken(authToken string) (accessToken string, err erro
 		"code":          []string{authToken},
 		"redirect_uri":  []string{config.MigrationTodoistRedirectURL.GetString()},
 	}
-	resp, err := migration.DoPost("https://todoist.com/oauth/access_token", form)
+	resp, err := migration.DoPost(oauthTokenURL, form)
 	if err != nil {
 		return
 	}
@@ -597,7 +606,7 @@ func getAccessTokenFromAuthToken(authToken string) (accessToken string, err erro
 	}
 
 	token := &apiTokenResponse{}
-	err = json.NewDecoder(resp.Body).Decode(token)
+	err = migration.DecodeJSONLimited(resp.Body, token, migration.MaxResponseBytes)
 	return token.AccessToken, err
 }
 
@@ -639,15 +648,20 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		"Authorization": "Bearer " + token,
 	}
 
-	resp, err := migration.DoPostWithHeaders("https://api.todoist.com/api/v1/sync", form, bearerHeader)
+	resp, err := migration.DoPostWithHeaders(apiPrefix+"sync", form, bearerHeader)
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
 
 	syncResponse := &sync{}
-	err = json.NewDecoder(resp.Body).Decode(syncResponse)
+	err = migration.DecodeJSONLimited(resp.Body, syncResponse, migration.MaxResponseBytes)
 	if err != nil {
+		return
+	}
+
+	itemCount := syncResponse.itemCount()
+	if err = migration.CheckItemCount(itemCount); err != nil {
 		return
 	}
 
@@ -659,7 +673,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	iteration := 0
 
 	for {
-		completedURL := "https://api.todoist.com/api/v1/tasks/completed?limit=" + strconv.Itoa(paginationLimit)
+		completedURL := apiPrefix + "tasks/completed?limit=" + strconv.Itoa(paginationLimit)
 		if cursor != "" {
 			completedURL += "&cursor=" + url.QueryEscape(cursor)
 		}
@@ -670,7 +684,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		}
 
 		completedSyncResponse := &paginatedCompletedTasks{}
-		err = json.NewDecoder(resp.Body).Decode(completedSyncResponse)
+		err = migration.DecodeJSONLimited(resp.Body, completedSyncResponse, migration.MaxResponseBytes)
 		resp.Body.Close()
 		if err != nil {
 			return
@@ -694,9 +708,13 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 				continue
 			}
 			doneItems[i.TaskID] = i
+			itemCount++
+			if err = migration.CheckItemCount(itemCount); err != nil {
+				return
+			}
 
 			// need to get done item data using v1 API
-			resp, err = migration.DoGetWithHeaders("https://api.todoist.com/api/v1/tasks/"+i.TaskID, bearerHeader)
+			resp, err = migration.DoGetWithHeaders(apiPrefix+"tasks/"+i.TaskID, bearerHeader)
 			if err != nil {
 				return
 			}
@@ -713,7 +731,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 			// The v1 API returns the task directly, not wrapped
 			doneI := &item{}
-			err = json.NewDecoder(resp.Body).Decode(doneI)
+			err = migration.DecodeJSONLimited(resp.Body, doneI, migration.MaxResponseBytes)
 			resp.Body.Close()
 			if err != nil {
 				return
@@ -740,7 +758,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	iteration = 0
 
 	for {
-		archivedURL := "https://api.todoist.com/api/v1/projects/archived"
+		archivedURL := apiPrefix + "projects/archived"
 		if cursor != "" {
 			archivedURL += "?cursor=" + url.QueryEscape(cursor)
 		}
@@ -751,9 +769,14 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		}
 
 		archivedResponse := &paginatedProjects{}
-		err = json.NewDecoder(resp.Body).Decode(archivedResponse)
+		err = migration.DecodeJSONLimited(resp.Body, archivedResponse, migration.MaxResponseBytes)
 		resp.Body.Close()
 		if err != nil {
+			return
+		}
+
+		itemCount += int64(len(archivedResponse.Results))
+		if err = migration.CheckItemCount(itemCount); err != nil {
 			return
 		}
 
@@ -774,17 +797,22 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 	// Project data is not included in the regular sync for archived projects, so we need to get all of those by hand
 	for _, p := range archivedProjects {
-		resp, err = migration.DoGetWithHeaders("https://api.todoist.com/api/v1/projects/"+p.ID+"/full", bearerHeader)
+		resp, err = migration.DoGetWithHeaders(apiPrefix+"projects/"+p.ID+"/full", bearerHeader)
 		if err != nil {
 			return
 		}
 
 		archivedProjectData := &sync{}
-		err = json.NewDecoder(resp.Body).Decode(&archivedProjectData)
+		err = migration.DecodeJSONLimited(resp.Body, archivedProjectData, migration.MaxResponseBytes)
+		resp.Body.Close()
 		if err != nil {
 			return
 		}
-		resp.Body.Close()
+
+		itemCount += archivedProjectData.itemCount()
+		if err = migration.CheckItemCount(itemCount); err != nil {
+			return
+		}
 
 		syncResponse.Items = append(syncResponse.Items, archivedProjectData.Items...)
 		syncResponse.Labels = append(syncResponse.Labels, archivedProjectData.Labels...)

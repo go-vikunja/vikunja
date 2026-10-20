@@ -19,9 +19,11 @@ package microsofttodo
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 
@@ -217,4 +219,43 @@ func TestMakeAuthenticatedGetRequestUpstreamError(t *testing.T) {
 	require.ErrorAs(t, err, &upstreamErr)
 	assert.Equal(t, http.StatusNotFound, upstreamErr.StatusCode)
 	assert.Contains(t, upstreamErr.Body, "MailboxNotEnabledForRESTAPI")
+}
+
+func TestMakeAuthenticatedGetRequestTooLarge(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"value":[],"padding":"` + strings.Repeat("x", 2048) + `"}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	prevPrefix, prevMax := apiPrefix, migration.MaxResponseBytes
+	apiPrefix = srv.URL + "/"
+	migration.MaxResponseBytes = 1024
+	t.Cleanup(func() { apiPrefix, migration.MaxResponseBytes = prevPrefix, prevMax })
+
+	err := makeAuthenticatedGetRequest("token", "lists/delta", &projectsResponse{})
+	require.ErrorIs(t, err, migration.ErrResponseTooLarge)
+}
+
+func TestGetMicrosoftTodoDataItemLimit(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/lists/delta" {
+			_, _ = w.Write([]byte(`{"value":[{"id":"l1","displayName":"list"}]}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"value":[{"id":"t","title":"task"}],"@odata.nextLink":"` + srv.URL + `/lists/l1/tasks"}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	prevPrefix := apiPrefix
+	apiPrefix = srv.URL + "/"
+	config.MigrationMaxItems.Set(5)
+	t.Cleanup(func() {
+		apiPrefix = prevPrefix
+		config.MigrationMaxItems.Set(100000)
+	})
+
+	_, err := getMicrosoftTodoData("token")
+	var limitErr *migration.ErrImportItemLimitExceeded
+	require.ErrorAs(t, err, &limitErr)
 }
