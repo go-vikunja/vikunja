@@ -19,6 +19,7 @@ package commands
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"text/template"
@@ -76,7 +77,7 @@ silently with status 0 — that makes the hook safe to install globally.`,
 			data := buildPrimeContext(cmd.Context(), cfg,
 				defaultGate(auth.NewStdPrompter()), credentials.Default())
 
-			tpl, err := template.New("prime").Parse(promptTemplate)
+			tpl, err := parsePromptTemplate()
 			if err != nil {
 				return fmt.Errorf("parse prompt template: %w", err)
 			}
@@ -114,4 +115,14 @@ func buildPrimeContext(ctx context.Context, cfg *config.Config, gate *trust.Gate
 		TaskURLExample:    cfg.TaskURL(123),
 		UntrustedServer:   untrusted,
 	}
+}
+
+// json keeps remote values on one line with <> escaped, so they can't close the code fence or authority tag.
+func parsePromptTemplate() (*template.Template, error) {
+	return template.New("prime").Funcs(template.FuncMap{
+		"json": func(v any) (string, error) {
+			b, err := json.Marshal(v)
+			return string(b), err
+		},
+	}).Parse(promptTemplate)
 }
