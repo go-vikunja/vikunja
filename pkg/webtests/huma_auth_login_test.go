@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/routes"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
@@ -294,4 +295,74 @@ func TestHumaLoginLdapEmailUnconfirmedAccount(t *testing.T) {
 	assert.Equal(t, http.StatusPreconditionFailed, rec.Code, rec.Body.String())
 	assert.Equal(t, user.ErrCodeEmailNotConfirmed, problemCode(t, rec))
 	assert.Nil(t, refreshCookie(rec))
+}
+
+func TestAuthenticateUserCredentialsLdapAvatarSync(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+	if !config.AuthLdapEnabled.GetBool() {
+		t.Skip("Skipping LDAP tests because ldap is not configured")
+	}
+
+	orig := config.AuthLdapAvatarSyncAttribute.GetString()
+	t.Cleanup(func() { config.AuthLdapAvatarSyncAttribute.Set(orig) })
+
+	login := func(password string) (*user.User, error) {
+		return shared.AuthenticateUserCredentials(t.Context(), &user.Login{Username: "professor", Password: password})
+	}
+	storedUser := func() *user.User {
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByUsername(s, "professor")
+		require.NoError(t, err)
+		return u
+	}
+
+	config.AuthLdapAvatarSyncAttribute.Set("")
+	_, err = login("professor")
+	require.NoError(t, err)
+	u := storedUser()
+	require.NotEqual(t, "ldap", u.AvatarProvider)
+	require.Zero(t, u.AvatarFileID)
+
+	config.AuthLdapAvatarSyncAttribute.Set("jpegPhoto")
+
+	t.Run("wrong password does not sync", func(t *testing.T) {
+		_, err := login("not-the-password")
+		require.Error(t, err)
+		after := storedUser()
+		assert.NotEqual(t, "ldap", after.AvatarProvider)
+		assert.Zero(t, after.AvatarFileID)
+	})
+
+	t.Run("missing totp does not sync", func(t *testing.T) {
+		s := db.NewSession()
+		_, err := s.Insert(&user.TOTP{UserID: u.ID, Secret: "JBSWY3DPEHPK3PXP", Enabled: true})
+		if err == nil {
+			err = s.Commit()
+		}
+		s.Close()
+		require.NoError(t, err)
+
+		_, err = login("professor")
+		require.Error(t, err)
+		assert.True(t, user.IsErrInvalidTOTPPasscode(err))
+		after := storedUser()
+		assert.NotEqual(t, "ldap", after.AvatarProvider)
+		assert.Zero(t, after.AvatarFileID)
+
+		s = db.NewSession()
+		defer s.Close()
+		_, err = s.Where("user_id = ?", u.ID).Delete(&user.TOTP{})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+	})
+
+	t.Run("successful login syncs after commit", func(t *testing.T) {
+		_, err := login("professor")
+		require.NoError(t, err)
+		after := storedUser()
+		assert.Equal(t, "ldap", after.AvatarProvider)
+		assert.NotZero(t, after.AvatarFileID)
+	})
 }

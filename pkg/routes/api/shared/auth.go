@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
@@ -103,7 +104,7 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 	// creation); a no-op once DispatchPending has run.
 	defer events.CleanupPending(s)
 
-	u, err := resolveLoginUser(ctx, s, login)
+	u, ldapAvatar, err := resolveLoginUser(ctx, s, login)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err
@@ -132,6 +133,12 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 
 	events.DispatchPending(ctx, s)
 
+	if len(ldapAvatar) > 0 {
+		if err := avatar.SyncFromProvider(ctx, u.ID, "ldap", ldapAvatar); err != nil {
+			log.Errorf("Error storing LDAP avatar for user %s: %v", u.Username, err)
+		}
+	}
+
 	return u, nil
 }
 
@@ -139,23 +146,24 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 // then against local accounts, mirroring v1's order so local users keep working
 // alongside LDAP. Bots are rejected before bcrypt runs because they have no
 // password hash.
-func resolveLoginUser(ctx context.Context, s *xorm.Session, login *user.Login) (*user.User, error) {
+func resolveLoginUser(ctx context.Context, s *xorm.Session, login *user.Login) (u *user.User, ldapAvatar []byte, err error) {
 	if config.AuthLdapEnabled.GetBool() {
-		u, err := ldap.AuthenticateUserInLDAP(ctx, s, login.Username, login.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
+		u, ldapAvatar, err = ldap.AuthenticateUserInLDAP(s, login.Username, login.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
 		if err != nil && !user.IsErrWrongUsernameOrPassword(err) {
-			return nil, err
+			return nil, nil, err
 		}
 		if u != nil {
-			return u, nil
+			return u, ldapAvatar, nil
 		}
 	}
 
 	existingUser, lookupErr := user.GetUserByUsername(s, login.Username)
 	if lookupErr == nil && existingUser.IsBot() {
-		return nil, &user.ErrAccountIsBot{UserID: existingUser.ID}
+		return nil, nil, &user.ErrAccountIsBot{UserID: existingUser.ID}
 	}
 
-	return user.CheckUserCredentials(ctx, s, login)
+	u, err = user.CheckUserCredentials(ctx, s, login)
+	return u, nil, err
 }
 
 // enforceLoginTOTP runs the TOTP gate for users who have it enabled, mirroring

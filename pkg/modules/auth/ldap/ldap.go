@@ -18,7 +18,6 @@ package ldap
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"encoding/binary"
 	"errors"
@@ -32,8 +31,6 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -133,9 +130,10 @@ func sanitizedUserQuery(username string) (string, bool) {
 	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), escapedUsername), true
 }
 
-func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, password string, syncGroups bool, avatarSyncAttribute string) (u *user.User, err error) {
+// The avatar is returned raw so the caller can store it after the login committed.
+func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGroups bool, avatarSyncAttribute string) (u *user.User, avatarRaw []byte, err error) {
 	if password == "" || username == "" {
-		return nil, user.ErrNoUsernamePassword{}
+		return nil, nil, user.ErrNoUsernamePassword{}
 	}
 
 	l, err := ConnectAndBindToLDAPDirectory()
@@ -150,7 +148,7 @@ func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, pass
 	userFilter, ok := sanitizedUserQuery(username)
 	if !ok {
 		log.Debugf("Could not sanitize username %s", username)
-		return nil, user.ErrWrongUsernameOrPassword{}
+		return nil, nil, user.ErrWrongUsernameOrPassword{}
 	}
 
 	attributes := []string{
@@ -179,7 +177,7 @@ func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, pass
 
 	if len(sr.Entries) > 1 || len(sr.Entries) == 0 {
 		log.Debugf("Found %d entries for username %s", len(sr.Entries), username)
-		return nil, user.ErrWrongUsernameOrPassword{}
+		return nil, nil, user.ErrWrongUsernameOrPassword{}
 	}
 
 	userdn := sr.Entries[0].DN
@@ -189,7 +187,7 @@ func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, pass
 	if err != nil {
 		var lerr *ldap.Error
 		if errors.As(err, &lerr) && lerr.ResultCode == ldap.LDAPResultInvalidCredentials {
-			return nil, user.ErrWrongUsernameOrPassword{}
+			return nil, nil, user.ErrWrongUsernameOrPassword{}
 		}
 
 		return
@@ -197,20 +195,11 @@ func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, pass
 
 	u, err = getOrCreateLdapUser(s, sr.Entries[0])
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if avatarSyncAttribute != "" {
-		raw := sr.Entries[0].GetRawAttributeValue(avatarSyncAttribute)
-		if len(raw) > 0 {
-			prepared, avatarErr := upload.PrepareAvatar(ctx, raw)
-			if avatarErr == nil {
-				avatarErr = avatar.SaveSynced(s, u, "ldap", prepared)
-			}
-			if avatarErr != nil {
-				log.Errorf("Error storing LDAP avatar for user %s: %v", u.Username, avatarErr)
-			}
-		}
+		avatarRaw = sr.Entries[0].GetRawAttributeValue(avatarSyncAttribute)
 	}
 
 	if !syncGroups {
@@ -225,11 +214,11 @@ func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, pass
 		bindPassword := config.AuthLdapBindPassword.GetString()
 		if bindDN != "" && bindPassword != "" {
 			if err = l.Bind(bindDN, bindPassword); err != nil {
-				return nil, fmt.Errorf("could not re-bind service account for group sync: %w", err)
+				return nil, nil, fmt.Errorf("could not re-bind service account for group sync: %w", err)
 			}
 		} else {
 			if err = l.UnauthenticatedBind(""); err != nil {
-				return nil, fmt.Errorf("could not re-bind anonymously for group sync: %w", err)
+				return nil, nil, fmt.Errorf("could not re-bind anonymously for group sync: %w", err)
 			}
 		}
 	}
@@ -237,7 +226,7 @@ func AuthenticateUserInLDAP(ctx context.Context, s *xorm.Session, username, pass
 	ldapUsername := sr.Entries[0].GetAttributeValue(config.AuthLdapAttributeUsername.GetString())
 	err = syncUserGroups(s, l, u, userdn, ldapUsername)
 
-	return u, err
+	return u, avatarRaw, err
 }
 
 func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err error) {
