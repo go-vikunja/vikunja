@@ -138,15 +138,18 @@ func UserTOTPEnable(c *echo.Context) error {
 
 // UserTOTPDisable disables totp settings for the current user.
 // @Summary Disable totp settings
-// @Description Disables any totp settings for the current user.
+// @Description Disables any totp settings for the current user. Requires the current password and a current totp passcode.
 // @tags user
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param totp body user.Login true "The current user's password (only password is enough)."
+// @Param totp body user.Login true "The current user's password and a current totp passcode (totp_passcode)."
 // @Success 200 {object} models.Message "Successfully disabled"
 // @Failure 400 {object} web.HTTPError "Something's invalid."
+// @Failure 403 {object} web.HTTPError "Wrong password."
 // @Failure 404 {object} web.HTTPError "User does not exist."
+// @Failure 412 {object} web.HTTPError "Invalid totp passcode."
+// @Failure 429 {object} web.HTTPError "Too many failed attempts."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/disable [post]
 func UserTOTPDisable(c *echo.Context) error {
@@ -166,13 +169,7 @@ func UserTOTPDisable(c *echo.Context) error {
 	}
 	defer s.Close()
 
-	err = user.CheckReauthPassword(u, login.Password)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	err = user.DisableTOTP(s, u)
+	err = user.DisableTOTPWithReauth(s, u, login.Password, login.TOTPPasscode)
 	if err != nil {
 		_ = s.Rollback()
 		return err

@@ -2983,6 +2983,10 @@ export type TotpDisableBodyBody = {
      * The current user's password, required to disable totp.
      */
     password?: string;
+    /**
+     * A current passcode from the user's authenticator, required to disable totp.
+     */
+    totp_passcode?: string;
 };
 
 export type TotpEnableBodyBody = {
@@ -4748,6 +4752,10 @@ export type TotpDisableBodyBodyWritable = {
      * The current user's password, required to disable totp.
      */
     password?: string;
+    /**
+     * A current passcode from the user's authenticator, required to disable totp.
+     */
+    totp_passcode?: string;
 };
 
 export type TotpEnableBodyBodyWritable = {

@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/pquerna/otp/totp"
@@ -95,13 +97,39 @@ func TestHumaTOTP(t *testing.T) {
 		require.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
 	})
 
-	t.Run("Disable with the correct password", func(t *testing.T) {
+	t.Run("Disable with the correct password and passcode", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		passcode, err := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now())
+		require.NoError(t, err)
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/totp/disable",
+			fmt.Sprintf(`{"password":"12345678","totp_passcode":%q}`, passcode), humaTokenFor(t, &testuser10), "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), "disabled successfully")
+		db.AssertMissing(t, "totp", map[string]interface{}{"user_id": 10})
+	})
+
+	// GHSA-49pj-52x6-8gpj: the password alone must not strip the second factor.
+	t.Run("Disable with the password but no passcode is refused", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/totp/disable",
 			`{"password":"12345678"}`, humaTokenFor(t, &testuser10), "")
-		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-		assert.Contains(t, rec.Body.String(), "disabled successfully")
+		require.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
+		db.AssertExists(t, "totp", map[string]interface{}{"user_id": 10, "enabled": true}, false)
+	})
+
+	t.Run("Disable with a wrong passcode is refused and counted", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/user/settings/totp/disable",
+			`{"password":"12345678","totp_passcode":"000000"}`, humaTokenFor(t, &testuser10), "")
+		require.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
+		db.AssertExists(t, "totp", map[string]interface{}{"user_id": 10, "enabled": true}, false)
+		attempts, exists, err := keyvalue.Get(testuser10.GetFailedTOTPAttemptsKey())
+		require.NoError(t, err)
+		require.True(t, exists, "a wrong passcode must count toward the totp lockout")
+		assert.Equal(t, int64(1), attempts)
 	})
 
 	t.Run("Disable with a wrong password is refused", func(t *testing.T) {
@@ -123,7 +151,7 @@ func TestHumaTOTP(t *testing.T) {
 			{http.MethodGet, "/api/v2/user/settings/totp/qrcode", ""},
 			{http.MethodPost, "/api/v2/user/settings/totp/enroll", ""},
 			{http.MethodPost, "/api/v2/user/settings/totp/enable", `{"passcode":"000000"}`},
-			{http.MethodPost, "/api/v2/user/settings/totp/disable", `{"password":"12345678"}`},
+			{http.MethodPost, "/api/v2/user/settings/totp/disable", `{"password":"12345678","totp_passcode":"000000"}`},
 		} {
 			rec := humaRequest(t, e, tc.method, tc.path, tc.body, token, "")
 			assert.Equal(t, http.StatusPreconditionFailed, rec.Code,

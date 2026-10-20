@@ -1,7 +1,7 @@
 import {test, expect} from '../../../support/fixtures'
 import {generate} from 'otplib'
 import {gotoUserSettings} from '../../../support/userSettings'
-import {TotpFactory} from '../../../factories/totp'
+import {TotpFactory, FIXED_TOTP_SECRET} from '../../../factories/totp'
 import {TEST_PASSWORD} from '../../../support/constants'
 
 test.describe('TOTP', () => {
@@ -28,6 +28,7 @@ test.describe('TOTP', () => {
 
 		await page.getByRole('button', {name: 'Disable'}).click()
 		await page.locator('#currentPassword').fill(TEST_PASSWORD)
+		await page.locator('#totpDisablePasscode').fill(await generate({secret: FIXED_TOTP_SECRET}))
 
 		// Second "Disable" inside the form submits it.
 		await page.locator('.card').getByRole('button', {name: 'Disable'}).last().click()
@@ -36,6 +37,20 @@ test.describe('TOTP', () => {
 		await expect(page.getByRole('button', {name: 'Enroll'})).toBeVisible()
 		await page.reload()
 		await expect(page.getByRole('button', {name: 'Enroll'})).toBeVisible()
+	})
+
+	test('keeps TOTP enabled when the disable passcode is wrong', async ({authenticatedPage: page, currentUser}) => {
+		await TotpFactory.create(1, {user_id: currentUser.id}, false)
+		await gotoUserSettings(page, 'totp')
+
+		await page.getByRole('button', {name: 'Disable'}).click()
+		await page.locator('#currentPassword').fill(TEST_PASSWORD)
+		await page.locator('#totpDisablePasscode').fill('000000')
+		await page.locator('.card').getByRole('button', {name: 'Disable'}).last().click()
+
+		await expect(page.locator('.global-notification .vue-notification.error')).toBeVisible()
+		await page.reload()
+		await expect(page.getByText("You've successfully set up two factor authentication!")).toBeVisible()
 	})
 
 	test('rejects wrong passcode during enrollment', async ({authenticatedPage: page}) => {

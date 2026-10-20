@@ -65,6 +65,16 @@
 					type="password"
 					@keyup.enter="totpDisable"
 				/>
+				<FormField
+					id="totpDisablePasscode"
+					v-model="totpDisablePasscode"
+					:label="$t('user.settings.totp.passcode')"
+					autocomplete="one-time-code"
+					:placeholder="$t('user.settings.totp.passcodePlaceholder')"
+					type="text"
+					inputmode="numeric"
+					@keyup.enter="totpDisable"
+				/>
 				<XButton
 					danger
 					:loading="disableMutation.isPending.value"
@@ -112,6 +122,7 @@ useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
 const totpConfirmPasscode = ref('')
 const totpDisableForm = ref(false)
 const totpDisablePassword = ref('')
+const totpDisablePasscode = ref('')
 
 const configStore = useConfigStore()
 const authStore = useAuthStore()
@@ -145,12 +156,16 @@ async function totpConfirm() {
 function closeDisableForm() {
 	totpDisableForm.value = false
 	totpDisablePassword.value = ''
+	totpDisablePasscode.value = ''
 }
 
 async function totpDisable() {
 	if (disableMutation.isPending.value) return
 	try {
-		await disableMutation.mutateAsync(totpDisablePassword.value)
+		await disableMutation.mutateAsync({
+			password: totpDisablePassword.value,
+			totp_passcode: totpDisablePasscode.value,
+		})
 	} catch {
 		return
 	}
