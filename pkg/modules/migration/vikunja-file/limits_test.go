@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"compress/flate"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -28,11 +29,14 @@ import (
 	"image/png"
 	"io"
 	"os"
+	"reflect"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 
@@ -445,4 +449,199 @@ func TestVikunjaFileLimits(t *testing.T) {
 			"created_by_id": 1,
 		}, false)
 	})
+}
+
+func TestCheckDataItemCount(t *testing.T) {
+	t.Cleanup(func() { config.MigrationMaxItems.Set(100000) })
+	var limitErr *migration.ErrImportItemLimitExceeded
+
+	// Every element costs at least its pointer slot, doubled for append's spare capacity.
+	elementsOverBudget := func(maxItems int64) string {
+		return strings.Repeat("{},", int(maxItems*decodeBytesPerItem/16)) + "{}"
+	}
+
+	t.Run("charges each element by its decode target", func(t *testing.T) {
+		config.MigrationMaxItems.Set(1)
+		projectCost := 16 + reflect.TypeFor[models.ProjectWithTasksAndBuckets]().Size()
+		taskCost := 16 + reflect.TypeFor[models.TaskWithComments]().Size()
+		fitting := int((decodeBytesPerItem - projectCost) / taskCost)
+		tasks := func(n int) []byte {
+			return []byte(`[{"tasks":[` + strings.Repeat("{},", n-1) + `{}]}]`)
+		}
+		require.NoError(t, checkDataItemCount(tasks(fitting)))
+		require.ErrorAs(t, checkDataItemCount(tasks(fitting+1)), &limitErr)
+	})
+
+	t.Run("rejects bare assignees before decoding", func(t *testing.T) {
+		config.MigrationMaxItems.Set(100)
+		data := `[{"title":"p","tasks":[{"title":"t","assignees":[` + elementsOverBudget(100) + `]}]}]`
+		require.ErrorAs(t, checkDataItemCount([]byte(data)), &limitErr)
+	})
+
+	t.Run("rejects arrays CheckItemLimit does not count", func(t *testing.T) {
+		config.MigrationMaxItems.Set(100)
+		data := []byte(`[{"title":"p","positions":[` + elementsOverBudget(100) + `]}]`)
+
+		var projects []*models.ProjectWithTasksAndBuckets
+		require.NoError(t, json.Unmarshal(data, &projects))
+		require.NoError(t, migration.CheckItemLimit(projects))
+		require.ErrorAs(t, checkDataItemCount(data), &limitErr)
+	})
+
+	t.Run("charges keys json case-folds onto a field as unknown", func(t *testing.T) {
+		config.MigrationMaxItems.Set(1)
+		n := int(decodeBytesPerItem/unknownElementBytes) + 1
+		data := []byte(`[{"TASKS":[` + strings.Repeat("{},", n-1) + `{}]}]`)
+
+		var projects []*models.ProjectWithTasksAndBuckets
+		require.NoError(t, json.Unmarshal(data, &projects))
+		require.Len(t, projects[0].Tasks, n)
+		require.ErrorAs(t, checkDataItemCount(data), &limitErr)
+	})
+
+	t.Run("unknown elements cost more than any export struct", func(t *testing.T) {
+		seen := map[reflect.Type]bool{}
+		var walk func(typ reflect.Type)
+		walk = func(typ reflect.Type) {
+			if seen[typ] {
+				return
+			}
+			seen[typ] = true
+			kind := typ.Kind()
+			if kind == reflect.Pointer || kind == reflect.Slice || kind == reflect.Array || kind == reflect.Map {
+				walk(typ.Elem())
+				return
+			}
+			if kind == reflect.Struct {
+				assert.Less(t, 16+typ.Size(), uintptr(unknownElementBytes), typ.String())
+				for i := range typ.NumField() {
+					walk(typ.Field(i).Type)
+				}
+			}
+		}
+		walk(reflect.TypeFor[models.ProjectWithTasksAndBuckets]())
+	})
+
+	assertPassesAtItemLimit := func(t *testing.T, data []byte) {
+		t.Helper()
+		var projects []*models.ProjectWithTasksAndBuckets
+		require.NoError(t, json.Unmarshal(data, &projects))
+		for limit := int64(1); ; limit++ {
+			config.MigrationMaxItems.Set(limit)
+			if migration.CheckItemLimit(projects) == nil {
+				break
+			}
+		}
+		require.NoError(t, checkDataItemCount(data))
+	}
+
+	t.Run("accepts the fixture export at its exact item limit", func(t *testing.T) {
+		zr, err := zip.OpenReader("export.zip")
+		require.NoError(t, err)
+		defer zr.Close()
+		f, err := zr.Open("data.json")
+		require.NoError(t, err)
+		defer f.Close()
+		data, err := io.ReadAll(f)
+		require.NoError(t, err)
+
+		assertPassesAtItemLimit(t, data)
+	})
+
+	t.Run("accepts positions in every view at the exact item limit", func(t *testing.T) {
+		p := &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 1, Title: "p"}}
+		for v := int64(1); v <= 4; v++ {
+			p.Views = append(p.Views, &models.ProjectView{ID: v, ProjectID: 1})
+		}
+		p.Buckets = []*models.Bucket{{ID: 1, ProjectViewID: 4}}
+		for i := int64(1); i <= 1000; i++ {
+			p.Tasks = append(p.Tasks, &models.TaskWithComments{Task: models.Task{ID: i, Title: "t"}})
+			p.TaskBuckets = append(p.TaskBuckets, &models.TaskBucket{TaskID: i, BucketID: 1, ProjectViewID: 4})
+			for v := int64(1); v <= 4; v++ {
+				p.Positions = append(p.Positions, &models.TaskPosition{TaskID: i, ProjectViewID: v, Position: float64(i)})
+			}
+		}
+		data, err := json.Marshal([]*models.ProjectWithTasksAndBuckets{p})
+		require.NoError(t, err)
+
+		assertPassesAtItemLimit(t, data)
+	})
+
+	t.Run("accepts 25 views with a position and bucket in each plus reactions at the exact item limit", func(t *testing.T) {
+		p := &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 1, Title: "p"}}
+		for v := int64(1); v <= 25; v++ {
+			p.Views = append(p.Views, &models.ProjectView{ID: v, ProjectID: 1, Title: "view"})
+			p.Buckets = append(p.Buckets, &models.Bucket{ID: v, ProjectViewID: v, Title: "bucket"})
+		}
+		for i := int64(1); i <= 1000; i++ {
+			task := &models.TaskWithComments{Task: models.Task{
+				ID:        i,
+				Title:     "t",
+				CreatedBy: &user.User{ID: 1, Username: "user1"},
+				Reactions: models.ReactionMap{"👍": {
+					{ID: 1, Username: "user1"},
+					{ID: 2, Username: "user2"},
+					{ID: 3, Username: "user3"},
+				}},
+			}}
+			p.Tasks = append(p.Tasks, task)
+			for v := int64(1); v <= 25; v++ {
+				p.TaskBuckets = append(p.TaskBuckets, &models.TaskBucket{TaskID: i, BucketID: v, ProjectViewID: v})
+				p.Positions = append(p.Positions, &models.TaskPosition{TaskID: i, ProjectViewID: v, Position: float64(i)})
+			}
+		}
+		data, err := json.Marshal([]*models.ProjectWithTasksAndBuckets{p})
+		require.NoError(t, err)
+
+		assertPassesAtItemLimit(t, data)
+	})
+
+	t.Run("accepts nulls", func(t *testing.T) {
+		config.MigrationMaxItems.Set(100000)
+		require.NoError(t, checkDataItemCount([]byte(`[{"tasks":null,"child_projects":null},{"tasks":[null,{"labels":null,"related_tasks":null}]}]`)))
+		require.NoError(t, checkDataItemCount([]byte(`null`)))
+	})
+
+	t.Run("rejects malformed data", func(t *testing.T) {
+		config.MigrationMaxItems.Set(100000)
+		var invalid *migration.ErrInvalidImportFile
+		require.ErrorAs(t, checkDataItemCount([]byte(`[{"tasks":`)), &invalid)
+		require.ErrorAs(t, checkDataItemCount([]byte(``)), &invalid)
+	})
+
+	t.Run("rejects deeply nested data", func(t *testing.T) {
+		config.MigrationMaxItems.Set(100000)
+		var invalid *migration.ErrInvalidImportFile
+		data := strings.Repeat(`{"a":`, maxDataDepth+1) + "null" + strings.Repeat("}", maxDataDepth+1)
+		require.ErrorAs(t, checkDataItemCount([]byte(data)), &invalid)
+	})
+
+	t.Run("rejects an oversized import before inserting anything", func(t *testing.T) {
+		setLimits(t, "256MB", "1GB", 10000)
+		config.MigrationMaxItems.Set(1)
+		data := `[{"title":"oversized project","tasks":[` + strings.Repeat(`{"title":"t"},`, decodeBytesPerItem/16) + `{"title":"t"}]}]`
+
+		err := runMigrate(t, buildExportWithFiles(t, data, nil))
+		require.ErrorAs(t, err, &limitErr)
+		db.AssertMissing(t, "projects", map[string]interface{}{"title": "oversized project"})
+	})
+}
+
+func TestFilterItemCount(t *testing.T) {
+	t.Cleanup(func() { config.MigrationMaxItems.Set(100000) })
+	setLimits(t, "256MB", "1GB", 10000)
+	config.MigrationMaxItems.Set(2)
+
+	data := `[{"title":"filter-limit project"}]`
+	filters := `[{"title":"f1"},{"title":"f2"},{"title":"f3"}]`
+	export := buildExportWithFiles(t, data, []struct {
+		name    string
+		content []byte
+	}{{name: "filters.json", content: []byte(filters)}})
+
+	var limitErr *migration.ErrImportItemLimitExceeded
+	err := runMigrate(t, export)
+	require.ErrorAs(t, err, &limitErr)
+	db.AssertMissing(t, "projects", map[string]interface{}{"title": "filter-limit project"})
+	db.AssertMissing(t, "saved_filters", map[string]interface{}{"title": "f1"})
 }
