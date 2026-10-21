@@ -595,4 +595,28 @@ describe('hasFilterQuery', () => {
 		expect(hasFilterQuery('done = false')).toBe(true)
 		expect(hasFilterQuery('hello')).toBe(false)
 	})
+
+	it.each([
+		'testing',
+		'meeting in the office',
+		'things I like',
+		'a = b',
+		'2 > 1',
+	])('treats "%s" as a search', term => {
+		expect(hasFilterQuery(term)).toBe(false)
+	})
+
+	it.each([
+		'done = false',
+		'done=false',
+		'priority >= 3',
+		'dueDate < now',
+		'due_date < now',
+		'labels in 1, 2',
+		'labels not in 1',
+		'title like foo',
+		'(done = false) && (priority > 2)',
+	])('treats "%s" as a filter', filter => {
+		expect(hasFilterQuery(filter)).toBe(true)
+	})
 })
