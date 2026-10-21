@@ -59,4 +59,30 @@ func TestHTTPRequestLoggerOmitsSecrets(t *testing.T) {
 		assert.NotContains(t, out, "sharehashsecret")
 		assert.NotContains(t, out, "querysecret")
 	})
+
+	t.Run("frontend asset logs its path", func(t *testing.T) {
+		buf.Reset()
+		fe := echo.New()
+		fe.Use(httpRequestLogger(logger))
+		fe.Use(static())
+		req := httptest.NewRequest(http.MethodGet, "/index.html?token=querysecret", nil)
+		fe.ServeHTTP(httptest.NewRecorder(), req)
+
+		out := buf.String()
+		assert.Contains(t, out, "route=/index.html")
+		assert.NotContains(t, out, "querysecret")
+	})
+
+	t.Run("frontend fallback logs no path", func(t *testing.T) {
+		buf.Reset()
+		fe := echo.New()
+		fe.Use(httpRequestLogger(logger))
+		fe.Use(static())
+		req := httptest.NewRequest(http.MethodGet, "/share/sharehashsecret/auth", nil)
+		fe.ServeHTTP(httptest.NewRecorder(), req)
+
+		out := buf.String()
+		assert.Contains(t, out, "status=200")
+		assert.NotContains(t, out, "sharehashsecret")
+	})
 }
