@@ -47,6 +47,7 @@ import {useI18n} from 'vue-i18n'
 
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {formatDate} from '@/helpers/time/formatDate'
+import {parseDateMath} from '@/helpers/time/parseDateMath'
 
 import {useRangePick} from '@/composables/useRangePick'
 
@@ -98,14 +99,24 @@ watch(() => to.value, emitChanged)
 
 function asDate(value: string): Date | null {
 	const parsed = parseDateOrString(value, null)
-	return parsed instanceof Date ? parsed : null
+	return parsed instanceof Date ? parsed : parseDateMath(value)
+}
+
+// Datemath ends are exclusive (`now/d+1d` is tomorrow 00:00), so step back into the last included day.
+function asEndDate(value: string): Date | null {
+	const parsed = parseDateOrString(value, null)
+	if (parsed instanceof Date) {
+		return parsed
+	}
+	const end = parseDateMath(value)
+	return end && new Date(end.getTime() - 1)
 }
 
 const isPopupOpen = ref(false)
 
 const {rangeStart, rangeEnd, pickDay, reset: resetPendingRange} = useRangePick(
 	() => asDate(from.value),
-	() => asDate(to.value),
+	() => asEndDate(to.value),
 	(start, end) => {
 		// Inclusive end: a range ending "Sep 22" should cover the whole 22nd.
 		from.value = formatDate(start, 'YYYY-MM-DD 00:00')
