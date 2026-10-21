@@ -354,6 +354,9 @@ const DRAG_OPTIONS = {
 	dragClass: 'task-dragging',
 	delayOnTouchOnly: true,
 	delay: 1000,
+	// With native drag sortable leaves the board to the browser's auto-scroll: Chrome's edge zone is ~20px, Firefox has none.
+	forceAutoScrollFallback: true,
+	scrollSensitivity: 100,
 } as const
 
 const MIN_SCROLL_HEIGHT_PERCENT = 0.25
