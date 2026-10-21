@@ -210,10 +210,9 @@ test.describe('Project View Kanban', () => {
 
 		const board = page.locator('.kanban')
 		const boardBox = await board.boundingBox()
-		const taskBox = await page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title}).first().boundingBox()
 		const nearRightEdge = {x: boardBox!.x + boardBox!.width - 60, y: boardBox!.y + boardBox!.height / 2}
 
-		await page.mouse.move(taskBox!.x + 20, taskBox!.y + 10)
+		await page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title}).first().hover()
 		await page.mouse.down()
 		await page.mouse.move(nearRightEdge.x, nearRightEdge.y, {steps: 20})
 		await expect.poll(async () => {
