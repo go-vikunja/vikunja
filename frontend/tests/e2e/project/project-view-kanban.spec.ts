@@ -199,6 +199,40 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).toContainText(tasks[0].title)
 	})
 
+	test('Scrolls the board while dragging a task to a bucket off screen', async ({authenticatedPage: page}) => {
+		const moreBuckets = await BucketFactory.create(6, {
+			id: (i: number) => buckets.length + i,
+			project_view_id: 4,
+		}, false)
+		const lastBucket = moreBuckets[moreBuckets.length - 1]
+		const tasks = await createTaskWithBuckets(buckets)
+		await page.goto('/projects/1/4')
+
+		const board = page.locator('.kanban')
+		const boardBox = await board.boundingBox()
+		const taskBox = await page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title}).first().boundingBox()
+		const nearRightEdge = {x: boardBox!.x + boardBox!.width - 60, y: boardBox!.y + boardBox!.height / 2}
+
+		await page.mouse.move(taskBox!.x + 20, taskBox!.y + 10)
+		await page.mouse.down()
+		await page.mouse.move(nearRightEdge.x, nearRightEdge.y, {steps: 20})
+		await expect.poll(async () => {
+			// Native drag only fires dragover while the pointer moves.
+			await page.mouse.move(nearRightEdge.x + 1, nearRightEdge.y)
+			await page.mouse.move(nearRightEdge.x, nearRightEdge.y)
+			return board.evaluate(el => el.scrollLeft + el.clientWidth >= el.scrollWidth - 1)
+		}, {timeout: 10000}).toBe(true)
+
+		const lastBucketTasks = page.locator(`.kanban .bucket[data-bucket-id="${lastBucket.id}"] .tasks`)
+		const targetBox = await lastBucketTasks.boundingBox()
+		await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + 10, {steps: 10})
+		await page.mouse.up()
+
+		await expect(lastBucketTasks).toContainText(tasks[0].title)
+		await page.reload()
+		await expect(page.locator(`.kanban .bucket[data-bucket-id="${lastBucket.id}"] .tasks`)).toContainText(tasks[0].title)
+	})
+
 	test('Recurring task dropped on done bucket moves back to the default bucket', async ({authenticatedPage: page}) => {
 		// Reproduces https://github.com/go-vikunja/vikunja/issues/2618
 		const projects = await ProjectFactory.create(1)
