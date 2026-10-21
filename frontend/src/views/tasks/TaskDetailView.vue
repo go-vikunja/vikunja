@@ -441,7 +441,6 @@
 				>
 					<template v-if="canWrite">
 						<XButton
-							v-shortcut="SHORTCUTS.taskDetail.done"
 							:class="{'is-pending': !task.done}"
 							class="button--mark-done"
 							icon="check-double"
@@ -1162,6 +1161,7 @@ useTaskDetailShortcuts({
 	task: () => task.value,
 	taskTitle: () => taskTitle.value,
 	onSave: saveTask,
+	onToggleDone: () => toggleTaskDone(true).catch(error),
 })
 
 const showDeleteModal = ref(false)
@@ -1172,7 +1172,14 @@ async function deleteTask() {
 	router.push({name: 'project.index', params: {projectId: task.value.project_id}})
 }
 
-async function toggleTaskDone() {
+async function toggleTaskDone(returnToList = false) {
+	if (!canWrite.value || updateTask.isPending.value) return
+
+	const taskRoute = route.fullPath
+	const previousView = props.backdropView || router.options.history.state.back
+	const returnRoute = typeof previousView === 'string' && router.resolve(previousView).name !== 'task.detail'
+		? previousView
+		: projectRoute.value
 	const newTask = {
 		...task.value,
 		done: !task.value.done,
@@ -1186,6 +1193,11 @@ async function toggleTaskDone() {
 		newTask,
 		toggleTaskDone,
 	)
+
+	if (returnToList && newTask.done && authStore.settings.frontend_settings.return_to_list_after_done
+		&& props.taskId === newTask.id && route.fullPath === taskRoute) {
+		await router.push(returnRoute)
+	}
 }
 
 async function changeProject(project: ProjectResponse | null) {

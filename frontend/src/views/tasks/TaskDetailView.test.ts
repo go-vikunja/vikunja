@@ -28,6 +28,10 @@ import EditLabels from '@/components/tasks/partials/EditLabels.vue'
 import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
 import TaskDetailView from './TaskDetailView.vue'
+import shortcut from '@/directives/shortcut'
+import {queryClient as accountQueryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
+import {PERMISSIONS} from '@/constants/permissions'
 
 enableAutoUnmount(afterEach)
 
@@ -53,7 +57,10 @@ function dueDatePicker(wrapper: VueWrapper) {
 	return wrapper.findAllComponents(Datepicker)[0]!
 }
 
-async function mountDetail(taskId = 1) {
+async function mountDetail(taskId = 1, returnToList = false, backdropView?: string) {
+	accountQueryClient.setQueryData(accountKeys.user(0), {
+		settings: {frontend_settings: {return_to_list_after_done: returnToList}},
+	})
 	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
 	const router = createRouter({
 		history: createMemoryHistory(),
@@ -66,12 +73,12 @@ async function mountDetail(taskId = 1) {
 	})
 	await router.push('/')
 	const wrapper = shallowMount(TaskDetailView, {
-		props: {taskId},
+		props: {taskId, backdropView},
 		global: {
 			plugins: [createPinia(), router, [VueQueryPlugin, {queryClient}]],
 			mocks: {$t: (key: string) => key},
 			stubs: {Icon: true, XButton: true, Modal: true, CustomTransition: {template: '<div><slot/></div>'}},
-			directives: {tooltip: () => {}, cy: () => {}, shortcut: () => {}},
+			directives: {tooltip: () => {}, cy: () => {}, shortcut},
 		},
 	})
 	await flushPromises()
@@ -110,6 +117,109 @@ describe('TaskDetailView draft', () => {
 		await flushPromises()
 
 		expect(dueDatePicker(wrapper).props('modelValue')).toEqual(new Date('2024-01-01T10:00:00Z'))
+	})
+
+	it('returns to the originating list only after keyboard completion saves', async () => {
+		let finishSave!: (value: {data: ReturnType<typeof serverTask>}) => void
+		sdk.patchTasksRead.mockImplementation(() => new Promise(resolve => { finishSave = resolve }))
+		const wrapper = await mountDetail(1, true, '/projects/1?filter=priority%20%3E%202')
+		document.body.dispatchEvent(new KeyboardEvent('keydown', {key: 't', code: 'KeyT', bubbles: true}))
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
+		expect(wrapper.vm.$route.fullPath).toBe('/')
+		finishSave({data: serverTask(1, {done: true})})
+		await flushPromises()
+
+		expect(wrapper.vm.$route.fullPath).toBe('/projects/1?filter=priority%20%3E%202')
+	})
+
+	it.each([
+		{enabled: false, done: false, mouse: false},
+		{enabled: true, done: true, mouse: false},
+		{enabled: true, done: false, mouse: true},
+	])('stays on the task for completion with $enabled, done $done, mouse $mouse', async ({enabled, done, mouse}) => {
+		sdk.tasksRead.mockResolvedValue({data: serverTask(1, {done})})
+		sdk.patchTasksRead.mockResolvedValue({data: serverTask(1, {done: !done})})
+		const wrapper = await mountDetail(1, enabled, '/projects/1')
+
+		if (mouse) {
+			await wrapper.find('.button--mark-done').trigger('click')
+		} else {
+			document.body.dispatchEvent(new KeyboardEvent('keydown', {key: 't', code: 'KeyT', bubbles: true}))
+		}
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
+		expect(wrapper.vm.$route.fullPath).toBe('/')
+	})
+
+	it('does not leave the task when keyboard completion fails to save', async () => {
+		sdk.patchTasksRead.mockRejectedValue(new Error('Save failed'))
+		const wrapper = await mountDetail(1, true, '/projects/1')
+		document.body.dispatchEvent(new KeyboardEvent('keydown', {key: 't', code: 'KeyT', bubbles: true}))
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
+		expect(wrapper.vm.$route.fullPath).toBe('/')
+	})
+
+	it('does not navigate away from another task opened while completion is pending', async () => {
+		let finishSave!: (value: {data: ReturnType<typeof serverTask>}) => void
+		sdk.patchTasksRead.mockImplementation(() => new Promise(resolve => { finishSave = resolve }))
+		const wrapper = await mountDetail(1, true, '/projects/1')
+		document.body.dispatchEvent(new KeyboardEvent('keydown', {key: 't', code: 'KeyT', bubbles: true}))
+		await flushPromises()
+		await wrapper.setProps({taskId: 2})
+		finishSave({data: serverTask(1, {done: true})})
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
+		expect(wrapper.vm.$route.fullPath).toBe('/')
+	})
+
+	it('returns to the project when a task was opened directly', async () => {
+		sdk.patchTasksRead.mockResolvedValue({data: serverTask(1, {done: true})})
+		const wrapper = await mountDetail(1, true)
+		document.body.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyT', bubbles: true}))
+		await flushPromises()
+
+		expect(wrapper.vm.$route.fullPath).toBe('/projects/1')
+	})
+
+	it('does not return to another task used as a modal backdrop', async () => {
+		sdk.patchTasksRead.mockResolvedValue({data: serverTask(1, {done: true})})
+		const wrapper = await mountDetail(1, true, '/tasks/2')
+		document.body.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyT', bubbles: true}))
+		await flushPromises()
+
+		expect(wrapper.vm.$route.fullPath).toBe('/projects/1')
+	})
+
+	it('ignores repeated, modified, composing and form-field completion keys', async () => {
+		await mountDetail(1, true, '/projects/1')
+		for (const options of [{repeat: true}, {ctrlKey: true}, {isComposing: true}]) {
+			document.body.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyT', bubbles: true, ...options}))
+		}
+		for (const tag of ['input', 'textarea', 'select']) {
+			const field = document.createElement(tag)
+			document.body.append(field)
+			field.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyT', bubbles: true}))
+			field.remove()
+		}
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).not.toHaveBeenCalled()
+	})
+
+	it('does not complete a read-only task with the keyboard', async () => {
+		sdk.tasksRead.mockResolvedValue({data: serverTask(1, {max_permission: PERMISSIONS.READ})})
+		const wrapper = await mountDetail(1, true, '/projects/1')
+		document.body.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyT', bubbles: true}))
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).not.toHaveBeenCalled()
+		expect(wrapper.vm.$route.fullPath).toBe('/')
 	})
 
 	it('reseeds the draft from the response of a save', async () => {

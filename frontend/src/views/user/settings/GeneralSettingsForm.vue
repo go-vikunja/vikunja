@@ -79,6 +79,10 @@
 				/>
 			</FormField>
 			<FormCheckbox
+				v-model="settings.frontend_settings.return_to_list_after_done"
+				:label="$t('user.settings.general.returnToListAfterDone')"
+			/>
+			<FormCheckbox
 				v-model="settings.frontend_settings.show_last_viewed"
 				:label="$t('user.settings.general.showLastViewed')"
 			/>

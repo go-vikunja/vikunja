@@ -125,6 +125,26 @@ test.describe('User Settings', () => {
 		expect(settings.frontend_settings.sidebar_width).toBe(422)
 	})
 
+	test('Persists the keyboard completion auto-return preference', async ({authenticatedPage: page, apiContext, userToken}) => {
+		await page.goto('/user/settings/general')
+		const preference = page.getByLabel('Return to the task list after completing a task with the T key')
+		await expect(preference).not.toBeChecked()
+
+		for (const enabled of [true, false]) {
+			await preference.setChecked(enabled)
+			const saved = page.waitForResponse(response =>
+				response.url().includes('/api/v2/user/settings/general') && response.request().method() === 'PATCH',
+			)
+			await page.locator('[data-cy=saveGeneralSettings]').click()
+			expect((await saved).ok()).toBe(true)
+			await page.reload()
+			await expect(preference).toBeChecked({checked: enabled})
+
+			const stored = await apiContext.get('user', {headers: {Authorization: `Bearer ${userToken}`}})
+			expect((await stored.json()).settings.frontend_settings.return_to_list_after_done).toBe(enabled)
+		}
+	})
+
 	test('Updates the week start day', async ({authenticatedPage: page, apiContext, userToken}) => {
 		await page.goto('/user/settings/general')
 		await page.waitForLoadState('networkidle')

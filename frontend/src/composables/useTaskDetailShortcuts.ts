@@ -1,5 +1,6 @@
 import {ref, onMounted, onBeforeUnmount} from 'vue'
-import {eventToShortcutString} from '@/helpers/shortcut'
+import {eventToShortcutString, isFormField} from '@/helpers/shortcut'
+import {SHORTCUTS} from '@/constants/shortcuts'
 
 import {getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
@@ -8,6 +9,7 @@ interface UseTaskDetailShortcutsOptions {
 	task: () => ITask
 	taskTitle: () => string
 	onSave: () => void
+	onToggleDone: () => void
 }
 
 async function copySavely(value: string) {
@@ -23,6 +25,7 @@ export function useTaskDetailShortcuts({
 	task,
 	taskTitle,
 	onSave,
+	onToggleDone,
 }: UseTaskDetailShortcutsOptions) {
 	const dotKeyPressedTimes = ref(0)
 	const dotKeyCopyValue = ref('')
@@ -45,6 +48,13 @@ export function useTaskDetailShortcuts({
 		if (shortcutString === 'Control+KeyS' || shortcutString === 'Meta+KeyS') {
 			event.preventDefault()
 			onSave()
+			return
+		}
+
+		if (shortcutString === SHORTCUTS.taskDetail.done) {
+			if (event.defaultPrevented || event.isComposing || event.repeat || isFormField(event.target)) return
+			event.preventDefault()
+			onToggleDone()
 			return
 		}
 

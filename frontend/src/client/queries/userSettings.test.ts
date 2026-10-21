@@ -27,6 +27,13 @@ describe('normalizeUserSettings', () => {
 		expect(settings.language).toBe('de-DE')
 	})
 
+	it('defaults keyboard completion auto-return to off and preserves the saved preference', () => {
+		expect(normalizeUserSettings({}).frontend_settings.return_to_list_after_done).toBe(false)
+		expect(normalizeUserSettings({
+			frontend_settings: {return_to_list_after_done: true},
+		}).frontend_settings.return_to_list_after_done).toBe(true)
+	})
+
 	it('keeps the language returned by the api', () => {
 		const settings = normalizeUserSettings({language: 'fr-FR'})
 

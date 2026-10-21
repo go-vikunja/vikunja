@@ -15,6 +15,7 @@ import {RELATION_KIND} from '@/types/IRelationKind'
 
 export interface FrontendSettings {
 	play_sound_when_done: boolean
+	return_to_list_after_done: boolean
 	quick_add_magic_mode: PrefixMode
 	color_schema: BasicColorSchema
 	allow_icon_changes: boolean
@@ -70,6 +71,7 @@ export type UserSettings = Required<Omit<UserGeneralSettings, '$schema' | 'front
 export function defaultFrontendSettings(): FrontendSettings {
 	return {
 		play_sound_when_done: true,
+		return_to_list_after_done: false,
 		quick_add_magic_mode: PrefixMode.Default,
 		color_schema: 'auto',
 		allow_icon_changes: true,

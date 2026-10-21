@@ -19,6 +19,7 @@ import {createDefaultViews} from '../project/prepareProjects'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {pasteFile, pasteHtmlFromClipboard} from '../../support/commands'
 import {login} from '../../support/authenticateUser'
+import {updateUserSettings} from '../../support/updateUserSettings'
 import type {Locator, Page} from '@playwright/test'
 import {readFileSync} from 'fs'
 import {join, dirname} from 'path'
@@ -123,6 +124,37 @@ test.describe('Task', () => {
 		await page.goto('/projects/1/1')
 		await page.locator('.tasks .task .fancy-checkbox').first().click()
 		await expect(page.locator('.global-notification')).toContainText('Success')
+	})
+
+	test('Returns to the list only for keyboard completion when enabled', async ({authenticatedPage: page, apiContext, userToken}) => {
+		const [task] = await TaskFactory.create(1, {
+			id: 1,
+			project_id: projects[0].id,
+			done: false,
+		})
+		await updateUserSettings(apiContext, userToken, {frontend_settings: {return_to_list_after_done: true}})
+		await page.goto('/projects/1/1')
+		const listUrl = page.url()
+		await page.locator('.tasks .task .tasktext').first().click()
+		await expect(page).toHaveURL(new RegExp(`/tasks/${task.id}$`))
+
+		const doneButton = page.locator('.button--mark-done')
+		await doneButton.click()
+		await expect(doneButton).toContainText('Mark as undone')
+		await expect(page).toHaveURL(new RegExp(`/tasks/${task.id}$`))
+
+		await doneButton.focus()
+		await page.keyboard.press('t')
+		await expect(doneButton).toContainText('Mark task done!')
+		await expect(page).toHaveURL(new RegExp(`/tasks/${task.id}$`))
+
+		await doneButton.focus()
+		await page.keyboard.press('t')
+		await expect(page).toHaveURL(listUrl)
+		await page.reload()
+		await expect(page).toHaveURL(listUrl)
+		const stored = await apiContext.get(`tasks/${task.id}`, {headers: {Authorization: `Bearer ${userToken}`}})
+		expect((await stored.json()).done).toBe(true)
 	})
 
 	test('Can add a task to favorites', async ({authenticatedPage: page}) => {

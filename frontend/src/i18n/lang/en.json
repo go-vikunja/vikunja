@@ -153,6 +153,7 @@
         "discoverableByName": "Allow other users to add me as a member to teams or projects when they search for my name",
         "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
         "playSoundWhenDone": "Play a sound when marking tasks as done",
+        "returnToListAfterDone": "Return to the task list after completing a task with the T key",
         "allowIconChanges": "Show special logos during certain times",
         "alwaysShowBucketTaskCount": "Always show task count on Kanban buckets",
         "defaultTaskRelationType": "Default task relation type",
