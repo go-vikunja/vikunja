@@ -1092,10 +1092,14 @@ func httpRequestLogger(httpLogger *slog.Logger) echo.MiddlewareFunc {
 		LogUserAgent: true,
 		HandleError:  true,
 		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			route := c.Path()
+			if asset, ok := c.Get(staticAssetLogPathKey).(string); ok && route == "" {
+				route = asset
+			}
 			attrs := []slog.Attr{
 				slog.String("remote_ip", v.RemoteIP),
 				slog.String("method", v.Method),
-				slog.String("route", c.Path()),
+				slog.String("route", route),
 				slog.Int("status", v.Status),
 				slog.Duration("latency", v.Latency),
 				slog.String("user_agent", v.UserAgent),
