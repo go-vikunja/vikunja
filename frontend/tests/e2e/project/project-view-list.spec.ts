@@ -4,6 +4,7 @@ import {TaskFactory} from '../../factories/task'
 import {TaskRelationFactory} from '../../factories/task_relation'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
+import {ProjectViewFactory} from '../../factories/project_view'
 import {createProjects} from './prepareProjects'
 import {BucketFactory} from '../../factories/bucket'
 import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
@@ -253,5 +254,28 @@ test.describe('Project View List', () => {
 
 		// Only one task should be visible (the searchable one)
 		await expect(page.locator('.tasks .task')).toHaveCount(1)
+	})
+
+	test('Should search in a view with a filter when the term contains a filter operator', async ({authenticatedPage: page}) => {
+		await ProjectFactory.create(1, {title: 'First Project'})
+		await ProjectViewFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			view_kind: 0,
+			filter: JSON.stringify({filter: 'done = false'}),
+		})
+		// "meeting" contains the "in" operator
+		const {searchableTask} = await createTasksWithSearch()
+
+		await page.goto('/projects/1/1')
+		await expect(page.locator('.tasks')).toContainText('Regular task 1')
+
+		await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+		await page.locator('.filter-popup .filter-input .ProseMirror').fill('meeting')
+		await page.locator('.filter-popup button').filter({hasText: 'Show results'}).click()
+
+		await expect(page).toHaveURL(/s=meeting/)
+		await expect(page.locator('.tasks .task')).toHaveCount(1)
+		await expect(page.locator('.tasks')).toContainText(searchableTask.title)
 	})
 })
