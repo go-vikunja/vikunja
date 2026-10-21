@@ -14,9 +14,12 @@ function getFocusableElement(el: HTMLElement): HTMLElement | null {
 	return el.querySelector<HTMLElement>('input, select, textarea, [contenteditable="true"]')
 }
 
-const focus = <Directive<HTMLElement, string>>{
+const focus = <Directive<HTMLElement, boolean | undefined>>{
 	// When the bound element is inserted into the DOM...
-	mounted(el, {modifiers}) {
+	mounted(el, {value, modifiers}) {
+		if (value === false) {
+			return
+		}
 		// Focus the element only if the viewport is big enough
 		// auto focusing elements on mobile can be annoying since in these cases the
 		// keyboard always pops up and takes half of the available space on the screen.
