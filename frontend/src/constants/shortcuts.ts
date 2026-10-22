@@ -16,6 +16,7 @@ export const SHORTCUTS = {
 	taskDetail: {
 		openProject: 'KeyU',
 		done: 'KeyT',
+		doneAndBack: 'Shift+KeyT',
 		favorite: 'KeyS',
 		labels: 'KeyL',
 		priority: 'KeyP',
