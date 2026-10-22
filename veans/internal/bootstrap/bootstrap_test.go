@@ -122,12 +122,22 @@ func (q *queuePrompter) ReadPassword(_ string) (string, error) { return "", nil 
 // named value reads more clearly than fmt.Errorf at the call site).
 var errReadFailure = errors.New("simulated stdin read failure")
 
+func testDest(t *testing.T, path string) configDest {
+	t.Helper()
+	dir := filepath.Dir(path)
+	dest, err := newConfigDest(openRoot(t, dir), dir, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return dest
+}
+
 func TestConfirmOverwriteExistingConfig(t *testing.T) {
 	t.Run("file missing — no prompt", func(t *testing.T) {
 		dir := t.TempDir()
 		p := &queuePrompter{}
 		opts := &Options{ConfigPath: filepath.Join(dir, "does-not-exist.yml")}
-		if err := confirmOverwriteExistingConfig(opts, p); err != nil {
+		if err := confirmOverwriteExistingConfig(opts, testDest(t, opts.ConfigPath), p); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if p.calls != 0 {
@@ -143,7 +153,7 @@ func TestConfirmOverwriteExistingConfig(t *testing.T) {
 		}
 		p := &queuePrompter{}
 		opts := &Options{ConfigPath: path, OverwriteExistingConfig: true}
-		if err := confirmOverwriteExistingConfig(opts, p); err != nil {
+		if err := confirmOverwriteExistingConfig(opts, testDest(t, opts.ConfigPath), p); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if p.calls != 0 {
@@ -162,7 +172,7 @@ func TestConfirmOverwriteExistingConfig(t *testing.T) {
 		for _, ans := range yesAnswers {
 			p := &queuePrompter{answers: []string{ans}}
 			opts := &Options{ConfigPath: path}
-			if err := confirmOverwriteExistingConfig(opts, p); err != nil {
+			if err := confirmOverwriteExistingConfig(opts, testDest(t, opts.ConfigPath), p); err != nil {
 				t.Errorf("answer %q: unexpected error: %v", ans, err)
 			}
 		}
@@ -172,7 +182,7 @@ func TestConfirmOverwriteExistingConfig(t *testing.T) {
 		for _, ans := range noAnswers {
 			p := &queuePrompter{answers: []string{ans}}
 			opts := &Options{ConfigPath: path}
-			err := confirmOverwriteExistingConfig(opts, p)
+			err := confirmOverwriteExistingConfig(opts, testDest(t, opts.ConfigPath), p)
 			if err == nil {
 				t.Errorf("answer %q: expected error, got nil", ans)
 				continue
@@ -193,7 +203,7 @@ func TestConfirmOverwriteExistingConfig(t *testing.T) {
 		// Prompter read failure → wrapped as CodeUnknown.
 		p := &queuePrompter{err: errReadFailure}
 		opts := &Options{ConfigPath: path}
-		err := confirmOverwriteExistingConfig(opts, p)
+		err := confirmOverwriteExistingConfig(opts, testDest(t, opts.ConfigPath), p)
 		if err == nil {
 			t.Fatal("expected error from prompter failure, got nil")
 		}

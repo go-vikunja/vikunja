@@ -1,13 +1,15 @@
 import {ref, onMounted, onBeforeUnmount} from 'vue'
 import {eventToShortcutString} from '@/helpers/shortcut'
+import {SHORTCUTS} from '@/constants/shortcuts'
 
-import {getTaskIdentifier} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
+import {getTaskIdentifier} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
 
 interface UseTaskDetailShortcutsOptions {
 	task: () => ITask
 	taskTitle: () => string
 	onSave: () => void
+	onDoneAndBack: () => void
 }
 
 async function copySavely(value: string) {
@@ -23,6 +25,7 @@ export function useTaskDetailShortcuts({
 	task,
 	taskTitle,
 	onSave,
+	onDoneAndBack,
 }: UseTaskDetailShortcutsOptions) {
 	const dotKeyPressedTimes = ref(0)
 	const dotKeyCopyValue = ref('')
@@ -55,6 +58,12 @@ export function useTaskDetailShortcuts({
 			target.tagName.toLowerCase() === 'textarea' ||
 			target.contentEditable === 'true'
 		) {
+			return
+		}
+
+		if (shortcutString === SHORTCUTS.taskDetail.doneAndBack) {
+			event.preventDefault()
+			onDoneAndBack()
 			return
 		}
 

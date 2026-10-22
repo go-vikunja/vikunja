@@ -55,7 +55,7 @@ func adminReq(t *testing.T, e *echo.Echo, method, path string, u *user.User, bod
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	if u != nil {
-		tok, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+		tok, err := auth.NewUserJWTAuthtoken(u, testSessionID(u))
 		require.NoError(t, err)
 		req.Header.Set(echo.HeaderAuthorization, "Bearer "+tok)
 	}
@@ -72,6 +72,17 @@ func TestAdmin_GateUnlicensed(t *testing.T) {
 	admin := promoteToAdmin(t, 1)
 
 	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/overview", admin, "")
+	assert.Equal(t, http.StatusNotFound, res.Code)
+}
+
+func TestAdmin_GateUnlicensedV2(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	res := adminReq(t, e, http.MethodGet, "/api/v2/admin/overview", admin, "")
 	assert.Equal(t, http.StatusNotFound, res.Code)
 }
 

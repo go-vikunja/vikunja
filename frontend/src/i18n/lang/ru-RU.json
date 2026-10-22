@@ -62,7 +62,6 @@
 			"email": "Email адрес",
 			"emailPlaceholder": "напр. frederic{'@'}vikunja.io",
 			"password": "Пароль",
-			"passwordPlaceholder": "напр. •••••••••••",
 			"forgotPassword": "Забыли пароль?",
 			"resetPassword": "Сбросить пароль",
 			"resetPasswordAction": "Отправить ссылку на сброс пароля",
@@ -124,7 +123,6 @@
 			"passwordUpdateSuccess": "Пароль изменён.",
 			"updateEmailTitle": "Изменить Email",
 			"updateEmailNew": "Новый email адрес",
-			"updateEmailSuccess": "E-mail успешно изменён. Для подтверждения нажмите на ссылку в письме, отправленном на новый адрес.",
 			"general": {
 				"title": "Основные настройки",
 				"name": "Моё имя",
@@ -186,7 +184,8 @@
 			"desktop": {
 				"quickEntryShortcut": "Ярлык быстрого входа",
 				"shortcutRecorderPlaceholder": "Нажмите, чтобы задать ярлык",
-				"shortcutRecorderRecording": "Нажмите комбинацию клавиш…"
+				"shortcutRecorderRecording": "Нажмите комбинацию клавиш…",
+				"shortcutRecorderClear": "Очистить комбинацию"
 			},
 			"totp": {
 				"title": "Двухфакторная аутентификация",
@@ -492,7 +491,8 @@
 		},
 		"table": {
 			"title": "Таблица",
-			"columns": "Столбцы"
+			"columns": "Столбцы",
+			"sortBy": "Сортировать по столбцу {column}"
 		},
 		"kanban": {
 			"title": "Канбан",
@@ -556,6 +556,7 @@
 			"createSuccess": "Представление создано.",
 			"titleRequired": "Пожалуйста, укажите название.",
 			"delete": "Удалить представление",
+			"edit": "Изменить это представление",
 			"deleteText": "Удалить это представление? После удаления его не получится использовать для просмотра задач в этом проекте. Сами задачи останутся. Это действие отменить нельзя!",
 			"deleteSuccess": "Представление удалено.",
 			"onlyAdminsCanEdit": "Только администраторы проекта могут изменять представления.",
@@ -592,6 +593,7 @@
 			"success": "Фильтр сохранён."
 		},
 		"query": {
+			"label": "Запрос для фильтрации",
 			"placeholder": "Введите запрос для поиска или фильтрации…",
 			"help": {
 				"intro": "Для фильтрации задач можно использовать синтаксис, похожий на SQL. Можно фильтровать по следующим полям:",
@@ -743,7 +745,10 @@
 		"imprint": "Отпечаток",
 		"privacy": "Политика конфиденциальности",
 		"closeSidebar": "Закрыть боковую панель",
-		"home": "Главная страница Vikunja"
+		"home": "Главная страница Vikunja",
+		"toggleChildProjects": "Показать или скрыть подпроекты",
+		"main": "Основная навигация",
+		"savedFilters": "Сохранённые фильтры"
 	},
 	"misc": {
 		"loading": "Загрузка…",
@@ -817,8 +822,12 @@
 			"orderedList": "Нумерованный список",
 			"orderedListTooltip": "Создать нумерованный список.",
 			"link": "Ссылка",
+			"urlPlaceholder": "URL",
 			"image": "Изображение",
 			"imageTooltip": "Загрузить изображение с компьютера.",
+			"altText": "Альтернативный текст",
+			"altTextPlaceholder": "Опишите это изображение",
+			"toolbarLabel": "Форматирование текста",
 			"horizontalRule": "Разделитель",
 			"horizontalRuleTooltip": "Разделитель текста.",
 			"text": "Текст",
@@ -849,7 +858,9 @@
 		},
 		"multiselect": {
 			"createPlaceholder": "Создать",
-			"selectPlaceholder": "Кликните или нажмите Enter для выбора"
+			"selectPlaceholder": "Кликните или нажмите Enter для выбора",
+			"removeItem": "Удалить этот элемент",
+			"clear": "Очистить выделение"
 		},
 		"datepickerRange": {
 			"to": "По",
@@ -930,6 +941,7 @@
 		"new": "Создать задачу",
 		"createSuccess": "Задача удалена.",
 		"addReminder": "Добавить напоминание…",
+		"removeReminder": "Удалить это напоминание",
 		"doneSuccess": "Задача отмечена как завершённая.",
 		"undoneSuccess": "Задача отмечена как незавершённая.",
 		"readOnlyCheckbox": "Задача доступна только для чтения и не может быть отмечена завершённой.",
@@ -952,22 +964,30 @@
 			"chooseDueDate": "Нажмите для выбора срока",
 			"chooseStartDate": "Нажмите для выбора даты начала",
 			"chooseEndDate": "Нажмите для выбора даты окончания",
+			"removeDueDate": "Удалить срок",
+			"removeStartDate": "Удалить дату начала",
+			"removeEndDate": "Удалить дату окончания",
+			"removeRepeat": "Удалить интервал повтора",
+			"removeAssignee": "Снять задачу с пользователя {user}",
 			"move": "Переместить задачу в другой проект",
 			"done": "Отметить задачу завершённой!",
 			"undone": "Отметить задачу незавершённой",
 			"created": "Создана {0} пользователем {1}",
 			"updated": "Обновлено {0}",
 			"doneAt": "Завершено {0}",
+			"titleRequired": "Нужно ввести название задачи.",
 			"updateSuccess": "Задача сохранена.",
 			"deleteSuccess": "Задача удалена.",
 			"duplicateSuccess": "Задача продублирована.",
 			"noBucket": "Нет колонки",
+			"bucketSelectLabel": "Канбан-колонка: {bucket}",
 			"bucketChangedSuccess": "Колонка задачи была успешно изменена.",
 			"belongsToProject": "Задача принадлежит проекту «{project}»",
 			"back": "Вернуться к проекту",
 			"due": "Истекает {at}",
 			"closeTaskDetail": "Закрыть детали задачи",
 			"title": "Детали задачи",
+			"markAsDone": "Отметить задачу «{task}» завершённой",
 			"scrollToBottom": "Прокрутить до конца страницы",
 			"organization": "Организация",
 			"management": "Управление",
@@ -1016,13 +1036,13 @@
 			"repeat": "Повтор",
 			"comment": "{count} комментарий | {count} комментария | {count} комментариев",
 			"commentCount": "Число комментариев",
+			"attachment": "{count} вложение | {count} вложения | {count} вложений",
 			"startDate": "Дата начала",
 			"title": "Название",
 			"updated": "Дата изменения",
 			"doneAt": "Дата завершения"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Вы не можете отписаться здесь, потому что вы подписаны эту задачу через её проект.",
 			"subscribedProject": "Вы подписаны на этот проект и будете получать уведомления об изменениях.",
 			"notSubscribedProject": "Вы не подписаны на этот проект и не будете получать уведомления об изменениях.",
 			"subscribedTask": "Вы подписаны на эту задачу и будете получать уведомления об изменениях.",
@@ -1088,9 +1108,12 @@
 		"label": {
 			"placeholder": "Введите метку…",
 			"createPlaceholder": "Добавить как новую метку",
+			"linkShareCannotCreate": "Через ссылку для обмена нельзя создавать новые метки. Можно добавлять только метки, которые уже используются в этом проекте.",
+			"removeLabel": "Убрать метку {label}",
 			"addSuccess": "Метка добавлена.",
 			"removeSuccess": "Метка удалена.",
 			"addCreateSuccess": "Метка успешно создана и добавлена.",
+			"createFailed": "Эти метки не могут быть созданы и не были добавлены: {labels}",
 			"delete": {
 				"header": "Удалить метку",
 				"text1": "Удалить эту метку?",
@@ -1135,6 +1158,9 @@
 			"after": "{amount} {unit} после {type}",
 			"beforeShort": "до",
 			"afterShort": "после",
+			"periodUnit": "Единица времени",
+			"periodDirection": "До или после",
+			"periodRelativeTo": "Относительно какой даты",
 			"onDueDate": "По истечению срока",
 			"onStartDate": "В дату начала",
 			"onEndDate": "В дату окончания",
@@ -1333,6 +1359,7 @@
 		"subscribeFeed": "Подписаться на уведомления через Atom-ленту"
 	},
 	"quickActions": {
+		"title": "Поиск и быстрые действия",
 		"notLoggedIn": "Сначала войдите в главное окно Vikunja.",
 		"commands": "Команды",
 		"placeholder": "Введите команду или поисковый запрос…",
@@ -1351,10 +1378,6 @@
 			"newProject": "Создать проект",
 			"newTeam": "Создать команду"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "Реакция от {user}: {value}",
@@ -1529,6 +1552,11 @@
 			"skipEmailConfirm": "Пропустить подтверждение по электронной почте",
 			"createSubmit": "Создать пользователя",
 			"saveButton": "Сохранить изменения",
+			"newPasswordLabel": "Новый пароль",
+			"setPassword": "Установить пароль",
+			"setPasswordSuccess": "Пароль пользователя {username} обновлён.",
+			"sendResetEmail": "Отправить email для сброса пароля",
+			"sendResetEmailSuccess": "Пользователю {username} отправлен email для сброса пароля.",
 			"createdSuccess": "Пользователь {username} создан.",
 			"updatedSuccess": "Пользователь {username} обновлён.",
 			"deletedSuccess": "Пользователь {username} удалён.",

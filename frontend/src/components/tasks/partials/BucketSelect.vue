@@ -3,9 +3,11 @@
 		<span class="has-text-grey-light"> &gt; </span>
 		<template v-if="canWrite">
 			<Dropdown>
-				<template #trigger="{toggleOpen}">
+				<template #trigger="{toggleOpen, open}">
 					<BaseButton
 						class="bucket-name"
+						:aria-expanded="open"
+						:aria-label="$t('task.detail.bucketSelectLabel', {bucket: currentBucketTitle})"
 						@click="toggleOpen"
 					>
 						{{ currentBucketTitle }}
@@ -15,14 +17,18 @@
 						/>
 					</BaseButton>
 				</template>
-				<DropdownItem
-					v-for="bucket in buckets"
-					:key="bucket.id"
-					:class="{'is-active': currentBucket?.id === bucket.id}"
-					@click="changeBucket(bucket)"
-				>
-					{{ bucket.title }}
-				</DropdownItem>
+				<template #default="{close}">
+					<div @click="close">
+						<DropdownItem
+							v-for="bucket in buckets"
+							:key="bucket.id"
+							:class="{'is-active': currentBucket?.id === bucket.id}"
+							@click="changeBucket(bucket)"
+						>
+							{{ bucket.title }}
+						</DropdownItem>
+					</div>
+				</template>
 			</Dropdown>
 		</template>
 		<span
@@ -35,25 +41,24 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, watch} from 'vue'
+import {bucketsQuery} from '@/client/queries/kanban'
+import {useMoveTaskMutation} from '@/client/queries/taskMutations'
+import {useQuery} from '@tanstack/vue-query'
+import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import type {ITask} from '@/modelTypes/ITask'
-import type {IBucket} from '@/modelTypes/IBucket'
+import type {Task as ITask} from '@/client/generated'
+import type {Bucket as IBucket} from '@/client/generated'
 
-import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
+import {PROJECT_VIEW_KINDS} from '@/constants/projectView'
 
-import {useProjectStore} from '@/stores/projects'
-import {useKanbanStore} from '@/stores/kanban'
+import {useProjects} from '@/composables/useProjects'
 import {useBaseStore} from '@/stores/base'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 
-import BucketService from '@/services/bucket'
-import TaskBucketService from '@/services/taskBucket'
-import TaskBucketModel from '@/models/taskBucket'
 
 import {success} from '@/message'
 
@@ -62,17 +67,14 @@ const props = defineProps<{
 	canWrite: boolean
 }>()
 
-const emit = defineEmits<{
-	'update:task': [task: ITask]
-}>()
 
 const {t} = useI18n({useScope: 'global'})
 
-const projectStore = useProjectStore()
-const kanbanStore = useKanbanStore()
+const projectList = useProjects()
+const moveMutation = useMoveTaskMutation()
 const baseStore = useBaseStore()
 
-const project = computed(() => projectStore.projects[props.task.projectId])
+const project = computed(() => projectList.projects[props.task.project_id ?? 0])
 
 // If the project has exactly one manual kanban view, always use it.
 // If there are multiple, only show the selector when the active view is one of them.
@@ -82,8 +84,8 @@ const kanbanView = computed(() => {
 	}
 
 	const manualKanbanViews = project.value.views.filter(
-		v => v.viewKind === PROJECT_VIEW_KINDS.KANBAN
-			&& v.bucketConfigurationMode === 'manual',
+		view => view.view_kind === PROJECT_VIEW_KINDS.KANBAN
+			&& view.bucket_configuration_mode === 'manual',
 	)
 
 	if (manualKanbanViews.length === 1) {
@@ -98,34 +100,14 @@ const kanbanView = computed(() => {
 	return null
 })
 
-const buckets = ref<IBucket[]>([])
-
-watch(
-	() => kanbanView.value,
-	async (view) => {
-		if (!view) {
-			buckets.value = []
-			return
-		}
-
-		const bucketService = new BucketService()
-		try {
-			buckets.value = await bucketService.getAll({
-				projectId: props.task.projectId,
-				projectViewId: view.id,
-			} as IBucket)
-		} catch (e) {
-			console.error('Failed to load buckets:', e)
-		}
-	},
-	{immediate: true},
-)
+const bucketsQueryResult = useQuery(computed(() => bucketsQuery(props.task.project_id ?? 0, kanbanView.value?.id ?? 0)))
+const buckets = computed(() => bucketsQueryResult.data.value ?? [])
 
 const currentBucket = computed(() => {
 	if (!kanbanView.value) {
 		return undefined
 	}
-	return props.task.buckets?.find(b => b.projectViewId === kanbanView.value.id)
+	return props.task.buckets?.find(b => b.project_view_id === kanbanView.value?.id)
 })
 
 const currentBucketTitle = computed(() => {
@@ -137,39 +119,12 @@ async function changeBucket(bucket: IBucket) {
 		return
 	}
 
-	const taskBucketService = new TaskBucketService()
-	const updatedTaskBucket = await taskBucketService.update(new TaskBucketModel({
-		taskId: props.task.id,
-		bucketId: bucket.id,
-		projectViewId: kanbanView.value.id,
-		projectId: props.task.projectId,
-	}))
-
-	const updatedBuckets = (props.task.buckets || []).map(b => {
-		if (b.projectViewId === kanbanView.value.id) {
-			return {...bucket}
-		}
-		return b
+	await moveMutation.mutateAsync({
+		project: props.task.project_id!,
+		view: kanbanView.value.id!,
+		bucket: bucket.id!,
+		task: props.task,
 	})
-
-	if (!updatedBuckets.find(b => b.projectViewId === kanbanView.value.id)) {
-		updatedBuckets.push({...bucket})
-	}
-
-	kanbanStore.moveTaskToBucket(props.task, bucket.id)
-
-	// Only pick up done state from the response since moving to/from the
-	// done bucket can toggle it. Spreading the full response task would
-	// overwrite fields like maxPermission that are not part of this endpoint.
-	const updatedTask = {
-		...props.task,
-		done: updatedTaskBucket.task?.done ?? props.task.done,
-		doneAt: updatedTaskBucket.task?.doneAt ?? props.task.doneAt,
-		buckets: updatedBuckets,
-		bucketId: bucket.id,
-	}
-
-	emit('update:task', updatedTask)
 
 	success({message: t('task.detail.bucketChangedSuccess')})
 }

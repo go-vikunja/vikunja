@@ -14,16 +14,16 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 
-import type {ILabel} from '@/modelTypes/ILabel'
+import type {Label} from '@/client/generated'
 import XLabel from '@/components/tasks/partials/Label.vue'
 
 const props = defineProps<{
-	labels: ILabel[],
+	labels: Label[],
 }>()
 
 const displayLabels = computed(() =>
 	Array.from(new Map(props.labels.map(label => [label.id, label])).values())
-		.sort((a, b) => a.title.localeCompare(b.title)),
+		.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? '')),
 )
 </script>
 

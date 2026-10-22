@@ -18,11 +18,87 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// initConfigFromYAML runs InitConfig against a config file in a temporary directory.
+// cors.enable is turned off because InitConfig aborts when it is on without a publicurl.
+func initConfigFromYAML(t *testing.T, config string) {
+	t.Helper()
+
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "config.yml"), []byte("cors:\n  enable: false\n"+config), 0600))
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(dir))
+	t.Cleanup(func() {
+		require.NoError(t, os.Chdir(cwd))
+		viper.Reset()
+	})
+
+	viper.Reset()
+	InitConfig()
+}
+
+func TestServiceSecret(t *testing.T) {
+	t.Run("service.jwtsecret is migrated to service.secret", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  jwtsecret: legacy-secret\n")
+
+		assert.Equal(t, "legacy-secret", ServiceSecret.GetString())
+	})
+	t.Run("service.jwtsecret is migrated from the environment", func(t *testing.T) {
+		t.Setenv("VIKUNJA_SERVICE_JWTSECRET", "legacy-env-secret")
+		initConfigFromYAML(t, "")
+
+		assert.Equal(t, "legacy-env-secret", ServiceSecret.GetString())
+	})
+	t.Run("service.secret wins over service.jwtsecret", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  secret: new-secret\n  jwtsecret: legacy-secret\n")
+
+		assert.Equal(t, "new-secret", ServiceSecret.GetString())
+	})
+	t.Run("a secret is generated when none is configured", func(t *testing.T) {
+		initConfigFromYAML(t, "")
+
+		assert.Len(t, ServiceSecret.GetString(), 64)
+	})
+	t.Run("InitDefaultConfig generates a secret on its own", func(t *testing.T) {
+		viper.Reset()
+		t.Cleanup(viper.Reset)
+		InitDefaultConfig()
+
+		assert.Len(t, ServiceSecret.GetString(), 64)
+	})
+}
+
+func TestLogLevelDefaults(t *testing.T) {
+	t.Run("category levels inherit log.level", func(t *testing.T) {
+		initConfigFromYAML(t, "log:\n  level: WARNING\n")
+
+		assert.Equal(t, "WARNING", LogDatabaseLevel.GetString())
+		assert.Equal(t, "WARNING", LogHTTPLevel.GetString())
+		assert.Equal(t, "WARNING", LogEventsLevel.GetString())
+		assert.Equal(t, "WARNING", LogMailLevel.GetString())
+	})
+	t.Run("explicit category level wins", func(t *testing.T) {
+		initConfigFromYAML(t, "log:\n  level: WARNING\n  httplevel: DEBUG\n")
+
+		assert.Equal(t, "DEBUG", LogHTTPLevel.GetString())
+		assert.Equal(t, "WARNING", LogDatabaseLevel.GetString())
+	})
+	t.Run("category level from the environment wins", func(t *testing.T) {
+		t.Setenv("VIKUNJA_LOG_HTTPLEVEL", "ERROR")
+		initConfigFromYAML(t, "log:\n  level: WARNING\n")
+
+		assert.Equal(t, "ERROR", LogHTTPLevel.GetString())
+	})
+}
 
 func TestGetRootpathLocation(t *testing.T) {
 	// The function should return the current working directory
@@ -72,4 +148,98 @@ func TestResolvePath(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestDeprecatedWebhookKeysMigration(t *testing.T) {
+	t.Run("migrates webhooks.* from the config file", func(t *testing.T) {
+		initConfigFromYAML(t, "webhooks:\n  proxyurl: http://mole:8080\n  proxypassword: secret\n  allownonroutableips: true\n")
+
+		assert.Equal(t, "http://mole:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "secret", OutgoingRequestsProxyPassword.GetString())
+		assert.True(t, OutgoingRequestsAllowNonRoutableIPs.GetBool())
+	})
+	t.Run("migrates webhooks.* from the environment", func(t *testing.T) {
+		t.Setenv("VIKUNJA_WEBHOOKS_PROXYURL", "http://mole:8080")
+		t.Setenv("VIKUNJA_WEBHOOKS_PROXYPASSWORD", "secret")
+		t.Setenv("VIKUNJA_WEBHOOKS_ALLOWNONROUTABLEIPS", "true")
+		initConfigFromYAML(t, "")
+
+		assert.Equal(t, "http://mole:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "secret", OutgoingRequestsProxyPassword.GetString())
+		assert.True(t, OutgoingRequestsAllowNonRoutableIPs.GetBool())
+	})
+	t.Run("outgoingrequests.* wins over webhooks.*", func(t *testing.T) {
+		initConfigFromYAML(t, "webhooks:\n  proxyurl: http://old:8080\n  proxypassword: old\noutgoingrequests:\n  proxyurl: http://new:8080\n  proxypassword: new\n")
+
+		assert.Equal(t, "http://new:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "new", OutgoingRequestsProxyPassword.GetString())
+	})
+}
+
+func TestTimezoneFallback(t *testing.T) {
+	t.Run("empty service.timezone falls back to UTC", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: \"\"\n")
+		assert.Equal(t, "UTC", ServiceTimeZone.GetString())
+		assert.Equal(t, "UTC", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("invalid service.timezone falls back to UTC", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: Invalid/Nonexistent\n")
+		assert.Equal(t, "UTC", ServiceTimeZone.GetString())
+		assert.Equal(t, "UTC", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("valid service.timezone is preserved", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: America/New_York\n")
+		assert.Equal(t, "America/New_York", ServiceTimeZone.GetString())
+		assert.Equal(t, "America/New_York", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("invalid defaultsettings.timezone falls back to service.timezone", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: Europe/Berlin\ndefaultsettings:\n  timezone: Bad/Timezone\n")
+		assert.Equal(t, "Europe/Berlin", DefaultSettingsTimezone.GetString())
+	})
+}
+
+func TestPathsFollowRootpath(t *testing.T) {
+	assertPathsUnder := func(t *testing.T, root string) {
+		t.Helper()
+		assert.Equal(t, filepath.Join(root, "vikunja.db"), DatabasePath.GetString())
+		assert.Equal(t, filepath.Join(root, "logs"), LogPath.GetString())
+		assert.Equal(t, filepath.Join(root, "plugins"), PluginsDir.GetString())
+	}
+
+	t.Run("rootpath from a search-path config file", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\n")
+
+		assertPathsUnder(t, "/pinned/root")
+	})
+	t.Run("rootpath from the environment", func(t *testing.T) {
+		t.Setenv("VIKUNJA_SERVICE_ROOTPATH", "/env/root")
+		initConfigFromYAML(t, "")
+
+		assertPathsUnder(t, "/env/root")
+	})
+	t.Run("rootpath from a pinned config file", func(t *testing.T) {
+		dir := t.TempDir()
+		configPath := filepath.Join(dir, "config.yml")
+		require.NoError(t, os.WriteFile(configPath, []byte("cors:\n  enable: false\nservice:\n  rootpath: /pinned/root\n"), 0600))
+		SetConfigFile(configPath)
+		t.Cleanup(func() {
+			SetConfigFile("")
+			viper.Reset()
+		})
+
+		viper.Reset()
+		InitConfig()
+
+		assertPathsUnder(t, "/pinned/root")
+	})
+	t.Run("explicit paths win", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\nlog:\n  path: /var/log/vikunja\n")
+
+		assert.Equal(t, "/var/log/vikunja", LogPath.GetString())
+	})
+	t.Run("relative plugins.dir is resolved against rootpath", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\nplugins:\n  dir: custom-plugins\n")
+
+		assert.Equal(t, "/pinned/root/custom-plugins", PluginsDir.GetString())
+	})
 }

@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200322214440",
 		Description: "Add hex color property to namepaces",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(namespace20200322214440{})
+			return partialSync(tx, namespace20200322214440{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(namespace20200322214440{})

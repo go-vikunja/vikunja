@@ -39,7 +39,6 @@
 			"email": "E-mail adresa",
 			"emailPlaceholder": "primjer frane{'@'}vikunja.io",
 			"password": "Lozinka",
-			"passwordPlaceholder": "primjer •••••••••••",
 			"forgotPassword": "Zaboravili ste lozinku?",
 			"resetPassword": "Ponovno postavite lozinku",
 			"resetPasswordAction": "Pošalji mi vezu za ponovno postavljanje lozinke",
@@ -70,7 +69,6 @@
 			"currentPasswordPlaceholder": "Vaša trenutna lozinka",
 			"passwordUpdateSuccess": "Lozinka je uspješno ažurirana.",
 			"updateEmailTitle": "Ažurirajte e-mail adresu",
-			"updateEmailSuccess": "Vaša email adresa je uspješno ažurirana. Poslali smo vam poveznicu da ju potvrdite.",
 			"general": {
 				"title": "Opće postavke",
 				"savedSuccess": "Postavke su uspješno spremljene.",
@@ -658,7 +656,6 @@
 			"doneAt": "Dovršeno u"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Ovdje se ne možete odjaviti jer ste pretplaćeni na ovaj zadatak putem njegovog projekta.",
 			"subscribedProject": "Trenutno ste pretplaćeni na ovaj projekt i primat ćete obavijesti o promjenama.",
 			"notSubscribedProject": "Niste pretplaćeni na ovaj projekt i nećete primati obavijesti o promjenama.",
 			"subscribedTask": "Trenutno ste pretplaćeni na ovaj zadatak i primat ćete obavijesti o promjenama.",

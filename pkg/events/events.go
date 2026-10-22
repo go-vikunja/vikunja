@@ -26,6 +26,7 @@ import (
 	"github.com/getsentry/sentry-go"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/errorreport"
 	"code.vikunja.io/api/pkg/log"
 	vmetrics "code.vikunja.io/api/pkg/metrics"
 	"github.com/ThreeDotsLabs/watermill"
@@ -55,8 +56,18 @@ type Event interface {
 	Name() string
 }
 
+// MetadataSkipErrorReporting marks a message whose failure is a user
+// configuration problem (an unreachable webhook target, say) rather than a bug,
+// so parking it in the poison queue must not page us. The poison middleware
+// republishes the same message, so metadata a handler sets survives.
+const MetadataSkipErrorReporting = "skip_error_reporting"
+
 type messageHandleFailedError struct {
 	Metadata message.Metadata
+}
+
+func shouldReportPoisonedMessage(meta message.Metadata) bool {
+	return meta.Get(MetadataSkipErrorReporting) != "true"
 }
 
 func (m *messageHandleFailedError) Error() string {
@@ -94,11 +105,20 @@ func InitEvents() (err error) {
 		for s, m := range msg.Metadata {
 			meta += s + "=" + m + ", "
 		}
-		log.Errorf("Error while handling message %s, %s payload=%s", msg.UUID, meta, string(msg.Payload))
+		// The payload is deliberately not logged: events can carry credentials and user data.
+		log.Errorf("Error while handling message %s, %s", msg.UUID, meta)
 
-		if config.SentryEnabled.GetBool() {
-			sentry.CaptureException(&messageHandleFailedError{
-				Metadata: msg.Metadata,
+		if config.SentryEnabled.GetBool() && shouldReportPoisonedMessage(msg.Metadata) {
+			failure := &messageHandleFailedError{Metadata: msg.Metadata}
+			sentry.WithScope(func(scope *sentry.Scope) {
+				// The wrapper error itself says nothing about the failure, so group by the handler
+				// that choked and why.
+				errorreport.ApplyFingerprint(scope, failure,
+					"message_handle_failed",
+					msg.Metadata.Get(middleware.PoisonedHandlerKey),
+					errorreport.Normalize(msg.Metadata.Get(middleware.ReasonForPoisonedKey)),
+				)
+				sentry.CaptureException(failure)
 			})
 		}
 		return nil
@@ -237,30 +257,44 @@ func DispatchWithContext(ctx context.Context, event Event) error {
 	return pubsub.Publish(event.Name(), msg)
 }
 
-// pendingEventQueue holds the pending events and a mutex for thread-safe access
 type pendingEventQueue struct {
-	mu     sync.Mutex
-	events []Event
+	mu        sync.Mutex
+	events    []Event
+	callbacks []func() error
 }
 
 var pendingEvents sync.Map // map[any]*pendingEventQueue
+
+func pendingQueue(key any) *pendingEventQueue {
+	val, _ := pendingEvents.LoadOrStore(key, &pendingEventQueue{})
+	return val.(*pendingEventQueue)
+}
 
 // DispatchOnCommit stores an event to be dispatched later, after a transaction commits.
 // The key should be the *xorm.Session pointer associated with the transaction.
 // Call DispatchPending(key) after s.Commit() to actually dispatch the events.
 // Call CleanupPending(key) on rollback to discard them.
 func DispatchOnCommit(key any, event Event) {
-	val, _ := pendingEvents.LoadOrStore(key, &pendingEventQueue{})
-	queue := val.(*pendingEventQueue)
+	queue := pendingQueue(key)
 	queue.mu.Lock()
 	queue.events = append(queue.events, event)
 	queue.mu.Unlock()
 }
 
-// DispatchPending dispatches all events accumulated for the given key and removes them.
-// Call this after s.Commit(). Safe to call even if no events were registered.
+// OnCommit registers fn to run synchronously in DispatchPending(key), before the pending
+// events are published. CleanupPending(key) discards it. Errors are logged.
+func OnCommit(key any, fn func() error) {
+	queue := pendingQueue(key)
+	queue.mu.Lock()
+	queue.callbacks = append(queue.callbacks, fn)
+	queue.mu.Unlock()
+}
+
+// DispatchPending runs the OnCommit callbacks and dispatches all events accumulated for the
+// given key, then removes them.
+// Call this after s.Commit(). Safe to call even if nothing was registered.
 // Request metadata on the context (see WithRequestMeta) is copied onto each message.
-// If any event fails to dispatch, the error is logged but remaining events are still dispatched.
+// Failures are logged; remaining callbacks and events still run.
 func DispatchPending(ctx context.Context, key any) {
 	val, ok := pendingEvents.LoadAndDelete(key)
 	if !ok {
@@ -269,6 +303,11 @@ func DispatchPending(ctx context.Context, key any) {
 	queue := val.(*pendingEventQueue)
 	// No need to lock here since we've already removed it from the map
 	// and this key won't receive new events
+	for _, fn := range queue.callbacks {
+		if err := fn(); err != nil {
+			log.Errorf("Failed to run on-commit callback: %v", err)
+		}
+	}
 	for _, event := range queue.events {
 		if err := DispatchWithContext(ctx, event); err != nil {
 			log.Errorf("Failed to dispatch event %s: %v", event.Name(), err)
@@ -276,8 +315,8 @@ func DispatchPending(ctx context.Context, key any) {
 	}
 }
 
-// CleanupPending discards all pending events for the given key without dispatching.
-// Call this when a transaction is rolled back.
+// CleanupPending discards all pending events and callbacks for the given key without
+// running them. Call this when a transaction is rolled back.
 func CleanupPending(key any) {
 	pendingEvents.Delete(key)
 }

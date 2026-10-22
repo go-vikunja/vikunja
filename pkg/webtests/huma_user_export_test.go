@@ -18,7 +18,9 @@ package webtests
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"code.vikunja.io/api/pkg/files"
@@ -122,5 +124,26 @@ func TestHumaUserExport(t *testing.T) {
 		require.NoError(t, err)
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/user/export", "", "", "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("Download is documented as a 200 response", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v2/openapi.json", nil)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+
+		var spec map[string]any
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &spec))
+
+		paths, _ := spec["paths"].(map[string]any)
+		path, _ := paths["/user/export/download"].(map[string]any)
+		post, ok := path["post"].(map[string]any)
+		require.True(t, ok, "POST /user/export/download must be in the spec")
+		responses, _ := post["responses"].(map[string]any)
+		assert.Contains(t, responses, "200")
+		assert.NotContains(t, responses, "201")
 	})
 }

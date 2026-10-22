@@ -17,6 +17,7 @@
 package initialize
 
 import (
+	"context"
 	"time"
 
 	"code.vikunja.io/api/pkg/audit"
@@ -34,6 +35,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	migrationmodule "code.vikunja.io/api/pkg/modules/migration"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/plugins"
 	_ "code.vikunja.io/api/pkg/plugins/yaegi" // register yaegi plugin loader
@@ -84,7 +86,7 @@ func FullInitWithoutAsync() {
 	LightInit()
 
 	// Initialize the files handler
-	err := files.InitFileHandler()
+	err := files.InitFileHandler(context.Background())
 	if err != nil {
 		log.Fatalf("Could not init file handler: %s", err)
 	}
@@ -139,6 +141,7 @@ func FullInit() {
 	models.RegisterUserDeletionCron()
 	models.RegisterTaskCleanupCron()
 	models.RegisterOldExportCleanupCron()
+	migrationmodule.RegisterImportUploadCleanupCron()
 	models.RegisterAddTaskToFilterViewCron()
 	user.RegisterTokenCleanupCron()
 	models.RegisterSessionCleanupCron()

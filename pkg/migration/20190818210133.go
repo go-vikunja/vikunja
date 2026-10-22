@@ -43,7 +43,7 @@ func init() {
 		ID:          "20190818210133",
 		Description: "Add link sharing table",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(linkSharing20190818210133{})
+			return tx.Sync2(linkSharing20190818210133{}) //nolint:forbidigo // brand-new table, nothing to drop
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(linkSharing20190818210133{})

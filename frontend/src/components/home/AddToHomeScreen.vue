@@ -26,13 +26,19 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {useLocalStorage} from '@vueuse/core'
 import {computed} from 'vue'
 import {useBaseStore} from '@/stores/base'
+import {useAuthStore} from '@/stores/auth'
 
 const baseStore = useBaseStore()
+const authStore = useAuthStore()
 
 const hideMessage = useLocalStorage('hideAddToHomeScreenMessage', false)
 const hasUpdateAvailable = computed(() => baseStore.updateAvailable)
 
 const shouldShowMessage = computed(() => {
+	if (!authStore.authenticated) {
+		return false
+	}
+
 	if (hideMessage.value) {
 		return false
 	}

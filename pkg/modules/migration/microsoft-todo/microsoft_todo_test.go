@@ -17,10 +17,15 @@
 package microsofttodo
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
 
 	"github.com/d4l3k/messagediff"
 	"github.com/stretchr/testify/assert"
@@ -114,7 +119,7 @@ func TestConverting(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              2,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project 1",
 			},
 			Tasks: []*models.TaskWithComments{
@@ -172,7 +177,7 @@ func TestConverting(t *testing.T) {
 			Project: models.Project{
 				Title:           "Project 2",
 				ID:              3,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 			},
 			Tasks: []*models.TaskWithComments{
 				{
@@ -195,4 +200,62 @@ func TestConverting(t *testing.T) {
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
 		t.Errorf("converted microsoft todo data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
 	}
+}
+
+func TestMakeAuthenticatedGetRequestUpstreamError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":"itemNotFound","innerError":{"code":"MailboxNotEnabledForRESTAPI"}}}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	prevPrefix := apiPrefix
+	apiPrefix = srv.URL + "/"
+	t.Cleanup(func() { apiPrefix = prevPrefix })
+
+	err := makeAuthenticatedGetRequest("token", "lists/delta", &projectsResponse{})
+
+	var upstreamErr *migration.ErrUpstreamRequestFailed
+	require.ErrorAs(t, err, &upstreamErr)
+	assert.Equal(t, http.StatusNotFound, upstreamErr.StatusCode)
+	assert.Contains(t, upstreamErr.Body, "MailboxNotEnabledForRESTAPI")
+}
+
+func TestMakeAuthenticatedGetRequestTooLarge(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"value":[],"padding":"` + strings.Repeat("x", 2048) + `"}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	prevPrefix, prevMax := apiPrefix, migration.MaxResponseBytes
+	apiPrefix = srv.URL + "/"
+	migration.MaxResponseBytes = 1024
+	t.Cleanup(func() { apiPrefix, migration.MaxResponseBytes = prevPrefix, prevMax })
+
+	err := makeAuthenticatedGetRequest("token", "lists/delta", &projectsResponse{})
+	require.ErrorIs(t, err, migration.ErrResponseTooLarge)
+}
+
+func TestGetMicrosoftTodoDataItemLimit(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/lists/delta" {
+			_, _ = w.Write([]byte(`{"value":[{"id":"l1","displayName":"list"}]}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"value":[{"id":"t","title":"task"}],"@odata.nextLink":"` + srv.URL + `/lists/l1/tasks"}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	prevPrefix := apiPrefix
+	apiPrefix = srv.URL + "/"
+	config.MigrationMaxItems.Set(5)
+	t.Cleanup(func() {
+		apiPrefix = prevPrefix
+		config.MigrationMaxItems.Set(100000)
+	})
+
+	_, err := getMicrosoftTodoData("token")
+	var limitErr *migration.ErrImportItemLimitExceeded
+	require.ErrorAs(t, err, &limitErr)
 }

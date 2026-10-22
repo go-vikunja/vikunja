@@ -35,7 +35,7 @@ func init() {
 		ID:          "20210407170753",
 		Description: "Add discoverable by email or name columns",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20210407170753{})
+			return partialSync(tx, users20210407170753{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

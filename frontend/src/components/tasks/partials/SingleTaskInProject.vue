@@ -1,11 +1,11 @@
 <template>
 	<div
 		:data-task-id="task.id"
-		:data-project-id="task.projectId"
+		:data-project-id="task.project_id"
 	>
 		<div
 			ref="taskRoot"
-			:class="{'is-loading': taskService.loading}"
+			:class="{'is-loading': isLoading}"
 			class="task loader-container single-task"
 			tabindex="-1"
 			:data-is-overdue="isOverdue || undefined"
@@ -17,7 +17,7 @@
 				class="is-inline-flex is-align-items-center"
 			>
 				<FancyCheckbox
-					v-model="task.done"
+					:model-value="task.done ?? false"
 					:disabled="isArchived || disabled || !canMarkAsDone"
 					:aria-label="$t('task.detail.markAsDone', {task: task.title})"
 					@update:modelValue="markAsDone"
@@ -26,7 +26,7 @@
 			</span>
 
 			<ColorBubble
-				v-if="!showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
+				v-if="!showProjectSeparately && projectColor !== '' && currentProject?.id !== task.project_id"
 				:color="projectColor"
 				class="mie-1"
 			/>
@@ -35,26 +35,26 @@
 				:class="{ 'done': task.done, 'show-project': showProject && project}"
 				class="tasktext"
 			>
-				<span class="is-inline-flex is-align-items-center">
+				<span>
 					<RouterLink
 						v-if="showProject && typeof project !== 'undefined'"
 						v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-						:to="{ name: 'project.index', params: { projectId: task.projectId } }"
+						:to="{ name: 'project.index', params: { projectId: task.project_id } }"
 						class="task-project mie-1"
-						:class="{'mie-2': task.hexColor !== ''}"
+						:class="{'mie-2': task.hex_color !== ''}"
 						@click.stop
 					>
 						{{ project.title }}
 					</RouterLink>
 
 					<ColorBubble
-						v-if="task.hexColor !== ''"
-						:color="getHexColor(task.hexColor)"
+						v-if="task.hex_color !== ''"
+						:color="getHexColor(task.hex_color)"
 						class="mie-1"
 					/>
 	
 					<PriorityLabel
-						:priority="task.priority"
+						:priority="task.priority ?? 0"
 						:done="task.done"
 						class="pis-2 mie-1"
 					/>
@@ -64,7 +64,6 @@
 							ref="taskLinkRef"
 							:to="taskDetailRoute"
 							class="task-link"
-							tabindex="-1"
 						>
 							{{ task.title }}
 						</RouterLink>
@@ -72,30 +71,35 @@
 				</span>
 
 				<Labels
-					v-if="task.labels.length > 0"
+					v-if="(task.labels?.length ?? 0) > 0"
 					class="labels mis-2 mie-1"
-					:labels="task.labels"
+					:labels="task.labels ?? []"
 				/>
 
 				<AssigneeList
-					v-if="task.assignees.length > 0"
-					:assignees="task.assignees"
+					v-if="(task.assignees?.length ?? 0) > 0"
+					:assignees="task.assignees ?? []"
 					:avatar-size="25"
 					class="mis-1"
 					:inline="true"
 				/>
 
 				<Popup
-					v-if="+new Date(task.dueDate) > 0"
+					v-if="task.due_date && +new Date(task.due_date) > 0"
+					placement="bottom-start"
+					:anchor="dueDateTriggerEl"
+					sheet-on-mobile
+					:sheet-title="$t('task.deferDueDate.title')"
 				>
 					<template #trigger="{toggle, isOpen}">
 						<BaseButton
-							v-tooltip="formatDateLong(task.dueDate)"
+							ref="dueDateTrigger"
+							v-tooltip="formatDateLong(task.due_date)"
 							class="dueDate"
 							@click.prevent.stop="toggle()"
 						>	
 							<time
-								:datetime="formatISO(task.dueDate)"
+								:datetime="formatISO(task.due_date)"
 								class="is-italic"
 								:aria-expanded="isOpen ? 'true' : 'false'"
 							>
@@ -106,28 +110,28 @@
 					<template #content="{isOpen}">
 						<DeferTask
 							v-if="isOpen"
-							v-model="task"
-							@update:modelValue="deferTaskUpdate"
+							:model-value="task"
 						/>
 					</template>
 				</Popup>
 
 				<span>
 					<span
-						v-if="task.attachments.length > 0"
+						v-if="(task.attachments?.length ?? 0) > 0"
 						class="project-task-icon"
+						role="img"
+						:aria-label="$t('task.attributes.attachment', (task.attachments?.length ?? 0))"
 					>
 						<Icon icon="paperclip" />
 					</span>
 					<span
-						v-if="!isEditorContentEmpty(task.description)"
+						v-if="!isEditorContentEmpty((task.description ?? ''))"
 						class="project-task-icon is-mirrored-rtl"
 					>
 						<Icon icon="align-left" />
 					</span>
 					<span
-						v-if="taskIsRepeating"
-						v-tooltip="repeatTooltip"
+						v-if="isRepeating"
 						class="project-task-icon"
 					>
 						<Icon icon="history" />
@@ -142,13 +146,13 @@
 			</div>
 
 			<ProgressBar
-				v-if="task.percentDone > 0"
-				:value="task.percentDone * 100"
+				v-if="(task.percent_done ?? 0) > 0"
+				:value="(task.percent_done ?? 0) * 100"
 				is-small
 			/>
 
 			<ColorBubble
-				v-if="showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
+				v-if="showProjectSeparately && projectColor !== '' && currentProject?.id !== task.project_id"
 				:color="projectColor"
 				class="mie-1"
 			/>
@@ -156,7 +160,7 @@
 			<RouterLink
 				v-if="showProjectSeparately"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-				:to="{ name: 'project.index', params: { projectId: task.projectId } }"
+				:to="{ name: 'project.index', params: { projectId: task.project_id } }"
 				class="task-project"
 				@click.stop
 			>
@@ -164,13 +168,15 @@
 			</RouterLink>
 
 			<BaseButton
-				:class="{'is-favorite': task.isFavorite}"
+				:class="{'is-favorite': task.is_favorite}"
 				class="favorite"
 				@click.stop="toggleFavorite"
 			>
-				<span class="is-sr-only">{{ task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite') }}</span>
+				<span class="is-sr-only">{{
+					task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
+				}}</span>
 				<Icon
-					v-if="task.isFavorite"
+					v-if="task.is_favorite"
 					icon="star"
 				/>
 				<Icon
@@ -180,12 +186,12 @@
 			</BaseButton>
 			<slot />
 		</div>
-		<template v-if="typeof task.relatedTasks?.subtask !== 'undefined'">
-			<template v-for="subtask in task.relatedTasks.subtask">
+		<template v-if="typeof task.related_tasks?.subtask !== 'undefined'">
+			<template v-for="subtask in task.related_tasks.subtask">
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
 						:key="subtask.id"
-						:the-task="getTaskById(subtask.id)"
+						:the-task="getTaskById(subtask.id)!"
 						:disabled="disabled"
 						:can-mark-as-done="canMarkAsDone"
 						:all-tasks="allTasks"
@@ -198,11 +204,11 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, shallowReactive, onMounted, computed} from 'vue'
+import {ref, watch, onMounted, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import TaskModel, {getHexColor} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
+import {getHexColor} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
@@ -217,20 +223,20 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Popup from '@/components/misc/Popup.vue'
 
-import TaskService from '@/services/task'
 
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 import {success} from '@/message'
 
-import {useProjectStore} from '@/stores/projects'
-import {useBaseStore} from '@/stores/base'
-import {useTaskStore} from '@/stores/tasks'
+import {useProjects} from '@/composables/useProjects'
+import {useCurrentProject} from '@/composables/useCurrentProject'
+import {useUpdateTaskMutation, useFavoriteTaskMutation} from '@/client/queries/taskMutations'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useGlobalNow} from '@/composables/useGlobalNow'
-import {isRepeating, describeRepeat} from '@/helpers/rrule'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -251,9 +257,9 @@ const emit = defineEmits<{
 	'taskUpdated': [task: ITask],
 }>()
 
-function getTaskById(taskId: number): ITask | undefined {
+function getTaskById(taskId: number | undefined): ITask | undefined {
 	if (typeof props.allTasks === 'undefined' || props.allTasks.length === 0) {
-		return null
+		return undefined
 	}
 
 	return props.allTasks.find(t => t.id === taskId)
@@ -261,44 +267,25 @@ function getTaskById(taskId: number): ITask | undefined {
 
 const {t} = useI18n({useScope: 'global'})
 
-const taskService = shallowReactive(new TaskService())
-const task = ref<ITask>(new TaskModel())
+const task = computed(() => props.theTask)
 
-const taskIsRepeating = computed(() => isRepeating(task.value.repeat))
+const isRepeating = computed(() => (task.value.repeat_after ?? 0) > 0
+	|| ((task.value.repeat_after ?? 0) === 0
+		&& task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
 
-const repeatTooltip = computed(() => {
-	if (!task.value.repeat) {
-		return ''
-	}
-	return describeRepeat(task.value.repeat, t)
-})
+const projectList = useProjects()
+const updateTask = useUpdateTaskMutation(true)
+const favoriteTask = useFavoriteTaskMutation()
+const isLoading = useDelayedLoading(() => updateTask.isPending.value || favoriteTask.isPending.value)
 
-watch(
-	() => props.theTask,
-	newVal => {
-		task.value = newVal
-	},
-	{
-		immediate: true,
-		deep: true,
-	},
-)
+const project = computed(() => projectList.projects[task.value.project_id ?? 0])
+const projectColor = computed(() => project.value?.hex_color ?? '')
 
-const baseStore = useBaseStore()
-const projectStore = useProjectStore()
-const taskStore = useTaskStore()
+const showProjectSeparately = computed(() => !props.showProject
+	&& currentProject.value?.id !== task.value.project_id
+	&& project.value)
 
-const project = computed(() => projectStore.projects[task.value.projectId])
-const projectColor = computed(() => project.value ? project.value?.hexColor : '')
-
-const showProjectSeparately = computed(() => !props.showProject && currentProject.value?.id !== task.value.projectId && project.value)
-
-const currentProject = computed(() => {
-	return typeof baseStore.currentProject === 'undefined' ? {
-		id: 0,
-		title: '',
-	} : baseStore.currentProject
-})
+const {currentProject} = useCurrentProject()
 
 const taskDetailRoute = computed(() => ({
 	name: 'task.detail',
@@ -308,11 +295,11 @@ const taskDetailRoute = computed(() => ({
 }))
 
 function updateDueDate() {
-	if (!task.value.dueDate) {
+	if (!task.value.due_date) {
 		return
 	}
 
-	dueDateFormatted.value = formatDisplayDate(task.value.dueDate)
+	dueDateFormatted.value = formatDisplayDate(task.value.due_date)
 }
 
 const dueDateFormatted = ref('')
@@ -321,31 +308,33 @@ useIntervalFn(updateDueDate, 60_000, {
 })
 onMounted(updateDueDate)
 
-watch(() => task.value.dueDate, updateDueDate)
+watch(() => task.value.due_date, updateDueDate)
 
 const {now} = useGlobalNow()
 const isOverdue = computed(() => (
 	!task.value.done &&
-	task.value.dueDate !== null &&
-	task.value.dueDate.getTime() > 0 &&
-	task.value.dueDate.getTime() <= now.value.getTime()
+	task.value.due_date !== null &&
+	new Date(task.value.due_date ?? 0).getTime() > 0 &&
+	new Date(task.value.due_date ?? 0).getTime() <= now.value.getTime()
 ))
 
-let oldTask
+let oldTask: ITask
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
-	oldTask = {...task.value}
+	if (!wasReverted) oldTask = {...task.value}
 
 	// Fire the request immediately and with the intended done value snapshotted, so a re-render or
 	// teardown during the animation delay can neither drop the save nor make it send a stale state.
-	const updatePromise = taskStore.update({
-		...task.value,
+	const source = wasReverted && isRepeating.value ? oldTask : task.value
+	const updatePromise = updateTask.mutateAsync({
+		...source,
+		id: source.id!,
 		done: checked,
-	})
+	}).catch(() => undefined)
 
 	const finish = async () => {
 		const newTask = await updatePromise
-		task.value = newTask
+		if (!newTask) return
 
 		updateDueDate()
 
@@ -359,7 +348,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 		emit('taskUpdated', newTask)
 
 		let message = t('task.doneSuccess')
-		if (!task.value.done && !taskIsRepeating.value) {
+		if (!task.value.done && !isRepeating.value) {
 			message = t('task.undoneSuccess')
 		}
 
@@ -377,23 +366,21 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 }
 
 function undoDone(checked: boolean) {
-	if (taskIsRepeating.value) {
-		task.value = {...oldTask}
-	}
-	task.value.done = !task.value.done
 	markAsDone(!checked, true)
 }
 
 async function toggleFavorite() {
-	task.value = await taskStore.toggleFavorite(task.value)
-	emit('taskUpdated', task.value)
+	const updated = await favoriteTask.mutateAsync({...task.value, id: task.value.id!})
+	emit('taskUpdated', updated)
 }
 
 const taskRoot = ref<HTMLElement | null>(null)
-const taskLinkRef = ref<HTMLElement | null>(null)
+const dueDateTrigger = ref<InstanceType<typeof BaseButton> | null>(null)
+const dueDateTriggerEl = computed<HTMLElement | null>(() => dueDateTrigger.value?.$el ?? null)
+const taskLinkRef = ref<InstanceType<typeof BaseButton> | null>(null)
 
 function hasTextSelected() {
-	const isTextSelected = window.getSelection().toString()
+	const isTextSelected = window.getSelection()?.toString()
 	return !(typeof isTextSelected === 'undefined' || isTextSelected === '' || isTextSelected === '\n')
 }
 
@@ -477,7 +464,7 @@ defineExpose({
 	}
 
 	&[data-is-overdue] .dueDate {
-		color: var(--danger);
+		color: var(--danger-text);
 	}
 
 	.task-project {
@@ -485,6 +472,13 @@ defineExpose({
 		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
+	}
+
+	.tasktext :deep(.color-bubble),
+	.tasktext :deep(.avatar-wrapper),
+	.tasktext :deep(.labels .tag) {
+		vertical-align: middle;
+		transform: translateY(-2px);
 	}
 
 	.avatar {
@@ -618,8 +612,7 @@ defineExpose({
 	background-color: var(--white);
 	box-shadow: var(--shadow-lg);
 	color: var(--text);
-	inset-block-start: unset;
-	
+
 	&.is-open {
 		padding: 1rem;
 		border: 1px solid var(--grey-200);

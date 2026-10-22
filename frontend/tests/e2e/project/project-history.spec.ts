@@ -32,7 +32,7 @@ test.describe('Project History', () => {
 			}, false)
 		}
 
-		const loadProjectArrayPromise = page.waitForResponse('**/api/v1/projects*')
+		const loadProjectArrayPromise = page.waitForResponse('**/api/v2/projects*')
 		await page.goto('/')
 		await loadProjectArrayPromise
 		await expect(page.locator('body')).not.toContainText('Last viewed')
@@ -86,8 +86,8 @@ test.describe('Project History', () => {
 		// Disable the setting via API
 		const token = await page.evaluate(() => localStorage.getItem('token'))
 		await updateUserSettings(apiContext, token!, {
-			frontendSettings: {
-				showLastViewed: false,
+			frontend_settings: {
+				show_last_viewed: false,
 			},
 		})
 
@@ -115,8 +115,8 @@ test.describe('Project History', () => {
 		// Disable the setting first
 		const token = await page.evaluate(() => localStorage.getItem('token'))
 		await updateUserSettings(apiContext, token!, {
-			frontendSettings: {
-				showLastViewed: false,
+			frontend_settings: {
+				show_last_viewed: false,
 			},
 		})
 
@@ -130,8 +130,8 @@ test.describe('Project History', () => {
 
 		// Re-enable the setting
 		await updateUserSettings(apiContext, token!, {
-			frontendSettings: {
-				showLastViewed: true,
+			frontend_settings: {
+				show_last_viewed: true,
 			},
 		})
 

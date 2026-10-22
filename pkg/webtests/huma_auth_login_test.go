@@ -24,24 +24,44 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/avatar"
+	"code.vikunja.io/api/pkg/routes"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/labstack/echo/v5"
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// refreshCookie returns the Set-Cookie value for the refresh-token cookie, or ""
-// if the response set no such cookie.
-func refreshCookie(rec *httptest.ResponseRecorder) *http.Cookie {
+func refreshCookies(rec *httptest.ResponseRecorder) []*http.Cookie {
+	cookies := []*http.Cookie{}
 	for _, c := range rec.Result().Cookies() {
 		if c.Name == auth.RefreshTokenCookieName {
-			return c
+			cookies = append(cookies, c)
 		}
 	}
-	return nil
+	return cookies
+}
+
+func refreshCookie(rec *httptest.ResponseRecorder) *http.Cookie {
+	cookies := refreshCookies(rec)
+	if len(cookies) == 0 {
+		return nil
+	}
+	return cookies[0]
+}
+
+func refreshCookiePaths(rec *httptest.ResponseRecorder) []string {
+	paths := []string{}
+	for _, c := range refreshCookies(rec) {
+		paths = append(paths, c.Path)
+	}
+	return paths
 }
 
 // TestHumaLogin ports the v1 login coverage to /api/v2: it asserts the token
@@ -66,6 +86,7 @@ func TestHumaLogin(t *testing.T) {
 		require.NotNil(t, cookie, "login must set the refresh-token cookie")
 		assert.NotEmpty(t, cookie.Value)
 		assert.True(t, cookie.HttpOnly, "refresh cookie must be HttpOnly")
+		assert.ElementsMatch(t, []string{auth.RefreshTokenPathV1, auth.RefreshTokenPathV2}, refreshCookiePaths(rec))
 	})
 
 	t.Run("wrong password", func(t *testing.T) {
@@ -121,8 +142,8 @@ func TestHumaLogin(t *testing.T) {
 	})
 }
 
-// TestHumaLogout proves the v2 logout deletes the session server-side and clears
-// the refresh-token cookie.
+// TestHumaLogout proves the v2 logout deletes the session server-side, clears
+// the refresh-token cookie and dispatches the audited logout event.
 func TestHumaLogout(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -138,9 +159,14 @@ func TestHumaLogout(t *testing.T) {
 	token, err := auth.NewUserJWTAuthtoken(&testuser1, session.ID)
 	require.NoError(t, err)
 
+	events.ClearDispatchedEvents()
 	rec := humaRequest(t, e, http.MethodPost, "/api/v2/logout", "", token, "")
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 	assert.Contains(t, rec.Body.String(), "Successfully logged out.")
+
+	dispatched := events.GetDispatchedEvents((&user.LogoutEvent{}).Name())
+	require.Len(t, dispatched, 1)
+	assert.Equal(t, testuser1.ID, dispatched[0].(*user.LogoutEvent).UserID)
 
 	cookie := refreshCookie(rec)
 	require.NotNil(t, cookie, "logout must clear the refresh cookie")
@@ -162,6 +188,60 @@ func TestHumaLoginUnauthenticated(t *testing.T) {
 
 	rec := humaRequest(t, e, http.MethodPost, "/api/v2/login", `{"username":"user1","password":"12345678"}`, "", "")
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+}
+
+// TestHumaLoginRouteGate proves /api/v2/login follows the same local-or-LDAP
+// config gate v1 applies in routes.go, and that logout is never gated.
+func TestHumaLoginRouteGate(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+
+	defer func(local, ldap bool) {
+		config.AuthLocalEnabled.Set(local)
+		config.AuthLdapEnabled.Set(ldap)
+	}(config.AuthLocalEnabled.GetBool(), config.AuthLdapEnabled.GetBool())
+
+	for _, tc := range []struct {
+		name        string
+		local, ldap bool
+		registered  bool
+	}{
+		{"local enabled", true, false, true},
+		{"ldap only", false, true, true},
+		{"neither", false, false, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			config.AuthLocalEnabled.Set(tc.local)
+			config.AuthLdapEnabled.Set(tc.ldap)
+
+			e := routes.NewEcho()
+			routes.RegisterRoutes(e)
+
+			assert.Equal(t, tc.registered, hasRoute(e, http.MethodPost, "/api/v2/login"))
+			assert.True(t, hasRoute(e, http.MethodPost, "/api/v2/logout"), "logout must stay registered regardless of local auth")
+
+			rec := humaRequest(t, e, http.MethodPost, "/api/v2/login", `{"username":"user1","password":"12345678"}`, "", "")
+			switch {
+			case !tc.registered:
+				assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+			case tc.local:
+				assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+			default:
+				// LDAP-only: no LDAP server in tests, so the credentials fail -
+				// reachability is what matters here.
+				assert.NotEqual(t, http.StatusNotFound, rec.Code, rec.Body.String())
+			}
+		})
+	}
+}
+
+func hasRoute(e *echo.Echo, method, path string) bool {
+	for _, r := range e.Router().Routes() {
+		if r.Path == path && r.Method == method {
+			return true
+		}
+	}
+	return false
 }
 
 // TestHumaOpenIDGating proves the OIDC callback route only exists when OpenID is
@@ -192,5 +272,100 @@ func TestHumaOpenIDGating(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/auth/openid/doesnotexist/callback", body, "", "")
 		assert.NotEqual(t, http.StatusNotFound, rec.Code)
 		assert.NotEqual(t, http.StatusUnauthorized, rec.Code)
+	})
+}
+
+func TestHumaLoginLdapEmailUnconfirmedAccount(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	if !config.AuthLdapEnabled.GetBool() {
+		t.Skip("Skipping LDAP tests because ldap is not configured")
+	}
+
+	const body = `{"username":"professor","password":"professor"}`
+	rec := humaRequest(t, e, http.MethodPost, "/api/v2/login", body, "", "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+
+	s := db.NewSession()
+	u, err := user.GetUserByUsername(s, "professor")
+	s.Close()
+	require.NoError(t, err)
+	setUserStatus(t, u.ID, user.StatusEmailConfirmationRequired)
+
+	rec = humaRequest(t, e, http.MethodPost, "/api/v2/login", body, "", "")
+	assert.Equal(t, http.StatusPreconditionFailed, rec.Code, rec.Body.String())
+	assert.Equal(t, user.ErrCodeEmailNotConfirmed, problemCode(t, rec))
+	assert.Nil(t, refreshCookie(rec))
+}
+
+func TestAuthenticateUserCredentialsLdapAvatarSync(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+	if !config.AuthLdapEnabled.GetBool() {
+		t.Skip("Skipping LDAP tests because ldap is not configured")
+	}
+
+	orig := config.AuthLdapAvatarSyncAttribute.GetString()
+	t.Cleanup(func() { config.AuthLdapAvatarSyncAttribute.Set(orig) })
+
+	login := func(password string) (*user.User, error) {
+		u, err := shared.AuthenticateUserCredentials(t.Context(), &user.Login{Username: "professor", Password: password})
+		avatar.WaitForProviderSyncsForTests()
+		return u, err
+	}
+	storedUser := func() *user.User {
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByUsername(s, "professor")
+		require.NoError(t, err)
+		return u
+	}
+
+	config.AuthLdapAvatarSyncAttribute.Set("")
+	_, err = login("professor")
+	require.NoError(t, err)
+	u := storedUser()
+	require.NotEqual(t, "ldap", u.AvatarProvider)
+	require.Zero(t, u.AvatarFileID)
+
+	config.AuthLdapAvatarSyncAttribute.Set("jpegPhoto")
+
+	t.Run("wrong password does not sync", func(t *testing.T) {
+		_, err := login("not-the-password")
+		require.Error(t, err)
+		after := storedUser()
+		assert.NotEqual(t, "ldap", after.AvatarProvider)
+		assert.Zero(t, after.AvatarFileID)
+	})
+
+	t.Run("missing totp does not sync", func(t *testing.T) {
+		s := db.NewSession()
+		_, err := s.Insert(&user.TOTP{UserID: u.ID, Secret: "JBSWY3DPEHPK3PXP", Enabled: true})
+		if err == nil {
+			err = s.Commit()
+		}
+		s.Close()
+		require.NoError(t, err)
+
+		_, err = login("professor")
+		require.Error(t, err)
+		assert.True(t, user.IsErrInvalidTOTPPasscode(err))
+		after := storedUser()
+		assert.NotEqual(t, "ldap", after.AvatarProvider)
+		assert.Zero(t, after.AvatarFileID)
+
+		s = db.NewSession()
+		defer s.Close()
+		_, err = s.Where("user_id = ?", u.ID).Delete(&user.TOTP{})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+	})
+
+	t.Run("successful login syncs after commit", func(t *testing.T) {
+		_, err := login("professor")
+		require.NoError(t, err)
+		after := storedUser()
+		assert.Equal(t, "ldap", after.AvatarProvider)
+		assert.NotZero(t, after.AvatarFileID)
 	})
 }

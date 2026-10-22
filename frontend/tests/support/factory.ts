@@ -15,6 +15,13 @@ export class Factory {
 		return {}
 	}
 
+	// Hook to transform a row just before it is seeded to the DB. The returned
+	// data (from create()) keeps the original values; only what is written to the
+	// database is transformed. Default: identity.
+	static transformForSeed(item: Record<string, unknown>): Record<string, unknown> {
+		return item
+	}
+
 	/**
 	 * Seeds a bunch of fake data into the database.
 	 *
@@ -61,7 +68,7 @@ export class Factory {
 				}
 				// Skip arrays, objects, and other complex types
 			}
-			return flatItem
+			return this.transformForSeed(flatItem)
 		})
 
 		await this.seed(this.table, flatData, truncate)

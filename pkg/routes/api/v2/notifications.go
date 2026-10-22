@@ -50,7 +50,7 @@ func RegisterNotificationRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "notifications-list",
 		Summary:     "List notifications",
-		Description: "Returns the authenticated user's own notifications, newest first. Link shares have no notifications and are refused.",
+		Description: "Returns the authenticated user's own notifications, newest first. Notifications about a project the caller can no longer read are omitted; the filtering happens in the query, so pages come back full and total and total_pages count the visible notifications only. Link shares have no notifications and are refused.",
 		Method:      http.MethodGet,
 		Path:        "/notifications",
 		Tags:        tags,
@@ -75,6 +75,15 @@ func RegisterNotificationRoutes(api huma.API) {
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
 	}, notificationsMarkAllRead)
+
+	Register(api, huma.Operation{
+		OperationID: "notifications-delete-all",
+		Summary:     "Delete all notifications",
+		Description: "Deletes every notification of the authenticated user. Only the caller's own notifications are affected; link shares have no notifications and are refused.",
+		Method:      http.MethodDelete,
+		Path:        "/notifications",
+		Tags:        tags,
+	}, notificationsDeleteAll)
 }
 
 func init() { AddRouteRegistrar(RegisterNotificationRoutes) }
@@ -136,4 +145,15 @@ func notificationsMarkAllRead(ctx context.Context, _ *struct{}) (*markAllReadBod
 	out := &markAllReadBody{}
 	out.Body.Message = "success"
 	return out, nil
+}
+
+func notificationsDeleteAll(ctx context.Context, _ *struct{}) (*emptyBody, error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := handler.DoDelete(ctx, &models.DatabaseNotifications{}, a); err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &emptyBody{}, nil
 }

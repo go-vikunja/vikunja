@@ -1,8 +1,8 @@
-import type {ITaskRepeat} from '@/modelTypes/ITask'
+import type {IRepeatAfter} from '@/types/IRepeatAfter'
 
 export interface repeatParsedResult {
 	textWithoutMatched: string,
-	repeat: ITaskRepeat | null,
+	repeats: IRepeatAfter | null,
 }
 
 export interface ParsedTaskText {
@@ -12,7 +12,7 @@ export interface ParsedTaskText {
 	project: string | null,
 	priority: number | null,
 	assignees: string[],
-	repeat: ITaskRepeat | null,
+	repeats: IRepeatAfter | null,
 }
 
 export interface Prefixes {

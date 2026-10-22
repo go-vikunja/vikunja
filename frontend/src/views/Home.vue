@@ -21,14 +21,14 @@
 		</Message>
 		<AddTask
 			class="is-max-width-desktop"
-			@taskAdded="updateTaskKey"
+			@tasksAdded="updateTaskKey"
 		/>
 		<ImportHint v-if="tasksLoaded" />
 		<div
-			v-if="authStore.settings.frontendSettings.showLastViewed !== false && projectHistory.length > 0"
+			v-if="authStore.settings.frontend_settings.show_last_viewed !== false && projectHistory.length > 0"
 			class="is-max-width-desktop has-text-start mbs-4"
 		>
-			<h3>{{ $t('home.lastViewed') }}</h3>
+			<h2>{{ $t('home.lastViewed') }}</h2>
 			<ProjectCardGrid
 				v-cy="'projectCardGrid'"
 				:projects="projectHistory"
@@ -36,7 +36,7 @@
 			/>
 		</div>
 		<ShowTasks
-			v-if="projectStore.hasProjects"
+			v-if="projectList.hasProjects"
 			:key="showTasksKey"
 			:label-ids="labelIds"
 			class="show-tasks"
@@ -61,13 +61,13 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 
 const salutation = useDaytimeSalutation()
 
 const authStore = useAuthStore()
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const route = useRoute()
 const router = useRouter()
 
@@ -78,13 +78,13 @@ const projectHistory = computed(() => {
 	}
 	
 	return getHistory()
-		.map(l => projectStore.projects[l.id])
+		.map(l => projectList.projects[l.id])
 		.filter(l => Boolean(l))
 })
 
 const tasksLoaded = ref(false)
 
-const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletion_scheduled_at))
 
 // Extract label IDs from query parameter
 const labelIds = computed(() => {
@@ -92,7 +92,7 @@ const labelIds = computed(() => {
 	if (!labelsParam) {
 		return undefined
 	}
-	return Array.isArray(labelsParam) ? labelsParam : [labelsParam]
+	return Array.isArray(labelsParam) ? labelsParam.filter((id): id is string => id !== null) : [labelsParam]
 })
 
 // This is to reload the tasks list after adding a new task through the global task add.

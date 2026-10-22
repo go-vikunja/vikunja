@@ -13,6 +13,7 @@
 					v-tooltip="$t('misc.copy')"
 					:shadow="false"
 					icon="paste"
+					:aria-label="$t('misc.copy')"
 					@click="copy(feedUrl)"
 				/>
 			</template>

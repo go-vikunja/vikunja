@@ -4,7 +4,7 @@ import { onBeforeRouteUpdate } from 'vue-router'
 
 import { MILLISECONDS_A_SECOND } from '@/constants/date'
 
-const GLOBAL_NOW_INTERVAL = 60 * MILLISECONDS_A_SECOND
+export const GLOBAL_NOW_INTERVAL = 60 * MILLISECONDS_A_SECOND
 
 /**
  * A global shared state that provides the current time, updated at a regular interval.

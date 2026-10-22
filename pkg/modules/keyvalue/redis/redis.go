@@ -21,6 +21,8 @@ import (
 	"context"
 	"encoding/gob"
 	"errors"
+	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/red"
 	"github.com/redis/go-redis/v9"
@@ -42,6 +44,15 @@ func NewStorage() *Storage {
 
 // Put puts a value into redis
 func (s *Storage) Put(key string, value interface{}) (err error) {
+	return s.put(key, value, 0)
+}
+
+// PutWithTTL puts a value into redis which redis expires after ttl
+func (s *Storage) PutWithTTL(key string, value interface{}, ttl time.Duration) (err error) {
+	return s.put(key, value, ttl)
+}
+
+func (s *Storage) put(key string, value interface{}, ttl time.Duration) (err error) {
 
 	var v interface{}
 
@@ -63,10 +74,10 @@ func (s *Storage) Put(key string, value interface{}) (err error) {
 		if err != nil {
 			return err
 		}
-		return s.client.Set(context.Background(), key, buf.Bytes(), 0).Err()
+		return s.client.Set(context.Background(), key, buf.Bytes(), ttl).Err()
 	}
 
-	return s.client.Set(context.Background(), key, v, 0).Err()
+	return s.client.Set(context.Background(), key, v, ttl).Err()
 }
 
 // Get retrieves a saved value from redis
@@ -109,24 +120,48 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 	return s.client.IncrBy(context.Background(), key, update).Err()
 }
 
+var incrByWithTTLScript = redis.NewScript(`
+local v = redis.call('INCRBY', KEYS[1], ARGV[1])
+if redis.call('PTTL', KEYS[1]) == -1 then
+	redis.call('PEXPIRE', KEYS[1], ARGV[2])
+end
+return v
+`)
+
+// Scripted so a concurrent first increment can't lose the ttl.
+func (s *Storage) IncrByWithTTL(key string, update int64, ttl time.Duration) (int64, error) {
+	return incrByWithTTLScript.Run(context.Background(), s.client, []string{key}, update, ttl.Milliseconds()).Int64()
+}
+
 // DecrBy decreases the value saved at key by the amount provided through update
 func (s *Storage) DecrBy(key string, update int64) (err error) {
 	return s.client.DecrBy(context.Background(), key, update).Err()
 }
 
+var globEscaper = strings.NewReplacer("\\", "\\\\", "*", "\\*", "?", "\\?", "[", "\\[", "]", "\\]")
+
 // ListKeys returns all keys in redis starting with the given prefix
 func (s *Storage) ListKeys(prefix string) ([]string, error) {
 	ctx := context.Background()
-	pattern := prefix + "*"
+	// Match the prefix literally like the memory backend does; user-derived prefixes may contain glob chars.
+	pattern := globEscaper.Replace(prefix) + "*"
 	var cursor uint64
 	var keys []string
+	// SCAN may return duplicates
+	seen := make(map[string]struct{})
 
 	for {
 		k, c, err := s.client.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {
 			return nil, err
 		}
-		keys = append(keys, k...)
+		for _, key := range k {
+			if _, has := seen[key]; has {
+				continue
+			}
+			seen[key] = struct{}{}
+			keys = append(keys, key)
+		}
 		cursor = c
 		if cursor == 0 {
 			break
@@ -138,12 +173,24 @@ func (s *Storage) ListKeys(prefix string) ([]string, error) {
 
 // DelPrefix removes all keys in redis which start with the given prefix
 func (s *Storage) DelPrefix(prefix string) error {
-	keys, err := s.ListKeys(prefix)
-	if err != nil {
-		return err
+	ctx := context.Background()
+	pattern := globEscaper.Replace(prefix) + "*"
+	var cursor uint64
+
+	// UNLINK per page so a large prefix neither blocks Redis nor piles up in memory here.
+	for {
+		keys, next, err := s.client.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return err
+		}
+		if len(keys) > 0 {
+			if err := s.client.Unlink(ctx, keys...).Err(); err != nil {
+				return err
+			}
+		}
+		cursor = next
+		if cursor == 0 {
+			return nil
+		}
 	}
-	if len(keys) == 0 {
-		return nil
-	}
-	return s.client.Del(context.Background(), keys...).Err()
 }

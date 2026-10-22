@@ -122,10 +122,11 @@ oddly, suspect one of these:
   both → `update`), and `CanDoAPIRoute` consults both route tables, treating
   PATCH as an alias for the stored PUT. So `PermissionsForBot`'s scope map
   authorizes the v2 calls unchanged, including the PATCH task update.
-- The bucket-task MOVE (`PUT …/buckets/:bucket/tasks`) and the
-  buckets-with-tasks LIST (`GET …/buckets/tasks`) collide on subkey
-  `views_buckets_tasks`; which one gets the bare key vs `views_buckets_tasks_put`
-  depends on unspecified route-init order, so the bot requests **both**.
+- The bucket-task MOVE is `views_buckets_tasks_update` and the
+  buckets-with-tasks LIST is bare `views_buckets_tasks`; bucket CRUD is
+  `views_buckets_{create,update,delete}`. Older servers used `_put`/`_post`
+  suffixes (and an order-dependent bare/`_put` collision), so the bot requests
+  both naming schemes.
 - `client.PermissionsForBot()` calls `GET /routes` at runtime and
   grants only the intersection of what we want and what the server
   exposes. **Don't hard-code permission group names** — they drift
@@ -178,6 +179,17 @@ oddly, suspect one of these:
   strips any inherited `VEANS_TOKEN` so the developer's keyring
   stays untouched. Don't bypass the credentials package in tests —
   leaks between tests will surface as the wrong bot token.
+
+## Trust gate
+
+- `.veans.yml` is repo-controlled, so `internal/trust` gates `cfg.Server`
+  before any credential or request goes out (`newRuntime`, `runLogin`).
+  Trusted origins live in `~/.config/veans/trusted.json` (no XDG override),
+  keyed by `trust.Origin` (scheme + host + port; userinfo rejected).
+- No terminal → no prompt, fail closed. `VEANS_SERVER` with the same origin
+  counts as trusted (CI). `init` records the server the user typed.
+- Tests build a `trust.Gate` on a temp store; never let one write to the
+  real `~/.config/veans`.
 
 ## Project identifiers and bot usernames
 

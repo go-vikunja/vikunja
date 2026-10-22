@@ -1,0 +1,689 @@
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
+
+import {client} from './generated/client.gen'
+import {configureApiClient} from './http'
+import {InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
+import {ApiError} from './problem'
+
+const auth = vi.hoisted(() => ({
+	token: null as string | null,
+	type: null as number | null,
+	id: 1,
+	sessionEpoch: 1,
+	identities: new Map<string, {id: number; type: number}>(),
+	refreshToken: vi.fn(),
+}))
+
+vi.mock('@/helpers/auth', () => ({
+	getAuthSessionEpoch: () => auth.sessionEpoch,
+	getToken: () => auth.token,
+	getTokenType: () => auth.type,
+	getTokenIdentity: (token: string | null) => token
+		? auth.identities.get(token) ?? (auth.type === null ? null : {id: auth.id, type: auth.type})
+		: null,
+	refreshToken: auth.refreshToken,
+}))
+
+const problem = (code: number, detail = 'request failed') => new Response(JSON.stringify({code, detail}), {
+	status: 401,
+	headers: {'Content-Type': 'application/problem+json'},
+})
+
+// Echo rejects some /api/v2 requests before Huma and answers with a v1-shaped body.
+const echoError = (status: number, body: {code?: number, message: string}) => new Response(JSON.stringify(body), {
+	status,
+	headers: {'Content-Type': 'application/json'},
+})
+
+const ok = () => new Response(JSON.stringify({ok: true}), {
+	status: 200,
+	headers: {'Content-Type': 'application/json'},
+})
+
+async function expectApiError(request: Promise<unknown>, fields: Record<string, unknown>) {
+	const rejection = await request.then(() => undefined, (e: unknown) => e)
+	expect(rejection).toBeInstanceOf(ApiError)
+	expect(rejection).toMatchObject(fields)
+}
+
+const BrowserRequest = globalThis.Request
+
+class BodyAwareRequest extends BrowserRequest {
+	constructor(input: RequestInfo | URL, init?: RequestInit) {
+		if (input instanceof BrowserRequest && input.body !== null && input.bodyUsed) {
+			throw new TypeError('Body has already been consumed')
+		}
+		super(input, init)
+	}
+}
+
+function deferred<T>() {
+	let resolve!: (value: T) => void
+	const promise = new Promise<T>((resolvePromise) => {
+		resolve = resolvePromise
+	})
+	return {promise, resolve}
+}
+
+function deferredJsonResponse() {
+	const bodyStarted = deferred<void>()
+	const bodyFinished = deferred<void>()
+	const response = new Response(new ReadableStream({
+		async pull(controller) {
+			bodyStarted.resolve()
+			await bodyFinished.promise
+			controller.enqueue(new TextEncoder().encode(JSON.stringify({ok: true})))
+			controller.close()
+		},
+	}, {highWaterMark: 0}), {
+		status: 200,
+		headers: {'Content-Type': 'application/json'},
+	})
+
+	return {bodyFinished, bodyStarted, response}
+}
+
+function deferredBlobResponse() {
+	const bodyStarted = deferred<void>()
+	const bodyFinished = deferred<void>()
+	const response = new Response(new ReadableStream({
+		async pull(controller) {
+			bodyStarted.resolve()
+			await bodyFinished.promise
+			controller.enqueue(new TextEncoder().encode('attachment bytes'))
+			controller.close()
+		},
+	}, {highWaterMark: 0}), {
+		status: 200,
+		headers: {'Content-Type': 'application/octet-stream'},
+	})
+
+	return {bodyFinished, bodyStarted, response}
+}
+
+function deferredErrorResponse() {
+	const bodyStarted = deferred<void>()
+	const bodyFinished = deferred<void>()
+	const response = new Response(new ReadableStream({
+		async pull(controller) {
+			bodyStarted.resolve()
+			await bodyFinished.promise
+			controller.enqueue(new TextEncoder().encode('request failed'))
+			controller.close()
+		},
+	}, {highWaterMark: 0}), {status: 400})
+
+	return {bodyFinished, bodyStarted, response}
+}
+
+describe('configureApiClient', () => {
+	let requests: Request[]
+	let responses: Response[]
+
+	beforeEach(() => {
+		window.API_URL = 'https://api.example.com/root'
+		auth.token = null
+		auth.type = null
+		auth.id = 1
+		auth.sessionEpoch = 1
+		auth.identities.clear()
+		auth.refreshToken.mockReset()
+		requests = []
+		responses = [ok()]
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			return responses.shift() ?? ok()
+		}))
+		configureApiClient()
+	})
+
+	afterEach(() => {
+		vi.unstubAllGlobals()
+	})
+
+	it('configures the v2 base URL and includes credentials', async () => {
+		await client.get({url: '/probe'})
+
+		expect(requests[0].url).toBe('https://api.example.com/root/api/v2/probe')
+		expect(requests[0].credentials).toBe('include')
+	})
+
+	it('supports the same-origin default', async () => {
+		window.API_URL = ''
+		configureApiClient()
+
+		await client.get({url: '/probe'})
+
+		expect(requests[0].url).toBe('http://localhost:3000/api/v2/probe')
+	})
+
+	it('adds the current bearer token', async () => {
+		auth.token = 'current-token'
+
+		await client.get({url: '/probe'})
+
+		expect(requests[0].headers.get('Authorization')).toBe('Bearer current-token')
+	})
+
+	it('rejects a successful response from an older session for the same identity', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const response = deferred<Response>()
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			return response.promise
+		}))
+
+		const request = client.get({url: '/probe'})
+		await vi.waitFor(() => expect(requests).toHaveLength(1))
+		auth.sessionEpoch++
+		response.resolve(ok())
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+	})
+
+	it('rejects a response after the API client is reconfigured', async () => {
+		const response = deferred<Response>()
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			return response.promise
+		}))
+
+		const request = client.get({url: '/probe'})
+		await vi.waitFor(() => expect(requests).toHaveLength(1))
+		window.API_URL = 'https://other.example'
+		configureApiClient()
+		response.resolve(ok())
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+	})
+
+	it('rejects a request built for an outdated configured API before sending', async () => {
+		window.API_URL = 'https://other.example'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
+	it('rejects an outdated nested API base before sending', async () => {
+		window.API_URL = 'https://api.example.com/root/tenant-a'
+		configureApiClient()
+		window.API_URL = 'https://api.example.com/root'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
+	it('treats an extra trailing slash as the same API base', async () => {
+		window.API_URL = 'https://api.example.com/root//'
+		configureApiClient()
+		window.API_URL = 'https://api.example.com/root/api/v1'
+
+		await client.get({url: '/probe'})
+
+		expect(requests[0].url).toBe('https://api.example.com/root/api/v2/probe')
+	})
+
+	it('refuses to configure a missing API base and sends nothing', async () => {
+		window.API_URL = undefined as unknown as string
+
+		expect(() => configureApiClient()).toThrow(InvalidApiUrlProvidedError)
+
+		await expect(client.get({url: '/probe'})).rejects.toBeInstanceOf(InvalidApiUrlProvidedError)
+		expect(requests).toHaveLength(0)
+	})
+
+	it('rejects a root-relative API base that canonicalizes to another origin', async () => {
+		window.API_URL = '/\\evil.example'
+		configureApiClient()
+		auth.token = 'current-token'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
+	it('rejects a whitespace-obscured cross-origin API base', async () => {
+		window.API_URL = '/\t/evil.example'
+		configureApiClient()
+		auth.token = 'current-token'
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+
+		expect(requests).toHaveLength(0)
+	})
+
+	it('rejects when the session changes while reading a successful response body', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const {bodyFinished, bodyStarted, response} = deferredJsonResponse()
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			return response
+		}))
+
+		const request = client.get({url: '/probe'})
+		await bodyStarted.promise
+		auth.sessionEpoch++
+		bodyFinished.resolve()
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+	})
+
+	it('fences a blob response without buffering a second copy', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const blobResponse = new Response(new Blob(['attachment bytes']), {
+			status: 200,
+			headers: {'Content-Type': 'application/octet-stream'},
+		})
+		const clone = vi.spyOn(blobResponse, 'clone')
+		responses = [blobResponse]
+
+		const {data} = await client.get({
+			url: '/probe',
+			parseAs: 'blob',
+		})
+
+		expect(clone).not.toHaveBeenCalled()
+		expect(data).toBeInstanceOf(Blob)
+		expect(await (data as Blob).text()).toBe('attachment bytes')
+	})
+
+	it('rejects when the session changes while reading a blob response body', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const {bodyFinished, bodyStarted, response} = deferredBlobResponse()
+		responses = [response]
+
+		const request = client.get({
+			url: '/probe',
+			parseAs: 'blob',
+		})
+		await bodyStarted.promise
+		auth.sessionEpoch++
+		bodyFinished.resolve()
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+	})
+
+	it('rejects when the session changes while reading a headerless error body', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		const {bodyFinished, bodyStarted, response} = deferredErrorResponse()
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			return response
+		}))
+
+		const request = client.get({url: '/probe'})
+		await bodyStarted.promise
+		auth.sessionEpoch++
+		bodyFinished.resolve()
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+	})
+
+	it('preserves explicit basic authorization', async () => {
+		auth.token = 'session-token'
+
+		await client.get({
+			url: '/probe',
+			headers: {Authorization: 'Basic client-credentials'},
+		})
+
+		expect(requests[0].headers.get('Authorization')).toBe('Basic client-credentials')
+	})
+
+	it('does not refresh explicit bearer authorization', async () => {
+		auth.token = 'session-token'
+		auth.type = 1
+		responses = [problem(11)]
+
+		await expect(client.get({
+			url: '/probe',
+			headers: {Authorization: 'Bearer api-token'},
+		})).rejects.toMatchObject({code: 11})
+
+		expect(requests[0].headers.get('Authorization')).toBe('Bearer api-token')
+		expect(auth.refreshToken).not.toHaveBeenCalled()
+		expect(requests).toHaveLength(1)
+	})
+
+	it('refreshes an expired user token and retries once', async () => {
+		auth.token = 'expired-token'
+		auth.type = 1
+		responses = [problem(11), ok()]
+		auth.refreshToken.mockImplementation(async () => {
+			auth.token = 'replacement-token'
+		})
+
+		await client.get({url: '/probe'})
+
+		expect(auth.refreshToken).toHaveBeenCalledOnce()
+		expect(auth.refreshToken).toHaveBeenCalledWith(true)
+		expect(requests).toHaveLength(2)
+		expect(requests[1].headers.get('Authorization')).toBe('Bearer replacement-token')
+	})
+
+	it('rejects when the session changes while reading a retried response body', async () => {
+		auth.token = 'expired-token'
+		auth.type = 1
+		const {bodyFinished, bodyStarted, response} = deferredJsonResponse()
+		responses = [problem(11), response]
+		auth.refreshToken.mockImplementation(async () => {
+			auth.token = 'replacement-token'
+		})
+
+		const request = client.get({url: '/probe'})
+		await bodyStarted.promise
+		auth.sessionEpoch++
+		bodyFinished.resolve()
+
+		await expect(request).rejects.toMatchObject({name: 'AbortError'})
+		expect(requests).toHaveLength(2)
+	})
+
+	it.each(['POST', 'PUT', 'PATCH'] as const)('replays a consumed %s body after refreshing', async (method) => {
+		auth.token = 'expired-token'
+		auth.type = 1
+		responses = [problem(11), ok()]
+		auth.refreshToken.mockImplementation(async () => {
+			auth.token = 'replacement-token'
+		})
+		const bodies: string[] = []
+		vi.stubGlobal('Request', BodyAwareRequest)
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			bodies.push(await request.text())
+			return responses.shift() ?? ok()
+		}))
+
+		await client.request({
+			method,
+			url: '/probe',
+			body: {message: 'keep me'},
+		})
+
+		expect(requests).toHaveLength(2)
+		expect(bodies).toEqual([
+			JSON.stringify({message: 'keep me'}),
+			JSON.stringify({message: 'keep me'}),
+		])
+		expect(auth.refreshToken).toHaveBeenCalledOnce()
+	})
+
+	it('reuses a refreshed token for a delayed 401 response', async () => {
+		auth.token = 'expired-token'
+		auth.type = 1
+		auth.refreshToken.mockImplementation(async () => {
+			auth.token = 'replacement-token'
+		})
+		const firstResponse = deferred<Response>()
+		const secondResponse = deferred<Response>()
+		let expiredRequests = 0
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			if (request.headers.get('Authorization') !== 'Bearer expired-token') {
+				return ok()
+			}
+			expiredRequests++
+			return expiredRequests === 1 ? firstResponse.promise : secondResponse.promise
+		}))
+
+		const first = client.get({url: '/first'})
+		const second = client.get({url: '/second'})
+		await vi.waitFor(() => expect(requests).toHaveLength(2))
+
+		firstResponse.resolve(problem(11))
+		await first
+		expect(auth.refreshToken).toHaveBeenCalledOnce()
+
+		secondResponse.resolve(problem(11))
+		await second
+
+		expect(auth.refreshToken).toHaveBeenCalledOnce()
+		expect(requests).toHaveLength(4)
+		expect(requests[3].headers.get('Authorization')).toBe('Bearer replacement-token')
+	})
+
+	it('does not replay a delayed mutation after the user changes', async () => {
+		auth.token = 'user-a-token'
+		auth.type = 1
+		auth.identities.set('user-a-token', {id: 1, type: 1})
+		auth.identities.set('user-b-token', {id: 2, type: 1})
+		const firstResponse = deferred<Response>()
+		const bodies: string[] = []
+		vi.stubGlobal('Request', BodyAwareRequest)
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			bodies.push(await request.text())
+			return firstResponse.promise
+		}))
+
+		const mutation = client.request({
+			method: 'POST',
+			url: '/probe',
+			body: {message: 'user a data'},
+		})
+		await vi.waitFor(() => expect(requests).toHaveLength(1))
+
+		auth.token = 'user-b-token'
+		firstResponse.resolve(problem(11))
+
+		await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
+		expect(auth.refreshToken).not.toHaveBeenCalled()
+		expect(requests).toHaveLength(1)
+		expect(bodies).toEqual([JSON.stringify({message: 'user a data'})])
+	})
+
+	it('does not replay a mutation when the user changes during refresh', async () => {
+		auth.token = 'user-a-token'
+		auth.type = 1
+		auth.identities.set('user-a-token', {id: 1, type: 1})
+		auth.identities.set('user-b-token', {id: 2, type: 1})
+		const refresh = deferred<void>()
+		auth.refreshToken.mockImplementation(() => refresh.promise)
+		const bodies: string[] = []
+		vi.stubGlobal('Request', BodyAwareRequest)
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			bodies.push(await request.text())
+			return problem(11)
+		}))
+
+		const mutation = client.request({
+			method: 'POST',
+			url: '/probe',
+			body: {message: 'user a data'},
+		})
+		await vi.waitFor(() => expect(auth.refreshToken).toHaveBeenCalledOnce())
+
+		auth.token = 'user-b-token'
+		refresh.resolve()
+
+		await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
+		expect(requests).toHaveLength(1)
+		expect(bodies).toEqual([JSON.stringify({message: 'user a data'})])
+	})
+
+	it('does not replay a mutation when the session changes during refresh', async () => {
+		auth.token = 'user-a-token'
+		auth.type = 1
+		auth.identities.set('user-a-token', {id: 1, type: 1})
+		const refresh = deferred<void>()
+		auth.refreshToken.mockImplementation(() => refresh.promise)
+		vi.stubGlobal('fetch', vi.fn(async (request: Request) => {
+			requests.push(request)
+			return problem(11)
+		}))
+
+		const mutation = client.request({
+			method: 'POST',
+			url: '/probe',
+			body: {message: 'user a data'},
+		})
+		await vi.waitFor(() => expect(auth.refreshToken).toHaveBeenCalledOnce())
+
+		auth.sessionEpoch++
+		refresh.resolve()
+
+		await expect(mutation).rejects.toMatchObject({name: 'AbortError'})
+		expect(requests).toHaveLength(1)
+	})
+
+	it('does not refresh link-share tokens', async () => {
+		auth.token = 'link-share-token'
+		auth.type = 2
+		responses = [problem(11)]
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({code: 11})
+
+		expect(auth.refreshToken).not.toHaveBeenCalled()
+		expect(requests).toHaveLength(1)
+	})
+
+	it('does not refresh without a token', async () => {
+		auth.type = 1
+		responses = [problem(11)]
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({code: 11})
+
+		expect(auth.refreshToken).not.toHaveBeenCalled()
+		expect(requests).toHaveLength(1)
+	})
+
+	it('does not retry other 401 responses', async () => {
+		auth.token = 'current-token'
+		auth.type = 1
+		responses = [problem(1017)]
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({code: 1017})
+
+		expect(auth.refreshToken).not.toHaveBeenCalled()
+		expect(requests).toHaveLength(1)
+	})
+
+	it('returns the second 401 problem after one retry', async () => {
+		auth.token = 'expired-token'
+		auth.type = 1
+		responses = [problem(11, 'expired'), problem(11, 'still expired')]
+		auth.refreshToken.mockImplementation(async () => {
+			auth.token = 'replacement-token'
+		})
+
+		await expect(client.get({url: '/probe'})).rejects.toMatchObject({
+			code: 11,
+			detail: 'still expired',
+		})
+
+		expect(auth.refreshToken).toHaveBeenCalledOnce()
+		expect(requests).toHaveLength(2)
+	})
+
+	it('stamps the response status onto an Echo error body', async () => {
+		responses = [echoError(429, {message: 'Too Many Requests'})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			message: 'Too Many Requests',
+			detail: 'Too Many Requests',
+			status: 429,
+		})
+	})
+
+	it('keeps the Echo error code while stamping the status', async () => {
+		responses = [echoError(401, {
+			code: 11,
+			message: 'missing, malformed, expired or otherwise invalid token provided',
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			code: 11,
+			message: 'missing, malformed, expired or otherwise invalid token provided',
+			detail: 'missing, malformed, expired or otherwise invalid token provided',
+			status: 401,
+		})
+	})
+
+	it('throws a problem body as an ApiError', async () => {
+		responses = [new Response(JSON.stringify({
+			$schema: 'https://example.com/schemas/ErrorModel.json',
+			status: 500,
+			title: 'Internal Server Error',
+			detail: 'Oo',
+		}), {
+			status: 500,
+			headers: {'Content-Type': 'application/problem+json'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			name: 'ApiError',
+			message: 'Oo',
+			status: 500,
+			title: 'Internal Server Error',
+			detail: 'Oo',
+		})
+	})
+
+	it('keeps the code of a problem body', async () => {
+		responses = [new Response(JSON.stringify({
+			status: 403,
+			code: 4004,
+			detail: 'forbidden',
+		}), {
+			status: 403,
+			headers: {'Content-Type': 'application/problem+json'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			status: 403,
+			code: 4004,
+			detail: 'forbidden',
+		})
+	})
+
+	it('turns a plain-text proxy error into an ApiError', async () => {
+		responses = [new Response('Bad Gateway', {
+			status: 502,
+			headers: {'Content-Type': 'text/plain; charset=utf-8'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			message: 'Bad Gateway',
+			status: 502,
+			detail: 'Bad Gateway',
+		})
+	})
+
+	it('turns a plain-text 404 into an ApiError', async () => {
+		responses = [new Response('404 page not found\n', {
+			status: 404,
+			headers: {'Content-Type': 'text/plain; charset=utf-8'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			status: 404,
+			detail: '404 page not found',
+		})
+	})
+
+	it('falls back to the status text for an empty error body', async () => {
+		responses = [new Response('', {status: 503, statusText: 'Service Unavailable'})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			status: 503,
+			detail: 'Service Unavailable',
+		})
+	})
+
+	it('leaves a transport failure untouched', async () => {
+		const failure = new TypeError('Failed to fetch')
+		vi.stubGlobal('fetch', vi.fn(async () => {
+			throw failure
+		}))
+
+		await expect(client.get({url: '/probe'})).rejects.toBe(failure)
+	})
+})

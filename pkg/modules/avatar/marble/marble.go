@@ -17,6 +17,7 @@
 package marble
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"math"
@@ -140,11 +141,11 @@ func GenerateDataURI(u *user.User, size int64, palette []string) (string, error)
 	return dataURI, nil
 }
 
-func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+func (p *Provider) GetAvatar(_ context.Context, u *user.User, size int64) (avatar []byte, mimeType string, err error) {
 	return GenerateSVG(u, size, defaultColors)
 }
 
 // AsDataURI returns a data URI for the SVG avatar
-func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
+func (p *Provider) AsDataURI(_ context.Context, u *user.User, size int64) (string, error) {
 	return GenerateDataURI(u, size, defaultColors)
 }

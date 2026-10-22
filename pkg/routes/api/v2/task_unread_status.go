@@ -49,7 +49,7 @@ func RegisterTaskUnreadStatusRoutes(api huma.API) {
 		Summary:     "Mark a task as read",
 		Description: "Clears the authenticated user's unread status for a task, dismissing the unread indicator raised by mentions and other task notifications. Idempotent: marking an already-read or inaccessible task succeeds as a no-op.",
 		Method:      http.MethodPut,
-		Path:        "/tasks/{projecttask}/read",
+		Path:        "/tasks/{task}/read",
 		Tags:        tags,
 	}, tasksMarkRead)
 }
@@ -57,7 +57,7 @@ func RegisterTaskUnreadStatusRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterTaskUnreadStatusRoutes) }
 
 func tasksMarkRead(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask" doc:"The numeric id of the task to mark as read."`
+	TaskID int64 `path:"task" doc:"The numeric id of the task to mark as read."`
 }) (*taskReadBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {

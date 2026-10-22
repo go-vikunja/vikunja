@@ -86,7 +86,6 @@
 				"subject": "Uppgift \"%[1]s\" (%[2]s) är förfallen",
 				"message": "Det här är en vänlig påminnelse om uppgiften \"%[1]s\" (%[2]s) som är förfallen %[3]s och ännu inte färdig.",
 				"multiple_subject": "Dina förfallna uppgifter",
-				"multiple_message": "Du har följande förfallna uppgifter:",
 				"overdue_since": "sedan %[1]s",
 				"overdue_now": "nu",
 				"overdue": "förfallen %[1]s"

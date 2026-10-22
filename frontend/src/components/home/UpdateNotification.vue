@@ -19,10 +19,12 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue'
 import {useBaseStore} from '@/stores/base'
+import {useAuthStore} from '@/stores/auth'
 
 const baseStore = useBaseStore()
+const authStore = useAuthStore()
 
-const updateAvailable = computed(() => baseStore.updateAvailable)
+const updateAvailable = computed(() => baseStore.updateAvailable && authStore.authenticated)
 const registration = ref<ServiceWorkerRegistration | null>(null)
 const refreshing = ref(false)
 
@@ -30,8 +32,11 @@ document.addEventListener('swUpdated', showRefreshUI, {once: true})
 
 navigator?.serviceWorker?.addEventListener(
 	'controllerchange', () => {
-		if (refreshing.value) return
-		refreshing.value = true
+		// clientsClaim() also fires this on first install — only reload after
+		// the user opted into an update, or unsaved state (e.g. login form
+		// input) gets wiped.
+		if (!refreshing.value) return
+		refreshing.value = false
 		window.location.reload()
 	},
 )
@@ -48,6 +53,7 @@ function refreshApp() {
 	if (!registration.value || !registration.value.waiting) {
 		return
 	}
+	refreshing.value = true
 	// Notify the service worker to actually do the update
 	registration.value.waiting.postMessage('skipWaiting')
 }

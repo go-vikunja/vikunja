@@ -17,6 +17,7 @@
 package todoist
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -388,7 +389,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              2,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project1",
 				Description:     "Lorem Ipsum dolor sit amet\nLorem Ipsum dolor sit amet 2\nLorem Ipsum dolor sit amet 3",
 				HexColor:        todoistColors["berry_red"],
@@ -524,7 +525,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              3,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project2",
 				Description:     "Lorem Ipsum dolor sit amet 4\nLorem Ipsum dolor sit amet 5",
 				HexColor:        todoistColors["mint_green"],
@@ -625,7 +626,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		{
 			Project: models.Project{
 				ID:              4,
-				ParentProjectID: 1,
+				ParentProjectID: models.Ptr(int64(1)),
 				Title:           "Project3 - Archived",
 				HexColor:        todoistColors["mint_green"],
 				IsArchived:      true,
@@ -649,6 +650,107 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
 		t.Errorf("converted todoist data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
+	}
+}
+
+func TestConvertTodoistToVikunjaWithBrokenAttachment(t *testing.T) {
+	// Todoist returns opaque identifiers instead of urls for attachments it does not host itself.
+	// Those must not fail the whole migration, see https://github.com/go-vikunja/vikunja/issues/3435
+	testSync := &sync{
+		Projects: []*project{
+			{
+				ID:   "396936926",
+				Name: "Project1",
+			},
+		},
+		Items: []*item{
+			{
+				ID:        "400000001",
+				ProjectID: "396936926",
+				Content:   "Task1",
+			},
+		},
+		Notes: []*note{
+			{
+				ID:      "101478",
+				ItemID:  "400000001",
+				Content: "Lorem Ipsum dolor sit amet",
+				FileAttachment: &fileAttachment{
+					FileName:    "mail attachment",
+					FileType:    "text/plain",
+					FileURL:     "[[outlook=id3=aWQ9MDAwMDAwMDBDRjVENTQ1RjUzOTJERDQ1OER, Skattemeldingen kommer ]]",
+					UploadState: "completed",
+				},
+			},
+		},
+	}
+
+	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	require.NoError(t, err)
+	require.Len(t, hierachie, 2)
+	require.Len(t, hierachie[1].Tasks, 1)
+	assert.Empty(t, hierachie[1].Tasks[0].Attachments)
+	assert.Equal(t, "Lorem Ipsum dolor sit amet", hierachie[1].Tasks[0].Description)
+}
+
+func TestConvertTodoistToVikunjaPreservesDescriptions(t *testing.T) {
+	// The Todoist v1 sync API returns a `description` field (markdown) on every
+	// item. It must become the task description, with notes appended after it.
+	testSync := &sync{}
+	require.NoError(t, json.Unmarshal([]byte(`{
+		"projects": [{"id": "396936926", "name": "Project1"}],
+		"items": [
+			{"id": "400000001", "project_id": "396936926", "content": "With description and note", "description": "The task description"},
+			{"id": "400000002", "project_id": "396936926", "content": "With description only", "description": "Only a description"},
+			{"id": "400000003", "project_id": "396936926", "content": "With note only"}
+		],
+		"notes": [
+			{"id": "101478", "item_id": "400000001", "content": "A note"},
+			{"id": "101479", "item_id": "400000003", "content": "A note"}
+		]
+	}`), testSync))
+
+	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	require.NoError(t, err)
+	require.Len(t, hierachie, 2)
+	require.Len(t, hierachie[1].Tasks, 3)
+
+	assert.Equal(t, "The task description\nA note", hierachie[1].Tasks[0].Description)
+	assert.Equal(t, "Only a description", hierachie[1].Tasks[1].Description)
+	// Regression: without a description, notes alone still become the description.
+	assert.Equal(t, "A note", hierachie[1].Tasks[2].Description)
+}
+
+func TestTodoistItemDecoding(t *testing.T) {
+	// The v1 sync API returns `description` on every item, the decoder must not
+	// silently drop it.
+	payload := `{"items": [{"id": "400000001", "content": "Task1", "description": "Some markdown description"}]}`
+	s := &sync{}
+	require.NoError(t, json.Unmarshal([]byte(payload), s))
+	require.Len(t, s.Items, 1)
+	assert.Equal(t, "Some markdown description", s.Items[0].Description)
+}
+
+func TestIsDownloadableURL(t *testing.T) {
+	tests := []struct {
+		name string
+		url  string
+		want bool
+	}{
+		{name: "https", url: "https://todoist.com/file.md", want: true},
+		{name: "http", url: "http://todoist.com/file.md", want: true},
+		{name: "todoist mail attachment id", url: "[[outlook=id3=aWQ9MDAwMDAwMDBDRjVENTQ1RjUzOTJERDQ1OER]]", want: false},
+		{name: "no scheme", url: "todoist.com/file.md", want: false},
+		{name: "no host", url: "https://", want: false},
+		{name: "other scheme", url: "file:///etc/passwd", want: false},
+		{name: "empty", url: "", want: false},
+		{name: "invalid", url: "https://%zz", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, isDownloadableURL(tt.url))
+		})
 	}
 }
 

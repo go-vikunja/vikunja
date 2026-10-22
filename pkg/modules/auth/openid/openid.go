@@ -17,7 +17,6 @@
 package openid
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -25,6 +24,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -32,7 +32,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -77,8 +76,29 @@ type Provider struct {
 	Oauth2Config   *oauth2.Config `json:"-"`
 }
 
+// boolish decodes a JSON bool or the strings "true"/"false"/"1"/"0" — some
+// OIDC providers emit email_verified as a string.
+type boolish bool
+
+func (b *boolish) UnmarshalJSON(data []byte) error {
+	var raw any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	switch v := raw.(type) {
+	case bool:
+		*b = boolish(v)
+	case string:
+		*b = boolish(v == "true" || v == "1")
+	default:
+		*b = false
+	}
+	return nil
+}
+
 type claims struct {
 	Email              string                   `json:"email"`
+	EmailVerified      boolish                  `json:"email_verified"`
 	Name               string                   `json:"name"`
 	PreferredUsername  string                   `json:"preferred_username"`
 	Nickname           string                   `json:"nickname"`
@@ -94,7 +114,7 @@ func init() {
 func (p *Provider) setOicdProvider() (err error) {
 	err = utils.RetryWithBackoff(fmt.Sprintf("OpenID Connect provider '%s'", p.Name), func() error {
 		var providerErr error
-		p.openIDProvider, providerErr = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
+		p.openIDProvider, providerErr = oidc.NewProvider(withHTTPClient(context.Background()), p.OriginalAuthURL)
 		return providerErr
 	})
 
@@ -103,6 +123,12 @@ func (p *Provider) setOicdProvider() (err error) {
 	}
 
 	return err
+}
+
+var httpClient = sync.OnceValue(utils.NewUnguardedHTTPClient)
+
+func withHTTPClient(ctx context.Context) context.Context {
+	return oidc.ClientContext(ctx, httpClient())
 }
 
 func (p *Provider) Issuer() (issuerURL string, err error) {
@@ -201,10 +227,7 @@ func HandleCallback(c *echo.Context) error {
 // ErrOpenIDBadRequestWithDetails error keeps its provider detail so v1 can render
 // its bespoke body and v2 can map it to RFC 9457.
 func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string) (*user.User, *models.SessionOIDCData, error) {
-	// ctx is threaded through only to dispatch the login event; the OIDC token
-	// exchange, claim verification and user/avatar sync run on their own
-	// background contexts, exactly as the v1 callback always did.
-	provider, oauthToken, idToken, rawIDToken, err := exchangeOidcTokens(cb, providerKey) //nolint:contextcheck
+	provider, oauthToken, idToken, rawIDToken, err := exchangeOidcTokens(ctx, cb, providerKey)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -215,7 +238,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 		ProviderKey: providerKey,
 	}
 
-	cl, err := getClaims(provider, oauthToken, idToken) //nolint:contextcheck
+	cl, err := getClaims(ctx, provider, oauthToken, idToken)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -227,20 +250,16 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	defer events.CleanupPending(s)
 
 	// Check if we have seen this user before
-	u, err := getOrCreateUser(s, cl, provider, idToken) //nolint:contextcheck
+	u, err := getOrCreateUser(s, cl, provider, idToken)
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
 		return nil, nil, err
 	}
 
-	if u.Status == user.StatusDisabled {
+	if err := user.CheckUserCanAuthenticate(u); err != nil {
 		_ = s.Rollback()
-		return nil, nil, &user.ErrAccountDisabled{UserID: u.ID}
-	}
-	if u.Status == user.StatusAccountLocked {
-		_ = s.Rollback()
-		return nil, nil, &user.ErrAccountLocked{UserID: u.ID}
+		return nil, nil, err
 	}
 
 	// Must run before team sync so a failed 2FA attempt cannot mutate team
@@ -275,6 +294,10 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	}
 
 	events.DispatchPending(ctx, s)
+
+	if cl.Picture != "" {
+		syncUserAvatarFromOpenID(ctx, u.ID, cl.Picture)
+	}
 
 	return u, oidcData, nil
 }
@@ -334,84 +357,62 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 	return teamData
 }
 
-// Download and store a user's avatar from an OpenID provider
-func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) (err error) {
-	// If no picture URL is provided, reset the avatar provider if it was set to openid
-	if pictureURL == "" {
-		if u.AvatarProvider == "openid" {
-			u.AvatarProvider = "default"
-			_, err = s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
-			if err != nil {
-				return fmt.Errorf("error resetting avatar provider: %w", err)
-			}
-			avatar.FlushAllCaches(u)
-		}
+func resetOpenIDAvatar(s *xorm.Session, u *user.User) error {
+	if u.AvatarProvider != "openid" {
 		return nil
 	}
 
-	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
-
-	// Download avatar
-	avatarData, err := utils.DownloadImage(pictureURL)
+	u.AvatarProvider = "default"
+	_, err := s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
 	if err != nil {
-		return fmt.Errorf("error downloading avatar: %w", err)
+		return fmt.Errorf("error resetting avatar provider: %w", err)
 	}
-
-	// Process avatar, ensure 1:1 ratio
-	processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
-	if err != nil {
-		return fmt.Errorf("error processing avatar: %w", err)
-	}
-
-	// Set avatar provider to openid
-	u.AvatarProvider = "openid"
-
-	// Store avatar and update user
-	err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
-	if err != nil {
-		return fmt.Errorf("error storing avatar: %w", err)
-	}
-
 	avatar.FlushAllCaches(u)
-
 	return nil
 }
 
-// fallbackSearchUsers builds the ordered list of local-user lookups used to link an OIDC
-// login to an existing account when the provider has email and/or username fallback enabled.
-// GetUserWithEmail ANDs all non-zero fields, so the email (when set) is combined with each
-// username candidate.
-func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) []*user.User {
-	fallbackEmail := ""
-	if provider.EmailFallback {
-		// Used alone, allow for someone to connect from various provider to the same account.
-		// Discouraged for untrusted providers where someone can set email without verification.
-		// Note: mapping on email prevents auto-updating the user email.
-		fallbackEmail = cl.Email
-	}
+func syncUserAvatarFromOpenID(ctx context.Context, userID int64, pictureURL string) {
+	log.Debugf("Found avatar URL for user %d: %s", userID, pictureURL)
 
-	// Try the subject first (keeps working for IdPs where sub == username), then the
-	// preferred_username. The latter lets providers with an opaque sub (e.g. a random
-	// UUID, like PocketID) still link to an existing local account.
-	var searches []*user.User
+	avatar.SyncFromProviderAsync(ctx, userID, "openid", func(ctx context.Context) ([]byte, error) {
+		return utils.DownloadImage(ctx, pictureURL)
+	})
+}
+
+// fallbackSearchUsers builds the ordered list of local-user lookups used to link an OIDC
+// login to an existing account. With a usable email: each username candidate AND the
+// email, then the email alone. Without: each username candidate alone.
+func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) []*user.User {
+	// Empty candidates are skipped: GetUserWithEmail ignores zero fields, so an empty
+	// username or email would degenerate to an issuer-only lookup and link an arbitrary
+	// local user.
+	var usernames []string
 	if provider.UsernameFallback {
-		// Skip empty username candidates: GetUserWithEmail ANDs only non-zero fields, so a
-		// {Issuer, Username:"", Email:""} would degenerate to an issuer-only lookup and link
-		// an arbitrary local user. idToken.Subject is non-empty per OIDC, but guard anyway.
+		// Subject first for IdPs where sub == username; preferred_username covers IdPs
+		// with an opaque sub (e.g. PocketID).
 		if idToken.Subject != "" {
-			searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: idToken.Subject, Email: fallbackEmail})
+			usernames = append(usernames, idToken.Subject)
 		}
 		preferred := strings.ReplaceAll(cl.PreferredUsername, " ", "-")
 		if preferred != "" && preferred != idToken.Subject {
-			searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: preferred, Email: fallbackEmail})
+			usernames = append(usernames, preferred)
 		}
 	}
-	// EmailFallback without UsernameFallback: a single email-only lookup (the caller only
-	// runs this when at least one fallback is enabled, so EmailFallback is guaranteed here).
-	// Only add it when there is a real email — an empty email would degenerate to an
-	// issuer-only lookup and link an arbitrary local user.
-	if len(searches) == 0 && cl.Email != "" {
-		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Email: cl.Email})
+
+	// Only a verified email may link to an existing account — an unverified one lets an
+	// attacker asserting a victim's email take over their local account (GHSA-xv7q-fvmc-jx96).
+	// Note: mapping on email prevents auto-updating the user email.
+	email := ""
+	if provider.EmailFallback && bool(cl.EmailVerified) {
+		email = cl.Email
+	}
+
+	var searches []*user.User
+	for _, username := range usernames {
+		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: username, Email: email})
+	}
+	if email != "" {
+		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Email: email})
 	}
 
 	return searches
@@ -460,6 +461,10 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
+	if fallbackMatchFound && u.IsBot() {
+		return nil, &user.ErrAccountIsBot{UserID: u.ID}
+	}
+
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
 
 		// If no user exists, create one with the preferred username if it is not already taken
@@ -495,10 +500,11 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
-	// Try sync avatar if available
-	err = syncUserAvatarFromOpenID(s, u, cl.Picture)
-	if err != nil {
-		log.Errorf("Error syncing avatar for user %s: %v", u.Username, err)
+	// A picture is synced by AuthenticateCallback once the login committed.
+	if cl.Picture == "" {
+		if err := resetOpenIDAvatar(s, u); err != nil {
+			log.Errorf("Error resetting avatar for user %s: %v", u.Username, err)
+		}
 	}
 
 	return u, nil
@@ -509,6 +515,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 	if (forceUserInfo && cl2.Email != "") || cl.Email == "" {
 		cl.Email = cl2.Email
+		cl.EmailVerified = cl2.EmailVerified
 	}
 
 	if (forceUserInfo && cl2.Name != "") || cl.Name == "" {
@@ -542,7 +549,7 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 	return nil
 }
 
-func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDToken) (*claims, error) {
+func getClaims(ctx context.Context, provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDToken) (*claims, error) {
 
 	cl := &claims{}
 	err := idToken.Claims(cl)
@@ -552,7 +559,8 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	}
 
 	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" || cl.Picture == "" {
-		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
+		ctx = withHTTPClient(ctx)
+		info, err := provider.openIDProvider.UserInfo(ctx, provider.Oauth2Config.TokenSource(ctx, oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)
 			return nil, err
@@ -581,8 +589,8 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 // and verifies the returned ID token. It takes an already-bound Callback so it
 // can be shared by the v1 echo handler (which binds from the request) and the v2
 // Huma handler (which binds via its typed body).
-func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.Token, *oidc.IDToken, string, error) {
-	provider, err := GetProvider(providerKey)
+func exchangeOidcTokens(ctx context.Context, cb *Callback, providerKey string) (*Provider, *oauth2.Token, *oidc.IDToken, string, error) {
+	provider, err := GetProvider(providerKey) //nolint:contextcheck // GetProvider is shared with context-less startup callers.
 	if err != nil {
 		return nil, nil, nil, "", err
 	}
@@ -592,22 +600,27 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 
 	log.Debugf("Trying to authenticate user using provider: %s", provider.Key)
 
-	provider.Oauth2Config.RedirectURL = cb.RedirectURL
+	// Oauth2Config is shared with the cached provider and concurrent callbacks.
+	oauth2Config := *provider.Oauth2Config
+	oauth2Config.RedirectURL = cb.RedirectURL
+	provider.Oauth2Config = &oauth2Config
 	// Parse the access & ID token
-	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
+	oauth2Token, err := provider.Oauth2Config.Exchange(withHTTPClient(ctx), cb.Code)
 	if err != nil {
+		log.Debugf("Token exchange failed for provider %s using token_endpoint_auth_method %s", provider.Key, authStyleName(provider.Oauth2Config.Endpoint.AuthStyle))
+
 		var rerr *oauth2.RetrieveError
 		if errors.As(err, &rerr) {
 
 			details := make(map[string]interface{})
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
-				log.Debugf("Raw token value is %s", rerr.Body)
+				log.Debugf("Token endpoint error code=%q description=%q", rerr.ErrorCode, rerr.ErrorDescription)
 				return nil, nil, nil, "", err
 			}
 
 			log.Errorf("Error retrieving token: %s", err)
-			log.Debugf("Raw token value is %s", rerr.Body)
+			log.Debugf("Token endpoint error code=%q description=%q", rerr.ErrorCode, rerr.ErrorDescription)
 			return nil, nil, nil, "", &models.ErrOpenIDBadRequestWithDetails{
 				Message: "Could not authenticate against third party.",
 				Details: details,
@@ -620,14 +633,15 @@ func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.To
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		log.Debugf("Could not get id_token, raw token is %v", oauth2Token)
+		// Do not log oauth2Token itself: %v would print AccessToken/RefreshToken in clear text.
+		log.Debugf("Could not get id_token: response did not contain an id_token extra field (token_type=%s)", oauth2Token.TokenType)
 		return nil, nil, nil, "", &models.ErrOpenIDBadRequest{Message: "Missing token"}
 	}
 
 	verifier := provider.openIDProvider.Verifier(&oidc.Config{ClientID: provider.ClientID})
 
 	// Parse and verify ID Token payload.
-	idToken, err := verifier.Verify(context.Background(), rawIDToken)
+	idToken, err := verifier.Verify(ctx, rawIDToken)
 	if err != nil {
 		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
 		return nil, nil, nil, "", err

@@ -17,7 +17,7 @@ const CLASS_LIGHT = 'light'
 // https://github.com/vueuse/vueuse/blob/main/packages/core/useDark/index.ts 
 export const useColorScheme = createSharedComposable(() => {
 	const authStore = useAuthStore()
-	const store = computed(() => authStore.settings.frontendSettings.colorSchema)
+	const store = computed(() => authStore.settings.frontend_settings.color_schema)
 
 	const preferredColorScheme = usePreferredColorScheme()
 

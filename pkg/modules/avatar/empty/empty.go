@@ -17,6 +17,7 @@
 package empty
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 
@@ -48,12 +49,12 @@ const defaultAvatar string = `<?xml version="1.0" encoding="UTF-8"?>
 </svg>`
 
 // GetAvatar implements getting the avatar method
-func (p *Provider) GetAvatar(_ *user.User, _ int64) (avatar []byte, mimeType string, err error) {
+func (p *Provider) GetAvatar(_ context.Context, _ *user.User, _ int64) (avatar []byte, mimeType string, err error) {
 	return []byte(defaultAvatar), "image/svg+xml", nil
 }
 
 // AsDataURI returns a data URI for the default SVG avatar
-func (p *Provider) AsDataURI(_ *user.User, _ int64) (string, error) {
+func (p *Provider) AsDataURI(_ context.Context, _ *user.User, _ int64) (string, error) {
 	// Encode the SVG as base64 and create a data URI
 	base64Data := base64.StdEncoding.EncodeToString([]byte(defaultAvatar))
 	dataURI := fmt.Sprintf("data:image/svg+xml;base64,%s", base64Data)

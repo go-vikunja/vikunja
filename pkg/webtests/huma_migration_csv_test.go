@@ -18,7 +18,14 @@ package webtests
 
 import (
 	"net/http"
+	"strings"
 	"testing"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
+	"code.vikunja.io/api/pkg/notifications"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,8 +41,6 @@ const csvTestConfig = `{"delimiter":",","quote_char":"\"","date_format":"2006-01
 	`{"column_index":2,"column_name":"Done","attribute":"done"},` +
 	`{"column_index":3,"column_name":"Priority","attribute":"priority"}]}`
 
-// TestHumaMigrationCSV covers the generic CSV importer's v2 endpoints:
-// status, detect, preview and migrate. No v1 webtest exists to mirror.
 func TestHumaMigrationCSV(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 	token := humaTokenFor(t, &testuser1)
@@ -63,29 +68,24 @@ func TestHumaMigrationCSV(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "Task 1")
 	})
 
-	t.Run("migrate imports the file", func(t *testing.T) {
+	t.Run("migrate queues the import", func(t *testing.T) {
 		body, contentType := multipartImportBody(t, "import.csv", []byte(csvTestFile), map[string]string{"config": csvTestConfig})
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"message":"Everything was migrated successfully."`)
+		assert.Contains(t, rec.Body.String(), `"message":"Migration was started successfully."`)
 
-		// The status now reflects a finished migration.
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/migration/csv/status", "", token, "")
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		assert.NotContains(t, rec.Body.String(), `"started_at":"0001-01-01T00:00:00Z"`,
-			"after migrating, the status must carry a real started_at; body: %s", rec.Body.String())
+			"starting a migration must claim the slot with a real started_at; body: %s", rec.Body.String())
 	})
 }
 
-// TestHumaMigrationCSV_BadInput covers the negative paths: missing config,
-// malformed config JSON, and an empty file.
 func TestHumaMigrationCSV_BadInput(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 	token := humaTokenFor(t, &testuser1)
 
 	t.Run("missing config is rejected with 422", func(t *testing.T) {
-		// The config form value is required:"true", so Huma's multipart
-		// validation refuses the request before the handler runs.
 		body, contentType := multipartImportBody(t, "import.csv", []byte(csvTestFile), nil)
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
@@ -97,14 +97,22 @@ func TestHumaMigrationCSV_BadInput(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 	})
 
-	t.Run("empty file is rejected with a domain error", func(t *testing.T) {
+	t.Run("empty file is queued and fails in the job", func(t *testing.T) {
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+		events.ClearDispatchedEvents()
+
 		body, contentType := multipartImportBody(t, "empty.csv", []byte{}, map[string]string{"config": csvTestConfig})
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
-		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		status := runQueuedImport(t)
+		notifications.AssertSent(t, &migrationHandler.MigrationFailedNotification{})
+		notifications.AssertNotSent(t, &migrationHandler.MigrationDoneNotification{})
+		assertClaimReleased(t, status)
 	})
 }
 
-// TestHumaMigrationCSV_Unauthenticated proves all CSV ops require auth.
 func TestHumaMigrationCSV_Unauthenticated(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 
@@ -122,4 +130,43 @@ func TestHumaMigrationCSV_Unauthenticated(t *testing.T) {
 		rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
 	})
+}
+
+// TestHumaMigrationCSV_RowLimit verifies migration.maxcsvrows enforcement and
+// claim release (GHSA-pqf9-h8g4-8gmh). Enforcement moved into the job with the
+// CSV migrator's request-time validator, so the request itself now succeeds.
+func TestHumaMigrationCSV_RowLimit(t *testing.T) {
+	config.MigrationMaxCSVRows.Set("10")
+	defer config.MigrationMaxCSVRows.Set("100000")
+
+	e := setupMigrationTestEnv(t)
+	token := humaTokenFor(t, &testuser1)
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+	events.ClearDispatchedEvents()
+
+	var sb strings.Builder
+	sb.WriteString("Title,Description\n")
+	for i := 0; i < 11; i++ {
+		sb.WriteString("Task,Description\n")
+	}
+	oversized := sb.String()
+
+	body, contentType := multipartImportBody(t, "import.csv", []byte(oversized), map[string]string{"config": csvTestConfig})
+	rec := migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	status := runQueuedImport(t)
+	notifications.AssertSent(t, &migrationHandler.MigrationFailedNotification{})
+	notifications.AssertNotSent(t, &migrationHandler.MigrationDoneNotification{})
+	assertClaimReleased(t, status)
+	db.AssertMissing(t, "tasks", map[string]interface{}{
+		"title":         "Task",
+		"created_by_id": testuser1.ID,
+	})
+
+	body, contentType = multipartImportBody(t, "import.csv", []byte(csvTestFile), map[string]string{"config": csvTestConfig})
+	rec = migrationUploadRequest(t, e, "/api/v2/migration/csv/migrate", body, contentType, token)
+	require.Equal(t, http.StatusOK, rec.Code,
+		"the released claim must let the user retry; body: %s", rec.Body.String())
 }

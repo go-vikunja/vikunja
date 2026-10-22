@@ -115,6 +115,7 @@ function getBuildConfig(env: Record<string, string>) {
 		// https://vitest.dev/config/
 		test: {
 			environment: 'happy-dom',
+			setupFiles: ['./src/test-setup.ts'],
 			exclude: [...configDefaults.exclude, 'e2e/**'],
 			'vitest.commandLine': 'pnpm test:unit',
 		},
@@ -249,7 +250,6 @@ function getBuildConfig(env: Record<string, string>) {
 			},
 		},
 		build: {
-			target: 'esnext',
 			// required for sentry debugging: tells vite to create source maps
 			sourcemap: Boolean(env.SENTRY_AUTH_TOKEN),
 			rollupOptions: {

@@ -1,8 +1,7 @@
 import {watch} from 'vue'
 import {createSharedComposable, tryOnMounted} from '@vueuse/core'
-import {storeToRefs} from 'pinia'
 
-import {useTimeTrackingStore} from '@/stores/timeTracking'
+import {useTimeTracking} from '@/composables/useTimeTracking'
 import {getFullBaseUrl} from '@/helpers/getFullBaseUrl'
 
 const TRACKING_FAVICON = `${getFullBaseUrl()}images/icons/favicon-tracking-32x32.png`
@@ -15,7 +14,7 @@ function getFaviconLink(): HTMLLinkElement | null {
 // is running, so an active time tracking session is visible even when the tab
 // isn't focused.
 export const useTimeTrackingFavicon = createSharedComposable(() => {
-	const {hasActiveTimer} = storeToRefs(useTimeTrackingStore())
+	const {hasActiveTimer} = useTimeTracking()
 
 	const originalHref = getFaviconLink()?.getAttribute('href') ?? '/favicon.ico'
 

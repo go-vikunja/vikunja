@@ -55,7 +55,7 @@ type bucketsWithTasksBody struct {
 // taskListViewInput is shared by both view-scoped endpoints.
 type TaskListQueryParams struct {
 	ListParams
-	Filter             string   `query:"filter" doc:"Filter query to match tasks by. See https://vikunja.io/docs/filters."`
+	Filter             string   `query:"filter" doc:"Filter query to match tasks by, e.g. \"done = false && due_date < now+7d\". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters."`
 	FilterTimezone     string   `query:"filter_timezone" doc:"Timezone used to resolve relative date filters like \"now\"."`
 	FilterIncludeNulls bool     `query:"filter_include_nulls" doc:"If true, also include tasks whose filtered field is null."`
 	SortBy             []string `query:"sort_by,explode" doc:"Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query)."`

@@ -5,7 +5,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 const configStore = useConfigStore()
 const hide = ref(false)
-const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
+const enabled = computed(() => configStore.demo_mode_enabled && !hide.value)
 </script>
 
 <template>

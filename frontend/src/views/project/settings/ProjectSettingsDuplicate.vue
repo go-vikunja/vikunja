@@ -4,42 +4,50 @@
 		:title="$t('project.duplicate.title')"
 		primary-icon="paste"
 		:primary-label="$t('project.duplicate.label')"
+		:primary-disabled="Boolean(loadError)"
 		@primary="duplicate"
 	>
-		<p>{{ $t('project.duplicate.text') }}</p>
-		<ProjectSearch v-model="parentProject" />
-		<FancyCheckbox
-			v-model="duplicateShares"
-			class="mbs-2"
-		>
-			{{ $t('project.duplicate.shares') }}
-		</FancyCheckbox>
+		<ErrorMessage v-if="loadError" />
+		<template v-else>
+			<p>{{ $t('project.duplicate.text') }}</p>
+			<ProjectSearch v-model="parentProject" />
+			<FancyCheckbox
+				v-model="duplicateShares"
+				class="mbs-2"
+			>
+				{{ $t('project.duplicate.shares') }}
+			</FancyCheckbox>
+		</template>
 	</CreateEdit>
 </template>
 
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
-import {useRoute} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
+import ErrorMessage from '@/components/misc/Error.vue'
 
-import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
-import {useProject, useProjectStore} from '@/stores/projects'
-import type {IProject} from '@/modelTypes/IProject'
+import {useProject} from '@/composables/useProject'
+import {useProjects} from '@/composables/useProjects'
+import type {ProjectResponse} from '@/client/queries/projects'
+import {useDuplicateProjectMutation} from '@/client/queries/projects'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('project.duplicate.title'))
 
 const route = useRoute()
-const projectStore = useProjectStore()
+const router = useRouter()
+const projectList = useProjects()
 
-const {project, isLoading, duplicateProject} = useProject(route.params.projectId)
+const {project, isLoading, isLoaded, error: loadError} = useProject(() => Number(route.params.projectId))
+const duplicateProject = useDuplicateProjectMutation()
 
-const parentProject = ref<IProject | null>(null)
+const parentProject = ref<ProjectResponse | null>(null)
 const duplicateShares = ref(true)
 const isDuplicating = ref(false)
 
@@ -50,19 +58,24 @@ const loadingModel = computed({
 	},
 })
 watch(
-	() => project.parentProjectId,
-	parentProjectId => {
-		parentProject.value = projectStore.projects[parentProjectId]
-	},
+	() => projectList.projects[project.value.parent_project_id],
+	parent => parentProject.value = parent ?? null,
 	{immediate: true},
 )
 
 async function duplicate() {
+	if (isDuplicating.value || !isLoaded.value) {
+		return
+	}
 	isDuplicating.value = true
 
 	try {
-		await duplicateProject(parentProject.value?.id ?? 0, duplicateShares.value)
-		success({message: t('project.duplicate.success')})
+		const duplicated = await duplicateProject.mutateAsync({
+			projectId: project.value.id,
+			parentProjectId: parentProject.value?.id ?? 0,
+			duplicateShares: duplicateShares.value,
+		})
+		await router.push({name: 'project.index', params: {projectId: duplicated.id}})
 	} finally {
 		isDuplicating.value = false
 	}

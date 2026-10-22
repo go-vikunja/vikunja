@@ -10,7 +10,7 @@ inputs:
   version:
     description: 'golangci-lint version to run'
     required: false
-    default: 'v2.12.2'
+    default: 'v2.14.0'
   working-directory:
     description: 'Module directory to lint, relative to the repo root'
     required: false
@@ -18,7 +18,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       id: go
       with:
         go-version: stable

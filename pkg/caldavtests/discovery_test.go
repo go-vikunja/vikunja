@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDiscovery(t *testing.T) {
@@ -99,6 +100,10 @@ func TestDiscoveryPrincipal(t *testing.T) {
 		// Should contain the username in the principal URL
 		assert.Contains(t, body, "user15",
 			"Principal URL should contain the authenticated username")
+		assert.Contains(t, body, "/dav/principals/user15/",
+			"Principal URL should be well-formed")
+		assert.NotContains(t, body, "user15//",
+			"Principal URL must not have a double trailing slash")
 	})
 
 	t.Run("PROPFIND on /dav/principals/user15/ returns principal info", func(t *testing.T) {
@@ -176,6 +181,28 @@ func TestDiscoveryCalendarHome(t *testing.T) {
 		assert.Contains(t, body, "calendar",
 			"Calendar collections should have calendar in resourcetype")
 	})
+
+	// Apple Calendar tries to sync a home set marked as calendar and fails (#3884).
+	for _, path := range []string{"/dav/projects", "/dav/projects/", "/dav/", "/dav/principals/user15/"} {
+		t.Run("PROPFIND Depth:0 on "+path+" is a collection but not a calendar", func(t *testing.T) {
+			e := setupTestEnv(t)
+
+			rec := caldavPROPFIND(t, e, path, "0", PropfindCalendarCollectionProperties)
+
+			assertResponseStatus(t, rec, 207)
+			ms := parseMultistatus(t, rec)
+			require.Len(t, ms.Responses, 1)
+
+			var resourceType string
+			for _, ps := range ms.Responses[0].Propstat {
+				if strings.Contains(ps.Status, "200") {
+					resourceType = ps.Prop.ResourceType.InnerXML
+				}
+			}
+			assert.Contains(t, resourceType, "collection")
+			assert.NotContains(t, resourceType, "calendar")
+		})
+	}
 
 	t.Run("Each listed calendar has supported-calendar-component-set", func(t *testing.T) {
 		e := setupTestEnv(t)

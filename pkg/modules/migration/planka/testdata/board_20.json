@@ -1,0 +1,6 @@
+{
+  "item": {"id": "20", "position": 65536, "name": "Only Board", "projectId": "200"},
+  "included": {"boardMemberships": [], "labels": [], "lists": [{"id": "1200", "type": "active", "position": 65536, "name": "Stuff", "boardId": "20"}], "cards": [
+    {"id": "2200", "type": "project", "position": 65536, "name": "Lonely card", "description": null, "dueDate": null, "isClosed": false, "commentsTotal": 0, "listChangedAt": "2024-01-02T00:00:00.000Z", "boardId": "20", "listId": "1200", "creatorUserId": "1", "coverAttachmentId": null, "createdAt": "2024-01-01T00:00:00.000Z"}
+  ], "cardMemberships": [], "cardLabels": [], "taskLists": [], "tasks": [], "customFieldGroups": [], "customFields": [], "customFieldValues": [], "users": [], "projects": [], "attachments": []}
+}

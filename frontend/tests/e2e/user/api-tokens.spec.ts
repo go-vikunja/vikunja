@@ -1,4 +1,5 @@
 import {test, expect} from '../../support/fixtures'
+import {serverPageSize} from '../../support/pagination'
 
 test.describe('API Tokens', () => {
 	test('Pre-populates title from query parameter', async ({authenticatedPage: page}) => {
@@ -33,7 +34,7 @@ test.describe('API Tokens', () => {
 		await expect(tasksGroupDiv).toBeVisible()
 
 		// Within that group, find the specific "create" permission checkbox and verify it's checked
-		const createCheckbox = tasksGroupDiv.getByRole('checkbox', {name: 'Checkbox create'})
+		const createCheckbox = tasksGroupDiv.getByRole('checkbox', {name: 'Checkbox create', exact: true})
 		await expect(createCheckbox).toBeChecked()
 	})
 
@@ -67,4 +68,58 @@ test.describe('API Tokens', () => {
 		// Now the form should be visible
 		await expect(titleInput).toBeVisible()
 	})
+})
+
+test('creates and revokes a scoped token with stored state surviving reload', async ({authenticatedPage: page, apiContext}) => {
+	await page.goto('/user/settings/api-tokens?title=Stored%20token&scopes=tasks:read_all')
+	const tasksGroup = page.locator('.mbe-2').filter({
+		has: page.getByRole('checkbox', {name: 'Checkbox tasks', exact: true}),
+	})
+	await expect(page.locator('#apiTokenTitle')).toHaveValue('Stored token')
+	await expect(tasksGroup.getByRole('checkbox', {name: 'Checkbox read all', exact: true})).toBeChecked()
+	const created = page.waitForResponse(r => r.url().endsWith('/api/v2/tokens') && r.request().method() === 'POST')
+	await page.getByRole('button', {name: 'Create token', exact: true}).click()
+	const response = await created
+	expect(response.ok()).toBe(true)
+	const token = await response.json()
+	await expect(page.locator('.message')).toContainText(token.token)
+	await expect(page.locator('tbody')).toContainText('Stored token')
+	await page.reload()
+	await expect(page.locator('tbody')).toContainText('Stored token')
+	await expect(page.locator('body')).not.toContainText(token.token)
+	const usable = await apiContext.get('/api/v2/tasks', {headers: {Authorization: `Bearer ${token.token}`}})
+	expect(usable.ok()).toBe(true)
+	await page.getByRole('button', {name: 'Delete', exact: true}).click()
+	await page.locator('[data-cy="modalPrimary"]').click()
+	await expect(page.locator('tbody tr')).toHaveCount(0)
+	await page.reload()
+	await expect(page.locator('tbody tr')).toHaveCount(0)
+	const revoked = await apiContext.get('/api/v2/tasks', {headers: {Authorization: `Bearer ${token.token}`}})
+	expect(revoked.status()).toBe(401)
+})
+
+test('pages through more tokens than fit on one page', async ({authenticatedPage: page, apiContext, userToken}) => {
+	const pageSize = await serverPageSize(apiContext)
+	for (let i = 1; i <= pageSize + 1; i++) {
+		const response = await apiContext.post('/api/v2/tokens', {
+			headers: {Authorization: `Bearer ${userToken}`},
+			data: {
+				title: `Paged token ${i}`,
+				permissions: {tasks: ['read_all']},
+				expires_at: '2099-01-01T00:00:00Z',
+			},
+		})
+		expect(response.ok()).toBe(true)
+	}
+	await page.goto('/user/settings/api-tokens')
+	await expect(page.locator('tbody tr')).toHaveCount(pageSize)
+	await page.locator('nav.pagination').getByText('2', {exact: true}).click()
+	await expect(page).toHaveURL(/[?&]page=2/)
+	await expect(page.locator('tbody tr')).toHaveCount(1)
+	await page.reload()
+	await expect(page.locator('tbody tr')).toHaveCount(1)
+	await page.getByRole('button', {name: 'Delete', exact: true}).click()
+	await page.locator('[data-cy="modalPrimary"]').click()
+	await expect(page.locator('tbody tr')).toHaveCount(pageSize)
+	await expect(page.locator('nav.pagination')).toHaveCount(0)
 })

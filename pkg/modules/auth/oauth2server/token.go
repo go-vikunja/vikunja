@@ -54,6 +54,17 @@ type TokenRequest struct {
 
 // HandleToken handles POST /oauth/token.
 // Supports grant_type=authorization_code and grant_type=refresh_token.
+// @Summary OAuth 2.0 token endpoint
+// @Description Exchanges an authorization code for an access token, or a refresh token for a new one. Part of the OAuth 2.0 Authorization Code flow with PKCE. Needs no authentication: the grant itself is the credential.
+// @tags auth
+// @Accept json
+// @Produce json
+// @Param grant body TokenRequest true "The token request"
+// @Success 200 {object} TokenResponse "The access token, its type, lifetime and refresh token."
+// @Failure 400 {object} web.HTTPError "Unsupported grant type, or an invalid, expired or already-used authorization code."
+// @Failure 401 {object} web.HTTPError "Invalid or expired refresh token."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /oauth/token [post]
 func HandleToken(c *echo.Context) error {
 	var req TokenRequest
 	if err := c.Bind(&req); err != nil {
@@ -84,34 +95,51 @@ func ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress
 	}
 }
 
-func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+// consumeAuthorizationCode commits in its own transaction so a rollback during
+// validation cannot resurrect the code.
+func consumeAuthorizationCode(code string) (*models.OAuthCode, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Look up and delete the authorization code (single-use)
-	oauthCode, err := models.GetAndDeleteOAuthCode(s, req.Code)
+	oauthCode, err := models.GetAndDeleteOAuthCode(s, code)
 	if err != nil {
-		_ = s.Rollback()
+		// An expired code is deleted before the error is returned.
+		if commitErr := s.Commit(); commitErr != nil {
+			log.Errorf("Could not commit authorization code deletion: %s", commitErr)
+		}
+		return nil, err
+	}
+
+	if err := s.Commit(); err != nil {
+		return nil, err
+	}
+
+	return oauthCode, nil
+}
+
+func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+	oauthCode, err := consumeAuthorizationCode(req.Code)
+	if err != nil {
 		return nil, err
 	}
 
 	// Validate client_id matches
 	if oauthCode.ClientID != req.ClientID {
-		_ = s.Rollback()
 		return nil, &models.ErrOAuthClientNotFound{}
 	}
 
 	// Validate redirect_uri matches
 	if oauthCode.RedirectURI != req.RedirectURI {
-		_ = s.Rollback()
 		return nil, &models.ErrOAuthInvalidRedirectURI{}
 	}
 
 	// Verify PKCE
 	if !VerifyPKCE(req.CodeVerifier, oauthCode.CodeChallenge, oauthCode.CodeChallengeMethod) {
-		_ = s.Rollback()
 		return nil, &models.ErrOAuthPKCEVerifyFailed{}
 	}
+
+	s := db.NewSession()
+	defer s.Close()
 
 	// Create a session (reuses existing session infrastructure)
 	session, err := models.CreateSession(s, oauthCode.UserID, deviceInfo, ipAddress, false, nil)
@@ -120,7 +148,7 @@ func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInf
 		return nil, err
 	}
 
-	u, err := user.GetUserByID(s, oauthCode.UserID)
+	u, err := user.GetUserByIDForAuth(s, oauthCode.UserID)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err

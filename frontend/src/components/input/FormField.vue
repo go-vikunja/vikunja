@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import {computed, useSlots, useId, ref} from 'vue'
+import {computed, useSlots, useId, ref, useAttrs} from 'vue'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 interface Props {
 	modelValue?: string | number
@@ -17,6 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
 	'update:modelValue': [value: string | number]
 }>()
+const showLoading = useDelayedLoading(() => props.loading)
 
 function handleInput(event: Event) {
 	const value = (event.target as HTMLInputElement).value
@@ -36,6 +38,8 @@ const generatedId = useId()
 
 const inputId = computed(() => props.id ?? generatedId)
 const errorId = computed(() => props.error ? `${inputId.value}-error` : undefined)
+const attrs = useAttrs()
+const describedBy = computed(() => [attrs['aria-describedby'], errorId.value].filter(Boolean).join(' ') || undefined)
 const hasAddon = computed(() => !!slots.addon)
 
 const fieldClasses = computed(() => [
@@ -52,7 +56,7 @@ const inputClasses = computed(() => [
 	'input',
 	{
 		'disabled': props.disabled,
-		'is-loading': props.loading,
+		'is-loading': showLoading.value,
 	},
 ])
 
@@ -94,7 +98,7 @@ defineExpose({
 						:class="inputClasses"
 						:disabled="disabled || undefined"
 						:aria-invalid="error ? true : undefined"
-						:aria-describedby="errorId"
+						:aria-describedby="describedBy"
 						@input="handleInput"
 					>
 				</slot>
@@ -126,7 +130,7 @@ defineExpose({
 						:class="inputClasses"
 						:disabled="disabled || undefined"
 						:aria-invalid="error ? true : undefined"
-						:aria-describedby="errorId"
+						:aria-describedby="describedBy"
 						@input="handleInput"
 					>
 				</slot>

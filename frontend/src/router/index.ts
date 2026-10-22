@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
+import {getSensitiveParam} from '@/helpers/sensitiveQueryParams'
 
 import {getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
@@ -9,6 +10,8 @@ import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {PRO_FEATURE} from '@/constants/proFeatures'
+import {i18n} from '@/i18n'
+import {error, success} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
@@ -37,8 +40,8 @@ const router = createRouter({
 
 		// Otherwise just scroll to the top
 		return {
-			'inset-inline-start': 0,
-			'inset-block-start': 0,
+			left: 0,
+			top: 0,
 		}
 	},
 	routes: [
@@ -109,10 +112,15 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/Caldav.vue'),
 					beforeEnter: async () => {
 						const {useConfigStore} = await import('@/stores/config')
-						if (!useConfigStore().caldavEnabled) {
+						if (!useConfigStore().caldav_enabled) {
 							return {name: 'user.settings.general'}
 						}
 					},
+				},
+				{
+					path: '/user/settings/mcp',
+					name: 'user.settings.mcp',
+					component: () => import('@/views/user/settings/Mcp.vue'),
 				},
 				{
 					path: '/user/settings/data-export',
@@ -150,7 +158,7 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/TOTP.vue'),
 					beforeEnter: async () => {
 						const {useConfigStore} = await import('@/stores/config')
-						if (!useConfigStore().totpEnabled || !useAuthStore().info?.isLocalUser) {
+						if (!useConfigStore().totp_enabled || !useAuthStore().info?.is_local_user) {
 							return {name: 'user.settings.general'}
 						}
 					},
@@ -192,6 +200,7 @@ const router = createRouter({
 					props: route => ({
 						service: route.params.service as string,
 						code: route.query.code as string,
+						state: route.query.state as string,
 					}),
 				},
 			],
@@ -261,7 +270,7 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/projects/:projectId/settings/edit',
+			path: '/projects/:projectId(\\d+)/settings/edit',
 			name: 'project.settings.edit',
 			component: () => import('@/views/project/settings/ProjectSettingsEdit.vue'),
 			props: route => ({ projectId: Number(route.params.projectId as string) }),
@@ -302,7 +311,7 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/projects/:projectId/settings/delete',
+			path: '/projects/:projectId(\\d+)/settings/delete',
 			name: 'project.settings.delete',
 			component: () => import('@/views/project/settings/ProjectSettingsDelete.vue'),
 			meta: {
@@ -327,7 +336,8 @@ const router = createRouter({
 			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/projects/:projectId/settings/edit',
+			// Saved-filter pseudo-projects use IDs <= -2; -1 is the Favorites pseudo-project.
+			path: '/projects/:projectId(-[2-9]\\d*|-1\\d+)/settings/edit',
 			name: 'filter.settings.edit',
 			component: () => import('@/views/filters/FilterEdit.vue'),
 			meta: {
@@ -336,7 +346,7 @@ const router = createRouter({
 			props: route => ({ projectId: Number(route.params.projectId as string) }),
 		},
 		{
-			path: '/projects/:projectId/settings/delete',
+			path: '/projects/:projectId(-[2-9]\\d*|-1\\d+)/settings/delete',
 			name: 'filter.settings.delete',
 			component: () => import('@/views/filters/FilterDelete.vue'),
 			meta: {
@@ -467,17 +477,51 @@ const router = createRouter({
 					name: 'admin.projects',
 					component: () => import('@/views/admin/ProjectsView.vue'),
 				},
+				{
+					path: 'invite-links',
+					name: 'admin.inviteLinks',
+					component: () => import('@/views/admin/InviteLinksView.vue'),
+					meta: {
+						requiresUserInvites: true,
+					},
+				},
 			],
 		},
 	],
 })
 
-export async function getAuthForRoute(to: RouteLocation, authStore) {
+export async function getAuthForRoute(to: RouteLocation, authStore: {
+	authUser: boolean,
+	authLinkShare: boolean,
+	info: {pending_email?: string} | null,
+	verifyEmail: (token: string) => Promise<unknown>,
+	refreshUserInfo: () => Promise<unknown>,
+}) {
 	// vue-router already decoded to.hash once, so slicing off the prefix yields the original
 	// fullPath (e.g. /oauth/authorize?...) losslessly — no extra decodeURIComponent needed.
 	const redirectDest = to.name === 'user.login' && to.hash.startsWith(REDIRECT_HASH_PREFIX)
 		? to.hash.slice(REDIRECT_HASH_PREFIX.length)
 		: ''
+
+	// Signed-in browsers bounce off the login page, so the token has to be redeemed here.
+	const confirmToken = getSensitiveParam(to, 'userEmailConfirm')
+	if (confirmToken && authStore.authUser) {
+		try {
+			// info may predate a change requested in another session; re-read before judging.
+			await authStore.refreshUserInfo()
+			const hadPending = !!authStore.info?.pending_email
+			await authStore.verifyEmail(confirmToken)
+			await authStore.refreshUserInfo()
+			if (hadPending && !authStore.info?.pending_email) {
+				success({message: i18n.global.t('user.settings.updateEmailConfirmed')})
+				return {name: 'user.settings.email-update'}
+			}
+		} catch (e) {
+			// Keep the original API error code for translation.
+			error((e as {cause?: unknown})?.cause ?? e)
+		}
+		return {name: 'home'}
+	}
 
 	if (authStore.authUser || authStore.authLinkShare) {
 		// An already-signed-in browser that opens a copied /login#redirect=<oauth.authorize> URL
@@ -489,20 +533,17 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 		return
 	}
 
-	// Check if password reset token is in query params
-	const resetToken = to.query.userPasswordReset as string | undefined
+	const resetToken = getSensitiveParam(to, 'userPasswordReset')
 	
-	// Redirect to password reset page if we have a token stored
 	if (resetToken && to.name !== 'user.password-reset.reset') {
-		return {name: 'user.password-reset.reset', query: { userPasswordReset: resetToken }}
+		return {name: 'user.password-reset.reset', hash: '#userPasswordReset=' + resetToken}
 	}
 
 	if (typeof resetToken === 'undefined' && to.name === 'user.password-reset.reset') {
 		return {name: 'user.login'}
 	}
 
-	// Check if email confirmation token is in query params
-	const emailConfirmToken = to.query.userEmailConfirm as string | undefined
+	const emailConfirmToken = getSensitiveParam(to, 'userEmailConfirm')
 	if (emailConfirmToken) {
 		// Save token to localStorage before redirecting
 		localStorage.setItem('emailConfirmToken', emailConfirmToken)
@@ -564,11 +605,20 @@ router.beforeEach(async (to, from) => {
 		const configStore = useConfigStore()
 		const featureOn = configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
 		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
-		if (authStore.info?.isAdmin === undefined) {
+		if (authStore.info?.is_admin === undefined) {
 			await authStore.refreshUserInfo()
 		}
-		const isAdmin = authStore.info?.isAdmin === true
+		const isAdmin = authStore.info?.is_admin === true
 		if (!featureOn || !isAdmin) {
+			return {name: 'not-found'}
+		}
+	}
+
+	if (to.meta?.requiresUserInvites) {
+		const baseStore = useBaseStore()
+		await baseStore.appReady
+		const configStore = useConfigStore()
+		if (!configStore.isProFeatureEnabled(PRO_FEATURE.USER_INVITES)) {
 			return {name: 'not-found'}
 		}
 	}
@@ -621,5 +671,6 @@ router.beforeEach(async (to, from) => {
 		return to.fullPath + to.hash
 	}
 })
+
 
 export default router

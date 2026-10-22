@@ -38,7 +38,7 @@ func init() {
 		ID:          "20190524205441",
 		Description: "Add extra table for reminders",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(taskReminder20190524205441{})
+			err := tx.Sync2(taskReminder20190524205441{}) //nolint:forbidigo // brand-new table, nothing to drop
 			if err != nil {
 				return err
 			}

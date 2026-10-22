@@ -106,7 +106,9 @@ const (
 	ActionAPITokenRevoked = "auth.api_token.revoked" // #nosec G101
 	ActionAPITokenUsed    = "auth.api_token.used"    // #nosec G101
 
-	ActionUserCreated = "user.created"
+	ActionUserCreated             = "user.created"
+	ActionUserDataExportRequested = "user.data_export.requested"
+	ActionBotStatusChanged        = "bot.status.changed"
 
 	ActionTaskCreated           = "task.created"
 	ActionTaskUpdated           = "task.updated"
@@ -132,6 +134,8 @@ const (
 	ActionTeamMemberAdded   = "team.member.added"
 	ActionTeamMemberRemoved = "team.member.removed"
 
+	ActionAdminInviteLinkCreated     = "admin.invite_link.created"
+	ActionAdminInviteLinkDeleted     = "admin.invite_link.deleted"
 	ActionAdminUserCreated           = "admin.user.created"
 	ActionAdminUserAdminGranted      = "admin.user.admin.granted"
 	ActionAdminUserAdminRevoked      = "admin.user.admin.revoked"

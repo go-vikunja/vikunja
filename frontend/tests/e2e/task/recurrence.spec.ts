@@ -7,7 +7,7 @@ test.describe('Task recurrence', () => {
 		await ProjectFactory.create(1, {id: 1})
 	})
 
-	test('sets repeat-every-day via preset button', async ({authenticatedPage: page}) => {
+	test('sets repeat-every-day via preset button', async ({authenticatedPage: page, apiContext, userToken}) => {
 		const [task] = await TaskFactory.create(1, {
 			id: 1,
 			project_id: 1,
@@ -16,15 +16,15 @@ test.describe('Task recurrence', () => {
 		await page.goto(`/tasks/${task.id}`)
 
 		// Reveal the RepeatAfter component (hidden until the user activates it)
-		await page.getByRole('button', {name: 'Set Repeat'}).click()
+		await page.getByRole('button', {name: 'Set Repeating Interval'}).click()
 
 		const save = page.waitForResponse(r =>
-			r.url().includes(`/tasks/${task.id}`) && r.request().method() === 'POST',
+			new URL(r.url()).pathname.endsWith(`/tasks/${task.id}`) && r.request().method() === 'PATCH',
 		)
 		await page.getByRole('button', {name: 'Every Day'}).click()
-		const r = await save
-		const body = r.request().postDataJSON()
-		expect(body.repeat).toEqual({freq: 'daily', interval: 1})
+		expect((await save).ok()).toBeTruthy()
+		const response = await apiContext.get(`/api/v2/tasks/${task.id}`, {headers: {Authorization: `Bearer ${userToken}`}})
+		expect((await response.json()).repeat_after).toBe(86400)
 	})
 
 	test('completing a recurring task reopens with advanced due date', async ({
@@ -35,13 +35,13 @@ test.describe('Task recurrence', () => {
 			id: 1,
 			project_id: 1,
 			due_date: originalDue.toISOString(),
-			repeats: 'FREQ=DAILY;INTERVAL=1',
+			repeat_after: 86400,
 		}, false)
 
 		await page.goto(`/tasks/${task.id}`)
 
 		const completed = page.waitForResponse(r =>
-			r.url().includes(`/tasks/${task.id}`) && r.request().method() === 'POST',
+			new URL(r.url()).pathname.endsWith(`/tasks/${task.id}`) && r.request().method() === 'PATCH',
 		)
 		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Mark task done!'}).click()
 		await completed
@@ -61,18 +61,19 @@ test.describe('Task recurrence', () => {
 		expect(newDue - originalDue.getTime()).toBeCloseTo(86_400_000, -4)
 	})
 
-	test('selecting months frequency reveals the day-of-month selector', async ({authenticatedPage: page}) => {
+	test('monthly repeat mode hides the amount field', async ({authenticatedPage: page}) => {
 		const [task] = await TaskFactory.create(1, {id: 1, project_id: 1}, false)
 		await page.goto(`/tasks/${task.id}`)
 
 		// Reveal the RepeatAfter component (hidden until the user activates it)
-		await page.getByRole('button', {name: 'Set Repeat'}).click()
+		await page.getByRole('button', {name: 'Set Repeating Interval'}).click()
 
-		// The day-of-month picker is only rendered when the frequency unit is "months".
-		await expect(page.locator('#repeatDay')).toHaveCount(0)
+		await expect(page.locator('#repeatMode')).toBeVisible()
+		// Amount input is visible in the default repeat mode
+		await expect(page.locator('input[placeholder*="amount" i]')).toHaveCount(1)
 
-		await page.locator('.repeat-interval-unit select').selectOption('months')
+		await page.locator('#repeatMode').selectOption({label: 'Monthly'})
 
-		await expect(page.locator('#repeatDay')).toBeVisible()
+		await expect(page.locator('input[placeholder*="amount" i]')).toHaveCount(0)
 	})
 })

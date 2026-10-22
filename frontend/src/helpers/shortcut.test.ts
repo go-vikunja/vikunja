@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 
 import * as appleDevice from '@/helpers/isAppleDevice'
-import {parseKey, matchesKey, eventToShortcutString, isFormField, install, uninstall} from './shortcut'
+import {parseKey, matchesKey, eventToShortcutString, isFormField, install, uninstall, shortcutBindingToDisplay} from './shortcut'
 
 // Helper to create a partial KeyboardEvent with sensible defaults
 function makeEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
@@ -290,6 +290,71 @@ describe('eventToShortcutString', () => {
 	})
 })
 
+describe('shortcutBindingToDisplay', () => {
+	it('should convert a simple key binding to display keys', () => {
+		expect(shortcutBindingToDisplay('KeyT')).toEqual({
+			keys: ['t'],
+		})
+	})
+
+	it('should convert Mod bindings to ctrl on non-Apple devices', () => {
+		const spy = vi.spyOn(appleDevice, 'isAppleDevice').mockReturnValue(false)
+
+		expect(shortcutBindingToDisplay('Mod+KeyE')).toEqual({
+			keys: ['ctrl', 'e'],
+		})
+
+		spy.mockRestore()
+	})
+
+	it('should convert Mod bindings to command on Apple devices', () => {
+		const spy = vi.spyOn(appleDevice, 'isAppleDevice').mockReturnValue(true)
+
+		expect(shortcutBindingToDisplay('Mod+KeyE')).toEqual({
+			keys: ['⌘', 'e'],
+		})
+
+		spy.mockRestore()
+	})
+
+	it('should convert Shift+Slash to display keys', () => {
+		expect(shortcutBindingToDisplay('Shift+Slash')).toEqual({
+			keys: ['shift', '/'],
+		})
+	})
+
+	it('should convert sequences to display keys with then combination', () => {
+		expect(shortcutBindingToDisplay('KeyG KeyO')).toEqual({
+			keys: ['g', 'o'],
+			combination: 'then',
+		})
+	})
+
+	it('should convert Alt bindings to display keys', () => {
+		expect(shortcutBindingToDisplay('Alt+KeyR')).toEqual({
+			keys: ['alt', 'r'],
+		})
+	})
+
+	it('should convert Backspace to a display key', () => {
+		expect(shortcutBindingToDisplay('Backspace')).toEqual({
+			keys: ['backspace'],
+		})
+	})
+
+	it('should convert Delete to a display key', () => {
+		expect(shortcutBindingToDisplay('Delete')).toEqual({
+			keys: ['delete'],
+		})
+	})
+
+	it('should convert Period bindings to display keys', () => {
+		expect(shortcutBindingToDisplay('Period')).toEqual({
+			keys: ['.'],
+		})
+	})
+})
+
 // --- isFormField ---
 
 describe('isFormField', () => {
@@ -346,8 +411,8 @@ function fireKeydown(code: string, mods: Partial<Pick<KeyboardEvent, 'ctrlKey' |
 describe('install / uninstall (sequence handling)', () => {
 	let elA: HTMLElement
 	let elB: HTMLElement
-	let clickA: ReturnType<typeof vi.fn>
-	let clickB: ReturnType<typeof vi.fn>
+	let clickA: ReturnType<typeof vi.fn<(event: MouseEvent) => void>>
+	let clickB: ReturnType<typeof vi.fn<(event: MouseEvent) => void>>
 
 	beforeEach(() => {
 		elA = document.createElement('button')

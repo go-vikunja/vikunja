@@ -1,19 +1,14 @@
 import type {Editor, Range} from '@tiptap/core'
+import type {SuggestionProps, SuggestionKeyDownProps} from '@tiptap/suggestion'
+import type {CommandProps} from './commands'
 import {VueRenderer} from '@tiptap/vue-3'
-import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 
 import CommandsList from './CommandsList.vue'
 import {getPopupContainer} from './popupContainer'
+import {createSuggestionPopup, type SuggestionPopup} from './suggestionPopup'
 
 type TranslateFunction = (key: string) => string
 
-interface SuggestionProps {
-	editor: Editor
-	clientRect?: () => DOMRect
-	command: (item: {command: (params: {editor: Editor, range: Range}) => void}) => void
-	items: unknown[]
-	event?: KeyboardEvent
-}
 
 export default function suggestionSetup(t: TranslateFunction) {
 	return {
@@ -170,24 +165,10 @@ export default function suggestionSetup(t: TranslateFunction) {
 
 		render: () => {
 			let component: VueRenderer
-			let popupElement: HTMLElement | null = null
-			let cleanupFloating: (() => void) | null = null
-
-			const virtualReference = {
-				getBoundingClientRect: () => ({
-					width: 0,
-					height: 0,
-					x: 0,
-					y: 0,
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-				} as DOMRect),
-			}
+			let popup: SuggestionPopup | null = null
 
 			return {
-				onStart: (props: SuggestionProps) => {
+				onStart: (props: SuggestionProps<CommandProps>) => {
 					component = new VueRenderer(CommandsList, {
 						// using vue 2:
 						// parent: this,
@@ -200,60 +181,27 @@ export default function suggestionSetup(t: TranslateFunction) {
 						return
 					}
 
-					// Create popup element
-					popupElement = document.createElement('div')
-					popupElement.style.position = 'absolute'
-					popupElement.style.top = '0'
-					popupElement.style.left = '0'
-					popupElement.style.zIndex = '4700'
-					popupElement.appendChild(component.element!)
-					getPopupContainer(props.editor).appendChild(popupElement)
-
-					// Update virtual reference
-					const rect = props.clientRect()
-					virtualReference.getBoundingClientRect = () => rect
-
-					// Set up floating positioning
-					const updatePosition = () => {
-						computePosition(virtualReference, popupElement!, {
-							placement: 'bottom-start',
-							middleware: [
-								offset(8),
-								flip(),
-								shift({ padding: 8 }),
-							],
-						}).then(({ x, y }) => {
-							if (popupElement) {
-								popupElement.style.left = `${x}px`
-								popupElement.style.top = `${y}px`
-							}
-						})
-					}
-
-					updatePosition()
-					cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
+					popup = createSuggestionPopup(
+						getPopupContainer(props.editor),
+						component.element!,
+						props.clientRect,
+						props.editor.view.dom,
+					)
 				},
 
-				onUpdate(props: SuggestionProps) {
+				onUpdate(props: SuggestionProps<CommandProps>) {
 					component.updateProps(props)
-
-					if (!props.clientRect || !popupElement) {
-						return
-					}
-
-					// Update virtual reference
-					const rect = props.clientRect()
-					virtualReference.getBoundingClientRect = () => rect
+					popup?.reposition()
 				},
 
-				onKeyDown(props: SuggestionProps) {
+				onKeyDown(props: SuggestionKeyDownProps) {
 					if (props.event && props.event.key === 'Escape') {
 						if (props.event.isComposing) {
 							return false
 						}
 
-						if (popupElement) {
-							popupElement.style.display = 'none'
+						if (popup) {
+							popup.element.style.display = 'none'
 						}
 
 						return true
@@ -263,13 +211,8 @@ export default function suggestionSetup(t: TranslateFunction) {
 				},
 
 				onExit() {
-					if (cleanupFloating) {
-						cleanupFloating()
-					}
-					if (popupElement) {
-						popupElement.remove()
-						popupElement = null
-					}
+					popup?.destroy()
+					popup = null
 					component.destroy()
 				},
 			}

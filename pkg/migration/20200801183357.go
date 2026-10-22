@@ -35,7 +35,7 @@ func init() {
 		ID:          "20200801183357",
 		Description: "Add avatar provider setting to user",
 		Migrate: func(tx *xorm.Engine) error {
-			err := tx.Sync2(user20200801183357{})
+			err := partialSync(tx, user20200801183357{})
 			if err != nil {
 				return err
 			}

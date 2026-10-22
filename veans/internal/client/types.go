@@ -117,6 +117,8 @@ type Task struct {
 	DueDate      *time.Time         `json:"due_date,omitempty"`
 	EndDate      *time.Time         `json:"end_date,omitempty"`
 	PercentDone  float64            `json:"percent_done,omitempty"`
+	// URL is not on the wire; commands fill it before printing.
+	URL string `json:"url,omitempty"`
 }
 
 // TaskPatch is the JSON Merge Patch body for UpdateTask (PATCH /tasks/{id}).

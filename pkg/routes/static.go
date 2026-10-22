@@ -23,7 +23,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -52,6 +51,9 @@ const (
 	window.CUSTOM_LOGO_URL_DARK = '{{ .CUSTOM_LOGO_URL_DARK }}'
 </script>`
 )
+
+// Build artifacts carry no secrets, unlike SPA routes and query strings.
+const staticAssetLogPathKey = `static_asset_log_path`
 
 // Because the files are embedded into the final binary, we can be absolutely sure the etag will never change
 // and we can cache its generation pretty heavily.
@@ -107,13 +109,7 @@ func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 		}
 
 		scriptConfigString = strings.ReplaceAll(buf.String(), `<div id="app"></div>`, `<div id="app"></div>`+scriptConfig)
-
-		publicURL := config.ServicePublicURL.GetString()
-		if publicURL == "" {
-			publicURL = "/"
-		}
-
-		scriptConfigString = strings.ReplaceAll(scriptConfigString, "'/api/v1'", "'"+publicURL+"api/v1'")
+		scriptConfigString = injectAPIURL(scriptConfigString, config.ServicePublicURL.GetString())
 	}
 
 	reader := strings.NewReader(scriptConfigString)
@@ -123,11 +119,14 @@ func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 		return err
 	}
 
-	//etag, err := generateEtag(index, info.Name())
-	//if err != nil {
-	//	return err
-	//}
 	return serveFile(c, reader, info, "")
+}
+
+// injectAPIURL points the frontend at the public URL. The frontend appends the
+// /api/vN suffix itself; an empty value means the frontend's own origin.
+func injectAPIURL(index, publicURL string) string {
+	apiURL := template.JSEscapeString(strings.TrimSuffix(publicURL, "/"))
+	return strings.Replace(index, "window.API_URL = ''", "window.API_URL = '"+apiURL+"'", 1)
 }
 
 // Copied from echo's middleware.StaticWithConfig simplified and adjusted for caching
@@ -143,10 +142,8 @@ func static() echo.MiddlewareFunc {
 			if strings.HasSuffix(c.Path(), "*") { // When serving from a group, e.g. `/static*`.
 				p = c.Param("*")
 			}
-			p, err = url.PathUnescape(p)
-			if err != nil {
-				return
-			}
+			// Both arrive decoded (path params through RouterConfig.UnescapePathParamValues) -
+			// decoding again 500s on a literal `%` and promotes an encoded `%2f` to a separator.
 			name := path.Join(rootPath, path.Clean("/"+p)) // "/"+ for security
 
 			file, err := assetFs.Open(name)
@@ -186,6 +183,7 @@ func static() echo.MiddlewareFunc {
 				return err
 			}
 
+			c.Set(staticAssetLogPathKey, "/"+strings.TrimPrefix(name, rootPath))
 			return serveFile(c, file, info, etag)
 		}
 	}

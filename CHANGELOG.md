@@ -7,6 +7,2765 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.7.1] - 2026-10-20
+
+### Bug Fixes
+
+* *(api)* Treat page=0 as the first page on v1 list endpoints
+* *(api-tokens)* Name non-CRUD permission keys by action across v1 and v2
+* *(attachments)* Decode previews from the stream instead of buffering the file
+* *(attachments)* Bound concurrent preview generation by decoded pixels
+* *(attachments)* Generate a preview once for concurrent requests
+* *(attachments)* Never upscale image previews
+* *(attachments)* Skip previews of very large files
+* *(attachments)* Bound how much of a file is read for the image header
+* *(attachments)* Keep previews in the file storage instead of keyvalue
+* *(attachments)* Only serve stored previews as jpeg or png
+* *(attachments)* Drop a preview stored after its file was deleted
+* *(attachments)* Reject v1 preview requests that cannot return a preview
+* *(attachments)* Dispatch events after uploading attachments
+* *(auth)* Drop stored tokens when the api server changes
+* *(auth)* Read email link tokens from the url fragment
+* *(auth)* Refuse email-unconfirmed accounts on every credential path
+* *(auth)* Reject user JWTs whose session was revoked on the HTTP path
+* *(auth)* Reject bot credentials while the bot's owner can't authenticate
+* *(auth)* Sync OIDC and LDAP avatars after the login commits
+* *(avatar)* Round requested size up to a fixed allowlist
+* *(avatar)* Bound decode memory
+* *(avatar)* Scale synced avatars while cropping them
+* *(avatar)* Delete the old avatar only after the new one is saved
+* *(avatar)* Answer 400 for uploads the decoder rejects
+* *(avatar)* Sync LDAP and OIDC avatars through one decode
+* *(avatar)* Decode avatars before opening a database session
+* *(avatar)* Remove a replaced avatar's blob only after commit
+* *(avatar)* Keep the shared default avatar when replacing it
+* *(avatar)* Flush avatar caches only after the replacement commits
+* *(avatar)* Cancel an avatar decode when the client goes away
+* *(background)* Bound decode memory
+* *(background)* Answer 400 for any image the decoder rejects
+* *(background)* Name the right mime type when rejecting an image
+* *(background)* Decode backgrounds before opening the write session
+* *(build)* Pin xgo module version and docker image digest
+* *(caldav)* Bound PROPPATCH response size
+* *(caldav)* Redact credential headers and truncate body in debug logs
+* *(caldav)* Merge multiple CATEGORIES properties into labels (#4183)
+* *(caldav)* Cap and dedupe RELATED-TO placeholders per VTODO
+* *(client)* Turn non-JSON error bodies into problem bodies
+* *(client)* Throw failed responses as ApiError
+* *(config)* Re-anchor database, log and plugin paths to the final rootpath
+* *(datepicker)* Skip time step buttons when tabbing
+* *(db)* Percent-encode postgres credentials in the connection URL
+* *(desktop)* Restrict remote images to https in the CSP
+* *(dump)* Log only env variable names on restore, not their values
+* *(dump)* Create the dump archive 0600 and refuse existing paths
+* *(editor)* Keep restored comment draft in edit mode
+* *(editor)* Allowlist table cell background colors
+* *(export)* Only detach expired exports in cleanup cron
+* *(export)* Remove replaced and failed export archives
+* *(files)* Write local files through a temporary file
+* *(files)* Remove the previews of a file with it
+* *(files)* Open s3 files without requiring a content length
+* *(files)* Store local blobs 0600 in 0700 directories
+* *(files)* Drop the file row when storing its content fails
+* *(filters)* Hint at && and || when a filter value contains and/or
+* *(filters)* Populate task cache in filter view cron
+* *(frontend)* Show 'just now' for timestamps within the last minute
+* *(frontend)* Cache created tasks with their view position
+* *(frontend)* Close project settings dialogs opened without history
+* *(frontend)* Apply the history fallback to the remaining route dialogs
+* *(frontend)* Stop color picker from echoing model changes as updates
+* *(frontend)* Handle Escape on keydown in Quick Actions (#4129)
+* *(frontend)* Hide PWA banners until the user is logged in (#3964)
+* *(frontend)* Validate oidc logout url scheme
+* *(frontend)* Keep dropdown menus within the viewport
+* *(frontend)* Keep dropdown menus clear of the fixed navbar
+* *(frontend)* Send the oauth callback state with the migration request
+* *(gantt)* Always draw bars at least one day wide (#4116)
+* *(kanban)* Show no cover when the cover image fails to load
+* *(kanban)* Allow auto-scrolling between buckets while dragging on mobile
+* *(kanban)* Only request a cover preview for image attachments
+* *(kanban)* Load cover images only when the card is visible
+* *(kanban)* Drop cover fetches that resolve after the card moved on
+* *(kanban)* Retry a cover once when the server is busy
+* *(kanban)* Cap manual buckets at 100 per view
+* *(kanban)* Reject bucket actions through another view's url
+* *(kanban)* Only move tasks into buckets of their own project's view
+* *(kanban)* Never dispatch the task object bound from a bucket move body
+* *(ldap)* Match legacy group members against the ldap username
+* *(ldap)* Keep the login when storing the synced avatar fails
+* *(migration)* Skip indexes on mysql text columns instead of aborting
+* *(migration)* Decode utf-16 and drop nul bytes in csv imports
+* *(migration)* Escape checklist titles in trello and wekan imports
+* *(migration)* Escape trello link attachment url and name
+* *(migration)* Escape planka names in generated markdown
+* *(migration)* Dispatch events after importing saved filters
+* *(migration)* Cap the entry count of vikunja export archives
+* *(migration)* Cap the number of items one import may create
+* *(migration)* Reject wekan boards with duplicate ids or too many items
+* *(migration)* Cap trello and todoist downloads at files.maxsize
+* *(migration)* Bound todoist and microsoft todo api responses and item counts
+* *(migration)* Bind oauth migration callbacks to the user who requested the auth url
+* *(migration)* Rename stored API token permission keys
+* *(migration)* Count vikunja export items before decoding data.json
+* *(models)* Return 404 for missing api tokens on delete (#3944) (#4119)
+* *(notifications)* Escape user input in conversational email header
+* *(oidc)* Bound avatar decode memory
+* *(openid)* Reject non-http(s) end_session_endpoint
+* *(openid)* Copy oauth2 config before setting per-request redirect URL
+* *(packaging)* Persist a service secret on package install
+* *(project)* Strip styles and form elements from project descriptions
+* *(quick-actions)* Update the search query during IME composition
+* *(quick-add)* Apply default due time to dates without a time
+* *(quick-add-magic)* Do not parse date ranges as due date
+* *(reactions)* Never return a null user in a reaction list
+* *(reactions)* Remove reactions whose user does not exist
+* *(reminders)* Exclude bot users from task reminder recipients
+* *(reminders)* Skip overdue webhook events when no webhook subscribes to them
+* *(reminders)* Keep dispatching overdue events to plugin listeners
+* *(routes)* Log route template instead of raw request URI
+* *(routes)* Reject form-encoded bodies outside the OAuth token endpoint
+* *(saved-filters)* Search titles case-insensitively on postgres
+* *(sentry)* Handle cyclic objects when redacting events
+* *(sentry)* Only report resource load failures from our own origin
+* *(systemd)* Set UMask=0077 in vikunja.service
+* *(tasks)* Strip the leading # from hex_color before saving an update
+* *(tasks)* Don't clear assignees on bulk updates that don't name them
+* *(tasks)* Don't clear reminders on bulk updates that don't name them
+* *(tasks)* Don't change favorites on bulk updates that don't name them
+* *(tasks)* Reject bulk updates without fields
+* *(tasks)* Clamp day when advancing a monthly repeating task by one month (#4107)
+* *(tasks)* Dedup task ids in bulk update
+* *(teams)* Ignore client-set external_id on team create and update
+* *(teams)* Require membership for team self-removal
+* *(time-tracking)* Start timer at chosen start time
+* *(totp)* Require a current passcode to disable totp
+* *(totp)* Require the current password to enroll and enable totp
+* *(unsplash)* Close pingback response body
+* *(user)* Set default reminder settings on bot users and guard reminder parser (#4007)
+* *(user)* Only reassign owned projects on account deletion
+* *(user)* Remove export and avatar files on account deletion
+* *(user)* Put account tokens in the email link fragment
+* *(user)* Throttle password re-checks per user on sensitive account actions
+* *(user)* Enforce the email confirmation cooldown on redis
+* *(veans)* Never downgrade server discovery to http
+* *(veans)* Gate repo-configured server before sending credentials
+* *(veans)* Fence remote project metadata in the agent prompt
+* *(veans)* Keep init writes inside the repo root
+* *(veans)* Request renamed bucket permission keys for bot tokens
+* *(views)* Reject bucket configurations without a filter
+* *(views)* Cap filter bucket configurations at 50
+* *(webhooks)* Route task events by the stored task and load payloads as the webhook creator
+* *(webhooks)* Require project write access to list webhook targets
+* *(webhooks)* Derive user- vs project-level webhooks from the route, never the body
+* Use vite default build target ([0437395](04373954353c22b78f552044ad551e1407a92f24))
+* Reject hex_color values that are not hex colors ([9125e1a](9125e1a93a282e53819c30884c6bef8f9a6be5c4))
+
+### Dependencies
+
+* *(deps)* Update module go.opentelemetry.io/otel to v1.42.0 [security]
+* *(deps)* Bump brace-expansion from 5.0.9 to 5.0.12 in /frontend
+* *(deps)* Update docker/dockerfile:1 docker digest to 4edf897
+* *(deps)* Update module golang.org/x/net to v0.60.0 [security]
+* *(deps)* Bump joi from 18.2.3 to 18.2.9 in /frontend
+* *(deps)* Update postgres:18 docker digest to 74935e7
+* *(deps)* Update axllent/mailpit docker tag to v1.31.5
+* *(deps)* Update dependency @babel/core to v8.0.7
+* *(deps)* Update dependency basic-ftp to v6.2.3
+* *(deps)* Update dependency ip-address to v10.7.3
+* *(deps)* Bump shell-quote from 1.10.0 to 1.12.0 in /frontend
+* *(deps)* Bump proxy-addr from 2.0.7 to 2.0.8 in /desktop
+* *(deps)* Bump js-yaml from 3.15.1 to 3.15.2 in /frontend
+* *(deps)* Bump qs from 6.15.3 to 6.16.0 in /desktop
+* *(deps)* Update module github.com/modelcontextprotocol/go-sdk to v1.8.0
+* *(deps)* Update dependency launch-editor to v2.14.2
+* *(deps)* Update dependency ip-address to v10.7.4
+* *(deps)* Update dependency go to v1.27.2
+* *(deps)* Update axllent/mailpit docker tag to v1.31.6
+* *(deps)* Lock file maintenance
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.27.x docker digest to 783cf55
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.27.x docker digest to 7d5cab9
+* *(deps)* Update go to 1.27.3 in mise
+
+### Documentation
+
+* *(agents)* Document supported database versions
+* *(api)* Document decode failures on avatar and background uploads
+* *(config)* Clarify CRITICAL and NOTICE log level aliases
+* *(config)* Document group sync filter placeholders
+* *(config)* Document the ldap id attribute
+* *(filters)* Describe the filter grammar in filter parameter docs
+* *(veans)* Document the server trust gate
+* Docs(agents): point migration skill at minimum database versions [skip ci] ([fe4d602](fe4d602b372eeb737a3b598ac8f8fb66d5bcae8e))
+
+### Features
+
+* *(api)* Return per-view positions from task create
+* *(attachments)* Encode opaque previews as jpeg
+* *(attachments)* Add a repair command for the previews older versions left in keyvalue
+* *(attachments)* Fail a v2 preview request that cannot produce a preview
+* *(attachments)* Serve v2 previews from their own route
+* *(attachments)* Always return the original from the v2 download route
+- **BREAKING**: the v2 attachment download route ignores preview_size. Request previews from GET /tasks/{task}/attachments/{attachment}/preview?size= instead.
+* *(auth)* Sync provider avatars in the background after login
+* *(avatar)* Store every avatar as a centered square
+- **BREAKING**: store every avatar as a centered square
+* *(ci)* Add agentscan to check new PRs for automation signals
+* *(datepicker)* Advance to minutes after typing the hour
+* *(files)* Open a stored file together with its size
+* *(files)* Store previews of a file in the file storage
+* *(frontend)* Move editor toolbar buttons that don't fit into a More menu
+* *(frontend)* Add project settings dropdown to project cards
+* *(keyvalue)* Add atomic IncrByWithTTL for windowed counters
+* *(ldap)* Query only the user's groups during group sync
+* *(ldap)* Match users and groups by an immutable directory id
+* *(log)* Add SafeHeaders to mask credential headers in logs
+* *(mcp)* Let read tools return only requested fields
+* *(mcp)* Add filter_syntax tool and resource
+* *(mcp)* Point filter params, errors and instructions at filter_syntax
+* *(models)* Migrate external team ids to a new identifier
+* *(time-tracking)* Add formatTimeRange helper
+* *(time-tracking)* Show date in time entry list
+* *(veans)* Store frontend url in .veans.yml
+* *(veans)* Include web ui url in task output
+* *(veans)* Teach agents to reference tasks as pill links
+* *(veans)* Backfill frontend_url in existing .veans.yml
+* *(veans)* Add trust store and gate for server origins
+* *(veans)* Trust the server typed during init
+
+### Miscellaneous Tasks
+
+* *(ci)* Bump golangci-lint to v2.14.0
+* *(frontend)* Regenerate API client for bulk task fields doc
+* *(frontend)* Regenerate API client for filter docs
+* *(frontend)* Regenerate api client
+* *(i18n)* Update translations via Crowdin
+* Better wording ([e5a9631](e5a9631be1428bc12af8eb6674fa2b1c32c2c10f))
+
+### Other
+
+* *(lint)* Forbid logging raw http headers and env variables
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Sign release docker images with cosign
+* *(other)* Attest build provenance for release docker images
+* *(other)* [skip ci] Updated yaegi symbols
+
+### Performance
+
+* *(attachments)* Stream stored previews instead of buffering them
+* *(attachments)* Generate every preview size from one decode
+* *(keyvalue)* Unlink keys per scan page when deleting a prefix
+
+### Refactor
+
+* *(attachments)* Thread a context into preview generation (mechanical)
+* *(attachments)* Split preview rendering from the cache lookup
+* *(attachments)* Return why a preview could not be generated
+* *(attachments)* Cut comment noise
+* *(attachments)* Answer a download with either a preview or the original
+* *(attachments)* Test previews against the real file storage
+* *(attachments)* Split attachment downloads from previews
+* *(attachments)* Request previews from the preview route
+* *(files)* Move the preview sizes to the files package (mechanical)
+* *(files)* Parse preview sizes from the stored size list
+* *(files)* Export the stored preview size list
+* *(imageutils)* Move pixel-weighted decode semaphore
+* *(imageutils)* Drop ValidateReader
+* *(imageutils)* Queue decodes on the caller's context
+* *(imageutils)* Answer every busy decode with code 4037
+- **BREAKING**: answer every busy decode with code 4037
+* *(ldap)* Use go-ldap filter escaping for the user filter
+* *(migration)* Read csv imports through one helper
+* *(user)* Use keyvalue.GetInt64 for failed login and TOTP counters
+
+### Testing
+
+* *(attachments)* Pin image preview and fallback to the original
+* *(attachments)* Fold the large-image test into the generator table
+* *(e2e)* Cover closing directly opened project settings dialogs
+* *(e2e)* Cover keyboard navigation of the editor toolbar overflow menu
+* *(export)* Don't assume sequential file ids in the failed export test
+* *(log)* Cover log level aliases
+* *(mcp)* Drop session ID handling from stateless MCP test client
+* *(models)* Fit invalid reminder time in column
+* *(user)* Assert deleting a user removes their reactions
+
+## [2.7.0] - 2026-10-02
+
+### Bug Fixes
+
+* *(a11y)* Open task datepickers when activating date fields
+* *(a11y)* Focus the first date shortcut with a visible ring
+* *(a11y)* Support keyboard navigation and confirmation in date shortcuts
+* *(a11y)* Keep loading buttons focusable instead of natively disabling them
+* *(account)* Preserve public mutation option types
+* *(admin)* Show project owner with user component
+* *(admin)* Rank exact and prefix user matches before the page cap
+* *(admin)* Rank exact and prefix team matches before the page cap
+* *(admin)* Match admin user search case-insensitively
+* *(api)* Do not transform an already serialized payload on a retried request
+* *(api)* Respect service.maxitemsperpage in v2 list endpoints
+* *(api)* Describe public feature names as strings
+* *(api-tokens)* Order token list by id before paging
+* *(api/v2)* Bound the body read on upload routes instead of huma's 5s default
+* *(assignees)* Include public team members in project user search
+* *(auth)* Keep the request error as cause when refreshing user info fails
+* *(auth)* Show request password reset error when the request has no response
+* *(auth)* Show password reset error when the request has no response
+* *(auth)* Link OIDC users by email when username fallback misses (#4012)
+* *(auth)* Add an iat claim to issued JWTs
+* *(auth)* Compute token expiry against server time
+* *(auth)* Drop the v1 refresh fallback
+* *(auth)* Drop the stale token once its refresh is rejected
+* *(auth)* Skip the refresh retry when no refresh cookie was sent
+* *(auth)* Type login registration and link share credentials
+* *(auth)* Narrow refresh error causes before reading status
+* *(auth)* Reject missing OpenID providers before callback
+* *(auth)* Keep recoverable sessions after a failed refresh
+* *(auth)* Send the refresh cookie with SameSite=Lax
+* *(avatar)* Read FileReader result directly
+* *(bots)* Allow owners to manage disabled bots
+* *(bots)* 404 unowned bots, require status on PUT, audit owner status changes
+* *(bots)* Order the bot list by id so pages are stable
+* *(bots)* Lock the bot list while the previous page is shown
+* *(bots)* Show a newly created bot on the page it lands on
+* *(caldav)* Stop reporting home sets as calendars
+* *(caldav)* Report home sets as non-calendars through caldav-go
+* *(caldav)* Parse Z-suffixed timestamps as UTC (#3883)
+* *(caldav-tokens)* Honour page in the v2 token list
+* *(ci)* Use upstream LLM action
+* *(cli)* Audit user change-status
+* *(client)* Stamp the response status onto Echo-level error bodies
+* *(client)* Keep a newer pending secret mutation when an older call settles
+* *(client)* Hand mutations their request context and never toast its aborts
+* *(comments)* Stop returning the author's email when reading a single comment
+* *(config)* Migrate deprecated webhooks.* keys after loading the config
+* *(datepicker)* Defer quick-select focus after pointer clicks
+* *(datepicker)* Wait for Tab before focusing quick select
+* *(datepicker)* Remove popup timing workarounds
+* *(datepicker)* Confirm typed times with Enter
+* *(dates)* Restore the DateKebab type
+* *(dates)* Preserve text when no date expression matches
+* *(dates)* Respect time format in date tooltips
+* *(db)* Redact PostgreSQL credentials from connection errors (#3707)
+* *(db)* Disable prepared statements when ParadeDB is installed
+* *(desktop)* Re-add ad-hoc signing in macos builds
+* *(doctor)* Qualify PostgreSQL system catalog queries
+* *(doctor)* Check OIDC discovery through the outgoing proxy
+* *(dragging)* Declare typed list items and draggable slots
+* *(dump)* Rebuild project_ancestors after restoring a dump
+* *(editor)* Don't strike through nested checklist items of a checked parent (#3715)
+* *(editor)* Do not crash on enter with a selection starting at a block boundary
+* *(editor)* Stop positioning suggestion popups after teardown
+* *(editor)* Keep suggestion popups anchored to the caret while scrolling
+* *(editor)* Do not crash when pasting markdown with an empty list item
+* *(editor)* Repair pasted content the schema cannot hold
+* *(editor)* Keep formatting when pasting rich text
+* *(editor)* Test rendered filter decorations
+* *(editor)* Remove ignored StarterKit history option
+* *(editor)* Type slash command suggestion options
+* *(editor)* Export the emoji suggestion prop type
+* *(editor)* Narrow DOM targets and checkbox click events
+* *(editor)* Keep double-clicked text in place and put the cursor there
+* *(errors)* Update the attachment size webtest and yaegi symbols for the moved codes
+* *(feeds)* Set target on task assigned notifications in atom feed
+* *(files)* Map ErrFileDoesNotExist to a 404 http error
+* *(files)* Move ErrCodeFileIsTooLarge off the task sort param code
+- **BREAKING**: uploading a file larger than the configured limit now returns 4035 instead of 4013.
+* *(filters)* Keep date filter boundaries inside the driver's year range
+* *(filters)* Highlight unquoted date, label and project values
+* *(filters)* Respect filter_include_nulls on saved filter views
+* *(filters)* Return a boolean from query detection
+* *(filters)* Preserve generic route filter ref types
+* *(frontend)* Keep avatar and name visible in a narrow multiselect (#3714)
+* *(frontend)* Don't report errors wrapping axios failures to sentry
+* *(frontend)* Reload on stale chunk load errors instead of reporting them
+* *(frontend)* Don't read attachment name after delete modal closes
+* *(frontend)* Fall back to blob url when FileReader is unavailable
+* *(frontend)* Don't render empty src on avatar images
+* *(frontend)* Skip sentry reports for placeholder image sources
+* *(frontend)* Use shared blob cache for attachment previews
+* *(frontend)* Use shared blob cache for editor images
+* *(frontend)* Don't crash the project view switcher when views are missing
+* *(frontend)* Let the views computed keep its inferred type
+* *(frontend)* Take the project id for gantt from props, not the route
+* *(frontend)* Don't crash the archive modal when the project is gone
+* *(frontend)* Don't render delete confirmation without a target
+* *(frontend)* Don't touch the api token form after it unmounts
+* *(frontend)* Guard password field focus on settings pages
+* *(frontend)* Don't use the tiptap editor after it was destroyed
+* *(frontend)* Guard mention suggestion teardown against a missing renderer
+* *(frontend)* Reject instead of crashing when a blob request has no body
+* *(frontend)* Ignore drag events without a pointer position
+* *(frontend)* Don't render app routes in the logged out shell
+* *(frontend)* Guard the external user check against a null user
+* *(frontend)* Treat html-for-chunk mime errors as stale chunk loads
+* *(frontend)* Don't report browser extension and webview injection errors to sentry
+* *(frontend)* Drop empty sentry events
+* *(frontend)* Fall back to a blob url when reading an svg attachment fails
+* *(frontend)* Notify instead of throwing when an attachment upload fails
+* *(frontend)* Keep Date instances intact when camel casing objects
+* *(frontend)* Never serialize an invalid date
+* *(frontend)* Render nothing instead of throwing on invalid dates
+* *(frontend)* Guard the datepicker toISOString call sites
+* *(frontend)* Keep flatpickr's alt input out of the expiry flex row
+* *(frontend)* Show the server message of a request error given as cause
+* *(frontend)* Drop sentry events for promises rejected with an empty object
+* *(frontend)* Don't render the custom logo img without a custom logo
+* *(frontend)* Skip image errors whose src resolves to the page itself
+* *(frontend)* Disambiguate project and filter settings routes
+* *(frontend)* Close the bucket dropdown after selecting a bucket
+* *(frontend)* Keep the remove assignee button below popups
+* *(frontend)* Stop dropping DOMExceptions before they reach sentry
+* *(frontend)* Don't report broken images inside user content
+* *(frontend)* Hold sidebar project list updates until a drag ends
+* *(frontend)* Handle the pop sound play() rejection (#4030)
+* *(frontend)* Delay task loading spinners for fast requests
+* *(frontend)* Delay project, filter, sharing and time entry spinners
+* *(frontend)* Delay spinners inside shared input and card components
+* *(frontend)* Keep kanban add-task input disabled while the create is in flight
+* *(frontend)* Delay task detail partial and quick actions spinners
+* *(frontend)* Delay webhook, sharing and project background spinners
+* *(frontend)* Delay admin, team, label and session spinners
+* *(frontend)* Hide token creation on disabled bots
+* *(frontend)* Show a rate limit message when booting hits a 429
+* *(gantt)* Retain inferred route query type
+* *(histoire)* Correct button import casing
+* *(home)* Omit unset background filter styles
+* *(home)* Filter empty label query values
+* *(i18n)* Exclude bound keypaths from literal key checks
+* *(i18n)* Type lowercase Day.js locale keys
+* *(i18n)* Pass typed interpolation objects and plural counts
+* *(i18n)* Derive the message schema from English translations
+* *(import)* Create imported tasks in one batch with preserved indexes
+* *(inputs)* Retain numeric multiselect result indexes
+* *(inputs)* Type emoji picker component and element refs
+* *(kanban)* Do not crash when moving a task into a bucket that is not loaded
+* *(kanban)* Resolve the moved task by its id when dropping it
+* *(kanban)* Resolve the moved bucket by its id when dropping it
+* *(kanban)* Don't write a bucket update into a board that was replaced
+* *(kanban)* Keep bucket footer out of the task scroll container
+* *(kanban)* Keep the add task button under the bucket content (#3888)
+* *(kanban)* Move tasks into saved filter done bucket when done elsewhere
+* *(kanban)* Type drag events timers and debug flag
+* *(labels)* Remove task associations when deleting a label
+* *(list)* Resolve the dropped task by its id when saving its position
+* *(mage)* Create the frontend dist placeholder for test and worktree targets
+* *(mage)* Run webtests in test:filter instead of silently skipping them
+* *(metrics)* Don't log an error for every unauthenticated request
+* *(migration)* Quote index identifiers so the swap works on postgres
+* *(migration)* Don't report upstream 4xx migration failures to sentry
+* *(migration)* Return 400 when an import zip has no data file
+* *(migration)* Use 14009 for ErrNoDataFileInZip to avoid clashing with #3745
+* *(migration)* Handle a CSV without data rows
+* *(migration)* Return 400 for unparseable import files
+* *(migration)* Treat a truncated import file as a client error too
+* *(migration)* Use 14010 for ErrInvalidImportFile, 14008 is taken
+* *(migration)* Do not report 4xx domain errors to sentry
+* *(migration)* Move zip/empty file error codes off the api token codes
+- **BREAKING**: a failed import now returns 14011 instead of 14001 and 14012 instead of 14002.
+* *(migration)* Return 400 instead of 500 for broken vikunja exports
+* *(migration)* Preserve todoist task descriptions (#3819)
+* *(migration)* Leave subscriptions unique index to its dedupe migration
+* *(migration)* Answer 412 instead of 500 when a migration claim collides
+* *(migration)* Judge an abandoned claim by a heartbeat, not by start time
+* *(migration)* Log migration start and completion at info level
+* *(migration)* Don't report a failed success mail as a failed migration
+* *(migration)* Run file imports in the background
+* *(migration)* Keep a queued import upload out of the storage quota
+* *(migration)* Remove the partial blob of a failed import upload write
+* *(migration)* Clean up label_tasks rows orphaned by deleted labels
+* *(migration)* Route Trello API requests through the outgoing client
+* *(multiselect)* Keep multiple value an array while a create is pending
+* *(notifications)* Narrow unknown errors without crashing
+* *(notifications)* Fetch the inbox only once the first socket connection settles
+* *(notifications)* Skip mail rendering when the mailer is disabled
+* *(popup)* Open the popup on browsers without the Popover API
+* *(project)* Don't crash the background settings when no project is loaded
+* *(project)* Skip background previews whose blur hash can't be decoded
+* *(projects)* Narrow filter routes and specify submit events
+* *(projects)* Normalize route ids before lookup
+* *(projects)* Guard absent project ids in list actions
+* *(projects)* Avoid refetching patched project lists
+* *(projects)* Count a project as default only for its owner
+* *(projects)* Let owners delete their own default project
+* *(projects)* Let a nearer grant lower an inherited permission
+* *(quick-actions)* Handle a null current project
+* *(quick-actions)* Type keyboard shortcut events
+* *(ratelimit)* Don't log an error for unauthenticated requests
+* *(reminders)* Skip inactive assignees when collecting task users
+* *(reminders)* Show due reminders in notifications without email
+* *(restore)* Restore empty json column values as NULL
+* *(restore)* Convert numeric bools when restoring into postgres
+* *(router)* Type lazy modal component loaders
+* *(router)* Declare the auth guard dependency contract
+* *(router)* Use supported scroll position properties
+* *(router)* Don't persist one-time tokens in last visited route
+* *(routes)* Send and expose Retry-After on rate-limited responses
+* *(saved-filters)* Delete by id instead of every loaded field
+* *(sentry)* Drop the router and async component errors a stale chunk causes
+* *(sentry)* Drop the WKWebView postMessage error host apps inject
+* *(sentry)* Group reported errors by the error, not the reporting frame
+* *(sentry)* Stop attaching component props to error events
+* *(sentry)* Redact one-time tokens from urls in events, spans and replays
+* *(sentry)* Only report resource load failures for fetched urls
+* *(sessions)* Clamp the page against real data, not the placeholder
+* *(sessions)* Break last_active ties by id so pages stay stable
+* *(settings)* Only save the settings that changed onto the server's current settings
+* *(sharing)* Require project admin to manage link shares
+* *(sharing)* Delete a user's webhooks when they lose project access
+* *(sharing)* List what is deleted when removing project access
+* *(sharing)* Call the shared entity a project in the remove dialog
+* *(shortcuts)* Narrow event targets and type test listeners
+* *(table)* Show priorities for completed tasks
+* *(table)* Preserve sort field types when filtering columns
+* *(task)* Tolerate partial tasks when preparing a task for the api
+* *(task)* Do not replace the related tasks of the task being saved
+* *(task)* Type the related task entries in processModel
+* *(task)* Remove duplicate close button in task detail modal
+* *(task)* Make modal close button readable on task card
+* *(task)* Cancel the debounced scroll-container lookup when the detail view unmounts
+* *(tasks)* Stop mapTasksDeep from descending into the updated task
+* *(tasks)* Keep cached related tasks one level deep like the API
+* *(tasks)* Retain inferred task draft defaults
+* *(tasks)* Type optional task color styles
+* *(tasks)* Keep id as the final sort tie-breaker
+* *(tasks)* Narrow caught task creation errors
+* *(tasks)* Handle absent bucket and deferred date values
+* *(tasks)* Handle absent repeat task values
+* *(tasks)* Type task links and guard optional list fields
+* *(tasks)* Align overview date and event types
+* *(tasks)* Preserve detail draft types and narrow history state
+* *(tasks)* Return no tasks when a search has no project scope
+* *(tasks)* Skip position recalculation for views without projects
+* *(teams)* Order team list by relevance and id before paginating
+* *(teams)* Clamp an out-of-range team list page
+* *(test)* Rebuild project_ancestors when the testing API resets projects
+* *(tests)* Type fixture values for pgx parameter binding
+* *(tests)* Narrow parsed dates before assertions
+* *(tests)* Use the auth type value union
+* *(typecheck)* Inherit app libraries in Vitest
+* *(typecheck)* Declare Workbox service worker globals
+* *(types)* Import reactive value types from Vue
+* *(ui)* Avoid expanding icon unions in prop defaults
+* *(ui)* Register buttons without expanding component unions
+* *(upcoming)* Reload tasks when date filter toggles change
+* *(user)* Move ErrCodeOpenIDCustomScopeMalformed off the username code
+- **BREAKING**: a malformed OIDC custom scope now returns 1038 instead of 1022.
+* *(user)* Give ErrCodeTOTPPasscodeUsed a unique error code
+- **BREAKING**: a reused TOTP passcode now returns 1039 instead of 1025.
+* *(user)* Give ErrCodeAccountLocked a unique error code
+- **BREAKING**: a locked account now returns 1040 instead of 1026.
+* *(user)* Fallback empty user timezone to valid UTC location (#3965) (#3991)
+* *(user)* Only allow writable projects as the default project
+* *(user)* Revoke sessions when too many TOTP attempts lock the account
+* *(utils)* Honor proxy env vars for outgoing requests
+* *(utils)* Exempt the proxy dial from the SSRF guard
+* *(utils)* Use the configured proxy without a password
+* *(utils)* Stop exempting direct requests to the proxy address from the SSRF guard
+* *(validation)* Parse v2 request body errors
+* *(views)* Preserve saved sort restoration during navigation
+* *(views)* Load tasks after restoring the saved query
+* *(webhooks)* Add stable id ordering to Webhook.ReadAll
+* *(websocket)* Type the first-connection timer so clearTimeout accepts it
+* *(websocket)* Check the session and close sockets on revocation
+* *(websocket)* Refresh an expired token before reconnecting
+* Don't report failed webhook deliveries to sentry ([8dcd71d](8dcd71db73ebc7466b0a00fb49b0742ed9910a9a))
+* Return 404 instead of 500 when a stored file is missing from disk ([fe52d4e](fe52d4e23ee41975a8caea33c6ebedb2e2a8eb89))
+* Fall back to full recalculation when updating a task position ([2069759](206975997f2301fd1ae183ac9cbdf63e26901ac5))
+* Unwrap wrapped domain errors in the http error handler ([c7bd8ba](c7bd8ba20912af3f083cd2d4be031a3690bf095c))
+* Unwrap wrapped domain errors in attachment upload results ([79083df](79083df2ea9dd21559184ff614d8a1771d206eac))
+* Lock project views before writing task positions on create ([d20d4da](d20d4da86797f10bf36ef49b9f37d21dd6dd4546))
+* Lock project views before writing task positions on update and delete ([2a0f16a](2a0f16a96770c08283cc1f5aa6c1934b6fd12494))
+* Lock project views before writing task positions in saved filter sync ([33e82a9](33e82a956d49c1e0e69c78c32abf8b3b37128fea))
+* Lock project views before deleting a project's task positions ([a9a9945](a9a9945bc88a18c7818c521c8ded47424bd7f8bc))
+* Lock views before repairing task positions ([72844bf](72844bf71587d75aa72e492c3d9c3c09d03d6b91))
+
+### Dependencies
+
+* *(deps)* Update crowdin/github-action action to v3.0.1
+* *(deps)* Update dependency @sentry/vue to v10.72.0
+* *(deps)* Update aws-sdk-go-v2 monorepo
+* *(deps)* Update dependency happy-dom to v20.11.15
+* *(deps)* Update module github.com/aws/aws-sdk-go-v2/config to v1.33.2
+* *(deps)* Update dependency ip-address to v10.7.0
+* *(deps)* Update pnpm to v11.25.0
+* *(deps)* Update dependency serialize-javascript to v7.1.1
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.21.0
+* *(deps)* Update dependency go to v1.27.1
+* *(deps)* Update dependency happy-dom to v20.12.0
+* *(deps)* Update module github.com/go-sql-driver/mysql to v1.10.1
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.27.x docker digest to 8cc742b
+* *(deps)* Update module golang.org/x/crypto to v0.56.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency @sentry/vue to v10.73.0
+* *(deps)* Update tiptap to v3.30.6
+* *(deps)* Update dependency undici@7 to v8.10.1
+* *(deps)* Update module github.com/yuin/goldmark/v2 to v2.0.1
+* *(deps)* Update dependency undici@6 to v8.10.1
+* *(deps)* Update tiptap to v3.31.0
+* *(deps)* Update crowdin/github-action action to v3.0.2
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.52
+* *(deps)* Update dependency @tiptap/vue-3 to v3.31.0
+* *(deps)* Update pnpm/action-setup action to v6.1.0
+* *(deps)* Update dependency fast-uri@3 to v4.1.4
+* *(deps)* Update dependency vue-router to v5.3.1
+* *(deps)* Update dependency happy-dom to v20.13.2
+* *(deps)* Update dependency postcss to v8.5.27
+* *(deps)* Update tiptap to v3.31.1
+* *(deps)* Update tiptap to v3.31.2
+* *(deps)* Update mcr.microsoft.com/playwright docker tag to v1.63.0 (#3806)
+* *(deps)* Update tiptap to v3.31.3
+* *(deps)* Update danielroe/provenance-action digest to ba56f4e
+* *(deps)* Update dependency postcss to v8.5.28
+* *(deps)* Update module github.com/jackc/pgx/v5 to v5.11.0
+* *(deps)* Update dependency undici@7 to v8.10.2
+* *(deps)* Group all undici variants in Renovate
+* *(deps)* Update dependency undici@6 to v8.10.2
+* *(deps)* Update danielroe/provenance-action digest to 345413a
+* *(deps)* Update module golang.org/x/oauth2 to v0.37.0
+* *(deps)* Update module golang.org/x/sync to v0.23.0
+* *(deps)* Update module golang.org/x/net to v0.59.0
+* *(deps)* Update node.js to v24.21.0
+* *(deps)* Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.112.0
+* *(deps)* Update dependency dompurify to v3.4.15
+* *(deps)* Update module golang.org/x/term to v0.46.0
+* *(deps)* Update module golang.org/x/image to v0.46.0
+* *(deps)* Update module github.com/yuin/goldmark/v2 to v2.0.2
+* *(deps)* Update pnpm to v11.26.0
+* *(deps)* Update dependency marked to v18.0.12
+* *(deps)* Pin caldav-go to the merged fork commit
+* *(deps)* Add the MCP go-sdk and jsonschema-go
+* *(deps)* Update appleboy/llm-action digest to 7752011
+* *(deps)* Update module github.com/yuin/goldmark/v2 to v2.1.1
+* *(deps)* Update dependency @sentry/vue to v10.74.0
+* *(deps)* Update dependency @babel/core to v8.0.5
+* *(deps)* Update dependency floating-vue to v5.4.0
+* *(deps)* Update danielroe/provenance-action digest to c40e78d
+* *(deps)* Update dependency markdown-it to v15.0.2
+* *(deps)* Update dependency rollup to v4.63.2
+* *(deps)* Update dependency js-yaml to v5.4.2
+* *(deps)* Update dependency js-yaml@4 to v5.4.2
+* *(deps)* Update dependency marked to v18.0.13
+* *(deps)* Update module github.com/olekukonko/tablewriter to v1.1.5
+* *(deps)* Update docker/build-push-action action to v7.4.0
+* *(deps)* Update docker/setup-buildx-action action to v4.4.1
+* *(deps)* Update dependency rollup to v4.63.3
+* *(deps)* Update pnpm to v11.27.0
+* *(deps)* Update jlumbroso/free-disk-space action to v1.3.2
+* *(deps)* Update module github.com/yuin/goldmark/v2 to v2.1.3
+* *(deps)* Update axllent/mailpit docker tag to v1.31.2
+* *(deps)* Update dependency ip-address to v10.7.2
+* *(deps)* Update node.js to ebfe2f9
+* *(deps)* Update dependency brace-expansion@5 to v5.0.12
+* *(deps)* Update postgres:18 docker digest to 86c951e
+* *(deps)* Update axllent/mailpit docker tag to v1.31.3
+* *(deps)* Update postgres:18 docker digest to 5a5a84b
+* *(deps)* Update aws-sdk-go
+* *(deps)* Bump dompurify from 3.4.15 to 3.4.16 in /frontend
+* *(deps)* Update dependency serialize-javascript to v7.1.2 [security]
+* *(deps)* Update dependency fast-uri@3 to v4.1.5 [security]
+* *(deps)* Update github-actions
+* *(frontend)* Drop removed editor deps from extension tests
+
+### Documentation
+
+* *(agents)* Require generated clients for new API routes
+* *(agents)* Document query cache conventions for frontend mutations
+* *(agents)* Route component mutations through use*Mutation hooks
+* *(agents)* Record conventions from the projects and project views migrations
+* *(agents)* Add query cache and mutation call rules from the v2 sharing migration
+* *(agents)* Add frontend UI state, v-model and focus rules
+* *(agents)* Require stored-state e2e checks and flag tests that cannot fail
+* *(agents)* Cover shared helper PRs, stack layers and i18n-safe renames
+* *(agents)* Apply the one-entry-per-line literal rule to frontend code
+* *(agents)* Record the v2 error shape, response normalization and patch-only boards
+* *(agents)* Add e2e cache, drag fixture and sdk mock rules from the task migration review
+* *(agents)* Fixup targets, cascade rebases and pre-merge squash for stacks
+* *(agents)* Point secret-bearing mutations at useSecretMutation
+* *(agents)* Describe the generated-client frontend conventions
+* *(ai)* Add sentry-triage skill
+* *(api)* Declare web.HTTPError and all refresh token 401 codes on v1 refresh
+* *(code-style)* Require multi-line composite literals
+* *(config)* Document proxy env var fallback for outgoing requests
+* *(config)* Document proxy credentials and OIDC coverage
+* *(e2e)* Add spec-writing gotchas and late full-suite failure triage
+* *(queries)* Correct pagination limit behavior
+* *(skills)* Only declare added columns in migration structs
+* Add prepare-worktree and run-e2e-tests skills ([993d0cc](993d0ccf33dde190cfc79521c93e460758465062))
+* Trim derivable content from AGENTS.md ([e4f8187](e4f8187c96de7802221205156a5976fb765ec311))
+* Note sha256 convention for high-entropy tokens ([2699eb0](2699eb00bf79191e84571818443d56a0508ac4bc))
+* Prefer existing e2e coverage over component tests ([5424113](5424113e990ffe072361ba6d0a08ae40a1c83b81))
+* Add swagger annotations for the OAuth 2.0 endpoints (#3837) ([a59dbc2](a59dbc2842ca7ee014e36e894a77349540fa475d))
+* Split AGENTS.md into progressive-disclosure docs ([0c2963d](0c2963d5a7520aa1a599ae851f5e3fdd71512827))
+* Describe MCP exposure for v2 contributors ([f16a5d6](f16a5d6dff168d96b631a5fe5c6725df4fcf739f))
+
+### Features
+
+* *(account)* Save settings as a merge patch of the changed fields
+* *(admin)* Filter and sort the admin project list
+* *(admin)* Show the capped-results hint in the admin pickers
+* *(admin)* Show the capped-results hint in the admin project owner filter
+* *(api)* Generate canonical v2 frontend client
+* *(api)* Redirect historical task indexes on v2
+* *(api)* Read the current user's general settings on v2
+* *(api-tokens)* Verify tokens by indexed sha256 instead of pbkdf2
+* *(api-tokens)* Add the mcp:access scope and permission helpers
+* *(api-v2)* Export the rich-text format header
+* *(auth)* Return error code 16005 when the refresh cookie is missing
+* *(auth)* Route OIDC requests through the outgoing proxy
+* *(client)* Toast failed query reads globally
+* *(config)* Default per-category log levels to log.level
+* *(datepicker)* Add vue-native calendar, shortcut and time components
+* *(datepicker)* Rebuild the date picker without flatpickr
+* *(frontend)* Configure v2 client runtime
+* *(frontend)* Add shared attachment blob cache
+* *(frontend)* Add shared UserAvatar component
+* *(frontend)* Show pro license status in about dialog
+* *(frontend)* Filter and sort the admin project list
+* *(frontend)* Add useDelayedLoading composable
+* *(gantt)* Show tooltip with full title on bars too narrow for their label
+* *(i18n)* Add section headings for the overdue tasks mail
+* *(invites)* Add admin-managed user invite links
+* *(license)* Add user_invites feature
+* *(link-sharing)* Add generated queries and share helpers
+* *(log)* Add log.httplevel and log requests by status
+* *(mcp)* Derive tool specs from the v2 OpenAPI document
+* *(mcp)* Dispatch tool calls through the v2 handlers
+* *(mcp)* Add catalog discovery and execution meta-tools
+* *(mcp)* Add the module and streamable-http transport
+* *(mcp)* Expose connection settings and token presets
+* *(metrics)* Optional Go profiler endpoint at /debug/pprof
+* *(migration)* Typed error for failed upstream requests
+* *(migration)* Add token_sha256 to api_tokens and make legacy hash columns nullable
+* *(migration)* Create and backfill project_ancestors
+* *(migration)* Record whether a migration succeeded
+* *(migration)* Show import progress and outcome in the migration views
+* *(migration)* Keep queued import uploads in the file storage
+* *(multiselect)* Hint when the results list only the first matches
+* *(popup)* Anchor with floating-ui and open as a bottom sheet on mobile
+* *(project-sharing)* Add generated membership queries and mutations
+* *(projects)* Maintain a project_ancestors closure table
+* *(queries)* Support optimistic updates in contextMutationOptions
+* *(quick-add)* Set first due date for repeating tasks without a date
+* *(reminders)* Track whether a task user is an assignee
+* *(reminders)* Split overdue mail into assigned and followed sections
+* *(routes)* Serve the MCP endpoint at /api/v2/mcp
+* *(sentry)* Derive a stable fingerprint from an error
+* *(settings)* Add MCP tokens and client connection guides
+* *(task)* Improve relation task search results (#3711)
+* *(tasks)* Add task index counters and historical aliases
+* *(tasks)* Allocate task indexes from the per-project counter
+* *(teams)* Add generated queries and fenced membership mutations
+* *(tokens)* Support supplied routes and locked permissions
+* *(ui)* Add a bottom sheet variant to Modal
+* *(user-search)* Add scoped generated client queries
+* *(webhooks)* Paginate the webhook list
+* *(websocket)* Expose whether the session's first connection is still pending
+* *(websocket)* Re-authenticate open sockets with a renewed token
+* Add /.well-known/change-password redirect ([5cb2838](5cb283802452ee1baf69e83686eaaee279740574))
+
+### Miscellaneous Tasks
+
+* *(ai)* Make vikunja skills generally available
+* *(client)* Regenerate for the user settings read and patch
+* *(client)* Regenerate the frontend API client
+* *(frontend)* Disable sentry rage click issues
+* *(frontend)* Regenerate v2 client for the per_page docs
+* *(frontend)* Regenerate API client for admin project filters
+* *(i18n)* Update translations via Crowdin
+* *(renovate)* Default to a weekly schedule
+* *(renovate)* Group overrides monthly and block major bumps
+* *(renovate)* Update github actions and digests monthly
+* *(renovate)* Group aws-sdk-go monthly and golang.org/x weekly
+* *(renovate)* Update node and pnpm monthly
+* *(renovate)* Group xgo image with go releases
+* Remove flatpickr ([911842d](911842d1256b3889c3a5d1b5e8a18cc954795bfe))
+
+### Other
+
+* *(frontend)* Fail CI on typecheck errors
+* *(other)* Verify generated frontend client is current
+* *(other)* Update auth.go
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* [skip ci] Updated yaegi symbols
+* *(other)* Keep TaskModel.created and updated as plain Dates
+* *(other)* Refactor comment for NewReadSession function
+
+Updated the comment for NewReadSession to clarify its behavior regarding transaction handling and connection pooling.
+* *(other)* Quote API cleanup trap for shellcheck
+
+### Performance
+
+* *(auth)* Reuse the api token owner from the request context
+* *(db)* Use the pgx driver for postgres
+* *(db)* Default connection lifetime 30 min instead of 10 s
+* *(db)* Match the leading SQL keyword without regexps
+* *(db)* Scan WITH statements for write verbs without a regexp
+* *(db)* Memoize single-row task, project and user lookups per session
+* *(db)* Read handlers and token auth run without a transaction
+* *(log)* Skip formatting database log lines the level would drop
+* *(projects)* Store the parent of top-level projects as null
+* *(projects)* Partial index on parent_project_id for child projects (#3777)
+* *(projects)* Resolve project access and ancestors through project_ancestors
+* *(subscriptions)* Bind entity and user ids as parameters instead of literals (#3776)
+* *(tasks)* Index (project_id, done, due_date) instead of (done, due_date)
+
+### Refactor
+
+* *(admin)* Add generated queries and scoped mutation callbacks
+* *(admin)* Rename wire fields (mechanical)
+* *(admin)* Use query subscriptions for admin pages
+* *(admin)* Remove legacy resource stacks
+* *(admin)* Fetch only the first page of user picker matches
+* *(admin)* Fetch only the first page of team picker matches
+* *(admin)* Share the picker page size
+* *(admin)* Keep the match total in admin picker queries
+* *(api-tokens)* Use the native date picker for custom expiry
+* *(api-tokens)* Share the bearer selection and usage audit
+* *(api-tokens)* Add generated queries and mutations
+* *(api-tokens)* Use generated fields and types (mechanical)
+* *(api-tokens)* Share cached lists across settings consumers
+* *(api-tokens)* Delete legacy resource stack
+* *(api-tokens)* Query token lists page by page
+* *(api-tokens)* Paginate the token settings and bot token lists
+* *(api-v2)* Rename the projecttask path parameter to task
+* *(attachments)* Add generated queries and cache mutations
+* *(attachments)* Switch consumers to generated types (mechanical)
+* *(attachments)* Activate query-owned uploads and previews
+* *(attachments)* Delete legacy attachment and file layers
+* *(attachments)* Opt blob downloads out of the global error toast
+* *(auth)* Expose identity key
+* *(auth)* Refresh through generated public SDK calls
+* *(auth)* Migrate session operations to the v2 SDK
+* *(avatar)* Add image and provider query operations
+* *(avatar)* Subscribe to blobs and mutate through v2
+* *(avatar)* Delete the legacy avatar stack
+* *(bots)* Add generated resource queries and mutations
+* *(bots)* Subscribe settings to v2 query cache
+* *(bots)* Delete legacy service
+* *(bots)* Query the bot list one page at a time
+* *(bots)* Paginate the bot settings page
+* *(caldav)* Add token queries and generated mutations
+* *(caldav)* Switch token types (mechanical)
+* *(caldav)* Subscribe to tokens and scope creation secrets
+* *(caldav)* Delete the legacy token stack
+* *(caldav-tokens)* Page the token list query on the server
+* *(caldav-tokens)* Paginate the settings token table
+* *(caldav-tokens)* Adopt shared pagination helpers for the token list
+* *(client)* Extract shared request-context infrastructure
+* *(client)* Add a shared blob response guard
+* *(client)* Move the blob response guards onto expectBlob
+* *(client)* Add a secret-bearing mutation composable
+* *(client)* Move URL imports off the fetcher (mechanical)
+* *(client)* Store the API base suffix-less and canonicalize v2 URLs
+* *(client)* Delete shared legacy infrastructure and Axios
+* *(client)* Share the paginated envelope normalisation as toPaginated
+* *(client)* Move normalizePageNumber into the pagination helpers
+* *(client)* Share removing a deleted row from cached pages
+* *(client)* Add a shared out-of-range page clamp
+* *(comments)* Add paged queries and mutation bookkeeping
+* *(comments)* Switch consumers to generated types (mechanical)
+* *(comments)* Activate paged queries and local editor drafts
+* *(comments)* Delete legacy comment layers
+* *(config)* Switch consumers to wire fields (mechanical)
+* *(config)* Bootstrap through the generated public client
+* *(config)* Drop the no-op empty license.key default
+* *(db)* Add search relevance order helper
+* *(deletion)* Add generated account lifecycle mutations
+* *(deletion)* Reconcile scheduled deletion through queries
+* *(deletion)* Delete the legacy account service
+* *(email)* Add generated account email mutations
+* *(email)* Use the wire field in the form (mechanical)
+* *(email)* Submit account changes through query mutations
+* *(email)* Delete the legacy email stack
+* *(export)* Add metadata query and generated actions
+* *(export)* Query status and download through generated actions
+* *(export)* Delete the legacy export service
+* *(filters)* Reopen the date picker instead of ignoring clicks
+* *(frontend)* Migrate labels to v2 client
+* *(frontend)* Consolidate task identifier display
+* *(frontend)* Use UserAvatar in User.vue
+* *(frontend)* Use UserAvatar in Comments.vue
+* *(frontend)* Use UserAvatar in the app header
+* *(frontend)* Use UserAvatar in the mention suggestion list
+* *(frontend)* Use UserAvatar in the comment quote node
+* *(frontend)* Migrate project navigation to v2 client
+* *(frontend)* Stop hydrating link-share project store
+* *(frontend)* Extract useTableSort composable
+* *(frontend)* Pass raw loading flags to self-delaying components
+* *(frontend)* Drop the repeated rate limit check around ApiConfig
+* *(gantt)* Replace the flatpickr range input with DateRangeInput
+* *(helpers)* Extract getScrollParent from task detail view
+* *(humabridge)* Export the echo-context accessor
+* *(kanban)* Add bucket mutations and scoped pagination
+* *(labels)* Move cache writes into mutation options
+* *(labels)* Render the label create row through the createOption slot
+* *(labels)* Fetch all label pages through fetchAllPages
+* *(link-shares)* Create link shares through useSecretMutation
+* *(link-sharing)* Use generated fields (mechanical)
+* *(link-sharing)* Manage links through query subscriptions
+* *(link-sharing)* Delete legacy link sharing layers
+* *(migration)* Scan the vikunja-file archive once before importing
+* *(migration)* Parse the csv import config once per request
+* *(migration)* Tidy the ticktick, wekan and csv read paths
+* *(migrators)* Add generated provider operations and status queries
+* *(migrators)* Use generated credential body (mechanical)
+* *(migrators)* Subscribe views and background polling to v2 queries
+* *(migrators)* Remove legacy migration services
+* *(models)* Load tasks by id through the memoized GetTaskByIDSimple
+* *(models)* Drop the unused GetProjectsByIDs
+- **BREAKING**: drop the unused GetProjectsByIDs
+* *(multiselect)* Give the create option its own slot
+* *(multiselect)* Drop unreachable string branches from search result slots
+* *(notifications)* Rename local that shadowed the mail package
+* *(notifications)* Add generated queries and display helpers
+* *(notifications)* Rename read timestamp (mechanical)
+* *(notifications)* Subscribe inbox to query cache
+* *(notifications)* Remove legacy resource stack
+* *(password)* Add generated password mutations
+* *(password)* Use wire fields in the change form (mechanical)
+* *(password)* Submit forms through generated mutations
+* *(password)* Delete the legacy password stacks
+* *(popup)* Show the popup box as a native popover
+* *(popup)* Drop consumer styles the top layer replaces
+* *(popup)* Drop the stale hint about positioning popups via CSS
+* *(popup)* Drop the unused hasOverflow prop
+* *(project)* Anchor the sort and column popups to their triggers
+* *(project-backgrounds)* Migrate project backgrounds to v2 client
+* *(project-backgrounds)* Derive the current project background from the query cache
+* *(project-backgrounds)* Take the delete mutation input as an object
+* *(project-backgrounds)* Fence background mutations through contextMutationOptions
+* *(project-sharing)* Use generated relation types (mechanical)
+* *(project-sharing)* Reconcile sharing controls through query caches
+* *(project-sharing)* Remove legacy sharing layers
+* *(project-sharing)* Render user and team sharing components (mechanical)
+* *(project-views)* Migrate project views to the v2 client
+* *(project-views)* Fence view mutations through contextMutationOptions
+* *(projects)* Extract query and mutation data layer
+* *(projects)* Fence project mutations through contextMutationOptions
+* *(projects)* Fetch all project pages through fetchAllPages
+* *(queries)* Remove hand-rolled request-context fencing helpers
+* *(queries)* Share the paginated envelope, page count and page size helpers
+* *(queries)* Pass optimistic context to settled callbacks
+* *(queries)* Let full-list sweeps use the server page size
+* *(queries)* Drop the stale v2 per_page maximum
+* *(queries)* Let comments and time entries use the server page size
+* *(reactions)* Add generated mutations and immutable updates
+* *(reactions)* Switch consumers to generated types (mechanical)
+* *(reactions)* Reconcile task reactions without refetching
+* *(reactions)* Delete legacy reaction layers
+* *(saved-filters)* Migrate saved filters to v2 client
+* *(saved-filters)* Fence saved filter mutations through contextMutationOptions
+* *(session)* Add session queries and revocation mutation
+* *(session)* Use generated types and wire fields (mechanical)
+* *(session)* Subscribe to the session cache
+* *(session)* Delete the legacy session stack
+* *(sessions)* Query the session list page by page
+* *(sessions)* Paginate the session settings page
+* *(settings)* Add account queries and editable drafts
+* *(settings)* Use wire field names in consumers (mechanical)
+* *(settings)* Read profile state from account queries
+* *(settings)* Delete the legacy settings stack
+* *(sharing)* Add a shared list for user and team project shares
+* *(sharing)* Add user and team sharing components
+* *(sharing)* Remove UserTeam component
+* *(subscriptions)* Toggle project and task subscriptions through v2
+* *(subscriptions)* Move task subscriptions into query mutations
+* *(subscriptions)* Switch to generated fields (mechanical)
+* *(subscriptions)* Remove adapters and wire task mutations
+* *(subscriptions)* Delete legacy subscription model and type
+* *(tasks)* Use the native picker for due dates, reminders and postponing
+* *(tasks)* Create quick-add labels through the label mutation
+* *(tasks)* Extract task domain helpers
+* *(tasks)* Add task and board query definitions
+* *(tasks)* Reconcile task detail list and board caches
+* *(tasks)* Add generated task mutations and optimistic moves
+* *(tasks)* Switch consumers to generated types (mechanical)
+* *(tasks)* Activate query-owned tasks and boards
+* *(tasks)* Retire legacy task and kanban stacks
+* *(tasks)* Extract quick-add orchestration into useQuickAddTask
+* *(tasks)* Switch quick-add consumers to useQuickAddTask
+* *(tasks)* Give each task consumer the mutations it triggers
+* *(tasks)* Let task rows own only the mutations they trigger
+* *(tasks)* Remove the useTaskActions facade
+* *(tasks)* Opt task reads out of the global error toast
+* *(tasks)* Remove unused Zod repeat schema
+* *(teams)* Use generated team types and fields (mechanical)
+* *(teams)* Read live memberships and preserve edit drafts
+* *(teams)* Move team selectors to query subscriptions
+* *(teams)* Keep embedded team responses in generated form
+* *(teams)* Delete legacy team and member layers
+* *(teams)* Split the team list into paged and search queries
+* *(teams)* Switch team pickers to the first-page search query
+* *(teams)* Paginate the team list page
+* *(teams)* Filter team list by membership subquery instead of DISTINCT join
+* *(time-tracking)* Add entry queries and timer mutations
+* *(time-tracking)* Switch generated fields (mechanical)
+* *(time-tracking)* Activate query-owned timers and entry lists
+* *(time-tracking)* Delete legacy timer store and service
+* *(totp)* Add enrollment queries and mutations
+* *(totp)* Subscribe to status and scope QR object URLs
+* *(totp)* Delete the legacy enrollment stack
+* *(user)* Extract display helpers and auth constants
+* *(user)* Switch imports and wire fields (mechanical)
+* *(user)* Preserve generated user objects in consumers
+* *(user)* Remove legacy user model and interface
+* *(user-search)* Use generated user types (mechanical)
+* *(user-search)* Preserve generated user presentation and fields
+* *(user-search)* Migrate selectors and imperative searches to v2
+* *(user-search)* Remove legacy search services
+* *(users)* Accept display fields in user component
+* *(utils)* Split proxy-aware client from the SSRF guard
+* *(utils)* Rename NewHTTPClient to NewUnguardedHTTPClient
+* *(web)* Read source files through an fs.FS in the error code test
+* *(webhooks)* Add scoped v2 queries and mutations
+* *(webhooks)* Rename wire fields (mechanical)
+* *(webhooks)* Share query-backed subscription management
+* *(webhooks)* Remove legacy resource stack
+* *(webhooks)* Key the webhook list by page instead of fetching every page
+* *(websocket)* Reconcile server events through query mutations
+* *(websocket)* Connect task and timer cache events
+* *(websocket)* Track connection state as a single status
+* Split deleteStaleFilterTasks into collect and delete ([7c11e71](7c11e71430b5afba59b564eb07755c688de948d4))
+
+### Styling
+
+* *(frontend)* Order delayed loading after macros in form components
+
+### Testing
+
+* *(admin)* Cover mutation invalidation and runtime license gating
+* *(admin)* Make admin project search tests ParadeDB independent
+* *(admin)* Pin user picker invalidation on user updates
+* *(api)* Cover the create path of a retried request
+* *(api-tokens)* Cover sha256 fast path, legacy backfill and null legacy columns
+* *(api-tokens)* Verify scoped token persistence and revocation
+* *(api-tokens)* Pin paged token lists and delete across pages
+* *(api-tokens)* Pin route-driven paging of the token settings page
+* *(attachments)* Pin v2 requests and cache reconciliation
+* *(attachments)* Provide Pinia for date formatting
+* *(auth)* Require an iat claim on issued JWTs
+* *(auth)* Cover token expiry checks with a skewed browser clock
+* *(auth)* Pin login with a skewed browser clock end to end
+* *(auth)* Cover generated refresh and problem responses
+* *(avatar)* Pin request sharing and blob lifecycle
+* *(bots)* Cover management persistence and token cache eviction
+* *(bots)* Reproduce disabled bot management failures
+* *(bots)* Pin the paged bot list and cross-page mutations
+* *(bots)* Cover paging through the bot settings page end to end
+* *(bots)* Cover opening an out-of-range bot page directly
+* *(caldav)* Pin one-time secrets and durable token changes
+* *(caldav-tokens)* Pin paged token list and delete across pages
+* *(client)* Pin the normalized shape of Echo-level error bodies
+* *(client)* Pin the global query error toast
+* *(client)* Pin the shared blob response guard
+* *(client)* Pin that secret mutations drop their variables once settled
+* *(client)* Pin v2 URL upgrade and native request errors
+* *(comments)* Pin paging and mutation bookkeeping
+* *(config)* Cover generated bootstrap and feature name schema
+* *(datepicker)* Cover keyboard navigation and mobile opening
+* *(db)* Let AssertExists and AssertMissing match NULL columns
+* *(db)* Cover the session memo
+* *(deletion)* Verify confirmation links and durable cancellation
+* *(e2e)* Update date picker selectors, cover the mobile sheet, fix the API_URL slash
+* *(e2e)* Verify invite registration and SMTP confirmation
+* *(e2e)* Expect the translated invalid password reset token message
+* *(e2e)* Open the used-up invite link in its own browser context
+* *(e2e)* Allow non-routable IPs through outgoingrequests config
+* *(e2e)* Cover admin project list filters and sorting
+* *(e2e)* Expect the project wording in the remove share dialog
+* *(e2e)* Cover websocket re-authentication
+* *(email)* Pin pending account reconciliation and persistence
+* *(export)* Verify metadata invalidation and ZIP downloads
+* *(filters)* Cover reopening the date picker on another date value
+* *(filters)* Mock async editor to avoid loading TipTap after teardown
+* *(frontend)* Assert the archive modal keeps its document title
+* *(frontend)* Type the api token create mock parameter
+* *(frontend)* Cover UserAvatar and avatar cache invalidation
+* *(frontend)* Wait for the delayed task row spinner
+* *(kanban)* Cover saving the position of a dropped bucket
+* *(kanban)* Cover bucket paging and metadata updates
+* *(link-sharing)* Cover cached shares and view-specific URLs
+* *(migration)* Cover api_tokens sha256 migration, sqlite rebuild and re-runs
+* *(migration)* Build the orphan test data from the real label models
+* *(migrators)* Cover cached progress and persistent CSV imports
+* *(multiselect)* Pin search result and create option rendering
+* *(notifications)* Cover inbox persistence and cache events
+* *(notifications)* Cover single inbox fetch and polling fallback end to end
+* *(password)* Verify reset links and changed login credentials
+* *(popup)* Cover the popup without the Popover API
+* *(project-sharing)* Cover membership caches and permissions
+* *(project-sharing)* Cover user and team share lifecycles
+* *(project-sharing)* Pin keyboard sharing, removal cancel and row details
+* *(projects)* Insert raw test projects through one helper that writes their ancestors
+* *(queries)* Pin optimistic and toast fencing for contextMutationOptions
+* *(ratelimit)* Align basic auth rate limit webtests to a fresh window
+* *(reactions)* Pin generated requests and task cache updates
+* *(reminders)* Exercise the subscriber pass in the IsAssignee test
+* *(reminders)* Include reminders exactly at the cron tick
+* *(reminders)* Exclude notifications for completed tasks
+* *(richtext)* Detect capitalization-only edits
+* *(richtext)* Normalize CRLF in code blocks
+* *(saved-filters)* Cover editing and deleting a saved filter end to end
+* *(saved-filters)* Open filter settings modals from a direct URL
+* *(session)* Pin paginated reads and durable revocation
+* *(sessions)* Pin paged session query and revoke across pages
+* *(sessions)* Cover paging and revoking the last row of a page
+* *(settings)* Pin cache ownership and persisted preferences
+* *(settings)* Cover a setting changed elsewhere while the form is open
+* *(subscriptions)* Pin task subscription cache updates
+* *(tasks)* Pin extracted task domain behavior
+* *(tasks)* Pin query scope and board pagination
+* *(tasks)* Cover reconciliation across task caches
+* *(tasks)* Pin mutation writes rollback and partial bulk results
+* *(tasks)* Verify query-backed consumers and navigation
+* *(tasks)* Verify v2 writes and persisted board edits
+* *(tasks)* Pin the loading state of a task list row
+* *(teams)* Cover pagination membership and cache lifecycle
+* *(teams)* Verify member changes and preserve open drafts
+* *(teams)* Pin paged list and first-page search requests
+* *(teams)* Assert the two team pages cover every seeded team once
+* *(time-tracking)* Pin timer scope and list reconciliation
+* *(totp)* Pin enrollment secret and QR lifecycle
+* *(user)* Pin display and avatar cache behavior
+* *(user)* Reject tokens issued for another purpose
+* *(user)* Enforce CalDAV token deletion ownership
+* *(user-search)* Cover scoped v2 search queries
+* *(user-search)* Pin generated user presentation and embedding
+* *(utils)* Preserve fractional duration components
+* *(utils)* Assert avatar crop source pixels
+* *(utils)* Preserve seconds when stripping nanoseconds
+* *(web)* Fail when two packages claim the same world error code
+* *(web)* Catch ErrorCode-prefixed constants in error code uniqueness check
+* *(webhooks)* Verify scoped cache and stored subscriptions
+* *(webhooks)* Pin paged list requests and delete across pages
+* *(websocket)* Pin cache routing and stale connection rejection
+* Expect ErrFileDoesNotExist from LoadFileByID in s3 integration test ([37649d1](37649d1dd2c6db3a7737f983e4b7ae3c479d9852))
+* Remove component tests covered by e2e ([40c97e2](40c97e2e5871e70f1ae72daf2640b623c6ce832f))
+* Focus due date action before keyboard shortcut ([c9a3264](c9a32645943382966ff0a983e67f92306a58f017))
+
+## [2.6.0] - 2026-08-31
+
+### Bug Fixes
+
+* *(a11y)* Label the audio player and play button with the file name
+* *(a11y)* Move focus into the main content when the skip link is used
+* *(a11y)* Keep closed popups out of the tab order
+* *(a11y)* Announce the quick action result type
+* *(a11y)* Announce the description save state
+* *(a11y)* Give password fields a prose placeholder
+* *(a11y)* Label the link share password fields
+* *(api)* Enforce token scopes for task expansions
+* *(api tokens)* Don't audit autopatch's internal dispatch legs
+* *(api/v1)* Validate the email update body and report the mailer-dependent message
+* *(api/v2)* Don't require read_one for autopatch's internal GET
+* *(attachments)* Manage the preview blob url lifecycle
+* *(attachments)* Guard audio load against double clicks, failures and unmount races
+* *(attachments)* Track the playing audio element from the play event
+* *(attachments)* Give the video error state a panel
+* *(auth)* Don't auto-redirect to the OIDC provider when the login URL must stay copyable
+* *(auth)* Allow API tokens to call /api/v2/token/test (#3548)
+* *(auth)* Send the refresh token cookie to the v2 refresh endpoint
+* *(auth)* Clear the refresh cookie only when the token is unusable
+* *(auth)* Reject bot accounts during OIDC fallback
+* *(auth)* Hide enabled totp secrets
+* *(button)* Restore shadow and wrap prop defaults
+* *(caldav)* Don't duplicate a task when a client PUTs a stale href
+* *(caldav)* Keep pseudo collection hrefs and reads inside their own collection
+* *(caldav)* Let the permission check decide what a collection accepts
+* *(caldav)* Force a full resync for pseudo collections
+* *(caldav)* Stop advertising writes clients cannot make
+* *(caldav)* Encode task uids in hrefs instead of interpolating them raw (#3560)
+* *(caldav)* Stop answering requests out of process-wide state
+* *(caldav)* Authorize task relations
+* *(ci)* Bump LLM-action fork pin to root-container fix (#3430)
+* *(ci)* Set repo for auto-merge label workflow via env
+* *(ci)* Restore preview builds for fork PRs behind an approval gate
+* *(doctor)* Stop creating the files directory during diagnostics
+* *(doctor)* Stop creating the sqlite database during diagnostics
+* *(doctor)* Stop creating a temp database for the ephemeral sentinel
+* *(doctor)* Fail early when the database path is a directory
+* *(doctor)* Print an absolute config file path
+* *(doctor)* Time out the S3 storage probe
+* *(doctor)* Print each check group as it completes
+* *(doctor)* Accept matching directory owner
+* *(e2etests)* Drain pending event handlers before seeding fixtures
+* *(editor)* Join list items on backspace instead of splitting the list
+* *(editor)* Open the lightbox only for resolved attachment images
+* *(editor)* Don't trust stored image ids, scope and dedupe the blob lookup
+* *(editor)* Preserve subscript and superscript in pasted text (#3606)
+* *(events)* Don't log event payloads in the poison queue handler
+* *(files)* Bound S3 storage calls with the caller's context
+* *(filters)* Bound expression complexity
+* *(frontend)* Keep focus in the multiselect input after selecting an option
+* *(frontend)* Don't duplicate subtasks as top-level rows in saved filter list views
+* *(frontend)* Show confirmation notice when registration requires email verification
+* *(frontend)* Don't overlap project color with drag handle on touch capable desktops
+* *(frontend)* Redeem email confirmation link while logged in
+* *(frontend)* Do not retry a rate-limited token refresh
+* *(frontend)* Keep API token delete target during modal close animation
+* *(frontend)* Guard token delete flow against double submit
+* *(frontend)* Add accessible name to custom expiry date input
+* *(gantt)* Measure day width when the chart appears after loading
+* *(images)* Bound decode and resize dimensions
+* *(keyvalue)* Dedupe keys returned by redis SCAN
+* *(keyvalue)* Escape glob metacharacters in redis ListKeys prefix
+* *(labels)* Let bots use labels created by their owner (#3609)
+* *(labels)* Return 403 instead of panicking on bulk label replace
+* *(labels)* Share labels between all bots of the same owner
+* *(labels)* Fail closed if the visibility condition degenerates
+* *(lightbox)* Make the toolbar readable and labelled in both themes
+* *(lightbox)* Surface image load failures instead of spinning forever
+* *(lightbox)* Accept only blob urls and close on unsafe sources
+* *(lightbox)* Keep double-click from closing the lightbox or entering edit mode
+* *(lightbox)* Correct pan clamping, zoom anchoring and wheel sensitivity
+* *(lightbox)* Harden the gesture lifecycle
+* *(lightbox)* Fall back to a generic accessible name for empty alt
+* *(link share)* Don't apply Bulma content typography to the shared project view
+* *(metrics)* Store active users as TTL keys in keyvalue to avoid concurrent map access
+* *(migration)* Don't fail todoist migration on undownloadable attachments
+* *(migration)* Map exported assignees to the importing user instead of failing
+* *(migration)* Don't panic on events for unregistered migrators
+* *(migration)* Keep imported tasks done when they are placed in an imported bucket
+* *(migration)* Cascade archived state to descendants on structure import
+* *(migration)* Serialize imports per user
+* *(migration)* Cap csv rows while decoding
+* *(migration)* Bound planka import resources
+* *(migration)* Bound vikunja file imports
+* *(migration)* Reload conflicting claims after rollback
+* *(modal)* Make the fullscreen variant closable on every viewport
+* *(notifications)* Retry subscriber notifications instead of dropping them on error
+* *(notifications)* Include the project prefix in task identifiers (#3538)
+* *(openid)* Pin token endpoint auth method instead of probing (#3607)
+* *(packaging)* Restart the service on package upgrades
+* *(packaging)* Run the postinstall script on apk and arch upgrades
+* *(packaging)* Stop rpm upgrades from replacing the config
+* *(permissions)* Decode a null permission as unknown, not read
+* *(plugins)* Exclude example plugin from module build
+* *(popup)* Let a popup's own trigger close it again
+* *(projects)* Make position healing include the moved project
+* *(projects)* Reload projects when the api recalculated positions
+* *(projects)* Deny writes to pseudo projects across the permission family
+* *(projects)* Backfill is_archived for descendants of archived projects
+* *(projects)* Only cascade archived state to descendants when it changes
+* *(projects)* Reject un-archiving a child while its parent is archived
+* *(projects)* Sub-resource permission checks no longer get the un-archive exception
+* *(projects)* Allow un-archiving orphaned projects, batch descendant archive update
+* *(projects)* Tolerate dangling stored parent when updating, keep admin bypass for filter buckets
+* *(projects)* Report null for a max_permission nobody computed
+* *(projects)* Report read for the Favorites pseudo project
+* *(quick-add)* Reuse existing labels in the desktop quick entry window (#3533)
+* *(ratelimit)* Namespace each limiter's counters by prefix
+* *(ratelimit)* Give session renewal its own budget
+* *(routes)* Extract the client IP for requests over a unix socket
+* *(routes)* Rate limit /api/v2/user/token/refresh
+* *(routes)* Share one unauth rate limiter with v1's public routes
+* *(routes)* Rate limit the unauthenticated v2 auth routes
+* *(routes)* Rate limit basic auth failures
+* *(settings)* Show the current language in the settings select
+* *(sharing)* Stop logging the link share password
+* *(sharing)* Keep the link share password form after a wrong password
+* *(sharing)* Restrict link share hash reads
+* *(sharing)* Restrict team attachment visibility
+* *(static)* Don't unescape already-decoded request paths (#3437)
+* *(subscriptions)* Don't let implicit subscribes lift an explicit opt-out
+* *(tasks)* Don't wrap reminders into the past when repeating from current date
+* *(tasks)* Keep task attribute icons on the same line as a wrapped title
+* *(tasks)* Vertically center the assignee avatar in the task row
+* *(tasks)* Center color bubble, label tag and avatar on the task row line
+* *(tasks)* Remove double spacing between assignee avatar and username
+* *(tasks)* Scope saved filter view updates to filters that can see the task
+* *(tasks)* Hide assignee email addresses
+* *(tasks)* Authorize both sides of relation deletion
+* *(tasks)* Restrict subtask expansion by access
+* *(tasks)* Require access for favorites
+* *(tasks)* Validate position target views
+* *(teams)* Preserve members across list responses (#3486)
+* *(user)* Keep email confirmation status after registration
+* *(user)* Keep old email active until new one is confirmed
+* *(user)* Expire used TOTP passcodes via keyvalue TTL
+* *(users)* Reject link shares from user listings
+* *(views)* Persist per-view sort and filter across page reloads
+* *(webhooks)* Wrap long target URLs instead of overflowing the table
+* Don't tag prerelease docker images as latest ([10cfb6a](10cfb6ae8d4121a5a0dbd930faa3212c26f9bdd7))
+* Disable pagination previous/next links instead of rendering dead router links ([2812ace](2812ace274fe14cca84758a6f3fbaa04bb771ed3))
+* Use caller's session in LoadFileMetaByID to prevent connection pool deadlock ([0441065](044106508a6be29e5395892f37236920a9a0cbce))
+* Release db connection before reading attachment files from storage ([96ddc10](96ddc10110095196de00878eb4dfa9c348105215))
+* Load export file meta inside transaction and open storage after commit ([6d2b5af](6d2b5aff54e13c2c04f5f068a93f53da03430439))
+* Expose pkg/config and viper to yaegi plugins ([358d043](358d043fb996bcde0f0db7872c38bb9da76f8760))
+* Expose xorm and xormigrate to yaegi plugins ([8dfb5d4](8dfb5d49ca3c38ec40f7dce7541da78681bd0813))
+* Sort saved filters alphabetically in sidebar navigation 🤖🤖🤖 (#3497) ([4505e6e](4505e6ea4333a80b9addf5cddd3a04304951f4cd))
+
+### Dependencies
+
+* *(deps)* Update dependency basic-ftp to v6.1.0
+* *(deps)* Update dependency @types/codemirror to v5.60.18
+* *(deps)* Update dependency basic-ftp to v6.2.0
+* *(deps)* Update node.js to v24.19.0
+* *(deps)* Update dependency dompurify to v3.4.13 [security]
+* *(deps)* Update danielroe/provenance-action digest to 2fb14fe
+* *(deps)* Update pnpm to v11.21.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dependency undici@7 to v8.10.0
+* *(deps)* Update dependency nanoid to v6.0.1
+* *(deps)* Update aws-sdk-go-v2 monorepo
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.26.x docker digest to 1a7c89c
+* *(deps)* Bump nanoid from 3.3.16 to 6.0.1 in /frontend
+* *(deps)* Drop redundant esbuild devDependency
+* *(deps)* Update nanoid to 3.3.18
+* *(deps)* Update js-yaml to 3.15.1
+* *(deps)* Update brace-expansion to 5.0.9
+* *(deps)* Update brace-expansion to 5.0.9 in desktop
+* *(deps)* Update fast-uri to 3.1.5
+* *(deps)* Update docker/dockerfile:1 docker digest to ecfaec9
+* *(deps)* Update dependency go to v1.26.6
+* *(deps)* Update dependency postcss to v8.5.26
+* *(deps)* Update dependency vue to v3.5.41
+* *(deps)* Update module golang.org/x/image to v0.45.0
+* *(deps)* Update dependency marked to v18.0.9
+* *(deps)* Update cachix/install-nix-action action to v31.11.1
+* *(deps)* Update module charm.land/lipgloss/v2 to v2.0.6
+* *(deps)* Update dependency rollup-plugin-visualizer to v7.1.1
+* *(deps)* Update module github.com/stretchr/testify to v1.12.0
+* *(deps)* Update dependency serialize-javascript to v7.1.0
+* *(deps)* Update dependency undici@6 to v8.10.0
+* *(deps)* Update dependency ip-address to v10.5.0
+* *(deps)* Update dependency pinia to v4.0.3
+* *(deps)* Update tiptap to v3.30.1
+* *(deps)* Update dependency esbuild to v0.28.2
+* *(deps)* Update dependency @sentry/vue to v10.70.0
+* *(deps)* Update dependency js-yaml@4 to v5.3.0
+* *(deps)* Update e18e/action-dependency-diff action to v1.7.1
+* *(deps)* Update module golang.org/x/net to v0.58.0
+* *(deps)* Update dependency js-yaml to v5.3.0
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.50
+* *(deps)* Update dependency fast-uri@3 to v4
+* *(deps)* Update module github.com/arran4/golang-ical to v0.3.6
+* *(deps)* Update dependency dayjs to v1.11.22
+* *(deps)* Update docker/setup-buildx-action action to v4.3.0
+* *(deps)* Update pnpm to v11.22.0
+* *(deps)* Update module github.com/stretchr/testify to v1.12.1
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v11.2.5
+* *(deps)* Update dependency go to v1.26.7
+* *(deps)* Update module charm.land/bubbletea/v2 to v2.0.9
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.26.x docker digest to f4dc2c0
+* *(deps)* Update crowdin/github-action action to v2.17.1
+* *(deps)* Update dependency dayjs to v1.11.23
+* *(deps)* Update module github.com/aws/smithy-go to v1.27.9
+* *(deps)* Update dependency marked to v18.0.10
+* *(deps)* Update dependency dompurify to v3.4.14
+* *(deps)* Update danielroe/provenance-action digest to 755e844
+* *(deps)* Update tiptap to v3.30.2
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.27.x docker digest to d3a0360
+* *(deps)* Update dependency rollup to v4.62.5
+* *(deps)* Update module github.com/aws/smithy-go to v1.28.1
+* *(deps)* Update node.js to v24.20.0
+* *(deps)* Update dependency vue-i18n to v11.4.9
+* *(deps)* Update danielroe/provenance-action digest to b3ab830
+* *(deps)* Update dependency fast-uri@3 to v4.1.3
+* *(deps)* Update module github.com/threedotslabs/watermill to v1.5.3
+* *(deps)* Update pnpm to v11.23.0
+* *(deps)* Update tiptap to v3.30.3
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.49.0
+* *(deps)* Update crowdin/github-action action to v3
+* *(deps)* Update module github.com/yuin/goldmark to v2
+* *(deps)* Update dependency picomatch to v4.0.7
+* *(deps)* Update dependency @sentry/vue to v10.71.0
+* *(deps)* Update pnpm to v11.24.0
+* *(deps)* Update dependency marked to v18.0.11
+* *(deps)* Update module github.com/yuin/goldmark to v2 (#3627)
+* *(deps)* Update node.js to e67514e (#3638)
+* *(deps)* Update dependency js-yaml to v5.4.0
+* *(deps)* Update dependency js-yaml@4 to v5.4.0
+* *(deps)* Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.109.1
+* *(deps)* Update dependency rollup to v4.63.0
+* *(deps)* Update dependency vue-i18n to v11.4.10
+* *(deps)* Update dependency axios to v1.20.0 (#3649)
+* *(deps)* Update tiptap to v3.30.5
+* *(deps)* Update dependency js-yaml@4 to v5.4.1
+* *(deps)* Update dependency js-yaml to v5.4.1
+* *(deps)* Update dependency vue to v3.5.42
+* *(deps)* Update softprops/action-gh-release action to v3.0.3
+* *(deps)* Update dependency happy-dom to v20.11.8
+* *(deps)* Update dependency vue-router to v5.3.0
+* *(deps)* Update dependency rollup to v4.63.1
+* *(deps)* Update danielroe/provenance-action digest to 71d3c60
+* *(deps)* Update postgres:18 docker digest to 4ef4dbc
+* *(deps)* Update dependency markdown-it to v15.0.1
+* *(deps)* Update dependency basic-ftp to v6.2.1
+
+### Documentation
+
+* *(api)* Correct v2 password-token description to match 404 behavior
+* *(config)* Clarify realip trust semantics for ipextractionmethod
+
+### Features
+
+* *(a11y)* Show task glance tooltip on keyboard focus, dismiss with Escape
+* *(a11y)* Close popups with Escape
+* *(admin)* Port GET /admin/users to /api/v2 (#3676)
+* *(api/v2)* Expose pending email, add cancel and resend endpoints
+* *(attachments)* Compact attachment rows, move metadata into tooltips
+* *(attachments)* Keep the uploader avatar in the attachment meta line
+* *(attachments)* Add zoom & pan image lightbox
+* *(attachments)* Play audio attachments when clicking the attachment row
+* *(attachments)* Preview video attachments in a modal 🤖🤖🤖 (#3491)
+* *(attachments)* Show a play icon for video attachments
+* *(cmd)* Add --config flag to pin the config file (#3652)
+* *(db)* Memoize per-session data and drop it on the first write
+* *(doctor)* Report service.rootpath in the configuration group
+* *(editor)* Add helper to parse task ids from same-origin task urls
+* *(editor)* Add taskLink node rendered as a task pill
+* *(frontend)* Show pending email change with resend and cancel
+* *(frontend)* Add planka migration form
+* *(frontend)* Refresh the token via /api/v2 with a v1 fallback
+* *(frontend)* Let users unsubscribe from an inherited subscription
+* *(keyvalue)* Add PutWithTTL to the storage interface
+* *(labels)* Search labels by description, through MultiFieldSearch
+* *(lightbox)* Keyboard zoom and pan
+* *(migration)* Client-aware get and size-limited download helpers, bounded json decode
+* *(migration)* Add planka api client
+* *(migration)* Fetch planka projects and boards
+* *(migration)* Convert planka data to vikunja structure
+* *(migration)* Add planka migrator routes on v2
+* *(notifications)* Notify subscribers when a task is created
+* *(notifications)* Add clearing stored notifications (#2735)
+* *(subscriptions)* Add muted column to subscriptions
+* *(subscriptions)* Allow unsubscribing from an inherited subscription
+* *(subscriptions)* Enforce one subscription row per user and entity
+* *(tasks)* Subscribe task creator to their own task
+* *(tasks)* Audio attachment preview
+* *(user)* Add pending_email column
+* *(user)* Notify the current address when an email change is requested
+* *(user)* Add shared bot identity helpers
+* Regenerate and commit swagger docs and yaegi symbols during release tagging ([339b9a2](339b9a2deb7012eb9a898aa1d9fa02b0e42710aa))
+* Report ParadeDB extension and index status in doctor command ([7e4df58](7e4df58342e7c9c293c9c4d18338d967ea678d19))
+* Drop columns for real in SQLite migrations ([88e8bcf](88e8bcf250d8c25dce8744b57e9994a441d06750))
+* Expose database connection pool stats as prometheus metrics ([263c24f](263c24f0b7d97959927c68a9aef6e37c763cb2ef))
+* Show relative time in api token expiry notifications ([7d91052](7d910529766a905247278aaa663d22ba8e1d33f1))
+* Add shared task cache with service-level invalidation ([7d84f71](7d84f7189a05128593b04f528b70cb7514f76593))
+* Add default due time settings (#3433) ([d71301f](d71301ff0cef2b84e25c016eebd18151bc3fb40e))
+* Filter tasks by creator username (#2916) ([07927c5](07927c5b4fa945c24443df445019e9a0c84af340))
+
+### Miscellaneous Tasks
+
+* *(devenv)* Provide go 1.27.0 and golangci-lint 2.13.0 in dev shell
+* *(i18n)* Update translations via Crowdin
+* *(lint)* Ban replacing a session context outside pkg/db
+* *(tasks)* Drop redundant comments
+* Bump go to 1.27.0 ([c80aac2](c80aac2a99a592783e4bf1f5ef2f0103f05fda07))
+* Bump golangci-lint to v2.13.0 ([8d6e0e5](8d6e0e55fcf82f8ab883877c4d003e6f0eac29e4))
+* Regenerate yaegi symbols ([e38f210](e38f2106604adb3b81eacc5941c8ef3790283323))
+
+### Other
+
+* *(other)* [skip ci] Updated yaegi symbols
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Bump ParadeDB image to v0.25.3 to fix flaky block read errors
+* *(other)* Add workflow to sync auto-merge label with PR auto-merge state
+* *(other)* Remove "waiting for reply" label when a PR gets new commits
+* *(other)* Link the preview deployment from the PR
+
+### Performance
+
+* *(labels)* List a user's labels without joining label_tasks
+* *(projects)* Resolve a user's project access in one query per request
+* *(projects)* Resolve project permissions from the access memo
+* *(projects)* Filter accessible projects through the memo
+* *(projects)* List a user's projects from the memo instead of recursive CTEs
+* *(tasks)* Only use DISTINCT when a join can multiply rows
+* *(tasks)* Add composite index on (done, due_date)
+
+### Refactor
+
+* *(attachments)* Show mime type in the file name tooltip
+* *(attachments)* Rename AudioPreview prop to attachment
+* *(attachments)* Drop the unused canPreview helper
+* *(attachments)* Gate video previews on mime alone
+* *(attachments)* Collapse blob previews into one state
+* *(auth)* Give RefreshSession typed domain errors
+* *(bots)* Take a verified user, not any web.Auth
+* *(db)* Resolve the database path without creating anything
+* *(editor)* Extract the TipTap extension list into createEditorExtensions
+* *(files)* Split base path creation out of storage validation
+* *(files)* Move base path creation and validation onto FileStorage
+* *(frontend)* Centralize menu shortcuts (#2832)
+* *(labels)* Split the label query into two honest functions
+* *(labels)* Share one visibility condition between list and read
+* *(lightbox)* Extract zoom math into helpers/imageZoom.ts with tests
+* *(projects)* Read archived state from the materialized column only
+* *(projects)* Dedupe effective parent lookup, tidy error ordering and comments
+* *(projects)* Extract getUserIDsWithProjectAccess and make it authoritative
+* *(routes)* Extract pathScoped middleware helper
+* Share top-layer container lookup between editor popups and glance tooltip ([dec61cf](dec61cff3b649ef63c0ff7597f47fcc85004d4a5))
+* Mount the lightbox only while open, keyed by url ([935f275](935f2753e43ca994465481407b8730287f4dcd32))
+* Use IsBotOwnedBy for bot ownership checks ([669395e](669395e026a3a110bfb740f041db53df26db567e))
+
+### Testing
+
+* *(attachments)* Cover AudioPreview lifecycle, coordination and error paths
+* *(db)* Make database path tests platform-aware
+* *(e2e)* Cover registration flow when email confirmation is required
+* *(e2e)* Spy on v2 refresh endpoint
+* *(e2e)* Make team owner a fixture member
+* *(editor)* Run task link tests against the real editor extension config
+* *(files)* Restore the storage global after InitFileHandler
+* *(files)* Cover Ensure and ValidateBasePath per backend
+* *(frontend)* Cover delete modal close race and double submit guard
+* *(migration)* Handle database id sequences
+* *(projects)* Materialize inherited archived state in fixtures
+* *(projects)* Cover the parent owner on member-created subprojects
+* *(projects)* Assert search stays within the accessible set
+* *(routes)* Cover the v2 unauthenticated rate limit
+* *(subscriptions)* Cover the opt-out paths and the rows they leave behind
+* *(tasks)* Cover saved filter view scoping, access paths and filter edge cases
+* *(views)* Cover restoring persisted sort into the url query
+* Ensure previous pagination button on first page does not navigate to negative page ([0db7607](0db760752fe48be26f9e3bc600af11ada506a0ed))
+* Cover the doctor database checks ([363813f](363813f3bbd2a3b9eaaeb51244d71cb9af2da82e))
+* Stop leaking config overrides between tests ([f42d1a6](f42d1a6ca949810905337340e3ee784fd65dfe4d))
+* Assert both refresh cookie paths and consolidate the cookie helpers ([e955522](e955522590ad0003c25af4d8a3d4801f30c43bab))
+* Cover the v2 admin license gate ([4864678](4864678f70ca38042c9dacee2df594a1b4160a9a))
+* Merge overlapping refresh rate limit subtests ([4dbdc64](4dbdc64053fe1ef4ede67b48f13ce5abae0c8044))
+
+## [2.5.0] - 2026-08-04
+
+### Bug Fixes
+
+* *(api tokens)* Guard GetTokenFromTokenString against short token strings
+* *(api/v2)* Strip internal error detail in NewError, not NewErrorWithContext
+* *(api/v2)* Stop leaking the healthcheck cause to unauthenticated callers
+* *(api/v2)* Validate slice-of-struct body fields at the boundary
+* *(auth)* Use configured bcrypt rounds everywhere
+* *(auth)* Gate the v2 login route on local or ldap auth being enabled
+* *(avatar)* Bounds-check size before narrowing int64 to int
+* *(caldav)* Close username enumeration oracle in basic auth (#3349)
+* *(caldav)* Answer PROPPATCH with 207/403 instead of a blanket 501 (#3364)
+* *(caldav)* Return 404 for principal sub-paths and foreign usernames (#3371)
+* *(caldav)* Remove double trailing slash from current-user-principal href
+* *(caldav)* Don't wipe fields the parser doesn't understand on update
+* *(caldav)* Anchor RELATED=END alarm triggers on due date when the task has one
+* *(caldav)* Report completion status from Done instead of done_at
+* *(caldav)* Stop corrupting percent signs in REPORT responses
+* *(ci)* Tag preview images with the PR head sha
+* *(ci)* Describe PR head instead of base branch for preview version
+* *(ci)* Replace retired GitHub Models inference in auto-label workflow (#3415)
+* *(ci)* Pin LLM-action to fork with reasoning model support
+* *(config)* Apply deprecated service.jwtsecret to service.secret
+* *(db)* Ping the database on connect so failures report the real error
+* *(desktop)* Coordinate token refresh across renderer windows
+* *(desktop)* Create quick-entry window lazily
+* *(dump)* Parse dumped time strings so restore works on MySQL and MariaDB
+* *(dump)* Skip directory entries in dump zip when restoring
+* *(dump)* Reuse single stdin reader for all restore prompts
+* *(filter)* Don't rewrite in/not in/like inside quoted values
+* *(filters)* Skip saved filters owned by disabled users
+* *(filters)* Don't let one filter fail the whole filter view maintenance
+* *(frontend)* Route to not-found on forbidden task instead of blank shell
+* *(frontend)* Don't reload page on first service worker install
+* *(frontend)* Force rel=noopener on links in project descriptions
+* *(gravatar)* Route avatar requests through the SSRF-safe http client
+* *(labels)* Allow attaching labels via inherited child-project access (#3374)
+* *(license)* Refuse redirects and use the SSRF-safe http client for checks
+* *(mage)* Scaffold new migrations with partialSync
+* *(migration)* Seed task positions for exports without order information
+* *(migration)* Stop existing-table struct syncs from dropping indexes
+* *(migration)* Recreate indexes dropped by partial-struct sync migrations
+* *(migration)* Detect sqlite indexes created with lowercase SQL (#3354)
+* *(migration)* Prevent stack overflow on ticktick parentId cycles
+* *(migration)* Abort import on unexpected task creation error
+* *(migration)* Repair kanban views without a bucket configuration mode
+* *(migration/csv)* Cap CSV import buffer to the configured upload limit
+* *(models)* Use ILIKE for the team search count query
+* *(models)* Write back dates rescheduled by repeat logic under restricted column updates
+* *(notifications)* Deliver task deleted notifications again
+* *(notifications)* Don't notify subscribers who lost access to the entity
+* *(notifications)* Check project access when reading notifications
+* *(notifications)* Require a persisted notification to declare its project
+* *(notifications)* Delete stored notifications of unknown types
+* *(oauth2)* Burn authorization code even when validation fails (#3350)
+* *(openid)* Stop logging raw token-endpoint response bodies
+* *(packaging)* Return ENOSYS instead of SIGSYS for filtered syscalls
+* *(packaging)* Stop masking filesystem paths in the systemd unit (#3306)
+* *(plugins)* Regenerate stale yaegi symbol tables
+* *(projects)* Don't report database errors as a missing project
+* *(ratelimit)* Don't panic on unauthenticated requests
+* *(ratelimit)* Key by ip when the configured kind is unknown
+* *(security)* Rate limit the websocket upgrade endpoint (#3348)
+* *(security)* Return the negated user id from LinkSharing.GetID
+* *(security)* Reject link shares at team, bot and webhook permission checks
+* *(security)* Reject link shares in Webhook.ReadAll
+* *(security)* Reject non-user tokens in GetUserFromClaims
+* *(subscriptions)* Declare subscription entity as string enum in v2 OpenAPI schema
+* *(subscriptions)* Marshal unknown subscription entity type as null
+* *(unsplash)* Route api requests through the SSRF-safe http client
+* *(views)* Seed and maintain kanban buckets when a view's kind changes
+* *(views)* Preselect manual bucket mode in the view edit form
+* *(views)* Drop deleted bucket from view state after deleting it
+* *(web)* Stop logging the full auth object on permission denials
+* *(webhooks)* Bound the error response body read
+* Shadow embedded CRUDable Update method on LinkSharing ([c580d51](c580d516f4d1add72dcee4109b0311356077e707))
+* Shadow embedded CRUDable ReadAll method on SavedFilter ([6f65621](6f65621c1423e284531682727839dd21a580d0b9))
+* Embed user.User by value in AdminUser ([4cc647b](4cc647b9b89407ed4d93313d90b0b96bba5b3579))
+* Embed LinkSharing by value in LinkShareToken ([b8492a0](b8492a0ab94c8596318ae7f650e077f280a413a2))
+* Always serialize parent_project_id for pseudo-projects ([2e0cd81](2e0cd81ce081a0d17a7606c20c2e0b077a88fb1e))
+* Avoid panic on null jwt claim values ([ccba2e4](ccba2e4546abcca66b07f7a7706e1f23167ecea3))
+* Report the real link share id in saved filter errors ([ed8dc89](ed8dc89f75dfa7009a9d52985fb0e44533081c5e))
+
+### Dependencies
+
+* *(deps)* Update postgres:18 docker digest to 3a82e1f
+* *(deps)* Update dev-dependencies
+* *(deps)* Update actions/checkout action to v7.0.1
+* *(deps)* Update danielroe/provenance-action digest to 8ecbdd2
+* *(deps)* Update pnpm to v11.14.0
+* *(deps)* Update module github.com/prometheus/client_golang to v1.24.0
+* *(deps)* Update module github.com/labstack/echo/v5 to v5.3.1
+* *(deps)* Update danielroe/provenance-action digest to fcc45fd
+* *(deps)* Update pnpm to v11.15.0
+* *(deps)* Update aws-sdk-go-v2 monorepo
+* *(deps)* Update dependency happy-dom to v20.11.0
+* *(deps)* Update dependency postcss to v8.5.20
+* *(deps)* Update pnpm to v11.15.1
+* *(deps)* Update dependency vue-i18n to v11.4.7
+* *(deps)* Update dependency undici@7 to v8.8.0
+* *(deps)* Update docker/login-action action to v4.5.0
+* *(deps)* Update module github.com/ganigeorgiev/fexpr to v0.6.0
+* *(deps)* Update dependency marked to v18.0.7
+* *(deps)* Update dependency undici@6 to v8.8.0
+* *(deps)* Update crowdin/github-action action to v2.17.0
+* *(deps)* Update module github.com/gabriel-vasile/mimetype to v1.4.15
+* *(deps)* Update docker/login-action action to v4.5.1
+* *(deps)* Update dependency js-yaml to v5.2.2 [security]
+* *(deps)* Update dependency js-yaml@4 to v5.2.2 [security]
+* *(deps)* Update dependency @sentry/vue to v10.67.0
+* *(deps)* Update module github.com/prometheus/client_golang to v1.24.1
+* *(deps)* Update dependency tar to v7.5.21
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.3.3
+* *(deps)* Update dependency flatted to v3.4.3
+* *(deps)* Update dependency postcss to v8.5.22
+* *(deps)* Update pnpm to v11.16.0
+* *(deps)* Update pnpm to v11.17.0
+* *(deps)* Lock file maintenance
+* *(deps)* Update danielroe/provenance-action digest to b793421
+* *(deps)* Update dependency @sentry/vue to v10.68.0
+* *(deps)* Update dependency undici@7 to v8.9.0
+* *(deps)* Update dependency postcss to v8.5.23
+* *(deps)* Update tiptap to v3.29.0
+* *(deps)* Update module github.com/aws/smithy-go to v1.27.5
+* *(deps)* Update dependency tar to v7.5.22
+* *(deps)* Update module github.com/yuin/goldmark to v1.8.5
+* *(deps)* Update playwright to v1.62.0
+* *(deps)* Update dependency undici@6 to v8.9.0
+* *(deps)* Update dependency ip-address to v10.2.2
+* *(deps)* Update danielroe/provenance-action digest to ec1767b
+* *(deps)* Update actions/stale action to v11
+* *(deps)* Update dependency basic-ftp to v6.0.2
+* *(deps)* Update dependency ip-address to v10.3.1
+* *(deps)* Update dependency vite-plugin-vue-devtools to v8.2.1
+* *(deps)* Update docker/login-action action to v4.5.2
+* *(deps)* Update docker/login-action action to v4.6.0
+* *(deps)* Update dependency vue-i18n to v11.4.8
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.49
+* *(deps)* Update module github.com/aws/smithy-go to v1.27.6
+* *(deps)* Update dependency postcss to v8.5.25
+* *(deps)* Update node.js to v24.18.1
+* *(deps)* Update dependency minimatch to v10.2.6
+* *(deps)* Update tiptap to v3.29.2
+* *(deps)* Update dependency rollup to v4.62.3
+* *(deps)* Update pnpm to v11.18.0
+* *(deps)* Update dependency @sentry/vue to v10.69.0
+* *(deps)* Update dependency axios to v1.19.0
+* *(deps)* Update vueuse to v14.4.0
+* *(deps)* Update dependency flatted to v3.4.4
+* *(deps)* Update dependency markdown-it to v15
+* *(deps)* Update pnpm/action-setup action to v6.0.10
+* *(deps)* Update pnpm to v11.19.0
+* *(deps)* Update danielroe/provenance-action digest to 193227b
+* *(deps)* Update dependency ip-address to v10.4.0
+* *(deps)* Update playwright to v1.62.1
+* *(deps)* Update module github.com/danielgtaylor/huma/v2 to v2.39.1
+* *(deps)* Update node.js to v24.19.0
+* *(deps)* Update dependency js-yaml@4 to v5.2.3
+* *(deps)* Update dependency js-yaml to v5.2.3
+* *(deps)* Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.106.4
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.22.0
+* *(deps)* Update dependency rollup to v4.62.4
+
+### Documentation
+
+* *(agents)* Explicit mention of no raw sql [skip ci]
+* *(skill)* Ban plain tx.Sync on existing tables in the migration skill
+* Update readme with LLM disclosure, update sponsors [skip ci] ([7f7d61f](7f7d61fe5d3bfbab327e2ca31180cdd564c8691c))
+
+### Features
+
+* *(api/v2)* Add bulk task creation endpoint
+* *(audit)* Audit full personal data export requests
+* *(desktop)* Add a Content Security Policy to the app window (#3351)
+* *(dev)* Add paseo config
+* *(mage)* Add generate:yaegi-symbols and check:yaegi-symbols targets
+* *(tasks)* Calculate top-of-view positions per batch
+* *(tasks)* Generalize task creation to batches
+* *(tasks)* Add BulkTaskCreation model
+* *(tasks)* Update saved-filter views once per creation batch
+* *(tasks)* Add bulk creation to the task service
+* *(tasks)* Add bulk quick-add creation to the task store
+* *(tasks)* Create quick-add tasks through the bulk endpoint
+
+### Miscellaneous Tasks
+
+* *(i18n)* Update translations via Crowdin
+* Cleanup dead code ([1e081d3](1e081d34a7107302f05d614ba8233297a5d68319))
+
+### Other
+
+* *(lint)* Forbid plain Sync in migrations via forbidigo
+* *(other)* Drop unused contents: write from generate-swagger-docs
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Auto-regenerate yaegi symbols alongside swagger docs
+* *(other)* [skip ci] Updated yaegi symbols
+
+### Performance
+
+* *(tasks)* Index task_positions on (project_view_id, position)
+
+### Refactor
+
+* *(projects)* Resolve read permissions for many projects at once
+* Drop redundant link share branch in comment permissions ([d545e3b](d545e3bbb14bb606d86bffe73e11c926ce1af378))
+
+### Testing
+
+* *(api-tokens)* Match permission checkbox name exactly
+* *(e2e)* Cover multiline creation order and subtasks
+* *(models)* Restore notification faking after user delete tests
+* *(ratelimit)* Assert exact statuses instead of absence of 500
+* Guard schema-link creation for all v2 response types ([f02df25](f02df25510827fda377e9e40bdc2b7bc06ae66d1))
+* Guard parent_project_id in project responses ([aa62c00](aa62c00b780e7493b3a276e408805284aa437590))
+* Cover link share principal confusion at the HTTP layer ([2b1558e](2b1558e8dfc9cda9b13fb52baac108108b9c3059))
+* Assert link share attachments are not attributed to a colliding user ([4b35f5d](4b35f5d7e2ca93681bdd7ed29208682a31aeb816))
+
+## [2.4.0] - 2026-07-19
+
+### Bug Fixes
+
+* *(a11y)* Make list view task links keyboard focusable and openable with Enter
+* *(a11y)* Show a visible focus ring on checkboxes and other focusable controls
+* *(a11y)* Make task title keyboard editable
+* *(a11y)* Pick label text color by actual WCAG contrast ratio
+* *(a11y)* Fix light theme contrast of success and danger text
+* *(a11y)* Make kanban cards reachable and openable by keyboard
+* *(a11y)* Show a keyboard-only focus ring on text inputs and editable titles
+* *(a11y)* Move focus to main content when the skip link is activated
+* *(a11y)* Add accessible names to all icon-only buttons
+* *(a11y)* Login tab order, announced errors, combobox pattern, named dialogs and selects (#3228)
+* *(a11y)* Expose expanded, sort, result-count and toggle states to assistive technology
+* *(a11y)* Contrast tokens, empty-title feedback, structure and landmarks (#3234)
+* *(a11y)* Render the kanban bucket footer as a list item
+* *(a11y)* Un-nest the attachment rows
+* *(a11y)* Keep the auth hero heading readable with a gradient scrim
+* *(a11y)* Label the bucket selector with its purpose and current bucket
+* *(a11y)* Announce comment and attachment counts on task cards and rows
+* *(a11y)* Make the editor toolbar a single tab stop with roving focus
+* *(admin)* Reload created user before returning in admin create handler
+* *(ai)* Correct snake_case in json instructions
+* *(api)* Uppercase project identifier before by-index lookup
+* *(api)* Close the user data export reader after download
+* *(api)* Export api-token permission groups in snake_case
+* *(api)* Return 200 instead of 500 when listing attachments on a task with none
+* *(api)* Derive API-token ownership from a verified user principal (GHSA-vvcv-vpph-h844)
+* *(api)* Reject link shares on reaction and task-read endpoints (consistency; GHSA-vvcv-vpph-h844)
+* *(api/docs)* Make redoc load docs.json from public URL
+* *(api/docs)* Use Base in redoc template
+* *(api/v2)* Publish OpenAPI Servers and make schemas publicly fetchable
+* *(api/v2)* Return generic 401 instead of leaking internal auth error
+* *(api/v2)* Don't leak internal error detail in 5xx responses
+* *(api/v2)* Dedupe BucketConfigurationMode enum tag
+* *(api/v2)* Guard against nil bucket configuration elements
+* *(api/v2)* Scope project view delete to its parent project
+* *(api/v2)* Apply rate limit before the admin gate
+* *(api/v2)* Accept real image content-types on avatar upload
+* *(api/v2)* Align avatar upload body limit with global overhead
+* *(api/v2)* Reject non-decodable images (e.g. SVG) on avatar upload with 400
+* *(api/v2)* Keep include_public out of the team body schema
+* *(api/v2)* Omit project max_permission (null) when not expanded
+* *(api/v2)* Drop ETag/conditional read on project get
+* *(api/v2)* Map ValidationHTTPError to its HTTP status
+* *(api/v2)* Return 200 from notifications mark-all (creates nothing)
+* *(api/v2)* Group time-entries token routes under their own scope
+* *(api/v2)* Expose v2-only token route groups via the routes endpoint
+* *(api/v2)* Return ErrProjectDoesNotExist for unknown project identifiers
+* *(api/v2)* Gate /register at registration time, not per request
+* *(api/v2)* Close export reader when commit fails before streaming
+* *(assignees)* Resolve 500 error when reading task assignees
+* *(assignees)* Use db.ILIKE helper for assignee search count query
+* *(attachments)* Keep blob mime type so pdf previews open inline (#3157)
+* *(audit)* Handle reopen failure after a failed rotation
+* *(audit)* Only attribute the logout event to user tokens
+* *(auth)* Tolerate string booleans in oidc provider config (#2599)
+* *(auth)* Make refresh token path respect to public URL
+* *(auth)* Cleanup getRefreshTokenCookiePath implementation
+* *(auth)* Don't panic on /token/test with API token
+* *(auth)* Remove stale OIDC callback lock
+* *(auth)* Roll back on commit failure in DeleteSession
+* *(auth)* Return ErrAccountLocked for locked accounts on login
+* *(auth)* Build OIDC end-session URL with RP-Initiated Logout params (#2943)
+* *(auth)* Preserve desktop authorize URL when not signed in (#2944)
+* *(auth)* Link OIDC username fallback on preferred_username, not just sub (#2945)
+* *(auth)* Dedupe and retry token refresh to prevent spurious logouts (#2948)
+* *(auth)* Allow api tokens to access global v2 task list endpoint
+* *(auth)* Use binddn as group sync dn instead of userbind
+* *(auth)* Require verified email before OIDC email-fallback account linking (GHSA-xv7q-fvmc-jx96)
+* *(auth)* Reject API tokens at the OAuth authorize endpoint (GHSA-v3p6-34mc-hj7v)
+* *(caldav)* Return 404 when trying to access a project that cannot exist with CalDAV (#2796)
+* *(caldav)* Store markdown descriptions as HTML, skip spurious updates
+* *(caldav)* Compute VTODO DURATION components correctly (#3155)
+* *(caldav)* Parse ISO 8601 week durations in reminder triggers (#3183)
+* *(ci)* Skip interactive prompt in nixpkgs update workflow
+* *(ci)* Use working model
+* *(ci)* Don’t close issue directly
+* *(ci)* Add mage aliases for pacakge releases
+* *(ci)* Configure gpg loopback pinentry for reprepro signing
+* *(ci)* Sign APT Release files manually instead of via reprepro gpgme
+* *(ci)* Install makepkg for repo-add utility scripts
+* *(ci)* Rename .archlinux files to .pkg.tar.zst for repo-add
+* *(ci)* Add debug step to list incoming package files
+* *(ci)* Add deeper debug for archlinux/pacman package contents
+* *(ci)* Install libarchive-tools for repo-add bsdtar dependency
+* *(ci)* Set RELEASE_VERSION to avoid git dependency in containers
+* *(ci)* Add libc6-compat for Alpine, fix S3 upload glob, add debug
+* *(ci)* Inline APK repo generation to avoid glibc binary on Alpine
+* *(ci)* Skip desktop .apk in APK repo, not a valid Alpine package
+* *(ci)* Revert S3 glob to **/* and clean up directories before upload
+* *(ci)* Update s3-action to skip directories during upload
+* *(ci)* Pin s3-action to main branch
+* *(ci)* Exclude package files from repo metadata upload
+* *(ci)* Write GPG key directly to file instead of importing and exporting
+* *(ci)* Resolve symlinks before upload instead of deleting them
+* *(ci)* Commit newly added Crowdin translation files
+* *(ci)* Escape ${{ secrets.* }} mention in release-binaries description
+* *(ci)* Switch release composite actions to unstable on non-tag builds
+* *(ci)* Drop "./" from PACKAGE_OUTPUT_DIR so strip-path-prefix matches
+* *(ci)* Generate config.yml.sample in release-os-package for vikunja
+* *(ci)* Copy pnpm-workspace.yaml into Docker frontend build
+* *(cli)* Guard last admin on scheduled CLI deletion path
+* *(cli)* Drain the mail queue before user commands exit
+* *(comments)* Even padding around comment message
+* *(db)* Interpolate table identifiers in truncate instead of binding them
+* *(desktop)* Rebuild tray menu in place instead of recreating the Tray
+* *(desktop)* Support Ctrl and mouse-wheel zoom shortcuts
+* *(desktop)* Drop redundant zoom clamp
+* *(desktop)* Show tray icon in packaged builds
+* *(desktop)* Quit on SIGTERM and SIGINT
+* *(desktop)* Show hidden window when relaunched from tray
+* *(desktop)* Set the main window icon on Linux
+* *(desktop)* Register vikunja-desktop:// scheme handler for AppImage (#3203)
+* *(docker)* Make /tmp world-writable so exports work under any UID
+* *(editor)* Render floating popups inside the task dialog (Kanban popup)
+* *(editor)* Render link prompt inside the task dialog so it works in the Kanban popup (#2940)
+* *(editor)* Make link prompt a sub-modal — Escape cancels it without closing the task dialog
+* *(events)* Build event doers without re-fetching the user
+* *(events)* Handle nil auth when building event doers
+* *(export)* Treat a missing export meta row as no export in the status
+* *(files)* Never cache file downloads in v1 or v2
+* *(filter)* Accept non-zero-padded dates in task filters
+* *(filters)* Resolve relative and absolute date filters in UTC (#3181) 🤖🤖🤖 (#3229)
+* *(frontend)* Render editor popups inside modal dialog top-layer
+* *(frontend)* Guard caldav and totp settings routes when disabled
+* *(frontend)* Guard Object.keys against null in refactored helpers
+* *(frontend)* Restore tablet pagination layout (space-between + flex order)
+* *(frontend)* Make sw.ts respect to frontend base URL
+* *(frontend)* Fix hard-coded API base in checkAndSetApiUrl.ts
+* *(frontend)* Use import.meta.env.MODE instead of DEV for testid directive
+* *(frontend)* Respect week_start setting when language is not explicitly set
+* *(frontend)* Add postcss-html as explicit devDependency
+* *(frontend)* Focus quick actions input after modal opens
+* *(frontend)* Respect user's 12h/24h time format in date pickers
+* *(frontend)* Extend checkbox hit target to 44x44
+* *(frontend)* Skip task detail on label and checkbox clicks
+* *(frontend)* Scope checkbox hit-area pseudo to the task row
+* *(frontend)* Ensure text color inherits in filter autocomplete component
+* *(frontend)* Prevent avatar layout shift while loading
+* *(frontend)* Wrap notifications in Teleport to appear above modals for #2744
+* *(frontend)* Fix buttons alignments in rtl direction
+* *(frontend)* Restore quick actions menu styling and height limit
+* *(frontend)* Auto-refresh relative dates as time passes
+* *(frontend)* Scroll tall default modals instead of clipping their top
+* *(frontend)* Zero seconds on api token custom expiry date
+* *(frontend/kanban)* Honor server bucket redirect on drag (#2618)
+* *(frontend/oidc)* Prefix frontend base to redirect URL
+* *(frontend/vite)* Configure vite dev proxy to handle frontend path
+* *(gantt)* Preserve horizontal scroll when focusing a task bar
+* *(kanban)* Prevent task taps from leaking through the sticky add-task footer on touch devices
+* *(kanban)* Count tasks in bucket, not filter total, for saved-filter bucket limits
+* *(kanban)* Upsert race condition in kanban task bucket sync (#2938)
+* *(kanban)* Authorize body task_id when moving a task into a bucket (GHSA-5pg6-m483-7vrg)
+* *(kanban)* Prevent cross-tenant bucket relocation via project_view_id mass-assignment (GHSA-569v-q83c-3j3g)
+* *(kanban)* Pin link-share task collection view to the share's project (GHSA-rj9j-8772-4h6c)
+* *(keyvalue)* Treat undecodable cached values as a cache miss
+* *(labels)* Report owner-level max_permission
+* *(labels)* Explain why link-share users can't create labels (#3233)
+* *(license)* Degrade to free when servers unreachable or key rejected
+* *(link-sharing)* Resolve share read permission via project id so by-id reads work
+* *(migration)* Reuse existing labels on re-import
+* *(migration)* Tolerate non-numeric values in TickTick CSV exports
+* *(migration)* Don't drop TickTick tasks sharing a malformed id
+* *(migration)* Fail loudly if a deduplicated position pair has no row
+* *(modal)* Open dialog reliably in electron desktop
+* *(modal)* Clear stale data-closing flag when re-opened mid-close
+* *(modal)* Skip showModal if enabled flipped false before mount
+* *(modal)* Print full content of modal dialogs
+* *(models)* Allow user-delete cascade to complete for disabled creators
+* *(models)* Make API tokens work on /api/v2 routes
+* *(models)* Validate API token permissions against v1+v2 route union
+* *(notifications)* Pass lang to overdue reminder translation
+* *(notifications)* Skip logo attachment for conversational mails
+* *(notifications)* Strip remote images from notification emails
+* *(notifications)* Refresh embedded users when reading notifications
+* *(notifications)* Log unexpected user refresh failures
+* *(notifications)* Use full user so notifications show display name
+* *(notifications)* Queue mails only after the notification row is committed (#3150)
+* *(notifications)* Render Markdown in plain-text emails (#3219)
+* *(oauth2server)* Accept all loopback redirect forms
+* *(postgres)* Resolve all statements against the configured schema (#3156)
+* *(print)* Hide bucket select icon
+* *(print)* Hide description editor when no description is present
+* *(print)* Hide reaction create button
+* *(project)* Replace CAST(... AS int) with CASE WHEN for MySQL 8 compat
+* *(projects)* Enforce write permission on target parent when duplicating a project (GHSA-f27p-pw2p-9pr4)
+* *(quick-add)* Don't abort task creation when a label can't be created (#3232)
+* *(relations)* Correctly position quick add magic hint (#2766)
+* *(routes)* Set Cache-Control: no-store on /api/v2 too
+* *(routes)* Apply rate-limit and metrics middleware to /api/v2
+* *(routes)* Generate request IDs at the start of the middleware chain
+* *(search)* Mirror ParadeDB BM25 matching into the subtask parent search condition
+* *(security)* Clear plaintext user tokens for reset/confirm/deletion (GHSA-r6w9-259g-gwrv)
+* *(security)* Hash password-reset, email-confirm and deletion tokens at rest (GHSA-r6w9-259g-gwrv)
+* *(security)* Require Admin to detach a project from its parent (GHSA-44v6-7fxq-vgf4)
+* *(security)* Reject cross-project views in ProjectView Can{Delete,Update} (GHSA-gg93-x632-9ccv)
+* *(static)* Correct the API_URL value to replace in index.html
+* *(task)* Print styles
+* *(task)* Don't drop the list-view done save during the check animation
+* *(task)* Recurring tasks return to original bucket when no default is set (#2806)
+* *(task-comments)* Derive update event doer from authenticated user
+* *(tasks)* Let getCommentUrl handle frontendUrl including sub-path
+* *(tasks)* Disable task glance tooltip on touch devices
+* *(tasks)* Prevent duplicate task_positions rows and stale identifiers
+* *(tasks)* Add labels sequentially when the backend db serializes writes
+* *(tasks)* Reset description checklist when a recurring task recurs (#2941)
+* *(tasks)* Show filter-matched subtasks whose parent is filtered out (#2952)
+* *(tasks)* Prevent position race conditions with atomic upserts and locking (#3098)
+* *(tasks)* Bump project and task updated times when task sub-entities change
+* *(tasks)* Make subtask root condition NULL-safe and search-aware (#3197)
+* *(time-tracking)* Reject inverted time-entry intervals
+* *(time-tracking)* Cap smart-fill start at now so the range is never inverted
+* *(tooltip)* Show tooltips in top layer when inside modal dialog
+* *(ui)* Make code element background dark-mode aware and harden config store
+* *(user)* Skip last-admin guard when target is already unreachable
+* *(user)* Correct week_start validation range
+* *(user)* Stop double-encoding FrontendSettings on UpdateUser (#2793)
+* *(veans)* Preserve unsent task fields on update via PATCH (#2962)
+* *(views)* Persist list/table sort across sidebar navigation (#2778)
+* *(webhook)* Use same casing for basic auth fields (#2688)
+* Fatal with clear message when keyvalue type is redis but redis is not enabled ([85cfadc](85cfadc5b0ffb3e00a560489905b8a9840503664))
+* Prevent package postinstall hang when generating jwt secret ([9456223](94562235564e69cb20fe6196f690d6763d4daee8))
+* Respect allow_icon_changes config on web and desktop ([fb6f16a](fb6f16addecc3ee4012aeabdec253a35b454926a))
+* Dispatch pending events after user creation commits ([b867109](b86710903b89548d0b7f8a739360a56706ea2784))
+* Blur quick add input on escape ([5edc7b5](5edc7b5160fc573be25a2611754e324ad1291c0f))
+* Don't re-login after logout when OIDC auto-redirect is enabled ([e25ca7a](e25ca7ab9af5f50243e59b35e3ae50828bbcc46b))
+* Use correct type for permission error ([e1afa03](e1afa039cb08f35cd5c100b1a8872ffe4e471af8))
+* Adapt to sentry-go v0.47 API changes ([c7413a1](c7413a1d868734dc8afbe59d0983021916718769))
+* Resolve golangci-lint v2.12 findings ([93f8808](93f88084de7b4a74f5c74d19de728318b040959e))
+* GCS signing issue (#2920) ([7ae80c0](7ae80c073b367724ed7b361051adcf9c94c33e05))
+* Create saved filter positions before the fetch query (#3084) ([f11c90c](f11c90ca6b37692fff701657e7bad564055819b2))
+* Assign bot-created projects to the bot's owner ([61d74ee](61d74ee2efec4fea6cda0036436f72f84d693e92))
+* Embed frontend assets with names starting with _ or . ([568b367](568b36716426ef819fa830c556dd945a5c6e7668))
+* Dispatch pending events in admin handlers ([39bbf8d](39bbf8d006953addb34d4a49a2d1c0dc46947f11))
+* Only audit denied admin access for confirmed non-admins ([7217604](72176040106152e83e58c9212ce719b52d5f9015))
+* Use correct label for imported tasks 'project' ([d8b4b49](d8b4b49016eefe6cde8b0e9e77a1d58311884d5b))
+* Hide license-gated routes from api token scope list (#3216) ([e2c09d5](e2c09d593ca92ab582ce605f711ce4e8e7ac063a))
+* Interpolate dynamic values into translated error toasts ([f388015](f388015ddaa82915197183fbed35d6a31d5bc381))
+* Disable echo group 404 auto-registration to keep pre-5.3.0 routing behavior ([f76e405](f76e405b6cf3a3399487b59a9b180fd9da454fca))
+
+### Dependencies
+
+* *(deps)* Bump axios from 1.13.5 to 1.15.0 in /frontend
+* *(deps)* Update dependency wait-on to v9.0.5
+* *(deps)* Update dependency stylelint to v17.7.0
+* *(deps)* Update dev-dependencies
+* *(deps)* Patch follow-redirects and basic-ftp security vulnerabilities
+* *(deps)* Update dependency stylelint to v17.8.0
+* *(deps)* Update dependency postcss to v8.5.10
+* *(deps)* Update dependency electron to v40.9.1
+* *(deps)* Bump dompurify from 3.3.2 to 3.4.0 in /frontend
+* *(deps)* Update dev-dependencies to v8.59.0
+* *(deps)* Update dev-dependencies to v4.2.3
+* *(deps)* Pin dependency otplib to 12.0.1
+* *(deps)* Update dependency caniuse-lite to v1.0.30001790
+* *(deps)* Bump github.com/Azure/go-ntlmssp
+* *(deps)* Bump go.opentelemetry.io/otel from 1.40.0 to 1.41.0
+* *(deps)* Bump workbox-precaching to 7.4.1 to match workbox-cli
+* *(deps)* Bump axios from 1.15.0 to 1.15.2 in /frontend
+* *(deps)* Update dependency vite to v7.3.3
+* *(deps)* Update dev-dependencies to v4.3.0
+* *(deps)* Group node and pnpm updates across mise and version files
+* *(deps)* Update dependency caniuse-lite to v1.0.30001793
+* *(deps)* Bump brace-expansion from 5.0.5 to 5.0.6 in /frontend
+* *(deps)* Update dependency vue-tsc to v3.3.0
+* *(deps)* Update dev-dependencies to v8.59.4
+* *(deps)* Bump @babel/plugin-transform-modules-systemjs to 7.29.4
+* *(deps)* Bump fast-uri to 3.1.2
+* *(deps)* Bump ip-address to 10.2.0
+* *(deps)* Bump postcss to >=8.5.10 to fix XSS via unescaped </style>
+* *(deps)* Bump @xmldom/xmldom to 0.8.13
+* *(deps)* Bump js-cookie from 3.0.5 to 3.0.7 in /frontend
+* *(deps)* Bump tmp to >=0.2.6 to fix path traversal vulnerability
+* *(deps)* Bump qs to 6.15.2 in desktop
+* *(deps)* Bump ip-address to >=10.1.1 in desktop workspace
+* *(deps)* Bump axios from 1.15.2 to 1.16.0 in /frontend
+* *(deps)* Update dependency vue-tsc to v3.3.3
+* *(deps)* Add huma/v2 and align transitive deps
+* *(deps)* Update dev-dependencies to v8.60.1
+* *(deps)* Update dev-dependencies to v10.9.2
+* *(deps)* Update dev-dependencies to v26.14.0
+* *(deps)* Update devenv
+* *(deps)* Update dev-dependencies to v8.61.0
+* *(deps)* Update dev-dependencies to v40.10.3
+* *(deps)* Update shell-quote to 1.8.4
+* *(deps)* Bump tmp to >=0.2.7 to fix path traversal advisory
+* *(deps)* Force esbuild >=0.28.1 to fix transitive advisories
+* *(deps)* Bump dompurify to 3.4.9 to fix XSS advisories
+* *(deps)* Force form-data >=4.0.6 to fix unsafe boundary advisory
+* *(deps)* Tighten tar override to >=7.5.16
+* *(deps)* Force markdown-it >=14.2.0 to fix ReDoS advisory
+* *(deps)* Force launch-editor >=2.14.1
+* *(deps)* Force @babel/core >=7.29.6
+* *(deps)* Bump js-yaml to >=4.2.0 where possible
+* *(deps)* Update dev-dependencies to v10.5.0
+* *(deps)* Update dev-dependencies to v20.10.6
+* *(deps)* Bump dompurify from 3.4.9 to 3.4.11 in /frontend
+* *(deps)* Update dev-dependencies to v4.62.1
+* *(deps)* Update dev-dependencies to v4.62.2
+* *(deps)* Bump desktop undici to patched versions
+* *(deps)* Pin dependencies
+* *(deps)* Update docker/dockerfile:1 docker digest to 87999aa
+* *(deps)* Update tiptap to v3.27.1
+* *(deps)* Update actions/cache action to v6
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.25.x docker digest to 57c6285
+* *(deps)* Update postgres:18 docker digest to 4aabea7
+* *(deps)* Update node.js to cd6fb7e
+* *(deps)* Update actions/checkout action to v7
+* *(deps)* Update dependency @floating-ui/dom to v1.7.6
+* *(deps)* Update dependency dayjs to v1.11.21
+* *(deps)* Update dependency marked to v17.0.6
+* *(deps)* Update dependency sortablejs to v1.15.7
+* *(deps)* Update dependency nanoid to v5.1.16
+* *(deps)* Update dependency ufo to v1.6.4
+* *(deps)* Update module github.com/arran4/golang-ical to v0.3.5
+* *(deps)* Update module github.com/coder/websocket to v1.8.15
+* *(deps)* Update module github.com/go-ldap/ldap/v3 to v3.4.13
+* *(deps)* Update actions/ai-inference action to v2.1.1
+* *(deps)* Update module github.com/golang-jwt/jwt/v5 to v5.3.1
+* *(deps)* Update module github.com/labstack/echo-jwt/v5 to v5.0.1
+* *(deps)* Update module github.com/olekukonko/tablewriter to v1.1.4
+* *(deps)* Update module github.com/sahilm/fuzzy to v0.1.3
+* *(deps)* Update node.js to v24.18.0
+* *(deps)* Update playwright to v1.61.1
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v11.2.4
+* *(deps)* Update go to 1.26.4 in all places
+* *(deps)* Update dependency vue to v3.5.39
+* *(deps)* Update module github.com/threedotslabs/watermill to v1.5.2
+* *(deps)* Update module github.com/wneessen/go-mail to v0.7.3
+* *(deps)* Update aws-sdk-go-v2 monorepo
+* *(deps)* Update dependency axios to v1.18.1
+* *(deps)* Update pnpm to v10.34.4
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.47
+* *(deps)* Update module github.com/aws/smithy-go to v1.27.3
+* *(deps)* Update dependency @sentry/vue to v10.62.0
+* *(deps)* Update dependency vue-i18n to v11.4.6
+* *(deps)* Update golangci/golangci-lint-action action to v9.3.0
+* *(deps)* Update font awesome
+* *(deps)* Update module github.com/bbrks/go-blurhash to v1.2.0
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.19.0
+* *(deps)* Update module github.com/fatih/color to v1.19.0
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.21.0
+* *(deps)* Update module github.com/labstack/echo/v5 to v5.2.1
+* *(deps)* Update module golang.org/x/crypto to v0.53.0
+* *(deps)* Update module github.com/magefile/mage to v1.17.2
+* *(deps)* Update vueuse to v14.3.0
+* *(deps)* Update module xorm.io/xorm to v1.4.1
+* *(deps)* Update module github.com/danielgtaylor/huma/v2 to v2.38.0
+* *(deps)* Update module github.com/go-sql-driver/mysql to v1.10.0
+* *(deps)* Update module github.com/hashicorp/go-version to v1.9.0
+* *(deps)* Update module golang.org/x/term to v0.44.0
+* *(deps)* Update module github.com/lib/pq to v1.12.3
+* *(deps)* Update module golang.org/x/image to v0.43.0
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.26.x docker digest to 9887b39
+* *(deps)* Update dependency undici@6 to v8
+* *(deps)* Update actions/create-github-app-token action to v3
+* *(deps)* Update dependency stylelint to v17.14.0
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.47.0
+* *(deps)* Update module golang.org/x/net to v0.56.0
+* *(deps)* Update dependency golangci/golangci-lint to v2.12.2
+* *(deps)* Update module github.com/schollz/progressbar/v3 to v3.19.1
+* *(deps)* Update dependency tar to v7.5.19
+* *(deps)* Update eslint to v10
+* *(deps)* Update github artifact actions
+* *(deps)* Update docker/setup-buildx-action action to v4
+* *(deps)* Update magefile/mage-action action to v4
+* *(deps)* Update docker/metadata-action action to v6
+* *(deps)* Update docker/login-action action to v4
+* *(deps)* Update docker/build-push-action action to v7
+* *(deps)* Update low-risk dev-dependency majors
+* *(deps)* Update cachix/install-nix-action action to v31
+* *(deps)* Update actions/stale action to v10
+* *(deps)* Update dependency undici@7 to v8
+* *(deps)* Update actions/github-script action to v9
+* *(deps)* Update dependency postcss to v8.5.16
+* *(deps)* Update dependency marked to v18
+* *(deps)* Pin cachix/install-nix-action action to v31.10.6
+* *(deps)* Update docker/login-action action to v4.3.0
+* *(deps)* Update charmbracelet bubbletea and lipgloss to v2
+* *(deps)* Update docker/metadata-action action to v6.2.0
+* *(deps)* Update docker/setup-buildx-action action to v4.2.0
+* *(deps)* Update softprops/action-gh-release action to v3
+* *(deps)* Update pnpm/action-setup action to v6
+* *(deps)* Update typescript to v6
+* *(deps)* Update danielroe/provenance-action digest to 83ae780
+* *(deps)* Update vite to v8
+* *(deps)* Update module charm.land/bubbletea/v2 to v2.0.8
+* *(deps)* Update module charm.land/lipgloss/v2 to v2.0.5
+* *(deps)* Update dependency vue-router to v5
+* *(deps)* Update dependency electron to v42
+* *(deps)* Upgrade to pnpm 11 and migrate config to pnpm-workspace.yaml
+* *(deps)* Update pnpm to 11 in devenv
+* *(deps)* Lock file maintenance
+* *(deps)* Update dependency js-yaml to v5.2.1
+* *(deps)* Update dependency picomatch to v4.0.5
+* *(deps)* Update dependency js-yaml@4 to v5.2.1
+* *(deps)* Update dependency markdown-it to v14.3.0
+* *(deps)* Update dependency serialize-javascript to v7.0.7
+* *(deps)* Update docker/login-action action to v4.4.0
+* *(deps)* Migrate rollup override to pnpm catalog
+* *(deps)* Update dependency @sentry/vue to v10.63.0
+* *(deps)* Update module github.com/wneessen/go-mail to v0.8.0
+* *(deps)* Update dependency undici@6 to v8.6.0
+* *(deps)* Update dependency undici@7 to v8.6.0
+* *(deps)* Update dependency electron to v43
+* *(deps)* Update module golang.org/x/text to v0.39.0
+* *(deps)* Update module code.dny.dev/ssrf to v0.3.0
+* *(deps)* Update pnpm to v11.10.0
+* *(deps)* Update ghcr.io/techknowlogick/xgo:go-1.26.x docker digest to b00957d
+* *(deps)* Update danielroe/provenance-action digest to da28a90
+* *(deps)* Update dependency go to v1.26.5
+* *(deps)* Update postgres:18 docker digest to 3111367
+* *(deps)* Update dependency undici@7 to v8.7.0
+* *(deps)* Update module golang.org/x/sys to v0.47.0
+* *(deps)* Update module golang.org/x/sync to v0.22.0
+* *(deps)* Update postgres:18 docker digest to 22c89fe
+* *(deps)* Update module golang.org/x/image to v0.44.0
+* *(deps)* Update dependency undici@6 to v8.7.0
+* *(deps)* Update module golang.org/x/term to v0.45.0
+* *(deps)* Update tiptap to v3.27.2
+* *(deps)* Update module golang.org/x/net to v0.57.0
+* *(deps)* Update module github.com/wneessen/go-mail to v0.8.1
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.20.0
+* *(deps)* Update cachix/install-nix-action action to v31.10.7
+* *(deps)* Update actions/stale action to v10.4.0
+* *(deps)* Update tiptap to v3.27.3
+* *(deps)* Update dependency @sentry/vue to v10.64.0
+* *(deps)* Update module github.com/yuin/goldmark to v1.8.4
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.3.1
+* *(deps)* Update dependency vite to v8.1.4
+* *(deps)* Update danielroe/provenance-action digest to 97ee003
+* *(deps)* Update softprops/action-gh-release action to v3.0.2
+* *(deps)* Update module github.com/mattn/go-sqlite3 to v1.14.48
+* *(deps)* Update postgres:18 docker digest to b913fd5
+* *(deps)* Update dependency postcss to v8.5.17
+* *(deps)* Update dependency dompurify to v3.4.12
+* *(deps)* Update cachix/install-nix-action action to v31.11.0
+* *(deps)* Update dependency @sentry/vue to v10.65.0
+* *(deps)* Update dependency @floating-ui/dom to v1.8.0
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.48.0
+* *(deps)* Update dependency tar to v7.5.20
+* *(deps)* Update postgres:18 docker digest to 32ca0af
+* *(deps)* Update dependency postcss to v8.5.19
+* *(deps)* Update pnpm to v11.11.0
+* *(deps)* Update actions/setup-node action to v6.5.0
+* *(deps)* Replace vendored humaecho5 with upstream humaecho adapter (#3205)
+* *(deps)* Update dependency @sentry/vue to v10.66.0
+* *(deps)* Update actions/setup-go action to v7
+* *(deps)* Update actions/setup-node action to v7
+* *(deps)* Update dependency vue-router to v5.2.0
+* *(deps)* Update pnpm to v11.13.1
+* *(deps)* Update tiptap to v3.27.4
+* *(deps)* Update module github.com/go-ldap/ldap/v3 to v3.4.14
+* *(deps)* Update module github.com/aws/smithy-go to v1.27.4
+* *(deps)* Update dependency @fortawesome/vue-fontawesome to v3.3.2
+* *(deps)* Update module github.com/labstack/echo-jwt/v5 to v5.0.2
+* *(deps)* Update dependency marked to v18.0.6
+* *(deps)* Update module github.com/aws/aws-sdk-go-v2/service/s3 to v1.105.2
+* *(deps)* Update dependency nanoid to v6
+* *(deps)* Update dependency vue to v3.5.40
+* *(deps)* Update crowdin/github-action action to v2.16.4
+* *(deps)* Update dependency pinia to v4
+* *(deps)* Update module github.com/labstack/echo/v5 to v5.3.0
+* *(deps)* Update font awesome to v7.3.1
+* *(deps)* Update tiptap to v3.28.0
+* *(deps-dev)* Bump esbuild from 0.28.0 to 0.28.1 in /frontend
+
+### Documentation
+
+* *(agents)* Reference crudable and migration skills in AGENTS.md
+* *(agents)* Add something about duplication [skip ci]
+* *(agents)* Comments should document the why, not the what
+* *(api/v2)* Add field and operation descriptions for labels
+* *(api/v2)* Mark server-controlled label and user fields read-only
+* *(api/v2)* Mark error code field read-only
+* *(api/v2)* Keep registrar godoc attached; clarify registry concurrency + ordering
+* *(api/v2)* Mark team external_id read-only
+* *(api/v2)* Tag LinkSharing fields for the v2 schema
+* *(api/v2)* Tag Webhook fields for the v2 schema
+* *(api/v2)* Add doc/readOnly tags to notification model fields
+* *(api/v2)* Tag project user share fields for the v2 schema
+* *(api/v2)* Tag SavedFilter fields for the v2 schema
+* *(api/v2)* Annotate TeamMember fields for the v2 schema
+* *(api/v2)* Tag project team share fields for the v2 schema
+* *(api/v2)* Tag bulk assignee fields for the v2 schema
+* *(api/v2)* Tag task bucket fields for the v2 schema
+* *(api/v2)* Tag project duplication fields for the v2 schema
+* *(api/v2)* Tag bulk task fields for the v2 schema
+* *(api/v2)* Tag task relation fields for the v2 schema
+* *(api/v2)* Tag reaction fields for the v2 schema
+* *(api/v2)* Tag task position fields for the v2 schema
+* *(api/v2)* Tag bulk label fields for the v2 schema
+* *(api/v2)* Tag task fields for the v2 schema
+* *(api/v2)* Tag task attachment fields for the v2 schema
+* *(api/v2)* Tag CalDAV token fields for the v2 schema
+* *(api/v2)* Tag TOTP fields for the v2 schema
+* *(audit)* Add package documentation
+* *(frontend)* Document styles architecture and token system
+* *(models)* Add doc and readOnly tags to Session fields for v2
+* *(models)* Tag APIToken fields for v2 OpenAPI reflection
+* *(models)* Tag TaskAssignee fields for the v2 schema
+* *(search)* Describe the actual constant-score relevance semantics
+* *(skills)* Hint at readOnly tags for server-controlled v2 fields
+* *(skills)* Document v2 self-registration pattern
+* *(skills)* Note v2 query params must be direct fields on the handler input
+* *(task-comments)* Trim comments to the non-obvious why
+* *(veans)* Add README with quick-start guide
+* *(veans)* AGENTS.md cheat sheet for coding agents
+* *(webhooks)* Version-qualify the events endpoint link in the events field doc
+* Add api-v2-routes skill and freeze /api/v1 ([d2a3186](d2a3186b3ed40214b9c385284868d7f10e573811))
+* Redirect translation requests to translation guide ([a35518a](a35518a099b3c5561a06e43af27608af5f93397b))
+* Trim wordy comments to load-bearing whys ([fb4bca3](fb4bca34ddd9ce2ed55bc7c184255a6f418119d6))
+* Trim wordy comments in v2 notifications ([604e585](604e5850bc32d95df22141083b44a83a53a290a5))
+* Update contribution guidelines about AI generated code ([afbfda5](afbfda58d50ee8714dd920c2cdc504415f8ba256))
+* Fix typo in autotls.enabled description ([123e480](123e4809f30433d71c986a3c8eab251af9dae894))
+* Fix @Success 200 -> 201 on 5 PUT/Create endpoints ([44ed50d](44ed50d508d4da1c7bc46f73c8cd6ac01eafc7c4))
+
+### Features
+
+* *(a11y)* Add i18n keys for accessibility labels
+* *(a11y)* Add skip navigation link and main landmark on auth pages
+* *(a11y)* Add accessible names to icon-only buttons
+* *(a11y)* Add aria-live region to toast notifications
+* *(a11y)* Add accessible names to modal dialogs
+* *(a11y)* Use autocomplete='new-password' on register form
+* *(a11y)* Fix logo link accessible name to include 'Vikunja'
+* *(a11y)* Associate form errors with input fields
+* *(a11y)* Add labels to color picker and sort select
+* *(a11y)* Fix heading hierarchy across pages
+* *(a11y)* Add descriptive labels to task checkboxes
+* *(a11y)* Associate errors with inputs in FormInput and FormSelect
+* *(admin)* Add /admin route group and overview endpoint
+* *(admin)* Add users/projects list endpoints and is_admin patch
+* *(admin)* Add user status and delete endpoints with reassign owner
+* *(admin)* Add create-user endpoint
+* *(admin)* Add typed models for admin users and overview
+* *(admin)* Add frontend admin shell, views, services, and routes
+* *(admin)* Wire up /admin route group with all endpoints
+* *(agents)* Add crudable skill for CRUDable + permissions guidance
+* *(agents)* Add migration skill for DB migration safety
+* *(api)* Add GET /projects/:project/tasks/by-index/:index endpoint
+* *(api)* Bot token support via /tokens CRUD and bot_users_enabled flag
+* *(api)* Accept project identifier in by-index task route
+* *(api)* Lowercase project identifier before by-index lookup
+* *(api)* Add v2 markdown conversion helpers
+* *(api)* Exchange rich-text fields as markdown on v2
+* *(api-v2)* Vendor scalar api docs bundle
+* *(api/v2)* Declare JWTKeyAuth security scheme
+* *(api/v2)* Enable AutoPatch for automatic JSON Merge Patch
+* *(api/v2)* Port Label to per-operation Huma handlers
+* *(api/v2)* Serve Scalar docs UI at /api/v2/docs
+* *(api/v2)* Preserve Vikunja numeric error code in problem+json
+* *(api/v2)* Add task duplicate action (#2815)
+* *(api/v2)* Add project view routes
+* *(api/v2)* Gate admin routes by feature + instance admin
+* *(api/v2)* Serve user avatars
+* *(api/v2)* Upload user avatar via multipart
+* *(api/v2)* Add team CRUD endpoints
+* *(api/v2)* Add nested task comment CRUD
+* *(api/v2)* Add shared conditional read helper and document list params
+* *(api/v2)* Report max_permission on label and project-view reads
+* *(api/v2)* Add Project CRUD on /api/v2
+* *(api/v2)* Report max_permission on task comment reads
+* *(api/v2)* Report max_permission on team reads
+* *(api/v2)* Add session list/delete on /api/v2
+* *(api/v2)* Add task labels (create/list/delete) on /api/v2
+* *(api/v2)* Add API token list/create/delete on /api/v2
+* *(api/v2)* Add bot user CRUD on /api/v2
+* *(api/v2)* Add link sharing (create/read/list/delete)
+* *(api/v2)* Add task assignees (create/list/delete) on /api/v2
+* *(api/v2)* Add project webhooks CRUD on /api/v2
+* *(api/v2)* Enforce validation centrally in the Register wrapper
+* *(api/v2)* Return 422 with invalid_fields for validation errors
+* *(api/v2)* Add subscribe/unsubscribe on /api/v2
+* *(api/v2)* Add notifications list/mark-read + mark-all on /api/v2
+* *(api/v2)* Add project user shares CRUD on /api/v2
+* *(api/v2)* Add saved filter CRUD on /api/v2
+* *(api/v2)* Add team members (add/remove/admin-toggle) on /api/v2
+* *(api/v2)* Add project team shares CRUD on /api/v2
+* *(api/v2)* Add bulk assignee replacement on /api/v2
+* *(api/v2)* Add task read-status marking on /api/v2
+* *(api/v2)* Add kanban task-bucket moves on /api/v2
+* *(api/v2)* Add project duplication on /api/v2
+* *(api/v2)* Add bulk task updates on /api/v2
+* *(api/v2)* Add task relations on /api/v2
+* *(api/v2)* Add reactions on /api/v2
+* *(api/v2)* Add task position updates on /api/v2
+* *(api/v2)* Add bulk label replacement on /api/v2
+* *(api/v2)* Add task CRUD on /api/v2
+* *(api/v2)* Add task attachments on /api/v2
+* *(api/v2)* Add CalDAV tokens on /api/v2
+* *(api/v2)* Add TOTP 2FA on /api/v2
+* *(api/v2)* Add user webhooks on /api/v2
+* *(api/v2)* Add user account-deletion flow on /api/v2
+* *(api/v2)* Add user account/settings on /api/v2
+* *(api/v2)* Add task collection (task lists) on /api/v2
+* *(api/v2)* Port OAuth migrators (Todoist, Trello, Microsoft To-Do)
+* *(api/v2)* Add admin actions on /api/v2
+* *(api/v2)* Add project background endpoints
+* *(api/v2)* Add public instance info endpoint
+* *(api/v2)* Add available webhook events endpoint
+* *(api/v2)* Add user search endpoints
+* *(api/v2)* Add public auth routes (register, password, confirm, link-share)
+* *(api/v2)* Add OAuth 2.0 token and authorize endpoints
+* *(api/v2)* Add token-check, token-routes and link-share renew endpoints
+* *(api/v2)* Add project background upload on /api/v2
+* *(api/v2)* Add file migrators (vikunja-file, ticktick, wekan) on /api/v2
+* *(api/v2)* Add the generic CSV importer on /api/v2
+* *(api/v2)* Add project background download and unsplash proxies
+* *(api/v2)* Add e2e testing-support endpoints on /api/v2
+* *(api/v2)* Add totp qr code endpoint
+* *(api/v2)* Add user data export endpoints
+* *(api/v2)* Add login and logout on /api/v2
+* *(api/v2)* Add OpenID Connect callback on /api/v2
+* *(api/v2)* Port refresh-token endpoint to /api/v2
+* *(api/v2)* Expose healthcheck as a documented endpoint
+* *(api/v2)* Expose notifications atom feed in the OpenAPI spec
+* *(api/v2)* Expose websocket endpoint under /api/v2
+* *(api/v2)* Add kanban bucket CRUD endpoints
+* *(audit)* Add audit logging package
+* *(audit)* Wire request-meta middleware and writer initialization
+* *(audit)* Register the audited event surface
+* *(audit)* Attribute failed logins to the originating request
+* *(audit)* Emit the login event for the OAuth code exchange
+* *(auth)* Include is_admin in JWT claims
+* *(auth)* Reject password login for bot users
+* *(auth)* Add GetAuthFromContext for Huma handlers
+* *(auth)* Add OpenID provider availability monitoring and retry logic (#3145)
+* *(avatar)* Use distinct marble palette for bot users
+* *(build)* Add centralized release magefile module
+* *(caldav)* Reject basic auth for bot users
+* *(caldav)* Serialize task descriptions as markdown
+* *(caldav)* Emit STATUS:NEEDS-ACTION for incomplete todos
+* *(caldav)* Implement RFC 6578 sync-collection REPORT to sync task deletions
+* *(ci)* Add multi-architecture support for OS package builds (#2610)
+* *(ci)* Add publish-repos job for OS package repository metadata
+* *(ci)* Sign RPM packages with GPG via nfpm
+* *(ci)* Sign archlinux packages with GPG for pacman verification
+* *(ci)* Add release-binaries and release-os-package composite actions
+* *(cli)* Add user set-admin command (license-gated)
+* *(client)* Add parent_project_id and position to Project wire type
+* *(comments)* Treat quoted comment authors as implicit mentions
+* *(comments)* Reply action with prefilled quote and jump-to-original chevron
+* *(config)* Add license.key configuration option
+* *(config)* Add service.enablebotusers flag
+* *(config)* Add audit logging config keys
+* *(date)* Show the matching preset name on the date-range button
+* *(date)* Accept a null modelValue in DatepickerWithRange
+* *(db)* Add license_status table migration
+* *(db)* Add is_admin column to users
+* *(editor)* Add lazy emoji data loader and filter
+* *(editor)* Add EmojiList popup component
+* *(editor)* Add emoji suggestion handler
+* *(editor)* Add emoji TipTap extension
+* *(editor)* Register emoji autocomplete extension
+* *(editor)* Preserve comment-id on blockquotes
+* *(editor)* Add focus style around the whole editor
+* *(editor)* Allow setting image alt text (#3206)
+* *(editor)* Prompt for alt text when inserting an image
+* *(events)* Carry request metadata onto dispatched event messages
+* *(events)* Add auth boundary events
+* *(filters)* Add Tomorrow option to date range dropdown
+* *(filters)* Generate open task saved filter on user creation
+* *(filters)* Translate My Open Tasks title in frontend
+* *(frontend)* Add FormInput primitive component
+* *(frontend)* Add FormSelect primitive component
+* *(frontend)* Add FormCheckbox primitive component
+* *(frontend)* Expose isAdmin on current user and add config feature check
+* *(frontend)* Introduce TimeDisplay component
+* *(frontend)* Add bot user model support and badge
+* *(frontend)* Add bot settings page and services
+* *(frontend)* Apply quick add magic when creating related tasks
+* *(frontend)* Add Atom feed settings page and notifications discovery (#2760)
+* *(frontend)* Preload assignee list on click with current user first (#2704)
+* *(i18n)* Add strings for quick add default reminders
+* *(i18n)* Make Greek available in the language selector
+* *(i18n)* Add persian to list of selectable languages
+* *(init)* Integrate license validation into startup and shutdown
+* *(init)* Use the hierarchical fuzzy picker for project selection
+* *(input)* Add quick-select shortcuts to the Datepicker
+* *(keyvalue)* Add RememberFor for TTL-cached values
+* *(labels)* Let bot owners manage labels created by their bots
+* *(license)* Add license key validation package
+* *(license)* Expose enabled_pro_features on /info
+* *(license)* Add runtime state snapshot and reload helpers
+* *(logging)* Include user agent in HTTP access log
+* *(mage)* Support existing branches in dev:prepare-worktree
+* *(magefile)* Bidirectional translation key validation
+* *(magefile)* Detect indirect api translation key references
+* *(metrics)* Invalidate the user count cache on registration
+* *(middleware)* Add RequireFeature and RequireSiteAdmin 404 gates
+* *(middleware)* Normalize PHP-style array query params
+* *(migration)* Add bot_owner_id column to users
+* *(migration)* Import recurring tasks from todoist
+* *(migration/wekan)* Import attachments from board export
+* *(models)* Add BotUser CRUD wrapper
+* *(models)* Accept v2 PATCH as alias for PUT in API token matcher
+* *(models)* Let TaskCollection force a flat task list
+* *(oauth2server)* Accept loopback redirect URIs
+* *(packaging)* Add systemd security hardening to service
+* *(permissions)* Site admins bypass all Can* checks (license-gated)
+* *(picker)* Add hierarchical fuzzy project picker
+* *(pro)* Admin password reset for existing users (#3085)
+* *(project)* Add before-delete slot to ProjectSettingsDropdown
+* *(projects)* Always store identifiers as uppercase (#2775)
+* *(projects)* Make duplicating shares opt-in (#2932)
+* *(projects)* Make gantt chart zoom in if there are space available
+* *(reminders)* Add allowAbsolute prop to ReminderDetail
+* *(richtext)* Add HTML to Markdown conversion
+* *(richtext)* Add Markdown to HTML conversion with mention rebuild
+* *(richtext)* Add markdown-domain change detection
+* *(routes)* Scaffold /api/v2 Echo group
+* *(search)* Rank ParadeDB search results by relevance
+* *(search)* Add explicit relevance sort field
+* *(search)* Boost title matches 1.5x over description matches
+* *(settings)* Add quickAddDefaultReminders field to frontend settings
+* *(settings)* Surface quick add default reminders in user settings
+* *(sharing)* Sort team members by display name in UI and by ID in API (#2784)
+* *(task)* Move new comment form to match sort order (#2789)
+* *(tasks)* Add GetTaskByProjectAndIndex resolver
+* *(tasks)* Enforce unique (project_id, index) via migration
+* *(tasks)* Apply default reminders to quick-add tasks with due date
+* *(tasks)* Soft-delete tasks with permanent deletion after 30 days (#3119)
+* *(time-tracking)* Add the time_entries table migration
+* *(time-tracking)* Add the time_entries model
+* *(time-tracking)* Filter time entries with the task DSL
+* *(time-tracking)* Expose time entries on the v2 API
+* *(time-tracking)* Dispatch time-entry events
+* *(time-tracking)* Count tracked time entries per task
+* *(time-tracking)* Broadcast timer changes over websocket
+* *(time-tracking)* Let clients subscribe to timer events
+* *(time-tracking)* Add the v2 time-entry service
+* *(time-tracking)* Add the time-tracking store
+* *(time-tracking)* Extract the smart-fill start computation
+* *(time-tracking)* Add the time-entry form
+* *(time-tracking)* Add the time-entry list
+* *(time-tracking)* Add the timer badge
+* *(time-tracking)* Show a running-elsewhere badge in the header
+* *(time-tracking)* Add the sidebar navigation entry
+* *(time-tracking)* Add the task-detail time-tracking section
+* *(time-tracking)* Add the time-tracking view
+* *(time-tracking)* Configure the smart-fill start time in settings
+* *(time-tracking)* Add favicon indicator for active time tracking sessions (#2937)
+* *(user)* Add IsAdmin field to User struct
+* *(user)* Extract last-admin guard and close invariant gaps
+* *(user)* Support all weekdays as week start
+* *(user)* Add BotOwnerID field and IsBot helper
+* *(user)* Add bot-related error types
+* *(user)* Reserve bot- username prefix for regular signup
+* *(user)* Add CreateBotUser
+* *(user)* Always include own bots in user search
+* *(veans)* Scaffold Go module
+* *(veans)* Add stable error envelope and code constants
+* *(veans)* Add JSON HTTP client and wire types
+* *(veans)* Add cobra root and version subcommand
+* *(veans)* Add credential store with keychain, env, and file backends
+* *(veans)* Add transient human auth flow
+* *(veans)* Add .veans.yml schema and config helpers
+* *(veans)* Add canonical status to bucket-title mapping
+* *(veans)* Require APIToken.ExpiresAt with FarFuture sentinel
+* *(veans)* Discover /routes for permission-group negotiation
+* *(veans)* Orchestrate init bootstrap from probe to config write
+* *(veans)* Wire init cobra command
+* *(veans)* Add shared command runtime and git branch helper
+* *(veans)* Add list command with filters and JSON output
+* *(veans)* Add show command with PROJ-NN/#NN ID resolver
+* *(veans)* Add label get-or-create helper
+* *(veans)* Add create command with labels and relations
+* *(veans)* Add update command with description and status transitions
+* *(veans)* Add claim command for assigning and bucket transition
+* *(veans)* Add prime command for agent prompt injection
+* *(veans)* Add api passthrough command
+* *(veans)* Add login command for token rotation
+* *(veans)* Use OAuth 2.0 Authorization Code + PKCE as default auth
+* *(veans)* Add browser launcher helpers for OAuth flow
+* *(veans)* Switch OAuth handshake to a loopback HTTP server
+* *(veans)* Reuse owned bot or prompt for fresh name on collision
+* *(veans)* Match existing bucket titles via case-insensitive alias table
+* *(veans)* Install agent hooks during init instead of just printing
+* *(veans)* URL discovery on init, port of the frontend's heuristic
+* *(veans)* Offer "create a new project" from init's picker
+* *(veans)* Make the HTTP client timeout configurable via .veans.yml
+* *(veans)* Warn when Chain.Set falls back past a failed backend
+* *(veans)* Build and publish veans alongside vikunja
+* Add Mage targets for OS package repository metadata ([8cc1a0b](8cc1a0b30f126268952dde1d1c0aaf477e8c2b1c))
+* Add license comments for agents and humans ([35f1839](35f183979c00580bb0f0ed5606587e4cb8723249))
+* Support filter_include_nulls in project view configuration ([e97b629](e97b629d6c35319bf46a8f1c8779a11a43e5d57d))
+* Always enable bot users ([d9a5958](d9a5958bb872f03af378b0acad5774f039ec5440))
+* Add Atom feed for user notifications with API token auth (#2758) ([70393f3](70393f38d21d6f2004cbf468c02e6fcf35c13ad2))
+* Vendor humaecho adapter for echo/v5 ([5fa6d66](5fa6d66c41d29b8b47a97a184b33de9827a55d4e))
+* Auto-redirect to OIDC provider on login when it's the only option ([18ee92f](18ee92f22782be62e914131bf76a577a4567215f))
+* Audit admin user and project mutations ([6f21c57](6f21c57c78a5ce1058a93e73e3019d8979acdf16))
+* Audit admin reads and denied admin access ([3a666da](3a666da860aa85f0bf954fd14d3aa2ede5c816a5))
+
+### Miscellaneous Tasks
+
+* *(a11y)* Add lint rule flagging icon-only buttons without accessible name
+* *(agents)* Remove CRUSH.md
+* *(ci)* Remove stale label from PR when there is activity
+* *(ci)* Don't report duplicate dependencies
+* *(ci)* Update ci service containers at most once a week
+* *(config)* Disable icon changes by default
+* *(dev)* Move devcontainer config to .devcontainer/ directory
+* *(dev)* Remove leftover .envrc
+* *(frontend)* Enable vue/multi-word-component-names with legacy allowlist
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Remove unused backend translation keys
+* *(i18n)* Remove unused frontend translation keys
+* *(lint)* Suppress contextcheck on OIDC provider init call sites
+* *(mage)* Silence gosec on worktree branch-exists helpers
+* *(search)* Consolidate scoring comments and deduplicate test helpers
+* *(veans)* Add magefile build and lint targets
+* *(veans)* Gitignore built binary
+* *(veans)* Add veans-local golangci config
+* *(veans)* Apply veans golangci pass across sources
+* Update stale workflow ([12f0752](12f07529e567dc15ee660fb827f8fbd4e6bd283b))
+* Add mise.toml to pin tool versions ([2b38c2a](2b38c2a19693bf514fd5ffcb4babb004cd366161))
+
+### Other
+
+* *(other)* Add AI-powered auto-labeling for new issues and PRs
+* *(other)* Add tests using mysql-8
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Run frontend translation check as a hard failure
+* *(other)* Improve modal responsive sizing with inline-size constraints (#2716)
+* *(other)* Register custom actionlint runner labels
+* *(other)* Prebuild static build/mage for repo metadata containers
+* *(other)* Move build-mage prep job out of test.yml into release.yml
+* *(other)* Reduce Preview docker build cache to mode=min to fit GHA cache budget
+* *(other)* Stop Preview docker build from using GHA cache (fixes "failed to reserve cache")
+* *(other)* Let stale bot close PRs waiting for reply
+* *(other)* Extract golangci-lint setup into reusable action (#3142)
+* *(time-tracking)* Add the time-tracking UI strings
+* *(veans)* Add veans-e2e workflow
+* *(veans)* Add veans-lint job to Test workflow
+* *(veans)* Add fast veans-test job for unit tests
+
+### Performance
+
+* *(tasks)* Batch task position existence check into one query
+
+### Refactor
+
+* *(admin)* Extract shared admin overview, user-create and user-view helpers
+* *(admin)* Share user-mutation logic between v1 and v2
+* *(api/v2)* Register upload route as RegisterAvatarUploadRoutes
+* *(api/v2)* Self-register resource routes via init() registry
+* *(api/v2)* Align project max_permission to the shared embed pattern
+* *(api/v2)* Dedup task collection query params via exported embed
+* *(api/v2)* Dedup the admin user-mutation handlers
+* *(api_tokens)* Preserve pre-set OwnerID in Create
+* *(audit)* Move package docs into entry.go
+* *(auth)* Extract shared auth/token business logic for v2 reuse
+* *(auth)* Extract transport-agnostic login, logout and OIDC cores
+* *(avatar)* Share avatar resolution between v1 and v2 handlers
+* *(avatar)* Share avatar-upload logic between v1 and v2 handlers
+* *(background)* Share upload validation between v1 and v2 handlers
+* *(background)* Extract download + unsplash-proxy logic for reuse
+* *(ci)* Split publish-repos into matrix with native containers
+* *(ci)* Call release composite actions from release.yml
+* *(ci)* Derive composite-action inputs from project name
+* *(config)* Add PRO_FEATURE constants for licensed features
+* *(events)* Pass context to DispatchPending directly
+* *(events)* Use a concrete doer on project and team events
+* *(feeds)* Extract atom feed builder + basic-auth validator for reuse
+* *(files)* Extract WriteFileDownload shared by attachment download
+* *(frontend)* Inline modal-card-head-padding in Card footer
+* *(frontend)* Inline modal-content-spacing-tablet in PDF preview
+* *(frontend)* Drop unused Bulma modal partial import
+* *(frontend)* Drop unused Bulma form/file partial import
+* *(frontend)* Replace for...in usages and forbid via lint rule
+* *(frontend)* Replace reverse-index splice loops with findIndex/filter
+* *(frontend)* Port is-pulled-right locally and drop Bulma float helper
+* *(frontend)* Drop Bulma components/media import
+* *(frontend)* Drop Bulma components/card import (#2639)
+* *(frontend)* Migrate .box to Card and drop Bulma elements/box (#2640)
+* *(frontend)* Drop Bulma components/navbar import
+* *(frontend)* Support two-col layout on FormField
+* *(frontend)* Use form primitives in user settings General view
+* *(frontend)* Use form primitives in WebhookManager
+* *(frontend)* Use FormCheckbox for remember-me on Login
+* *(frontend)* Port pagination rules into BasePagination and drop Bulma import
+* *(frontend)* Extract PaginationItem to own pagination-link styling
+* *(frontend)* Extract SideNavShell for admin and user settings
+* *(frontend)* Port checkbox-radio rules into FormCheckbox and drop Bulma import
+* *(handler)* Extract DoCreate from CreateWeb
+* *(handler)* Extract DoReadOne from ReadOneWeb
+* *(handler)* Extract DoReadAll from ReadAllWeb
+* *(handler)* Extract DoUpdate from UpdateWeb
+* *(handler)* Extract DoDelete from DeleteWeb
+* *(handler)* Return domain error for forbidden instead of echo.HTTPError
+* *(license)* Return typed feature slice for JSON encoding
+* *(magefile)* Consolidate api+frontend translation checks into one task
+* *(metrics)* Count entities on demand with a TTL cache
+* *(metrics)* Drop the user count listener
+* *(metrics)* Drop the project/task/team/attachment count listeners
+* *(metrics)* Drop inline file count tracking
+* *(migration)* Extract file/CSV migrate orchestration into shared funcs
+* *(models)* Remove *Arr helper fields now handled by normalizer
+* *(notifications)* Refresh users via an explicit type switch
+* *(projects)* Use getAllProjectsForUser in getProjectsToDelete (#2616)
+* *(register)* Use models.RegisterUser helper
+* *(reminders)* Make Reminders.vue take ITaskReminder[] directly
+* *(task-attachment)* Share upload+download via pkg/web/files for v1+v2
+* *(tasks)* Drop in-memory task dedup, rely on unique index
+* *(testing)* Extract e2e fixture reset/truncate into shared package
+* *(time-tracking)* Drop the now-redundant duration clamp in the entry list
+* *(user)* Remove the now-empty listeners file
+* *(user)* Extract shared account orchestration into models/user/shared for v1+v2
+* *(user)* Share user-search logic between v1 and v2
+* *(veans)* Migrate API client from v1 to v2
+* *(webhooks)* Mask write-only credentials in the model so create/update never echo them
+* Update reprepro-dist-conf for multi-arch with stable and unstable suites ([540beef](540beefabcc74f00b69bd23d455d765e390509fb))
+* Drop Release.* from project magefiles and point Dockerfile at build/ ([304fe55](304fe55da70e1dfbae4f800b93e0307df390fa4a))
+* Extract preprocessFilterString from task filter parsing ([26c067c](26c067cc3899ac77ea4bc3ba2250b71d4a5cb864))
+
+### Testing
+
+* *(admin)* Add webtests for /admin/* endpoints and share bypass
+* *(admin)* Add e2e tests for admin panel
+* *(api)* Cover positive project-identifier resolution
+* *(api/v2)* Label round-trip, ETag, PATCH, error shapes
+* *(api/v2)* Defer session close in admin webtest
+* *(api/v2)* Defer license reset in admin webtest
+* *(api/v2)* Assert admin project id via structured json
+* *(api/v2)* Cover include_public team surfacing and its config gate
+* *(api/v2)* Port full v1 team coverage (permission matrix, public discovery, exact cardinality, DB persistence)
+* *(api/v2)* Port full v1 label coverage
+* *(api/v2)* Port full v1 project view coverage
+* *(api/v2)* Port full v1 admin projects coverage
+* *(api/v2)* Prove author-only comment restriction with a writer non-author
+* *(api/v2)* Port full v1 task comment coverage (permission matrix, IDOR, search)
+* *(api/v2)* Port full v1 avatar coverage to TestAvatar
+* *(api/v2)* Port full v1 TaskDuplicate coverage
+* *(api/v2)* Port full v1 project coverage (permission matrix, archived)
+* *(api/v2)* Isolate project tests per-handler, not via shared harness
+* *(api/v2)* Strengthen project max_permission assertions
+* *(api/v2)* Assert task comment max_permission and per-caller ETag
+* *(api/v2)* Assert team max_permission + etag reflects permission
+* *(api/v2)* Assert both ETags non-empty in team permission test
+* *(api/v2)* Webhook CRUD permission matrix and config gate
+* *(api/v2)* Cover central validation (422, invalid_fields, full-body webhook updates)
+* *(api/v2)* Split the B1 webtests into per-route files
+* *(api/v2)* Cover ported auth/token endpoints
+* *(api/v2)* Cover the v2 file and CSV migrator endpoints
+* *(api/v2)* Cover background download and unsplash proxy routes
+* *(api/v2)* Use cross-engine datetime literals in testing webtest
+* *(api/v2)* Cover v2 login, logout and OIDC gating
+* *(audit)* Cover listener pipeline, license gating and rotation
+* *(auth)* Cover env-var string booleans for oidc providers (#2599)
+* *(e2e)* Mirror task id to index in TaskFactory
+* *(e2e)* Cover quick add auto-attaching default reminders
+* *(e2e)* Add user settings nav helper
+* *(e2e)* Add SessionFactory with sha256 token hashing
+* *(e2e)* Add WebhookFactory
+* *(e2e)* Add TotpFactory with fixed seed
+* *(e2e)* Add otplib dev dep for TOTP tests
+* *(e2e)* Cover TOTP enrollment flow
+* *(e2e)* Cover TOTP disable flow
+* *(e2e)* Assert wrong TOTP passcode is rejected
+* *(e2e)* Cover caldav token creation end-to-end
+* *(e2e)* Cover caldav token deletion
+* *(e2e)* Assert wrong password blocks email change
+* *(e2e)* Cover sessions list with current marker
+* *(e2e)* Assert session delete breaks refresh
+* *(e2e)* Assert current session has no delete control
+* *(e2e)* Cover account deletion request flow
+* *(e2e)* Cover scheduled deletion cancel flow
+* *(e2e)* Cover data export request flow
+* *(e2e)* Validate webhook target url
+* *(e2e)* Require at least one webhook event
+* *(e2e)* Create and delete a webhook
+* *(e2e)* Drop unused authenticatedPage from webhooks beforeEach
+* *(e2e)* Cover attachment deletion
+* *(e2e)* Assert readers cannot delete attachments
+* *(e2e)* Cover recurrence preset buttons
+* *(e2e)* Assert recurring task regenerates on complete
+* *(e2e)* Cover monthly repeat mode UI
+* *(e2e)* Drop unused authenticatedPage from recurrence beforeEach
+* *(e2e)* Add TeamProjectFactory
+* *(e2e)* Cover team READ permission boundary
+* *(e2e)* Cover team READ_WRITE permission
+* *(e2e)* Cover team share revocation
+* *(e2e)* Cover link share password protection
+* *(e2e)* Cover link share permission tiers
+* *(e2e)* Widen recurrence due-date tolerance to 5s
+* *(e2e)* Await DELETE in session revoke test to avoid race
+* *(e2e)* Await DELETE in caldav token revoke test to avoid race
+* *(e2e)* Use ISOString for date seeding to prevent timezone parsing errors
+* *(e2e)* Cover comment replies end-to-end
+* *(e2e)* Seed hashed user tokens in TokenFactory (GHSA-r6w9-259g-gwrv)
+* *(e2e/kanban)* Cover recurring task drag to done bucket (#2618)
+* *(e2e/kanban)* Seed the view only once with done_bucket_id
+* *(editor)* Add e2e for emoji autocomplete
+* *(frontend)* Update form primitive tests for admin input usage
+* *(kanban)* Cover moveTaskToBucket
+* *(keyvalue)* Cover RememberFor TTL caching
+* *(metrics)* Verify counts are read from the right table
+* *(middleware)* Lock in array-param order preservation
+* *(modal)* Cover open race for #2590
+* *(project)* Pin archived propagation aggregation in ReadAll CTE
+* *(search)* Pin ParadeDB matching contract with a behavioral test suite
+* *(tasks)* Pin subtask root placement for fuzzy search and multi-parent scopes
+* *(time-tracking)* Cover the time_entries model
+* *(time-tracking)* Cover the v2 time-entry routes
+* *(time-tracking)* Add end-to-end coverage
+* *(trello)* Serve testimage from local server instead of vikunja.io
+* *(trello)* Drop redundant BackgroundImage assignment in getTestBoard
+* *(user)* Add tests for updating week start day and verifying date picker behavior
+* *(veans)* Add e2e suite covering init, tasks, claim, prime flows
+* *(veans)* Pin runUpdate's call-order invariants
+* *(veans)* Cover credential-store hardening invariants
+* *(veans)* Cover the stable error-envelope contract
+* *(veans)* Cover client error mapping, pagination, and 404→BOT_USERS_UNAVAILABLE
+* *(veans)* Cover OAuth callback handler error paths
+* *(veans)* Cover bootstrap validators and prompt UX
+* Assert I18nParams keys against en.json translation placeholders ([c34972a](c34972a6baa86cb1f611436bbb66c5ea35ab31d0))
+* Cover getErrorText interpolation of i18n_params ([f405fc5](f405fc5a7812f938eecf25728671ea8d9b69a2d4))
+
 ## [2.3.0] - 2026-04-09
 
 ### Bug Fixes

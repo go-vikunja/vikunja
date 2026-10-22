@@ -1,6 +1,10 @@
 <template>
 	<NodeViewWrapper class="mention-user">
-		<img :src="avatarUrl">
+		<UserAvatar
+			:user="user"
+			:size="32"
+			class="mention-user__avatar"
+		/>
 		<span class="mention__label">
 			{{ node.attrs.label ?? node.attrs.id }}
 		</span>
@@ -8,24 +12,14 @@
 </template>
 
 <script lang="ts" setup>
-import { fetchAvatarBlobUrl } from '@/models/user'
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
-import { watch, ref } from 'vue'
-import type { IUser } from '@/modelTypes/IUser'
+import { computed } from 'vue'
+
+import UserAvatar from '@/components/misc/UserAvatar.vue'
 
 const props = defineProps(nodeViewProps)
 
-const avatarUrl = ref('')
-
-watch(
-	() => props.node.attrs.id,
-	async () => {
-		const username = props.node.attrs.id as string
-		const url = await fetchAvatarBlobUrl({username} as IUser, 32)
-		avatarUrl.value = url as string
-	},
-	{immediate: true},
-)
+const user = computed(() => ({username: props.node.attrs.id as string}))
 </script>
 
 <style lang="scss">
@@ -36,7 +30,7 @@ watch(
     inset-block-end: 0;
     padding-inline-start: 1.75rem;
 
-    > img {
+    .mention-user__avatar {
         border-radius: 100%;
         inline-size: 1.5rem;
         block-size: 1.5rem;

@@ -4,6 +4,7 @@ import vueTsEslintConfig from '@vue/eslint-config-typescript'
 import pluginDepend from 'eslint-plugin-depend'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
+import iconButtonAccessibleName from './eslint-rules/icon-button-accessible-name.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -15,10 +16,42 @@ export default [
 	{
 		ignores: [
 			'**/*.test.ts',
+			'src/client/generated/**',
 		],
 	},
 	{
+		plugins: {
+			vikunja: {
+				rules: {
+					'icon-button-accessible-name': iconButtonAccessibleName,
+				},
+			},
+		},
 		rules: {
+			'vikunja/icon-button-accessible-name': 'error',
+			'no-restricted-imports': ['error', {
+				paths: [
+					{
+						name: 'axios',
+						message: 'Use the generated v2 client.',
+					},
+				],
+				patterns: [
+					{
+						group: [
+							'axios/*',
+							'**/services',
+							'**/services/**',
+							'**/models',
+							'**/models/**',
+							'**/modelTypes',
+							'**/modelTypes/**',
+						],
+						message: 'Use generated API types and resource queries.',
+					},
+				],
+			}],
+
 			'quotes': ['error', 'single'],
 			'comma-dangle': ['error', 'always-multiline'],
 			'semi': ['error', 'never'],

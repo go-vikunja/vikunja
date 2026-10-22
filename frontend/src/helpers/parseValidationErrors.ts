@@ -1,6 +1,7 @@
-export interface ValidationError {
+import type {VikunjaErrorModel} from '@/client/generated'
+
+export interface ValidationError extends Pick<VikunjaErrorModel, 'code' | 'errors'> {
 	message?: string
-	code?: number
 	invalid_fields?: string[]
 }
 
@@ -19,13 +20,18 @@ export interface ValidationError {
  * })
  */
 export function parseValidationErrors(error: ValidationError | null | undefined): Record<string, string> {
-	if (!error || !error.invalid_fields || error.invalid_fields.length === 0) {
+	if (!error) {
 		return {}
 	}
 
 	const fieldErrors: Record<string, string> = {}
+	for (const field of error.errors ?? []) {
+		if (field.location?.startsWith('body.') && field.message) {
+			fieldErrors[field.location.slice(5)] = field.message
+		}
+	}
 
-	for (const fieldError of error.invalid_fields) {
+	for (const fieldError of error.invalid_fields ?? []) {
 		// Split on first colon to separate field name from message
 		const colonIndex = fieldError.indexOf(':')
 		if (colonIndex === -1) {

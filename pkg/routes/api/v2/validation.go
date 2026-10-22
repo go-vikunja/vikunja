@@ -19,6 +19,8 @@ package apiv2
 import (
 	"reflect"
 	"sort"
+	"strconv"
+	"strings"
 
 	"code.vikunja.io/api/pkg/models"
 
@@ -40,18 +42,66 @@ func validateInputBody(in any) error {
 	}
 	// Only struct bodies carry `valid:` tags. Binary/primitive bodies (e.g. the
 	// avatar endpoint's []byte) would make govalidator.ValidateStruct error out.
-	if reflect.Indirect(body).Kind() != reflect.Struct {
+	body = reflect.Indirect(body)
+	if body.Kind() != reflect.Struct {
 		return nil
 	}
-	if _, err := govalidator.ValidateStruct(body.Interface()); err != nil {
-		byField := govalidator.ErrorsByField(err)
-		fields := make([]string, 0, len(byField))
-		for field, msg := range byField {
-			fields = append(fields, field+": "+msg)
-		}
-		// Map iteration order is non-deterministic; sort for a stable errors[].
-		sort.Strings(fields)
-		return models.InvalidFieldError(fields)
+
+	fields := append(structErrors(body.Interface(), ""), pointerSliceErrors(body)...)
+	if len(fields) == 0 {
+		return nil
 	}
-	return nil
+	// Map iteration order is non-deterministic; sort for a stable errors[].
+	sort.Strings(fields)
+	return models.InvalidFieldError(fields)
+}
+
+// structErrors returns govalidator failures as "<prefix><field>: <message>", the shape invalidFieldDetails expects.
+func structErrors(s any, prefix string) []string {
+	_, err := govalidator.ValidateStruct(s)
+	if err == nil {
+		return nil
+	}
+	byField := govalidator.ErrorsByField(err)
+	fields := make([]string, 0, len(byField))
+	for field, msg := range byField {
+		fields = append(fields, prefix+field+": "+msg)
+	}
+	return fields
+}
+
+// pointerSliceErrors validates elements of []*T body fields, which govalidator walks past without ever applying their `valid:` tags.
+func pointerSliceErrors(body reflect.Value) []string {
+	var fields []string
+	t := body.Type()
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		// readOnly fields are accepted on write so clients can round-trip a GET response; the models ignore them.
+		if f.PkgPath != "" || f.Tag.Get("readOnly") == "true" || f.Tag.Get("valid") == "-" {
+			continue
+		}
+		if f.Type.Kind() != reflect.Slice || f.Type.Elem().Kind() != reflect.Pointer || f.Type.Elem().Elem().Kind() != reflect.Struct {
+			continue
+		}
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+		if name == "-" {
+			continue
+		}
+		if name == "" {
+			name = f.Name
+		}
+		v := body.Field(i)
+		if !v.CanInterface() {
+			continue
+		}
+		for j := 0; j < v.Len(); j++ {
+			el := v.Index(j)
+			if el.IsNil() {
+				continue
+			}
+			// "tasks[1]." matches how Huma locates its own array-element errors.
+			fields = append(fields, structErrors(el.Interface(), name+"["+strconv.Itoa(j)+"].")...)
+		}
+	}
+	return fields
 }

@@ -315,6 +315,52 @@ func TestUpdateTaskPositionWithConflictResolution(t *testing.T) {
 
 		assert.NotEqual(t, pos1.Position, pos2.Position)
 	})
+
+	t.Run("falls back to full recalculation when neighbours are too close", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("project_view_id = ?", 93).Delete(&TaskPosition{})
+		require.NoError(t, err)
+
+		// The gap between the neighbours of the target position only leaves
+		// 0.01/3 for two conflicting tasks, less than MinPositionSpacing.
+		conflictPosition := 100.005
+		_, err = s.Insert(&TaskPosition{TaskID: 900, ProjectViewID: 93, Position: 100})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 901, ProjectViewID: 93, Position: conflictPosition})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 902, ProjectViewID: 93, Position: 100.01})
+		require.NoError(t, err)
+
+		tp := &TaskPosition{
+			TaskID:        903,
+			ProjectViewID: 93,
+			Position:      conflictPosition,
+		}
+
+		err = updateTaskPosition(s, nil, tp)
+		require.NoError(t, err)
+
+		var positions []*TaskPosition
+		err = s.Where("project_view_id = ?", 93).OrderBy("position ASC").Find(&positions)
+		require.NoError(t, err)
+		require.Len(t, positions, 4)
+
+		for i := 1; i < len(positions); i++ {
+			assert.Greater(t, positions[i].Position, positions[i-1].Position,
+				"position of task %d should be greater than the one of task %d",
+				positions[i].TaskID, positions[i-1].TaskID)
+			assert.GreaterOrEqual(t, positions[i].Position-positions[i-1].Position, MinPositionSpacing)
+		}
+
+		updated := &TaskPosition{}
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 903, 93).Get(updated)
+		require.NoError(t, err)
+		assert.InDelta(t, updated.Position, tp.Position, 0, "the returned position should be refreshed")
+		assert.Greater(t, tp.Position, 1000.0, "positions should have been spread over the full range")
+	})
 }
 
 func TestRepairTaskPositions(t *testing.T) {
@@ -713,4 +759,9 @@ func TestBulkInsertTaskPositions(t *testing.T) {
 			builder.Gte{"task_id": 10000},
 		), 150)
 	})
+}
+
+func TestViewLockOrder(t *testing.T) {
+	ids := viewLockOrder([]*ProjectView{{ID: 4}, {ID: 1}, {ID: 4}, {ID: 2}})
+	assert.Equal(t, []int64{1, 2, 4}, ids)
 }

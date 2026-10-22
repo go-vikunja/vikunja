@@ -3,7 +3,7 @@
 		ref="taskViewContainer"
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskService.loading || !visible,
+			'is-loading': taskBusy || !visible,
 			'is-modal': isModal,
 		}"
 	>
@@ -15,7 +15,7 @@
 			<BaseButton
 				v-if="!isModal"
 				class="back-button mbs-2"
-				@click="lastProject ? router.back() : router.push(projectRoute)"
+				@click="goBack()"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -25,7 +25,6 @@
 				:task="task"
 				:can-write="canWrite"
 				:has-close="isModal"
-				@update:task="Object.assign(task, $event)"
 				@close="$emit('close')"
 			/>
 			<nav
@@ -34,19 +33,19 @@
 				class="subtitle"
 			>
 				<template
-					v-for="p in projectStore.getAncestors(project)"
+					v-for="p in projectList.getAncestors(project)"
 					:key="p.id"
 				>
 					<a
-						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
-						v-shortcut="p.id === project?.id ? 'KeyU' : ''"
+						v-if="typeof router.options.history.state.back === 'string' && router.options.history.state.back.includes('/projects/'+p.id+'/')"
+						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject : ''"
 						@click="router.back()"
 					>
 						{{ getProjectTitle(p) }}
 					</a>
 					<RouterLink
 						v-else
-						v-shortcut="p.id === project?.id ? 'KeyU' : ''"
+						v-shortcut="p.id === project?.id ? SHORTCUTS.taskDetail.openProject : ''"
 						:to="{ name: 'project.index', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
@@ -59,7 +58,6 @@
 				<BucketSelect
 					:task="task"
 					:can-write="canWrite"
-					@update:task="Object.assign(task, $event)"
 				/>
 			</nav>
 
@@ -86,12 +84,12 @@
 								v-if="canWrite"
 								:ref="e => setFieldRef('assignees', e)"
 								v-model="task.assignees"
-								:project-id="task.projectId"
+								:project-id="task.project_id"
 								:task-id="task.id"
 							/>
 							<AssigneeList
 								v-else
-								:assignees="task.assignees"
+								:assignees="task.assignees ?? []"
 								class="mbs-2"
 							/>
 						</div>
@@ -131,16 +129,18 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('dueDate', e)"
-										v-model="task.dueDate"
+										ref="dueDatePicker"
+										v-model="dueDateInput"
 										:choose-date-label="$t('task.detail.chooseDueDate')"
-										:disabled="taskService.loading || !canWrite"
+										:title="$t('task.attributes.dueDate')"
+										:disabled="taskBusy || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
-										v-if="task.dueDate && canWrite"
+										v-if="task.due_date && canWrite"
 										class="remove"
-										@click="() => {task.dueDate = null;saveTask()}"
+										:aria-label="$t('task.detail.removeDueDate')"
+										@click="() => {task.due_date = '';saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -164,7 +164,7 @@
 								</div>
 								<PercentDoneSelect
 									:ref="e => setFieldRef('percentDone', e)"
-									v-model="task.percentDone"
+									v-model="task.percent_done"
 									:disabled="!canWrite"
 									@update:modelValue="setPercentDone"
 								/>
@@ -185,16 +185,18 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('startDate', e)"
-										v-model="task.startDate"
+										ref="startDatePicker"
+										v-model="startDateInput"
 										:choose-date-label="$t('task.detail.chooseStartDate')"
-										:disabled="taskService.loading || !canWrite"
+										:title="$t('task.attributes.startDate')"
+										:disabled="taskBusy || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
-										v-if="task.startDate && canWrite"
+										v-if="task.start_date && canWrite"
 										class="remove"
-										@click="() => {task.startDate = null;saveTask()}"
+										:aria-label="$t('task.detail.removeStartDate')"
+										@click="() => {task.start_date = '';saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -218,16 +220,18 @@
 								</div>
 								<div class="date-input">
 									<Datepicker
-										:ref="e => setFieldRef('endDate', e)"
-										v-model="task.endDate"
+										ref="endDatePicker"
+										v-model="endDateInput"
 										:choose-date-label="$t('task.detail.chooseEndDate')"
-										:disabled="taskService.loading || !canWrite"
+										:title="$t('task.attributes.endDate')"
+										:disabled="taskBusy || !canWrite"
 										@closeOnChange="saveTask()"
 									/>
 									<BaseButton
-										v-if="task.endDate && canWrite"
+										v-if="task.end_date && canWrite"
 										class="remove"
-										@click="() => {task.endDate = null;saveTask()}"
+										:aria-label="$t('task.detail.removeEndDate')"
+										@click="() => {task.end_date = '';saveTask()}"
 									>
 										<span class="icon is-small">
 											<Icon icon="times" />
@@ -275,6 +279,7 @@
 									<BaseButton
 										v-if="canWrite"
 										class="remove"
+										:aria-label="$t('task.detail.removeRepeat')"
 										@click="removeRepeatAfter"
 									>
 										<span class="icon is-small">
@@ -284,9 +289,9 @@
 								</div>
 								<RepeatAfter
 									:ref="e => setFieldRef('repeatAfter', e)"
-									v-model="task"
+									:model-value="task"
 									:disabled="!canWrite"
-									@update:modelValue="saveTask()"
+									@update:modelValue="saveTask($event)"
 								/>
 							</div>
 						</CustomTransition>
@@ -330,6 +335,7 @@
 							:disabled="!canWrite"
 							:task-id="taskId"
 							:creatable="!authStore.isLinkShareAuth"
+							:creation-disabled-message="authStore.isLinkShareAuth ? $t('task.label.linkShareCannotCreate') : ''"
 						/>
 					</div>
 
@@ -338,14 +344,12 @@
 						<Description
 							:model-value="task"
 							:can-write="canWrite"
-							:attachment-upload="attachmentUpload"
-							@update:modelValue="Object.assign(task, $event)"
 						/>
 					</div>
 					
 					<!-- Reactions -->
 					<Reactions
-						v-model="task.reactions" 
+						:model-value="task.reactions"
 						entity-kind="tasks"
 						:entity-id="task.id"
 						class="details d-print-none"
@@ -361,8 +365,6 @@
 							:ref="e => { setFieldRef('attachments', e); attachmentsRef = e as any }"
 							:edit-enabled="canWrite"
 							:task="task"
-							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
-							@update:attachments="onAttachmentsUpdated"
 						/>
 					</div>
 
@@ -380,17 +382,17 @@
 						v-if="activeFields.relatedTasks"
 						class="content details mbe-0"
 					>
-						<h3>
+						<h2 class="task-section-title">
 							<span class="icon is-grey">
 								<Icon icon="sitemap" />
 							</span>
 							{{ $t('task.attributes.relatedTasks') }}
-						</h3>
+						</h2>
 						<RelatedTasks
 							:ref="e => setFieldRef('relatedTasks', e)"
 							:edit-enabled="canWrite"
-							:initial-related-tasks="task.relatedTasks"
-							:project-id="task.projectId"
+							:initial-related-tasks="task.related_tasks"
+							:project-id="task.project_id"
 							:show-no-relations-notice="true"
 							:task-id="taskId"
 						/>
@@ -401,17 +403,17 @@
 						v-if="activeFields.moveProject"
 						class="content details"
 					>
-						<h3>
+						<h2 class="task-section-title">
 							<span class="icon is-grey">
 								<Icon icon="list" />
 							</span>
 							{{ $t('task.detail.move') }}
-						</h3>
+						</h2>
 						<div class="field has-addons">
 							<div class="control is-expanded">
 								<ProjectSearch
 									:ref="e => setFieldRef('moveProject', e)"
-									:filter="project => project.id !== task.projectId"
+									:filter="project => project.id !== task.project_id"
 									@update:modelValue="changeProject"
 								/>
 							</div>
@@ -422,8 +424,7 @@
 					<Comments
 						:can-write="canWrite"
 						:task-id="taskId"
-						:project-id="task.projectId"
-						:initial-comments="task.comments"
+						:project-id="task.project_id"
 					/>
 
 					<!-- Marker element for scroll-to-bottom button visibility -->
@@ -440,7 +441,7 @@
 				>
 					<template v-if="canWrite">
 						<XButton
-							v-shortcut="'KeyT'"
+							v-shortcut="SHORTCUTS.taskDetail.done"
 							:class="{'is-pending': !task.done}"
 							class="button--mark-done"
 							icon="check-double"
@@ -452,24 +453,24 @@
 						<TaskSubscription
 							entity="task"
 							:entity-id="task.id"
-							:model-value="task.subscription"
-							@update:modelValue="sub => task.subscription = sub"
+							:model-value="task.subscription ?? null"
+							@toggle="toggleSubscription"
 						/>
 						<XButton
-							v-shortcut="'KeyS'"
+							v-shortcut="SHORTCUTS.taskDetail.favorite"
 							variant="secondary"
-							:icon="task.isFavorite ? 'star' : ['far', 'star']"
+							:icon="task.is_favorite ? 'star' : ['far', 'star']"
 							@click="toggleFavorite"
 						>
 							{{
-								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
+								task.is_favorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
 							}}
 						</XButton>
 						
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
-							v-shortcut="'KeyL'"
+							v-shortcut="SHORTCUTS.taskDetail.labels"
 							variant="secondary"
 							icon="tags"
 							@click="setFieldActive('labels')"
@@ -477,7 +478,7 @@
 							{{ $t('task.detail.actions.label') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyP'"
+							v-shortcut="SHORTCUTS.taskDetail.priority"
 							variant="secondary"
 							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
@@ -492,7 +493,7 @@
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyC'"
+							v-shortcut="SHORTCUTS.taskDetail.color"
 							variant="secondary"
 							icon="fill-drip"
 							:icon-color="color"
@@ -504,7 +505,7 @@
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
 						<XButton
-							v-shortcut="'KeyA'"
+							v-shortcut="SHORTCUTS.taskDetail.assignees"
 							v-cy="'taskDetail.assign'"
 							variant="secondary"
 							icon="users"
@@ -513,7 +514,7 @@
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyF'"
+							v-shortcut="SHORTCUTS.taskDetail.attachments"
 							variant="secondary"
 							icon="paperclip"
 							@click="openAttachments()"
@@ -521,7 +522,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyR'"
+							v-shortcut="SHORTCUTS.taskDetail.relatedTasks"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
@@ -529,7 +530,7 @@
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
-							v-shortcut="'KeyM'"
+							v-shortcut="SHORTCUTS.taskDetail.moveProject"
 							variant="secondary"
 							icon="list"
 							@click="setFieldActive('moveProject')"
@@ -557,7 +558,7 @@
 						</XButton>
 
 						<XButton
-							v-shortcut="'KeyD'"
+							v-shortcut="SHORTCUTS.taskDetail.dueDate"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
@@ -579,7 +580,7 @@
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
 						<XButton
-							v-shortcut="reminderShortcut"
+							v-shortcut="SHORTCUTS.taskDetail.reminder"
 							variant="secondary"
 							:icon="['far', 'clock']"
 							@click="setFieldActive('reminders')"
@@ -594,7 +595,7 @@
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
-							v-shortcut="deleteShortcut"
+							v-shortcut="SHORTCUTS.taskDetail.delete"
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
@@ -647,22 +648,24 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {ref, reactive, computed, watch, nextTick, onBeforeUnmount, onMounted, useTemplateRef, type ComponentPublicInstance} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver} from '@vueuse/core'
 import {klona} from 'klona/lite'
 
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
+import {useTask} from '@/composables/useTask'
+import {getHexColor} from '@/helpers/task'
+import {createTaskDraft, mergeTask} from '@/helpers/task'
 
-import type {ITask} from '@/modelTypes/ITask'
-import type {IAttachment} from '@/modelTypes/IAttachment'
-import type {IProject} from '@/modelTypes/IProject'
+import type {Task as ITask} from '@/client/generated'
+import type {ProjectResponse} from '@/client/queries/projects'
 
-import {PRIORITIES, type Priority} from '@/constants/priorities'
+import {PRIORITIES} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
 import {PRO_FEATURE} from '@/constants/proFeatures'
+import {SHORTCUTS} from '@/constants/shortcuts'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -690,29 +693,36 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import BucketSelect from '@/components/tasks/partials/BucketSelect.vue'
 import Reactions from '@/components/input/Reactions.vue'
 
-import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
+import {getScrollParent} from '@/helpers/getScrollParent'
+import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
-import {isRepeating} from '@/helpers/rrule'
 import {playPopSound} from '@/helpers/playPop'
+import {taskLoadErrorAction} from './taskDetailError'
 
-import {useTaskStore} from '@/stores/tasks'
-import {useKanbanStore} from '@/stores/kanban'
-import {useProjectStore} from '@/stores/projects'
+import {
+	useUpdateTaskMutation,
+	useDeleteTaskMutation,
+	useFavoriteTaskMutation,
+	useDuplicateTaskMutation,
+	useMarkTaskReadMutation,
+} from '@/client/queries/taskMutations'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
-import {success} from '@/message'
+import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
+import {useSetTaskSubscriptionMutation} from '@/client/queries/subscriptions'
 
 const props = defineProps<{
-	taskId: ITask['id'],
+	taskId: number,
 	backdropView?: RouteLocation['fullPath'],
 }>()
 
@@ -724,24 +734,85 @@ const router = useRouter()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
-const projectStore = useProjectStore()
-const taskStore = useTaskStore()
+const projectList = useProjects()
+const updateTask = useUpdateTaskMutation()
+const deleteTaskMutation = useDeleteTaskMutation()
+const favoriteTask = useFavoriteTaskMutation()
+const duplicateTask = useDuplicateTaskMutation()
+const markTaskRead = useMarkTaskReadMutation()
+const subscriptionMutation = useSetTaskSubscriptionMutation()
+const taskMutating = computed(() => [
+	updateTask,
+	deleteTaskMutation,
+	favoriteTask,
+	duplicateTask,
+	markTaskRead,
+].some(mutation => mutation.isPending.value))
 const configStore = useConfigStore()
-const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
-const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
+const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING)
+	&& !authStore.isLinkShareAuth)
 const baseStore = useBaseStore()
 
-const task = ref<ITask>(new TaskModel())
+const taskQuery = useTask(
+	() => props.taskId ?? 0,
+	() => [
+		'reactions',
+		'is_unread',
+		'buckets',
+		...(timeTrackingEnabled.value ? ['time_entries_count' as const] : []),
+	],
+)
+const task = ref(createTaskDraft())
+
+// Only fields edited here stay local; the rest follows the cache.
+function followServerFields(loaded: ITask) {
+	const {priority, percent_done, due_date, start_date, end_date, reminders, repeat_after, repeat_mode} = task.value
+	task.value = {
+		...createTaskDraft(klona(loaded)),
+		priority,
+		percent_done,
+		due_date,
+		start_date,
+		end_date,
+		reminders,
+		repeat_after,
+		repeat_mode,
+	}
+}
+
+function seedTask(loaded: ITask) {
+	task.value = createTaskDraft(klona(loaded))
+	taskColor.value = task.value.hex_color ?? ''
+}
+
+const dueDateInput = computed({
+	get: () => parseDateOrNull(task.value.due_date),
+	set: (date: Date | string | null) => {
+		task.value.due_date = parseDateOrNull(date)?.toISOString() ?? ''
+	},
+})
+const startDateInput = computed({
+	get: () => parseDateOrNull(task.value.start_date),
+	set: (date: Date | string | null) => {
+		task.value.start_date = parseDateOrNull(date)?.toISOString() ?? ''
+	},
+})
+const endDateInput = computed({
+	get: () => parseDateOrNull(task.value.end_date),
+	set: (date: Date | string | null) => {
+		task.value.end_date = parseDateOrNull(date)?.toISOString() ?? ''
+	},
+})
 const hasAttachments = computed(() => (task.value.attachments?.length ?? 0) > 0)
 const remindersDefaultRelativeTo = computed(() => {
-	if (task.value.dueDate) {
+	if (parseDateOrNull(task.value.due_date)) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	}
-	if (task.value.startDate) {
+	if (parseDateOrNull(task.value.start_date)) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
 	}
-	if (task.value.endDate) {
+	if (parseDateOrNull(task.value.end_date)) {
 		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
 	}
 	return null
@@ -763,17 +834,10 @@ const lastProject = computed(() => {
 
 	const id = parseInt(projectMatch[1])
 
-	return projectStore.projects[id] ?? null
+	return projectList.projects[id] ?? null
 })
 
 const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
-
-// Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
-// Use Alt+r on other platforms
-const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+KeyR' : 'Alt+KeyR')
-
-// Match native OS conventions for "delete the selected item"
-const deleteShortcut = isAppleDevice() ? 'Backspace' : 'Delete'
 
 onBeforeRouteLeave(async () => {
 	if (taskNotFound.value) {
@@ -786,7 +850,7 @@ onBeforeRouteLeave(async () => {
 				stop()
 				resolve()
 			}, 5000) // 5 second timeout
-			
+
 			const stop = watch(lastProjectOrTaskProject, (p) => {
 				if (p) {
 					clearTimeout(timeout)
@@ -798,7 +862,7 @@ onBeforeRouteLeave(async () => {
 	}
 
 	if (lastProjectOrTaskProject.value) {
-		await baseStore.handleSetCurrentProjectIfNotSet(lastProjectOrTaskProject.value)
+		baseStore.setCurrentProjectIfNotSet(lastProjectOrTaskProject.value)
 	}
 })
 
@@ -808,49 +872,26 @@ onBeforeRouteLeave(async () => {
 // updated, changed, updated and so on.
 // To prevent this, we put the task color property in a separate value which is set to the task color
 // when it is saved and loaded.
-const taskColor = ref<ITask['hexColor']>('')
+const taskColor = ref('')
 
 // Used to avoid flashing of empty elements if the task content is not yet loaded.
 const visible = ref(false)
 
-const project = computed(() => projectStore.projects[task.value.projectId])
+const project = computed(() => projectList.projects[task.value.project_id ?? 0])
 
 const projectRoute = computed(() => ({
 	name: 'project.index',
-	params: {projectId: task.value.projectId},
+	params: {projectId: task.value.project_id},
 	hash: route.hash,
 }))
 
 const canWrite = computed(() => (
-	task.value.maxPermission !== null &&
-	task.value.maxPermission > PERMISSIONS.READ
+	(taskQuery.task.value?.max_permission ?? 0) > PERMISSIONS.READ
 ))
 
-const color = computed(() => {
-	const color = task.value.getHexColor
-		? task.value.getHexColor()
-		: undefined
-
-	return color
-})
+const color = computed(() => getHexColor(task.value.hex_color))
 
 const isModal = computed(() => Boolean(props.backdropView))
-
-async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	const uploaded = await uploadFile(props.taskId, file, onSuccess)
-	if (uploaded.length > 0) {
-		onAttachmentsUpdated([...task.value.attachments, ...uploaded])
-	}
-	return uploaded
-}
-
-function onAttachmentsUpdated(attachments: IAttachment[]) {
-	task.value.attachments = attachments
-	kanbanStore.setTaskInBucket({
-		...task.value,
-		attachments,
-	})
-}
 
 const heading = ref<HTMLElement | null>(null)
 
@@ -867,18 +908,12 @@ const bottomMarkerVisible = ref(true)
 const isScrollable = ref(false)
 
 function resolveScrollContainer() {
-	let el = taskViewContainer.value
-
-	while (el) {
-		const overflowY = getComputedStyle(el).overflowY
-		if (['auto', 'scroll', 'overlay'].includes(overflowY)) {
-			scrollContainer.value = el
-			return
-		}
-		el = el.parentElement
+	// Null after unmount; deferred callers must not fall back to `document` then.
+	if (!taskViewContainer.value) {
+		return
 	}
 
-	scrollContainer.value = (document.scrollingElement as HTMLElement | null) ?? document.documentElement
+	scrollContainer.value = getScrollParent(taskViewContainer.value)
 }
 
 function updateScrollable() {
@@ -926,6 +961,7 @@ useMutationObserver(
 	debouncedMutationHandler,
 	{subtree: true, childList: true},
 )
+onBeforeUnmount(() => debouncedMutationHandler.cancel())
 
 const {height: scrollContainerHeight} = useElementSize(scrollContainer)
 watch(scrollContainerHeight, () => updateScrollable())
@@ -936,51 +972,8 @@ onMounted(async () => {
 	updateScrollable()
 })
 
-const taskService = shallowReactive(new TaskService())
+const taskBusy = useDelayedLoading(() => taskQuery.isFetching.value || taskMutating.value)
 
-// load task
-watch(
-	() => props.taskId,
-	async (id) => {
-		if (id === undefined) {
-			return
-		}
-
-		try {
-			const expand = ['reactions', 'comments', 'is_unread', 'buckets']
-			if (timeTrackingEnabled.value) {
-				// Only request the (server-computed) count when the feature is on.
-				expand.push('time_entries_count')
-			}
-			const loaded = await taskService.get({id}, {expand})
-			Object.assign(task.value, loaded)
-			taskColor.value = task.value.hexColor
-			setActiveFields()
-
-			if (task.value.isUnread) {
-				await taskStore.markTaskAsRead(task.value.id)
-				task.value.isUnread = false
-			}
-
-			if (lastProject.value) {
-				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
-			}
-		} catch (e) {
-			if (e?.response?.status === 404) {
-				taskNotFound.value = true
-				router.replace({name: 'not-found'})
-				return
-			}
-
-			throw e
-		} finally {
-			await nextTick()
-			scrollToHeading()
-			resolveScrollContainer()
-			updateScrollable()
-			visible.value = true
-		}
-	}, {immediate: true})
 
 type FieldType =
 	| 'assignees'
@@ -1016,24 +1009,50 @@ const activeFields: { [type in FieldType]: boolean } = reactive({
 })
 
 function setActiveFields() {
-	// FIXME: are these lines necessary?
-	// task.startDate = task.startDate || null
-	// task.endDate = task.endDate || null
-
 	// Set all active fields based on values in the model
-	activeFields.assignees = task.value.assignees.length > 0
-	activeFields.attachments = task.value.attachments.length > 0
-	activeFields.timeTracking = (task.value.timeEntriesCount ?? 0) > 0
-	activeFields.dueDate = task.value.dueDate !== null
-	activeFields.endDate = task.value.endDate !== null
-	activeFields.labels = task.value.labels.length > 0
-	activeFields.percentDone = task.value.percentDone > 0
+	activeFields.assignees = (task.value.assignees?.length ?? 0) > 0
+	activeFields.attachments = (task.value.attachments?.length ?? 0) > 0
+	activeFields.timeTracking = (task.value.time_entries_count ?? 0) > 0
+	activeFields.dueDate = Boolean(parseDateOrNull(task.value.due_date))
+	activeFields.endDate = Boolean(parseDateOrNull(task.value.end_date))
+	activeFields.labels = (task.value.labels?.length ?? 0) > 0
+	activeFields.percentDone = (task.value.percent_done ?? 0) > 0
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
-	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
-	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = isRepeating(task.value.repeat)
-	activeFields.startDate = task.value.startDate !== null
+	activeFields.relatedTasks = Object.keys(task.value.related_tasks ?? {}).length > 0
+	activeFields.reminders = (task.value.reminders?.length ?? 0) > 0
+	activeFields.repeatAfter = (task.value.repeat_after ?? 0) > 0
+		|| task.value.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.startDate = Boolean(parseDateOrNull(task.value.start_date))
 }
+
+watch(taskQuery.task, async (loaded, previous) => {
+	if (!loaded) return
+	if (loaded.id !== previous?.id) {
+		seedTask(loaded)
+		setActiveFields()
+	} else {
+		followServerFields(loaded)
+	}
+	if (loaded.is_unread) markTaskRead.mutateAsync(loaded.id).catch(() => {})
+	if (lastProject.value) baseStore.setCurrentProjectIfNotSet(lastProject.value)
+	await nextTick()
+	if (loaded.id !== previous?.id) scrollToHeading()
+	resolveScrollContainer()
+	updateScrollable()
+	visible.value = true
+}, {immediate: true})
+watch(taskQuery.error, cause => {
+	if (!cause) return
+	const action = taskLoadErrorAction(cause)
+	if (action === 'ignore') return
+	if (action === 'notFound') {
+		taskNotFound.value = true
+		router.replace({name: 'not-found'})
+		return
+	}
+	error(cause)
+	visible.value = true
+})
 
 const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
 	assignees: null,
@@ -1049,16 +1068,34 @@ const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive(
 	reminders: null,
 	repeatAfter: null,
 	startDate: null,
+	timeTracking: null,
 })
 
-function setFieldRef(name, e) {
-	activeFieldElements[name] = unrefElement(e)
+const dueDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('dueDatePicker')
+const startDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('startDatePicker')
+const endDatePicker = useTemplateRef<InstanceType<typeof Datepicker>>('endDatePicker')
+
+function setFieldRef(name: FieldType, e: Element | ComponentPublicInstance | null) {
+	const element = e instanceof Element ? e : e?.$el
+	activeFieldElements[name] = element instanceof HTMLElement ? element : null
 }
 
 function setFieldActive(fieldName: keyof typeof activeFields) {
 	activeFields[fieldName] = true
 	nextTick(() => {
-		const el = activeFieldElements[fieldName]
+		let datepicker: InstanceType<typeof Datepicker> | null = null
+		switch (fieldName) {
+			case 'dueDate':
+				datepicker = dueDatePicker.value
+				break
+			case 'startDate':
+				datepicker = startDatePicker.value
+				break
+			case 'endDate':
+				datepicker = endDatePicker.value
+				break
+		}
+		const el: HTMLElement | null = datepicker?.$el ?? activeFieldElements[fieldName]
 
 		if (!el) {
 			return
@@ -1066,8 +1103,10 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 
 		el.focus()
 
-		// scroll the field to the center of the screen if not in viewport already
-		scrollIntoView(el)
+		// Finish scrolling before the datepicker sheet locks the page.
+		scrollIntoView(el, datepicker ? 'instant' : 'smooth')
+
+		datepicker?.open()
 	})
 }
 
@@ -1094,25 +1133,19 @@ async function saveTask(
 		return
 	}
 
-	currentTask.hexColor = taskColor.value
+	currentTask.hex_color = taskColor.value
 
 	// If no end date is being set, but a start date and due date,
 	// use the due date as the end date
 	if (
-		currentTask.endDate === null &&
-		currentTask.startDate !== null &&
-		currentTask.dueDate !== null
+		!parseDateOrNull(currentTask.end_date) &&
+		Boolean(parseDateOrNull(currentTask.start_date)) &&
+		Boolean(parseDateOrNull(currentTask.due_date))
 	) {
-		currentTask.endDate = currentTask.dueDate
+		currentTask.end_date = currentTask.due_date
 	}
 
-	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
-
-	Object.assign(task.value, updatedTask)
-
-	// Wait for Vue reactivity to settle before re-evaluating active fields
-	await nextTick()
-
+	seedTask(mergeTask(task.value, await updateTask.mutateAsync({...currentTask, id: currentTask.id!})))
 	setActiveFields()
 
 	let actions: MessageAction[] = []
@@ -1129,14 +1162,15 @@ useTaskDetailShortcuts({
 	task: () => task.value,
 	taskTitle: () => taskTitle.value,
 	onSave: saveTask,
+	onDoneAndBack: markDoneAndGoBack,
 })
 
 const showDeleteModal = ref(false)
 
 async function deleteTask() {
-	await taskStore.delete(task.value)
+	await deleteTaskMutation.mutateAsync(task.value.id!)
 	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'project.index', params: {projectId: task.value.projectId}})
+	router.push({name: 'project.index', params: {projectId: task.value.project_id}})
 }
 
 async function toggleTaskDone() {
@@ -1155,25 +1189,51 @@ async function toggleTaskDone() {
 	)
 }
 
-async function changeProject(project: IProject | null) {
+async function markDoneAndGoBack() {
+	if (!canWrite.value || task.value.done) {
+		return
+	}
+
+	// Keydown handlers bypass Vue's errorHandler, so surface save errors here.
+	try {
+		await toggleTaskDone()
+	} catch (e) {
+		error(e)
+		return
+	}
+	goBack()
+}
+
+function goBack() {
+	if (lastProject.value) {
+		router.back()
+		return
+	}
+	router.push(projectRoute.value)
+}
+
+async function changeProject(project: ProjectResponse | null) {
 	if (project === null) {
 		return
 	}
-	kanbanStore.removeTaskInBucket(task.value)
 	await saveTask({
 		...task.value,
-		projectId: project.id,
+		project_id: project.id,
 	})
 	baseStore.setCurrentProject(project)
 }
 
+function toggleSubscription(subscribed: boolean) {
+	if (subscriptionMutation.isPending.value) return
+	subscriptionMutation.mutate({taskId: task.value.id!, subscribed})
+}
+
 async function toggleFavorite() {
-	const newTask = await taskStore.toggleFavorite(task.value)
-	Object.assign(task.value, newTask)
+	await favoriteTask.mutateAsync({...task.value, id: task.value.id!})
 }
 
 async function duplicateCurrentTask() {
-	const duplicatedTask = await taskStore.duplicateTask(task.value.id)
+	const duplicatedTask = await duplicateTask.mutateAsync(task.value.id!)
 	if (duplicatedTask) {
 		success({message: t('task.detail.duplicateSuccess')})
 		router.push({
@@ -1183,7 +1243,7 @@ async function duplicateCurrentTask() {
 	}
 }
 
-async function setPriority(priority: Priority) {
+async function setPriority(priority: number) {
 	const newTask: ITask = {
 		...task.value,
 		priority,
@@ -1195,15 +1255,15 @@ async function setPriority(priority: Priority) {
 async function setPercentDone(percentDone: number) {
 	const newTask: ITask = {
 		...task.value,
-		percentDone,
+		percent_done: percentDone,
 	}
 
 	return saveTask(newTask)
 }
 
 async function removeRepeatAfter() {
-	task.value.repeat = null
-	task.value.repeatsFromCurrentDate = false
+	task.value.repeat_after = 0
+	task.value.repeat_mode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
 	await saveTask()
 }
 
@@ -1274,7 +1334,7 @@ function setRelatedTasksActive() {
 	}
 }
 
-h3 .button {
+h2 .button {
 	vertical-align: middle;
 }
 
@@ -1419,16 +1479,24 @@ h3 .button {
 			background-color: transparent;
 			box-shadow: none;
 
+			// bright brand green with fixed dark text passes contrast in both themes
 			&.is-pending {
-				color: var(--success);
+				background-color: var(--success);
+				color: hsl(215, 27.9%, 16.9%);
 
 				&:hover,
 				&:focus {
-					background-color: var(--success);
-					color: #ffffff;
+					filter: brightness(1.05);
 				}
 			}
 		}
+	}
+}
+
+// keep the title clear of the modal's fixed close button
+.is-modal .heading {
+	@media screen and (min-width: $tablet) and (max-width: $desktop) {
+		padding-inline-end: 3.5rem;
 	}
 }
 
@@ -1499,5 +1567,12 @@ h3 .button {
 .modal-content .scroll-to-comments-button {
 	inset-block-end: .75rem;
 	inset-inline-end: 1rem;
+}
+
+// the task card spans the full width here, so the modal's white close button sits on it instead of the scrim
+@media screen and (min-width: $tablet) and (max-width: $desktop) {
+	.modal-dialog:has(.task-view-container.is-modal) .modal-container > .close {
+		color: var(--text);
+	}
 }
 </style>

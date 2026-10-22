@@ -4,20 +4,18 @@
 		:has-primary-action="false"
 	>
 		<template v-if="project">
-			<userTeam
-				:id="project.id"
+			<UserSharing
+				:project-id="project.id"
 				:user-is-admin="userIsAdmin"
-				share-type="user"
 			/>
-			<userTeam
-				:id="project.id"
+			<TeamSharing
+				:project-id="project.id"
 				:user-is-admin="userIsAdmin"
-				share-type="team"
 			/>
 		</template>
 
 		<LinkSharing
-			v-if="linkSharingEnabled && userIsAdmin"
+			v-if="configStore.link_sharing_enabled && userIsAdmin"
 			:project-id="projectId"
 			class="mbs-4"
 		/>
@@ -26,28 +24,30 @@
 
 
 <script lang="ts" setup>
-import {ref, computed, watchEffect} from 'vue'
+import {computed, watchEffect} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
-import ProjectService from '@/services/project'
-import ProjectModel from '@/models/project'
-import type {IProject} from '@/modelTypes/IProject'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import LinkSharing from '@/components/sharing/LinkSharing.vue'
-import userTeam from '@/components/sharing/UserTeam.vue'
+import TeamSharing from '@/components/sharing/TeamSharing.vue'
+import UserSharing from '@/components/sharing/UserSharing.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
+import {projectQuery} from '@/client/queries/projects'
 
 defineOptions({name: 'ProjectSettingShare'})
 
 const {t} = useI18n({useScope: 'global'})
 
-const project = ref<IProject>()
+const route = useRoute()
+const projectId = computed(() => Number(route.params.projectId))
+const {data: project} = useQuery(computed(() => ({...projectQuery(projectId.value), enabled: projectId.value > 0})))
 const title = computed(() => project.value?.title
 	? t('project.share.title', {project: project.value.title})
 	: '',
@@ -56,20 +56,10 @@ useTitle(title)
 
 const configStore = useConfigStore()
 
-const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
-const userIsAdmin = computed(() => project?.value?.maxPermission === PERMISSIONS.ADMIN)
+const userIsAdmin = computed(() => project.value?.max_permission === PERMISSIONS.ADMIN)
 
-async function loadProject(projectId: number) {
-	const projectService = new ProjectService()
-	const newProject = await projectService.get(new ProjectModel({id: projectId}))
-	await useBaseStore().handleSetCurrentProject({project: newProject})
-	project.value = newProject
-}
-
-const route = useRoute()
-const projectId = computed(() => route.params.projectId !== undefined
-	? parseInt(route.params.projectId as string)
-	: undefined,
-)
-watchEffect(() => projectId.value !== undefined && loadProject(projectId.value))
+const baseStore = useBaseStore()
+watchEffect(() => {
+	if (project.value) baseStore.setCurrentProject(project.value)
+})
 </script>

@@ -17,7 +17,11 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -33,20 +37,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// setupMigrationTestEnv builds a test env with the OAuth migrators enabled so
-// their v2 routes are registered (they are gated behind config flags that
-// default to false). setupTestEnv resets config to defaults, so the flags must
-// be set after it and the router rebuilt.
 func setupMigrationTestEnv(t *testing.T) *echo.Echo {
 	t.Helper()
 	_, err := setupTestEnv()
 	require.NoError(t, err)
 
-	// migration.Status is not part of models.GetTables() (pkg/models cannot
-	// import pkg/modules/migration without a cycle), so SetupTests never syncs
-	// migration_status. Create it here so the status/migrate handlers can query.
+	// SetupTests cannot own migration_status without an import cycle.
 	s := db.NewSession()
 	require.NoError(t, s.Sync2(&migration.Status{}))
+	_, err = s.Where("1 = 1").Delete(&migration.Status{})
+	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	require.NoError(t, s.Close())
 
@@ -64,14 +64,10 @@ func setupMigrationTestEnv(t *testing.T) *echo.Echo {
 	return e
 }
 
-// TestHumaMigrationOAuth covers the three OAuth migrators' v2 endpoints. There
-// is no v1 webtest for these handlers to mirror, so this is the parity baseline.
 func TestHumaMigrationOAuth(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 	token := humaTokenFor(t, &testuser1)
 
-	// The generic registration helper wires the same three ops for every
-	// migrator, so exercising each name guards against a copy-paste regression.
 	for _, name := range []string{"todoist", "trello", "microsoft-todo"} {
 		t.Run(name+" auth url", func(t *testing.T) {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/migration/"+name+"/auth", "", token, "")
@@ -82,14 +78,14 @@ func TestHumaMigrationOAuth(t *testing.T) {
 		t.Run(name+" status - never migrated", func(t *testing.T) {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/migration/"+name+"/status", "", token, "")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-			// A user who never migrated has a zero-value status.
 			assert.Contains(t, rec.Body.String(), `"started_at":"0001-01-01T00:00:00Z"`, "body: %s", rec.Body.String())
 		})
 	}
 
 	t.Run("migrate kicks off the migration", func(t *testing.T) {
 		events.ClearDispatchedEvents()
-		rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/todoist/migrate", `{"code":"test-code"}`, token, "")
+		state := issuedOAuthState(t, e, "/api/v2", "todoist", token)
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/todoist/migrate", `{"code":"test-code","state":"`+state+`"}`, token, "")
 		// 200, not the wrapper's POST default 201: this queues a job, it does
 		// not create a REST resource.
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
@@ -98,8 +94,6 @@ func TestHumaMigrationOAuth(t *testing.T) {
 	})
 }
 
-// TestHumaMigrationOAuth_AlreadyRunning ports v1's guard: starting a migration
-// while one is already in progress (started, not finished) is refused with 412.
 func TestHumaMigrationOAuth_AlreadyRunning(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 	token := humaTokenFor(t, &testuser1)
@@ -114,11 +108,71 @@ func TestHumaMigrationOAuth_AlreadyRunning(t *testing.T) {
 	require.NoError(t, s.Commit())
 	_ = s.Close()
 
-	rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/todoist/migrate", `{"code":"test-code"}`, token, "")
+	state := issuedOAuthState(t, e, "/api/v2", "todoist", token)
+	rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/todoist/migrate", `{"code":"test-code","state":"`+state+`"}`, token, "")
 	assert.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
 }
 
-// TestHumaMigrationOAuth_Unauthenticated proves all three ops require auth.
+func issuedOAuthState(t *testing.T, e *echo.Echo, prefix, name, token string) string {
+	t.Helper()
+	rec := humaRequest(t, e, http.MethodGet, prefix+"/migration/"+name+"/auth", "", token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	var body struct {
+		URL string `json:"url"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	authURL, err := url.Parse(body.URL)
+	require.NoError(t, err)
+	query := authURL.Query()
+	if name == "trello" {
+		// trello's implicit flow carries the state in the return url
+		returnURL, err := url.Parse(query.Get("return_url"))
+		require.NoError(t, err)
+		query = returnURL.Query()
+	}
+	state := query.Get("state")
+	require.NotEmpty(t, state, "auth url %s carries no state", body.URL)
+	return state
+}
+
+// GHSA-xgw3-ccqg-f6ww
+func TestMigrationOAuth_State(t *testing.T) {
+	for _, prefix := range []string{"/api/v1", "/api/v2"} {
+		for _, name := range []string{"todoist", "trello", "microsoft-todo"} {
+			migrate := func(t *testing.T, e *echo.Echo, token, state string) *httptest.ResponseRecorder {
+				body := `{"code":"test-code"}`
+				if state != "" {
+					body = `{"code":"test-code","state":"` + state + `"}`
+				}
+				return humaRequest(t, e, http.MethodPost, prefix+"/migration/"+name+"/migrate", body, token, "")
+			}
+			assertRejected := func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
+				assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+				assert.Contains(t, rec.Body.String(), strconv.Itoa(migration.ErrCodeInvalidOAuthState), "body: %s", rec.Body.String())
+			}
+
+			t.Run(prefix+" "+name+" without state", func(t *testing.T) {
+				e := setupMigrationTestEnv(t)
+				assertRejected(t, migrate(t, e, humaTokenFor(t, &testuser1), ""))
+			})
+			t.Run(prefix+" "+name+" with another user's state", func(t *testing.T) {
+				e := setupMigrationTestEnv(t)
+				state := issuedOAuthState(t, e, prefix, name, humaTokenFor(t, &testuser2))
+				assertRejected(t, migrate(t, e, humaTokenFor(t, &testuser1), state))
+			})
+			t.Run(prefix+" "+name+" with the user's own state, once", func(t *testing.T) {
+				e := setupMigrationTestEnv(t)
+				token := humaTokenFor(t, &testuser1)
+				state := issuedOAuthState(t, e, prefix, name, token)
+				rec := migrate(t, e, token, state)
+				require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+				assertRejected(t, migrate(t, e, token, state))
+			})
+		}
+	}
+}
+
 func TestHumaMigrationOAuth_Unauthenticated(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 
@@ -136,13 +190,9 @@ func TestHumaMigrationOAuth_Unauthenticated(t *testing.T) {
 	})
 }
 
-// TestHumaMigrationOAuth_Disabled proves a migrator's routes are absent when its
-// config flag is off.
 func TestHumaMigrationOAuth_Disabled(t *testing.T) {
 	_, err := setupTestEnv()
 	require.NoError(t, err)
-	// All migration flags default to false after InitDefaultConfig.
-
 	e := routes.NewEcho()
 	routes.RegisterRoutes(e)
 	token := humaTokenFor(t, &testuser1)

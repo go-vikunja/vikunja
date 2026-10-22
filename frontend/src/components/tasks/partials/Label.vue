@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type {ILabel} from '@/modelTypes/ILabel'
+import type {Label} from '@/client/generated'
 import {useLabelStyles} from '@/composables/useLabelStyles'
 
 defineProps<{
-	label: ILabel
+	label: Label
 }>()
 
 const {getLabelStyles} = useLabelStyles()

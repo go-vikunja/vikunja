@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type {IReactionPerEntity, ReactionKind} from '@/modelTypes/IReaction'
+import type {ReactionInput, ReactionUsers} from '@/client/queries/reactions'
 import {VuemojiPicker} from 'vuemoji-picker'
-import ReactionService from '@/services/reactions'
-import ReactionModel from '@/models/reaction'
+import {useSetReactionMutation} from '@/client/queries/reactions'
 import BaseButton from '@/components/base/BaseButton.vue'
-import type {IUser} from '@/modelTypes/IUser'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {useI18n} from 'vue-i18n'
 import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
@@ -13,67 +11,70 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {useAuthStore} from '@/stores/auth'
 import {useColorScheme} from '@/composables/useColorScheme'
 
-const props = withDefaults(defineProps<{
-	entityKind: ReactionKind,
+type ReactionSubject = {
+	entityKind: 'tasks',
+	taskId?: never,
+} | {
+	entityKind: 'comments',
+	taskId: number,
+}
+
+const props = withDefaults(defineProps<ReactionSubject & {
 	entityId: number,
+	modelValue?: ReactionUsers,
 	disabled?: boolean,
 }>(), {
+	modelValue: undefined,
 	disabled: false,
 })
 
-const model = defineModel<IReactionPerEntity>()
-
 const authStore = useAuthStore()
 const {t} = useI18n()
-const reactionService = new ReactionService()
+const reactionMutation = useSetReactionMutation()
 const {isDark} = useColorScheme()
 
-async function addReaction(value: string) {
-	const reaction = new ReactionModel({
-		id: props.entityId,
-		kind: props.entityKind,
-		value,
-	})
-	await reactionService.create(reaction)
+async function setReaction(value: string, remove: boolean) {
+	if (props.disabled || reactionMutation.isPending.value || !authStore.info) return
+	const user = {
+		id: authStore.info.id,
+		name: authStore.info.name,
+		username: authStore.info.username,
+	}
+	const input: ReactionInput = props.entityKind === 'comments'
+		? {
+			kind: 'comments',
+			taskId: props.taskId,
+			id: props.entityId,
+			value,
+			remove,
+			user,
+		}
+		: {
+			kind: 'tasks',
+			id: props.entityId,
+			value,
+			remove,
+			user,
+		}
+	try {
+		await reactionMutation.mutateAsync(input)
+	} catch {
+		return
+	}
+	if (props.entityId !== input.id || props.entityKind !== input.kind) return
 	showEmojiPicker.value = false
-
-	if (typeof model.value === 'undefined') {
-		model.value = {}
-	}
-
-	if (!authStore.info || !model.value) return
-
-	const modelValue = model.value
-	if (typeof modelValue[reaction.value] === 'undefined') {
-		modelValue[reaction.value] = [authStore.info]
-	} else {
-		modelValue[reaction.value]!.push(authStore.info)
-	}
 }
 
-async function removeReaction(value: string) {
-	const reaction = new ReactionModel({
-		id: props.entityId,
-		kind: props.entityKind,
-		value,
-	})
-	await reactionService.delete(reaction)
-	showEmojiPicker.value = false
-
-	if (!model.value) return
-
-	const modelValue = model.value
-	const userIndex = modelValue[reaction.value]?.findIndex(u => u.id === authStore.info?.id) ?? -1
-	if (userIndex !== -1) {
-		modelValue[reaction.value]!.splice(userIndex, 1)
-	}
-	if(modelValue[reaction.value]!.length === 0) {
-		delete modelValue[reaction.value]
-	}
+function addReaction(value: string) {
+	return setReaction(value, false)
 }
 
-function getReactionTooltip(users: IUser[], value: string | number) {
-	const names = users.map(u => getDisplayName(u))
+function removeReaction(value: string) {
+	return setReaction(value, true)
+}
+
+function getReactionTooltip(users: ReactionUsers[string], value: string | number) {
+	const names = (users ?? []).map(u => getDisplayName(u))
 	const valueStr = String(value)
 
 	if (names.length === 1) {
@@ -107,7 +108,7 @@ function hideEmojiPicker(e: MouseEvent) {
 onMounted(() => document.addEventListener('click', hideEmojiPicker))
 onBeforeUnmount(() => document.removeEventListener('click', hideEmojiPicker))
 
-const emojiPickerButtonRef = ref<HTMLElement | null>(null)
+const emojiPickerButtonRef = ref<InstanceType<typeof BaseButton> | null>(null)
 const reactionContainerRef = ref<HTMLElement | null>(null)
 const emojiPickerPosition = ref()
 
@@ -128,8 +129,8 @@ function toggleEmojiPicker() {
 }
 
 function hasCurrentUserReactedWithEmoji(value: string | number): boolean {
-	if (!model.value || !authStore.info) return false
-	const user = model.value[String(value)]?.find(u => u.id === authStore.info!.id)
+	if (!props.modelValue || !authStore.info) return false
+	const user = props.modelValue[String(value)]?.find(u => u.id === authStore.info!.id)
 	return typeof user !== 'undefined'
 }
 
@@ -149,15 +150,17 @@ async function toggleReaction(value: string | number) {
 		class="reactions"
 	>
 		<BaseButton
-			v-for="(users, value) in (model as IReactionPerEntity)"
+			v-for="(users, value) in modelValue"
 			:key="'button' + value"
 			v-tooltip="getReactionTooltip(users, value)"
 			class="reaction-button"
 			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
-			:disabled
+			:disabled="disabled"
+			:aria-disabled="reactionMutation.isPending.value || undefined"
+			:aria-pressed="hasCurrentUserReactedWithEmoji(value)"
 			@click="toggleReaction(value)"
 		>
-			{{ value }} {{ users.length }}
+			{{ value }} {{ users?.length }}
 		</BaseButton>
 		<BaseButton
 			v-if="!disabled"

@@ -124,17 +124,17 @@ func RenewToken(c *echo.Context) (err error) {
 // @tags auth
 // @Produce json
 // @Success 200 {object} auth.Token
-// @Failure 401 {object} models.Message "Invalid or expired refresh token."
+// @Failure 401 {object} web.HTTPError "Invalid, expired or already-used refresh token, or no refresh token cookie sent (codes 16002-16005)."
 // @Router /user/token/refresh [post]
 func RefreshToken(c *echo.Context) (err error) {
 	cookie, err := c.Cookie(auth.RefreshTokenCookieName)
 	if err != nil || cookie.Value == "" {
-		return echo.NewHTTPError(http.StatusUnauthorized, "No refresh token provided.")
+		return &models.ErrNoRefreshToken{}
 	}
 
 	result, err := auth.RefreshSession(cookie.Value)
 	if err != nil {
-		if user2.IsErrUserStatusError(err) {
+		if auth.IsUnusableRefreshToken(err) {
 			auth.ClearRefreshTokenCookie(c)
 		}
 		return err

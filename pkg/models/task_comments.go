@@ -76,7 +76,7 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 
 func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err error) {
 	// Check if the task exists
-	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
+	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,16 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
+	// TaskID is optional here: only routes carrying it in the URL bind it, so fall back to the stored row.
+	if tc.TaskID == 0 {
+		saved := &TaskComment{ID: tc.ID}
+		if err := getTaskCommentSimple(s, saved); err != nil {
+			return err
+		}
+		tc.TaskID = saved.TaskID
+	}
+
+	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err
 	}
@@ -245,13 +254,13 @@ func (tc *TaskComment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
-	// Get the author
-	author := &user.User{}
-	_, err = s.
-		Where("id = ?", tc.AuthorID).
-		Get(author)
-	tc.Author = author
-	return
+	authors, err := getUsersOrLinkSharesFromIDs(s, []int64{tc.AuthorID})
+	if err != nil {
+		return err
+	}
+
+	tc.Author = authors[tc.AuthorID]
+	return nil
 }
 
 // ReadAll returns all comments for a task

@@ -17,16 +17,20 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
 )
@@ -46,28 +50,17 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 				return true
 			}
 
-			authHeader := c.Request().Header.Values("Authorization")
-			if len(authHeader) == 0 {
-				return false // let the jwt middleware handle invalid headers
+			authHeader, ok := models.APITokenAuthorization(c.Request().Header)
+			if !ok {
+				return false // let the jwt middleware handle other or invalid headers
 			}
 
-			for _, s := range authHeader {
-				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
-					skipRouteCheck := c.Request().URL.Path == "/api/v1/token/test"
-					err := checkAPITokenAndPutItInContext(s, c, skipRouteCheck)
-					return err == nil
-				}
-			}
-
-			return false
+			return checkAPITokenAndPutItInContext(authHeader, c, shouldSkipRouteCheck(c)) == nil
 		},
+		SuccessHandler: checkUserJWTSession,
 		ErrorHandler: func(c *echo.Context, err error) error {
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, web.HTTPError{
-					HTTPCode: http.StatusUnauthorized,
-					Code:     ErrCodeInvalidToken,
-					Message:  "missing, malformed, expired or otherwise invalid token provided",
-				})
+				return c.JSON(http.StatusUnauthorized, errInvalidToken{}.HTTPError())
 			}
 
 			return nil
@@ -75,8 +68,62 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 	})
 }
 
+type errInvalidToken struct{}
+
+func (errInvalidToken) Error() string { return "invalid token" }
+
+func (errInvalidToken) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeInvalidToken,
+		Message:  "missing, malformed, expired or otherwise invalid token provided",
+	}
+}
+
+// A valid signature outlives logout, password changes and account freezes; the session doesn't.
+func checkUserJWTSession(c *echo.Context) error {
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok || !auth.IsUserToken(token) {
+		return nil
+	}
+
+	claims, err := auth.UserTokenClaimsFromJWT(token)
+	if err == nil {
+		err = auth.CheckUserTokenSession(claims)
+	}
+	if errors.Is(err, auth.ErrUserTokenRejected) {
+		log.Debugf("[auth] Rejected user token: %v", err)
+		return errInvalidToken{}
+	}
+	return err
+}
+
+// An autopatch leg inherits the client PATCH's authorisation only as long as it
+// resolves to the very route that PATCH was authorised against.
+func shouldSkipRouteCheck(c *echo.Context) bool {
+	if c.Path() == "/api/v1/token/test" || c.Path() == "/api/v2/token/test" {
+		return true
+	}
+
+	// Routes under the MCP prefix reject API tokens themselves; loopback routes still get checked here.
+	if c.Path() == mcp.RoutePrefix || strings.HasPrefix(c.Path(), mcp.RoutePrefix+"/") {
+		return true
+	}
+
+	// Autopatch re-dispatches a bare GET on the authorised route; a query string
+	// or any other method means the client smuggled it in through the path.
+	if c.Request().Method != http.MethodGet || c.Request().URL.RawQuery != "" {
+		return false
+	}
+
+	route, ok := humabridge.InternalDispatchRoute(c.Request().Context())
+	return ok && route != "" && route == c.Path()
+}
+
 func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, skipRouteCheck bool) error {
-	token, u, err := auth.ValidateAPITokenString(strings.TrimPrefix(tokenHeaderValue, "Bearer "))
+	s := db.NewReadSession()
+	token, u, err := models.ValidateTokenAndGetOwner(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "), false)
+	s.Close()
 	if err != nil {
 		log.Debugf("[auth] API token validation failed: %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
@@ -90,14 +137,9 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, sk
 	c.Set("api_token", token)
 	c.Set("api_user", u)
 
-	// Guarded by config: this fires on every token-authenticated request and
-	// only the audit listener consumes it.
-	if config.AuditEnabled.GetBool() {
-		err = events.DispatchWithContext(c.Request().Context(), &models.APITokenUsedEvent{
-			TokenID: token.ID,
-			OwnerID: token.OwnerID,
-		})
-		if err != nil {
+	// Autopatch's internal legs are not requests the client made.
+	if _, internalDispatch := humabridge.InternalDispatchRoute(c.Request().Context()); !internalDispatch {
+		if err := models.RecordAPITokenUse(c.Request().Context(), token); err != nil {
 			log.Errorf("Could not dispatch api token used event: %s", err)
 		}
 	}

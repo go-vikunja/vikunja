@@ -11,9 +11,11 @@ const {
 } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const {execFile} = require('child_process')
 const express = require('express')
 const portInUse = require('./portInUse.js')
 const oauth = require('./oauth.js')
+const {CONTENT_SECURITY_POLICY} = require('./csp.js')
 
 const frontendPath = 'frontend/'
 const PROTOCOL = 'vikunja-desktop'
@@ -69,6 +71,63 @@ if (!gotTheLock) {
 	process.exit(0)
 }
 
+// AppImages aren't installed, so nothing registers the vikunja-desktop://
+// scheme on the host — write a handler-only desktop file and register it via xdg-mime ourselves.
+function registerAppImageProtocolHandler() {
+	const appImagePath = process.env.APPIMAGE
+	// A newline in the path would break out of the quoted Exec= line and inject
+	// extra desktop-entry keys, so refuse to register such a path.
+	if (process.platform !== 'linux' || !appImagePath || /[\n\r]/.test(appImagePath)) {
+		return
+	}
+
+	try {
+		const applicationsDir = process.env.XDG_DATA_HOME
+			? path.join(process.env.XDG_DATA_HOME, 'applications')
+			: path.join(app.getPath('home'), '.local', 'share', 'applications')
+		const desktopFileName = `${PROTOCOL}-url-handler.desktop`
+		const desktopFilePath = path.join(applicationsDir, desktopFileName)
+		// Exec quoting per the desktop entry spec: escape "`$\ inside quotes, literal % as %%
+		const quotedExecPath = '"' + appImagePath.replace(/["`$\\]/g, '\\$&').replace(/%/g, '%%') + '"'
+		const desktopEntry = [
+			'[Desktop Entry]',
+			'Name=Vikunja Desktop',
+			'Type=Application',
+			`Exec=${quotedExecPath} %u`,
+			'Terminal=false',
+			'NoDisplay=true',
+			`MimeType=x-scheme-handler/${PROTOCOL};`,
+			'',
+		].join('\n')
+
+		// Rewrite when the AppImage was moved or renamed so Exec stays valid
+		let existing = null
+		try {
+			existing = fs.readFileSync(desktopFilePath, 'utf8')
+		} catch {
+			// Not written yet
+		}
+		if (existing !== desktopEntry) {
+			fs.mkdirSync(applicationsDir, {recursive: true})
+			fs.writeFileSync(desktopFilePath, desktopEntry)
+		}
+
+		execFile('xdg-mime', ['default', desktopFileName, `x-scheme-handler/${PROTOCOL}`], (err) => {
+			if (err) {
+				console.warn('Failed to set vikunja-desktop:// as default handler:', err.message)
+			}
+		})
+		execFile('update-desktop-database', [applicationsDir], (err) => {
+			if (err) {
+				console.warn('Failed to update desktop database:', err.message)
+			}
+		})
+	} catch (err) {
+		// Best effort — a failure here only breaks the login deep link
+		console.warn('Failed to register AppImage protocol handler:', err.message)
+	}
+}
+
 // Register the custom protocol for deep links
 if (process.defaultApp) {
 	// During development, register with the path to the script
@@ -77,6 +136,7 @@ if (process.defaultApp) {
 	}
 } else {
 	app.setAsDefaultProtocolClient(PROTOCOL)
+	registerAppImageProtocolHandler()
 }
 
 // Handle deep link on macOS (app already running or launched via URL)
@@ -169,8 +229,17 @@ function startServer(callback) {
 			port = 0
 		}
 
-		eApp.use(express.static(path.join(__dirname, frontendPath)))
+		// Documents only: sw.js importScripts() the workbox runtime, and a service worker
+		// inherits the CSP of its own script response rather than the page's.
+		eApp.use(express.static(path.join(__dirname, frontendPath), {
+			setHeaders: (response, filePath) => {
+				if (filePath.endsWith('index.html')) {
+					response.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY)
+				}
+			},
+		}))
 		eApp.use((request, response) => {
+			response.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY)
 			response.sendFile(path.join(__dirname, frontendPath, 'index.html'))
 		})
 
@@ -516,7 +585,6 @@ app.whenReady().then(() => {
 
 	startServer(() => {
 		createMainWindow()
-		createQuickEntryWindow()
 		setupTray()
 
 		registerQuickEntryShortcut(DEFAULT_QUICK_ENTRY_SHORTCUT)

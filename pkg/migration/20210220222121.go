@@ -36,7 +36,7 @@ func init() {
 		ID:          "20210220222121",
 		Description: "Add a read_at column to notifications",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(notifications20210220222121{})
+			return partialSync(tx, notifications20210220222121{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

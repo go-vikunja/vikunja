@@ -65,6 +65,10 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 	if pageNumber < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Page number cannot be negative.")
 	}
+	// Models treat page 0 as "fetch everything".
+	if pageNumber == 0 {
+		pageNumber = 1
+	}
 
 	// Items per page
 	var perPageNumber int

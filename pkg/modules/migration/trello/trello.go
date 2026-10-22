@@ -18,21 +18,32 @@ package trello
 
 import (
 	"bytes"
+	"fmt"
+	"html"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/richtext"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/adlio/trello"
-	"github.com/yuin/goldmark"
 )
 
 // Migration represents the trello migration struct
 type Migration struct {
 	Token string `json:"code"`
+	State string `json:"state"`
+}
+
+func (m *Migration) OAuthState() string {
+	return m.State
 }
 
 var trelloColorMap map[string]string
@@ -96,7 +107,13 @@ func (m *Migration) Name() string {
 // @Success 200 {object} handler.AuthURL "The auth url."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/trello/auth [get]
-func (m *Migration) AuthURL() string {
+func (m *Migration) AuthURL(state string) string {
+	// The implicit flow returns no state parameter, so it rides in return_url's query.
+	returnURL := config.MigrationTrelloRedirectURL.GetString()
+	sep := "?"
+	if strings.Contains(returnURL, "?") {
+		sep = "&"
+	}
 	return "https://trello.com/1/authorize" +
 		"?expiration=never" +
 		"&scope=read" +
@@ -104,7 +121,22 @@ func (m *Migration) AuthURL() string {
 		"&response_type=token" +
 		"&name=Vikunja%20Migration" +
 		"&key=" + config.MigrationTrelloKey.GetString() +
-		"&return_url=" + config.MigrationTrelloRedirectURL.GetString()
+		"&return_url=" + url.QueryEscape(returnURL+sep+"state="+url.QueryEscape(state))
+}
+
+// downloadAttachment hands the oauth token only to the url trello returned, not to wherever it redirects.
+func downloadAttachment(url, token string) (*bytes.Buffer, error) {
+	hc := utils.NewSSRFSafeHTTPClient()
+	hc.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return fmt.Errorf("%w: too many redirects", migration.ErrRedirectRefused)
+		}
+		req.Header.Del("Authorization")
+		return nil
+	}
+	return migration.DownloadFileWithHeadersLimited(hc, url, http.Header{
+		"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + token + `"`},
+	}, migration.MaxDownloadSize())
 }
 
 func getTrelloBoards(client *trello.Client) (trelloData []*trello.Board, err error) {
@@ -214,13 +246,8 @@ func fillCardData(client *trello.Client, board *trello.Board) (err error) {
 }
 
 func convertMarkdownToHTML(input string) (output string, err error) {
-	var buf bytes.Buffer
-	err = goldmark.Convert([]byte(input), &buf)
-	if err != nil {
-		return
-	}
 	//#nosec - we are not responsible to escape this as we don't know the context where it is used
-	return buf.String(), nil
+	return richtext.CommonMarkToHTML([]byte(input))
 }
 
 // Converts all previously obtained data from trello into the vikunja format.
@@ -249,7 +276,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 		project := &models.ProjectWithTasksAndBuckets{
 			Project: models.Project{
 				ID:              int64(index+1) + pseudoParentID,
-				ParentProjectID: pseudoParentID,
+				ParentProjectID: &pseudoParentID,
 				Title:           board.Name,
 				Description:     board.Desc,
 				IsArchived:      board.Closed,
@@ -261,11 +288,15 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 		if board.Prefs.BackgroundImage != "" {
 			log.Debugf("[Trello Migration] Downloading background %s for board %s", board.Prefs.BackgroundImage, board.ID)
 			buf, err := migration.DownloadFile(board.Prefs.BackgroundImage)
-			if err != nil {
+			switch {
+			case files.IsErrFileIsTooLarge(err):
+				log.Warningf("[Trello Migration] Background of board %s is too large, skipping it", board.ID)
+			case err != nil:
 				return nil, err
+			default:
+				log.Debugf("[Trello Migration] Downloaded background %s for board %s", board.Prefs.BackgroundImage, board.ID)
+				project.BackgroundInformation = buf
 			}
-			log.Debugf("[Trello Migration] Downloaded background %s for board %s", board.Prefs.BackgroundImage, board.ID)
-			project.BackgroundInformation = buf
 		} else {
 			log.Debugf("[Trello Migration] Board %s does not have a background image, not copying...", board.ID)
 		}
@@ -301,14 +332,14 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 
 				// Checklists (as markdown in description)
 				for _, checklist := range card.Checklists {
-					task.Description += "\n\n<h2> " + checklist.Name + "</h2>\n\n" + `<ul data-type="taskList">`
+					task.Description += "\n\n<h2> " + html.EscapeString(checklist.Name) + "</h2>\n\n" + `<ul data-type="taskList">`
 
 					for _, item := range checklist.CheckItems {
 						task.Description += "\n"
 						if item.State == "complete" {
-							task.Description += `<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + item.Name + `</p></div></li>`
+							task.Description += `<li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>` + html.EscapeString(item.Name) + `</p></div></li>`
 						} else {
-							task.Description += `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + item.Name + `</p></div></li>`
+							task.Description += `<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>` + html.EscapeString(item.Name) + `</p></div></li>`
 						}
 					}
 					task.Description += "</ul>"
@@ -342,9 +373,11 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 						// Download file and add it as attachment
 						log.Debugf("[Trello Migration] Downloading card attachment %s", attachment.ID)
 
-						buf, err := migration.DownloadFileWithHeaders(attachment.URL, map[string][]string{
-							"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + client.Token + `"`},
-						})
+						buf, err := downloadAttachment(attachment.URL, client.Token)
+						if files.IsErrFileIsTooLarge(err) {
+							log.Warningf("[Trello Migration] Card attachment %s is too large, skipping it", attachment.ID)
+							continue
+						}
 						if err != nil {
 							return nil, err
 						}
@@ -370,7 +403,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 					}
 
 					// Other links are not attachments in Vikunja, but we can add them to the description
-					task.Description += `<p><a href="` + attachment.URL + `">` + attachment.Name + "</a></p>\n"
+					task.Description += `<p><a href="` + html.EscapeString(attachment.URL) + `">` + html.EscapeString(attachment.Name) + "</a></p>\n"
 				}
 
 				// When the cover image was set manually, we need to add it as an attachment
@@ -379,22 +412,25 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 					cover := card.Cover.Scaled[len(card.Cover.Scaled)-1]
 
 					buf, err := migration.DownloadFile(cover.URL)
-					if err != nil {
+					switch {
+					case files.IsErrFileIsTooLarge(err):
+						log.Warningf("[Trello Migration] Cover of card %s is too large, skipping it", card.ID)
+					case err != nil:
 						return nil, err
-					}
+					default:
+						coverAttachment := &models.TaskAttachment{
+							ID: 43,
+							File: &files.File{
+								Name:        cover.ID + ".jpg",
+								Mime:        "image/jpg", // Seems to always return jpg
+								Size:        uint64(buf.Len()),
+								FileContent: buf.Bytes(),
+							},
+						}
 
-					coverAttachment := &models.TaskAttachment{
-						ID: 43,
-						File: &files.File{
-							Name:        cover.ID + ".jpg",
-							Mime:        "image/jpg", // Seems to always return jpg
-							Size:        uint64(buf.Len()),
-							FileContent: buf.Bytes(),
-						},
+						task.Attachments = append(task.Attachments, coverAttachment)
+						task.CoverImageAttachmentID = coverAttachment.ID
 					}
-
-					task.Attachments = append(task.Attachments, coverAttachment)
-					task.CoverImageAttachmentID = coverAttachment.ID
 				}
 
 				for _, action := range card.Actions {
@@ -473,6 +509,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 	client := trello.NewClient(config.MigrationTrelloKey.GetString(), m.Token)
 	client.Logger = log.GetLogger()
+	client.Client = utils.NewSSRFSafeHTTPClient()
 
 	boards, err := getTrelloBoards(client)
 	if err != nil {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, useId} from 'vue'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 export type SelectOption =
 	| string
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
 	'update:modelValue': [value: string | number]
 }>()
+const showLoading = useDelayedLoading(() => props.loading)
 
 defineOptions({inheritAttrs: false})
 
@@ -31,7 +33,7 @@ const errorId = computed(() => props.error ? `${selectId.value}-error` : undefin
 
 const wrapperClasses = computed(() => [
 	'select',
-	{'is-loading': props.loading},
+	{'is-loading': showLoading.value},
 ])
 
 const selectBindings = computed(() => {

@@ -13,6 +13,15 @@ depends:
 rpm:
   signature:
     key_file: ${NFPM_GPG_KEY_FILE}
+# apk and archlinux run `scripts.postinstall` on a fresh install only — nfpm
+# maps their upgrade hooks from these packager-specific keys instead. Without
+# them, upgrading on Alpine or Arch runs no maintainer script at all.
+apk:
+  scripts:
+    postupgrade: ./build/after-install-openrc.sh
+archlinux:
+  scripts:
+    postupgrade: ./build/after-install.sh
 overrides:
   apk:
     depends:
@@ -24,7 +33,8 @@ contents:
     dst: /opt/vikunja/vikunja
   - src: ./config.yml.sample
     dst: /etc/vikunja/config.yml
-    type: "config"
+    # noreplace only affects rpm; the other packagers treat it as plain config.
+    type: "config|noreplace"
   - src: /opt/vikunja/vikunja
     dst: /usr/local/bin/vikunja
     type: "symlink"

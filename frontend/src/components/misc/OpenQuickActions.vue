@@ -8,7 +8,7 @@ import {isAppleDevice} from '@/helpers/isAppleDevice'
 const baseStore = useBaseStore()
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function openQuickActionsViaHotkey(event) {
+function openQuickActionsViaHotkey(event: KeyboardEvent) {
 	const shortcutString = eventToShortcutString(event)
 	if (!shortcutString) return
 

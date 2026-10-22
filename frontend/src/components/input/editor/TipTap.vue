@@ -19,50 +19,62 @@
 				v-if="editor"
 				v-show="isEditing"
 				:editor="editor"
+				:should-show="showTextBubbleMenu"
 			>
 				<div class="editor-bubble__wrapper">
 					<BaseButton
 						v-tooltip="$t('input.editor.bold')"
+						:aria-label="$t('input.editor.bold')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('bold') }"
+						:aria-pressed="editor.isActive('bold')"
 						@click="() => editor?.chain().focus().toggleBold().run()"
 					>
 						<Icon :icon="['fas', 'bold']" />
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.italic')"
+						:aria-label="$t('input.editor.italic')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('italic') }"
+						:aria-pressed="editor.isActive('italic')"
 						@click="() => editor?.chain().focus().toggleItalic().run()"
 					>
 						<Icon :icon="['fas', 'italic']" />
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.underline')"
+						:aria-label="$t('input.editor.underline')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('underline') }"
+						:aria-pressed="editor.isActive('underline')"
 						@click="() => editor?.chain().focus().toggleUnderline().run()"
 					>
 						<Icon :icon="['fas', 'underline']" />
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.strikethrough')"
+						:aria-label="$t('input.editor.strikethrough')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('strike') }"
+						:aria-pressed="editor.isActive('strike')"
 						@click="() => editor?.chain().focus().toggleStrike().run()"
 					>
 						<Icon :icon="['fas', 'strikethrough']" />
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.code')"
+						:aria-label="$t('input.editor.code')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('code') }"
+						:aria-pressed="editor.isActive('code')"
 						@click="() => editor?.chain().focus().toggleCode().run()"
 					>
 						<Icon :icon="['fas', 'code']" />
 					</BaseButton>
 					<BaseButton
 						v-tooltip="$t('input.editor.link')"
+						:aria-label="$t('input.editor.link')"
 						class="editor-bubble__button"
 						:class="{ 'is-active': editor.isActive('link') }"
 						@click="setLink"
@@ -71,13 +83,38 @@
 					</BaseButton>
 				</div>
 			</BubbleMenu>
+			<BubbleMenu
+				v-if="editor"
+				v-show="isEditing"
+				plugin-key="imageBubbleMenu"
+				:editor="editor"
+				:should-show="showImageBubbleMenu"
+			>
+				<div class="editor-bubble__wrapper">
+					<BaseButton
+						class="editor-bubble__button editor-bubble__button--text"
+						@click="setImageAlt"
+					>
+						{{ $t('input.editor.altText') }}
+					</BaseButton>
+				</div>
+			</BubbleMenu>
 
 			<EditorContent
 				class="tiptap__editor"
+				data-user-content
 				:class="{'tiptap__editor-is-edit-enabled': isEditing}"
 				:editor="editor"
-				@dblclick="setEditIfApplicable()"
-				@click="focusIfEditing()"
+				@dblclick="setEditIfApplicable"
+				@click="handleContentClick"
+			/>
+
+			<ImageLightbox
+				v-if="lightboxBlobUrl !== null"
+				:key="lightboxBlobUrl"
+				:blob-url="lightboxBlobUrl"
+				:alt="lightboxAlt"
+				@close="closeLightbox"
 			/>
 		</div>
 
@@ -115,7 +152,7 @@
 					{{ $t('misc.save') }}
 				</BaseButton>
 			</li>
-			<li v-if="!isEditing">
+			<li v-if="!isEditing && isEditEnabled">
 				<BaseButton
 					class="done-edit"
 					@click="() => setEdit()"
@@ -147,53 +184,36 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {eventToShortcutString} from '@/helpers/shortcut'
 
 import EditorToolbar from './EditorToolbar.vue'
 
-import StarterKit from '@tiptap/starter-kit'
-import {Extension, mergeAttributes, type SetContentOptions} from '@tiptap/core'
+import {Extension, isTextSelection, mergeAttributes, type SetContentOptions} from '@tiptap/core'
 import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
-import {Plugin, PluginKey} from '@tiptap/pm/state'
-import {marked} from 'marked'
+import type {EditorState} from '@tiptap/pm/state'
+import type {EditorView} from '@tiptap/pm/view'
 import {BubbleMenu} from '@tiptap/vue-3/menus'
 
-import Link from '@tiptap/extension-link'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
-import Typography from '@tiptap/extension-typography'
-import Image from '@tiptap/extension-image'
-import Underline from '@tiptap/extension-underline'
-import {Placeholder} from '@tiptap/extensions'
 import Mention from '@tiptap/extension-mention'
 
-import {TaskList} from '@tiptap/extension-list'
-import {TaskItemWithId} from './taskItemWithId'
-import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
-import HardBreak from '@tiptap/extension-hard-break'
-
-import Commands from './commands'
-import suggestionSetup from './suggestion'
-import {EmojiExtension} from './emoji/emojiExtension'
+import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
+import {createEditorExtensions} from './editorExtensions'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
-
-import {common, createLowlight} from 'lowlight'
+import ImageLightbox from '@/components/misc/ImageLightbox.vue'
 
 import type {BottomAction, UploadCallback} from './types'
-import type {ITask} from '@/modelTypes/ITask'
-import type {IAttachment} from '@/modelTypes/IAttachment'
-import AttachmentModel from '@/models/attachment'
-import AttachmentService from '@/services/attachment'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
 
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
+import {getScrollParent} from '@/helpers/getScrollParent'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
+import {error} from '@/message'
 
 const props = withDefaults(defineProps<{
 	uploadCallback?: UploadCallback,
@@ -204,7 +224,7 @@ const props = withDefaults(defineProps<{
 	editShortcut?: string,
 	enableDiscardShortcut?: boolean,
 	enableMentions?: boolean,
-	mentionProjectId?: number,
+	projectId?: number,
 	storageKey?: string,
 }>(), {
 	uploadCallback: undefined,
@@ -215,11 +235,13 @@ const props = withDefaults(defineProps<{
 	editShortcut: '',
 	enableDiscardShortcut: false,
 	enableMentions: false,
-	mentionProjectId: 0,
+	projectId: 0,
 	storageKey: '',
 })
 
 const emit = defineEmits(['save'])
+
+provide(taskLinkCurrentProjectIdKey, computed(() => props.projectId || undefined))
 
 const modelValue = defineModel<string>({ default: '' })
 
@@ -232,100 +254,6 @@ const defaultSetContentOptions: SetContentOptions = {
 		preserveWhitespace: true,
 	},
 }
-
-const CustomTableCell = TableCell.extend({
-	addAttributes() {
-		return {
-			// extend the existing attributes …
-			...this.parent?.(),
-
-			// and add a new one …
-			backgroundColor: {
-				default: null,
-				parseHTML: (element: HTMLElement) => element.getAttribute('data-background-color'),
-				renderHTML: (attributes) => {
-					return {
-						'data-background-color': attributes.backgroundColor,
-						style: `background-color: ${attributes.backgroundColor}`,
-					}
-				},
-			},
-		}
-	},
-})
-
-type CacheKey = `${ITask['id']}-${IAttachment['id']}`
-const loadedAttachments = ref<{
-	[key: CacheKey]: string
-}>({})
-
-const CustomImage = Image.extend({
-	addAttributes() {
-		return {
-			src: {
-				default: null,
-			},
-			alt: {
-				default: null,
-			},
-			title: {
-				default: null,
-			},
-			id: {
-				default: null,
-			},
-			'data-src': {
-				default: null,
-			},
-		}
-	},
-	renderHTML({HTMLAttributes}) {
-		if (HTMLAttributes.src?.startsWith(window.API_URL) || HTMLAttributes['data-src']?.startsWith(window.API_URL)) {
-			const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
-
-			// The url is something like /tasks/<id>/attachments/<id>
-			const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
-			const taskId = Number(parts[1])
-			const attachmentId = Number(parts[3])
-			const cacheKey: CacheKey = `${taskId}-${attachmentId}`
-			const id = 'tiptap-image-' + cacheKey
-
-			nextTick(async () => {
-
-				const img = document.getElementById(id) as HTMLImageElement | null
-
-				if (!img || !(img instanceof HTMLImageElement)) return
-
-				if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
-
-					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
-
-					const attachmentService = new AttachmentService()
-					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
-				}
-
-				img.src = loadedAttachments.value[cacheKey] as string
-			})
-
-			return ['img', mergeAttributes(this.options.HTMLAttributes, {
-				'data-src': imageUrl,
-				src: '#',
-				alt: HTMLAttributes.alt,
-				title: HTMLAttributes.title,
-				id,
-			})]
-		}
-
-		return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
-	},
-})
-
-// prevent links from extending after space
-const NonInclusiveLink = Link.extend({
-	inclusive() {
-		return false
-	},
-})
 
 type Mode = 'edit' | 'preview'
 
@@ -358,185 +286,26 @@ watch(
 	},
 )
 
-const additionalLinkProtocols = [
-	'ftp',
-	'git',
-	'obsidian',
-	'notion',
-	'message',
-]
-
-const PasteHandler = Extension.create({
-	name: 'pasteHandler',
-
-	addProseMirrorPlugins() {
-		return [
-			new Plugin({
-				key: new PluginKey('pasteHandler'),
-				props: {
-					handlePaste: (view, event) => {
-
-						// Handle images pasted from clipboard
-						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length) {
-
-							for (const item of event.clipboardData.items) {
-								if (item.kind === 'file' && item.type.startsWith('image/')) {
-									const file = item.getAsFile()
-									if (file) {
-										uploadAndInsertFiles([file])
-										return true
-									}
-								}
-							}
-						}
-
-						const text = event.clipboardData?.getData('text/plain') || ''
-						if (!text) {
-							return false
-						}
-
-						// Don't convert markdown when pasting inside a code block
-						const $from = view.state.selection.$from
-						if ($from.parent.type.name === 'codeBlock') {
-							return false
-						}
-
-						const hasMarkdownSyntax = new RegExp('[*`_\\[\\]#-]').test(text)
-						if (!hasMarkdownSyntax) {
-							return false
-						}
-
-						const html = marked.parse(text)
-
-						this.editor.commands.insertContent(html)
-						return true
-					},
-				},
-			}),
-		]
-	},
+const extensions: Extensions = createEditorExtensions({
+	t,
+	isEditing,
+	isEditEnabled: () => props.isEditEnabled,
+	placeholder: () => props.placeholder,
+	contentHasChanged,
+	bubbleSave,
+	getEditor: () => editor.value,
+	uploadCallback: () => props.uploadCallback,
+	uploadAndInsertFiles,
 })
 
-
-const extensions : Extensions = [
-	// Starterkit:
-	StarterKit.configure({
-		codeBlock: false,
-		hardBreak: false,
-		blockquote: false,
-	}),
-	BlockquoteWithCommentId,
-
-	CodeBlockLowlight.configure({
-		lowlight: createLowlight(common),
-	}),
-	HardBreak.extend({
-		addKeyboardShortcuts() {
-			return {
-				'Shift-Enter': () => this.editor.commands.setHardBreak(),
-				'Mod-Enter': () => {
-					if (contentHasChanged.value) {
-						bubbleSave()
-					}
-					return true
-				},
-			}
-		},
-	}),
-
-	Placeholder.configure({
-		placeholder({editor}) {
-			if (!isEditing.value || editor.getText() !== '' && !editor.isFocused) {
-				return ''
-			}
-
-			return props.placeholder || t('input.editor.placeholder')
-		},
-	}),
-	Typography,
-	Underline,
-	NonInclusiveLink.configure({
-		openOnClick: false,
-		validate: (href) => (new RegExp(
-			`^(https?|${additionalLinkProtocols.join('|')}):\\/\\/`,
-			'i',
-		)).test(href),
-		protocols: additionalLinkProtocols,
-	}),
-	Table.configure({
-		resizable: true,
-	}),
-	TableRow,
-	TableHeader,
-	// Custom TableCell with backgroundColor attribute
-	CustomTableCell,
-
-	CustomImage,
-
-	TaskList,
-	TaskItemWithId.configure({
-		nested: true,
-		onReadOnlyChecked(node, checked) {
-			if (!props.isEditEnabled) {
-				return false
-			}
-
-			// Use taskId attribute to reliably find the correct node
-			// This fixes GitHub issues #293 and #563
-			const targetTaskId = node.attrs.taskId
-
-			if (!targetTaskId) {
-				// Fallback to original behavior if no ID (shouldn't happen)
-				console.warn('TaskItem missing taskId, falling back to node comparison')
-				editor.value!.state.doc.descendants((subnode, pos) => {
-					if (subnode === node) {
-						const {tr} = editor.value!.state
-						tr.setNodeMarkup(pos, undefined, {
-							...node.attrs,
-							checked,
-						})
-						editor.value!.view.dispatch(tr)
-						bubbleSave()
-					}
-				})
-				return true
-			}
-
-			// Find node by taskId for reliable matching
-			editor.value!.state.doc.descendants((subnode, pos) => {
-				if (subnode.type.name === 'taskItem' && subnode.attrs.taskId === targetTaskId) {
-					const {tr} = editor.value!.state
-					tr.setNodeMarkup(pos, undefined, {
-						...subnode.attrs,
-						checked,
-					})
-					editor.value!.view.dispatch(tr)
-					bubbleSave()
-					return false // Stop iteration once found
-				}
-			})
-
-			return true
-		},
-	}),
-
-	Commands.configure({
-		suggestion: suggestionSetup(t),
-	}),
-
-	EmojiExtension,
-
-	PasteHandler,
-]
-
 // Add mention extension if enabled
-if (props.enableMentions && props.mentionProjectId > 0) {
+if (props.enableMentions && props.projectId > 0) {
 	extensions.push(
 		Mention.configure({
 			HTMLAttributes: {
 				class: 'mention',
 			},
-			suggestion: mentionSuggestionSetup(props.mentionProjectId),
+			suggestion: mentionSuggestionSetup(props.projectId),
 		}).extend({
 
 			parseHTML() {
@@ -574,15 +343,28 @@ if (props.enableDiscardShortcut) {
 	}))
 }
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const editor = useEditor({
 	// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 	editable: isEditing.value,
 	extensions: extensions,
 	onUpdate: bubbleNow,
+	editorProps: {
+		attributes: {
+			'aria-label': props.placeholder || t('input.editor.label'),
+		},
+	},
 	parseOptions: {
 		preserveWhitespace: true,
 	},
 })
+
+// useEditor destroys the editor on unmount but leaves the ref populated, so `editor.value?.`
+// still hands out a dead instance to anything resuming after an await.
+function liveEditor() {
+	const instance = editor.value
+	return instance && !instance.isDestroyed ? instance : undefined
+}
 
 watchEffect(() => editor.value?.setEditable(isEditing.value, false))
 
@@ -601,7 +383,12 @@ watch(
 )
 
 function bubbleNow() {
-	const editorVal = editor.value!.getHTML()
+	const instance = liveEditor()
+	if (!instance) {
+		return
+	}
+
+	const editorVal = instance.getHTML()
 	if (editorVal === modelValue.value ||
 		(editorVal === '<p></p>') && modelValue.value === '') {
 		return
@@ -648,11 +435,24 @@ function exitEditMode() {
 	}
 }
 
-function setEditIfApplicable() {
+async function setEditIfApplicable(event: MouseEvent) {
 	if (!props.isEditEnabled) return
 	if (isEditing.value) return
+	if (getLightboxImage(event.target) !== null) return
 
-	setEdit()
+	const view = editor.value?.view
+	const pos = view?.posAtCoords({left: event.clientX, top: event.clientY})?.pos
+	if (view === undefined || pos === undefined) {
+		setEdit()
+		return
+	}
+
+	// The toolbar appearing above pushes the content down; scroll it back so the clicked text stays under the pointer.
+	const topBefore = view.coordsAtPos(pos).top
+	internalMode.value = 'edit'
+	await nextTick()
+	getScrollParent(view.dom).scrollBy(0, view.coordsAtPos(pos).top - topBefore)
+	editor.value?.commands.focus(pos)
 }
 
 function setEdit(focus: boolean = true) {
@@ -677,31 +477,40 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		throw new Error('Can\'t add files here')
 	}
 
-	props.uploadCallback(files).then(urls => {
+	// The server reports failed uploads (quota, disk full) in the response body,
+	// so a rejection here is a message for the user, not a bug to report.
+	props.uploadCallback(files).then(async urls => {
 		urls?.forEach(url => {
-			if (editor.value?.isEmpty) {
-				editor.value
+			if (liveEditor()?.isEmpty) {
+				liveEditor()
 					?.chain()
 					.focus()
 					.insertContent(UPLOAD_PLACEHOLDER_ELEMENT)
 					.run()
 			}
-			editor.value
+			liveEditor()
 				?.chain()
 				.focus()
 				.setImage({src: url})
 				.run()
 		})
-		
-		const html = editor.value?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
 
-		editor.value?.commands.setContent(html, {
+		const html = liveEditor()?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
+
+		liveEditor()?.commands.setContent(html, {
 			...defaultSetContentOptions,
 			emitUpdate: false,
 		})
 
 		bubbleNow()
-	})
+
+		// Prompt for alt text right after insertion. setContent above resets node
+		// positions, so reliably locating each image is fragile for multi-uploads —
+		// prompt only when a single image was inserted.
+		if (urls?.length === 1) {
+			await promptImageAlt(urls[0])
+		}
+	}).catch(e => error(e))
 }
 
 function triggerImageInput(event: Event) {
@@ -727,17 +536,79 @@ async function addImage(event: Event) {
 		return
 	}
 
-	const url = await inputPrompt(event.target.getBoundingClientRect(), '', editor.value)
+	if (!(event.target instanceof Element)) return
+	const url = await inputPrompt(event.target.getBoundingClientRect(), t('input.editor.urlPlaceholder'), '', editor.value)
 
 	if (url) {
-		editor.value?.chain().focus().setImage({src: url}).run()
+		liveEditor()?.chain().focus().setImage({src: url}).run()
 		bubbleNow()
+		await promptImageAlt(url)
 	}
 }
 
 function setLink(event: MouseEvent) {
 	const target = event.target as HTMLElement
 	setLinkInEditor(target.getBoundingClientRect(), editor.value)
+}
+
+// Compose the plugin's default predicate: keep its focus and empty-text-block
+// guards (a doubleclicked empty paragraph reports a non-empty range; focus
+// prevents a sibling editor's menu from lingering), but also hide the menu over
+// a selected image node so only the image menu shows there.
+function showTextBubbleMenu({view, element, state, from, to}: {view: EditorView, element: HTMLElement, state: EditorState, from: number, to: number}) {
+	const isEmptyTextBlock = !state.doc.textBetween(from, to).length && isTextSelection(state.selection)
+	const hasEditorFocus = view.hasFocus() || element.contains(document.activeElement)
+	return hasEditorFocus && from !== to && !isEmptyTextBlock && !editor.value?.isActive('image') && !editor.value?.isActive('taskLink')
+}
+
+function showImageBubbleMenu() {
+	return editor.value?.isActive('image') ?? false
+}
+
+async function promptAndApplyImageAlt(rect: DOMRect, previous: string) {
+	const alt = await inputPrompt(rect, t('input.editor.altTextPlaceholder'), previous, editor.value ?? undefined)
+
+	if (alt === null) {
+		return
+	}
+
+	liveEditor()?.chain().focus().updateAttributes('image', {alt}).run()
+	bubbleNow()
+}
+
+async function setImageAlt(event: MouseEvent) {
+	const target = event.target as HTMLElement
+	const previousAlt = editor.value?.getAttributes('image').alt || ''
+	await promptAndApplyImageAlt(target.getBoundingClientRect(), previousAlt)
+}
+
+// Cancelling leaves the image without alt text.
+async function promptImageAlt(src: string) {
+	const instance = liveEditor()
+	if (!instance) {
+		return
+	}
+
+	let pos: number | null = null
+	instance.state.doc.descendants((node, p) => {
+		if (node.type.name === 'image' && (node.attrs.src === src || node.attrs['data-src'] === src)) {
+			pos = p
+		}
+	})
+	if (pos === null) {
+		return
+	}
+
+	instance.chain().setNodeSelection(pos).run()
+	await nextTick()
+
+	const dom = liveEditor()?.view.nodeDOM(pos) as HTMLElement | null
+	const rect = dom?.getBoundingClientRect() ?? new DOMRect()
+	await promptAndApplyImageAlt(rect, '')
+
+	// Drop the node selection the prompt relied on so the next insert appends a new
+	// image instead of replacing this one.
+	liveEditor()?.chain().setTextSelection(pos + 1).run()
 }
 
 onMounted(async () => {
@@ -758,10 +629,14 @@ onMounted(async () => {
 		if (draft && isEditorContentEmpty(modelValue.value)) {
 			// Only load draft if current content is empty
 			// Set content and force edit mode for immediate editing
-			editor.value?.commands.setContent(draft, {emitUpdate: false})
+			editor.value?.commands.setContent(draft, {
+				...defaultSetContentOptions,
+				emitUpdate: false,
+			})
 			internalMode.value = 'edit'
-			// Update the model so parent sees the restored content
-			modelValue.value = draft
+			// The normalized HTML, not the raw draft: a mismatch would make the
+			// modelValue watcher reset the editor into preview mode.
+			modelValue.value = editor.value?.getHTML() ?? draft
 			return
 		}
 	}
@@ -804,7 +679,8 @@ defineExpose({setReplyContent})
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function setFocusToEditor(event: KeyboardEvent) {
-	const target = event.target as HTMLElement
+	const target = event.target
+	if (!(target instanceof HTMLElement)) return
 	if (target.shadowRoot) {
 		return
 	}
@@ -812,9 +688,9 @@ function setFocusToEditor(event: KeyboardEvent) {
 	const shortcutString = eventToShortcutString(event)
 	if (!shortcutString) return
 	if (shortcutString !== props.editShortcut ||
-		event.target.tagName.toLowerCase() === 'input' ||
-		event.target.tagName.toLowerCase() === 'textarea' ||
-		event.target.contentEditable === 'true') {
+		target.tagName.toLowerCase() === 'input' ||
+		target.tagName.toLowerCase() === 'textarea' ||
+		target.contentEditable === 'true') {
 		return
 	}
 
@@ -831,6 +707,38 @@ function focusIfEditing() {
 	if (isEditing.value) {
 		editor.value?.commands.focus()
 	}
+}
+
+const lightboxBlobUrl = ref<string | null>(null)
+const lightboxAlt = ref('')
+
+function getLightboxImage(target: EventTarget | null): HTMLImageElement | null {
+	if (
+		target instanceof HTMLImageElement
+		&& target.dataset.src !== undefined
+		&& target.src.startsWith('blob:')
+	) {
+		return target
+	}
+
+	return null
+}
+
+function handleContentClick(event: MouseEvent) {
+	focusIfEditing()
+	if (isEditing.value) {
+		return
+	}
+
+	const image = getLightboxImage(event.target)
+	if (image !== null) {
+		lightboxBlobUrl.value = image.src
+		lightboxAlt.value = image.alt
+	}
+}
+
+function closeLightbox() {
+	lightboxBlobUrl.value = null
 }
 
 function handleEscapeKey(event: KeyboardEvent) {
@@ -851,15 +759,17 @@ function handleEscapeKey(event: KeyboardEvent) {
 	// Don't preventDefault - let ProseMirror's extension handle the actual exit
 }
 
-function clickTasklistCheckbox(event: MouseEvent) {
+function clickTasklistCheckbox(event: Event) {
 	event.stopImmediatePropagation()
 
-	const target = event.target as HTMLElement
+	const target = event.target
+	if (!(target instanceof HTMLElement)) return
 	if (target.localName !== 'p') {
 		return
 	}
 
-	event.target.parentNode.parentNode.firstChild.click()
+	const label = target.parentElement?.parentElement?.firstElementChild
+	if (label instanceof HTMLElement) label.click()
 }
 
 watch(
@@ -1160,7 +1070,7 @@ ul[data-type='taskList'] {
 	padding: 0;
 	margin-inline-start: 0;
 
-	li[data-checked='true'] {
+	li[data-checked='true'] > div > :not(ul, ol) {
 		color: var(--grey-500);
 		text-decoration: line-through;
 	}
@@ -1211,6 +1121,12 @@ ul[data-type='taskList'] {
 
 	&:hover {
 		background: var(--grey-200);
+	}
+
+	&--text {
+		padding: .5rem .75rem;
+		font-size: .9rem;
+		white-space: nowrap;
 	}
 }
 

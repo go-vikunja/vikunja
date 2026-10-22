@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -164,6 +165,33 @@ func TestHumaBucket(t *testing.T) {
 			require.Error(t, err)
 			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
 		})
+		t.Run("At the bucket cap", func(t *testing.T) {
+			s := db.NewSession()
+			defer s.Close()
+			t.Cleanup(func() {
+				cs := db.NewSession()
+				defer cs.Close()
+				_, err := cs.Where("title = ?", "cap filler").Delete(&models.Bucket{})
+				require.NoError(t, err)
+				require.NoError(t, cs.Commit())
+			})
+			count, err := s.Where("project_view_id = ?", 4).Count(&models.Bucket{})
+			require.NoError(t, err)
+			for range 100 - int(count) {
+				_, err = s.Insert(&models.Bucket{
+					Title:         "cap filler",
+					ProjectViewID: 4,
+					CreatedByID:   testuser1.ID,
+				})
+				require.NoError(t, err)
+			}
+			require.NoError(t, s.Commit())
+
+			_, err = owned.testCreateWithUser(nil, nil, `{"title":"One too many"}`)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
+			assertHandlerErrorCode(t, err, models.ErrCodeTooManyBuckets)
+		})
 	})
 
 	t.Run("Update", func(t *testing.T) {
@@ -240,6 +268,20 @@ func TestHumaBucket(t *testing.T) {
 			_, err := owned.testDeleteWithUser(nil, map[string]string{"bucket": "9999"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
+		})
+		t.Run("Bucket of another view in the same project", func(t *testing.T) {
+			// bucket 1 belongs to view 4; view 1 is another view of project 1.
+			otherView := webHandlerTestV2{
+				user:     &testuser1,
+				basePath: "/api/v2/projects/1/views/1/buckets",
+				idParam:  "bucket",
+				t:        t,
+				e:        owned.e,
+			}
+			_, err := otherView.testDeleteWithUser(nil, map[string]string{"bucket": "1"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusBadRequest, getHTTPErrorCode(err))
+			db.AssertExists(t, "buckets", map[string]interface{}{"id": 1, "project_view_id": 4}, false)
 		})
 	})
 }

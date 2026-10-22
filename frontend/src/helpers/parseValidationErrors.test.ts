@@ -2,6 +2,19 @@ import {describe, it, expect} from 'vitest'
 import {parseValidationErrors} from './parseValidationErrors'
 
 describe('parseValidationErrors', () => {
+	it('parses v2 body errors without treating path and query errors as form fields', () => {
+		expect(parseValidationErrors({
+			code: 2002,
+			errors: [
+				{location: 'body.email', message: 'Invalid email'},
+				{location: 'body.language', message: 'Unsupported language'},
+				{location: 'query.page', message: 'Invalid page'},
+				{location: 'path.token', message: 'Invalid token'},
+				{location: 'body.username'},
+			],
+		})).toEqual({email: 'Invalid email', language: 'Unsupported language'})
+	})
+
 	it('returns empty object when no invalid_fields present', () => {
 		const error = {
 			message: 'invalid data',

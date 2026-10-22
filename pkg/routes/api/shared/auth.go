@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
@@ -65,9 +66,16 @@ func RegisterUser(ctx context.Context, in *UserRegister) (*user.User, error) {
 		return nil, err
 	}
 
+	if err := CommitRegistration(ctx, s); err != nil {
+		return nil, err
+	}
+	return newUser, nil
+}
+
+func CommitRegistration(ctx context.Context, s *xorm.Session) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return nil, err
+		return err
 	}
 
 	events.DispatchPending(ctx, s)
@@ -80,7 +88,7 @@ func RegisterUser(ctx context.Context, in *UserRegister) (*user.User, error) {
 		}
 	}
 
-	return newUser, nil
+	return nil
 }
 
 // AuthenticateUserCredentials verifies a login against local (and, if configured,
@@ -96,19 +104,15 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 	// creation); a no-op once DispatchPending has run.
 	defer events.CleanupPending(s)
 
-	u, err := resolveLoginUser(ctx, s, login)
+	u, ldapAvatar, err := resolveLoginUser(ctx, s, login)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err
 	}
 
-	if u.Status == user.StatusDisabled {
+	if err := user.CheckUserCanAuthenticate(u); err != nil {
 		_ = s.Rollback()
-		return nil, &user.ErrAccountDisabled{UserID: u.ID}
-	}
-	if u.Status == user.StatusAccountLocked {
-		_ = s.Rollback()
-		return nil, &user.ErrAccountLocked{UserID: u.ID}
+		return nil, err
 	}
 
 	if err := enforceLoginTOTP(s, u, login.TOTPPasscode); err != nil {
@@ -129,6 +133,12 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 
 	events.DispatchPending(ctx, s)
 
+	if len(ldapAvatar) > 0 {
+		avatar.SyncFromProviderAsync(ctx, u.ID, "ldap", func(context.Context) ([]byte, error) {
+			return ldapAvatar, nil
+		})
+	}
+
 	return u, nil
 }
 
@@ -136,23 +146,24 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 // then against local accounts, mirroring v1's order so local users keep working
 // alongside LDAP. Bots are rejected before bcrypt runs because they have no
 // password hash.
-func resolveLoginUser(ctx context.Context, s *xorm.Session, login *user.Login) (*user.User, error) {
+func resolveLoginUser(ctx context.Context, s *xorm.Session, login *user.Login) (u *user.User, ldapAvatar []byte, err error) {
 	if config.AuthLdapEnabled.GetBool() {
-		u, err := ldap.AuthenticateUserInLDAP(s, login.Username, login.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
+		u, ldapAvatar, err = ldap.AuthenticateUserInLDAP(s, login.Username, login.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
 		if err != nil && !user.IsErrWrongUsernameOrPassword(err) {
-			return nil, err
+			return nil, nil, err
 		}
 		if u != nil {
-			return u, nil
+			return u, ldapAvatar, nil
 		}
 	}
 
 	existingUser, lookupErr := user.GetUserByUsername(s, login.Username)
 	if lookupErr == nil && existingUser.IsBot() {
-		return nil, &user.ErrAccountIsBot{UserID: existingUser.ID}
+		return nil, nil, &user.ErrAccountIsBot{UserID: existingUser.ID}
 	}
 
-	return user.CheckUserCredentials(ctx, s, login)
+	u, err = user.CheckUserCredentials(ctx, s, login)
+	return u, nil, err
 }
 
 // enforceLoginTOTP runs the TOTP gate for users who have it enabled, mirroring
@@ -208,36 +219,35 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
-	// Read before deleting so the stored id_token survives for the logout URL.
 	// A missing session just means there is nothing to log out.
-	session, err := models.GetSessionByID(s, sid)
-	if err != nil && !models.IsErrSessionNotFound(err) {
+	session, err := models.DeleteSessionByID(s, sid)
+	if models.IsErrSessionNotFound(err) {
+		return "", nil
+	}
+	if err != nil {
 		_ = s.Rollback()
 		return "", err
 	}
-	if session != nil && session.OIDCProviderKey != "" {
+	if session.OIDCProviderKey != "" {
 		url, buildErr := openid.BuildEndSessionURL(session.OIDCProviderKey, &models.SessionOIDCData{
 			IDToken:     session.OIDCIDToken,
 			ProviderKey: session.OIDCProviderKey,
 		})
 		if buildErr != nil {
-			// A failed URL build must not block logout; the session is still deleted below.
+			// A failed URL build must not block logout.
 			log.Errorf("Could not build OIDC end-session URL for session %s: %v", sid, buildErr)
 		} else {
 			endSessionURL = url
 		}
 	}
 
-	if _, err := s.Where("id = ?", sid).Delete(&models.Session{}); err != nil {
-		_ = s.Rollback()
-		return "", err
-	}
-
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return "", err
 	}
+	events.DispatchPending(context.Background(), s)
 
 	return endSessionURL, nil
 }
@@ -248,6 +258,7 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 func ResetPassword(reset *user.PasswordReset) error {
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	userID, err := user.ResetPassword(s, reset)
 	if err != nil {
@@ -260,7 +271,11 @@ func ResetPassword(reset *user.PasswordReset) error {
 		return err
 	}
 
-	return s.Commit()
+	if err := s.Commit(); err != nil {
+		return err
+	}
+	events.DispatchPending(context.Background(), s)
+	return nil
 }
 
 // RequestPasswordResetToken issues a password-reset token for the account with
@@ -297,7 +312,9 @@ func ConfirmEmail(confirm *user.EmailConfirm) error {
 // Password is blanked by AuthenticateLinkShare before this is returned.
 type LinkShareToken struct {
 	auth.Token
-	*models.LinkSharing
+	// Embedded by value: a pointer embed's method set is never empty, which
+	// breaks Huma's $schema wrapper (go#15924).
+	models.LinkSharing
 	ProjectID int64 `json:"project_id" readOnly:"true" doc:"The id of the project this share grants access to."`
 }
 
@@ -337,7 +354,7 @@ func AuthenticateLinkShare(hash, password string) (*LinkShareToken, error) {
 
 	return &LinkShareToken{
 		Token:       auth.Token{Token: t},
-		LinkSharing: share,
+		LinkSharing: *share,
 		ProjectID:   share.ProjectID,
 	}, nil
 }

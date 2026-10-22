@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/health"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -53,9 +54,8 @@ func init() { AddRouteRegistrar(RegisterHealthRoutes) }
 //nolint:contextcheck // health.Check and openid.GetAllProviders are shared v1/v2 code; they take no context and use background contexts for their own pings.
 func healthcheck(_ context.Context, _ *struct{}) (*healthBody, error) {
 	if err := health.Check(); err != nil {
-		// Mirror v1: a failed check is an internal error; the cause is logged,
-		// not leaked to the client.
-		return nil, huma.Error500InternalServerError("Internal server error", err)
+		log.Errorf("v2: healthcheck failed: %s", err)
+		return nil, huma.Error500InternalServerError("Internal server error")
 	}
 	out := &healthBody{}
 	out.Body.Status = "OK"

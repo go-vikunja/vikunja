@@ -2,10 +2,14 @@ import {test, expect} from '../../support/fixtures'
 import {TaskFactory} from '../../factories/task'
 import {createProjects} from './prepareProjects'
 
-async function openAndSetFilters(page) {
+async function openFilterPopup(page) {
 	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
 	await expect(page.locator('.filter-popup')).toBeVisible()
-	await page.locator('.filter-popup .filter-input .ProseMirror').fill('done = true')
+}
+
+async function openAndSetFilters(page, filter = 'done = true') {
+	await openFilterPopup(page)
+	await page.locator('.filter-popup .filter-input .ProseMirror').fill(filter)
 	await page.locator('.filter-popup button').filter({hasText: 'Show results'}).click()
 }
 
@@ -52,6 +56,45 @@ test.describe('Filter Persistence Across Views', () => {
 		await page.reload()
 
 		await expect(page).toHaveURL(/filter=/)
+	})
+
+	test('should only show a task without a due date when include nulls is ticked', async ({authenticatedPage: page}) => {
+		await TaskFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			title: 'Overdue Task',
+			due_date: new Date(Date.now() - 86_400_000).toISOString(),
+		})
+		await TaskFactory.create(1, {
+			id: 2,
+			project_id: 1,
+			title: 'No Due Date Task',
+		}, false)
+
+		await page.goto('/projects/1/1')
+		await expect(page.locator('.tasks')).toContainText('No Due Date Task')
+
+		await openAndSetFilters(page, 'due_date < now')
+
+		await expect(page.locator('.tasks')).toContainText('Overdue Task')
+		await expect(page.locator('.tasks')).not.toContainText('No Due Date Task')
+
+		const requestWithNulls = page.waitForRequest(request => {
+			const url = new URL(request.url())
+			return url.pathname.endsWith('/projects/1/views/1/tasks') &&
+				url.searchParams.get('filter_include_nulls') === 'true'
+		})
+
+		await openFilterPopup(page)
+		const includeNulls = page.locator('.filter-popup .fancy-checkbox').filter({hasText: 'Include Tasks which'})
+		// The checkbox stretches across the flex column, so its centre misses the label.
+		await includeNulls.locator('label').click()
+		await expect(includeNulls.locator('input[type=checkbox]')).toBeChecked()
+		await page.locator('.filter-popup button').filter({hasText: 'Show results'}).click()
+		await requestWithNulls
+
+		await expect(page.locator('.tasks')).toContainText('No Due Date Task')
+		await expect(page.locator('.tasks')).toContainText('Overdue Task')
 	})
 
 	test('should handle URL sharing with filters', async ({authenticatedPage: page}) => {

@@ -55,7 +55,7 @@ func TestAsDataURI(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := tc.provider.AsDataURI(testUser, 64)
+			result, err := tc.provider.AsDataURI(t.Context(), testUser, 64)
 			if err != nil {
 				t.Fatalf("Expected no error, got: %v", err)
 			}

@@ -43,7 +43,7 @@ func TestDatabaseNotifications_ReadAll_RefreshesUsers(t *testing.T) {
 		insertStoredNotification(t, s, 1, &TaskAssignedNotification{
 			Doer:     &user.User{ID: 12, Username: "user12"},
 			Assignee: &user.User{ID: 12, Username: "user12"},
-			Task:     &Task{ID: 1},
+			Task:     &Task{ID: 1, ProjectID: 1},
 		})
 
 		got := readAssignedNotification(t, s, 1)
@@ -58,7 +58,7 @@ func TestDatabaseNotifications_ReadAll_RefreshesUsers(t *testing.T) {
 
 		insertStoredNotification(t, s, 1, &TaskAssignedNotification{
 			Doer: &user.User{ID: 999999, Username: "ghost"},
-			Task: &Task{ID: 1},
+			Task: &Task{ID: 1, ProjectID: 1},
 		})
 
 		got := readAssignedNotification(t, s, 1)
@@ -74,7 +74,7 @@ func TestDatabaseNotifications_ReadAll_RefreshesUsers(t *testing.T) {
 		// stale stored value.
 		insertStoredNotification(t, s, 1, &TaskAssignedNotification{
 			Doer: &user.User{ID: 17, Username: "stale"},
-			Task: &Task{ID: 1},
+			Task: &Task{ID: 1, ProjectID: 1},
 		})
 
 		got := readAssignedNotification(t, s, 1)
@@ -82,16 +82,19 @@ func TestDatabaseNotifications_ReadAll_RefreshesUsers(t *testing.T) {
 	})
 }
 
-func insertStoredNotification(t *testing.T, s *xorm.Session, notifiableID int64, n notifications.Notification) {
+func insertStoredNotification(t *testing.T, s *xorm.Session, notifiableID int64, n notifications.Notification) *notifications.DatabaseNotification {
 	t.Helper()
 	content, err := json.Marshal(n)
 	require.NoError(t, err)
-	_, err = s.Insert(&notifications.DatabaseNotification{
+	dbn := &notifications.DatabaseNotification{
 		NotifiableID: notifiableID,
 		Notification: json.RawMessage(content),
 		Name:         n.Name(),
-	})
+		ProjectID:    notifications.ProjectIDOf(n),
+	}
+	_, err = s.Insert(dbn)
 	require.NoError(t, err)
+	return dbn
 }
 
 func readAssignedNotification(t *testing.T, s *xorm.Session, notifiableID int64) *TaskAssignedNotification {

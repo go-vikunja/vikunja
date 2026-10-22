@@ -1,9 +1,16 @@
 <template>
 	<div>
-		<Popup @update:open="showFormSwitch = null">
+		<Popup
+			placement="bottom-start"
+			:anchor="triggerEl"
+			sheet-on-mobile
+			:sheet-title="$t('task.attributes.reminders')"
+			@update:open="showFormSwitch = null"
+		>
 			<template #trigger="{toggle}">
 				<SimpleButton
-					v-tooltip="reminder.reminder && reminder.relativeTo !== null ? formatDisplayDate(reminder.reminder) : null"
+					ref="trigger"
+					v-tooltip="reminder.reminder && reminder.relative_to !== '' ? formatDisplayDate(reminder.reminder) : null"
 					@click.prevent.stop="toggle()"
 				>
 					{{ reminderText }}
@@ -23,14 +30,18 @@
 							v-for="(p, k) in presets"
 							:key="k"
 							class="option-button"
-							:class="{'currently-active': p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo}"
+							:class="{'currently-active': p.relative_period === modelValue?.relative_period
+								&& modelValue?.relative_to === p.relative_to}"
 							@click="setReminderFromPreset(p, close)"
 						>
 							{{ formatReminder(p) }}
 						</SimpleButton>
 						<SimpleButton
 							class="option-button"
-							:class="{'currently-active': typeof modelValue !== 'undefined' && modelValue?.relativeTo !== null && presets.find(p => p.relativePeriod === modelValue?.relativePeriod && modelValue?.relativeTo === p.relativeTo) === undefined}"
+							:class="{'currently-active': typeof modelValue !== 'undefined'
+								&& modelValue?.relative_to !== ''
+								&& presets.find(p => p.relative_period === modelValue?.relative_period
+									&& modelValue?.relative_to === p.relative_to) === undefined}"
 							@click="showFormSwitch = 'relative'"
 						>
 							{{ $t('task.reminder.custom') }}
@@ -38,7 +49,7 @@
 						<SimpleButton
 							v-if="allowAbsolute"
 							class="option-button"
-							:class="{'currently-active': modelValue?.relativeTo === null}"
+							:class="{'currently-active': modelValue?.relative_to === ''}"
 							@click="showFormSwitch = 'absolute'"
 						>
 							{{ $t('task.reminder.dateAndTime') }}
@@ -54,6 +65,8 @@
 					<DatepickerInline
 						v-else-if="activeForm === 'absolute'"
 						v-model="reminderDate"
+						shortcuts-layout="chips"
+						:large="isMobile"
 					/>
 
 					<XButton
@@ -77,15 +90,17 @@ import {SECONDS_A_DAY, SECONDS_A_HOUR} from '@/constants/date'
 import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {useI18n} from 'vue-i18n'
 
+import {useIsMobile} from '@/composables/useIsMobile'
+
 import {type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
-import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import type {TaskReminder as ITaskReminder} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
+import {createReminderDraft} from '@/helpers/task'
 
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 import ReminderPeriod from '@/components/tasks/partials/ReminderPeriod.vue'
 import Popup from '@/components/misc/Popup.vue'
 
-import TaskReminderModel from '@/models/taskReminder'
 import Card from '@/components/misc/Card.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
@@ -95,7 +110,7 @@ const props = withDefaults(defineProps<{
 	defaultRelativeTo?: IReminderPeriodRelativeTo | null,
 	allowAbsolute?: boolean,
 }>(), {
-	modelValue: () => new TaskReminderModel() as ITaskReminder,
+	modelValue: () => createReminderDraft(),
 	clearAfterUpdate: false,
 	defaultRelativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 	allowAbsolute: true,
@@ -107,18 +122,22 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const reminder = ref<ITaskReminder>(new TaskReminderModel())
+const trigger = ref<InstanceType<typeof SimpleButton> | null>(null)
+const triggerEl = computed<HTMLElement | null>(() => trigger.value?.$el ?? null)
+
+const reminder = ref<ITaskReminder>(createReminderDraft())
 
 const presets = computed(() => [
-	{reminder: null, relativePeriod: 0, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -2 * SECONDS_A_HOUR, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 3, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 7, relativeTo: props.defaultRelativeTo},
-	{reminder: null, relativePeriod: -1 * SECONDS_A_DAY * 30, relativeTo: props.defaultRelativeTo},
+	{reminder: '', relative_period: 0, relative_to: props.defaultRelativeTo},
+	{reminder: '', relative_period: -2 * SECONDS_A_HOUR, relative_to: props.defaultRelativeTo},
+	{reminder: '', relative_period: -1 * SECONDS_A_DAY, relative_to: props.defaultRelativeTo},
+	{reminder: '', relative_period: -1 * SECONDS_A_DAY * 3, relative_to: props.defaultRelativeTo},
+	{reminder: '', relative_period: -1 * SECONDS_A_DAY * 7, relative_to: props.defaultRelativeTo},
+	{reminder: '', relative_period: -1 * SECONDS_A_DAY * 30, relative_to: props.defaultRelativeTo},
 ] as ITaskReminder[])
 const reminderDate = ref<Date | null>(null)
 
+const isMobile = useIsMobile()
 const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
 
 const activeForm = computed(() => {
@@ -137,11 +156,11 @@ const lockedRelativeTo = computed(() => {
 })
 
 const reminderText = computed(() => {
-	if (reminder.value.relativeTo !== null) {
+	if (reminder.value.relative_to) {
 		return formatReminder(reminder.value)
 	}
 
-	if (reminder.value.reminder !== null) {
+	if (reminder.value.reminder) {
 		return formatDisplayDate(reminder.value.reminder)
 	}
 
@@ -152,16 +171,16 @@ watch(
 	() => props.modelValue,
 	(newReminder) => {
 		if (newReminder) {
-			reminder.value = newReminder
+			reminder.value = {...newReminder}
 
-			if (newReminder.relativeTo === null && newReminder.reminder !== null) {
+			if (!newReminder.relative_to && newReminder.reminder) {
 				reminderDate.value = new Date(newReminder.reminder)
 			}
 
 			return
 		}
 
-		reminder.value = new TaskReminderModel()
+		reminder.value = createReminderDraft()
 	},
 	{immediate: true},
 )
@@ -170,22 +189,22 @@ function updateData() {
 	emit('update:modelValue', reminder.value)
 
 	if (props.clearAfterUpdate) {
-		reminder.value = new TaskReminderModel()
+		reminder.value = createReminderDraft()
 	}
 }
 
 function setReminderDateAndClose(close: () => void) {
 	reminder.value.reminder = reminderDate.value === null
-		? null
-		: new Date(reminderDate.value)
-	reminder.value.relativeTo = null
-	reminder.value.relativePeriod = 0
+		? ''
+		: new Date(reminderDate.value).toISOString()
+	reminder.value.relative_to = ''
+	reminder.value.relative_period = 0
 	updateDataAndMaybeCloseNow(close)
 }
 
 
 function setReminderFromPreset(preset: ITaskReminder, close: () => void) {
-	reminder.value = preset
+	reminder.value = {...preset}
 	updateData()
 	close()
 }
@@ -206,10 +225,10 @@ function confirmAndClose(close: () => void) {
 }
 
 function formatReminder(reminder: ITaskReminder) {
-	const period = secondsToPeriod(reminder.relativePeriod)
+	const period = secondsToPeriod(reminder.relative_period ?? 0)
 
 	if (period.amount === 0) {
-		switch (reminder.relativeTo) {
+		switch (reminder.relative_to) {
 			case REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE:
 				return t('task.reminder.onDueDate')
 			case REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE:
@@ -221,31 +240,31 @@ function formatReminder(reminder: ITaskReminder) {
 
 	const amountAbs = Math.abs(period.amount)
 
-	let relativeTo = ''
-	switch (reminder.relativeTo) {
+	let relative_to = ''
+	switch (reminder.relative_to) {
 		case REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE:
-			relativeTo = t('task.attributes.dueDate')
+			relative_to = t('task.attributes.dueDate')
 			break
 		case REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE:
-			relativeTo = t('task.attributes.startDate')
+			relative_to = t('task.attributes.startDate')
 			break
 		case REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE:
-			relativeTo = t('task.attributes.endDate')
+			relative_to = t('task.attributes.endDate')
 			break
 	}
 
-	if (reminder.relativePeriod <= 0) {
+	if ((reminder.relative_period ?? 0) <= 0) {
 		return t('task.reminder.before', {
 			amount: amountAbs,
 			unit: translateUnit(amountAbs, period.unit),
-			type: relativeTo,
+			type: relative_to,
 		})
 	}
 
 	return t('task.reminder.after', {
 		amount: amountAbs,
 		unit: translateUnit(amountAbs, period.unit),
-		type: relativeTo,
+		type: relative_to,
 	})
 }
 
@@ -276,16 +295,22 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 	align-items: flex-start;
 }
 
-:deep(.popup) {
-	inset-block-start: unset;
-}
-
 .reminder-options-popup {
 	inline-size: 310px;
 	z-index: 99;
 
-	@media screen and (max-width: ($tablet)) {
-		inline-size: calc(100vw - 5rem);
+	.bottom-sheet & {
+		inline-size: 100%;
+		border: 0;
+		box-shadow: none;
+		border-radius: 0;
+		padding-block-end: .5rem;
+
+		.option-button {
+			inline-size: 100%;
+			padding: .75rem 1rem;
+			font-size: 1rem;
+		}
 	}
 
 	.option-button {

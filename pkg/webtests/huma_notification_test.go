@@ -108,8 +108,29 @@ func TestHumaNotification_MarkAllAsRead(t *testing.T) {
 		"another user's notifications must stay unread; body: %s", otherList.Body.String())
 }
 
+// TestHumaNotification_DeleteAll covers the bulk delete: it removes every
+// notification of the caller and leaves other users' notifications untouched.
+func TestHumaNotification_DeleteAll(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	rec := humaRequest(t, e, http.MethodDelete, "/api/v2/notifications", "", token, "")
+	require.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
+
+	list := humaRequest(t, e, http.MethodGet, "/api/v2/notifications", "", token, "")
+	require.Equal(t, http.StatusOK, list.Code, "body: %s", list.Body.String())
+	assert.Empty(t, notificationIDsFromReadAll(t, list.Body.Bytes()),
+		"caller must have no notifications left after delete-all; body: %s", list.Body.String())
+
+	otherList := humaRequest(t, e, http.MethodGet, "/api/v2/notifications", "", humaTokenFor(t, &testuser2), "")
+	require.Equal(t, http.StatusOK, otherList.Code, "body: %s", otherList.Body.String())
+	assert.ElementsMatch(t, []int64{3}, notificationIDsFromReadAll(t, otherList.Body.Bytes()),
+		"another user's notification #3 must survive delete-all; body: %s", otherList.Body.String())
+}
+
 // TestHumaNotification_LinkShareForbidden ports v1's guard: a link-share auth
-// has no notifications, so list / mark-read / mark-all all refuse it (403).
+// has no notifications, so list / mark-read / mark-all / delete-all all refuse it (403).
 func TestHumaNotification_LinkShareForbidden(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -133,6 +154,10 @@ func TestHumaNotification_LinkShareForbidden(t *testing.T) {
 	})
 	t.Run("mark all read", func(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/notifications", "", token, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+	t.Run("delete all", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/notifications", "", token, "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
 }

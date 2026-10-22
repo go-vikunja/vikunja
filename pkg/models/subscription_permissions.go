@@ -29,6 +29,41 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 
 	sb.EntityType = getEntityTypeFromString(sb.Entity)
 
+	return sb.canReadEntity(s, a)
+}
+
+// CanDelete checks if a user can delete a subscription
+func (sb *Subscription) CanDelete(s *xorm.Session, a web.Auth) (can bool, err error) {
+	if _, is := a.(*LinkSharing); is {
+		return false, ErrGenericForbidden{}
+	}
+
+	sb.EntityType = getEntityTypeFromString(sb.Entity)
+
+	own, err := getOwnSubscription(s, sb.EntityType, sb.EntityID, a.GetID())
+	if err != nil {
+		return false, err
+	}
+	if own != nil {
+		// A muted row means they already unsubscribed, so there is nothing left to delete.
+		return !own.Muted, nil
+	}
+
+	// Without an own row there is nothing to delete, only an opt-out to write, which needs read access.
+	can, err = sb.canReadEntity(s, a)
+	if err != nil || !can {
+		return false, err
+	}
+
+	inherited, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, a)
+	if err != nil {
+		return false, err
+	}
+
+	return inherited != nil, nil
+}
+
+func (sb *Subscription) canReadEntity(s *xorm.Session, a web.Auth) (can bool, err error) {
 	switch sb.EntityType {
 	case SubscriptionEntityProject:
 		l := &Project{ID: sb.EntityID}
@@ -41,23 +76,4 @@ func (sb *Subscription) CanCreate(s *xorm.Session, a web.Auth) (can bool, err er
 	}
 
 	return
-}
-
-// CanDelete checks if a user can delete a subscription
-func (sb *Subscription) CanDelete(s *xorm.Session, a web.Auth) (can bool, err error) {
-	if _, is := a.(*LinkSharing); is {
-		return false, ErrGenericForbidden{}
-	}
-
-	sb.EntityType = getEntityTypeFromString(sb.Entity)
-
-	realSb := &Subscription{}
-	exists, err := s.
-		Where("entity_id = ? AND entity_type = ? AND user_id = ?", sb.EntityID, sb.EntityType, a.GetID()).
-		Get(realSb)
-	if err != nil {
-		return false, err
-	}
-
-	return exists, nil
 }

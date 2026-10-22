@@ -111,3 +111,17 @@ func TestBasicAuth(t *testing.T) {
 		assert.Equal(t, int64(13), u.ID)
 	})
 }
+
+func TestBasicAuthEmailUnconfirmedUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	require.NoError(t, user.SetUserStatus(s, &user.User{ID: 13}, user.StatusEmailConfirmationRequired))
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	c := newContext()
+	ok, err := BasicAuth(c, "user13", feedsTokenUser13Valid)
+	require.NoError(t, err)
+	assert.False(t, ok)
+	assert.Nil(t, c.Get("userBasicAuth"))
+}

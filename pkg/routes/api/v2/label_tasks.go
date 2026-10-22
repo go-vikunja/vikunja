@@ -45,7 +45,7 @@ func RegisterLabelTaskRoutes(api huma.API) {
 		Summary:     "List the labels on a task",
 		Description: "Returns the labels attached to the given task, paginated. Requires read access to the task.",
 		Method:      http.MethodGet,
-		Path:        "/tasks/{projecttask}/labels",
+		Path:        "/tasks/{task}/labels",
 		Tags:        tags,
 	}, labelTasksList)
 
@@ -54,7 +54,7 @@ func RegisterLabelTaskRoutes(api huma.API) {
 		Summary:     "Add a label to a task",
 		Description: "Attaches an existing label to the given task. Requires write access to the task and access to the label. Fails if the label is already on the task.",
 		Method:      http.MethodPost,
-		Path:        "/tasks/{projecttask}/labels",
+		Path:        "/tasks/{task}/labels",
 		Tags:        tags,
 	}, labelTasksCreate)
 
@@ -63,7 +63,7 @@ func RegisterLabelTaskRoutes(api huma.API) {
 		Summary:     "Remove a label from a task",
 		Description: "Detaches a label from the given task. Requires write access to the task.",
 		Method:      http.MethodDelete,
-		Path:        "/tasks/{projecttask}/labels/{label}",
+		Path:        "/tasks/{task}/labels/{label}",
 		Tags:        tags,
 	}, labelTasksDelete)
 }
@@ -71,7 +71,7 @@ func RegisterLabelTaskRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterLabelTaskRoutes) }
 
 func labelTasksList(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask"`
+	TaskID int64 `path:"task"`
 	ListParams
 }) (*labelTaskListBody, error) {
 	a, err := authFromCtx(ctx)
@@ -90,7 +90,7 @@ func labelTasksList(ctx context.Context, in *struct {
 }
 
 func labelTasksCreate(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask"`
+	TaskID int64 `path:"task"`
 	Body   models.LabelTask
 }) (*singleBody[models.LabelTask], error) {
 	a, err := authFromCtx(ctx)
@@ -105,7 +105,7 @@ func labelTasksCreate(ctx context.Context, in *struct {
 }
 
 func labelTasksDelete(ctx context.Context, in *struct {
-	TaskID  int64 `path:"projecttask"`
+	TaskID  int64 `path:"task"`
 	LabelID int64 `path:"label"`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)

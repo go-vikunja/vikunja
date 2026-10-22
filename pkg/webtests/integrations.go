@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -143,9 +144,14 @@ func newTestRequest(t *testing.T, method string, handler func(ctx *echo.Context)
 	return
 }
 
+// testSessionID is the sessions.yml fixture row of a fixture user; user JWTs need a live session.
+func testSessionID(u *user.User) string {
+	return "test-session-" + strconv.FormatInt(u.ID, 10)
+}
+
 func addUserTokenToContext(t *testing.T, user *user.User, c *echo.Context) {
 	// Get the token as a string
-	token, err := auth.NewUserJWTAuthtoken(user, "test-session-id")
+	token, err := auth.NewUserJWTAuthtoken(user, testSessionID(user))
 	require.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
@@ -187,6 +193,7 @@ func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, han
 	var c *echo.Context
 	c, rec = createRequest(e, method, payload, queryParams, urlParams)
 	c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextPlain)
+	setCaldavRequestPath(c, urlParams)
 
 	result, _ := caldav.BasicAuth(c, user.Username, "12345678")
 	if !result {
@@ -195,6 +202,28 @@ func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, han
 	}
 	err = handler(c)
 	return
+}
+
+// createRequest sets path values out of band, but the caldav handlers and caldav-go
+// both read the resource off the request path, so the fixture has to carry a real one.
+func setCaldavRequestPath(c *echo.Context, urlParams map[string]string) {
+	project, has := urlParams["project"]
+	if !has {
+		return
+	}
+
+	path := caldav.ProjectBasePath + "/" + project
+	if task, has := urlParams["task"]; has {
+		path += "/" + url.PathEscape(task) + ".ics"
+	}
+
+	u, err := url.Parse(path)
+	if err != nil {
+		panic(err)
+	}
+	c.Request().URL.Path = u.Path
+	c.Request().URL.RawPath = u.RawPath
+	c.Request().RequestURI = path
 }
 
 func assertHandlerErrorCode(t *testing.T, err error, expectedErrorCode int) {
@@ -447,7 +476,7 @@ func (h *webHandlerTestV2) buildURL(queryParams url.Values, urlParams map[string
 
 func (h *webHandlerTestV2) serve(method, path, payload string) (*httptest.ResponseRecorder, error) {
 	require.NoError(h.t, h.ensureEnv())
-	token, err := auth.NewUserJWTAuthtoken(h.user, "test-session-id")
+	token, err := auth.NewUserJWTAuthtoken(h.user, testSessionID(h.user))
 	require.NoError(h.t, err)
 	var reader *strings.Reader
 	if payload != "" {

@@ -34,7 +34,7 @@ func init() {
 		ID:          "20240309111148",
 		Description: "Add IsPublic field to teams table to control discoverability of teams.",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(teams20240309111148{})
+			return partialSync(tx, teams20240309111148{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

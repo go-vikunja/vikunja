@@ -42,6 +42,8 @@ fully cleaned up, for example after importing from external services like Trello
 Orphaned projects cannot be un-archived, modified, or deleted through the UI
 because permission checks fail when traversing the broken parent chain.
 
+The project_ancestors closure table is rebuilt as part of the repair.
+
 Use --dry-run to preview what would be fixed without making changes.`,
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInitWithoutAsync()
@@ -72,6 +74,9 @@ Use --dry-run to preview what would be fixed without making changes.`,
 		log.Infof("Repair complete:")
 		log.Infof("  Orphaned projects found: %d", result.Found)
 		log.Infof("  Projects repaired: %d", result.Repaired)
+		if !dryRun {
+			log.Infof("  Project ancestors closure table: rebuilt")
+		}
 
 		if result.Found == 0 {
 			log.Infof("No orphaned projects found - all parent references are valid!")

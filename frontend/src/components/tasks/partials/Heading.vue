@@ -3,8 +3,8 @@
 		<div class="tw:flex tw:items-center md:tw:items-stretch tw:flex-col tw:gap-1 task-properties">
 			<div class="tw:flex tw:items-center tw:gap-2">
 				<ColorBubble
-					v-if="task.hexColor !== ''"
-					:color="getHexColor(task.hexColor)"
+					v-if="task.hex_color !== ''"
+					:color="getHexColor(task.hex_color)"
 				/>
 				<BaseButton @click="copyUrl">
 					<span class="title task-id">
@@ -28,22 +28,16 @@
 			class="title input"
 			:class="{'disabled': !canWrite}"
 			:contenteditable="canWrite ? true : undefined"
+			:tabindex="canWrite ? 0 : undefined"
+			:aria-label="canWrite ? $t('task.attributes.title') : undefined"
 			:spellcheck="false"
 			@input="handleTitleInput"
-			@blur="save(($event.target as HTMLInputElement).textContent as string)"
+			@blur="save($event.target as HTMLElement)"
 			@keydown.enter.prevent.stop="!$event.isComposing && ($event.target as HTMLInputElement).blur()"
 			@keydown.esc.prevent.stop="!$event.isComposing && cancel($event.target as HTMLInputElement)"
 		>
-			{{ task.title.trim() }}
+			{{ (task.title ?? '').trim() }}
 		</h1>
-		<BaseButton
-			v-if="hasClose"
-			:aria-label="$t('task.detail.closeTaskDetail')"
-			class="close d-print-none"
-			@click="$emit('close')"
-		>
-			<Icon icon="times" />
-		</BaseButton>
 		<CustomTransition name="fade">
 			<span
 				v-if="loading && saving"
@@ -69,17 +63,20 @@
 <script setup lang="ts">
 import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 
+import {error} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Done from '@/components/misc/Done.vue'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {useTaskStore} from '@/stores/tasks'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 
-import type {ITask} from '@/modelTypes/ITask'
-import {getHexColor, getTaskIdentifier} from '@/models/task'
+import type {Task as ITask} from '@/client/generated'
+import {getHexColor, getTaskIdentifier} from '@/helpers/task'
 
 const props = defineProps<{
 	task: ITask,
@@ -94,6 +91,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const copy = useCopyToClipboard()
+const {t} = useI18n({useScope: 'global'})
 
 async function copyUrl() {
 	const route = router.resolve({name: 'task.detail', query: {taskId: props.task.id}})
@@ -102,8 +100,8 @@ async function copyUrl() {
 	await copy(absoluteURL)
 }
 
-const taskStore = useTaskStore()
-const loading = computed(() => taskStore.isLoading)
+const updateTask = useUpdateTaskMutation()
+const loading = useDelayedLoading(updateTask.isPending)
 
 const textIdentifier = computed(() => getTaskIdentifier(props.task))
 
@@ -139,10 +137,20 @@ watch(() => props.task.id, () => {
 
 function handleTitleInput(event: Event) {
 	const target = event.target as HTMLInputElement
-	titleHasChanges.value = target.textContent !== props.task.title
+	titleHasChanges.value = target.textContent !== (props.task.title ?? '')
 }
 
-async function save(title: string) {
+async function save(element: HTMLElement) {
+	const title = element.textContent ?? ''
+
+	// An empty title would be discarded by the api, so revert and tell the user instead of failing silently.
+	if (title.trim() === '') {
+		element.textContent = props.task.title ?? ''
+		titleHasChanges.value = false
+		error({message: t('task.detail.titleRequired')})
+		return
+	}
+
 	// We only want to save if the title was actually changed.
 	// so we only continue if the task title changed.
 	if (title === props.task.title) {
@@ -151,8 +159,9 @@ async function save(title: string) {
 
 	try {
 		saving.value = true
-		const newTask = await taskStore.update({
+		const newTask = await updateTask.mutateAsync({
 			...props.task,
+			id: props.task.id!,
 			title,
 		})
 		emit('update:task', newTask)
@@ -167,7 +176,7 @@ async function save(title: string) {
 }
 
 async function cancel(element: HTMLInputElement) {
-	element.textContent = props.task.title
+	element.textContent = props.task.title ?? ''
 	titleHasChanges.value = false
 	element.blur()
 }
@@ -210,22 +219,11 @@ async function cancel(element: HTMLInputElement) {
 	inline-size: .75rem;
 }
 
+// Modal renders its own fixed close button from $tablet up
 .close {
-	font-size: 2rem;
-	margin-inline-start: 0.5rem;
-	line-height: 1;
-
-	@media screen and (max-width: $tablet) {
-		display: none;
-	}
-	
-	@media screen and (min-width: #{$desktop + 1px}) {
-		display: none;
-	}
-}
-
-.task-properties .close {
 	display: none;
+	font-size: 2rem;
+	line-height: 1;
 	position: absolute;
 	inset-inline-end: 1.25rem;
 	inset-block-start: 1.1rem;

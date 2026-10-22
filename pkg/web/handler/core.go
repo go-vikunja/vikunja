@@ -45,7 +45,7 @@ func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 	if !canCreate {
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		log.Warningf("Tried to create while not having the permissions for it (User: %v)", a)
+		log.Warningf("Tried to create while not having the permissions for it (User: %v)", a.GetID())
 		return ErrGenericForbidden{}
 	}
 
@@ -69,7 +69,7 @@ func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 // obj is fully populated. maxPermission is exposed via the x-max-permission
 // header in the Echo wrapper; Huma wrapper may ignore it.
 func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int, err error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
@@ -85,8 +85,8 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 	if !canRead {
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		log.Warningf("Tried to read while not having the permissions for it (User: %v)", a)
-		return 0, ErrGenericForbidden{Message: "You don't have the permission to see this"}
+		log.Warningf("Tried to read while not having the permissions for it (User: %v)", a.GetID())
+		return 0, ErrReadForbidden()
 	}
 
 	if err := obj.ReadOne(s, a); err != nil {
@@ -109,7 +109,7 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 // interface, the result count, and total count. Pagination header math and
 // nil-slice normalization remain the caller's responsibility.
 func DoReadAll(ctx context.Context, obj CObject, a web.Auth, search string, page, perPage int) (result any, resultCount int, total int64, err error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
@@ -152,7 +152,7 @@ func DoUpdate(ctx context.Context, obj CObject, a web.Auth) error {
 	if !canUpdate {
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		log.Warningf("Tried to update while not having the permissions for it (User: %v)", a)
+		log.Warningf("Tried to update while not having the permissions for it (User: %v)", a.GetID())
 		return ErrGenericForbidden{}
 	}
 
@@ -191,7 +191,7 @@ func DoDelete(ctx context.Context, obj CObject, a web.Auth) error {
 	if !canDelete {
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		log.Warningf("Tried to delete while not having the permissions for it (User: %v)", a)
+		log.Warningf("Tried to delete while not having the permissions for it (User: %v)", a.GetID())
 		return ErrGenericForbidden{}
 	}
 

@@ -1,39 +1,71 @@
-import AttachmentModel from '@/models/attachment'
-import type {IAttachment} from '@/modelTypes/IAttachment'
+import type {TaskAttachment} from '@/client/generated'
+import {queryClient} from '@/client/queryClient'
+import {
+	attachmentBlob,
+	attachmentKeys,
+	type AttachmentIdentity,
+	type PreviewSize,
+} from '@/client/queries/attachments'
+import {captureClientRequestContext, assertClientRequestContext} from '@/client/requestContext'
+import {downloadBlob} from '@/helpers/downloadBlob'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
 
-import AttachmentService from '@/services/attachment'
+// A blob: url for an svg inherits our origin and can script; a data: url cannot.
+const SCRIPTABLE_MIME_TYPE = 'image/svg+xml'
 
-export async function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void): Promise<IAttachment[]> {
-	const attachmentService = new AttachmentService()
-	const files = [file]
-
-	return await uploadFiles(attachmentService, taskId, files, onSuccess)
+// The cache holds the bytes; a url belongs to the caller that asked for it and nobody else may revoke it.
+export function fetchAttachmentBlob(attachment: AttachmentIdentity, size?: PreviewSize): Promise<Blob> {
+	return queryClient.fetchQuery({
+		queryKey: attachmentKeys.blob(attachment.task_id, attachment.id, size),
+		queryFn: ({signal}) => attachmentBlob(attachment, size, signal),
+		staleTime: Infinity,
+		retry: false,
+		// Every caller reports the failure itself, together with the data-url step that follows.
+		meta: {handlesError: true},
+	})
 }
 
-export async function uploadFiles(
-	attachmentService: AttachmentService,
-	taskId: number,
-	files: File[] | FileList,
-	onSuccess?: (attachmentUrl: string) => void,
-): Promise<IAttachment[]> {
-	const attachmentModel = new AttachmentModel({taskId})
-	const response = await attachmentService.create(attachmentModel, files)
-	console.debug(`Uploaded attachments for task ${taskId}, response was`, response)
-
-	const uploaded: IAttachment[] = []
-	response.success?.map((attachment: IAttachment) => {
-		uploaded.push(attachment)
-		onSuccess?.(generateAttachmentUrl(taskId, attachment.id))
-	})
-
-	if (response.errors !== null) {
-		const messages = response.errors.map((e: {message: string}) => e.message)
-		throw new Error(messages.join('\n'))
+export async function fetchAttachmentUrl(attachment: AttachmentIdentity, size?: PreviewSize): Promise<string> {
+	const context = captureClientRequestContext()
+	const blob = await fetchAttachmentBlob(attachment, size)
+	assertClientRequestContext(context)
+	const mimeType = blob.type.split(';')[0].trim().toLowerCase()
+	// FileReader is absent in iOS Lockdown Mode and some webviews, fall back to a blob url there.
+	if (mimeType !== SCRIPTABLE_MIME_TYPE || typeof FileReader === 'undefined') {
+		return URL.createObjectURL(blob)
 	}
 
-	return uploaded
+	return new Promise<string>((resolve, reject) => {
+		const reader = new FileReader()
+		reader.onload = () => {
+			// the identity can change while the read runs, so the pre-read fence has to be repeated
+			try {
+				assertClientRequestContext(context)
+			} catch (fenced) {
+				reject(fenced)
+				return
+			}
+			if (typeof reader.result === 'string') {
+				resolve(reader.result)
+				return
+			}
+			reject(new Error('Attachment could not be read as a data url'))
+		}
+		reader.onerror = () => reject(reader.error ?? new Error('Attachment could not be read as a data url'))
+		reader.readAsDataURL(blob)
+	})
+}
+
+// The svg defence hands out inert data: urls, which own nothing.
+export function releaseAttachmentUrl(url: string | null | undefined) {
+	if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+}
+
+export async function downloadAttachment(attachment: TaskAttachment) {
+	const url = await fetchAttachmentUrl({id: attachment.id!, task_id: attachment.task_id!})
+	downloadBlob(url, attachment.file?.name ?? '')
 }
 
 export function generateAttachmentUrl(taskId: number, attachmentId: number) {
-	return `${window.API_URL}/tasks/${taskId}/attachments/${attachmentId}`
+	return `${getApiBaseUrl()}/tasks/${taskId}/attachments/${attachmentId}`
 }

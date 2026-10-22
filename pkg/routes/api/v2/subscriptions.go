@@ -40,7 +40,7 @@ func RegisterSubscriptionRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "subscriptions-create",
 		Summary:     "Subscribe to an entity",
-		Description: "Subscribes the authenticated user to a project or task so they receive its notifications. The user needs read access to the entity. Fails if a subscription already exists.",
+		Description: "Subscribes the authenticated user to a project or task so they receive its notifications. The user needs read access to the entity. Fails if the user is already subscribed, directly or through a parent project. Subscribing again after an opt-out lifts it.",
 		Method:      http.MethodPost,
 		Path:        "/subscriptions/{entity}/{entityID}",
 		Tags:        tags,
@@ -49,7 +49,7 @@ func RegisterSubscriptionRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "subscriptions-delete",
 		Summary:     "Unsubscribe from an entity",
-		Description: "Removes the authenticated user's own subscription to a project or task. Only affects the caller's subscription, not other users'.",
+		Description: "Stops notifications about a project or task for the authenticated user. If the subscription was inherited from a parent project, the opt-out is recorded for this entity instead, leaving the parent subscription in place. Only affects the caller's subscription, not other users'.",
 		Method:      http.MethodDelete,
 		Path:        "/subscriptions/{entity}/{entityID}",
 		Tags:        tags,

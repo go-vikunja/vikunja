@@ -113,6 +113,20 @@ func TestTeamMember_Delete(t *testing.T) {
 			"user_id": 1,
 		})
 	})
+	t.Run("does not clean up after a user who is not a member", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		team := &Team{Name: "access loss team"}
+		require.NoError(t, team.Create(f.s, f.owner))
+		require.NoError(t, (&TeamMember{TeamID: team.ID, Username: "user3"}).Create(f.s, f.owner))
+		require.NoError(t, (&TeamProject{
+			TeamID:     team.ID,
+			ProjectID:  f.parent.ID,
+			Permission: PermissionWrite,
+		}).Create(f.s, f.owner))
+
+		require.NoError(t, (&TeamMember{TeamID: team.ID, Username: f.member.Username}).Delete(f.s, f.owner))
+		f.assertWebhooksKept(t)
+	})
 }
 
 func TestTeamMember_Update(t *testing.T) {
@@ -166,89 +180,31 @@ func TestTeamMember_Update(t *testing.T) {
 	})
 }
 
-func TestCleanupTaskMembersAfterTeamRemoval(t *testing.T) {
-	t.Run("removes data when member loses team access", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
+func TestTeamMember_CanDelete(t *testing.T) {
+	tests := []struct {
+		name   string
+		teamID int64
+		target string
+		doer   *user.User
+		want   bool
+	}{
+		{name: "member removes themselves", teamID: 1, target: "user2", doer: &user.User{ID: 2}, want: true},
+		{name: "team admin removes another member", teamID: 1, target: "user2", doer: &user.User{ID: 1}, want: true},
+		{name: "non-admin removes another member", teamID: 1, target: "user1", doer: &user.User{ID: 2}, want: false},
+		{name: "non-member removes themselves", teamID: 1, target: "user3", doer: &user.User{ID: 3}, want: false},
+		{name: "non-member removes themselves from external team", teamID: 14, target: "user3", doer: &user.User{ID: 3}, want: false},
+		{name: "self-removal from nonexistent team", teamID: 9999, target: "user3", doer: &user.User{ID: 3}, want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
 
-		s := db.NewSession()
-		defer s.Close()
-
-		task := &Task{
-			Title:       "team cleanup",
-			ProjectID:   19,
-			CreatedByID: 7,
-			Index:       2,
-		}
-		_, err := s.Insert(task)
-		require.NoError(t, err)
-
-		_, err = s.Insert(&TaskAssginee{TaskID: task.ID, UserID: 2})
-		require.NoError(t, err)
-
-		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 2})
-		require.NoError(t, err)
-
-		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 19, UserID: 2})
-		require.NoError(t, err)
-
-		_, err = s.Where("team_id = ? AND user_id = ?", 9, 2).Delete(&TeamMember{})
-		require.NoError(t, err)
-
-		_, err = s.Where("project_id = ? AND user_id = ?", 19, 2).Delete(&ProjectUser{})
-		require.NoError(t, err)
-
-		require.NoError(t, s.Commit())
-
-		err = cleanupTaskMembersAfterTeamRemoval(s, 9, 2)
-		require.NoError(t, err)
-
-		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": task.ID, "user_id": 2})
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": task.ID, "user_id": 2})
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": 19, "user_id": 2})
-	})
-
-	t.Run("removes orphaned data for deleted project", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		const orphanProjectID int64 = 54321
-
-		s := db.NewSession()
-		defer s.Close()
-
-		_, err := s.Insert(&TeamProject{TeamID: 9, ProjectID: orphanProjectID, Permission: PermissionRead})
-		require.NoError(t, err)
-
-		task := &Task{
-			Title:       "orphan cleanup",
-			ProjectID:   orphanProjectID,
-			CreatedByID: 7,
-			Index:       5,
-		}
-		_, err = s.Insert(task)
-		require.NoError(t, err)
-
-		_, err = s.Insert(&TaskAssginee{TaskID: task.ID, UserID: 2})
-		require.NoError(t, err)
-
-		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 2})
-		require.NoError(t, err)
-
-		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: orphanProjectID, UserID: 2})
-		require.NoError(t, err)
-
-		_, err = s.Where("team_id = ? AND user_id = ?", 9, 2).Delete(&TeamMember{})
-		require.NoError(t, err)
-
-		_, err = s.Where("project_id = ? AND user_id = ?", orphanProjectID, 2).Delete(&ProjectUser{})
-		require.NoError(t, err)
-
-		require.NoError(t, s.Commit())
-
-		err = cleanupTaskMembersAfterTeamRemoval(s, 9, 2)
-		require.NoError(t, err)
-
-		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": task.ID, "user_id": 2})
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": task.ID, "user_id": 2})
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": orphanProjectID, "user_id": 2})
-	})
+			tm := &TeamMember{TeamID: tt.teamID, Username: tt.target}
+			can, err := tm.CanDelete(s, tt.doer)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, can)
+		})
+	}
 }

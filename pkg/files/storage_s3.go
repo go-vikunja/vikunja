@@ -49,18 +49,30 @@ func (s *s3Storage) key(name string) string {
 }
 
 func (s *s3Storage) Open(name string) (io.ReadCloser, error) {
+	content, _, err := s.OpenWithSize(name)
+	return content, err
+}
+
+func (s *s3Storage) OpenWithSize(name string) (io.ReadCloser, int64, error) {
 	key := s.key(name)
 	out, err := s.client.GetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return nil, s3ToPathError("open", name, err)
+		return nil, 0, s3ToPathError("open", name, err)
 	}
-	return out.Body, nil
+	if out.ContentLength == nil {
+		return out.Body, -1, nil
+	}
+	return out.Body, *out.ContentLength, nil
 }
 
 func (s *s3Storage) Write(name string, content io.ReadSeeker, size uint64) error {
+	return s.writeContext(context.Background(), name, content, size)
+}
+
+func (s *s3Storage) writeContext(ctx context.Context, name string, content io.ReadSeeker, size uint64) error {
 	contentLength, err := contentLengthFromReadSeeker(content, size)
 	if err != nil {
 		return fmt.Errorf("failed to determine S3 upload content length: %w", err)
@@ -70,7 +82,7 @@ func (s *s3Storage) Write(name string, content io.ReadSeeker, size uint64) error
 		return fmt.Errorf("failed to seek to start before S3 upload: %w", err)
 	}
 
-	_, err = s.client.PutObject(context.Background(), &s3.PutObjectInput{
+	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:        aws.String(s.bucket),
 		Key:           aws.String(s.key(name)),
 		Body:          content,
@@ -83,8 +95,12 @@ func (s *s3Storage) Write(name string, content io.ReadSeeker, size uint64) error
 }
 
 func (s *s3Storage) Stat(name string) (os.FileInfo, error) {
+	return s.statContext(context.Background(), name)
+}
+
+func (s *s3Storage) statContext(ctx context.Context, name string) (os.FileInfo, error) {
 	key := s.key(name)
-	head, err := s.client.HeadObject(context.Background(), &s3.HeadObjectInput{
+	head, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
@@ -109,12 +125,16 @@ func (s *s3Storage) Stat(name string) (os.FileInfo, error) {
 }
 
 func (s *s3Storage) Remove(name string) error {
+	return s.removeContext(context.Background(), name)
+}
+
+func (s *s3Storage) removeContext(ctx context.Context, name string) error {
 	// Check existence first for proper error on missing files
-	if _, err := s.Stat(name); err != nil {
+	if _, err := s.statContext(ctx, name); err != nil {
 		return err
 	}
 
-	_, err := s.client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(s.key(name)),
 	})
@@ -123,6 +143,14 @@ func (s *s3Storage) Remove(name string) error {
 
 func (*s3Storage) MkdirAll(string, os.FileMode) error {
 	return nil // S3 has no directories
+}
+
+func (*s3Storage) Ensure() error {
+	return nil
+}
+
+func (*s3Storage) ValidateBasePath() error {
+	return nil
 }
 
 // s3ToPathError converts S3 SDK errors into os-compatible path errors.

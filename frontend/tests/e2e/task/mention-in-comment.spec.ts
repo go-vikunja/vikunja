@@ -2,6 +2,8 @@ import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {TaskCommentFactory} from '../../factories/task_comment'
+import {UserFactory} from '../../factories/user'
+import {UserProjectFactory} from '../../factories/users_project'
 import {createDefaultViews} from '../project/prepareProjects'
 
 test.describe('Mention in task comment', () => {
@@ -52,6 +54,24 @@ test.describe('Mention in task comment', () => {
 		)
 
 		expect(mentionErrors).toHaveLength(0)
+	})
+
+	test('suggests a project member and inserts the mention', async ({authenticatedPage: page, currentUser}) => {
+		const [member] = await UserFactory.create(1, {id: currentUser.id + 100}, false)
+		await UserProjectFactory.create(1, {project_id: 1, user_id: member.id})
+
+		await page.goto('/tasks/1')
+
+		const commentEditor = page.locator('.task-view .comments .media.comment .tiptap__editor .tiptap.ProseMirror[contenteditable="true"]')
+		await expect(commentEditor).toBeVisible({timeout: 10000})
+		await commentEditor.click()
+		await commentEditor.pressSequentially(`@${member.username.substring(0, 8)}`, {delay: 50})
+
+		const suggestion = page.locator('.mention-items .mention-item').filter({hasText: member.username})
+		await expect(suggestion).toBeVisible({timeout: 5000})
+		await suggestion.click()
+
+		await expect(commentEditor.locator('.mention-user')).toContainText(member.username)
 	})
 
 	test('can type mention without error notifications appearing', async ({authenticatedPage: page}) => {

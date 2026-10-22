@@ -32,12 +32,13 @@ func ParseISO8601Duration(str string) time.Duration {
 
 	years := parseDurationPart(matches[2], time.Hour*24*365)
 	months := parseDurationPart(matches[3], time.Hour*24*30)
-	days := parseDurationPart(matches[4], time.Hour*24)
-	hours := parseDurationPart(matches[5], time.Hour)
-	minutes := parseDurationPart(matches[6], time.Second*60)
-	seconds := parseDurationPart(matches[7], time.Second)
+	weeks := parseDurationPart(matches[4], time.Hour*24*7)
+	days := parseDurationPart(matches[5], time.Hour*24)
+	hours := parseDurationPart(matches[6], time.Hour)
+	minutes := parseDurationPart(matches[7], time.Second*60)
+	seconds := parseDurationPart(matches[8], time.Second)
 
-	duration := years + months + days + hours + minutes + seconds
+	duration := years + months + weeks + days + hours + minutes + seconds
 
 	if matches[1] == "-" {
 		return -duration
@@ -45,7 +46,7 @@ func ParseISO8601Duration(str string) time.Duration {
 	return duration
 }
 
-var durationRegex = regexp.MustCompile(`([-+])?P([\d\.]+Y)?([\d\.]+M)?([\d\.]+D)?T?([\d\.]+H)?([\d\.]+M)?([\d\.]+?S)?`)
+var durationRegex = regexp.MustCompile(`([-+])?P([\d\.]+Y)?([\d\.]+M)?([\d\.]+W)?([\d\.]+D)?T?([\d\.]+H)?([\d\.]+M)?([\d\.]+?S)?`)
 
 func parseDurationPart(value string, unit time.Duration) time.Duration {
 	if len(value) != 0 {

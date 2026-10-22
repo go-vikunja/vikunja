@@ -1,228 +1,156 @@
 import {describe, it, expect} from 'vitest'
 import {shouldShowTaskInListView} from './useTaskListFiltering'
-import type {ITask} from '@/modelTypes/ITask'
+import {normalizeTask} from '@/client/queries/tasks'
 
 describe('shouldShowTaskInListView', () => {
 	it('should hide subtasks when parent is in the same project', () => {
-		const parentTask: Partial<ITask> = {
+		const parentTask = normalizeTask({
 			id: 1,
 			title: 'Parent Task',
-			projectId: 100,
-			relatedTasks: {},
-		}
+			project_id: 100,
+			related_tasks: {},
+		})
 
-		const subtask: Partial<ITask> = {
+		const subtask = normalizeTask({
 			id: 2,
 			title: 'Subtask',
-			projectId: 100,
-			relatedTasks: {
+			project_id: 100,
+			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task',
-					projectId: 100,
-				} as ITask],
+					project_id: 100,
+				}],
 			},
-		}
+		})
 
-		const allTasks = [parentTask, subtask] as ITask[]
+		const allTasks = [parentTask, subtask]
 
-		expect(shouldShowTaskInListView(parentTask as ITask, allTasks)).toBe(true)
-		expect(shouldShowTaskInListView(subtask as ITask, allTasks)).toBe(false)
+		expect(shouldShowTaskInListView(parentTask, allTasks)).toBe(true)
+		expect(shouldShowTaskInListView(subtask, allTasks)).toBe(false)
 	})
 
 	it('should show subtasks when parent is in a different project', () => {
-		const parentTask: Partial<ITask> = {
+		const parentTask = normalizeTask({
 			id: 1,
 			title: 'Parent Task in Project A',
-			projectId: 100,
-		}
+			project_id: 100,
+		})
 
-		const subtask: Partial<ITask> = {
+		const subtask = normalizeTask({
 			id: 2,
 			title: 'Subtask in Project B',
-			projectId: 200,
-			relatedTasks: {
+			project_id: 200,
+			related_tasks: {
 				parenttask: [{
 					id: 1,
 					title: 'Parent Task in Project A',
-					projectId: 100,
-				} as ITask],
+					project_id: 100,
+				}],
 			},
-		}
+		})
 
 		// In Project B's view, we only see the subtask
-		const tasksInProjectB = [subtask] as ITask[]
+		const tasksInProjectB = [subtask]
 
-		expect(shouldShowTaskInListView(subtask as ITask, tasksInProjectB)).toBe(true)
+		expect(shouldShowTaskInListView(subtask, tasksInProjectB)).toBe(true)
 	})
 
-	it('should show tasks with no parents', () => {
-		const task: Partial<ITask> = {
+	it.each([
+		['no related tasks', {}],
+		['undefined related tasks', undefined],
+		['an empty parenttask array', {parenttask: []}],
+	])('should show a task with %s', (_case, related_tasks) => {
+		const task = normalizeTask({
 			id: 1,
 			title: 'Regular Task',
-			projectId: 100,
-			relatedTasks: {},
-		}
+			project_id: 100,
+			related_tasks,
+		})
 
-		const allTasks = [task] as ITask[]
-
-		expect(shouldShowTaskInListView(task as ITask, allTasks)).toBe(true)
-	})
-
-	it('should show tasks with undefined relatedTasks', () => {
-		const task: Partial<ITask> = {
-			id: 1,
-			title: 'Regular Task',
-			projectId: 100,
-		}
-
-		const allTasks = [task] as ITask[]
-
-		expect(shouldShowTaskInListView(task as ITask, allTasks)).toBe(true)
-	})
-
-	it('should show tasks with empty parenttask array', () => {
-		const task: Partial<ITask> = {
-			id: 1,
-			title: 'Regular Task',
-			projectId: 100,
-			relatedTasks: {
-				parenttask: [],
-			},
-		}
-
-		const allTasks = [task] as ITask[]
-
-		expect(shouldShowTaskInListView(task as ITask, allTasks)).toBe(true)
+		expect(shouldShowTaskInListView(task, [task])).toBe(true)
 	})
 
 	it('should handle multiple levels of nesting within same project', () => {
-		const grandparent: Partial<ITask> = {
+		const grandparent = normalizeTask({
 			id: 1,
 			title: 'Grandparent',
-			projectId: 100,
-			relatedTasks: {},
-		}
+			project_id: 100,
+			related_tasks: {},
+		})
 
-		const parent: Partial<ITask> = {
+		const parent = normalizeTask({
 			id: 2,
 			title: 'Parent',
-			projectId: 100,
-			relatedTasks: {
-				parenttask: [{id: 1, title: 'Grandparent', projectId: 100} as ITask],
+			project_id: 100,
+			related_tasks: {
+				parenttask: [{id: 1, title: 'Grandparent', project_id: 100}],
 			},
-		}
+		})
 
-		const child: Partial<ITask> = {
+		const child = normalizeTask({
 			id: 3,
 			title: 'Child',
-			projectId: 100,
-			relatedTasks: {
-				parenttask: [{id: 2, title: 'Parent', projectId: 100} as ITask],
+			project_id: 100,
+			related_tasks: {
+				parenttask: [{id: 2, title: 'Parent', project_id: 100}],
 			},
-		}
+		})
 
-		const allTasks = [grandparent, parent, child] as ITask[]
+		const allTasks = [grandparent, parent, child]
 
-		expect(shouldShowTaskInListView(grandparent as ITask, allTasks)).toBe(true)
-		expect(shouldShowTaskInListView(parent as ITask, allTasks)).toBe(false)
-		expect(shouldShowTaskInListView(child as ITask, allTasks)).toBe(false)
+		expect(shouldShowTaskInListView(grandparent, allTasks)).toBe(true)
+		expect(shouldShowTaskInListView(parent, allTasks)).toBe(false)
+		expect(shouldShowTaskInListView(child, allTasks)).toBe(false)
 	})
 
 	it('should show task if it has multiple parents and none are in view', () => {
-		const subtask: Partial<ITask> = {
+		const subtask = normalizeTask({
 			id: 3,
 			title: 'Subtask with multiple parents',
-			projectId: 300,
-			relatedTasks: {
+			project_id: 300,
+			related_tasks: {
 				parenttask: [
-					{id: 1, title: 'Parent 1', projectId: 100} as ITask,
-					{id: 2, title: 'Parent 2', projectId: 200} as ITask,
+					{id: 1, title: 'Parent 1', project_id: 100},
+					{id: 2, title: 'Parent 2', project_id: 200},
 				],
 			},
-		}
+		})
 
 		// In Project 300's view, neither parent is present
-		const tasksInProject300 = [subtask] as ITask[]
+		const tasksInProject300 = [subtask]
 
-		expect(shouldShowTaskInListView(subtask as ITask, tasksInProject300)).toBe(true)
+		expect(shouldShowTaskInListView(subtask, tasksInProject300)).toBe(true)
 	})
 
 	it('should hide task if it has multiple parents and at least one is in view', () => {
-		const parent1: Partial<ITask> = {
+		const parent1 = normalizeTask({
 			id: 1,
 			title: 'Parent 1',
-			projectId: 100,
-		}
+			project_id: 100,
+		})
 
-		const parent2: Partial<ITask> = {
+		const parent2 = normalizeTask({
 			id: 2,
 			title: 'Parent 2',
-			projectId: 100,
-		}
+			project_id: 100,
+		})
 
-		const subtask: Partial<ITask> = {
+		const subtask = normalizeTask({
 			id: 3,
 			title: 'Subtask with multiple parents',
-			projectId: 100,
-			relatedTasks: {
+			project_id: 100,
+			related_tasks: {
 				parenttask: [
-					{id: 1, title: 'Parent 1', projectId: 100} as ITask,
-					{id: 2, title: 'Parent 2', projectId: 100} as ITask,
+					{id: 1, title: 'Parent 1', project_id: 100},
+					{id: 2, title: 'Parent 2', project_id: 100},
 				],
 			},
-		}
+		})
 
-		const allTasks = [parent1, parent2, subtask] as ITask[]
+		const allTasks = [parent1, parent2, subtask]
 
-		expect(shouldShowTaskInListView(subtask as ITask, allTasks)).toBe(false)
+		expect(shouldShowTaskInListView(subtask, allTasks)).toBe(false)
 	})
 
-	it('should show subtasks in filtered views even when parent is in the same view', () => {
-		const parentTask: Partial<ITask> = {
-			id: 1,
-			title: 'Parent Task',
-			projectId: 100,
-			relatedTasks: {},
-		}
-
-		const subtask: Partial<ITask> = {
-			id: 2,
-			title: 'Subtask',
-			projectId: 100,
-			relatedTasks: {
-				parenttask: [{
-					id: 1,
-					title: 'Parent Task',
-					projectId: 100,
-				} as ITask],
-			},
-		}
-
-		const allTasks = [parentTask, subtask] as ITask[]
-
-		// In a filtered view, both parent and subtask should be visible
-		expect(shouldShowTaskInListView(parentTask as ITask, allTasks, true)).toBe(true)
-		expect(shouldShowTaskInListView(subtask as ITask, allTasks, true)).toBe(true)
-	})
-
-	it('should show subtasks in filtered views even when only subtask matches filter', () => {
-		const subtask: Partial<ITask> = {
-			id: 2,
-			title: 'Subtask matching filter',
-			projectId: 100,
-			relatedTasks: {
-				parenttask: [{
-					id: 1,
-					title: 'Parent Task',
-					projectId: 100,
-				} as ITask],
-			},
-		}
-
-		// Only the subtask is in the results (parent didn't match filter)
-		const allTasks = [subtask] as ITask[]
-
-		expect(shouldShowTaskInListView(subtask as ITask, allTasks, true)).toBe(true)
-	})
 })

@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<p class="has-text-weight-bold">
+		<h3 class="has-text-weight-bold share-heading">
 			{{ $t('project.share.links.title') }}
 			<span
 				v-tooltip="$t('project.share.links.explanation')"
@@ -8,7 +8,7 @@
 			>
 				{{ $t('project.share.links.what') }}
 			</span>
-		</p>
+		</h3>
 
 		<div class="sharables-project">
 			<XButton
@@ -29,7 +29,7 @@
 						<div class="select">
 							<select
 								:id="id"
-								v-model="selectedPermission"
+								v-model="draft.permission"
 							>
 								<option :value="PERMISSIONS.READ">
 									{{ $t('project.share.permission.read') }}
@@ -46,21 +46,24 @@
 				</FormField>
 				<FormField
 					id="linkShareName"
-					v-model="name"
+					v-model="draft.name"
 					v-tooltip="$t('project.share.links.nameExplanation')"
 					:label="$t('project.share.links.name')"
 					:placeholder="$t('project.share.links.namePlaceholder')"
 				/>
 				<FormField
 					id="linkSharePassword"
-					v-model="password"
+					v-model="draft.password"
 					v-tooltip="$t('project.share.links.passwordExplanation')"
 					:label="$t('project.share.links.password')"
 					type="password"
 					:placeholder="$t('user.auth.passwordPlaceholder')"
+					autocomplete="new-password"
 				/>
 				<XButton
 					icon="plus"
+					:loading="isMutating"
+					:disabled="isMutating"
 					@click="add(projectId)"
 				>
 					{{ $t('project.share.share') }}
@@ -99,7 +102,7 @@
 										keypath="project.share.links.sharedBy"
 										scope="global"
 									>
-										<strong>{{ getDisplayName(s.sharedBy) }}</strong>
+										<strong>{{ getDisplayName(s.shared_by) }}</strong>
 									</i18n-t>
 								</p>
 
@@ -144,7 +147,11 @@
 							</td>
 							<td v-if="availableViews.length > 0">
 								<div class="select">
-									<select v-model="selectedViews[s.id]">
+									<select
+										:value="selectedViews[s.id]"
+										:aria-label="$t('project.share.links.view')"
+										@change="pickedViews[s.id] = Number(($event.target as HTMLSelectElement).value)"
+									>
 										<option
 											v-for="(view) in availableViews"
 											:key="view.id"
@@ -159,6 +166,7 @@
 								<XButton
 									danger
 									icon="trash-alt"
+									:aria-label="$t('project.share.links.remove')"
 									@click="
 										() => {
 											linkIdToDelete = s.id
@@ -190,123 +198,73 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, computed, shallowReactive} from 'vue'
-import {useI18n} from 'vue-i18n'
-
+import {ref, watch, computed} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
+import type {LinkSharing} from '@/client/generated'
+import {linkSharesQuery, createLinkShareDraft, useCreateLinkShareMutation, useDeleteLinkShareMutation} from '@/client/queries/linkShares'
 import {PERMISSIONS} from '@/constants/permissions'
 import FormField from '@/components/input/FormField.vue'
-import LinkShareModel from '@/models/linkShare'
-
-import type {ILinkShare} from '@/modelTypes/ILinkShare'
-import type {IProject} from '@/modelTypes/IProject'
-
-import LinkShareService from '@/services/linkShare'
-
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {success} from '@/message'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {useConfigStore} from '@/stores/config'
-import {useProjectStore} from '@/stores/projects'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import {useProjectViews} from '@/composables/useProjectViews'
 
-const props = withDefaults(defineProps<{
-	projectId?: IProject['id'],
-}>(), {
-	projectId: 0,
-})
-
-const {t} = useI18n({useScope: 'global'})
-
-const linkShares = ref<ILinkShare[]>([])
-const linkShareService = shallowReactive(new LinkShareService())
-const selectedPermission = ref(PERMISSIONS.READ)
-const name = ref('')
-const password = ref('')
+const props = withDefaults(defineProps<{projectId?: number}>(), {projectId: 0})
+const sharesQuery = useQuery(computed(() => ({...linkSharesQuery(props.projectId), enabled: props.projectId > 0})))
+type VisibleShare = LinkSharing & Required<Pick<LinkSharing, 'id' | 'hash'>>
+const linkShares = computed(() => (sharesQuery.data.value ?? []).filter((share): share is VisibleShare => typeof share.id === 'number' && typeof share.hash === 'string'))
+const createMutation = useCreateLinkShareMutation()
+const deleteMutation = useDeleteLinkShareMutation()
+const isMutating = computed(() => createMutation.isPending.value || deleteMutation.isPending.value)
+const draft = ref(createLinkShareDraft())
 const showDeleteModal = ref(false)
 const linkIdToDelete = ref(0)
 const showNewForm = ref(false)
-
-const projectStore = useProjectStore()
-
-const availableViews = computed<IProjectView[]>(() => projectStore.projects[props.projectId]?.views || [])
+const {views: availableViews} = useProjectViews(() => props.projectId)
 const copy = useCopyToClipboard()
-watch(
-	() => props.projectId,
-	load,
-	{immediate: true},
-)
-
+const pickedViews = ref<Record<number, number>>({})
 const configStore = useConfigStore()
-const frontendUrl = computed(() => configStore.frontendUrl)
 
-async function load(projectId: IProject['id']) {
-	// If projectId == 0 the project on the calling component wasn't already loaded, so we just bail out here
-	if (projectId === 0) {
-		return
-	}
-
-	linkShares.value = await linkShareService.getAll({projectId})
-}
-
-type SelectedViewMapper = Record<IProject['id'], IProjectView['id']>
-
-const selectedViews = ref<SelectedViewMapper>({})
-
-watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProjectViews]) => {
-	if (!newLinkShares?.length || !newProjectViews?.length) {
-		selectedViews.value = {}
-		return
-	}
-
-	newLinkShares.forEach((linkShare) => {
-		selectedViews.value[linkShare.id] = newProjectViews.length > 0 ? newProjectViews[0].id : null
-	})
-}, {
-	immediate:true,
-	deep: true,
-})
-
-
-async function add(projectId: IProject['id']) {
-	const newLinkShare = new LinkShareModel({
-		permission: selectedPermission.value,
-		projectId,
-		name: name.value,
-		password: password.value,
-	})
-	await linkShareService.create(newLinkShare)
-	selectedPermission.value = PERMISSIONS.READ
-	name.value = ''
-	password.value = ''
+watch(() => props.projectId, () => {
+	draft.value = createLinkShareDraft()
 	showNewForm.value = false
-	success({message: t('project.share.links.createSuccess')})
-	await load(projectId)
-}
+	showDeleteModal.value = false
+}, {flush: 'sync'})
 
-async function remove(projectId: IProject['id']) {
+async function add(projectId: number) {
+	if (projectId <= 0 || isMutating.value) return
 	try {
-		await linkShareService.delete(new LinkShareModel({
-			id: linkIdToDelete.value,
-			projectId,
-		}))
-		success({message: t('project.share.links.deleteSuccess')})
-		await load(projectId)
-	} finally {
-		showDeleteModal.value = false
+		await createMutation.mutateAsync({projectId, share: draft.value})
+	} catch {
+		return
+	}
+	if (props.projectId === projectId) {
+		draft.value = createLinkShareDraft()
+		showNewForm.value = false
 	}
 }
 
-function getShareLink(hash: string, viewId: IProjectView['id']|null) {
-	return frontendUrl.value + 'share/' + hash + '/auth' + (viewId ? '?view=' + viewId : '')
+function remove(projectId: number) {
+	if (isMutating.value) return
+	deleteMutation.mutate({projectId, id: linkIdToDelete.value}, {
+		onSettled: () => {
+			if (props.projectId === projectId) showDeleteModal.value = false
+		},
+	})
 }
 
-const shareLinks = computed(() => {
-	return linkShares.value.reduce((links, linkShare) => {
-		links[linkShare.id] = getShareLink(linkShare.hash, selectedViews.value[linkShare.id] ?? null)
-		return links
-	}, {} as {[id: string]: string },
-	)
+const selectedViews = computed(() => {
+	const viewIds = availableViews.value.flatMap(view => view.id === undefined ? [] : [view.id])
+	return Object.fromEntries(linkShares.value.map(share => {
+		const picked = pickedViews.value[share.id]
+		return [share.id, picked !== undefined && viewIds.includes(picked) ? picked : viewIds[0] ?? null]
+	}))
 })
+
+const shareLinks = computed(() => Object.fromEntries(linkShares.value.map(share => {
+	const viewId = selectedViews.value[share.id]
+	return [share.id, `${configStore.frontend_url}share/${share.hash}/auth${viewId ? `?view=${viewId}` : ''}`]
+})))
 </script>
 
 <style lang="scss" scoped>

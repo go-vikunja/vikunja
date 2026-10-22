@@ -34,7 +34,7 @@ func init() {
 		ID:          "20220616145228",
 		Description: "Add overdue task summary time field to users",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(users20220616145228{})
+			return partialSync(tx, users20220616145228{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

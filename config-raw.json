@@ -51,7 +51,7 @@
                 {
                     "key": "rootpath",
                     "default_value": "\u003crootpath\u003e",
-                    "comment": "The base path on the file system where Vikunja stores its data (database, files, logs, plugins).\nDefaults to the current working directory. When running as a systemd service, this respects the WorkingDirectory= setting.\nVikunja will also look in this path for a config file, so you could provide only this variable to point to a folder\nwith a config file which will then be used."
+                    "comment": "The base path on the file system where Vikunja stores its data (database, files, logs, plugins).\nDefaults to the current working directory. When running as a systemd service, this respects the WorkingDirectory= setting.\nVikunja will also look in this path for a config file, so you could provide only this variable to point to a folder\nwith a config file which will then be used.\nWhen a config file is pinned with the `--config` flag, this search is skipped and rootpath defaults to the directory containing that config file.\nA relative rootpath set in a pinned config file is resolved against that same directory."
                 },
                 {
                     "key": "maxitemsperpage",
@@ -156,12 +156,12 @@
                 {
                     "key": "ipextractionmethod",
                     "default_value": "direct",
-                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
+                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header, but only honours it when the header value itself falls into a trusted range (loopback, private networks or 'service.trustedproxies') — it does not check who sent the header, so it cannot report public client IPs. Prefer 'xff' behind a reverse proxy. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
                 },
                 {
                     "key": "trustedproxies",
                     "default_value": "",
-                    "comment": "Comma-separated list of CIDR ranges for trusted reverse proxies. Only used when service.ipextractionmethod is 'xff' or 'realip'. X-Forwarded-For / X-Real-IP headers are only trusted from these addresses. Example: '127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12'"
+                    "comment": "Comma-separated list of CIDR ranges for trusted reverse proxies. Only used when service.ipextractionmethod is 'xff' or 'realip'. With 'xff', X-Forwarded-For is only trusted when the request comes from one of these addresses; with 'realip', the X-Real-IP value itself must be within these ranges. Example: '127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12'"
                 }
             ]
         },
@@ -221,7 +221,7 @@
                 {
                     "key": "path",
                     "default_value": "./vikunja.db",
-                    "comment": "When using sqlite, this is the path where to store the database file. Can be an absolute path or relative path. \u003cbr/\u003e\nRelative paths are resolved as follows: \u003cbr/\u003e\n- If `service.rootpath` is explicitly configured (differs from the binary location), the database path is resolved relative to that directory. \u003cbr/\u003e\n- Otherwise, relative paths are resolved to a platform-specific user data directory to prevent database files from being created in system directories (like `C:\\Windows\\System32` on Windows when running as a service): \u003cbr/\u003e\n  - **Windows**: `%LOCALAPPDATA%\\Vikunja` (e.g., `C:\\Users\\username\\AppData\\Local\\Vikunja`) \u003cbr/\u003e\n  - **macOS**: `~/Library/Application Support/Vikunja` \u003cbr/\u003e\n  - **Linux**: `$XDG_DATA_HOME/vikunja` or `~/.local/share/vikunja` \u003cbr/\u003e\n**Recommendation**: Use an absolute path for production deployments, especially when running Vikunja as a Windows service, to have full control over the database location."
+                    "comment": "When using sqlite, this is the path where to store the database file. Can be an absolute path or relative path. \u003cbr/\u003e\nRelative paths are resolved as follows: \u003cbr/\u003e\n- If the config file was pinned with the `--config` flag and this value is not set explicitly, the default is resolved against the anchored rootpath, which is the directory of that config file. \u003cbr/\u003e\n- If `service.rootpath` is explicitly configured (differs from the binary location), the database path is resolved relative to that directory. \u003cbr/\u003e\n- Otherwise, relative paths are resolved to a platform-specific user data directory to prevent database files from being created in system directories (like `C:\\Windows\\System32` on Windows when running as a service): \u003cbr/\u003e\n  - **Windows**: `%LOCALAPPDATA%\\Vikunja` (e.g., `C:\\Users\\username\\AppData\\Local\\Vikunja`) \u003cbr/\u003e\n  - **macOS**: `~/Library/Application Support/Vikunja` \u003cbr/\u003e\n  - **Linux**: `$XDG_DATA_HOME/vikunja` or `~/.local/share/vikunja` \u003cbr/\u003e\n**Recommendation**: Use an absolute path for production deployments, especially when running Vikunja as a Windows service, to have full control over the database location."
                 },
                 {
                     "key": "maxopenconnections",
@@ -235,7 +235,7 @@
                 },
                 {
                     "key": "maxconnectionlifetime",
-                    "default_value": "10000",
+                    "default_value": "1800000",
                     "comment": "The maximum lifetime of a single db connection in milliseconds."
                 },
                 {
@@ -403,7 +403,7 @@
                 {
                     "key": "level",
                     "default_value": "INFO",
-                    "comment": "Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
+                    "comment": "Change the log level. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO."
                 },
                 {
                     "key": "format",
@@ -417,13 +417,18 @@
                 },
                 {
                     "key": "databaselevel",
-                    "default_value": "WARNING",
-                    "comment": "The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
+                    "default_value": "",
+                    "comment": "The log level for database log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "http",
                     "default_value": "stdout",
                     "comment": "Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging."
+                },
+                {
+                    "key": "httplevel",
+                    "default_value": "",
+                    "comment": "The log level for http request log messages. Requests are logged at INFO, requests failing with a 4xx status at WARNING and requests failing with a 5xx status at ERROR. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "events",
@@ -432,8 +437,8 @@
                 },
                 {
                     "key": "eventslevel",
-                    "default_value": "info",
-                    "comment": "The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG."
+                    "default_value": "",
+                    "comment": "The log level for event log messages. Possible values (case-insensitive) are ERROR, INFO, DEBUG. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "mail",
@@ -442,8 +447,8 @@
                 },
                 {
                     "key": "maillevel",
-                    "default_value": "info",
-                    "comment": "The log level for mail log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG."
+                    "default_value": "",
+                    "comment": "The log level for mail log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. Defaults to the value of `log.level`."
                 }
             ]
         },
@@ -479,6 +484,16 @@
                     "key": "noauthlimit",
                     "default_value": "10",
                     "comment": "The number of requests a user can make from the same IP to all unauthenticated routes (login, register,\npassword confirmation, email verification, password reset request) per minute. This limit cannot be disabled.\nYou should only change this if you know what you're doing."
+                },
+                {
+                    "key": "tokenrefreshlimit",
+                    "default_value": "60",
+                    "comment": "The number of requests a user can make from the same IP to the session renewal routes\n(token refresh and the OAuth token endpoint) per minute. These are kept separate from\n\"noauthlimit\" because every logged-in client renews its access token periodically, which\nwould otherwise use up the budget reserved for login attempts. This limit cannot be disabled."
+                },
+                {
+                    "key": "basicauthlimit",
+                    "default_value": "10",
+                    "comment": "The number of failed HTTP BasicAuth attempts (CalDAV, feeds) a client can make from the same IP per minute before further attempts are rejected with 429. Only failures count, so successful regular syncs are never limited. This limit is separate from \"noauthlimit\" so CalDAV clients cannot starve the login budget."
                 }
             ]
         },
@@ -547,6 +562,41 @@
             "key": "migration",
             "comment": "To use any of the available migrators, you usually need to configure credentials for the appropriate service and enable it. Find instructions below on how to do this for the provided migrators.",
             "children": [
+                {
+                    "key": "maxcsvrows",
+                    "default_value": "100000",
+                    "comment": "The maximum number of data rows parsed from one CSV import, including generic CSV and TickTick backup files."
+                },
+                {
+                    "key": "maxitems",
+                    "default_value": "100000",
+                    "comment": "The maximum number of projects, buckets, tasks, comments and attachments one import may contain, across all migrators."
+                },
+                {
+                    "key": "vikunjafile",
+                    "children": [
+                        {
+                            "key": "maxsize",
+                            "default_value": "256MB",
+                            "comment": "The maximum total size of decompressed content a Vikunja export file may contain. Exports whose declared uncompressed size exceeds this are rejected before anything is read."
+                        },
+                        {
+                            "key": "maxfiles",
+                            "default_value": "10000",
+                            "comment": "The maximum number of files a single Vikunja export may contain."
+                        },
+                        {
+                            "key": "maxuserstorage",
+                            "default_value": "1GB",
+                            "comment": "How much file storage a single user may use through Vikunja export imports. Existing storage plus the planned import size must stay below this."
+                        }
+                    ]
+                },
+                {
+                    "key": "claimtimeout",
+                    "default_value": "5m",
+                    "comment": "How long a migration's claim on the user's migration slot may go without a heartbeat before another import for the same user may take it over. A running migration refreshes its heartbeat continuously, so a long-running import keeps its claim no matter how long it takes; a takeover only happens when the instance running it died mid-import (normally the claim is released on success and failure)."
+                },
                 {
                     "key": "todoist",
                     "children": [
@@ -767,12 +817,12 @@
                                         {
                                             "key": "usernamefallback",
                                             "default_value": "false",
-                                            "comment": "This option allows to look for a local account where the OIDC Issuer match the Vikunja local username. Allowed value is either `true` or `false`. That option can be combined with `emailfallback`.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
+                                            "comment": "This option allows to look for a local account where the OIDC Issuer match the Vikunja local username. Allowed value is either `true` or `false`. If `emailfallback` is also enabled, a local account matching both username and email is preferred, then one matching the email alone.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
                                         },
                                         {
                                             "key": "emailfallback",
                                             "default_value": "false",
-                                            "comment": "This option allows to look for a local account where the OIDC user's email match the Vikunja local email. Allowed value is either `true` or `false`. That option can be combined with `usernamefallback`.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
+                                            "comment": "This option allows to look for a local account where the OIDC user's email match the Vikunja local email. Allowed value is either `true` or `false`. Requires the provider to send `email_verified: true`. Also applies when `usernamefallback` is enabled.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
                                         },
                                         {
                                             "key": "forceuserinfo",
@@ -847,7 +897,7 @@
                         {
                             "key": "groupsyncfilter",
                             "default_value": "(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
-                            "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`."
+                            "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`.\nMay contain `{userdn}` (the user's DN) and `{username}` (the user's `attribute.username` value), both escaped. With a placeholder, every matching group is a membership and `attribute.memberid` is ignored; login fails if the value is empty.\nExample (OpenLDAP, direct membership): `(&(objectclass=groupOfNames)(member={userdn}))`\nExample (Active Directory, including nested groups): `(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={userdn}))`\nWithout a placeholder, Vikunja fetches all matching groups and checks their `attribute.memberid` values, which is slow on large directories and misses members of Active Directory groups with more than 1500 members."
                         },
                         {
                             "key": "groupsyncuseserviceaccount",
@@ -882,7 +932,12 @@
                                 {
                                     "key": "memberid",
                                     "default_value": "member",
-                                    "comment": "The LDAP attribute used to check group membership of a team in Vikunja. Only used when groups are synced to Vikunja."
+                                    "comment": "The LDAP attribute used to check group membership of a team in Vikunja. Only used when groups are synced to Vikunja and `groupsyncfilter` contains neither `{userdn}` nor `{username}`."
+                                },
+                                {
+                                    "key": "id",
+                                    "default_value": "",
+                                    "comment": "An immutable LDAP attribute used to match LDAP users to Vikunja accounts and LDAP groups to Vikunja teams, so renaming a user's login name or moving or renaming a group in the directory keeps the account or team and its shares. Use `objectGUID` for Active Directory or `entryUUID` for OpenLDAP. If empty, users are matched by `attribute.username` and groups by their DN.\nWhen set on an existing installation, existing accounts and teams are migrated gradually, each on the next login of that user or of a member of that group. The switch is one-way: unsetting or changing this attribute later creates new accounts and teams, and the old ones keep their data and shares but no longer match. While this is set, users must not be able to edit their own `attribute.username` value: a user who sets it to another user's id value could take over that user's migrated account."
                                 }
                             ]
                         }
@@ -908,6 +963,11 @@
                     "key": "password",
                     "default_value": "",
                     "comment": "If set to a non-empty value the /metrics endpoint will require this as a password via basic auth in combination with the username below."
+                },
+                {
+                    "key": "pprof",
+                    "default_value": "false",
+                    "comment": "If set to true (and metrics are enabled), exposes the Go runtime profiler at `/debug/pprof/`, protected by the same basic auth as the metrics endpoint when username and password are set. Profiles reveal internals of the running process; only enable it on instances that are not reachable from the internet."
                 }
             ]
         },
@@ -1039,17 +1099,17 @@
                 {
                     "key": "allownonroutableips",
                     "default_value": "false",
-                    "comment": "If set to true, outgoing HTTP requests (webhooks, avatar downloads, migration imports) may resolve to non-globally-routable IP addresses. When false (the default), Vikunja blocks these to prevent SSRF attacks. Set to true only if you need these to reach services on your internal network."
+                    "comment": "If set to true, outgoing HTTP requests (webhooks, avatar downloads, migration imports, and the license check) may resolve to non-globally-routable IP addresses. When false (the default), Vikunja blocks these to prevent SSRF attacks. Requests sent through a proxy are not checked, since the proxy resolves the target: filtering them is the proxy's job, and a generic forward proxy does not filter. Set to true only if you need these to reach services on your internal network."
                 },
                 {
                     "key": "proxyurl",
                     "default_value": "",
-                    "comment": "The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing HTTP requests. Applies to webhooks, avatar downloads, and migration imports. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `outgoingrequests.proxypassword`."
+                    "comment": "The URL of an HTTP proxy, for example [a mole instance](https://github.com/frain-dev/mole), to use for outgoing HTTP requests: webhooks, avatar downloads, migration imports, OpenID Connect, and the license check. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Credentials can be part of the URL (`http://user:password@proxy:3128`) or set with `outgoingrequests.proxypassword`. If not set, the standard `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` environment variables are used. Connections to the proxy itself are exempt from the `allownonroutableips` check, since the proxy resolves proxied targets."
                 },
                 {
                     "key": "proxypassword",
                     "default_value": "",
-                    "comment": "The proxy password for authenticating against the proxy."
+                    "comment": "The proxy password. Used with the username from `outgoingrequests.proxyurl`, or `vikunja` if the URL has none. Ignored when `outgoingrequests.proxyurl` already contains a password."
                 }
             ]
         },

@@ -22,6 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -67,4 +69,25 @@ func TestHuma_ErrorShapeIsRFC9457(t *testing.T) {
 		}
 		assert.True(t, foundTitleError, "expected at least one error detail locating `title`; got %+v", body.Errors)
 	})
+}
+
+// TestHuma_HealthcheckFailureDoesNotLeakCause drives /api/v2/health into its
+// 500 path end-to-end. The endpoint is unauthenticated, so the underlying
+// DB/Redis driver error — which carries hosts, ports and credentials — must
+// never reach the response body.
+func TestHuma_HealthcheckFailureDoesNotLeakCause(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	// Redis is enabled but never initialized in tests, so health.Check fails.
+	config.RedisEnabled.Set(true)
+	defer config.RedisEnabled.Set(false)
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/health", "", "", "")
+	require.Equal(t, http.StatusInternalServerError, rec.Code, "body: %s", rec.Body.String())
+
+	var body huma.ErrorModel
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), "body: %s", rec.Body.String())
+	assert.Empty(t, body.Errors, "the healthcheck must not expose the underlying cause")
+	assert.NotContains(t, rec.Body.String(), "redis", "body: %s", rec.Body.String())
 }

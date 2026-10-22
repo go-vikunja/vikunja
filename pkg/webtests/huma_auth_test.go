@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -99,8 +100,7 @@ func TestHumaAuthPublic(t *testing.T) {
 	})
 }
 
-// TestHumaRegisterDisabled proves the registration endpoint 404s when
-// registration is disabled, mirroring v1.
+// Public registration remains unavailable without an invitation.
 func TestHumaRegisterDisabled(t *testing.T) {
 	config.ServiceEnableRegistration.Set(false)
 	defer config.ServiceEnableRegistration.Set(true)
@@ -169,6 +169,11 @@ func TestHumaTokenMeta(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/token/test", "", "", "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
+	t.Run("token test with api token", func(t *testing.T) {
+		rec := apiTokenReq(e, http.MethodGet, "/api/v2/token/test", "tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e", "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"message":"ok"`)
+	})
 	t.Run("routes lists token routes", func(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/routes", "", userToken, "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
@@ -210,6 +215,17 @@ func TestHumaOAuth(t *testing.T) {
 		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "abc", "S256", "s")
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/authorize", string(body), "", "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	})
+
+	// GHSA-v3p6-34mc-hj7v: an oauth-scoped API token must not obtain an
+	// authorization code (and with it a full session JWT).
+	t.Run("authorize rejects legacy oauth-scoped API token", func(t *testing.T) {
+		apiToken := insertLegacyOAuthScopedToken(t)
+
+		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "abc", "S256", "")
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/authorize", string(body), apiToken, "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.NotContains(t, rec.Body.String(), `"code":"`)
 	})
 
 	t.Run("full code flow with PKCE (JSON token request)", func(t *testing.T) {
@@ -260,6 +276,12 @@ func TestHumaOAuth(t *testing.T) {
 		form := url.Values{"grant_type": {"password"}, "client_id": {"vikunja"}}
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/token", form.Encode(), "", "application/x-www-form-urlencoded")
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("oversized form body", func(t *testing.T) {
+		form := url.Values{"grant_type": {"authorization_code"}, "code": {strings.Repeat("a", 64<<10)}}
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/token", form.Encode(), "", "application/x-www-form-urlencoded")
+		assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Code, rec.Body.String())
 	})
 }
 

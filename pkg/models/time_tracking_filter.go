@@ -53,7 +53,12 @@ func timeEntryFilterCond(filter, filterTimezone string) (builder.Cond, error) {
 		return nil, nil
 	}
 
-	parsed, err := fexpr.Parse(preprocessFilterString(filter))
+	filter, err := prepareFilterForParsing(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	parsed, err := fexpr.Parse(filter)
 	if err != nil {
 		return nil, &ErrInvalidFilterExpression{Expression: filter, ExpressionError: err}
 	}
@@ -197,8 +202,9 @@ func timeEntryTimeFilterValue(raw string, loc *time.Location) (time.Time, error)
 		loc = config.GetTimeZone()
 	}
 	if expr, err := safeDatemathParse(raw); err == nil {
-		t := expr.Time(datemath.WithLocation(loc)).In(config.GetTimeZone())
-		return adjustDateForMysql(t), nil
+		// UTC for the same reason as the task filter, see getValueForField.
+		t := expr.Time(datemath.WithLocation(loc)).UTC()
+		return clampDateToDriverRange(t), nil
 	}
 	return parseTimeFromUserInput(raw, loc)
 }

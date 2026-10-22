@@ -21,17 +21,16 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/richtext"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/labstack/echo/v5"
 )
 
 const (
 	// "markdown" converts rich-text fields on read and write; anything else keeps HTML.
 	richTextFormatQuery  = "format"
-	richTextFormatHeader = "X-Vikunja-Format"
+	RichTextFormatHeader = "X-Vikunja-Format"
 	markdownFormat       = "markdown"
 )
 
@@ -40,12 +39,12 @@ const (
 // read here so this also catches the X-Vikunja-Format header — the only channel
 // that survives AutoPatch's PATCH re-dispatch (it strips the query).
 func requestWantsMarkdown(ctx context.Context) bool {
-	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
-	if !ok {
+	ec := humabridge.EchoContextFrom(ctx)
+	if ec == nil {
 		return false
 	}
 	return ec.QueryParam(richTextFormatQuery) == markdownFormat ||
-		ec.Request().Header.Get(richTextFormatHeader) == markdownFormat
+		ec.Request().Header.Get(RichTextFormatHeader) == markdownFormat
 }
 
 // richTextFormatAPIDescription documents the cross-cutting markdown behavior at

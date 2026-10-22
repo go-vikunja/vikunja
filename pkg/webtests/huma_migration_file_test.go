@@ -21,7 +21,16 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strconv"
 	"testing"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/modules/migration"
+	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
+	"code.vikunja.io/api/pkg/notifications"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -58,44 +67,125 @@ func migrationUploadRequest(t *testing.T, e *echo.Echo, path string, body *bytes
 	return rec
 }
 
+// runQueuedImport runs the job for the import the preceding request queued:
+// webtests dispatch into events.Fake(), so no listener runs on its own.
+func runQueuedImport(t *testing.T) *migration.Status {
+	t.Helper()
+	dispatched := events.GetDispatchedEvents((&migrationHandler.FileMigrationRequestedEvent{}).Name())
+	require.Len(t, dispatched, 1)
+	event, ok := dispatched[0].(*migrationHandler.FileMigrationRequestedEvent)
+	require.True(t, ok)
+
+	events.TestListener(t, event, &migrationHandler.FileMigrationListener{})
+
+	status, err := migration.GetMigrationStatusByID(event.MigrationStatusID)
+	require.NoError(t, err)
+	return status
+}
+
+func assertClaimReleased(t *testing.T, status *migration.Status) {
+	t.Helper()
+	assert.False(t, status.FinishedAt.IsZero(), "the finished import must not keep holding the claim")
+	assert.Nil(t, status.ActiveUserID, "the finished import must not keep holding the claim")
+}
+
 // TestHumaMigrationFile covers the always-registered file migrators
 // (vikunja-file, ticktick, wekan) status + migrate endpoints. There is no v1
 // webtest for these handlers to mirror, so this is the parity baseline.
 func TestHumaMigrationFile(t *testing.T) {
+	migrators := []string{"vikunja-file", "ticktick", "wekan"}
+
+	t.Run("status - never migrated", func(t *testing.T) {
+		e := setupMigrationTestEnv(t)
+		token := humaTokenFor(t, &testuser1)
+
+		for _, name := range migrators {
+			rec := humaRequest(t, e, http.MethodGet, "/api/v2/migration/"+name+"/status", "", token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"started_at":"0001-01-01T00:00:00Z"`, "body: %s", rec.Body.String())
+		}
+	})
+
+	// Only vikunja-file validates in the request; ticktick would have to parse the whole upload.
+	t.Run("vikunja-file rejects a non-zip upload", func(t *testing.T) {
+		e := setupMigrationTestEnv(t)
+		token := humaTokenFor(t, &testuser1)
+
+		body, contentType := multipartImportBody(t, "bad.zip", []byte("not a zip archive"), nil)
+		rec := migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
+		require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), strconv.Itoa(migration.ErrCodeNotAZipFile), "body: %s", rec.Body.String())
+	})
+
+	t.Run("wekan rejects duplicate card ids", func(t *testing.T) {
+		board := []byte(`{"title":"dup","cards":[{"_id":"dup","title":"a"},{"_id":"dup","title":"b"}]}`)
+		for _, method := range []string{http.MethodPost, http.MethodPut} {
+			e := setupMigrationTestEnv(t)
+			token := humaTokenFor(t, &testuser1)
+			events.ClearDispatchedEvents()
+
+			path := "/api/v2/migration/wekan/migrate"
+			if method == http.MethodPut {
+				path = "/api/v1/migration/wekan/migrate"
+			}
+			body, contentType := multipartImportBody(t, "board.json", board, nil)
+			req := httptest.NewRequest(method, path, body)
+			req.Header.Set("Content-Type", contentType)
+			req.Header.Set("Authorization", "Bearer "+token)
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, req)
+
+			require.Equal(t, http.StatusBadRequest, rec.Code, "%s body: %s", path, rec.Body.String())
+			assert.Empty(t, events.GetDispatchedEvents((&migrationHandler.FileMigrationRequestedEvent{}).Name()))
+		}
+	})
+
+	// payload is shaped to hit a *domain* rejection once parsed: a ticktick CSV
+	// with no data rows is "empty", as is a wekan board with no title or cards.
+	for name, payload := range map[string][]byte{
+		"ticktick": []byte("Title,Content\n"),
+		"wekan":    []byte(`{"title":"","cards":[]}`),
+	} {
+		t.Run(name+" queues an unusable upload and fails it in the job", func(t *testing.T) {
+			e := setupMigrationTestEnv(t)
+			token := humaTokenFor(t, &testuser1)
+			notifications.Fake()
+			t.Cleanup(notifications.Unfake)
+			events.ClearDispatchedEvents()
+
+			body, contentType := multipartImportBody(t, "bad."+name, payload, nil)
+			rec := migrationUploadRequest(t, e, "/api/v2/migration/"+name+"/migrate", body, contentType, token)
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"message":"Migration was started successfully."`)
+
+			status := runQueuedImport(t)
+			notifications.AssertSent(t, &migrationHandler.MigrationFailedNotification{})
+			notifications.AssertNotSent(t, &migrationHandler.MigrationDoneNotification{})
+			assertClaimReleased(t, status)
+		})
+	}
+}
+
+// TestHumaMigrationFile_QueuesTheImport proves a valid export is accepted and
+// queued rather than imported inside the request, and that the claim it takes
+// blocks a second import until the queued one finishes.
+func TestHumaMigrationFile_QueuesTheImport(t *testing.T) {
 	e := setupMigrationTestEnv(t)
 	token := humaTokenFor(t, &testuser1)
 
-	// payload is shaped per migrator to hit a *domain* rejection (4xx) rather
-	// than a raw parse error: a wekan board with no title/cards is "empty", a
-	// ticktick CSV with no data rows is "empty", and a vikunja-file that isn't
-	// a zip is rejected as such. (Syntactically-malformed input would surface a
-	// raw json/zip error that maps to 500 in both v1 and v2 alike.)
-	migrators := map[string][]byte{
-		"vikunja-file": []byte("not a zip archive"),
-		"ticktick":     []byte("Title,Content\n"),
-		"wekan":        []byte(`{"title":"","cards":[]}`),
-	}
+	export, err := os.ReadFile("../modules/migration/vikunja-file/export.zip")
+	require.NoError(t, err)
 
-	for name, payload := range migrators {
-		t.Run(name+" status - never migrated", func(t *testing.T) {
-			rec := humaRequest(t, e, http.MethodGet, "/api/v2/migration/"+name+"/status", "", token, "")
-			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-			// A user who never migrated has a zero-value status.
-			assert.Contains(t, rec.Body.String(), `"started_at":"0001-01-01T00:00:00Z"`, "body: %s", rec.Body.String())
-		})
+	body, contentType := multipartImportBody(t, "export.zip", export, nil)
+	rec := migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"message":"Migration was started successfully."`)
+	events.AssertDispatched(t, &migrationHandler.FileMigrationRequestedEvent{})
 
-		t.Run(name+" migrate maps a rejected file to a 4xx domain error", func(t *testing.T) {
-			// Drives the request through the multipart binding and into the
-			// migrator, which rejects it with a domain error that
-			// translateDomainError turns into a 4xx — proving the v2 plumbing
-			// (bind, run, error bridge) is wired, not the parsing itself.
-			body, contentType := multipartImportBody(t, "bad."+name, payload, nil)
-			rec := migrationUploadRequest(t, e, "/api/v2/migration/"+name+"/migrate", body, contentType, token)
-			assert.GreaterOrEqual(t, rec.Code, http.StatusBadRequest, "body: %s", rec.Body.String())
-			assert.Less(t, rec.Code, http.StatusInternalServerError,
-				"a rejected upload must map to a 4xx domain error, not a 500; body: %s", rec.Body.String())
-		})
-	}
+	body, contentType = multipartImportBody(t, "export.zip", export, nil)
+	rec = migrationUploadRequest(t, e, "/api/v2/migration/vikunja-file/migrate", body, contentType, token)
+	assert.Equal(t, http.StatusPreconditionFailed, rec.Code,
+		"the queued import must keep holding the claim; body: %s", rec.Body.String())
 }
 
 // TestHumaMigrationFile_Unauthenticated proves the file migrator ops require auth.
@@ -125,4 +215,58 @@ func TestHumaMigrationFile_MissingFile(t *testing.T) {
 
 	rec := migrationUploadRequest(t, e, "/api/v2/migration/ticktick/migrate", buf, w.FormDataContentType(), token)
 	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+}
+
+// TestHumaMigrationFile_MalformedJSON proves a syntactically broken upload is
+// classified as the user's problem, not a 500 forwarded to Sentry. See
+// API-CLOUD-4B. wekan no longer validates in the request, so the classification
+// now happens when the job maps the parse failure through asImportFileError.
+func TestHumaMigrationFile_MalformedJSON(t *testing.T) {
+	config.SentryEnabled.Set(true)
+	defer config.SentryEnabled.Set(false)
+
+	t.Cleanup(notifications.Unfake)
+
+	for _, payload := range [][]byte{
+		[]byte(`<html>not an export</html>`),
+		[]byte(`{"title": `),
+		append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"title": `)...),
+	} {
+		e := setupMigrationTestEnv(t)
+		token := humaTokenFor(t, &testuser1)
+		notifications.Fake()
+		events.ClearDispatchedEvents()
+
+		body, contentType := multipartImportBody(t, "board.json", payload, nil)
+		rec := migrationUploadRequest(t, e, "/api/v2/migration/wekan/migrate", body, contentType, token)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		status := runQueuedImport(t)
+		notifications.AssertSent(t, &migrationHandler.MigrationFailedNotification{})
+		notifications.AssertNotSent(t, &migrationHandler.MigrationFailedReportedNotification{})
+		assertClaimReleased(t, status)
+	}
+}
+
+// TestHumaMigrationFile_JSONWithBOM proves an otherwise valid export is not
+// rejected just because the exporter prefixed it with a byte order mark.
+func TestHumaMigrationFile_JSONWithBOM(t *testing.T) {
+	e := setupMigrationTestEnv(t)
+	token := humaTokenFor(t, &testuser1)
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+	events.ClearDispatchedEvents()
+
+	payload := append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"title":"BOM board","lists":[{"_id":"l1","title":"Todo"}],"cards":[{"_id":"c1","title":"A card","listId":"l1"}]}`)...)
+	body, contentType := multipartImportBody(t, "board.json", payload, nil)
+	rec := migrationUploadRequest(t, e, "/api/v2/migration/wekan/migrate", body, contentType, token)
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	status := runQueuedImport(t)
+	notifications.AssertSent(t, &migrationHandler.MigrationDoneNotification{})
+	assertClaimReleased(t, status)
+	db.AssertExists(t, "projects", map[string]interface{}{
+		"title":    "BOM board",
+		"owner_id": testuser1.ID,
+	}, false)
 }

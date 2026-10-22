@@ -1,4 +1,5 @@
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
+import type {TimeEntry as ITimeEntry} from '@/client/generated'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 // The smart-clock start time: continue from the most recent entry's end so
 // consecutive entries don't overlap or leave gaps; with no completed entry to
@@ -10,7 +11,7 @@ export function smartFillStart(recentEntries: ITimeEntry[], defaultStart: string
 	const cap = (start: Date) => (start.getTime() > now.getTime() ? new Date(now) : start)
 
 	const lastEnd = recentEntries
-		.map(entry => entry.endTime)
+		.map(entry => parseDateOrNull(entry.end_time))
 		.filter((end): end is Date => end !== null)
 		.sort((a, b) => b.getTime() - a.getTime())[0]
 	if (lastEnd !== undefined) {

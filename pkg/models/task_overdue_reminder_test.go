@@ -21,7 +21,9 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
@@ -49,20 +51,35 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		require.NoError(t, err)
 		require.Len(t, uts, 1)
-		assert.Len(t, uts[1].tasks, 2)
-		// The tasks don't always have the same order, so we only check their presence, not their position.
-		var task5Present bool
-		var task6Present bool
-		for _, t := range uts[1].tasks {
-			if t.ID == 5 {
-				task5Present = true
-			}
-			if t.ID == 6 {
-				task6Present = true
-			}
-		}
-		assert.Truef(t, task5Present, "expected task 5 to be present but was not")
-		assert.Truef(t, task6Present, "expected task 6 to be present but was not")
+		// User 1 created tasks 5 and 6 but is not assigned to them
+		assert.Empty(t, uts[1].assigned)
+		assert.Len(t, uts[1].followed, 2)
+		assert.Contains(t, uts[1].followed, int64(5))
+		assert.Contains(t, uts[1].followed, int64(6))
+	})
+	t.Run("assigned and followed are split", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		overdueTime, err := time.Parse(time.RFC3339, "2018-11-30T10:00:00Z")
+		require.NoError(t, err)
+
+		assignedTask := &Task{Title: "Assigned overdue", CreatedByID: 1, ProjectID: 1, DueDate: overdueTime}
+		require.NoError(t, assignedTask.Create(s, &user.User{ID: 1}))
+		_, err = s.Insert(&TaskAssginee{TaskID: assignedTask.ID, UserID: 1})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
+		require.NoError(t, err)
+		uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+		require.NoError(t, err)
+		require.Contains(t, uts, int64(1))
+
+		assert.Contains(t, uts[1].assigned, assignedTask.ID)
+		assert.NotContains(t, uts[1].followed, assignedTask.ID)
+		assert.Contains(t, uts[1].followed, int64(5))
+		assert.Contains(t, uts[1].followed, int64(6))
 	})
 	t.Run("done overdue", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -74,6 +91,23 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		tasks, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
+	})
+	t.Run("unparseable reminder time does not fail for other users", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(2).Cols("overdue_tasks_reminders_time").Update(&user.User{
+			OverdueTasksRemindersTime: "xx:yy",
+		})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
+		require.NoError(t, err)
+
+		uts, err := getUndoneOverdueTasks(s, now, nil)
+		require.NoError(t, err)
+		require.Contains(t, uts, int64(1))
 	})
 }
 
@@ -340,6 +374,7 @@ func TestOverdueTaskNotificationsIncludeSubscribers(t *testing.T) {
 			}
 			if tu.User.ID == 2 && tu.Task.ID == task.ID {
 				hasSubscriber = true
+				assert.False(t, tu.IsAssignee, "subscriber should be listed as follower, not assignee")
 			}
 		}
 
@@ -446,5 +481,56 @@ func TestOverdueTaskNotificationsIncludeSubscribers(t *testing.T) {
 		}
 
 		assert.False(t, hasSubscriber, "subscriber without project access should not receive notification")
+	})
+}
+
+func TestOverdueEventsWithListeners(t *testing.T) {
+	t.Run("no webhook subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		single, batch, err := overdueEventsWithListeners(s)
+		require.NoError(t, err)
+		assert.False(t, single)
+		assert.False(t, batch)
+	})
+	t.Run("batch event subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&Webhook{
+			TargetURL:   "https://example.com/overdue",
+			Events:      []string{"task.updated", (&TasksOverdueEvent{}).Name()},
+			UserID:      1,
+			CreatedByID: 1,
+		})
+		require.NoError(t, err)
+
+		single, batch, err := overdueEventsWithListeners(s)
+		require.NoError(t, err)
+		assert.False(t, single)
+		assert.True(t, batch)
+	})
+}
+
+type testOverdueListener struct{}
+
+func (*testOverdueListener) Handle(*message.Message) error { return nil }
+func (*testOverdueListener) Name() string                  { return "testOverdueListener" }
+
+func TestHasNonWebhookListener(t *testing.T) {
+	// Unique names: the listener registry is global and has no unregister.
+	t.Run("webhook listener only", func(t *testing.T) {
+		name := "test.overdue.webhook-only"
+		events.RegisterListener(name, &WebhookListener{EventName: name})
+		assert.False(t, hasNonWebhookListener(name))
+	})
+	t.Run("plugin listener", func(t *testing.T) {
+		name := "test.overdue.plugin"
+		events.RegisterListener(name, &WebhookListener{EventName: name})
+		events.RegisterListener(name, &testOverdueListener{})
+		assert.True(t, hasNonWebhookListener(name))
 	})
 }

@@ -29,7 +29,7 @@ import (
 )
 
 func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) {
-	apiToken, u, err := models.ValidateTokenAndGetOwner(s, token)
+	apiToken, u, err := models.ValidateTokenAndGetOwner(s, token, true)
 	if err != nil {
 		return nil, err
 	}

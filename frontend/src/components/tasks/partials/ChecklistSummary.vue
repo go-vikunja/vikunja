@@ -35,13 +35,13 @@ import {computed} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {getChecklistStatistics} from '@/helpers/checklistFromText'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 const props = defineProps<{
 	task: ITask
 }>()
 
-const checklist = computed(() => getChecklistStatistics(props.task.description))
+const checklist = computed(() => getChecklistStatistics((props.task.description ?? '')))
 
 const checklistCircleDone = computed(() => {
 	const r = 5
@@ -57,14 +57,14 @@ const allDone = computed(() => checklist.value.total === checklist.value.checked
 const {t} = useI18n({useScope: 'global'})
 const label = computed(() => {
 	return allDone.value
-		? t('task.checklistAllDone', checklist.value)
-		: t('task.checklistTotal', checklist.value)
+		? t('task.checklistAllDone', {...checklist.value})
+		: t('task.checklistTotal', {...checklist.value})
 })
 </script>
 
 <style scoped lang="scss">
 .checklist-summary {
-	color: var(--grey-500);
+	color: var(--text-muted);
 	display: inline-flex;
 	align-items: center;
 	padding-inline-start: .5rem;

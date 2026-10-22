@@ -1,14 +1,16 @@
 <template>
 	<span
-		v-if="task.commentCount && task.commentCount > 0"
+		v-if="task.comment_count && task.comment_count > 0"
 		v-tooltip="tooltip"
 		class="comment-count"
-		:class="{'is-unread': task.isUnread}"
+		:class="{'is-unread': task.is_unread}"
+		role="img"
+		:aria-label="tooltip"
 	>
 		<Icon :icon="['far', 'comments']" />
-		<span class="comment-count-badge">{{ task.commentCount }}</span>
+		<span class="comment-count-badge">{{ task.comment_count }}</span>
 		<span
-			v-if="task.isUnread"
+			v-if="task.is_unread"
 			class="unread-indicator"
 		/>
 	</span>
@@ -18,7 +20,7 @@
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 const props = defineProps<{
 	task: ITask
@@ -26,7 +28,7 @@ const props = defineProps<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const tooltip = computed(() => t('task.attributes.comment', props.task.commentCount))
+const tooltip = computed(() => t('task.attributes.comment', props.task.comment_count ?? 0))
 </script>
 
 <style scoped lang="scss">
@@ -35,7 +37,7 @@ const tooltip = computed(() => t('task.attributes.comment', props.task.commentCo
 	align-items: center;
 	gap: 0.25rem;
 	font-size: 0.875rem;
-	color: var(--grey-500);
+	color: var(--text-muted);
 
 	.comment-count-badge {
 		font-weight: 600;

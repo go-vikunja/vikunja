@@ -46,13 +46,13 @@ withDefaults(defineProps<{
 const authStore = useAuthStore()
 
 const minimumPriority = computed(() => {
-	return authStore.settings.frontendSettings.minimumPriority || priorities.MEDIUM
+	return authStore.settings.frontend_settings.minimum_priority || priorities.MEDIUM
 })
 </script>
 
 <style lang="scss" scoped>
 .high-priority {
-	color: var(--danger);
+	color: var(--danger-text);
 	inline-size: auto !important; // To override the width set in tasks
 }
 

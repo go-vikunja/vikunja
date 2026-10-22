@@ -49,7 +49,7 @@ func RegisterWebhookRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "webhooks-list",
 		Summary:     "List a project's webhooks",
-		Description: "Returns the webhook targets configured for the given project, paginated. Requires read access to the project. Secret and basic-auth credentials are never included.",
+		Description: "Returns the webhook targets configured for the given project, paginated. Requires write access to the project, because target URLs often carry the receiver's credential. Secret and basic-auth credentials are never included.",
 		Method:      http.MethodGet,
 		Path:        "/projects/{project}/webhooks",
 		Tags:        tags,
@@ -113,6 +113,7 @@ func webhooksCreate(ctx context.Context, in *struct {
 		return nil, err
 	}
 	in.Body.ProjectID = in.ProjectID // URL wins over body
+	in.Body.UserID = 0
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
@@ -133,6 +134,7 @@ func webhooksUpdate(ctx context.Context, in *struct {
 	// right webhook under the right project.
 	in.Body.ID = in.ID
 	in.Body.ProjectID = in.ProjectID
+	in.Body.UserID = 0
 	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}

@@ -21,17 +21,31 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/v2/extension"
+	"github.com/yuin/goldmark/v2/parser"
+	"github.com/yuin/goldmark/v2/renderer/html"
 	"xorm.io/xorm"
 )
 
-// markdownConverter renders GFM but never enables html.WithUnsafe() — raw HTML in
-// the markdown stays inert, so the only active markup is what goldmark emits. This
-// is what stops user-supplied markdown from smuggling in scripts.
-var markdownConverter = goldmark.New(
-	goldmark.WithExtensions(extension.GFM),
+// Neither renderer enables html.WithUnsafe() — raw HTML in the markdown stays
+// inert, so the only active markup is what goldmark emits. This is what stops
+// user-supplied markdown from smuggling in scripts.
+var (
+	gfmParser   = parser.New(parser.WithExtensions(extension.GFMParser))
+	gfmRenderer = html.New(html.WithExtensions(extension.GFMHTMLRenderer))
+
+	commonMarkParser   = parser.New()
+	commonMarkRenderer = html.New()
 )
+
+// CommonMarkToHTML renders plain CommonMark (no GFM extensions) to HTML.
+func CommonMarkToHTML(md []byte) (string, error) {
+	var buf bytes.Buffer
+	if err := commonMarkRenderer.Render(&buf, md, commonMarkParser.Parse(md)); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
 
 // MarkdownToHTML converts GFM Markdown to canonical rich-text HTML, rewriting task
 // lists into TipTap's <ul data-type="taskList"> form. Mentions are left as literal
@@ -48,7 +62,8 @@ func MarkdownToHTMLWithMentions(s *xorm.Session, md string) (string, error) {
 
 func markdownToHTML(md string, s *xorm.Session) (string, error) {
 	var buf bytes.Buffer
-	if err := markdownConverter.Convert([]byte(md), &buf); err != nil {
+	source := []byte(md)
+	if err := gfmRenderer.Render(&buf, source, gfmParser.Parse(source)); err != nil {
 		return "", fmt.Errorf("converting markdown to html: %w", err)
 	}
 

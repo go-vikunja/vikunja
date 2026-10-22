@@ -34,7 +34,7 @@ func init() {
 		ID:          "20230104152903",
 		Description: "Adding OidcID to teams",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(teams20230104152903{})
+			return partialSync(tx, teams20230104152903{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

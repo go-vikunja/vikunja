@@ -18,7 +18,7 @@
 					:id="textareaId"
 					ref="newTaskInput"
 					v-model="newTaskTitle"
-					v-focus
+					v-focus="autofocus"
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
 					:placeholder="$t('project.list.addPlaceholder')"
@@ -34,7 +34,7 @@
 			<p class="control">
 				<XButton
 					class="add-task-button"
-					:disabled="newTaskTitle === '' || loading || undefined"
+					:disabled="newTaskTitle === '' || showLoading || undefined"
 					icon="plus"
 					:loading="loading"
 					:aria-label="$t('project.list.add')"
@@ -58,35 +58,37 @@
 </template>
 
 <script setup lang="ts">
+import {assertClientRequestContext, captureClientRequestContext} from '@/client/requestContext'
+import {useCreateTaskRelationMutation} from '@/client/queries/taskMutations'
 import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useElementHover} from '@vueuse/core'
 import {useRouter} from 'vue-router'
 
 import {RELATION_KIND} from '@/types/IRelationKind'
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
 
 import Expandable from '@/components/base/Expandable.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
-import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
-import TaskRelationService from '@/services/taskRelation'
-import TaskRelationModel from '@/models/taskRelation'
+import {parseSubtasksViaIndention, type TaskWithParent} from '@/helpers/parseSubtasksViaIndention'
 import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
+import {runWrites} from '@/helpers/runWrites'
+import {error} from '@/message'
 
 import {useAuthStore} from '@/stores/auth'
-import {useTaskStore} from '@/stores/tasks'
+import {useConfigStore} from '@/stores/config'
+import {reportSkippedLabels, useQuickAddTask} from '@/composables/useQuickAddTask'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
-const props = withDefaults(defineProps<{
-	defaultPosition?: number,
-}>(), {
-	defaultPosition: undefined,
-})
+const {autofocus = true} = defineProps<{
+	autofocus?: boolean,
+}>()
 
-const emit = defineEmits(['taskAdded'])
+const emit = defineEmits<{
+	tasksAdded: [tasks: ITask[]],
+}>()
 
 const textareaId = computed(() => `task-add-textarea-${Math.random().toString(36).substr(2, 9)}`)
 
@@ -95,7 +97,10 @@ const {textarea: newTaskInput} = useAutoHeightTextarea(newTaskTitle)
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
-const taskStore = useTaskStore()
+const configStore = useConfigStore()
+const {createNewTasksBulk, findProjectId, ensureLabelsExist, isLoading: loading} = useQuickAddTask()
+const showLoading = useDelayedLoading(loading)
+const createRelationMutation = useCreateTaskRelationMutation()
 const router = useRouter()
 
 // enable only if we don't have a modal
@@ -117,8 +122,6 @@ function resetEmptyTitleError() {
 	}
 }
 
-const loading = computed(() => taskStore.isLoading)
-
 async function addTask() {
 	if (newTaskTitle.value === '') {
 		errorMessage.value = t('project.create.addTitleRequired')
@@ -130,80 +133,66 @@ async function addTask() {
 		return
 	}
 
+	const context = captureClientRequestContext()
 	const taskTitleBackup = newTaskTitle.value
-	// This allows us to find the tasks with the title they had before being parsed
-	// by quick add magic.
-	const createdTasks: { [key: ITask['title']]: ITask } = {}
-	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
+	// Keyed by the title the task had before quick add magic parsed it. A Map,
+	// because a user-entered `__proto__` would corrupt plain-object lookups.
+	const createdTasks = new Map<ITask['title'], ITask>()
+	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontend_settings.quick_add_magic_mode)
 
 	// We ensure all labels exist prior to passing them down to the create task method
 	// In the store it will only ever see one task at a time so there's no way to reliably 
 	// check if a new label was created before (because everything happens async).
-	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontendSettings.quickAddMagicMode) ?? [])
-	await taskStore.ensureLabelsExist(allLabels.flat())
+	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontend_settings.quick_add_magic_mode) ?? [])
+	const requestedLabels = [...new Set(allLabels.flat())]
+	const {skipped} = await ensureLabelsExist(requestedLabels, context)
+	assertClientRequestContext(context)
 
-	const taskCollectionService = new TaskService()
-	const projectIndices = new Map<number, number>()
+	// Skipped labels (e.g. link shares may not create them) don't block task creation; just tell the user.
+	reportSkippedLabels(skipped)
 
-	let currentProjectId = authStore.settings.defaultProjectId
+	let currentProjectId = authStore.settings.default_project_id
 	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
 		currentProjectId = Number(router.currentRoute.value.params.projectId)
 	}
 
-	// Create a map of project indices before creating tasks
-	if (tasksToCreate.length > 1) {
-		for (const {project} of tasksToCreate) {
-			const projectId = project !== null
-				? await taskStore.findProjectId({project, projectId: 0})
-				: currentProjectId
+	try {
+		newTaskTitle.value = ''
 
-			if (!projectIndices.has(projectId)) {
-				const newestTask = await taskCollectionService.getAll(new TaskModel({}), {
-					sort_by: ['id'],
-					order_by: ['desc'],
-					per_page: 1,
-					filter: `project_id = ${projectId}`,
-				})
-				projectIndices.set(projectId, newestTask[0]?.index || 0)
-			}
-		}
-	}
+		const entries = await Promise.all(tasksToCreate
+			.filter(({title}) => title !== '')
+			.map(async ({title, project}) => ({
+				title,
+				project_id: (project !== null
+					? await findProjectId({project, projectId: 0})
+					: currentProjectId) || authStore.settings.default_project_id || 0,
+			})))
 
-	const newTasks = tasksToCreate.map(async ({title, project}, index) => {
-		if (title === '') {
+		// Input like a lone bullet passes the empty check but parses to nothing.
+		if (entries.length === 0) {
+			newTaskTitle.value = taskTitleBackup
+			errorMessage.value = t('project.create.addTitleRequired')
 			return
 		}
 
-		// If the task has a project specified, make sure to use it
-		const projectId = project !== null
-			? await taskStore.findProjectId({project, projectId: 0})
-			: currentProjectId
+		// Separate from createdTasks: duplicate lines create two tasks but collapse
+		// into a single map entry.
+		const allCreated: ITask[] = []
 
-		// Calculate new index for this task per project
-		let taskIndex: number | undefined
-		if (tasksToCreate.length > 1) {
-			const lastIndex = projectIndices.get(projectId)
-			taskIndex = lastIndex + index + 1
-		}
-
-		const task = await taskStore.createNewTask({
-			title,
-			projectId: projectId || authStore.settings.defaultProjectId,
-			position: props.defaultPosition,
-			index: taskIndex,
+		assertClientRequestContext(context)
+		const bulk = await createNewTasksBulk(entries)
+		entries.forEach(({title}, index) => {
+			const task = bulk.tasks[index]
+			if (task === null) {
+				return
+			}
+			createdTasks.set(title, task)
+			allCreated.push(task)
 		})
-		createdTasks[title] = task
-		return task
-	})
 
-	try {
-		newTaskTitle.value = ''
-		await Promise.all(newTasks)
-
-		const taskRelationService = new TaskRelationService()
 		const allParentTasks = tasksToCreate.filter(t => t.parent !== null).map(t => t.parent)
-		const relations = tasksToCreate.map(async t => {
-			const createdTask = createdTasks[t.title]
+		const createRelation = async (t: TaskWithParent) => {
+			const createdTask = createdTasks.get(t.title)
 			if (typeof createdTask === 'undefined') {
 				return
 			}
@@ -213,50 +202,41 @@ async function addTask() {
 				return
 			}
 
-			const createdParentTask = createdTasks[t.parent]
+			const createdParentTask = createdTasks.get(t.parent ?? '')
 			if (typeof createdTask === 'undefined' || typeof createdParentTask === 'undefined') {
 				return
 			}
 
-			const rel = await taskRelationService.create(new TaskRelationModel({
-				taskId: createdTask.id,
-				otherTaskId: createdParentTask.id,
-				relationKind: RELATION_KIND.PARENTTASK,
-			}))
-			
-			if (typeof createdTask.relatedTasks === 'undefined') {
-				createdTask.relatedTasks = {}
-			}
-			if (typeof createdTask.relatedTasks[RELATION_KIND.PARENTTASK] === 'undefined') {
-				createdTask.relatedTasks[RELATION_KIND.PARENTTASK] = []
-			}
-			createdTask.relatedTasks[RELATION_KIND.PARENTTASK].push({
-				...createdParentTask,
-				relatedTasks: {}, // To avoid endless references
-			})
-
-			if (typeof createdParentTask.relatedTasks === 'undefined') {
-				createdParentTask.relatedTasks = {}
-			}
-			if (typeof createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] === 'undefined') {
-				createdParentTask.relatedTasks[RELATION_KIND.SUBTASK] = []
-			}
-			createdParentTask.relatedTasks[RELATION_KIND.SUBTASK].push({
-				...createdTask,
-				relatedTasks: {}, // To avoid endless references
+			assertClientRequestContext(context)
+			const rel = await createRelationMutation.mutateAsync({
+				taskId: createdTask.id!,
+				other_task_id: createdParentTask.id,
+				relation_kind: RELATION_KIND.PARENTTASK,
 			})
 
 			return rel
-		})
-		await Promise.all(relations)
-		
-		// We're emitting all tasks at once at the end to avoid the same task showing up multiple times
-		Object.values(createdTasks).forEach(task => {
-			emit('taskAdded', task)
-		})
+		}
+
+		try {
+			await runWrites(tasksToCreate, createRelation, configStore.concurrent_writes)
+		} catch (e) {
+			// The tasks themselves exist by now — reporting and moving on beats
+			// restoring the input and letting the user duplicate all of them.
+			error(e)
+		}
+
+		assertClientRequestContext(context)
+		if (allCreated.length > 0) {
+			emit('tasksAdded', allCreated)
+		}
+
+		if (bulk.error !== null) {
+			newTaskTitle.value = taskTitleBackup
+			error(bulk.error)
+		}
 	} catch (e) {
 		newTaskTitle.value = taskTitleBackup
-		if (e?.message === 'NO_PROJECT') {
+		if (e instanceof Error && e.message === 'NO_PROJECT') {
 			errorMessage.value = t('project.create.addProjectRequired')
 			return
 		}

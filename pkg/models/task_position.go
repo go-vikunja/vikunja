@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 
@@ -29,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -39,7 +41,7 @@ type TaskPosition struct {
 	// The ID of the task this position is for
 	TaskID int64 `xorm:"bigint not null index unique(task_view)" json:"task_id" param:"task" readOnly:"true" doc:"The numeric id of the task this position belongs to. Taken from the URL; ignored in the request body."`
 	// The project view this task is related to
-	ProjectViewID int64 `xorm:"bigint not null index unique(task_view)" json:"project_view_id" doc:"The id of the project view this position applies to. Positions are stored per view, so the same task has an independent position in each of its project's views."`
+	ProjectViewID int64 `xorm:"bigint not null index unique(task_view) index(view_position)" json:"project_view_id" doc:"The id of the project view this position applies to. Positions are stored per view, so the same task has an independent position in each of its project's views."`
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
 	// We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
@@ -48,7 +50,7 @@ type TaskPosition struct {
 	// which also leaves a lot of room for rearranging and sorting later.
 	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
-	Position float64 `xorm:"double not null" json:"position" doc:"The task's sort position within the view, as a float so a task can be placed between any two others. To drop a task between two neighbours, set this to their midpoint. Values below the minimum spacing trigger a server-side recalculation of all positions in the view, so the stored value may differ from what you sent."`
+	Position float64 `xorm:"double not null index(view_position)" json:"position" doc:"The task's sort position within the view, as a float so a task can be placed between any two others. To drop a task between two neighbours, set this to their midpoint. Values below the minimum spacing trigger a server-side recalculation of all positions in the view, so the stored value may differ from what you sent."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -60,7 +62,78 @@ func (tp *TaskPosition) TableName() string {
 
 func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	t := &Task{ID: tp.TaskID}
-	return t.CanUpdate(s, a)
+	can, err := t.CanUpdate(s, a)
+	if err != nil {
+		return false, err
+	}
+	if !can {
+		return false, nil
+	}
+
+	view, err := GetProjectViewByID(s, tp.ProjectViewID)
+	if err != nil {
+		return false, err
+	}
+
+	fits, err := taskFitsView(s, a, view, tp.TaskID)
+	if err != nil || !fits {
+		return false, err
+	}
+	canRead, _, err := view.CanRead(s, a)
+	if err != nil {
+		return false, err
+	}
+	return canRead, nil
+}
+
+func taskFitsView(s *xorm.Session, a web.Auth, view *ProjectView, taskID int64) (bool, error) {
+	if filterID := GetSavedFilterIDFromProjectID(view.ProjectID); filterID > 0 {
+		return taskMatchesSavedFilterView(s, a, view, filterID, taskID)
+	}
+
+	task, err := GetTaskByIDSimple(s, taskID)
+	if err != nil {
+		return false, err
+	}
+	return view.ProjectID == task.ProjectID, nil
+}
+
+// Reuse fetch matching so relative dates use the saved filter owner's timezone.
+func taskMatchesSavedFilterView(s *xorm.Session, a web.Auth, view *ProjectView, filterID, taskID int64) (bool, error) {
+	sf := &SavedFilter{ID: filterID}
+	canRead, _, err := sf.CanRead(s, a)
+	if err != nil {
+		return false, err
+	}
+	if !canRead {
+		return false, nil
+	}
+
+	filter, err := GetSavedFilterSimpleByID(s, filterID)
+	if err != nil {
+		return false, err
+	}
+	task, err := GetTaskByIDSimple(s, taskID)
+	if err != nil {
+		return false, err
+	}
+
+	accessByProject, _, err := getProjectAccessForTasks(s, []*Task{&task})
+	if err != nil {
+		return false, err
+	}
+
+	owner, err := user.GetUserByID(s, filter.OwnerID)
+	if err != nil {
+		return false, err
+	}
+
+	matched, err := matchTasksToViewsOfFilter(s, []*Task{&task}, filter, []*ProjectView{view}, accessByProject, owner.Timezone)
+	if err != nil {
+		return false, err
+	}
+	_, matches := matched[task.ID]
+	return matches, nil
 }
 
 func (tp *TaskPosition) refresh(s *xorm.Session) (err error) {
@@ -104,12 +177,10 @@ func upsertTaskPosition(s *xorm.Session, tp *TaskPosition) (err error) {
 // via drag & drop in between — and the caller's value is stale, so the row is
 // kept as is.
 //
-// The recalculation paths pass true: they rewrite every position in the view,
-// so their values are authoritative. They hold the view lock, but writers of
-// the first kind deliberately don't take it and can slip a row in between the
-// recalculation's delete and reinsert (invisible to the delete's snapshot
-// under READ COMMITTED). A plain insert would then fail on the unique index;
-// overwriting resolves the race with the recalculated value instead.
+// The recalculation paths pass true: their values are authoritative and win
+// over a row committed between the recalculation's delete and reinsert
+// (invisible to the delete's snapshot under READ COMMITTED), which a plain
+// insert would trip over on the unique index.
 func bulkInsertTaskPositions(s *xorm.Session, positions []*TaskPosition, overwrite bool) (err error) {
 	// Keep statements well below the parameter limits of all supported databases.
 	const batchSize = 100
@@ -157,8 +228,10 @@ func bulkInsertTaskPositions(s *xorm.Session, positions []*TaskPosition, overwri
 // concurrent transactions which rewrite the positions of the same view.
 // Without it, two transactions can both delete the old position rows and then
 // insert overlapping new ones, violating the unique index on
-// (task_id, project_view_id). SQLite allows only a single writer at a time and
-// does not support FOR UPDATE, so no explicit lock is needed there.
+// (task_id, project_view_id). Every transaction writing positions of a view has
+// to take this lock before its first write, see lockViewsForPositionUpdate.
+// SQLite allows only a single writer at a time and does not support FOR UPDATE,
+// so no explicit lock is needed there.
 func lockPositionsForViewUpdate(s *xorm.Session, viewID int64) (err error) {
 	if db.Type() == schemas.SQLITE {
 		return nil
@@ -169,18 +242,56 @@ func lockPositionsForViewUpdate(s *xorm.Session, viewID int64) (err error) {
 	return
 }
 
-// updateTaskPosition is the internal function that performs the task position update logic
-// without dispatching events. This is used by moveTaskToDoneBuckets to avoid duplicate events.
-func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err error) {
-	if tp.Position < MinPositionSpacing {
-		// The recalculation below will need the view lock anyway. Taking it
-		// before the upsert keeps the lock order consistent with concurrent
-		// recalculations (view lock first, then position rows), avoiding a
-		// lock-order deadlock.
-		err = lockPositionsForViewUpdate(s, tp.ProjectViewID)
+// lockViewsForPositionUpdate takes the lock of lockPositionsForViewUpdate for a
+// whole set of views, always by ascending view id. Every transaction writing
+// task_positions must lock all views it touches up front and in this order —
+// writing a row first and taking a view lock later inverts the order against a
+// concurrent recalculation and deadlocks (Sentry API-CLOUD-48).
+func lockViewsForPositionUpdate(s *xorm.Session, views []*ProjectView) (err error) {
+	for _, id := range viewLockOrder(views) {
+		err = lockPositionsForViewUpdate(s, id)
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// viewLockOrder returns the view ids to lock, ascending and deduplicated.
+func viewLockOrder(views []*ProjectView) []int64 {
+	ids := make([]int64, 0, len(views))
+	for _, view := range views {
+		ids = append(ids, view.ID)
+	}
+	slices.Sort(ids)
+	return slices.Compact(ids)
+}
+
+func lockProjectViewsForPositionUpdate(s *xorm.Session, projectIDs ...int64) (views []*ProjectView, err error) {
+	seen := make(map[int64]bool, len(projectIDs))
+	for _, projectID := range projectIDs {
+		if seen[projectID] {
+			continue
+		}
+		seen[projectID] = true
+
+		projectViews, err := getViewsForProject(s, projectID)
+		if err != nil {
+			return nil, err
+		}
+		views = append(views, projectViews...)
+	}
+
+	return views, lockViewsForPositionUpdate(s, views)
+}
+
+// updateTaskPosition is the internal function that performs the task position update logic
+// without dispatching events. This is used by moveTaskToDoneBuckets to avoid duplicate events.
+func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err error) {
+	err = lockPositionsForViewUpdate(s, tp.ProjectViewID)
+	if err != nil {
+		return err
 	}
 
 	err = upsertTaskPosition(s, tp)
@@ -209,6 +320,9 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 
 	if len(conflicts) > 1 {
 		err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
+		if IsErrNeedsFullRecalculation(err) {
+			err = recalculateTaskPositionsForRepair(s, &ProjectView{ID: tp.ProjectViewID})
+		}
 		if err != nil {
 			return err
 		}
@@ -290,6 +404,9 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 	if err != nil {
 		return err
 	}
+	if len(projects) == 0 {
+		return nil
+	}
 
 	for _, p := range projects {
 		opts.projectIDs = append(opts.projectIDs, p.ID)
@@ -357,6 +474,33 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 	return
 }
 
+// AddPositionsToTasks fills Positions with each task's stored position in every view.
+func AddPositionsToTasks(s *xorm.Session, tasks []*Task) error {
+	taskMap := make(map[int64]*Task, len(tasks))
+	ids := make([]int64, 0, len(tasks))
+	for _, t := range tasks {
+		if t == nil {
+			continue
+		}
+		taskMap[t.ID] = t
+		ids = append(ids, t.ID)
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	positions := []*TaskPosition{}
+	err := s.In("task_id", ids).Find(&positions)
+	if err != nil {
+		return err
+	}
+	for _, p := range positions {
+		if t := taskMap[p.TaskID]; t != nil {
+			t.Positions = append(t.Positions, p)
+		}
+	}
+	return nil
+}
+
 // recalculateTaskPositionsForRepair recalculates positions for all tasks in a view
 // without requiring auth. Used by CLI repair when localized repair fails.
 // Unlike RecalculateTaskPositions, this only operates on tasks that already have
@@ -415,40 +559,137 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 }
 
 func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
-	position := t.Position
-	if position == 0 {
-		lowestPosition := &TaskPosition{}
-		exists, err := s.Where("project_view_id = ?", view.ID).
+	positions, err := calculateNewPositionsForTasks(s, a, []*Task{t}, view)
+	if err != nil {
+		return nil, err
+	}
+	if len(positions) == 0 {
+		// Unreachable: the batch returns one position per task.
+		return nil, fmt.Errorf("no position calculated for task %d in view %d", t.ID, view.ID)
+	}
+
+	return positions[0], nil
+}
+
+// defaultPositionsForEmptyView derives positions from task indexes, falling back to payload order because indexes only collide-free within one project.
+func defaultPositionsForEmptyView(tasks []*Task, viewID int64) []*TaskPosition {
+	positions := make([]*TaskPosition, 0, len(tasks))
+	seen := make(map[float64]bool, len(tasks))
+	collides := false
+
+	for _, t := range tasks {
+		position := calculateDefaultPosition(t.Index, 0)
+		if position == 0 || seen[position] {
+			collides = true
+		}
+		seen[position] = true
+		positions = append(positions, &TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: viewID,
+			Position:      position,
+		})
+	}
+
+	if collides {
+		for i, p := range positions {
+			p.Position = calculateDefaultPosition(int64(i+1), 0)
+		}
+	}
+
+	return positions
+}
+
+// calculateNewPositionsForTasks places a batch on top of one view, keeping explicit positions the migration importer seeds to preserve export order (#3297).
+func calculateNewPositionsForTasks(s *xorm.Session, a web.Auth, tasks []*Task, view *ProjectView) ([]*TaskPosition, error) {
+	positions := make([]*TaskPosition, 0, len(tasks))
+	needDefault := make([]*Task, 0, len(tasks))
+	for _, t := range tasks {
+		if t.Position != 0 {
+			positions = append(positions, &TaskPosition{
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+				Position:      calculateDefaultPosition(t.Index, t.Position),
+			})
+			continue
+		}
+		needDefault = append(needDefault, t)
+	}
+
+	if len(needDefault) == 0 {
+		return positions, nil
+	}
+
+	lowestPosition := &TaskPosition{}
+	exists, err := s.Where("project_view_id = ?", view.ID).
+		OrderBy("position asc").
+		Get(lowestPosition)
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		return append(positions, defaultPositionsForEmptyView(needDefault, view.ID)...), nil
+	}
+
+	step := lowestPosition.Position / float64(len(needDefault)+1)
+	if step < MinPositionSpacing {
+		// The recalculation persists positions for the batch's own rows too; drop only the ones it did not have before, so rows written earlier in this creation (moveTaskToDoneBuckets) survive.
+		batchIDs := make([]int64, 0, len(tasks))
+		for _, t := range tasks {
+			batchIDs = append(batchIDs, t.ID)
+		}
+
+		preexisting := []*TaskPosition{}
+		err = s.Where("project_view_id = ?", view.ID).In("task_id", batchIDs).Find(&preexisting)
+		if err != nil {
+			return nil, err
+		}
+		hadPosition := make(map[int64]bool, len(preexisting))
+		for _, p := range preexisting {
+			hadPosition[p.TaskID] = true
+		}
+
+		err = RecalculateTaskPositions(s, view, a)
+		if err != nil {
+			return nil, err
+		}
+
+		recalculated := make([]int64, 0, len(batchIDs))
+		for _, id := range batchIDs {
+			if !hadPosition[id] {
+				recalculated = append(recalculated, id)
+			}
+		}
+		if len(recalculated) > 0 {
+			_, err = s.Where("project_view_id = ?", view.ID).In("task_id", recalculated).Delete(&TaskPosition{})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		lowestPosition = &TaskPosition{}
+		exists, err = s.Where("project_view_id = ?", view.ID).
 			OrderBy("position asc").
 			Get(lowestPosition)
 		if err != nil {
 			return nil, err
 		}
-		if exists {
-			if lowestPosition.Position < MinPositionSpacing {
-				err = RecalculateTaskPositions(s, view, a)
-				if err != nil {
-					return nil, err
-				}
-
-				lowestPosition = &TaskPosition{}
-				_, err = s.Where("project_view_id = ?", view.ID).
-					OrderBy("position asc").
-					Get(lowestPosition)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			position = lowestPosition.Position / 2
+		if !exists {
+			return append(positions, defaultPositionsForEmptyView(needDefault, view.ID)...), nil
 		}
+
+		step = lowestPosition.Position / float64(len(needDefault)+1)
 	}
 
-	return &TaskPosition{
-		TaskID:        t.ID,
-		ProjectViewID: view.ID,
-		Position:      calculateDefaultPosition(t.Index, position),
-	}, nil
+	for i, t := range needDefault {
+		positions = append(positions, &TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      step * float64(i+1),
+		})
+	}
+
+	return positions, nil
 }
 
 type taskPositionKey struct {
@@ -458,7 +699,7 @@ type taskPositionKey struct {
 
 // filterNewTaskPositions returns the positions whose (task_id, project_view_id)
 // row does not exist yet, also deduplicating within the slice. Position creation
-// during task creation can trigger a full recalculation (calculateNewPositionForTask
+// during task creation can trigger a full recalculation (calculateNewPositionsForTasks
 // or moveTaskToDoneBuckets) that already persists rows for the new task, so inserting
 // the queued positions unconditionally would violate the unique index on
 // (task_id, project_view_id).
@@ -515,44 +756,6 @@ func DeleteOrphanedTaskPositions(s *xorm.Session, dryRun bool) (count int64, err
 	return s.Where(whereClause).Delete(&TaskPosition{})
 }
 
-// createPositionsForTasksInView creates position records for tasks that don't have them.
-// Used as a safety net during task fetching for saved filter views.
-func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *ProjectView, a web.Auth) error {
-	if len(tasks) == 0 {
-		return nil
-	}
-
-	// Get the current lowest position to place new tasks at the top
-	lowestPosition := &TaskPosition{}
-	has, err := s.
-		Where("project_view_id = ?", view.ID).
-		OrderBy("position asc").
-		Get(lowestPosition)
-	if err != nil {
-		return err
-	}
-
-	var basePosition float64
-	if !has || lowestPosition.Position < MinPositionSpacing {
-		return RecalculateTaskPositions(s, view, a)
-	}
-
-	// Place new tasks before the lowest position, evenly spaced
-	basePosition = lowestPosition.Position
-	spacing := basePosition / float64(len(tasks)+1)
-
-	newPositions := make([]*TaskPosition, 0, len(tasks))
-	for i, task := range tasks {
-		newPositions = append(newPositions, &TaskPosition{
-			TaskID:        task.ID,
-			ProjectViewID: view.ID,
-			Position:      spacing * float64(i+1),
-		})
-	}
-
-	return bulkInsertTaskPositions(s, newPositions, false)
-}
-
 // ensureTaskPositionsForSavedFilterView creates position rows for all tasks matching a saved
 // filter which don't have one in its view yet. This must run before the fetch query: healing
 // afterwards means the query sorts fresh matches last (NULL position) and they jump to the top
@@ -565,15 +768,7 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 	// Parse a fresh copy of the filters because convertFiltersToDBFilterCond mutates the
 	// field names in place — reusing opts.parsedFilters would double-prefix them for the
 	// subsequent fetch query.
-	parsedFilters, err := getTaskFiltersFromFilterString(opts.filter, opts.filterTimezone)
-	if err != nil {
-		return err
-	}
-
-	// Check before converting: the conversion renames the field to task_buckets.bucket_id in place.
-	joinTaskBuckets := hasBucketIDInParsedFilter(parsedFilters)
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, opts.filterIncludeNulls)
+	filterCond, joinTaskBuckets, err := parseFilterCond(opts.filter, opts.filterTimezone, opts.filterIncludeNulls)
 	if err != nil {
 		return err
 	}
@@ -603,7 +798,23 @@ func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects
 		return fmt.Errorf("could not fetch unpositioned tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
 	}
 
-	return createPositionsForTasksInView(s, tasks, view, a)
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	// Taken only once there is something to write so plain reads don't serialize.
+	err = lockPositionsForViewUpdate(s, view.ID)
+	if err != nil {
+		return err
+	}
+
+	positions, err := calculateNewPositionsForTasks(s, a, tasks, view)
+	if err != nil {
+		return err
+	}
+
+	// A concurrent heal of the same view may have inserted rows already; those are as good as these.
+	return bulkInsertTaskPositions(s, positions, false)
 }
 
 // findPositionConflicts returns all task positions that share the same position value
@@ -662,8 +873,11 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 		return nil, err
 	}
 
+	slices.Sort(viewIDs)
+
 	// Process each view
-	for viewID, positions := range positionsByView {
+	for _, viewID := range viewIDs {
+		positions := positionsByView[viewID]
 		result.ViewsScanned++
 
 		// Find duplicate positions within this view's positions
@@ -684,6 +898,12 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 
 		view, has := viewsByID[viewID]
 		if !has {
+			continue
+		}
+
+		err = lockPositionsForViewUpdate(s, viewID)
+		if err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("view %d: locking failed: %v", viewID, err))
 			continue
 		}
 

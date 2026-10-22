@@ -18,6 +18,9 @@ const fs = require('fs')
 const path = require('path')
 const {execSync} = require('child_process')
 
+const API_URL_SCRIPT_RE = /<script>(?:(?!<\/script>)[\s\S])*window\.API_URL(?:(?!<\/script>)[\s\S])*<\/script>/
+const INLINE_SCRIPT_RE = /<script\b((?:"[^"]*"|'[^']*'|[^>"'])*)>/gi
+
 // Helper function to copy directory recursively
 async function copyDir(src, dest) {
 	// Create destination directory if it doesn't exist
@@ -92,8 +95,20 @@ async function main() {
 		
 		await copyDir(frontendSourceDir, frontendDir)
 
-		console.log('Step 2: Modifying index.html...')
-		await replaceTextInFile(indexFilePath, /\/api\/v1/g, '')
+		console.log('Step 2: Externalising the API_URL script in index.html...')
+		// Kept out of index.html so the CSP can stay on script-src 'self' without a hash.
+		const indexHtml = await fs.promises.readFile(indexFilePath, 'utf8')
+		if (!API_URL_SCRIPT_RE.test(indexHtml)) {
+			throw new Error(`${indexFilePath} has no inline window.API_URL script; the desktop CSP assumes script-src 'self' with no inline scripts`)
+		}
+		const rewrittenHtml = indexHtml.replace(API_URL_SCRIPT_RE, '<script src="/api-url.js"></script>')
+		const remainingInlineScripts = [...rewrittenHtml.matchAll(INLINE_SCRIPT_RE)]
+			.filter(([, attrs]) => !/(^|[\s/])src\s*=/i.test(attrs))
+		if (remainingInlineScripts.length > 0) {
+			throw new Error(`${indexFilePath} still has an inline script; the desktop CSP is script-src 'self', which blocks it`)
+		}
+		await fs.promises.writeFile(indexFilePath, rewrittenHtml, 'utf8')
+		await fs.promises.writeFile(path.join(frontendDir, 'api-url.js'), "window.API_URL = ''\n", 'utf8')
 
 		console.log('Step 3: Updating version in package.json...')
 		await replaceTextInFile(packageJsonPath, /\${version}/g, versionPlaceholder)

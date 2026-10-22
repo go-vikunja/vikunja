@@ -46,6 +46,9 @@ import (
 
 var webhookClient *http.Client
 
+// The webhook target is user-configured, so its error body is untrusted and can be arbitrarily large.
+const maxWebhookErrorBodySize = 4096
+
 type Webhook struct {
 	// The generated ID of this webhook target
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook" readOnly:"true" doc:"The generated ID of this webhook target."`
@@ -54,9 +57,9 @@ type Webhook struct {
 	// The webhook events which should fire this webhook target
 	Events []string `xorm:"JSON not null" valid:"required" json:"events" doc:"The webhook events which should fire this webhook target. Get the available events from /api/v1/webhooks/events."`
 	// The project ID of the project this webhook target belongs to
-	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project" readOnly:"true" doc:"The id of the project this webhook target belongs to. Set from the URL, not the body."`
+	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project" readOnly:"true" doc:"The id of the project this webhook target belongs to."`
 	// The user ID if this is a user-level webhook (mutually exclusive with ProjectID)
-	UserID int64 `xorm:"bigint null index" json:"user_id" readOnly:"true" doc:"The id of the user if this is a user-level webhook (mutually exclusive with project_id)."`
+	UserID int64 `xorm:"bigint null index" json:"user_id" readOnly:"true" doc:"The id of the user if this is a user-level webhook (mutually exclusive with project_id). Set from the route, not the body."`
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
 	Secret string `xorm:"null" json:"secret" writeOnly:"true" doc:"If provided, webhook requests will be signed using HMAC. See https://vikunja.io/docs/webhooks/#signing. Write-only: never returned in responses."`
 	// If provided, webhook requests will be sent with a Basic Auth header.
@@ -78,6 +81,17 @@ type Webhook struct {
 
 func (w *Webhook) TableName() string {
 	return "webhooks"
+}
+
+// The route, not the body, decides whether a webhook is user- or project-level.
+func (w *Webhook) UnmarshalJSON(data []byte) error {
+	userID, projectID := w.UserID, w.ProjectID
+	type plain Webhook
+	if err := json.Unmarshal(data, (*plain)(w)); err != nil {
+		return err
+	}
+	w.UserID, w.ProjectID = userID, projectID
+	return nil
 }
 
 // maskCredentials clears the write-only secret and basic-auth fields so they are
@@ -159,7 +173,7 @@ func GetUserDirectedWebhookEvents() []string {
 // @Security JWTKeyAuth
 // @Param id path int true "Project ID"
 // @Param webhook body models.Webhook true "The webhook target object with required fields"
-// @Success 200 {object} models.Webhook "The created webhook target."
+// @Success 201 {object} models.Webhook "The created webhook target."
 // @Failure 400 {object} web.HTTPError "Invalid webhook object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks [put]
@@ -217,18 +231,21 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /projects/{id}/webhooks [get]
 func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+	// A link share can read its project, but webhook target_urls are secrets.
+	if _, is := a.(*LinkSharing); is {
+		return nil, 0, 0, ErrGenericForbidden{}
+	}
+
 	// w.UserID set selects the user-level list: a user may only see their own
-	// webhooks. The project list (w.UserID == 0) delegates to the project's read
-	// permission instead.
+	// webhooks. The project list (w.UserID == 0) needs project write access.
 	var listCond builder.Cond
 	if w.UserID > 0 {
-		if _, isShareAuth := a.(*LinkSharing); isShareAuth || w.UserID != a.GetID() {
+		if w.UserID != a.GetID() {
 			return nil, 0, 0, ErrGenericForbidden{}
 		}
 		listCond = builder.Eq{"user_id": w.UserID}
 	} else {
-		p := &Project{ID: w.ProjectID}
-		can, _, cerr := p.CanRead(s, a)
+		can, cerr := canReadProjectWebhooks(s, w.ProjectID, a)
 		if cerr != nil {
 			return nil, 0, 0, cerr
 		}
@@ -240,6 +257,7 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 
 	ws := []*Webhook{}
 	err = s.Where(listCond).
+		OrderBy("id ASC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&ws)
 	if err != nil {
@@ -370,7 +388,7 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	defer res.Body.Close()
 
 	if res.StatusCode > 399 {
-		responseBody, readErr := io.ReadAll(res.Body)
+		responseBody, readErr := io.ReadAll(io.LimitReader(res.Body, maxWebhookErrorBodySize))
 		if readErr != nil {
 			return fmt.Errorf("webhook %d returned status %d and reading its body failed: %w", w.ID, res.StatusCode, readErr)
 		}

@@ -1,5 +1,7 @@
 import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
+import {WebhookFactory} from '../../factories/webhook'
+import {serverPageSize} from '../../support/pagination'
 
 test.describe('Project webhooks', () => {
 	test.beforeEach(async ({currentUser}) => {
@@ -31,12 +33,14 @@ test.describe('Project webhooks', () => {
 			.locator('.base-checkbox__label').click()
 
 		const created = page.waitForResponse(r =>
-			r.url().includes('/projects/1/webhooks') && r.request().method() === 'PUT',
+			r.url().includes('/projects/1/webhooks') && r.request().method() === 'POST',
 		)
 		await page.getByRole('button', {name: /create webhook/i}).click()
 		await created
 
 		const row = page.locator('table.table tbody tr', {hasText: 'example.com/hook'})
+		await expect(row).toBeVisible()
+		await page.reload()
 		await expect(row).toBeVisible()
 
 		const deleted = page.waitForResponse(r =>
@@ -47,5 +51,62 @@ test.describe('Project webhooks', () => {
 		await deleted
 
 		await expect(row).toHaveCount(0)
+		await page.reload()
+		await expect(row).toHaveCount(0)
+	})
+
+	test('does not overflow the table with a long target URL', async ({authenticatedPage: page, currentUser}) => {
+		const longUrl = 'https://discord.com/api/webhooks/1234567890123456789/' +
+			'aVeryLongDiscordWebhookTokenWithoutAnyBreakOpportunitiesAtAllWhatsoever1234567890'
+		await WebhookFactory.create(1, {
+			project_id: 1,
+			target_url: longUrl,
+			created_by_id: currentUser.id,
+		})
+
+		await page.goto('/projects/1/settings/webhooks')
+		await page.waitForLoadState('networkidle')
+
+		const table = page.locator('table.table')
+		await expect(table).toContainText('discord.com')
+
+		// The table grows past its container instead of wrapping when the URL cell can't break
+		const overflow = await table.evaluate(el => el.getBoundingClientRect().width - el.parentElement!.clientWidth)
+		expect(overflow).toBeLessThanOrEqual(1)
+	})
+
+	test('pages the list and deletes a webhook on a later page', async ({authenticatedPage: page, currentUser, apiContext}) => {
+		const pageSize = await serverPageSize(apiContext)
+		await WebhookFactory.create(pageSize + 1, {
+			project_id: 1,
+			target_url: i => `https://example.com/hook-${i}`,
+			created_by_id: currentUser.id,
+		})
+
+		await page.goto('/projects/1/settings/webhooks')
+		await page.waitForLoadState('networkidle')
+
+		const rows = page.locator('table.table tbody tr')
+		await expect(rows).toHaveCount(pageSize)
+
+		const secondPage = page.waitForResponse(r =>
+			r.url().includes('/projects/1/webhooks') && r.url().includes('page=2') && r.request().method() === 'GET',
+		)
+		await page.getByRole('button', {name: 'Goto page 2'}).click()
+		await secondPage
+		await expect(rows).toHaveCount(1)
+
+		const deleted = page.waitForResponse(r =>
+			r.url().match(/\/projects\/1\/webhooks\/\d+/) !== null && r.request().method() === 'DELETE',
+		)
+		await rows.first().locator('.button.is-danger').click()
+		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+		await deleted
+
+		await expect(rows).toHaveCount(pageSize)
+		await expect(page.locator('nav.pagination')).toHaveCount(0)
+		await page.reload()
+		await expect(rows).toHaveCount(pageSize)
+		await expect(page.locator('nav.pagination')).toHaveCount(0)
 	})
 })

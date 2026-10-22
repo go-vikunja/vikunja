@@ -105,7 +105,7 @@ func userDeletionRequest(ctx context.Context, in *userDeletionPasswordBody) (*em
 	}
 
 	if u.IsLocalUser() {
-		if err := user.CheckUserPassword(u, in.Body.Password); err != nil {
+		if err := user.CheckReauthPassword(u, in.Body.Password); err != nil {
 			_ = s.Rollback()
 			return nil, translateDomainError(err)
 		}
@@ -154,7 +154,7 @@ func userDeletionCancel(ctx context.Context, in *userDeletionPasswordBody) (*emp
 	}
 
 	if u.IsLocalUser() {
-		if err := user.CheckUserPassword(u, in.Body.Password); err != nil {
+		if err := user.CheckReauthPassword(u, in.Body.Password); err != nil {
 			_ = s.Rollback()
 			return nil, translateDomainError(err)
 		}

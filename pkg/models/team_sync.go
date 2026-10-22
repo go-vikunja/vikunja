@@ -111,29 +111,42 @@ func removeUserFromTeamsByIDs(s *xorm.Session, u *user.User, teamIDs []int64) (e
 	}
 
 	log.Debugf("Removing team_member with user_id %v from team_ids %v", u.ID, teamIDs)
-	_, err = s.
-		In("team_id", teamIDs).
-		And("user_id = ?", u.ID).
-		Delete(&TeamMember{})
-	return err
+	return removeUserFromTeams(s, u, teamIDs)
 }
 
 func removeUserFromAllTeamsForThisIssuer(s *xorm.Session, u *user.User, issuer string) (err error) {
 	teamIDs := []int64{}
 	err = s.
 		Table("teams").
-		Where("issuer = ?", issuer).
-		Cols("id").
+		Join("INNER", "team_members", "team_members.team_id = teams.id").
+		Where("teams.issuer = ? AND team_members.user_id = ?", issuer, u.ID).
+		Cols("teams.id").
 		Find(&teamIDs)
 	if err != nil {
 		return
 	}
 
-	_, err = s.
+	return removeUserFromTeams(s, u, teamIDs)
+}
+
+func removeUserFromTeams(s *xorm.Session, u *user.User, teamIDs []int64) error {
+	if len(teamIDs) == 0 {
+		return nil
+	}
+
+	_, err := s.
 		In("team_id", teamIDs).
 		And("user_id = ?", u.ID).
 		Delete(&TeamMember{})
-	return err
+	if err != nil {
+		return err
+	}
+
+	projectIDs, err := teamProjectIDs(s, teamIDs...)
+	if err != nil {
+		return err
+	}
+	return cleanupAfterProjectAccessLoss(s, u.ID, projectIDs)
 }
 
 // getOrCreateTeamsByIssuer returns a slice of teams which were generated from the external provider data.
@@ -192,4 +205,64 @@ func createExternalTeam(s *xorm.Session, teamData *Team, u *user.User, issuer, t
 
 func getExternalTeamName(name, suffix string) string {
 	return name + " (" + suffix + ")"
+}
+
+// MigrateExternalTeamIDs leaves teams whose new id is already taken alone.
+func MigrateExternalTeamIDs(s *xorm.Session, issuer string, newIDsByOldID map[string]string) error {
+	if len(newIDsByOldID) == 0 {
+		return nil
+	}
+
+	oldIDs := make([]string, 0, len(newIDsByOldID))
+	for oldID := range newIDsByOldID {
+		oldIDs = append(oldIDs, oldID)
+	}
+
+	teams := []*Team{}
+	err := s.
+		Where("issuer = ?", issuer).
+		In("external_id", oldIDs).
+		Find(&teams)
+	if err != nil || len(teams) == 0 {
+		return err
+	}
+
+	newIDs := make([]string, 0, len(teams))
+	for _, t := range teams {
+		newIDs = append(newIDs, newIDsByOldID[t.ExternalID])
+	}
+
+	takenIDs := []string{}
+	err = s.
+		Table("teams").
+		Where("issuer = ?", issuer).
+		In("external_id", newIDs).
+		Cols("external_id").
+		Find(&takenIDs)
+	if err != nil {
+		return err
+	}
+	taken := make(map[string]bool, len(takenIDs))
+	for _, id := range takenIDs {
+		taken[id] = true
+	}
+
+	for _, t := range teams {
+		newID := newIDsByOldID[t.ExternalID]
+		if taken[newID] {
+			continue
+		}
+
+		log.Debugf("Migrating external id of team %d from %s to %s", t.ID, t.ExternalID, newID)
+		_, err = s.
+			Where("id = ?", t.ID).
+			Cols("external_id").
+			Update(&Team{ExternalID: newID})
+		if err != nil {
+			return err
+		}
+		taken[newID] = true
+	}
+
+	return nil
 }

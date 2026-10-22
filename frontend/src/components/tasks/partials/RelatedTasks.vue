@@ -4,6 +4,7 @@
 			v-if="editEnabled && Object.keys(relatedTasks).length > 0"
 			id="showRelatedTasksFormButton"
 			v-tooltip="$t('task.relation.add')"
+			:aria-label="$t('task.relation.add')"
 			class="is-pulled-end add-task-relation-button d-print-none"
 			:class="{'is-active': showNewRelationForm}"
 			variant="secondary"
@@ -20,14 +21,14 @@
 					{{ $t('task.relation.new') }}
 					<CustomTransition name="fade">
 						<span
-							v-if="taskRelationService.loading"
+							v-if="isSaving"
 							class="is-inline-flex"
 						>
 							<span class="loader is-inline-block mie-2" />
 							{{ $t('misc.saving') }}
 						</span>
 						<span
-							v-else-if="!taskRelationService.loading && saved"
+							v-else-if="saved"
 							class="has-text-success"
 						>
 							{{ $t('misc.saved') }}
@@ -42,7 +43,7 @@
 						v-model="newTaskRelation.task"
 						v-focus
 						:placeholder="$t('task.relation.searchPlaceholder')"
-						:loading="taskService.loading"
+						:loading="taskQuery.isFetching.value"
 						:search-results="mappedFoundTasks"
 						label="title"
 						:creatable="true"
@@ -51,29 +52,23 @@
 						@create="createAndRelateTask"
 					>
 						<template #searchResult="{option: task}">
-							<span 
-								v-if="typeof task !== 'string'"
+							<span
 								class="search-result"
 								:class="{'is-strikethrough': task.done}"
 							>
 								<span
-									v-if="task.projectId !== projectId"
+									v-if="task.project_id !== projectId"
 									class="different-project"
 								>
 									<span
-										v-if="task.differentProject !== null"
+										v-if="projectList.projects[task.project_id ?? 0]?.title"
 										v-tooltip="$t('task.relation.differentProject')"
 									>
-										{{ task.differentProject }} >
+										{{ projectList.projects[task.project_id ?? 0]?.title }} >
 									</span>
 								</span>
+								<span class="task-identifier">{{ getTaskIdentifier(task) }}</span>
 								{{ task.title }}
-							</span>
-							<span
-								v-else
-								class="search-result"
-							>
-								{{ task }}
 							</span>
 						</template>
 					</Multiselect>
@@ -85,7 +80,10 @@
 				>
 					<div class="control is-expanded">
 						<div class="select is-fullwidth has-defaults">
-							<select v-model="newTaskRelation.kind">
+							<select
+								v-model="newTaskRelation.kind"
+								:aria-label="$t('task.relation.select')"
+							>
 								<option value="unset">
 									{{ $t('task.relation.select') }}
 								</option>
@@ -122,34 +120,36 @@
 				>
 					<div class="is-flex is-align-items-center">
 						<FancyCheckbox
-							v-model="task.done"
+							:model-value="task.done ?? false"
 							class="task-done-checkbox"
-							@update:modelValue="toggleTaskDone(task)"
+							@update:modelValue="toggleTaskDone({...task, done: $event})"
 						/>
 						<RouterLink
 							:to="{ name: route.name as string, params: { id: task.id }, state: { backdropView: route.fullPath } }"
 							:class="{ 'is-strikethrough': task.done}"
 						>
 							<span
-								v-if="task.projectId !== projectId"
+								v-if="task.project_id !== projectId"
 								class="different-project"
 							>
 								<span
-									v-if="task.differentProject !== null"
+									v-if="projectList.projects[task.project_id ?? 0]?.title"
 									v-tooltip="$t('task.relation.differentProject')"
 								>
-									{{ task.differentProject }} >
+									{{ projectList.projects[task.project_id ?? 0]?.title }} >
 								</span>
 							</span>
+							<span class="task-identifier">{{ getTaskIdentifier(task) }}</span>
 							{{ task.title }}
 						</RouterLink>
 					</div>
 					<BaseButton
 						v-if="editEnabled"
 						class="remove"
+						:aria-label="$t('task.relation.delete')"
 						@click="setRelationToDelete({
-							relationKind: rts.kind,
-							otherTaskId: task.id
+							relation_kind: rts.kind,
+							other_task_id: task.id
 						})"
 					>
 						<Icon icon="trash-alt" />
@@ -184,18 +184,18 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, shallowReactive, watch, computed} from 'vue'
+import {ref, reactive, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
-import type {ITaskRelation} from '@/modelTypes/ITaskRelation'
+import {useTasks} from '@/composables/useTasks'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {useCreateTaskRelationMutation, useDeleteTaskRelationMutation, useUpdateTaskMutation} from '@/client/queries/taskMutations'
+import {createTaskDraft, getTaskIdentifier} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
+import type {TaskRelation as ITaskRelation} from '@/client/generated'
 import {RELATION_KINDS, type IRelationKind} from '@/types/IRelationKind'
 
-import TaskRelationService from '@/services/taskRelation'
-import TaskRelationModel from '@/models/taskRelation'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -204,14 +204,14 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 
 import {error, success} from '@/message'
-import {useTaskStore} from '@/stores/tasks'
-import {useProjectStore} from '@/stores/projects'
+import {useQuickAddTask} from '@/composables/useQuickAddTask'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
 
 const props = withDefaults(defineProps<{
 	taskId: number,
-	initialRelatedTasks?: ITask['relatedTasks'],
+	initialRelatedTasks?: ITask['related_tasks'],
 	showNoRelationsNotice?: boolean,
 	projectId: number,
 	editEnabled: boolean,
@@ -220,59 +220,49 @@ const props = withDefaults(defineProps<{
 	showNoRelationsNotice: false,
 })
 
-const taskStore = useTaskStore()
-const projectStore = useProjectStore()
+const {createNewTask} = useQuickAddTask()
+const updateTask = useUpdateTaskMutation()
+const projectList = useProjects()
 const authStore = useAuthStore()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
 type TaskRelation = {kind: IRelationKind, task: ITask}
 
-const taskService = shallowReactive(new TaskService())
+const createRelation = useCreateTaskRelationMutation()
+const deleteRelation = useDeleteTaskRelationMutation()
+const isSaving = useDelayedLoading(() => createRelation.isPending.value || deleteRelation.isPending.value)
 
-const relatedTasks = ref<ITask['relatedTasks']>({})
+const relatedTasks = computed(() => props.initialRelatedTasks ?? {})
 
 const newTaskRelation: TaskRelation = reactive({
-	kind: authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind,
-	task: new TaskModel(),
+	kind: authStore.settings.frontend_settings.default_task_relation_type as IRelationKind,
+	task: createTaskDraft(),
 })
 
-watch(
-	() => props.initialRelatedTasks,
-	(value) => {
-		relatedTasks.value = value
-	},
-	{immediate: true},
-)
 
 const showNewRelationForm = ref(false)
 const showCreate = computed(() => Object.keys(relatedTasks.value).length === 0 || showNewRelationForm.value)
 
 const query = ref('')
-const foundTasks = ref<ITask[]>([])
+const taskQuery = useTasks(() => ({params: {q: query.value, sort_by: ['done']}}), {enabled: () => query.value !== ''})
+const foundTasks = taskQuery.tasks
+function findTasks(value: string) { query.value = value }
 
-async function findTasks(newQuery: string) {
-	query.value = newQuery
-	const result = await taskService.getAll({}, {
-		s: newQuery,
-		sort_by: 'done',
-	})
-	
-	foundTasks.value = mapRelatedTasks(result)
-}
-
-function mapRelatedTasks(tasks: ITask[]) {
-	return tasks.map(task => {
-		// by doing this here once we can save a lot of duplicate calls in the template
-		const project = projectStore.projects[task.projectId]
-
-		return {
-			...task,
-			differentProject:
-				(project &&
-					task.projectId !== props.projectId &&
-					project?.title) || null,
+function sortTasksForRelationSearch(tasks: ITask[]) {
+	return [...tasks].sort((a, b) => {
+		if (a.done !== b.done) {
+			return a.done ? 1 : -1
 		}
+
+		const aIsCurrentProject = a.project_id === props.projectId
+		const bIsCurrentProject = b.project_id === props.projectId
+
+		if (aIsCurrentProject === bIsCurrentProject) {
+			return 0
+		}
+
+		return aIsCurrentProject ? -1 : 1
 	})
 }
 
@@ -292,14 +282,14 @@ const mapRelationKindsTitleGetter = computed(() => ({
 
 const mappedRelatedTasks = computed(() => Object.entries(relatedTasks.value).map(
 	([kind, tasks]) => ({
-		title: mapRelationKindsTitleGetter.value[kind as IRelationKind](tasks.length),
-		tasks: mapRelatedTasks(tasks),
+		title: mapRelationKindsTitleGetter.value[kind as IRelationKind]((tasks ?? []).length),
+		tasks: tasks ?? [],
 		kind: kind as IRelationKind,
 	}),
 ))
-const mappedFoundTasks = computed(() => mapRelatedTasks(foundTasks.value.filter(t => t.id !== props.taskId)))
+const mappedFoundTasks = computed(() => sortTasksForRelationSearch(foundTasks.value.filter(t => t.id !== props.taskId)))
 
-const taskRelationService = shallowReactive(new TaskRelationService())
+
 const saved = ref(false)
 
 async function addTaskRelation() {
@@ -307,22 +297,18 @@ async function addTaskRelation() {
 		return createAndRelateTask(query.value)
 	}
 
-	if (newTaskRelation.task.id === 0) {
+	if (!newTaskRelation.task.id) {
 		error({message: t('task.relation.taskRequired')})
 		return
 	}
 
-	await taskRelationService.create(new TaskRelationModel({
+	await createRelation.mutateAsync({
 		taskId: props.taskId,
-		otherTaskId: newTaskRelation.task.id,
-		relationKind: newTaskRelation.kind,
-	}))
-	relatedTasks.value[newTaskRelation.kind] = [
-		...(relatedTasks.value[newTaskRelation.kind] || []),
-		newTaskRelation.task,
-	]
-	newTaskRelation.task = new TaskModel()
-	newTaskRelation.kind = authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind
+		other_task_id: newTaskRelation.task.id,
+		relation_kind: newTaskRelation.kind,
+	})
+	newTaskRelation.task = createTaskDraft()
+	newTaskRelation.kind = authStore.settings.frontend_settings.default_task_relation_type as IRelationKind
 	saved.value = true
 	showNewRelationForm.value = false
 	setTimeout(() => {
@@ -338,21 +324,13 @@ function setRelationToDelete(relation: Partial<ITaskRelation>) {
 
 async function removeTaskRelation() {
 	const relation = relationToDelete.value
-	if (!relation || !relation.relationKind || !relation.otherTaskId) {
+	if (!relation || !relation.relation_kind || !relation.other_task_id) {
 		relationToDelete.value = undefined
 		return
 	}
 	try {
-		const relationKind = relation.relationKind
-		await taskRelationService.delete(new TaskRelationModel({
-			relationKind,
-			taskId: props.taskId,
-			otherTaskId: relation.otherTaskId,
-		}))
-
-		relatedTasks.value[relationKind] = relatedTasks.value[relationKind]?.filter(
-			({id}) => id !== relation.otherTaskId,
-		)
+		const relationKind = relation.relation_kind
+		await deleteRelation.mutateAsync({relationKind, task: props.taskId!, otherTask: relation.other_task_id})
 
 		saved.value = true
 		setTimeout(() => {
@@ -364,29 +342,18 @@ async function removeTaskRelation() {
 }
 
 async function createAndRelateTask(title: string) {
-	const newTask = await taskStore.createNewTask({title, projectId: props.projectId})
+	const newTask = await createNewTask({title, project_id: props.projectId})
 	newTaskRelation.task = newTask
 	await addTaskRelation()
 }
 
 async function toggleTaskDone(task: ITask) {
-	await taskStore.update(task)
+	await updateTask.mutateAsync({...task, id: task.id!})
 	
 	if (task.done) {
 		playPopSound()
 	}
 	
-	// Find the task in the project and update it so that it is correctly strike through
-	Object.entries(relatedTasks.value).some(([kind, tasks]) => {
-		return (tasks as ITask[]).some((t, key) => {
-			const found = t.id === task.id
-			if (found) {
-				relatedTasks.value[kind as IRelationKind]![key] = task
-			}
-			return found
-		})
-	})
-
 	success({message: t('task.detail.updateSuccess')})
 }
 </script>
@@ -407,6 +374,11 @@ async function toggleTaskDone(task: ITask) {
 .different-project {
 	color: var(--grey-500);
 	inline-size: auto;
+}
+
+.task-identifier {
+	color: var(--grey-500);
+	margin-inline-end: .35rem;
 }
 
 .title {

@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -35,10 +36,17 @@ import (
 )
 
 const apiScopes = `tasks.read tasks.read.shared`
-const apiPrefix = `https://graph.microsoft.com/v1.0/me/todo/`
+
+// var, not const, so tests can point it at a local server
+var apiPrefix = `https://graph.microsoft.com/v1.0/me/todo/`
 
 type Migration struct {
-	Code string `json:"code"`
+	Code  string `json:"code"`
+	State string `json:"state"`
+}
+
+func (m *Migration) OAuthState() string {
+	return m.State
 }
 
 type apiTokenResponse struct {
@@ -132,13 +140,14 @@ func (dtt *dateTimeTimeZone) toTime() (t time.Time, err error) {
 // @Success 200 {object} handler.AuthURL "The auth url."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/microsoft-todo/auth [get]
-func (m *Migration) AuthURL() string {
+func (m *Migration) AuthURL(state string) string {
 	return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize" +
 		"?client_id=" + config.MigrationMicrosoftTodoClientID.GetString() +
 		"&response_type=code" +
 		"&redirect_uri=" + config.MigrationMicrosoftTodoRedirectURL.GetString() +
 		"&response_mode=query" +
-		"&scope=" + apiScopes
+		"&scope=" + apiScopes +
+		"&state=" + url.QueryEscape(state)
 }
 
 // Name is used to get the name of the Microsoft Todo migration - we're using the docs here to annotate the status route.
@@ -173,11 +182,11 @@ func getMicrosoftGraphAuthToken(code string) (accessToken string, err error) {
 	if resp.StatusCode > 399 {
 		buf := &bytes.Buffer{}
 		_, _ = buf.ReadFrom(resp.Body)
-		return "", fmt.Errorf("got http status %d while trying to get token, error was %s", resp.StatusCode, buf.String())
+		return "", fmt.Errorf("could not get microsoft todo auth token: %w", migration.NewErrUpstreamRequestFailed("microsoft login", resp.StatusCode, buf.String()))
 	}
 
 	token := &apiTokenResponse{}
-	err = json.NewDecoder(resp.Body).Decode(token)
+	err = migration.DecodeJSONLimited(resp.Body, token, migration.MaxResponseBytes)
 	return token.AccessToken, err
 }
 
@@ -195,13 +204,16 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	defer resp.Body.Close()
 
 	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(resp.Body)
+	read, err := buf.ReadFrom(io.LimitReader(resp.Body, migration.MaxResponseBytes+1))
 	if err != nil {
 		return err
 	}
+	if read > migration.MaxResponseBytes {
+		return migration.ErrResponseTooLarge
+	}
 
 	if resp.StatusCode > 399 {
-		return fmt.Errorf("microsoft graph api error: status code: %d, response was: %s", resp.StatusCode, buf.String())
+		return migration.NewErrUpstreamRequestFailed("microsoft graph", resp.StatusCode, buf.String())
 	}
 
 	// If the response is an empty json array, we need to exit here, otherwise this breaks the json parser since it
@@ -227,6 +239,11 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 
 	log.Debugf("[Microsoft Todo Migration] Got %d projects", len(projects.Value))
 
+	itemCount := int64(len(projects.Value))
+	if err = migration.CheckItemCount(itemCount); err != nil {
+		return
+	}
+
 	for _, project := range projects.Value {
 		link := "lists/" + project.ID + "/tasks"
 		project.Tasks = []*task{}
@@ -244,6 +261,10 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 			log.Debugf("[Microsoft Todo Migration] Got %d tasks for project %s", len(tr.Value), project.ID)
 
 			project.Tasks = append(project.Tasks, tr.Value...)
+			itemCount += int64(len(tr.Value))
+			if err = migration.CheckItemCount(itemCount); err != nil {
+				return
+			}
 
 			if tr.Nextlink == "" {
 				break
@@ -285,7 +306,7 @@ func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.P
 			Project: models.Project{
 				Title:           l.DisplayName,
 				ID:              int64(index+1) + pseudoParentID,
-				ParentProjectID: pseudoParentID,
+				ParentProjectID: &pseudoParentID,
 			},
 		}
 

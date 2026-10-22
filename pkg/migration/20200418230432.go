@@ -34,7 +34,7 @@ func init() {
 		ID:          "20200418230432",
 		Description: "Add bucket id property to task",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(task20200418230432{})
+			return partialSync(tx, task20200418230432{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return tx.DropTables(task20200418230432{})

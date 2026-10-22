@@ -84,6 +84,24 @@ func TestTeam_Create(t *testing.T) {
 			"is_public":   true,
 		}, false)
 	})
+	t.Run("ignores client-set external id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{
+			Name:       "Testteam293_External",
+			ExternalID: "attacker-set",
+		}
+		err := team.Create(s, doer)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		assert.Empty(t, team.ExternalID)
+		db.AssertMissing(t, "teams", map[string]interface{}{
+			"external_id": "attacker-set",
+		})
+	})
 }
 
 func TestTeam_ReadOne(t *testing.T) {
@@ -201,6 +219,97 @@ func TestTeam_ReadAll(t *testing.T) {
 		ts = teams.([]*Team)
 		assert.Len(t, ts, 7)
 	})
+	t.Run("pages are ordered by id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		var pages [][]int64
+		for page := 1; page <= 3; page++ {
+			teams, _, _, err := (&Team{}).ReadAll(s, doer, "", page, 2)
+			require.NoError(t, err)
+			pages = append(pages, teamIDs(teams.([]*Team)))
+		}
+		assert.Equal(t, [][]int64{
+			{1, 2},
+			{3, 4},
+			{8},
+		}, pages)
+	})
+	t.Run("search ranks exact and prefix matches first", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		created := map[string]int64{}
+		for _, name := range []string{
+			"has zzq inside",
+			"zzq prefix",
+			"ZZQ",
+		} {
+			team := &Team{Name: name}
+			require.NoError(t, team.CreateNewTeam(s, &user.User{ID: 1, Username: "user1"}, true))
+			created[name] = team.ID
+		}
+
+		teams, _, _, err := (&Team{}).ReadAll(s, doer, "zzq", 1, 2)
+		require.NoError(t, err)
+		assert.Equal(t, []int64{
+			created["ZZQ"],
+			created["zzq prefix"],
+		}, teamIDs(teams.([]*Team)))
+
+		teams, _, _, err = (&Team{}).ReadAll(s, doer, "zzq", 2, 2)
+		require.NoError(t, err)
+		assert.Equal(t, []int64{
+			created["has zzq inside"],
+		}, teamIDs(teams.([]*Team)))
+	})
+}
+
+func teamIDs(teams []*Team) []int64 {
+	ids := make([]int64, 0, len(teams))
+	for _, team := range teams {
+		ids = append(ids, team.ID)
+	}
+	return ids
+}
+
+func TestTeamListPreservesMembersForSharedUsers(t *testing.T) {
+	t.Run("team list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		teams, _, _, err := (&Team{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+		require.NoError(t, err)
+
+		membersByTeamID := make(map[int64]int)
+		for _, team := range teams.([]*Team) {
+			membersByTeamID[team.ID] = len(team.Members)
+		}
+		assert.Equal(t, 2, membersByTeamID[1])
+		assert.Equal(t, 1, membersByTeamID[2])
+	})
+
+	t.Run("project team list", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TeamProject{TeamID: 2, ProjectID: 3, Permission: PermissionRead})
+		require.NoError(t, err)
+
+		teams, _, _, err := (&TeamProject{ProjectID: 3}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+		require.NoError(t, err)
+
+		membersByTeamID := make(map[int64]int)
+		for _, team := range teams.([]*TeamWithPermission) {
+			membersByTeamID[team.ID] = len(team.Members)
+		}
+		assert.Equal(t, 2, membersByTeamID[1])
+		assert.Equal(t, 1, membersByTeamID[2])
+	})
 }
 
 func TestTeam_Update(t *testing.T) {
@@ -222,6 +331,43 @@ func TestTeam_Update(t *testing.T) {
 		db.AssertExists(t, "teams", map[string]interface{}{
 			"id":   team.ID,
 			"name": "SomethingNew",
+		}, false)
+	})
+	t.Run("ignores client-set external id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{
+			ID:         1,
+			Name:       "SomethingNew",
+			ExternalID: "attacker-set",
+		}
+		err := team.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertMissing(t, "teams", map[string]interface{}{
+			"external_id": "attacker-set",
+		})
+	})
+	t.Run("keeps the existing external id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{
+			ID:         14,
+			Name:       "SomethingNew",
+			ExternalID: "attacker-set",
+		}
+		err := team.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":          14,
+			"external_id": "14",
 		}, false)
 	})
 	t.Run("empty name", func(t *testing.T) {

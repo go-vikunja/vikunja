@@ -12,6 +12,7 @@
 			<a
 				href="#main-content"
 				class="skip-to-content"
+				@click.prevent="skipToMainContent"
 			>
 				{{ $t('misc.skipToContent') }}
 			</a>
@@ -24,7 +25,7 @@
 				v-else
 				show-api-config
 			>
-				<RouterView />
+				<RouterView v-if="showNoAuthRoute" />
 			</NoAuthWrapper>
 		</template>
 
@@ -41,8 +42,7 @@
 
 <script lang="ts" setup>
 import {computed, watch} from 'vue'
-import {useRoute} from 'vue-router'
-import {useI18n} from 'vue-i18n'
+import {useRoute, useRouter} from 'vue-router'
 import isTouchDevice from 'is-touch-device'
 
 import Notification from '@/components/misc/Notification.vue'
@@ -67,15 +67,22 @@ import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
+import {AUTH_TYPES} from '@/constants/auth'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 
-const importAccountDeleteService = () => import('@/services/accountDelete')
-import {success} from '@/message'
+import {useConfirmDeletionMutation} from '@/client/queries/accountDeletion'
+import {getSensitiveParam} from '@/helpers/sensitiveQueryParams'
 
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const {isQuickAddMode} = useQuickAddMode()
+
+// Activating #main-content only scrolls natively, so focus has to be moved explicitly.
+// Deferred a frame because a synchronous focus() did not stick in Safari.
+function skipToMainContent() {
+	requestAnimationFrame(() => document.getElementById('main-content')?.focus())
+}
 
 // Make the Electron frameless window transparent
 if (isQuickAddMode) {
@@ -87,24 +94,38 @@ const route = useRoute()
 
 const showAuthLayout = computed(() => authStore.authUser && typeof route.name === 'string' && !AUTH_ROUTE_NAMES.has(route.name))
 
+// The router guard bounces every other route to /login while logged out, so anything
+// else reaching the logged-out shell means the auth state was cleared mid-navigation
+// (logout, expired session) while the old route is still current. Mounting it there
+// would run app components against a null `authStore.info`.
+const showNoAuthRoute = computed(() => typeof route.name === 'string' && AUTH_ROUTE_NAMES.has(route.name))
+
 useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
 
-const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+const confirmDeletion = useConfirmDeletionMutation()
 
-// setup account deletion verification
-const accountDeletionConfirm = computed(() => route.query?.accountDeletionConfirm as (string | undefined))
-watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
-	if (accountDeletionConfirm === undefined) {
-		return
-	}
+// Without a session the token would burn on an unauthenticated request, so keep it in the URL until login lands.
+const accountDeletionToken = computed(() => {
+	const token = getSensitiveParam(route, 'accountDeletionConfirm')
+	return authStore.authUser && token ? token : ''
+})
 
-	const AccountDeleteService = (await importAccountDeleteService()).default
-	const accountDeletionService = new AccountDeleteService()
-	await accountDeletionService.confirm(accountDeletionConfirm)
-	success({message: t('user.deletion.confirmSuccess')})
-	authStore.refreshUserInfo()
-}, { immediate: true })
+watch(accountDeletionToken, async token => {
+	if (!token) return
+	// The URL reaches Sentry replays and lastVisited, so drop the single-use token before spending it.
+	const query = {...route.query}
+	delete query.accountDeletionConfirm
+	const hash = new URLSearchParams(route.hash.slice(1)).has('accountDeletionConfirm') ? '' : route.hash
+	// A failed strip must not skip spending the token.
+	await router.replace({path: route.path, query, hash}).catch(() => {})
+	confirmDeletion.mutate({
+		id: authStore.session?.id ?? 0,
+		type: authStore.session?.type ?? AUTH_TYPES.USER,
+		token,
+	})
+}, {immediate: true})
 
 setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
 useColorScheme()

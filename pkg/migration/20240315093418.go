@@ -37,7 +37,7 @@ func init() {
 		ID:          "20240315093418",
 		Description: "Relate buckets to views instead of projects",
 		Migrate: func(tx *xorm.Engine) (err error) {
-			err = tx.Sync2(buckets20240315093418{})
+			err = partialSync(tx, buckets20240315093418{})
 			if err != nil {
 				return
 			}

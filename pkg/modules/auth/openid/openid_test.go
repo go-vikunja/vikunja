@@ -17,10 +17,31 @@
 package openid
 
 import (
+	"bytes"
+	"context"
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	"image"
+	"image/png"
+	"math/big"
+	"net/http"
+	"net/http/httptest"
+	"net/http/httputil"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/avatar"
+	"code.vikunja.io/api/pkg/modules/imageutils"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/utils"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -282,6 +303,24 @@ func TestGetOrCreateUser(t *testing.T) {
 			"subject": idToken.Subject,
 		})
 	})
+	t.Run("ProviderFallback: reject bot matched by preferred_username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:             "bot@example.com",
+			PreferredUsername: "bot-owner-a-assistant",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000023"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		assert.True(t, user.IsErrAccountIsBot(err))
+		assert.Nil(t, u)
+	})
 	t.Run("ProviderFallback: Falls back to sub when preferred_username is empty", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -310,7 +349,8 @@ func TestGetOrCreateUser(t *testing.T) {
 		require.NoError(t, err)
 
 		cl := &claims{
-			Email: "user11@example.com",
+			Email:         "user11@example.com",
+			EmailVerified: true,
 		}
 		provider := &Provider{
 			EmailFallback: true,
@@ -327,6 +367,51 @@ func TestGetOrCreateUser(t *testing.T) {
 		usersAfter, err := s.Count(&user.User{})
 		require.NoError(t, err)
 		assert.Equal(t, usersBefore, usersAfter, "no new user should have been created")
+	})
+	t.Run("ProviderFallback: unverified email does not link to an existing local user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// GHSA-xv7q-fvmc-jx96: an attacker asserting a victim's email without
+		// email_verified must not be linked to the victim's local account.
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     false,
+			PreferredUsername: "attackerUser",
+		}
+		provider := &Provider{
+			EmailFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.NotEqual(t, 11, int(u.ID), "must not link to user 11 via an unverified email")
+		assert.Equal(t, "https://some.issuer", u.Issuer, "a new separate account should have been created")
+		assert.Equal(t, "attacker-subject", u.Subject)
+	})
+	t.Run("ProviderFallback: verified email links to existing local user despite unknown subject", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:         "user11@example.com",
+			EmailVerified: true,
+		}
+		provider := &Provider{
+			EmailFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 	})
 	t.Run("ProviderFallback: empty email claim does not link to an arbitrary local user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -366,7 +451,8 @@ func TestGetOrCreateUser(t *testing.T) {
 		defer s.Close()
 
 		cl := &claims{
-			Email: "user11@example.com",
+			Email:         "user11@example.com",
+			EmailVerified: true,
 		}
 		provider := &Provider{
 			UsernameFallback: true,
@@ -380,6 +466,58 @@ func TestGetOrCreateUser(t *testing.T) {
 		assert.Equal(t, idToken.Subject, u.Username, "subject match username")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+	})
+	t.Run("ProviderFallback: both enabled, username mismatch still links on verified email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usersBefore, err := s.Count(&user.User{})
+		require.NoError(t, err)
+
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "someone-else",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000011"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
+
+		usersAfter, err := s.Count(&user.User{})
+		require.NoError(t, err)
+		assert.Equal(t, usersBefore, usersAfter, "no new user should have been created")
+	})
+	t.Run("ProviderFallback: both enabled, username mismatch and unverified email creates a new user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     false,
+			PreferredUsername: "attackerUser",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.NotEqual(t, 11, int(u.ID), "must not link to user 11 via an unverified email")
+		assert.Equal(t, "https://some.issuer", u.Issuer, "a new separate account should have been created")
 	})
 }
 
@@ -559,48 +697,308 @@ func TestEnforceTOTPIfRequired(t *testing.T) {
 	})
 }
 
-func TestSyncUserAvatarFromOpenID(t *testing.T) {
-	t.Run("empty picture URL resets openid provider to default", func(t *testing.T) {
+func TestResetOpenIDAvatar(t *testing.T) {
+	t.Run("resets openid provider to default", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		// Use the fixture user that has avatar_provider = "openid"
 		u, err := user.GetUserByID(s, 19)
 		require.NoError(t, err)
 		assert.Equal(t, "openid", u.AvatarProvider, "precondition: user should have openid avatar provider")
 
-		err = syncUserAvatarFromOpenID(s, u, "")
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		require.NoError(t, resetOpenIDAvatar(s, u))
+		require.NoError(t, s.Commit())
 
-		// Verify the avatar provider was reset to default in the database
 		db.AssertExists(t, "users", map[string]interface{}{
 			"id":              19,
 			"avatar_provider": "default",
 		}, false)
 	})
 
-	t.Run("empty picture URL does not reset non-openid provider", func(t *testing.T) {
+	t.Run("does not reset non-openid provider", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		// Use a regular user (avatar_provider is empty/"default")
 		u, err := user.GetUserByID(s, 1)
 		require.NoError(t, err)
 
-		err = syncUserAvatarFromOpenID(s, u, "")
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		require.NoError(t, resetOpenIDAvatar(s, u))
+		require.NoError(t, s.Commit())
 
-		// Verify the avatar provider was NOT changed to "default" or anything else
 		s2 := db.NewSession()
 		defer s2.Close()
 		updatedUser, err := user.GetUserByID(s2, 1)
 		require.NoError(t, err)
 		assert.Empty(t, updatedUser.AvatarProvider, "avatar provider should remain empty for non-openid user")
 	})
+}
+
+func servePicture(t *testing.T) (url string, hits *atomic.Int32) {
+	t.Helper()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	t.Cleanup(func() { config.OutgoingRequestsAllowNonRoutableIPs.Set("false") })
+
+	picture := &bytes.Buffer{}
+	require.NoError(t, png.Encode(picture, image.NewNRGBA(image.Rect(0, 0, 8, 4))))
+	hits = &atomic.Int32{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits.Add(1)
+		w.Header().Set("Content-Type", "image/png")
+		_, _ = w.Write(picture.Bytes())
+	}))
+	t.Cleanup(srv.Close)
+	return srv.URL, hits
+}
+
+func TestGetOrCreateUserLeavesPictureToTheCaller(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	pictureURL, hits := servePicture(t)
+
+	s := db.NewSession()
+	defer s.Close()
+	cl := &claims{
+		Email:             "picture-later@example.com",
+		PreferredUsername: "pictureLaterUser",
+		Picture:           pictureURL,
+	}
+	idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "picture-later"}
+
+	u, err := getOrCreateUser(s, cl, &Provider{}, idToken)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	assert.Equal(t, int32(0), hits.Load())
+	s2 := db.NewSession()
+	defer s2.Close()
+	stored, err := user.GetUserByID(s2, u.ID)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), stored.AvatarFileID)
+	assert.Equal(t, config.DefaultSettingsAvatarProvider.GetString(), stored.AvatarProvider)
+}
+
+func TestSyncUserAvatarFromOpenID(t *testing.T) {
+	t.Run("stores the downloaded picture", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		pictureURL, hits := servePicture(t)
+
+		syncUserAvatarFromOpenID(t.Context(), 1, pictureURL)
+		avatar.WaitForProviderSyncsForTests()
+
+		assert.Equal(t, int32(1), hits.Load())
+		s := db.NewSession()
+		defer s.Close()
+		stored, err := user.GetUserByID(s, 1)
+		require.NoError(t, err)
+		assert.Equal(t, "openid", stored.AvatarProvider)
+		assert.NotZero(t, stored.AvatarFileID)
+	})
+
+	t.Run("busy decoder leaves the avatar unchanged", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		pictureURL, hits := servePicture(t)
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+
+		syncUserAvatarFromOpenID(t.Context(), 19, pictureURL)
+		avatar.WaitForProviderSyncsForTests()
+
+		assert.Equal(t, int32(1), hits.Load())
+		s := db.NewSession()
+		defer s.Close()
+		stored, err := user.GetUserByID(s, 19)
+		require.NoError(t, err)
+		assert.Equal(t, "openid", stored.AvatarProvider)
+		assert.Equal(t, int64(0), stored.AvatarFileID)
+	})
+}
+
+func TestEmailVerifiedClaimDecoding(t *testing.T) {
+	// Some OIDC providers emit email_verified as a JSON string; both forms must
+	// decode without breaking the whole claims parse (GHSA-xv7q-fvmc-jx96).
+	cases := map[string]bool{
+		`{"email_verified": true}`:    true,
+		`{"email_verified": false}`:   false,
+		`{"email_verified": "true"}`:  true,
+		`{"email_verified": "false"}`: false,
+		`{"email_verified": "1"}`:     true,
+		`{"email_verified": "0"}`:     false,
+		`{}`:                          false,
+	}
+	for body, want := range cases {
+		t.Run(body, func(t *testing.T) {
+			var cl claims
+			require.NoError(t, json.Unmarshal([]byte(body), &cl))
+			assert.Equal(t, want, bool(cl.EmailVerified))
+		})
+	}
+}
+
+func TestOIDCRequestsUseConfiguredProxy(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	server := newMockOIDCServerWithAuthMethods([]string{authMethodPost}, func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"invalid_client"}`))
+	})
+	defer server.Close()
+
+	var mu sync.Mutex
+	var proxiedPaths []string
+	forward := &httputil.ReverseProxy{Rewrite: func(*httputil.ProxyRequest) {}}
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		proxiedPaths = append(proxiedPaths, r.URL.Path)
+		mu.Unlock()
+		forward.ServeHTTP(w, r)
+	}))
+	defer proxy.Close()
+
+	config.OutgoingRequestsProxyURL.Set(proxy.URL)
+	previousClient := httpClient
+	httpClient = sync.OnceValue(utils.NewUnguardedHTTPClient)
+	t.Cleanup(func() {
+		config.OutgoingRequestsProxyURL.Set("")
+		httpClient = previousClient
+	})
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	_, _, _, _, err := exchangeOidcTokens(context.Background(), &Callback{Code: "code"}, "provider1")
+	var detailedErr *models.ErrOpenIDBadRequestWithDetails
+	require.ErrorAs(t, err, &detailedErr)
+
+	mu.Lock()
+	defer mu.Unlock()
+	assert.Contains(t, proxiedPaths, "/.well-known/openid-configuration")
+	assert.Contains(t, proxiedPaths, "/token")
+}
+
+// go-oidc fetches the JWKS with the client captured by oidc.NewProvider, not the Verify context.
+func TestOIDCIDTokenVerificationUsesConfiguredProxy(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	b64 := base64.RawURLEncoding.EncodeToString
+
+	var server *httptest.Server
+	mux := http.NewServeMux()
+	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"issuer":                 server.URL,
+			"authorization_endpoint": server.URL + "/auth",
+			"token_endpoint":         server.URL + "/token",
+			"jwks_uri":               server.URL + "/jwks",
+		})
+	})
+	mux.HandleFunc("/jwks", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"keys": []map[string]string{{
+			"kty": "RSA", "alg": "RS256", "use": "sig", "kid": "test",
+			"n": b64(key.N.Bytes()),
+			"e": b64(big.NewInt(int64(key.E)).Bytes()),
+		}}})
+	})
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
+		header := b64([]byte(`{"alg":"RS256","kid":"test","typ":"JWT"}`))
+		payload, _ := json.Marshal(map[string]any{
+			"iss": server.URL, "aud": "client1", "sub": "user1",
+			"iat": time.Now().Unix(), "exp": time.Now().Add(time.Hour).Unix(),
+		})
+		signingInput := header + "." + b64(payload)
+		digest := sha256.Sum256([]byte(signingInput))
+		signature, _ := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, digest[:])
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"access_token": "access", "token_type": "Bearer", "expires_in": 3600,
+			"id_token": signingInput + "." + b64(signature),
+		})
+	})
+	server = httptest.NewServer(mux)
+	defer server.Close()
+
+	var mu sync.Mutex
+	var proxiedPaths []string
+	forward := &httputil.ReverseProxy{Rewrite: func(*httputil.ProxyRequest) {}}
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		proxiedPaths = append(proxiedPaths, r.URL.Path)
+		mu.Unlock()
+		forward.ServeHTTP(w, r)
+	}))
+	defer proxy.Close()
+
+	config.OutgoingRequestsProxyURL.Set(proxy.URL)
+	previousClient := httpClient
+	httpClient = sync.OnceValue(utils.NewUnguardedHTTPClient)
+	t.Cleanup(func() {
+		config.OutgoingRequestsProxyURL.Set("")
+		httpClient = previousClient
+	})
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	_, _, idToken, _, err := exchangeOidcTokens(context.Background(), &Callback{Code: "code"}, "provider1")
+	require.NoError(t, err)
+	assert.Equal(t, "user1", idToken.Subject)
+
+	mu.Lock()
+	defer mu.Unlock()
+	assert.Contains(t, proxiedPaths, "/jwks")
+}
+
+// The memory keyvalue store shallow-copies Provider, so Oauth2Config is shared across requests.
+func TestExchangeOidcTokensDoesNotMutateCachedRedirectURL(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	var receivedRedirectURI string
+	server := newMockOIDCServerWithAuthMethods([]string{authMethodPost}, func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		receivedRedirectURI = r.PostForm.Get("redirect_uri")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"invalid_client"}`))
+	})
+	defer server.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	_, _, _, _, err := exchangeOidcTokens(context.Background(), &Callback{Code: "code", RedirectURL: "https://example.com/callback"}, "provider1")
+	require.Error(t, err)
+	assert.Equal(t, "https://example.com/callback", receivedRedirectURI)
+
+	cached, err := getCachedProvider("provider1")
+	require.NoError(t, err)
+	assert.Empty(t, cached.Oauth2Config.RedirectURL)
 }

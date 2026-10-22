@@ -4,6 +4,7 @@ import {TaskFactory} from '../../factories/task'
 import {TaskRelationFactory} from '../../factories/task_relation'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
+import {ProjectViewFactory} from '../../factories/project_view'
 import {createProjects} from './prepareProjects'
 import {BucketFactory} from '../../factories/bucket'
 import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
@@ -30,6 +31,45 @@ test.describe('Project View List', () => {
 		await page.locator('.task-add textarea').fill(newTaskTitle)
 		await page.locator('.task-add textarea').press('Enter')
 		await expect(page.locator('.tasks')).toContainText(newTaskTitle)
+	})
+
+	test('Should create multiple tasks from multiline input and keep their order', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		await BucketFactory.create(2, {
+			project_view_id: 4,
+		})
+
+		const titles = ['first multi task', 'second multi task', 'third multi task', 'fourth multi task']
+
+		await page.goto('/projects/1/1')
+		await page.locator('.task-add textarea').fill(titles.join('\n'))
+		await page.locator('.task-add textarea').press('Enter')
+
+		await expect(page.locator('.tasks')).toContainText(titles[3])
+		await expect(page.locator('.tasks .task .tasktext')).toContainText(titles)
+
+		// The order must survive a reload, not only hold in memory
+		await page.reload()
+		await expect(page.locator('.tasks .task .tasktext')).toContainText(titles)
+	})
+
+	test('Should create subtasks from indented multiline input', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		await BucketFactory.create(2, {
+			project_view_id: 4,
+		})
+
+		await page.goto('/projects/1/1')
+		await page.locator('.task-add textarea').fill('Parent multi task\n  Sub multi task')
+		await page.locator('.task-add textarea').press('Enter')
+
+		await expect(page.locator('.tasks')).toContainText('Sub multi task')
+
+		await page.reload()
+		await expect(page.locator('ul.tasks > div > .single-task')).toBeVisible()
+		await expect(page.locator('ul.tasks > div > .single-task').first()).toContainText('Parent multi task')
+		await expect(page.locator('ul.tasks > div > .subtask-nested')).toBeVisible()
+		await expect(page.locator('.subtask-nested')).toContainText('Sub multi task')
 	})
 
 	test('Should navigate to the task when the title is clicked', async ({authenticatedPage: page}) => {
@@ -92,6 +132,26 @@ test.describe('Project View List', () => {
 		await expect(page).toHaveURL(/\?page=2/)
 		await expect(page.locator('.tasks')).toContainText(tasks[99].title)
 		await expect(page.locator('.tasks')).not.toContainText(tasks[20].title)
+	})
+
+	test('Should not navigate to a negative page when clicking previous on the first page', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const tasks = await TaskFactory.create(100, {
+			id: '{increment}',
+			title: i => `task${i}`,
+			project_id: 1,
+		})
+		await page.goto('/projects/1/1?page=1')
+
+		await expect(page.locator('.tasks')).toContainText(tasks[20].title)
+
+		const previous = page.locator('.card-content .pagination .pagination-previous')
+		await expect(previous).toHaveAttribute('aria-disabled', 'true')
+		await previous.click({force: true})
+
+		await expect(page).not.toHaveURL(/\?page=0/)
+		await expect(page.locator('.tasks')).toContainText(tasks[20].title)
+		await expect(page.locator('.global-notification.is-danger, .global-notification.error')).not.toBeVisible()
 	})
 
 	test('Should show cross-project subtasks in their own project List view', async ({authenticatedPage: page}) => {
@@ -194,5 +254,28 @@ test.describe('Project View List', () => {
 
 		// Only one task should be visible (the searchable one)
 		await expect(page.locator('.tasks .task')).toHaveCount(1)
+	})
+
+	test('Should search in a view with a filter when the term contains a filter operator', async ({authenticatedPage: page}) => {
+		await ProjectFactory.create(1, {title: 'First Project'})
+		await ProjectViewFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			view_kind: 0,
+			filter: JSON.stringify({filter: 'done = false'}),
+		})
+		// "meeting" contains the "in" operator
+		const {searchableTask} = await createTasksWithSearch()
+
+		await page.goto('/projects/1/1')
+		await expect(page.locator('.tasks')).toContainText('Regular task 1')
+
+		await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+		await page.locator('.filter-popup .filter-input .ProseMirror').fill('meeting')
+		await page.locator('.filter-popup button').filter({hasText: 'Show results'}).click()
+
+		await expect(page).toHaveURL(/s=meeting/)
+		await expect(page.locator('.tasks .task')).toHaveCount(1)
+		await expect(page.locator('.tasks')).toContainText(searchableTask.title)
 	})
 })

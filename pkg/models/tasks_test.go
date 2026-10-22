@@ -72,9 +72,56 @@ func TestTask_Create(t *testing.T) {
 			"task_id":   task.ID,
 			"bucket_id": 1,
 		}, false)
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+			"user_id":     usr.ID,
+		}, false)
 
 		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TaskCreatedEvent{})
+	})
+	t.Run("already subscribed to the project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user6 is subscribed to project 12 (fixture), so the inherited subscription must not
+		// be duplicated with a task level one
+		usr6 := &user.User{ID: 6, Username: "user6"}
+		task := &Task{
+			Title:     "Lorem",
+			ProjectID: 12,
+		}
+		err := task.Create(s, usr6)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+		})
+	})
+	t.Run("created by link share is not subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		linkShare := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		task := &Task{
+			Title:     "Lorem",
+			ProjectID: 2,
+		}
+		err := task.Create(s, linkShare)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+		})
 	})
 	t.Run("with reminders", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -205,6 +252,28 @@ func TestTask_Update(t *testing.T) {
 			"title":       "test10000",
 			"description": "Lorem Ipsum Dolor",
 			"project_id":  1,
+		}, false)
+	})
+	t.Run("hex color with leading #", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:        1,
+			Title:     "test",
+			ProjectID: 1,
+			HexColor:  "#f0f0f0",
+		}
+		err := task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.Equal(t, "f0f0f0", task.HexColor)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        1,
+			"hex_color": "f0f0f0",
 		}, false)
 	})
 	t.Run("nonexistant task", func(t *testing.T) {
@@ -643,6 +712,29 @@ func TestTask_Update(t *testing.T) {
 		assert.Equal(t, "updated", updatedTask.Title)
 		assert.True(t, updatedTask.DoneAt.IsZero())
 	})
+	t.Run("passing fields restricts the write to the given columns", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Priority stays zero to simulate a caller not parsing that column (fixture has 100).
+		task := &Task{
+			ID:       3,
+			Title:    "updated with a field list",
+			Priority: 0,
+		}
+
+		err := task.updateSingleTask(s, u, []string{"title"})
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		updatedTask := &Task{ID: 3}
+		err = updatedTask.ReadOne(s, u)
+		require.NoError(t, err)
+		assert.Equal(t, "updated with a field list", updatedTask.Title)
+		assert.Equal(t, int64(100), updatedTask.Priority, "priority must survive since it wasn't in the fields list")
+	})
 }
 
 func TestTask_Delete(t *testing.T) {
@@ -714,6 +806,11 @@ func TestHardDeleteTask(t *testing.T) {
 	require.NoError(t, err)
 	_, err = s.Insert(&TaskUnreadStatus{TaskID: 1, UserID: 2})
 	require.NoError(t, err)
+	_, err = s.Insert(
+		&TaskIndexAlias{ProjectID: 2, Index: 99, TaskID: 1},
+		&TaskIndexAlias{ProjectID: 3, Index: 99, TaskID: 1},
+	)
+	require.NoError(t, err)
 	_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 1, UserID: 2})
 	require.NoError(t, err)
 	// Comment 1 belongs to task 1
@@ -741,6 +838,7 @@ func TestHardDeleteTask(t *testing.T) {
 	db.AssertMissing(t, "task_relations", map[string]interface{}{"other_task_id": 1})
 	db.AssertMissing(t, "favorites", map[string]interface{}{"entity_id": 1, "kind": FavoriteKindTask})
 	db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_id": 1, "entity_type": SubscriptionEntityTask})
+	db.AssertMissing(t, "task_index_aliases", map[string]interface{}{"task_id": 1})
 	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindTask})
 	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindComment})
 	// The attachment files are gone too
@@ -943,6 +1041,29 @@ func TestUpdateDone(t *testing.T) {
 				// original future due date — not futureDue+1day.
 				assert.True(t, newTask.DueDate.After(time.Now()))
 				assert.True(t, newTask.DueDate.Before(futureDue))
+				assert.False(t, newTask.Done)
+			})
+			t.Run("reminders spanning more than 292 years", func(t *testing.T) {
+				// time.Duration saturates at ~292 years; the offset between reminders
+				// must not be computed as a single Duration.
+				oldTask := &Task{
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=3650",
+					RepeatsFromCurrentDate: true,
+					Reminders: []*TaskReminder{
+						{Reminder: time.Date(1734, 1, 1, 0, 0, 0, 0, time.UTC)},
+						{Reminder: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)},
+					}}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				assert.Len(t, newTask.Reminders, 2)
+				expectedFirst := time.Now().Add(3650 * 24 * time.Hour)
+				assert.Equal(t, expectedFirst.Unix(), newTask.Reminders[0].Reminder.Unix())
+				assert.Equal(t, expectedFirst.Year()+292, newTask.Reminders[1].Reminder.Year())
+				assert.True(t, newTask.Reminders[1].Reminder.After(newTask.Reminders[0].Reminder))
 				assert.False(t, newTask.Done)
 			})
 			t.Run("start date", func(t *testing.T) {
@@ -1515,4 +1636,30 @@ func TestTaskIndexUniqueConstraint(t *testing.T) {
 		CreatedByID: 1,
 	})
 	require.Error(t, err, "unique constraint on (project_id, index) must reject duplicates")
+}
+
+func TestGetTaskByIDSimpleMemo(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
+	s := db.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Commit())
+
+	first, err := GetTaskByIDSimple(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "task #1", first.Title)
+	first.Title = "mutated"
+
+	updateTitleBehindTheBack(t, 1, &Task{Title: behindTheBackTitle})
+
+	second, err := GetTaskByIDSimple(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "task #1", second.Title, "a re-read that reaches the db would see the other session's write")
+
+	_, err = s.ID(2).Cols("title").Update(&Task{Title: "any write invalidates the memo"})
+	require.NoError(t, err)
+
+	afterWrite, err := GetTaskByIDSimple(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
 }

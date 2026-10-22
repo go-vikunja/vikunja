@@ -50,25 +50,6 @@ func checkDiskSpace(path string) CheckResult {
 	}
 }
 
-// isGroupMember reports whether the current process belongs to the given
-// group, checking both the primary gid and all supplementary groups.
-func isGroupMember(gid int) bool {
-	if os.Getgid() == gid {
-		return true
-	}
-
-	groups, err := os.Getgroups()
-	if err != nil {
-		return false
-	}
-	for _, g := range groups {
-		if g == gid {
-			return true
-		}
-	}
-	return false
-}
-
 func checkDirectoryOwnership(info os.FileInfo) []CheckResult {
 	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
@@ -121,15 +102,6 @@ func checkDirectoryOwnership(info os.FileInfo) []CheckResult {
 			Name:   "Ownership match",
 			Passed: false,
 			Error:  errMsg,
-		})
-	case currentUID != 0 && !isGroupMember(int(gid)):
-		results = append(results, CheckResult{
-			Name:   "Ownership match",
-			Passed: false,
-			Error: fmt.Sprintf(
-				"directory owned by gid %d but Vikunja process is not a member of that group",
-				gid,
-			),
 		})
 	case currentUID != 0 && nsActive:
 		matchResult := CheckResult{

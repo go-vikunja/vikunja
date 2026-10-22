@@ -18,13 +18,44 @@ package user
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestUserTimezoneDefaultFallback(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &User{
+		ID:       1,
+		Timezone: "",
+	}
+	updated, err := UpdateUser(s, u, false)
+	require.NoError(t, err)
+	assert.NotEmpty(t, updated.Timezone)
+	_, err = time.LoadLocation(updated.Timezone)
+	require.NoError(t, err)
+
+	created, err := CreateUser(s, &User{
+		Username: "tzfallbackuser",
+		Email:    "tzfallbackuser@example.com",
+		Password: "testpassword",
+		Timezone: "",
+	})
+	require.NoError(t, err)
+	assert.NotEmpty(t, created.Timezone)
+	_, err = time.LoadLocation(created.Timezone)
+	require.NoError(t, err)
+}
 
 func TestCreateBotUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
@@ -475,6 +506,146 @@ func TestUpdateUser(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
 	})
+	t.Run("pending email survives an update without email change", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("pending_email").Update(&User{PendingEmail: "p@example.com"})
+		require.NoError(t, err)
+
+		_, err = UpdateUser(s, &User{
+			ID:   1,
+			Name: "Lorem Ipsum",
+		}, false)
+		require.NoError(t, err)
+
+		updated, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+		assert.Equal(t, "p@example.com", updated.PendingEmail)
+	})
+	t.Run("direct email change discards the pending one", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("pending_email").Update(&User{PendingEmail: "p@example.com"})
+		require.NoError(t, err)
+		_, err = generateToken(s, &User{ID: 1}, TokenEmailConfirm)
+		require.NoError(t, err)
+
+		_, err = UpdateUser(s, &User{
+			ID:    1,
+			Email: "testing@example.com",
+		}, false)
+		require.NoError(t, err)
+
+		updated, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+		assert.Equal(t, "testing@example.com", updated.Email)
+		assert.Empty(t, updated.PendingEmail)
+
+		tokens, err := getTokensForKind(s, &User{ID: 1}, TokenEmailConfirm)
+		require.NoError(t, err)
+		assert.Empty(t, tokens)
+	})
+	t.Run("frontend settings survive profile-only update", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		originalSettings := map[string]any{
+			"color_schema": "dark",
+		}
+		settingsJSON, err := json.Marshal(originalSettings)
+		require.NoError(t, err)
+		_, err = s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Update(&struct {
+				FrontendSettings string `xorm:"frontend_settings"`
+			}{
+				FrontendSettings: string(settingsJSON),
+			})
+		require.NoError(t, err)
+
+		updated, err := UpdateUser(s, &User{
+			ID:    1,
+			Email: "testing@example.com",
+		}, false)
+		require.NoError(t, err)
+		require.Equal(t, map[string]interface{}(originalSettings), updated.FrontendSettings)
+
+		var stored sql.NullString
+		has, err := s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Get(&stored)
+		require.NoError(t, err)
+		require.True(t, has)
+		require.True(t, stored.Valid)
+		assert.JSONEq(t, string(settingsJSON), stored.String)
+	})
+	t.Run("frontend settings can be saved from request map", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		frontendSettings := map[string]any{
+			"color_schema": "dark",
+			"nested": map[string]any{
+				"a": float64(1),
+			},
+		}
+
+		updated, err := UpdateUser(s, &User{
+			ID:               1,
+			FrontendSettings: frontendSettings,
+		}, true)
+		require.NoError(t, err)
+		require.Equal(t, frontendSettings, updated.FrontendSettings)
+
+		var stored sql.NullString
+		has, err := s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Get(&stored)
+		require.NoError(t, err)
+		require.True(t, has)
+		require.True(t, stored.Valid)
+		assert.JSONEq(t, `{"color_schema":"dark","nested":{"a":1}}`, stored.String)
+	})
+	t.Run("frontend settings can be cleared", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Update(&struct {
+				FrontendSettings string `xorm:"frontend_settings"`
+			}{
+				FrontendSettings: `{"color_schema":"dark"}`,
+			})
+		require.NoError(t, err)
+
+		updated, err := UpdateUser(s, &User{
+			ID:               1,
+			FrontendSettings: nil,
+		}, true)
+		require.NoError(t, err)
+		require.Nil(t, updated.FrontendSettings)
+
+		var stored sql.NullString
+		has, err := s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Get(&stored)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.False(t, stored.Valid)
+	})
 }
 
 func TestUpdateUserPassword(t *testing.T) {
@@ -543,7 +714,7 @@ func TestUserPasswordReset(t *testing.T) {
 		require.NoError(t, err)
 
 		db.AssertMissing(t, "user_tokens", map[string]interface{}{
-			"token": token,
+			"token": utils.Sha256Hex(token),
 			"kind":  TokenPasswordReset,
 		})
 	})
@@ -654,6 +825,31 @@ func TestCleanupOldTokens(t *testing.T) {
 			"kind":  TokenPasswordReset,
 		}, false)
 	})
+	t.Run("deletes old email confirm tokens only with a pending email change", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id = ?", 1).Cols("pending_email").Update(&User{PendingEmail: "p@example.com"})
+		require.NoError(t, err)
+
+		withPending, err := generateToken(s, &User{ID: 1}, TokenEmailConfirm)
+		require.NoError(t, err)
+		withoutPending, err := generateToken(s, &User{ID: 2}, TokenEmailConfirm)
+		require.NoError(t, err)
+
+		_, err = s.In("id", withPending.ID, withoutPending.ID).
+			Cols("created").
+			Update(&Token{Created: time.Now().Add(-25 * time.Hour)})
+		require.NoError(t, err)
+
+		_, err = CleanupOldTokens(s)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "user_tokens", map[string]interface{}{"id": withPending.ID})
+		db.AssertExists(t, "user_tokens", map[string]interface{}{"id": withoutPending.ID}, false)
+	})
 	t.Run("does not delete email confirm tokens", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -733,7 +929,7 @@ func TestConfirmDeletion(t *testing.T) {
 		require.NoError(t, err)
 
 		db.AssertMissing(t, "user_tokens", map[string]interface{}{
-			"token": token,
+			"token": utils.Sha256Hex(token),
 			"kind":  TokenAccountDeletion,
 		})
 	})
@@ -762,4 +958,102 @@ func TestGetUserByID_ActiveUser(t *testing.T) {
 	u, err := GetUserByID(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), u.ID)
+}
+
+func TestGetUserByID_AfterBatchLoadKeepsStatusCheck(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	t.Cleanup(func() { db.LoadAndAssertFixtures(t) })
+	s := db.NewSession()
+	defer s.Close()
+	// Commit so the second session's write below is visible; a commit does not dirty the memo.
+	require.NoError(t, s.Commit())
+
+	batch, err := GetUsersByIDs(s, []int64{17, 18, 1})
+	require.NoError(t, err)
+	require.Len(t, batch, 3)
+	assert.Empty(t, batch[17].Email)
+	assert.Empty(t, batch[18].Email)
+
+	disabled, err := GetUserByID(s, 17)
+	require.True(t, IsErrAccountDisabled(err))
+	require.NotNil(t, disabled)
+	assert.Equal(t, int64(17), disabled.ID)
+	assert.Empty(t, disabled.Email)
+
+	locked, err := GetUserByID(s, 18)
+	require.True(t, IsErrAccountLocked(err))
+	require.NotNil(t, locked)
+	assert.Equal(t, int64(18), locked.ID)
+
+	s2 := db.NewSession()
+	defer s2.Close()
+	_, err = s2.ID(1).Cols("username").Update(&User{Username: "behind the back"})
+	require.NoError(t, err)
+	require.NoError(t, s2.Commit())
+
+	first, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "user1", first.Username, "a re-read that reaches the db would see the other session's write")
+	first.Username = "mutated"
+
+	second, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "user1", second.Username)
+
+	_, err = s.ID(2).Cols("name").Update(&User{Name: "any write invalidates the memo"})
+	require.NoError(t, err)
+
+	afterWrite, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, "behind the back", afterWrite.Username)
+}
+
+func TestGetUserForAuth(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	for _, tc := range []struct {
+		name     string
+		id       int64
+		username string
+		wantErr  func(error) bool
+	}{
+		{"active", 1, "user1", nil},
+		{"email confirmation required", 4, "user4", IsErrEmailNotConfirmed},
+		{"disabled", 17, "user17", IsErrAccountDisabled},
+		{"locked", 18, "user18", IsErrAccountLocked},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			byID, err := GetUserByIDForAuth(s, tc.id)
+			byName, nameErr := GetUserByUsernameForAuth(s, tc.username)
+			if tc.wantErr == nil {
+				require.NoError(t, err)
+				require.NoError(t, nameErr)
+				assert.Equal(t, tc.id, byID.ID)
+				assert.Equal(t, tc.id, byName.ID)
+				return
+			}
+			assert.True(t, tc.wantErr(err), "by id: got %v", err)
+			assert.True(t, tc.wantErr(nameErr), "by username: got %v", nameErr)
+			assert.True(t, IsErrUserCannotAuthenticate(err))
+		})
+	}
+}
+
+// TOK-BOT-01
+func TestGetUserForAuthChecksBotOwner(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := GetUserByIDForAuth(s, 23)
+	require.NoError(t, err)
+
+	require.NoError(t, SetUserStatus(s, &User{ID: 21}, StatusDisabled))
+
+	_, err = GetUserByIDForAuth(s, 23)
+	assert.True(t, IsErrAccountDisabled(err), "by id: got %v", err)
+	_, err = GetUserByUsernameForAuth(s, "bot-owner-a-assistant")
+	assert.True(t, IsErrAccountDisabled(err), "by username: got %v", err)
 }

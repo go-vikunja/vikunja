@@ -27,10 +27,12 @@ import (
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/web"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
+	"xorm.io/xorm"
 )
 
 type backgroundSearchBody struct {
@@ -79,19 +81,16 @@ func RegisterBackgroundRoutes(api huma.API) {
 	}, backgroundGet)
 
 	if config.BackgroundsUploadEnabled.GetBool() {
-		Register(api, huma.Operation{
+		Register(api, withUploadLimits(huma.Operation{
 			OperationID: "projects-background-upload",
 			Summary:     "Upload a project background",
-			Description: "Uploads an image via multipart/form-data under the \"background\" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project.",
+			Description: "Uploads an image via multipart/form-data under the \"background\" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project. A file that is not a decodable image of a supported format fails with 400, an image over the pixel limit fails with 400 and code 4032, and the request fails with 503 and code 4037 when the server is too busy decoding other images.",
 			Method:      http.MethodPut,
 			Path:        "/projects/{project}/backgrounds/upload",
 			// Return the updated project with 200, the natural code for an idempotent PUT.
 			DefaultStatus: http.StatusOK,
 			Tags:          tags,
-			// +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't rejected by multipart boundary/header bytes.
-			// #nosec G115 - configured value won't exceed int64 max in practice.
-			MaxBodyBytes: (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024,
-		}, backgroundUpload)
+		}), backgroundUpload)
 	}
 
 	if config.BackgroundsUnsplashEnabled.GetBool() {
@@ -194,7 +193,7 @@ func backgroundUnsplashSet(ctx context.Context, in *struct {
 	defer s.Close()
 
 	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanUpdate(s, a)
+	can, err := project.CanWrite(s, a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -228,59 +227,85 @@ func backgroundUnsplashSet(ctx context.Context, in *struct {
 type backgroundUploadInput struct {
 	ProjectID int64 `path:"project" doc:"The id of the project to set the background on."`
 	// Allow-list mirrors the formats background uploads can actually be decoded as
-	// (handler.ValidateAndSaveBackgroundUpload's allowedImageMimes); octet-stream covers
+	// (handler.PrepareBackground's allowedImageMimes); octet-stream covers
 	// programmatic clients. Huma's MimeTypeValidator rejects the part pre-handler, so the
-	// byte-level image check in the shared function is the real gate.
+	// byte-level image check in PrepareBackground is the real gate.
 	RawBody huma.MultipartFormFiles[struct {
 		Background huma.FormFile `form:"background" contentType:"image/jpeg,image/png,image/gif,image/bmp,image/tiff,image/webp,application/octet-stream" required:"true" doc:"The background image to upload. Must be a decodable raster image (JPEG, PNG, GIF, BMP, TIFF or WebP); it is resized server-side and re-encoded as JPEG."`
 	}]
 }
 
-// backgroundUpload owns auth, the session and the permission check because there is
-// no handler.Do* for multipart uploads (see the api-v2-routes skill's "Non-CRUDable
-// / custom routes" section). It shares its body with v1 via
-// handler.ValidateAndSaveBackgroundUpload.
+// Custom handler: there is no handler.Do* for multipart uploads.
 func backgroundUpload(ctx context.Context, in *backgroundUploadInput) (*singleBody[models.Project], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanUpdate(s, a)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-	if !can {
-		_ = s.Rollback()
-		return nil, huma.Error403Forbidden("forbidden")
-	}
-	project, err = models.GetProjectSimpleByID(s, in.ProjectID)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
+	if err := checkBackgroundUploadAllowed(a, in.ProjectID); err != nil {
+		return nil, err
 	}
 
 	file := in.RawBody.Data().Background
 	defer func() { _ = file.Close() }()
 
-	if err := backgroundHandler.ValidateAndSaveBackgroundUpload(s, a, project, file, file.Filename, uint64(file.Size)); err != nil {
-		_ = s.Rollback()
-		if backgroundHandler.IsErrFileIsNoImage(err) || backgroundHandler.IsErrFileUnsupportedImageFormat(err) {
-			return nil, huma.Error400BadRequest(err.Error())
-		}
-		return nil, translateDomainError(err)
+	bg, err := backgroundHandler.PrepareBackground(ctx, file, file.Filename)
+	if err != nil {
+		return nil, translateBackgroundUploadError(err)
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
+	// Re-checked because the decode may have queued long enough for permissions to change.
+	project, err := writableProjectForBackground(s, a, in.ProjectID)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+	if err := backgroundHandler.SaveBackground(s, a, project, bg); err != nil {
+		_ = s.Rollback()
+		return nil, translateBackgroundUploadError(err)
+	}
+	if err := project.ReadOne(s, a); err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	return &singleBody[models.Project]{Body: project}, nil
+}
+
+func checkBackgroundUploadAllowed(a web.Auth, projectID int64) error {
+	s := db.NewReadSession()
+	defer s.Close()
+	_, err := writableProjectForBackground(s, a, projectID)
+	return err
+}
+
+func writableProjectForBackground(s *xorm.Session, a web.Auth, projectID int64) (*models.Project, error) {
+	project := &models.Project{ID: projectID}
+	can, err := project.CanWrite(s, a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	if !can {
+		return nil, huma.Error403Forbidden("forbidden")
+	}
+	project, err = models.GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return project, nil
+}
+
+func translateBackgroundUploadError(err error) error {
+	if backgroundHandler.IsErrFileIsNoImage(err) || backgroundHandler.IsErrFileUnsupportedImageFormat(err) {
+		return huma.Error400BadRequest(err.Error())
+	}
+	return translateDomainError(err)
 }
 
 // backgroundGet owns auth, the session and the permission check because there is no
@@ -325,7 +350,7 @@ func backgroundGet(ctx context.Context, in *struct {
 
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
 		defer func() { _ = bgFile.File.Close() }()
-		c := humaecho5.Unwrap(hctx)
+		c := humaecho.Unwrap(hctx)
 		webfiles.WriteProjectBackground((*c).Response(), (*c).Request(), bgFile, stat)
 	}}, nil
 }
@@ -361,7 +386,7 @@ func backgroundUnsplashThumb(ctx context.Context, in *struct {
 func streamUnsplashProxy(body io.ReadCloser) *huma.StreamResponse {
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
 		defer func() { _ = body.Close() }()
-		c := humaecho5.Unwrap(hctx)
+		c := humaecho.Unwrap(hctx)
 		resp := (*c).Response()
 		resp.Header().Set("Content-Type", "image/jpg")
 		resp.WriteHeader(http.StatusOK)
@@ -381,7 +406,7 @@ func backgroundRemove(ctx context.Context, in *struct {
 	defer s.Close()
 
 	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanUpdate(s, a)
+	can, err := project.CanWrite(s, a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)

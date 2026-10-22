@@ -28,7 +28,7 @@ import (
 )
 
 // TestLabelTaskBulk_V2 ports the v1 bulk-replace matrix
-// (pkg/webtests/label_task_test.go) onto PUT /api/v2/tasks/{projecttask}/labels/bulk.
+// (pkg/webtests/label_task_test.go) onto PUT /api/v2/tasks/{task}/labels/bulk.
 // The body is the full target label set; the call adds missing labels and
 // removes any not listed.
 //

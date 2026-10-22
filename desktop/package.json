@@ -5,7 +5,7 @@
   "main": "main.js",
   "repository": "https://code.vikunja.io/desktop",
   "license": "GPL-3.0-or-later",
-  "packageManager": "pnpm@11.10.0",
+  "packageManager": "pnpm@11.27.0",
   "author": {
     "email": "maintainers@vikunja.io",
     "name": "Vikunja Team"
@@ -54,6 +54,7 @@
     },
     "mac": {
       "category": "public.app-category.productivity",
+      "identity": "-",
       "target": [
         "dmg",
         "zip"
@@ -61,7 +62,7 @@
     }
   },
   "devDependencies": {
-    "electron": "43.1.0",
+    "electron": "43.7.0",
     "electron-builder": "26.15.3",
     "unzipper": "0.12.5"
   },

@@ -42,7 +42,7 @@ var testuser21 = user.User{ID: 21, Username: "user_bot_owner_a", Issuer: "local"
 // first's tokens. One env, one secret, all callers via humaTokenFor.
 //
 // Fixture topology (pkg/db/fixtures/api_tokens.yml):
-//   - tokens #1, #2: owned by user1.
+//   - tokens #1, #2, #9–12: owned by user1.
 //   - token #3: owned by user2 — never visible to user1, never deletable by user1.
 //   - tokens #4, #5: owned by disabled/locked users 17/18.
 //   - tokens #6, #7: owned by user15.
@@ -59,11 +59,27 @@ func TestHumaAPIToken(t *testing.T) {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens", "", user1Token, "")
 			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 			ids := apiTokenIDsFromReadAll(t, rec.Body.Bytes())
-			// user1 owns exactly tokens #1 and #2; cardinality is pinned.
-			assert.ElementsMatch(t, []int64{1, 2}, ids,
-				"ReadAll must return exactly {1,2}; body: %s", rec.Body.String())
-			assert.Equal(t, int64(2), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
+			assert.ElementsMatch(t, []int64{
+				1,
+				2,
+				9,
+				10,
+				11,
+				12,
+			}, ids,
+				"ReadAll must return exactly {1,2,9,10,11,12}; body: %s", rec.Body.String())
+			assert.Equal(t, int64(6), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
 			assert.NotContains(t, ids, int64(3), "token #3 (owned by user2) must be hidden")
+		})
+		t.Run("Pagination - pages are ordered by id and disjoint", func(t *testing.T) {
+			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens?page=1&per_page=4", "", user1Token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, []int64{1, 2, 9, 10}, apiTokenIDsFromReadAll(t, rec.Body.Bytes()))
+			assert.Equal(t, int64(6), apiTokenTotalFromReadAll(t, rec.Body.Bytes()))
+
+			rec = humaRequest(t, e, http.MethodGet, "/api/v2/tokens?page=2&per_page=4", "", user1Token, "")
+			require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, []int64{11, 12}, apiTokenIDsFromReadAll(t, rec.Body.Bytes()))
 		})
 		t.Run("Isolation - user2 sees only its own token", func(t *testing.T) {
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens", "", user2Token, "")
@@ -87,15 +103,15 @@ func TestHumaAPIToken(t *testing.T) {
 			ids := apiTokenIDsFromReadAll(t, rec.Body.Bytes())
 			assert.Empty(t, ids, "bot 23 has no tokens; list must be empty but authorized; body: %s", rec.Body.String())
 		})
-		t.Run("owner_id - forbidden when not the bot's owner", func(t *testing.T) {
+		t.Run("owner_id - not found when not the bot's owner", func(t *testing.T) {
 			// user1 is not the owner of bot 23 (owned by user21).
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens?owner_id=23", "", user1Token, "")
-			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 		})
-		t.Run("owner_id - forbidden when the target is not a bot", func(t *testing.T) {
+		t.Run("owner_id - not found when the target is not a bot", func(t *testing.T) {
 			// user2 is a real user, not a bot owned by user1.
 			rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens?owner_id=2", "", user1Token, "")
-			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 		})
 	})
 
@@ -126,12 +142,12 @@ func TestHumaAPIToken(t *testing.T) {
 				user1Token, "")
 			assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
 		})
-		t.Run("owner_id - forbidden when the target is not a caller-owned bot", func(t *testing.T) {
+		t.Run("owner_id - not found when the target is not a caller-owned bot", func(t *testing.T) {
 			// user1 cannot mint a token for user2 (not a bot they own).
 			rec := humaRequest(t, e, http.MethodPost, "/api/v2/tokens",
 				`{"title":"sneaky","owner_id":2,"permissions":{"tasks":["read_all"]},"expires_at":"2099-01-01T00:00:00Z"}`,
 				user1Token, "")
-			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 		})
 	})
 
@@ -142,9 +158,8 @@ func TestHumaAPIToken(t *testing.T) {
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			// CanDelete returns (false, nil) for a missing token → generic forbidden.
 			rec := humaRequest(t, e, http.MethodDelete, "/api/v2/tokens/9999", "", user1Token, "")
-			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 		})
 		t.Run("Normal - own token", func(t *testing.T) {
 			// Runs last so deleting #1 doesn't disturb the ReadAll cardinality assertions.

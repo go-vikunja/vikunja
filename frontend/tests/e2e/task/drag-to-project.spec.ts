@@ -146,6 +146,67 @@ test.describe('Drag Task to Project in Sidebar', () => {
 			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 		})
 
+		test('Dragging a card from a saved-filter kanban to a sidebar project removes it from the board', async ({authenticatedPage: page, apiContext, userToken}) => {
+			const headers = {Authorization: `Bearer ${userToken}`}
+			const projects = await ProjectFactory.create(2, {
+				title: i => i === 0 ? 'Source Project' : 'Target Project',
+			})
+			await ProjectViewFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				view_kind: 0,
+			})
+			await ProjectViewFactory.create(1, {
+				id: 2,
+				project_id: projects[1].id,
+				view_kind: 0,
+			}, false)
+
+			const filter = await apiContext.post('/api/v2/filters', {
+				headers,
+				data: {title: 'Source only', filters: {filter: `project = ${projects[0].id}`}},
+			})
+			expect(filter.ok()).toBeTruthy()
+			const filterProjectId = -(await filter.json()).id - 1
+
+			// Saved filters get no stored Kanban view, so seed one to exercise the pseudo-project board.
+			const [filterView] = await ProjectViewFactory.create(1, {
+				id: 80,
+				project_id: filterProjectId,
+				view_kind: 3,
+				bucket_configuration_mode: 1,
+			}, false)
+			const buckets = await BucketFactory.create(1, {project_view_id: filterView.id})
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				title: 'Filtered task',
+				project_id: projects[0].id,
+			})
+			await TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: filterView.id,
+			}, false)
+
+			const boardRoute = `/projects/${filterProjectId}/${filterView.id}`
+			await page.goto(boardRoute)
+			const card = page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title})
+			await expect(card).toBeVisible()
+
+			await card.dragTo(page.locator(`li[data-project-id="${projects[1].id}"]`))
+
+			await expect(page.locator('.global-notification')).toContainText('moved to')
+			await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title})).toHaveCount(0)
+
+			await page.reload()
+			await expect(page.locator('.kanban .bucket').first()).toBeVisible()
+			await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title})).toHaveCount(0)
+
+			const stored = await apiContext.get(`tasks/${tasks[0].id}`, {headers})
+			expect(stored.ok()).toBeTruthy()
+			expect((await stored.json()).project_id).toBe(projects[1].id)
+		})
+
 		test('Does not move task when dropped on the same project', async ({authenticatedPage: page}) => {
 			const {sourceProject, sourceKanbanView, tasks} = await createProjectsWithTasks()
 
@@ -293,8 +354,8 @@ test.describe('Drag Task to Project in Sidebar', () => {
 			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 
 			// Intercept the task update API call and return an error
-			await page.route('**/api/v1/tasks/*', async (route) => {
-				if (route.request().method() === 'POST') {
+			await page.route('**/api/v2/tasks/*', async (route) => {
+				if (route.request().method() === 'PATCH') {
 					await route.fulfill({
 						status: 500,
 						contentType: 'application/json',

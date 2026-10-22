@@ -22,13 +22,14 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestTaskDuplicateV2 covers POST /tasks/{projecttask}/duplicate. It drives the
+// TestTaskDuplicateV2 covers POST /tasks/{task}/duplicate. It drives the
 // Echo+Huma stack directly (humaRequest/humaTokenFor) because webHandlerTestV2's
 // buildURL only models base[/{id}] paths, not action sub-paths.
 func TestTaskDuplicateV2(t *testing.T) {
@@ -53,6 +54,23 @@ func TestTaskDuplicateV2(t *testing.T) {
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
 		assert.NotZero(t, resp.DuplicatedTask.ID, "duplicated task should have an id")
 		assert.NotEqual(t, sourceTaskID, resp.DuplicatedTask.ID, "duplicated task must have a new id, not the source task's")
+	})
+
+	t.Run("returns the stored positions of the duplicate", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/tasks/2/duplicate", ``, humaTokenFor(t, &testuser1), "")
+		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+		resp := &models.TaskDuplicate{}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), resp))
+
+		s := db.NewSession()
+		defer s.Close()
+		stored := []*models.TaskPosition{}
+		require.NoError(t, s.Where("task_id = ?", resp.Task.ID).Find(&stored))
+		require.NotEmpty(t, stored)
+		assertPositionsMatch(t, stored, resp.Task.Positions)
 	})
 
 	t.Run("nonexistent source task", func(t *testing.T) {

@@ -46,6 +46,9 @@ func TestProjectDuplicateV2(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects/1/duplicate", `{}`, token, "")
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"duplicated_project"`)
+		// Never computed on this path, so it must be null — the zero value (0) would claim read.
+		assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+		assert.NotContains(t, rec.Body.String(), `"max_permission":0`)
 
 		var resp struct {
 			DuplicatedProject struct {
@@ -81,6 +84,30 @@ func TestProjectDuplicateV2(t *testing.T) {
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
 		assert.NotZero(t, resp.DuplicatedProject.ID)
 		assert.Equal(t, int64(1), resp.DuplicatedProject.ParentProjectID, "duplicate must land under the requested parent")
+	})
+
+	t.Run("no access to target parent is forbidden", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		files.InitTestFileFixtures(t)
+		token := humaTokenFor(t, &testuser1)
+
+		// testuser1 can read source project 1 but has no access at all to
+		// project 20 (owned by user 13).
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects/1/duplicate", `{"parent_project_id":20}`, token, "")
+		require.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("read-only access to target parent is forbidden", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		files.InitTestFileFixtures(t)
+		token := humaTokenFor(t, &testuser1)
+
+		// testuser1 has read-but-not-write on project 9, which must not be
+		// enough to place the duplicate under it.
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects/1/duplicate", `{"parent_project_id":9}`, token, "")
+		require.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
 
 	t.Run("nonexistent source project", func(t *testing.T) {

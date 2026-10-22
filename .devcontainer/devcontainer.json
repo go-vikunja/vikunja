@@ -13,6 +13,9 @@
         "vitest.explorer",
         "vue.volar"
       ]
+    },
+    "zed": {
+      "extensions": []
     }
   },
   "forwardPorts": [

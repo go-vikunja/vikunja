@@ -34,7 +34,7 @@ func init() {
 		ID:          "20201121181647",
 		Description: "Add a name field to user",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(user20201121181647{})
+			return partialSync(tx, user20201121181647{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

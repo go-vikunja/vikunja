@@ -1,0 +1,405 @@
+import {describe, it, expect} from 'vitest'
+import {reactive} from 'vue'
+
+import {ApiError} from '@/client/problem'
+import {isReportableResourceUrl, redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './sentryFilters'
+
+// Object.assign instead of `new Error(msg, {cause})`: the vitest tsconfig
+// targets a lib without the two-argument Error constructor.
+function errorWithCause(message: string, cause: unknown): Error {
+	return Object.assign(new Error(message), {cause})
+}
+
+// happy-dom's DOMException lacks the legacy numeric `code` that browsers set.
+function browserDomException(message: string, name: string, code: number): DOMException {
+	return Object.assign(new DOMException(message, name), {code})
+}
+
+describe('shouldDropEvent', () => {
+	it('drops a plain fetch error', () => {
+		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
+	})
+
+	it('drops an error wrapping a fetch error as cause', () => {
+		expect(shouldDropEvent(errorWithCause('Error renewing token: ', new TypeError('Failed to fetch')))).toBe(true)
+	})
+
+	it('drops an error with a fetch error two levels deep', () => {
+		const inner = errorWithCause('inner', new TypeError('Failed to fetch'))
+
+		expect(shouldDropEvent(errorWithCause('outer', inner))).toBe(true)
+	})
+
+	it('drops an error-like object with code and message', () => {
+		expect(shouldDropEvent({code: 'ECONNABORTED', message: 'timeout'})).toBe(true)
+	})
+
+	it('drops a v1 api error body', () => {
+		expect(shouldDropEvent({code: 1001, message: 'The user does not exist.'})).toBe(true)
+	})
+
+	it('drops a v2 problem body with its detail copied to message', () => {
+		const problem = {status: 400, code: 2002, detail: 'invalid data'}
+
+		expect(shouldDropEvent({...problem, message: problem.detail})).toBe(true)
+	})
+
+	it('drops an error wrapping an api error body as cause', () => {
+		expect(shouldDropEvent(errorWithCause('outer', {code: 1001, message: 'The user does not exist.'}))).toBe(true)
+	})
+
+	it('keeps a DOMException', () => {
+		expect(shouldDropEvent(browserDomException('Failed to execute \'insertBefore\' on \'Node\'', 'NotFoundError', 8))).toBe(false)
+	})
+
+	it('keeps an error wrapping a DOMException as cause', () => {
+		expect(shouldDropEvent(errorWithCause('outer', browserDomException('The operation was aborted.', 'AbortError', 20)))).toBe(false)
+	})
+
+	it('keeps an error with a node-style code', () => {
+		expect(shouldDropEvent(Object.assign(new Error('boom'), {code: 'ERR_SOMETHING'}))).toBe(false)
+	})
+
+	it('keeps a plain error', () => {
+		expect(shouldDropEvent(new Error('something actually broke'))).toBe(false)
+	})
+
+	it('keeps a plain error wrapping another plain error', () => {
+		expect(shouldDropEvent(errorWithCause('outer', new Error('inner')))).toBe(false)
+	})
+
+	it('keeps undefined', () => {
+		expect(shouldDropEvent(undefined)).toBe(false)
+	})
+
+	it('does not loop on a cause cycle', () => {
+		const a = new Error('a')
+		const b = errorWithCause('b', a)
+		Object.assign(a, {cause: b})
+
+		expect(shouldDropEvent(a)).toBe(false)
+	})
+})
+
+describe('shouldDropEvent with chunk load errors', () => {
+	const messages = [
+		'Failed to fetch dynamically imported module: https://try.vikunja.io/assets/ProjectList-abc123.js',
+		'error loading dynamically imported module: https://try.vikunja.io/assets/ProjectList-abc123.js',
+		'Importing a module script failed.',
+		'Unable to preload CSS for /assets/ProjectList-abc123.css',
+		'\'text/html\' is not a valid JavaScript MIME type.',
+		'Loading module from “https://try.vikunja.io/assets/ProjectList-abc123.js” was blocked because of a disallowed MIME type (“text/html”).',
+		'Failed to load module script: Expected a JavaScript module script but the server responded with a MIME type of "text/html".',
+	]
+
+	it.each(messages)('drops the exception %s', message => {
+		expect(shouldDropEvent(new Error(message))).toBe(true)
+	})
+
+	it.each(messages)('drops the event message %s', message => {
+		expect(shouldDropEvent(undefined, {message})).toBe(true)
+	})
+
+	it.each(messages)('drops the event exception value %s', message => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{value: message}]}})).toBe(true)
+	})
+
+	it('keeps an unrelated event message', () => {
+		expect(shouldDropEvent(undefined, {message: 'something actually broke'})).toBe(false)
+	})
+
+	it('keeps an unrelated mime type error', () => {
+		expect(shouldDropEvent(new Error('Refused to apply style because its MIME type is not supported'))).toBe(false)
+	})
+})
+
+describe('shouldDropEvent with stale chunk fallout', () => {
+	const messages = [
+		'Couldn\'t resolve component "default" at "/tasks/:id"',
+		'Couldn\'t resolve component "default" at "/projects"',
+		'Couldn\'t resolve component "default" at "/projects". Ensure you passed a function that returns a promise.',
+		'Async component timed out after 60000ms.',
+	]
+
+	it.each(messages)('drops the exception %s', message => {
+		expect(shouldDropEvent(new Error(message))).toBe(true)
+	})
+
+	it.each(messages)('drops the event exception value %s', message => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{value: message}]}})).toBe(true)
+	})
+
+	it('keeps an unrelated component error', () => {
+		expect(shouldDropEvent(new Error('Failed to mount component: template or render function not defined'))).toBe(false)
+	})
+
+	it('keeps an unrelated timeout', () => {
+		expect(shouldDropEvent(new Error('Navigation timed out after 5000ms'))).toBe(false)
+	})
+})
+
+describe('shouldDropEvent with third party injections', () => {
+	const messages = [
+		'Invalid call to runtime.sendMessage(). Tab not found.',
+		'undefined is not an object (evaluating \'window.webkit.messageHandlers\')',
+		'Error invoking postMessage: Java object is gone',
+		'undefined is not an object (evaluating \'window.weixinPostMessageHandlers.weixinDispatchMessage.postMessage\')',
+		'WKWebView API client did not respond to this postMessage',
+	]
+
+	it.each(messages)('drops the exception %s', message => {
+		expect(shouldDropEvent(new Error(message))).toBe(true)
+	})
+
+	it.each(messages)('drops the event exception value %s', message => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{value: message}]}})).toBe(true)
+	})
+
+	const extensionUrls = [
+		'chrome-extension://abcdefghijklmnop/content.js',
+		'moz-extension://abcdefghijklmnop/content.js',
+		'safari-web-extension://ABCDEF-1234/content.js',
+		'iabjs://navigation_performance_logger_android',
+	]
+
+	it.each(extensionUrls)('drops an event thrown from %s', filename => {
+		expect(shouldDropEvent(undefined, {
+			exception: {
+				values: [{
+					value: 'boom',
+					stacktrace: {frames: [{filename: 'https://try.vikunja.io/assets/index.js'}, {filename}]},
+				}],
+			},
+		})).toBe(true)
+	})
+
+	it('keeps an event an extension only appears deeper in', () => {
+		expect(shouldDropEvent(undefined, {
+			exception: {
+				values: [{
+					value: 'boom',
+					stacktrace: {frames: [{filename: 'chrome-extension://abc/content.js'}, {filename: 'https://try.vikunja.io/assets/index.js'}]},
+				}],
+			},
+		})).toBe(false)
+	})
+
+	it('keeps an event thrown from our own code', () => {
+		expect(shouldDropEvent(undefined, {
+			exception: {
+				values: [{
+					value: 'boom',
+					stacktrace: {frames: [{filename: 'https://try.vikunja.io/assets/index.js'}]},
+				}],
+			},
+		})).toBe(false)
+	})
+
+	it('keeps an unrelated client error', () => {
+		expect(shouldDropEvent(new Error('The API client did not respond in time'))).toBe(false)
+	})
+
+	it('keeps an unrelated postMessage error', () => {
+		expect(shouldDropEvent(new Error('Failed to execute \'postMessage\' on \'Window\''))).toBe(false)
+	})
+})
+
+describe('shouldDropEvent with empty events', () => {
+	it('drops an event without a message or exception', () => {
+		expect(shouldDropEvent(undefined, {})).toBe(true)
+	})
+
+	it('drops an event whose exception values are blank', () => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{}]}})).toBe(true)
+	})
+
+	it('keeps an event with only an exception type', () => {
+		expect(shouldDropEvent(undefined, {exception: {values: [{type: 'TypeError'}]}})).toBe(false)
+	})
+
+	it('keeps an event with only a message', () => {
+		expect(shouldDropEvent(undefined, {message: 'something actually broke'})).toBe(false)
+	})
+
+	it('keeps an event when no event was passed at all', () => {
+		expect(shouldDropEvent(new Error('something actually broke'))).toBe(false)
+	})
+
+	it('drops a promise rejected with an empty object', () => {
+		expect(shouldDropEvent({}, {
+			exception: {
+				values: [{
+					type: 'UnhandledRejection',
+					value: 'Object captured as promise rejection with keys: [object has no keys]',
+				}],
+			},
+		})).toBe(true)
+	})
+
+	it('keeps a promise rejected with an object that has keys', () => {
+		expect(shouldDropEvent({reason: 'boom'}, {
+			exception: {
+				values: [{
+					type: 'UnhandledRejection',
+					value: 'Object captured as promise rejection with keys: reason',
+				}],
+			},
+		})).toBe(false)
+	})
+})
+
+
+describe('stripNavigationFragment', () => {
+	it.each(['browser.request', 'browser.domContentLoadedEvent', 'navigation.navigate', 'navigation.reload', 'navigation.back_forward'])('removes the original fragment from %s while preserving timing data', op => {
+		const span = {op, description: 'https://example.com/register?lang=en#invite-link=secret', startTimestamp: 1, endTimestamp: 2}
+		expect(stripNavigationFragment(span)).toEqual({...span, description: 'https://example.com/register?lang=en'})
+		expect(span.description).toContain('#invite-link=secret')
+	})
+
+	it.each([null, undefined, {op: 'navigation.navigate'}, {op: 'resource.script', description: 'https://example.com/app.js#hash'}])('preserves other recording data: %j', span => {
+		expect(stripNavigationFragment(span)).toBe(span)
+	})
+})
+
+describe('generated transport errors', () => {
+	it('drops 4xx v2 problems without legacy message fields', () => {
+		expect(shouldDropEvent({status: 404, detail: 'Not found'})).toBe(true)
+	})
+
+	it('drops a rate-limited Echo body once its status is stamped on', () => {
+		expect(shouldDropEvent({
+			message: 'rate limit exceeded',
+			status: 429,
+			detail: 'rate limit exceeded',
+		})).toBe(true)
+	})
+
+	it('drops a 4xx ApiError', () => {
+		expect(shouldDropEvent(new ApiError({status: 404, detail: '404 page not found'}))).toBe(true)
+	})
+
+	it('drops a 4xx ApiError without a code', () => {
+		expect(shouldDropEvent(new ApiError({status: 403, detail: 'Forbidden'}))).toBe(true)
+	})
+
+	it('reports a 5xx ApiError', () => {
+		expect(shouldDropEvent(new ApiError({status: 502, detail: 'Bad Gateway'}))).toBe(false)
+	})
+
+	it('reports a 5xx ApiError with a code', () => {
+		expect(shouldDropEvent(new ApiError({status: 500, code: 1, detail: 'Internal'}))).toBe(false)
+	})
+
+	it('drops an error wrapping a 4xx ApiError as cause', () => {
+		expect(shouldDropEvent(errorWithCause('outer', new ApiError({status: 404, detail: 'Not found'})))).toBe(true)
+	})
+
+	it('reports 5xx v2 problems', () => {
+		expect(shouldDropEvent({status: 500, detail: 'Unavailable'})).toBe(false)
+	})
+
+	it('reports a 5xx Echo body once its status is stamped on', () => {
+		expect(shouldDropEvent({
+			message: 'Internal Server Error',
+			status: 500,
+			detail: 'Internal Server Error',
+		})).toBe(false)
+	})
+
+	it('drops fetch network failures', () => {
+		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
+	})
+})
+
+describe('redactSensitiveParams', () => {
+	it.each([
+		['https://vikunja.example/?userPasswordReset=abc123', 'https://vikunja.example/?userPasswordReset=[Filtered]'],
+		['/login?foo=1&accountDeletionConfirm=abc123&bar=2', '/login?foo=1&accountDeletionConfirm=[Filtered]&bar=2'],
+		['/?userEmailConfirm=abc123#hash', '/?userEmailConfirm=[Filtered]#hash'],
+		['userPasswordReset=abc123', 'userPasswordReset=[Filtered]'],
+		['/login%3FuserPasswordReset%3Dabc123', '/login%3FuserPasswordReset%3D[Filtered]'],
+		['/tasks/1?view=list', '/tasks/1?view=list'],
+	])('redacts %s', (input, expected) => {
+		expect(redactSensitiveParams(input)).toBe(expected)
+	})
+
+	it('redacts nested strings in an event', () => {
+		const event = {
+			request: {url: 'https://vikunja.example/?userPasswordReset=abc123'},
+			breadcrumbs: [{category: 'navigation', data: {from: '/', to: '/?accountDeletionConfirm=abc123'}}],
+			urls: ['https://vikunja.example/?userEmailConfirm=abc123'],
+			level: 'error',
+			count: 1,
+		}
+
+		expect(redactSensitiveParams(event)).toEqual({
+			request: {url: 'https://vikunja.example/?userPasswordReset=[Filtered]'},
+			breadcrumbs: [{category: 'navigation', data: {from: '/', to: '/?accountDeletionConfirm=[Filtered]'}}],
+			urls: ['https://vikunja.example/?userEmailConfirm=[Filtered]'],
+			level: 'error',
+			count: 1,
+		})
+	})
+
+	// Console breadcrumbs carry the raw logged arguments until Sentry normalizes
+	// the event, which happens after our event processor.
+	it('handles a cyclic object', () => {
+		const route: Record<string, unknown> = {path: '/?userPasswordReset=abc123'}
+		route.children = [{parent: route}]
+
+		const redacted = redactSensitiveParams({breadcrumbs: [{data: {arguments: [route]}}]})
+		const copy = redacted.breadcrumbs[0].data.arguments[0]
+
+		expect(copy.path).toBe('/?userPasswordReset=[Filtered]')
+		expect((copy.children as {parent: unknown}[])[0].parent).toBe(copy)
+	})
+
+	it('handles a cyclic reactive object', () => {
+		const project = reactive<Record<string, unknown>>({title: '/?accountDeletionConfirm=abc123', childProjects: []})
+		;(project.childProjects as unknown[]).push({parentProject: project})
+
+		const redacted = redactSensitiveParams({extra: {project}})
+
+		expect(redacted.extra.project.title).toBe('/?accountDeletionConfirm=[Filtered]')
+		expect((redacted.extra.project.childProjects as {parentProject: unknown}[])[0].parentProject).toBe(redacted.extra.project)
+	})
+})
+
+describe('isReportableResourceUrl', () => {
+	const page = 'https://app.vikunja.cloud/tasks/395132'
+
+	it.each([
+		'https://app.vikunja.cloud/assets/logo.png',
+		'https://app.vikunja.cloud/tasks/395132/cover.png',
+	])('reports %s, which the browser fetched over the network', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(true)
+	})
+
+	it.each([
+		// FRONTEND-OSS-263: favicons a browser extension injected into /register
+		'https://news.search.yahoo.co.jp/favicon.ico',
+		'https://auctions.search.yahoo.co.jp/favicon.ico',
+		'http://app.vikunja.cloud/assets/logo.png',
+		'https://app.vikunja.cloud:8443/assets/logo.png',
+	])('skips %s, which is not served from our origin', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
+	})
+
+	it.each([
+		'data:image/svg+xml;base64,PHN2ZyAvPg==',
+		'blob:https://app.vikunja.cloud/47479b89-bed9-427b-a859-a447f21d5034',
+		'cid:part1.abcdef@example.com',
+		'filesystem:https://app.vikunja.cloud/temporary/avatar.png',
+		'about:blank',
+	])('skips %s, whose bytes never went over the network', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
+	})
+
+	it.each(['', ' ', 'not a url'])('skips an unresolvable src: %j', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
+	})
+
+	it.each([page, `${page}#`, `${page}#section`])('skips %s, which is the page itself', url => {
+		expect(isReportableResourceUrl(url, `${page}#other`)).toBe(false)
+	})
+})

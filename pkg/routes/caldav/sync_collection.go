@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -28,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/labstack/echo/v5"
+	"github.com/samedi/caldav-go/errs"
 )
 
 const (
@@ -121,7 +123,30 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 
 	log.Debugf("[CALDAV sync-collection] project=%d token=%q calendar-data=%v", projectID, rawToken, includeCalendarData)
 
+	// Deletions are looked up by project_id, which no task row ever has for a
+	// pseudo project, so a delta here would never contain tombstones. Checked
+	// before loading the collection because clients poll this path forever.
+	if rawToken != "" && models.IsPseudoProjectID(projectID) {
+		s := db.NewSession()
+		defer s.Close()
+
+		// Without this the 403 would leak which saved filter ids exist.
+		can, err := storage.canReadCollection(s)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		}
+		if !can {
+			return c.String(http.StatusNotFound, "Project not found")
+		}
+
+		log.Debugf("[CALDAV sync-collection] project=%d is a pseudo project → 403 valid-sync-token to force a full resync", projectID)
+		return writeForbiddenValidSyncToken(c)
+	}
+
 	rr, err := storage.getProjectRessource(true)
+	if errors.Is(err, errs.ResourceNotFoundError) {
+		return c.String(http.StatusNotFound, "Project not found")
+	}
 	if err != nil {
 		log.Errorf("[CALDAV sync-collection] Failed to load project resource: %v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
@@ -132,6 +157,8 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 	newEtagClean := strings.Trim(newEtag, `"`)
 	newToken := syncTokenPrefix + `"` + newEtagClean + `"`
 
+	// A pseudo project gets a token here that the branch above will always
+	// reject; RFC 6578 mandates a sync-token in the multistatus regardless.
 	if rawToken == "" {
 		log.Debugf("[CALDAV sync-collection] project=%d empty token → full sync (%d tasks)", projectID, len(rr.projectTasks))
 		return writeSyncResponse(c, rr, rr.projectTasks, nil, newToken, includeCalendarData)
@@ -198,7 +225,7 @@ func writeSyncResponse(
 	sb.WriteString(`<D:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + "\n")
 
 	for _, t := range tasks {
-		href := getTaskURL(&t.Task)
+		href := taskURL(rr.project.ID, &t.Task)
 		etag := `"` + strconv.FormatInt(t.ID, 10) + `-` + strconv.FormatInt(t.Updated.Unix(), 10) + `"`
 
 		sb.WriteString("  <D:response>\n")
@@ -218,7 +245,7 @@ func writeSyncResponse(
 	}
 
 	for _, d := range deletions {
-		href := getTaskURL(d)
+		href := taskURL(rr.project.ID, d)
 		sb.WriteString("  <D:response>\n")
 		sb.WriteString("    <D:href>" + xmlEscape(href) + "</D:href>\n")
 		sb.WriteString("    <D:status>HTTP/1.1 404 Not Found</D:status>\n")

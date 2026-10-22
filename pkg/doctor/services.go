@@ -29,29 +29,27 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/red"
+	"code.vikunja.io/api/pkg/utils"
 )
 
-// CheckOptionalServices returns check groups for all enabled optional services.
-func CheckOptionalServices() []CheckGroup {
-	var groups []CheckGroup
-
+// CheckOptionalServices runs the checks for all enabled optional services, passing
+// each group to emit as it completes.
+func CheckOptionalServices(emit func(CheckGroup)) {
 	if config.RedisEnabled.GetBool() {
-		groups = append(groups, checkRedis())
+		emit(checkRedis())
 	}
 
 	if config.MailerEnabled.GetBool() {
-		groups = append(groups, checkMailer())
+		emit(checkMailer())
 	}
 
 	if config.AuthLdapEnabled.GetBool() {
-		groups = append(groups, checkLDAP())
+		emit(checkLDAP())
 	}
 
 	if config.AuthOpenIDEnabled.GetBool() {
-		groups = append(groups, checkOpenID())
+		emit(checkOpenID())
 	}
-
-	return groups
 }
 
 func checkRedis() CheckGroup {
@@ -327,7 +325,8 @@ func checkOpenIDProvider(key string, rawProvider interface{}) (CheckResult, stri
 		}, ""
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := utils.NewUnguardedHTTPClient()
+	client.Timeout = 5 * time.Second
 	resp, err := client.Do(req) // #nosec G704 -- URL is from configured OIDC provider endpoints
 	if err != nil {
 		return CheckResult{

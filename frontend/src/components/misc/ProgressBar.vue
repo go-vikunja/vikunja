@@ -8,16 +8,18 @@
 		:value="value"
 		max="100"
 	>
-		{{ value }}%
+		{{ value === undefined ? '' : `${value}%` }}
 	</progress>
 </template>
 
 <script setup lang="ts">
+// an omitted value renders the browser's indeterminate bar
 withDefaults(defineProps<{
-	value: number
+	value?: number
 	isSmall?: boolean
 	isPrimary?: boolean
 }>(), {
+	value: undefined,
 	isSmall: false,
 	isPrimary: false,
 })

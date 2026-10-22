@@ -169,18 +169,6 @@ definitions:
       url:
         type: string
     type: object
-  license.Feature:
-    enum:
-    - 0
-    - 1
-    - 2
-    - 3
-    type: integer
-    x-enum-varnames:
-    - FeatureUnknown
-    - FeatureAdminPanel
-    - FeatureTimeTracking
-    - FeatureAuditLogs
   license.Info:
     properties:
       expires_at:
@@ -204,9 +192,31 @@ definitions:
     properties:
       code:
         type: string
+      state:
+        type: string
     type: object
+  migration.ErrorKind:
+    enum:
+    - reported
+    - interrupted
+    - credentials
+    - queue
+    - upload
+    - detail
+    type: string
+    x-enum-varnames:
+    - ErrorKindReported
+    - ErrorKindInterrupted
+    - ErrorKindCredentials
+    - ErrorKindQueue
+    - ErrorKindUpload
+    - ErrorKindDetail
   migration.Status:
     properties:
+      error_kind:
+        $ref: '#/definitions/migration.ErrorKind'
+      error_message:
+        type: string
       finished_at:
         type: string
       id:
@@ -927,12 +937,18 @@ definitions:
           Positions are always saved per view. They will automatically be set if you request the tasks through a view
           endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
         type: number
+      positions:
+        items:
+          $ref: '#/definitions/models.TaskPosition'
+        type: array
       priority:
         description: The task priority. Can be anything you want, it is possible to
           sort by this later.
         type: integer
       project_id:
-        description: The project this task belongs to.
+        description: |-
+          The project this task belongs to.
+          Must precede done/due_date: xorm orders composite index columns by struct field order.
         type: integer
       reactions:
         allOf:
@@ -1437,6 +1453,56 @@ definitions:
           with the current timestamp.
         type: string
     type: object
+  oauth2server.AuthorizeRequest:
+    properties:
+      client_id:
+        type: string
+      code_challenge:
+        type: string
+      code_challenge_method:
+        type: string
+      redirect_uri:
+        type: string
+      response_type:
+        type: string
+      state:
+        type: string
+    type: object
+  oauth2server.AuthorizeResponse:
+    properties:
+      code:
+        type: string
+      redirect_uri:
+        type: string
+      state:
+        type: string
+    type: object
+  oauth2server.TokenRequest:
+    properties:
+      client_id:
+        type: string
+      code:
+        type: string
+      code_verifier:
+        type: string
+      grant_type:
+        type: string
+      redirect_uri:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  oauth2server.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
   openid.Callback:
     properties:
       code:
@@ -1558,7 +1624,7 @@ definitions:
         type: array
       enabled_pro_features:
         items:
-          $ref: '#/definitions/license.Feature'
+          type: string
         type: array
       frontend_url:
         type: string
@@ -1591,10 +1657,14 @@ definitions:
     properties:
       code:
         type: string
+      state:
+        type: string
     type: object
   trello.Migration:
     properties:
       code:
+        type: string
+      state:
         type: string
     type: object
   user.EmailConfirm:
@@ -1667,11 +1737,6 @@ definitions:
         type: string
       url:
         description: The totp url used to be able to enroll the user later
-        type: string
-    type: object
-  user.TOTPPasscode:
-    properties:
-      passcode:
         type: string
     type: object
   user.Token:
@@ -1781,6 +1846,15 @@ definitions:
         minLength: 3
         type: string
     type: object
+  v1.UserTOTPEnableRequest:
+    properties:
+      passcode:
+        description: A passcode generated from the enrolled secret.
+        type: string
+      password:
+        description: The current user's password.
+        type: string
+    type: object
   v1.UserWithSettings:
     properties:
       auth_provider:
@@ -1810,6 +1884,8 @@ definitions:
       name:
         description: The full name of the user.
         type: string
+      pending_email:
+        type: string
       settings:
         $ref: '#/definitions/models.UserGeneralSettings'
       updated:
@@ -1826,6 +1902,12 @@ definitions:
     properties:
       code:
         type: integer
+      i18n_params:
+        additionalProperties:
+          type: string
+        description: I18nParams carries Message's dynamic values, keyed by the client's
+          translation placeholder names, so clients can localise the error.
+        type: object
       message:
         type: string
     type: object
@@ -1922,7 +2004,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created reaction
           schema:
             $ref: '#/definitions/models.Reaction'
@@ -1991,8 +2073,8 @@ paths:
         name: username
         required: true
         type: string
-      - description: The size of the avatar you want to get. If bigger than the max
-          configured size this will be adjusted to the maximum size.
+      - description: The size of the avatar you want to get. Rounded up to 16, 32,
+          48, 64, 128, 256, 512 or 1024 and capped at the max configured size.
         in: query
         name: size
         type: integer
@@ -3169,7 +3251,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: A message telling you everything was migrated successfully.
+          description: A message telling you the migration was started.
           schema:
             $ref: '#/definitions/models.Message'
         "500":
@@ -3252,10 +3334,38 @@ paths:
       tags:
       - migration
   /notifications:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes every notification belonging to the authenticated user.
+        Only the caller's own notifications are affected.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All notifications deleted.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "403":
+          description: Link shares cannot have notifications.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete all notifications of the current user
+      tags:
+      - subscriptions
     get:
       consumes:
       - application/json
-      description: Returns an array with all notifications for the current user.
+      description: Returns an array with all notifications for the current user. Notifications
+        about a project the current user can no longer read are omitted; the filtering
+        happens in the query, so paging and the `x-pagination-*` headers all describe
+        the visible notifications only.
       parameters:
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
@@ -3342,6 +3452,82 @@ paths:
       summary: Mark a notification as (un-)read
       tags:
       - subscriptions
+  /oauth/authorize:
+    post:
+      consumes:
+      - application/json
+      description: Creates an authorization code for an OAuth 2.0 client on behalf
+        of the authenticated user. PKCE is required. API tokens cannot be used to
+        authorize a client.
+      parameters:
+      - description: The authorization request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/oauth2server.AuthorizeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The authorization code and the redirect URI to return it to.
+          schema:
+            $ref: '#/definitions/oauth2server.AuthorizeResponse'
+        "400":
+          description: response_type is not 'code', the redirect URI is invalid, or
+            the PKCE challenge is missing.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: An API token was used to authorize an OAuth client.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: OAuth 2.0 authorize endpoint
+      tags:
+      - auth
+  /oauth/token:
+    post:
+      consumes:
+      - application/json
+      description: 'Exchanges an authorization code for an access token, or a refresh
+        token for a new one. Part of the OAuth 2.0 Authorization Code flow with PKCE.
+        Needs no authentication: the grant itself is the credential.'
+      parameters:
+      - description: The token request
+        in: body
+        name: grant
+        required: true
+        schema:
+          $ref: '#/definitions/oauth2server.TokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The access token, its type, lifetime and refresh token.
+          schema:
+            $ref: '#/definitions/oauth2server.TokenResponse'
+        "400":
+          description: Unsupported grant type, or an invalid, expired or already-used
+            authorization code.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "401":
+          description: Invalid or expired refresh token.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: OAuth 2.0 token endpoint
+      tags:
+      - auth
   /projects:
     get:
       consumes:
@@ -3681,6 +3867,10 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
+        "503":
+          description: The server is busy decoding other images.
+          schema:
+            $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
       summary: Upload a project background
@@ -4011,7 +4201,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created bucket object.
           schema:
             $ref: '#/definitions/models.Bucket'
@@ -4183,7 +4373,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created webhook target.
           schema:
             $ref: '#/definitions/models.Webhook'
@@ -4318,8 +4508,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Share a project via link. The user needs to have write-access to
-        the project to be able do this.
+      description: Share a project via link. The user needs to be admin of the project
+        to be able do this.
       parameters:
       - description: Project ID
         in: path
@@ -4364,8 +4554,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove a link share. The user needs to have write-access to the
-        project to be able do this.
+      description: Remove a link share. The user needs to be admin of the project
+        to be able do this.
       parameters:
       - description: Project ID
         in: path
@@ -4546,7 +4736,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created project view
           schema:
             $ref: '#/definitions/models.ProjectView'
@@ -5117,7 +5307,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Unsubscribes the current user to an entity.
+      description: Unsubscribes the current user to an entity. If the subscription
+        is inherited from a parent project, an opt-out is stored for this entity instead.
       parameters:
       - description: The entity the user subscribed to. Can be either `project` or
           `task`.
@@ -5530,9 +5721,9 @@ paths:
         name: attachmentID
         required: true
         type: integer
-      - description: The size of the preview image. Can be sm = 100px, md = 200px,
-          lg = 400px or xl = 800px. If provided, a preview image will be returned
-          if the attachment is an image.
+      - description: 'The size of the preview image. Can be sm = 100px, md = 200px,
+          lg = 400px or xl = 800px. If provided, a preview image is returned instead
+          of the attachment: a JPEG, or a PNG when the image has transparency.'
         in: query
         name: preview_size
         type: string
@@ -5540,7 +5731,7 @@ paths:
       - application/octet-stream
       responses:
         "200":
-          description: The attachment file.
+          description: The attachment file, or its preview when preview_size is provided.
           schema:
             type: file
         "403":
@@ -5551,8 +5742,17 @@ paths:
           description: The task does not exist.
           schema:
             $ref: '#/definitions/models.Message'
+        "422":
+          description: preview_size is invalid (code 4039), or the attachment has
+            no preview (code 4038).
+          schema:
+            $ref: '#/definitions/models.Message'
         "500":
           description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+        "503":
+          description: Too many previews are being generated, try again later.
           schema:
             $ref: '#/definitions/models.Message'
       security:
@@ -6684,7 +6884,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: The created token.
           schema:
             $ref: '#/definitions/models.APIToken'
@@ -7159,6 +7359,10 @@ paths:
           description: Internal error
           schema:
             $ref: '#/definitions/models.Message'
+        "503":
+          description: The server is busy decoding other images.
+          schema:
+            $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
       summary: Upload a user avatar
@@ -7352,9 +7556,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Disables any totp settings for the current user.
+      description: Disables any totp settings for the current user. Requires the current
+        password and a current totp passcode.
       parameters:
-      - description: The current user's password (only password is enough).
+      - description: The current user's password and a current totp passcode (totp_passcode).
         in: body
         name: totp
         required: true
@@ -7371,8 +7576,20 @@ paths:
           description: Something's invalid.
           schema:
             $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Wrong password.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
         "404":
           description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "412":
+          description: Invalid totp passcode.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "429":
+          description: Too many failed attempts.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -7389,14 +7606,14 @@ paths:
       consumes:
       - application/json
       description: Enables a previously enrolled totp setting by providing a totp
-        passcode.
+        passcode and the current password.
       parameters:
-      - description: The totp passcode.
+      - description: The totp passcode and the current password.
         in: body
         name: totp
         required: true
         schema:
-          $ref: '#/definitions/user.TOTPPasscode'
+          $ref: '#/definitions/v1.UserTOTPEnableRequest'
       produces:
       - application/json
       responses:
@@ -7408,12 +7625,20 @@ paths:
           description: Something's invalid.
           schema:
             $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Wrong password.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
         "404":
           description: User does not exist.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "412":
           description: TOTP is not enrolled.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "429":
+          description: Too many failed attempts.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -7431,7 +7656,14 @@ paths:
       - application/json
       description: Creates an initial setup for the user in the db. After this step,
         the user needs to verify they have a working totp setup with the "enable totp"
-        endpoint.
+        endpoint. Requires the current password.
+      parameters:
+      - description: The current user's password.
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/v1.UserPasswordConfirmation'
       produces:
       - application/json
       responses:
@@ -7443,8 +7675,16 @@ paths:
           description: Something's invalid.
           schema:
             $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: Wrong password.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
         "404":
           description: User does not exist.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "429":
+          description: Too many failed attempts.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -7670,9 +7910,10 @@ paths:
           schema:
             $ref: '#/definitions/auth.Token'
         "401":
-          description: Invalid or expired refresh token.
+          description: Invalid, expired or already-used refresh token, or no refresh
+            token cookie sent (codes 16002-16005).
           schema:
-            $ref: '#/definitions/models.Message'
+            $ref: '#/definitions/web.HTTPError'
       summary: Refresh user token
       tags:
       - auth

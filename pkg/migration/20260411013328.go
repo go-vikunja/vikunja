@@ -37,7 +37,7 @@ func init() {
 			}
 
 			// Heal pre-existing duplicates before adding the constraint —
-			// setNewTaskIndex's Go-level guard isn't race-safe. Wrapped in a
+			// setNewTaskIndexes's Go-level guard isn't race-safe. Wrapped in a
 			// session transaction so a mid-way failure can't leave rows
 			// partially re-indexed without the constraint in place.
 			s := tx.NewSession()

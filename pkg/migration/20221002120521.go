@@ -34,7 +34,7 @@ func init() {
 		ID:          "20221002120521",
 		Description: "Add cover image attachment id",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(tasks20221002120521{})
+			return partialSync(tx, tasks20221002120521{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil

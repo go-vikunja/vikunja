@@ -17,10 +17,12 @@
 package models
 
 import (
+	"context"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -68,6 +70,7 @@ func deleteUsers() {
 		func() {
 			us := db.NewSession()
 			defer us.Close()
+			defer events.CleanupPending(us)
 
 			err = DeleteUser(us, u)
 			if err != nil {
@@ -81,7 +84,9 @@ func deleteUsers() {
 			err = us.Commit()
 			if err != nil {
 				log.Errorf("Could not commit transaction: %s", err)
+				return
 			}
+			events.DispatchPending(context.Background(), us)
 		}()
 	}
 }
@@ -98,7 +103,7 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 	}
 
 	for _, l := range projects {
-		if l.ID < 0 {
+		if l.ID < 0 || l.OwnerID != u.ID {
 			continue
 		}
 
@@ -145,7 +150,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	for _, p := range projectsToDelete {
-		if p.ParentProjectID != 0 {
+		if p.parentID() != 0 {
 			// Child projects are deleted by p.Delete
 			continue
 		}
@@ -157,6 +162,11 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
+	err = deleteUserFiles(s, u.ID)
+	if err != nil {
+		return err
+	}
+
 	// Delete all related entities
 	relatedEntities := []struct {
 		column string
@@ -165,10 +175,12 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		{"user_id", &TaskAssginee{}},
 		{"user_id", &Subscription{}},
 		{"user_id", &TeamMember{}},
+		{"user_id", &ProjectUser{}},
 		{"owner_id", &SavedFilter{}},
 		{"user_id", &Reaction{}},
 		{"user_id", &Favorite{}},
 		{"owner_id", &APIToken{}},
+		{"created_by_id", &Webhook{}},
 	}
 
 	for _, entity := range relatedEntities {
@@ -176,6 +188,11 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		if err != nil {
 			return err
 		}
+	}
+
+	err = DeleteAllUserSessions(s, u.ID)
+	if err != nil {
+		return err
 	}
 
 	// Notify before deleting the user row, because ShouldNotify will try to
@@ -189,6 +206,29 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 
 	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
 	return err
+}
+
+func deleteUserFiles(s *xorm.Session, userID int64) error {
+	u := &user.User{}
+	has, err := s.Where("id = ?", userID).Cols("export_file_id", "avatar_file_id").Get(u)
+	if err != nil || !has {
+		return err
+	}
+
+	fileIDs := []int64{u.ExportFileID}
+	if u.OwnsAvatarFile() {
+		fileIDs = append(fileIDs, u.AvatarFileID)
+	}
+
+	// Blob removal can't roll back, so it waits for the commit.
+	for _, id := range fileIDs {
+		events.OnCommit(s, func() error {
+			deleteFileInNewSession(id)
+			return nil
+		})
+	}
+
+	return nil
 }
 
 func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err error) {

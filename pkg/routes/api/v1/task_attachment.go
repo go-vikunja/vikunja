@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	webfiles "code.vikunja.io/api/pkg/web/files"
@@ -61,6 +62,7 @@ func UploadTaskAttachment(c *echo.Context) error {
 	form, err := c.MultipartForm()
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		if errors.Is(err, http.ErrNotMultipart) {
 			return echo.NewHTTPError(http.StatusBadRequest, "No multipart form provided").Wrap(err)
 		}
@@ -83,13 +85,16 @@ func UploadTaskAttachment(c *echo.Context) error {
 	success, failures, err := models.UploadTaskAttachments(s, auth, taskAttachment.TaskID, uploads)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
 	return c.JSON(http.StatusOK, webfiles.BuildUploadResult(success, append(openErrors, failures...)))
 }
@@ -101,12 +106,14 @@ func UploadTaskAttachment(c *echo.Context) error {
 // @Produce octet-stream
 // @Param id path int true "Task ID"
 // @Param attachmentID path int true "Attachment ID"
-// @Param preview_size query string false "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image will be returned if the attachment is an image."
+// @Param preview_size query string false "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image is returned instead of the attachment: a JPEG, or a PNG when the image has transparency."
 // @Security JWTKeyAuth
-// @Success 200 {file} blob "The attachment file."
+// @Success 200 {file} blob "The attachment file, or its preview when preview_size is provided."
 // @Failure 403 {object} models.Message "No access to this task."
 // @Failure 404 {object} models.Message "The task does not exist."
+// @Failure 422 {object} models.Message "preview_size is invalid (code 4039), or the attachment has no preview (code 4038)."
 // @Failure 500 {object} models.Message "Internal error"
+// @Failure 503 {object} models.Message "Too many previews are being generated, try again later."
 // @Router /tasks/{id}/attachments/{attachmentID} [get]
 func GetTaskAttachment(c *echo.Context) error {
 
@@ -120,21 +127,22 @@ func GetTaskAttachment(c *echo.Context) error {
 		return err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
+	if c.QueryParams().Has("preview_size") {
+		previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
+		preview, err := models.GetTaskAttachmentPreview(c.Request().Context(), auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
+		if err != nil {
+			return err
+		}
+		webfiles.WriteAttachmentPreview(c.Response(), preview)
+		return nil
+	}
 
-	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
-	attachment, preview, err := models.LoadTaskAttachmentForDownload(s, auth, taskAttachment.TaskID, taskAttachment.ID, previewSize)
+	file, err := models.GetTaskAttachmentForDownload(auth, taskAttachment.TaskID, taskAttachment.ID)
 	if err != nil {
-		_ = s.Rollback()
 		return err
 	}
+	defer func() { _ = file.File.Close() }()
 
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	webfiles.WriteAttachmentDownload(c.Response(), c.Request(), attachment, preview)
+	webfiles.WriteFileDownload(c.Response(), c.Request(), file)
 	return nil
 }

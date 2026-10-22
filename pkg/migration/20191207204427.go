@@ -34,7 +34,7 @@ func init() {
 		ID:          "20191207204427",
 		Description: "Add task identifier to list",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync2(list20191207204427{})
+			return partialSync(tx, list20191207204427{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return dropTableColum(tx, "list", "indentifier")

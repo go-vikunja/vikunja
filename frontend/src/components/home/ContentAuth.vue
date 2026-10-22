@@ -18,18 +18,19 @@
 				class="app-container-background background-fade-in d-print-none"
 				:style="{
 					'background-image': background && `url(${background})`,
-					'filter': backgroundBrightness && `brightness(${backgroundBrightness}%)`
+					'filter': backgroundBrightness ? `brightness(${backgroundBrightness}%)` : undefined
 				}"
 			/>
 			<Navigation class="d-print-none" />
 			<main
 				id="main-content"
+				tabindex="-1"
 				class="app-content"
 				:class="[
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
 				]"
-				:style="{'--sidebar-width': sidebarWidth}"
+				:style="{'--sidebar-width': sidebarWidthStyle}"
 			>
 				<BaseButton
 					v-show="menuActive"
@@ -63,7 +64,7 @@
 				</Modal>
 
 				<BaseButton
-					v-shortcut="'Shift+Slash'"
+					v-shortcut="SHORTCUTS.showKeyboardShortcuts"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>
@@ -79,26 +80,26 @@
 import {watch, computed, onBeforeUnmount} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 
+import {SHORTCUTS} from '@/constants/shortcuts'
 import Navigation from '@/components/home/Navigation.vue'
 import QuickActions from '@/components/quick-actions/QuickActions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useBaseStore} from '@/stores/base'
-import {useLabelStore} from '@/stores/labels'
-import {useProjectStore} from '@/stores/projects'
 
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 import {useWebSocket} from '@/composables/useWebSocket'
+import {useServerCacheEvents} from '@/composables/useServerCacheEvents'
 import {useAuthStore} from '@/stores/auth'
 
 const authStore = useAuthStore()
 const backgroundBrightness = computed(() =>
-	authStore.settings?.frontendSettings?.backgroundBrightness,
+	authStore.settings?.frontend_settings?.background_brightness,
 )
 
-const {sidebarWidth} = useSidebarResize()
+const {sidebarWidthStyle} = useSidebarResize()
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 
@@ -127,13 +128,12 @@ watch(() => route.name as string, (routeName) => {
 				'tasks.range',
 				'labels.index',
 				'migrate.start',
-				'migrate.wunderlist',
 				'projects.index',
 			].includes(routeName) ||
 			routeName.startsWith('user.settings')
 		)
 	) {
-		baseStore.handleSetCurrentProject({project: null})
+		baseStore.setCurrentProject(null)
 	}
 })
 
@@ -141,14 +141,9 @@ watch(() => route.name as string, (routeName) => {
 
 useRenewTokenOnFocus()
 
+useServerCacheEvents()
 const {connect} = useWebSocket()
 connect()
-
-const labelStore = useLabelStore()
-labelStore.loadAllLabels()
-
-const projectStore = useProjectStore()
-projectStore.loadAllProjects()
 
 // Listen for task creation from the quick-entry window
 const taskUpdateChannel = new BroadcastChannel('vikunja-task-updates')

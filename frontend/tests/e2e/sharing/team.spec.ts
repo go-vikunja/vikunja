@@ -5,6 +5,7 @@ import {TeamProjectFactory} from '../../factories/team_project'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
 import {login, setupApiUrl} from '../../support/authenticateUser'
+import {serverPageSize} from '../../support/pagination'
 
 test.describe('Team', () => {
 	test('Creates a new team', async ({authenticatedPage: page}) => {
@@ -38,6 +39,37 @@ test.describe('Team', () => {
 		}
 	})
 
+	test('Paginates the team list', async ({authenticatedPage: page, apiContext}) => {
+		const pageSize = await serverPageSize(apiContext)
+		await TeamMemberFactory.create(pageSize + 5, {
+			team_id: '{increment}',
+		})
+		const teams = await TeamFactory.create(pageSize + 5, {
+			id: '{increment}',
+			name: (i: number) => `paged team ${i}`,
+		})
+		const rows = page.locator('ul.teams li')
+
+		await page.goto('/teams')
+		await expect(rows).toHaveCount(pageSize)
+		const firstPage = await rows.allTextContents()
+
+		await page.getByRole('link', {name: 'Goto page 2'}).click()
+		await expect(page).toHaveURL(/[?&]page=2/)
+		await expect(rows).toHaveCount(5)
+		const secondPage = await rows.allTextContents()
+
+		expect([...firstPage, ...secondPage].map(name => name.trim()).sort())
+			.toEqual(teams.map(team => team.name).sort())
+
+		await page.reload()
+		await expect(rows).toHaveCount(5)
+
+		await page.goto('/teams?page=99')
+		await expect(page).toHaveURL(/[?&]page=2(&|$)/)
+		await expect(rows).toHaveCount(5)
+	})
+
 	test('Allows an admin to edit the team', async ({authenticatedPage: page}) => {
 		await TeamMemberFactory.create(1, {
 			team_id: 1,
@@ -52,8 +84,32 @@ test.describe('Team', () => {
 
 		await page.locator('.card .button').filter({hasText: 'Save'}).click()
 
-		await expect(page.locator('table.table td').filter({hasText: 'Admin'})).toBeVisible()
+		await expect(page.getByRole('cell', {name: 'Admin', exact: true})).toBeVisible()
 		await expect(page.locator('.global-notification')).toContainText('Success')
+		await page.reload()
+		await expect(page.locator('input#teamtext')).toHaveValue('New Team Name')
+	})
+
+	test('Does not carry an unsaved draft over to another team', async ({authenticatedPage: page}) => {
+		await TeamMemberFactory.create(2, {
+			team_id: '{increment}',
+			admin: true,
+		})
+		const [firstTeam, secondTeam] = await TeamFactory.create(2, {
+			id: '{increment}',
+		})
+
+		await page.goto(`/teams/${firstTeam.id}/edit`)
+		await expect(page.locator('input#teamtext')).toHaveValue(firstTeam.name)
+		await page.locator('.menu-container').getByRole('link', {name: 'Teams'}).click()
+		await page.locator('ul.teams').getByRole('link', {name: secondTeam.name, exact: true}).click()
+		await expect(page.locator('input#teamtext')).toHaveValue(secondTeam.name)
+		await page.locator('input#teamtext').fill('Unsaved team name')
+
+		// Jump straight between the two edit pages so the view instance is reused.
+		await page.evaluate(() => history.go(-2))
+		await expect(page).toHaveURL(new RegExp(`/teams/${firstTeam.id}/edit`))
+		await expect(page.locator('input#teamtext')).toHaveValue(firstTeam.name)
 	})
 
 	test('Does not allow a normal user to edit the team', async ({authenticatedPage: page}) => {
@@ -61,13 +117,23 @@ test.describe('Team', () => {
 			team_id: 1,
 			admin: false,
 		})
+		const [otherUser] = await UserFactory.create(1, {id: 2}, false)
+		await TeamMemberFactory.create(1, {
+			team_id: 1,
+			user_id: otherUser.id,
+			admin: false,
+		}, false)
 		await TeamFactory.create(1, {
 			id: 1,
 		})
 
 		await page.goto('/teams/1/edit')
 		await expect(page.locator('.card input.input')).not.toBeVisible()
-		await expect(page.locator('table.table td').filter({hasText: 'Member'})).toBeVisible()
+		await expect(page.locator('table.table tr').filter({hasText: otherUser.username})).toBeVisible()
+		await expect(page.locator('table.table td').filter({hasText: 'Member'})).toHaveCount(2)
+		await expect(page.getByRole('button', {name: 'Make Admin', exact: true})).toHaveCount(0)
+		await expect(page.getByRole('button', {name: 'Remove a user from the team'})).toHaveCount(0)
+		await expect(page.locator('.card-content .multiselect')).toHaveCount(0)
 	})
 
 	test('Allows an admin to add members to the team', async ({authenticatedPage: page}) => {
@@ -92,15 +158,50 @@ test.describe('Team', () => {
 
 		// Wait for search results to appear (there's a 200ms debounce in the multiselect)
 		await expect(multiselect.locator('.search-results')).toBeVisible({timeout: 5000})
+		await expect(multiselect.locator('.search-results').locator('> *').first()).toContainText(users[1].username)
 		await multiselect.locator('.search-results').locator('> *').first().click()
+		await page.locator('input#teamtext').fill('Unsaved team name')
 		await teamMembersCard.locator('.card-content .button').filter({hasText: 'Add to team'}).click()
 
-		await expect(page.locator('table.table td').filter({hasText: 'Admin'})).toBeVisible()
+		await expect(page.getByRole('cell', {name: 'Admin', exact: true})).toBeVisible()
 		// Find the row containing the new member's username
 		const newMemberRow = page.locator('table.table tr').filter({hasText: users[1].username})
 		await expect(newMemberRow).toBeVisible()
 		await expect(newMemberRow).toContainText('Member')
+		await expect(page.locator('input#teamtext')).toHaveValue('Unsaved team name')
+		await newMemberRow.getByRole('button', {name: 'Make Admin', exact: true}).click()
+		await expect(newMemberRow.getByRole('cell', {name: 'Admin', exact: true})).toBeVisible()
+		await page.reload()
+		await expect(newMemberRow.getByRole('cell', {name: 'Admin', exact: true})).toBeVisible()
+		await newMemberRow.getByRole('button', {name: 'Remove a user from the team'}).click()
+		await page.locator('dialog[open]').getByRole('button', {name: 'Do it!'}).click()
+		await expect(newMemberRow).toHaveCount(0)
 		await expect(page.locator('.global-notification')).toContainText('Success')
+	})
+
+	test('Clears member search results when the search input is cleared', async ({authenticatedPage: page}) => {
+		await TeamMemberFactory.create(1, {
+			team_id: 1,
+			admin: true,
+		})
+		await TeamFactory.create(1, {
+			id: 1,
+		})
+		const [user] = await UserFactory.create(1, {id: 100}, false)
+
+		await page.goto('/teams/1/edit')
+		const multiselect = page.locator('.card').filter({hasText: 'Team Members'}).locator('.card-content .multiselect')
+		const input = multiselect.locator('.input-wrapper input')
+
+		await input.click()
+		await input.pressSequentially(user.username, {delay: 10})
+		await expect(multiselect.locator('.search-result-button').filter({hasText: user.username})).toBeVisible({timeout: 5000})
+
+		// Backspace fires the keyup the multiselect searches on; fill('') would not.
+		await input.press('ControlOrMeta+a')
+		await input.press('Backspace')
+		await expect(input).toHaveValue('')
+		await expect(multiselect.locator('.search-results')).toHaveCount(0)
 	})
 })
 
@@ -143,6 +244,7 @@ test.describe('Team permission tiers on shared projects', () => {
 		const [owner, member] = await UserFactory.create(2)
 		await createProjects(1)
 		const [team] = await TeamFactory.create(1, {id: 1, name: 'Shared Team', created_by_id: owner.id}, false)
+		await TeamMemberFactory.create(1, {team_id: team.id, user_id: owner.id, admin: true}, false)
 		await TeamMemberFactory.create(1, {team_id: team.id, user_id: member.id, admin: false}, false)
 		await TeamProjectFactory.create(1, {team_id: team.id, project_id: 1, permission: 1}, false)
 
@@ -172,7 +274,7 @@ test.describe('Team permission tiers on shared projects', () => {
 		// error and the frontend never renders the project title.
 		await login(page, apiContext, member)
 		const projectResponse = page.waitForResponse(r =>
-			r.url().endsWith('/projects/1') && r.request().method() === 'GET',
+			new URL(r.url()).pathname.endsWith('/projects/1') && r.request().method() === 'GET',
 		)
 		await page.goto('/projects/1/1')
 		const resp = await projectResponse

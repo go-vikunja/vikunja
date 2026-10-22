@@ -115,6 +115,46 @@ func TestTaskBucketV2(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeProjectViewDoesNotExist))
 	})
 
+	t.Run("task from a foreign project is forbidden", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		// testuser1 owns project 1 but has no access to project 20 (owner 13),
+		// where task 34 lives. The body task id must be authorized, not just
+		// the URL bucket (GHSA-5pg6-m483-7vrg).
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodPut, fmt.Sprintf(path, 3), `{"task_id":34}`, token, "")
+		require.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{
+			"task_id":         34,
+			"project_view_id": 4,
+		})
+		// The task's own bucket placement stays untouched.
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   34,
+			"bucket_id": 5,
+		}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":   34,
+			"done": false,
+		}, false)
+	})
+
+	t.Run("task of another writable project is forbidden", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		// testuser1 can write both project 1 (task 1) and project 10 (bucket 10).
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/projects/10/views/40/buckets/10/tasks", `{"task_id":1}`, token, "")
+		require.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{
+			"task_id":         1,
+			"project_view_id": 40,
+		})
+	})
+
 	t.Run("no write access is forbidden", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)

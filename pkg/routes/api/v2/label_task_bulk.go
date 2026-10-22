@@ -39,7 +39,7 @@ func RegisterLabelTaskBulkRoutes(api huma.API) {
 		Summary:     "Replace all labels on a task",
 		Description: "Sets the task's labels to exactly the provided list: labels not in the list are removed, missing ones are added, unchanged ones are left alone. Requires write access to the task, and you must be able to see every label you attach. Returns the resulting label set.",
 		Method:      http.MethodPut,
-		Path:        "/tasks/{projecttask}/labels/bulk",
+		Path:        "/tasks/{task}/labels/bulk",
 		Tags:        tags,
 	}, labelTasksBulkReplace)
 }
@@ -47,7 +47,7 @@ func RegisterLabelTaskBulkRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterLabelTaskBulkRoutes) }
 
 func labelTasksBulkReplace(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask" doc:"The numeric id of the task whose labels to replace."`
+	TaskID int64 `path:"task" doc:"The numeric id of the task whose labels to replace."`
 	Body   models.LabelTaskBulk
 }) (*singleBody[models.LabelTaskBulk], error) {
 	a, err := authFromCtx(ctx)

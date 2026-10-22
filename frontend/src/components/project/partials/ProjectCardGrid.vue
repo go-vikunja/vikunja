@@ -15,12 +15,12 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
-import type {IProject} from '@/modelTypes/IProject'
+import type {ProjectResponse} from '@/client/queries/projects'
 
 import ProjectCard from './ProjectCard.vue'
 
 const props = withDefaults(defineProps<{
-	projects: IProject[],
+	projects: ProjectResponse[],
 	showArchived?: boolean,
 	itemLimit?: boolean,
 	showEvenNumberOfProjects?: boolean,
@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<{
 const filteredProjects = computed(() => {
 	return props.showArchived
 		? props.projects
-		: props.projects.filter(l => !l.isArchived)
+		: props.projects.filter(project => !project.is_archived)
 })
 </script>
 

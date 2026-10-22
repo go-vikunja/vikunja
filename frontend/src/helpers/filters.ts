@@ -25,6 +25,10 @@ export const ASSIGNEE_FIELDS = [
 	'assignees',
 ]
 
+export const CREATED_BY_FIELDS = [
+	'createdBy',
+]
+
 export const LABEL_FIELDS = [
 	'labels',
 ]
@@ -36,12 +40,14 @@ export const PROJECT_FIELDS = [
 export const AUTOCOMPLETE_FIELDS = [
 	...LABEL_FIELDS,
 	...ASSIGNEE_FIELDS,
+	...CREATED_BY_FIELDS,
 	...PROJECT_FIELDS,
 ]
 
 export const AVAILABLE_FILTER_FIELDS = [
 	...DATE_FIELDS,
 	...ASSIGNEE_FIELDS,
+	...CREATED_BY_FIELDS,
 	...LABEL_FIELDS,
 	...PROJECT_FIELDS,
 	'done',
@@ -76,8 +82,30 @@ export const FILTER_OPERATORS_REGEX = '('+FILTER_OPERATORS.map(op => {
 	return needsWordBoundary ? '\\b' + escaped + '\\b' : escaped
 }).join('|')+')'
 
+// Filterable on the API but not offered for autocompletion.
+const API_ONLY_FILTER_FIELDS = [
+	'id',
+	'title',
+	'description',
+	'project_id',
+	'created_by_id',
+	'repeat_after',
+	'hex_color',
+	'uid',
+	'position',
+	'bucket_id',
+	'index',
+]
+
+const FILTER_QUERY_REGEX = new RegExp('\\b(' + [
+	...AVAILABLE_FILTER_FIELDS,
+	...AVAILABLE_FILTER_FIELDS.map(f => snakeCase(f)),
+	...API_ONLY_FILTER_FIELDS,
+].join('|') + ')\\s*' + FILTER_OPERATORS_REGEX, 'i')
+
+// A bare operator is not enough: search terms like "testing" contain "in".
 export function hasFilterQuery(filter: string): boolean {
-	return FILTER_OPERATORS.find(o => filter.includes(o)) || false
+	return FILTER_QUERY_REGEX.test(filter)
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {

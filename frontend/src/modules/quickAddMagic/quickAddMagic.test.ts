@@ -1,3 +1,6 @@
+import {assert} from 'vitest'
+import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {parseTaskText, PrefixMode} from '.'
@@ -6,14 +9,88 @@ import {parseDate} from './dateParser'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
+import type {IRepeatAfter} from '@/types/IRepeatAfter'
+import {setActivePinia, createPinia} from 'pinia'
+import {useAuthStore} from '@/stores/auth'
+
+function setDefaultDueTime(default_due_time?: string) {
+	const authStore = useAuthStore()
+	queryClient.setQueryData(accountKeys.user(0), {settings: {
+		...authStore.settings,
+		frontend_settings: {
+			...authStore.settings.frontend_settings,
+			default_due_time,
+		},
+	}})
+}
 
 describe('Parse Task Text', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
+		queryClient.clear()
+		setActivePinia(createPinia())
+		useAuthStore()
 	})
 
 	afterEach(() => {
 		vi.useRealTimers()
+	})
+
+	it('uses the configured default due time for date-only parsing', () => {
+		setDefaultDueTime('14:30')
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate('plan this tomorrow')
+
+		expect(result.date).not.toBeNull()
+		expect(result.date?.getHours()).toBe(14)
+		expect(result.date?.getMinutes()).toBe(30)
+	})
+
+	it.each([
+		'Epic test task 2026-10-13',
+		'Epic test task 13.10.2026',
+		'Epic test task oct 13',
+		'Epic test task friday',
+		'Epic test task 17th',
+	])('uses the configured default due time for date-only text "%s"', text => {
+		setDefaultDueTime('23:59')
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate(text)
+
+		expect(result.date).not.toBeNull()
+		expect(result.date?.getHours()).toBe(23)
+		expect(result.date?.getMinutes()).toBe(59)
+	})
+
+	it('prefers an explicit time over the configured default due time', () => {
+		setDefaultDueTime('23:59')
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate('Epic test task 2026-10-13 at 15:00')
+
+		expect(result.date?.getHours()).toBe(15)
+		expect(result.date?.getMinutes()).toBe(0)
+	})
+
+	it('keeps midnight for explicit dates when no default due time is configured', () => {
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate('Epic test task 2026-10-13')
+
+		expect(result.date?.getHours()).toBe(0)
+		expect(result.date?.getMinutes()).toBe(0)
+	})
+
+	it('falls back to the existing default due time when no user value is configured', () => {
+		vi.setSystemTime(new Date(2026, 7, 4, 10, 15))
+
+		const result = parseDate('plan this tomorrow')
+
+		expect(result.date).not.toBeNull()
+		expect(result.date?.getHours()).toBe(12)
+		expect(result.date?.getMinutes()).toBe(0)
 	})
 
 	it('should return text with no intents as is', () => {
@@ -60,7 +137,7 @@ describe('Parse Task Text', () => {
 			expect(result.project).toBeNull()
 			expect(result.priority).toBeNull()
 			expect(result.assignees).toHaveLength(0)
-			expect(result.repeat).toBeNull()
+			expect(result.repeats).toBeNull()
 		})
 
 		it('should skip all parsing when text is wrapped in single quotes', () => {
@@ -72,7 +149,7 @@ describe('Parse Task Text', () => {
 			expect(result.project).toBeNull()
 			expect(result.priority).toBeNull()
 			expect(result.assignees).toHaveLength(0)
-			expect(result.repeat).toBeNull()
+			expect(result.repeats).toBeNull()
 		})
 
 		it('should not skip parsing for unmatched quotes', () => {
@@ -445,6 +522,34 @@ describe('Parse Task Text', () => {
 				expect(result.date).toBeNull()
 			})
 		})
+		describe('Should not parse dates which are part of a date range', () => {
+			const cases = [
+				'31.12.2026 - 01.01.2027 Happy new year',
+				'Happy new year 31.12.2026 - 01.01.2027',
+				'31.12.2026 – 01.01.2027 Happy new year',
+				'12/31/2026 - 01/01/2027 Happy new year',
+				'2026-12-31 - 2027-01-01 Happy new year',
+				'31.12 - 01.01 Happy new year',
+			]
+
+			cases.forEach(c => {
+				it(`should not parse a date from '${c}'`, () => {
+					const result = parseTaskText(c)
+
+					expect(result.text).toBe(c)
+					expect(result.date).toBeNull()
+				})
+			})
+
+			it('should still parse a date after a dash which is not a range', () => {
+				const result = parseTaskText('Meeting - 31.12.2026')
+
+				expect(result.text).toBe('Meeting -')
+				expect(result.date?.getFullYear()).toBe(2026)
+				expect(result.date?.getMonth()).toBe(11)
+				expect(result.date?.getDate()).toBe(31)
+			})
+		})
 		describe('Should still parse dates at text boundaries', () => {
 			const now = new Date()
 			now.setFullYear(2021, 5, 24)
@@ -666,7 +771,8 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date?.getFullYear()}-${date?.getMonth() + 1}-${date?.getDate()}`).toBe(cases[c])
+					assert.isNotNull(date)
+					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`).toBe(cases[c])
 					expect(text.trim()).toBe('Lorem Ipsum')
 				}
 				
@@ -705,6 +811,16 @@ describe('Parse Task Text', () => {
 				'in 4 weeks': '2021-7-22 12:0',
 				'in 1 month': '2021-7-24 12:0',
 				'in 3 months': '2021-9-24 12:0',
+				'in 30 minutes': '2021-6-24 12:30',
+				'in 1 year': '2022-6-24 12:0',
+				'in two weeks': '2021-7-8 12:0',
+				'in Two Weeks': '2021-7-8 12:0',
+				'in three days': '2021-6-27 12:0',
+				'in twelve months': '2022-6-24 12:0',
+				'in a week': '2021-7-1 12:0',
+				'in an hour': '2021-6-24 13:0',
+				'in a year': '2022-6-24 12:0',
+				'Something in two days at 10:00': '2021-6-26 10:0',
 				'Something in 5 days at 10:00': '2021-6-29 10:0',
 				'Something 17th at 10:00': '2021-7-17 10:0',
 				'Something sep 17 at 10:00': '2021-9-17 10:0',
@@ -729,13 +845,15 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe(cases[c])
+					assert.isNotNull(date)
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe(cases[c])
 				})
 			}
 
 			it('should replace the text in title case', () => {
 				const {date, newText} = parseDate('Some task Mar 8th', now)
 
+				assert.isNotNull(date)
 				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
 				expect(newText).toBe('Some task')
 			})
@@ -743,8 +861,22 @@ describe('Parse Task Text', () => {
 			it('should replace the text in lowercase', () => {
 				const {date, newText} = parseDate('Some task mar 8th', now)
 
+				assert.isNotNull(date)
 				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
 				expect(newText).toBe('Some task')
+			})
+
+			it('should remove a spelled out relative date from the text', () => {
+				const {date, newText} = parseDate('Call mom in two weeks', now)
+
+				assert.isNotNull(date)
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`).toBe('2021-7-8')
+				expect(newText).toBe('Call mom')
+			})
+
+			it('should not parse a relative date from inside a word', () => {
+				expect(parseDate('Meet in a weekend', now).date).toBeNull()
+				expect(parseDate('Check plugin 2 days', now).date).toBeNull()
 			})
 		})
 	})
@@ -930,58 +1062,59 @@ describe('Parse Task Text', () => {
 	})
 
 	describe('Recurring Dates', () => {
-		// Test cases now expect structured repeat objects {freq, interval}
 		const cases = {
-			'every 1 hour': {freq: 'hourly', interval: 1},
-			'every hour': {freq: 'hourly', interval: 1},
-			'every 5 hours': {freq: 'hourly', interval: 5},
-			'every 12 hours': {freq: 'hourly', interval: 12},
-			'every day': {freq: 'daily', interval: 1},
-			'every 1 day': {freq: 'daily', interval: 1},
-			'every 2 days': {freq: 'daily', interval: 2},
-			'every week': {freq: 'weekly', interval: 1},
-			'every 1 week': {freq: 'weekly', interval: 1},
-			'every 3 weeks': {freq: 'weekly', interval: 3},
-			'every month': {freq: 'monthly', interval: 1},
-			'every 1 month': {freq: 'monthly', interval: 1},
-			'every 2 months': {freq: 'monthly', interval: 2},
-			'every year': {freq: 'yearly', interval: 1},
-			'every 1 year': {freq: 'yearly', interval: 1},
-			'every 4 years': {freq: 'yearly', interval: 4},
-			'every one hour': {freq: 'hourly', interval: 1},
-			'every two hours': {freq: 'hourly', interval: 2},
-			'every three hours': {freq: 'hourly', interval: 3},
-			'every four hours': {freq: 'hourly', interval: 4},
-			'every five hours': {freq: 'hourly', interval: 5},
-			'every six hours': {freq: 'hourly', interval: 6},
-			'every seven hours': {freq: 'hourly', interval: 7},
-			'every eight hours': {freq: 'hourly', interval: 8},
-			'every nine hours': {freq: 'hourly', interval: 9},
-			'every ten hours': {freq: 'hourly', interval: 10},
-			'annually': {freq: 'yearly', interval: 1},
-			'biannually': {freq: 'monthly', interval: 6},
-			'semiannually': {freq: 'monthly', interval: 6},
-			'biennially': {freq: 'yearly', interval: 2},
-			'daily': {freq: 'daily', interval: 1},
-			'hourly': {freq: 'hourly', interval: 1},
-			'monthly': {freq: 'monthly', interval: 1},
-			'weekly': {freq: 'weekly', interval: 1},
-			'yearly': {freq: 'yearly', interval: 1},
-		} as Record<string, {freq: string, interval: number}>
+			'every 1 hour': {type: 'hours', amount: 1},
+			'every hour': {type: 'hours', amount: 1},
+			'every 5 hours': {type: 'hours', amount: 5},
+			'every 12 hours': {type: 'hours', amount: 12},
+			'every day': {type: 'days', amount: 1},
+			'every 1 day': {type: 'days', amount: 1},
+			'every 2 days': {type: 'days', amount: 2},
+			'every week': {type: 'weeks', amount: 1},
+			'every 1 week': {type: 'weeks', amount: 1},
+			'every 3 weeks': {type: 'weeks', amount: 3},
+			'every month': {type: 'months', amount: 1},
+			'every 1 month': {type: 'months', amount: 1},
+			'every 2 months': {type: 'months', amount: 2},
+			'every year': {type: 'years', amount: 1},
+			'every 1 year': {type: 'years', amount: 1},
+			'every 4 years': {type: 'years', amount: 4},
+			'every one hour': {type: 'hours', amount: 1}, // maybe unnesecary but better to include it for completeness sake
+			'every two hours': {type: 'hours', amount: 2},
+			'every three hours': {type: 'hours', amount: 3},
+			'every four hours': {type: 'hours', amount: 4},
+			'every five hours': {type: 'hours', amount: 5},
+			'every six hours': {type: 'hours', amount: 6},
+			'every seven hours': {type: 'hours', amount: 7},
+			'every eight hours': {type: 'hours', amount: 8},
+			'every nine hours': {type: 'hours', amount: 9},
+			'every ten hours': {type: 'hours', amount: 10},
+			'annually': {type: 'years', amount: 1},
+			'biannually': {type: 'months', amount: 6},
+			'semiannually': {type: 'months', amount: 6},
+			'biennially': {type: 'years', amount: 2},
+			'daily': {type: 'days', amount: 1},
+			'hourly': {type: 'hours', amount: 1},
+			'monthly': {type: 'months', amount: 1},
+			'weekly': {type: 'weeks', amount: 1},
+			'yearly': {type: 'years', amount: 1},
+		} as Record<string, IRepeatAfter>
 
-		for (const c in cases) {
-			it(`should parse ${c} as recurring repeat {freq: ${cases[c].freq}, interval: ${cases[c].interval}}`, () => {
+		for (const c of Object.keys(cases)) {
+			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type}`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c}`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeat).toEqual(cases[c])
+				expect(result?.repeats?.type).toBe(cases[c].type)
+				expect(result?.repeats?.amount).toBe(cases[c].amount)
 			})
-
-			it(`should parse ${c} as recurring repeat at 11:42`, () => {
+		 	
+			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type} at 11:42`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c} at 11:42`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeat).toEqual(cases[c])
+				expect(result?.repeats?.type).toBe(cases[c].type)
+				expect(result?.repeats?.amount).toBe(cases[c].amount)
 				const now = new Date()
 				expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`)
 				expect(`${result?.date?.getHours()}:${result?.date?.getMinutes()}`).toBe('11:42')
@@ -1005,7 +1138,7 @@ describe('Parse Task Text', () => {
 				const result = parseTaskText(`Lorem Ipsum word${c}notword`)
 
 				expect(result.text).toBe(`Lorem Ipsum word${c}notword`)
-				expect(result?.repeat).toBeNull()
+				expect(result?.repeats).toBeNull()
 			})
 		})
 	})

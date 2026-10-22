@@ -265,6 +265,16 @@ func TestHumaTeam(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"is_public":true`)
 		})
+		t.Run("Ignores client-set external id", func(t *testing.T) {
+			h := handlerFor(&testuser1)
+			rec, err := h.testCreateWithUser(nil, nil, `{"name":"LoremExternal","external_id":"attacker-set"}`)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusCreated, rec.Code)
+			assert.Contains(t, rec.Body.String(), `"external_id":""`)
+			db.AssertMissing(t, "teams", map[string]interface{}{
+				"external_id": "attacker-set",
+			})
+		})
 		// v1's TestTeam_Create/"empty name" -> ErrTeamNameCannotBeEmpty. Name has
 		// minLength:1, so Huma rejects an empty name with 422 before the model is
 		// touched.
@@ -290,6 +300,14 @@ func TestHumaTeam(t *testing.T) {
 				"id":   1,
 				"name": "SomethingNew",
 			}, false)
+		})
+		t.Run("Ignores client-set external id", func(t *testing.T) {
+			h := handlerFor(&testuser1)
+			_, err := h.testUpdateWithUser(nil, map[string]string{"team": "1"}, `{"name":"SomethingNew","external_id":"attacker-set"}`)
+			require.NoError(t, err)
+			db.AssertMissing(t, "teams", map[string]interface{}{
+				"external_id": "attacker-set",
+			})
 		})
 		// v1's TestTeam_Update/"empty name" -> ErrTeamNameCannotBeEmpty, this time
 		// on an UPDATE (PUT) to an existing team the user can admin. Huma's

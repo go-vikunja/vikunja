@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -132,6 +133,50 @@ func TestSetUserStatusAsAdmin_Events(t *testing.T) {
 		events.DispatchPending(context.Background(), s)
 
 		assert.Zero(t, events.CountDispatchedEvents((&AdminUserStatusChangedEvent{}).Name()))
+	})
+}
+
+// GHSA-4hv6-xc92-j86g
+func TestSetUserStatusAsAdmin_RevokesSessions(t *testing.T) {
+	doer := &user.User{ID: 1}
+
+	t.Run("a non-active status deletes the user's sessions", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := SetUserStatusAsAdmin(s, doer, 2, user.StatusDisabled)
+		require.NoError(t, err)
+		assert.Zero(t, events.CountDispatchedEvents((&SessionsRevokedEvent{}).Name()))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		db.AssertMissing(t, "sessions", map[string]interface{}{"user_id": 2})
+		db.AssertExists(t, "sessions", map[string]interface{}{"user_id": 1}, false)
+		assert.Equal(t, &SessionsRevokedEvent{UserID: 2}, singleDispatchedEvent[*SessionsRevokedEvent](t))
+	})
+
+	t.Run("activating keeps the user's sessions", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		const sid = "550e8400-e29b-41d4-a716-446655440017"
+		_, err := s.Insert(&Session{
+			ID:         sid,
+			UserID:     17,
+			TokenHash:  "disabled",
+			LastActive: time.Now(),
+		})
+		require.NoError(t, err)
+
+		_, err = SetUserStatusAsAdmin(s, doer, 17, user.StatusActive)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		db.AssertExists(t, "sessions", map[string]interface{}{"id": sid}, false)
+		assert.Zero(t, events.CountDispatchedEvents((&SessionsRevokedEvent{}).Name()))
 	})
 }
 
@@ -325,5 +370,74 @@ func TestCreateUserAsAdmin_Events(t *testing.T) {
 		events.CleanupPending(s)
 
 		assert.Zero(t, events.CountDispatchedEvents((&AdminUserCreatedEvent{}).Name()))
+	})
+}
+
+func TestListUsersAsAdmin_RelevanceOrder(t *testing.T) {
+	adminActionsSetup(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	for i := range 21 {
+		_, err := s.Insert(&user.User{
+			Username: fmt.Sprintf("zz-relq-%02d", i),
+			Email:    fmt.Sprintf("relevance-substring-%02d@example.com", i),
+		})
+		require.NoError(t, err)
+	}
+	prefix := &user.User{
+		Username: "relq-prefix",
+		Email:    "relevance-prefix@example.com",
+	}
+	_, err := s.Insert(prefix)
+	require.NoError(t, err)
+	exact := &user.User{
+		Username: "relq",
+		Email:    "relevance-exact@example.com",
+	}
+	_, err = s.Insert(exact)
+	require.NoError(t, err)
+
+	users, total, err := ListUsersAsAdmin(s, &user.User{ID: 1}, "relq", 1, 20)
+	require.NoError(t, err)
+	assert.EqualValues(t, 23, total)
+	require.Len(t, users, 20)
+	assert.Equal(t, exact.ID, users[0].ID)
+	assert.Equal(t, prefix.ID, users[1].ID)
+	assert.Less(t, users[2].ID, users[3].ID)
+}
+
+func TestListUsersAsAdmin_CaseInsensitive(t *testing.T) {
+	adminActionsSetup(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	mixed := &user.User{
+		Username: "MixedCaseAdminSearch",
+		Email:    "Mixed.Case@Example.com",
+	}
+	_, err := s.Insert(mixed)
+	require.NoError(t, err)
+
+	t.Run("upper case query finds lower case username", func(t *testing.T) {
+		users, total, err := ListUsersAsAdmin(s, &user.User{ID: 1}, "USER10", 1, 20)
+		require.NoError(t, err)
+		assert.EqualValues(t, 1, total)
+		require.Len(t, users, 1)
+		assert.Equal(t, "user10", users[0].Username)
+	})
+	t.Run("lower case query finds mixed case username", func(t *testing.T) {
+		users, total, err := ListUsersAsAdmin(s, &user.User{ID: 1}, "mixedcaseadmin", 1, 20)
+		require.NoError(t, err)
+		assert.EqualValues(t, 1, total)
+		require.Len(t, users, 1)
+		assert.Equal(t, mixed.ID, users[0].ID)
+	})
+	t.Run("lower case query finds mixed case email", func(t *testing.T) {
+		users, total, err := ListUsersAsAdmin(s, &user.User{ID: 1}, "mixed.case@example", 1, 20)
+		require.NoError(t, err)
+		assert.EqualValues(t, 1, total)
+		require.Len(t, users, 1)
+		assert.Equal(t, mixed.ID, users[0].ID)
 	})
 }
