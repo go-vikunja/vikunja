@@ -38,17 +38,36 @@ import (
 
 var pubsub *gochannel.GoChannel
 
-// activeHandlers tracks in-flight event handler goroutines so the test
-// endpoint can wait for them to finish before truncating tables.
-var activeHandlers sync.WaitGroup
+type handlerTracker struct {
+	idle    *sync.Cond
+	pending int
+}
 
-// WaitForPendingHandlers blocks until all currently in-flight event handler
-// goroutines have completed (including retries). This is intended for the
-// testing endpoint to avoid connection starvation: async handlers from the
-// previous test can hold SQLite connections, starving the next test's seed
-// request.
+var activeHandlers = handlerTracker{idle: sync.NewCond(&sync.Mutex{})}
+
+func (h *handlerTracker) start() {
+	h.idle.L.Lock()
+	h.pending++
+	h.idle.L.Unlock()
+}
+
+func (h *handlerTracker) finish() {
+	h.idle.L.Lock()
+	defer h.idle.L.Unlock()
+	h.pending--
+	if h.pending == 0 {
+		h.idle.Broadcast()
+	}
+}
+
+// WaitForPendingHandlers drains in-flight handlers before test fixtures are reset.
 func WaitForPendingHandlers() {
-	activeHandlers.Wait()
+	activeHandlers.idle.L.Lock()
+	defer activeHandlers.idle.L.Unlock()
+	// A redelivery may start while a drain waiter is waking up.
+	for activeHandlers.pending > 0 {
+		activeHandlers.idle.Wait()
+	}
 }
 
 // Event represents the event interface used by all events
@@ -124,13 +143,11 @@ func InitEvents() (err error) {
 		return nil
 	})
 
-	// handlerTracker is a middleware that tracks in-flight handlers via the
-	// activeHandlers WaitGroup. It wraps the entire processing chain
-	// (including retries) so WaitForPendingHandlers() can drain all work.
+	// Include retries in the drain.
 	handlerTracker := func(h message.HandlerFunc) message.HandlerFunc {
 		return func(msg *message.Message) ([]*message.Message, error) {
-			activeHandlers.Add(1)
-			defer activeHandlers.Done()
+			activeHandlers.start()
+			defer activeHandlers.finish()
 			return h(msg)
 		}
 	}
@@ -186,8 +203,8 @@ func InitEventsForTesting(ctx context.Context) (<-chan struct{}, error) {
 
 	handlerTracker := func(h message.HandlerFunc) message.HandlerFunc {
 		return func(msg *message.Message) ([]*message.Message, error) {
-			activeHandlers.Add(1)
-			defer activeHandlers.Done()
+			activeHandlers.start()
+			defer activeHandlers.finish()
 			return h(msg)
 		}
 	}
