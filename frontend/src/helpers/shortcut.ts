@@ -29,45 +29,51 @@ export function parseKey(keyStr: string): ParsedKey {
 }
 
 export function matchesKey(event: KeyboardEvent, parsed: ParsedKey): boolean {
-	if (event.code !== parsed.code) return false
+	const shortcut = eventToShortcutString(event)
+	if (!shortcut) return false
+	const actual = parseKey(shortcut)
+	if (actual.code !== parsed.code) return false
 
 	const isMac = isAppleDevice()
 
 	const wantCtrl = parsed.ctrl || (!isMac && parsed.mod)
 	const wantMeta = parsed.meta || (isMac && parsed.mod)
 
-	if (event.ctrlKey !== wantCtrl) return false
-	if (event.altKey !== parsed.alt) return false
-	if (event.shiftKey !== parsed.shift) return false
-	if (event.metaKey !== wantMeta) return false
+	if (actual.ctrl !== wantCtrl) return false
+	if (actual.alt !== parsed.alt) return false
+	if (actual.shift !== parsed.shift) return false
+	if (actual.meta !== wantMeta) return false
 
 	return true
 }
 
-/**
- * Convert a KeyboardEvent to a normalized shortcut string (event.code-based).
- * Replacement for eventToHotkeyString from @github/hotkey.
- *
- * Examples:
- *   Ctrl+K press -> 'Control+KeyK'
- *   Cmd+K press  -> 'Meta+KeyK'
- *   plain T      -> 'KeyT'
- *   Shift+Delete -> 'Shift+Delete'
- */
 export function eventToShortcutString(event: KeyboardEvent): string {
-	// Skip modifier-only keys
-	if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key)) {
+	if (event.isComposing || event.keyCode === 229 || event.getModifierState('AltGraph')) return ''
+	if (['', 'Dead', 'Process', 'Compose', 'Unidentified', 'Control', 'Alt', 'Shift', 'Meta', 'AltGraph'].includes(event.key)) {
 		return ''
+	}
+
+	let key = event.key
+	if (/^[a-z]$/i.test(key)) {
+		key = `Key${key.toUpperCase()}`
+	} else if (/^\p{L}$/u.test(key) && !/\p{Script=Latin}/u.test(key) && /^Key[A-Z]$/.test(event.code)) {
+		// Preserve letter shortcuts when switching to a non-Latin input layout.
+		key = event.code
+	} else if (key === '.') {
+		key = 'Period'
+	} else if (key === '/') {
+		key = 'Slash'
 	}
 
 	const parts: string[] = []
 
 	if (event.ctrlKey) parts.push('Control')
 	if (event.altKey) parts.push('Alt')
-	if (event.shiftKey) parts.push('Shift')
+	// Punctuation includes the Shift used to produce it (e.g. Danish Shift++ → ?).
+	if (event.shiftKey && !/^[\p{P}\p{S}]$/u.test(event.key)) parts.push('Shift')
 	if (event.metaKey) parts.push('Meta')
 
-	parts.push(event.code)
+	parts.push(key)
 
 	return parts.join('+')
 }
