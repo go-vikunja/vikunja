@@ -1428,6 +1428,7 @@
     "task": {
       "title": "Task Page",
       "done": "Mark task done / undone",
+      "doneAndBack": "Mark task done and go back",
       "assign": "Assign this task to a user",
       "labels": "Add labels to this task",
       "dueDate": "Change the due date of this task",

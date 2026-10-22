@@ -15,7 +15,7 @@
 			<BaseButton
 				v-if="!isModal"
 				class="back-button mbs-2"
-				@click="lastProject ? router.back() : router.push(projectRoute)"
+				@click="goBack()"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -1162,6 +1162,7 @@ useTaskDetailShortcuts({
 	task: () => task.value,
 	taskTitle: () => taskTitle.value,
 	onSave: saveTask,
+	onDoneAndBack: markDoneAndGoBack,
 })
 
 const showDeleteModal = ref(false)
@@ -1186,6 +1187,29 @@ async function toggleTaskDone() {
 		newTask,
 		toggleTaskDone,
 	)
+}
+
+async function markDoneAndGoBack() {
+	if (!canWrite.value || task.value.done) {
+		return
+	}
+
+	// Keydown handlers bypass Vue's errorHandler, so surface save errors here.
+	try {
+		await toggleTaskDone()
+	} catch (e) {
+		error(e)
+		return
+	}
+	goBack()
+}
+
+function goBack() {
+	if (lastProject.value) {
+		router.back()
+		return
+	}
+	router.push(projectRoute.value)
 }
 
 async function changeProject(project: ProjectResponse | null) {
