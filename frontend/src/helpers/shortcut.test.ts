@@ -1,12 +1,14 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 
+import {SHORTCUTS} from '@/constants/shortcuts'
 import * as appleDevice from '@/helpers/isAppleDevice'
 import {parseKey, matchesKey, eventToShortcutString, isFormField, install, uninstall, shortcutBindingToDisplay} from './shortcut'
 
 // Helper to create a partial KeyboardEvent with sensible defaults
 function makeEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
 	return {
-		key: '',
+		key: overrides.code?.startsWith('Key') ? overrides.code.slice(3).toLowerCase() : overrides.code ?? '',
+		getModifierState: () => false,
 		code: '',
 		ctrlKey: false,
 		altKey: false,
@@ -267,7 +269,7 @@ describe('eventToShortcutString', () => {
 
 	it('should handle Slash with Shift (question mark)', () => {
 		const event = makeEvent({key: '?', code: 'Slash', shiftKey: true})
-		expect(eventToShortcutString(event)).toBe('Shift+Slash')
+		expect(eventToShortcutString(event)).toBe('?')
 	})
 
 	it('should produce correct code on non-Latin layouts', () => {
@@ -289,6 +291,178 @@ describe('eventToShortcutString', () => {
 		expect(eventToShortcutString(event)).toBe('Control+Alt+Shift+Meta+KeyA')
 	})
 })
+
+describe('keyboard layouts', () => {
+	const cases: [string, KeyboardEventInit, string, string][] = [
+		['AZERTY A', {
+			key: 'a',
+			code: 'KeyQ',
+		}, 'KeyA', 'KeyQ'],
+		['Dvorak T', {
+			key: 't',
+			code: 'KeyK',
+		}, 'KeyT', 'KeyK'],
+		['Dvorak Ctrl+K', {
+			key: 'k',
+			code: 'KeyV',
+			ctrlKey: true,
+		}, 'Control+KeyK', 'Control+KeyV'],
+		['AZERTY Cmd+A', {
+			key: 'a',
+			code: 'KeyQ',
+			metaKey: true,
+		}, 'Meta+KeyA', 'Meta+KeyQ'],
+		['Russian Ctrl+K', {
+			key: 'л',
+			code: 'KeyK',
+			ctrlKey: true,
+		}, 'Control+KeyK', 'KeyK'],
+		['Greek T', {
+			key: 'τ',
+			code: 'KeyT',
+		}, 'KeyT', 'KeyR'],
+		['Arabic T', {
+			key: 'ف',
+			code: 'KeyT',
+		}, 'KeyT', 'KeyR'],
+		['Danish question mark', {
+			key: '?',
+			code: 'Minus',
+			shiftKey: true,
+		}, '?', 'Shift+Slash'],
+		['US question mark', {
+			key: '?',
+			code: 'Slash',
+			shiftKey: true,
+		}, '?', 'Shift+Slash'],
+		['unshifted question mark', {
+			key: '?',
+			code: 'KeyM',
+		}, '?', 'KeyM'],
+		['AZERTY period', {
+			key: '.',
+			code: 'Semicolon',
+			shiftKey: true,
+		}, 'Period', 'Semicolon'],
+		['Dvorak Ctrl+period', {
+			key: '.',
+			code: 'KeyE',
+			ctrlKey: true,
+		}, 'Control+Period', 'Control+KeyE'],
+		['Caps Lock', {
+			key: 'T',
+			code: 'KeyT',
+		}, 'KeyT', 'Shift+KeyT'],
+		['explicit Shift', {
+			key: 'R',
+			code: 'KeyO',
+			shiftKey: true,
+		}, 'Shift+KeyR', 'KeyR'],
+	]
+
+	it.each(cases)('%s matches the same shortcut through both entry points', (_, init, binding, wrongBinding) => {
+		const event = new KeyboardEvent('keydown', init)
+		expect(eventToShortcutString(event)).toBe(binding)
+		expect(matchesKey(event, parseKey(binding))).toBe(true)
+		expect(matchesKey(event, parseKey(wrongBinding))).toBe(false)
+	})
+
+	it.each(['å', 'é', 'ø', ';', '_'])('does not fall back to the physical letter key for %s', key => {
+		const event = new KeyboardEvent('keydown', {
+			key,
+			code: 'KeyT',
+		})
+		expect(matchesKey(event, parseKey('KeyT'))).toBe(false)
+		expect(eventToShortcutString(event)).not.toBe('KeyT')
+	})
+
+	it('does not map a non-Latin letter on a punctuation key to that punctuation', () => {
+		const event = new KeyboardEvent('keydown', {
+			key: 'ю',
+			code: 'Period',
+		})
+		expect(matchesKey(event, parseKey('Period'))).toBe(false)
+	})
+
+	it.each(['Dead', 'Process', 'Unidentified', 'Compose', ''])('ignores %s events', key => {
+		const event = new KeyboardEvent('keydown', {
+			key,
+			code: 'KeyT',
+		})
+		expect(eventToShortcutString(event)).toBe('')
+		expect(matchesKey(event, parseKey('KeyT'))).toBe(false)
+	})
+
+	it('ignores IME composition in imperative handlers too', () => {
+		const event = new KeyboardEvent('keydown', {
+			key: 'k',
+			code: 'KeyK',
+			ctrlKey: true,
+			isComposing: true,
+		})
+		expect(eventToShortcutString(event)).toBe('')
+		expect(matchesKey(event, parseKey('Control+KeyK'))).toBe(false)
+	})
+
+	it('ignores legacy IME keydown events before isComposing is set', () => {
+		const event = makeEvent({
+			key: 'k',
+			code: 'KeyK',
+			ctrlKey: true,
+			keyCode: 229,
+		})
+		expect(eventToShortcutString(event)).toBe('')
+	})
+
+	it('does not interpret AltGr text entry as a shortcut', () => {
+		const event = makeEvent({
+			key: 'л',
+			code: 'KeyK',
+			ctrlKey: true,
+			altKey: true,
+			getModifierState: modifier => modifier === 'AltGraph',
+		})
+		expect(eventToShortcutString(event)).toBe('')
+		expect(matchesKey(event, parseKey('Control+Alt+KeyK'))).toBe(false)
+	})
+
+	it('only opens help for a question mark without extra command modifiers', () => {
+		const binding = parseKey(SHORTCUTS.showKeyboardShortcuts)
+		expect(matchesKey(new KeyboardEvent('keydown', {
+			key: '?',
+			code: 'Minus',
+			shiftKey: true,
+		}), binding)).toBe(true)
+		for (const init of [
+			{
+				key: '_',
+				code: 'Slash',
+				shiftKey: true,
+			},
+			{
+				key: '?',
+				code: 'Minus',
+				shiftKey: true,
+				ctrlKey: true,
+			},
+			{
+				key: '?',
+				code: 'Minus',
+				shiftKey: true,
+				altKey: true,
+			},
+			{
+				key: '?',
+				code: 'Minus',
+				shiftKey: true,
+				metaKey: true,
+			},
+		]) {
+			expect(matchesKey(new KeyboardEvent('keydown', init), binding)).toBe(false)
+		}
+	})
+})
+
 
 describe('shortcutBindingToDisplay', () => {
 	it('should convert a simple key binding to display keys', () => {
@@ -399,7 +573,7 @@ describe('isFormField', () => {
 function fireKeydown(code: string, mods: Partial<Pick<KeyboardEvent, 'ctrlKey' | 'altKey' | 'shiftKey' | 'metaKey'>> = {}) {
 	const event = new KeyboardEvent('keydown', {
 		code,
-		key: code,
+		key: code.startsWith('Key') ? code.slice(3).toLowerCase() : code,
 		bubbles: true,
 		cancelable: true,
 		...mods,
@@ -426,6 +600,22 @@ describe('install / uninstall (sequence handling)', () => {
 	afterEach(() => {
 		uninstall(elA)
 		uninstall(elB)
+	})
+
+	it.each([
+		['Dvorak', 'g', 'KeyU', 'o', 'KeyS'],
+		['Russian', 'п', 'KeyG', 'щ', 'KeyO'],
+	])('completes navigation sequences on %s', (_, key1, code1, key2, code2) => {
+		install(elA, 'KeyG KeyO')
+		install(elB, 'KeyO')
+		for (const [key, code] of [[key1, code1], [key2, code2]]) {
+			document.dispatchEvent(new KeyboardEvent('keydown', {
+				key,
+				code,
+			}))
+		}
+		expect(clickA).toHaveBeenCalledTimes(1)
+		expect(clickB).not.toHaveBeenCalled()
 	})
 
 	it('should not fire single-key shortcut while a sequence is in progress', () => {
