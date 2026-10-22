@@ -37,7 +37,8 @@ import (
 type TimeEntry struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"timeentry" readOnly:"true" doc:"The unique, numeric id of this time entry."`
 
-	UserID int64 `xorm:"bigint not null INDEX" json:"user_id" readOnly:"true" doc:"The id of the user who logged this time entry. Set by the server."`
+	UserID int64      `xorm:"bigint not null INDEX" json:"-"`
+	User   *user.User `xorm:"-" json:"user" readOnly:"true" doc:"The user who logged this time entry. Set by the server."`
 
 	TaskID    int64 `xorm:"bigint null INDEX" json:"task_id" doc:"The task this entry is attached to. Exactly one of task_id / project_id must be set."`
 	ProjectID int64 `xorm:"bigint null INDEX" json:"project_id" doc:"The project this entry is attached to directly. Exactly one of task_id / project_id must be set."`
@@ -92,6 +93,9 @@ func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	if err = addUsersToTimeEntries(s, []*TimeEntry{te}); err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &TimeEntryCreatedEvent{TimeEntry: te, Doer: doer})
 	return nil
 }
@@ -118,6 +122,9 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) 
 
 	doer, err := user.GetUserByID(s, userID)
 	if err != nil {
+		return nil, err
+	}
+	if err := addUsersToTimeEntries(s, []*TimeEntry{running}); err != nil {
 		return nil, err
 	}
 	events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: running, Doer: doer})
@@ -195,7 +202,29 @@ func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 		OrderBy("start_time ASC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&entries)
-	return entries, len(entries), total, err
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if err = addUsersToTimeEntries(s, entries); err != nil {
+		return nil, 0, 0, err
+	}
+	return entries, len(entries), total, nil
+}
+
+func addUsersToTimeEntries(s *xorm.Session, entries []*TimeEntry) error {
+	userIDs := make([]int64, 0, len(entries))
+	for _, entry := range entries {
+		userIDs = append(userIDs, entry.UserID)
+	}
+	users, err := user.GetUsersByIDs(s, userIDs)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		entry.User = users[entry.UserID]
+	}
+	return nil
 }
 
 func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
@@ -234,6 +263,9 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	if err = addUsersToTimeEntries(s, []*TimeEntry{te}); err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: te, Doer: doer})
 	return nil
 }
@@ -241,6 +273,10 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 func (te *TimeEntry) Delete(s *xorm.Session, a web.Auth) (err error) {
 	entry, err := getTimeEntryByID(s, te.ID)
 	if err != nil {
+		return err
+	}
+	// the websocket listener routes the event by entry.User
+	if err = addUsersToTimeEntries(s, []*TimeEntry{entry}); err != nil {
 		return err
 	}
 	if _, err = s.Where("id = ?", te.ID).Delete(&TimeEntry{}); err != nil {
@@ -315,6 +351,11 @@ func (te *TimeEntry) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	entry, can, maxPerm, err := te.canDoTimeEntry(s, a, true)
 	if err != nil {
 		return false, maxPerm, err
+	}
+	if can {
+		if err = addUsersToTimeEntries(s, []*TimeEntry{entry}); err != nil {
+			return false, maxPerm, err
+		}
 	}
 	*te = *entry // ReadOne is a no-op; populate te here
 	return can, maxPerm, nil
