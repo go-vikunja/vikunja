@@ -71,7 +71,6 @@ type taskUser struct {
 
 const dbTimeFormat = `2006-01-02 15:04:05`
 
-//nolint:gocyclo
 func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (taskUsers []*taskUser, err error) {
 	if len(taskIDs) == 0 {
 		return
@@ -84,130 +83,10 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		return
 	}
 
-	projectIDs := []int64{}
-	for _, task := range taskMap {
-		projectIDs = append(projectIDs, task.ProjectID)
-	}
-	projects := make(map[int64]*Project)
-	err = s.In("id", projectIDs).Find(&projects)
-	if err != nil {
-		return
-	}
-
-	// user_id -> project_id -> has read access
-	userPermissionOnProject := make(map[int64]map[int64]bool)
-
-	// First hit per (task, user) wins, so assignees must be appended first.
-	seen := make(map[int64]map[int64]struct{})
-	appendUser := func(taskID int64, u *user.User, isAssignee bool) (err error) {
-		if u == nil {
-			return
-		}
-		task, hasTask := taskMap[taskID]
-		if !hasTask {
-			return
-		}
-		if seen[taskID] == nil {
-			seen[taskID] = make(map[int64]struct{})
-		}
-		if _, exists := seen[taskID][u.ID]; exists {
-			return
-		}
-		seen[taskID][u.ID] = struct{}{}
-
-		userProjects, has := userPermissionOnProject[u.ID]
-		if !has {
-			userPermissionOnProject[u.ID] = make(map[int64]bool)
-			userProjects = userPermissionOnProject[u.ID]
-		}
-		_, projectExists := userProjects[task.ProjectID]
-		if !projectExists {
-			p, exists := projects[task.ProjectID]
-			if !exists {
-				return
-			}
-
-			userProjects[task.ProjectID] = p.isOwner(u)
-
-			if !p.isOwner(u) {
-				userProjects[task.ProjectID], err = p.checkPermission(s, u, PermissionRead, PermissionWrite, PermissionAdmin)
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		if !userProjects[task.ProjectID] {
-			return
-		}
-
-		taskUsers = append(taskUsers, &taskUser{Task: task, User: u, IsAssignee: isAssignee})
-
-		return
-	}
-
-	type userWithTask struct {
-		TaskID    int64
-		user.User `xorm:"extends"`
-	}
-
 	notBot := builder.Or(
 		builder.IsNull{"users.bot_owner_id"},
 		builder.Eq{"users.bot_owner_id": 0},
 	)
-
-	conditions := []builder.Cond{
-		builder.In("tasks.id", taskIDs),
-		builder.Eq{"users.status": user.StatusActive},
-		notBot,
-		taskNotDeletedCond("tasks"),
-	}
-	if cond != nil {
-		conditions = append(conditions, cond)
-	}
-
-	assigneeConds := []builder.Cond{
-		builder.In("task_assignees.task_id", taskIDs),
-		builder.Eq{"users.status": user.StatusActive},
-		notBot,
-	}
-	if cond != nil {
-		assigneeConds = append(assigneeConds, cond)
-	}
-
-	assignees := []*TaskAssigneeWithUser{}
-	err = s.Table("task_assignees").
-		Select("DISTINCT task_assignees.task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.overdue_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
-		Join("INNER", "users", "task_assignees.user_id = users.id").
-		Where(builder.And(assigneeConds...)).
-		Find(&assignees)
-	if err != nil {
-		return
-	}
-
-	for i := range assignees {
-		err = appendUser(assignees[i].TaskID, &assignees[i].User, true)
-		if err != nil {
-			return
-		}
-	}
-
-	creators := []*userWithTask{}
-	err = s.Table("tasks").
-		Select("DISTINCT tasks.id AS task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.overdue_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
-		Join("INNER", "users", "tasks.created_by_id = users.id").
-		Where(builder.And(conditions...)).
-		Find(&creators)
-	if err != nil {
-		return
-	}
-
-	for _, creator := range creators {
-		err = appendUser(creator.TaskID, &creator.User, false)
-		if err != nil {
-			return
-		}
-	}
 
 	subscriptions, err := GetSubscriptionsForEntities(s, SubscriptionEntityTask, taskIDs)
 	if err != nil {
@@ -239,16 +118,31 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		return nil, err
 	}
 
+	assigneeRows := []*TaskAssginee{}
+	err = s.In("task_id", taskIDs).Find(&assigneeRows)
+	if err != nil {
+		return nil, err
+	}
+	assignees := make(map[int64]map[int64]struct{})
+	for _, a := range assigneeRows {
+		if assignees[a.TaskID] == nil {
+			assignees[a.TaskID] = make(map[int64]struct{})
+		}
+		assignees[a.TaskID][a.UserID] = struct{}{}
+	}
+
 	for taskID, subs := range subscriptions {
 		for _, sub := range subs {
 			u, has := subscribers[sub.UserID]
 			if !has {
 				continue
 			}
-			err = appendUser(taskID, u, false)
-			if err != nil {
-				return
+			task, has := taskMap[taskID]
+			if !has {
+				continue
 			}
+			_, isAssignee := assignees[taskID][sub.UserID]
+			taskUsers = append(taskUsers, &taskUser{Task: task, User: u, IsAssignee: isAssignee})
 		}
 	}
 
