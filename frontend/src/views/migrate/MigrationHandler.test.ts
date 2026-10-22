@@ -17,6 +17,17 @@ const sdk = vi.hoisted(() => ({
 	migrationTodoistMigrate: vi.fn(),
 }))
 
+const router = vi.hoisted(() => ({
+	route: {query: {} as Record<string, string>, hash: ''},
+	replace: vi.fn(),
+}))
+
+vi.mock('vue-router', async importOriginal => ({
+	...await importOriginal<typeof import('vue-router')>(),
+	useRoute: () => router.route,
+	useRouter: () => ({replace: router.replace}),
+}))
+
 vi.mock('@/client/generated', async importOriginal => ({
 	...await importOriginal<typeof import('@/client/generated')>(),
 	...sdk,
@@ -40,6 +51,9 @@ describe('MigrationHandler', () => {
 		setActivePinia(createPinia())
 		queryClient.clear()
 		vi.mocked(error).mockClear()
+		router.route = {query: {}, hash: ''}
+		router.replace.mockReset().mockResolvedValue(undefined)
+		sdk.migrationTodoistMigrate.mockClear()
 	})
 
 	afterEach(() => {
@@ -105,5 +119,27 @@ describe('MigrationHandler', () => {
 		expect(sdk.migrationTodoistMigrate).toHaveBeenCalledWith(expect.objectContaining({
 			body: {code: 'the-code', state: 'the-state'},
 		}))
+	})
+
+	it('removes the oauth code from the url so a later visit cannot reuse it', async () => {
+		router.route = {query: {code: 'work-account-code', state: 'work-account-state', other: 'kept'}, hash: ''}
+		sdk.migrationTodoistStatus.mockResolvedValue({data: {started_at: '2026-01-01T00:00:00Z', finished_at: '2026-01-01T00:01:00Z'}})
+		sdk.migrationTodoistAuth.mockResolvedValue({data: {url: 'https://todoist.example/auth'}})
+		sdk.migrationTodoistMigrate.mockResolvedValue({data: {}})
+		router.replace.mockImplementation(async () => wrapper?.setProps({code: undefined, state: undefined}))
+		wrapper = mount(MigrationHandler, {
+			props: {service: 'todoist', code: 'work-account-code', state: 'work-account-state'},
+			global: {
+				plugins: [i18n, [VueQueryPlugin, {queryClient}]],
+				stubs: {XButton: {template: '<button><slot /></button>'}},
+			},
+		})
+		await flushPromises()
+
+		expect(router.replace).toHaveBeenCalledWith({query: {other: 'kept'}, hash: ''})
+
+		await wrapper.find('.migration-buttons button').trigger('click')
+		await flushPromises()
+		expect(sdk.migrationTodoistMigrate).toHaveBeenCalledExactlyOnceWith({body: {code: 'work-account-code', state: 'work-account-state'}})
 	})
 })
