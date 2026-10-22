@@ -174,6 +174,35 @@ func TestTimeEntry_ReadAll(t *testing.T) {
 	}
 }
 
+func TestTimeEntry_ReadAllIncludesUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+	require.NoError(t, err)
+	entries := result.([]*TimeEntry)
+	require.NotEmpty(t, entries)
+	for _, e := range entries {
+		require.NotNil(t, e.User, "entry %d", e.ID)
+		assert.Equal(t, e.UserID, e.User.ID)
+		assert.Empty(t, e.User.Email)
+	}
+}
+
+func TestTimeEntry_ReadOneIncludesUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	te := &TimeEntry{ID: 3}
+	can, _, err := te.CanRead(s, &user.User{ID: 1})
+	require.NoError(t, err)
+	require.True(t, can)
+	require.NotNil(t, te.User)
+	assert.Equal(t, "user3", te.User.Username)
+}
+
 // Filtering reuses the task filter grammar. user1 can read entries 1,2,4
 // (project 1) and 3 (project 3, shared) — the filter only narrows that set.
 func TestTimeEntry_ReadAll_Filter(t *testing.T) {
@@ -265,6 +294,8 @@ func TestTimeEntry_Create(t *testing.T) {
 		require.NoError(t, s.Commit())
 
 		assert.Equal(t, int64(1), te.UserID)
+		require.NotNil(t, te.User)
+		assert.Equal(t, int64(1), te.User.ID)
 		assert.True(t, te.StartTime.Equal(start))
 		db.AssertExists(t, "time_entries", map[string]interface{}{
 			"id":      te.ID,
