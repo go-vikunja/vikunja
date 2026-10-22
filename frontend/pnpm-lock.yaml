@@ -15,7 +15,7 @@ overrides:
   tmp: 0.2.7
   esbuild: 0.28.2
   form-data: 4.0.6
-  markdown-it: 15.0.2
+  markdown-it: 15.0.3
   launch-editor: 2.14.2
   '@babel/core': 8.0.7
   js-yaml@4: 5.4.2
@@ -5029,8 +5029,8 @@ packages:
   markdown-it-emoji@3.1.0:
     resolution: {integrity: sha512-NhmMEH2ywduD4Nty1E8uB5NqfLhAT1VR0dyvoJyStKOqCzbZmVdn/+8wj7zpDsb/fLBikpCPsWwxqKlvMmbz4g==}
 
-  markdown-it@15.0.2:
-    resolution: {integrity: sha512-q4IGxMv56jCqT4OCRCADBoDP3LO4MhmTXjFbphHPXs4g3j9Xg5RDnxqN8IF/3vIWEU+VCnUq+7JUg/cfy2E6Qw==}
+  markdown-it@15.0.3:
+    resolution: {integrity: sha512-+Az7Ojz3iRGu8KYMvJ6xVhvrxP3eE+vEtJX75Ow88XBpcQNV/0lGX5ZynIIBftREo4DC2jsveAMDaeltmm8QvQ==}
     hasBin: true
 
   marked@18.0.13:
@@ -11558,7 +11558,7 @@ snapshots:
       gray-matter: 4.0.3
       jiti: 2.7.0
       jsdom: 27.4.0(@noble/hashes@2.4.0)(supports-color@10.2.2)
-      markdown-it: 15.0.2
+      markdown-it: 15.0.3
       markdown-it-anchor: 9.2.1(@types/markdown-it@14.2.0)(markdown-it@15.0.2)
       markdown-it-attrs: 4.5.0(markdown-it@15.0.2)
       markdown-it-emoji: 3.1.0
@@ -12150,15 +12150,15 @@ snapshots:
   markdown-it-anchor@9.2.1(@types/markdown-it@14.2.0)(markdown-it@15.0.2):
     dependencies:
       '@types/markdown-it': 14.2.0
-      markdown-it: 15.0.2
+      markdown-it: 15.0.3
 
   markdown-it-attrs@4.5.0(markdown-it@15.0.2):
     dependencies:
-      markdown-it: 15.0.2
+      markdown-it: 15.0.3
 
   markdown-it-emoji@3.1.0: {}
 
-  markdown-it@15.0.2:
+  markdown-it@15.0.3:
     dependencies:
       argparse: 3.0.3
       entities: 8.1.0
