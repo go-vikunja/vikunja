@@ -19,7 +19,9 @@ package events
 import (
 	"context"
 	"errors"
+	"runtime"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/log"
 
@@ -155,4 +157,42 @@ func TestShouldReportPoisonedMessage(t *testing.T) {
 	t.Run("flag set to something else", func(t *testing.T) {
 		assert.True(t, shouldReportPoisonedMessage(message.Metadata{MetadataSkipErrorReporting: "false"}))
 	})
+}
+
+func TestWaitForPendingHandlersDuringNewDelivery(t *testing.T) {
+	previous := runtime.GOMAXPROCS(1)
+	defer runtime.GOMAXPROCS(previous)
+
+	activeHandlers.start()
+	started := make(chan struct{})
+	returned := make(chan any, 1)
+	go func() {
+		defer func() { returned <- recover() }()
+		close(started)
+		WaitForPendingHandlers()
+	}()
+	<-started
+	runtime.Gosched()
+
+	// A redelivery starts before the drain waiter resumes.
+	activeHandlers.finish()
+	activeHandlers.start()
+	runtime.Gosched()
+
+	select {
+	case result := <-returned:
+		activeHandlers.finish()
+		// Returning in the gap between deliveries is valid; panicking is not.
+		assert.Nil(t, result, "drain panicked during redelivery")
+		return
+	default:
+	}
+
+	activeHandlers.finish()
+	select {
+	case result := <-returned:
+		assert.Nil(t, result, "drain panicked")
+	case <-time.After(time.Second):
+		t.Fatal("drain did not return after all handlers finished")
+	}
 }
