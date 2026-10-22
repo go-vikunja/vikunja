@@ -188,6 +188,25 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 		assert.False(t, hasUser13, "subscriber without project access should be filtered out")
 	})
 
+	t.Run("disabled subscriber", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 5 is disabled
+		_, err := s.Insert(&ProjectUser{UserID: 5, ProjectID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 2, UserID: 5})
+		require.NoError(t, err)
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{2}, nil)
+		require.NoError(t, err)
+
+		for _, tu := range taskUsers {
+			assert.NotEqual(t, int64(5), tu.User.ID)
+		}
+	})
+
 	t.Run("assignees - with and without project access", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

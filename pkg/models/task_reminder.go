@@ -227,6 +227,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 
 	subscriberCond := []builder.Cond{
 		builder.In("id", subscriberIDs),
+		builder.Eq{"users.status": user.StatusActive},
 		notBot,
 	}
 	if cond != nil {
