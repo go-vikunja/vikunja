@@ -148,6 +148,7 @@ export default {
 <script setup lang="ts">
 import {computed, nextTick, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRoute, useRouter} from 'vue-router'
 
 import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/Message.vue'
@@ -175,6 +176,8 @@ const props = defineProps<{
 const PROGRESS_DOTS_COUNT = 8
 
 const {t, te} = useI18n({useScope: 'global'})
+const route = useRoute()
+const router = useRouter()
 
 const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
 const authUrl = ref('')
@@ -185,6 +188,7 @@ const confirmedAgain = ref(false)
 const startedHere = ref(false)
 
 const migratorAuthCode = ref('')
+const migratorAuthState = ref<string>()
 const migrationError = ref('')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service as keyof typeof MIGRATORS])
@@ -234,6 +238,12 @@ async function initMigration() {
 		authUrl.value = authResult?.url ?? ''
 		const prefix = '#token='
 		migratorAuthCode.value = location.hash.startsWith(prefix) ? location.hash.substring(prefix.length) : props.code ?? ''
+		migratorAuthState.value = props.state
+		if (migratorAuthCode.value) {
+			// A reload or back navigation would otherwise re-import from the account that issued this code.
+			const {code: _code, state: _state, ...query} = route.query
+			await router.replace({query, hash: ''}).catch(() => {})
+		}
 		if (migratorAuthCode.value && previousMigrationFinishedAt.value === null) await migrate()
 	} catch (cause) {
 		if (!isRequestContextAbort(cause)) migrationError.value = getErrorText(cause)
@@ -273,7 +283,7 @@ async function migrate(credentialsConfig?: PlankaCredentials) {
 			await startMigration.mutateAsync({kind: 'credentials', provider, body: credentialsConfig})
 		} else if (isMigratorOfKind(provider, 'oauth')) {
 			if (!migratorAuthCode.value) return
-			await startMigration.mutateAsync({kind: 'oauth', provider, body: {code: migratorAuthCode.value, state: props.state}})
+			await startMigration.mutateAsync({kind: 'oauth', provider, body: {code: migratorAuthCode.value, state: migratorAuthState.value}})
 		} else return
 		migrationStore.start(provider)
 		if (provider === migrator.value.id) startedHere.value = true
