@@ -57,7 +57,7 @@ export function parseServerCacheEvent(
 ): ServerCacheEvent | null {
 	if (!isRecord(data)) return null
 	if (event === 'timer.created' || event === 'timer.updated' || event === 'timer.deleted') {
-		if (currentUserId === undefined || data.user_id !== currentUserId) return null
+		if (currentUserId === undefined || !isRecord(data.user) || data.user.id !== currentUserId) return null
 		if (typeof data.id !== 'number' || data.id <= 0) return null
 		if (data.task_id !== undefined && data.task_id !== null && typeof data.task_id !== 'number') return null
 		return {

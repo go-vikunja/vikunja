@@ -22,7 +22,7 @@ const sdk = vi.hoisted(() => ({
 	timeEntriesCreate: vi.fn(async ({body}: {body: Record<string, unknown>}) => ({data: {
 		...body,
 		id: 1,
-		user_id: 1,
+		user: {id: 1},
 	}})),
 }))
 

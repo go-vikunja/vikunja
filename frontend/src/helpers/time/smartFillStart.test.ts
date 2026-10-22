@@ -6,7 +6,7 @@ import type {TimeEntry as ITimeEntry} from '@/client/generated'
 function entry(startTime: Date, endTime: Date | null): ITimeEntry {
 	return {
 		id: 1,
-		user_id: 1,
+		user: {id: 1},
 		task_id: 0,
 		project_id: 0,
 		start_time: startTime.toISOString(),
