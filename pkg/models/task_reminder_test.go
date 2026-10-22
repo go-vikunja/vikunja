@@ -86,25 +86,39 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 }
 
 func TestGetTaskUsersForTasks(t *testing.T) {
-	t.Run("task owner", func(t *testing.T) {
+	t.Run("creator through their implicit subscription", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		// Task 1 is owned by user 1 (created_by_id: 1) in project 1 (owned by user 1)
-		taskUsers, err := getTaskUsersForTasks(s, []int64{1}, nil)
-		require.NoError(t, err)
-		require.NotEmpty(t, taskUsers)
+		task := &Task{Title: "Created", ProjectID: 1}
+		require.NoError(t, task.Create(s, &user.User{ID: 1}))
 
-		// Should include the task creator
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+
 		hasUser1 := false
 		for _, tu := range taskUsers {
-			if tu.User.ID == 1 && tu.Task.ID == 1 {
+			if tu.User.ID == 1 && tu.Task.ID == task.ID {
 				hasUser1 = true
-				break
 			}
 		}
-		assert.True(t, hasUser1, "task owner should be included in task users")
+		assert.True(t, hasUser1)
+	})
+
+	t.Run("creator who unsubscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		creator := &user.User{ID: 1}
+		task := &Task{Title: "Created", ProjectID: 1}
+		require.NoError(t, task.Create(s, creator))
+		require.NoError(t, (&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID}).Delete(s, creator))
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+		assert.Empty(t, taskUsers)
 	})
 
 	t.Run("project shared directly with user", func(t *testing.T) {
@@ -113,6 +127,9 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 		defer s.Close()
 
 		// Task 32 is in project 3, which is shared directly with user 1 (users_projects id: 1)
+		_, err := s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 32, UserID: 1})
+		require.NoError(t, err)
+
 		taskUsers, err := getTaskUsersForTasks(s, []int64{32}, nil)
 		require.NoError(t, err)
 		require.NotEmpty(t, taskUsers)
@@ -126,37 +143,6 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 			}
 		}
 		assert.True(t, hasUser1, "user with direct project share should be included")
-	})
-
-	t.Run("creator who lost project access", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		// Task 1 is in project 1 (owned by user 1)
-		// Task 1 was created by user 1 (created_by_id: 1)
-		// User 13 has no access to project 1
-		// Create a scenario by pretending user 13 created the task but has no access
-
-		_, err := s.
-			Cols("created_by_id").
-			Where("id = ?", 1).
-			Update(&Task{CreatedByID: 13})
-		require.NoError(t, err)
-
-		taskUsers, err := getTaskUsersForTasks(s, []int64{1}, nil)
-		require.NoError(t, err)
-
-		// Should only include users with access
-		// User 13 should not be in the results (no access to project 1)
-		hasUser13 := false
-		for _, tu := range taskUsers {
-			if tu.User.ID == 13 && tu.Task.ID == 1 {
-				hasUser13 = true
-				break
-			}
-		}
-		assert.False(t, hasUser13, "creator without project access should be filtered out")
 	})
 
 	t.Run("subscriber who lost project access", func(t *testing.T) {
@@ -204,6 +190,47 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 
 		for _, tu := range taskUsers {
 			assert.NotEqual(t, int64(5), tu.User.ID)
+		}
+	})
+
+	t.Run("assignee through their implicit subscription", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		creator := &user.User{ID: 1}
+		task := &Task{Title: "Assigned", ProjectID: 1}
+		require.NoError(t, task.Create(s, creator))
+		require.NoError(t, (&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID}).Delete(s, creator))
+		_, err := s.Insert(&ProjectUser{UserID: 2, ProjectID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		require.NoError(t, (&TaskAssginee{TaskID: task.ID, UserID: 2}).Create(s, creator))
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+		require.Len(t, taskUsers, 1)
+		assert.Equal(t, int64(2), taskUsers[0].User.ID)
+		assert.True(t, taskUsers[0].IsAssignee)
+	})
+
+	t.Run("assignee who unsubscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		creator := &user.User{ID: 1}
+		assignee := &user.User{ID: 2}
+		task := &Task{Title: "Assigned", ProjectID: 1}
+		require.NoError(t, task.Create(s, creator))
+		_, err := s.Insert(&ProjectUser{UserID: 2, ProjectID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		require.NoError(t, (&TaskAssginee{TaskID: task.ID, UserID: 2}).Create(s, creator))
+		require.NoError(t, (&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID}).Delete(s, assignee))
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+		for _, tu := range taskUsers {
+			assert.NotEqual(t, int64(2), tu.User.ID)
 		}
 	})
 
@@ -295,10 +322,9 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Task 1: user 1 is creator and owner
 		// Task 2: user 1 is subscriber and owner
 		// Task 30: user 1 is assignee and owner, user 2 is assignee without access
-		taskUsers, err := getTaskUsersForTasks(s, []int64{1, 2, 30}, nil)
+		taskUsers, err := getTaskUsersForTasks(s, []int64{2, 30}, nil)
 		require.NoError(t, err)
 		require.NotEmpty(t, taskUsers)
 
@@ -307,7 +333,6 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 		for _, tu := range taskUsers {
 			taskIDs[tu.Task.ID] = true
 		}
-		assert.True(t, taskIDs[1], "should include users for task 1")
 		assert.True(t, taskIDs[2], "should include users for task 2")
 		assert.True(t, taskIDs[30], "should include users for task 30")
 
@@ -345,20 +370,6 @@ func TestGetTaskUsersForTasksIsAssignee(t *testing.T) {
 		tu := findTaskUser(taskUsers, 30, 1)
 		require.NotNil(t, tu)
 		assert.True(t, tu.IsAssignee)
-	})
-
-	t.Run("creator", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		// Task 1: user 1 is creator only
-		taskUsers, err := getTaskUsersForTasks(s, []int64{1}, nil)
-		require.NoError(t, err)
-
-		tu := findTaskUser(taskUsers, 1, 1)
-		require.NotNil(t, tu)
-		assert.False(t, tu.IsAssignee)
 	})
 
 	t.Run("subscriber", func(t *testing.T) {
