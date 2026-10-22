@@ -20,6 +20,7 @@
 						<th v-if="!hideLabelColumn">
 							{{ $t('timeTracking.form.task') }}
 						</th>
+						<th>{{ $t('misc.user') }}</th>
 						<th>{{ $t('task.comment.comment') }}</th>
 						<th class="nowrap">
 							{{ $t('timeTracking.list.time') }}
@@ -58,6 +59,13 @@
 								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
 						</td>
+						<td class="nowrap">
+							<User
+								:user="row.entry.user"
+								:avatar-size="20"
+								is-inline
+							/>
+						</td>
 						<td class="has-text-grey">
 							{{ row.entry.comment }}
 						</td>
@@ -68,7 +76,7 @@
 							{{ row.seconds === null ? '' : formatDuration(row.seconds) }}
 						</td>
 						<td class="nowrap has-text-right">
-							<template v-if="row.entry.user_id === currentUserId">
+							<template v-if="row.entry.user.id === currentUserId">
 								<BaseButton
 									v-tooltip="$t('menu.edit')"
 									v-cy="'editTimeEntry'"
@@ -94,7 +102,7 @@
 				<tfoot>
 					<tr>
 						<td
-							:colspan="hideLabelColumn ? 2 : 4"
+							:colspan="hideLabelColumn ? 3 : 5"
 							class="has-text-weight-bold"
 						>
 							{{ $t(paged ? 'timeTracking.list.pageTotal' : 'timeTracking.list.total') }}
@@ -115,6 +123,7 @@ import {computed} from 'vue'
 
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import User from '@/components/misc/User.vue'
 
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'

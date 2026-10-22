@@ -38,7 +38,7 @@ vi.mock('@/message', () => ({
 let client: QueryClient
 const running = {
 	id: 4,
-	user_id: 7,
+	user: {id: 7},
 	task_id: 1,
 	start_time: '2026-09-19T09:00:00Z',
 	end_time: null,
@@ -137,7 +137,7 @@ it('deletes the matching active timer without affecting another user', async () 
 	client.setQueryData(timeEntryKeys.active(8), normalizeTimeEntry({
 		...running,
 		id: 5,
-		user_id: 8,
+		user: {id: 8},
 	}))
 	sdk.timeEntriesDelete.mockResolvedValue({data: undefined})
 	await client.getMutationCache().build(client, deleteTimeEntryMutationOptions()).execute({
