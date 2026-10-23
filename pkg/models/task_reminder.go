@@ -139,7 +139,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		builder.Eq{"users.bot_owner_id": 0},
 	)
 
-	// Assignees and creators are subscribed implicitly, so unsubscribing silences reminders for them too.
+	// Creators and assignees hold implicit subscriptions.
 	subscriptions, err := GetSubscriptionsForEntities(s, SubscriptionEntityTask, taskIDs)
 	if err != nil {
 		return nil, err

@@ -44,7 +44,6 @@
   entity_id: 51
   user_id: 1
   created: 2021-02-01 15:13:12
-# Creator and assignee subscriptions, as task creation, assignment and the backfill leave them
 - id: 12
   entity_type: 3 # Task
   entity_id: 5
