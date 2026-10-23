@@ -195,6 +195,15 @@ function getBuildConfig(env: Record<string, string>) {
 					start_url: '.',
 					display: 'standalone',
 					background_color: '#000000',
+					share_target: {
+						action: './',
+						method: 'GET',
+						params: {
+							title: 'title',
+							text: 'description',
+							url: 'url',
+						},
+					},
 					shortcuts: [
 						{
 							name: 'Overview',
