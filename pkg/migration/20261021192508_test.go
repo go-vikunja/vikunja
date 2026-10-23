@@ -26,12 +26,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type projectsStub20261021192508 struct {
-	ID              int64 `xorm:"autoincr not null unique pk"`
-	ParentProjectID int64 `xorm:"bigint null"`
+type projectAncestorsStub20261021192508 struct {
+	ProjectID  int64 `xorm:"bigint not null pk"`
+	AncestorID int64 `xorm:"bigint not null pk"`
 }
 
-func (projectsStub20261021192508) TableName() string { return "projects" }
+func (projectAncestorsStub20261021192508) TableName() string { return "project_ancestors" }
 
 type tasksStub20261021192508 struct {
 	ID          int64 `xorm:"autoincr not null unique pk"`
@@ -71,7 +71,7 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 	require.NoError(t, err)
 
 	tables := []interface{}{
-		projectsStub20261021192508{},
+		projectAncestorsStub20261021192508{},
 		tasksStub20261021192508{},
 		taskAssigneesStub20261021192508{},
 		usersStub20261021192508{},
@@ -86,14 +86,16 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 	_, err = x.Insert(
 		&usersStub20261021192508{ID: 1},
 		&usersStub20261021192508{ID: 2},
-		&projectsStub20261021192508{ID: 1},
-		&projectsStub20261021192508{ID: 2, ParentProjectID: 1},
-		&projectsStub20261021192508{ID: 3},
-		&projectsStub20261021192508{ID: 4, ParentProjectID: 5},
-		&projectsStub20261021192508{ID: 5, ParentProjectID: 6},
-		&projectsStub20261021192508{ID: 6},
-		&projectsStub20261021192508{ID: 7, ParentProjectID: 8},
-		&projectsStub20261021192508{ID: 8, ParentProjectID: 7},
+		&projectAncestorsStub20261021192508{ProjectID: 1, AncestorID: 1},
+		&projectAncestorsStub20261021192508{ProjectID: 2, AncestorID: 2},
+		&projectAncestorsStub20261021192508{ProjectID: 2, AncestorID: 1},
+		&projectAncestorsStub20261021192508{ProjectID: 3, AncestorID: 3},
+		&projectAncestorsStub20261021192508{ProjectID: 4, AncestorID: 4},
+		&projectAncestorsStub20261021192508{ProjectID: 4, AncestorID: 5},
+		&projectAncestorsStub20261021192508{ProjectID: 4, AncestorID: 6},
+		&projectAncestorsStub20261021192508{ProjectID: 5, AncestorID: 5},
+		&projectAncestorsStub20261021192508{ProjectID: 5, AncestorID: 6},
+		&projectAncestorsStub20261021192508{ProjectID: 6, AncestorID: 6},
 		&tasksStub20261021192508{ID: 1, ProjectID: 1, CreatedByID: 1},
 		&tasksStub20261021192508{ID: 2, ProjectID: 1, CreatedByID: 1},
 		&tasksStub20261021192508{ID: 3, ProjectID: 2, CreatedByID: 2},
@@ -102,8 +104,6 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		&tasksStub20261021192508{ID: 6, ProjectID: 3, CreatedByID: 1},
 		&tasksStub20261021192508{ID: 7, ProjectID: 4, CreatedByID: 1},
 		&tasksStub20261021192508{ID: 8, ProjectID: 3, CreatedByID: 1},
-		// task 9: project cycle
-		&tasksStub20261021192508{ID: 9, ProjectID: 7, CreatedByID: 1},
 		// task 3: assignee gets subscribed even though the creator inherits
 		&taskAssigneesStub20261021192508{TaskID: 3, UserID: 1},
 		// task 6: assignee who is also the creator gets one row
@@ -145,6 +145,5 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		{6, 1, false},
 		{6, 2, false},
 		{8, 1, false},
-		{9, 1, false},
 	}, got)
 }

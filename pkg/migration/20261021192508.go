@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"src.techknowlogick.com/xormigrate"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -37,19 +38,18 @@ func (subscriptions20261021192508) TableName() string {
 	return "subscriptions"
 }
 
+type projectAncestors20261021192508 struct {
+	ProjectID  int64 `xorm:"bigint not null pk"`
+	AncestorID int64 `xorm:"bigint not null pk"`
+}
+
+func (projectAncestors20261021192508) TableName() string {
+	return "project_ancestors"
+}
+
 type subscriptionKey20261021192508 struct {
-	EntityType int
-	EntityID   int64
-	UserID     int64
-}
-
-type projects20261021192508 struct {
-	ID              int64  `xorm:"bigint autoincr not null unique pk"`
-	ParentProjectID *int64 `xorm:"bigint INDEX null"`
-}
-
-func (projects20261021192508) TableName() string {
-	return "projects"
+	ID     int64
+	UserID int64
 }
 
 type tasks20261021192508 struct {
@@ -86,20 +86,8 @@ const (
 
 // Any existing task or ancestor-project row, muted or not, is the user's choice.
 func subscribeCreatorsAndAssigneesToTasks20261021192508(tx *xorm.Engine) error {
-	allProjects := []*projects20261021192508{}
-	if err := tx.Cols("id", "parent_project_id").Find(&allProjects); err != nil {
-		return fmt.Errorf("could not get projects: %w", err)
-	}
-	parents := make(map[int64]int64, len(allProjects))
-	for _, p := range allProjects {
-		parents[p.ID] = 0
-		if p.ParentProjectID != nil {
-			parents[p.ID] = *p.ParentProjectID
-		}
-	}
-
 	allTasks := []*tasks20261021192508{}
-	if err := tx.Cols("id", "project_id", "created_by_id").OrderBy("id").Find(&allTasks); err != nil {
+	if err := tx.Cols("id", "project_id", "created_by_id").Find(&allTasks); err != nil {
 		return fmt.Errorf("could not get tasks: %w", err)
 	}
 	taskProjects := make(map[int64]int64, len(allTasks))
@@ -108,7 +96,7 @@ func subscribeCreatorsAndAssigneesToTasks20261021192508(tx *xorm.Engine) error {
 	}
 
 	assignees := []*taskAssignees20261021192508{}
-	if err := tx.Cols("task_id", "user_id").OrderBy("task_id, user_id").Find(&assignees); err != nil {
+	if err := tx.Cols("task_id", "user_id").Find(&assignees); err != nil {
 		return fmt.Errorf("could not get task assignees: %w", err)
 	}
 
@@ -121,75 +109,57 @@ func subscribeCreatorsAndAssigneesToTasks20261021192508(tx *xorm.Engine) error {
 		userExists[u.ID] = true
 	}
 
-	existing := []*subscriptions20261021192508{}
+	taskSubs := []*subscriptions20261021192508{}
 	err := tx.
-		Cols("entity_type", "entity_id", "user_id").
-		In("entity_type", subscriptionEntityProject20261021192508, subscriptionEntityTask20261021192508).
-		Find(&existing)
+		Cols("entity_id", "user_id").
+		Where(builder.Eq{"entity_type": subscriptionEntityTask20261021192508}).
+		Find(&taskSubs)
 	if err != nil {
-		return fmt.Errorf("could not get subscriptions: %w", err)
+		return fmt.Errorf("could not get task subscriptions: %w", err)
 	}
-	subscribed := make(map[subscriptionKey20261021192508]bool, len(existing))
-	for _, s := range existing {
-		subscribed[subscriptionKey20261021192508{
-			EntityType: s.EntityType,
-			EntityID:   s.EntityID,
-			UserID:     s.UserID,
+	taskSubscribed := make(map[subscriptionKey20261021192508]bool, len(taskSubs))
+	for _, s := range taskSubs {
+		taskSubscribed[subscriptionKey20261021192508{
+			ID:     s.EntityID,
+			UserID: s.UserID,
 		}] = true
 	}
 
-	ancestorCache := make(map[int64][]int64)
-	ancestorsOf := func(projectID int64) []int64 {
-		if cached, ok := ancestorCache[projectID]; ok {
-			return cached
-		}
-		ancestors := []int64{}
-		visited := map[int64]bool{}
-		for current := projectID; current > 0 && !visited[current]; {
-			parent, exists := parents[current]
-			if !exists {
-				break
-			}
-			visited[current] = true
-			ancestors = append(ancestors, current)
-			current = parent
-		}
-		ancestorCache[projectID] = ancestors
-		return ancestors
+	covered := []*struct {
+		ProjectID int64 `xorm:"project_id"`
+		UserID    int64 `xorm:"user_id"`
+	}{}
+	err = tx.
+		Table(&subscriptions20261021192508{}).
+		Join("INNER", &projectAncestors20261021192508{}, "project_ancestors.ancestor_id = subscriptions.entity_id").
+		Where(builder.Eq{"subscriptions.entity_type": subscriptionEntityProject20261021192508}).
+		Cols("project_ancestors.project_id", "subscriptions.user_id").
+		Find(&covered)
+	if err != nil {
+		return fmt.Errorf("could not get project subscriptions: %w", err)
 	}
-
-	isSubscribed := func(taskID, userID int64) bool {
-		if subscribed[subscriptionKey20261021192508{
-			EntityType: subscriptionEntityTask20261021192508,
-			EntityID:   taskID,
-			UserID:     userID,
-		}] {
-			return true
-		}
-		for _, projectID := range ancestorsOf(taskProjects[taskID]) {
-			if subscribed[subscriptionKey20261021192508{
-				EntityType: subscriptionEntityProject20261021192508,
-				EntityID:   projectID,
-				UserID:     userID,
-			}] {
-				return true
-			}
-		}
-		return false
+	projectSubscribed := make(map[subscriptionKey20261021192508]bool, len(covered))
+	for _, c := range covered {
+		projectSubscribed[subscriptionKey20261021192508{
+			ID:     c.ProjectID,
+			UserID: c.UserID,
+		}] = true
 	}
 
 	subs := []*subscriptions20261021192508{}
-	seen := make(map[subscriptionKey20261021192508]bool)
 	add := func(taskID, userID int64) {
-		key := subscriptionKey20261021192508{
-			EntityType: subscriptionEntityTask20261021192508,
-			EntityID:   taskID,
-			UserID:     userID,
+		taskKey := subscriptionKey20261021192508{
+			ID:     taskID,
+			UserID: userID,
 		}
-		if seen[key] || !userExists[userID] || isSubscribed(taskID, userID) {
+		projectKey := subscriptionKey20261021192508{
+			ID:     taskProjects[taskID],
+			UserID: userID,
+		}
+		if !userExists[userID] || taskSubscribed[taskKey] || projectSubscribed[projectKey] {
 			return
 		}
-		seen[key] = true
+		taskSubscribed[taskKey] = true
 		subs = append(subs, &subscriptions20261021192508{
 			EntityType: subscriptionEntityTask20261021192508,
 			EntityID:   taskID,
