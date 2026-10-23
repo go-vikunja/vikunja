@@ -24,6 +24,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 type projectAncestorsStub20261021192508 struct {
@@ -103,13 +104,14 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		&tasksStub20261021192508{ID: 5, ProjectID: 3, CreatedByID: -1},
 		&tasksStub20261021192508{ID: 6, ProjectID: 3, CreatedByID: 1},
 		&tasksStub20261021192508{ID: 7, ProjectID: 4, CreatedByID: 1},
-		&tasksStub20261021192508{ID: 8, ProjectID: 3, CreatedByID: 1},
 		// task 3: assignee gets subscribed even though the creator inherits
 		&taskAssigneesStub20261021192508{TaskID: 3, UserID: 1},
 		// task 6: assignee who is also the creator gets one row
 		&taskAssigneesStub20261021192508{TaskID: 6, UserID: 1},
 		// task 4: assignee muted the project
 		&taskAssigneesStub20261021192508{TaskID: 4, UserID: 2},
+		&taskAssigneesStub20261021192508{TaskID: 99, UserID: 1},
+		&taskAssigneesStub20261021192508{TaskID: 1, UserID: 3},
 		// task 2: creator opted out
 		&subscriptionsStub20261021192508{EntityType: subscriptionEntityTask20261021192508, EntityID: 2, UserID: 1, Muted: true},
 		// task 3: creator subscribed through the parent project
@@ -120,15 +122,13 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		&subscriptionsStub20261021192508{EntityType: subscriptionEntityTask20261021192508, EntityID: 6, UserID: 2},
 		// task 7: creator subscribed through the grandparent project
 		&subscriptionsStub20261021192508{EntityType: subscriptionEntityProject20261021192508, EntityID: 6, UserID: 1},
-		// task 8: creator already subscribed
-		&subscriptionsStub20261021192508{EntityType: subscriptionEntityTask20261021192508, EntityID: 8, UserID: 1},
 	)
 	require.NoError(t, err)
 
 	require.NoError(t, subscribeCreatorsAndAssigneesToTasks20261021192508(x))
 
 	subs := []*subscriptionsStub20261021192508{}
-	require.NoError(t, x.Where("entity_type = ?", subscriptionEntityTask20261021192508).OrderBy("entity_id, user_id").Find(&subs))
+	require.NoError(t, x.Where(builder.Eq{"entity_type": subscriptionEntityTask20261021192508}).OrderBy("entity_id, user_id").Find(&subs))
 
 	type row struct {
 		EntityID, UserID int64
@@ -144,6 +144,5 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		{3, 1, false},
 		{6, 1, false},
 		{6, 2, false},
-		{8, 1, false},
 	}, got)
 }
