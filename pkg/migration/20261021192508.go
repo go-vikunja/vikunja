@@ -18,6 +18,7 @@ package migration
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"src.techknowlogick.com/xormigrate"
@@ -36,9 +37,46 @@ func (subscriptions20261021192508) TableName() string {
 	return "subscriptions"
 }
 
-type taskUser20261021192508 struct {
-	TaskID int64
-	UserID int64
+type subscriptionKey20261021192508 struct {
+	EntityType int
+	EntityID   int64
+	UserID     int64
+}
+
+type projects20261021192508 struct {
+	ID              int64  `xorm:"bigint autoincr not null unique pk"`
+	ParentProjectID *int64 `xorm:"bigint INDEX null"`
+}
+
+func (projects20261021192508) TableName() string {
+	return "projects"
+}
+
+type tasks20261021192508 struct {
+	ID          int64 `xorm:"bigint autoincr not null unique pk"`
+	ProjectID   int64 `xorm:"bigint INDEX not null"`
+	CreatedByID int64 `xorm:"bigint not null"`
+}
+
+func (tasks20261021192508) TableName() string {
+	return "tasks"
+}
+
+type taskAssignees20261021192508 struct {
+	TaskID int64 `xorm:"bigint INDEX not null"`
+	UserID int64 `xorm:"bigint INDEX not null"`
+}
+
+func (taskAssignees20261021192508) TableName() string {
+	return "task_assignees"
+}
+
+type users20261021192508 struct {
+	ID int64 `xorm:"bigint autoincr not null unique pk"`
+}
+
+func (users20261021192508) TableName() string {
+	return "users"
 }
 
 const (
@@ -46,43 +84,125 @@ const (
 	subscriptionEntityTask20261021192508    = 3
 )
 
-// Reminders now reach only subscribers, but creators were only subscribed
-// implicitly since v2.6.0 and assignees since 2021. Any existing row, muted or
-// not and on the task or an ancestor project, is the user's own choice and is kept.
+// Any existing task or ancestor-project row, muted or not, is the user's choice.
 func subscribeCreatorsAndAssigneesToTasks20261021192508(tx *xorm.Engine) error {
-	pairs := []*taskUser20261021192508{}
-	err := tx.SQL(`
-WITH RECURSIVE project_ancestors AS (
-    SELECT id AS project_id, id AS ancestor_id FROM projects
+	allProjects := []*projects20261021192508{}
+	if err := tx.Cols("id", "parent_project_id").Find(&allProjects); err != nil {
+		return fmt.Errorf("could not get projects: %w", err)
+	}
+	parents := make(map[int64]int64, len(allProjects))
+	for _, p := range allProjects {
+		parents[p.ID] = 0
+		if p.ParentProjectID != nil {
+			parents[p.ID] = *p.ParentProjectID
+		}
+	}
 
-    UNION ALL
+	allTasks := []*tasks20261021192508{}
+	if err := tx.Cols("id", "project_id", "created_by_id").OrderBy("id").Find(&allTasks); err != nil {
+		return fmt.Errorf("could not get tasks: %w", err)
+	}
+	taskProjects := make(map[int64]int64, len(allTasks))
+	for _, t := range allTasks {
+		taskProjects[t.ID] = t.ProjectID
+	}
 
-    SELECT pa.project_id, p.parent_project_id
-    FROM project_ancestors pa
-             JOIN projects p ON p.id = pa.ancestor_id
-    WHERE p.parent_project_id > 0
-),
-task_users AS (
-    SELECT id AS task_id, created_by_id AS user_id FROM tasks
-    UNION
-    SELECT task_id, user_id FROM task_assignees
-)
-SELECT tu.task_id, tu.user_id
-FROM task_users tu
-         JOIN tasks t ON t.id = tu.task_id
-         JOIN users u ON u.id = tu.user_id
-WHERE NOT EXISTS (
-    SELECT 1 FROM subscriptions s
-    WHERE s.entity_type = ? AND s.entity_id = tu.task_id AND s.user_id = tu.user_id
-)
-  AND NOT EXISTS (
-    SELECT 1 FROM project_ancestors pa
-             JOIN subscriptions s ON s.entity_type = ? AND s.entity_id = pa.ancestor_id
-    WHERE pa.project_id = t.project_id AND s.user_id = tu.user_id
-)`, subscriptionEntityTask20261021192508, subscriptionEntityProject20261021192508).
-		Find(&pairs)
+	assignees := []*taskAssignees20261021192508{}
+	if err := tx.Cols("task_id", "user_id").OrderBy("task_id, user_id").Find(&assignees); err != nil {
+		return fmt.Errorf("could not get task assignees: %w", err)
+	}
+
+	allUsers := []*users20261021192508{}
+	if err := tx.Cols("id").Find(&allUsers); err != nil {
+		return fmt.Errorf("could not get users: %w", err)
+	}
+	userExists := make(map[int64]bool, len(allUsers))
+	for _, u := range allUsers {
+		userExists[u.ID] = true
+	}
+
+	existing := []*subscriptions20261021192508{}
+	err := tx.
+		Cols("entity_type", "entity_id", "user_id").
+		In("entity_type", subscriptionEntityProject20261021192508, subscriptionEntityTask20261021192508).
+		Find(&existing)
 	if err != nil {
-		return fmt.Errorf("could not find task creators and assignees without a subscription: %w", err)
+		return fmt.Errorf("could not get subscriptions: %w", err)
+	}
+	subscribed := make(map[subscriptionKey20261021192508]bool, len(existing))
+	for _, s := range existing {
+		subscribed[subscriptionKey20261021192508{
+			EntityType: s.EntityType,
+			EntityID:   s.EntityID,
+			UserID:     s.UserID,
+		}] = true
+	}
+
+	ancestorCache := make(map[int64][]int64)
+	ancestorsOf := func(projectID int64) []int64 {
+		if cached, ok := ancestorCache[projectID]; ok {
+			return cached
+		}
+		ancestors := []int64{}
+		visited := map[int64]bool{}
+		for current := projectID; current > 0 && !visited[current]; {
+			parent, exists := parents[current]
+			if !exists {
+				break
+			}
+			visited[current] = true
+			ancestors = append(ancestors, current)
+			current = parent
+		}
+		ancestorCache[projectID] = ancestors
+		return ancestors
+	}
+
+	isSubscribed := func(taskID, userID int64) bool {
+		if subscribed[subscriptionKey20261021192508{
+			EntityType: subscriptionEntityTask20261021192508,
+			EntityID:   taskID,
+			UserID:     userID,
+		}] {
+			return true
+		}
+		for _, projectID := range ancestorsOf(taskProjects[taskID]) {
+			if subscribed[subscriptionKey20261021192508{
+				EntityType: subscriptionEntityProject20261021192508,
+				EntityID:   projectID,
+				UserID:     userID,
+			}] {
+				return true
+			}
+		}
+		return false
+	}
+
+	subs := []*subscriptions20261021192508{}
+	seen := make(map[subscriptionKey20261021192508]bool)
+	add := func(taskID, userID int64) {
+		key := subscriptionKey20261021192508{
+			EntityType: subscriptionEntityTask20261021192508,
+			EntityID:   taskID,
+			UserID:     userID,
+		}
+		if seen[key] || !userExists[userID] || isSubscribed(taskID, userID) {
+			return
+		}
+		seen[key] = true
+		subs = append(subs, &subscriptions20261021192508{
+			EntityType: subscriptionEntityTask20261021192508,
+			EntityID:   taskID,
+			UserID:     userID,
+		})
+	}
+	for _, t := range allTasks {
+		add(t.ID, t.CreatedByID)
+	}
+	for _, a := range assignees {
+		if _, exists := taskProjects[a.TaskID]; exists {
+			add(a.TaskID, a.UserID)
+		}
 	}
 
 	sess := tx.NewSession()
@@ -93,17 +213,8 @@ WHERE NOT EXISTS (
 
 	// 4 params per row stays under SQLite's 999 variable limit before 3.32.
 	const batchSize = 200
-	for start := 0; start < len(pairs); start += batchSize {
-		batch := pairs[start:min(start+batchSize, len(pairs))]
-		subs := make([]*subscriptions20261021192508, 0, len(batch))
-		for _, p := range batch {
-			subs = append(subs, &subscriptions20261021192508{
-				EntityType: subscriptionEntityTask20261021192508,
-				EntityID:   p.TaskID,
-				UserID:     p.UserID,
-			})
-		}
-		if _, err := sess.Insert(&subs); err != nil {
+	for batch := range slices.Chunk(subs, batchSize) {
+		if _, err := sess.Insert(&batch); err != nil {
 			return fmt.Errorf("could not subscribe task creators and assignees: %w", err)
 		}
 	}

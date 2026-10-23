@@ -89,12 +89,21 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		&projectsStub20261021192508{ID: 1},
 		&projectsStub20261021192508{ID: 2, ParentProjectID: 1},
 		&projectsStub20261021192508{ID: 3},
+		&projectsStub20261021192508{ID: 4, ParentProjectID: 5},
+		&projectsStub20261021192508{ID: 5, ParentProjectID: 6},
+		&projectsStub20261021192508{ID: 6},
+		&projectsStub20261021192508{ID: 7, ParentProjectID: 8},
+		&projectsStub20261021192508{ID: 8, ParentProjectID: 7},
 		&tasksStub20261021192508{ID: 1, ProjectID: 1, CreatedByID: 1},
 		&tasksStub20261021192508{ID: 2, ProjectID: 1, CreatedByID: 1},
 		&tasksStub20261021192508{ID: 3, ProjectID: 2, CreatedByID: 2},
 		&tasksStub20261021192508{ID: 4, ProjectID: 3, CreatedByID: 2},
 		&tasksStub20261021192508{ID: 5, ProjectID: 3, CreatedByID: -1},
 		&tasksStub20261021192508{ID: 6, ProjectID: 3, CreatedByID: 1},
+		&tasksStub20261021192508{ID: 7, ProjectID: 4, CreatedByID: 1},
+		&tasksStub20261021192508{ID: 8, ProjectID: 3, CreatedByID: 1},
+		// task 9: project cycle
+		&tasksStub20261021192508{ID: 9, ProjectID: 7, CreatedByID: 1},
 		// task 3: assignee gets subscribed even though the creator inherits
 		&taskAssigneesStub20261021192508{TaskID: 3, UserID: 1},
 		// task 6: assignee who is also the creator gets one row
@@ -102,20 +111,24 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		// task 4: assignee muted the project
 		&taskAssigneesStub20261021192508{TaskID: 4, UserID: 2},
 		// task 2: creator opted out
-		&subscriptionsStub20261021192508{EntityType: 3, EntityID: 2, UserID: 1, Muted: true},
+		&subscriptionsStub20261021192508{EntityType: subscriptionEntityTask20261021192508, EntityID: 2, UserID: 1, Muted: true},
 		// task 3: creator subscribed through the parent project
-		&subscriptionsStub20261021192508{EntityType: 2, EntityID: 1, UserID: 2},
+		&subscriptionsStub20261021192508{EntityType: subscriptionEntityProject20261021192508, EntityID: 1, UserID: 2},
 		// task 4: creator muted the project
-		&subscriptionsStub20261021192508{EntityType: 2, EntityID: 3, UserID: 2, Muted: true},
+		&subscriptionsStub20261021192508{EntityType: subscriptionEntityProject20261021192508, EntityID: 3, UserID: 2, Muted: true},
 		// task 6: someone else's subscription doesn't count
-		&subscriptionsStub20261021192508{EntityType: 3, EntityID: 6, UserID: 2},
+		&subscriptionsStub20261021192508{EntityType: subscriptionEntityTask20261021192508, EntityID: 6, UserID: 2},
+		// task 7: creator subscribed through the grandparent project
+		&subscriptionsStub20261021192508{EntityType: subscriptionEntityProject20261021192508, EntityID: 6, UserID: 1},
+		// task 8: creator already subscribed
+		&subscriptionsStub20261021192508{EntityType: subscriptionEntityTask20261021192508, EntityID: 8, UserID: 1},
 	)
 	require.NoError(t, err)
 
 	require.NoError(t, subscribeCreatorsAndAssigneesToTasks20261021192508(x))
 
 	subs := []*subscriptionsStub20261021192508{}
-	require.NoError(t, x.Where("entity_type = 3").OrderBy("entity_id, user_id").Find(&subs))
+	require.NoError(t, x.Where("entity_type = ?", subscriptionEntityTask20261021192508).OrderBy("entity_id, user_id").Find(&subs))
 
 	type row struct {
 		EntityID, UserID int64
@@ -131,5 +144,7 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		{3, 1, false},
 		{6, 1, false},
 		{6, 2, false},
+		{8, 1, false},
+		{9, 1, false},
 	}, got)
 }
