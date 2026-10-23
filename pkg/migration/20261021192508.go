@@ -84,6 +84,9 @@ const (
 	subscriptionEntityTask20261021192508    = 3
 )
 
+// 4 params per row stays under SQLite's 999 variable limit before 3.32.
+const subscriptionBackfillBatch20261021192508 = 200
+
 // Any existing task or ancestor-project row, muted or not, is the user's choice.
 func subscribeCreatorsAndAssigneesToTasks20261021192508(tx *xorm.Engine) error {
 	allTasks := []*tasks20261021192508{}
@@ -181,9 +184,7 @@ func subscribeCreatorsAndAssigneesToTasks20261021192508(tx *xorm.Engine) error {
 		return fmt.Errorf("could not start transaction to subscribe task creators and assignees: %w", err)
 	}
 
-	// 4 params per row stays under SQLite's 999 variable limit before 3.32.
-	const batchSize = 200
-	for batch := range slices.Chunk(subs, batchSize) {
+	for batch := range slices.Chunk(subs, subscriptionBackfillBatch20261021192508) {
 		if _, err := sess.Insert(&batch); err != nil {
 			return fmt.Errorf("could not subscribe task creators and assignees: %w", err)
 		}
