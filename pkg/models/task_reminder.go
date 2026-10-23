@@ -139,7 +139,6 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 		builder.Eq{"users.bot_owner_id": 0},
 	)
 
-	// Creators and assignees hold implicit subscriptions.
 	subscriptions, err := GetSubscriptionsForEntities(s, SubscriptionEntityTask, taskIDs)
 	if err != nil {
 		return nil, err
