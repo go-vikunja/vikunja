@@ -376,8 +376,11 @@ func TestCheckCredentialsIsSSRFSafe(t *testing.T) {
 	t.Cleanup(func() { config.OutgoingRequestsAllowNonRoutableIPs.Set(true) })
 
 	m := &Migrator{URL: srv.URL, Token: "key"}
-	var errNoPlanka *ErrNoPlankaAtURL
-	require.ErrorAs(t, m.CheckCredentials(), &errNoPlanka)
+	var errNotAllowed *ErrPlankaHostNotAllowed
+	require.ErrorAs(t, m.CheckCredentials(), &errNotAllowed)
+
+	m = &Migrator{URL: srv.URL, Username: "user@example.com", Password: "secret"}
+	require.ErrorAs(t, m.CheckCredentials(), &errNotAllowed)
 }
 
 func TestLoginWithAPIKey(t *testing.T) {
