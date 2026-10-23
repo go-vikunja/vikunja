@@ -85,6 +85,15 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 	})
 }
 
+func findTaskUser(taskUsers []*taskUser, taskID, userID int64) *taskUser {
+	for _, tu := range taskUsers {
+		if tu.Task.ID == taskID && tu.User.ID == userID {
+			return tu
+		}
+	}
+	return nil
+}
+
 func TestGetTaskUsersForTasks(t *testing.T) {
 	t.Run("creator through their implicit subscription", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -97,13 +106,9 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
 		require.NoError(t, err)
 
-		hasUser1 := false
-		for _, tu := range taskUsers {
-			if tu.User.ID == 1 && tu.Task.ID == task.ID {
-				hasUser1 = true
-			}
-		}
-		assert.True(t, hasUser1)
+		require.Len(t, taskUsers, 1)
+		assert.Equal(t, int64(1), taskUsers[0].User.ID)
+		assert.False(t, taskUsers[0].IsAssignee)
 	})
 
 	t.Run("creator who unsubscribed", func(t *testing.T) {
@@ -179,18 +184,16 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// User 5 is disabled
-		_, err := s.Insert(&ProjectUser{UserID: 5, ProjectID: 1, Permission: PermissionRead})
+		_, err := s.Insert(&ProjectUser{UserID: 17, ProjectID: 1, Permission: PermissionRead})
 		require.NoError(t, err)
-		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 2, UserID: 5})
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 2, UserID: 17})
 		require.NoError(t, err)
 
 		taskUsers, err := getTaskUsersForTasks(s, []int64{2}, nil)
 		require.NoError(t, err)
 
-		for _, tu := range taskUsers {
-			assert.NotEqual(t, int64(5), tu.User.ID)
-		}
+		assert.NotNil(t, findTaskUser(taskUsers, 2, 1))
+		assert.Nil(t, findTaskUser(taskUsers, 2, 17))
 	})
 
 	t.Run("assignee through their implicit subscription", func(t *testing.T) {
@@ -229,9 +232,52 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 
 		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
 		require.NoError(t, err)
-		for _, tu := range taskUsers {
-			assert.NotEqual(t, int64(2), tu.User.ID)
-		}
+		require.Len(t, taskUsers, 1)
+		assert.Equal(t, int64(1), taskUsers[0].User.ID)
+		assert.False(t, taskUsers[0].IsAssignee)
+	})
+
+	t.Run("assignee subscribed only through project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		creator := &user.User{ID: 1}
+		task := &Task{Title: "Assigned", ProjectID: 1}
+		require.NoError(t, task.Create(s, creator))
+		require.NoError(t, (&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID}).Delete(s, creator))
+		_, err := s.Insert(&ProjectUser{UserID: 2, ProjectID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 1, UserID: 2})
+		require.NoError(t, err)
+		require.NoError(t, (&TaskAssginee{TaskID: task.ID, UserID: 2}).Create(s, creator))
+
+		own, err := getOwnSubscription(s, SubscriptionEntityTask, task.ID, 2)
+		require.NoError(t, err)
+		require.Nil(t, own)
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+		require.Len(t, taskUsers, 1)
+		assert.Equal(t, int64(2), taskUsers[0].User.ID)
+		assert.True(t, taskUsers[0].IsAssignee)
+	})
+
+	t.Run("creator who muted the project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		creator := &user.User{ID: 1}
+		task := &Task{Title: "Created", ProjectID: 1}
+		require.NoError(t, task.Create(s, creator))
+		_, err := s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 1, UserID: 1, Muted: true})
+		require.NoError(t, err)
+		require.NoError(t, (&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID}).Delete(s, creator))
+
+		taskUsers, err := getTaskUsersForTasks(s, []int64{task.ID}, nil)
+		require.NoError(t, err)
+		assert.Empty(t, taskUsers)
 	})
 
 	t.Run("assignees - with and without project access", func(t *testing.T) {
@@ -292,19 +338,15 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Task 30: user 1 is both creator and assignee
+		// Task 30 already has a direct subscription for user 1
+		_, err := s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 1, UserID: 1})
+		require.NoError(t, err)
+
 		taskUsers, err := getTaskUsersForTasks(s, []int64{30}, nil)
 		require.NoError(t, err)
-		require.NotEmpty(t, taskUsers)
-
-		// Count how many times user 1 appears for task 30
-		user1Count := 0
-		for _, tu := range taskUsers {
-			if tu.User.ID == 1 && tu.Task.ID == 30 {
-				user1Count++
-			}
-		}
-		assert.Equal(t, 1, user1Count, "each user should appear only once per task")
+		require.Len(t, taskUsers, 1)
+		assert.Equal(t, int64(1), taskUsers[0].User.ID)
+		assert.True(t, taskUsers[0].IsAssignee)
 	})
 
 	t.Run("empty task list", func(t *testing.T) {
@@ -349,15 +391,6 @@ func TestGetTaskUsersForTasks(t *testing.T) {
 }
 
 func TestGetTaskUsersForTasksIsAssignee(t *testing.T) {
-	findTaskUser := func(taskUsers []*taskUser, taskID, userID int64) *taskUser {
-		for _, tu := range taskUsers {
-			if tu.Task.ID == taskID && tu.User.ID == userID {
-				return tu
-			}
-		}
-		return nil
-	}
-
 	t.Run("assignee", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
