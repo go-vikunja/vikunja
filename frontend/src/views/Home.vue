@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 
 import Message from '@/components/misc/Message.vue'
@@ -58,11 +58,13 @@ import ImportHint from '@/components/home/ImportHint.vue'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {parseQuickAddPrefill, QUICK_ADD_PREFILL_PARAMS} from '@/helpers/quickAddPrefill'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
+import {useBaseStore} from '@/stores/base'
 
 const salutation = useDaytimeSalutation()
 
@@ -70,6 +72,19 @@ const authStore = useAuthStore()
 const projectList = useProjects()
 const route = useRoute()
 const router = useRouter()
+const baseStore = useBaseStore()
+
+watch(() => route.query, query => {
+	const prefill = parseQuickAddPrefill(query)
+	if (prefill === null) {
+		return
+	}
+	baseStore.setQuickActionsActive(true, prefill)
+	// Stripped so a reload doesn't open the dialog again.
+	const rest = {...query}
+	QUICK_ADD_PREFILL_PARAMS.forEach(param => delete rest[param])
+	router.replace({name: 'home', query: rest})
+}, {immediate: true})
 
 const projectHistory = computed(() => {
 	// If we don't check this, it tries to load the project background right after logging out	
