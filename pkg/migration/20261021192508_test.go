@@ -110,7 +110,9 @@ func TestSubscribeCreatorsAndAssigneesToTasks20261021192508(t *testing.T) {
 		&taskAssigneesStub20261021192508{TaskID: 6, UserID: 1},
 		// task 4: assignee muted the project
 		&taskAssigneesStub20261021192508{TaskID: 4, UserID: 2},
+		// task 99 does not exist
 		&taskAssigneesStub20261021192508{TaskID: 99, UserID: 1},
+		// user 3 does not exist
 		&taskAssigneesStub20261021192508{TaskID: 1, UserID: 3},
 		// task 2: creator opted out
 		&subscriptionsStub20261021192508{EntityType: subscriptionEntityTask20261021192508, EntityID: 2, UserID: 1, Muted: true},
