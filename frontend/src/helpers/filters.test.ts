@@ -17,6 +17,8 @@ describe('Filter Transformation', () => {
 		'assignees': 'assignees',
 		'createdBy': 'created_by',
 		'labels': 'labels',
+		'relations': 'relations',
+		'openRelations': 'open_relations',
 	}
 
 	describe('For API', () => {
