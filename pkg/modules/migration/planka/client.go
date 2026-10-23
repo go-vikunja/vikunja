@@ -34,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/utils"
 
+	"code.dny.dev/ssrf"
 	"github.com/c2h5oh/datasize"
 )
 
@@ -297,7 +298,7 @@ func (c *client) probeMe(ctx context.Context) (me *plankaUserResponse, status in
 
 	resp, err := c.hc.Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
-		return nil, 0, &ErrNoPlankaAtURL{Reason: err.Error()}
+		return nil, 0, unreachableError(err)
 	}
 	defer resp.Body.Close()
 
@@ -318,6 +319,13 @@ func (c *client) probeMe(ctx context.Context) (me *plankaUserResponse, status in
 	return me, resp.StatusCode, nil
 }
 
+func unreachableError(err error) error {
+	if errors.Is(err, ssrf.ErrProhibitedIP) {
+		return &ErrPlankaHostNotAllowed{}
+	}
+	return &ErrNoPlankaAtURL{Reason: err.Error()}
+}
+
 func (c *client) loginWithPassword(ctx context.Context, username, password string) error {
 	body, err := json.Marshal(map[string]string{
 		"emailOrUsername": username,
@@ -336,7 +344,7 @@ func (c *client) loginWithPassword(ctx context.Context, username, password strin
 
 	resp, err := c.hc.Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
-		return &ErrNoPlankaAtURL{Reason: err.Error()}
+		return unreachableError(err)
 	}
 	defer resp.Body.Close()
 
