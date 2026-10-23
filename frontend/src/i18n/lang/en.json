@@ -611,6 +611,27 @@
       "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks.",
       "bucketOptions": "Bucket options"
     },
+    "venn": {
+      "title": "Venn",
+      "labels": "Labels",
+      "all": "All",
+      "none": "None",
+      "searchLabels": "Search labels…",
+      "showLabels": "Labels ({shown}/{total})",
+      "notDrawn": "Only the {max} labels with the most tasks fit in the diagram.",
+      "board": "Board",
+      "noLabels": "None of the tasks in this view have labels yet. Add labels to tasks to see how they overlap.",
+      "chartLabel": "Venn diagram of the tasks in this view, grouped by label",
+      "regionLabel": "{region}: no tasks | {region}: {count} task | {region}: {count} tasks",
+      "outside": "None of the selected labels",
+      "more": "+{count} more",
+      "allTasks": "All tasks",
+      "tasksIn": "Tasks in {region}",
+      "outsideTasks": "Tasks without any of the selected labels",
+      "showAll": "Show all tasks",
+      "regionEmpty": "No tasks here.",
+      "unplaced": "Also, without room in the diagram:"
+    },
     "pseudo": {
       "favorites": {
         "title": "Favorites"
