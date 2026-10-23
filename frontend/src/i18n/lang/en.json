@@ -1538,6 +1538,7 @@
     "newTeam": "Enter the name of the new team…",
     "createTask": "Create a task in the current project ({title})",
     "createProject": "Create a project",
+    "removePrefillDescription": "Remove the description",
     "results": "No results | {count} result | {count} results",
     "resultTypes": {
       "command": "Command",
