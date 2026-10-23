@@ -7,11 +7,11 @@
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			<line
-				v-for="(date, index) in timelineData"
-				:key="date.toISOString()"
-				:x1="index * dayWidthPixels"
+				v-for="x in positions"
+				:key="x"
+				:x1="x"
 				:y1="0"
-				:x2="index * dayWidthPixels"
+				:x2="x"
 				:y2="height"
 				stroke="var(--grey-400)"
 				stroke-width="0.5"
@@ -23,10 +23,9 @@
 
 <script setup lang="ts">
 defineProps<{
-	timelineData: Date[]
+	positions: number[]
 	totalWidth: number
 	height: number
-	dayWidthPixels: number
 }>()
 </script>
 
