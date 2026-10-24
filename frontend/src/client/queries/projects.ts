@@ -77,6 +77,7 @@ export const projectKeys = {
 	all: ['projects'] as const,
 	list: () => ['projects', 'list'] as const,
 	detail: (id: number) => ['projects', 'detail', id] as const,
+	count: (id: number) => ['projects', 'detail', id, 'count'] as const,
 }
 
 export function createProjectDraft(project: Partial<ProjectWritable> = {}): ProjectDraft {
@@ -418,7 +419,7 @@ export function descendantIds(projects: readonly ProjectResponse[], projectId: n
 
 export function projectCountQuery(id: number) {
 	return queryOptions({
-		queryKey: [...projectKeys.detail(id), 'count'] as const,
+		queryKey: projectKeys.count(id),
 		queryFn: async ({signal}) => (await projectsCount({path: {id}, signal})).data,
 		staleTime: 0,
 		enabled: id > 0,
