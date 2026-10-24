@@ -18,7 +18,12 @@ import {
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
-import {normalizeTask, taskQuery, type TaskResponse} from './tasks'
+import {
+	normalizeTask,
+	taskKeys,
+	taskQuery,
+	type TaskResponse,
+} from './tasks'
 import {insertTaskIntoBoards, invalidateTaskMembership} from './taskCache'
 import {timeEntryKeys} from './timeEntries'
 import {
@@ -205,6 +210,7 @@ export function deleteProjectMutationOptions() {
 		onSettled: (_input, client) => Promise.all([
 			// Already pruned optimistically; a refetch reloads every page.
 			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
+			client.invalidateQueries({queryKey: taskKeys.details}),
 			invalidateAfterTrashChange(client),
 		]),
 		// Failures reach the global Vue error handler, which toasts them.
