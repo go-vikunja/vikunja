@@ -8962,10 +8962,6 @@ export type TasksTrashListData = {
          */
         per_page?: number;
         /**
-         * Search query; filters the list to items matching this string.
-         */
-        q?: string;
-        /**
          * How rich-text fields are exchanged. See the API description.
          */
         format?: 'html' | 'markdown';

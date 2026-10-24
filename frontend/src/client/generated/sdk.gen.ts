@@ -2393,7 +2393,7 @@ export const tasksTrashEmpty = <ThrowOnError extends boolean = true>(options?: O
 /**
  * List trashed tasks
  *
- * Returns soft-deleted tasks in non-archived projects the user can write to, newest deletion first. Trashed tasks are purged 30 days after deleted_at. q is ignored. Not available to link shares.
+ * Returns soft-deleted tasks in non-archived projects the user can write to, newest deletion first. Trashed tasks are purged 30 days after deleted_at. Not available to link shares.
  */
 export const tasksTrashList = <ThrowOnError extends boolean = true>(options?: Options<TasksTrashListData, ThrowOnError>): RequestResult<TasksTrashListResponses, TasksTrashListErrors, ThrowOnError> => (options?.client ?? client).get<TasksTrashListResponses, TasksTrashListErrors, ThrowOnError>({
     security: [{
@@ -3031,7 +3031,7 @@ export const tasksRelationsDelete = <ThrowOnError extends boolean = true>(option
 /**
  * Restore a task from the trash
  *
- * Requires write access to the task's project; refused while the project is archived. The task lands in the default bucket (done bucket if done) at the end of every view. Link shares with write access may restore.
+ * Requires write access to the task's project; refused while the project is archived. The task returns to the default bucket (done bucket if done) and is positioned like a new task. Link shares with write access may restore.
  */
 export const tasksRestore = <ThrowOnError extends boolean = true>(options: Options<TasksRestoreData, ThrowOnError>): RequestResult<TasksRestoreResponses, TasksRestoreErrors, ThrowOnError> => (options.client ?? client).post<TasksRestoreResponses, TasksRestoreErrors, ThrowOnError>({
     security: [{
