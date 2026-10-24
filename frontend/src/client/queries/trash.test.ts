@@ -13,6 +13,7 @@ import {
 	trashKeys,
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
+import {taskKeys} from './tasks'
 import {
 	normalizeProject,
 	projectKeys,
@@ -127,14 +128,18 @@ describe('deleteProjectMutationOptions', () => {
 		expect(client.getQueryData(projectKeys.detail(4))).toBeDefined()
 	})
 
-	it('marks time entries stale', async () => {
+	it('marks time entries, task lists and task details stale', async () => {
 		const client = new QueryClient()
 		seedTrash(client)
+		client.setQueryData(taskKeys.list({}), [])
+		client.setQueryData(taskKeys.detail(5), {id: 5})
 		sdk.projectsDelete.mockResolvedValue({data: undefined})
 
 		await client.getMutationCache().build(client, deleteProjectMutationOptions()).execute(1)
 
 		expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(taskKeys.list({}))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(taskKeys.detail(5))?.isInvalidated).toBe(true)
 	})
 })
 
