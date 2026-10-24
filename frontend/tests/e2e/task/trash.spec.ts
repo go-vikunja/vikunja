@@ -6,6 +6,7 @@ import {BucketFactory} from '../../factories/bucket'
 import {TimeEntryFactory} from '../../factories/time_entry'
 import {LicenseFactory} from '../../factories/license'
 import {UserFactory} from '../../factories/user'
+import {UserProjectFactory} from '../../factories/users_project'
 import {createDefaultViews} from '../project/prepareProjects'
 
 function trashedTask(id: number, title: string, deletedBy = 1) {
@@ -109,11 +110,34 @@ test.describe('Trash', () => {
 		const notice = page.locator('[data-cy="taskInTrashNotice"]')
 		await expect(notice).toContainText('This task is in the trash.')
 		await expect(page).toHaveURL(/\/tasks\/1/)
+		await expect(notice.getByRole('link', {name: 'Open trash'})).toBeVisible()
 
 		await notice.locator('[data-cy="restoreTrashedTask"]').click()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
 		await page.reload()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
+	})
+
+	test('a read-only share sees a trashed task without restore', async ({authenticatedPage: page, currentUser}) => {
+		const [owner] = await UserFactory.create(1, {id: 2}, false)
+		await ProjectFactory.create(1, {id: 2, title: 'Shared Project', owner_id: owner.id}, false)
+		await createDefaultViews(2, 5)
+		await UserProjectFactory.create(1, {project_id: 2, user_id: currentUser.id, permission: 0})
+		await TaskFactory.create(1, {
+			id: 1,
+			title: 'Shared trashed task',
+			project_id: 2,
+			deleted_at: new Date().toISOString(),
+			deleted_by_id: owner.id,
+		}, false)
+		await page.goto('/tasks/1')
+
+		const notice = page.locator('[data-cy="taskInTrashNotice"]')
+		await expect(notice).toContainText('This task is in the trash.')
+		// canRestore reads the project list, so wait for it before asserting absence
+		await expect(page.locator('.menu-container')).toContainText('Shared Project')
+		await expect(notice.locator('[data-cy="restoreTrashedTask"]')).toHaveCount(0)
+		await expect(notice.getByRole('link', {name: 'Open trash'})).toHaveCount(0)
 	})
 
 	test.describe('time tracking', () => {
