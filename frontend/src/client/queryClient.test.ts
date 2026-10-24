@@ -79,4 +79,22 @@ describe('queryClient', () => {
 
 		expect(queryFn).toHaveBeenCalledOnce()
 	})
+
+	it('retries an ordinary failed read once', async () => {
+		const cause = {
+			status: 500,
+			detail: 'boom',
+		}
+		const queryFn = vi.fn(async () => {
+			throw cause
+		})
+
+		await expect(queryClient.fetchQuery({
+			queryKey: ['flaky'],
+			queryFn,
+			retryDelay: 0,
+		})).rejects.toBe(cause)
+
+		expect(queryFn).toHaveBeenCalledTimes(2)
+	})
 })
