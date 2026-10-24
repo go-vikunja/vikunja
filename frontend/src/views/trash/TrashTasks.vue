@@ -66,7 +66,7 @@
 			</ul>
 		</Card>
 		<p
-			v-else-if="!isFetching"
+			v-else-if="isSuccess && !isFetching"
 			class="has-text-centered has-text-grey is-italic"
 		>
 			{{ $t('trash.noTasks') }}
@@ -145,6 +145,7 @@ const tasks = computed(() => query.data.value?.items ?? [])
 const total = computed(() => query.data.value?.total ?? 0)
 const totalPages = computed(() => query.data.value?.total_pages ?? 0)
 const isFetching = query.isFetching
+const isSuccess = query.isSuccess
 
 // Restoring or deleting the last task of the last page leaves the page empty
 watch(() => clampPage(currentPage.value, {data: query.data.value, isPlaceholderData: query.isPlaceholderData.value}), page => {
