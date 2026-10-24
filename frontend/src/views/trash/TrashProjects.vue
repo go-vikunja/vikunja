@@ -38,13 +38,13 @@
 							v-if="project.trashed_sub_projects?.length"
 							v-cy="'toggleTrashedSubProjects'"
 							class="trashed-project__toggle"
-							:aria-expanded="expanded.has(project.id!)"
-							@click="toggle(project.id!)"
+							:aria-expanded="expanded.has(project.id)"
+							@click="toggle(project.id)"
 						>
 							<Icon
 								icon="chevron-down"
 								class="trashed-project__chevron"
-								:class="{'is-collapsed': !expanded.has(project.id!)}"
+								:class="{'is-collapsed': !expanded.has(project.id)}"
 							/>
 							{{ $t('trash.subProjects', project.trashed_sub_projects.length) }}
 						</BaseButton>
@@ -60,8 +60,8 @@
 								v-cy="'restoreProject'"
 								class="trash-action"
 								:aria-label="$t('trash.restore')"
-								:aria-disabled="isRestoring(project.id!) || undefined"
-								@click="restore(project.id!)"
+								:aria-disabled="isRestoring(project.id) || undefined"
+								@click="restore(project.id)"
 							>
 								<Icon icon="undo" />
 							</BaseButton>
@@ -77,7 +77,7 @@
 						</span>
 					</div>
 					<ul
-						v-if="expanded.has(project.id!)"
+						v-if="expanded.has(project.id)"
 						v-cy="'trashedSubProjects'"
 						class="trashed-sub-projects"
 					>
@@ -148,7 +148,8 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 
-import type {Project, TrashedSubProject} from '@/client/generated'
+import type {TrashedSubProject} from '@/client/generated'
+import type {ProjectResponse} from '@/client/queries/projects'
 import {
 	trashDaysLeft,
 	trashedProjectsQuery,
@@ -179,7 +180,7 @@ const restoreProject = useRestoreProjectMutation()
 const deleteProjectPermanently = useDeleteProjectPermanentlyMutation()
 const emptyProjectTrash = useEmptyProjectTrashMutation()
 
-const projectToDelete = ref<Project | null>(null)
+const projectToDelete = ref<ProjectResponse | null>(null)
 const showEmptyModal = ref(false)
 
 const expanded = reactive(new Set<number>())
@@ -190,7 +191,7 @@ function toggle(projectId: number) {
 }
 
 // The API lists them shallowest first; show each below its parent instead.
-function subProjectTree(project: Project): TrashedSubProject[] {
+function subProjectTree(project: ProjectResponse): TrashedSubProject[] {
 	const children = new Map<number, TrashedSubProject[]>()
 	for (const sub of project.trashed_sub_projects ?? []) {
 		const siblings = children.get(sub.parent_project_id ?? 0) ?? []
@@ -204,7 +205,7 @@ function subProjectTree(project: Project): TrashedSubProject[] {
 			visit(sub.id ?? 0)
 		}
 	}
-	visit(project.id ?? 0)
+	visit(project.id)
 	return ordered
 }
 
@@ -225,7 +226,7 @@ function openEmptyModal() {
 async function deleteForever() {
 	const project = projectToDelete.value
 	projectToDelete.value = null
-	if (project?.id) {
+	if (project) {
 		await deleteProjectPermanently.mutateAsync(project.id)
 	}
 }

@@ -14,7 +14,6 @@ import {
 	tasksRestore,
 	tasksTrashEmpty,
 	tasksTrashList,
-	type Project,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
@@ -23,8 +22,10 @@ import {invalidateTaskMembership} from './taskCache'
 import {timeEntryKeys} from './timeEntries'
 import {
 	descendantIds,
+	normalizeProject,
 	projectKeys,
 	type ProjectListResult,
+	type ProjectResponse,
 } from './projects'
 import {trashKeys} from './trashShared'
 import {i18n} from '@/i18n'
@@ -42,7 +43,7 @@ export {
 export const TRASH_RETENTION_DAYS = 30
 
 export type TrashedTaskPage = Paginated<TaskResponse>
-export type TrashedProjectPage = Paginated<Project>
+export type TrashedProjectPage = Paginated<ProjectResponse>
 
 export function trashDaysLeft(deletedAt: string | Date, now = new Date()): number {
 	const purgeAt = new Date(deletedAt).getTime() + TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000
@@ -120,7 +121,8 @@ export function trashedProjectsQuery(page: number) {
 		queryKey: trashKeys.projectList(page),
 		queryFn: async ({signal}): Promise<TrashedProjectPage> => {
 			const {data} = await projectsTrashList({query: {page}, signal})
-			return toPaginated(data, page)
+			const paginated = toPaginated(data, page)
+			return {...paginated, items: paginated.items.map(normalizeProject)}
 		},
 		placeholderData: keepPreviousData,
 		staleTime: 0,
@@ -169,7 +171,7 @@ export function deleteProjectMutationOptions() {
 export function restoreProjectMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => (await projectsRestore({path: {id}})).data,
-		onSuccess: (_project, id, client) => removeFromPages<Project>(client, trashKeys.projects, project => project.id === id),
+		onSuccess: (_project, id, client) => removeFromPages<ProjectResponse>(client, trashKeys.projects, project => project.id === id),
 		onSettled: (_id, client) => invalidateAfterProjectTrashChange(client),
 		successMessage: () => i18n.global.t('trash.restoreProjectSuccess'),
 	})
@@ -178,7 +180,7 @@ export function restoreProjectMutationOptions() {
 export function deleteProjectPermanentlyMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => { await projectsDeletePermanently({path: {id}}) },
-		onSuccess: (_data, id, client) => removeFromPages<Project>(client, trashKeys.projects, project => project.id === id),
+		onSuccess: (_data, id, client) => removeFromPages<ProjectResponse>(client, trashKeys.projects, project => project.id === id),
 		onSettled: (_id, client) => Promise.all([
 			client.invalidateQueries({queryKey: trashKeys.all}),
 			client.invalidateQueries({queryKey: timeEntryKeys.all}),
