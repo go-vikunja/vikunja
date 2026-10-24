@@ -1428,6 +1428,7 @@
 		"task": {
 			"title": "Aufgabenseite",
 			"done": "Aufgabe als erledigt / unerledigt markieren",
+			"doneAndBack": "Aufgabe markieren und zurückgehen",
 			"assign": "Diese Aufgabe jemandem zuweisen",
 			"labels": "Dieser Aufgabe ein Label hinzufügen",
 			"dueDate": "Ändere das Fälligkeitsdatum dieser Aufgabe",
