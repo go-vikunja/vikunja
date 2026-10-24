@@ -42,10 +42,6 @@ const props = defineProps<{
 	inTrash: TaskInTrash,
 }>()
 
-const emit = defineEmits<{
-	restored: [],
-}>()
-
 const taskInTrashLabel = useDeletedLabel('trash.taskInTrash')
 const projectList = useProjects()
 const restoreTask = useRestoreTaskMutation()
@@ -56,7 +52,6 @@ const deletedLabel = computed(() => taskInTrashLabel(props.inTrash))
 
 async function restore() {
 	await restoreTask.mutateAsync(props.taskId)
-	emit('restored')
 }
 </script>
 
