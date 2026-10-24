@@ -46,6 +46,7 @@ import {
 	getSavedFilterIdFromProjectId,
 	isSavedFilterProject,
 	normalizeProject,
+	projectCountQuery,
 	projectKeys,
 	projectQuery,
 	patchProjectFavoriteMutationOptions,
@@ -188,6 +189,10 @@ describe('project queries', () => {
 		expect(projectQuery(-2).enabled).toBe(true)
 		expect(projectQuery(-1).enabled).toBe(true)
 		expect(projectQuery(0).enabled).toBe(false)
+	})
+
+	it('lets the caller handle project count errors', () => {
+		expect(projectCountQuery(1).meta).toEqual({handlesError: true})
 	})
 
 })
