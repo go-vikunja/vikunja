@@ -48,7 +48,7 @@ func RegisterTaskTrashRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID:   "tasks-restore",
 		Summary:       "Restore a task from the trash",
-		Description:   "Requires write access to the task's project; refused while the project is archived. The task lands in the default bucket (done bucket if done) at the end of every view. Link shares with write access may restore.",
+		Description:   "Requires write access to the task's project; refused while the project is archived. The task returns to the default bucket (done bucket if done) and is positioned like a new task. Link shares with write access may restore.",
 		Method:        http.MethodPost,
 		Path:          "/tasks/{task}/restore",
 		DefaultStatus: http.StatusOK,
