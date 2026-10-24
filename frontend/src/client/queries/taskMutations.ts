@@ -29,6 +29,7 @@ import {contextMutationOptions} from './contextMutation'
 import {normalizeTask, taskKeys, type PaginatedTaskResponse, type TaskResponse} from './tasks'
 import {bucketKeys, kanbanKeys, normalizeBucket, type BoardData} from './kanban'
 import {
+	insertTaskIntoBoards,
 	invalidateTaskMembership,
 	mapTaskEverywhere,
 	removeTaskEverywhere,
@@ -143,32 +144,6 @@ function cachedViewBuckets(client: QueryClient, project: number, view: number) {
 	const board = client.getQueriesData<BoardData>({queryKey: kanbanKeys.view(project, view)})
 		.find(([, data]) => data)?.[1]
 	return board?.buckets ?? client.getQueryData<Bucket[]>(bucketKeys.list(project, view))
-}
-
-export function insertTaskIntoBoards(client: QueryClient, created: Task) {
-	const task = normalizeTask(created)
-	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
-		const project = kanbanKeys.projectOf(key)
-		const viewId = kanbanKeys.viewOf(key)
-		if (!board || project === undefined || project !== task.project_id || viewId === undefined) continue
-		const view = getCachedProject(project, client)?.views?.find(item => item.id === viewId)
-		// The response only echoes the requested bucket, which belongs to the one view it was requested for.
-		const target = board.buckets.some(bucket => bucket.id === task.bucket_id)
-			? task.bucket_id
-			: view && view.bucket_configuration_mode !== 'filter'
-				? task.done && view.done_bucket_id
-					? view.done_bucket_id
-					: getDefaultBucketId(view, board.buckets)
-				: undefined
-		if (target === undefined) continue
-		const position = task.positions?.find(item => item.project_view_id === viewId)?.position ?? task.position
-		client.setQueryData(key, {
-			...board,
-			buckets: board.buckets.map(bucket => bucket.id === target
-				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target, position}, ...bucket.tasks]}
-				: bucket),
-		})
-	}
 }
 
 export function createTaskMutationOptions() {
