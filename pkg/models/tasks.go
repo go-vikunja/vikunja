@@ -436,9 +436,17 @@ func (t *Task) resolveIDFromProjectAndIndex(s *xorm.Session) error {
 	if t.ID != 0 || t.ProjectID < 1 || t.Index < 1 {
 		return nil
 	}
-	resolved, err := GetTaskByProjectAndIndex(s, t.ProjectID, t.Index)
+	// Unscoped so a trashed task resolves and CanRead can report it as in the trash.
+	resolved := &Task{}
+	has, err := s.Unscoped().
+		Where("project_id = ? AND `index` = ?", t.ProjectID, t.Index).
+		Cols("id").
+		Get(resolved)
 	if err != nil {
 		return err
+	}
+	if !has {
+		return ErrTaskDoesNotExist{}
 	}
 	t.ID = resolved.ID
 	return nil
