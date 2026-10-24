@@ -1837,8 +1837,7 @@
     "deletedByYou": "Deleted by you {since}",
     "taskInTrashByYou": "This task is in the trash. You deleted it {since}.",
     "tabs": {
-      "label": "Trash sections",
-      "tasks": "Tasks"
+      "label": "Trash sections"
     }
   }
 }
