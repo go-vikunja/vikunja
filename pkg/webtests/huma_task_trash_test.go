@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -104,7 +105,13 @@ func TestHumaTaskTrash(t *testing.T) {
 		require.NoError(t, err)
 
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/tasks/51/restore", "", stranger(t), "")
-		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+		assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"code":4002`)
+
+		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/32", "", humaTokenFor(t, &user.User{ID: 3, Username: "user3", Issuer: "local"}), "")
+		require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+		rec = humaRequest(t, e, http.MethodPost, "/api/v2/tasks/32/restore", "", user1(t), "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "reader: %s", rec.Body.String())
 
 		rec = humaRequest(t, e, http.MethodPost, "/api/v2/tasks/51/restore", "", user1(t), "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
@@ -132,7 +139,8 @@ func TestHumaTaskTrash(t *testing.T) {
 		require.NoError(t, err)
 
 		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/51/permanent", "", stranger(t), "")
-		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+		assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"code":4002`)
 
 		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/1/permanent", "", user1(t), "")
 		assert.Equal(t, http.StatusNotFound, rec.Code, "live task: %s", rec.Body.String())
