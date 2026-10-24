@@ -27,10 +27,6 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-type trashedTaskListBody struct {
-	Body Paginated[*models.Task]
-}
-
 func init() { AddRouteRegistrar(RegisterTaskTrashRoutes) }
 
 func RegisterTaskTrashRoutes(api huma.API) {
@@ -77,7 +73,7 @@ func RegisterTaskTrashRoutes(api huma.API) {
 func tasksTrashList(ctx context.Context, in *struct {
 	PageParams
 	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
-}) (*trashedTaskListBody, error) {
+}) (*taskListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -90,7 +86,7 @@ func tasksTrashList(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	convertTasksToMarkdown(ctx, tasks...)
-	return &trashedTaskListBody{Body: NewPaginated(tasks, total, in.Page, in.PerPage)}, nil
+	return &taskListBody{Body: NewPaginated(tasks, total, in.Page, in.PerPage)}, nil
 }
 
 func tasksRestore(ctx context.Context, in *struct {
