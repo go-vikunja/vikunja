@@ -201,8 +201,13 @@ func TestProjectAccessCond(t *testing.T) {
 		assert.Empty(t, projectIDsMatching(t, s, empty.cond("id", PermissionRead)))
 	})
 
-	for _, minPermission := range []Permission{PermissionRead, PermissionWrite, PermissionAdmin} {
-		t.Run("subquery fallback matches the list with bounded parameters at "+strconv.Itoa(int(minPermission)), func(t *testing.T) {
+	minPermissions := map[string]Permission{
+		"read":  PermissionRead,
+		"write": PermissionWrite,
+		"admin": PermissionAdmin,
+	}
+	for name, minPermission := range minPermissions {
+		t.Run("subquery fallback matches the list with bounded parameters at "+name, func(t *testing.T) {
 			ids := projectIDsMatching(t, s, access.cond("id", minPermission))
 			assert.NotEmpty(t, ids)
 			fallback := access.condViaSubquery("id", minPermission)

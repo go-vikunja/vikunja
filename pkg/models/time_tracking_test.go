@@ -836,11 +836,18 @@ func TestTimeEntry_TrashedTask(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, can, "delete")
 
-		can, err = (&TimeEntry{ID: entry.ID, Comment: "edited", StartTime: entry.StartTime}).CanUpdate(s, u)
+		can, err = (&TimeEntry{
+			ID:        entry.ID,
+			Comment:   "edited",
+			StartTime: entry.StartTime,
+		}).CanUpdate(s, u)
 		require.NoError(t, err)
 		assert.False(t, can, "update in place")
 
-		can, err = (&TimeEntry{ID: 1, TaskID: 51}).CanUpdate(s, u)
+		can, err = (&TimeEntry{
+			ID:     1,
+			TaskID: 51,
+		}).CanUpdate(s, u)
 		require.NoError(t, err)
 		assert.False(t, can, "move onto a trashed task")
 
@@ -853,6 +860,10 @@ func TestTimeEntry_TrashedTask(t *testing.T) {
 
 		deleteExpiredTasks(time.Now())
 
-		db.AssertExists(t, "time_entries", map[string]interface{}{"id": entry.ID, "task_id": 0, "project_id": 1}, false)
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         entry.ID,
+			"task_id":    0,
+			"project_id": 1,
+		}, false)
 	})
 }

@@ -60,7 +60,11 @@ func trashedTaskReadError(s *xorm.Session, a web.Auth, taskID int64, notFound er
 		return err
 	}
 
-	inTrash := ErrTaskIsInTrash{ID: trashed.ID, ProjectID: trashed.ProjectID, DeletedAt: trashed.DeletedAt}
+	inTrash := ErrTaskIsInTrash{
+		ID:        trashed.ID,
+		ProjectID: trashed.ProjectID,
+		DeletedAt: trashed.DeletedAt,
+	}
 	if trashed.DeletedByID != 0 {
 		deleters, err := getUsersOrLinkSharesFromIDs(s, []int64{trashed.DeletedByID})
 		if err != nil {
@@ -75,7 +79,10 @@ func trashedTaskReadError(s *xorm.Session, a web.Auth, taskID int64, notFound er
 func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
 	restored, err := s.Table("tasks").
 		Where(builder.And(builder.Eq{"id": t.ID}, builder.NotNull{"deleted_at"})).
-		Update(map[string]any{"deleted_at": nil, "deleted_by_id": nil})
+		Update(map[string]any{
+			"deleted_at":    nil,
+			"deleted_by_id": nil,
+		})
 	if err != nil {
 		return err
 	}

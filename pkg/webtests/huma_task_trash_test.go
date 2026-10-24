@@ -53,6 +53,12 @@ func trashedIDs(t *testing.T, body []byte) []int64 {
 func TestHumaTaskTrash(t *testing.T) {
 	user1 := func(t *testing.T) string { return humaTokenFor(t, &testuser1) }
 	stranger := func(t *testing.T) string { return humaTokenFor(t, &testuser13) }
+	writeShare := &models.LinkSharing{
+		ID:         2,
+		Hash:       "test2",
+		ProjectID:  2,
+		Permission: models.PermissionWrite,
+	}
 
 	t.Run("list", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -70,7 +76,7 @@ func TestHumaTaskTrash(t *testing.T) {
 	t.Run("link shares have no trash", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		token, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: models.PermissionWrite})
+		token, err := auth.NewLinkShareJWTAuthtoken(writeShare)
 		require.NoError(t, err)
 
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/deleted", "", token, "")
@@ -139,7 +145,7 @@ func TestHumaTaskTrash(t *testing.T) {
 	t.Run("write link share undoes its own delete", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		token, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: models.PermissionWrite})
+		token, err := auth.NewLinkShareJWTAuthtoken(writeShare)
 		require.NoError(t, err)
 
 		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/13", "", token, "")

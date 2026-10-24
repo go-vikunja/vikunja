@@ -92,13 +92,27 @@ func TestTask_Restore(t *testing.T) {
 		require.NoError(t, err)
 		events.AssertDispatched(t, &TaskRestoredEvent{})
 
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51, "deleted_at": nil, "deleted_by_id": nil}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":            51,
+			"deleted_at":    nil,
+			"deleted_by_id": nil,
+		}, false)
 		assert.True(t, task.Updated.After(time.Date(2018, 12, 1, 1, 12, 4, 0, time.UTC)))
 
 		// View 4 is project 1's manual kanban with default bucket 1
-		db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 51, "project_view_id": 1}, false)
-		db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 51, "project_view_id": 4}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 51, "project_view_id": 4, "bucket_id": 1}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         51,
+			"project_view_id": 1,
+		}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{
+			"task_id":         51,
+			"project_view_id": 4,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":         51,
+			"project_view_id": 4,
+			"bucket_id":       1,
+		}, false)
 
 		s := db.NewSession()
 		defer s.Close()
@@ -112,7 +126,11 @@ func TestTask_Restore(t *testing.T) {
 		_, err := restoreTaskForTest(t, 51, u1)
 		require.NoError(t, err)
 
-		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 51, "project_view_id": 4, "bucket_id": 3}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":         51,
+			"project_view_id": 4,
+			"bucket_id":       3,
+		}, false)
 	})
 	t.Run("round trip through delete keeps the deleter cleared", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -121,22 +139,40 @@ func TestTask_Restore(t *testing.T) {
 		_, err := restoreTaskForTest(t, 1, u1)
 		require.NoError(t, err)
 
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "deleted_at": nil, "deleted_by_id": nil}, false)
-		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": 4}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":            1,
+			"deleted_at":    nil,
+			"deleted_by_id": nil,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":         1,
+			"project_view_id": 4,
+		}, false)
 	})
 	t.Run("write link share can restore in its project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  2,
+			Permission: PermissionWrite,
+		}
 		trashTaskForTest(t, 13, share)
 
 		_, err := restoreTaskForTest(t, 13, share)
 		require.NoError(t, err)
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 13, "deleted_at": nil}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         13,
+			"deleted_at": nil,
+		}, false)
 	})
 	t.Run("read-only link share cannot restore", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		_, err := restoreTaskForTest(t, 51, &LinkSharing{ID: 1, ProjectID: 1, Permission: PermissionRead})
+		_, err := restoreTaskForTest(t, 51, &LinkSharing{
+			ID:         1,
+			ProjectID:  1,
+			Permission: PermissionRead,
+		})
 		require.ErrorIs(t, err, ErrGenericForbidden{})
 	})
 	t.Run("unrelated user cannot tell the task is trashed", func(t *testing.T) {
@@ -222,7 +258,10 @@ func TestTaskTrash_InstanceAdminInArchivedProject(t *testing.T) {
 		_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
 		require.NoError(t, err)
 		setTaskColumnsForTest(t, 36, map[string]any{"deleted_at": time.Now()})
-		return &user.User{ID: 2, IsAdmin: true}
+		return &user.User{
+			ID:      2,
+			IsAdmin: true,
+		}
 	}
 
 	t.Run("restore is refused", func(t *testing.T) {
@@ -266,7 +305,10 @@ func TestGetTrashedTasks(t *testing.T) {
 
 		tasks, total, err := GetTrashedTasks(s, u1, 1, 50)
 		require.NoError(t, err)
-		assert.Equal(t, []int64{1, 51}, trashedTaskIDs(tasks))
+		assert.Equal(t, []int64{
+			1,
+			51,
+		}, trashedTaskIDs(tasks))
 		assert.Equal(t, int64(2), total)
 
 		require.NotNil(t, tasks[0].DeletedBy)
@@ -301,7 +343,12 @@ func TestGetTrashedTasks(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, _, err := GetTrashedTasks(s, &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}, 1, 50)
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  2,
+			Permission: PermissionWrite,
+		}
+		_, _, err := GetTrashedTasks(s, share, 1, 50)
 		require.ErrorIs(t, err, ErrGenericForbidden{})
 	})
 }
@@ -331,7 +378,11 @@ func TestTask_DeletePermanently(t *testing.T) {
 	})
 	t.Run("write link share is denied", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  2,
+			Permission: PermissionWrite,
+		}
 		trashTaskForTest(t, 13, share)
 		require.ErrorIs(t, deletePermanentlyForTest(t, 13, share), ErrGenericForbidden{})
 	})
@@ -339,7 +390,10 @@ func TestTask_DeletePermanently(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		err := deletePermanentlyForTest(t, 1, &user.User{ID: 1})
 		assert.True(t, IsErrTaskDoesNotExist(err))
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "deleted_at": nil}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         1,
+			"deleted_at": nil,
+		}, false)
 	})
 }
 

@@ -796,11 +796,18 @@ func TestTask_Delete(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		err := (&Task{ID: 13}).Delete(s, &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite})
+		err := (&Task{ID: 13}).Delete(s, &LinkSharing{
+			ID:         2,
+			ProjectID:  2,
+			Permission: PermissionWrite,
+		})
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 13, "deleted_by_id": -2}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":            13,
+			"deleted_by_id": -2,
+		}, false)
 	})
 	t.Run("stops running timers on the task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -882,8 +889,16 @@ func TestHardDeleteTask(t *testing.T) {
 	// The attachment files are gone too
 	db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
 	db.AssertMissing(t, "time_entries", map[string]interface{}{"task_id": 1})
-	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 1, "task_id": 0, "project_id": 1}, false)
-	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 4, "task_id": 0, "project_id": 1}, false)
+	db.AssertExists(t, "time_entries", map[string]interface{}{
+		"id":         1,
+		"task_id":    0,
+		"project_id": 1,
+	}, false)
+	db.AssertExists(t, "time_entries", map[string]interface{}{
+		"id":         4,
+		"task_id":    0,
+		"project_id": 1,
+	}, false)
 }
 
 func TestHardDeleteTask_RollbackKeepsAttachmentBlobs(t *testing.T) {
