@@ -9,8 +9,8 @@
 				variant="secondary"
 				icon="trash-alt"
 				danger
-				:disabled="total === 0"
-				@click="showEmptyModal = true"
+				:aria-disabled="total === 0 || undefined"
+				@click="openEmptyModal()"
 			>
 				{{ $t('trash.empty') }}
 			</XButton>
@@ -46,8 +46,8 @@
 							v-cy="'restoreTask'"
 							class="trash-action"
 							:aria-label="$t('trash.restore')"
-							:disabled="restoreTask.isPending.value && restoreTask.variables.value === task.id"
-							@click="restoreTask.mutate(task.id)"
+							:aria-disabled="isRestoring(task.id) || undefined"
+							@click="restore(task.id)"
 						>
 							<Icon icon="undo" />
 						</BaseButton>
@@ -156,6 +156,24 @@ const emptyTaskTrash = useEmptyTaskTrashMutation()
 
 const taskToDelete = ref<TaskResponse | null>(null)
 const showEmptyModal = ref(false)
+
+function isRestoring(id: number) {
+	return restoreTask.isPending.value && restoreTask.variables.value === id
+}
+
+function restore(id: number) {
+	if (isRestoring(id)) {
+		return
+	}
+	restoreTask.mutate(id)
+}
+
+function openEmptyModal() {
+	if (total.value === 0) {
+		return
+	}
+	showEmptyModal.value = true
+}
 
 async function deleteForever() {
 	const task = taskToDelete.value
