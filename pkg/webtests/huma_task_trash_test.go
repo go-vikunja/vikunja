@@ -109,7 +109,12 @@ func TestHumaTaskTrash(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"code":4002`)
 
-		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/32", "", humaTokenFor(t, &user.User{ID: 3, Username: "user3", Issuer: "local"}), "")
+		user3 := &user.User{
+			ID:       3,
+			Username: "user3",
+			Issuer:   "local",
+		}
+		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/32", "", humaTokenFor(t, user3), "")
 		require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
 		rec = humaRequest(t, e, http.MethodPost, "/api/v2/tasks/32/restore", "", user1(t), "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, "reader: %s", rec.Body.String())

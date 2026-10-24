@@ -191,10 +191,14 @@ func TestTask_Restore(t *testing.T) {
 		require.NoError(t, err)
 		dispatched := events.GetDispatchedEvents((&TaskRestoredEvent{}).Name())
 		require.Len(t, dispatched, 1)
-		db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 51, "project_view_id": view.ID})
+		inFilterView := map[string]interface{}{
+			"task_id":         51,
+			"project_view_id": view.ID,
+		}
+		db.AssertMissing(t, "task_buckets", inFilterView)
 
 		events.TestListener(t, dispatched[0], &UpdateTaskInSavedFilterViews{})
-		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 51, "project_view_id": view.ID}, false)
+		db.AssertExists(t, "task_buckets", inFilterView, false)
 	})
 	t.Run("live task is not in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
