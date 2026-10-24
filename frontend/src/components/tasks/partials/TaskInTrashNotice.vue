@@ -8,7 +8,7 @@
 		<p class="has-text-grey">
 			{{ $t('trash.daysLeft', trashDaysLeft(inTrash.deleted_at)) }}
 		</p>
-		<!-- The trash only lists what the user can restore; link shares can't open it -->
+		<!-- The trash only lists what the user can restore -->
 		<div
 			v-if="canRestore"
 			class="task-in-trash__actions"
