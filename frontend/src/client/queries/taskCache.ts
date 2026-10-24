@@ -153,7 +153,7 @@ function canPatchBoard(view: ProjectView | undefined, params: TaskFilterParams |
 	return view !== undefined
 		&& view.bucket_configuration_mode !== 'filter'
 		&& !params?.filter
-		&& !params?.s
+		&& !params?.q
 }
 
 // Like the server, a done task goes to the done bucket even when another bucket was requested.
