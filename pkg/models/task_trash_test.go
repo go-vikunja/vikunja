@@ -127,7 +127,10 @@ func TestTask_Restore(t *testing.T) {
 
 		_, err := restoreTaskForTest(t, 51, &user.User{ID: 2})
 		assert.True(t, IsErrTaskDoesNotExist(err))
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51, "deleted_by_id": nil}, false)
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"id":         51,
+			"deleted_at": nil,
+		})
 	})
 	t.Run("reader cannot restore", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
