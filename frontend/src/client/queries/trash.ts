@@ -30,6 +30,7 @@ import {
 	normalizeProject,
 	projectKeys,
 	removeProjectSubtree,
+	toastError,
 	type ProjectResponse,
 } from './projects'
 import {trashKeys} from './trashShared'
@@ -198,15 +199,13 @@ export function deleteProjectMutationOptions() {
 			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
 			removeProjectFromHistory({id})
 		},
-		// The view toasts with an undo action
 		onSettled: (_input, client) => Promise.all([
-			// Already pruned optimistically; a refetch reloads every page.
 			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 			client.invalidateQueries({queryKey: taskKeys.details}),
 			invalidateAfterTrashChange(client),
 		]),
-		// Failures reach the global Vue error handler, which toasts them.
-		toastError: () => false,
+		// No successMessage: the view toasts with an undo action.
+		toastError,
 	})
 }
 
