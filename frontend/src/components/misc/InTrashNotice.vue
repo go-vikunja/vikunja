@@ -7,9 +7,12 @@
 		<p class="has-text-grey">
 			{{ $t('trash.daysLeft', trashDaysLeft(deletedAt)) }}
 		</p>
-		<div class="in-trash__actions">
+		<!-- The trash only lists what the user can restore -->
+		<div
+			v-if="canRestore"
+			class="in-trash__actions"
+		>
 			<XButton
-				v-if="canRestore"
 				v-cy="restoreCy"
 				icon="undo"
 				:loading="restoring"
