@@ -149,7 +149,11 @@ test.describe('Trash', () => {
 			await LicenseFactory.disable()
 		})
 
-		test('time entries of a trashed task are read-only', async ({authenticatedPage: page, apiContext, userToken}) => {
+		test('time entries of a trashed task are read-only', async ({
+			authenticatedPage: page,
+			apiContext,
+			userToken,
+		}) => {
 			await trashedTask(1, 'Tracked then trashed')
 			const [entry] = await TimeEntryFactory.create(1, {task_id: 1, comment: 'tracked before trash'})
 			await page.goto('/time-tracking')
