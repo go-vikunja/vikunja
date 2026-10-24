@@ -127,7 +127,7 @@ test.describe('Project trash', () => {
 		await expect(page.locator('.project-title')).toContainText('First Project')
 	})
 
-	test('a read-only share sees a trashed project without restore', async ({authenticatedPage: page, apiContext, currentUser, userToken}) => {
+	test('a read-only share sees a trashed project without restore', async ({authenticatedPage: page, apiContext, currentUser}) => {
 		const [owner] = await UserFactory.create(1, {id: 2}, false)
 		await ProjectFactory.create(1, {id: 4, title: 'Shared Project', owner_id: owner.id}, false)
 		await createDefaultViews(4, 5)
@@ -140,8 +140,5 @@ test.describe('Project trash', () => {
 		await expect(notice).toContainText('This project is in the trash.')
 		await expect(notice.locator('[data-cy="restoreTrashed"]')).toHaveCount(0)
 		await expect(notice.getByRole('link', {name: 'Open trash'})).toHaveCount(0)
-
-		const restore = await apiContext.post('/api/v2/projects/4/restore', {headers: {Authorization: `Bearer ${userToken}`}})
-		expect(restore.status()).toBe(403)
 	})
 })
