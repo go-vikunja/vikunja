@@ -824,7 +824,9 @@ const trashedTask = computed(() => taskLoadError.value?.action === 'inTrash'
 	: null)
 const taskNotFound = computed(() => taskLoadError.value?.action === 'inTrash'
 	|| taskLoadError.value?.action === 'notFound')
-const taskTitle = computed(() => task.value.title)
+const taskTitle = computed(() => trashedTask.value
+	? t('trash.taskInTrashTitle')
+	: task.value.title)
 useTitle(taskTitle)
 
 const lastProject = computed(() => {
