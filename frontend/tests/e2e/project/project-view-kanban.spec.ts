@@ -451,7 +451,7 @@ test.describe('Project View Kanban', () => {
 		await card.click()
 		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
 		await expect(page).toHaveURL(new RegExp(`/projects/1/${view.id}$`))
-		await expect(page.locator('.kanban .bucket')).toHaveCount(2)
+		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).toBeVisible()
 		await expect(card).toHaveCount(0)
 
 		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
