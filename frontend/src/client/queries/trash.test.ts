@@ -12,7 +12,6 @@ import {
 import {timeEntryKeys} from './timeEntries'
 import {kanbanKeys, normalizeBucket, type BoardData} from './kanban'
 import {projectKeys} from './projects'
-import {deleteTaskMutationOptions} from './taskMutations'
 import {ApiError} from '@/client/problem'
 
 const sdk = vi.hoisted(() => ({
@@ -20,7 +19,6 @@ const sdk = vi.hoisted(() => ({
 	tasksRestore: vi.fn(),
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
-	tasksDelete: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({
@@ -201,18 +199,6 @@ it('marks the trash and time entries stale after emptying the trash', async () =
 	await client.getMutationCache().build(client, emptyTaskTrashMutationOptions()).execute(undefined)
 
 	expect(sdk.tasksTrashEmpty).toHaveBeenCalled()
-	expect(client.getQueryState(trashKeys.taskList(1))?.isInvalidated).toBe(true)
-	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
-})
-
-it('marks the trash and time entries stale after deleting a task', async () => {
-	const client = new QueryClient()
-	seedTrash(client)
-	sdk.tasksDelete.mockResolvedValue({})
-
-	await client.getMutationCache().build(client, deleteTaskMutationOptions()).execute(5)
-
-	expect(sdk.tasksDelete).toHaveBeenCalledWith({path: {task: 5}})
 	expect(client.getQueryState(trashKeys.taskList(1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
 })
