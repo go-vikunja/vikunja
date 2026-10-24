@@ -20,6 +20,8 @@ import {
 	updateTaskMutationOptions,
 	updateTaskPositionMutationOptions,
 } from './taskMutations'
+import {trashKeys} from './trash'
+import {timeEntryKeys} from './timeEntries'
 import type {Task, PaginatedTask} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
@@ -419,6 +421,31 @@ describe('task mutations', () => {
 		expect(sdk.projectViewBucketsTasksList).toHaveBeenCalledOnce()
 		expect(sdk.projectTasksList).toHaveBeenCalledTimes(2)
 		unsubscribe()
+	})
+
+	it('marks the trash and time entries stale after deleting a task', async () => {
+		const client = new QueryClient()
+		client.setQueryData(trashKeys.taskList(1), {
+			items: [],
+			page: 1,
+			per_page: 50,
+			total: 0,
+			total_pages: 0,
+		})
+		client.setQueryData(timeEntryKeys.list('', 'UTC', 1), {
+			items: [],
+			page: 1,
+			per_page: 50,
+			total: 0,
+			total_pages: 0,
+		})
+		sdk.tasksDelete.mockResolvedValue({})
+		await client.getMutationCache()
+			.build(client, deleteTaskMutationOptions())
+			.execute(5)
+		expect(sdk.tasksDelete).toHaveBeenCalledWith({path: {task: 5}})
+		expect(client.getQueryState(trashKeys.taskList(1))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
 	})
 
 	it('inserts a duplicate into the default bucket of every cached view', async () => {
