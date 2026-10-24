@@ -156,6 +156,14 @@ function canPatchBoard(view: ProjectView | undefined, params: TaskFilterParams |
 		&& !params?.s
 }
 
+// Like the server, a done task goes to the done bucket even when another bucket was requested.
+function targetBucketId(view: ProjectView, board: BoardData, task: TaskResponse): number | undefined {
+	if (task.done && view.done_bucket_id) return view.done_bucket_id
+	// The response only echoes the requested bucket, which belongs to the one view it was requested for.
+	if (board.buckets.some(bucket => bucket.id === task.bucket_id)) return task.bucket_id
+	return getDefaultBucketId(view, board.buckets)
+}
+
 export function insertTaskIntoBoards(client: QueryClient, created: Task) {
 	const task = normalizeTask(created)
 	const unpatchable: QueryKey[] = []
@@ -168,12 +176,7 @@ export function insertTaskIntoBoards(client: QueryClient, created: Task) {
 			unpatchable.push(key)
 			continue
 		}
-		// The response only echoes the requested bucket, which belongs to the one view it was requested for.
-		const target = board.buckets.some(bucket => bucket.id === task.bucket_id)
-			? task.bucket_id
-			: task.done && view.done_bucket_id
-				? view.done_bucket_id
-				: getDefaultBucketId(view, board.buckets)
+		const target = targetBucketId(view, board, task)
 		if (target === undefined) continue
 		// A card left over from another tab would otherwise show twice.
 		const deduped = removeFromBoard(board, task.id, dropMembership) ?? board
