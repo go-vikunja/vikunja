@@ -1,5 +1,5 @@
 import {describe, it, expect, vi} from 'vitest'
-import {QueryClient} from '@tanstack/vue-query'
+import {QueryClient, QueryObserver} from '@tanstack/vue-query'
 import {
 	deleteTaskPermanentlyMutationOptions,
 	restoreTaskMutationOptions,
@@ -9,6 +9,7 @@ import {
 	trashKeys,
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
+import {kanbanKeys} from './kanban'
 
 const sdk = vi.hoisted(() => ({
 	tasksTrashList: vi.fn(),
@@ -54,6 +55,46 @@ it('drops a restored task from the trash and marks time entries stale', async ()
 	expect(sdk.tasksRestore).toHaveBeenCalledWith({path: {task: 2}})
 	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({items: [{id: 1}], total: 2})
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+})
+
+it('refetches the mounted boards of the restored task\'s project', async () => {
+	const client = new QueryClient()
+	seedTrash(client)
+	const readBoard = vi.fn().mockResolvedValue({
+		buckets: [],
+		pages: {},
+	})
+	const readOtherBoard = vi.fn().mockResolvedValue({
+		buckets: [],
+		pages: {},
+	})
+	const observers = [
+		new QueryObserver(client, {
+			queryKey: kanbanKeys.board(5, 6),
+			queryFn: readBoard,
+		}),
+		new QueryObserver(client, {
+			queryKey: kanbanKeys.board(7, 8),
+			queryFn: readOtherBoard,
+		}),
+	].map(observer => observer.subscribe(() => {}))
+	await vi.waitFor(() => {
+		expect(readBoard).toHaveBeenCalledTimes(1)
+		expect(readOtherBoard).toHaveBeenCalledTimes(1)
+	})
+	sdk.tasksRestore.mockResolvedValue({
+		data: {
+			id: 2,
+			title: 'restore',
+			project_id: 5,
+		},
+	})
+
+	await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
+	observers.forEach(stop => stop())
+
+	expect(readBoard).toHaveBeenCalledTimes(2)
+	expect(readOtherBoard).toHaveBeenCalledTimes(1)
 })
 
 it('drops a permanently deleted task from the trash', async () => {
