@@ -10572,7 +10572,7 @@ export type TimeEntriesListData = {
          */
         q?: string;
         /**
-         * Filter entries with the task filter syntax over user_id, task_id, project_id, start_time and end_time — e.g. "project_id = 5 && start_time > now-7d". Use end_time = null to match running timers.
+         * Filter entries with the task filter syntax over user_id, task_id, project_id, start_time and end_time — e.g. "project_id = 5 && start_time > now-7d". Use end_time = null to match running timers, project_id = null for entries without task or project, and task_id = null for entries not on a task.
          */
         filter?: string;
         /**
