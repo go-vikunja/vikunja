@@ -2214,7 +2214,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	doer := doerFromAuth(s, a)
 
-	if err = stopRunningTimersOnTask(s, t.ID, doer); err != nil {
+	if err = stopRunningTimersOnTrashedTask(s, t.ID, doer); err != nil {
 		return err
 	}
 

@@ -175,7 +175,7 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) 
 }
 
 // Stops every user's running timer on the task, not just the doer's.
-func stopRunningTimersOnTask(s *xorm.Session, taskID int64, doer *user.User) error {
+func stopRunningTimersOnTrashedTask(s *xorm.Session, taskID int64, doer *user.User) error {
 	running := []*TimeEntry{}
 	if err := s.Where("task_id = ? AND end_time IS NULL", taskID).Find(&running); err != nil {
 		return err
@@ -462,7 +462,7 @@ func (te *TimeEntry) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	_, can, err := te.canWriteTimeEntry(s, a, false)
+	_, can, err := te.canDoLiveTimeEntry(s, a, false)
 	return can, err
 }
 
@@ -495,7 +495,7 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	_, can, err := te.canWriteTimeEntry(s, a, false)
+	_, can, err := te.canDoLiveTimeEntry(s, a, false)
 	return can, err
 }
 
@@ -509,7 +509,7 @@ func (te *TimeEntry) canModify(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	entry, can, err := te.canWriteTimeEntry(s, a, true)
+	entry, can, err := te.canDoLiveTimeEntry(s, a, true)
 	if err != nil || !can {
 		return false, err
 	}
@@ -517,7 +517,7 @@ func (te *TimeEntry) canModify(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 // Entries of trashed tasks are read-only.
-func (te *TimeEntry) canWriteTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*TimeEntry, bool, error) {
+func (te *TimeEntry) canDoLiveTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*TimeEntry, bool, error) {
 	entry, can, _, err := te.canDoTimeEntry(s, a, fetch)
 	if err != nil {
 		return nil, false, err
