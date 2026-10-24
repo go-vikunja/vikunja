@@ -11,7 +11,7 @@
 					:class="{'is-active': route.name === 'trash.tasks'}"
 					:to="{name: 'trash.tasks'}"
 				>
-					{{ $t('trash.tabs.tasks') }}
+					{{ $t('quickActions.tasks') }}
 				</BaseButton>
 			</nav>
 			<div id="trash-actions" />
