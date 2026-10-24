@@ -35,8 +35,9 @@ test.describe('Project trash', () => {
 		await page.goto('/projects/1/settings/delete')
 
 		const dialog = page.getByRole('dialog', {name: 'Delete this project'})
-		await expect(dialog.locator('[data-cy="projectDeleteNotice"]'))
-			.toContainText('Moves this project and 2 tasks to the trash.')
+		await expect(dialog.locator('[data-cy="projectDeleteNotice"]')).toContainText(
+			'Moves this project and 2 tasks to the trash. They are deleted permanently after 30 days.',
+		)
 		await dialog.getByRole('button', {name: 'Do it!'}).click()
 
 		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
