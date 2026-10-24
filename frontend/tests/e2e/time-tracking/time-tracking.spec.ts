@@ -403,6 +403,112 @@ test.describe('Time tracking', () => {
 			await expect(input).toHaveValue('')
 			await expect(userMultiselect.locator('.search-results')).toHaveCount(0)
 		})
+
+		test.describe('without project or task', () => {
+			test('logs an entry with nothing selected', async ({
+				authenticatedPage: page,
+				apiContext,
+				userToken,
+			}) => {
+				await page.goto('/time-tracking')
+				await page.locator('[data-cy="addTimeEntry"]').click()
+				const form = page.locator('[data-cy="timeEntryForm"]')
+				await expect(form.locator('[data-cy="timeEntryPrivateHint"]')).toBeVisible()
+
+				await form.locator('[data-cy="timeEntryComment"]').fill('private work')
+				await form.locator('[data-cy="smartFill"]').click()
+				await form.locator('[data-cy="saveTimeEntry"]').click()
+
+				const entry = page.locator('[data-cy="timeEntry"]').filter({hasText: 'private work'})
+				await expect(entry.locator('[data-cy="timeEntryNoProject"]')).toBeVisible()
+				await page.reload()
+				await expect(entry.locator('[data-cy="timeEntryNoProject"]')).toBeVisible()
+
+				const stored = await apiContext.get('/api/v2/time-entries', {
+					headers: {Authorization: `Bearer ${userToken}`},
+				})
+				expect((await stored.json()).items).toEqual([
+					expect.objectContaining({
+						comment: 'private work',
+						task_id: 0,
+						project_id: 0,
+					}),
+				])
+			})
+
+			test('starts a timer with nothing selected', async ({
+				authenticatedPage: page,
+				apiContext,
+				userToken,
+			}) => {
+				await page.goto('/time-tracking')
+				await page.locator('[data-cy="addTimeEntry"]').click()
+				await page.locator('[data-cy="timeEntryForm"] [data-cy="startTimer"]').click()
+
+				const badge = page.locator('[data-cy="timerBadge"]')
+				await expect(badge).toContainText('No project')
+
+				const stored = await apiContext.get('/api/v2/time-entries', {
+					headers: {Authorization: `Bearer ${userToken}`},
+				})
+				expect((await stored.json()).items).toEqual([
+					expect.objectContaining({
+						task_id: 0,
+						project_id: 0,
+						end_time: null,
+					}),
+				])
+				await page.reload()
+				await expect(badge).toContainText('No project')
+			})
+
+			test('clearing the project of an entry detaches it', async ({
+				authenticatedPage: page,
+				apiContext,
+				userToken,
+			}) => {
+				await ProjectFactory.create(1, {id: 1, title: 'Detach project'}, false)
+				await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'was on a project'}, false)
+
+				await page.goto('/time-tracking')
+				const entry = page.locator('[data-cy="timeEntry"]').filter({hasText: 'was on a project'})
+				await expect(entry).toContainText('Detach project')
+				await entry.locator('[data-cy="editTimeEntry"]').click()
+
+				const form = page.locator('[data-cy="timeEntryForm"]')
+				await form.locator('.multiselect').first().locator('.removal-button').click()
+				await expect(form.locator('[data-cy="timeEntryPrivateHint"]')).toBeVisible()
+				await form.locator('[data-cy="updateTimeEntry"]').click()
+
+				await expect(entry.locator('[data-cy="timeEntryNoProject"]')).toBeVisible()
+				const stored = await apiContext.get('/api/v2/time-entries/1', {
+					headers: {Authorization: `Bearer ${userToken}`},
+				})
+				expect(await stored.json()).toMatchObject({task_id: 0, project_id: 0})
+			})
+
+			test('editing only the comment keeps the project', async ({
+				authenticatedPage: page,
+				apiContext,
+				userToken,
+			}) => {
+				await ProjectFactory.create(1, {id: 1, title: 'Keep project'}, false)
+				await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'before'}, false)
+
+				await page.goto('/time-tracking')
+				const entries = page.locator('[data-cy="timeEntry"]')
+				await entries.first().locator('[data-cy="editTimeEntry"]').click()
+				const form = page.locator('[data-cy="timeEntryForm"]')
+				await form.locator('[data-cy="timeEntryComment"]').fill('after')
+				await form.locator('[data-cy="updateTimeEntry"]').click()
+
+				await expect(entries.first()).toContainText('after')
+				const stored = await apiContext.get('/api/v2/time-entries/1', {
+					headers: {Authorization: `Bearer ${userToken}`},
+				})
+				expect(await stored.json()).toMatchObject({project_id: 1, comment: 'after'})
+			})
+		})
 	})
 
 	test.describe('without the feature licensed', () => {
@@ -417,91 +523,5 @@ test.describe('Time tracking', () => {
 			await page.goto('/time-tracking')
 			await expect(page.locator('[data-cy="addTimeEntry"]')).not.toBeVisible()
 		})
-	})
-})
-
-test.describe('Time tracking without project or task', () => {
-	test.beforeEach(async () => {
-		await LicenseFactory.enable(['time_tracking'])
-	})
-
-	test.afterEach(async () => {
-		await LicenseFactory.disable()
-	})
-
-	test('logs an entry with nothing selected', async ({authenticatedPage: page, apiContext, userToken}) => {
-		await page.goto('/time-tracking')
-		await page.locator('[data-cy="addTimeEntry"]').click()
-		const form = page.locator('[data-cy="timeEntryForm"]')
-		await expect(form.locator('[data-cy="timeEntryPrivateHint"]')).toBeVisible()
-
-		await form.locator('[data-cy="timeEntryComment"]').fill('private work')
-		await form.locator('[data-cy="smartFill"]').click()
-		await form.locator('[data-cy="saveTimeEntry"]').click()
-
-		const entry = page.locator('[data-cy="timeEntry"]').filter({hasText: 'private work'})
-		await expect(entry.locator('[data-cy="timeEntryNoProject"]')).toBeVisible()
-		await page.reload()
-		await expect(entry.locator('[data-cy="timeEntryNoProject"]')).toBeVisible()
-
-		const stored = await apiContext.get('/api/v2/time-entries', {headers: {Authorization: `Bearer ${userToken}`}})
-		expect((await stored.json()).items).toEqual([expect.objectContaining({comment: 'private work', task_id: 0, project_id: 0})])
-	})
-
-	test('starts a timer with nothing selected', async ({authenticatedPage: page, apiContext, userToken}) => {
-		await page.goto('/time-tracking')
-		await page.locator('[data-cy="addTimeEntry"]').click()
-		await page.locator('[data-cy="timeEntryForm"] [data-cy="startTimer"]').click()
-
-		const badge = page.locator('[data-cy="timerBadge"]')
-		await expect(badge).toContainText('No project')
-
-		const stored = await apiContext.get('/api/v2/time-entries', {
-			headers: {Authorization: `Bearer ${userToken}`},
-		})
-		expect((await stored.json()).items).toEqual([
-			expect.objectContaining({
-				task_id: 0,
-				project_id: 0,
-				end_time: null,
-			}),
-		])
-		await page.reload()
-		await expect(badge).toContainText('No project')
-	})
-
-	test('clearing the project of an entry detaches it', async ({authenticatedPage: page, apiContext, userToken}) => {
-		await ProjectFactory.create(1, {id: 1, title: 'Detach project'}, false)
-		await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'was on a project'}, false)
-
-		await page.goto('/time-tracking')
-		const entry = page.locator('[data-cy="timeEntry"]').filter({hasText: 'was on a project'})
-		await expect(entry).toContainText('Detach project')
-		await entry.locator('[data-cy="editTimeEntry"]').click()
-
-		const form = page.locator('[data-cy="timeEntryForm"]')
-		await form.locator('.multiselect').first().locator('.removal-button').click()
-		await expect(form.locator('[data-cy="timeEntryPrivateHint"]')).toBeVisible()
-		await form.locator('[data-cy="updateTimeEntry"]').click()
-
-		await expect(entry.locator('[data-cy="timeEntryNoProject"]')).toBeVisible()
-		const stored = await apiContext.get('/api/v2/time-entries/1', {headers: {Authorization: `Bearer ${userToken}`}})
-		expect(await stored.json()).toMatchObject({task_id: 0, project_id: 0})
-	})
-
-	test('editing only the comment keeps the project', async ({authenticatedPage: page, apiContext, userToken}) => {
-		await ProjectFactory.create(1, {id: 1, title: 'Keep project'}, false)
-		await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'before'}, false)
-
-		await page.goto('/time-tracking')
-		const entries = page.locator('[data-cy="timeEntry"]')
-		await entries.first().locator('[data-cy="editTimeEntry"]').click()
-		const form = page.locator('[data-cy="timeEntryForm"]')
-		await form.locator('[data-cy="timeEntryComment"]').fill('after')
-		await form.locator('[data-cy="updateTimeEntry"]').click()
-
-		await expect(entries.first()).toContainText('after')
-		const stored = await apiContext.get('/api/v2/time-entries/1', {headers: {Authorization: `Bearer ${userToken}`}})
-		expect(await stored.json()).toMatchObject({project_id: 1, comment: 'after'})
 	})
 })
