@@ -33,7 +33,6 @@ import {
 	toastError,
 	type ProjectResponse,
 } from './projects'
-import {trashKeys} from './trashShared'
 import {i18n} from '@/i18n'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 
@@ -42,8 +41,15 @@ export {
 	taskInTrashFromError,
 	type ProjectInTrash,
 	type TaskInTrash,
-	trashKeys,
-} from './trashShared'
+} from './trashErrors'
+
+export const trashKeys = {
+	all: ['trash'] as const,
+	tasks: ['trash', 'tasks'] as const,
+	taskList: (page: number) => ['trash', 'tasks', page] as const,
+	projects: ['trash', 'projects'] as const,
+	projectList: (page: number) => ['trash', 'projects', page] as const,
+}
 
 // Matches the server's hard-coded retention.
 export const TRASH_RETENTION_DAYS = 30
