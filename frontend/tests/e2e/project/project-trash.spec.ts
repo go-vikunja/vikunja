@@ -46,12 +46,16 @@ test.describe('Project trash', () => {
 		await LicenseFactory.enable(['time_tracking'])
 		try {
 			await addChildProject()
-			await TimeEntryFactory.create(1, {project_id: 1})
+			await TimeEntryFactory.create(2, {project_id: 1})
 			await page.goto('/projects/1/settings/delete')
 
 			const dialog = page.getByRole('dialog', {name: 'Delete this project'})
-			await expect(dialog.locator('[data-cy="projectDeleteNotice"]')).toContainText('Moves this project, 1 sub-project and no tasks to the trash.')
-			await expect(dialog.locator('[data-cy="projectDeleteTimeEntries"]')).toContainText('1 time entry from 1 person')
+			await expect(dialog.locator('[data-cy="projectDeleteNotice"]')).toContainText(
+				'Moves this project, 1 sub-project and no tasks to the trash. They are deleted permanently after 30 days.',
+			)
+			await expect(dialog.locator('[data-cy="projectDeleteTimeEntries"]')).toContainText(
+				'2 time entries from 1 person will be kept but detached from the project after 30 days.',
+			)
 		} finally {
 			await LicenseFactory.disable()
 		}
