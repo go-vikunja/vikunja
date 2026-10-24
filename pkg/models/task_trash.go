@@ -70,21 +70,6 @@ func trashedTaskReadError(s *xorm.Session, a web.Auth, taskID int64, notFound er
 	return inTrash
 }
 
-// canDoTrashedTask loads the trashed task into t and checks write access to its project.
-func (t *Task) canDoTrashedTask(s *xorm.Session, a web.Auth) (bool, error) {
-	trashed, err := getTrashedTask(s, t.ID)
-	if err != nil {
-		return false, err
-	}
-	*t = *trashed
-	return (&Project{ID: t.ProjectID}).CanWrite(s, a)
-}
-
-// CanRestore checks whether the auth may restore the trashed task.
-func (t *Task) CanRestore(s *xorm.Session, a web.Auth) (bool, error) {
-	return t.canDoTrashedTask(s, a)
-}
-
 // Restore brings a trashed task back. The task lands in the default (or done)
 // bucket at the end of every view; its old position is gone.
 func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
@@ -117,15 +102,6 @@ func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
 	})
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
-}
-
-// CanDeletePermanently checks whether the auth may purge the trashed task.
-// Link shares have no trash, so they can't.
-func (t *Task) CanDeletePermanently(s *xorm.Session, a web.Auth) (bool, error) {
-	if _, isShare := a.(*LinkSharing); isShare {
-		return false, nil
-	}
-	return t.canDoTrashedTask(s, a)
 }
 
 // DeletePermanently purges a trashed task right away instead of waiting for the retention period.

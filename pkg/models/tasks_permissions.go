@@ -65,6 +65,30 @@ func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) 
 	return t.canDoTask(s, a)
 }
 
+// canDoTrashedTask loads the trashed task into t and checks write access to its project.
+func (t *Task) canDoTrashedTask(s *xorm.Session, a web.Auth) (bool, error) {
+	trashed, err := getTrashedTask(s, t.ID)
+	if err != nil {
+		return false, err
+	}
+	*t = *trashed
+	return (&Project{ID: t.ProjectID}).CanWrite(s, a)
+}
+
+// CanRestore checks whether the auth may restore the trashed task.
+func (t *Task) CanRestore(s *xorm.Session, a web.Auth) (bool, error) {
+	return t.canDoTrashedTask(s, a)
+}
+
+// CanDeletePermanently checks whether the auth may purge the trashed task.
+// Link shares have no trash, so they can't.
+func (t *Task) CanDeletePermanently(s *xorm.Session, a web.Auth) (bool, error) {
+	if _, isShare := a.(*LinkSharing); isShare {
+		return false, nil
+	}
+	return t.canDoTrashedTask(s, a)
+}
+
 // Helper function to check if a user can do stuff on a project task
 func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
 	// Get the task
