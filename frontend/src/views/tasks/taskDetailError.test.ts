@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
+import {ApiError} from '@/client/problem'
 import {taskLoadErrorAction} from './taskDetailError'
 
 describe('taskLoadErrorAction', () => {
@@ -8,7 +9,15 @@ describe('taskLoadErrorAction', () => {
 	})
 
 	it('keeps trashed tasks in place', () => {
-		expect(taskLoadErrorAction({status: 404, code: 4040, details: {project_id: 1, deleted_at: '2026-01-01T00:00:00Z'}})).toBe('inTrash')
+		expect(taskLoadErrorAction(new ApiError({
+			status: 404,
+			code: 4040,
+			detail: 'in trash',
+			details: {
+				project_id: 1,
+				deleted_at: '2026-01-01T00:00:00Z',
+			},
+		}))).toBe('inTrash')
 	})
 
 	it('sends 403 and 404 to not found', () => {
