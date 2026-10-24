@@ -29,13 +29,7 @@ import (
 	"xorm.io/xorm"
 )
 
-// TimeEntry is a single tracked time span attached to a task, a project, or
-// nothing — at most one of TaskID / ProjectID is set. Entries without either
-// are private to their author. A running live timer is just an entry whose
-// EndTime is still null.
-//
-// v2-only: doc: tags are the schema's source of truth (no v1 swaggo), and it
-// implements CRUDable + Permissions because the shared handler.Do* pipeline needs them.
+// TimeEntry is a tracked time span on a task, a project, or neither.
 type TimeEntry struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"timeentry" readOnly:"true" doc:"The unique, numeric id of this time entry."`
 
@@ -59,13 +53,14 @@ type TimeEntry struct {
 	Filter         string `xorm:"-" json:"-"`
 	FilterTimezone string `xorm:"-" json:"-"`
 
-	// Whether the request body named a container at all, so an update can tell "detach" from "keep".
+	// Absent and null both decode to 0.
 	containerSent bool
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
 
+// UnmarshalJSON records whether task_id/project_id were sent, so updates can tell detach from keep.
 func (te *TimeEntry) UnmarshalJSON(data []byte) error {
 	type plain TimeEntry
 	if err := json.Unmarshal(data, (*plain)(te)); err != nil {
@@ -343,7 +338,7 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// task_id / project_id are listed so a reassignment (and the zero value of
-	// the side being cleared) is written; validated in CanUpdate.
+	// the side being cleared) is written.
 	_, err = s.
 		Where("id = ?", te.ID).
 		Cols("task_id", "project_id", "start_time", "end_time", "comment").
