@@ -8,9 +8,12 @@
 		<p class="has-text-grey">
 			{{ $t('trash.daysLeft', trashDaysLeft(inTrash.deleted_at)) }}
 		</p>
-		<div class="task-in-trash__actions">
+		<!-- The trash only lists what the user can restore -->
+		<div
+			v-if="canRestore"
+			class="task-in-trash__actions"
+		>
 			<XButton
-				v-if="canRestore"
 				v-cy="'restoreTrashedTask'"
 				icon="undo"
 				:loading="restoreTask.isPending.value"
@@ -46,7 +49,10 @@ const taskInTrashLabel = useDeletedLabel('trash.taskInTrash')
 const projectList = useProjects()
 const restoreTask = useRestoreTaskMutation()
 
-const canRestore = computed(() => (projectList.projects[props.inTrash.project_id]?.max_permission ?? 0) > PERMISSIONS.READ)
+const canRestore = computed(() => {
+	const project = projectList.projects[props.inTrash.project_id]
+	return !project?.is_archived && (project?.max_permission ?? 0) > PERMISSIONS.READ
+})
 
 const deletedLabel = computed(() => taskInTrashLabel(props.inTrash))
 
