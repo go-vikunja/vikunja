@@ -9,8 +9,8 @@
 				variant="secondary"
 				icon="trash-alt"
 				danger
-				:disabled="total === 0"
-				@click="showEmptyModal = true"
+				:aria-disabled="total === 0 || undefined"
+				@click="openEmptyModal()"
 			>
 				{{ $t('trash.empty') }}
 			</XButton>
@@ -60,8 +60,8 @@
 								v-cy="'restoreProject'"
 								class="trash-action"
 								:aria-label="$t('trash.restore')"
-								:disabled="restoreProject.isPending.value && restoreProject.variables.value === project.id"
-								@click="restoreProject.mutate(project.id!)"
+								:aria-disabled="isRestoring(project.id!) || undefined"
+								@click="restore(project.id!)"
 							>
 								<Icon icon="undo" />
 							</BaseButton>
@@ -206,6 +206,20 @@ function subProjectTree(project: Project): TrashedSubProject[] {
 	}
 	visit(project.id ?? 0)
 	return ordered
+}
+
+function isRestoring(projectId: number) {
+	return restoreProject.isPending.value && restoreProject.variables.value === projectId
+}
+
+function restore(projectId: number) {
+	if (isRestoring(projectId)) return
+	restoreProject.mutate(projectId)
+}
+
+function openEmptyModal() {
+	if (total.value === 0) return
+	showEmptyModal.value = true
 }
 
 async function deleteForever() {
