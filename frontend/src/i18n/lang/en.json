@@ -1834,6 +1834,7 @@
     "open": "Open trash",
     "taskInTrash": "This task is in the trash. It was deleted {since}.",
     "taskInTrashBy": "This task is in the trash. {user} deleted it {since}.",
+    "taskInTrashTitle": "Task in the trash",
     "inTrash": "In trash",
     "daysLeftShort": "deleted permanently today | {count} day left | {count} days left",
     "deletedByYou": "Deleted by you {since}",
