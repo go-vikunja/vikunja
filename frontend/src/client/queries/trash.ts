@@ -14,6 +14,7 @@ import {
 	tasksRestore,
 	tasksTrashEmpty,
 	tasksTrashList,
+	type TrashedSubProject,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
@@ -134,13 +135,38 @@ export function useEmptyTaskTrashMutation() {
 	return useMutation(emptyTaskTrashMutationOptions())
 }
 
+// The API lists them shallowest first; show each below its parent instead.
+export function orderTrashedSubProjects(projectId: number, subProjects: TrashedSubProject[]): TrashedSubProject[] {
+	const children = new Map<number, TrashedSubProject[]>()
+	for (const sub of subProjects) {
+		const siblings = children.get(sub.parent_project_id ?? 0) ?? []
+		siblings.push(sub)
+		children.set(sub.parent_project_id ?? 0, siblings)
+	}
+	const ordered: TrashedSubProject[] = []
+	const visit = (parentId: number) => {
+		for (const sub of children.get(parentId) ?? []) {
+			ordered.push(sub)
+			visit(sub.id ?? 0)
+		}
+	}
+	visit(projectId)
+	return ordered
+}
+
 export function trashedProjectsQuery(page: number) {
 	return queryOptions({
 		queryKey: trashKeys.projectList(page),
 		queryFn: async ({signal}): Promise<TrashedProjectPage> => {
 			const {data} = await projectsTrashList({query: {page}, signal})
 			const paginated = toPaginated(data, page)
-			return {...paginated, items: paginated.items.map(normalizeProject)}
+			return {
+				...paginated,
+				items: paginated.items.map(raw => {
+					const project = normalizeProject(raw)
+					return {...project, trashed_sub_projects: orderTrashedSubProjects(project.id, project.trashed_sub_projects ?? [])}
+				}),
+			}
 		},
 		placeholderData: keepPreviousData,
 		staleTime: 0,

@@ -82,7 +82,7 @@
 						class="trashed-sub-projects"
 					>
 						<li
-							v-for="sub in subProjectTree(project)"
+							v-for="sub in project.trashed_sub_projects"
 							:key="sub.id"
 							:style="{paddingInlineStart: `${(sub.depth ?? 1) * 1.25}rem`}"
 						>
@@ -148,7 +148,6 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 
-import type {TrashedSubProject} from '@/client/generated'
 import type {ProjectResponse} from '@/client/queries/projects'
 import {
 	trashDaysLeft,
@@ -188,25 +187,6 @@ function toggle(projectId: number) {
 	if (!expanded.delete(projectId)) {
 		expanded.add(projectId)
 	}
-}
-
-// The API lists them shallowest first; show each below its parent instead.
-function subProjectTree(project: ProjectResponse): TrashedSubProject[] {
-	const children = new Map<number, TrashedSubProject[]>()
-	for (const sub of project.trashed_sub_projects ?? []) {
-		const siblings = children.get(sub.parent_project_id ?? 0) ?? []
-		siblings.push(sub)
-		children.set(sub.parent_project_id ?? 0, siblings)
-	}
-	const ordered: TrashedSubProject[] = []
-	const visit = (parentId: number) => {
-		for (const sub of children.get(parentId) ?? []) {
-			ordered.push(sub)
-			visit(sub.id ?? 0)
-		}
-	}
-	visit(project.id)
-	return ordered
 }
 
 function isRestoring(projectId: number) {
