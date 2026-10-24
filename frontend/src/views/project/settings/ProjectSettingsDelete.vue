@@ -40,7 +40,7 @@ import {useRoute, useRouter} from 'vue-router'
 
 import Loading from '@/components/misc/Loading.vue'
 import {projectCountQuery, useDeleteProjectMutation} from '@/client/queries/projects'
-import {useRestoreProjectMutation} from '@/client/queries/trash'
+import {TRASH_RETENTION_DAYS, useRestoreProjectMutation} from '@/client/queries/trash'
 import {useGoBack} from '@/composables/useGoBack'
 import {useProjects} from '@/composables/useProjects'
 import {useTitle} from '@/composables/useTitle'
@@ -64,13 +64,14 @@ const trashNotice = computed(() => {
 	const subProjects = count.value?.sub_projects ?? 0
 	const tasks = t('project.delete.tasks', count.value?.tasks ?? 0)
 	return subProjects > 0
-		? t('project.delete.toTrashWithSubProjects', {subProjects: t('project.delete.subProjects', subProjects), tasks})
-		: t('project.delete.toTrash', {tasks})
+		? t('project.delete.toTrashWithSubProjects', {subProjects: t('project.delete.subProjects', subProjects), tasks, days: TRASH_RETENTION_DAYS})
+		: t('project.delete.toTrash', {tasks, days: TRASH_RETENTION_DAYS})
 })
 
 const timeEntriesNotice = computed(() => t('project.delete.timeEntries', {
 	entries: t('project.delete.timeEntryCount', count.value?.time_entries ?? 0),
 	people: t('project.delete.people', count.value?.time_entry_authors ?? 0),
+	days: TRASH_RETENTION_DAYS,
 }))
 
 async function deleteProject() {
