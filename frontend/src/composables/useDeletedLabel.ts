@@ -23,12 +23,18 @@ export function useDeletedLabel(keys: DeletedLabelKeys) {
 	// formatDateSince would otherwise start the shared clock during render, outside setup
 	useGlobalNow()
 
+	// The backend reports a link share as a user with the negated share id.
+	const currentDeleterId = () => {
+		const id = authStore.info?.id
+		return id !== undefined && authStore.isLinkShareAuth ? -id : id
+	}
+
 	return (item: Trashed) => {
 		const since = formatDateSince(item.deleted_at)
 		if (!item.deleted_by) {
 			return t(keys.unknown, {since})
 		}
-		if (item.deleted_by.id === authStore.info?.id) {
+		if (item.deleted_by.id === currentDeleterId()) {
 			return t(keys.byYou, {since})
 		}
 		return t(keys.by, {user: getDisplayName(item.deleted_by), since})
