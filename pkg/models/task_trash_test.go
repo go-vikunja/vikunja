@@ -77,7 +77,9 @@ func deletePermanentlyForTest(t *testing.T, taskID int64, a web.Auth) error {
 		return ErrGenericForbidden{}
 	}
 	require.NoError(t, task.DeletePermanently(s))
-	return s.Commit()
+	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
+	return nil
 }
 
 func TestTask_Restore(t *testing.T) {
