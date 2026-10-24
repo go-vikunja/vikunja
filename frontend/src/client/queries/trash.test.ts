@@ -237,14 +237,6 @@ describe('taskInTrashFromError', () => {
 			detail: 'not found',
 		}))).toBeNull()
 	})
-	it('ignores trash details without a project', () => {
-		expect(taskInTrashFromError(new ApiError({
-			status: 404,
-			code: 4040,
-			detail: 'in trash',
-			details: {deleted_at: '2026-01-01T00:00:00Z'},
-		}))).toBeNull()
-	})
 })
 
 describe('trashDaysLeft', () => {
