@@ -262,7 +262,8 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 
 	t.Run("PUT with null detaches", func(t *testing.T) {
 		e, token := setup(t)
-		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"task_id":null,"project_id":null,`+times+`}`, token, "")
+		body := `{"task_id":null,"project_id":null,` + times + `}`
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", body, token, "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
 	})
@@ -283,7 +284,10 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 
 	t.Run("PATCH with null detaches", func(t *testing.T) {
 		e, token := setup(t)
-		rec := humaRequest(t, e, http.MethodPatch, "/api/v2/time-entries/2", `{"project_id":null}`, token, "application/merge-patch+json")
+		rec := humaRequest(
+			t, e, http.MethodPatch, "/api/v2/time-entries/2", `{"project_id":null}`, token,
+			"application/merge-patch+json",
+		)
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
 	})

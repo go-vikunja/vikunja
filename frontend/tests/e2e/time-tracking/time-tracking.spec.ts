@@ -467,8 +467,15 @@ test.describe('Time tracking', () => {
 				apiContext,
 				userToken,
 			}) => {
-				await ProjectFactory.create(1, {id: 1, title: 'Detach project'}, false)
-				await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'was on a project'}, false)
+				await ProjectFactory.create(1, {
+					id: 1,
+					title: 'Detach project',
+				}, false)
+				await TimeEntryFactory.create(1, {
+					id: 1,
+					project_id: 1,
+					comment: 'was on a project',
+				}, false)
 
 				await page.goto('/time-tracking')
 				const entry = page.locator('[data-cy="timeEntry"]').filter({hasText: 'was on a project'})
@@ -484,7 +491,10 @@ test.describe('Time tracking', () => {
 				const stored = await apiContext.get('/api/v2/time-entries/1', {
 					headers: {Authorization: `Bearer ${userToken}`},
 				})
-				expect(await stored.json()).toMatchObject({task_id: 0, project_id: 0})
+				expect(await stored.json()).toMatchObject({
+					task_id: 0,
+					project_id: 0,
+				})
 			})
 
 			test('editing only the comment keeps the project', async ({
@@ -492,8 +502,15 @@ test.describe('Time tracking', () => {
 				apiContext,
 				userToken,
 			}) => {
-				await ProjectFactory.create(1, {id: 1, title: 'Keep project'}, false)
-				await TimeEntryFactory.create(1, {id: 1, project_id: 1, comment: 'before'}, false)
+				await ProjectFactory.create(1, {
+					id: 1,
+					title: 'Keep project',
+				}, false)
+				await TimeEntryFactory.create(1, {
+					id: 1,
+					project_id: 1,
+					comment: 'before',
+				}, false)
 
 				await page.goto('/time-tracking')
 				const entries = page.locator('[data-cy="timeEntry"]')
@@ -506,7 +523,10 @@ test.describe('Time tracking', () => {
 				const stored = await apiContext.get('/api/v2/time-entries/1', {
 					headers: {Authorization: `Bearer ${userToken}`},
 				})
-				expect(await stored.json()).toMatchObject({project_id: 1, comment: 'after'})
+				expect(await stored.json()).toMatchObject({
+					project_id: 1,
+					comment: 'after',
+				})
 			})
 		})
 	})
