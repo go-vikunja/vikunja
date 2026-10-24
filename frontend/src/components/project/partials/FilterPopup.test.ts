@@ -1,5 +1,6 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest'
 import {shallowMount, flushPromises} from '@vue/test-utils'
+import {ref} from 'vue'
 import {createPinia, setActivePinia} from 'pinia'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
@@ -8,6 +9,10 @@ const sdk = vi.hoisted(() => ({
 }))
 
 vi.mock('@/client/generated', () => sdk)
+
+vi.mock('@/composables/useIncludeSubprojects', () => ({
+	useIncludeSubprojects: () => ref(false),
+}))
 
 import FilterPopup from './FilterPopup.vue'
 
