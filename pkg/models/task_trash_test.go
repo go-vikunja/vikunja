@@ -300,11 +300,9 @@ func TestEmptyTaskTrash(t *testing.T) {
 
 	s := db.NewSession()
 	defer s.Close()
-	purged, err := EmptyTaskTrash(s, u1)
-	require.NoError(t, err)
+	require.NoError(t, EmptyTaskTrash(s, u1))
 	require.NoError(t, s.Commit())
 
-	assert.Equal(t, 2, purged)
 	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 1})
 	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
 	// Archived project and read-only project are out of scope

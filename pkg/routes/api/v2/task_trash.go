@@ -167,7 +167,7 @@ func tasksTrashEmpty(ctx context.Context, _ *struct{}) (*emptyBody, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	if _, err := models.EmptyTaskTrash(s, a); err != nil {
+	if err := models.EmptyTaskTrash(s, a); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}

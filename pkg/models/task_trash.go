@@ -174,20 +174,20 @@ func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (tasks []*T
 }
 
 // EmptyTaskTrash purges every task in the auth's trash, including ones others deleted.
-func EmptyTaskTrash(s *xorm.Session, a web.Auth) (purged int, err error) {
+func EmptyTaskTrash(s *xorm.Session, a web.Auth) error {
 	cond, err := trashedTasksCond(s, a)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	tasks := []*Task{}
 	if err = s.Unscoped().Where(cond).Find(&tasks); err != nil {
-		return 0, err
+		return err
 	}
 	for _, task := range tasks {
 		if err = hardDeleteTask(s, task); err != nil {
-			return 0, err
+			return err
 		}
 	}
-	return len(tasks), nil
+	return nil
 }
