@@ -312,6 +312,7 @@ it('drops a restored project from the trash and marks time entries stale', async
 		total: 3,
 		total_pages: 2,
 	})
+	client.setQueryData(taskKeys.detail(5), {id: 5})
 	sdk.projectsRestore.mockResolvedValue({data: {id: 2, title: 'restore'}})
 
 	await client.getMutationCache().build(client, restoreProjectMutationOptions()).execute(2)
@@ -319,6 +320,7 @@ it('drops a restored project from the trash and marks time entries stale', async
 	expect(sdk.projectsRestore).toHaveBeenCalledWith({path: {id: 2}})
 	expect(client.getQueryData(trashKeys.projectList(1))).toMatchObject({items: [{id: 1}], total: 2})
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(taskKeys.detail(5))?.isInvalidated).toBe(true)
 })
 
 describe('deleteProjectMutationOptions', () => {
