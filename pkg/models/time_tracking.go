@@ -446,7 +446,7 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 		can, maxPerm, err := project.CanRead(s, a)
 		return entry, can, maxPerm, err
 	default:
-		// Private to the author; an entry about to be created has no author yet.
+		// Private to the author. !fetch is a create or update target with no author yet; CanUpdate checks authorship first.
 		return entry, !fetch || entry.UserID == a.GetID(), int(PermissionWrite), nil
 	}
 }
