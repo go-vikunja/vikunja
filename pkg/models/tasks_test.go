@@ -852,7 +852,10 @@ func TestHardDeleteTask(t *testing.T) {
 	_, err = s.Insert(&Reaction{EntityID: 1, EntityKind: ReactionKindComment, UserID: 1, Value: "👍"})
 	require.NoError(t, err)
 
-	err = hardDeleteTask(s, &Task{ID: 1, ProjectID: 1})
+	err = hardDeleteTask(s, &Task{
+		ID:        1,
+		ProjectID: 1,
+	})
 	require.NoError(t, err)
 	_, err = files.FileStat(&files.File{ID: 1})
 	require.NoError(t, err, "blob must survive until commit")
@@ -894,7 +897,10 @@ func TestHardDeleteTask_RollbackKeepsAttachmentBlobs(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	require.NoError(t, hardDeleteTask(s, &Task{ID: 1, ProjectID: 1}))
+	require.NoError(t, hardDeleteTask(s, &Task{
+		ID:        1,
+		ProjectID: 1,
+	}))
 	require.NoError(t, s.Rollback())
 	events.CleanupPending(s)
 
