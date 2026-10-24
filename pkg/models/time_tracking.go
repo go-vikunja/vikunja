@@ -248,9 +248,13 @@ func readableTimeEntriesCond(s *xorm.Session, a web.Auth) (builder.Cond, error) 
 
 func timeEntryWithoutContainerCond() builder.Cond {
 	return builder.And(
-		builder.Or(builder.Eq{"task_id": 0}, builder.IsNull{"task_id"}),
-		builder.Or(builder.Eq{"project_id": 0}, builder.IsNull{"project_id"}),
+		noContainerCond("task_id"),
+		noContainerCond("project_id"),
 	)
+}
+
+func noContainerCond(col string) builder.Cond {
+	return builder.Or(builder.Eq{col: 0}, builder.IsNull{col})
 }
 
 func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result any, resultCount int, numberOfTotalItems int64, err error) {
