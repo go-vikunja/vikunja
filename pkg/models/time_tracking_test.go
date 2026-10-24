@@ -1096,7 +1096,12 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 		for _, e := range result.([]*TimeEntry) {
 			ids = append(ids, e.ID)
 		}
-		assert.ElementsMatch(t, []int64{1, 2, 3, 4}, ids)
+		assert.ElementsMatch(t, []int64{
+			1,
+			2,
+			3,
+			4,
+		}, ids)
 	})
 	t.Run("task_id = null filter", func(t *testing.T) {
 		entry := insert(t)
@@ -1144,5 +1149,9 @@ func TestTimeEntry_UpdateDetachesWithOneExplicitNull(t *testing.T) {
 	require.NoError(t, te.Update(s, a))
 	require.NoError(t, s.Commit())
 
-	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 2, "task_id": 0, "project_id": 0}, false)
+	db.AssertExists(t, "time_entries", map[string]interface{}{
+		"id":         2,
+		"task_id":    0,
+		"project_id": 0,
+	}, false)
 }
