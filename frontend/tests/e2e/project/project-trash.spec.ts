@@ -138,6 +138,7 @@ test.describe('Project trash', () => {
 		const notice = page.locator('[data-cy="projectInTrashNotice"]')
 		await expect(notice).toContainText('This project is in the trash.')
 		await expect(page.locator('.global-notification')).not.toContainText('This project is in the trash')
+		await expect(notice.getByRole('link', {name: 'Open trash'})).toBeVisible()
 
 		await notice.locator('[data-cy="restoreTrashed"]').click()
 		await expect(notice).toHaveCount(0)
