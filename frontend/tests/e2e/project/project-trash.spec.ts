@@ -139,6 +139,7 @@ test.describe('Project trash', () => {
 		const notice = page.locator('[data-cy="projectInTrashNotice"]')
 		await expect(notice).toContainText('This project is in the trash.')
 		await expect(notice.locator('[data-cy="restoreTrashed"]')).toHaveCount(0)
+		await expect(notice.getByRole('link', {name: 'Open trash'})).toHaveCount(0)
 
 		const restore = await apiContext.post('/api/v2/projects/4/restore', {headers: {Authorization: `Bearer ${userToken}`}})
 		expect(restore.status()).toBe(403)
