@@ -5,6 +5,7 @@ import {
 	type QueryClient,
 } from '@tanstack/vue-query'
 import {
+	projectsDelete,
 	projectsDeletePermanently,
 	projectsRestore,
 	projectsTrashEmpty,
@@ -17,12 +18,22 @@ import {
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
-import {normalizeTask, taskQuery, type TaskResponse} from './tasks'
+import {
+	normalizeTask,
+	taskKeys,
+	taskQuery,
+	type TaskResponse,
+} from './tasks'
 import {insertTaskIntoBoards, invalidateTaskMembership} from './taskCache'
 import {timeEntryKeys} from './timeEntries'
-import {projectKeys} from './projects'
+import {
+	descendantIds,
+	projectKeys,
+	type ProjectListResult,
+} from './projects'
 import {trashKeys} from './trashShared'
 import {i18n} from '@/i18n'
+import {removeProjectFromHistory} from '@/modules/projectHistory'
 
 export {
 	ERROR_CODE_PROJECT_IS_IN_TRASH,
@@ -150,6 +161,38 @@ function invalidateAfterProjectTrashChange(client: QueryClient) {
 	])
 }
 
+export function deleteProjectMutationOptions() {
+	return contextMutationOptions({
+		mutationFn: async (id: number) => {
+			await projectsDelete({path: {id}})
+		},
+		optimistic: {
+			queryKeys: () => [projectKeys.list()],
+			update: (id, client) => {
+				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+				const ids = new Set(list ? descendantIds(list.projects, id) : [id])
+				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+					current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
+				)
+				return ids
+			},
+		},
+		onSuccess: (_data, id, client, ids) => {
+			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
+			removeProjectFromHistory({id})
+		},
+		// The view toasts with an undo action
+		onSettled: (_input, client) => Promise.all([
+			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
+			client.invalidateQueries({queryKey: trashKeys.all}),
+			// Tasks of trashed projects drop out of every list
+			client.invalidateQueries({queryKey: taskKeys.all}),
+		]),
+		// Failures reach the global Vue error handler, which toasts them.
+		toastError: () => false,
+	})
+}
+
 export function restoreProjectMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => (await projectsRestore({path: {id}})).data,
@@ -174,6 +217,10 @@ export function emptyProjectTrashMutationOptions() {
 		onSettled: (_input, client) => invalidateTrash(client),
 		successMessage: () => i18n.global.t('trash.emptySuccess'),
 	})
+}
+
+export function useDeleteProjectMutation() {
+	return useMutation(deleteProjectMutationOptions())
 }
 
 export function useRestoreProjectMutation() {

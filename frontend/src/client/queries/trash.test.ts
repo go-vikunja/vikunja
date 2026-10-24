@@ -1,6 +1,7 @@
 import {describe, it, expect, vi} from 'vitest'
 import {QueryClient, QueryObserver} from '@tanstack/vue-query'
 import {
+	deleteProjectMutationOptions,
 	deleteTaskPermanentlyMutationOptions,
 	emptyTaskTrashMutationOptions,
 	restoreTaskMutationOptions,
@@ -11,7 +12,11 @@ import {
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
 import {kanbanKeys, normalizeBucket, type BoardData} from './kanban'
-import {projectKeys} from './projects'
+import {
+	normalizeProject,
+	projectKeys,
+	type ProjectListResult,
+} from './projects'
 import {ApiError} from '@/client/problem'
 import {error} from '@/message'
 
@@ -21,6 +26,7 @@ const sdk = vi.hoisted(() => ({
 	tasksRead: vi.fn(),
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
+	projectsDelete: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({
@@ -288,6 +294,37 @@ it('marks the trash and time entries stale after emptying the trash', async () =
 	expect(sdk.tasksTrashEmpty).toHaveBeenCalled()
 	expect(client.getQueryState(trashKeys.taskList(1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+})
+
+describe('deleteProjectMutationOptions', () => {
+	const project = (id: number, parent_project_id = 0) => normalizeProject({id, title: 'Project', parent_project_id})
+
+	it('removes a deleted project, all descendants, and their detail entries', async () => {
+		const client = new QueryClient()
+		client.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [
+				project(1),
+				project(2, 1),
+				project(3, 2),
+				project(4),
+			],
+			favoriteProject: null,
+			savedFilterProjects: [project(-2)],
+		})
+		for (const id of [1, 2, 3, 4]) {
+			client.setQueryData(projectKeys.detail(id), project(id))
+		}
+		sdk.projectsDelete.mockResolvedValue({data: undefined})
+
+		await client.getMutationCache().build(client, deleteProjectMutationOptions()).execute(1)
+
+		expect(sdk.projectsDelete).toHaveBeenCalledWith({path: {id: 1}})
+		expect(client.getQueryData<ProjectListResult>(projectKeys.list())?.projects.map(p => p.id)).toEqual([4])
+		expect(client.getQueryData(projectKeys.detail(1))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(2))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(3))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(4))).toBeDefined()
+	})
 })
 
 describe('taskInTrashFromError', () => {
