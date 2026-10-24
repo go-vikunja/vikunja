@@ -10,7 +10,8 @@ import {
 	trashKeys,
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
-import {kanbanKeys} from './kanban'
+import {kanbanKeys, normalizeBucket, type BoardData} from './kanban'
+import {projectKeys} from './projects'
 import {deleteTaskMutationOptions} from './taskMutations'
 import {ApiError} from '@/client/problem'
 
@@ -97,10 +98,32 @@ it('drops a restored task from the trash and marks time entries stale', async ()
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
 })
 
-it('refetches the mounted boards of the restored task\'s project', async () => {
+it('patches the restored card into scrolled boards and refetches only filter boards', async () => {
 	const client = new QueryClient()
 	seedTrash(client)
+	client.setQueryData(projectKeys.detail(5), {
+		id: 5,
+		views: [
+			{
+				id: 6,
+				bucket_configuration_mode: 'manual',
+				default_bucket_id: 3,
+			},
+			{
+				id: 9,
+				bucket_configuration_mode: 'filter',
+			},
+		],
+	})
 	const readBoard = vi.fn().mockResolvedValue({
+		buckets: [normalizeBucket({
+			id: 3,
+			count: 30,
+			tasks: [{id: 1}],
+		})],
+		pages: {3: 1},
+	})
+	const readFilterBoard = vi.fn().mockResolvedValue({
 		buckets: [],
 		pages: {},
 	})
@@ -114,13 +137,23 @@ it('refetches the mounted boards of the restored task\'s project', async () => {
 			queryFn: readBoard,
 		}),
 		new QueryObserver(client, {
+			queryKey: kanbanKeys.board(5, 9),
+			queryFn: readFilterBoard,
+		}),
+		new QueryObserver(client, {
 			queryKey: kanbanKeys.board(7, 8),
 			queryFn: readOtherBoard,
 		}),
 	].map(observer => observer.subscribe(() => {}))
 	await vi.waitFor(() => {
 		expect(readBoard).toHaveBeenCalledTimes(1)
+		expect(readFilterBoard).toHaveBeenCalledTimes(1)
 		expect(readOtherBoard).toHaveBeenCalledTimes(1)
+		expect(client.getQueryData(kanbanKeys.board(5, 6))).toBeDefined()
+	})
+	client.setQueryData<BoardData>(kanbanKeys.board(5, 6), current => current && {
+		...current,
+		pages: {3: 2},
 	})
 	sdk.tasksRestore.mockResolvedValue({
 		data: {
@@ -133,7 +166,15 @@ it('refetches the mounted boards of the restored task\'s project', async () => {
 	await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
 	observers.forEach(stop => stop())
 
-	expect(readBoard).toHaveBeenCalledTimes(2)
+	const board = client.getQueryData<BoardData>(kanbanKeys.board(5, 6))!
+	expect(board.buckets[0].tasks.map(task => task.id)).toEqual([
+		2,
+		1,
+	])
+	expect(board.buckets[0].count).toBe(31)
+	expect(board.pages).toEqual({3: 2})
+	expect(readBoard).toHaveBeenCalledTimes(1)
+	expect(readFilterBoard).toHaveBeenCalledTimes(2)
 	expect(readOtherBoard).toHaveBeenCalledTimes(1)
 })
 
