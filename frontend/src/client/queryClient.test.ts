@@ -64,4 +64,37 @@ describe('queryClient', () => {
 
 		expect(error).not.toHaveBeenCalled()
 	})
+
+	it('does not retry a read of a trashed project', async () => {
+		const cause = {
+			status: 404,
+			code: 3018,
+			details: {id: 1, deleted_at: '2026-01-01T00:00:00Z', can_restore: true},
+		}
+		const queryFn = vi.fn(async () => {
+			throw cause
+		})
+
+		await expect(queryClient.fetchQuery({queryKey: ['trashed'], queryFn})).rejects.toBe(cause)
+
+		expect(queryFn).toHaveBeenCalledOnce()
+	})
+
+	it('retries an ordinary failed read once', async () => {
+		const cause = {
+			status: 500,
+			detail: 'boom',
+		}
+		const queryFn = vi.fn(async () => {
+			throw cause
+		})
+
+		await expect(queryClient.fetchQuery({
+			queryKey: ['flaky'],
+			queryFn,
+			retryDelay: 0,
+		})).rejects.toBe(cause)
+
+		expect(queryFn).toHaveBeenCalledTimes(2)
+	})
 })

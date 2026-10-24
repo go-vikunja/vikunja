@@ -1,20 +1,33 @@
 import {describe, it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {
+	deleteProjectMutationOptions,
 	deleteTaskPermanentlyMutationOptions,
+	projectInTrashFromError,
+	restoreProjectMutationOptions,
 	restoreTaskMutationOptions,
 	taskInTrashFromError,
 	trashDaysLeft,
+	trashedProjectsQuery,
 	trashedTasksQuery,
 	trashKeys,
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
+import {taskKeys} from './tasks'
+import {
+	normalizeProject,
+	projectKeys,
+	type ProjectListResult,
+} from './projects'
 
 const sdk = vi.hoisted(() => ({
 	tasksTrashList: vi.fn(),
 	tasksRestore: vi.fn(),
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
+	projectsDelete: vi.fn(),
+	projectsRestore: vi.fn(),
+	projectsTrashList: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({
@@ -67,6 +80,72 @@ it('drops a permanently deleted task from the trash', async () => {
 	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({items: [{id: 2}], total: 2})
 })
 
+it('drops a restored project from the trash and marks time entries stale', async () => {
+	const client = new QueryClient()
+	seedTrash(client)
+	client.setQueryData(trashKeys.projectList(1), {
+		items: [{id: 1, title: 'keep'}, {id: 2, title: 'restore'}],
+		page: 1,
+		per_page: 2,
+		total: 3,
+		total_pages: 2,
+	})
+	client.setQueryData(taskKeys.detail(5), {id: 5})
+	sdk.projectsRestore.mockResolvedValue({data: {id: 2, title: 'restore'}})
+
+	await client.getMutationCache().build(client, restoreProjectMutationOptions()).execute(2)
+
+	expect(sdk.projectsRestore).toHaveBeenCalledWith({path: {id: 2}})
+	expect(client.getQueryData(trashKeys.projectList(1))).toMatchObject({items: [{id: 1}], total: 2})
+	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(taskKeys.detail(5))?.isInvalidated).toBe(true)
+})
+
+describe('deleteProjectMutationOptions', () => {
+	const project = (id: number, parent_project_id = 0) => normalizeProject({id, title: 'Project', parent_project_id})
+
+	it('removes a deleted project, all descendants, and their detail entries', async () => {
+		const client = new QueryClient()
+		client.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [
+				project(1),
+				project(2, 1),
+				project(3, 2),
+				project(4),
+			],
+			favoriteProject: null,
+			savedFilterProjects: [project(-2)],
+		})
+		for (const id of [1, 2, 3, 4]) {
+			client.setQueryData(projectKeys.detail(id), project(id))
+		}
+		sdk.projectsDelete.mockResolvedValue({data: undefined})
+
+		await client.getMutationCache().build(client, deleteProjectMutationOptions()).execute(1)
+
+		expect(sdk.projectsDelete).toHaveBeenCalledWith({path: {id: 1}})
+		expect(client.getQueryData<ProjectListResult>(projectKeys.list())?.projects.map(p => p.id)).toEqual([4])
+		expect(client.getQueryData(projectKeys.detail(1))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(2))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(3))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(4))).toBeDefined()
+	})
+
+	it('marks time entries, task lists and task details stale', async () => {
+		const client = new QueryClient()
+		seedTrash(client)
+		client.setQueryData(taskKeys.list({}), [])
+		client.setQueryData(taskKeys.detail(5), {id: 5})
+		sdk.projectsDelete.mockResolvedValue({data: undefined})
+
+		await client.getMutationCache().build(client, deleteProjectMutationOptions()).execute(1)
+
+		expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(taskKeys.list({}))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(taskKeys.detail(5))?.isInvalidated).toBe(true)
+	})
+})
+
 describe('taskInTrashFromError', () => {
 	it('reads the details of a trashed task', () => {
 		const details = {project_id: 1, deleted_at: '2026-01-01T00:00:00Z'}
@@ -75,6 +154,85 @@ describe('taskInTrashFromError', () => {
 	it('ignores a plain not found', () => {
 		expect(taskInTrashFromError({status: 404, code: 4002})).toBeNull()
 	})
+})
+
+describe('projectInTrashFromError', () => {
+	it('reads the details of a trashed project', () => {
+		const details = {id: 1, deleted_at: '2026-01-01T00:00:00Z', can_restore: true}
+		expect(projectInTrashFromError({status: 404, code: 3018, details})).toEqual(details)
+	})
+	it('ignores a plain not found', () => {
+		expect(projectInTrashFromError({status: 404, code: 3001})).toBeNull()
+	})
+	it('ignores a trashed task', () => {
+		expect(projectInTrashFromError({status: 404, code: 4040, details: {project_id: 1}})).toBeNull()
+	})
+})
+
+it('normalizes trashed projects and orders sub-projects below their parents', async () => {
+	const client = new QueryClient()
+	sdk.projectsTrashList.mockResolvedValue({
+		data: {
+			items: [
+				{
+					id: 1,
+					hex_color: 'ff0000',
+					trashed_sub_projects: [
+						{
+							id: 2,
+							parent_project_id: 1,
+							depth: 1,
+						},
+						{
+							id: 3,
+							parent_project_id: 1,
+							depth: 1,
+						},
+						{
+							id: 4,
+							parent_project_id: 3,
+							depth: 2,
+						},
+						{
+							id: 5,
+							parent_project_id: 2,
+							depth: 2,
+						},
+					],
+				},
+			],
+			page: 1,
+			per_page: 50,
+			total: 1,
+			total_pages: 1,
+		},
+	})
+
+	const page = await client.fetchQuery(trashedProjectsQuery(1))
+
+	expect(sdk.projectsTrashList).toHaveBeenCalledWith(expect.objectContaining({query: {page: 1}}))
+	expect(page.items[0]?.hex_color).toBe('#ff0000')
+	expect(page.items[0]?.trashed_sub_projects?.map(({id, depth}) => ({
+		id,
+		depth,
+	}))).toEqual([
+		{
+			id: 2,
+			depth: 1,
+		},
+		{
+			id: 5,
+			depth: 2,
+		},
+		{
+			id: 3,
+			depth: 1,
+		},
+		{
+			id: 4,
+			depth: 2,
+		},
+	])
 })
 
 describe('trashDaysLeft', () => {
