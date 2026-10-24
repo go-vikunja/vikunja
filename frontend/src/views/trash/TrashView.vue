@@ -14,6 +14,7 @@
 					{{ $t('quickActions.tasks') }}
 				</BaseButton>
 			</nav>
+			<!-- Tabs teleport their actions here -->
 			<div id="trash-actions" />
 		</div>
 		<RouterView />
