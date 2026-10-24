@@ -14,12 +14,12 @@ import {
 	createTaskMutationOptions,
 	deleteTaskMutationOptions,
 	duplicateTaskMutationOptions,
-	insertTaskIntoBoards,
 	moveTaskMutationOptions,
 	taskWriteBody,
 	updateTaskMutationOptions,
 	updateTaskPositionMutationOptions,
 } from './taskMutations'
+import {insertTaskIntoBoards} from './taskCache'
 import {trashKeys} from './trash'
 import {timeEntryKeys} from './timeEntries'
 import type {Task, PaginatedTask} from '@/client/generated'

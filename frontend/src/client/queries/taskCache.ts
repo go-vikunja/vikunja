@@ -1,9 +1,10 @@
 import {hashKey, type QueryClient, type QueryKey} from '@tanstack/vue-query'
 import type {Task} from '@/client/generated'
-import {mapTasksDeep, mergeTask, removeTask} from '@/helpers/task'
+import {getDefaultBucketId, mapTasksDeep, mergeTask, removeTask} from '@/helpers/task'
 import {normalizeTask, taskKeys, type PaginatedTaskResponse, type TaskResponse} from './tasks'
 import {kanbanKeys, type BoardData} from './kanban'
 import {totalPagesFor} from './pagination'
+import {getCachedProject} from './projects'
 
 // Applies `update` to every cached copy of task `id` (detail, lists, boards, nested relations),
 // so a mutation response patches all mounted views without refetching them.
@@ -133,6 +134,32 @@ export function removeTaskEverywhere(client: QueryClient, id: number) {
 	client.setQueriesData<TaskResponse>({queryKey: taskKeys.details}, current =>
 		current ? removeTask([current], id).map(normalizeTask)[0] : current,
 	)
+}
+
+export function insertTaskIntoBoards(client: QueryClient, created: Task) {
+	const task = normalizeTask(created)
+	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
+		const project = kanbanKeys.projectOf(key)
+		const viewId = kanbanKeys.viewOf(key)
+		if (!board || project === undefined || project !== task.project_id || viewId === undefined) continue
+		const view = getCachedProject(project, client)?.views?.find(item => item.id === viewId)
+		// The response only echoes the requested bucket, which belongs to the one view it was requested for.
+		const target = board.buckets.some(bucket => bucket.id === task.bucket_id)
+			? task.bucket_id
+			: view && view.bucket_configuration_mode !== 'filter'
+				? task.done && view.done_bucket_id
+					? view.done_bucket_id
+					: getDefaultBucketId(view, board.buckets)
+				: undefined
+		if (target === undefined) continue
+		const position = task.positions?.find(item => item.project_view_id === viewId)?.position ?? task.position
+		client.setQueryData(key, {
+			...board,
+			buckets: board.buckets.map(bucket => bucket.id === target
+				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target, position}, ...bucket.tasks]}
+				: bucket),
+		})
+	}
 }
 
 export async function invalidateTaskMembership(
