@@ -50,8 +50,8 @@ const canRestore = computed(() => (projectList.projects[props.inTrash.project_id
 
 const deletedLabel = computed(() => taskInTrashLabel(props.inTrash))
 
-async function restore() {
-	await restoreTask.mutateAsync(props.taskId)
+function restore() {
+	restoreTask.mutate(props.taskId)
 }
 </script>
 
