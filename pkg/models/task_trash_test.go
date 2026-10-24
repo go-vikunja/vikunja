@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -162,12 +163,60 @@ func TestTask_Restore(t *testing.T) {
 		err = second.Restore(s, u1)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
+	t.Run("reappears in saved filter views", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		view, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+		events.ClearDispatchedEvents()
+
+		_, err := restoreTaskForTest(t, 51, u1)
+		require.NoError(t, err)
+		dispatched := events.GetDispatchedEvents((&TaskRestoredEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 51, "project_view_id": view.ID})
+
+		events.TestListener(t, dispatched[0], &UpdateTaskInSavedFilterViews{})
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 51, "project_view_id": view.ID}, false)
+	})
 	t.Run("live task is not in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		_, err := restoreTaskForTest(t, 1, u1)
 		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+}
+
+func TestTaskTrash_InstanceAdminInArchivedProject(t *testing.T) {
+	setup := func(t *testing.T) *user.User {
+		db.LoadAndAssertFixtures(t)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		t.Cleanup(license.ResetForTests)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
+		require.NoError(t, err)
+		// Task 36 lives in archived project 22
+		setTaskColumnsForTest(t, 36, map[string]any{"deleted_at": time.Now()})
+		return &user.User{ID: 2, IsAdmin: true}
+	}
+
+	t.Run("restore is refused", func(t *testing.T) {
+		admin := setup(t)
+
+		_, err := restoreTaskForTest(t, 36, admin)
+		assert.True(t, IsErrProjectIsArchived(err), "got %v", err)
+	})
+	t.Run("permanent delete is refused", func(t *testing.T) {
+		admin := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := (&Task{ID: 36}).CanDeletePermanently(s, admin)
+		assert.True(t, IsErrProjectIsArchived(err), "got %v", err)
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 36}, false)
 	})
 }
 
