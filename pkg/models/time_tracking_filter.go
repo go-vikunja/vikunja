@@ -124,7 +124,7 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	switch field {
 	case "user_id", "task_id":
 		if field == "task_id" && raw == "null" {
-			return nullContainerFilterCond(field, noContainerCond(field), comparator)
+			return nullFilterCond(field, noContainerCond(field), comparator)
 		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
@@ -135,7 +135,7 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	case "project", "project_id":
 		// A task always has a project, so "no project" means no container at all
 		if raw == "null" {
-			return nullContainerFilterCond("project_id", timeEntryWithoutContainerCond(), comparator)
+			return nullFilterCond("project_id", timeEntryWithoutContainerCond(), comparator)
 		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
@@ -163,7 +163,7 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 
 	case "start_time", "end_time":
 		if raw == "null" {
-			return nullTimeFilterCond(field, comparator)
+			return nullFilterCond(field, builder.IsNull{field}, comparator)
 		}
 		value, err := timeEntryTimeFilterValue(raw, loc)
 		if err != nil {
@@ -176,18 +176,7 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	}
 }
 
-// nullTimeFilterCond handles `end_time = null` (running timers) and its negation.
-func nullTimeFilterCond(field string, comparator taskFilterComparator) (builder.Cond, error) {
-	if comparator == taskFilterComparatorEquals {
-		return &builder.IsNull{field}, nil
-	}
-	if comparator == taskFilterComparatorNotEquals {
-		return &builder.NotNull{field}, nil
-	}
-	return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: "null"}
-}
-
-func nullContainerFilterCond(field string, isNull builder.Cond, comparator taskFilterComparator) (builder.Cond, error) {
+func nullFilterCond(field string, isNull builder.Cond, comparator taskFilterComparator) (builder.Cond, error) {
 	if comparator == taskFilterComparatorEquals {
 		return isNull, nil
 	}
