@@ -78,11 +78,15 @@ export function invalidateAfterTrashChange(client: QueryClient, taskId?: number)
 	])
 }
 
+function removeTrashedTask(client: QueryClient, id: number) {
+	removeFromPages<TaskResponse>(client, trashKeys.tasks, task => task.id === id)
+}
+
 export function restoreTaskMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => normalizeTask((await tasksRestore({path: {task: id}})).data),
 		onSuccess: (restored, id, client) => {
-			removeFromPages<TaskResponse>(client, trashKeys.tasks, task => task.id === id)
+			removeTrashedTask(client, id)
 			// Delete patched the card off the still-mounted board; only the server knows its restored bucket.
 			void client.invalidateQueries({
 				queryKey: kanbanKeys.all,
@@ -98,7 +102,7 @@ export function restoreTaskMutationOptions() {
 export function deleteTaskPermanentlyMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => { await tasksDeletePermanently({path: {task: id}}) },
-		onSuccess: (_data, id, client) => removeFromPages<TaskResponse>(client, trashKeys.tasks, task => task.id === id),
+		onSuccess: (_data, id, client) => removeTrashedTask(client, id),
 		onSettled: (_id, client) => invalidateTrash(client),
 		successMessage: () => i18n.global.t('trash.deleteForeverSuccess'),
 	})
