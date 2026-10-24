@@ -23,6 +23,13 @@
 					{{ timeEntriesNotice }}
 				</p>
 			</template>
+			<p
+				v-else-if="countFailed"
+				v-cy="'projectDeleteNotice'"
+				class="tw:text-balance"
+			>
+				{{ $t('project.delete.toTrashFallback', {days: TRASH_RETENTION_DAYS}) }}
+			</p>
 			<Loading
 				v-else
 				class="is-loading-small"
@@ -56,7 +63,7 @@ const goBack = useGoBack()
 
 const projectId = computed(() => Number(route.params.projectId))
 const project = computed(() => projectList.projects[projectId.value])
-const count = useQuery(computed(() => projectCountQuery(projectId.value))).data
+const {data: count, isError: countFailed} = useQuery(computed(() => projectCountQuery(projectId.value)))
 
 useTitle(() => t('project.delete.title', {project: project?.value?.title}))
 
