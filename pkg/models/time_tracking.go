@@ -462,11 +462,8 @@ func (te *TimeEntry) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	entry, can, _, err := te.canDoTimeEntry(s, a, false)
-	if err != nil {
-		return false, err
-	}
-	return can && !entry.InTrash, nil
+	_, can, err := te.canWriteTimeEntry(s, a, false)
+	return can, err
 }
 
 // CanUpdate allows the author to edit their entry, including moving it between
@@ -484,8 +481,7 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if existing.UserID != a.GetID() {
 		return false, nil
 	}
-	existingInTrash, err := isTaskTrashed(s, existing.TaskID)
-	if err != nil || existingInTrash {
+	if err = markTimeEntriesInTrash(s, []*TimeEntry{existing}); err != nil || existing.InTrash {
 		return false, err
 	}
 
@@ -499,11 +495,8 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	container, canReadContainer, _, err := te.canDoTimeEntry(s, a, false)
-	if err != nil {
-		return false, err
-	}
-	return canReadContainer && !container.InTrash, nil
+	_, can, err := te.canWriteTimeEntry(s, a, false)
+	return can, err
 }
 
 func (te *TimeEntry) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
@@ -516,21 +509,20 @@ func (te *TimeEntry) canModify(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	entry, canRead, _, err := te.canDoTimeEntry(s, a, true)
-	if err != nil {
+	entry, can, err := te.canWriteTimeEntry(s, a, true)
+	if err != nil || !can {
 		return false, err
 	}
-	if !canRead {
-		return false, nil
-	}
-	return entry.UserID == a.GetID() && !entry.InTrash, nil
+	return entry.UserID == a.GetID(), nil
 }
 
-func isTaskTrashed(s *xorm.Session, taskID int64) (bool, error) {
-	if taskID == 0 {
-		return false, nil
+// Entries of trashed tasks are read-only.
+func (te *TimeEntry) canWriteTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*TimeEntry, bool, error) {
+	entry, can, _, err := te.canDoTimeEntry(s, a, fetch)
+	if err != nil {
+		return nil, false, err
 	}
-	return s.Table("tasks").Where(builder.And(builder.Eq{"id": taskID}, builder.NotNull{"deleted_at"})).Exist()
+	return entry, can && !entry.InTrash, nil
 }
 
 func markTimeEntriesInTrash(s *xorm.Session, entries []*TimeEntry) error {
