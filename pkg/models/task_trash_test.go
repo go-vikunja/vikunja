@@ -146,6 +146,7 @@ func TestTask_Restore(t *testing.T) {
 			"id":         51,
 			"deleted_at": nil,
 		})
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51}, false)
 	})
 	t.Run("reader cannot restore", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
