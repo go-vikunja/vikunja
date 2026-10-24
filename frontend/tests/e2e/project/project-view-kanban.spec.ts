@@ -413,7 +413,7 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.project-kanban .filter-container .base-button')).toBeVisible()
 	})
 
-	test('Should remove a task from the board when deleting it', async ({authenticatedPage: page}) => {
+	test('Should remove a task from the board when deleting it', async ({authenticatedPage: page, apiContext, userToken}) => {
 		const {task, view} = await createSingleTaskInBucket(5)
 		await page.goto(`/projects/1/${view.id}`)
 
@@ -429,6 +429,10 @@ test.describe('Project View Kanban', () => {
 		for (let i = 0; i < bucketCount; i++) {
 			await expect(page.locator('.kanban .bucket').nth(i)).not.toContainText(task.title)
 		}
+
+		const stored = await apiContext.get(`tasks/${task.id}`, {headers: {Authorization: `Bearer ${userToken}`}})
+		expect(stored.status()).toBe(404)
+		expect((await stored.json()).code).toBe(4040)
 	})
 
 	test('Undo after deleting a task puts its card back on the board', async ({
