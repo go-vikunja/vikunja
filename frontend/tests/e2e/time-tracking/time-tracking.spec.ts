@@ -448,12 +448,25 @@ test.describe('Time tracking without project or task', () => {
 		expect((await stored.json()).items).toEqual([expect.objectContaining({comment: 'private work', task_id: 0, project_id: 0})])
 	})
 
-	test('starts a timer with nothing selected', async ({authenticatedPage: page}) => {
+	test('starts a timer with nothing selected', async ({authenticatedPage: page, apiContext, userToken}) => {
 		await page.goto('/time-tracking')
 		await page.locator('[data-cy="addTimeEntry"]').click()
 		await page.locator('[data-cy="timeEntryForm"] [data-cy="startTimer"]').click()
 
 		const badge = page.locator('[data-cy="timerBadge"]')
+		await expect(badge).toContainText('No project')
+
+		const stored = await apiContext.get('/api/v2/time-entries', {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect((await stored.json()).items).toEqual([
+			expect.objectContaining({
+				task_id: 0,
+				project_id: 0,
+				end_time: null,
+			}),
+		])
+		await page.reload()
 		await expect(badge).toContainText('No project')
 	})
 
