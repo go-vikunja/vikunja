@@ -4,6 +4,7 @@ import {
 	deleteProjectMutationOptions,
 	deleteTaskPermanentlyMutationOptions,
 	emptyTaskTrashMutationOptions,
+	orderTrashedSubProjects,
 	projectInTrashFromError,
 	restoreProjectMutationOptions,
 	restoreTaskMutationOptions,
@@ -410,6 +411,22 @@ describe('projectInTrashFromError', () => {
 			details: {project_id: 1},
 		}))).toBeNull()
 	})
+})
+
+it('orders trashed sub-projects below their parents, siblings in API order', () => {
+	const ordered = orderTrashedSubProjects(1, [
+		{id: 2, parent_project_id: 1, depth: 1},
+		{id: 3, parent_project_id: 1, depth: 1},
+		{id: 4, parent_project_id: 3, depth: 2},
+		{id: 5, parent_project_id: 2, depth: 2},
+	])
+
+	expect(ordered.map(({id, depth}) => ({id, depth}))).toEqual([
+		{id: 2, depth: 1},
+		{id: 5, depth: 2},
+		{id: 3, depth: 1},
+		{id: 4, depth: 2},
+	])
 })
 
 describe('trashDaysLeft', () => {
