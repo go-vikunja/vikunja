@@ -432,7 +432,7 @@ export function projectCountQuery(id: number) {
 		queryFn: async ({signal}) => (await projectsCount({path: {id}, signal})).data,
 		staleTime: 0,
 		enabled: id > 0,
-		// The delete dialog renders a fallback instead.
+		// ProjectSettingsDelete renders a fallback text instead.
 		meta: {handlesError: true},
 	})
 }
