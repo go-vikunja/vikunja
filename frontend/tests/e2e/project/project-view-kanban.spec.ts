@@ -413,7 +413,11 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.project-kanban .filter-container .base-button')).toBeVisible()
 	})
 
-	test('Should remove a task from the board when deleting it', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('Should remove a task from the board when deleting it', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		const {task, view} = await createSingleTaskInBucket(5)
 		await page.goto(`/projects/1/${view.id}`)
 
