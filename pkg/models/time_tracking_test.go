@@ -1128,36 +1128,21 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 	})
 }
 
-func TestTimeEntry_UpdateDetachesWithExplicitNull(t *testing.T) {
-	update := func(t *testing.T, body string) {
-		s := db.NewSession()
-		defer s.Close()
-		a := &user.User{ID: 1}
+func TestTimeEntry_UpdateDetachesWithOneExplicitNull(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	a := &user.User{ID: 1}
 
-		te := &TimeEntry{}
-		require.NoError(t, json.Unmarshal([]byte(body), te))
-		te.ID = 2
-		can, err := te.CanUpdate(s, a)
-		require.NoError(t, err)
-		require.True(t, can)
-		require.NoError(t, te.Update(s, a))
-		require.NoError(t, s.Commit())
-	}
-	times := `"start_time":"2018-12-01T12:00:00Z","end_time":"2018-12-01T13:00:00Z"`
+	te := &TimeEntry{}
+	body := `{"project_id":null,"start_time":"2018-12-01T12:00:00Z","end_time":"2018-12-01T13:00:00Z"}`
+	require.NoError(t, json.Unmarshal([]byte(body), te))
+	te.ID = 2
+	can, err := te.CanUpdate(s, a)
+	require.NoError(t, err)
+	require.True(t, can)
+	require.NoError(t, te.Update(s, a))
+	require.NoError(t, s.Commit())
 
-	t.Run("explicit null detaches", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		update(t, `{"task_id":null,"project_id":null,`+times+`}`)
-		db.AssertExists(t, "time_entries", map[string]interface{}{"id": 2, "task_id": 0, "project_id": 0}, false)
-	})
-	t.Run("one explicit null is enough", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		update(t, `{"project_id":null,`+times+`}`)
-		db.AssertExists(t, "time_entries", map[string]interface{}{"id": 2, "task_id": 0, "project_id": 0}, false)
-	})
-	t.Run("omitted keeps the container", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		update(t, `{"comment":"kept",`+times+`}`)
-		db.AssertExists(t, "time_entries", map[string]interface{}{"id": 2, "project_id": 1, "comment": "kept"}, false)
-	})
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 2, "task_id": 0, "project_id": 0}, false)
 }

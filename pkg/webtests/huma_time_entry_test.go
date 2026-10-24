@@ -264,21 +264,28 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 		e, token := setup(t)
 		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"task_id":null,"project_id":null,`+times+`}`, token, "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"project_id":0`)
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
+	})
+
+	t.Run("PUT with one null detaches", func(t *testing.T) {
+		e, token := setup(t)
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"project_id":null,`+times+`}`, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
 	})
 
 	t.Run("PUT without container keeps it", func(t *testing.T) {
 		e, token := setup(t)
 		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{`+times+`}`, token, "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"project_id":1`)
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 1)
 	})
 
 	t.Run("PATCH with null detaches", func(t *testing.T) {
 		e, token := setup(t)
 		rec := humaRequest(t, e, http.MethodPatch, "/api/v2/time-entries/2", `{"project_id":null}`, token, "application/merge-patch+json")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"project_id":0`)
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
 	})
 
 	t.Run("filter by no project", func(t *testing.T) {
@@ -291,4 +298,15 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assert.ElementsMatch(t, []int64{2}, timeEntryIDsFromReadAll(t, rec.Body.Bytes()))
 	})
+}
+
+func assertTimeEntryContainer(t *testing.T, body []byte, taskID, projectID int64) {
+	t.Helper()
+	var entry struct {
+		TaskID    int64 `json:"task_id"`
+		ProjectID int64 `json:"project_id"`
+	}
+	require.NoError(t, json.Unmarshal(body, &entry), string(body))
+	assert.Equal(t, taskID, entry.TaskID, "task_id")
+	assert.Equal(t, projectID, entry.ProjectID, "project_id")
 }
