@@ -48,7 +48,7 @@ test.describe('Project trash', () => {
 
 			const dialog = page.getByRole('dialog', {name: 'Delete this project'})
 			await expect(dialog.locator('[data-cy="projectDeleteNotice"]')).toContainText('Moves this project, 1 sub-project and no tasks to the trash.')
-			await expect(dialog.locator('[data-cy="projectDeleteTimeEntries"]')).toContainText('1 time entries from 1 people')
+			await expect(dialog.locator('[data-cy="projectDeleteTimeEntries"]')).toContainText('1 time entry from 1 person')
 		} finally {
 			await LicenseFactory.disable()
 		}
