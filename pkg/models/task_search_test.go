@@ -56,6 +56,45 @@ func TestKanbanViewBucketFiltering(t *testing.T) {
 	}
 }
 
+func TestKanbanFilterBucketsEnrichEveryTaskCopy(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	view, err := GetProjectViewByID(s, 4)
+	require.NoError(t, err)
+	view.BucketConfigurationMode = BucketConfigurationModeFilter
+	view.BucketConfiguration = []*ProjectViewBucketConfiguration{
+		{
+			Title:  "Labelled",
+			Filter: &TaskCollection{Filter: "labels in 4"},
+		},
+		{
+			Title:  "Also labelled",
+			Filter: &TaskCollection{Filter: "labels in 4"},
+		},
+	}
+
+	project, err := GetProjectSimpleByID(s, view.ProjectID)
+	require.NoError(t, err)
+
+	buckets, err := GetTasksInBucketsForView(s, view, []*Project{project}, &taskSearchOptions{}, &user.User{ID: 1})
+	require.NoError(t, err)
+
+	copies := 0
+	for _, b := range buckets {
+		for _, tsk := range b.Tasks {
+			if tsk.ID != 1 {
+				continue
+			}
+			copies++
+			assert.Equalf(t, b.ID, tsk.BucketID, "task 1 in bucket %d reports bucket %d", b.ID, tsk.BucketID)
+			assert.NotEmptyf(t, tsk.Labels, "task 1 in bucket %d is missing its labels", b.ID)
+		}
+	}
+	assert.Equal(t, 2, copies)
+}
+
 // TestTaskSearchRelevanceRanking verifies that a multi-word search ranks the task
 // matching all words above tasks matching only some. The ranking uses ParadeDB's
 // relevance score and is therefore only enforced on ParadeDB; on other databases
