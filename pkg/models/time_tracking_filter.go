@@ -123,6 +123,9 @@ func buildTimeEntryFilterCond(groups []fexpr.ExprGroup, loc *time.Location) (bui
 func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw string, loc *time.Location) (builder.Cond, error) {
 	switch field {
 	case "user_id", "task_id":
+		if field == "task_id" && raw == "null" {
+			return nullContainerFilterCond(field, builder.Or(builder.Eq{"task_id": 0}, builder.IsNull{"task_id"}), comparator)
+		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
 			return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: raw}
@@ -130,6 +133,10 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 		return getFilterCond(&taskFilter{field: field, value: value, comparator: comparator, isNumeric: true}, false)
 
 	case "project", "project_id":
+		// A task always has a project, so "no project" means no container at all
+		if raw == "null" {
+			return nullContainerFilterCond("project_id", timeEntryWithoutContainerCond(), comparator)
+		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
 			return nil, ErrInvalidTimeEntryFilterValue{Field: "project_id", Value: raw}
@@ -176,6 +183,16 @@ func nullTimeFilterCond(field string, comparator taskFilterComparator) (builder.
 	}
 	if comparator == taskFilterComparatorNotEquals {
 		return &builder.NotNull{field}, nil
+	}
+	return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: "null"}
+}
+
+func nullContainerFilterCond(field string, isNull builder.Cond, comparator taskFilterComparator) (builder.Cond, error) {
+	if comparator == taskFilterComparatorEquals {
+		return isNull, nil
+	}
+	if comparator == taskFilterComparatorNotEquals {
+		return builder.Not{isNull}, nil
 	}
 	return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: "null"}
 }
