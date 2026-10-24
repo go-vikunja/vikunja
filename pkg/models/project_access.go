@@ -79,11 +79,6 @@ const projectAccessMinPermissionIDsQuery = projectAccessCTE + `
 SELECT id FROM (` + projectAccessSelect + `) effective
 WHERE permission BETWEEN ? AND ?`
 
-const projectAccessIDsQuery = projectAccessCTE + `
-SELECT DISTINCT pa.project_id AS id
-FROM grants g
-INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id`
-
 type projectAccessRow struct {
 	ID         int64 `xorm:"id"`
 	Permission int64 `xorm:"permission"`
@@ -118,24 +113,12 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 }
 
 // Above this many ids the inlined list bloats the statement and defeats server-side
-// plan caching, so the subquery form with its three bind parameters wins.
+// plan caching, so the subquery form with its fixed bind parameters wins.
 const maxInListSize = 1000
 
-func (pa *projectAccess) cond(column string) builder.Cond {
-	if len(pa.sortedIDs) > maxInListSize {
-		return pa.condViaSubquery(column)
-	}
+func (pa *projectAccess) cond(column string, minPermission Permission) builder.Cond {
 	// The empty slice matters: an argument-less builder.In is dropped by Where and
 	// matches every row, while In with an empty slice renders as 0=1.
-	return builder.In(column, pa.sortedIDs)
-}
-
-// Keeps the bind parameter count at three whatever the tree size.
-func (pa *projectAccess) condViaSubquery(column string) builder.Cond {
-	return builder.In(column, builder.Expr(projectAccessIDsQuery, pa.userID, pa.userID, pa.userID))
-}
-
-func (pa *projectAccess) condWithMinPermission(column string, minPermission Permission) builder.Cond {
 	ids := []int64{}
 	for _, id := range pa.sortedIDs {
 		if pa.permissions[id] >= minPermission {
@@ -143,13 +126,14 @@ func (pa *projectAccess) condWithMinPermission(column string, minPermission Perm
 		}
 	}
 	if len(ids) > maxInListSize {
-		return pa.condWithMinPermissionViaSubquery(column, minPermission)
+		return pa.condViaSubquery(column, minPermission)
 	}
 	return builder.In(column, ids)
 }
 
-// The upper bound drops out-of-enum grants, like getProjectAccessForUser does.
-func (pa *projectAccess) condWithMinPermissionViaSubquery(column string, minPermission Permission) builder.Cond {
+// Keeps the bind parameter count at five whatever the tree size. The upper bound
+// drops out-of-enum grants, like getProjectAccessForUser does.
+func (pa *projectAccess) condViaSubquery(column string, minPermission Permission) builder.Cond {
 	return builder.In(column, builder.Expr(projectAccessMinPermissionIDsQuery, pa.userID, pa.userID, pa.userID, int(minPermission), int(PermissionAdmin)))
 }
 
@@ -168,7 +152,7 @@ func accessibleProjectIDsCond(s *xorm.Session, a web.Auth, column string) (build
 	if err != nil {
 		return nil, err
 	}
-	return access.cond(column), nil
+	return access.cond(column, PermissionRead), nil
 }
 
 // GetAllParentProjects returns the project itself and every ancestor, keyed by id.
