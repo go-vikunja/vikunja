@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -210,6 +211,34 @@ func TestDeleteUser_RemovesReactions(t *testing.T) {
 	require.NoError(t, s.Commit())
 
 	db.AssertMissing(t, "reactions", map[string]interface{}{"user_id": 1})
+}
+
+func TestDeleteUser_RemovesTimeEntriesWithoutContainer(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+
+	start := time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)
+	own := &TimeEntry{
+		UserID:    1,
+		StartTime: start,
+	}
+	other := &TimeEntry{
+		UserID:    3,
+		StartTime: start,
+	}
+	_, err := s.Insert(own, other)
+	require.NoError(t, err)
+
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	require.NoError(t, DeleteUser(s, u))
+	require.NoError(t, s.Commit())
+
+	db.AssertMissing(t, "time_entries", map[string]interface{}{"id": own.ID})
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": other.ID}, false)
 }
 
 // GHSA-hq66-9qg8-jwqg

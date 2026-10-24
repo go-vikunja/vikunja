@@ -190,6 +190,15 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
+	// Container-less entries are author-only and would become unreachable.
+	_, err = s.Where(builder.And(
+		builder.Eq{"user_id": u.ID},
+		timeEntryWithoutContainerCond(),
+	)).Delete(&TimeEntry{})
+	if err != nil {
+		return err
+	}
+
 	err = DeleteAllUserSessions(s, u.ID)
 	if err != nil {
 		return err
