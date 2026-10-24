@@ -14,6 +14,7 @@ import {
 	createTaskMutationOptions,
 	deleteTaskMutationOptions,
 	duplicateTaskMutationOptions,
+	insertTaskIntoBoards,
 	moveTaskMutationOptions,
 	taskWriteBody,
 	updateTaskMutationOptions,
@@ -430,6 +431,30 @@ describe('task mutations', () => {
 			.map(bucket => bucket.tasks.map(task => task.id))).toEqual([[], [9]])
 		expect(client.getQueryData<BoardData>(kanbanKeys.board(1, 5))?.buckets[0].tasks
 			.map(task => task.id)).toEqual([9])
+	})
+
+	it('inserts a done card into the done bucket', async () => {
+		const {projectKeys} = await import('./projects')
+		const client = await seedDefaultBucketBoards()
+		client.setQueryData(projectKeys.detail(1), {
+			id: 1,
+			views: [{
+				id: 2,
+				bucket_configuration_mode: 'manual',
+				default_bucket_id: 4,
+				done_bucket_id: 3,
+			}],
+		})
+		insertTaskIntoBoards(client, {
+			id: 9,
+			project_id: 1,
+			done: true,
+		})
+		expect(client.getQueryData<BoardData>(kanbanKeys.board(1, 2))?.buckets
+			.map(bucket => bucket.tasks.map(task => task.id))).toEqual([
+			[9],
+			[],
+		])
 	})
 
 	it('caches a created card with its stored position in each view', async () => {

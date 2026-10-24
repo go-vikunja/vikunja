@@ -145,7 +145,7 @@ function cachedViewBuckets(client: QueryClient, project: number, view: number) {
 	return board?.buckets ?? client.getQueryData<Bucket[]>(bucketKeys.list(project, view))
 }
 
-function insertTaskIntoBoards(client: QueryClient, created: Task) {
+export function insertTaskIntoBoards(client: QueryClient, created: Task) {
 	const task = normalizeTask(created)
 	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
 		const project = kanbanKeys.projectOf(key)
@@ -156,7 +156,9 @@ function insertTaskIntoBoards(client: QueryClient, created: Task) {
 		const target = board.buckets.some(bucket => bucket.id === task.bucket_id)
 			? task.bucket_id
 			: view && view.bucket_configuration_mode !== 'filter'
-				? getDefaultBucketId(view, board.buckets)
+				? task.done && view.done_bucket_id
+					? view.done_bucket_id
+					: getDefaultBucketId(view, board.buckets)
 				: undefined
 		if (target === undefined) continue
 		const position = task.positions?.find(item => item.project_view_id === viewId)?.position ?? task.position

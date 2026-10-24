@@ -17,6 +17,8 @@ import {removeFromPages, toPaginated, type Paginated} from './pagination'
 import {normalizeTask, type TaskResponse} from './tasks'
 import {invalidateTaskMembership} from './taskCache'
 import {kanbanKeys} from './kanban'
+import {insertTaskIntoBoards} from './taskMutations'
+import {getCachedProject} from './projects'
 import {timeEntryKeys} from './timeEntries'
 import {i18n} from '@/i18n'
 
@@ -89,10 +91,14 @@ export function restoreTaskMutationOptions() {
 		mutationFn: async (id: number) => normalizeTask((await tasksRestore({path: {task: id}})).data),
 		onSuccess: (restored, id, client) => {
 			removeTrashedTask(client, id)
-			// Delete patched the card off the still-mounted board; only the server knows its restored bucket.
+			insertTaskIntoBoards(client, restored)
+			// Filter buckets are server-decided, so those boards can't be patched.
 			void client.invalidateQueries({
 				queryKey: kanbanKeys.all,
-				predicate: query => kanbanKeys.projectOf(query.queryKey) === restored.project_id,
+				predicate: ({queryKey}) => kanbanKeys.projectOf(queryKey) === restored.project_id
+					&& getCachedProject(restored.project_id, client)?.views
+						?.find(view => view.id === kanbanKeys.viewOf(queryKey))
+						?.bucket_configuration_mode === 'filter',
 				refetchType: 'active',
 			})
 		},
