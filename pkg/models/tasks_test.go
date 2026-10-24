@@ -1544,12 +1544,56 @@ func Test_getTaskIndexFromSearchString(t *testing.T) {
 			args:      args{s: "Task #aaaaa"},
 			wantIndex: 0,
 		},
+		{
+			name:      "plain number",
+			args:      args{s: "12"},
+			wantIndex: 12,
+		},
+		{
+			name:      "number in text",
+			args:      args{s: "Task 12"},
+			wantIndex: 0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if gotIndex := getTaskIndexFromSearchString(tt.args.s); gotIndex != tt.wantIndex {
 				t.Errorf("getTaskIndexFromSearchString() = %v, want %v", gotIndex, tt.wantIndex)
 			}
+		})
+	}
+}
+
+func Test_getTaskIDFromSearchString(t *testing.T) {
+	tests := []struct {
+		name   string
+		search string
+		wantID int64
+	}{
+		{
+			name:   "plain number",
+			search: "2620",
+			wantID: 2620,
+		},
+		{
+			name:   "index notation is not an id",
+			search: "#2620",
+			wantID: 0,
+		},
+		{
+			name:   "number in text",
+			search: "Task 2620",
+			wantID: 0,
+		},
+		{
+			name:   "no number",
+			search: "Task",
+			wantID: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.wantID, getTaskIDFromSearchString(tt.search))
 		})
 	}
 }
