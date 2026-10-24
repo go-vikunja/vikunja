@@ -3,7 +3,6 @@ import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {
 	projectsCount,
 	projectsCreate,
-	projectsDelete,
 	projectsDuplicate,
 	projectsList,
 	projectsRead,
@@ -18,14 +17,12 @@ import type {
 import {queryClient} from '@/client/queryClient'
 import {PERMISSIONS} from '@/constants/permissions'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
-import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
 
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {setSubscription} from './subscriptionRequests'
 import {taskKeys} from './tasks'
-import {trashKeys} from './trashShared'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -414,40 +411,9 @@ export function setProjectSubscriptionMutationOptions() {
 	})
 }
 
-function descendantIds(projects: readonly ProjectResponse[], projectId: number): number[] {
+export function descendantIds(projects: readonly ProjectResponse[], projectId: number): number[] {
 	const children = projects.filter(project => project.parent_project_id === projectId)
 	return [projectId, ...children.flatMap(project => descendantIds(projects, project.id))]
-}
-
-export function deleteProjectMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (id: number) => {
-			await projectsDelete({path: {id}})
-		},
-		optimistic: {
-			queryKeys: () => [projectKeys.list()],
-			update: (id, client) => {
-				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
-				const ids = new Set(list ? descendantIds(list.projects, id) : [id])
-				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-					current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
-				)
-				return ids
-			},
-		},
-		onSuccess: (_data, id, client, ids) => {
-			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
-			removeProjectFromHistory({id})
-		},
-		// The view toasts with an undo action
-		onSettled: (_input, client) => Promise.all([
-			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
-			client.invalidateQueries({queryKey: trashKeys.all}),
-			// Tasks of trashed projects drop out of every list
-			client.invalidateQueries({queryKey: taskKeys.all}),
-		]),
-		toastError,
-	})
 }
 
 export function projectCountQuery(id: number) {
@@ -500,10 +466,6 @@ export function usePatchProjectFavoriteMutation() {
 
 export function useSetProjectSubscriptionMutation() {
 	return useMutation(setProjectSubscriptionMutationOptions())
-}
-
-export function useDeleteProjectMutation() {
-	return useMutation(deleteProjectMutationOptions())
 }
 
 export function useDuplicateProjectMutation() {

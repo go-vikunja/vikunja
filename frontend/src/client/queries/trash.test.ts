@@ -1,6 +1,7 @@
 import {describe, it, expect, vi} from 'vitest'
 import {QueryClient} from '@tanstack/vue-query'
 import {
+	deleteProjectMutationOptions,
 	deleteTaskPermanentlyMutationOptions,
 	restoreTaskMutationOptions,
 	taskInTrashFromError,
@@ -9,12 +10,18 @@ import {
 	trashKeys,
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
+import {
+	normalizeProject,
+	projectKeys,
+	type ProjectListResult,
+} from './projects'
 
 const sdk = vi.hoisted(() => ({
 	tasksTrashList: vi.fn(),
 	tasksRestore: vi.fn(),
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
+	projectsDelete: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({
@@ -65,6 +72,37 @@ it('drops a permanently deleted task from the trash', async () => {
 
 	expect(sdk.tasksDeletePermanently).toHaveBeenCalledWith({path: {task: 1}})
 	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({items: [{id: 2}], total: 2})
+})
+
+describe('deleteProjectMutationOptions', () => {
+	const project = (id: number, parent_project_id = 0) => normalizeProject({id, title: 'Project', parent_project_id})
+
+	it('removes a deleted project, all descendants, and their detail entries', async () => {
+		const client = new QueryClient()
+		client.setQueryData<ProjectListResult>(projectKeys.list(), {
+			projects: [
+				project(1),
+				project(2, 1),
+				project(3, 2),
+				project(4),
+			],
+			favoriteProject: null,
+			savedFilterProjects: [project(-2)],
+		})
+		for (const id of [1, 2, 3, 4]) {
+			client.setQueryData(projectKeys.detail(id), project(id))
+		}
+		sdk.projectsDelete.mockResolvedValue({data: undefined})
+
+		await client.getMutationCache().build(client, deleteProjectMutationOptions()).execute(1)
+
+		expect(sdk.projectsDelete).toHaveBeenCalledWith({path: {id: 1}})
+		expect(client.getQueryData<ProjectListResult>(projectKeys.list())?.projects.map(p => p.id)).toEqual([4])
+		expect(client.getQueryData(projectKeys.detail(1))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(2))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(3))).toBeUndefined()
+		expect(client.getQueryData(projectKeys.detail(4))).toBeDefined()
+	})
 })
 
 describe('taskInTrashFromError', () => {
