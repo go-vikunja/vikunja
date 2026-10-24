@@ -31,7 +31,10 @@
 			</div>
 		</div>
 		<p
-			v-if="taskId === undefined && selectedTask === null && selectedProject === null"
+			v-if="taskId === undefined
+				&& selectedTask === null
+				&& selectedProject === null
+				&& (!isEditing || containerLoaded)"
 			v-cy="'timeEntryPrivateHint'"
 			class="help mbe-3"
 		>
