@@ -1049,15 +1049,13 @@ watch(taskQuery.task, async (loaded, previous) => {
 	updateScrollable()
 	visible.value = true
 }, {immediate: true})
-watch(taskQuery.error, cause => {
-	if (!cause) return
-	const {action} = taskLoadErrorAction(cause)
-	if (action === 'ignore' || action === 'inTrash') return
-	if (action === 'notFound') {
+watch(taskLoadError, loadError => {
+	if (!loadError || loadError.action === 'ignore' || loadError.action === 'inTrash') return
+	if (loadError.action === 'notFound') {
 		router.replace({name: 'not-found'})
 		return
 	}
-	error(cause)
+	error(taskQuery.error.value)
 	visible.value = true
 })
 
