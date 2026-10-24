@@ -43,7 +43,7 @@ export function error(e: unknown, actions: Action[] = []) {
 		type: 'error',
 		title: i18n.global.t('error.error'),
 		text: getErrorText(e),
-		ignoreDuplicates: true,
+		ignoreDuplicates: actions.length === 0,
 		data: {
 			actions: actions,
 		},
