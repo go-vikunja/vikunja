@@ -1410,7 +1410,7 @@ func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, creatorID 
 		},
 	}
 	canRead, _, err = fullTask.CanRead(s, creator)
-	if IsErrTaskDoesNotExist(err) {
+	if IsErrTaskDoesNotExist(err) || IsErrTaskIsInTrash(err) {
 		// Already gone (task.deleted), keep the event's copy.
 		return true, nil
 	}
