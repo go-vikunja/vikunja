@@ -55,7 +55,8 @@ export function success(e: unknown, actions: Action[] = []) {
 		type: 'success',
 		title: i18n.global.t('error.success'),
 		text: getErrorText(e),
-		ignoreDuplicates: true,
+		// Duplicates merge on title and text, which would drop this toast's own actions.
+		ignoreDuplicates: actions.length === 0,
 		data: {
 			actions: actions,
 		},
