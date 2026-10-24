@@ -547,6 +547,70 @@ describe('task mutations', () => {
 		expect(client.getQueryData<BoardData>(manual)?.buckets[0].tasks.map(task => task.id)).toEqual([99])
 	})
 
+	it('refetches the open boards a created card cannot be patched into', async () => {
+		const {projectKeys} = await import('./projects')
+		const client = new QueryClient()
+		client.setQueryData(projectKeys.detail(1), {
+			id: 1,
+			views: [
+				{
+					id: 2,
+					bucket_configuration_mode: 'filter',
+				},
+				{
+					id: 5,
+					bucket_configuration_mode: 'manual',
+					default_bucket_id: 6,
+				},
+			],
+		})
+		const emptyBoard = () => Promise.resolve({
+			buckets: [normalizeBucket({
+				id: 6,
+				count: 0,
+				tasks: [],
+			})],
+			pages: {6: 1},
+		})
+		const readFilterView = vi.fn(emptyBoard)
+		const readSearched = vi.fn(emptyBoard)
+		const readPlain = vi.fn(emptyBoard)
+		const searched = kanbanKeys.board(1, 5, {s: 'milk'})
+		const plain = kanbanKeys.board(1, 5)
+		const observers = [
+			new QueryObserver(client, {
+				queryKey: kanbanKeys.board(1, 2),
+				queryFn: readFilterView,
+			}),
+			new QueryObserver(client, {
+				queryKey: searched,
+				queryFn: readSearched,
+			}),
+			new QueryObserver(client, {
+				queryKey: plain,
+				queryFn: readPlain,
+			}),
+		].map(observer => observer.subscribe(() => {}))
+		await vi.waitFor(() => {
+			expect(client.getQueryData(kanbanKeys.board(1, 2))).toBeDefined()
+			expect(client.getQueryData(searched)).toBeDefined()
+			expect(client.getQueryData(plain)).toBeDefined()
+		})
+		sdk.tasksCreate.mockResolvedValue({data: {id: 99, project_id: 1}})
+		sdk.projectTasksList.mockResolvedValue({data: {items: [], total: 0}})
+
+		await client.getMutationCache()
+			.build(client, createTaskMutationOptions())
+			.execute({title: 'new', project_id: 1})
+		observers.forEach(stop => stop())
+
+		expect(readFilterView).toHaveBeenCalledTimes(2)
+		expect(readSearched).toHaveBeenCalledTimes(2)
+		expect(client.getQueryData<BoardData>(searched)?.buckets[0].tasks).toEqual([])
+		expect(readPlain).toHaveBeenCalledTimes(1)
+		expect(client.getQueryData<BoardData>(plain)?.buckets[0].tasks.map(task => task.id)).toEqual([99])
+	})
+
 	it('renames the cached task bucket when toggling done moves the card', async () => {
 		const {projectKeys} = await import('./projects')
 		const client = new QueryClient()
