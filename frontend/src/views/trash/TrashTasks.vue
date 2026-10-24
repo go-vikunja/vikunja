@@ -47,7 +47,7 @@
 							v-cy="'restoreTask'"
 							class="trash-action"
 							:aria-label="$t('trash.restore')"
-							:aria-disabled="pendingIds.has(task.id) || undefined"
+							:aria-disabled="pendingRows.has(task.id) || undefined"
 							@click="restore(task.id)"
 						>
 							<Icon icon="undo" />
@@ -57,7 +57,7 @@
 							v-cy="'deleteTaskForever'"
 							class="trash-action trash-action--danger"
 							:aria-label="$t('trash.deleteForever')"
-							:aria-disabled="pendingIds.has(task.id) || undefined"
+							:aria-disabled="pendingRows.has(task.id) || undefined"
 							@click="confirmDeleteForever(task)"
 						>
 							<Icon icon="trash-alt" />
@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -132,6 +132,7 @@ import {
 import {clampPage} from '@/client/queries/pagination'
 import type {TaskResponse} from '@/client/queries/tasks'
 import {useDeletedLabel} from '@/composables/useDeletedLabel'
+import {usePendingRows} from '@/composables/usePendingRows'
 import {formatDateLong} from '@/helpers/time/formatDate'
 
 const deletedLabel = useDeletedLabel({
@@ -166,25 +167,14 @@ const emptyTaskTrash = useEmptyTaskTrashMutation()
 const taskToDelete = ref<TaskResponse | null>(null)
 const showEmptyModal = ref(false)
 
-// Per row: a mutation's isPending/variables only track its latest call
-const pendingIds = reactive(new Set<number>())
+const pendingRows = usePendingRows()
 
-async function restore(id: number) {
-	if (pendingIds.has(id)) {
-		return
-	}
-	pendingIds.add(id)
-	try {
-		await restoreTask.mutateAsync(id)
-	} catch {
-		return
-	} finally {
-		pendingIds.delete(id)
-	}
+function restore(id: number) {
+	return pendingRows.run(id, () => restoreTask.mutateAsync(id))
 }
 
 function confirmDeleteForever(task: TaskResponse) {
-	if (pendingIds.has(task.id)) {
+	if (pendingRows.has(task.id)) {
 		return
 	}
 	taskToDelete.value = task
@@ -200,17 +190,10 @@ function openEmptyModal() {
 async function deleteForever() {
 	const task = taskToDelete.value
 	taskToDelete.value = null
-	if (!task || pendingIds.has(task.id)) {
+	if (!task) {
 		return
 	}
-	pendingIds.add(task.id)
-	try {
-		await deleteTaskPermanently.mutateAsync(task.id)
-	} catch {
-		return
-	} finally {
-		pendingIds.delete(task.id)
-	}
+	await pendingRows.run(task.id, () => deleteTaskPermanently.mutateAsync(task.id))
 }
 
 async function emptyTrash() {
