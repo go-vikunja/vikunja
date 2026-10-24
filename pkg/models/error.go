@@ -816,7 +816,12 @@ const ErrCodeTaskIsInTrash = 4040
 
 // HTTPError holds the http error description
 func (err ErrTaskIsInTrash) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTaskIsInTrash, Message: "This task is in the trash.", Details: err}
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTaskIsInTrash,
+		Message:  "This task is in the trash.",
+		Details:  err,
+	}
 }
 
 // ErrBulkTasksMustBeInSameProject represents a "ErrBulkTasksMustBeInSameProject" kind of error.

@@ -2355,7 +2355,10 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 	// Tracked time outlives the task
 	_, err = s.Table("time_entries").
 		Where("task_id = ?", t.ID).
-		Update(map[string]any{"task_id": 0, "project_id": t.ProjectID})
+		Update(map[string]any{
+			"task_id":    0,
+			"project_id": t.ProjectID,
+		})
 	if err != nil {
 		return
 	}
