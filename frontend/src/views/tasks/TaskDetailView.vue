@@ -22,7 +22,6 @@
 			<TaskInTrashNotice
 				:task-id="taskId"
 				:in-trash="trashedTask"
-				@restored="trashedTask = null"
 			/>
 		</div>
 		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
@@ -720,7 +719,7 @@ import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 import {useSetTaskSubscriptionMutation} from '@/client/queries/subscriptions'
-import {taskInTrashFromError, useRestoreTaskMutation, type TaskInTrash} from '@/client/queries/trash'
+import {taskInTrashFromError, useRestoreTaskMutation} from '@/client/queries/trash'
 
 const props = defineProps<{
 	taskId: number,
@@ -819,10 +818,10 @@ const remindersDefaultRelativeTo = computed(() => {
 	}
 	return null
 })
-const taskNotFound = ref(false)
-const trashedTask = ref<TaskInTrash | null>(null)
-watch(() => props.taskId, () => {
-	trashedTask.value = null
+const trashedTask = computed(() => taskInTrashFromError(taskQuery.error.value))
+const taskNotFound = computed(() => {
+	const action = taskLoadErrorAction(taskQuery.error.value)
+	return action === 'inTrash' || action === 'notFound'
 })
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
@@ -1051,13 +1050,8 @@ watch(taskQuery.error, cause => {
 	if (!cause) return
 	const action = taskLoadErrorAction(cause)
 	if (action === 'ignore') return
-	if (action === 'inTrash') {
-		taskNotFound.value = true
-		trashedTask.value = taskInTrashFromError(cause)
-		return
-	}
+	if (action === 'inTrash') return
 	if (action === 'notFound') {
-		taskNotFound.value = true
 		router.replace({name: 'not-found'})
 		return
 	}
