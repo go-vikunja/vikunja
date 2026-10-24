@@ -75,7 +75,7 @@ const timeEntriesNotice = computed(() => t('project.delete.timeEntries', {
 }))
 
 async function deleteProject() {
-	if (!project.value) {
+	if (!project.value || deleteMutation.isPending.value) {
 		return
 	}
 
