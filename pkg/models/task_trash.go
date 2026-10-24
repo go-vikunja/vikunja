@@ -122,16 +122,9 @@ func trashedTasksCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 		return nil, err
 	}
 
-	writable := []int64{}
-	for _, id := range access.sortedIDs {
-		if access.permissions[id] >= PermissionWrite {
-			writable = append(writable, id)
-		}
-	}
-
 	return builder.And(
 		builder.NotNull{"tasks.deleted_at"},
-		builder.In("tasks.project_id", writable),
+		access.condWithMinPermission("tasks.project_id", PermissionWrite),
 		builder.In("tasks.project_id", builder.Select("id").From("projects").Where(builder.Eq{"is_archived": false})),
 	), nil
 }

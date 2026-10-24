@@ -209,6 +209,19 @@ func TestProjectAccessCond(t *testing.T) {
 		assert.Len(t, args, 3)
 	})
 
+	t.Run("min permission subquery fallback matches the same projects with bounded parameters", func(t *testing.T) {
+		writable := access.condWithMinPermission("id", PermissionWrite)
+		fallback := access.condWithMinPermissionViaSubquery("id", PermissionWrite)
+		ids := projectIDsMatching(t, s, writable)
+		assert.NotEmpty(t, ids)
+		assert.Less(t, len(ids), len(access.sortedIDs))
+		assert.Equal(t, ids, projectIDsMatching(t, s, fallback))
+
+		_, args, err := builder.ToSQL(fallback)
+		require.NoError(t, err)
+		assert.Len(t, args, 5)
+	})
+
 	t.Run("link share is confined to its project", func(t *testing.T) {
 		cond, err := accessibleProjectIDsCond(s, &LinkSharing{ProjectID: 42}, "id")
 		require.NoError(t, err)

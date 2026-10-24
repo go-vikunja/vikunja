@@ -59,7 +59,7 @@ WITH grants (project_id, permission) AS (
 )`
 
 // Inherited admin is sticky (it could unshare the parent anyway); below that the nearest grant wins.
-const projectAccessQuery = projectAccessCTE + `
+const projectAccessSelect = `
 SELECT id,
     CASE WHEN MAX(permission) = 2 THEN 2
          ELSE MAX(CASE WHEN nearest = 1 THEN permission END)
@@ -71,6 +71,13 @@ FROM (
     INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id
 ) ranked
 GROUP BY id`
+
+const projectAccessQuery = projectAccessCTE + projectAccessSelect
+
+// Binds the user id three times, then the permission bounds.
+const projectAccessMinPermissionIDsQuery = projectAccessCTE + `
+SELECT id FROM (` + projectAccessSelect + `) effective
+WHERE permission BETWEEN ? AND ?`
 
 const projectAccessIDsQuery = projectAccessCTE + `
 SELECT DISTINCT pa.project_id AS id
@@ -126,6 +133,24 @@ func (pa *projectAccess) cond(column string) builder.Cond {
 // Keeps the bind parameter count at three whatever the tree size.
 func (pa *projectAccess) condViaSubquery(column string) builder.Cond {
 	return builder.In(column, builder.Expr(projectAccessIDsQuery, pa.userID, pa.userID, pa.userID))
+}
+
+func (pa *projectAccess) condWithMinPermission(column string, minPermission Permission) builder.Cond {
+	ids := []int64{}
+	for _, id := range pa.sortedIDs {
+		if pa.permissions[id] >= minPermission {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) > maxInListSize {
+		return pa.condWithMinPermissionViaSubquery(column, minPermission)
+	}
+	return builder.In(column, ids)
+}
+
+// The upper bound drops out-of-enum grants, like getProjectAccessForUser does.
+func (pa *projectAccess) condWithMinPermissionViaSubquery(column string, minPermission Permission) builder.Cond {
+	return builder.In(column, builder.Expr(projectAccessMinPermissionIDsQuery, pa.userID, pa.userID, pa.userID, int(minPermission), int(PermissionAdmin)))
 }
 
 // Includes projects inherited through a shared parent.
