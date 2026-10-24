@@ -103,6 +103,16 @@ describe('deleteProjectMutationOptions', () => {
 		expect(client.getQueryData(projectKeys.detail(3))).toBeUndefined()
 		expect(client.getQueryData(projectKeys.detail(4))).toBeDefined()
 	})
+
+	it('marks time entries stale', async () => {
+		const client = new QueryClient()
+		seedTrash(client)
+		sdk.projectsDelete.mockResolvedValue({data: undefined})
+
+		await client.getMutationCache().build(client, deleteProjectMutationOptions()).execute(1)
+
+		expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+	})
 })
 
 describe('taskInTrashFromError', () => {

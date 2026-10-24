@@ -18,7 +18,7 @@ import {
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
-import {normalizeTask, taskKeys, type TaskResponse} from './tasks'
+import {normalizeTask, type TaskResponse} from './tasks'
 import {invalidateTaskMembership} from './taskCache'
 import {timeEntryKeys} from './timeEntries'
 import {
@@ -160,10 +160,9 @@ export function deleteProjectMutationOptions() {
 		},
 		// The view toasts with an undo action
 		onSettled: (_input, client) => Promise.all([
+			// Already pruned optimistically; a refetch reloads every page.
 			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
-			client.invalidateQueries({queryKey: trashKeys.all}),
-			// Tasks of trashed projects drop out of every list
-			client.invalidateQueries({queryKey: taskKeys.all}),
+			invalidateAfterTrashChange(client),
 		]),
 		// Failures reach the global Vue error handler, which toasts them.
 		toastError: () => false,
