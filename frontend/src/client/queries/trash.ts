@@ -15,6 +15,7 @@ import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
 import {normalizeTask, type TaskResponse} from './tasks'
 import {invalidateTaskMembership} from './taskCache'
+import {kanbanKeys} from './kanban'
 import {timeEntryKeys} from './timeEntries'
 import {i18n} from '@/i18n'
 
@@ -74,7 +75,15 @@ export function invalidateAfterTrashChange(client: QueryClient, taskId?: number)
 export function restoreTaskMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => normalizeTask((await tasksRestore({path: {task: id}})).data),
-		onSuccess: (_task, id, client) => removeFromPages<TaskResponse>(client, trashKeys.tasks, task => task.id === id),
+		onSuccess: (restored, id, client) => {
+			removeFromPages<TaskResponse>(client, trashKeys.tasks, task => task.id === id)
+			// Delete patched the card off the still-mounted board; only the server knows its restored bucket.
+			void client.invalidateQueries({
+				queryKey: kanbanKeys.all,
+				predicate: query => kanbanKeys.projectOf(query.queryKey) === restored.project_id,
+				refetchType: 'active',
+			})
+		},
 		onSettled: (id, client) => invalidateAfterTrashChange(client, id),
 		successMessage: () => i18n.global.t('trash.restoreSuccess'),
 	})
