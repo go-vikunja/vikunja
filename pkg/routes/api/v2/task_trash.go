@@ -138,6 +138,7 @@ func tasksDeletePermanently(ctx context.Context, in *struct {
 	}
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	task := &models.Task{ID: in.ID}
 	can, err := task.CanDeletePermanently(s, a)
@@ -156,6 +157,7 @@ func tasksDeletePermanently(ctx context.Context, in *struct {
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 	return &emptyBody{}, nil
 }
 
@@ -166,6 +168,7 @@ func tasksTrashEmpty(ctx context.Context, _ *struct{}) (*emptyBody, error) {
 	}
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	if err := models.EmptyTaskTrash(s, a); err != nil {
 		_ = s.Rollback()
@@ -174,5 +177,6 @@ func tasksTrashEmpty(ctx context.Context, _ *struct{}) (*emptyBody, error) {
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 	return &emptyBody{}, nil
 }
