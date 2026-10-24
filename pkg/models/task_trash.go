@@ -102,12 +102,11 @@ func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 }
 
-// DeletePermanently purges a trashed task right away instead of waiting for the retention period.
+// DeletePermanently purges a trashed task.
 func (t *Task) DeletePermanently(s *xorm.Session) error {
 	return hardDeleteTask(s, t)
 }
 
-// Trashed tasks in non-archived projects the user can write to.
 func trashedTasksCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 	if _, isShare := a.(*LinkSharing); isShare {
 		return nil, ErrGenericForbidden{}
