@@ -1,7 +1,13 @@
 import {hashKey, type QueryClient, type QueryKey} from '@tanstack/vue-query'
-import type {Task} from '@/client/generated'
+import type {ProjectView, Task} from '@/client/generated'
 import {getDefaultBucketId, mapTasksDeep, mergeTask, removeTask} from '@/helpers/task'
-import {normalizeTask, taskKeys, type PaginatedTaskResponse, type TaskResponse} from './tasks'
+import {
+	normalizeTask,
+	taskKeys,
+	type PaginatedTaskResponse,
+	type TaskFilterParams,
+	type TaskResponse,
+} from './tasks'
 import {kanbanKeys, type BoardData} from './kanban'
 import {totalPagesFor} from './pagination'
 import {getCachedProject} from './projects'
@@ -142,21 +148,32 @@ function positionAboveBoard(board: BoardData, task: TaskResponse): number {
 	return Number.isFinite(lowest) && lowest > 0 ? lowest / 2 : task.index * 2 ** 16
 }
 
+// Filter buckets are server-decided and a filtered or searched board may not match the task.
+function canPatchBoard(view: ProjectView | undefined, params: TaskFilterParams | undefined): view is ProjectView {
+	return view !== undefined
+		&& view.bucket_configuration_mode !== 'filter'
+		&& !params?.filter
+		&& !params?.s
+}
+
 export function insertTaskIntoBoards(client: QueryClient, created: Task) {
 	const task = normalizeTask(created)
+	const unpatchable: QueryKey[] = []
 	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
 		const project = kanbanKeys.projectOf(key)
 		const viewId = kanbanKeys.viewOf(key)
 		if (!board || project === undefined || project !== task.project_id || viewId === undefined) continue
 		const view = getCachedProject(project, client)?.views?.find(item => item.id === viewId)
+		if (!canPatchBoard(view, kanbanKeys.paramsOf(key))) {
+			unpatchable.push(key)
+			continue
+		}
 		// The response only echoes the requested bucket, which belongs to the one view it was requested for.
 		const target = board.buckets.some(bucket => bucket.id === task.bucket_id)
 			? task.bucket_id
-			: view && view.bucket_configuration_mode !== 'filter'
-				? task.done && view.done_bucket_id
-					? view.done_bucket_id
-					: getDefaultBucketId(view, board.buckets)
-				: undefined
+			: task.done && view.done_bucket_id
+				? view.done_bucket_id
+				: getDefaultBucketId(view, board.buckets)
 		if (target === undefined) continue
 		// A card left over from another tab would otherwise show twice.
 		const deduped = removeFromBoard(board, task.id, dropMembership) ?? board
@@ -167,6 +184,13 @@ export function insertTaskIntoBoards(client: QueryClient, created: Task) {
 			buckets: deduped.buckets.map(bucket => bucket.id === target
 				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target, position}, ...bucket.tasks]}
 				: bucket),
+		})
+	}
+	for (const queryKey of unpatchable) {
+		void client.invalidateQueries({
+			queryKey,
+			exact: true,
+			refetchType: 'active',
 		})
 	}
 }

@@ -16,8 +16,6 @@ import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
 import {normalizeTask, taskQuery, type TaskResponse} from './tasks'
 import {insertTaskIntoBoards, invalidateTaskMembership} from './taskCache'
-import {kanbanKeys} from './kanban'
-import {getCachedProject} from './projects'
 import {timeEntryKeys} from './timeEntries'
 import {i18n} from '@/i18n'
 
@@ -95,15 +93,6 @@ export function restoreTaskMutationOptions() {
 		onSuccess: (restored, id, client) => {
 			removeTrashedTask(client, id)
 			insertTaskIntoBoards(client, restored)
-			// Filter buckets are server-decided, so those boards can't be patched.
-			void client.invalidateQueries({
-				queryKey: kanbanKeys.all,
-				predicate: ({queryKey}) => kanbanKeys.projectOf(queryKey) === restored.project_id
-					&& getCachedProject(restored.project_id, client)?.views
-						?.find(view => view.id === kanbanKeys.viewOf(queryKey))
-						?.bucket_configuration_mode === 'filter',
-				refetchType: 'active',
-			})
 		},
 		onSettled: (id, client) => invalidateAfterTrashChange(client, id),
 		successMessage: () => i18n.global.t('trash.restoreSuccess'),
