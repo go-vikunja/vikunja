@@ -150,7 +150,10 @@ export function trashedProjectsQuery(page: number) {
 				...paginated,
 				items: paginated.items.map(raw => {
 					const project = normalizeProject(raw)
-					return {...project, trashed_sub_projects: orderTrashedSubProjects(project.id, project.trashed_sub_projects ?? [])}
+					return {
+						...project,
+						trashed_sub_projects: orderTrashedSubProjects(project.id, project.trashed_sub_projects ?? []),
+					}
 				}),
 			}
 		},
@@ -193,7 +196,11 @@ export function deleteProjectMutationOptions() {
 export function restoreProjectMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => (await projectsRestore({path: {id}})).data,
-		onSuccess: (_project, id, client) => removeFromPages<ProjectResponse>(client, trashKeys.projects, project => project.id === id),
+		onSuccess: (_project, id, client) => removeFromPages<ProjectResponse>(
+			client,
+			trashKeys.projects,
+			project => project.id === id,
+		),
 		onSettled: (_id, client) => invalidateAfterProjectTrashChange(client),
 		successMessage: () => i18n.global.t('trash.restoreProjectSuccess'),
 	})
@@ -202,7 +209,11 @@ export function restoreProjectMutationOptions() {
 export function deleteProjectPermanentlyMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => { await projectsDeletePermanently({path: {id}}) },
-		onSuccess: (_data, id, client) => removeFromPages<ProjectResponse>(client, trashKeys.projects, project => project.id === id),
+		onSuccess: (_data, id, client) => removeFromPages<ProjectResponse>(
+			client,
+			trashKeys.projects,
+			project => project.id === id,
+		),
 		onSettled: (_id, client) => Promise.all([
 			client.invalidateQueries({queryKey: trashKeys.all}),
 			client.invalidateQueries({queryKey: timeEntryKeys.all}),
