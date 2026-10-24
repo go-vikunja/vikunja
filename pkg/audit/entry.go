@@ -114,6 +114,7 @@ const (
 	ActionTaskUpdated           = "task.updated"
 	ActionTaskDeleted           = "task.deleted"
 	ActionTaskRestored          = "task.restored"
+	ActionTaskPurged            = "task.purged"
 	ActionTaskAssigneeAdded     = "task.assignee.added"
 	ActionTaskAssigneeRemoved   = "task.assignee.removed"
 	ActionTaskCommentCreated    = "task.comment.created"
