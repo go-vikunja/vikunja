@@ -112,8 +112,7 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 	})
 }
 
-// Above this many ids the inlined list bloats the statement and defeats server-side
-// plan caching, so the subquery form with its fixed bind parameters wins.
+// Past this many ids the inlined list defeats plan caching; the subquery keeps binds fixed.
 const maxInListSize = 1000
 
 func (pa *projectAccess) cond(column string, minPermission Permission) builder.Cond {
@@ -131,8 +130,7 @@ func (pa *projectAccess) cond(column string, minPermission Permission) builder.C
 	return builder.In(column, ids)
 }
 
-// Keeps the bind parameter count at five whatever the tree size. The upper bound
-// drops out-of-enum grants, like getProjectAccessForUser does.
+// The upper bound drops out-of-enum grants, like getProjectAccessForUser does.
 func (pa *projectAccess) condViaSubquery(column string, minPermission Permission) builder.Cond {
 	return builder.In(column, builder.Expr(projectAccessMinPermissionIDsQuery, pa.userID, pa.userID, pa.userID, int(minPermission), int(PermissionAdmin)))
 }
