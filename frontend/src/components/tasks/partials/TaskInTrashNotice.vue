@@ -8,7 +8,7 @@
 		<p class="has-text-grey">
 			{{ $t('trash.daysLeft', trashDaysLeft(inTrash.deleted_at)) }}
 		</p>
-		<!-- The trash only lists what the user can restore -->
+		<!-- The trash only lists what the user can restore; link shares can't open it -->
 		<div
 			v-if="canRestore"
 			class="task-in-trash__actions"
@@ -22,6 +22,7 @@
 				{{ $t('trash.restore') }}
 			</XButton>
 			<XButton
+				v-if="canOpenTrash"
 				variant="secondary"
 				:to="{name: 'trash.tasks'}"
 			>
@@ -39,6 +40,7 @@ import {trashDaysLeft, useRestoreTaskMutation, type TaskInTrash} from '@/client/
 import {useDeletedLabel} from '@/composables/useDeletedLabel'
 import {useProjects} from '@/composables/useProjects'
 import {PERMISSIONS} from '@/constants/permissions'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps<{
 	taskId: number,
@@ -51,12 +53,14 @@ const taskInTrashLabel = useDeletedLabel({
 	byYou: 'trash.taskInTrashByYou',
 })
 const projectList = useProjects()
+const authStore = useAuthStore()
 const restoreTask = useRestoreTaskMutation()
 
 const canRestore = computed(() => {
 	const project = projectList.projects[props.inTrash.project_id]
 	return !project?.is_archived && (project?.max_permission ?? 0) > PERMISSIONS.READ
 })
+const canOpenTrash = computed(() => canRestore.value && !authStore.isLinkShareAuth)
 
 const deletedLabel = computed(() => taskInTrashLabel(props.inTrash))
 
