@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
@@ -156,7 +157,20 @@ func TestHumaTaskTrash(t *testing.T) {
 		require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
 
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/tasks/51", "", user1(t), "")
+		assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"code":4002`)
+	})
+	t.Run("stranger emptying their trash leaves others' trash alone", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/deleted", "", stranger(t), "")
+		require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51}, false)
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/tasks/deleted", "", user1(t), "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Equal(t, []int64{51}, trashedIDs(t, rec.Body.Bytes()))
 	})
 	t.Run("empty trash", func(t *testing.T) {
 		e, err := setupTestEnv()
