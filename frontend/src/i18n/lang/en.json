@@ -1691,7 +1691,8 @@
       "save": "Save entry",
       "startTimer": "Start timer",
       "update": "Update entry",
-      "smartFill": "Fill from last entry"
+      "smartFill": "Fill from last entry",
+      "privateHint": "Without a project or task, only you can see this entry."
     },
     "list": {
       "emptyTask": "No time tracked for this task yet.",
@@ -1704,7 +1705,8 @@
     "browse": {
       "selectRange": "Select a range",
       "userSearch": "Search for a user…"
-    }
+    },
+    "noProject": "No project"
   },
   "time": {
     "justNow": "just now",

@@ -10,6 +10,12 @@
 			:title="$t('timeTracking.title')"
 		>
 			{{ elapsed }}
+			<span
+				v-if="activeTimer && !activeTimer.task_id && !activeTimer.project_id"
+				class="timer-badge__label"
+			>
+				{{ $t('timeTracking.noProject') }}
+			</span>
 		</RouterLink>
 		<BaseButton
 			v-tooltip="$t('timeTracking.stop')"
@@ -90,6 +96,12 @@ onUnmounted(() => {
 	color: var(--primary);
 	font-variant-numeric: tabular-nums;
 	font-weight: 600;
+}
+
+.timer-badge__label {
+	margin-inline-start: .25rem;
+	color: var(--grey-500);
+	font-weight: normal;
 }
 
 .timer-badge__stop {

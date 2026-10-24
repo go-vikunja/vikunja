@@ -2847,17 +2847,17 @@ export type TimeEntry = {
      */
     readonly in_trash?: boolean;
     /**
-     * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
+     * The project this entry is attached to directly. At most one of task_id / project_id may be set; 0 means none. Entries without task and project are only visible to their author.
      */
-    project_id?: number;
+    project_id?: number | null;
     /**
      * When the tracked time started.
      */
     start_time?: string;
     /**
-     * The task this entry is attached to. Exactly one of task_id / project_id must be set.
+     * The task this entry is attached to. At most one of task_id / project_id may be set; 0 means none. On update, omitting both keeps the current container; sending either, even as null, replaces it.
      */
-    task_id?: number;
+    task_id?: number | null;
     /**
      * A timestamp when this time entry was last updated. You cannot change this value.
      */
@@ -2898,17 +2898,17 @@ export type TimeEntryReadBody = {
      */
     readonly max_permission?: number;
     /**
-     * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
+     * The project this entry is attached to directly. At most one of task_id / project_id may be set; 0 means none. Entries without task and project are only visible to their author.
      */
-    project_id?: number;
+    project_id?: number | null;
     /**
      * When the tracked time started.
      */
     start_time?: string;
     /**
-     * The task this entry is attached to. Exactly one of task_id / project_id must be set.
+     * The task this entry is attached to. At most one of task_id / project_id may be set; 0 means none. On update, omitting both keeps the current container; sending either, even as null, replaces it.
      */
-    task_id?: number;
+    task_id?: number | null;
     /**
      * A timestamp when this time entry was last updated. You cannot change this value.
      */
@@ -4738,17 +4738,17 @@ export type TimeEntryWritable = {
      */
     end_time?: string | null;
     /**
-     * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
+     * The project this entry is attached to directly. At most one of task_id / project_id may be set; 0 means none. Entries without task and project are only visible to their author.
      */
-    project_id?: number;
+    project_id?: number | null;
     /**
      * When the tracked time started.
      */
     start_time?: string;
     /**
-     * The task this entry is attached to. Exactly one of task_id / project_id must be set.
+     * The task this entry is attached to. At most one of task_id / project_id may be set; 0 means none. On update, omitting both keeps the current container; sending either, even as null, replaces it.
      */
-    task_id?: number;
+    task_id?: number | null;
 };
 
 export type TimeEntryReadBodyWritable = {
@@ -4761,17 +4761,17 @@ export type TimeEntryReadBodyWritable = {
      */
     end_time?: string | null;
     /**
-     * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
+     * The project this entry is attached to directly. At most one of task_id / project_id may be set; 0 means none. Entries without task and project are only visible to their author.
      */
-    project_id?: number;
+    project_id?: number | null;
     /**
      * When the tracked time started.
      */
     start_time?: string;
     /**
-     * The task this entry is attached to. Exactly one of task_id / project_id must be set.
+     * The task this entry is attached to. At most one of task_id / project_id may be set; 0 means none. On update, omitting both keeps the current container; sending either, even as null, replaces it.
      */
-    task_id?: number;
+    task_id?: number | null;
 };
 
 export type TokenRequestWritable = {
