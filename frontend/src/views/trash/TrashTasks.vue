@@ -28,41 +28,39 @@
 					v-for="task in tasks"
 					:key="task.id"
 					v-cy="'trashedTask'"
+					class="trashed-task"
 				>
-					<SingleTaskInProject
-						:the-task="task"
-						:can-mark-as-done="false"
+					<SingleTaskInlineReadonly
+						:task="task"
 						show-project
-						readonly
+					/>
+					<span
+						v-tooltip="formatDateLong(task.deleted_at)"
+						class="trashed-task-meta"
 					>
-						<span
-							v-tooltip="formatDateLong(task.deleted_at)"
-							class="trashed-task-meta"
+						{{ deletedLabel(task) }} · {{ $t('trash.daysLeftShort', trashDaysLeft(task.deleted_at ?? '')) }}
+					</span>
+					<span class="trashed-task-actions">
+						<BaseButton
+							v-tooltip="$t('trash.restore')"
+							v-cy="'restoreTask'"
+							class="trash-action"
+							:aria-label="$t('trash.restore')"
+							:disabled="restoreTask.isPending.value && restoreTask.variables.value === task.id"
+							@click="restoreTask.mutate(task.id)"
 						>
-							{{ deletedLabel(task) }} · {{ $t('trash.daysLeftShort', trashDaysLeft(task.deleted_at ?? '')) }}
-						</span>
-						<span class="trashed-task-actions">
-							<BaseButton
-								v-tooltip="$t('trash.restore')"
-								v-cy="'restoreTask'"
-								class="trash-action"
-								:aria-label="$t('trash.restore')"
-								:disabled="restoreTask.isPending.value && restoreTask.variables.value === task.id"
-								@click="restoreTask.mutate(task.id)"
-							>
-								<Icon icon="undo" />
-							</BaseButton>
-							<BaseButton
-								v-tooltip="$t('trash.deleteForever')"
-								v-cy="'deleteTaskForever'"
-								class="trash-action trash-action--danger"
-								:aria-label="$t('trash.deleteForever')"
-								@click="taskToDelete = task"
-							>
-								<Icon icon="trash-alt" />
-							</BaseButton>
-						</span>
-					</SingleTaskInProject>
+							<Icon icon="undo" />
+						</BaseButton>
+						<BaseButton
+							v-tooltip="$t('trash.deleteForever')"
+							v-cy="'deleteTaskForever'"
+							class="trash-action trash-action--danger"
+							:aria-label="$t('trash.deleteForever')"
+							@click="taskToDelete = task"
+						>
+							<Icon icon="trash-alt" />
+						</BaseButton>
+					</span>
 				</li>
 			</ul>
 		</Card>
@@ -120,7 +118,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
-import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
+import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInlineReadonly.vue'
 
 import {
 	trashDaysLeft,
@@ -179,6 +177,23 @@ async function emptyTrash() {
 	list-style: none;
 	margin: 0;
 	padding: .5rem;
+}
+
+.trashed-task {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	padding: .4rem;
+	border-radius: $radius;
+	transition: background-color $transition;
+
+	&:hover {
+		background-color: var(--grey-100);
+	}
+
+	.task {
+		cursor: default;
+	}
 }
 
 .trashed-task-meta {

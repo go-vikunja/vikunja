@@ -5,7 +5,7 @@
 	>
 		<div
 			ref="taskRoot"
-			:class="{'is-loading': isLoading, 'is-readonly': readonly}"
+			:class="{'is-loading': isLoading}"
 			class="task loader-container single-task"
 			tabindex="-1"
 			:data-is-overdue="isOverdue || undefined"
@@ -13,7 +13,6 @@
 			@keyup.enter="openTaskDetail"
 		>
 			<span
-				v-if="!readonly"
 				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
 				class="is-inline-flex is-align-items-center"
 			>
@@ -60,16 +59,7 @@
 						class="pis-2 mie-1"
 					/>
 
-					<span
-						v-if="readonly"
-						class="task-link"
-					>
-						{{ task.title }}
-					</span>
-					<TaskGlanceTooltip
-						v-else
-						:task="task"
-					>
+					<TaskGlanceTooltip :task="task">
 						<RouterLink
 							ref="taskLinkRef"
 							:to="taskDetailRoute"
@@ -94,15 +84,8 @@
 					:inline="true"
 				/>
 
-				<time
-					v-if="readonly && task.due_date && +new Date(task.due_date) > 0"
-					:datetime="formatISO(task.due_date)"
-					class="dueDate is-italic"
-				>
-					– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
-				</time>
 				<Popup
-					v-else-if="task.due_date && +new Date(task.due_date) > 0"
+					v-if="task.due_date && +new Date(task.due_date) > 0"
 					placement="bottom-start"
 					:anchor="dueDateTriggerEl"
 					sheet-on-mobile
@@ -185,7 +168,6 @@
 			</RouterLink>
 
 			<BaseButton
-				v-if="!readonly"
 				:class="{'is-favorite': task.is_favorite}"
 				class="favorite"
 				@click.stop="toggleFavorite"
@@ -263,15 +245,12 @@ const props = withDefaults(defineProps<{
 	disabled?: boolean,
 	canMarkAsDone?: boolean,
 	allTasks?: ITask[],
-	// No links or inline edits, e.g. for trashed tasks
-	readonly?: boolean,
 }>(), {
 	isArchived: false,
 	showProject: false,
 	disabled: false,
 	canMarkAsDone: true,
 	allTasks: () => [],
-	readonly: false,
 })
 
 const emit = defineEmits<{
@@ -406,9 +385,6 @@ function hasTextSelected() {
 }
 
 function openTaskDetail(event: MouseEvent | KeyboardEvent) {
-	if (props.readonly) {
-		return
-	}
 	if (event.target instanceof HTMLElement) {
 		const isInteractiveElement = event.target.closest('a, button, label, input[type="checkbox"], .favorite, [role="button"]')
 		if (isInteractiveElement || hasTextSelected()) {
@@ -438,10 +414,6 @@ defineExpose({
 
 	&:hover {
 		background-color: var(--grey-100);
-	}
-
-	&.is-readonly {
-		cursor: default;
 	}
 
 	&:has(*:focus-visible), &:focus {
