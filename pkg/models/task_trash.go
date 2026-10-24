@@ -27,7 +27,8 @@ import (
 	"xorm.io/xorm"
 )
 
-func getTrashedTask(s *xorm.Session, taskID int64) (*Task, error) {
+// Unreadable trashed tasks are ErrTaskDoesNotExist so their existence doesn't leak.
+func getReadableTrashedTask(s *xorm.Session, a web.Auth, taskID int64) (*Task, error) {
 	task := &Task{}
 	has, err := s.Unscoped().
 		Where(builder.And(builder.Eq{"id": taskID}, builder.NotNull{"deleted_at"})).
@@ -38,25 +39,25 @@ func getTrashedTask(s *xorm.Session, taskID int64) (*Task, error) {
 	if !has {
 		return nil, ErrTaskDoesNotExist{ID: taskID}
 	}
+
+	canRead, _, err := (&Project{ID: task.ProjectID}).CanRead(s, a)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
+		return nil, ErrTaskDoesNotExist{ID: taskID}
+	}
 	return task, nil
 }
 
-// Readers of the project get ErrTaskIsInTrash; everyone else keeps notFound so the task's existence doesn't leak.
+// Readers of the project get ErrTaskIsInTrash; everyone else keeps notFound.
 func trashedTaskReadError(s *xorm.Session, a web.Auth, taskID int64, notFound error) error {
-	trashed, err := getTrashedTask(s, taskID)
+	trashed, err := getReadableTrashedTask(s, a, taskID)
 	if IsErrTaskDoesNotExist(err) {
 		return notFound
 	}
 	if err != nil {
 		return err
-	}
-
-	canRead, _, err := (&Project{ID: trashed.ProjectID}).CanRead(s, a)
-	if err != nil {
-		return err
-	}
-	if !canRead {
-		return notFound
 	}
 
 	inTrash := ErrTaskIsInTrash{ID: trashed.ID, ProjectID: trashed.ProjectID, DeletedAt: trashed.DeletedAt}

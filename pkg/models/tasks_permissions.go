@@ -66,16 +66,9 @@ func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) 
 }
 
 func (t *Task) canDoTrashedTask(s *xorm.Session, a web.Auth) (bool, error) {
-	trashed, err := getTrashedTask(s, t.ID)
+	trashed, err := getReadableTrashedTask(s, a, t.ID)
 	if err != nil {
 		return false, err
-	}
-	canRead, _, err := (&Project{ID: trashed.ProjectID}).CanRead(s, a)
-	if err != nil {
-		return false, err
-	}
-	if !canRead {
-		return false, ErrTaskDoesNotExist{ID: t.ID}
 	}
 	// CanWrite lets instance admins past archived projects
 	if err := (&Project{ID: trashed.ProjectID}).CheckIsArchived(s); err != nil {
