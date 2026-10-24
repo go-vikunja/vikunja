@@ -163,10 +163,17 @@ export function trashedProjectsQuery(page: number) {
 }
 
 // A project carries its tasks and their time entries with it.
+function invalidateProjectTasks(client: QueryClient) {
+	return Promise.all([
+		client.invalidateQueries({queryKey: taskKeys.details}),
+		invalidateAfterTrashChange(client),
+	])
+}
+
 function invalidateAfterProjectTrashChange(client: QueryClient) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: projectKeys.all}),
-		invalidateAfterTrashChange(client),
+		invalidateProjectTasks(client),
 	])
 }
 
@@ -185,8 +192,7 @@ export function deleteProjectMutationOptions() {
 		},
 		onSettled: (_input, client) => Promise.all([
 			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
-			client.invalidateQueries({queryKey: taskKeys.details}),
-			invalidateAfterTrashChange(client),
+			invalidateProjectTasks(client),
 		]),
 		// No successMessage: the view toasts with an undo action.
 		toastError,
