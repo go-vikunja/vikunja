@@ -431,6 +431,29 @@ test.describe('Project View Kanban', () => {
 		}
 	})
 
+	test('Undo after deleting a task puts its card back on the board', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		const {task, view} = await createSingleTaskInBucket()
+		await page.goto(`/projects/1/${view.id}`)
+
+		const card = page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})
+		await card.click()
+		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
+		await expect(page).toHaveURL(new RegExp(`/projects/1/${view.id}$`))
+		await expect(page.locator('.kanban .bucket')).toHaveCount(2)
+		await expect(card).toHaveCount(0)
+
+		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
+		await toast.getByRole('button', {name: 'Undo'}).click()
+
+		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).toContainText(task.title)
+		const stored = await apiContext.get(`tasks/${task.id}`, {headers: {Authorization: `Bearer ${userToken}`}})
+		expect(stored.status()).toBe(200)
+	})
+
 	test('Should show a task description icon if the task has a description', async ({authenticatedPage: page}) => {
 		const {task, view} = await createSingleTaskInBucket(1, {
 			description: 'Lorem Ipsum',
