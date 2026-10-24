@@ -17,6 +17,7 @@ import {ApiError} from '@/client/problem'
 const sdk = vi.hoisted(() => ({
 	tasksTrashList: vi.fn(),
 	tasksRestore: vi.fn(),
+	tasksRead: vi.fn(),
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
 }))
@@ -79,6 +80,12 @@ it('drops a restored task from the trash and marks time entries stale', async ()
 	const client = new QueryClient()
 	seedTrash(client)
 	sdk.tasksRestore.mockResolvedValue({
+		data: {
+			id: 2,
+			title: 'restore',
+		},
+	})
+	sdk.tasksRead.mockResolvedValue({
 		data: {
 			id: 2,
 			title: 'restore',
@@ -160,6 +167,13 @@ it('patches the restored card into scrolled boards and refetches only filter boa
 			project_id: 5,
 		},
 	})
+	sdk.tasksRead.mockResolvedValue({
+		data: {
+			id: 2,
+			title: 'restore',
+			project_id: 5,
+		},
+	})
 
 	await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
 	observers.forEach(stop => stop())
@@ -174,6 +188,56 @@ it('patches the restored card into scrolled boards and refetches only filter boa
 	expect(readBoard).toHaveBeenCalledTimes(1)
 	expect(readFilterBoard).toHaveBeenCalledTimes(2)
 	expect(readOtherBoard).toHaveBeenCalledTimes(1)
+})
+
+it('patches the restored card with the full task detail', async () => {
+	const client = new QueryClient()
+	client.setQueryData(projectKeys.detail(5), {
+		id: 5,
+		views: [{
+			id: 6,
+			bucket_configuration_mode: 'manual',
+			default_bucket_id: 3,
+		}],
+	})
+	client.setQueryData(kanbanKeys.board(5, 6), {
+		buckets: [normalizeBucket({
+			id: 3,
+			count: 1,
+			tasks: [{
+				id: 1,
+				position: 400,
+			}],
+		})],
+		pages: {3: 1},
+	})
+	sdk.tasksRestore.mockResolvedValue({
+		data: {
+			id: 2,
+			project_id: 5,
+		},
+	})
+	sdk.tasksRead.mockResolvedValue({
+		data: {
+			id: 2,
+			project_id: 5,
+			identifier: 'P-2',
+			labels: [{
+				id: 7,
+				title: 'urgent',
+			}],
+		},
+	})
+
+	await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
+
+	expect(sdk.tasksRead).toHaveBeenCalledWith(expect.objectContaining({path: {task: 2}}))
+	expect(client.getQueryData<BoardData>(kanbanKeys.board(5, 6))?.buckets[0].tasks[0]).toMatchObject({
+		id: 2,
+		identifier: 'P-2',
+		labels: [{id: 7}],
+		position: 200,
+	})
 })
 
 it('drops a permanently deleted task from the trash', async () => {
