@@ -33,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
@@ -674,10 +675,10 @@ func TestSendTaskDeletedNotification(t *testing.T) {
 // names, so register once per process (relevant for -count > 1).
 var registerAuditEventsOnce sync.Once
 
-// A full personal data export is the most sensitive self-service action there
-// is. Driving it through the real router instead of calling the listener
-// directly is what makes this a regression test of the registration itself.
-func TestAuditUserDataExportRequested(t *testing.T) {
+// Driving events through the real router instead of calling the listener
+// directly is what makes these regression tests of the registration itself.
+func startAuditLogForTest(t *testing.T) string {
+	t.Helper()
 	logfile := filepath.Join(t.TempDir(), "audit.log")
 	config.AuditLogfile.Set(logfile)
 	require.NoError(t, audit.Init())
@@ -695,25 +696,75 @@ func TestAuditUserDataExportRequested(t *testing.T) {
 	ready, err := events.InitEventsForTesting(ctx)
 	require.NoError(t, err)
 	<-ready
+	return logfile
+}
 
-	require.NoError(t, events.Dispatch(&UserDataExportRequestedEvent{User: &user.User{ID: 42}}))
-
-	var content []byte
+func waitForAuditEntries(t *testing.T, logfile string, n int) []audit.Entry {
+	t.Helper()
+	var lines [][]byte
 	require.Eventually(t, func() bool {
 		c, err := os.ReadFile(logfile)
 		if err != nil {
 			return false
 		}
-		content = bytes.TrimSpace(c)
-		return len(content) > 0
-	}, 5*time.Second, 10*time.Millisecond, "expected an audit entry for the export request")
+		content := bytes.TrimSpace(c)
+		if len(content) == 0 {
+			return false
+		}
+		lines = bytes.Split(content, []byte("\n"))
+		return len(lines) >= n
+	}, 5*time.Second, 10*time.Millisecond, "expected %d audit entries", n)
 
-	var entry audit.Entry
-	require.NoError(t, json.Unmarshal(content, &entry))
+	entries := make([]audit.Entry, 0, len(lines))
+	for _, line := range lines {
+		var entry audit.Entry
+		require.NoError(t, json.Unmarshal(line, &entry))
+		entries = append(entries, entry)
+	}
+	return entries
+}
+
+// A full personal data export is the most sensitive self-service action there is.
+func TestAuditUserDataExportRequested(t *testing.T) {
+	logfile := startAuditLogForTest(t)
+
+	require.NoError(t, events.Dispatch(&UserDataExportRequestedEvent{User: &user.User{ID: 42}}))
+
+	entries := waitForAuditEntries(t, logfile, 1)
+	require.Len(t, entries, 1)
+	entry := entries[0]
 	assert.Equal(t, audit.ActionUserDataExportRequested, entry.Action)
 	assert.Equal(t, audit.UserActor(42), entry.Actor)
 	assert.Equal(t, audit.UserTarget(42), entry.Target)
 	assert.Equal(t, audit.OutcomeSuccess, entry.Outcome)
+}
+
+func TestAuditTaskPurged(t *testing.T) {
+	logfile := startAuditLogForTest(t)
+
+	require.NoError(t, events.Dispatch(&TaskPurgedEvent{
+		Task: &Task{
+			ID:        51,
+			ProjectID: 1,
+		},
+		Doer: &user.User{ID: 3},
+	}))
+	waitForAuditEntries(t, logfile, 1)
+	require.NoError(t, events.Dispatch(&TaskPurgedEvent{Task: &Task{
+		ID:        52,
+		ProjectID: 1,
+	}}))
+	entries := waitForAuditEntries(t, logfile, 2)
+	require.Len(t, entries, 2)
+
+	assert.Equal(t, audit.ActionTaskPurged, entries[0].Action)
+	assert.Equal(t, audit.ActorFromDoerID(3), entries[0].Actor)
+	assert.Equal(t, audit.TaskTarget(51), entries[0].Target)
+	assert.Equal(t, map[string]any{"project_id": float64(1)}, entries[0].Metadata)
+
+	assert.Equal(t, audit.ActionTaskPurged, entries[1].Action)
+	assert.Equal(t, audit.SystemActor(), entries[1].Actor, "retention cron")
+	assert.Equal(t, audit.TaskTarget(52), entries[1].Target)
 }
 
 func TestWebhookDeliveryListenerSkipsErrorReporting(t *testing.T) {
@@ -893,4 +944,90 @@ func TestWebhookListener_TaskPayloadUsesCreatorAccess(t *testing.T) {
 	delivered := webhookDeliveriesByID(t)
 	assert.Contains(t, relatedIDs(delivered[1]), int64(19))
 	assert.NotContains(t, relatedIDs(delivered[readerHook.ID]), int64(19))
+}
+
+func TestWebhookListener_DeliversTaskDeletedForTrashedTask(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	hook := &Webhook{
+		TargetURL:   "https://example.com/deleted",
+		Events:      []string{"task.deleted"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	_, err := s.Insert(hook)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	doer := &user.User{ID: 1}
+	trashTaskForTest(t, 1, doer)
+
+	events.ClearDispatchedEvents()
+	events.TestListener(t, &TaskDeletedEvent{
+		Task: &Task{
+			ID:        1,
+			ProjectID: 1,
+			Title:     "task #1",
+		},
+		Doer: doer,
+	}, &WebhookListener{EventName: "task.deleted"})
+
+	delivered := webhookDeliveriesByID(t)
+	require.Contains(t, delivered, hook.ID)
+	task, ok := delivered[hook.ID].Payload.Data.(map[string]interface{})["task"].(map[string]interface{})
+	require.True(t, ok, "task should be the event's copy")
+	assert.Equal(t, "task #1", task["title"])
+}
+
+func TestWebhookListener_DeliversTaskPurged(t *testing.T) {
+	// Task 51 in project 1 is in the fixture trash, deleted long enough ago for the cron.
+	deliverPurge := func(t *testing.T, purge func(t *testing.T)) map[string]interface{} {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		hook := &Webhook{
+			TargetURL:   "https://example.com/purged",
+			Events:      []string{"task.purged"},
+			ProjectID:   1,
+			CreatedByID: 1,
+		}
+		_, err := s.Insert(hook)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		events.ClearDispatchedEvents()
+		purge(t)
+		purged := events.GetDispatchedEvents((&TaskPurgedEvent{}).Name())
+		require.Len(t, purged, 1)
+
+		events.ClearDispatchedEvents()
+		events.TestListener(t, purged[0], &WebhookListener{EventName: "task.purged"})
+
+		delivered := webhookDeliveriesByID(t)
+		require.Contains(t, delivered, hook.ID)
+		data, ok := delivered[hook.ID].Payload.Data.(map[string]interface{})
+		require.True(t, ok)
+		task, ok := data["task"].(map[string]interface{})
+		require.True(t, ok, "task should be the event's copy")
+		assert.InDelta(t, 51, task["id"], 0)
+		return data
+	}
+
+	t.Run("purged by a user", func(t *testing.T) {
+		data := deliverPurge(t, func(t *testing.T) {
+			require.NoError(t, deletePermanentlyForTest(t, 51, &user.User{ID: 1}))
+		})
+		doer, ok := data["doer"].(*user.User)
+		require.True(t, ok, "doer should be reloaded")
+		assert.Equal(t, int64(1), doer.ID)
+	})
+	t.Run("purged by the retention cron", func(t *testing.T) {
+		data := deliverPurge(t, func(t *testing.T) {
+			files.InitTestFileFixtures(t)
+			deleteExpiredTasks(time.Now())
+		})
+		assert.Nil(t, data["doer"])
+	})
 }

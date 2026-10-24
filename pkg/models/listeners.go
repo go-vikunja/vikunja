@@ -67,6 +67,7 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&TaskUpdatedEvent{})
 		RegisterEventForWebhook(&TaskDeletedEvent{})
 		RegisterEventForWebhook(&TaskRestoredEvent{})
+		RegisterEventForWebhook(&TaskPurgedEvent{})
 		RegisterEventForWebhook(&TaskAssigneeCreatedEvent{})
 		RegisterEventForWebhook(&TaskAssigneeDeletedEvent{})
 		RegisterEventForWebhook(&TaskCommentCreatedEvent{})
@@ -193,6 +194,14 @@ func registerEventsForAuditLogging() {
 			Action: audit.ActionTaskRestored,
 			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.TaskTarget(e.Task.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskPurgedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskPurged,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"project_id": e.Task.ProjectID},
 		}
 	})
 	audit.RegisterEventForAudit(func(e *TaskAssigneeCreatedEvent) *audit.Entry {
@@ -1410,7 +1419,7 @@ func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, creatorID 
 		},
 	}
 	canRead, _, err = fullTask.CanRead(s, creator)
-	if IsErrTaskDoesNotExist(err) {
+	if IsErrTaskDoesNotExist(err) || IsErrTaskIsInTrash(err) {
 		// Already gone (task.deleted), keep the event's copy.
 		return true, nil
 	}
