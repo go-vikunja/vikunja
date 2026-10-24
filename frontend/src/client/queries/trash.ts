@@ -64,10 +64,16 @@ export function trashedTasksQuery(page: number) {
 }
 
 // Deleting or restoring a task stops timers and flips in_trash on its time entries.
-export function invalidateAfterTrashChange(client: QueryClient, taskId?: number) {
+function invalidateTrash(client: QueryClient) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: trashKeys.all}),
 		client.invalidateQueries({queryKey: timeEntryKeys.all}),
+	])
+}
+
+export function invalidateAfterTrashChange(client: QueryClient, taskId?: number) {
+	return Promise.all([
+		invalidateTrash(client),
 		invalidateTaskMembership(client, taskId, 'active'),
 	])
 }
@@ -93,10 +99,7 @@ export function deleteTaskPermanentlyMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => { await tasksDeletePermanently({path: {task: id}}) },
 		onSuccess: (_data, id, client) => removeFromPages<TaskResponse>(client, trashKeys.tasks, task => task.id === id),
-		onSettled: (_id, client) => Promise.all([
-			client.invalidateQueries({queryKey: trashKeys.all}),
-			client.invalidateQueries({queryKey: timeEntryKeys.all}),
-		]),
+		onSettled: (_id, client) => invalidateTrash(client),
 		successMessage: () => i18n.global.t('trash.deleteForeverSuccess'),
 	})
 }
@@ -104,10 +107,7 @@ export function deleteTaskPermanentlyMutationOptions() {
 export function emptyTaskTrashMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async () => { await tasksTrashEmpty() },
-		onSettled: (_input, client) => Promise.all([
-			client.invalidateQueries({queryKey: trashKeys.all}),
-			client.invalidateQueries({queryKey: timeEntryKeys.all}),
-		]),
+		onSettled: (_input, client) => invalidateTrash(client),
 		successMessage: () => i18n.global.t('trash.emptySuccess'),
 	})
 }
