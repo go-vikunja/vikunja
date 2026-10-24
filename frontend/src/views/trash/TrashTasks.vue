@@ -46,7 +46,7 @@
 							v-cy="'restoreTask'"
 							class="trash-action"
 							:aria-label="$t('trash.restore')"
-							:aria-disabled="isRestoring(task.id) || undefined"
+							:aria-disabled="pendingIds.has(task.id) || undefined"
 							@click="restore(task.id)"
 						>
 							<Icon icon="undo" />
@@ -56,7 +56,8 @@
 							v-cy="'deleteTaskForever'"
 							class="trash-action trash-action--danger"
 							:aria-label="$t('trash.deleteForever')"
-							@click="taskToDelete = task"
+							:aria-disabled="pendingIds.has(task.id) || undefined"
+							@click="confirmDeleteForever(task)"
 						>
 							<Icon icon="trash-alt" />
 						</BaseButton>
@@ -111,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, reactive, ref, watch} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -157,15 +158,28 @@ const emptyTaskTrash = useEmptyTaskTrashMutation()
 const taskToDelete = ref<TaskResponse | null>(null)
 const showEmptyModal = ref(false)
 
-function isRestoring(id: number) {
-	return restoreTask.isPending.value && restoreTask.variables.value === id
-}
+// Per row: a mutation's isPending/variables only track its latest call
+const pendingIds = reactive(new Set<number>())
 
-function restore(id: number) {
-	if (isRestoring(id)) {
+async function restore(id: number) {
+	if (pendingIds.has(id)) {
 		return
 	}
-	restoreTask.mutate(id)
+	pendingIds.add(id)
+	try {
+		await restoreTask.mutateAsync(id)
+	} catch {
+		return
+	} finally {
+		pendingIds.delete(id)
+	}
+}
+
+function confirmDeleteForever(task: TaskResponse) {
+	if (pendingIds.has(task.id)) {
+		return
+	}
+	taskToDelete.value = task
 }
 
 function openEmptyModal() {
@@ -178,8 +192,14 @@ function openEmptyModal() {
 async function deleteForever() {
 	const task = taskToDelete.value
 	taskToDelete.value = null
-	if (task) {
+	if (!task || pendingIds.has(task.id)) {
+		return
+	}
+	pendingIds.add(task.id)
+	try {
 		await deleteTaskPermanently.mutateAsync(task.id)
+	} finally {
+		pendingIds.delete(task.id)
 	}
 }
 
