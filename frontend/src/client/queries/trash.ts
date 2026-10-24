@@ -31,9 +31,6 @@ import {i18n} from '@/i18n'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 
 export {
-	ERROR_CODE_PROJECT_IS_IN_TRASH,
-	ERROR_CODE_TASK_IS_IN_TRASH,
-	isInTrashError,
 	projectInTrashFromError,
 	taskInTrashFromError,
 	type ProjectInTrash,
