@@ -412,13 +412,19 @@ func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 // GetTaskByProjectAndIndex returns a task by its per-project index.
 // Returns ErrTaskDoesNotExist if nothing matches.
 func GetTaskByProjectAndIndex(s *xorm.Session, projectID, index int64) (task Task, err error) {
+	return getTaskByProjectAndIndex(s, projectID, index, false)
+}
+
+func getTaskByProjectAndIndex(s *xorm.Session, projectID, index int64, unscoped bool) (task Task, err error) {
 	if projectID < 1 || index < 1 {
 		return Task{}, ErrTaskDoesNotExist{}
 	}
 
-	has, err := s.
-		Where("project_id = ? AND `index` = ?", projectID, index).
-		Get(&task)
+	q := s.Where("project_id = ? AND `index` = ?", projectID, index)
+	if unscoped {
+		q = q.Unscoped()
+	}
+	has, err := q.Get(&task)
 	if err != nil {
 		return Task{}, err
 	}
@@ -437,7 +443,7 @@ func (t *Task) resolveIDFromProjectAndIndex(s *xorm.Session) error {
 		return nil
 	}
 	// Unscoped so a trashed task resolves and CanRead can report it as in the trash.
-	resolved, err := GetTaskByProjectAndIndex(s.Unscoped(), t.ProjectID, t.Index)
+	resolved, err := getTaskByProjectAndIndex(s, t.ProjectID, t.Index, true)
 	if err != nil {
 		return err
 	}
