@@ -44,7 +44,11 @@ async function mountModal() {
 
 	const wrapper = mount(ProjectSettingsDelete, {
 		global: {
-			plugins: [i18n, router, [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
+			plugins: [
+				i18n,
+				router,
+				[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}],
+			],
 			components: {Modal},
 			directives: {cy: testid},
 			stubs: {
@@ -90,6 +94,7 @@ describe('ProjectSettingsDelete', () => {
 		wrapper = await mountModal()
 
 		expect(wrapper.findComponent(Loading).exists()).toBe(false)
-		expect(document.querySelector('dialog.modal-dialog')?.textContent).toContain('Moves this project and everything in it to the trash.')
+		expect(document.querySelector('dialog.modal-dialog')?.textContent)
+			.toContain('Moves this project and everything in it to the trash.')
 	})
 })

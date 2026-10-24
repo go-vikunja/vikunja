@@ -26,12 +26,17 @@ test.describe('Project trash', () => {
 		await TaskFactory.truncate()
 	})
 
-	test('deleting a project moves it to the trash and undo restores it', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('deleting a project moves it to the trash and undo restores it', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		await TaskFactory.create(2, {project_id: 1}, false)
 		await page.goto('/projects/1/settings/delete')
 
 		const dialog = page.getByRole('dialog', {name: 'Delete this project'})
-		await expect(dialog.locator('[data-cy="projectDeleteNotice"]')).toContainText('Moves this project and 2 tasks to the trash.')
+		await expect(dialog.locator('[data-cy="projectDeleteNotice"]'))
+			.toContainText('Moves this project and 2 tasks to the trash.')
 		await dialog.getByRole('button', {name: 'Do it!'}).click()
 
 		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
@@ -61,7 +66,11 @@ test.describe('Project trash', () => {
 		}
 	})
 
-	test('lists a trashed project with its sub-projects and restores it', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('lists a trashed project with its sub-projects and restores it', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		await addChildProject()
 		await trashProject(apiContext, userToken, 1)
 		await page.goto('/trash/projects')
@@ -118,7 +127,11 @@ test.describe('Project trash', () => {
 		}
 	})
 
-	test('opening a trashed project shows a notice with restore', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('opening a trashed project shows a notice with restore', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		await trashProject(apiContext, userToken, 1)
 		await page.goto('/projects/1/1')
 
@@ -131,7 +144,11 @@ test.describe('Project trash', () => {
 		await expect(page.locator('.project-title')).toContainText('First Project')
 	})
 
-	test('a read-only share sees a trashed project without restore', async ({authenticatedPage: page, apiContext, currentUser}) => {
+	test('a read-only share sees a trashed project without restore', async ({
+		authenticatedPage: page,
+		apiContext,
+		currentUser,
+	}) => {
 		const [owner] = await UserFactory.create(1, {id: 2}, false)
 		await ProjectFactory.create(1, {id: 4, title: 'Shared Project', owner_id: owner.id}, false)
 		await createDefaultViews(4, 5)
