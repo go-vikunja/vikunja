@@ -6,7 +6,6 @@
 		:can-restore="inTrash.can_restore"
 		:restoring="restoreProject.isPending.value"
 		:trash-route="{name: 'trash.projects'}"
-		restore-cy="restoreTrashedProject"
 		@restore="restoreProject.mutate(inTrash.id)"
 	/>
 </template>

@@ -122,7 +122,7 @@ test.describe('Project trash', () => {
 		await expect(notice).toContainText('This project is in the trash.')
 		await expect(page.locator('.global-notification')).not.toContainText('This project is in the trash')
 
-		await notice.locator('[data-cy="restoreTrashedProject"]').click()
+		await notice.locator('[data-cy="restoreTrashed"]').click()
 		await expect(notice).toHaveCount(0)
 		await expect(page.locator('.project-title')).toContainText('First Project')
 	})
@@ -136,8 +136,9 @@ test.describe('Project trash', () => {
 		await trashProject(apiContext, ownerToken, 4)
 		await page.goto('/projects/4/5')
 
-		await expect(page.locator('[data-cy="projectInTrashNotice"]')).toContainText('This project is in the trash.')
-		await expect(page.locator('[data-cy="restoreTrashedProject"]')).toHaveCount(0)
+		const notice = page.locator('[data-cy="projectInTrashNotice"]')
+		await expect(notice).toContainText('This project is in the trash.')
+		await expect(notice.locator('[data-cy="restoreTrashed"]')).toHaveCount(0)
 
 		const restore = await apiContext.post('/api/v2/projects/4/restore', {headers: {Authorization: `Bearer ${userToken}`}})
 		expect(restore.status()).toBe(403)

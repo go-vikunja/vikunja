@@ -112,7 +112,7 @@ test.describe('Trash', () => {
 		await expect(page).toHaveURL(/\/tasks\/1/)
 		await expect(notice.getByRole('link', {name: 'Open trash'})).toBeVisible()
 
-		await notice.locator('[data-cy="restoreTrashedTask"]').click()
+		await notice.locator('[data-cy="restoreTrashed"]').click()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
 		await page.reload()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
