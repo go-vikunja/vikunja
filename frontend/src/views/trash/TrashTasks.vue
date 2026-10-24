@@ -38,7 +38,8 @@
 						v-tooltip="formatDateLong(task.deleted_at)"
 						class="trashed-task-meta"
 					>
-						{{ deletedLabel(task) }} · {{ $t('trash.daysLeftShort', trashDaysLeft(task.deleted_at ?? '')) }}
+						{{ deletedLabel(task) }} ·
+						{{ $t('trash.daysLeftShort', trashDaysLeft(task.deleted_at ?? '')) }}
 					</span>
 					<span class="trashed-task-actions">
 						<BaseButton
@@ -148,9 +149,15 @@ const isFetching = query.isFetching
 const isSuccess = query.isSuccess
 
 // Restoring or deleting the last task of the last page leaves the page empty
-watch(() => clampPage(currentPage.value, {data: query.data.value, isPlaceholderData: query.isPlaceholderData.value}), page => {
-	currentPage.value = page
-})
+watch(
+	() => clampPage(currentPage.value, {
+		data: query.data.value,
+		isPlaceholderData: query.isPlaceholderData.value,
+	}),
+	page => {
+		currentPage.value = page
+	},
+)
 
 const restoreTask = useRestoreTaskMutation()
 const deleteTaskPermanently = useDeleteTaskPermanentlyMutation()
