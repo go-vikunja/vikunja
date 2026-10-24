@@ -180,10 +180,15 @@ func stopRunningTimersOnTask(s *xorm.Session, taskID int64, doer *user.User) err
 	if err := s.Where("task_id = ? AND end_time IS NULL", taskID).Find(&running); err != nil {
 		return err
 	}
+	// the websocket listener routes the event by entry.User
+	if err := addUsersToTimeEntries(s, running); err != nil {
+		return err
+	}
 	for _, entry := range running {
 		if err := entry.stop(s); err != nil {
 			return err
 		}
+		entry.InTrash = true
 		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: entry, Doer: doer})
 	}
 	return nil
