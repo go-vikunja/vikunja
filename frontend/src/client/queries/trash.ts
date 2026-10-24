@@ -83,12 +83,16 @@ function removeTrashedTask(client: QueryClient, id: number) {
 export function restoreTaskMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number, {client}) => {
-			await tasksRestore({path: {task: id}})
+			const {data} = await tasksRestore({path: {task: id}})
 			// The restore response lacks labels, assignees and the identifier the card shows.
-			return client.fetchQuery({
-				...taskQuery(id),
-				staleTime: 0,
-			})
+			try {
+				return await client.fetchQuery({
+					...taskQuery(id),
+					staleTime: 0,
+				})
+			} catch {
+				return normalizeTask(data)
+			}
 		},
 		onSuccess: (restored, id, client) => {
 			removeTrashedTask(client, id)

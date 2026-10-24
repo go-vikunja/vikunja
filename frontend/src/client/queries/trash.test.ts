@@ -13,6 +13,7 @@ import {timeEntryKeys} from './timeEntries'
 import {kanbanKeys, normalizeBucket, type BoardData} from './kanban'
 import {projectKeys} from './projects'
 import {ApiError} from '@/client/problem'
+import {error} from '@/message'
 
 const sdk = vi.hoisted(() => ({
 	tasksTrashList: vi.fn(),
@@ -238,6 +239,28 @@ it('patches the restored card with the full task detail', async () => {
 		labels: [{id: 7}],
 		position: 200,
 	})
+})
+
+it('falls back to the restore response when the task detail fails', async () => {
+	const client = new QueryClient()
+	seedTrash(client)
+	sdk.tasksRestore.mockResolvedValue({
+		data: {
+			id: 2,
+			title: 'restore',
+		},
+	})
+	sdk.tasksRead.mockRejectedValue(new Error('network'))
+
+	const restored = await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
+
+	expect(restored).toMatchObject({
+		id: 2,
+		title: 'restore',
+		labels: [],
+	})
+	expect(error).not.toHaveBeenCalled()
+	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({items: [{id: 1}]})
 })
 
 it('drops a permanently deleted task from the trash', async () => {
