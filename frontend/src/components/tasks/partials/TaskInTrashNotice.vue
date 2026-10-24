@@ -47,7 +47,11 @@ const props = defineProps<{
 	inTrash: TaskInTrash,
 }>()
 
-const taskInTrashLabel = useDeletedLabel('trash.taskInTrash')
+const taskInTrashLabel = useDeletedLabel({
+	unknown: 'trash.taskInTrash',
+	by: 'trash.taskInTrashBy',
+	byYou: 'trash.taskInTrashByYou',
+})
 const projectList = useProjects()
 const authStore = useAuthStore()
 const restoreTask = useRestoreTaskMutation()
