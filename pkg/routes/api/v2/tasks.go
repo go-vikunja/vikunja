@@ -114,7 +114,7 @@ func RegisterTaskRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-delete",
 		Summary:     "Delete a task",
-		Description: "Deletes a task. Requires write access to its project.",
+		Description: "Moves a task to the trash. Requires write access to its project. Trashed tasks can be restored for 30 days before they are deleted permanently.",
 		Method:      "DELETE",
 		Path:        "/tasks/{task}",
 		Tags:        tags,
