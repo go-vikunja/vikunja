@@ -1,7 +1,25 @@
-import {describe, it, expect} from 'vitest'
+import {describe, it, expect, vi} from 'vitest'
+import {notify} from '@kyvg/vue3-notification'
 
 import {ApiError} from '@/client/problem'
-import {getErrorText} from './index'
+import {getErrorText, success} from './index'
+
+vi.mock('@kyvg/vue3-notification', () => ({notify: vi.fn()}))
+
+describe('success', () => {
+	it('merges duplicate toasts without actions', () => {
+		success({message: 'Saved'})
+		expect(notify).toHaveBeenLastCalledWith(expect.objectContaining({ignoreDuplicates: true}))
+	})
+
+	it('never merges toasts with actions, so each keeps its own undo', () => {
+		success({message: 'Deleted'}, [{
+			title: 'Undo',
+			callback: () => {},
+		}])
+		expect(notify).toHaveBeenLastCalledWith(expect.objectContaining({ignoreDuplicates: false}))
+	})
+})
 
 describe('getErrorText', () => {
 	it.each([null, undefined])('handles an empty rejection reason (%s)', reason => {

@@ -195,15 +195,6 @@ function getViewRoute(view: ProjectView) {
 	}
 }
 
-.switch-view {
-	background: var(--white);
-	display: inline-flex;
-	border-radius: $radius;
-	font-size: .75rem;
-	box-shadow: var(--shadow-sm);
-	padding: .5rem;
-}
-
 .switch-view--hidden {
 	position: absolute;
 	visibility: hidden;
@@ -226,30 +217,6 @@ function getViewRoute(view: ProjectView) {
 
 .dropdown-icon {
 	font-size: .6rem;
-}
-
-.switch-view-button {
-	padding: .25rem .5rem;
-	display: block;
-	white-space: nowrap;
-	border-radius: $radius;
-	transition: all 100ms;
-
-	&:not(:last-child) {
-		margin-inline-end: .5rem;
-	}
-
-	&:hover {
-		color: var(--switch-view-color);
-		background: var(--switch-view-active-background);
-	}
-
-	&.is-active {
-		color: var(--switch-view-color);
-		background: var(--switch-view-active-background);
-		font-weight: bold;
-		box-shadow: var(--shadow-xs);
-	}
 }
 
 // FIXME: this should be in notification and set via a prop

@@ -36,6 +36,7 @@ import {
 	taskQueryKeys,
 } from './taskCache'
 import {getCachedProject, projectKeys} from './projects'
+import {invalidateAfterTrashChange} from './trash'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {getDefaultBucketId, moveTaskToBucket} from '@/helpers/task'
 import {translatedError} from '@/message'
@@ -201,7 +202,7 @@ export function deleteTaskMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => { await tasksDelete({path: {task: id}}) },
 		onSuccess: (_data, id, client) => removeTaskEverywhere(client, id),
-		onSettled: (_id, client) => invalidateTaskMembership(client, undefined, 'active'),
+		onSettled: (_id, client) => invalidateAfterTrashChange(client),
 	})
 }
 

@@ -413,7 +413,11 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.project-kanban .filter-container .base-button')).toBeVisible()
 	})
 
-	test('Should remove a task from the board when deleting it', async ({authenticatedPage: page}) => {
+	test('Should remove a task from the board when deleting it', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		const {task, view} = await createSingleTaskInBucket(5)
 		await page.goto(`/projects/1/${view.id}`)
 
@@ -421,16 +425,41 @@ test.describe('Project View Kanban', () => {
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
 		await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'})).toBeVisible()
 		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
-		await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
-		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 
-		await expect(page.locator('.global-notification')).toContainText('Success')
+		await expect(page.locator('.global-notification')).toContainText('The task has been moved to the trash.')
 
 		await page.goBack()
 		const bucketCount = await page.locator('.kanban .bucket').count()
 		for (let i = 0; i < bucketCount; i++) {
 			await expect(page.locator('.kanban .bucket').nth(i)).not.toContainText(task.title)
 		}
+
+		const stored = await apiContext.get(`tasks/${task.id}`, {headers: {Authorization: `Bearer ${userToken}`}})
+		expect(stored.status()).toBe(404)
+		expect((await stored.json()).code).toBe(4040)
+	})
+
+	test('Undo after deleting a task puts its card back on the board', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		const {task, view} = await createSingleTaskInBucket()
+		await page.goto(`/projects/1/${view.id}`)
+
+		const card = page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})
+		await card.click()
+		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
+		await expect(page).toHaveURL(new RegExp(`/projects/1/${view.id}$`))
+		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).toBeVisible()
+		await expect(card).toHaveCount(0)
+
+		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
+		await toast.getByRole('button', {name: 'Undo'}).click()
+
+		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).toContainText(task.title)
+		const stored = await apiContext.get(`tasks/${task.id}`, {headers: {Authorization: `Bearer ${userToken}`}})
+		expect(stored.status()).toBe(200)
 	})
 
 	test('Should show a task description icon if the task has a description', async ({authenticatedPage: page}) => {
