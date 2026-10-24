@@ -27,10 +27,9 @@ import {
 import {insertTaskIntoBoards, invalidateTaskMembership} from './taskCache'
 import {timeEntryKeys} from './timeEntries'
 import {
-	descendantIds,
 	normalizeProject,
 	projectKeys,
-	type ProjectListResult,
+	removeProjectSubtree,
 	type ProjectResponse,
 } from './projects'
 import {trashKeys} from './trashShared'
@@ -193,14 +192,7 @@ export function deleteProjectMutationOptions() {
 		},
 		optimistic: {
 			queryKeys: () => [projectKeys.list()],
-			update: (id, client) => {
-				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
-				const ids = new Set(list ? descendantIds(list.projects, id) : [id])
-				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-					current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
-				)
-				return ids
-			},
+			update: (id, client) => removeProjectSubtree(client, id),
 		},
 		onSuccess: (_data, id, client, ids) => {
 			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
