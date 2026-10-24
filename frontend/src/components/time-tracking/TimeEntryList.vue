@@ -39,7 +39,7 @@
 					>
 						<td v-if="!hideLabelColumn">
 							<span
-								v-if="row.entry.task_id === 0 && row.entry.project_id === 0"
+								v-if="isPrivateEntry(row.entry)"
 								v-cy="'timeEntryNoProject'"
 								class="has-text-grey is-italic"
 							>
@@ -140,6 +140,7 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {formatTimeRange} from '@/helpers/time/formatTimeRange'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTimeFormat} from '@/composables/useTimeFormat'
+import {isPrivateEntry} from '@/client/queries/timeEntries'
 
 import type {TaskResponse} from '@/client/queries/tasks'
 import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'

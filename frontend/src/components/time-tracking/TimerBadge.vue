@@ -11,7 +11,7 @@
 		>
 			{{ elapsed }}
 			<span
-				v-if="activeTimer && !activeTimer.task_id && !activeTimer.project_id"
+				v-if="activeTimer && isPrivateEntry(activeTimer)"
 				class="timer-badge__label"
 			>
 				{{ $t('timeTracking.noProject') }}
@@ -34,7 +34,10 @@ import {ref, computed, onMounted, onUnmounted} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useTimeTracking} from '@/composables/useTimeTracking'
-import {useStopTimerMutation} from '@/client/queries/timeEntries'
+import {
+	isPrivateEntry,
+	useStopTimerMutation,
+} from '@/client/queries/timeEntries'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 const {activeTimer, hasActiveTimer} = useTimeTracking()
