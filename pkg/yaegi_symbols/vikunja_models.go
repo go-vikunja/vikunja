@@ -311,6 +311,7 @@ func init() {
 		"IsErrTaskCannotBeEmpty":                           reflect.ValueOf(models.IsErrTaskCannotBeEmpty),
 		"IsErrTaskCommentDoesNotExist":                     reflect.ValueOf(models.IsErrTaskCommentDoesNotExist),
 		"IsErrTaskDoesNotExist":                            reflect.ValueOf(models.IsErrTaskDoesNotExist),
+		"IsErrTaskIsInTrash":                               reflect.ValueOf(models.IsErrTaskIsInTrash),
 		"IsErrTaskRelationCycle":                           reflect.ValueOf(models.IsErrTaskRelationCycle),
 		"IsErrTeamAlreadyHasAccess":                        reflect.ValueOf(models.IsErrTeamAlreadyHasAccess),
 		"IsErrTeamDoesNotExist":                            reflect.ValueOf(models.IsErrTeamDoesNotExist),
