@@ -39,7 +39,7 @@ func RegisterTaskTrashRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-trash-list",
 		Summary:     "List trashed tasks",
-		Description: "Returns soft-deleted tasks in non-archived projects the user can write to, newest deletion first. Trashed tasks are purged 30 days after deleted_at. q is ignored. Not available to link shares.",
+		Description: "Returns soft-deleted tasks in non-archived projects the user can write to, newest deletion first. Trashed tasks are purged 30 days after deleted_at. Not available to link shares.",
 		Method:      http.MethodGet,
 		Path:        "/tasks/deleted",
 		Tags:        tags,
@@ -75,7 +75,7 @@ func RegisterTaskTrashRoutes(api huma.API) {
 }
 
 func tasksTrashList(ctx context.Context, in *struct {
-	ListParams
+	PageParams
 	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 }) (*trashedTaskListBody, error) {
 	a, err := authFromCtx(ctx)
