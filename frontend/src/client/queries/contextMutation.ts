@@ -9,7 +9,7 @@ import {
 import {error, success} from '@/message'
 
 export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(options: {
-	mutationFn: (input: TInput, context: {request: ClientRequestContext}) => Promise<TData>
+	mutationFn: (input: TInput, context: {request: ClientRequestContext, client: QueryClient}) => Promise<TData>
 	optimistic?: {
 		queryKeys: (input: TInput, client: QueryClient) => readonly QueryKey[]
 		update: (input: TInput, client: QueryClient) => TOptimistic
@@ -31,9 +31,12 @@ export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(o
 			const previous = queryKeys.flatMap(queryKey => client.getQueriesData({queryKey}))
 			return {request, previous, optimistic: options.optimistic.update(input, client)}
 		},
-		mutationFn: async (input: TInput) => {
+		mutationFn: async (input: TInput, {client}) => {
 			const request = captureClientRequestContext()
-			const data = await options.mutationFn(input, {request})
+			const data = await options.mutationFn(input, {
+				request,
+				client,
+			})
 			assertClientRequestContext(request)
 			return data
 		},

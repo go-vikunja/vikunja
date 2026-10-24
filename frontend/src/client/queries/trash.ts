@@ -14,7 +14,7 @@ import {
 import {ApiError} from '@/client/problem'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
-import {normalizeTask, type TaskResponse} from './tasks'
+import {normalizeTask, taskQuery, type TaskResponse} from './tasks'
 import {insertTaskIntoBoards, invalidateTaskMembership} from './taskCache'
 import {kanbanKeys} from './kanban'
 import {getCachedProject} from './projects'
@@ -84,7 +84,14 @@ function removeTrashedTask(client: QueryClient, id: number) {
 
 export function restoreTaskMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (id: number) => normalizeTask((await tasksRestore({path: {task: id}})).data),
+		mutationFn: async (id: number, {client}) => {
+			await tasksRestore({path: {task: id}})
+			// The restore response lacks labels, assignees and the identifier the card shows.
+			return client.fetchQuery({
+				...taskQuery(id),
+				staleTime: 0,
+			})
+		},
 		onSuccess: (restored, id, client) => {
 			removeTrashedTask(client, id)
 			insertTaskIntoBoards(client, restored)

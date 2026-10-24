@@ -136,6 +136,12 @@ export function removeTaskEverywhere(client: QueryClient, id: number) {
 	)
 }
 
+// Mirrors the server, which places a task without a stored position above the view's lowest one.
+function positionAboveBoard(board: BoardData, task: TaskResponse): number {
+	const lowest = Math.min(...board.buckets.flatMap(bucket => bucket.tasks.map(item => item.position)))
+	return Number.isFinite(lowest) && lowest > 0 ? lowest / 2 : task.index * 2 ** 16
+}
+
 export function insertTaskIntoBoards(client: QueryClient, created: Task) {
 	const task = normalizeTask(created)
 	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
@@ -152,7 +158,8 @@ export function insertTaskIntoBoards(client: QueryClient, created: Task) {
 					: getDefaultBucketId(view, board.buckets)
 				: undefined
 		if (target === undefined) continue
-		const position = task.positions?.find(item => item.project_view_id === viewId)?.position ?? task.position
+		const position = task.positions?.find(item => item.project_view_id === viewId)?.position
+			?? (task.position || positionAboveBoard(board, task))
 		client.setQueryData(key, {
 			...board,
 			buckets: board.buckets.map(bucket => bucket.id === target
