@@ -44,7 +44,7 @@ async function mountModal() {
 
 	const wrapper = mount(ProjectSettingsDelete, {
 		global: {
-			plugins: [i18n, router, [VueQueryPlugin, {queryClient: new QueryClient()}]],
+			plugins: [i18n, router, [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
 			components: {Modal},
 			directives: {cy: testid},
 			stubs: {
@@ -82,6 +82,15 @@ describe('ProjectSettingsDelete', () => {
 
 		expect(wrapper.findComponent(Loading).exists()).toBe(true)
 		expect(document.querySelector('dialog.modal-dialog')?.textContent).not.toContain('Moves this project')
+	})
+
+	it('falls back to a generic notice when the counts fail', async () => {
+		sdk.projectsCount.mockRejectedValue(new Error('network'))
+
+		wrapper = await mountModal()
+
+		expect(wrapper.findComponent(Loading).exists()).toBe(false)
+		expect(document.querySelector('dialog.modal-dialog')?.textContent).toContain('Moves this project and everything in it to the trash.')
 	})
 
 	it('tells what moves to the trash once the counts resolved', async () => {

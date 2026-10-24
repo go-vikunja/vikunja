@@ -454,6 +454,7 @@
       "header": "Delete this project",
       "success": "The project has been moved to the trash.",
       "toTrash": "Moves this project and {tasks} to the trash. They are deleted permanently after {days} days.",
+      "toTrashFallback": "Moves this project and everything in it to the trash. It is deleted permanently after {days} days.",
       "toTrashWithSubProjects": "Moves this project, {subProjects} and {tasks} to the trash. They are deleted permanently after {days} days.",
       "subProjects": "{count} sub-project | {count} sub-projects",
       "tasks": "no tasks | {count} task | {count} tasks",
