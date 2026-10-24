@@ -163,7 +163,7 @@ func timeEntriesTimerStop(ctx context.Context, _ *struct{}) (*singleBody[models.
 
 func timeEntriesList(ctx context.Context, in *struct {
 	ListParams
-	Filter         string `query:"filter" doc:"Filter entries with the task filter syntax over user_id, task_id, project_id, start_time and end_time — e.g. \"project_id = 5 && start_time > now-7d\". Use end_time = null to match running timers."`
+	Filter         string `query:"filter" doc:"Filter entries with the task filter syntax over user_id, task_id, project_id, start_time and end_time — e.g. \"project_id = 5 && start_time > now-7d\". Use end_time = null to match running timers, project_id = null for entries without task or project, and task_id = null for entries not on a task."`
 	FilterTimezone string `query:"filter_timezone" doc:"IANA timezone name used to resolve relative dates (now, now-7d) in the filter, e.g. Europe/Berlin."`
 }) (*timeEntryListBody, error) {
 	a, err := authFromCtx(ctx)
