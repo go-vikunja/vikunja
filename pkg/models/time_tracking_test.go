@@ -999,9 +999,12 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 
 		result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 3}, "", 1, 50)
 		require.NoError(t, err)
+		ids := []int64{}
 		for _, e := range result.([]*TimeEntry) {
-			assert.NotEqual(t, entry.ID, e.ID)
+			ids = append(ids, e.ID)
 		}
+		assert.NotEmpty(t, ids)
+		assert.NotContains(t, ids, entry.ID)
 	})
 	t.Run("only the author modifies it", func(t *testing.T) {
 		entry := insert(t)
@@ -1094,6 +1097,34 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 			ids = append(ids, e.ID)
 		}
 		assert.ElementsMatch(t, []int64{1, 2, 3, 4}, ids)
+	})
+	t.Run("task_id = null filter", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		result, _, _, err := (&TimeEntry{Filter: "task_id = null"}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		ids := []int64{}
+		for _, e := range result.([]*TimeEntry) {
+			ids = append(ids, e.ID)
+		}
+		assert.ElementsMatch(t, []int64{
+			2,
+			3,
+			entry.ID,
+		}, ids)
+
+		result, _, _, err = (&TimeEntry{Filter: "task_id != null"}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		ids = []int64{}
+		for _, e := range result.([]*TimeEntry) {
+			ids = append(ids, e.ID)
+		}
+		assert.ElementsMatch(t, []int64{
+			1,
+			4,
+		}, ids)
 	})
 }
 
