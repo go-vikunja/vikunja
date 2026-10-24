@@ -170,7 +170,7 @@ const showEmptyModal = ref(false)
 const pendingRows = usePendingRows()
 
 function restore(id: number) {
-	return pendingRows.run(id, () => restoreTask.mutateAsync(id))
+	return pendingRows.run(restoreTask, id)
 }
 
 function confirmDeleteForever(task: TaskResponse) {
@@ -193,7 +193,7 @@ async function deleteForever() {
 	if (!task) {
 		return
 	}
-	await pendingRows.run(task.id, () => deleteTaskPermanently.mutateAsync(task.id))
+	await pendingRows.run(deleteTaskPermanently, task.id)
 }
 
 async function emptyTrash() {
