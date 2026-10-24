@@ -2,16 +2,18 @@
 	<div class="content is-max-width-desktop">
 		<h1>{{ $t('trash.title') }}</h1>
 		<div class="trash-header">
-			<nav class="trash-tabs">
+			<nav
+				class="switch-view"
+				:aria-label="$t('trash.tabs.label')"
+			>
 				<BaseButton
-					class="trash-tab"
+					class="switch-view-button"
 					:class="{'is-active': route.name === 'trash.tasks'}"
 					:to="{name: 'trash.tasks'}"
 				>
-					{{ $t('quickActions.tasks') }}
+					{{ $t('trash.tabs.tasks') }}
 				</BaseButton>
 			</nav>
-			<!-- Each tab teleports its own actions here -->
 			<div id="trash-actions" />
 		</div>
 		<RouterView />
@@ -38,30 +40,5 @@ useTitle(() => t('trash.title'))
 	justify-content: space-between;
 	gap: 1rem;
 	margin-block-end: 1rem;
-}
-
-.trash-tabs {
-	display: inline-flex;
-	gap: .5rem;
-	padding: .5rem;
-	border-radius: $radius;
-	background: var(--white);
-	box-shadow: var(--shadow-sm);
-	font-size: .75rem;
-}
-
-.trash-tab {
-	padding: .25rem .5rem;
-	border-radius: $radius;
-
-	&:hover,
-	&.is-active {
-		color: var(--switch-view-color);
-		background: var(--switch-view-active-background);
-	}
-
-	&.is-active {
-		font-weight: bold;
-	}
 }
 </style>
