@@ -801,6 +801,12 @@ type ErrTaskIsInTrash struct {
 	DeletedBy *user.User `json:"deleted_by,omitempty"`
 }
 
+// IsErrTaskIsInTrash checks if an error is a ErrTaskIsInTrash.
+func IsErrTaskIsInTrash(err error) bool {
+	_, ok := err.(ErrTaskIsInTrash)
+	return ok
+}
+
 func (err ErrTaskIsInTrash) Error() string {
 	return fmt.Sprintf("The task is in the trash. [ID: %d]", err.ID)
 }
