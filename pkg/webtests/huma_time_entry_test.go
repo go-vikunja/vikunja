@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/license"
 
 	"github.com/labstack/echo/v5"
@@ -236,6 +237,27 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		rec = humaRequest(t, e, http.MethodGet, path, "", humaTokenFor(t, &testuser2), "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+	})
+
+	t.Run("only the author updates or deletes it", func(t *testing.T) {
+		e, token := setup(t)
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/time-entries", `{`+times+`,"comment":"solo"}`, token, "")
+		require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+		var created struct {
+			ID int64 `json:"id"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
+
+		path := "/api/v2/time-entries/" + strconv.FormatInt(created.ID, 10)
+		other := humaTokenFor(t, &testuser2)
+		rec = humaRequest(t, e, http.MethodPut, path, `{`+times+`,"comment":"hijacked"}`, other, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+		rec = humaRequest(t, e, http.MethodDelete, path, "", other, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":      created.ID,
+			"comment": "solo",
+		}, false)
 	})
 
 	t.Run("PUT with null detaches", func(t *testing.T) {

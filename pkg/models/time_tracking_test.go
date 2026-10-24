@@ -1010,10 +1010,71 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 
 		can, err := (&TimeEntry{ID: entry.ID}).CanDelete(s, u1)
 		require.NoError(t, err)
-		assert.True(t, can)
+		assert.True(t, can, "author delete")
 		can, err = (&TimeEntry{ID: entry.ID}).CanDelete(s, &user.User{ID: 3})
 		require.NoError(t, err)
+		assert.False(t, can, "other user delete")
+
+		edit := func() *TimeEntry {
+			return &TimeEntry{
+				ID:        entry.ID,
+				StartTime: entry.StartTime,
+				EndTime:   entry.EndTime,
+				Comment:   "edited",
+			}
+		}
+		can, err = edit().CanUpdate(s, u1)
+		require.NoError(t, err)
+		assert.True(t, can, "author update")
+		can, err = edit().CanUpdate(s, &user.User{ID: 3})
+		require.NoError(t, err)
+		assert.False(t, can, "other user update")
+	})
+	t.Run("moving it into an unreadable project is denied", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user1 has no access to project 2
+		can, err := (&TimeEntry{
+			ID:        entry.ID,
+			ProjectID: 2,
+			StartTime: entry.StartTime,
+			EndTime:   entry.EndTime,
+		}).CanUpdate(s, u1)
+		require.NoError(t, err)
 		assert.False(t, can)
+	})
+	t.Run("detaching hides it from project members", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		author := &user.User{ID: 3}
+
+		// Entry 3 is user3's on project 3, which user1 can read.
+		body := `{"project_id":null,` +
+			`"start_time":"2018-12-01T12:00:00Z","end_time":"2018-12-01T13:00:00Z"}`
+		te := &TimeEntry{}
+		require.NoError(t, json.Unmarshal([]byte(body), te))
+		te.ID = 3
+		can, err := te.CanUpdate(s, author)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, te.Update(s, author))
+		require.NoError(t, s.Commit())
+
+		can, _, err = (&TimeEntry{ID: 3}).CanRead(s, u1)
+		require.NoError(t, err)
+		assert.False(t, can)
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		ids := []int64{}
+		for _, e := range result.([]*TimeEntry) {
+			ids = append(ids, e.ID)
+		}
+		assert.NotEmpty(t, ids)
+		assert.NotContains(t, ids, int64(3))
 	})
 	t.Run("project_id = null filter", func(t *testing.T) {
 		entry := insert(t)
