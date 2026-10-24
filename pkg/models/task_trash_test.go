@@ -145,6 +145,23 @@ func TestTask_Restore(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrProjectIsArchived(err))
 	})
+	t.Run("second restore of the same loaded task is refused", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		defer events.CleanupPending(s)
+
+		first := &Task{ID: 51}
+		second := &Task{ID: 51}
+		_, err := first.CanRestore(s, u1)
+		require.NoError(t, err)
+		_, err = second.CanRestore(s, u1)
+		require.NoError(t, err)
+
+		require.NoError(t, first.Restore(s, u1))
+		err = second.Restore(s, u1)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
 	t.Run("live task is not in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
