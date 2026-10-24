@@ -103,7 +103,7 @@ onUnmounted(() => {
 
 .timer-badge__label {
 	margin-inline-start: .25rem;
-	color: var(--grey-500);
+	color: var(--grey-600);
 	font-weight: normal;
 }
 
