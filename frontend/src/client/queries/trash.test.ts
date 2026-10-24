@@ -171,32 +171,67 @@ describe('projectInTrashFromError', () => {
 
 it('normalizes trashed projects and orders sub-projects below their parents', async () => {
 	const client = new QueryClient()
-	sdk.projectsTrashList.mockResolvedValue({data: {
-		items: [{
-			id: 1,
-			hex_color: 'ff0000',
-			trashed_sub_projects: [
-				{id: 2, parent_project_id: 1, depth: 1},
-				{id: 3, parent_project_id: 1, depth: 1},
-				{id: 4, parent_project_id: 3, depth: 2},
-				{id: 5, parent_project_id: 2, depth: 2},
+	sdk.projectsTrashList.mockResolvedValue({
+		data: {
+			items: [
+				{
+					id: 1,
+					hex_color: 'ff0000',
+					trashed_sub_projects: [
+						{
+							id: 2,
+							parent_project_id: 1,
+							depth: 1,
+						},
+						{
+							id: 3,
+							parent_project_id: 1,
+							depth: 1,
+						},
+						{
+							id: 4,
+							parent_project_id: 3,
+							depth: 2,
+						},
+						{
+							id: 5,
+							parent_project_id: 2,
+							depth: 2,
+						},
+					],
+				},
 			],
-		}],
-		page: 1,
-		per_page: 50,
-		total: 1,
-		total_pages: 1,
-	}})
+			page: 1,
+			per_page: 50,
+			total: 1,
+			total_pages: 1,
+		},
+	})
 
 	const page = await client.fetchQuery(trashedProjectsQuery(1))
 
 	expect(sdk.projectsTrashList).toHaveBeenCalledWith(expect.objectContaining({query: {page: 1}}))
 	expect(page.items[0]?.hex_color).toBe('#ff0000')
-	expect(page.items[0]?.trashed_sub_projects?.map(({id, depth}) => ({id, depth}))).toEqual([
-		{id: 2, depth: 1},
-		{id: 5, depth: 2},
-		{id: 3, depth: 1},
-		{id: 4, depth: 2},
+	expect(page.items[0]?.trashed_sub_projects?.map(({id, depth}) => ({
+		id,
+		depth,
+	}))).toEqual([
+		{
+			id: 2,
+			depth: 1,
+		},
+		{
+			id: 5,
+			depth: 2,
+		},
+		{
+			id: 3,
+			depth: 1,
+		},
+		{
+			id: 4,
+			depth: 2,
+		},
 	])
 })
 
