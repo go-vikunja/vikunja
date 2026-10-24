@@ -53,15 +53,15 @@
 						</td>
 						<td v-if="!hideLabelColumn">
 							<RouterLink
-								v-if="row.entry.task_id > 0"
+								v-if="row.entry.task_id > 0 && !row.entry.in_trash"
 								:to="{ name: 'task.detail', params: { id: row.entry.task_id } }"
 							>
 								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
 							<span
-								v-if="row.entry.in_trash"
+								v-else-if="row.entry.in_trash"
 								v-cy="'timeEntryInTrash'"
-								class="tag mis-1"
+								class="tag"
 							>
 								{{ $t('trash.inTrash') }}
 							</span>
