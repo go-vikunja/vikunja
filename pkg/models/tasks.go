@@ -2274,7 +2274,7 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 		if attachment.File == nil {
 			continue
 		}
-		err = attachment.File.Delete(s)
+		err = attachment.File.DeleteOnCommit(s)
 		if err != nil && !files.IsErrFileDoesNotExist(err) {
 			return err
 		}

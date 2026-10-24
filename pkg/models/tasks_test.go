@@ -854,7 +854,12 @@ func TestHardDeleteTask(t *testing.T) {
 
 	err = hardDeleteTask(s, &Task{ID: 1, ProjectID: 1})
 	require.NoError(t, err)
+	_, err = files.FileStat(&files.File{ID: 1})
+	require.NoError(t, err, "blob must survive until commit")
 	require.NoError(t, s.Commit())
+	events.DispatchPending(t.Context(), s)
+	_, err = files.FileStat(&files.File{ID: 1})
+	require.Error(t, err)
 
 	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 1})
 	for _, table := range []string{
@@ -882,6 +887,21 @@ func TestHardDeleteTask(t *testing.T) {
 	db.AssertMissing(t, "time_entries", map[string]interface{}{"task_id": 1})
 	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 1, "task_id": 0, "project_id": 1}, false)
 	db.AssertExists(t, "time_entries", map[string]interface{}{"id": 4, "task_id": 0, "project_id": 1}, false)
+}
+
+func TestHardDeleteTask_RollbackKeepsAttachmentBlobs(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	require.NoError(t, hardDeleteTask(s, &Task{ID: 1, ProjectID: 1}))
+	require.NoError(t, s.Rollback())
+	events.CleanupPending(s)
+
+	db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+	_, err := files.FileStat(&files.File{ID: 1})
+	require.NoError(t, err)
 }
 
 func TestUpdateTasksHelper(t *testing.T) {
