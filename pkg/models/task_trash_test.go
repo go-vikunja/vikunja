@@ -149,7 +149,6 @@ func TestTask_Restore(t *testing.T) {
 	})
 	t.Run("reader cannot restore", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		// User 1 only reads project 3
 		setTaskColumnsForTest(t, 32, map[string]any{"deleted_at": time.Now()})
 
 		_, err := restoreTaskForTest(t, 32, u1)
@@ -157,7 +156,6 @@ func TestTask_Restore(t *testing.T) {
 	})
 	t.Run("refused in an archived project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		// Task 36 lives in archived project 22, which a delete would refuse
 		setTaskColumnsForTest(t, 36, map[string]any{"deleted_at": time.Now()})
 
 		_, err := restoreTaskForTest(t, 36, u1)
@@ -216,7 +214,6 @@ func TestTaskTrash_InstanceAdminInArchivedProject(t *testing.T) {
 		defer s.Close()
 		_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
 		require.NoError(t, err)
-		// Task 36 lives in archived project 22
 		setTaskColumnsForTest(t, 36, map[string]any{"deleted_at": time.Now()})
 		return &user.User{ID: 2, IsAdmin: true}
 	}

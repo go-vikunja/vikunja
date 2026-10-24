@@ -707,7 +707,6 @@ func TestTimeEntry_Events(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// entry 4 is user1's running timer on task 1
 		require.NoError(t, (&Task{ID: 1}).Delete(s, u))
 		require.NoError(t, s.Commit())
 		events.DispatchPending(context.Background(), s)
