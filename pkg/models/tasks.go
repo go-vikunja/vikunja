@@ -180,6 +180,10 @@ type Task struct {
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who created this task. Set by the server."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
 
+	// Null for tasks soft-deleted before this was tracked.
+	DeletedBy   *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded."`
+	DeletedByID int64      `xorm:"bigint null 'deleted_by_id'" json:"-"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
@@ -1099,42 +1103,9 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		return err
 	}
 
-	views, err := lockProjectViewsForPositionUpdate(s, projectID)
+	err = placeTasksInViews(s, a, projectID, tasks, setBucket, taskProvidedBucket)
 	if err != nil {
 		return err
-	}
-
-	positions, taskBuckets, err := setTasksInBucketInViews(s, views, tasks, a, setBucket, taskProvidedBucket)
-	if err != nil {
-		return err
-	}
-
-	if len(positions) > 0 {
-		positions, err = filterNewTaskPositions(s, positions)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(positions) > 0 {
-		err = bulkInsertTaskPositions(s, positions, false)
-		if err != nil {
-			return
-		}
-
-		err = resolvePositionConflictsAfterInsert(s, positions)
-		if err != nil {
-			return
-		}
-	}
-
-	// Keep statements well below the parameter limits of all supported databases.
-	const taskBucketBatchSize = 100
-	for chunk := range slices.Chunk(taskBuckets, taskBucketBatchSize) {
-		_, err = s.Insert(chunk)
-		if err != nil {
-			return
-		}
 	}
 
 	// Link shares can't have subscriptions
@@ -1182,6 +1153,48 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 
 	err = updateProjectLastUpdated(s, &Project{ID: projectID})
 	return
+}
+
+func placeTasksInViews(s *xorm.Session, a web.Auth, projectID int64, tasks []*Task, setBucket bool, providedBuckets map[int64]*Bucket) error {
+	views, err := lockProjectViewsForPositionUpdate(s, projectID)
+	if err != nil {
+		return err
+	}
+
+	positions, taskBuckets, err := setTasksInBucketInViews(s, views, tasks, a, setBucket, providedBuckets)
+	if err != nil {
+		return err
+	}
+
+	if len(positions) > 0 {
+		positions, err = filterNewTaskPositions(s, positions)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(positions) > 0 {
+		err = bulkInsertTaskPositions(s, positions, false)
+		if err != nil {
+			return err
+		}
+
+		err = resolvePositionConflictsAfterInsert(s, positions)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Keep statements well below the parameter limits of all supported databases.
+	const taskBucketBatchSize = 100
+	for chunk := range slices.Chunk(taskBuckets, taskBucketBatchSize) {
+		_, err = s.Insert(chunk)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func setTasksInBucketInViews(s *xorm.Session, views []*ProjectView, tasks []*Task, a web.Auth, setBucket bool, providedBuckets map[int64]*Bucket) ([]*TaskPosition, []*TaskBucket, error) {
@@ -2192,6 +2205,17 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	doer := doerFromAuth(s, a)
+
+	if err = stopRunningTimersOnTask(s, t.ID, doer); err != nil {
+		return err
+	}
+
+	_, err = s.ID(t.ID).Cols("deleted_by_id").NoAutoTime().Update(&Task{DeletedByID: doer.ID})
+	if err != nil {
+		return err
+	}
+
 	// The deleted tag on Task.DeletedAt turns this into an update setting
 	// deleted_at. Must be a pointer: xorm tracks the after-delete closure that
 	// stamps DeletedAt in a map keyed by the bean, and a Task value is unhashable.
@@ -2202,7 +2226,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
-		Doer: doerFromAuth(s, a),
+		Doer: doer,
 	})
 
 	// fullTask, not t: the receiver only has the id from the route param
@@ -2311,6 +2335,14 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 	}
 
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskIndexAlias{})
+	if err != nil {
+		return
+	}
+
+	// Tracked time outlives the task
+	_, err = s.Table("time_entries").
+		Where("task_id = ?", t.ID).
+		Update(map[string]any{"task_id": 0, "project_id": t.ProjectID})
 	if err != nil {
 		return
 	}
