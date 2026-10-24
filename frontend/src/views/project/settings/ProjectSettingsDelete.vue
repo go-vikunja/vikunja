@@ -71,8 +71,15 @@ const trashNotice = computed(() => {
 	const subProjects = count.value?.sub_projects ?? 0
 	const tasks = t('project.delete.tasks', count.value?.tasks ?? 0)
 	return subProjects > 0
-		? t('project.delete.toTrashWithSubProjects', {subProjects: t('project.delete.subProjects', subProjects), tasks, days: TRASH_RETENTION_DAYS})
-		: t('project.delete.toTrash', {tasks, days: TRASH_RETENTION_DAYS})
+		? t('project.delete.toTrashWithSubProjects', {
+			subProjects: t('project.delete.subProjects', subProjects),
+			tasks,
+			days: TRASH_RETENTION_DAYS,
+		})
+		: t('project.delete.toTrash', {
+			tasks,
+			days: TRASH_RETENTION_DAYS,
+		})
 })
 
 const timeEntriesNotice = computed(() => t('project.delete.timeEntries', {
