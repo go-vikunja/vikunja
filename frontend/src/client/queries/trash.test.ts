@@ -3,6 +3,8 @@ import {QueryClient} from '@tanstack/vue-query'
 import {
 	deleteProjectMutationOptions,
 	deleteTaskPermanentlyMutationOptions,
+	projectInTrashFromError,
+	restoreProjectMutationOptions,
 	restoreTaskMutationOptions,
 	taskInTrashFromError,
 	trashDaysLeft,
@@ -22,6 +24,7 @@ const sdk = vi.hoisted(() => ({
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
 	projectsDelete: vi.fn(),
+	projectsRestore: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({
@@ -74,6 +77,25 @@ it('drops a permanently deleted task from the trash', async () => {
 	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({items: [{id: 2}], total: 2})
 })
 
+it('drops a restored project from the trash and marks time entries stale', async () => {
+	const client = new QueryClient()
+	seedTrash(client)
+	client.setQueryData(trashKeys.projectList(1), {
+		items: [{id: 1, title: 'keep'}, {id: 2, title: 'restore'}],
+		page: 1,
+		per_page: 2,
+		total: 3,
+		total_pages: 2,
+	})
+	sdk.projectsRestore.mockResolvedValue({data: {id: 2, title: 'restore'}})
+
+	await client.getMutationCache().build(client, restoreProjectMutationOptions()).execute(2)
+
+	expect(sdk.projectsRestore).toHaveBeenCalledWith({path: {id: 2}})
+	expect(client.getQueryData(trashKeys.projectList(1))).toMatchObject({items: [{id: 1}], total: 2})
+	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+})
+
 describe('deleteProjectMutationOptions', () => {
 	const project = (id: number, parent_project_id = 0) => normalizeProject({id, title: 'Project', parent_project_id})
 
@@ -122,6 +144,19 @@ describe('taskInTrashFromError', () => {
 	})
 	it('ignores a plain not found', () => {
 		expect(taskInTrashFromError({status: 404, code: 4002})).toBeNull()
+	})
+})
+
+describe('projectInTrashFromError', () => {
+	it('reads the details of a trashed project', () => {
+		const details = {id: 1, deleted_at: '2026-01-01T00:00:00Z', can_restore: true}
+		expect(projectInTrashFromError({status: 404, code: 3018, details})).toEqual(details)
+	})
+	it('ignores a plain not found', () => {
+		expect(projectInTrashFromError({status: 404, code: 3001})).toBeNull()
+	})
+	it('ignores a trashed task', () => {
+		expect(projectInTrashFromError({status: 404, code: 4040, details: {project_id: 1}})).toBeNull()
 	})
 })
 
