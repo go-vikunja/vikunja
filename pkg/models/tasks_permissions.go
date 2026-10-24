@@ -44,7 +44,11 @@ func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission
 	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
 		return
 	}
-	*t, err = GetTaskByIDSimple(s, t.ID)
+	taskID := t.ID
+	*t, err = GetTaskByIDSimple(s, taskID)
+	if IsErrTaskDoesNotExist(err) {
+		return false, 0, trashedTaskReadError(s, a, taskID, err)
+	}
 	if err != nil {
 		return
 	}
@@ -59,6 +63,33 @@ func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission
 // CanWrite checks if a user has write access to a task
 func (t *Task) CanWrite(s *xorm.Session, a web.Auth) (canWrite bool, err error) {
 	return t.canDoTask(s, a)
+}
+
+func (t *Task) canDoTrashedTask(s *xorm.Session, a web.Auth) (bool, error) {
+	trashed, err := getReadableTrashedTask(s, a, t.ID)
+	if err != nil {
+		return false, err
+	}
+	// CanWrite lets instance admins past archived projects
+	if err := (&Project{ID: trashed.ProjectID}).CheckIsArchived(s); err != nil {
+		return false, err
+	}
+	*t = *trashed
+	return (&Project{ID: t.ProjectID}).CanWrite(s, a)
+}
+
+// CanRestore checks whether the auth may restore the trashed task.
+func (t *Task) CanRestore(s *xorm.Session, a web.Auth) (bool, error) {
+	return t.canDoTrashedTask(s, a)
+}
+
+// CanDeletePermanently checks whether the auth may purge the trashed task.
+// Link shares have no trash, so they can't.
+func (t *Task) CanDeletePermanently(s *xorm.Session, a web.Auth) (bool, error) {
+	if _, isShare := a.(*LinkSharing); isShare {
+		return false, nil
+	}
+	return t.canDoTrashedTask(s, a)
 }
 
 // Helper function to check if a user can do stuff on a project task

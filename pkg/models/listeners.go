@@ -58,12 +58,15 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TasksBatchCreatedEvent{}).Name(), &UpdateTasksBatchInSavedFilterViews{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
+	// Same payload shape as TaskUpdatedEvent
+	events.RegisterListener((&TaskRestoredEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &MarkTaskUnreadOnComment{})
 	events.RegisterListener((&user.AccountLockedEvent{}).Name(), &RevokeSessionsOnAccountLock{})
 	if config.WebhooksEnabled.GetBool() {
 		RegisterEventForWebhook(&TaskCreatedEvent{})
 		RegisterEventForWebhook(&TaskUpdatedEvent{})
 		RegisterEventForWebhook(&TaskDeletedEvent{})
+		RegisterEventForWebhook(&TaskRestoredEvent{})
 		RegisterEventForWebhook(&TaskAssigneeCreatedEvent{})
 		RegisterEventForWebhook(&TaskAssigneeDeletedEvent{})
 		RegisterEventForWebhook(&TaskCommentCreatedEvent{})
@@ -181,6 +184,13 @@ func registerEventsForAuditLogging() {
 	audit.RegisterEventForAudit(func(e *TaskDeletedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionTaskDeleted,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TaskTarget(e.Task.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskRestoredEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTaskRestored,
 			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.TaskTarget(e.Task.ID),
 		}
@@ -1400,7 +1410,7 @@ func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, creatorID 
 		},
 	}
 	canRead, _, err = fullTask.CanRead(s, creator)
-	if IsErrTaskDoesNotExist(err) {
+	if IsErrTaskDoesNotExist(err) || IsErrTaskIsInTrash(err) {
 		// Already gone (task.deleted), keep the event's copy.
 		return true, nil
 	}

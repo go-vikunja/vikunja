@@ -894,3 +894,38 @@ func TestWebhookListener_TaskPayloadUsesCreatorAccess(t *testing.T) {
 	assert.Contains(t, relatedIDs(delivered[1]), int64(19))
 	assert.NotContains(t, relatedIDs(delivered[readerHook.ID]), int64(19))
 }
+
+func TestWebhookListener_DeliversTaskDeletedForTrashedTask(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	hook := &Webhook{
+		TargetURL:   "https://example.com/deleted",
+		Events:      []string{"task.deleted"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	_, err := s.Insert(hook)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	doer := &user.User{ID: 1}
+	trashTaskForTest(t, 1, doer)
+
+	events.ClearDispatchedEvents()
+	events.TestListener(t, &TaskDeletedEvent{
+		Task: &Task{
+			ID:        1,
+			ProjectID: 1,
+			Title:     "task #1",
+		},
+		Doer: doer,
+	}, &WebhookListener{EventName: "task.deleted"})
+
+	delivered := webhookDeliveriesByID(t)
+	require.Contains(t, delivered, hook.ID)
+	task, ok := delivered[hook.ID].Payload.Data.(map[string]interface{})["task"].(map[string]interface{})
+	require.True(t, ok, "task should be the event's copy")
+	assert.Equal(t, "task #1", task["title"])
+}

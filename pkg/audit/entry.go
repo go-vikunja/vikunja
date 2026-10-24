@@ -113,6 +113,7 @@ const (
 	ActionTaskCreated           = "task.created"
 	ActionTaskUpdated           = "task.updated"
 	ActionTaskDeleted           = "task.deleted"
+	ActionTaskRestored          = "task.restored"
 	ActionTaskAssigneeAdded     = "task.assignee.added"
 	ActionTaskAssigneeRemoved   = "task.assignee.removed"
 	ActionTaskCommentCreated    = "task.comment.created"

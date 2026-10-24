@@ -54,19 +54,24 @@ func NewPaginated[T any](items []T, total int64, page, perPage int) Paginated[T]
 	}
 }
 
-// ListParams carries the standard (page, per_page, q) query shape for list operations.
+// PageParams carries the (page, per_page) query shape for list operations without search.
 // per_page has no schema default or maximum: both come from service.maxitemsperpage in Resolve.
+type PageParams struct {
+	Page    int `query:"page"     default:"1" minimum:"1" doc:"1-based page number."`
+	PerPage int `query:"per_page" minimum:"1" doc:"Items per page. Defaults to the instance's configured maximum (service.maxitemsperpage, reported as max_items_per_page by /info) and is silently capped at it; asking for more is not an error."`
+}
+
+// ListParams carries the standard (page, per_page, q) query shape for list operations.
 type ListParams struct {
-	Page    int    `query:"page"     default:"1" minimum:"1" doc:"1-based page number."`
-	PerPage int    `query:"per_page" minimum:"1" doc:"Items per page. Defaults to the instance's configured maximum (service.maxitemsperpage, reported as max_items_per_page by /info) and is silently capped at it; asking for more is not an error."`
-	Q       string `query:"q" doc:"Search query; filters the list to items matching this string."`
+	PageParams
+	Q string `query:"q" doc:"Search query; filters the list to items matching this string."`
 }
 
 // A signature drift would make Huma silently stop applying the cap.
-var _ huma.Resolver = (*ListParams)(nil)
+var _ huma.Resolver = (*PageParams)(nil)
 
 // Resolve defaults and caps per_page to service.maxitemsperpage, like /api/v1.
-func (l *ListParams) Resolve(huma.Context) []error {
+func (l *PageParams) Resolve(huma.Context) []error {
 	maxItems := config.ServiceMaxItemsPerPage.GetInt()
 	if l.PerPage <= 0 || l.PerPage > maxItems {
 		l.PerPage = maxItems
