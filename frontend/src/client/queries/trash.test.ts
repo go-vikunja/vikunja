@@ -1,5 +1,5 @@
 import {describe, it, expect, vi} from 'vitest'
-import {QueryClient} from '@tanstack/vue-query'
+import {QueryClient, QueryObserver} from '@tanstack/vue-query'
 import {
 	deleteTaskPermanentlyMutationOptions,
 	emptyTaskTrashMutationOptions,
@@ -11,10 +11,13 @@ import {
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
 import {error} from '@/message'
+import {kanbanKeys, normalizeBucket, type BoardData} from './kanban'
+import {projectKeys} from './projects'
 
 const sdk = vi.hoisted(() => ({
 	tasksTrashList: vi.fn(),
 	tasksRestore: vi.fn(),
+	tasksRead: vi.fn(),
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
 }))
@@ -82,6 +85,12 @@ it('drops a restored task from the trash and marks time entries stale', async ()
 			title: 'restore',
 		},
 	})
+	sdk.tasksRead.mockResolvedValue({
+		data: {
+			id: 2,
+			title: 'restore',
+		},
+	})
 
 	await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
 
@@ -92,6 +101,143 @@ it('drops a restored task from the trash and marks time entries stale', async ()
 		total_pages: 1,
 	})
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+})
+
+it('patches the restored card into scrolled boards and refetches only filter boards', async () => {
+	const client = new QueryClient()
+	seedTrash(client)
+	client.setQueryData(projectKeys.detail(5), {
+		id: 5,
+		views: [
+			{
+				id: 6,
+				bucket_configuration_mode: 'manual',
+				default_bucket_id: 3,
+			},
+			{
+				id: 9,
+				bucket_configuration_mode: 'filter',
+			},
+		],
+	})
+	const readBoard = vi.fn().mockResolvedValue({
+		buckets: [normalizeBucket({
+			id: 3,
+			count: 30,
+			tasks: [{id: 1}],
+		})],
+		pages: {3: 1},
+	})
+	const readFilterBoard = vi.fn().mockResolvedValue({
+		buckets: [],
+		pages: {},
+	})
+	const readOtherBoard = vi.fn().mockResolvedValue({
+		buckets: [],
+		pages: {},
+	})
+	const observers = [
+		new QueryObserver(client, {
+			queryKey: kanbanKeys.board(5, 6),
+			queryFn: readBoard,
+		}),
+		new QueryObserver(client, {
+			queryKey: kanbanKeys.board(5, 9),
+			queryFn: readFilterBoard,
+		}),
+		new QueryObserver(client, {
+			queryKey: kanbanKeys.board(7, 8),
+			queryFn: readOtherBoard,
+		}),
+	].map(observer => observer.subscribe(() => {}))
+	await vi.waitFor(() => {
+		expect(readBoard).toHaveBeenCalledTimes(1)
+		expect(readFilterBoard).toHaveBeenCalledTimes(1)
+		expect(readOtherBoard).toHaveBeenCalledTimes(1)
+		expect(client.getQueryData(kanbanKeys.board(5, 6))).toBeDefined()
+	})
+	client.setQueryData<BoardData>(kanbanKeys.board(5, 6), current => current && {
+		...current,
+		pages: {3: 2},
+	})
+	sdk.tasksRestore.mockResolvedValue({
+		data: {
+			id: 2,
+			title: 'restore',
+			project_id: 5,
+		},
+	})
+	sdk.tasksRead.mockResolvedValue({
+		data: {
+			id: 2,
+			title: 'restore',
+			project_id: 5,
+		},
+	})
+
+	await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
+	observers.forEach(stop => stop())
+
+	const board = client.getQueryData<BoardData>(kanbanKeys.board(5, 6))!
+	expect(board.buckets[0].tasks.map(task => task.id)).toEqual([
+		2,
+		1,
+	])
+	expect(board.buckets[0].count).toBe(31)
+	expect(board.pages).toEqual({3: 2})
+	expect(readBoard).toHaveBeenCalledTimes(1)
+	expect(readFilterBoard).toHaveBeenCalledTimes(2)
+	expect(readOtherBoard).toHaveBeenCalledTimes(1)
+})
+
+it('patches the restored card with the full task detail', async () => {
+	const client = new QueryClient()
+	client.setQueryData(projectKeys.detail(5), {
+		id: 5,
+		views: [{
+			id: 6,
+			bucket_configuration_mode: 'manual',
+			default_bucket_id: 3,
+		}],
+	})
+	client.setQueryData(kanbanKeys.board(5, 6), {
+		buckets: [normalizeBucket({
+			id: 3,
+			count: 1,
+			tasks: [{
+				id: 1,
+				position: 400,
+			}],
+		})],
+		pages: {3: 1},
+	})
+	sdk.tasksRestore.mockResolvedValue({
+		data: {
+			id: 2,
+			project_id: 5,
+		},
+	})
+	sdk.tasksRead.mockResolvedValue({
+		data: {
+			id: 2,
+			project_id: 5,
+			identifier: 'P-2',
+			labels: [{
+				id: 7,
+				title: 'urgent',
+			}],
+		},
+	})
+
+	await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
+
+	expect(sdk.tasksRead).toHaveBeenCalledWith(expect.objectContaining({path: {task: 2}}))
+	expect(client.getQueryData<BoardData>(kanbanKeys.board(5, 6))?.buckets[0].tasks[0]).toMatchObject({
+		id: 2,
+		identifier: 'P-2',
+		labels: [{id: 7}],
+		position: 200,
+	})
 })
 
 it('falls back to the restore response when the task detail fails', async () => {

@@ -13,8 +13,8 @@ import {
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {removeFromPages, toPaginated, type Paginated} from './pagination'
-import {normalizeTask, type TaskResponse} from './tasks'
-import {invalidateTaskMembership} from './taskCache'
+import {normalizeTask, taskQuery, type TaskResponse} from './tasks'
+import {insertTaskIntoBoards, invalidateTaskMembership} from './taskCache'
 import {timeEntryKeys} from './timeEntries'
 import {i18n} from '@/i18n'
 
@@ -95,7 +95,10 @@ export function restoreTaskMutationOptions() {
 				return normalizeTask(data)
 			}
 		},
-		onSuccess: (_task, id, client) => removeTrashedTask(client, id),
+		onSuccess: (restored, id, client) => {
+			removeTrashedTask(client, id)
+			insertTaskIntoBoards(client, restored)
+		},
 		onSettled: (id, client) => invalidateAfterTrashChange(client, id),
 		successMessage: () => i18n.global.t('trash.restoreSuccess'),
 	})
