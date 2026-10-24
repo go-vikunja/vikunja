@@ -150,23 +150,11 @@ func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (tasks []*T
 	}
 
 	taskMap := make(map[int64]*Task, len(tasks))
-	deleterIDs := []int64{}
 	for _, task := range tasks {
 		taskMap[task.ID] = task
-		if task.DeletedByID != 0 {
-			deleterIDs = append(deleterIDs, task.DeletedByID)
-		}
 	}
 	if err = addMoreInfoToTasks(s, taskMap, a, nil, nil); err != nil {
 		return nil, 0, err
-	}
-
-	deleters, err := getUsersOrLinkSharesFromIDs(s, deleterIDs)
-	if err != nil {
-		return nil, 0, err
-	}
-	for _, task := range tasks {
-		task.DeletedBy = deleters[task.DeletedByID]
 	}
 
 	return tasks, total, nil

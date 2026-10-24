@@ -736,6 +736,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		if i.CreatedByID != 0 {
 			userIDs = append(userIDs, i.CreatedByID)
 		}
+		if i.DeletedByID != 0 {
+			userIDs = append(userIDs, i.DeletedByID)
+		}
 		projectIDs = append(projectIDs, i.ProjectID)
 	}
 
@@ -838,6 +841,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		// Make created by user objects
 		if createdBy, has := users[task.CreatedByID]; has {
 			task.CreatedBy = createdBy
+		}
+		if deletedBy, has := users[task.DeletedByID]; has {
+			task.DeletedBy = deletedBy
 		}
 
 		// Add the reminders
