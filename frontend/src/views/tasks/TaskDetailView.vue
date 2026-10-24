@@ -1173,7 +1173,11 @@ useTaskDetailShortcuts({
 async function deleteTask() {
 	const id = task.value.id!
 	const projectId = task.value.project_id
-	await deleteTaskMutation.mutateAsync(id)
+	try {
+		await deleteTaskMutation.mutateAsync(id)
+	} catch {
+		return
+	}
 	// Works after unmount: the view navigates away before anyone clicks undo
 	success({message: t('task.detail.deleteSuccess')}, [{
 		title: t('task.undo'),
