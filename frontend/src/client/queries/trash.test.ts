@@ -2,6 +2,7 @@ import {describe, it, expect, vi} from 'vitest'
 import {QueryClient, QueryObserver} from '@tanstack/vue-query'
 import {
 	deleteTaskPermanentlyMutationOptions,
+	emptyTaskTrashMutationOptions,
 	restoreTaskMutationOptions,
 	taskInTrashFromError,
 	trashDaysLeft,
@@ -10,6 +11,7 @@ import {
 } from './trash'
 import {timeEntryKeys} from './timeEntries'
 import {kanbanKeys} from './kanban'
+import {deleteTaskMutationOptions} from './taskMutations'
 import {ApiError} from '@/client/problem'
 
 const sdk = vi.hoisted(() => ({
@@ -17,6 +19,7 @@ const sdk = vi.hoisted(() => ({
 	tasksRestore: vi.fn(),
 	tasksDeletePermanently: vi.fn(),
 	tasksTrashEmpty: vi.fn(),
+	tasksDelete: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({
@@ -26,35 +29,71 @@ vi.mock('@/message', () => ({
 
 function seedTrash(client: QueryClient) {
 	client.setQueryData(trashKeys.taskList(1), {
-		items: [{id: 1, title: 'keep'}, {id: 2, title: 'restore'}],
+		items: [
+			{
+				id: 1,
+				title: 'keep',
+			},
+			{
+				id: 2,
+				title: 'restore',
+			},
+		],
 		page: 1,
 		per_page: 2,
 		total: 3,
 		total_pages: 2,
 	})
-	client.setQueryData(timeEntryKeys.list('', 'UTC', 1), {items: [], page: 1, per_page: 50, total: 0, total_pages: 0})
+	client.setQueryData(timeEntryKeys.list('', 'UTC', 1), {
+		items: [],
+		page: 1,
+		per_page: 50,
+		total: 0,
+		total_pages: 0,
+	})
 }
 
 it('normalizes the trashed tasks of a page', async () => {
 	const client = new QueryClient()
-	sdk.tasksTrashList.mockResolvedValue({data: {items: [{id: 3}], page: 2, per_page: 50, total: 51, total_pages: 2}})
+	sdk.tasksTrashList.mockResolvedValue({
+		data: {
+			items: [{id: 3}],
+			page: 2,
+			per_page: 50,
+			total: 51,
+			total_pages: 2,
+		},
+	})
 
 	const page = await client.fetchQuery(trashedTasksQuery(2))
 
 	expect(sdk.tasksTrashList).toHaveBeenCalledWith(expect.objectContaining({query: {page: 2}}))
 	expect(page.total).toBe(51)
-	expect(page.items[0]).toMatchObject({id: 3, title: '', labels: []})
+	expect(page.items[0]).toMatchObject({
+		id: 3,
+		title: '',
+		labels: [],
+	})
 })
 
 it('drops a restored task from the trash and marks time entries stale', async () => {
 	const client = new QueryClient()
 	seedTrash(client)
-	sdk.tasksRestore.mockResolvedValue({data: {id: 2, title: 'restore'}})
+	sdk.tasksRestore.mockResolvedValue({
+		data: {
+			id: 2,
+			title: 'restore',
+		},
+	})
 
 	await client.getMutationCache().build(client, restoreTaskMutationOptions()).execute(2)
 
 	expect(sdk.tasksRestore).toHaveBeenCalledWith({path: {task: 2}})
-	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({items: [{id: 1}], total: 2})
+	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({
+		items: [{id: 1}],
+		total: 2,
+		total_pages: 1,
+	})
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
 })
 
@@ -106,7 +145,35 @@ it('drops a permanently deleted task from the trash', async () => {
 	await client.getMutationCache().build(client, deleteTaskPermanentlyMutationOptions()).execute(1)
 
 	expect(sdk.tasksDeletePermanently).toHaveBeenCalledWith({path: {task: 1}})
-	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({items: [{id: 2}], total: 2})
+	expect(client.getQueryData(trashKeys.taskList(1))).toMatchObject({
+		items: [{id: 2}],
+		total: 2,
+		total_pages: 1,
+	})
+})
+
+it('marks the trash and time entries stale after emptying the trash', async () => {
+	const client = new QueryClient()
+	seedTrash(client)
+	sdk.tasksTrashEmpty.mockResolvedValue({})
+
+	await client.getMutationCache().build(client, emptyTaskTrashMutationOptions()).execute(undefined)
+
+	expect(sdk.tasksTrashEmpty).toHaveBeenCalled()
+	expect(client.getQueryState(trashKeys.taskList(1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+})
+
+it('marks the trash and time entries stale after deleting a task', async () => {
+	const client = new QueryClient()
+	seedTrash(client)
+	sdk.tasksDelete.mockResolvedValue({})
+
+	await client.getMutationCache().build(client, deleteTaskMutationOptions()).execute(5)
+
+	expect(sdk.tasksDelete).toHaveBeenCalledWith({path: {task: 5}})
+	expect(client.getQueryState(trashKeys.taskList(1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
 })
 
 describe('taskInTrashFromError', () => {
