@@ -276,7 +276,7 @@ function mergeProjectMetadata(previous: ProjectResponse, updated: ProjectRespons
 }
 
 // Project callers let failures reach the global Vue error handler, which toasts them.
-const toastError = () => false
+export const toastError = () => false
 
 export function createProjectMutationOptions() {
 	return contextMutationOptions({
