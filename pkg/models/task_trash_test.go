@@ -65,6 +65,21 @@ func restoreTaskForTest(t *testing.T, taskID int64, a web.Auth) (*Task, error) {
 	return task, nil
 }
 
+func deletePermanentlyForTest(t *testing.T, taskID int64, a web.Auth) error {
+	s := db.NewSession()
+	defer s.Close()
+	task := &Task{ID: taskID}
+	can, err := task.CanDeletePermanently(s, a)
+	if err != nil {
+		return err
+	}
+	if !can {
+		return ErrGenericForbidden{}
+	}
+	require.NoError(t, task.DeletePermanently(s))
+	return s.Commit()
+}
+
 func TestTask_Restore(t *testing.T) {
 	u1 := &user.User{ID: 1}
 
@@ -214,10 +229,8 @@ func TestTaskTrash_InstanceAdminInArchivedProject(t *testing.T) {
 	})
 	t.Run("permanent delete is refused", func(t *testing.T) {
 		admin := setup(t)
-		s := db.NewSession()
-		defer s.Close()
 
-		_, err := (&Task{ID: 36}).CanDeletePermanently(s, admin)
+		err := deletePermanentlyForTest(t, 36, admin)
 		assert.True(t, IsErrProjectIsArchived(err), "got %v", err)
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 36}, false)
 	})
@@ -290,52 +303,37 @@ func TestGetTrashedTasks(t *testing.T) {
 }
 
 func TestTask_DeletePermanently(t *testing.T) {
-	deletePermanently := func(t *testing.T, taskID int64, a web.Auth) error {
-		s := db.NewSession()
-		defer s.Close()
-		task := &Task{ID: taskID}
-		can, err := task.CanDeletePermanently(s, a)
-		if err != nil {
-			return err
-		}
-		if !can {
-			return ErrGenericForbidden{}
-		}
-		require.NoError(t, task.DeletePermanently(s))
-		return s.Commit()
-	}
-
 	t.Run("writer purges a trashed task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		require.NoError(t, deletePermanently(t, 51, &user.User{ID: 1}))
+		require.NoError(t, deletePermanentlyForTest(t, 51, &user.User{ID: 1}))
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
 	})
 	t.Run("unrelated user cannot tell the task is trashed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		assert.True(t, IsErrTaskDoesNotExist(deletePermanently(t, 51, &user.User{ID: 2})))
+		assert.True(t, IsErrTaskDoesNotExist(deletePermanentlyForTest(t, 51, &user.User{ID: 2})))
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51}, false)
 	})
 	t.Run("reader is denied", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		setTaskColumnsForTest(t, 32, map[string]any{"deleted_at": time.Now()})
-		require.ErrorIs(t, deletePermanently(t, 32, &user.User{ID: 1}), ErrGenericForbidden{})
+		require.ErrorIs(t, deletePermanentlyForTest(t, 32, &user.User{ID: 1}), ErrGenericForbidden{})
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 32}, false)
 	})
 	t.Run("refused in an archived project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		setTaskColumnsForTest(t, 36, map[string]any{"deleted_at": time.Now()})
-		assert.True(t, IsErrProjectIsArchived(deletePermanently(t, 36, &user.User{ID: 1})))
+		assert.True(t, IsErrProjectIsArchived(deletePermanentlyForTest(t, 36, &user.User{ID: 1})))
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 36}, false)
 	})
 	t.Run("write link share is denied", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
 		trashTaskForTest(t, 13, share)
-		require.ErrorIs(t, deletePermanently(t, 13, share), ErrGenericForbidden{})
+		require.ErrorIs(t, deletePermanentlyForTest(t, 13, share), ErrGenericForbidden{})
 	})
 	t.Run("live task is not in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		err := deletePermanently(t, 1, &user.User{ID: 1})
+		err := deletePermanentlyForTest(t, 1, &user.User{ID: 1})
 		assert.True(t, IsErrTaskDoesNotExist(err))
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "deleted_at": nil}, false)
 	})
