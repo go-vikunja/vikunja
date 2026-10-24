@@ -280,7 +280,6 @@ func TestHumaTask_ReadByIndex(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
 	t.Run("Trashed task returns ErrTaskIsInTrash", func(t *testing.T) {
-		// Task 51 is project 1's soft-deleted index 34.
 		rec := get("1", "34")
 		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeTaskIsInTrash))
