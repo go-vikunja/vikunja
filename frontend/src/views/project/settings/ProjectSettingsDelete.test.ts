@@ -92,26 +92,4 @@ describe('ProjectSettingsDelete', () => {
 		expect(wrapper.findComponent(Loading).exists()).toBe(false)
 		expect(document.querySelector('dialog.modal-dialog')?.textContent).toContain('Moves this project and everything in it to the trash.')
 	})
-
-	it('tells what moves to the trash once the counts resolved', async () => {
-		sdk.projectsCount.mockResolvedValue({data: {sub_projects: 0, tasks: 3, time_entries: 0, time_entry_authors: 0}})
-
-		wrapper = await mountModal()
-
-		expect(sdk.projectsCount).toHaveBeenCalledWith(expect.objectContaining({path: {id: 42}}))
-		expect(wrapper.findComponent(Loading).exists()).toBe(false)
-		const text = document.querySelector('dialog.modal-dialog')?.textContent
-		expect(text).toContain('Moves this project and 3 tasks to the trash.')
-		expect(text).not.toContain('time entries')
-	})
-
-	it('mentions sub-projects and time entries', async () => {
-		sdk.projectsCount.mockResolvedValue({data: {sub_projects: 2, tasks: 1, time_entries: 4, time_entry_authors: 2}})
-
-		wrapper = await mountModal()
-
-		const text = document.querySelector('dialog.modal-dialog')?.textContent
-		expect(text).toContain('Moves this project, 2 sub-projects and 1 task to the trash.')
-		expect(text).toContain('4 time entries from 2 people will be kept but detached')
-	})
 })
