@@ -585,7 +585,7 @@ describe('task mutations', () => {
 		const readFilterView = vi.fn(emptyBoard)
 		const readSearched = vi.fn(emptyBoard)
 		const readPlain = vi.fn(emptyBoard)
-		const searched = kanbanKeys.board(1, 5, {s: 'milk'})
+		const searched = kanbanKeys.board(1, 5, {q: 'milk'})
 		const plain = kanbanKeys.board(1, 5)
 		const observers = [
 			new QueryObserver(client, {
