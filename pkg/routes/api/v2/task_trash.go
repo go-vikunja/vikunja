@@ -119,12 +119,18 @@ func tasksRestore(ctx context.Context, in *struct {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
+	// A fresh struct so the queued event keeps its own task
+	restored := &models.Task{ID: task.ID}
+	if err := restored.ReadOne(s, a); err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
 	events.DispatchPending(ctx, s)
-	convertTasksToMarkdown(ctx, task)
-	return &singleBody[models.Task]{Body: task}, nil
+	convertTasksToMarkdown(ctx, restored)
+	return &singleBody[models.Task]{Body: restored}, nil
 }
 
 func tasksDeletePermanently(ctx context.Context, in *struct {

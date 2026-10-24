@@ -115,7 +115,14 @@ func TestHumaTaskTrash(t *testing.T) {
 
 		rec = humaRequest(t, e, http.MethodPost, "/api/v2/tasks/51/restore", "", user1(t), "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"id":51`)
+		var restored map[string]any
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &restored))
+		assert.InDelta(t, 51, restored["id"], 0)
+		assert.NotEmpty(t, restored["identifier"], rec.Body.String())
+		createdBy, ok := restored["created_by"].(map[string]any)
+		require.True(t, ok, rec.Body.String())
+		assert.NotZero(t, createdBy["id"])
+		assert.Nil(t, restored["deleted_at"], rec.Body.String())
 
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/tasks/51", "", user1(t), "")
 		assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
