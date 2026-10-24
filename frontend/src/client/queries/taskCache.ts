@@ -158,11 +158,13 @@ export function insertTaskIntoBoards(client: QueryClient, created: Task) {
 					: getDefaultBucketId(view, board.buckets)
 				: undefined
 		if (target === undefined) continue
+		// A card left over from another tab would otherwise show twice.
+		const deduped = removeFromBoard(board, task.id, dropMembership) ?? board
 		const position = task.positions?.find(item => item.project_view_id === viewId)?.position
-			?? (task.position || positionAboveBoard(board, task))
+			?? (task.position || positionAboveBoard(deduped, task))
 		client.setQueryData(key, {
-			...board,
-			buckets: board.buckets.map(bucket => bucket.id === target
+			...deduped,
+			buckets: deduped.buckets.map(bucket => bucket.id === target
 				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target, position}, ...bucket.tasks]}
 				: bucket),
 		})
