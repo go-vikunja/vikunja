@@ -39,6 +39,7 @@ styles/
     ├── task.scss           Styles for .task-view on the public share page
     ├── tasks.scss          Legacy .tasks tree — flagged for untangling
     ├── labels.scss         .labels-list styles
+    ├── switch-view.scss    .switch-view tab bar (project views, trash)
     └── tooltip.scss        v-popper tooltip theme
 ```
 
