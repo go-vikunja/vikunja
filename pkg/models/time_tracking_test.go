@@ -700,6 +700,26 @@ func TestTimeEntry_Events(t *testing.T) {
 		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TimeEntryUpdatedEvent{})
 	})
+
+	t.Run("trashing a task dispatches updated with the owner and in_trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		// entry 4 is user1's running timer on task 1
+		require.NoError(t, (&Task{ID: 1}).Delete(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TimeEntryUpdatedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		entry := dispatched[0].(*TimeEntryUpdatedEvent).TimeEntry
+		assert.Equal(t, int64(4), entry.ID)
+		require.NotNil(t, entry.User, "the websocket listener routes by entry.User")
+		assert.Equal(t, int64(1), entry.User.ID)
+		assert.True(t, entry.InTrash)
+	})
 }
 
 func TestTimeEntry_Delete(t *testing.T) {
