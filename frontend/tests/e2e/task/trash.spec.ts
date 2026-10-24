@@ -110,7 +110,7 @@ test.describe('Trash', () => {
 		await expect(notice).toContainText('This task is in the trash.')
 		await expect(page).toHaveURL(/\/tasks\/1/)
 
-		await notice.locator('[data-cy="restoreTrashedTask"]').click()
+		await notice.locator('[data-cy="restoreTrashed"]').click()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
 		await page.reload()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')

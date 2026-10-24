@@ -13,7 +13,7 @@
 			class="in-trash__actions"
 		>
 			<XButton
-				v-cy="restoreCy"
+				v-cy="'restoreTrashed'"
 				icon="undo"
 				:loading="restoring"
 				@click="emit('restore')"
@@ -42,7 +42,6 @@ defineProps<{
 	canRestore: boolean,
 	restoring: boolean,
 	trashRoute: RouteLocationRaw,
-	restoreCy: string,
 }>()
 
 const emit = defineEmits<{

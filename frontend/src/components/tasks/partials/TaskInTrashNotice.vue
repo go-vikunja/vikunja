@@ -6,7 +6,6 @@
 		:can-restore="canRestore"
 		:restoring="restoreTask.isPending.value"
 		:trash-route="{name: 'trash.tasks'}"
-		restore-cy="restoreTrashedTask"
 		@restore="restore()"
 	/>
 </template>
