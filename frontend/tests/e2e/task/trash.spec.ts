@@ -149,15 +149,21 @@ test.describe('Trash', () => {
 			await LicenseFactory.disable()
 		})
 
-		test('time entries of a trashed task are read-only', async ({authenticatedPage: page}) => {
+		test('time entries of a trashed task are read-only', async ({authenticatedPage: page, apiContext, userToken}) => {
 			await trashedTask(1, 'Tracked then trashed')
-			await TimeEntryFactory.create(1, {task_id: 1, comment: 'tracked before trash'})
+			const [entry] = await TimeEntryFactory.create(1, {task_id: 1, comment: 'tracked before trash'})
 			await page.goto('/time-tracking')
 
 			const row = page.locator('[data-cy="timeEntry"]').filter({hasText: 'tracked before trash'})
 			await expect(row.locator('[data-cy="timeEntryInTrash"]')).toBeVisible()
 			await expect(row.locator('[data-cy="editTimeEntry"]')).toHaveCount(0)
 			await expect(row.locator('[data-cy="deleteTimeEntry"]')).toHaveCount(0)
+
+			const stored = await apiContext.get(`/api/v2/time-entries/${entry.id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(stored.ok()).toBe(true)
+			expect((await stored.json()).in_trash).toBe(true)
 		})
 	})
 })
