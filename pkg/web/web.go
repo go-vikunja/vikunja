@@ -53,11 +53,6 @@ type HTTPError struct {
 	Details    any               `json:"details,omitempty"`
 }
 
-type HTTPErrorWithDetails struct {
-	HTTPError
-	Details interface{} `json:"details"`
-}
-
 // Auth defines the interface used to retrieve authentication information
 type Auth interface {
 	// Most of the time, we need an ID from the auth object only. Having this method saves the need to cast it.
