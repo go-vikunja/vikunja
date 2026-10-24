@@ -135,7 +135,11 @@ import {useDeletedLabel} from '@/composables/useDeletedLabel'
 import {usePendingRows} from '@/composables/usePendingRows'
 import {formatDateLong} from '@/helpers/time/formatDate'
 
-const deletedLabel = useDeletedLabel('trash.deleted')
+const deletedLabel = useDeletedLabel({
+	unknown: 'trash.deleted',
+	by: 'trash.deletedBy',
+	byYou: 'trash.deletedByYou',
+})
 
 const currentPage = ref(1)
 const query = useQuery(computed(() => trashedTasksQuery(currentPage.value)))
