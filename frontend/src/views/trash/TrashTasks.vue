@@ -198,6 +198,8 @@ async function deleteForever() {
 	pendingIds.add(task.id)
 	try {
 		await deleteTaskPermanently.mutateAsync(task.id)
+	} catch {
+		return
 	} finally {
 		pendingIds.delete(task.id)
 	}
@@ -205,7 +207,11 @@ async function deleteForever() {
 
 async function emptyTrash() {
 	showEmptyModal.value = false
-	await emptyTaskTrash.mutateAsync()
+	try {
+		await emptyTaskTrash.mutateAsync()
+	} catch {
+		return
+	}
 	currentPage.value = 1
 }
 </script>
