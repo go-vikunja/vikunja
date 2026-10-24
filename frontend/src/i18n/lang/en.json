@@ -457,7 +457,9 @@
       "toTrashWithSubProjects": "Moves this project, {subProjects} and {tasks} to the trash. They are deleted permanently after 30 days.",
       "subProjects": "{count} sub-project | {count} sub-projects",
       "tasks": "no tasks | {count} task | {count} tasks",
-      "timeEntries": "{entries} time entries from {people} people will be kept but detached from the project after 30 days."
+      "timeEntries": "{entries} from {people} will be kept but detached from the project after 30 days.",
+      "timeEntryCount": "{count} time entry | {count} time entries",
+      "people": "{count} person | {count} people"
     },
     "duplicate": {
       "title": "Duplicate this project",

@@ -20,7 +20,7 @@
 					v-cy="'projectDeleteTimeEntries'"
 					class="tw:text-balance has-text-weight-bold"
 				>
-					{{ $t('project.delete.timeEntries', {entries: count.time_entries, people: count.time_entry_authors}) }}
+					{{ timeEntriesNotice }}
 				</p>
 			</template>
 			<Loading
@@ -67,6 +67,11 @@ const trashNotice = computed(() => {
 		? t('project.delete.toTrashWithSubProjects', {subProjects: t('project.delete.subProjects', subProjects), tasks})
 		: t('project.delete.toTrash', {tasks})
 })
+
+const timeEntriesNotice = computed(() => t('project.delete.timeEntries', {
+	entries: t('project.delete.timeEntryCount', count.value?.time_entries ?? 0),
+	people: t('project.delete.people', count.value?.time_entry_authors ?? 0),
+}))
 
 async function deleteProject() {
 	if (!project.value) {
