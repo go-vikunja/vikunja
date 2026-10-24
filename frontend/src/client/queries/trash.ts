@@ -121,7 +121,7 @@ export function useEmptyTaskTrashMutation() {
 }
 
 // The API lists them shallowest first; show each below its parent instead.
-export function orderTrashedSubProjects(projectId: number, subProjects: TrashedSubProject[]): TrashedSubProject[] {
+function orderTrashedSubProjects(projectId: number, subProjects: TrashedSubProject[]): TrashedSubProject[] {
 	const children = new Map<number, TrashedSubProject[]>()
 	for (const sub of subProjects) {
 		const siblings = children.get(sub.parent_project_id ?? 0) ?? []
