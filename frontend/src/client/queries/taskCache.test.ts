@@ -9,7 +9,9 @@ import {
 	type TaskResponse,
 } from './tasks'
 import {kanbanKeys, kanbanQuery, normalizeBucket, type BoardData} from './kanban'
+import {projectKeys} from './projects'
 import {
+	insertTaskIntoBoards,
 	invalidateTaskMembership,
 	mapTaskEverywhere,
 	replaceTaskEverywhere,
@@ -183,5 +185,61 @@ describe('task cache reconciliation', () => {
 		replaceTaskEverywhere(client, {id: 3, project_id: 2, title: 'new'})
 		expect(client.getQueryData<PaginatedTaskResponse>(list)).toEqual({items: [], total: 0})
 		expect(client.getQueryCache().getAll().map(query => query.queryKey)).toEqual([list])
+	})
+	it('replaces a stale copy of an inserted card instead of showing it twice', () => {
+		const client = new QueryClient()
+		const board = kanbanKeys.board(1, 2)
+		client.setQueryData(projectKeys.detail(1), {
+			id: 1,
+			views: [{
+				id: 2,
+				bucket_configuration_mode: 'manual',
+				default_bucket_id: 4,
+			}],
+		})
+		client.setQueryData(board, {
+			buckets: [
+				normalizeBucket({
+					id: 3,
+					count: 2,
+					tasks: [
+						{
+							id: 9,
+							project_id: 1,
+						},
+						{
+							id: 1,
+							project_id: 1,
+						},
+					],
+				}),
+				normalizeBucket({
+					id: 4,
+					count: 0,
+					tasks: [],
+				}),
+			],
+			pages: {
+				3: 1,
+				4: 1,
+			},
+		})
+		insertTaskIntoBoards(client, {
+			id: 9,
+			project_id: 1,
+		})
+		expect(client.getQueryData<BoardData>(board)?.buckets.map(bucket => ({
+			count: bucket.count,
+			ids: bucket.tasks.map(task => task.id),
+		}))).toEqual([
+			{
+				count: 1,
+				ids: [1],
+			},
+			{
+				count: 1,
+				ids: [9],
+			},
+		])
 	})
 })
