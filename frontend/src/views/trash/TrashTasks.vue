@@ -134,7 +134,11 @@ import type {TaskResponse} from '@/client/queries/tasks'
 import {useDeletedLabel} from '@/composables/useDeletedLabel'
 import {formatDateLong} from '@/helpers/time/formatDate'
 
-const deletedLabel = useDeletedLabel('trash.deleted')
+const deletedLabel = useDeletedLabel({
+	unknown: 'trash.deleted',
+	by: 'trash.deletedBy',
+	byYou: 'trash.deletedByYou',
+})
 
 const currentPage = ref(1)
 const query = useQuery(computed(() => trashedTasksQuery(currentPage.value)))
