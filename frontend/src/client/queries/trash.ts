@@ -43,10 +43,7 @@ export type TaskInTrash = {
 
 export function taskInTrashFromError(cause: unknown): TaskInTrash | null {
 	if (!(cause instanceof ApiError) || cause.code !== ERROR_CODE_TASK_IS_IN_TRASH) return null
-	const {details} = cause
-	if (typeof details !== 'object' || details === null) return null
-	if (!('project_id' in details) || !('deleted_at' in details)) return null
-	return details as TaskInTrash
+	return (cause.details as TaskInTrash | undefined) ?? null
 }
 
 export function trashDaysLeft(deletedAt: string | Date, now = new Date()): number {
