@@ -412,9 +412,18 @@ export function setProjectSubscriptionMutationOptions() {
 	})
 }
 
-export function descendantIds(projects: readonly ProjectResponse[], projectId: number): number[] {
+function descendantIds(projects: readonly ProjectResponse[], projectId: number): number[] {
 	const children = projects.filter(project => project.parent_project_id === projectId)
 	return [projectId, ...children.flatMap(project => descendantIds(projects, project.id))]
+}
+
+export function removeProjectSubtree(client: QueryClient, id: number): Set<number> {
+	const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+	const ids = new Set(list ? descendantIds(list.projects, id) : [id])
+	client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+		current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
+	)
+	return ids
 }
 
 export function projectCountQuery(id: number) {
