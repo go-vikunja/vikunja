@@ -11,8 +11,13 @@ type Trashed = {
 	deleted_by?: User
 }
 
-// keyPrefix names three strings: keyPrefix (deleter unknown), keyPrefix + 'By' and keyPrefix + 'ByYou'.
-export function useDeletedLabel(keyPrefix: string) {
+type DeletedLabelKeys = {
+	unknown: string
+	by: string
+	byYou: string
+}
+
+export function useDeletedLabel(keys: DeletedLabelKeys) {
 	const {t} = useI18n({useScope: 'global'})
 	const authStore = useAuthStore()
 	// formatDateSince would otherwise start the shared clock during render, outside setup
@@ -21,11 +26,11 @@ export function useDeletedLabel(keyPrefix: string) {
 	return (item: Trashed) => {
 		const since = formatDateSince(item.deleted_at)
 		if (!item.deleted_by) {
-			return t(keyPrefix, {since})
+			return t(keys.unknown, {since})
 		}
 		if (item.deleted_by.id === authStore.info?.id) {
-			return t(`${keyPrefix}ByYou`, {since})
+			return t(keys.byYou, {since})
 		}
-		return t(`${keyPrefix}By`, {user: getDisplayName(item.deleted_by), since})
+		return t(keys.by, {user: getDisplayName(item.deleted_by), since})
 	}
 }
