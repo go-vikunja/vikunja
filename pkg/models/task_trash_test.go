@@ -121,12 +121,20 @@ func TestTask_Restore(t *testing.T) {
 		_, err := restoreTaskForTest(t, 51, &LinkSharing{ID: 1, ProjectID: 1, Permission: PermissionRead})
 		require.ErrorIs(t, err, ErrGenericForbidden{})
 	})
-	t.Run("unrelated user cannot restore", func(t *testing.T) {
+	t.Run("unrelated user cannot tell the task is trashed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		_, err := restoreTaskForTest(t, 51, &user.User{ID: 2})
-		require.ErrorIs(t, err, ErrGenericForbidden{})
+		assert.True(t, IsErrTaskDoesNotExist(err))
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51, "deleted_by_id": nil}, false)
+	})
+	t.Run("reader cannot restore", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// User 1 only reads project 3
+		setTaskColumnsForTest(t, 32, map[string]any{"deleted_at": time.Now()})
+
+		_, err := restoreTaskForTest(t, 32, u1)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
 	})
 	t.Run("refused in an archived project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -233,10 +241,22 @@ func TestTask_DeletePermanently(t *testing.T) {
 		require.NoError(t, deletePermanently(t, 51, &user.User{ID: 1}))
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
 	})
-	t.Run("unrelated user is denied", func(t *testing.T) {
+	t.Run("unrelated user cannot tell the task is trashed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		require.ErrorIs(t, deletePermanently(t, 51, &user.User{ID: 2}), ErrGenericForbidden{})
+		assert.True(t, IsErrTaskDoesNotExist(deletePermanently(t, 51, &user.User{ID: 2})))
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51}, false)
+	})
+	t.Run("reader is denied", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		setTaskColumnsForTest(t, 32, map[string]any{"deleted_at": time.Now()})
+		require.ErrorIs(t, deletePermanently(t, 32, &user.User{ID: 1}), ErrGenericForbidden{})
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 32}, false)
+	})
+	t.Run("refused in an archived project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		setTaskColumnsForTest(t, 36, map[string]any{"deleted_at": time.Now()})
+		assert.True(t, IsErrProjectIsArchived(deletePermanently(t, 36, &user.User{ID: 1})))
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 36}, false)
 	})
 	t.Run("write link share is denied", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

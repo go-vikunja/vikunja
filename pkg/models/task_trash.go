@@ -73,11 +73,6 @@ func trashedTaskReadError(s *xorm.Session, a web.Auth, taskID int64, notFound er
 // Restore brings a trashed task back. The task lands in the default (or done)
 // bucket at the end of every view; its old position is gone.
 func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
-	// CanWrite skips this for instance admins
-	if err := (&Project{ID: t.ProjectID}).CheckIsArchived(s); err != nil {
-		return err
-	}
-
 	_, err := s.Table("tasks").
 		Where("id = ?", t.ID).
 		Update(map[string]any{"deleted_at": nil, "deleted_by_id": nil})
