@@ -19,7 +19,6 @@ import {
 	updateTaskMutationOptions,
 	updateTaskPositionMutationOptions,
 } from './taskMutations'
-import {insertTaskIntoBoards} from './taskCache'
 import {trashKeys} from './trash'
 import {timeEntryKeys} from './timeEntries'
 import type {Task, PaginatedTask} from '@/client/generated'
@@ -460,7 +459,7 @@ describe('task mutations', () => {
 			.map(task => task.id)).toEqual([9])
 	})
 
-	it('inserts a done card into the done bucket', async () => {
+	it('inserts a done card into the done bucket even when another bucket was requested', async () => {
 		const {projectKeys} = await import('./projects')
 		const client = await seedDefaultBucketBoards()
 		client.setQueryData(projectKeys.detail(1), {
@@ -472,11 +471,22 @@ describe('task mutations', () => {
 				done_bucket_id: 3,
 			}],
 		})
-		insertTaskIntoBoards(client, {
-			id: 9,
-			project_id: 1,
-			done: true,
+		sdk.tasksCreate.mockResolvedValue({
+			data: {
+				id: 9,
+				project_id: 1,
+				bucket_id: 4,
+				done: true,
+			},
 		})
+		await client.getMutationCache()
+			.build(client, createTaskMutationOptions())
+			.execute({
+				title: 'new',
+				project_id: 1,
+				bucket_id: 4,
+				done: true,
+			})
 		expect(client.getQueryData<BoardData>(kanbanKeys.board(1, 2))?.buckets
 			.map(bucket => bucket.tasks.map(task => task.id))).toEqual([
 			[9],
