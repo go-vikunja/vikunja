@@ -19,12 +19,14 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"io/fs"
 	"net/http"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -545,7 +547,11 @@ func TestProject_DeletePermanently(t *testing.T) {
 			return ErrGenericForbidden{}
 		}
 		require.NoError(t, project.DeletePermanently(s))
-		return s.Commit()
+		if err := s.Commit(); err != nil {
+			return err
+		}
+		events.DispatchPending(context.Background(), s)
+		return nil
 	}
 
 	t.Run("admin purges a trashed project", func(t *testing.T) {
@@ -579,6 +585,17 @@ func TestProject_DeletePermanently(t *testing.T) {
 		}
 		assert.True(t, IsErrProjectDoesNotExist(purge(t, 45, share)))
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
+	})
+	t.Run("takes the background along", func(t *testing.T) {
+		u6 := &user.User{ID: 6}
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		trashProjectForTest(t, 35, u6)
+
+		require.NoError(t, purge(t, 35, u6))
+		_, err := files.FileStat(&files.File{ID: 1})
+		require.ErrorIs(t, err, fs.ErrNotExist)
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
 	})
 }
 
