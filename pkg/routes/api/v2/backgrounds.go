@@ -407,22 +407,17 @@ func backgroundRemove(ctx context.Context, in *struct {
 	defer s.Close()
 	defer events.CleanupPending(s)
 
-	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanWrite(s, a)
+	project, err := writableProjectForBackground(s, a, in.ProjectID)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-	if !can {
-		_ = s.Rollback()
-		return nil, huma.Error403Forbidden("forbidden")
+		return nil, err
 	}
 
-	if err := project.DeleteBackgroundFileIfExists(s); err != nil {
+	if err := project.RemoveBackground(s); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
-	if err := models.ClearProjectBackground(s, project.ID); err != nil {
+	if err := project.ReadOne(s, a); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}

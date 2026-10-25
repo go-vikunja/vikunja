@@ -362,6 +362,7 @@ func checkProjectBackgroundWritePermissions(s *xorm.Session, c *echo.Context) (p
 		return nil, auth, echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
 
+	project, err = models.GetProjectSimpleByID(s, projectID)
 	return
 }
 
@@ -454,13 +455,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	err = project.DeleteBackgroundFileIfExists(s)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	err = models.ClearProjectBackground(s, project.ID)
+	err = project.RemoveBackground(s)
 	if err != nil {
 		_ = s.Rollback()
 		return err
