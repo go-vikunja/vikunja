@@ -608,22 +608,21 @@ func GetProjectCount(s *xorm.Session, a web.Auth, projectID int64) (*ProjectCoun
 		return nil, ErrGenericForbidden{}
 	}
 
-	ids, err := subtreeIDs(s, projectID, builder.IsNull{"projects.deleted_at"})
-	if err != nil {
-		return nil, err
-	}
-	// Ahead of IsAdmin, which waves instance admins through without loading the project.
-	if len(ids) == 0 {
-		return nil, trashedProjectReadError(s, a, projectID, ErrProjectDoesNotExist{ID: projectID})
-	}
-
 	project := &Project{ID: projectID}
 	can, err := project.IsAdmin(s, a)
+	if IsErrProjectDoesNotExist(err) {
+		return nil, trashedProjectReadError(s, a, projectID, err)
+	}
 	if err != nil {
 		return nil, err
 	}
 	if !can {
 		return nil, ErrGenericForbidden{}
+	}
+
+	ids, err := subtreeIDs(s, projectID, builder.IsNull{"projects.deleted_at"})
+	if err != nil {
+		return nil, err
 	}
 
 	count := &ProjectCount{SubProjects: int64(len(ids)) - 1}
