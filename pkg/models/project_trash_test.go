@@ -653,15 +653,10 @@ func TestBuildOverview_SkipsTrashedProjects(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	live, err := s.Table("projects").Where("deleted_at IS NULL").Count()
-	require.NoError(t, err)
-	all, err := s.Table("projects").Count()
-	require.NoError(t, err)
-	require.Greater(t, all, live)
-
 	overview, err := BuildOverview(s)
 	require.NoError(t, err)
-	assert.Equal(t, live, overview.Projects)
+	// 46 fixtures, 45 and 46 trashed
+	assert.Equal(t, int64(44), overview.Projects)
 }
 
 func TestCleanupAfterProjectAccessLoss_KeepsTrashedProjectsWithAccess(t *testing.T) {

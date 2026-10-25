@@ -31,36 +31,47 @@ import (
 // caching/expiry/invalidation behaviour itself is covered by the keyvalue RememberFor
 // tests.
 func TestMetricsCountFromDatabase(t *testing.T) {
-	cases := map[string]string{
-		metrics.UserCountKey:        "users",
-		metrics.ProjectCountKey:     "projects",
-		metrics.TaskCountKey:        "tasks",
-		metrics.TeamCountKey:        "teams",
-		metrics.FilesCountKey:       "files",
-		metrics.AttachmentsCountKey: "task_attachments",
+	// Projects and tasks exclude trashed fixtures.
+	cases := map[string]struct {
+		table    string
+		expected int64
+	}{
+		metrics.UserCountKey: {
+			table:    "users",
+			expected: 25,
+		},
+		metrics.ProjectCountKey: {
+			table:    "projects",
+			expected: 44,
+		},
+		metrics.TaskCountKey: {
+			table:    "tasks",
+			expected: 53,
+		},
+		metrics.TeamCountKey: {
+			table:    "teams",
+			expected: 13,
+		},
+		metrics.FilesCountKey: {
+			table:    "files",
+			expected: 1,
+		},
+		metrics.AttachmentsCountKey: {
+			table:    "task_attachments",
+			expected: 4,
+		},
 	}
 
 	db.LoadAndAssertFixtures(t)
 
-	s := db.NewSession()
-	defer s.Close()
-
-	for key, table := range cases {
-		t.Run(table, func(t *testing.T) {
+	for key, tc := range cases {
+		t.Run(tc.table, func(t *testing.T) {
 			// Drop any value cached by a previous test so we recompute from the DB.
 			require.NoError(t, metrics.InvalidateCount(key))
 
-			query := s.Table(table)
-			if key == metrics.TaskCountKey || key == metrics.ProjectCountKey {
-				query = query.Where("deleted_at IS NULL")
-			}
-			expected, err := query.Count()
-			require.NoError(t, err)
-
 			count, err := metrics.GetCount(key)
 			require.NoError(t, err)
-			assert.Equal(t, expected, count)
-			assert.Positive(t, count, "fixtures should contain at least one %s", table)
+			assert.Equal(t, tc.expected, count)
 		})
 	}
 }
