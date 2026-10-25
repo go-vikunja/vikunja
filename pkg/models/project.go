@@ -1468,15 +1468,15 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return trashProject(s, fullProject, a)
 }
 
-// DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
-// if one exists
+// DeleteBackgroundFileIfExists deletes the project's background file row, if one exists.
+// The blob goes once the caller runs events.DispatchPending(s) after committing.
 func (p *Project) DeleteBackgroundFileIfExists(s *xorm.Session) (err error) {
 	if p.BackgroundFileID == 0 {
 		return
 	}
 
 	file := files.File{ID: p.BackgroundFileID}
-	err = file.Delete(s)
+	err = file.DeleteOnCommit(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		return nil
 	}

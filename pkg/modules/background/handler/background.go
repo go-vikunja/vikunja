@@ -39,6 +39,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -447,6 +448,7 @@ func LoadProjectBackgroundForDownload(s *xorm.Session, project *models.Project) 
 func RemoveProjectBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	project, _, err := checkProjectBackgroundWritePermissions(s, c)
 	if err != nil {
@@ -469,6 +471,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 	if err := s.Commit(); err != nil {
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
 	return c.JSON(http.StatusOK, project)
 }

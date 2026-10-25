@@ -144,6 +144,7 @@ func projectsDeletePermanently(ctx context.Context, in *struct {
 	}
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	project := &models.Project{ID: in.ID}
 	can, err := project.CanDeletePermanently(s, a)
@@ -162,6 +163,7 @@ func projectsDeletePermanently(ctx context.Context, in *struct {
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 	return &emptyBody{}, nil
 }
 
@@ -172,6 +174,7 @@ func projectsTrashEmpty(ctx context.Context, _ *struct{}) (*emptyBody, error) {
 	}
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	if _, err := models.EmptyProjectTrash(s, a); err != nil {
 		_ = s.Rollback()
@@ -180,6 +183,7 @@ func projectsTrashEmpty(ctx context.Context, _ *struct{}) (*emptyBody, error) {
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 	return &emptyBody{}, nil
 }
 

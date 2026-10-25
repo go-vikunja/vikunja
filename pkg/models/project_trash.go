@@ -17,6 +17,7 @@
 package models
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -571,6 +572,7 @@ func deleteExpiredProjects(now time.Time) {
 		func() {
 			ps := db.NewSession()
 			defer ps.Close()
+			defer events.CleanupPending(ps)
 
 			// An earlier iteration may have purged it with its parent
 			project, err := getTrashedProject(ps, projectID)
@@ -587,7 +589,9 @@ func deleteExpiredProjects(now time.Time) {
 			}
 			if err = ps.Commit(); err != nil {
 				log.Errorf("Could not commit transaction: %s", err)
+				return
 			}
+			events.DispatchPending(context.Background(), ps)
 		}()
 	}
 }

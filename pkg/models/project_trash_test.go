@@ -18,11 +18,13 @@ package models
 
 import (
 	"context"
+	"io/fs"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
@@ -30,6 +32,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // Fixture projects 45 and 46 (child of 45) are in user 1's trash.
@@ -335,6 +338,41 @@ func TestProject_DeletePermanently(t *testing.T) {
 	t.Run("live project is not in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		assert.True(t, IsErrProjectDoesNotExist(purge(t, 1, &user.User{ID: 1})))
+	})
+	t.Run("background blob goes only once the commit is dispatched", func(t *testing.T) {
+		u6 := &user.User{ID: 6}
+		background := &files.File{ID: 1}
+		purgeProject35 := func(t *testing.T) *xorm.Session {
+			s := db.NewSession()
+			project := &Project{ID: 35}
+			can, err := project.CanDeletePermanently(s, u6)
+			require.NoError(t, err)
+			require.True(t, can)
+			require.NoError(t, project.DeletePermanently(s))
+			return s
+		}
+
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		trashProjectForTest(t, 35, u6)
+
+		s := purgeProject35(t)
+		require.NoError(t, s.Rollback())
+		events.CleanupPending(s)
+		s.Close()
+		_, err := files.FileStat(background)
+		require.NoError(t, err)
+		db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+
+		s = purgeProject35(t)
+		defer s.Close()
+		require.NoError(t, s.Commit())
+		_, err = files.FileStat(background)
+		require.NoError(t, err)
+
+		events.DispatchPending(context.Background(), s)
+		_, err = files.FileStat(background)
+		require.ErrorIs(t, err, fs.ErrNotExist)
 	})
 }
 
