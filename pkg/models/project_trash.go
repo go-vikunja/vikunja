@@ -365,10 +365,6 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 	if err != nil {
 		return err
 	}
-	restored := []*Project{}
-	if err = s.Unscoped().In("id", ids).Find(&restored); err != nil {
-		return err
-	}
 	_, err = s.Table("projects").
 		In("id", ids).
 		Update(map[string]any{
@@ -378,8 +374,6 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 	if err != nil {
 		return err
 	}
-	p.DeletedAt = time.Time{}
-	p.DeletedByID = 0
 
 	_, err = s.In("id", ids).Cols("updated").Update(&Project{})
 	if err != nil {
@@ -391,10 +385,12 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
+	restored := []*Project{}
+	if err = s.In("id", ids).Find(&restored); err != nil {
+		return err
+	}
 	doer := doerFromAuth(s, a)
 	for _, project := range restored {
-		project.DeletedAt = time.Time{}
-		project.DeletedByID = 0
 		events.DispatchOnCommit(s, &ProjectRestoredEvent{
 			Project: project,
 			Doer:    doer,
