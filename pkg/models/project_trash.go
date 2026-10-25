@@ -52,6 +52,28 @@ func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
 		return err
 	}
 
+	// Owners may trash their own default project, nobody else's.
+	blockedID := int64(0)
+	has, err := s.Table("users").
+		Join("INNER", "projects", "projects.id = users.default_project_id AND projects.owner_id = users.id").
+		Where(builder.And(
+			builder.In("projects.id", ids),
+			builder.Neq{"projects.owner_id": a.GetID()},
+		)).
+		Cols("projects.id").
+		Get(&blockedID)
+	if err != nil {
+		return err
+	}
+	if has {
+		return &ErrCannotDeleteDefaultProject{ProjectID: blockedID}
+	}
+
+	projects := []*Project{}
+	if err = s.In("id", ids).Find(&projects); err != nil {
+		return err
+	}
+
 	doer := doerFromAuth(s, a)
 	_, err = s.In("id", ids).Cols("deleted_by_id").NoAutoTime().Update(&Project{DeletedByID: doer.ID})
 	if err != nil {
@@ -74,6 +96,15 @@ func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
 		Project: project,
 		Doer:    doer,
 	})
+	for _, p := range projects {
+		if p.ID == project.ID {
+			continue
+		}
+		events.DispatchOnCommit(s, &ProjectDeletedEvent{
+			Project: p,
+			Doer:    doer,
+		})
+	}
 	return nil
 }
 

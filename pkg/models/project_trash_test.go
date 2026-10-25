@@ -41,6 +41,42 @@ func trashProjectForTest(t *testing.T, projectID int64, a web.Auth) {
 	require.NoError(t, s.Commit())
 }
 
+func TestTrashProject_SubProjects(t *testing.T) {
+	u6 := &user.User{ID: 6}
+
+	t.Run("refused while a sub-project is another user's default", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		// 27 -> 12 -> 25 -> 26
+		_, err := s.Table("projects").Where("id = ?", 26).Update(map[string]any{"owner_id": 2})
+		require.NoError(t, err)
+		_, err = s.Table("users").Where("id = ?", 2).Update(map[string]any{"default_project_id": 26})
+		require.NoError(t, err)
+
+		err = (&Project{ID: 12}).Delete(s, u6)
+		var cannotDelete *ErrCannotDeleteDefaultProject
+		require.ErrorAs(t, err, &cannotDelete)
+		assert.Equal(t, int64(26), cannotDelete.ProjectID)
+	})
+	t.Run("one deleted event per trashed project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, (&Project{ID: 12}).Delete(s, u6))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		trashed := []int64{}
+		for _, e := range events.GetDispatchedEvents((&ProjectDeletedEvent{}).Name()) {
+			trashed = append(trashed, e.(*ProjectDeletedEvent).Project.ID)
+		}
+		assert.ElementsMatch(t, []int64{12, 25, 26}, trashed)
+	})
+}
+
 func restoreProjectForTest(t *testing.T, projectID int64, a web.Auth) error {
 	s := db.NewSession()
 	defer s.Close()
