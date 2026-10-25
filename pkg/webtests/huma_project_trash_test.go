@@ -132,6 +132,17 @@ func TestHumaProjectTrash(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"items":[]`)
 	})
+	t.Run("empty trash of another user", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/projects/deleted", "", stranger(t), "")
+		require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/deleted", "", user1(t), "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"id":45`)
+	})
 	t.Run("count", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
