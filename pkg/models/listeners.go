@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -1549,6 +1550,19 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 	return event, doerID, nil
 }
 
+// Uses the closure table, not the parent walk, so a trashed tree's ancestors see project.deleted.
+func webhookProjectIDs(s *xorm.Session, projectID int64) ([]int64, error) {
+	ancestorIDs := []int64{}
+	err := s.Table(&ProjectAncestor{}).
+		Where(builder.Eq{"project_id": projectID}).
+		Cols("ancestor_id").
+		Find(&ancestorIDs)
+	if err != nil {
+		return nil, err
+	}
+	return append([]int64{projectID}, ancestorIDs...), nil
+}
+
 // Skips webhooks whose creator is inactive or can no longer read the project.
 func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string) ([]*Webhook, error) {
 	matchingWebhooks := []*Webhook{}
@@ -1556,15 +1570,9 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 		return matchingWebhooks, nil
 	}
 
-	parents, err := GetAllParentProjects(s, projectID)
+	projectIDs, err := webhookProjectIDs(s, projectID)
 	if err != nil {
 		return nil, err
-	}
-
-	projectIDs := make([]int64, 0, len(parents)+1)
-	projectIDs = append(projectIDs, projectID)
-	for _, p := range parents {
-		projectIDs = append(projectIDs, p.ID)
 	}
 
 	ws := []*Webhook{}
@@ -1592,6 +1600,9 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 	}
 
 	project, err := GetProjectSimpleByID(s, projectID)
+	if IsErrProjectDoesNotExist(err) {
+		project, err = getTrashedProject(s, projectID)
+	}
 	if err != nil && !IsErrProjectDoesNotExist(err) {
 		return nil, err
 	}
@@ -1601,10 +1612,10 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 		if !exists || creator.Status != user.StatusActive {
 			continue
 		}
-		// project.deleted fires after the row is gone; nothing left to check against.
+		// Purged projects have no row left to check against.
 		if project != nil {
 			// Backstop for access lost without an explicit removal, e.g. by moving the project.
-			canRead, _, err := project.CanRead(s, &user.User{ID: w.CreatedByID})
+			canRead, err := webhookCreatorCanRead(s, project, &user.User{ID: w.CreatedByID})
 			if err != nil {
 				return nil, err
 			}
