@@ -229,3 +229,5 @@ tool (
 )
 
 replace github.com/samedi/caldav-go => github.com/go-vikunja/caldav-go v3.0.1-0.20260914150516-75a300de4623+incompatible
+
+replace github.com/teambition/rrule-go => github.com/kentonium3/rrule-go v1.8.3
