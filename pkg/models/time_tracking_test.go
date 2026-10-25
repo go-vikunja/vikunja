@@ -262,11 +262,32 @@ func TestTimeEntry_ReadAll_Filter(t *testing.T) {
 }
 
 func TestTimeEntry_NotNullFilterRendersIsNotNull(t *testing.T) {
-	cond, err := resolveTimeEntryFilter("end_time", taskFilterComparatorNotEquals, "null", time.UTC)
-	require.NoError(t, err)
-	sql, _, err := builder.ToSQL(cond)
-	require.NoError(t, err)
-	assert.Equal(t, "end_time IS NOT NULL", sql)
+	tests := []struct {
+		field string
+		want  string
+	}{
+		{
+			field: "end_time",
+			want:  "end_time IS NOT NULL",
+		},
+		{
+			field: "task_id",
+			want:  "NOT (task_id=? OR task_id IS NULL)",
+		},
+		{
+			field: "project_id",
+			want:  "NOT ((task_id=? OR task_id IS NULL) AND (project_id=? OR project_id IS NULL))",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.field, func(t *testing.T) {
+			cond, err := resolveTimeEntryFilter(tt.field, taskFilterComparatorNotEquals, "null", time.UTC)
+			require.NoError(t, err)
+			sql, _, err := builder.ToSQL(cond)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, sql)
+		})
+	}
 }
 
 // Search matches the entry comment. Comments: 1="Time entry on task 1",
