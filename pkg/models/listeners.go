@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -1549,6 +1550,32 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 	return event, doerID, nil
 }
 
+func webhookProjectIDs(s *xorm.Session, projectID int64, eventName string) ([]int64, error) {
+	projectIDs := []int64{projectID}
+
+	// Every project in a trashed tree fires project.deleted; its trashed ancestors' webhooks must see it.
+	if eventName == (&ProjectDeletedEvent{}).Name() {
+		ancestorIDs := []int64{}
+		err := s.Table(&ProjectAncestor{}).
+			Where(builder.Eq{"project_id": projectID}).
+			Cols("ancestor_id").
+			Find(&ancestorIDs)
+		if err != nil {
+			return nil, err
+		}
+		return append(projectIDs, ancestorIDs...), nil
+	}
+
+	parents, err := GetAllParentProjects(s, projectID)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range parents {
+		projectIDs = append(projectIDs, p.ID)
+	}
+	return projectIDs, nil
+}
+
 // Skips webhooks whose creator is inactive or can no longer read the project.
 func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string) ([]*Webhook, error) {
 	matchingWebhooks := []*Webhook{}
@@ -1556,15 +1583,9 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 		return matchingWebhooks, nil
 	}
 
-	parents, err := GetAllParentProjects(s, projectID)
+	projectIDs, err := webhookProjectIDs(s, projectID, eventName)
 	if err != nil {
 		return nil, err
-	}
-
-	projectIDs := make([]int64, 0, len(parents)+1)
-	projectIDs = append(projectIDs, projectID)
-	for _, p := range parents {
-		projectIDs = append(projectIDs, p.ID)
 	}
 
 	ws := []*Webhook{}

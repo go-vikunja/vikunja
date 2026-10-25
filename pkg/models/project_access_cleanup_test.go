@@ -362,6 +362,37 @@ func TestWebhookListener_SkipsCreatorWithoutAccessToTrashedProject(t *testing.T)
 	assert.True(t, delivered[owners.ID], "the owner's webhook should still be delivered")
 }
 
+func TestWebhookListener_TrashedRootReceivesChildDeleted(t *testing.T) {
+	f := setupAccessLoss(t)
+
+	onRoot := &Webhook{
+		TargetURL:   "https://example.com/root",
+		Events:      []string{"project.deleted"},
+		ProjectID:   f.parent.ID,
+		CreatedByID: f.owner.ID,
+	}
+	_, err := f.s.Insert(onRoot)
+	require.NoError(t, err)
+	require.NoError(t, (&Project{ID: f.parent.ID}).Delete(f.s, f.owner))
+	require.NoError(t, f.s.Commit())
+
+	events.ClearDispatchedEvents()
+	events.TestListener(
+		t,
+		&ProjectDeletedEvent{
+			Project: f.child,
+			Doer:    f.owner,
+		},
+		&WebhookListener{EventName: "project.deleted"},
+	)
+
+	delivered := map[int64]bool{}
+	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
+		delivered[e.(*WebhookDeliveryEvent).WebhookID] = true
+	}
+	assert.True(t, delivered[onRoot.ID], "the trashed root's webhook missed the child's project.deleted")
+}
+
 func TestWebhookListener_SkipsInactiveCreator(t *testing.T) {
 	for _, tc := range []struct {
 		status    user.Status
