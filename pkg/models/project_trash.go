@@ -242,19 +242,24 @@ func getTrashedProject(s *xorm.Session, projectID int64) (*Project, error) {
 }
 
 // Trashed projects can't be reached through the regular permission checks, which skip them.
-func canAdminTrashedProject(s *xorm.Session, a web.Auth, project *Project) (bool, error) {
+// Like regular reads, link shares never reach a trashed project.
+func trashedProjectPermission(s *xorm.Session, a web.Auth, project *Project) (
+	permission Permission,
+	reachable bool,
+	err error,
+) {
 	if _, isShare := a.(*LinkSharing); isShare {
-		return false, nil
+		return 0, false, nil
 	}
 	if isInstanceAdmin(s, a) || project.OwnerID == a.GetID() {
-		return true, nil
+		return PermissionAdmin, true, nil
 	}
 	access, err := getProjectAccessIncludingTrash(s, a.GetID())
 	if err != nil {
-		return false, err
+		return 0, false, err
 	}
-	permission, has := access.permission(project.ID)
-	return has && permission == PermissionAdmin, nil
+	permission, reachable = access.permission(project.ID)
+	return permission, reachable, nil
 }
 
 // Readers who could reach the project get ErrProjectIsInTrash; everyone else keeps notFound.
@@ -270,7 +275,7 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 		return err
 	}
 
-	reachable, err := canReachTrashedProject(s, a, trashed)
+	permission, reachable, err := trashedProjectPermission(s, a, trashed)
 	if err != nil {
 		return err
 	}
@@ -282,11 +287,7 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 		ID:        trashed.ID,
 		DeletedAt: trashed.DeletedAt,
 	}
-	isAdmin, err := canAdminTrashedProject(s, a, trashed)
-	if err != nil {
-		return err
-	}
-	if isAdmin {
+	if permission == PermissionAdmin {
 		blocker, err := restoreBlocker(s, trashed)
 		if err != nil {
 			return err
@@ -303,29 +304,13 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 	return inTrash
 }
 
-// Like regular reads, link shares never reach a trashed project.
-func canReachTrashedProject(s *xorm.Session, a web.Auth, project *Project) (bool, error) {
-	if _, isShare := a.(*LinkSharing); isShare {
-		return false, nil
-	}
-	if isInstanceAdmin(s, a) || project.OwnerID == a.GetID() {
-		return true, nil
-	}
-	access, err := getProjectAccessIncludingTrash(s, a.GetID())
-	if err != nil {
-		return false, err
-	}
-	_, has := access.permission(project.ID)
-	return has, nil
-}
-
 // Loads the trashed project into p; unreachable callers get ErrProjectDoesNotExist so it doesn't leak.
 func (p *Project) canDoTrashedProject(s *xorm.Session, a web.Auth) (bool, error) {
 	trashed, err := getTrashedProject(s, p.ID)
 	if err != nil {
 		return false, err
 	}
-	reachable, err := canReachTrashedProject(s, a, trashed)
+	permission, reachable, err := trashedProjectPermission(s, a, trashed)
 	if err != nil {
 		return false, err
 	}
@@ -333,7 +318,7 @@ func (p *Project) canDoTrashedProject(s *xorm.Session, a web.Auth) (bool, error)
 		return false, ErrProjectDoesNotExist{ID: p.ID}
 	}
 	*p = *trashed
-	return canAdminTrashedProject(s, a, p)
+	return permission == PermissionAdmin, nil
 }
 
 // CanRestore requires admin access to the trashed project.
