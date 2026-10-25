@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
@@ -345,8 +346,12 @@ func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
 	}
 	parent := &Project{}
 	has, err := s.Unscoped().ID(parentID).Get(parent)
-	if err != nil || !has {
+	if err != nil {
 		return nil, err
+	}
+	// Purging takes all sub-projects along and the orphan repair re-parents the rest.
+	if !has {
+		return nil, fmt.Errorf("parent project %d of project %d does not exist", parentID, p.ID)
 	}
 	switch {
 	case !parent.DeletedAt.IsZero():
@@ -360,22 +365,6 @@ func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
 // Restore brings a trashed project back with all its trashed sub-projects,
 // whenever they were deleted. Trashed tasks inside stay in the trash.
 func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
-	if parentID := p.parentID(); parentID > 0 {
-		has, err := s.Unscoped().ID(parentID).Exist(&Project{})
-		if err != nil {
-			return err
-		}
-		if !has {
-			// Unreachable while purging takes all sub-projects along, but a dangling parent must not block the restore.
-			p.ParentProjectID = noParentProjectID()
-			if _, err := s.ID(p.ID).Unscoped().Cols("parent_project_id").Update(p); err != nil {
-				return err
-			}
-			if err := moveProjectAncestors(s, p.ID, 0); err != nil {
-				return err
-			}
-		}
-	}
 	blocker, err := restoreBlocker(s, p)
 	if err != nil {
 		return err
