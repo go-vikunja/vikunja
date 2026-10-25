@@ -54,7 +54,12 @@ func TestHumaProjectTrash(t *testing.T) {
 		require.Len(t, list.Items[0].TrashedSubProjects, 1)
 		assert.Equal(t, int64(46), list.Items[0].TrashedSubProjects[0].ID)
 
-		token, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{ID: 3, Hash: "test3", ProjectID: 3, Permission: models.PermissionAdmin})
+		token, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{
+			ID:         3,
+			Hash:       "test3",
+			ProjectID:  3,
+			Permission: models.PermissionAdmin,
+		})
 		require.NoError(t, err)
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/deleted", "", token, "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())

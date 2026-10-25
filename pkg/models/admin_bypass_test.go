@@ -158,7 +158,10 @@ func setUpTrashedProjectAdmin(t *testing.T) *user.User {
 	_, err = s.Table("projects").Where("id = ?", 1).Update(map[string]any{"deleted_at": time.Now()})
 	require.NoError(t, err)
 
-	return &user.User{ID: 2, IsAdmin: true}
+	return &user.User{
+		ID:      2,
+		IsAdmin: true,
+	}
 }
 
 func TestAdminBypass_TrashedProject(t *testing.T) {

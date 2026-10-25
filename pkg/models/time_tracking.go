@@ -573,8 +573,18 @@ func (te *TimeEntry) canDoLiveTimeEntry(s *xorm.Session, a web.Auth, fetch bool)
 }
 
 // inTrashedProject reports done when the project is in the trash: then only the author may read the entry.
-func (te *TimeEntry) inTrashedProject(s *xorm.Session, a web.Auth, projectID int64, fetch bool) (done, can bool, err error) {
-	trashed, err := s.Table("projects").Where(builder.And(builder.Eq{"id": projectID}, builder.NotNull{"deleted_at"})).Exist()
+func (te *TimeEntry) inTrashedProject(
+	s *xorm.Session,
+	a web.Auth,
+	projectID int64,
+	fetch bool,
+) (done, can bool, err error) {
+	trashed, err := s.Table("projects").
+		Where(builder.And(
+			builder.Eq{"id": projectID},
+			builder.NotNull{"deleted_at"},
+		)).
+		Exist()
 	if err != nil || !trashed {
 		return false, false, err
 	}
@@ -589,7 +599,10 @@ func trashedProjectIDsQuery() *builder.Builder {
 func timeEntryInTrashedProjectCond() builder.Cond {
 	return builder.Or(
 		builder.In("project_id", trashedProjectIDsQuery()),
-		builder.In("task_id", builder.Select("id").From("tasks").Where(builder.In("project_id", trashedProjectIDsQuery()))),
+		builder.In("task_id", builder.Select("id").
+			From("tasks").
+			Where(builder.In("project_id", trashedProjectIDsQuery())),
+		),
 	)
 }
 

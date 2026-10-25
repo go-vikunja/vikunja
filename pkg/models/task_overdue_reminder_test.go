@@ -48,7 +48,10 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 
 		_, err := s.Table("tasks").Where("id = ?", 53).Update(map[string]any{"due_date": "2018-11-30 00:00:00"})
 		require.NoError(t, err)
-		_, err = s.Insert(&TaskAssginee{TaskID: 53, UserID: 1})
+		_, err = s.Insert(&TaskAssginee{
+			TaskID: 53,
+			UserID: 1,
+		})
 		require.NoError(t, err)
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")

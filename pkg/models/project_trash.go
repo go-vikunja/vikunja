@@ -132,7 +132,10 @@ func hardDeleteProject(s *xorm.Session, p *Project) (err error) {
 
 	_, err = s.Table("time_entries").
 		Where("project_id = ?", p.ID).
-		Update(map[string]any{"project_id": 0, "task_id": 0})
+		Update(map[string]any{
+			"project_id": 0,
+			"task_id":    0,
+		})
 	if err != nil {
 		return
 	}
@@ -275,7 +278,10 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 		return notFound
 	}
 
-	inTrash := ErrProjectIsInTrash{ID: trashed.ID, DeletedAt: trashed.DeletedAt}
+	inTrash := ErrProjectIsInTrash{
+		ID:        trashed.ID,
+		DeletedAt: trashed.DeletedAt,
+	}
 	isAdmin, err := canAdminTrashedProject(s, a, trashed)
 	if err != nil {
 		return err
@@ -351,9 +357,15 @@ func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
 	}
 	switch {
 	case !parent.DeletedAt.IsZero():
-		return ErrParentProjectIsInTrash{ProjectID: p.ID, ParentProjectID: parentID}, nil
+		return ErrParentProjectIsInTrash{
+			ProjectID:       p.ID,
+			ParentProjectID: parentID,
+		}, nil
 	case parent.IsArchived:
-		return ErrParentProjectIsArchived{ProjectID: p.ID, ParentProjectID: parentID}, nil
+		return ErrParentProjectIsArchived{
+			ProjectID:       p.ID,
+			ParentProjectID: parentID,
+		}, nil
 	}
 	return nil, nil
 }
@@ -374,7 +386,10 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 	}
 	_, err = s.Table("projects").
 		In("id", ids).
-		Update(map[string]any{"deleted_at": nil, "deleted_by_id": nil})
+		Update(map[string]any{
+			"deleted_at":    nil,
+			"deleted_by_id": nil,
+		})
 	if err != nil {
 		return err
 	}

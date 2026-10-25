@@ -616,7 +616,12 @@ const ErrCodeProjectIsInTrash = 3018
 
 // HTTPError holds the http error description
 func (err ErrProjectIsInTrash) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeProjectIsInTrash, Message: "This project is in the trash. Restore it first.", Details: err}
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectIsInTrash,
+		Message:  "This project is in the trash. Restore it first.",
+		Details:  err,
+	}
 }
 
 // ErrParentProjectIsInTrash is returned when restoring a project whose parent is still in the trash.
@@ -626,7 +631,11 @@ type ErrParentProjectIsInTrash struct {
 }
 
 func (err ErrParentProjectIsInTrash) Error() string {
-	return fmt.Sprintf("Parent project is in the trash [ProjectID: %d, ParentProjectID: %d]", err.ProjectID, err.ParentProjectID)
+	return fmt.Sprintf(
+		"Parent project is in the trash [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
 }
 
 // ErrCodeParentProjectIsInTrash holds the unique world-error code of this error
@@ -634,7 +643,11 @@ const ErrCodeParentProjectIsInTrash = 3019
 
 // HTTPError holds the http error description
 func (err ErrParentProjectIsInTrash) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeParentProjectIsInTrash, Message: "The parent project is in the trash. Restore it first."}
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectIsInTrash,
+		Message:  "The parent project is in the trash. Restore it first.",
+	}
 }
 
 // ErrParentProjectIsArchived represents an error, where a project's parent is archived

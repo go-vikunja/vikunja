@@ -90,7 +90,7 @@ type Project struct {
 	// The user who moved this project to the trash. Only present on trashed projects.
 	DeletedBy   *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this project to the trash. Only present on trashed projects."`
 	DeletedByID int64      `xorm:"bigint null 'deleted_by_id'" json:"-"`
-	// The trashed sub-projects at any depth that restoring this project brings back, shallowest first. Only present in the trash listing.
+	// The trashed sub-projects at any depth that restoring this project brings back. Only in the trash listing.
 	TrashedSubProjects []*TrashedSubProject `xorm:"-" json:"trashed_sub_projects,omitempty" readOnly:"true" doc:"The trashed sub-projects at any depth that restoring this project brings back, shallowest first. Only present in the trash listing."`
 
 	web.CRUDable    `xorm:"-" json:"-"`

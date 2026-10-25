@@ -269,7 +269,10 @@ func TestTask_Restore(t *testing.T) {
 		require.ErrorAs(t, err, &inTrash)
 		assert.Equal(t, ErrCodeProjectIsInTrash, inTrash.HTTPError().Code)
 		assert.Equal(t, int64(45), inTrash.ID)
-		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 53, "deleted_at": nil})
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"id":         53,
+			"deleted_at": nil,
+		})
 	})
 }
 

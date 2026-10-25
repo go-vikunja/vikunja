@@ -644,13 +644,29 @@ func TestProject_Delete(t *testing.T) {
 		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &ProjectDeletedEvent{})
 
-		for _, id := range []int64{12, 25, 26} {
-			db.AssertExists(t, "projects", map[string]interface{}{"id": id, "deleted_by_id": 6}, false)
-			db.AssertMissing(t, "projects", map[string]interface{}{"id": id, "deleted_at": nil})
+		for _, id := range []int64{
+			12,
+			25,
+			26,
+		} {
+			db.AssertExists(t, "projects", map[string]interface{}{
+				"id":            id,
+				"deleted_by_id": 6,
+			}, false)
+			db.AssertMissing(t, "projects", map[string]interface{}{
+				"id":         id,
+				"deleted_at": nil,
+			})
 		}
-		db.AssertExists(t, "projects", map[string]interface{}{"id": 27, "deleted_at": nil}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":         27,
+			"deleted_at": nil,
+		}, false)
 		// Kept for the restore
-		db.AssertExists(t, "project_ancestors", map[string]interface{}{"project_id": 26, "ancestor_id": 12}, false)
+		db.AssertExists(t, "project_ancestors", map[string]interface{}{
+			"project_id":  26,
+			"ancestor_id": 12,
+		}, false)
 
 		s2 := db.NewSession()
 		defer s2.Close()
@@ -665,7 +681,10 @@ func TestProject_Delete(t *testing.T) {
 		require.NoError(t, (&Project{ID: 1}).Delete(s, &user.User{ID: 1}))
 		require.NoError(t, s.Commit())
 
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "deleted_at": nil}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         1,
+			"deleted_at": nil,
+		}, false)
 		db.AssertExists(t, "project_views", map[string]interface{}{"project_id": 1}, false)
 		db.AssertExists(t, "project_task_counters", map[string]interface{}{"project_id": 1}, false)
 	})
@@ -679,7 +698,10 @@ func TestProject_Delete(t *testing.T) {
 		err := project.Delete(s, &user.User{ID: 3})
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
-		db.AssertExists(t, "users", map[string]interface{}{"id": 3, "default_project_id": 0}, false)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":                 3,
+			"default_project_id": 0,
+		}, false)
 	})
 	t.Run("default project of a different user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -719,8 +741,16 @@ func TestHardDeleteProject(t *testing.T) {
 		db.AssertMissing(t, "project_task_counters", map[string]interface{}{
 			"project_id": 1,
 		})
-		for _, id := range []int64{1, 2, 4} {
-			db.AssertExists(t, "time_entries", map[string]interface{}{"id": id, "task_id": 0, "project_id": 0}, false)
+		for _, id := range []int64{
+			1,
+			2,
+			4,
+		} {
+			db.AssertExists(t, "time_entries", map[string]interface{}{
+				"id":         id,
+				"task_id":    0,
+				"project_id": 0,
+			}, false)
 		}
 	})
 	t.Run("removes aliases owned by or targeting the project", func(t *testing.T) {
@@ -794,8 +824,18 @@ func TestHardDeleteProject(t *testing.T) {
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 53})
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 54})
-		db.AssertExists(t, "time_entries", map[string]interface{}{"id": 5, "user_id": 3, "task_id": 0, "project_id": 0}, false)
-		db.AssertExists(t, "time_entries", map[string]interface{}{"id": 6, "user_id": 3, "task_id": 0, "project_id": 0}, false)
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         5,
+			"user_id":    3,
+			"task_id":    0,
+			"project_id": 0,
+		}, false)
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         6,
+			"user_id":    3,
+			"task_id":    0,
+			"project_id": 0,
+		}, false)
 	})
 }
 
@@ -1186,7 +1226,10 @@ func TestProject_ForeignDefaultDoesNotBlockOwner(t *testing.T) {
 		project := Project{ID: 1}
 		require.NoError(t, project.Delete(s, &user.User{ID: 1}))
 		require.NoError(t, s.Commit())
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 1, "deleted_at": nil})
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id":         1,
+			"deleted_at": nil,
+		})
 		db.AssertExists(t, "users", map[string]interface{}{"id": 2, "default_project_id": 0}, false)
 	})
 }
