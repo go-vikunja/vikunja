@@ -30,6 +30,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 func timePtr(t time.Time) *time.Time { return &t }
@@ -246,6 +247,14 @@ func TestTimeEntry_ReadAll_Filter(t *testing.T) {
 			assert.ElementsMatch(t, tt.wantIDs, gotIDs)
 		})
 	}
+}
+
+func TestTimeEntry_NotNullFilterRendersIsNotNull(t *testing.T) {
+	cond, err := resolveTimeEntryFilter("end_time", taskFilterComparatorNotEquals, "null", time.UTC)
+	require.NoError(t, err)
+	sql, _, err := builder.ToSQL(cond)
+	require.NoError(t, err)
+	assert.Equal(t, "end_time IS NOT NULL", sql)
 }
 
 // Search matches the entry comment. Comments: 1="Time entry on task 1",

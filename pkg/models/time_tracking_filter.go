@@ -124,7 +124,8 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	switch field {
 	case "user_id", "task_id":
 		if field == "task_id" && raw == "null" {
-			return nullFilterCond(field, noContainerCond(field), comparator)
+			isNull := noContainerCond(field)
+			return nullFilterCond(field, isNull, builder.Not{isNull}, comparator)
 		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
@@ -135,7 +136,8 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	case "project", "project_id":
 		// A task always has a project, so "no project" means no container at all
 		if raw == "null" {
-			return nullFilterCond("project_id", timeEntryWithoutContainerCond(), comparator)
+			isNull := timeEntryWithoutContainerCond()
+			return nullFilterCond("project_id", isNull, builder.Not{isNull}, comparator)
 		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
@@ -163,7 +165,7 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 
 	case "start_time", "end_time":
 		if raw == "null" {
-			return nullFilterCond(field, builder.IsNull{field}, comparator)
+			return nullFilterCond(field, builder.IsNull{field}, builder.NotNull{field}, comparator)
 		}
 		value, err := timeEntryTimeFilterValue(raw, loc)
 		if err != nil {
@@ -176,12 +178,13 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	}
 }
 
-func nullFilterCond(field string, isNull builder.Cond, comparator taskFilterComparator) (builder.Cond, error) {
+// Not{IsNull} renders "NOT col IS NULL", which flips under MySQL HIGH_NOT_PRECEDENCE.
+func nullFilterCond(field string, isNull, notNull builder.Cond, comparator taskFilterComparator) (builder.Cond, error) {
 	if comparator == taskFilterComparatorEquals {
 		return isNull, nil
 	}
 	if comparator == taskFilterComparatorNotEquals {
-		return builder.Not{isNull}, nil
+		return notNull, nil
 	}
 	return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: "null"}
 }
