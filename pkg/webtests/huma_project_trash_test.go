@@ -98,11 +98,14 @@ func TestHumaProjectTrash(t *testing.T) {
 			Owner *struct {
 				ID int64 `json:"id"`
 			} `json:"owner"`
-			Updated time.Time `json:"updated"`
+			Updated       time.Time `json:"updated"`
+			MaxPermission *int64    `json:"max_permission"`
 		}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &restored))
 		require.NotNil(t, restored.Owner)
 		assert.Equal(t, int64(1), restored.Owner.ID)
+		require.NotNil(t, restored.MaxPermission)
+		assert.Equal(t, int64(models.PermissionAdmin), *restored.MaxPermission)
 		// Fixture value is 2018-12-02 15:13:12
 		assert.True(t, restored.Updated.After(time.Date(2018, 12, 3, 0, 0, 0, 0, time.UTC)), restored.Updated)
 

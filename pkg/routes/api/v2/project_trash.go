@@ -95,7 +95,8 @@ func projectsTrashList(ctx context.Context, in *ListParams) (*projectListBody, e
 }
 
 func projectsRestore(ctx context.Context, in *struct {
-	ID int64 `path:"id" doc:"The numeric id of the project."`
+	ID     int64  `path:"id" doc:"The numeric id of the project."`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 }) (*singleBody[models.Project], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -132,6 +133,9 @@ func projectsRestore(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	events.DispatchPending(ctx, s)
+	// CanRestore already required admin.
+	restored.MaxPermission = models.Ptr(models.PermissionAdmin)
+	convertToMarkdown(ctx, &restored.Description)
 	return &singleBody[models.Project]{Body: restored}, nil
 }
 
