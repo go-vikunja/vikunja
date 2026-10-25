@@ -1645,7 +1645,8 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 
 func webhookCreatorCanRead(s *xorm.Session, project *Project, isTrashed bool, creator *user.User) (bool, error) {
 	if isTrashed {
-		return canReachTrashedProject(s, creator, project)
+		_, reachable, err := trashedProjectPermission(s, creator, project)
+		return reachable, err
 	}
 	canRead, _, err := project.CanRead(s, creator)
 	return canRead, err
