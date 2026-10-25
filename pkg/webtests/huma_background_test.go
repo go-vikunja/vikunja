@@ -49,6 +49,9 @@ func TestHumaProjectBackgroundDelete(t *testing.T) {
 		require.True(t, has)
 		assert.Equal(t, "Test35 with background", project.Title)
 		assert.Equal(t, int64(0), project.BackgroundFileID)
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		assert.Contains(t, rec.Body.String(), `"title":"Test35 with background"`)
+		assert.Contains(t, rec.Body.String(), `"owner":{`)
 	})
 	t.Run("Read-only user is forbidden", func(t *testing.T) {
 		// testuser15 has read-only (permission 0) access to project 35.
