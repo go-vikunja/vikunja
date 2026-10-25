@@ -237,11 +237,11 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 		return err
 	}
 
-	access, err := getProjectAccessIncludingTrash(s, a.GetID())
+	reachable, err := canReachTrashedProject(s, a, trashed)
 	if err != nil {
 		return err
 	}
-	if _, has := access.permission(projectID); !has && trashed.OwnerID != a.GetID() {
+	if !reachable {
 		return notFound
 	}
 

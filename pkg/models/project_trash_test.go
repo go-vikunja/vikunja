@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -178,6 +179,22 @@ func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 
 		assert.False(t, readInTrash(t, 21, u1).CanRestore)
 	})
+}
+
+func TestProject_ReadTrashed_InstanceAdmin(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
+	require.NoError(t, err)
+
+	_, _, err = (&Project{ID: 45}).CanRead(s, &user.User{ID: 2, IsAdmin: true})
+	var inTrash ErrProjectIsInTrash
+	require.ErrorAs(t, err, &inTrash)
+	assert.True(t, inTrash.CanRestore)
 }
 
 func TestProject_TrashHidesContents(t *testing.T) {
