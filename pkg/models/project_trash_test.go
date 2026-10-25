@@ -131,6 +131,38 @@ func TestProject_Restore(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, can)
 	})
+	t.Run("one event per project on restore and trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		projectIDs := func(eventName string) []int64 {
+			ids := []int64{}
+			for _, e := range events.GetDispatchedEvents(eventName) {
+				switch ev := e.(type) {
+				case *ProjectRestoredEvent:
+					ids = append(ids, ev.Project.ID)
+				case *ProjectDeletedEvent:
+					ids = append(ids, ev.Project.ID)
+				}
+			}
+			return ids
+		}
+
+		require.NoError(t, restoreProjectForTest(t, 45, u1))
+		assert.ElementsMatch(t, []int64{
+			45,
+			46,
+		}, projectIDs((&ProjectRestoredEvent{}).Name()))
+
+		s := db.NewSession()
+		defer s.Close()
+		require.NoError(t, (&Project{ID: 45}).Delete(s, u1))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+		assert.ElementsMatch(t, []int64{
+			45,
+			46,
+		}, projectIDs((&ProjectDeletedEvent{}).Name()))
+	})
 	t.Run("brings back sub-projects trashed separately before", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		u6 := &user.User{ID: 6}
