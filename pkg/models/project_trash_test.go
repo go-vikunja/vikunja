@@ -25,6 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -269,9 +270,9 @@ func TestProject_Restore(t *testing.T) {
 		require.NoError(t, restoreProjectForTest(t, 11, u1))
 		require.ErrorIs(t, restoreProjectForTest(t, 9, u1), ErrGenericForbidden{})
 	})
-	t.Run("unrelated user is denied", func(t *testing.T) {
+	t.Run("unrelated user does not see it", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		require.ErrorIs(t, restoreProjectForTest(t, 45, &user.User{ID: 2}), ErrGenericForbidden{})
+		assert.True(t, IsErrProjectDoesNotExist(restoreProjectForTest(t, 45, &user.User{ID: 2})))
 	})
 	t.Run("live project is not in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -401,6 +402,62 @@ func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 		assert.Equal(t, http.StatusPreconditionFailed, missing.HTTPError().HTTPCode)
 		assert.Equal(t, ErrCodeParentProjectDoesNotExist, missing.HTTPError().Code)
 	})
+	t.Run("not while the parent row is gone", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		_, err := s.Table("projects").Where("id = ?", 46).Update(map[string]any{"parent_project_id": 99999})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.False(t, readInTrash(t, 46, u1).CanRestore)
+		require.Error(t, restoreProjectForTest(t, 46, u1))
+	})
+}
+
+func TestProject_ReadTrashed_Shares(t *testing.T) {
+	t.Run("read share sees the trash but can't restore", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// User 1 reads project 9 of user 6
+		trashProjectForTest(t, 9, &user.User{ID: 6})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, err := (&Project{ID: 9}).CanRead(s, &user.User{ID: 1})
+		var inTrash ErrProjectIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		assert.False(t, inTrash.CanRestore)
+	})
+	t.Run("link share of the project gets a plain not found", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		share := &LinkSharing{
+			ID:         3,
+			ProjectID:  45,
+			Permission: PermissionAdmin,
+		}
+		_, _, err := (&Project{ID: 45}).CanRead(s, share)
+		assert.True(t, IsErrProjectDoesNotExist(err))
+		assert.NotErrorAs(t, err, &ErrProjectIsInTrash{})
+	})
+}
+
+func TestProject_ReadTrashed_InstanceAdmin(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
+	require.NoError(t, err)
+
+	_, _, err = (&Project{ID: 45}).CanRead(s, &user.User{ID: 2, IsAdmin: true})
+	var inTrash ErrProjectIsInTrash
+	require.ErrorAs(t, err, &inTrash)
+	assert.True(t, inTrash.CanRestore)
 }
 
 func TestProject_TrashHidesContents(t *testing.T) {
@@ -497,28 +554,132 @@ func TestProject_DeletePermanently(t *testing.T) {
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
 	})
-	t.Run("unrelated user is denied", func(t *testing.T) {
+	t.Run("unrelated user does not see it", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		require.ErrorIs(t, purge(t, 45, &user.User{ID: 2}), ErrGenericForbidden{})
+		assert.True(t, IsErrProjectDoesNotExist(purge(t, 45, &user.User{ID: 2})))
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
 	})
 	t.Run("live project is not in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		assert.True(t, IsErrProjectDoesNotExist(purge(t, 1, &user.User{ID: 1})))
 	})
+	t.Run("read share is denied", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// User 1 reads project 9 of user 6
+		trashProjectForTest(t, 9, &user.User{ID: 6})
+		require.ErrorIs(t, purge(t, 9, &user.User{ID: 1}), ErrGenericForbidden{})
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 9}, false)
+	})
+	t.Run("link share does not see it", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		share := &LinkSharing{
+			ID:         3,
+			ProjectID:  45,
+			Permission: PermissionAdmin,
+		}
+		assert.True(t, IsErrProjectDoesNotExist(purge(t, 45, share)))
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
+	})
 }
 
 func TestEmptyProjectTrash(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
+	t.Run("purges the auth's trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 
-	purged, err := EmptyProjectTrash(s, &user.User{ID: 1})
-	require.NoError(t, err)
-	require.NoError(t, s.Commit())
-	assert.Equal(t, 1, purged)
-	db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
-	db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+		purged, err := EmptyProjectTrash(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		assert.Equal(t, 1, purged)
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+	})
+	t.Run("leaves other users' trash alone", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		purged, err := EmptyProjectTrash(s, &user.User{ID: 2})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		assert.Equal(t, 0, purged)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 46}, false)
+	})
+}
+
+// User 1 only reads 12 through 27, so its admin share on 25 doesn't put 25 in their trash.
+func TestProjectTrash_AdminOnlyOnTrashedChild(t *testing.T) {
+	u1 := &user.User{ID: 1}
+	setup := func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		_, err := s.Insert(&ProjectUser{
+			UserID:     1,
+			ProjectID:  25,
+			Permission: PermissionAdmin,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+		// 27 -> 12 -> 25 -> 26
+		trashProjectForTest(t, 12, &user.User{ID: 6})
+	}
+
+	t.Run("hidden from the trash list", func(t *testing.T) {
+		setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		projects, total, err := GetTrashedProjects(s, u1, 1, 50)
+		require.NoError(t, err)
+		// Only the fixture trash
+		require.Len(t, projects, 1)
+		assert.Equal(t, int64(45), projects[0].ID)
+		assert.Equal(t, int64(1), total)
+	})
+	t.Run("reading tells it is in the trash, not restorable", func(t *testing.T) {
+		setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, err := (&Project{ID: 25}).CanRead(s, u1)
+		var inTrash ErrProjectIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		assert.False(t, inTrash.CanRestore)
+	})
+	t.Run("restore is refused for the trashed parent", func(t *testing.T) {
+		setup(t)
+		require.ErrorAs(t, restoreProjectForTest(t, 25, u1), &ErrParentProjectIsInTrash{})
+	})
+	t.Run("emptying the trash leaves it", func(t *testing.T) {
+		setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		purged, err := EmptyProjectTrash(s, u1)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		assert.Equal(t, 1, purged)
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 25}, false)
+	})
+	t.Run("may still be purged directly", func(t *testing.T) {
+		setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project := &Project{ID: 25}
+		can, err := project.CanDeletePermanently(s, u1)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, project.DeletePermanently(s))
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 25})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 26})
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 12}, false)
+	})
 }
 
 func TestDeleteExpiredProjects(t *testing.T) {

@@ -84,7 +84,7 @@ func (b *Bucket) getOwnView(s *xorm.Session) (*ProjectView, error) {
 
 // Not Project.CanUpdate: that swallows the archived error to allow un-archiving, buckets must not get that.
 func canWriteBucketProject(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
-	if isInstanceAdmin(s, a) {
+	if isPseudoProjectInstanceAdmin(s, projectID, a) {
 		return true, nil
 	}
 

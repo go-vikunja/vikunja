@@ -1617,6 +1617,18 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 	return matchingWebhooks, nil
 }
 
+func webhookCreatorCanRead(s *xorm.Session, project *Project, creator *user.User) (bool, error) {
+	if !project.DeletedAt.IsZero() {
+		_, _, err := getReadableTrashedProject(s, creator, project.ID)
+		if IsErrProjectDoesNotExist(err) {
+			return false, nil
+		}
+		return err == nil, err
+	}
+	canRead, _, err := project.CanRead(s, creator)
+	return canRead, err
+}
+
 // Handle is executed when the event WebhookListener listens on is fired
 func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	var event map[string]interface{}
