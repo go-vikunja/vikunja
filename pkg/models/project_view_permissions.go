@@ -23,6 +23,9 @@ import (
 
 func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	if isInstanceAdmin(s, a) {
+		if err := requireLiveProject(s, pv.ProjectID); err != nil {
+			return false, 0, err
+		}
 		return true, int(PermissionAdmin), nil
 	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
@@ -37,6 +40,9 @@ func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
 func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	if isInstanceAdmin(s, a) {
+		if err := requireLiveProject(s, pv.ProjectID); err != nil {
+			return false, err
+		}
 		return true, nil
 	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
@@ -55,6 +61,9 @@ func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 
 func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if isInstanceAdmin(s, a) {
+		if err := requireLiveProject(s, pv.ProjectID); err != nil {
+			return false, err
+		}
 		return true, nil
 	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
@@ -74,6 +83,9 @@ func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 
 func (pv *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if isInstanceAdmin(s, a) {
+		if err := requireLiveProject(s, pv.ProjectID); err != nil {
+			return false, err
+		}
 		return true, nil
 	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)

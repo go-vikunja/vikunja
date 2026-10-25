@@ -18,6 +18,7 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/license"
@@ -141,5 +142,91 @@ func TestAdminBypass_StaleJWT_DeletedUser(t *testing.T) {
 		can, _, err := p.CanRead(s, stale)
 		require.NoError(t, err)
 		assert.False(t, can, "deleted admin must not grant bypass")
+	})
+}
+
+func setUpTrashedProjectAdmin(t *testing.T) *user.User {
+	db.LoadAndAssertFixtures(t)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	t.Cleanup(license.ResetForTests)
+
+	s := db.NewAutocommitSession()
+	defer s.Close()
+	_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
+	require.NoError(t, err)
+	// Project 1 has views and buckets, unlike the trashed fixtures.
+	_, err = s.Table("projects").Where("id = ?", 1).Update(map[string]any{"deleted_at": time.Now()})
+	require.NoError(t, err)
+
+	return &user.User{ID: 2, IsAdmin: true}
+}
+
+func TestAdminBypass_TrashedProject(t *testing.T) {
+	admin := setUpTrashedProjectAdmin(t)
+	s := db.NewSession()
+	defer s.Close()
+	notFound := ErrProjectDoesNotExist{ID: 45}
+
+	t.Run("CanWrite", func(t *testing.T) {
+		can, err := (&Project{ID: 45}).CanWrite(s, admin)
+		require.ErrorIs(t, err, notFound)
+		assert.False(t, can)
+	})
+	t.Run("CanUpdate", func(t *testing.T) {
+		can, err := (&Project{ID: 45}).CanUpdate(s, admin)
+		require.ErrorIs(t, err, notFound)
+		assert.False(t, can)
+	})
+	t.Run("IsAdmin", func(t *testing.T) {
+		can, err := (&Project{ID: 45}).IsAdmin(s, admin)
+		require.ErrorIs(t, err, notFound)
+		assert.False(t, can)
+	})
+	t.Run("share a user", func(t *testing.T) {
+		pu := &ProjectUser{
+			ProjectID: 45,
+			Username:  "user3",
+		}
+		can, err := pu.CanCreate(s, admin)
+		require.ErrorIs(t, err, notFound)
+		assert.False(t, can)
+	})
+	t.Run("share a team", func(t *testing.T) {
+		tp := &TeamProject{
+			ProjectID: 45,
+			TeamID:    1,
+		}
+		can, err := tp.CanCreate(s, admin)
+		require.ErrorIs(t, err, notFound)
+		assert.False(t, can)
+	})
+	t.Run("create a view", func(t *testing.T) {
+		can, err := (&ProjectView{ProjectID: 45}).CanCreate(s, admin)
+		require.ErrorIs(t, err, notFound)
+		assert.False(t, can)
+	})
+	t.Run("update a view", func(t *testing.T) {
+		pv := &ProjectView{
+			ID:        4,
+			ProjectID: 1,
+		}
+		can, err := pv.CanUpdate(s, admin)
+		require.ErrorIs(t, err, ErrProjectDoesNotExist{ID: 1})
+		assert.False(t, can)
+	})
+	t.Run("update a bucket", func(t *testing.T) {
+		b := &Bucket{
+			ID:            1,
+			ProjectViewID: 4,
+			ProjectID:     1,
+		}
+		can, err := b.CanUpdate(s, admin)
+		require.ErrorIs(t, err, ErrProjectDoesNotExist{ID: 1})
+		assert.False(t, can)
+	})
+	t.Run("live project still bypasses", func(t *testing.T) {
+		can, err := (&Project{ID: 2}).CanWrite(s, admin)
+		require.NoError(t, err)
+		assert.True(t, can)
 	})
 }

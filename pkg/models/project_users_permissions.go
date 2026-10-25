@@ -43,6 +43,9 @@ func (lu *ProjectUser) canDoProjectUser(s *xorm.Session, a web.Auth) (bool, erro
 	}
 
 	if isInstanceAdmin(s, a) {
+		if err := requireLiveProject(s, lu.ProjectID); err != nil {
+			return false, err
+		}
 		return true, nil
 	}
 

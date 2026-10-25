@@ -33,14 +33,14 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
-	// Get the project and check the permission
+	// Loaded ahead of the admin bypass: the scoped load is what rejects trashed projects.
 	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// We put the result of the is archived check in a separate variable to be able to return it later without
@@ -230,14 +230,13 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return sf.CanUpdate(s, a)
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
-	// Get the project
 	ol, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// Check if we're moving the project to a different parent project.
@@ -302,13 +301,13 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
 	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// Check if we're dealing with a share auth
@@ -327,6 +326,15 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	}
 	is, err := originalProject.checkPermission(s, u, PermissionAdmin)
 	return is, err
+}
+
+// requireLiveProject rejects trashed projects for the instance admin bypasses that skip the scoped project load.
+func requireLiveProject(s *xorm.Session, projectID int64) error {
+	if IsPseudoProjectID(projectID) {
+		return nil
+	}
+	_, err := GetProjectSimpleByID(s, projectID)
+	return err
 }
 
 // Little helper function to check if a user is project owner

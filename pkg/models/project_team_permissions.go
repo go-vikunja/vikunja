@@ -66,6 +66,9 @@ func (tl *TeamProject) canDoTeamProject(s *xorm.Session, a web.Auth) (bool, erro
 	}
 
 	if isInstanceAdmin(s, a) {
+		if err := requireLiveProject(s, tl.ProjectID); err != nil {
+			return false, err
+		}
 		return true, nil
 	}
 
