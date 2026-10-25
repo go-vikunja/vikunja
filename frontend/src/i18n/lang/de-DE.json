@@ -1538,6 +1538,7 @@
 		"newTeam": "Gib den Namen des neuen Teams ein …",
 		"createTask": "Eine Aufgabe im aktuellen Projekt erstellen ({title})",
 		"createProject": "Projekt erstellen",
+		"removePrefillDescription": "Beschreibung entfernen",
 		"results": "keine Ergebnisse | {count} Ergebnis | {count} Ergebnisse",
 		"resultTypes": {
 			"command": "Aktion",
@@ -1670,6 +1671,7 @@
 		"14202": "Das Planka-Konto erfordert einen zusätzlichen Anmeldeschritt (Zwei-Faktor-Code oder das Akzeptieren der Nutzungsbedingungen). Melde dich einmal im Browser bei Planka an oder verwende stattdessen einen API-Schlüssel anstelle von Benutzername und Passwort.",
 		"14203": "Eine Planka-URL und entweder ein API-Schlüssel oder Benutzername und Passwort sind erforderlich.",
 		"14204": "Die Planka-API konnte unter der angegebenen URL nicht erreicht werden. Prüfe die URL und ob Vikunja die Instanz erreichen kann.",
+		"14205": "Die Planka-URL zeigt auf eine private oder lokale Netzwerkadresse, die Vikunja standardmäßig blockiert. Ein Admin kann das ändern, indem outgoingrequests.allownonroutableips eingeschaltet werden.",
 		"error": "Fehler",
 		"success": "Erfolgreich",
 		"0001": "Das darfst du nicht tun."
