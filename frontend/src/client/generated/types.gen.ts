@@ -2207,13 +2207,13 @@ export type Task = {
     };
     reminders?: Array<TaskReminder> | null;
     /**
-     * The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount.
+     * The recurrence, as RFC 5545 RRULE parts. When the task has a due date, it is the first occurrence. Completing the task moves its dates to the next occurrence and reopens it. Send null to remove the recurrence. A partial update (PATCH) leaves an omitted repeat unchanged; a full update (PUT) replaces every field, so an omitted repeat removes it too. The whole rule, written out as RRULE text, must fit in 500 characters.
      */
-    repeat_after?: number;
+    repeat?: TaskRepeat;
     /**
-     * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
+     * When true, the next occurrence is counted from the moment the task is completed instead of from its previous due date.
      */
-    repeat_mode?: number;
+    repeats_from_current_date?: boolean;
     start_date?: string;
     /**
      * The requesting user's subscription to this task. Read-only here; use the subscription endpoints to change it. Only present when reading a single task.
@@ -2548,13 +2548,13 @@ export type TaskReadOneBody = {
     };
     reminders?: Array<TaskReminder> | null;
     /**
-     * The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount.
+     * The recurrence, as RFC 5545 RRULE parts. When the task has a due date, it is the first occurrence. Completing the task moves its dates to the next occurrence and reopens it. Send null to remove the recurrence. A partial update (PATCH) leaves an omitted repeat unchanged; a full update (PUT) replaces every field, so an omitted repeat removes it too. The whole rule, written out as RRULE text, must fit in 500 characters.
      */
-    repeat_after?: number;
+    repeat?: TaskRepeat;
     /**
-     * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
+     * When true, the next occurrence is counted from the moment the task is completed instead of from its previous due date.
      */
-    repeat_mode?: number;
+    repeats_from_current_date?: boolean;
     start_date?: string;
     /**
      * The requesting user's subscription to this task. Read-only here; use the subscription endpoints to change it. Only present when reading a single task.
@@ -2605,6 +2605,69 @@ export type TaskReminder = {
     relative_period?: number;
     relative_to?: string;
     reminder?: string;
+};
+
+export type TaskRepeat = {
+    /**
+     * Weekdays as two-letter codes mo, tu, we, th, fr, sa, su. A signed position may prefix a code for monthly and yearly rules only: 2tu is the second Tuesday, -1fr the last Friday. Positions range from -5 to 5 within a month (monthly, or yearly with by_month) and from -53 to 53 within a year (yearly). Any case is accepted; responses are lowercase. No value may appear twice.
+     */
+    by_day?: Array<string> | null;
+    /**
+     * Hours of the day, 0 to 23. No value may appear twice. One period of freq (counted as 366 days for yearly, 31 for monthly, 7 for weekly and 1 otherwise) times the combinations of by_hour, by_minute and by_second may hold at most 10000 occurrences.
+     */
+    by_hour?: Array<number> | null;
+    /**
+     * Minutes of the hour, 0 to 59. No value may appear twice. One period of freq (counted as 366 days for yearly, 31 for monthly, 7 for weekly and 1 otherwise) times the combinations of by_hour, by_minute and by_second may hold at most 10000 occurrences.
+     */
+    by_minute?: Array<number> | null;
+    /**
+     * Months of the year, 1 (January) to 12. No value may appear twice.
+     */
+    by_month?: Array<number> | null;
+    /**
+     * Days of the month, 1 to 31, or -31 to -1 counting from the end (-1 is the last day). No value may appear twice.
+     */
+    by_month_day?: Array<number> | null;
+    /**
+     * Seconds of the minute, 0 to 59. No value may appear twice. One period of freq (counted as 366 days for yearly, 31 for monthly, 7 for weekly and 1 otherwise) times the combinations of by_hour, by_minute and by_second may hold at most 10000 occurrences.
+     */
+    by_second?: Array<number> | null;
+    /**
+     * Picks occurrences by their position within each period: 1 is the first, -1 the last, up to 366 or -366. Combine it with another by_* field, for example by_day mo,tu,we,th,fr with by_set_pos -1 for the last weekday of the month. At most 10 values, none twice, and none beyond the number of occurrences a period can hold.
+     */
+    by_set_pos?: Array<number> | null;
+    /**
+     * ISO week numbers, 1 to 53, or -53 to -1 counting from the end of the year. No value may appear twice.
+     */
+    by_week_no?: Array<number> | null;
+    /**
+     * Days of the year, 1 to 366, or -366 to -1 counting from the end. No value may appear twice.
+     */
+    by_year_day?: Array<number> | null;
+    /**
+     * How many occurrences remain, including the current one. 0 or omitted means unlimited; at most 10000; negative values are refused. Each completion lowers it by one; completing the task when it is 1 ends the recurrence: the repeat is removed and the task stays done.
+     */
+    count?: number;
+    /**
+     * How often the task repeats: yearly, monthly, weekly, daily, hourly, minutely or secondly. Any case is accepted; responses are lowercase. The sub-daily frequencies (hourly, minutely, secondly) cannot be combined with any by_* field.
+     */
+    freq?: string;
+    /**
+     * Repeat every this many periods of freq, for example 2 with weekly for every other week. 1 by default; 0 is read as 1 and responses return 1; negative values are refused. One step may span at most 100 years: at most 100 for yearly, 1200 monthly, 5218 weekly, 36525 daily, 876600 hourly, 52596000 minutely and 3155760000 secondly.
+     */
+    interval?: number;
+    /**
+     * Response only; ignored on write. True when the stored recurrence rule has parts this structured form cannot represent, such as BYEASTER or a DTSTART set by a CalDAV client. Such a rule can be removed (send repeat: null) but not edited through the API.
+     */
+    readonly read_only?: boolean;
+    /**
+     * The last moment an occurrence may fall on, as an RFC 3339 date-time (inclusive). Responses return it in UTC. Omit it for no end. Once it has passed, completing the task leaves it done and keeps the repeat.
+     */
+    until?: string;
+    /**
+     * The day a week starts on, which matters for weekly rules with an interval above 1 and by_day, and for by_week_no: mo (the default, omitted in responses), tu, we, th, fr, sa or su. Any case is accepted.
+     */
+    wkst?: string;
 };
 
 export type Team = {
@@ -4508,13 +4571,13 @@ export type TaskWritable = {
     project_id?: number;
     reminders?: Array<TaskReminder> | null;
     /**
-     * The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount.
+     * The recurrence, as RFC 5545 RRULE parts. When the task has a due date, it is the first occurrence. Completing the task moves its dates to the next occurrence and reopens it. Send null to remove the recurrence. A partial update (PATCH) leaves an omitted repeat unchanged; a full update (PUT) replaces every field, so an omitted repeat removes it too. The whole rule, written out as RRULE text, must fit in 500 characters.
      */
-    repeat_after?: number;
+    repeat?: TaskRepeatWritable;
     /**
-     * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
+     * When true, the next occurrence is counted from the moment the task is completed instead of from its previous due date.
      */
-    repeat_mode?: number;
+    repeats_from_current_date?: boolean;
     start_date?: string;
     /**
      * The task title. This is what you'll see in the project.
@@ -4609,13 +4672,13 @@ export type TaskReadOneBodyWritable = {
     project_id?: number;
     reminders?: Array<TaskReminder> | null;
     /**
-     * The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount.
+     * The recurrence, as RFC 5545 RRULE parts. When the task has a due date, it is the first occurrence. Completing the task moves its dates to the next occurrence and reopens it. Send null to remove the recurrence. A partial update (PATCH) leaves an omitted repeat unchanged; a full update (PUT) replaces every field, so an omitted repeat removes it too. The whole rule, written out as RRULE text, must fit in 500 characters.
      */
-    repeat_after?: number;
+    repeat?: TaskRepeatWritable;
     /**
-     * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
+     * When true, the next occurrence is counted from the moment the task is completed instead of from its previous due date.
      */
-    repeat_mode?: number;
+    repeats_from_current_date?: boolean;
     start_date?: string;
     /**
      * The task title. This is what you'll see in the project.
@@ -4632,6 +4695,65 @@ export type TaskRelationWritable = {
      * The kind of relation, describing the direction from the base task to the other task (e.g. subtask, blocking, related). The inverse relation is created automatically.
      */
     relation_kind?: 'subtask' | 'parenttask' | 'related' | 'duplicateof' | 'duplicates' | 'blocking' | 'blocked' | 'precedes' | 'follows' | 'copiedfrom' | 'copiedto';
+};
+
+export type TaskRepeatWritable = {
+    /**
+     * Weekdays as two-letter codes mo, tu, we, th, fr, sa, su. A signed position may prefix a code for monthly and yearly rules only: 2tu is the second Tuesday, -1fr the last Friday. Positions range from -5 to 5 within a month (monthly, or yearly with by_month) and from -53 to 53 within a year (yearly). Any case is accepted; responses are lowercase. No value may appear twice.
+     */
+    by_day?: Array<string> | null;
+    /**
+     * Hours of the day, 0 to 23. No value may appear twice. One period of freq (counted as 366 days for yearly, 31 for monthly, 7 for weekly and 1 otherwise) times the combinations of by_hour, by_minute and by_second may hold at most 10000 occurrences.
+     */
+    by_hour?: Array<number> | null;
+    /**
+     * Minutes of the hour, 0 to 59. No value may appear twice. One period of freq (counted as 366 days for yearly, 31 for monthly, 7 for weekly and 1 otherwise) times the combinations of by_hour, by_minute and by_second may hold at most 10000 occurrences.
+     */
+    by_minute?: Array<number> | null;
+    /**
+     * Months of the year, 1 (January) to 12. No value may appear twice.
+     */
+    by_month?: Array<number> | null;
+    /**
+     * Days of the month, 1 to 31, or -31 to -1 counting from the end (-1 is the last day). No value may appear twice.
+     */
+    by_month_day?: Array<number> | null;
+    /**
+     * Seconds of the minute, 0 to 59. No value may appear twice. One period of freq (counted as 366 days for yearly, 31 for monthly, 7 for weekly and 1 otherwise) times the combinations of by_hour, by_minute and by_second may hold at most 10000 occurrences.
+     */
+    by_second?: Array<number> | null;
+    /**
+     * Picks occurrences by their position within each period: 1 is the first, -1 the last, up to 366 or -366. Combine it with another by_* field, for example by_day mo,tu,we,th,fr with by_set_pos -1 for the last weekday of the month. At most 10 values, none twice, and none beyond the number of occurrences a period can hold.
+     */
+    by_set_pos?: Array<number> | null;
+    /**
+     * ISO week numbers, 1 to 53, or -53 to -1 counting from the end of the year. No value may appear twice.
+     */
+    by_week_no?: Array<number> | null;
+    /**
+     * Days of the year, 1 to 366, or -366 to -1 counting from the end. No value may appear twice.
+     */
+    by_year_day?: Array<number> | null;
+    /**
+     * How many occurrences remain, including the current one. 0 or omitted means unlimited; at most 10000; negative values are refused. Each completion lowers it by one; completing the task when it is 1 ends the recurrence: the repeat is removed and the task stays done.
+     */
+    count?: number;
+    /**
+     * How often the task repeats: yearly, monthly, weekly, daily, hourly, minutely or secondly. Any case is accepted; responses are lowercase. The sub-daily frequencies (hourly, minutely, secondly) cannot be combined with any by_* field.
+     */
+    freq?: string;
+    /**
+     * Repeat every this many periods of freq, for example 2 with weekly for every other week. 1 by default; 0 is read as 1 and responses return 1; negative values are refused. One step may span at most 100 years: at most 100 for yearly, 1200 monthly, 5218 weekly, 36525 daily, 876600 hourly, 52596000 minutely and 3155760000 secondly.
+     */
+    interval?: number;
+    /**
+     * The last moment an occurrence may fall on, as an RFC 3339 date-time (inclusive). Responses return it in UTC. Omit it for no end. Once it has passed, completing the task leaves it done and keeps the repeat.
+     */
+    until?: string;
+    /**
+     * The day a week starts on, which matters for weekly rules with an interval above 1 and by_day, and for by_week_no: mo (the default, omitted in responses), tu, we, th, fr, sa or su. Any case is accepted.
+     */
+    wkst?: string;
 };
 
 export type TeamWritable = {

@@ -33,6 +33,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/teambition/rrule-go"
 )
 
 func TestCaldav(t *testing.T) {
@@ -1561,6 +1562,80 @@ END:VTODO` + vtodoFooter
 		assert.Equal(t, "FREQ=YEARLY;BYEASTER=0", task.Repeats, "the stored rule is authoritative, not its lossy structured form")
 	})
 
+	// The stale-COUNT echo over CalDAV: a client sends the RRULE as it last synced it, so after a
+	// completion elsewhere it carries the old, higher COUNT.
+	// countAfterWebCompletion stores COUNT=3 on task 40 (due in the future), completes it through
+	// the API so the server decrements it to 2, and returns the stored rule.
+	countAfterWebCompletion := func(t *testing.T, e *echo.Echo) string {
+		t.Helper()
+		s := db.NewSession()
+		_, err := s.ID(int64(40)).Cols("repeats", "due_date", "done").
+			Update(&models.Task{Repeats: "FREQ=DAILY;INTERVAL=1;COUNT=3", DueDate: time.Date(2030, 1, 10, 12, 0, 0, 0, time.UTC)})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		rec := humaRequest(t, e, http.MethodPatch, "/api/v2/tasks/40", `{"done":true}`, humaTokenFor(t, &testuser15), "application/merge-patch+json")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		stored := getTask(t, "uid-caldav-test")
+		require.Contains(t, stored.Repeats, "COUNT=2", "completing the task decrements COUNT")
+		require.False(t, stored.Done)
+		return stored.Repeats
+	}
+	putWithRRule := func(t *testing.T, e *echo.Echo, extra string) {
+		t.Helper()
+		vtodo := vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Renamed by a CalDAV client
+` + extra + `
+END:VTODO` + vtodoFooter
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		require.Equal(t, 201, rec.Result().StatusCode, rec.Body.String())
+	}
+
+	t.Run("#7 PUT with the COUNT synced before a completion keeps the decremented COUNT", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		afterCompletion := countAfterWebCompletion(t, e)
+
+		putWithRRule(t, e, "RRULE:FREQ=DAILY;INTERVAL=1;COUNT=3")
+
+		task := getTask(t, "uid-caldav-test")
+		assert.Equal(t, "Renamed by a CalDAV client", task.Title)
+		assert.Equal(t, afterCompletion, task.Repeats)
+	})
+
+	t.Run("#7 PUT with a lower COUNT saves it", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		countAfterWebCompletion(t, e)
+
+		putWithRRule(t, e, "RRULE:FREQ=DAILY;INTERVAL=1;COUNT=1")
+
+		assert.Equal(t, "FREQ=DAILY;INTERVAL=1;COUNT=1", getTask(t, "uid-caldav-test").Repeats)
+	})
+
+	t.Run("#7 PUT with a changed FREQ and the old COUNT saves it", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		countAfterWebCompletion(t, e)
+
+		putWithRRule(t, e, "RRULE:FREQ=WEEKLY;INTERVAL=1;COUNT=3")
+
+		assert.Equal(t, "FREQ=WEEKLY;INTERVAL=1;COUNT=3", getTask(t, "uid-caldav-test").Repeats)
+	})
+
+	t.Run("#7 a CalDAV completion carrying the stale COUNT decrements the stored one", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		countAfterWebCompletion(t, e)
+
+		putWithRRule(t, e, "STATUS:COMPLETED\nRRULE:FREQ=DAILY;INTERVAL=1;COUNT=3")
+
+		task := getTask(t, "uid-caldav-test")
+		assert.False(t, task.Done, "the task reopens for its next occurrence")
+		assert.Contains(t, task.Repeats, "COUNT=1", "decremented from the stored COUNT=2, not from the stale 3")
+		assert.Equal(t, time.Date(2030, 1, 12, 12, 0, 0, 0, time.UTC), task.DueDate.UTC())
+	})
+
 	t.Run("PUT with a changed RRULE updates the recurrence", func(t *testing.T) {
 		e, _ := setupTestEnv()
 
@@ -1583,6 +1658,87 @@ END:VTODO` + vtodoFooter
 
 		task := getTask(t, "uid-caldav-test")
 		assert.Equal(t, "FREQ=WEEKLY;INTERVAL=1", task.Repeats, "an RRULE sent by the client must replace the stored recurrence")
+	})
+
+	t.Run("PUT with a new RRULE replaces a read-only stored rule", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		s := db.NewSession()
+		_, err := s.ID(int64(40)).Cols("repeats").Update(&models.Task{Repeats: "FREQ=YEARLY;BYEASTER=0"})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Title Caldav Test
+RRULE:FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-test")
+		assert.Equal(t, "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15", task.Repeats, "CalDAV is the way to replace a rule the API can't edit")
+	})
+
+	t.Run("export writes a stored rule normalised and semantically equal", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		const stored = "FREQ=MONTHLY;BYMONTHDAY=01"
+		s := db.NewSession()
+		_, err := s.ID(int64(40)).Cols("repeats").Update(&models.Task{Repeats: stored})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, rec.Result().StatusCode)
+
+		var exported string
+		for _, line := range strings.Split(rec.Body.String(), "\n") {
+			if rest, ok := strings.CutPrefix(strings.TrimRight(line, "\r"), "RRULE:"); ok {
+				exported = rest
+			}
+		}
+		require.NotEmpty(t, exported, "the VTODO must carry the stored rule")
+		assert.NotContains(t, exported, "BYMONTHDAY=01", "export emits the normalised form")
+
+		want, err := rrule.StrToROption(stored)
+		require.NoError(t, err)
+		got, err := rrule.StrToROption(exported)
+		require.NoError(t, err)
+		assert.Equal(t, want.Freq, got.Freq)
+		assert.Equal(t, want.Bymonthday, got.Bymonthday)
+		assert.Equal(t, max(want.Interval, 1), max(got.Interval, 1))
+	})
+
+	t.Run("PUT without RRULE keeps a policy-rejected stored rule and succeeds", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		const stored = "FREQ=HOURLY;INTERVAL=1;BYHOUR=9"
+		s := db.NewSession()
+		_, err := s.ID(int64(40)).Cols("repeats").Update(&models.Task{Repeats: stored})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		const vtodo = vtodoHeader + `BEGIN:VTODO
+UID:uid-caldav-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Only the summary changed
+END:VTODO` + vtodoFooter
+
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		task := getTask(t, "uid-caldav-test")
+		assert.Equal(t, "Only the summary changed", task.Title)
+		assert.Equal(t, stored, task.Repeats, "an update that doesn't carry RRULE never fails on, or changes, the stored rule")
 	})
 
 	t.Run("PUT preserves percent_done not present in VTODO", func(t *testing.T) {

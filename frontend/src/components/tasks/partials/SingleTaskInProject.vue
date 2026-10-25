@@ -131,7 +131,8 @@
 						<Icon icon="align-left" />
 					</span>
 					<span
-						v-if="isRepeating"
+						v-if="taskIsRepeating"
+						v-tooltip="repeatTooltip"
 						class="project-task-icon"
 					>
 						<Icon icon="history" />
@@ -234,8 +235,8 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useGlobalNow} from '@/composables/useGlobalNow'
+import {describeRepeat, isRepeating} from '@/helpers/rrule'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const props = withDefaults(defineProps<{
@@ -269,9 +270,8 @@ const {t} = useI18n({useScope: 'global'})
 
 const task = computed(() => props.theTask)
 
-const isRepeating = computed(() => (task.value.repeat_after ?? 0) > 0
-	|| ((task.value.repeat_after ?? 0) === 0
-		&& task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const taskIsRepeating = computed(() => isRepeating(task.value.repeat))
+const repeatTooltip = computed(() => describeRepeat(task.value.repeat, t))
 
 const projectList = useProjects()
 const updateTask = useUpdateTaskMutation(true)
@@ -325,7 +325,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 
 	// Fire the request immediately and with the intended done value snapshotted, so a re-render or
 	// teardown during the animation delay can neither drop the save nor make it send a stale state.
-	const source = wasReverted && isRepeating.value ? oldTask : task.value
+	const source = wasReverted && taskIsRepeating.value ? oldTask : task.value
 	const updatePromise = updateTask.mutateAsync({
 		...source,
 		id: source.id!,
@@ -348,7 +348,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 		emit('taskUpdated', newTask)
 
 		let message = t('task.doneSuccess')
-		if (!task.value.done && !isRepeating.value) {
+		if (!task.value.done && !taskIsRepeating.value) {
 			message = t('task.undoneSuccess')
 		}
 

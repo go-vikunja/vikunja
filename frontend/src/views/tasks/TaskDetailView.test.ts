@@ -29,6 +29,7 @@ import {mapTaskEverywhere} from '@/client/queries/taskCache'
 import EditLabels from '@/components/tasks/partials/EditLabels.vue'
 import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
+import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskDetailView from './TaskDetailView.vue'
 
 enableAutoUnmount(afterEach)
@@ -126,6 +127,48 @@ describe('TaskDetailView draft', () => {
 
 		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
 		expect(wrapper.findAllComponents(Datepicker)[0]?.props('modelValue')).toEqual(new Date('2024-03-03T10:00:00Z'))
+	})
+})
+
+describe('TaskDetailView repeat', () => {
+	const rule = {
+		freq: 'weekly',
+		interval: 2,
+	}
+
+	beforeEach(() => {
+		sdk.tasksRead.mockReset()
+		sdk.tasksRead.mockImplementation(async ({path}: {path: {task: number}}) => ({data: serverTask(path.task, {
+			repeat: rule,
+			repeats_from_current_date: true,
+		})}))
+		sdk.patchTasksRead.mockReset()
+		sdk.patchTasksRead.mockImplementation(async () => ({data: serverTask(1)}))
+	})
+
+	function removeButton(wrapper: VueWrapper) {
+		return wrapper.findAllComponents({name: 'BaseButton'})
+			.find(button => button.attributes('aria-label') === 'task.detail.removeRepeat')
+	}
+
+	it('shows the editor for a task with a rule', async () => {
+		const wrapper = await mountDetail()
+
+		expect(wrapper.findComponent(RepeatAfter).props('modelValue')).toMatchObject({repeat: rule})
+	})
+
+	it('clears the rule with an explicit null and hides the editor', async () => {
+		const wrapper = await mountDetail()
+
+		removeButton(wrapper)!.vm.$emit('click')
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
+		expect(sdk.patchTasksRead.mock.calls[0]![0].body).toEqual(expect.arrayContaining([
+			{op: 'add', path: '/repeat', value: null},
+			{op: 'add', path: '/repeats_from_current_date', value: false},
+		]))
+		expect(wrapper.findComponent(RepeatAfter).exists()).toBe(false)
 	})
 })
 

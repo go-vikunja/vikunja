@@ -824,11 +824,49 @@ func TestTodoistDueStringToRRule(t *testing.T) {
 		// Language gate: empty lang defaults to English (Todoist default)
 		{"empty lang defaults to english", "every day", "", "FREQ=DAILY;INTERVAL=1"},
 
-		// Language gate: non-English languages are skipped
+		// Language gate: non-English phrases are skipped
 		{"german skipped", "jeden Tag", "de", ""},
-		{"japanese skipped", "every day", "ja", ""},
+		{"german interval phrase skipped", "alle 2 Wochen", "de", ""},
 		{"french skipped", "tous les jours", "fr", ""},
-		{"spanish skipped", "every day", "es", ""},
+		{"non-english lang skips PR-only weekday pattern", "every monday", "de", ""},
+
+		// Upstream's grammar ignores lang: a phrase it recognised never regresses
+		{"japanese lang upstream phrase", "every day", "ja", "FREQ=DAILY;INTERVAL=1"},
+		{"spanish lang upstream phrase", "every day", "es", "FREQ=DAILY;INTERVAL=1"},
+		{"german lang upstream interval phrase", "every 2 weeks", "de", "FREQ=WEEKLY;INTERVAL=2"},
+
+		// Upstream's phrasings (optional "every", a number or "other", a unit, plural allowed)
+		{"bare unit", "day", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"bare plural unit", "days", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"every plural unit", "every days", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"every other year", "every other year", "en", "FREQ=YEARLY;INTERVAL=2"},
+		{"other without every", "other month", "en", "FREQ=MONTHLY;INTERVAL=2"},
+		{"number without every", "2 weeks", "en", "FREQ=WEEKLY;INTERVAL=2"},
+		{"extra internal whitespace", "every  3   weeks", "en", "FREQ=WEEKLY;INTERVAL=3"},
+		{"tab whitespace", "every\t2\tdays", "en", "FREQ=DAILY;INTERVAL=2"},
+		{"surrounding whitespace", "  every day  ", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"24h time suffix", "every day at 21:00", "en", "FREQ=DAILY;INTERVAL=1"},
+		{"at-sign clock time", "every month @ 10:00", "en", "FREQ=MONTHLY;INTERVAL=1"},
+		{"bare unit with time", "2 days at 9am", "en", "FREQ=DAILY;INTERVAL=2"},
+
+		// A zero (or unrepresentable) interval yields no recurrence
+		{"zero interval", "every 0 days", "en", ""},
+		{"zero interval without every", "0 weeks", "en", ""},
+		{"zero padded zero interval", "every 00 months", "en", ""},
+		{"zero interval non-english lang", "every 0 days", "de", ""},
+		{"overflowing interval", "every 99999999999999999999 days", "en", ""},
+		{"leading zero interval", "every 03 days", "en", "FREQ=DAILY;INTERVAL=3"},
+
+		// Remaining rows of upstream's TestParseTodoistRepeat
+		{"upstream every 3 days", "every 3 days", "en", "FREQ=DAILY;INTERVAL=3"},
+		{"upstream every 3 months", "every 3 months", "en", "FREQ=MONTHLY;INTERVAL=3"},
+		{"upstream day of month", "every 27th", "en", ""},
+		{"upstream non-english", "cada día", "es", ""},
+		{"upstream gibberish", "whenever", "en", ""},
+
+		// Unparseable phrases
+		{"every last friday", "every last friday", "en", ""},
+		{"other without unit", "every other", "en", ""},
 	}
 
 	for _, tc := range testCases {

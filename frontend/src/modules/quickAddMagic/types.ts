@@ -1,8 +1,14 @@
-import type {IRepeatAfter} from '@/types/IRepeatAfter'
+import type {RepeatFrequency} from '@/helpers/rrule'
+
+// Quick add only recognises the units the simple repeat editor offers.
+export interface QuickAddRepeat {
+	type: RepeatFrequency,
+	amount: number,
+}
 
 export interface repeatParsedResult {
 	textWithoutMatched: string,
-	repeats: IRepeatAfter | null,
+	repeats: QuickAddRepeat | null,
 }
 
 export interface ParsedTaskText {
@@ -12,7 +18,7 @@ export interface ParsedTaskText {
 	project: string | null,
 	priority: number | null,
 	assignees: string[],
-	repeats: IRepeatAfter | null,
+	repeats: QuickAddRepeat | null,
 }
 
 export interface Prefixes {

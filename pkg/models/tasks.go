@@ -79,9 +79,13 @@ type Task struct {
 	Repeats string `xorm:"varchar(500) null" json:"-"`
 	// Structured recurrence pattern for the API. Mirrors RFC 5545 RRULE fields.
 	// Converted to/from the Repeats RRULE string at the API boundary.
-	Repeat *TaskRepeat `xorm:"-" json:"repeat,omitempty"`
+	Repeat *TaskRepeat `xorm:"-" json:"repeat,omitempty" doc:"The recurrence, as RFC 5545 RRULE parts. When the task has a due date, it is the first occurrence. Completing the task moves its dates to the next occurrence and reopens it. Send null to remove the recurrence. A partial update (PATCH) leaves an omitted repeat unchanged; a full update (PUT) replaces every field, so an omitted repeat removes it too. The whole rule, written out as RRULE text, must fit in 500 characters."`
 	// If true, the next occurrence is calculated from the completion date rather than the original due date.
-	RepeatsFromCurrentDate bool `xorm:"null default false" json:"repeats_from_current_date"`
+	RepeatsFromCurrentDate bool `xorm:"null default false" json:"repeats_from_current_date" doc:"When true, the next occurrence is counted from the moment the task is completed instead of from its previous due date."`
+	// The due date's intended local time of day, in seconds after local midnight, when a completion
+	// moved it off that time because of a spring-forward gap; nil otherwise. Only completion
+	// writes it, a due-date edit clears it, and it is never exposed.
+	IntendedDueTime *int `xorm:"int null 'intended_due_time'" json:"-"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
@@ -167,11 +171,26 @@ type Task struct {
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
+
+	// copiesStoredRule marks a task whose Repeats is copied from a rule already stored on
+	// another task (duplication), so creation checks it for syntax and the safety bound only,
+	// never against the creation policy. Unexported: no API payload, import file or column can
+	// set it.
+	copiesStoredRule bool
 }
 
 type TaskWithComments struct {
 	Task
 	Comments []*TaskComment `xorm:"-" json:"comments"`
+	// RepeatsRRule is export/import-only: it carries the exact stored rule text, which the
+	// structured repeat cannot always express. TaskWithComments is never
+	// an API response, so this changes no API shape.
+	RepeatsRRule string `xorm:"-" json:"repeats_rrule,omitempty"`
+	// IntendedDueTime is export/import-only: the due date's intended clock time after a
+	// spring-forward gap shift, in seconds after local midnight, so a round trip keeps it. The
+	// embedded Task.IntendedDueTime is not serialised, so this is the only copy in the file; a
+	// pointer keeps a real 0 (midnight). TaskWithComments is never an API response.
+	IntendedDueTime *int `xorm:"-" json:"intended_due_time,omitempty"`
 }
 
 // TableName returns the table name for tasks
@@ -1042,9 +1061,12 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 			return ErrInvalidTaskInBulkCreation{Index: i, Err: err}
 		}
 
-		if err := setRepeatsFromRepeat(t); err != nil {
+		// A raw rule set by a trusted caller (duplication, importers, CalDAV) is kept verbatim.
+		decision, err := resolveCreateRepeat(t)
+		if err != nil {
 			return ErrInvalidTaskInBulkCreation{Index: i, Err: err}
 		}
+		t.Repeats = decision.Repeats
 
 		t.ProjectID = projectID
 		t.ID = 0
@@ -1142,7 +1164,7 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		}
 
 		// Update the reminders
-		if err := t.updateReminders(s, t); err != nil {
+		if err := t.updateReminders(s, t, reminderZone(s, a, t, nil)); err != nil {
 			return err
 		}
 
@@ -1407,8 +1429,14 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
-	if err := setRepeatsFromRepeat(t); err != nil {
-		return err
+	// Recurrence write rules. A field-masked update whose mask excludes
+	// recurrence keeps the stored rule, copied above, and never re-validates it.
+	if len(fields) == 0 || fieldSet["repeats"] {
+		decision, err := resolveIncomingRepeat(ot.Repeats, t.Repeat, t.Repeats)
+		if err != nil {
+			return err
+		}
+		t.Repeats = decision.Repeats
 	}
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
@@ -1518,13 +1546,61 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	// Completion steps the rule this update stores. When the same update replaces the rule with a
+	// new one together with done: true, the new rule drives the date step and its COUNT is
+	// decremented; stepping the old one would write the old rule back over the replacement. A
+	// stale echo keeps the stored rule (isStaleCount), so it still completes from the stored COUNT.
+	//
+	// An update that clears the rule while completing the task still steps the old rule and
+	// reopens the task, but the rule stays cleared. v1's full-replace update clears the rule
+	// whenever repeat is omitted, so a v1 {"done": true} on a repeating task lands here,
+	// and upstream has always reopened it for its next occurrence (webtest "Repeating task
+	// update done"); writing the stepped old rule back would undo the clear.
+	//
+	// An update that adds a rule to a task that had none, together with done: true, leaves the task
+	// done with the new rule stored, as upstream did (no step, no COUNT decrement). A replacement
+	// also brings its from-current-date flag.
+	completedFrom := ot
+	clearsRule := t.Repeats == "" && ot.Repeats != ""
+	replacesRule := ot.Repeats != "" && t.Repeats != "" && t.Repeats != ot.Repeats
+	if replacesRule {
+		completedFrom.Repeats = t.Repeats
+		completedFrom.RepeatsFromCurrentDate = t.RepeatsFromCurrentDate
+	}
+
+	// intended_due_time is never read from the incoming task: JSON cannot set it, and a
+	// read-modify copy may carry a stale one. Completion steps from the stored value, and a
+	// refused completion keeps it.
+	var storedIntended *int
+	if ot.IntendedDueTime != nil {
+		v := *ot.IntendedDueTime // a copy: the merge below may write through ot's pointer
+		storedIntended = &v
+	}
+	t.IntendedDueTime = ot.IntendedDueTime
+
 	// Captured before updateDone reopens the completed repeating task below.
-	repeatingCompleted := ot.isRepeating() && !ot.Done && t.Done
+	repeatingCompleted := completedFrom.isRepeating() && !ot.Done && t.Done
 	preRepeatDueDate, preRepeatStartDate, preRepeatEndDate := t.DueDate, t.StartDate, t.EndDate
 	preRepeatDescription := t.Description
 
-	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDoneAt := updateDone(&ot, t)
+	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone.
+	// The zone is resolved only for that transition, in the project after this update.
+	zone := config.GetTimeZone()
+	if repeatingCompleted {
+		zone = resolveTaskZone(s, a, t.ProjectID)
+	}
+	updateDoneAt := updateDone(&completedFrom, t, zone)
+	// A completion that moved the dates stores the helper's intent. Any other write, a refused
+	// completion included, keeps the stored one unless it changes the due date: the gap
+	// check cannot tell an edit from a gap shift within its bound, so an edit must clear it.
+	movedCompletion := repeatingCompleted && !t.Done
+	if !movedCompletion && !preRepeatDueDate.Equal(ot.DueDate) {
+		t.IntendedDueTime = nil
+	}
+	if clearsRule {
+		t.Repeats = ""
+		t.Repeat = nil
+	}
 	if updateDoneAt {
 		colsToUpdate = append(colsToUpdate, "done_at")
 	}
@@ -1556,8 +1632,12 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
-	// Update the reminders
-	if err := ot.updateReminders(s, t); err != nil {
+	// Update the reminders, in the completion's zone when this save completed a repeating task.
+	var completionZone *time.Location
+	if repeatingCompleted {
+		completionZone = zone
+	}
+	if err := ot.updateReminders(s, t, reminderZone(s, a, t, completionZone)); err != nil {
 		return err
 	}
 
@@ -1623,6 +1703,12 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
 		return err
 	}
+	// mergo skips a nil source, so the decided value is set explicitly, and written only when it
+	// changed (neither the field list nor the default columns name it).
+	ot.IntendedDueTime = t.IntendedDueTime
+	if !equalIntPtr(storedIntended, ot.IntendedDueTime) {
+		colsToUpdate = append(colsToUpdate, "intended_due_time")
+	}
 
 	//////
 	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
@@ -1644,10 +1730,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if t.DueDate.IsZero() {
 		ot.DueDate = time.Time{}
 	}
-	// RRULE repeats - clear if no repeat was provided
-	if t.Repeat == nil && t.Repeats == "" {
-		ot.Repeats = ""
-	}
+	// RRULE repeats - the rule decided above (and possibly advanced by updateDone) is
+	// authoritative; mergo skips an empty one, so a cleared rule is set explicitly.
+	ot.Repeats = t.Repeats
 	// Repeats from current date
 	if !t.RepeatsFromCurrentDate {
 		ot.RepeatsFromCurrentDate = false
@@ -1841,41 +1926,54 @@ func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*Pr
 	return nil
 }
 
-// setRepeatsFromRepeat stores the API's structured repeat as the RRULE string, then validates the result.
-func setRepeatsFromRepeat(t *Task) (err error) {
-	if t.Repeat != nil {
-		t.Repeats, err = t.Repeat.toRRule()
-		if err != nil {
-			return err
-		}
-	}
-	return validateRRule(t.Repeats)
-}
-
-// validateRRule checks that an RRULE string is parseable.
-// Empty strings are valid (no recurrence). Returns ErrInvalidData if parsing fails.
+// validateRRule checks that an RRULE string is parseable, within the safety bound and allowed
+// by the creation policy. Empty strings are valid (no recurrence). Returns ErrInvalidData
+// otherwise. The bound is checked on the parsed options, before rrule-go builds the rule, since
+// building it is what allocates (checkRRuleBounds).
 func validateRRule(rruleStr string) error {
-	if rruleStr == "" {
-		return nil
+	opt, err := validateRRuleSyntax(rruleStr)
+	if err != nil || opt == nil {
+		return err
 	}
-	rule, err := rrule.StrToRRule(rruleStr)
-	if err != nil {
-		return ErrInvalidData{Message: "Invalid RRULE: " + err.Error()}
-	}
-
-	opt := rule.OrigOptions
-	if rrulePolicyRejects(&opt) {
+	if rrulePolicyRejects(opt) {
 		return ErrInvalidData{Message: "Invalid RRULE: sub-daily frequencies cannot be combined with BY* components"}
 	}
-
 	return nil
 }
 
+// validateRRuleSyntax checks that an RRULE string parses and is within the safety bound,
+// without the creation policy. It returns the parsed options, nil for "".
+func validateRRuleSyntax(rruleStr string) (*rrule.ROption, error) {
+	if rruleStr == "" {
+		return nil, nil
+	}
+	if len(rruleStr) > maxRRuleLength {
+		return nil, ErrInvalidData{Message: fmt.Sprintf("Invalid RRULE: the rule is %d characters long; at most %d characters are allowed", len(rruleStr), maxRRuleLength)}
+	}
+	opt, err := rrule.StrToROption(rruleStr)
+	if err != nil {
+		return nil, ErrInvalidData{Message: "Invalid RRULE: " + err.Error()}
+	}
+	// rrule-go's serialisation can be longer than the text (a date-only UNTIL gains a time), and
+	// completing a COUNT rule stores it serialised, so the serialised form has to fit as well.
+	if serialised := opt.RRuleString(); len(serialised) > maxRRuleLength {
+		return nil, ErrInvalidData{Message: fmt.Sprintf("Invalid RRULE: the rule is %d characters long once normalised; at most %d characters are allowed", len(serialised), maxRRuleLength)}
+	}
+	if err := checkRRuleWriteLimits(opt); err != nil {
+		return nil, err
+	}
+	if _, err := rrule.NewRRule(*opt); err != nil {
+		return nil, ErrInvalidData{Message: "Invalid RRULE: " + err.Error()}
+	}
+	return opt, nil
+}
+
+// fixedDurationForRRule returns the elapsed step of a plain SECONDLY, MINUTELY or HOURLY rule (no
+// BY part, COUNT or UNTIL). DAILY and WEEKLY rules step on the local wall clock instead, and
+// months and years were never a fixed number of seconds, so every other rule returns false. A step that does not fit time.Duration is not
+// fixed either.
 func fixedDurationForRRule(opt *rrule.ROption) (time.Duration, bool) {
-	if opt.Count > 0 || !opt.Until.IsZero() ||
-		len(opt.Bymonthday) > 0 || len(opt.Bymonth) > 0 || len(opt.Byyearday) > 0 ||
-		len(opt.Byweekno) > 0 || len(opt.Bysetpos) > 0 || len(opt.Byhour) > 0 ||
-		len(opt.Byminute) > 0 || len(opt.Bysecond) > 0 || len(opt.Byweekday) > 0 {
+	if !plainRule(opt) {
 		return 0, false
 	}
 
@@ -1892,13 +1990,9 @@ func fixedDurationForRRule(opt *rrule.ROption) (time.Duration, bool) {
 		base = time.Minute
 	case rrule.HOURLY:
 		base = time.Hour
-	case rrule.DAILY:
-		base = 24 * time.Hour
-	case rrule.WEEKLY:
-		base = 7 * 24 * time.Hour
-	case rrule.MONTHLY, rrule.YEARLY:
-		// Months and years aren't a fixed number of seconds, so they can't be
-		// expressed as a time.Duration; the caller falls back to rrule.After.
+	case rrule.DAILY, rrule.WEEKLY, rrule.MONTHLY, rrule.YEARLY:
+		return 0, false
+	default:
 		return 0, false
 	}
 
@@ -1922,22 +2016,32 @@ func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time
 
 	diff := now.Sub(t)
 	if diff == math.MaxInt64 {
+		// The gap exceeds time.Duration's range (~292 years). Count whole steps in seconds instead
+		// of rebasing on now, so the result stays aligned to t.
+		if duration%time.Second == 0 {
+			step := int64(duration / time.Second)
+			next := time.Unix(t.Unix()+(now.Unix()-t.Unix())/step*step, int64(t.Nanosecond())).In(t.Location())
+			for !next.After(now) {
+				next = next.Add(duration)
+			}
+			return next
+		}
 		return now.Add(duration)
 	}
 
-	intervals := int64(diff/duration) + 1
-	if intervals > math.MaxInt64/int64(duration) {
-		return now.Add(duration)
-	}
-
-	return t.Add(time.Duration(intervals) * duration)
+	// The whole steps that fit the gap fit time.Duration, since the gap does; the final step is a
+	// separate addition, so the total never overflows and stays aligned to t.
+	return t.Add(diff / duration * duration).Add(duration)
 }
 
 // clampRRuleAnchor fast-forwards a DAILY/WEEKLY DTSTART that sits more than a year
 // before now by a whole number of periods, landing it within one period below the
 // one-year cutoff. Whole-period AddDate arithmetic preserves the rule's phase, so
-// rrule.After() past the cutoff returns the same occurrence with far fewer
-// iterations. Other frequencies (and recent anchors) are returned unchanged.
+// iterating past the cutoff yields the same occurrences with far fewer iterations.
+// Other frequencies (and recent anchors) are returned unchanged. The engine passes
+// floating values, on which daysBetween is exact and the day-length
+// corrections below never fire; they stay as guards. A rule with COUNT is never
+// clamped: COUNT counts from DTSTART.
 func clampRRuleAnchor(opt *rrule.ROption, baseDate, now time.Time) time.Time {
 	if opt.Freq != rrule.DAILY && opt.Freq != rrule.WEEKLY {
 		return baseDate
@@ -1952,11 +2056,20 @@ func clampRRuleAnchor(opt *rrule.ROption, baseDate, now time.Time) time.Time {
 		periodDays = 1
 	}
 	if opt.Freq == rrule.WEEKLY {
+		if periodDays > math.MaxInt/7 {
+			return baseDate // overflow-safe: a period this long already ends past the cutoff
+		}
 		periodDays *= 7
 	}
 
-	// Estimate whole periods to skip, then correct for day-length variance (DST).
-	gapDays := int(cutoff.Sub(baseDate).Hours() / 24)
+	// Estimate whole periods to skip, then correct for day-length variance (a guard: floating
+	// values have no DST).
+	gapDays := daysBetween(baseDate, cutoff)
+	if periodDays > gapDays {
+		// One period from the anchor already passes the cutoff: the anchor is within one period
+		// below it. Returning early also keeps AddDate away from huge day counts.
+		return baseDate
+	}
 	if k := gapDays / periodDays; k > 0 {
 		baseDate = baseDate.AddDate(0, 0, k*periodDays)
 	}
@@ -1973,157 +2086,280 @@ func clampRRuleAnchor(opt *rrule.ROption, baseDate, now time.Time) time.Time {
 	return baseDate
 }
 
-// setTaskDatesRRule sets the next occurrence dates using an RRULE string.
-// If repeatsFromCurrentDate is true, the next occurrence is calculated from now.
-// Otherwise, it's calculated from the current due date.
-func setTaskDatesRRule(oldTask, newTask *Task) {
-	if oldTask.Repeats == "" {
-		return
+// daysBetween returns the number of calendar days from a's date to b's date, each read in its own
+// location. It counts on the civil calendar instead of through a Duration, so unlike b.Sub(a) it
+// never saturates (~292 years). The engine calls it on floating values (both UTC), where it is
+// exact; a location difference could make it off by one day.
+func daysBetween(a, b time.Time) int {
+	ay, am, ad := a.Date()
+	by, bm, bd := b.Date()
+	from := time.Date(ay, am, ad, 0, 0, 0, 0, time.UTC).Unix()
+	to := time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC).Unix()
+	return int((to - from) / (24 * 60 * 60))
+}
+
+// timeNow is the recurrence engine's clock; tests replace it to pin "now".
+var timeNow = time.Now
+
+// plainUntilStep returns the fixed step and the UNTIL of a SECONDLY, MINUTELY or HOURLY rule with
+// UNTIL but no COUNT and no BY* part, or a zero step for any other rule. Iterating such a rule from
+// an old due date generated every occurrence up to now (FREQ=SECONDLY with a 2020 due date: 200M+
+// per completion), and only DAILY/WEEKLY anchors are clamped, so its due date is advanced by
+// arithmetic instead, exactly as the same rule without UNTIL, and UNTIL is applied to the result.
+func plainUntilStep(opt *rrule.ROption) (time.Duration, time.Time) {
+	if opt.Until.IsZero() || opt.Count > 0 || (opt.Freq != rrule.SECONDLY && opt.Freq != rrule.MINUTELY && opt.Freq != rrule.HOURLY) {
+		return 0, time.Time{}
 	}
-
-	opt, err := rrule.StrToROption(oldTask.Repeats)
-	if err != nil {
-		log.Errorf("Failed to parse RRULE '%s' for task %d: %v", oldTask.Repeats, oldTask.ID, err)
-		return
+	withoutUntil := *opt
+	withoutUntil.Until = time.Time{}
+	step, ok := fixedDurationForRRule(&withoutUntil)
+	if !ok {
+		return 0, time.Time{}
 	}
+	return step, opt.Until
+}
 
-	now := time.Now()
-
-	// If no due date is set and we're not repeating from current date,
-	// there's nothing to reschedule — the repeat interval is a no-op.
-	if oldTask.DueDate.IsZero() && !oldTask.RepeatsFromCurrentDate {
-		return
+// absoluteReminders returns the reminders the engine moves. Relative ones (relative_to set) are
+// recomputed from their moved anchor date by updateRelativeReminderDates instead.
+func absoluteReminders(reminders []*TaskReminder) []*TaskReminder {
+	absolute := make([]*TaskReminder, 0, len(reminders))
+	for _, rem := range reminders {
+		if rem.RelativeTo == "" {
+			absolute = append(absolute, rem)
+		}
 	}
+	return absolute
+}
 
-	// Finite recurrence (COUNT): we treat the stored COUNT as the number of
-	// occurrences remaining, including the one just completed. If only one
-	// remains, the recurrence is exhausted — leave the task done, clear the rule
-	// so it stops advertising an active recurrence, and don't reschedule.
-	// (COUNT==0 in the rrule lib means "no limit".)
-	if opt.Count == 1 {
+// setTaskDatesRRule moves a completed repeating task to its next occurrence and reopens it.
+// Completion is one nextOccurrence call: the input is built from the old task, and the result is
+// applied to the new one. With a due date, the due date moves to the next occurrence and every
+// other date moves with it. Without one, the no-due-date policy still decides which dates move, as
+// upstream's legacy code moved them. DAILY and WEEKLY rules step on the zone's wall clock, not by
+// 24 hours; sub-daily rules step by elapsed time. When the rule has no occurrence left (COUNT
+// exhausted or UNTIL passed), or nextOccurrence refuses it, the task stays done. zone is the
+// completion's zone. Spans are computed in civil days or through shiftTime, so dates more than
+// ~292 years apart move without overflow.
+func setTaskDatesRRule(oldTask, newTask *Task, now time.Time, zone *time.Location) {
+	absolute := absoluteReminders(oldTask.Reminders)
+	res := nextOccurrence(completionInput(oldTask, absolute, now, zone))
+	if res.Reason == reasonCountExhausted {
+		// The last remaining occurrence was completed: the task stays done, and the rule is cleared
+		// so it stops advertising an active recurrence.
 		newTask.Repeats = ""
 		newTask.Repeat = nil
 		return
 	}
-
-	// Determine the base date for calculating the next occurrence
-	var baseDate time.Time
-	switch {
-	case oldTask.RepeatsFromCurrentDate:
-		baseDate = now
-	case !oldTask.DueDate.IsZero():
-		baseDate = oldTask.DueDate
-	default:
-		baseDate = now
-	}
-
-	// Determine where to search for the next occurrence:
-	// - If repeating from the current date, always advance from now — the
-	//   (possibly future) due date is irrelevant when the user wants the next
-	//   occurrence measured from completion.
-	// - Otherwise, if the due date is in the future, advance from there (to get
-	//   the next interval); if it's in the past, advance from now to skip overdue dates.
-	var searchFrom time.Time
-	switch {
-	case oldTask.RepeatsFromCurrentDate:
-		searchFrom = now
-	case !oldTask.DueDate.IsZero() && oldTask.DueDate.After(now):
-		searchFrom = oldTask.DueDate
-	default:
-		searchFrom = now
-	}
-
-	var nextOccurrence time.Time
-	if duration, ok := fixedDurationForRRule(opt); ok {
-		nextOccurrence = addRepeatIntervalToTime(searchFrom, baseDate, duration)
-	} else {
-		rule, err := rrule.StrToRRule(oldTask.Repeats)
-		if err != nil {
-			log.Errorf("Failed to parse RRULE '%s' for task %d: %v", oldTask.Repeats, oldTask.ID, err)
-			return
-		}
-		// rule.After() has no iteration cap and generates from DTSTART forward, so an
-		// ancient anchor makes it churn through decades of skipped occurrences. Only
-		// DAILY/WEEKLY are clamped here; MONTHLY/YEARLY have the same unclamped risk
-		// (rrule-go's After() returns the zero time once the anchor exceeds ~292 years,
-		// from int64 duration overflow) but that's a pre-existing edge left alone for now.
-		// Whole-period day arithmetic preserves phase exactly (interval sequence, week
-		// parity, BYDAY/BYSETPOS boundaries), so After() yields the same occurrence, but cheaply.
-		baseDate = clampRRuleAnchor(opt, baseDate, now)
-		rule.DTStart(baseDate)
-		nextOccurrence = rule.After(searchFrom, false)
-	}
-	if nextOccurrence.IsZero() {
-		// No more occurrences according to the rule (e.g., COUNT limit reached)
-		// Don't reschedule, just mark as done
+	if res.Reason != "" {
+		// No next occurrence (or a refused rule): the task stays done with its dates unchanged.
 		return
 	}
+	if !applyNextOccurrence(oldTask, newTask, absolute, res, zone) {
+		return
+	}
+	// Only a completion that moved the dates writes the intent; every refusal above leaves the
+	// caller's value (the stored one) in place, like the dates.
+	newTask.IntendedDueTime = intendedDueTimeColumn(res.Due.Intended)
 
 	// Decrement the remaining COUNT so finite (COUNT) recurrences actually
-	// terminate. The DTSTART reset above re-bases the rule's count window to the
-	// current date on every completion, so without persisting a decremented
+	// terminate. The DTSTART reset re-bases the rule's count window to the
+	// anchor date on every completion, so without persisting a decremented
 	// COUNT the task would repeat forever. opt.RRuleString() matches the format
 	// produced by TaskRepeat.toRRule(), so the stored value stays consistent.
-	// Interim tradeoff: only done-toggles trust this decremented DB count — a
-	// non-done-toggling update takes the client-supplied repeat, so a stale
-	// client can reset COUNT back to its original value.
-	if opt.Count > 1 {
+	// An update that echoes the unchanged structured repeat keeps this decremented
+	// text byte-identical (resolveIncomingRepeat's equal-echo rule), and so does a stale
+	// client echoing the higher COUNT it read before the decrement (isStaleCount).
+	// nextOccurrence parsed the same text, so this parse cannot fail.
+	if opt, err := rrule.StrToROption(oldTask.Repeats); err == nil && opt.Count > 1 {
 		opt.Count--
 		newTask.Repeats = opt.RRuleString()
 	}
 
-	// Calculate the time difference for adjusting related dates
-	var timeDiff time.Duration
-	if !oldTask.DueDate.IsZero() {
-		timeDiff = nextOccurrence.Sub(oldTask.DueDate)
-		newTask.DueDate = nextOccurrence
-	} else {
-		timeDiff = nextOccurrence.Sub(baseDate)
-	}
-
-	// Update reminders with the same time difference
-	newTask.Reminders = oldTask.Reminders
-	if len(oldTask.Reminders) > 0 && timeDiff != 0 {
-		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in].Reminder = r.Reminder.Add(timeDiff)
-		}
-	}
-
-	// Update start/end dates, preserving their offsets.
-	//
-	// When a due date exists it is the reference point: shift start and end by
-	// the same timeDiff the due date moved, which keeps each one's offset from
-	// the due date (and the start->end gap) intact. This holds whether or not
-	// we repeat from the current date — for RepeatsFromCurrentDate the due date
-	// has already been re-based to the next occurrence, so the offsets follow.
-	// Setting start directly to nextOccurrence (the previous behaviour) collapsed
-	// start onto the due date and lost the gap.
-	//
-	// When there is no due date (only possible with RepeatsFromCurrentDate), the
-	// next occurrence is the anchor and the start->end gap is preserved.
-	if !oldTask.DueDate.IsZero() {
-		if !oldTask.StartDate.IsZero() && timeDiff != 0 {
-			newTask.StartDate = oldTask.StartDate.Add(timeDiff)
-		}
-		if !oldTask.EndDate.IsZero() && timeDiff != 0 {
-			newTask.EndDate = oldTask.EndDate.Add(timeDiff)
-		}
-	} else {
-		if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
-			diff := oldTask.EndDate.Sub(oldTask.StartDate)
-			newTask.StartDate = nextOccurrence
-			newTask.EndDate = newTask.StartDate.Add(diff)
-		} else {
-			if !oldTask.StartDate.IsZero() {
-				newTask.StartDate = nextOccurrence
-			}
-			if !oldTask.EndDate.IsZero() {
-				newTask.EndDate = nextOccurrence
-			}
-		}
-	}
-
 	newTask.Done = false
+}
+
+// completionInput is the nextOccurrence input for completing oldTask: its rule and dates, with
+// absolute (its absolute reminders, in order) as the reminders that step.
+func completionInput(oldTask *Task, absolute []*TaskReminder, now time.Time, zone *time.Location) nextOccurrenceInput {
+	reminders := make([]datedValue, len(absolute))
+	for i, rem := range absolute {
+		reminders[i] = datedValue{At: rem.Reminder}
+	}
+	return nextOccurrenceInput{
+		Rule:           oldTask.Repeats,
+		Due:            datedValue{At: oldTask.DueDate, Intended: storedIntendedDueTime(oldTask)},
+		Start:          datedValue{At: oldTask.StartDate},
+		End:            datedValue{At: oldTask.EndDate},
+		Reminders:      reminders,
+		Now:            now,
+		FromCompletion: oldTask.RepeatsFromCurrentDate,
+		Zone:           zone,
+		TaskID:         oldTask.ID,
+	}
+}
+
+// storedIntendedDueTime is the task's stored intended_due_time as the due date's intended local
+// time of day, or nil. A value outside 0 to 86399 seconds cannot be a time of day and is ignored.
+func storedIntendedDueTime(task *Task) *time.Duration {
+	if task.IntendedDueTime == nil {
+		return nil
+	}
+	secs := *task.IntendedDueTime
+	if secs < 0 || secs >= 24*60*60 {
+		log.Debugf("Task %d: ignoring its stored intended_due_time %d, which is not a time of day", task.ID, secs)
+		return nil
+	}
+	d := time.Duration(secs) * time.Second
+	return &d
+}
+
+// intendedDueTimeColumn is the intended_due_time to store for a due date's intended local time
+// of day: whole seconds, or nil for NULL.
+func intendedDueTimeColumn(d *time.Duration) *int {
+	if d == nil {
+		return nil
+	}
+	secs := int(*d / time.Second)
+	return &secs
+}
+
+func equalIntPtr(a, b *int) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	return *a == *b
+}
+
+// applyNextOccurrence writes a successful nextOccurrence result onto newTask, where completion has
+// always assigned: newTask shares oldTask's reminders (updateSingleTask and updateTaskBucket rely
+// on the shared slice), each absolute one takes its moved value, and the due, start and end dates
+// are written when the old task had them. Every moved date is converted to the server zone, as
+// every date loaded from the database is, so responses keep their offset; the instants are the
+// helper's. Relative reminders are recomputed from the moved dates
+// later in the save path (updateRelativeReminderDates, in zone, the completion's); when one of them
+// would fall outside the storable range, everything applied here is put back and it reports false,
+// the task stays done.
+func applyNextOccurrence(oldTask, newTask *Task, absolute []*TaskReminder, res nextOccurrenceResult, zone *time.Location) bool {
+	dueDate, startDate, endDate, reminders := newTask.DueDate, newTask.StartDate, newTask.EndDate, newTask.Reminders
+	reminderTimes := make([]time.Time, len(absolute))
+	for i, rem := range absolute {
+		reminderTimes[i] = rem.Reminder
+	}
+
+	server := config.GetTimeZone()
+	newTask.Reminders = oldTask.Reminders
+	for i, rem := range absolute {
+		rem.Reminder = res.Reminders[i].At.In(server)
+	}
+	if !oldTask.DueDate.IsZero() {
+		newTask.DueDate = res.Due.At.In(server)
+	}
+	// When the next occurrence is the stored due date itself, the stepping moves no companion date,
+	// so a start or end the same update edits or clears is kept.
+	if dueUnmoved := !oldTask.DueDate.IsZero() && res.Due.At.Equal(oldTask.DueDate); !dueUnmoved {
+		if !oldTask.StartDate.IsZero() {
+			newTask.StartDate = res.Start.At.In(server)
+		}
+		if !oldTask.EndDate.IsZero() {
+			newTask.EndDate = res.End.At.In(server)
+		}
+	}
+
+	// A date outside 1000-01-01..9999-12-31 cannot be stored (MySQL's DATETIME range, the
+	// strictest supported database): leave the task done with its dates as they were.
+	if datesOutsideStorableRange(newTask, zone) {
+		log.Errorf("Not advancing task %d: a date of its next occurrence is outside the years 1000 to 9999", oldTask.ID)
+		newTask.DueDate, newTask.StartDate, newTask.EndDate, newTask.Reminders = dueDate, startDate, endDate, reminders
+		for i, rem := range absolute {
+			rem.Reminder = reminderTimes[i]
+		}
+		return false
+	}
+	return true
+}
+
+// advanceTaskDates evaluates the rule (bounded, the options rrule-go evaluates) past the guards of
+// nextOccurrence, in the server zone, and applies the result to newTask as completion does. It
+// reports whether the dates moved; false means the rule has no occurrence left or could not be
+// evaluated, and the task stays done with its dates and reminders as they were. Completion no
+// longer calls it (it calls nextOccurrence); it is kept for TestAdvanceTaskDatesRecoversFromAPanic,
+// which drives the evaluation stage with a rule the bounds refuse.
+func advanceTaskDates(oldTask, newTask *Task, opt *rrule.ROption, bounded rrule.ROption, now time.Time) (moved bool) {
+	absolute := absoluteReminders(oldTask.Reminders)
+	zone := config.GetTimeZone()
+	res := evaluateNextOccurrence(completionInput(oldTask, absolute, now, zone), opt, bounded)
+	return res.Reason == "" && applyNextOccurrence(oldTask, newTask, absolute, res, zone)
+}
+
+// logNoOccurrenceInWindow logs that an infinite rule yielded no next occurrence. A variable so
+// tests can observe it.
+var logNoOccurrenceInWindow = func(taskID int64) {
+	log.Errorf("Not advancing task %d: no occurrence found within the recurrence library's search window", taskID)
+}
+
+// dueDateBeyondHorizon reports whether the task's due date lies more than maxAnchorAgeYears before
+// now. Only the due date is checked: without a due date, each date takes one
+// step from itself, which costs nothing however old it is.
+func dueDateBeyondHorizon(due, now time.Time) bool {
+	// In UTC, so the cut-off does not depend on the location now carries.
+	return !due.IsZero() && due.Before(now.UTC().AddDate(-maxAnchorAgeYears, 0, 0))
+}
+
+// datesOutsideStorableRange reports whether any of the task's dates lies outside the years 1000
+// to 9999 in UTC, the range of MySQL's DATETIME. Relative reminders count as updateRelativeReminderDates
+// will recompute them from the moved dates in zone, since that happens after completion.
+func datesOutsideStorableRange(t *Task, zone *time.Location) bool {
+	for _, d := range storableRangeDates(t, zone) {
+		// The database stores GMT (pkg/db), so the year is the UTC one, whatever the service zone.
+		if year := d.UTC().Year(); !d.IsZero() && (year < 1000 || year > 9999) {
+			return true
+		}
+	}
+	return false
+}
+
+// storableRangeDates is every date datesOutsideStorableRange judges: the due, start and end dates,
+// then each reminder as it will be stored, a relative one computed as updateRelativeReminderDates
+// computes it. A relative reminder without its base date is left out.
+func storableRangeDates(t *Task, zone *time.Location) []time.Time {
+	dates := []time.Time{t.DueDate, t.StartDate, t.EndDate}
+	for _, rem := range t.Reminders {
+		if rem.RelativeTo == "" {
+			dates = append(dates, rem.Reminder)
+			continue
+		}
+		if base := relativeReminderBase(t, rem.RelativeTo); !base.IsZero() {
+			dates = append(dates, relativeReminderTime(base, rem.RelativePeriod, zone))
+		}
+	}
+	return dates
+}
+
+// relativeReminderBase is the task's date a reminder relative to relTo counts from; zero when the
+// task has no such date or relTo names none.
+func relativeReminderBase(t *Task, relTo ReminderRelation) time.Time {
+	switch relTo {
+	case ReminderRelationDueDate:
+		return t.DueDate
+	case ReminderRelationStartDate:
+		return t.StartDate
+	case ReminderRelationEndDate:
+		return t.EndDate
+	}
+	return time.Time{}
+}
+
+// shiftTime moves t by the same offset that takes from to to.
+// time.Time.Sub saturates at ~292 years, so for larger spans the offset is
+// applied as whole years plus a small remainder instead of one Duration.
+func shiftTime(t, from, to time.Time) time.Time {
+	diff := to.Sub(from)
+	if diff != math.MaxInt64 && diff != math.MinInt64 {
+		return t.Add(diff)
+	}
+	years := to.Year() - from.Year()
+	rest := to.Sub(from.AddDate(years, 0, 0))
+	return t.AddDate(years, 0, 0).Add(rest)
 }
 
 var (
@@ -2145,13 +2381,16 @@ func resetDescriptionChecklist(description string) string {
 // We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.Repeats has a value
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
-func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
+//
+// Completing a repeating task is one nextOccurrence call (setTaskDatesRRule), with a single "now"
+// and the completion's zone.
+func updateDone(oldTask *Task, newTask *Task, zone *time.Location) (updateDoneAt bool) {
 	// Track if the done status changed before repeat helpers modify it
 	doneStatusChanged := oldTask.Done != newTask.Done
 
 	if !oldTask.Done && newTask.Done {
 		if oldTask.Repeats != "" {
-			setTaskDatesRRule(oldTask, newTask)
+			setTaskDatesRRule(oldTask, newTask, timeNow(), zone)
 		}
 
 		// A recurring task reopens for its next occurrence, so its checklist starts fresh.
@@ -2170,25 +2409,18 @@ func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 	return doneStatusChanged
 }
 
-// Set the absolute trigger dates for Reminders with relative period
-func updateRelativeReminderDates(task *Task) (err error) {
+// Set the absolute trigger dates for Reminders with relative period, whole days counted on zone's
+// calendar (relativeReminderTime). zone may be nil when no reminder has a period of a day
+// or more with its base date set (taskNeedsReminderZone).
+func updateRelativeReminderDates(task *Task, zone *time.Location) (err error) {
 	for _, reminder := range task.Reminders {
-		relativeDuration := time.Duration(reminder.RelativePeriod) * time.Second
 		if reminder.RelativeTo != "" {
 			reminder.Reminder = time.Time{}
 		}
 		switch reminder.RelativeTo {
-		case ReminderRelationDueDate:
-			if !task.DueDate.IsZero() {
-				reminder.Reminder = task.DueDate.Add(relativeDuration)
-			}
-		case ReminderRelationStartDate:
-			if !task.StartDate.IsZero() {
-				reminder.Reminder = task.StartDate.Add(relativeDuration)
-			}
-		case ReminderRelationEndDate:
-			if !task.EndDate.IsZero() {
-				reminder.Reminder = task.EndDate.Add(relativeDuration)
+		case ReminderRelationDueDate, ReminderRelationStartDate, ReminderRelationEndDate:
+			if base := relativeReminderBase(task, reminder.RelativeTo); !base.IsZero() {
+				reminder.Reminder = relativeReminderTime(base, reminder.RelativePeriod, zone)
 			}
 		default:
 			if reminder.RelativePeriod != 0 {
@@ -2202,11 +2434,42 @@ func updateRelativeReminderDates(task *Task) (err error) {
 	return nil
 }
 
+// taskNeedsReminderZone reports whether computing the task's relative reminders reads a zone: some
+// reminder is relative by a whole day or more and its base date is set. Any other
+// save resolves no zone.
+func taskNeedsReminderZone(task *Task) bool {
+	for _, r := range task.Reminders {
+		wholeDays := r.RelativePeriod <= -24*60*60 || r.RelativePeriod >= 24*60*60
+		if r.RelativeTo != "" && wholeDays && !relativeReminderBase(task, r.RelativeTo).IsZero() {
+			return true
+		}
+	}
+	return false
+}
+
+// resolveReminderTaskZone is resolveTaskZone as reminderZone calls it; a variable so tests can
+// count the resolutions.
+var resolveReminderTaskZone = resolveTaskZone
+
+// reminderZone is the zone the task's relative reminders are computed in when a saves it:
+// the completion's zone when the save completes a repeating task, otherwise the resolved one, but
+// only when a reminder needs it. Otherwise nil, which relativeReminderTime never reads.
+func reminderZone(s *xorm.Session, a web.Auth, task *Task, completionZone *time.Location) *time.Location {
+	if completionZone != nil {
+		return completionZone
+	}
+	if !taskNeedsReminderZone(task) {
+		return nil
+	}
+	return resolveReminderTaskZone(s, a, task.ProjectID)
+}
+
 // Removes all old reminders and adds the new ones. This is a lot easier and less buggy than
 // trying to figure out which reminders changed and then only re-add those needed. And since it does
 // not make a performance difference we'll just do that.
-// The parameter is a slice which holds the new reminders.
-func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
+// The parameter is a slice which holds the new reminders; zone is the one relative reminders are
+// computed in (reminderZone).
+func (t *Task) updateReminders(s *xorm.Session, task *Task, zone *time.Location) (err error) {
 
 	_, err = s.
 		Where("task_id = ?", t.ID).
@@ -2215,7 +2478,7 @@ func (t *Task) updateReminders(s *xorm.Session, task *Task) (err error) {
 		return
 	}
 
-	err = updateRelativeReminderDates(task)
+	err = updateRelativeReminderDates(task, zone)
 	if err != nil {
 		return
 	}

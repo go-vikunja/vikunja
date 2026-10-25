@@ -1,4 +1,4 @@
-import {REPEAT_TYPES, type IRepeatType} from '@/types/IRepeatAfter'
+import {REPEAT_FREQUENCIES, type RepeatFrequency} from '@/helpers/rrule'
 import type {repeatParsedResult} from './types'
 import {numberWordsRegexGroup, parseAmount} from './numberWords'
 
@@ -13,55 +13,55 @@ export const getRepeats = (text: string): repeatParsedResult => {
 	}
 
 	let amount = results[5] ? parseAmount(results[5].trim()) : 1
-	let type: IRepeatType = REPEAT_TYPES.Hours
+	let type: RepeatFrequency = REPEAT_FREQUENCIES.Hours
 
 	switch (results[2]) {
 		case 'biennially':
-			type = REPEAT_TYPES.Years
+			type = REPEAT_FREQUENCIES.Years
 			amount = 2
 			break
 		case 'biannually':
 		case 'semiannually':
-			type = REPEAT_TYPES.Months
+			type = REPEAT_FREQUENCIES.Months
 			amount = 6
 			break
 		case 'yearly':
 		case 'annually':
-			type = REPEAT_TYPES.Years
+			type = REPEAT_FREQUENCIES.Years
 			break
 		case 'daily':
-			type = REPEAT_TYPES.Days
+			type = REPEAT_FREQUENCIES.Days
 			break
 		case 'hourly':
-			type = REPEAT_TYPES.Hours
+			type = REPEAT_FREQUENCIES.Hours
 			break
 		case 'monthly':
-			type = REPEAT_TYPES.Months
+			type = REPEAT_FREQUENCIES.Months
 			break
 		case 'weekly':
-			type = REPEAT_TYPES.Weeks
+			type = REPEAT_FREQUENCIES.Weeks
 			break
 		default:
 			switch (results[7]) {
 				case 'hour':
 				case 'hours':
-					type = REPEAT_TYPES.Hours
+					type = REPEAT_FREQUENCIES.Hours
 					break
 				case 'day':
 				case 'days':
-					type = REPEAT_TYPES.Days
+					type = REPEAT_FREQUENCIES.Days
 					break
 				case 'week':
 				case 'weeks':
-					type = REPEAT_TYPES.Weeks
+					type = REPEAT_FREQUENCIES.Weeks
 					break
 				case 'month':
 				case 'months':
-					type = REPEAT_TYPES.Months
+					type = REPEAT_FREQUENCIES.Months
 					break
 				case 'year':
 				case 'years':
-					type = REPEAT_TYPES.Years
+					type = REPEAT_FREQUENCIES.Years
 					break
 			}
 	}

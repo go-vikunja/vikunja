@@ -17,9 +17,12 @@
 package models
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/json"
+	"io"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -31,6 +34,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestGetUserDataExportStatus(t *testing.T) {
@@ -143,4 +147,174 @@ func TestHandleUserDataExport(t *testing.T) {
 			assertBlobMissing(t, id)
 		}
 	})
+}
+
+// exportedTasks runs user userID's project and task export and returns each exported task's JSON
+// object from data.json, by id.
+func exportedTasks(t *testing.T, s *xorm.Session, userID int64) map[string]map[string]json.RawMessage {
+	t.Helper()
+	u, err := user.GetUserByID(s, userID)
+	require.NoError(t, err)
+
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	_, err = exportProjectsAndTasks(s, u, zw)
+	require.NoError(t, err)
+	require.NoError(t, zw.Close())
+
+	zr, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	require.NoError(t, err)
+	var data []byte
+	for _, f := range zr.File {
+		if f.Name != "data.json" {
+			continue
+		}
+		rc, err := f.Open()
+		require.NoError(t, err)
+		data, err = io.ReadAll(rc)
+		require.NoError(t, err)
+		require.NoError(t, rc.Close())
+	}
+	require.NotEmpty(t, data, "the export must contain data.json")
+
+	var projects []struct {
+		Tasks []map[string]json.RawMessage `json:"tasks"`
+	}
+	require.NoError(t, json.Unmarshal(data, &projects))
+	tasks := map[string]map[string]json.RawMessage{}
+	for _, p := range projects {
+		for _, task := range p.Tasks {
+			tasks[string(task["id"])] = task
+		}
+	}
+	return tasks
+}
+
+// seedShiftedTask1 puts fixture task 1 in a gap-shifted state: a daily task that a completion
+// moved to Sun 2027-03-14 03:30 EDT, because 02:30 does not exist that day, remembering 02:30.
+func seedShiftedTask1(t *testing.T, s *xorm.Session) {
+	t.Helper()
+	_, err := s.ID(1).Cols("due_date", "repeats", "intended_due_time").Update(&Task{
+		DueDate:         time.Date(2027, 3, 14, 7, 30, 0, 0, time.UTC),
+		Repeats:         "FREQ=DAILY;INTERVAL=1",
+		IntendedDueTime: intPtr(9000),
+	})
+	require.NoError(t, err)
+}
+
+// The export carries the due date's intended time as the
+// export-only intended_due_time, and only when there is one. A real 0 (midnight) is kept.
+func TestExportProjectsAndTasksCarriesIntendedDueTime(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	seedShiftedTask1(t, s)
+	_, err := s.ID(3).Cols("intended_due_time").Update(&Task{IntendedDueTime: intPtr(0)})
+	require.NoError(t, err)
+
+	tasks := exportedTasks(t, s, 1)
+
+	for id, want := range map[string]string{"1": "9000", "3": "0"} {
+		task, ok := tasks[id]
+		require.True(t, ok, "task %s must be exported", id)
+		assert.Equal(t, want, string(task["intended_due_time"]), "task %s", id)
+	}
+
+	plain, ok := tasks["2"]
+	require.True(t, ok)
+	_, has := plain["intended_due_time"]
+	assert.False(t, has, "a task without an intended time must not carry intended_due_time")
+}
+
+// intended_due_time is export-file-only. The task model every API response is built from
+// does not serialise it, and the API description does not name it.
+func TestIntendedDueTimeIsNotInTheAPI(t *testing.T) {
+	out, err := json.Marshal(&Task{ID: 1, Title: "t", DueDate: time.Date(2027, 3, 14, 7, 30, 0, 0, time.UTC), IntendedDueTime: intPtr(9000)})
+	require.NoError(t, err)
+	assert.NotContains(t, string(out), "intended")
+
+	spec, err := os.ReadFile(filepath.Join("..", "swagger", "swagger.json"))
+	require.NoError(t, err)
+	assert.NotContains(t, string(spec), "intended_due_time")
+}
+
+// Completion half of the round trip: seedShiftedTask1's task, exported while shifted, decoded,
+// restored and re-created by the import path, then completed in New York, returns to its intended
+// Mon 2027-03-15 02:30 EDT and forgets the intended time (gap 1 h, displacement 1 h).
+func TestExportProjectsAndTasksIntendedDueTimeRoundTrip(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	jwtUser := &user.User{ID: 1, Username: "user1"}
+	withFixedNow(t, time.Date(2027, 3, 14, 8, 0, 0, 0, time.UTC)) // Sun 04:00 EDT
+	setUserZone(t, s, 1, "America/New_York")
+	seedShiftedTask1(t, s)
+
+	raw, err := json.Marshal(exportedTasks(t, s, 1)["1"])
+	require.NoError(t, err)
+	imported := &TaskWithComments{}
+	require.NoError(t, json.Unmarshal(raw, imported))
+	require.NotNil(t, imported.IntendedDueTime, "the export-only field carries the value")
+	assert.Equal(t, 9000, *imported.IntendedDueTime)
+	assert.Nil(t, imported.Task.IntendedDueTime, "the stored field can only be set through the validated restore")
+
+	// What the vikunja-file importer does with the file's task (its own tests cover the checks).
+	imported.Task.IntendedDueTime = imported.IntendedDueTime
+	imported.Repeats = imported.RepeatsRRule
+	imported.Repeat = nil
+	require.NoError(t, CreateTasksForImport(s, 1, []*Task{&imported.Task}, jwtUser))
+	newID := imported.ID
+	require.NotEqual(t, int64(1), newID)
+
+	stored := &Task{}
+	has, err := s.ID(newID).Get(stored)
+	require.NoError(t, err)
+	require.True(t, has)
+	require.NotNil(t, stored.IntendedDueTime, "the import stores the restored value")
+	assert.Equal(t, 9000, *stored.IntendedDueTime)
+
+	require.NoError(t, (&Task{ID: newID, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+
+	stored = &Task{}
+	has, err = s.ID(newID).Get(stored)
+	require.NoError(t, err)
+	require.True(t, has)
+	assert.False(t, stored.Done)
+	assert.Equal(t, time.Date(2027, 3, 15, 6, 30, 0, 0, time.UTC), stored.DueDate.UTC(), "Mon 02:30 EDT")
+	assert.Nil(t, stored.IntendedDueTime)
+}
+
+// The export carries each task's exact rule in the export-only repeats_rrule field,
+// next to the structured repeat the API also returns.
+func TestExportProjectsAndTasksCarriesRepeatsRRule(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(1).Cols("repeats").Update(&Task{Repeats: "FREQ=YEARLY;BYEASTER=0"})
+	require.NoError(t, err)
+
+	tasks := exportedTasks(t, s, 1)
+
+	for id, want := range map[string]string{
+		"28": "FREQ=HOURLY;INTERVAL=1",
+		"1":  "FREQ=YEARLY;BYEASTER=0",
+	} {
+		task, ok := tasks[id]
+		require.True(t, ok, "task %s must be exported", id)
+		var got string
+		require.NoError(t, json.Unmarshal(task["repeats_rrule"], &got), "task %s: repeats_rrule", id)
+		assert.Equal(t, want, got, "task %s", id)
+		assert.NotEqual(t, "null", string(task["repeat"]), "task %s keeps the structured repeat", id)
+		assert.NotEmpty(t, task["repeat"], "task %s keeps the structured repeat", id)
+	}
+
+	// A task without a rule carries no repeats_rrule key at all.
+	plain, ok := tasks["2"]
+	require.True(t, ok)
+	_, has := plain["repeats_rrule"]
+	assert.False(t, has, "a task without a rule must not carry repeats_rrule")
 }

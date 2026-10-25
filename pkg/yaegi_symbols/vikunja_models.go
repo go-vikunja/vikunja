@@ -40,6 +40,7 @@ func init() {
 		"DeleteSessionByID":                                reflect.ValueOf(models.DeleteSessionByID),
 		"DeleteUser":                                       reflect.ValueOf(models.DeleteUser),
 		"DeleteUserAsAdmin":                                reflect.ValueOf(models.DeleteUserAsAdmin),
+		"DropUnimportableRepeat":                           reflect.ValueOf(models.DropUnimportableRepeat),
 		"ErrCodeAPITokenDoesNotExist":                      reflect.ValueOf(constant.MakeFromLiteral("14017", token.INT, 0)),
 		"ErrCodeAPITokenInvalid":                           reflect.ValueOf(constant.MakeFromLiteral("14001", token.INT, 0)),
 		"ErrCodeAttachmentDoesNotBelongToTask":             reflect.ValueOf(constant.MakeFromLiteral("4020", token.INT, 0)),

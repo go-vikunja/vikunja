@@ -363,6 +363,11 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 		t.ID = 0
 		t.ProjectID = ld.Project.ID
 		t.UID = ""
+		// The stored rule text in t.Repeats is copied verbatim; the structured repeat is only its
+		// projection and must not rebuild it. It is an existing stored rule, so it
+		// is checked for syntax and the safety bound only, not the creation policy.
+		t.Repeat = nil
+		t.copiesStoredRule = true
 	}
 
 	err = createTasks(s, ld.Project.ID, tasks, doer, false, false, true)
