@@ -1592,6 +1592,11 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 	}
 
 	project, err := GetProjectSimpleByID(s, projectID)
+	isTrashed := false
+	if IsErrProjectDoesNotExist(err) {
+		project, err = getTrashedProject(s, projectID)
+		isTrashed = err == nil
+	}
 	if err != nil && !IsErrProjectDoesNotExist(err) {
 		return nil, err
 	}
@@ -1601,10 +1606,10 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 		if !exists || creator.Status != user.StatusActive {
 			continue
 		}
-		// project.deleted fires after the row is gone; nothing left to check against.
+		// Purged projects have no row left to check against.
 		if project != nil {
 			// Backstop for access lost without an explicit removal, e.g. by moving the project.
-			canRead, _, err := project.CanRead(s, &user.User{ID: w.CreatedByID})
+			canRead, err := webhookCreatorCanRead(s, project, isTrashed, &user.User{ID: w.CreatedByID})
 			if err != nil {
 				return nil, err
 			}
@@ -1615,6 +1620,14 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 		matchingWebhooks = append(matchingWebhooks, w)
 	}
 	return matchingWebhooks, nil
+}
+
+func webhookCreatorCanRead(s *xorm.Session, project *Project, isTrashed bool, creator *user.User) (bool, error) {
+	if isTrashed {
+		return canReachTrashedProject(s, creator, project)
+	}
+	canRead, _, err := project.CanRead(s, creator)
+	return canRead, err
 }
 
 // Handle is executed when the event WebhookListener listens on is fired
