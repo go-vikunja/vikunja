@@ -328,15 +328,6 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	return is, err
 }
 
-// requireLiveProject rejects trashed projects for the instance admin bypasses that skip the scoped project load.
-func requireLiveProject(s *xorm.Session, projectID int64) error {
-	if IsPseudoProjectID(projectID) {
-		return nil
-	}
-	_, err := GetProjectSimpleByID(s, projectID)
-	return err
-}
-
 // Little helper function to check if a user is project owner
 func (p *Project) isOwner(u *user.User) bool {
 	return p.OwnerID == u.ID

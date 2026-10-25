@@ -23,9 +23,11 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestAdminBypass_Project(t *testing.T) {
@@ -164,72 +166,101 @@ func setUpTrashedProjectAdmin(t *testing.T) *user.User {
 	}
 }
 
+// Sub-resource checks a regular project admin passes, built per project so trashed and live run the same set.
+func adminProjectWriteChecks(projectID, viewID, bucketID int64) map[string]func(*xorm.Session, web.Auth) (bool, error) {
+	view := &ProjectView{
+		ID:        viewID,
+		ProjectID: projectID,
+	}
+	projectUser := &ProjectUser{
+		ProjectID: projectID,
+		Username:  "user1",
+	}
+	teamProject := &TeamProject{
+		ProjectID: projectID,
+		TeamID:    1,
+	}
+	bucket := &Bucket{
+		ID:            bucketID,
+		ProjectViewID: viewID,
+		ProjectID:     projectID,
+	}
+	return map[string]func(*xorm.Session, web.Auth) (bool, error){
+		"ProjectView.CanCreate": view.CanCreate,
+		"ProjectView.CanUpdate": view.CanUpdate,
+		"ProjectView.CanDelete": view.CanDelete,
+		"ProjectUser.CanCreate": projectUser.CanCreate,
+		"ProjectUser.CanUpdate": projectUser.CanUpdate,
+		"ProjectUser.CanDelete": projectUser.CanDelete,
+		"TeamProject.CanCreate": teamProject.CanCreate,
+		"TeamProject.CanUpdate": teamProject.CanUpdate,
+		"TeamProject.CanDelete": teamProject.CanDelete,
+		"Bucket.CanUpdate":      bucket.CanUpdate,
+	}
+}
+
 func TestAdminBypass_TrashedProject(t *testing.T) {
 	admin := setUpTrashedProjectAdmin(t)
 	s := db.NewSession()
 	defer s.Close()
 	notFound := ErrProjectDoesNotExist{ID: 45}
 
-	t.Run("CanWrite", func(t *testing.T) {
+	t.Run("Project.CanWrite", func(t *testing.T) {
 		can, err := (&Project{ID: 45}).CanWrite(s, admin)
 		require.ErrorIs(t, err, notFound)
 		assert.False(t, can)
 	})
-	t.Run("CanUpdate", func(t *testing.T) {
+	t.Run("Project.CanUpdate", func(t *testing.T) {
 		can, err := (&Project{ID: 45}).CanUpdate(s, admin)
 		require.ErrorIs(t, err, notFound)
 		assert.False(t, can)
 	})
-	t.Run("IsAdmin", func(t *testing.T) {
+	t.Run("Project.IsAdmin", func(t *testing.T) {
 		can, err := (&Project{ID: 45}).IsAdmin(s, admin)
 		require.ErrorIs(t, err, notFound)
 		assert.False(t, can)
 	})
-	t.Run("share a user", func(t *testing.T) {
-		pu := &ProjectUser{
-			ProjectID: 45,
-			Username:  "user3",
-		}
-		can, err := pu.CanCreate(s, admin)
-		require.ErrorIs(t, err, notFound)
-		assert.False(t, can)
-	})
-	t.Run("share a team", func(t *testing.T) {
-		tp := &TeamProject{
-			ProjectID: 45,
-			TeamID:    1,
-		}
-		can, err := tp.CanCreate(s, admin)
-		require.ErrorIs(t, err, notFound)
-		assert.False(t, can)
-	})
-	t.Run("create a view", func(t *testing.T) {
-		can, err := (&ProjectView{ProjectID: 45}).CanCreate(s, admin)
-		require.ErrorIs(t, err, notFound)
-		assert.False(t, can)
-	})
-	t.Run("update a view", func(t *testing.T) {
+	t.Run("ProjectView.CanRead", func(t *testing.T) {
 		pv := &ProjectView{
-			ID:        4,
+			ID:        1,
 			ProjectID: 1,
 		}
-		can, err := pv.CanUpdate(s, admin)
-		require.ErrorIs(t, err, ErrProjectDoesNotExist{ID: 1})
+		can, _, err := pv.CanRead(s, admin)
+		var inTrash ErrProjectIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		assert.Equal(t, int64(1), inTrash.ID)
 		assert.False(t, can)
 	})
-	t.Run("update a bucket", func(t *testing.T) {
-		b := &Bucket{
-			ID:            1,
-			ProjectViewID: 4,
-			ProjectID:     1,
+	for name, check := range adminProjectWriteChecks(1, 4, 1) {
+		t.Run(name, func(t *testing.T) {
+			can, err := check(s, admin)
+			require.ErrorIs(t, err, ErrProjectDoesNotExist{ID: 1})
+			assert.False(t, can)
+		})
+	}
+
+	t.Run("live project", func(t *testing.T) {
+		t.Run("Project.CanWrite", func(t *testing.T) {
+			can, err := (&Project{ID: 2}).CanWrite(s, admin)
+			require.NoError(t, err)
+			assert.True(t, can)
+		})
+		t.Run("ProjectView.CanRead", func(t *testing.T) {
+			pv := &ProjectView{
+				ID:        5,
+				ProjectID: 2,
+			}
+			can, maxPermission, err := pv.CanRead(s, admin)
+			require.NoError(t, err)
+			assert.True(t, can)
+			assert.Equal(t, int(PermissionAdmin), maxPermission)
+		})
+		for name, check := range adminProjectWriteChecks(2, 8, 4) {
+			t.Run(name, func(t *testing.T) {
+				can, err := check(s, admin)
+				require.NoError(t, err)
+				assert.True(t, can)
+			})
 		}
-		can, err := b.CanUpdate(s, admin)
-		require.ErrorIs(t, err, ErrProjectDoesNotExist{ID: 1})
-		assert.False(t, can)
-	})
-	t.Run("live project still bypasses", func(t *testing.T) {
-		can, err := (&Project{ID: 2}).CanWrite(s, admin)
-		require.NoError(t, err)
-		assert.True(t, can)
 	})
 }

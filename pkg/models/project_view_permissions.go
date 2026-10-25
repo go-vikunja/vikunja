@@ -22,10 +22,7 @@ import (
 )
 
 func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
-	if isInstanceAdmin(s, a) {
-		if err := requireLiveProject(s, pv.ProjectID); err != nil {
-			return false, 0, err
-		}
+	if pv.isPseudoProjectInstanceAdmin(s, a) {
 		return true, int(PermissionAdmin), nil
 	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
@@ -39,10 +36,7 @@ func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 }
 
 func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	if isInstanceAdmin(s, a) {
-		if err := requireLiveProject(s, pv.ProjectID); err != nil {
-			return false, err
-		}
+	if pv.isPseudoProjectInstanceAdmin(s, a) {
 		return true, nil
 	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
@@ -60,10 +54,7 @@ func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	if isInstanceAdmin(s, a) {
-		if err := requireLiveProject(s, pv.ProjectID); err != nil {
-			return false, err
-		}
+	if pv.isPseudoProjectInstanceAdmin(s, a) {
 		return true, nil
 	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
@@ -82,10 +73,7 @@ func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (pv *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	if isInstanceAdmin(s, a) {
-		if err := requireLiveProject(s, pv.ProjectID); err != nil {
-			return false, err
-		}
+	if pv.isPseudoProjectInstanceAdmin(s, a) {
 		return true, nil
 	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
@@ -96,6 +84,11 @@ func (pv *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 
 	pp := pv.getProject()
 	return pp.IsAdmin(s, a)
+}
+
+// Real projects get the instance admin bypass from Project, behind its trash check.
+func (pv *ProjectView) isPseudoProjectInstanceAdmin(s *xorm.Session, a web.Auth) bool {
+	return IsPseudoProjectID(pv.ProjectID) && isInstanceAdmin(s, a)
 }
 
 func (pv *ProjectView) getProject() (pp *Project) {
