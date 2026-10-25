@@ -172,13 +172,7 @@ func TestTimeEntry_ReadAll(t *testing.T) {
 
 			result, count, total, err := (&TimeEntry{}).ReadAll(s, tt.auth, "", 1, 50)
 			require.NoError(t, err)
-			entries, ok := result.([]*TimeEntry)
-			require.True(t, ok)
-
-			gotIDs := make([]int64, 0, len(entries))
-			for _, e := range entries {
-				gotIDs = append(gotIDs, e.ID)
-			}
+			gotIDs := timeEntryIDs(t, result)
 			assert.ElementsMatch(t, tt.wantIDs, gotIDs)
 			assert.Equal(t, len(tt.wantIDs), count)
 			assert.Equal(t, int64(len(tt.wantIDs)), total)
@@ -250,12 +244,7 @@ func TestTimeEntry_ReadAll_Filter(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			entries, ok := result.([]*TimeEntry)
-			require.True(t, ok)
-			gotIDs := make([]int64, 0, len(entries))
-			for _, e := range entries {
-				gotIDs = append(gotIDs, e.ID)
-			}
+			gotIDs := timeEntryIDs(t, result)
 			assert.ElementsMatch(t, tt.wantIDs, gotIDs)
 		})
 	}
@@ -312,12 +301,7 @@ func TestTimeEntry_ReadAll_Search(t *testing.T) {
 
 			result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, tt.search, 1, 50)
 			require.NoError(t, err)
-			entries, ok := result.([]*TimeEntry)
-			require.True(t, ok)
-			gotIDs := make([]int64, 0, len(entries))
-			for _, e := range entries {
-				gotIDs = append(gotIDs, e.ID)
-			}
+			gotIDs := timeEntryIDs(t, result)
 			assert.ElementsMatch(t, tt.wantIDs, gotIDs)
 		})
 	}
