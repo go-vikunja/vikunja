@@ -26,7 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -131,37 +130,40 @@ func TestProject_Restore(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, can)
 	})
-	t.Run("one event per project on restore and trash", func(t *testing.T) {
+	t.Run("one restored event per project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		events.ClearDispatchedEvents()
-		projectIDs := func(eventName string) []int64 {
-			ids := []int64{}
-			for _, e := range events.GetDispatchedEvents(eventName) {
-				switch ev := e.(type) {
-				case *ProjectRestoredEvent:
-					ids = append(ids, ev.Project.ID)
-				case *ProjectDeletedEvent:
-					ids = append(ids, ev.Project.ID)
-				}
-			}
-			return ids
-		}
 
 		require.NoError(t, restoreProjectForTest(t, 45, u1))
+
+		restored := []int64{}
+		for _, e := range events.GetDispatchedEvents((&ProjectRestoredEvent{}).Name()) {
+			restored = append(restored, e.(*ProjectRestoredEvent).Project.ID)
+		}
 		assert.ElementsMatch(t, []int64{
 			45,
 			46,
-		}, projectIDs((&ProjectRestoredEvent{}).Name()))
+		}, restored)
+	})
+	t.Run("one deleted event per project when trashed again", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		require.NoError(t, restoreProjectForTest(t, 45, u1))
+		events.ClearDispatchedEvents()
 
 		s := db.NewSession()
 		defer s.Close()
 		require.NoError(t, (&Project{ID: 45}).Delete(s, u1))
 		require.NoError(t, s.Commit())
 		events.DispatchPending(context.Background(), s)
+
+		trashed := []int64{}
+		for _, e := range events.GetDispatchedEvents((&ProjectDeletedEvent{}).Name()) {
+			trashed = append(trashed, e.(*ProjectDeletedEvent).Project.ID)
+		}
 		assert.ElementsMatch(t, []int64{
 			45,
 			46,
-		}, projectIDs((&ProjectDeletedEvent{}).Name()))
+		}, trashed)
 	})
 	t.Run("brings back sub-projects trashed separately before", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -316,21 +318,6 @@ func TestProject_ReadTrashed_Shares(t *testing.T) {
 		assert.True(t, IsErrProjectDoesNotExist(err))
 		assert.NotErrorAs(t, err, &ErrProjectIsInTrash{})
 	})
-}
-
-func setUpInstanceAdmin(t *testing.T) *user.User {
-	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
-	t.Cleanup(license.ResetForTests)
-
-	s := db.NewAutocommitSession()
-	defer s.Close()
-	_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
-	require.NoError(t, err)
-
-	return &user.User{
-		ID:      2,
-		IsAdmin: true,
-	}
 }
 
 func TestProject_ReadTrashed_InstanceAdmin(t *testing.T) {

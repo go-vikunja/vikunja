@@ -147,8 +147,7 @@ func TestAdminBypass_StaleJWT_DeletedUser(t *testing.T) {
 	})
 }
 
-func setUpTrashedProjectAdmin(t *testing.T) *user.User {
-	db.LoadAndAssertFixtures(t)
+func setUpInstanceAdmin(t *testing.T) *user.User {
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 	t.Cleanup(license.ResetForTests)
 
@@ -156,14 +155,24 @@ func setUpTrashedProjectAdmin(t *testing.T) *user.User {
 	defer s.Close()
 	_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
 	require.NoError(t, err)
-	// Project 1 has views and buckets, unlike the trashed fixtures.
-	_, err = s.Table("projects").Where("id = ?", 1).Update(map[string]any{"deleted_at": time.Now()})
-	require.NoError(t, err)
 
 	return &user.User{
 		ID:      2,
 		IsAdmin: true,
 	}
+}
+
+func setUpTrashedProjectAdmin(t *testing.T) *user.User {
+	db.LoadAndAssertFixtures(t)
+	admin := setUpInstanceAdmin(t)
+
+	s := db.NewAutocommitSession()
+	defer s.Close()
+	// Project 1 has views and buckets, unlike the trashed fixtures.
+	_, err := s.Table("projects").Where("id = ?", 1).Update(map[string]any{"deleted_at": time.Now()})
+	require.NoError(t, err)
+
+	return admin
 }
 
 // Sub-resource checks a regular project admin passes, built per project so trashed and live run the same set.
