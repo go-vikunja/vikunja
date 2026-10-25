@@ -19,6 +19,7 @@ package models
 import (
 	"context"
 	"io/fs"
+	"net/http"
 	"testing"
 	"time"
 
@@ -280,7 +281,11 @@ func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 		s.Close()
 
 		assert.False(t, readInTrash(t, 46, u1).CanRestore)
-		require.Error(t, restoreProjectForTest(t, 46, u1))
+		err = restoreProjectForTest(t, 46, u1)
+		var missing ErrParentProjectDoesNotExist
+		require.ErrorAs(t, err, &missing)
+		assert.Equal(t, http.StatusPreconditionFailed, missing.HTTPError().HTTPCode)
+		assert.Equal(t, ErrCodeParentProjectDoesNotExist, missing.HTTPError().Code)
 	})
 }
 

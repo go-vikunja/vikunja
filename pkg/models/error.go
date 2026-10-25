@@ -662,6 +662,38 @@ func (err ErrParentProjectIsInTrash) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrParentProjectDoesNotExist is returned when restoring a project whose parent row is gone.
+type ErrParentProjectDoesNotExist struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectDoesNotExist checks if an error is ErrParentProjectDoesNotExist.
+func IsErrParentProjectDoesNotExist(err error) bool {
+	_, ok := err.(ErrParentProjectDoesNotExist)
+	return ok
+}
+
+func (err ErrParentProjectDoesNotExist) Error() string {
+	return fmt.Sprintf(
+		"Parent project does not exist [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
+}
+
+// ErrCodeParentProjectDoesNotExist holds the unique world-error code of this error
+const ErrCodeParentProjectDoesNotExist = 3020
+
+// HTTPError holds the http error description
+func (err ErrParentProjectDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectDoesNotExist,
+		Message:  "The parent project does not exist anymore.",
+	}
+}
+
 // ErrParentProjectIsArchived represents an error, where a project's parent is archived
 type ErrParentProjectIsArchived struct {
 	ProjectID       int64

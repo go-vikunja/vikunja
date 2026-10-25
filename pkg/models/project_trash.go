@@ -18,7 +18,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"time"
 
@@ -332,7 +331,10 @@ func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
 	}
 	// Purging takes all sub-projects along and the orphan repair re-parents the rest.
 	if !has {
-		return fmt.Errorf("parent project %d of project %d does not exist", parentID, p.ID), nil
+		return ErrParentProjectDoesNotExist{
+			ProjectID:       p.ID,
+			ParentProjectID: parentID,
+		}, nil
 	}
 	switch {
 	case !parent.DeletedAt.IsZero():
