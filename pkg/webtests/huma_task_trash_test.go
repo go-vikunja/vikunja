@@ -57,14 +57,18 @@ func assertTaskInTrash(t *testing.T, rec *httptest.ResponseRecorder) {
 	var body struct {
 		Code    int `json:"code"`
 		Details struct {
-			ProjectID int64  `json:"project_id"`
-			DeletedAt string `json:"deleted_at"`
+			ID         int64  `json:"id"`
+			ProjectID  int64  `json:"project_id"`
+			DeletedAt  string `json:"deleted_at"`
+			CanRestore bool   `json:"can_restore"`
 		} `json:"details"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
 	assert.Equal(t, models.ErrCodeTaskIsInTrash, body.Code, rec.Body.String())
+	assert.Equal(t, int64(51), body.Details.ID, rec.Body.String())
 	assert.Equal(t, int64(1), body.Details.ProjectID, rec.Body.String())
 	assert.NotEmpty(t, body.Details.DeletedAt, rec.Body.String())
+	assert.True(t, body.Details.CanRestore, rec.Body.String())
 }
 
 // Task 51 in project 1 (owned by user 1) is soft-deleted in the fixtures.
