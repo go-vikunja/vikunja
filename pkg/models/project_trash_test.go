@@ -272,6 +272,17 @@ func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 
 		assert.False(t, readInTrash(t, 21, u1).CanRestore)
 	})
+	t.Run("not while the parent row is gone", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		_, err := s.Table("projects").Where("id = ?", 46).Update(map[string]any{"parent_project_id": 99999})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.False(t, readInTrash(t, 46, u1).CanRestore)
+		require.Error(t, restoreProjectForTest(t, 46, u1))
+	})
 }
 
 func TestProject_ReadTrashed_Shares(t *testing.T) {

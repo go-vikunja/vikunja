@@ -332,7 +332,7 @@ func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
 	}
 	// Purging takes all sub-projects along and the orphan repair re-parents the rest.
 	if !has {
-		return nil, fmt.Errorf("parent project %d of project %d does not exist", parentID, p.ID)
+		return fmt.Errorf("parent project %d of project %d does not exist", parentID, p.ID), nil
 	}
 	switch {
 	case !parent.DeletedAt.IsZero():
