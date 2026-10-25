@@ -260,6 +260,17 @@ func TestTask_Restore(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
+	t.Run("refused while its project is in the trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		setTaskColumnsForTest(t, 53, map[string]any{"deleted_at": time.Now()})
+
+		_, err := restoreTaskForTest(t, 53, u1)
+		var inTrash ErrProjectIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		assert.Equal(t, ErrCodeProjectIsInTrash, inTrash.HTTPError().Code)
+		assert.Equal(t, int64(45), inTrash.ID)
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 53, "deleted_at": nil})
+	})
 }
 
 func TestTaskTrash_InstanceAdminInArchivedProject(t *testing.T) {
