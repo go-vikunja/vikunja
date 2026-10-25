@@ -267,11 +267,35 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 	return inTrash
 }
 
+// Like regular reads, link shares never reach a trashed project.
+func canReachTrashedProject(s *xorm.Session, a web.Auth, project *Project) (bool, error) {
+	if _, isShare := a.(*LinkSharing); isShare {
+		return false, nil
+	}
+	if isInstanceAdmin(s, a) || project.OwnerID == a.GetID() {
+		return true, nil
+	}
+	access, err := getProjectAccessIncludingTrash(s, a.GetID())
+	if err != nil {
+		return false, err
+	}
+	_, has := access.permission(project.ID)
+	return has, nil
+}
+
 // canDoTrashedProject loads the trashed project into p and checks admin access to it.
+// Callers who can't reach it get ErrProjectDoesNotExist, so its existence doesn't leak.
 func (p *Project) canDoTrashedProject(s *xorm.Session, a web.Auth) (bool, error) {
 	trashed, err := getTrashedProject(s, p.ID)
 	if err != nil {
 		return false, err
+	}
+	reachable, err := canReachTrashedProject(s, a, trashed)
+	if err != nil {
+		return false, err
+	}
+	if !reachable {
+		return false, ErrProjectDoesNotExist{ID: p.ID}
 	}
 	*p = *trashed
 	return canAdminTrashedProject(s, a, p)

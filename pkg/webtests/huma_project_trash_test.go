@@ -79,7 +79,8 @@ func TestHumaProjectTrash(t *testing.T) {
 		require.NoError(t, err)
 
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects/45/restore", "", stranger(t), "")
-		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+		assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"code":3001`)
 
 		rec = humaRequest(t, e, http.MethodPost, "/api/v2/projects/46/restore", "", user1(t), "")
 		assert.Equal(t, http.StatusPreconditionFailed, rec.Code, rec.Body.String())
@@ -96,7 +97,8 @@ func TestHumaProjectTrash(t *testing.T) {
 		require.NoError(t, err)
 
 		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/projects/45/permanent", "", stranger(t), "")
-		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+		assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"code":3001`)
 
 		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/projects/1/permanent", "", user1(t), "")
 		assert.Equal(t, http.StatusNotFound, rec.Code, "live project: %s", rec.Body.String())

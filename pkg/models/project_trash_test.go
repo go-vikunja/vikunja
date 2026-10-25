@@ -122,9 +122,9 @@ func TestProject_Restore(t *testing.T) {
 		require.NoError(t, restoreProjectForTest(t, 11, u1))
 		require.ErrorIs(t, restoreProjectForTest(t, 9, u1), ErrGenericForbidden{})
 	})
-	t.Run("unrelated user is denied", func(t *testing.T) {
+	t.Run("unrelated user does not see it", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		require.ErrorIs(t, restoreProjectForTest(t, 45, &user.User{ID: 2}), ErrGenericForbidden{})
+		assert.True(t, IsErrProjectDoesNotExist(restoreProjectForTest(t, 45, &user.User{ID: 2})))
 	})
 	t.Run("live project is not in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -274,9 +274,9 @@ func TestProject_DeletePermanently(t *testing.T) {
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
 	})
-	t.Run("unrelated user is denied", func(t *testing.T) {
+	t.Run("unrelated user does not see it", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		require.ErrorIs(t, purge(t, 45, &user.User{ID: 2}), ErrGenericForbidden{})
+		assert.True(t, IsErrProjectDoesNotExist(purge(t, 45, &user.User{ID: 2})))
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
 	})
 	t.Run("live project is not in the trash", func(t *testing.T) {
