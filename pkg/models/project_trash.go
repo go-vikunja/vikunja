@@ -19,6 +19,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
@@ -432,22 +433,32 @@ func trashedProjectsCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Only trashed ids: the access map holds every live project too, which would bloat the IN list.
-	trashedIDs := []int64{}
-	err = s.Table("projects").Where(builder.NotNull{"deleted_at"}).Cols("id").Find(&trashedIDs)
-	if err != nil {
-		return nil, err
-	}
 	adminIDs := []int64{}
-	for _, id := range trashedIDs {
-		if permission, has := access.permission(id); has && permission == PermissionAdmin {
+	for _, id := range access.sortedIDs {
+		if access.permissions[id] == PermissionAdmin {
 			adminIDs = append(adminIDs, id)
 		}
+	}
+	// Only trashed ids: the access map holds every live project too, which would bloat the IN list.
+	trashedAdminIDs := []int64{}
+	for chunk := range slices.Chunk(adminIDs, maxInListSize) {
+		batch := []int64{}
+		err = s.Table("projects").
+			Where(builder.And(
+				builder.In("id", chunk),
+				builder.NotNull{"deleted_at"},
+			)).
+			Cols("id").
+			Find(&batch)
+		if err != nil {
+			return nil, err
+		}
+		trashedAdminIDs = append(trashedAdminIDs, batch...)
 	}
 
 	return builder.And(
 		builder.NotNull{"projects.deleted_at"},
-		builder.In("projects.id", adminIDs),
+		builder.In("projects.id", trashedAdminIDs),
 		builder.Or(
 			builder.IsNull{"projects.parent_project_id"},
 			builder.NotIn("projects.parent_project_id",
