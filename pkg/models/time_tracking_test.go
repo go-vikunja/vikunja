@@ -1074,6 +1074,11 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 		require.True(t, can)
 		require.NoError(t, te.Update(s, author))
 		require.NoError(t, s.Commit())
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         3,
+			"task_id":    0,
+			"project_id": 0,
+		}, false)
 
 		can, _, err = (&TimeEntry{ID: 3}).CanRead(s, u1)
 		require.NoError(t, err)
@@ -1140,27 +1145,4 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 			4,
 		}, ids)
 	})
-}
-
-func TestTimeEntry_UpdateDetachesWithOneExplicitNull(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-	a := &user.User{ID: 1}
-
-	te := &TimeEntry{}
-	body := `{"project_id":null,"start_time":"2018-12-01T12:00:00Z","end_time":"2018-12-01T13:00:00Z"}`
-	require.NoError(t, json.Unmarshal([]byte(body), te))
-	te.ID = 2
-	can, err := te.CanUpdate(s, a)
-	require.NoError(t, err)
-	require.True(t, can)
-	require.NoError(t, te.Update(s, a))
-	require.NoError(t, s.Commit())
-
-	db.AssertExists(t, "time_entries", map[string]interface{}{
-		"id":         2,
-		"task_id":    0,
-		"project_id": 0,
-	}, false)
 }
