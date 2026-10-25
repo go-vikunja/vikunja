@@ -1456,15 +1456,6 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	isDefaultProject, err := p.isDefaultProject(s)
-	if err != nil {
-		return err
-	}
-	// Owners should be allowed to delete the default project
-	if isDefaultProject && fullProject.OwnerID != a.GetID() {
-		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
-	}
-
 	return trashProject(s, fullProject, a)
 }
 
