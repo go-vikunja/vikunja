@@ -113,19 +113,18 @@ func TestNextOccurrence_Reasons(t *testing.T) {
 	assert.Equal(t, []int64{2}, logged, "only the infinite rule logs a search-window exhaustion")
 
 	t.Run("evaluation_failed", func(t *testing.T) {
-		// The bounds refuse this ordinal; like TestAdvanceTaskDatesRecoversFromAPanic, the
-		// evaluation stage is called past them, and rrule-go's panic is recovered.
-		const rule = "FREQ=MONTHLY;BYDAY=-6MO"
-		opt, err := rrule.StrToROption(rule)
-		require.NoError(t, err)
-		require.Error(t, checkRRuleBounds(opt))
+		// Any panic in the evaluation stage is recovered. A nil option stands in for one: it panics
+		// inside the stage whatever rrule-go version is in use, so this does not depend on a
+		// library bug the bounds already keep out of reach.
+		const rule = "FREQ=MONTHLY;BYDAY=-1MO"
+		var opt *rrule.ROption
 		in := nextOccurrenceInput{
 			Rule: rule, Due: dated(time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC)),
 			Reminders: []datedValue{dated(time.Date(2026, 9, 30, 9, 0, 0, 0, time.UTC))},
 			Now:       now, Zone: time.UTC, TaskID: 99,
 		}
 		var res nextOccurrenceResult
-		require.NotPanics(t, func() { res = evaluateNextOccurrence(in, opt, *opt) })
+		require.NotPanics(t, func() { res = evaluateNextOccurrence(in, opt, rrule.ROption{}) })
 		assert.Equal(t, reasonEvaluationFailed, res.Reason)
 		assertNothingMoved(t, in, res)
 	})

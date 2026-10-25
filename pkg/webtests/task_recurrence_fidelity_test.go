@@ -126,7 +126,7 @@ func TestTaskRecurrenceFidelity(t *testing.T) {
 		return e, token, stale
 	}
 
-	t.Run("#7 v2 PATCH carrying the stale COUNT keeps the decremented one", func(t *testing.T) {
+	t.Run("v2 PATCH carrying the stale COUNT keeps the decremented one", func(t *testing.T) {
 		e, token, _ := countSetup(t)
 		afterCompletion := storedRule(t, 1)
 
@@ -137,7 +137,7 @@ func TestTaskRecurrenceFidelity(t *testing.T) {
 		assert.Equal(t, afterCompletion, storedRule(t, 1))
 	})
 
-	t.Run("#7 v1 POST of a copy read before the completion keeps the decremented COUNT", func(t *testing.T) {
+	t.Run("v1 POST of a copy read before the completion keeps the decremented COUNT", func(t *testing.T) {
 		e, token, stale := countSetup(t)
 		afterCompletion := storedRule(t, 1)
 
@@ -147,7 +147,7 @@ func TestTaskRecurrenceFidelity(t *testing.T) {
 		assert.Equal(t, afterCompletion, storedRule(t, 1))
 	})
 
-	t.Run("#7 v2 PATCH of a lower COUNT saves it", func(t *testing.T) {
+	t.Run("v2 PATCH of a lower COUNT saves it", func(t *testing.T) {
 		e, token, _ := countSetup(t)
 
 		rec := humaRequest(t, e, http.MethodPatch, taskPathV2, `{"repeat":{"freq":"daily","interval":1,"count":1}}`, token, mergePatch)
@@ -155,7 +155,7 @@ func TestTaskRecurrenceFidelity(t *testing.T) {
 		assert.Contains(t, storedRule(t, 1), "COUNT=1")
 	})
 
-	t.Run("#7 v2 PATCH of a changed rule with the old COUNT saves it as sent", func(t *testing.T) {
+	t.Run("v2 PATCH of a changed rule with the old COUNT saves it as sent", func(t *testing.T) {
 		e, token, _ := countSetup(t)
 
 		rec := humaRequest(t, e, http.MethodPatch, taskPathV2, `{"repeat":{"freq":"weekly","interval":1,"count":3}}`, token, mergePatch)
@@ -310,7 +310,7 @@ func TestTaskRecurrenceFidelity(t *testing.T) {
 		assert.Equal(t, time.Date(2030, 1, 11, 12, 0, 0, 0, time.UTC), task.DueDate.UTC())
 	})
 
-	t.Run("#7 an exhausted COUNT rule stays cleared after a later update", func(t *testing.T) {
+	t.Run("an exhausted COUNT rule stays cleared after a later update", func(t *testing.T) {
 		e, token := setup(t, "FREQ=DAILY;INTERVAL=1;COUNT=1")
 
 		rec := humaRequest(t, e, http.MethodPatch, taskPathV2, `{"done":true}`, token, mergePatch)

@@ -1595,7 +1595,7 @@ END:VTODO` + vtodoFooter
 		require.Equal(t, 201, rec.Result().StatusCode, rec.Body.String())
 	}
 
-	t.Run("#7 PUT with the COUNT synced before a completion keeps the decremented COUNT", func(t *testing.T) {
+	t.Run("PUT with the COUNT synced before a completion keeps the decremented COUNT", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		afterCompletion := countAfterWebCompletion(t, e)
 
@@ -1606,7 +1606,7 @@ END:VTODO` + vtodoFooter
 		assert.Equal(t, afterCompletion, task.Repeats)
 	})
 
-	t.Run("#7 PUT with a lower COUNT saves it", func(t *testing.T) {
+	t.Run("PUT with a lower COUNT saves it", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		countAfterWebCompletion(t, e)
 
@@ -1615,7 +1615,7 @@ END:VTODO` + vtodoFooter
 		assert.Equal(t, "FREQ=DAILY;INTERVAL=1;COUNT=1", getTask(t, "uid-caldav-test").Repeats)
 	})
 
-	t.Run("#7 PUT with a changed FREQ and the old COUNT saves it", func(t *testing.T) {
+	t.Run("PUT with a changed FREQ and the old COUNT saves it", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		countAfterWebCompletion(t, e)
 
@@ -1624,7 +1624,7 @@ END:VTODO` + vtodoFooter
 		assert.Equal(t, "FREQ=WEEKLY;INTERVAL=1;COUNT=3", getTask(t, "uid-caldav-test").Repeats)
 	})
 
-	t.Run("#7 a CalDAV completion carrying the stale COUNT decrements the stored one", func(t *testing.T) {
+	t.Run("a CalDAV completion carrying the stale COUNT decrements the stored one", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		countAfterWebCompletion(t, e)
 

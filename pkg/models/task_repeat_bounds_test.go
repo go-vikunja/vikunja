@@ -555,10 +555,10 @@ func TestRRuleIntervalHorizon(t *testing.T) {
 // an evaluation that panics anyway (here a BYDAY ordinal the bounds refuse, passed past them) must
 // not take the request down: the task stays done with its dates, reminders and rule unchanged.
 func TestAdvanceTaskDatesRecoversFromAPanic(t *testing.T) {
-	const rule = "FREQ=MONTHLY;BYDAY=-6MO"
-	opt, err := rrule.StrToROption(rule)
-	require.NoError(t, err)
-	require.Error(t, checkRRuleBounds(opt), "the bounds refuse it; this test passes it past them")
+	// A nil option panics inside the evaluation stage whatever rrule-go version is in use, standing in
+	// for any panic there; the bounds already keep the library's known panics out of reach.
+	const rule = "FREQ=MONTHLY;BYDAY=-1MO"
+	var opt *rrule.ROption
 
 	due := time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC)
 	reminder := time.Date(2026, 9, 30, 9, 0, 0, 0, time.UTC)
@@ -568,7 +568,7 @@ func TestAdvanceTaskDatesRecoversFromAPanic(t *testing.T) {
 
 	var moved bool
 	require.NotPanics(t, func() {
-		moved = advanceTaskDates(oldTask, newTask, opt, *opt, time.Date(2026, 10, 22, 12, 0, 0, 0, time.UTC))
+		moved = advanceTaskDates(oldTask, newTask, opt, rrule.ROption{}, time.Date(2026, 10, 22, 12, 0, 0, 0, time.UTC))
 	})
 	assert.False(t, moved)
 	assert.True(t, newTask.Done)
