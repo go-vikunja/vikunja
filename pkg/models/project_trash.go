@@ -32,16 +32,15 @@ import (
 	"xorm.io/xorm"
 )
 
-// subtreeIDs returns the project and its descendants; trashed narrows them to live (false) or trashed (true) ones.
-func subtreeIDs(s *xorm.Session, projectID int64, trashed bool) (ids []int64, err error) {
-	deletedCond := "projects.deleted_at IS NULL"
-	if trashed {
-		deletedCond = "projects.deleted_at IS NOT NULL"
-	}
+// Includes the project itself.
+func subtreeIDs(s *xorm.Session, projectID int64, cond builder.Cond) (ids []int64, err error) {
 	ids = []int64{}
 	err = s.Table("project_ancestors").
-		Join("INNER", "projects", "projects.id = project_ancestors.project_id AND "+deletedCond).
-		Where("project_ancestors.ancestor_id = ?", projectID).
+		Join("INNER", "projects", "projects.id = project_ancestors.project_id").
+		Where(builder.And(
+			builder.Eq{"project_ancestors.ancestor_id": projectID},
+			cond,
+		)).
 		Cols("project_ancestors.project_id").
 		Find(&ids)
 	return
@@ -49,7 +48,7 @@ func subtreeIDs(s *xorm.Session, projectID int64, trashed bool) (ids []int64, er
 
 // trashProject moves the project and all its live descendants to the trash in one go.
 func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
-	ids, err := subtreeIDs(s, project.ID, false)
+	ids, err := subtreeIDs(s, project.ID, builder.IsNull{"projects.deleted_at"})
 	if err != nil {
 		return err
 	}
@@ -374,7 +373,7 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 		return blocker
 	}
 
-	ids, err := subtreeIDs(s, p.ID, true)
+	ids, err := subtreeIDs(s, p.ID, builder.NotNull{"projects.deleted_at"})
 	if err != nil {
 		return err
 	}
@@ -497,8 +496,12 @@ func GetTrashedProjects(s *xorm.Session, a web.Auth, page, perPage int) (project
 	err = s.Table("project_ancestors").
 		Select("project_ancestors.ancestor_id, project_ancestors.depth, projects.id, projects.title, "+
 			"COALESCE(projects.parent_project_id, 0) AS parent_project_id").
-		Join("INNER", "projects", "projects.id = project_ancestors.project_id AND projects.deleted_at IS NOT NULL").
-		Where(builder.And(builder.In("project_ancestors.ancestor_id", projectIDs), builder.Gt{"project_ancestors.depth": 0})).
+		Join("INNER", "projects", "projects.id = project_ancestors.project_id").
+		Where(builder.And(
+			builder.In("project_ancestors.ancestor_id", projectIDs),
+			builder.Gt{"project_ancestors.depth": 0},
+			builder.NotNull{"projects.deleted_at"},
+		)).
 		OrderBy("project_ancestors.depth, projects.title, projects.id").
 		Find(&subProjects)
 	if err != nil {
@@ -611,7 +614,7 @@ func GetProjectCount(s *xorm.Session, a web.Auth, projectID int64) (*ProjectCoun
 		return nil, ErrGenericForbidden{}
 	}
 
-	ids, err := subtreeIDs(s, projectID, false)
+	ids, err := subtreeIDs(s, projectID, builder.IsNull{"projects.deleted_at"})
 	if err != nil {
 		return nil, err
 	}

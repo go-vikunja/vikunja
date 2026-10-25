@@ -19,6 +19,7 @@ package models
 import (
 	"code.vikunja.io/api/pkg/license"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -43,7 +44,7 @@ func BuildOverview(s *xorm.Session) (*Overview, error) {
 	if err != nil {
 		return nil, err
 	}
-	projects, err := s.Table("projects").Where("deleted_at IS NULL").Count()
+	projects, err := s.Table("projects").Where(builder.IsNull{"deleted_at"}).Count()
 	if err != nil {
 		return nil, err
 	}
