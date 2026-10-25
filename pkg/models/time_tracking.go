@@ -248,12 +248,12 @@ func readableTimeEntriesCond(s *xorm.Session, a web.Auth) (builder.Cond, error) 
 
 func timeEntryWithoutContainerCond() builder.Cond {
 	return builder.And(
-		noContainerCond("task_id"),
-		noContainerCond("project_id"),
+		zeroOrNullCond("task_id"),
+		zeroOrNullCond("project_id"),
 	)
 }
 
-func noContainerCond(col string) builder.Cond {
+func zeroOrNullCond(col string) builder.Cond {
 	return builder.Or(builder.Eq{col: 0}, builder.IsNull{col})
 }
 

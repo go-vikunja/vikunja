@@ -124,7 +124,7 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	switch field {
 	case "user_id", "task_id":
 		if field == "task_id" && raw == "null" {
-			isNull := noContainerCond(field)
+			isNull := zeroOrNullCond(field)
 			return nullFilterCond(field, isNull, builder.Not{isNull}, comparator)
 		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
