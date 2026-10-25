@@ -230,6 +230,7 @@ func TestTimeEntry_ReadAll_Filter(t *testing.T) {
 		{"by project negated", "project_id != 1", []int64{3}, false},
 		{"by start time", "start_time > '2018-12-01T11:00:00+00:00'", []int64{2, 3, 4}, false},
 		{"running timers via null end_time", "end_time = null", []int64{4}, false},
+		{"finished entries via not-null end_time", "end_time != null", []int64{1, 2, 3}, false},
 		{"compound and", "user_id = 1 && end_time = null", []int64{4}, false},
 		{"compound or", "user_id = 3 || task_id = 1", []int64{1, 3, 4}, false},
 		{"in list", "user_id in 1,3", []int64{1, 2, 3, 4}, false},
