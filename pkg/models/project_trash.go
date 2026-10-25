@@ -415,9 +415,15 @@ func trashedProjectsCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Only trashed ids: the access map holds every live project too, which would bloat the IN list.
+	trashedIDs := []int64{}
+	err = s.Table("projects").Where(builder.NotNull{"deleted_at"}).Cols("id").Find(&trashedIDs)
+	if err != nil {
+		return nil, err
+	}
 	adminIDs := []int64{}
-	for _, id := range access.sortedIDs {
-		if access.permissions[id] == PermissionAdmin {
+	for _, id := range trashedIDs {
+		if permission, has := access.permission(id); has && permission == PermissionAdmin {
 			adminIDs = append(adminIDs, id)
 		}
 	}
