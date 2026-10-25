@@ -162,14 +162,6 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 			// Child projects are deleted with their parent
 			continue
 		}
-		// Someone else's default project was only shared with the user
-		isDefault, err := p.isDefaultProject(s)
-		if err != nil {
-			return err
-		}
-		if isDefault && p.OwnerID != u.ID {
-			continue
-		}
 		if err = hardDeleteProject(s, p); err != nil {
 			return err
 		}
