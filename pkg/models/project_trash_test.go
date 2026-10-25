@@ -109,7 +109,6 @@ func TestProject_Restore(t *testing.T) {
 
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 45, "deleted_at": nil, "deleted_by_id": nil}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 46, "deleted_at": nil}, false)
-		// Bumped for CalDAV
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 53, "updated": "2018-12-01 01:12:04"})
 
 		s := db.NewSession()
@@ -187,7 +186,6 @@ func TestProject_ReadTrashed(t *testing.T) {
 	_, _, err = (&Project{ID: 45}).CanRead(s, &user.User{ID: 2})
 	assert.True(t, IsErrProjectDoesNotExist(err))
 
-	// A task in a trashed project points at the project
 	_, _, err = (&Task{ID: 53}).CanRead(s, &user.User{ID: 1})
 	require.ErrorAs(t, err, &inTrash)
 }
@@ -628,7 +626,6 @@ func TestTimeEntry_TrashedProject(t *testing.T) {
 	assert.True(t, inTrash[5])
 	assert.True(t, inTrash[6])
 
-	// The project owner doesn't see other people's entries in it anymore
 	result, _, _, err = (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
 	require.NoError(t, err)
 	for _, e := range result.([]*TimeEntry) {

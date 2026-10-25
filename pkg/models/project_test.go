@@ -719,7 +719,6 @@ func TestHardDeleteProject(t *testing.T) {
 		db.AssertMissing(t, "project_task_counters", map[string]interface{}{
 			"project_id": 1,
 		})
-		// Entries 1, 2 and 4 survive without a container
 		for _, id := range []int64{1, 2, 4} {
 			db.AssertExists(t, "time_entries", map[string]interface{}{"id": id, "task_id": 0, "project_id": 0}, false)
 		}
