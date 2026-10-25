@@ -1465,6 +1465,10 @@ func (p *Project) DeleteBackgroundFileIfExists(s *xorm.Session) (err error) {
 		return
 	}
 
+	if err = RemoveUnsplashPhoto(s, p.BackgroundFileID); err != nil {
+		return err
+	}
+
 	file := files.File{ID: p.BackgroundFileID}
 	err = file.DeleteOnCommit(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {

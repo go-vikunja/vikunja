@@ -855,6 +855,27 @@ func TestProject_DeleteBackgroundFileIfExists(t *testing.T) {
 		err = project.DeleteBackgroundFileIfExists(s)
 		require.NoError(t, err)
 	})
+	t.Run("removes the unsplash attribution", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		photo := &UnsplashPhoto{
+			FileID:     1,
+			UnsplashID: "test",
+		}
+		require.NoError(t, photo.Save(s))
+		project := Project{
+			ID:               1,
+			BackgroundFileID: 1,
+		}
+		require.NoError(t, project.DeleteBackgroundFileIfExists(s))
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "unsplash_photos", map[string]any{
+			"file_id": 1,
+		})
+	})
 	t.Run("project with invalid background", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		files.InitTestFileFixtures(t)
