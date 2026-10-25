@@ -295,6 +295,14 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 	})
 }
 
+func deliveredWebhookIDs() map[int64]bool {
+	delivered := map[int64]bool{}
+	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
+		delivered[e.(*WebhookDeliveryEvent).WebhookID] = true
+	}
+	return delivered
+}
+
 func TestWebhookListener_SkipsCreatorWithoutAccess(t *testing.T) {
 	f := setupAccessLoss(t)
 	f.shareDirectly(t, PermissionWrite)
@@ -315,10 +323,7 @@ func TestWebhookListener_SkipsCreatorWithoutAccess(t *testing.T) {
 	events.ClearDispatchedEvents()
 	events.TestListener(t, &TaskUpdatedEvent{Task: f.task, Doer: f.owner}, &WebhookListener{EventName: "task.updated"})
 
-	delivered := map[int64]bool{}
-	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
-		delivered[e.(*WebhookDeliveryEvent).WebhookID] = true
-	}
+	delivered := deliveredWebhookIDs()
 	assert.False(t, delivered[f.webhookC], "webhook of a creator without access was delivered")
 	assert.Len(t, delivered, 1, "the owner's webhook should still be delivered")
 }
@@ -354,10 +359,7 @@ func TestWebhookListener_SkipsCreatorWithoutAccessToTrashedProject(t *testing.T)
 		&WebhookListener{EventName: "project.deleted"},
 	)
 
-	delivered := map[int64]bool{}
-	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
-		delivered[e.(*WebhookDeliveryEvent).WebhookID] = true
-	}
+	delivered := deliveredWebhookIDs()
 	assert.False(t, delivered[f.webhookC], "webhook of a creator without access was delivered")
 	assert.True(t, delivered[owners.ID], "the owner's webhook should still be delivered")
 }
@@ -386,10 +388,7 @@ func TestWebhookListener_TrashedRootReceivesChildDeleted(t *testing.T) {
 		&WebhookListener{EventName: "project.deleted"},
 	)
 
-	delivered := map[int64]bool{}
-	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
-		delivered[e.(*WebhookDeliveryEvent).WebhookID] = true
-	}
+	delivered := deliveredWebhookIDs()
 	assert.True(t, delivered[onRoot.ID], "the trashed root's webhook missed the child's project.deleted")
 }
 
@@ -419,10 +418,7 @@ func TestWebhookListener_SkipsInactiveCreator(t *testing.T) {
 			events.ClearDispatchedEvents()
 			events.TestListener(t, &TaskUpdatedEvent{Task: f.task, Doer: f.owner}, &WebhookListener{EventName: "task.updated"})
 
-			delivered := map[int64]bool{}
-			for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
-				delivered[e.(*WebhookDeliveryEvent).WebhookID] = true
-			}
+			delivered := deliveredWebhookIDs()
 			assert.True(t, delivered[owners.ID], "the active owner's webhook should still be delivered")
 			assert.Equal(t, tc.delivered, delivered[f.webhookP])
 			assert.Equal(t, tc.delivered, delivered[f.webhookC])
