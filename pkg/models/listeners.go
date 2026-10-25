@@ -1550,30 +1550,17 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 	return event, doerID, nil
 }
 
-func webhookProjectIDs(s *xorm.Session, projectID int64, eventName string) ([]int64, error) {
-	projectIDs := []int64{projectID}
-
-	// Every project in a trashed tree fires project.deleted; its trashed ancestors' webhooks must see it.
-	if eventName == (&ProjectDeletedEvent{}).Name() {
-		ancestorIDs := []int64{}
-		err := s.Table(&ProjectAncestor{}).
-			Where(builder.Eq{"project_id": projectID}).
-			Cols("ancestor_id").
-			Find(&ancestorIDs)
-		if err != nil {
-			return nil, err
-		}
-		return append(projectIDs, ancestorIDs...), nil
-	}
-
-	parents, err := GetAllParentProjects(s, projectID)
+// Uses the closure table, not the parent walk, so a trashed tree's ancestors see project.deleted.
+func webhookProjectIDs(s *xorm.Session, projectID int64) ([]int64, error) {
+	ancestorIDs := []int64{}
+	err := s.Table(&ProjectAncestor{}).
+		Where(builder.Eq{"project_id": projectID}).
+		Cols("ancestor_id").
+		Find(&ancestorIDs)
 	if err != nil {
 		return nil, err
 	}
-	for _, p := range parents {
-		projectIDs = append(projectIDs, p.ID)
-	}
-	return projectIDs, nil
+	return append([]int64{projectID}, ancestorIDs...), nil
 }
 
 // Skips webhooks whose creator is inactive or can no longer read the project.
@@ -1583,7 +1570,7 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 		return matchingWebhooks, nil
 	}
 
-	projectIDs, err := webhookProjectIDs(s, projectID, eventName)
+	projectIDs, err := webhookProjectIDs(s, projectID)
 	if err != nil {
 		return nil, err
 	}
