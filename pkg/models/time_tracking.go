@@ -53,7 +53,6 @@ type TimeEntry struct {
 	Filter         string `xorm:"-" json:"-"`
 	FilterTimezone string `xorm:"-" json:"-"`
 
-	// Absent and null both decode to 0.
 	containerSent bool
 
 	web.CRUDable    `xorm:"-" json:"-"`
@@ -454,7 +453,7 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 		can, maxPerm, err := project.CanRead(s, a)
 		return entry, can, maxPerm, err
 	default:
-		// Private to the author. !fetch is a create or update target with no author yet; CanUpdate checks authorship first.
+		// !fetch: create/update target, no author yet; CanUpdate checks authorship first.
 		return entry, !fetch || entry.UserID == a.GetID(), int(PermissionWrite), nil
 	}
 }
