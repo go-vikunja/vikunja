@@ -225,11 +225,16 @@ func TestDeleteUser_RemovesTimeEntriesWithoutContainer(t *testing.T) {
 		UserID:    1,
 		StartTime: start,
 	}
+	ownInProject := &TimeEntry{
+		UserID:    1,
+		ProjectID: 3,
+		StartTime: start,
+	}
 	other := &TimeEntry{
 		UserID:    3,
 		StartTime: start,
 	}
-	_, err := s.Insert(own, other)
+	_, err := s.Insert(own, ownInProject, other)
 	require.NoError(t, err)
 
 	u, err := user.GetUserByID(s, 1)
@@ -238,6 +243,7 @@ func TestDeleteUser_RemovesTimeEntriesWithoutContainer(t *testing.T) {
 	require.NoError(t, s.Commit())
 
 	db.AssertMissing(t, "time_entries", map[string]interface{}{"id": own.ID})
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": ownInProject.ID}, false)
 	db.AssertExists(t, "time_entries", map[string]interface{}{"id": other.ID}, false)
 }
 

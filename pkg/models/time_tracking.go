@@ -257,6 +257,14 @@ func zeroOrNullCond(col string) builder.Cond {
 	return builder.Or(builder.Eq{col: 0}, builder.IsNull{col})
 }
 
+func deleteUserPrivateTimeEntries(s *xorm.Session, userID int64) error {
+	_, err := s.Where(builder.And(
+		builder.Eq{"user_id": userID},
+		timeEntryWithoutContainerCond(),
+	)).Delete(&TimeEntry{})
+	return err
+}
+
 func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result any, resultCount int, numberOfTotalItems int64, err error) {
 	// Link shares have no time-tracking access (mirrors the Can* methods);
 	// DoReadAll skips the permission check, so it must be guarded here too.
