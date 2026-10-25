@@ -165,6 +165,7 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 
 	case "start_time", "end_time":
 		if raw == "null" {
+			// NotNull, not Not{IsNull}: that renders "NOT col IS NULL", which flips under MySQL HIGH_NOT_PRECEDENCE.
 			return nullFilterCond(field, builder.IsNull{field}, builder.NotNull{field}, comparator)
 		}
 		value, err := timeEntryTimeFilterValue(raw, loc)
@@ -178,7 +179,6 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	}
 }
 
-// Not{IsNull} renders "NOT col IS NULL", which flips under MySQL HIGH_NOT_PRECEDENCE.
 func nullFilterCond(field string, isNull, notNull builder.Cond, comparator taskFilterComparator) (builder.Cond, error) {
 	if comparator == taskFilterComparatorEquals {
 		return isNull, nil
