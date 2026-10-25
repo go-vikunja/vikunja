@@ -17,6 +17,7 @@
 package models
 
 import (
+	"slices"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
@@ -232,22 +233,7 @@ func getTrashedProject(s *xorm.Session, projectID int64) (*Project, error) {
 	return project, nil
 }
 
-// Trashed projects can't be reached through the regular permission checks, which skip them.
-func canAdminTrashedProject(s *xorm.Session, a web.Auth, project *Project) (bool, error) {
-	if _, isShare := a.(*LinkSharing); isShare {
-		return false, nil
-	}
-	if isInstanceAdmin(s, a) || project.OwnerID == a.GetID() {
-		return true, nil
-	}
-	access, err := getProjectAccessIncludingTrash(s, a.GetID())
-	if err != nil {
-		return false, err
-	}
-	permission, has := access.permission(project.ID)
-	return has && permission == PermissionAdmin, nil
-}
-
+// Unreachable trashed projects are ErrProjectDoesNotExist so their existence doesn't leak.
 // Like regular reads, link shares never reach a trashed project.
 func getReadableTrashedProject(s *xorm.Session, a web.Auth, projectID int64) (*Project, Permission, error) {
 	if _, isShare := a.(*LinkSharing); isShare {
@@ -273,10 +259,7 @@ func getReadableTrashedProject(s *xorm.Session, a web.Auth, projectID int64) (*P
 
 // Readers who could reach the project get ErrProjectIsInTrash; everyone else keeps notFound.
 func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFound error) error {
-	if _, isShare := a.(*LinkSharing); isShare {
-		return notFound
-	}
-	trashed, err := getTrashedProject(s, projectID)
+	trashed, permission, err := getReadableTrashedProject(s, a, projectID)
 	if IsErrProjectDoesNotExist(err) {
 		return notFound
 	}
@@ -284,16 +267,11 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 		return err
 	}
 
-	access, err := getProjectAccessIncludingTrash(s, a.GetID())
-	if err != nil {
-		return err
+	inTrash := ErrProjectIsInTrash{
+		ID:        trashed.ID,
+		DeletedAt: trashed.DeletedAt,
 	}
-	if _, has := access.permission(projectID); !has && trashed.OwnerID != a.GetID() {
-		return notFound
-	}
-
-	inTrash := ErrProjectIsInTrash{ID: trashed.ID, DeletedAt: trashed.DeletedAt}
-	inTrash.CanRestore, err = canAdminTrashedProject(s, a, trashed)
+	inTrash.CanRestore, err = canRestoreTrashedProject(s, trashed, permission)
 	if err != nil {
 		return err
 	}
@@ -356,14 +334,14 @@ func readableTrashedRoot(s *xorm.Session, a web.Auth, p *Project) (rootID int64,
 	return rootID, canRestore, err
 }
 
-// Loads the trashed project into p.
+// Loads the trashed project into p; unreachable callers get ErrProjectDoesNotExist so it doesn't leak.
 func (p *Project) canDoTrashedProject(s *xorm.Session, a web.Auth) (bool, error) {
-	trashed, err := getTrashedProject(s, p.ID)
+	trashed, permission, err := getReadableTrashedProject(s, a, p.ID)
 	if err != nil {
 		return false, err
 	}
 	*p = *trashed
-	return canAdminTrashedProject(s, a, p)
+	return permission == PermissionAdmin, nil
 }
 
 // CanRestore checks whether the auth may restore the trashed project.
@@ -482,10 +460,26 @@ func trashedProjectsCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 			adminIDs = append(adminIDs, id)
 		}
 	}
+	// Only trashed ids: the access map holds every live project too, which would bloat the IN list.
+	trashedAdminIDs := []int64{}
+	for chunk := range slices.Chunk(adminIDs, maxInListSize) {
+		batch := []int64{}
+		err = s.Table("projects").
+			Where(builder.And(
+				builder.In("id", chunk),
+				builder.NotNull{"deleted_at"},
+			)).
+			Cols("id").
+			Find(&batch)
+		if err != nil {
+			return nil, err
+		}
+		trashedAdminIDs = append(trashedAdminIDs, batch...)
+	}
 
 	return builder.And(
 		builder.NotNull{"projects.deleted_at"},
-		builder.In("projects.id", adminIDs),
+		builder.In("projects.id", trashedAdminIDs),
 		builder.Or(
 			builder.IsNull{"projects.parent_project_id"},
 			builder.NotIn("projects.parent_project_id",
