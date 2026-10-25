@@ -35,6 +35,17 @@ import (
 
 func timePtr(t time.Time) *time.Time { return &t }
 
+func timeEntryIDs(t *testing.T, result any) []int64 {
+	t.Helper()
+	entries, ok := result.([]*TimeEntry)
+	require.True(t, ok)
+	ids := make([]int64, 0, len(entries))
+	for _, e := range entries {
+		ids = append(ids, e.ID)
+	}
+	return ids
+}
+
 // Fixture access graph (pkg/db/fixtures): project 1 is owned by user1 only
 // (everyone else a stranger); task 1 lives in project 1. Project 3 is owned by
 // user3, with user1 and user2 granted read. user4 has access to neither.
@@ -492,10 +503,7 @@ func TestTimeEntry_RunningTimerEndTimeIsNull(t *testing.T) {
 	found := &TimeEntry{Filter: "end_time = null"}
 	result, _, _, err := found.ReadAll(s, a, "", 1, 50)
 	require.NoError(t, err)
-	ids := []int64{}
-	for _, e := range result.([]*TimeEntry) {
-		ids = append(ids, e.ID)
-	}
+	ids := timeEntryIDs(t, result)
 	assert.Contains(t, ids, te.ID)
 }
 
@@ -1008,10 +1016,7 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 
 		result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 3}, "", 1, 50)
 		require.NoError(t, err)
-		ids := []int64{}
-		for _, e := range result.([]*TimeEntry) {
-			ids = append(ids, e.ID)
-		}
+		ids := timeEntryIDs(t, result)
 		assert.NotEmpty(t, ids)
 		assert.NotContains(t, ids, entry.ID)
 	})
@@ -1086,10 +1091,7 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 
 		result, _, _, err := (&TimeEntry{}).ReadAll(s, u1, "", 1, 50)
 		require.NoError(t, err)
-		ids := []int64{}
-		for _, e := range result.([]*TimeEntry) {
-			ids = append(ids, e.ID)
-		}
+		ids := timeEntryIDs(t, result)
 		assert.NotEmpty(t, ids)
 		assert.NotContains(t, ids, int64(3))
 	})
@@ -1106,10 +1108,7 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 
 		result, _, _, err = (&TimeEntry{Filter: "project_id != null"}).ReadAll(s, u1, "", 1, 50)
 		require.NoError(t, err)
-		ids := []int64{}
-		for _, e := range result.([]*TimeEntry) {
-			ids = append(ids, e.ID)
-		}
+		ids := timeEntryIDs(t, result)
 		assert.ElementsMatch(t, []int64{
 			1,
 			2,
@@ -1124,10 +1123,7 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 
 		result, _, _, err := (&TimeEntry{Filter: "task_id = null"}).ReadAll(s, u1, "", 1, 50)
 		require.NoError(t, err)
-		ids := []int64{}
-		for _, e := range result.([]*TimeEntry) {
-			ids = append(ids, e.ID)
-		}
+		ids := timeEntryIDs(t, result)
 		assert.ElementsMatch(t, []int64{
 			2,
 			3,
@@ -1136,10 +1132,7 @@ func TestTimeEntry_WithoutContainer(t *testing.T) {
 
 		result, _, _, err = (&TimeEntry{Filter: "task_id != null"}).ReadAll(s, u1, "", 1, 50)
 		require.NoError(t, err)
-		ids = []int64{}
-		for _, e := range result.([]*TimeEntry) {
-			ids = append(ids, e.ID)
-		}
+		ids = timeEntryIDs(t, result)
 		assert.ElementsMatch(t, []int64{
 			1,
 			4,
