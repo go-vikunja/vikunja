@@ -152,6 +152,34 @@ func TestProject_ReadTrashed(t *testing.T) {
 	require.ErrorAs(t, err, &inTrash)
 }
 
+func TestProject_ReadTrashed_CanRestore(t *testing.T) {
+	u1 := &user.User{ID: 1}
+	readInTrash := func(t *testing.T, projectID int64, a web.Auth) ErrProjectIsInTrash {
+		s := db.NewSession()
+		defer s.Close()
+		_, _, err := (&Project{ID: projectID}).CanRead(s, a)
+		var inTrash ErrProjectIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		return inTrash
+	}
+
+	t.Run("not while the parent is in the trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		assert.False(t, readInTrash(t, 46, u1).CanRestore)
+	})
+	t.Run("not while the parent is archived", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// 21 is a child of archived 22
+		s := db.NewSession()
+		_, err := s.Table("projects").Where("id = ?", 21).Update(map[string]any{"deleted_at": time.Now()})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.False(t, readInTrash(t, 21, u1).CanRestore)
+	})
+}
+
 func TestProject_TrashHidesContents(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()

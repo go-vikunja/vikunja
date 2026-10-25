@@ -246,9 +246,16 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 	}
 
 	inTrash := ErrProjectIsInTrash{ID: trashed.ID, DeletedAt: trashed.DeletedAt}
-	inTrash.CanRestore, err = canAdminTrashedProject(s, a, trashed)
+	isAdmin, err := canAdminTrashedProject(s, a, trashed)
 	if err != nil {
 		return err
+	}
+	if isAdmin {
+		blocker, err := restoreBlocker(s, trashed)
+		if err != nil {
+			return err
+		}
+		inTrash.CanRestore = blocker == nil
 	}
 	if trashed.DeletedByID != 0 {
 		deleters, err := getUsersOrLinkSharesFromIDs(s, []int64{trashed.DeletedByID})
@@ -275,17 +282,35 @@ func (p *Project) CanRestore(s *xorm.Session, a web.Auth) (bool, error) {
 	return p.canDoTrashedProject(s, a)
 }
 
+// restoreBlocker returns the parent's reason to keep p in the trash, if any.
+func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
+	parentID := p.parentID()
+	if parentID == 0 {
+		return nil, nil
+	}
+	parent := &Project{}
+	has, err := s.Unscoped().ID(parentID).Get(parent)
+	if err != nil || !has {
+		return nil, err
+	}
+	switch {
+	case !parent.DeletedAt.IsZero():
+		return ErrParentProjectIsInTrash{ProjectID: p.ID, ParentProjectID: parentID}, nil
+	case parent.IsArchived:
+		return ErrParentProjectIsArchived{ProjectID: p.ID, ParentProjectID: parentID}, nil
+	}
+	return nil, nil
+}
+
 // Restore brings a trashed project back with all its trashed sub-projects,
 // whenever they were deleted. Trashed tasks inside stay in the trash.
 func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 	if parentID := p.parentID(); parentID > 0 {
-		parent := &Project{}
-		has, err := s.Unscoped().ID(parentID).Get(parent)
+		has, err := s.Unscoped().ID(parentID).Exist(&Project{})
 		if err != nil {
 			return err
 		}
-		switch {
-		case !has:
+		if !has {
 			// Unreachable while purging takes all sub-projects along, but a dangling parent must not block the restore.
 			p.ParentProjectID = noParentProjectID()
 			if _, err := s.ID(p.ID).Unscoped().Cols("parent_project_id").Update(p); err != nil {
@@ -294,11 +319,14 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 			if err := moveProjectAncestors(s, p.ID, 0); err != nil {
 				return err
 			}
-		case !parent.DeletedAt.IsZero():
-			return ErrParentProjectIsInTrash{ProjectID: p.ID, ParentProjectID: parentID}
-		case parent.IsArchived:
-			return ErrParentProjectIsArchived{ProjectID: p.ID, ParentProjectID: parentID}
 		}
+	}
+	blocker, err := restoreBlocker(s, p)
+	if err != nil {
+		return err
+	}
+	if blocker != nil {
+		return blocker
 	}
 
 	ids, err := subtreeIDs(s, p.ID, true)
