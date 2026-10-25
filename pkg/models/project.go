@@ -1459,7 +1459,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	return trashProject(s, fullProject, a)
 }
 
-// DeleteBackgroundFileIfExists drops the file row; the blob goes once the caller runs events.DispatchPending.
+// DeleteBackgroundFileIfExists drops the file row of the project background, if any.
 func (p *Project) DeleteBackgroundFileIfExists(s *xorm.Session) (err error) {
 	if p.BackgroundFileID == 0 {
 		return
