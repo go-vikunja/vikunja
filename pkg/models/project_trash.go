@@ -576,6 +576,20 @@ type ProjectCount struct {
 
 // GetProjectCount counts what the project and its live sub-projects contain. Admins only.
 func GetProjectCount(s *xorm.Session, a web.Auth, projectID int64) (*ProjectCount, error) {
+	// An admin share would see totals of sub-projects it can't reach.
+	if _, isShare := a.(*LinkSharing); isShare {
+		return nil, ErrGenericForbidden{}
+	}
+
+	ids, err := subtreeIDs(s, projectID, false)
+	if err != nil {
+		return nil, err
+	}
+	// Ahead of IsAdmin, which waves instance admins through without loading the project.
+	if len(ids) == 0 {
+		return nil, trashedProjectReadError(s, a, projectID, ErrProjectDoesNotExist{ID: projectID})
+	}
+
 	project := &Project{ID: projectID}
 	can, err := project.IsAdmin(s, a)
 	if err != nil {
@@ -583,11 +597,6 @@ func GetProjectCount(s *xorm.Session, a web.Auth, projectID int64) (*ProjectCoun
 	}
 	if !can {
 		return nil, ErrGenericForbidden{}
-	}
-
-	ids, err := subtreeIDs(s, projectID, false)
-	if err != nil {
-		return nil, err
 	}
 
 	count := &ProjectCount{SubProjects: int64(len(ids)) - 1}
@@ -598,7 +607,10 @@ func GetProjectCount(s *xorm.Session, a web.Auth, projectID int64) (*ProjectCoun
 
 	entriesCond := builder.Or(
 		builder.In("project_id", ids),
-		builder.In("task_id", builder.Select("id").From("tasks").Where(builder.In("project_id", ids))),
+		builder.In("task_id", builder.Select("id").From("tasks").Where(builder.And(
+			builder.In("project_id", ids),
+			builder.IsNull{"deleted_at"},
+		))),
 	)
 	count.TimeEntries, err = s.Table("time_entries").Where(entriesCond).Count()
 	if err != nil {

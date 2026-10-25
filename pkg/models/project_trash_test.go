@@ -333,27 +333,77 @@ func TestDeleteExpiredProjects(t *testing.T) {
 }
 
 func TestGetProjectCount(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
+	t.Run("counts the project and its sub-projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
 
-	tasks, err := s.Where("project_id = ?", 1).Count(&Task{})
-	require.NoError(t, err)
+		tasks, err := s.Where("project_id = ?", 1).Count(&Task{})
+		require.NoError(t, err)
 
-	count, err := GetProjectCount(s, &user.User{ID: 1}, 1)
-	require.NoError(t, err)
-	assert.Equal(t, int64(0), count.SubProjects)
-	assert.Equal(t, tasks, count.Tasks)
-	// Entries 1, 2 and 4, all by user 1
-	assert.Equal(t, int64(3), count.TimeEntries)
-	assert.Equal(t, int64(1), count.TimeEntryAuthors)
+		count, err := GetProjectCount(s, &user.User{ID: 1}, 1)
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), count.SubProjects)
+		assert.Equal(t, tasks, count.Tasks)
+		// Entries 1, 2 and 4, all by user 1
+		assert.Equal(t, int64(3), count.TimeEntries)
+		assert.Equal(t, int64(1), count.TimeEntryAuthors)
 
-	count, err = GetProjectCount(s, &user.User{ID: 6}, 27)
-	require.NoError(t, err)
-	assert.Equal(t, int64(3), count.SubProjects)
+		count, err = GetProjectCount(s, &user.User{ID: 6}, 27)
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), count.SubProjects)
 
-	_, err = GetProjectCount(s, &user.User{ID: 2}, 1)
-	require.ErrorIs(t, err, ErrGenericForbidden{})
+		_, err = GetProjectCount(s, &user.User{ID: 2}, 1)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+	})
+	t.Run("skips time entries on trashed tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Task 51 in project 1 is in the trash
+		_, err := s.Insert(&TimeEntry{
+			UserID:    3,
+			TaskID:    51,
+			StartTime: time.Now(),
+		})
+		require.NoError(t, err)
+
+		count, err := GetProjectCount(s, &user.User{ID: 1}, 1)
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), count.TimeEntries)
+		assert.Equal(t, int64(1), count.TimeEntryAuthors)
+	})
+	t.Run("instance admin gets no count for trashed or missing projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+		defer license.ResetForTests()
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
+		require.NoError(t, err)
+		admin := &user.User{ID: 2, IsAdmin: true}
+
+		_, err = GetProjectCount(s, admin, 45)
+		require.ErrorAs(t, err, &ErrProjectIsInTrash{})
+
+		_, err = GetProjectCount(s, admin, 99999)
+		assert.True(t, IsErrProjectDoesNotExist(err))
+	})
+	t.Run("admin link share is forbidden", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		share := &LinkSharing{
+			ID:         3,
+			ProjectID:  3,
+			Permission: PermissionAdmin,
+		}
+		_, err := GetProjectCount(s, share, 3)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+	})
 }
 
 func TestTimeEntry_TrashedProject(t *testing.T) {
