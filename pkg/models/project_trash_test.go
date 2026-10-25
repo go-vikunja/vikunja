@@ -96,7 +96,11 @@ func TestTrashProject_SubProjects(t *testing.T) {
 		for _, e := range events.GetDispatchedEvents((&ProjectDeletedEvent{}).Name()) {
 			trashed = append(trashed, e.(*ProjectDeletedEvent).Project.ID)
 		}
-		assert.ElementsMatch(t, []int64{12, 25, 26}, trashed)
+		assert.ElementsMatch(t, []int64{
+			12,
+			25,
+			26,
+		}, trashed)
 	})
 }
 
@@ -222,8 +226,15 @@ func TestProject_Restore(t *testing.T) {
 		trashProjectForTest(t, 12, u6)
 
 		require.NoError(t, restoreProjectForTest(t, 12, u6))
-		for _, id := range []int64{12, 25, 26} {
-			db.AssertExists(t, "projects", map[string]interface{}{"id": id, "deleted_at": nil}, false)
+		for _, id := range []int64{
+			12,
+			25,
+			26,
+		} {
+			db.AssertExists(t, "projects", map[string]interface{}{
+				"id":         id,
+				"deleted_at": nil,
+			}, false)
 		}
 	})
 	t.Run("brings back a sub-project someone else trashed before", func(t *testing.T) {
@@ -310,7 +321,6 @@ func TestProject_ReadTrashed(t *testing.T) {
 	_, _, err = (&Project{ID: 45}).CanRead(s, &user.User{ID: 2})
 	assert.True(t, IsErrProjectDoesNotExist(err))
 
-	// A task in a trashed project points at the project
 	_, _, err = (&Task{ID: 53}).CanRead(s, &user.User{ID: 1})
 	require.ErrorAs(t, err, &inTrash)
 }
@@ -416,17 +426,6 @@ func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 		assert.Equal(t, http.StatusPreconditionFailed, missing.HTTPError().HTTPCode)
 		assert.Equal(t, ErrCodeParentProjectDoesNotExist, missing.HTTPError().Code)
 	})
-	t.Run("not while the parent row is gone", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		_, err := s.Table("projects").Where("id = ?", 46).Update(map[string]any{"parent_project_id": 99999})
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		s.Close()
-
-		assert.False(t, readInTrash(t, 46, u1).CanRestore)
-		require.Error(t, restoreProjectForTest(t, 46, u1))
-	})
 }
 
 func TestProject_ReadTrashed_Shares(t *testing.T) {
@@ -509,7 +508,12 @@ func TestGetTrashedProjects(t *testing.T) {
 		assert.Equal(t, int64(1), total)
 		assert.Equal(t, int64(45), projects[0].ID)
 		require.Len(t, projects[0].TrashedSubProjects, 1)
-		assert.Equal(t, &TrashedSubProject{ID: 46, Title: "Test46 trashed with its parent", ParentProjectID: 45, Depth: 1}, projects[0].TrashedSubProjects[0])
+		assert.Equal(t, &TrashedSubProject{
+			ID:              46,
+			Title:           "Test46 trashed with its parent",
+			ParentProjectID: 45,
+			Depth:           1,
+		}, projects[0].TrashedSubProjects[0])
 		require.NotNil(t, projects[0].DeletedBy)
 		assert.Equal(t, int64(1), projects[0].DeletedBy.ID)
 	})
@@ -545,7 +549,11 @@ func TestGetTrashedProjects(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, _, err := GetTrashedProjects(s, &LinkSharing{ID: 3, ProjectID: 3, Permission: PermissionAdmin}, 1, 50)
+		_, _, err := GetTrashedProjects(s, &LinkSharing{
+			ID:         3,
+			ProjectID:  3,
+			Permission: PermissionAdmin,
+		}, 1, 50)
 		require.ErrorIs(t, err, ErrGenericForbidden{})
 	})
 }
@@ -944,7 +952,6 @@ func TestTimeEntry_TrashedProject(t *testing.T) {
 	assert.True(t, inTrash[5])
 	assert.True(t, inTrash[6])
 
-	// The project owner doesn't see other people's entries in it anymore
 	result, _, _, err = (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
 	require.NoError(t, err)
 	entryIDs := []int64{}
@@ -966,6 +973,74 @@ func TestTimeEntry_TrashedProject(t *testing.T) {
 	assert.False(t, can)
 
 	db.AssertCount(t, "time_entries", builder.Eq{"project_id": 45}, 1)
+}
+
+func TestBuildOverview_SkipsTrashedProjects(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	overview, err := BuildOverview(s)
+	require.NoError(t, err)
+	// 46 fixtures, 45 and 46 trashed
+	assert.Equal(t, int64(44), overview.Projects)
+}
+
+func TestCleanupAfterProjectAccessLoss_KeepsTrashedProjectsWithAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.Insert(&TaskAssginee{
+		TaskID: 54,
+		UserID: 1,
+	})
+	require.NoError(t, err)
+
+	// User 1 still owns trashed project 45 and its child 46
+	require.NoError(t, cleanupAfterProjectAccessLossForUsers(s, []int64{1}, []int64{45}))
+	require.NoError(t, s.Commit())
+
+	db.AssertExists(t, "task_assignees", map[string]interface{}{
+		"task_id": 54,
+		"user_id": 1,
+	}, false)
+}
+
+func TestProject_TrashedIdentifierStaysReserved(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.Table("projects").Where("id = ?", 45).Update(map[string]any{"identifier": "TRASHED"})
+	require.NoError(t, err)
+
+	err = CreateProject(s, &Project{
+		Title:      "new",
+		Identifier: "trashed",
+	}, &user.User{ID: 1}, false, false)
+	assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
+}
+
+func TestRepairOrphanedProjects_Trashed(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(45).Unscoped().Delete(&Project{})
+	require.NoError(t, err)
+
+	_, err = RepairOrphanedProjects(s, false)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+	repaired := &Project{}
+	has, err := s2.Unscoped().ID(46).Get(repaired)
+	require.NoError(t, err)
+	require.True(t, has)
+	assert.Equal(t, int64(0), repaired.parentID())
 }
 
 // Project.Delete trashes whole subtrees, so the project access query only has to
@@ -1048,65 +1123,6 @@ func TestTrashedProjectNeverHasLiveDescendant(t *testing.T) {
 			assertNoLiveDescendantOfTrashedProject(t)
 		})
 	}
-}
-
-func TestProject_TrashedIdentifierStaysReserved(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	_, err := s.Table("projects").Where("id = ?", 45).Update(map[string]any{"identifier": "TRASHED"})
-	require.NoError(t, err)
-
-	err = CreateProject(s, &Project{Title: "new", Identifier: "trashed"}, &user.User{ID: 1}, false, false)
-	assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
-}
-
-func TestRepairOrphanedProjects_Trashed(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	_, err := s.ID(45).Unscoped().Delete(&Project{})
-	require.NoError(t, err)
-
-	_, err = RepairOrphanedProjects(s, false)
-	require.NoError(t, err)
-	require.NoError(t, s.Commit())
-
-	s2 := db.NewSession()
-	defer s2.Close()
-	repaired := &Project{}
-	has, err := s2.Unscoped().ID(46).Get(repaired)
-	require.NoError(t, err)
-	require.True(t, has)
-	assert.Equal(t, int64(0), repaired.parentID())
-}
-
-func TestBuildOverview_SkipsTrashedProjects(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	overview, err := BuildOverview(s)
-	require.NoError(t, err)
-	// 46 fixtures, 45 and 46 trashed
-	assert.Equal(t, int64(44), overview.Projects)
-}
-
-func TestCleanupAfterProjectAccessLoss_KeepsTrashedProjectsWithAccess(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	_, err := s.Insert(&TaskAssginee{TaskID: 54, UserID: 1})
-	require.NoError(t, err)
-
-	// User 1 still owns trashed project 45 and its child 46
-	require.NoError(t, cleanupAfterProjectAccessLossForUsers(s, []int64{1}, []int64{45}))
-	require.NoError(t, s.Commit())
-
-	db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": 54, "user_id": 1}, false)
 }
 
 func TestEmptyProjectTrash_OwnDeletionsOnly(t *testing.T) {

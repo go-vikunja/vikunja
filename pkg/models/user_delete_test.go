@@ -63,7 +63,10 @@ func TestDeleteUser(t *testing.T) {
 		notifications.Fake()
 		t.Cleanup(notifications.Unfake)
 
-		_, err := s.Table("projects").In("id", []int64{45, 46}).Update(map[string]any{"owner_id": 6})
+		_, err := s.Table("projects").In("id", []int64{
+			45,
+			46,
+		}).Update(map[string]any{"owner_id": 6})
 		require.NoError(t, err)
 
 		events.ClearDispatchedEvents()
@@ -84,7 +87,10 @@ func TestDeleteUser(t *testing.T) {
 		notifications.Fake()
 		t.Cleanup(notifications.Unfake)
 
-		_, err := s.Table("projects").In("id", []int64{45, 46}).Update(map[string]any{"owner_id": 6})
+		_, err := s.Table("projects").In("id", []int64{
+			45,
+			46,
+		}).Update(map[string]any{"owner_id": 6})
 		require.NoError(t, err)
 		_, err = s.Insert(&ProjectUser{
 			ProjectID:  45,

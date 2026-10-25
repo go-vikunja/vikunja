@@ -156,7 +156,10 @@ func setUpInstanceAdmin(t *testing.T) *user.User {
 	_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
 	require.NoError(t, err)
 
-	return &user.User{ID: 2, IsAdmin: true}
+	return &user.User{
+		ID:      2,
+		IsAdmin: true,
+	}
 }
 
 func setUpTrashedProjectAdmin(t *testing.T) *user.User {
