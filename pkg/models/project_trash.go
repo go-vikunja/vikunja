@@ -17,7 +17,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
@@ -249,6 +248,29 @@ func canAdminTrashedProject(s *xorm.Session, a web.Auth, project *Project) (bool
 	return has && permission == PermissionAdmin, nil
 }
 
+// Like regular reads, link shares never reach a trashed project.
+func getReadableTrashedProject(s *xorm.Session, a web.Auth, projectID int64) (*Project, Permission, error) {
+	if _, isShare := a.(*LinkSharing); isShare {
+		return nil, 0, ErrProjectDoesNotExist{ID: projectID}
+	}
+	project, err := getTrashedProject(s, projectID)
+	if err != nil {
+		return nil, 0, err
+	}
+	if isInstanceAdmin(s, a) || project.OwnerID == a.GetID() {
+		return project, PermissionAdmin, nil
+	}
+	access, err := getProjectAccessIncludingTrash(s, a.GetID())
+	if err != nil {
+		return nil, 0, err
+	}
+	permission, reachable := access.permission(project.ID)
+	if !reachable {
+		return nil, 0, ErrProjectDoesNotExist{ID: projectID}
+	}
+	return project, permission, nil
+}
+
 // Readers who could reach the project get ErrProjectIsInTrash; everyone else keeps notFound.
 func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFound error) error {
 	if _, isShare := a.(*LinkSharing); isShare {
@@ -282,10 +304,59 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 		}
 		inTrash.DeletedBy = deleters[trashed.DeletedByID]
 	}
+	inTrash.TrashedRootID, inTrash.CanRestoreRoot, err = readableTrashedRoot(s, a, trashed)
+	if err != nil {
+		return err
+	}
 	return inTrash
 }
 
-// canDoTrashedProject loads the trashed project into p and checks admin access to it.
+func canRestoreTrashedProject(s *xorm.Session, p *Project, permission Permission) (bool, error) {
+	if permission != PermissionAdmin {
+		return false, nil
+	}
+	blocker, err := restoreBlocker(s, p)
+	return blocker == nil, err
+}
+
+// The topmost trashed ancestor of p if the caller can reach it (else 0), and whether the caller can restore it.
+func readableTrashedRoot(s *xorm.Session, a web.Auth, p *Project) (rootID int64, canRestore bool, err error) {
+	trashedAncestors := []*ProjectAncestor{}
+	err = s.Table("project_ancestors").
+		Join("INNER", "projects", "projects.id = project_ancestors.ancestor_id").
+		Where(builder.And(
+			builder.Eq{"project_ancestors.project_id": p.ID},
+			builder.Gt{"project_ancestors.depth": 0},
+			builder.NotNull{"projects.deleted_at"},
+		)).
+		Cols("project_ancestors.ancestor_id", "project_ancestors.depth").
+		OrderBy("project_ancestors.depth").
+		Find(&trashedAncestors)
+	if err != nil {
+		return 0, false, err
+	}
+	// Stop at the first live ancestor: restoring the root below it brings p back.
+	for i, ancestor := range trashedAncestors {
+		if ancestor.Depth != int64(i+1) {
+			break
+		}
+		rootID = ancestor.AncestorID
+	}
+	if rootID == 0 {
+		return 0, false, nil
+	}
+	root, permission, err := getReadableTrashedProject(s, a, rootID)
+	if IsErrProjectDoesNotExist(err) {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, err
+	}
+	canRestore, err = canRestoreTrashedProject(s, root, permission)
+	return rootID, canRestore, err
+}
+
+// Loads the trashed project into p.
 func (p *Project) canDoTrashedProject(s *xorm.Session, a web.Auth) (bool, error) {
 	trashed, err := getTrashedProject(s, p.ID)
 	if err != nil {
@@ -313,7 +384,10 @@ func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
 	}
 	// Purging takes all sub-projects along and the orphan repair re-parents the rest.
 	if !has {
-		return nil, fmt.Errorf("parent project %d of project %d does not exist", parentID, p.ID)
+		return ErrParentProjectDoesNotExist{
+			ProjectID:       p.ID,
+			ParentProjectID: parentID,
+		}, nil
 	}
 	switch {
 	case !parent.DeletedAt.IsZero():

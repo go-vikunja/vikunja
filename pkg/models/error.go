@@ -605,6 +605,15 @@ type ErrProjectIsInTrash struct {
 	DeletedAt  time.Time  `json:"deleted_at"`
 	DeletedBy  *user.User `json:"deleted_by,omitempty"`
 	CanRestore bool       `json:"can_restore"`
+	// The topmost trashed ancestor, which has to be restored instead.
+	TrashedRootID  int64 `json:"trashed_root_id,omitempty"`
+	CanRestoreRoot bool  `json:"can_restore_root"`
+}
+
+// IsErrProjectIsInTrash checks if an error is ErrProjectIsInTrash.
+func IsErrProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrProjectIsInTrash)
+	return ok
 }
 
 func (err ErrProjectIsInTrash) Error() string {
@@ -625,6 +634,12 @@ type ErrParentProjectIsInTrash struct {
 	ParentProjectID int64
 }
 
+// IsErrParentProjectIsInTrash checks if an error is ErrParentProjectIsInTrash.
+func IsErrParentProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrParentProjectIsInTrash)
+	return ok
+}
+
 func (err ErrParentProjectIsInTrash) Error() string {
 	return fmt.Sprintf("Parent project is in the trash [ProjectID: %d, ParentProjectID: %d]", err.ProjectID, err.ParentProjectID)
 }
@@ -635,6 +650,38 @@ const ErrCodeParentProjectIsInTrash = 3019
 // HTTPError holds the http error description
 func (err ErrParentProjectIsInTrash) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeParentProjectIsInTrash, Message: "The parent project is in the trash. Restore it first."}
+}
+
+// ErrParentProjectDoesNotExist is returned when restoring a project whose parent row is gone.
+type ErrParentProjectDoesNotExist struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectDoesNotExist checks if an error is ErrParentProjectDoesNotExist.
+func IsErrParentProjectDoesNotExist(err error) bool {
+	_, ok := err.(ErrParentProjectDoesNotExist)
+	return ok
+}
+
+func (err ErrParentProjectDoesNotExist) Error() string {
+	return fmt.Sprintf(
+		"Parent project does not exist [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
+}
+
+// ErrCodeParentProjectDoesNotExist holds the unique world-error code of this error
+const ErrCodeParentProjectDoesNotExist = 3021
+
+// HTTPError holds the http error description
+func (err ErrParentProjectDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectDoesNotExist,
+		Message:  "The parent project does not exist anymore.",
+	}
 }
 
 // ErrParentProjectIsArchived represents an error, where a project's parent is archived
