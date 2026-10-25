@@ -7664,7 +7664,12 @@ export type ProjectsRestoreData = {
          */
         id: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * How rich-text fields are exchanged. See the API description.
+         */
+        format?: 'html' | 'markdown';
+    };
     url: '/projects/{id}/restore';
 };
 
