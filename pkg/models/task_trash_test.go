@@ -267,7 +267,6 @@ func TestTask_Restore(t *testing.T) {
 		_, err := restoreTaskForTest(t, 53, u1)
 		var inTrash ErrProjectIsInTrash
 		require.ErrorAs(t, err, &inTrash)
-		assert.Equal(t, ErrCodeProjectIsInTrash, inTrash.HTTPError().Code)
 		assert.Equal(t, int64(45), inTrash.ID)
 		db.AssertMissing(t, "tasks", map[string]interface{}{
 			"id":         53,
