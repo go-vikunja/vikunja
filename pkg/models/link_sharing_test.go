@@ -300,7 +300,8 @@ func TestGetLinkShareFromClaims(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, (&Project{ID: dbShare.ProjectID}).Delete(s, &user.User{ID: 1}))
 
-		_, err = GetLinkShareFromClaims(s, buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, dbShare.Permission, dbShare.SharedByID))
+		claims := buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, dbShare.Permission, dbShare.SharedByID)
+		_, err = GetLinkShareFromClaims(s, claims)
 		require.Error(t, err)
 		_, err = GetLinkShareByHash(s, dbShare.Hash)
 		assert.True(t, IsErrProjectShareDoesNotExist(err))

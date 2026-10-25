@@ -51,9 +51,15 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 		defer s.Close()
 
 		now := time.Date(2018, 12, 1, 1, 12, 0, 0, time.UTC)
-		_, err := s.Insert(&TaskReminder{TaskID: 53, Reminder: now})
+		_, err := s.Insert(&TaskReminder{
+			TaskID:   53,
+			Reminder: now,
+		})
 		require.NoError(t, err)
-		_, err = s.Insert(&TaskAssginee{TaskID: 53, UserID: 1})
+		_, err = s.Insert(&TaskAssginee{
+			TaskID: 53,
+			UserID: 1,
+		})
 		require.NoError(t, err)
 
 		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)

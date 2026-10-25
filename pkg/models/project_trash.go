@@ -46,7 +46,6 @@ func subtreeIDs(s *xorm.Session, projectID int64, cond builder.Cond) (ids []int6
 	return
 }
 
-// trashProject moves the project and all its live descendants to the trash in one go.
 func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
 	ids, err := subtreeIDs(s, project.ID, builder.IsNull{"projects.deleted_at"})
 	if err != nil {
@@ -142,7 +141,10 @@ func hardDeleteProjectTree(s *xorm.Session, p *Project, doer *user.User, ancesto
 
 	_, err = s.Table("time_entries").
 		Where("project_id = ?", p.ID).
-		Update(map[string]any{"project_id": 0, "task_id": 0})
+		Update(map[string]any{
+			"project_id": 0,
+			"task_id":    0,
+		})
 	if err != nil {
 		return
 	}
@@ -355,7 +357,7 @@ func readableTrashedRoot(s *xorm.Session, a web.Auth, p *Project) (rootID int64,
 	return rootID, canRestore, err
 }
 
-// Loads the trashed project into p; unreachable callers get ErrProjectDoesNotExist so it doesn't leak.
+// Loads the trashed project into p.
 func (p *Project) canDoTrashedProject(s *xorm.Session, a web.Auth) (bool, error) {
 	trashed, permission, err := getReadableTrashedProject(s, a, p.ID)
 	if err != nil {
@@ -365,12 +367,11 @@ func (p *Project) canDoTrashedProject(s *xorm.Session, a web.Auth) (bool, error)
 	return permission == PermissionAdmin, nil
 }
 
-// CanRestore checks whether the auth may restore the trashed project.
+// CanRestore requires admin access to the trashed project.
 func (p *Project) CanRestore(s *xorm.Session, a web.Auth) (bool, error) {
 	return p.canDoTrashedProject(s, a)
 }
 
-// restoreBlocker returns the parent's reason to keep p in the trash, if any.
 func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
 	parentID := p.parentID()
 	if parentID == 0 {
@@ -390,15 +391,20 @@ func restoreBlocker(s *xorm.Session, p *Project) (blocker error, err error) {
 	}
 	switch {
 	case !parent.DeletedAt.IsZero():
-		return ErrParentProjectIsInTrash{ProjectID: p.ID, ParentProjectID: parentID}, nil
+		return ErrParentProjectIsInTrash{
+			ProjectID:       p.ID,
+			ParentProjectID: parentID,
+		}, nil
 	case parent.IsArchived:
-		return ErrParentProjectIsArchived{ProjectID: p.ID, ParentProjectID: parentID}, nil
+		return ErrParentProjectIsArchived{
+			ProjectID:       p.ID,
+			ParentProjectID: parentID,
+		}, nil
 	}
 	return nil, nil
 }
 
-// Restore brings a trashed project back with all its trashed sub-projects,
-// whenever they were deleted. Trashed tasks inside stay in the trash.
+// Restore brings back all trashed sub-projects, whenever they were trashed; trashed tasks stay.
 func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 	blocker, err := restoreBlocker(s, p)
 	if err != nil {
@@ -414,7 +420,10 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 	}
 	_, err = s.Table("projects").
 		In("id", ids).
-		Update(map[string]any{"deleted_at": nil, "deleted_by_id": nil})
+		Update(map[string]any{
+			"deleted_at":    nil,
+			"deleted_by_id": nil,
+		})
 	if err != nil {
 		return err
 	}
@@ -443,7 +452,7 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 	return nil
 }
 
-// CanDeletePermanently checks whether the auth may purge the trashed project.
+// CanDeletePermanently requires admin access to the trashed project.
 func (p *Project) CanDeletePermanently(s *xorm.Session, a web.Auth) (bool, error) {
 	return p.canDoTrashedProject(s, a)
 }
@@ -631,8 +640,7 @@ func EmptyProjectTrash(s *xorm.Session, a web.Auth, includeOthers bool) (purged 
 	return len(projects), nil
 }
 
-// RegisterProjectCleanupCron registers the cron job that permanently removes
-// projects which were trashed more than TrashRetention ago.
+// RegisterProjectCleanupCron purges projects trashed more than TrashRetention ago.
 func RegisterProjectCleanupCron() {
 	err := cron.Schedule("30 * * * *", func() {
 		deleteExpiredProjects(time.Now())
