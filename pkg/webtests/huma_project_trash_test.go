@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -88,6 +89,17 @@ func TestHumaProjectTrash(t *testing.T) {
 
 		rec = humaRequest(t, e, http.MethodPost, "/api/v2/projects/45/restore", "", user1(t), "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		var restored struct {
+			Owner *struct {
+				ID int64 `json:"id"`
+			} `json:"owner"`
+			Updated time.Time `json:"updated"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &restored))
+		require.NotNil(t, restored.Owner)
+		assert.Equal(t, int64(1), restored.Owner.ID)
+		// Fixture value is 2018-12-02 15:13:12
+		assert.True(t, restored.Updated.After(time.Date(2018, 12, 3, 0, 0, 0, 0, time.UTC)), restored.Updated)
 
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/46", "", user1(t), "")
 		assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())

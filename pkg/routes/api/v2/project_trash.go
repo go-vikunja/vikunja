@@ -119,11 +119,20 @@ func projectsRestore(ctx context.Context, in *struct {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
+	restored, err := models.GetProjectSimpleByID(s, project.ID)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+	if err := restored.ReadOne(s, a); err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
 	events.DispatchPending(ctx, s)
-	return &singleBody[models.Project]{Body: project}, nil
+	return &singleBody[models.Project]{Body: restored}, nil
 }
 
 func projectsDeletePermanently(ctx context.Context, in *struct {
