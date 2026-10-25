@@ -607,6 +607,12 @@ type ErrProjectIsInTrash struct {
 	CanRestore bool       `json:"can_restore"`
 }
 
+// IsErrProjectIsInTrash checks if an error is ErrProjectIsInTrash.
+func IsErrProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrProjectIsInTrash)
+	return ok
+}
+
 func (err ErrProjectIsInTrash) Error() string {
 	return fmt.Sprintf("The project is in the trash. [ID: %d]", err.ID)
 }
@@ -628,6 +634,12 @@ func (err ErrProjectIsInTrash) HTTPError() web.HTTPError {
 type ErrParentProjectIsInTrash struct {
 	ProjectID       int64
 	ParentProjectID int64
+}
+
+// IsErrParentProjectIsInTrash checks if an error is ErrParentProjectIsInTrash.
+func IsErrParentProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrParentProjectIsInTrash)
+	return ok
 }
 
 func (err ErrParentProjectIsInTrash) Error() string {
