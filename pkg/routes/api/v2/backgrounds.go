@@ -413,16 +413,10 @@ func backgroundRemove(ctx context.Context, in *struct {
 		return nil, err
 	}
 
-	if err := project.DeleteBackgroundFileIfExists(s); err != nil {
+	if err := project.RemoveBackground(s); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
-	if err := models.ClearProjectBackground(s, project.ID); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-	project.BackgroundFileID = 0
-	project.BackgroundBlurHash = ""
 	if err := project.ReadOne(s, a); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)

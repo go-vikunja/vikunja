@@ -457,19 +457,11 @@ func RemoveProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	err = project.DeleteBackgroundFileIfExists(s)
+	err = project.RemoveBackground(s)
 	if err != nil {
 		_ = s.Rollback()
 		return err
 	}
-
-	err = models.ClearProjectBackground(s, project.ID)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	project.BackgroundFileID = 0
-	project.BackgroundBlurHash = ""
 
 	if err := s.Commit(); err != nil {
 		return err

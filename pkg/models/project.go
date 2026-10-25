@@ -1501,6 +1501,19 @@ func ClearProjectBackground(s *xorm.Session, projectID int64) (err error) {
 	return
 }
 
+// RemoveBackground deletes the background file and clears the background fields.
+func (p *Project) RemoveBackground(s *xorm.Session) error {
+	if err := p.DeleteBackgroundFileIfExists(s); err != nil {
+		return err
+	}
+	if err := ClearProjectBackground(s, p.ID); err != nil {
+		return err
+	}
+	p.BackgroundFileID = 0
+	p.BackgroundBlurHash = ""
+	return nil
+}
+
 const archiveStateUpdateBatch = 500
 
 func SetArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
