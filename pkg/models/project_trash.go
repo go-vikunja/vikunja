@@ -101,7 +101,7 @@ func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
 	return nil
 }
 
-// hardDeleteProject purges p and its sub-projects; time entries survive detached, kept by their authors.
+// Time entries survive without a container, kept by their authors.
 func hardDeleteProject(s *xorm.Session, p *Project) (err error) {
 	// Lock first: the task loop below deletes task_positions rows before the views are dropped further down.
 	_, err = lockProjectViewsForPositionUpdate(s, p.ID)
