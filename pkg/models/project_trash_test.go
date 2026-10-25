@@ -18,6 +18,8 @@ package models
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 	"testing"
 	"time"
 
@@ -288,6 +290,7 @@ func TestProject_ReadTrashed(t *testing.T) {
 	require.NotNil(t, inTrash.DeletedBy)
 	assert.Equal(t, int64(1), inTrash.DeletedBy.ID)
 	assert.True(t, inTrash.CanRestore)
+	assert.Zero(t, inTrash.TrashedRootID)
 
 	_, _, err = (&Project{ID: 45}).CanRead(s, &user.User{ID: 2})
 	assert.True(t, IsErrProjectDoesNotExist(err))
@@ -295,6 +298,109 @@ func TestProject_ReadTrashed(t *testing.T) {
 	// A task in a trashed project points at the project
 	_, _, err = (&Task{ID: 53}).CanRead(s, &user.User{ID: 1})
 	require.ErrorAs(t, err, &inTrash)
+}
+
+func shareProjectForTest(t *testing.T, projectID, userID int64, permission Permission) {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Insert(&ProjectUser{
+		UserID:     userID,
+		ProjectID:  projectID,
+		Permission: permission,
+	})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+}
+
+func TestProject_ReadTrashed_CanRestore(t *testing.T) {
+	u1 := &user.User{ID: 1}
+	readInTrash := func(t *testing.T, projectID int64, a web.Auth) ErrProjectIsInTrash {
+		s := db.NewSession()
+		defer s.Close()
+		_, _, err := (&Project{ID: projectID}).CanRead(s, a)
+		var inTrash ErrProjectIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		return inTrash
+	}
+
+	t.Run("not while the parent is in the trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		inTrash := readInTrash(t, 46, u1)
+		assert.False(t, inTrash.CanRestore)
+		assert.Equal(t, int64(45), inTrash.TrashedRootID)
+		assert.True(t, inTrash.CanRestoreRoot)
+	})
+	t.Run("a reader of the root can't restore it", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		shareProjectForTest(t, 45, 2, PermissionRead)
+
+		inTrash := readInTrash(t, 46, &user.User{ID: 2})
+		assert.Equal(t, int64(45), inTrash.TrashedRootID)
+		assert.False(t, inTrash.CanRestoreRoot)
+	})
+	t.Run("the root can't be restored while its parent is archived", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		_, err := s.Table("projects").Where("id = ?", 45).Update(map[string]any{"parent_project_id": 22})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		inTrash := readInTrash(t, 46, u1)
+		assert.Equal(t, int64(45), inTrash.TrashedRootID)
+		assert.False(t, inTrash.CanRestoreRoot)
+	})
+	t.Run("an unreachable root is omitted", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		shareProjectForTest(t, 46, 2, PermissionAdmin)
+
+		inTrash := readInTrash(t, 46, &user.User{ID: 2})
+		assert.Zero(t, inTrash.TrashedRootID)
+		assert.False(t, inTrash.CanRestoreRoot)
+		details, err := json.Marshal(inTrash)
+		require.NoError(t, err)
+		assert.NotContains(t, string(details), "trashed_root_id")
+	})
+	t.Run("points deeper sub-projects to the topmost trashed ancestor", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u6 := &user.User{ID: 6}
+		// 12 -> 25 -> 26
+		trashProjectForTest(t, 26, u6)
+		trashProjectForTest(t, 12, u6)
+
+		inTrash := readInTrash(t, 26, u6)
+		assert.False(t, inTrash.CanRestore)
+		assert.Equal(t, int64(12), inTrash.TrashedRootID)
+	})
+	t.Run("not while the parent is archived", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// 21 is a child of archived 22
+		s := db.NewSession()
+		_, err := s.Table("projects").Where("id = ?", 21).Update(map[string]any{"deleted_at": time.Now()})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		inTrash := readInTrash(t, 21, u1)
+		assert.False(t, inTrash.CanRestore)
+		assert.Zero(t, inTrash.TrashedRootID)
+	})
+	t.Run("not while the parent row is gone", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		_, err := s.Table("projects").Where("id = ?", 46).Update(map[string]any{"parent_project_id": 99999})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.False(t, readInTrash(t, 46, u1).CanRestore)
+		err = restoreProjectForTest(t, 46, u1)
+		var missing ErrParentProjectDoesNotExist
+		require.ErrorAs(t, err, &missing)
+		assert.Equal(t, http.StatusPreconditionFailed, missing.HTTPError().HTTPCode)
+		assert.Equal(t, ErrCodeParentProjectDoesNotExist, missing.HTTPError().Code)
+	})
 }
 
 func TestProject_TrashHidesContents(t *testing.T) {
