@@ -26,13 +26,9 @@ import {
 	mapTaskEverywhere,
 } from './taskCache'
 
-// task_id / project_id are 0 when unset, never null.
 export type TimeEntryResponse = Omit<TimeEntry, 'id' | 'user' | 'task_id' | 'project_id' | 'comment'> &
-	Required<Pick<TimeEntry, 'id' | 'comment'>> & {
-		user: User & Required<Pick<User, 'id'>>
-		task_id: number
-		project_id: number
-	}
+	Required<Pick<TimeEntry, 'id' | 'task_id' | 'project_id' | 'comment'>> &
+	{user: User & Required<Pick<User, 'id'>>}
 
 export type TimeEntryPage = Paginated<TimeEntryResponse>
 
@@ -153,7 +149,7 @@ export function createTimeEntryMutationOptions() {
 			patchTimeEntry(client, entry)
 			bumpTaskEntryCount(client, entry.task_id ?? 0, 1)
 		},
-		onSettled: (input, client) => settle(client, input.task_id ?? undefined),
+		onSettled: (input, client) => settle(client, input.task_id),
 	})
 }
 
@@ -188,7 +184,7 @@ export function updateTimeEntryMutationOptions() {
 			bumpTaskEntryCount(client, previousTaskId, -1)
 			bumpTaskEntryCount(client, taskId, 1)
 		},
-		onSettled: (input, client) => settle(client, input.task_id ?? undefined),
+		onSettled: (input, client) => settle(client, input.task_id),
 	})
 }
 

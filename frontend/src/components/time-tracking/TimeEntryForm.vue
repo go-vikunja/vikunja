@@ -329,7 +329,7 @@ watch(() => props.entry, async (entry, _previous, onCleanup) => {
 	}
 }, {immediate: true})
 
-// Omitting both keys keeps the server-side container; explicit nulls detach it.
+// Omitting both keys keeps the server-side container; sending 0 for both detaches it.
 function applyContainerChange(payload: UpdateTimeEntryInput, entry: ITimeEntry) {
 	if (props.taskId !== undefined) {
 		return
@@ -340,8 +340,8 @@ function applyContainerChange(payload: UpdateTimeEntryInput, entry: ITimeEntry) 
 	if (unchanged || (!containerLoaded.value && taskId === 0 && projectId === 0)) {
 		return
 	}
-	payload.task_id = taskId || null
-	payload.project_id = projectId || null
+	payload.task_id = taskId
+	payload.project_id = projectId
 }
 
 function draftIdentity() {
