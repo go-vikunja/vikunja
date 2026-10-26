@@ -134,7 +134,8 @@ test.describe('Project trash', () => {
 		userToken,
 	}) => {
 		await trashProject(apiContext, userToken, 1)
-		await page.goto('/projects/1/1')
+		// The table view: the list view autofocuses its add-task input
+		await page.goto('/projects/1/3')
 
 		const notice = page.locator('[data-cy="projectInTrashNotice"]')
 		await expect(notice).toContainText('This project is in the trash.')
