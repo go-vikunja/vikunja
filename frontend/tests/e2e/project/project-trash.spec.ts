@@ -185,4 +185,30 @@ test.describe('Project trash', () => {
 		await expect(notice.locator('[data-cy="restoreTrashed"]')).toHaveCount(0)
 		await expect(notice.getByRole('link', {name: 'Open trash'})).toHaveCount(0)
 	})
+
+	test('a read-only share sees a sub-project of a trashed project without restoring the parent', async ({
+		authenticatedPage: page,
+		apiContext,
+		currentUser,
+	}) => {
+		const [owner] = await UserFactory.create(1, {id: 2}, false)
+		await ProjectFactory.create(1, {id: 4, title: 'Shared Project', owner_id: owner.id}, false)
+		await createDefaultViews(4, 5)
+		await ProjectFactory.create(1, {
+			id: 5,
+			title: 'Shared child',
+			owner_id: owner.id,
+			parent_project_id: 4,
+		}, false)
+		await createDefaultViews(5, 9)
+		await UserProjectFactory.create(1, {project_id: 4, user_id: currentUser.id, permission: 0})
+		const {token: ownerToken} = await login(null, apiContext, owner)
+		await trashProject(apiContext, ownerToken, 4)
+		await page.goto('/projects/5/9')
+
+		const notice = page.locator('[data-cy="projectInTrashNotice"]')
+		await expect(notice).toContainText('This project is in the trash.')
+		await expect(notice.locator('[data-cy="restoreTrashed"]')).toHaveCount(0)
+		await expect(notice.getByRole('button', {name: 'Restore parent project'})).toHaveCount(0)
+	})
 })

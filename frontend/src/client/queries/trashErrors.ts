@@ -20,6 +20,7 @@ export type ProjectInTrash = {
 	can_restore: boolean
 	// The trashed ancestor that has to be restored instead
 	trashed_root_id?: number
+	can_restore_root: boolean
 }
 
 function trashDetailsFromError(cause: unknown, errorCode: number): unknown {

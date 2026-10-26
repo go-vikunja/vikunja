@@ -37,7 +37,7 @@ const restoreTarget = computed(() => props.inTrash.trashed_root_id
 	? {
 		id: props.inTrash.trashed_root_id,
 		label: t('trash.restoreParentProject'),
-		allowed: true,
+		allowed: props.inTrash.can_restore_root,
 	}
 	: {
 		id: props.inTrash.id,
