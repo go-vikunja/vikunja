@@ -99,12 +99,10 @@ async function deleteProject() {
 	} catch {
 		return
 	}
-	// Toast after navigating, so the undo can take the focus the closed view dropped.
-	// Works after unmount: the view navigates away before anyone clicks undo
+	await router.push({name: 'home'})
 	success({message: t('project.delete.success')}, [{
 		title: t('task.undo'),
 		callback: () => restoreMutation.mutate(id),
-	}])
-	router.push({name: 'home'})
+	}], {takeFocus: true})
 }
 </script>
