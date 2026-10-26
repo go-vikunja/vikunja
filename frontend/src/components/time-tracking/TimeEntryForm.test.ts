@@ -24,6 +24,14 @@ const sdk = vi.hoisted(() => ({
 		id: 1,
 		user: {id: 1},
 	}})),
+	timeEntriesUpdate: vi.fn(async ({path, body}: {
+		path: {id: number}
+		body: Record<string, unknown>
+	}) => ({data: {
+		...body,
+		id: path.id,
+		user: {id: 1},
+	}})),
 }))
 
 vi.mock('@/client/generated', () => sdk)
@@ -41,6 +49,10 @@ vi.mock('@/message', () => ({
 
 import TimeEntryForm from './TimeEntryForm.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import {queryClient} from '@/client/queryClient'
+import {normalizeProject, projectKeys} from '@/client/queries/projects'
+import type {TimeEntryResponse} from '@/client/queries/timeEntries'
 
 const FORM_OPENED = new Date('2026-06-07T09:00:00Z')
 const CLICKED = new Date('2026-06-07T09:30:00Z')
@@ -51,11 +63,11 @@ const cy: Directive<HTMLElement, string> = {
 	},
 }
 
-function mountForm() {
+function mountForm(props: InstanceType<typeof TimeEntryForm>['$props'] = {taskId: 1}) {
 	const pinia = createPinia()
 	setActivePinia(pinia)
 	return shallowMount(TimeEntryForm, {
-		props: {taskId: 1},
+		props,
 		global: {
 			plugins: [
 				pinia,
@@ -185,5 +197,72 @@ describe('TimeEntryForm backdated stop hint', () => {
 		await chooseStart(wrapper, new Date('2026-06-07T07:00:00Z'))
 
 		expect(wrapper.find(hint).exists()).toBe(false)
+	})
+})
+
+describe('TimeEntryForm update container', () => {
+	const entry: TimeEntryResponse = {
+		id: 2,
+		task_id: 0,
+		project_id: 1,
+		comment: 'on project',
+		start_time: '2026-06-07T08:00:00.000Z',
+		end_time: '2026-06-07T09:00:00.000Z',
+		user: {id: 1},
+	}
+
+	beforeEach(() => {
+		sdk.timeEntriesUpdate.mockClear()
+		// useProjects reads the app-wide client, not the injected one.
+		queryClient.setQueryData(projectKeys.list(), {
+			projects: [normalizeProject({
+				id: 1,
+				title: 'Project 1',
+			})],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
+	})
+
+	afterEach(() => {
+		queryClient.clear()
+	})
+
+	async function saveEdit(wrapper: ReturnType<typeof mountForm>) {
+		await wrapper.find('[data-cy="updateTimeEntry"]').trigger('click')
+		await flushPromises()
+		return sdk.timeEntriesUpdate.mock.calls.at(-1)?.[0]
+	}
+
+	it('sends 0 for both containers after the project is cleared', async () => {
+		const wrapper = mountForm({entry})
+		await flushPromises()
+		wrapper.findComponent(ProjectSearch).vm.$emit('update:modelValue', null)
+
+		expect(await saveEdit(wrapper)).toStrictEqual({
+			path: {id: 2},
+			body: {
+				comment: 'on project',
+				start_time: '2026-06-07T08:00:00.000Z',
+				end_time: '2026-06-07T09:00:00.000Z',
+				task_id: 0,
+				project_id: 0,
+			},
+		})
+	})
+
+	it('omits both containers when the project is unchanged', async () => {
+		const wrapper = mountForm({entry})
+		await flushPromises()
+
+		expect(await saveEdit(wrapper)).toStrictEqual({
+			path: {id: 2},
+			body: {
+				comment: 'on project',
+				start_time: '2026-06-07T08:00:00.000Z',
+				end_time: '2026-06-07T09:00:00.000Z',
+			},
+		})
+
 	})
 })
