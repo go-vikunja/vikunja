@@ -41,28 +41,13 @@
 						{{ deletedLabel(task) }} ·
 						{{ $t('trash.daysLeftShort', trashDaysLeft(task.deleted_at ?? '')) }}
 					</span>
-					<span class="trashed-task-actions">
-						<BaseButton
-							v-tooltip="$t('trash.restore')"
-							v-cy="'restoreTask'"
-							class="trash-action"
-							:aria-label="$t('trash.restore')"
-							:aria-disabled="pendingRows.has(task.id) || undefined"
-							@click="restore(task.id)"
-						>
-							<Icon icon="undo" />
-						</BaseButton>
-						<BaseButton
-							v-tooltip="$t('trash.deleteForever')"
-							v-cy="'deleteTaskForever'"
-							class="trash-action trash-action--danger"
-							:aria-label="$t('trash.deleteForever')"
-							:aria-disabled="pendingRows.has(task.id) || undefined"
-							@click="confirmDeleteForever(task)"
-						>
-							<Icon icon="trash-alt" />
-						</BaseButton>
-					</span>
+					<TrashRowActions
+						:pending="pendingRows.has(task.id)"
+						restore-cy="restoreTask"
+						delete-forever-cy="deleteTaskForever"
+						@restore="restore(task.id)"
+						@deleteForever="confirmDeleteForever(task)"
+					/>
 				</li>
 			</ul>
 		</Card>
@@ -116,11 +101,11 @@
 import {computed, ref, watch} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 
-import BaseButton from '@/components/base/BaseButton.vue'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInlineReadonly.vue'
+import TrashRowActions from '@/components/trash/TrashRowActions.vue'
 
 import {
 	trashDaysLeft,
@@ -237,30 +222,5 @@ async function emptyTrash() {
 	color: var(--grey-500);
 	font-size: .85rem;
 	white-space: nowrap;
-}
-
-.trashed-task-actions {
-	display: inline-flex;
-	gap: .25rem;
-}
-
-.trash-action {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	inline-size: 2rem;
-	block-size: 2rem;
-	border-radius: $radius;
-	color: var(--grey-500);
-	transition: color $transition, background-color $transition;
-
-	&:hover {
-		color: var(--primary);
-		background-color: var(--grey-200);
-	}
-
-	&--danger:hover {
-		color: var(--danger);
-	}
 }
 </style>

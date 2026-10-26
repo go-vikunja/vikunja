@@ -54,28 +54,13 @@
 						>
 							{{ deletedLabel(project) }} · {{ $t('trash.daysLeftShort', trashDaysLeft(project.deleted_at ?? '')) }}
 						</span>
-						<span class="trashed-project__actions">
-							<BaseButton
-								v-tooltip="$t('trash.restore')"
-								v-cy="'restoreProject'"
-								class="trash-action"
-								:aria-label="$t('trash.restore')"
-								:aria-disabled="pendingRows.has(project.id) || undefined"
-								@click="restore(project.id)"
-							>
-								<Icon icon="undo" />
-							</BaseButton>
-							<BaseButton
-								v-tooltip="$t('trash.deleteForever')"
-								v-cy="'deleteProjectForever'"
-								class="trash-action trash-action--danger"
-								:aria-label="$t('trash.deleteForever')"
-								:aria-disabled="pendingRows.has(project.id) || undefined"
-								@click="confirmDeleteForever(project)"
-							>
-								<Icon icon="trash-alt" />
-							</BaseButton>
-						</span>
+						<TrashRowActions
+							:pending="pendingRows.has(project.id)"
+							restore-cy="restoreProject"
+							delete-forever-cy="deleteProjectForever"
+							@restore="restore(project.id)"
+							@deleteForever="confirmDeleteForever(project)"
+						/>
 					</div>
 					<ul
 						v-if="expanded.has(project.id)"
@@ -148,6 +133,7 @@ import Card from '@/components/misc/Card.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
+import TrashRowActions from '@/components/trash/TrashRowActions.vue'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import {
@@ -288,11 +274,6 @@ async function emptyTrash() {
 	white-space: nowrap;
 }
 
-.trashed-project__actions {
-	display: inline-flex;
-	gap: .25rem;
-}
-
 .trashed-sub-projects {
 	list-style: none;
 	margin: 0 0 .5rem;
@@ -302,26 +283,6 @@ async function emptyTrash() {
 
 	li {
 		padding-block: .15rem;
-	}
-}
-
-.trash-action {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	inline-size: 2rem;
-	block-size: 2rem;
-	border-radius: $radius;
-	color: var(--grey-500);
-	transition: color $transition, background-color $transition;
-
-	&:hover {
-		color: var(--primary);
-		background-color: var(--grey-200);
-	}
-
-	&--danger:hover {
-		color: var(--danger);
 	}
 }
 </style>
