@@ -60,7 +60,7 @@
 								v-cy="'restoreProject'"
 								class="trash-action"
 								:aria-label="$t('trash.restore')"
-								:aria-disabled="isRestoring(project.id) || undefined"
+								:aria-disabled="pendingRows.has(project.id) || undefined"
 								@click="restore(project.id)"
 							>
 								<Icon icon="undo" />
@@ -70,7 +70,8 @@
 								v-cy="'deleteProjectForever'"
 								class="trash-action trash-action--danger"
 								:aria-label="$t('trash.deleteForever')"
-								@click="projectToDelete = project"
+								:aria-disabled="pendingRows.has(project.id) || undefined"
+								@click="confirmDeleteForever(project)"
 							>
 								<Icon icon="trash-alt" />
 							</BaseButton>
@@ -93,7 +94,7 @@
 			</ul>
 		</Card>
 		<p
-			v-else-if="!isFetching"
+			v-else-if="isSuccess && !isFetching"
 			class="has-text-centered has-text-grey is-italic"
 		>
 			{{ $t('trash.noProjects') }}
@@ -158,6 +159,7 @@ import {
 } from '@/client/queries/trash'
 import {clampPage} from '@/client/queries/pagination'
 import {useDeletedLabel} from '@/composables/useDeletedLabel'
+import {usePendingRows} from '@/composables/usePendingRows'
 import {getHexColor} from '@/helpers/task'
 import {formatDateLong} from '@/helpers/time/formatDate'
 
@@ -173,6 +175,7 @@ const projects = computed(() => query.data.value?.items ?? [])
 const total = computed(() => query.data.value?.total ?? 0)
 const totalPages = computed(() => query.data.value?.total_pages ?? 0)
 const isFetching = query.isFetching
+const isSuccess = query.isSuccess
 
 // Restoring or deleting the last project of the last page leaves the page empty
 watch(() => clampPage(currentPage.value, {data: query.data.value, isPlaceholderData: query.isPlaceholderData.value}), page => {
@@ -193,13 +196,17 @@ function toggle(projectId: number) {
 	}
 }
 
-function isRestoring(projectId: number) {
-	return restoreProject.isPending.value && restoreProject.variables.value === projectId
-}
+const pendingRows = usePendingRows()
 
 function restore(projectId: number) {
-	if (isRestoring(projectId)) return
-	restoreProject.mutate(projectId)
+	return pendingRows.run(restoreProject, projectId)
+}
+
+function confirmDeleteForever(project: ProjectResponse) {
+	if (pendingRows.has(project.id)) {
+		return
+	}
+	projectToDelete.value = project
 }
 
 function openEmptyModal() {
@@ -210,14 +217,19 @@ function openEmptyModal() {
 async function deleteForever() {
 	const project = projectToDelete.value
 	projectToDelete.value = null
-	if (project) {
-		await deleteProjectPermanently.mutateAsync(project.id)
+	if (!project) {
+		return
 	}
+	await pendingRows.run(deleteProjectPermanently, project.id)
 }
 
 async function emptyTrash() {
 	showEmptyModal.value = false
-	await emptyProjectTrash.mutateAsync()
+	try {
+		await emptyProjectTrash.mutateAsync()
+	} catch {
+		return
+	}
 	currentPage.value = 1
 }
 </script>
