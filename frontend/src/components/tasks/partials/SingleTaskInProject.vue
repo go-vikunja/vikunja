@@ -236,7 +236,9 @@ import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {useGlobalNow} from '@/composables/useGlobalNow'
-import {describeRepeat, isRepeating} from '@/helpers/rrule'
+import {dueDateOf, isRepeating, recurrenceZone} from '@/helpers/rrule'
+import {describeRepeatRule} from '@/helpers/rruleDescribe'
+import {useAuthStore} from '@/stores/auth'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const props = withDefaults(defineProps<{
@@ -266,12 +268,19 @@ function getTaskById(taskId: number | undefined): ITask | undefined {
 	return props.allTasks.find(t => t.id === taskId)
 }
 
-const {t} = useI18n({useScope: 'global'})
+const {t, locale} = useI18n({useScope: 'global'})
+const authStore = useAuthStore()
 
 const task = computed(() => props.theTask)
 
 const taskIsRepeating = computed(() => isRepeating(task.value.repeat))
-const repeatTooltip = computed(() => describeRepeat(task.value.repeat, t))
+const repeatTooltip = computed(() => describeRepeatRule(task.value.repeat, {
+	t: (key, params, plural) => plural === undefined ? t(key, params ?? {}) : t(key, params ?? {}, plural),
+	locale: locale.value,
+	weekStart: authStore.settings.week_start ?? 0,
+	zone: recurrenceZone(authStore.settings),
+	dueDate: dueDateOf(task.value),
+}))
 
 const projectList = useProjects()
 const updateTask = useUpdateTaskMutation(true)
