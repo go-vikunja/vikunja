@@ -1630,8 +1630,11 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 
 func webhookCreatorCanRead(s *xorm.Session, project *Project, creator *user.User) (bool, error) {
 	if !project.DeletedAt.IsZero() {
-		_, reachable, err := trashedProjectPermission(s, creator, project)
-		return reachable, err
+		_, _, err := getReadableTrashedProject(s, creator, project.ID)
+		if IsErrProjectDoesNotExist(err) {
+			return false, nil
+		}
+		return err == nil, err
 	}
 	canRead, _, err := project.CanRead(s, creator)
 	return canRead, err

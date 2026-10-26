@@ -234,46 +234,38 @@ func getTrashedProject(s *xorm.Session, projectID int64) (*Project, error) {
 	return project, nil
 }
 
-// Trashed projects can't be reached through the regular permission checks, which skip them.
+// Unreachable trashed projects are ErrProjectDoesNotExist so their existence doesn't leak.
 // Like regular reads, link shares never reach a trashed project.
-func trashedProjectPermission(s *xorm.Session, a web.Auth, project *Project) (
-	permission Permission,
-	reachable bool,
-	err error,
-) {
+func getReadableTrashedProject(s *xorm.Session, a web.Auth, projectID int64) (*Project, Permission, error) {
 	if _, isShare := a.(*LinkSharing); isShare {
-		return 0, false, nil
+		return nil, 0, ErrProjectDoesNotExist{ID: projectID}
+	}
+	project, err := getTrashedProject(s, projectID)
+	if err != nil {
+		return nil, 0, err
 	}
 	if isInstanceAdmin(s, a) || project.OwnerID == a.GetID() {
-		return PermissionAdmin, true, nil
+		return project, PermissionAdmin, nil
 	}
 	access, err := getProjectAccessIncludingTrash(s, a.GetID())
 	if err != nil {
-		return 0, false, err
+		return nil, 0, err
 	}
-	permission, reachable = access.permission(project.ID)
-	return permission, reachable, nil
+	permission, reachable := access.permission(project.ID)
+	if !reachable {
+		return nil, 0, ErrProjectDoesNotExist{ID: projectID}
+	}
+	return project, permission, nil
 }
 
 // Readers who could reach the project get ErrProjectIsInTrash; everyone else keeps notFound.
 func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFound error) error {
-	if _, isShare := a.(*LinkSharing); isShare {
-		return notFound
-	}
-	trashed, err := getTrashedProject(s, projectID)
+	trashed, permission, err := getReadableTrashedProject(s, a, projectID)
 	if IsErrProjectDoesNotExist(err) {
 		return notFound
 	}
 	if err != nil {
 		return err
-	}
-
-	permission, reachable, err := trashedProjectPermission(s, a, trashed)
-	if err != nil {
-		return err
-	}
-	if !reachable {
-		return notFound
 	}
 
 	inTrash := ErrProjectIsInTrash{
@@ -297,18 +289,11 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 	return inTrash
 }
 
-// Loads the trashed project into p; unreachable callers get ErrProjectDoesNotExist so it doesn't leak.
+// Loads the trashed project into p.
 func (p *Project) canDoTrashedProject(s *xorm.Session, a web.Auth) (bool, error) {
-	trashed, err := getTrashedProject(s, p.ID)
+	trashed, permission, err := getReadableTrashedProject(s, a, p.ID)
 	if err != nil {
 		return false, err
-	}
-	permission, reachable, err := trashedProjectPermission(s, a, trashed)
-	if err != nil {
-		return false, err
-	}
-	if !reachable {
-		return false, ErrProjectDoesNotExist{ID: p.ID}
 	}
 	*p = *trashed
 	return permission == PermissionAdmin, nil
