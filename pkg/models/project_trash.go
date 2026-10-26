@@ -102,7 +102,23 @@ func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
 }
 
 // Time entries survive without a container, kept by their authors. A nil doer is the system.
-func hardDeleteProject(s *xorm.Session, p *Project, doer *user.User) (err error) {
+func hardDeleteProject(s *xorm.Session, p *Project, doer *user.User) error {
+	ancestorIDs := []int64{}
+	err := s.Table(&ProjectAncestor{}).
+		Where(builder.And(
+			builder.Eq{"project_id": p.ID},
+			builder.Gt{"depth": 0},
+		)).
+		Cols("ancestor_id").
+		Find(&ancestorIDs)
+	if err != nil {
+		return err
+	}
+	return hardDeleteProjectTree(s, p, doer, ancestorIDs)
+}
+
+// Children get their ancestors passed down: deleting p's closure rows also drops their links to p.
+func hardDeleteProjectTree(s *xorm.Session, p *Project, doer *user.User, ancestorIDs []int64) (err error) {
 	// Lock first: the task loop below deletes task_positions rows before the views are dropped further down.
 	_, err = lockProjectViewsForPositionUpdate(s, p.ID)
 	if err != nil {
@@ -205,8 +221,9 @@ func hardDeleteProject(s *xorm.Session, p *Project, doer *user.User) (err error)
 		return
 	}
 	events.DispatchOnCommit(s, &ProjectPurgedEvent{
-		Project: p,
-		Doer:    doer,
+		Project:     p,
+		Doer:        doer,
+		AncestorIDs: ancestorIDs,
 	})
 
 	children := []*Project{}
@@ -214,8 +231,9 @@ func hardDeleteProject(s *xorm.Session, p *Project, doer *user.User) (err error)
 	if err != nil {
 		return
 	}
+	childAncestorIDs := append(slices.Clone(ancestorIDs), p.ID)
 	for _, child := range children {
-		err = hardDeleteProject(s, child, doer)
+		err = hardDeleteProjectTree(s, child, doer, childAncestorIDs)
 		if err != nil {
 			return
 		}

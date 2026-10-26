@@ -1571,8 +1571,32 @@ func webhookProjectIDs(s *xorm.Session, projectID int64) ([]int64, error) {
 	return append([]int64{projectID}, ancestorIDs...), nil
 }
 
+// popEventAncestorIDs removes the routing-only ancestor_ids of a purge event so it never reaches a payload.
+func popEventAncestorIDs(event map[string]interface{}) []int64 {
+	raw, _ := event["ancestor_ids"].([]interface{})
+	delete(event, "ancestor_ids")
+	ids := make([]int64, 0, len(raw))
+	for _, id := range raw {
+		ids = append(ids, getIDAsInt64(id))
+	}
+	return ids
+}
+
+// Nil once purged.
+func getProjectIncludingTrash(s *xorm.Session, projectID int64) (*Project, error) {
+	project, err := GetProjectSimpleByID(s, projectID)
+	if IsErrProjectDoesNotExist(err) {
+		project, err = getTrashedProject(s, projectID)
+	}
+	if IsErrProjectDoesNotExist(err) {
+		return nil, nil
+	}
+	return project, err
+}
+
 // Skips webhooks whose creator is inactive or can no longer read the project.
-func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string) ([]*Webhook, error) {
+// purgedAncestorIDs stands in for the closure rows a purge already deleted.
+func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string, purgedAncestorIDs []int64) ([]*Webhook, error) {
 	matchingWebhooks := []*Webhook{}
 	if projectID <= 0 {
 		return matchingWebhooks, nil
@@ -1582,6 +1606,7 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 	if err != nil {
 		return nil, err
 	}
+	projectIDs = append(projectIDs, purgedAncestorIDs...)
 
 	ws := []*Webhook{}
 	err = s.In("project_id", projectIDs).
@@ -1607,11 +1632,8 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 		return nil, err
 	}
 
-	project, err := GetProjectSimpleByID(s, projectID)
-	if IsErrProjectDoesNotExist(err) {
-		project, err = getTrashedProject(s, projectID)
-	}
-	if err != nil && !IsErrProjectDoesNotExist(err) {
+	project, err := getProjectIncludingTrash(s, projectID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -1620,10 +1642,18 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string)
 		if !exists || creator.Status != user.StatusActive {
 			continue
 		}
-		// Purged projects have no row left to check against.
-		if project != nil {
+		checked := project
+		if checked == nil {
+			// Purged: check the ancestor the webhook is on instead.
+			checked, err = getProjectIncludingTrash(s, w.ProjectID)
+			if err != nil {
+				return nil, err
+			}
+		}
+		// Nil when the webhook's own project went in the same purge: nothing left to check against.
+		if checked != nil {
 			// Backstop for access lost without an explicit removal, e.g. by moving the project.
-			canRead, err := webhookCreatorCanRead(s, project, &user.User{ID: w.CreatedByID})
+			canRead, err := webhookCreatorCanRead(s, checked, &user.User{ID: w.CreatedByID})
 			if err != nil {
 				return nil, err
 			}
@@ -1671,7 +1701,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
-	matchingWebhooks, err := projectWebhooksForEvent(s, projectID, wl.EventName)
+	matchingWebhooks, err := projectWebhooksForEvent(s, projectID, wl.EventName, popEventAncestorIDs(event))
 	if err != nil {
 		return err
 	}

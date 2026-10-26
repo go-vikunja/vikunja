@@ -492,6 +492,74 @@ func purgedProjectDoers(t *testing.T) map[int64]*user.User {
 	return doers
 }
 
+func TestWebhookListener_ParentReceivesChildPurged(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	u6 := &user.User{ID: 6}
+	// 12 -> 25 -> 26, all user6's; user15 only reads 26.
+	trashProjectForTest(t, 26, u6)
+	s := db.NewSession()
+	defer s.Close()
+	hook := func(createdByID int64) *Webhook {
+		w := &Webhook{
+			TargetURL:   "https://example.com/purged",
+			Events:      []string{"project.purged"},
+			ProjectID:   25,
+			CreatedByID: createdByID,
+		}
+		_, err := s.Insert(w)
+		require.NoError(t, err)
+		return w
+	}
+	owners := hook(6)
+	strangers := hook(15)
+	require.NoError(t, s.Commit())
+
+	events.ClearDispatchedEvents()
+	require.NoError(t, (&Project{ID: 26}).DeletePermanently(s, u6))
+	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
+	purged := events.GetDispatchedEvents((&ProjectPurgedEvent{}).Name())
+	require.Len(t, purged, 1)
+
+	events.ClearDispatchedEvents()
+	events.TestListener(t, purged[0], &WebhookListener{EventName: "project.purged"})
+
+	delivered := webhookDeliveriesByID(t)
+	require.Contains(t, delivered, owners.ID)
+	assert.NotContains(t, delivered, strangers.ID, "creator can't read the webhook's project")
+	assert.NotContains(t, delivered[owners.ID].Payload.Data, "ancestor_ids")
+}
+
+func TestProject_DeletePermanently_SnapshotsAncestors(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	u6 := &user.User{ID: 6}
+	// 27 -> 12 -> 25 -> 26
+	trashProjectForTest(t, 12, u6)
+	s := db.NewSession()
+	defer s.Close()
+
+	events.ClearDispatchedEvents()
+	require.NoError(t, (&Project{ID: 12}).DeletePermanently(s, u6))
+	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
+
+	ancestors := map[int64][]int64{}
+	for _, e := range events.GetDispatchedEvents((&ProjectPurgedEvent{}).Name()) {
+		purged := e.(*ProjectPurgedEvent)
+		ancestors[purged.Project.ID] = purged.AncestorIDs
+	}
+	assert.ElementsMatch(t, []int64{27}, ancestors[12])
+	assert.ElementsMatch(t, []int64{
+		27,
+		12,
+	}, ancestors[25])
+	assert.ElementsMatch(t, []int64{
+		27,
+		12,
+		25,
+	}, ancestors[26])
+}
+
 func TestProject_DeletePermanently(t *testing.T) {
 	purge := func(t *testing.T, projectID int64, a web.Auth) error {
 		s := db.NewSession()

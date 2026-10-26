@@ -286,6 +286,8 @@ func (p *ProjectRestoredEvent) Name() string {
 type ProjectPurgedEvent struct {
 	Project *Project   `json:"project"`
 	Doer    *user.User `json:"doer"`
+	// Webhook routing only, stripped from the payload: the closure rows are gone once the purge commits.
+	AncestorIDs []int64 `json:"ancestor_ids,omitempty"`
 }
 
 // Name defines the name for ProjectPurgedEvent
