@@ -155,6 +155,15 @@ func Init() {
 		log.Fatalf("Could not initialize license system: %s", err)
 	}
 
+	activate(key)
+
+	// Offline tokens are bound to this ID, so admins need it before they have a license.
+	if !loadState().Licensed {
+		log.Infof("Instance ID: %s", instanceID)
+	}
+}
+
+func activate(key string) {
 	// No license key configured — free mode. Clear any state persisted by a
 	// previous run (e.g. via Redis) so a removed key can't leave stale
 	// Licensed=true entitlements behind.
