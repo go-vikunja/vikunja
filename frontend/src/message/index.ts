@@ -38,13 +38,23 @@ export interface Action {
 	callback: () => void,
 }
 
-export type ToastData = {actions: Action[]}
+export type ToastOptions = {
+	takeFocus?: boolean,
+}
+
+export type ToastData = {
+	actions: Action[],
+	takeFocus: boolean,
+}
 
 // Long enough to reach the action; Notification.vue pauses it while the toast is hovered or focused
 export const ACTION_TOAST_DURATION = 10_000
 
-function toast(type: 'error' | 'success', title: string, e: unknown, actions: Action[], duration?: number) {
-	const data: ToastData = {actions}
+function toast(type: 'error' | 'success', title: string, e: unknown, actions: Action[], options: ToastOptions & {duration?: number} = {}) {
+	const data: ToastData = {
+		actions,
+		takeFocus: options.takeFocus ?? false,
+	}
 	notify({
 		type,
 		title,
@@ -52,16 +62,16 @@ function toast(type: 'error' | 'success', title: string, e: unknown, actions: Ac
 		// Duplicates merge on title and text, which would drop this toast's own actions.
 		ignoreDuplicates: actions.length === 0,
 		// Notification.vue runs the pausable timer instead
-		duration: actions.length > 0 ? -1 : duration,
+		duration: actions.length > 0 ? -1 : options.duration,
 		data,
 	})
 }
 
 export function error(e: unknown, actions: Action[] = []) {
 	// The 3s library default is too short to notice and read an error.
-	toast('error', i18n.global.t('error.error'), e, actions, 10_000)
+	toast('error', i18n.global.t('error.error'), e, actions, {duration: 10_000})
 }
 
-export function success(e: unknown, actions: Action[] = []) {
-	toast('success', i18n.global.t('error.success'), e, actions)
+export function success(e: unknown, actions: Action[] = [], options: ToastOptions = {}) {
+	toast('success', i18n.global.t('error.success'), e, actions, options)
 }

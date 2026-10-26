@@ -77,7 +77,7 @@
 </template>
 
 <script lang="ts" setup>
-import {onBeforeUnmount, onMounted, ref, useTemplateRef} from 'vue'
+import {nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef} from 'vue'
 import {useElementBounding} from '@vueuse/core'
 import {notify, type NotificationItem} from '@kyvg/vue3-notification'
 import {useIsMobile} from '@/composables/useIsMobile'
@@ -86,6 +86,7 @@ import {useBottomBannersOffset} from '@/composables/useBottomBanners'
 
 import {ACTION_TOAST_DURATION, type ToastData} from '@/message'
 import {pausableTimeout} from '@/message/pausableTimeout'
+import {captureFocus} from '@/composables/useFocusAfterRemoval'
 
 const isMobile = useIsMobile()
 const isRtl = useIsRtl()
@@ -103,20 +104,39 @@ function syncTeleportTarget() {
 
 const actionTimers = new Map<NotificationItem['id'], ReturnType<typeof pausableTimeout>>()
 
-function hasActions(item: NotificationItem) {
-	return ((item.data as Partial<ToastData> | undefined)?.actions?.length ?? 0) > 0
+function toastData(item: NotificationItem) {
+	return item.data as Partial<ToastData> | undefined
 }
 
-function startActionTimer(item: NotificationItem) {
+function hasActions(item: NotificationItem) {
+	return (toastData(item)?.actions?.length ?? 0) > 0
+}
+
+function toastElement(item: NotificationItem) {
+	return document.querySelector<HTMLElement>(`.vue-notification-wrapper[data-id="${item.id}"]`)
+}
+
+async function startActionTimer(item: NotificationItem) {
 	if (!hasActions(item)) {
 		return
 	}
 	actionTimers.set(item.id, pausableTimeout(ACTION_TOAST_DURATION, () => notify.close(item.id)))
+	if (!toastData(item)?.takeFocus) {
+		return
+	}
+	await nextTick()
+	const moveFocus = captureFocus()
+	requestAnimationFrame(() => {
+		void moveFocus(() => toastElement(item)?.querySelector<HTMLElement>('button'))
+	})
 }
 
 function stopActionTimer(item: NotificationItem) {
 	actionTimers.get(item.id)?.cancel()
 	actionTimers.delete(item.id)
+	if (toastElement(item)?.contains(document.activeElement)) {
+		document.getElementById('main-content')?.focus({preventScroll: true})
+	}
 }
 
 function releaseFocusHold(item: NotificationItem, event: FocusEvent) {
