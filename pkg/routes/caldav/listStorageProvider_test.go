@@ -577,6 +577,37 @@ END:VCALENDAR`
 	})
 }
 
+// A plain parse error made caldav-go answer 500, which clients retry forever (#4248).
+func TestNonVTODOContentIsForbidden(t *testing.T) {
+	const eventContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//EN
+BEGIN:VEVENT
+UID:uid-caldav-test
+DTSTART:19700101T000000Z
+SUMMARY:Non-task event
+END:VEVENT
+END:VCALENDAR`
+
+	t.Run("create", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := storageFor(caldavFilterUser, 36)
+		_, err := storage.CreateResource(projectPath(36)+"uid-caldav-event.ics", eventContent)
+		require.ErrorIs(t, err, errs.ForbiddenError)
+	})
+
+	t.Run("update", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := storageFor(caldavFilterUser, 36)
+		storage.task = &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}
+		_, err := storage.UpdateResource(projectPath(36)+"uid-caldav-test.ics", eventContent)
+		require.ErrorIs(t, err, errs.ForbiddenError)
+		db.AssertCount(t, "tasks", builder.Eq{"id": 40, "title": "Title Caldav Test"}, 1)
+	})
+}
+
 // TestGetResourcesByList_URLProjectConsistency covers GHSA-48ch-p4gq-x46x.
 func TestGetResourcesByList_URLProjectConsistency(t *testing.T) {
 	u := &user.User{
