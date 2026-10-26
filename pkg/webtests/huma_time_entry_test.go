@@ -260,6 +260,14 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 		}, false)
 	})
 
+	t.Run("PUT with 0 detaches", func(t *testing.T) {
+		e, token := setup(t)
+		body := `{"task_id":0,"project_id":0,` + times + `}`
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", body, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
+	})
+
 	t.Run("PUT with null detaches", func(t *testing.T) {
 		e, token := setup(t)
 		body := `{"task_id":null,"project_id":null,` + times + `}`
