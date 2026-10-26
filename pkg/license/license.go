@@ -150,7 +150,7 @@ func Init() {
 
 	// Load or generate instance ID
 	var err error
-	instanceID, err = loadOrCreateInstanceID()
+	instanceID, err = InstanceID()
 	if err != nil {
 		log.Fatalf("Could not initialize license system: %s", err)
 	}
@@ -352,7 +352,8 @@ func saveState(st state) {
 	}
 }
 
-func loadOrCreateInstanceID() (string, error) {
+// InstanceID returns this instance's ID, creating it if missing.
+func InstanceID() (string, error) {
 	s := db.NewSession()
 	defer s.Close()
 
