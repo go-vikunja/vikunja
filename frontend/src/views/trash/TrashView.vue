@@ -14,14 +14,14 @@
 					{{ $t('quickActions.tasks') }}
 				</BaseButton>
 				<BaseButton
-					class="trash-tab"
+					class="switch-view-button"
 					:class="{'is-active': route.name === 'trash.projects'}"
 					:to="{name: 'trash.projects'}"
 				>
 					{{ $t('quickActions.projects') }}
 				</BaseButton>
 			</nav>
-			<!-- TrashTasks teleports its actions here -->
+			<!-- Each tab teleports its own actions here -->
 			<div id="trash-actions" />
 		</div>
 		<RouterView />
