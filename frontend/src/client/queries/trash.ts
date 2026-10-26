@@ -49,7 +49,10 @@ export {
 export const TRASH_RETENTION_DAYS = 30
 
 export type TrashedTaskPage = Paginated<TaskResponse>
-export type TrashedProjectPage = Paginated<ProjectResponse>
+export type TrashedProjectResponse = ProjectResponse & {
+	trashed_sub_projects: TrashedSubProject[]
+}
+export type TrashedProjectPage = Paginated<TrashedProjectResponse>
 
 export function trashDaysLeft(deletedAt: string | Date, now = new Date()): number {
 	const purgeAt = new Date(deletedAt).getTime() + TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000
@@ -171,7 +174,7 @@ export function trashedProjectsQuery(page: number) {
 					const project = normalizeProject(raw)
 					return {
 						...project,
-						trashed_sub_projects: orderTrashedSubProjects(project.id, project.trashed_sub_projects ?? []),
+						trashed_sub_projects: orderTrashedSubProjects(project.id, raw.trashed_sub_projects ?? []),
 					}
 				}),
 			}
