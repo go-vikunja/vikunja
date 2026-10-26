@@ -59,6 +59,24 @@ test.describe('Trash', () => {
 		expect(stored.ok()).toBe(true)
 	})
 
+	test('restoring with the keyboard moves focus to the next row', async ({authenticatedPage: page}) => {
+		await trashedTask(1, 'First trashed')
+		await trashedTask(2, 'Second trashed')
+		await page.goto('/trash/tasks')
+		const rows = page.locator('[data-cy="trashedTask"]')
+		await expect(rows).toHaveCount(2)
+		const remainingTitle = (await rows.nth(1).innerText()).includes('First trashed')
+			? 'First trashed'
+			: 'Second trashed'
+
+		await rows.first().locator('[data-cy="restoreTask"]').focus()
+		await page.keyboard.press('Enter')
+
+		await expect(rows).toHaveCount(1)
+		await expect(rows.first()).toContainText(remainingTitle)
+		await expect(rows.first().locator('[data-cy="restoreTask"]')).toBeFocused()
+	})
+
 	test('shows who else deleted a task', async ({authenticatedPage: page}) => {
 		const [other] = await UserFactory.create(1, {id: 2}, false)
 		await trashedTask(1, 'Trashed by someone else', 2)
@@ -81,6 +99,24 @@ test.describe('Trash', () => {
 		const stored = await apiContext.get('tasks/1', {headers: {Authorization: `Bearer ${userToken}`}})
 		expect(stored.status()).toBe(404)
 		expect((await stored.json()).code).toBe(4002)
+	})
+
+	test('deleting forever with the keyboard moves focus to the next row', async ({authenticatedPage: page}) => {
+		await trashedTask(1, 'First trashed')
+		await trashedTask(2, 'Second trashed')
+		await page.goto('/trash/tasks')
+		const rows = page.locator('[data-cy="trashedTask"]')
+		await expect(rows).toHaveCount(2)
+
+		await rows.first().locator('[data-cy="deleteTaskForever"]').focus()
+		await page.keyboard.press('Enter')
+		const dialog = page.getByRole('dialog', {name: 'Delete this task forever'})
+		await dialog.getByRole('button', {name: 'Do it!'}).focus()
+		await page.keyboard.press('Enter')
+
+		await expect(rows).toHaveCount(1)
+		await expect(dialog).toHaveCount(0)
+		await expect(rows.first().locator('[data-cy="deleteTaskForever"]')).toBeFocused()
 	})
 
 	test('empties the trash', async ({authenticatedPage: page, apiContext, userToken}) => {
@@ -114,6 +150,7 @@ test.describe('Trash', () => {
 
 		await notice.locator('[data-cy="restoreTrashed"]').click()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
+		await expect(page.locator('.task-view-container')).toBeFocused()
 		await page.reload()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
 	})
