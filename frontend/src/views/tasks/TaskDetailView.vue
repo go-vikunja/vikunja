@@ -1178,8 +1178,6 @@ async function deleteTask() {
 	} catch {
 		return
 	}
-	// Toast after navigating, so the undo can take the focus the closed view dropped.
-	// Works after unmount: the view navigates away before anyone clicks undo
 	await router.push({name: 'project.index', params: {projectId}})
 	success({message: t('task.detail.deleteSuccess')}, [{
 		title: t('task.undo'),
