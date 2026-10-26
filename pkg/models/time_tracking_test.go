@@ -411,6 +411,52 @@ func TestTimeEntry_Create(t *testing.T) {
 		require.NotNil(t, stopped.EndTime)
 		assert.True(t, stopped.EndTime.Before(time.Now().Add(time.Minute)), "expected end at now, got %s", stopped.EndTime)
 	})
+
+	t.Run("a backdated timer ends the caller's completed entries spanning its start", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// entry 2 (user1) and entry 3 (user3) both span 12:00-13:00
+		spanned, err := getTimeEntryByID(s, 2)
+		require.NoError(t, err)
+		switchedAt := spanned.StartTime.Add(30 * time.Minute)
+
+		next := &TimeEntry{TaskID: 1, StartTime: switchedAt}
+		require.NoError(t, next.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		ended, err := getTimeEntryByID(s, 2)
+		require.NoError(t, err)
+		require.NotNil(t, ended.EndTime)
+		assert.True(t, ended.EndTime.Equal(switchedAt), "expected end %s, got %s", switchedAt, ended.EndTime)
+
+		others, err := getTimeEntryByID(s, 3)
+		require.NoError(t, err)
+		assert.True(t, others.EndTime.After(switchedAt), "another user's entry must stay untouched")
+
+		before, err := getTimeEntryByID(s, 1)
+		require.NoError(t, err)
+		assert.True(t, before.EndTime.Before(switchedAt), "an entry ending before the start must stay untouched")
+	})
+
+	t.Run("a completed manual entry leaves spanned entries alone", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		spanned, err := getTimeEntryByID(s, 2)
+		require.NoError(t, err)
+		start := spanned.StartTime.Add(30 * time.Minute)
+
+		manual := &TimeEntry{TaskID: 1, StartTime: start, EndTime: timePtr(start.Add(time.Hour))}
+		require.NoError(t, manual.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		untouched, err := getTimeEntryByID(s, 2)
+		require.NoError(t, err)
+		assert.True(t, untouched.EndTime.Equal(*spanned.EndTime))
+	})
 }
 
 // A running timer (no end) must round-trip as a NULL end_time: found by the
