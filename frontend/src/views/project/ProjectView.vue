@@ -18,6 +18,7 @@ import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {saveProjectToHistory} from '@/modules/projectHistory'
+import {useFocusAfterRemoval} from '@/composables/useFocusAfterRemoval'
 
 const props = defineProps<{
 	projectId: number,
@@ -31,6 +32,7 @@ const authStore = useAuthStore()
 const project = useQuery(computed(() => projectQuery(props.projectId)))
 const currentProject = computed(() => project.data.value)
 const projectInTrash = computed(() => projectInTrashFromError(project.error.value))
+useFocusAfterRemoval(() => projectInTrash.value !== null, () => document.getElementById('main-content'))
 
 const currentView = computed(() => {
 	return currentProject.value?.views.find(v => v.id === props.viewId)

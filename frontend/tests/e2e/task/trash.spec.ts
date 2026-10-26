@@ -132,6 +132,7 @@ test.describe('Trash', () => {
 
 		await notice.locator('[data-cy="restoreTrashed"]').click()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
+		await expect(page.locator('.task-view-container')).toBeFocused()
 		await page.reload()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
 	})

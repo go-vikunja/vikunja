@@ -1,4 +1,4 @@
-import {nextTick} from 'vue'
+import {nextTick, watch} from 'vue'
 
 type FocusTarget = () => HTMLElement | null | undefined
 
@@ -27,4 +27,16 @@ export function captureFocus() {
 			focusFirst(targets)
 		}
 	}
+}
+
+export function useFocusAfterRemoval(isShown: () => boolean, target: FocusTarget) {
+	watch(isShown, async (shown, wasShown) => {
+		if (!wasShown || shown) {
+			return
+		}
+		await nextTick()
+		if (focusIsLost(null)) {
+			focusFirst([target])
+		}
+	})
 }

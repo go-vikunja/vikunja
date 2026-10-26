@@ -144,6 +144,7 @@ test.describe('Project trash', () => {
 		await notice.locator('[data-cy="restoreTrashed"]').click()
 		await expect(notice).toHaveCount(0)
 		await expect(page.locator('.project-title')).toContainText('First Project')
+		await expect(page.locator('#main-content')).toBeFocused()
 	})
 
 	test('opening a sub-project of a trashed project offers restoring the parent', async ({
