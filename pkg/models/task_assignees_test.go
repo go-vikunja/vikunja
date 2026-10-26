@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 // TestTaskAssignee_DoerHasDisplayName guards against the regression in #2720: the doer attached to
@@ -59,6 +60,46 @@ func TestTaskAssignee_DoerHasDisplayName(t *testing.T) {
 	require.NotNil(t, ev.Doer)
 	require.Equal(t, "Name with spaces", ev.Doer.GetName(),
 		"notification doer must carry the display Name, not the username")
+}
+
+func TestTaskAssignee_CreateSubscribesProjectSubscriber(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	creator := &user.User{ID: 1}
+	task := &Task{
+		Title:     "Assigned",
+		ProjectID: 1,
+	}
+	require.NoError(t, task.Create(s, creator))
+	_, err := s.Insert(&ProjectUser{
+		UserID:     2,
+		ProjectID:  1,
+		Permission: PermissionRead,
+	})
+	require.NoError(t, err)
+	_, err = s.Insert(&Subscription{
+		EntityType: SubscriptionEntityProject,
+		EntityID:   1,
+		UserID:     2,
+	})
+	require.NoError(t, err)
+
+	require.NoError(t, (&TaskAssginee{TaskID: task.ID, UserID: 2}).Create(s, creator))
+	require.NoError(t, s.Commit())
+
+	db.AssertExists(t, "subscriptions", map[string]interface{}{
+		"entity_type": SubscriptionEntityTask,
+		"entity_id":   task.ID,
+		"user_id":     2,
+		"muted":       false,
+	}, false)
+	db.AssertCount(t, "subscriptions", builder.Eq{
+		"entity_type": SubscriptionEntityTask,
+		"entity_id":   task.ID,
+		"user_id":     2,
+	}, 1)
 }
 
 // TestDoerFromAuth_DisabledUser ensures resolving the event doer keeps working when acting on behalf
