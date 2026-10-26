@@ -31,7 +31,10 @@ export function projectInTrashFromError(cause: unknown): ProjectInTrash | null {
 	return trashDetailsFromError(cause, ERROR_CODE_PROJECT_IS_IN_TRASH) as ProjectInTrash | null
 }
 
-// Views render these in place instead of a toast
+export function isProjectInTrashError(cause: unknown): boolean {
+	return projectInTrashFromError(cause) !== null
+}
+
 export function isInTrashError(cause: unknown): boolean {
-	return taskInTrashFromError(cause) !== null || projectInTrashFromError(cause) !== null
+	return taskInTrashFromError(cause) !== null || isProjectInTrashError(cause)
 }

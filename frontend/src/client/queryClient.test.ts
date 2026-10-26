@@ -91,12 +91,34 @@ describe('queryClient', () => {
 		expect(error).toHaveBeenCalledExactlyOnceWith(unhandled)
 	})
 
+	it('reports an in-trash failure of a query that does not handle it', async () => {
+		const cause = new ApiError({
+			status: 404,
+			code: 4040,
+			detail: 'in trash',
+			details: {
+				id: 1,
+				project_id: 1,
+				deleted_at: '2026-01-01T00:00:00Z',
+				can_restore: true,
+			},
+		})
+
+		await expect(failingQuery(['trashed-task-comments'], cause)).rejects.toBe(cause)
+
+		expect(error).toHaveBeenCalledExactlyOnceWith(cause)
+	})
+
 	it('does not retry a read of a trashed project', async () => {
 		const cause = new ApiError({
 			status: 404,
 			code: 3018,
 			detail: 'in trash',
-			details: {id: 1, deleted_at: '2026-01-01T00:00:00Z', can_restore: true},
+			details: {
+				id: 1,
+				deleted_at: '2026-01-01T00:00:00Z',
+				can_restore: true,
+			},
 		})
 		const queryFn = vi.fn(async () => {
 			throw cause

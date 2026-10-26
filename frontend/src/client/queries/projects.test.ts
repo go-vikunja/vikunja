@@ -56,6 +56,8 @@ import {
 } from './projects'
 import {taskKeys} from './tasks'
 import {deleteProjectMutationOptions} from './trash'
+import {ApiError} from '@/client/problem'
+import {error} from '@/message'
 
 function execute<TData, TVariables, TContext>(
 	options: MutationOptions<TData, Error, TVariables, TContext>,
@@ -101,6 +103,7 @@ describe('project queries', () => {
 	beforeEach(() => {
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
+		vi.mocked(error).mockClear()
 	})
 
 	it('reads the detail before falling back to the navigation list', () => {
@@ -189,6 +192,32 @@ describe('project queries', () => {
 		expect(projectQuery(-2).enabled).toBe(true)
 		expect(projectQuery(-1).enabled).toBe(true)
 		expect(projectQuery(0).enabled).toBe(false)
+	})
+
+	it('leaves only the in-trash failure of a project read to the view', async () => {
+		const inTrash = new ApiError({
+			status: 404,
+			code: 3018,
+			detail: 'in trash',
+			details: {
+				id: 1,
+				deleted_at: '2026-01-01T00:00:00Z',
+				can_restore: true,
+			},
+		})
+		const failed = new ApiError({
+			status: 500,
+			detail: 'boom',
+		})
+		sdk.projectsRead.mockRejectedValueOnce(inTrash).mockRejectedValueOnce(failed)
+
+		await expect(queryClient.fetchQuery(projectQuery(1))).rejects.toBe(inTrash)
+		await expect(queryClient.fetchQuery({
+			...projectQuery(2),
+			retry: false,
+		})).rejects.toBe(failed)
+
+		expect(error).toHaveBeenCalledExactlyOnceWith(failed)
 	})
 
 	it('lets the caller handle project count errors', () => {

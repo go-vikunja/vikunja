@@ -23,6 +23,7 @@ import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {setSubscription} from './subscriptionRequests'
 import {taskKeys} from './tasks'
+import {isProjectInTrashError} from './trashErrors'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -175,6 +176,8 @@ export function projectQuery(id: number) {
 			return normalizeProject(data)
 		},
 		enabled: id !== 0,
+		// ProjectView renders a notice instead
+		meta: {handlesError: isProjectInTrashError},
 	})
 }
 

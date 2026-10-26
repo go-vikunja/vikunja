@@ -22,7 +22,6 @@ export const queryClient = new QueryClient({
 		onError: (cause, query) => {
 			if (handlesError(query.meta, cause)) return
 			if (cause instanceof CancelledError || isRequestContextAbort(cause)) return
-			if (isInTrashError(cause)) return
 			error(cause)
 		},
 	}),
