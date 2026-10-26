@@ -77,12 +77,13 @@ func policyOf(opt *rrule.ROption) noDuePolicy {
 	return policyOneStep
 }
 
-// plainRule reports whether the rule has no BY part, no COUNT and no UNTIL.
+// plainRule reports whether the rule has no BY part (BYEASTER included), no COUNT and no UNTIL.
 func plainRule(opt *rrule.ROption) bool {
 	return opt.Count <= 0 && opt.Until.IsZero() &&
 		len(opt.Bymonthday) == 0 && len(opt.Bymonth) == 0 && len(opt.Byyearday) == 0 &&
 		len(opt.Byweekno) == 0 && len(opt.Bysetpos) == 0 && len(opt.Byhour) == 0 &&
-		len(opt.Byminute) == 0 && len(opt.Bysecond) == 0 && len(opt.Byweekday) == 0
+		len(opt.Byminute) == 0 && len(opt.Bysecond) == 0 && len(opt.Byweekday) == 0 &&
+		len(opt.Byeaster) == 0
 }
 
 // wallclockPeriodDays is the period of a plain DAILY or WEEKLY rule in local calendar days,
@@ -121,12 +122,16 @@ type recurrence struct {
 	until           time.Time
 	// periodDays is a plain DAILY or WEEKLY rule's period in local days, else 0.
 	periodDays int
-	now        time.Time // in zone
-	zone       *time.Location
+	// stepsDueDate: this recurrence steps a due date, so an occurrence whose wall clock does not
+	// exist in the zone is skipped (RFC 5545 §3.3.10). Set once in newRecurrence.
+	stepsDueDate bool
+	now          time.Time // in zone
+	zone         *time.Location
 }
 
 // occurrence is a moved (or reference) date: its instant, and the floating value it stands for,
-// its expected wall clock. For a gap-shifted instant that is the unshifted wall clock.
+// its wall clock. For an instant a gap shifted forward (a date that is not the due date) that is
+// the unshifted wall clock.
 type occurrence struct {
 	at time.Time
 	f  time.Time
@@ -141,6 +146,9 @@ func newRecurrence(in nextOccurrenceInput, opt *rrule.ROption, bounded rrule.ROp
 		namesTime: len(opt.Byhour) > 0 || len(opt.Byminute) > 0 || len(opt.Bysecond) > 0,
 		now:       in.Now.In(in.Zone),
 		zone:      in.Zone,
+		// Exactly the tasks withDueDate moves (evaluateNextOccurrence's switch); the other two
+		// paths step dates that are not recurrence instances and keep the forward reading.
+		stepsDueDate: !in.Due.At.IsZero(),
 	}
 	if r.family == familyElapsed {
 		r.step, _ = fixedDurationForRRule(opt)
@@ -160,11 +168,24 @@ func newRecurrence(in nextOccurrenceInput, opt *rrule.ROption, bounded rrule.ROp
 func (r *recurrence) float(t time.Time) time.Time    { return float(t, r.zone) }
 func (r *recurrence) localise(f time.Time) time.Time { return localise(f, r.zone) }
 
+// instant is f's instant in the zone (localise), and whether f exists there: false in a
+// spring-forward gap, where the instant reads as f moved forward by the gap.
+func (r *recurrence) instant(f time.Time) (time.Time, bool) {
+	at := r.localise(f)
+	return at, r.float(at).Equal(f)
+}
+
+// skips reports whether a candidate that does not exist in the zone is dropped: only while the
+// due date is stepped.
+func (r *recurrence) skips(exists bool) bool { return r.stepsDueDate && !exists }
+
 // --- stepping one date ---
 
 // next returns the rule's first occurrence strictly after from, for the rule anchored at a date:
 // anchorF is the date's floating value (wallclock family), anchorAt its instant (elapsed family).
 // clamp allows the anchor clamp, which only the due date takes. false means no occurrence is left.
+// When the due date is stepped, a wallclock occurrence whose wall clock does not exist in the zone
+// is skipped and never ranked (RFC 5545 §3.3.10); elapsed rules never meet one.
 func (r *recurrence) next(anchorF, anchorAt, from time.Time, clamp bool) (occurrence, bool) {
 	if r.family == familyElapsed {
 		at := r.nextElapsed(anchorAt, from)
@@ -214,7 +235,8 @@ func (r *recurrence) nextElapsed(anchor, from time.Time) time.Time {
 // nextWholePeriod steps a plain DAILY or WEEKLY rule: whole periods of local calendar days from
 // the anchor, past from, in O(1). The first candidate is at least one period after the anchor, so
 // a date that is already after from still takes one step, as the earlier fixed-duration engine's
-// step did.
+// step did. A due-date candidate in a gap is skipped; a period's drift against the transition
+// date's weekday window ends any run of skips within a few years (research R-3).
 func (r *recurrence) nextWholePeriod(anchorF, from time.Time) occurrence {
 	n := r.periodDays
 	j := 1
@@ -223,7 +245,11 @@ func (r *recurrence) nextWholePeriod(anchorF, from time.Time) occurrence {
 	}
 	for ; ; j++ {
 		f := anchorF.AddDate(0, 0, j*n)
-		if at := r.localise(f); at.After(from) {
+		at, exists := r.instant(f)
+		if r.skips(exists) {
+			continue
+		}
+		if at.After(from) {
 			return occurrence{at: at, f: f}
 		}
 	}
@@ -255,11 +281,11 @@ func withinUntil(at, until time.Time) bool {
 }
 
 // nextIterated chooses the next occurrence of a rule without COUNT in one rrule.Iterator pass:
-// floating occurrences more than 48 h before from cannot normalise after it and are skipped; every
-// later one is normalised, and the earliest normalised instant strictly after from (and within
-// UNTIL) is the best. The pass stops at the first floating occurrence more than 48 h after the
-// best instant's wall clock, a proven lower bound on every later one. The stop is relative to the
-// best candidate, not to from.
+// floating occurrences more than 48 h before from cannot normalise after it and are passed over;
+// every later one is normalised, and the earliest normalised instant strictly after from (and
+// within UNTIL) is the best. A due-date occurrence in a gap is skipped before it is compared. The
+// pass stops at the first floating occurrence more than 48 h after the best instant's wall clock, a
+// proven lower bound on every later one. The stop is relative to the best candidate, not to from.
 func (r *recurrence) nextIterated(dtstart, from time.Time) (occurrence, bool) {
 	rule, until, err := r.floatingRule(dtstart)
 	if err != nil {
@@ -277,8 +303,8 @@ func (r *recurrence) nextIterated(dtstart, from time.Time) (occurrence, bool) {
 		if !f.After(skip) {
 			continue
 		}
-		at := r.localise(f)
-		if !withinUntil(at, until) || !at.After(from) {
+		at, exists := r.instant(f)
+		if r.skips(exists) || !withinUntil(at, until) || !at.After(from) {
 			continue
 		}
 		switch {
@@ -297,7 +323,9 @@ func (r *recurrence) nextIterated(dtstart, from time.Time) (occurrence, bool) {
 // is normalised (the look-back skip never affects the ranks), collisions count once, and since
 // normalisation can reorder occurrences an instant's rank is final only once the iterator has
 // passed its wall clock by 48 h. Ranks are assigned in time order, so the first final instant
-// after from within COUNT is the answer; the rule is exhausted once COUNT instants are final.
+// after from within COUNT is the answer; the rule is exhausted once COUNT instants are final. A
+// due-date occurrence in a gap is skipped before it is buffered, so it never gets a rank and does
+// not count.
 func (r *recurrence) nextCounted(dtstart, from time.Time) (occurrence, bool) {
 	rule, until, err := r.floatingRule(dtstart)
 	if err != nil {
@@ -323,7 +351,11 @@ func (r *recurrence) nextCounted(dtstart, from time.Time) (occurrence, bool) {
 		if !ok {
 			return occurrence{}, false
 		}
-		at := r.localise(f)
+		// The skip comes after the finality block above, which reads the incoming floating f only.
+		at, exists := r.instant(f)
+		if r.skips(exists) {
+			continue
+		}
 		// An instant at or before a final one cannot occur (by lookAround); it would be a duplicate.
 		if !withinUntil(at, until) || (rank > 0 && !at.After(lastFinal)) {
 			continue
@@ -362,15 +394,15 @@ func (r *recurrence) representative(kept, other occurrence) occurrence {
 // --- the three ways a task moves ---
 
 // withDueDate moves the due date to the next occurrence, and every other date with it. In normal
-// mode the rule is anchored at the due date's expected floating value and the search starts at
-// now, or at the due date when that is later; from completion it is anchored at now, whose clock
-// time the re-based due date takes, without intent.
+// mode the rule is anchored at the due date's wall clock and the search starts at now, or at the
+// due date when that is later; from completion it is anchored at now, whose clock time the
+// re-based due date takes. In both modes a generated due date whose wall clock does not exist is
+// skipped (recurrence.stepsDueDate).
 func (r *recurrence) withDueDate(in nextOccurrenceInput) (nextOccurrenceResult, bool) {
-	ref := occurrence{at: in.Due.At, f: r.expF(in.Due)}
+	ref := occurrence{at: in.Due.At, f: r.float(in.Due.At)}
 	var next occurrence
 	var ok bool
 	if in.FromCompletion {
-		ref.f = r.float(in.Due.At)
 		next, ok = r.next(r.float(r.now), r.now, r.now, false)
 	} else {
 		from := r.now
@@ -384,10 +416,7 @@ func (r *recurrence) withDueDate(in nextOccurrenceInput) (nextOccurrenceResult, 
 	}
 
 	res := unmovedResult(in, "")
-	res.Due = r.annotate(next.at, next.f)
-	if in.FromCompletion {
-		res.Due = datedValue{At: next.at.In(r.zone)}
-	}
+	res.Due = datedValue{At: next.at.In(r.zone)}
 	if next.at.Equal(in.Due.At) {
 		// The next occurrence is the stored due date itself: no companion moves.
 		return res, true
@@ -404,7 +433,9 @@ func (r *recurrence) withDueDate(in nextOccurrenceInput) (nextOccurrenceResult, 
 // as upstream's setTaskDatesFromCurrentDateRepeat did: the earliest absolute reminder lands on the
 // first occurrence after now and the others move with it; the start lands there too and the end
 // moves with the start, or lands there itself when there is no start. The re-based dates take
-// now's clock time, without intent.
+// now's clock time. They are not recurrence instances, so one in a gap moves forward by the gap:
+// the same rule and now can give a different instant here than for a due date in withDueDate,
+// which skips the gap occurrence instead.
 func (r *recurrence) fromCompletionWithoutDueDate(in nextOccurrenceInput) (nextOccurrenceResult, bool) {
 	next, ok := r.next(r.float(r.now), r.now, r.now, false)
 	if !ok {
@@ -485,7 +516,7 @@ func (r *recurrence) withoutDueDate(in nextOccurrenceInput) (nextOccurrenceResul
 
 // stepOnItsOwn moves one date of a task without a due date by the rule anchored at itself: past now
 // under the independent policy, one step under the one-step policy. These dates are never the due
-// date, so they carry no intent.
+// date, so one in a gap moves forward by the gap.
 func (r *recurrence) stepOnItsOwn(d datedValue) (datedValue, occurrence, bool) {
 	from := d.At
 	if r.policy == policyIndependent {
@@ -498,7 +529,7 @@ func (r *recurrence) stepOnItsOwn(d datedValue) (datedValue, occurrence, bool) {
 	return datedValue{At: o.at.In(r.zone)}, o, true
 }
 
-// --- companions and intended clock times ---
+// --- companions ---
 
 // moveCompanion moves a companion date c with a reference that moved from refOld to refNew, by
 // the rule's family:
@@ -511,8 +542,9 @@ func (r *recurrence) stepOnItsOwn(d datedValue) (datedValue, occurrence, bool) {
 //     would put there is clamped to the reference's instant, which is always forward of its wall
 //     clock.
 //
-// A companion carries no intent: its input Intended is ignored and one that is gap-shifted or
-// clamped keeps the shifted time on later steps. An unset date stays unset.
+// A companion is not a recurrence instance: one that lands in a gap moves forward by the gap, and
+// one that is gap-shifted or clamped keeps the shifted time on later steps. An unset date stays
+// unset.
 func (r *recurrence) moveCompanion(c datedValue, refOld, refNew occurrence) datedValue {
 	if c.At.IsZero() {
 		return c
@@ -529,57 +561,4 @@ func (r *recurrence) moveCompanion(c datedValue, refOld, refNew occurrence) date
 		at = refNew.at
 	}
 	return datedValue{At: at.In(r.zone)}
-}
-
-// annotate is the moved due date with the intent to store: under a wallclock rule, when the
-// instant's local clock differs from the intended occurrence's clock time (the time of day of f)
-// because of a gap shift, it remembers the intended one. Otherwise, and under an elapsed rule, it
-// gets none. IntendedZone is always "".
-func (r *recurrence) annotate(at, f time.Time) datedValue {
-	d := datedValue{At: at.In(r.zone)}
-	if r.family != familyWallclock {
-		return d
-	}
-	if want := timeOfDay(f); timeOfDay(r.float(at)) != want {
-		d.Intended = &want
-	}
-	return d
-}
-
-// expF is the due date's expected floating value: its wall clock in the zone, moved back by the
-// displacement of an intent that passes the gap check, which recovers the intended civil date as
-// well as the clock time. Elapsed rules never use intent.
-func (r *recurrence) expF(d datedValue) time.Time {
-	f := r.float(d.At)
-	if displacement, ok := r.acceptedDisplacement(d); ok {
-		return f.Add(-displacement)
-	}
-	return f
-}
-
-// acceptedDisplacement applies the gap check to the due date's intent I (instant t, local clock
-// L in this zone) and returns L − I. The intent is honoured only when
-// 0 < (L − I) mod 24 h ≤ g, where g = offset(t) − offset(t − 24 h) when positive, else 0: the
-// spring-forward gap the zone had in the 24 h before t. IntendedZone is never read. Otherwise the
-// intent is ignored, never an error. Times are compared at second precision, the storage's.
-// Known limit: a whole-day skip (Pacific/Apia 2011) shifts INTERVAL>1 phase.
-func (r *recurrence) acceptedDisplacement(d datedValue) (time.Duration, bool) {
-	if r.family != familyWallclock || d.Intended == nil {
-		return 0, false
-	}
-	intended := d.Intended.Truncate(time.Second)
-	if intended < 0 || intended >= 24*time.Hour {
-		return 0, false
-	}
-	_, cur := d.At.In(r.zone).Zone()
-	_, prev := d.At.Add(-24 * time.Hour).In(r.zone).Zone()
-	gap := time.Duration(cur-prev) * time.Second
-	if gap <= 0 {
-		return 0, false
-	}
-	displacement := (timeOfDay(r.float(d.At)).Truncate(time.Second) - intended + 24*time.Hour) % (24 * time.Hour)
-	if displacement == 0 || displacement > gap {
-		return 0, false
-	}
-	return displacement, true
 }

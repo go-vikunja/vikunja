@@ -82,10 +82,6 @@ type Task struct {
 	Repeat *TaskRepeat `xorm:"-" json:"repeat,omitempty" doc:"The recurrence, as RFC 5545 RRULE parts. When the task has a due date, it is the first occurrence. Completing the task moves its dates to the next occurrence and reopens it. Send null to remove the recurrence. A partial update (PATCH) leaves an omitted repeat unchanged; a full update (PUT) replaces every field, so an omitted repeat removes it too. The whole rule, written out as RRULE text, must fit in 500 characters."`
 	// If true, the next occurrence is calculated from the completion date rather than the original due date.
 	RepeatsFromCurrentDate bool `xorm:"null default false" json:"repeats_from_current_date" doc:"When true, the next occurrence is counted from the moment the task is completed instead of from its previous due date."`
-	// The due date's intended local time of day, in seconds after local midnight, when a completion
-	// moved it off that time because of a spring-forward gap; nil otherwise. Only completion
-	// writes it, a due-date edit clears it, and it is never exposed.
-	IntendedDueTime *int `xorm:"int null 'intended_due_time'" json:"-"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
@@ -186,11 +182,6 @@ type TaskWithComments struct {
 	// structured repeat cannot always express. TaskWithComments is never
 	// an API response, so this changes no API shape.
 	RepeatsRRule string `xorm:"-" json:"repeats_rrule,omitempty"`
-	// IntendedDueTime is export/import-only: the due date's intended clock time after a
-	// spring-forward gap shift, in seconds after local midnight, so a round trip keeps it. The
-	// embedded Task.IntendedDueTime is not serialised, so this is the only copy in the file; a
-	// pointer keeps a real 0 (midnight). TaskWithComments is never an API response.
-	IntendedDueTime *int `xorm:"-" json:"intended_due_time,omitempty"`
 }
 
 // TableName returns the table name for tasks
@@ -1568,16 +1559,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		completedFrom.RepeatsFromCurrentDate = t.RepeatsFromCurrentDate
 	}
 
-	// intended_due_time is never read from the incoming task: JSON cannot set it, and a
-	// read-modify copy may carry a stale one. Completion steps from the stored value, and a
-	// refused completion keeps it.
-	var storedIntended *int
-	if ot.IntendedDueTime != nil {
-		v := *ot.IntendedDueTime // a copy: the merge below may write through ot's pointer
-		storedIntended = &v
-	}
-	t.IntendedDueTime = ot.IntendedDueTime
-
 	// Captured before updateDone reopens the completed repeating task below.
 	repeatingCompleted := completedFrom.isRepeating() && !ot.Done && t.Done
 	preRepeatDueDate, preRepeatStartDate, preRepeatEndDate := t.DueDate, t.StartDate, t.EndDate
@@ -1590,13 +1571,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		zone = resolveTaskZone(s, a, t.ProjectID)
 	}
 	updateDoneAt := updateDone(&completedFrom, t, zone)
-	// A completion that moved the dates stores the helper's intent. Any other write, a refused
-	// completion included, keeps the stored one unless it changes the due date: the gap
-	// check cannot tell an edit from a gap shift within its bound, so an edit must clear it.
-	movedCompletion := repeatingCompleted && !t.Done
-	if !movedCompletion && !preRepeatDueDate.Equal(ot.DueDate) {
-		t.IntendedDueTime = nil
-	}
 	if clearsRule {
 		t.Repeats = ""
 		t.Repeat = nil
@@ -1702,12 +1676,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
 		return err
-	}
-	// mergo skips a nil source, so the decided value is set explicitly, and written only when it
-	// changed (neither the field list nor the default columns name it).
-	ot.IntendedDueTime = t.IntendedDueTime
-	if !equalIntPtr(storedIntended, ot.IntendedDueTime) {
-		colsToUpdate = append(colsToUpdate, "intended_due_time")
 	}
 
 	//////
@@ -2157,9 +2125,6 @@ func setTaskDatesRRule(oldTask, newTask *Task, now time.Time, zone *time.Locatio
 	if !applyNextOccurrence(oldTask, newTask, absolute, res, zone) {
 		return
 	}
-	// Only a completion that moved the dates writes the intent; every refusal above leaves the
-	// caller's value (the stored one) in place, like the dates.
-	newTask.IntendedDueTime = intendedDueTimeColumn(res.Due.Intended)
 
 	// Decrement the remaining COUNT so finite (COUNT) recurrences actually
 	// terminate. The DTSTART reset re-bases the rule's count window to the
@@ -2187,7 +2152,7 @@ func completionInput(oldTask *Task, absolute []*TaskReminder, now time.Time, zon
 	}
 	return nextOccurrenceInput{
 		Rule:           oldTask.Repeats,
-		Due:            datedValue{At: oldTask.DueDate, Intended: storedIntendedDueTime(oldTask)},
+		Due:            datedValue{At: oldTask.DueDate},
 		Start:          datedValue{At: oldTask.StartDate},
 		End:            datedValue{At: oldTask.EndDate},
 		Reminders:      reminders,
@@ -2196,38 +2161,6 @@ func completionInput(oldTask *Task, absolute []*TaskReminder, now time.Time, zon
 		Zone:           zone,
 		TaskID:         oldTask.ID,
 	}
-}
-
-// storedIntendedDueTime is the task's stored intended_due_time as the due date's intended local
-// time of day, or nil. A value outside 0 to 86399 seconds cannot be a time of day and is ignored.
-func storedIntendedDueTime(task *Task) *time.Duration {
-	if task.IntendedDueTime == nil {
-		return nil
-	}
-	secs := *task.IntendedDueTime
-	if secs < 0 || secs >= 24*60*60 {
-		log.Debugf("Task %d: ignoring its stored intended_due_time %d, which is not a time of day", task.ID, secs)
-		return nil
-	}
-	d := time.Duration(secs) * time.Second
-	return &d
-}
-
-// intendedDueTimeColumn is the intended_due_time to store for a due date's intended local time
-// of day: whole seconds, or nil for NULL.
-func intendedDueTimeColumn(d *time.Duration) *int {
-	if d == nil {
-		return nil
-	}
-	secs := int(*d / time.Second)
-	return &secs
-}
-
-func equalIntPtr(a, b *int) bool {
-	if a == nil || b == nil {
-		return a == b
-	}
-	return *a == *b
 }
 
 // applyNextOccurrence writes a successful nextOccurrence result onto newTask, where completion has

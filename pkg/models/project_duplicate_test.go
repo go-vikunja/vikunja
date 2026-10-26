@@ -18,7 +18,6 @@ package models
 
 import (
 	"testing"
-	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -143,34 +142,6 @@ func TestProjectDuplicate(t *testing.T) {
 			require.True(t, has, title)
 			assert.Equal(t, rule, task.Repeats, "%s: the duplicate must carry the original's rule byte-identical", title)
 		}
-	})
-
-	t.Run("carries intended_due_time", func(t *testing.T) {
-		files.InitTestFileFixtures(t)
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		intended := 9000
-		_, err := s.Insert(&Task{Title: "shifted task", ProjectID: 4, Index: 20, CreatedByID: 3, Repeats: "FREQ=DAILY;INTERVAL=1",
-			DueDate: time.Date(2030, 3, 10, 7, 30, 0, 0, time.UTC), IntendedDueTime: &intended, UID: "duplicate-intended"})
-		require.NoError(t, err)
-		_, err = s.ID(4).Cols("last_index").Update(&ProjectTaskCounter{LastIndex: 20})
-		require.NoError(t, err)
-
-		usr := &user.User{ID: 3}
-		duplicate := &ProjectDuplicate{ProjectID: 4}
-		can, err := duplicate.CanCreate(s, usr)
-		require.NoError(t, err)
-		require.True(t, can)
-		require.NoError(t, duplicate.Create(s, usr))
-
-		task := &Task{}
-		has, err := s.Where("project_id = ? AND title = ?", duplicate.Project.ID, "shifted task").Get(task)
-		require.NoError(t, err)
-		require.True(t, has)
-		require.NotNil(t, task.IntendedDueTime)
-		assert.Equal(t, 9000, *task.IntendedDueTime)
 	})
 
 	t.Run("preserves out-of-order task indexes", func(t *testing.T) {

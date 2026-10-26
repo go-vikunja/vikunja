@@ -18,7 +18,6 @@ package models
 
 import (
 	"testing"
-	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -128,30 +127,6 @@ func TestTaskDuplicate(t *testing.T) {
 				assert.Equal(t, tc.readOnly, td.Task.Repeat.ReadOnly)
 			})
 		}
-	})
-
-	t.Run("carries intended_due_time", func(t *testing.T) {
-		// A trusted internal copy, like the stored rule.
-		files.InitTestFileFixtures(t)
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		intended := 9000
-		_, err := s.ID(1).Cols("repeats", "due_date", "intended_due_time").Update(&Task{
-			Repeats: "FREQ=DAILY;INTERVAL=1", DueDate: time.Date(2030, 3, 10, 7, 30, 0, 0, time.UTC), IntendedDueTime: &intended,
-		})
-		require.NoError(t, err)
-
-		td := &TaskDuplicate{TaskID: 1}
-		require.NoError(t, td.Create(s, &user.User{ID: 1}))
-
-		stored := &Task{}
-		has, err := s.ID(td.Task.ID).Get(stored)
-		require.NoError(t, err)
-		require.True(t, has)
-		require.NotNil(t, stored.IntendedDueTime)
-		assert.Equal(t, 9000, *stored.IntendedDueTime)
 	})
 
 	t.Run("refuses a stored rule outside the safety bound", func(t *testing.T) {

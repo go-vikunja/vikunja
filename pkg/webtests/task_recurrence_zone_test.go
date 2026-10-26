@@ -77,11 +77,6 @@ func zoneSeedRule(t *testing.T, taskID int64, rule string, due time.Time) {
 	zoneSeedTask(t, taskID, []string{"repeats", "due_date", "done"}, &models.Task{Repeats: rule, DueDate: due})
 }
 
-func zoneSeedIntended(t *testing.T, taskID int64, secs int) {
-	t.Helper()
-	zoneSeedTask(t, taskID, []string{"intended_due_time"}, &models.Task{IntendedDueTime: &secs})
-}
-
 func zoneSeedReminders(t *testing.T, taskID int64, at ...time.Time) {
 	t.Helper()
 	s := db.NewSession()
@@ -117,25 +112,12 @@ func zoneStoredReminders(t *testing.T, taskID int64) []time.Time {
 	return out
 }
 
-func zoneAssertIntended(t *testing.T, taskID int64, want *int) {
-	t.Helper()
-	got := zoneStoredTask(t, taskID).IntendedDueTime
-	if want == nil {
-		assert.Nil(t, got, "intended_due_time is NULL")
-		return
-	}
-	require.NotNil(t, got, "intended_due_time is set")
-	assert.Equal(t, *want, *got)
-}
-
-// zoneDo sends a request and checks its status and that its body never exposes the intended
-// time.
+// zoneDo sends a request and checks its status.
 func zoneDo(t *testing.T, e *echo.Echo, method, path, body, token, contentType string) {
 	t.Helper()
 	rec := humaRequest(t, e, method, path, body, token, contentType)
 	require.GreaterOrEqual(t, rec.Code, 200, rec.Body.String())
 	require.Less(t, rec.Code, 300, rec.Body.String())
-	assert.NotContains(t, rec.Body.String(), "intended")
 }
 
 func zoneV1Echo(t *testing.T, e *echo.Echo, token string, taskID int64, edit func(map[string]any)) {
@@ -143,7 +125,6 @@ func zoneV1Echo(t *testing.T, e *echo.Echo, token string, taskID int64, edit fun
 	path := fmt.Sprintf("/api/v1/tasks/%d", taskID)
 	rec := humaRequest(t, e, http.MethodGet, path, "", token, "")
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-	assert.NotContains(t, rec.Body.String(), "intended")
 	task := map[string]any{}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &task))
 	edit(task)
@@ -156,8 +137,6 @@ func zoneSetup(t *testing.T) *echo.Echo {
 	require.NoError(t, err)
 	return e
 }
-
-func intended(secs int) *int { return &secs }
 
 // Every completion path stores the same next date for the same user.
 // The no-zone runs are the positive control: the server zone gives a different date, so the
@@ -287,13 +266,13 @@ func TestRecurrenceZone_LinkShare_UsesOwnerZone(t *testing.T) {
 	}
 }
 
-// The intended due time end to end: daily, due Sat 2030-03-09 02:30 EST. The first completion lands on
-// Sun 03:30 EDT (02:30 does not exist) and stores 9000; the second returns to Mon 02:30 EDT and
-// stores NULL. Each chain makes each save site both write and read the value.
-func TestRecurrenceZone_IntendedDueTimeChains(t *testing.T) {
+// A gap occurrence is skipped end to end: daily, due Sat 2030-03-09 02:30 EST. The first completion
+// skips Sun 2030-03-10 (02:30 does not exist) and lands on Mon 02:30 EDT; the second gives Tue
+// 02:30 EDT. Each chain goes through each save site.
+func TestRecurrenceZone_GapSkipChains(t *testing.T) {
 	due := time.Date(2030, 3, 9, 7, 30, 0, 0, time.UTC)
-	shifted := time.Date(2030, 3, 10, 7, 30, 0, 0, time.UTC)
-	restored := time.Date(2030, 3, 11, 6, 30, 0, 0, time.UTC)
+	monday := time.Date(2030, 3, 11, 6, 30, 0, 0, time.UTC)
+	tuesday := time.Date(2030, 3, 12, 6, 30, 0, 0, time.UTC)
 	patch := func(t *testing.T, e *echo.Echo, token string) {
 		zoneDo(t, e, http.MethodPatch, "/api/v2/tasks/1", `{"done":true}`, token, zoneMergePatch)
 	}
@@ -311,86 +290,17 @@ func TestRecurrenceZone_IntendedDueTimeChains(t *testing.T) {
 			token := humaTokenFor(t, &testuser1)
 
 			chain.first(t, e, token)
-			assert.Equal(t, shifted, zoneStoredTask(t, 1).DueDate.UTC())
-			zoneAssertIntended(t, 1, intended(9000))
+			assert.Equal(t, monday, zoneStoredTask(t, 1).DueDate.UTC(), "the gap day is skipped")
 
 			chain.second(t, e, token)
-			assert.Equal(t, restored, zoneStoredTask(t, 1).DueDate.UTC())
-			zoneAssertIntended(t, 1, nil)
+			assert.Equal(t, tuesday, zoneStoredTask(t, 1).DueDate.UTC())
 		})
 	}
 }
 
-// Over HTTP, from the shifted state (Sun 2030-03-10 03:30 EDT, 9000), an edit to Sun 03:20
-// EDT clears the value, so the next completion is Mon 03:20 EDT. Without the clear it would be
-// Mon 02:30 EDT: a 50-minute displacement is inside the 60-minute gap.
-func TestRecurrenceZone_IntendedClearedByDueDateEdit(t *testing.T) {
-	shifted := time.Date(2030, 3, 10, 7, 30, 0, 0, time.UTC)
-	edited := time.Date(2030, 3, 10, 7, 20, 0, 0, time.UTC)
-	editedJSON := edited.Format(time.RFC3339)
-	nextAfterEdit := time.Date(2030, 3, 11, 7, 20, 0, 0, time.UTC)
-
-	setup := func(t *testing.T) (*echo.Echo, string) {
-		t.Helper()
-		e := zoneSetup(t)
-		zoneSetUser(t, 1, zoneNewYork)
-		zoneSeedRule(t, 1, zoneDailyRule, shifted)
-		zoneSeedIntended(t, 1, 9000)
-		return e, humaTokenFor(t, &testuser1)
-	}
-
-	for _, tc := range []struct {
-		name string
-		edit func(t *testing.T, e *echo.Echo, token string)
-	}{
-		{"V1Post", func(t *testing.T, e *echo.Echo, token string) {
-			zoneV1Echo(t, e, token, 1, func(task map[string]any) { task["due_date"] = editedJSON })
-		}},
-		{"V2Patch", func(t *testing.T, e *echo.Echo, token string) {
-			zoneDo(t, e, http.MethodPatch, "/api/v2/tasks/1", `{"due_date":"`+editedJSON+`"}`, token, zoneMergePatch)
-		}},
-		{"BulkV2", func(t *testing.T, e *echo.Echo, token string) {
-			zoneDo(t, e, http.MethodPut, "/api/v2/tasks/bulk",
-				`{"task_ids":[1],"fields":["due_date"],"values":{"due_date":"`+editedJSON+`"}}`, token, "")
-		}},
-	} {
-		t.Run("TestRecurrenceZone_"+tc.name+"_ClearsIntended", func(t *testing.T) {
-			e, token := setup(t)
-			tc.edit(t, e, token)
-			assert.Equal(t, edited, zoneStoredTask(t, 1).DueDate.UTC())
-			zoneAssertIntended(t, 1, nil)
-
-			zoneDo(t, e, http.MethodPatch, "/api/v2/tasks/1", `{"done":true}`, token, zoneMergePatch)
-			assert.Equal(t, nextAfterEdit, zoneStoredTask(t, 1).DueDate.UTC(), "Mon 03:20 EDT")
-		})
-	}
-
-	for _, tc := range []struct {
-		name string
-		edit func(t *testing.T, e *echo.Echo, token string)
-	}{
-		{"V2PatchTitle", func(t *testing.T, e *echo.Echo, token string) {
-			zoneDo(t, e, http.MethodPatch, "/api/v2/tasks/1", `{"title":"renamed"}`, token, zoneMergePatch)
-		}},
-		{"V1PostEchoingEveryDate", func(t *testing.T, e *echo.Echo, token string) {
-			zoneV1Echo(t, e, token, 1, func(task map[string]any) { task["title"] = "renamed" })
-		}},
-		{"V2PatchRuleOnly", func(t *testing.T, e *echo.Echo, token string) {
-			zoneDo(t, e, http.MethodPatch, "/api/v2/tasks/1", `{"repeat":{"freq":"daily","interval":2}}`, token, zoneMergePatch)
-		}},
-	} {
-		t.Run("TestRecurrenceZone_"+tc.name+"_KeepsIntended", func(t *testing.T) {
-			e, token := setup(t)
-			tc.edit(t, e, token)
-			assert.Equal(t, shifted, zoneStoredTask(t, 1).DueDate.UTC())
-			zoneAssertIntended(t, 1, intended(9000))
-		})
-	}
-}
-
-// Companion dates carry no intent (a documented known limit): a
-// start, an absolute reminder and an end in the gap keep their shifted time on later steps. The
-// due date (Sat 2030-03-09 20:00 EST) is never shifted, so intended_due_time stays NULL.
+// Companion dates are not recurrence instances (a documented known limit): a start, an absolute
+// reminder and an end in the gap move forward by the gap and keep their shifted time on later
+// steps. The due date (Sat 2030-03-09 20:00 EST) never meets the gap.
 func TestRecurrenceZone_CompanionsKeepShiftedTime(t *testing.T) {
 	e := zoneSetup(t)
 	zoneSetUser(t, 1, zoneNewYork)
@@ -410,7 +320,6 @@ func TestRecurrenceZone_CompanionsKeepShiftedTime(t *testing.T) {
 		assert.Equal(t, time.Date(2030, 3, day, 7, 30, 0, 0, time.UTC), task.StartDate.UTC())
 		assert.Equal(t, time.Date(2030, 3, day, 7, 45, 0, 0, time.UTC), task.EndDate.UTC())
 		assert.Equal(t, []time.Time{time.Date(2030, 3, day, 7, 15, 0, 0, time.UTC)}, zoneStoredReminders(t, 1))
-		zoneAssertIntended(t, 1, nil)
 	}
 }
 
@@ -427,18 +336,4 @@ func TestRecurrenceZone_RemindersLandingOnOneInstantMerge(t *testing.T) {
 
 	assert.Equal(t, []time.Time{time.Date(2030, 3, 10, 7, 30, 0, 0, time.UTC)}, zoneStoredReminders(t, 1),
 		"the two reminders become one row at Sun 03:30 EDT")
-}
-
-// A create through the API never stores an intended time.
-func TestRecurrenceZone_V2CreateLeavesIntendedNull(t *testing.T) {
-	e := zoneSetup(t)
-	rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects/1/tasks",
-		`{"title":"created","due_date":"2030-03-10T07:30:00Z","repeat":{"freq":"daily","interval":1}}`, humaTokenFor(t, &testuser1), "")
-	require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
-	assert.NotContains(t, rec.Body.String(), "intended")
-	created := map[string]any{}
-	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
-	id, ok := created["id"].(float64)
-	require.True(t, ok)
-	zoneAssertIntended(t, int64(id), nil)
 }

@@ -195,8 +195,6 @@ func TestNextOccurrence_Deterministic(t *testing.T) {
 		assert.Equal(t, before[i].Reason, after.Reason, "case %d", i)
 		for _, pair := range [][2]datedValue{{before[i].Due, after.Due}, {before[i].Start, after.Start}, {before[i].End, after.End}} {
 			assert.True(t, pair[0].At.Equal(pair[1].At), "case %d: %v vs %v", i, pair[0].At, pair[1].At)
-			assert.Equal(t, pair[0].Intended, pair[1].Intended, "case %d", i)
-			assert.Equal(t, pair[0].IntendedZone, pair[1].IntendedZone, "case %d", i)
 		}
 	}
 }
@@ -251,59 +249,8 @@ func TestNextOccurrence_Golden(t *testing.T) {
 			res := nextOccurrence(tc.in)
 			require.Empty(t, res.Reason)
 			assert.True(t, res.Due.At.Equal(tc.due), "got %v, want %v", res.Due.At, tc.due)
-			assert.Nil(t, res.Due.Intended)
-			assert.Empty(t, res.Due.IntendedZone)
 			assert.True(t, res.Start.At.IsZero(), "an unset date stays unset")
 			assert.True(t, res.End.At.IsZero(), "an unset date stays unset")
-		})
-	}
-}
-
-// TestNextOccurrence_IntendedIsAcceptedAndIgnored: an intended clock time in a zone without a clock
-// change near the date fails the gap check (g = 0) and is ignored, never an
-// error. TestNextOccurrenceIntended covers the intents that apply.
-func TestNextOccurrence_IntendedIsAcceptedAndIgnored(t *testing.T) {
-	intended := 2*time.Hour + 30*time.Minute
-	tc := nextOccurrenceGoldenCases[1]
-	in := tc.in
-	in.Due.Intended, in.Due.IntendedZone = &intended, "UTC"
-	var res nextOccurrenceResult
-	require.NotPanics(t, func() { res = nextOccurrence(in) })
-	require.Empty(t, res.Reason)
-	assert.True(t, res.Due.At.Equal(tc.due), "got %v, want %v", res.Due.At, tc.due)
-}
-
-// TestNextOccurrence_EchoedDatesCarryNoCompanionIntent: a path that returns an input date as it is
-// (a guard, an unset date) still returns Start, End and the reminders without Intended, and no date
-// with an IntendedZone; the due date's own Intended is echoed, as only a due date carries one.
-func TestNextOccurrence_EchoedDatesCarryNoCompanionIntent(t *testing.T) {
-	ny := mustZone(t, "America/New_York")
-	at := func(s string) time.Time { return ts(t, ny, s) }
-	withIntent := func(d time.Time) datedValue {
-		v := dz(t, d, "02:30")
-		v.IntendedZone = "Europe/Berlin"
-		return v
-	}
-	for _, tc := range []struct {
-		name string
-		in   nextOccurrenceInput
-	}{
-		{"no_rule guard", nextOccurrenceInput{Due: withIntent(at("2027-03-14 03:30 -04:00")), Start: withIntent(at("2027-03-14 03:30 -04:00")),
-			Reminders: []datedValue{withIntent(at("2027-03-14 03:30 -04:00"))}, Now: at("2027-03-14 04:00 -04:00"), Zone: ny}},
-		{"unset end", nextOccurrenceInput{Rule: "FREQ=DAILY", Due: withIntent(at("2027-03-14 03:30 -04:00")), End: datedValue{Intended: tod(t, "02:30"), IntendedZone: "UTC"},
-			Now: at("2027-03-14 04:00 -04:00"), Zone: ny}},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			res := nextOccurrence(tc.in)
-			for i, d := range append([]datedValue{res.Start, res.End}, res.Reminders...) {
-				assert.Nil(t, d.Intended, "date %d", i)
-				assert.Empty(t, d.IntendedZone, "date %d", i)
-			}
-			assert.Empty(t, res.Due.IntendedZone)
-			if res.Reason != "" {
-				assert.Equal(t, tc.in.Due.Intended, res.Due.Intended, "an unmoved due date echoes its Intended")
-			}
-			assert.Equal(t, "Europe/Berlin", tc.in.Due.IntendedZone, "the input is not changed")
 		})
 	}
 }
@@ -441,8 +388,7 @@ func TestNextOccurrence_UnsetReminderIsNotStepped(t *testing.T) {
 
 // ---------------------------------------------------------------------------------------------
 // The wall-clock engine. Golden times are New York unless stated. Inputs and expectations are
-// written with their numeric UTC offset, so a time in a repeated (fall-back) hour is unambiguous;
-// "[02:30]" in a comment is an output intent.
+// written with their numeric UTC offset, so a time in a repeated (fall-back) hour is unambiguous.
 // ---------------------------------------------------------------------------------------------
 
 func mustZone(t *testing.T, name string) *time.Location {
@@ -464,30 +410,7 @@ func ts(t *testing.T, zone *time.Location, s string) time.Time {
 	return v.In(zone)
 }
 
-// tod parses a local time of day, "15:04" or "15:04:05"; "" is no intent.
-func tod(t *testing.T, s string) *time.Duration {
-	t.Helper()
-	if s == "" {
-		return nil
-	}
-	layout := "15:04"
-	if len(s) == len("15:04:05") {
-		layout = "15:04:05"
-	}
-	v, err := time.Parse(layout, s)
-	require.NoError(t, err)
-	d := time.Duration(v.Hour())*time.Hour + time.Duration(v.Minute())*time.Minute + time.Duration(v.Second())*time.Second
-	return &d
-}
-
-// dz is a date with an intended clock time ("" = none). IntendedZone stays "": it is deprecated,
-// never read and never set, so assertDated checks "" for free.
-func dz(t *testing.T, at time.Time, intended string) datedValue {
-	t.Helper()
-	return datedValue{At: at, Intended: tod(t, intended)}
-}
-
-// assertDated checks one result date: the instant, the intended time, and that IntendedZone is "".
+// assertDated checks one result date's instant.
 func assertDated(t *testing.T, label string, got, want datedValue) {
 	t.Helper()
 	if want.At.IsZero() {
@@ -495,22 +418,6 @@ func assertDated(t *testing.T, label string, got, want datedValue) {
 		return
 	}
 	assert.True(t, got.At.Equal(want.At), "%s: got %v (%v), want %v", label, got.At, got.At.UTC(), want.At)
-	if want.Intended == nil {
-		assert.Nil(t, got.Intended, "%s: want no intent, got %v", label, durString(got.Intended))
-		assert.Empty(t, got.IntendedZone, "%s", label)
-		return
-	}
-	if assert.NotNil(t, got.Intended, "%s: want intent %v", label, *want.Intended) {
-		assert.Equal(t, *want.Intended, *got.Intended, "%s: intent", label)
-	}
-	assert.Equal(t, want.IntendedZone, got.IntendedZone, "%s: intent zone", label)
-}
-
-func durString(d *time.Duration) string {
-	if d == nil {
-		return "nil"
-	}
-	return d.String()
 }
 
 // assertResult checks a whole result against the expected one.
@@ -529,8 +436,7 @@ func assertResult(t *testing.T, got, want nextOccurrenceResult) {
 	}
 }
 
-// fedBack is the input of the next completion: the result's dates, with their intent, completed
-// at now in zone (the chain feeds each output Intended back in).
+// fedBack is the input of the next completion: the result's dates, completed at now in zone.
 func fedBack(in nextOccurrenceInput, res nextOccurrenceResult, now time.Time, zone *time.Location) nextOccurrenceInput {
 	next := in
 	next.Due, next.Start, next.End = res.Due, res.Start, res.End
@@ -664,6 +570,9 @@ func TestNextOccurrenceRuleAttributes(t *testing.T) {
 		{"FREQ=SECONDLY;INTERVAL=7200", familyElapsed, policyIndependent},
 		{"FREQ=HOURLY;UNTIL=20271231T000000Z", familyElapsed, policyOneStep},
 		{"FREQ=MINUTELY;COUNT=5", familyElapsed, policyOneStep},
+		// BYEASTER is a BY part: a DAILY or WEEKLY rule with it is not plain (plan D-4).
+		{"FREQ=DAILY;BYEASTER=1", familyWallclock, policyOneStep},
+		{"FREQ=WEEKLY;BYEASTER=1", familyWallclock, policyOneStep},
 	} {
 		t.Run(tc.rule, func(t *testing.T) {
 			opt, err := rrule.StrToROption(tc.rule)
@@ -812,24 +721,24 @@ func TestNextOccurrenceWallClock(t *testing.T) {
 			nextOccurrenceResult{Due: dated(ts(t, auckland, "2027-04-04 20:00 +12:00"))}},
 		{"HOURLY;INTERVAL=24 is elapsed", in(ny, "FREQ=HOURLY;INTERVAL=24", at("2027-03-13 20:00 -05:00"), at("2027-03-13 20:05 -05:00")),
 			nextOccurrenceResult{Due: dated(at("2027-03-14 21:00 -04:00"))}},
-		{"a gap moves forward by the gap", in(ny, "FREQ=DAILY", at("2027-03-13 02:30 -05:00"), at("2027-03-13 03:00 -05:00")),
-			nextOccurrenceResult{Due: dz(t, at("2027-03-14 03:30 -04:00"), "02:30")}},
+		{"a gap occurrence is skipped", in(ny, "FREQ=DAILY", at("2027-03-13 02:30 -05:00"), at("2027-03-13 03:00 -05:00")),
+			nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00"))}},
 		{"an overlap takes the earlier instant", in(ny, "FREQ=DAILY", at("2026-10-31 01:30 -04:00"), at("2026-10-31 01:35 -04:00")),
 			nextOccurrenceResult{Due: dated(at("2026-11-01 01:30 -04:00"))}},
 		{"east, Berlin gap", in(berlin, "FREQ=DAILY", ts(t, berlin, "2027-03-27 02:30 +01:00"), ts(t, berlin, "2027-03-27 02:35 +01:00")),
-			nextOccurrenceResult{Due: dz(t, ts(t, berlin, "2027-03-28 03:30 +02:00"), "02:30")}},
+			nextOccurrenceResult{Due: dated(ts(t, berlin, "2027-03-29 02:30 +02:00"))}},
 		{"east, Berlin overlap", in(berlin, "FREQ=DAILY", ts(t, berlin, "2026-10-24 02:30 +02:00"), ts(t, berlin, "2026-10-24 02:35 +02:00")),
 			nextOccurrenceResult{Due: dated(ts(t, berlin, "2026-10-25 02:30 +02:00"))}},
 		{"midnight gap, Santiago", in(santiago, "FREQ=DAILY", ts(t, santiago, "2026-09-05 00:30 -04:00"), ts(t, santiago, "2026-09-05 00:35 -04:00")),
-			nextOccurrenceResult{Due: dz(t, ts(t, santiago, "2026-09-06 01:30 -03:00"), "00:30")}},
+			nextOccurrenceResult{Due: dated(ts(t, santiago, "2026-09-07 00:30 -03:00"))}},
 		{"from completion keeps the completion's clock", nextOccurrenceInput{Rule: "FREQ=DAILY", FromCompletion: true, Due: dated(at("2027-03-13 20:00 -05:00")), Now: at("2027-03-13 19:30 -05:00"), Zone: ny},
 			nextOccurrenceResult{Due: dated(at("2027-03-14 19:30 -04:00"))}},
-		{"monthly: the earliest normalised instant wins", in(ny, "FREQ=MONTHLY;BYMONTHDAY=14;BYHOUR=2,3;BYMINUTE=0,30;BYSETPOS=2,3", at("2027-02-14 03:00 -05:00"), at("2027-03-01 12:00 -05:00")),
+		{"monthly: the in-gap BYSETPOS slot is skipped, 03:00 remains", in(ny, "FREQ=MONTHLY;BYMONTHDAY=14;BYHOUR=2,3;BYMINUTE=0,30;BYSETPOS=2,3", at("2027-02-14 03:00 -05:00"), at("2027-03-01 12:00 -05:00")),
 			nextOccurrenceResult{Due: dated(at("2027-03-14 03:00 -04:00"))}},
-		{"weekly: the earliest normalised instant wins", in(ny, "FREQ=WEEKLY;BYDAY=SU;BYHOUR=2,3;BYMINUTE=0,30;BYSETPOS=2,3", at("2027-03-07 03:00 -05:00"), at("2027-03-08 12:00 -05:00")),
+		{"weekly: the in-gap BYSETPOS slot is skipped, 03:00 remains", in(ny, "FREQ=WEEKLY;BYDAY=SU;BYHOUR=2,3;BYMINUTE=0,30;BYSETPOS=2,3", at("2027-03-07 03:00 -05:00"), at("2027-03-08 12:00 -05:00")),
 			nextOccurrenceResult{Due: dated(at("2027-03-14 03:00 -04:00"))}},
 		{"no due date, independent: the start jumps past now on the wall clock", nextOccurrenceInput{Rule: "FREQ=DAILY", Start: dated(at("2027-03-13 02:30 -05:00")), Now: at("2027-03-13 12:00 -05:00"), Zone: ny},
-			nextOccurrenceResult{Start: dated(at("2027-03-14 03:30 -04:00"))}}, // a companion: no intent
+			nextOccurrenceResult{Start: dated(at("2027-03-14 03:30 -04:00"))}}, // not a due date: shifted, not skipped
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -894,7 +803,7 @@ func TestNextOccurrenceServerZoneControl(t *testing.T) {
 
 // TestNextOccurrenceUntil: UNTIL is compared with each occurrence's normalised instant, at second
 // precision: around an overlap an occurrence within UNTIL is kept although its floating value is
-// past it, and through a gap one past UNTIL is dropped although its floating value is before it.
+// past it.
 func TestNextOccurrenceUntil(t *testing.T) {
 	ny := mustZone(t, "America/New_York")
 	at := func(s string) time.Time { return ts(t, ny, s) }
@@ -908,7 +817,7 @@ func TestNextOccurrenceUntil(t *testing.T) {
 		{"UNTIL in the second pass of the overlap keeps 01:30 EDT", "FREQ=DAILY;UNTIL=20261101T061500Z", at("2026-10-31 01:30 -04:00"), at("2026-10-31 02:00 -04:00"), at("2026-11-01 01:30 -04:00"), false},
 		{"UNTIL in the first pass, before 01:30 EDT", "FREQ=DAILY;UNTIL=20261101T051500Z", at("2026-10-31 01:30 -04:00"), at("2026-10-31 02:00 -04:00"), time.Time{}, true},
 		{"UNTIL exactly at the occurrence is included", "FREQ=DAILY;UNTIL=20261101T053000Z", at("2026-10-31 01:30 -04:00"), at("2026-10-31 02:00 -04:00"), at("2026-11-01 01:30 -04:00"), false},
-		{"a gap shift past UNTIL is excluded", "FREQ=DAILY;UNTIL=20270314T071500Z", at("2027-03-13 02:30 -05:00"), at("2027-03-13 03:00 -05:00"), time.Time{}, true},
+		{"a skipped gap occurrence and the next one past UNTIL", "FREQ=DAILY;UNTIL=20270314T071500Z", at("2027-03-13 02:30 -05:00"), at("2027-03-13 03:00 -05:00"), time.Time{}, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			in := nextOccurrenceInput{Rule: tc.rule, Due: dated(tc.due), Now: tc.now, Zone: ny}
@@ -952,11 +861,11 @@ func TestNextOccurrenceCount(t *testing.T) {
 		want      nextOccurrenceResult
 		wantCount int
 	}{
-		{"a collision counts once", nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=30;COUNT=3", Due: dated(at("2027-03-13 03:30 -05:00")), Now: at("2027-03-14 03:45 -04:00"), Zone: ny},
+		{"a skipped gap time is not counted", nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=30;COUNT=3", Due: dated(at("2027-03-13 03:30 -05:00")), Now: at("2027-03-14 03:45 -04:00"), Zone: ny},
 			nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00"))}, 2},
-		{"COUNT follows time, not floating order", nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=0,30;BYSETPOS=2,3;COUNT=2", Due: dated(at("2027-03-13 03:00 -05:00")), Now: at("2027-03-13 03:15 -05:00"), Zone: ny},
+		{"COUNT ranks the existing BYSETPOS slot, not the skipped one", nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=0,30;BYSETPOS=2,3;COUNT=2", Due: dated(at("2027-03-13 03:00 -05:00")), Now: at("2027-03-13 03:15 -05:00"), Zone: ny},
 			nextOccurrenceResult{Due: dated(at("2027-03-14 03:00 -04:00"))}, 1},
-		{"collision representative (no COUNT)", nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=30", Due: dated(at("2027-03-13 03:30 -05:00")), Start: dated(at("2027-03-13 02:30 -05:00")), Now: at("2027-03-13 04:00 -05:00"), Zone: ny},
+		{"a skipped gap time beside an existing one (no COUNT)", nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=30", Due: dated(at("2027-03-13 03:30 -05:00")), Start: dated(at("2027-03-13 02:30 -05:00")), Now: at("2027-03-13 04:00 -05:00"), Zone: ny},
 			nextOccurrenceResult{Due: dated(at("2027-03-14 03:30 -04:00")), Start: dated(at("2027-03-14 03:30 -04:00"))}, 0},
 		{"elapsed COUNT keeps native COUNT on UTC", nextOccurrenceInput{Rule: "FREQ=HOURLY;COUNT=5", Due: dated(at("2027-03-14 01:30 -05:00")), Start: dated(at("2027-03-14 01:00 -05:00")), Now: at("2027-03-14 01:45 -05:00"), Zone: ny},
 			nextOccurrenceResult{Due: dated(at("2027-03-14 03:30 -04:00")), Start: dated(at("2027-03-14 03:00 -04:00"))}, 4},
@@ -981,7 +890,8 @@ func TestNextOccurrenceCount(t *testing.T) {
 
 // TestNextOccurrenceCompanions: a companion keeps its own local clock time and moves by whole
 // local days (wallclock), keeps its calendar offset when the rule names a time, or moves by
-// the reference's elapsed delta (sub-daily). It carries no intent.
+// the reference's elapsed delta (sub-daily). It is not a recurrence instance, so it is never
+// skipped.
 func TestNextOccurrenceCompanions(t *testing.T) {
 	ny := mustZone(t, "America/New_York")
 	at := func(s string) time.Time { return ts(t, ny, s) }
@@ -1019,6 +929,9 @@ func TestNextOccurrenceCompanions(t *testing.T) {
 		{"one-step end keeps its whole-day gap", nextOccurrenceInput{Rule: "FREQ=WEEKLY;BYDAY=SA",
 			Start: dated(at("2027-03-06 22:00 -05:00")), End: dated(at("2027-03-08 06:00 -05:00")), Now: at("2027-03-06 23:00 -05:00"), Zone: ny},
 			nextOccurrenceResult{Start: dated(at("2027-03-13 22:00 -05:00")), End: dated(at("2027-03-15 06:00 -04:00"))}},
+		{"one-step BYEASTER: the start takes one step and the end follows it", nextOccurrenceInput{Rule: "FREQ=WEEKLY;BYEASTER=1",
+			Start: dated(at("2027-03-29 09:00 -04:00")), End: dated(at("2027-03-29 10:00 -04:00")), Now: at("2027-03-29 12:00 -04:00"), Zone: ny},
+			nextOccurrenceResult{Start: dated(at("2028-04-17 09:00 -04:00")), End: dated(at("2028-04-17 10:00 -04:00"))}},
 		{"fall back: calendar order, no clamp", nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=1;BYMINUTE=30",
 			Due: dated(at("2026-11-01 01:30 -05:00")), Start: dated(at("2026-11-01 01:45 -04:00")), Now: at("2026-11-01 02:30 -05:00"), Zone: ny},
 			nextOccurrenceResult{Due: dated(at("2026-11-02 01:30 -05:00")), Start: dated(at("2026-11-02 01:45 -05:00"))}},
@@ -1043,13 +956,13 @@ func TestNextOccurrenceCompanions(t *testing.T) {
 	})
 }
 
-// --- the intended clock time in the helper ---
+// --- chains across a gap ---
 
-// TestNextOccurrenceIntended chains completions, feeding each output intent back in: a gap-shifted
-// due date returns to its intended clock time at the next step when the gap check accepts
-// it. Companions carry no intent, so a gap-shifted or clamped one keeps the shifted time (a known
-// limit).
-func TestNextOccurrenceIntended(t *testing.T) {
+// TestNextOccurrenceGapSkipChains chains completions, feeding each result back in: a due date
+// whose next occurrence is in a gap skips that day and keeps its clock time on every later step.
+// Companions are not recurrence instances, so a gap-shifted or clamped one keeps the shifted time
+// (a known limit).
+func TestNextOccurrenceGapSkipChains(t *testing.T) {
 	ny := mustZone(t, "America/New_York")
 	at := func(s string) time.Time { return ts(t, ny, s) }
 
@@ -1071,18 +984,10 @@ func TestNextOccurrenceIntended(t *testing.T) {
 		}
 	}
 
-	t.Run("the due date returns to 02:30", func(t *testing.T) {
+	t.Run("the gap day is skipped and the chain continues at 02:30", func(t *testing.T) {
 		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dated(at("2027-03-13 02:30 -05:00"))},
-			step{at("2027-03-13 03:00 -05:00"), ny, nextOccurrenceResult{Due: dz(t, at("2027-03-14 03:30 -04:00"), "02:30")}},
-			step{at("2027-03-14 03:35 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00"))}})
-	})
-	t.Run("in Chicago the gap check rejects the intent (g = 0)", func(t *testing.T) {
-		// 07:30Z is 01:30 CST in Chicago, whose clocks change only at 08:00Z: no gap in the 24 h
-		// before, so the intent 02:30 is ignored and the due date keeps its Chicago clock.
-		chicago := mustZone(t, "America/Chicago")
-		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dated(at("2027-03-13 02:30 -05:00"))},
-			step{at("2027-03-13 03:00 -05:00"), ny, nextOccurrenceResult{Due: dz(t, at("2027-03-14 03:30 -04:00"), "02:30")}},
-			step{at("2027-03-14 03:35 -04:00"), chicago, nextOccurrenceResult{Due: dated(ts(t, chicago, "2027-03-15 01:30 -05:00"))}})
+			step{at("2027-03-13 03:00 -05:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00"))}},
+			step{at("2027-03-15 03:00 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-16 02:30 -04:00"))}})
 	})
 	t.Run("companions keep their gap-shifted clocks (a known limit)", func(t *testing.T) {
 		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dated(at("2027-03-13 20:00 -05:00")), Start: dated(at("2027-03-13 02:30 -05:00")),
@@ -1101,50 +1006,52 @@ func TestNextOccurrenceIntended(t *testing.T) {
 			step{at("2027-03-13 23:30 -05:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-14 23:00 -04:00")), Start: dated(at("2027-03-14 22:00 -04:00")),
 				End: dated(at("2027-03-15 03:30 -04:00"))}})
 	})
-	t.Run("partially named times keep the remembered components", func(t *testing.T) {
-		for _, tc := range []struct{ rule, due, sun, intent, mon string }{
-			{"FREQ=DAILY;BYMINUTE=30", "2027-03-13 02:30 -05:00", "2027-03-14 03:30 -04:00", "02:30", "2027-03-15 02:30 -04:00"},
-			{"FREQ=DAILY;BYSECOND=15", "2027-03-13 02:30:15 -05:00", "2027-03-14 03:30:15 -04:00", "02:30:15", "2027-03-15 02:30:15 -04:00"},
-			{"FREQ=DAILY;BYHOUR=2", "2027-03-13 02:30 -05:00", "2027-03-14 03:30 -04:00", "02:30", "2027-03-15 02:30 -04:00"},
-			{"FREQ=DAILY;BYHOUR=2;BYMINUTE=30", "2027-03-13 02:30 -05:00", "2027-03-14 03:30 -04:00", "02:30", "2027-03-15 02:30 -04:00"}, // a named time in the gap
+	t.Run("partially named times skip the gap day", func(t *testing.T) {
+		for _, tc := range []struct{ rule, due, mon, tue string }{
+			{"FREQ=DAILY;BYMINUTE=30", "2027-03-13 02:30 -05:00", "2027-03-15 02:30 -04:00", "2027-03-16 02:30 -04:00"},
+			{"FREQ=DAILY;BYSECOND=15", "2027-03-13 02:30:15 -05:00", "2027-03-15 02:30:15 -04:00", "2027-03-16 02:30:15 -04:00"},
+			{"FREQ=DAILY;BYHOUR=2", "2027-03-13 02:30 -05:00", "2027-03-15 02:30 -04:00", "2027-03-16 02:30 -04:00"},
+			{"FREQ=DAILY;BYHOUR=2;BYMINUTE=30", "2027-03-13 02:30 -05:00", "2027-03-15 02:30 -04:00", "2027-03-16 02:30 -04:00"}, // a named time in the gap
 		} {
 			t.Run(tc.rule, func(t *testing.T) {
 				chain(t, nextOccurrenceInput{Rule: tc.rule, Due: dated(at(tc.due))},
-					step{at("2027-03-13 03:00 -05:00"), ny, nextOccurrenceResult{Due: dz(t, at(tc.sun), tc.intent)}},
-					step{at("2027-03-14 04:00 -04:00"), ny, nextOccurrenceResult{Due: dated(at(tc.mon))}})
+					step{at("2027-03-13 03:00 -05:00"), ny, nextOccurrenceResult{Due: dated(at(tc.mon))}},
+					step{at("2027-03-15 04:00 -04:00"), ny, nextOccurrenceResult{Due: dated(at(tc.tue))}})
 			})
 		}
 	})
-	t.Run("a clamp on a shifted reference keeps the clamped time (a known limit)", func(t *testing.T) {
+	t.Run("companions move two days with a skipped due date", func(t *testing.T) {
+		// The rule names a time, so the end keeps its calendar offset to the due date (moveCompanion).
 		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=2;BYMINUTE=30", Due: dated(at("2027-03-13 02:30 -05:00")), End: dated(at("2027-03-13 03:00 -05:00"))},
-			step{at("2027-03-13 04:00 -05:00"), ny, nextOccurrenceResult{Due: dz(t, at("2027-03-14 03:30 -04:00"), "02:30"), End: dated(at("2027-03-14 03:30 -04:00"))}},
-			step{at("2027-03-14 04:00 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00")), End: dated(at("2027-03-15 03:30 -04:00"))}})
+			step{at("2027-03-13 04:00 -05:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00")), End: dated(at("2027-03-15 03:00 -04:00"))}},
+			step{at("2027-03-15 04:00 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-16 02:30 -04:00")), End: dated(at("2027-03-16 03:00 -04:00"))}})
 	})
 	t.Run("a clamp on a shifted companion keeps the clamped time (a known limit)", func(t *testing.T) {
 		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=3;BYMINUTE=10", Due: dated(at("2027-03-13 03:10 -05:00")), Start: dated(at("2027-03-13 02:40 -05:00"))},
 			step{at("2027-03-13 04:00 -05:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-14 03:10 -04:00")), Start: dated(at("2027-03-14 03:10 -04:00"))}},
 			step{at("2027-03-14 04:00 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-15 03:10 -04:00")), Start: dated(at("2027-03-15 03:10 -04:00"))}})
 	})
-	t.Run("Nuuk: the intended civil date is recovered", func(t *testing.T) {
+	t.Run("Nuuk: a gap that crosses midnight skips a whole period", func(t *testing.T) {
+		// 2027-03-27 23:30 is in Nuuk's gap, so INTERVAL=2 goes from the 25th to the 29th.
 		nuuk := mustZone(t, "America/Nuuk")
 		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY;INTERVAL=2", Due: dated(ts(t, nuuk, "2027-03-25 23:30 -02:00"))},
-			step{ts(t, nuuk, "2027-03-25 23:35 -02:00"), nuuk, nextOccurrenceResult{Due: dz(t, ts(t, nuuk, "2027-03-28 00:30 -01:00"), "23:30")}},
-			step{ts(t, nuuk, "2027-03-28 00:35 -01:00"), nuuk, nextOccurrenceResult{Due: dated(ts(t, nuuk, "2027-03-29 23:30 -01:00"))}})
+			step{ts(t, nuuk, "2027-03-25 23:35 -02:00"), nuuk, nextOccurrenceResult{Due: dated(ts(t, nuuk, "2027-03-29 23:30 -01:00"))}},
+			step{ts(t, nuuk, "2027-03-29 23:35 -01:00"), nuuk, nextOccurrenceResult{Due: dated(ts(t, nuuk, "2027-03-31 23:30 -01:00"))}})
 	})
 	t.Run("Santiago midnight gap", func(t *testing.T) {
 		santiago := mustZone(t, "America/Santiago")
 		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dated(ts(t, santiago, "2026-09-05 00:30 -04:00"))},
-			step{ts(t, santiago, "2026-09-05 00:35 -04:00"), santiago, nextOccurrenceResult{Due: dz(t, ts(t, santiago, "2026-09-06 01:30 -03:00"), "00:30")}},
-			step{ts(t, santiago, "2026-09-06 01:35 -03:00"), santiago, nextOccurrenceResult{Due: dated(ts(t, santiago, "2026-09-07 00:30 -03:00"))}})
+			step{ts(t, santiago, "2026-09-05 00:35 -04:00"), santiago, nextOccurrenceResult{Due: dated(ts(t, santiago, "2026-09-07 00:30 -03:00"))}},
+			step{ts(t, santiago, "2026-09-07 00:35 -03:00"), santiago, nextOccurrenceResult{Due: dated(ts(t, santiago, "2026-09-08 00:30 -03:00"))}})
 	})
-	t.Run("no gap, no intent; elapsed rules never carry intent", func(t *testing.T) {
+	t.Run("no gap; elapsed rules are never skipped", func(t *testing.T) {
 		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dated(at("2027-03-13 20:00 -05:00"))},
 			step{at("2027-03-13 20:05 -05:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-14 20:00 -04:00"))}})
 		chain(t, nextOccurrenceInput{Rule: "FREQ=HOURLY;INTERVAL=24", Due: dated(at("2027-03-13 02:30 -05:00")), Start: dated(at("2027-03-13 02:15 -05:00"))},
 			step{at("2027-03-13 03:00 -05:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-14 03:30 -04:00")), Start: dated(at("2027-03-14 03:15 -04:00"))}})
 	})
-	t.Run("from completion: the re-based due date takes now's clock and no intent", func(t *testing.T) {
-		in := nextOccurrenceInput{Rule: "FREQ=DAILY", FromCompletion: true, Due: dz(t, at("2027-03-14 03:30 -04:00"), "02:30")}
+	t.Run("from completion: the re-based due date takes now's clock", func(t *testing.T) {
+		in := nextOccurrenceInput{Rule: "FREQ=DAILY", FromCompletion: true, Due: dated(at("2027-03-14 03:30 -04:00"))}
 		chain(t, in, step{at("2027-03-14 09:00 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-15 09:00 -04:00"))}})
 	})
 	t.Run("from completion, no due date: colliding reminders separate again", func(t *testing.T) {
@@ -1162,26 +1069,176 @@ func TestNextOccurrenceIntended(t *testing.T) {
 			step{at("2027-03-14 04:00 -04:00"), ny, nextOccurrenceResult{Reminders: []datedValue{
 				dated(at("2027-03-15 04:00 -04:00")), dated(at("2027-03-15 03:30 -04:00"))}}})
 	})
-	t.Run("an intent beyond the gap is ignored", func(t *testing.T) {
-		// 03:30 EDT with intent 01:00: a displacement of 2.5 h exceeds the 1 h gap.
-		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dz(t, at("2027-03-14 03:30 -04:00"), "01:00")},
-			step{at("2027-03-14 03:35 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-15 03:30 -04:00"))}})
+}
+
+// --- BYEASTER on DAILY and WEEKLY rules ---
+
+// TestNextOccurrenceByEaster: BYEASTER is a BY part, so a DAILY or WEEKLY rule with it steps only
+// to matching Easter days, like the YEARLY form (FR-008, SC-003). Easter 2027 is 03-28 and Easter
+// 2028 is 04-16, so BYEASTER=1 is Easter Monday: 2027-03-29, then 2028-04-17.
+func TestNextOccurrenceByEaster(t *testing.T) {
+	ny := mustZone(t, "America/New_York")
+	at := func(s string) time.Time { return ts(t, ny, s) }
+	for _, rule := range []string{"FREQ=DAILY;BYEASTER=1", "FREQ=WEEKLY;BYEASTER=1", "FREQ=YEARLY;BYEASTER=1"} {
+		t.Run(rule, func(t *testing.T) {
+			in := nextOccurrenceInput{Rule: rule, Due: dated(at("2027-03-29 09:00 -04:00")), Now: at("2027-03-29 09:30 -04:00"), Zone: ny}
+			res := nextOccurrence(asStored(in))
+			assertResult(t, res, nextOccurrenceResult{Due: dated(at("2028-04-17 09:00 -04:00"))})
+			assertCompletionAgrees(t, in, res)
+		})
+	}
+}
+
+// --- skipping a due-date occurrence whose wall clock does not exist ---
+
+// TestNextOccurrenceGapSkip: a generated due date whose local wall clock does not exist in the zone
+// (a spring-forward gap) is skipped, and the next existing occurrence is taken (RFC 5545 §3.3.10,
+// FR-001). Rules that never meet a gap, overlaps and zones without one are unchanged (FR-004,
+// FR-009), and so are the companion dates, which move by whole days on their own clocks (FR-006).
+// Each case also goes through completion in the same zone.
+func TestNextOccurrenceGapSkip(t *testing.T) {
+	ny := mustZone(t, "America/New_York")
+	at := func(s string) time.Time { return ts(t, ny, s) }
+	sydney := mustZone(t, "Australia/Sydney")
+	lordHowe := mustZone(t, "Australia/Lord_Howe")
+	fixed := time.FixedZone("UTC-5", -5*60*60)
+	in := func(zone *time.Location, rule string, due, now time.Time) nextOccurrenceInput {
+		return nextOccurrenceInput{Rule: rule, Due: dated(due), Now: now, Zone: zone}
+	}
+	cases := []struct {
+		name string
+		in   nextOccurrenceInput
+		want nextOccurrenceResult
+	}{
+		// FR-001: every calendar frequency, plain (whole periods) and with BY parts (iterated).
+		{"weekly Sunday 02:30 skips 2027-03-14", in(ny, "FREQ=WEEKLY", at("2027-03-07 02:30 -05:00"), at("2027-03-07 03:00 -05:00")),
+			nextOccurrenceResult{Due: dated(at("2027-03-21 02:30 -04:00"))}},
+		{"weekly BYDAY=SU 02:30 skips 2027-03-14", in(ny, "FREQ=WEEKLY;BYDAY=SU", at("2027-03-07 02:30 -05:00"), at("2027-03-07 03:00 -05:00")),
+			nextOccurrenceResult{Due: dated(at("2027-03-21 02:30 -04:00"))}},
+		{"monthly on the 14th skips 2027-03-14", in(ny, "FREQ=MONTHLY", at("2027-02-14 02:30 -05:00"), at("2027-02-14 03:00 -05:00")),
+			nextOccurrenceResult{Due: dated(at("2027-04-14 02:30 -04:00"))}},
+		{"monthly BYMONTHDAY=14 skips 2027-03-14", in(ny, "FREQ=MONTHLY;BYMONTHDAY=14", at("2027-02-14 02:30 -05:00"), at("2027-02-14 03:00 -05:00")),
+			nextOccurrenceResult{Due: dated(at("2027-04-14 02:30 -04:00"))}},
+		{"yearly on March 14 skips 2027", in(ny, "FREQ=YEARLY", at("2026-03-14 02:30 -04:00"), at("2026-03-14 03:00 -04:00")),
+			nextOccurrenceResult{Due: dated(at("2028-03-14 02:30 -04:00"))}},
+		{"Sydney daily 02:30 skips 2027-10-03", in(sydney, "FREQ=DAILY", ts(t, sydney, "2027-10-02 02:30 +10:00"), ts(t, sydney, "2027-10-02 03:00 +10:00")),
+			nextOccurrenceResult{Due: dated(ts(t, sydney, "2027-10-04 02:30 +11:00"))}},
+		{"Lord Howe daily 02:15 skips its 30-minute gap on 2027-10-03", in(lordHowe, "FREQ=DAILY", ts(t, lordHowe, "2027-10-02 02:15 +10:30"), ts(t, lordHowe, "2027-10-02 03:00 +10:30")),
+			nextOccurrenceResult{Due: dated(ts(t, lordHowe, "2027-10-04 02:15 +11:00"))}},
+		// SC-001: the southern 2026 transitions (2026-10-04 in both zones).
+		{"Sydney daily 02:30 skips 2026-10-04", in(sydney, "FREQ=DAILY", ts(t, sydney, "2026-10-03 02:30 +10:00"), ts(t, sydney, "2026-10-03 03:00 +10:00")),
+			nextOccurrenceResult{Due: dated(ts(t, sydney, "2026-10-05 02:30 +11:00"))}},
+		{"Lord Howe daily 02:15 skips 2026-10-04", in(lordHowe, "FREQ=DAILY", ts(t, lordHowe, "2026-10-03 02:15 +10:30"), ts(t, lordHowe, "2026-10-03 03:00 +10:30")),
+			nextOccurrenceResult{Due: dated(ts(t, lordHowe, "2026-10-05 02:15 +11:00"))}},
+		// The from-completion due path (engine withDueDate, FromCompletion): the rule is re-based at
+		// now, 02:30 EST on 03-13, so its first step is 02:30 on 03-14, inside the gap.
+		{"from completion: the re-based due date skips the gap day", nextOccurrenceInput{Rule: "FREQ=DAILY", FromCompletion: true,
+			Due: dated(at("2027-03-12 20:00 -05:00")), Now: at("2027-03-13 02:30 -05:00"), Zone: ny},
+			nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00"))}},
+		// Termination (research R-3): a 364-day period lands on the second Sunday of March, inside
+		// the gap, in 2027, 2028, 2029, 2030 and 2031; New York's 2032 transition is on 03-14.
+		{"a long period skips five gap days in a row", in(ny, "FREQ=WEEKLY;INTERVAL=52", at("2026-03-15 02:30 -04:00"), at("2026-03-15 03:00 -04:00")),
+			nextOccurrenceResult{Due: dated(at("2032-03-07 02:30 -05:00"))}},
+		// FR-003: a due date a client resolved inside the gap hour is an existing instant; its next
+		// occurrence keeps that clock time.
+		{"a client-resolved due date in the gap hour keeps its clock", in(ny, "FREQ=DAILY", at("2027-03-14 03:30 -04:00"), at("2027-03-14 03:35 -04:00")),
+			nextOccurrenceResult{Due: dated(at("2027-03-15 03:30 -04:00"))}},
+		// FR-004: an overlap is not a gap; the earlier instant, as before.
+		{"an overlap day still takes the earlier instant", in(ny, "FREQ=DAILY", at("2027-11-06 01:30 -04:00"), at("2027-11-06 01:35 -04:00")),
+			nextOccurrenceResult{Due: dated(at("2027-11-07 01:30 -04:00"))}},
+		// FR-009: the same New York row in zones without a gap is the plain next day.
+		{"UTC has no gap", in(time.UTC, "FREQ=DAILY", time.Date(2027, 3, 13, 2, 30, 0, 0, time.UTC), time.Date(2027, 3, 13, 3, 0, 0, 0, time.UTC)),
+			nextOccurrenceResult{Due: dated(time.Date(2027, 3, 14, 2, 30, 0, 0, time.UTC))}},
+		{"a fixed offset has no gap", in(fixed, "FREQ=DAILY", time.Date(2027, 3, 13, 2, 30, 0, 0, fixed), time.Date(2027, 3, 13, 3, 0, 0, 0, fixed)),
+			nextOccurrenceResult{Due: dated(time.Date(2027, 3, 14, 2, 30, 0, 0, fixed))}},
+		// FR-006: the due date skips to 03-15, so the companions move two days, each on its own
+		// clock; 02:00 exists on 03-15, so the reminder is not shifted.
+		{"companions move two days with a skipped due date", nextOccurrenceInput{Rule: "FREQ=DAILY",
+			Due: dated(at("2027-03-13 02:30 -05:00")), Start: dated(at("2027-03-13 01:00 -05:00")), End: dated(at("2027-03-13 03:00 -05:00")),
+			Reminders: []datedValue{dated(at("2027-03-13 02:00 -05:00"))}, Now: at("2027-03-13 03:30 -05:00"), Zone: ny},
+			nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00")), Start: dated(at("2027-03-15 01:00 -04:00")),
+				End: dated(at("2027-03-15 03:00 -04:00")), Reminders: []datedValue{dated(at("2027-03-15 02:00 -04:00"))}}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			res := nextOccurrence(asStored(tc.in))
+			assertResult(t, res, tc.want)
+			assertCompletionAgrees(t, tc.in, res)
+		})
+	}
+
+	t.Run("a skipped occurrence is not counted against COUNT", func(t *testing.T) {
+		// FR-002, SC-002: COUNT=3 from 2027-03-13 02:30 EST has the 13th, 15th and 16th. Each step
+		// completes through completion, which writes COUNT-1 back, and checks the helper agrees.
+		in := nextOccurrenceInput{Rule: "FREQ=DAILY;COUNT=3", Due: dated(at("2027-03-13 02:30 -05:00")), Now: at("2027-03-13 03:00 -05:00"), Zone: ny}
+		for _, step := range []struct {
+			now   time.Time
+			due   time.Time
+			count int
+		}{
+			{at("2027-03-13 03:00 -05:00"), at("2027-03-15 02:30 -04:00"), 2},
+			{at("2027-03-15 03:00 -04:00"), at("2027-03-16 02:30 -04:00"), 1},
+		} {
+			in.Now = step.now
+			res := nextOccurrence(asStored(in))
+			assertResult(t, res, nextOccurrenceResult{Due: dated(step.due)})
+			assertCompletionAgrees(t, in, res)
+			withFixedNow(t, in.Now)
+			n := completeRepeatingIn(&Task{Repeats: in.Rule, DueDate: in.Due.At}, ny)
+			opt, err := rrule.StrToROption(n.Repeats)
+			require.NoError(t, err)
+			assert.Equal(t, step.count, opt.Count, "stored COUNT after completion")
+			in = fedBack(in, res, step.now, ny)
+			in.Rule = n.Repeats
+		}
+		in.Now = at("2027-03-16 03:00 -04:00")
+		assertResult(t, nextOccurrence(asStored(in)), nextOccurrenceResult{Reason: reasonCountExhausted})
 	})
-	t.Run("an intent far from any clock change is ignored (g = 0)", func(t *testing.T) {
-		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dz(t, at("2027-06-14 03:30 -04:00"), "02:30")},
-			step{at("2027-06-14 03:35 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-06-15 03:30 -04:00"))}})
+
+	t.Run("a skip just before UNTIL", func(t *testing.T) {
+		// The 14th is skipped and the 15th (06:30Z) is within UNTIL. Completed again at 06:45Z,
+		// before UNTIL, the 16th is past it: no occurrence is left. A now after 07:00Z would stop at
+		// the up-front until_passed guard instead.
+		in := nextOccurrenceInput{Rule: "FREQ=DAILY;UNTIL=20270315T070000Z", Due: dated(at("2027-03-13 02:30 -05:00")), Now: at("2027-03-13 03:00 -05:00"), Zone: ny}
+		first := nextOccurrence(asStored(in))
+		assertResult(t, first, nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00"))})
+		assertCompletionAgrees(t, in, first)
+		next := fedBack(in, first, time.Date(2027, 3, 15, 6, 45, 0, 0, time.UTC), ny)
+		second := nextOccurrence(asStored(next))
+		assertResult(t, second, nextOccurrenceResult{Reason: reasonNoOccurrence})
+		assertCompletionAgrees(t, next, second)
 	})
-	t.Run("IntendedZone is ignored on input (the gap check has no zone condition)", func(t *testing.T) {
-		due := dz(t, at("2027-03-14 03:30 -04:00"), "02:30")
-		due.IntendedZone = "Europe/Berlin"
-		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: due},
-			step{at("2027-03-14 03:35 -04:00"), ny, nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00"))}})
+
+	t.Run("a rule whose every occurrence is in a gap has none", func(t *testing.T) {
+		// Plan D-5: the second Sunday of March at 02:30 never exists in New York, so every
+		// occurrence is skipped until rrule-go's search window ends, and the existing log line runs.
+		var logged []int64
+		orig := logNoOccurrenceInWindow
+		logNoOccurrenceInWindow = func(taskID int64) { logged = append(logged, taskID) }
+		t.Cleanup(func() { logNoOccurrenceInWindow = orig })
+
+		in := nextOccurrenceInput{Rule: "FREQ=YEARLY;BYMONTH=3;BYDAY=2SU;BYHOUR=2;BYMINUTE=30", Due: dated(at("2027-01-10 02:30 -05:00")),
+			Now: at("2027-01-10 03:00 -05:00"), Zone: ny, TaskID: 7}
+		res := nextOccurrence(asStored(in))
+		assertResult(t, res, nextOccurrenceResult{Reason: reasonNoOccurrence})
+		assertNothingMoved(t, asStored(in), res)
+		assert.Equal(t, []int64{7}, logged, "the search-window exhaustion is logged")
 	})
-	t.Run("an intent on a fall-back day is ignored (g = 0)", func(t *testing.T) {
-		// The offset fell by an hour in the 24 h before 08:30Z, so g = 0 and nothing is accepted.
-		chain(t, nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dz(t, at("2026-11-01 03:30 -05:00"), "02:30")},
-			step{at("2026-11-01 03:35 -05:00"), ny, nextOccurrenceResult{Due: dated(at("2026-11-02 03:30 -05:00"))}})
-	})
+}
+
+// TestNextOccurrenceGapSkipBySetPosKnownLimit pins a known limit (plan D-6): rrule-go applies
+// BYSETPOS to the floating values before the engine skips a nonexistent one, so the in-gap 02:30
+// still takes position 1 on 2027-03-14 and the whole day is skipped, although 03:30 exists that
+// day. A stricter reading (RFC 7529 §4.1 order) would choose 03-14 03:30 EDT; changing this must
+// be deliberate.
+func TestNextOccurrenceGapSkipBySetPosKnownLimit(t *testing.T) {
+	ny := mustZone(t, "America/New_York")
+	at := func(s string) time.Time { return ts(t, ny, s) }
+	in := nextOccurrenceInput{Rule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=30;BYSETPOS=1", Due: dated(at("2027-03-13 02:30 -05:00")),
+		Now: at("2027-03-13 03:00 -05:00"), Zone: ny}
+	res := nextOccurrence(asStored(in))
+	assertResult(t, res, nextOccurrenceResult{Due: dated(at("2027-03-15 02:30 -04:00"))})
+	assertCompletionAgrees(t, in, res)
 }
 
 // --- zone x transition matrix ---
@@ -1189,8 +1246,8 @@ func TestNextOccurrenceIntended(t *testing.T) {
 // TestNextOccurrenceZoneMatrix runs the engine's scenarios in UTC, America/New_York,
 // Europe/Berlin, Asia/Kolkata and Pacific/Auckland, across every 2026-2027 transition of the DST
 // zones. New York's values are the literal goldens of the tests above; here each zone asserts the
-// property: the same local clock, a gap moves forward, where the due date returns at the next
-// step and a companion keeps the shifted time (a known limit), an overlap takes the earlier
+// property: the same local clock, a due date in a gap skips the gap day while a companion moves
+// forward by the gap and keeps the shifted time (a known limit), an overlap takes the earlier
 // instant, and sub-daily rules are elapsed. The zones without DST see the identity on the same
 // dates.
 func TestNextOccurrenceZoneMatrix(t *testing.T) {
@@ -1243,18 +1300,22 @@ func TestNextOccurrenceZoneMatrix(t *testing.T) {
 				assertDated(t, "hourly due", res.Due, dated(due.Add(24*time.Hour)))
 				assertDated(t, "hourly start", res.Start, dated(local(-1, 8, 0).Add(24*time.Hour)))
 
-				// Normalisation and the intended clock time at the affected wall clock: the due date
-				// (plain and with a named time) and a companion.
+				// The affected wall clock: the due date (plain and with a named time), which skips a
+				// gap day, and a companion, which moves forward by the gap.
 				probe := tr.probe // a time of day inside the gap or the overlap, or 02:30 without DST
 				h, mi := int(probe/time.Hour), int(probe%time.Hour/time.Minute)
 				named := "FREQ=DAILY;BYHOUR=" + strconv.Itoa(h) + ";BYMINUTE=" + strconv.Itoa(mi)
+				skipped := 0 // the due date's extra days: one when the gap day is skipped
+				if tr.change > 0 {
+					skipped = 1
+				}
 				for _, rule := range []string{"FREQ=DAILY", named} {
 					due := local(-1, h, mi)
 					in := nextOccurrenceInput{Rule: rule, Due: dated(due), Now: due.Add(5 * time.Minute)}
 					first := complete(in)
 					assertTransitionResult(t, rule+" due", zone, tr, first.Due, wall(0, probe), true)
 					second := complete(fedBack(in, first, first.Due.At.Add(5*time.Minute), zone))
-					assertDated(t, rule+" due, next step", second.Due, dated(time.Date(d.Year(), d.Month(), d.Day()+1, h, mi, 0, 0, zone)))
+					assertDated(t, rule+" due, next step", second.Due, dated(time.Date(d.Year(), d.Month(), d.Day()+1+skipped, h, mi, 0, 0, zone)))
 				}
 				due = local(-1, 20, 0)
 				in := nextOccurrenceInput{Rule: "FREQ=DAILY", Due: dated(due), Start: dated(local(-1, h, mi)), Now: due.Add(time.Hour)}
@@ -1299,33 +1360,34 @@ func transitionOn(zone *time.Location, d time.Time) zoneTransition {
 		if magnitude < 0 {
 			magnitude = -magnitude
 		}
-		return zoneTransition{change: change, probe: timeOfDay(reading.UTC()) + magnitude/2}
+		return zoneTransition{change: change, probe: clockOf(reading.UTC()) + magnitude/2}
 	}
 	return zoneTransition{probe: 2*time.Hour + 30*time.Minute}
 }
 
+// clockOf is a floating value's time of day, 0 <= d < 24h.
+func clockOf(f time.Time) time.Duration {
+	h, m, s := f.Clock()
+	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(f.Nanosecond())
+}
+
 // assertTransitionResult checks a date asked for at the floating wall clock asked on the change's
-// date: a gap moves it forward by the gap, and a due date (remembers) keeps the asked clock time as
-// its intent while a companion gets none; an overlap keeps the clock at the earlier instant;
-// otherwise it is the identity. IntendedZone is always "".
-func assertTransitionResult(t *testing.T, label string, zone *time.Location, tr zoneTransition, got datedValue, asked time.Time, remembers bool) {
+// date: in a gap a due date (skips) is skipped to the asked clock on the next day, while a companion
+// moves forward by the gap; an overlap keeps the clock at the earlier instant; otherwise it is the
+// identity.
+func assertTransitionResult(t *testing.T, label string, zone *time.Location, tr zoneTransition, got datedValue, asked time.Time, skips bool) {
 	t.Helper()
-	assert.Empty(t, got.IntendedZone, label)
 	switch {
+	case tr.change > 0 && skips:
+		want := asked.AddDate(0, 0, 1)
+		assert.True(t, float(got.At, zone).Equal(want), "%s: gap: skipped to wall clock %v, got %v", label, want, float(got.At, zone))
 	case tr.change > 0:
 		assert.True(t, float(got.At, zone).Equal(asked.Add(tr.change)), "%s: gap: wall clock %v, want %v", label, float(got.At, zone), asked.Add(tr.change))
-		if !remembers {
-			assert.Nil(t, got.Intended, "%s: a companion carries no intent", label)
-		} else if assert.NotNil(t, got.Intended, "%s: the asked clock is remembered", label) {
-			assert.Equal(t, timeOfDay(asked), *got.Intended, label)
-		}
 	case tr.change < 0:
 		assert.True(t, float(got.At, zone).Equal(asked), "%s: overlap: wall clock %v, want %v", label, float(got.At, zone), asked)
 		assert.True(t, float(got.At.Add(-tr.change), zone).Equal(asked), "%s: overlap: the earlier instant", label)
-		assert.Nil(t, got.Intended, label)
 	default:
 		assert.True(t, float(got.At, zone).Equal(asked), "%s: identity: wall clock %v, want %v", label, float(got.At, zone), asked)
-		assert.Nil(t, got.Intended, label)
 	}
 }
 

@@ -17,7 +17,6 @@
 package caldavtests
 
 import (
-	"net/http"
 	"testing"
 	"time"
 
@@ -82,49 +81,21 @@ func TestRecurrenceZone_CalDAVCompletion(t *testing.T) {
 			assert.False(t, task.Done, "reopened")
 			assert.Equal(t, tc.want, task.DueDate.UTC())
 
-			get := caldavGET(t, e, "/dav/projects/36/"+uid+".ics")
-			require.Equal(t, http.StatusOK, get.Code)
-			assert.NotContains(t, get.Body.String(), "intended")
-			assert.NotContains(t, get.Body.String(), "INTENDED")
 		})
 	}
 }
 
-// Over CalDAV, a PUT re-sending the same DUE keeps the stored intended time, and a PUT that
-// changes DUE clears it.
-func TestRecurrenceZone_CalDAVIntendedDueTime(t *testing.T) {
-	shifted := time.Date(2030, 3, 10, 7, 30, 0, 0, time.UTC) // Sun 03:30 EDT
-	const uid = "recurrence-zone-intended"
-	setup := func(t *testing.T) *echo.Echo {
-		t.Helper()
-		e := setupTestEnv(t)
-		zoneSetCaldavUser(t, "America/New_York")
-		zonePUT(t, e, uid, NewVTodo(uid, "shifted daily").Due(shifted).Rrule("FREQ=DAILY;INTERVAL=1").Build())
-		s := db.NewSession()
-		intended := 9000
-		_, err := s.Where("uid = ?", uid).Cols("intended_due_time").Update(&models.Task{IntendedDueTime: &intended})
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		require.NoError(t, s.Close())
-		return e
-	}
+// A CalDAV completion skips a gap occurrence: daily, due Sat 2030-03-09 02:30 EST, completed over
+// CalDAV in New York. Sun 2030-03-10 02:30 does not exist, so the next due date is Mon 02:30 EDT.
+func TestRecurrenceZone_CalDAVGapSkip(t *testing.T) {
+	due := time.Date(2030, 3, 9, 7, 30, 0, 0, time.UTC)
+	e := setupTestEnv(t)
+	zoneSetCaldavUser(t, "America/New_York")
+	const uid = "recurrence-zone-gap-skip"
+	zonePUT(t, e, uid, NewVTodo(uid, "daily 02:30").Due(due).Rrule("FREQ=DAILY;INTERVAL=1").Build())
+	zonePUT(t, e, uid, NewVTodo(uid, "daily 02:30").Due(due).Rrule("FREQ=DAILY;INTERVAL=1").Status("COMPLETED").Build())
 
-	t.Run("an unchanged DUE keeps it", func(t *testing.T) {
-		e := setup(t)
-		zonePUT(t, e, uid, NewVTodo(uid, "shifted daily renamed").Due(shifted).Rrule("FREQ=DAILY;INTERVAL=1").Build())
-
-		task := zoneTaskByUID(t, uid)
-		assert.Equal(t, "shifted daily renamed", task.Title)
-		require.NotNil(t, task.IntendedDueTime)
-		assert.Equal(t, 9000, *task.IntendedDueTime)
-	})
-	t.Run("a changed DUE clears it", func(t *testing.T) {
-		e := setup(t)
-		edited := time.Date(2030, 3, 10, 7, 20, 0, 0, time.UTC) // Sun 03:20 EDT
-		zonePUT(t, e, uid, NewVTodo(uid, "shifted daily").Due(edited).Rrule("FREQ=DAILY;INTERVAL=1").Build())
-
-		task := zoneTaskByUID(t, uid)
-		assert.Equal(t, edited, task.DueDate.UTC())
-		assert.Nil(t, task.IntendedDueTime)
-	})
+	task := zoneTaskByUID(t, uid)
+	assert.False(t, task.Done, "reopened")
+	assert.Equal(t, time.Date(2030, 3, 11, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "Mon 02:30 EDT")
 }

@@ -23,7 +23,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -32,7 +31,6 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
@@ -523,75 +521,25 @@ func TestVikunjaFileMigrator_MigrateRecurrence(t *testing.T) {
 	})
 }
 
-// captureLog sends the standard log to a file for the rest of the test and returns a reader for it.
-func captureLog(t *testing.T) func() string {
-	t.Helper()
-	dir := t.TempDir()
-	log.ConfigureStandardLogger(true, "file", dir, "INFO", "text")
-	t.Cleanup(log.InitLogger)
-	return func() string {
-		b, err := os.ReadFile(filepath.Join(dir, "standard.log"))
-		require.NoError(t, err)
-		return string(b)
-	}
-}
-
-// storedIntendedDueTime reads the imported task's intended_due_time column.
-func storedIntendedDueTime(t *testing.T, title string) *int {
-	t.Helper()
-	return importedTask(t, title).IntendedDueTime
-}
-
-// Import restores the export's intended_due_time when it is a time of day
-// (0-86399) on a task with a due date, and drops it otherwise with one log line, never failing.
-// The import half of the round trip: the daily task exported while gap-shifted (Sun 2027-03-14 03:30
-// EDT, 9000) keeps 9000; the models export test completes it.
-func TestVikunjaFileMigrator_MigrateIntendedDueTime(t *testing.T) {
+// An export written by a build that stored the due date's intended time still imports: the
+// intended_due_time key is ignored, and the task keeps the due date and rule the file gives it.
+func TestVikunjaFileMigrator_MigrateIgnoresIntendedDueTime(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
-	setStoredUserZone(t, 1, "America/New_York")
-	readLog := captureLog(t)
 
-	shifted := time.Date(2027, 3, 14, 7, 30, 0, 0, time.UTC)
-	intended := func(v int) *int { return &v }
-	task := func(id int64, title string, due time.Time, v *int) *models.TaskWithComments {
-		return &models.TaskWithComments{
-			Task:            models.Task{ID: id, Title: title, DueDate: due},
-			RepeatsRRule:    "FREQ=DAILY;INTERVAL=1",
-			IntendedDueTime: v,
-		}
-	}
-	projects := []*models.ProjectWithTasksAndBuckets{{
-		Project: models.Project{ID: 1, Title: "intended due time"},
-		Tasks: []*models.TaskWithComments{
-			task(51, "it shifted", shifted, intended(9000)),
-			task(52, "it midnight", shifted, intended(0)),
-			task(53, "it last second", shifted, intended(86399)),
-			task(54, "it a day", shifted, intended(86400)),
-			task(55, "it too large", shifted, intended(90000)),
-			task(56, "it negative", shifted, intended(-1)),
-			task(57, "it no due date", time.Time{}, intended(9000)),
-			task(58, "it none", shifted, nil),
-		},
-	}}
-	data, err := json.Marshal(projects)
-	require.NoError(t, err)
-
-	r := zipWith(t, map[string][]byte{"VERSION": []byte("dev"), "data.json": data})
+	// Sun 2027-03-14 03:30 EDT, exported with the 02:30 the old build meant (9000 s).
+	data := `[{
+		"id": 1,
+		"title": "old export",
+		"views": [],
+		"tasks": [
+			{"id": 51, "title": "ie shifted", "due_date": "2027-03-14T07:30:00Z",
+			 "repeats_rrule": "FREQ=DAILY;INTERVAL=1", "intended_due_time": 9000}
+		]
+	}]`
+	r := zipWith(t, map[string][]byte{"VERSION": []byte("dev"), "data.json": []byte(data)})
 	require.NoError(t, (&FileMigrator{}).Migrate(&user.User{ID: 1}, r, int64(r.Len())))
 
-	for title, want := range map[string]int{"it shifted": 9000, "it midnight": 0, "it last second": 86399} {
-		got := storedIntendedDueTime(t, title)
-		require.NotNil(t, got, title)
-		assert.Equal(t, want, *got, title)
-	}
-	for _, title := range []string{"it a day", "it too large", "it negative", "it no due date", "it none"} {
-		assert.Nil(t, storedIntendedDueTime(t, title), title)
-	}
-	assert.Equal(t, "FREQ=DAILY;INTERVAL=1", importedTask(t, "it shifted").Repeats)
-
-	logged := readLog()
-	for _, id := range []string{"54", "55", "56", "57"} {
-		assert.Equal(t, 1, strings.Count(logged, "Importing task "+id+" of project 1 without its intended due time"), "one drop line for task %s", id)
-	}
-	assert.Equal(t, 4, strings.Count(logged, "without its intended due time"), "one line per dropped value, none for kept or absent ones")
+	task := importedTask(t, "ie shifted")
+	assert.Equal(t, time.Date(2027, 3, 14, 7, 30, 0, 0, time.UTC), task.DueDate.UTC())
+	assert.Equal(t, "FREQ=DAILY;INTERVAL=1", task.Repeats)
 }

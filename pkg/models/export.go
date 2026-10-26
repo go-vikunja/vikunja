@@ -275,8 +275,6 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 			Task: *t,
 			// The exact rule text, which the structured repeat cannot always express.
 			RepeatsRRule: t.Repeats,
-			// The due date's intended time, which the API never returns.
-			IntendedDueTime: t.IntendedDueTime,
 		}
 		if _, exists := projectsMap[t.ProjectID]; !exists {
 			log.Debugf("[User Data Export] Project %d does not exist for task %d, omitting", t.ProjectID, t.ID)

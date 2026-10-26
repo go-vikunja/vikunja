@@ -141,7 +141,6 @@ func applyImportedRecurrenceToProjects(projects []*models.ProjectWithTasksAndBuc
 				lt = lp.Tasks[j]
 			}
 			applyImportedRecurrenceToTask(t, lt, loc)
-			restoreIntendedDueTime(t, p.ID)
 			// A rule the create path would refuse is dropped, not fatal: the rest of the
 			// import goes ahead. Ids are the export file's, never titles.
 			if err := models.DropUnimportableRepeat(&t.Task); err != nil {
@@ -169,33 +168,5 @@ func applyImportedRecurrenceToTask(t *models.TaskWithComments, legacy *legacyTas
 			t.Repeats = rule
 			t.RepeatsFromCurrentDate = fromCurrentDate
 		}
-	}
-}
-
-// secondsPerDay bounds an intended time of day: 0 (midnight) to 86399.
-const secondsPerDay = 24 * 60 * 60
-
-// restoreIntendedDueTime restores the due date's intended time of day from the export-only
-// field: only a value of 0-86399 on a task with a due date is kept, anything else is dropped with a
-// log line and the task imported without it, never an error. The stored field is not serialised, so
-// a crafted file can set it only through this check. Whether the restored value is used is decided
-// at completion by the gap check; the import does not check it.
-func restoreIntendedDueTime(t *models.TaskWithComments, projectID int64) {
-	v := t.IntendedDueTime
-	t.IntendedDueTime = nil
-	t.Task.IntendedDueTime = nil
-	if v == nil {
-		return
-	}
-
-	switch {
-	case *v < 0 || *v >= secondsPerDay:
-		// Ids are the export file's, never titles.
-		log.Warningf(logPrefix+"Importing task %d of project %d without its intended due time: %d is not a time of day", t.ID, projectID, *v)
-	case t.DueDate.IsZero():
-		log.Warningf(logPrefix+"Importing task %d of project %d without its intended due time: the task has no due date", t.ID, projectID)
-	default:
-		restored := *v
-		t.Task.IntendedDueTime = &restored
 	}
 }

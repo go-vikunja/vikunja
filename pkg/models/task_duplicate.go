@@ -73,8 +73,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	}
 
 	// Create the new task. Only the stored rule text is copied, not its structured repeat, so
-	// the copy keeps rules the structured form cannot fully express. The due
-	// date's intended time is copied with it, so the copy's next completion matches the original's.
+	// the copy keeps rules the structured form cannot fully express.
 	newTask := &Task{
 		Title:                  originalTask.Title,
 		Description:            originalTask.Description,
@@ -83,7 +82,6 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		ProjectID:              originalTask.ProjectID,
 		Repeats:                originalTask.Repeats,
 		RepeatsFromCurrentDate: originalTask.RepeatsFromCurrentDate,
-		IntendedDueTime:        originalTask.IntendedDueTime,
 		Priority:               originalTask.Priority,
 		StartDate:              originalTask.StartDate,
 		EndDate:                originalTask.EndDate,

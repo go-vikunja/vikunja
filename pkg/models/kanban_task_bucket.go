@@ -193,7 +193,7 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 			task.DoneAt = time.Time{}
 		}
 		// updateDone also decrements a COUNT rule, or clears an exhausted one, so the rule is
-		// persisted with the dates, and so is the due date's intended time it stores.
+		// persisted with the dates.
 		_, err = s.Where("id = ?", task.ID).
 			Cols(
 				"done",
@@ -202,7 +202,6 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 				"end_date",
 				"done_at",
 				"repeats",
-				"intended_due_time",
 			).
 			Update(task)
 		if err != nil {

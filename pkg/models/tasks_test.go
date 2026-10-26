@@ -2360,31 +2360,13 @@ func TestCompletionZone(t *testing.T) {
 	})
 }
 
-func intPtr(v int) *int { return &v }
-
-// readTaskForEcho reads a task as a client would before sending it back in a full update.
-func readTaskForEcho(t *testing.T, s *xorm.Session, taskID int64, u *user.User) *Task {
-	t.Helper()
-	read := &Task{ID: taskID}
-	require.NoError(t, read.ReadOne(s, u))
-	read.Repeats = ""
-	return read
-}
-
-// seedIntendedDueTime writes intended_due_time straight onto task 1, as an earlier completion would.
-func seedIntendedDueTime(t *testing.T, s *xorm.Session, v *int) {
-	t.Helper()
-	_, err := s.ID(1).Cols("intended_due_time").Update(&Task{IntendedDueTime: v})
-	require.NoError(t, err)
-}
-
-// A daily task due Sat 2027-03-13 02:30 EST, completed in New York,
-// lands on Sun 03:30 EDT (02:30 does not exist that day) and remembers 02:30 as 9000 s; the next
-// completion returns to Mon 02:30 EDT and stores NULL. Each chain exercises both save sites.
-func TestIntendedDueTime(t *testing.T) {
+// A daily task due Sat 2027-03-13 02:30 EST, completed in New York, skips Sun 2027-03-14 (02:30 does
+// not exist that day) and lands on Mon 02:30 EDT; the next completion gives Tue 02:30 EDT. Each
+// chain exercises both save sites.
+func TestCompletionSkipsGapOccurrence(t *testing.T) {
 	due := time.Date(2027, 3, 13, 7, 30, 0, 0, time.UTC)
-	shifted := time.Date(2027, 3, 14, 7, 30, 0, 0, time.UTC)  // Sun 03:30 EDT
-	restored := time.Date(2027, 3, 15, 6, 30, 0, 0, time.UTC) // Mon 02:30 EDT
+	monday := time.Date(2027, 3, 15, 6, 30, 0, 0, time.UTC)  // Mon 02:30 EDT
+	tuesday := time.Date(2027, 3, 16, 6, 30, 0, 0, time.UTC) // Tue 02:30 EDT
 	jwtUser := &user.User{ID: 1, Username: "user1"}
 
 	setup := func(t *testing.T) *xorm.Session {
@@ -2414,155 +2396,81 @@ func TestIntendedDueTime(t *testing.T) {
 			steps[chain[0]](t, s)
 			task := storedTask1(t, s)
 			assert.False(t, task.Done)
-			assert.Equal(t, shifted, task.DueDate.UTC())
-			require.NotNil(t, task.IntendedDueTime, "the gap shift is remembered")
-			assert.Equal(t, 9000, *task.IntendedDueTime)
+			assert.Equal(t, monday, task.DueDate.UTC(), "the gap day is skipped")
 
 			steps[chain[1]](t, s)
 			task = storedTask1(t, s)
-			assert.Equal(t, restored, task.DueDate.UTC(), "the intended 02:30 comes back")
-			assert.Nil(t, task.IntendedDueTime, "NULL once the due date is on its intended time")
+			assert.False(t, task.Done)
+			assert.Equal(t, tuesday, task.DueDate.UTC())
 		})
 	}
-
-	t.Run("a stored value outside a day is ignored", func(t *testing.T) {
-		s := setup(t)
-		seedIntendedDueTime(t, s, intPtr(86400))
-		patch(t, s)
-
-		task := storedTask1(t, s)
-		assert.Equal(t, shifted, task.DueDate.UTC())
-		require.NotNil(t, task.IntendedDueTime)
-		assert.Equal(t, 9000, *task.IntendedDueTime)
-	})
 }
 
-// Only completion writes intended_due_time, and an explicit due-date edit clears it. The
-// gap check cannot tell an edit from a shift within its bound: from the shifted state (Sun 03:30
-// EDT, 9000), an edit to Sun 03:20 EDT is a 50-minute displacement, inside the 60-minute gap, so
-// without the clear the next completion would land on Mon 02:30 EDT instead of 03:20.
-func TestIntendedClear(t *testing.T) {
-	shifted := time.Date(2027, 3, 14, 7, 30, 0, 0, time.UTC) // Sun 03:30 EDT
-	edited := time.Date(2027, 3, 14, 7, 20, 0, 0, time.UTC)  // Sun 03:20 EDT
+// SC-002 through the update path: a daily COUNT=3 task due Sat 2027-03-13 02:30 EST in New York has
+// the 13th, 15th and 16th; the gap day is not counted. The third completion ends the rule: the task
+// stays done and its rule is cleared.
+func TestCompletionGapSkipCount(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
 	jwtUser := &user.User{ID: 1, Username: "user1"}
-	const rule = "FREQ=DAILY;INTERVAL=1"
-
-	setup := func(t *testing.T) *xorm.Session {
+	setUserZone(t, s, 1, "America/New_York")
+	seedRepeatingTask(t, s, "FREQ=DAILY;COUNT=3", time.Date(2027, 3, 13, 7, 30, 0, 0, time.UTC))
+	complete := func(t *testing.T, now time.Time) *Task {
 		t.Helper()
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		t.Cleanup(func() { s.Close() })
-		withFixedNow(t, time.Date(2027, 3, 14, 7, 0, 0, 0, time.UTC))
-		setUserZone(t, s, 1, "America/New_York")
-		seedRepeatingTask(t, s, rule, shifted)
-		seedIntendedDueTime(t, s, intPtr(9000))
-		return s
-	}
-	complete := func(t *testing.T, s *xorm.Session) {
-		t.Helper()
+		withFixedNow(t, now)
 		require.NoError(t, (&Task{ID: 1, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+		return storedTask1(t, s)
 	}
-
-	t.Run("a field-masked due-date edit clears it", func(t *testing.T) {
-		s := setup(t)
-		require.NoError(t, (&Task{ID: 1, DueDate: edited}).updateSingleTask(s, jwtUser, []string{"due_date"}))
-		assert.Nil(t, storedTask1(t, s).IntendedDueTime)
-
-		complete(t, s)
-		assert.Equal(t, time.Date(2027, 3, 15, 7, 20, 0, 0, time.UTC), storedTask1(t, s).DueDate.UTC(), "Mon 03:20 EDT")
-	})
-	t.Run("a full update with a new due date clears it", func(t *testing.T) {
-		s := setup(t)
-		upd := readTaskForEcho(t, s, 1, jwtUser)
-		upd.DueDate = edited
-		require.NoError(t, upd.Update(s, jwtUser))
-		assert.Nil(t, storedTask1(t, s).IntendedDueTime)
-	})
-	t.Run("clearing the due date clears it", func(t *testing.T) {
-		s := setup(t)
-		require.NoError(t, (&Task{ID: 1}).updateSingleTask(s, jwtUser, []string{"due_date"}))
-		assert.Nil(t, storedTask1(t, s).IntendedDueTime)
-	})
-
-	keeps := func(t *testing.T, s *xorm.Session) {
+	count := func(t *testing.T, rule string) int {
 		t.Helper()
-		task := storedTask1(t, s)
-		require.NotNil(t, task.IntendedDueTime)
-		assert.Equal(t, 9000, *task.IntendedDueTime)
-	}
-	t.Run("a title-only update keeps it", func(t *testing.T) {
-		s := setup(t)
-		require.NoError(t, (&Task{ID: 1, Title: "renamed"}).updateSingleTask(s, jwtUser, []string{"title"}))
-		keeps(t, s)
-	})
-	t.Run("a full update echoing every date, in another offset, keeps it", func(t *testing.T) {
-		s := setup(t)
-		upd := readTaskForEcho(t, s, 1, jwtUser)
-		upd.DueDate = upd.DueDate.In(time.FixedZone("UTC+5", 5*60*60))
-		upd.Title = "renamed"
-		require.NoError(t, upd.Update(s, jwtUser))
-		keeps(t, s)
-	})
-	t.Run("a start-date edit keeps it", func(t *testing.T) {
-		s := setup(t)
-		require.NoError(t, (&Task{ID: 1, StartDate: edited}).updateSingleTask(s, jwtUser, []string{"start_date"}))
-		keeps(t, s)
-	})
-	t.Run("a rule change keeps it", func(t *testing.T) {
-		s := setup(t)
-		require.NoError(t, (&Task{ID: 1, Repeat: &TaskRepeat{Freq: "daily", Interval: 2}}).updateSingleTask(s, jwtUser, []string{"repeats"}))
-		assert.Contains(t, storedTask1(t, s).Repeats, "INTERVAL=2")
-		keeps(t, s)
-	})
-	t.Run("the incoming task never supplies it", func(t *testing.T) {
-		s := setup(t)
-		require.NoError(t, (&Task{ID: 1, Title: "renamed", IntendedDueTime: intPtr(1)}).updateSingleTask(s, jwtUser, []string{"title"}))
-		keeps(t, s)
-	})
-}
-
-// A refused completion (here: a relative reminder would land past 9999, so the dates are put
-// back) leaves the task done with its dates and its intended_due_time unchanged; so does a rule
-// whose UNTIL has passed.
-func TestIntendedRefusedCompletion(t *testing.T) {
-	jwtUser := &user.User{ID: 1, Username: "user1"}
-
-	t.Run("outside the storable range", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-		withFixedNow(t, time.Date(2026, 10, 23, 12, 0, 0, 0, time.UTC))
-		due := time.Date(9999, 12, 29, 12, 0, 0, 0, time.UTC)
-		seedRepeatingTask(t, s, "FREQ=DAILY;INTERVAL=1", due)
-		seedIntendedDueTime(t, s, intPtr(9000))
-		_, err := s.Insert(&TaskReminder{TaskID: 1, Reminder: due.Add(48 * time.Hour), RelativeTo: ReminderRelationDueDate, RelativePeriod: 172800})
+		opt, err := rrule.StrToROption(rule)
 		require.NoError(t, err)
+		return opt.Count
+	}
 
-		require.NoError(t, (&Task{ID: 1, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+	task := complete(t, time.Date(2027, 3, 13, 8, 0, 0, 0, time.UTC))
+	assert.False(t, task.Done)
+	assert.Equal(t, time.Date(2027, 3, 15, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "Mon 02:30 EDT")
+	assert.Equal(t, 2, count(t, task.Repeats))
 
-		task := storedTask1(t, s)
-		assert.True(t, task.Done, "not advanced")
-		assert.Equal(t, due, task.DueDate.UTC())
-		require.NotNil(t, task.IntendedDueTime)
-		assert.Equal(t, 9000, *task.IntendedDueTime)
-	})
-	t.Run("UNTIL passed", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-		withFixedNow(t, time.Date(2027, 3, 20, 12, 0, 0, 0, time.UTC))
-		due := time.Date(2027, 3, 14, 7, 30, 0, 0, time.UTC)
-		seedRepeatingTask(t, s, "FREQ=DAILY;INTERVAL=1;UNTIL=20270316T000000Z", due)
-		seedIntendedDueTime(t, s, intPtr(9000))
+	task = complete(t, time.Date(2027, 3, 15, 7, 0, 0, 0, time.UTC))
+	assert.False(t, task.Done)
+	assert.Equal(t, time.Date(2027, 3, 16, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "Tue 02:30 EDT")
+	assert.Equal(t, 1, count(t, task.Repeats))
 
-		require.NoError(t, (&TaskBucket{TaskID: 1, BucketID: 3, ProjectViewID: 4, ProjectID: 1}).Update(s, jwtUser))
+	task = complete(t, time.Date(2027, 3, 16, 7, 0, 0, 0, time.UTC))
+	assert.True(t, task.Done, "the last occurrence was completed")
+	assert.Empty(t, task.Repeats, "an exhausted rule is cleared")
+	assert.Equal(t, time.Date(2027, 3, 16, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "the dates stay")
+}
 
-		task := storedTask1(t, s)
-		assert.True(t, task.Done)
-		assert.Equal(t, due, task.DueDate.UTC())
-		require.NotNil(t, task.IntendedDueTime)
-		assert.Equal(t, 9000, *task.IntendedDueTime)
-	})
+// FR-007 through the update path: a relative reminder is recomputed from the due date the skip
+// chose. Daily 02:30, due Sat 2027-03-13 02:30 EST in New York, reminder 1 hour before the due date:
+// after completion the due date is Mon 2027-03-15 02:30 EDT and the reminder Mon 01:30 EDT (05:30Z),
+// computed by updateRelativeReminderDates.
+func TestCompletionGapSkipRelativeReminder(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	jwtUser := &user.User{ID: 1, Username: "user1"}
+	withFixedNow(t, time.Date(2027, 3, 13, 8, 0, 0, 0, time.UTC))
+	setUserZone(t, s, 1, "America/New_York")
+	due := time.Date(2027, 3, 13, 7, 30, 0, 0, time.UTC)
+	seedRepeatingTask(t, s, "FREQ=DAILY;INTERVAL=1", due)
+	_, err := s.Insert(&TaskReminder{TaskID: 1, Reminder: due.Add(-time.Hour), RelativeTo: ReminderRelationDueDate, RelativePeriod: -3600})
+	require.NoError(t, err)
+
+	require.NoError(t, (&Task{ID: 1, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+
+	task := storedTask1(t, s)
+	assert.False(t, task.Done)
+	assert.Equal(t, time.Date(2027, 3, 15, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "Mon 02:30 EDT")
+	reminders := []*TaskReminder{}
+	require.NoError(t, s.Where("task_id = ?", 1).Find(&reminders))
+	require.Len(t, reminders, 1)
+	assert.Equal(t, ReminderRelationDueDate, reminders[0].RelativeTo)
+	assert.Equal(t, time.Date(2027, 3, 15, 5, 30, 0, 0, time.UTC), reminders[0].Reminder.UTC(), "Mon 01:30 EDT")
 }
 
 // A saved-filter kanban view carries a negative synthetic project id. A Done move there must

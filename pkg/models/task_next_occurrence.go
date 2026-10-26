@@ -44,14 +44,9 @@ const (
 	reasonOutsideStorableRange  noNextReason = "outside_storable_range"
 )
 
-// datedValue is one date that steps, with its remembered intended clock time. Intended is
-// meaningful on Due only; it is ignored on every other date and nil on every other output.
+// datedValue is one date that steps.
 type datedValue struct {
-	At       time.Time      // the stored instant; zero = the date is not set
-	Intended *time.Duration // the due date's intended local time of day (0 ≤ d < 24h), or nil
-	// Deprecated: ignored on input and always "" on output; retained for now, the tests assert it
-	// stays empty.
-	IntendedZone string
+	At time.Time // the stored instant; zero = the date is not set
 }
 
 // nextOccurrenceInput is everything nextOccurrence reads.
@@ -68,7 +63,7 @@ type nextOccurrenceInput struct {
 
 // nextOccurrenceResult is a task's dates at its next occurrence, or the reason there is none.
 type nextOccurrenceResult struct {
-	Due, Start, End datedValue   // moved dates in Zone; Due carries the Intended to store (nil = store NULL), the others nil
+	Due, Start, End datedValue   // moved dates in Zone
 	Reminders       []datedValue // same order as the input
 	Reason          noNextReason // "" when the dates moved; otherwise nothing moved
 }
@@ -80,27 +75,16 @@ type nextOccurrenceResult struct {
 // decrements COUNT either; completion writes COUNT-1 back.
 //
 // The rule is evaluated in Zone: calendar-unit rules on its local calendar and wall clock,
-// sub-daily ones by elapsed time. Moved dates are returned in Zone, the due date with the intended
-// clock time to store; completion converts them to the server zone.
+// sub-daily ones by elapsed time. A generated due date whose wall clock does not exist in Zone (a
+// spring-forward gap) is skipped (RFC 5545 §3.3.10). Moved dates are returned in Zone; completion
+// converts them to the server zone. The reminders slice of the result is always its own copy
+// (unmovedResult), never the caller's.
 func nextOccurrence(in nextOccurrenceInput) nextOccurrenceResult {
 	opt, bounded, reason := checkNextOccurrenceGuards(in)
 	if reason != "" {
-		return unmovedResult(in, reason).withoutCompanionIntent()
+		return unmovedResult(in, reason)
 	}
-	return evaluateNextOccurrence(in, opt, bounded).withoutCompanionIntent()
-}
-
-// withoutCompanionIntent is the result as every path returns it, the ones that echo an input date
-// included: Start, End and each reminder carry no Intended, and no date carries an IntendedZone.
-// The due date's Intended is left as it is. The reminders slice is always the result's own copy
-// (unmovedResult), never the caller's.
-func (res nextOccurrenceResult) withoutCompanionIntent() nextOccurrenceResult {
-	res.Due.IntendedZone = ""
-	res.Start, res.End = datedValue{At: res.Start.At}, datedValue{At: res.End.At}
-	for i := range res.Reminders {
-		res.Reminders[i] = datedValue{At: res.Reminders[i].At}
-	}
-	return res
+	return evaluateNextOccurrence(in, opt, bounded)
 }
 
 // checkNextOccurrenceGuards applies completion's guards, in the order completion has always
@@ -281,12 +265,6 @@ func localise(f time.Time, zone *time.Location) time.Time {
 		// A gap: the pre-transition offset's instant reads as f moved forward by the gap.
 		return c1.In(zone)
 	}
-}
-
-// timeOfDay is a floating value's local time of day, 0 <= d < 24h.
-func timeOfDay(f time.Time) time.Duration {
-	h, m, s := f.Clock()
-	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(f.Nanosecond())
 }
 
 // relativeReminderTime is the instant of a reminder periodSeconds relative to base. The period's
