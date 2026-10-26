@@ -606,7 +606,8 @@ type ErrProjectIsInTrash struct {
 	DeletedBy  *user.User `json:"deleted_by,omitempty"`
 	CanRestore bool       `json:"can_restore"`
 	// The topmost trashed ancestor, which has to be restored instead.
-	TrashedRootID int64 `json:"trashed_root_id,omitempty"`
+	TrashedRootID  int64 `json:"trashed_root_id,omitempty"`
+	CanRestoreRoot bool  `json:"can_restore_root"`
 }
 
 // IsErrProjectIsInTrash checks if an error is ErrProjectIsInTrash.

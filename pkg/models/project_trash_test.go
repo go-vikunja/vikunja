@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	"io/fs"
 	"net/http"
 	"testing"
@@ -249,6 +250,19 @@ func TestProject_ReadTrashed(t *testing.T) {
 	require.ErrorAs(t, err, &inTrash)
 }
 
+func shareProjectForTest(t *testing.T, projectID, userID int64, permission Permission) {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Insert(&ProjectUser{
+		UserID:     userID,
+		ProjectID:  projectID,
+		Permission: permission,
+	})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+}
+
 func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 	u1 := &user.User{ID: 1}
 	readInTrash := func(t *testing.T, projectID int64, a web.Auth) ErrProjectIsInTrash {
@@ -265,6 +279,38 @@ func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 		inTrash := readInTrash(t, 46, u1)
 		assert.False(t, inTrash.CanRestore)
 		assert.Equal(t, int64(45), inTrash.TrashedRootID)
+		assert.True(t, inTrash.CanRestoreRoot)
+	})
+	t.Run("a reader of the root can't restore it", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		shareProjectForTest(t, 45, 2, PermissionRead)
+
+		inTrash := readInTrash(t, 46, &user.User{ID: 2})
+		assert.Equal(t, int64(45), inTrash.TrashedRootID)
+		assert.False(t, inTrash.CanRestoreRoot)
+	})
+	t.Run("the root can't be restored while its parent is archived", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		_, err := s.Table("projects").Where("id = ?", 45).Update(map[string]any{"parent_project_id": 22})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		inTrash := readInTrash(t, 46, u1)
+		assert.Equal(t, int64(45), inTrash.TrashedRootID)
+		assert.False(t, inTrash.CanRestoreRoot)
+	})
+	t.Run("an unreachable root is omitted", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		shareProjectForTest(t, 46, 2, PermissionAdmin)
+
+		inTrash := readInTrash(t, 46, &user.User{ID: 2})
+		assert.Zero(t, inTrash.TrashedRootID)
+		assert.False(t, inTrash.CanRestoreRoot)
+		details, err := json.Marshal(inTrash)
+		require.NoError(t, err)
+		assert.NotContains(t, string(details), "trashed_root_id")
 	})
 	t.Run("points deeper sub-projects to the topmost trashed ancestor", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

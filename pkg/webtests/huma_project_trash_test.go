@@ -97,9 +97,10 @@ func TestHumaProjectTrash(t *testing.T) {
 		var blocked struct {
 			Code    int `json:"code"`
 			Details struct {
-				ID            int64 `json:"id"`
-				CanRestore    bool  `json:"can_restore"`
-				TrashedRootID int64 `json:"trashed_root_id"`
+				ID             int64 `json:"id"`
+				CanRestore     bool  `json:"can_restore"`
+				TrashedRootID  int64 `json:"trashed_root_id"`
+				CanRestoreRoot bool  `json:"can_restore_root"`
 			} `json:"details"`
 		}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &blocked))
@@ -107,6 +108,7 @@ func TestHumaProjectTrash(t *testing.T) {
 		assert.Equal(t, int64(46), blocked.Details.ID, rec.Body.String())
 		assert.False(t, blocked.Details.CanRestore, rec.Body.String())
 		assert.Equal(t, int64(45), blocked.Details.TrashedRootID, rec.Body.String())
+		assert.True(t, blocked.Details.CanRestoreRoot, rec.Body.String())
 
 		rec = humaRequest(t, e, http.MethodPost, "/api/v2/projects/45/restore", "", user1(t), "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
