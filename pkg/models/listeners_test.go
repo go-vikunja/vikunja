@@ -33,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
@@ -978,4 +979,55 @@ func TestWebhookListener_DeliversTaskDeletedForTrashedTask(t *testing.T) {
 	task, ok := delivered[hook.ID].Payload.Data.(map[string]interface{})["task"].(map[string]interface{})
 	require.True(t, ok, "task should be the event's copy")
 	assert.Equal(t, "task #1", task["title"])
+}
+
+func TestWebhookListener_DeliversTaskPurged(t *testing.T) {
+	// Task 51 in project 1 is in the fixture trash, deleted long enough ago for the cron.
+	deliverPurge := func(t *testing.T, purge func(t *testing.T)) map[string]interface{} {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		hook := &Webhook{
+			TargetURL:   "https://example.com/purged",
+			Events:      []string{"task.purged"},
+			ProjectID:   1,
+			CreatedByID: 1,
+		}
+		_, err := s.Insert(hook)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		events.ClearDispatchedEvents()
+		purge(t)
+		purged := events.GetDispatchedEvents((&TaskPurgedEvent{}).Name())
+		require.Len(t, purged, 1)
+
+		events.ClearDispatchedEvents()
+		events.TestListener(t, purged[0], &WebhookListener{EventName: "task.purged"})
+
+		delivered := webhookDeliveriesByID(t)
+		require.Contains(t, delivered, hook.ID)
+		data, ok := delivered[hook.ID].Payload.Data.(map[string]interface{})
+		require.True(t, ok)
+		task, ok := data["task"].(map[string]interface{})
+		require.True(t, ok, "task should be the event's copy")
+		assert.InDelta(t, 51, task["id"], 0)
+		return data
+	}
+
+	t.Run("purged by a user", func(t *testing.T) {
+		data := deliverPurge(t, func(t *testing.T) {
+			require.NoError(t, deletePermanentlyForTest(t, 51, &user.User{ID: 1}))
+		})
+		doer, ok := data["doer"].(*user.User)
+		require.True(t, ok, "doer should be reloaded")
+		assert.Equal(t, int64(1), doer.ID)
+	})
+	t.Run("purged by the retention cron", func(t *testing.T) {
+		data := deliverPurge(t, func(t *testing.T) {
+			files.InitTestFileFixtures(t)
+			deleteExpiredTasks(time.Now())
+		})
+		assert.Nil(t, data["doer"])
+	})
 }
