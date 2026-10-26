@@ -1,6 +1,7 @@
 <template>
 	<div
 		ref="taskViewContainer"
+		tabindex="-1"
 		class="loader-container task-view-container"
 		:class="{
 			'is-loading': taskBusy || (!visible && !trashedTask),
@@ -717,6 +718,7 @@ import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 import {useSetTaskSubscriptionMutation} from '@/client/queries/subscriptions'
 import {useRestoreTaskMutation} from '@/client/queries/trash'
+import {useFocusAfterRemoval} from '@/composables/useFocusAfterRemoval'
 
 const props = defineProps<{
 	taskId: number,
@@ -907,6 +909,7 @@ async function scrollToHeading() {
 const attachmentsRef = ref<InstanceType<typeof Attachments> | null>(null)
 
 const taskViewContainer = ref<HTMLElement | null>(null)
+useFocusAfterRemoval(() => trashedTask.value !== null, () => taskViewContainer.value)
 const scrollContainer = ref<HTMLElement | null>(null)
 const contentBottomMarker = ref<HTMLElement | null>(null)
 const bottomMarkerVisible = ref(true)
