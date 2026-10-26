@@ -21,7 +21,11 @@ const props = defineProps<{
 	inTrash: ProjectInTrash,
 }>()
 
-const projectInTrashLabel = useDeletedLabel('trash.projectInTrash')
+const projectInTrashLabel = useDeletedLabel({
+	unknown: 'trash.projectInTrash',
+	by: 'trash.projectInTrashBy',
+	byYou: 'trash.projectInTrashByYou',
+})
 const restoreProject = useRestoreProjectMutation()
 
 const deletedLabel = computed(() => projectInTrashLabel(props.inTrash))
