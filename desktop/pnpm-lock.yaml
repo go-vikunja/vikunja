@@ -16,7 +16,7 @@ overrides:
   brace-expansion@5: 5.0.12
   fast-uri@3: 4.2.3
   undici@6: 8.10.2
-  undici@7: 8.10.2
+  undici@7: 8.12.2
 
 importers:
 
@@ -1149,6 +1149,10 @@ packages:
     resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
     engines: {node: '>=22.19.0'}
 
+  undici@8.12.2:
+    resolution: {integrity: sha512-XtuDWVdqTLr3NAxm2ly9/hU6kUsJOgGh1RASzMBbsw6aWCOaQzHdW+QQDfdERjfJ2V5vL5pRPa4RetO9UfivDg==}
+    engines: {node: '>=22.19.0'}
+
   universalify@0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
@@ -1265,7 +1269,7 @@ snapshots:
       semver: 7.8.5
       sumchecker: 3.0.1(supports-color@7.2.0)
     optionalDependencies:
-      undici: 8.10.2
+      undici: 8.12.2
     transitivePeerDependencies:
       - supports-color
 
@@ -2534,6 +2538,9 @@ snapshots:
   undici-types@8.9.0: {}
 
   undici@8.10.2: {}
+
+  undici@8.12.2:
+    optional: true
 
   universalify@0.1.2: {}
 
