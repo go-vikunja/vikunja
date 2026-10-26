@@ -357,6 +357,60 @@ func TestTimeEntry_Create(t *testing.T) {
 		assert.NotNil(t, reloaded.EndTime, "first timer should have been auto-stopped")
 		assert.Nil(t, second.EndTime, "second timer should still be running")
 	})
+
+	t.Run("a backdated timer stops the running one at its start", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// entry 4 is user1's running timer
+		running, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+
+		switchedAt := running.StartTime.Add(90 * time.Minute)
+		next := &TimeEntry{TaskID: 1, StartTime: switchedAt}
+		require.NoError(t, next.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		stopped, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+		require.NotNil(t, stopped.EndTime)
+		assert.True(t, stopped.EndTime.Equal(switchedAt), "expected end %s, got %s", switchedAt, stopped.EndTime)
+	})
+
+	t.Run("a timer starting before the running one stops it at now", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		running, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+
+		before := time.Now()
+		next := &TimeEntry{TaskID: 1, StartTime: running.StartTime.Add(-time.Hour)}
+		require.NoError(t, next.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		stopped, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+		require.NotNil(t, stopped.EndTime)
+		assert.False(t, stopped.EndTime.Before(before.Truncate(time.Second)), "expected end at now, got %s", stopped.EndTime)
+	})
+
+	t.Run("a timer starting in the future stops the running one at now", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		next := &TimeEntry{TaskID: 1, StartTime: time.Now().Add(time.Hour)}
+		require.NoError(t, next.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		stopped, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+		require.NotNil(t, stopped.EndTime)
+		assert.True(t, stopped.EndTime.Before(time.Now().Add(time.Minute)), "expected end at now, got %s", stopped.EndTime)
+	})
 }
 
 // A running timer (no end) must round-trip as a NULL end_time: found by the
