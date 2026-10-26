@@ -1390,6 +1390,18 @@ export type PaginatedToken = {
     total_pages?: number;
 };
 
+export type PaginatedTrashedProject = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    items?: Array<TrashedProject> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedTrashedTask = {
     /**
      * A URL to the JSON Schema for this object.
@@ -1568,10 +1580,6 @@ export type Project = {
      */
     title?: string;
     /**
-     * The trashed sub-projects at any depth that restoring this project brings back, shallowest first. Only present in the trash listing.
-     */
-    readonly trashed_sub_projects?: Array<TrashedSubProject> | null;
-    /**
      * A timestamp when this project was last updated. You cannot change this value.
      */
     readonly updated?: string;
@@ -1696,10 +1704,6 @@ export type ProjectReadBody = {
      * The title of the project. You'll see this in the overview.
      */
     title?: string;
-    /**
-     * The trashed sub-projects at any depth that restoring this project brings back, shallowest first. Only present in the trash listing.
-     */
-    readonly trashed_sub_projects?: Array<TrashedSubProject> | null;
     /**
      * A timestamp when this project was last updated. You cannot change this value.
      */
@@ -3094,6 +3098,89 @@ export type TotpEnrollBodyBody = {
     password?: string;
 };
 
+export type TrashedProject = {
+    /**
+     * A small BlurHash preview of the project background, shown until the real background loads. See https://blurha.sh/.
+     */
+    readonly background_blur_hash?: string;
+    /**
+     * Extra information about the background (e.g. attribution). When not null, the background is available at /projects/{projectID}/background.
+     */
+    readonly background_information?: unknown;
+    /**
+     * A timestamp when this project was created. You cannot change this value.
+     */
+    readonly created?: string;
+    /**
+     * When this project was moved to the trash. Trashed projects are removed permanently 30 days later.
+     */
+    readonly deleted_at?: string;
+    /**
+     * The user who moved this project to the trash. Only present on trashed projects.
+     */
+    readonly deleted_by?: User;
+    /**
+     * The description of the project.
+     */
+    description?: string;
+    /**
+     * The hex color of this project, without the leading #.
+     */
+    hex_color?: string;
+    /**
+     * The unique, numeric id of this project.
+     */
+    readonly id?: number;
+    /**
+     * The unique project short identifier. Used to build task identifiers (e.g. PROJ-123).
+     */
+    identifier?: string;
+    /**
+     * Whether the project is archived. Archived projects are read-only.
+     */
+    is_archived?: boolean;
+    /**
+     * Whether the project is a favorite of the requesting user. This value is per-user and depends on who makes the call.
+     */
+    is_favorite?: boolean;
+    /**
+     * The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response.
+     */
+    readonly max_permission?: number | null;
+    /**
+     * The user who owns this project. Set by the server; ignored on write.
+     */
+    readonly owner?: User;
+    /**
+     * The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission.
+     */
+    parent_project_id?: number | null;
+    /**
+     * The position of this project when listing all projects. See the tasks.position property for how positions work.
+     */
+    position?: number;
+    /**
+     * The requesting user's subscription status for this project. Read-only here; use the subscription endpoints to change it. Only returned when retrieving a single project.
+     */
+    readonly subscription?: Subscription;
+    /**
+     * The title of the project. You'll see this in the overview.
+     */
+    title?: string;
+    /**
+     * The trashed sub-projects at any depth that restoring this project brings back, shallowest first.
+     */
+    readonly trashed_sub_projects?: Array<TrashedSubProject> | null;
+    /**
+     * A timestamp when this project was last updated. You cannot change this value.
+     */
+    readonly updated?: string;
+    /**
+     * The views configured for this project. Managed through the project view endpoints.
+     */
+    readonly views?: Array<ProjectView> | null;
+};
+
 export type TrashedSubProject = {
     /**
      * How many levels below the listed project it sits, starting at 1.
@@ -4428,6 +4515,14 @@ export type PaginatedTokenWritable = {
     total_pages?: number;
 };
 
+export type PaginatedTrashedProjectWritable = {
+    items?: Array<TrashedProjectWritable> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedTrashedTaskWritable = {
     items?: Array<TrashedTaskWritable> | null;
     page?: number;
@@ -5064,6 +5159,41 @@ export type TotpEnrollBodyBodyWritable = {
      * The current user's password, required to enroll into totp.
      */
     password?: string;
+};
+
+export type TrashedProjectWritable = {
+    /**
+     * The description of the project.
+     */
+    description?: string;
+    /**
+     * The hex color of this project, without the leading #.
+     */
+    hex_color?: string;
+    /**
+     * The unique project short identifier. Used to build task identifiers (e.g. PROJ-123).
+     */
+    identifier?: string;
+    /**
+     * Whether the project is archived. Archived projects are read-only.
+     */
+    is_archived?: boolean;
+    /**
+     * Whether the project is a favorite of the requesting user. This value is per-user and depends on who makes the call.
+     */
+    is_favorite?: boolean;
+    /**
+     * The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission.
+     */
+    parent_project_id?: number | null;
+    /**
+     * The position of this project when listing all projects. See the tasks.position property for how positions work.
+     */
+    position?: number;
+    /**
+     * The title of the project. You'll see this in the overview.
+     */
+    title?: string;
 };
 
 export type TrashedTaskWritable = {
@@ -7473,7 +7603,7 @@ export type ProjectsTrashListResponses = {
     /**
      * OK
      */
-    200: PaginatedProject;
+    200: PaginatedTrashedProject;
 };
 
 export type ProjectsTrashListResponse = ProjectsTrashListResponses[keyof ProjectsTrashListResponses];
