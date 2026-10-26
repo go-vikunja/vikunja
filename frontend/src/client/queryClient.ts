@@ -1,7 +1,7 @@
 import {CancelledError, QueryCache, QueryClient, type QueryMeta} from '@tanstack/vue-query'
 
 import {isRequestContextAbort} from '@/client/requestContext'
-import {isInTrashError} from '@/client/queries/trashShared'
+import {isInTrashError} from '@/client/queries/trashErrors'
 import {error} from '@/message'
 
 declare module '@tanstack/vue-query' {
