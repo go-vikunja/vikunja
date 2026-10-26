@@ -722,7 +722,7 @@ func TestHardDeleteProject(t *testing.T) {
 		has, err := s.Unscoped().ID(id).Get(project)
 		require.NoError(t, err)
 		require.True(t, has)
-		require.NoError(t, hardDeleteProject(s, project))
+		require.NoError(t, hardDeleteProject(s, project, nil))
 		require.NoError(t, s.Commit())
 	}
 

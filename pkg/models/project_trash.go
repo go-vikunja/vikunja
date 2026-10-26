@@ -101,8 +101,8 @@ func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
 	return nil
 }
 
-// Time entries survive without a container, kept by their authors.
-func hardDeleteProject(s *xorm.Session, p *Project) (err error) {
+// Time entries survive without a container, kept by their authors. A nil doer is the system.
+func hardDeleteProject(s *xorm.Session, p *Project, doer *user.User) (err error) {
 	// Lock first: the task loop below deletes task_positions rows before the views are dropped further down.
 	_, err = lockProjectViewsForPositionUpdate(s, p.ID)
 	if err != nil {
@@ -204,6 +204,10 @@ func hardDeleteProject(s *xorm.Session, p *Project) (err error) {
 	if err != nil {
 		return
 	}
+	events.DispatchOnCommit(s, &ProjectPurgedEvent{
+		Project: p,
+		Doer:    doer,
+	})
 
 	children := []*Project{}
 	err = s.Unscoped().Where("parent_project_id = ?", p.ID).Find(&children)
@@ -211,7 +215,7 @@ func hardDeleteProject(s *xorm.Session, p *Project) (err error) {
 		return
 	}
 	for _, child := range children {
-		err = hardDeleteProject(s, child)
+		err = hardDeleteProject(s, child, doer)
 		if err != nil {
 			return
 		}
@@ -428,8 +432,8 @@ func (p *Project) CanDeletePermanently(s *xorm.Session, a web.Auth) (bool, error
 }
 
 // DeletePermanently purges the project with all its sub-projects.
-func (p *Project) DeletePermanently(s *xorm.Session) error {
-	return hardDeleteProject(s, p)
+func (p *Project) DeletePermanently(s *xorm.Session, a web.Auth) error {
+	return hardDeleteProject(s, p, doerFromAuth(s, a))
 }
 
 // TrashedSubProject is a trashed descendant shown under its topmost trashed ancestor in the trash.
@@ -578,8 +582,9 @@ func EmptyProjectTrash(s *xorm.Session, a web.Auth) (purged int, err error) {
 	if err = s.Unscoped().Where(cond).Find(&projects); err != nil {
 		return 0, err
 	}
+	doer := doerFromAuth(s, a)
 	for _, project := range projects {
-		if err = hardDeleteProject(s, project); err != nil {
+		if err = hardDeleteProject(s, project, doer); err != nil {
 			return 0, err
 		}
 	}
@@ -624,7 +629,7 @@ func deleteExpiredProjects(now time.Time) {
 				return
 			}
 			if err == nil {
-				err = hardDeleteProject(ps, project)
+				err = hardDeleteProject(ps, project, nil)
 			}
 			if err != nil {
 				_ = ps.Rollback()

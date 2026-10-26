@@ -238,7 +238,7 @@ func TestProjectAncestorsOnDelete(t *testing.T) {
 
 	project, err := GetProjectSimpleByID(s, 12)
 	require.NoError(t, err)
-	require.NoError(t, hardDeleteProject(s, project))
+	require.NoError(t, hardDeleteProject(s, project, nil))
 
 	assert.Empty(t, projectAncestorsOf(t, s, removed...))
 	assert.ElementsMatch(t, survivors, allProjectAncestors(t, s))

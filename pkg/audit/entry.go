@@ -129,6 +129,7 @@ const (
 	ActionProjectUpdated        = "project.updated"
 	ActionProjectDeleted        = "project.deleted"
 	ActionProjectRestored       = "project.restored"
+	ActionProjectPurged         = "project.purged"
 	ActionProjectSharedWithUser = "project.shared.user"
 	ActionProjectSharedWithTeam = "project.shared.team"
 

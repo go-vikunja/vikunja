@@ -162,7 +162,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 			// Child projects are deleted with their parent
 			continue
 		}
-		if err = hardDeleteProject(s, p); err != nil {
+		if err = hardDeleteProject(s, p, nil); err != nil {
 			return err
 		}
 	}

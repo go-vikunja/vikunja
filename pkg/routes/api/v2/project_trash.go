@@ -164,7 +164,7 @@ func projectsDeletePermanently(ctx context.Context, in *struct {
 		_ = s.Rollback()
 		return nil, huma.Error403Forbidden("forbidden")
 	}
-	if err := project.DeletePermanently(s); err != nil {
+	if err := project.DeletePermanently(s, a); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}

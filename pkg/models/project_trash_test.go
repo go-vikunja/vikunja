@@ -435,6 +435,17 @@ func TestGetTrashedProjects(t *testing.T) {
 	})
 }
 
+func purgedProjectDoers(t *testing.T) map[int64]*user.User {
+	t.Helper()
+	doers := map[int64]*user.User{}
+	for _, e := range events.GetDispatchedEvents((&ProjectPurgedEvent{}).Name()) {
+		purged, ok := e.(*ProjectPurgedEvent)
+		require.True(t, ok)
+		doers[purged.Project.ID] = purged.Doer
+	}
+	return doers
+}
+
 func TestProject_DeletePermanently(t *testing.T) {
 	purge := func(t *testing.T, projectID int64, a web.Auth) error {
 		s := db.NewSession()
@@ -447,7 +458,7 @@ func TestProject_DeletePermanently(t *testing.T) {
 		if !can {
 			return ErrGenericForbidden{}
 		}
-		require.NoError(t, project.DeletePermanently(s))
+		require.NoError(t, project.DeletePermanently(s, a))
 		if err := s.Commit(); err != nil {
 			return err
 		}
@@ -457,9 +468,20 @@ func TestProject_DeletePermanently(t *testing.T) {
 
 	t.Run("admin purges a trashed project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
 		require.NoError(t, purge(t, 45, &user.User{ID: 1}))
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+
+		doers := purgedProjectDoers(t)
+		require.Len(t, doers, 2)
+		for _, id := range []int64{
+			45,
+			46,
+		} {
+			require.NotNil(t, doers[id], "project %d", id)
+			assert.Equal(t, int64(1), doers[id].ID, "project %d", id)
+		}
 	})
 	t.Run("unrelated user does not see it", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -503,15 +525,22 @@ func TestProject_DeletePermanently(t *testing.T) {
 func TestEmptyProjectTrash(t *testing.T) {
 	t.Run("purges the auth's trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
 		s := db.NewSession()
 		defer s.Close()
 
 		purged, err := EmptyProjectTrash(s, &user.User{ID: 1})
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
 		assert.Equal(t, 1, purged)
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+
+		doers := purgedProjectDoers(t)
+		require.Len(t, doers, 2)
+		require.NotNil(t, doers[45])
+		assert.Equal(t, int64(1), doers[45].ID)
 	})
 	t.Run("leaves other users' trash alone", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -592,7 +621,7 @@ func TestProjectTrash_AdminOnlyOnTrashedChild(t *testing.T) {
 		can, err := project.CanDeletePermanently(s, u1)
 		require.NoError(t, err)
 		require.True(t, can)
-		require.NoError(t, project.DeletePermanently(s))
+		require.NoError(t, project.DeletePermanently(s, u1))
 		require.NoError(t, s.Commit())
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 25})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 26})
@@ -605,10 +634,16 @@ func TestDeleteExpiredProjects(t *testing.T) {
 
 	t.Run("older than the retention period", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
 		deleteExpiredProjects(trashedAt.Add(TrashRetention + time.Hour))
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 1}, false)
+
+		doers := purgedProjectDoers(t)
+		require.Len(t, doers, 2)
+		assert.Contains(t, doers, int64(45))
+		assert.Nil(t, doers[45], "the system purges")
 	})
 	t.Run("within the retention period", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
