@@ -155,6 +155,8 @@ func Init() {
 		log.Fatalf("Could not initialize license system: %s", err)
 	}
 
+	log.Infof("Instance ID: %s", instanceID)
+
 	// No license key configured — free mode. Clear any state persisted by a
 	// previous run (e.g. via Redis) so a removed key can't leave stale
 	// Licensed=true entitlements behind.
