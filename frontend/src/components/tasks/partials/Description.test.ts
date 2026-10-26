@@ -4,7 +4,7 @@ import {shallowMount} from '@vue/test-utils'
 import Description from './Description.vue'
 
 vi.mock('@/components/input/AsyncEditor', () => ({
-	default: {template: '<div class="stub-editor" />'},
+	default: {template: '<div class="tiptap__task-description stub-editor" />'},
 }))
 
 vi.mock('@/client/queries/taskMutations', () => ({
