@@ -21,6 +21,6 @@ overrides:
   launch-editor: 2.14.2
   '@babel/core': 8.0.7
   js-yaml@4: 5.4.2
-  fast-uri@3: 4.1.5
+  fast-uri@3: 4.2.3
 publicHoistPattern:
   - '*eslint*'
