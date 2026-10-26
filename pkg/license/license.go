@@ -164,6 +164,11 @@ func Init() {
 		return
 	}
 
+	if isOfflineToken(key) {
+		initOffline(key)
+		return
+	}
+
 	// Check for cached validation
 	cached, err := loadCachedStatus()
 	if err != nil {
