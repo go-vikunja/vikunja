@@ -70,11 +70,12 @@
 </template>
 
 <script lang="ts" setup>
-import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
 import {notify, type NotificationItem} from '@kyvg/vue3-notification'
 
 import {ACTION_TOAST_DURATION, type ToastData} from '@/message'
 import {pausableTimeout} from '@/message/pausableTimeout'
+import {focusIsLost} from '@/composables/useFocusAfterRemoval'
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null
@@ -90,16 +91,30 @@ function hasActions(item: NotificationItem) {
 	return ((item.data as Partial<ToastData> | undefined)?.actions?.length ?? 0) > 0
 }
 
-function startActionTimer(item: NotificationItem) {
+function toastElement(item: NotificationItem) {
+	return document.querySelector<HTMLElement>(`.vue-notification-wrapper[data-id="${item.id}"]`)
+}
+
+async function startActionTimer(item: NotificationItem) {
 	if (!hasActions(item)) {
 		return
 	}
 	actionTimers.set(item.id, pausableTimeout(ACTION_TOAST_DURATION, () => notify.close(item.id)))
+	// Only recover lost focus (e.g. the deleted view's button is gone); never pull it from where the user is.
+	await nextTick()
+	requestAnimationFrame(() => {
+		if (focusIsLost(null)) {
+			toastElement(item)?.querySelector<HTMLElement>('button')?.focus({preventScroll: true})
+		}
+	})
 }
 
 function stopActionTimer(item: NotificationItem) {
 	actionTimers.get(item.id)?.cancel()
 	actionTimers.delete(item.id)
+	if (toastElement(item)?.contains(document.activeElement)) {
+		document.getElementById('main-content')?.focus({preventScroll: true})
+	}
 }
 
 function releaseFocusHold(item: NotificationItem, event: FocusEvent) {

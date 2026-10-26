@@ -3,7 +3,7 @@ import {nextTick, watch} from 'vue'
 type FocusTarget = () => HTMLElement | null | undefined
 
 // Lost: dropped to <body> with a removed element, or still on what started the action.
-function focusIsLost(trigger: Element | null) {
+export function focusIsLost(trigger: Element | null) {
 	const active = document.activeElement
 	return !active || active === document.body || active === trigger
 }
