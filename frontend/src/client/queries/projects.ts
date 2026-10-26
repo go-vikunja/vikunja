@@ -176,7 +176,7 @@ export function projectQuery(id: number) {
 			return normalizeProject(data)
 		},
 		enabled: id !== 0,
-		// ProjectView renders a notice instead
+		// All consumers suppress trash errors; ProjectView renders the notice.
 		meta: {handlesError: isProjectInTrashError},
 	})
 }
