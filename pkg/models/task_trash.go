@@ -135,29 +135,35 @@ func purgeTrashedTask(s *xorm.Session, t *Task, doer *user.User) error {
 	return nil
 }
 
-func trashedTasksCond(s *xorm.Session, a web.Auth, minPermission Permission) (builder.Cond, error) {
+func trashedTasksCond(s *xorm.Session, a web.Auth, minPermission Permission) (builder.Cond, *projectAccess, error) {
 	if _, isShare := a.(*LinkSharing); isShare {
-		return nil, ErrGenericForbidden{}
+		return nil, nil, ErrGenericForbidden{}
 	}
 	u, err := user.GetFromAuth(a)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	access, err := getProjectAccessForUser(s, u.ID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	return builder.And(
 		builder.NotNull{"tasks.deleted_at"},
 		access.cond("tasks.project_id", minPermission),
 		builder.In("tasks.project_id", builder.Select("id").From("projects").Where(builder.Eq{"is_archived": false})),
-	), nil
+	), access, nil
+}
+
+// TrashedTask is a task in the caller's trash.
+type TrashedTask struct {
+	Task
+	CanDeletePermanently bool `json:"can_delete_permanently" readOnly:"true" doc:"Whether the requesting user may permanently delete this task, which needs admin access to its project. Write access is enough to see and restore it."`
 }
 
 // GetTrashedTasks returns the trash of the auth, newest first.
-func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (tasks []*Task, total int64, err error) {
-	cond, err := trashedTasksCond(s, a, PermissionWrite)
+func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (trashed []*TrashedTask, total int64, err error) {
+	cond, access, err := trashedTasksCond(s, a, PermissionWrite)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -167,7 +173,7 @@ func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (tasks []*T
 		return nil, 0, err
 	}
 
-	tasks = []*Task{}
+	tasks := []*Task{}
 	err = s.Unscoped().
 		Where(cond).
 		OrderBy("tasks.deleted_at DESC, tasks.id DESC").
@@ -185,12 +191,20 @@ func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (tasks []*T
 		return nil, 0, err
 	}
 
-	return tasks, total, nil
+	trashed = make([]*TrashedTask, 0, len(tasks))
+	for _, task := range tasks {
+		permission, _ := access.permission(task.ProjectID)
+		trashed = append(trashed, &TrashedTask{
+			Task:                 *task,
+			CanDeletePermanently: permission >= PermissionAdmin,
+		})
+	}
+	return trashed, total, nil
 }
 
 // EmptyTaskTrash purges the auth's trash in projects it administers, including tasks others deleted.
 func EmptyTaskTrash(s *xorm.Session, a web.Auth) error {
-	cond, err := trashedTasksCond(s, a, PermissionAdmin)
+	cond, _, err := trashedTasksCond(s, a, PermissionAdmin)
 	if err != nil {
 		return err
 	}

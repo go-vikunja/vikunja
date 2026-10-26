@@ -33,8 +33,9 @@ import (
 
 type trashListResponse struct {
 	Items []struct {
-		ID        int64  `json:"id"`
-		DeletedAt string `json:"deleted_at"`
+		ID                   int64  `json:"id"`
+		DeletedAt            string `json:"deleted_at"`
+		CanDeletePermanently bool   `json:"can_delete_permanently"`
 	} `json:"items"`
 	Total int64 `json:"total"`
 }
@@ -233,7 +234,21 @@ func TestHumaTaskTrash(t *testing.T) {
 			require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
 		}
 
-		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/19/permanent", "", user1(t), "")
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/deleted", "", user1(t), "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		var list trashListResponse
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &list))
+		purgeable := map[int64]bool{}
+		for _, item := range list.Items {
+			purgeable[item.ID] = item.CanDeletePermanently
+		}
+		assert.Equal(t, map[int64]bool{
+			19: false,
+			20: true,
+			51: true,
+		}, purgeable)
+
+		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/19/permanent", "", user1(t), "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
 
 		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/deleted", "", user1(t), "")

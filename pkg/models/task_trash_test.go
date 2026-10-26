@@ -293,7 +293,7 @@ func TestTaskTrash_InstanceAdminInArchivedProject(t *testing.T) {
 	})
 }
 
-func trashedTaskIDs(tasks []*Task) []int64 {
+func trashedTaskIDs(tasks []*TrashedTask) []int64 {
 	ids := make([]int64, 0, len(tasks))
 	for _, task := range tasks {
 		ids = append(ids, task.ID)

@@ -70,10 +70,14 @@ func RegisterTaskTrashRoutes(api huma.API) {
 	}, tasksTrashEmpty)
 }
 
+type trashedTaskListBody struct {
+	Body Paginated[*models.TrashedTask]
+}
+
 func tasksTrashList(ctx context.Context, in *struct {
 	PageParams
 	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
-}) (*taskListBody, error) {
+}) (*trashedTaskListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -85,8 +89,12 @@ func tasksTrashList(ctx context.Context, in *struct {
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	convertTasksToMarkdown(ctx, tasks...)
-	return &taskListBody{Body: NewPaginated(tasks, total, in.Page, in.PerPage)}, nil
+	plain := make([]*models.Task, 0, len(tasks))
+	for _, task := range tasks {
+		plain = append(plain, &task.Task)
+	}
+	convertTasksToMarkdown(ctx, plain...)
+	return &trashedTaskListBody{Body: NewPaginated(tasks, total, in.Page, in.PerPage)}, nil
 }
 
 func tasksRestore(ctx context.Context, in *struct {
