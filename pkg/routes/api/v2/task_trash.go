@@ -54,7 +54,7 @@ func RegisterTaskTrashRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-delete-permanently",
 		Summary:     "Permanently delete a trashed task",
-		Description: "Purges a task that is already in the trash, with everything attached to it. Its time entries move to the task's project. Requires write access to the project; not available to link shares.",
+		Description: "Purges a task that is already in the trash, with everything attached to it. Its time entries move to the task's project. Requires admin access to the project; not available to link shares.",
 		Method:      http.MethodDelete,
 		Path:        "/tasks/{task}/permanent",
 		Tags:        tags,
@@ -63,7 +63,7 @@ func RegisterTaskTrashRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-trash-empty",
 		Summary:     "Empty the task trash",
-		Description: "Permanently deletes every task GET /tasks/deleted would return, including tasks other users deleted.",
+		Description: "Permanently deletes the tasks GET /tasks/deleted would return in projects the user is admin of, including tasks other users deleted.",
 		Method:      http.MethodDelete,
 		Path:        "/tasks/deleted",
 		Tags:        tags,

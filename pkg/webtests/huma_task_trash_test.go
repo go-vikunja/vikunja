@@ -220,6 +220,33 @@ func TestHumaTaskTrash(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"code":4002`)
 	})
+	t.Run("purging needs admin", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		// User 1 can write to project 10 (task 19) and is admin of project 11 (task 20)
+		for _, path := range []string{
+			"/api/v2/tasks/19",
+			"/api/v2/tasks/20",
+		} {
+			rec := humaRequest(t, e, http.MethodDelete, path, "", user1(t), "")
+			require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+		}
+
+		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/19/permanent", "", user1(t), "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/tasks/deleted", "", user1(t), "")
+		require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 20})
+
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/tasks/deleted", "", user1(t), "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Equal(t, []int64{19}, trashedIDs(t, rec.Body.Bytes()))
+
+		rec = humaRequest(t, e, http.MethodPost, "/api/v2/tasks/19/restore", "", user1(t), "")
+		assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	})
 	t.Run("stranger emptying their trash leaves others' trash alone", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)

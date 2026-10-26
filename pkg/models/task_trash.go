@@ -124,7 +124,7 @@ func (t *Task) DeletePermanently(s *xorm.Session) error {
 	return hardDeleteTask(s, t)
 }
 
-func trashedTasksCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
+func trashedTasksCond(s *xorm.Session, a web.Auth, minPermission Permission) (builder.Cond, error) {
 	if _, isShare := a.(*LinkSharing); isShare {
 		return nil, ErrGenericForbidden{}
 	}
@@ -139,14 +139,14 @@ func trashedTasksCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 
 	return builder.And(
 		builder.NotNull{"tasks.deleted_at"},
-		access.cond("tasks.project_id", PermissionWrite),
+		access.cond("tasks.project_id", minPermission),
 		builder.In("tasks.project_id", builder.Select("id").From("projects").Where(builder.Eq{"is_archived": false})),
 	), nil
 }
 
 // GetTrashedTasks returns the trash of the auth, newest first.
 func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (tasks []*Task, total int64, err error) {
-	cond, err := trashedTasksCond(s, a)
+	cond, err := trashedTasksCond(s, a, PermissionWrite)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -177,9 +177,9 @@ func GetTrashedTasks(s *xorm.Session, a web.Auth, page, perPage int) (tasks []*T
 	return tasks, total, nil
 }
 
-// EmptyTaskTrash purges every task in the auth's trash, including ones others deleted.
+// EmptyTaskTrash purges the auth's trash in projects it administers, including tasks others deleted.
 func EmptyTaskTrash(s *xorm.Session, a web.Auth) error {
-	cond, err := trashedTasksCond(s, a)
+	cond, err := trashedTasksCond(s, a, PermissionAdmin)
 	if err != nil {
 		return err
 	}

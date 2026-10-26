@@ -355,10 +355,38 @@ func TestGetTrashedTasks(t *testing.T) {
 }
 
 func TestTask_DeletePermanently(t *testing.T) {
-	t.Run("writer purges a trashed task", func(t *testing.T) {
+	t.Run("owner purges a trashed task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		require.NoError(t, deletePermanentlyForTest(t, 51, &user.User{ID: 1}))
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
+	})
+	t.Run("admin shares purge", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u1 := &user.User{ID: 1}
+		// User 1 is admin of project 11 by user share and of project 8 by team share
+		trashTaskForTest(t, 20, u1)
+		trashTaskForTest(t, 17, u1)
+
+		require.NoError(t, deletePermanentlyForTest(t, 20, u1))
+		require.NoError(t, deletePermanentlyForTest(t, 17, u1))
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 20})
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 17})
+	})
+	t.Run("writer can restore but not purge", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u1 := &user.User{ID: 1}
+		// User 1 can write to project 10 by user share and to project 7 by team share
+		for _, taskID := range []int64{
+			19,
+			16,
+		} {
+			trashTaskForTest(t, taskID, u1)
+			require.ErrorIs(t, deletePermanentlyForTest(t, taskID, u1), ErrGenericForbidden{})
+			db.AssertExists(t, "tasks", map[string]interface{}{"id": taskID}, false)
+
+			_, err := restoreTaskForTest(t, taskID, u1)
+			require.NoError(t, err)
+		}
 	})
 	t.Run("unrelated user cannot tell the task is trashed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -406,6 +434,8 @@ func TestEmptyTaskTrash(t *testing.T) {
 	setTaskColumnsForTest(t, 1, map[string]any{"deleted_by_id": 2})
 	setTaskColumnsForTest(t, 36, map[string]any{"deleted_at": time.Now()})
 	setTaskColumnsForTest(t, 32, map[string]any{"deleted_at": time.Now()})
+	trashTaskForTest(t, 19, u1)
+	trashTaskForTest(t, 20, u1)
 
 	s := db.NewSession()
 	defer s.Close()
@@ -414,9 +444,11 @@ func TestEmptyTaskTrash(t *testing.T) {
 
 	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 1})
 	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
-	// Archived project and read-only project are out of scope
+	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 20})
+	// Archived, read-only and write-only projects are out of scope
 	db.AssertExists(t, "tasks", map[string]interface{}{"id": 36}, false)
 	db.AssertExists(t, "tasks", map[string]interface{}{"id": 32}, false)
+	db.AssertExists(t, "tasks", map[string]interface{}{"id": 19}, false)
 }
 
 func TestTask_CanRead_Trashed(t *testing.T) {
