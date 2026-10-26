@@ -66,6 +66,31 @@ describe('queryClient', () => {
 		expect(error).not.toHaveBeenCalled()
 	})
 
+	it('lets a query handle only the failures its predicate matches', async () => {
+		const handled = {
+			status: 404,
+			detail: 'gone',
+		}
+		const unhandled = {
+			status: 500,
+			detail: 'boom',
+		}
+		const meta = {handlesError: (cause: unknown) => cause === handled}
+
+		for (const cause of [handled, unhandled]) {
+			await expect(queryClient.fetchQuery({
+				queryKey: ['predicate', cause.status],
+				queryFn: async () => {
+					throw cause
+				},
+				retry: false,
+				meta,
+			})).rejects.toBe(cause)
+		}
+
+		expect(error).toHaveBeenCalledExactlyOnceWith(unhandled)
+	})
+
 	it('does not retry a read of a trashed project', async () => {
 		const cause = new ApiError({
 			status: 404,
