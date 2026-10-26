@@ -146,6 +146,25 @@ test.describe('Project trash', () => {
 		await expect(page.locator('.project-title')).toContainText('First Project')
 	})
 
+	test('opening a sub-project of a trashed project offers restoring the parent', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		await addChildProject()
+		await trashProject(apiContext, userToken, 1)
+		await page.goto('/projects/2/5')
+
+		const notice = page.locator('[data-cy="projectInTrashNotice"]')
+		await expect(notice).toContainText('This project is in the trash.')
+		await notice.getByRole('button', {name: 'Restore parent project'}).click()
+
+		await expect(notice).toHaveCount(0)
+		await expect(page.locator('.project-title')).toContainText('Child project')
+		const parent = await apiContext.get('projects/1', {headers: {Authorization: `Bearer ${userToken}`}})
+		expect(parent.ok()).toBe(true)
+	})
+
 	test('a read-only share sees a trashed project without restore', async ({
 		authenticatedPage: page,
 		apiContext,

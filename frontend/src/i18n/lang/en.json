@@ -1848,6 +1848,7 @@
       "label": "Trash sections"
     },
     "restoreProjectSuccess": "The project has been restored.",
+    "restoreParentProject": "Restore parent project",
     "deleteProjectForeverSuccess": "The project has been deleted permanently.",
     "noProjects": "There are no projects in the trash.",
     "subProjects": "+{count} sub-project | +{count} sub-projects",
