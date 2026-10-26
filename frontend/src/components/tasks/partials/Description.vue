@@ -252,5 +252,22 @@ function uploadCallback(files: File[] | FileList): Promise<string[]> {
 	// The exact amount of pixels we need to make the description icon align with the buttons and the form inside the editor.
 	// The icon is not exactly the same length on all sides so we need to hack our way around it.
 	margin-inline-start: 4px;
+
+	:deep(.tiptap__wrapper-is-editing) {
+		display: flex;
+		flex-direction: column;
+		max-block-size: 20rem;
+	}
+
+	:deep(.tiptap__editor) {
+		max-block-size: 20rem;
+		overflow-y: auto;
+	}
+
+	:deep(.tiptap__wrapper-is-editing .tiptap__editor) {
+		flex: 1 1 auto;
+		min-block-size: 0;
+		max-block-size: none;
+	}
 }
 </style>
