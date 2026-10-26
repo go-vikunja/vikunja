@@ -72,7 +72,7 @@ func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
 	// Starting a new running timer auto-stops the previous one; a completed
 	// manual entry (EndTime set) must leave the running timer alone.
 	if te.EndTime == nil {
-		if _, err = stopRunningTimerForUser(s, te.UserID); err != nil {
+		if _, err = stopRunningTimerForUser(s, te.UserID, te.StartTime); err != nil {
 			return err
 		}
 	}
@@ -105,9 +105,9 @@ func (te *TimeEntry) ReadOne(_ *xorm.Session, _ web.Auth) (err error) {
 	return nil
 }
 
-// stopRunningTimerForUser stops the user's active timer (end_time = now) and
-// returns it, or nil if no timer is running.
-func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) {
+// stopRunningTimerForUser stops the user's active timer and returns it, or nil
+// if no timer is running. See stop for how at is applied.
+func stopRunningTimerForUser(s *xorm.Session, userID int64, at time.Time) (*TimeEntry, error) {
 	running := &TimeEntry{}
 	exists, err := s.Where("user_id = ? AND end_time IS NULL", userID).Get(running)
 	if err != nil {
@@ -116,7 +116,7 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) 
 	if !exists {
 		return nil, nil
 	}
-	if err := running.stop(s); err != nil {
+	if err := running.stop(s, at); err != nil {
 		return nil, err
 	}
 
@@ -141,7 +141,7 @@ func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {
 		return nil, ErrGenericForbidden{}
 	}
 
-	running, err := stopRunningTimerForUser(s, a.GetID())
+	running, err := stopRunningTimerForUser(s, a.GetID(), time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -303,9 +303,14 @@ func getTimeEntryByID(s *xorm.Session, id int64) (*TimeEntry, error) {
 	return entry, nil
 }
 
-func (te *TimeEntry) stop(s *xorm.Session) (err error) {
-	now := time.Now()
-	te.EndTime = &now
+// stop ends the timer at at, so a backdated successor doesn't overlap it. An at
+// outside the timer's start and now would invert or extend it, so that ends at now.
+func (te *TimeEntry) stop(s *xorm.Session, at time.Time) (err error) {
+	end := time.Now()
+	if at.After(te.StartTime) && at.Before(end) {
+		end = at
+	}
+	te.EndTime = &end
 	_, err = s.ID(te.ID).Update(te)
 	return err
 }
