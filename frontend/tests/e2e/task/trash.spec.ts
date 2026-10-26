@@ -136,7 +136,7 @@ test.describe('Trash', () => {
 		await expect(notice).toContainText('This task is in the trash.')
 		// canRestore reads the project list, so wait for it before asserting absence
 		await expect(page.locator('.menu-container')).toContainText('Shared Project')
-		await expect(notice.locator('[data-cy="restoreTrashedTask"]')).toHaveCount(0)
+		await expect(notice.locator('[data-cy="restoreTrashed"]')).toHaveCount(0)
 		await expect(notice.getByRole('link', {name: 'Open trash'})).toHaveCount(0)
 	})
 
