@@ -565,7 +565,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to parse VTODO in CreateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
 		_ = s.Rollback()
-		return nil, err
+		return nil, errs.ForbiddenError
 	}
 
 	vTask.ProjectID = vcls.project.ID
@@ -685,7 +685,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to parse VTODO in UpdateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
 		_ = s.Rollback()
-		return nil, err
+		return nil, errs.ForbiddenError
 	}
 
 	// At this point, we already have the right task in vcls.task, so we can use that ID directly

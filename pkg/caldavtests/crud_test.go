@@ -80,7 +80,6 @@ func TestCRUDCreate(t *testing.T) {
 	})
 
 	t.Run("PUT with invalid VCALENDAR returns error", func(t *testing.T) {
-		t.Skip("Known bug: parse errors propagate as 500 instead of 400 — caldav-go does not map parse failures to 4xx")
 		e := setupTestEnv(t)
 
 		rec := caldavPUT(t, e, "/dav/projects/36/bad-task.ics", "not a valid vcalendar")
@@ -90,6 +89,15 @@ func TestCRUDCreate(t *testing.T) {
 			"PUT with invalid VCALENDAR should return 4xx error")
 		assert.Less(t, rec.Code, 500,
 			"PUT with invalid VCALENDAR should not be a server error")
+	})
+
+	t.Run("PUT with a VEVENT instead of a VTODO returns 403", func(t *testing.T) {
+		e := setupTestEnv(t)
+
+		vevent := "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nUID:test-event-1\r\nDTSTART:19700101T000000Z\r\nSUMMARY:Non-task event\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+		rec := caldavPUT(t, e, "/dav/projects/36/test-event-1.ics", vevent)
+
+		assert.Equal(t, http.StatusForbidden, rec.Code)
 	})
 
 	t.Run("PUT to nonexistent project returns 404", func(t *testing.T) {
