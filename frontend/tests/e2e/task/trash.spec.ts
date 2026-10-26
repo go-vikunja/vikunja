@@ -59,6 +59,24 @@ test.describe('Trash', () => {
 		expect(stored.ok()).toBe(true)
 	})
 
+	test('restoring with the keyboard moves focus to the next row', async ({authenticatedPage: page}) => {
+		await trashedTask(1, 'First trashed')
+		await trashedTask(2, 'Second trashed')
+		await page.goto('/trash/tasks')
+		const rows = page.locator('[data-cy="trashedTask"]')
+		await expect(rows).toHaveCount(2)
+		const remainingTitle = (await rows.nth(1).innerText()).includes('First trashed')
+			? 'First trashed'
+			: 'Second trashed'
+
+		await rows.first().locator('[data-cy="restoreTask"]').focus()
+		await page.keyboard.press('Enter')
+
+		await expect(rows).toHaveCount(1)
+		await expect(rows.first()).toContainText(remainingTitle)
+		await expect(rows.first().locator('[data-cy="restoreTask"]')).toBeFocused()
+	})
+
 	test('shows who else deleted a task', async ({authenticatedPage: page}) => {
 		const [other] = await UserFactory.create(1, {id: 2}, false)
 		await trashedTask(1, 'Trashed by someone else', 2)

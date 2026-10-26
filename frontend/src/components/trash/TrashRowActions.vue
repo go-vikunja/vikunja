@@ -3,6 +3,7 @@
 		<BaseButton
 			v-tooltip="$t('trash.restore')"
 			v-cy="restoreCy"
+			data-trash-action="restore"
 			class="trash-action"
 			:aria-label="$t('trash.restore')"
 			:aria-disabled="pending || undefined"
@@ -13,6 +14,7 @@
 		<BaseButton
 			v-tooltip="$t('trash.deleteForever')"
 			v-cy="deleteForeverCy"
+			data-trash-action="delete-forever"
 			class="trash-action trash-action--danger"
 			:aria-label="$t('trash.deleteForever')"
 			:aria-disabled="pending || undefined"

@@ -2,9 +2,13 @@ import {computed, ref, shallowRef, watch, type Ref, type ShallowRef} from 'vue'
 import type {UseQueryReturnType} from '@tanstack/vue-query'
 
 import {clampPage, type Paginated} from '@/client/queries/pagination'
+import {captureFocus} from '@/composables/useFocusAfterRemoval'
 import {usePendingRows} from '@/composables/usePendingRows'
 
 type RowMutation = {mutateAsync: (id: number) => Promise<unknown>}
+// Matches data-trash-action in TrashRowActions.vue
+type RowAction = 'restore' | 'delete-forever'
+type MoveFocus = ReturnType<typeof captureFocus>
 
 export function useTrashList<T extends {id: number}>(options: {
 	// A callback, so the caller's useQuery keeps the concrete types
@@ -34,52 +38,93 @@ export function useTrashList<T extends {id: number}>(options: {
 	)
 
 	const pendingRows = usePendingRows()
-	const itemToDelete: ShallowRef<T | null> = shallowRef(null)
-	const showEmptyModal = ref(false)
+	// Focus is captured on the click that opened the modal, not on its submit button
+	const deleteModal: ShallowRef<{item: T, moveFocus: MoveFocus} | null> = shallowRef(null)
+	const emptyModal = shallowRef<{moveFocus: MoveFocus} | null>(null)
+	const itemToDelete = computed(() => deleteModal.value?.item ?? null)
+	const showEmptyModal = computed(() => emptyModal.value !== null)
+
+	const listElement = ref<HTMLElement | null>(null)
+	const emptyStateElement = ref<HTMLElement | null>(null)
+
+	function rowAction(id: number, action: RowAction) {
+		return listElement.value?.querySelector<HTMLElement>(
+			`[data-trash-row="${id}"] [data-trash-action="${action}"]`,
+		)
+	}
+
+	// The next row's same action, else the previous row's, else the list itself
+	async function removeRow(mutation: RowMutation, id: number, action: RowAction, moveFocus: MoveFocus) {
+		const ids = items.value.map(item => item.id)
+		const index = ids.indexOf(id)
+		if (!await pendingRows.run(mutation, id)) {
+			return
+		}
+		const neighbours = [
+			...ids.slice(index + 1),
+			...ids.slice(0, index).reverse(),
+		]
+		await moveFocus(
+			...neighbours.map(neighbour => () => rowAction(neighbour, action)),
+			() => emptyStateElement.value,
+			() => listElement.value,
+		)
+	}
 
 	function restore(id: number) {
-		return pendingRows.run(options.restore, id)
+		return removeRow(options.restore, id, 'restore', captureFocus())
 	}
 
 	function confirmDeleteForever(item: T) {
 		if (pendingRows.has(item.id)) {
 			return
 		}
-		itemToDelete.value = item
+		deleteModal.value = {
+			item,
+			moveFocus: captureFocus(),
+		}
 	}
 
 	function cancelDeleteForever() {
-		itemToDelete.value = null
+		deleteModal.value = null
 	}
 
 	async function deleteForever() {
-		const item = itemToDelete.value
-		itemToDelete.value = null
-		if (!item) {
+		const modal = deleteModal.value
+		deleteModal.value = null
+		if (!modal) {
 			return
 		}
-		await pendingRows.run(options.deleteForever, item.id)
+		await removeRow(options.deleteForever, modal.item.id, 'delete-forever', modal.moveFocus)
 	}
 
 	function openEmptyModal() {
 		if (total.value === 0) {
 			return
 		}
-		showEmptyModal.value = true
+		emptyModal.value = {moveFocus: captureFocus()}
 	}
 
 	function closeEmptyModal() {
-		showEmptyModal.value = false
+		emptyModal.value = null
 	}
 
 	async function emptyTrash() {
-		showEmptyModal.value = false
+		const modal = emptyModal.value
+		emptyModal.value = null
+		if (!modal) {
+			return
+		}
 		try {
 			await options.empty.mutateAsync()
 		} catch {
 			return
 		}
 		currentPage.value = 1
+		await modal.moveFocus(
+			() => emptyStateElement.value,
+			() => listElement.value,
+		)
 	}
 
 	return {
@@ -89,6 +134,8 @@ export function useTrashList<T extends {id: number}>(options: {
 		totalPages,
 		isFetching: query.isFetching,
 		showEmptyState,
+		listElement,
+		emptyStateElement,
 		isPending: pendingRows.has,
 		itemToDelete,
 		showEmptyModal,

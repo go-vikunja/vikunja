@@ -16,47 +16,55 @@
 			</XButton>
 		</Teleport>
 
-		<Card
-			v-if="items.length > 0"
-			:padding="false"
-			class="has-overflow"
-			:has-content="false"
-			:loading="isFetching"
+		<div
+			ref="listElement"
+			tabindex="-1"
 		>
-			<ul class="trashed-tasks">
-				<li
-					v-for="task in items"
-					:key="task.id"
-					v-cy="'trashedTask'"
-					class="trashed-task"
-				>
-					<SingleTaskInlineReadonly
-						:task="task"
-						show-project
-					/>
-					<span
-						v-tooltip="formatDateLong(task.deleted_at)"
-						class="trashed-task-meta"
+			<Card
+				v-if="items.length > 0"
+				:padding="false"
+				class="has-overflow"
+				:has-content="false"
+				:loading="isFetching"
+			>
+				<ul class="trashed-tasks">
+					<li
+						v-for="task in items"
+						:key="task.id"
+						v-cy="'trashedTask'"
+						:data-trash-row="task.id"
+						class="trashed-task"
 					>
-						{{ deletedLabel(task) }} ·
-						{{ $t('trash.daysLeftShort', trashDaysLeft(task.deleted_at ?? '')) }}
-					</span>
-					<TrashRowActions
-						:pending="isPending(task.id)"
-						restore-cy="restoreTask"
-						delete-forever-cy="deleteTaskForever"
-						@restore="restore(task.id)"
-						@deleteForever="confirmDeleteForever(task)"
-					/>
-				</li>
-			</ul>
-		</Card>
-		<p
-			v-else-if="showEmptyState"
-			class="has-text-centered has-text-grey is-italic"
-		>
-			{{ $t('trash.noTasks') }}
-		</p>
+						<SingleTaskInlineReadonly
+							:task="task"
+							show-project
+						/>
+						<span
+							v-tooltip="formatDateLong(task.deleted_at)"
+							class="trashed-task-meta"
+						>
+							{{ deletedLabel(task) }} ·
+							{{ $t('trash.daysLeftShort', trashDaysLeft(task.deleted_at ?? '')) }}
+						</span>
+						<TrashRowActions
+							:pending="isPending(task.id)"
+							restore-cy="restoreTask"
+							delete-forever-cy="deleteTaskForever"
+							@restore="restore(task.id)"
+							@deleteForever="confirmDeleteForever(task)"
+						/>
+					</li>
+				</ul>
+			</Card>
+			<p
+				v-else-if="showEmptyState"
+				ref="emptyStateElement"
+				tabindex="-1"
+				class="has-text-centered has-text-grey is-italic"
+			>
+				{{ $t('trash.noTasks') }}
+			</p>
+		</div>
 
 		<PaginationEmit
 			v-if="totalPages > 1"
@@ -131,6 +139,8 @@ const {
 	totalPages,
 	isFetching,
 	showEmptyState,
+	listElement,
+	emptyStateElement,
 	isPending,
 	itemToDelete,
 	showEmptyModal,

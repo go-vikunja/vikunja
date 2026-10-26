@@ -16,74 +16,82 @@
 			</XButton>
 		</Teleport>
 
-		<Card
-			v-if="items.length > 0"
-			:padding="false"
-			:has-content="false"
-			:loading="isFetching"
+		<div
+			ref="listElement"
+			tabindex="-1"
 		>
-			<ul class="trashed-projects">
-				<li
-					v-for="project in items"
-					:key="project.id"
-					v-cy="'trashedProject'"
-				>
-					<div class="trashed-project">
-						<ColorBubble
-							v-if="getHexColor(project.hex_color)"
-							:color="getHexColor(project.hex_color)"
-						/>
-						<span class="trashed-project__title">{{ project.title }}</span>
-						<BaseButton
-							v-if="project.trashed_sub_projects?.length"
-							v-cy="'toggleTrashedSubProjects'"
-							class="trashed-project__toggle"
-							:aria-expanded="expanded.has(project.id)"
-							@click="toggle(project.id)"
-						>
-							<Icon
-								icon="chevron-down"
-								class="trashed-project__chevron"
-								:class="{'is-collapsed': !expanded.has(project.id)}"
-							/>
-							{{ $t('trash.subProjects', project.trashed_sub_projects.length) }}
-						</BaseButton>
-						<span
-							v-tooltip="formatDateLong(project.deleted_at)"
-							class="trashed-project__meta"
-						>
-							{{ deletedLabel(project) }} · {{ $t('trash.daysLeftShort', trashDaysLeft(project.deleted_at ?? '')) }}
-						</span>
-						<TrashRowActions
-							:pending="isPending(project.id)"
-							restore-cy="restoreProject"
-							delete-forever-cy="deleteProjectForever"
-							@restore="restore(project.id)"
-							@deleteForever="confirmDeleteForever(project)"
-						/>
-					</div>
-					<ul
-						v-if="expanded.has(project.id)"
-						v-cy="'trashedSubProjects'"
-						class="trashed-sub-projects"
+			<Card
+				v-if="items.length > 0"
+				:padding="false"
+				:has-content="false"
+				:loading="isFetching"
+			>
+				<ul class="trashed-projects">
+					<li
+						v-for="project in items"
+						:key="project.id"
+						v-cy="'trashedProject'"
+						:data-trash-row="project.id"
 					>
-						<li
-							v-for="sub in project.trashed_sub_projects"
-							:key="sub.id"
-							:style="{paddingInlineStart: `${(sub.depth ?? 1) * 1.25}rem`}"
+						<div class="trashed-project">
+							<ColorBubble
+								v-if="getHexColor(project.hex_color)"
+								:color="getHexColor(project.hex_color)"
+							/>
+							<span class="trashed-project__title">{{ project.title }}</span>
+							<BaseButton
+								v-if="project.trashed_sub_projects?.length"
+								v-cy="'toggleTrashedSubProjects'"
+								class="trashed-project__toggle"
+								:aria-expanded="expanded.has(project.id)"
+								@click="toggle(project.id)"
+							>
+								<Icon
+									icon="chevron-down"
+									class="trashed-project__chevron"
+									:class="{'is-collapsed': !expanded.has(project.id)}"
+								/>
+								{{ $t('trash.subProjects', project.trashed_sub_projects.length) }}
+							</BaseButton>
+							<span
+								v-tooltip="formatDateLong(project.deleted_at)"
+								class="trashed-project__meta"
+							>
+								{{ deletedLabel(project) }} · {{ $t('trash.daysLeftShort', trashDaysLeft(project.deleted_at ?? '')) }}
+							</span>
+							<TrashRowActions
+								:pending="isPending(project.id)"
+								restore-cy="restoreProject"
+								delete-forever-cy="deleteProjectForever"
+								@restore="restore(project.id)"
+								@deleteForever="confirmDeleteForever(project)"
+							/>
+						</div>
+						<ul
+							v-if="expanded.has(project.id)"
+							v-cy="'trashedSubProjects'"
+							class="trashed-sub-projects"
 						>
-							{{ sub.title }}
-						</li>
-					</ul>
-				</li>
-			</ul>
-		</Card>
-		<p
-			v-else-if="showEmptyState"
-			class="has-text-centered has-text-grey is-italic"
-		>
-			{{ $t('trash.noProjects') }}
-		</p>
+							<li
+								v-for="sub in project.trashed_sub_projects"
+								:key="sub.id"
+								:style="{paddingInlineStart: `${(sub.depth ?? 1) * 1.25}rem`}"
+							>
+								{{ sub.title }}
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</Card>
+			<p
+				v-else-if="showEmptyState"
+				ref="emptyStateElement"
+				tabindex="-1"
+				class="has-text-centered has-text-grey is-italic"
+			>
+				{{ $t('trash.noProjects') }}
+			</p>
+		</div>
 
 		<PaginationEmit
 			v-if="totalPages > 1"
@@ -160,6 +168,8 @@ const {
 	totalPages,
 	isFetching,
 	showEmptyState,
+	listElement,
+	emptyStateElement,
 	isPending,
 	itemToDelete,
 	showEmptyModal,
