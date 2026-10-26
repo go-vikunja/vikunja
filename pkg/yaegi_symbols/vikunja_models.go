@@ -703,6 +703,7 @@ func init() {
 		"TimeEntryCreatedEvent":                        reflect.ValueOf((*models.TimeEntryCreatedEvent)(nil)),
 		"TimeEntryDeletedEvent":                        reflect.ValueOf((*models.TimeEntryDeletedEvent)(nil)),
 		"TimeEntryUpdatedEvent":                        reflect.ValueOf((*models.TimeEntryUpdatedEvent)(nil)),
+		"TrashedTask":                                  reflect.ValueOf((*models.TrashedTask)(nil)),
 		"UndoneTaskOverdueNotification":                reflect.ValueOf((*models.UndoneTaskOverdueNotification)(nil)),
 		"UndoneTasksOverdueNotification":               reflect.ValueOf((*models.UndoneTasksOverdueNotification)(nil)),
 		"UnsplashPhoto":                                reflect.ValueOf((*models.UnsplashPhoto)(nil)),
