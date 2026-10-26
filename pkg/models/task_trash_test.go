@@ -18,6 +18,8 @@ package models
 
 import (
 	"context"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
@@ -77,10 +79,21 @@ func deletePermanentlyForTest(t *testing.T, taskID int64, a web.Auth) error {
 	if !can {
 		return ErrGenericForbidden{}
 	}
-	require.NoError(t, task.DeletePermanently(s))
+	require.NoError(t, task.DeletePermanently(s, a))
 	require.NoError(t, s.Commit())
 	events.DispatchPending(context.Background(), s)
 	return nil
+}
+
+func purgedTaskDoers(t *testing.T) map[int64]*user.User {
+	t.Helper()
+	doers := map[int64]*user.User{}
+	for _, e := range events.GetDispatchedEvents((&TaskPurgedEvent{}).Name()) {
+		purged, ok := e.(*TaskPurgedEvent)
+		require.True(t, ok)
+		doers[purged.Task.ID] = purged.Doer
+	}
+	return doers
 }
 
 func TestTask_Restore(t *testing.T) {
@@ -357,8 +370,14 @@ func TestGetTrashedTasks(t *testing.T) {
 func TestTask_DeletePermanently(t *testing.T) {
 	t.Run("owner purges a trashed task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
 		require.NoError(t, deletePermanentlyForTest(t, 51, &user.User{ID: 1}))
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
+
+		doers := purgedTaskDoers(t)
+		require.Len(t, doers, 1)
+		require.NotNil(t, doers[51])
+		assert.Equal(t, int64(1), doers[51].ID)
 	})
 	t.Run("admin shares purge", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -437,10 +456,13 @@ func TestEmptyTaskTrash(t *testing.T) {
 	trashTaskForTest(t, 19, u1)
 	trashTaskForTest(t, 20, u1)
 
+	events.ClearDispatchedEvents()
+
 	s := db.NewSession()
 	defer s.Close()
 	require.NoError(t, EmptyTaskTrash(s, u1))
 	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
 
 	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 1})
 	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
@@ -449,6 +471,17 @@ func TestEmptyTaskTrash(t *testing.T) {
 	db.AssertExists(t, "tasks", map[string]interface{}{"id": 36}, false)
 	db.AssertExists(t, "tasks", map[string]interface{}{"id": 32}, false)
 	db.AssertExists(t, "tasks", map[string]interface{}{"id": 19}, false)
+
+	doers := purgedTaskDoers(t)
+	assert.ElementsMatch(t, []int64{
+		1,
+		20,
+		51,
+	}, slices.Collect(maps.Keys(doers)))
+	for id, doer := range doers {
+		require.NotNil(t, doer, "task %d", id)
+		assert.Equal(t, int64(1), doer.ID, "task %d", id)
+	}
 }
 
 func TestTask_CanRead_Trashed(t *testing.T) {

@@ -150,7 +150,7 @@ func tasksDeletePermanently(ctx context.Context, in *struct {
 		_ = s.Rollback()
 		return nil, huma.Error403Forbidden("forbidden")
 	}
-	if err := task.DeletePermanently(s); err != nil {
+	if err := task.DeletePermanently(s, a); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}

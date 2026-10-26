@@ -674,10 +674,10 @@ func TestSendTaskDeletedNotification(t *testing.T) {
 // names, so register once per process (relevant for -count > 1).
 var registerAuditEventsOnce sync.Once
 
-// A full personal data export is the most sensitive self-service action there
-// is. Driving it through the real router instead of calling the listener
-// directly is what makes this a regression test of the registration itself.
-func TestAuditUserDataExportRequested(t *testing.T) {
+// Driving events through the real router instead of calling the listener
+// directly is what makes these regression tests of the registration itself.
+func startAuditLogForTest(t *testing.T) string {
+	t.Helper()
 	logfile := filepath.Join(t.TempDir(), "audit.log")
 	config.AuditLogfile.Set(logfile)
 	require.NoError(t, audit.Init())
@@ -695,25 +695,68 @@ func TestAuditUserDataExportRequested(t *testing.T) {
 	ready, err := events.InitEventsForTesting(ctx)
 	require.NoError(t, err)
 	<-ready
+	return logfile
+}
 
-	require.NoError(t, events.Dispatch(&UserDataExportRequestedEvent{User: &user.User{ID: 42}}))
-
-	var content []byte
+func waitForAuditEntries(t *testing.T, logfile string, n int) []audit.Entry {
+	t.Helper()
+	var lines [][]byte
 	require.Eventually(t, func() bool {
 		c, err := os.ReadFile(logfile)
 		if err != nil {
 			return false
 		}
-		content = bytes.TrimSpace(c)
-		return len(content) > 0
-	}, 5*time.Second, 10*time.Millisecond, "expected an audit entry for the export request")
+		content := bytes.TrimSpace(c)
+		if len(content) == 0 {
+			return false
+		}
+		lines = bytes.Split(content, []byte("\n"))
+		return len(lines) >= n
+	}, 5*time.Second, 10*time.Millisecond, "expected %d audit entries", n)
 
-	var entry audit.Entry
-	require.NoError(t, json.Unmarshal(content, &entry))
+	entries := make([]audit.Entry, 0, len(lines))
+	for _, line := range lines {
+		var entry audit.Entry
+		require.NoError(t, json.Unmarshal(line, &entry))
+		entries = append(entries, entry)
+	}
+	return entries
+}
+
+// A full personal data export is the most sensitive self-service action there is.
+func TestAuditUserDataExportRequested(t *testing.T) {
+	logfile := startAuditLogForTest(t)
+
+	require.NoError(t, events.Dispatch(&UserDataExportRequestedEvent{User: &user.User{ID: 42}}))
+
+	entries := waitForAuditEntries(t, logfile, 1)
+	require.Len(t, entries, 1)
+	entry := entries[0]
 	assert.Equal(t, audit.ActionUserDataExportRequested, entry.Action)
 	assert.Equal(t, audit.UserActor(42), entry.Actor)
 	assert.Equal(t, audit.UserTarget(42), entry.Target)
 	assert.Equal(t, audit.OutcomeSuccess, entry.Outcome)
+}
+
+func TestAuditTaskPurged(t *testing.T) {
+	logfile := startAuditLogForTest(t)
+
+	require.NoError(t, events.Dispatch(&TaskPurgedEvent{
+		Task: &Task{ID: 51},
+		Doer: &user.User{ID: 3},
+	}))
+	waitForAuditEntries(t, logfile, 1)
+	require.NoError(t, events.Dispatch(&TaskPurgedEvent{Task: &Task{ID: 52}}))
+	entries := waitForAuditEntries(t, logfile, 2)
+	require.Len(t, entries, 2)
+
+	assert.Equal(t, audit.ActionTaskPurged, entries[0].Action)
+	assert.Equal(t, audit.ActorFromDoerID(3), entries[0].Actor)
+	assert.Equal(t, audit.TaskTarget(51), entries[0].Target)
+
+	assert.Equal(t, audit.ActionTaskPurged, entries[1].Action)
+	assert.Equal(t, audit.SystemActor(), entries[1].Actor, "retention cron")
+	assert.Equal(t, audit.TaskTarget(52), entries[1].Target)
 }
 
 func TestWebhookDeliveryListenerSkipsErrorReporting(t *testing.T) {

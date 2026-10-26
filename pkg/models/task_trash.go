@@ -120,8 +120,19 @@ func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
 }
 
 // DeletePermanently purges a trashed task.
-func (t *Task) DeletePermanently(s *xorm.Session) error {
-	return hardDeleteTask(s, t)
+func (t *Task) DeletePermanently(s *xorm.Session, a web.Auth) error {
+	return purgeTrashedTask(s, t, doerFromAuth(s, a))
+}
+
+func purgeTrashedTask(s *xorm.Session, t *Task, doer *user.User) error {
+	if err := hardDeleteTask(s, t); err != nil {
+		return err
+	}
+	events.DispatchOnCommit(s, &TaskPurgedEvent{
+		Task: t,
+		Doer: doer,
+	})
+	return nil
 }
 
 func trashedTasksCond(s *xorm.Session, a web.Auth, minPermission Permission) (builder.Cond, error) {
@@ -188,8 +199,9 @@ func EmptyTaskTrash(s *xorm.Session, a web.Auth) error {
 	if err = s.Unscoped().Where(cond).Find(&tasks); err != nil {
 		return err
 	}
+	doer := doerFromAuth(s, a)
 	for _, task := range tasks {
-		if err = hardDeleteTask(s, task); err != nil {
+		if err = purgeTrashedTask(s, task, doer); err != nil {
 			return err
 		}
 	}

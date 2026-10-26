@@ -67,6 +67,7 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&TaskUpdatedEvent{})
 		RegisterEventForWebhook(&TaskDeletedEvent{})
 		RegisterEventForWebhook(&TaskRestoredEvent{})
+		RegisterEventForWebhook(&TaskPurgedEvent{})
 		RegisterEventForWebhook(&TaskAssigneeCreatedEvent{})
 		RegisterEventForWebhook(&TaskAssigneeDeletedEvent{})
 		RegisterEventForWebhook(&TaskCommentCreatedEvent{})
@@ -191,6 +192,13 @@ func registerEventsForAuditLogging() {
 	audit.RegisterEventForAudit(func(e *TaskRestoredEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionTaskRestored,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TaskTarget(e.Task.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskPurgedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTaskPurged,
 			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.TaskTarget(e.Task.ID),
 		}

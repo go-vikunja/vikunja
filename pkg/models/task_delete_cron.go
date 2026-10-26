@@ -70,7 +70,7 @@ func deleteExpiredTasks(now time.Time) {
 			defer ts.Close()
 			defer events.CleanupPending(ts)
 
-			err = hardDeleteTask(ts, task)
+			err = purgeTrashedTask(ts, task, nil)
 			if err != nil {
 				_ = ts.Rollback()
 				log.Errorf("Could not permanently delete task %d: %s", task.ID, err)

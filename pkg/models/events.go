@@ -79,6 +79,17 @@ func (t *TaskRestoredEvent) Name() string {
 	return "task.restored"
 }
 
+// TaskPurgedEvent fires when a trashed task is permanently deleted. Doer is nil for the retention cron.
+type TaskPurgedEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskPurgedEvent
+func (t *TaskPurgedEvent) Name() string {
+	return "task.purged"
+}
+
 // TaskAssigneeCreatedEvent represents an event where a task has been assigned to a user
 type TaskAssigneeCreatedEvent struct {
 	Task     *Task      `json:"task"`
