@@ -5,7 +5,6 @@ import {createPinia, setActivePinia} from 'pinia'
 import {accountKeys} from '@/client/queries/account'
 import {queryClient} from '@/client/queryClient'
 import {useAuthStore} from '@/stores/auth'
-import {useProjectChromeBackground} from '@/composables/useProjectChromeBackground'
 
 const baseStoreState = reactive({background: '' as string | null})
 
@@ -28,7 +27,8 @@ function setExtendProjectBackgroundToChrome(enabled: boolean) {
 }
 
 describe('useProjectChromeBackground', () => {
-	beforeEach(() => {
+	beforeEach(async () => {
+		vi.resetModules()
 		queryClient.clear()
 		setActivePinia(createPinia())
 		useAuthStore()
@@ -36,7 +36,9 @@ describe('useProjectChromeBackground', () => {
 		document.body.classList.remove('has-project-chrome-background')
 	})
 
-	it('enables the chrome background only when the setting is on and a project background exists', () => {
+	it('enables the chrome background only when the setting is on and a project background exists', async () => {
+		const {useProjectChromeBackground} = await import('@/composables/useProjectChromeBackground')
+
 		setExtendProjectBackgroundToChrome(true)
 		baseStoreState.background = 'https://example.com/bg.jpg'
 
@@ -47,7 +49,9 @@ describe('useProjectChromeBackground', () => {
 		expect(document.body.classList.contains('has-project-chrome-background')).toBe(true)
 	})
 
-	it('stays disabled when the setting is off', () => {
+	it('stays disabled when the setting is off', async () => {
+		const {useProjectChromeBackground} = await import('@/composables/useProjectChromeBackground')
+
 		setExtendProjectBackgroundToChrome(false)
 		baseStoreState.background = 'https://example.com/bg.jpg'
 
