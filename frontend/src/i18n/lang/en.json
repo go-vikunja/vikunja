@@ -1695,7 +1695,8 @@
       "save": "Save entry",
       "startTimer": "Start timer",
       "update": "Update entry",
-      "smartFill": "Fill from last entry"
+      "smartFill": "Fill from last entry",
+      "stopsRunningTimerAt": "Starting this timer stops the running one at {time}."
     },
     "list": {
       "emptyTask": "No time tracked for this task yet.",

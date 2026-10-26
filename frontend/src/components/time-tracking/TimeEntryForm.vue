@@ -108,6 +108,13 @@
 				</XButton>
 			</template>
 		</div>
+		<p
+			v-if="backdatedStopAt !== null"
+			v-cy="'backdatedStopHint'"
+			class="help"
+		>
+			{{ $t('timeTracking.form.stopsRunningTimerAt', {time: formatDayTime(backdatedStopAt, timeFormat)}) }}
+		</p>
 	</form>
 </template>
 
@@ -122,6 +129,10 @@ import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import {useTasks} from '@/composables/useTasks'
 import {ensureTask} from '@/client/queries/tasks'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
+import {backdatedStop} from '@/helpers/time/backdatedStop'
+import {formatDayTime} from '@/helpers/time/formatTimeRange'
+import {useTimeTracking} from '@/composables/useTimeTracking'
+import {useTimeFormat} from '@/composables/useTimeFormat'
 import {useCreateTimeEntryMutation, useUpdateTimeEntryMutation} from '@/client/queries/timeEntries'
 import type {UpdateTimeEntryInput} from '@/client/queries/timeEntries'
 import type {TimeEntryWritable} from '@/client/generated'
@@ -155,6 +166,8 @@ const createMutation = useCreateTimeEntryMutation()
 const updateMutation = useUpdateTimeEntryMutation()
 const authStore = useAuthStore()
 const projectList = useProjects()
+const {activeTimer} = useTimeTracking()
+const {store: timeFormat} = useTimeFormat()
 
 const isEditing = computed(() => props.entry != null)
 
@@ -175,6 +188,14 @@ const from = computed({
 	},
 })
 const to = ref<Date | null>(null)
+
+const backdatedStopAt = computed(() => {
+	const runningStart = parseDateOrNull(activeTimer.value?.start_time)
+	if (isEditing.value || !start.value.chosen || start.value.date === null || runningStart === null) {
+		return null
+	}
+	return backdatedStop(runningStart, start.value.date, new Date())
+})
 const comment = ref('')
 const isSaving = ref(false)
 
