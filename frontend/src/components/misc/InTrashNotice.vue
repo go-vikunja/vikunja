@@ -7,9 +7,9 @@
 		<p class="has-text-grey">
 			{{ $t('trash.daysLeft', trashDaysLeft(deletedAt)) }}
 		</p>
-		<!-- The trash only lists what the user can restore -->
+		<!-- Restore stays user-only; the trash lists only what the user can restore -->
 		<div
-			v-if="canRestore"
+			v-if="canRestore && !authStore.isLinkShareAuth"
 			class="in-trash__actions"
 		>
 			<XButton
@@ -21,7 +21,6 @@
 				{{ $t('trash.restore') }}
 			</XButton>
 			<XButton
-				v-if="!authStore.isLinkShareAuth"
 				variant="secondary"
 				:to="trashRoute"
 			>

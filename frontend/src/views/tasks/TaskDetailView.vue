@@ -19,10 +19,7 @@
 			>
 				<Icon icon="times" />
 			</BaseButton>
-			<TaskInTrashNotice
-				:task-id="taskId"
-				:in-trash="trashedTask"
-			/>
+			<TaskInTrashNotice :in-trash="trashedTask" />
 		</div>
 		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
 		<div

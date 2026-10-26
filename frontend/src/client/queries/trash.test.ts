@@ -371,8 +371,10 @@ describe('deleteProjectMutationOptions', () => {
 describe('taskInTrashFromError', () => {
 	it('reads the details of a trashed task', () => {
 		const details = {
+			id: 1,
 			project_id: 1,
 			deleted_at: '2026-01-01T00:00:00Z',
+			can_restore: true,
 		}
 		expect(taskInTrashFromError(new ApiError({
 			status: 404,

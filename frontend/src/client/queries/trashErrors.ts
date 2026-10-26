@@ -6,9 +6,11 @@ export const ERROR_CODE_TASK_IS_IN_TRASH = 4040
 export const ERROR_CODE_PROJECT_IS_IN_TRASH = 3018
 
 export type TaskInTrash = {
+	id: number
 	project_id: number
 	deleted_at: string
 	deleted_by?: User
+	can_restore: boolean
 }
 
 export type ProjectInTrash = {
@@ -16,6 +18,8 @@ export type ProjectInTrash = {
 	deleted_at: string
 	deleted_by?: User
 	can_restore: boolean
+	// The trashed ancestor that has to be restored instead
+	trashed_root_id?: number
 }
 
 function trashDetailsFromError(cause: unknown, errorCode: number): unknown {
