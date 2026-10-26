@@ -86,8 +86,7 @@ func TestTask_Create(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// user6 is subscribed to project 12 (fixture), so the inherited subscription must not
-		// be duplicated with a task level one
+		// user6 is subscribed to project 12 (fixture)
 		usr6 := &user.User{ID: 6, Username: "user6"}
 		task := &Task{
 			Title:     "Lorem",
@@ -98,10 +97,16 @@ func TestTask_Create(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
 			"entity_type": SubscriptionEntityTask,
 			"entity_id":   task.ID,
-		})
+			"user_id":     usr6.ID,
+			"muted":       false,
+		}, false)
+		db.AssertCount(t, "subscriptions", builder.Eq{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+		}, 1)
 	})
 	t.Run("created by link share is not subscribed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

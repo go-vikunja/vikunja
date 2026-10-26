@@ -249,15 +249,10 @@ func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
 	return err
 }
 
-// subscribeUserImplicitly subscribes u only if no row exists: muted or not, an existing row is the user's own decision.
+// subscribeUserImplicitly ignores inherited subscriptions so unsubscribing from the parent later keeps this one.
 func subscribeUserImplicitly(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, u *user.User) error {
 	own, err := getOwnSubscription(s, entityType, entityID, u.ID)
 	if err != nil || own != nil {
-		return err
-	}
-
-	inherited, err := GetSubscriptionForUser(s, entityType, entityID, u)
-	if err != nil || inherited != nil {
 		return err
 	}
 
