@@ -60,10 +60,15 @@ func trashedTaskReadError(s *xorm.Session, a web.Auth, taskID int64, notFound er
 		return err
 	}
 
+	canRestore, err := trashedTaskAllows(s, a, trashed, (*Project).CanWrite)
+	if err != nil && !IsErrProjectIsArchived(err) {
+		return err
+	}
 	inTrash := ErrTaskIsInTrash{
-		ID:        trashed.ID,
-		ProjectID: trashed.ProjectID,
-		DeletedAt: trashed.DeletedAt,
+		ID:         trashed.ID,
+		ProjectID:  trashed.ProjectID,
+		DeletedAt:  trashed.DeletedAt,
+		CanRestore: canRestore,
 	}
 	if trashed.DeletedByID != 0 {
 		deleters, err := getUsersOrLinkSharesFromIDs(s, []int64{trashed.DeletedByID})

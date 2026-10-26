@@ -890,10 +890,11 @@ func (err ErrTaskDoesNotExist) HTTPError() web.HTTPError {
 
 // ErrTaskIsInTrash is returned instead of ErrTaskDoesNotExist to callers who can read the trashed task's project.
 type ErrTaskIsInTrash struct {
-	ID        int64      `json:"-"`
-	ProjectID int64      `json:"project_id"`
-	DeletedAt time.Time  `json:"deleted_at"`
-	DeletedBy *user.User `json:"deleted_by,omitempty"`
+	ID         int64      `json:"id"`
+	ProjectID  int64      `json:"project_id"`
+	DeletedAt  time.Time  `json:"deleted_at"`
+	DeletedBy  *user.User `json:"deleted_by,omitempty"`
+	CanRestore bool       `json:"can_restore"`
 }
 
 // IsErrTaskIsInTrash checks if an error is a ErrTaskIsInTrash.

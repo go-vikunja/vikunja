@@ -507,10 +507,36 @@ func TestTask_CanRead_Trashed(t *testing.T) {
 		_, _, err := (&Task{ID: 1}).CanRead(s, &user.User{ID: 1})
 		var inTrash ErrTaskIsInTrash
 		require.ErrorAs(t, err, &inTrash)
+		assert.Equal(t, int64(1), inTrash.ID)
 		assert.Equal(t, int64(1), inTrash.ProjectID)
 		assert.False(t, inTrash.DeletedAt.IsZero())
 		require.NotNil(t, inTrash.DeletedBy)
 		assert.Equal(t, int64(1), inTrash.DeletedBy.ID)
+		assert.True(t, inTrash.CanRestore)
+	})
+	t.Run("read-only reader can't restore", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// User 1 only reads project 3
+		setTaskColumnsForTest(t, 32, map[string]any{"deleted_at": time.Now()})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, err := (&Task{ID: 32}).CanRead(s, &user.User{ID: 1})
+		var inTrash ErrTaskIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		assert.False(t, inTrash.CanRestore)
+	})
+	t.Run("archived project can't restore", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		// Task 36 is in archived project 22, owned by user 1
+		setTaskColumnsForTest(t, 36, map[string]any{"deleted_at": time.Now()})
+		s := db.NewSession()
+		defer s.Close()
+
+		_, _, err := (&Task{ID: 36}).CanRead(s, &user.User{ID: 1})
+		var inTrash ErrTaskIsInTrash
+		require.ErrorAs(t, err, &inTrash)
+		assert.False(t, inTrash.CanRestore)
 	})
 	t.Run("unknown deleter", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
