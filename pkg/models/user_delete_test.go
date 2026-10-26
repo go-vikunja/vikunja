@@ -78,6 +78,7 @@ func TestDeleteUser(t *testing.T) {
 		doers := purgedProjectDoers(t)
 		assert.Contains(t, doers, int64(45))
 		assert.Contains(t, doers, int64(46))
+		assert.Nil(t, doers[45], "the system purges")
 	})
 	t.Run("hands a shared trashed project over", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

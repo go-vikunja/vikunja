@@ -653,8 +653,13 @@ func TestEmptyProjectTrash(t *testing.T) {
 
 		doers := purgedProjectDoers(t)
 		require.Len(t, doers, 2)
-		require.NotNil(t, doers[45])
-		assert.Equal(t, int64(1), doers[45].ID)
+		for _, id := range []int64{
+			45,
+			46,
+		} {
+			require.NotNil(t, doers[id], "project %d", id)
+			assert.Equal(t, int64(1), doers[id].ID, "project %d", id)
+		}
 	})
 	t.Run("leaves other users' trash alone", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
