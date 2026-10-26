@@ -268,7 +268,7 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
 	})
 
-	t.Run("PUT with null detaches", func(t *testing.T) {
+	t.Run("tolerates legacy null on PUT", func(t *testing.T) {
 		e, token := setup(t)
 		body := `{"task_id":null,"project_id":null,` + times + `}`
 		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", body, token, "")
@@ -276,9 +276,9 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
 	})
 
-	t.Run("PUT with one null detaches", func(t *testing.T) {
+	t.Run("PUT with one key 0 detaches from the omitted one too", func(t *testing.T) {
 		e, token := setup(t)
-		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"project_id":null,`+times+`}`, token, "")
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"task_id":0,`+times+`}`, token, "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
 	})
@@ -290,19 +290,24 @@ func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
 		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 1)
 	})
 
-	t.Run("PATCH with null detaches", func(t *testing.T) {
+	t.Run("PATCH with 0 detaches", func(t *testing.T) {
 		e, token := setup(t)
 		rec := humaRequest(
-			t, e, http.MethodPatch, "/api/v2/time-entries/2", `{"project_id":null}`, token,
+			t, e, http.MethodPatch, "/api/v2/time-entries/2", `{"project_id":0}`, token,
 			"application/merge-patch+json",
 		)
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         2,
+			"task_id":    0,
+			"project_id": 0,
+		}, false)
 	})
 
 	t.Run("filter by no project", func(t *testing.T) {
 		e, token := setup(t)
-		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"project_id":null,`+times+`}`, token, "")
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"project_id":0,`+times+`}`, token, "")
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 
 		q := url.Values{"filter": {"project_id = null"}}
