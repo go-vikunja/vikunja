@@ -30,10 +30,14 @@ test.describe('Trash', () => {
 	test('undo after deleting a task restores it', async ({authenticatedPage: page, apiContext, userToken}) => {
 		await TaskFactory.create(1, {id: 1, project_id: 1, title: 'Undo me'}, false)
 		await page.goto('/tasks/1')
+		await page.clock.install()
 
 		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
 		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
 		const undo = toast.getByRole('button', {name: 'Undo'})
+		await expect(undo).toBeFocused()
+		await page.clock.fastForward(11_000)
+		await expect(undo).toBeVisible()
 		await expect(undo).toBeFocused()
 		await undo.click()
 		await expect(page.locator('.global-notification')).toContainText('The task has been restored.')

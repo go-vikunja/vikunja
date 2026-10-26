@@ -94,4 +94,68 @@ describe('Notification', () => {
 
 		expect(document.activeElement).toBe(elsewhere)
 	})
+
+	it('stays open past its duration while focused and closes once focus leaves', async () => {
+		const elsewhere = addButton('Search')
+		await showToast({takeFocus: true})
+
+		vi.advanceTimersByTime(ACTION_TOAST_DURATION * 2)
+		await flushPromises()
+		expect(toast()).not.toBeNull()
+
+		elsewhere.focus()
+		vi.advanceTimersByTime(ACTION_TOAST_DURATION)
+		await flushPromises()
+		expect(toast()).toBeNull()
+	})
+
+	it('keeps the focus hold when focus moves within the toast', async () => {
+		await showToast({takeFocus: true}, [
+			{
+				title: 'Undo',
+				callback: () => {},
+			},
+			{
+				title: 'Open',
+				callback: () => {},
+			},
+		])
+		const undo = toastButton('Undo')!
+		const open = toastButton('Open')!
+
+		undo.dispatchEvent(new FocusEvent('focusout', {
+			bubbles: true,
+			relatedTarget: open,
+		}))
+		vi.advanceTimersByTime(ACTION_TOAST_DURATION * 2)
+		await flushPromises()
+		expect(toast()).not.toBeNull()
+
+		undo.dispatchEvent(new FocusEvent('focusout', {
+			bubbles: true,
+			relatedTarget: null,
+		}))
+		vi.advanceTimersByTime(ACTION_TOAST_DURATION)
+		await flushPromises()
+		expect(toast()).toBeNull()
+	})
+
+	it('hands focus to the main content when a focused toast closes', async () => {
+		const main = document.createElement('main')
+		main.id = 'main-content'
+		main.tabIndex = -1
+		document.body.append(main)
+		const undo = vi.fn()
+		await showToast({takeFocus: true}, [{
+			title: 'Undo',
+			callback: undo,
+		}])
+
+		toastButton('Undo')!.click()
+		await flushPromises()
+
+		expect(undo).toHaveBeenCalledOnce()
+		expect(toast()).toBeNull()
+		expect(document.activeElement).toBe(main)
+	})
 })
