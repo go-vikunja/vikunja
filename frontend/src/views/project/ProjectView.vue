@@ -6,7 +6,7 @@ import {useQuery} from '@tanstack/vue-query'
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
-import {saveProjectView} from '@/helpers/projectView'
+import {getDefaultProjectView, saveProjectView} from '@/helpers/projectView'
 import {projectQuery} from '@/client/queries/projects'
 import {projectInTrashFromError} from '@/client/queries/trash'
 
@@ -16,7 +16,6 @@ import ProjectTable from '@/components/project/views/ProjectTable.vue'
 import ProjectKanban from '@/components/project/views/ProjectKanban.vue'
 import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 
-import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {saveProjectToHistory} from '@/modules/projectHistory'
 import {useFocusAfterRemoval} from '@/composables/useFocusAfterRemoval'
 
@@ -57,21 +56,11 @@ watch(
 
 function redirectToDefaultViewIfNecessary() {
 	if (props.viewId === 0 || !currentView.value) {
-		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
-		// are not always loaded then.
-
-		const defaultView  = authStore.settings.frontend_settings.default_view
-		const views = currentProject.value?.views ?? []
-
-		let view
-		if (defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
-			view = views.find(view => view.view_kind === defaultView)
-		}
-
-		// Use the first view as fallback if the default view is not available
-		if (view === undefined && views.length > 0) {
-			view = views[0]
-		}
+		// Project views may arrive after the router resolves.
+		const view = getDefaultProjectView(
+			currentProject.value?.views ?? [],
+			authStore.settings.frontend_settings.default_view,
+		)
 
 		if (view) {
 			router.replace({
