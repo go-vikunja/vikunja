@@ -39,7 +39,6 @@ export interface Action {
 }
 
 export type ToastOptions = {
-	// Only for flows whose view is gone: the action button takes the focus that dropped to the body
 	takeFocus?: boolean,
 }
 

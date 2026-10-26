@@ -49,6 +49,7 @@ async function showToast(options: ToastOptions = {}, actions: Action[] = [{
 	success({message: 'Deleted'}, actions, options)
 	await flushPromises()
 	vi.advanceTimersToNextFrame()
+	await flushPromises()
 }
 
 describe('Notification', () => {
@@ -86,11 +87,28 @@ describe('Notification', () => {
 		expect(document.activeElement).toBe(toastButton('Undo'))
 	})
 
-	it('does not take focus the user holds elsewhere', async () => {
-		const elsewhere = addButton('Search')
-		elsewhere.focus()
+	it('takes focus from the destination view autofocus for an opted-in toast', async () => {
+		const input = document.createElement('input')
+		input.placeholder = 'Add a task'
+		document.body.append(input)
+		input.focus()
 
 		await showToast({takeFocus: true})
+
+		expect(document.activeElement).toBe(toastButton('Undo'))
+	})
+
+	it('does not take focus the user moves elsewhere before the handoff', async () => {
+		const elsewhere = addButton('Search')
+		success({message: 'Deleted'}, [{
+			title: 'Undo',
+			callback: () => {},
+		}], {takeFocus: true})
+		await flushPromises()
+		elsewhere.focus()
+
+		vi.advanceTimersToNextFrame()
+		await flushPromises()
 
 		expect(document.activeElement).toBe(elsewhere)
 	})

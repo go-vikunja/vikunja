@@ -75,7 +75,7 @@ import {notify, type NotificationItem} from '@kyvg/vue3-notification'
 
 import {ACTION_TOAST_DURATION, type ToastData} from '@/message'
 import {pausableTimeout} from '@/message/pausableTimeout'
-import {focusIsLost} from '@/composables/useFocusAfterRemoval'
+import {captureFocus} from '@/composables/useFocusAfterRemoval'
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null
@@ -108,10 +108,9 @@ async function startActionTimer(item: NotificationItem) {
 		return
 	}
 	await nextTick()
+	const moveFocus = captureFocus()
 	requestAnimationFrame(() => {
-		if (focusIsLost(null)) {
-			toastElement(item)?.querySelector<HTMLElement>('button')?.focus({preventScroll: true})
-		}
+		void moveFocus(() => toastElement(item)?.querySelector<HTMLElement>('button'))
 	})
 }
 
