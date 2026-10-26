@@ -88,7 +88,7 @@ func RegisterTimeEntryRoutes(api huma.API) {
 	registerGated(api, huma.Operation{
 		OperationID: "time-entries-update",
 		Summary:     "Update a time entry",
-		Description: "Updates a time entry. Only the author may update it. The entry can be moved between a task, a project and neither — at most one of task_id / project_id may be set, and you need read access to the new one. Omitting both keeps the current container; sending either, even as null, replaces it, so null for both detaches the entry. PUT replaces all editable fields; use PATCH for a partial update.",
+		Description: "Updates a time entry. Only the author may update it. The entry can be moved between a task, a project and neither — at most one of task_id / project_id may be set, and you need read access to the new one. Omitting both keeps the current container; sending either replaces it, so 0 for both detaches the entry. PUT replaces all editable fields; use PATCH for a partial update.",
 		Method:      http.MethodPut,
 		Path:        "/time-entries/{id}",
 		Tags:        tags,

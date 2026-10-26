@@ -36,8 +36,8 @@ type TimeEntry struct {
 	UserID int64      `xorm:"bigint not null INDEX" json:"-"`
 	User   *user.User `xorm:"-" json:"user" readOnly:"true" doc:"The user who logged this time entry. Set by the server."`
 
-	TaskID    int64 `xorm:"bigint null INDEX" json:"task_id" nullable:"true" doc:"The task this entry is attached to. At most one of task_id / project_id may be set; 0 means none. On update, omitting both keeps the current container; sending either, even as null, replaces it."`
-	ProjectID int64 `xorm:"bigint null INDEX" json:"project_id" nullable:"true" doc:"The project this entry is attached to directly. At most one of task_id / project_id may be set; 0 means none. Entries without task and project are only visible to their author."`
+	TaskID    int64 `xorm:"bigint null INDEX" json:"task_id" doc:"The task this entry is attached to; 0 means none. At most one of task_id / project_id may be set. On update, omitting both keeps the current container; sending either replaces it."`
+	ProjectID int64 `xorm:"bigint null INDEX" json:"project_id" doc:"The project this entry is attached to directly; 0 means none. At most one of task_id / project_id may be set. Entries without task and project are only visible to their author."`
 
 	StartTime time.Time  `xorm:"not null INDEX" json:"start_time" doc:"When the tracked time started."`
 	EndTime   *time.Time `xorm:"null" json:"end_time" doc:"When the tracked time ended. Null means a live timer is still running."`
