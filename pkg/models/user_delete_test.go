@@ -66,10 +66,16 @@ func TestDeleteUser(t *testing.T) {
 		_, err := s.Table("projects").In("id", []int64{45, 46}).Update(map[string]any{"owner_id": 6})
 		require.NoError(t, err)
 
+		events.ClearDispatchedEvents()
 		require.NoError(t, DeleteUser(s, &user.User{ID: 6}))
 		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+		doers := purgedProjectDoers(t)
+		assert.Contains(t, doers, int64(45))
+		assert.Contains(t, doers, int64(46))
+		assert.Nil(t, doers[45], "the system purges")
 	})
 	t.Run("hands a shared trashed project over", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
