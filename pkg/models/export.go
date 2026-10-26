@@ -273,6 +273,8 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 	for _, t := range tasks {
 		taskMap[t.ID] = &TaskWithComments{
 			Task: *t,
+			// The exact rule text, which the structured repeat cannot always express.
+			RepeatsRRule: t.Repeats,
 		}
 		if _, exists := projectsMap[t.ProjectID]; !exists {
 			log.Debugf("[User Data Export] Project %d does not exist for task %d, omitting", t.ProjectID, t.ID)

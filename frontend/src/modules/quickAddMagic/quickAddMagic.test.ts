@@ -3,13 +3,14 @@ import {queryClient} from '@/client/queryClient'
 import {accountKeys} from '@/client/queries/account'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {parseTaskText, PrefixMode} from '.'
+import {parseTaskText, PREFIXES, PrefixMode} from '.'
 import type {ParsedTaskText} from '.'
 import {parseDate} from './dateParser'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
-import type {IRepeatAfter} from '@/types/IRepeatAfter'
+import type {QuickAddRepeat} from './types'
+import {buildQuickAddTask} from '@/helpers/task'
 import {setActivePinia, createPinia} from 'pinia'
 import {useAuthStore} from '@/stores/auth'
 
@@ -1098,23 +1099,22 @@ describe('Parse Task Text', () => {
 			'monthly': {type: 'months', amount: 1},
 			'weekly': {type: 'weeks', amount: 1},
 			'yearly': {type: 'years', amount: 1},
-		} as Record<string, IRepeatAfter>
+		} satisfies Record<string, QuickAddRepeat>
+		const caseFor = (text: string): QuickAddRepeat => cases[text as keyof typeof cases]
 
 		for (const c of Object.keys(cases)) {
-			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type}`, () => {
+			it(`should parse ${c} as recurring date every ${caseFor(c).amount} ${caseFor(c).type}`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c}`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeats?.type).toBe(cases[c].type)
-				expect(result?.repeats?.amount).toBe(cases[c].amount)
+				expect(result.repeats).toEqual(caseFor(c))
 			})
 		 	
-			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type} at 11:42`, () => {
+			it(`should parse ${c} as recurring date every ${caseFor(c).amount} ${caseFor(c).type} at 11:42`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c} at 11:42`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeats?.type).toBe(cases[c].type)
-				expect(result?.repeats?.amount).toBe(cases[c].amount)
+				expect(result.repeats).toEqual(caseFor(c))
 				const now = new Date()
 				expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`)
 				expect(`${result?.date?.getHours()}:${result?.date?.getMinutes()}`).toBe('11:42')
@@ -1140,6 +1140,14 @@ describe('Parse Task Text', () => {
 				expect(result.text).toBe(`Lorem Ipsum word${c}notword`)
 				expect(result?.repeats).toBeNull()
 			})
+		})
+
+		it('should turn "every 2 weeks" into a structured repeat on the quick-add task', () => {
+			const parsed = parseTaskText('Lorem Ipsum every 2 weeks', PrefixMode.Default)
+			const task = buildQuickAddTask(parsed, {title: 'Lorem Ipsum every 2 weeks'}, PREFIXES[PrefixMode.Default], [])
+
+			expect(task.title).toBe('Lorem Ipsum')
+			expect(task.repeat).toEqual({freq: 'weekly', interval: 2})
 		})
 	})
 })

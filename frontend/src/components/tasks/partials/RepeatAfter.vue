@@ -1,79 +1,83 @@
 <template>
 	<div class="control repeat-after-input">
-		<div class="button-group mbs-2">
+		<p
+			v-if="isComplex"
+			class="repeat-advanced-note"
+		>
+			{{ $t('task.repeat.advancedReadonly') }}
+		</p>
+		<div class="button-group">
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setRepeatAfter(1, 'days')"
+				:disabled="disabled || isComplex"
+				@click="() => setQuickRepeat('daily')"
 			>
 				{{ $t('task.repeat.everyDay') }}
 			</XButton>
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setRepeatAfter(1, 'weeks')"
+				:disabled="disabled || isComplex"
+				@click="() => setQuickRepeat('weekly')"
 			>
 				{{ $t('task.repeat.everyWeek') }}
 			</XButton>
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setRepeatAfter(30, 'days')"
+				:disabled="disabled || isComplex"
+				@click="() => setQuickRepeat('monthly')"
 			>
-				{{ $t('task.repeat.every30d') }}
+				{{ $t('task.repeat.everyMonth') }}
+			</XButton>
+			<XButton
+				variant="secondary"
+				class="is-small"
+				:disabled="disabled || isComplex"
+				@click="() => setQuickRepeat('yearly')"
+			>
+				{{ $t('task.repeat.everyYear') }}
 			</XButton>
 		</div>
-		<div class="is-flex is-align-items-center mbe-2">
-			<label
-				for="repeatMode"
-				class="is-fullwidth"
+		<div class="repeat-from-current-date">
+			<FancyCheckbox
+				v-model="repeatsFromCurrentDate"
+				:disabled="disabled"
+				@update:modelValue="updateFromCurrentDate"
 			>
-				{{ $t('task.repeat.mode') }}:
-			</label>
-			<div class="control">
-				<div class="select">
-					<select
-						id="repeatMode"
-						v-model="task.repeat_mode"
-						@change="updateData"
-					>
-						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT">
-							{{ $t('misc.default') }}
-						</option>
-						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_MONTH">
-							{{ $t('task.repeat.monthly') }}
-						</option>
-						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE">
-							{{ $t('task.repeat.fromCurrentDate') }}
-						</option>
-					</select>
-				</div>
-			</div>
+				{{ $t('task.repeat.fromCurrentDate') }}
+			</FancyCheckbox>
 		</div>
 		<div
-			v-if="task.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
-			class="is-flex"
+			v-if="!hasUnmappableFreq"
+			class="repeat-custom-row"
 		>
-			<p class="pis-4">
+			<label
+				for="repeatInterval"
+				class="repeat-custom-label"
+			>
 				{{ $t('task.repeat.each') }}
-			</p>
-			<div class="field has-addons is-fullwidth">
-				<div class="control">
+			</label>
+			<div class="field has-addons repeat-interval-controls">
+				<div class="control repeat-interval-amount">
 					<input
-						v-model="repeatAfter.amount"
-						:disabled="disabled || undefined"
+						id="repeatInterval"
+						v-model.number="repeatInterval"
+						:disabled="disabled || isComplex || undefined"
 						class="input"
 						:placeholder="$t('task.repeat.specifyAmount')"
 						type="number"
-						min="0"
+						min="1"
 						@change="updateData"
 					>
 				</div>
-				<div class="control">
+				<div class="control repeat-interval-unit">
 					<div class="select">
 						<select
-							v-model="repeatAfter.type"
-							:disabled="disabled || undefined"
+							v-model="repeatFrequency"
+							:disabled="disabled || isComplex || undefined"
+							:aria-label="$t('task.repeat.intervalUnit')"
 							@change="updateData"
 						>
 							<option value="hours">
@@ -85,8 +89,46 @@
 							<option value="weeks">
 								{{ $t('task.repeat.weeks') }}
 							</option>
+							<option value="months">
+								{{ $t('task.repeat.months') }}
+							</option>
+							<option value="years">
+								{{ $t('task.repeat.years') }}
+							</option>
 						</select>
 					</div>
+				</div>
+			</div>
+		</div>
+		<div
+			v-if="repeatFrequency === 'months'"
+			class="repeat-month-day-row"
+		>
+			<label
+				for="repeatDay"
+				class="repeat-month-day-label"
+			>
+				{{ $t('task.repeat.onDay') }}
+			</label>
+			<div class="control repeat-month-day-control">
+				<div class="select">
+					<select
+						id="repeatDay"
+						v-model.number="repeatByMonthDay"
+						:disabled="disabled || isComplex || undefined"
+						@change="updateData"
+					>
+						<option :value="0">
+							{{ $t('task.repeat.sameDay') }}
+						</option>
+						<option
+							v-for="day in 31"
+							:key="day"
+							:value="day"
+						>
+							{{ day }}
+						</option>
+					</select>
 				</div>
 			</div>
 		</div>
@@ -94,15 +136,20 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {error} from '@/message'
 
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
-import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {Task as ITask} from '@/client/generated'
-import {createTaskDraft, parseRepeatAfter, repeatAfterToSeconds} from '@/helpers/task'
+import {
+	freqToUiFreq,
+	isComplexRepeat,
+	isMappableFreq,
+	repeatFromSettings,
+	type RepeatFrequency,
+} from '@/helpers/rrule'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: ITask | undefined,
@@ -112,24 +159,34 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'update:modelValue': [value: ITask | undefined],
+	'update:modelValue': [value: ITask],
 }>()
 
 const {t} = useI18n({useScope: 'global'})
 
-const task = ref<ITask>(createTaskDraft())
-const repeatAfter = reactive({
-	amount: 0,
-	type: '',
-})
+const repeatInterval = ref(1)
+const repeatFrequency = ref<RepeatFrequency>('days')
+const repeatByMonthDay = ref(0)
+const repeatsFromCurrentDate = ref(false)
+
+// Editing a rule the simple controls can't represent would drop its advanced parts; it can still be removed.
+const isComplex = computed(() => isComplexRepeat(props.modelValue?.repeat))
+
+// A freq without a unit in the dropdown (e.g. MINUTELY) would show a wrong value, so hide the row.
+const hasUnmappableFreq = computed(() => props.modelValue?.repeat != null
+	&& !isMappableFreq(props.modelValue.repeat.freq))
 
 watch(
 	() => props.modelValue,
 	(value) => {
-		if (!value) return
-		task.value = {...value}
-		if (typeof value.repeat_after !== 'undefined') {
-			Object.assign(repeatAfter, parseRepeatAfter(value.repeat_after))
+		if (!value) {
+			return
+		}
+		repeatsFromCurrentDate.value = value.repeats_from_current_date ?? false
+		if (value.repeat) {
+			repeatInterval.value = value.repeat.interval || 1
+			repeatFrequency.value = freqToUiFreq(value.repeat.freq ?? '')
+			repeatByMonthDay.value = value.repeat.by_month_day?.[0] ?? 0
 		}
 	},
 	{
@@ -138,50 +195,177 @@ watch(
 	},
 )
 
+function emitTask(changes: Pick<ITask, 'repeat' | 'repeats_from_current_date'>) {
+	if (!props.modelValue) {
+		return
+	}
+	emit('update:modelValue', {
+		...props.modelValue,
+		...changes,
+	})
+}
+
+// The completion-date flag is orthogonal to the rule: changing it sends the existing rule back
+// whole, never one rebuilt from the controls, which would drop parts they don't show. Without a
+// rule yet, the controls build one as for any other edit.
+function updateFromCurrentDate() {
+	if (props.modelValue?.repeat) {
+		emitTask({repeats_from_current_date: repeatsFromCurrentDate.value})
+		return
+	}
+	updateData()
+}
+
 function updateData() {
-	if (!task.value || 
-		(task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) ||
-		(task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE && repeatAfter.amount === 0)
-	) {
+	// A complex rule keeps the completion-date flag editable and is sent back whole.
+	if (isComplex.value) {
+		emitTask({repeats_from_current_date: repeatsFromCurrentDate.value})
 		return
 	}
 
-	if (task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount < 0) {
+	if (repeatInterval.value < 1) {
 		error({message: t('task.repeat.invalidAmount')})
 		return
 	}
 
-	task.value.repeat_after = repeatAfterToSeconds(repeatAfter as IRepeatAfter)
-	emit('update:modelValue', task.value)
+	const byMonthDay = repeatFrequency.value === 'months' && repeatByMonthDay.value > 0
+		? repeatByMonthDay.value
+		: undefined
+	emitTask({
+		repeat: repeatFromSettings(repeatInterval.value, repeatFrequency.value, byMonthDay) ?? undefined,
+		repeats_from_current_date: repeatsFromCurrentDate.value,
+	})
 }
 
-function setRepeatAfter(amount: number, type: IRepeatAfter['type']) {
-	Object.assign(repeatAfter, { amount, type})
-	updateData()
+function setQuickRepeat(freq: string) {
+	if (isComplex.value) {
+		return
+	}
+
+	repeatInterval.value = 1
+	repeatFrequency.value = freqToUiFreq(freq)
+	repeatByMonthDay.value = 0
+	emitTask({
+		repeat: {
+			freq,
+			interval: 1,
+		},
+		repeats_from_current_date: repeatsFromCurrentDate.value,
+	})
 }
 </script>
 
 <style lang="scss" scoped>
-p {
-	padding-block-start: 6px;
-}
-
-.input {
-	min-inline-size: 2rem;
+.repeat-after-input {
+	container-type: inline-size;
+	display: flex;
+	flex-direction: column;
+	gap: .5rem;
+	margin-block-start: .25rem;
+	max-inline-size: 100%;
 }
 
 .button-group {
 	display: flex;
-	justify-content: center;
+	flex-wrap: wrap;
+	gap: .25rem;
+}
 
-	:deep(.button:not(:last-child)) {
-		border-start-end-radius: 0;
-		border-end-end-radius: 0;
+.repeat-advanced-note {
+	margin: 0;
+	font-size: .85rem;
+	color: var(--grey-500);
+}
+
+.repeat-from-current-date {
+	display: flex;
+	align-items: center;
+	min-block-size: 1.25rem;
+}
+
+.repeat-custom-row,
+.repeat-month-day-row {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	min-inline-size: 0;
+}
+
+.repeat-custom-label,
+.repeat-month-day-label {
+	display: flex;
+	align-items: center;
+	flex: 0 0 auto;
+	min-block-size: 2.25rem;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.repeat-interval-controls {
+	display: flex;
+	flex: 0 1 12.5rem;
+	max-inline-size: 12.5rem;
+	min-inline-size: 0;
+	margin-block-end: 0;
+}
+
+.repeat-interval-amount {
+	flex: 0 0 4rem;
+}
+
+.repeat-interval-unit {
+	flex: 0 1 8.5rem;
+	min-inline-size: 7.5rem;
+	max-inline-size: 8.5rem;
+}
+
+.repeat-month-day-control {
+	flex: 1 1 4.5rem;
+	min-inline-size: 4.5rem;
+	max-inline-size: 8rem;
+}
+
+.input {
+	min-inline-size: 0;
+}
+
+.repeat-interval-amount .input,
+.repeat-interval-unit .select,
+.repeat-interval-unit select,
+.repeat-month-day-control .select,
+.repeat-month-day-control select {
+	inline-size: 100%;
+}
+
+@container (max-width: 15rem) {
+	.repeat-interval-controls {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: .25rem;
 	}
 
-	:deep(.button:not(:first-child)) {
-		border-start-start-radius: 0;
-		border-end-start-radius: 0;
+	.repeat-interval-controls > .control {
+		margin-inline-end: 0;
+	}
+
+	.repeat-interval-amount {
+		flex: none;
+		inline-size: 4rem;
+	}
+
+	.repeat-interval-unit {
+		flex: none;
+		inline-size: 100%;
+	}
+
+	.repeat-interval-amount .input {
+		border-start-end-radius: $radius;
+		border-end-end-radius: $radius;
+	}
+
+	.repeat-interval-unit .select select {
+		border-start-start-radius: $radius;
+		border-end-start-radius: $radius;
 	}
 }
 </style>

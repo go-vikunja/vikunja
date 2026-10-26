@@ -105,6 +105,45 @@ func TestProjectDuplicate(t *testing.T) {
 		assertShareCount(t, s, l.Project.ID, 2, 1, 1)
 	})
 
+	// Every duplicated task carries its rule text verbatim.
+	t.Run("carries recurrence rules verbatim", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		rules := map[string]string{
+			"easter task": "FREQ=YEARLY;BYEASTER=0",
+			"simple task": "FREQ=WEEKLY;INTERVAL=2",
+			// Rejected by today's creation policy, still copied verbatim as an existing stored rule.
+			"policy-rejected task": "FREQ=HOURLY;INTERVAL=1;BYHOUR=9",
+		}
+		// Inserted directly, as a CalDAV client or the migration would have stored them.
+		_, err := s.Insert(
+			&Task{Title: "easter task", ProjectID: 4, Index: 20, CreatedByID: 3, Repeats: rules["easter task"], UID: "duplicate-rrule-easter"},
+			&Task{Title: "simple task", ProjectID: 4, Index: 21, CreatedByID: 3, Repeats: rules["simple task"], UID: "duplicate-rrule-simple"},
+			&Task{Title: "policy-rejected task", ProjectID: 4, Index: 22, CreatedByID: 3, Repeats: rules["policy-rejected task"], UID: "duplicate-rrule-policy"},
+		)
+		require.NoError(t, err)
+		_, err = s.ID(4).Cols("last_index").Update(&ProjectTaskCounter{LastIndex: 22})
+		require.NoError(t, err)
+
+		usr := &user.User{ID: 3}
+		duplicate := &ProjectDuplicate{ProjectID: 4}
+		can, err := duplicate.CanCreate(s, usr)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, duplicate.Create(s, usr))
+
+		for title, rule := range rules {
+			task := &Task{}
+			has, err := s.Where("project_id = ? AND title = ?", duplicate.Project.ID, title).Get(task)
+			require.NoError(t, err)
+			require.True(t, has, title)
+			assert.Equal(t, rule, task.Repeats, "%s: the duplicate must carry the original's rule byte-identical", title)
+		}
+	})
+
 	t.Run("preserves out-of-order task indexes", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		db.LoadAndAssertFixtures(t)

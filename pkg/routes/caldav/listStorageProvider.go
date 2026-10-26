@@ -764,6 +764,9 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 
 	// Overlay only what the VTODO expressed; everything else keeps its stored value.
 	base := *stored
+	// The RRULE string is authoritative: its structured form can't express every rule (e.g. BYEASTER),
+	// and a non-nil one would be re-serialised over the stored rule on update.
+	base.Repeat = nil
 	if props.Title {
 		base.Title = vTask.Title
 	}
@@ -787,6 +790,9 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	}
 	if props.Color {
 		base.HexColor = vTask.HexColor
+	}
+	if props.Repeats {
+		base.Repeats = vTask.Repeats
 	}
 	// nil = no VALARM, keep stored reminders; non-nil (even empty) = client owns the alarm set.
 	if vTask.Reminders != nil {

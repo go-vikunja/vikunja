@@ -72,22 +72,24 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		return err
 	}
 
-	// Create the new task
+	// Create the new task. Only the stored rule text is copied, not its structured repeat, so
+	// the copy keeps rules the structured form cannot fully express.
 	newTask := &Task{
-		Title:       originalTask.Title,
-		Description: originalTask.Description,
-		Done:        false,
-		DueDate:     originalTask.DueDate,
-		ProjectID:   originalTask.ProjectID,
-		RepeatAfter: originalTask.RepeatAfter,
-		RepeatMode:  originalTask.RepeatMode,
-		Priority:    originalTask.Priority,
-		StartDate:   originalTask.StartDate,
-		EndDate:     originalTask.EndDate,
-		HexColor:    originalTask.HexColor,
-		PercentDone: originalTask.PercentDone,
-		Assignees:   originalTask.Assignees,
-		Reminders:   originalTask.Reminders,
+		Title:                  originalTask.Title,
+		Description:            originalTask.Description,
+		Done:                   false,
+		DueDate:                originalTask.DueDate,
+		ProjectID:              originalTask.ProjectID,
+		Repeats:                originalTask.Repeats,
+		RepeatsFromCurrentDate: originalTask.RepeatsFromCurrentDate,
+		Priority:               originalTask.Priority,
+		StartDate:              originalTask.StartDate,
+		EndDate:                originalTask.EndDate,
+		HexColor:               originalTask.HexColor,
+		PercentDone:            originalTask.PercentDone,
+		Assignees:              originalTask.Assignees,
+		Reminders:              originalTask.Reminders,
+		copiesStoredRule:       true,
 	}
 
 	err = createTask(s, newTask, doer, true, true)

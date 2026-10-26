@@ -17,8 +17,10 @@
 package models
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/json"
+	"io"
 	"os"
 	"testing"
 	"time"
@@ -31,6 +33,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestGetUserDataExportStatus(t *testing.T) {
@@ -143,4 +146,78 @@ func TestHandleUserDataExport(t *testing.T) {
 			assertBlobMissing(t, id)
 		}
 	})
+}
+
+// exportedTasks runs user userID's project and task export and returns each exported task's JSON
+// object from data.json, by id.
+func exportedTasks(t *testing.T, s *xorm.Session, userID int64) map[string]map[string]json.RawMessage {
+	t.Helper()
+	u, err := user.GetUserByID(s, userID)
+	require.NoError(t, err)
+
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	_, err = exportProjectsAndTasks(s, u, zw)
+	require.NoError(t, err)
+	require.NoError(t, zw.Close())
+
+	zr, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	require.NoError(t, err)
+	var data []byte
+	for _, f := range zr.File {
+		if f.Name != "data.json" {
+			continue
+		}
+		rc, err := f.Open()
+		require.NoError(t, err)
+		data, err = io.ReadAll(rc)
+		require.NoError(t, err)
+		require.NoError(t, rc.Close())
+	}
+	require.NotEmpty(t, data, "the export must contain data.json")
+
+	var projects []struct {
+		Tasks []map[string]json.RawMessage `json:"tasks"`
+	}
+	require.NoError(t, json.Unmarshal(data, &projects))
+	tasks := map[string]map[string]json.RawMessage{}
+	for _, p := range projects {
+		for _, task := range p.Tasks {
+			tasks[string(task["id"])] = task
+		}
+	}
+	return tasks
+}
+
+// The export carries each task's exact rule in the export-only repeats_rrule field,
+// next to the structured repeat the API also returns.
+func TestExportProjectsAndTasksCarriesRepeatsRRule(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(1).Cols("repeats").Update(&Task{Repeats: "FREQ=YEARLY;BYEASTER=0"})
+	require.NoError(t, err)
+
+	tasks := exportedTasks(t, s, 1)
+
+	for id, want := range map[string]string{
+		"28": "FREQ=HOURLY;INTERVAL=1",
+		"1":  "FREQ=YEARLY;BYEASTER=0",
+	} {
+		task, ok := tasks[id]
+		require.True(t, ok, "task %s must be exported", id)
+		var got string
+		require.NoError(t, json.Unmarshal(task["repeats_rrule"], &got), "task %s: repeats_rrule", id)
+		assert.Equal(t, want, got, "task %s", id)
+		assert.NotEqual(t, "null", string(task["repeat"]), "task %s keeps the structured repeat", id)
+		assert.NotEmpty(t, task["repeat"], "task %s keeps the structured repeat", id)
+	}
+
+	// A task without a rule carries no repeats_rrule key at all.
+	plain, ok := tasks["2"]
+	require.True(t, ok)
+	_, has := plain["repeats_rrule"]
+	assert.False(t, has, "a task without a rule must not carry repeats_rrule")
 }

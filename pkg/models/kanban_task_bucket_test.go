@@ -21,11 +21,13 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/teambition/rrule-go"
 	"xorm.io/xorm"
 )
 
@@ -201,7 +203,7 @@ func TestTaskBucket_Update(t *testing.T) {
 		err = updatedTask.ReadOne(s, u)
 		require.NoError(t, err)
 		updatedTask.Done = true
-		updateDone(oldTask, updatedTask) // updatedTask now contains the updated dates
+		updateDone(oldTask, updatedTask, config.GetTimeZone()) // updatedTask now contains the updated dates
 
 		err = tb.Update(s, u)
 		require.NoError(t, err)
@@ -222,6 +224,52 @@ func TestTaskBucket_Update(t *testing.T) {
 		assert.Equal(t, updatedTask.DueDate.Unix(), tb.Task.DueDate.Unix())
 		assert.Equal(t, updatedTask.StartDate.Unix(), tb.Task.StartDate.Unix())
 		assert.Equal(t, updatedTask.EndDate.Unix(), tb.Task.EndDate.Unix())
+	})
+	// Completing a COUNT rule by moving it to the done bucket must persist the decrement, and
+	// clear an exhausted rule, exactly as completing it through a task update does.
+	t.Run("moving a COUNT rule to the done bucket persists the decremented COUNT", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// A future due date, so the rule still has an occurrence after this one.
+		due := time.Now().Add(24 * time.Hour).Truncate(time.Second)
+		_, err := s.ID(28).Cols("repeats", "due_date").Update(&Task{Repeats: "FREQ=DAILY;INTERVAL=1;COUNT=2", DueDate: due})
+		require.NoError(t, err)
+
+		tb := &TaskBucket{TaskID: 28, BucketID: 3, ProjectViewID: 4, ProjectID: 1}
+		require.NoError(t, tb.Update(s, u))
+		require.NoError(t, s.Commit())
+
+		stored := &Task{}
+		has, err := s.ID(28).Get(stored)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.False(t, stored.Done)
+		opt, err := rrule.StrToROption(stored.Repeats)
+		require.NoError(t, err, "stored rule %q", stored.Repeats)
+		assert.Equal(t, 1, opt.Count, "stored rule %q", stored.Repeats)
+		assert.Equal(t, rrule.DAILY, opt.Freq)
+		assert.Equal(t, due.Add(24*time.Hour).Unix(), stored.DueDate.Unix())
+	})
+	t.Run("moving an exhausted COUNT rule to the done bucket clears the rule", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(28).Cols("repeats").Update(&Task{Repeats: "FREQ=DAILY;INTERVAL=1;COUNT=1"})
+		require.NoError(t, err)
+
+		tb := &TaskBucket{TaskID: 28, BucketID: 3, ProjectViewID: 4, ProjectID: 1}
+		require.NoError(t, tb.Update(s, u))
+		require.NoError(t, s.Commit())
+
+		stored := &Task{}
+		has, err := s.ID(28).Get(stored)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.True(t, stored.Done, "an exhausted rule leaves the task done")
+		assert.Empty(t, stored.Repeats)
 	})
 	t.Run("moving a repeating task from a non-default bucket to the done bucket moves it to the default bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

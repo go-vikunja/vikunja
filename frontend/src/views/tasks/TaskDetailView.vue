@@ -696,7 +696,7 @@ import Reactions from '@/components/input/Reactions.vue'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {getScrollParent} from '@/helpers/getScrollParent'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isRepeating} from '@/helpers/rrule'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 import {taskLoadErrorAction} from './taskDetailError'
@@ -707,6 +707,7 @@ import {
 	useFavoriteTaskMutation,
 	useDuplicateTaskMutation,
 	useMarkTaskReadMutation,
+	type TaskInput,
 } from '@/client/queries/taskMutations'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
@@ -767,7 +768,16 @@ const task = ref(createTaskDraft())
 
 // Only fields edited here stay local; the rest follows the cache.
 function followServerFields(loaded: ITask) {
-	const {priority, percent_done, due_date, start_date, end_date, reminders, repeat_after, repeat_mode} = task.value
+	const {
+		priority,
+		percent_done,
+		due_date,
+		start_date,
+		end_date,
+		reminders,
+		repeat,
+		repeats_from_current_date,
+	} = task.value
 	task.value = {
 		...createTaskDraft(klona(loaded)),
 		priority,
@@ -776,8 +786,8 @@ function followServerFields(loaded: ITask) {
 		start_date,
 		end_date,
 		reminders,
-		repeat_after,
-		repeat_mode,
+		repeat,
+		repeats_from_current_date,
 	}
 }
 
@@ -1020,8 +1030,7 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.related_tasks ?? {}).length > 0
 	activeFields.reminders = (task.value.reminders?.length ?? 0) > 0
-	activeFields.repeatAfter = (task.value.repeat_after ?? 0) > 0
-		|| task.value.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.repeatAfter = isRepeating(task.value.repeat)
 	activeFields.startDate = Boolean(parseDateOrNull(task.value.start_date))
 }
 
@@ -1122,7 +1131,7 @@ function openAttachments() {
 }
 
 async function saveTask(
-	currentTask: ITask | null = null,
+	currentTask: TaskInput | null = null,
 	undoCallback?: () => void,
 ) {
 	if (currentTask === null) {
@@ -1262,9 +1271,11 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeat_after = 0
-	task.value.repeat_mode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	await saveTask()
+	await saveTask({
+		...klona(task.value),
+		repeat: null,
+		repeats_from_current_date: false,
+	})
 }
 
 function setRelatedTasksActive() {

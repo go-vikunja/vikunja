@@ -29,7 +29,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/teambition/rrule-go"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 func TestTask_Create(t *testing.T) {
@@ -416,9 +418,9 @@ func TestTask_Update(t *testing.T) {
 		defer s.Close()
 
 		task := &Task{
-			ID:          28,
-			Done:        true,
-			RepeatAfter: 3600,
+			ID:      28,
+			Done:    true,
+			Repeats: "FREQ=HOURLY;INTERVAL=1",
 		}
 		err := task.Update(s, u)
 		require.NoError(t, err)
@@ -449,9 +451,9 @@ func TestTask_Update(t *testing.T) {
 
 		// Mark the repeating task as done
 		task := &Task{
-			ID:          28,
-			Done:        true,
-			RepeatAfter: 3600,
+			ID:      28,
+			Done:    true,
+			Repeats: "FREQ=HOURLY;INTERVAL=1",
 		}
 		err = task.Update(s, u)
 		require.NoError(t, err)
@@ -485,9 +487,9 @@ func TestTask_Update(t *testing.T) {
 		// the frontend hits when the user clicks "Done" in the task
 		// detail pane).
 		task := &Task{
-			ID:          28,
-			Done:        true,
-			RepeatAfter: 3600,
+			ID:      28,
+			Done:    true,
+			Repeats: "FREQ=HOURLY;INTERVAL=1",
 		}
 		err = task.Update(s, u)
 		require.NoError(t, err)
@@ -533,9 +535,9 @@ func TestTask_Update(t *testing.T) {
 		require.NoError(t, err)
 
 		task := &Task{
-			ID:          28,
-			Done:        true,
-			RepeatAfter: 3600,
+			ID:      28,
+			Done:    true,
+			Repeats: "FREQ=HOURLY;INTERVAL=1",
 		}
 		err = task.Update(s, u)
 		require.NoError(t, err)
@@ -872,7 +874,7 @@ func TestUpdateDone(t *testing.T) {
 
 		oldTask := &Task{Done: false}
 		newTask := &Task{Done: true}
-		updateDone(oldTask, newTask)
+		updateDone(oldTask, newTask, config.GetTimeZone())
 		assert.NotEqual(t, time.Time{}, newTask.DoneAt)
 	})
 	t.Run("unmarking a task as done", func(t *testing.T) {
@@ -882,194 +884,179 @@ func TestUpdateDone(t *testing.T) {
 
 		oldTask := &Task{Done: true}
 		newTask := &Task{Done: false}
-		updateDone(oldTask, newTask)
+		updateDone(oldTask, newTask, config.GetTimeZone())
 		assert.Equal(t, time.Time{}, newTask.DoneAt)
 	})
-	t.Run("no interval set, default repeat mode", func(t *testing.T) {
+	t.Run("no repeats set", func(t *testing.T) {
 		dueDate := time.Unix(1550000000, 0)
 		oldTask := &Task{
-			Done:        false,
-			RepeatAfter: 0,
-			RepeatMode:  TaskRepeatModeDefault,
-			DueDate:     dueDate,
+			Done:    false,
+			Repeats: "",
+			DueDate: dueDate,
 		}
 		newTask := &Task{
 			Done:    true,
 			DueDate: dueDate,
 		}
-		updateDone(oldTask, newTask)
+		updateDone(oldTask, newTask, config.GetTimeZone())
 
 		assert.Equal(t, dueDate.Unix(), newTask.DueDate.Unix())
 		assert.True(t, newTask.Done)
 	})
-	t.Run("repeating interval", func(t *testing.T) {
-		t.Run("normal", func(t *testing.T) {
+	t.Run("repeating interval with RRULE", func(t *testing.T) {
+		t.Run("daily repeat", func(t *testing.T) {
+			oldDueDate := time.Now().Add(-48 * time.Hour) // 2 days ago
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				DueDate:     time.Unix(1550000000, 0),
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: oldDueDate,
 			}
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, config.GetTimeZone())
 
-			var expected = time.Unix(1550008600, 0)
-			for time.Since(expected) > 0 {
-				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
-			}
-
-			assert.Equal(t, expected, newTask.DueDate)
+			// A 2-day-overdue daily rule skips the two past days and lands exactly
+			// one day in the future: oldDueDate + 3 days. Weekly would be +7 days,
+			// so an exact delta guards against the frequency being misinterpreted.
+			assert.Equal(t, oldDueDate.Add(72*time.Hour).Unix(), newTask.DueDate.Unix())
 			assert.False(t, newTask.Done)
 		})
-		t.Run("don't update if due date is zero", func(t *testing.T) {
+		t.Run("no due date is a no-op", func(t *testing.T) {
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				DueDate:     time.Time{},
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: time.Time{},
 			}
 			newTask := &Task{
-				Done:    true,
-				DueDate: time.Unix(1543626724, 0),
+				Done: true,
 			}
-			updateDone(oldTask, newTask)
-			assert.Equal(t, time.Unix(1543626724, 0), newTask.DueDate)
-			assert.False(t, newTask.Done)
+			updateDone(oldTask, newTask, config.GetTimeZone())
+			// Repeating task without a due date should not get one auto-assigned
+			assert.True(t, newTask.DueDate.IsZero(), "due date should remain unset")
 		})
 		t.Run("update reminders", func(t *testing.T) {
+			oldReminder1 := time.Now().Add(-48 * time.Hour)
+			oldReminder2 := time.Now().Add(-24 * time.Hour)
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: time.Now().Add(-48 * time.Hour),
 				Reminders: []*TaskReminder{
 					{
-						Reminder: time.Unix(1550000000, 0),
+						Reminder: oldReminder1,
 					},
 					{
-						Reminder: time.Unix(1555000000, 0),
+						Reminder: oldReminder2,
 					},
 				},
 			}
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
-
-			var expected1 = time.Unix(1550008600, 0)
-			var expected2 = time.Unix(1555008600, 0)
-			for time.Since(expected1) > 0 {
-				expected1 = expected1.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
-			}
-			for time.Since(expected2) > 0 {
-				expected2 = expected2.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
-			}
+			updateDone(oldTask, newTask, config.GetTimeZone())
 
 			assert.Len(t, newTask.Reminders, 2)
-			assert.Equal(t, expected1, newTask.Reminders[0].Reminder)
-			assert.Equal(t, expected2, newTask.Reminders[1].Reminder)
+			// New reminders should be in the future
+			assert.True(t, newTask.Reminders[0].Reminder.After(oldReminder1))
+			assert.True(t, newTask.Reminders[1].Reminder.After(oldReminder2))
 			assert.False(t, newTask.Done)
 		})
 		t.Run("update start date", func(t *testing.T) {
+			// Start and due share the same 2-day-overdue anchor, so the due date
+			// shifts by exactly 72h and start must shift by the same delta to keep
+			// its offset from the due date intact.
+			base := time.Now().Add(-48 * time.Hour)
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				StartDate:   time.Unix(1550000000, 0),
+				Done:      false,
+				Repeats:   "FREQ=DAILY;INTERVAL=1",
+				DueDate:   base,
+				StartDate: base,
 			}
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, config.GetTimeZone())
 
-			var expected = time.Unix(1550008600, 0)
-			for time.Since(expected) > 0 {
-				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
-			}
-
-			assert.Equal(t, expected, newTask.StartDate)
+			assert.Equal(t, base.Add(72*time.Hour).Unix(), newTask.StartDate.Unix())
 			assert.False(t, newTask.Done)
 		})
 		t.Run("update end date", func(t *testing.T) {
+			base := time.Now().Add(-48 * time.Hour)
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				EndDate:     time.Unix(1550000000, 0),
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: base,
+				EndDate: base,
 			}
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, config.GetTimeZone())
 
-			var expected = time.Unix(1550008600, 0)
-			for time.Since(expected) > 0 {
-				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
-			}
-
-			assert.Equal(t, expected, newTask.EndDate)
+			assert.Equal(t, base.Add(72*time.Hour).Unix(), newTask.EndDate.Unix())
 			assert.False(t, newTask.Done)
 		})
 		t.Run("ensure due date is repeated even if the original one is in the future", func(t *testing.T) {
+			oldDueDate := time.Now().Add(time.Hour)
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				DueDate:     time.Now().Add(time.Hour),
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: oldDueDate,
 			}
 			newTask := &Task{
 				Done: true,
 			}
-			updateDone(oldTask, newTask)
-			expected := oldTask.DueDate.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
-			assert.Equal(t, expected, newTask.DueDate)
+			updateDone(oldTask, newTask, config.GetTimeZone())
+			// Next occurrence should be after the original due date
+			assert.True(t, newTask.DueDate.After(oldDueDate))
 			assert.False(t, newTask.Done)
 		})
 		t.Run("repeat from current date", func(t *testing.T) {
 			t.Run("due date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					DueDate:     time.Unix(1550000000, 0),
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					DueDate:                time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.DueDate.Unix())
+				// Should calculate from now, so new due date should be tomorrow or later
+				assert.True(t, newTask.DueDate.After(time.Now()))
 				assert.False(t, newTask.Done)
 			})
-			t.Run("reminders", func(t *testing.T) {
+			t.Run("future due date searches from now (regression)", func(t *testing.T) {
+				// Repeat-from-current-date with a due date in the FUTURE must advance
+				// from now, not from the future due date.
+				futureDue := time.Now().Add(30 * 24 * time.Hour)
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					Reminders: []*TaskReminder{
-						{
-							Reminder: time.Unix(1550000000, 0),
-						},
-						{
-							Reminder: time.Unix(1555000000, 0),
-						},
-					}}
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					DueDate:                futureDue,
+				}
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
-				diff := oldTask.Reminders[1].Reminder.Sub(oldTask.Reminders[0].Reminder)
-
-				assert.Len(t, newTask.Reminders, 2)
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[0].Reminder.Unix())
-				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[1].Reminder.Unix())
+				// Next occurrence is ~tomorrow (measured from now), well before the
+				// original future due date — not futureDue+1day.
+				assert.True(t, newTask.DueDate.After(time.Now()))
+				assert.True(t, newTask.DueDate.Before(futureDue))
 				assert.False(t, newTask.Done)
 			})
 			t.Run("reminders spanning more than 292 years", func(t *testing.T) {
 				// time.Duration saturates at ~292 years; the offset between reminders
 				// must not be computed as a single Duration.
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 315360000,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=3650",
+					RepeatsFromCurrentDate: true,
 					Reminders: []*TaskReminder{
 						{Reminder: time.Date(1734, 1, 1, 0, 0, 0, 0, time.UTC)},
 						{Reminder: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)},
@@ -1077,10 +1064,10 @@ func TestUpdateDone(t *testing.T) {
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
 				assert.Len(t, newTask.Reminders, 2)
-				expectedFirst := time.Now().Add(time.Duration(oldTask.RepeatAfter) * time.Second)
+				expectedFirst := time.Now().Add(3650 * 24 * time.Hour)
 				assert.Equal(t, expectedFirst.Unix(), newTask.Reminders[0].Reminder.Unix())
 				assert.Equal(t, expectedFirst.Year()+292, newTask.Reminders[1].Reminder.Year())
 				assert.True(t, newTask.Reminders[1].Reminder.After(newTask.Reminders[0].Reminder))
@@ -1088,159 +1075,146 @@ func TestUpdateDone(t *testing.T) {
 			})
 			t.Run("start date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					StartDate:   time.Unix(1550000000, 0),
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					StartDate:              time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.StartDate.Unix())
+				assert.True(t, newTask.StartDate.After(time.Now()))
 				assert.False(t, newTask.Done)
 			})
 			t.Run("end date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					EndDate:     time.Unix(1560000000, 0),
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					EndDate:                time.Unix(1560000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.EndDate.Unix())
+				assert.True(t, newTask.EndDate.After(time.Now()))
 				assert.False(t, newTask.Done)
 			})
-			t.Run("start and end date", func(t *testing.T) {
+			t.Run("preserves start-to-due gap (regression)", func(t *testing.T) {
+				// With both start and due dates, repeat-from-current-date must keep
+				// the start->due offset; it previously collapsed start onto the due
+				// date.
+				oldStart := time.Unix(1550000000, 0)
+				oldDue := oldStart.Add(72 * time.Hour) // 3-day gap
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					StartDate:   time.Unix(1550000000, 0),
-					EndDate:     time.Unix(1560000000, 0),
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					StartDate:              oldStart,
+					DueDate:                oldDue,
 				}
 				newTask := &Task{
 					Done: true,
 				}
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
-				diff := oldTask.EndDate.Sub(oldTask.StartDate)
-
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.StartDate.Unix())
-				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.EndDate.Unix())
 				assert.False(t, newTask.Done)
+				// Due date moves to ~now+1day (measured from completion).
+				assert.True(t, newTask.DueDate.After(time.Now()))
+				// The 3-day start->due gap is preserved, not collapsed to zero. The start moves by
+				// the due date's whole local days and keeps its own clock time: three calendar days
+				// before the new due date, at the old start's time (the zone is the server's, GMT,
+				// here), rather than exactly 72 elapsed hours before it.
+				gmt := config.GetTimeZone()
+				newDue, start := newTask.DueDate.In(gmt), oldStart.In(gmt)
+				wantStart := time.Date(newDue.Year(), newDue.Month(), newDue.Day()-3, start.Hour(), start.Minute(), start.Second(), 0, gmt)
+				assert.True(t, newTask.StartDate.Equal(wantStart), "start: got %v, want %v", newTask.StartDate, wantStart)
 			})
+		})
+		t.Run("finite recurrence (COUNT) decrements and terminates", func(t *testing.T) {
+			// COUNT=3 yields exactly 3 completable occurrences: the stored rule is
+			// decremented on each completion and the task stays done once exhausted,
+			// instead of repeating forever. RepeatsFromCurrentDate keeps the rule's
+			// count window anchored at now so each completion reschedules.
+			now := time.Now()
+
+			// Completion 1: COUNT 3 -> 2, reschedules (task reopens).
+			t1 := &Task{Repeats: "FREQ=DAILY;COUNT=3", RepeatsFromCurrentDate: true, DueDate: now}
+			n1 := &Task{Done: true}
+			updateDone(t1, n1, config.GetTimeZone())
+			require.False(t, n1.Done, "should reopen after completing occurrence 1 of 3")
+			o1, err := rrule.StrToROption(n1.Repeats)
+			require.NoError(t, err)
+			assert.Equal(t, 2, o1.Count)
+
+			// Completion 2: COUNT 2 -> 1, reschedules.
+			t2 := &Task{Repeats: n1.Repeats, RepeatsFromCurrentDate: true, DueDate: n1.DueDate}
+			n2 := &Task{Done: true}
+			updateDone(t2, n2, config.GetTimeZone())
+			require.False(t, n2.Done, "should reopen after completing occurrence 2 of 3")
+			o2, err := rrule.StrToROption(n2.Repeats)
+			require.NoError(t, err)
+			assert.Equal(t, 1, o2.Count)
+
+			// Completion 3: COUNT == 1, exhausted -> stays done, no reschedule.
+			t3 := &Task{Repeats: n2.Repeats, RepeatsFromCurrentDate: true, DueDate: n2.DueDate}
+			n3 := &Task{Done: true}
+			updateDone(t3, n3, config.GetTimeZone())
+			assert.True(t, n3.Done, "should stay done once the finite recurrence is exhausted")
+			assert.Empty(t, n3.Repeats, "exhausted recurrence should clear the rule so the UI stops showing it")
 		})
 		t.Run("repeat each month", func(t *testing.T) {
 			t.Run("due date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					DueDate:    time.Unix(1550000000, 0),
+					Done:    false,
+					Repeats: "FREQ=MONTHLY;INTERVAL=1",
+					DueDate: time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				oldDueDate := oldTask.DueDate
 
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
 				assert.True(t, newTask.DueDate.After(oldDueDate))
-				assert.NotEqual(t, oldDueDate.Month(), newTask.DueDate.Month())
-				assert.False(t, newTask.Done)
-			})
-			t.Run("reminders", func(t *testing.T) {
-				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					Reminders: []*TaskReminder{
-						{
-							Reminder: time.Unix(1550000000, 0),
-						},
-						{
-							Reminder: time.Unix(1555000000, 0),
-						},
-					}}
-				newTask := &Task{
-					Done: true,
-				}
-				oldReminders := make([]time.Time, len(oldTask.Reminders))
-				for i, r := range newTask.Reminders {
-					oldReminders[i] = r.Reminder
-				}
-
-				updateDone(oldTask, newTask)
-
-				assert.Len(t, newTask.Reminders, len(oldReminders))
-				for i, r := range newTask.Reminders {
-					assert.True(t, r.Reminder.After(oldReminders[i]))
-					assert.NotEqual(t, oldReminders[i].Month(), r.Reminder.Month())
-				}
 				assert.False(t, newTask.Done)
 			})
 			t.Run("start date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					StartDate:  time.Unix(1550000000, 0),
+					Done:      false,
+					Repeats:   "FREQ=MONTHLY;INTERVAL=1",
+					DueDate:   time.Unix(1550000000, 0),
+					StartDate: time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				oldStartDate := oldTask.StartDate
 
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
 				assert.True(t, newTask.StartDate.After(oldStartDate))
-				assert.NotEqual(t, oldStartDate.Month(), newTask.StartDate.Month())
 				assert.False(t, newTask.Done)
 			})
 			t.Run("end date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					EndDate:    time.Unix(1560000000, 0),
+					Done:    false,
+					Repeats: "FREQ=MONTHLY;INTERVAL=1",
+					DueDate: time.Unix(1560000000, 0),
+					EndDate: time.Unix(1560000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				oldEndDate := oldTask.EndDate
 
-				updateDone(oldTask, newTask)
+				updateDone(oldTask, newTask, config.GetTimeZone())
 
 				assert.True(t, newTask.EndDate.After(oldEndDate))
-				assert.NotEqual(t, oldEndDate.Month(), newTask.EndDate.Month())
-				assert.False(t, newTask.Done)
-			})
-			t.Run("start and end date", func(t *testing.T) {
-				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					StartDate:  time.Unix(1550000000, 0),
-					EndDate:    time.Unix(1560000000, 0),
-				}
-				newTask := &Task{
-					Done: true,
-				}
-				oldStartDate := oldTask.StartDate
-				oldEndDate := oldTask.EndDate
-				oldDiff := oldTask.EndDate.Sub(oldTask.StartDate)
-
-				updateDone(oldTask, newTask)
-
-				assert.True(t, newTask.StartDate.After(oldStartDate))
-				assert.NotEqual(t, oldStartDate.Month(), newTask.StartDate.Month())
-				assert.True(t, newTask.EndDate.After(oldEndDate))
-				assert.NotEqual(t, oldEndDate.Month(), newTask.EndDate.Month())
-				assert.Equal(t, oldDiff, newTask.EndDate.Sub(newTask.StartDate))
 				assert.False(t, newTask.Done)
 			})
 		})
@@ -1249,16 +1223,16 @@ func TestUpdateDone(t *testing.T) {
 			const unchecked = `before<ul data-type="taskList"><li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Item</p></li></ul>after`
 
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				DueDate:     time.Unix(1550000000, 0),
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: time.Unix(1550000000, 0),
 			}
 			newTask := &Task{
 				Done:        true,
 				Description: checked,
 			}
 
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, config.GetTimeZone())
 
 			assert.False(t, newTask.Done)
 			assert.True(t, newTask.DueDate.After(oldTask.DueDate))
@@ -1268,17 +1242,15 @@ func TestUpdateDone(t *testing.T) {
 			const checked = `before<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Item</p></li></ul>after`
 
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 0,
-				RepeatMode:  TaskRepeatModeDefault,
-				DueDate:     time.Unix(1550000000, 0),
+				Done:    false,
+				DueDate: time.Unix(1550000000, 0),
 			}
 			newTask := &Task{
 				Done:        true,
 				Description: checked,
 			}
 
-			updateDone(oldTask, newTask)
+			updateDone(oldTask, newTask, config.GetTimeZone())
 
 			assert.True(t, newTask.Done)
 			assert.Equal(t, checked, newTask.Description)
@@ -1286,76 +1258,113 @@ func TestUpdateDone(t *testing.T) {
 	})
 }
 
-func TestTask_RepeatAfterCap(t *testing.T) {
-	const maxRepeat int64 = 10 * 365 * 24 * 3600
-
-	t.Run("create rejects repeat_after above cap", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		usr := &user.User{ID: 1, Username: "user1"}
-		task := &Task{
-			Title:       "nope",
-			ProjectID:   1,
-			RepeatAfter: maxRepeat + 1,
-		}
-		err := task.Create(s, usr)
-		require.Error(t, err)
-		assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+func TestValidateRRule(t *testing.T) {
+	t.Run("empty string is valid", func(t *testing.T) {
+		assert.NoError(t, validateRRule(""))
 	})
-
-	t.Run("create accepts repeat_after at cap", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		usr := &user.User{ID: 1, Username: "user1"}
-		task := &Task{
-			Title:       "ok",
-			ProjectID:   1,
-			RepeatAfter: maxRepeat,
-		}
-		require.NoError(t, task.Create(s, usr))
-		require.NoError(t, s.Commit())
+	t.Run("valid daily rule", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=DAILY;INTERVAL=1"))
 	})
-
-	t.Run("update rejects repeat_after above cap", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		usr := &user.User{ID: 1, Username: "user1"}
-		task := &Task{
-			ID:          1,
-			RepeatAfter: maxRepeat + 1,
-		}
-		err := task.Update(s, usr)
+	t.Run("valid weekly with byday", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR"))
+	})
+	t.Run("valid monthly with bymonthday", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15"))
+	})
+	t.Run("malformed string rejected", func(t *testing.T) {
+		err := validateRRule("not a valid rrule")
 		require.Error(t, err)
-		assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+		assert.True(t, IsErrInvalidData(err))
+	})
+	t.Run("missing freq rejected", func(t *testing.T) {
+		err := validateRRule("INTERVAL=2")
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidData(err))
+	})
+	t.Run("plain sub-daily rules stay valid", func(t *testing.T) {
+		// The legacy migration and the UI only author plain sub-daily interval
+		// rules, so these must keep passing.
+		assert.NoError(t, validateRRule("FREQ=SECONDLY;INTERVAL=7200"))
+		assert.NoError(t, validateRRule("FREQ=MINUTELY;INTERVAL=30"))
+		assert.NoError(t, validateRRule("FREQ=HOURLY;INTERVAL=2"))
+	})
+	t.Run("sub-daily with by-part rejected", func(t *testing.T) {
+		// FREQ=SECONDLY;BYSECOND=0 is a time-only filter that defeats the rrule
+		// library's day-skip optimization and iterates second-by-second (DoS).
+		for _, r := range []string{
+			"FREQ=SECONDLY;BYSECOND=0",
+			"FREQ=MINUTELY;BYMINUTE=0",
+			"FREQ=HOURLY;BYHOUR=9",
+			"FREQ=SECONDLY;BYDAY=MO",
+		} {
+			err := validateRRule(r)
+			require.Error(t, err, r)
+			assert.True(t, IsErrInvalidData(err), r)
+		}
 	})
 }
 
-func TestErrInvalidTaskRepeatInterval(t *testing.T) {
-	err := ErrInvalidTaskRepeatInterval{RepeatAfter: 999999999999}
-	assert.True(t, IsErrInvalidTaskRepeatInterval(err))
-	assert.False(t, IsErrInvalidTaskRepeatInterval(ErrTaskCannotBeEmpty{}))
-	httpErr := err.HTTPError()
-	assert.Equal(t, 400, httpErr.HTTPCode)
-	assert.Equal(t, ErrCodeInvalidTaskRepeatInterval, httpErr.Code)
+func TestFixedDurationForRRule(t *testing.T) {
+	cases := []struct {
+		name         string
+		freq         rrule.Frequency
+		interval     int
+		wantDuration time.Duration
+		wantOK       bool
+	}{
+		// Sub-daily frequencies step by elapsed time, so they map to a Duration.
+		{"secondly interval 30", rrule.SECONDLY, 30, 30 * time.Second, true},
+		{"minutely interval 15", rrule.MINUTELY, 15, 15 * time.Minute, true},
+		{"hourly interval 1", rrule.HOURLY, 1, time.Hour, true},
+		// DAILY and WEEKLY step on the local wall clock,
+		// so they are no longer a fixed number of seconds. Their no-due-date policy is tested by
+		// TestNextOccurrenceRuleAttributes.
+		{"daily interval 1", rrule.DAILY, 1, 0, false},
+		{"weekly interval 2", rrule.WEEKLY, 2, 0, false},
+		// Months and years have variable length, so the caller falls back to
+		// rrule.After instead of using a Duration.
+		{"monthly is not fixed", rrule.MONTHLY, 1, 0, false},
+		{"yearly is not fixed", rrule.YEARLY, 1, 0, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d, ok := fixedDurationForRRule(&rrule.ROption{Freq: c.freq, Interval: c.interval})
+			assert.Equal(t, c.wantOK, ok)
+			assert.Equal(t, c.wantDuration, d)
+		})
+	}
 }
 
-func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
-	// GHSA-r4fg-73rc-hhh7: ancient due_date + 1s interval used to spin
-	// for billions of iterations. The <1s assertion catches a regression
-	// to the O(n) loop.
+// TestUpdateDone_UnmovedDueKeepsACompanionEdit: when the next occurrence is the stored due date
+// itself (from completion, due exactly one step ahead), completion moves no companion date, so a
+// start or end the same update edits or clears is kept, as before completion became a
+// nextOccurrence call.
+func TestUpdateDone_UnmovedDueKeepsACompanionEdit(t *testing.T) {
+	now := time.Date(2026, 10, 22, 12, 0, 0, 0, time.UTC)
+	withFixedNow(t, now)
+	due := time.Date(2026, 10, 23, 12, 0, 0, 0, time.UTC)
 	oldTask := &Task{
-		Done:        false,
-		RepeatAfter: 1,
-		RepeatMode:  TaskRepeatModeDefault,
-		DueDate:     time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
-		StartDate:   time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
-		EndDate:     time.Date(1900, 1, 2, 0, 0, 0, 0, time.UTC),
+		Repeats: "FREQ=DAILY", RepeatsFromCurrentDate: true, DueDate: due,
+		StartDate: time.Date(2026, 10, 23, 10, 0, 0, 0, time.UTC),
+		EndDate:   time.Date(2026, 10, 23, 14, 0, 0, 0, time.UTC),
+	}
+	editedStart := time.Date(2026, 10, 23, 17, 0, 0, 0, time.UTC)
+	newTask := &Task{Done: true, Repeats: oldTask.Repeats, DueDate: due, StartDate: editedStart} // end cleared
+
+	updateDone(oldTask, newTask, time.UTC)
+	assert.False(t, newTask.Done)
+	assert.True(t, newTask.DueDate.Equal(due), "got %v", newTask.DueDate)
+	assert.True(t, newTask.StartDate.Equal(editedStart), "the edited start is kept, got %v", newTask.StartDate)
+	assert.True(t, newTask.EndDate.IsZero(), "the cleared end stays cleared, got %v", newTask.EndDate)
+}
+
+func TestUpdateDone_RRuleAncientDueDate(t *testing.T) {
+	oldTask := &Task{
+		Done:      false,
+		Repeats:   "FREQ=SECONDLY;INTERVAL=1",
+		DueDate:   time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		StartDate: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		EndDate:   time.Date(1900, 1, 2, 0, 0, 0, 0, time.UTC),
 		Reminders: []*TaskReminder{
 			{Reminder: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)},
 		},
@@ -1363,7 +1372,7 @@ func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
 	newTask := &Task{Done: true}
 
 	start := time.Now()
-	updateDone(oldTask, newTask)
+	updateDone(oldTask, newTask, config.GetTimeZone())
 	elapsed := time.Since(start)
 
 	require.Less(t, elapsed, time.Second, "updateDone must not take seconds for ancient due dates")
@@ -1373,88 +1382,83 @@ func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
 	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
 }
 
-func TestAddRepeatIntervalToTime(t *testing.T) {
-	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
-	day := 24 * time.Hour
+func TestUpdateDone_RRuleAncientDueDate_SlowPath(t *testing.T) {
+	// A daily rule with a By-part takes the rrule.After slow path (no fixed
+	// duration). Anchored at the oldest due date the horizon still evaluates
+	// (200 years back), clampRRuleAnchor advancing the DTSTART keeps it cheap.
+	oldTask := &Task{
+		Done:    false,
+		Repeats: "FREQ=DAILY;BYHOUR=9",
+		DueDate: func() time.Time {
+			n := time.Now().UTC()
+			return time.Date(n.Year()-200, n.Month(), n.Day()+1, 0, 0, 0, 0, time.UTC)
+		}(),
+	}
+	newTask := &Task{Done: true}
 
-	tests := []struct {
-		name     string
-		now      time.Time
-		t        time.Time
-		duration time.Duration
-		want     time.Time
-	}{
-		{
-			name:     "one day interval, t one day before now",
-			now:      now,
-			t:        now.Add(-day),
-			duration: day,
-			want:     now.Add(day),
-		},
-		{
-			name:     "one day interval, t exactly one week before now",
-			now:      now,
-			t:        now.Add(-7 * day),
-			duration: day,
-			want:     now.Add(day),
-		},
-		{
-			name:     "t in the far past (PoC case) completes with sane result",
-			now:      now,
-			t:        time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
-			duration: time.Second,
-			want:     now.Add(time.Second),
-		},
-		{
-			name:     "zero t saturates and falls back",
-			now:      now,
-			t:        time.Time{},
-			duration: time.Hour,
-			want:     now.Add(time.Hour),
-		},
-		{
-			name:     "t after now still advances by one interval",
-			now:      now,
-			t:        now.Add(time.Hour),
-			duration: day,
-			want:     now.Add(time.Hour + day),
-		},
-		{
-			name:     "t equals now still advances",
-			now:      now,
-			t:        now,
-			duration: day,
-			want:     now.Add(day),
-		},
-		{
-			name:     "zero duration returns t unchanged",
-			now:      now,
-			t:        now.Add(-day),
-			duration: 0,
-			want:     now.Add(-day),
-		},
-		{
-			name:     "negative duration returns t unchanged",
-			now:      now,
-			t:        now.Add(-day),
-			duration: -time.Hour,
-			want:     now.Add(-day),
-		},
-		{
-			name:     "tiny duration on ancient date does not overflow",
-			now:      now,
-			t:        time.Date(1800, 1, 1, 0, 0, 0, 0, time.UTC),
-			duration: 1,
-			want:     now.Add(1),
-		},
+	start := time.Now()
+	updateDone(oldTask, newTask, config.GetTimeZone())
+	elapsed := time.Since(start)
+
+	// FREQ=DAILY;BYHOUR=9 fires every day at 09:00:00 UTC, so the next occurrence
+	// is the first 09:00 UTC strictly after now.
+	su := start.UTC()
+	expected := time.Date(su.Year(), su.Month(), su.Day(), 9, 0, 0, 0, time.UTC)
+	if !expected.After(start) {
+		expected = expected.AddDate(0, 0, 1)
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			got := addRepeatIntervalToTime(tc.now, tc.t, tc.duration)
-			assert.Equal(t, tc.want, got)
-		})
-	}
+	require.Less(t, elapsed, time.Second, "slow-path reschedule must stay bounded for ancient due dates")
+	assert.True(t, newTask.DueDate.Equal(expected), "expected next due date %v, got %v", expected, newTask.DueDate.UTC())
+	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
+}
+
+func TestUpdateDone_RRuleSlowPathPreservesPhase(t *testing.T) {
+	// clampRRuleAnchor advances the DTSTART by whole periods; the resulting next
+	// occurrence must match what the un-advanced (recent enough to iterate
+	// correctly) rule yields for the same phase. INTERVAL=3 exercises the period
+	// arithmetic; the 08:30 anchor minute proves wall-clock time is preserved.
+	const repeats = "FREQ=DAILY;INTERVAL=3;BYHOUR=9"
+	anchor := time.Date(2000, 3, 7, 8, 30, 0, 0, time.UTC)
+
+	rule, err := rrule.StrToRRule(repeats)
+	require.NoError(t, err)
+	rule.DTStart(anchor)
+	expected := rule.After(time.Now(), false)
+	require.False(t, expected.IsZero())
+
+	oldTask := &Task{Done: false, Repeats: repeats, DueDate: anchor}
+	newTask := &Task{Done: true}
+	updateDone(oldTask, newTask, config.GetTimeZone())
+
+	assert.True(t, newTask.DueDate.Equal(expected), "clamped anchor changed the occurrence: expected %v, got %v", expected.UTC(), newTask.DueDate.UTC())
+	assert.False(t, newTask.Done)
+}
+
+func TestUpdateDone_FieldScopedRepeatPersists(t *testing.T) {
+	// Completing a repeating task through a field-scoped update (e.g. the bulk
+	// endpoint sending only `done`) must still persist the reschedule: the new
+	// due date and the reopened done state, not just done=false at the old date.
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	u := &user.User{ID: 1}
+
+	// Fixture task 28 repeats hourly with a due date back in 2018.
+	orig := &Task{}
+	_, err := s.ID(28).Get(orig)
+	require.NoError(t, err)
+	require.False(t, orig.Done)
+
+	task := &Task{ID: 28, ProjectID: 1, Done: true}
+	require.NoError(t, task.updateSingleTask(s, u, []string{"done"}))
+
+	stored := &Task{}
+	_, err = s.ID(28).Get(stored)
+	require.NoError(t, err)
+	assert.False(t, stored.Done, "repeating task reopens for its next occurrence")
+	assert.True(t, stored.DueDate.After(time.Now()), "rescheduled due date must persist, not stay at the old date")
+	assert.True(t, stored.DueDate.After(orig.DueDate))
 }
 
 func TestTask_ReadOne(t *testing.T) {
@@ -1703,53 +1707,814 @@ func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
 }
 
-func TestAddOneMonthToDate(t *testing.T) {
-	// addOneMonthToDate returns times in the configured time zone
-	loc := config.GetTimeZone()
-	tests := []struct {
-		name string
-		in   time.Time
-		want time.Time
-	}{
-		{
-			name: "regular day",
-			in:   time.Date(2027, time.January, 15, 9, 0, 0, 0, loc),
-			want: time.Date(2027, time.February, 15, 9, 0, 0, 0, loc),
-		},
-		{
-			name: "january 31 clamps to february 28 in a non-leap year",
-			in:   time.Date(2027, time.January, 31, 9, 0, 0, 0, loc),
-			want: time.Date(2027, time.February, 28, 9, 0, 0, 0, loc),
-		},
-		{
-			name: "january 31 clamps to february 29 in a leap year",
-			in:   time.Date(2028, time.January, 31, 9, 0, 0, 0, loc),
-			want: time.Date(2028, time.February, 29, 9, 0, 0, 0, loc),
-		},
-		{
-			name: "march 31 clamps to april 30",
-			in:   time.Date(2027, time.March, 31, 9, 0, 0, 0, loc),
-			want: time.Date(2027, time.April, 30, 9, 0, 0, 0, loc),
-		},
-		{
-			name: "october 31 clamps to november 30",
-			in:   time.Date(2027, time.October, 31, 9, 0, 0, 0, loc),
-			want: time.Date(2027, time.November, 30, 9, 0, 0, 0, loc),
-		},
-		{
-			name: "december rolls into january of the next year",
-			in:   time.Date(2027, time.December, 31, 9, 0, 0, 0, loc),
-			want: time.Date(2028, time.January, 31, 9, 0, 0, 0, loc),
-		},
-		{
-			name: "february 28 advances to march 28",
-			in:   time.Date(2027, time.February, 28, 9, 0, 0, 0, loc),
-			want: time.Date(2027, time.March, 28, 9, 0, 0, 0, loc),
-		},
+// withFixedNow pins the recurrence engine's clock for one test.
+func withFixedNow(t *testing.T, now time.Time) {
+	t.Helper()
+	orig := timeNow
+	timeNow = func() time.Time { return now }
+	t.Cleanup(func() { timeNow = orig })
+}
+
+// completeRepeating marks a copy of old done, as Update does, and returns the result. The rule is
+// copied onto the new task first, as the write path resolves it before completion runs.
+func completeRepeating(old *Task) *Task { return completeRepeatingIn(old, config.GetTimeZone()) }
+
+// completeRepeatingIn is completeRepeating with an explicit completion zone.
+func completeRepeatingIn(old *Task, zone *time.Location) *Task {
+	n := &Task{Done: true, Repeats: old.Repeats}
+	updateDone(old, n, zone)
+	return n
+}
+
+func reminderAt(at time.Time) *TaskReminder {
+	return &TaskReminder{Reminder: at}
+}
+
+// reminderTime returns the i-th reminder of n, failing the test when it is missing.
+func reminderTime(t *testing.T, n *Task, i int) time.Time {
+	t.Helper()
+	require.Greater(t, len(n.Reminders), i, "reminder %d is missing", i)
+	return n.Reminders[i].Reminder
+}
+
+func TestShiftTime(t *testing.T) {
+	t.Run("short span moves by the exact offset", func(t *testing.T) {
+		from := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		got := shiftTime(from.Add(90*time.Minute), from, from.Add(36*time.Hour))
+		assert.True(t, got.Equal(from.Add(90*time.Minute+36*time.Hour)), "got %v", got)
+	})
+	t.Run("span over 292 years forward does not saturate", func(t *testing.T) {
+		from := time.Date(1700, 1, 1, 0, 0, 0, 0, time.UTC)
+		to := time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC)
+		got := shiftTime(time.Date(1700, 1, 2, 0, 0, 0, 0, time.UTC), from, to)
+		assert.True(t, got.Equal(time.Date(2026, 1, 2, 10, 0, 0, 0, time.UTC)), "got %v", got)
+	})
+	t.Run("span over 292 years backward does not saturate", func(t *testing.T) {
+		from := time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC)
+		to := time.Date(1700, 1, 1, 0, 0, 0, 0, time.UTC)
+		got := shiftTime(time.Date(2026, 1, 2, 10, 0, 0, 0, time.UTC), from, to)
+		assert.True(t, got.Equal(time.Date(1700, 1, 2, 0, 0, 0, 0, time.UTC)), "got %v", got)
+	})
+}
+
+// TestSetTaskDatesRRule pins the completion engine against upstream's legacy setTaskDatesDefault /
+// setTaskDatesMonthRepeat / setTaskDatesFromCurrentDateRepeat. Their parity still governs which
+// dates move without a due date (the no-due-date policy); DAILY and WEEKLY rules now step on the
+// completion zone's wall clock, not by 24 elapsed hours. The "fixed-duration" subtest names
+// predate that change and are kept: they are the policy ratchet.
+func TestSetTaskDatesRRule(t *testing.T) {
+	// Thursday, Oct 22 2026, 12:00 UTC.
+	now := time.Date(2026, 10, 22, 12, 0, 0, 0, time.UTC)
+	at := func(month time.Month, day, hour, minute int) time.Time {
+		return time.Date(2026, month, day, hour, minute, 0, 0, time.UTC)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, addOneMonthToDate(tt.in))
+
+	t.Run("normal mode, no due date", func(t *testing.T) {
+		t.Run("fixed-duration: each date independently jumps past now", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{
+				Repeats:   "FREQ=DAILY;INTERVAL=1",
+				StartDate: at(10, 20, 9, 0),
+				EndDate:   at(10, 23, 10, 0),
+				Reminders: []*TaskReminder{reminderAt(at(10, 21, 8, 0))},
+			})
+			assert.False(t, n.Done)
+			assert.True(t, n.DueDate.IsZero(), "no due date is invented")
+			assert.True(t, n.StartDate.Equal(at(10, 23, 9, 0)), "start: got %v", n.StartDate)
+			assert.True(t, n.EndDate.Equal(at(10, 24, 10, 0)), "end (already future) moves one step: got %v", n.EndDate)
+			assert.True(t, reminderTime(t, n, 0).Equal(at(10, 23, 8, 0)), "reminder: got %v", reminderTime(t, n, 0))
+		})
+		t.Run("calendar: each date takes exactly one rule step, end keeps its gap to start", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{
+				Repeats:   "FREQ=MONTHLY;INTERVAL=1",
+				StartDate: at(1, 10, 9, 0),
+				EndDate:   at(1, 12, 17, 0),
+				Reminders: []*TaskReminder{reminderAt(at(1, 15, 8, 0))},
+			})
+			assert.False(t, n.Done)
+			// One step only, even though the result is still before now (upstream's monthly path).
+			assert.True(t, n.StartDate.Equal(at(2, 10, 9, 0)), "start: got %v", n.StartDate)
+			assert.True(t, n.EndDate.Equal(at(2, 12, 17, 0)), "end: got %v", n.EndDate)
+			assert.True(t, reminderTime(t, n, 0).Equal(at(2, 15, 8, 0)), "reminder: got %v", reminderTime(t, n, 0))
+		})
+		t.Run("calendar: the end keeps its gap to the start instead of stepping on its own", func(t *testing.T) {
+			withFixedNow(t, now)
+			// MONTHLY from Jan 30 skips February (no 30th) to Mar 30; on its own the end would
+			// step Feb 1 -> Mar 1, but it keeps its two-day gap to the start instead.
+			n := completeRepeating(&Task{Repeats: "FREQ=MONTHLY", StartDate: at(1, 30, 9, 0), EndDate: at(2, 1, 9, 0)})
+			assert.True(t, n.StartDate.Equal(at(3, 30, 9, 0)), "start: got %v", n.StartDate)
+			assert.True(t, n.EndDate.Equal(at(4, 1, 9, 0)), "end: got %v", n.EndDate)
+		})
+		t.Run("calendar: migrated month-end rule steps a Jan 31 reminder to Feb 28", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{
+				Repeats:   "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29,30,31;BYSETPOS=-1",
+				Reminders: []*TaskReminder{reminderAt(at(1, 31, 10, 0))},
+			})
+			assert.False(t, n.Done)
+			assert.True(t, reminderTime(t, n, 0).Equal(at(2, 28, 10, 0)), "reminder: got %v", reminderTime(t, n, 0))
+		})
+		t.Run("calendar: only an end date takes one step", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=MONTHLY;INTERVAL=1", EndDate: at(3, 5, 9, 0)})
+			assert.True(t, n.EndDate.Equal(at(4, 5, 9, 0)), "end: got %v", n.EndDate)
+			assert.True(t, n.StartDate.IsZero())
+		})
+		t.Run("finite: a COUNT rule takes one rule step and is never caught up like a fixed duration", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY;COUNT=3", StartDate: at(10, 17, 12, 0)})
+			assert.False(t, n.Done)
+			assert.True(t, n.StartDate.Equal(at(10, 18, 12, 0)), "start: got %v", n.StartDate)
+			o, err := rrule.StrToROption(n.Repeats)
+			require.NoError(t, err)
+			assert.Equal(t, 2, o.Count)
+		})
+		t.Run("no dates at all reopens the task with nothing to move (upstream parity)", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY;INTERVAL=1"})
+			assert.False(t, n.Done)
+			assert.True(t, n.DueDate.IsZero())
+			assert.True(t, n.StartDate.IsZero())
+			assert.True(t, n.EndDate.IsZero())
+		})
+	})
+
+	t.Run("from current date, no due date", func(t *testing.T) {
+		t.Run("earliest absolute reminder lands on now + one step, the others keep their spacing", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{
+				Repeats:                "FREQ=DAILY;INTERVAL=1",
+				RepeatsFromCurrentDate: true,
+				StartDate:              at(10, 1, 9, 0),
+				EndDate:                at(10, 3, 9, 0),
+				// The later reminder comes first: the earliest is found, not assumed.
+				Reminders: []*TaskReminder{reminderAt(at(10, 1, 10, 0)), reminderAt(at(10, 1, 8, 0))},
+			})
+			assert.False(t, n.Done)
+			next := now.Add(24 * time.Hour)
+			assert.True(t, reminderTime(t, n, 1).Equal(next), "earliest reminder: got %v", reminderTime(t, n, 1))
+			// A companion moves by the reference's whole local days (Oct 1 -> Oct 23) and keeps its
+			// own clock time, 10:00, instead of keeping its elapsed spacing to the re-based reminder
+			// (it was next + 2 h).
+			assert.True(t, reminderTime(t, n, 0).Equal(at(10, 23, 10, 0)), "other reminder: got %v", reminderTime(t, n, 0))
+			assert.True(t, n.StartDate.Equal(next), "start: got %v", n.StartDate)
+			// Likewise, the end moves by the start's 22 days (Oct 1 -> Oct 23) and keeps its
+			// 09:00 (it was next + 48 h, at the start's new clock).
+			assert.True(t, n.EndDate.Equal(at(10, 25, 9, 0)), "end keeps its whole-day gap to start: got %v", n.EndDate)
+		})
+		t.Run("calendar rule: next is the first occurrence after now", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{
+				Repeats:                "FREQ=WEEKLY;BYDAY=MO",
+				RepeatsFromCurrentDate: true,
+				Reminders:              []*TaskReminder{reminderAt(at(9, 1, 8, 0))},
+			})
+			assert.True(t, reminderTime(t, n, 0).Equal(at(10, 26, 12, 0)), "next Monday from now: got %v", reminderTime(t, n, 0))
+		})
+		t.Run("only an end date moves to now + one step", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY", RepeatsFromCurrentDate: true, EndDate: at(9, 1, 8, 0)})
+			assert.True(t, n.EndDate.Equal(now.Add(24*time.Hour)), "end: got %v", n.EndDate)
+		})
+		t.Run("relative reminders don't take part in the anchoring", func(t *testing.T) {
+			withFixedNow(t, now)
+			relative := &TaskReminder{RelativeTo: ReminderRelationStartDate, RelativePeriod: -3600, Reminder: at(9, 1, 8, 0)}
+			n := completeRepeating(&Task{
+				Repeats:                "FREQ=DAILY",
+				RepeatsFromCurrentDate: true,
+				StartDate:              at(10, 1, 9, 0),
+				Reminders:              []*TaskReminder{relative, reminderAt(at(10, 1, 10, 0))},
+			})
+			// The stale value of the relative reminder is earlier, but only absolute ones anchor.
+			assert.True(t, reminderTime(t, n, 1).Equal(now.Add(24*time.Hour)), "absolute reminder: got %v", reminderTime(t, n, 1))
+		})
+		t.Run("no dates at all reopens the task with nothing to move", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY", RepeatsFromCurrentDate: true})
+			assert.False(t, n.Done)
+			assert.True(t, n.DueDate.IsZero())
+			assert.True(t, n.StartDate.IsZero())
+			assert.True(t, n.EndDate.IsZero())
+			assert.Empty(t, n.Reminders)
+		})
+	})
+
+	t.Run("with a due date", func(t *testing.T) {
+		// The overflow coverage is TestShiftTime and the from-current-date test of reminders
+		// more than 292 years apart; this one checks that dates far before a recent due date keep
+		// their offset.
+		t.Run("start and reminder far before the due date keep their offset", func(t *testing.T) {
+			withFixedNow(t, now)
+			due := at(10, 20, 9, 0)
+			start := time.Date(1700, 1, 1, 9, 0, 0, 0, time.UTC)
+			reminder := time.Date(1700, 1, 1, 7, 0, 0, 0, time.UTC)
+			n := completeRepeating(&Task{
+				Repeats:   "FREQ=DAILY;BYHOUR=9",
+				DueDate:   due,
+				StartDate: start,
+				Reminders: []*TaskReminder{reminderAt(reminder)},
+			})
+			require.False(t, n.Done)
+			assert.True(t, n.DueDate.Equal(at(10, 23, 9, 0)), "due: got %v", n.DueDate)
+			assert.True(t, n.StartDate.Equal(start.AddDate(0, 0, 3)), "start keeps its offset: got %v", n.StartDate)
+			assert.True(t, reminderTime(t, n, 0).Equal(reminder.AddDate(0, 0, 3)), "reminder keeps its offset: got %v", reminderTime(t, n, 0))
+		})
+		t.Run("a due date more than 200 years ago is beyond the horizon: the task stays done", func(t *testing.T) {
+			// Nothing looks back further than 200 years.
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY;INTERVAL=3;BYHOUR=9", DueDate: time.Date(1700, 1, 1, 9, 0, 0, 0, time.UTC)})
+			assert.True(t, n.Done)
+			assert.True(t, n.DueDate.IsZero(), "dates unchanged")
+		})
+		t.Run("a DAILY rule anchored in 1830 reschedules quickly and to the right phase", func(t *testing.T) {
+			withFixedNow(t, now)
+			anchor := time.Date(1830, 1, 1, 9, 0, 0, 0, time.UTC)
+			// INTERVAL=3: the next occurrence is the first 09:00 strictly after now whose day
+			// distance from the anchor is a multiple of 3.
+			daysSinceAnchor := int(time.Date(2026, 10, 22, 0, 0, 0, 0, time.UTC).Unix()-time.Date(1830, 1, 1, 0, 0, 0, 0, time.UTC).Unix()) / 86400
+			k := (daysSinceAnchor + 1 + 2) / 3 * 3
+			expected := time.Date(1830, 1, 1+k, 9, 0, 0, 0, time.UTC)
+
+			start := time.Now()
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY;INTERVAL=3;BYHOUR=9", DueDate: anchor})
+			elapsed := time.Since(start)
+
+			assert.Less(t, elapsed, 50*time.Millisecond)
+			assert.True(t, n.DueDate.Equal(expected), "expected %v, got %v", expected, n.DueDate)
+		})
+		t.Run("migrated month-end rule from Jan 31 goes to Feb 28, then Mar 31", func(t *testing.T) {
+			withFixedNow(t, at(1, 15, 12, 0))
+			const monthEnd = "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29,30,31;BYSETPOS=-1"
+			n1 := completeRepeating(&Task{Repeats: monthEnd, DueDate: at(1, 31, 10, 0)})
+			assert.True(t, n1.DueDate.Equal(at(2, 28, 10, 0)), "first: got %v", n1.DueDate)
+			n2 := completeRepeating(&Task{Repeats: monthEnd, DueDate: n1.DueDate})
+			assert.True(t, n2.DueDate.Equal(at(3, 31, 10, 0)), "second: got %v", n2.DueDate)
+		})
+		t.Run("new FREQ=MONTHLY from Jan 31 skips short months", func(t *testing.T) {
+			withFixedNow(t, at(1, 15, 12, 0))
+			n := completeRepeating(&Task{Repeats: "FREQ=MONTHLY", DueDate: at(1, 31, 10, 0)})
+			assert.True(t, n.DueDate.Equal(at(3, 31, 10, 0)), "got %v", n.DueDate)
+		})
+		t.Run("COUNT=1 stays done and clears the rule", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY;COUNT=1", DueDate: now.Add(time.Hour)})
+			assert.True(t, n.Done)
+			assert.Empty(t, n.Repeats)
+		})
+		t.Run("COUNT=3 becomes COUNT=2 after completion", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY;COUNT=3", DueDate: now.Add(time.Hour)})
+			assert.False(t, n.Done)
+			assert.True(t, n.DueDate.Equal(now.Add(25*time.Hour)), "got %v", n.DueDate)
+			o, err := rrule.StrToROption(n.Repeats)
+			require.NoError(t, err)
+			assert.Equal(t, 2, o.Count)
+		})
+		t.Run("UNTIL exactly at the next occurrence reschedules", func(t *testing.T) {
+			withFixedNow(t, now)
+			n := completeRepeating(&Task{Repeats: "FREQ=DAILY;UNTIL=20261023T130000Z", DueDate: at(10, 22, 13, 0)})
+			assert.False(t, n.Done)
+			assert.True(t, n.DueDate.Equal(at(10, 23, 13, 0)), "got %v", n.DueDate)
+		})
+		t.Run("UNTIL one second before the next occurrence stays done", func(t *testing.T) {
+			withFixedNow(t, now)
+			old := &Task{Repeats: "FREQ=DAILY;UNTIL=20261023T125959Z", DueDate: at(10, 22, 13, 0)}
+			n := completeRepeating(old)
+			assert.True(t, n.Done)
+			assert.Equal(t, old.Repeats, n.Repeats, "the rule is kept")
+			assert.True(t, n.DueDate.IsZero(), "nothing is rescheduled")
+		})
+		t.Run("DST: a calendar DAILY rule keeps the wall-clock time across spring-forward", func(t *testing.T) {
+			// The rule is evaluated in the completion's zone, so Berlin is passed explicitly; the
+			// expected value is unchanged.
+			berlin, err := time.LoadLocation("Europe/Berlin")
+			require.NoError(t, err)
+			withFixedNow(t, time.Date(2026, 3, 28, 8, 0, 0, 0, berlin))
+			n := completeRepeatingIn(&Task{Repeats: "FREQ=DAILY;BYHOUR=9", DueDate: time.Date(2026, 3, 28, 9, 0, 0, 0, berlin)}, berlin)
+			assert.True(t, n.DueDate.Equal(time.Date(2026, 3, 29, 9, 0, 0, 0, berlin)), "got %v", n.DueDate.In(berlin))
+		})
+		t.Run("DST: a plain DAILY rule keeps the wall-clock time across spring-forward", func(t *testing.T) {
+			// FREQ=DAILY without a BY* part steps on the completion zone's wall clock, not by 24
+			// elapsed hours, so 09:00 CET is followed by 09:00 CEST (it used to be 10:00 CEST).
+			// Sub-daily rules stay elapsed.
+			berlin, err := time.LoadLocation("Europe/Berlin")
+			require.NoError(t, err)
+			withFixedNow(t, time.Date(2026, 3, 28, 8, 0, 0, 0, berlin))
+			n := completeRepeatingIn(&Task{Repeats: "FREQ=DAILY", DueDate: time.Date(2026, 3, 28, 9, 0, 0, 0, berlin)}, berlin)
+			assert.True(t, n.DueDate.Equal(time.Date(2026, 3, 29, 9, 0, 0, 0, berlin)), "got %v", n.DueDate.In(berlin))
+		})
+		t.Run("leap day: YEARLY from Feb 29 skips to the next Feb 29", func(t *testing.T) {
+			// rrule-go follows RFC 5545: an invalid date (Feb 29 in a common year) is skipped.
+			withFixedNow(t, time.Date(2028, 2, 1, 12, 0, 0, 0, time.UTC))
+			n := completeRepeating(&Task{Repeats: "FREQ=YEARLY", DueDate: time.Date(2028, 2, 29, 9, 0, 0, 0, time.UTC)})
+			assert.True(t, n.DueDate.Equal(time.Date(2032, 2, 29, 9, 0, 0, 0, time.UTC)), "got %v", n.DueDate)
+		})
+	})
+
+	t.Run("UNTIL already passed leaves a task without due date done", func(t *testing.T) {
+		withFixedNow(t, now)
+		old := &Task{Repeats: "FREQ=DAILY;UNTIL=20260101T000000Z", StartDate: time.Date(2025, 11, 1, 9, 0, 0, 0, time.UTC)}
+		n := completeRepeating(old)
+		assert.True(t, n.Done)
+		assert.Equal(t, old.Repeats, n.Repeats, "the rule is kept")
+		assert.True(t, n.StartDate.IsZero(), "nothing is rescheduled")
+	})
+}
+
+func TestClampRRuleAnchor(t *testing.T) {
+	t.Run("the day gap does not saturate past 292 years", func(t *testing.T) {
+		a := time.Date(1700, 1, 1, 9, 0, 0, 0, time.UTC)
+		b := time.Date(2025, 10, 22, 12, 0, 0, 0, time.UTC)
+		// 325 years from 1700-01-01 to 2025-01-01 hold 79 leap days (1700, 1800 and 1900 are not leap years).
+		expected := 325*365 + 79 + (time.Date(2025, 10, 22, 0, 0, 0, 0, time.UTC).YearDay() - 1)
+		assert.Equal(t, expected, daysBetween(a, b))
+	})
+	t.Run("an anchor two millennia back lands within one period below the cutoff, quickly", func(t *testing.T) {
+		// The clamp runs on the floating timeline: the zone's wall clock read as
+		// UTC, so New York's DST never reaches it and its day count is exact.
+		ny, err := time.LoadLocation("America/New_York")
+		require.NoError(t, err)
+		now := float(time.Date(2026, 10, 22, 12, 0, 0, 0, ny), ny)
+		cutoff := now.AddDate(-1, 0, 0)
+		anchor := float(time.Date(1, 1, 1, 9, 0, 0, 0, ny), ny)
+		require.Equal(t, time.UTC, anchor.Location(), "a floating value is UTC-located")
+		opt := &rrule.ROption{Freq: rrule.WEEKLY, Interval: 1}
+
+		start := time.Now()
+		got := clampRRuleAnchor(opt, anchor, now)
+		elapsed := time.Since(start)
+
+		// A loop over the ~105k skipped weeks takes far longer; 50ms leaves room for a loaded CI host.
+		assert.Less(t, elapsed, 50*time.Millisecond)
+		assert.False(t, got.After(cutoff), "got %v", got)
+		assert.True(t, got.AddDate(0, 0, 7).After(cutoff), "got %v", got)
+		assert.Equal(t, anchor.Weekday(), got.Weekday(), "phase is preserved")
+		assert.Equal(t, 9, got.Hour())
+	})
+}
+
+// repeatingFixtureTask is fixture task #28, which repeats hourly.
+const repeatingFixtureTask int64 = 28
+
+// storeRepeats writes a rule straight onto the repeating fixture task, bypassing the write path's
+// validation.
+func storeRepeats(t *testing.T, s *xorm.Session, repeats string) {
+	t.Helper()
+	_, err := s.ID(repeatingFixtureTask).Cols("repeats").NoAutoTime().Update(&Task{Repeats: repeats})
+	require.NoError(t, err)
+}
+
+func storedRepeats(t *testing.T, s *xorm.Session, taskID int64) string {
+	t.Helper()
+	stored := &Task{}
+	has, err := s.ID(taskID).Get(stored)
+	require.NoError(t, err)
+	require.True(t, has)
+	return stored.Repeats
+}
+
+// readForEcho reads the repeating fixture task as the API does and drops the raw rule, as JSON
+// decoding would (Repeats is json:"-"), so the result is what a client sends back.
+func readForEcho(t *testing.T, s *xorm.Session, u *user.User) *Task {
+	t.Helper()
+	read := &Task{ID: repeatingFixtureTask}
+	require.NoError(t, read.ReadOne(s, u))
+	read.Repeats = ""
+	return read
+}
+
+// TestTask_RecurrenceWritePaths pins the recurrence write rules at model level: create, bulk
+// create and update all decide the stored rule through resolveIncomingRepeat.
+func TestTask_RecurrenceWritePaths(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	t.Run("update echoing the read repeat keeps the stored text byte-identical", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		// Non-canonical part order: re-serialising the projection would rewrite it.
+		storeRepeats(t, s, "INTERVAL=1;FREQ=HOURLY")
+
+		upd := readForEcho(t, s, u)
+		require.NotNil(t, upd.Repeat)
+		upd.Title = "renamed"
+		require.NoError(t, upd.Update(s, u))
+
+		assert.Equal(t, "INTERVAL=1;FREQ=HOURLY", storedRepeats(t, s, repeatingFixtureTask))
+		assert.Equal(t, "renamed", upd.Title)
+	})
+	t.Run("fixture task 28 survives an echo unchanged", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		upd := readForEcho(t, s, u)
+		upd.Title = "renamed"
+		require.NoError(t, upd.Update(s, u))
+
+		assert.Equal(t, "FREQ=HOURLY;INTERVAL=1", storedRepeats(t, s, repeatingFixtureTask))
+	})
+	t.Run("a read-only rule is kept on echo, refused on edit and cleared on null", func(t *testing.T) {
+		const easter = "FREQ=YEARLY;BYEASTER=0"
+
+		t.Run("echo keeps it", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			storeRepeats(t, s, easter)
+
+			upd := readForEcho(t, s, u)
+			require.NotNil(t, upd.Repeat)
+			require.True(t, upd.Repeat.ReadOnly)
+			upd.Title = "renamed"
+			require.NoError(t, upd.Update(s, u))
+
+			assert.Equal(t, easter, storedRepeats(t, s, repeatingFixtureTask))
+			require.NotNil(t, upd.Repeat, "the response carries the projection")
+			assert.True(t, upd.Repeat.ReadOnly, "the response marks it read-only")
+		})
+		t.Run("changing the interval is refused", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			storeRepeats(t, s, easter)
+
+			upd := readForEcho(t, s, u)
+			upd.Repeat.Interval = 2
+			err := upd.Update(s, u)
+			require.Error(t, err)
+			assert.True(t, IsErrInvalidData(err), "got %v", err)
+			assert.Equal(t, easter, storedRepeats(t, s, repeatingFixtureTask))
+		})
+		t.Run("repeat nil clears it", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			storeRepeats(t, s, easter)
+
+			upd := readForEcho(t, s, u)
+			upd.Repeat = nil
+			require.NoError(t, upd.Update(s, u))
+
+			assert.Empty(t, storedRepeats(t, s, repeatingFixtureTask))
+			assert.Nil(t, upd.Repeat)
+		})
+	})
+	t.Run("a different valid repeat replaces the rule", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		upd := readForEcho(t, s, u)
+		upd.Repeat = &TaskRepeat{Freq: "weekly", Interval: 2}
+		require.NoError(t, upd.Update(s, u))
+
+		assert.Equal(t, "FREQ=WEEKLY;INTERVAL=2", storedRepeats(t, s, repeatingFixtureTask))
+	})
+	t.Run("masked update excluding recurrence never re-validates the stored rule", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		// Rejected by today's policy (sub-daily with a BY* part); it may predate the policy.
+		const legacy = "FREQ=HOURLY;BYHOUR=9"
+		storeRepeats(t, s, legacy)
+
+		upd := &Task{ID: repeatingFixtureTask, Title: "renamed only"}
+		require.NoError(t, upd.updateSingleTask(s, u, []string{"title"}))
+
+		assert.Equal(t, legacy, storedRepeats(t, s, repeatingFixtureTask))
+		assert.Equal(t, legacy, upd.Repeats, "the response reflects the stored rule")
+	})
+	t.Run("masked update ignores a repeat in the body when the mask excludes it", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		upd := &Task{ID: repeatingFixtureTask, Title: "renamed only", Repeat: &TaskRepeat{Freq: "daily", Interval: 1}}
+		require.NoError(t, upd.updateSingleTask(s, u, []string{"title"}))
+
+		assert.Equal(t, "FREQ=HOURLY;INTERVAL=1", storedRepeats(t, s, repeatingFixtureTask))
+		assert.Equal(t, "FREQ=HOURLY;INTERVAL=1", upd.Repeats, "the response must not show a rule that was not stored")
+	})
+	t.Run("masked update including repeat applies the write rules", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		storeRepeats(t, s, "INTERVAL=1;FREQ=HOURLY")
+
+		upd := &Task{ID: repeatingFixtureTask, Repeat: &TaskRepeat{Freq: "hourly", Interval: 1}}
+		require.NoError(t, upd.updateSingleTask(s, u, []string{"repeat"}))
+		assert.Equal(t, "INTERVAL=1;FREQ=HOURLY", storedRepeats(t, s, repeatingFixtureTask), "an equal echo keeps the text")
+
+		upd = &Task{ID: repeatingFixtureTask}
+		require.NoError(t, upd.updateSingleTask(s, u, []string{"repeat"}))
+		assert.Empty(t, storedRepeats(t, s, repeatingFixtureTask), "repeat absent from the body but in the mask clears it")
+	})
+	t.Run("bulk create stores a raw rule verbatim", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tasks := []*Task{
+			{Title: "easter", Repeats: "FREQ=YEARLY;BYEASTER=0"},
+			{Title: "reordered", Repeats: "INTERVAL=2;FREQ=DAILY"},
+			{Title: "structured", Repeat: &TaskRepeat{Freq: "weekly", Interval: 1}},
+		}
+		require.NoError(t, createTasks(s, 1, tasks, u, true, true, false))
+
+		assert.Equal(t, "FREQ=YEARLY;BYEASTER=0", storedRepeats(t, s, tasks[0].ID))
+		assert.Equal(t, "INTERVAL=2;FREQ=DAILY", storedRepeats(t, s, tasks[1].ID))
+		assert.Equal(t, "FREQ=WEEKLY;INTERVAL=1", storedRepeats(t, s, tasks[2].ID))
+		require.NotNil(t, tasks[0].Repeat, "the response carries the projection")
+		assert.True(t, tasks[0].Repeat.ReadOnly)
+	})
+	t.Run("bulk create reports the index of a raw rule its structured repeat contradicts", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tasks := []*Task{
+			{Title: "fine", Repeats: "FREQ=DAILY"},
+			{Title: "contradicting", Repeats: "FREQ=DAILY", Repeat: &TaskRepeat{Freq: "weekly", Interval: 1}},
+		}
+		err := createTasks(s, 1, tasks, u, true, true, false)
+		require.Error(t, err)
+		var berr ErrInvalidTaskInBulkCreation
+		require.ErrorAs(t, err, &berr)
+		assert.Equal(t, 1, berr.Index)
+		assert.True(t, IsErrInvalidData(berr.Err), "got %v", berr.Err)
+	})
+	t.Run("completion without a due date moves absolute reminders and recomputes relative ones", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		withFixedNow(t, time.Date(2026, 10, 22, 12, 0, 0, 0, time.UTC))
+
+		task := &Task{
+			Title:     "no due date",
+			ProjectID: 1,
+			Repeat:    &TaskRepeat{Freq: "daily", Interval: 1},
+			StartDate: time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC),
+			Reminders: []*TaskReminder{
+				{RelativeTo: ReminderRelationStartDate, RelativePeriod: -3600},
+				{Reminder: time.Date(2026, 10, 21, 7, 30, 0, 0, time.UTC)},
+			},
+		}
+		require.NoError(t, task.Create(s, u))
+		require.NoError(t, s.Commit())
+
+		done := &Task{ID: task.ID, Done: true}
+		require.NoError(t, done.updateSingleTask(s, u, []string{"done"}))
+		require.NoError(t, s.Commit())
+
+		read := &Task{ID: task.ID}
+		require.NoError(t, read.ReadOne(s, u))
+		assert.False(t, read.Done, "the task reopens")
+		newStart := time.Date(2026, 10, 23, 9, 0, 0, 0, time.UTC)
+		assert.True(t, read.StartDate.Equal(newStart), "start: got %v", read.StartDate)
+		require.Len(t, read.Reminders, 2)
+		byKind := map[bool]time.Time{}
+		for _, r := range read.Reminders {
+			byKind[r.RelativeTo != ""] = r.Reminder
+		}
+		assert.True(t, byKind[true].Equal(newStart.Add(-time.Hour)), "relative reminder follows the new start: got %v", byKind[true])
+		assert.True(t, byKind[false].Equal(time.Date(2026, 10, 23, 7, 30, 0, 0, time.UTC)), "absolute reminder: got %v", byKind[false])
+	})
+}
+
+// seedRepeatingTask writes a rule and a due date straight onto task 1, as a CalDAV client or
+// an earlier completion would have stored them.
+func seedRepeatingTask(t *testing.T, s *xorm.Session, rule string, due time.Time) {
+	t.Helper()
+	_, err := s.ID(1).Cols("repeats", "due_date", "done").Update(&Task{Repeats: rule, DueDate: due})
+	require.NoError(t, err)
+}
+
+// storedTask1 reads task 1 as stored.
+func storedTask1(t *testing.T, s *xorm.Session) *Task {
+	t.Helper()
+	task := &Task{}
+	has, err := s.ID(1).Get(task)
+	require.NoError(t, err)
+	require.True(t, has)
+	return task
+}
+
+// Both completion call sites compute the next occurrence in the completing user's zone,
+// re-fetched from the database (the auth object is JWT-shaped, with an empty Timezone). The
+// MO,WE,FR rule, due Mon 2026-10-26 20:00 EDT, completed at 20:05 EDT, lands on Wed 2026-10-28
+// 20:00 EDT; in the server zone (GMT, the fixture default) it would be Wed 2026-10-28 00:00Z, a
+// day early.
+func TestCompletionZone(t *testing.T) {
+	const rule = "FREQ=WEEKLY;BYDAY=MO,WE,FR"
+	due := time.Date(2026, 10, 27, 0, 0, 0, 0, time.UTC)
+	jwtUser := &user.User{ID: 1, Username: "user1"}
+	wantNY := time.Date(2026, 10, 29, 0, 0, 0, 0, time.UTC)
+	wantServer := time.Date(2026, 10, 28, 0, 0, 0, 0, time.UTC)
+
+	setup := func(t *testing.T, zone string) *xorm.Session {
+		t.Helper()
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		t.Cleanup(func() { s.Close() })
+		withFixedNow(t, time.Date(2026, 10, 27, 0, 5, 0, 0, time.UTC))
+		setUserZone(t, s, 1, zone)
+		seedRepeatingTask(t, s, rule, due)
+		return s
+	}
+
+	t.Run("update by a JWT-shaped user completes in the stored zone", func(t *testing.T) {
+		s := setup(t, "America/New_York")
+		require.NoError(t, (&Task{ID: 1, Done: true}).Update(s, jwtUser))
+
+		task := storedTask1(t, s)
+		assert.False(t, task.Done, "reopened")
+		assert.Equal(t, wantNY, task.DueDate.UTC())
+	})
+	t.Run("field-masked update completes in the stored zone", func(t *testing.T) {
+		s := setup(t, "America/New_York")
+		require.NoError(t, (&Task{ID: 1, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+
+		task := storedTask1(t, s)
+		assert.False(t, task.Done)
+		assert.Equal(t, wantNY, task.DueDate.UTC())
+		assert.Equal(t, rule, task.Repeats)
+	})
+	t.Run("kanban done bucket completes in the stored zone", func(t *testing.T) {
+		s := setup(t, "America/New_York")
+		tb := &TaskBucket{TaskID: 1, BucketID: 3, ProjectViewID: 4, ProjectID: 1}
+		require.NoError(t, tb.Update(s, jwtUser))
+
+		task := storedTask1(t, s)
+		assert.False(t, task.Done)
+		assert.Equal(t, wantNY, task.DueDate.UTC())
+	})
+	t.Run("a user without a zone completes in the server zone", func(t *testing.T) {
+		s := setup(t, "")
+		require.NoError(t, (&Task{ID: 1, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+
+		assert.Equal(t, wantServer, storedTask1(t, s).DueDate.UTC(), "positive control: the fixture discriminates")
+	})
+	t.Run("kanban by a user without a zone completes in the server zone", func(t *testing.T) {
+		s := setup(t, "")
+		tb := &TaskBucket{TaskID: 1, BucketID: 3, ProjectViewID: 4, ProjectID: 1}
+		require.NoError(t, tb.Update(s, jwtUser))
+
+		assert.Equal(t, wantServer, storedTask1(t, s).DueDate.UTC())
+	})
+}
+
+// A daily task due Sat 2027-03-13 02:30 EST, completed in New York, skips Sun 2027-03-14 (02:30 does
+// not exist that day) and lands on Mon 02:30 EDT; the next completion gives Tue 02:30 EDT. Each
+// chain exercises both save sites.
+func TestCompletionSkipsGapOccurrence(t *testing.T) {
+	due := time.Date(2027, 3, 13, 7, 30, 0, 0, time.UTC)
+	monday := time.Date(2027, 3, 15, 6, 30, 0, 0, time.UTC)  // Mon 02:30 EDT
+	tuesday := time.Date(2027, 3, 16, 6, 30, 0, 0, time.UTC) // Tue 02:30 EDT
+	jwtUser := &user.User{ID: 1, Username: "user1"}
+
+	setup := func(t *testing.T) *xorm.Session {
+		t.Helper()
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		t.Cleanup(func() { s.Close() })
+		withFixedNow(t, time.Date(2027, 3, 13, 8, 0, 0, 0, time.UTC))
+		setUserZone(t, s, 1, "America/New_York")
+		seedRepeatingTask(t, s, "FREQ=DAILY;INTERVAL=1", due)
+		return s
+	}
+	patch := func(t *testing.T, s *xorm.Session) {
+		t.Helper()
+		require.NoError(t, (&Task{ID: 1, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+	}
+	kanban := func(t *testing.T, s *xorm.Session) {
+		t.Helper()
+		require.NoError(t, (&TaskBucket{TaskID: 1, BucketID: 3, ProjectViewID: 4, ProjectID: 1}).Update(s, jwtUser))
+	}
+	steps := map[string]func(*testing.T, *xorm.Session){"update": patch, "kanban": kanban}
+
+	for _, chain := range [][2]string{{"update", "update"}, {"update", "kanban"}, {"kanban", "update"}, {"kanban", "kanban"}} {
+		t.Run(chain[0]+" then "+chain[1], func(t *testing.T) {
+			s := setup(t)
+
+			steps[chain[0]](t, s)
+			task := storedTask1(t, s)
+			assert.False(t, task.Done)
+			assert.Equal(t, monday, task.DueDate.UTC(), "the gap day is skipped")
+
+			steps[chain[1]](t, s)
+			task = storedTask1(t, s)
+			assert.False(t, task.Done)
+			assert.Equal(t, tuesday, task.DueDate.UTC())
 		})
 	}
+}
+
+// SC-002 through the update path: a daily COUNT=3 task due Sat 2027-03-13 02:30 EST in New York has
+// the 13th, 15th and 16th; the gap day is not counted. The third completion ends the rule: the task
+// stays done and its rule is cleared.
+func TestCompletionGapSkipCount(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	jwtUser := &user.User{ID: 1, Username: "user1"}
+	setUserZone(t, s, 1, "America/New_York")
+	seedRepeatingTask(t, s, "FREQ=DAILY;COUNT=3", time.Date(2027, 3, 13, 7, 30, 0, 0, time.UTC))
+	complete := func(t *testing.T, now time.Time) *Task {
+		t.Helper()
+		withFixedNow(t, now)
+		require.NoError(t, (&Task{ID: 1, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+		return storedTask1(t, s)
+	}
+	count := func(t *testing.T, rule string) int {
+		t.Helper()
+		opt, err := rrule.StrToROption(rule)
+		require.NoError(t, err)
+		return opt.Count
+	}
+
+	task := complete(t, time.Date(2027, 3, 13, 8, 0, 0, 0, time.UTC))
+	assert.False(t, task.Done)
+	assert.Equal(t, time.Date(2027, 3, 15, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "Mon 02:30 EDT")
+	assert.Equal(t, 2, count(t, task.Repeats))
+
+	task = complete(t, time.Date(2027, 3, 15, 7, 0, 0, 0, time.UTC))
+	assert.False(t, task.Done)
+	assert.Equal(t, time.Date(2027, 3, 16, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "Tue 02:30 EDT")
+	assert.Equal(t, 1, count(t, task.Repeats))
+
+	task = complete(t, time.Date(2027, 3, 16, 7, 0, 0, 0, time.UTC))
+	assert.True(t, task.Done, "the last occurrence was completed")
+	assert.Empty(t, task.Repeats, "an exhausted rule is cleared")
+	assert.Equal(t, time.Date(2027, 3, 16, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "the dates stay")
+}
+
+// FR-007 through the update path: a relative reminder is recomputed from the due date the skip
+// chose. Daily 02:30, due Sat 2027-03-13 02:30 EST in New York, reminder 1 hour before the due date:
+// after completion the due date is Mon 2027-03-15 02:30 EDT and the reminder Mon 01:30 EDT (05:30Z),
+// computed by updateRelativeReminderDates.
+func TestCompletionGapSkipRelativeReminder(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	jwtUser := &user.User{ID: 1, Username: "user1"}
+	withFixedNow(t, time.Date(2027, 3, 13, 8, 0, 0, 0, time.UTC))
+	setUserZone(t, s, 1, "America/New_York")
+	due := time.Date(2027, 3, 13, 7, 30, 0, 0, time.UTC)
+	seedRepeatingTask(t, s, "FREQ=DAILY;INTERVAL=1", due)
+	_, err := s.Insert(&TaskReminder{TaskID: 1, Reminder: due.Add(-time.Hour), RelativeTo: ReminderRelationDueDate, RelativePeriod: -3600})
+	require.NoError(t, err)
+
+	require.NoError(t, (&Task{ID: 1, Done: true}).updateSingleTask(s, jwtUser, []string{"done"}))
+
+	task := storedTask1(t, s)
+	assert.False(t, task.Done)
+	assert.Equal(t, time.Date(2027, 3, 15, 6, 30, 0, 0, time.UTC), task.DueDate.UTC(), "Mon 02:30 EDT")
+	reminders := []*TaskReminder{}
+	require.NoError(t, s.Where("task_id = ?", 1).Find(&reminders))
+	require.Len(t, reminders, 1)
+	assert.Equal(t, ReminderRelationDueDate, reminders[0].RelativeTo)
+	assert.Equal(t, time.Date(2027, 3, 15, 5, 30, 0, 0, time.UTC), reminders[0].Reminder.UTC(), "Mon 01:30 EDT")
+}
+
+// A saved-filter kanban view carries a negative synthetic project id. A Done move there must
+// resolve the zone with the task's own project, so the owner fallback still applies. The
+// completing user (user1) has no zone; the owner of project 1 is made user2, in New York, and
+// user1 keeps write access through a share.
+func TestCompletionZone_SavedFilterKanban(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	withFixedNow(t, time.Date(2026, 10, 27, 0, 5, 0, 0, time.UTC))
+	u := &user.User{ID: 1, Username: "user1"}
+	setUserZone(t, s, 1, "")
+	setUserZone(t, s, 2, "America/New_York")
+	setProjectOwner(t, s, 1, 2)
+	_, err := s.Insert(&ProjectUser{UserID: 1, ProjectID: 1, Permission: PermissionWrite})
+	require.NoError(t, err)
+	seedRepeatingTask(t, s, "FREQ=WEEKLY;BYDAY=MO,WE,FR", time.Date(2026, 10, 27, 0, 0, 0, 0, time.UTC))
+
+	sf := &SavedFilter{Title: "zone filter", Filters: &TaskCollection{Filter: "done = false"}}
+	require.NoError(t, sf.Create(s, u))
+	filterProjectID := getProjectIDFromSavedFilterID(sf.ID)
+	require.Negative(t, filterProjectID)
+
+	view := &ProjectView{}
+	has, err := s.Where("project_id = ? AND view_kind = ?", filterProjectID, ProjectViewKindKanban).Get(view)
+	require.NoError(t, err)
+	require.True(t, has)
+	done := &Bucket{Title: "done", ProjectViewID: view.ID, ProjectID: filterProjectID}
+	require.NoError(t, done.Create(s, u))
+	view.DoneBucketID = done.ID
+	_, err = s.ID(view.ID).Cols("done_bucket_id").Update(view)
+	require.NoError(t, err)
+
+	tb := &TaskBucket{TaskID: 1, BucketID: done.ID, ProjectViewID: view.ID, ProjectID: filterProjectID}
+	require.NoError(t, tb.Update(s, u))
+
+	task := storedTask1(t, s)
+	assert.False(t, task.Done, "reopened")
+	assert.Equal(t, time.Date(2026, 10, 29, 0, 0, 0, 0, time.UTC), task.DueDate.UTC(),
+		"the owner's New York calendar, not the server's (2026-10-28)")
 }

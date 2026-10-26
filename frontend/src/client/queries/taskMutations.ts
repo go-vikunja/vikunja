@@ -15,6 +15,7 @@ import {
 	tasksPositionUpdate,
 	taskBucketUpdate,
 	type Task,
+	type TaskRepeat,
 	type TaskWritable,
 	type User,
 	type Label,
@@ -52,8 +53,8 @@ const writableFields = [
 	'priority',
 	'hex_color',
 	'percent_done',
-	'repeat_after',
-	'repeat_mode',
+	'repeat',
+	'repeats_from_current_date',
 	'is_favorite',
 	'bucket_id',
 	'project_id',
@@ -61,8 +62,12 @@ const writableFields = [
 	'cover_image_attachment_id',
 ] as const satisfies readonly (keyof TaskWritable)[]
 
-export function taskWriteBody(task: Task): TaskWritable {
-	const body: TaskWritable = Object.fromEntries(
+// A null repeat clears the rule; an absent one leaves it as stored.
+export type TaskInput = Omit<Task, 'repeat'> & {repeat?: TaskRepeat | null}
+type TaskWriteBody = Omit<TaskWritable, 'repeat'> & {repeat?: TaskWritable['repeat'] | null}
+
+export function taskWriteBody(task: TaskInput): TaskWriteBody {
+	const body: TaskWriteBody = Object.fromEntries(
 		writableFields
 			.filter(field => task[field] !== undefined)
 			.map(field => [field, task[field]]),
@@ -76,10 +81,21 @@ export function taskWriteBody(task: Task): TaskWritable {
 		...reminder,
 		reminder: reminder.reminder === '' ? API_ZERO_DATE : reminder.reminder,
 	}))
+	if (task.repeat) {
+		const {read_only: _readOnly, ...repeat} = task.repeat
+		body.repeat = repeat
+	}
 	return body
 }
 
-function taskPatchBody(task: Task): JsonPatchOp[] {
+// A new task has no rule to clear.
+function taskCreateBody(task: TaskInput): TaskWritable {
+	const {repeat, ...body} = taskWriteBody(task)
+	return repeat === null ? body : {...body, repeat}
+}
+
+// The add of a null value must stay: AutoPatch only clears a rule on an explicit null.
+function taskPatchBody(task: TaskInput): JsonPatchOp[] {
 	return Object.entries(taskWriteBody(task)).map(([field, value]) => ({op: 'add', path: `/${field}`, value}))
 }
 
@@ -170,9 +186,9 @@ function insertTaskIntoBoards(client: QueryClient, created: Task) {
 
 export function createTaskMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (task: Task & Required<Pick<Task, 'project_id'>>) => (await tasksCreate({
+		mutationFn: async (task: TaskInput & Required<Pick<Task, 'project_id'>>) => (await tasksCreate({
 			path: {project: task.project_id},
-			body: taskWriteBody(task),
+			body: taskCreateBody(task),
 		})).data,
 		onSuccess: (task, _input, client) => insertTaskIntoBoards(client, task),
 		onSettled: (_task, client) => invalidateTaskMembership(client, undefined, 'active'),
@@ -181,13 +197,13 @@ export function createTaskMutationOptions() {
 
 export function updateTaskMutationOptions(optimistic = false) {
 	return contextMutationOptions({
-		mutationFn: async (task: Task & Required<Pick<Task, 'id'>>) => (await patchTasksRead({
+		mutationFn: async (task: TaskInput & Required<Pick<Task, 'id'>>) => (await patchTasksRead({
 			path: {task: task.id},
 			body: taskPatchBody(task),
 		})).data,
 		optimistic: optimistic ? {
 			queryKeys: ({id}, client) => taskQueryKeys(client, id),
-			update: (task, client) => replaceTaskEverywhere(client, task),
+			update: (task, client) => replaceTaskEverywhere(client, {...task, repeat: task.repeat ?? undefined}),
 		} : undefined,
 		onSuccess: (task, input, client) => {
 			replaceTaskEverywhere(client, task)
@@ -207,11 +223,11 @@ export function deleteTaskMutationOptions() {
 
 export function bulkCreateTasksMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (input: Task[]) => {
+		mutationFn: async (input: TaskInput[]) => {
 			const context = captureClientRequestContext()
 			const tasks: (Task | null)[] = Array(input.length).fill(null)
 			let error: unknown = null
-			const groups = new Map<number, {task: Task, index: number}[]>()
+			const groups = new Map<number, {task: TaskInput, index: number}[]>()
 			input.forEach((task, index) => {
 				const project = task.project_id ?? 0
 				groups.set(project, [...(groups.get(project) ?? []), {task, index}])
@@ -225,7 +241,7 @@ export function bulkCreateTasksMutationOptions() {
 					try {
 						const {data} = await tasksBulkCreate({
 							path: {project},
-							body: {tasks: batch.map(({task}) => taskWriteBody(task))},
+							body: {tasks: batch.map(({task}) => taskCreateBody(task))},
 						})
 						if (data.tasks?.length !== batch.length) throw translatedError('task.bulkCreateUnexpectedResponse')
 						data.tasks!.forEach((task, index) => { tasks[batch[index].index] = task })

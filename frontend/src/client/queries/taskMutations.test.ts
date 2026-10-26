@@ -119,6 +119,51 @@ describe('task mutations', () => {
 		expect(client.getQueryData<Task>(taskKeys.detail(1))?.title).toBe('new')
 	})
 
+	it('clears a rule with an explicit null and never sends the read-only flag', async () => {
+		const client = new QueryClient()
+		client.setQueryData(taskKeys.detail(1), {id: 1, repeat: {freq: 'daily', interval: 1}})
+		sdk.patchTasksRead.mockResolvedValue({data: {id: 1, repeats_from_current_date: false}})
+		const update = updateTaskMutationOptions()
+		await client.getMutationCache()
+			.build(client, update)
+			.execute({id: 1, repeat: null, repeats_from_current_date: false})
+		expect(sdk.patchTasksRead).toHaveBeenCalledWith({
+			path: {task: 1},
+			body: [
+				{op: 'add', path: '/repeat', value: null},
+				{op: 'add', path: '/repeats_from_current_date', value: false},
+			],
+		})
+		expect(client.getQueryData<Task>(taskKeys.detail(1))).not.toHaveProperty('repeat.freq')
+
+		sdk.patchTasksRead.mockResolvedValue({data: {id: 1}})
+		await client.getMutationCache()
+			.build(client, update)
+			.execute({id: 1, repeat: {freq: 'yearly', interval: 1, read_only: true}})
+		expect(sdk.patchTasksRead).toHaveBeenLastCalledWith({
+			path: {task: 1},
+			body: [{op: 'add', path: '/repeat', value: {freq: 'yearly', interval: 1}}],
+		})
+	})
+
+	it('leaves the stored rule alone when the input has no repeat', async () => {
+		const client = new QueryClient()
+		sdk.patchTasksRead.mockResolvedValue({data: {id: 1, title: 'new'}})
+		await client.getMutationCache()
+			.build(client, updateTaskMutationOptions())
+			.execute({id: 1, title: 'new'})
+		expect(sdk.patchTasksRead.mock.calls[0][0].body).not.toContainEqual(expect.objectContaining({path: '/repeat'}))
+	})
+
+	it('creates a task without a rule when the draft cleared it', async () => {
+		const client = new QueryClient()
+		sdk.tasksCreate.mockResolvedValue({data: {id: 9, project_id: 1}})
+		await client.getMutationCache()
+			.build(client, createTaskMutationOptions())
+			.execute({project_id: 1, title: 'new', repeat: null})
+		expect(sdk.tasksCreate.mock.calls[0][0].body).toEqual({title: 'new', project_id: 1})
+	})
+
 	it('addresses the delete endpoint by task id', async () => {
 		const client = new QueryClient()
 		sdk.tasksDelete.mockResolvedValue({})
