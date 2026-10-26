@@ -2,6 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {CancelledError} from '@tanstack/vue-query'
 
 import {queryClient} from './queryClient'
+import {ApiError} from '@/client/problem'
 import {error} from '@/message'
 
 vi.mock('@/message', () => ({error: vi.fn()}))
@@ -66,11 +67,12 @@ describe('queryClient', () => {
 	})
 
 	it('does not retry a read of a trashed project', async () => {
-		const cause = {
+		const cause = new ApiError({
 			status: 404,
 			code: 3018,
+			detail: 'in trash',
 			details: {id: 1, deleted_at: '2026-01-01T00:00:00Z', can_restore: true},
-		}
+		})
 		const queryFn = vi.fn(async () => {
 			throw cause
 		})
