@@ -2374,7 +2374,7 @@ export const tasksBulkUpdate = <ThrowOnError extends boolean = true>(options: Op
 /**
  * Empty the task trash
  *
- * Permanently deletes every task GET /tasks/deleted would return, including tasks other users deleted.
+ * Permanently deletes the tasks GET /tasks/deleted would return in projects the user is admin of, including tasks other users deleted.
  */
 export const tasksTrashEmpty = <ThrowOnError extends boolean = true>(options?: Options<TasksTrashEmptyData, ThrowOnError>): RequestResult<TasksTrashEmptyResponses, TasksTrashEmptyErrors, ThrowOnError> => (options?.client ?? client).delete<TasksTrashEmptyResponses, TasksTrashEmptyErrors, ThrowOnError>({
     security: [{
@@ -2928,7 +2928,7 @@ export const taskLabelsDelete = <ThrowOnError extends boolean = true>(options: O
 /**
  * Permanently delete a trashed task
  *
- * Purges a task that is already in the trash, with everything attached to it. Its time entries move to the task's project. Requires write access to the project; not available to link shares.
+ * Purges a task that is already in the trash, with everything attached to it. Its time entries move to the task's project. Requires admin access to the project; not available to link shares.
  */
 export const tasksDeletePermanently = <ThrowOnError extends boolean = true>(options: Options<TasksDeletePermanentlyData, ThrowOnError>): RequestResult<TasksDeletePermanentlyResponses, TasksDeletePermanentlyErrors, ThrowOnError> => (options.client ?? client).delete<TasksDeletePermanentlyResponses, TasksDeletePermanentlyErrors, ThrowOnError>({
     security: [{
