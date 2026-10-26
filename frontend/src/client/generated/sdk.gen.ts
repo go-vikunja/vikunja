@@ -3180,7 +3180,7 @@ export const timeEntriesList = <ThrowOnError extends boolean = true>(options?: O
 /**
  * Create a time entry
  *
- * Logs a manual time entry for the authenticated user. Exactly one of task_id / project_id must be set.
+ * Logs a time entry for the authenticated user. Exactly one of task_id / project_id must be set. Omit end_time to start a running timer: your entries spanning a past start_time end there, and a running timer that doesn't span it stops at now.
  */
 export const timeEntriesCreate = <ThrowOnError extends boolean = true>(options: Options<TimeEntriesCreateData, ThrowOnError>): RequestResult<TimeEntriesCreateResponses, TimeEntriesCreateErrors, ThrowOnError> => (options.client ?? client).post<TimeEntriesCreateResponses, TimeEntriesCreateErrors, ThrowOnError>({
     security: [{
