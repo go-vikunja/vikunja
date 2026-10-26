@@ -38,27 +38,29 @@ export interface Action {
 	callback: () => void,
 }
 
-export function error(e: unknown, actions: Action[] = []) {
-	notify({
-		type: 'error',
-		title: i18n.global.t('error.error'),
-		text: getErrorText(e),
-		ignoreDuplicates: actions.length === 0,
-		data: {
-			actions: actions,
-		},
-	})
-}
+export type ToastData = {actions: Action[]}
 
-export function success(e: unknown, actions: Action[] = []) {
+// Long enough to reach the action; Notification.vue pauses it while the toast is hovered or focused
+export const ACTION_TOAST_DURATION = 10_000
+
+function toast(type: 'error' | 'success', title: string, e: unknown, actions: Action[]) {
+	const data: ToastData = {actions}
 	notify({
-		type: 'success',
-		title: i18n.global.t('error.success'),
+		type,
+		title,
 		text: getErrorText(e),
 		// Duplicates merge on title and text, which would drop this toast's own actions.
 		ignoreDuplicates: actions.length === 0,
-		data: {
-			actions: actions,
-		},
+		// Notification.vue runs the pausable timer instead
+		duration: actions.length > 0 ? -1 : undefined,
+		data,
 	})
+}
+
+export function error(e: unknown, actions: Action[] = []) {
+	toast('error', i18n.global.t('error.error'), e, actions)
+}
+
+export function success(e: unknown, actions: Action[] = []) {
+	toast('success', i18n.global.t('error.success'), e, actions)
 }
