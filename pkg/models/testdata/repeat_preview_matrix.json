@@ -1,0 +1,1175 @@
+{
+	"version": 1,
+	"rows": [
+		{
+			"name": "daily 09:00 across New York spring-forward",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "daily"
+			},
+			"due": "2091-03-09T09:00:00-05:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every day",
+			"expect": [
+				{
+					"due": "2091-03-10T09:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-03-11T09:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-03-12T09:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "daily 00:30 across New York fall-back gives consecutive dates",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "daily"
+			},
+			"due": "2091-11-03T00:30:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every day",
+			"expect": [
+				{
+					"due": "2091-11-04T00:30:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-11-05T00:30:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-11-06T00:30:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "every 3 days across a leap day",
+			"user_zone": "UTC",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "daily",
+				"interval": 3
+			},
+			"due": "2092-02-27T10:00:00Z",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every 3 days",
+			"expect": [
+				{
+					"due": "2092-03-01T10:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-03-04T10:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-03-07T10:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "weekly implicit across Berlin fall-back",
+			"user_zone": "Europe/Berlin",
+			"server_zone": "Europe/Berlin",
+			"repeat": {
+				"freq": "weekly"
+			},
+			"due": "2091-10-21T18:00:00+02:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every week on Sunday",
+			"expect": [
+				{
+					"due": "2091-10-28T18:00:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-11-04T18:00:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-11-11T18:00:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "every 2 weeks implicit",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "weekly",
+				"interval": 2
+			},
+			"due": "2092-06-04T08:15:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every 2 weeks on Wednesday",
+			"expect": [
+				{
+					"due": "2092-06-18T08:15:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-07-02T08:15:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-07-16T08:15:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "weekly mon-wed-fri across New York fall-back",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "weekly",
+				"by_day": [
+					"mo",
+					"we",
+					"fr"
+				]
+			},
+			"due": "2091-10-31T09:00:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every week on Monday, Wednesday, and Friday",
+			"expect": [
+				{
+					"due": "2091-11-02T09:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-11-05T09:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-11-07T09:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "every 2 weeks on tue and thu from a thursday",
+			"user_zone": "Europe/Berlin",
+			"server_zone": "Europe/Berlin",
+			"repeat": {
+				"freq": "weekly",
+				"interval": 2,
+				"by_day": [
+					"tu",
+					"th"
+				]
+			},
+			"due": "2092-04-17T08:00:00+02:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every 2 weeks on Tuesday and Thursday",
+			"expect": [
+				{
+					"due": "2092-04-29T08:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-05-01T08:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-05-13T08:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "weekdays from a friday",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "weekly",
+				"by_day": [
+					"mo",
+					"tu",
+					"we",
+					"th",
+					"fr"
+				]
+			},
+			"due": "2092-05-23T17:00:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every weekday",
+			"expect": [
+				{
+					"due": "2092-05-26T17:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-05-27T17:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-05-28T17:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "monthly implicit from the 15th",
+			"user_zone": "UTC",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "monthly"
+			},
+			"due": "2093-01-15T12:00:00Z",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the 15th",
+			"expect": [
+				{
+					"due": "2093-02-15T12:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-03-15T12:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-04-15T12:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "monthly implicit from the 31st skips short months",
+			"user_zone": "Europe/Berlin",
+			"server_zone": "Europe/Berlin",
+			"repeat": {
+				"freq": "monthly"
+			},
+			"due": "2093-01-31T09:00:00+01:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the 31st",
+			"expect": [
+				{
+					"due": "2093-03-31T09:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-05-31T09:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-07-31T09:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "monthly implicit from the 29th skips february of a non-leap year",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "monthly"
+			},
+			"due": "2093-01-29T07:00:00-05:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the 29th",
+			"expect": [
+				{
+					"due": "2093-03-29T07:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-04-29T07:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-05-29T07:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "monthly on the last day through a leap february",
+			"user_zone": "UTC",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "monthly",
+				"by_month_day": [
+					-1
+				]
+			},
+			"due": "2092-01-31T17:00:00Z",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the last day",
+			"expect": [
+				{
+					"due": "2092-02-29T17:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-03-31T17:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-04-30T17:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "monthly on the 4th friday across a five-friday month",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "monthly",
+				"by_day": [
+					"4fr"
+				]
+			},
+			"due": "2092-04-25T10:00:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the 4th Friday",
+			"expect": [
+				{
+					"due": "2092-05-23T10:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-06-27T10:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-07-25T10:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "monthly on the last friday across the same five-friday month",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "monthly",
+				"by_day": [
+					"-1fr"
+				]
+			},
+			"due": "2092-04-25T10:00:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the last Friday",
+			"expect": [
+				{
+					"due": "2092-05-30T10:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-06-27T10:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-07-25T10:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "monthly on the 2nd tuesday across Berlin spring-forward",
+			"user_zone": "Europe/Berlin",
+			"server_zone": "Europe/Berlin",
+			"repeat": {
+				"freq": "monthly",
+				"by_day": [
+					"2tu"
+				]
+			},
+			"due": "2093-02-10T08:00:00+01:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the 2nd Tuesday",
+			"expect": [
+				{
+					"due": "2093-03-10T08:00:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-04-14T08:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-05-12T08:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "yearly implicit",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "yearly"
+			},
+			"due": "2091-03-14T09:00:00-04:00",
+			"completions": 2,
+			"preview_eligible": true,
+			"summary": "Every year on March 14",
+			"expect": [
+				{
+					"due": "2092-03-14T09:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-03-14T09:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "yearly from february 29 skips non-leap years",
+			"user_zone": "UTC",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "yearly"
+			},
+			"due": "2092-02-29T10:00:00Z",
+			"completions": 2,
+			"preview_eligible": true,
+			"summary": "Every year on February 29",
+			"expect": [
+				{
+					"due": "2096-02-29T10:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2104-02-29T10:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "weekly count 3 clears on the third completion",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "weekly",
+				"count": 3
+			},
+			"due": "2092-09-01T18:00:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every week on Monday, 3 times",
+			"expect": [
+				{
+					"due": "2092-09-08T18:00:00-04:00",
+					"count": 2,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-09-15T18:00:00-04:00",
+					"count": 1,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-09-15T18:00:00-04:00",
+					"count": null,
+					"cleared": true,
+					"done": true
+				}
+			]
+		},
+		{
+			"name": "daily count 1 clears on the first completion",
+			"user_zone": "Europe/Berlin",
+			"server_zone": "Europe/Berlin",
+			"repeat": {
+				"freq": "daily",
+				"count": 1
+			},
+			"due": "2093-06-01T08:00:00+02:00",
+			"completions": 1,
+			"preview_eligible": true,
+			"summary": "Every day, 1 time",
+			"expect": [
+				{
+					"due": "2093-06-01T08:00:00+02:00",
+					"count": null,
+					"cleared": true,
+					"done": true
+				}
+			]
+		},
+		{
+			"name": "weekly until equal to an occurrence includes it",
+			"user_zone": "UTC",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "weekly",
+				"until": "2093-03-18T09:00:00Z"
+			},
+			"due": "2093-03-04T09:00:00Z",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every week on Wednesday, until Mar 18, 9:00 AM",
+			"expect": [
+				{
+					"due": "2093-03-11T09:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-03-18T09:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-03-18T09:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": true
+				}
+			]
+		},
+		{
+			"name": "weekly until one second before an occurrence excludes it",
+			"user_zone": "UTC",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "weekly",
+				"until": "2093-03-18T08:59:59Z"
+			},
+			"due": "2093-03-04T09:00:00Z",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every week on Wednesday, until Mar 18, 8:59 AM",
+			"expect": [
+				{
+					"due": "2093-03-11T09:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-03-11T09:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": true
+				}
+			]
+		},
+		{
+			"name": "monthly 2nd tuesday until mid-sequence",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "monthly",
+				"by_day": [
+					"2tu"
+				],
+				"until": "2092-06-21T03:59:59Z"
+			},
+			"due": "2092-04-08T09:00:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the 2nd Tuesday, until Jun 20",
+			"expect": [
+				{
+					"due": "2092-05-13T09:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-06-10T09:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-06-10T09:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": true
+				}
+			]
+		},
+		{
+			"name": "every 6 hours across New York spring-forward",
+			"user_zone": "America/New_York",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "hourly",
+				"interval": 6
+			},
+			"due": "2091-03-10T22:00:00-05:00",
+			"completions": 3,
+			"preview_eligible": false,
+			"summary": "Every 6 hours",
+			"expect": [
+				{
+					"due": "2091-03-11T05:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-03-11T11:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2091-03-11T17:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "every 2 weeks on saturday and sunday from a sunday",
+			"user_zone": "UTC",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "weekly",
+				"interval": 2,
+				"by_day": [
+					"sa",
+					"su"
+				]
+			},
+			"due": "2093-05-03T10:00:00Z",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every 2 weeks on Saturday and Sunday",
+			"expect": [
+				{
+					"due": "2093-05-16T10:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-05-17T10:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-05-30T10:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "zones differ: weekly mon-wed-fri at 20:00 New York, server UTC",
+			"user_zone": "America/New_York",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "weekly",
+				"by_day": [
+					"mo",
+					"we",
+					"fr"
+				]
+			},
+			"due": "2093-11-02T20:00:00-05:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every week on Monday, Wednesday, and Friday",
+			"expect": [
+				{
+					"due": "2093-11-04T20:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-11-06T20:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-11-09T20:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "zones differ: monthly on the 15th at 21:00 New York, server UTC",
+			"user_zone": "America/New_York",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "monthly",
+				"by_month_day": [
+					15
+				]
+			},
+			"due": "2093-01-15T21:00:00-05:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the 15th",
+			"expect": [
+				{
+					"due": "2093-02-15T21:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-03-15T21:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-04-15T21:00:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "zones differ: monthly 2nd tuesday at 07:00 Berlin, server New York",
+			"user_zone": "Europe/Berlin",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "monthly",
+				"by_day": [
+					"2tu"
+				]
+			},
+			"due": "2093-09-08T07:00:00+02:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every month on the 2nd Tuesday",
+			"expect": [
+				{
+					"due": "2093-10-13T07:00:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-11-10T07:00:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-12-08T07:00:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "zones differ: weekly friday until the end of a New York friday, server UTC",
+			"user_zone": "America/New_York",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "weekly",
+				"by_day": [
+					"fr"
+				],
+				"until": "2092-11-22T04:59:59Z"
+			},
+			"due": "2092-11-07T20:00:00-05:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every week on Friday, until Nov 21",
+			"expect": [
+				{
+					"due": "2092-11-14T20:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-11-21T20:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-11-21T20:00:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": true
+				}
+			]
+		},
+		{
+			"name": "daily 02:30 across New York spring-forward returns to 02:30",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "daily"
+			},
+			"due": "2092-03-08T02:30:00-05:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every day",
+			"expect": [
+				{
+					"due": "2092-03-09T03:30:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-03-10T02:30:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-03-11T02:30:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "daily 01:30 across New York fall-back takes the earlier instant",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "daily"
+			},
+			"due": "2092-11-01T01:30:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every day",
+			"expect": [
+				{
+					"due": "2092-11-02T01:30:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-11-03T01:30:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2092-11-04T01:30:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "daily 00:30 across Berlin fall-back gives consecutive dates",
+			"user_zone": "Europe/Berlin",
+			"server_zone": "Europe/Berlin",
+			"repeat": {
+				"freq": "daily"
+			},
+			"due": "2093-10-24T00:30:00+02:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every day",
+			"expect": [
+				{
+					"due": "2093-10-25T00:30:00+02:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-10-26T00:30:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2093-10-27T00:30:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "zones differ near midnight: daily 23:45 New York across fall-back, server UTC",
+			"user_zone": "America/New_York",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "daily"
+			},
+			"due": "2094-11-05T23:45:00-04:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every day",
+			"expect": [
+				{
+					"due": "2094-11-06T23:45:00-04:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2094-11-07T23:45:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2094-11-08T23:45:00-05:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "zones differ near midnight: weekly tue-thu 00:15 Berlin, server New York",
+			"user_zone": "Europe/Berlin",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "weekly",
+				"by_day": [
+					"tu",
+					"th"
+				]
+			},
+			"due": "2094-02-02T00:15:00+01:00",
+			"completions": 3,
+			"preview_eligible": true,
+			"summary": "Every week on Tuesday and Thursday",
+			"expect": [
+				{
+					"due": "2094-02-04T00:15:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2094-02-09T00:15:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2094-02-11T00:15:00+01:00",
+					"count": null,
+					"cleared": false,
+					"done": false
+				}
+			]
+		},
+		{
+			"name": "weekly until before the due date stays done",
+			"user_zone": "UTC",
+			"server_zone": "UTC",
+			"repeat": {
+				"freq": "weekly",
+				"until": "2094-04-27T09:00:00Z"
+			},
+			"due": "2094-05-04T09:00:00Z",
+			"completions": 1,
+			"preview_eligible": false,
+			"summary": "Every week on Tuesday, until Apr 27, 9:00 AM",
+			"expect": [
+				{
+					"due": "2094-05-04T09:00:00Z",
+					"count": null,
+					"cleared": false,
+					"done": true
+				}
+			]
+		},
+		{
+			"name": "hourly count 2 clears on the second completion",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "hourly",
+				"count": 2
+			},
+			"due": "2094-06-01T09:00:00-04:00",
+			"completions": 2,
+			"preview_eligible": false,
+			"summary": "Every hour, 2 times",
+			"expect": [
+				{
+					"due": "2094-06-01T10:00:00-04:00",
+					"count": 1,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2094-06-01T10:00:00-04:00",
+					"count": null,
+					"cleared": true,
+					"done": true
+				}
+			]
+		},
+		{
+			"name": "weekly mon-wed-fri count 2 clears on the second completion",
+			"user_zone": "America/New_York",
+			"server_zone": "America/New_York",
+			"repeat": {
+				"freq": "weekly",
+				"by_day": [
+					"mo",
+					"we",
+					"fr"
+				],
+				"count": 2
+			},
+			"due": "2095-04-15T18:30:00-04:00",
+			"completions": 2,
+			"preview_eligible": true,
+			"summary": "Every week on Monday, Wednesday, and Friday, 2 times",
+			"expect": [
+				{
+					"due": "2095-04-18T18:30:00-04:00",
+					"count": 1,
+					"cleared": false,
+					"done": false
+				},
+				{
+					"due": "2095-04-18T18:30:00-04:00",
+					"count": null,
+					"cleared": true,
+					"done": true
+				}
+			]
+		}
+	]
+}

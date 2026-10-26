@@ -222,18 +222,17 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			Done:        t.Done,
 			Completed:   t.DoneAt,
 			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
-			Categories:  categories,
-			Priority:    t.Priority,
-			Start:       t.StartDate,
-			End:         t.EndDate,
-			Created:     t.Created,
-			Updated:     t.Updated,
-			DueDate:     t.DueDate,
-			Duration:    duration,
-			RepeatAfter: t.RepeatAfter,
-			RepeatMode:  t.RepeatMode,
-			Alarms:      alarms,
-			Relations:   relations,
+			Categories: categories,
+			Priority:   t.Priority,
+			Start:      t.StartDate,
+			End:        t.EndDate,
+			Created:    t.Created,
+			Updated:    t.Updated,
+			DueDate:    t.DueDate,
+			Duration:   duration,
+			Repeats:    t.Repeats,
+			Alarms:     alarms,
+			Relations:  relations,
 		})
 	}
 
@@ -278,6 +277,7 @@ type ParsedVTODOProperties struct {
 	StartDate   bool
 	EndDate     bool
 	Color       bool
+	Repeats     bool
 }
 
 // ParseTaskFromVTODO parses a VTODO into a Task. Partial updates must overlay only
@@ -400,6 +400,18 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 		titleValue = summary.Value
 	}
 
+	// Parse RRULE for recurring tasks, normalizing it so a malformed value from a
+	// client is dropped (with a log line) rather than stored or later failing the
+	// whole task on validation.
+	var repeats string
+	if rruleProp, ok := task["RRULE"]; ok {
+		if normalized, valid := models.NormalizeRRule(rruleProp.Value); valid {
+			repeats = normalized
+		} else {
+			log.Debugf("[CalDAV] Ignoring unparseable RRULE %q on imported task %q", rruleProp.Value, uidValue)
+		}
+	}
+
 	dtStartProp, hasDTStart := task["DTSTART"]
 	startDate := caldavTimeToTimestamp(dtStartProp)
 
@@ -436,6 +448,7 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 		EndDate:     endDate,
 		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
 		HexColor:    hexColor,
+		Repeats:     repeats,
 	}
 
 	for _, c := range relations {
@@ -493,6 +506,8 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 		StartDate:   parsedDateProperty(dtStartProp, hasDTStart, startDate),
 		EndDate:     hasEndDate,
 		Color:       hasColor && (color == "" || hexColor != ""),
+		// A missing or unusable RRULE keeps the stored recurrence; only a valid one replaces it.
+		Repeats: repeats != "",
 	}
 
 	return vTask, props, nil

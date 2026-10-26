@@ -126,7 +126,6 @@ func TestFilterComplexityLimits(t *testing.T) {
 func TestErrFilterTooComplexHTTPErrorCode(t *testing.T) {
 	httpErr := (&ErrFilterTooComplex{Reason: "test"}).HTTPError()
 	assert.Equal(t, 4033, httpErr.Code)
-	assert.NotEqual(t, ErrCodeInvalidTaskRepeatInterval, httpErr.Code)
 }
 
 func TestIsErrInvalidFilterMatchesParseErrors(t *testing.T) {

@@ -288,10 +288,13 @@
 									</BaseButton>
 								</div>
 								<RepeatAfter
-									:ref="e => setFieldRef('repeatAfter', e)"
+									:key="task.id"
+									:ref="setRepeatAfterRef"
 									:model-value="task"
 									:disabled="!canWrite"
+									:start-open="openRepeatOnMount"
 									@update:modelValue="saveTask($event)"
+									@update:open="repeatEditorOpen = $event"
 								/>
 							</div>
 						</CustomTransition>
@@ -590,7 +593,7 @@
 						<XButton
 							variant="secondary"
 							icon="history"
-							@click="setFieldActive('repeatAfter')"
+							@click="activateRepeat"
 						>
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
@@ -696,7 +699,7 @@ import Reactions from '@/components/input/Reactions.vue'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {getScrollParent} from '@/helpers/getScrollParent'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isRepeating} from '@/helpers/rrule'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 import {taskLoadErrorAction} from './taskDetailError'
@@ -707,6 +710,7 @@ import {
 	useFavoriteTaskMutation,
 	useDuplicateTaskMutation,
 	useMarkTaskReadMutation,
+	type TaskInput,
 } from '@/client/queries/taskMutations'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
@@ -767,7 +771,16 @@ const task = ref(createTaskDraft())
 
 // Only fields edited here stay local; the rest follows the cache.
 function followServerFields(loaded: ITask) {
-	const {priority, percent_done, due_date, start_date, end_date, reminders, repeat_after, repeat_mode} = task.value
+	const {
+		priority,
+		percent_done,
+		due_date,
+		start_date,
+		end_date,
+		reminders,
+		repeat,
+		repeats_from_current_date,
+	} = task.value
 	task.value = {
 		...createTaskDraft(klona(loaded)),
 		priority,
@@ -776,8 +789,8 @@ function followServerFields(loaded: ITask) {
 		start_date,
 		end_date,
 		reminders,
-		repeat_after,
-		repeat_mode,
+		repeat,
+		repeats_from_current_date,
 	}
 }
 
@@ -991,6 +1004,11 @@ type FieldType =
 	| 'startDate'
 	| 'timeTracking'
 
+const repeatAfterField = ref<InstanceType<typeof RepeatAfter> | null>(null)
+const repeatEditorOpen = ref(false)
+// "Set Repeat" opens the presets only when it is what puts the repeat field on screen.
+const openRepeatOnMount = ref(false)
+
 const activeFields: { [type in FieldType]: boolean } = reactive({
 	assignees: false,
 	attachments: false,
@@ -1020,8 +1038,8 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.related_tasks ?? {}).length > 0
 	activeFields.reminders = (task.value.reminders?.length ?? 0) > 0
-	activeFields.repeatAfter = (task.value.repeat_after ?? 0) > 0
-		|| task.value.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	// An opened, still empty repeat field must not vanish because another field was saved meanwhile.
+	activeFields.repeatAfter = isRepeating(task.value.repeat) || repeatEditorOpen.value
 	activeFields.startDate = Boolean(parseDateOrNull(task.value.start_date))
 }
 
@@ -1029,6 +1047,7 @@ watch(taskQuery.task, async (loaded, previous) => {
 	if (!loaded) return
 	if (loaded.id !== previous?.id) {
 		seedTask(loaded)
+		repeatEditorOpen.value = false
 		setActiveFields()
 	} else {
 		followServerFields(loaded)
@@ -1080,6 +1099,19 @@ function setFieldRef(name: FieldType, e: Element | ComponentPublicInstance | nul
 	activeFieldElements[name] = element instanceof HTMLElement ? element : null
 }
 
+function setRepeatAfterRef(e: Element | ComponentPublicInstance | null) {
+	setFieldRef('repeatAfter', e)
+	repeatAfterField.value = e instanceof Element ? null : e as InstanceType<typeof RepeatAfter> | null
+}
+
+function activateRepeat() {
+	openRepeatOnMount.value = !activeFields.repeatAfter
+	setFieldActive('repeatAfter')
+	nextTick(() => {
+		openRepeatOnMount.value = false
+	})
+}
+
 function setFieldActive(fieldName: keyof typeof activeFields) {
 	activeFields[fieldName] = true
 	nextTick(() => {
@@ -1101,7 +1133,12 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 			return
 		}
 
-		el.focus()
+		// The repeat field's root is not focusable; its trigger is.
+		if (fieldName === 'repeatAfter' && typeof repeatAfterField.value?.focus === 'function') {
+			repeatAfterField.value.focus()
+		} else {
+			el.focus()
+		}
 
 		// Finish scrolling before the datepicker sheet locks the page.
 		scrollIntoView(el, datepicker ? 'instant' : 'smooth')
@@ -1122,7 +1159,7 @@ function openAttachments() {
 }
 
 async function saveTask(
-	currentTask: ITask | null = null,
+	currentTask: TaskInput | null = null,
 	undoCallback?: () => void,
 ) {
 	if (currentTask === null) {
@@ -1145,7 +1182,13 @@ async function saveTask(
 		currentTask.end_date = currentTask.due_date
 	}
 
-	seedTask(mergeTask(task.value, await updateTask.mutateAsync({...currentTask, id: currentTask.id!})))
+	const savedId = currentTask.id
+	const saved = await updateTask.mutateAsync({...currentTask, id: currentTask.id!})
+	// The person may have moved to another task while this save was in flight; only the cache follows it then.
+	if (savedId !== props.taskId || savedId !== task.value.id) {
+		return
+	}
+	seedTask(mergeTask(task.value, saved))
 	setActiveFields()
 
 	let actions: MessageAction[] = []
@@ -1262,9 +1305,11 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeat_after = 0
-	task.value.repeat_mode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	await saveTask()
+	await saveTask({
+		...klona(task.value),
+		repeat: null,
+		repeats_from_current_date: false,
+	})
 }
 
 function setRelatedTasksActive() {

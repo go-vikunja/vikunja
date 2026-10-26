@@ -14,29 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package caldav
+package migration
 
-import "testing"
+import (
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
+)
 
-func Test_getRruleFromInterval(t *testing.T) {
-	tests := []struct {
-		name         string
-		interval     int64
-		wantFreq     string
-		wantInterval int64
-	}{
-		{"seconds", 435, "SECONDLY", 435},
-		{"minutes", 120, "MINUTELY", 2},
-		{"hours", 7200, "HOURLY", 2},
-		{"daily", 86400, "DAILY", 1},
-		{"weekly", 1209600, "WEEKLY", 2},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotFreq, gotInterval := getRruleFromInterval(tt.interval)
-			if gotFreq != tt.wantFreq || gotInterval != tt.wantInterval {
-				t.Errorf("getRruleFromInterval() = %s,%d; want %s,%d", gotFreq, gotInterval, tt.wantFreq, tt.wantInterval)
-			}
-		})
-	}
+// tasks20261023190000 is the one column this migration adds: the due date's intended local time
+// of day, in seconds after local midnight, which a completion remembers when a spring-forward gap
+// shifted the due date (NULL when it did not).
+type tasks20261023190000 struct {
+	IntendedDueTime *int `xorm:"int null 'intended_due_time'"`
+}
+
+func (tasks20261023190000) TableName() string {
+	return "tasks"
+}
+
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20261023190000",
+		Description: "Add intended_due_time column to tasks",
+		Migrate: func(tx *xorm.Engine) error {
+			return partialSync(tx, tasks20261023190000{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }
