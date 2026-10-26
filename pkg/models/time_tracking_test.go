@@ -100,6 +100,9 @@ func TestTimeEntry_CanCreate(t *testing.T) {
 		{"both task and project is invalid", &TimeEntry{TaskID: 1, ProjectID: 1}, &user.User{ID: 1}, false, IsErrTimeEntryInvalidContainer},
 		{"without task or project", &TimeEntry{}, &user.User{ID: 1}, true, nil},
 		{"link share denied", &TimeEntry{ProjectID: 1}, &LinkSharing{ID: 1, ProjectID: 1}, false, nil},
+		{"favorites pseudo project is rejected", &TimeEntry{ProjectID: FavoritesPseudoProjectID}, &user.User{ID: 1}, false, IsErrProjectDoesNotExist},
+		// Saved filter 1 is owned by user1.
+		{"saved filter pseudo project is rejected", &TimeEntry{ProjectID: -2}, &user.User{ID: 1}, false, IsErrProjectDoesNotExist},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -899,6 +902,39 @@ func TestTimeEntry_TaskCount(t *testing.T) {
 		taskMap := map[int64]*Task{1: task1}
 		require.NoError(t, addTimeEntriesCountToTasks(s, u, []int64{1}, taskMap))
 		assert.Nil(t, task1.TimeEntriesCount, "an unlicensed instance must not expose counts")
+	})
+}
+
+func TestTimeEntry_PseudoProject(t *testing.T) {
+	t.Run("moving an entry onto favorites is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := (&TimeEntry{
+			ID:        2,
+			ProjectID: FavoritesPseudoProjectID,
+		}).CanUpdate(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err), "unexpected error type: %v", err)
+	})
+	t.Run("a stored entry on favorites is not readable by another user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    1,
+			ProjectID: FavoritesPseudoProjectID,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+
+		can, _, err := (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 2})
+		assert.False(t, can)
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err), "unexpected error type: %v", err)
 	})
 }
 

@@ -448,6 +448,10 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 		// CanUpdate checks authorship first.
 		return entry, !fetch || entry.UserID == a.GetID(), int(PermissionWrite), nil
 	}
+	// Pseudo projects (favorites, saved filters) pass CanRead but can't hold entries.
+	if projectID < 0 {
+		return entry, false, -1, ErrProjectDoesNotExist{ID: projectID}
+	}
 
 	if err := entry.markInTrash(s); err != nil {
 		return entry, false, -1, err
