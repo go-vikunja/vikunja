@@ -23,7 +23,7 @@ describe('usePendingRows', () => {
 		expect(rows.has(3)).toBe(true)
 		expect(rows.has(4)).toBe(false)
 		request.resolve()
-		await run
+		await expect(run).resolves.toBe(true)
 		expect(rows.has(3)).toBe(false)
 	})
 
@@ -33,7 +33,16 @@ describe('usePendingRows', () => {
 		const run = rows.run({mutateAsync: () => request.promise}, 3)
 		expect(rows.has(3)).toBe(true)
 		request.reject(new Error('failed'))
-		await expect(run).resolves.toBeUndefined()
+		await expect(run).resolves.toBe(false)
 		expect(rows.has(3)).toBe(false)
+	})
+
+	it('ignores a second run while the row is pending', async () => {
+		const rows = usePendingRows()
+		const request = deferred()
+		const first = rows.run({mutateAsync: () => request.promise}, 3)
+		await expect(rows.run({mutateAsync: () => request.promise}, 3)).resolves.toBe(false)
+		request.resolve()
+		await expect(first).resolves.toBe(true)
 	})
 })
