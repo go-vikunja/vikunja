@@ -66,12 +66,20 @@ func (t *Task) canDoTrashedTask(s *xorm.Session, a web.Auth, can func(*Project, 
 	if err != nil {
 		return false, err
 	}
+	allowed, err := trashedTaskAllows(s, a, trashed, can)
+	if err != nil {
+		return false, err
+	}
+	*t = *trashed
+	return allowed, nil
+}
+
+func trashedTaskAllows(s *xorm.Session, a web.Auth, trashed *Task, can func(*Project, *xorm.Session, web.Auth) (bool, error)) (bool, error) {
 	// CanWrite lets instance admins past archived projects
 	if err := (&Project{ID: trashed.ProjectID}).CheckIsArchived(s); err != nil {
 		return false, err
 	}
-	*t = *trashed
-	return can(&Project{ID: t.ProjectID}, s, a)
+	return can(&Project{ID: trashed.ProjectID}, s, a)
 }
 
 // CanRestore checks whether the auth may restore the trashed task.
