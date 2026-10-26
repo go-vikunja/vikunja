@@ -369,6 +369,11 @@ func saveState(st state) {
 	}
 }
 
+// InstanceID returns this instance's ID, creating it if missing.
+func InstanceID() (string, error) {
+	return loadOrCreateInstanceID()
+}
+
 func loadOrCreateInstanceID() (string, error) {
 	s := db.NewSession()
 	defer s.Close()

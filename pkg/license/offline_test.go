@@ -240,3 +240,24 @@ func TestInitOffline(t *testing.T) {
 		assert.True(t, IsFeatureEnabled(FeatureAdminPanel))
 	})
 }
+
+func TestInstanceID(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	id, err := InstanceID()
+	require.NoError(t, err)
+	assert.Equal(t, testInstanceID, id)
+
+	s := db.NewSession()
+	_, err = s.Where("1 = 1").Delete(&Status{})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	created, err := InstanceID()
+	require.NoError(t, err)
+	assert.NotEmpty(t, created)
+	again, err := InstanceID()
+	require.NoError(t, err)
+	assert.Equal(t, created, again)
+}
