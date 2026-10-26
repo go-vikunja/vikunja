@@ -38,13 +38,24 @@ export interface Action {
 	callback: () => void,
 }
 
-export type ToastData = {actions: Action[]}
+export type ToastOptions = {
+	// Only for flows whose view is gone: the action button takes the focus that dropped to the body
+	takeFocus?: boolean,
+}
+
+export type ToastData = {
+	actions: Action[],
+	takeFocus: boolean,
+}
 
 // Long enough to reach the action; Notification.vue pauses it while the toast is hovered or focused
 export const ACTION_TOAST_DURATION = 10_000
 
-function toast(type: 'error' | 'success', title: string, e: unknown, actions: Action[]) {
-	const data: ToastData = {actions}
+function toast(type: 'error' | 'success', title: string, e: unknown, actions: Action[], options: ToastOptions = {}) {
+	const data: ToastData = {
+		actions,
+		takeFocus: options.takeFocus ?? false,
+	}
 	notify({
 		type,
 		title,
@@ -61,6 +72,6 @@ export function error(e: unknown, actions: Action[] = []) {
 	toast('error', i18n.global.t('error.error'), e, actions)
 }
 
-export function success(e: unknown, actions: Action[] = []) {
-	toast('success', i18n.global.t('error.success'), e, actions)
+export function success(e: unknown, actions: Action[] = [], options: ToastOptions = {}) {
+	toast('success', i18n.global.t('error.success'), e, actions, options)
 }

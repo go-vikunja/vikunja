@@ -41,7 +41,9 @@ test.describe('Project trash', () => {
 		await dialog.getByRole('button', {name: 'Do it!'}).click()
 
 		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
-		await toast.getByRole('button', {name: 'Undo'}).click()
+		const undo = toast.getByRole('button', {name: 'Undo'})
+		await expect(undo).toBeFocused()
+		await undo.click()
 		await expect(page.locator('.global-notification')).toContainText('The project has been restored.')
 
 		const stored = await apiContext.get('projects/1', {headers: {Authorization: `Bearer ${userToken}`}})

@@ -105,6 +105,6 @@ async function deleteProject() {
 	success({message: t('project.delete.success')}, [{
 		title: t('task.undo'),
 		callback: () => restoreMutation.mutate(id),
-	}])
+	}], {takeFocus: true})
 }
 </script>

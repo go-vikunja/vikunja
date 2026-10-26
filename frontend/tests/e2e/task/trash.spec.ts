@@ -33,7 +33,9 @@ test.describe('Trash', () => {
 
 		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
 		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
-		await toast.getByRole('button', {name: 'Undo'}).click()
+		const undo = toast.getByRole('button', {name: 'Undo'})
+		await expect(undo).toBeFocused()
+		await undo.click()
 		await expect(page.locator('.global-notification')).toContainText('The task has been restored.')
 		await expect(page.locator('.tasks .task').filter({hasText: 'Undo me'})).toBeVisible()
 

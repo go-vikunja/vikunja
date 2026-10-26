@@ -1184,7 +1184,7 @@ async function deleteTask() {
 	success({message: t('task.detail.deleteSuccess')}, [{
 		title: t('task.undo'),
 		callback: () => restoreTaskMutation.mutate(id),
-	}])
+	}], {takeFocus: true})
 }
 
 async function toggleTaskDone() {

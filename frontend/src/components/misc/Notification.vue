@@ -87,8 +87,12 @@ function syncTeleportTarget() {
 
 const actionTimers = new Map<NotificationItem['id'], ReturnType<typeof pausableTimeout>>()
 
+function toastData(item: NotificationItem) {
+	return item.data as Partial<ToastData> | undefined
+}
+
 function hasActions(item: NotificationItem) {
-	return ((item.data as Partial<ToastData> | undefined)?.actions?.length ?? 0) > 0
+	return (toastData(item)?.actions?.length ?? 0) > 0
 }
 
 function toastElement(item: NotificationItem) {
@@ -100,7 +104,9 @@ async function startActionTimer(item: NotificationItem) {
 		return
 	}
 	actionTimers.set(item.id, pausableTimeout(ACTION_TOAST_DURATION, () => notify.close(item.id)))
-	// Only recover lost focus (e.g. the deleted view's button is gone); never pull it from where the user is.
+	if (!toastData(item)?.takeFocus) {
+		return
+	}
 	await nextTick()
 	requestAnimationFrame(() => {
 		if (focusIsLost(null)) {
