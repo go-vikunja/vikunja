@@ -676,6 +676,7 @@ func init() {
 		"TaskOverdueEvent":                             reflect.ValueOf((*models.TaskOverdueEvent)(nil)),
 		"TaskPosition":                                 reflect.ValueOf((*models.TaskPosition)(nil)),
 		"TaskPositionsRecalculatedEvent":               reflect.ValueOf((*models.TaskPositionsRecalculatedEvent)(nil)),
+		"TaskPurgedEvent":                              reflect.ValueOf((*models.TaskPurgedEvent)(nil)),
 		"TaskRelation":                                 reflect.ValueOf((*models.TaskRelation)(nil)),
 		"TaskRelationCreatedEvent":                     reflect.ValueOf((*models.TaskRelationCreatedEvent)(nil)),
 		"TaskRelationDeletedEvent":                     reflect.ValueOf((*models.TaskRelationDeletedEvent)(nil)),
