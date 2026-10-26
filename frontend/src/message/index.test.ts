@@ -19,6 +19,19 @@ describe('success', () => {
 		}])
 		expect(notify).toHaveBeenLastCalledWith(expect.objectContaining({ignoreDuplicates: false}))
 	})
+
+	it('leaves closing a toast with actions to its pausable timer', () => {
+		success({message: 'Deleted'}, [{
+			title: 'Undo',
+			callback: () => {},
+		}])
+		expect(notify).toHaveBeenLastCalledWith(expect.objectContaining({duration: -1}))
+	})
+
+	it('keeps the default duration for toasts without actions', () => {
+		success({message: 'Saved'})
+		expect(notify).toHaveBeenLastCalledWith(expect.objectContaining({duration: undefined}))
+	})
 })
 
 describe('error', () => {
