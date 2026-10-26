@@ -767,6 +767,27 @@ func TestAuditTaskPurged(t *testing.T) {
 	assert.Equal(t, audit.TaskTarget(52), entries[1].Target)
 }
 
+func TestAuditProjectPurged(t *testing.T) {
+	logfile := startAuditLogForTest(t)
+
+	require.NoError(t, events.Dispatch(&ProjectPurgedEvent{
+		Project: &Project{ID: 45},
+		Doer:    &user.User{ID: 3},
+	}))
+	waitForAuditEntries(t, logfile, 1)
+	require.NoError(t, events.Dispatch(&ProjectPurgedEvent{Project: &Project{ID: 46}}))
+	entries := waitForAuditEntries(t, logfile, 2)
+	require.Len(t, entries, 2)
+
+	assert.Equal(t, audit.ActionProjectPurged, entries[0].Action)
+	assert.Equal(t, audit.ActorFromDoerID(3), entries[0].Actor)
+	assert.Equal(t, audit.ProjectTarget(45), entries[0].Target)
+
+	assert.Equal(t, audit.ActionProjectPurged, entries[1].Action)
+	assert.Equal(t, audit.SystemActor(), entries[1].Actor, "retention cron")
+	assert.Equal(t, audit.ProjectTarget(46), entries[1].Target)
+}
+
 func TestWebhookDeliveryListenerSkipsErrorReporting(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 

@@ -102,8 +102,24 @@ func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
 	return nil
 }
 
-// Time entries survive without a container, kept by their authors.
-func hardDeleteProject(s *xorm.Session, p *Project) (err error) {
+// Time entries survive without a container, kept by their authors. A nil doer is the system.
+func hardDeleteProject(s *xorm.Session, p *Project, doer *user.User) error {
+	ancestorIDs := []int64{}
+	err := s.Table(&ProjectAncestor{}).
+		Where(builder.And(
+			builder.Eq{"project_id": p.ID},
+			builder.Gt{"depth": 0},
+		)).
+		Cols("ancestor_id").
+		Find(&ancestorIDs)
+	if err != nil {
+		return err
+	}
+	return hardDeleteProjectTree(s, p, doer, ancestorIDs)
+}
+
+// Children get their ancestors passed down: deleting p's closure rows also drops their links to p.
+func hardDeleteProjectTree(s *xorm.Session, p *Project, doer *user.User, ancestorIDs []int64) (err error) {
 	// Lock first: the task loop below deletes task_positions rows before the views are dropped further down.
 	_, err = lockProjectViewsForPositionUpdate(s, p.ID)
 	if err != nil {
@@ -202,14 +218,20 @@ func hardDeleteProject(s *xorm.Session, p *Project) (err error) {
 	if err != nil {
 		return
 	}
+	events.DispatchOnCommit(s, &ProjectPurgedEvent{
+		Project:     p,
+		Doer:        doer,
+		AncestorIDs: ancestorIDs,
+	})
 
 	children := []*Project{}
 	err = s.Unscoped().Where("parent_project_id = ?", p.ID).Find(&children)
 	if err != nil {
 		return
 	}
+	childAncestorIDs := append(slices.Clone(ancestorIDs), p.ID)
 	for _, child := range children {
-		err = hardDeleteProject(s, child)
+		err = hardDeleteProjectTree(s, child, doer, childAncestorIDs)
 		if err != nil {
 			return
 		}
@@ -426,9 +448,9 @@ func (p *Project) CanDeletePermanently(s *xorm.Session, a web.Auth) (bool, error
 	return p.canDoTrashedProject(s, a)
 }
 
-// DeletePermanently purges a trashed project with all its sub-projects right away.
-func (p *Project) DeletePermanently(s *xorm.Session) error {
-	return hardDeleteProject(s, p)
+// DeletePermanently purges the project with all its sub-projects.
+func (p *Project) DeletePermanently(s *xorm.Session, a web.Auth) error {
+	return hardDeleteProject(s, p, doerFromAuth(s, a))
 }
 
 // TrashedSubProject is a trashed descendant shown under its topmost trashed ancestor in the trash.
@@ -577,8 +599,9 @@ func EmptyProjectTrash(s *xorm.Session, a web.Auth) (purged int, err error) {
 	if err = s.Unscoped().Where(cond).Find(&projects); err != nil {
 		return 0, err
 	}
+	doer := doerFromAuth(s, a)
 	for _, project := range projects {
-		if err = hardDeleteProject(s, project); err != nil {
+		if err = hardDeleteProject(s, project, doer); err != nil {
 			return 0, err
 		}
 	}
@@ -624,7 +647,7 @@ func deleteExpiredProjects(now time.Time) {
 				return
 			}
 			if err == nil {
-				err = hardDeleteProject(ps, project)
+				err = hardDeleteProject(ps, project, nil)
 			}
 			if err != nil {
 				_ = ps.Rollback()

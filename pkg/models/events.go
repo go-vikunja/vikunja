@@ -282,6 +282,19 @@ func (p *ProjectRestoredEvent) Name() string {
 	return "project.restored"
 }
 
+// ProjectPurgedEvent fires for every project removed permanently, sub-projects included. Doer is nil for the system.
+type ProjectPurgedEvent struct {
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
+	// Webhook routing only, stripped from the payload: the closure rows are gone once the purge commits.
+	AncestorIDs []int64 `json:"ancestor_ids,omitempty"`
+}
+
+// Name defines the name for ProjectPurgedEvent
+func (p *ProjectPurgedEvent) Name() string {
+	return "project.purged"
+}
+
 // ProjectDeletedEvent represents an event where a project has been deleted
 type ProjectDeletedEvent struct {
 	Project *Project   `json:"project"`
