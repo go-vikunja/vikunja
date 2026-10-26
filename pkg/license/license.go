@@ -164,6 +164,15 @@ func Init() {
 		return
 	}
 
+	if isOfflineToken(key) {
+		expiresAt, ok := applyOfflineToken(key)
+		if ok {
+			stopCh = make(chan struct{})
+			go offlineBackgroundLoop(expiresAt)
+		}
+		return
+	}
+
 	// Check for cached validation
 	cached, err := loadCachedStatus()
 	if err != nil {
@@ -219,7 +228,13 @@ func ResetForTests() {
 }
 
 // ReloadFromCache applies the cached license_status row; empty or missing cache degrades to free mode.
+// Offline tokens are re-verified instead, since they never use the cache.
 func ReloadFromCache() error {
+	if key := config.LicenseKey.GetString(); isOfflineToken(key) {
+		applyOfflineToken(key)
+		return nil
+	}
+
 	cached, err := loadCachedStatus()
 	if err != nil {
 		return err

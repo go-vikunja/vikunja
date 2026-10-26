@@ -19,6 +19,7 @@ module code.vikunja.io/api
 go 1.27.0
 
 require (
+	aidanwoods.dev/go-paseto v1.6.0
 	code.dny.dev/ssrf v0.3.0
 	dario.cat/mergo v1.0.2
 	github.com/JohannesKaufmann/dom v0.3.1
@@ -102,6 +103,7 @@ require (
 )
 
 require (
+	aidanwoods.dev/go-result v0.3.1 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Azure/go-ntlmssp v0.1.1 // indirect
