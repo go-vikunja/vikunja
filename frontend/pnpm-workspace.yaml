@@ -13,7 +13,7 @@ overrides:
   serialize-javascript: 7.1.2
   flatted: 3.4.4
   ip-address: 10.7.4
-  postcss: 8.5.28
+  postcss: 8.5.31
   tmp: 0.2.7
   esbuild: 0.28.2
   form-data: 4.0.6
