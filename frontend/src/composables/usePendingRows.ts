@@ -8,15 +8,17 @@ export function usePendingRows() {
 
 	return {
 		has: (id: number) => pending.has(id),
-		async run(mutation: RowMutation, id: number) {
+		async run(mutation: RowMutation, id: number): Promise<boolean> {
 			if (pending.has(id)) {
-				return
+				return false
 			}
 			pending.add(id)
 			try {
 				await mutation.mutateAsync(id)
+				return true
 			} catch {
 				// The mutation's onError already toasted it
+				return false
 			} finally {
 				pending.delete(id)
 			}
