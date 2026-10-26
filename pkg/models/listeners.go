@@ -198,9 +198,10 @@ func registerEventsForAuditLogging() {
 	})
 	audit.RegisterEventForAudit(func(e *TaskPurgedEvent) *audit.Entry {
 		return &audit.Entry{
-			Action: audit.ActionTaskPurged,
-			Actor:  auditActorFromUser(e.Doer),
-			Target: audit.TaskTarget(e.Task.ID),
+			Action:   audit.ActionTaskPurged,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"project_id": e.Task.ProjectID},
 		}
 	})
 	audit.RegisterEventForAudit(func(e *TaskAssigneeCreatedEvent) *audit.Entry {

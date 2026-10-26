@@ -742,17 +742,24 @@ func TestAuditTaskPurged(t *testing.T) {
 	logfile := startAuditLogForTest(t)
 
 	require.NoError(t, events.Dispatch(&TaskPurgedEvent{
-		Task: &Task{ID: 51},
+		Task: &Task{
+			ID:        51,
+			ProjectID: 1,
+		},
 		Doer: &user.User{ID: 3},
 	}))
 	waitForAuditEntries(t, logfile, 1)
-	require.NoError(t, events.Dispatch(&TaskPurgedEvent{Task: &Task{ID: 52}}))
+	require.NoError(t, events.Dispatch(&TaskPurgedEvent{Task: &Task{
+		ID:        52,
+		ProjectID: 1,
+	}}))
 	entries := waitForAuditEntries(t, logfile, 2)
 	require.Len(t, entries, 2)
 
 	assert.Equal(t, audit.ActionTaskPurged, entries[0].Action)
 	assert.Equal(t, audit.ActorFromDoerID(3), entries[0].Actor)
 	assert.Equal(t, audit.TaskTarget(51), entries[0].Target)
+	assert.Equal(t, map[string]any{"project_id": float64(1)}, entries[0].Metadata)
 
 	assert.Equal(t, audit.ActionTaskPurged, entries[1].Action)
 	assert.Equal(t, audit.SystemActor(), entries[1].Actor, "retention cron")
