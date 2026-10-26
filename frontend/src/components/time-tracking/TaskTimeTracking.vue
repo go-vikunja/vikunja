@@ -5,16 +5,19 @@
 			v-tooltip="$t('timeTracking.logTime')"
 			v-cy="'addTaskTimeEntry'"
 			:aria-label="$t('timeTracking.logTime')"
-			class="is-pulled-right d-print-none"
+			class="is-pulled-end add-time-entry-button d-print-none"
 			:class="{'is-active': showForm}"
 			variant="secondary"
 			icon="plus"
 			:shadow="false"
 			@click="showForm = !showForm"
 		/>
-		<h3 class="title is-5">
+		<h2 class="task-section-title">
+			<span class="icon is-grey">
+				<Icon :icon="['far', 'clock']" />
+			</span>
 			{{ $t('timeTracking.title') }}
-		</h3>
+		</h2>
 		<TimeEntryForm
 			v-if="formVisible"
 			:task-id="taskId"
@@ -91,3 +94,15 @@ async function onDelete(entry: ITimeEntry) {
 	currentPage.value = Math.min(currentPage.value, Math.max(1, totalPages.value))
 }
 </script>
+
+<style lang="scss" scoped>
+.add-time-entry-button {
+	svg {
+		transition: transform $transition;
+	}
+
+	&.is-active svg {
+		transform: rotate(45deg);
+	}
+}
+</style>
