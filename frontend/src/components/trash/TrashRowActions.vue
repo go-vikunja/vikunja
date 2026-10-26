@@ -3,7 +3,7 @@
 		<BaseButton
 			v-tooltip="$t('trash.restore')"
 			v-cy="restoreCy"
-			data-trash-action="restore"
+			:data-trash-action="TRASH_ROW_ACTION.restore"
 			class="trash-action"
 			:aria-label="$t('trash.restore')"
 			:aria-disabled="pending || undefined"
@@ -15,7 +15,7 @@
 			v-if="canDeleteForever"
 			v-tooltip="$t('trash.deleteForever')"
 			v-cy="deleteForeverCy"
-			data-trash-action="delete-forever"
+			:data-trash-action="TRASH_ROW_ACTION.deleteForever"
 			class="trash-action trash-action--danger"
 			:aria-label="$t('trash.deleteForever')"
 			:aria-disabled="pending || undefined"
@@ -25,6 +25,15 @@
 		</BaseButton>
 	</span>
 </template>
+
+<script lang="ts">
+export const TRASH_ROW_ACTION = {
+	restore: 'restore',
+	deleteForever: 'delete-forever',
+} as const
+
+export type RowAction = typeof TRASH_ROW_ACTION[keyof typeof TRASH_ROW_ACTION]
+</script>
 
 <script setup lang="ts">
 import BaseButton from '@/components/base/BaseButton.vue'

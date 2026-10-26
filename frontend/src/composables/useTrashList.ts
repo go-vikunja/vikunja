@@ -4,10 +4,9 @@ import type {UseQueryReturnType} from '@tanstack/vue-query'
 import {clampPage, type Paginated} from '@/client/queries/pagination'
 import {captureFocus} from '@/composables/useFocusAfterRemoval'
 import {usePendingRows} from '@/composables/usePendingRows'
+import type {RowAction} from '@/components/trash/TrashRowActions.vue'
 
 type RowMutation = {mutateAsync: (id: number) => Promise<unknown>}
-// Matches data-trash-action in TrashRowActions.vue
-type RowAction = 'restore' | 'delete-forever'
 type MoveFocus = ReturnType<typeof captureFocus>
 
 export function useTrashList<T extends {id: number}>(options: {
