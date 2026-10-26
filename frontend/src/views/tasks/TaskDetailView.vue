@@ -690,6 +690,7 @@ import BucketSelect from '@/components/tasks/partials/BucketSelect.vue'
 import Reactions from '@/components/input/Reactions.vue'
 
 import {getProjectTitle} from '@/helpers/getProjectTitle'
+import {getDefaultProjectView, getProjectViewId} from '@/helpers/projectView'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {getScrollParent} from '@/helpers/getScrollParent'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
@@ -1173,12 +1174,28 @@ useTaskDetailShortcuts({
 async function deleteTask() {
 	const id = task.value.id!
 	const projectId = task.value.project_id
+	let viewId: number | undefined
 	try {
+		const destinationProject = await projectList.loadProject(projectId)
+		const view = destinationProject.views.find(view => view.id === getProjectViewId(projectId))
+			?? getDefaultProjectView(destinationProject.views, authStore.settings.frontend_settings.default_view)
+		viewId = view?.id
 		await deleteTaskMutation.mutateAsync(id)
 	} catch {
 		return
 	}
-	await router.push({name: 'project.index', params: {projectId}})
+	await router.push(viewId
+		? {
+			name: 'project.view',
+			params: {
+				projectId,
+				viewId,
+			},
+		}
+		: {
+			name: 'project.index',
+			params: {projectId},
+		})
 	success({message: t('task.detail.deleteSuccess')}, [{
 		title: t('task.undo'),
 		callback: () => restoreTaskMutation.mutate(id),
