@@ -1,6 +1,8 @@
-import {afterEach, describe, expect, it} from 'vitest'
+import {afterEach, beforeEach, describe, expect, it} from 'vitest'
+import {flushPromises} from '@vue/test-utils'
+import {effectScope, ref} from 'vue'
 
-import {captureFocus} from './useFocusAfterRemoval'
+import {captureFocus, useFocusAfterRemoval} from './useFocusAfterRemoval'
 
 function button(label: string) {
 	const element = document.createElement('button')
@@ -47,5 +49,56 @@ describe('captureFocus', () => {
 		await moveFocus(() => target)
 
 		expect(document.activeElement).toBe(elsewhere)
+	})
+})
+
+describe('useFocusAfterRemoval', () => {
+	let scope: ReturnType<typeof effectScope>
+
+	beforeEach(() => {
+		scope = effectScope()
+	})
+
+	afterEach(() => {
+		scope.stop()
+		document.body.innerHTML = ''
+	})
+
+	function watchNotice(initiallyShown: boolean, target: HTMLElement) {
+		const shown = ref(initiallyShown)
+		scope.run(() => useFocusAfterRemoval(() => shown.value, () => target))
+		return shown
+	}
+
+	it('focuses the target once the notice is gone and focus dropped to the body', async () => {
+		const target = button('Main content')
+		const shown = watchNotice(true, target)
+
+		shown.value = false
+		await flushPromises()
+
+		expect(document.activeElement).toBe(target)
+	})
+
+	it('leaves focus the user holds elsewhere', async () => {
+		const elsewhere = button('Search')
+		const target = button('Main content')
+		const shown = watchNotice(true, target)
+		elsewhere.focus()
+
+		shown.value = false
+		await flushPromises()
+
+		expect(document.activeElement).toBe(elsewhere)
+	})
+
+	it('does not move focus when the notice appears', async () => {
+		const target = button('Main content')
+		const shown = watchNotice(false, target)
+
+		shown.value = true
+		await flushPromises()
+
+		expect(document.activeElement).toBe(document.body)
 	})
 })
