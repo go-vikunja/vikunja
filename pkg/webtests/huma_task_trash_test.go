@@ -19,6 +19,7 @@ package webtests
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -47,6 +48,22 @@ func trashedIDs(t *testing.T, body []byte) []int64 {
 		ids = append(ids, item.ID)
 	}
 	return ids
+}
+
+func assertTaskInTrash(t *testing.T, rec *httptest.ResponseRecorder) {
+	t.Helper()
+	require.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+	var body struct {
+		Code    int `json:"code"`
+		Details struct {
+			ProjectID int64  `json:"project_id"`
+			DeletedAt string `json:"deleted_at"`
+		} `json:"details"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	assert.Equal(t, models.ErrCodeTaskIsInTrash, body.Code, rec.Body.String())
+	assert.Equal(t, int64(1), body.Details.ProjectID, rec.Body.String())
+	assert.NotEmpty(t, body.Details.DeletedAt, rec.Body.String())
 }
 
 // Task 51 in project 1 (owned by user 1) is soft-deleted in the fixtures.
@@ -89,23 +106,55 @@ func TestHumaTaskTrash(t *testing.T) {
 		require.NoError(t, err)
 
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/51", "", user1(t), "")
-		require.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
-		var body struct {
-			Code    int `json:"code"`
-			Details struct {
-				ProjectID int64  `json:"project_id"`
-				DeletedAt string `json:"deleted_at"`
-			} `json:"details"`
-		}
-		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
-		assert.Equal(t, models.ErrCodeTaskIsInTrash, body.Code)
-		assert.Equal(t, int64(1), body.Details.ProjectID, rec.Body.String())
-		assert.NotEmpty(t, body.Details.DeletedAt)
+		assertTaskInTrash(t, rec)
 
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/tasks/51", "", stranger(t), "")
 		require.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
 		assert.NotContains(t, rec.Body.String(), "details")
 		assert.Contains(t, rec.Body.String(), `"code":4002`)
+	})
+	t.Run("writing a trashed task", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		writes := []struct {
+			method string
+			path   string
+			body   string
+		}{
+			{
+				method: http.MethodPut,
+				path:   "/api/v2/tasks/51",
+				body:   `{"title":"edited"}`,
+			},
+			{
+				method: http.MethodDelete,
+				path:   "/api/v2/tasks/51",
+			},
+			{
+				method: http.MethodPost,
+				path:   "/api/v1/tasks/51",
+				body:   `{"title":"edited"}`,
+			},
+			{
+				method: http.MethodDelete,
+				path:   "/api/v1/tasks/51",
+			},
+		}
+		for _, w := range writes {
+			t.Run(w.method+" "+w.path, func(t *testing.T) {
+				rec := humaRequest(t, e, w.method, w.path, w.body, user1(t), "")
+				assertTaskInTrash(t, rec)
+
+				rec = humaRequest(t, e, w.method, w.path, w.body, stranger(t), "")
+				require.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+				assert.NotContains(t, rec.Body.String(), "details")
+				assert.Contains(t, rec.Body.String(), `"code":4002`)
+			})
+		}
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":    51,
+			"title": "task #51 soft deleted",
+		}, false)
 	})
 	t.Run("restore", func(t *testing.T) {
 		e, err := setupTestEnv()

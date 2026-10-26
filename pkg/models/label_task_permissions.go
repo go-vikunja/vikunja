@@ -70,7 +70,7 @@ func (ltb *LabelTaskBulk) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 // always the same check for either deleting or adding a label to a task
 func canDoLabelTask(s *xorm.Session, taskID int64, a web.Auth) (bool, error) {
 	// A user can add a label to a task if he can write to the task
-	task, err := GetTaskByIDSimple(s, taskID)
+	task, err := getTaskByIDForAuth(s, a, taskID)
 	if err != nil {
 		return false, err
 	}

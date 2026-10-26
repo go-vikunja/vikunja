@@ -29,6 +29,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func trashTaskForTest(t *testing.T, taskID int64, a web.Auth) {
@@ -451,4 +452,78 @@ func TestTask_CanRead_Trashed(t *testing.T) {
 		_, _, err := (&Task{ID: 51}).CanRead(s, &user.User{ID: 2})
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
+}
+
+func TestTask_WritesOnTrashedTask(t *testing.T) {
+	writes := []struct {
+		name  string
+		check func(s *xorm.Session, a web.Auth, taskID int64) (bool, error)
+	}{
+		{
+			name: "update",
+			check: func(s *xorm.Session, a web.Auth, taskID int64) (bool, error) {
+				return (&Task{ID: taskID}).CanUpdate(s, a)
+			},
+		},
+		{
+			name: "delete",
+			check: func(s *xorm.Session, a web.Auth, taskID int64) (bool, error) {
+				return (&Task{ID: taskID}).CanDelete(s, a)
+			},
+		},
+		{
+			name: "comment",
+			check: func(s *xorm.Session, a web.Auth, taskID int64) (bool, error) {
+				return (&TaskComment{TaskID: taskID}).CanCreate(s, a)
+			},
+		},
+		{
+			name: "attachment",
+			check: func(s *xorm.Session, a web.Auth, taskID int64) (bool, error) {
+				return (&TaskAttachment{TaskID: taskID}).CanCreate(s, a)
+			},
+		},
+		{
+			name: "assignee",
+			check: func(s *xorm.Session, a web.Auth, taskID int64) (bool, error) {
+				return (&TaskAssginee{
+					TaskID: taskID,
+					UserID: 1,
+				}).CanCreate(s, a)
+			},
+		},
+		{
+			name: "labels",
+			check: func(s *xorm.Session, a web.Auth, taskID int64) (bool, error) {
+				return (&LabelTaskBulk{TaskID: taskID}).CanCreate(s, a)
+			},
+		},
+		{
+			name: "relation",
+			check: func(s *xorm.Session, a web.Auth, taskID int64) (bool, error) {
+				return (&TaskRelation{
+					TaskID:       taskID,
+					OtherTaskID:  2,
+					RelationKind: RelationKindRelated,
+				}).CanCreate(s, a)
+			},
+		},
+	}
+
+	for _, w := range writes {
+		t.Run(w.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			// User 1 only reads project 3
+			setTaskColumnsForTest(t, 32, map[string]any{"deleted_at": time.Now()})
+			s := db.NewSession()
+			defer s.Close()
+
+			_, err := w.check(s, &user.User{ID: 1}, 51)
+			require.ErrorAs(t, err, &ErrTaskIsInTrash{}, "writer")
+			_, err = w.check(s, &user.User{ID: 1}, 32)
+			require.ErrorAs(t, err, &ErrTaskIsInTrash{}, "reader")
+			_, err = w.check(s, &user.User{ID: 2}, 51)
+			assert.True(t, IsErrTaskDoesNotExist(err), "stranger: %v", err)
+		})
+	}
 }

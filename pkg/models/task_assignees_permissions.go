@@ -42,5 +42,9 @@ func canDoTaskAssingee(s *xorm.Session, taskID int64, a web.Auth) (bool, error) 
 	if err != nil {
 		return false, err
 	}
+	// GetProjectSimpleByTaskID also resolves trashed tasks
+	if _, err := getTaskByIDForAuth(s, a, taskID); err != nil {
+		return false, err
+	}
 	return project.CanUpdate(s, a)
 }

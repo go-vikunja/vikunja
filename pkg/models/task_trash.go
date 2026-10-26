@@ -75,6 +75,15 @@ func trashedTaskReadError(s *xorm.Session, a web.Auth, taskID int64, notFound er
 	return inTrash
 }
 
+// GetTaskByIDSimple, but a trashed task is ErrTaskIsInTrash for readers of its project.
+func getTaskByIDForAuth(s *xorm.Session, a web.Auth, taskID int64) (Task, error) {
+	task, err := GetTaskByIDSimple(s, taskID)
+	if IsErrTaskDoesNotExist(err) {
+		return Task{}, trashedTaskReadError(s, a, taskID, err)
+	}
+	return task, err
+}
+
 // Restore brings a trashed task back into its default or done bucket, positioned like a new task.
 func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
 	restored, err := s.Table("tasks").

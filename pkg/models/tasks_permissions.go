@@ -44,11 +44,7 @@ func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission
 	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
 		return
 	}
-	taskID := t.ID
-	*t, err = GetTaskByIDSimple(s, taskID)
-	if IsErrTaskDoesNotExist(err) {
-		return false, 0, trashedTaskReadError(s, a, taskID, err)
-	}
+	*t, err = getTaskByIDForAuth(s, a, t.ID)
 	if err != nil {
 		return
 	}
@@ -94,8 +90,7 @@ func (t *Task) CanDeletePermanently(s *xorm.Session, a web.Auth) (bool, error) {
 
 // Helper function to check if a user can do stuff on a project task
 func (t *Task) canDoTask(s *xorm.Session, a web.Auth) (bool, error) {
-	// Get the task
-	ot, err := GetTaskByIDSimple(s, t.ID)
+	ot, err := getTaskByIDForAuth(s, a, t.ID)
 	if err != nil {
 		return false, err
 	}
