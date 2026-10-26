@@ -12,6 +12,7 @@
 			<Icon icon="undo" />
 		</BaseButton>
 		<BaseButton
+			v-if="canDeleteForever"
 			v-tooltip="$t('trash.deleteForever')"
 			v-cy="deleteForeverCy"
 			:data-trash-action="TRASH_ROW_ACTION.deleteForever"
@@ -39,6 +40,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 defineProps<{
 	pending: boolean,
+	canDeleteForever: boolean,
 	restoreCy: string,
 	deleteForeverCy: string,
 }>()

@@ -70,7 +70,13 @@ it('normalizes the trashed tasks of a page', async () => {
 	const client = new QueryClient()
 	sdk.tasksTrashList.mockResolvedValue({
 		data: {
-			items: [{id: 3}],
+			items: [
+				{id: 3},
+				{
+					id: 4,
+					can_delete_permanently: true,
+				},
+			],
 			page: 2,
 			per_page: 50,
 			total: 51,
@@ -86,6 +92,11 @@ it('normalizes the trashed tasks of a page', async () => {
 		id: 3,
 		title: '',
 		labels: [],
+		can_delete_permanently: false,
+	})
+	expect(page.items[1]).toMatchObject({
+		id: 4,
+		can_delete_permanently: true,
 	})
 })
 
