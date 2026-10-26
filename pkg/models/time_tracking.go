@@ -69,10 +69,13 @@ func (*TimeEntry) TableName() string {
 func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
 	te.UserID = a.GetID()
 
-	// Starting a new running timer auto-stops the previous one; a completed
-	// manual entry (EndTime set) must leave the running timer alone.
+	// Starting a new running timer ends the entries it overlaps and auto-stops the
+	// previous one; a completed manual entry (EndTime set) must leave both alone.
 	if te.EndTime == nil {
-		if _, err = stopRunningTimerForUser(s, te.UserID, te.StartTime); err != nil {
+		if err = endEntriesSpanning(s, te.UserID, te.StartTime); err != nil {
+			return err
+		}
+		if _, err = stopRunningTimerForUser(s, te.UserID); err != nil {
 			return err
 		}
 	}
@@ -105,9 +108,47 @@ func (te *TimeEntry) ReadOne(_ *xorm.Session, _ web.Auth) (err error) {
 	return nil
 }
 
-// stopRunningTimerForUser stops the user's active timer and returns it, or nil
-// if no timer is running. See stop for how at is applied.
-func stopRunningTimerForUser(s *xorm.Session, userID int64, at time.Time) (*TimeEntry, error) {
+// endEntriesSpanning ends the user's entries that span at, so a timer started
+// there doesn't overlap them. A running timer counts as ending now.
+func endEntriesSpanning(s *xorm.Session, userID int64, at time.Time) error {
+	if !at.Before(time.Now()) {
+		return nil
+	}
+
+	// UTC: the driver drops a bound parameter's offset.
+	spanning := []*TimeEntry{}
+	err := s.Where(builder.And(
+		builder.Eq{"user_id": userID},
+		builder.Lt{"start_time": at.UTC()},
+		builder.Or(builder.IsNull{"end_time"}, builder.Gt{"end_time": at.UTC()}),
+	)).Find(&spanning)
+	if err != nil || len(spanning) == 0 {
+		return err
+	}
+
+	for _, entry := range spanning {
+		entry.EndTime = &at
+		if _, err = s.ID(entry.ID).Cols("end_time").Update(entry); err != nil {
+			return err
+		}
+	}
+
+	doer, err := user.GetUserByID(s, userID)
+	if err != nil {
+		return err
+	}
+	if err = addUsersToTimeEntries(s, spanning); err != nil {
+		return err
+	}
+	for _, entry := range spanning {
+		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: entry, Doer: doer})
+	}
+	return nil
+}
+
+// stopRunningTimerForUser stops the user's active timer (end_time = now) and
+// returns it, or nil if no timer is running.
+func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) {
 	running := &TimeEntry{}
 	exists, err := s.Where("user_id = ? AND end_time IS NULL", userID).Get(running)
 	if err != nil {
@@ -116,7 +157,7 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64, at time.Time) (*Time
 	if !exists {
 		return nil, nil
 	}
-	if err := running.stop(s, at); err != nil {
+	if err := running.stop(s); err != nil {
 		return nil, err
 	}
 
@@ -141,7 +182,7 @@ func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {
 		return nil, ErrGenericForbidden{}
 	}
 
-	running, err := stopRunningTimerForUser(s, a.GetID(), time.Now())
+	running, err := stopRunningTimerForUser(s, a.GetID())
 	if err != nil {
 		return nil, err
 	}
@@ -303,14 +344,9 @@ func getTimeEntryByID(s *xorm.Session, id int64) (*TimeEntry, error) {
 	return entry, nil
 }
 
-// stop ends the timer at at, so a backdated successor doesn't overlap it. An at
-// outside the timer's start and now would invert or extend it, so that ends at now.
-func (te *TimeEntry) stop(s *xorm.Session, at time.Time) (err error) {
-	end := time.Now()
-	if at.After(te.StartTime) && at.Before(end) {
-		end = at
-	}
-	te.EndTime = &end
+func (te *TimeEntry) stop(s *xorm.Session) (err error) {
+	now := time.Now()
+	te.EndTime = &now
 	_, err = s.ID(te.ID).Update(te)
 	return err
 }
