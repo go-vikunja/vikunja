@@ -65,7 +65,8 @@ export function useTrashList<T extends {id: number}>(options: {
 			...ids.slice(0, index).reverse(),
 		]
 		await moveFocus(
-			...neighbours.map(neighbour => () => rowAction(neighbour, action)),
+			// Not every row offers delete forever
+			...neighbours.map(neighbour => () => rowAction(neighbour, action) ?? rowAction(neighbour, 'restore')),
 			() => emptyStateElement.value,
 			() => listElement.value,
 		)

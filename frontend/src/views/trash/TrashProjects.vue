@@ -61,6 +61,7 @@
 							</span>
 							<TrashRowActions
 								:pending="isPending(project.id)"
+								can-delete-forever
 								restore-cy="restoreProject"
 								delete-forever-cy="deleteProjectForever"
 								@restore="restore(project.id)"

@@ -1834,7 +1834,8 @@
       "text": "This permanently deletes \"{task}\" with its comments, attachments, reminders and relations. Its time entries stay with the project. This cannot be undone."
     },
     "emptyModal": {
-      "text": "There are no tasks to delete. | This permanently deletes 1 task, including tasks other people moved to the trash. This cannot be undone. | This permanently deletes {count} tasks, including tasks other people moved to the trash. This cannot be undone."
+      "text": "There are no tasks to delete. | This permanently deletes 1 task, including tasks other people moved to the trash. This cannot be undone. | This permanently deletes {count} tasks, including tasks other people moved to the trash. This cannot be undone.",
+      "adminOnlyText": "This permanently deletes the trashed tasks of every project you are admin of, including tasks other people moved to the trash. Tasks in other projects stay in the trash. This cannot be undone."
     },
     "open": "Open trash",
     "taskInTrash": "This task is in the trash. It was deleted {since}.",

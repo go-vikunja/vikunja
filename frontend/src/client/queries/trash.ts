@@ -54,7 +54,10 @@ export const trashKeys = {
 // Matches the server's hard-coded retention.
 export const TRASH_RETENTION_DAYS = 30
 
-export type TrashedTaskPage = Paginated<TaskResponse>
+export type TrashedTaskResponse = TaskResponse & {
+	can_delete_permanently: boolean
+}
+export type TrashedTaskPage = Paginated<TrashedTaskResponse>
 export type TrashedProjectResponse = ProjectResponse & {
 	trashed_sub_projects: TrashedSubProject[]
 }
@@ -71,7 +74,13 @@ export function trashedTasksQuery(page: number) {
 		queryFn: async ({signal}): Promise<TrashedTaskPage> => {
 			const {data} = await tasksTrashList({query: {page}, signal})
 			const paginated = toPaginated(data, page)
-			return {...paginated, items: paginated.items.map(normalizeTask)}
+			return {
+				...paginated,
+				items: paginated.items.map(task => ({
+					...normalizeTask(task),
+					can_delete_permanently: task.can_delete_permanently ?? false,
+				})),
+			}
 		},
 		placeholderData: keepPreviousData,
 		staleTime: 0,

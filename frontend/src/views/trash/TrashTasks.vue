@@ -48,6 +48,7 @@
 						</span>
 						<TrashRowActions
 							:pending="isPending(task.id)"
+							:can-delete-forever="task.can_delete_permanently"
 							restore-cy="restoreTask"
 							delete-forever-cy="deleteTaskForever"
 							@restore="restore(task.id)"
@@ -98,7 +99,7 @@
 			</template>
 			<template #text>
 				<p class="tw:text-balance">
-					{{ $t('trash.emptyModal.text', total) }}
+					{{ emptyModalText }}
 				</p>
 			</template>
 		</Modal>
@@ -107,6 +108,7 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {useQuery} from '@tanstack/vue-query'
 
 import Card from '@/components/misc/Card.vue'
@@ -157,6 +159,12 @@ const {
 	deleteForever: useDeleteTaskPermanentlyMutation(),
 	empty: useEmptyTaskTrashMutation(),
 })
+
+const {t} = useI18n({useScope: 'global'})
+// Emptying skips tasks the user isn't admin of, and other pages can't be checked from here
+const emptyModalText = computed(() => totalPages.value <= 1 && items.value.every(task => task.can_delete_permanently)
+	? t('trash.emptyModal.text', total.value)
+	: t('trash.emptyModal.adminOnlyText'))
 </script>
 
 <style lang="scss" scoped>
