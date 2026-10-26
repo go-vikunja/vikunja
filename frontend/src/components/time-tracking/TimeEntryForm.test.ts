@@ -29,8 +29,10 @@ const sdk = vi.hoisted(() => ({
 vi.mock('@/client/generated', () => sdk)
 
 const activeTimer = vi.hoisted(() => ({value: null as {start_time: string} | null}))
+const spanning = vi.hoisted(() => ({value: [] as unknown[]}))
 vi.mock('@/composables/useTimeTracking', () => ({
 	useTimeTracking: () => ({activeTimer: ref(activeTimer.value)}),
+	useTimeEntries: () => ({entries: ref(spanning.value)}),
 }))
 vi.mock('@/message', () => ({
 	error: vi.fn(),
@@ -124,6 +126,7 @@ describe('TimeEntryForm backdated stop hint', () => {
 
 	afterEach(() => {
 		activeTimer.value = null
+		spanning.value = []
 		vi.useRealTimers()
 	})
 
@@ -152,6 +155,25 @@ describe('TimeEntryForm backdated stop hint', () => {
 		const wrapper = mountForm()
 
 		await chooseStart(wrapper, new Date('2026-06-07T09:15:00Z'))
+
+		expect(wrapper.find(hint).exists()).toBe(false)
+	})
+
+	it('shows when a completed entry spans the chosen start', async () => {
+		spanning.value = [{id: 2}]
+		const wrapper = mountForm()
+
+		await chooseStart(wrapper, new Date('2026-06-07T09:15:00Z'))
+
+		expect(wrapper.find(hint).exists()).toBe(true)
+	})
+
+	it('is hidden for a start in the future', async () => {
+		activeTimer.value = {start_time: '2026-06-07T08:00:00Z'}
+		spanning.value = [{id: 2}]
+		const wrapper = mountForm()
+
+		await chooseStart(wrapper, new Date('2026-06-07T10:00:00Z'))
 
 		expect(wrapper.find(hint).exists()).toBe(false)
 	})
