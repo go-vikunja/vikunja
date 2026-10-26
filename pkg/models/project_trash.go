@@ -286,7 +286,45 @@ func trashedProjectReadError(s *xorm.Session, a web.Auth, projectID int64, notFo
 		}
 		inTrash.DeletedBy = deleters[trashed.DeletedByID]
 	}
+	inTrash.TrashedRootID, err = readableTrashedRootID(s, a, trashed)
+	if err != nil {
+		return err
+	}
 	return inTrash
+}
+
+// The topmost trashed ancestor of p if the caller can reach it, else 0.
+func readableTrashedRootID(s *xorm.Session, a web.Auth, p *Project) (int64, error) {
+	trashedAncestors := []*ProjectAncestor{}
+	err := s.Table("project_ancestors").
+		Join("INNER", "projects", "projects.id = project_ancestors.ancestor_id").
+		Where(builder.And(
+			builder.Eq{"project_ancestors.project_id": p.ID},
+			builder.Gt{"project_ancestors.depth": 0},
+			builder.NotNull{"projects.deleted_at"},
+		)).
+		Cols("project_ancestors.ancestor_id", "project_ancestors.depth").
+		OrderBy("project_ancestors.depth").
+		Find(&trashedAncestors)
+	if err != nil {
+		return 0, err
+	}
+	rootID := int64(0)
+	// Stop at the first live ancestor: restoring the root below it brings p back.
+	for i, ancestor := range trashedAncestors {
+		if ancestor.Depth != int64(i+1) {
+			break
+		}
+		rootID = ancestor.AncestorID
+	}
+	if rootID == 0 {
+		return 0, nil
+	}
+	_, _, err = getReadableTrashedProject(s, a, rootID)
+	if IsErrProjectDoesNotExist(err) {
+		return 0, nil
+	}
+	return rootID, err
 }
 
 // Loads the trashed project into p.

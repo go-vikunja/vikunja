@@ -240,6 +240,7 @@ func TestProject_ReadTrashed(t *testing.T) {
 	require.NotNil(t, inTrash.DeletedBy)
 	assert.Equal(t, int64(1), inTrash.DeletedBy.ID)
 	assert.True(t, inTrash.CanRestore)
+	assert.Zero(t, inTrash.TrashedRootID)
 
 	_, _, err = (&Project{ID: 45}).CanRead(s, &user.User{ID: 2})
 	assert.True(t, IsErrProjectDoesNotExist(err))
@@ -261,7 +262,20 @@ func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 
 	t.Run("not while the parent is in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		assert.False(t, readInTrash(t, 46, u1).CanRestore)
+		inTrash := readInTrash(t, 46, u1)
+		assert.False(t, inTrash.CanRestore)
+		assert.Equal(t, int64(45), inTrash.TrashedRootID)
+	})
+	t.Run("points deeper sub-projects to the topmost trashed ancestor", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u6 := &user.User{ID: 6}
+		// 12 -> 25 -> 26
+		trashProjectForTest(t, 26, u6)
+		trashProjectForTest(t, 12, u6)
+
+		inTrash := readInTrash(t, 26, u6)
+		assert.False(t, inTrash.CanRestore)
+		assert.Equal(t, int64(12), inTrash.TrashedRootID)
 	})
 	t.Run("not while the parent is archived", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -272,7 +286,9 @@ func TestProject_ReadTrashed_CanRestore(t *testing.T) {
 		require.NoError(t, s.Commit())
 		s.Close()
 
-		assert.False(t, readInTrash(t, 21, u1).CanRestore)
+		inTrash := readInTrash(t, 21, u1)
+		assert.False(t, inTrash.CanRestore)
+		assert.Zero(t, inTrash.TrashedRootID)
 	})
 	t.Run("not while the parent row is gone", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
