@@ -79,7 +79,11 @@ func RegisterProjectTrashRoutes(api huma.API) {
 	}, projectsCount)
 }
 
-func projectsTrashList(ctx context.Context, in *ListParams) (*projectListBody, error) {
+type projectTrashListBody struct {
+	Body Paginated[*models.TrashedProject]
+}
+
+func projectsTrashList(ctx context.Context, in *ListParams) (*projectTrashListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -91,7 +95,7 @@ func projectsTrashList(ctx context.Context, in *ListParams) (*projectListBody, e
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &projectListBody{Body: NewPaginated(projects, total, in.Page, in.PerPage)}, nil
+	return &projectTrashListBody{Body: NewPaginated(projects, total, in.Page, in.PerPage)}, nil
 }
 
 func projectsRestore(ctx context.Context, in *struct {
