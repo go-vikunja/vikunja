@@ -17,14 +17,14 @@
 		</Teleport>
 
 		<Card
-			v-if="projects.length > 0"
+			v-if="items.length > 0"
 			:padding="false"
 			:has-content="false"
 			:loading="isFetching"
 		>
 			<ul class="trashed-projects">
 				<li
-					v-for="project in projects"
+					v-for="project in items"
 					:key="project.id"
 					v-cy="'trashedProject'"
 				>
@@ -55,7 +55,7 @@
 							{{ deletedLabel(project) }} · {{ $t('trash.daysLeftShort', trashDaysLeft(project.deleted_at ?? '')) }}
 						</span>
 						<TrashRowActions
-							:pending="pendingRows.has(project.id)"
+							:pending="isPending(project.id)"
 							restore-cy="restoreProject"
 							delete-forever-cy="deleteProjectForever"
 							@restore="restore(project.id)"
@@ -79,7 +79,7 @@
 			</ul>
 		</Card>
 		<p
-			v-else-if="isSuccess && !isFetching"
+			v-else-if="showEmptyState"
 			class="has-text-centered has-text-grey is-italic"
 		>
 			{{ $t('trash.noProjects') }}
@@ -93,8 +93,8 @@
 		/>
 
 		<Modal
-			:enabled="projectToDelete !== null"
-			@close="projectToDelete = null"
+			:enabled="itemToDelete !== null"
+			@close="cancelDeleteForever()"
 			@submit="deleteForever()"
 		>
 			<template #header>
@@ -102,14 +102,14 @@
 			</template>
 			<template #text>
 				<p class="tw:text-balance">
-					{{ $t('trash.deleteProjectForeverModal.text', {project: projectToDelete?.title}) }}
+					{{ $t('trash.deleteProjectForeverModal.text', {project: itemToDelete?.title}) }}
 				</p>
 			</template>
 		</Modal>
 
 		<Modal
 			:enabled="showEmptyModal"
-			@close="showEmptyModal = false"
+			@close="closeEmptyModal()"
 			@submit="emptyTrash()"
 		>
 			<template #header>
@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref, watch} from 'vue'
+import {computed, reactive} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -135,7 +135,6 @@ import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import TrashRowActions from '@/components/trash/TrashRowActions.vue'
 
-import type {ProjectResponse} from '@/client/queries/projects'
 import {
 	trashDaysLeft,
 	trashedProjectsQuery,
@@ -143,9 +142,8 @@ import {
 	useEmptyProjectTrashMutation,
 	useRestoreProjectMutation,
 } from '@/client/queries/trash'
-import {clampPage} from '@/client/queries/pagination'
 import {useDeletedLabel} from '@/composables/useDeletedLabel'
-import {usePendingRows} from '@/composables/usePendingRows'
+import {useTrashList} from '@/composables/useTrashList'
 import {getHexColor} from '@/helpers/task'
 import {formatDateLong} from '@/helpers/time/formatDate'
 
@@ -155,68 +153,35 @@ const deletedLabel = useDeletedLabel({
 	byYou: 'trash.deletedByYou',
 })
 
-const currentPage = ref(1)
-const query = useQuery(computed(() => trashedProjectsQuery(currentPage.value)))
-const projects = computed(() => query.data.value?.items ?? [])
-const total = computed(() => query.data.value?.total ?? 0)
-const totalPages = computed(() => query.data.value?.total_pages ?? 0)
-const isFetching = query.isFetching
-const isSuccess = query.isSuccess
-
-// Restoring or deleting the last project of the last page leaves the page empty
-watch(() => clampPage(currentPage.value, {data: query.data.value, isPlaceholderData: query.isPlaceholderData.value}), page => {
-	currentPage.value = page
+const {
+	currentPage,
+	items,
+	total,
+	totalPages,
+	isFetching,
+	showEmptyState,
+	isPending,
+	itemToDelete,
+	showEmptyModal,
+	restore,
+	confirmDeleteForever,
+	cancelDeleteForever,
+	deleteForever,
+	openEmptyModal,
+	closeEmptyModal,
+	emptyTrash,
+} = useTrashList({
+	query: page => useQuery(computed(() => trashedProjectsQuery(page.value))),
+	restore: useRestoreProjectMutation(),
+	deleteForever: useDeleteProjectPermanentlyMutation(),
+	empty: useEmptyProjectTrashMutation(),
 })
-
-const restoreProject = useRestoreProjectMutation()
-const deleteProjectPermanently = useDeleteProjectPermanentlyMutation()
-const emptyProjectTrash = useEmptyProjectTrashMutation()
-
-const projectToDelete = ref<ProjectResponse | null>(null)
-const showEmptyModal = ref(false)
 
 const expanded = reactive(new Set<number>())
 function toggle(projectId: number) {
 	if (!expanded.delete(projectId)) {
 		expanded.add(projectId)
 	}
-}
-
-const pendingRows = usePendingRows()
-
-function restore(projectId: number) {
-	return pendingRows.run(restoreProject, projectId)
-}
-
-function confirmDeleteForever(project: ProjectResponse) {
-	if (pendingRows.has(project.id)) {
-		return
-	}
-	projectToDelete.value = project
-}
-
-function openEmptyModal() {
-	if (total.value === 0) return
-	showEmptyModal.value = true
-}
-
-async function deleteForever() {
-	const project = projectToDelete.value
-	projectToDelete.value = null
-	if (!project) {
-		return
-	}
-	await pendingRows.run(deleteProjectPermanently, project.id)
-}
-
-async function emptyTrash() {
-	showEmptyModal.value = false
-	try {
-		await emptyProjectTrash.mutateAsync()
-	} catch {
-		return
-	}
-	currentPage.value = 1
 }
 </script>
 
