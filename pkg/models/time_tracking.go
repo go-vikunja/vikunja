@@ -233,7 +233,7 @@ func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {
 
 // readableTimeEntriesCond restricts a query to entries the auth can read: a
 // standalone entry on an accessible project, one on a task in such a project,
-// or the auth's own entries without any container.
+// or the auth's own entries without any container or in a trashed project.
 func readableTimeEntriesCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 	accessible, err := accessibleProjectIDsCond(s, a, "project_id")
 	if err != nil {
@@ -243,7 +243,7 @@ func readableTimeEntriesCond(s *xorm.Session, a web.Auth) (builder.Cond, error) 
 		entriesForProjectCond(accessible),
 		builder.And(
 			builder.Eq{"user_id": a.GetID()},
-			builder.Or(timeEntryWithoutContainerCond(), timeEntryInTrashCond()),
+			builder.Or(timeEntryWithoutContainerCond(), timeEntryInTrashedProjectCond()),
 		),
 	), nil
 }
@@ -456,17 +456,13 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 	if err := entry.markInTrash(s); err != nil {
 		return entry, false, -1, err
 	}
+	can, maxPerm, err := (&Project{ID: projectID}).CanRead(s, a)
 	if !entry.InTrash {
-		can, maxPerm, err := (&Project{ID: projectID}).CanRead(s, a)
 		return entry, can, maxPerm, err
 	}
-	if fetch && entry.UserID == a.GetID() {
-		return entry, true, int(PermissionRead), nil
-	}
 	// A trashed project errors here: its entries only reach the author.
-	can, _, err := (&Project{ID: projectID}).CanRead(s, a)
 	if IsErrProjectIsInTrash(err) || IsErrProjectDoesNotExist(err) {
-		return entry, false, int(PermissionRead), nil
+		return entry, fetch && entry.UserID == a.GetID(), int(PermissionRead), nil
 	}
 	return entry, can, int(PermissionRead), err
 }
@@ -584,6 +580,17 @@ func taskInTrashCond() builder.Cond {
 	return builder.Or(
 		builder.NotNull{"deleted_at"},
 		builder.In("project_id", trashedProjectIDsQuery()),
+	)
+}
+
+// Narrower than timeEntryInTrashCond: a trashed task in a live project stays with the project's readers.
+func timeEntryInTrashedProjectCond() builder.Cond {
+	return builder.Or(
+		builder.In("project_id", trashedProjectIDsQuery()),
+		builder.In("task_id", builder.Select("id").
+			From("tasks").
+			Where(builder.In("project_id", trashedProjectIDsQuery())),
+		),
 	)
 }
 

@@ -970,7 +970,7 @@ func TestTimeEntry_TrashedTask(t *testing.T) {
 		assert.True(t, inTrash[entry.ID])
 		assert.False(t, inTrash[1])
 	})
-	t.Run("readable by project readers only", func(t *testing.T) {
+	t.Run("readable by project readers", func(t *testing.T) {
 		entry := setup(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -984,6 +984,28 @@ func TestTimeEntry_TrashedTask(t *testing.T) {
 		can, _, err = (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 2})
 		require.NoError(t, err)
 		assert.False(t, can)
+	})
+	t.Run("hidden from its author without access to the live project", func(t *testing.T) {
+		setup(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    2,
+			TaskID:    51,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+		u2 := &user.User{ID: 2}
+
+		can, _, err := (&TimeEntry{ID: entry.ID}).CanRead(s, u2)
+		require.NoError(t, err)
+		assert.False(t, can)
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, u2, "", 1, 50)
+		require.NoError(t, err)
+		assert.NotContains(t, timeEntryIDs(t, result), entry.ID)
 	})
 	t.Run("read-only", func(t *testing.T) {
 		entry := setup(t)
