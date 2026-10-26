@@ -38,6 +38,30 @@ describe('captureFocus', () => {
 		expect(document.activeElement).toBe(target)
 	})
 
+	it('waits for a closing dialog before moving focus outside it', async () => {
+		const trigger = button('Delete forever')
+		const target = button('Next delete forever')
+		trigger.focus()
+		const moveFocus = captureFocus()
+		const dialog = document.createElement('dialog')
+		dialog.setAttribute('open', '')
+		dialog.dataset.closing = ''
+		dialog.append(button('Do it!'))
+		document.body.append(dialog)
+		dialog.querySelector('button')!.focus()
+
+		const moving = moveFocus(() => target)
+		await flushPromises()
+		expect(dialog.contains(document.activeElement)).toBe(true)
+
+		dialog.removeAttribute('open')
+		dialog.remove()
+		dialog.dispatchEvent(new Event('close'))
+		await moving
+
+		expect(document.activeElement).toBe(target)
+	})
+
 	it('leaves focus the user moved elsewhere in the meantime', async () => {
 		const trigger = button('Restore')
 		const elsewhere = button('Search')

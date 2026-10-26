@@ -107,6 +107,24 @@ test.describe('Trash', () => {
 		expect((await stored.json()).code).toBe(4002)
 	})
 
+	test('deleting forever with the keyboard moves focus to the next row', async ({authenticatedPage: page}) => {
+		await trashedTask(1, 'First trashed')
+		await trashedTask(2, 'Second trashed')
+		await page.goto('/trash/tasks')
+		const rows = page.locator('[data-cy="trashedTask"]')
+		await expect(rows).toHaveCount(2)
+
+		await rows.first().locator('[data-cy="deleteTaskForever"]').focus()
+		await page.keyboard.press('Enter')
+		const dialog = page.getByRole('dialog', {name: 'Delete this task forever'})
+		await dialog.getByRole('button', {name: 'Do it!'}).focus()
+		await page.keyboard.press('Enter')
+
+		await expect(rows).toHaveCount(1)
+		await expect(dialog).toHaveCount(0)
+		await expect(rows.first().locator('[data-cy="deleteTaskForever"]')).toBeFocused()
+	})
+
 	test('empties the trash', async ({authenticatedPage: page, apiContext, userToken}) => {
 		await trashedTask(1, 'First trashed')
 		await trashedTask(2, 'Second trashed')

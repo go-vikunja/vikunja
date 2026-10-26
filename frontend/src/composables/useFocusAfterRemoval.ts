@@ -23,6 +23,9 @@ export function captureFocus() {
 	const trigger = document.activeElement
 	return async (...targets: FocusTarget[]) => {
 		await nextTick()
+		await Promise.all([...document.querySelectorAll('dialog[open][data-closing]')].map(dialog =>
+			new Promise<void>(resolve => dialog.addEventListener('close', () => resolve(), {once: true})),
+		))
 		if (focusIsLost(trigger)) {
 			focusFirst(targets)
 		}
