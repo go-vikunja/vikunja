@@ -57,7 +57,8 @@
 								v-tooltip="formatDateLong(project.deleted_at)"
 								class="trashed-project__meta"
 							>
-								{{ deletedLabel(project) }} · {{ $t('trash.daysLeftShort', trashDaysLeft(project.deleted_at ?? '')) }}
+								{{ deletedLabel(project) }} ·
+								{{ $t('trash.daysLeftShort', trashDaysLeft(project.deleted_at ?? '')) }}
 							</span>
 							<TrashRowActions
 								:pending="isPending(project.id)"
