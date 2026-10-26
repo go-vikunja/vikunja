@@ -402,6 +402,12 @@ type TrashedSubProject struct {
 	Depth           int64  `xorm:"depth" json:"depth" doc:"How many levels below the listed project it sits, starting at 1."`
 }
 
+// TrashedProject is a topmost trashed project in the trash listing.
+type TrashedProject struct {
+	Project
+	TrashedSubProjects []*TrashedSubProject `json:"trashed_sub_projects,omitempty" readOnly:"true" doc:"The trashed sub-projects at any depth that restoring this project brings back, shallowest first."`
+}
+
 type trashedSubProjectRow struct {
 	AncestorID        int64 `xorm:"ancestor_id"`
 	TrashedSubProject `xorm:"extends"`
@@ -452,7 +458,7 @@ func trashedProjectsCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 }
 
 // GetTrashedProjects returns the project trash of the auth, newest first.
-func GetTrashedProjects(s *xorm.Session, a web.Auth, page, perPage int) (projects []*Project, total int64, err error) {
+func GetTrashedProjects(s *xorm.Session, a web.Auth, page, perPage int) (trashed []*TrashedProject, total int64, err error) {
 	cond, err := trashedProjectsCond(s, a)
 	if err != nil {
 		return nil, 0, err
@@ -463,14 +469,18 @@ func GetTrashedProjects(s *xorm.Session, a web.Auth, page, perPage int) (project
 		return nil, 0, err
 	}
 
-	projects = []*Project{}
+	projects := []*Project{}
 	err = s.Unscoped().
 		Where(cond).
 		OrderBy("projects.deleted_at DESC, projects.id DESC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&projects)
-	if err != nil || len(projects) == 0 {
-		return projects, total, err
+	if err != nil {
+		return nil, 0, err
+	}
+	trashed = make([]*TrashedProject, 0, len(projects))
+	if len(projects) == 0 {
+		return trashed, total, nil
 	}
 
 	projectIDs := make([]int64, 0, len(projects))
@@ -510,10 +520,13 @@ func GetTrashedProjects(s *xorm.Session, a web.Auth, page, perPage int) (project
 	for _, project := range projects {
 		project.Owner = users[project.OwnerID]
 		project.DeletedBy = users[project.DeletedByID]
-		project.TrashedSubProjects = subProjectsByRoot[project.ID]
+		trashed = append(trashed, &TrashedProject{
+			Project:            *project,
+			TrashedSubProjects: subProjectsByRoot[project.ID],
+		})
 	}
 
-	return projects, total, nil
+	return trashed, total, nil
 }
 
 // EmptyProjectTrash purges every project in the auth's trash, including ones others deleted.
