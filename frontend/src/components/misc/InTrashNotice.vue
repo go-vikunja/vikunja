@@ -18,7 +18,7 @@
 				:loading="restoring"
 				@click="emit('restore')"
 			>
-				{{ $t('trash.restore') }}
+				{{ restoreLabel ?? $t('trash.restore') }}
 			</XButton>
 			<XButton
 				variant="secondary"
@@ -41,6 +41,7 @@ defineProps<{
 	label: string,
 	deletedAt: string,
 	canRestore: boolean,
+	restoreLabel?: string,
 	restoring: boolean,
 	trashRoute: RouteLocationRaw,
 }>()
