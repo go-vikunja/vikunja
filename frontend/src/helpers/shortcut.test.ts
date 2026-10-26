@@ -4,18 +4,18 @@ import {SHORTCUTS} from '@/constants/shortcuts'
 import * as appleDevice from '@/helpers/isAppleDevice'
 import {parseKey, matchesKey, eventToShortcutString, isFormField, install, uninstall, shortcutBindingToDisplay} from './shortcut'
 
-// Helper to create a partial KeyboardEvent with sensible defaults
 function makeEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
-	return {
+	const event = new KeyboardEvent('keydown')
+	const props = {
 		key: overrides.code?.startsWith('Key') ? overrides.code.slice(3).toLowerCase() : overrides.code ?? '',
-		getModifierState: () => false,
 		code: '',
-		ctrlKey: false,
-		altKey: false,
-		shiftKey: false,
-		metaKey: false,
+		getModifierState: () => false,
 		...overrides,
-	} as KeyboardEvent
+	}
+	for (const [name, value] of Object.entries(props)) {
+		Object.defineProperty(event, name, {value})
+	}
+	return event
 }
 
 // --- parseKey ---
@@ -412,6 +412,12 @@ describe('keyboard layouts', () => {
 			keyCode: 229,
 		})
 		expect(eventToShortcutString(event)).toBe('')
+	})
+
+	it('ignores keydown events that are not KeyboardEvents', () => {
+		const event = new Event('keydown')
+		expect(eventToShortcutString(event)).toBe('')
+		expect(matchesKey(event, parseKey('Control+KeyK'))).toBe(false)
 	})
 
 	it('does not interpret AltGr text entry as a shortcut', () => {

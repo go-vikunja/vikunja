@@ -28,7 +28,7 @@ export function parseKey(keyStr: string): ParsedKey {
 	}
 }
 
-export function matchesKey(event: KeyboardEvent, parsed: ParsedKey): boolean {
+export function matchesKey(event: Event, parsed: ParsedKey): boolean {
 	const shortcut = eventToShortcutString(event)
 	if (!shortcut) return false
 	const actual = parseKey(shortcut)
@@ -47,7 +47,9 @@ export function matchesKey(event: KeyboardEvent, parsed: ParsedKey): boolean {
 	return true
 }
 
-export function eventToShortcutString(event: KeyboardEvent): string {
+// Typed as Event: autofill and password managers dispatch plain Events with type keydown.
+export function eventToShortcutString(event: Event): string {
+	if (!(event instanceof KeyboardEvent)) return ''
 	if (event.isComposing || event.keyCode === 229 || event.getModifierState('AltGraph')) return ''
 	if (['', 'Dead', 'Process', 'Compose', 'Unidentified', 'Control', 'Alt', 'Shift', 'Meta', 'AltGraph'].includes(event.key)) {
 		return ''
