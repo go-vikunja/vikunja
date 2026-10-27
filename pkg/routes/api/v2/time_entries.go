@@ -77,12 +77,13 @@ func RegisterTimeEntryRoutes(api huma.API) {
 	registerGated(api, huma.Operation{
 		OperationID: "time-entries-create",
 		Summary:     "Create a time entry",
-		Description: "Logs a time entry for the authenticated user. Set task_id or project_id, or neither for an entry only you can see. " +
+		Description: "Logs a time entry for the authenticated user. " +
+			"Set task_id or project_id, or neither for an entry only you can see. " +
 			"Omit end_time to start a running timer: your entries spanning a past start_time end there, " +
 			"and a running timer that doesn't span it stops at now.",
-		Method:      http.MethodPost,
-		Path:        "/time-entries",
-		Tags:        tags,
+		Method: http.MethodPost,
+		Path:   "/time-entries",
+		Tags:   tags,
 	}, timeEntriesCreate)
 
 	registerGated(api, huma.Operation{
