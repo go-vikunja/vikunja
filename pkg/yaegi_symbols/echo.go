@@ -148,7 +148,7 @@ func init() {
 		"TrustLoopback":                         reflect.ValueOf(echo.TrustLoopback),
 		"TrustPrivateNet":                       reflect.ValueOf(echo.TrustPrivateNet),
 		"UnwrapResponse":                        reflect.ValueOf(echo.UnwrapResponse),
-		"Version":                               reflect.ValueOf(constant.MakeFromLiteral("\"5.4.1\"", token.STRING, 0)),
+		"Version":                               reflect.ValueOf(constant.MakeFromLiteral("\"5.4.2\"", token.STRING, 0)),
 		"WrapHandler":                           reflect.ValueOf(echo.WrapHandler),
 		"WrapMiddleware":                        reflect.ValueOf(echo.WrapMiddleware),
 
