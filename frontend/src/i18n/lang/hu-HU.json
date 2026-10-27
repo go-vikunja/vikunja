@@ -168,7 +168,7 @@
 				"defaultProject": "Alapértelmezett projekt",
 				"defaultView": "Alapértelmezett nézet",
 				"timezone": "Időzóna",
-				"overdueTasksRemindersTime": "Esedékes feladatokra emlékeztető e-mail küldésének ideje",
+				"overdueTasksRemindersTime": "Elmaradt feladatokra emlékeztető e-mail küldésének ideje",
 				"quickAddDefaultReminders": "Alapértelmezett emlékeztetők a gyors hozzáadáshoz",
 				"quickAddDefaultRemindersDescription": "Ezeket az emlékeztetőket a rendszer automatikusan hozzáadja minden, a gyors hozzáadás funkcióval létrehozott, határidővel rendelkező feladathoz.",
 				"quickAddDefaultRemindersHint": "Adj hozzá egy, vagy több emlékeztetőt a feladat határidejéhez viszonyítva. Hagyd üresen a kikapcsoláshoz.",
@@ -220,7 +220,7 @@
 				"confirmNotice": "A kétfaktoros hitelesítés engedélyezése után minden munkamenetből kijelentkeztetünk és újra be kell jelentkezned.",
 				"setupSuccess": "Kétlépcsős azonosítás sikeresen bekapcsolva!",
 				"enterPassword": "Kérlek, írd be jelszavad!",
-				"disable": "Kétlépcsős hitelesítés kikapcsolása",
+				"disable": "Kétlépcsős azonosítás kikapcsolása",
 				"confirmSuccess": "Sikeresen engedélyezted a kétfaktoros hitelesítést!",
 				"disableSuccess": "A kétlépcsős azonosítást sikeresen kikapcsoltuk."
 			},
@@ -404,7 +404,7 @@
 		"archivedMessage": "Ez a projekt archiválva van. Nem lehet hozzá új feladatokat létrehozni, vagy szerkeszteni.",
 		"archived": "Archivált",
 		"showArchived": "Archív megjelenítése",
-		"title": "Elnevezés",
+		"title": "Projektek",
 		"color": "Szín",
 		"projects": "Projektek",
 		"parent": "Szülő projekt",
@@ -455,7 +455,7 @@
 			"text1": "Biztosan törölni szeretnéd ezt a projektet és annak összes tartalmát?",
 			"text2": "Ez magában foglalja az összes feladatot és NEM VISSZAVONHATÓ!",
 			"success": "A projekt sikeresen törölve.",
-			"tasksToDelete": "Ezzel visszavonhatatlanul eltávolítjuk kb. {count} feladatát.",
+			"tasksToDelete": "Ezzel visszavonhatatlanul eltávolítunk kb. {count} feladatot.",
 			"tasksAndChildProjectsToDelete": "Ezzel visszavonhatatlanul eltávolítunk kb. {tasks} feladatot és {projects} projektet.",
 			"noTasksToDelete": "Ez a projekt nem tartalmaz feladatokat, biztonságosan törölhető."
 		},
@@ -512,8 +512,8 @@
 				"removeText": "A {sharable} biztosan ne legyen többé elérhető a {type} számára? Nem visszavonható!",
 				"removeCleanupText": "Aki elveszti a hozzáférést ehhez a projekthez,\nvagy az alá tartozó projektekhez,\naz alábbiakat is bukja:",
 				"removeSuccess": "{type} sikeresen levéve innen: {sharable}",
-				"addedSuccess": "A {type} sikeresen hozzá lett adva.",
-				"updatedSuccess": "A {type} sikeresen hozzá lett adva.",
+				"addedSuccess": "A {type} sikeresen hozzáadva.",
+				"updatedSuccess": "A {type} sikeresen hozzáadva.",
 				"search": "Keress egy {type} -t, hogy megoszthasd vele ezt a projektet",
 				"permissionFor": "Engedély a következőhöz: {sharable}"
 			},
@@ -600,7 +600,7 @@
 			"addTask": "Feladat hozzáadása",
 			"addAnotherTask": "További feladat hozzáadása",
 			"addBucket": "Vödör létrehozása",
-			"addBucketPlaceholder": "Adja meg az új vödör címét…",
+			"addBucketPlaceholder": "Add meg az új vödör címét…",
 			"deleteHeaderBucket": "Vödör törlése",
 			"deleteBucketText1": "Biztosan törlöd ezt az vödröt?",
 			"deleteBucketText2": "Ez nem törli a feladatokat, hanem áthelyezi őket az alapértelmezett vödörbe.",
@@ -632,7 +632,7 @@
 			"basicauthpassword": "Basic Auth Jelszó",
 			"basicauthlink": "Basic Auth használata?",
 			"secretHint": "Amennyiben meg van adva, a webhook cél URL-címére irányuló összes kérés HMAC használatával lesz aláírva.",
-			"secretDocs": "Tekintse meg a dokumentációt a titkok használatának további részleteiért."
+			"secretDocs": "Tekintsd meg a dokumentációt a titkok használatának további részleteiért."
 		},
 		"views": {
 			"header": "Nézetek szerkesztése",
@@ -689,7 +689,7 @@
 			"help": {
 				"intro": "A feladatok szűréséhez az SQL-hez hasonló lekérdezési szintaxist használhatsz. A szűréshez rendelkezésre álló mezők a következők:",
 				"link": "Hogyan működik?",
-				"canUseDatemath": "Dátumszámítást használhatsz relatív dátumok beállításához. Kattints a dátumértékre a lekérdezésben a részletekért.",
+				"canUseDatemath": "Függvényt használhatsz relatív dátumok beállításához. Kattints a dátumértékre a lekérdezésben a részletekért.",
 				"fields": {
 					"done": "A feladat befejeződött-e, vagy sem",
 					"priority": "A feladat prioritási szintje (1-5)",
@@ -1428,6 +1428,7 @@
 		"task": {
 			"title": "Feladat oldal",
 			"done": "Feladat megjelölése készként / nem készként",
+			"doneAndBack": "Feladat befejezettnek jelölése és visszalépés",
 			"assign": "Rendelje hozzá ezt a feladatot egy felhasználóhoz",
 			"labels": "Adjon hozzá címkéket ehhez a feladathoz",
 			"dueDate": "Módosítsa ennek a feladatnak a határidejét",
@@ -1537,6 +1538,7 @@
 		"newTeam": "Adja meg az új csapat nevét…",
 		"createTask": "Feladat létrehozása az aktuális projektben ({title})",
 		"createProject": "Projekt létrehozása",
+		"removePrefillDescription": "Leírás eltávolítása",
 		"results": "Nincs találat | {count} találat | {count} találat",
 		"resultTypes": {
 			"command": "Parancs",
@@ -1669,6 +1671,7 @@
 		"14202": "A Planka fiók egy extra bejelentkezési lépést igényel (kétfaktoros kódot, vagy a feltételek elfogadását). Jelentkezz be egyszer a Plankába a böngészőben, vagy használj API kulcsot a felhasználónév és a jelszó helyett!",
 		"14203": "A Planka URL-je és egy API kulcs, vagy felhasználónév és jelszó szükséges.",
 		"14204": "Nem sikerült elérni a megadott URL-en lévő Planka API-t. Ellenőrizd az URL-t és hogy a Vikunja el tudja-e érni az adott példányt.",
+		"14205": "A Planka URL privát vagy helyi webcímre mutat, amit a Vikunja alapból blokkol. Egy rendszergazda enegedélyezheti az 'outgoingrequests.allownonroutableips' igazra állításával.",
 		"error": "Hiba",
 		"success": "Siker",
 		"0001": "Nincs jogosultsága ehhez."
