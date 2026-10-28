@@ -54,6 +54,7 @@
       ]
     },
     "appx": {
+      "artifactName": "${productName}-${version}.msix",
       "applicationId": "VikunjaDesktop",
       "displayName": "Vikunja Desktop",
       "publisherDisplayName": "Vikunja",
