@@ -511,6 +511,38 @@ jobs:
             ./desktop/dist/Vikunja*
             !./desktop/dist/*.blockmap
             !./desktop/dist/*.msix
+      - name: Store Microsoft Store Package
+        if: runner.os == 'Windows' && github.ref_type == 'tag'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vikunja_desktop_msix
+          path: ./desktop/dist/*.msix
+          if-no-files-found: error
+
+  desktop-microsoft-store:
+    # Separate job so a Store outage or failed certification doesn't block the GitHub release.
+    if: github.ref_type == 'tag' && vars.MS_STORE_PRODUCT_ID != ''
+    runs-on: windows-latest
+    needs:
+      - desktop
+    steps:
+      - name: Download Microsoft Store Package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: vikunja_desktop_msix
+      - name: Setup Microsoft Store Developer CLI
+        uses: microsoft/microsoft-store-apppublisher@cc9910a8d59f2eb55cbb83df0a3800cf3b5300e0 # v1.4
+      - name: Publish to Microsoft Store
+        shell: bash
+        env:
+          MS_STORE_TENANT_ID: ${{ secrets.MS_STORE_TENANT_ID }}
+          MS_STORE_SELLER_ID: ${{ secrets.MS_STORE_SELLER_ID }}
+          MS_STORE_CLIENT_ID: ${{ secrets.MS_STORE_CLIENT_ID }}
+          MS_STORE_CLIENT_SECRET: ${{ secrets.MS_STORE_CLIENT_SECRET }}
+          MS_STORE_PRODUCT_ID: ${{ vars.MS_STORE_PRODUCT_ID }}
+        run: |
+          msstore reconfigure --tenantId "$MS_STORE_TENANT_ID" --sellerId "$MS_STORE_SELLER_ID" --clientId "$MS_STORE_CLIENT_ID" --clientSecret "$MS_STORE_CLIENT_SECRET"
+          msstore publish ./*.msix -id "$MS_STORE_PRODUCT_ID"
 
   generate-swagger-and-yaegi:
     runs-on: ubuntu-latest
