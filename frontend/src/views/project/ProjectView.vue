@@ -6,16 +6,18 @@ import {useQuery} from '@tanstack/vue-query'
 import {useBaseStore} from '@/stores/base'
 import {useAuthStore} from '@/stores/auth'
 
-import {saveProjectView} from '@/helpers/projectView'
+import {getDefaultProjectView, saveProjectView} from '@/helpers/projectView'
 import {projectQuery} from '@/client/queries/projects'
+import {projectInTrashFromError} from '@/client/queries/trash'
 
 import ProjectList from '@/components/project/views/ProjectList.vue'
 import ProjectGantt from '@/components/project/views/ProjectGantt.vue'
 import ProjectTable from '@/components/project/views/ProjectTable.vue'
 import ProjectKanban from '@/components/project/views/ProjectKanban.vue'
+import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 
-import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/constants/projectView'
 import {saveProjectToHistory} from '@/modules/projectHistory'
+import {useFocusAfterRemoval} from '@/composables/useFocusAfterRemoval'
 
 const props = defineProps<{
 	projectId: number,
@@ -28,6 +30,8 @@ const baseStore = useBaseStore()
 const authStore = useAuthStore()
 const project = useQuery(computed(() => projectQuery(props.projectId)))
 const currentProject = computed(() => project.data.value)
+const projectInTrash = computed(() => projectInTrashFromError(project.error.value))
+useFocusAfterRemoval(() => projectInTrash.value !== null, () => document.getElementById('main-content'))
 
 const currentView = computed(() => {
 	return currentProject.value?.views.find(v => v.id === props.viewId)
@@ -52,21 +56,11 @@ watch(
 
 function redirectToDefaultViewIfNecessary() {
 	if (props.viewId === 0 || !currentView.value) {
-		// Ideally, we would do that in the router redirect, but the projects (and therefore, the views) 
-		// are not always loaded then.
-
-		const defaultView  = authStore.settings.frontend_settings.default_view
-		const views = currentProject.value?.views ?? []
-
-		let view
-		if (defaultView !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST) {
-			view = views.find(view => view.view_kind === defaultView)
-		}
-
-		// Use the first view as fallback if the default view is not available
-		if (view === undefined && views.length > 0) {
-			view = views[0]
-		}
+		// Project views may arrive after the router resolves.
+		const view = getDefaultProjectView(
+			currentProject.value?.views ?? [],
+			authStore.settings.frontend_settings.default_view,
+		)
 
 		if (view) {
 			router.replace({
@@ -103,8 +97,14 @@ watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
 </script>
 
 <template>
+	<div
+		v-if="projectInTrash"
+		class="content is-max-width-desktop"
+	>
+		<ProjectInTrashNotice :in-trash="projectInTrash" />
+	</div>
 	<ProjectList
-		v-if="currentView?.view_kind === 'list'"
+		v-else-if="currentView?.view_kind === 'list'"
 		:project-id="projectId"
 		:is-loading-project="isLoadingProject"
 		:view-id

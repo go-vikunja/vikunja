@@ -29,6 +29,7 @@ import {contextMutationOptions} from './contextMutation'
 import {normalizeTask, taskKeys, type PaginatedTaskResponse, type TaskResponse} from './tasks'
 import {bucketKeys, kanbanKeys, normalizeBucket, type BoardData} from './kanban'
 import {
+	insertTaskIntoBoards,
 	invalidateTaskMembership,
 	mapTaskEverywhere,
 	removeTaskEverywhere,
@@ -36,6 +37,7 @@ import {
 	taskQueryKeys,
 } from './taskCache'
 import {getCachedProject, projectKeys} from './projects'
+import {invalidateAfterTrashChange} from './trash'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {getDefaultBucketId, moveTaskToBucket} from '@/helpers/task'
 import {translatedError} from '@/message'
@@ -144,30 +146,6 @@ function cachedViewBuckets(client: QueryClient, project: number, view: number) {
 	return board?.buckets ?? client.getQueryData<Bucket[]>(bucketKeys.list(project, view))
 }
 
-function insertTaskIntoBoards(client: QueryClient, created: Task) {
-	const task = normalizeTask(created)
-	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
-		const project = kanbanKeys.projectOf(key)
-		const viewId = kanbanKeys.viewOf(key)
-		if (!board || project === undefined || project !== task.project_id || viewId === undefined) continue
-		const view = getCachedProject(project, client)?.views?.find(item => item.id === viewId)
-		// The response only echoes the requested bucket, which belongs to the one view it was requested for.
-		const target = board.buckets.some(bucket => bucket.id === task.bucket_id)
-			? task.bucket_id
-			: view && view.bucket_configuration_mode !== 'filter'
-				? getDefaultBucketId(view, board.buckets)
-				: undefined
-		if (target === undefined) continue
-		const position = task.positions?.find(item => item.project_view_id === viewId)?.position ?? task.position
-		client.setQueryData(key, {
-			...board,
-			buckets: board.buckets.map(bucket => bucket.id === target
-				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target, position}, ...bucket.tasks]}
-				: bucket),
-		})
-	}
-}
-
 export function createTaskMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (task: Task & Required<Pick<Task, 'project_id'>>) => (await tasksCreate({
@@ -201,7 +179,7 @@ export function deleteTaskMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (id: number) => { await tasksDelete({path: {task: id}}) },
 		onSuccess: (_data, id, client) => removeTaskEverywhere(client, id),
-		onSettled: (_id, client) => invalidateTaskMembership(client, undefined, 'active'),
+		onSettled: (_id, client) => invalidateAfterTrashChange(client),
 	})
 }
 

@@ -452,12 +452,15 @@
     "delete": {
       "title": "Delete \"{project}\"",
       "header": "Delete this project",
-      "text1": "Are you sure you want to delete this project and all of its contents?",
-      "text2": "This includes all tasks and CANNOT BE UNDONE!",
-      "success": "The project was successfully deleted.",
-      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
-      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
+      "success": "The project has been moved to the trash.",
+      "toTrash": "Moves this project and {tasks} to the trash. They are deleted permanently after {days} days.",
+      "toTrashFallback": "Moves this project and everything in it to the trash. It is deleted permanently after {days} days.",
+      "toTrashWithSubProjects": "Moves this project, {subProjects} and {tasks} to the trash. They are deleted permanently after {days} days.",
+      "subProjects": "{count} sub-project | {count} sub-projects",
+      "tasks": "no tasks | {count} task | {count} tasks",
+      "timeEntries": "{entries} from {people} will be kept but detached from the project after {days} days.",
+      "timeEntryCount": "{count} time entry | {count} time entries",
+      "people": "{count} person | {count} people"
     },
     "duplicate": {
       "title": "Duplicate this project",
@@ -1126,7 +1129,7 @@
       "doneAt": "Done {0}",
       "titleRequired": "The task title can't be empty.",
       "updateSuccess": "The task was saved successfully.",
-      "deleteSuccess": "The task has been deleted successfully.",
+      "deleteSuccess": "The task has been moved to the trash.",
       "duplicateSuccess": "The task was duplicated successfully.",
       "noBucket": "No bucket",
       "bucketSelectLabel": "Kanban bucket: {bucket}",
@@ -1141,11 +1144,6 @@
       "organization": "Organization",
       "management": "Management",
       "dateAndTime": "Date and time",
-      "delete": {
-        "header": "Delete this task",
-        "text1": "Are you sure you want to remove this task?",
-        "text2": "This will also remove all attachments, reminders and relations associated with this task and cannot be undone!"
-      },
       "actions": {
         "assign": "Assign to User",
         "label": "Add Labels",
@@ -1606,6 +1604,8 @@
     "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
     "3016": "The parent project is archived. Un-archive the parent project first.",
     "3017": "The default project must be a project you can write to.",
+    "3018": "This project is in the trash. Restore it first.",
+    "3019": "The parent project is in the trash. Restore it first.",
     "4001": "The task title cannot be empty.",
     "4002": "The task does not exist.",
     "4003": "All bulk editing tasks must belong to the same project.",
@@ -1631,6 +1631,7 @@
     "4023": "Cannot create a task relation cycle.",
     "4034": "The file does not exist.",
     "4035": "The uploaded file exceeds the maximum configured file size.",
+    "4040": "This task is in the trash.",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that project.",
@@ -1815,5 +1816,52 @@
       "futureExpiry": "Choose an expiry in the future.",
       "creatorDeleted": "Deleted user"
     }
+  },
+  "trash": {
+    "restoreSuccess": "The task has been restored.",
+    "deleteForeverSuccess": "The task has been deleted permanently.",
+    "emptySuccess": "The trash has been emptied.",
+    "title": "Trash",
+    "restore": "Restore",
+    "deleteForever": "Delete forever",
+    "empty": "Empty trash",
+    "noTasks": "There are no tasks in the trash.",
+    "deletedBy": "Deleted by {user} {since}",
+    "deleted": "Deleted {since}",
+    "daysLeft": "Deleted permanently today | Deleted permanently in {count} day | Deleted permanently in {count} days",
+    "deleteForeverModal": {
+      "header": "Delete this task forever",
+      "text": "This permanently deletes \"{task}\" with its comments, attachments, reminders and relations. Its time entries stay with the project. This cannot be undone."
+    },
+    "emptyModal": {
+      "text": "There are no tasks to delete. | This permanently deletes 1 task, including tasks other people moved to the trash. This cannot be undone. | This permanently deletes {count} tasks, including tasks other people moved to the trash. This cannot be undone.",
+      "adminOnlyText": "This permanently deletes the trashed tasks of every project you are admin of, including tasks other people moved to the trash. Tasks in other projects stay in the trash. This cannot be undone."
+    },
+    "open": "Open trash",
+    "taskInTrash": "This task is in the trash. It was deleted {since}.",
+    "taskInTrashBy": "This task is in the trash. {user} deleted it {since}.",
+    "taskInTrashTitle": "Task in the trash",
+    "inTrash": "In trash",
+    "daysLeftShort": "deleted permanently today | {count} day left | {count} days left",
+    "deletedByYou": "Deleted by you {since}",
+    "taskInTrashByYou": "This task is in the trash. You deleted it {since}.",
+    "tabs": {
+      "label": "Trash sections"
+    },
+    "restoreProjectSuccess": "The project has been restored.",
+    "restoreParentProject": "Restore parent project",
+    "deleteProjectForeverSuccess": "The project has been deleted permanently.",
+    "noProjects": "There are no projects in the trash.",
+    "subProjects": "+{count} sub-project | +{count} sub-projects",
+    "deleteProjectForeverModal": {
+      "header": "Delete this project forever",
+      "text": "This permanently deletes \"{project}\" with its sub-projects, tasks, views and shares. Time entries stay with the people who logged them, without a project. This cannot be undone."
+    },
+    "emptyProjectsModal": {
+      "text": "There are no projects to delete. | This permanently deletes 1 project with everything in it, including projects other people moved to the trash. This cannot be undone. | This permanently deletes {count} projects with everything in them, including projects other people moved to the trash. This cannot be undone."
+    },
+    "projectInTrash": "This project is in the trash. It was deleted {since}.",
+    "projectInTrashBy": "This project is in the trash. {user} deleted it {since}.",
+    "projectInTrashByYou": "This project is in the trash. You deleted it {since}."
   }
 }

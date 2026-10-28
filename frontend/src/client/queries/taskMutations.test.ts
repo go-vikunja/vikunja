@@ -19,6 +19,8 @@ import {
 	updateTaskMutationOptions,
 	updateTaskPositionMutationOptions,
 } from './taskMutations'
+import {trashKeys} from './trash'
+import {timeEntryKeys} from './timeEntries'
 import type {Task, PaginatedTask} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
@@ -420,6 +422,31 @@ describe('task mutations', () => {
 		unsubscribe()
 	})
 
+	it('marks the trash and time entries stale after deleting a task', async () => {
+		const client = new QueryClient()
+		client.setQueryData(trashKeys.taskList(1), {
+			items: [],
+			page: 1,
+			per_page: 50,
+			total: 0,
+			total_pages: 0,
+		})
+		client.setQueryData(timeEntryKeys.list('', 'UTC', 1), {
+			items: [],
+			page: 1,
+			per_page: 50,
+			total: 0,
+			total_pages: 0,
+		})
+		sdk.tasksDelete.mockResolvedValue({})
+		await client.getMutationCache()
+			.build(client, deleteTaskMutationOptions())
+			.execute(5)
+		expect(sdk.tasksDelete).toHaveBeenCalledWith({path: {task: 5}})
+		expect(client.getQueryState(trashKeys.taskList(1))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
+	})
+
 	it('inserts a duplicate into the default bucket of every cached view', async () => {
 		const client = await seedDefaultBucketBoards()
 		sdk.tasksDuplicate.mockResolvedValue({data: {duplicated_task: {id: 9, project_id: 1, bucket_id: 0}}})
@@ -430,6 +457,41 @@ describe('task mutations', () => {
 			.map(bucket => bucket.tasks.map(task => task.id))).toEqual([[], [9]])
 		expect(client.getQueryData<BoardData>(kanbanKeys.board(1, 5))?.buckets[0].tasks
 			.map(task => task.id)).toEqual([9])
+	})
+
+	it('inserts a done card into the done bucket even when another bucket was requested', async () => {
+		const {projectKeys} = await import('./projects')
+		const client = await seedDefaultBucketBoards()
+		client.setQueryData(projectKeys.detail(1), {
+			id: 1,
+			views: [{
+				id: 2,
+				bucket_configuration_mode: 'manual',
+				default_bucket_id: 4,
+				done_bucket_id: 3,
+			}],
+		})
+		sdk.tasksCreate.mockResolvedValue({
+			data: {
+				id: 9,
+				project_id: 1,
+				bucket_id: 4,
+				done: true,
+			},
+		})
+		await client.getMutationCache()
+			.build(client, createTaskMutationOptions())
+			.execute({
+				title: 'new',
+				project_id: 1,
+				bucket_id: 4,
+				done: true,
+			})
+		expect(client.getQueryData<BoardData>(kanbanKeys.board(1, 2))?.buckets
+			.map(bucket => bucket.tasks.map(task => task.id))).toEqual([
+			[9],
+			[],
+		])
 	})
 
 	it('caches a created card with its stored position in each view', async () => {
@@ -493,6 +555,70 @@ describe('task mutations', () => {
 		expect(client.getQueryData<BoardData>(filtered)).toEqual(board)
 		expect(client.getQueryState(filtered)?.isInvalidated).toBe(true)
 		expect(client.getQueryData<BoardData>(manual)?.buckets[0].tasks.map(task => task.id)).toEqual([99])
+	})
+
+	it('refetches the open boards a created card cannot be patched into', async () => {
+		const {projectKeys} = await import('./projects')
+		const client = new QueryClient()
+		client.setQueryData(projectKeys.detail(1), {
+			id: 1,
+			views: [
+				{
+					id: 2,
+					bucket_configuration_mode: 'filter',
+				},
+				{
+					id: 5,
+					bucket_configuration_mode: 'manual',
+					default_bucket_id: 6,
+				},
+			],
+		})
+		const emptyBoard = () => Promise.resolve({
+			buckets: [normalizeBucket({
+				id: 6,
+				count: 0,
+				tasks: [],
+			})],
+			pages: {6: 1},
+		})
+		const readFilterView = vi.fn(emptyBoard)
+		const readSearched = vi.fn(emptyBoard)
+		const readPlain = vi.fn(emptyBoard)
+		const searched = kanbanKeys.board(1, 5, {q: 'milk'})
+		const plain = kanbanKeys.board(1, 5)
+		const observers = [
+			new QueryObserver(client, {
+				queryKey: kanbanKeys.board(1, 2),
+				queryFn: readFilterView,
+			}),
+			new QueryObserver(client, {
+				queryKey: searched,
+				queryFn: readSearched,
+			}),
+			new QueryObserver(client, {
+				queryKey: plain,
+				queryFn: readPlain,
+			}),
+		].map(observer => observer.subscribe(() => {}))
+		await vi.waitFor(() => {
+			expect(client.getQueryData(kanbanKeys.board(1, 2))).toBeDefined()
+			expect(client.getQueryData(searched)).toBeDefined()
+			expect(client.getQueryData(plain)).toBeDefined()
+		})
+		sdk.tasksCreate.mockResolvedValue({data: {id: 99, project_id: 1}})
+		sdk.projectTasksList.mockResolvedValue({data: {items: [], total: 0}})
+
+		await client.getMutationCache()
+			.build(client, createTaskMutationOptions())
+			.execute({title: 'new', project_id: 1})
+		observers.forEach(stop => stop())
+
+		expect(readFilterView).toHaveBeenCalledTimes(2)
+		expect(readSearched).toHaveBeenCalledTimes(2)
+		expect(client.getQueryData<BoardData>(searched)?.buckets[0].tasks).toEqual([])
+		expect(readPlain).toHaveBeenCalledTimes(1)
+		expect(client.getQueryData<BoardData>(plain)?.buckets[0].tasks.map(task => task.id)).toEqual([99])
 	})
 
 	it('renames the cached task bucket when toggling done moves the card', async () => {

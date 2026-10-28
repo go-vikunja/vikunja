@@ -7,6 +7,8 @@
 			class="global-notification"
 			role="status"
 			aria-live="polite"
+			@start="startActionTimer"
+			@destroy="stopActionTimer"
 		>
 			<template #body="{ item, close }">
 				<!-- FIXME: overlay whole notification with button and add event listener on that button instead -->
@@ -16,6 +18,10 @@
 						item.type,
 					]"
 					@click="close()"
+					@mouseenter="actionTimers.get(item.id)?.hold('hover')"
+					@mouseleave="actionTimers.get(item.id)?.release('hover')"
+					@focusin="actionTimers.get(item.id)?.hold('focus')"
+					@focusout="releaseFocusHold(item, $event)"
 				>
 					<div
 						v-if="item.title"
@@ -64,7 +70,12 @@
 </template>
 
 <script lang="ts" setup>
-import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
+import {notify, type NotificationItem} from '@kyvg/vue3-notification'
+
+import {ACTION_TOAST_DURATION, type ToastData} from '@/message'
+import {pausableTimeout} from '@/message/pausableTimeout'
+import {captureFocus} from '@/composables/useFocusAfterRemoval'
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null
@@ -72,6 +83,50 @@ let observer: MutationObserver | null = null
 function syncTeleportTarget() {
 	const dialogs = document.querySelectorAll<HTMLDialogElement>('dialog.modal-dialog[open]')
 	teleportTarget.value = dialogs.item(dialogs.length - 1) ?? 'body'
+}
+
+const actionTimers = new Map<NotificationItem['id'], ReturnType<typeof pausableTimeout>>()
+
+function toastData(item: NotificationItem) {
+	return item.data as Partial<ToastData> | undefined
+}
+
+function hasActions(item: NotificationItem) {
+	return (toastData(item)?.actions?.length ?? 0) > 0
+}
+
+function toastElement(item: NotificationItem) {
+	return document.querySelector<HTMLElement>(`.vue-notification-wrapper[data-id="${item.id}"]`)
+}
+
+async function startActionTimer(item: NotificationItem) {
+	if (!hasActions(item)) {
+		return
+	}
+	actionTimers.set(item.id, pausableTimeout(ACTION_TOAST_DURATION, () => notify.close(item.id)))
+	if (!toastData(item)?.takeFocus) {
+		return
+	}
+	await nextTick()
+	const moveFocus = captureFocus()
+	requestAnimationFrame(() => {
+		void moveFocus(() => toastElement(item)?.querySelector<HTMLElement>('button'))
+	})
+}
+
+function stopActionTimer(item: NotificationItem) {
+	actionTimers.get(item.id)?.cancel()
+	actionTimers.delete(item.id)
+	if (toastElement(item)?.contains(document.activeElement)) {
+		document.getElementById('main-content')?.focus({preventScroll: true})
+	}
+}
+
+function releaseFocusHold(item: NotificationItem, event: FocusEvent) {
+	const toast = event.currentTarget as HTMLElement
+	if (!toast.contains(event.relatedTarget as Node | null)) {
+		actionTimers.get(item.id)?.release('focus')
+	}
 }
 
 onMounted(() => {

@@ -1,8 +1,8 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
+	projectsCount,
 	projectsCreate,
-	projectsDelete,
 	projectsDuplicate,
 	projectsList,
 	projectsRead,
@@ -17,13 +17,13 @@ import type {
 import {queryClient} from '@/client/queryClient'
 import {PERMISSIONS} from '@/constants/permissions'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
-import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
 
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {setSubscription} from './subscriptionRequests'
 import {taskKeys} from './tasks'
+import {isProjectInTrashError} from './trashErrors'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -78,6 +78,7 @@ export const projectKeys = {
 	all: ['projects'] as const,
 	list: () => ['projects', 'list'] as const,
 	detail: (id: number) => ['projects', 'detail', id] as const,
+	count: (id: number) => ['projects', 'detail', id, 'count'] as const,
 }
 
 export function createProjectDraft(project: Partial<ProjectWritable> = {}): ProjectDraft {
@@ -175,6 +176,8 @@ export function projectQuery(id: number) {
 			return normalizeProject(data)
 		},
 		enabled: id !== 0,
+		// All consumers suppress trash errors; ProjectView renders the notice.
+		meta: {handlesError: isProjectInTrashError},
 	})
 }
 
@@ -276,7 +279,7 @@ function mergeProjectMetadata(previous: ProjectResponse, updated: ProjectRespons
 }
 
 // Project callers let failures reach the global Vue error handler, which toasts them.
-const toastError = () => false
+export const toastError = () => false
 
 export function createProjectMutationOptions() {
 	return contextMutationOptions({
@@ -417,29 +420,23 @@ function descendantIds(projects: readonly ProjectResponse[], projectId: number):
 	return [projectId, ...children.flatMap(project => descendantIds(projects, project.id))]
 }
 
-export function deleteProjectMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (id: number) => {
-			await projectsDelete({path: {id}})
-		},
-		optimistic: {
-			queryKeys: () => [projectKeys.list()],
-			update: (id, client) => {
-				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
-				const ids = new Set(list ? descendantIds(list.projects, id) : [id])
-				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-					current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
-				)
-				return ids
-			},
-		},
-		onSuccess: (_data, id, client, ids) => {
-			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
-			removeProjectFromHistory({id})
-		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
-		successMessage: () => i18n.global.t('project.delete.success'),
-		toastError,
+export function removeProjectSubtree(client: QueryClient, id: number): Set<number> {
+	const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+	const ids = new Set(list ? descendantIds(list.projects, id) : [id])
+	client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+		current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
+	)
+	return ids
+}
+
+export function projectCountQuery(id: number) {
+	return queryOptions({
+		queryKey: projectKeys.count(id),
+		queryFn: async ({signal}) => (await projectsCount({path: {id}, signal})).data,
+		staleTime: 0,
+		enabled: id > 0,
+		// ProjectSettingsDelete renders a fallback text instead.
+		meta: {handlesError: true},
 	})
 }
 
@@ -484,10 +481,6 @@ export function usePatchProjectFavoriteMutation() {
 
 export function useSetProjectSubscriptionMutation() {
 	return useMutation(setProjectSubscriptionMutationOptions())
-}
-
-export function useDeleteProjectMutation() {
-	return useMutation(deleteProjectMutationOptions())
 }
 
 export function useDuplicateProjectMutation() {

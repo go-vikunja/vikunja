@@ -1,6 +1,15 @@
+import type {ProjectView} from '@/client/generated'
+import {DEFAULT_PROJECT_VIEW_SETTINGS, type DefaultProjectViewKind} from '@/constants/projectView'
+
 export type ProjectViewSettings = Record<number, number>
 
 const SETTINGS_KEY_PROJECT_VIEW = 'projectView'
+
+export function getDefaultProjectView(views: readonly ProjectView[], preferredKind: DefaultProjectViewKind | undefined) {
+	return (preferredKind !== DEFAULT_PROJECT_VIEW_SETTINGS.FIRST
+		? views.find(view => view.view_kind === preferredKind)
+		: undefined) ?? views[0]
+}
 
 /**
  * Save the current project view to local storage

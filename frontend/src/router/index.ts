@@ -455,6 +455,30 @@ const router = createRouter({
 			},
 		},
 		{
+			path: '/trash',
+			component: () => import('@/views/trash/TrashView.vue'),
+			meta: {
+				title: 'trash.title',
+			},
+			children: [
+				{
+					path: '',
+					name: 'trash',
+					redirect: {name: 'trash.tasks'},
+				},
+				{
+					path: 'tasks',
+					name: 'trash.tasks',
+					component: () => import('@/views/trash/TrashTasks.vue'),
+				},
+				{
+					path: 'projects',
+					name: 'trash.projects',
+					component: () => import('@/views/trash/TrashProjects.vue'),
+				},
+			],
+		},
+		{
 			path: '/admin',
 			component: () => import('@/views/admin/AdminShell.vue'),
 			meta: {

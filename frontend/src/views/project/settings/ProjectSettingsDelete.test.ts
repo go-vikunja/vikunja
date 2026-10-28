@@ -8,7 +8,7 @@ import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import type {ProjectResponse} from '@/client/queries/projects'
 
 const sdk = vi.hoisted(() => ({
-	tasksList: vi.fn(),
+	projectsCount: vi.fn(),
 }))
 
 vi.mock('@/client/generated', () => sdk)
@@ -44,7 +44,11 @@ async function mountModal() {
 
 	const wrapper = mount(ProjectSettingsDelete, {
 		global: {
-			plugins: [i18n, router, [VueQueryPlugin, {queryClient: new QueryClient()}]],
+			plugins: [
+				i18n,
+				router,
+				[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}],
+			],
 			components: {Modal},
 			directives: {cy: testid},
 			stubs: {
@@ -66,7 +70,7 @@ describe('ProjectSettingsDelete', () => {
 		setActivePinia(createPinia())
 		document.body.innerHTML = ''
 		projects[42] = {id: 42, title: 'Test'} as ProjectResponse
-		sdk.tasksList.mockReset()
+		sdk.projectsCount.mockReset()
 	})
 
 	afterEach(() => {
@@ -75,23 +79,22 @@ describe('ProjectSettingsDelete', () => {
 		document.body.innerHTML = ''
 	})
 
-	it('shows the loader while the task count is pending', async () => {
-		sdk.tasksList.mockReturnValue(new Promise(() => {}))
+	it('shows the loader while the counts are pending', async () => {
+		sdk.projectsCount.mockReturnValue(new Promise(() => {}))
 
 		wrapper = await mountModal()
 
 		expect(wrapper.findComponent(Loading).exists()).toBe(true)
-		expect(document.querySelector('dialog.modal-dialog')?.textContent)
-			.not.toContain('does not contain any tasks')
+		expect(document.querySelector('dialog.modal-dialog')?.textContent).not.toContain('Moves this project')
 	})
 
-	it('shows the task count once the query resolved', async () => {
-		sdk.tasksList.mockResolvedValue({data: {items: [], total: 3, page: 1, per_page: 1, total_pages: 3}})
+	it('falls back to a generic notice when the counts fail', async () => {
+		sdk.projectsCount.mockRejectedValue(new Error('network'))
 
 		wrapper = await mountModal()
 
 		expect(wrapper.findComponent(Loading).exists()).toBe(false)
 		expect(document.querySelector('dialog.modal-dialog')?.textContent)
-			.toContain('irrevocably remove approx. 3 tasks')
+			.toContain('Moves this project and everything in it to the trash.')
 	})
 })

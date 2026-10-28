@@ -1,9 +1,16 @@
 import {hashKey, type QueryClient, type QueryKey} from '@tanstack/vue-query'
-import type {Task} from '@/client/generated'
-import {mapTasksDeep, mergeTask, removeTask} from '@/helpers/task'
-import {normalizeTask, taskKeys, type PaginatedTaskResponse, type TaskResponse} from './tasks'
+import type {ProjectView, Task} from '@/client/generated'
+import {getDefaultBucketId, mapTasksDeep, mergeTask, removeTask} from '@/helpers/task'
+import {
+	normalizeTask,
+	taskKeys,
+	type PaginatedTaskResponse,
+	type TaskFilterParams,
+	type TaskResponse,
+} from './tasks'
 import {kanbanKeys, type BoardData} from './kanban'
 import {totalPagesFor} from './pagination'
+import {getCachedProject} from './projects'
 
 // Applies `update` to every cached copy of task `id` (detail, lists, boards, nested relations),
 // so a mutation response patches all mounted views without refetching them.
@@ -133,6 +140,62 @@ export function removeTaskEverywhere(client: QueryClient, id: number) {
 	client.setQueriesData<TaskResponse>({queryKey: taskKeys.details}, current =>
 		current ? removeTask([current], id).map(normalizeTask)[0] : current,
 	)
+}
+
+// Mirrors the server, which places a task without a stored position above the view's lowest one.
+function positionAboveBoard(board: BoardData, task: TaskResponse): number {
+	const lowest = Math.min(...board.buckets.flatMap(bucket => bucket.tasks.map(item => item.position)))
+	return Number.isFinite(lowest) && lowest > 0 ? lowest / 2 : task.index * 2 ** 16
+}
+
+// Filter buckets are server-decided and a filtered or searched board may not match the task.
+function canPatchBoard(view: ProjectView | undefined, params: TaskFilterParams | undefined): view is ProjectView {
+	return view !== undefined
+		&& view.bucket_configuration_mode !== 'filter'
+		&& !params?.filter
+		&& !params?.q
+}
+
+// Like the server, a done task goes to the done bucket even when another bucket was requested.
+function targetBucketId(view: ProjectView, board: BoardData, task: TaskResponse): number | undefined {
+	if (task.done && view.done_bucket_id) return view.done_bucket_id
+	// The response only echoes the requested bucket, which belongs to the one view it was requested for.
+	if (board.buckets.some(bucket => bucket.id === task.bucket_id)) return task.bucket_id
+	return getDefaultBucketId(view, board.buckets)
+}
+
+export function insertTaskIntoBoards(client: QueryClient, created: Task) {
+	const task = normalizeTask(created)
+	const unpatchable: QueryKey[] = []
+	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
+		const project = kanbanKeys.projectOf(key)
+		const viewId = kanbanKeys.viewOf(key)
+		if (!board || project === undefined || project !== task.project_id || viewId === undefined) continue
+		const view = getCachedProject(project, client)?.views?.find(item => item.id === viewId)
+		if (!canPatchBoard(view, kanbanKeys.paramsOf(key))) {
+			unpatchable.push(key)
+			continue
+		}
+		const target = targetBucketId(view, board, task)
+		if (target === undefined) continue
+		// A card left over from another tab would otherwise show twice.
+		const deduped = removeFromBoard(board, task.id, dropMembership) ?? board
+		const position = task.positions?.find(item => item.project_view_id === viewId)?.position
+			?? (task.position || positionAboveBoard(deduped, task))
+		client.setQueryData(key, {
+			...deduped,
+			buckets: deduped.buckets.map(bucket => bucket.id === target
+				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target, position}, ...bucket.tasks]}
+				: bucket),
+		})
+	}
+	for (const queryKey of unpatchable) {
+		void client.invalidateQueries({
+			queryKey,
+			exact: true,
+			refetchType: 'active',
+		})
+	}
 }
 
 export async function invalidateTaskMembership(

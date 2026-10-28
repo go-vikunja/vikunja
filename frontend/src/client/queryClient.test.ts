@@ -2,6 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {CancelledError} from '@tanstack/vue-query'
 
 import {queryClient} from './queryClient'
+import {ApiError} from '@/client/problem'
 import {error} from '@/message'
 
 vi.mock('@/message', () => ({error: vi.fn()}))
@@ -63,5 +64,86 @@ describe('queryClient', () => {
 		})).rejects.toBe(cause)
 
 		expect(error).not.toHaveBeenCalled()
+	})
+
+	it('lets a query handle only the failures its predicate matches', async () => {
+		const handled = {
+			status: 404,
+			detail: 'gone',
+		}
+		const unhandled = {
+			status: 500,
+			detail: 'boom',
+		}
+		const meta = {handlesError: (cause: unknown) => cause === handled}
+
+		for (const cause of [handled, unhandled]) {
+			await expect(queryClient.fetchQuery({
+				queryKey: ['predicate', cause.status],
+				queryFn: async () => {
+					throw cause
+				},
+				retry: false,
+				meta,
+			})).rejects.toBe(cause)
+		}
+
+		expect(error).toHaveBeenCalledExactlyOnceWith(unhandled)
+	})
+
+	it('reports an in-trash failure of a query that does not handle it', async () => {
+		const cause = new ApiError({
+			status: 404,
+			code: 4040,
+			detail: 'in trash',
+			details: {
+				id: 1,
+				project_id: 1,
+				deleted_at: '2026-01-01T00:00:00Z',
+				can_restore: true,
+			},
+		})
+
+		await expect(failingQuery(['trashed-task-comments'], cause)).rejects.toBe(cause)
+
+		expect(error).toHaveBeenCalledExactlyOnceWith(cause)
+	})
+
+	it('does not retry a read of a trashed project', async () => {
+		const cause = new ApiError({
+			status: 404,
+			code: 3018,
+			detail: 'in trash',
+			details: {
+				id: 1,
+				deleted_at: '2026-01-01T00:00:00Z',
+				can_restore: true,
+			},
+		})
+		const queryFn = vi.fn(async () => {
+			throw cause
+		})
+
+		await expect(queryClient.fetchQuery({queryKey: ['trashed'], queryFn})).rejects.toBe(cause)
+
+		expect(queryFn).toHaveBeenCalledOnce()
+	})
+
+	it('retries an ordinary failed read once', async () => {
+		const cause = {
+			status: 500,
+			detail: 'boom',
+		}
+		const queryFn = vi.fn(async () => {
+			throw cause
+		})
+
+		await expect(queryClient.fetchQuery({
+			queryKey: ['flaky'],
+			queryFn,
+			retryDelay: 0,
+		})).rejects.toBe(cause)
+
+		expect(queryFn).toHaveBeenCalledTimes(2)
 	})
 })
