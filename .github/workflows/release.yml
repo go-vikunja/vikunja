@@ -499,7 +499,10 @@ jobs:
           files: "desktop/dist/Vikunja*"
           target-path: /desktop/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
           strip-path-prefix: desktop/dist/
-          exclude: "desktop/dist/*.blockmap"
+          # The .msix is unsigned until the Store signs it, so it can't be installed from a download.
+          exclude: |
+            desktop/dist/*.blockmap
+            desktop/dist/*.msix
       - name: Store Desktop Package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -507,6 +510,7 @@ jobs:
           path: |
             ./desktop/dist/Vikunja*
             !./desktop/dist/*.blockmap
+            !./desktop/dist/*.msix
 
   generate-swagger-and-yaegi:
     runs-on: ubuntu-latest
