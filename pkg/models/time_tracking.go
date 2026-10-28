@@ -48,6 +48,8 @@ type TimeEntry struct {
 
 	Comment string `xorm:"text null" json:"comment" doc:"An optional comment describing the logged time."`
 
+	InTrash bool `xorm:"-" json:"in_trash" readOnly:"true" doc:"Whether the entry's task is in the trash. Such entries are read-only."`
+
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this time entry was created. You cannot change this value."`
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this time entry was last updated. You cannot change this value."`
 
@@ -172,6 +174,29 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) 
 	return running, nil
 }
 
+// Stops every user's running timer on the task, not just the doer's.
+func stopRunningTimersOnTrashedTask(s *xorm.Session, taskID int64, doer *user.User) error {
+	running := []*TimeEntry{}
+	if err := s.Where("task_id = ? AND end_time IS NULL", taskID).Find(&running); err != nil {
+		return err
+	}
+	// the websocket listener routes the event by entry.User
+	if err := addUsersToTimeEntries(s, running); err != nil {
+		return err
+	}
+	for _, entry := range running {
+		if err := entry.stop(s); err != nil {
+			return err
+		}
+		entry.InTrash = true
+		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{
+			TimeEntry: entry,
+			Doer:      doer,
+		})
+	}
+	return nil
+}
+
 // StopRunningTimer stops the authenticated user's active timer and returns it,
 // or ErrNoRunningTimer when none is running. The stop time is the server's now.
 func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {
@@ -248,6 +273,9 @@ func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 	}
 
 	if err = addUsersToTimeEntries(s, entries); err != nil {
+		return nil, 0, 0, err
+	}
+	if err = markTimeEntriesInTrash(s, entries); err != nil {
 		return nil, 0, 0, err
 	}
 	return entries, len(entries), total, nil
@@ -366,11 +394,19 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 
 	switch {
 	case entry.TaskID != 0:
-		task, err := GetTaskByIDSimple(s, entry.TaskID)
+		task := &Task{}
+		has, err := s.Unscoped().Where("id = ?", entry.TaskID).Get(task)
 		if err != nil {
 			return entry, false, -1, err
 		}
-		can, maxPerm, err := task.CanRead(s, a)
+		if !has {
+			return entry, false, -1, ErrTaskDoesNotExist{ID: entry.TaskID}
+		}
+		entry.InTrash = !task.DeletedAt.IsZero()
+		can, maxPerm, err := (&Project{ID: task.ProjectID}).CanRead(s, a)
+		if entry.InTrash {
+			maxPerm = int(PermissionRead)
+		}
 		return entry, can, maxPerm, err
 	case entry.ProjectID != 0:
 		project, _, err := getProjectSimple(s, builder.Eq{"id": entry.ProjectID})
@@ -429,7 +465,7 @@ func (te *TimeEntry) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	_, can, _, err := te.canDoTimeEntry(s, a, false)
+	_, can, err := te.canDoLiveTimeEntry(s, a, false)
 	return can, err
 }
 
@@ -448,6 +484,9 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if existing.UserID != a.GetID() {
 		return false, nil
 	}
+	if err = markTimeEntriesInTrash(s, []*TimeEntry{existing}); err != nil || existing.InTrash {
+		return false, err
+	}
 
 	// A request that omits the container keeps the existing one — an entry
 	// always has exactly one, so "clearing" it is never valid.
@@ -459,8 +498,8 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	_, canReadContainer, _, err := te.canDoTimeEntry(s, a, false)
-	return canReadContainer, err
+	_, can, err := te.canDoLiveTimeEntry(s, a, false)
+	return can, err
 }
 
 func (te *TimeEntry) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
@@ -473,14 +512,49 @@ func (te *TimeEntry) canModify(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	entry, canRead, _, err := te.canDoTimeEntry(s, a, true)
-	if err != nil {
+	entry, can, err := te.canDoLiveTimeEntry(s, a, true)
+	if err != nil || !can {
 		return false, err
 	}
-	if !canRead {
-		return false, nil
-	}
 	return entry.UserID == a.GetID(), nil
+}
+
+// Entries of trashed tasks are read-only.
+func (te *TimeEntry) canDoLiveTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*TimeEntry, bool, error) {
+	entry, can, _, err := te.canDoTimeEntry(s, a, fetch)
+	if err != nil {
+		return nil, false, err
+	}
+	return entry, can && !entry.InTrash, nil
+}
+
+func markTimeEntriesInTrash(s *xorm.Session, entries []*TimeEntry) error {
+	taskIDs := []int64{}
+	for _, e := range entries {
+		if e.TaskID != 0 {
+			taskIDs = append(taskIDs, e.TaskID)
+		}
+	}
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	trashedIDs := []int64{}
+	err := s.Table("tasks").
+		Cols("id").
+		Where(builder.And(builder.In("id", taskIDs), builder.NotNull{"deleted_at"})).
+		Find(&trashedIDs)
+	if err != nil {
+		return err
+	}
+	trashed := make(map[int64]bool, len(trashedIDs))
+	for _, id := range trashedIDs {
+		trashed[id] = true
+	}
+	for _, e := range entries {
+		e.InTrash = trashed[e.TaskID]
+	}
+	return nil
 }
 
 // addTimeEntriesCountToTasks attaches each task's time-entry count for the

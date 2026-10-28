@@ -71,6 +71,7 @@ func translateDomainError(err error) error {
 		if vm, ok := se.(*vikunjaErrorModel); ok {
 			vm.Code = details.Code
 			vm.I18nParams = details.I18nParams
+			vm.Details = details.Details
 		}
 		return se
 	}
@@ -116,6 +117,7 @@ type vikunjaErrorModel struct {
 	huma.ErrorModel
 	Code       int               `json:"code,omitempty" readOnly:"true" doc:"Vikunja numeric error code; see https://vikunja.io/docs/errors/"`
 	I18nParams map[string]string `json:"i18n_params,omitempty" readOnly:"true" doc:"Dynamic values referenced by the error message, keyed by translation placeholder name, for client-side localisation."`
+	Details    any               `json:"details,omitempty" readOnly:"true" doc:"Error-specific data; its shape depends on code."`
 }
 
 // Huma skips its default error response once an operation declares any response; declaring 307 would drop the error schema.

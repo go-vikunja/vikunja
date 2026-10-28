@@ -35,7 +35,7 @@ func (ta *TaskAttachment) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanCreate checks if the user can create an attachment
 func (ta *TaskAttachment) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	t, err := GetTaskByIDSimple(s, ta.TaskID)
+	t, err := getTaskByIDForAuth(s, a, ta.TaskID)
 	if err != nil {
 		return false, err
 	}

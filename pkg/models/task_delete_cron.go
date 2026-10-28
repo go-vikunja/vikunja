@@ -17,10 +17,12 @@
 package models
 
 import (
+	"context"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
 	"xorm.io/builder"
@@ -66,8 +68,9 @@ func deleteExpiredTasks(now time.Time) {
 		func() {
 			ts := db.NewSession()
 			defer ts.Close()
+			defer events.CleanupPending(ts)
 
-			err = hardDeleteTask(ts, task)
+			err = purgeTrashedTask(ts, task, nil)
 			if err != nil {
 				_ = ts.Rollback()
 				log.Errorf("Could not permanently delete task %d: %s", task.ID, err)
@@ -79,7 +82,9 @@ func deleteExpiredTasks(now time.Time) {
 			err = ts.Commit()
 			if err != nil {
 				log.Errorf("Could not commit transaction: %s", err)
+				return
 			}
+			events.DispatchPending(context.Background(), ts)
 		}()
 	}
 }

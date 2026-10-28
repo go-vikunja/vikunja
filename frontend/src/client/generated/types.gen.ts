@@ -1390,6 +1390,18 @@ export type PaginatedToken = {
     total_pages?: number;
 };
 
+export type PaginatedTrashedTask = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    items?: Array<TrashedTask> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedUser = {
     /**
      * A URL to the JSON Schema for this object.
@@ -2140,6 +2152,10 @@ export type Task = {
      * When this task was soft-deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
      */
     readonly deleted_at?: string;
+    /**
+     * The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded.
+     */
+    readonly deleted_by?: User;
     description?: string;
     done?: boolean;
     /**
@@ -2477,6 +2493,10 @@ export type TaskReadOneBody = {
      * When this task was soft-deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
      */
     readonly deleted_at?: string;
+    /**
+     * The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded.
+     */
+    readonly deleted_by?: User;
     description?: string;
     done?: boolean;
     /**
@@ -2835,6 +2855,10 @@ export type TimeEntry = {
      */
     readonly id?: number;
     /**
+     * Whether the entry's task is in the trash. Such entries are read-only.
+     */
+    readonly in_trash?: boolean;
+    /**
      * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
      */
     project_id?: number;
@@ -2877,6 +2901,10 @@ export type TimeEntryReadBody = {
      * The unique, numeric id of this time entry.
      */
     readonly id?: number;
+    /**
+     * Whether the entry's task is in the trash. Such entries are read-only.
+     */
+    readonly in_trash?: boolean;
     /**
      * The maximum permission the requesting user has on this time entry (0=read, 1=read/write, 2=admin).
      */
@@ -3017,6 +3045,148 @@ export type TotpEnrollBodyBody = {
      * The current user's password, required to enroll into totp.
      */
     password?: string;
+};
+
+export type TrashedTask = {
+    /**
+     * The users assigned to this task. Read-only here; use the task-assignee endpoints to change assignments.
+     */
+    readonly assignees?: Array<User> | null;
+    /**
+     * The task's attachments. Read-only here; use the attachment endpoints to add or remove them.
+     */
+    readonly attachments?: Array<TaskAttachment> | null;
+    /**
+     * The bucket the task is in. Only populated when the task is accessed via a view with buckets. To move a task between buckets, the new bucket must be in the same view as the old one.
+     */
+    bucket_id?: number;
+    /**
+     * The task's buckets across all views. Only present when requested via the buckets expand option.
+     */
+    readonly buckets?: Array<Bucket> | null;
+    /**
+     * Whether the requesting user may permanently delete this task, which needs admin access to its project. Write access is enough to see and restore it.
+     */
+    readonly can_delete_permanently?: boolean;
+    /**
+     * The number of comments on this task. Only present when requested via the comment_count expand option.
+     */
+    readonly comment_count?: number;
+    /**
+     * The task's first 50 comments. Only present when requested via the comments expand option.
+     */
+    readonly comments?: Array<TaskComment> | null;
+    /**
+     * The id of the attachment used as this task's cover image, or 0 for none.
+     */
+    cover_image_attachment_id?: number;
+    /**
+     * When this task was created. Set by the server; ignored on write.
+     */
+    readonly created?: string;
+    /**
+     * The user who created this task. Set by the server.
+     */
+    readonly created_by?: User;
+    /**
+     * When this task was soft-deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
+     */
+    readonly deleted_at?: string;
+    /**
+     * The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded.
+     */
+    readonly deleted_by?: User;
+    description?: string;
+    done?: boolean;
+    /**
+     * When the task was marked as done. Set by the server; ignored on write.
+     */
+    readonly done_at?: string;
+    due_date?: string;
+    end_date?: string;
+    /**
+     * The task color as a hex string without the leading '#'.
+     */
+    hex_color?: string;
+    /**
+     * The unique, numeric id of this task.
+     */
+    readonly id?: number;
+    /**
+     * The textual task identifier, derived from the project identifier and the task index (e.g. "PROJ-12").
+     */
+    readonly identifier?: string;
+    /**
+     * The per-project task index, assigned by the server.
+     */
+    readonly index?: number;
+    /**
+     * Whether the requesting user has favorited this task. Per-user, so it differs between callers.
+     */
+    is_favorite?: boolean;
+    /**
+     * Whether the task is unread for the requesting user. Only present when requested via the is_unread expand option.
+     */
+    readonly is_unread?: boolean;
+    /**
+     * The labels on this task. Read-only here; use the label-task endpoints to add or remove labels.
+     */
+    readonly labels?: Array<Label> | null;
+    /**
+     * How far the task is from done, between 0 and 1.
+     */
+    percent_done?: number;
+    /**
+     * The task's position, saved per view. Only non-zero when the task is fetched through a view endpoint; use the task-position endpoint to change it.
+     */
+    readonly position?: number;
+    /**
+     * The task's stored position in each view of its project. Only present in create and duplicate responses.
+     */
+    readonly positions?: Array<TaskPosition> | null;
+    priority?: number;
+    /**
+     * The id of the project this task belongs to. On create it is taken from the URL; on update, setting it to a different project moves the task (requires write access to the target project).
+     */
+    project_id?: number;
+    /**
+     * Reactions on this task. Only present when requested via the reactions expand option.
+     */
+    readonly reactions?: {
+        [key: string]: Array<User> | null;
+    };
+    /**
+     * Related tasks grouped by relation kind. Read-only here; use the task-relation endpoints to change relations.
+     */
+    readonly related_tasks?: {
+        [key: string]: Array<Task> | null;
+    };
+    reminders?: Array<TaskReminder> | null;
+    /**
+     * The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount.
+     */
+    repeat_after?: number;
+    /**
+     * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
+     */
+    repeat_mode?: number;
+    start_date?: string;
+    /**
+     * The requesting user's subscription to this task. Read-only here; use the subscription endpoints to change it. Only present when reading a single task.
+     */
+    readonly subscription?: Subscription;
+    /**
+     * The number of time entries on this task. Only present when requested via the time_entries_count expand option.
+     */
+    readonly time_entries_count?: number;
+    /**
+     * The task title. This is what you'll see in the project.
+     */
+    title?: string;
+    /**
+     * When this task was last updated. Set by the server; ignored on write.
+     */
+    readonly updated?: string;
 };
 
 export type User = {
@@ -3377,6 +3547,10 @@ export type VikunjaErrorModel = {
      * A human-readable explanation specific to this occurrence of the problem.
      */
     detail?: string;
+    /**
+     * Error-specific data; its shape depends on code.
+     */
+    readonly details?: unknown;
     /**
      * Optional list of individual error details
      */
@@ -4188,6 +4362,14 @@ export type PaginatedTokenWritable = {
     total_pages?: number;
 };
 
+export type PaginatedTrashedTaskWritable = {
+    items?: Array<TrashedTaskWritable> | null;
+    page?: number;
+    per_page?: number;
+    total?: number;
+    total_pages?: number;
+};
+
 export type PaginatedUserWritable = {
     items?: Array<UserWritable> | null;
     page?: number;
@@ -4797,6 +4979,52 @@ export type TotpEnrollBodyBodyWritable = {
      * The current user's password, required to enroll into totp.
      */
     password?: string;
+};
+
+export type TrashedTaskWritable = {
+    /**
+     * The bucket the task is in. Only populated when the task is accessed via a view with buckets. To move a task between buckets, the new bucket must be in the same view as the old one.
+     */
+    bucket_id?: number;
+    /**
+     * The id of the attachment used as this task's cover image, or 0 for none.
+     */
+    cover_image_attachment_id?: number;
+    description?: string;
+    done?: boolean;
+    due_date?: string;
+    end_date?: string;
+    /**
+     * The task color as a hex string without the leading '#'.
+     */
+    hex_color?: string;
+    /**
+     * Whether the requesting user has favorited this task. Per-user, so it differs between callers.
+     */
+    is_favorite?: boolean;
+    /**
+     * How far the task is from done, between 0 and 1.
+     */
+    percent_done?: number;
+    priority?: number;
+    /**
+     * The id of the project this task belongs to. On create it is taken from the URL; on update, setting it to a different project moves the task (requires write access to the target project).
+     */
+    project_id?: number;
+    reminders?: Array<TaskReminder> | null;
+    /**
+     * The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount.
+     */
+    repeat_after?: number;
+    /**
+     * How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date.
+     */
+    repeat_mode?: number;
+    start_date?: string;
+    /**
+     * The task title. This is what you'll see in the project.
+     */
+    title?: string;
 };
 
 export type UserWritable = {
@@ -8904,6 +9132,69 @@ export type TasksBulkUpdateResponses = {
 
 export type TasksBulkUpdateResponse = TasksBulkUpdateResponses[keyof TasksBulkUpdateResponses];
 
+export type TasksTrashEmptyData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/tasks/deleted';
+};
+
+export type TasksTrashEmptyErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksTrashEmptyError = TasksTrashEmptyErrors[keyof TasksTrashEmptyErrors];
+
+export type TasksTrashEmptyResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type TasksTrashEmptyResponse = TasksTrashEmptyResponses[keyof TasksTrashEmptyResponses];
+
+export type TasksTrashListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number.
+         */
+        page?: number;
+        /**
+         * Items per page. Defaults to the instance's configured maximum (service.maxitemsperpage, reported as max_items_per_page by /info) and is silently capped at it; asking for more is not an error.
+         */
+        per_page?: number;
+        /**
+         * How rich-text fields are exchanged. See the API description.
+         */
+        format?: 'html' | 'markdown';
+    };
+    url: '/tasks/deleted';
+};
+
+export type TasksTrashListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksTrashListError = TasksTrashListErrors[keyof TasksTrashListErrors];
+
+export type TasksTrashListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedTrashedTask;
+};
+
+export type TasksTrashListResponse = TasksTrashListResponses[keyof TasksTrashListResponses];
+
 export type TaskTimeEntriesListData = {
     body?: never;
     path: {
@@ -9770,6 +10061,36 @@ export type TaskLabelsDeleteResponses = {
 
 export type TaskLabelsDeleteResponse = TaskLabelsDeleteResponses[keyof TaskLabelsDeleteResponses];
 
+export type TasksDeletePermanentlyData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/permanent';
+};
+
+export type TasksDeletePermanentlyErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksDeletePermanentlyError = TasksDeletePermanentlyErrors[keyof TasksDeletePermanentlyErrors];
+
+export type TasksDeletePermanentlyResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type TasksDeletePermanentlyResponse = TasksDeletePermanentlyResponses[keyof TasksDeletePermanentlyResponses];
+
 export type TasksPositionUpdateData = {
     body: TaskPositionWritable;
     path: {
@@ -9897,6 +10218,41 @@ export type TasksRelationsDeleteResponses = {
 };
 
 export type TasksRelationsDeleteResponse = TasksRelationsDeleteResponses[keyof TasksRelationsDeleteResponses];
+
+export type TasksRestoreData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric id of the task.
+         */
+        task: number;
+    };
+    query?: {
+        /**
+         * How rich-text fields are exchanged. See the API description.
+         */
+        format?: 'html' | 'markdown';
+    };
+    url: '/tasks/{task}/restore';
+};
+
+export type TasksRestoreErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TasksRestoreError = TasksRestoreErrors[keyof TasksRestoreErrors];
+
+export type TasksRestoreResponses = {
+    /**
+     * OK
+     */
+    200: Task;
+};
+
+export type TasksRestoreResponse = TasksRestoreResponses[keyof TasksRestoreResponses];
 
 export type TeamsListData = {
     body?: never;
