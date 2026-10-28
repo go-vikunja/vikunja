@@ -599,6 +599,104 @@ func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectIsInTrash is returned instead of ErrProjectDoesNotExist to callers who could reach the trashed project.
+type ErrProjectIsInTrash struct {
+	ID         int64      `json:"id"`
+	DeletedAt  time.Time  `json:"deleted_at"`
+	DeletedBy  *user.User `json:"deleted_by,omitempty"`
+	CanRestore bool       `json:"can_restore"`
+	// The topmost trashed ancestor, which has to be restored instead.
+	TrashedRootID  int64 `json:"trashed_root_id,omitempty"`
+	CanRestoreRoot bool  `json:"can_restore_root"`
+}
+
+// IsErrProjectIsInTrash checks if an error is ErrProjectIsInTrash.
+func IsErrProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrProjectIsInTrash)
+	return ok
+}
+
+func (err ErrProjectIsInTrash) Error() string {
+	return fmt.Sprintf("The project is in the trash. [ID: %d]", err.ID)
+}
+
+// ErrCodeProjectIsInTrash holds the unique world-error code of this error
+const ErrCodeProjectIsInTrash = 3018
+
+// HTTPError holds the http error description
+func (err ErrProjectIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectIsInTrash,
+		Message:  "This project is in the trash. Restore it first.",
+		Details:  err,
+	}
+}
+
+// ErrParentProjectIsInTrash is returned when restoring a project whose parent is still in the trash.
+type ErrParentProjectIsInTrash struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectIsInTrash checks if an error is ErrParentProjectIsInTrash.
+func IsErrParentProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrParentProjectIsInTrash)
+	return ok
+}
+
+func (err ErrParentProjectIsInTrash) Error() string {
+	return fmt.Sprintf(
+		"Parent project is in the trash [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
+}
+
+// ErrCodeParentProjectIsInTrash holds the unique world-error code of this error
+const ErrCodeParentProjectIsInTrash = 3019
+
+// HTTPError holds the http error description
+func (err ErrParentProjectIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectIsInTrash,
+		Message:  "The parent project is in the trash. Restore it first.",
+	}
+}
+
+// ErrParentProjectDoesNotExist is returned when restoring a project whose parent row is gone.
+type ErrParentProjectDoesNotExist struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectDoesNotExist checks if an error is ErrParentProjectDoesNotExist.
+func IsErrParentProjectDoesNotExist(err error) bool {
+	_, ok := err.(ErrParentProjectDoesNotExist)
+	return ok
+}
+
+func (err ErrParentProjectDoesNotExist) Error() string {
+	return fmt.Sprintf(
+		"Parent project does not exist [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
+}
+
+// ErrCodeParentProjectDoesNotExist holds the unique world-error code of this error
+const ErrCodeParentProjectDoesNotExist = 3020
+
+// HTTPError holds the http error description
+func (err ErrParentProjectDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectDoesNotExist,
+		Message:  "The parent project does not exist anymore.",
+	}
+}
+
 // ErrParentProjectIsArchived represents an error, where a project's parent is archived
 type ErrParentProjectIsArchived struct {
 	ProjectID       int64
@@ -795,10 +893,11 @@ func (err ErrTaskDoesNotExist) HTTPError() web.HTTPError {
 
 // ErrTaskIsInTrash is returned instead of ErrTaskDoesNotExist to callers who can read the trashed task's project.
 type ErrTaskIsInTrash struct {
-	ID        int64      `json:"-"`
-	ProjectID int64      `json:"project_id"`
-	DeletedAt time.Time  `json:"deleted_at"`
-	DeletedBy *user.User `json:"deleted_by,omitempty"`
+	ID         int64      `json:"id"`
+	ProjectID  int64      `json:"project_id"`
+	DeletedAt  time.Time  `json:"deleted_at"`
+	DeletedBy  *user.User `json:"deleted_by,omitempty"`
+	CanRestore bool       `json:"can_restore"`
 }
 
 // IsErrTaskIsInTrash checks if an error is a ErrTaskIsInTrash.

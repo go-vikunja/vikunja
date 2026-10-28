@@ -39,6 +39,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -363,6 +364,7 @@ func checkProjectBackgroundWritePermissions(s *xorm.Session, c *echo.Context) (p
 		return nil, auth, echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
 
+	project, err = models.GetProjectSimpleByID(s, projectID)
 	return
 }
 
@@ -447,6 +449,7 @@ func LoadProjectBackgroundForDownload(s *xorm.Session, project *models.Project) 
 func RemoveProjectBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	project, _, err := checkProjectBackgroundWritePermissions(s, c)
 	if err != nil {
@@ -454,13 +457,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	err = project.DeleteBackgroundFileIfExists(s)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	err = models.ClearProjectBackground(s, project.ID)
+	err = project.RemoveBackground(s)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -469,6 +466,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 	if err := s.Commit(); err != nil {
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
 	return c.JSON(http.StatusOK, project)
 }

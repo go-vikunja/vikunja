@@ -100,6 +100,9 @@ func TestTimeEntry_CanCreate(t *testing.T) {
 		{"both task and project is invalid", &TimeEntry{TaskID: 1, ProjectID: 1}, &user.User{ID: 1}, false, IsErrTimeEntryInvalidContainer},
 		{"without task or project", &TimeEntry{}, &user.User{ID: 1}, true, nil},
 		{"link share denied", &TimeEntry{ProjectID: 1}, &LinkSharing{ID: 1, ProjectID: 1}, false, nil},
+		{"favorites pseudo project is rejected", &TimeEntry{ProjectID: FavoritesPseudoProjectID}, &user.User{ID: 1}, false, IsErrProjectDoesNotExist},
+		// Saved filter 1 is owned by user1.
+		{"saved filter pseudo project is rejected", &TimeEntry{ProjectID: -2}, &user.User{ID: 1}, false, IsErrProjectDoesNotExist},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -902,6 +905,39 @@ func TestTimeEntry_TaskCount(t *testing.T) {
 	})
 }
 
+func TestTimeEntry_PseudoProject(t *testing.T) {
+	t.Run("moving an entry onto favorites is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := (&TimeEntry{
+			ID:        2,
+			ProjectID: FavoritesPseudoProjectID,
+		}).CanUpdate(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err), "unexpected error type: %v", err)
+	})
+	t.Run("a stored entry on favorites is not readable by another user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    1,
+			ProjectID: FavoritesPseudoProjectID,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+
+		can, _, err := (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 2})
+		assert.False(t, can)
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err), "unexpected error type: %v", err)
+	})
+}
+
 // Task 51 is soft-deleted in the fixtures and lives in project 1.
 func TestTimeEntry_TrashedTask(t *testing.T) {
 	setup := func(t *testing.T) *TimeEntry {
@@ -934,7 +970,7 @@ func TestTimeEntry_TrashedTask(t *testing.T) {
 		assert.True(t, inTrash[entry.ID])
 		assert.False(t, inTrash[1])
 	})
-	t.Run("readable by project readers only", func(t *testing.T) {
+	t.Run("readable by project readers", func(t *testing.T) {
 		entry := setup(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -948,6 +984,28 @@ func TestTimeEntry_TrashedTask(t *testing.T) {
 		can, _, err = (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 2})
 		require.NoError(t, err)
 		assert.False(t, can)
+	})
+	t.Run("hidden from its author without access to the live project", func(t *testing.T) {
+		setup(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    2,
+			TaskID:    51,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+		u2 := &user.User{ID: 2}
+
+		can, _, err := (&TimeEntry{ID: entry.ID}).CanRead(s, u2)
+		require.NoError(t, err)
+		assert.False(t, can)
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, u2, "", 1, 50)
+		require.NoError(t, err)
+		assert.NotContains(t, timeEntryIDs(t, result), entry.ID)
 	})
 	t.Run("read-only", func(t *testing.T) {
 		entry := setup(t)

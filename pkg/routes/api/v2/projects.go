@@ -76,7 +76,7 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-delete",
 		Summary:     "Delete a project",
-		Description: "Deletes a project together with its tasks, views, buckets and child projects. Only project admins may delete it.",
+		Description: "Moves a project and all its sub-projects to the trash. Only project admins may delete it. It can be restored for 30 days before it is deleted permanently with its tasks, views and buckets.",
 		Method:      http.MethodDelete,
 		Path:        "/projects/{id}",
 		Tags:        tags,

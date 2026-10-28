@@ -102,6 +102,14 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 		return nil, err
 	}
 
+	// getAllProjectsForUser skips the trash.
+	trashed := []*Project{}
+	err = s.Unscoped().Where(builder.And(builder.Eq{"owner_id": u.ID}, builder.NotNull{"deleted_at"})).Find(&trashed)
+	if err != nil {
+		return nil, err
+	}
+	projects = append(projects, trashed...)
+
 	for _, l := range projects {
 		if l.ID < 0 || l.OwnerID != u.ID {
 			continue
@@ -151,13 +159,10 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 
 	for _, p := range projectsToDelete {
 		if p.parentID() != 0 {
-			// Child projects are deleted by p.Delete
+			// Child projects are deleted with their parent
 			continue
 		}
-		err = p.Delete(s, u)
-		// If the user is the owner of the default project it will be deleted, if they are not the owner
-		// we can ignore the error as the project was shared in that case.
-		if err != nil && !IsErrCannotDeleteDefaultProject(err) {
+		if err = hardDeleteProject(s, p, nil); err != nil {
 			return err
 		}
 	}
@@ -274,7 +279,8 @@ func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err err
 		return true, err
 	}
 
-	_, err = s.Where("id = ?", l.ID).
+	_, err = s.Unscoped().
+		Where("id = ?", l.ID).
 		Cols("owner_id").
 		Update(&Project{OwnerID: firstUser.UserID})
 	if err != nil {

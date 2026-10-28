@@ -445,6 +445,7 @@ var userDeleteCmd = &cobra.Command{
 
 		s := db.NewSession()
 		defer s.Close()
+		defer events.CleanupPending(s)
 
 		u := getUserFromArg(s, args[0])
 

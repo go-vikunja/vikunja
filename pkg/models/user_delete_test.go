@@ -56,6 +56,77 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 10}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 11}, false)
 	})
+	t.Run("purges the user's trashed projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		_, err := s.Table("projects").In("id", []int64{
+			45,
+			46,
+		}).Update(map[string]any{"owner_id": 6})
+		require.NoError(t, err)
+
+		events.ClearDispatchedEvents()
+		require.NoError(t, DeleteUser(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+		doers := purgedProjectDoers(t)
+		assert.Contains(t, doers, int64(45))
+		assert.Contains(t, doers, int64(46))
+		assert.Nil(t, doers[45], "the system purges")
+	})
+	t.Run("hands a shared trashed project over", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		_, err := s.Table("projects").In("id", []int64{
+			45,
+			46,
+		}).Update(map[string]any{"owner_id": 6})
+		require.NoError(t, err)
+		_, err = s.Insert(&ProjectUser{
+			ProjectID:  45,
+			UserID:     4,
+			Permission: PermissionRead,
+		})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":       45,
+			"owner_id": 4,
+		}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 46}, false)
+		db.AssertExists(t, "users_projects", map[string]interface{}{
+			"project_id": 45,
+			"user_id":    4,
+			"permission": PermissionAdmin,
+		}, false)
+	})
+	t.Run("keeps a trashed sub-project under someone else's trashed parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		_, err := s.Table("projects").Where("id = ?", 46).Update(map[string]any{"owner_id": 6})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 46}, false)
+	})
 	t.Run("user with no projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

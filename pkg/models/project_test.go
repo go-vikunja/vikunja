@@ -17,10 +17,12 @@
 package models
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 
@@ -631,17 +633,104 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 }
 
 func TestProject_Delete(t *testing.T) {
-	t.Run("normal", func(t *testing.T) {
+	t.Run("moves the project and its sub-projects to the trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project hierarchy: 27 -> 12 -> 25 -> 26 (all owned by user 6)
+		require.NoError(t, (&Project{ID: 12}).Delete(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+		events.AssertDispatched(t, &ProjectDeletedEvent{})
+
+		for _, id := range []int64{
+			12,
+			25,
+			26,
+		} {
+			db.AssertExists(t, "projects", map[string]interface{}{
+				"id":            id,
+				"deleted_by_id": 6,
+			}, false)
+			db.AssertMissing(t, "projects", map[string]interface{}{
+				"id":         id,
+				"deleted_at": nil,
+			})
+		}
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":         27,
+			"deleted_at": nil,
+		}, false)
+		// Kept for the restore
+		db.AssertExists(t, "project_ancestors", map[string]interface{}{
+			"project_id":  26,
+			"ancestor_id": 12,
+		}, false)
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		_, err := GetProjectSimpleByID(s2, 12)
+		assert.True(t, IsErrProjectDoesNotExist(err))
+	})
+	t.Run("keeps tasks and the project's data", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, (&Project{ID: 1}).Delete(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         1,
+			"deleted_at": nil,
+		}, false)
+		db.AssertExists(t, "project_views", map[string]interface{}{"project_id": 1}, false)
+		db.AssertExists(t, "project_task_counters", map[string]interface{}{"project_id": 1}, false)
+	})
+	t.Run("default project of the same user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 		project := Project{
-			ID: 1,
+			ID: 4,
 		}
-		err := project.Delete(s, &user.User{ID: 1})
+		err := project.Delete(s, &user.User{ID: 3})
 		require.NoError(t, err)
-		err = s.Commit()
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":                 3,
+			"default_project_id": 0,
+		}, false)
+	})
+	t.Run("default project of a different user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		project := Project{
+			ID: 4,
+		}
+		err := project.Delete(s, &user.User{ID: 2})
+		require.Error(t, err)
+		assert.True(t, IsErrCannotDeleteDefaultProject(err))
+	})
+}
+
+func TestHardDeleteProject(t *testing.T) {
+	hardDelete := func(t *testing.T, s *xorm.Session, id int64) {
+		project := &Project{}
+		has, err := s.Unscoped().ID(id).Get(project)
 		require.NoError(t, err)
+		require.True(t, has)
+		require.NoError(t, hardDeleteProject(s, project, nil))
+		require.NoError(t, s.Commit())
+	}
+
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		hardDelete(t, s, 1)
 		db.AssertMissing(t, "projects", map[string]interface{}{
 			"id": 1,
 		})
@@ -652,6 +741,17 @@ func TestProject_Delete(t *testing.T) {
 		db.AssertMissing(t, "project_task_counters", map[string]interface{}{
 			"project_id": 1,
 		})
+		for _, id := range []int64{
+			1,
+			2,
+			4,
+		} {
+			db.AssertExists(t, "time_entries", map[string]interface{}{
+				"id":         id,
+				"task_id":    0,
+				"project_id": 0,
+			}, false)
+		}
 	})
 	t.Run("removes aliases owned by or targeting the project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -665,8 +765,7 @@ func TestProject_Delete(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		require.NoError(t, (&Project{ID: 1}).Delete(s, &user.User{ID: 1}))
-		require.NoError(t, s.Commit())
+		hardDelete(t, s, 1)
 
 		db.AssertMissing(t, "project_task_counters", map[string]interface{}{"project_id": 1})
 		db.AssertMissing(t, "task_index_aliases", map[string]interface{}{"project_id": 1})
@@ -682,43 +781,13 @@ func TestProject_Delete(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
-		project := Project{
-			ID: 35,
-		}
-		err := project.Delete(s, &user.User{ID: 6})
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		hardDelete(t, s, 35)
 		db.AssertMissing(t, "projects", map[string]interface{}{
 			"id": 35,
 		})
 		db.AssertMissing(t, "files", map[string]interface{}{
 			"id": 1,
 		})
-	})
-	t.Run("default project of the same user", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-		project := Project{
-			ID: 4,
-		}
-		err := project.Delete(s, &user.User{ID: 3})
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 4})
-		db.AssertExists(t, "users", map[string]interface{}{"id": 3, "default_project_id": 0}, false)
-	})
-	t.Run("default project of a different user", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-		project := Project{
-			ID: 4,
-		}
-		err := project.Delete(s, &user.User{ID: 2})
-		require.Error(t, err)
-		assert.True(t, IsErrCannotDeleteDefaultProject(err))
 	})
 	t.Run("deletes archived parent and its child atomically", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -727,11 +796,7 @@ func TestProject_Delete(t *testing.T) {
 
 		// Project 22 is archived (is_archived=1), owned by user 1
 		// Project 21 is a child of 22 (parent_project_id=22)
-		project := Project{ID: 22}
-		err := project.Delete(s, &user.User{ID: 1})
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		hardDelete(t, s, 22)
 
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 22})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 21})
@@ -742,16 +807,35 @@ func TestProject_Delete(t *testing.T) {
 		defer s.Close()
 
 		// Project hierarchy: 27 -> 12 -> 25 -> 26 (all owned by user 6)
-		project := Project{ID: 27}
-		err := project.Delete(s, &user.User{ID: 6})
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		hardDelete(t, s, 27)
 
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 27})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 12})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 25})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 26})
+	})
+	t.Run("trashed project with its trashed child and their time entries", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		hardDelete(t, s, 45)
+
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 53})
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 54})
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         5,
+			"user_id":    3,
+			"task_id":    0,
+			"project_id": 0,
+		}, false)
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         6,
+			"user_id":    3,
+			"task_id":    0,
+			"project_id": 0,
+		}, false)
 	})
 }
 
@@ -770,6 +854,27 @@ func TestProject_DeleteBackgroundFileIfExists(t *testing.T) {
 		require.NoError(t, err)
 		err = project.DeleteBackgroundFileIfExists(s)
 		require.NoError(t, err)
+	})
+	t.Run("removes the unsplash attribution", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		photo := &UnsplashPhoto{
+			FileID:     1,
+			UnsplashID: "test",
+		}
+		require.NoError(t, photo.Save(s))
+		project := Project{
+			ID:               1,
+			BackgroundFileID: 1,
+		}
+		require.NoError(t, project.DeleteBackgroundFileIfExists(s))
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "unsplash_photos", map[string]any{
+			"file_id": 1,
+		})
 	})
 	t.Run("project with invalid background", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -1142,7 +1247,10 @@ func TestProject_ForeignDefaultDoesNotBlockOwner(t *testing.T) {
 		project := Project{ID: 1}
 		require.NoError(t, project.Delete(s, &user.User{ID: 1}))
 		require.NoError(t, s.Commit())
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 1})
+		db.AssertMissing(t, "projects", map[string]interface{}{
+			"id":         1,
+			"deleted_at": nil,
+		})
 		db.AssertExists(t, "users", map[string]interface{}{"id": 2, "default_project_id": 0}, false)
 	})
 }

@@ -65,10 +65,6 @@ func (tl *TeamProject) canDoTeamProject(s *xorm.Session, a web.Auth) (bool, erro
 		return false, nil
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
 	l := Project{ID: tl.ProjectID}
 	return l.IsAdmin(s, a)
 }
