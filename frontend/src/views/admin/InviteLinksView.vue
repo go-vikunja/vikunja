@@ -14,7 +14,7 @@
 		</p>
 		<div
 			v-else
-			class="overflow-x-auto"
+			class="tw:overflow-x-auto"
 		>
 			<table class="table has-actions is-striped is-hoverable is-fullwidth">
 				<thead>
