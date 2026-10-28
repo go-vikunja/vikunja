@@ -35,6 +35,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
+	"github.com/samedi/caldav-go/lib"
 	"xorm.io/xorm"
 )
 
@@ -285,7 +286,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 }
 
 // GetResourcesByFilters fetches a project of resources with a filter
-func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *data.ResourceFilter) ([]data.Resource, error) {
+func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, filter *data.ResourceFilter) ([]data.Resource, error) {
 
 	// If we already have a project saved, that means the user is making a REPORT request to find out if
 	// anything changed, in that case we need to return all tasks.
@@ -300,6 +301,9 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 			}
 			r := data.NewResource(taskURL(vcls.project.ID, &vcls.project.Tasks[i].Task), &rr)
 			r.Name = vcls.project.Tasks[i].Title
+			if !matchesTodoFilter(filter, &r) {
+				continue
+			}
 			resources = append(resources, r)
 		}
 		return resources, nil
@@ -315,6 +319,24 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 	return []data.Resource{r}, nil
 	// For now, filtering is disabled.
 	// return vcls.GetResources(rpath, false)
+}
+
+// caldav-go only evaluates time-range on VEVENTs, so a VTODO query with one would match
+// nothing. Those keep getting every task, the client narrows them down itself.
+func matchesTodoFilter(filter *data.ResourceFilter, r *data.Resource) bool {
+	if filter == nil || filter.GetTimeRangeFilter() != nil {
+		return true
+	}
+	return filter.Match(todoResource{r})
+}
+
+// caldav-go reports every non-collection resource as a VEVENT.
+type todoResource struct {
+	*data.Resource
+}
+
+func (todoResource) ComponentName() string {
+	return lib.VTODO
 }
 
 // WebDAV requires every Depth: 1 child to live under the collection's own URI.
