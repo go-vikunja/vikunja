@@ -735,11 +735,29 @@
             "children": [
                 {
                     "key": "imprinturl",
-                    "default_value": ""
+                    "default_value": "",
+                    "comment": "Deprecated: add a legal.<link key> entry with the text \"Imprint\" instead."
                 },
                 {
                     "key": "privacyurl",
-                    "default_value": ""
+                    "default_value": "",
+                    "comment": "Deprecated: add a legal.<link key> entry with the text \"Privacy Policy\" instead."
+                },
+                {
+                    "key": "<link key>",
+                    "comment": "Any number of legal links. You can freely choose the `<link key>`, links are shown sorted by it, after the deprecated imprinturl and privacyurl.\nVia environment variables: VIKUNJA_LEGAL_<LINK KEY>_TEXT and VIKUNJA_LEGAL_<LINK KEY>_URL.",
+                    "children": [
+                        {
+                            "key": "text",
+                            "default_value": "",
+                            "comment": "The link text."
+                        },
+                        {
+                            "key": "url",
+                            "default_value": "",
+                            "comment": "The link target."
+                        }
+                    ]
                 }
             ]
         },
