@@ -45,3 +45,49 @@ func TestHumaInfo(t *testing.T) {
 	require.Contains(t, body, "concurrent_writes")
 	assert.Equal(t, config.DatabaseType.GetString() != "sqlite", body["concurrent_writes"])
 }
+
+func TestHumaInfoLegalLinks(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	config.LegalImprintURL.Set("https://example.com/imprint")
+	config.LegalPrivacyURL.Set("https://example.com/privacy")
+	config.Key("legal.imprint").Set(map[string]any{
+		"text": "Imprint",
+		"url":  "https://example.com/imprint",
+	})
+	config.Key("legal.terms").Set(map[string]any{
+		"text": "Terms",
+		"url":  "https://example.com/terms",
+	})
+	t.Cleanup(func() {
+		config.LegalImprintURL.Set("")
+		config.LegalPrivacyURL.Set("")
+		config.Key("legal.imprint").Set(nil)
+		config.Key("legal.terms").Set(nil)
+	})
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/info", "", "", "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	legal := body["legal"].(map[string]any)
+
+	assert.Equal(t, "https://example.com/imprint", legal["imprint_url"])
+	assert.Equal(t, "https://example.com/privacy", legal["privacy_policy_url"])
+	// Deprecated urls first, the duplicate imprint entry dropped.
+	assert.Equal(t, []any{
+		map[string]any{
+			"text": "Imprint",
+			"url":  "https://example.com/imprint",
+		},
+		map[string]any{
+			"text": "Privacy Policy",
+			"url":  "https://example.com/privacy",
+		},
+		map[string]any{
+			"text": "Terms",
+			"url":  "https://example.com/terms",
+		},
+	}, legal["links"])
+}

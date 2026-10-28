@@ -883,8 +883,27 @@ export type LdapAuthInfo = {
 };
 
 export type LegalInfo = {
+    /**
+     * Deprecated: use links, which also contains this url.
+     *
+     * @deprecated
+     */
     imprint_url?: string;
+    /**
+     * All legal links, including the deprecated imprint and privacy policy urls.
+     */
+    links?: Array<LegalLink> | null;
+    /**
+     * Deprecated: use links, which also contains this url.
+     *
+     * @deprecated
+     */
     privacy_policy_url?: string;
+};
+
+export type LegalLink = {
+    text?: string;
+    url?: string;
 };
 
 export type LinkShareReadBody = {
