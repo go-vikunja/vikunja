@@ -2859,7 +2859,7 @@ export type TimeEntry = {
      */
     readonly in_trash?: boolean;
     /**
-     * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
+     * The project this entry is attached to directly; 0 means none. At most one of task_id / project_id may be set. Entries without task and project are only visible to their author.
      */
     project_id?: number;
     /**
@@ -2867,7 +2867,7 @@ export type TimeEntry = {
      */
     start_time?: string;
     /**
-     * The task this entry is attached to. Exactly one of task_id / project_id must be set.
+     * The task this entry is attached to; 0 means none. At most one of task_id / project_id may be set. On update, omitting both keeps the current container; sending either replaces it.
      */
     task_id?: number;
     /**
@@ -2910,7 +2910,7 @@ export type TimeEntryReadBody = {
      */
     readonly max_permission?: number;
     /**
-     * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
+     * The project this entry is attached to directly; 0 means none. At most one of task_id / project_id may be set. Entries without task and project are only visible to their author.
      */
     project_id?: number;
     /**
@@ -2918,7 +2918,7 @@ export type TimeEntryReadBody = {
      */
     start_time?: string;
     /**
-     * The task this entry is attached to. Exactly one of task_id / project_id must be set.
+     * The task this entry is attached to; 0 means none. At most one of task_id / project_id may be set. On update, omitting both keeps the current container; sending either replaces it.
      */
     task_id?: number;
     /**
@@ -4900,7 +4900,7 @@ export type TimeEntryWritable = {
      */
     end_time?: string | null;
     /**
-     * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
+     * The project this entry is attached to directly; 0 means none. At most one of task_id / project_id may be set. Entries without task and project are only visible to their author.
      */
     project_id?: number;
     /**
@@ -4908,7 +4908,7 @@ export type TimeEntryWritable = {
      */
     start_time?: string;
     /**
-     * The task this entry is attached to. Exactly one of task_id / project_id must be set.
+     * The task this entry is attached to; 0 means none. At most one of task_id / project_id may be set. On update, omitting both keeps the current container; sending either replaces it.
      */
     task_id?: number;
 };
@@ -4923,7 +4923,7 @@ export type TimeEntryReadBodyWritable = {
      */
     end_time?: string | null;
     /**
-     * The project this entry is attached to directly. Exactly one of task_id / project_id must be set.
+     * The project this entry is attached to directly; 0 means none. At most one of task_id / project_id may be set. Entries without task and project are only visible to their author.
      */
     project_id?: number;
     /**
@@ -4931,7 +4931,7 @@ export type TimeEntryReadBodyWritable = {
      */
     start_time?: string;
     /**
-     * The task this entry is attached to. Exactly one of task_id / project_id must be set.
+     * The task this entry is attached to; 0 means none. At most one of task_id / project_id may be set. On update, omitting both keeps the current container; sending either replaces it.
      */
     task_id?: number;
 };
@@ -10572,7 +10572,7 @@ export type TimeEntriesListData = {
          */
         q?: string;
         /**
-         * Filter entries with the task filter syntax over user_id, task_id, project_id, start_time and end_time — e.g. "project_id = 5 && start_time > now-7d". Use end_time = null to match running timers.
+         * Filter entries with the task filter syntax over user_id, task_id, project_id, start_time and end_time — e.g. "project_id = 5 && start_time > now-7d". Use end_time = null to match running timers, project_id = null for entries without task or project, and task_id = null for entries not on a task.
          */
         filter?: string;
         /**

@@ -32,6 +32,10 @@ export type TimeEntryResponse = Omit<TimeEntry, 'id' | 'user' | 'task_id' | 'pro
 
 export type TimeEntryPage = Paginated<TimeEntryResponse>
 
+export function isPrivateEntry(entry: Pick<TimeEntryResponse, 'task_id' | 'project_id'>): boolean {
+	return entry.task_id === 0 && entry.project_id === 0
+}
+
 export function normalizeTimeEntry(entry: TimeEntry): TimeEntryResponse {
 	return {
 		...entry,

@@ -10,6 +10,12 @@
 			:title="$t('timeTracking.title')"
 		>
 			{{ elapsed }}
+			<span
+				v-if="activeTimer && isPrivateEntry(activeTimer)"
+				class="timer-badge__label"
+			>
+				{{ $t('timeTracking.noProject') }}
+			</span>
 		</RouterLink>
 		<BaseButton
 			v-tooltip="$t('timeTracking.stop')"
@@ -28,7 +34,10 @@ import {ref, computed, onMounted, onUnmounted} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useTimeTracking} from '@/composables/useTimeTracking'
-import {useStopTimerMutation} from '@/client/queries/timeEntries'
+import {
+	isPrivateEntry,
+	useStopTimerMutation,
+} from '@/client/queries/timeEntries'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 const {activeTimer, hasActiveTimer} = useTimeTracking()
@@ -90,6 +99,12 @@ onUnmounted(() => {
 	color: var(--primary);
 	font-variant-numeric: tabular-nums;
 	font-weight: 600;
+}
+
+.timer-badge__label {
+	margin-inline-start: .25rem;
+	color: var(--grey-600);
+	font-weight: normal;
 }
 
 .timer-badge__stop {

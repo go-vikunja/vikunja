@@ -123,6 +123,10 @@ func buildTimeEntryFilterCond(groups []fexpr.ExprGroup, loc *time.Location) (bui
 func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw string, loc *time.Location) (builder.Cond, error) {
 	switch field {
 	case "user_id", "task_id":
+		if field == "task_id" && raw == "null" {
+			isNull := zeroOrNullCond(field)
+			return nullFilterCond(field, isNull, builder.Not{isNull}, comparator)
+		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
 			return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: raw}
@@ -130,6 +134,11 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 		return getFilterCond(&taskFilter{field: field, value: value, comparator: comparator, isNumeric: true}, false)
 
 	case "project", "project_id":
+		// A task always has a project, so "no project" means no container at all
+		if raw == "null" {
+			isNull := timeEntryWithoutContainerCond()
+			return nullFilterCond("project_id", isNull, builder.Not{isNull}, comparator)
+		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
 			return nil, ErrInvalidTimeEntryFilterValue{Field: "project_id", Value: raw}
@@ -156,7 +165,8 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 
 	case "start_time", "end_time":
 		if raw == "null" {
-			return nullTimeFilterCond(field, comparator)
+			// NotNull, not Not{IsNull}: that renders "NOT col IS NULL", which flips under MySQL HIGH_NOT_PRECEDENCE.
+			return nullFilterCond(field, builder.IsNull{field}, builder.NotNull{field}, comparator)
 		}
 		value, err := timeEntryTimeFilterValue(raw, loc)
 		if err != nil {
@@ -169,13 +179,12 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	}
 }
 
-// nullTimeFilterCond handles `end_time = null` (running timers) and its negation.
-func nullTimeFilterCond(field string, comparator taskFilterComparator) (builder.Cond, error) {
+func nullFilterCond(field string, isNull, notNull builder.Cond, comparator taskFilterComparator) (builder.Cond, error) {
 	if comparator == taskFilterComparatorEquals {
-		return &builder.IsNull{field}, nil
+		return isNull, nil
 	}
 	if comparator == taskFilterComparatorNotEquals {
-		return &builder.NotNull{field}, nil
+		return notNull, nil
 	}
 	return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: "null"}
 }

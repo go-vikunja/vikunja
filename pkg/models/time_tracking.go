@@ -17,6 +17,7 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -28,20 +29,15 @@ import (
 	"xorm.io/xorm"
 )
 
-// TimeEntry is a single tracked time span attached to either a task or a
-// project — exactly one of TaskID / ProjectID is set (XOR). A running live
-// timer is just an entry whose EndTime is still null.
-//
-// v2-only: doc: tags are the schema's source of truth (no v1 swaggo), and it
-// implements CRUDable + Permissions because the shared handler.Do* pipeline needs them.
+// TimeEntry is a tracked time span on a task, a project, or neither.
 type TimeEntry struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"timeentry" readOnly:"true" doc:"The unique, numeric id of this time entry."`
 
 	UserID int64      `xorm:"bigint not null INDEX" json:"-"`
 	User   *user.User `xorm:"-" json:"user" readOnly:"true" doc:"The user who logged this time entry. Set by the server."`
 
-	TaskID    int64 `xorm:"bigint null INDEX" json:"task_id" doc:"The task this entry is attached to. Exactly one of task_id / project_id must be set."`
-	ProjectID int64 `xorm:"bigint null INDEX" json:"project_id" doc:"The project this entry is attached to directly. Exactly one of task_id / project_id must be set."`
+	TaskID    int64 `xorm:"bigint null INDEX" json:"task_id" doc:"The task this entry is attached to; 0 means none. At most one of task_id / project_id may be set. On update, omitting both keeps the current container; sending either replaces it."`
+	ProjectID int64 `xorm:"bigint null INDEX" json:"project_id" doc:"The project this entry is attached to directly; 0 means none. At most one of task_id / project_id may be set. Entries without task and project are only visible to their author."`
 
 	StartTime time.Time  `xorm:"not null INDEX" json:"start_time" doc:"When the tracked time started."`
 	EndTime   *time.Time `xorm:"null" json:"end_time" doc:"When the tracked time ended. Null means a live timer is still running."`
@@ -57,8 +53,26 @@ type TimeEntry struct {
 	Filter         string `xorm:"-" json:"-"`
 	FilterTimezone string `xorm:"-" json:"-"`
 
+	containerSent bool
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
+}
+
+// UnmarshalJSON records whether task_id/project_id were sent, so updates can tell detach from keep.
+func (te *TimeEntry) UnmarshalJSON(data []byte) error {
+	type plain TimeEntry
+	if err := json.Unmarshal(data, (*plain)(te)); err != nil {
+		return err
+	}
+	keys := map[string]json.RawMessage{}
+	if err := json.Unmarshal(data, &keys); err != nil {
+		return err
+	}
+	_, hasTask := keys["task_id"]
+	_, hasProject := keys["project_id"]
+	te.containerSent = hasTask || hasProject
+	return nil
 }
 
 // TableName is time_entries, not the xorm-default time_entry.
@@ -218,13 +232,36 @@ func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {
 }
 
 // readableTimeEntriesCond restricts a query to entries the auth can read: a
-// standalone entry on an accessible project, or one on a task in such a project.
+// standalone entry on an accessible project, one on a task in such a project,
+// or the auth's own entries without any container.
 func readableTimeEntriesCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 	accessible, err := accessibleProjectIDsCond(s, a, "project_id")
 	if err != nil {
 		return nil, err
 	}
-	return entriesForProjectCond(accessible), nil
+	return builder.Or(
+		entriesForProjectCond(accessible),
+		builder.And(timeEntryWithoutContainerCond(), builder.Eq{"user_id": a.GetID()}),
+	), nil
+}
+
+func timeEntryWithoutContainerCond() builder.Cond {
+	return builder.And(
+		zeroOrNullCond("task_id"),
+		zeroOrNullCond("project_id"),
+	)
+}
+
+func zeroOrNullCond(col string) builder.Cond {
+	return builder.Or(builder.Eq{col: 0}, builder.IsNull{col})
+}
+
+func deleteUserPrivateTimeEntries(s *xorm.Session, userID int64) error {
+	_, err := s.Where(builder.And(
+		builder.Eq{"user_id": userID},
+		timeEntryWithoutContainerCond(),
+	)).Delete(&TimeEntry{})
+	return err
 }
 
 func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result any, resultCount int, numberOfTotalItems int64, err error) {
@@ -312,7 +349,7 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// task_id / project_id are listed so a reassignment (and the zero value of
-	// the side being cleared) is written; the XOR was validated in CanUpdate.
+	// the side being cleared) is written.
 	_, err = s.
 		Where("id = ?", te.ID).
 		Cols("task_id", "project_id", "start_time", "end_time", "comment").
@@ -416,7 +453,8 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 		can, maxPerm, err := project.CanRead(s, a)
 		return entry, can, maxPerm, err
 	default:
-		return entry, false, 0, nil
+		// CanUpdate checks authorship first.
+		return entry, !fetch || entry.UserID == a.GetID(), int(PermissionWrite), nil
 	}
 }
 
@@ -438,9 +476,8 @@ func (te *TimeEntry) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	return can, maxPerm, nil
 }
 
-// validateContainer enforces the XOR invariant: exactly one of task or project.
 func (te *TimeEntry) validateContainer() error {
-	if (te.TaskID == 0) == (te.ProjectID == 0) {
+	if te.TaskID != 0 && te.ProjectID != 0 {
 		return ErrTimeEntryInvalidContainer{TaskID: te.TaskID, ProjectID: te.ProjectID}
 	}
 	return nil
@@ -471,7 +508,7 @@ func (te *TimeEntry) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanUpdate allows the author to edit their entry, including moving it between
 // task / project: on top of the author check it validates the (possibly new)
-// container (XOR) and requires read access to it, mirroring create.
+// container and requires read access to it, mirroring create.
 func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if _, isShareAuth := a.(*LinkSharing); isShareAuth {
 		return false, nil
@@ -488,9 +525,7 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	// A request that omits the container keeps the existing one — an entry
-	// always has exactly one, so "clearing" it is never valid.
-	if te.TaskID == 0 && te.ProjectID == 0 {
+	if te.TaskID == 0 && te.ProjectID == 0 && !te.containerSent {
 		te.TaskID = existing.TaskID
 		te.ProjectID = existing.ProjectID
 	}
