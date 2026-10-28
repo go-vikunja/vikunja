@@ -1695,7 +1695,8 @@
 			"save": "Speichern",
 			"startTimer": "Timer starten",
 			"update": "Eintrag aktualisieren",
-			"smartFill": "Vom letzten Eintrag ausfüllen"
+			"smartFill": "Vom letzten Eintrag ausfüllen",
+			"endsSpanningEntriesAt": "Wenn du diesen Timer startest, beendet den überlappenden Timer um {time}."
 		},
 		"list": {
 			"emptyTask": "Noch keine Zeit für diese Aufgabe getrackt.",
