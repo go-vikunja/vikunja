@@ -11182,7 +11182,24 @@ const docTemplate = `{
                 "imprint_url": {
                     "type": "string"
                 },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/shared.LegalLink"
+                    }
+                },
                 "privacy_policy_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "shared.LegalLink": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }

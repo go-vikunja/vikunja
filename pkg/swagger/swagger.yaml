@@ -1577,7 +1577,18 @@ definitions:
     properties:
       imprint_url:
         type: string
+      links:
+        items:
+          $ref: '#/definitions/shared.LegalLink'
+        type: array
       privacy_policy_url:
+        type: string
+    type: object
+  shared.LegalLink:
+    properties:
+      text:
+        type: string
+      url:
         type: string
     type: object
   shared.LocalAuthInfo:
