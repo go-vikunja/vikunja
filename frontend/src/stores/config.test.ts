@@ -148,8 +148,16 @@ describe('config store', () => {
 				data: {
 					version: 'v2',
 					legal: {
-						imprint_url: 'javascript:alert(1)',
-						privacy_policy_url: 'https://example.test/privacy',
+						links: [
+							{
+								text: 'Imprint',
+								url: 'javascript:alert(1)',
+							},
+							{
+								text: 'Privacy Policy',
+								url: 'https://example.test/privacy',
+							},
+						],
 					},
 					auth: {
 						openid_connect: {
@@ -167,10 +175,32 @@ describe('config store', () => {
 
 			await store.update()
 
-			expect(store.legal.imprint_url).toBe('')
-			expect(store.legal.privacy_policy_url).toBe('https://example.test/privacy')
+			expect(store.legal.links).toEqual([{
+				text: 'Privacy Policy',
+				url: 'https://example.test/privacy',
+			}])
 			expect(store.auth.openid_connect.providers[0].auth_url).toBe('')
 			expect(store.auth.openid_connect.providers[0].logout_url).toBe('http://example.test/logout')
+		})
+
+		it('builds legal links from the deprecated urls when the API sends no links', async () => {
+			sdk.info.mockResolvedValue({
+				data: {
+					version: 'v2',
+					legal: {
+						imprint_url: 'https://example.test/imprint',
+						privacy_policy_url: 'javascript:alert(1)',
+					},
+				},
+			})
+			const store = useConfigStore()
+
+			await store.update()
+
+			expect(store.legal.links).toEqual([{
+				text: 'Imprint',
+				url: 'https://example.test/imprint',
+			}])
 		})
 
 		it('does not apply a response for an API that is no longer configured', async () => {

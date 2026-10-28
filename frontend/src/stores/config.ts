@@ -3,7 +3,7 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 
 import {getApiBaseUrl, getApiRootUrl, InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
 import {canonicalApiBaseUrl} from '@/client/requestContext'
-import {info, type VikunjaInfos, type AuthInfo} from '@/client/generated'
+import {info, type VikunjaInfos, type AuthInfo, type LegalLink} from '@/client/generated'
 import {publicClient} from '@/client/publicClient'
 import {ApiError} from '@/client/problem'
 import {captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
@@ -17,7 +17,9 @@ export type ConfigState = Required<Omit<VikunjaInfos,
 	available_migrators: string[]
 	enabled_background_providers: string[]
 	enabled_pro_features: string[]
-	legal: Required<NonNullable<VikunjaInfos['legal']>>
+	legal: {
+		links: Required<LegalLink>[],
+	}
 	auth: {
 		local: Required<NonNullable<AuthInfo['local']>>
 		ldap: Required<NonNullable<AuthInfo['ldap']>>
@@ -46,6 +48,26 @@ export function navigableUrl(url: string | undefined): string {
 	}
 }
 
+function legalLinks(legal: VikunjaInfos['legal']): ConfigState['legal']['links'] {
+	// APIs from before legal.links only send the deprecated urls.
+	const links = legal?.links ?? [
+		{
+			text: 'Imprint',
+			url: legal?.imprint_url,
+		},
+		{
+			text: 'Privacy Policy',
+			url: legal?.privacy_policy_url,
+		},
+	]
+	return links
+		.map(link => ({
+			text: link.text ?? '',
+			url: navigableUrl(link.url),
+		}))
+		.filter(link => link.text !== '' && link.url !== '')
+}
+
 function defaultConfig(): ConfigState {
 	return {
 		version: '',
@@ -60,8 +82,7 @@ function defaultConfig(): ConfigState {
 		totp_enabled: true,
 		enabled_background_providers: [],
 		legal: {
-			imprint_url: '',
-			privacy_policy_url: '',
+			links: [],
 		},
 		caldav_enabled: false,
 		user_deletion_enabled: true,
@@ -104,8 +125,7 @@ export const useConfigStore = defineStore('config', () => {
 			enabled_background_providers: config.enabled_background_providers ?? [],
 			enabled_pro_features: config.enabled_pro_features ?? [],
 			legal: {
-				imprint_url: navigableUrl(config.legal?.imprint_url),
-				privacy_policy_url: navigableUrl(config.legal?.privacy_policy_url),
+				links: legalLinks(config.legal),
 			},
 			auth: {
 				local: {...defaults.auth.local, ...config.auth?.local},
