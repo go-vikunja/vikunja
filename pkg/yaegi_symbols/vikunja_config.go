@@ -86,11 +86,13 @@ func init() {
 		"FilesS3UsePathStyle":                        reflect.ValueOf(config.FilesS3UsePathStyle),
 		"FilesType":                                  reflect.ValueOf(config.FilesType),
 		"GetConfigValueFromFile":                     reflect.ValueOf(config.GetConfigValueFromFile),
+		"GetLegalLinks":                              reflect.ValueOf(config.GetLegalLinks),
 		"GetMaxFileSizeInMBytes":                     reflect.ValueOf(config.GetMaxFileSizeInMBytes),
 		"GetTimeZone":                                reflect.ValueOf(config.GetTimeZone),
 		"InitConfig":                                 reflect.ValueOf(config.InitConfig),
 		"InitDefaultConfig":                          reflect.ValueOf(config.InitDefaultConfig),
 		"KeyvalueType":                               reflect.ValueOf(config.KeyvalueType),
+		"Legal":                                      reflect.ValueOf(config.Legal),
 		"LegalImprintURL":                            reflect.ValueOf(config.LegalImprintURL),
 		"LegalPrivacyURL":                            reflect.ValueOf(config.LegalPrivacyURL),
 		"LicenseKey":                                 reflect.ValueOf(config.LicenseKey),
@@ -205,6 +207,7 @@ func init() {
 		"WebhooksTimeoutSeconds":                     reflect.ValueOf(config.WebhooksTimeoutSeconds),
 
 		// type definitions
-		"Key": reflect.ValueOf((*config.Key)(nil)),
+		"Key":       reflect.ValueOf((*config.Key)(nil)),
+		"LegalLink": reflect.ValueOf((*config.LegalLink)(nil)),
 	}
 }

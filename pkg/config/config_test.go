@@ -243,3 +243,38 @@ func TestPathsFollowRootpath(t *testing.T) {
 		assert.Equal(t, "/pinned/root/custom-plugins", PluginsDir.GetString())
 	})
 }
+
+func TestGetLegalLinks(t *testing.T) {
+	t.Run("from the config file, sorted by key", func(t *testing.T) {
+		initConfigFromYAML(t, "legal:\n  imprinturl: https://example.com/old\n  terms:\n    text: Terms\n    url: https://example.com/terms\n  imprint:\n    text: Imprint\n    url: https://example.com/imprint\n  incomplete:\n    text: No url\n")
+
+		assert.Equal(t, []LegalLink{
+			{
+				Text: "Imprint",
+				URL:  "https://example.com/imprint",
+			},
+			{
+				Text: "Terms",
+				URL:  "https://example.com/terms",
+			},
+		}, GetLegalLinks())
+	})
+	t.Run("from the environment, with underscores in the link key", func(t *testing.T) {
+		t.Setenv("VIKUNJA_LEGAL_FOOBAR_TEXT", "foobar")
+		t.Setenv("VIKUNJA_LEGAL_FOOBAR_URL", "https://foo.bar")
+		t.Setenv("VIKUNJA_LEGAL_TERMS_OF_SERVICE_TEXT", "Terms of Service")
+		t.Setenv("VIKUNJA_LEGAL_TERMS_OF_SERVICE_URL", "https://example.com/tos")
+		initConfigFromYAML(t, "")
+
+		assert.Equal(t, []LegalLink{
+			{
+				Text: "foobar",
+				URL:  "https://foo.bar",
+			},
+			{
+				Text: "Terms of Service",
+				URL:  "https://example.com/tos",
+			},
+		}, GetLegalLinks())
+	})
+}
