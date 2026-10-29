@@ -1695,7 +1695,8 @@
 			"save": "Bejegyzés mentése",
 			"startTimer": "Időmérő elindítása",
 			"update": "Bejegyzés frissítése",
-			"smartFill": "Kitöltés az utolsó bejegyzésből"
+			"smartFill": "Kitöltés az utolsó bejegyzésből",
+			"endsSpanningEntriesAt": "Új időmérő indítása megállítja az átfedő bejegyzéseket itt: {time}"
 		},
 		"list": {
 			"emptyTask": "Ehhez a feladathoz még nem lett idő rögzítve.",
