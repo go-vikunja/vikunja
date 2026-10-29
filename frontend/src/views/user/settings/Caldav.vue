@@ -92,7 +92,14 @@
 			v-if="newToken"
 			class="mbe-4"
 		>
-			{{ $t('user.settings.caldav.tokenCreated', {token: newToken.token}) }}<br>
+			<i18n-t
+				keypath="user.settings.caldav.tokenCreated"
+				scope="global"
+			>
+				<template #token>
+					<code>{{ newToken.token }}</code>
+				</template>
+			</i18n-t><br>
 			{{ $t('user.settings.caldav.wontSeeItAgain') }}
 		</Message>
 
