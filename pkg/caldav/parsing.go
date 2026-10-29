@@ -184,7 +184,8 @@ func init() {
 	}
 }
 
-func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectTasks []*models.TaskWithComments) string {
+// GetCaldavTodosForTasks writes the tasks' dates in loc, the zone of the user reading them.
+func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectTasks []*models.TaskWithComments, loc *time.Location) string {
 
 	// Make caldav todos from Vikunja todos
 	var caldavtodos []*Todo
@@ -238,8 +239,9 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 	}
 
 	caldavConfig := &Config{
-		Name:   project.Title,
-		ProdID: "Vikunja Todo App",
+		Name:     project.Title,
+		ProdID:   "Vikunja Todo App",
+		TimeZone: loc,
 	}
 
 	return ParseTodos(caldavConfig, caldavtodos)
@@ -280,11 +282,12 @@ type ParsedVTODOProperties struct {
 	Color       bool
 }
 
-// ParseTaskFromVTODO parses a VTODO into a Task. Partial updates must overlay only
-// the fields reported by the returned properties, or everything else gets wiped.
+// ParseTaskFromVTODO parses a VTODO into a Task, reading floating and date-only
+// values in loc. Partial updates must overlay only the fields reported by the
+// returned properties, or everything else gets wiped.
 //
 //nolint:gocyclo
-func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOProperties, err error) {
+func ParseTaskFromVTODO(content string, loc *time.Location) (vTask *models.Task, props ParsedVTODOProperties, err error) {
 	parsed, err := ics.ParseCalendar(strings.NewReader(content))
 	if err != nil {
 		return nil, props, err
@@ -401,10 +404,10 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 	}
 
 	dtStartProp, hasDTStart := task["DTSTART"]
-	startDate := caldavTimeToTimestamp(dtStartProp)
+	startDate := caldavTimeToTimestamp(dtStartProp, loc)
 
 	dueProp, hasDue := task["DUE"]
-	dueDate := caldavTimeToTimestamp(dueProp)
+	dueDate := caldavTimeToTimestamp(dueProp, loc)
 
 	// time.ParseDuration can't read RFC 5545 durations like PT120H0M0S, hence ParseISO8601Duration.
 	dtEndProp, hasDTEnd := task["DTEND"]
@@ -413,7 +416,7 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 	var hasEndDate bool
 	switch {
 	case hasDTEnd:
-		endDate = caldavTimeToTimestamp(dtEndProp)
+		endDate = caldavTimeToTimestamp(dtEndProp, loc)
 		hasEndDate = parsedDateProperty(dtEndProp, hasDTEnd, endDate)
 	case hasDuration && hasDTStart && !startDate.IsZero():
 		if d := utils.ParseISO8601Duration(task["DURATION"].Value); d > 0 {
@@ -431,10 +434,10 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 		Priority:    priority,
 		Labels:      labels,
 		DueDate:     dueDate,
-		Updated:     caldavTimeToTimestamp(task["DTSTAMP"]),
+		Updated:     caldavTimeToTimestamp(task["DTSTAMP"], loc),
 		StartDate:   startDate,
 		EndDate:     endDate,
-		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
+		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"], loc),
 		HexColor:    hexColor,
 	}
 
@@ -480,7 +483,7 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOPr
 
 	for _, vAlarm := range vTodo.SubComponents() {
 		if vAlarm, ok := vAlarm.(*ics.VAlarm); ok {
-			vTask = parseVAlarm(vAlarm, vTask)
+			vTask = parseVAlarm(vAlarm, vTask, loc)
 		}
 	}
 
@@ -504,7 +507,7 @@ func parsedDateProperty(prop ics.IANAProperty, present bool, parsed time.Time) b
 	return present && (prop.Value == "" || !parsed.IsZero())
 }
 
-func parseVAlarm(vAlarm *ics.VAlarm, vTask *models.Task) *models.Task {
+func parseVAlarm(vAlarm *ics.VAlarm, vTask *models.Task, loc *time.Location) *models.Task {
 	for _, property := range vAlarm.UnknownPropertiesIANAProperties() {
 		if property.IANAToken != "TRIGGER" {
 			continue
@@ -513,7 +516,7 @@ func parseVAlarm(vAlarm *ics.VAlarm, vTask *models.Task) *models.Task {
 		if contains(property.ICalParameters["VALUE"], "DATE-TIME") {
 			// Example: TRIGGER;VALUE=DATE-TIME:20181201T011210Z
 			vTask.Reminders = append(vTask.Reminders, &models.TaskReminder{
-				Reminder: caldavTimeToTimestamp(property),
+				Reminder: caldavTimeToTimestamp(property, loc),
 			})
 			continue
 		}
@@ -552,14 +555,16 @@ func contains(array []string, str string) bool {
 }
 
 // https://tools.ietf.org/html/rfc5545#section-3.3.5
-func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
+func caldavTimeToTimestamp(ianaProperty ics.IANAProperty, loc *time.Location) time.Time {
 	tstring := ianaProperty.Value
 	if tstring == "" {
 		return time.Time{}
 	}
 
 	format := DateFormat
-	loc := config.GetTimeZone()
+	if loc == nil {
+		loc = config.GetTimeZone()
+	}
 
 	// A trailing Z is UTC per RFC 5545 and cannot be combined with a TZID.
 	isUTC := strings.HasSuffix(tstring, "Z")
