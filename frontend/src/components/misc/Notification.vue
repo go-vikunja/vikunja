@@ -113,6 +113,7 @@ onBeforeUnmount(() => {
 	border: 1px solid;
 	border-radius: $radius;
 	color: var(--text);
+	font-size: .875rem;
 	box-shadow: var(--shadow-md);
 
 	.notification-title {
