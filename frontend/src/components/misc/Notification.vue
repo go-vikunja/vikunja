@@ -23,7 +23,7 @@
 					>
 						<Icon
 							:icon="item.type === 'error' ? 'exclamation-circle' : 'check'"
-							class="mie-1"
+							class="notification-icon mie-1"
 						/>
 						{{ item.title }}
 					</div>
@@ -95,20 +95,35 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+// Matches Message.vue instead of the library's solid fills.
 .vue-notification {
 	z-index: 9999;
-}
+	border: 1px solid;
+	border-radius: $radius;
+	color: var(--text);
+	box-shadow: var(--shadow-sm);
 
-/* The library's default colors fail 4.5:1 contrast with white text. */
-.vue-notification.success {
-	background: hsl(var(--success-h), var(--success-s), 25%);
-	border-inline-start-color: hsl(var(--success-h), var(--success-s), 18%);
-}
+	.notification-title {
+		color: var(--text-strong);
+	}
 
-.vue-notification.error {
-	background: hsl(var(--danger-h), var(--danger-s), 40%);
-	border-inline-start-color: hsl(var(--danger-h), var(--danger-s), 30%);
-}
+	&.success {
+		border-color: var(--success);
+		background: linear-gradient(hsla(var(--success-h), var(--success-s), var(--success-l), .08), hsla(var(--success-h), var(--success-s), var(--success-l), .08)), var(--white);
 
+		.notification-icon {
+			color: var(--success-text);
+		}
+	}
+
+	&.error {
+		border-color: var(--danger);
+		background: linear-gradient(hsla(var(--danger-h), var(--danger-s), var(--danger-l), .08), hsla(var(--danger-h), var(--danger-s), var(--danger-l), .08)), var(--white);
+
+		.notification-icon {
+			color: var(--danger-text);
+		}
+	}
+}
 </style>
