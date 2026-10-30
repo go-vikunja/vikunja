@@ -114,6 +114,10 @@ func (q *queuePrompter) ReadLine(_ string) (string, error) {
 	return q.answers[q.calls-1], nil
 }
 
+func (q *queuePrompter) ReadLineContext(_ context.Context, p string) (string, error) {
+	return q.ReadLine(p)
+}
+
 func (q *queuePrompter) ReadPassword(_ string) (string, error) { return "", nil }
 
 // errReadFailure is a sentinel used to simulate a stdin read failure

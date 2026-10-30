@@ -31,6 +31,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/muesli/cancelreader"
 	"golang.org/x/term"
 
 	"code.vikunja.io/veans/internal/client"
@@ -40,6 +41,9 @@ import (
 // Prompter abstracts stdin / TTY reads so tests can inject scripted answers.
 type Prompter interface {
 	ReadLine(prompt string) (string, error)
+	// ReadLineContext returns ctx.Err() once ctx is done, leaving unread
+	// input for the next prompt, and io.EOF when stdin is exhausted.
+	ReadLineContext(ctx context.Context, prompt string) (string, error)
 	ReadPassword(prompt string) (string, error)
 }
 
@@ -56,14 +60,47 @@ func NewStdPrompter() *StdPrompter {
 }
 
 func (p *StdPrompter) ReadLine(prompt string) (string, error) {
+	line, err := p.ReadLineContext(context.Background(), prompt)
+	if errors.Is(err, io.EOF) {
+		return "", nil
+	}
+	return line, err
+}
+
+func (p *StdPrompter) ReadLineContext(ctx context.Context, prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", err
 	}
+	if p.stdin.Buffered() == 0 && ctx.Done() != nil {
+		if err := waitForStdin(ctx); err != nil {
+			return "", err
+		}
+	}
 	line, err := p.stdin.ReadString('\n')
-	if err != nil && !errors.Is(err, io.EOF) {
+	if err != nil && (!errors.Is(err, io.EOF) || line == "") {
 		return "", err
 	}
 	return strings.TrimRight(line, "\r\n"), nil
+}
+
+// waitForStdin blocks until stdin is readable without consuming any of it,
+// so an abandoned read can't swallow the next prompt's (or the picker's) input.
+func waitForStdin(ctx context.Context) error {
+	r, err := cancelreader.NewReader(os.Stdin)
+	if err != nil {
+		// Regular files can't be polled, but reading them never blocks.
+		return nil //nolint:nilerr
+	}
+	defer r.Close()
+	stop := context.AfterFunc(ctx, func() { r.Cancel() })
+	defer stop()
+	if _, err := r.Read(nil); err != nil {
+		if errors.Is(err, cancelreader.ErrCanceled) {
+			return ctx.Err()
+		}
+		return err
+	}
+	return nil
 }
 
 func (p *StdPrompter) ReadPassword(prompt string) (string, error) {
@@ -106,8 +143,7 @@ type LoginOptions struct {
 //  1. opts.Token (paste-in or --token flag)
 //  2. POST /login with Username + Password (used non-interactively when both
 //     are set, or when --use-password is passed)
-//  3. OAuth Authorization Code + PKCE flow with manual callback paste-back
-//     (the default for interactive use)
+//  3. OAuth Authorization Code + PKCE flow (the default for interactive use)
 func AcquireHumanToken(ctx context.Context, c *client.Client, opts LoginOptions, p Prompter) (string, error) {
 	if opts.Token != "" {
 		return opts.Token, nil

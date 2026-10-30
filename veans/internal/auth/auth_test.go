@@ -44,6 +44,10 @@ func (r *recordingPrompter) ReadLine(p string) (string, error) {
 	return "", nil
 }
 
+func (r *recordingPrompter) ReadLineContext(_ context.Context, p string) (string, error) {
+	return r.ReadLine(p)
+}
+
 func (r *recordingPrompter) ReadPassword(p string) (string, error) {
 	r.calls = append(r.calls, "pw:"+p)
 	return "", nil
