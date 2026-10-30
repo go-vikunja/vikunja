@@ -85,7 +85,7 @@ func ProjectHandler(c *echo.Context) error {
 	// Parse it
 	vtodo := string(body)
 	if vtodo != "" && strings.HasPrefix(vtodo, `BEGIN:VCALENDAR`) {
-		storage.task, _, err = caldav2.ParseTaskFromVTODO(vtodo)
+		storage.task, _, err = caldav2.ParseTaskFromVTODO(vtodo, storage.timeZone())
 		if err != nil {
 			log.Warningf("[CALDAV] Failed to parse task: %v", err)
 			return models.ErrInvalidData{Message: "Invalid task"}

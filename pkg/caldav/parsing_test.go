@@ -886,7 +886,7 @@ END:VCALENDAR`,
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotProps, err := ParseTaskFromVTODO(tt.args.content)
+			got, gotProps, err := ParseTaskFromVTODO(tt.args.content, config.GetTimeZone())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseTaskFromVTODO() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1154,7 +1154,7 @@ END:VCALENDAR`,
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GetCaldavTodosForTasks(tt.args.list, tt.args.tasks)
+			got := GetCaldavTodosForTasks(tt.args.list, tt.args.tasks, config.GetTimeZone())
 			if diff, equal := messagediff.PrettyDiff(got, tt.wantCaldav); !equal {
 				t.Errorf("GetCaldavTodosForTasks() gotVTask = %v, want %v, diff = %s", got, tt.wantCaldav, diff)
 			}
@@ -1166,7 +1166,7 @@ func TestCaldavTimeToTimestamp_NoTZID(t *testing.T) {
 	config.InitDefaultConfig()
 	prop := ics.IANAProperty{BaseProperty: ics.BaseProperty{Value: "20181201T011204", ICalParameters: map[string][]string{}}}
 
-	got := caldavTimeToTimestamp(prop)
+	got := caldavTimeToTimestamp(prop, config.GetTimeZone())
 	want := time.Date(2018, 12, 1, 1, 12, 4, 0, config.GetTimeZone())
 
 	if !got.Equal(want) || got.Location().String() != config.GetTimeZone().String() {
@@ -1221,7 +1221,7 @@ func TestCaldavTimeToTimestamp_NonUTCServerTimezone(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			prop := ics.IANAProperty{BaseProperty: ics.BaseProperty{Value: tt.value, ICalParameters: tt.params}}
-			got := caldavTimeToTimestamp(prop)
+			got := caldavTimeToTimestamp(prop, config.GetTimeZone())
 			if !got.Equal(tt.want) || got.Location().String() != "Europe/Berlin" {
 				t.Fatalf("caldavTimeToTimestamp() = %v, want %v", got, tt.want)
 			}
@@ -1248,7 +1248,7 @@ ACTION:DISPLAY
 DESCRIPTION:Test
 END:VALARM
 END:VTODO
-END:VCALENDAR`)
+END:VCALENDAR`, config.GetTimeZone())
 	if err != nil {
 		t.Fatal(err)
 	}
