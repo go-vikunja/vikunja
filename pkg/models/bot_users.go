@@ -53,7 +53,7 @@ func (b *BotUser) Create(s *xorm.Session, a web.Auth) error {
 	}
 	b.User = *created
 	b.Status = &b.User.Status
-	return nil
+	return user.AttachBotOwners(s, &b.User)
 }
 
 // ReadAll returns all bots owned by the calling user.
@@ -76,8 +76,13 @@ func (b *BotUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	if err != nil {
 		return nil, 0, 0, err
 	}
+	users := make([]*user.User, 0, len(bots))
 	for _, bot := range bots {
 		bot.Status = &bot.User.Status
+		users = append(users, &bot.User)
+	}
+	if err := user.AttachBotOwners(s, users...); err != nil {
+		return nil, 0, 0, err
 	}
 	return bots, len(bots), total, nil
 }
@@ -90,7 +95,7 @@ func (b *BotUser) ReadOne(s *xorm.Session, a web.Auth) error {
 	}
 	b.User = *u
 	b.Status = &b.User.Status
-	return nil
+	return user.AttachBotOwners(s, &b.User)
 }
 
 // Update allows a narrow set of fields to be changed on an owned bot.
@@ -133,7 +138,7 @@ func (b *BotUser) Update(s *xorm.Session, a web.Auth) error {
 	}
 	b.User = *existing
 	b.Status = &b.User.Status
-	return nil
+	return user.AttachBotOwners(s, &b.User)
 }
 
 // Delete completely removes the bot user and all associated data.
