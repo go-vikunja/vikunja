@@ -47,8 +47,10 @@ func newLoginCmd() *cobra.Command {
 for the bot configured in .veans.yml. The new token replaces the
 existing one in the credential store.
 
-The default flow is OAuth 2.0 Authorization Code + PKCE — open the
-URL veans prints, sign in, and paste the callback URL back. Use
+The default flow is OAuth 2.0 Authorization Code + PKCE — veans opens
+the authorize URL in your browser and catches the redirect. If the
+browser runs on another machine, paste the URL it was redirected to
+back into the terminal instead. Use
 --token to paste in a personal API token, or --use-password / --username
 to force POST /login instead.
 
