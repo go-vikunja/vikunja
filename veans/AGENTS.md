@@ -151,9 +151,13 @@ oddly, suspect one of these:
   No client registration needed — `client_id` can be any consistent
   string (we use `veans-cli`).
 - `internal/auth/oauth.go` binds a free port on 127.0.0.1, opens the
-  browser, and captures the callback. The `Shutdown` defer uses
-  `context.WithoutCancel(ctx)` so cancellation at the outer scope
-  still drains the loopback server cleanly.
+  browser, and captures the callback, while also accepting the redirect
+  URL pasted on stdin (browser on another machine). The paste read goes
+  through `ReadLineContext`, which polls stdin via `cancelreader` without
+  consuming it: a plain blocked read left behind after the loopback wins
+  would swallow init's next prompt and the bubbletea picker's keystrokes.
+- The `Shutdown` defer uses `context.WithoutCancel(ctx)` so cancellation
+  at the outer scope still drains the loopback server cleanly.
 - Token exchange goes out as **JSON**. v2's `/oauth/token` accepts both JSON
   and form-encoded bodies (Huma picks the decoder off the `Content-Type`
   header), but the standard `golang.org/x/oauth2` client hard-codes form

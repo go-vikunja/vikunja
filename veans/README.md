@@ -41,10 +41,13 @@ without breaking sessions in unrelated repos.
 
 1. Authenticates as you. Default is OAuth 2.0 Authorization Code + PKCE
    against Vikunja's built-in authorization server (Vikunja 2.3+ — no
-   client registration needed). veans prints an authorize URL; you open
-   it in your browser, sign in, and paste the resulting
-   `vikunja-veans-cli://callback?code=...` URL back into the CLI. The
-   browser will fail to open the custom scheme — that's expected; the
+   client registration needed). veans opens the authorize URL in your
+   browser and catches the redirect on a loopback port.
+
+   On a machine without a browser (e.g. over SSH), open the printed URL
+   on any machine, sign in, and paste the
+   `http://127.0.0.1:NNN/callback?code=...` URL the browser ends up on back
+   into the CLI. The page itself fails to load, which is expected; the
    address bar still has what we need.
 
    Alternative auth modes:
@@ -181,9 +184,8 @@ PR lands.
 
 ## Out of scope (for now)
 
-- OAuth 2.0 device flow (RFC 8628) — would let SSH'd / headless setups
-  authenticate without a browser-on-the-same-machine; not implemented
-  upstream yet.
+- OAuth 2.0 device flow (RFC 8628) — would replace the headless
+  paste-back step; not implemented upstream yet.
 - Project-scoped API tokens — Vikunja doesn't ship them yet. The
   credential schema's `scope` field is forward-compatible for when it does.
 - Auto-installing hook snippets. We print them; you paste them.

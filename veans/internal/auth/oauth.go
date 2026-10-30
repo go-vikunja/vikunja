@@ -21,6 +21,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"html"
 	"io"
@@ -97,14 +98,11 @@ type callbackResult struct {
 }
 
 // runOAuthFlow drives an OAuth Authorization Code + PKCE handshake against
-// Vikunja's server using a localhost loopback listener (RFC 8252):
-// bind 127.0.0.1:0, open the authorize URL in the browser, capture the
-// callback, exchange the code for a token.
-//
-// The prompter is retained on the signature for symmetry with the
-// password flow but isn't called — the loopback handshake completes
-// without further user input beyond the in-browser sign-in.
-func runOAuthFlow(ctx context.Context, c *client.Client, _ Prompter, w io.Writer) (string, error) {
+// Vikunja's server with a loopback redirect URI (RFC 8252). A local browser
+// lands on our listener; one on another machine (SSH, headless box) can't
+// reach it, so the user may paste the URL it was redirected to instead.
+// Whichever arrives first wins.
+func runOAuthFlow(ctx context.Context, c *client.Client, p Prompter, w io.Writer) (string, error) {
 	pkce, err := generatePKCE()
 	if err != nil {
 		return "", output.Wrap(output.CodeUnknown, err, "generate PKCE: %v", err)
@@ -132,12 +130,10 @@ func runOAuthFlow(ctx context.Context, c *client.Client, _ Prompter, w io.Writer
 
 	authURL := buildAuthorizeURL(c.BaseURL, redirectURI, pkce, state)
 	announceBrowserStep(w, authURL)
-	// Best-effort browser launch — the URL is also printed so the user
-	// can paste it manually if their environment can't auto-open one
-	// (SSH session, container without DISPLAY, etc.).
+	// Best-effort: the URL is printed too.
 	_ = browser.OpenURL(authURL)
 
-	result, err := waitForCallback(ctx, resultCh)
+	result, err := waitForCallback(ctx, resultCh, p, w)
 	if err != nil {
 		return "", err
 	}
@@ -160,6 +156,19 @@ func runOAuthFlow(ctx context.Context, c *client.Client, _ Prompter, w io.Writer
 		return "", output.New(output.CodeAuth, "OAuth token exchange returned empty access_token")
 	}
 	return resp.AccessToken, nil
+}
+
+// parsePastedCallback accepts the full redirect URL or just its query.
+func parsePastedCallback(raw string) callbackResult {
+	raw = strings.TrimSpace(raw)
+	if i := strings.IndexByte(raw, '?'); i >= 0 {
+		raw = raw[i+1:]
+	}
+	q, err := url.ParseQuery(raw)
+	if err != nil {
+		return callbackResult{err: fmt.Errorf("parse redirect URL: %w", err)}
+	}
+	return callbackFromQuery(q)
 }
 
 // bindLoopbackListener picks a free port on 127.0.0.1 and returns a
@@ -199,15 +208,7 @@ func newCallbackServer(listener net.Listener) (*http.Server, <-chan callbackResu
 				http.Error(rw, "method not allowed", http.StatusMethodNotAllowed)
 				return
 			}
-			q := r.URL.Query()
-			res := callbackResult{code: q.Get("code"), state: q.Get("state")}
-			if errCode := q.Get("error"); errCode != "" {
-				desc := q.Get("error_description")
-				if desc == "" {
-					desc = errCode
-				}
-				res.err = fmt.Errorf("authorization failed: %s", desc)
-			}
+			res := callbackFromQuery(r.URL.Query())
 			renderCallbackPage(rw, res.err)
 			select {
 			case resultCh <- res:
@@ -218,24 +219,67 @@ func newCallbackServer(listener net.Listener) (*http.Server, <-chan callbackResu
 	return server, resultCh
 }
 
-// waitForCallback blocks until the loopback handler fires, ctx cancels,
-// or loopbackTimeout elapses.
-func waitForCallback(ctx context.Context, resultCh <-chan callbackResult) (callbackResult, error) {
-	timer := time.NewTimer(loopbackTimeout)
-	defer timer.Stop()
+func callbackFromQuery(q url.Values) callbackResult {
+	res := callbackResult{code: q.Get("code"), state: q.Get("state")}
+	if errCode := q.Get("error"); errCode != "" {
+		desc := q.Get("error_description")
+		if desc == "" {
+			desc = errCode
+		}
+		res.err = fmt.Errorf("authorization failed: %s", desc)
+	}
+	return res
+}
+
+func checkCallback(result callbackResult) (callbackResult, error) {
+	if result.err != nil {
+		return result, output.Wrap(output.CodeAuth, result.err, "%v", result.err)
+	}
+	if result.code == "" {
+		return result, output.New(output.CodeAuth, "no `code` returned from OAuth callback")
+	}
+	return result, nil
+}
+
+// waitForCallback blocks until the loopback handler fires, the user pastes
+// the redirect URL, ctx cancels, or loopbackTimeout elapses.
+func waitForCallback(ctx context.Context, resultCh <-chan callbackResult, p Prompter, w io.Writer) (callbackResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, loopbackTimeout)
+	defer cancel()
+
+	pasted := make(chan callbackResult, 1)
+	readerDone := make(chan struct{})
+	go func() {
+		defer close(readerDone)
+		for {
+			line, err := p.ReadLineContext(ctx, "Redirect URL: ")
+			if err != nil {
+				// EOF or ctx done: stop offering paste, keep waiting for the loopback.
+				return
+			}
+			if strings.TrimSpace(line) != "" {
+				pasted <- parsePastedCallback(line)
+				return
+			}
+		}
+	}()
+	// The prompter is shared with later prompts; don't return while it's mid-read.
+	defer func() {
+		cancel()
+		<-readerDone
+	}()
+
 	select {
 	case result := <-resultCh:
-		if result.err != nil {
-			return result, output.Wrap(output.CodeAuth, result.err, "%v", result.err)
-		}
-		if result.code == "" {
-			return result, output.New(output.CodeAuth, "no `code` returned from OAuth callback")
-		}
-		return result, nil
-	case <-timer.C:
-		return callbackResult{}, output.New(output.CodeAuth,
-			"OAuth flow timed out after %s — re-run init with --use-password or --token", loopbackTimeout)
+		fmt.Fprintln(w)
+		return checkCallback(result)
+	case result := <-pasted:
+		return checkCallback(result)
 	case <-ctx.Done():
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return callbackResult{}, output.New(output.CodeAuth,
+				"OAuth flow timed out after %s — re-run with --use-password or --token", loopbackTimeout)
+		}
 		return callbackResult{}, ctx.Err()
 	}
 }
@@ -248,7 +292,9 @@ func announceBrowserStep(w io.Writer, authURL string) {
 	fmt.Fprintln(w, "Opening your browser to authorize veans:")
 	fmt.Fprintln(w, "  "+authURL)
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "If the browser doesn't open, paste the URL above manually.")
+	fmt.Fprintln(w, "If the browser doesn't open, open the URL above in any browser. When it")
+	fmt.Fprintln(w, "runs on another machine, it ends on a 127.0.0.1 page that fails to load:")
+	fmt.Fprintln(w, "copy that page's full URL from the address bar and paste it below.")
 	fmt.Fprintln(w)
 }
 
