@@ -1057,3 +1057,104 @@ func TestGetUserForAuthChecksBotOwner(t *testing.T) {
 	_, err = GetUserByUsernameForAuth(s, "bot-owner-a-assistant")
 	assert.True(t, IsErrAccountDisabled(err), "by username: got %v", err)
 }
+
+func TestGetUserBotOwner(t *testing.T) {
+	t.Run("by id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bot, err := GetUserByID(s, 23)
+		require.NoError(t, err)
+		require.NotNil(t, bot.BotOwner)
+		assert.Equal(t, int64(21), bot.BotOwner.ID)
+		assert.Equal(t, "user_bot_owner_a", bot.BotOwner.Username)
+		assert.Empty(t, bot.BotOwner.Email)
+	})
+	t.Run("batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		users, err := GetUsersByIDs(s, []int64{1, 23, 24, 25})
+		require.NoError(t, err)
+		require.Len(t, users, 4)
+		assert.Nil(t, users[1].BotOwner)
+		for botID, ownerID := range map[int64]int64{23: 21, 24: 22, 25: 21} {
+			require.NotNil(t, users[botID].BotOwner, "bot %d", botID)
+			assert.Equal(t, ownerID, users[botID].BotOwner.ID, "bot %d", botID)
+			assert.Empty(t, users[botID].BotOwner.Email, "bot %d", botID)
+		}
+	})
+	t.Run("human has none", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		assert.Nil(t, u.BotOwner)
+
+		j, err := json.Marshal(u)
+		require.NoError(t, err)
+		assert.NotContains(t, string(j), "bot_owner")
+	})
+	t.Run("disabled owner is still attached", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, SetUserStatus(s, &User{ID: 21}, StatusDisabled))
+
+		bot, err := GetUserByID(s, 23)
+		require.NoError(t, err)
+		require.NotNil(t, bot.BotOwner)
+		assert.Equal(t, int64(21), bot.BotOwner.ID)
+
+		users, err := GetUsersByIDs(s, []int64{25})
+		require.NoError(t, err)
+		require.NotNil(t, users[25].BotOwner)
+		assert.Equal(t, int64(21), users[25].BotOwner.ID)
+	})
+	t.Run("locked owner is still attached", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, SetUserStatus(s, &User{ID: 22}, StatusAccountLocked))
+
+		bot, err := GetUserByID(s, 24)
+		require.NoError(t, err)
+		require.NotNil(t, bot.BotOwner)
+		assert.Equal(t, int64(22), bot.BotOwner.ID)
+	})
+	t.Run("missing owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(24).Cols("bot_owner_id").Update(&User{BotOwnerID: 999999})
+		require.NoError(t, err)
+
+		bot, err := GetUserByID(s, 24)
+		require.NoError(t, err)
+		assert.Nil(t, bot.BotOwner)
+	})
+	t.Run("does not leak into the memo", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		first, err := GetUserByID(s, 23)
+		require.NoError(t, err)
+		first.BotOwner.Name = "mutated"
+
+		second, err := GetUserByID(s, 23)
+		require.NoError(t, err)
+		assert.NotEqual(t, "mutated", second.BotOwner.Name)
+
+		owner, err := GetUserByID(s, 21)
+		require.NoError(t, err)
+		assert.NotEqual(t, "mutated", owner.Name)
+	})
+}
