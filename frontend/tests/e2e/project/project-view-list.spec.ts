@@ -85,6 +85,26 @@ test.describe('Project View List', () => {
 		await expect(page).toHaveURL(new RegExp(`/tasks/${tasks[0].id}`))
 	})
 
+	test('Should mark overdue tasks with an icon, not only by color', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const [overdue] = await TaskFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			due_date: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+		})
+		const [future] = await TaskFactory.create(1, {
+			id: 2,
+			project_id: 1,
+			due_date: new Date(Date.now() + 3 * 86_400_000).toISOString(),
+		}, false)
+		await page.goto('/projects/1/1')
+
+		const overdueRow = page.locator('.tasks .task').filter({hasText: overdue.title})
+		await expect(overdueRow.locator('.overdue-indicator svg')).toBeVisible()
+		await expect(overdueRow.locator('.overdue-indicator')).toContainText('Overdue')
+		await expect(page.locator('.tasks .task').filter({hasText: future.title}).locator('.overdue-indicator')).toHaveCount(0)
+	})
+
 	test('Should not see any elements for a project which is shared read only', async ({authenticatedPage: page}) => {
 		await UserFactory.create(2)
 		await UserProjectFactory.create(1, {

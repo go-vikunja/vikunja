@@ -583,4 +583,21 @@ test.describe('Project View Kanban', () => {
 		await expect(limitSpan).toBeVisible()
 		await expect(limitSpan).toContainText('2/10')
 	})
+
+	test('Should mark overdue cards with an icon, not only by color', async ({authenticatedPage: page}) => {
+		const [task] = await TaskFactory.create(1, {
+			project_id: 1,
+			due_date: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+		})
+		await TaskBucketFactory.create(1, {
+			task_id: task.id,
+			bucket_id: buckets[0].id,
+			project_view_id: buckets[0].project_view_id,
+		})
+		await page.goto('/projects/1/4')
+
+		const dueDate = page.locator('.kanban .kanban-card').filter({hasText: task.title}).locator('.due-date')
+		await expect(dueDate.locator('.overdue-indicator svg')).toBeVisible()
+		await expect(dueDate.locator('.overdue-indicator')).toContainText('Overdue')
+	})
 })
