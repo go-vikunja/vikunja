@@ -6,6 +6,10 @@
 			:data-is-overdue="isOverdue(r) || undefined"
 			class="reminder-input"
 		>
+			<OverdueIndicator
+				v-if="isOverdue(r)"
+				class="reminder-overdue mie-2"
+			/>
 			<ReminderDetail
 				v-model="reminders[index]"
 				class="reminder-detail"
@@ -44,6 +48,7 @@ import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import ReminderDetail from '@/components/tasks/partials/ReminderDetail.vue'
+import OverdueIndicator from '@/components/tasks/partials/OverdueIndicator.vue'
 import {useNow} from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
@@ -102,7 +107,8 @@ function removeReminderByIndex(index: number) {
 	display: flex;
 	align-items: center;
 
-	&[data-is-overdue] :deep(.datepicker .show) {
+	&[data-is-overdue] :deep(.datepicker .show),
+	.reminder-overdue {
 		color: var(--danger-text);
 	}
 

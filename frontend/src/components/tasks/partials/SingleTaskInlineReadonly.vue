@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="task"
-		:data-is-overdue="(dueDate && dueDate <= new Date()) && !task.done || undefined"
+		:data-is-overdue="isOverdue() || undefined"
 	>
 		<span>
 			<span
@@ -56,6 +56,10 @@
 			v-tooltip="formatDateLong(task.due_date)"
 			class="dueDate"
 		>
+			<OverdueIndicator
+				v-if="isOverdue()"
+				class="mie-1"
+			/>
 			<time
 				:datetime="formatISO(task.due_date)"
 				class="is-italic"
@@ -110,6 +114,7 @@ import type {Task as ITask} from '@/client/generated'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
+import OverdueIndicator from '@/components/tasks/partials/OverdueIndicator.vue'
 
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 
@@ -128,6 +133,10 @@ const props = withDefaults(defineProps<{
 const projectList = useProjects()
 
 const dueDate = computed(() => parseDateOrNull(props.task.due_date))
+// Not a computed: `new Date()` is no reactive dependency, so it would never refresh.
+function isOverdue() {
+	return dueDate.value !== null && dueDate.value <= new Date() && !props.task.done
+}
 const project = computed(() => projectList.projects[props.task.project_id ?? 0])
 </script>
 
