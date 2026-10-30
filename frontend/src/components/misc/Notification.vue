@@ -21,6 +21,10 @@
 						v-if="item.title"
 						class="notification-title"
 					>
+						<Icon
+							:icon="item.type === 'error' ? 'exclamation-circle' : 'check'"
+							class="mie-1"
+						/>
 						{{ item.title }}
 					</div>
 					<div class="notification-content">
@@ -94,6 +98,17 @@ onBeforeUnmount(() => {
 <style scoped>
 .vue-notification {
 	z-index: 9999;
+}
+
+/* The library's default colors fail 4.5:1 contrast with white text. */
+.vue-notification.success {
+	background: hsl(var(--success-h), var(--success-s), 25%);
+	border-inline-start-color: hsl(var(--success-h), var(--success-s), 18%);
+}
+
+.vue-notification.error {
+	background: hsl(var(--danger-h), var(--danger-s), 40%);
+	border-inline-start-color: hsl(var(--danger-h), var(--danger-s), 30%);
 }
 
 </style>
