@@ -4,6 +4,7 @@
 			position="bottom left"
 			:max="2"
 			:ignore-duplicates="true"
+			:width="isMobile ? '100%' : 300"
 			class="global-notification"
 			role="status"
 			aria-live="polite"
@@ -69,6 +70,9 @@
 
 <script lang="ts" setup>
 import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {useIsMobile} from '@/composables/useIsMobile'
+
+const isMobile = useIsMobile()
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null
