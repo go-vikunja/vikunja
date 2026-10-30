@@ -1534,7 +1534,7 @@ h2 .button {
 .scroll-to-comments-button {
 	position: fixed;
 	// Position above the keyboard shortcuts button (which is at bottom: calc(1rem - 4px))
-	inset-block-end: 2.5rem;
+	inset-block-end: calc(var(--bottom-banners-end-height, 0px) + 2.5rem);
 	inset-inline-end: .75rem;
 	z-index: 10;
 	inline-size: 2rem;
