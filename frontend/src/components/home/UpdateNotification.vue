@@ -71,6 +71,7 @@ function refreshApp() {
 	padding: .5rem .5rem .5rem 1rem;
 	background: $warning;
 	border-radius: $radius;
+	box-shadow: var(--shadow-md);
 	font-size: .9rem;
 	color: hsl(220.9, 39.3%, 11%); // color copied to avoid it changing in dark mode
 }
