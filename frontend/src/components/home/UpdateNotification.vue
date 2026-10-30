@@ -61,8 +61,8 @@ function refreshApp() {
 
 <style lang="scss" scoped>
 .update-notification {
-	max-inline-size: calc(100% - 2rem);
-	margin: 0 1rem 1rem;
+	max-inline-size: calc(100% - 1.5rem);
+	margin: 0 .75rem .75rem;
 
 	display: flex;
 	align-items: center;
