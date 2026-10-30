@@ -1135,6 +1135,7 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",
       "due": "Due {at}",
+      "overdue": "Overdue",
       "closeTaskDetail": "Close task detail",
       "title": "Task detail",
       "markAsDone": "Mark '{task}' as done",
