@@ -3443,7 +3443,7 @@ export const botsList = <ThrowOnError extends boolean = true>(options?: Options<
 /**
  * Create a bot user
  *
- * Creates a bot user owned by the authenticated user. The username must start with the 'bot-' prefix. Bots have no email or password and cannot create further bots. Requires a real user account — link shares cannot create bots.
+ * Creates a bot user owned by the authenticated user. The username must start with the 'bot-' prefix. Bots have no email or password and cannot create further bots. The owner becomes visible to anyone who can see the bot, as its bot_owner. Requires a real user account — link shares cannot create bots.
  */
 export const botsCreate = <ThrowOnError extends boolean = true>(options: Options<BotsCreateData, ThrowOnError>): RequestResult<BotsCreateResponses, BotsCreateErrors, ThrowOnError> => (options.client ?? client).post<BotsCreateResponses, BotsCreateErrors, ThrowOnError>({
     security: [{
