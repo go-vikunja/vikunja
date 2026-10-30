@@ -5,6 +5,7 @@
 			:max="2"
 			:ignore-duplicates="true"
 			:width="isMobile ? '100%' : 300"
+			:style="{bottom: 'var(--bottom-banners-height, 0px)'}"
 			class="global-notification"
 			role="status"
 			aria-live="polite"
