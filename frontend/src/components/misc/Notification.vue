@@ -1,7 +1,7 @@
 <template>
 	<Teleport :to="teleportTarget">
 		<Notifications
-			position="bottom left"
+			:position="isRtl ? 'bottom right' : 'bottom left'"
 			:max="2"
 			:ignore-duplicates="true"
 			:width="isMobile ? '100%' : 300"
@@ -70,10 +70,15 @@
 </template>
 
 <script lang="ts" setup>
-import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {useIsMobile} from '@/composables/useIsMobile'
+import {isRTLLanguage, type SupportedLocale} from '@/i18n'
 
 const isMobile = useIsMobile()
+// Same start-side column as the bottom banners.
+const {locale} = useI18n()
+const isRtl = computed(() => isRTLLanguage(locale.value as SupportedLocale))
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null
