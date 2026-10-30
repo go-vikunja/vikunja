@@ -578,7 +578,20 @@
       "partialDatesEnd": "End date only (open-ended)",
       "expandGroup": "Expand group: {task}",
       "collapseGroup": "Collapse group: {task}",
-      "toggleRelationArrows": "Toggle relation arrows"
+      "toggleRelationArrows": "Toggle relation arrows",
+      "zoom": "Zoom",
+      "zoomToFit": "Fit range",
+      "weekShort": "W{week}",
+      "weeksRow": "Weeks row",
+      "yearsRow": "Years row",
+      "weekLabel": "Week {week}, {start}",
+      "yearLabel": "Year: {year}",
+      "quickRange": "Quick range",
+      "thisMonth": "This month",
+      "thisQuarter": "This quarter",
+      "nextThreeMonths": "Next 3 months",
+      "thisYear": "This year",
+      "nextYear": "Next year"
     },
     "table": {
       "title": "Table",
