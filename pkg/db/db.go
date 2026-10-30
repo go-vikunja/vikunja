@@ -132,7 +132,7 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 
 	// xorm connects lazily, so this is where an unreachable database first surfaces. Without it
 	// the first real query reports it instead, which reads as a schema or extension bug (#3287).
-	if err = engine.Ping(); err != nil {
+	if err = pingEngineWithRetry(engine); err != nil {
 		if config.DatabaseType.GetString() == "postgres" {
 			err = sanitizePostgresConnectionError(
 				err,
@@ -261,7 +261,7 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 
 	// Ping first so an unreachable database still reports as a connection error
 	// (#3287) instead of as a failed extension lookup.
-	if err = engine.Ping(); err != nil {
+	if err = pingEngineWithRetry(engine); err != nil {
 		return nil, err
 	}
 
