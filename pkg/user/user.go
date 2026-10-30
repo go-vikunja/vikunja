@@ -121,6 +121,9 @@ type User struct {
 	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
 	Timezone   string `xorm:"varchar(255) null" json:"-"`
 
+	// The user who created this bot. Only set for bot users.
+	BotOwner *User `xorm:"-" json:"bot_owner,omitempty" readOnly:"true" doc:"The user who created this bot. Only set for bot users."`
+
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
 
@@ -272,6 +275,9 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 	}
 
 	u := *raw
+	if err := AttachBotOwners(s, &u); err != nil {
+		return &User{}, err
+	}
 	return &u, finishLoadedUser(&u)
 }
 
@@ -367,7 +373,48 @@ func GetUsersByIDs(s *xorm.Session, userIDs []int64) (users map[int64]*User, err
 		copied := *u
 		users[id] = &copied
 	}
+
+	bots := make([]*User, 0, len(users))
+	for _, u := range users {
+		bots = append(bots, u)
+	}
+	if err := AttachBotOwners(s, bots...); err != nil {
+		return nil, err
+	}
 	return users, nil
+}
+
+// AttachBotOwners sets BotOwner on every bot in users, loading all owners in one query.
+// Owners skip the disabled/locked gate: a bot's activity stays visible after its owner is disabled.
+func AttachBotOwners(s *xorm.Session, users ...*User) error {
+	ownerIDs := make([]int64, 0, len(users))
+	for _, u := range users {
+		if u.IsBot() && u.BotOwner == nil {
+			ownerIDs = append(ownerIDs, u.BotOwnerID)
+		}
+	}
+	if len(ownerIDs) == 0 {
+		return nil
+	}
+
+	owners, err := db.RememberEach(s, ownerIDs, userMemoKey, func(missing []int64) (map[int64]*User, error) {
+		return GetUsersByCond(s, builder.In("id", missing))
+	})
+	if err != nil {
+		return err
+	}
+
+	copies := make(map[int64]*User, len(owners))
+	for id, o := range owners {
+		copied := *o
+		copies[id] = &copied
+	}
+	for _, u := range users {
+		if u.IsBot() && u.BotOwner == nil {
+			u.BotOwner = copies[u.BotOwnerID]
+		}
+	}
+	return nil
 }
 
 func GetUsersByCond(s *xorm.Session, cond builder.Cond) (users map[int64]*User, err error) {

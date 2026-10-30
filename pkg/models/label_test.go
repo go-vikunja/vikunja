@@ -280,6 +280,17 @@ func TestLabel_ReadOne(t *testing.T) {
 		Updated:                      testUpdatedTime,
 		ExportFileID:                 1,
 	}
+	botOwnerA := &user.User{
+		ID:                           21,
+		Username:                     "user_bot_owner_a",
+		Password:                     "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
+		Issuer:                       "local",
+		EmailRemindersEnabled:        true,
+		OverdueTasksRemindersEnabled: true,
+		OverdueTasksRemindersTime:    "09:00",
+		Created:                      testCreatedTime,
+		Updated:                      testUpdatedTime,
+	}
 	tests := []struct {
 		name                string
 		fields              fields
@@ -460,6 +471,7 @@ func TestLabel_ReadOne(t *testing.T) {
 					Username:                     "bot-owner-a-assistant",
 					Issuer:                       "local",
 					BotOwnerID:                   21,
+					BotOwner:                     botOwnerA,
 					EmailRemindersEnabled:        true,
 					OverdueTasksRemindersEnabled: true,
 					OverdueTasksRemindersTime:    "09:00",
@@ -536,6 +548,7 @@ func TestLabel_ReadOne(t *testing.T) {
 					Username:                     "bot-owner-a-scheduler",
 					Issuer:                       "local",
 					BotOwnerID:                   21,
+					BotOwner:                     botOwnerA,
 					EmailRemindersEnabled:        true,
 					OverdueTasksRemindersEnabled: true,
 					OverdueTasksRemindersTime:    "09:00",
