@@ -121,6 +121,7 @@
         "enable": "Enable",
         "tokensInactive": "API tokens of a disabled bot are rejected. Enable the bot to create or use tokens.",
         "badge": "Bot",
+        "badgeOwner": "Bot, created by {user}",
         "delete": {
           "header": "Delete this bot user",
           "text1": "Are you sure you want to delete the bot user \"{username}\"?",

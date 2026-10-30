@@ -14,9 +14,9 @@
 			/>
 			<span
 				v-if="isBot"
-				v-tooltip="t('user.settings.bots.badge')"
+				v-tooltip="botBadgeLabel"
 				class="bot-badge"
-				aria-label="Bot"
+				:aria-label="botBadgeLabel"
 			>B</span>
 		</span>
 		<span
@@ -35,7 +35,7 @@ import {getDisplayName} from '@/helpers/user'
 import type {User as IUser} from '@/client/generated'
 
 const props = withDefaults(defineProps<{
-	user: Pick<IUser, 'name' | 'username' | 'bot_owner_id'> & {botOwnerId?: number},
+	user: Pick<IUser, 'name' | 'username' | 'bot_owner_id' | 'bot_owner'> & {botOwnerId?: number},
 	showUsername?: boolean,
 	avatarSize?: number,
 	isInline?: boolean,
@@ -49,6 +49,9 @@ const {t} = useI18n({useScope: 'global'})
 
 const displayName = computed(() => getDisplayName(props.user))
 const isBot = computed(() => (props.user.bot_owner_id ?? props.user.botOwnerId ?? 0) > 0)
+const botBadgeLabel = computed(() => props.user.bot_owner
+	? t('user.settings.bots.badgeOwner', {user: getDisplayName(props.user.bot_owner)})
+	: t('user.settings.bots.badge'))
 </script>
 
 <style lang="scss" scoped>
