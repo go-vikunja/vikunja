@@ -600,4 +600,21 @@ test.describe('Project View Kanban', () => {
 		await expect(dueDate.locator('.overdue-indicator svg')).toBeVisible()
 		await expect(dueDate.locator('.overdue-indicator')).toContainText('Overdue')
 	})
+
+	test('Should mark a full bucket with an icon, not only by color', async ({authenticatedPage: page}) => {
+		await createTaskWithBuckets(buckets, 2)
+		await page.goto('/projects/1/4')
+
+		const bucketDropdown = page.locator('.kanban .bucket .bucket-header .dropdown.options').first()
+		await bucketDropdown.locator('.dropdown-trigger').click()
+		await bucketDropdown.locator('.dropdown-menu .dropdown-item').filter({hasText: 'Limit: Not Set'}).click()
+		await bucketDropdown.locator('.dropdown-menu .field input.input').fill('2')
+		await bucketDropdown.locator('.dropdown-menu .field .control .button').click()
+		await expect(page.locator('.global-notification')).toContainText('Success')
+
+		const limitSpan = page.locator('.kanban .bucket .bucket-header span.limit').first()
+		await expect(limitSpan).toContainText('2/2')
+		await expect(limitSpan.locator('svg')).toBeVisible()
+		await expect(limitSpan).toContainText('Limit reached')
+	})
 })
