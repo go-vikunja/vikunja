@@ -160,7 +160,7 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/labstack/echo/v4 v4.16.2 // indirect
+	github.com/labstack/echo/v4 v4.16.3 // indirect
 	github.com/labstack/gommon v0.5.0 // indirect
 	github.com/laurent22/ical-go v0.1.1-0.20181107184520-7e5d6ade8eef // indirect
 	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect
