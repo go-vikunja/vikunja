@@ -96,19 +96,16 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
-.global-notification {
-	padding: 0 .75rem .75rem;
-
-	// The library clips each toast, which hides its shadow.
-	:deep(.vue-notification-wrapper) {
-		overflow: visible;
-	}
+// The library clips each toast, which hides its shadow.
+.global-notification :deep(.vue-notification-wrapper) {
+	overflow: visible;
 }
 
 // Matches Message.vue instead of the library's solid fills.
 .vue-notification {
 	z-index: 9999;
-	margin: .5rem 0 0;
+	// On the toast, not the group: a padded group stays visible when empty.
+	margin: 0 .75rem .75rem;
 	border: 1px solid;
 	border-radius: $radius;
 	color: var(--text);
