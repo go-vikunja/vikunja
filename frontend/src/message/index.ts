@@ -43,6 +43,8 @@ export function error(e: unknown, actions: Action[] = []) {
 		type: 'error',
 		title: i18n.global.t('error.error'),
 		text: getErrorText(e),
+		// The 3s library default is too short to notice and read an error.
+		duration: 10000,
 		ignoreDuplicates: true,
 		data: {
 			actions: actions,
