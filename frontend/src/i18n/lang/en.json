@@ -610,6 +610,7 @@
       "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
       "collapse": "Collapse this bucket",
       "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks.",
+      "bucketLimitReachedShort": "Limit reached",
       "bucketOptions": "Bucket options"
     },
     "pseudo": {
@@ -1135,6 +1136,7 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",
       "due": "Due {at}",
+      "overdue": "Overdue",
       "closeTaskDetail": "Close task detail",
       "title": "Task detail",
       "markAsDone": "Mark '{task}' as done",

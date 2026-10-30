@@ -231,6 +231,10 @@
   --success-a: 1;
   --success: hsla(var(--success-h), var(--success-s), var(--success-l), var(--success-a));
 
+  // Darker than --success: --success as text fails WCAG contrast on white
+  --success-text-l: 25%;
+  --success-text: hsla(var(--success-h), var(--success-s), var(--success-text-l), var(--success-a));
+
   // $danger / $red is #ff4136
   --danger-h: 3.3deg;
   --danger-s: 100%;
@@ -333,6 +337,7 @@
 
       // Bright values already pass contrast on dark backgrounds; skip the light-theme darkening
       --danger-text: var(--danger);
+      --success-text: var(--success);
 
       --scheme-main-bis: var(--grey-100);
       --scheme-main-ter: var(--grey-100);

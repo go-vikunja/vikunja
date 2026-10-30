@@ -4,6 +4,7 @@
 			position="bottom left"
 			:max="2"
 			:ignore-duplicates="true"
+			:width="isMobile ? '100%' : 300"
 			class="global-notification"
 			role="status"
 			aria-live="polite"
@@ -21,6 +22,10 @@
 						v-if="item.title"
 						class="notification-title"
 					>
+						<Icon
+							:icon="item.type === 'error' ? 'exclamation-circle' : 'check'"
+							class="notification-icon mie-1"
+						/>
 						{{ item.title }}
 					</div>
 					<div class="notification-content">
@@ -65,6 +70,9 @@
 
 <script lang="ts" setup>
 import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {useIsMobile} from '@/composables/useIsMobile'
+
+const isMobile = useIsMobile()
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null
@@ -91,9 +99,43 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
-.vue-notification {
-	z-index: 9999;
+<style lang="scss" scoped>
+// The library clips each toast, which hides its shadow.
+.global-notification :deep(.vue-notification-wrapper) {
+	overflow: visible;
 }
 
+// Matches Message.vue instead of the library's solid fills.
+.vue-notification {
+	z-index: 9999;
+	// On the toast, not the group: a padded group stays visible when empty.
+	margin: 0 .75rem .75rem;
+	border: 1px solid;
+	border-radius: $radius;
+	color: var(--text);
+	font-size: .875rem;
+	box-shadow: var(--shadow-md);
+
+	.notification-title {
+		color: var(--text-strong);
+	}
+
+	&.success {
+		border-color: var(--success);
+		background: linear-gradient(hsla(var(--success-h), var(--success-s), var(--success-l), .08), hsla(var(--success-h), var(--success-s), var(--success-l), .08)), var(--white);
+
+		.notification-icon {
+			color: var(--success-text);
+		}
+	}
+
+	&.error {
+		border-color: var(--danger);
+		background: linear-gradient(hsla(var(--danger-h), var(--danger-s), var(--danger-l), .08), hsla(var(--danger-h), var(--danger-s), var(--danger-l), .08)), var(--white);
+
+		.notification-icon {
+			color: var(--danger-text);
+		}
+	}
+}
 </style>

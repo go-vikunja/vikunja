@@ -583,4 +583,38 @@ test.describe('Project View Kanban', () => {
 		await expect(limitSpan).toBeVisible()
 		await expect(limitSpan).toContainText('2/10')
 	})
+
+	test('Should mark overdue cards with an icon, not only by color', async ({authenticatedPage: page}) => {
+		const [task] = await TaskFactory.create(1, {
+			project_id: 1,
+			due_date: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+		})
+		await TaskBucketFactory.create(1, {
+			task_id: task.id,
+			bucket_id: buckets[0].id,
+			project_view_id: buckets[0].project_view_id,
+		})
+		await page.goto('/projects/1/4')
+
+		const dueDate = page.locator('.kanban .kanban-card').filter({hasText: task.title}).locator('.due-date')
+		await expect(dueDate.locator('.overdue-indicator svg')).toBeVisible()
+		await expect(dueDate.locator('.overdue-indicator')).toContainText('Overdue')
+	})
+
+	test('Should mark a full bucket with an icon, not only by color', async ({authenticatedPage: page}) => {
+		await createTaskWithBuckets(buckets, 2)
+		await page.goto('/projects/1/4')
+
+		const bucketDropdown = page.locator('.kanban .bucket .bucket-header .dropdown.options').first()
+		await bucketDropdown.locator('.dropdown-trigger').click()
+		await bucketDropdown.locator('.dropdown-menu .dropdown-item').filter({hasText: 'Limit: Not Set'}).click()
+		await bucketDropdown.locator('.dropdown-menu .field input.input').fill('2')
+		await bucketDropdown.locator('.dropdown-menu .field .control .button').click()
+		await expect(page.locator('.global-notification')).toContainText('Success')
+
+		const limitSpan = page.locator('.kanban .bucket .bucket-header span.limit').first()
+		await expect(limitSpan).toContainText('2/2')
+		await expect(limitSpan.locator('svg')).toBeVisible()
+		await expect(limitSpan).toContainText('Limit reached')
+	})
 })

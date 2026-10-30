@@ -45,6 +45,7 @@ import {
 	faGripLines,
 	faHeader,
 	faHistory,
+	faHourglassEnd,
 	faImage,
 	faKeyboard,
 	faLayerGroup,
@@ -164,6 +165,7 @@ library.add(faForward)
 library.add(faGripLines)
 library.add(faHeader)
 library.add(faHistory)
+library.add(faHourglassEnd)
 library.add(faImage)
 library.add(faKeyboard)
 library.add(faLayerGroup)

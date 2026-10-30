@@ -97,7 +97,11 @@
 							v-tooltip="formatDateLong(task.due_date)"
 							class="dueDate"
 							@click.prevent.stop="toggle()"
-						>	
+						>
+							<OverdueIndicator
+								v-if="isOverdue"
+								class="mie-1"
+							/>
 							<time
 								:datetime="formatISO(task.due_date)"
 								class="is-italic"
@@ -214,6 +218,7 @@ import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 import DeferTask from '@/components/tasks/partials/DeferTask.vue'
+import OverdueIndicator from '@/components/tasks/partials/OverdueIndicator.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 
