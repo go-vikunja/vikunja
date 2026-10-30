@@ -1,11 +1,12 @@
 <template>
 	<Teleport :to="teleportTarget">
 		<Notifications
+			ref="group"
 			:position="isRtl ? 'bottom right' : 'bottom left'"
 			:max="2"
 			:ignore-duplicates="true"
 			:width="isMobile ? '100%' : 300"
-			:style="{bottom: 'var(--bottom-banners-height, 0px)'}"
+			:style="{bottom: `${bannersOffset}px`}"
 			class="global-notification"
 			role="status"
 			aria-live="polite"
@@ -70,15 +71,17 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
-import {useI18n} from 'vue-i18n'
+import {onBeforeUnmount, onMounted, ref, useTemplateRef} from 'vue'
+import {useElementBounding} from '@vueuse/core'
 import {useIsMobile} from '@/composables/useIsMobile'
-import {isRTLLanguage, type SupportedLocale} from '@/i18n'
+import {useIsRtl} from '@/composables/useIsRtl'
+import {useBottomBannersOffset} from '@/composables/useBottomBanners'
 
 const isMobile = useIsMobile()
-// Same start-side column as the bottom banners.
-const {locale} = useI18n()
-const isRtl = computed(() => isRTLLanguage(locale.value as SupportedLocale))
+const isRtl = useIsRtl()
+
+const {left, right} = useElementBounding(useTemplateRef('group'))
+const bannersOffset = useBottomBannersOffset(() => ({left: left.value, right: right.value}))
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null

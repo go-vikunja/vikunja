@@ -3,40 +3,45 @@
 		ref="stack"
 		class="bottom-banners"
 	>
-		<div class="bottom-banners__cards">
-			<AddToHomeScreen />
-			<UpdateNotification />
-		</div>
-		<div ref="bars">
-			<DemoMode />
-		</div>
+		<AddToHomeScreen />
+		<UpdateNotification />
+		<DemoMode class="bottom-banners__bar" />
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {onScopeDispose, useTemplateRef, watchEffect} from 'vue'
-import {useElementSize} from '@vueuse/core'
+import {onScopeDispose, useTemplateRef, watch, watchEffect} from 'vue'
+import {useMutationObserver, useResizeObserver, useWindowSize} from '@vueuse/core'
 
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import UpdateNotification from '@/components/home/UpdateNotification.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
-import {useIsMobile} from '@/composables/useIsMobile'
+import {bottomBannerRects, useBottomBannersOffset} from '@/composables/useBottomBanners'
+import {useIsRtl} from '@/composables/useIsRtl'
 
 const stack = useTemplateRef<HTMLElement>('stack')
-const bars = useTemplateRef<HTMLElement>('bars')
-const {height} = useElementSize(stack, undefined, {box: 'border-box'})
-const {height: barsHeight} = useElementSize(bars, undefined, {box: 'border-box'})
-const isMobile = useIsMobile()
+const {width: viewportWidth, height: viewportHeight} = useWindowSize()
 
-// Other bottom-fixed UI offsets itself by these to stay above the banners.
-// On desktop the cards only occupy the start column, so the end edge just has the bars to clear.
-const VARS = ['--bottom-banners-height', '--bottom-banners-end-height']
-watchEffect(() => {
-	const root = document.documentElement.style
-	root.setProperty(VARS[0], `${height.value}px`)
-	root.setProperty(VARS[1], `${isMobile.value ? height.value : barsHeight.value}px`)
-})
-onScopeDispose(() => VARS.forEach(v => document.documentElement.style.removeProperty(v)))
+function measure() {
+	bottomBannerRects.value = [...(stack.value?.children ?? [])]
+		.map(el => el.getBoundingClientRect())
+		.filter(r => r.width > 0 && r.height > 0)
+}
+
+useResizeObserver(stack, measure)
+useMutationObserver(stack, measure, {childList: true, subtree: true})
+watch([viewportWidth, viewportHeight], measure)
+onScopeDispose(() => bottomBannerRects.value = [])
+
+// For floating controls pinned to the end edge (keyboard shortcuts, scroll buttons).
+const EDGE_ZONE = 64
+const isRtl = useIsRtl()
+const endOffset = useBottomBannersOffset(() => isRtl.value
+	? {left: 0, right: EDGE_ZONE}
+	: {left: viewportWidth.value - EDGE_ZONE, right: viewportWidth.value})
+
+watchEffect(() => document.documentElement.style.setProperty('--bottom-banners-end-height', `${endOffset.value}px`))
+onScopeDispose(() => document.documentElement.style.removeProperty('--bottom-banners-end-height'))
 </script>
 
 <style lang="scss" scoped>
@@ -48,11 +53,19 @@ onScopeDispose(() => VARS.forEach(v => document.documentElement.style.removeProp
 	// at least define it centrally
 	// the highest z-index of a modal is .hint-modal with 4500
 	z-index: 5000;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 	// The stack spans the full width; only the banners themselves should catch clicks.
 	pointer-events: none;
 
-	> * > * {
+	> * {
 		pointer-events: auto;
+	}
+
+	@media screen and (max-width: $tablet) {
+		align-items: stretch;
 	}
 
 	@media print {
@@ -60,14 +73,7 @@ onScopeDispose(() => VARS.forEach(v => document.documentElement.style.removeProp
 	}
 }
 
-// Same column as the toasts, which stack on top.
-.bottom-banners__cards {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-
-	@media screen and (max-width: $tablet) {
-		align-items: stretch;
-	}
+.bottom-banners__bar {
+	align-self: stretch;
 }
 </style>
