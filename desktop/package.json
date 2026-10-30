@@ -49,8 +49,16 @@
         "nsis",
         "portable",
         "msi",
-        "zip"
+        "zip",
+        "appx"
       ]
+    },
+    "appx": {
+      "artifactName": "${productName}-${version}.msix",
+      "applicationId": "VikunjaDesktop",
+      "displayName": "Vikunja Desktop",
+      "publisherDisplayName": "Vikunja",
+      "backgroundColor": "transparent"
     },
     "mac": {
       "category": "public.app-category.productivity",
