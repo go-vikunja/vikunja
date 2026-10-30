@@ -25,6 +25,8 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -98,6 +100,8 @@ func TestHumaBotUser(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"username":"bot-owner-a-assistant"`)
 			assert.Contains(t, rec.Body.String(), `"bot_owner_id":21`)
+			assert.Contains(t, rec.Body.String(), `"bot_owner":{"id":21,`)
+			assert.NotContains(t, rec.Body.String(), "user_bot_owner_a@example.com")
 			assert.Contains(t, rec.Body.String(), `"max_permission":`)
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
@@ -304,4 +308,23 @@ func botIDsFromReadAll(t *testing.T, body []byte) []int64 {
 		ids = append(ids, it.ID)
 	}
 	return ids
+}
+
+// Anyone who can see a bot's work can see who owns it, even outside /user/bots.
+func TestHumaBotOwnerVisibleOnCreatedBy(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	s := db.NewSession()
+	_, err = s.ID(1).Cols("created_by_id").Update(&models.Task{CreatedByID: 23})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	require.NoError(t, s.Close())
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1", "", humaTokenFor(t, &testuser1), "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	body := rec.Body.String()
+	assert.Contains(t, body, `"bot_owner":{"id":21,`)
+	assert.Contains(t, body, `"username":"user_bot_owner_a"`)
+	assert.NotContains(t, body, "user_bot_owner_a@example.com")
 }
