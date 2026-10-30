@@ -4,6 +4,7 @@
 			position="bottom left"
 			:max="2"
 			:ignore-duplicates="true"
+			:width="isMobile ? '100%' : 300"
 			class="global-notification"
 			role="status"
 			aria-live="polite"
@@ -69,6 +70,9 @@
 
 <script lang="ts" setup>
 import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {useIsMobile} from '@/composables/useIsMobile'
+
+const isMobile = useIsMobile()
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null
@@ -96,9 +100,16 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+// The library clips each toast, which hides its shadow.
+.global-notification :deep(.vue-notification-wrapper) {
+	overflow: visible;
+}
+
 // Matches Message.vue instead of the library's solid fills.
 .vue-notification {
 	z-index: 9999;
+	// On the toast, not the group: a padded group stays visible when empty.
+	margin: 0 .75rem .75rem;
 	border: 1px solid;
 	border-radius: $radius;
 	color: var(--text);
