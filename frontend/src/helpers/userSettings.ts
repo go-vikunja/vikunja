@@ -25,6 +25,7 @@ export interface FrontendSettings {
 	time_format: TimeFormat
 	default_task_relation_type: IRelationKind
 	background_brightness: number | null
+	extend_project_background_to_chrome: boolean
 	always_show_bucket_task_count: boolean
 	show_last_viewed: boolean
 	sidebar_width: number | null
@@ -80,6 +81,7 @@ export function defaultFrontendSettings(): FrontendSettings {
 		time_format: TIME_FORMAT.HOURS_24,
 		default_task_relation_type: RELATION_KIND.RELATED,
 		background_brightness: null,
+		extend_project_background_to_chrome: false,
 		always_show_bucket_task_count: false,
 		show_last_viewed: true,
 		sidebar_width: null,

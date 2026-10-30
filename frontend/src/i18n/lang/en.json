@@ -276,6 +276,7 @@
       "backgroundBrightness": {
         "title": "Background brightness"
       },
+      "extendProjectBackgroundToChrome": "Show the project background behind the sidebar and top bar",
       "webhooks": {
         "title": "Webhook Notifications",
         "description": "Configure webhook URLs to receive POST requests when reminder or overdue events fire. These webhooks receive events from all your projects."
