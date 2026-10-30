@@ -21,6 +21,10 @@
 						v-if="item.title"
 						class="notification-title"
 					>
+						<Icon
+							:icon="item.type === 'error' ? 'exclamation-circle' : 'check'"
+							class="notification-icon mie-1"
+						/>
 						{{ item.title }}
 					</div>
 					<div class="notification-content">
@@ -91,9 +95,36 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+// Matches Message.vue instead of the library's solid fills.
 .vue-notification {
 	z-index: 9999;
-}
+	border: 1px solid;
+	border-radius: $radius;
+	color: var(--text);
+	font-size: .875rem;
+	box-shadow: var(--shadow-md);
 
+	.notification-title {
+		color: var(--text-strong);
+	}
+
+	&.success {
+		border-color: var(--success);
+		background: linear-gradient(hsla(var(--success-h), var(--success-s), var(--success-l), .08), hsla(var(--success-h), var(--success-s), var(--success-l), .08)), var(--white);
+
+		.notification-icon {
+			color: var(--success-text);
+		}
+	}
+
+	&.error {
+		border-color: var(--danger);
+		background: linear-gradient(hsla(var(--danger-h), var(--danger-s), var(--danger-l), .08), hsla(var(--danger-h), var(--danger-s), var(--danger-l), .08)), var(--white);
+
+		.notification-icon {
+			color: var(--danger-text);
+		}
+	}
+}
 </style>
