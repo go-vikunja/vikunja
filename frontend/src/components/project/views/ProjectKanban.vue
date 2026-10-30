@@ -66,10 +66,20 @@
 									</h2>
 									<span
 										v-if="bucket.limit > 0 || alwaysShowBucketTaskCount"
-										:class="{'is-max': bucket.limit > 0 && bucket.count >= bucket.limit}"
+										v-tooltip="isBucketFull(bucket) ? $t('project.kanban.bucketLimitReached') : ''"
+										:class="{'is-max': isBucketFull(bucket)}"
 										class="limit"
 									>
+										<Icon
+											v-if="isBucketFull(bucket)"
+											icon="exclamation-circle"
+											class="mie-1"
+										/>
 										{{ bucket.limit > 0 ? `${bucket.count}/${bucket.limit}` : bucket.count }}
+										<span
+											v-if="isBucketFull(bucket)"
+											class="is-sr-only"
+										>{{ $t('project.kanban.bucketLimitReachedShort') }}</span>
 									</span>
 									<Dropdown
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
@@ -199,12 +209,12 @@
 											</div>
 											<XButton
 												v-else
-												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
+												v-tooltip="isBucketFull(bucket) ? $t('project.kanban.bucketLimitReached') : ''"
 												class="is-fullwidth has-text-centered"
 												:shadow="false"
 												icon="plus"
 												variant="secondary"
-												:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
+												:disabled="isBucketFull(bucket)"
 												@click="toggleShowNewTaskInput(bucket.id)"
 											>
 												{{
@@ -632,7 +642,7 @@ async function addTaskToBucket(bucketId: number) {
 	scrollTaskContainerToTop(bucketId)
 
 	const bucket = getBucketById(bucketId)
-	if (bucket && bucket.limit && bucket.count >= bucket.limit) {
+	if (bucket && isBucketFull(bucket)) {
 		toggleShowNewTaskInput(bucketId)
 	}
 }
@@ -778,6 +788,10 @@ async function setBucketLimit(bucketId: number, now: boolean = false) {
 	}
 
 	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit)
+}
+
+function isBucketFull(bucket: BucketResponse) {
+	return bucket.limit > 0 && bucket.count >= bucket.limit
 }
 
 function shouldAcceptDrop(bucket: BucketResponse) {
