@@ -251,7 +251,7 @@ onBeforeUnmount(() => {
 
 .keyboard-shortcuts-button {
 	position: fixed;
-	inset-block-end: calc(1rem - 4px);
+	inset-block-end: calc(var(--bottom-banners-height, 0px) + 1rem - 4px);
 	inset-inline-end: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
 	color: var(--grey-500);
