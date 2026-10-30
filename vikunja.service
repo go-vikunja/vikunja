@@ -14,9 +14,6 @@ Type=simple
 WorkingDirectory=/opt/vikunja
 ExecStart=/usr/local/bin/vikunja
 Restart=always
-# Mitigates CVE-2026-98432 (kernel IPv4 TCP use-after-free) by disabling MPTCP
-# on Vikunja's listen sockets. Remove once the host kernel is patched.
-Environment=GODEBUG=multipathtcp=0
 # Keeps the SQLite database and stored files private to the service user.
 UMask=0077
 
