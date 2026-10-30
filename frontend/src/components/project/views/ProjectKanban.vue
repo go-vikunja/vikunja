@@ -1038,6 +1038,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		.limit {
 			padding: 0 .5rem;
 			font-weight: bold;
+			white-space: nowrap;
 
 			&.is-max {
 				color: var(--danger-text);
