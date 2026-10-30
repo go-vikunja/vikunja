@@ -1246,6 +1246,10 @@ definitions:
         description: Whether the member is an admin of the team. See the docs for
           more about what a team admin can do
         type: boolean
+      bot_owner:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this bot. Only set for bot users.
       bot_owner_id:
         description: |-
           BotOwnerID is the ID of the owning (human) user if this user is a bot.
@@ -1359,6 +1363,10 @@ definitions:
     type: object
   models.UserWithPermission:
     properties:
+      bot_owner:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this bot. Only set for bot users.
       bot_owner_id:
         description: |-
           BotOwnerID is the ID of the owning (human) user if this user is a bot.
@@ -1522,6 +1530,10 @@ definitions:
     properties:
       auth_provider:
         type: string
+      bot_owner:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this bot. Only set for bot users.
       bot_owner_id:
         description: |-
           BotOwnerID is the ID of the owning (human) user if this user is a bot.
@@ -1761,6 +1773,10 @@ definitions:
     type: object
   user.User:
     properties:
+      bot_owner:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this bot. Only set for bot users.
       bot_owner_id:
         description: |-
           BotOwnerID is the ID of the owning (human) user if this user is a bot.
@@ -1870,6 +1886,10 @@ definitions:
     properties:
       auth_provider:
         type: string
+      bot_owner:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who created this bot. Only set for bot users.
       bot_owner_id:
         description: |-
           BotOwnerID is the ID of the owning (human) user if this user is a bot.
