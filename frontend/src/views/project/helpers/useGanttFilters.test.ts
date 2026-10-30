@@ -46,7 +46,7 @@ describe('useGanttFilters', () => {
 			fullPath: '/tasks/3619',
 		})
 
-		const {filters} = useGanttFilters(route, ref(5), ref(2759))
+		const {filters} = useGanttFilters(route, ref(5), ref(2759), ref(false))
 
 		expect(filters.value.projectId).toBe(5)
 		expect(filters.value.viewId).toBe(2759)
@@ -60,7 +60,7 @@ describe('useGanttFilters', () => {
 			fullPath: '/projects/5/2759?dateFrom=2024-01-01&dateTo=2024-02-01',
 		})
 
-		const {filters} = useGanttFilters(route, ref(5), ref(2759))
+		const {filters} = useGanttFilters(route, ref(5), ref(2759), ref(false))
 
 		expect(filters.value.dateFrom).toBe(new Date(2024, 0, 1).toISOString())
 		expect(filters.value.dateTo).toBe(new Date(2024, 1, 1).toISOString())
