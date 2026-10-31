@@ -7,7 +7,7 @@ allowBuilds:
 catalog:
   rollup: 4.63.3
 overrides:
-  minimatch: 10.2.6
+  minimatch: 11.0.1
   rollup: 'catalog:'
   basic-ftp: 6.2.3
   serialize-javascript: 7.1.3
