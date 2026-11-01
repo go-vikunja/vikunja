@@ -12,4 +12,4 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
-      - uses: MatteoGabriele/agentscan-text-action@main
+      - uses: MatteoGabriele/agentscan-text-action@3f61cb459479f203d0342df01f197127912c6129 # main

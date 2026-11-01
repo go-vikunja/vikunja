@@ -27,7 +27,7 @@ jobs:
           version: latest
           args: -compile ./mage-static
       - name: Store Mage Binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mage_bin
           path: ./mage-static
@@ -38,12 +38,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Mage Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: mage_bin
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
+        uses: proudust/gh-describe@9b42731dd866e3cd8165a65f94cc58613def3114 # v2.2.2
       - name: Set up Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -57,7 +57,7 @@ jobs:
           chmod +x ./mage-static
           ./mage-static build
       - name: Store Vikunja Binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: vikunja_bin
           path: ./vikunja
@@ -106,7 +106,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Mage Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: mage_bin
       - name: Check
@@ -120,7 +120,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Mage Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: mage_bin
       - uses: ./.github/actions/setup-frontend
@@ -168,7 +168,7 @@ jobs:
           wget https://dl.vikunja.io/vikunja/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
           unzip vikunja-latest.zip vikunja-unstable-linux-amd64
       - name: Download Vikunja Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: vikunja_bin
       - name: run migration
@@ -260,7 +260,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Mage Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: mage_bin
       - name: Set up Go
@@ -310,7 +310,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Mage Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: mage_bin
       - name: Set up Go
@@ -331,7 +331,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Mage Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: mage_bin
       - name: Set up Go
@@ -361,7 +361,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Mage Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: mage_bin
       - name: Set up Go
@@ -430,7 +430,7 @@ jobs:
       - uses: ./.github/actions/setup-frontend
       - name: Git describe
         id: ghd
-        uses: proudust/gh-describe@80412be8ce0e77d8afba6b340e34790bc772aa45 # v2.2.0
+        uses: proudust/gh-describe@9b42731dd866e3cd8165a65f94cc58613def3114 # v2.2.2
       - name: Inject frontend version
         working-directory: frontend
         run: |
@@ -439,7 +439,7 @@ jobs:
         working-directory: frontend
         run: pnpm build
       - name: Store Frontend
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: frontend_dist
           path: ./frontend/dist
@@ -451,7 +451,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Vikunja Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: vikunja_bin
       - name: Set up Go
@@ -508,7 +508,7 @@ jobs:
           (cd veans && mage test:e2e)
       - name: Upload API log on failure
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: veans-e2e-vikunja-log
           path: /tmp/vikunja.log
@@ -537,14 +537,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download Vikunja Binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: vikunja_bin
       - uses: ./.github/actions/setup-frontend
         with:
           install-e2e-binaries: false # Playwright browsers already in container
       - name: Download Frontend
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: frontend_dist
           path: ./frontend/dist
@@ -595,14 +595,14 @@ jobs:
           VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTID: vikunja
           VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTSECRET: secret
       - name: Upload Playwright Report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: playwright-report-${{ matrix.shard }}
           path: frontend/playwright-report/
           retention-days: 30
       - name: Upload Test Results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: playwright-test-results-${{ matrix.shard }}
