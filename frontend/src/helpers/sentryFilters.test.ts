@@ -1,4 +1,4 @@
-import {describe, it, expect} from 'vitest'
+import {afterEach, describe, it, expect} from 'vitest'
 import {reactive} from 'vue'
 
 import {ApiError} from '@/client/problem'
@@ -248,6 +248,42 @@ describe('shouldDropEvent with empty events', () => {
 	})
 })
 
+
+describe('shouldDropEvent on a machine-translated page', () => {
+	afterEach(() => {
+		document.body.innerHTML = ''
+	})
+
+	// What Chrome's and Edge's built-in translators leave behind.
+	function translatePage() {
+		document.body.innerHTML = '<span><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Hecho</font></font></span>'
+	}
+
+	it.each([
+		'Cannot read properties of null (reading \'nextSibling\')',
+		'Cannot read properties of null (reading \'insertBefore\')',
+		'can\'t access property "parentNode", e is null',
+		'null is not an object (evaluating \'e.nextSibling\')',
+	])('drops a vue patch error: %s', message => {
+		translatePage()
+		expect(shouldDropEvent(new TypeError(message))).toBe(true)
+	})
+
+	it('keeps the same error on an untranslated page', () => {
+		document.body.innerHTML = '<span>Done</span>'
+		expect(shouldDropEvent(new TypeError('Cannot read properties of null (reading \'nextSibling\')'))).toBe(false)
+	})
+
+	it('keeps it when the only font element is user content', () => {
+		document.body.innerHTML = '<div data-user-content><p><font color="red">pasted</font></p></div>'
+		expect(shouldDropEvent(new TypeError('Cannot read properties of null (reading \'nextSibling\')'))).toBe(false)
+	})
+
+	it('keeps an unrelated error on a translated page', () => {
+		translatePage()
+		expect(shouldDropEvent(new TypeError('Cannot read properties of undefined (reading \'id\')'))).toBe(false)
+	})
+})
 
 describe('stripNavigationFragment', () => {
 	it.each(['browser.request', 'browser.domContentLoadedEvent', 'navigation.navigate', 'navigation.reload', 'navigation.back_forward'])('removes the original fragment from %s while preserving timing data', op => {
