@@ -19,12 +19,14 @@ package apiv2
 
 import (
 	"context"
+	"maps"
 	"net/http"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -45,6 +47,17 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	// Real presence/format rules live in `valid:` tags, enforced by govalidator in
 	// the Register wrapper; leave the schema permissive so partial updates match v1.
 	cfg.FieldsOptionalByDefault = true
+	jsonFormat := huma.DefaultJSONFormat
+	jsonFormat.Unmarshal = func(data []byte, v any) error {
+		if err := utils.CheckJSONForNUL(data); err != nil {
+			return err
+		}
+		return huma.DefaultJSONFormat.Unmarshal(data, v)
+	}
+	// DefaultConfig shares huma's global DefaultFormats map; don't mutate it.
+	cfg.Formats = maps.Clone(cfg.Formats)
+	cfg.Formats["application/json"] = jsonFormat
+	cfg.Formats["json"] = jsonFormat
 	api := humabridge.NewWithGroup(e, g, GroupPrefix, cfg)
 	oapi := api.OpenAPI()
 	if oapi.Info != nil {
