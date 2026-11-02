@@ -21,7 +21,7 @@
 							{{ $t('timeTracking.form.task') }}
 						</th>
 						<th>{{ $t('misc.user') }}</th>
-						<th>{{ $t('task.comment.comment') }}</th>
+						<th>{{ $t('timeTracking.commentLabel') }}</th>
 						<th class="nowrap">
 							{{ $t('timeTracking.list.time') }}
 						</th>

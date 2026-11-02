@@ -32,7 +32,7 @@
 		</div>
 
 		<div class="field">
-			<label class="label">{{ $t('task.comment.comment') }}</label>
+			<label class="label">{{ $t('timeTracking.commentLabel') }}</label>
 			<input
 				v-model="comment"
 				v-cy="'timeEntryComment'"
