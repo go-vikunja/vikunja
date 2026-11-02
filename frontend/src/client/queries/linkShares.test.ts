@@ -7,7 +7,7 @@ vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => 1, getToken: () => null, getTokenIdentity: () => null}))
 
-import {linkShareKeys, linkSharesQuery, createLinkShareDraft, createLinkShareMutationOptions, deleteLinkShareMutationOptions} from './linkShares'
+import {linkShareKeys, linkSharesQuery, linkSharesCreatedBy, createLinkShareDraft, createLinkShareMutationOptions, deleteLinkShareMutationOptions} from './linkShares'
 
 let client: QueryClient
 beforeEach(() => {
@@ -45,5 +45,30 @@ describe('link shares', () => {
 
 	it('provides draft defaults', () => {
 		expect(createLinkShareDraft()).toEqual({name: '', password: '', permission: 0})
+	})
+
+	describe('linkSharesCreatedBy', () => {
+		const shares = [
+			{id: 1, name: 'by 2', shared_by: {id: 2}},
+			{id: 2, name: 'by 3', shared_by: {id: 3}},
+			{id: 3, name: 'by 4', shared_by: {id: 4}},
+			{id: 4, name: 'no creator'},
+			{name: 'no id', shared_by: {id: 2}},
+		]
+
+		it('selects shares created by any of the given users, tagged with the project', () => {
+			expect(linkSharesCreatedBy(7, shares, [2, 4])).toEqual([
+				{projectId: 7, share: shares[0]},
+				{projectId: 7, share: shares[2]},
+			])
+		})
+
+		it('selects nothing without users', () => {
+			expect(linkSharesCreatedBy(7, shares, [])).toEqual([])
+		})
+
+		it('selects nothing when no share matches', () => {
+			expect(linkSharesCreatedBy(7, shares, [99])).toEqual([])
+		})
 	})
 })
