@@ -37,3 +37,4 @@ Invoke with the `Skill` tool before writing code in these areas:
 - [Dev commands and configuration](.agents/docs/dev-commands.md)
 - [Supported databases](.agents/docs/databases.md)
 - [License system](.agents/docs/license.md)
+- [Security Vulnerabilities](SECURITY.md)
