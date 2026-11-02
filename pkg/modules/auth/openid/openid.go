@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -67,7 +68,6 @@ type Provider struct {
 	UsernameFallback    bool   `json:"username_fallback"`
 	ForceUserInfo       bool   `json:"force_user_info"`
 	RequireAvailability bool   `json:"-"`
-	UseGroupsClaim      bool   `json:"-"`
 	ClientSecret        string `json:"-"`
 	// RP-Initiated Logout endpoint, cached at init so logout never fetches.
 	// Exported so it survives the gob keyvalue round-trip (gob skips unexported
@@ -99,7 +99,7 @@ func (b *boolish) UnmarshalJSON(data []byte) error {
 
 // stringList decodes a JSON string array or a single string — some OIDC
 // providers emit a lone group as a plain string. Other shapes decode to an
-// empty list, since the claim is parsed even when usegroupsclaim is off.
+// empty list, since the claim is parsed even for providers not requesting it.
 type stringList []string
 
 func (l *stringList) UnmarshalJSON(data []byte) error {
@@ -306,8 +306,9 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 		return nil, nil, err
 	}
 
+	// Gated on the scope because some providers send groups without being asked.
 	var teamData []*models.Team
-	if provider.UseGroupsClaim {
+	if slices.Contains(strings.Fields(provider.Scope), "groups") {
 		teamData = getTeamDataFromGroupsClaim(cl.Groups)
 	} else {
 		teamData = getTeamDataFromToken(cl.VikunjaGroups, provider)
