@@ -82,6 +82,11 @@
 	</Teleport>
 </template>
 
+<script lang="ts">
+// Shared across instances so scanning a list skips the delay once one tooltip was open.
+let lastHiddenAt = 0
+</script>
+
 <script setup lang="ts">
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {ref, computed, onUnmounted, nextTick, useId} from 'vue'
@@ -105,6 +110,7 @@ const props = defineProps<{
 }>()
 
 const HOVER_DELAY = 1000 // 1 second
+const WARM_WINDOW = 300
 const MAX_DESCRIPTION_LENGTH = 150
 
 // Taps on touch devices emulate mouseenter, which would show the tooltip unexpectedly.
@@ -169,6 +175,7 @@ function scheduleShow() {
 		clearTimeout(hoverTimeout)
 	}
 
+	const isWarm = Date.now() - lastHiddenAt < WARM_WINDOW
 	hoverTimeout = setTimeout(async () => {
 		hoverTimeout = null
 		teleportTarget.value = getTopLayerContainer(triggerRef.value)
@@ -178,13 +185,17 @@ function scheduleShow() {
 
 		await nextTick()
 		await updatePosition()
-	}, HOVER_DELAY)
+	}, isWarm ? 0 : HOVER_DELAY)
 }
 
 function hide() {
 	if (hoverTimeout) {
 		clearTimeout(hoverTimeout)
 		hoverTimeout = null
+	}
+
+	if (showTooltip.value) {
+		lastHiddenAt = Date.now()
 	}
 
 	showTooltip.value = false
