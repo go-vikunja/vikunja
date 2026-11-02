@@ -4,6 +4,7 @@ import type {UserWithPermission, TeamWithPermission} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {projectKeys} from './projects'
+import {teamKeys} from './teams'
 import {userSearchKeys} from './userSearch'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import {i18n} from '@/i18n'
@@ -23,6 +24,7 @@ async function invalidateShares(client: QueryClient, projectId: number, kind: 'u
 		client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
 		client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		client.invalidateQueries({queryKey: userSearchKeys.all, refetchType: 'none'}),
+		...(kind === 'teams' ? [client.invalidateQueries({queryKey: teamKeys.adminProjectsAll, refetchType: 'none'})] : []),
 	])
 }
 
