@@ -18,7 +18,6 @@ package user
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -27,7 +26,6 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
@@ -238,11 +236,8 @@ func GetTOTPQrCodeAsJpegForUser(s *xorm.Session, user *User) ([]byte, error) {
 }
 
 // HandleFailedTOTPAuth records a failed TOTP attempt and locks the account
-// after 10 consecutive failures.
-//
-// Must not share the caller's session: the login handler rolls its session
-// back on auth failure, which would discard the lockout write
-// (GHSA-fgfv-pv97-6cmj). Opens its own session and commits independently.
+// after maxFailedLoginAttempts consecutive failures. Opens its own session,
+// see lockAccount.
 func HandleFailedTOTPAuth(user *User) {
 	log.Errorf("Invalid TOTP credentials provided for user %d", user.ID)
 
@@ -272,34 +267,9 @@ func HandleFailedTOTPAuth(user *User) {
 		return
 	}
 
-	if attempts < 10 {
+	if attempts < maxFailedLoginAttempts {
 		return
 	}
 
-	log.Infof("Blocking user account %d after 10 failed TOTP password attempts", user.ID)
-	s := db.NewSession()
-	defer s.Close()
-	defer events.CleanupPending(s)
-
-	if err := RequestUserPasswordResetToken(s, user); err != nil {
-		log.Errorf("Could not issue password reset token for user %d after 10 failed TOTP attempts: %s", user.ID, err)
-		_ = s.Rollback()
-		return
-	}
-	if err := notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTPNotification{User: user}, s); err != nil {
-		log.Errorf("Could not send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
-		_ = s.Rollback()
-		return
-	}
-	if err := user.SetStatus(s, StatusAccountLocked); err != nil {
-		log.Errorf("Could not lock user %d: %s", user.ID, err)
-		_ = s.Rollback()
-		return
-	}
-	events.DispatchOnCommit(s, &AccountLockedEvent{UserID: user.ID})
-	if err := s.Commit(); err != nil {
-		log.Errorf("Could not commit lockout for user %d: %s", user.ID, err)
-		return
-	}
-	events.DispatchPending(context.Background(), s)
+	lockAccount(user, &PasswordAccountLockedAfterInvalidTOTPNotification{User: user})
 }
