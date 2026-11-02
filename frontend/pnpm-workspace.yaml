@@ -19,7 +19,7 @@ overrides:
   form-data: 4.0.6
   markdown-it: 15.0.3
   launch-editor: 2.14.2
-  '@babel/core': 8.0.7
+  '@babel/core': 8.0.10
   js-yaml@4: 5.4.2
   fast-uri@3: 4.2.3
 publicHoistPattern:
