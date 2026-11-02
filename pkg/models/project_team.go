@@ -314,3 +314,47 @@ func (tl *TeamProject) Update(s *xorm.Session, _ web.Auth) (err error) {
 	err = updateProjectLastUpdated(s, &Project{ID: tl.ProjectID})
 	return
 }
+
+// GetAdminProjectsSharedWithTeam returns the projects shared directly with the team
+// on which a is admin. Sub-projects inheriting the share are not included.
+func GetAdminProjectsSharedWithTeam(s *xorm.Session, a web.Auth, teamID int64) ([]*Project, error) {
+	team, err := GetTeamByID(s, teamID)
+	if err != nil {
+		return nil, err
+	}
+	canRead, _, err := team.CanRead(s, a)
+	if err != nil {
+		return nil, err
+	}
+	if !canRead {
+		return nil, ErrGenericForbidden{}
+	}
+
+	projectIDs := []int64{}
+	if err := s.Table("team_projects").Where("team_id = ?", teamID).OrderBy("project_id").Cols("project_id").Find(&projectIDs); err != nil {
+		return nil, err
+	}
+	projects, err := GetProjectsMapByIDs(s, projectIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	instanceAdmin := isInstanceAdmin(s, a)
+	u := &user.User{ID: a.GetID()}
+	permissions, err := checkPermissionsForProjects(s, u, projectIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*Project{}
+	for _, id := range projectIDs {
+		p, has := projects[id]
+		if !has {
+			continue
+		}
+		if instanceAdmin || p.isOwner(u) || permissions[id] == PermissionAdmin {
+			result = append(result, p)
+		}
+	}
+	return result, nil
+}
