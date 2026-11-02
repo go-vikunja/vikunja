@@ -1275,6 +1275,11 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		if err != nil {
 			return err
 		}
+
+		err = cleanupAfterProjectMove(s, project.ID)
+		if err != nil {
+			return err
+		}
 	}
 
 	events.DispatchOnCommit(s, &ProjectUpdatedEvent{

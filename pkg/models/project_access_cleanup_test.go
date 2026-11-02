@@ -104,6 +104,15 @@ func (f *accessLossFixture) giveParentTo(t *testing.T, u *user.User) {
 	require.NoError(t, err)
 }
 
+func (f *accessLossFixture) moveChildToNewRoot(t *testing.T) {
+	t.Helper()
+	root := &Project{Title: "access loss new root"}
+	require.NoError(t, root.Create(f.s, f.owner))
+	rootID := root.ID
+	f.child.ParentProjectID = &rootID
+	require.NoError(t, UpdateProject(f.s, f.child, f.owner, false))
+}
+
 func (f *accessLossFixture) assertCleanedUp(t *testing.T) {
 	t.Helper()
 	require.NoError(t, f.s.Commit())
@@ -235,6 +244,29 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 
 		require.NoError(t, (&ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, Permission: PermissionRead}).Update(f.s, f.owner))
 		f.assertWebhooksKept(t)
+	})
+	t.Run("moving the child under a parent the member cannot read", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareViaTeam(t)
+		f.moveChildToNewRoot(t)
+
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID})
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP}, false)
+		db.AssertExists(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID}, false)
+	})
+	t.Run("moving the child keeps webhooks of a member shared on the child", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareViaTeam(t)
+		pu := &ProjectUser{ProjectID: f.child.ID, Username: f.member.Username, Permission: PermissionRead}
+		require.NoError(t, pu.Create(f.s, f.owner))
+		f.moveChildToNewRoot(t)
+
+		require.NoError(t, f.s.Commit())
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC}, false)
+		db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID}, false)
 	})
 	t.Run("removes orphaned data for deleted project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

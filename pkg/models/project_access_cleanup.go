@@ -83,6 +83,48 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, pro
 	return nil
 }
 
+// Moving a project can drop access inherited from its old ancestors, with no share removed to trigger cleanup.
+func cleanupAfterProjectMove(s *xorm.Session, projectID int64) error {
+	subtreeIDs := builder.Select("project_id").From("project_ancestors").Where(builder.Eq{"ancestor_id": projectID})
+	taskIDs := builder.Select("id").From("tasks").Where(builder.In("project_id", subtreeIDs))
+
+	userIDs := []int64{}
+	err := s.Table("webhooks").
+		Cols("created_by_id").
+		Where(builder.In("project_id", subtreeIDs)).
+		Find(&userIDs)
+	if err != nil {
+		return err
+	}
+
+	subscriberIDs := []int64{}
+	err = s.Table("subscriptions").
+		Cols("user_id").
+		Where(builder.Or(
+			builder.Eq{"entity_type": SubscriptionEntityProject}.And(builder.In("entity_id", subtreeIDs)),
+			builder.Eq{"entity_type": SubscriptionEntityTask}.And(builder.In("entity_id", taskIDs)),
+		)).
+		Find(&subscriberIDs)
+	if err != nil {
+		return err
+	}
+
+	assigneeIDs := []int64{}
+	err = s.Table("task_assignees").
+		Cols("user_id").
+		Where(builder.In("task_id", taskIDs)).
+		Find(&assigneeIDs)
+	if err != nil {
+		return err
+	}
+
+	userIDs = slices.Concat(userIDs, subscriberIDs, assigneeIDs)
+	slices.Sort(userIDs)
+	userIDs = slices.Compact(userIDs)
+
+	return cleanupAfterProjectAccessLossForUsers(s, userIDs, []int64{projectID})
+}
+
 // Keep in sync with ProjectAccessCleanupList.vue.
 func deleteUserDataInProjects(s *xorm.Session, userID int64, projectIDs []int64) error {
 	if len(projectIDs) == 0 {
