@@ -133,6 +133,10 @@
 			<template #text>
 				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}</p>
 				<ProjectAccessCleanupList :intro="$t('project.share.userTeam.removeCleanupText')" />
+				<RevokeLinkSharesOption
+					v-model:revoke="revokeLinkShares"
+					:shares="linkSharesToRevoke"
+				/>
 			</template>
 		</Modal>
 	</div>
@@ -146,6 +150,9 @@ import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
+import RevokeLinkSharesOption from '@/components/sharing/RevokeLinkSharesOption.vue'
+import {useDeleteLinkShareMutation} from '@/client/queries/linkShares'
+import {useLinkSharesCreatedBy} from '@/composables/useLinkSharesCreatedBy'
 
 type Identified<T extends {id?: number}> = T & {id: number}
 
@@ -163,6 +170,7 @@ const props = defineProps<{
 	add: (projectId: number, candidate: Identified<Candidate>) => Promise<unknown>
 	updatePermission: (projectId: number, share: Identified<Share>, permission: Permission) => Promise<unknown>
 	remove: (projectId: number, share: Identified<Share>) => Promise<unknown>
+	affectedUserIds: (share: Identified<Share>) => number[]
 }>()
 
 const showSearchLoading = useDelayedLoading(() => props.searchLoading)
@@ -183,6 +191,15 @@ const unsharedCandidates = computed(() => props.candidates.filter(hasId).filter(
 const selected = ref(null) as Ref<Identified<Candidate> | null>
 const selectedPermission = ref<Record<number, Permission>>({})
 const shareToDelete = ref(null) as Ref<Identified<Share> | null>
+const revokeLinkShares = ref(false)
+const linkSharesToRevoke = useLinkSharesCreatedBy(
+	() => shareToDelete.value && props.userIsAdmin ? [props.projectId] : [],
+	() => shareToDelete.value ? props.affectedUserIds(shareToDelete.value) : [],
+)
+const deleteLinkShare = useDeleteLinkShareMutation()
+watch(shareToDelete, () => {
+	revokeLinkShares.value = false
+})
 
 watch(identifiedShares, shares => {
 	selectedPermission.value = Object.fromEntries(shares.map(share => [share.id, normalizeSharePermission(share.permission)]))
@@ -220,8 +237,14 @@ async function changePermission(share: Identified<Share>) {
 
 async function removeShare() {
 	const share = shareToDelete.value
-	if (!share || props.isMutating) return
-	await props.remove(props.projectId, share).catch(() => {})
+	if (!share || props.isMutating || deleteLinkShare.isPending.value) return
+	const linkShares = revokeLinkShares.value ? linkSharesToRevoke.value : []
+	try {
+		await props.remove(props.projectId, share)
+		await Promise.allSettled(linkShares.map(({projectId, share}) => deleteLinkShare.mutateAsync({projectId, id: share.id})))
+	} catch {
+		// The mutation already toasted the error.
+	}
 	if (shareToDelete.value === share) shareToDelete.value = null
 }
 </script>
