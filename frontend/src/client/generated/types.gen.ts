@@ -10250,6 +10250,33 @@ export type TeamsMembersToggleAdminResponses = {
 
 export type TeamsMembersToggleAdminResponse = TeamsMembersToggleAdminResponses[keyof TeamsMembersToggleAdminResponses];
 
+export type TeamsProjectsListData = {
+    body?: never;
+    path: {
+        team: number;
+    };
+    query?: never;
+    url: '/teams/{team}/projects';
+};
+
+export type TeamsProjectsListErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type TeamsProjectsListError = TeamsProjectsListErrors[keyof TeamsProjectsListErrors];
+
+export type TeamsProjectsListResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedProject;
+};
+
+export type TeamsProjectsListResponse = TeamsProjectsListResponses[keyof TeamsProjectsListResponses];
+
 export type TimeEntriesListData = {
     body?: never;
     path?: never;
