@@ -2,21 +2,6 @@
 
 let
   pkgs-unstable = import inputs.nixpkgs-unstable { system = pkgs.stdenv.system; };
-  # nixpkgs still ships golangci-lint 2.12.2 built with go 1.26, which refuses
-  # a go.mod targeting 1.27; drop when nixpkgs bumps to >= 2.13.0 on go 1.27
-  golangci-lint-go127 =
-    (pkgs-unstable.golangci-lint.override {
-      buildGo126Module = pkgs-unstable.buildGo127Module;
-    }).overrideAttrs (finalAttrs: prev: {
-      version = "2.13.0";
-      src = pkgs-unstable.fetchFromGitHub {
-        owner = "golangci";
-        repo = "golangci-lint";
-        tag = "v${finalAttrs.version}";
-        hash = "sha256-WWKvf1uQr8QK0Ja+EjN0YbLMX27N23HvyfFFKfjQ1gg=";
-      };
-      vendorHash = "sha256-thmkiCuE4FnVTIExfwN7xm6xioxz4C+tagvIsre/s5A=";
-    });
 in {
   # staticcheck 2026.1 tests panic when rebuilt with go 1.27; drop when nixpkgs ships a fixed release
   overlays = [
@@ -34,7 +19,7 @@ in {
     crowdin-cli
     nfpm
     # API tools
-    golangci-lint-go127 mage
+    golangci-lint mage
     # Desktop
     electron
     # Font processing tools
