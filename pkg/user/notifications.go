@@ -191,6 +191,32 @@ func (n *PasswordAccountLockedAfterInvalidTOTPNotification) Name() string {
 	return "password.account.locked.after.invalid.totp"
 }
 
+// AccountLockedAfterInvalidPasswordNotification represents a AccountLockedAfterInvalidPasswordNotification notification
+type AccountLockedAfterInvalidPasswordNotification struct {
+	User *User
+}
+
+// ToMail returns the mail notification for AccountLockedAfterInvalidPasswordNotification
+func (n *AccountLockedAfterInvalidPasswordNotification) ToMail(lang string) *notifications.Mail {
+	resetURL := config.ServicePublicURL.GetString() + "get-password-reset"
+	return notifications.NewMail().
+		Subject(i18n.T(lang, "notifications.totp.account_locked.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.login.account_locked.message")).
+		Line(i18n.T(lang, "notifications.totp.account_locked.disabled")).
+		Line(i18n.T(lang, "notifications.totp.account_locked.reset_instructions", resetURL, resetURL))
+}
+
+// ToDB returns the AccountLockedAfterInvalidPasswordNotification notification in a format which can be saved in the db
+func (n *AccountLockedAfterInvalidPasswordNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *AccountLockedAfterInvalidPasswordNotification) Name() string {
+	return "account.locked.after.invalid.password"
+}
+
 // FailedLoginAttemptNotification represents a FailedLoginAttemptNotification notification
 type FailedLoginAttemptNotification struct {
 	User *User

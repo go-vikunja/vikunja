@@ -173,6 +173,7 @@ func init() {
 		"AccountDeletedNotification":                        reflect.ValueOf((*user.AccountDeletedNotification)(nil)),
 		"AccountDeletionConfirmNotification":                reflect.ValueOf((*user.AccountDeletionConfirmNotification)(nil)),
 		"AccountDeletionNotification":                       reflect.ValueOf((*user.AccountDeletionNotification)(nil)),
+		"AccountLockedAfterInvalidPasswordNotification":     reflect.ValueOf((*user.AccountLockedAfterInvalidPasswordNotification)(nil)),
 		"AccountLockedEvent":                                reflect.ValueOf((*user.AccountLockedEvent)(nil)),
 		"CreateUserOptions":                                 reflect.ValueOf((*user.CreateUserOptions)(nil)),
 		"CreatedEvent":                                      reflect.ValueOf((*user.CreatedEvent)(nil)),

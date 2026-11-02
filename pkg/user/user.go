@@ -493,7 +493,7 @@ func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User,
 }
 
 // CheckUserCredentials checks user credentials. The context carries request
-// metadata for the audit trail of failed attempts.
+// metadata for the audit trail of failed attempts. Rolls s back on a wrong password.
 func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
@@ -521,6 +521,8 @@ func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User
 	err = CheckUserPassword(user, u.Password)
 	if err != nil {
 		if IsErrWrongUsernameOrPassword(err) {
+			// Rolled back first: a lockout needs its own write lock on SQLite.
+			_ = s.Rollback()
 			handleFailedPassword(ctx, user)
 		}
 		return user, err
@@ -546,6 +548,11 @@ func handleFailedPassword(ctx context.Context, user *User) {
 		log.Errorf("Could not dispatch login failed event: %s", err)
 	}
 
+	// Already locked or disabled: counting on would resend the lockout mail.
+	if user.Status != StatusActive {
+		return
+	}
+
 	key := user.GetFailedPasswordAttemptsKey()
 	err := keyvalue.IncrBy(key, 1)
 	if err != nil {
@@ -558,23 +565,21 @@ func handleFailedPassword(ctx context.Context, user *User) {
 		log.Errorf("Could not get failed password attempts for user %d: %s", user.ID, err)
 		return
 	}
-	if attempts != 3 {
+	if attempts == 3 {
+		err = notifications.Notify(user, &FailedLoginAttemptNotification{
+			User: user,
+		})
+		if err != nil {
+			log.Errorf("Could not send invalid password mail to user: %s", err)
+		}
 		return
 	}
 
-	err = notifications.Notify(user, &FailedLoginAttemptNotification{
-		User: user,
-	})
-	if err != nil {
-		log.Errorf("Could not send invalid password mail to user: %s", err)
+	if attempts < maxFailedLoginAttempts {
 		return
 	}
 
-	err = keyvalue.Del(key)
-	if err != nil {
-		log.Errorf("Could not remove failed password attempts: %s", err)
-		return
-	}
+	lockAccount(user, key, &AccountLockedAfterInvalidPasswordNotification{User: user})
 }
 
 // CheckUserPassword checks and verifies a user's password. The user object needs to contain the hashed password from the database.
