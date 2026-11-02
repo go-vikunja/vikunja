@@ -21,6 +21,7 @@ import (
 
 	"github.com/labstack/echo/v5"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/health"
 )
 
@@ -30,4 +31,8 @@ func HealthcheckHandler(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 	return c.String(http.StatusOK, "OK")
+}
+
+func healthBasicAuth() echo.MiddlewareFunc {
+	return configBasicAuth(config.HealthUsername, config.HealthPassword)
 }

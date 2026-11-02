@@ -990,6 +990,22 @@
             ]
         },
         {
+            "key": "health",
+            "comment": "Healthcheck endpoints (`/health` and `/api/v2/health`)",
+            "children": [
+                {
+                    "key": "username",
+                    "default_value": "",
+                    "comment": "If set to a non-empty value the health endpoints will require this as a username via basic auth in combination with the password below."
+                },
+                {
+                    "key": "password",
+                    "default_value": "",
+                    "comment": "If set to a non-empty value the health endpoints will require this as a password via basic auth in combination with the username below."
+                }
+            ]
+        },
+        {
             "key": "defaultsettings",
             "comment": "Provide default settings for new users. When a new user is created, these settings will automatically be set for the user. If you change them in the config file afterwards they will not be changed back for existing users.",
             "children": [
