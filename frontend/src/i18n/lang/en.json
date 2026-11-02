@@ -528,6 +528,11 @@
           "assignments": "your task assignments",
           "subscriptions": "your subscriptions to tasks and projects",
           "webhooks": "webhooks you created"
+        },
+        "linkShares": {
+          "intro": "Link shares created by someone losing access are kept and keep working:",
+          "created": "created {date}",
+          "revoke": "Also revoke this link share | Also revoke these link shares"
         }
       },
       "permission": {
