@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
 )
 
@@ -31,7 +32,7 @@ const maxFailedLoginAttempts = 10
 //
 // Must not share the caller's session: login handlers roll back on auth
 // failure, which would discard the lockout (GHSA-fgfv-pv97-6cmj).
-func lockAccount(user *User, n notifications.Notification) {
+func lockAccount(user *User, attemptsKey string, n notifications.Notification) {
 	log.Infof("Locking user account %d after %d failed login attempts", user.ID, maxFailedLoginAttempts)
 	s := db.NewSession()
 	defer s.Close()
@@ -58,4 +59,9 @@ func lockAccount(user *User, n notifications.Notification) {
 		return
 	}
 	events.DispatchPending(context.Background(), s)
+
+	// Otherwise the first typo after a password reset relocks the account.
+	if err := keyvalue.Del(attemptsKey); err != nil {
+		log.Errorf("Could not reset failed attempts for user %d after lockout: %s", user.ID, err)
+	}
 }
