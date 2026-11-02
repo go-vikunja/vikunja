@@ -271,5 +271,5 @@ func HandleFailedTOTPAuth(user *User) {
 		return
 	}
 
-	lockAccount(user, &PasswordAccountLockedAfterInvalidTOTPNotification{User: user})
+	lockAccount(user, key, &PasswordAccountLockedAfterInvalidTOTPNotification{User: user})
 }
