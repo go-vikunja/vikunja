@@ -147,6 +147,7 @@ func NewEcho() *echo.Echo {
 		// is added. Our route setup creates multiple groups with the same prefix
 		// (e.g. rate-limit subgroups of /api/v1), which would panic as duplicates.
 		NoGroupAutoRegister404Routes: true,
+		JSONSerializer:               jsonSerializer{},
 	})
 
 	e.IPExtractor = newIPExtractor(config.ServiceIPExtractionMethod.GetString(), config.ServiceTrustedProxies.GetString())
