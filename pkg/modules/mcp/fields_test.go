@@ -55,6 +55,16 @@ func TestFieldTree_Apply(t *testing.T) {
 		},
 	}, got)
 }
+func TestFieldTree_ApplyNoMatchReturnsEmptyMap(t *testing.T) {
+	tree := parseFields([]string{"missing", "other.missing"})
+
+	// assert.Equal uses reflect.DeepEqual, so a nil map would not match.
+	assert.Equal(t, map[string]any{}, tree.apply(map[string]any{"id": 1, "title": "t"}))
+	assert.Equal(t, []any{map[string]any{}, map[string]any{}}, tree.apply([]any{
+		map[string]any{"id": 1},
+		map[string]any{"id": 2},
+	}))
+}
 func TestParseFields_WholeValueWins(t *testing.T) {
 	assert.Equal(t, fieldTree{"owner": nil}, parseFields([]string{"owner.name", "owner"}))
 	assert.Equal(t, fieldTree{"owner": nil}, parseFields([]string{"owner", "owner.name"}))
