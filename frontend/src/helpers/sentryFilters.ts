@@ -50,6 +50,9 @@ const NETWORK_ERROR_PATTERNS = [
 	/networkerror/i,
 ]
 
+// Vue's DOM ops hitting a node a browser translator swapped out from under it.
+const DETACHED_NODE_ERROR_PATTERN = /\b(?:insertBefore|nextSibling|parentNode|removeChild)\b/
+
 const THIRD_PARTY_URL_PATTERN = /^(?:(?:chrome|moz|safari-web|safari|ms-browser)-extension:|iabjs:)/i
 
 type SentryEventLike = {
@@ -142,6 +145,23 @@ function isEmptyObject(e: unknown): boolean {
 		&& Object.keys(e).length === 0
 }
 
+// Chrome's and Edge's translators replace text nodes Vue still references with
+// <font> wrappers. We never render <font> ourselves, only user HTML might.
+function isPageMachineTranslated(): boolean {
+	if (typeof document === 'undefined') {
+		return false
+	}
+
+	return Array.from(document.getElementsByTagName('font'))
+		.some(font => !font.closest('[data-user-content]'))
+}
+
+function isTranslatorDomError(e: unknown): boolean {
+	return e instanceof TypeError
+		&& DETACHED_NODE_ERROR_PATTERN.test(e.message)
+		&& isPageMachineTranslated()
+}
+
 export function shouldDropEvent(originalException: unknown, event?: SentryEventLike): boolean {
 	if (isNoisyMessage(event?.message)) {
 		return true
@@ -152,6 +172,10 @@ export function shouldDropEvent(originalException: unknown, event?: SentryEventL
 	}
 
 	if (hasThirdPartyTopFrame(event)) {
+		return true
+	}
+
+	if (isTranslatorDomError(originalException)) {
 		return true
 	}
 
