@@ -1689,6 +1689,7 @@
     "stop": "Stop timer",
     "logTime": "Log time",
     "editEntry": "Edit entry",
+    "commentLabel": "Comment",
     "form": {
       "task": "Task",
       "taskSearch": "Search for a task…",
