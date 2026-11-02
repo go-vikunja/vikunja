@@ -107,3 +107,38 @@ func TestHealthcheckV2OpenIDProviders(t *testing.T) {
 	assert.Equal(t, "up", body.OpenIDProviders[1].Key)
 	assert.True(t, body.OpenIDProviders[1].Available)
 }
+
+func TestHealthcheckBasicAuth(t *testing.T) {
+	_, err := setupTestEnv()
+	require.NoError(t, err)
+
+	config.HealthUsername.Set("h")
+	config.HealthPassword.Set("s")
+	defer config.HealthUsername.Set("")
+	defer config.HealthPassword.Set("")
+	e := routes.NewEcho()
+	routes.RegisterRoutes(e)
+
+	get := func(t *testing.T, path, username, password string) int {
+		t.Helper()
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		if username != "" {
+			req.SetBasicAuth(username, password)
+		}
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		return rec.Code
+	}
+
+	for _, path := range []string{"/health", "/api/v2/health"} {
+		t.Run(path, func(t *testing.T) {
+			assert.Equal(t, http.StatusUnauthorized, get(t, path, "", ""))
+			assert.Equal(t, http.StatusUnauthorized, get(t, path, "h", "wrong"))
+			assert.Equal(t, http.StatusOK, get(t, path, "h", "s"))
+		})
+	}
+
+	t.Run("other v2 routes are unaffected", func(t *testing.T) {
+		assert.Equal(t, http.StatusOK, get(t, "/api/v2/info", "", ""))
+	})
+}

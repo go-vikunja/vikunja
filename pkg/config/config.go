@@ -218,6 +218,9 @@ const (
 	MetricsPassword Key = `metrics.password`
 	MetricsPprof    Key = `metrics.pprof`
 
+	HealthUsername Key = `health.username`
+	HealthPassword Key = `health.password`
+
 	DefaultSettingsAvatarProvider              Key = `defaultsettings.avatar_provider`
 	DefaultSettingsAvatarFileID                Key = `defaultsettings.avatar_file_id`
 	DefaultSettingsEmailRemindersEnabled       Key = `defaultsettings.email_reminders_enabled`
