@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/stretchr/testify/assert"
@@ -409,6 +410,58 @@ func TestCheckUserCredentials(t *testing.T) {
 		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "12345"})
 		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
+	})
+	t.Run("locks account after 10 wrong passwords", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u := &User{ID: 1}
+		key := u.GetFailedPasswordAttemptsKey()
+		// keyvalue store is process-global; reset counter between runs.
+		_ = keyvalue.Del(key)
+		gen := sessionAuthGeneration(t, u.ID)
+
+		for i := range 10 {
+			s := db.NewSession()
+			_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "wrong"})
+			require.True(t, IsErrWrongUsernameOrPassword(err), "attempt %d: got %v", i+1, err)
+			// Login handlers roll back on failure; the lockout must survive that.
+			require.NoError(t, s.Rollback())
+			require.NoError(t, s.Close())
+		}
+
+		s := db.NewSession()
+		defer s.Close()
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountLocked(err), "expected ErrAccountLocked, got: %v", err)
+		assert.Equal(t, gen+2, sessionAuthGeneration(t, u.ID))
+
+		tokens, err := getTokensForKind(s, u, TokenPasswordReset)
+		require.NoError(t, err)
+		assert.NotEmpty(t, tokens)
+
+		_, exists, err := keyvalue.Get(key)
+		require.NoError(t, err)
+		assert.False(t, exists, "counter must be cleared so a reset account isn't relocked by the next typo")
+	})
+	t.Run("does not count wrong passwords on a locked account", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u := &User{ID: 1}
+		key := u.GetFailedPasswordAttemptsKey()
+		_ = keyvalue.Del(key)
+
+		s := db.NewSession()
+		defer s.Close()
+		require.NoError(t, u.SetStatus(s, StatusAccountLocked))
+		require.NoError(t, s.Commit())
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		_, err := CheckUserCredentials(context.Background(), s2, &Login{Username: "user1", Password: "wrong"})
+		require.True(t, IsErrWrongUsernameOrPassword(err))
+
+		_, exists, err := keyvalue.Get(key)
+		require.NoError(t, err)
+		assert.False(t, exists)
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

@@ -30,36 +30,43 @@ func TestReauthThrottle(t *testing.T) {
 
 	for _, tc := range []struct {
 		name, method, path, wrong, right string
+		// Checked via CheckUserCredentials, so the 10th failure trips the
+		// account lockout, which revokes the session.
+		locksAccount bool
 	}{
-		{"v1 totp disable", http.MethodPost, "/api/v1/user/settings/totp/disable", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v2 totp disable", http.MethodPost, "/api/v2/user/settings/totp/disable", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v1 totp enroll", http.MethodPost, "/api/v1/user/settings/totp/enroll", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v2 totp enroll", http.MethodPost, "/api/v2/user/settings/totp/enroll", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v1 totp enable", http.MethodPost, "/api/v1/user/settings/totp/enable", `{"passcode":"000000","password":"wrong"}`, `{"passcode":"000000","password":"12345678"}`},
-		{"v2 totp enable", http.MethodPost, "/api/v2/user/settings/totp/enable", `{"passcode":"000000","password":"wrong"}`, `{"passcode":"000000","password":"12345678"}`},
-		{"v1 deletion request", http.MethodPost, "/api/v1/user/deletion/request", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v2 deletion request", http.MethodPost, "/api/v2/user/deletion/request", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v1 deletion cancel", http.MethodPost, "/api/v1/user/deletion/cancel", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v2 deletion cancel", http.MethodPost, "/api/v2/user/deletion/cancel", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v1 export request", http.MethodPost, "/api/v1/user/export/request", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v2 export request", http.MethodPost, "/api/v2/user/export/request", `{"password":"wrong"}`, `{"password":"12345678"}`},
-		{"v1 password change", http.MethodPost, "/api/v1/user/password", `{"old_password":"wrong","new_password":"newpassword1"}`, `{"old_password":"12345678","new_password":"newpassword1"}`},
-		{"v2 password change", http.MethodPost, "/api/v2/user/password", `{"old_password":"wrong","new_password":"newpassword1"}`, `{"old_password":"12345678","new_password":"newpassword1"}`},
-		{"v1 email change", http.MethodPost, "/api/v1/user/settings/email", `{"new_email":"new@example.com","password":"wrong"}`, `{"new_email":"new@example.com","password":"12345678"}`},
-		{"v2 email change", http.MethodPut, "/api/v2/user/settings/email", `{"new_email":"new@example.com","password":"wrong"}`, `{"new_email":"new@example.com","password":"12345678"}`},
+		{"v1 totp disable", http.MethodPost, "/api/v1/user/settings/totp/disable", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v2 totp disable", http.MethodPost, "/api/v2/user/settings/totp/disable", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v1 totp enroll", http.MethodPost, "/api/v1/user/settings/totp/enroll", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v2 totp enroll", http.MethodPost, "/api/v2/user/settings/totp/enroll", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v1 totp enable", http.MethodPost, "/api/v1/user/settings/totp/enable", `{"passcode":"000000","password":"wrong"}`, `{"passcode":"000000","password":"12345678"}`, false},
+		{"v2 totp enable", http.MethodPost, "/api/v2/user/settings/totp/enable", `{"passcode":"000000","password":"wrong"}`, `{"passcode":"000000","password":"12345678"}`, false},
+		{"v1 deletion request", http.MethodPost, "/api/v1/user/deletion/request", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v2 deletion request", http.MethodPost, "/api/v2/user/deletion/request", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v1 deletion cancel", http.MethodPost, "/api/v1/user/deletion/cancel", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v2 deletion cancel", http.MethodPost, "/api/v2/user/deletion/cancel", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v1 export request", http.MethodPost, "/api/v1/user/export/request", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v2 export request", http.MethodPost, "/api/v2/user/export/request", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
+		{"v1 password change", http.MethodPost, "/api/v1/user/password", `{"old_password":"wrong","new_password":"newpassword1"}`, `{"old_password":"12345678","new_password":"newpassword1"}`, true},
+		{"v2 password change", http.MethodPost, "/api/v2/user/password", `{"old_password":"wrong","new_password":"newpassword1"}`, `{"old_password":"12345678","new_password":"newpassword1"}`, true},
+		{"v1 email change", http.MethodPost, "/api/v1/user/settings/email", `{"new_email":"new@example.com","password":"wrong"}`, `{"new_email":"new@example.com","password":"12345678"}`, true},
+		{"v2 email change", http.MethodPut, "/api/v2/user/settings/email", `{"new_email":"new@example.com","password":"wrong"}`, `{"new_email":"new@example.com","password":"12345678"}`, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
 			token := humaTokenFor(t, &testuser10)
 
-			for i := 0; i < failureLimit; i++ {
+			for i := range failureLimit {
 				rec := humaRequest(t, e, tc.method, tc.path, tc.wrong, token, "")
 				require.Equal(t, http.StatusForbidden, rec.Code, "attempt %d; body: %s", i, rec.Body.String())
 			}
 
+			want := http.StatusTooManyRequests
+			if tc.locksAccount {
+				want = http.StatusUnauthorized
+			}
 			rec := humaRequest(t, e, tc.method, tc.path, tc.right, token, "")
-			assert.Equal(t, http.StatusTooManyRequests, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, want, rec.Code, "body: %s", rec.Body.String())
 		})
 	}
 
