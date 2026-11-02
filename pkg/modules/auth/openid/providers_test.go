@@ -205,8 +205,8 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 	// Regression test for #2599. When provider config is sourced from environment
 	// variables or `*.file` Docker secrets, every leaf value arrives as a string.
 	// The boolean fields (emailfallback, usernamefallback, forceuserinfo,
-	// requireavailability) must accept stringified bools, not silently fall back
-	// to zero values or reject the whole provider.
+	// requireavailability, usegroupsclaim) must accept stringified bools, not
+	// silently fall back to zero values or reject the whole provider.
 	defer CleanupSavedOpenIDProviders()
 
 	server := newMockOIDCServer()
@@ -218,10 +218,12 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 		usernameFallback        interface{}
 		forceUserInfo           interface{}
 		requireAvailability     interface{}
+		useGroupsClaim          interface{}
 		wantEmailFallback       bool
 		wantUsernameFallback    bool
 		wantForceUserInfo       bool
 		wantRequireAvailability bool
+		wantUseGroupsClaim      bool
 	}{
 		{
 			name:                    "native bool true",
@@ -229,10 +231,12 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 			usernameFallback:        true,
 			forceUserInfo:           true,
 			requireAvailability:     true,
+			useGroupsClaim:          true,
 			wantEmailFallback:       true,
 			wantUsernameFallback:    true,
 			wantForceUserInfo:       true,
 			wantRequireAvailability: true,
+			wantUseGroupsClaim:      true,
 		},
 		{
 			name:                    "native bool false",
@@ -240,10 +244,12 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 			usernameFallback:        false,
 			forceUserInfo:           false,
 			requireAvailability:     false,
+			useGroupsClaim:          false,
 			wantEmailFallback:       false,
 			wantUsernameFallback:    false,
 			wantForceUserInfo:       false,
 			wantRequireAvailability: false,
+			wantUseGroupsClaim:      false,
 		},
 		{
 			name:                    "string true",
@@ -251,10 +257,12 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 			usernameFallback:        "true",
 			forceUserInfo:           "true",
 			requireAvailability:     "true",
+			useGroupsClaim:          "true",
 			wantEmailFallback:       true,
 			wantUsernameFallback:    true,
 			wantForceUserInfo:       true,
 			wantRequireAvailability: true,
+			wantUseGroupsClaim:      true,
 		},
 		{
 			name:                    "string false",
@@ -262,10 +270,12 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 			usernameFallback:        "false",
 			forceUserInfo:           "false",
 			requireAvailability:     "false",
+			useGroupsClaim:          "false",
 			wantEmailFallback:       false,
 			wantUsernameFallback:    false,
 			wantForceUserInfo:       false,
 			wantRequireAvailability: false,
+			wantUseGroupsClaim:      false,
 		},
 		{
 			name:                    "string 1 and 0",
@@ -273,10 +283,12 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 			usernameFallback:        "0",
 			forceUserInfo:           "1",
 			requireAvailability:     "0",
+			useGroupsClaim:          "1",
 			wantEmailFallback:       true,
 			wantUsernameFallback:    false,
 			wantForceUserInfo:       true,
 			wantRequireAvailability: false,
+			wantUseGroupsClaim:      true,
 		},
 	}
 
@@ -291,6 +303,7 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 				"usernamefallback":    tc.usernameFallback,
 				"forceuserinfo":       tc.forceUserInfo,
 				"requireavailability": tc.requireAvailability,
+				"usegroupsclaim":      tc.useGroupsClaim,
 			}
 
 			provider, err := getProviderFromMap(pi, "test")
@@ -301,6 +314,7 @@ func TestGetProviderFromMapStringBooleans(t *testing.T) {
 			assert.Equal(t, tc.wantUsernameFallback, provider.UsernameFallback, "UsernameFallback")
 			assert.Equal(t, tc.wantForceUserInfo, provider.ForceUserInfo, "ForceUserInfo")
 			assert.Equal(t, tc.wantRequireAvailability, provider.RequireAvailability, "RequireAvailability")
+			assert.Equal(t, tc.wantUseGroupsClaim, provider.UseGroupsClaim, "UseGroupsClaim")
 		})
 	}
 }

@@ -67,6 +67,7 @@ type Provider struct {
 	UsernameFallback    bool   `json:"username_fallback"`
 	ForceUserInfo       bool   `json:"force_user_info"`
 	RequireAvailability bool   `json:"-"`
+	UseGroupsClaim      bool   `json:"-"`
 	ClientSecret        string `json:"-"`
 	// RP-Initiated Logout endpoint, cached at init so logout never fetches.
 	// Exported so it survives the gob keyvalue round-trip (gob skips unexported
@@ -96,6 +97,31 @@ func (b *boolish) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// stringList decodes a JSON string array or a single string — some OIDC
+// providers emit a lone group as a plain string. Other shapes decode to an
+// empty list, since the claim is parsed even when usegroupsclaim is off.
+type stringList []string
+
+func (l *stringList) UnmarshalJSON(data []byte) error {
+	var raw any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	var values stringList
+	switch v := raw.(type) {
+	case string:
+		values = stringList{v}
+	case []any:
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				values = append(values, s)
+			}
+		}
+	}
+	*l = values
+	return nil
+}
+
 type claims struct {
 	Email              string                   `json:"email"`
 	EmailVerified      boolish                  `json:"email_verified"`
@@ -103,6 +129,7 @@ type claims struct {
 	PreferredUsername  string                   `json:"preferred_username"`
 	Nickname           string                   `json:"nickname"`
 	VikunjaGroups      []map[string]interface{} `json:"vikunja_groups"`
+	Groups             stringList               `json:"groups"`
 	Picture            string                   `json:"picture"`
 	ExtraSettingsLinks map[string]any           `json:"extra_settings_links"`
 }
@@ -279,7 +306,12 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 		return nil, nil, err
 	}
 
-	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
+	var teamData []*models.Team
+	if provider.UseGroupsClaim {
+		teamData = getTeamDataFromGroupsClaim(cl.Groups)
+	} else {
+		teamData = getTeamDataFromToken(cl.VikunjaGroups, provider)
+	}
 
 	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, provider.Name)
 	if err != nil {
@@ -351,6 +383,22 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 			ExternalID:  oidcID,
 			Description: description,
 			IsPublic:    isPublic,
+		})
+	}
+
+	return teamData
+}
+
+// The groups claim only carries names, so the name doubles as the external id.
+func getTeamDataFromGroupsClaim(groups []string) (teamData []*models.Team) {
+	teamData = []*models.Team{}
+	for _, name := range groups {
+		if name == "" {
+			continue
+		}
+		teamData = append(teamData, &models.Team{
+			Name:       name,
+			ExternalID: name,
 		})
 	}
 
@@ -536,6 +584,10 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 
 	if (forceUserInfo && len(cl2.VikunjaGroups) > 0) || len(cl.VikunjaGroups) == 0 {
 		cl.VikunjaGroups = cl2.VikunjaGroups
+	}
+
+	if (forceUserInfo && len(cl2.Groups) > 0) || len(cl.Groups) == 0 {
+		cl.Groups = cl2.Groups
 	}
 
 	if (forceUserInfo && len(cl2.ExtraSettingsLinks) > 0) || len(cl.ExtraSettingsLinks) == 0 {

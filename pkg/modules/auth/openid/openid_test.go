@@ -170,6 +170,38 @@ func TestGetOrCreateUser(t *testing.T) {
 		}, false)
 	})
 
+	t.Run("existing user, non existing team from groups claim", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		group := "new sso group"
+		cl := &claims{
+			Email: "other-email-address@some.service.com",
+			Groups: stringList{
+				group,
+				"",
+			},
+		}
+
+		provider := &Provider{Name: "Vikunja Login"}
+		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		teamData := getTeamDataFromGroupsClaim(cl.Groups)
+		require.Len(t, teamData, 1, "empty group names must be skipped")
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", provider.Name)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        group + " (" + provider.Name + ")",
+			"external_id": group,
+		}, false)
+	})
+
 	t.Run("Update IsPublic flag for existing team", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -621,6 +653,20 @@ func TestMergeClaims(t *testing.T) {
 		assert.Equal(t, "userinfo_nickname", tokenClaims.PreferredUsername)
 	})
 
+	t.Run("Use groups from userinfo when the token has none", func(t *testing.T) {
+		tokenClaims := &claims{
+			Email: "token-email@example.com",
+		}
+		userinfoClaims := &claims{
+			Groups: stringList{"userinfo-group"},
+		}
+
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
+		require.NoError(t, err)
+
+		assert.Equal(t, stringList{"userinfo-group"}, tokenClaims.Groups)
+	})
+
 	t.Run("Error when email is missing", func(t *testing.T) {
 		// Setup token claims with missing email
 		tokenClaims := &claims{
@@ -830,6 +876,29 @@ func TestEmailVerifiedClaimDecoding(t *testing.T) {
 			var cl claims
 			require.NoError(t, json.Unmarshal([]byte(body), &cl))
 			assert.Equal(t, want, bool(cl.EmailVerified))
+		})
+	}
+}
+
+func TestGroupsClaimDecoding(t *testing.T) {
+	// The groups claim is decoded for every provider, so no shape of it may
+	// break the whole claims parse.
+	cases := map[string]stringList{
+		`{"groups": ["a", "b"]}`: {
+			"a",
+			"b",
+		},
+		`{"groups": "a"}`:                {"a"},
+		`{"groups": ["a", 1, {"b": 2}]}`: {"a"},
+		`{"groups": {"a": "b"}}`:         nil,
+		`{"groups": null}`:               nil,
+		`{}`:                             nil,
+	}
+	for body, want := range cases {
+		t.Run(body, func(t *testing.T) {
+			var cl claims
+			require.NoError(t, json.Unmarshal([]byte(body), &cl))
+			assert.Equal(t, want, cl.Groups)
 		})
 	}
 }
