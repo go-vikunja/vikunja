@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -773,6 +774,41 @@ func (err *ErrProjectMoveTooLarge) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeProjectMoveTooLarge,
 		Message:  "This project hierarchy is too large to be moved below the chosen parent project.",
+	}
+}
+
+// ErrAccessLossNeedsConfirmation represents an error where a change would make users lose access to a project holding webhooks or link shares they created.
+type ErrAccessLossNeedsConfirmation struct {
+	Webhooks   int64
+	LinkShares int64
+}
+
+// IsErrAccessLossNeedsConfirmation checks if an error is ErrAccessLossNeedsConfirmation.
+func IsErrAccessLossNeedsConfirmation(err error) bool {
+	_, ok := err.(*ErrAccessLossNeedsConfirmation)
+	return ok
+}
+
+func (err *ErrAccessLossNeedsConfirmation) Error() string {
+	return fmt.Sprintf("Users would lose access to projects holding their webhooks or link shares [Webhooks: %d, LinkShares: %d]", err.Webhooks, err.LinkShares)
+}
+
+// ErrCodeAccessLossNeedsConfirmation holds the unique world-error code of this error
+const ErrCodeAccessLossNeedsConfirmation = 3018
+
+// HTTPError holds the http error description
+func (err *ErrAccessLossNeedsConfirmation) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeAccessLossNeedsConfirmation,
+		Message: fmt.Sprintf(
+			"Users would lose access to projects holding %d webhooks and %d link shares they created. Say what to do with them by setting delete_webhooks and revoke_link_shares.",
+			err.Webhooks, err.LinkShares,
+		),
+		I18nParams: map[string]string{
+			"webhooks":    strconv.FormatInt(err.Webhooks, 10),
+			"link_shares": strconv.FormatInt(err.LinkShares, 10),
+		},
 	}
 }
 

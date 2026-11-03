@@ -17,8 +17,10 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
@@ -38,6 +40,8 @@ type accessLossFixture struct {
 	task     *Task
 	webhookP int64
 	webhookC int64
+	shareP   int64
+	shareC   int64
 }
 
 func setupAccessLoss(t *testing.T) *accessLossFixture {
@@ -80,6 +84,21 @@ func setupAccessLoss(t *testing.T) *accessLossFixture {
 	}
 	f.webhookP = insertWebhook(f.parent.ID)
 	f.webhookC = insertWebhook(f.child.ID)
+
+	insertLinkShare := func(projectID int64) int64 {
+		share := &LinkSharing{
+			Hash:        fmt.Sprintf("access-loss-%d", projectID),
+			ProjectID:   projectID,
+			Permission:  PermissionRead,
+			SharingType: SharingTypeWithoutPassword,
+			SharedByID:  f.member.ID,
+		}
+		_, err := s.Insert(share)
+		require.NoError(t, err)
+		return share.ID
+	}
+	f.shareP = insertLinkShare(f.parent.ID)
+	f.shareC = insertLinkShare(f.child.ID)
 	return f
 }
 
@@ -112,6 +131,28 @@ func (f *accessLossFixture) assertCleanedUp(t *testing.T) {
 	db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
 	db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID})
 	db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID})
+	db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareP}, false)
+	db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
+}
+
+func (f *accessLossFixture) assertLinkSharesRevoked(t *testing.T) {
+	t.Helper()
+	db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.shareP})
+	db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.shareC})
+}
+
+func (f *accessLossFixture) assertWebhooksTransferredTo(t *testing.T, u *user.User) {
+	t.Helper()
+	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": u.ID}, false)
+	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": u.ID}, false)
+}
+
+// Moves the child out from under the shared parent, so the member loses access to the child only.
+func (f *accessLossFixture) moveChildToTopLevel(t *testing.T, cleanup AccessLossCleanup) error {
+	t.Helper()
+	detached := int64(0)
+	child := &Project{ID: f.child.ID, Title: f.child.Title, ParentProjectID: &detached, AccessLossCleanup: cleanup}
+	return child.Update(f.s, f.owner)
 }
 
 func (f *accessLossFixture) assertWebhooksKept(t *testing.T) {
@@ -275,7 +316,7 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 
 		projectIDs, err := teamProjectIDs(s, 9)
 		require.NoError(t, err)
-		err = cleanupAfterProjectAccessLoss(s, 2, projectIDs)
+		err = cleanupAfterProjectAccessLoss(s, 2, projectIDs, AccessLossCleanup{})
 		require.NoError(t, err)
 
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": task.ID, "user_id": 2})
@@ -303,11 +344,203 @@ func deliveredWebhookIDs() map[int64]bool {
 	return delivered
 }
 
+func TestProjectAccessLossCleanupOptions(t *testing.T) {
+	removeShare := func(t *testing.T, f *accessLossFixture, cleanup AccessLossCleanup) error {
+		t.Helper()
+		return (&ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, AccessLossCleanup: cleanup}).Delete(f.s, f.owner)
+	}
+
+	t.Run("revokes link shares", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+
+		require.NoError(t, removeShare(t, f, AccessLossCleanup{RevokeLinkShares: true}))
+		require.NoError(t, f.s.Commit())
+		f.assertLinkSharesRevoked(t)
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookP})
+	})
+	t.Run("keeps webhooks by transferring them to the project owner", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+
+		require.NoError(t, removeShare(t, f, AccessLossCleanup{KeepWebhooks: true}))
+		require.NoError(t, f.s.Commit())
+		f.assertWebhooksTransferredTo(t, f.owner)
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+	})
+	t.Run("transfers each webhook to its own project's owner", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		childOwner := &user.User{ID: 3}
+		_, err := f.s.ID(f.child.ID).Cols("owner_id").Update(&Project{OwnerID: childOwner.ID})
+		require.NoError(t, err)
+
+		require.NoError(t, removeShare(t, f, AccessLossCleanup{KeepWebhooks: true}))
+		require.NoError(t, f.s.Commit())
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": f.owner.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": childOwner.ID}, false)
+	})
+	t.Run("confirm fails with the affected counts", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+
+		err := removeShare(t, f, AccessLossCleanup{Confirm: true})
+		require.Error(t, err)
+		require.True(t, IsErrAccessLossNeedsConfirmation(err))
+		assert.Equal(t, &ErrAccessLossNeedsConfirmation{Webhooks: 2, LinkShares: 2}, err)
+	})
+	t.Run("confirm passes when nothing is affected", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		_, err := f.s.Where("created_by_id = ?", f.member.ID).Delete(&Webhook{})
+		require.NoError(t, err)
+		_, err = f.s.Where("shared_by_id = ?", f.member.ID).Delete(&LinkSharing{})
+		require.NoError(t, err)
+
+		require.NoError(t, removeShare(t, f, AccessLossCleanup{Confirm: true}))
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+	})
+	t.Run("confirm ignores users who keep access", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		f.shareViaTeam(t)
+
+		require.NoError(t, removeShare(t, f, AccessLossCleanup{Confirm: true}))
+	})
+	t.Run("team removal applies the options to every member", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		team := f.shareViaTeam(t)
+
+		tp := &TeamProject{TeamID: team.ID, ProjectID: f.parent.ID, AccessLossCleanup: AccessLossCleanup{KeepWebhooks: true, RevokeLinkShares: true}}
+		require.NoError(t, tp.Delete(f.s, f.owner))
+		require.NoError(t, f.s.Commit())
+		f.assertWebhooksTransferredTo(t, f.owner)
+		f.assertLinkSharesRevoked(t)
+	})
+	t.Run("member removal applies the options", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		team := f.shareViaTeam(t)
+
+		tm := &TeamMember{TeamID: team.ID, Username: f.member.Username, AccessLossCleanup: AccessLossCleanup{RevokeLinkShares: true}}
+		require.NoError(t, tm.Delete(f.s, f.owner))
+		require.NoError(t, f.s.Commit())
+		f.assertLinkSharesRevoked(t)
+	})
+	t.Run("team deletion applies the options", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		team := f.shareViaTeam(t)
+		team.AccessLossCleanup = AccessLossCleanup{KeepWebhooks: true}
+
+		require.NoError(t, team.Delete(f.s, f.owner))
+		require.NoError(t, f.s.Commit())
+		f.assertWebhooksTransferredTo(t, f.owner)
+	})
+	t.Run("team sync follows the config", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		team := f.shareViaTeam(t)
+		config.AuthTeamSyncTransferWebhooks.Set(true)
+		config.AuthTeamSyncRevokeLinkShares.Set(true)
+		t.Cleanup(func() {
+			config.AuthTeamSyncTransferWebhooks.Set(false)
+			config.AuthTeamSyncRevokeLinkShares.Set(false)
+		})
+
+		require.NoError(t, removeUserFromTeamsByIDs(f.s, f.member, []int64{team.ID}))
+		require.NoError(t, f.s.Commit())
+		f.assertWebhooksTransferredTo(t, f.owner)
+		f.assertLinkSharesRevoked(t)
+	})
+}
+
+func TestProjectMoveAccessLossCleanup(t *testing.T) {
+	t.Run("cleans up the moved subtree", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{}))
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID})
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
+		// Parent access is untouched.
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP}, false)
+		db.AssertExists(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID}, false)
+	})
+	t.Run("applies the options", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{KeepWebhooks: true, RevokeLinkShares: true}))
+		require.NoError(t, f.s.Commit())
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.owner.ID}, false)
+		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.shareC})
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareP}, false)
+	})
+	t.Run("covers grandchildren", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		childID := f.child.ID
+		grandchild := &Project{Title: "access loss grandchild", ParentProjectID: &childID}
+		require.NoError(t, grandchild.Create(f.s, f.owner))
+		share := &LinkSharing{Hash: "access-loss-grandchild", ProjectID: grandchild.ID, SharingType: SharingTypeWithoutPassword, SharedByID: f.member.ID}
+		_, err := f.s.Insert(share)
+		require.NoError(t, err)
+
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{RevokeLinkShares: true}))
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": share.ID})
+	})
+	t.Run("confirm fails with the affected counts", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+
+		err := f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true})
+		assert.Equal(t, &ErrAccessLossNeedsConfirmation{Webhooks: 1, LinkShares: 1}, err)
+	})
+	t.Run("confirm passes when everyone keeps access", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		pu := &ProjectUser{ProjectID: f.child.ID, Username: f.member.Username, Permission: PermissionRead}
+		require.NoError(t, pu.Create(f.s, f.owner))
+
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true}))
+	})
+	t.Run("a plain edit does not clean up", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		_, err := f.s.Where("project_id = ? AND user_id = ?", f.parent.ID, f.member.ID).Delete(&ProjectUser{})
+		require.NoError(t, err)
+
+		child := &Project{ID: f.child.ID, Title: "renamed", AccessLossCleanup: AccessLossCleanup{Confirm: true}}
+		require.NoError(t, child.Update(f.s, f.owner))
+		require.NoError(t, f.s.Commit())
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC}, false)
+	})
+}
+
+func TestWebhookListener_DeliversTransferredWebhook(t *testing.T) {
+	f := setupAccessLoss(t)
+	f.shareDirectly(t, PermissionWrite)
+	pu := &ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, AccessLossCleanup: AccessLossCleanup{KeepWebhooks: true}}
+	require.NoError(t, pu.Delete(f.s, f.owner))
+	require.NoError(t, f.s.Commit())
+
+	events.ClearDispatchedEvents()
+	events.TestListener(t, &TaskUpdatedEvent{Task: f.task, Doer: f.owner}, &WebhookListener{EventName: "task.updated"})
+
+	delivered := map[int64]bool{}
+	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
+		delivered[e.(*WebhookDeliveryEvent).WebhookID] = true
+	}
+	assert.True(t, delivered[f.webhookC], "the kept webhook should still be delivered")
+}
+
 func TestWebhookListener_SkipsCreatorWithoutAccess(t *testing.T) {
 	f := setupAccessLoss(t)
 	f.shareDirectly(t, PermissionWrite)
 
-	// A move drops access without triggering the cleanup.
 	_, err := f.s.Insert(&Webhook{
 		TargetURL:   "https://example.com/owner",
 		Events:      []string{"task.updated"},
@@ -315,9 +548,9 @@ func TestWebhookListener_SkipsCreatorWithoutAccess(t *testing.T) {
 		CreatedByID: f.owner.ID,
 	})
 	require.NoError(t, err)
-	detached := int64(0)
-	f.child.ParentProjectID = &detached
-	require.NoError(t, f.child.Update(f.s, f.owner))
+	// Drops access while skipping the cleanup.
+	_, err = f.s.Where("project_id = ? AND user_id = ?", f.parent.ID, f.member.ID).Delete(&ProjectUser{})
+	require.NoError(t, err)
 	require.NoError(t, f.s.Commit())
 
 	events.ClearDispatchedEvents()
