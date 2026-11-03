@@ -1763,9 +1763,9 @@ export type ProjectView = {
      */
     readonly updated?: string;
     /**
-     * The kind of this view. One of list, gantt, table or kanban.
+     * The kind of this view. One of list, gantt, table, kanban or venn. venn groups the view's tasks by their labels.
      */
-    view_kind?: 'list' | 'gantt' | 'table' | 'kanban';
+    view_kind?: 'list' | 'gantt' | 'table' | 'kanban' | 'venn';
 };
 
 export type ProjectViewBucketConfiguration = {
@@ -1833,9 +1833,9 @@ export type ProjectViewReadBody = {
      */
     readonly updated?: string;
     /**
-     * The kind of this view. One of list, gantt, table or kanban.
+     * The kind of this view. One of list, gantt, table, kanban or venn. venn groups the view's tasks by their labels.
      */
-    view_kind?: 'list' | 'gantt' | 'table' | 'kanban';
+    view_kind?: 'list' | 'gantt' | 'table' | 'kanban' | 'venn';
 };
 
 export type Provider = {
@@ -4413,9 +4413,9 @@ export type ProjectViewWritable = {
      */
     title?: string;
     /**
-     * The kind of this view. One of list, gantt, table or kanban.
+     * The kind of this view. One of list, gantt, table, kanban or venn. venn groups the view's tasks by their labels.
      */
-    view_kind?: 'list' | 'gantt' | 'table' | 'kanban';
+    view_kind?: 'list' | 'gantt' | 'table' | 'kanban' | 'venn';
 };
 
 export type ProjectViewReadBodyWritable = {
@@ -4448,9 +4448,9 @@ export type ProjectViewReadBodyWritable = {
      */
     title?: string;
     /**
-     * The kind of this view. One of list, gantt, table or kanban.
+     * The kind of this view. One of list, gantt, table, kanban or venn. venn groups the view's tasks by their labels.
      */
-    view_kind?: 'list' | 'gantt' | 'table' | 'kanban';
+    view_kind?: 'list' | 'gantt' | 'table' | 'kanban' | 'venn';
 };
 
 export type PublicInviteLinkWritable = {
