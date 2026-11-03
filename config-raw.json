@@ -378,7 +378,7 @@
                 {
                     "key": "forcessl",
                     "default_value": "false",
-                    "comment": "By default, Vikunja will try to connect with starttls, use this option to force it to use ssl."
+                    "comment": "By default, Vikunja uses starttls if the mail server offers it and falls back to plaintext otherwise. Enable this to always connect with implicit TLS (usually port 465) and refuse unencrypted connections."
                 }
             ]
         },
