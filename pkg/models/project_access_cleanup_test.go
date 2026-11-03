@@ -347,7 +347,7 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 
 		projectIDs, err := teamProjectIDs(s, 9)
 		require.NoError(t, err)
-		err = cleanupAfterProjectAccessLoss(s, 2, projectIDs)
+		err = cleanupAfterProjectAccessLoss(s, 2, projectIDs, OutsideWebhooksDelete)
 		require.NoError(t, err)
 
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": task.ID, "user_id": 2})

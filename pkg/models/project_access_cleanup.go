@@ -25,11 +25,20 @@ import (
 	"xorm.io/xorm"
 )
 
-func cleanupAfterProjectAccessLoss(s *xorm.Session, userID int64, projectIDs []int64) error {
-	return cleanupAfterProjectAccessLossForUsers(s, []int64{userID}, projectIDs)
+// OutsideWebhooks decides what happens to the webhooks of users who lose access to a project.
+type OutsideWebhooks int
+
+const (
+	// OutsideWebhooksDelete is the zero value so v1 and internal callers keep deleting them.
+	OutsideWebhooksDelete OutsideWebhooks = iota
+	OutsideWebhooksKeep
+)
+
+func cleanupAfterProjectAccessLoss(s *xorm.Session, userID int64, projectIDs []int64, webhooks OutsideWebhooks) error {
+	return cleanupAfterProjectAccessLossForUsers(s, []int64{userID}, projectIDs, webhooks)
 }
 
-func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, projectIDs []int64) error {
+func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, projectIDs []int64, webhooks OutsideWebhooks) error {
 	if len(userIDs) == 0 || len(projectIDs) == 0 {
 		return nil
 	}
@@ -75,7 +84,7 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, pro
 			}
 		}
 
-		if err := deleteUserDataInProjects(s, userID, lost); err != nil {
+		if err := deleteUserDataInProjects(s, userID, lost, webhooks); err != nil {
 			return err
 		}
 	}
@@ -84,7 +93,7 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, pro
 }
 
 // Moving a project can drop access inherited from its old ancestors, with no share removed to trigger cleanup.
-func cleanupAfterProjectMove(s *xorm.Session, projectID int64) error {
+func cleanupAfterProjectMove(s *xorm.Session, projectID int64, webhooks OutsideWebhooks) error {
 	subtreeIDs := builder.Select("project_id").From("project_ancestors").Where(builder.Eq{"ancestor_id": projectID})
 	taskIDs := builder.Select("id").From("tasks").Where(builder.In("project_id", subtreeIDs))
 
@@ -122,11 +131,11 @@ func cleanupAfterProjectMove(s *xorm.Session, projectID int64) error {
 	slices.Sort(userIDs)
 	userIDs = slices.Compact(userIDs)
 
-	return cleanupAfterProjectAccessLossForUsers(s, userIDs, []int64{projectID})
+	return cleanupAfterProjectAccessLossForUsers(s, userIDs, []int64{projectID}, webhooks)
 }
 
 // Keep in sync with ProjectAccessCleanupList.vue.
-func deleteUserDataInProjects(s *xorm.Session, userID int64, projectIDs []int64) error {
+func deleteUserDataInProjects(s *xorm.Session, userID int64, projectIDs []int64, webhooks OutsideWebhooks) error {
 	if len(projectIDs) == 0 {
 		return nil
 	}
@@ -153,6 +162,10 @@ func deleteUserDataInProjects(s *xorm.Session, userID int64, projectIDs []int64)
 		Delete(&Subscription{})
 	if err != nil {
 		return err
+	}
+
+	if webhooks == OutsideWebhooksKeep {
+		return nil
 	}
 
 	_, err = s.In("project_id", projectIDs).
