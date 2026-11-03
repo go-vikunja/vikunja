@@ -665,7 +665,7 @@ func (err *ErrProjectMoveTooLarge) Error() string {
 }
 
 // ErrCodeProjectMoveTooLarge holds the unique world-error code of this error
-const ErrCodeProjectMoveTooLarge = 3018
+const ErrCodeProjectMoveTooLarge = 3020
 
 // HTTPError holds the http error description
 func (err *ErrProjectMoveTooLarge) HTTPError() web.HTTPError {
@@ -1494,7 +1494,7 @@ func (err ErrTaskRelationHierarchyTooLarge) Error() string {
 }
 
 // ErrCodeTaskRelationHierarchyTooLarge holds the unique world-error code of this error
-const ErrCodeTaskRelationHierarchyTooLarge = 4040
+const ErrCodeTaskRelationHierarchyTooLarge = 4041
 
 // HTTPError holds the http error description
 func (err ErrTaskRelationHierarchyTooLarge) HTTPError() web.HTTPError {
