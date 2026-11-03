@@ -460,3 +460,11 @@ func TestSavedFilter_ZeroProjectUserGetsNoTaskPositions(t *testing.T) {
 		})
 	}
 }
+
+func TestStaleFilterTaskIDs(t *testing.T) {
+	saved := map[int64]*TaskBucket{1: {TaskID: 1}, 2: {TaskID: 2}, 3: {TaskID: 3}}
+	matching := taskIDSet([]*Task{{ID: 2}, {ID: 4}})
+
+	assert.ElementsMatch(t, []int64{1, 3}, staleFilterTaskIDs(saved, matching))
+	assert.Empty(t, staleFilterTaskIDs(saved, taskIDSet([]*Task{{ID: 1}, {ID: 2}, {ID: 3}})))
+}
