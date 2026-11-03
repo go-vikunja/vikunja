@@ -17,6 +17,7 @@
 package models
 
 import (
+	"slices"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -330,10 +331,11 @@ func GetAdminProjectsSharedWithTeam(s *xorm.Session, a web.Auth, teamID int64) (
 		return nil, ErrGenericForbidden{}
 	}
 
-	projectIDs := []int64{}
-	if err := s.Table("team_projects").Where("team_id = ?", teamID).OrderBy("project_id").Cols("project_id").Find(&projectIDs); err != nil {
+	projectIDs, err := teamProjectIDs(s, teamID)
+	if err != nil {
 		return nil, err
 	}
+	slices.Sort(projectIDs)
 	projects, err := GetProjectsMapByIDs(s, projectIDs)
 	if err != nil {
 		return nil, err
@@ -352,7 +354,7 @@ func GetAdminProjectsSharedWithTeam(s *xorm.Session, a web.Auth, teamID int64) (
 		if !has {
 			continue
 		}
-		if instanceAdmin || p.isOwner(u) || permissions[id] == PermissionAdmin {
+		if instanceAdmin || permissions[id] == PermissionAdmin {
 			result = append(result, p)
 		}
 	}
