@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,7 +32,7 @@ func TestMarkdownToHTMLWithMentions(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		got, err := MarkdownToHTMLWithMentions(s, "hi @user1")
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 1}, "hi @user1")
 		require.NoError(t, err)
 		assert.Equal(t, `<p>hi <mention-user data-id="user1" data-label="user1">@user1</mention-user></p>`, got)
 	})
@@ -41,7 +42,7 @@ func TestMarkdownToHTMLWithMentions(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		got, err := MarkdownToHTMLWithMentions(s, "hi @nosuchuser")
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 1}, "hi @nosuchuser")
 		require.NoError(t, err)
 		assert.Equal(t, "<p>hi @nosuchuser</p>", got)
 	})
@@ -51,7 +52,7 @@ func TestMarkdownToHTMLWithMentions(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		got, err := MarkdownToHTMLWithMentions(s, "cc @user1, please review")
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 1}, "cc @user1, please review")
 		require.NoError(t, err)
 		assert.Equal(t, `<p>cc <mention-user data-id="user1" data-label="user1">@user1</mention-user>, please review</p>`, got)
 	})
@@ -61,7 +62,7 @@ func TestMarkdownToHTMLWithMentions(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		got, err := MarkdownToHTMLWithMentions(s, "ping @user1 and @user2")
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 1}, "ping @user1 and @user2")
 		require.NoError(t, err)
 		assert.Contains(t, got, `<mention-user data-id="user1" data-label="user1">@user1</mention-user>`)
 		assert.Contains(t, got, `<mention-user data-id="user2" data-label="user2">@user2</mention-user>`)
@@ -72,7 +73,7 @@ func TestMarkdownToHTMLWithMentions(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		got, err := MarkdownToHTMLWithMentions(s, "reach me at user1@example.com please")
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 1}, "reach me at user1@example.com please")
 		require.NoError(t, err)
 		assert.NotContains(t, got, "mention-user")
 	})
@@ -82,7 +83,7 @@ func TestMarkdownToHTMLWithMentions(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		got, err := MarkdownToHTMLWithMentions(s, "use `@user1` literally")
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 1}, "use `@user1` literally")
 		require.NoError(t, err)
 		assert.NotContains(t, got, "mention-user")
 		assert.Contains(t, got, "<code>@user1</code>")
@@ -93,10 +94,40 @@ func TestMarkdownToHTMLWithMentions(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		got, err := MarkdownToHTMLWithMentions(s, "- [ ] ping @user1")
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 1}, "- [ ] ping @user1")
 		require.NoError(t, err)
 		assert.Contains(t, got, `data-type="taskItem"`)
 		assert.Contains(t, got, `<mention-user data-id="user1" data-label="user1">@user1</mention-user>`)
+	})
+
+	t.Run("own bot is resolved", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 21}, "hi @bot-owner-a-assistant")
+		require.NoError(t, err)
+		assert.Equal(t, `<p>hi <mention-user data-id="bot-owner-a-assistant" data-label="Owner A Assistant">@Owner A Assistant</mention-user></p>`, got)
+	})
+
+	t.Run("someone else's bot stays literal text", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		got, err := MarkdownToHTMLWithMentions(s, &user.User{ID: 21}, "hi @bot-owner-b-assistant")
+		require.NoError(t, err)
+		assert.Equal(t, "<p>hi @bot-owner-b-assistant</p>", got)
+	})
+
+	t.Run("link share resolves humans but not bots", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		got, err := MarkdownToHTMLWithMentions(s, linkShareAuth{}, "hi @user1 and @bot-owner-a-assistant")
+		require.NoError(t, err)
+		assert.Equal(t, `<p>hi <mention-user data-id="user1" data-label="user1">@user1</mention-user> and @bot-owner-a-assistant</p>`, got)
 	})
 
 	t.Run("no session leaves mention as text", func(t *testing.T) {
@@ -105,3 +136,7 @@ func TestMarkdownToHTMLWithMentions(t *testing.T) {
 		assert.Equal(t, "<p>hi @user1</p>", got)
 	})
 }
+
+type linkShareAuth struct{}
+
+func (linkShareAuth) GetID() int64 { return -2 }

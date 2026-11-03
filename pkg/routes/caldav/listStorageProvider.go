@@ -623,7 +623,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 	}
 
 	// Inbound CalDAV descriptions are markdown; store them as canonical HTML.
-	if err := applyDescriptionFromMarkdown(s, vTask, ""); err != nil {
+	if err := applyDescriptionFromMarkdown(s, vcls.user, vTask, ""); err != nil {
 		log.Errorf("[CALDAV] Failed to convert description in CreateResource: %v", err)
 		_ = s.Rollback()
 		events.CleanupPending(s)
@@ -677,13 +677,13 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 // applyDescriptionFromMarkdown converts a task's inbound CalDAV description
 // (markdown) to canonical HTML, rebuilding @mentions. Unchanged markdown keeps the
 // stored HTML verbatim, so a no-op read-modify-write doesn't churn it or move Updated.
-func applyDescriptionFromMarkdown(s *xorm.Session, vTask *models.Task, storedHTML string) error {
+func applyDescriptionFromMarkdown(s *xorm.Session, viewer *user2.User, vTask *models.Task, storedHTML string) error {
 	if !richtext.Changed(storedHTML, vTask.Description) {
 		vTask.Description = storedHTML
 		return nil
 	}
 
-	htmlDesc, err := richtext.MarkdownToHTMLWithMentions(s, vTask.Description)
+	htmlDesc, err := richtext.MarkdownToHTMLWithMentions(s, viewer, vTask.Description)
 	if err != nil {
 		return err
 	}
@@ -777,7 +777,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	}
 
 	// Inbound markdown → canonical HTML, kept verbatim when unchanged.
-	if err := applyDescriptionFromMarkdown(s, vTask, stored.Description); err != nil {
+	if err := applyDescriptionFromMarkdown(s, vcls.user, vTask, stored.Description); err != nil {
 		log.Errorf("[CALDAV] Failed to convert description in UpdateResource: %v", err)
 		_ = s.Rollback()
 		events.CleanupPending(s)
