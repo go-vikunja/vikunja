@@ -496,6 +496,27 @@ func TestInsertFromStructure(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), parentBucketCount)
 	})
+	t.Run("skips null positions and task buckets", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		structure := []*models.ProjectWithTasksAndBuckets{{
+			Project: models.Project{
+				Title: "Null positions",
+				Views: []*models.ProjectView{{
+					ID:                      100,
+					Title:                   "Kanban",
+					ViewKind:                models.ProjectViewKindKanban,
+					BucketConfigurationMode: models.BucketConfigurationModeManual,
+				}},
+			},
+			Tasks:       []*models.TaskWithComments{{Task: models.Task{ID: 10, Title: "task"}}},
+			Buckets:     []*models.Bucket{{ID: 200, Title: "Backlog", ProjectViewID: 100}},
+			Positions:   []*models.TaskPosition{nil},
+			TaskBuckets: []*models.TaskBucket{nil},
+		}}
+
+		require.NoError(t, InsertFromStructure(structure, u))
+	})
 	t.Run("preserves out-of-order indexes before assigning automatic indexes", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
