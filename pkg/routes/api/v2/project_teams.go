@@ -67,10 +67,11 @@ func RegisterProjectTeamRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "project-teams-delete",
 		Summary:     "Remove a team from a project",
-		Description: "Revokes a team's access to the project. Only project admins may remove a share.",
+		Description: "Revokes a team's access to the project. Only project admins may remove a share. Members who lose access to the project or its child projects have their task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks there removed.",
 		Method:      http.MethodDelete,
 		Path:        "/projects/{project}/teams/{team}",
 		Tags:        tags,
+		Responses:   outsideWebhooksResponses(api),
 	}, projectTeamsDelete)
 }
 
@@ -129,14 +130,16 @@ func projectTeamsUpdate(ctx context.Context, in *struct {
 }
 
 func projectTeamsDelete(ctx context.Context, in *struct {
-	ProjectID int64 `path:"project"`
-	TeamID    int64 `path:"team"`
+	ProjectID            int64                     `path:"project"`
+	TeamID               int64                     `path:"team"`
+	ClearOutsideWebhooks clearOutsideWebhooksParam `query:"clear_outside_webhooks"`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.DoDelete(ctx, &models.TeamProject{ProjectID: in.ProjectID, TeamID: in.TeamID}, a); err != nil {
+	share := &models.TeamProject{ProjectID: in.ProjectID, TeamID: in.TeamID, OutsideWebhooks: in.ClearOutsideWebhooks.option()}
+	if err := handler.DoDelete(ctx, share, a); err != nil {
 		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil
