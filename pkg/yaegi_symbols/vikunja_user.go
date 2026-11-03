@@ -21,6 +21,7 @@ func init() {
 		"CheckUserCanAuthenticate":             reflect.ValueOf(user.CheckUserCanAuthenticate),
 		"CheckUserCredentials":                 reflect.ValueOf(user.CheckUserCredentials),
 		"CheckUserPassword":                    reflect.ValueOf(user.CheckUserPassword),
+		"CheckUserPasswordCountingFailures":    reflect.ValueOf(user.CheckUserPasswordCountingFailures),
 		"CleanupOldTokens":                     reflect.ValueOf(user.CleanupOldTokens),
 		"ConfirmDeletion":                      reflect.ValueOf(user.ConfirmDeletion),
 		"ConfirmEmail":                         reflect.ValueOf(user.ConfirmEmail),
