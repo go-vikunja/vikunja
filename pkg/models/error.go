@@ -1473,8 +1473,7 @@ func (err ErrInvalidFilterExpression) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidFilterExpression,
-		// Omits the expression: it may contain a private view's stored filter.
-		Message: fmt.Sprintf("The filter expression is invalid: %v", err.ExpressionError),
+		Message:  fmt.Sprintf("The filter expression is invalid: %v", err.ExpressionError),
 	}
 }
 
