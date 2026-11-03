@@ -17,7 +17,6 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -278,35 +277,6 @@ const (
 func validateFilterComplexity(filter string) error {
 	if len(filter) > maxFilterBytes {
 		return &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-byte limit", maxFilterBytes)}
-	}
-
-	depth := 0
-	for i := 0; i < len(filter); {
-		switch c := filter[i]; c {
-		case '\'', '"':
-			if end := quotedRunEnd(filter, i); end > 0 {
-				i = end
-				continue
-			}
-			i++
-		case '(':
-			depth++
-			if depth > maxFilterDepth {
-				return &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-level nesting limit", maxFilterDepth)}
-			}
-			i++
-		case ')':
-			depth--
-			if depth < 0 {
-				return &ErrInvalidFilterExpression{
-					Expression:      filter,
-					ExpressionError: errors.New("unexpected closing parenthesis"),
-				}
-			}
-			i++
-		default:
-			i++
-		}
 	}
 
 	return nil
