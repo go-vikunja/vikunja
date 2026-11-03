@@ -474,7 +474,8 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 	return
 }
 
-// AddPositionsToTasks fills Positions with each task's stored position in every view.
+// AddPositionsToTasks fills Positions with each task's stored position in every
+// view of its own project.
 func AddPositionsToTasks(s *xorm.Session, tasks []*Task) error {
 	taskMap := make(map[int64]*Task, len(tasks))
 	ids := make([]int64, 0, len(tasks))
@@ -489,7 +490,12 @@ func AddPositionsToTasks(s *xorm.Session, tasks []*Task) error {
 		return nil
 	}
 	positions := []*TaskPosition{}
-	err := s.In("task_id", ids).Find(&positions)
+	err := s.
+		Select("task_positions.*").
+		Join("INNER", "tasks", "tasks.id = task_positions.task_id").
+		Join("INNER", "project_views", "project_views.id = task_positions.project_view_id AND project_views.project_id = tasks.project_id").
+		In("task_positions.task_id", ids).
+		Find(&positions)
 	if err != nil {
 		return err
 	}
