@@ -45,6 +45,8 @@ func (*ProjectAncestor) TableName() string {
 
 const projectAncestorInsertBatch = 500
 
+var maxProjectMoveAncestorRows = 50_000
+
 func insertProjectAncestorRows(s *xorm.Session, rows []*ProjectAncestor) error {
 	for chunk := range slices.Chunk(rows, projectAncestorInsertBatch) {
 		if _, err := s.Insert(chunk); err != nil {
@@ -126,6 +128,9 @@ func moveProjectAncestors(s *xorm.Session, projectID, newParentID int64) error {
 		parentRows, err = lockAncestorChainOf(s, newParentID)
 		if err != nil {
 			return err
+		}
+		if len(parentRows) > maxProjectMoveAncestorRows/len(subtree) {
+			return &ErrProjectMoveTooLarge{ProjectID: projectID, MaxAncestorRows: maxProjectMoveAncestorRows}
 		}
 	}
 
