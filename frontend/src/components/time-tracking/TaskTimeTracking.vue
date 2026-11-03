@@ -23,12 +23,18 @@
 			v-cy="'taskRunningTimer'"
 			class="running-timer"
 		>
-			<span class="has-text-grey">{{ $t('timeTracking.running') }}</span>
-			<span class="running-timer__elapsed">{{ elapsed }}</span>
-			<span
-				v-if="runningTimer.comment"
-				class="running-timer__comment has-text-grey"
-			>{{ runningTimer.comment }}</span>
+			<div class="running-timer__info">
+				<div>
+					<span class="has-text-grey">{{ $t('timeTracking.running') }}</span>
+					<span class="running-timer__elapsed">{{ elapsed }}</span>
+				</div>
+				<div
+					v-if="runningTimer.comment"
+					class="running-timer__comment has-text-grey"
+				>
+					{{ runningTimer.comment }}
+				</div>
+			</div>
 			<XButton
 				v-cy="'stopTaskTimer'"
 				class="running-timer__stop"
@@ -146,7 +152,12 @@ async function onDelete(entry: ITimeEntry) {
 	margin-block-end: 1rem;
 }
 
+.running-timer__info {
+	min-inline-size: 0;
+}
+
 .running-timer__elapsed {
+	margin-inline-start: .5rem;
 	color: var(--primary);
 	font-variant-numeric: tabular-nums;
 	font-weight: 600;
