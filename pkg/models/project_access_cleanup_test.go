@@ -106,11 +106,48 @@ func (f *accessLossFixture) giveParentTo(t *testing.T, u *user.User) {
 
 func (f *accessLossFixture) moveChildToNewRoot(t *testing.T) {
 	t.Helper()
+	require.NoError(t, f.tryMoveChildToNewRoot(t, OutsideWebhooksDelete))
+}
+
+func (f *accessLossFixture) tryMoveChildToNewRoot(t *testing.T, webhooks OutsideWebhooks) error {
+	t.Helper()
 	root := &Project{Title: "access loss new root"}
 	require.NoError(t, root.Create(f.s, f.owner))
 	rootID := root.ID
 	f.child.ParentProjectID = &rootID
-	require.NoError(t, UpdateProject(f.s, f.child, f.owner, false))
+	f.child.OutsideWebhooks = webhooks
+	return UpdateProject(f.s, f.child, f.owner, false)
+}
+
+// Commits the setup so a rollback only undoes the operation under test.
+func (f *accessLossFixture) commitSetup(t *testing.T) {
+	t.Helper()
+	require.NoError(t, f.s.Commit())
+	f.s.Close()
+	f.s = db.NewSession()
+	t.Cleanup(func() { f.s.Close() })
+}
+
+func (f *accessLossFixture) deleteMemberWebhooks(t *testing.T) {
+	t.Helper()
+	_, err := f.s.Where("created_by_id = ?", f.member.ID).Delete(&Webhook{})
+	require.NoError(t, err)
+}
+
+func (f *accessLossFixture) assertNothingCleanedUp(t *testing.T) {
+	t.Helper()
+	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP}, false)
+	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC}, false)
+	db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID}, false)
+	db.AssertExists(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID}, false)
+}
+
+func (f *accessLossFixture) assertCleanedUpExceptWebhooks(t *testing.T) {
+	t.Helper()
+	require.NoError(t, f.s.Commit())
+	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC}, false)
+	db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+	db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID})
 }
 
 func (f *accessLossFixture) assertCleanedUp(t *testing.T) {
@@ -364,6 +401,85 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 		require.NoError(t, f.s.Commit())
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookP})
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
+	})
+}
+
+func TestProjectAccessLossCleanup_OutsideWebhooks(t *testing.T) {
+	t.Run("move asks for confirmation and rolls back when webhooks would be deleted", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareViaTeam(t)
+		f.commitSetup(t)
+
+		err := f.tryMoveChildToNewRoot(t, OutsideWebhooksConfirm)
+		require.Error(t, err)
+		assert.True(t, IsErrOutsideWebhooksNeedConfirmation(err))
+		require.NoError(t, f.s.Rollback())
+
+		db.AssertExists(t, "projects", map[string]interface{}{"id": f.child.ID, "parent_project_id": f.parent.ID}, false)
+		f.assertNothingCleanedUp(t)
+	})
+	t.Run("move without webhooks to delete proceeds without confirmation", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareViaTeam(t)
+		f.deleteMemberWebhooks(t)
+
+		require.NoError(t, f.tryMoveChildToNewRoot(t, OutsideWebhooksConfirm))
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+	})
+	t.Run("move keeps webhooks when asked to", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareViaTeam(t)
+
+		require.NoError(t, f.tryMoveChildToNewRoot(t, OutsideWebhooksKeep))
+		f.assertCleanedUpExceptWebhooks(t)
+	})
+	t.Run("move deletes webhooks when asked to", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareViaTeam(t)
+
+		require.NoError(t, f.tryMoveChildToNewRoot(t, OutsideWebhooksDelete))
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
+	})
+	t.Run("removing a share asks for confirmation and rolls back when webhooks would be deleted", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		f.commitSetup(t)
+
+		err := (&ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, OutsideWebhooks: OutsideWebhooksConfirm}).Delete(f.s, f.owner)
+		require.Error(t, err)
+		assert.True(t, IsErrOutsideWebhooksNeedConfirmation(err))
+		require.NoError(t, f.s.Rollback())
+
+		db.AssertExists(t, "users_projects", map[string]interface{}{"project_id": f.parent.ID, "user_id": f.member.ID}, false)
+		f.assertNothingCleanedUp(t)
+	})
+	t.Run("removing a share without webhooks to delete proceeds without confirmation", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		f.deleteMemberWebhooks(t)
+
+		require.NoError(t, (&ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, OutsideWebhooks: OutsideWebhooksConfirm}).Delete(f.s, f.owner))
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "users_projects", map[string]interface{}{"project_id": f.parent.ID, "user_id": f.member.ID})
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+	})
+	t.Run("removing a share keeps webhooks when asked to", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+
+		require.NoError(t, (&ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, OutsideWebhooks: OutsideWebhooksKeep}).Delete(f.s, f.owner))
+		f.assertCleanedUpExceptWebhooks(t)
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP}, false)
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID})
+	})
+	t.Run("removing a team member asks for confirmation when webhooks would be deleted", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		team := f.shareViaTeam(t)
+
+		err := (&TeamMember{TeamID: team.ID, Username: f.member.Username, OutsideWebhooks: OutsideWebhooksConfirm}).Delete(f.s, f.owner)
+		assert.True(t, IsErrOutsideWebhooksNeedConfirmation(err))
 	})
 }
 
