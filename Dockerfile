@@ -56,9 +56,6 @@ USER 1000
 
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 ENV VIKUNJA_DATABASE_PATH=/db/vikunja.db
-# Mitigates CVE-2026-98432 (kernel IPv4 TCP use-after-free) by disabling MPTCP
-# on Vikunja's listen sockets. Remove once host kernels are patched.
-ENV GODEBUG=multipathtcp=0
 
 COPY --from=apibuilder /build/vikunja-* vikunja
 COPY --from=apibuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
