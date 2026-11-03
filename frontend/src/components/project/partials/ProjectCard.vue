@@ -70,6 +70,7 @@ import {PERMISSIONS} from '@/constants/permissions'
 
 import {useProjectBackground} from '@/composables/useProjectBackground'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
+import {htmlToPreviewText} from '@/helpers/htmlToPreviewText'
 
 const props = defineProps<{
 	project: ProjectResponse,
@@ -86,9 +87,7 @@ async function toggleProjectFavorite() {
 	await favoriteMutation.mutateAsync({id: props.project.id, isFavorite: !props.project.is_favorite})
 }
 
-const textOnlyDescription = computed(() => {
-	return props.project.description ? props.project.description.replace(/<[^>]*>/g, '') : ''
-})
+const textOnlyDescription = computed(() => htmlToPreviewText(props.project.description ?? ''))
 </script>
 
 <style lang="scss" scoped>
