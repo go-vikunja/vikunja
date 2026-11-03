@@ -194,7 +194,15 @@ func RebuildProjectAncestors(s *xorm.Session) error {
 		parents[project.ID] = project.parentID()
 	}
 
-	rows := make([]*ProjectAncestor, 0, len(projects))
+	// Flushed per batch: deep trees derive far more rows than there are projects.
+	rows := make([]*ProjectAncestor, 0, projectAncestorInsertBatch)
+	flush := func() error {
+		if err := insertProjectAncestorRows(s, rows); err != nil {
+			return err
+		}
+		rows = rows[:0]
+		return nil
+	}
 	for _, project := range projects {
 		rows = append(rows, &ProjectAncestor{ProjectID: project.ID, AncestorID: project.ID})
 
@@ -209,8 +217,13 @@ func RebuildProjectAncestors(s *xorm.Session) error {
 			visited[current] = true
 			depth++
 			rows = append(rows, &ProjectAncestor{ProjectID: project.ID, AncestorID: current, Depth: depth})
+			if len(rows) >= projectAncestorInsertBatch {
+				if err := flush(); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
-	return insertProjectAncestorRows(s, rows)
+	return flush()
 }
