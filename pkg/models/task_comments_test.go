@@ -153,6 +153,24 @@ func TestTaskComment_Delete(t *testing.T) {
 			"id": 1,
 		})
 	})
+	t.Run("link share is the event doer", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		tc := &TaskComment{ID: 1, TaskID: 1}
+		require.NoError(t, tc.Delete(s, share))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TaskCommentDeletedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		doer := dispatched[0].(*TaskCommentDeletedEvent).Doer
+		require.NotNil(t, doer)
+		assert.Equal(t, share.GetID(), doer.ID)
+	})
 	t.Run("nonexisting comment", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
