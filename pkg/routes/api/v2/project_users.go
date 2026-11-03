@@ -67,7 +67,7 @@ func RegisterProjectUserRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "project-users-delete",
 		Summary:     "Remove a user's access to a project",
-		Description: "Revokes a user's direct access to the project, identified by username in the path. Only project admins may do this.",
+		Description: "Revokes a user's direct access to the project, identified by username in the path. Only project admins may do this. Users who lose access to a project or its child projects lose their task assignments and subscriptions there; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares.",
 		Method:      http.MethodDelete,
 		Path:        "/projects/{project}/users/{user}",
 		Tags:        tags,
@@ -130,14 +130,20 @@ func projectUsersUpdate(ctx context.Context, in *struct {
 }
 
 func projectUsersDelete(ctx context.Context, in *struct {
-	ProjectID int64  `path:"project"`
-	Username  string `path:"user"`
+	ProjectID        int64  `path:"project"`
+	Username         string `path:"user"`
+	KeepWebhooks     bool   `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted."`
+	RevokeLinkShares bool   `query:"revoke_link_shares" doc:"Delete the link shares created by users who lose access. By default they keep working."`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.DoDelete(ctx, &models.ProjectUser{ProjectID: in.ProjectID, Username: in.Username}, a); err != nil {
+	if err := handler.DoDelete(ctx, &models.ProjectUser{
+		ProjectID:         in.ProjectID,
+		Username:          in.Username,
+		AccessLossCleanup: models.AccessLossCleanup{KeepWebhooks: in.KeepWebhooks, RevokeLinkShares: in.RevokeLinkShares},
+	}, a); err != nil {
 		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil

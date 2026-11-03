@@ -45,7 +45,7 @@ func RegisterTeamMemberRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "teams-members-remove",
 		Summary:     "Remove a member from a team",
-		Description: "Removes a user from a team, revoking the access the team granted them. A team admin may remove anyone; a member may remove themselves. The last member of a team cannot be removed.",
+		Description: "Removes a user from a team, revoking the access the team granted them. A team admin may remove anyone; a member may remove themselves. The last member of a team cannot be removed. Users who lose access to a project or its child projects lose their task assignments and subscriptions there; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares.",
 		Method:      http.MethodDelete,
 		Path:        "/teams/{team}/members/{user}",
 		Tags:        tags,
@@ -80,14 +80,16 @@ func teamMembersAdd(ctx context.Context, in *struct {
 }
 
 func teamMembersRemove(ctx context.Context, in *struct {
-	TeamID   int64  `path:"team"`
-	Username string `path:"user" doc:"The username of the member to remove."`
+	TeamID           int64  `path:"team"`
+	Username         string `path:"user" doc:"The username of the member to remove."`
+	KeepWebhooks     bool   `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted."`
+	RevokeLinkShares bool   `query:"revoke_link_shares" doc:"Delete the link shares created by users who lose access. By default they keep working."`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	tm := &models.TeamMember{TeamID: in.TeamID, Username: in.Username}
+	tm := &models.TeamMember{TeamID: in.TeamID, Username: in.Username, AccessLossCleanup: models.AccessLossCleanup{KeepWebhooks: in.KeepWebhooks, RevokeLinkShares: in.RevokeLinkShares}}
 	if err := handler.DoDelete(ctx, tm, a); err != nil {
 		return nil, translateDomainError(err)
 	}
