@@ -116,6 +116,12 @@ func TestFilterComplexityLimits(t *testing.T) {
 		assert.True(t, IsErrFilterTooComplex(err), "depth after a correctly terminated escaped-quote run must still be tracked")
 	})
 
+	t.Run("quotes inside comments do not hide nesting", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("// '\n"+parens(150)+"\n// '", "UTC")
+		require.Error(t, err)
+		assert.True(t, IsErrFilterTooComplex(err))
+	})
+
 	t.Run("unmatched closing parenthesis is rejected", func(t *testing.T) {
 		_, err := getTaskFiltersFromFilterString("done = true)", "UTC")
 		require.Error(t, err)

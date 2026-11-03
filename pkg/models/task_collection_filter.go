@@ -312,6 +312,23 @@ func validateFilterComplexity(filter string) error {
 	return nil
 }
 
+// Uses fexpr's own scanner so comments and quotes are read exactly as Parse reads them.
+func filterGroupDepthExceeds(filter string, remaining int) bool {
+	scanner := fexpr.NewScanner([]byte(filter))
+	for {
+		t, err := scanner.Scan()
+		if err != nil || t.Type == fexpr.TokenEOF {
+			return false
+		}
+		if t.Type != fexpr.TokenGroup {
+			continue
+		}
+		if remaining == 0 || filterGroupDepthExceeds(t.Literal, remaining-1) {
+			return true
+		}
+	}
+}
+
 func prepareFilterForParsing(filter string) (string, error) {
 	// Preprocessing may shrink or expand input, so enforce the cap on both forms.
 	if err := validateFilterComplexity(filter); err != nil {
@@ -321,6 +338,9 @@ func prepareFilterForParsing(filter string) (string, error) {
 	filter = preprocessFilterString(filter)
 	if err := validateFilterComplexity(filter); err != nil {
 		return "", err
+	}
+	if filterGroupDepthExceeds(filter, maxFilterDepth) {
+		return "", &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-level nesting limit", maxFilterDepth)}
 	}
 
 	return filter, nil
