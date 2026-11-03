@@ -32,10 +32,8 @@
 		<KeyboardShortcuts v-if="keyboardShortcutsActive && !isQuickAddMode" />
 
 		<Teleport to="body">
-			<AddToHomeScreen v-if="!isQuickAddMode" />
-			<UpdateNotification v-if="!isQuickAddMode" />
+			<BottomBanners v-if="!isQuickAddMode" />
 			<Notification />
-			<DemoMode v-if="!isQuickAddMode" />
 		</Teleport>
 	</Ready>
 </template>
@@ -46,7 +44,7 @@ import {useRoute, useRouter} from 'vue-router'
 import isTouchDevice from 'is-touch-device'
 
 import Notification from '@/components/misc/Notification.vue'
-import UpdateNotification from '@/components/home/UpdateNotification.vue'
+import BottomBanners from '@/components/home/BottomBanners.vue'
 import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
 
 import AppHeader from '@/components/home/AppHeader.vue'
@@ -64,8 +62,6 @@ import {useColorScheme} from '@/composables/useColorScheme'
 import {useTimeTrackingFavicon} from '@/composables/useTimeTrackingFavicon'
 import {useBodyClass} from '@/composables/useBodyClass'
 import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
-import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
-import DemoMode from '@/components/home/DemoMode.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {AUTH_TYPES} from '@/constants/auth'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
