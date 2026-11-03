@@ -40,11 +40,11 @@ func (p *clearOutsideWebhooksParam) OnParamSet(isSet bool, _ any) {
 	p.set = isSet
 }
 
-func (clearOutsideWebhooksParam) Schema(huma.Registry) *huma.Schema {
+func (*clearOutsideWebhooksParam) Schema(huma.Registry) *huma.Schema {
 	return &huma.Schema{Type: huma.TypeBoolean, Description: clearOutsideWebhooksDoc}
 }
 
-func (p clearOutsideWebhooksParam) option() models.OutsideWebhooks {
+func (p *clearOutsideWebhooksParam) option() models.OutsideWebhooks {
 	if !p.set {
 		return models.OutsideWebhooksFromChoice(nil)
 	}

@@ -37,11 +37,11 @@ const (
 )
 
 // OutsideWebhooksFromChoice maps the API's nullable clear_outside_webhooks onto an option.
-func OutsideWebhooksFromChoice(clear *bool) OutsideWebhooks {
+func OutsideWebhooksFromChoice(clearWebhooks *bool) OutsideWebhooks {
 	switch {
-	case clear == nil:
+	case clearWebhooks == nil:
 		return OutsideWebhooksConfirm
-	case *clear:
+	case *clearWebhooks:
 		return OutsideWebhooksDelete
 	default:
 		return OutsideWebhooksKeep
