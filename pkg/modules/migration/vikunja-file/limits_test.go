@@ -644,4 +644,21 @@ func TestFilterItemCount(t *testing.T) {
 	require.ErrorAs(t, err, &limitErr)
 	db.AssertMissing(t, "projects", map[string]interface{}{"title": "filter-limit project"})
 	db.AssertMissing(t, "saved_filters", map[string]interface{}{"title": "f1"})
+
+	t.Run("preflight rejects filters over the item limit", func(t *testing.T) {
+		config.MigrationMaxItems.Set(2)
+		require.NoError(t, checkFilterItemCount([]byte(`[{"title":"f1"},{"title":"f2"}]`)))
+		require.ErrorAs(t, checkFilterItemCount([]byte(filters)), &limitErr)
+	})
+
+	t.Run("preflight rejects oversized nested filter fields", func(t *testing.T) {
+		config.MigrationMaxItems.Set(1)
+		sortBy := strings.Repeat(`"a",`, decodeBytesPerItem/16) + `"a"`
+		require.ErrorAs(t, checkFilterItemCount([]byte(`[{"title":"f","filters":{"sort_by":[`+sortBy+`]}}]`)), &limitErr)
+	})
+
+	t.Run("preflight rejects malformed filters", func(t *testing.T) {
+		var invalid *migration.ErrInvalidImportFile
+		require.ErrorAs(t, checkFilterItemCount([]byte(`[{"title":`)), &invalid)
+	})
 }

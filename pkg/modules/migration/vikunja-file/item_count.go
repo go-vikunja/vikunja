@@ -41,18 +41,26 @@ const unknownElementBytes = 1 << 10
 
 var unmarshalerType = reflect.TypeFor[json.Unmarshaler]()
 
-// Streams data against the decode target's types so the heap json.Unmarshal would allocate stays bounded.
 func checkDataItemCount(data []byte) error {
+	return checkDecodeBudget(data, reflect.TypeFor[[]*models.ProjectWithTasksAndBuckets](), "data")
+}
+
+func checkFilterItemCount(data []byte) error {
+	return checkDecodeBudget(data, reflect.TypeFor[[]*models.SavedFilter](), "filter data")
+}
+
+// Streams data against the decode target's types so the heap json.Unmarshal would allocate stays bounded.
+func checkDecodeBudget(data []byte, target reflect.Type, what string) error {
 	b := &decodeBudget{
 		dec:       json.NewDecoder(bytes.NewReader(data)),
 		remaining: migration.MaxItems() * decodeBytesPerItem,
 	}
-	err := b.value(reflect.TypeFor[[]*models.ProjectWithTasksAndBuckets](), 0)
+	err := b.value(target, 0)
 	var limitErr *migration.ErrImportItemLimitExceeded
 	if err == nil || errors.As(err, &limitErr) {
 		return err
 	}
-	return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read data: %w", err)}
+	return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read %s: %w", what, err)}
 }
 
 type decodeBudget struct {
@@ -108,8 +116,15 @@ func (b *decodeBudget) value(t reflect.Type, depth int) error {
 		fields = jsonFields(t)
 	}
 
+	var topLevelItems int64
 	for b.dec.More() {
 		next, cost := elem, elemCost
+		if depth == 0 && delim == '[' {
+			topLevelItems++
+			if err := migration.CheckItemCount(topLevelItems); err != nil {
+				return err
+			}
+		}
 		if delim == '{' {
 			key, err := b.dec.Token()
 			if err != nil {
