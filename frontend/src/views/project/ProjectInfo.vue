@@ -9,8 +9,14 @@
 			:show-close="true"
 			@close="goBack()"
 		>
+			<p
+				v-if="project?.id === -1"
+				class="has-text-start"
+			>
+				{{ $t('project.favoriteDescription') }}
+			</p>
 			<div
-				v-if="htmlDescription !== ''"
+				v-else-if="htmlDescription !== ''"
 				class="has-text-start"
 				data-user-content
 				v-html="htmlDescription"
@@ -29,14 +35,12 @@
 import {computed} from 'vue'
 import {useProjects} from '@/composables/useProjects'
 import {useGoBack} from '@/composables/useGoBack'
-import {useI18n} from 'vue-i18n'
 import {sanitizeProjectDescription} from '@/helpers/sanitizeProjectDescription'
 
 const props = defineProps<{
 	projectId: number
 }>()
 
-const {t} = useI18n()
 const goBack = useGoBack()
 
 const projectList = useProjects()
@@ -45,10 +49,6 @@ const htmlDescription = computed(() => {
 	const description = project.value?.description || ''
 	if (description === '') {
 		return ''
-	}
-
-	if (project.value.id === -1) {
-		return t('project.favoriteDescription')
 	}
 
 	return sanitizeProjectDescription(description)
