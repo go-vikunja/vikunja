@@ -2,7 +2,7 @@
 	<Teleport :to="teleportTarget">
 		<Notifications
 			ref="group"
-			position="bottom left"
+			:position="isRtl ? 'bottom right' : 'bottom left'"
 			:max="2"
 			:ignore-duplicates="true"
 			:width="isMobile ? '100%' : 300"
@@ -74,9 +74,11 @@
 import {onBeforeUnmount, onMounted, ref, useTemplateRef} from 'vue'
 import {useElementBounding} from '@vueuse/core'
 import {useIsMobile} from '@/composables/useIsMobile'
+import {useIsRtl} from '@/composables/useIsRtl'
 import {useBottomBannersOffset} from '@/composables/useBottomBanners'
 
 const isMobile = useIsMobile()
+const isRtl = useIsRtl()
 
 const {left, right} = useElementBounding(useTemplateRef('group'))
 const bannersOffset = useBottomBannersOffset(() => ({left: left.value, right: right.value}))
