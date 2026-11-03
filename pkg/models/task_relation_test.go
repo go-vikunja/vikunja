@@ -317,6 +317,56 @@ func TestTaskRelation_Create(t *testing.T) {
 	})
 }
 
+func TestCreateTaskRelationsForImport(t *testing.T) {
+	t.Run("long chain is not limited by the cycle check cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		previous := maxTaskRelationCycleCheckVisits
+		maxTaskRelationCycleCheckVisits = 2
+		t.Cleanup(func() { maxTaskRelationCycleCheckVisits = previous })
+
+		err := CreateTaskRelationsForImport(s, []*TaskRelation{
+			{TaskID: 1, OtherTaskID: 2, RelationKind: RelationKindSubtask},
+			{TaskID: 2, OtherTaskID: 3, RelationKind: RelationKindSubtask},
+			{TaskID: 4, OtherTaskID: 3, RelationKind: RelationKindParenttask},
+			{TaskID: 3, OtherTaskID: 4, RelationKind: RelationKindSubtask},
+			{TaskID: 1, OtherTaskID: 4, RelationKind: RelationKindRelated},
+		}, &user.User{ID: 1})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       3,
+			"other_task_id": 4,
+			"relation_kind": RelationKindSubtask,
+		}, false)
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       4,
+			"other_task_id": 3,
+			"relation_kind": RelationKindParenttask,
+		}, false)
+	})
+	t.Run("cycle", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := CreateTaskRelationsForImport(s, []*TaskRelation{
+			{TaskID: 2, OtherTaskID: 3, RelationKind: RelationKindSubtask},
+			{TaskID: 3, OtherTaskID: 4, RelationKind: RelationKindSubtask},
+			{TaskID: 2, OtherTaskID: 4, RelationKind: RelationKindParenttask},
+		}, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationCycle(err))
+		db.AssertMissing(t, "task_relations", map[string]interface{}{
+			"task_id":       2,
+			"other_task_id": 3,
+		})
+	})
+}
+
 func TestTaskRelation_Delete(t *testing.T) {
 	u := &user.User{ID: 1}
 

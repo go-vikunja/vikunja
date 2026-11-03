@@ -206,7 +206,10 @@ func checkTaskRelationCycle(s *xorm.Session, relation *TaskRelation, otherTaskID
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations [put]
 func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
+	return rel.create(s, a, true)
+}
 
+func (rel *TaskRelation) create(s *xorm.Session, a web.Auth, checkCycle bool) error {
 	// Check if both tasks are the same
 	if rel.TaskID == rel.OtherTaskID {
 		return ErrRelationTasksCannotBeTheSame{
@@ -247,7 +250,7 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 	}
 
 	// If we're creating a subtask relation, check if we're about to create a cycle
-	if rel.RelationKind == RelationKindSubtask || rel.RelationKind == RelationKindParenttask {
+	if checkCycle && (rel.RelationKind == RelationKindSubtask || rel.RelationKind == RelationKindParenttask) {
 		err = checkTaskRelationCycle(s, rel, rel.OtherTaskID, nil, nil)
 		if err != nil {
 			return err
@@ -274,6 +277,83 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		Relation: rel,
 		Doer:     doer,
 	})
+	return nil
+}
+
+// CreateTaskRelationsForImport checks the hierarchy formed by relations once instead of
+// per relation. Only valid when every task involved was created by the same import, so
+// no pre-existing relation can close a cycle. Relations that already exist are skipped.
+func CreateTaskRelationsForImport(s *xorm.Session, relations []*TaskRelation, a web.Auth) error {
+	if err := checkImportedTaskRelationCycles(relations); err != nil {
+		return err
+	}
+
+	for _, rel := range relations {
+		err := rel.create(s, a, false)
+		if err != nil && !IsErrRelationAlreadyExists(err) {
+			return err
+		}
+	}
+	return nil
+}
+
+func checkImportedTaskRelationCycles(relations []*TaskRelation) error {
+	type edge struct{ parent, child int64 }
+
+	seen := make(map[edge]bool)
+	children := make(map[int64][]int64)
+	parentCount := make(map[int64]int)
+	for _, rel := range relations {
+		var e edge
+		switch rel.RelationKind {
+		case RelationKindSubtask:
+			e = edge{parent: rel.TaskID, child: rel.OtherTaskID}
+		case RelationKindParenttask:
+			e = edge{parent: rel.OtherTaskID, child: rel.TaskID}
+		default:
+			continue
+		}
+		if e.parent == e.child || seen[e] {
+			continue
+		}
+		seen[e] = true
+		children[e.parent] = append(children[e.parent], e.child)
+		parentCount[e.child]++
+		if _, ok := parentCount[e.parent]; !ok {
+			parentCount[e.parent] = 0
+		}
+	}
+
+	// Kahn's algorithm: tasks left over once all roots are peeled off sit on or below a cycle.
+	queue := make([]int64, 0, len(parentCount))
+	for id, count := range parentCount {
+		if count == 0 {
+			queue = append(queue, id)
+		}
+	}
+	for len(queue) > 0 {
+		id := queue[0]
+		queue = queue[1:]
+		delete(parentCount, id)
+		for _, child := range children[id] {
+			parentCount[child]--
+			if parentCount[child] == 0 {
+				queue = append(queue, child)
+			}
+		}
+	}
+
+	for _, rel := range relations {
+		_, taskLeft := parentCount[rel.TaskID]
+		_, otherLeft := parentCount[rel.OtherTaskID]
+		if taskLeft && otherLeft && (rel.RelationKind == RelationKindSubtask || rel.RelationKind == RelationKindParenttask) {
+			return ErrTaskRelationCycle{
+				TaskID:      rel.TaskID,
+				OtherTaskID: rel.OtherTaskID,
+				Kind:        rel.RelationKind,
+			}
+		}
+	}
 	return nil
 }
 
