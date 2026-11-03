@@ -132,7 +132,10 @@
 			</template>
 			<template #text>
 				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}</p>
-				<ProjectAccessCleanupList :intro="$t('project.share.userTeam.removeCleanupText')" />
+				<ProjectAccessCleanupList
+					v-model="cleanup"
+					:intro="$t('project.share.userTeam.removeCleanupText')"
+				/>
 			</template>
 		</Modal>
 	</div>
@@ -141,6 +144,7 @@
 <script setup lang="ts" generic="Candidate extends Record<string, unknown> & {id?: number}, Share extends {id?: number, permission?: number}">
 import {computed, ref, watch, type Ref} from 'vue'
 import {normalizeSharePermission} from '@/client/queries/projectShares'
+import {defaultAccessLossCleanup, type AccessLossCleanup} from '@/client/queries/accessLossCleanup'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Multiselect from '@/components/input/Multiselect.vue'
@@ -162,7 +166,7 @@ const props = defineProps<{
 	shareName: (share: Identified<Share>) => string
 	add: (projectId: number, candidate: Identified<Candidate>) => Promise<unknown>
 	updatePermission: (projectId: number, share: Identified<Share>, permission: Permission) => Promise<unknown>
-	remove: (projectId: number, share: Identified<Share>) => Promise<unknown>
+	remove: (projectId: number, share: Identified<Share>, cleanup: AccessLossCleanup) => Promise<unknown>
 }>()
 
 const showSearchLoading = useDelayedLoading(() => props.searchLoading)
@@ -183,6 +187,10 @@ const unsharedCandidates = computed(() => props.candidates.filter(hasId).filter(
 const selected = ref(null) as Ref<Identified<Candidate> | null>
 const selectedPermission = ref<Record<number, Permission>>({})
 const shareToDelete = ref(null) as Ref<Identified<Share> | null>
+const cleanup = ref(defaultAccessLossCleanup())
+watch(shareToDelete, () => {
+	cleanup.value = defaultAccessLossCleanup()
+})
 
 watch(identifiedShares, shares => {
 	selectedPermission.value = Object.fromEntries(shares.map(share => [share.id, normalizeSharePermission(share.permission)]))
@@ -221,7 +229,7 @@ async function changePermission(share: Identified<Share>) {
 async function removeShare() {
 	const share = shareToDelete.value
 	if (!share || props.isMutating) return
-	await props.remove(props.projectId, share).catch(() => {})
+	await props.remove(props.projectId, share, cleanup.value).catch(() => {})
 	if (shareToDelete.value === share) shareToDelete.value = null
 }
 </script>
