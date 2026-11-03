@@ -114,9 +114,13 @@ func readConfig(open Opener) (image.Config, error) {
 	defer header.Close()
 
 	// DecodeConfig buffers the whole file for formats whose metadata may sit at the end, like TIFF.
-	cfg, _, err := image.DecodeConfig(io.LimitReader(header, maxHeaderBytes))
+	cfg, format, err := image.DecodeConfig(io.LimitReader(header, maxHeaderBytes))
 	if err != nil {
 		return image.Config{}, fmt.Errorf("%w: %w", ErrUndecodable, err)
+	}
+	// imaging registers the tiff decoder process-wide, so it has to be refused here.
+	if format == "tiff" {
+		return image.Config{}, fmt.Errorf("%w: tiff is not supported", ErrUndecodable)
 	}
 	if err := ValidateConfig(cfg); err != nil {
 		return image.Config{}, err

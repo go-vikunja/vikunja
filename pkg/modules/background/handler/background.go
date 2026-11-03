@@ -27,8 +27,7 @@ import (
 	"github.com/disintegration/imaging"
 
 	_ "golang.org/x/image/bmp"  // To make sure the decoder used for generating blurHashes recognizes bmps
-	_ "golang.org/x/image/tiff" // To make sure the decoder used for generating blurHashes recognizes tiffs
-	_ "golang.org/x/image/webp" // To make sure the decoder used for generating blurHashes recognizes tiffs
+	_ "golang.org/x/image/webp" // To make sure the decoder used for generating blurHashes recognizes webps
 
 	"image"
 	"io"
@@ -62,7 +61,6 @@ var allowedImageMimes = []string{
 	"image/png",
 	"image/gif",
 	"image/bmp",
-	"image/tiff",
 	"image/webp",
 }
 
