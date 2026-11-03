@@ -203,7 +203,15 @@ import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupL
 import RevokeLinkSharesOption from '@/components/sharing/RevokeLinkSharesOption.vue'
 import EditTeamForm from '@/components/teams/EditTeamForm.vue'
 import {getDisplayName} from '@/helpers/user'
-import {teamAdminProjectsQuery, useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
+import {
+	teamAdminProjectsQuery,
+	useUpdateTeamMutation,
+	useDeleteTeamMutation,
+	useAddTeamMemberMutation,
+	useRemoveTeamMemberMutation,
+	useLeaveTeamMutation,
+	useToggleTeamMemberAdminMutation,
+} from '@/client/queries/teams'
 import {useDeleteLinkShareMutation} from '@/client/queries/linkShares'
 import {useLinkSharesCreatedBy} from '@/composables/useLinkSharesCreatedBy'
 import {useTeam} from '@/composables/useTeams'
@@ -247,7 +255,9 @@ const {data: adminProjects} = useQuery(computed(() => ({
 	enabled: showUserDeleteModal.value && userIsAdmin.value,
 })))
 const memberLinkShares = useLinkSharesCreatedBy(
-	() => showUserDeleteModal.value ? (adminProjects.value ?? []).flatMap(project => project.id === undefined ? [] : [project.id]) : [],
+	() => showUserDeleteModal.value
+		? (adminProjects.value ?? []).flatMap(project => project.id === undefined ? [] : [project.id])
+		: [],
 	() => memberToDelete.value?.id === undefined ? [] : [memberToDelete.value.id],
 )
 const revokeMemberLinkShares = ref(false)
@@ -280,7 +290,9 @@ async function deleteMember() {
 	removingMember.value = true
 	try {
 		await removeMemberMutation.mutateAsync({teamId: teamId.value, username: memberToDelete.value.username})
-		await Promise.allSettled(linkShares.map(({projectId, share}) => deleteLinkShare.mutateAsync({projectId, id: share.id})))
+		await Promise.allSettled(
+			linkShares.map(({projectId, share}) => deleteLinkShare.mutateAsync({projectId, id: share.id})),
+		)
 	} catch {
 		// The mutation already toasted the error.
 	} finally {

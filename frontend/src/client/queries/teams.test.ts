@@ -6,7 +6,17 @@ import type {
 } from '@/client/generated'
 import {success} from '@/message'
 
-const sdk = vi.hoisted(() => ({teamsList: vi.fn(), teamsRead: vi.fn(), teamsCreate: vi.fn(), teamsUpdate: vi.fn(), teamsDelete: vi.fn(), teamsMembersAdd: vi.fn(), teamsMembersRemove: vi.fn(), teamsMembersToggleAdmin: vi.fn(), teamsProjectsList: vi.fn()}))
+const sdk = vi.hoisted(() => ({
+	teamsList: vi.fn(),
+	teamsRead: vi.fn(),
+	teamsCreate: vi.fn(),
+	teamsUpdate: vi.fn(),
+	teamsDelete: vi.fn(),
+	teamsMembersAdd: vi.fn(),
+	teamsMembersRemove: vi.fn(),
+	teamsMembersToggleAdmin: vi.fn(),
+	teamsProjectsList: vi.fn(),
+}))
 const session = vi.hoisted(() => ({epoch: 1}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
@@ -14,7 +24,19 @@ vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => session.epoch, getT
 vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 
 import {PICKER_PAGE_SIZE} from './pagination'
-import {teamKeys, teamsPageQuery, teamSearchQuery, teamAdminProjectsQuery, createTeamMutationOptions, updateTeamMutationOptions, deleteTeamMutationOptions, addTeamMemberMutationOptions, removeTeamMemberMutationOptions, leaveTeamMutationOptions, toggleTeamMemberAdminMutationOptions} from './teams'
+import {
+	teamKeys,
+	teamsPageQuery,
+	teamSearchQuery,
+	teamAdminProjectsQuery,
+	createTeamMutationOptions,
+	updateTeamMutationOptions,
+	deleteTeamMutationOptions,
+	addTeamMemberMutationOptions,
+	removeTeamMemberMutationOptions,
+	leaveTeamMutationOptions,
+	toggleTeamMemberAdminMutationOptions,
+} from './teams'
 
 function teamPage(items: Team[], page = 1, total = items.length) {
 	return {
