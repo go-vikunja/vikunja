@@ -121,6 +121,7 @@
 				"enable": "Aktivieren",
 				"tokensInactive": "API-Token eines deaktivierten Bots werden abgelehnt. Aktiviere den Bot, um Token zu erstellen oder zu verwenden.",
 				"badge": "Bot",
+				"badgeOwner": "Bot, erstellt von {user}",
 				"delete": {
 					"header": "Diesen Bot-Account löschen",
 					"text1": "Bist Du sicher, dass Du den Bot-Account \"{username}\" löschen möchtest?",
