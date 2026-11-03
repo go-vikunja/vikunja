@@ -124,6 +124,23 @@ func TestCheckItemLimit(t *testing.T) {
 		require.ErrorAs(t, CheckItemLimit(projectWithTask(root)), &limitErr)
 	})
 
+	t.Run("counts a task position per task and view", func(t *testing.T) {
+		withViews := func(tasks, views int) []*models.ProjectWithTasksAndBuckets {
+			p := &models.ProjectWithTasksAndBuckets{Project: models.Project{Title: "p"}}
+			for range tasks {
+				p.Tasks = append(p.Tasks, &models.TaskWithComments{Task: models.Task{Title: "t"}})
+			}
+			for range views {
+				p.Views = append(p.Views, &models.ProjectView{})
+			}
+			return []*models.ProjectWithTasksAndBuckets{p}
+		}
+		// project, 2 tasks, 2 views, 2*2 positions
+		require.NoError(t, CheckItemLimit(withViews(2, 2)))
+		// project, 3 tasks, 2 views, 3*2 positions
+		require.ErrorAs(t, CheckItemLimit(withViews(3, 2)), &limitErr)
+	})
+
 	t.Run("terminates on a related task cycle", func(t *testing.T) {
 		a := &models.Task{Title: "a"}
 		b := &models.Task{

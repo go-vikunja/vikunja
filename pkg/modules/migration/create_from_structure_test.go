@@ -844,3 +844,23 @@ func TestInsertFromStructureItemLimit(t *testing.T) {
 	require.ErrorAs(t, err, &limitErr)
 	db.AssertMissing(t, "projects", map[string]interface{}{"title": "item limit project"})
 }
+
+func TestInsertFromStructureRejectsViewTaskFanOut(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	config.MigrationMaxItems.Set(100)
+	t.Cleanup(func() { config.MigrationMaxItems.Set(100000) })
+
+	p := &models.ProjectWithTasksAndBuckets{Project: models.Project{Title: "view fan-out project"}}
+	for i := range 20 {
+		p.Tasks = append(p.Tasks, &models.TaskWithComments{Task: models.Task{Title: fmt.Sprintf("task %d", i)}})
+	}
+	for i := range 20 {
+		p.Views = append(p.Views, &models.ProjectView{ID: int64(i + 1), Title: "view", ViewKind: models.ProjectViewKindList})
+	}
+
+	// 41 items without positions, 400 position rows on top.
+	err := InsertFromStructure([]*models.ProjectWithTasksAndBuckets{p}, &user.User{ID: 1})
+	var limitErr *ErrImportItemLimitExceeded
+	require.ErrorAs(t, err, &limitErr)
+	db.AssertMissing(t, "projects", map[string]interface{}{"title": "view fan-out project"})
+}

@@ -43,11 +43,17 @@ func CheckItemLimit(str []*models.ProjectWithTasksAndBuckets) error {
 			if p == nil {
 				continue
 			}
-			count += 1 + int64(len(p.Buckets)) + int64(len(p.Tasks))
+			views := int64(len(p.Views))
+			count += 1 + int64(len(p.Buckets)) + int64(len(p.Tasks)) + views
 			if err := CheckItemCount(count); err != nil {
 				return err
 			}
-			if err := countTasks(p.Tasks, &count); err != nil {
+			tasks, err := countTasks(p.Tasks, &count)
+			if err != nil {
+				return err
+			}
+			count += tasks * views
+			if err := CheckItemCount(count); err != nil {
 				return err
 			}
 			if err := walk(p.ChildProjects); err != nil {
@@ -60,7 +66,8 @@ func CheckItemLimit(str []*models.ProjectWithTasksAndBuckets) error {
 }
 
 // countTasks mirrors the queueing in createProjectWithEverything, so nested related tasks count too.
-func countTasks(tasks []*models.TaskWithComments, count *int64) error {
+// Returns how many tasks will be created.
+func countTasks(tasks []*models.TaskWithComments, count *int64) (int64, error) {
 	queued := make([]*models.Task, 0, len(tasks))
 	queuedIDs := make(map[int64]bool, len(tasks))
 	for _, t := range tasks {
@@ -97,8 +104,8 @@ func countTasks(tasks []*models.TaskWithComments, count *int64) error {
 		}
 		// Also stops a pointer cycle among id-less related tasks.
 		if err := CheckItemCount(*count); err != nil {
-			return err
+			return 0, err
 		}
 	}
-	return nil
+	return int64(len(queued)), nil
 }
