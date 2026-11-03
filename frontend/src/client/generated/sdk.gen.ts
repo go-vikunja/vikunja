@@ -1391,7 +1391,7 @@ export const patchProjectsRead = <ThrowOnError extends boolean = true>(options: 
 /**
  * Update a project
  *
- * Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update.
+ * Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update. Reparenting removes the task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks of users who lose access through the move.
  */
 export const projectsUpdate = <ThrowOnError extends boolean = true>(options: Options<ProjectsUpdateData, ThrowOnError>): RequestResult<ProjectsUpdateResponses, ProjectsUpdateErrors, ThrowOnError> => (options.client ?? client).put<ProjectsUpdateResponses, ProjectsUpdateErrors, ThrowOnError>({
     security: [{
@@ -1747,7 +1747,7 @@ export const projectTeamsCreate = <ThrowOnError extends boolean = true>(options:
 /**
  * Remove a team from a project
  *
- * Revokes a team's access to the project. Only project admins may remove a share.
+ * Revokes a team's access to the project. Only project admins may remove a share. Members who lose access to the project or its child projects have their task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks there removed.
  */
 export const projectTeamsDelete = <ThrowOnError extends boolean = true>(options: Options<ProjectTeamsDeleteData, ThrowOnError>): RequestResult<ProjectTeamsDeleteResponses, ProjectTeamsDeleteErrors, ThrowOnError> => (options.client ?? client).delete<ProjectTeamsDeleteResponses, ProjectTeamsDeleteErrors, ThrowOnError>({
     security: [{
@@ -1850,7 +1850,7 @@ export const projectsUsersSearch = <ThrowOnError extends boolean = true>(options
 /**
  * Remove a user's access to a project
  *
- * Revokes a user's direct access to the project, identified by username in the path. Only project admins may do this.
+ * Revokes a user's direct access to the project, identified by username in the path. Only project admins may do this. If the user loses access to the project or its child projects, their task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks there are removed.
  */
 export const projectUsersDelete = <ThrowOnError extends boolean = true>(options: Options<ProjectUsersDeleteData, ThrowOnError>): RequestResult<ProjectUsersDeleteResponses, ProjectUsersDeleteErrors, ThrowOnError> => (options.client ?? client).delete<ProjectUsersDeleteResponses, ProjectUsersDeleteErrors, ThrowOnError>({
     security: [{
@@ -3016,7 +3016,7 @@ export const teamsCreate = <ThrowOnError extends boolean = true>(options: Option
 /**
  * Delete a team
  *
- * Deletes a team and revokes the access it granted to all of its members. Only a team admin may delete it.
+ * Deletes a team and revokes the access it granted to all of its members. Only a team admin may delete it. Members who lose access to a project have their task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks there removed.
  */
 export const teamsDelete = <ThrowOnError extends boolean = true>(options: Options<TeamsDeleteData, ThrowOnError>): RequestResult<TeamsDeleteResponses, TeamsDeleteErrors, ThrowOnError> => (options.client ?? client).delete<TeamsDeleteResponses, TeamsDeleteErrors, ThrowOnError>({
     security: [{
@@ -3123,7 +3123,7 @@ export const teamsMembersAdd = <ThrowOnError extends boolean = true>(options: Op
 /**
  * Remove a member from a team
  *
- * Removes a user from a team, revoking the access the team granted them. A team admin may remove anyone; a member may remove themselves. The last member of a team cannot be removed.
+ * Removes a user from a team, revoking the access the team granted them. A team admin may remove anyone; a member may remove themselves. The last member of a team cannot be removed. If the user loses access to a project, their task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks there are removed.
  */
 export const teamsMembersRemove = <ThrowOnError extends boolean = true>(options: Options<TeamsMembersRemoveData, ThrowOnError>): RequestResult<TeamsMembersRemoveResponses, TeamsMembersRemoveErrors, ThrowOnError> => (options.client ?? client).delete<TeamsMembersRemoveResponses, TeamsMembersRemoveErrors, ThrowOnError>({
     security: [{

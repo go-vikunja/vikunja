@@ -4339,6 +4339,10 @@ export type ProjectDuplicateWritable = {
 
 export type ProjectReadBodyWritable = {
     /**
+     * Only read when the update moves the project. What to do with webhooks created by users who lose access to the project or its child projects: true deletes them, false keeps them. Their task assignments and subscriptions are removed either way. When omitted or null and any such webhook exists, the request fails with 409 and code 3018 without changing anything.
+     */
+    clear_outside_webhooks?: boolean | null;
+    /**
      * The description of the project.
      */
     description?: string;
@@ -7223,6 +7227,10 @@ export type PatchProjectsReadData = {
 
 export type PatchProjectsReadErrors = {
     /**
+     * clear_outside_webhooks was omitted and the change would delete webhooks of users who lose access (code 3018). i18n_params.count holds how many. Nothing was changed; repeat the request with clear_outside_webhooks set.
+     */
+    409: VikunjaErrorModel;
+    /**
      * Error
      */
     default: VikunjaErrorModel;
@@ -7254,6 +7262,10 @@ export type ProjectsUpdateData = {
 };
 
 export type ProjectsUpdateErrors = {
+    /**
+     * clear_outside_webhooks was omitted and the change would delete webhooks of users who lose access (code 3018). i18n_params.count holds how many. Nothing was changed; repeat the request with clear_outside_webhooks set.
+     */
+    409: VikunjaErrorModel;
     /**
      * Error
      */
@@ -7876,11 +7888,20 @@ export type ProjectTeamsDeleteData = {
         project: number;
         team: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * What to do with webhooks created by users who lose access to the project or its child projects: true deletes them, false keeps them. Their task assignments and subscriptions are removed either way. When omitted and any such webhook exists, the request fails with 409 and code 3018 without changing anything.
+         */
+        clear_outside_webhooks?: boolean;
+    };
     url: '/projects/{project}/teams/{team}';
 };
 
 export type ProjectTeamsDeleteErrors = {
+    /**
+     * clear_outside_webhooks was omitted and the change would delete webhooks of users who lose access (code 3018). i18n_params.count holds how many. Nothing was changed; repeat the request with clear_outside_webhooks set.
+     */
+    409: VikunjaErrorModel;
     /**
      * Error
      */
@@ -8031,11 +8052,20 @@ export type ProjectUsersDeleteData = {
         project: number;
         user: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * What to do with webhooks created by users who lose access to the project or its child projects: true deletes them, false keeps them. Their task assignments and subscriptions are removed either way. When omitted and any such webhook exists, the request fails with 409 and code 3018 without changing anything.
+         */
+        clear_outside_webhooks?: boolean;
+    };
     url: '/projects/{project}/users/{user}';
 };
 
 export type ProjectUsersDeleteErrors = {
+    /**
+     * clear_outside_webhooks was omitted and the change would delete webhooks of users who lose access (code 3018). i18n_params.count holds how many. Nothing was changed; repeat the request with clear_outside_webhooks set.
+     */
+    409: VikunjaErrorModel;
     /**
      * Error
      */
@@ -10030,11 +10060,20 @@ export type TeamsDeleteData = {
     path: {
         id: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * What to do with webhooks created by users who lose access to the project or its child projects: true deletes them, false keeps them. Their task assignments and subscriptions are removed either way. When omitted and any such webhook exists, the request fails with 409 and code 3018 without changing anything.
+         */
+        clear_outside_webhooks?: boolean;
+    };
     url: '/teams/{id}';
 };
 
 export type TeamsDeleteErrors = {
+    /**
+     * clear_outside_webhooks was omitted and the change would delete webhooks of users who lose access (code 3018). i18n_params.count holds how many. Nothing was changed; repeat the request with clear_outside_webhooks set.
+     */
+    409: VikunjaErrorModel;
     /**
      * Error
      */
@@ -10197,11 +10236,20 @@ export type TeamsMembersRemoveData = {
          */
         user: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * What to do with webhooks created by users who lose access to the project or its child projects: true deletes them, false keeps them. Their task assignments and subscriptions are removed either way. When omitted and any such webhook exists, the request fails with 409 and code 3018 without changing anything.
+         */
+        clear_outside_webhooks?: boolean;
+    };
     url: '/teams/{team}/members/{user}';
 };
 
 export type TeamsMembersRemoveErrors = {
+    /**
+     * clear_outside_webhooks was omitted and the change would delete webhooks of users who lose access (code 3018). i18n_params.count holds how many. Nothing was changed; repeat the request with clear_outside_webhooks set.
+     */
+    409: VikunjaErrorModel;
     /**
      * Error
      */
