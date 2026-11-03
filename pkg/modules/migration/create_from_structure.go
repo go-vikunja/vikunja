@@ -76,21 +76,28 @@ func insertFromStructureWithFileProvider(str []*models.ProjectWithTasksAndBucket
 	}
 
 	// Failed transactions roll back file rows, not blobs written before commit.
+	// Deferred so a panic can't skip it.
 	createdFiles := &[]int64{}
+	committed := false
+	defer func() {
+		if committed {
+			return
+		}
+		cleanupAndRollback(s, *createdFiles)
+		events.CleanupPending(s)
+	}()
 
 	err = insertFromStructure(s, str, importer, provider, createdFiles)
 	if err != nil {
 		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
-		cleanupAndRollback(s, *createdFiles)
-		events.CleanupPending(s)
 		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
-		events.CleanupPending(s)
 		return err
 	}
+	committed = true
 
 	events.DispatchPending(context.Background(), s)
 	return nil
