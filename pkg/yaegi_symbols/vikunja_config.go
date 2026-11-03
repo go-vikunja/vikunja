@@ -89,6 +89,8 @@ func init() {
 		"GetLegalLinks":                              reflect.ValueOf(config.GetLegalLinks),
 		"GetMaxFileSizeInMBytes":                     reflect.ValueOf(config.GetMaxFileSizeInMBytes),
 		"GetTimeZone":                                reflect.ValueOf(config.GetTimeZone),
+		"HealthPassword":                             reflect.ValueOf(config.HealthPassword),
+		"HealthUsername":                             reflect.ValueOf(config.HealthUsername),
 		"InitConfig":                                 reflect.ValueOf(config.InitConfig),
 		"InitDefaultConfig":                          reflect.ValueOf(config.InitDefaultConfig),
 		"KeyvalueType":                               reflect.ValueOf(config.KeyvalueType),
