@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest'
-import {shallowMount, flushPromises} from '@vue/test-utils'
+import {mount, shallowMount, flushPromises} from '@vue/test-utils'
 import {createPinia, setActivePinia} from 'pinia'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
@@ -30,21 +30,29 @@ function deferred() {
 	return {promise, resolve}
 }
 
-function mountRow() {
-	const router = createRouter({
+function createTestRouter() {
+	return createRouter({
 		history: createMemoryHistory(),
 		routes: [
 			{path: '/tasks/:id', name: 'task.detail', component: {render: () => null}},
 			{path: '/projects/:projectId', name: 'project.index', component: {render: () => null}},
 		],
 	})
+}
+
+function globalOptions() {
+	return {
+		plugins: [createPinia(), createTestRouter(), [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]] as never[],
+		directives: {tooltip: {}},
+		mocks: {$t: (key: string) => key},
+		stubs: {TaskGlanceTooltip: true, CommentCount: true, ChecklistSummary: true, FancyCheckbox: true},
+	}
+}
+
+function mountRow() {
 	return shallowMount(SingleTaskInProject, {
 		props: {theTask},
-		global: {
-			plugins: [createPinia(), router, [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
-			directives: {tooltip: {}},
-			mocks: {$t: (key: string) => key},
-		},
+		global: globalOptions(),
 	})
 }
 
@@ -88,5 +96,66 @@ describe('SingleTaskInProject', () => {
 		await flushPromises()
 
 		expect(wrapper.get('.task').classes()).not.toContain('is-loading')
+	})
+
+	describe('subtask rendering', () => {
+		function task(id: number, subtaskIds: number[] = []): ITask {
+			return {
+				id,
+				project_id: 1,
+				title: `Task ${id}`,
+				done: false,
+				is_favorite: false,
+				related_tasks: {subtask: subtaskIds.map(subId => ({id: subId}))},
+			} as ITask
+		}
+
+		function mountTree(tasks: ITask[]) {
+			return mount(SingleTaskInProject, {
+				props: {theTask: tasks[0], allTasks: tasks},
+				global: globalOptions(),
+			})
+		}
+
+		function renderedTaskIds(wrapper: ReturnType<typeof mountTree>) {
+			return wrapper.findAll('[data-task-id]').map(el => Number(el.attributes('data-task-id')))
+		}
+
+		it('renders each task of a diamond graph a bounded number of times', () => {
+			// Every task of a level is a subtask of every task of the level above.
+			const levels = 4
+			const width = 4
+			const ids = Array.from({length: levels}, (_, level) =>
+				Array.from({length: width}, (_, i) => 2 + level * width + i))
+			const tasks = [
+				task(1, ids[0]),
+				...ids.flatMap((levelIds, level) => levelIds.map(id => task(id, ids[level + 1] ?? []))),
+			]
+
+			const rendered = renderedTaskIds(mountTree(tasks))
+
+			expect(new Set(rendered)).toEqual(new Set(tasks.map(t => t.id)))
+			const edgeCount = tasks.reduce((sum, t) => sum + (t.related_tasks?.subtask?.length ?? 0), 0)
+			expect(rendered.length).toBeLessThanOrEqual(edgeCount + 1)
+		})
+
+		it('renders a plain tree completely', () => {
+			const tasks = [
+				task(1, [2, 3]),
+				task(2, [4, 5]),
+				task(3, [6]),
+				task(4),
+				task(5),
+				task(6),
+			]
+
+			expect(renderedTaskIds(mountTree(tasks))).toEqual([1, 2, 4, 5, 3, 6])
+		})
+
+		it('stops nesting subtasks after five levels', () => {
+			const tasks = Array.from({length: 10}, (_, i) => task(i + 1, i < 9 ? [i + 2] : []))
+
+			expect(renderedTaskIds(mountTree(tasks))).toEqual([1, 2, 3, 4, 5, 6])
+		})
 	})
 })
