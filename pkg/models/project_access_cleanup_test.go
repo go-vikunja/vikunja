@@ -257,6 +257,46 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP}, false)
 		db.AssertExists(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID}, false)
 	})
+	t.Run("moving the child cleans up each kind of holder in its subtree", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		team := f.shareViaTeam(t)
+		grandchild := &Project{Title: "access loss grandchild", ParentProjectID: &f.child.ID}
+		require.NoError(t, grandchild.Create(f.s, f.owner))
+		grandchildTask := &Task{Title: "access loss grandchild task", ProjectID: grandchild.ID}
+		require.NoError(t, grandchildTask.Create(f.s, f.owner))
+
+		// Each holder has exactly one kind of data, so only its own gather query can find it.
+		webhookUser := &user.User{ID: 3, Username: "user3"}
+		assigneeUser := &user.User{ID: 4, Username: "user4"}
+		taskSubUser := &user.User{ID: 5, Username: "user5"}
+		projectSubUser := &user.User{ID: 6, Username: "user6"}
+		for _, u := range []*user.User{webhookUser, assigneeUser, taskSubUser, projectSubUser} {
+			require.NoError(t, (&TeamMember{TeamID: team.ID, Username: u.Username}).Create(f.s, f.owner))
+		}
+		webhook := &Webhook{
+			TargetURL:   "https://example.com/access-loss",
+			Events:      []string{"task.updated"},
+			ProjectID:   grandchild.ID,
+			CreatedByID: webhookUser.ID,
+		}
+		_, err := f.s.Insert(webhook)
+		require.NoError(t, err)
+		_, err = f.s.Insert(
+			&TaskAssginee{TaskID: grandchildTask.ID, UserID: assigneeUser.ID},
+			&Subscription{EntityType: SubscriptionEntityTask, EntityID: f.task.ID, UserID: taskSubUser.ID},
+			&Subscription{EntityType: SubscriptionEntityProject, EntityID: grandchild.ID, UserID: projectSubUser.ID},
+			&Subscription{EntityType: SubscriptionEntityProject, EntityID: f.parent.ID, UserID: projectSubUser.ID},
+		)
+		require.NoError(t, err)
+		f.moveChildToNewRoot(t)
+
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": webhook.ID})
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": grandchildTask.ID, "user_id": assigneeUser.ID})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": taskSubUser.ID})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": grandchild.ID, "user_id": projectSubUser.ID})
+		db.AssertExists(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": projectSubUser.ID}, false)
+	})
 	t.Run("moving the child keeps webhooks of a member shared on the child", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareViaTeam(t)
