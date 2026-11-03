@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,7 +36,7 @@ func TestApplyDescriptionFromMarkdown(t *testing.T) {
 		const stored = `<p>Hello <strong>world</strong></p>`
 		vTask := &models.Task{Description: "Hello **world**"}
 
-		require.NoError(t, applyDescriptionFromMarkdown(s, vTask, stored))
+		require.NoError(t, applyDescriptionFromMarkdown(s, &user.User{ID: 1}, vTask, stored))
 		assert.Equal(t, stored, vTask.Description)
 	})
 
@@ -47,7 +48,7 @@ func TestApplyDescriptionFromMarkdown(t *testing.T) {
 		const stored = `<p>Hello <strong>world</strong></p>`
 		vTask := &models.Task{Description: "Hello **mars**"}
 
-		require.NoError(t, applyDescriptionFromMarkdown(s, vTask, stored))
+		require.NoError(t, applyDescriptionFromMarkdown(s, &user.User{ID: 1}, vTask, stored))
 		assert.Equal(t, "<p>Hello <strong>mars</strong></p>", vTask.Description)
 	})
 
@@ -58,7 +59,7 @@ func TestApplyDescriptionFromMarkdown(t *testing.T) {
 
 		vTask := &models.Task{Description: "ping @user1"}
 
-		require.NoError(t, applyDescriptionFromMarkdown(s, vTask, ""))
+		require.NoError(t, applyDescriptionFromMarkdown(s, &user.User{ID: 1}, vTask, ""))
 		assert.Contains(t, vTask.Description, `<mention-user data-id="user1"`)
 	})
 
@@ -69,7 +70,7 @@ func TestApplyDescriptionFromMarkdown(t *testing.T) {
 
 		vTask := &models.Task{Description: "- [x] done"}
 
-		require.NoError(t, applyDescriptionFromMarkdown(s, vTask, ""))
+		require.NoError(t, applyDescriptionFromMarkdown(s, &user.User{ID: 1}, vTask, ""))
 		assert.Contains(t, vTask.Description, `data-type="taskList"`)
 		assert.Contains(t, vTask.Description, `data-checked="true"`)
 		assert.Contains(t, vTask.Description, "<p>done</p>")
@@ -82,7 +83,7 @@ func TestApplyDescriptionFromMarkdown(t *testing.T) {
 
 		vTask := &models.Task{Description: ""}
 
-		require.NoError(t, applyDescriptionFromMarkdown(s, vTask, "<p>was here</p>"))
+		require.NoError(t, applyDescriptionFromMarkdown(s, &user.User{ID: 1}, vTask, "<p>was here</p>"))
 		assert.Empty(t, vTask.Description)
 	})
 }

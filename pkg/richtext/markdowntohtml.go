@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"code.vikunja.io/api/pkg/web"
+
 	"github.com/yuin/goldmark/v2/extension"
 	"github.com/yuin/goldmark/v2/parser"
 	"github.com/yuin/goldmark/v2/renderer/html"
@@ -51,16 +53,16 @@ func CommonMarkToHTML(md []byte) (string, error) {
 // lists into TipTap's <ul data-type="taskList"> form. Mentions are left as literal
 // "@username" — see MarkdownToHTMLWithMentions to resolve them.
 func MarkdownToHTML(md string) (string, error) {
-	return markdownToHTML(md, nil)
+	return markdownToHTML(md, nil, nil)
 }
 
 // MarkdownToHTMLWithMentions is MarkdownToHTML plus mention resolution: "@username"
-// matching an existing user becomes a <mention-user> tag. Needs a session.
-func MarkdownToHTMLWithMentions(s *xorm.Session, md string) (string, error) {
-	return markdownToHTML(md, s)
+// matching an existing user visible to viewer becomes a <mention-user> tag. Needs a session.
+func MarkdownToHTMLWithMentions(s *xorm.Session, viewer web.Auth, md string) (string, error) {
+	return markdownToHTML(md, s, viewer)
 }
 
-func markdownToHTML(md string, s *xorm.Session) (string, error) {
+func markdownToHTML(md string, s *xorm.Session, viewer web.Auth) (string, error) {
 	var buf bytes.Buffer
 	source := []byte(md)
 	if err := gfmRenderer.Render(&buf, source, gfmParser.Parse(source)); err != nil {
@@ -77,7 +79,7 @@ func markdownToHTML(md string, s *xorm.Session) (string, error) {
 	}
 
 	if s != nil {
-		if err := rebuildMentions(s, nodes); err != nil {
+		if err := rebuildMentions(s, viewer, nodes); err != nil {
 			return "", err
 		}
 	}
