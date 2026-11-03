@@ -29,6 +29,7 @@ import {i18n} from '@/i18n'
 export type WebhookScope = {kind: 'project', projectId: number} | {kind: 'user'}
 export type WebhookPage = Paginated<Webhook>
 export const webhookKeys = {
+	projects: ['webhooks', 'list', 'project'] as const,
 	scope: (scope: WebhookScope) => scope.kind === 'project'
 		? ['webhooks', 'list', 'project', scope.projectId] as const
 		: ['webhooks', 'list', 'user'] as const,

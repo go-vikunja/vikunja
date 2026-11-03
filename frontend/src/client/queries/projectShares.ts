@@ -1,6 +1,7 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {projectUsersList, projectUsersCreate, projectUsersUpdate, projectUsersDelete, projectTeamsList, projectTeamsCreate, projectTeamsUpdate, projectTeamsDelete} from '@/client/generated'
 import type {UserWithPermission, TeamWithPermission} from '@/client/generated'
+import {invalidateAccessLossCleanup, type AccessLossCleanup} from './accessLossCleanup'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {projectKeys} from './projects'
@@ -66,11 +67,11 @@ export const useUpdateProjectUserShareMutation = () => useMutation(updateProject
 
 export function deleteProjectUserShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, username}: UserShareInput) => { await projectUsersDelete({path: {project: projectId, user: username}}) },
+		mutationFn: async ({projectId, username, cleanup}: UserShareInput & {cleanup: AccessLossCleanup}) => { await projectUsersDelete({path: {project: projectId, user: username}, query: cleanup}) },
 		onSuccess: (_data, {projectId, username}, client) => {
 			client.setQueryData<UserWithPermission[]>(projectShareKeys.users(projectId), current => current?.filter(item => item.username !== username))
 		},
-		onSettled: ({projectId}, client) => invalidateShares(client, projectId, 'users'),
+		onSettled: ({projectId}, client) => Promise.all([invalidateShares(client, projectId, 'users'), invalidateAccessLossCleanup(client)]),
 		successMessage: () => shareSuccess('users', 'removeSuccess'),
 	})
 }
@@ -106,11 +107,11 @@ export const useUpdateProjectTeamShareMutation = () => useMutation(updateProject
 
 export function deleteProjectTeamShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, teamId}: TeamShareInput) => { await projectTeamsDelete({path: {project: projectId, team: teamId}}) },
+		mutationFn: async ({projectId, teamId, cleanup}: TeamShareInput & {cleanup: AccessLossCleanup}) => { await projectTeamsDelete({path: {project: projectId, team: teamId}, query: cleanup}) },
 		onSuccess: (_data, {projectId, teamId}, client) => {
 			client.setQueryData<TeamWithPermission[]>(projectShareKeys.teams(projectId), current => current?.filter(item => item.id !== teamId))
 		},
-		onSettled: ({projectId}, client) => invalidateShares(client, projectId, 'teams'),
+		onSettled: ({projectId}, client) => Promise.all([invalidateShares(client, projectId, 'teams'), invalidateAccessLossCleanup(client)]),
 		successMessage: () => shareSuccess('teams', 'removeSuccess'),
 	})
 }

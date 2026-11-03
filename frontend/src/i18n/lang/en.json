@@ -544,12 +544,14 @@
         "others": {
           "assignments": "their task assignments",
           "subscriptions": "their subscriptions to tasks and projects",
-          "webhooks": "webhooks they created"
+          "deleteWebhooks": "Delete webhooks they created. Unchecked, they move to the project owner and keep working.",
+          "revokeLinkShares": "Revoke link shares they created"
         },
         "self": {
           "assignments": "your task assignments",
           "subscriptions": "your subscriptions to tasks and projects",
-          "webhooks": "webhooks you created"
+          "deleteWebhooks": "Delete webhooks you created. Unchecked, they move to the project owner and keep working.",
+          "revokeLinkShares": "Revoke link shares you created"
         }
       },
       "permission": {
