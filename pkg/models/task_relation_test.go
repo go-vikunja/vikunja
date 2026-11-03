@@ -225,7 +225,7 @@ func TestTaskRelation_Create(t *testing.T) {
 		rel := TaskRelation{TaskID: 3, OtherTaskID: 4, RelationKind: RelationKindSubtask}
 		err := rel.Create(s, &user.User{ID: 1})
 		require.Error(t, err)
-		assert.True(t, IsErrTaskRelationHierarchyTooLarge(err))
+		assert.Equal(t, ErrTaskRelationHierarchyTooLarge{TaskID: 1, MaxTasks: 2}, err)
 	})
 	t.Run("cycle with one parenttask", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
