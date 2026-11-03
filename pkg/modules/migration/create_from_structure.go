@@ -512,24 +512,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		return err
 	}
 
-	relations := []*models.TaskRelation{}
-	for _, state := range initialTasks {
-		for kind, related := range state.task.RelatedTasks {
-			for _, rt := range related {
-				if state.task.ID == rt.ID {
-					log.Debugf("[creating structure] Skipping invalid self-relation for task %d", rt.ID)
-					continue
-				}
-				relations = append(relations, &models.TaskRelation{
-					TaskID:       state.task.ID,
-					OtherTaskID:  rt.ID,
-					RelationKind: kind,
-				})
-			}
-		}
-	}
-	log.Debugf("[creating structure] Creating %d task relations", len(relations))
-	err = models.CreateTaskRelationsForImport(s, relations, user)
+	err = models.CreateTaskRelationsForImport(s, tasksToCreate, user)
 	if err != nil {
 		return err
 	}

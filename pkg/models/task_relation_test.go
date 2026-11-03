@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -26,6 +27,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestTaskRelation_Create(t *testing.T) {
@@ -318,6 +320,19 @@ func TestTaskRelation_Create(t *testing.T) {
 }
 
 func TestCreateTaskRelationsForImport(t *testing.T) {
+	doer := &user.User{ID: 1}
+	importTasks := func(t *testing.T, s *xorm.Session, count int) []*Task {
+		tasks := make([]*Task, count)
+		for i := range tasks {
+			tasks[i] = &Task{Title: fmt.Sprintf("imported %d", i), RelatedTasks: RelatedTaskMap{}}
+		}
+		require.NoError(t, CreateTasksForImport(s, 1, tasks, doer))
+		return tasks
+	}
+	relate := func(task *Task, kind RelationKind, other *Task) {
+		task.RelatedTasks[kind] = append(task.RelatedTasks[kind], other)
+	}
+
 	t.Run("long chain is not limited by the cycle check cap", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -327,24 +342,24 @@ func TestCreateTaskRelationsForImport(t *testing.T) {
 		maxTaskRelationCycleCheckVisits = 2
 		t.Cleanup(func() { maxTaskRelationCycleCheckVisits = previous })
 
-		err := CreateTaskRelationsForImport(s, []*TaskRelation{
-			{TaskID: 1, OtherTaskID: 2, RelationKind: RelationKindSubtask},
-			{TaskID: 2, OtherTaskID: 3, RelationKind: RelationKindSubtask},
-			{TaskID: 4, OtherTaskID: 3, RelationKind: RelationKindParenttask},
-			{TaskID: 3, OtherTaskID: 4, RelationKind: RelationKindSubtask},
-			{TaskID: 1, OtherTaskID: 4, RelationKind: RelationKindRelated},
-		}, &user.User{ID: 1})
-		require.NoError(t, err)
+		tasks := importTasks(t, s, 4)
+		relate(tasks[0], RelationKindSubtask, tasks[1])
+		relate(tasks[1], RelationKindSubtask, tasks[2])
+		relate(tasks[3], RelationKindParenttask, tasks[2])
+		relate(tasks[2], RelationKindSubtask, tasks[3])
+		relate(tasks[0], RelationKindRelated, tasks[3])
+
+		require.NoError(t, CreateTaskRelationsForImport(s, tasks, doer))
 		require.NoError(t, s.Commit())
 
 		db.AssertExists(t, "task_relations", map[string]interface{}{
-			"task_id":       3,
-			"other_task_id": 4,
+			"task_id":       tasks[2].ID,
+			"other_task_id": tasks[3].ID,
 			"relation_kind": RelationKindSubtask,
 		}, false)
 		db.AssertExists(t, "task_relations", map[string]interface{}{
-			"task_id":       4,
-			"other_task_id": 3,
+			"task_id":       tasks[3].ID,
+			"other_task_id": tasks[2].ID,
 			"relation_kind": RelationKindParenttask,
 		}, false)
 	})
@@ -353,16 +368,35 @@ func TestCreateTaskRelationsForImport(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		err := CreateTaskRelationsForImport(s, []*TaskRelation{
-			{TaskID: 2, OtherTaskID: 3, RelationKind: RelationKindSubtask},
-			{TaskID: 3, OtherTaskID: 4, RelationKind: RelationKindSubtask},
-			{TaskID: 2, OtherTaskID: 4, RelationKind: RelationKindParenttask},
-		}, &user.User{ID: 1})
+		tasks := importTasks(t, s, 3)
+		relate(tasks[0], RelationKindSubtask, tasks[1])
+		relate(tasks[1], RelationKindSubtask, tasks[2])
+		relate(tasks[0], RelationKindParenttask, tasks[2])
+
+		err := CreateTaskRelationsForImport(s, tasks, doer)
 		require.Error(t, err)
 		assert.True(t, IsErrTaskRelationCycle(err))
+		require.NoError(t, s.Commit())
 		db.AssertMissing(t, "task_relations", map[string]interface{}{
-			"task_id":       2,
-			"other_task_id": 3,
+			"task_id":       tasks[0].ID,
+			"other_task_id": tasks[1].ID,
+		})
+	})
+	t.Run("related task outside the batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tasks := importTasks(t, s, 2)
+		relate(tasks[0], RelationKindSubtask, tasks[1])
+		relate(tasks[1], RelationKindSubtask, &Task{ID: 1})
+
+		err := CreateTaskRelationsForImport(s, tasks, doer)
+		require.Error(t, err)
+		assert.False(t, IsErrTaskRelationCycle(err))
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "task_relations", map[string]interface{}{
+			"task_id": tasks[0].ID,
 		})
 	})
 }
