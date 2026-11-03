@@ -203,6 +203,44 @@ func TestUniqueIssuersAllowed(t *testing.T) {
 	assert.Len(t, providers, 2)
 }
 
+func TestFindProviderByIssuer(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	server1 := newMockOIDCServer()
+	defer server1.Close()
+	server2 := newMockOIDCServer()
+	defer server2.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server1.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+		"provider2": map[string]interface{}{
+			"name":         "Provider Two",
+			"authurl":      server2.URL,
+			"clientid":     "client2",
+			"clientsecret": "secret2",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+
+	providers, err := GetAllProviders()
+	require.NoError(t, err)
+
+	t.Run("matching issuer", func(t *testing.T) {
+		provider := FindProviderByIssuer(providers, server2.URL)
+		require.NotNil(t, provider)
+		assert.Equal(t, "provider2", provider.Key)
+	})
+	t.Run("issuer of a provider no longer configured", func(t *testing.T) {
+		assert.Nil(t, FindProviderByIssuer(providers, "https://removed.example.com"))
+	})
+}
+
 func TestGetProviderFromMapStringBooleans(t *testing.T) {
 	// Regression test for #2599. When provider config is sourced from environment
 	// variables or `*.file` Docker secrets, every leaf value arrives as a string.
