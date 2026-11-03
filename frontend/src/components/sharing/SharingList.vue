@@ -241,9 +241,10 @@ async function removeShare() {
 	removing.value = true
 	try {
 		await props.remove(props.projectId, share)
-		await Promise.allSettled(
-			linkShares.map(({projectId, share}) => deleteLinkShare.mutateAsync({projectId, id: share.id})),
-		)
+		// Parallel deletes hit DB write contention.
+		for (const {projectId, share} of linkShares) {
+			await deleteLinkShare.mutateAsync({projectId, id: share.id}).catch(() => {})
+		}
 	} catch {
 		// The mutation already toasted the error.
 	} finally {

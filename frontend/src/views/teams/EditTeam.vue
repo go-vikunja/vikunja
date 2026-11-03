@@ -290,9 +290,10 @@ async function deleteMember() {
 	removingMember.value = true
 	try {
 		await removeMemberMutation.mutateAsync({teamId: teamId.value, username: memberToDelete.value.username})
-		await Promise.allSettled(
-			linkShares.map(({projectId, share}) => deleteLinkShare.mutateAsync({projectId, id: share.id})),
-		)
+		// Parallel deletes hit DB write contention.
+		for (const {projectId, share} of linkShares) {
+			await deleteLinkShare.mutateAsync({projectId, id: share.id}).catch(() => {})
+		}
 	} catch {
 		// The mutation already toasted the error.
 	} finally {
