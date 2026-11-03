@@ -497,11 +497,11 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 			return fmt.Errorf("could not read filters file: %w", err)
 		}
 
+		if err := checkFilterItemCount(bufFilter.Bytes()); err != nil {
+			return err
+		}
 		if err := json.Unmarshal(bufFilter.Bytes(), &filters); err != nil {
 			return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read filter data: %w", err)}
-		}
-		if err := migration.CheckItemCount(int64(len(filters))); err != nil {
-			return err
 		}
 	}
 
