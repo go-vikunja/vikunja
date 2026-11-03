@@ -59,6 +59,7 @@ const shouldShowMessage = computed(() => {
 	padding: .5rem 1rem;
 	background: var(--grey-900);
 	border-radius: $radius;
+	box-shadow: var(--shadow-md);
 	font-size: .9rem;
 	color: var(--grey-200);
 
