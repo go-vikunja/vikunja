@@ -648,6 +648,34 @@ func (err *ErrInvalidDefaultProject) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrOutsideWebhooksNeedConfirmation represents an error where removing access would delete webhooks of users losing it and the caller did not say whether to.
+type ErrOutsideWebhooksNeedConfirmation struct {
+	Webhooks int64
+}
+
+// IsErrOutsideWebhooksNeedConfirmation checks if an error is ErrOutsideWebhooksNeedConfirmation.
+func IsErrOutsideWebhooksNeedConfirmation(err error) bool {
+	_, ok := err.(*ErrOutsideWebhooksNeedConfirmation)
+	return ok
+}
+
+func (err *ErrOutsideWebhooksNeedConfirmation) Error() string {
+	return fmt.Sprintf("Removing access would delete webhooks of users losing it [Webhooks: %d]", err.Webhooks)
+}
+
+// ErrCodeOutsideWebhooksNeedConfirmation holds the unique world-error code of this error
+const ErrCodeOutsideWebhooksNeedConfirmation = 3018
+
+// HTTPError holds the http error description
+func (err *ErrOutsideWebhooksNeedConfirmation) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode:   http.StatusConflict,
+		Code:       ErrCodeOutsideWebhooksNeedConfirmation,
+		Message:    fmt.Sprintf("This would delete %d webhooks of users who lose access. Set clear_outside_webhooks to true to delete them or false to keep them.", err.Webhooks),
+		I18nParams: map[string]string{"count": fmt.Sprintf("%d", err.Webhooks)},
+	}
+}
+
 // ==============
 // Task errors
 // ==============

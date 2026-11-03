@@ -32,7 +32,21 @@ const (
 	// OutsideWebhooksDelete is the zero value so v1 and internal callers keep deleting them.
 	OutsideWebhooksDelete OutsideWebhooks = iota
 	OutsideWebhooksKeep
+	// OutsideWebhooksConfirm fails with ErrOutsideWebhooksNeedConfirmation when any webhook would be deleted.
+	OutsideWebhooksConfirm
 )
+
+// OutsideWebhooksFromChoice maps the API's nullable clear_outside_webhooks onto an option.
+func OutsideWebhooksFromChoice(clear *bool) OutsideWebhooks {
+	switch {
+	case clear == nil:
+		return OutsideWebhooksConfirm
+	case *clear:
+		return OutsideWebhooksDelete
+	default:
+		return OutsideWebhooksKeep
+	}
+}
 
 func cleanupAfterProjectAccessLoss(s *xorm.Session, userID int64, projectIDs []int64, webhooks OutsideWebhooks) error {
 	return cleanupAfterProjectAccessLossForUsers(s, []int64{userID}, projectIDs, webhooks)
@@ -72,6 +86,7 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, pro
 		deletedIDs = append(deletedIDs, id)
 	}
 
+	lostByUser := make(map[int64][]int64, len(userIDs))
 	for _, userID := range userIDs {
 		permissions, err := checkReadPermissionsForProjects(s, &user.User{ID: userID}, existingIDs)
 		if err != nil {
@@ -83,13 +98,42 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, pro
 				lost = append(lost, id)
 			}
 		}
+		lostByUser[userID] = lost
+	}
 
-		if err := deleteUserDataInProjects(s, userID, lost, webhooks); err != nil {
+	if webhooks == OutsideWebhooksConfirm {
+		count, err := countWebhooksInProjects(s, lostByUser)
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			return &ErrOutsideWebhooksNeedConfirmation{Webhooks: count}
+		}
+	}
+
+	for _, userID := range userIDs {
+		if err := deleteUserDataInProjects(s, userID, lostByUser[userID], webhooks); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func countWebhooksInProjects(s *xorm.Session, projectIDsByUser map[int64][]int64) (total int64, err error) {
+	for userID, projectIDs := range projectIDsByUser {
+		if len(projectIDs) == 0 {
+			continue
+		}
+		count, err := s.In("project_id", projectIDs).
+			And("created_by_id = ?", userID).
+			Count(&Webhook{})
+		if err != nil {
+			return 0, err
+		}
+		total += count
+	}
+	return total, nil
 }
 
 // Moving a project can drop access inherited from its old ancestors, with no share removed to trigger cleanup.
@@ -164,7 +208,7 @@ func deleteUserDataInProjects(s *xorm.Session, userID int64, projectIDs []int64,
 		return err
 	}
 
-	if webhooks == OutsideWebhooksKeep {
+	if webhooks != OutsideWebhooksDelete {
 		return nil
 	}
 
