@@ -37,7 +37,7 @@ func TestChangeUserPassword(t *testing.T) {
 		require.NoError(t, user.UpdateUserPassword(s, &user.User{ID: 2}, "user2password"))
 
 		// The username points at another account, e.g. a stale token claim.
-		err := ChangeUserPassword(s, &user.User{ID: 1, Username: "user2"}, "user2password", "newpassword")
+		err := ChangeUserPassword(context.Background(), s, &user.User{ID: 1, Username: "user2"}, "user2password", "newpassword")
 		require.Error(t, err)
 		assert.True(t, user.IsErrWrongUsernameOrPassword(err))
 	})
@@ -46,7 +46,7 @@ func TestChangeUserPassword(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		require.NoError(t, ChangeUserPassword(s, &user.User{ID: 1}, "12345678", "newpassword"))
+		require.NoError(t, ChangeUserPassword(context.Background(), s, &user.User{ID: 1}, "12345678", "newpassword"))
 		require.NoError(t, s.Commit())
 
 		u, err := user.GetUserByID(s, 1)

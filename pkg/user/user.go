@@ -525,14 +525,7 @@ func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User
 		return &User{}, ErrEmailNotConfirmed{UserID: user.ID}
 	}
 
-	// Check the users password
-	err = CheckUserPassword(user, u.Password)
-	if err != nil {
-		if IsErrWrongUsernameOrPassword(err) {
-			// Rolled back first: a lockout needs its own write lock on SQLite.
-			_ = s.Rollback()
-			handleFailedPassword(ctx, user)
-		}
+	if err := CheckUserPasswordCountingFailures(ctx, s, user, u.Password); err != nil {
 		return user, err
 	}
 
@@ -549,6 +542,18 @@ func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User
 
 func (u *User) IsLocalUser() bool {
 	return u.Issuer == IssuerLocal
+}
+
+// CheckUserPasswordCountingFailures is CheckUserPassword, but a wrong password
+// counts toward the account lockout. It rolls back s on a wrong password.
+func CheckUserPasswordCountingFailures(ctx context.Context, s *xorm.Session, user *User, password string) error {
+	err := CheckUserPassword(user, password)
+	if IsErrWrongUsernameOrPassword(err) {
+		// Rolled back first: a lockout needs its own write lock on SQLite.
+		_ = s.Rollback()
+		handleFailedPassword(ctx, user)
+	}
+	return err
 }
 
 func handleFailedPassword(ctx context.Context, user *User) {

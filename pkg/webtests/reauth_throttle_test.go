@@ -30,8 +30,8 @@ func TestReauthThrottle(t *testing.T) {
 
 	for _, tc := range []struct {
 		name, method, path, wrong, right string
-		// Checked via CheckUserCredentials, so the 10th failure trips the
-		// account lockout, which revokes the session.
+		// Wrong passwords count toward the account lockout, so the 10th
+		// failure locks the account, which revokes the session.
 		locksAccount bool
 	}{
 		{"v1 totp disable", http.MethodPost, "/api/v1/user/settings/totp/disable", `{"password":"wrong"}`, `{"password":"12345678"}`, false},
