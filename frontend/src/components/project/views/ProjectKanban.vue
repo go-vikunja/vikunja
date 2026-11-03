@@ -38,12 +38,13 @@
 						<template #item="{element: bucket, index: bucketIndex }">
 							<li
 								class="bucket"
-								:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
+								:class="{'is-collapsed': isCollapsed(bucket)}"
 								:data-bucket-id="bucket.id"
 							>
 								<div
 									class="bucket-header"
 									@click="() => unCollapseBucket(bucket)"
+									@dragenter="() => expandWhileDragging(bucket)"
 								>
 									<span
 										v-if="bucket.id !== 0 && view?.done_bucket_id === bucket.id"
@@ -398,6 +399,7 @@ const newTaskInputFocused = ref(false)
 
 const showSetLimitInput = ref(false)
 const collapsedBuckets = ref<CollapsedBuckets>({})
+const dragExpandedBuckets = ref(new Set<number>())
 
 // URL-synchronized filter parameters
 const filter = useRouteQuery('filter')
@@ -568,6 +570,7 @@ async function updateTaskPosition(e: SortableEvent & {originalEvent?: MouseEvent
 	const project = projectId.value
 	const view = props.viewId
 	drag.value = false
+	dragExpandedBuckets.value.clear()
 	try {
 		const {moved} = await handleTaskDropToProject(e, task => {
 			// A moved task stays in a pseudo-project board (favorites, saved filters) until the board is re-read.
@@ -844,6 +847,17 @@ function toggleDoneBucket(bucket: BucketResponse) {
 function collapseBucket(bucket: BucketResponse) {
 	collapsedBuckets.value[bucket.id] = true
 	saveCollapsedBucketState(projectIdWithFallback.value, collapsedBuckets.value)
+}
+
+function isCollapsed(bucket: BucketResponse) {
+	return collapsedBuckets.value[bucket.id] && !dragExpandedBuckets.value.has(bucket.id)
+}
+
+// Collapsed buckets hide their task list, leaving nothing to drop on.
+function expandWhileDragging(bucket: BucketResponse) {
+	if (drag.value && collapsedBuckets.value[bucket.id]) {
+		dragExpandedBuckets.value.add(bucket.id)
+	}
 }
 
 function unCollapseBucket(bucket: BucketResponse) {
