@@ -519,6 +519,28 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		return err
 	}
 
+	relations := []*models.TaskRelation{}
+	for _, state := range initialTasks {
+		for kind, related := range state.task.RelatedTasks {
+			for _, rt := range related {
+				if state.task.ID == rt.ID {
+					log.Debugf("[creating structure] Skipping invalid self-relation for task %d", rt.ID)
+					continue
+				}
+				relations = append(relations, &models.TaskRelation{
+					TaskID:       state.task.ID,
+					OtherTaskID:  rt.ID,
+					RelationKind: kind,
+				})
+			}
+		}
+	}
+	log.Debugf("[creating structure] Creating %d task relations", len(relations))
+	err = models.CreateTaskRelationsForImport(s, relations, user)
+	if err != nil {
+		return err
+	}
+
 	for _, state := range initialTasks {
 		t := state.task
 		t.BucketID = state.bucketID
@@ -529,39 +551,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 
 		log.Debugf("[creating structure] Created task %d", t.ID)
-		if len(t.RelatedTasks) > 0 {
-			log.Debugf("[creating structure] Creating %d related task kinds", len(t.RelatedTasks))
-		}
-
-		// Create all relation for each task
-		for kind, tasks := range t.RelatedTasks {
-
-			if len(tasks) > 0 {
-				log.Debugf("[creating structure] Creating %d related tasks for kind %v", len(tasks), kind)
-			}
-
-			for _, rt := range tasks {
-				taskRel := &models.TaskRelation{
-					TaskID:       t.ID,
-					OtherTaskID:  rt.ID,
-					RelationKind: kind,
-				}
-
-				// Add this check to prevent self-relations
-				if taskRel.TaskID == taskRel.OtherTaskID {
-					log.Debugf("[creating structure] Skipping invalid self-relation for task %d", taskRel.TaskID)
-					continue
-				}
-
-				err = taskRel.Create(s, user)
-				if err != nil && !models.IsErrRelationAlreadyExists(err) {
-					return
-				}
-
-				log.Debugf("[creating structure] Created task relation between task %d and %d", t.ID, rt.ID)
-
-			}
-		}
 
 		// Create all attachments for each task
 		if len(t.Attachments) > 0 {
