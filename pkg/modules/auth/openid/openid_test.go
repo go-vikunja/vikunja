@@ -25,18 +25,23 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/png"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/imageutils"
@@ -339,6 +344,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		logged := captureWarnings(t)
 
 		cl := &claims{
 			Email:             "bot@example.com",
@@ -352,6 +358,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		assert.True(t, user.IsErrAccountIsBot(err))
 		assert.Nil(t, u)
+		assert.NotContains(t, logged(), fallbackWarningMarker)
 	})
 	t.Run("ProviderFallback: Falls back to sub when preferred_username is empty", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -550,6 +557,164 @@ func TestGetOrCreateUser(t *testing.T) {
 
 		assert.NotEqual(t, 11, int(u.ID), "must not link to user 11 via an unverified email")
 		assert.Equal(t, "https://some.issuer", u.Issuer, "a new separate account should have been created")
+	})
+}
+
+func captureWarnings(t *testing.T) func() string {
+	t.Helper()
+	dir := t.TempDir()
+	log.ConfigureStandardLogger(true, "file", dir, "WARNING", "text")
+	t.Cleanup(log.InitLogger)
+
+	return func() string {
+		t.Helper()
+		content, err := os.ReadFile(filepath.Join(dir, "standard.log"))
+		require.NoError(t, err)
+		return string(content)
+	}
+}
+
+const fallbackWarningMarker = "via the deprecated emailfallback/usernamefallback option"
+
+func expectedFallbackWarning(userID int) string {
+	return fmt.Sprintf(
+		`OpenID provider \"test\" matched local user %d %s. `+
+			"Both options will be removed in a future release; the user must link the provider from their account settings before then.",
+		userID, fallbackWarningMarker,
+	)
+}
+
+func TestFallbackLogsDeprecationWarning(t *testing.T) {
+	t.Run("username fallback match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		provider := &Provider{
+			Key:              "test",
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "user11",
+		}
+
+		u, err := getOrCreateUser(s, &claims{}, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, int64(11), u.ID)
+
+		out := logged()
+		assert.Contains(t, out, "level=WARN")
+		assert.Contains(t, out, expectedFallbackWarning(11))
+		assert.Equal(t, 1, strings.Count(out, fallbackWarningMarker))
+	})
+	t.Run("email fallback match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		cl := &claims{
+			Email:         "user11@example.com",
+			EmailVerified: true,
+		}
+		provider := &Provider{
+			Key:           "test",
+			EmailFallback: true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "unknown-subject",
+		}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, int64(11), u.ID)
+
+		out := logged()
+		assert.Contains(t, out, "level=WARN")
+		assert.Contains(t, out, expectedFallbackWarning(11))
+		assert.Equal(t, 1, strings.Count(out, fallbackWarningMarker))
+	})
+	t.Run("miss then hit", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "nobody",
+		}
+		provider := &Provider{
+			Key:              "test",
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "nobody-subject",
+		}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, int64(11), u.ID)
+
+		out := logged()
+		assert.Contains(t, out, expectedFallbackWarning(11))
+		assert.Equal(t, 1, strings.Count(out, fallbackWarningMarker))
+	})
+	t.Run("disabled user fallback match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		provider := &Provider{
+			Key:              "test",
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "user17",
+		}
+
+		u, err := getOrCreateUser(s, &claims{}, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, int64(17), u.ID)
+
+		out := logged()
+		assert.Contains(t, out, expectedFallbackWarning(17))
+		assert.Equal(t, 1, strings.Count(out, fallbackWarningMarker))
+	})
+	t.Run("no fallback match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		cl := &claims{
+			Email:             "nobody@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "nobody",
+		}
+		provider := &Provider{
+			Key:              "test",
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "nobody-subject",
+		}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, "https://some.issuer", u.Issuer)
+
+		assert.NotContains(t, logged(), fallbackWarningMarker)
 	})
 }
 
