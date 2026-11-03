@@ -161,7 +161,12 @@ func (u *User) RouteForDB() int64 {
 	return u.ID
 }
 
-func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
+// deliveredToLockedAccount marks notifications a locked account needs to recover from the lock.
+type deliveredToLockedAccount interface {
+	deliveredToLockedAccount()
+}
+
+func (u *User) ShouldNotify(notification notifications.Notification, sessions ...*xorm.Session) (bool, error) {
 	if u.IsBot() {
 		return false, nil
 	}
@@ -173,6 +178,9 @@ func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
 		defer s.Close()
 	}
 	_, err := getUser(s, &User{ID: u.ID}, true)
+	if _, recovery := notification.(deliveredToLockedAccount); recovery && IsErrAccountLocked(err) {
+		return true, nil
+	}
 	if IsErrUserStatusError(err) {
 		return false, nil
 	}

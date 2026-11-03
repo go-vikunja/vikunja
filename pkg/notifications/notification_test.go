@@ -69,7 +69,7 @@ func (t *testNotifiable) RouteForDB() int64 {
 	return 42
 }
 
-func (t *testNotifiable) ShouldNotify(_ ...*xorm.Session) (should bool, err error) {
+func (t *testNotifiable) ShouldNotify(_ Notification, _ ...*xorm.Session) (should bool, err error) {
 	return t.ShouldSendNotification, nil
 }
 

@@ -119,6 +119,8 @@ type ResetPasswordNotification struct {
 	Token *Token
 }
 
+func (n *ResetPasswordNotification) deliveredToLockedAccount() {}
+
 // ToMail returns the mail notification for ResetPasswordNotification
 func (n *ResetPasswordNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
