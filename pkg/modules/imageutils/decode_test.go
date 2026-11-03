@@ -148,6 +148,11 @@ func TestDecode_ClosesEverySourceHandle(t *testing.T) {
 			opened:   1,
 			tooLarge: true,
 		},
+		"tiff is not supported": {
+			content:     testTIFF(t, 16, 16),
+			opened:      1,
+			undecodable: true,
+		},
 		"image whose header is past the read limit is never opened for decoding": {
 			content:     testTIFF(t, 1024, maxHeaderBytes/(4*1024)+1),
 			opened:      1,

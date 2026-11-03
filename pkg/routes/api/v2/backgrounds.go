@@ -231,7 +231,7 @@ type backgroundUploadInput struct {
 	// programmatic clients. Huma's MimeTypeValidator rejects the part pre-handler, so the
 	// byte-level image check in PrepareBackground is the real gate.
 	RawBody huma.MultipartFormFiles[struct {
-		Background huma.FormFile `form:"background" contentType:"image/jpeg,image/png,image/gif,image/bmp,image/tiff,image/webp,application/octet-stream" required:"true" doc:"The background image to upload. Must be a decodable raster image (JPEG, PNG, GIF, BMP, TIFF or WebP); it is resized server-side and re-encoded as JPEG."`
+		Background huma.FormFile `form:"background" contentType:"image/jpeg,image/png,image/gif,image/bmp,image/webp,application/octet-stream" required:"true" doc:"The background image to upload. Must be a decodable raster image (JPEG, PNG, GIF, BMP or WebP); it is resized server-side and re-encoded as JPEG."`
 	}]
 }
 

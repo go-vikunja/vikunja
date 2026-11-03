@@ -31,9 +31,9 @@ import (
 )
 
 type avatarUploadInput struct {
-	// Allow-list mirrors the image formats avatar.PrepareUpload can actually decode (the decoders registered process-wide by the imaging package: png, jpeg, gif, tiff, bmp); octet-stream covers programmatic clients. Huma's MimeTypeValidator rejects the part pre-handler, so anything advertised here must also pass the byte-level image check in avatar.PrepareUpload. Formats without a registered decoder (e.g. svg, webp) are intentionally excluded.
+	// Allow-list mirrors the image formats avatar.PrepareUpload can actually decode (png, jpeg, gif, bmp; tiff is refused by imageutils); octet-stream covers programmatic clients. Huma's MimeTypeValidator rejects the part pre-handler, so anything advertised here must also pass the byte-level image check in avatar.PrepareUpload. Formats without a registered decoder (e.g. svg, webp) are intentionally excluded.
 	RawBody huma.MultipartFormFiles[struct {
-		Avatar huma.FormFile `form:"avatar" contentType:"image/png,image/jpeg,image/gif,image/tiff,image/bmp,application/octet-stream" required:"true" doc:"The avatar image to upload. Must be a decodable raster image (PNG, JPEG, GIF, TIFF or BMP); it is resized server-side and re-encoded as PNG."`
+		Avatar huma.FormFile `form:"avatar" contentType:"image/png,image/jpeg,image/gif,image/bmp,application/octet-stream" required:"true" doc:"The avatar image to upload. Must be a decodable raster image (PNG, JPEG, GIF or BMP); it is resized server-side and re-encoded as PNG."`
 	}]
 }
 
