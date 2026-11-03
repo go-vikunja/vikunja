@@ -283,6 +283,30 @@ func TestTask_Update(t *testing.T) {
 			"project_id": 2,
 		}, false)
 	})
+	t.Run("task moved to a writable project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 1, Title: "test10000"}
+		can, err := task.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// User 1 has write access to project 10 through a share.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 10, Index: 9999})
+		require.NoError(t, err)
+
+		err = task.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         1,
+			"title":      "test10000",
+			"project_id": 10,
+		}, false)
+	})
 	t.Run("hex color with leading #", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

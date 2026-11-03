@@ -74,6 +74,33 @@ func TestBulkTask_Update(t *testing.T) {
 		assert.False(t, allowed)
 	})
 
+	t.Run("task moved to a forbidden project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bt := &BulkTask{
+			TaskIDs: []int64{1, 3},
+			Fields:  []string{"title"},
+			Values:  &Task{Title: "bulkupdated"},
+		}
+
+		allowed, err := bt.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, allowed)
+
+		// Project 2 belongs to user 3 and is not shared with user 1.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 2, Index: 9999})
+		require.NoError(t, err)
+
+		err = bt.Update(s, u)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "title": "task #1", "project_id": 2}, false)
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 3, "title": "task #3 high prio", "project_id": 1}, false)
+	})
+
 	t.Run("duplicate ids update the task once", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
