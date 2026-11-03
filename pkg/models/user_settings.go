@@ -17,8 +17,6 @@
 package models
 
 import (
-	"context"
-
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/user"
 
@@ -68,20 +66,24 @@ func NewUserGeneralSettings(u *user.User) *UserGeneralSettings {
 // ChangeUserPassword verifies the old password, sets the new one, and
 // invalidates all of the user's sessions. Lives here (not in pkg/user) because
 // it needs DeleteAllUserSessions, which pkg/user cannot import.
-func ChangeUserPassword(ctx context.Context, s *xorm.Session, u *user.User, oldPassword, newPassword string) error {
+func ChangeUserPassword(s *xorm.Session, u *user.User, oldPassword, newPassword string) error {
 	if oldPassword == "" {
 		return user.ErrEmptyOldPassword{}
 	}
 
-	err := user.ThrottleReauth(u.ID, func() error {
-		_, err := user.CheckUserCredentials(ctx, s, &user.Login{Username: u.Username, Password: oldPassword})
-		return err
-	})
+	target, err := user.GetUserByID(s, u.ID)
 	if err != nil {
 		return err
 	}
+	if !target.IsLocalUser() {
+		return &user.ErrAccountIsNotLocal{UserID: target.ID}
+	}
 
-	return setUserPasswordAndInvalidateSessions(s, u, newPassword)
+	if err := user.CheckReauthPassword(target, oldPassword); err != nil {
+		return err
+	}
+
+	return setUserPasswordAndInvalidateSessions(s, target, newPassword)
 }
 
 // setUserPasswordAndInvalidateSessions is shared by the self-service and admin
