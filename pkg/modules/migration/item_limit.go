@@ -35,6 +35,9 @@ func CheckItemCount(count int64) error {
 	return nil
 }
 
+// Each imported task gets a position row in every view.
+const maxViewsPerProject = 25
+
 func CheckItemLimit(str []*models.ProjectWithTasksAndBuckets) error {
 	var count int64
 	var walk func(projects []*models.ProjectWithTasksAndBuckets) error
@@ -44,6 +47,9 @@ func CheckItemLimit(str []*models.ProjectWithTasksAndBuckets) error {
 				continue
 			}
 			views := int64(len(p.Views))
+			if views > maxViewsPerProject {
+				return &ErrImportTooManyViews{MaxViews: maxViewsPerProject}
+			}
 			count += 1 + int64(len(p.Buckets)) + int64(len(p.Tasks)) + views
 			if err := CheckItemCount(count); err != nil {
 				return err

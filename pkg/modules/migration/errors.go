@@ -136,6 +136,24 @@ func (err *ErrImportItemLimitExceeded) HTTPError() web.HTTPError {
 	}
 }
 
+type ErrImportTooManyViews struct {
+	MaxViews int64
+}
+
+func (err *ErrImportTooManyViews) Error() string {
+	return fmt.Sprintf("A project in the import has more than %d views", err.MaxViews)
+}
+
+const ErrCodeImportTooManyViews = 14020
+
+func (err *ErrImportTooManyViews) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeImportTooManyViews,
+		Message:  fmt.Sprintf("A project in the import has more than %d views.", err.MaxViews),
+	}
+}
+
 type ErrInvalidOAuthState struct{}
 
 func (err *ErrInvalidOAuthState) Error() string {
