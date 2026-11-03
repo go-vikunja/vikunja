@@ -87,7 +87,7 @@ test.describe('Link shares of a user losing access', () => {
 	async function storedShareNames(apiContext, token: string) {
 		const response = await apiContext.get('/api/v2/projects/1/shares', {headers: {Authorization: `Bearer ${token}`}})
 		expect(response.ok()).toBe(true)
-		return (await response.json()).items.map(share => share.name)
+		return (await response.json()).items.map(share => share.name).sort()
 	}
 
 	for (const revoke of [true, false]) {
