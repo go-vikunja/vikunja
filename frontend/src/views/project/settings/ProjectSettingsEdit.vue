@@ -59,6 +59,12 @@
 				</div>
 			</div>
 		</template>
+		<AccessLossConfirmModal
+			v-model:cleanup="accessLossCleanup"
+			:counts="accessLossCounts"
+			@confirm="confirmAccessLoss"
+			@cancel="cancelAccessLoss"
+		/>
 	</CreateEdit>
 </template>
 
@@ -72,6 +78,7 @@ import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FormField from '@/components/input/FormField.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
+import AccessLossConfirmModal from '@/components/sharing/AccessLossConfirmModal.vue'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import {useUpdateProjectMutation} from '@/client/queries/projects'
@@ -80,6 +87,7 @@ import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 import {useProject} from '@/composables/useProject'
 import {useGoBack} from '@/composables/useGoBack'
+import {useAccessLossConfirmation} from '@/composables/useAccessLossConfirmation'
 
 import {useTitle} from '@/composables/useTitle'
 import {PERMISSIONS} from '@/constants/permissions'
@@ -97,6 +105,13 @@ const {t} = useI18n({useScope: 'global'})
 
 const {project, isLoaded, isLoading, error: loadError} = useProject(() => props.projectId)
 const updateProject = useUpdateProjectMutation(t('project.edit.success'))
+const {
+	counts: accessLossCounts,
+	cleanup: accessLossCleanup,
+	run: withAccessLossConfirmation,
+	confirm: confirmAccessLoss,
+	cancel: cancelAccessLoss,
+} = useAccessLossConfirmation()
 
 const parentProject = ref<ProjectResponse | null>(null)
 const parentProjectChanged = ref(false)
@@ -147,7 +162,8 @@ async function save() {
 		if (parentProjectChanged.value) {
 			project.value.parent_project_id = parentProject.value?.id ?? 0
 		}
-		await updateProject.mutateAsync(project.value)
+		const saved = await withAccessLossConfirmation(accessLoss => updateProject.mutateAsync({...project.value, accessLoss}))
+		if (!saved) return
 		useBaseStore().setCurrentProject(project.value)
 		goBack()
 	} finally {
