@@ -200,7 +200,7 @@ func userChangePassword(ctx context.Context, in *struct {
 	}
 }) (*singleBody[userActionMessageBody], error) {
 	return runUserAction(ctx, func(s *xorm.Session, u *user.User) error {
-		return models.ChangeUserPassword(ctx, s, u, in.Body.OldPassword, in.Body.NewPassword)
+		return models.ChangeUserPassword(s, u, in.Body.OldPassword, in.Body.NewPassword)
 	}, "The password was updated successfully.")
 }
 
