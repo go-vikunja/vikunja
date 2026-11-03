@@ -347,6 +347,31 @@ func TestProjectAncestorsRebuildTerminatesOnParentCycle(t *testing.T) {
 	}
 }
 
+func TestProjectAncestorsRebuildDeepChain(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Enough derived rows to span several insert batches.
+	const depth = 40
+	chain := make([]int64, 0, depth)
+	for i := range depth {
+		project := &Project{Title: "chain", OwnerID: 1}
+		if i > 0 {
+			project.ParentProjectID = Ptr(chain[i-1])
+		}
+		_, err := s.Insert(project)
+		require.NoError(t, err)
+		chain = append(chain, project.ID)
+	}
+
+	require.NoError(t, RebuildProjectAncestors(s))
+
+	rows := projectAncestorsOf(t, s, chain...)
+	require.Len(t, rows, depth*(depth+1)/2)
+	assert.Contains(t, rows, ProjectAncestor{ProjectID: chain[depth-1], AncestorID: chain[0], Depth: depth - 1})
+}
+
 func TestProjectAccessFollowsMove(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
