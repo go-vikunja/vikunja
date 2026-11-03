@@ -37,6 +37,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -199,6 +200,25 @@ func TestTaskAttachment_Delete(t *testing.T) {
 
 		_, _, err = ta.File.OpenPreview(PreviewMedium)
 		require.ErrorIs(t, err, fs.ErrNotExist)
+	})
+	t.Run("link share is the event doer", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		ta := &TaskAttachment{ID: 1}
+		require.NoError(t, ta.Delete(s, share))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TaskAttachmentDeletedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		doer := dispatched[0].(*TaskAttachmentDeletedEvent).Doer
+		require.NotNil(t, doer)
+		assert.Equal(t, share.GetID(), doer.ID)
 	})
 	t.Run("Nonexisting", func(t *testing.T) {
 		files.InitTestFileFixtures(t)

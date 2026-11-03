@@ -17,9 +17,11 @@
 package models
 
 import (
+	"context"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -47,6 +49,28 @@ func TestTaskRelation_Create(t *testing.T) {
 			"relation_kind": RelationKindSubtask,
 			"created_by_id": 1,
 		}, false)
+	})
+	t.Run("link share is the event doer", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		rel := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  2,
+			RelationKind: RelationKindSubtask,
+		}
+		require.NoError(t, rel.Create(s, share))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TaskRelationCreatedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		doer := dispatched[0].(*TaskRelationCreatedEvent).Doer
+		require.NotNil(t, doer)
+		assert.Equal(t, share.GetID(), doer.ID)
 	})
 	t.Run("Two Tasks In Different Projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -301,6 +325,28 @@ func TestTaskRelation_Delete(t *testing.T) {
 			"other_task_id": 1,
 			"relation_kind": RelationKindParenttask,
 		})
+	})
+	t.Run("link share is the event doer", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		rel := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  29,
+			RelationKind: RelationKindSubtask,
+		}
+		require.NoError(t, rel.Delete(s, share))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TaskRelationDeletedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		doer := dispatched[0].(*TaskRelationDeletedEvent).Doer
+		require.NotNil(t, doer)
+		assert.Equal(t, share.GetID(), doer.ID)
 	})
 	t.Run("Not existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
