@@ -788,6 +788,41 @@ func TestInsertFromStructureFileProvider(t *testing.T) {
 	})
 }
 
+type panickingAttachmentProvider struct {
+	testFileProvider
+}
+
+func (p *panickingAttachmentProvider) OpenAttachment(_ *models.TaskAttachment) (io.ReadSeekCloser, int64, error) {
+	panic("attachment")
+}
+
+func TestInsertFromStructurePanicCleanup(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	u := &user.User{ID: 1}
+
+	unrelated, err := files.Create(bytes.NewReader([]byte("unrelated")), "unrelated", 9, u)
+	require.NoError(t, err)
+	newBackgroundID := unrelated.ID + 1
+	background := &trackedReadSeekCloser{Reader: bytes.NewReader(testBackground(t))}
+	provider := &panickingAttachmentProvider{testFileProvider{background: background}}
+	structure := []*models.ProjectWithTasksAndBuckets{{
+		Project: models.Project{Title: "panic cleanup", BackgroundFileID: unrelated.ID},
+		Tasks: []*models.TaskWithComments{{Task: models.Task{
+			Title:       "task",
+			Attachments: []*models.TaskAttachment{{File: &files.File{Name: "boom"}}},
+		}}},
+	}}
+
+	require.Panics(t, func() {
+		_ = InsertFromStructureWithFileProvider(structure, u, provider)
+	})
+	require.Equal(t, newBackgroundID, structure[0].Project.BackgroundFileID, "background must be stored before the panic")
+
+	_, err = files.FileStat(&files.File{ID: newBackgroundID})
+	require.ErrorIs(t, err, fs.ErrNotExist, "a panicking import must remove its stored blobs")
+	db.AssertMissing(t, "projects", map[string]interface{}{"title": "panic cleanup"})
+}
+
 func TestInsertFromStructureItemLimit(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	config.MigrationMaxItems.Set(3)
