@@ -297,6 +297,16 @@ func CreateTaskRelationsForImport(s *xorm.Session, relations []*TaskRelation, a 
 	return nil
 }
 
+func (rel *TaskRelation) hierarchyEdge() (parentID, childID int64, ok bool) {
+	if rel.RelationKind == RelationKindSubtask {
+		return rel.TaskID, rel.OtherTaskID, true
+	}
+	if rel.RelationKind == RelationKindParenttask {
+		return rel.OtherTaskID, rel.TaskID, true
+	}
+	return 0, 0, false
+}
+
 func checkImportedTaskRelationCycles(relations []*TaskRelation) error {
 	type edge struct{ parent, child int64 }
 
@@ -304,16 +314,9 @@ func checkImportedTaskRelationCycles(relations []*TaskRelation) error {
 	children := make(map[int64][]int64)
 	parentCount := make(map[int64]int)
 	for _, rel := range relations {
-		var e edge
-		switch rel.RelationKind {
-		case RelationKindSubtask:
-			e = edge{parent: rel.TaskID, child: rel.OtherTaskID}
-		case RelationKindParenttask:
-			e = edge{parent: rel.OtherTaskID, child: rel.TaskID}
-		default:
-			continue
-		}
-		if e.parent == e.child || seen[e] {
+		parent, child, isHierarchy := rel.hierarchyEdge()
+		e := edge{parent: parent, child: child}
+		if !isHierarchy || parent == child || seen[e] {
 			continue
 		}
 		seen[e] = true
@@ -346,7 +349,7 @@ func checkImportedTaskRelationCycles(relations []*TaskRelation) error {
 	for _, rel := range relations {
 		_, taskLeft := parentCount[rel.TaskID]
 		_, otherLeft := parentCount[rel.OtherTaskID]
-		if taskLeft && otherLeft && (rel.RelationKind == RelationKindSubtask || rel.RelationKind == RelationKindParenttask) {
+		if _, _, isHierarchy := rel.hierarchyEdge(); isHierarchy && taskLeft && otherLeft {
 			return ErrTaskRelationCycle{
 				TaskID:      rel.TaskID,
 				OtherTaskID: rel.OtherTaskID,
