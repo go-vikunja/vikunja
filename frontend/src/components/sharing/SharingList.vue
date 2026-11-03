@@ -197,6 +197,7 @@ const linkSharesToRevoke = useLinkSharesCreatedBy(
 	() => shareToDelete.value ? props.affectedUserIds(shareToDelete.value) : [],
 )
 const deleteLinkShare = useDeleteLinkShareMutation()
+const removing = ref(false)
 watch(shareToDelete, () => {
 	revokeLinkShares.value = false
 })
@@ -237,13 +238,16 @@ async function changePermission(share: Identified<Share>) {
 
 async function removeShare() {
 	const share = shareToDelete.value
-	if (!share || props.isMutating || deleteLinkShare.isPending.value) return
+	if (!share || props.isMutating || removing.value) return
 	const linkShares = revokeLinkShares.value ? linkSharesToRevoke.value : []
+	removing.value = true
 	try {
 		await props.remove(props.projectId, share)
 		await Promise.allSettled(linkShares.map(({projectId, share}) => deleteLinkShare.mutateAsync({projectId, id: share.id})))
 	} catch {
 		// The mutation already toasted the error.
+	} finally {
+		removing.value = false
 	}
 	if (shareToDelete.value === share) shareToDelete.value = null
 }

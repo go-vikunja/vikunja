@@ -252,6 +252,7 @@ const memberLinkShares = useLinkSharesCreatedBy(
 )
 const revokeMemberLinkShares = ref(false)
 const deleteLinkShare = useDeleteLinkShareMutation()
+const removingMember = ref(false)
 watch(showUserDeleteModal, () => {
 	revokeMemberLinkShares.value = false
 })
@@ -274,8 +275,9 @@ async function deleteTeam() {
 }
 
 async function deleteMember() {
-	if (!memberToDelete.value?.username || deleteLinkShare.isPending.value) return
+	if (!memberToDelete.value?.username || removingMember.value) return
 	const linkShares = revokeMemberLinkShares.value ? memberLinkShares.value : []
+	removingMember.value = true
 	try {
 		await removeMemberMutation.mutateAsync({teamId: teamId.value, username: memberToDelete.value.username})
 		await Promise.allSettled(linkShares.map(({projectId, share}) => deleteLinkShare.mutateAsync({projectId, id: share.id})))
@@ -283,6 +285,7 @@ async function deleteMember() {
 		// The mutation already toasted the error.
 	} finally {
 		showUserDeleteModal.value = false
+		removingMember.value = false
 	}
 }
 
