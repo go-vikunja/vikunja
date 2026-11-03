@@ -1,10 +1,12 @@
 <template>
 	<Teleport :to="teleportTarget">
 		<Notifications
+			ref="group"
 			position="bottom left"
 			:max="2"
 			:ignore-duplicates="true"
 			:width="isMobile ? '100%' : 300"
+			:style="{bottom: `${bannersOffset}px`}"
 			class="global-notification"
 			role="status"
 			aria-live="polite"
@@ -69,10 +71,15 @@
 </template>
 
 <script lang="ts" setup>
-import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {onBeforeUnmount, onMounted, ref, useTemplateRef} from 'vue'
+import {useElementBounding} from '@vueuse/core'
 import {useIsMobile} from '@/composables/useIsMobile'
+import {useBottomBannersOffset} from '@/composables/useBottomBanners'
 
 const isMobile = useIsMobile()
+
+const {left, right} = useElementBounding(useTemplateRef('group'))
+const bannersOffset = useBottomBannersOffset(() => ({left: left.value, right: right.value}))
 
 const teleportTarget = ref<string | HTMLElement>('body')
 let observer: MutationObserver | null = null
