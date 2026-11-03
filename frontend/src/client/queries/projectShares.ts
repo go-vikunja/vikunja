@@ -32,7 +32,9 @@ async function invalidateShares(client: QueryClient, projectId: number, kind: 'u
 		client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
 		client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		client.invalidateQueries({queryKey: userSearchKeys.all, refetchType: 'none'}),
-		...(kind === 'teams' ? [client.invalidateQueries({queryKey: teamKeys.adminProjectsAll, refetchType: 'none'})] : []),
+		...(kind === 'teams'
+			? [client.invalidateQueries({queryKey: teamKeys.adminProjectsAll, refetchType: 'none'})]
+			: []),
 	])
 }
 

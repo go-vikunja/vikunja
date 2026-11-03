@@ -69,7 +69,12 @@ func TestHumaTeamProjects(t *testing.T) {
 	t.Run("Forbidden for link shares", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		token, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{ID: 1, Hash: "test", ProjectID: 1, Permission: models.PermissionRead})
+		token, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{
+			ID:         1,
+			Hash:       "test",
+			ProjectID:  1,
+			Permission: models.PermissionRead,
+		})
 		require.NoError(t, err)
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1/projects", "", token, "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())

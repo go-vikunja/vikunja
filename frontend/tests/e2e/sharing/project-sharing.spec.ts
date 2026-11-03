@@ -85,19 +85,29 @@ test.describe('Link shares of a user losing access', () => {
 	}
 
 	async function storedShareNames(apiContext, token: string) {
-		const response = await apiContext.get('/api/v2/projects/1/shares', {headers: {Authorization: `Bearer ${token}`}})
+		const response = await apiContext.get('/api/v2/projects/1/shares', {
+			headers: {Authorization: `Bearer ${token}`},
+		})
 		expect(response.ok()).toBe(true)
 		return (await response.json()).items.map(share => share.name).sort()
 	}
 
 	for (const revoke of [true, false]) {
-		test(`removes a user ${revoke ? 'and revokes' : 'but keeps'} their link shares`, async ({authenticatedPage: page, apiContext, userToken}) => {
+		test(`removes a user ${revoke ? 'and revokes' : 'but keeps'} their link shares`, async ({
+			authenticatedPage: page,
+			apiContext,
+			userToken,
+		}) => {
 			const [, member] = await UserFactory.create(2)
 			await createProjects(1)
 			await UserProjectFactory.create(1, {project_id: 1, user_id: member.id, permission: 2})
 			await createShares(member.id)
 			await page.goto('/projects/1/settings/share')
-			const row = page.getByRole('heading', {name: 'Shared with these users', exact: true}).locator('..').getByRole('row').filter({hasText: member.username})
+			const row = page
+				.getByRole('heading', {name: 'Shared with these users', exact: true})
+				.locator('..')
+				.getByRole('row')
+				.filter({hasText: member.username})
 			await row.getByRole('button', {name: 'Remove this user'}).click()
 			const dialog = page.getByRole('dialog', {name: 'Remove a user from the project'})
 			const listed = dialog.getByTestId('revocable-link-share')
@@ -112,7 +122,9 @@ test.describe('Link shares of a user losing access', () => {
 			}
 			await dialog.getByRole('button', {name: 'Do it!'}).click()
 			await expect(row).toHaveCount(0)
-			await expect.poll(() => storedShareNames(apiContext, userToken)).toEqual(revoke ? ['Owner link'] : ['Client link', 'Owner link'])
+			await expect
+				.poll(() => storedShareNames(apiContext, userToken))
+				.toEqual(revoke ? ['Owner link'] : ['Client link', 'Owner link'])
 		})
 	}
 
@@ -122,14 +134,22 @@ test.describe('Link shares of a user losing access', () => {
 		await UserProjectFactory.create(1, {project_id: 1, user_id: member.id, permission: 2})
 		await LinkShareFactory.create(1, {name: 'Owner link', shared_by_id: 1})
 		await page.goto('/projects/1/settings/share')
-		await page.getByRole('row').filter({hasText: member.username}).getByRole('button', {name: 'Remove this user'}).click()
+		await page
+			.getByRole('row')
+			.filter({hasText: member.username})
+			.getByRole('button', {name: 'Remove this user'})
+			.click()
 		const dialog = page.getByRole('dialog', {name: 'Remove a user from the project'})
 		await expect(dialog.getByText('their task assignments')).toBeVisible()
 		await expect(dialog.getByTestId('revocable-link-share')).toHaveCount(0)
 		await expect(dialog.getByRole('checkbox')).toHaveCount(0)
 	})
 
-	test('removes a team member and revokes their link shares', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('removes a team member and revokes their link shares', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		const [, member] = await UserFactory.create(2)
 		await createProjects(1)
 		await TeamFactory.create(1, {id: 1, name: 'Sharing Team'})
@@ -138,7 +158,11 @@ test.describe('Link shares of a user losing access', () => {
 		await TeamProjectFactory.create(1, {team_id: 1, project_id: 1, permission: 2})
 		await createShares(member.id)
 		await page.goto('/teams/1/edit')
-		await page.getByRole('row').filter({hasText: member.username}).getByRole('button', {name: 'Remove a user from the team'}).click()
+		await page
+			.getByRole('row')
+			.filter({hasText: member.username})
+			.getByRole('button', {name: 'Remove a user from the team'})
+			.click()
 		const dialog = page.getByRole('dialog', {name: 'Remove a user from the team'})
 		await expect(dialog.getByTestId('revocable-link-share')).toHaveText([/Client link/])
 		await dialog.getByText('Also revoke this link share').click()

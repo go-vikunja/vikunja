@@ -4,7 +4,17 @@ import {
 	useMutation,
 	type QueryClient,
 } from '@tanstack/vue-query'
-import {teamsList, teamsRead, teamsCreate, teamsUpdate, teamsDelete, teamsMembersAdd, teamsMembersRemove, teamsMembersToggleAdmin, teamsProjectsList} from '@/client/generated'
+import {
+	teamsList,
+	teamsRead,
+	teamsCreate,
+	teamsUpdate,
+	teamsDelete,
+	teamsMembersAdd,
+	teamsMembersRemove,
+	teamsMembersToggleAdmin,
+	teamsProjectsList,
+} from '@/client/generated'
 import type {Team, TeamReadBody, TeamWritable, TeamMemberWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {

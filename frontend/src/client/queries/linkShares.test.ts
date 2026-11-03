@@ -7,7 +7,14 @@ vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => 1, getToken: () => null, getTokenIdentity: () => null}))
 
-import {linkShareKeys, linkSharesQuery, linkSharesCreatedBy, createLinkShareDraft, createLinkShareMutationOptions, deleteLinkShareMutationOptions} from './linkShares'
+import {
+	linkShareKeys,
+	linkSharesQuery,
+	linkSharesCreatedBy,
+	createLinkShareDraft,
+	createLinkShareMutationOptions,
+	deleteLinkShareMutationOptions,
+} from './linkShares'
 
 let client: QueryClient
 beforeEach(() => {
