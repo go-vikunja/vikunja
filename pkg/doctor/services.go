@@ -19,10 +19,12 @@ package doctor
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -327,6 +329,15 @@ func checkOpenIDProvider(key string, rawProvider interface{}) (CheckResult, stri
 
 	client := utils.NewUnguardedHTTPClient()
 	client.Timeout = 5 * time.Second
+	client.CheckRedirect = func(next *http.Request, via []*http.Request) error {
+		if next.URL.Scheme != req.URL.Scheme || !strings.EqualFold(next.URL.Host, req.URL.Host) {
+			return fmt.Errorf("refusing redirect to %s outside the configured provider origin", next.URL.Redacted())
+		}
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		return nil
+	}
 	resp, err := client.Do(req) // #nosec G704 -- URL is from configured OIDC provider endpoints
 	if err != nil {
 		return CheckResult{
