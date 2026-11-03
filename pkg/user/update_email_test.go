@@ -310,3 +310,36 @@ func TestResendEmailConfirmation(t *testing.T) {
 		assert.Equal(t, before[0].Token, after[0].Token)
 	})
 }
+
+func TestChangeUserEmail(t *testing.T) {
+	t.Run("verifies the password of the authenticated account", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, UpdateUserPassword(s, &User{ID: 2}, "user2password"))
+
+		// The username points at another account, e.g. a stale token claim.
+		err := ChangeUserEmail(context.Background(), s, &User{ID: 1, Username: "user2"}, "user2password", "new1@example.com")
+		require.Error(t, err)
+		assert.True(t, IsErrWrongUsernameOrPassword(err))
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		updated, err := GetUserWithEmail(s2, &User{ID: 1})
+		require.NoError(t, err)
+		assert.Equal(t, "user1@example.com", updated.Email)
+		assert.Empty(t, updated.PendingEmail)
+	})
+	t.Run("changes the email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, ChangeUserEmail(context.Background(), s, &User{ID: 1}, "12345678", "new1@example.com"))
+
+		updated, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+		assert.Equal(t, "new1@example.com", updated.Email)
+	})
+}
