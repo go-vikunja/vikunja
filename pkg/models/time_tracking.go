@@ -67,6 +67,7 @@ func (*TimeEntry) TableName() string {
 // --- CRUDable ---
 
 func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
+	te.ID = 0
 	te.UserID = a.GetID()
 
 	// Starting a new running timer ends the entries it overlaps and auto-stops the

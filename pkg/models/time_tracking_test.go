@@ -305,6 +305,21 @@ func TestTimeEntry_Create(t *testing.T) {
 		}, false)
 	})
 
+	t.Run("ignores a client-supplied id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		start := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
+		end := time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC)
+		te := &TimeEntry{ID: 999999, TaskID: 1, StartTime: start, EndTime: &end}
+		require.NoError(t, te.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		assert.NotEqual(t, int64(999999), te.ID)
+		db.AssertMissing(t, "time_entries", map[string]interface{}{"id": 999999})
+	})
+
 	t.Run("defaults the start time to now when none is given", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
