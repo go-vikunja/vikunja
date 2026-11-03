@@ -141,6 +141,20 @@ func TestCheckItemLimit(t *testing.T) {
 		require.ErrorAs(t, CheckItemLimit(withViews(3, 2)), &limitErr)
 	})
 
+	t.Run("rejects too many views in a project", func(t *testing.T) {
+		config.MigrationMaxItems.Set(100000)
+		t.Cleanup(func() { config.MigrationMaxItems.Set(10) })
+		p := &models.ProjectWithTasksAndBuckets{Project: models.Project{Title: "p"}}
+		for range maxViewsPerProject + 1 {
+			p.Views = append(p.Views, &models.ProjectView{})
+		}
+		var viewsErr *ErrImportTooManyViews
+		require.ErrorAs(t, CheckItemLimit([]*models.ProjectWithTasksAndBuckets{p}), &viewsErr)
+
+		p.Views = p.Views[:maxViewsPerProject]
+		require.NoError(t, CheckItemLimit([]*models.ProjectWithTasksAndBuckets{p}))
+	})
+
 	t.Run("terminates on a related task cycle", func(t *testing.T) {
 		a := &models.Task{Title: "a"}
 		b := &models.Task{
