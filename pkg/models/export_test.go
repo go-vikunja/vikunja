@@ -144,3 +144,33 @@ func TestHandleUserDataExport(t *testing.T) {
 		}
 	})
 }
+
+func TestReplaceExportFileID(t *testing.T) {
+	t.Run("replaces a missing export", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, replaceExportFileID(s, 15, 0, 2))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "users", map[string]interface{}{"id": 15, "export_file_id": 2}, false)
+	})
+	t.Run("replaces the expected export", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, replaceExportFileID(s, 1, 1, 2))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "users", map[string]interface{}{"id": 1, "export_file_id": 2}, false)
+	})
+	t.Run("keeps a pointer that changed since it was read", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.Error(t, replaceExportFileID(s, 1, 3, 2))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "users", map[string]interface{}{"id": 1, "export_file_id": 1}, false)
+	})
+}
