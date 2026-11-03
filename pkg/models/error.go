@@ -672,7 +672,7 @@ func (err *ErrProjectMoveTooLarge) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeProjectMoveTooLarge,
-		Message:  "This project has too many child projects to be moved below the chosen parent project.",
+		Message:  "This project hierarchy is too large to be moved below the chosen parent project.",
 	}
 }
 
