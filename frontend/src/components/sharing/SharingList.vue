@@ -135,6 +135,7 @@
 				<ProjectAccessCleanupList :intro="$t('project.share.userTeam.removeCleanupText')" />
 			</template>
 		</Modal>
+		<OutsideWebhooksModal :prompt="outsideWebhooksPrompt" />
 	</div>
 </template>
 
@@ -146,6 +147,8 @@ import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
+import OutsideWebhooksModal from '@/components/sharing/OutsideWebhooksModal.vue'
+import {useOutsideWebhooksConfirmation} from '@/composables/useOutsideWebhooksConfirmation'
 
 type Identified<T extends {id?: number}> = T & {id: number}
 
@@ -162,10 +165,11 @@ const props = defineProps<{
 	shareName: (share: Identified<Share>) => string
 	add: (projectId: number, candidate: Identified<Candidate>) => Promise<unknown>
 	updatePermission: (projectId: number, share: Identified<Share>, permission: Permission) => Promise<unknown>
-	remove: (projectId: number, share: Identified<Share>) => Promise<unknown>
+	remove: (projectId: number, share: Identified<Share>, clearOutsideWebhooks?: boolean) => Promise<unknown>
 }>()
 
 const showSearchLoading = useDelayedLoading(() => props.searchLoading)
+const {prompt: outsideWebhooksPrompt, run: withOutsideWebhooks} = useOutsideWebhooksConfirmation()
 
 const search = defineModel<string>('search', {required: true})
 
@@ -221,7 +225,8 @@ async function changePermission(share: Identified<Share>) {
 async function removeShare() {
 	const share = shareToDelete.value
 	if (!share || props.isMutating) return
-	await props.remove(props.projectId, share).catch(() => {})
+	const projectId = props.projectId
+	await withOutsideWebhooks(clearOutsideWebhooks => props.remove(projectId, share, clearOutsideWebhooks)).catch(() => {})
 	if (shareToDelete.value === share) shareToDelete.value = null
 }
 </script>

@@ -13,7 +13,7 @@
 		:share-name="getDisplayName"
 		:add="(projectId, user) => createShare.mutateAsync({projectId, username: user.username})"
 		:update-permission="(projectId, share, permission) => updateShare.mutateAsync({projectId, username: share.username, permission})"
-		:remove="(projectId, share) => deleteShare.mutateAsync({projectId, username: share.username})"
+		:remove="(projectId, share, clearOutsideWebhooks) => deleteShare.mutateAsync({projectId, username: share.username, clearOutsideWebhooks})"
 	>
 		<template #candidate="{candidate}">
 			<User

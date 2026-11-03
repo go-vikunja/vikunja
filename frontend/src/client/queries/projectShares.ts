@@ -2,6 +2,7 @@ import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 import {projectUsersList, projectUsersCreate, projectUsersUpdate, projectUsersDelete, projectTeamsList, projectTeamsCreate, projectTeamsUpdate, projectTeamsDelete} from '@/client/generated'
 import type {UserWithPermission, TeamWithPermission} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {toastUnlessOutsideWebhooksConflict} from './outsideWebhooks'
 import {fetchAllPages} from './fetchAllPages'
 import {projectKeys} from './projects'
 import {userSearchKeys} from './userSearch'
@@ -35,6 +36,7 @@ function shareSuccess(kind: 'users' | 'teams', action: 'addedSuccess' | 'updated
 
 type UserShareInput = {projectId: number, username: string}
 type TeamShareInput = {projectId: number, teamId: number}
+type RemoveShareInput = {clearOutsideWebhooks?: boolean}
 
 export function projectUserSharesQuery(projectId: number) {
 	return queryOptions({
@@ -66,12 +68,15 @@ export const useUpdateProjectUserShareMutation = () => useMutation(updateProject
 
 export function deleteProjectUserShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, username}: UserShareInput) => { await projectUsersDelete({path: {project: projectId, user: username}}) },
+		mutationFn: async ({projectId, username, clearOutsideWebhooks}: UserShareInput & RemoveShareInput) => {
+			await projectUsersDelete({path: {project: projectId, user: username}, query: {clear_outside_webhooks: clearOutsideWebhooks}})
+		},
 		onSuccess: (_data, {projectId, username}, client) => {
 			client.setQueryData<UserWithPermission[]>(projectShareKeys.users(projectId), current => current?.filter(item => item.username !== username))
 		},
 		onSettled: ({projectId}, client) => invalidateShares(client, projectId, 'users'),
 		successMessage: () => shareSuccess('users', 'removeSuccess'),
+		toastError: toastUnlessOutsideWebhooksConflict,
 	})
 }
 export const useDeleteProjectUserShareMutation = () => useMutation(deleteProjectUserShareMutationOptions())
@@ -106,12 +111,15 @@ export const useUpdateProjectTeamShareMutation = () => useMutation(updateProject
 
 export function deleteProjectTeamShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, teamId}: TeamShareInput) => { await projectTeamsDelete({path: {project: projectId, team: teamId}}) },
+		mutationFn: async ({projectId, teamId, clearOutsideWebhooks}: TeamShareInput & RemoveShareInput) => {
+			await projectTeamsDelete({path: {project: projectId, team: teamId}, query: {clear_outside_webhooks: clearOutsideWebhooks}})
+		},
 		onSuccess: (_data, {projectId, teamId}, client) => {
 			client.setQueryData<TeamWithPermission[]>(projectShareKeys.teams(projectId), current => current?.filter(item => item.id !== teamId))
 		},
 		onSettled: ({projectId}, client) => invalidateShares(client, projectId, 'teams'),
 		successMessage: () => shareSuccess('teams', 'removeSuccess'),
+		toastError: toastUnlessOutsideWebhooksConflict,
 	})
 }
 export const useDeleteProjectTeamShareMutation = () => useMutation(deleteProjectTeamShareMutationOptions())
