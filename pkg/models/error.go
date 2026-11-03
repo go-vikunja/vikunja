@@ -1449,6 +1449,34 @@ func (err ErrTaskRelationCycle) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskRelationHierarchyTooLarge represents an error where a task hierarchy is too large to check for cycles
+type ErrTaskRelationHierarchyTooLarge struct {
+	TaskID   int64
+	MaxTasks int
+}
+
+// IsErrTaskRelationHierarchyTooLarge checks if an error is ErrTaskRelationHierarchyTooLarge.
+func IsErrTaskRelationHierarchyTooLarge(err error) bool {
+	var e ErrTaskRelationHierarchyTooLarge
+	return errors.As(err, &e)
+}
+
+func (err ErrTaskRelationHierarchyTooLarge) Error() string {
+	return fmt.Sprintf("Task hierarchy is too large to check for relation cycles [TaskID: %v, MaxTasks: %v]", err.TaskID, err.MaxTasks)
+}
+
+// ErrCodeTaskRelationHierarchyTooLarge holds the unique world-error code of this error
+const ErrCodeTaskRelationHierarchyTooLarge = 4040
+
+// HTTPError holds the http error description
+func (err ErrTaskRelationHierarchyTooLarge) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTaskRelationHierarchyTooLarge,
+		Message:  fmt.Sprintf("The task hierarchy contains more than %d tasks.", err.MaxTasks),
+	}
+}
+
 // ErrInvalidFilterExpression represents an error where the task filter expression was invalid
 type ErrInvalidFilterExpression struct {
 	Expression      string

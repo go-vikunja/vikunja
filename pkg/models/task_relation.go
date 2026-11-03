@@ -138,6 +138,8 @@ func getInverseRelation(kind RelationKind) RelationKind {
 	return RelationKindUnknown
 }
 
+var maxTaskRelationCycleCheckVisits = 10_000
+
 func checkTaskRelationCycle(s *xorm.Session, relation *TaskRelation, otherTaskIDToCheck int64, visited map[int64]bool, currentPath map[int64]bool) (err error) {
 	if visited == nil {
 		visited = make(map[int64]bool)
@@ -160,6 +162,10 @@ func checkTaskRelationCycle(s *xorm.Session, relation *TaskRelation, otherTaskID
 			OtherTaskID: relation.OtherTaskID,
 			Kind:        relation.RelationKind,
 		}
+	}
+
+	if len(visited) >= maxTaskRelationCycleCheckVisits {
+		return ErrTaskRelationHierarchyTooLarge{TaskID: relation.TaskID, MaxTasks: maxTaskRelationCycleCheckVisits}
 	}
 
 	visited[relation.TaskID] = true

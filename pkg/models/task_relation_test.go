@@ -208,6 +208,25 @@ func TestTaskRelation_Create(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrTaskRelationCycle(err))
 	})
+	t.Run("hierarchy too large to check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		previous := maxTaskRelationCycleCheckVisits
+		maxTaskRelationCycleCheckVisits = 2
+		t.Cleanup(func() { maxTaskRelationCycleCheckVisits = previous })
+
+		for _, pair := range [][2]int64{{1, 2}, {2, 3}} {
+			rel := TaskRelation{TaskID: pair[0], OtherTaskID: pair[1], RelationKind: RelationKindSubtask}
+			require.NoError(t, rel.Create(s, &user.User{ID: 1}))
+		}
+
+		rel := TaskRelation{TaskID: 3, OtherTaskID: 4, RelationKind: RelationKindSubtask}
+		err := rel.Create(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationHierarchyTooLarge(err))
+	})
 	t.Run("cycle with one parenttask", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
