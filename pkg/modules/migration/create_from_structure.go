@@ -689,6 +689,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		newPositions := []*models.TaskPosition{}
 		positionTaskIDs := make([]int64, 0, len(project.Positions))
 		for _, pos := range project.Positions {
+			if pos == nil {
+				continue
+			}
 			_, hasTask := canonicalByOldID[pos.TaskID]
 			_, hasView := viewsByOldIDs[pos.ProjectViewID]
 			if !hasTask || !hasView {
@@ -716,6 +719,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		newTaskBuckets := make([]*models.TaskBucket, 0, len(project.TaskBuckets))
 		bucketTaskIDs := make([]int64, 0, len(project.TaskBuckets))
 		for _, tb := range project.TaskBuckets {
+			if tb == nil {
+				continue
+			}
 			_, hasTask := canonicalByOldID[tb.TaskID]
 			_, hasBucket := bucketsByOldID[tb.BucketID]
 			if !hasTask || !hasBucket {
