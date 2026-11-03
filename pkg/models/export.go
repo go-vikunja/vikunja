@@ -36,6 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -114,15 +115,11 @@ func ExportUserData(s *xorm.Session, u *user.User) (previousExportFileID int64, 
 		return 0, err
 	}
 
-	// Save the file id with the user
-	u.ExportFileID = exportFile.ID
-	_, err = s.
-		Where("id = ?", u.ID).
-		Cols("export_file_id").
-		Update(u)
+	err = replaceExportFileID(s, u.ID, current.ExportFileID, exportFile.ID)
 	if err != nil {
 		return 0, err
 	}
+	u.ExportFileID = exportFile.ID
 
 	// Send a notification
 	err = notifications.Notify(u, &DataExportReadyNotification{
@@ -133,6 +130,26 @@ func ExportUserData(s *xorm.Session, u *user.User) (previousExportFileID int64, 
 	}
 
 	return current.ExportFileID, nil
+}
+
+// Fails if another export replaced oldID in the meantime, so the export it replaced isn't lost.
+func replaceExportFileID(s *xorm.Session, userID, oldID, newID int64) error {
+	var current builder.Cond = builder.Eq{"export_file_id": oldID}
+	if oldID == 0 {
+		current = builder.Or(current, builder.IsNull{"export_file_id"})
+	}
+	updated, err := s.
+		Where("id = ?", userID).
+		And(current).
+		Cols("export_file_id").
+		Update(&user.User{ExportFileID: newID})
+	if err != nil {
+		return err
+	}
+	if updated == 0 {
+		return fmt.Errorf("export file of user %d changed during the export", userID)
+	}
+	return nil
 }
 
 // Only logs errors: the caller's change is already committed.
