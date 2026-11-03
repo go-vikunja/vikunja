@@ -960,6 +960,22 @@
                             ]
                         }
                     ]
+                },
+                {
+                    "key": "teamsync",
+                    "comment": "What happens to the webhooks and link shares of a user who loses project access because OpenID or LDAP team sync removed them from a team. Nobody can be asked, since sync runs during login.",
+                    "children": [
+                        {
+                            "key": "transferwebhooks",
+                            "default_value": "false",
+                            "comment": "If true, the user's webhooks in projects they lost access to are transferred to each project's owner and keep firing. If false, they are deleted."
+                        },
+                        {
+                            "key": "revokelinkshares",
+                            "default_value": "false",
+                            "comment": "If true, link shares the user created in projects they lost access to are deleted. Link shares keep working after their creator loses access, so enable this if team removal usually means offboarding."
+                        }
+                    ]
                 }
             ]
         },
