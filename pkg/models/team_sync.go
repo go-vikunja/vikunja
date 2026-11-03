@@ -146,7 +146,7 @@ func removeUserFromTeams(s *xorm.Session, u *user.User, teamIDs []int64) error {
 	if err != nil {
 		return err
 	}
-	return cleanupAfterProjectAccessLoss(s, u.ID, projectIDs)
+	return cleanupAfterProjectAccessLoss(s, u.ID, projectIDs, teamSyncAccessLossCleanup())
 }
 
 // getOrCreateTeamsByIssuer returns a slice of teams which were generated from the external provider data.

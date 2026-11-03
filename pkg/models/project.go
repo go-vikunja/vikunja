@@ -93,6 +93,8 @@ type Project struct {
 
 	LastPurgedAt time.Time `xorm:"null" json:"-"`
 
+	AccessLossCleanup AccessLossCleanup `xorm:"-" json:"-"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
@@ -1283,6 +1285,11 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	if parentChanged {
 		err = moveProjectAncestors(s, project.ID, project.parentID())
+		if err != nil {
+			return err
+		}
+
+		err = cleanupAfterProjectMove(s, project.ID, project.AccessLossCleanup)
 		if err != nil {
 			return err
 		}
