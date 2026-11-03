@@ -172,7 +172,5 @@ func SendMail(m *Mail, lang string) error {
 		return err
 	}
 
-	mail.SendMail(opts)
-
-	return nil
+	return mail.SendMail(opts)
 }
