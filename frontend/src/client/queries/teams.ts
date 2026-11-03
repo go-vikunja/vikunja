@@ -7,6 +7,7 @@ import {
 import {teamsList, teamsRead, teamsCreate, teamsUpdate, teamsDelete, teamsMembersAdd, teamsMembersRemove, teamsMembersToggleAdmin} from '@/client/generated'
 import type {Team, TeamReadBody, TeamWritable, TeamMemberWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
+import {toastUnlessOutsideWebhooksConflict} from './outsideWebhooks'
 import {
 	PICKER_PAGE_SIZE,
 	removeFromPages,
@@ -110,12 +111,17 @@ export function updateTeamMutationOptions() {
 	})
 }
 
+type RemoveAccessInput = {clearOutsideWebhooks?: boolean}
+
 export function deleteTeamMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (id: number) => { await teamsDelete({path: {id}}) },
-		onSuccess: (_data, id, client) => removeCachedTeam(client, id),
-		onSettled: (_id, client) => invalidateTeams(client),
+		mutationFn: async ({id, clearOutsideWebhooks}: {id: number} & RemoveAccessInput) => {
+			await teamsDelete({path: {id}, query: {clear_outside_webhooks: clearOutsideWebhooks}})
+		},
+		onSuccess: (_data, {id}, client) => removeCachedTeam(client, id),
+		onSettled: (_input, client) => invalidateTeams(client),
 		successMessage: () => i18n.global.t('team.edit.delete.success'),
+		toastError: toastUnlessOutsideWebhooksConflict,
 	})
 }
 
@@ -137,8 +143,8 @@ export function addTeamMemberMutationOptions() {
 	})
 }
 
-async function removeTeamMember({teamId, username}: MemberInput) {
-	await teamsMembersRemove({path: {team: teamId, user: username}})
+async function removeTeamMember({teamId, username, clearOutsideWebhooks}: MemberInput & RemoveAccessInput) {
+	await teamsMembersRemove({path: {team: teamId, user: username}, query: {clear_outside_webhooks: clearOutsideWebhooks}})
 }
 
 export function removeTeamMemberMutationOptions() {
@@ -147,6 +153,7 @@ export function removeTeamMemberMutationOptions() {
 		onSuccess: (_data, {teamId, username}, client) => updateCachedTeam(client, teamId, team => ({...team, members: team.members?.filter(member => member.username !== username)})),
 		onSettled: ({teamId}, client) => invalidateMembership(client, teamId),
 		successMessage: () => i18n.global.t('team.edit.deleteUser.success'),
+		toastError: toastUnlessOutsideWebhooksConflict,
 	})
 }
 
@@ -156,6 +163,7 @@ export function leaveTeamMutationOptions() {
 		onSuccess: (_data, {teamId}, client) => client.removeQueries({queryKey: teamKeys.detail(teamId), exact: true}),
 		onSettled: (_input, client) => invalidateMembership(client),
 		successMessage: () => i18n.global.t('team.edit.leave.success'),
+		toastError: toastUnlessOutsideWebhooksConflict,
 	})
 }
 

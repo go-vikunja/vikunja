@@ -1,5 +1,7 @@
 import {QueryClient} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {ApiError} from '@/client/problem'
+import {error} from '@/message'
 import {projectKeys} from './projects'
 
 const sdk = vi.hoisted(() => ({projectUsersList: vi.fn(), projectUsersCreate: vi.fn(), projectUsersUpdate: vi.fn(), projectUsersDelete: vi.fn(), projectTeamsList: vi.fn(), projectTeamsCreate: vi.fn(), projectTeamsUpdate: vi.fn(), projectTeamsDelete: vi.fn()}))
@@ -76,5 +78,20 @@ describe('project shares', () => {
 		await client.getMutationCache().build(client, deleteProjectTeamShareMutationOptions()).execute({projectId: 1, teamId: 7})
 		expect(client.getQueryData(projectShareKeys.users(1))).toEqual([{username: 'alex'}])
 		expect(client.getQueryData(projectShareKeys.teams(1))).toEqual([{id: 8}])
+	})
+
+	it('sends the outside-webhooks decision and leaves the conflict to the caller', async () => {
+		client.setQueryData(projectShareKeys.users(1), [{username: 'sam'}])
+		sdk.projectUsersDelete.mockRejectedValueOnce(new ApiError({status: 409, detail: 'confirm', code: 3018}))
+		const remove = (clearOutsideWebhooks?: boolean) => client.getMutationCache().build(client, deleteProjectUserShareMutationOptions()).execute({projectId: 1, username: 'sam', clearOutsideWebhooks})
+
+		await expect(remove()).rejects.toBeInstanceOf(ApiError)
+		expect(error).not.toHaveBeenCalled()
+		expect(client.getQueryData(projectShareKeys.users(1))).toEqual([{username: 'sam'}])
+
+		sdk.projectUsersDelete.mockResolvedValueOnce({})
+		await remove(false)
+		expect(sdk.projectUsersDelete).toHaveBeenLastCalledWith({path: {project: 1, user: 'sam'}, query: {clear_outside_webhooks: false}})
+		expect(client.getQueryData(projectShareKeys.users(1))).toEqual([])
 	})
 })

@@ -59,6 +59,7 @@
 				</div>
 			</div>
 		</template>
+		<OutsideWebhooksModal :prompt="outsideWebhooksPrompt" />
 	</CreateEdit>
 </template>
 
@@ -72,6 +73,7 @@ import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FormField from '@/components/input/FormField.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
+import OutsideWebhooksModal from '@/components/sharing/OutsideWebhooksModal.vue'
 
 import type {ProjectResponse} from '@/client/queries/projects'
 import {useUpdateProjectMutation} from '@/client/queries/projects'
@@ -80,6 +82,7 @@ import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 import {useProject} from '@/composables/useProject'
 import {useGoBack} from '@/composables/useGoBack'
+import {useOutsideWebhooksConfirmation} from '@/composables/useOutsideWebhooksConfirmation'
 
 import {useTitle} from '@/composables/useTitle'
 import {PERMISSIONS} from '@/constants/permissions'
@@ -97,6 +100,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const {project, isLoaded, isLoading, error: loadError} = useProject(() => props.projectId)
 const updateProject = useUpdateProjectMutation(t('project.edit.success'))
+const {prompt: outsideWebhooksPrompt, run: withOutsideWebhooks} = useOutsideWebhooksConfirmation()
 
 const parentProject = ref<ProjectResponse | null>(null)
 const parentProjectChanged = ref(false)
@@ -147,7 +151,10 @@ async function save() {
 		if (parentProjectChanged.value) {
 			project.value.parent_project_id = parentProject.value?.id ?? 0
 		}
-		await updateProject.mutateAsync(project.value)
+		const saved = await withOutsideWebhooks(clearOutsideWebhooks => updateProject.mutateAsync({...project.value, clearOutsideWebhooks}))
+		if (!saved) {
+			return
+		}
 		useBaseStore().setCurrentProject(project.value)
 		goBack()
 	} finally {

@@ -17,7 +17,7 @@ export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(o
 	onSuccess?: (data: TData, input: TInput, client: QueryClient, optimistic: TOptimistic) => void
 	onSettled?: (input: TInput, client: QueryClient, optimistic: TOptimistic) => Promise<unknown>
 	successMessage?: (data: TData, input: TInput) => string | undefined
-	toastError?: (input: TInput) => boolean
+	toastError?: (input: TInput, cause: unknown) => boolean
 }) {
 	return mutationOptions({
 		onMutate: async (input: TInput, {client}) => {
@@ -48,7 +48,7 @@ export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(o
 			for (const [queryKey, previous] of context.previous) {
 				if (previous !== undefined) client.setQueryData(queryKey, previous)
 			}
-			if (!isRequestContextAbort(cause) && (options.toastError?.(input) ?? true)) error(cause)
+			if (!isRequestContextAbort(cause) && (options.toastError?.(input, cause) ?? true)) error(cause)
 		},
 		onSettled: async (_data, cause, input, context, {client}) => {
 			if (context && isClientRequestContextCurrent(context.request) && !isRequestContextAbort(cause)) {

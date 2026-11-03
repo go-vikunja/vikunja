@@ -31,6 +31,7 @@
 			/>
 		</template>
 	</draggable>
+	<OutsideWebhooksModal :prompt="outsideWebhooksPrompt" />
 </template>
 
 <script lang="ts" setup>
@@ -39,12 +40,14 @@ import {draggableFor} from '@/components/base/Draggable'
 import type {SortableEvent} from 'sortablejs'
 
 import ProjectsNavigationItem from '@/components/home/ProjectsNavigationItem.vue'
+import OutsideWebhooksModal from '@/components/sharing/OutsideWebhooksModal.vue'
 
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {useUpdateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
 import {useProjects} from '@/composables/useProjects'
 import {useProjectDragState} from '@/composables/useProjectDragState'
+import {useOutsideWebhooksConfirmation} from '@/composables/useOutsideWebhooksConfirmation'
 
 const props = defineProps<{
 	modelValue?: ProjectResponse[],
@@ -62,6 +65,7 @@ const {isDraggingProject} = useProjectDragState()
 
 const projectList = useProjects()
 const updateMutation = useUpdateProjectMutation()
+const {prompt: outsideWebhooksPrompt, run: withOutsideWebhooks} = useOutsideWebhooksConfirmation()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
@@ -120,12 +124,15 @@ async function saveProjectPosition(e: SortableEvent) {
 	)
 
 	try {
-		await updateMutation.mutateAsync({
+		const saved = await withOutsideWebhooks(clearOutsideWebhooks => updateMutation.mutateAsync({
 			...project,
 			position,
 			parent_project_id: parentProjectId,
-		})
-		emit('update:modelValue', availableProjects.value)
+			clearOutsideWebhooks,
+		}))
+		if (saved) {
+			emit('update:modelValue', availableProjects.value)
+		}
 	} finally {
 		projectUpdating.value[project.id] = false
 	}

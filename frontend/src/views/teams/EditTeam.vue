@@ -185,6 +185,8 @@
 				<ProjectAccessCleanupList :intro="$t('team.edit.deleteUser.cleanupText')" />
 			</template>
 		</Modal>
+
+		<OutsideWebhooksModal :prompt="outsideWebhooksPrompt" />
 	</div>
 </template>
 
@@ -195,12 +197,14 @@ import {useRoute, useRouter} from 'vue-router'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
 import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
+import OutsideWebhooksModal from '@/components/sharing/OutsideWebhooksModal.vue'
 import EditTeamForm from '@/components/teams/EditTeamForm.vue'
 import {getDisplayName} from '@/helpers/user'
 import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
 import {useTeam} from '@/composables/useTeams'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {useOutsideWebhooksConfirmation} from '@/composables/useOutsideWebhooksConfirmation'
 import {PERMISSIONS} from '@/constants/permissions'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
@@ -222,6 +226,7 @@ const addMemberMutation = useAddTeamMemberMutation()
 const removeMemberMutation = useRemoveTeamMemberMutation()
 const leaveMutation = useLeaveTeamMutation()
 const toggleAdminMutation = useToggleTeamMemberAdminMutation()
+const {prompt: outsideWebhooksPrompt, run: withOutsideWebhooks} = useOutsideWebhooksConfirmation()
 const teamLoading = computed(() => isFetching.value || updateMutation.isPending.value || deleteMutation.isPending.value)
 const showTeamLoading = useDelayedLoading(teamLoading)
 const membersLoading = computed(() => addMemberMutation.isPending.value || removeMemberMutation.isPending.value || toggleAdminMutation.isPending.value)
@@ -242,8 +247,9 @@ function save(draft: Required<TeamWritable>) {
 }
 
 async function deleteTeam() {
+	const id = teamId.value
 	try {
-		await deleteMutation.mutateAsync(teamId.value)
+		if (!await withOutsideWebhooks(clearOutsideWebhooks => deleteMutation.mutateAsync({id, clearOutsideWebhooks}))) return
 	} catch {
 		return
 	} finally {
@@ -252,13 +258,12 @@ async function deleteTeam() {
 	await router.push({name: 'teams.index'})
 }
 
-function deleteMember() {
-	if (!memberToDelete.value?.username) return
-	removeMemberMutation.mutate({teamId: teamId.value, username: memberToDelete.value.username}, {
-		onSettled: () => {
-			showUserDeleteModal.value = false
-		},
-	})
+async function deleteMember() {
+	const username = memberToDelete.value?.username
+	if (!username) return
+	const id = teamId.value
+	await withOutsideWebhooks(clearOutsideWebhooks => removeMemberMutation.mutateAsync({teamId: id, username, clearOutsideWebhooks})).catch(() => {})
+	showUserDeleteModal.value = false
 }
 
 async function addUser() {
@@ -283,9 +288,11 @@ function findUser(query: string) {
 }
 
 async function leave() {
-	if (!userInfo.value?.username) return
+	const username = userInfo.value?.username
+	if (!username) return
+	const id = teamId.value
 	try {
-		await leaveMutation.mutateAsync({teamId: teamId.value, username: userInfo.value.username})
+		if (!await withOutsideWebhooks(clearOutsideWebhooks => leaveMutation.mutateAsync({teamId: id, username, clearOutsideWebhooks}))) return
 	} catch {
 		return
 	} finally {

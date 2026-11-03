@@ -45,6 +45,8 @@ type ProjectUser struct {
 	// A timestamp when this relation was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this relation was last updated. You cannot change this value."`
 
+	OutsideWebhooks OutsideWebhooks `xorm:"-" json:"-"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
@@ -165,7 +167,7 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
-	err = cleanupAfterProjectAccessLoss(s, lu.UserID, []int64{lu.ProjectID})
+	err = cleanupAfterProjectAccessLoss(s, lu.UserID, []int64{lu.ProjectID}, lu.OutsideWebhooks)
 	if err != nil {
 		return err
 	}

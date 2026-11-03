@@ -530,6 +530,12 @@
           "webhooks": "webhooks you created"
         }
       },
+      "outsideWebhooks": {
+        "title": "Delete webhooks?",
+        "text": "{count} webhook was created by someone who loses access through this change. Kept webhooks stop sending events until their creator has access again. | {count} webhooks were created by people who lose access through this change. Kept webhooks stop sending events until their creators have access again.",
+        "delete": "Delete webhooks",
+        "keep": "Keep webhooks"
+      },
       "permission": {
         "title": "Permission",
         "read": "Read only",
@@ -1607,6 +1613,7 @@
     "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
     "3016": "The parent project is archived. Un-archive the parent project first.",
     "3017": "The default project must be a project you can write to.",
+    "3018": "This would delete {count} webhooks of people who lose access. Choose whether to delete or keep them.",
     "4001": "The task title cannot be empty.",
     "4002": "The task does not exist.",
     "4003": "All bulk editing tasks must belong to the same project.",

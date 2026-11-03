@@ -66,7 +66,7 @@ type ProjectDraft = Required<Pick<ProjectWritable,
 	'position'
 >>
 
-type UpdateProjectInput = ProjectDraft & {id: number}
+type UpdateProjectInput = ProjectDraft & {id: number, clearOutsideWebhooks?: boolean}
 
 type DuplicateProjectInput = {
 	projectId: number
@@ -297,16 +297,16 @@ export function createProjectMutationOptions() {
 
 export function updateProjectMutationOptions(successMessage?: string) {
 	return contextMutationOptions({
-		mutationFn: async ({id, ...project}: UpdateProjectInput) => {
+		mutationFn: async ({id, clearOutsideWebhooks, ...project}: UpdateProjectInput) => {
 			const {data} = await projectsUpdate({
 				path: {id},
-				body: projectBody(project),
+				body: {...projectBody(project), clear_outside_webhooks: clearOutsideWebhooks},
 			})
 			return normalizeProject({...project, ...data})
 		},
 		optimistic: {
 			queryKeys: ({id}) => [projectKeys.list(), projectKeys.detail(id)],
-			update: ({id, ...project}, client) => {
+			update: ({id, clearOutsideWebhooks: _clearOutsideWebhooks, ...project}, client) => {
 				const previous = getCachedProject(id, client)
 				const refetchList = !previous
 					|| previous.is_archived !== project.is_archived

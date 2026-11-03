@@ -41,7 +41,7 @@ Layering, per feature `foo`:
 
 Rules:
 
-- Mutations use `contextMutationOptions` (`client/queries/contextMutation.ts`). It drops `onSuccess`/`onError`/ `onSettled` once the request context changed, toasts failures unless `toastError(input)` returns false, and its `optimistic` option does the cancel, snapshot and rollback. `toastError` sees the input, not the error, so it cannot suppress a single status.
+- Mutations use `contextMutationOptions` (`client/queries/contextMutation.ts`). It drops `onSuccess`/`onError`/ `onSettled` once the request context changed, toasts failures unless `toastError(input, cause)` returns false, and its `optimistic` option does the cancel, snapshot and rollback.
 - Failed queries toast through `QueryCache.onError` in `client/queryClient.ts`; cancellations and request-context aborts are skipped. A query whose consumer renders its own error state sets `meta: {handlesError: true}`, or the user gets both. Mutations are not covered there.
 - `mutationFn` shapes input, calls the generated client, returns the narrowed entity. No separate `createFoo` wrapper unless something else calls it. The client is configured with `throwOnError: true`, so failures throw; don't add `error` checks.
 - All cache writes (`setQueryData`, `invalidateQueries`, `cancelQueries`) live in mutation option callbacks. Use the `client` passed in the callback context, not the `queryClient` singleton. Never write to the cache from a plain exported function, a store action, or a socket handler.

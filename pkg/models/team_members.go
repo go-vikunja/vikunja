@@ -126,7 +126,7 @@ func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	err = cleanupAfterProjectAccessLoss(s, tm.UserID, projectIDs)
+	err = cleanupAfterProjectAccessLoss(s, tm.UserID, projectIDs, tm.OutsideWebhooks)
 	if err != nil {
 		return err
 	}

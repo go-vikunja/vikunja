@@ -105,6 +105,17 @@ describe('contextMutationOptions', () => {
 		})).rejects.toThrow('denied')
 		expect(error).not.toHaveBeenCalled()
 	})
+
+	it('lets toastError decide by the error', async () => {
+		const cause = new Error('conflict')
+		const toastError = vi.fn(() => false)
+		await expect(execute({
+			mutationFn: async () => { throw cause },
+			toastError,
+		})).rejects.toBe(cause)
+		expect(toastError).toHaveBeenCalledWith(1, cause)
+		expect(error).not.toHaveBeenCalled()
+	})
 })
 
 describe('contextMutationOptions optimistic updates', () => {

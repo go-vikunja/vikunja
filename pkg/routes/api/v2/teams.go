@@ -76,10 +76,11 @@ func RegisterTeamRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "teams-delete",
 		Summary:     "Delete a team",
-		Description: "Deletes a team and revokes the access it granted to all of its members. Only a team admin may delete it.",
+		Description: "Deletes a team and revokes the access it granted to all of its members. Only a team admin may delete it. Members who lose access to a project have their task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks there removed.",
 		Method:      http.MethodDelete,
 		Path:        "/teams/{id}",
 		Tags:        tags,
+		Responses:   outsideWebhooksResponses(api),
 	}, teamsDelete)
 }
 
@@ -176,13 +177,14 @@ func teamsUpdate(ctx context.Context, in *struct {
 }
 
 func teamsDelete(ctx context.Context, in *struct {
-	ID int64 `path:"id"`
+	ID                   int64                     `path:"id"`
+	ClearOutsideWebhooks clearOutsideWebhooksParam `query:"clear_outside_webhooks"`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.DoDelete(ctx, &models.Team{ID: in.ID}, a); err != nil {
+	if err := handler.DoDelete(ctx, &models.Team{ID: in.ID, OutsideWebhooks: in.ClearOutsideWebhooks.option()}, a); err != nil {
 		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil

@@ -45,10 +45,11 @@ func RegisterTeamMemberRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "teams-members-remove",
 		Summary:     "Remove a member from a team",
-		Description: "Removes a user from a team, revoking the access the team granted them. A team admin may remove anyone; a member may remove themselves. The last member of a team cannot be removed.",
+		Description: "Removes a user from a team, revoking the access the team granted them. A team admin may remove anyone; a member may remove themselves. The last member of a team cannot be removed. If the user loses access to a project, their task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks there are removed.",
 		Method:      http.MethodDelete,
 		Path:        "/teams/{team}/members/{user}",
 		Tags:        tags,
+		Responses:   outsideWebhooksResponses(api),
 	}, teamMembersRemove)
 
 	Register(api, huma.Operation{
@@ -80,14 +81,15 @@ func teamMembersAdd(ctx context.Context, in *struct {
 }
 
 func teamMembersRemove(ctx context.Context, in *struct {
-	TeamID   int64  `path:"team"`
-	Username string `path:"user" doc:"The username of the member to remove."`
+	TeamID               int64                     `path:"team"`
+	Username             string                    `path:"user" doc:"The username of the member to remove."`
+	ClearOutsideWebhooks clearOutsideWebhooksParam `query:"clear_outside_webhooks"`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	tm := &models.TeamMember{TeamID: in.TeamID, Username: in.Username}
+	tm := &models.TeamMember{TeamID: in.TeamID, Username: in.Username, OutsideWebhooks: in.ClearOutsideWebhooks.option()}
 	if err := handler.DoDelete(ctx, tm, a); err != nil {
 		return nil, translateDomainError(err)
 	}

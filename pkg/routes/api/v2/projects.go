@@ -67,10 +67,11 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-update",
 		Summary:     "Update a project",
-		Description: "Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update.",
+		Description: "Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update. Reparenting removes the task assignments, subscriptions and, depending on clear_outside_webhooks, webhooks of users who lose access through the move.",
 		Method:      http.MethodPut,
 		Path:        "/projects/{id}",
 		Tags:        tags,
+		Responses:   outsideWebhooksResponses(api),
 	}, projectsUpdate)
 
 	Register(api, huma.Operation{
@@ -118,6 +119,8 @@ func projectsList(ctx context.Context, in *struct {
 // list route), so the embed just reuses it rather than declaring a sibling.
 type projectReadBody struct {
 	models.Project
+	// A body field, not a query param: AutoPatch drops the query string on its GET→PUT round trip.
+	ClearOutsideWebhooks *bool `json:"clear_outside_webhooks,omitempty" nullable:"true" writeOnly:"true" doc:"Only read when the update moves the project. What to do with webhooks created by users who lose access to the project or its child projects: true deletes them, false keeps them. Their task assignments and subscriptions are removed either way. When omitted or null and any such webhook exists, the request fails with 409 and code 3018 without changing anything."`
 }
 
 func projectsRead(ctx context.Context, in *struct {
@@ -175,6 +178,7 @@ func projectsUpdate(ctx context.Context, in *struct {
 	}
 	project := &in.Body.Project
 	project.ID = in.ID // URL wins over body
+	project.OutsideWebhooks = models.OutsideWebhooksFromChoice(in.Body.ClearOutsideWebhooks)
 	if err := convertToHTML(ctx, &project.Description); err != nil {
 		return nil, translateDomainError(err)
 	}

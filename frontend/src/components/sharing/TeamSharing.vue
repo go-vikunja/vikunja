@@ -13,7 +13,7 @@
 		:share-name="team => team.name ?? ''"
 		:add="(projectId, team) => createShare.mutateAsync({projectId, teamId: team.id})"
 		:update-permission="(projectId, share, permission) => updateShare.mutateAsync({projectId, teamId: share.id, permission})"
-		:remove="(projectId, share) => deleteShare.mutateAsync({projectId, teamId: share.id})"
+		:remove="(projectId, share, clearOutsideWebhooks) => deleteShare.mutateAsync({projectId, teamId: share.id, clearOutsideWebhooks})"
 	>
 		<template #candidate="{candidate}">
 			<span class="search-result">{{ candidate.name }}</span>
