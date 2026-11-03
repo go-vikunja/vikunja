@@ -57,20 +57,18 @@
 								<span class="icon is-small">
 									<Icon icon="lock" />
 								</span>
-								{{ $t('project.share.permission.admin') }}
 							</template>
 							<template v-else-if="share.permission === PERMISSIONS.READ_WRITE">
 								<span class="icon is-small">
 									<Icon icon="pen" />
 								</span>
-								{{ $t('project.share.permission.readWrite') }}
 							</template>
 							<template v-else>
 								<span class="icon is-small">
 									<Icon icon="users" />
 								</span>
-								{{ $t('project.share.permission.read') }}
 							</template>
+							{{ sharePermissionLabel(share.permission) }}
 						</td>
 						<td
 							v-if="userIsAdmin"
@@ -144,7 +142,7 @@
 
 <script setup lang="ts" generic="Candidate extends Record<string, unknown> & {id?: number}, Share extends {id?: number, permission?: number}">
 import {computed, ref, watch, type Ref} from 'vue'
-import {normalizeSharePermission} from '@/client/queries/projectShares'
+import {normalizeSharePermission, sharePermissionLabel} from '@/client/queries/projectShares'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Multiselect from '@/components/input/Multiselect.vue'

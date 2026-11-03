@@ -18,6 +18,14 @@ export function normalizeSharePermission(permission: unknown): Permission {
 	return permission === PERMISSIONS.ADMIN || permission === PERMISSIONS.READ_WRITE ? permission : PERMISSIONS.READ
 }
 
+export function sharePermissionLabel(permission: unknown): string {
+	switch (normalizeSharePermission(permission)) {
+		case PERMISSIONS.ADMIN: return i18n.global.t('project.share.permission.admin')
+		case PERMISSIONS.READ_WRITE: return i18n.global.t('project.share.permission.readWrite')
+		default: return i18n.global.t('project.share.permission.read')
+	}
+}
+
 async function invalidateShares(client: QueryClient, projectId: number, kind: 'users' | 'teams') {
 	await Promise.all([
 		client.invalidateQueries({queryKey: projectShareKeys[kind](projectId)}),

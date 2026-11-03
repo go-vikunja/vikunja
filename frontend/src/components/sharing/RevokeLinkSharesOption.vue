@@ -11,7 +11,7 @@
 				data-cy="revocable-link-share"
 			>
 				<span :class="{'is-italic': !share.name}">{{ share.name || $t('project.share.links.noName') }}</span>
-				· {{ permissionLabel(share.permission) }}
+				· {{ sharePermissionLabel(share.permission) }}
 				· {{ $t('project.share.accessCleanup.linkShares.created', {date: formatDateShort(share.created)}) }}
 			</li>
 		</ul>
@@ -22,11 +22,9 @@
 </template>
 
 <script setup lang="ts">
-import {useI18n} from 'vue-i18n'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import type {RevocableLinkShare} from '@/client/queries/linkShares'
-import {normalizeSharePermission} from '@/client/queries/projectShares'
-import {PERMISSIONS} from '@/constants/permissions'
+import {sharePermissionLabel} from '@/client/queries/projectShares'
 import {formatDateShort} from '@/helpers/time/formatDate'
 
 defineProps<{
@@ -34,16 +32,6 @@ defineProps<{
 }>()
 
 const revoke = defineModel<boolean>('revoke', {required: true})
-
-const {t} = useI18n({useScope: 'global'})
-
-function permissionLabel(permission: number | undefined) {
-	switch (normalizeSharePermission(permission)) {
-		case PERMISSIONS.ADMIN: return t('project.share.permission.admin')
-		case PERMISSIONS.READ_WRITE: return t('project.share.permission.readWrite')
-		default: return t('project.share.permission.read')
-	}
-}
 </script>
 
 <style lang="scss" scoped>
