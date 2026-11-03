@@ -555,6 +555,25 @@ describe('project drafts and cache mutations', () => {
 		expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
 	})
 
+	it('sends the outside-webhooks decision without caching it', async () => {
+		const cached = serverProject({id: 1, parent_project_id: 2})
+		queryClient.setQueryData(listKey, {projects: [cached], favoriteProject: null, savedFilterProjects: []})
+		queryClient.setQueryData(projectKeys.detail(1), cached)
+		let optimistic: unknown
+		sdk.projectsUpdate.mockImplementation(async () => {
+			optimistic = queryClient.getQueryData(projectKeys.detail(1))
+			return {data: serverProject({id: 1, parent_project_id: 3})}
+		})
+
+		await updateProject({...cached, parent_project_id: 3, clearOutsideWebhooks: false})
+
+		expect(sdk.projectsUpdate.mock.calls[0][0].body).toMatchObject({parent_project_id: 3, clear_outside_webhooks: false})
+		expect(optimistic).toMatchObject({parent_project_id: 3})
+		expect(optimistic).not.toHaveProperty('clearOutsideWebhooks')
+		expect(queryClient.getQueryData(projectKeys.detail(1))).not.toHaveProperty('clearOutsideWebhooks')
+		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects[0]).not.toHaveProperty('clearOutsideWebhooks')
+	})
+
 	it('preserves list-only permission and views when the update response is sparse', async () => {
 		const views = [{id: 12, project_id: 1, title: 'List', view_kind: 'list'}] as const
 		const cached = serverProject({id: 1, title: 'Before', max_permission: 2, views: [...views]})
