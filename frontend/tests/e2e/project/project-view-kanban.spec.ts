@@ -199,6 +199,30 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).toContainText(tasks[0].title)
 	})
 
+	test('Expands a collapsed bucket while dragging a task over it', async ({authenticatedPage: page}) => {
+		const tasks = await createTaskWithBuckets(buckets)
+		await page.goto('/projects/1/4')
+
+		const targetBucket = page.locator(`.kanban .bucket[data-bucket-id="${buckets[1].id}"]`)
+		await targetBucket.locator('.bucket-header .dropdown.options .dropdown-trigger').click()
+		await targetBucket.locator('.bucket-header .dropdown-item').filter({hasText: 'Collapse'}).click()
+		await expect(targetBucket).toHaveClass(/is-collapsed/)
+
+		await page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title}).first().hover()
+		await page.mouse.down()
+		const headerBox = await targetBucket.locator('.bucket-header').boundingBox()
+		await page.mouse.move(headerBox!.x + headerBox!.width / 2, headerBox!.y + headerBox!.height / 2, {steps: 10})
+		await expect(targetBucket).not.toHaveClass(/is-collapsed/)
+
+		const targetBox = await targetBucket.locator('.tasks').boundingBox()
+		await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + 10, {steps: 10})
+		await page.mouse.up()
+
+		await expect(targetBucket.locator('.tasks')).toContainText(tasks[0].title)
+		await page.reload()
+		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).toContainText(tasks[0].title)
+	})
+
 	test('Scrolls the board while dragging a task to a bucket off screen', async ({authenticatedPage: page}) => {
 		const moreBuckets = await BucketFactory.create(6, {
 			id: (i: number) => buckets.length + i,
