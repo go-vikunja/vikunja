@@ -21,6 +21,9 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -62,6 +65,20 @@ func TestHumaTeamProjects(t *testing.T) {
 		// user6 owns projects 28/32/33/34 but is not in team 1.
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1/projects", "", humaTokenFor(t, &testuser6), "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+	t.Run("Forbidden for link shares", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{ID: 1, Hash: "test", ProjectID: 1, Permission: models.PermissionRead})
+		require.NoError(t, err)
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1/projects", "", token, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+	t.Run("Unauthenticated", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1/projects", "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
 	})
 	t.Run("Nonexistent team", func(t *testing.T) {
 		e, err := setupTestEnv()
