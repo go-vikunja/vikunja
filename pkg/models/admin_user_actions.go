@@ -133,7 +133,7 @@ func SetUserPasswordAsAdmin(s *xorm.Session, doer *user.User, id int64, newPassw
 		return nil, &user.ErrAccountIsNotLocal{UserID: target.ID}
 	}
 
-	if err := setUserPasswordAndInvalidateSessions(s, target, newPassword); err != nil {
+	if err := SetUserPasswordAndInvalidateSessions(s, target, newPassword); err != nil {
 		return nil, err
 	}
 

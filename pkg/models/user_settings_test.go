@@ -17,9 +17,11 @@
 package models
 
 import (
+	"context"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -52,4 +54,21 @@ func TestChangeUserPassword(t *testing.T) {
 		require.NoError(t, user.CheckUserPassword(u, "newpassword"))
 		db.AssertMissing(t, "sessions", map[string]any{"user_id": 1})
 	})
+}
+
+func TestSetUserPasswordAndInvalidateSessions(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	events.ClearDispatchedEvents()
+	s := db.NewSession()
+	defer s.Close()
+
+	require.NoError(t, SetUserPasswordAndInvalidateSessions(s, &user.User{ID: 2}, "newpassword"))
+	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
+
+	u, err := user.GetUserByID(s, 2)
+	require.NoError(t, err)
+	require.NoError(t, user.CheckUserPassword(u, "newpassword"))
+	db.AssertMissing(t, "sessions", map[string]any{"user_id": 2})
+	assert.Equal(t, &SessionsRevokedEvent{UserID: 2}, singleDispatchedEvent[*SessionsRevokedEvent](t))
 }
