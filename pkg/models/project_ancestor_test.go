@@ -163,6 +163,26 @@ func TestProjectAncestorsOnMove(t *testing.T) {
 	})
 }
 
+func TestProjectAncestorsMoveTooLarge(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	previous := maxProjectMoveAncestorRows
+	t.Cleanup(func() { maxProjectMoveAncestorRows = previous })
+
+	// 12 has a subtree of three (12, 25, 26); 28 is a top level project, so the move needs 3 rows.
+	before := projectAncestorsOf(t, s, 12, 25, 26)
+	maxProjectMoveAncestorRows = 2
+	err := moveProjectAncestors(s, 12, 28)
+	require.Error(t, err)
+	assert.True(t, IsErrProjectMoveTooLarge(err))
+	assert.ElementsMatch(t, before, projectAncestorsOf(t, s, 12, 25, 26))
+
+	maxProjectMoveAncestorRows = 3
+	require.NoError(t, moveProjectAncestors(s, 12, 28))
+}
+
 func TestProjectAncestorsWithoutClosureRows(t *testing.T) {
 	// 12 -> 27, with 25 and 26 below 12
 	const broken = int64(12)

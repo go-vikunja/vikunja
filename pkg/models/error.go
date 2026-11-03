@@ -648,6 +648,34 @@ func (err *ErrInvalidDefaultProject) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectMoveTooLarge represents an error where moving a project would create too many hierarchy links
+type ErrProjectMoveTooLarge struct {
+	ProjectID       int64
+	MaxAncestorRows int
+}
+
+// IsErrProjectMoveTooLarge checks if an error is ErrProjectMoveTooLarge.
+func IsErrProjectMoveTooLarge(err error) bool {
+	var e *ErrProjectMoveTooLarge
+	return errors.As(err, &e)
+}
+
+func (err *ErrProjectMoveTooLarge) Error() string {
+	return fmt.Sprintf("Project move creates too many ancestor links [ProjectID: %d, MaxAncestorRows: %d]", err.ProjectID, err.MaxAncestorRows)
+}
+
+// ErrCodeProjectMoveTooLarge holds the unique world-error code of this error
+const ErrCodeProjectMoveTooLarge = 3018
+
+// HTTPError holds the http error description
+func (err *ErrProjectMoveTooLarge) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeProjectMoveTooLarge,
+		Message:  "This project has too many child projects to be moved below the chosen parent project.",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
