@@ -4865,6 +4865,10 @@ export type ProjectDuplicateWritable = {
 
 export type ProjectReadBodyWritable = {
     /**
+     * Only read when the update moves the project. If any user would lose access to a project holding webhooks or link shares they created, fail with 409 and code 3018 without changing anything. i18n_params carries the webhooks and link_shares counts.
+     */
+    confirm_access_loss?: boolean;
+    /**
      * The description of the project.
      */
     description?: string;
@@ -4885,6 +4889,10 @@ export type ProjectReadBodyWritable = {
      */
     is_favorite?: boolean;
     /**
+     * Only read when the update moves the project. Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+     */
+    keep_webhooks?: boolean;
+    /**
      * The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission.
      */
     parent_project_id?: number | null;
@@ -4892,6 +4900,10 @@ export type ProjectReadBodyWritable = {
      * The position of this project when listing all projects. See the tasks.position property for how positions work.
      */
     position?: number;
+    /**
+     * Only read when the update moves the project. Delete the link shares created by users who lose access. By default they keep working.
+     */
+    revoke_link_shares?: boolean;
     /**
      * The title of the project. You'll see this in the overview.
      */
@@ -8697,7 +8709,16 @@ export type ProjectTeamsDeleteData = {
         project: number;
         team: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+         */
+        keep_webhooks?: boolean;
+        /**
+         * Delete the link shares created by users who lose access. By default they keep working.
+         */
+        revoke_link_shares?: boolean;
+    };
     url: '/projects/{project}/teams/{team}';
 };
 
@@ -8852,7 +8873,16 @@ export type ProjectUsersDeleteData = {
         project: number;
         user: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+         */
+        keep_webhooks?: boolean;
+        /**
+         * Delete the link shares created by users who lose access. By default they keep working.
+         */
+        revoke_link_shares?: boolean;
+    };
     url: '/projects/{project}/users/{user}';
 };
 
@@ -11009,7 +11039,16 @@ export type TeamsDeleteData = {
     path: {
         id: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+         */
+        keep_webhooks?: boolean;
+        /**
+         * Delete the link shares created by users who lose access. By default they keep working.
+         */
+        revoke_link_shares?: boolean;
+    };
     url: '/teams/{id}';
 };
 
@@ -11176,7 +11215,16 @@ export type TeamsMembersRemoveData = {
          */
         user: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+         */
+        keep_webhooks?: boolean;
+        /**
+         * Delete the link shares created by users who lose access. By default they keep working.
+         */
+        revoke_link_shares?: boolean;
+    };
     url: '/teams/{team}/members/{user}';
 };
 
