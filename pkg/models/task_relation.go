@@ -83,10 +83,10 @@ type TaskRelation struct {
 	// The ID of the "base" task, the task which has a relation to another.
 	TaskID int64 `xorm:"bigint not null" json:"task_id" param:"task" readOnly:"true" doc:"The id of the base task. Set from the URL path; ignored in the request body."`
 	// The ID of the other task, the task which is being related.
-	OtherTaskID int64 `xorm:"bigint not null" json:"other_task_id" param:"otherTask" doc:"The id of the other task this relation points to."`
+	OtherTaskID int64 `xorm:"bigint not null index(other_task_kind)" json:"other_task_id" param:"otherTask" doc:"The id of the other task this relation points to."`
 	// The kind of the relation.
 	// The enum list must stay in sync with RelationKind.isValid() (RelationKindUnknown excluded); the v2 delete route param repeats it.
-	RelationKind RelationKind `xorm:"varchar(50) not null" json:"relation_kind" param:"relationKind" enum:"subtask,parenttask,related,duplicateof,duplicates,blocking,blocked,precedes,follows,copiedfrom,copiedto" doc:"The kind of relation, describing the direction from the base task to the other task (e.g. subtask, blocking, related). The inverse relation is created automatically."`
+	RelationKind RelationKind `xorm:"varchar(50) not null index(other_task_kind)" json:"relation_kind" param:"relationKind" enum:"subtask,parenttask,related,duplicateof,duplicates,blocking,blocked,precedes,follows,copiedfrom,copiedto" doc:"The kind of relation, describing the direction from the base task to the other task (e.g. subtask, blocking, related). The inverse relation is created automatically."`
 
 	CreatedByID int64 `xorm:"bigint not null" json:"-"`
 	// The user who created this relation
