@@ -4,7 +4,17 @@ import {
 	useMutation,
 	type QueryClient,
 } from '@tanstack/vue-query'
-import {teamsList, teamsRead, teamsCreate, teamsUpdate, teamsDelete, teamsMembersAdd, teamsMembersRemove, teamsMembersToggleAdmin} from '@/client/generated'
+import {
+	teamsList,
+	teamsRead,
+	teamsCreate,
+	teamsUpdate,
+	teamsDelete,
+	teamsMembersAdd,
+	teamsMembersRemove,
+	teamsMembersToggleAdmin,
+	teamsProjectsList,
+} from '@/client/generated'
 import type {Team, TeamReadBody, TeamWritable, TeamMemberWritable} from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {
@@ -25,6 +35,8 @@ export const teamKeys = {
 	searches: ['teams', 'search'] as const,
 	search: (search: string, includePublic = false) => [...teamKeys.searches, search, includePublic] as const,
 	detail: (id: number) => ['teams', 'detail', id] as const,
+	adminProjectsAll: ['teams', 'admin-projects'] as const,
+	adminProjects: (id: number) => [...teamKeys.adminProjectsAll, id] as const,
 }
 
 export function createTeamDraft(team: TeamWritable = {}): Required<TeamWritable> {
@@ -67,6 +79,13 @@ export function teamQuery(id: number) {
 	return queryOptions({
 		queryKey: teamKeys.detail(id),
 		queryFn: async ({signal}) => (await teamsRead({path: {id}, signal})).data,
+	})
+}
+
+export function teamAdminProjectsQuery(id: number) {
+	return queryOptions({
+		queryKey: teamKeys.adminProjects(id),
+		queryFn: async ({signal}) => (await teamsProjectsList({path: {team: id}, signal})).data.items ?? [],
 	})
 }
 

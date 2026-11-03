@@ -50,3 +50,22 @@ export function deleteLinkShareMutationOptions() {
 
 export const useCreateLinkShareMutation = () => useSecretMutation(createLinkShareMutationOptions())
 export const useDeleteLinkShareMutation = () => useMutation(deleteLinkShareMutationOptions())
+
+export type RevocableLinkShare = {
+	projectId: number,
+	share: LinkSharing & {id: number},
+}
+
+export function linkSharesCreatedBy(
+	projectId: number,
+	shares: readonly LinkSharing[],
+	userIds: readonly number[],
+): RevocableLinkShare[] {
+	return shares
+		.filter((share): share is LinkSharing & {id: number} => (
+			typeof share.id === 'number'
+			&& share.shared_by?.id !== undefined
+			&& userIds.includes(share.shared_by.id)
+		))
+		.map(share => ({projectId, share}))
+}

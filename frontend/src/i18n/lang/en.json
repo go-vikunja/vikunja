@@ -528,6 +528,11 @@
           "assignments": "your task assignments",
           "subscriptions": "your subscriptions to tasks and projects",
           "webhooks": "webhooks you created"
+        },
+        "linkShares": {
+          "intro": "Removing access does not revoke the link shares they created. Anyone with one of these links keeps access:",
+          "created": "created {date}",
+          "revoke": "Also revoke this link share | Also revoke these link shares"
         }
       },
       "permission": {

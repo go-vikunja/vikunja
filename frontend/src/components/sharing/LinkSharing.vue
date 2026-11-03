@@ -110,21 +110,19 @@
 									<template v-if="s.permission === PERMISSIONS.ADMIN">
 										<span class="icon is-small">
 											<Icon icon="lock" />
-										</span>&nbsp;
-										{{ $t('project.share.permission.admin') }}
+										</span>
 									</template>
 									<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
 										<span class="icon is-small">
 											<Icon icon="pen" />
-										</span>&nbsp;
-										{{ $t('project.share.permission.readWrite') }}
+										</span>
 									</template>
 									<template v-else>
 										<span class="icon is-small">
 											<Icon icon="users" />
-										</span>&nbsp;
-										{{ $t('project.share.permission.read') }}
-									</template>
+										</span>
+									</template>&nbsp;
+									{{ sharePermissionLabel(s.permission) }}
 								</p>
 						
 								<FormField
@@ -202,6 +200,7 @@ import {ref, watch, computed} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 import type {LinkSharing} from '@/client/generated'
 import {linkSharesQuery, createLinkShareDraft, useCreateLinkShareMutation, useDeleteLinkShareMutation} from '@/client/queries/linkShares'
+import {sharePermissionLabel} from '@/client/queries/projectShares'
 import {PERMISSIONS} from '@/constants/permissions'
 import FormField from '@/components/input/FormField.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'

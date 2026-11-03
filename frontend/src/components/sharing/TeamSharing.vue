@@ -14,6 +14,8 @@
 		:add="(projectId, team) => createShare.mutateAsync({projectId, teamId: team.id})"
 		:update-permission="(projectId, share, permission) => updateShare.mutateAsync({projectId, teamId: share.id, permission})"
 		:remove="(projectId, share) => deleteShare.mutateAsync({projectId, teamId: share.id})"
+		:affected-user-ids="team => (team.members ?? [])
+			.flatMap(member => member.id === undefined ? [] : [member.id])"
 	>
 		<template #candidate="{candidate}">
 			<span class="search-result">{{ candidate.name }}</span>

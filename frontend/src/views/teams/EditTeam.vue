@@ -183,21 +183,37 @@
 					{{ $t('team.edit.deleteUser.text2') }}
 				</p>
 				<ProjectAccessCleanupList :intro="$t('team.edit.deleteUser.cleanupText')" />
+				<RevokeLinkSharesOption
+					v-model:revoke="revokeMemberLinkShares"
+					:shares="memberLinkShares"
+				/>
 			</template>
 		</Modal>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
 import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
+import RevokeLinkSharesOption from '@/components/sharing/RevokeLinkSharesOption.vue'
 import EditTeamForm from '@/components/teams/EditTeamForm.vue'
 import {getDisplayName} from '@/helpers/user'
-import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
+import {
+	teamAdminProjectsQuery,
+	useUpdateTeamMutation,
+	useDeleteTeamMutation,
+	useAddTeamMemberMutation,
+	useRemoveTeamMemberMutation,
+	useLeaveTeamMutation,
+	useToggleTeamMemberAdminMutation,
+} from '@/client/queries/teams'
+import {useDeleteLinkShareMutation} from '@/client/queries/linkShares'
+import {useLinkSharesCreatedBy} from '@/composables/useLinkSharesCreatedBy'
 import {useTeam} from '@/composables/useTeams'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
@@ -234,6 +250,22 @@ const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
 const showLeaveModal = ref(false)
 const showMustSelectUserError = ref(false)
+const {data: adminProjects} = useQuery(computed(() => ({
+	...teamAdminProjectsQuery(teamId.value),
+	enabled: showUserDeleteModal.value && userIsAdmin.value,
+})))
+const memberLinkShares = useLinkSharesCreatedBy(
+	() => showUserDeleteModal.value
+		? (adminProjects.value ?? []).flatMap(project => project.id === undefined ? [] : [project.id])
+		: [],
+	() => memberToDelete.value?.id === undefined ? [] : [memberToDelete.value.id],
+)
+const revokeMemberLinkShares = ref(false)
+const deleteLinkShare = useDeleteLinkShareMutation()
+const removingMember = ref(false)
+watch(showUserDeleteModal, () => {
+	revokeMemberLinkShares.value = false
+})
 const title = computed(() => t('team.edit.title', {team: team.value?.name ?? ''}))
 useTitle(title)
 
@@ -252,13 +284,22 @@ async function deleteTeam() {
 	await router.push({name: 'teams.index'})
 }
 
-function deleteMember() {
-	if (!memberToDelete.value?.username) return
-	removeMemberMutation.mutate({teamId: teamId.value, username: memberToDelete.value.username}, {
-		onSettled: () => {
-			showUserDeleteModal.value = false
-		},
-	})
+async function deleteMember() {
+	if (!memberToDelete.value?.username || removingMember.value) return
+	const linkShares = revokeMemberLinkShares.value ? memberLinkShares.value : []
+	removingMember.value = true
+	try {
+		await removeMemberMutation.mutateAsync({teamId: teamId.value, username: memberToDelete.value.username})
+		// Parallel deletes hit DB write contention.
+		for (const {projectId, share} of linkShares) {
+			await deleteLinkShare.mutateAsync({projectId, id: share.id}).catch(() => {})
+		}
+	} catch {
+		// The mutation already toasted the error.
+	} finally {
+		showUserDeleteModal.value = false
+		removingMember.value = false
+	}
 }
 
 async function addUser() {
