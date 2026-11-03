@@ -127,6 +127,22 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 46}, false)
 	})
+	t.Run("removes linked identities", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		db.AssertExists(t, "user_identities", map[string]interface{}{"user_id": 6}, false)
+
+		err := DeleteUser(s, &user.User{ID: 6})
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "user_identities", map[string]interface{}{"user_id": 6})
+		db.AssertExists(t, "user_identities", map[string]interface{}{"user_id": 1}, false)
+	})
 	t.Run("user with no projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

@@ -63,7 +63,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -86,7 +86,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.NotEmpty(t, u.Username)
 		err = s.Commit()
@@ -108,7 +108,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "12345"}
 
-		_, err := getOrCreateUser(s, cl, provider, idToken)
+		_, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.Error(t, err)
 	})
 	t.Run("existing user, different email address", func(t *testing.T) {
@@ -122,7 +122,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -149,7 +149,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		require.NoError(t, err)
@@ -186,7 +186,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromGroupsClaim(cl.Groups)
 		require.Len(t, teamData, 1, "empty group names must be skipped")
@@ -218,7 +218,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", provider.Name)
@@ -300,7 +300,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, idToken.Subject, u.Username, "subject match username")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -320,7 +320,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		// PocketID-style: the subject is an opaque UUID that does not match any local username.
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000011"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -349,7 +349,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000023"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		assert.True(t, user.IsErrAccountIsBot(err))
 		assert.Nil(t, u)
 		assert.NotContains(t, logged(), fallbackWarningMarker)
@@ -367,7 +367,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, idToken.Subject, u.Username, "subject should match username")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -390,7 +390,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, cl.Email, u.Email, "email should match")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -418,7 +418,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -441,7 +441,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -468,7 +468,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "opaque-subject-no-email"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		// Must not have linked an existing local user.
 		require.Error(t, err, "an empty email must not silently link an existing local user")
 		assert.Nil(t, u, "no existing local user should be returned for an empty email claim")
@@ -493,7 +493,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, cl.Email, u.Email, "email should match")
 		assert.Equal(t, idToken.Subject, u.Username, "subject match username")
@@ -519,7 +519,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000011"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
@@ -544,13 +544,107 @@ func TestGetOrCreateUser(t *testing.T) {
 		}
 		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "attacker-subject"}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
 
 		assert.NotEqual(t, 11, int(u.ID), "must not link to user 11 via an unverified email")
 		assert.Equal(t, "https://some.issuer", u.Issuer, "a new separate account should have been created")
+	})
+	t.Run("LinkedIdentity: takes precedence over the fallback", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "user11",
+		}
+		provider := &Provider{
+			EmailFallback:    true,
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "linked-user1"}
+
+		u, linked, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.True(t, linked)
+		assert.Equal(t, int64(1), u.ID)
+	})
+	t.Run("LinkedIdentity: only matches its own issuer", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:             "linked-elsewhere@example.com",
+			PreferredUsername: "linkedElsewhere",
+		}
+		idToken := &oidc.IDToken{Issuer: "https://unrelated.issuer", Subject: "linked-user1"}
+
+		u, linked, err := getOrCreateUser(s, cl, &Provider{}, idToken)
+		require.NoError(t, err)
+		assert.False(t, linked)
+		assert.NotEqual(t, int64(1), u.ID)
+		assert.Equal(t, "https://unrelated.issuer", u.Issuer)
+	})
+	t.Run("LinkedIdentity: bot user is refused", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usersBefore, err := s.Count(&user.User{})
+		require.NoError(t, err)
+
+		cl := &claims{
+			Email:             "idp-bot@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "idpBot",
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "linked-bot"}
+
+		u, linked, err := getOrCreateUser(s, cl, &Provider{}, idToken)
+		require.Error(t, err)
+		var botErr *user.ErrAccountIsBot
+		require.ErrorAs(t, err, &botErr)
+		assert.Equal(t, int64(23), botErr.UserID)
+		assert.False(t, linked)
+		assert.Nil(t, u)
+		usersAfter, err := s.Count(&user.User{})
+		require.NoError(t, err)
+		assert.Equal(t, usersBefore, usersAfter, "no new user should have been created")
+	})
+	t.Run("LinkedIdentity: identity of a deleted user fails instead of creating an account", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&user.Identity{
+			UserID:  9999,
+			Issuer:  "https://some.service.com",
+			Subject: "linked-orphan",
+		})
+		require.NoError(t, err)
+		usersBefore, err := s.Count(&user.User{})
+		require.NoError(t, err)
+
+		cl := &claims{
+			Email:             "idp-orphan@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "idpOrphan",
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "linked-orphan"}
+
+		u, linked, err := getOrCreateUser(s, cl, &Provider{}, idToken)
+		require.Error(t, err)
+		assert.True(t, user.IsErrUserDoesNotExist(err))
+		assert.False(t, linked)
+		assert.Nil(t, u)
+		usersAfter, err := s.Count(&user.User{})
+		require.NoError(t, err)
+		assert.Equal(t, usersBefore, usersAfter, "no new user should have been created")
 	})
 }
 
@@ -594,7 +688,7 @@ func TestFallbackLogsDeprecationWarning(t *testing.T) {
 			Subject: "user11",
 		}
 
-		u, err := getOrCreateUser(s, &claims{}, provider, idToken)
+		u, _, err := getOrCreateUser(s, &claims{}, provider, idToken)
 		require.NoError(t, err)
 		require.Equal(t, int64(11), u.ID)
 
@@ -622,7 +716,7 @@ func TestFallbackLogsDeprecationWarning(t *testing.T) {
 			Subject: "unknown-subject",
 		}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		require.Equal(t, int64(11), u.ID)
 
@@ -652,7 +746,7 @@ func TestFallbackLogsDeprecationWarning(t *testing.T) {
 			Subject: "nobody-subject",
 		}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		require.Equal(t, int64(11), u.ID)
 
@@ -675,7 +769,7 @@ func TestFallbackLogsDeprecationWarning(t *testing.T) {
 			Subject: "user17",
 		}
 
-		u, err := getOrCreateUser(s, &claims{}, provider, idToken)
+		u, _, err := getOrCreateUser(s, &claims{}, provider, idToken)
 		require.NoError(t, err)
 		require.Equal(t, int64(17), u.ID)
 
@@ -704,7 +798,7 @@ func TestFallbackLogsDeprecationWarning(t *testing.T) {
 			Subject: "nobody-subject",
 		}
 
-		u, err := getOrCreateUser(s, cl, provider, idToken)
+		u, _, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		require.Equal(t, "https://some.issuer", u.Issuer)
 
@@ -974,7 +1068,7 @@ func TestGetOrCreateUserLeavesPictureToTheCaller(t *testing.T) {
 	}
 	idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "picture-later"}
 
-	u, err := getOrCreateUser(s, cl, &Provider{}, idToken)
+	u, _, err := getOrCreateUser(s, cl, &Provider{}, idToken)
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 

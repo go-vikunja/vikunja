@@ -207,6 +207,7 @@ func deleteUserInViews(s *xorm.Session, u *user.User, views []*ProjectView) (err
 		{"user_id", &Favorite{}},
 		{"owner_id", &APIToken{}},
 		{"created_by_id", &Webhook{}},
+		{"user_id", &user.Identity{}},
 	}
 
 	for _, entity := range relatedEntities {
