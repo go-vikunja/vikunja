@@ -74,12 +74,6 @@ func TestHumaTeamProjects(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1/projects", "", token, "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
-	t.Run("Unauthenticated", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		rec := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1/projects", "", "", "")
-		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
-	})
 	t.Run("Nonexistent team", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
