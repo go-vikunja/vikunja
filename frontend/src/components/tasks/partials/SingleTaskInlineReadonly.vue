@@ -64,7 +64,7 @@
 				:datetime="formatISO(task.due_date)"
 				class="is-italic"
 			>
-				– {{ $t('task.detail.due', {at: formatDisplayDate(task.due_date)}) }}
+				{{ $t('task.detail.due', {at: formatDisplayDate(task.due_date)}) }}
 			</time>
 		</span>
 
