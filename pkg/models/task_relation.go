@@ -17,9 +17,11 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -280,10 +282,34 @@ func (rel *TaskRelation) create(s *xorm.Session, a web.Auth, checkCycle bool) er
 	return nil
 }
 
-// CreateTaskRelationsForImport checks the hierarchy formed by relations once instead of
-// per relation. Only valid when every task involved was created by the same import, so
-// no pre-existing relation can close a cycle. Relations that already exist are skipped.
-func CreateTaskRelationsForImport(s *xorm.Session, relations []*TaskRelation, a web.Auth) error {
+// CreateTaskRelationsForImport creates the RelatedTasks of a batch just passed to CreateTasksForImport.
+func CreateTaskRelationsForImport(s *xorm.Session, tasks []*Task, a web.Auth) error {
+	inBatch := make(map[int64]bool, len(tasks))
+	for _, t := range tasks {
+		inBatch[t.ID] = true
+	}
+
+	relations := []*TaskRelation{}
+	for _, t := range tasks {
+		for kind, related := range t.RelatedTasks {
+			for _, rt := range related {
+				if t.ID == rt.ID {
+					log.Debugf("[creating structure] Skipping invalid self-relation for task %d", rt.ID)
+					continue
+				}
+				// The batch-wide cycle check is only sound when no pre-existing relation can close a cycle.
+				if !inBatch[rt.ID] {
+					return fmt.Errorf("task %d is related to task %d, which is not part of the imported batch", t.ID, rt.ID)
+				}
+				relations = append(relations, &TaskRelation{
+					TaskID:       t.ID,
+					OtherTaskID:  rt.ID,
+					RelationKind: kind,
+				})
+			}
+		}
+	}
+
 	if err := checkImportedTaskRelationCycles(relations); err != nil {
 		return err
 	}
