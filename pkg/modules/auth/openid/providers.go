@@ -215,9 +215,6 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
-// FindProviderByIssuer returns the provider whose issuer is issuer, or nil when
-// none is configured anymore. Matching on the issuer keeps working when a
-// provider key is renamed in the config.
 func FindProviderByIssuer(providers []*Provider, issuer string) *Provider {
 	for _, provider := range providers {
 		providerIssuer, err := provider.Issuer()

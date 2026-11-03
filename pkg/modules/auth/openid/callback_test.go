@@ -36,13 +36,13 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const mockIDPProviderKey = "provider1"
 
-// mockIDP is an OIDC provider issuing signed ID tokens with the claims set via setClaims.
 type mockIDP struct {
 	*httptest.Server
 	key    *rsa.PrivateKey
@@ -126,7 +126,6 @@ func (idp *mockIDP) currentClaims() map[string]any {
 	return out
 }
 
-// configure registers the IdP as the only OpenID provider, under mockIDPProviderKey.
 func (idp *mockIDP) configure(t *testing.T) {
 	t.Helper()
 	config.AuthOpenIDEnabled.Set(true)
@@ -212,6 +211,165 @@ func TestAuthenticateCallback(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, user.IsErrAccountDisabled(err), "expected ErrAccountDisabled, got %v", err)
 	})
+}
+
+func TestAuthenticateCallbackLinkedIdentity(t *testing.T) {
+	t.Run("logs in the local user without syncing profile or avatar, but syncs teams", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		pictureURL, hits := servePicture(t)
+		idp := newMockIDP(t)
+		idp.configure(t)
+		linkIdentity(t, 1, idp.URL, "linked-sub")
+
+		idp.setClaims(map[string]any{
+			"sub":                "linked-sub",
+			"email":              "idp-email@example.com",
+			"email_verified":     true,
+			"name":               "IdP Name",
+			"preferred_username": "idpUsername",
+			"picture":            pictureURL,
+			"vikunja_groups": []map[string]any{
+				{
+					"name":   "idp team",
+					"oidcID": "idp-team-1",
+				},
+			},
+		})
+		u, _, err := AuthenticateCallback(t.Context(), &Callback{Code: "code"}, mockIDPProviderKey)
+		require.NoError(t, err)
+		avatar.WaitForProviderSyncsForTests()
+
+		assert.Equal(t, int64(1), u.ID)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":     1,
+			"email":  "user1@example.com",
+			"issuer": user.IssuerLocal,
+		}, false)
+		assert.Empty(t, u.Name)
+		db.AssertMissing(t, "users", map[string]interface{}{
+			"issuer": idp.URL,
+		})
+		assert.Equal(t, int32(0), hits.Load(), "picture must not be fetched for a linked user")
+		assertTeamSynced(t, 1, "idp-team-1")
+	})
+	t.Run("keeps an openid avatar when the IdP sends no picture", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		idp := newMockIDP(t)
+		idp.configure(t)
+		linkIdentity(t, 1, idp.URL, "avatar-sub")
+
+		s := db.NewSession()
+		defer s.Close()
+		_, err := s.ID(1).Cols("avatar_provider").Update(&user.User{AvatarProvider: "openid"})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		idp.setClaims(map[string]any{
+			"sub":                "avatar-sub",
+			"email":              "idp-email@example.com",
+			"preferred_username": "idpUsername",
+		})
+		u, _, err := AuthenticateCallback(t.Context(), &Callback{Code: "code"}, mockIDPProviderKey)
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(1), u.ID)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":              1,
+			"avatar_provider": "openid",
+		}, false)
+	})
+	t.Run("refuses a linked user who cannot authenticate", func(t *testing.T) {
+		cases := map[string]struct {
+			userID  int64
+			isError func(error) bool
+		}{
+			"disabled": {
+				userID:  17,
+				isError: user.IsErrAccountDisabled,
+			},
+			"locked": {
+				userID:  18,
+				isError: user.IsErrAccountLocked,
+			},
+			"email not confirmed": {
+				userID:  4,
+				isError: user.IsErrEmailNotConfirmed,
+			},
+		}
+		for name, tc := range cases {
+			t.Run(name, func(t *testing.T) {
+				db.LoadAndAssertFixtures(t)
+				idp := newMockIDP(t)
+				idp.configure(t)
+				linkIdentity(t, tc.userID, idp.URL, "linked-sub")
+
+				idp.setClaims(map[string]any{
+					"sub":                "linked-sub",
+					"email":              "idp-email@example.com",
+					"name":               "IdP Name",
+					"preferred_username": "idpUsername",
+				})
+				_, _, err := AuthenticateCallback(t.Context(), &Callback{Code: "code"}, mockIDPProviderKey)
+				require.Error(t, err)
+				assert.True(t, tc.isError(err), "unexpected error %v", err)
+				db.AssertMissing(t, "users", map[string]interface{}{
+					"issuer": idp.URL,
+				})
+			})
+		}
+	})
+	t.Run("enforces TOTP for a linked user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		idp := newMockIDP(t)
+		idp.configure(t)
+		// Own TOTP user: user 10's fixture TOTP would mark its passcode used for other tests.
+		const secret = "KRSXG5CTMVRXEZLU"
+		s := db.NewSession()
+		_, err := s.Insert(&user.TOTP{
+			UserID:  2,
+			Secret:  secret,
+			Enabled: true,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+		t.Cleanup(func() {
+			_ = keyvalue.Del((&user.User{ID: 2}).GetFailedTOTPAttemptsKey())
+		})
+		linkIdentity(t, 2, idp.URL, "linked-sub")
+		idp.setClaims(map[string]any{
+			"sub":                "linked-sub",
+			"email":              "idp-email@example.com",
+			"name":               "IdP Name",
+			"preferred_username": "idpUsername",
+		})
+
+		_, _, err = AuthenticateCallback(t.Context(), &Callback{Code: "code"}, mockIDPProviderKey)
+		require.Error(t, err)
+		assert.True(t, user.IsErrInvalidTOTPPasscode(err), "unexpected error %v", err)
+
+		passcode, err := totp.GenerateCode(secret, time.Now())
+		require.NoError(t, err)
+		u, _, err := AuthenticateCallback(t.Context(), &Callback{
+			Code:         "code",
+			TOTPPasscode: passcode,
+		}, mockIDPProviderKey)
+		require.NoError(t, err)
+		assert.Equal(t, int64(2), u.ID)
+	})
+}
+
+func linkIdentity(t *testing.T, userID int64, issuer, subject string) {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Insert(&user.Identity{
+		UserID:  userID,
+		Issuer:  issuer,
+		Subject: subject,
+	})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
 }
 
 func assertTeamSynced(t *testing.T, userID int64, externalID string) {
