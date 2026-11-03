@@ -1473,7 +1473,7 @@ func (err ErrInvalidFilterExpression) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidFilterExpression,
-		Message:  fmt.Sprintf("The filter expression '%s' is invalid: %v", err.Expression, err.ExpressionError),
+		Message:  fmt.Sprintf("The filter expression is invalid: %v", err.ExpressionError),
 	}
 }
 
