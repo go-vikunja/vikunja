@@ -7428,7 +7428,7 @@ export type ProjectsBackgroundUnsplashSetResponse = ProjectsBackgroundUnsplashSe
 export type ProjectsBackgroundUploadData = {
     body: {
         /**
-         * The background image to upload. Must be a decodable raster image (JPEG, PNG, GIF, BMP, TIFF or WebP); it is resized server-side and re-encoded as JPEG.
+         * The background image to upload. Must be a decodable raster image (JPEG, PNG, GIF, BMP or WebP); it is resized server-side and re-encoded as JPEG.
          */
         background: Blob | File;
     };
@@ -11151,7 +11151,7 @@ export type SessionsDeleteResponse = SessionsDeleteResponses[keyof SessionsDelet
 export type UserAvatarUploadData = {
     body: {
         /**
-         * The avatar image to upload. Must be a decodable raster image (PNG, JPEG, GIF, TIFF or BMP); it is resized server-side and re-encoded as PNG.
+         * The avatar image to upload. Must be a decodable raster image (PNG, JPEG, GIF or BMP); it is resized server-side and re-encoded as PNG.
          */
         avatar: Blob | File;
     };
