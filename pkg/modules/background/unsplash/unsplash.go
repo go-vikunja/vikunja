@@ -49,6 +49,8 @@ func init() {
 const (
 	unsplashAPIURL = `https://api.unsplash.com/`
 	cachePrefix    = `unsplash_photo_`
+	// Every page of the featured collection is cached in memory.
+	maxEmptySearchPage = 100
 )
 
 // Provider represents an unsplash image provider
@@ -163,6 +165,12 @@ func (p *Provider) Search(_ *xorm.Session, search string, page int64) (result []
 
 	// If we don't have a search query, return results from the unsplash featured collection
 	if search == "" {
+		if page > maxEmptySearchPage {
+			return []*background.Image{}, nil
+		}
+		if page < 1 {
+			page = 1
+		}
 
 		var existsForPage bool
 
