@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -48,6 +49,8 @@ type mockIDP struct {
 	key    *rsa.PrivateKey
 	mu     sync.Mutex
 	claims map[string]any
+	// Counts code exchanges, so tests can prove a code was not consumed.
+	tokenRequests atomic.Int32
 }
 
 func newMockIDP(t *testing.T) *mockIDP {
@@ -82,6 +85,7 @@ func newMockIDP(t *testing.T) *mockIDP {
 		}}})
 	})
 	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
+		idp.tokenRequests.Add(1)
 		payload := idp.currentClaims()
 		payload["iss"] = idp.URL
 		payload["aud"] = "client1"
