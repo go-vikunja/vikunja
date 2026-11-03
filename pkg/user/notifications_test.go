@@ -19,6 +19,7 @@ package user
 import (
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/notifications"
 
 	"github.com/stretchr/testify/assert"
@@ -47,6 +48,34 @@ func TestNotificationLinksKeepTokensOutOfTheQuery(t *testing.T) {
 				assert.Contains(t, body, "#"+tc.param+"=secrettoken")
 				assert.NotContains(t, body, "?"+tc.param+"=")
 			}
+		})
+	}
+}
+
+func TestShouldNotify(t *testing.T) {
+	tests := map[string]struct {
+		userID       int64
+		notification notifications.Notification
+		want         bool
+	}{
+		"active user":                        {userID: 1, notification: &PasswordChangedNotification{}, want: true},
+		"locked user, ordinary notification": {userID: 18, notification: &PasswordChangedNotification{}, want: false},
+		"locked user, password reset":        {userID: 18, notification: &ResetPasswordNotification{}, want: true},
+		"disabled user, password reset":      {userID: 17, notification: &ResetPasswordNotification{}, want: false},
+		"bot user, password reset":           {userID: 23, notification: &ResetPasswordNotification{}, want: false},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			u, err := loadUser(s, &User{ID: tt.userID}, false)
+			require.NoError(t, err)
+
+			got, err := u.ShouldNotify(tt.notification, s)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
