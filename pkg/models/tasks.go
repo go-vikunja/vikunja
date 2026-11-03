@@ -1299,6 +1299,14 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		return
 	}
 
+	can, err := (&Project{ID: ot.ProjectID}).CanWrite(s, a)
+	if err != nil {
+		return err
+	}
+	if !can {
+		return ErrGenericForbidden{}
+	}
+
 	if t.ProjectID == 0 {
 		t.ProjectID = ot.ProjectID
 	}
