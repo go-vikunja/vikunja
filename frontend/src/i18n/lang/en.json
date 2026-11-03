@@ -530,7 +530,7 @@
           "webhooks": "webhooks you created"
         },
         "linkShares": {
-          "intro": "Link shares created by someone losing access are kept and keep working:",
+          "intro": "Removing access does not revoke the link shares they created. Anyone with one of these links keeps access:",
           "created": "created {date}",
           "revoke": "Also revoke this link share | Also revoke these link shares"
         }
