@@ -119,7 +119,9 @@ func TestFilterComplexityLimits(t *testing.T) {
 	t.Run("quotes inside comments do not hide nesting", func(t *testing.T) {
 		_, err := getTaskFiltersFromFilterString("// '\n"+parens(150)+"\n// '", "UTC")
 		require.Error(t, err)
-		assert.True(t, IsErrFilterTooComplex(err))
+		var tooComplex *ErrFilterTooComplex
+		require.ErrorAs(t, err, &tooComplex)
+		assert.Equal(t, fmt.Sprintf("it exceeds the %d-level nesting limit", maxFilterDepth), tooComplex.Reason)
 	})
 
 	t.Run("unmatched closing parenthesis is rejected", func(t *testing.T) {
