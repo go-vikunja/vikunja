@@ -24,7 +24,9 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/stretchr/testify/assert"
@@ -418,6 +420,9 @@ func TestCheckUserCredentials(t *testing.T) {
 		// keyvalue store is process-global; reset counter between runs.
 		_ = keyvalue.Del(key)
 		gen := sessionAuthGeneration(t, u.ID)
+		events.ClearDispatchedEvents()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		for i := range 10 {
 			s := db.NewSession()
@@ -434,6 +439,11 @@ func TestCheckUserCredentials(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrAccountLocked(err), "expected ErrAccountLocked, got: %v", err)
 		assert.Equal(t, gen+2, sessionAuthGeneration(t, u.ID))
+
+		locked := events.GetDispatchedEvents((&AccountLockedEvent{}).Name())
+		require.Len(t, locked, 1)
+		assert.Equal(t, &AccountLockedEvent{UserID: u.ID}, locked[0])
+		notifications.AssertSent(t, &AccountLockedAfterInvalidPasswordNotification{})
 
 		tokens, err := getTokensForKind(s, u, TokenPasswordReset)
 		require.NoError(t, err)
