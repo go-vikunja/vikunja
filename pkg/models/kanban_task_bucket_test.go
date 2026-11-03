@@ -460,6 +460,9 @@ func TestTaskBucket_Update(t *testing.T) {
 			defer s.Close()
 			_, err := s.ID(2).Cols("done_at").Update(&Task{DoneAt: doneAt})
 			require.NoError(t, err)
+			// User 1 is only a reader of project 9, but moves the task back out of it below.
+			_, err = s.Where("user_id = ? AND project_id = ?", 1, 9).Cols("permission").Update(&ProjectUser{Permission: PermissionWrite})
+			require.NoError(t, err)
 			err = s.Commit()
 			require.NoError(t, err)
 		}()
