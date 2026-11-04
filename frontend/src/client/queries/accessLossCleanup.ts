@@ -9,7 +9,10 @@ export type AccessLossCleanup = Required<NonNullable<ProjectUsersDeleteData['que
 export type AccessLossChoice = AccessLossCleanup | {confirm_access_loss: true}
 
 export function defaultAccessLossCleanup(): AccessLossCleanup {
-	return {keep_webhooks: false, revoke_link_shares: false}
+	return {
+		keep_webhooks: false,
+		revoke_link_shares: false,
+	}
 }
 
 // The cleanup reaches every project the users lost, not just the one on screen.

@@ -36,6 +36,8 @@ function shareSuccess(kind: 'users' | 'teams', action: 'addedSuccess' | 'updated
 
 type UserShareInput = {projectId: number, username: string}
 type TeamShareInput = {projectId: number, teamId: number}
+type UserShareDeleteInput = UserShareInput & {cleanup: AccessLossCleanup}
+type TeamShareDeleteInput = TeamShareInput & {cleanup: AccessLossCleanup}
 
 export function projectUserSharesQuery(projectId: number) {
 	return queryOptions({
@@ -67,11 +69,22 @@ export const useUpdateProjectUserShareMutation = () => useMutation(updateProject
 
 export function deleteProjectUserShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, username, cleanup}: UserShareInput & {cleanup: AccessLossCleanup}) => { await projectUsersDelete({path: {project: projectId, user: username}, query: cleanup}) },
+		mutationFn: async ({projectId, username, cleanup}: UserShareDeleteInput) => {
+			await projectUsersDelete({
+				path: {
+					project: projectId,
+					user: username,
+				},
+				query: cleanup,
+			})
+		},
 		onSuccess: (_data, {projectId, username}, client) => {
 			client.setQueryData<UserWithPermission[]>(projectShareKeys.users(projectId), current => current?.filter(item => item.username !== username))
 		},
-		onSettled: ({projectId}, client) => Promise.all([invalidateShares(client, projectId, 'users'), invalidateAccessLossCleanup(client)]),
+		onSettled: ({projectId}, client) => Promise.all([
+			invalidateShares(client, projectId, 'users'),
+			invalidateAccessLossCleanup(client),
+		]),
 		successMessage: () => shareSuccess('users', 'removeSuccess'),
 	})
 }
@@ -107,11 +120,22 @@ export const useUpdateProjectTeamShareMutation = () => useMutation(updateProject
 
 export function deleteProjectTeamShareMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({projectId, teamId, cleanup}: TeamShareInput & {cleanup: AccessLossCleanup}) => { await projectTeamsDelete({path: {project: projectId, team: teamId}, query: cleanup}) },
+		mutationFn: async ({projectId, teamId, cleanup}: TeamShareDeleteInput) => {
+			await projectTeamsDelete({
+				path: {
+					project: projectId,
+					team: teamId,
+				},
+				query: cleanup,
+			})
+		},
 		onSuccess: (_data, {projectId, teamId}, client) => {
 			client.setQueryData<TeamWithPermission[]>(projectShareKeys.teams(projectId), current => current?.filter(item => item.id !== teamId))
 		},
-		onSettled: ({projectId}, client) => Promise.all([invalidateShares(client, projectId, 'teams'), invalidateAccessLossCleanup(client)]),
+		onSettled: ({projectId}, client) => Promise.all([
+			invalidateShares(client, projectId, 'teams'),
+			invalidateAccessLossCleanup(client),
+		]),
 		successMessage: () => shareSuccess('teams', 'removeSuccess'),
 	})
 }
