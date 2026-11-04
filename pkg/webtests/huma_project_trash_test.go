@@ -147,6 +147,29 @@ func TestHumaProjectTrash(t *testing.T) {
 		rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/45", "", user1(t), "")
 		assert.NotContains(t, rec.Body.String(), `"code":3018`)
 	})
+	t.Run("empty trash keeps other people's deletions when asked", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		rec := humaRequest(t, e, http.MethodDelete, "/api/v2/projects/1", "", user1(t), "")
+		require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+
+		// Fixture project 45 was trashed by user 1 as well
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/deleted/count", "", user1(t), "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"total":2`)
+		assert.Contains(t, rec.Body.String(), `"by_others":0`)
+
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/deleted/count", "", stranger(t), "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"total":0`)
+
+		rec = humaRequest(t, e, http.MethodDelete, "/api/v2/projects/deleted?include_others=false", "", user1(t), "")
+		require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/projects/deleted", "", user1(t), "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"items":[]`)
+	})
 	t.Run("empty trash", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)

@@ -63,11 +63,20 @@ func RegisterProjectTrashRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-trash-empty",
 		Summary:     "Empty the project trash",
-		Description: "Permanently deletes every project GET /projects/deleted would return, including projects other users deleted.",
+		Description: "Permanently deletes every project GET /projects/deleted would return, with their sub-projects. Projects other users moved to the trash are included unless include_others is false.",
 		Method:      http.MethodDelete,
 		Path:        "/projects/deleted",
 		Tags:        tags,
 	}, projectsTrashEmpty)
+
+	Register(api, huma.Operation{
+		OperationID: "projects-trash-count",
+		Summary:     "Count what emptying the project trash deletes",
+		Description: "Counts the projects DELETE /projects/deleted would purge, and how many of them other users moved to the trash. Sub-projects are not counted separately; they go with the listed project.",
+		Method:      http.MethodGet,
+		Path:        "/projects/deleted/count",
+		Tags:        tags,
+	}, projectsTrashCount)
 
 	Register(api, huma.Operation{
 		OperationID: "projects-count",
@@ -175,7 +184,9 @@ func projectsDeletePermanently(ctx context.Context, in *struct {
 	return &emptyBody{}, nil
 }
 
-func projectsTrashEmpty(ctx context.Context, _ *struct{}) (*emptyBody, error) {
+func projectsTrashEmpty(ctx context.Context, in *struct {
+	IncludeOthers bool `query:"include_others" default:"true" doc:"Also purge projects other users moved to the trash."`
+}) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -184,7 +195,7 @@ func projectsTrashEmpty(ctx context.Context, _ *struct{}) (*emptyBody, error) {
 	defer s.Close()
 	defer events.CleanupPending(s)
 
-	if _, err := models.EmptyProjectTrash(s, a); err != nil {
+	if _, err := models.EmptyProjectTrash(s, a, in.IncludeOthers); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
@@ -210,4 +221,19 @@ func projectsCount(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	return &singleBody[models.ProjectCount]{Body: count}, nil
+}
+
+func projectsTrashCount(ctx context.Context, _ *struct{}) (*singleBody[models.TrashCount], error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	s := db.NewReadSession()
+	defer s.Close()
+
+	count, err := models.CountProjectTrash(s, a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &singleBody[models.TrashCount]{Body: count}, nil
 }

@@ -696,7 +696,7 @@ func TestEmptyProjectTrash(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		purged, err := EmptyProjectTrash(s, &user.User{ID: 1})
+		purged, err := EmptyProjectTrash(s, &user.User{ID: 1}, true)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 		events.DispatchPending(context.Background(), s)
@@ -719,7 +719,7 @@ func TestEmptyProjectTrash(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		purged, err := EmptyProjectTrash(s, &user.User{ID: 2})
+		purged, err := EmptyProjectTrash(s, &user.User{ID: 2}, true)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 		assert.Equal(t, 0, purged)
@@ -777,7 +777,7 @@ func TestProjectTrash_AdminOnlyOnTrashedChild(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		purged, err := EmptyProjectTrash(s, u1)
+		purged, err := EmptyProjectTrash(s, u1, true)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 		assert.Equal(t, 1, purged)
@@ -1072,4 +1072,32 @@ func TestCleanupAfterProjectAccessLoss_KeepsTrashedProjectsWithAccess(t *testing
 	require.NoError(t, s.Commit())
 
 	db.AssertExists(t, "task_assignees", map[string]interface{}{"task_id": 54, "user_id": 1}, false)
+}
+
+func TestEmptyProjectTrash_OwnDeletionsOnly(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	u1 := &user.User{ID: 1}
+	s := db.NewSession()
+	_, err := s.Table("projects").Where("id = ?", 45).Update(map[string]any{"deleted_by_id": 2})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+	trashProjectForTest(t, 1, u1)
+
+	cs := db.NewSession()
+	count, err := CountProjectTrash(cs, u1)
+	cs.Close()
+	require.NoError(t, err)
+	// 45 (user 2, with child 46) and 1 (user 1)
+	assert.Equal(t, &TrashCount{Total: 2, ByOthers: 1}, count)
+
+	es := db.NewSession()
+	defer es.Close()
+	purged, err := EmptyProjectTrash(es, u1, false)
+	require.NoError(t, err)
+	require.NoError(t, es.Commit())
+	assert.Equal(t, 1, purged)
+	db.AssertMissing(t, "projects", map[string]interface{}{"id": 1})
+	db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
+	db.AssertExists(t, "projects", map[string]interface{}{"id": 46}, false)
 }
