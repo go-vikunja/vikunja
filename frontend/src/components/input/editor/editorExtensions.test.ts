@@ -1,8 +1,10 @@
+// @vitest-environment jsdom
+// happy-dom doesn't parse svg tr/td as foreign elements.
 import {describe, it, expect, afterEach, beforeEach, vi} from 'vitest'
 import {createPinia, setActivePinia} from 'pinia'
 import {nextTick, ref} from 'vue'
 import {Editor} from '@tiptap/core'
-import {createEditorExtensions, type EditorExtensionDeps} from './editorExtensions'
+import {createEditorExtensions, parseEditorHTML, type EditorExtensionDeps} from './editorExtensions'
 import {queryClient} from '@/client/queryClient'
 import {attachmentKeys} from '@/client/queries/attachments'
 
@@ -189,5 +191,53 @@ describe('CustomTableCell backgroundColor', () => {
 
 		expect(editor.getHTML()).not.toContain('position')
 		expect(editor.view.dom.querySelector('td')!.getAttribute('style') ?? '').not.toContain('position')
+	})
+})
+
+describe('table cell spans', () => {
+	function spans(html: string) {
+		const {editor} = createEditor(html)
+		const attrs: {colspan: number, rowspan: number}[] = []
+		editor.state.doc.descendants(node => {
+			if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+				attrs.push({colspan: node.attrs.colspan, rowspan: node.attrs.rowspan})
+			}
+		})
+		return attrs
+	}
+
+	function firstColspanPerTable(editor: Editor) {
+		const colspans: number[] = []
+		editor.state.doc.descendants(node => {
+			if (node.type.name === 'table') {
+				colspans.push(node.firstChild!.firstChild!.attrs.colspan)
+			}
+		})
+		return colspans
+	}
+
+	it('keeps a normal span', () => {
+		expect(spans('<table><tr><td colspan="2" rowspan="3">x</td></tr></table>'))
+			.toEqual([{colspan: 2, rowspan: 3}])
+	})
+
+	it('keeps tables within the cell budget and drops the grid of later ones', () => {
+		// 6000 implied cells each, the second overruns the remaining budget
+		const table = `<table><tr>${'<td colspan="100">x</td>'.repeat(30)}</tr></table>`
+		const {editor} = createEditor('')
+		editor.commands.setContent(parseEditorHTML(editor, table + table))
+
+		expect(firstColspanPerTable(editor)).toEqual([100])
+	})
+
+	it.each([
+		['a rowspan', '<table><tr><td rowspan="100000000">x</td></tr></table>'],
+		['svg table parts', '<svg><tr><td colspan="20000">x</td></tr></svg>'],
+	])('drops the grid implied by %s', (_name, html) => {
+		const {editor} = createEditor('')
+		editor.commands.setContent(parseEditorHTML(editor, html))
+
+		expect(firstColspanPerTable(editor)).toEqual([])
+		expect(editor.getText()).toContain('x')
 	})
 })

@@ -35,4 +35,12 @@ describe('TipTap draft restore', () => {
 		await flushPromises()
 		expect(wrapper.find('.tiptap__editor-is-edit-enabled').exists()).toBe(true)
 	})
+
+	it('drops the grid of a table whose spans imply too many cells', async () => {
+		const wrapper = mountWithDraft('<table><tr><td colspan="100000000">x</td></tr></table>')
+		await flushPromises()
+
+		expect(wrapper.find('table').exists()).toBe(false)
+		expect(wrapper.text()).toContain('x')
+	})
 })
