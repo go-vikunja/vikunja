@@ -213,8 +213,18 @@ func cleanupAfterProjectMove(s *xorm.Session, projectID int64, cleanup AccessLos
 	userIDs := slices.Concat(webhookCreatorIDs, linkShareCreatorIDs, subscriberIDs, assigneeIDs)
 	slices.Sort(userIDs)
 	userIDs = slices.Compact(userIDs)
+	if len(userIDs) == 0 {
+		return nil
+	}
 
-	return cleanupAfterProjectAccessLossForUsers(s, userIDs, []int64{projectID}, cleanup)
+	// DeleteUser keeps link shares, and a missing user would count as losing access.
+	existingUserIDs := []int64{}
+	err = s.Table("users").In("id", userIDs).Cols("id").Find(&existingUserIDs)
+	if err != nil {
+		return err
+	}
+
+	return cleanupAfterProjectAccessLossForUsers(s, existingUserIDs, []int64{projectID}, cleanup)
 }
 
 // Keep in sync with ProjectAccessCleanupList.vue.
