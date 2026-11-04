@@ -1289,12 +1289,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 			return err
 		}
 
-		cleanup := project.AccessLossCleanup
-		// Confirm counts and revoked link shares are other users' data a link share can't access.
-		if _, isLinkShare := auth.(*LinkSharing); isLinkShare {
-			cleanup = AccessLossCleanup{}
-		}
-		err = cleanupAfterProjectMove(s, auth, project.ID, cleanup)
+		err = cleanupAfterProjectMove(s, auth, project.ID, project.AccessLossCleanup)
 		if err != nil {
 			return err
 		}
