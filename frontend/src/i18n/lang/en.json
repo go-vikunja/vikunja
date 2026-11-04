@@ -225,6 +225,24 @@
         "confirmSuccess": "You've successfully enabled two factor authentication!",
         "disableSuccess": "Two factor authentication was successfully disabled."
       },
+      "linkedAccounts": {
+        "title": "Linked accounts",
+        "description": "Link an account at an identity provider to log in with it in addition to your password.",
+        "provider": "Provider",
+        "linkedAt": "Linked at",
+        "none": "You have not linked any accounts yet.",
+        "link": "Link {provider}",
+        "unlink": "Unlink",
+        "unlinkHeader": "Unlink {provider}",
+        "unlinkText": "You will no longer be able to log in with this account. Enter your password to confirm.",
+        "linkSuccess": "The account was linked successfully.",
+        "unlinkSuccess": "The account was unlinked successfully.",
+        "confirmTitle": "Link {provider} to your account",
+        "confirmText": "Enter your password to link this {provider} account to your Vikunja account. You can then log in with either.",
+        "confirm": "Link account",
+        "noSession": "You need to be logged in to link an account. Log in with your password and start linking again from the settings.",
+        "backToSettings": "Back to linked accounts"
+      },
       "caldav": {
         "title": "CalDAV",
         "howTo": "You can connect Vikunja to CalDAV clients to view and manage all your tasks from different clients. Enter this URL into your client:",
@@ -1681,7 +1699,10 @@
     "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
     "14203": "A Planka URL and either an API key or username and password are required.",
     "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance.",
-    "14205": "The Planka URL points to a private or local network address, which Vikunja blocks by default. An administrator can allow it by setting outgoingrequests.allownonroutableips to true."
+    "14205": "The Planka URL points to a private or local network address, which Vikunja blocks by default. An administrator can allow it by setting outgoingrequests.allownonroutableips to true.",
+    "15002": "This account at the identity provider is already linked to another Vikunja account.",
+    "15003": "You already linked an account of this provider. Unlink it first.",
+    "15004": "This linked account does not exist."
   },
   "about": {
     "title": "About",
