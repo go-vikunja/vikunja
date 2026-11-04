@@ -124,7 +124,7 @@ test.describe('Moving a project', () => {
 		await createMemberData(child.id, member.id)
 		await clearParentAndSave(page, child.id)
 		const dialog = page.getByRole('dialog', {name: 'Some users will lose access'})
-		await expect(dialog).toContainText('They created 1 webhooks and 1 link shares there.')
+		await expect(dialog).toContainText('They created 1 webhook and 1 link share there.')
 		await dialog.getByRole('checkbox', {name: DELETE_WEBHOOKS}).uncheck()
 		await dialog.getByRole('checkbox', {name: REVOKE_LINK_SHARES}).check()
 		await dialog.getByRole('button', {name: 'Do it!'}).click()
