@@ -23,8 +23,26 @@ test('enables a retained webhook and takes it over without changing its destinat
 	const row = page.getByRole('row').filter({hasText: targetUrl})
 	await expect(row).toContainText('Disabled.')
 	await expect(row).toContainText('your project access')
-	await row.getByRole('button', {name: 'Enable webhook', exact: true}).click()
-	await expect(row.getByRole('button', {name: 'Enable webhook', exact: true})).toHaveCount(0)
+	let release!: () => void
+	let received!: () => void
+	const responseGate = new Promise<void>(resolve => { release = resolve })
+	const requestReceived = new Promise<void>(resolve => { received = resolve })
+	await page.route(`**/api/v2/projects/1/webhooks/${webhook.id}`, async route => {
+		if (route.request().method() !== 'PUT') return route.continue()
+		const response = await route.fetch()
+		received()
+		await responseGate
+		await route.fulfill({response})
+	})
+	const enableButton = row.getByRole('button', {name: 'Enable webhook', exact: true})
+	await enableButton.focus()
+	await enableButton.press('Enter')
+	await requestReceived
+	await expect(enableButton).toBeFocused()
+	await expect(enableButton).toHaveAttribute('aria-disabled', 'true')
+	release()
+	await expect(enableButton).toHaveCount(0)
+	await expect(row.getByRole('button', {name: 'Delete this webhook', exact: true})).toBeFocused()
 
 	await page.reload()
 	await expect(row).toBeVisible()

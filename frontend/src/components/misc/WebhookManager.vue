@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue'
+import {computed, nextTick, ref, watch} from 'vue'
 
 import type {Webhook, WebhookWritable} from '@/client/generated'
 import {useQuery} from '@tanstack/vue-query'
@@ -131,17 +131,24 @@ function confirmDelete(webhookId: number) {
 	showDeleteModal.value = true
 }
 
-function enable(webhook: Webhook) {
+async function enable(webhook: Webhook, event: MouseEvent) {
 	if (!webhook.id) return
-	updateMutation.mutate({
-		scope: props.scope,
-		id: webhook.id,
-		body: {
-			target_url: webhook.target_url,
-			events: webhook.events,
-			is_disabled: false,
-		},
-	})
+	const deleteButton = (event.currentTarget as HTMLButtonElement).nextElementSibling as HTMLButtonElement
+	try {
+		await updateMutation.mutateAsync({
+			scope: props.scope,
+			id: webhook.id,
+			body: {
+				target_url: webhook.target_url,
+				events: webhook.events,
+				is_disabled: false,
+			},
+		})
+	} catch {
+		return
+	}
+	await nextTick()
+	deleteButton.focus()
 }
 
 function doDelete() {
@@ -320,8 +327,8 @@ function doDelete() {
 						<XButton
 							v-if="w.is_disabled"
 							icon="play"
-							:disabled="updateMutation.isPending.value"
-							@click="enable(w)"
+							:loading="updateMutation.isPending.value"
+							@click="enable(w, $event)"
 						>
 							{{ $t('project.webhooks.enable') }}
 						</XButton>
