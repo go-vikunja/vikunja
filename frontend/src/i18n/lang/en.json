@@ -1417,21 +1417,21 @@
         "header": "Delete the team",
         "text1": "Are you sure you want to delete this team and all of its members?",
         "text2": "All team members will lose access to projects shared with this team. This CANNOT BE UNDONE!",
-        "cleanupText": "On projects the team members lose access to, the following will also be deleted:",
+        "cleanupText": "Team members who lose access to projects through this will also lose:",
         "success": "The team was successfully deleted."
       },
       "deleteUser": {
         "header": "Remove a user from the team",
         "text1": "Are you sure you want to remove this user from the team?",
         "text2": "They will lose access to all projects this team has access to. This CANNOT BE UNDONE!",
-        "cleanupText": "On projects this user loses access to, the following will also be deleted:",
+        "cleanupText": "On projects this user loses access to, they will also lose:",
         "success": "The user was successfully deleted from the team."
       },
       "leave": {
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
         "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
-        "cleanupText": "On projects you lose access to, the following will also be deleted:",
+        "cleanupText": "On projects you lose access to, you will also lose:",
         "success": "You have successfully left the team."
       }
     },
