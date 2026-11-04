@@ -40,6 +40,7 @@
 			<div class="is-flex">
 				<XButton
 					type="submit"
+					class="mie-2"
 					:loading="passwordResetMutation.isPending.value"
 				>
 					{{ $t('user.auth.resetPasswordAction') }}
@@ -80,9 +81,3 @@ async function requestPasswordReset() {
 	}
 }
 </script>
-
-<style scoped>
-.button {
-	margin: 0 0.4rem 0 0;
-}
-</style>

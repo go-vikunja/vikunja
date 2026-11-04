@@ -98,9 +98,3 @@ async function resetPassword() {
 	}
 }
 </script>
-
-<style scoped>
-.button {
-	margin: 0 0.4rem 0 0;
-}
-</style>
