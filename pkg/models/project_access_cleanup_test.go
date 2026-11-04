@@ -105,6 +105,19 @@ func (f *accessLossFixture) insertWebhook(t *testing.T, projectID, createdByID i
 	return w.ID
 }
 
+func (f *accessLossFixture) otherUserWithWebhook(t *testing.T) (other *user.User, webhookID int64) {
+	t.Helper()
+	other = &user.User{ID: 3, Username: "user3"}
+	return other, f.insertWebhook(t, f.child.ID, other.ID)
+}
+
+func (f *accessLossFixture) addOtherMemberWithWebhook(t *testing.T, team *Team) (other *user.User, webhookID int64) {
+	t.Helper()
+	other, webhookID = f.otherUserWithWebhook(t)
+	require.NoError(t, (&TeamMember{TeamID: team.ID, Username: other.Username}).Create(f.s, f.owner))
+	return other, webhookID
+}
+
 func (f *accessLossFixture) shareDirectly(t *testing.T, perm Permission) {
 	t.Helper()
 	pu := &ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, Permission: perm}
@@ -198,21 +211,12 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 	t.Run("removing the team from the project spares members with a direct share", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
-		other := &user.User{ID: 3, Username: "user3"}
-		require.NoError(t, (&TeamMember{TeamID: team.ID, Username: other.Username}).Create(f.s, f.owner))
+		other, othersWebhook := f.addOtherMemberWithWebhook(t, team)
 		require.NoError(t, (&ProjectUser{ProjectID: f.parent.ID, Username: other.Username, Permission: PermissionRead}).Create(f.s, f.owner))
-		othersWebhook := &Webhook{
-			TargetURL:   "https://example.com/access-loss",
-			Events:      []string{"task.updated"},
-			ProjectID:   f.child.ID,
-			CreatedByID: other.ID,
-		}
-		_, err := f.s.Insert(othersWebhook)
-		require.NoError(t, err)
 
 		require.NoError(t, (&TeamProject{TeamID: team.ID, ProjectID: f.parent.ID}).Delete(f.s, f.owner))
 		f.assertCleanedUp(t)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook}, false)
 	})
 	t.Run("removing the member from the team", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -462,9 +466,7 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 	t.Run("deleting your own team cannot keep your webhooks", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
-		other := &user.User{ID: 3, Username: "user3"}
-		require.NoError(t, (&TeamMember{TeamID: team.ID, Username: other.Username}).Create(f.s, f.owner))
-		othersWebhook := f.insertWebhook(t, f.child.ID, other.ID)
+		_, othersWebhook := f.addOtherMemberWithWebhook(t, team)
 		team.AccessLossCleanup = AccessLossCleanup{KeepWebhooks: true}
 
 		require.NoError(t, team.Delete(f.s, f.member))
@@ -475,9 +477,7 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 	t.Run("removing your own team from the project cannot keep your webhooks", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
-		other := &user.User{ID: 3, Username: "user3"}
-		require.NoError(t, (&TeamMember{TeamID: team.ID, Username: other.Username}).Create(f.s, f.owner))
-		othersWebhook := f.insertWebhook(t, f.child.ID, other.ID)
+		_, othersWebhook := f.addOtherMemberWithWebhook(t, team)
 
 		tp := &TeamProject{
 			TeamID:            team.ID,
@@ -547,14 +547,13 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 	t.Run("moving the project out of your inherited access cannot keep your webhooks", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionAdmin)
-		other := &user.User{ID: 3, Username: "user3"}
+		other, othersWebhook := f.otherUserWithWebhook(t)
 		pu := &ProjectUser{
 			ProjectID:  f.parent.ID,
 			Username:   other.Username,
 			Permission: PermissionWrite,
 		}
 		require.NoError(t, pu.Create(f.s, f.owner))
-		othersWebhook := f.insertWebhook(t, f.child.ID, other.ID)
 
 		require.NoError(t, f.moveChildToTopLevelAs(t, f.member, AccessLossCleanup{KeepWebhooks: true}))
 		require.NoError(t, f.s.Commit())
