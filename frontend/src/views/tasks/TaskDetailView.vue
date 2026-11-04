@@ -4,12 +4,12 @@
 		tabindex="-1"
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskBusy || (!visible && !trashedTask),
+			'is-loading': taskBusy || (!visible && !hasTrashNotice),
 			'is-modal': isModal,
 		}"
 	>
 		<div
-			v-if="trashedTask"
+			v-if="hasTrashNotice"
 			class="task-view"
 		>
 			<BaseButton
@@ -20,7 +20,14 @@
 			>
 				<Icon icon="times" />
 			</BaseButton>
-			<TaskInTrashNotice :in-trash="trashedTask" />
+			<TaskInTrashNotice
+				v-if="trashedTask"
+				:in-trash="trashedTask"
+			/>
+			<ProjectInTrashNotice
+				v-else-if="trashedProject"
+				:in-trash="trashedProject"
+			/>
 		</div>
 		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
 		<div
@@ -698,6 +705,7 @@ import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelative
 import {playPopSound} from '@/helpers/playPop'
 import {taskLoadErrorAction} from './taskDetailError'
 import TaskInTrashNotice from '@/components/tasks/partials/TaskInTrashNotice.vue'
+import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 
 import {
 	useUpdateTaskMutation,
@@ -822,11 +830,15 @@ const taskLoadError = computed(() => taskQuery.error.value ? taskLoadErrorAction
 const trashedTask = computed(() => taskLoadError.value?.action === 'inTrash'
 	? taskLoadError.value.inTrash
 	: null)
-const taskNotFound = computed(() => taskLoadError.value?.action === 'inTrash'
-	|| taskLoadError.value?.action === 'notFound')
-const taskTitle = computed(() => trashedTask.value
-	? t('trash.taskInTrashTitle')
-	: task.value.title)
+const trashedProject = computed(() => taskLoadError.value?.action === 'projectInTrash'
+	? taskLoadError.value.inTrash
+	: null)
+const hasTrashNotice = computed(() => trashedTask.value !== null || trashedProject.value !== null)
+const taskNotFound = computed(() => hasTrashNotice.value || taskLoadError.value?.action === 'notFound')
+const taskTitle = computed(() => {
+	if (trashedProject.value) return t('trash.title')
+	return trashedTask.value ? t('trash.taskInTrashTitle') : task.value.title
+})
 useTitle(taskTitle)
 
 const lastProject = computed(() => {
@@ -910,7 +922,7 @@ async function scrollToHeading() {
 const attachmentsRef = ref<InstanceType<typeof Attachments> | null>(null)
 
 const taskViewContainer = ref<HTMLElement | null>(null)
-useFocusAfterRemoval(() => trashedTask.value !== null, () => taskViewContainer.value)
+useFocusAfterRemoval(() => hasTrashNotice.value, () => taskViewContainer.value)
 const scrollContainer = ref<HTMLElement | null>(null)
 const contentBottomMarker = ref<HTMLElement | null>(null)
 const bottomMarkerVisible = ref(true)
@@ -1051,13 +1063,15 @@ watch(taskQuery.task, async (loaded, previous) => {
 	visible.value = true
 }, {immediate: true})
 watch(taskLoadError, loadError => {
-	if (!loadError || loadError.action === 'ignore' || loadError.action === 'inTrash') return
-	if (loadError.action === 'notFound') {
-		router.replace({name: 'not-found'})
-		return
+	switch (loadError?.action) {
+		case 'notFound':
+			router.replace({name: 'not-found'})
+			break
+		case 'report':
+			error(taskQuery.error.value)
+			visible.value = true
+			break
 	}
-	error(taskQuery.error.value)
-	visible.value = true
 })
 
 const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
