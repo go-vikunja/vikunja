@@ -77,7 +77,7 @@ import {isRequestContextAbort} from '@/client/requestContext'
 import ReauthFields from '@/components/user/ReauthFields.vue'
 import Message from '@/components/misc/Message.vue'
 import {getErrorText} from '@/message'
-import {endLinkFlow, getRedirectUrlFromCurrentFrontendPath} from '@/helpers/redirectToProvider'
+import {endOpenIdFlow, getRedirectUrlFromCurrentFrontendPath} from '@/helpers/redirectToProvider'
 import {useConfigStore} from '@/stores/config'
 import {
 	ERROR_CODE_TOO_MANY_REAUTH_ATTEMPTS,
@@ -157,25 +157,25 @@ async function linkIdentity() {
 		errorMessage.value = getErrorText(e)
 		const code = (e as VikunjaErrorModel)?.code
 		if (code === undefined || !RETRYABLE_LINK_ERRORS.has(code)) {
-			endLinkFlow(props.state)
+			endOpenIdFlow(props.state)
 			mode.value = 'failed'
 		}
 		return
 	}
 
-	endLinkFlow(props.state)
+	endOpenIdFlow(props.state)
 	await router.replace({name: 'user.settings.linked-accounts'})
 }
 
 function cancelLinking() {
 	active = false
-	endLinkFlow(props.state)
+	endOpenIdFlow(props.state)
 	router.replace({name: 'user.settings.linked-accounts'})
 }
 
 onMounted(async () => {
 	if (mode.value !== 'confirm') {
-		endLinkFlow(props.state)
+		endOpenIdFlow(props.state)
 		focusBackButton()
 		return
 	}
@@ -191,7 +191,7 @@ onMounted(async () => {
 	} catch (e) {
 		if (!active || isRequestContextAbort(e)) return
 		errorMessage.value = getErrorText(e)
-		endLinkFlow(props.state)
+		endOpenIdFlow(props.state)
 		mode.value = 'failed'
 	}
 })
