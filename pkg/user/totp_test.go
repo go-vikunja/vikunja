@@ -59,6 +59,34 @@ func TestTOTPPasscodeCannotBeReused(t *testing.T) {
 	assert.True(t, IsErrTOTPPasscodeUsed(err), "expected ErrTOTPPasscodeUsed, got: %v", err)
 }
 
+func TestTOTPPasscodeWhitespaceVariantsCannotBeReused(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	secret := "JBSWY3DPEHPK3PXP" //nolint:gosec
+	// Previous window: still valid, but not consumed by TestTOTPPasscodeCannotBeReused.
+	passcode, err := totp.GenerateCode(secret, time.Now().Add(-30*time.Second))
+	require.NoError(t, err)
+
+	user := &User{ID: 10}
+
+	_, err = ValidateTOTPPasscode(s, &TOTPPasscode{User: user, Passcode: " " + passcode + "\t"})
+	require.NoError(t, err)
+
+	for _, variant := range []string{passcode, " " + passcode, passcode + " ", "\n" + passcode + "\n"} {
+		_, err = ValidateTOTPPasscode(s, &TOTPPasscode{User: user, Passcode: variant})
+		require.Error(t, err, "variant %q", variant)
+		assert.True(t, IsErrTOTPPasscodeUsed(err), "variant %q: expected ErrTOTPPasscodeUsed, got: %v", variant, err)
+	}
+
+	for _, invalid := range []string{passcode[:3] + " " + passcode[3:], "+" + passcode[1:], passcode + "0", ""} {
+		_, err = ValidateTOTPPasscode(s, &TOTPPasscode{User: user, Passcode: invalid})
+		require.Error(t, err, "invalid %q", invalid)
+		assert.True(t, IsErrInvalidTOTPPasscode(err), "invalid %q: expected ErrInvalidTOTPPasscode, got: %v", invalid, err)
+	}
+}
+
 func TestHandleFailedTOTPAuthLocksAccount(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 
