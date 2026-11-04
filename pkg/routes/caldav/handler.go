@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -78,21 +79,33 @@ func ProjectHandler(c *echo.Context) error {
 		user:    u,
 	}
 
-	// Try to parse a task from the request payload
 	body, _ := io.ReadAll(c.Request().Body)
 	// Restore the io.ReadCloser to its original state
 	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-	// Parse it
-	vtodo := string(body)
-	if vtodo != "" && strings.HasPrefix(vtodo, `BEGIN:VCALENDAR`) {
-		storage.task, _, err = caldav2.ParseTaskFromVTODO(vtodo)
+
+	logRequest(c.Request().Header, body)
+
+	if c.Request().Method == http.MethodPut && strings.HasPrefix(string(body), `BEGIN:VCALENDAR`) {
+		if err := checkCalendarBody(string(body)); err != nil {
+			return err
+		}
+
+		s := db.NewSession()
+		canRead, err := storage.canReadCollection(s)
+		s.Close()
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		}
+		if !canRead {
+			return c.String(http.StatusNotFound, "Project not found")
+		}
+
+		storage.task, _, err = caldav2.ParseTaskFromVTODO(string(body))
 		if err != nil {
 			log.Warningf("[CALDAV] Failed to parse task: %v", err)
 			return models.ErrInvalidData{Message: "Invalid task"}
 		}
 	}
-
-	logRequest(c.Request().Header, body)
 
 	// RFC 6578: intercept sync-collection REPORT before caldav-go sees it.
 	// caldav-go returns 412 (empty body) for unknown REPORT types, which causes
@@ -194,6 +207,17 @@ func TaskHandler(c *echo.Context) error {
 		return c.String(http.StatusNotFound, "Task not found")
 	}
 
+	if c.Request().Method == http.MethodPut {
+		body, err := io.ReadAll(io.LimitReader(c.Request().Body, caldav2.MaxVCalendarSize+1))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Could not read request body").Wrap(err)
+		}
+		if err := checkCalendarBody(string(body)); err != nil {
+			return err
+		}
+		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}
+
 	storage := &VikunjaCaldavProjectStorage{
 		project: project,
 		task:    &models.Task{UID: taskUID},
@@ -276,6 +300,18 @@ func EntryHandler(c *echo.Context) error {
 
 	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())
+	return nil
+}
+
+// Runs before any permission check, so the parser never sees what it handles superlinearly.
+func checkCalendarBody(body string) error {
+	err := caldav2.CheckVCalendarLimits(body)
+	switch {
+	case errors.Is(err, caldav2.ErrVCalendarTooLarge):
+		return echo.NewHTTPError(http.StatusRequestEntityTooLarge, err.Error())
+	case err != nil:
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	return nil
 }
 

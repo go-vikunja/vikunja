@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -285,6 +286,10 @@ type ParsedVTODOProperties struct {
 //
 //nolint:gocyclo
 func ParseTaskFromVTODO(content string) (vTask *models.Task, props ParsedVTODOProperties, err error) {
+	if err = CheckVCalendarLimits(content); err != nil {
+		return nil, props, err
+	}
+
 	parsed, err := ics.ParseCalendar(strings.NewReader(content))
 	if err != nil {
 		return nil, props, err
@@ -592,4 +597,105 @@ func caldavTimeToTimestamp(ianaProperty ics.IANAProperty) time.Time {
 	}
 
 	return t.In(config.GetTimeZone())
+}
+
+const (
+	MaxVCalendarSize = 1 << 20
+	// golang-ical rescans the whole line for every parameter value.
+	MaxPropertyParameters = 100
+)
+
+var (
+	ErrVCalendarTooLarge         = fmt.Errorf("calendar data must not exceed %d bytes", MaxVCalendarSize)
+	ErrTooManyPropertyParameters = fmt.Errorf("a calendar property must not have more than %d parameters", MaxPropertyParameters)
+)
+
+var icalUnfolder = strings.NewReplacer("\r\n ", "", "\r\n\t", "", "\n ", "", "\n\t", "")
+
+// CheckVCalendarLimits is linear itself, so it is safe to run before any permission check.
+func CheckVCalendarLimits(content string) error {
+	if len(content) > MaxVCalendarSize {
+		return ErrVCalendarTooLarge
+	}
+
+	for line := range strings.SplitSeq(icalUnfolder.Replace(content), "\n") {
+		if strings.Count(line, ";")+strings.Count(line, ",") <= MaxPropertyParameters {
+			continue
+		}
+		count, ok := propertyParameterCount(line)
+		if !ok || count > MaxPropertyParameters {
+			return ErrTooManyPropertyParameters
+		}
+	}
+
+	return nil
+}
+
+func isICalTokenChar(b byte) bool {
+	return b == '-' || ('a' <= b && b <= 'z') || ('A' <= b && b <= 'Z') || ('0' <= b && b <= '9')
+}
+
+func skipICalToken(line string, i int) int {
+	for i < len(line) && isICalTokenChar(line[i]) {
+		i++
+	}
+	return i
+}
+
+// propertyParameterCount mirrors golang-ical's line walk; ok is false where the parser is more lenient.
+func propertyParameterCount(line string) (count int, ok bool) {
+	i := skipICalToken(line, 0)
+	if i == 0 {
+		return 0, false
+	}
+
+	for i < len(line) {
+		switch line[i] {
+		case ':':
+			return count, true
+		case ';':
+			nameEnd := skipICalToken(line, i+1)
+			if nameEnd == i+1 || nameEnd >= len(line) || line[nameEnd] != '=' {
+				return count, false
+			}
+			i = nameEnd
+			for {
+				count++
+				i, ok = skipParameterValue(line, i+1)
+				if !ok {
+					return count, false
+				}
+				if i >= len(line) || line[i] != ',' {
+					break
+				}
+			}
+		default:
+			return count, false
+		}
+	}
+
+	return count, false
+}
+
+func skipParameterValue(line string, i int) (int, bool) {
+	quoted := i < len(line) && line[i] == '"'
+	if quoted {
+		i++
+	}
+	for ; i < len(line); i++ {
+		switch line[i] {
+		case '\\':
+			i++
+		case '"':
+			if quoted {
+				return i + 1, true
+			}
+			return i, false
+		case ';', ':', ',':
+			if !quoted {
+				return i, true
+			}
+		}
+	}
+	return i, false
 }
