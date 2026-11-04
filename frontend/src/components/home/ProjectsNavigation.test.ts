@@ -33,7 +33,7 @@ describe('ProjectsNavigation', () => {
 			props: {modelValue: projects(1, 2, 3, 4), canEditOrder: true},
 			attachTo: document.body,
 			global: {
-				stubs: {ProjectsNavigationItem},
+				stubs: {ProjectsNavigationItem, AccessLossConfirmModal: true},
 				config: {errorHandler: error => { errors.push(error) }},
 			},
 		})
