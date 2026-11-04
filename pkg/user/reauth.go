@@ -17,11 +17,14 @@
 package user
 
 import (
+	"context"
 	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+
+	"xorm.io/xorm"
 )
 
 const (
@@ -59,8 +62,56 @@ func refundReauthAttempt(key string) {
 	}
 }
 
-func CheckReauthPassword(u *User, password string) error {
+// Rolls s back on a wrong password.
+func CheckReauthPassword(ctx context.Context, s *xorm.Session, u *User, password string) error {
 	return ThrottleReauth(u.ID, func() error {
-		return CheckUserPassword(u, password)
+		return CheckUserPasswordCountingFailures(ctx, s, u, password)
 	})
+}
+
+// Rolls s back on failure.
+func Reauthenticate(ctx context.Context, s *xorm.Session, u *User, password, passcode string) error {
+	err := ThrottleReauth(u.ID, func() error {
+		if err := CheckUserPasswordCountingFailures(ctx, s, u, password); err != nil {
+			return err
+		}
+		return CheckTOTPIfEnabled(s, u, passcode)
+	})
+	if err != nil {
+		handleFailedTOTPCheck(s, u, passcode, err)
+	}
+	return err
+}
+
+func CheckTOTPIfEnabled(s *xorm.Session, u *User, passcode string) error {
+	enabled, err := TOTPEnabledForUser(s, u)
+	if err != nil || !enabled {
+		return err
+	}
+	if passcode == "" {
+		return ErrInvalidTOTPPasscode{}
+	}
+	_, err = ValidateTOTPPasscode(s, &TOTPPasscode{
+		User:     u,
+		Passcode: passcode,
+	})
+	return err
+}
+
+// Rolls s back on failure.
+func CheckTOTPCountingFailures(s *xorm.Session, u *User, passcode string) error {
+	err := CheckTOTPIfEnabled(s, u, passcode)
+	if err != nil {
+		handleFailedTOTPCheck(s, u, passcode, err)
+	}
+	return err
+}
+
+func handleFailedTOTPCheck(s *xorm.Session, u *User, passcode string, err error) {
+	// Rolled back first: HandleFailedTOTPAuth needs its own write lock on SQLite.
+	_ = s.Rollback()
+	// A missing passcode is the prompt for one, not a guess.
+	if passcode != "" && IsErrInvalidTOTPPasscode(err) {
+		HandleFailedTOTPAuth(u)
+	}
 }

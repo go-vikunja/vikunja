@@ -115,7 +115,7 @@ func AuthenticateUserCredentials(ctx context.Context, login *user.Login) (*user.
 		return nil, err
 	}
 
-	if err := enforceLoginTOTP(s, u, login.TOTPPasscode); err != nil {
+	if err := user.CheckTOTPCountingFailures(s, u, login.TOTPPasscode); err != nil {
 		return nil, err
 	}
 
@@ -164,39 +164,6 @@ func resolveLoginUser(ctx context.Context, s *xorm.Session, login *user.Login) (
 
 	u, err = user.CheckUserCredentials(ctx, s, login)
 	return u, nil, err
-}
-
-// enforceLoginTOTP runs the TOTP gate for users who have it enabled, mirroring
-// v1: a missing passcode is rejected, and a wrong one trips the failed-attempt
-// lockout via HandleFailedTOTPAuth. The session is rolled back before
-// HandleFailedTOTPAuth so its dedicated session can acquire a write lock on
-// SQLite shared-cache (the lockout write is decoupled from this transaction —
-// see GHSA-fgfv-pv97-6cmj).
-func enforceLoginTOTP(s *xorm.Session, u *user.User, passcode string) error {
-	totpEnabled, err := user.TOTPEnabledForUser(s, u)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	if !totpEnabled {
-		return nil
-	}
-
-	if passcode == "" {
-		_ = s.Rollback()
-		return user.ErrInvalidTOTPPasscode{}
-	}
-
-	_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{User: u, Passcode: passcode})
-	if err != nil {
-		_ = s.Rollback()
-		if user.IsErrInvalidTOTPPasscode(err) {
-			user.HandleFailedTOTPAuth(u)
-		}
-		return err
-	}
-
-	return nil
 }
 
 // DeleteSession removes the session with the given id, logging the user out

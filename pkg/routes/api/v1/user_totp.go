@@ -96,7 +96,7 @@ func UserTOTPEnroll(c *echo.Context) error {
 	}
 	defer s.Close()
 
-	t, err := user.EnrollTOTP(s, u, pass.Password)
+	t, err := user.EnrollTOTP(c.Request().Context(), s, u, pass.Password)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -139,7 +139,7 @@ func UserTOTPEnable(c *echo.Context) error {
 	defer s.Close()
 	defer events.CleanupPending(s)
 
-	err = user.EnableTOTP(s, u, body.Password, body.Passcode)
+	err = user.EnableTOTP(c.Request().Context(), s, u, body.Password, body.Passcode)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -187,7 +187,7 @@ func UserTOTPDisable(c *echo.Context) error {
 	}
 	defer s.Close()
 
-	err = user.DisableTOTPWithReauth(s, u, login.Password, login.TOTPPasscode)
+	err = user.DisableTOTPWithReauth(c.Request().Context(), s, u, login.Password, login.TOTPPasscode)
 	if err != nil {
 		_ = s.Rollback()
 		return err
