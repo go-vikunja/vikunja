@@ -108,7 +108,7 @@
 								danger
 								icon="trash-alt"
 								:aria-label="$t('project.share.userTeam.remove', {type: typeName})"
-								@click="shareToDelete = share"
+								@click="confirmRemoval(share)"
 							/>
 						</td>
 					</tr>
@@ -189,7 +189,7 @@ const unsharedCandidates = computed(() => props.candidates.filter(hasId).filter(
 const selected = ref(null) as Ref<Identified<Candidate> | null>
 const selectedPermission = ref<Record<number, Permission>>({})
 const shareToDelete = ref(null) as Ref<Identified<Share> | null>
-const removingOwnShare = computed(() => shareToDelete.value !== null && (props.isOwnShare?.(shareToDelete.value) ?? false))
+const removingOwnShare = ref(false)
 const cleanup = ref(defaultAccessLossCleanup())
 watch(shareToDelete, () => {
 	cleanup.value = defaultAccessLossCleanup()
@@ -227,6 +227,11 @@ async function changePermission(share: Identified<Share>) {
 	if (props.projectId === projectId) {
 		selectedPermission.value[share.id] = normalizeSharePermission(identifiedShares.value.find(item => item.id === share.id)?.permission)
 	}
+}
+
+function confirmRemoval(share: Identified<Share>) {
+	removingOwnShare.value = props.isOwnShare?.(share) ?? false
+	shareToDelete.value = share
 }
 
 async function removeShare() {
