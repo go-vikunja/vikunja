@@ -476,7 +476,17 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
 		doer, doersWebhook := f.addOtherMemberWithWebhook(t, team)
-		_, err := f.s.Where("team_id = ? AND user_id = ?", team.ID, doer.ID).Cols("admin").Update(&TeamMember{Admin: true})
+		_, err := f.s.ID(f.webhookC).Cols("events").Update(&Webhook{Events: []string{"project.deleted"}})
+		require.NoError(t, err)
+		active := &Webhook{
+			ProjectID:   f.child.ID,
+			CreatedByID: f.owner.ID,
+			TargetURL:   "https://example.com/owner",
+			Events:      []string{"project.deleted"},
+		}
+		_, err = f.s.Insert(active)
+		require.NoError(t, err)
+		_, err = f.s.Where("team_id = ? AND user_id = ?", team.ID, doer.ID).Cols("admin").Update(&TeamMember{Admin: true})
 		require.NoError(t, err)
 		canDelete, err := team.CanDelete(f.s, doer)
 		require.NoError(t, err)
@@ -487,6 +497,13 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		require.NoError(t, f.s.Commit())
 		f.assertWebhooksTransferredTo(t, doer)
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": doersWebhook})
+		retained := &Webhook{}
+		found, err := f.s.ID(f.webhookC).Get(retained)
+		require.NoError(t, err)
+		require.True(t, found)
+		assert.True(t, retained.IsDisabled)
+		assert.Equal(t, "https://example.com/access-loss", retained.TargetURL)
+		assert.Equal(t, []string{"project.deleted"}, retained.Events)
 
 		events.ClearDispatchedEvents()
 		events.TestListener(t, &TaskUpdatedEvent{
@@ -494,6 +511,21 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 			Doer: f.owner,
 		}, &WebhookListener{EventName: "task.updated"})
 		assert.Empty(t, events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()))
+
+		f.child.Description = "private update after team deletion"
+		require.NoError(t, f.child.Update(f.s, f.owner))
+		require.NoError(t, f.s.Commit())
+		events.ClearDispatchedEvents()
+		require.NoError(t, f.child.Delete(f.s, f.owner))
+		require.NoError(t, f.s.Commit())
+		events.DispatchPending(t.Context(), f.s)
+		deleted := singleDispatchedEvent[*ProjectDeletedEvent](t)
+		events.ClearDispatchedEvents()
+		events.TestListener(t, deleted, &WebhookListener{EventName: "project.deleted"})
+		deliveries := webhookDeliveriesByID(t)
+		assert.NotContains(t, deliveries, f.webhookC)
+		require.Contains(t, deliveries, active.ID)
+		assert.Equal(t, "private update after team deletion", deleted.Project.Description)
 	})
 	t.Run("removing your own team from the project cannot keep your webhooks", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -693,6 +725,8 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 func TestWebhookListener_DeliversTransferredWebhook(t *testing.T) {
 	f := setupAccessLoss(t)
 	f.shareDirectly(t, PermissionWrite)
+	_, err := f.s.ID(f.webhookP).Cols("is_disabled").Update(&Webhook{IsDisabled: true})
+	require.NoError(t, err)
 	doer := &user.User{
 		ID:       3,
 		Username: "user3",
@@ -711,6 +745,14 @@ func TestWebhookListener_DeliversTransferredWebhook(t *testing.T) {
 	require.NoError(t, pu.Delete(f.s, doer))
 	require.NoError(t, f.s.Commit())
 	f.assertWebhooksTransferredTo(t, doer)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":          f.webhookP,
+		"is_disabled": true,
+	}, false)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":          f.webhookC,
+		"is_disabled": false,
+	}, false)
 
 	events.ClearDispatchedEvents()
 	events.TestListener(t, &TaskUpdatedEvent{

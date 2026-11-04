@@ -88,7 +88,15 @@ func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, e
 		askBeforeAccessLoss = false
 	}
 
-	access, err := getProjectReadAccessForUsers(s, userIDs, existing)
+	doerID := int64(0)
+	if u, isUser := doer.(*user.User); isUser {
+		doerID = u.ID
+	}
+	accessUserIDs := userIDs
+	if cleanup.KeepWebhooks && doerID != 0 {
+		accessUserIDs = slices.Concat(userIDs, []int64{doerID})
+	}
+	access, err := getProjectReadAccessForUsers(s, accessUserIDs, existing)
 	if err != nil {
 		return err
 	}
@@ -105,11 +113,6 @@ func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, e
 		if err := checkAccessLossNeedsConfirmation(s, lostByUser); err != nil {
 			return err
 		}
-	}
-
-	doerID := int64(0)
-	if u, isUser := doer.(*user.User); isUser {
-		doerID = u.ID
 	}
 
 	for _, userID := range userIDs {
@@ -138,6 +141,24 @@ func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, e
 		for userID, lost := range lostByUser {
 			if userID == doerID || len(lost) == 0 {
 				continue
+			}
+			if doer != nil {
+				disabledProjectIDs := []int64{}
+				for _, projectID := range lost {
+					if !access[doerID][projectID] {
+						disabledProjectIDs = append(disabledProjectIDs, projectID)
+					}
+				}
+				if len(disabledProjectIDs) > 0 {
+					_, err := s.In("project_id", disabledProjectIDs).
+						And("created_by_id = ?", userID).
+						Cols("is_disabled").
+						NoAutoTime().
+						Update(&Webhook{IsDisabled: true})
+					if err != nil {
+						return err
+					}
+				}
 			}
 			column := "created_by_id"
 			webhook := &Webhook{CreatedByID: doerID}
