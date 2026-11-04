@@ -182,9 +182,9 @@
           "mm-dd-yyyy": "MM-DD-YYYY",
           "dd-mm-yyyy": "DD-MM-YYYY",
           "yyyy-mm-dd": "YYYY-MM-DD",
-          "mm/dd/yyyy": "MM/DD/YYYY",
-          "dd/mm/yyyy": "DD/MM/YYYY",
-          "yyyy/mm/dd": "YYYY/MM/DD"
+          "mm\/dd\/yyyy": "MM\/DD\/YYYY",
+          "dd\/mm\/yyyy": "DD\/MM\/YYYY",
+          "yyyy\/mm\/dd": "YYYY\/MM\/DD"
         },
         "timeFormat": "Time format",
         "defaultDueTime": "Default due time",
