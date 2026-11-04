@@ -1,6 +1,9 @@
 import {computed, ref, shallowRef, watch, type Ref, type ShallowRef} from 'vue'
 import type {UseQueryReturnType} from '@tanstack/vue-query'
 
+import type {TrashCount} from '@/client/generated'
+import type {EmptyTrashInput} from '@/client/queries/trash'
+
 import {clampPage, type Paginated} from '@/client/queries/pagination'
 import {captureFocus} from '@/composables/useFocusAfterRemoval'
 import {usePendingRows} from '@/composables/usePendingRows'
@@ -14,7 +17,9 @@ export function useTrashList<T extends {id: number}>(options: {
 	query: (page: Ref<number>) => UseQueryReturnType<Paginated<T>, Error>,
 	restore: RowMutation,
 	deleteForever: RowMutation,
-	empty: {mutateAsync: () => Promise<unknown>},
+	// Only runs while the empty dialog is open
+	count: (enabled: Ref<boolean>) => UseQueryReturnType<TrashCount, Error>,
+	empty: {mutateAsync: (input: EmptyTrashInput) => Promise<unknown>},
 }) {
 	const currentPage = ref(1)
 	const query = options.query(currentPage)
@@ -42,6 +47,8 @@ export function useTrashList<T extends {id: number}>(options: {
 	const emptyModal = shallowRef<{moveFocus: MoveFocus} | null>(null)
 	const itemToDelete = computed(() => deleteModal.value?.item ?? null)
 	const showEmptyModal = computed(() => emptyModal.value !== null)
+	const emptyCount = options.count(showEmptyModal).data
+	const includeOthers = ref(true)
 
 	const listElement = ref<HTMLElement | null>(null)
 	const emptyStateElement = ref<HTMLElement | null>(null)
@@ -102,6 +109,7 @@ export function useTrashList<T extends {id: number}>(options: {
 		if (total.value === 0) {
 			return
 		}
+		includeOthers.value = true
 		emptyModal.value = {moveFocus: captureFocus()}
 	}
 
@@ -116,7 +124,7 @@ export function useTrashList<T extends {id: number}>(options: {
 			return
 		}
 		try {
-			await options.empty.mutateAsync()
+			await options.empty.mutateAsync({includeOthers: includeOthers.value})
 		} catch {
 			return
 		}
@@ -139,6 +147,8 @@ export function useTrashList<T extends {id: number}>(options: {
 		isPending: pendingRows.has,
 		itemToDelete,
 		showEmptyModal,
+		emptyCount,
+		includeOthers,
 		restore,
 		confirmDeleteForever,
 		cancelDeleteForever,

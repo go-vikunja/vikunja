@@ -1842,8 +1842,9 @@
       "text": "This permanently deletes \"{task}\" with its comments, attachments, reminders and relations. Its time entries stay with the project. This cannot be undone."
     },
     "emptyModal": {
-      "text": "There are no tasks to delete. | This permanently deletes 1 task, including tasks other people moved to the trash. This cannot be undone. | This permanently deletes {count} tasks, including tasks other people moved to the trash. This cannot be undone.",
-      "adminOnlyText": "This permanently deletes the trashed tasks of every project you are admin of, including tasks other people moved to the trash. Tasks in other projects stay in the trash. This cannot be undone."
+      "text": "There are no tasks you can delete. | This permanently deletes 1 task. This cannot be undone. | This permanently deletes {count} tasks. This cannot be undone.",
+      "byOthers": "1 of them was moved to the trash by someone else. | {count} of them were moved to the trash by other people.",
+      "includeOthers": "Also delete tasks other people moved to the trash"
     },
     "open": "Open trash",
     "taskInTrash": "This task is in the trash. It was deleted {since}.",
@@ -1866,7 +1867,9 @@
       "text": "This permanently deletes \"{project}\" with its sub-projects, tasks, views and shares. Time entries stay with the people who logged them, without a project. This cannot be undone."
     },
     "emptyProjectsModal": {
-      "text": "There are no projects to delete. | This permanently deletes 1 project with everything in it, including projects other people moved to the trash. This cannot be undone. | This permanently deletes {count} projects with everything in them, including projects other people moved to the trash. This cannot be undone."
+      "text": "There are no projects you can delete. | This permanently deletes 1 project with everything in it. This cannot be undone. | This permanently deletes {count} projects with everything in them. This cannot be undone.",
+      "byOthers": "1 of them was moved to the trash by someone else. | {count} of them were moved to the trash by other people.",
+      "includeOthers": "Also delete projects other people moved to the trash"
     },
     "projectInTrash": "This project is in the trash. It was deleted {since}.",
     "projectInTrashBy": "This project is in the trash. {user} deleted it {since}.",

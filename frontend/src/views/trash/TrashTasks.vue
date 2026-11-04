@@ -89,35 +89,30 @@
 			</template>
 		</Modal>
 
-		<Modal
+		<EmptyTrashModal
+			v-model:include-others="includeOthers"
 			:enabled="showEmptyModal"
+			:count="emptyCount"
+			:texts="{text: 'trash.emptyModal.text', byOthers: 'trash.emptyModal.byOthers', includeOthers: 'trash.emptyModal.includeOthers'}"
 			@close="closeEmptyModal()"
 			@submit="emptyTrash()"
-		>
-			<template #header>
-				<span>{{ $t('trash.empty') }}</span>
-			</template>
-			<template #text>
-				<p class="tw:text-balance">
-					{{ emptyModalText }}
-				</p>
-			</template>
-		</Modal>
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useI18n} from 'vue-i18n'
 import {useQuery} from '@tanstack/vue-query'
 
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import SingleTaskInlineReadonly from '@/components/tasks/partials/SingleTaskInlineReadonly.vue'
+import EmptyTrashModal from '@/components/trash/EmptyTrashModal.vue'
 import TrashRowActions from '@/components/trash/TrashRowActions.vue'
 
 import {
+	taskTrashCountQuery,
 	trashDaysLeft,
 	trashedTasksQuery,
 	useDeleteTaskPermanentlyMutation,
@@ -146,6 +141,8 @@ const {
 	isPending,
 	itemToDelete,
 	showEmptyModal,
+	emptyCount,
+	includeOthers,
 	restore,
 	confirmDeleteForever,
 	cancelDeleteForever,
@@ -157,14 +154,10 @@ const {
 	query: page => useQuery(computed(() => trashedTasksQuery(page.value))),
 	restore: useRestoreTaskMutation(),
 	deleteForever: useDeleteTaskPermanentlyMutation(),
+	count: enabled => useQuery(computed(() => ({...taskTrashCountQuery(), enabled: enabled.value}))),
 	empty: useEmptyTaskTrashMutation(),
 })
 
-const {t} = useI18n({useScope: 'global'})
-// Emptying skips tasks the user isn't admin of, and other pages can't be checked from here
-const emptyModalText = computed(() => totalPages.value <= 1 && items.value.every(task => task.can_delete_permanently)
-	? t('trash.emptyModal.text', total.value)
-	: t('trash.emptyModal.adminOnlyText'))
 </script>
 
 <style lang="scss" scoped>

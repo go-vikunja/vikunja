@@ -130,6 +130,30 @@ test.describe('Project trash', () => {
 		}
 	})
 
+	test('emptying purges projects other people trashed by default', async ({authenticatedPage: page, apiContext, userToken}) => {
+		await UserFactory.create(1, {id: 2}, false)
+		await ProjectFactory.create(1, {
+			id: 3,
+			title: 'Trashed by someone else',
+			deleted_at: new Date().toISOString(),
+			deleted_by_id: 2,
+		}, false)
+		await trashProject(apiContext, userToken, 1)
+		await page.goto('/trash/projects')
+		await expect(page.locator('[data-cy="trashedProject"]')).toHaveCount(2)
+
+		await page.locator('[data-cy="emptyProjectTrash"]').click()
+		const dialog = page.locator('dialog[open]').filter({hasText: 'Empty trash'})
+		await expect(dialog.locator('[data-cy="emptyTrashText"]')).toContainText('2 projects')
+		await expect(dialog.locator('[data-cy="emptyTrashOthersWarning"]')).toContainText('1 of them was moved to the trash by someone else.')
+		await expect(dialog.locator('[data-cy="emptyTrashIncludeOthers"] input')).toBeChecked()
+		await dialog.locator('.actions .button').filter({hasText: 'Do it!'}).click()
+
+		await expect(page.getByText('There are no projects in the trash.')).toBeVisible()
+		const theirs = await apiContext.get('projects/3', {headers: {Authorization: `Bearer ${userToken}`}})
+		expect((await theirs.json()).code).toBe(3001)
+	})
+
 	test('opening a trashed project shows a notice with restore', async ({
 		authenticatedPage: page,
 		apiContext,
