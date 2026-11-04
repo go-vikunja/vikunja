@@ -1,6 +1,6 @@
-import {describe, it, expect} from 'vitest'
+import {afterEach, beforeEach, describe, it, expect} from 'vitest'
 
-import {getAutoRedirectProvider} from './redirectToProvider'
+import {getAutoRedirectProvider, isLinkingIdentity, redirectToProvider} from './redirectToProvider'
 import type {IProvider} from '@/types/IProvider'
 
 const provider = {key: 'authentik', name: 'Authentik'} as IProvider
@@ -47,5 +47,46 @@ describe('getAutoRedirectProvider', () => {
 	it('does not redirect when openid is disabled or has no providers', () => {
 		expect(getAutoRedirectProvider({...soleProviderContext, openIdEnabled: false})).toBeUndefined()
 		expect(getAutoRedirectProvider({...soleProviderContext, providers: []})).toBeUndefined()
+	})
+})
+
+describe('redirectToProvider', () => {
+	const originalLocation = window.location
+	const fullProvider = {
+		...provider,
+		auth_url: 'https://idp.example.com/auth',
+		client_id: 'vikunja',
+		scope: 'openid',
+		logout_url: '',
+	} as IProvider
+
+	beforeEach(() => {
+		localStorage.clear()
+		Object.defineProperty(window, 'location', {
+			configurable: true,
+			value: {...originalLocation, href: 'http://localhost/user/settings/linked-accounts'},
+		})
+	})
+
+	afterEach(() => {
+		Object.defineProperty(window, 'location', {configurable: true, value: originalLocation})
+	})
+
+	it('uses the login redirect uri when linking', () => {
+		redirectToProvider(fullProvider, {linking: true})
+
+		expect(isLinkingIdentity()).toBe(true)
+		const url = new URL(window.location.href)
+		expect(url.searchParams.get('prompt')).toBe('select_account')
+		expect(url.searchParams.get('redirect_uri')).toBe('http://localhost/auth/openid/authentik')
+		expect(url.searchParams.get('state')).toBe(localStorage.getItem('state'))
+	})
+
+	it('drops a stale linking marker on a login redirect', () => {
+		redirectToProvider(fullProvider, {linking: true})
+		redirectToProvider(fullProvider)
+
+		expect(isLinkingIdentity()).toBe(false)
+		expect(new URL(window.location.href).searchParams.has('prompt')).toBe(false)
 	})
 })
