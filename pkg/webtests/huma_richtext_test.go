@@ -265,6 +265,13 @@ func TestHumaRichText_Write(t *testing.T) {
 		assert.Equal(t, "<p>Hello <strong>world</strong></p>", desc)
 	})
 
+	t.Run("markdown write with oversized tables is rejected", func(t *testing.T) {
+		table := strings.Repeat("|a", 200) + "|\n" + strings.Repeat("|-", 200) + "|\n" + strings.Repeat("x\n", 200)
+		body := fmt.Sprintf(`{"title":"w-table","description":%s,"hex_color":"112233"}`, mustJSON(table))
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/labels?format=markdown", body, token, "")
+		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+	})
+
 	t.Run("default write stores body verbatim", func(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/labels",
 			`{"title":"w2","description":"Hello **world**","hex_color":"112233"}`, token, "")
