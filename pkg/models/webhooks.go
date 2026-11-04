@@ -55,7 +55,10 @@ type Webhook struct {
 	// The target URL where the POST request with the webhook payload will be made
 	TargetURL string `xorm:"not null" valid:"required,url" json:"target_url" doc:"The target URL where the POST request with the webhook payload will be made."`
 	// The webhook events which should fire this webhook target
-	Events []string `xorm:"JSON not null" valid:"required" json:"events" doc:"The webhook events which should fire this webhook target. Get the available events from /api/v1/webhooks/events."`
+	Events      []string `xorm:"JSON not null" valid:"required" json:"events" doc:"The webhook events which should fire this webhook target. Get the available events from /api/v1/webhooks/events."`
+	IsDisabled  bool     `xorm:"not null default false" json:"is_disabled" readOnly:"true" doc:"Disabled webhooks do not deliver events. Re-enable explicitly through the update endpoint."`
+	SetDisabled *bool    `xorm:"-" json:"-"`
+
 	// The project ID of the project this webhook target belongs to
 	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project" readOnly:"true" doc:"The id of the project this webhook target belongs to."`
 	// The user ID if this is a user-level webhook (mutually exclusive with ProjectID)
@@ -66,8 +69,8 @@ type Webhook struct {
 	BasicAuthUser     string `xorm:"null" json:"basic_auth_user" writeOnly:"true" doc:"If provided together with basic_auth_password, webhook requests will be sent with a Basic Auth header. Write-only: never returned in responses."`
 	BasicAuthPassword string `xorm:"null" json:"basic_auth_password" writeOnly:"true" doc:"The password for the Basic Auth header. Write-only: never returned in responses."`
 
-	// The user who initially created the webhook target.
-	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who initially created the webhook target."`
+	// The user whose access controls delivery.
+	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user whose access controls delivery. Changes when the webhook is transferred or re-enabled by another user."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"`
 
 	// A timestamp when this webhook target was created. You cannot change this value.
@@ -202,6 +205,7 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	w.CreatedByID = a.GetID()
+	w.IsDisabled = false
 	w.ID = 0
 	_, err = s.Insert(w)
 	if err != nil {
@@ -303,15 +307,29 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 // @Failure 404 {object} web.HTTPError "The webhok target does not exist"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks/{webhookID} [post]
-func (w *Webhook) Update(s *xorm.Session, _ web.Auth) (err error) {
+func (w *Webhook) Update(s *xorm.Session, a web.Auth) (err error) {
 	for _, event := range w.Events {
 		if _, has := availableWebhookEvents[event]; !has {
 			return InvalidFieldError([]string{"events"})
 		}
 	}
 
+	columns := []string{"events"}
+	if w.SetDisabled != nil {
+		if w.IsDisabled && !*w.SetDisabled {
+			w.CreatedByID = a.GetID()
+			w.CreatedBy, err = user.GetUserByID(s, a.GetID())
+			if err != nil {
+				return err
+			}
+			columns = append(columns, "created_by_id")
+		}
+		w.IsDisabled = *w.SetDisabled
+		columns = append(columns, "is_disabled")
+	}
+
 	_, err = s.Where("id = ?", w.ID).
-		Cols("events").
+		Cols(columns...).
 		Update(w)
 	if err != nil {
 		return err

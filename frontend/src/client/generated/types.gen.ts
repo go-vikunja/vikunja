@@ -4091,7 +4091,7 @@ export type Webhook = {
      */
     readonly created?: string;
     /**
-     * The user who initially created the webhook target.
+     * The user whose access controls delivery. Changes when the webhook is transferred or re-enabled by another user.
      */
     readonly created_by?: User;
     /**
@@ -4102,6 +4102,10 @@ export type Webhook = {
      * The generated ID of this webhook target.
      */
     readonly id?: number;
+    /**
+     * Disabled webhooks do not deliver events. Re-enable explicitly through the update endpoint.
+     */
+    readonly is_disabled?: boolean;
     /**
      * The id of the project this webhook target belongs to.
      */
@@ -4118,6 +4122,26 @@ export type Webhook = {
      * The id of the user if this is a user-level webhook (mutually exclusive with project_id). Set from the route, not the body.
      */
     readonly user_id?: number;
+};
+
+export type WebhookUpdate = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The webhook events to subscribe to.
+     */
+    events?: Array<string> | null;
+    /**
+     * Omit to preserve the disabled state. Explicitly enabling a disabled webhook transfers it to the acting user.
+     */
+    is_disabled?: boolean;
+    /**
+     * The existing target URL. It cannot be changed.
+     */
+    target_url?: string;
+    [key: string]: unknown;
 };
 
 export type ApiTokenWritable = {
@@ -5943,6 +5967,22 @@ export type WebhookWritable = {
      * The target URL where the POST request with the webhook payload will be made.
      */
     target_url?: string;
+};
+
+export type WebhookUpdateWritable = {
+    /**
+     * The webhook events to subscribe to.
+     */
+    events?: Array<string> | null;
+    /**
+     * Omit to preserve the disabled state. Explicitly enabling a disabled webhook transfers it to the acting user.
+     */
+    is_disabled?: boolean;
+    /**
+     * The existing target URL. It cannot be changed.
+     */
+    target_url?: string;
+    [key: string]: unknown;
 };
 
 export type AdminInviteLinksListData = {
@@ -9757,7 +9797,7 @@ export type WebhooksDeleteResponses = {
 export type WebhooksDeleteResponse = WebhooksDeleteResponses[keyof WebhooksDeleteResponses];
 
 export type WebhooksUpdateData = {
-    body: WebhookWritable;
+    body: WebhookUpdateWritable;
     path: {
         project: number;
         webhook: number;
@@ -13099,7 +13139,7 @@ export type UserWebhooksDeleteResponses = {
 export type UserWebhooksDeleteResponse = UserWebhooksDeleteResponses[keyof UserWebhooksDeleteResponses];
 
 export type UserWebhooksUpdateData = {
-    body: WebhookWritable;
+    body: WebhookUpdateWritable;
     path: {
         webhook: number;
     };

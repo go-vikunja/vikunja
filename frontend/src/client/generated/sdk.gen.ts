@@ -2401,9 +2401,9 @@ export const webhooksDelete = <ThrowOnError extends boolean = true>(options: Opt
 });
 
 /**
- * Update a webhook target's events
+ * Update a webhook target
  *
- * Changes the events a webhook target subscribes to. Only the events list can be changed; target_url, secret and auth are immutable after creation. The webhook must belong to the project in the path, and write access to that project is required.
+ * Changes the subscribed events and optionally is_disabled. Omitting is_disabled preserves its state. Explicitly enabling a disabled webhook transfers it to the acting user. The target URL and credentials remain unchanged. The webhook must belong to the project in the path, and write access to that project is required.
  */
 export const webhooksUpdate = <ThrowOnError extends boolean = true>(options: Options<WebhooksUpdateData, ThrowOnError>): RequestResult<WebhooksUpdateResponses, WebhooksUpdateErrors, ThrowOnError> => (options.client ?? client).put<WebhooksUpdateResponses, WebhooksUpdateErrors, ThrowOnError>({
     security: [{
@@ -4606,9 +4606,9 @@ export const userWebhooksDelete = <ThrowOnError extends boolean = true>(options:
 });
 
 /**
- * Update a user webhook's events
+ * Update a user webhook
  *
- * Changes the events a user webhook subscribes to. Only the events list can be changed; target_url, secret and auth are immutable after creation. Only the owning user may update it.
+ * Changes the subscribed events and optionally is_disabled. Omitting is_disabled preserves its state. The target URL and credentials remain unchanged. Only the owning user may update it.
  */
 export const userWebhooksUpdate = <ThrowOnError extends boolean = true>(options: Options<UserWebhooksUpdateData, ThrowOnError>): RequestResult<UserWebhooksUpdateResponses, UserWebhooksUpdateErrors, ThrowOnError> => (options.client ?? client).put<UserWebhooksUpdateResponses, UserWebhooksUpdateErrors, ThrowOnError>({
     security: [{

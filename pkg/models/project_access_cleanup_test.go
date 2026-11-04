@@ -237,7 +237,15 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 		team := f.shareViaTeam(t)
 
 		require.NoError(t, removeUserFromTeamsByIDs(f.s, f.member, []int64{team.ID}))
-		f.assertCleanedUp(t)
+		require.NoError(t, f.s.Commit())
+		for _, id := range []int64{f.webhookP, f.webhookC} {
+			db.AssertExists(t, "webhooks", map[string]interface{}{"id": id, "created_by_id": f.member.ID, "target_url": "https://example.com/access-loss", "is_disabled": true}, false)
+		}
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID})
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareP}, false)
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
 	})
 	t.Run("external team sync leaves teams the user was never in alone", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -512,19 +520,19 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareP}, false)
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
 	})
-	t.Run("team sync follows the config", func(t *testing.T) {
+	t.Run("team sync disables webhooks and can revoke link shares", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
-		config.AuthTeamSyncTransferWebhooks.Set(true)
 		config.AuthTeamSyncRevokeLinkShares.Set(true)
 		t.Cleanup(func() {
-			config.AuthTeamSyncTransferWebhooks.Set(false)
 			config.AuthTeamSyncRevokeLinkShares.Set(false)
 		})
 
 		require.NoError(t, removeUserFromTeamsByIDs(f.s, f.member, []int64{team.ID}))
 		require.NoError(t, f.s.Commit())
-		f.assertWebhooksTransferredTo(t, f.owner)
+		for _, id := range []int64{f.webhookP, f.webhookC} {
+			db.AssertExists(t, "webhooks", map[string]interface{}{"id": id, "created_by_id": f.member.ID, "is_disabled": true}, false)
+		}
 		f.assertLinkSharesRevoked(t)
 	})
 }

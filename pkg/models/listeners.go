@@ -1295,6 +1295,10 @@ func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
 		return nil
 	}
 
+	if webhook.IsDisabled {
+		return nil
+	}
+
 	if err := webhook.sendWebhookPayload(evt.Payload); err != nil {
 		// A target that is down or rejects the payload is the user's to fix, so
 		// don't report it — but still retry and eventually poison the message.
@@ -1618,6 +1622,7 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string,
 
 	ws := []*Webhook{}
 	err = s.In("project_id", projectIDs).
+		And("is_disabled = ?", false).
 		OrderBy("id ASC").
 		Find(&ws)
 	if err != nil {
@@ -1724,6 +1729,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		if userID > 0 {
 			userWebhooks := []*Webhook{}
 			err = s.Where("user_id = ? AND (project_id IS NULL OR project_id = 0)", userID).
+				And("is_disabled = ?", false).
 				OrderBy("id ASC").
 				Find(&userWebhooks)
 			if err != nil {

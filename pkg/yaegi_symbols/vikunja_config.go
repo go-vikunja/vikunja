@@ -36,7 +36,6 @@ func init() {
 		"AuthOpenIDEnabled":                          reflect.ValueOf(config.AuthOpenIDEnabled),
 		"AuthOpenIDProviders":                        reflect.ValueOf(config.AuthOpenIDProviders),
 		"AuthTeamSyncRevokeLinkShares":               reflect.ValueOf(config.AuthTeamSyncRevokeLinkShares),
-		"AuthTeamSyncTransferWebhooks":               reflect.ValueOf(config.AuthTeamSyncTransferWebhooks),
 		"AutoTLSEmail":                               reflect.ValueOf(config.AutoTLSEmail),
 		"AutoTLSEnabled":                             reflect.ValueOf(config.AutoTLSEnabled),
 		"AutoTLSRenewBefore":                         reflect.ValueOf(config.AutoTLSRenewBefore),
