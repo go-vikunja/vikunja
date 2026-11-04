@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -43,11 +44,11 @@ func teamSyncAccessLossCleanup() AccessLossCleanup {
 	}
 }
 
-func cleanupAfterProjectAccessLoss(s *xorm.Session, userID int64, projectIDs []int64, cleanup AccessLossCleanup) error {
-	return cleanupAfterProjectAccessLossForUsers(s, []int64{userID}, projectIDs, cleanup)
+func cleanupAfterProjectAccessLoss(s *xorm.Session, doer web.Auth, userID int64, projectIDs []int64, cleanup AccessLossCleanup) error {
+	return cleanupAfterProjectAccessLossForUsers(s, doer, []int64{userID}, projectIDs, cleanup)
 }
 
-func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, projectIDs []int64, cleanup AccessLossCleanup) error {
+func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, doer web.Auth, userIDs []int64, projectIDs []int64, cleanup AccessLossCleanup) error {
 	if len(userIDs) == 0 || len(projectIDs) == 0 {
 		return nil
 	}
@@ -119,8 +120,18 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, pro
 		}
 	}
 
+	doerID := int64(0)
+	if u, isUser := doer.(*user.User); isUser {
+		doerID = u.ID
+	}
+
 	for _, userID := range userIDs {
 		lost := lostByUser[userID]
+		userCleanup := cleanup
+		// A kept webhook moves to the owner but still fires to the doer's URL.
+		if userID == doerID {
+			userCleanup.KeepWebhooks = false
+		}
 		err := deleteUserDataInProjects(s, userID, slices.Concat(lost, deletedIDs))
 		if err != nil {
 			return err
@@ -130,11 +141,11 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, userIDs []int64, pro
 		if err != nil {
 			return err
 		}
-		err = deleteUserWebhooksAndLinkShares(s, userID, lost, cleanup)
+		err = deleteUserWebhooksAndLinkShares(s, userID, lost, userCleanup)
 		if err != nil {
 			return err
 		}
-		if cleanup.KeepWebhooks {
+		if userCleanup.KeepWebhooks {
 			if err := transferWebhooksToProjectOwners(s, userID, lost, existing); err != nil {
 				return err
 			}
@@ -172,7 +183,7 @@ func checkAccessLossConfirmed(s *xorm.Session, projectIDsByUser map[int64][]int6
 }
 
 // Moving a project can drop access inherited from its old ancestors, with no share removed to trigger cleanup.
-func cleanupAfterProjectMove(s *xorm.Session, projectID int64, cleanup AccessLossCleanup) error {
+func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, projectID int64, cleanup AccessLossCleanup) error {
 	subtreeIDs := builder.Select("project_id").From("project_ancestors").Where(builder.Eq{"ancestor_id": projectID})
 	inSubtree := builder.Or(builder.Eq{"project_id": projectID}, builder.In("project_id", subtreeIDs))
 	taskIDs := builder.Select("id").From("tasks").Where(inSubtree)
@@ -223,7 +234,7 @@ func cleanupAfterProjectMove(s *xorm.Session, projectID int64, cleanup AccessLos
 		return err
 	}
 
-	return cleanupAfterProjectAccessLossForUsers(s, existingUserIDs, []int64{projectID}, cleanup)
+	return cleanupAfterProjectAccessLossForUsers(s, doer, existingUserIDs, []int64{projectID}, cleanup)
 }
 
 // Keep in sync with ProjectAccessCleanupList.vue.

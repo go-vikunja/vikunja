@@ -1290,7 +1290,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 			return err
 		}
 
-		err = cleanupAfterProjectMove(s, project.ID, project.AccessLossCleanup)
+		err = cleanupAfterProjectMove(s, auth, project.ID, project.AccessLossCleanup)
 		if err != nil {
 			return err
 		}

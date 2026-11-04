@@ -122,16 +122,11 @@ func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return nil
 	}
 
-	// A kept webhook moves to the owner but still fires to the leaver's URL.
-	if doer, isUser := a.(*user2.User); isUser && doer.ID == tm.UserID {
-		tm.AccessLossCleanup.KeepWebhooks = false
-	}
-
 	projectIDs, err := teamProjectIDs(s, tm.TeamID)
 	if err != nil {
 		return err
 	}
-	err = cleanupAfterProjectAccessLoss(s, tm.UserID, projectIDs, tm.AccessLossCleanup)
+	err = cleanupAfterProjectAccessLoss(s, a, tm.UserID, projectIDs, tm.AccessLossCleanup)
 	if err != nil {
 		return err
 	}
