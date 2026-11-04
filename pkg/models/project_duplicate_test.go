@@ -17,6 +17,7 @@
 package models
 
 import (
+	"io"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -31,6 +32,52 @@ import (
 func TestProjectDuplicate(t *testing.T) {
 	t.Run("duplicate project", func(t *testing.T) {
 		testProjectDuplicate(t, 1, 1)
+	})
+
+	t.Run("duplicate archived project with attachments", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		original, err := GetProjectSimpleByID(s, 1)
+		require.NoError(t, err)
+		original.IsArchived = true
+		require.NoError(t, UpdateProject(s, original, u, false))
+
+		duplicate := &ProjectDuplicate{ProjectID: 1}
+		can, err := duplicate.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, duplicate.Create(s, u))
+		assert.True(t, duplicate.Project.IsArchived)
+		require.NoError(t, s.Commit())
+
+		saved := db.NewSession()
+		defer saved.Close()
+		project, err := GetProjectSimpleByID(saved, duplicate.Project.ID)
+		require.NoError(t, err)
+		assert.True(t, project.IsArchived)
+		assert.Zero(t, project.parentID())
+
+		task := &Task{}
+		has, err := saved.Where("project_id = ? AND title = ?", project.ID, "task #1").Get(task)
+		require.NoError(t, err)
+		require.True(t, has)
+		attachments := []*TaskAttachment{}
+		require.NoError(t, saved.Where("task_id = ?", task.ID).Find(&attachments))
+		require.Len(t, attachments, 2)
+		for _, attachment := range attachments {
+			assert.NotEqual(t, int64(1), attachment.FileID)
+			file := &files.File{ID: attachment.FileID}
+			require.NoError(t, file.LoadFileMetaByID(saved))
+			require.NoError(t, file.LoadFileByID())
+			content, err := io.ReadAll(file.File)
+			require.NoError(t, err)
+			require.NoError(t, file.File.Close())
+			assert.Equal(t, "testfile1", string(content))
+		}
 	})
 
 	t.Run("duplicate project with uploaded background", func(t *testing.T) {
