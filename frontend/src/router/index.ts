@@ -17,6 +17,7 @@ import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 import {loadUserInfo} from '@/router/loadUserInfo'
+import {canLinkAccounts} from '@/helpers/canLinkAccounts'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -161,6 +162,17 @@ const router = createRouter({
 						const info = await loadUserInfo()
 						const {useConfigStore} = await import('@/stores/config')
 						if (!useConfigStore().totp_enabled || !info?.is_local_user) {
+							return {name: 'user.settings.general'}
+						}
+					},
+				},
+				{
+					path: '/user/settings/linked-accounts',
+					name: 'user.settings.linked-accounts',
+					component: () => import('@/views/user/settings/LinkedAccounts.vue'),
+					beforeEnter: async () => {
+						const info = await loadUserInfo()
+						if (!canLinkAccounts(useConfigStore().auth.openid_connect, info)) {
 							return {name: 'user.settings.general'}
 						}
 					},
