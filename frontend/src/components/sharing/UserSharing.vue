@@ -14,6 +14,7 @@
 		:add="(projectId, user) => createShare.mutateAsync({projectId, username: user.username})"
 		:update-permission="(projectId, share, permission) => updateShare.mutateAsync({projectId, username: share.username, permission})"
 		:remove="(projectId, share, cleanup) => deleteShare.mutateAsync({projectId, username: share.username, cleanup})"
+		:is-own-share="share => share.id === authStore.info?.id"
 	>
 		<template #candidate="{candidate}">
 			<User

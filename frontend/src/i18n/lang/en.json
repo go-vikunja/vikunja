@@ -534,6 +534,7 @@
         "removeHeader": "Remove a {type} from the {sharable}",
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
         "removeCleanupText": "Anyone who loses access to this project, or the projects under it, through this will also lose:",
+        "removeOwnCleanupText": "If you lose access to this project, or the projects under it, through this you will also lose:",
         "removeSuccess": "The {sharable} was successfully removed from the {type}.",
         "addedSuccess": "The {type} was successfully added.",
         "updatedSuccess": "The {type} was successfully added.",
