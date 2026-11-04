@@ -442,6 +442,8 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		require.NoError(t, team.Delete(f.s, f.owner))
 		require.NoError(t, f.s.Commit())
 		f.assertWebhooksTransferredTo(t, f.owner)
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareP}, false)
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
 	})
 	t.Run("team sync follows the config", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -531,6 +533,10 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		require.NoError(t, pu.Create(f.s, f.owner))
 
 		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true}))
+		require.NoError(t, f.s.Commit())
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.member.ID}, false)
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC, "shared_by_id": f.member.ID}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": f.child.ID, "parent_project_id": nil}, false)
 	})
 	t.Run("confirm ignores link shares of deleted users", func(t *testing.T) {
 		f := setupAccessLoss(t)
