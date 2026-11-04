@@ -130,11 +130,13 @@ func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.Mig
 	if m != nil {
 		migrationID = m.ID
 	}
-	log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, err.Error())
+	// err itself stays for classification, a redacted error loses its type.
+	redacted := migration.RedactError(err)
+	log.Errorf("[Migration] Migration %d from %s for user %d failed. Error was: %s", migrationID, migratorKind, u.ID, redacted.Error())
 
 	// One condition for both, so the status never shows an error the failure mail wouldn't have.
 	reportedToUs := config.SentryEnabled.GetBool() && shouldReportMigrationError(err)
-	failStatus := func() error { return migration.FailMigrationWithDetail(m, err.Error()) }
+	failStatus := func() error { return migration.FailMigrationWithDetail(m, redacted.Error()) }
 
 	var nerr error
 	if reportedToUs {
@@ -144,7 +146,7 @@ func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.Mig
 		})
 		failure := &migrationFailedError{
 			MigratorKind:  migratorKind,
-			OriginalError: err,
+			OriginalError: redacted,
 		}
 		sentry.WithScope(func(scope *sentry.Scope) {
 			errorreport.ApplyFingerprint(scope, err, migrationFingerprint(migratorKind, err)...)
@@ -153,7 +155,7 @@ func reportMigrationFailure(u *user2.User, migratorKind string, ms migration.Mig
 	} else {
 		nerr = notifications.Notify(u, &MigrationFailedNotification{
 			MigratorName: ms.Name(),
-			Error:        err,
+			Error:        redacted,
 		})
 	}
 	if nerr != nil {
