@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 
 	"github.com/stretchr/testify/assert"
@@ -94,4 +95,30 @@ func TestConvertItemLimit(t *testing.T) {
 	var limitErr *migration.ErrImportItemLimitExceeded
 	require.ErrorAs(t, err, &limitErr)
 	assert.Less(t, downloads, 10, "conversion stops once the limit is reached")
+}
+
+func TestConvertTruncatesReferencedNames(t *testing.T) {
+	bd := &plankaBoardData{
+		plankaBoard: plankaBoard{ID: "b1", Name: "Board"},
+		boardIncluded: boardIncluded{
+			Lists:             []plankaList{{ID: "l1", Type: listTypeActive}},
+			Cards:             []plankaCard{{ID: "c1", Name: "Card", ListID: "l1"}},
+			CustomFieldGroups: []plankaCustomFieldGroup{{ID: "g1", Name: models.Ptr("Group")}},
+			CustomFields:      []plankaCustomField{{ID: "f1", Name: strings.Repeat("a", 1030)}},
+			CustomFieldValues: []plankaCustomFieldValue{{CardID: "c1", CustomFieldGroupID: "g1", CustomFieldID: "f1", Content: "value"}},
+		},
+		Comments: map[string][]plankaComment{"c1": {{ID: "cm1", Text: "hello", CardID: "c1", UserID: models.Ptr("u2")}}},
+	}
+	data := singleBoardData(bd)
+	data.CurrentUserID = "u1"
+	data.Users = map[string]plankaUser{"u2": {ID: "u2", Name: strings.Repeat("é", 600)}}
+
+	projects, err := convertPlankaToVikunja(data, nil)
+	require.NoError(t, err)
+	task := projects[1].Tasks[0]
+
+	assert.Contains(t, task.Description, "<td>"+strings.Repeat("a", 1024)+"</td>")
+	assert.NotContains(t, task.Description, strings.Repeat("a", 1025))
+	require.Len(t, task.Comments, 1)
+	assert.Equal(t, "<p><em>"+strings.Repeat("é", 512)+"</em>:</p>\n<p>hello</p>", task.Comments[0].Comment)
 }
