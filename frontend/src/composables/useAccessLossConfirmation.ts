@@ -27,7 +27,7 @@ export function useAccessLossConfirmation() {
 		const currentInvocation = ++invocation
 		settle(false)
 		try {
-			await attempt({confirm_access_loss: true})
+			await attempt({ask_before_access_loss: true})
 			return true
 		} catch (e) {
 			const conflict = countsFrom(e)

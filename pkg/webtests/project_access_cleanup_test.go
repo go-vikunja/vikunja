@@ -243,12 +243,12 @@ func TestProjectMoveCleanupOptions(t *testing.T) {
 		return humaRequest(t, e, http.MethodPatch, fmt.Sprintf("/api/v2/projects/%d", child.ID), body, humaTokenFor(t, &user.User{ID: 6}), "application/merge-patch+json")
 	}
 
-	t.Run("confirm returns a conflict and changes nothing", func(t *testing.T) {
+	t.Run("ask returns counts without changes then applies choices", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 		child, f := setup(t)
 
-		rec := patch(t, e, child, `{"parent_project_id":0,"confirm_access_loss":true}`)
+		rec := patch(t, e, child, `{"parent_project_id":0,"ask_before_access_loss":true}`)
 		require.Equal(t, http.StatusConflict, rec.Code, rec.Body.String())
 		var body struct {
 			Code       int               `json:"code"`
@@ -259,15 +259,13 @@ func TestProjectMoveCleanupOptions(t *testing.T) {
 		assert.Equal(t, map[string]string{"webhooks": "1", "link_shares": "1"}, body.I18nParams)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": child.ID, "parent_project_id": *child.ParentProjectID}, false)
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhook.ID, "created_by_id": 1}, false)
-	})
-	t.Run("choices apply through PATCH", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		child, f := setup(t)
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.linkShare.ID}, false)
 
-		rec := patch(t, e, child, `{"parent_project_id":0,"keep_webhooks":true,"revoke_link_shares":true}`)
+		rec = patch(t, e, child, `{"parent_project_id":0,"keep_webhooks":true,"revoke_link_shares":true}`)
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assert.NotContains(t, rec.Body.String(), "keep_webhooks")
+		assert.NotContains(t, rec.Body.String(), "ask_before_access_loss")
+		db.AssertExists(t, "projects", map[string]interface{}{"id": child.ID, "parent_project_id": nil}, false)
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhook.ID, "created_by_id": 6}, false)
 		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.linkShare.ID})
 	})

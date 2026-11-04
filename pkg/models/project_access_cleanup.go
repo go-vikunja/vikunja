@@ -32,8 +32,6 @@ type AccessLossCleanup struct {
 	// Kept webhooks move to the acting user and follow their access.
 	KeepWebhooks     bool
 	RevokeLinkShares bool
-	// Fails with ErrAccessLossNeedsConfirmation instead of cleaning up if anything is affected.
-	Confirm bool
 }
 
 // No admin is around to ask during a login-time sync.
@@ -80,13 +78,14 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, doer web.Auth, userI
 		}
 	}
 
-	return cleanupProjectAccessLoss(s, doer, userIDs, existing, deletedIDs, nil, cleanup)
+	return cleanupProjectAccessLoss(s, doer, userIDs, existing, deletedIDs, nil, cleanup, false)
 }
 
-func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, existing map[int64]*Project, deletedIDs []int64, before projectReadAccess, cleanup AccessLossCleanup) error {
-	// Confirm counts and revoked link shares are other users' data a link share can't access.
+func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, existing map[int64]*Project, deletedIDs []int64, before projectReadAccess, cleanup AccessLossCleanup, askBeforeAccessLoss bool) error {
+	// Affected counts and revoked link shares are other users' data a link share can't access.
 	if _, isLinkShare := doer.(*LinkSharing); isLinkShare {
 		cleanup = AccessLossCleanup{}
+		askBeforeAccessLoss = false
 	}
 
 	access, err := getProjectReadAccessForUsers(s, userIDs, existing)
@@ -102,8 +101,8 @@ func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, e
 		}
 	}
 
-	if cleanup.Confirm {
-		if err := checkAccessLossConfirmed(s, lostByUser); err != nil {
+	if askBeforeAccessLoss {
+		if err := checkAccessLossNeedsConfirmation(s, lostByUser); err != nil {
 			return err
 		}
 	}
@@ -160,7 +159,7 @@ func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, e
 	return nil
 }
 
-func checkAccessLossConfirmed(s *xorm.Session, projectIDsByUser map[int64][]int64) error {
+func checkAccessLossNeedsConfirmation(s *xorm.Session, projectIDsByUser map[int64][]int64) error {
 	affected := &ErrAccessLossNeedsConfirmation{}
 	for userID, projectIDs := range projectIDsByUser {
 		if len(projectIDs) == 0 {
@@ -259,8 +258,8 @@ func projectAccessBeforeMove(s *xorm.Session, projectID int64) (*projectMoveAcce
 	}, nil
 }
 
-func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, before *projectMoveAccess, cleanup AccessLossCleanup) error {
-	return cleanupProjectAccessLoss(s, doer, before.userIDs, before.projects, nil, before.access, cleanup)
+func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, before *projectMoveAccess, cleanup AccessLossCleanup, askBeforeAccessLoss bool) error {
+	return cleanupProjectAccessLoss(s, doer, before.userIDs, before.projects, nil, before.access, cleanup, askBeforeAccessLoss)
 }
 
 // Keep in sync with ProjectAccessCleanupList.vue.

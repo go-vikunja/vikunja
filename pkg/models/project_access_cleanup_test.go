@@ -169,19 +169,20 @@ func (f *accessLossFixture) assertWebhooksTransferredTo(t *testing.T, u *user.Us
 	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": u.ID}, false)
 }
 
-func (f *accessLossFixture) moveChildToTopLevel(t *testing.T, cleanup AccessLossCleanup) error {
+func (f *accessLossFixture) moveChildToTopLevel(t *testing.T, cleanup AccessLossCleanup, askBeforeAccessLoss bool) error {
 	t.Helper()
-	return f.moveChildToTopLevelAs(t, f.owner, cleanup)
+	return f.moveChildToTopLevelAs(t, f.owner, cleanup, askBeforeAccessLoss)
 }
 
-func (f *accessLossFixture) moveChildToTopLevelAs(t *testing.T, doer web.Auth, cleanup AccessLossCleanup) error {
+func (f *accessLossFixture) moveChildToTopLevelAs(t *testing.T, doer web.Auth, cleanup AccessLossCleanup, askBeforeAccessLoss bool) error {
 	t.Helper()
 	detached := int64(0)
 	child := &Project{
-		ID:                f.child.ID,
-		Title:             f.child.Title,
-		ParentProjectID:   &detached,
-		AccessLossCleanup: cleanup,
+		ID:                  f.child.ID,
+		Title:               f.child.Title,
+		ParentProjectID:     &detached,
+		AccessLossCleanup:   cleanup,
+		AskBeforeAccessLoss: askBeforeAccessLoss,
 	}
 	return child.Update(f.s, doer)
 }
@@ -542,7 +543,7 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
 
-		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{}))
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{}, false))
 		require.NoError(t, f.s.Commit())
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
@@ -558,7 +559,7 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{
 			KeepWebhooks:     true,
 			RevokeLinkShares: true,
-		}))
+		}, false))
 		require.NoError(t, f.s.Commit())
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.owner.ID}, false)
 		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.shareC})
@@ -575,7 +576,7 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		}
 		require.NoError(t, pu.Create(f.s, f.owner))
 
-		require.NoError(t, f.moveChildToTopLevelAs(t, f.member, AccessLossCleanup{KeepWebhooks: true}))
+		require.NoError(t, f.moveChildToTopLevelAs(t, f.member, AccessLossCleanup{KeepWebhooks: true}, false))
 		require.NoError(t, f.s.Commit())
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": f.member.ID}, false)
@@ -596,9 +597,8 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 
 		require.NoError(t, f.moveChildToTopLevelAs(t, adminShare, AccessLossCleanup{
 			KeepWebhooks:     true,
-			Confirm:          true,
 			RevokeLinkShares: true,
-		}))
+		}, true))
 		require.NoError(t, f.s.Commit())
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
@@ -621,21 +621,21 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		_, err := f.s.Insert(share)
 		require.NoError(t, err)
 
-		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{RevokeLinkShares: true}))
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{RevokeLinkShares: true}, false))
 		require.NoError(t, f.s.Commit())
 		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": share.ID})
 	})
-	t.Run("confirm fails with the affected counts", func(t *testing.T) {
+	t.Run("ask fails with the affected counts", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
 
-		err := f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true})
+		err := f.moveChildToTopLevel(t, AccessLossCleanup{}, true)
 		assert.Equal(t, &ErrAccessLossNeedsConfirmation{
 			Webhooks:   1,
 			LinkShares: 1,
 		}, err)
 	})
-	t.Run("confirm passes when everyone keeps access", func(t *testing.T) {
+	t.Run("ask passes when everyone keeps access", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
 		pu := &ProjectUser{
@@ -645,13 +645,13 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		}
 		require.NoError(t, pu.Create(f.s, f.owner))
 
-		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true}))
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{}, true))
 		require.NoError(t, f.s.Commit())
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.member.ID}, false)
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC, "shared_by_id": f.member.ID}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": f.child.ID, "parent_project_id": nil}, false)
 	})
-	t.Run("confirm ignores link shares of deleted users", func(t *testing.T) {
+	t.Run("ask ignores link shares of deleted users", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
 		pu := &ProjectUser{
@@ -669,7 +669,7 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		_, err := f.s.Insert(share)
 		require.NoError(t, err)
 
-		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true}))
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{}, true))
 		require.NoError(t, f.s.Commit())
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": share.ID}, false)
 	})
@@ -680,9 +680,9 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		require.NoError(t, err)
 
 		child := &Project{
-			ID:                f.child.ID,
-			Title:             "renamed",
-			AccessLossCleanup: AccessLossCleanup{Confirm: true},
+			ID:                  f.child.ID,
+			Title:               "renamed",
+			AskBeforeAccessLoss: true,
 		}
 		require.NoError(t, child.Update(f.s, f.owner))
 		require.NoError(t, f.s.Commit())

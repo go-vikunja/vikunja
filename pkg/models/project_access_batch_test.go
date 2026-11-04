@@ -70,7 +70,7 @@ func TestProjectMovePreservesPreviouslyInaccessibleData(t *testing.T) {
 	require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{
 		KeepWebhooks:     true,
 		RevokeLinkShares: true,
-	}))
+	}, false))
 	require.NoError(t, f.s.Commit())
 	db.AssertExists(t, "webhooks", map[string]interface{}{
 		"id":            oldWebhook,
@@ -85,7 +85,7 @@ func TestProjectMovePreservesPreviouslyInaccessibleData(t *testing.T) {
 
 func TestProjectMoveDoesNotAskAboutPreviouslyInaccessibleData(t *testing.T) {
 	f := setupAccessLoss(t)
-	require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true}))
+	require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{}, true))
 	require.NoError(t, f.s.Commit())
 	db.AssertExists(t, "webhooks", map[string]interface{}{
 		"id":            f.webhookC,

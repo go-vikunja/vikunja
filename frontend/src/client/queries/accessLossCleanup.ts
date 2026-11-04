@@ -5,8 +5,7 @@ import {webhookKeys} from './webhooks'
 
 export type AccessLossCleanup = Required<NonNullable<ProjectUsersDeleteData['query']>>
 
-// Asking first fails with 409 and the affected counts instead of applying the defaults.
-export type AccessLossChoice = AccessLossCleanup | {confirm_access_loss: true}
+export type AccessLossChoice = AccessLossCleanup | {ask_before_access_loss: true}
 
 export function defaultAccessLossCleanup(): AccessLossCleanup {
 	return {
