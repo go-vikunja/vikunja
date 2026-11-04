@@ -558,6 +558,7 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		require.NoError(t, f.moveChildToTopLevelAs(t, f.member, AccessLossCleanup{KeepWebhooks: true}))
 		require.NoError(t, f.s.Commit())
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": f.member.ID}, false)
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.owner.ID}, false)
 	})
 	t.Run("a link share moving the project gets the default cleanup", func(t *testing.T) {
