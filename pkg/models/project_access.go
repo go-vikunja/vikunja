@@ -166,7 +166,14 @@ func (pa *projectAccess) condViaSubquery(column string, minPermission Permission
 
 // Includes projects inherited through a shared parent.
 func accessibleProjectIDsCond(s *xorm.Session, a web.Auth, column string) (builder.Cond, error) {
+	return projectIDsWithPermissionCond(s, a, column, PermissionRead)
+}
+
+func projectIDsWithPermissionCond(s *xorm.Session, a web.Auth, column string, minPermission Permission) (builder.Cond, error) {
 	if share, ok := a.(*LinkSharing); ok {
+		if share.Permission < minPermission {
+			return builder.In(column, []int64{}), nil
+		}
 		return builder.Eq{column: share.ProjectID}, nil
 	}
 
@@ -179,7 +186,7 @@ func accessibleProjectIDsCond(s *xorm.Session, a web.Auth, column string) (build
 	if err != nil {
 		return nil, err
 	}
-	return access.cond(column, PermissionRead), nil
+	return access.cond(column, minPermission), nil
 }
 
 // GetAllParentProjects returns the project itself and every ancestor, keyed by id.

@@ -1301,7 +1301,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	// Healing before the write would leave the project at its tiny position and every
 	// further move to the top would trigger another recalculation.
 	if l.Position < 0.1 {
-		err = recalculateProjectPositions(s, l.parentID())
+		err = recalculateProjectPositions(s, auth, l.parentID(), l.ID)
 		if err != nil {
 			return err
 		}
@@ -1317,7 +1317,8 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	return
 }
 
-func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
+// Positions are global, so siblings the doer can only read keep theirs.
+func recalculateProjectPositions(s *xorm.Session, a web.Auth, parentProjectID, projectID int64) (err error) {
 
 	// Root projects may store their parent as NULL instead of 0 and would never be healed.
 	var parentCond builder.Cond = builder.Eq{"parent_project_id": parentProjectID}
@@ -1325,9 +1326,15 @@ func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err er
 		parentCond = builder.Or(parentCond, builder.IsNull{"parent_project_id"})
 	}
 
+	writable, err := projectIDsWithPermissionCond(s, a, "id", PermissionWrite)
+	if err != nil {
+		return err
+	}
+
 	allProjects := []*Project{}
 	err = s.
-		Where(parentCond).
+		// Instance admins pass CanUpdate without any grant on the project.
+		Where(builder.And(parentCond, builder.Or(writable, builder.Eq{"id": projectID}))).
 		OrderBy("position asc, id asc").
 		Find(&allProjects)
 	if err != nil {
