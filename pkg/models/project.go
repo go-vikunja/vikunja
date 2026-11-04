@@ -86,6 +86,8 @@ type Project struct {
 	// A timestamp when this project was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this project was last updated. You cannot change this value."`
 
+	LastPurgedAt time.Time `xorm:"null" json:"-"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }

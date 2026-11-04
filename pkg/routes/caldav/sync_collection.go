@@ -37,9 +37,7 @@ const (
 	syncTokenPrefix = "data:,"
 )
 
-// parseSyncToken extracts the project ID and timestamp from a sync token
-// of the form data:,"PROJECT_ID-UNIX_TIMESTAMP".
-func parseSyncToken(token string) (projectID int64, ts time.Time, ok bool) {
+func parseSyncToken(token string) (projectID int64, ts time.Time, purgeGeneration int64, ok bool) {
 	// Quotes may sit outside or inside the data:, prefix.
 	token = strings.TrimPrefix(token, `"`)
 	token = strings.TrimSuffix(token, `"`)
@@ -47,14 +45,23 @@ func parseSyncToken(token string) (projectID int64, ts time.Time, ok bool) {
 	token = strings.TrimPrefix(token, `"`)
 	token = strings.TrimSuffix(token, `"`)
 
+	if timestamp, generation, found := strings.Cut(token, ";purge="); found {
+		var err error
+		purgeGeneration, err = strconv.ParseInt(generation, 10, 64)
+		if err != nil || purgeGeneration <= 0 {
+			return 0, time.Time{}, 0, false
+		}
+		token = timestamp
+	}
+
 	if token == "" {
-		return 0, time.Time{}, false
+		return 0, time.Time{}, 0, false
 	}
 
 	// Split on the last '-' so a negative project ID can't break parsing.
 	idx := strings.LastIndex(token, "-")
 	if idx < 0 {
-		return 0, time.Time{}, false
+		return 0, time.Time{}, 0, false
 	}
 
 	projectIDStr := token[:idx]
@@ -62,15 +69,15 @@ func parseSyncToken(token string) (projectID int64, ts time.Time, ok bool) {
 
 	pid, err := strconv.ParseInt(projectIDStr, 10, 64)
 	if err != nil {
-		return 0, time.Time{}, false
+		return 0, time.Time{}, 0, false
 	}
 
 	unixSec, err := strconv.ParseInt(tsStr, 10, 64)
 	if err != nil {
-		return 0, time.Time{}, false
+		return 0, time.Time{}, 0, false
 	}
 
-	return pid, time.Unix(unixSec, 0).UTC(), true
+	return pid, time.Unix(unixSec, 0).UTC(), purgeGeneration, true
 }
 
 // extractSyncTokenFromBody pulls the <D:sync-token> text content from the
@@ -152,7 +159,6 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
 	}
 
-	// The etag is "PROJECT_ID-UNIX_TS"; the new sync token reuses it.
 	newEtag := rr.CalculateEtag()
 	newEtagClean := strings.Trim(newEtag, `"`)
 	newToken := syncTokenPrefix + `"` + newEtagClean + `"`
@@ -164,7 +170,7 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 		return writeSyncResponse(c, rr, rr.projectTasks, nil, newToken, includeCalendarData)
 	}
 
-	tokenProjectID, tokenTS, ok := parseSyncToken(rawToken)
+	tokenProjectID, tokenTS, tokenPurgeGeneration, ok := parseSyncToken(rawToken)
 	if !ok {
 		log.Warningf("[CALDAV sync-collection] project=%d could not parse token %q → 403 valid-sync-token", projectID, rawToken)
 		return writeForbiddenValidSyncToken(c)
@@ -172,6 +178,14 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 
 	if tokenProjectID != projectID {
 		log.Warningf("[CALDAV sync-collection] token project %d != request project %d → 403 valid-sync-token", tokenProjectID, projectID)
+		return writeForbiddenValidSyncToken(c)
+	}
+
+	purgeGeneration := int64(0)
+	if !rr.project.LastPurgedAt.IsZero() {
+		purgeGeneration = rr.project.LastPurgedAt.Unix()
+	}
+	if tokenPurgeGeneration != purgeGeneration {
 		return writeForbiddenValidSyncToken(c)
 	}
 

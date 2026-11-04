@@ -1144,7 +1144,11 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 		}
 	}
 
-	return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(latest.Unix(), 10) + `"`
+	etag := strconv.FormatInt(vlra.project.ID, 10) + "-" + strconv.FormatInt(latest.Unix(), 10)
+	if !vlra.project.LastPurgedAt.IsZero() {
+		etag += ";purge=" + strconv.FormatInt(vlra.project.LastPurgedAt.Unix(), 10)
+	}
+	return `"` + etag + `"`
 }
 
 // GetContent returns the content string of a resource (a task in our case)
