@@ -2236,6 +2236,10 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	// The event reaches every subscriber and webhook, not only the doer.
+	fullTask.RelatedTasks = make(RelatedTaskMap)
+	fullTask.IsFavorite = false
+	fullTask.Subscription = nil
 
 	// Bucket and position rows are removed right away because bucket counts
 	// don't join the tasks table and would leak soft-deleted tasks; Restore
