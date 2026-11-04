@@ -28,17 +28,25 @@ import (
 	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/commonmark"
 	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/strikethrough"
 	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/table"
+	"golang.org/x/net/html"
 )
 
 // HTMLToMarkdown converts rich-text HTML to GFM Markdown. Trimmed, so an empty
 // document ("<p></p>") yields "".
 func HTMLToMarkdown(htmlInput string) (string, error) {
-	md, err := newHTMLToMarkdownConverter().ConvertString(htmlInput)
+	doc, err := html.Parse(strings.NewReader(htmlInput))
+	if err != nil {
+		return "", fmt.Errorf("parsing html: %w", err)
+	}
+
+	skipOversizedTables(doc)
+
+	md, err := newHTMLToMarkdownConverter().ConvertNode(doc)
 	if err != nil {
 		return "", fmt.Errorf("converting html to markdown: %w", err)
 	}
 
-	return strings.TrimSpace(md), nil
+	return strings.TrimSpace(string(md)), nil
 }
 
 // newHTMLToMarkdownConverter builds a GFM converter. Per call: the registered

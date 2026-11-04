@@ -26,6 +26,7 @@ import (
 	"github.com/yuin/goldmark/v2/extension"
 	"github.com/yuin/goldmark/v2/parser"
 	"github.com/yuin/goldmark/v2/renderer/html"
+	"github.com/yuin/goldmark/v2/util"
 	"xorm.io/xorm"
 )
 
@@ -33,7 +34,11 @@ import (
 // inert, so the only active markup is what goldmark emits. This is what stops
 // user-supplied markdown from smuggling in scripts.
 var (
-	gfmParser   = parser.New(parser.WithExtensions(extension.GFMParser))
+	gfmParser = parser.New(
+		parser.WithExtensions(extension.GFMParser),
+		// Right before goldmark's table transformer (priority 200).
+		parser.WithParagraphTransformers(util.Prioritized[parser.ParagraphTransformer](tableBudgetTransformer{}, 199)),
+	)
 	gfmRenderer = html.New(html.WithExtensions(extension.GFMHTMLRenderer))
 
 	commonMarkParser   = parser.New()
@@ -65,7 +70,12 @@ func MarkdownToHTMLWithMentions(s *xorm.Session, viewer web.Auth, md string) (st
 func markdownToHTML(md string, s *xorm.Session, viewer web.Auth) (string, error) {
 	var buf bytes.Buffer
 	source := []byte(md)
-	if err := gfmRenderer.Render(&buf, source, gfmParser.Parse(source)); err != nil {
+	pc := parser.NewContext()
+	doc := gfmParser.Parse(source, parser.WithContext(pc))
+	if tablesExceedBudget(pc) {
+		return "", ErrTooManyTableCells
+	}
+	if err := gfmRenderer.Render(&buf, source, doc); err != nil {
 		return "", fmt.Errorf("converting markdown to html: %w", err)
 	}
 
