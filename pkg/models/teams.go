@@ -393,7 +393,7 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return fmt.Errorf("delete team invite links: %w", err)
 	}
 
-	err = cleanupAfterProjectAccessLossForUsers(s, memberIDs, projectIDs, t.AccessLossCleanup)
+	err = cleanupAfterProjectAccessLossForUsers(s, a, memberIDs, projectIDs, t.AccessLossCleanup)
 	if err != nil {
 		return err
 	}

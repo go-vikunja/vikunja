@@ -82,7 +82,7 @@ func teamMembersAdd(ctx context.Context, in *struct {
 func teamMembersRemove(ctx context.Context, in *struct {
 	TeamID           int64  `path:"team"`
 	Username         string `path:"user" doc:"The username of the member to remove."`
-	KeepWebhooks     bool   `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted."`
+	KeepWebhooks     bool   `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted."`
 	RevokeLinkShares bool   `query:"revoke_link_shares" doc:"Delete the link shares created by users who lose access. By default they keep working."`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)

@@ -150,7 +150,7 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 404 {object} web.HTTPError "Team or project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{projectID}/teams/{teamID} [delete]
-func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (tl *TeamProject) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Check if the team exists
 	_, err = GetTeamByID(s, tl.TeamID)
@@ -181,7 +181,7 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	err = cleanupAfterProjectAccessLossForUsers(s, memberIDs, []int64{tl.ProjectID}, tl.AccessLossCleanup)
+	err = cleanupAfterProjectAccessLossForUsers(s, a, memberIDs, []int64{tl.ProjectID}, tl.AccessLossCleanup)
 	if err != nil {
 		return err
 	}

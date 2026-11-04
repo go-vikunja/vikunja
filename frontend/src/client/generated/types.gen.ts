@@ -4889,7 +4889,7 @@ export type ProjectReadBodyWritable = {
      */
     is_favorite?: boolean;
     /**
-     * Only read when the update moves the project. Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+     * Only read when the update moves the project. Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted.
      */
     keep_webhooks?: boolean;
     /**
@@ -8711,7 +8711,7 @@ export type ProjectTeamsDeleteData = {
     };
     query?: {
         /**
-         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted.
          */
         keep_webhooks?: boolean;
         /**
@@ -8875,7 +8875,7 @@ export type ProjectUsersDeleteData = {
     };
     query?: {
         /**
-         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted.
          */
         keep_webhooks?: boolean;
         /**
@@ -11041,7 +11041,7 @@ export type TeamsDeleteData = {
     };
     query?: {
         /**
-         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted.
          */
         keep_webhooks?: boolean;
         /**
@@ -11217,7 +11217,7 @@ export type TeamsMembersRemoveData = {
     };
     query?: {
         /**
-         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted.
+         * Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted.
          */
         keep_webhooks?: boolean;
         /**

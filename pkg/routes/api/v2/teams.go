@@ -177,7 +177,7 @@ func teamsUpdate(ctx context.Context, in *struct {
 
 func teamsDelete(ctx context.Context, in *struct {
 	ID               int64 `path:"id"`
-	KeepWebhooks     bool  `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted."`
+	KeepWebhooks     bool  `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted."`
 	RevokeLinkShares bool  `query:"revoke_link_shares" doc:"Delete the link shares created by users who lose access. By default they keep working."`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
