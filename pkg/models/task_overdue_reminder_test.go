@@ -556,3 +556,35 @@ func TestHasNonWebhookListener(t *testing.T) {
 		assert.True(t, hasNonWebhookListener(name))
 	})
 }
+
+func TestSendOverdueRemindersScopesProjectsPerUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	events.ClearDispatchedEvents()
+
+	task1 := &Task{ID: 1, ProjectID: 1}
+	task32 := &Task{ID: 32, ProjectID: 3}
+	uts := map[int64]*userWithTasks{
+		1: {user: &user.User{ID: 1}, assigned: map[int64]*Task{}, followed: map[int64]*Task{1: task1}},
+		3: {user: &user.User{ID: 3}, assigned: map[int64]*Task{}, followed: map[int64]*Task{32: task32}},
+	}
+
+	require.NoError(t, sendOverdueReminders(s, uts, false, false, true))
+
+	dispatched := events.GetDispatchedEvents((&TasksOverdueEvent{}).Name())
+	require.Len(t, dispatched, 2)
+	for _, e := range dispatched {
+		ev := e.(*TasksOverdueEvent)
+		switch ev.User.ID {
+		case 1:
+			assert.Len(t, ev.Projects, 1)
+			assert.Contains(t, ev.Projects, int64(1))
+		case 3:
+			assert.Len(t, ev.Projects, 1)
+			assert.Contains(t, ev.Projects, int64(3))
+		default:
+			t.Fatalf("unexpected user %d", ev.User.ID)
+		}
+	}
+}
