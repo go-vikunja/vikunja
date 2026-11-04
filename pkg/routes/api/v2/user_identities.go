@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -91,6 +92,7 @@ func userIdentitiesLink(ctx context.Context, in *struct {
 		return nil, err
 	}
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	identity, err := openid.LinkIdentity(ctx, s, u, &in.Body)
 	if err != nil {
@@ -100,6 +102,7 @@ func userIdentitiesLink(ctx context.Context, in *struct {
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 	return &singleBody[openid.LinkedIdentity]{Body: identity}, nil
 }
 
