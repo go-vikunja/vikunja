@@ -103,7 +103,10 @@ describe('teams', () => {
 		client.setQueryData(teamKeys.search('t'), [{id: 1}, {id: 2}])
 		client.setQueryData(teamKeys.detail(1), {id: 1})
 		sdk.teamsDelete.mockResolvedValue({})
-		await client.getMutationCache().build(client, deleteTeamMutationOptions()).execute({id: 1, cleanup: defaultAccessLossCleanup()})
+		await client.getMutationCache().build(client, deleteTeamMutationOptions()).execute({
+			id: 1,
+			cleanup: defaultAccessLossCleanup(),
+		})
 		expect(client.getQueryData(teamKeys.list(1))).toEqual(teamPage([{id: 2}], 1, 25))
 		expect(client.getQueryData(teamKeys.list(2))).toEqual(teamPage([{id: 26}], 2, 25))
 		expect(client.getQueryData(teamKeys.search('t'))).toEqual([{id: 2}])
@@ -118,7 +121,11 @@ describe('teams', () => {
 		await client.getMutationCache().build(client, toggleTeamMemberAdminMutationOptions()).execute({teamId: 1, username: 'sam'})
 		expect(client.getQueryData<TeamReadBody>(teamKeys.detail(1))?.members).toEqual([{id: 7, username: 'sam', admin: true}])
 		sdk.teamsMembersRemove.mockResolvedValue({})
-		await client.getMutationCache().build(client, removeTeamMemberMutationOptions()).execute({teamId: 1, username: 'sam', cleanup: defaultAccessLossCleanup()})
+		await client.getMutationCache().build(client, removeTeamMemberMutationOptions()).execute({
+			teamId: 1,
+			username: 'sam',
+			cleanup: defaultAccessLossCleanup(),
+		})
 		expect(client.getQueryData<TeamReadBody>(teamKeys.detail(1))?.members).toEqual([])
 	})
 
@@ -126,8 +133,18 @@ describe('teams', () => {
 		client.setQueryData(teamKeys.list(1), teamPage([{id: 1}]))
 		client.setQueryData(teamKeys.detail(1), {id: 1, members: [{username: 'sam'}]})
 		sdk.teamsMembersRemove.mockResolvedValue({})
-		await client.getMutationCache().build(client, leaveTeamMutationOptions()).execute({teamId: 1, username: 'sam', cleanup: defaultAccessLossCleanup()})
-		expect(sdk.teamsMembersRemove).toHaveBeenCalledWith({path: {team: 1, user: 'sam'}, query: defaultAccessLossCleanup()})
+		await client.getMutationCache().build(client, leaveTeamMutationOptions()).execute({
+			teamId: 1,
+			username: 'sam',
+			cleanup: defaultAccessLossCleanup(),
+		})
+		expect(sdk.teamsMembersRemove).toHaveBeenCalledWith({
+			path: {
+				team: 1,
+				user: 'sam',
+			},
+			query: defaultAccessLossCleanup(),
+		})
 		expect(client.getQueryState(teamKeys.detail(1))).toBeUndefined()
 		expect(client.getQueryState(teamKeys.list(1))?.isInvalidated).toBe(true)
 		expect(sdk.teamsRead).not.toHaveBeenCalled()

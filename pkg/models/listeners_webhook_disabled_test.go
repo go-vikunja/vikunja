@@ -44,10 +44,18 @@ func TestWebhookDeliveryListener_SkipsDisabledQueuedWebhook(t *testing.T) {
 
 	s := db.NewSession()
 	defer s.Close()
-	webhook := &Webhook{ProjectID: 1, CreatedByID: 1, TargetURL: ts.URL, Events: []string{"task.updated"}}
+	webhook := &Webhook{
+		ProjectID:   1,
+		CreatedByID: 1,
+		TargetURL:   ts.URL,
+		Events:      []string{"task.updated"},
+	}
 	_, err := s.Insert(webhook)
 	require.NoError(t, err)
-	payload, err := json.Marshal(&WebhookDeliveryEvent{WebhookID: webhook.ID, Payload: &WebhookPayload{EventName: "task.updated"}})
+	payload, err := json.Marshal(&WebhookDeliveryEvent{
+		WebhookID: webhook.ID,
+		Payload:   &WebhookPayload{EventName: "task.updated"},
+	})
 	require.NoError(t, err)
 	_, err = s.ID(webhook.ID).Cols("is_disabled").Update(&Webhook{IsDisabled: true})
 	require.NoError(t, err)
@@ -61,9 +69,17 @@ func TestWebhookListener_SkipsDisabledDeletedProject(t *testing.T) {
 	f := setupAccessLoss(t)
 	_, err := f.s.ID(f.child.ID).Delete(&Project{})
 	require.NoError(t, err)
-	_, err = f.s.ID(f.webhookC).Cols("is_disabled", "events").Update(&Webhook{IsDisabled: true, Events: []string{"project.deleted"}})
+	_, err = f.s.ID(f.webhookC).Cols("is_disabled", "events").Update(&Webhook{
+		IsDisabled: true,
+		Events:     []string{"project.deleted"},
+	})
 	require.NoError(t, err)
-	active := &Webhook{ProjectID: f.child.ID, CreatedByID: f.owner.ID, TargetURL: "https://example.com/active", Events: []string{"project.deleted"}}
+	active := &Webhook{
+		ProjectID:   f.child.ID,
+		CreatedByID: f.owner.ID,
+		TargetURL:   "https://example.com/active",
+		Events:      []string{"project.deleted"},
+	}
 	_, err = f.s.Insert(active)
 	require.NoError(t, err)
 	require.NoError(t, f.s.Commit())
@@ -78,27 +94,52 @@ func TestWebhookListener_TeamReinstatementDoesNotEnable(t *testing.T) {
 	f := setupAccessLoss(t)
 	team := f.shareViaTeam(t)
 	require.NoError(t, removeUserFromTeamsByIDs(f.s, f.member, []int64{team.ID}))
-	require.NoError(t, (&TeamMember{TeamID: team.ID, Username: f.member.Username}).Create(f.s, f.owner))
+	require.NoError(t, (&TeamMember{
+		TeamID:   team.ID,
+		Username: f.member.Username,
+	}).Create(f.s, f.owner))
 	require.NoError(t, f.s.Commit())
 
 	events.ClearDispatchedEvents()
-	events.TestListener(t, &TaskUpdatedEvent{Task: f.task, Doer: f.owner}, &WebhookListener{EventName: "task.updated"})
+	events.TestListener(t, &TaskUpdatedEvent{
+		Task: f.task,
+		Doer: f.owner,
+	}, &WebhookListener{EventName: "task.updated"})
 	assert.Empty(t, events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()))
-	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "is_disabled": true, "created_by_id": f.member.ID}, false)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":            f.webhookC,
+		"is_disabled":   true,
+		"created_by_id": f.member.ID,
+	}, false)
 }
 
 func TestWebhookListener_SkipsDisabledUserWebhook(t *testing.T) {
 	f := setupAccessLoss(t)
 	RegisterUserDirectedEventForWebhook(&TaskReminderFiredEvent{})
-	disabled := &Webhook{UserID: f.owner.ID, CreatedByID: f.owner.ID, TargetURL: "https://example.com/disabled", Events: []string{"task.reminder.fired"}, IsDisabled: true}
+	disabled := &Webhook{
+		UserID:      f.owner.ID,
+		CreatedByID: f.owner.ID,
+		TargetURL:   "https://example.com/disabled",
+		Events:      []string{"task.reminder.fired"},
+		IsDisabled:  true,
+	}
 	_, err := f.s.Insert(disabled)
 	require.NoError(t, err)
-	active := &Webhook{UserID: f.owner.ID, CreatedByID: f.owner.ID, TargetURL: "https://example.com/active", Events: []string{"task.reminder.fired"}}
+	active := &Webhook{
+		UserID:      f.owner.ID,
+		CreatedByID: f.owner.ID,
+		TargetURL:   "https://example.com/active",
+		Events:      []string{"task.reminder.fired"},
+	}
 	_, err = f.s.Insert(active)
 	require.NoError(t, err)
 	require.NoError(t, f.s.Commit())
 	events.ClearDispatchedEvents()
-	events.TestListener(t, &TaskReminderFiredEvent{Task: f.task, User: f.owner, Project: f.child}, &WebhookListener{EventName: "task.reminder.fired"})
+	events.TestListener(t, &TaskReminderFiredEvent{
+		Task:    f.task,
+		User:    f.owner,
+		Project: f.child,
+	}, &WebhookListener{EventName: "task.reminder.fired"})
 	deliveries := webhookDeliveriesByID(t)
 	assert.Contains(t, deliveries, active.ID)
 	assert.NotContains(t, deliveries, disabled.ID)

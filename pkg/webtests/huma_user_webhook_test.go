@@ -197,8 +197,17 @@ func TestHumaUserWebhook_DisabledState(t *testing.T) {
 	path := "/api/v2/user/settings/webhooks/8"
 	rec := humaRequest(t, e, http.MethodPut, path, `{"target_url":"https://example.com/ignored","events":["task.reminder.fired"],"is_disabled":true}`, token, "")
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-	db.AssertExists(t, "webhooks", map[string]interface{}{"id": 8, "is_disabled": true, "user_id": 1}, false)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":          8,
+		"is_disabled": true,
+		"user_id":     1,
+	}, false)
 	rec = humaRequest(t, e, http.MethodPut, path, `{"target_url":"https://example.com/ignored","events":["task.reminder.fired"],"is_disabled":false}`, token, "")
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-	db.AssertExists(t, "webhooks", map[string]interface{}{"id": 8, "is_disabled": false, "user_id": 1, "created_by_id": 1}, false)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":            8,
+		"is_disabled":   false,
+		"user_id":       1,
+		"created_by_id": 1,
+	}, false)
 }

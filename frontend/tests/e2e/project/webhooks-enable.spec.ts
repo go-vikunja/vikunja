@@ -9,7 +9,10 @@ test('enables a retained webhook and takes it over without changing its destinat
 	apiContext,
 	userToken,
 }) => {
-	await ProjectFactory.create(1, {id: 1, owner_id: currentUser.id}, false)
+	await ProjectFactory.create(1, {
+		id: 1,
+		owner_id: currentUser.id,
+	}, false)
 	const [formerCreator] = await UserFactory.create(1, {id: 2}, false)
 	const targetUrl = 'https://example.com/retained-webhook'
 	const [webhook] = await WebhookFactory.create(1, {
@@ -34,7 +37,10 @@ test('enables a retained webhook and takes it over without changing its destinat
 		await responseGate
 		await route.fulfill({response})
 	})
-	const enableButton = row.getByRole('button', {name: 'Enable webhook', exact: true})
+	const enableButton = row.getByRole('button', {
+		name: 'Enable webhook',
+		exact: true,
+	})
 	await enableButton.focus()
 	await enableButton.press('Enter')
 	await requestReceived
@@ -42,7 +48,10 @@ test('enables a retained webhook and takes it over without changing its destinat
 	await expect(enableButton).toHaveAttribute('aria-disabled', 'true')
 	release()
 	await expect(enableButton).toHaveCount(0)
-	await expect(row.getByRole('button', {name: 'Delete this webhook', exact: true})).toBeFocused()
+	await expect(row.getByRole('button', {
+		name: 'Delete this webhook',
+		exact: true,
+	})).toBeFocused()
 
 	await page.reload()
 	await expect(row).toBeVisible()

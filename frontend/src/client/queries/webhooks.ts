@@ -87,9 +87,22 @@ export function deleteWebhookMutationOptions() {
 }
 export function updateWebhookMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({scope, id, body}: {scope: WebhookScope, id: number, body: WebhooksUpdateData['body']}) => (await (scope.kind === 'project'
-			? webhooksUpdate({path: {project: scope.projectId, webhook: id}, body})
-			: userWebhooksUpdate({path: {webhook: id}, body}))).data,
+		mutationFn: async ({scope, id, body}: {
+			scope: WebhookScope,
+			id: number,
+			body: WebhooksUpdateData['body'],
+		}) => (await (scope.kind === 'project'
+			? webhooksUpdate({
+				path: {
+					project: scope.projectId,
+					webhook: id,
+				},
+				body,
+			})
+			: userWebhooksUpdate({
+				path: {webhook: id},
+				body,
+			}))).data,
 		onSettled: ({scope}, client) => client.invalidateQueries({queryKey: webhookKeys.scope(scope)}),
 	})
 }

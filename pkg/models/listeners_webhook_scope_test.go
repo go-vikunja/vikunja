@@ -31,12 +31,22 @@ func TestProjectWebhooksForEvent_RequiresConfiguredProjectAccess(t *testing.T) {
 	defer s.Close()
 
 	owner := &user.User{ID: 1}
-	creator := &user.User{ID: 2, Username: "user2"}
+	creator := &user.User{
+		ID:       2,
+		Username: "user2",
+	}
 	parent := &Project{Title: "webhook parent"}
 	require.NoError(t, parent.Create(s, owner))
-	child := &Project{Title: "webhook child", ParentProjectID: &parent.ID}
+	child := &Project{
+		Title:           "webhook child",
+		ParentProjectID: &parent.ID,
+	}
 	require.NoError(t, child.Create(s, owner))
-	require.NoError(t, (&ProjectUser{ProjectID: child.ID, Username: creator.Username, Permission: PermissionRead}).Create(s, owner))
+	require.NoError(t, (&ProjectUser{
+		ProjectID:  child.ID,
+		Username:   creator.Username,
+		Permission: PermissionRead,
+	}).Create(s, owner))
 	hook := &Webhook{
 		TargetURL:   "https://example.com/parent",
 		Events:      []string{"task.updated"},
@@ -50,7 +60,11 @@ func TestProjectWebhooksForEvent_RequiresConfiguredProjectAccess(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, matching)
 
-	require.NoError(t, (&ProjectUser{ProjectID: parent.ID, Username: creator.Username, Permission: PermissionRead}).Create(s, owner))
+	require.NoError(t, (&ProjectUser{
+		ProjectID:  parent.ID,
+		Username:   creator.Username,
+		Permission: PermissionRead,
+	}).Create(s, owner))
 	matching, err = projectWebhooksForEvent(s, child.ID, "task.updated")
 	require.NoError(t, err)
 	require.Len(t, matching, 1)

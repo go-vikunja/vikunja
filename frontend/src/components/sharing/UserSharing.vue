@@ -73,9 +73,17 @@ const createShare = useCreateProjectUserShareMutation()
 const updateShare = useUpdateProjectUserShareMutation()
 const deleteShare = useDeleteProjectUserShareMutation()
 
-async function removeShare(projectId: number, share: {id?: number, username: string}, cleanup: AccessLossCleanup) {
+async function removeShare(projectId: number, share: {
+	id?: number,
+	username: string,
+}, cleanup: AccessLossCleanup) {
 	const ownShare = isOwnShare(share)
-	await deleteShare.mutateAsync({projectId, username: share.username, cleanup, isOwnShare: ownShare})
+	await deleteShare.mutateAsync({
+		projectId,
+		username: share.username,
+		cleanup,
+		isOwnShare: ownShare,
+	})
 	if (ownShare) await router.push({name: 'home'})
 }
 </script>

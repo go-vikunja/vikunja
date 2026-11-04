@@ -107,14 +107,20 @@ func (f *accessLossFixture) insertWebhook(t *testing.T, projectID, createdByID i
 
 func (f *accessLossFixture) otherUserWithWebhook(t *testing.T) (other *user.User, webhookID int64) {
 	t.Helper()
-	other = &user.User{ID: 3, Username: "user3"}
+	other = &user.User{
+		ID:       3,
+		Username: "user3",
+	}
 	return other, f.insertWebhook(t, f.child.ID, other.ID)
 }
 
 func (f *accessLossFixture) addOtherMemberWithWebhook(t *testing.T, team *Team) (other *user.User, webhookID int64) {
 	t.Helper()
 	other, webhookID = f.otherUserWithWebhook(t)
-	require.NoError(t, (&TeamMember{TeamID: team.ID, Username: other.Username}).Create(f.s, f.owner))
+	require.NoError(t, (&TeamMember{
+		TeamID:   team.ID,
+		Username: other.Username,
+	}).Create(f.s, f.owner))
 	return other, webhookID
 }
 
@@ -165,8 +171,14 @@ func (f *accessLossFixture) assertWebhooksDeleted(t *testing.T) {
 
 func (f *accessLossFixture) assertWebhooksTransferredTo(t *testing.T, u *user.User) {
 	t.Helper()
-	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": u.ID}, false)
-	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": u.ID}, false)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":            f.webhookP,
+		"created_by_id": u.ID,
+	}, false)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":            f.webhookC,
+		"created_by_id": u.ID,
+	}, false)
 }
 
 func (f *accessLossFixture) moveChildToTopLevel(t *testing.T, cleanup AccessLossCleanup, askBeforeAccessLoss bool) error {
@@ -239,12 +251,31 @@ func TestProjectAccessLossCleanup(t *testing.T) {
 
 		require.NoError(t, removeUserFromTeamsByIDs(f.s, f.member, []int64{team.ID}))
 		require.NoError(t, f.s.Commit())
-		for _, id := range []int64{f.webhookP, f.webhookC} {
-			db.AssertExists(t, "webhooks", map[string]interface{}{"id": id, "created_by_id": f.member.ID, "target_url": "https://example.com/access-loss", "is_disabled": true}, false)
+		for _, id := range []int64{
+			f.webhookP,
+			f.webhookC,
+		} {
+			db.AssertExists(t, "webhooks", map[string]interface{}{
+				"id":            id,
+				"created_by_id": f.member.ID,
+				"target_url":    "https://example.com/access-loss",
+				"is_disabled":   true,
+			}, false)
 		}
-		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID})
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID})
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{
+			"task_id": f.task.ID,
+			"user_id": f.member.ID,
+		})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   f.task.ID,
+			"user_id":     f.member.ID,
+		})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityProject,
+			"entity_id":   f.parent.ID,
+			"user_id":     f.member.ID,
+		})
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareP}, false)
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
 	})
@@ -402,7 +433,10 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		require.NoError(t, removeShare(t, f, AccessLossCleanup{KeepWebhooks: true}))
 		require.NoError(t, f.s.Commit())
 		f.assertWebhooksTransferredTo(t, f.owner)
-		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{
+			"task_id": f.task.ID,
+			"user_id": f.member.ID,
+		})
 	})
 	t.Run("transfers subtree webhooks to the doer despite different project owners", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -413,8 +447,14 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 
 		require.NoError(t, removeShare(t, f, AccessLossCleanup{KeepWebhooks: true}))
 		require.NoError(t, f.s.Commit())
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": f.owner.ID}, false)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.owner.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            f.webhookP,
+			"created_by_id": f.owner.ID,
+		}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            f.webhookC,
+			"created_by_id": f.owner.ID,
+		}, false)
 	})
 	t.Run("team removal applies the options to every member", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -540,7 +580,10 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		require.NoError(t, tp.Delete(f.s, f.member))
 		require.NoError(t, f.s.Commit())
 		f.assertWebhooksDeleted(t)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.member.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            othersWebhook,
+			"created_by_id": f.member.ID,
+		}, false)
 	})
 	t.Run("team deletion applies the options", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -563,8 +606,15 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 
 		require.NoError(t, removeUserFromTeamsByIDs(f.s, f.member, []int64{team.ID}))
 		require.NoError(t, f.s.Commit())
-		for _, id := range []int64{f.webhookP, f.webhookC} {
-			db.AssertExists(t, "webhooks", map[string]interface{}{"id": id, "created_by_id": f.member.ID, "is_disabled": true}, false)
+		for _, id := range []int64{
+			f.webhookP,
+			f.webhookC,
+		} {
+			db.AssertExists(t, "webhooks", map[string]interface{}{
+				"id":            id,
+				"created_by_id": f.member.ID,
+				"is_disabled":   true,
+			}, false)
 		}
 		f.assertLinkSharesRevoked(t)
 	})
@@ -578,11 +628,22 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{}, false))
 		require.NoError(t, f.s.Commit())
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
-		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID})
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{
+			"task_id": f.task.ID,
+			"user_id": f.member.ID,
+		})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   f.task.ID,
+			"user_id":     f.member.ID,
+		})
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP}, false)
-		db.AssertExists(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID}, false)
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityProject,
+			"entity_id":   f.parent.ID,
+			"user_id":     f.member.ID,
+		}, false)
 	})
 	t.Run("applies the options", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -593,7 +654,10 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 			RevokeLinkShares: true,
 		}, false))
 		require.NoError(t, f.s.Commit())
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.owner.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            f.webhookC,
+			"created_by_id": f.owner.ID,
+		}, false)
 		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.shareC})
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareP}, false)
 	})
@@ -611,8 +675,14 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		require.NoError(t, f.moveChildToTopLevelAs(t, f.member, AccessLossCleanup{KeepWebhooks: true}, false))
 		require.NoError(t, f.s.Commit())
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": f.member.ID}, false)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.member.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            f.webhookP,
+			"created_by_id": f.member.ID,
+		}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            othersWebhook,
+			"created_by_id": f.member.ID,
+		}, false)
 	})
 	t.Run("a link share moving the project gets the default cleanup", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -679,9 +749,18 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 
 		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{}, true))
 		require.NoError(t, f.s.Commit())
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.member.ID}, false)
-		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC, "shared_by_id": f.member.ID}, false)
-		db.AssertExists(t, "projects", map[string]interface{}{"id": f.child.ID, "parent_project_id": nil}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            f.webhookC,
+			"created_by_id": f.member.ID,
+		}, false)
+		db.AssertExists(t, "link_shares", map[string]interface{}{
+			"id":           f.shareC,
+			"shared_by_id": f.member.ID,
+		}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":                f.child.ID,
+			"parent_project_id": nil,
+		}, false)
 	})
 	t.Run("ask ignores link shares of deleted users", func(t *testing.T) {
 		f := setupAccessLoss(t)

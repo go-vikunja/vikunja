@@ -75,20 +75,49 @@ describe('project shares', () => {
 		client.setQueryData(projectShareKeys.teams(1), [{id: 7}, {id: 8}])
 		sdk.projectUsersDelete.mockResolvedValue({})
 		sdk.projectTeamsDelete.mockResolvedValue({})
-		await client.getMutationCache().build(client, deleteProjectUserShareMutationOptions()).execute({projectId: 1, username: 'sam', cleanup: defaultAccessLossCleanup(), isOwnShare: false})
-		await client.getMutationCache().build(client, deleteProjectTeamShareMutationOptions()).execute({projectId: 1, teamId: 7, cleanup: defaultAccessLossCleanup()})
+		await client.getMutationCache().build(client, deleteProjectUserShareMutationOptions()).execute({
+			projectId: 1,
+			username: 'sam',
+			cleanup: defaultAccessLossCleanup(),
+			isOwnShare: false,
+		})
+		await client.getMutationCache().build(client, deleteProjectTeamShareMutationOptions()).execute({
+			projectId: 1,
+			teamId: 7,
+			cleanup: defaultAccessLossCleanup(),
+		})
 		expect(client.getQueryData(projectShareKeys.users(1))).toEqual([{username: 'alex'}])
 		expect(client.getQueryData(projectShareKeys.teams(1))).toEqual([{id: 8}])
 	})
 
 	it('passes the cleanup choice and refreshes link shares and webhooks', async () => {
 		client.setQueryData(linkShareKeys.list(3), [])
-		client.setQueryData(webhookKeys.list({kind: 'project', projectId: 3}, 1), {items: []})
+		client.setQueryData(webhookKeys.list({
+			kind: 'project',
+			projectId: 3,
+		}, 1), {items: []})
 		sdk.projectUsersDelete.mockResolvedValue({})
-		const cleanup = {keep_webhooks: true, revoke_link_shares: true}
-		await client.getMutationCache().build(client, deleteProjectUserShareMutationOptions()).execute({projectId: 1, username: 'sam', cleanup, isOwnShare: false})
-		expect(sdk.projectUsersDelete).toHaveBeenCalledExactlyOnceWith({path: {project: 1, user: 'sam'}, query: cleanup})
+		const cleanup = {
+			keep_webhooks: true,
+			revoke_link_shares: true,
+		}
+		await client.getMutationCache().build(client, deleteProjectUserShareMutationOptions()).execute({
+			projectId: 1,
+			username: 'sam',
+			cleanup,
+			isOwnShare: false,
+		})
+		expect(sdk.projectUsersDelete).toHaveBeenCalledExactlyOnceWith({
+			path: {
+				project: 1,
+				user: 'sam',
+			},
+			query: cleanup,
+		})
 		expect(client.getQueryState(linkShareKeys.list(3))?.isInvalidated).toBe(true)
-		expect(client.getQueryState(webhookKeys.list({kind: 'project', projectId: 3}, 1))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(webhookKeys.list({
+			kind: 'project',
+			projectId: 3,
+		}, 1))?.isInvalidated).toBe(true)
 	})
 })

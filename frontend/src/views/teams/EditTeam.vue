@@ -255,7 +255,10 @@ function save(draft: Required<TeamWritable>) {
 
 async function deleteTeam() {
 	try {
-		await deleteMutation.mutateAsync({id: teamId.value, cleanup: cleanup.value})
+		await deleteMutation.mutateAsync({
+			id: teamId.value,
+			cleanup: cleanup.value,
+		})
 	} catch {
 		return
 	} finally {
@@ -266,7 +269,11 @@ async function deleteTeam() {
 
 function deleteMember() {
 	if (!memberToDelete.value?.username) return
-	removeMemberMutation.mutate({teamId: teamId.value, username: memberToDelete.value.username, cleanup: cleanup.value}, {
+	removeMemberMutation.mutate({
+		teamId: teamId.value,
+		username: memberToDelete.value.username,
+		cleanup: cleanup.value,
+	}, {
 		onSettled: () => {
 			showUserDeleteModal.value = false
 		},
@@ -297,7 +304,11 @@ function findUser(query: string) {
 async function leave() {
 	if (!userInfo.value?.username) return
 	try {
-		await leaveMutation.mutateAsync({teamId: teamId.value, username: userInfo.value.username, cleanup: cleanup.value})
+		await leaveMutation.mutateAsync({
+			teamId: teamId.value,
+			username: userInfo.value.username,
+			cleanup: cleanup.value,
+		})
 	} catch {
 		return
 	} finally {
