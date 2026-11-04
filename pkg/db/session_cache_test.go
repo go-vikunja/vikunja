@@ -91,6 +91,29 @@ func TestRemember(t *testing.T) {
 	assert.Equal(t, 2, calls)
 }
 
+func TestForget(t *testing.T) {
+	config.InitDefaultConfig()
+	_, err := CreateTestEngine()
+	require.NoError(t, err)
+
+	s := NewSession()
+	defer s.Close()
+
+	calls := 0
+	fetch := func() (int, error) {
+		calls++
+		return calls, nil
+	}
+
+	first, err := Remember(s, "forget-test", fetch)
+	require.NoError(t, err)
+	Forget(s, "forget-test")
+	second, err := Remember(s, "forget-test", fetch)
+	require.NoError(t, err)
+	assert.Equal(t, 1, first)
+	assert.Equal(t, 2, second)
+}
+
 func TestRememberEach(t *testing.T) {
 	config.InitDefaultConfig()
 	_, err := CreateTestEngine()
