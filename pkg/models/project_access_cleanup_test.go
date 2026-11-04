@@ -151,7 +151,12 @@ func (f *accessLossFixture) assertWebhooksTransferredTo(t *testing.T, u *user.Us
 func (f *accessLossFixture) moveChildToTopLevel(t *testing.T, cleanup AccessLossCleanup) error {
 	t.Helper()
 	detached := int64(0)
-	child := &Project{ID: f.child.ID, Title: f.child.Title, ParentProjectID: &detached, AccessLossCleanup: cleanup}
+	child := &Project{
+		ID:                f.child.ID,
+		Title:             f.child.Title,
+		ParentProjectID:   &detached,
+		AccessLossCleanup: cleanup,
+	}
 	return child.Update(f.s, f.owner)
 }
 
@@ -347,7 +352,12 @@ func deliveredWebhookIDs() map[int64]bool {
 func TestProjectAccessLossCleanupOptions(t *testing.T) {
 	removeShare := func(t *testing.T, f *accessLossFixture, cleanup AccessLossCleanup) error {
 		t.Helper()
-		return (&ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, AccessLossCleanup: cleanup}).Delete(f.s, f.owner)
+		pu := &ProjectUser{
+			ProjectID:         f.parent.ID,
+			Username:          f.member.Username,
+			AccessLossCleanup: cleanup,
+		}
+		return pu.Delete(f.s, f.owner)
 	}
 
 	t.Run("revokes link shares", func(t *testing.T) {
@@ -412,7 +422,14 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
 
-		tp := &TeamProject{TeamID: team.ID, ProjectID: f.parent.ID, AccessLossCleanup: AccessLossCleanup{KeepWebhooks: true, RevokeLinkShares: true}}
+		tp := &TeamProject{
+			TeamID:    team.ID,
+			ProjectID: f.parent.ID,
+			AccessLossCleanup: AccessLossCleanup{
+				KeepWebhooks:     true,
+				RevokeLinkShares: true,
+			},
+		}
 		require.NoError(t, tp.Delete(f.s, f.owner))
 		require.NoError(t, f.s.Commit())
 		f.assertWebhooksTransferredTo(t, f.owner)
@@ -422,7 +439,11 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
 
-		tm := &TeamMember{TeamID: team.ID, Username: f.member.Username, AccessLossCleanup: AccessLossCleanup{RevokeLinkShares: true}}
+		tm := &TeamMember{
+			TeamID:            team.ID,
+			Username:          f.member.Username,
+			AccessLossCleanup: AccessLossCleanup{RevokeLinkShares: true},
+		}
 		require.NoError(t, tm.Delete(f.s, f.owner))
 		require.NoError(t, f.s.Commit())
 		f.assertLinkSharesRevoked(t)
@@ -472,7 +493,10 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
 
-		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{KeepWebhooks: true, RevokeLinkShares: true}))
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{
+			KeepWebhooks:     true,
+			RevokeLinkShares: true,
+		}))
 		require.NoError(t, f.s.Commit())
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.owner.ID}, false)
 		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.shareC})
@@ -482,9 +506,17 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
 		childID := f.child.ID
-		grandchild := &Project{Title: "access loss grandchild", ParentProjectID: &childID}
+		grandchild := &Project{
+			Title:           "access loss grandchild",
+			ParentProjectID: &childID,
+		}
 		require.NoError(t, grandchild.Create(f.s, f.owner))
-		share := &LinkSharing{Hash: "access-loss-grandchild", ProjectID: grandchild.ID, SharingType: SharingTypeWithoutPassword, SharedByID: f.member.ID}
+		share := &LinkSharing{
+			Hash:        "access-loss-grandchild",
+			ProjectID:   grandchild.ID,
+			SharingType: SharingTypeWithoutPassword,
+			SharedByID:  f.member.ID,
+		}
 		_, err := f.s.Insert(share)
 		require.NoError(t, err)
 
@@ -497,12 +529,19 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		f.shareDirectly(t, PermissionWrite)
 
 		err := f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true})
-		assert.Equal(t, &ErrAccessLossNeedsConfirmation{Webhooks: 1, LinkShares: 1}, err)
+		assert.Equal(t, &ErrAccessLossNeedsConfirmation{
+			Webhooks:   1,
+			LinkShares: 1,
+		}, err)
 	})
 	t.Run("confirm passes when everyone keeps access", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
-		pu := &ProjectUser{ProjectID: f.child.ID, Username: f.member.Username, Permission: PermissionRead}
+		pu := &ProjectUser{
+			ProjectID:  f.child.ID,
+			Username:   f.member.Username,
+			Permission: PermissionRead,
+		}
 		require.NoError(t, pu.Create(f.s, f.owner))
 
 		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true}))
@@ -513,7 +552,11 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		_, err := f.s.Where("project_id = ? AND user_id = ?", f.parent.ID, f.member.ID).Delete(&ProjectUser{})
 		require.NoError(t, err)
 
-		child := &Project{ID: f.child.ID, Title: "renamed", AccessLossCleanup: AccessLossCleanup{Confirm: true}}
+		child := &Project{
+			ID:                f.child.ID,
+			Title:             "renamed",
+			AccessLossCleanup: AccessLossCleanup{Confirm: true},
+		}
 		require.NoError(t, child.Update(f.s, f.owner))
 		require.NoError(t, f.s.Commit())
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC}, false)
@@ -523,12 +566,19 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 func TestWebhookListener_DeliversTransferredWebhook(t *testing.T) {
 	f := setupAccessLoss(t)
 	f.shareDirectly(t, PermissionWrite)
-	pu := &ProjectUser{ProjectID: f.parent.ID, Username: f.member.Username, AccessLossCleanup: AccessLossCleanup{KeepWebhooks: true}}
+	pu := &ProjectUser{
+		ProjectID:         f.parent.ID,
+		Username:          f.member.Username,
+		AccessLossCleanup: AccessLossCleanup{KeepWebhooks: true},
+	}
 	require.NoError(t, pu.Delete(f.s, f.owner))
 	require.NoError(t, f.s.Commit())
 
 	events.ClearDispatchedEvents()
-	events.TestListener(t, &TaskUpdatedEvent{Task: f.task, Doer: f.owner}, &WebhookListener{EventName: "task.updated"})
+	events.TestListener(t, &TaskUpdatedEvent{
+		Task: f.task,
+		Doer: f.owner,
+	}, &WebhookListener{EventName: "task.updated"})
 
 	delivered := map[int64]bool{}
 	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {

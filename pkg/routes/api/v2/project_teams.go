@@ -139,9 +139,12 @@ func projectTeamsDelete(ctx context.Context, in *struct {
 		return nil, err
 	}
 	if err := handler.DoDelete(ctx, &models.TeamProject{
-		ProjectID:         in.ProjectID,
-		TeamID:            in.TeamID,
-		AccessLossCleanup: models.AccessLossCleanup{KeepWebhooks: in.KeepWebhooks, RevokeLinkShares: in.RevokeLinkShares},
+		ProjectID: in.ProjectID,
+		TeamID:    in.TeamID,
+		AccessLossCleanup: models.AccessLossCleanup{
+			KeepWebhooks:     in.KeepWebhooks,
+			RevokeLinkShares: in.RevokeLinkShares,
+		},
 	}, a); err != nil {
 		return nil, translateDomainError(err)
 	}
