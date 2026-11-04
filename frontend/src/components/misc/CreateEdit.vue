@@ -38,7 +38,7 @@
 						v-if="hasPrimaryAction"
 						variant="primary"
 						:icon="primaryIcon || undefined"
-						:disabled="isBusy"
+						:disabled="primaryDisabled"
 						class="mis-2"
 						:loading="currentLoading"
 						@click.prevent.stop="primary"
