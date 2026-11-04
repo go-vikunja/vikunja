@@ -102,7 +102,7 @@ type User struct {
 	IsAdmin bool `xorm:"not null default false" json:"-"`
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
-	AvatarFileID   int64  `xorm:"null" json:"-"`
+	AvatarFileID   int64  `xorm:"null index" json:"-"`
 
 	// Issuer and Subject contain the issuer and subject from the source the user authenticated with.
 	Issuer  string `xorm:"text null" json:"-"`
@@ -130,7 +130,7 @@ type User struct {
 	FrontendSettings   interface{}    `xorm:"json null" json:"-"`
 	ExtraSettingsLinks map[string]any `xorm:"json null" json:"-"`
 
-	ExportFileID int64 `xorm:"bigint null" json:"-"`
+	ExportFileID int64 `xorm:"bigint null index" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this user was created. You cannot change this value."`
