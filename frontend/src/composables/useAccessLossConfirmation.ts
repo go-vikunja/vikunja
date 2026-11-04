@@ -1,4 +1,4 @@
-import {ref} from 'vue'
+import {onScopeDispose, ref} from 'vue'
 import {ApiError} from '@/client/problem'
 import {defaultAccessLossCleanup, type AccessLossChoice} from '@/client/queries/accessLossCleanup'
 
@@ -21,6 +21,7 @@ export function useAccessLossConfirmation() {
 	let decide: ((confirmed: boolean) => void) | null = null
 
 	async function run(attempt: (choice: AccessLossChoice) => Promise<unknown>): Promise<boolean> {
+		settle(false)
 		try {
 			await attempt({confirm_access_loss: true})
 			return true
@@ -44,6 +45,8 @@ export function useAccessLossConfirmation() {
 		decide?.(confirmed)
 		decide = null
 	}
+
+	onScopeDispose(() => settle(false))
 
 	return {
 		counts,
