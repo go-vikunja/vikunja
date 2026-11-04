@@ -87,6 +87,10 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 	ta.FileID = file.ID
 
 	ta.CreatedBy, err = GetUserOrLinkShareUser(s, a)
+	if err == nil {
+		// After the upload, so a slow upload doesn't hold the task row lock.
+		_, err = lockTaskForWrite(s, a, ta.TaskID)
+	}
 	if err != nil {
 		// remove the  uploaded file if adding it to the db fails
 		if err2 := file.Delete(s); err2 != nil {
@@ -583,6 +587,9 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 	// Load the attachment
 	err := ta.ReadOne(s, a)
 	if err != nil && !files.IsErrFileDoesNotExist(err) {
+		return err
+	}
+	if _, err := lockTaskForWrite(s, a, ta.TaskID); err != nil {
 		return err
 	}
 
