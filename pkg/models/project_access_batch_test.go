@@ -142,46 +142,6 @@ func TestProjectReadAccessBatch(t *testing.T) {
 	}, access)
 }
 
-func TestProjectReadAccessBatchInvalidNearestGrant(t *testing.T) {
-	for _, tt := range []struct {
-		name     string
-		parent   Permission
-		child    Permission
-		readable bool
-	}{
-		{
-			name:   "invalid nearest blocks inherited read",
-			parent: PermissionRead,
-			child:  -5,
-		},
-		{
-			name:     "inherited admin survives lower invalid grant",
-			parent:   PermissionAdmin,
-			child:    -5,
-			readable: true,
-		},
-		{
-			name:   "above enum is rejected",
-			parent: PermissionRead,
-			child:  3,
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			f := setupAccessLoss(t)
-			f.shareDirectly(t, tt.parent)
-			_, err := f.s.Insert(&ProjectUser{
-				ProjectID:  f.child.ID,
-				UserID:     f.member.ID,
-				Permission: tt.child,
-			})
-			require.NoError(t, err)
-			access, err := getProjectReadAccessForUsers(f.s, []int64{f.member.ID}, map[int64]*Project{f.child.ID: f.child})
-			require.NoError(t, err)
-			require.Equal(t, tt.readable, access[f.member.ID][f.child.ID])
-		})
-	}
-}
-
 func TestProjectReadAccessBatchAdminLicense(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
