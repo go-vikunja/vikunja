@@ -146,6 +146,11 @@ func purgeTrashedTask(s *xorm.Session, t *Task, doer *user.User) error {
 	if err := hardDeleteTask(s, t); err != nil {
 		return err
 	}
+	if doer != nil {
+		if err := advanceProjectPurgeMarker(s, t.ProjectID); err != nil {
+			return err
+		}
+	}
 	events.DispatchOnCommit(s, &TaskPurgedEvent{
 		Task: t,
 		Doer: doer,
