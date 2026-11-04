@@ -1003,6 +1003,8 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.ID = 0
+	project.BackgroundFileID = 0
+	project.BackgroundBlurHash = ""
 	if doer.IsBot() {
 		project.OwnerID = doer.BotOwnerID
 		owner, err := user.GetUserByID(s, doer.BotOwnerID)
