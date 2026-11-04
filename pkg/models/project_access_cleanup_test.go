@@ -448,6 +448,20 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		require.NoError(t, f.s.Commit())
 		f.assertLinkSharesRevoked(t)
 	})
+	t.Run("a member leaving their team cannot keep their webhooks", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		team := f.shareViaTeam(t)
+
+		tm := &TeamMember{
+			TeamID:            team.ID,
+			Username:          f.member.Username,
+			AccessLossCleanup: AccessLossCleanup{KeepWebhooks: true},
+		}
+		require.NoError(t, tm.Delete(f.s, f.member))
+		require.NoError(t, f.s.Commit())
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookP})
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
+	})
 	t.Run("team deletion applies the options", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
