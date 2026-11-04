@@ -27,6 +27,25 @@ describe('taskLoadErrorAction', () => {
 		})
 	})
 
+	it('keeps tasks in trashed projects in place with the project trash details', () => {
+		const inTrash = {
+			id: 3,
+			deleted_at: '2026-01-01T00:00:00Z',
+			can_restore: true,
+			trashed_root_id: 2,
+			can_restore_root: false,
+		}
+		expect(taskLoadErrorAction(new ApiError({
+			status: 404,
+			code: 3018,
+			detail: 'project in trash',
+			details: inTrash,
+		}))).toEqual({
+			action: 'projectInTrash',
+			inTrash,
+		})
+	})
+
 	it('sends 403 and 404 to not found', () => {
 		expect(taskLoadErrorAction({status: 403})).toEqual({action: 'notFound'})
 		expect(taskLoadErrorAction({status: 404})).toEqual({action: 'notFound'})

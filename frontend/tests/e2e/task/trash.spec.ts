@@ -3,6 +3,7 @@ import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {BucketFactory} from '../../factories/bucket'
+import {TaskBucketFactory} from '../../factories/task_buckets'
 import {TimeEntryFactory} from '../../factories/time_entry'
 import {LicenseFactory} from '../../factories/license'
 import {UserFactory} from '../../factories/user'
@@ -186,6 +187,77 @@ test.describe('Trash', () => {
 		await expect(page.locator('.task-view-container')).toBeFocused()
 		await page.reload()
 		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Linked trashed task')
+	})
+
+	test('opening a task in a trashed project offers restoring the project', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		await TaskFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			title: 'Task in trashed project',
+		}, false)
+		const headers = {Authorization: `Bearer ${userToken}`}
+		const deleted = await apiContext.delete('projects/1', {headers})
+		expect(deleted.ok()).toBe(true)
+		await page.goto('/tasks/1')
+
+		const notice = page.locator('[data-cy="projectInTrashNotice"]')
+		await expect(notice).toContainText('This project is in the trash.')
+		await expect(page.locator('[data-cy="taskInTrashNotice"]')).toHaveCount(0)
+		await expect(page).toHaveURL(/\/tasks\/1/)
+		await expect(page).toHaveTitle('Trash | Vikunja')
+		await expect(page.locator('.global-notification')).not.toContainText('This project is in the trash')
+		await notice.getByRole('button', {name: 'Restore', exact: true}).click()
+
+		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Task in trashed project')
+		await expect(page.locator('.task-view-container')).toBeFocused()
+		await page.reload()
+		await expect(page.locator('.task-view h1[contenteditable]')).toContainText('Task in trashed project')
+		const stored = await apiContext.get('tasks/1', {headers})
+		expect(stored.ok()).toBe(true)
+	})
+
+	test('a task modal stays open when its project was trashed and restores it', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		await TaskFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			title: 'Task in trashed project',
+		}, false)
+		await TaskBucketFactory.create(1, {
+			task_id: 1,
+			bucket_id: 1,
+			project_view_id: 4,
+		})
+		await page.goto('/projects/1/4')
+		const card = page.locator('.kanban .task').filter({hasText: 'Task in trashed project'})
+		await expect(card).toBeVisible()
+		const headers = {Authorization: `Bearer ${userToken}`}
+		const deleted = await apiContext.delete('projects/1', {headers})
+		expect(deleted.ok()).toBe(true)
+		await card.click()
+
+		const modal = page.locator('.task-view-container.is-modal')
+		const notice = modal.locator('[data-cy="projectInTrashNotice"]')
+		await expect(notice).toContainText('This project is in the trash.')
+		await expect(modal.getByRole('button', {name: 'Close', exact: true})).toBeVisible()
+		await notice.getByRole('button', {name: 'Restore', exact: true}).click()
+
+		await expect(modal.locator('h1[contenteditable]')).toContainText('Task in trashed project')
+		await expect(modal).toBeFocused()
+		await page.getByRole('dialog', {name: 'Task detail'}).getByRole('button', {
+			name: 'Close dialog',
+			exact: true,
+		}).click()
+		await expect(page).toHaveURL(/\/projects\/1\/4/)
+		const stored = await apiContext.get('projects/1', {headers})
+		expect(stored.ok()).toBe(true)
 	})
 
 	test('a read-only share sees a trashed task without restore', async ({authenticatedPage: page, currentUser}) => {

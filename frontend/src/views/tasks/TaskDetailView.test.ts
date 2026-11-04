@@ -25,7 +25,14 @@ vi.mock('vue-i18n', async importOriginal => ({
 	useI18n: () => ({t: (key: string) => key}),
 }))
 
+vi.mock('@/i18n/lang/en.json', () => ({default: {}}))
+
+import {ApiError} from '@/client/problem'
+import BaseButton from '@/components/base/BaseButton.vue'
+import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
+import TaskInTrashNotice from '@/components/tasks/partials/TaskInTrashNotice.vue'
 import {mapTaskEverywhere} from '@/client/queries/taskCache'
+import {taskKeys} from '@/client/queries/tasks'
 import EditLabels from '@/components/tasks/partials/EditLabels.vue'
 import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
@@ -55,7 +62,7 @@ function dueDatePicker(wrapper: VueWrapper) {
 	return wrapper.findAllComponents(Datepicker)[0]!
 }
 
-async function mountDetail(taskId = 1, visited: RouteLocationRaw[] = []) {
+async function mountDetail(taskId = 1, visited: RouteLocationRaw[] = [], backdropView?: string) {
 	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
 	const router = createRouter({
 		history: createMemoryHistory(),
@@ -71,7 +78,11 @@ async function mountDetail(taskId = 1, visited: RouteLocationRaw[] = []) {
 		await router.push(location)
 	}
 	const wrapper = shallowMount(TaskDetailView, {
-		props: {taskId},
+		attachTo: document.body,
+		props: {
+			taskId,
+			backdropView,
+		},
 		global: {
 			plugins: [createPinia(), router, [VueQueryPlugin, {queryClient}]],
 			mocks: {$t: (key: string) => key},
@@ -186,5 +197,82 @@ describe('TaskDetailView mark done and go back', () => {
 
 		expect(sdk.patchTasksRead).not.toHaveBeenCalled()
 		expect(wrapper.vm.$router.currentRoute.value.path).toBe('/tasks/1')
+	})
+})
+
+describe('TaskDetailView in a trashed project', () => {
+	it.each([
+		{
+			mode: 'standalone',
+			backdropView: undefined,
+		},
+		{
+			mode: 'modal',
+			backdropView: '/projects/2',
+		},
+	])('shows the project notice in $mode mode without leaving the task route', async ({backdropView}) => {
+		message.error.mockClear()
+		const inTrash = {
+			id: 1,
+			deleted_at: '2026-01-01T00:00:00Z',
+			can_restore: true,
+			can_restore_root: false,
+		}
+		sdk.tasksRead.mockRejectedValue(new ApiError({
+			status: 404,
+			code: 3018,
+			detail: 'project in trash',
+			details: inTrash,
+		}))
+		const wrapper = await mountDetail(1, ['/tasks/1'], backdropView)
+
+		expect(message.error).not.toHaveBeenCalled()
+		expect(wrapper.findComponent(ProjectInTrashNotice).props('inTrash')).toEqual(inTrash)
+		expect(wrapper.findComponent(TaskInTrashNotice).exists()).toBe(false)
+		expect(wrapper.classes()).not.toContain('is-loading')
+		expect(wrapper.vm.$router.currentRoute.value.path).toBe('/tasks/1')
+		if (backdropView) {
+			const close = wrapper.findComponent(BaseButton)
+			expect(close.attributes('aria-label')).toBe('misc.close')
+			close.vm.$emit('click')
+			expect(wrapper.emitted('close')).toHaveLength(1)
+		}
+	})
+
+	it('restores focus when restoring the project reveals a task still in the trash', async () => {
+		const projectInTrash = {
+			id: 1,
+			deleted_at: '2026-01-01T00:00:00Z',
+			can_restore: true,
+			can_restore_root: false,
+		}
+		const taskInTrash = {
+			id: 1,
+			project_id: 1,
+			deleted_at: '2026-01-01T00:00:00Z',
+			can_restore: true,
+		}
+		sdk.tasksRead.mockRejectedValueOnce(new ApiError({
+			status: 404,
+			code: 3018,
+			detail: 'project in trash',
+			details: projectInTrash,
+		})).mockRejectedValue(new ApiError({
+			status: 404,
+			code: 4040,
+			detail: 'task in trash',
+			details: taskInTrash,
+		}))
+		const wrapper = await mountDetail(1, ['/tasks/1'])
+		const projectNotice = wrapper.findComponent(ProjectInTrashNotice).element as HTMLElement
+		projectNotice.tabIndex = -1
+		projectNotice.focus()
+		expect(document.activeElement).toBe(projectNotice)
+
+		await queryClient.invalidateQueries({queryKey: taskKeys.details})
+		await flushPromises()
+
+		expect(wrapper.findComponent(TaskInTrashNotice).props('inTrash')).toEqual(taskInTrash)
+		expect(document.activeElement).toBe(wrapper.element)
 	})
 })
