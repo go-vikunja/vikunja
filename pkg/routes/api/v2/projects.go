@@ -67,7 +67,7 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-update",
 		Summary:     "Update a project",
-		Description: "Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update. Moving the project removes the task assignments and subscriptions of users who lose access through the move; keep_webhooks, revoke_link_shares and confirm_access_loss decide what happens to their webhooks and link shares.",
+		Description: "Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update. Moving the project removes the task assignments and subscriptions of users who lose access through the move; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares. Set ask_before_access_loss to return affected counts for confirmation before applying the move.",
 		Method:      http.MethodPut,
 		Path:        "/projects/{id}",
 		Tags:        tags,
@@ -119,9 +119,9 @@ func projectsList(ctx context.Context, in *struct {
 type projectReadBody struct {
 	models.Project
 	// Body fields, not query params: AutoPatch drops the query string on its GET→PUT round trip.
-	ConfirmAccessLoss bool `json:"confirm_access_loss,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. If any user would lose access to a project holding webhooks or link shares they created, fail with 409 and code 3018 without changing anything. i18n_params carries the webhooks and link_shares counts."`
-	KeepWebhooks      bool `json:"keep_webhooks,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access."`
-	RevokeLinkShares  bool `json:"revoke_link_shares,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. Delete the link shares created by users who lose access. By default they keep working."`
+	AskBeforeAccessLoss bool `json:"ask_before_access_loss,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. If any user would lose access to a project holding webhooks or link shares they created, fail with 409 and code 3018 without changing anything. i18n_params carries the webhooks and link_shares counts."`
+	KeepWebhooks        bool `json:"keep_webhooks,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access."`
+	RevokeLinkShares    bool `json:"revoke_link_shares,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. Delete the link shares created by users who lose access. By default they keep working."`
 }
 
 func projectsRead(ctx context.Context, in *struct {
@@ -179,10 +179,10 @@ func projectsUpdate(ctx context.Context, in *struct {
 	}
 	project := &in.Body.Project
 	project.ID = in.ID // URL wins over body
+	project.AskBeforeAccessLoss = in.Body.AskBeforeAccessLoss
 	project.AccessLossCleanup = models.AccessLossCleanup{
 		KeepWebhooks:     in.Body.KeepWebhooks,
 		RevokeLinkShares: in.Body.RevokeLinkShares,
-		Confirm:          in.Body.ConfirmAccessLoss,
 	}
 	if err := convertToHTML(ctx, &project.Description); err != nil {
 		return nil, translateDomainError(err)

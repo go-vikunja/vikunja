@@ -1513,7 +1513,7 @@ export const patchProjectsRead = <ThrowOnError extends boolean = true>(options: 
 /**
  * Update a project
  *
- * Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update. Moving the project removes the task assignments and subscriptions of users who lose access through the move; keep_webhooks, revoke_link_shares and confirm_access_loss decide what happens to their webhooks and link shares.
+ * Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update. Moving the project removes the task assignments and subscriptions of users who lose access through the move; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares. Set ask_before_access_loss to return affected counts for confirmation before applying the move.
  */
 export const projectsUpdate = <ThrowOnError extends boolean = true>(options: Options<ProjectsUpdateData, ThrowOnError>): RequestResult<ProjectsUpdateResponses, ProjectsUpdateErrors, ThrowOnError> => (options.client ?? client).put<ProjectsUpdateResponses, ProjectsUpdateErrors, ThrowOnError>({
     security: [{

@@ -29,7 +29,7 @@ describe('useAccessLossConfirmation', () => {
 		const {run, counts} = setup()
 		const attempt = vi.fn().mockResolvedValue({})
 		expect(await run(attempt)).toBe(true)
-		expect(attempt).toHaveBeenCalledExactlyOnceWith({confirm_access_loss: true})
+		expect(attempt).toHaveBeenCalledExactlyOnceWith({ask_before_access_loss: true})
 		expect(counts.value).toBeNull()
 	})
 

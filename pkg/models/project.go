@@ -93,7 +93,8 @@ type Project struct {
 
 	LastPurgedAt time.Time `xorm:"null" json:"-"`
 
-	AccessLossCleanup AccessLossCleanup `xorm:"-" json:"-"`
+	AccessLossCleanup   AccessLossCleanup `xorm:"-" json:"-"`
+	AskBeforeAccessLoss bool              `xorm:"-" json:"-"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -1298,7 +1299,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 			return err
 		}
 
-		err = cleanupAfterProjectMove(s, auth, accessBeforeMove, project.AccessLossCleanup)
+		err = cleanupAfterProjectMove(s, auth, accessBeforeMove, project.AccessLossCleanup, project.AskBeforeAccessLoss)
 		if err != nil {
 			return err
 		}

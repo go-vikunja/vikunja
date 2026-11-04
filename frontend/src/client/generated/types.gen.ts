@@ -5015,7 +5015,7 @@ export type ProjectReadBodyWritable = {
     /**
      * Only read when the update moves the project. If any user would lose access to a project holding webhooks or link shares they created, fail with 409 and code 3018 without changing anything. i18n_params carries the webhooks and link_shares counts.
      */
-    confirm_access_loss?: boolean;
+    ask_before_access_loss?: boolean;
     /**
      * The description of the project.
      */
