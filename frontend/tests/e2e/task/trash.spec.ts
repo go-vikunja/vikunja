@@ -134,6 +134,7 @@ test.describe('Trash', () => {
 		await page.locator('[data-cy="emptyTaskTrash"]').click()
 		const dialog = page.locator('dialog[open]').filter({hasText: 'Empty trash'})
 		await expect(dialog).toContainText('2 tasks')
+		await expect(dialog.locator('[data-cy="emptyTrashOthersWarning"]')).toHaveCount(0)
 		await dialog.locator('.actions .button').filter({hasText: 'Do it!'}).click()
 
 		await expect(page.getByText('There are no tasks in the trash.')).toBeVisible()
@@ -143,6 +144,32 @@ test.describe('Trash', () => {
 			const stored = await apiContext.get(`tasks/${id}`, {headers: {Authorization: `Bearer ${userToken}`}})
 			expect((await stored.json()).code).toBe(4002)
 		}
+	})
+
+	test('emptying warns about tasks other people trashed and can keep them', async ({authenticatedPage: page, apiContext, userToken}) => {
+		await UserFactory.create(1, {id: 2}, false)
+		await trashedTask(1, 'Trashed by me')
+		await trashedTask(2, 'Trashed by someone else', 2)
+		await page.goto('/trash/tasks')
+		await expect(page.locator('[data-cy="trashedTask"]')).toHaveCount(2)
+
+		await page.locator('[data-cy="emptyTaskTrash"]').click()
+		const dialog = page.locator('dialog[open]').filter({hasText: 'Empty trash'})
+		await expect(dialog.locator('[data-cy="emptyTrashText"]')).toContainText('2 tasks')
+		await expect(dialog.locator('[data-cy="emptyTrashOthersWarning"]')).toContainText('1 of them was moved to the trash by someone else.')
+		const includeOthers = dialog.locator('[data-cy="emptyTrashIncludeOthers"]')
+		await expect(includeOthers.locator('input')).toBeChecked()
+
+		await includeOthers.click()
+		await expect(dialog.locator('[data-cy="emptyTrashText"]')).toContainText('1 task.')
+		await dialog.locator('.actions .button').filter({hasText: 'Do it!'}).click()
+
+		await expect(page.locator('[data-cy="trashedTask"]')).toHaveCount(1)
+		await expect(page.locator('[data-cy="trashedTask"]')).toContainText('Trashed by someone else')
+		const mine = await apiContext.get('tasks/1', {headers: {Authorization: `Bearer ${userToken}`}})
+		expect((await mine.json()).code).toBe(4002)
+		const theirs = await apiContext.get('tasks/2', {headers: {Authorization: `Bearer ${userToken}`}})
+		expect((await theirs.json()).code).toBe(4040)
 	})
 
 	test('opening a trashed task shows a notice with restore', async ({authenticatedPage: page}) => {

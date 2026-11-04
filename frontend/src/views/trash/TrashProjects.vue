@@ -117,20 +117,14 @@
 			</template>
 		</Modal>
 
-		<Modal
+		<EmptyTrashModal
+			v-model:include-others="includeOthers"
 			:enabled="showEmptyModal"
+			:count="emptyCount"
+			:texts="{text: 'trash.emptyProjectsModal.text', byOthers: 'trash.emptyProjectsModal.byOthers', includeOthers: 'trash.emptyProjectsModal.includeOthers'}"
 			@close="closeEmptyModal()"
 			@submit="emptyTrash()"
-		>
-			<template #header>
-				<span>{{ $t('trash.empty') }}</span>
-			</template>
-			<template #text>
-				<p class="tw:text-balance">
-					{{ $t('trash.emptyProjectsModal.text', total) }}
-				</p>
-			</template>
-		</Modal>
+		/>
 	</div>
 </template>
 
@@ -143,9 +137,11 @@ import Card from '@/components/misc/Card.vue'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Modal from '@/components/misc/Modal.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
+import EmptyTrashModal from '@/components/trash/EmptyTrashModal.vue'
 import TrashRowActions from '@/components/trash/TrashRowActions.vue'
 
 import {
+	projectTrashCountQuery,
 	trashDaysLeft,
 	trashedProjectsQuery,
 	useDeleteProjectPermanentlyMutation,
@@ -175,6 +171,8 @@ const {
 	isPending,
 	itemToDelete,
 	showEmptyModal,
+	emptyCount,
+	includeOthers,
 	restore,
 	confirmDeleteForever,
 	cancelDeleteForever,
@@ -186,6 +184,7 @@ const {
 	query: page => useQuery(computed(() => trashedProjectsQuery(page.value))),
 	restore: useRestoreProjectMutation(),
 	deleteForever: useDeleteProjectPermanentlyMutation(),
+	count: enabled => useQuery(computed(() => ({...projectTrashCountQuery(), enabled: enabled.value}))),
 	empty: useEmptyProjectTrashMutation(),
 })
 

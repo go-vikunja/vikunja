@@ -8,12 +8,15 @@ import {
 	projectsDelete,
 	projectsDeletePermanently,
 	projectsRestore,
+	projectsTrashCount,
 	projectsTrashEmpty,
 	projectsTrashList,
 	tasksDeletePermanently,
 	tasksRestore,
+	tasksTrashCount,
 	tasksTrashEmpty,
 	tasksTrashList,
+	type TrashCount,
 	type TrashedSubProject,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
@@ -49,6 +52,29 @@ export const trashKeys = {
 	taskList: (page: number) => ['trash', 'tasks', page] as const,
 	projects: ['trash', 'projects'] as const,
 	projectList: (page: number) => ['trash', 'projects', page] as const,
+	// Not below tasks/projects: removeFromPages expects pages there
+	taskCount: ['trash', 'count', 'tasks'] as const,
+	projectCount: ['trash', 'count', 'projects'] as const,
+}
+
+export type EmptyTrashInput = {
+	includeOthers: boolean
+}
+
+export function taskTrashCountQuery() {
+	return queryOptions({
+		queryKey: trashKeys.taskCount,
+		queryFn: async ({signal}): Promise<TrashCount> => (await tasksTrashCount({signal})).data,
+		staleTime: 0,
+	})
+}
+
+export function projectTrashCountQuery() {
+	return queryOptions({
+		queryKey: trashKeys.projectCount,
+		queryFn: async ({signal}): Promise<TrashCount> => (await projectsTrashCount({signal})).data,
+		staleTime: 0,
+	})
 }
 
 // Matches the server's hard-coded retention.
@@ -140,7 +166,9 @@ export function deleteTaskPermanentlyMutationOptions() {
 
 export function emptyTaskTrashMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async () => { await tasksTrashEmpty() },
+		mutationFn: async ({includeOthers}: EmptyTrashInput) => {
+			await tasksTrashEmpty({query: {include_others: includeOthers}})
+		},
 		onSettled: (_input, client) => invalidateTrash(client),
 		successMessage: () => i18n.global.t('trash.emptySuccess'),
 	})
@@ -264,7 +292,9 @@ export function deleteProjectPermanentlyMutationOptions() {
 
 export function emptyProjectTrashMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async () => { await projectsTrashEmpty() },
+		mutationFn: async ({includeOthers}: EmptyTrashInput) => {
+			await projectsTrashEmpty({query: {include_others: includeOthers}})
+		},
 		onSettled: (_input, client) => invalidateTrash(client),
 		successMessage: () => i18n.global.t('trash.emptySuccess'),
 	})

@@ -306,10 +306,13 @@ it('marks the trash and time entries stale after emptying the trash', async () =
 	seedTrash(client)
 	sdk.tasksTrashEmpty.mockResolvedValue({})
 
-	await client.getMutationCache().build(client, emptyTaskTrashMutationOptions()).execute(undefined)
+	client.setQueryData(trashKeys.taskCount, {total: 2, by_others: 1})
 
-	expect(sdk.tasksTrashEmpty).toHaveBeenCalled()
+	await client.getMutationCache().build(client, emptyTaskTrashMutationOptions()).execute({includeOthers: false})
+
+	expect(sdk.tasksTrashEmpty).toHaveBeenCalledWith({query: {include_others: false}})
 	expect(client.getQueryState(trashKeys.taskList(1))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(trashKeys.taskCount)?.isInvalidated).toBe(true)
 	expect(client.getQueryState(timeEntryKeys.list('', 'UTC', 1))?.isInvalidated).toBe(true)
 })
 
