@@ -83,7 +83,7 @@ func TestCSVRowLimit(t *testing.T) {
 
 	t.Run("limit+1 rows fail migrate", func(t *testing.T) {
 		content := buildCSV(101)
-		err := MigrateWithConfig(nil, bytes.NewReader([]byte(content)), int64(len(content)), importConfig)
+		_, err := projectsFromCSV(bytes.NewReader([]byte(content)), int64(len(content)), importConfig)
 		assertLimitErr(t, err)
 	})
 
