@@ -4,13 +4,17 @@
 	<ul class="cleanup-list">
 		<li>{{ $t(`project.share.accessCleanup.${perspective}.assignments`) }}</li>
 		<li>{{ $t(`project.share.accessCleanup.${perspective}.subscriptions`) }}</li>
+		<li v-if="perspective === 'self'">
+			{{ $t('project.share.accessCleanup.self.webhooks') }}
+		</li>
 	</ul>
 	<div class="cleanup-options">
 		<FormCheckbox
+			v-if="perspective === 'others'"
 			:model-value="!cleanup.keep_webhooks"
 			@update:modelValue="deleteWebhooks => cleanup = {...cleanup, keep_webhooks: !deleteWebhooks}"
 		>
-			{{ $t(`project.share.accessCleanup.${perspective}.deleteWebhooks`) }}
+			{{ $t('project.share.accessCleanup.others.deleteWebhooks') }}
 		</FormCheckbox>
 		<FormCheckbox
 			:model-value="cleanup.revoke_link_shares"
