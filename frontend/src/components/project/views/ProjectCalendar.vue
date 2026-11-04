@@ -98,7 +98,7 @@ async function moveEvent(info:EventDropArg|EventResizeDoneArg) {
 const options=computed<CalendarOptions>(()=>({
 	plugins:[dayGridPlugin,interactionPlugin],locales:calendarLocales,locale:locale.value,initialView:'dayGridMonth',firstDay:1,
 	headerToolbar:{left:'today prev,next',center:'title',right:'dayGridMonth,dayGridWeek,dayGridDay'},
- 
+
 	height:'auto',dayMaxEvents:3,views:{dayGridWeek:{dayMaxEvents:false},dayGridDay:{dayMaxEvents:false}},fixedWeekCount:false,editable:!mutation.isPending.value,eventResizableFromStart:true,
 	allDayMaintainDuration:true,moreLinkClick:()=>{
 		requestAnimationFrame(()=>{
