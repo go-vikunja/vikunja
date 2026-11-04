@@ -662,6 +662,8 @@
       "delete": "Delete this webhook",
       "deleteText": "Are you sure you want to delete this webhook? External targets will not be notified of its events anymore.",
       "deleteSuccess": "The webhook was successfully deleted.",
+      "enable": "Enable webhook",
+      "disabledWarning": "Disabled. Enabling this webhook transfers it to you. It will keep sending to the same destination, using your project access.",
       "create": "Create webhook",
       "secret": "Secret",
       "basicauthuser": "Basic Auth User",
