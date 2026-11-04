@@ -134,13 +134,14 @@ test.describe('Moving a project', () => {
 		await expect.poll(() => linkShareNames(apiContext, userToken, child.id)).toEqual(['Owner link'])
 	})
 
-	test('cancelling keeps the project where it was', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('cancelling keeps the project where it was and restores Save focus', async ({authenticatedPage: page, apiContext, userToken}) => {
 		const {member, parent, child} = await setupMove(apiContext, userToken)
 		await createMemberData(child.id, member.id)
 		await clearParentAndSave(page, child.id)
 		const dialog = page.getByRole('dialog', {name: 'Some users will lose access'})
 		await dialog.getByRole('button', {name: 'Cancel', exact: true}).click()
 		await expect(dialog).toHaveCount(0)
+		await expect(page.locator('footer.card-footer').getByRole('button', {name: 'Save', exact: true})).toBeFocused()
 		expect((await apiGet(apiContext, userToken, `/projects/${child.id}`)).parent_project_id).toBe(parent.id)
 		expect(await webhookCreators(apiContext, userToken, child.id)).toEqual([member.id])
 	})
