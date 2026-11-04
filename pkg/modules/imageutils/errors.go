@@ -31,7 +31,7 @@ type ErrImageTooLarge struct {
 }
 
 func (err *ErrImageTooLarge) Error() string {
-	return fmt.Sprintf("image dimensions %dx%d are invalid or exceed the maximum of %d pixels", err.Width, err.Height, MaxPixels)
+	return fmt.Sprintf("image dimensions %dx%d are invalid or exceed the maximum of %d pixels or %d pixels per side", err.Width, err.Height, MaxPixels, MaxSide)
 }
 
 const ErrCodeImageTooLarge = 4032
@@ -40,7 +40,7 @@ func (err *ErrImageTooLarge) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeImageTooLarge,
-		Message:  fmt.Sprintf("Image dimensions %dx%d are invalid or exceed the maximum of %d pixels.", err.Width, err.Height, MaxPixels),
+		Message:  fmt.Sprintf("Image dimensions %dx%d are invalid or exceed the maximum of %d pixels or %d pixels per side.", err.Width, err.Height, MaxPixels, MaxSide),
 	}
 }
 
