@@ -195,7 +195,12 @@ func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, projectID int64, cl
 	}
 
 	linkShareCreatorIDs := []int64{}
-	err = s.Table("link_shares").Cols("shared_by_id").Where(inSubtree).Find(&linkShareCreatorIDs)
+	// DeleteUser keeps link shares, and a missing sharer would count as losing access.
+	err = s.Table("link_shares").
+		Cols("shared_by_id").
+		Where(inSubtree).
+		And(builder.In("shared_by_id", builder.Select("id").From("users"))).
+		Find(&linkShareCreatorIDs)
 	if err != nil {
 		return err
 	}
@@ -223,18 +228,8 @@ func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, projectID int64, cl
 	userIDs := slices.Concat(webhookCreatorIDs, linkShareCreatorIDs, subscriberIDs, assigneeIDs)
 	slices.Sort(userIDs)
 	userIDs = slices.Compact(userIDs)
-	if len(userIDs) == 0 {
-		return nil
-	}
 
-	// DeleteUser keeps link shares, and a missing user would count as losing access.
-	existingUserIDs := []int64{}
-	err = s.Table("users").In("id", userIDs).Cols("id").Find(&existingUserIDs)
-	if err != nil {
-		return err
-	}
-
-	return cleanupAfterProjectAccessLossForUsers(s, doer, existingUserIDs, []int64{projectID}, cleanup)
+	return cleanupAfterProjectAccessLossForUsers(s, doer, userIDs, []int64{projectID}, cleanup)
 }
 
 // Keep in sync with ProjectAccessCleanupList.vue.
