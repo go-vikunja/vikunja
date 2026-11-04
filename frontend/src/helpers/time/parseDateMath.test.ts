@@ -26,6 +26,18 @@ describe('parseDateMath', () => {
 		expect(parseDateMath('now/w', new Date(2026, 9, 25, 10))).toEqual(new Date(2026, 9, 19))
 	})
 
+	it.each(['now+10001b', 'now-10001b', 'now+5000b+5001b'])('rejects %s as above the business day limit', expression => {
+		expect(parseDateMath(expression, now)).toBeNull()
+	})
+
+	it.each(['now+999999999999b', 'now-999999999999b', `now+${'9'.repeat(400)}b`])('rejects the huge business day offset %s', expression => {
+		expect(parseDateMath(expression, now)).toBeNull()
+	})
+
+	it.each(['now+10000b', 'now-10000b', 'now+5000b-4000b', 'now+999999d'])('evaluates %s within the business day limit', expression => {
+		expect(parseDateMath(expression, now)).toBeInstanceOf(Date)
+	})
+
 	it.each(['', 'now+', 'now/x', 'now/b', 'now||+1d', 'nope||+1d'])('returns null for %s', expression => {
 		expect(parseDateMath(expression, now)).toBeNull()
 	})
