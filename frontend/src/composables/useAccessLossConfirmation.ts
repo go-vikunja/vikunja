@@ -21,8 +21,10 @@ export function useAccessLossConfirmation() {
 	const counts = ref<AccessLossCounts | null>(null)
 	const cleanup = ref(defaultAccessLossCleanup())
 	let decide: ((confirmed: boolean) => void) | null = null
+	let invocation = 0
 
 	async function run(attempt: (choice: AccessLossChoice) => Promise<unknown>): Promise<boolean> {
+		const currentInvocation = ++invocation
 		settle(false)
 		try {
 			await attempt({confirm_access_loss: true})
@@ -30,6 +32,7 @@ export function useAccessLossConfirmation() {
 		} catch (e) {
 			const conflict = countsFrom(e)
 			if (!conflict) throw e
+			if (currentInvocation !== invocation) return false
 			counts.value = conflict
 		}
 
@@ -37,18 +40,21 @@ export function useAccessLossConfirmation() {
 		const confirmed = await new Promise<boolean>(resolve => {
 			decide = resolve
 		})
-		counts.value = null
-		if (!confirmed) return false
+		if (!confirmed || currentInvocation !== invocation) return false
 		await attempt(cleanup.value)
 		return true
 	}
 
 	function settle(confirmed: boolean) {
+		counts.value = null
 		decide?.(confirmed)
 		decide = null
 	}
 
-	onScopeDispose(() => settle(false))
+	onScopeDispose(() => {
+		invocation++
+		settle(false)
+	})
 
 	return {
 		counts,
