@@ -171,6 +171,17 @@ func TestTeamAccessRemovalCleanupOptions(t *testing.T) {
 			db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.linkShare.ID})
 		})
 	}
+
+	t.Run("a member leaving cannot keep their webhooks", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		f, team := setup(t)
+
+		path := fmt.Sprintf("/api/v2/teams/%d/members/user1?keep_webhooks=true", team.ID)
+		rec := apiTokenReq(e, http.MethodDelete, path, userJWT(t, 1), "")
+		assert.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhook.ID})
+	})
 }
 
 func TestProjectMoveCleanupOptions(t *testing.T) {
