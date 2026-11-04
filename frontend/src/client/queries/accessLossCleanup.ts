@@ -16,9 +16,9 @@ export function defaultAccessLossCleanup(): AccessLossCleanup {
 }
 
 // The cleanup reaches every project the users lost, not just the one on screen.
-export function invalidateAccessLossCleanup(client: QueryClient) {
+export function invalidateAccessLossCleanup(client: QueryClient, refetchType: 'active' | 'none' = 'active') {
 	return Promise.all([
-		client.invalidateQueries({queryKey: linkShareKeys.all}),
-		client.invalidateQueries({queryKey: webhookKeys.projects}),
+		client.invalidateQueries({queryKey: linkShareKeys.all, refetchType}),
+		client.invalidateQueries({queryKey: webhookKeys.projects, refetchType}),
 	])
 }

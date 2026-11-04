@@ -1,5 +1,6 @@
 import type {APIRequestContext} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
+import {login} from '../../support/authenticateUser'
 import {UserFactory} from '../../factories/user'
 import {TeamFactory} from '../../factories/team'
 import {TeamMemberFactory} from '../../factories/team_member'
@@ -35,6 +36,54 @@ async function webhookCreators(apiContext: APIRequestContext, token: string, pro
 }
 
 test.describe('Removing project access', () => {
+	test('returns home only after successfully removing your own share', async ({authenticatedPage: page, apiContext, userToken, currentUser}) => {
+		const [owner] = await UserFactory.create(1, {id: 2}, false)
+		const {token: ownerToken} = await login(null, apiContext, owner)
+		const created = await apiContext.post('/api/v2/projects', {
+			headers: {Authorization: `Bearer ${ownerToken}`},
+			data: {title: 'Project to leave'},
+		})
+		expect(created.ok()).toBe(true)
+		const project = await created.json()
+		await UserProjectFactory.create(1, {project_id: project.id, user_id: currentUser.id, permission: 2})
+		await page.goto(`/projects/${project.id}/settings/share`)
+		const sidebarProject = page.locator('.menu-container').getByRole('link', {name: project.title, exact: true})
+		await expect(sidebarProject).toBeVisible()
+		const row = page
+			.getByRole('heading', {name: 'Shared with these users', exact: true})
+			.locator('..')
+			.getByRole('row')
+			.filter({hasText: currentUser.username})
+		await row.getByRole('button', {name: 'Remove this user'}).click()
+		const confirmation = page.getByRole('dialog', {name: 'Remove a user from the project'})
+		await page.route(`**/api/v2/projects/${project.id}/users/${currentUser.username}*`, route => route.fulfill({
+			status: 503,
+			json: {title: 'Unavailable', status: 503, detail: 'Try again'},
+		}), {times: 1})
+		await confirmation.getByRole('button', {name: 'Do it!'}).click()
+		const errorToast = page.locator('.global-notification .vue-notification.error')
+		await expect(errorToast).toBeVisible()
+		await expect(page).toHaveURL(`/projects/${project.id}/settings/share`)
+		expect((await apiGet(apiContext, userToken, `/projects/${project.id}`)).id).toBe(project.id)
+		await errorToast.click()
+		await row.getByRole('button', {name: 'Remove this user'}).click()
+		const forbiddenResponses: string[] = []
+		page.on('response', response => {
+			if (response.status() === 403) forbiddenResponses.push(response.url())
+		})
+		await confirmation.getByRole('button', {name: 'Do it!'}).click()
+		await expect(page).toHaveURL('/')
+		await expect(page.getByRole('dialog')).toHaveCount(0)
+		await expect(sidebarProject).toHaveCount(0)
+		const access = await apiContext.get(`/api/v2/projects/${project.id}`, {headers: {Authorization: `Bearer ${userToken}`}})
+		expect(access.status()).toBe(403)
+		expect((await apiGet(apiContext, ownerToken, `/projects/${project.id}/users`)).items).toEqual([])
+		const projects = await apiGet(apiContext, userToken, '/projects')
+		expect(projects.items.map((item: {id: number}) => item.id)).not.toContain(project.id)
+		await expect(page.locator('.global-notification .vue-notification.error')).toHaveCount(0)
+		expect(forbiddenResponses).toEqual([])
+	})
+
 	test('defaults delete webhooks and keep link shares', async ({authenticatedPage: page, apiContext, userToken}) => {
 		const [, member] = await UserFactory.create(2)
 		await createProjects(1)
