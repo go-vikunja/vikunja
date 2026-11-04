@@ -208,7 +208,7 @@ func TestTaskAttachment_Delete(t *testing.T) {
 		defer s.Close()
 		events.ClearDispatchedEvents()
 
-		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		share := &LinkSharing{ID: 2, ProjectID: 1, Permission: PermissionWrite}
 		ta := &TaskAttachment{ID: 1}
 		require.NoError(t, ta.Delete(s, share))
 		require.NoError(t, s.Commit())

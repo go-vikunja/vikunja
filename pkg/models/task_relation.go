@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
@@ -208,7 +209,43 @@ func checkTaskRelationCycle(s *xorm.Session, relation *TaskRelation, otherTaskID
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations [put]
 func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
+	if err := rel.lockTasks(s, a); err != nil {
+		return err
+	}
 	return rel.create(s, a, true)
+}
+
+func (rel *TaskRelation) lockTasks(s *xorm.Session, a web.Auth) error {
+	taskIDs := []int64{
+		rel.TaskID,
+		rel.OtherTaskID,
+	}
+	if taskIDs[0] > taskIDs[1] {
+		taskIDs[0], taskIDs[1] = taskIDs[1], taskIDs[0]
+	}
+
+	for _, taskID := range taskIDs {
+		if taskID == rel.TaskID {
+			if _, err := lockTaskForWrite(s, a, taskID); err != nil {
+				return err
+			}
+			continue
+		}
+
+		task, err := GetTaskSimple(lockingSession(s), &Task{ID: taskID})
+		if err != nil {
+			return err
+		}
+		db.Forget(s, taskMemoKey(taskID))
+		can, _, err := (&Project{ID: task.ProjectID}).CanRead(s, a)
+		if err != nil {
+			return err
+		}
+		if !can {
+			return ErrGenericForbidden{}
+		}
+	}
+	return nil
 }
 
 func (rel *TaskRelation) create(s *xorm.Session, a web.Auth, checkCycle bool) error {
@@ -430,6 +467,9 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 	// Load the full relation first (populates CreatedBy)
 	err := rel.ReadOne(s, a)
 	if err != nil {
+		return err
+	}
+	if err = rel.lockTasks(s, a); err != nil {
 		return err
 	}
 

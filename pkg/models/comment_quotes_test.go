@@ -93,6 +93,7 @@ func TestTaskComment_CommentReplies_Notifications(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		// existing comment by user 2 on task 32
 		parent := &TaskComment{Comment: "original", TaskID: 32, AuthorID: 2}
@@ -123,6 +124,7 @@ func TestTaskComment_CommentReplies_Notifications(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		parent := &TaskComment{Comment: "original", TaskID: 32, AuthorID: 2}
 		_, err := s.Insert(parent)
@@ -155,6 +157,7 @@ func TestTaskComment_CommentReplies_Notifications(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		parentB := &TaskComment{Comment: "by B", TaskID: 32, AuthorID: 2}
 		_, err := s.Insert(parentB)
@@ -191,6 +194,7 @@ func TestTaskComment_CommentReplies_Notifications(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		// user 2 authored a comment on a different task (task 1, owned by user 1).
 		offTask := &TaskComment{Comment: "elsewhere", TaskID: 1, AuthorID: 2}
@@ -225,6 +229,7 @@ func TestTaskComment_CommentReplies_Notifications(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
@@ -253,6 +258,7 @@ func TestTaskComment_CommentReplies_Notifications(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		mine := &TaskComment{Comment: "by me", TaskID: 32, AuthorID: 1}
 		_, err := s.Insert(mine)
@@ -286,6 +292,7 @@ func TestTaskComment_CommentReplies_Notifications(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
@@ -314,6 +321,7 @@ func TestTaskComment_CommentReplies_Notifications(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		parent := &TaskComment{Comment: "original", TaskID: 32, AuthorID: 2}
 		_, err := s.Insert(parent)

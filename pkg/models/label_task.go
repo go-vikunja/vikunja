@@ -64,6 +64,10 @@ func (*LabelTask) TableName() string {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels/{label} [delete]
 func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
+	if _, err = lockTaskForWrite(s, auth, lt.TaskID); err != nil {
+		return err
+	}
+
 	_, err = s.Delete(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
 		return err
@@ -100,6 +104,10 @@ func (lt *LabelTask) Delete(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [put]
 func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
+	if _, err = lockTaskForWrite(s, auth, lt.TaskID); err != nil {
+		return err
+	}
+
 	// Check if the label is already added
 	exists, err := s.Exist(&LabelTask{LabelID: lt.LabelID, TaskID: lt.TaskID})
 	if err != nil {
@@ -471,7 +479,7 @@ type LabelTaskBulk struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/labels/bulk [post]
 func (ltb *LabelTaskBulk) Create(s *xorm.Session, a web.Auth) (err error) {
-	task, err := GetTaskByIDSimple(s, ltb.TaskID)
+	task, err := lockTaskForWrite(s, a, ltb.TaskID)
 	if err != nil {
 		return
 	}
