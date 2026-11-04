@@ -18,9 +18,14 @@ package openid
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 
 	"xorm.io/xorm"
 )
@@ -39,16 +44,40 @@ type LinkIdentityRequest struct {
 	TOTPPasscode string `json:"totp_passcode,omitempty" doc:"A current totp passcode. Required when the user has totp enabled."`
 }
 
-// An identity already linked to u is returned unchanged.
-func LinkIdentity(ctx context.Context, s *xorm.Session, u *user.User, req *LinkIdentityRequest) (*LinkedIdentity, error) {
-	// Before the exchange: the code is single-use, so a typo must not burn it.
-	if err := user.Reauthenticate(ctx, s, u, req.Password, req.TOTPPasscode); err != nil {
+type IdentityPreview struct {
+	Account string `json:"account" doc:"The provider account being linked, from the verified ID token."`
+}
+
+type preparedIdentity struct {
+	Issuer       string
+	Subject      string
+	ProviderKey  string
+	ProviderName string
+	Account      string
+}
+
+func identityPreviewKey(userID int64, req *LinkIdentityRequest) string {
+	return "openid_identity_preview_" + utils.Sha256Hex(fmt.Sprintf("%d:%q:%q:%q", userID, req.Provider, req.RedirectURL, req.Code))
+}
+
+func cachedIdentityPreview(userID int64, req *LinkIdentityRequest) (prepared preparedIdentity, found bool, err error) {
+	found, err = keyvalue.GetWithValue(identityPreviewKey(userID, req), &prepared)
+	if err != nil {
+		return prepared, false, err
+	}
+	if found && rawProviderConfigs()[req.Provider] == nil {
+		return prepared, false, &models.ErrOpenIDBadRequest{Message: "Provider does not exist"}
+	}
+	return prepared, found, nil
+}
+
+func PreviewIdentity(ctx context.Context, u *user.User, req *LinkIdentityRequest) (*IdentityPreview, error) {
+	prepared, found, err := cachedIdentityPreview(u.ID, req)
+	if err != nil {
 		return nil, err
 	}
-
-	// Don't hold the transaction across the IdP round trips.
-	if err := s.Rollback(); err != nil {
-		return nil, err
+	if found {
+		return previewIdentity(u, prepared)
 	}
 
 	provider, _, idToken, _, err := exchangeOidcTokens(ctx, &Callback{
@@ -58,47 +87,141 @@ func LinkIdentity(ctx context.Context, s *xorm.Session, u *user.User, req *LinkI
 	if err != nil {
 		return nil, err
 	}
+	var cl struct {
+		Email             string `json:"email"`
+		PreferredUsername string `json:"preferred_username"`
+		Name              string `json:"name"`
+	}
+	if err := idToken.Claims(&cl); err != nil {
+		return nil, err
+	}
+	account := idToken.Subject
+	for _, label := range []string{cl.Email, cl.PreferredUsername, cl.Name} {
+		if label != "" {
+			account = label
+			break
+		}
+	}
+	prepared = preparedIdentity{
+		Issuer:       idToken.Issuer,
+		Subject:      idToken.Subject,
+		ProviderKey:  provider.Key,
+		ProviderName: provider.Name,
+		Account:      account,
+	}
+	preview, err := previewIdentity(u, prepared)
+	if err != nil {
+		return nil, err
+	}
+	ttl := min(5*time.Minute, time.Until(idToken.Expiry))
+	if err := keyvalue.PutWithTTL(identityPreviewKey(u.ID, req), prepared, ttl); err != nil {
+		return nil, err
+	}
+	return preview, nil
+}
+
+func previewIdentity(u *user.User, prepared preparedIdentity) (*IdentityPreview, error) {
+	s := db.NewSession()
+	defer s.Close()
+	if _, err := identityToLink(s, u.ID, prepared); err != nil {
+		return nil, err
+	}
+	return &IdentityPreview{Account: prepared.Account}, nil
+}
+
+// An identity already linked to u is returned unchanged.
+func LinkIdentity(ctx context.Context, s *xorm.Session, u *user.User, req *LinkIdentityRequest) (*LinkedIdentity, error) {
+	// A typo must preserve both the authorization code and a prepared identity.
+	if err := user.Reauthenticate(ctx, s, u, req.Password, req.TOTPPasscode); err != nil {
+		return nil, err
+	}
+
+	// Don't hold the transaction across the IdP round trips.
+	if err := s.Rollback(); err != nil {
+		return nil, err
+	}
+
+	prepared, found, err := cachedIdentityPreview(u.ID, req)
+	if err != nil {
+		return nil, err
+	}
+	if found {
+		// Consume before writing, so a later unlink cannot replay the preview.
+		if err := keyvalue.Del(identityPreviewKey(u.ID, req)); err != nil {
+			return nil, err
+		}
+	} else {
+		provider, _, idToken, _, err := exchangeOidcTokens(ctx, &Callback{
+			Code:        req.Code,
+			RedirectURL: req.RedirectURL,
+		}, req.Provider)
+		if err != nil {
+			return nil, err
+		}
+		prepared = preparedIdentity{
+			Issuer:       idToken.Issuer,
+			Subject:      idToken.Subject,
+			ProviderKey:  provider.Key,
+			ProviderName: provider.Name,
+		}
+	}
+	provider := &Provider{
+		Key:  prepared.ProviderKey,
+		Name: prepared.ProviderName,
+	}
 
 	if err := s.Begin(); err != nil {
 		return nil, err
 	}
 
-	existing, found, err := user.GetIdentityByIssuerAndSubject(s, idToken.Issuer, idToken.Subject)
+	existing, err := identityToLink(s, u.ID, prepared)
 	if err != nil {
 		return nil, err
 	}
-	if found {
-		if existing.UserID != u.ID {
-			return nil, &models.ErrUserIdentityLinkedToOtherUser{Issuer: idToken.Issuer}
-		}
+	if existing != nil {
 		return withProvider(existing, provider), nil
 	}
 
-	ownedByOIDCUser, err := user.OIDCUserExists(s, idToken.Issuer, idToken.Subject)
-	if err != nil {
-		return nil, err
-	}
-	if ownedByOIDCUser {
-		return nil, &models.ErrUserIdentityLinkedToOtherUser{Issuer: idToken.Issuer}
-	}
-
-	hasIssuer, err := user.HasIdentityForIssuer(s, u.ID, idToken.Issuer)
-	if err != nil {
-		return nil, err
-	}
-	if hasIssuer {
-		return nil, &models.ErrUserIdentityProviderAlreadyLinked{
-			UserID: u.ID,
-			Issuer: idToken.Issuer,
-		}
-	}
-
-	newIdentity, err := user.CreateIdentity(s, u, idToken.Issuer, idToken.Subject, provider.Name)
+	newIdentity, err := user.CreateIdentity(s, u, prepared.Issuer, prepared.Subject, provider.Name)
 	if err != nil {
 		return nil, err
 	}
 
 	return withProvider(newIdentity, provider), nil
+}
+
+func identityToLink(s *xorm.Session, userID int64, prepared preparedIdentity) (*user.Identity, error) {
+	existing, found, err := user.GetIdentityByIssuerAndSubject(s, prepared.Issuer, prepared.Subject)
+	if err != nil {
+		return nil, err
+	}
+	if found {
+		if existing.UserID != userID {
+			return nil, &models.ErrUserIdentityLinkedToOtherUser{Issuer: prepared.Issuer}
+		}
+		return existing, nil
+	}
+
+	ownedByOIDCUser, err := user.OIDCUserExists(s, prepared.Issuer, prepared.Subject)
+	if err != nil {
+		return nil, err
+	}
+	if ownedByOIDCUser {
+		return nil, &models.ErrUserIdentityLinkedToOtherUser{Issuer: prepared.Issuer}
+	}
+
+	hasIssuer, err := user.HasIdentityForIssuer(s, userID, prepared.Issuer)
+	if err != nil {
+		return nil, err
+	}
+	if hasIssuer {
+		return nil, &models.ErrUserIdentityProviderAlreadyLinked{
+			UserID: userID,
+			Issuer: prepared.Issuer,
+		}
+	}
+
+	return nil, nil
 }
 
 // Another user's identity is reported as nonexistent.

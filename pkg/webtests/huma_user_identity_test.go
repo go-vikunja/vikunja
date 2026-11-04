@@ -98,6 +98,20 @@ func TestHumaUserIdentities(t *testing.T) {
 		})
 	})
 
+	t.Run("preview requires a local account", func(t *testing.T) {
+		e := setupIdentityTestEnv(t)
+		body := `{"provider":"p","code":"code","redirect_url":"https://localhost"}`
+		rec := humaRequest(t, e, http.MethodPost, identitiesPath+"/preview", body, "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
+		oidcUser := &user.User{
+			ID:       14,
+			Username: "user14",
+		}
+		rec = humaRequest(t, e, http.MethodPost, identitiesPath+"/preview", body, humaTokenFor(t, oidcUser), "")
+		assert.Equal(t, http.StatusPreconditionFailed, rec.Code, rec.Body.String())
+		assert.Equal(t, user.ErrCodeAccountIsNotLocal, problemCode(t, rec))
+	})
+
 	t.Run("unlink", func(t *testing.T) {
 		t.Run("removes the own identity", func(t *testing.T) {
 			e := setupIdentityTestEnv(t)
