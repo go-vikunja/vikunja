@@ -14,9 +14,24 @@ const DELETE_WEBHOOKS = 'Delete webhooks they created. Unchecked, they transfer 
 const REVOKE_LINK_SHARES = 'Revoke link shares they created'
 
 async function createMemberData(projectId: number, memberId: number) {
-	await LinkShareFactory.create(1, {id: 1, name: 'Member link', project_id: projectId, shared_by_id: memberId})
-	await LinkShareFactory.create(1, {id: 2, name: 'Owner link', project_id: projectId, shared_by_id: 1}, false)
-	await WebhookFactory.create(1, {id: 1, project_id: projectId, target_url: 'https://example.com/member', created_by_id: memberId})
+	await LinkShareFactory.create(1, {
+		id: 1,
+		name: 'Member link',
+		project_id: projectId,
+		shared_by_id: memberId,
+	})
+	await LinkShareFactory.create(1, {
+		id: 2,
+		name: 'Owner link',
+		project_id: projectId,
+		shared_by_id: 1,
+	}, false)
+	await WebhookFactory.create(1, {
+		id: 1,
+		project_id: projectId,
+		target_url: 'https://example.com/member',
+		created_by_id: memberId,
+	})
 }
 
 async function apiGet(apiContext: APIRequestContext, token: string, path: string) {
@@ -36,7 +51,12 @@ async function webhookCreators(apiContext: APIRequestContext, token: string, pro
 }
 
 test.describe('Removing project access', () => {
-	test('returns home only after successfully removing your own share', async ({authenticatedPage: page, apiContext, userToken, currentUser}) => {
+	test('returns home only after successfully removing your own share', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+		currentUser,
+	}) => {
 		const [owner] = await UserFactory.create(1, {id: 2}, false)
 		const {token: ownerToken} = await login(null, apiContext, owner)
 		const created = await apiContext.post('/api/v2/projects', {
@@ -45,12 +65,22 @@ test.describe('Removing project access', () => {
 		})
 		expect(created.ok()).toBe(true)
 		const project = await created.json()
-		await UserProjectFactory.create(1, {project_id: project.id, user_id: currentUser.id, permission: 2})
+		await UserProjectFactory.create(1, {
+			project_id: project.id,
+			user_id: currentUser.id,
+			permission: 2,
+		})
 		await page.goto(`/projects/${project.id}/settings/share`)
-		const sidebarProject = page.locator('.menu-container').getByRole('link', {name: project.title, exact: true})
+		const sidebarProject = page.locator('.menu-container').getByRole('link', {
+			name: project.title,
+			exact: true,
+		})
 		await expect(sidebarProject).toBeVisible()
 		const row = page
-			.getByRole('heading', {name: 'Shared with these users', exact: true})
+			.getByRole('heading', {
+				name: 'Shared with these users',
+				exact: true,
+			})
 			.locator('..')
 			.getByRole('row')
 			.filter({hasText: currentUser.username})
@@ -58,7 +88,11 @@ test.describe('Removing project access', () => {
 		const confirmation = page.getByRole('dialog', {name: 'Remove a user from the project'})
 		await page.route(`**/api/v2/projects/${project.id}/users/${currentUser.username}*`, route => route.fulfill({
 			status: 503,
-			json: {title: 'Unavailable', status: 503, detail: 'Try again'},
+			json: {
+				title: 'Unavailable',
+				status: 503,
+				detail: 'Try again',
+			},
 		}), {times: 1})
 		await confirmation.getByRole('button', {name: 'Do it!'}).click()
 		const errorToast = page.locator('.global-notification .vue-notification.error')
@@ -75,7 +109,10 @@ test.describe('Removing project access', () => {
 		await expect(page).toHaveURL('/')
 		await expect(page.getByRole('dialog')).toHaveCount(0)
 		await expect(sidebarProject).toHaveCount(0)
-		const access = await apiContext.get(`/api/v2/projects/${project.id}`, {headers: {Authorization: `Bearer ${userToken}`}})
+		const access = await apiContext.get(
+			`/api/v2/projects/${project.id}`,
+			{headers: {Authorization: `Bearer ${userToken}`}},
+		)
 		expect(access.status()).toBe(403)
 		expect((await apiGet(apiContext, ownerToken, `/projects/${project.id}/users`)).items).toEqual([])
 		const projects = await apiGet(apiContext, userToken, '/projects')
@@ -87,11 +124,18 @@ test.describe('Removing project access', () => {
 	test('defaults delete webhooks and keep link shares', async ({authenticatedPage: page, apiContext, userToken}) => {
 		const [, member] = await UserFactory.create(2)
 		await createProjects(1)
-		await UserProjectFactory.create(1, {project_id: 1, user_id: member.id, permission: 2})
+		await UserProjectFactory.create(1, {
+			project_id: 1,
+			user_id: member.id,
+			permission: 2,
+		})
 		await createMemberData(1, member.id)
 		await page.goto('/projects/1/settings/share')
 		const row = page
-			.getByRole('heading', {name: 'Shared with these users', exact: true})
+			.getByRole('heading', {
+				name: 'Shared with these users',
+				exact: true,
+			})
 			.locator('..')
 			.getByRole('row')
 			.filter({hasText: member.username})
@@ -105,14 +149,25 @@ test.describe('Removing project access', () => {
 		await expect.poll(() => linkShareNames(apiContext, userToken, 1)).toEqual(['Member link', 'Owner link'])
 	})
 
-	test('keeps webhooks for the owner and revokes link shares', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('keeps webhooks for the owner and revokes link shares', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		const [, member] = await UserFactory.create(2)
 		await createProjects(1)
-		await UserProjectFactory.create(1, {project_id: 1, user_id: member.id, permission: 2})
+		await UserProjectFactory.create(1, {
+			project_id: 1,
+			user_id: member.id,
+			permission: 2,
+		})
 		await createMemberData(1, member.id)
 		await page.goto('/projects/1/settings/share')
 		const row = page
-			.getByRole('heading', {name: 'Shared with these users', exact: true})
+			.getByRole('heading', {
+				name: 'Shared with these users',
+				exact: true,
+			})
 			.locator('..')
 			.getByRole('row')
 			.filter({hasText: member.username})
@@ -126,13 +181,31 @@ test.describe('Removing project access', () => {
 		await expect.poll(() => linkShareNames(apiContext, userToken, 1)).toEqual(['Owner link'])
 	})
 
-	test('removes a team member and revokes their link shares', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('removes a team member and revokes their link shares', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		const [, member] = await UserFactory.create(2)
 		await createProjects(1)
-		await TeamFactory.create(1, {id: 1, name: 'Sharing Team'})
-		await TeamMemberFactory.create(1, {team_id: 1, user_id: 1, admin: true})
-		await TeamMemberFactory.create(1, {team_id: 1, user_id: member.id}, false)
-		await TeamProjectFactory.create(1, {team_id: 1, project_id: 1, permission: 2})
+		await TeamFactory.create(1, {
+			id: 1,
+			name: 'Sharing Team',
+		})
+		await TeamMemberFactory.create(1, {
+			team_id: 1,
+			user_id: 1,
+			admin: true,
+		})
+		await TeamMemberFactory.create(1, {
+			team_id: 1,
+			user_id: member.id,
+		}, false)
+		await TeamProjectFactory.create(1, {
+			team_id: 1,
+			project_id: 1,
+			permission: 2,
+		})
 		await createMemberData(1, member.id)
 		await page.goto('/teams/1/edit')
 		const row = page.getByRole('row').filter({hasText: member.username})
@@ -151,14 +224,28 @@ test.describe('Moving a project', () => {
 	async function setupMove(apiContext: APIRequestContext, token: string) {
 		const [, member] = await UserFactory.create(2)
 		const create = async (body: object) => {
-			const response = await apiContext.post('/api/v2/projects', {headers: {Authorization: `Bearer ${token}`}, data: body})
+			const response = await apiContext.post('/api/v2/projects', {
+				headers: {Authorization: `Bearer ${token}`},
+				data: body,
+			})
 			expect(response.ok()).toBe(true)
 			return (await response.json()) as {id: number}
 		}
 		const parent = await create({title: 'Shared Parent'})
-		const child = await create({title: 'Moved Child', parent_project_id: parent.id})
-		await UserProjectFactory.create(1, {project_id: parent.id, user_id: member.id, permission: 2})
-		return {member, parent, child}
+		const child = await create({
+			title: 'Moved Child',
+			parent_project_id: parent.id,
+		})
+		await UserProjectFactory.create(1, {
+			project_id: parent.id,
+			user_id: member.id,
+			permission: 2,
+		})
+		return {
+			member,
+			parent,
+			child,
+		}
 	}
 
 	async function clearParentAndSave(page: import('@playwright/test').Page, childId: number) {
@@ -168,7 +255,11 @@ test.describe('Moving a project', () => {
 		await page.locator('footer.card-footer .button').filter({hasText: /^Save$/}).click()
 	}
 
-	test('asks about webhooks and link shares and applies the choice', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('asks about webhooks and link shares and applies the choice', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		const {member, child} = await setupMove(apiContext, userToken)
 		await createMemberData(child.id, member.id)
 		await clearParentAndSave(page, child.id)
@@ -178,28 +269,46 @@ test.describe('Moving a project', () => {
 		await dialog.getByRole('checkbox', {name: REVOKE_LINK_SHARES}).check()
 		await dialog.getByRole('button', {name: 'Do it!'}).click()
 		await expect(page.locator('.global-notification')).toContainText('Success')
-		await expect.poll(async () => (await apiGet(apiContext, userToken, `/projects/${child.id}`)).parent_project_id).toBe(0)
+		await expect
+			.poll(async () => (await apiGet(apiContext, userToken, `/projects/${child.id}`)).parent_project_id)
+			.toBe(0)
 		await expect.poll(() => webhookCreators(apiContext, userToken, child.id)).toEqual([1])
 		await expect.poll(() => linkShareNames(apiContext, userToken, child.id)).toEqual(['Owner link'])
 	})
 
-	test('cancelling keeps the project where it was and restores Save focus', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('cancelling keeps the project where it was and restores Save focus', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		const {member, parent, child} = await setupMove(apiContext, userToken)
 		await createMemberData(child.id, member.id)
 		await clearParentAndSave(page, child.id)
 		const dialog = page.getByRole('dialog', {name: 'Some users will lose access'})
-		await dialog.getByRole('button', {name: 'Cancel', exact: true}).click()
+		await dialog.getByRole('button', {
+			name: 'Cancel',
+			exact: true,
+		}).click()
 		await expect(dialog).toHaveCount(0)
-		await expect(page.locator('footer.card-footer').getByRole('button', {name: 'Save', exact: true})).toBeFocused()
+		await expect(page.locator('footer.card-footer').getByRole('button', {
+			name: 'Save',
+			exact: true,
+		})).toBeFocused()
 		expect((await apiGet(apiContext, userToken, `/projects/${child.id}`)).parent_project_id).toBe(parent.id)
 		expect(await webhookCreators(apiContext, userToken, child.id)).toEqual([member.id])
 	})
 
-	test('moves without asking when nobody loses webhooks or link shares', async ({authenticatedPage: page, apiContext, userToken}) => {
+	test('moves without asking when nobody loses webhooks or link shares', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
 		const {child} = await setupMove(apiContext, userToken)
 		await clearParentAndSave(page, child.id)
 		await expect(page.locator('.global-notification')).toContainText('Success')
 		await expect(page.getByRole('dialog', {name: 'Some users will lose access'})).toHaveCount(0)
-		await expect.poll(async () => (await apiGet(apiContext, userToken, `/projects/${child.id}`)).parent_project_id).toBe(0)
+		await expect
+			.poll(async () => (await apiGet(apiContext, userToken, `/projects/${child.id}`)).parent_project_id)
+			.toBe(0)
 	})
 })

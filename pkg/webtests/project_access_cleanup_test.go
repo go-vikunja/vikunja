@@ -180,7 +180,10 @@ func TestTeamAccessRemovalCleanupOptions(t *testing.T) {
 
 			rec := apiTokenReq(e, http.MethodDelete, path(team)+"?keep_webhooks=true&revoke_link_shares=true", userJWT(t, 6), "")
 			assert.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
-			db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhook.ID, "created_by_id": 6}, false)
+			db.AssertExists(t, "webhooks", map[string]interface{}{
+				"id":            f.webhook.ID,
+				"created_by_id": 6,
+			}, false)
 			db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.linkShare.ID})
 		})
 	}
@@ -256,17 +259,32 @@ func TestProjectMoveCleanupOptions(t *testing.T) {
 		}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
 		assert.Equal(t, models.ErrCodeAccessLossNeedsConfirmation, body.Code)
-		assert.Equal(t, map[string]string{"webhooks": "1", "link_shares": "1"}, body.I18nParams)
-		db.AssertExists(t, "projects", map[string]interface{}{"id": child.ID, "parent_project_id": *child.ParentProjectID}, false)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhook.ID, "created_by_id": 1}, false)
+		assert.Equal(t, map[string]string{
+			"webhooks":    "1",
+			"link_shares": "1",
+		}, body.I18nParams)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":                child.ID,
+			"parent_project_id": *child.ParentProjectID,
+		}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            f.webhook.ID,
+			"created_by_id": 1,
+		}, false)
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.linkShare.ID}, false)
 
 		rec = patch(t, e, child, `{"parent_project_id":0,"keep_webhooks":true,"revoke_link_shares":true}`)
 		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 		assert.NotContains(t, rec.Body.String(), "keep_webhooks")
 		assert.NotContains(t, rec.Body.String(), "ask_before_access_loss")
-		db.AssertExists(t, "projects", map[string]interface{}{"id": child.ID, "parent_project_id": nil}, false)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhook.ID, "created_by_id": 6}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":                child.ID,
+			"parent_project_id": nil,
+		}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            f.webhook.ID,
+			"created_by_id": 6,
+		}, false)
 		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.linkShare.ID})
 	})
 	t.Run("without options a move keeps today's defaults", func(t *testing.T) {

@@ -18,10 +18,21 @@ export function normalizeSharePermission(permission: unknown): Permission {
 	return permission === PERMISSIONS.ADMIN || permission === PERMISSIONS.READ_WRITE ? permission : PERMISSIONS.READ
 }
 
-async function invalidateShares(client: QueryClient, projectId: number, kind: 'users' | 'teams', refetchType: 'active' | 'none' = 'active') {
+async function invalidateShares(
+	client: QueryClient,
+	projectId: number,
+	kind: 'users' | 'teams',
+	refetchType: 'active' | 'none' = 'active',
+) {
 	await Promise.all([
-		client.invalidateQueries({queryKey: projectShareKeys[kind](projectId), refetchType}),
-		client.invalidateQueries({queryKey: projectKeys.detail(projectId), refetchType}),
+		client.invalidateQueries({
+			queryKey: projectShareKeys[kind](projectId),
+			refetchType,
+		}),
+		client.invalidateQueries({
+			queryKey: projectKeys.detail(projectId),
+			refetchType,
+		}),
 		client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		client.invalidateQueries({queryKey: userSearchKeys.all, refetchType: 'none'}),
 	])
@@ -36,7 +47,10 @@ function shareSuccess(kind: 'users' | 'teams', action: 'addedSuccess' | 'updated
 
 type UserShareInput = {projectId: number, username: string}
 type TeamShareInput = {projectId: number, teamId: number}
-type UserShareDeleteInput = UserShareInput & {cleanup: AccessLossCleanup, isOwnShare: boolean}
+type UserShareDeleteInput = UserShareInput & {
+	cleanup: AccessLossCleanup,
+	isOwnShare: boolean,
+}
 type TeamShareDeleteInput = TeamShareInput & {cleanup: AccessLossCleanup}
 
 export function projectUserSharesQuery(projectId: number) {

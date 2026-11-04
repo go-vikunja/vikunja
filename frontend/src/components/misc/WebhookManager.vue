@@ -39,7 +39,12 @@ const availableEvents = computed(() => eventData.value ?? [])
 const createMutation = useCreateWebhookMutation()
 const deleteMutation = useDeleteWebhookMutation()
 const updateMutation = useUpdateWebhookMutation()
-const loading = computed(() => isFetching.value || createMutation.isPending.value || deleteMutation.isPending.value || updateMutation.isPending.value)
+const loading = computed(() =>
+	isFetching.value
+	|| createMutation.isPending.value
+	|| deleteMutation.isPending.value
+	|| updateMutation.isPending.value,
+)
 function emptyDraft(): WebhookWritable & {target_url: string} {
 	return {target_url: '', secret: '', basic_auth_user: '', basic_auth_password: '', events: []}
 }

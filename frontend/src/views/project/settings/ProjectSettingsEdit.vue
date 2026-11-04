@@ -162,7 +162,10 @@ async function save() {
 		if (parentProjectChanged.value) {
 			project.value.parent_project_id = parentProject.value?.id ?? 0
 		}
-		const saved = await withAccessLossConfirmation(accessLoss => updateProject.mutateAsync({...project.value, accessLoss}))
+		const saved = await withAccessLossConfirmation(accessLoss => updateProject.mutateAsync({
+			...project.value,
+			accessLoss,
+		}))
 		if (!saved) return
 		useBaseStore().setCurrentProject(project.value)
 		goBack()

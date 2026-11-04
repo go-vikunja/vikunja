@@ -49,7 +49,11 @@ func TestWebhookDisabledMigration20261104201606(t *testing.T) {
 	require.NoError(t, x.DropTables(table))
 	t.Cleanup(func() { require.NoError(t, x.DropTables(table)) })
 	require.NoError(t, x.Sync2(table))
-	_, err = x.Insert(&webhookBefore20261104201606{ID: 1, ProjectID: 42, TargetURL: "https://example.com/existing"})
+	_, err = x.Insert(&webhookBefore20261104201606{
+		ID:        1,
+		ProjectID: 42,
+		TargetURL: "https://example.com/existing",
+	})
 	require.NoError(t, err)
 	before, err := x.DBMetas()
 	require.NoError(t, err)

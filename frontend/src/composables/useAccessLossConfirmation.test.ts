@@ -4,7 +4,15 @@ import {ApiError} from '@/client/problem'
 import {useAccessLossConfirmation} from './useAccessLossConfirmation'
 
 function conflict() {
-	return new ApiError({status: 409, detail: 'conflict', code: 3018, i18n_params: {webhooks: '2', link_shares: '1'}})
+	return new ApiError({
+		status: 409,
+		detail: 'conflict',
+		code: 3018,
+		i18n_params: {
+			webhooks: '2',
+			link_shares: '1',
+		},
+	})
 }
 
 function setup() {
@@ -21,7 +29,10 @@ function pendingAttempt() {
 	const promise = new Promise<unknown>((_, rejectPromise) => {
 		reject = rejectPromise
 	})
-	return {promise, reject}
+	return {
+		promise,
+		reject,
+	}
 }
 
 describe('useAccessLossConfirmation', () => {
@@ -63,17 +74,37 @@ describe('useAccessLossConfirmation', () => {
 		const secondResult = run(second)
 		secondRequest.reject(conflict())
 		await nextTick()
-		cleanup.value = {keep_webhooks: true, revoke_link_shares: true}
+		cleanup.value = {
+			keep_webhooks: true,
+			revoke_link_shares: true,
+		}
 
-		firstRequest.reject(new ApiError({status: 409, detail: 'conflict', code: 3018, i18n_params: {webhooks: '9', link_shares: '8'}}))
+		firstRequest.reject(new ApiError({
+			status: 409,
+			detail: 'conflict',
+			code: 3018,
+			i18n_params: {
+				webhooks: '9',
+				link_shares: '8',
+			},
+		}))
 		await nextTick()
-		expect(counts.value).toEqual({webhooks: 2, linkShares: 1})
-		expect(cleanup.value).toEqual({keep_webhooks: true, revoke_link_shares: true})
+		expect(counts.value).toEqual({
+			webhooks: 2,
+			linkShares: 1,
+		})
+		expect(cleanup.value).toEqual({
+			keep_webhooks: true,
+			revoke_link_shares: true,
+		})
 		expect(await firstResult).toBe(false)
 		confirm()
 		expect(await secondResult).toBe(true)
 		expect(first).toHaveBeenCalledOnce()
-		expect(second).toHaveBeenLastCalledWith({keep_webhooks: true, revoke_link_shares: true})
+		expect(second).toHaveBeenLastCalledWith({
+			keep_webhooks: true,
+			revoke_link_shares: true,
+		})
 		expect(counts.value).toBeNull()
 	})
 
@@ -103,7 +134,11 @@ describe('useAccessLossConfirmation', () => {
 
 	it('rethrows other errors', async () => {
 		const {run} = setup()
-		const error = new ApiError({status: 403, detail: 'forbidden', code: 3001})
+		const error = new ApiError({
+			status: 403,
+			detail: 'forbidden',
+			code: 3001,
+		})
 		await expect(run(vi.fn().mockRejectedValue(error))).rejects.toBe(error)
 	})
 })

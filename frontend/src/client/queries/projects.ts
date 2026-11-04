@@ -67,7 +67,10 @@ type ProjectDraft = Required<Pick<ProjectWritable,
 	'position'
 >>
 
-type UpdateProjectInput = ProjectDraft & {id: number, accessLoss?: AccessLossChoice}
+type UpdateProjectInput = ProjectDraft & {
+	id: number,
+	accessLoss?: AccessLossChoice,
+}
 
 type DuplicateProjectInput = {
 	projectId: number
@@ -304,7 +307,10 @@ export function updateProjectMutationOptions(successMessage?: string) {
 		mutationFn: async ({id, accessLoss, ...project}: UpdateProjectInput) => {
 			const {data} = await projectsUpdate({
 				path: {id},
-				body: {...projectBody(project), ...accessLoss},
+				body: {
+					...projectBody(project),
+					...accessLoss,
+				},
 			})
 			return normalizeProject({...project, ...data})
 		},
