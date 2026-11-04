@@ -20,7 +20,8 @@
 						<th v-if="!hideLabelColumn">
 							{{ $t('timeTracking.form.task') }}
 						</th>
-						<th>{{ $t('task.comment.comment') }}</th>
+						<th>{{ $t('misc.user') }}</th>
+						<th>{{ $t('timeTracking.commentLabel') }}</th>
 						<th class="nowrap">
 							{{ $t('timeTracking.list.time') }}
 						</th>
@@ -58,6 +59,13 @@
 								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
 						</td>
+						<td class="nowrap">
+							<User
+								:user="row.entry.user"
+								:avatar-size="20"
+								is-inline
+							/>
+						</td>
 						<td class="has-text-grey">
 							{{ row.entry.comment }}
 						</td>
@@ -68,7 +76,7 @@
 							{{ row.seconds === null ? '' : formatDuration(row.seconds) }}
 						</td>
 						<td class="nowrap has-text-right">
-							<template v-if="row.entry.user_id === currentUserId">
+							<template v-if="row.entry.user.id === currentUserId">
 								<BaseButton
 									v-tooltip="$t('menu.edit')"
 									v-cy="'editTimeEntry'"
@@ -94,7 +102,7 @@
 				<tfoot>
 					<tr>
 						<td
-							:colspan="hideLabelColumn ? 2 : 4"
+							:colspan="hideLabelColumn ? 3 : 5"
 							class="has-text-weight-bold"
 						>
 							{{ $t(paged ? 'timeTracking.list.pageTotal' : 'timeTracking.list.total') }}
@@ -115,16 +123,16 @@ import {computed} from 'vue'
 
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import User from '@/components/misc/User.vue'
 
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
 import {taskQuery} from '@/client/queries/tasks'
 import {useQueries} from '@tanstack/vue-query'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import {formatDate} from '@/helpers/time/formatDate'
+import {formatTimeRange} from '@/helpers/time/formatTimeRange'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTimeFormat} from '@/composables/useTimeFormat'
-import {TIME_FORMAT} from '@/constants/timeFormat'
 
 import type {TaskResponse} from '@/client/queries/tasks'
 import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
@@ -206,17 +214,9 @@ function formatDuration(seconds: number): string {
 	return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
 }
 
-function formatTime(date: Date): string {
-	return formatDate(date, timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
-}
-
 function timeRange(entry: ITimeEntry): string {
 	const start = parseDateOrNull(entry.start_time)
-	if (start === null) {
-		return ''
-	}
-	const end = parseDateOrNull(entry.end_time)
-	return end === null ? `${formatTime(start)} – …` : `${formatTime(start)} – ${formatTime(end)}`
+	return start === null ? '' : formatTimeRange(start, parseDateOrNull(entry.end_time), timeFormat.value)
 }
 </script>
 

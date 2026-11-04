@@ -132,7 +132,7 @@ func TestHumaTimeEntry_Create(t *testing.T) {
 		body := `{"task_id":1,"start_time":"2020-01-01T09:00:00Z","end_time":"2020-01-01T10:00:00Z","comment":"work"}`
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/time-entries", body, humaTokenFor(t, &testuser1), "")
 		require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"user_id":1`)
+		assert.Contains(t, rec.Body.String(), `"user":{"id":1,`)
 		assert.Contains(t, rec.Body.String(), `"task_id":1`)
 	})
 
@@ -145,7 +145,7 @@ func TestHumaTimeEntry_Create(t *testing.T) {
 		body := `{"task_id":1,"start_time":"2020-01-01T09:00:00Z","comment":"timer"}`
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/time-entries", body, humaTokenFor(t, &testuser1), "")
 		require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
-		assert.Contains(t, rec.Body.String(), `"user_id":1`)
+		assert.Contains(t, rec.Body.String(), `"user":{"id":1,`)
 		// A running timer's end_time is null on the wire, not the zero-time sentinel.
 		assert.Contains(t, rec.Body.String(), `"end_time":null`)
 		assert.NotContains(t, rec.Body.String(), "0001-01-01")

@@ -102,7 +102,7 @@ func (l *TimeEntryListener) Handle(msg *message.Message) error {
 	if err := json.Unmarshal(msg.Payload, &event); err != nil {
 		return err
 	}
-	if event.TimeEntry == nil {
+	if event.TimeEntry == nil || event.TimeEntry.User == nil {
 		return nil
 	}
 
@@ -112,7 +112,7 @@ func (l *TimeEntryListener) Handle(msg *message.Message) error {
 		return nil
 	}
 
-	hub.PublishForUser(event.TimeEntry.UserID, l.wsEvent, event.TimeEntry)
+	hub.PublishForUser(event.TimeEntry.User.ID, l.wsEvent, event.TimeEntry)
 	return nil
 }
 

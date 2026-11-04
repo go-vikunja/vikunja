@@ -378,7 +378,7 @@
                 {
                     "key": "forcessl",
                     "default_value": "false",
-                    "comment": "By default, Vikunja will try to connect with starttls, use this option to force it to use ssl."
+                    "comment": "By default, Vikunja uses starttls if the mail server offers it and falls back to plaintext otherwise. Enable this to always connect with implicit TLS (usually port 465) and refuse unencrypted connections."
                 }
             ]
         },
@@ -403,7 +403,7 @@
                 {
                     "key": "level",
                     "default_value": "INFO",
-                    "comment": "Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
+                    "comment": "Change the log level. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO."
                 },
                 {
                     "key": "format",
@@ -418,7 +418,7 @@
                 {
                     "key": "databaselevel",
                     "default_value": "",
-                    "comment": "The log level for database log messages. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG. Defaults to the value of `log.level`."
+                    "comment": "The log level for database log messages. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "http",
@@ -428,7 +428,7 @@
                 {
                     "key": "httplevel",
                     "default_value": "",
-                    "comment": "The log level for http request log messages. Requests are logged at INFO, requests failing with a 4xx status at WARNING and requests failing with a 5xx status at ERROR. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG. Defaults to the value of `log.level`."
+                    "comment": "The log level for http request log messages. Requests are logged at INFO, requests failing with a 4xx status at WARNING and requests failing with a 5xx status at ERROR. Possible values (case-insensitive) are ERROR, WARNING, INFO, DEBUG. CRITICAL is an alias for ERROR and NOTICE is an alias for INFO. Defaults to the value of `log.level`."
                 },
                 {
                     "key": "events",
@@ -566,6 +566,11 @@
                     "key": "maxcsvrows",
                     "default_value": "100000",
                     "comment": "The maximum number of data rows parsed from one CSV import, including generic CSV and TickTick backup files."
+                },
+                {
+                    "key": "maxitems",
+                    "default_value": "100000",
+                    "comment": "The maximum number of projects, buckets, tasks, comments and attachments one import may contain, across all migrators."
                 },
                 {
                     "key": "vikunjafile",
@@ -730,11 +735,29 @@
             "children": [
                 {
                     "key": "imprinturl",
-                    "default_value": ""
+                    "default_value": "",
+                    "comment": "Deprecated: add a legal.<link key> entry with the text \"Imprint\" instead."
                 },
                 {
                     "key": "privacyurl",
-                    "default_value": ""
+                    "default_value": "",
+                    "comment": "Deprecated: add a legal.<link key> entry with the text \"Privacy Policy\" instead."
+                },
+                {
+                    "key": "<link key>",
+                    "comment": "Any number of legal links. You can freely choose the `<link key>`, links are shown sorted by it, after the deprecated imprinturl and privacyurl.\nVia environment variables: VIKUNJA_LEGAL_<LINK KEY>_TEXT and VIKUNJA_LEGAL_<LINK KEY>_URL.",
+                    "children": [
+                        {
+                            "key": "text",
+                            "default_value": "",
+                            "comment": "The link text."
+                        },
+                        {
+                            "key": "url",
+                            "default_value": "",
+                            "comment": "The link target."
+                        }
+                    ]
                 }
             ]
         },
@@ -807,17 +830,17 @@
                                         {
                                             "key": "scope",
                                             "default_value": "openid email profile",
-                                            "comment": "The scope necessary to use oidc.\nIf you want to use the Feature to create and assign to Vikunja teams via oidc, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\ne.g. scope: openid email profile vikunja_scope"
+                                            "comment": "The scope necessary to use oidc.\nIf you want to use the Feature to create and assign to Vikunja teams via oidc, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\ne.g. scope: openid email profile vikunja_scope\nAlternatively, add the `groups` scope to create and assign the teams from your provider's `groups` claim instead, using each group name as the team's unique id.\ne.g. scope: openid email profile groups"
                                         },
                                         {
                                             "key": "usernamefallback",
                                             "default_value": "false",
-                                            "comment": "This option allows to look for a local account where the OIDC Issuer match the Vikunja local username. Allowed value is either `true` or `false`. If `emailfallback` is also enabled, a local account matching both username and email is preferred, then one matching the email alone.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
+                                            "comment": "Deprecated: will be removed in a future release. Users should link their provider from their account settings instead. This option allows to look for a local account where the OIDC Issuer match the Vikunja local username. Allowed value is either `true` or `false`. If `emailfallback` is also enabled, a local account matching both username and email is preferred, then one matching the email alone.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
                                         },
                                         {
                                             "key": "emailfallback",
                                             "default_value": "false",
-                                            "comment": "This option allows to look for a local account where the OIDC user's email match the Vikunja local email. Allowed value is either `true` or `false`. Requires the provider to send `email_verified: true`. Also applies when `usernamefallback` is enabled.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
+                                            "comment": "Deprecated: will be removed in a future release. Users should link their provider from their account settings instead. This option allows to look for a local account where the OIDC user's email match the Vikunja local email. Allowed value is either `true` or `false`. Requires the provider to send `email_verified: true`. Also applies when `usernamefallback` is enabled.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
                                         },
                                         {
                                             "key": "forceuserinfo",
@@ -892,7 +915,7 @@
                         {
                             "key": "groupsyncfilter",
                             "default_value": "(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
-                            "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`."
+                            "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`.\nMay contain `{userdn}` (the user's DN) and `{username}` (the user's `attribute.username` value), both escaped. With a placeholder, every matching group is a membership and `attribute.memberid` is ignored; login fails if the value is empty.\nExample (OpenLDAP, direct membership): `(&(objectclass=groupOfNames)(member={userdn}))`\nExample (Active Directory, including nested groups): `(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={userdn}))`\nWithout a placeholder, Vikunja fetches all matching groups and checks their `attribute.memberid` values, which is slow on large directories and misses members of Active Directory groups with more than 1500 members."
                         },
                         {
                             "key": "groupsyncuseserviceaccount",
@@ -927,7 +950,12 @@
                                 {
                                     "key": "memberid",
                                     "default_value": "member",
-                                    "comment": "The LDAP attribute used to check group membership of a team in Vikunja. Only used when groups are synced to Vikunja."
+                                    "comment": "The LDAP attribute used to check group membership of a team in Vikunja. Only used when groups are synced to Vikunja and `groupsyncfilter` contains neither `{userdn}` nor `{username}`."
+                                },
+                                {
+                                    "key": "id",
+                                    "default_value": "",
+                                    "comment": "An immutable LDAP attribute used to match LDAP users to Vikunja accounts and LDAP groups to Vikunja teams, so renaming a user's login name or moving or renaming a group in the directory keeps the account or team and its shares. Use `objectGUID` for Active Directory or `entryUUID` for OpenLDAP. If empty, users are matched by `attribute.username` and groups by their DN.\nWhen set on an existing installation, existing accounts and teams are migrated gradually, each on the next login of that user or of a member of that group. The switch is one-way: unsetting or changing this attribute later creates new accounts and teams, and the old ones keep their data and shares but no longer match. While this is set, users must not be able to edit their own `attribute.username` value: a user who sets it to another user's id value could take over that user's migrated account."
                                 }
                             ]
                         }
@@ -958,6 +986,22 @@
                     "key": "pprof",
                     "default_value": "false",
                     "comment": "If set to true (and metrics are enabled), exposes the Go runtime profiler at `/debug/pprof/`, protected by the same basic auth as the metrics endpoint when username and password are set. Profiles reveal internals of the running process; only enable it on instances that are not reachable from the internet."
+                }
+            ]
+        },
+        {
+            "key": "health",
+            "comment": "Healthcheck endpoints (`/health` and `/api/v2/health`)",
+            "children": [
+                {
+                    "key": "username",
+                    "default_value": "",
+                    "comment": "If set to a non-empty value the health endpoints will require this as a username via basic auth in combination with the password below."
+                },
+                {
+                    "key": "password",
+                    "default_value": "",
+                    "comment": "If set to a non-empty value the health endpoints will require this as a password via basic auth in combination with the username below."
                 }
             ]
         },

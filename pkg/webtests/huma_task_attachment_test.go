@@ -19,13 +19,20 @@ package webtests
 import (
 	"bytes"
 	"encoding/json"
+	"image"
+	"image/color"
+	"image/draw"
+	_ "image/jpeg"
+	"image/png"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strconv"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 
@@ -86,6 +93,16 @@ func uploadOneAttachment(t *testing.T, e *echo.Echo, token, filename string, con
 	return resp.Body.Success[0].ID
 }
 
+func assertAttachmentCreatedDispatched(t *testing.T, taskID, attachmentID int64) {
+	t.Helper()
+	dispatched := events.GetDispatchedEvents((&models.TaskAttachmentCreatedEvent{}).Name())
+	require.Len(t, dispatched, 1)
+	created, ok := dispatched[0].(*models.TaskAttachmentCreatedEvent)
+	require.True(t, ok, "dispatched %T", dispatched[0])
+	assert.Equal(t, attachmentID, created.Attachment.ID)
+	assert.Equal(t, taskID, created.Task.ID)
+}
+
 func TestTaskAttachmentsV2(t *testing.T) {
 	t.Run("Upload single file", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -97,6 +114,15 @@ func TestTaskAttachmentsV2(t *testing.T) {
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), "hello.txt")
 		assert.Contains(t, rec.Body.String(), `"success"`)
+	})
+
+	t.Run("Upload dispatches the attachment created event", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		id := uploadOneAttachment(t, e, token, "event.txt", []byte("event"))
+		assertAttachmentCreatedDispatched(t, 1, id)
 	})
 
 	t.Run("Upload multiple files", func(t *testing.T) {
@@ -156,6 +182,21 @@ func TestTaskAttachmentsV2(t *testing.T) {
 		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
 		assert.NotEmpty(t, rec.Header().Get("Last-Modified"))
 		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+	})
+
+	t.Run("Download returns the original even when a preview size is passed", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		var content bytes.Buffer
+		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, content.Bytes(), rec.Body.Bytes())
+		assert.Contains(t, rec.Header().Get("Content-Disposition"), "image.png")
 	})
 
 	t.Run("Delete", func(t *testing.T) {
@@ -243,19 +284,239 @@ func TestTaskAttachmentsV2(t *testing.T) {
 	})
 }
 
-// TestTaskAttachmentsV2_PreviewSize covers the preview_size query param: a non-image
-// attachment ignores it and returns the original bytes (the v1 behaviour).
-func TestTaskAttachmentsV2_PreviewSize(t *testing.T) {
-	e, err := setupTestEnv()
-	require.NoError(t, err)
-	token := humaTokenFor(t, &testuser1)
+func brokenPNG(t *testing.T) []byte {
+	t.Helper()
+	var valid bytes.Buffer
+	require.NoError(t, png.Encode(&valid, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+	// Keeps the header so the mime type is still detected as an image.
+	return slices.Concat(valid.Bytes()[:40], []byte("not image data"))
+}
 
-	content := []byte("not an image, just text")
-	id := uploadOneAttachment(t, e, token, "notimage.txt", content)
+func previewURL(taskID string, attachmentID int64, query string) string {
+	return "/api/v2/tasks/" + taskID + "/attachments/" + strconv.FormatInt(attachmentID, 10) + "/preview" + query
+}
 
-	rec := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/1/attachments/"+strconv.FormatInt(id, 10)+"?preview_size=md", "", token, "")
-	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-	assert.Equal(t, content, rec.Body.Bytes(), "preview_size on a non-image must return the original file")
+func TestTaskAttachmentsV2_Preview(t *testing.T) {
+	notPreviewable := map[string]struct {
+		filename string
+		content  []byte
+	}{
+		"non-image": {
+			filename: "notimage.txt",
+			content:  []byte("not an image, just text"),
+		},
+		"undecodable image": {
+			filename: "broken.png",
+			content:  brokenPNG(t),
+		},
+	}
+	for name, tc := range notPreviewable {
+		t.Run(name+" fails instead of returning the original file", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			id := uploadOneAttachment(t, e, token, tc.filename, tc.content)
+
+			rec := humaRequest(t, e, http.MethodGet, previewURL("1", id, "?size=md"), "", token, "")
+			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"code":`+strconv.Itoa(models.ErrCodeTaskAttachmentNotPreviewable))
+		})
+	}
+
+	transparent := image.NewNRGBA(image.Rect(0, 0, 400, 300))
+	opaque := image.NewNRGBA(image.Rect(0, 0, 400, 300))
+	draw.Draw(opaque, opaque.Bounds(), image.NewUniform(color.NRGBA{
+		R: 200,
+		G: 100,
+		B: 50,
+		A: 255,
+	}), image.Point{}, draw.Src)
+
+	previews := map[string]struct {
+		source      image.Image
+		contentType string
+		format      string
+	}{
+		"image with transparency returns a downscaled png": {
+			source:      transparent,
+			contentType: "image/png",
+			format:      "png",
+		},
+		"opaque image returns a downscaled jpeg": {
+			source:      opaque,
+			contentType: "image/jpeg",
+			format:      "jpeg",
+		},
+	}
+	for name, tc := range previews {
+		t.Run(name, func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			var content bytes.Buffer
+			require.NoError(t, png.Encode(&content, tc.source))
+			id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+			for range 2 {
+				rec := humaRequest(t, e, http.MethodGet, previewURL("1", id, "?size=md"), "", token, "")
+				require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+				assert.Equal(t, tc.contentType, rec.Header().Get("Content-Type"))
+				assert.Equal(t, strconv.Itoa(rec.Body.Len()), rec.Header().Get("Content-Length"))
+				assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
+				assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+
+				cfg, format, err := image.DecodeConfig(rec.Body)
+				require.NoError(t, err)
+				assert.Equal(t, tc.format, format)
+				assert.Equal(t, 200, cfg.Width)
+				assert.Equal(t, 150, cfg.Height)
+			}
+		})
+	}
+
+	invalidSizes := map[string]string{
+		"missing size": "",
+		"empty size":   "?size=",
+		"invalid size": "?size=huge",
+	}
+	for name, query := range invalidSizes {
+		t.Run(name+" is rejected", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			var content bytes.Buffer
+			require.NoError(t, png.Encode(&content, opaque))
+			id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+			rec := humaRequest(t, e, http.MethodGet, previewURL("1", id, query), "", token, "")
+			assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+		})
+	}
+
+	t.Run("nonexistent attachment", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodGet, previewURL("1", 99999, "?size=md"), "", token, "")
+		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("attachment that does not belong to the task in the path", func(t *testing.T) {
+		// Attachment 4 belongs to task 34, not task 1.
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodGet, previewURL("1", 4, "?size=md"), "", token, "")
+		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("forbidden on inaccessible task", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		rec := humaRequest(t, e, http.MethodGet, previewURL("34", 4, "?size=md"), "", token, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("unauthenticated", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		rec := humaRequest(t, e, http.MethodGet, previewURL("1", 1, "?size=md"), "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+	})
+}
+
+func TestTaskAttachmentsV1_PreviewSize(t *testing.T) {
+	v1URL := func(id int64, query string) string {
+		return "/api/v1/tasks/1/attachments/" + strconv.FormatInt(id, 10) + query
+	}
+
+	t.Run("no preview size returns the original file", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		var content bytes.Buffer
+		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+		rec := humaRequest(t, e, http.MethodGet, v1URL(id, ""), "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, content.Bytes(), rec.Body.Bytes())
+		assert.Contains(t, rec.Header().Get("Content-Disposition"), "image.png")
+	})
+
+	t.Run("valid preview size returns a downscaled preview", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		var content bytes.Buffer
+		require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+		id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+		rec := humaRequest(t, e, http.MethodGet, v1URL(id, "?preview_size=md"), "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, "image/png", rec.Header().Get("Content-Type"))
+		cfg, err := png.DecodeConfig(rec.Body)
+		require.NoError(t, err)
+		assert.Equal(t, 200, cfg.Width)
+		assert.Equal(t, 150, cfg.Height)
+	})
+
+	invalidSizes := map[string]string{
+		"empty":   "?preview_size=",
+		"invalid": "?preview_size=huge",
+	}
+	for name, query := range invalidSizes {
+		t.Run(name+" preview size is rejected", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			var content bytes.Buffer
+			require.NoError(t, png.Encode(&content, image.NewNRGBA(image.Rect(0, 0, 400, 300))))
+			id := uploadOneAttachment(t, e, token, "image.png", content.Bytes())
+
+			rec := humaRequest(t, e, http.MethodGet, v1URL(id, query), "", token, "")
+			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"code":`+strconv.Itoa(models.ErrCodeInvalidPreviewSize))
+		})
+	}
+
+	notPreviewable := map[string]struct {
+		filename string
+		content  []byte
+	}{
+		"non-image": {
+			filename: "notimage.txt",
+			content:  []byte("not an image, just text"),
+		},
+		"undecodable image": {
+			filename: "broken.png",
+			content:  brokenPNG(t),
+		},
+	}
+	for name, tc := range notPreviewable {
+		t.Run(name+" fails instead of returning the original file", func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			id := uploadOneAttachment(t, e, token, tc.filename, tc.content)
+
+			rec := humaRequest(t, e, http.MethodGet, v1URL(id, "?preview_size=md"), "", token, "")
+			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"code":`+strconv.Itoa(models.ErrCodeTaskAttachmentNotPreviewable))
+		})
+	}
 }
 
 // TestTaskAttachmentsV2_Disabled proves the resource is absent when the

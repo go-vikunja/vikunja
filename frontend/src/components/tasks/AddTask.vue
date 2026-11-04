@@ -18,7 +18,7 @@
 					:id="textareaId"
 					ref="newTaskInput"
 					v-model="newTaskTitle"
-					v-focus
+					v-focus="autofocus"
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
 					:placeholder="$t('project.list.addPlaceholder')"
@@ -82,10 +82,11 @@ import {reportSkippedLabels, useQuickAddTask} from '@/composables/useQuickAddTas
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	projectId?: number,
 	defaultDueDate?: string,
-}>()
+	autofocus?: boolean,
+}>(), {autofocus: true})
 
 const emit = defineEmits<{
 	tasksAdded: [tasks: ITask[]],

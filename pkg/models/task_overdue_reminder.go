@@ -17,6 +17,7 @@
 package models
 
 import (
+	"slices"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -81,9 +82,20 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (u
 		}
 
 		// If it is time for that current user, add the task to their project of overdue tasks
-		tm, err := time.Parse("15:04", t.User.OverdueTasksRemindersTime)
+		remindersTime := t.User.OverdueTasksRemindersTime
+		if remindersTime == "" {
+			remindersTime = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
+		}
+		if remindersTime == "" {
+			remindersTime = "9:00"
+		}
+		tm, err := time.Parse("15:04", remindersTime)
 		if err != nil {
-			return nil, err
+			tm, err = time.Parse("3:04", remindersTime)
+			if err != nil {
+				log.Errorf("[Undone Overdue Tasks Reminder] Could not parse reminder time %q for user %d: %v", t.User.OverdueTasksRemindersTime, t.User.ID, err)
+				continue
+			}
 		}
 		overdueMailTime := time.Date(now.Year(), now.Month(), now.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
 		isTimeForReminder := overdueMailTime.After(now) || overdueMailTime.Equal(now.In(tz))
@@ -120,6 +132,39 @@ func (ut *userWithTasks) allTasks() []*Task {
 	return append(mapToSlice(ut.assigned), mapToSlice(ut.followed)...)
 }
 
+// hasNonWebhookListener catches listeners registered by plugins.
+func hasNonWebhookListener(eventName string) bool {
+	return slices.ContainsFunc(events.ListenersFor(eventName), func(l events.Listener) bool {
+		_, isWebhook := l.(*WebhookListener)
+		return !isWebhook
+	})
+}
+
+// overdueEventsWithListeners lets the cron skip dispatching events nobody handles,
+// since each dispatched event costs the webhook listener a db session.
+func overdueEventsWithListeners(s *xorm.Session) (single, batch bool, err error) {
+	singleName := (&TaskOverdueEvent{}).Name()
+	batchName := (&TasksOverdueEvent{}).Name()
+
+	single = hasNonWebhookListener(singleName)
+	batch = hasNonWebhookListener(batchName)
+	if single && batch {
+		return
+	}
+
+	webhooks := []*Webhook{}
+	err = s.Cols("events").Find(&webhooks)
+	if err != nil {
+		return
+	}
+
+	for _, w := range webhooks {
+		single = single || slices.Contains(w.Events, singleName)
+		batch = batch || slices.Contains(w.Events, batchName)
+	}
+	return
+}
+
 // RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
 func RegisterOverdueReminderCron() {
 	webhookEnabled := config.WebhooksEnabled.GetBool()
@@ -139,8 +184,22 @@ func RegisterOverdueReminderCron() {
 
 		now := time.Now()
 
+		var dispatchSingle, dispatchBatch bool
+		if webhookEnabled {
+			var err error
+			dispatchSingle, dispatchBatch, err = overdueEventsWithListeners(s)
+			if err != nil {
+				log.Errorf("[Undone Overdue Tasks Reminder] Could not check for overdue event listeners: %s", err)
+				return
+			}
+		}
+
+		if !emailEnabled && !dispatchSingle && !dispatchBatch {
+			return
+		}
+
 		var cond builder.Cond
-		if emailEnabled && !webhookEnabled {
+		if !dispatchSingle && !dispatchBatch {
 			cond = builder.Eq{"users.overdue_tasks_reminders_enabled": true}
 		}
 
@@ -195,9 +254,7 @@ func RegisterOverdueReminderCron() {
 				}
 			}
 
-			// Dispatch webhook events
-			if webhookEnabled {
-				// Per-task events
+			if dispatchSingle {
 				for _, t := range tasks {
 					err = events.Dispatch(&TaskOverdueEvent{
 						Task:    t,
@@ -208,8 +265,9 @@ func RegisterOverdueReminderCron() {
 						log.Errorf("[Undone Overdue Tasks Reminder] Could not dispatch overdue event for task %d: %s", t.ID, err)
 					}
 				}
+			}
 
-				// Batch event
+			if dispatchBatch {
 				err = events.Dispatch(&TasksOverdueEvent{
 					Tasks:    tasks,
 					User:     ut.user,

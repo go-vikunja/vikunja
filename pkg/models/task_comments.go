@@ -139,7 +139,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
+	doer := doerFromAuth(s, a)
 	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err

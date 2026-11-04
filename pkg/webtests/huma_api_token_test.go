@@ -158,9 +158,8 @@ func TestHumaAPIToken(t *testing.T) {
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			// CanDelete returns (false, nil) for a missing token → generic forbidden.
 			rec := humaRequest(t, e, http.MethodDelete, "/api/v2/tokens/9999", "", user1Token, "")
-			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+			assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 		})
 		t.Run("Normal - own token", func(t *testing.T) {
 			// Runs last so deleting #1 doesn't disturb the ReadAll cardinality assertions.

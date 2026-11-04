@@ -96,7 +96,7 @@ func confirmExportPassword(ctx context.Context, s *xorm.Session, password string
 		return nil, err
 	}
 	if u.IsLocalUser() {
-		if err := user.CheckUserPassword(u, password); err != nil {
+		if err := user.CheckReauthPassword(u, password); err != nil {
 			return nil, translateDomainError(err)
 		}
 	}

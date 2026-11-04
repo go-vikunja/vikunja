@@ -2717,6 +2717,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
+                    },
+                    "503": {
+                        "description": "The server is busy decoding other images.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
                     }
                 }
             }
@@ -5443,14 +5449,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image will be returned if the attachment is an image.",
+                        "description": "The size of the preview image. Can be sm = 100px, md = 200px, lg = 400px or xl = 800px. If provided, a preview image is returned instead of the attachment: a JPEG, or a PNG when the image has transparency.",
                         "name": "preview_size",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "The attachment file.",
+                        "description": "The attachment file, or its preview when preview_size is provided.",
                         "schema": {
                             "type": "file"
                         }
@@ -5467,8 +5473,20 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.Message"
                         }
                     },
+                    "422": {
+                        "description": "preview_size is invalid (code 4039), or the attachment has no preview (code 4038).",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
                     "500": {
                         "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "503": {
+                        "description": "Too many previews are being generated, try again later.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -7910,6 +7928,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
+                    },
+                    "503": {
+                        "description": "The server is busy decoding other images.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
                     }
                 }
             }
@@ -8209,7 +8233,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Disables any totp settings for the current user.",
+                "description": "Disables any totp settings for the current user. Requires the current password and a current totp passcode.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8222,7 +8246,7 @@ const docTemplate = `{
                 "summary": "Disable totp settings",
                 "parameters": [
                     {
-                        "description": "The current user's password (only password is enough).",
+                        "description": "The current user's password and a current totp passcode (totp_passcode).",
                         "name": "totp",
                         "in": "body",
                         "required": true,
@@ -8244,8 +8268,26 @@ const docTemplate = `{
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Wrong password.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "412": {
+                        "description": "Invalid totp passcode.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many failed attempts.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -8266,7 +8308,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Enables a previously enrolled totp setting by providing a totp passcode.",
+                "description": "Enables a previously enrolled totp setting by providing a totp passcode and the current password.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8279,12 +8321,12 @@ const docTemplate = `{
                 "summary": "Enable a previously enrolled totp setting.",
                 "parameters": [
                     {
-                        "description": "The totp passcode.",
+                        "description": "The totp passcode and the current password.",
                         "name": "totp",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.TOTPPasscode"
+                            "$ref": "#/definitions/v1.UserTOTPEnableRequest"
                         }
                     }
                 ],
@@ -8301,6 +8343,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Wrong password.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "User does not exist.",
                         "schema": {
@@ -8309,6 +8357,12 @@ const docTemplate = `{
                     },
                     "412": {
                         "description": "TOTP is not enrolled.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many failed attempts.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -8329,7 +8383,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Creates an initial setup for the user in the db. After this step, the user needs to verify they have a working totp setup with the \"enable totp\" endpoint.",
+                "description": "Creates an initial setup for the user in the db. After this step, the user needs to verify they have a working totp setup with the \"enable totp\" endpoint. Requires the current password.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8340,6 +8394,17 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "Enroll a user into totp",
+                "parameters": [
+                    {
+                        "description": "The current user's password.",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserPasswordConfirmation"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -8353,8 +8418,20 @@ const docTemplate = `{
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Wrong password.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "User does not exist.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many failed attempts.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -9002,7 +9079,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "The size of the avatar you want to get. If bigger than the max configured size this will be adjusted to the maximum size.",
+                        "description": "The size of the avatar you want to get. Rounded up to 16, 32, 48, 64, 128, 256, 512 or 1024 and capped at the max configured size.",
                         "name": "size",
                         "in": "query"
                     }
@@ -9310,6 +9387,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "state": {
                     "type": "string"
                 }
             }
@@ -10262,6 +10342,12 @@ const docTemplate = `{
                     "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via views with buckets, this is primarily used to sort them based on a range.\nPositions are always saved per view. They will automatically be set if you request the tasks through a view\nendpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.",
                     "type": "number"
                 },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskPosition"
+                    }
+                },
                 "priority": {
                     "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
                     "type": "integer"
@@ -10657,6 +10743,14 @@ const docTemplate = `{
                     "description": "Whether the member is an admin of the team. See the docs for more about what a team admin can do",
                     "type": "boolean"
                 },
+                "bot_owner": {
+                    "description": "The user who created this bot. Only set for bot users.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.User"
+                        }
+                    ]
+                },
                 "bot_owner_id": {
                     "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
                     "type": "integer"
@@ -10807,6 +10901,14 @@ const docTemplate = `{
         "models.UserWithPermission": {
             "type": "object",
             "properties": {
+                "bot_owner": {
+                    "description": "The user who created this bot. Only set for bot users.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.User"
+                        }
+                    ]
+                },
                 "bot_owner_id": {
                     "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
                     "type": "integer"
@@ -11023,6 +11125,14 @@ const docTemplate = `{
                 "auth_provider": {
                     "type": "string"
                 },
+                "bot_owner": {
+                    "description": "The user who created this bot. Only set for bot users.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.User"
+                        }
+                    ]
+                },
                 "bot_owner_id": {
                     "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
                     "type": "integer"
@@ -11096,7 +11206,24 @@ const docTemplate = `{
                 "imprint_url": {
                     "type": "string"
                 },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/shared.LegalLink"
+                    }
+                },
                 "privacy_policy_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "shared.LegalLink": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -11212,6 +11339,9 @@ const docTemplate = `{
             "properties": {
                 "code": {
                     "type": "string"
+                },
+                "state": {
+                    "type": "string"
                 }
             }
         },
@@ -11219,6 +11349,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "state": {
                     "type": "string"
                 }
             }
@@ -11321,14 +11454,6 @@ const docTemplate = `{
                 }
             }
         },
-        "user.TOTPPasscode": {
-            "type": "object",
-            "properties": {
-                "passcode": {
-                    "type": "string"
-                }
-            }
-        },
         "user.Token": {
             "type": "object",
             "properties": {
@@ -11346,6 +11471,14 @@ const docTemplate = `{
         "user.User": {
             "type": "object",
             "properties": {
+                "bot_owner": {
+                    "description": "The user who created this bot. Only set for bot users.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.User"
+                        }
+                    ]
+                },
                 "bot_owner_id": {
                     "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
                     "type": "integer"
@@ -11463,11 +11596,32 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.UserTOTPEnableRequest": {
+            "type": "object",
+            "properties": {
+                "passcode": {
+                    "description": "A passcode generated from the enrolled secret.",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "The current user's password.",
+                    "type": "string"
+                }
+            }
+        },
         "v1.UserWithSettings": {
             "type": "object",
             "properties": {
                 "auth_provider": {
                     "type": "string"
+                },
+                "bot_owner": {
+                    "description": "The user who created this bot. Only set for bot users.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.User"
+                        }
+                    ]
                 },
                 "bot_owner_id": {
                     "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",

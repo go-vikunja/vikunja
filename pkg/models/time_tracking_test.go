@@ -174,6 +174,35 @@ func TestTimeEntry_ReadAll(t *testing.T) {
 	}
 }
 
+func TestTimeEntry_ReadAllIncludesUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+	require.NoError(t, err)
+	entries := result.([]*TimeEntry)
+	require.NotEmpty(t, entries)
+	for _, e := range entries {
+		require.NotNil(t, e.User, "entry %d", e.ID)
+		assert.Equal(t, e.UserID, e.User.ID)
+		assert.Empty(t, e.User.Email)
+	}
+}
+
+func TestTimeEntry_ReadOneIncludesUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	te := &TimeEntry{ID: 3}
+	can, _, err := te.CanRead(s, &user.User{ID: 1})
+	require.NoError(t, err)
+	require.True(t, can)
+	require.NotNil(t, te.User)
+	assert.Equal(t, "user3", te.User.Username)
+}
+
 // Filtering reuses the task filter grammar. user1 can read entries 1,2,4
 // (project 1) and 3 (project 3, shared) — the filter only narrows that set.
 func TestTimeEntry_ReadAll_Filter(t *testing.T) {
@@ -265,6 +294,8 @@ func TestTimeEntry_Create(t *testing.T) {
 		require.NoError(t, s.Commit())
 
 		assert.Equal(t, int64(1), te.UserID)
+		require.NotNil(t, te.User)
+		assert.Equal(t, int64(1), te.User.ID)
 		assert.True(t, te.StartTime.Equal(start))
 		db.AssertExists(t, "time_entries", map[string]interface{}{
 			"id":      te.ID,
@@ -272,6 +303,21 @@ func TestTimeEntry_Create(t *testing.T) {
 			"task_id": 1,
 			"comment": "work",
 		}, false)
+	})
+
+	t.Run("ignores a client-supplied id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		start := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
+		end := time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC)
+		te := &TimeEntry{ID: 999999, TaskID: 1, StartTime: start, EndTime: &end}
+		require.NoError(t, te.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		assert.NotEqual(t, int64(999999), te.ID)
+		db.AssertMissing(t, "time_entries", map[string]interface{}{"id": 999999})
 	})
 
 	t.Run("defaults the start time to now when none is given", func(t *testing.T) {
@@ -325,6 +371,106 @@ func TestTimeEntry_Create(t *testing.T) {
 		require.True(t, exists)
 		assert.NotNil(t, reloaded.EndTime, "first timer should have been auto-stopped")
 		assert.Nil(t, second.EndTime, "second timer should still be running")
+	})
+
+	t.Run("a backdated timer stops the running one at its start", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// entry 4 is user1's running timer
+		running, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+
+		switchedAt := running.StartTime.Add(90 * time.Minute)
+		next := &TimeEntry{TaskID: 1, StartTime: switchedAt}
+		require.NoError(t, next.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		stopped, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+		require.NotNil(t, stopped.EndTime)
+		assert.True(t, stopped.EndTime.Equal(switchedAt), "expected end %s, got %s", switchedAt, stopped.EndTime)
+	})
+
+	t.Run("a timer starting before the running one stops it at now", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		running, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+
+		before := time.Now()
+		next := &TimeEntry{TaskID: 1, StartTime: running.StartTime.Add(-time.Hour)}
+		require.NoError(t, next.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		stopped, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+		require.NotNil(t, stopped.EndTime)
+		assert.False(t, stopped.EndTime.Before(before.Truncate(time.Second)), "expected end at now, got %s", stopped.EndTime)
+	})
+
+	t.Run("a timer starting in the future stops the running one at now", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		next := &TimeEntry{TaskID: 1, StartTime: time.Now().Add(time.Hour)}
+		require.NoError(t, next.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		stopped, err := getTimeEntryByID(s, 4)
+		require.NoError(t, err)
+		require.NotNil(t, stopped.EndTime)
+		assert.True(t, stopped.EndTime.Before(time.Now().Add(time.Minute)), "expected end at now, got %s", stopped.EndTime)
+	})
+
+	t.Run("a backdated timer ends the caller's completed entries spanning its start", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// entry 2 (user1) and entry 3 (user3) both span 12:00-13:00
+		spanned, err := getTimeEntryByID(s, 2)
+		require.NoError(t, err)
+		switchedAt := spanned.StartTime.Add(30 * time.Minute)
+
+		next := &TimeEntry{TaskID: 1, StartTime: switchedAt}
+		require.NoError(t, next.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		ended, err := getTimeEntryByID(s, 2)
+		require.NoError(t, err)
+		require.NotNil(t, ended.EndTime)
+		assert.True(t, ended.EndTime.Equal(switchedAt), "expected end %s, got %s", switchedAt, ended.EndTime)
+
+		others, err := getTimeEntryByID(s, 3)
+		require.NoError(t, err)
+		assert.True(t, others.EndTime.After(switchedAt), "another user's entry must stay untouched")
+
+		before, err := getTimeEntryByID(s, 1)
+		require.NoError(t, err)
+		assert.True(t, before.EndTime.Before(switchedAt), "an entry ending before the start must stay untouched")
+	})
+
+	t.Run("a completed manual entry leaves spanned entries alone", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		spanned, err := getTimeEntryByID(s, 2)
+		require.NoError(t, err)
+		start := spanned.StartTime.Add(30 * time.Minute)
+
+		manual := &TimeEntry{TaskID: 1, StartTime: start, EndTime: timePtr(start.Add(time.Hour))}
+		require.NoError(t, manual.Create(s, &user.User{ID: 1}))
+		require.NoError(t, s.Commit())
+
+		untouched, err := getTimeEntryByID(s, 2)
+		require.NoError(t, err)
+		assert.True(t, untouched.EndTime.Equal(*spanned.EndTime))
 	})
 }
 

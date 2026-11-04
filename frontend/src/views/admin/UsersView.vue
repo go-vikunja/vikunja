@@ -9,6 +9,7 @@
 					@input="onSearch"
 				/>
 				<XButton
+					class="admin-users__add"
 					variant="primary"
 					@click="openCreate"
 				>
@@ -20,42 +21,48 @@
 				{{ $t('misc.loading') }}
 			</p>
 			<template v-else>
-				<table class="table has-actions is-striped is-hoverable is-fullwidth">
-					<thead>
-						<tr>
-							<th>{{ $t('misc.id') }}</th>
-							<th>{{ $t('user.auth.username') }}</th>
-							<th>{{ $t('user.auth.email') }}</th>
-							<th>{{ $t('admin.users.issuer') }}</th>
-							<th>{{ $t('admin.users.status') }}</th>
-							<th>{{ $t('task.attributes.created') }}</th>
-							<th />
-						</tr>
-					</thead>
-					<tbody>
-						<tr
-							v-for="u in users"
-							:key="u.id"
-						>
-							<td>{{ u.id }}</td>
-							<td>{{ u.username }}</td>
-							<td>{{ u.email }}</td>
-							<td>{{ u.auth_provider || $t('admin.users.issuerLocal') }}</td>
-							<td>{{ statusLabel(u.status) }}</td>
-							<td>
-								<TimeDisplay :date="u.created" />
-							</td>
-							<td class="actions">
-								<XButton
-									variant="secondary"
-									@click="openDetails(u)"
-								>
-									{{ $t('admin.users.details') }}
-								</XButton>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div class="admin-users__table">
+					<table class="table has-actions is-striped is-hoverable is-fullwidth">
+						<thead>
+							<tr>
+								<th>{{ $t('misc.id') }}</th>
+								<th>{{ $t('user.auth.username') }}</th>
+								<th>{{ $t('user.auth.email') }}</th>
+								<th>{{ $t('admin.users.status') }}</th>
+								<th>{{ $t('task.attributes.created') }}</th>
+								<th />
+							</tr>
+						</thead>
+						<tbody>
+							<tr
+								v-for="u in users"
+								:key="u.id"
+							>
+								<td>{{ u.id }}</td>
+								<td class="is-breakable">
+									<BreakableText :text="u.username ?? ''" />
+								</td>
+								<td class="is-breakable">
+									<BreakableText :text="u.email ?? ''" />
+								</td>
+								<td>
+									{{ statusLabel(u.status) }}
+								</td>
+								<td class="is-nowrap">
+									<TimeDisplay :date="u.created" />
+								</td>
+								<td class="actions">
+									<XButton
+										variant="secondary"
+										@click="openDetails(u)"
+									>
+										{{ $t('admin.users.details') }}
+									</XButton>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 				<PaginationEmit
 					v-if="totalPages > 1"
 					:total-pages="totalPages"
@@ -333,6 +340,7 @@ import FormInput from '@/components/input/FormInput.vue'
 import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
+import BreakableText from '@/components/misc/BreakableText.vue'
 
 type AdminUserRow = AdminUser & {id: number}
 const {t} = useI18n({useScope: 'global'})
@@ -459,6 +467,24 @@ async function doDelete(mode: DeleteUserMode) {
 	display: flex;
 	gap: 0.5rem;
 	margin-block-end: 1rem;
+}
+
+.admin-users__add {
+	flex-shrink: 0;
+}
+
+.admin-users__table {
+	overflow-x: auto;
+
+	th,
+	.is-nowrap {
+		white-space: nowrap;
+	}
+
+	.is-breakable {
+		min-inline-size: 6rem;
+		overflow-wrap: break-word;
+	}
 }
 
 .admin-users__meta {

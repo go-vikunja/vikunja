@@ -17,12 +17,17 @@
 package avatar
 
 import (
+	"context"
 	"errors"
-	"image"
+	"fmt"
 	"io"
+	"runtime/debug"
 	"strings"
+	"sync"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
@@ -39,15 +44,14 @@ import (
 	"xorm.io/xorm"
 )
 
-// ErrNotAnImage is returned by StoreUploadedAvatar when the uploaded file is not an image.
 var ErrNotAnImage = errors.New("uploaded file is no image")
 
 // Provider defines the avatar provider interface
 type Provider interface {
 	// GetAvatar is the method used to get an actual avatar for a user
-	GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error)
+	GetAvatar(ctx context.Context, user *user.User, size int64) (avatar []byte, mimeType string, err error)
 	// AsDataURI returns a base64-encoded string representation of the avatar suitable for inline use
-	AsDataURI(user *user.User, size int64) (inlineData string, err error)
+	AsDataURI(ctx context.Context, user *user.User, size int64) (inlineData string, err error)
 	// FlushCache removes cached avatar data for the user
 	FlushCache(u *user.User) error
 }
@@ -76,15 +80,12 @@ func FlushAllCaches(u *user.User) {
 // tolerates an unknown/disabled user (returning the default placeholder rather
 // than an error, since avatars are loaded via <img> tags), picks the right
 // provider (empty for unknown users, botmarble for bots, otherwise the user's
-// configured provider) and clamps the size to the server's configured maximum.
-func GetAvatarForUsername(s *xorm.Session, username string, size int64) (data []byte, mime string, err error) {
-	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
-	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
-		log.Errorf("Error getting user for avatar: %v", err)
+// configured provider) and normalizes the size.
+func GetAvatarForUsername(ctx context.Context, username string, size int64) (data []byte, mime string, err error) {
+	u, found, err := avatarUser(username)
+	if err != nil {
 		return nil, "", err
 	}
-
-	found := err == nil || user.IsErrUserStatusError(err)
 
 	provider := GetProvider(u)
 	if !found {
@@ -95,17 +96,48 @@ func GetAvatarForUsername(s *xorm.Session, username string, size int64) (data []
 		provider = &botmarble.Provider{}
 	}
 
-	if size > config.ServiceMaxAvatarSize.GetInt64() {
-		size = config.ServiceMaxAvatarSize.GetInt64()
-	}
-
-	data, mime, err = provider.GetAvatar(u, size)
+	data, mime, err = provider.GetAvatar(ctx, u, normalizeAvatarSize(size))
 	if err != nil {
-		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
+		if imageutils.IsErrDecodeBusy(err) {
+			log.Warningf("Error getting avatar for user %d: %v", u.ID, err)
+		} else {
+			log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
+		}
 		return nil, "", err
 	}
 
 	return data, mime, nil
+}
+
+// Providers cache per size without eviction, so only a fixed set of sizes may reach them.
+var avatarSizes = []int64{16, 32, 48, 64, 128, 256, 512, 1024}
+
+const defaultAvatarSize = 250
+
+func normalizeAvatarSize(size int64) int64 {
+	maxSize := config.ServiceMaxAvatarSize.GetInt64()
+	if size <= 0 {
+		size = defaultAvatarSize
+	}
+	for _, allowed := range avatarSizes {
+		if allowed >= size {
+			return min(allowed, maxSize)
+		}
+	}
+	return maxSize
+}
+
+// The session closes before rendering: providers may queue for decode capacity or call out over HTTP.
+func avatarUser(username string) (u *user.User, found bool, err error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err = user.GetUserWithEmail(s, &user.User{Username: username})
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
+		log.Errorf("Error getting user for avatar: %v", err)
+		return nil, false, err
+	}
+	return u, err == nil || user.IsErrUserStatusError(err), nil
 }
 
 // GetProvider returns the appropriate avatar provider for a user
@@ -133,45 +165,101 @@ func GetProvider(u *user.User) Provider {
 	}
 }
 
-// StoreUploadedAvatar validates that src is an image, switches the user's avatar
-// provider to "upload", stores the image as the user's avatar and flushes all
-// cached avatars for the user. It returns ErrNotAnImage if src is not an image.
-func StoreUploadedAvatar(s *xorm.Session, u *user.User, src io.ReadSeeker) error {
-	mime, err := mimetype.DetectReader(src)
+func PrepareUpload(ctx context.Context, src io.Reader) (*upload.EncodedAvatar, error) {
+	raw, err := io.ReadAll(src)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if !strings.HasPrefix(mime.String(), "image") {
-		return ErrNotAnImage
+	if !strings.HasPrefix(mimetype.Detect(raw).String(), "image") {
+		return nil, ErrNotAnImage
 	}
-	if _, err := src.Seek(0, io.SeekStart); err != nil {
+
+	a, err := upload.PrepareAvatar(ctx, raw)
+	if errors.Is(err, imageutils.ErrUndecodable) {
+		return nil, ErrNotAnImage
+	}
+	return a, err
+}
+
+func SaveUploaded(s *xorm.Session, u *user.User, a *upload.EncodedAvatar) error {
+	if err := upload.SaveAvatar(s, u, "upload", a); err != nil {
 		return err
 	}
 
-	// The mimetype sniff above accepts image types we cannot actually store
-	// (e.g. SVG, WebP) because upload.StoreAvatarFile decodes via image.Decode,
-	// which only has the decoders registered process-wide by the imaging package
-	// (png, jpeg, gif, tiff, bmp). image.DecodeConfig uses those same decoders, so
-	// validating here rejects undecodable images with a 400 instead of failing
-	// deeper in storage with a 500. The same config also carries the dimensions,
-	// so a decompression bomb is rejected here too (GHSA-4vh2-39rq-rq8j).
-	cfg, _, err := image.DecodeConfig(src)
+	events.OnCommit(s, func() error {
+		FlushAllCaches(u)
+		return nil
+	})
+
+	return nil
+}
+
+// Own session: decoding may queue and must not hold the login transaction.
+func SyncFromProvider(ctx context.Context, userID int64, provider string, raw []byte) error {
+	prepared, err := upload.PrepareAvatar(ctx, raw)
 	if err != nil {
-		return ErrNotAnImage
-	}
-	if err := imageutils.ValidateConfig(cfg); err != nil {
-		return err
-	}
-	if _, err := src.Seek(0, io.SeekStart); err != nil {
-		return err
+		return fmt.Errorf("error decoding avatar: %w", err)
 	}
 
-	u.AvatarProvider = "upload"
-	if err := upload.StoreAvatarFile(s, u, src); err != nil {
-		return err
+	s := db.NewSession()
+	defer s.Close()
+	defer events.CleanupPending(s)
+
+	u, err := user.GetUserByID(s, userID)
+	if err != nil {
+		_ = s.Rollback()
+		return fmt.Errorf("error loading user: %w", err)
 	}
+
+	if err := upload.SaveAvatar(s, u, provider, prepared); err != nil {
+		_ = s.Rollback()
+		return fmt.Errorf("error storing avatar: %w", err)
+	}
+
+	if err := s.Commit(); err != nil {
+		return fmt.Errorf("error committing avatar: %w", err)
+	}
+	events.DispatchPending(ctx, s)
 
 	FlushAllCaches(u)
 
 	return nil
+}
+
+var providerSyncs sync.WaitGroup
+
+// SyncFromProviderAsync fetches and stores a provider avatar in the background; failures are only logged.
+func SyncFromProviderAsync(ctx context.Context, userID int64, provider string, fetch func(context.Context) ([]byte, error)) {
+	// Fetch and decode carry their own timeouts, so the sync stays bounded without the request's cancellation.
+	ctx = context.WithoutCancel(ctx)
+	providerSyncs.Add(1)
+	go func() {
+		defer providerSyncs.Done()
+		err := fetchAndSyncFromProvider(ctx, userID, provider, fetch)
+		switch {
+		case err == nil:
+		case imageutils.IsErrDecodeBusy(err):
+			log.Warningf("Error syncing %s avatar for user %d: %v", provider, userID, err)
+		default:
+			log.Errorf("Error syncing %s avatar for user %d: %v", provider, userID, err)
+		}
+	}()
+}
+
+func fetchAndSyncFromProvider(ctx context.Context, userID int64, provider string, fetch func(context.Context) ([]byte, error)) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v\n%s", r, debug.Stack())
+		}
+	}()
+
+	raw, err := fetch(ctx)
+	if err != nil {
+		return fmt.Errorf("error fetching avatar: %w", err)
+	}
+	return SyncFromProvider(ctx, userID, provider, raw)
+}
+
+func WaitForProviderSyncsForTests() {
+	providerSyncs.Wait()
 }

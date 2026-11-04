@@ -17,7 +17,6 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -280,36 +279,24 @@ func validateFilterComplexity(filter string) error {
 		return &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-byte limit", maxFilterBytes)}
 	}
 
-	depth := 0
-	for i := 0; i < len(filter); {
-		switch c := filter[i]; c {
-		case '\'', '"':
-			if end := quotedRunEnd(filter, i); end > 0 {
-				i = end
-				continue
-			}
-			i++
-		case '(':
-			depth++
-			if depth > maxFilterDepth {
-				return &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-level nesting limit", maxFilterDepth)}
-			}
-			i++
-		case ')':
-			depth--
-			if depth < 0 {
-				return &ErrInvalidFilterExpression{
-					Expression:      filter,
-					ExpressionError: errors.New("unexpected closing parenthesis"),
-				}
-			}
-			i++
-		default:
-			i++
+	return nil
+}
+
+// Uses fexpr's own scanner so comments and quotes are read exactly as Parse reads them.
+func filterGroupDepthExceeds(filter string, remaining int) bool {
+	scanner := fexpr.NewScanner([]byte(filter))
+	for {
+		t, err := scanner.Scan()
+		if err != nil || t.Type == fexpr.TokenEOF {
+			return false
+		}
+		if t.Type != fexpr.TokenGroup {
+			continue
+		}
+		if remaining == 0 || filterGroupDepthExceeds(t.Literal, remaining-1) {
+			return true
 		}
 	}
-
-	return nil
 }
 
 func prepareFilterForParsing(filter string) (string, error) {
@@ -321,6 +308,9 @@ func prepareFilterForParsing(filter string) (string, error) {
 	filter = preprocessFilterString(filter)
 	if err := validateFilterComplexity(filter); err != nil {
 		return "", err
+	}
+	if filterGroupDepthExceeds(filter, maxFilterDepth) {
+		return "", &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-level nesting limit", maxFilterDepth)}
 	}
 
 	return filter, nil

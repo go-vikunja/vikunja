@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -85,8 +86,7 @@ func TestTask_Create(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// user6 is subscribed to project 12 (fixture), so the inherited subscription must not
-		// be duplicated with a task level one
+		// user6 is subscribed to project 12 (fixture)
 		usr6 := &user.User{ID: 6, Username: "user6"}
 		task := &Task{
 			Title:     "Lorem",
@@ -97,10 +97,16 @@ func TestTask_Create(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
 			"entity_type": SubscriptionEntityTask,
 			"entity_id":   task.ID,
-		})
+			"user_id":     usr6.ID,
+			"muted":       false,
+		}, false)
+		db.AssertCount(t, "subscriptions", builder.Eq{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+		}, 1)
 	})
 	t.Run("created by link share is not subscribed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -251,6 +257,76 @@ func TestTask_Update(t *testing.T) {
 			"title":       "test10000",
 			"description": "Lorem Ipsum Dolor",
 			"project_id":  1,
+		}, false)
+	})
+	t.Run("task moved to a forbidden project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 1, Title: "test10000"}
+		can, err := task.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// Project 2 belongs to user 3 and is not shared with user 1.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 2, Index: 9999})
+		require.NoError(t, err)
+
+		err = task.Update(s, u)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         1,
+			"title":      "task #1",
+			"project_id": 2,
+		}, false)
+	})
+	t.Run("task moved to a writable project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 1, Title: "test10000"}
+		can, err := task.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// User 1 has write access to project 10 through a share.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 10, Index: 9999})
+		require.NoError(t, err)
+
+		err = task.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         1,
+			"title":      "test10000",
+			"project_id": 10,
+		}, false)
+	})
+	t.Run("hex color with leading #", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:        1,
+			Title:     "test",
+			ProjectID: 1,
+			HexColor:  "#f0f0f0",
+		}
+		err := task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.Equal(t, "f0f0f0", task.HexColor)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        1,
+			"hex_color": "f0f0f0",
 		}, false)
 	})
 	t.Run("nonexistant task", func(t *testing.T) {
@@ -1673,4 +1749,55 @@ func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	afterWrite, err := GetTaskByIDSimple(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
+}
+
+func TestAddOneMonthToDate(t *testing.T) {
+	// addOneMonthToDate returns times in the configured time zone
+	loc := config.GetTimeZone()
+	tests := []struct {
+		name string
+		in   time.Time
+		want time.Time
+	}{
+		{
+			name: "regular day",
+			in:   time.Date(2027, time.January, 15, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.February, 15, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "january 31 clamps to february 28 in a non-leap year",
+			in:   time.Date(2027, time.January, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.February, 28, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "january 31 clamps to february 29 in a leap year",
+			in:   time.Date(2028, time.January, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2028, time.February, 29, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "march 31 clamps to april 30",
+			in:   time.Date(2027, time.March, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.April, 30, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "october 31 clamps to november 30",
+			in:   time.Date(2027, time.October, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.November, 30, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "december rolls into january of the next year",
+			in:   time.Date(2027, time.December, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2028, time.January, 31, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "february 28 advances to march 28",
+			in:   time.Date(2027, time.February, 28, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.March, 28, 9, 0, 0, 0, loc),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, addOneMonthToDate(tt.in))
+		})
+	}
 }

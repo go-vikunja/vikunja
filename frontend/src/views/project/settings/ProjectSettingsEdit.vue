@@ -64,7 +64,6 @@
 
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
-import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
@@ -80,6 +79,7 @@ import {useUpdateProjectMutation} from '@/client/queries/projects'
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
 import {useProject} from '@/composables/useProject'
+import {useGoBack} from '@/composables/useGoBack'
 
 import {useTitle} from '@/composables/useTitle'
 import {PERMISSIONS} from '@/constants/permissions'
@@ -90,7 +90,7 @@ const props = defineProps<{
 
 defineOptions({name: 'ProjectSettingEdit'})
 
-const router = useRouter()
+const goBack = useGoBack()
 const projectList = useProjects()
 
 const {t} = useI18n({useScope: 'global'})
@@ -149,7 +149,7 @@ async function save() {
 		}
 		await updateProject.mutateAsync(project.value)
 		useBaseStore().setCurrentProject(project.value)
-		router.back()
+		goBack()
 	} finally {
 		isSaving.value = false
 	}

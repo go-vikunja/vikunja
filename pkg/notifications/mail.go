@@ -18,6 +18,7 @@ package notifications
 
 import (
 	"fmt"
+	"html"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/i18n"
@@ -139,11 +140,11 @@ func CreateConversationalHeader(avatarDataURI, action, taskURL, projectTitle, ta
 	return fmt.Sprintf(
 		`%s%s <a href="%s" style="color: #0969da; text-decoration: none;">(%s &gt; %s) %s</a>`,
 		avatarHTML,
-		action,
-		taskURL,
-		projectTitle,
-		taskTitle,
-		taskIdentifier,
+		html.EscapeString(action),
+		html.EscapeString(taskURL),
+		html.EscapeString(projectTitle),
+		html.EscapeString(taskTitle),
+		html.EscapeString(taskIdentifier),
 	)
 }
 
@@ -171,7 +172,5 @@ func SendMail(m *Mail, lang string) error {
 		return err
 	}
 
-	mail.SendMail(opts)
-
-	return nil
+	return mail.SendMail(opts)
 }

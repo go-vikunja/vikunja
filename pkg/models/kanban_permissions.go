@@ -28,7 +28,21 @@ func (b *Bucket) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	return canWriteBucketProject(s, pv.ProjectID, a)
+	can, err := canWriteBucketProject(s, pv.ProjectID, a)
+	if err != nil || !can {
+		return false, err
+	}
+
+	// Capped here rather than in Create so imports and duplication can copy larger boards.
+	count, err := s.Where("project_view_id = ?", pv.ID).Count(&Bucket{})
+	if err != nil {
+		return false, err
+	}
+	if count >= maxBucketsPerView {
+		return false, ErrTooManyBuckets{ProjectViewID: pv.ID, Max: maxBucketsPerView}
+	}
+
+	return true, nil
 }
 
 // CanUpdate checks if a user can update an existing bucket
@@ -43,16 +57,29 @@ func (b *Bucket) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 
 // canDoBucket checks if the bucket exists and if the user has the permission to act on it
 func (b *Bucket) canDoBucket(s *xorm.Session, a web.Auth) (bool, error) {
-	bb, err := getBucketByID(s, b.ID)
-	if err != nil {
-		return false, err
-	}
-	pv, err := GetProjectViewByIDAndProject(s, bb.ProjectViewID, b.ProjectID)
+	pv, err := b.getOwnView(s)
 	if err != nil {
 		return false, err
 	}
 
 	return canWriteBucketProject(s, pv.ProjectID, a)
+}
+
+func (b *Bucket) getOwnView(s *xorm.Session) (*ProjectView, error) {
+	bb, err := getBucketByID(s, b.ID)
+	if err != nil {
+		return nil, err
+	}
+	pv, err := GetProjectViewByIDAndProject(s, bb.ProjectViewID, b.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	// Callers act on the URL view (last-bucket count, default/done ids), so it must be the bucket's own.
+	if bb.ProjectViewID != b.ProjectViewID {
+		return nil, ErrBucketDoesNotBelongToProjectView{BucketID: bb.ID, ProjectViewID: b.ProjectViewID}
+	}
+
+	return pv, nil
 }
 
 // Not Project.CanUpdate: that swallows the archived error to allow un-archiving, buckets must not get that.

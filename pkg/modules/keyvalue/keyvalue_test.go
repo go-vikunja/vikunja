@@ -18,9 +18,11 @@ package keyvalue
 
 import (
 	"errors"
+	"strconv"
 	"testing"
 	"time"
 
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -205,4 +207,78 @@ func TestPutWithTTL(t *testing.T) {
 		assert.True(t, exists)
 		assert.Equal(t, int64(1), val)
 	})
+}
+
+func TestIncrByWithTTL(t *testing.T) {
+	t.Run("returns the running count", func(t *testing.T) {
+		store = memory.NewStorage()
+
+		v, err := IncrByWithTTL("c", 1, time.Minute)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), v)
+		v, err = IncrByWithTTL("c", 1, time.Minute)
+		require.NoError(t, err)
+		assert.Equal(t, int64(2), v)
+		v, err = IncrByWithTTL("c", -1, time.Minute)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), v)
+	})
+
+	t.Run("window starts at the first increment", func(t *testing.T) {
+		store = memory.NewStorage()
+
+		_, err := IncrByWithTTL("c", 1, 50*time.Millisecond)
+		require.NoError(t, err)
+		time.Sleep(30 * time.Millisecond)
+		_, err = IncrByWithTTL("c", 1, 50*time.Millisecond)
+		require.NoError(t, err)
+		time.Sleep(30 * time.Millisecond)
+
+		_, exists, err := Get("c")
+		require.NoError(t, err)
+		assert.False(t, exists)
+	})
+}
+
+// redisLikeStore returns integers from Get as decimal strings, like go-redis does for INCRBY counters and Put(int64).
+type redisLikeStore struct {
+	*memory.Storage
+}
+
+func (s *redisLikeStore) Get(key string) (interface{}, bool, error) {
+	v, exists, err := s.Storage.Get(key)
+	if i, ok := v.(int64); ok {
+		return strconv.FormatInt(i, 10), exists, err
+	}
+	return v, exists, err
+}
+
+func TestGetInt64(t *testing.T) {
+	for name, newStore := range map[string]func() Storage{
+		"memory":     func() Storage { return memory.NewStorage() },
+		"redis-like": func() Storage { return &redisLikeStore{memory.NewStorage()} },
+	} {
+		t.Run(name, func(t *testing.T) {
+			store = newStore()
+
+			_, exists, err := GetInt64("c")
+			require.NoError(t, err)
+			assert.False(t, exists)
+
+			require.NoError(t, IncrBy("c", 3))
+			v, exists, err := GetInt64("c")
+			require.NoError(t, err)
+			assert.True(t, exists)
+			assert.Equal(t, int64(3), v)
+
+			require.NoError(t, Put("p", int64(1729000000)))
+			v, _, err = GetInt64("p")
+			require.NoError(t, err)
+			assert.Equal(t, int64(1729000000), v)
+
+			require.NoError(t, Put("s", "nope"))
+			_, _, err = GetInt64("s")
+			assert.True(t, e.IsErrValueHasWrongType(err))
+		})
+	}
 }

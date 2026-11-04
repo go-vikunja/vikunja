@@ -2,7 +2,7 @@ import {createPinia} from 'pinia'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {enableAutoUnmount, flushPromises, shallowMount, type VueWrapper} from '@vue/test-utils'
-import {createMemoryHistory, createRouter} from 'vue-router'
+import {createMemoryHistory, createRouter, type RouteLocationRaw} from 'vue-router'
 
 const sdk = vi.hoisted(() => ({
 	tasksRead: vi.fn(),
@@ -14,8 +14,10 @@ const sdk = vi.hoisted(() => ({
 	bucketsList: vi.fn(async () => ({data: {items: []}})),
 }))
 vi.mock('@/client/generated', () => sdk)
-vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
-vi.mock('@/composables/useProjects', () => ({useProjects: () => ({projects: {}})}))
+const message = vi.hoisted(() => ({error: vi.fn(), success: vi.fn()}))
+vi.mock('@/message', () => message)
+const projects = vi.hoisted(() => ({} as Record<number, unknown>))
+vi.mock('@/composables/useProjects', () => ({useProjects: () => ({projects})}))
 vi.mock('@/composables/useLabels', () => ({useLabels: () => ({filterLabelsByQuery: () => [], isPending: {value: false}, getLabelById: vi.fn()})}))
 vi.mock('vuemoji-picker', () => ({VuemojiPicker: {render: () => null}}))
 vi.mock('vue-i18n', async importOriginal => ({
@@ -53,7 +55,7 @@ function dueDatePicker(wrapper: VueWrapper) {
 	return wrapper.findAllComponents(Datepicker)[0]!
 }
 
-async function mountDetail(taskId = 1) {
+async function mountDetail(taskId = 1, visited: RouteLocationRaw[] = []) {
 	queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
 	const router = createRouter({
 		history: createMemoryHistory(),
@@ -65,6 +67,9 @@ async function mountDetail(taskId = 1) {
 		],
 	})
 	await router.push('/')
+	for (const location of visited) {
+		await router.push(location)
+	}
 	const wrapper = shallowMount(TaskDetailView, {
 		props: {taskId},
 		global: {
@@ -121,5 +126,65 @@ describe('TaskDetailView draft', () => {
 
 		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
 		expect(wrapper.findAllComponents(Datepicker)[0]?.props('modelValue')).toEqual(new Date('2024-03-03T10:00:00Z'))
+	})
+})
+
+describe('TaskDetailView mark done and go back', () => {
+	beforeEach(() => {
+		for (const id of Object.keys(projects)) {
+			delete projects[Number(id)]
+		}
+		sdk.tasksRead.mockReset()
+		sdk.tasksRead.mockImplementation(async ({path}: {path: {task: number}}) => ({data: serverTask(path.task)}))
+		sdk.patchTasksRead.mockReset()
+		sdk.patchTasksRead.mockImplementation(async () => ({data: serverTask(1, {done: true})}))
+	})
+
+	function pressShiftT() {
+		document.body.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyT', key: 'T', shiftKey: true, bubbles: true}))
+	}
+
+	it('marks the task done and returns to the project list it was opened from', async () => {
+		projects[5] = {id: 5, title: 'Origin'}
+		const wrapper = await mountDetail(1, ['/projects/5', {path: '/tasks/1', state: {back: '/projects/5'}}])
+
+		pressShiftT()
+		await flushPromises()
+		await vi.waitFor(() => expect(wrapper.vm.$router.currentRoute.value.path).toBe('/projects/5'))
+
+		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
+		expect(sdk.patchTasksRead.mock.calls[0]![0].body).toContainEqual({op: 'add', path: '/done', value: true})
+	})
+
+	it('falls back to the task project when opened directly', async () => {
+		const wrapper = await mountDetail(1, ['/tasks/1'])
+
+		pressShiftT()
+		await flushPromises()
+
+		expect(wrapper.vm.$router.currentRoute.value.path).toBe('/projects/1')
+	})
+
+	it('stays on the task when saving fails', async () => {
+		sdk.patchTasksRead.mockRejectedValue(new Error('nope'))
+		const wrapper = await mountDetail(1, ['/tasks/1'])
+
+		pressShiftT()
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).toHaveBeenCalledOnce()
+		expect(message.error).toHaveBeenCalled()
+		expect(wrapper.vm.$router.currentRoute.value.path).toBe('/tasks/1')
+	})
+
+	it('does nothing for a task that is already done', async () => {
+		sdk.tasksRead.mockImplementation(async ({path}: {path: {task: number}}) => ({data: serverTask(path.task, {done: true})}))
+		const wrapper = await mountDetail(1, ['/tasks/1'])
+
+		pressShiftT()
+		await flushPromises()
+
+		expect(sdk.patchTasksRead).not.toHaveBeenCalled()
+		expect(wrapper.vm.$router.currentRoute.value.path).toBe('/tasks/1')
 	})
 })

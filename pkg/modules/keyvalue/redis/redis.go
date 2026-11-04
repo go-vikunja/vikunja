@@ -120,6 +120,19 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 	return s.client.IncrBy(context.Background(), key, update).Err()
 }
 
+var incrByWithTTLScript = redis.NewScript(`
+local v = redis.call('INCRBY', KEYS[1], ARGV[1])
+if redis.call('PTTL', KEYS[1]) == -1 then
+	redis.call('PEXPIRE', KEYS[1], ARGV[2])
+end
+return v
+`)
+
+// Scripted so a concurrent first increment can't lose the ttl.
+func (s *Storage) IncrByWithTTL(key string, update int64, ttl time.Duration) (int64, error) {
+	return incrByWithTTLScript.Run(context.Background(), s.client, []string{key}, update, ttl.Milliseconds()).Int64()
+}
+
 // DecrBy decreases the value saved at key by the amount provided through update
 func (s *Storage) DecrBy(key string, update int64) (err error) {
 	return s.client.DecrBy(context.Background(), key, update).Err()
@@ -160,12 +173,24 @@ func (s *Storage) ListKeys(prefix string) ([]string, error) {
 
 // DelPrefix removes all keys in redis which start with the given prefix
 func (s *Storage) DelPrefix(prefix string) error {
-	keys, err := s.ListKeys(prefix)
-	if err != nil {
-		return err
+	ctx := context.Background()
+	pattern := globEscaper.Replace(prefix) + "*"
+	var cursor uint64
+
+	// UNLINK per page so a large prefix neither blocks Redis nor piles up in memory here.
+	for {
+		keys, next, err := s.client.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return err
+		}
+		if len(keys) > 0 {
+			if err := s.client.Unlink(ctx, keys...).Err(); err != nil {
+				return err
+			}
+		}
+		cursor = next
+		if cursor == 0 {
+			return nil
+		}
 	}
-	if len(keys) == 0 {
-		return nil
-	}
-	return s.client.Del(context.Background(), keys...).Err()
 }

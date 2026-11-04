@@ -186,6 +186,17 @@ func TestHumaTeamMember(t *testing.T) {
 				rec := humaRequest(t, e, http.MethodDelete, "/api/v2/teams/1/members/user1", "", token, "")
 				require.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 			})
+			// Self-removal must not answer differently for teams the caller is not in.
+			t.Run("Forbidden non-member removing themselves", func(t *testing.T) {
+				e, err := setupTestEnv()
+				require.NoError(t, err)
+				token := humaTokenFor(t, &testuser1)
+
+				for _, teamID := range []string{"9", "14", "9999"} {
+					rec := humaRequest(t, e, http.MethodDelete, "/api/v2/teams/"+teamID+"/members/user1", "", token, "")
+					require.Equal(t, http.StatusForbidden, rec.Code, "team %s body: %s", teamID, rec.Body.String())
+				}
+			})
 			// A non-member is forbidden (team 9, user1 not a member).
 			t.Run("Forbidden non-member", func(t *testing.T) {
 				e, err := setupTestEnv()

@@ -3,13 +3,23 @@
 		v-if="configStore.totp_enabled && isLocalUser"
 		:title="$t('user.settings.totp.title')"
 	>
-		<XButton
-			v-if="status.isSuccess.value && !totp.enabled && !totp.secret"
-			:loading="enrollMutation.isPending.value"
-			@click="totpEnroll"
-		>
-			{{ $t('user.settings.totp.enroll') }}
-		</XButton>
+		<template v-if="status.isSuccess.value && !totp.enabled && !totp.secret">
+			<FormField
+				id="totpEnrollPassword"
+				v-model="totpPassword"
+				:label="$t('user.settings.totp.enterPassword')"
+				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+				autocomplete="current-password"
+				type="password"
+				@keyup.enter="totpEnroll"
+			/>
+			<XButton
+				:loading="enrollMutation.isPending.value"
+				@click="totpEnroll"
+			>
+				{{ $t('user.settings.totp.enroll') }}
+			</XButton>
+		</template>
 		<template v-else-if="isEnrolling">
 			<p>
 				{{ $t('user.settings.totp.finishSetupPart1') }}
@@ -26,6 +36,15 @@
 			<p>
 				{{ $t('user.settings.totp.confirmNotice') }}
 			</p>
+			<FormField
+				id="totpConfirmPassword"
+				v-model="totpPassword"
+				:label="$t('user.settings.totp.enterPassword')"
+				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+				autocomplete="current-password"
+				type="password"
+				@keyup.enter="totpConfirm"
+			/>
 			<FormField
 				id="totpConfirmPasscode"
 				v-model="totpConfirmPasscode"
@@ -63,6 +82,16 @@
 					:label="$t('user.settings.totp.enterPassword')"
 					:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 					type="password"
+					@keyup.enter="totpDisable"
+				/>
+				<FormField
+					id="totpDisablePasscode"
+					v-model="totpDisablePasscode"
+					:label="$t('user.settings.totp.passcode')"
+					autocomplete="one-time-code"
+					:placeholder="$t('user.settings.totp.passcodePlaceholder')"
+					type="text"
+					inputmode="numeric"
 					@keyup.enter="totpDisable"
 				/>
 				<XButton
@@ -110,8 +139,10 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
 
 const totpConfirmPasscode = ref('')
+const totpPassword = ref('')
 const totpDisableForm = ref(false)
 const totpDisablePassword = ref('')
+const totpDisablePasscode = ref('')
 
 const configStore = useConfigStore()
 const authStore = useAuthStore()
@@ -131,13 +162,17 @@ const disableMutation = useDisableTotpMutation()
 
 function totpEnroll() {
 	if (enrollMutation.isPending.value) return
-	enrollMutation.mutate()
+	enrollMutation.mutate(totpPassword.value)
 }
 
 async function totpConfirm() {
 	if (enableMutation.isPending.value) return
 	try {
-		await enableMutation.mutateAsync(totpConfirmPasscode.value)
+		await enableMutation.mutateAsync({
+			passcode: totpConfirmPasscode.value,
+			password: totpPassword.value,
+		})
+		totpPassword.value = ''
 		await authStore.logout()
 	} catch { return }
 }
@@ -145,12 +180,16 @@ async function totpConfirm() {
 function closeDisableForm() {
 	totpDisableForm.value = false
 	totpDisablePassword.value = ''
+	totpDisablePasscode.value = ''
 }
 
 async function totpDisable() {
 	if (disableMutation.isPending.value) return
 	try {
-		await disableMutation.mutateAsync(totpDisablePassword.value)
+		await disableMutation.mutateAsync({
+			password: totpDisablePassword.value,
+			totp_passcode: totpDisablePasscode.value,
+		})
 	} catch {
 		return
 	}

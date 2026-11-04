@@ -13,6 +13,7 @@ import {
 import type {
 	TimeEntry,
 	TimeEntryWritable,
+	User,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {
@@ -25,8 +26,9 @@ import {
 	mapTaskEverywhere,
 } from './taskCache'
 
-export type TimeEntryResponse = Omit<TimeEntry, 'id' | 'user_id' | 'task_id' | 'project_id' | 'comment'> &
-	Required<Pick<TimeEntry, 'id' | 'user_id' | 'task_id' | 'project_id' | 'comment'>>
+export type TimeEntryResponse = Omit<TimeEntry, 'id' | 'user' | 'task_id' | 'project_id' | 'comment'> &
+	Required<Pick<TimeEntry, 'id' | 'task_id' | 'project_id' | 'comment'>> &
+	{user: User & Required<Pick<User, 'id'>>}
 
 export type TimeEntryPage = Paginated<TimeEntryResponse>
 
@@ -34,7 +36,7 @@ export function normalizeTimeEntry(entry: TimeEntry): TimeEntryResponse {
 	return {
 		...entry,
 		id: entry.id ?? 0,
-		user_id: entry.user_id ?? 0,
+		user: {...entry.user, id: entry.user?.id ?? 0},
 		task_id: entry.task_id ?? 0,
 		project_id: entry.project_id ?? 0,
 		comment: entry.comment ?? '',
@@ -96,7 +98,7 @@ export function patchTimeEntry(client: QueryClient, entry: TimeEntry) {
 			}
 			: undefined,
 	)
-	client.setQueryData<TimeEntryResponse | null>(timeEntryKeys.active(normalized.user_id), current => {
+	client.setQueryData<TimeEntryResponse | null>(timeEntryKeys.active(normalized.user.id), current => {
 		if (current === undefined) return current
 		if (!entry.end_time) return normalized
 		return current?.id === entry.id ? null : current

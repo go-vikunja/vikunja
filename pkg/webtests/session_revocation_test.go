@@ -75,7 +75,7 @@ func TestSessionRevocationDispatchesEvent(t *testing.T) {
 				require.NoError(t, err)
 				passcode, err := totp.GenerateCode("HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ", time.Now())
 				require.NoError(t, err)
-				rec := apiTokenReq(e, http.MethodPost, api.totpEnable, tokenWithSession(t), fmt.Sprintf(`{"passcode":%q}`, passcode))
+				rec := apiTokenReq(e, http.MethodPost, api.totpEnable, tokenWithSession(t), fmt.Sprintf(`{"passcode":%q,"password":"12345678"}`, passcode))
 				require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 				assert.Equal(t, []*models.SessionsRevokedEvent{{UserID: 1}}, revoked())
 			})

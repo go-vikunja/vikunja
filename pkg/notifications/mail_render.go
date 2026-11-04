@@ -19,6 +19,7 @@ package notifications
 import (
 	"bytes"
 	"embed"
+	"html"
 	templatehtml "html/template"
 	"io"
 	"net/url"
@@ -469,10 +470,7 @@ func convertLinesToPlain(lines []*mailLine) []*mailLine {
 		text = reLinks.ReplaceAllString(text, "$2 ($1)")
 		// Strip remaining HTML tags
 		text = reHTMLTags.ReplaceAllString(text, "")
-		// Clean up HTML entities
-		text = strings.ReplaceAll(text, "&gt;", ">")
-		text = strings.ReplaceAll(text, "&lt;", "<")
-		text = strings.ReplaceAll(text, "&amp;", "&")
+		text = html.UnescapeString(text)
 		text = strings.TrimSpace(text)
 
 		if text != "" {

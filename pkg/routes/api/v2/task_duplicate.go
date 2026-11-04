@@ -57,5 +57,8 @@ func tasksDuplicate(ctx context.Context, in *struct {
 	if err := handler.DoCreate(ctx, td, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	if err := addPositionsToTasks(td.Task); err != nil {
+		return nil, translateDomainError(err)
+	}
 	return &singleBody[models.TaskDuplicate]{Body: td}, nil
 }

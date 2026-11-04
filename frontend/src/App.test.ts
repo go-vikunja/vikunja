@@ -137,4 +137,14 @@ describe('App layout', () => {
 		expect(sdk.userDeletionConfirm).toHaveBeenCalledWith({body: {token: 'token-1'}})
 		expect(router.currentRoute.value.query.accountDeletionConfirm).toBeUndefined()
 	})
+
+	it('spends a deletion confirmation token from the fragment', async () => {
+		login()
+		const {router} = await mountApp('/labels#accountDeletionConfirm=token-1')
+		await flushPromises()
+
+		expect(sdk.userDeletionConfirm).toHaveBeenCalledTimes(1)
+		expect(sdk.userDeletionConfirm).toHaveBeenCalledWith({body: {token: 'token-1'}})
+		expect(router.currentRoute.value.hash).toBe('')
+	})
 })

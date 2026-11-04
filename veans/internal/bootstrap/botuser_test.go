@@ -18,6 +18,7 @@ package bootstrap
 
 import (
 	"bytes"
+	"context"
 	"strings"
 	"testing"
 
@@ -72,6 +73,9 @@ func (s *scriptedPrompter) ReadLine(_ string) (string, error) {
 	a := s.answers[s.pos]
 	s.pos++
 	return a, nil
+}
+func (s *scriptedPrompter) ReadLineContext(_ context.Context, p string) (string, error) {
+	return s.ReadLine(p)
 }
 func (s *scriptedPrompter) ReadPassword(_ string) (string, error) { return "", nil }
 

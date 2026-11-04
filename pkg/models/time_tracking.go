@@ -37,7 +37,8 @@ import (
 type TimeEntry struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"timeentry" readOnly:"true" doc:"The unique, numeric id of this time entry."`
 
-	UserID int64 `xorm:"bigint not null INDEX" json:"user_id" readOnly:"true" doc:"The id of the user who logged this time entry. Set by the server."`
+	UserID int64      `xorm:"bigint not null INDEX" json:"-"`
+	User   *user.User `xorm:"-" json:"user" readOnly:"true" doc:"The user who logged this time entry. Set by the server."`
 
 	TaskID    int64 `xorm:"bigint null INDEX" json:"task_id" doc:"The task this entry is attached to. Exactly one of task_id / project_id must be set."`
 	ProjectID int64 `xorm:"bigint null INDEX" json:"project_id" doc:"The project this entry is attached to directly. Exactly one of task_id / project_id must be set."`
@@ -66,11 +67,15 @@ func (*TimeEntry) TableName() string {
 // --- CRUDable ---
 
 func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
+	te.ID = 0
 	te.UserID = a.GetID()
 
-	// Starting a new running timer auto-stops the previous one; a completed
-	// manual entry (EndTime set) must leave the running timer alone.
+	// Starting a new running timer ends the entries it overlaps and auto-stops the
+	// previous one; a completed manual entry (EndTime set) must leave both alone.
 	if te.EndTime == nil {
+		if err = endEntriesSpanning(s, te.UserID, te.StartTime); err != nil {
+			return err
+		}
 		if _, err = stopRunningTimerForUser(s, te.UserID); err != nil {
 			return err
 		}
@@ -92,12 +97,53 @@ func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	if err = addUsersToTimeEntries(s, []*TimeEntry{te}); err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &TimeEntryCreatedEvent{TimeEntry: te, Doer: doer})
 	return nil
 }
 
 func (te *TimeEntry) ReadOne(_ *xorm.Session, _ web.Auth) (err error) {
 	// entry got already fetched in CanRead, nothing left to do here
+	return nil
+}
+
+// endEntriesSpanning ends the user's entries that span at, so a timer started
+// there doesn't overlap them. A running timer counts as ending now.
+func endEntriesSpanning(s *xorm.Session, userID int64, at time.Time) error {
+	if !at.Before(time.Now()) {
+		return nil
+	}
+
+	// UTC: the driver drops a bound parameter's offset.
+	spanning := []*TimeEntry{}
+	err := s.Where(builder.And(
+		builder.Eq{"user_id": userID},
+		builder.Lt{"start_time": at.UTC()},
+		builder.Or(builder.IsNull{"end_time"}, builder.Gt{"end_time": at.UTC()}),
+	)).Find(&spanning)
+	if err != nil || len(spanning) == 0 {
+		return err
+	}
+
+	for _, entry := range spanning {
+		entry.EndTime = &at
+		if _, err = s.ID(entry.ID).Cols("end_time").Update(entry); err != nil {
+			return err
+		}
+	}
+
+	doer, err := user.GetUserByID(s, userID)
+	if err != nil {
+		return err
+	}
+	if err = addUsersToTimeEntries(s, spanning); err != nil {
+		return err
+	}
+	for _, entry := range spanning {
+		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: entry, Doer: doer})
+	}
 	return nil
 }
 
@@ -118,6 +164,9 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) 
 
 	doer, err := user.GetUserByID(s, userID)
 	if err != nil {
+		return nil, err
+	}
+	if err := addUsersToTimeEntries(s, []*TimeEntry{running}); err != nil {
 		return nil, err
 	}
 	events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: running, Doer: doer})
@@ -195,7 +244,29 @@ func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 		OrderBy("start_time ASC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&entries)
-	return entries, len(entries), total, err
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if err = addUsersToTimeEntries(s, entries); err != nil {
+		return nil, 0, 0, err
+	}
+	return entries, len(entries), total, nil
+}
+
+func addUsersToTimeEntries(s *xorm.Session, entries []*TimeEntry) error {
+	userIDs := make([]int64, 0, len(entries))
+	for _, entry := range entries {
+		userIDs = append(userIDs, entry.UserID)
+	}
+	users, err := user.GetUsersByIDs(s, userIDs)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		entry.User = users[entry.UserID]
+	}
+	return nil
 }
 
 func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
@@ -234,6 +305,9 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	if err = addUsersToTimeEntries(s, []*TimeEntry{te}); err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: te, Doer: doer})
 	return nil
 }
@@ -241,6 +315,10 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 func (te *TimeEntry) Delete(s *xorm.Session, a web.Auth) (err error) {
 	entry, err := getTimeEntryByID(s, te.ID)
 	if err != nil {
+		return err
+	}
+	// the websocket listener routes the event by entry.User
+	if err = addUsersToTimeEntries(s, []*TimeEntry{entry}); err != nil {
 		return err
 	}
 	if _, err = s.Where("id = ?", te.ID).Delete(&TimeEntry{}); err != nil {
@@ -315,6 +393,11 @@ func (te *TimeEntry) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	entry, can, maxPerm, err := te.canDoTimeEntry(s, a, true)
 	if err != nil {
 		return false, maxPerm, err
+	}
+	if can {
+		if err = addUsersToTimeEntries(s, []*TimeEntry{entry}); err != nil {
+			return false, maxPerm, err
+		}
 	}
 	*te = *entry // ReadOne is a no-op; populate te here
 	return can, maxPerm, nil

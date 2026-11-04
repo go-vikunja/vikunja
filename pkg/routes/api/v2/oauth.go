@@ -17,8 +17,14 @@
 package apiv2
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
+	"io"
+	"mime"
 	"net/http"
+	"net/url"
 
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/humabridge"
@@ -58,6 +64,7 @@ func RegisterOAuthRoutes(api huma.API) {
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
 		Security:      publicSecurity,
+		Middlewares:   huma.Middlewares{formBodyAsJSON(api)},
 	}, oauthToken)
 
 	Register(api, huma.Operation{
@@ -69,6 +76,69 @@ func RegisterOAuthRoutes(api huma.API) {
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
 	}, oauthAuthorize)
+}
+
+// Per operation: an API-wide form format would let a cross-site <form> drive every endpoint (GHSA-frf4-3prf-3vch).
+func formBodyAsJSON(api huma.API) func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		mediaType, _, _ := mime.ParseMediaType(ctx.Header("Content-Type"))
+		if mediaType != "application/x-www-form-urlencoded" {
+			next(ctx)
+			return
+		}
+		body, err := formToJSON(ctx.BodyReader())
+		if errors.Is(err, errFormBodyTooLarge) {
+			_ = huma.WriteErr(api, ctx, http.StatusRequestEntityTooLarge, "request body too large")
+			return
+		}
+		if err != nil {
+			_ = huma.WriteErr(api, ctx, http.StatusBadRequest, "invalid form body", err)
+			return
+		}
+		next(&jsonBodyContext{humaContext: ctx, body: bytes.NewReader(body)})
+	}
+}
+
+// Read before Huma's MaxBodyBytes applies, so it needs its own cap.
+const maxFormBodyBytes = 64 << 10
+
+var errFormBodyTooLarge = errors.New("form body too large")
+
+// Only string scalars are produced, which is all TokenRequest needs.
+func formToJSON(r io.Reader) ([]byte, error) {
+	raw, err := io.ReadAll(io.LimitReader(r, maxFormBodyBytes+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(raw) > maxFormBodyBytes {
+		return nil, errFormBodyTooLarge
+	}
+	values, err := url.ParseQuery(string(raw))
+	if err != nil {
+		return nil, err
+	}
+	flat := make(map[string]string, len(values))
+	for key := range values {
+		flat[key] = values.Get(key)
+	}
+	return json.Marshal(flat)
+}
+
+// Alias so the embedded field isn't named Context, which would shadow huma.Context.Context().
+type humaContext = huma.Context
+
+type jsonBodyContext struct {
+	humaContext
+	body io.Reader
+}
+
+func (c *jsonBodyContext) BodyReader() io.Reader { return c.body }
+
+func (c *jsonBodyContext) Header(name string) string {
+	if http.CanonicalHeaderKey(name) == "Content-Type" {
+		return "application/json"
+	}
+	return c.humaContext.Header(name)
 }
 
 func oauthToken(ctx context.Context, in *struct {

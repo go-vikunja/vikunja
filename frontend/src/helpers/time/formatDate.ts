@@ -7,7 +7,7 @@ import {i18n} from '@/i18n'
 import {createSharedComposable} from '@vueuse/core'
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
 import {useDateDisplay} from '@/composables/useDateDisplay'
-import {useGlobalNow} from '@/composables/useGlobalNow'
+import {GLOBAL_NOW_INTERVAL, useGlobalNow} from '@/composables/useGlobalNow'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {DATE_DISPLAY, type DateDisplay} from '@/constants/dateDisplay'
 import {TIME_FORMAT, type TimeFormat} from '@/constants/timeFormat'
@@ -57,6 +57,11 @@ export const formatDateSince = (date: Date | string | null | undefined) => {
 	// internal Date.now()) makes every reactive caller re-render on the 60s tick, so open views
 	// don't keep showing a stale "x minutes ago".
 	const {now} = useGlobalNow()
+
+	// `now` lags up to one tick, so fresh dates would otherwise read "in a few seconds".
+	if (Math.abs(parsed.getTime() - now.value.getTime()) < GLOBAL_NOW_INTERVAL) {
+		return i18n.global.t('time.justNow')
+	}
 
 	return dayjs(parsed).locale(locale).from(now.value)
 }

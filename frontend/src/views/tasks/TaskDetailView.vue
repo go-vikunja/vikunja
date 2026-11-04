@@ -15,7 +15,7 @@
 			<BaseButton
 				v-if="!isModal"
 				class="back-button mbs-2"
-				@click="lastProject ? router.back() : router.push(projectRoute)"
+				@click="goBack()"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -1162,6 +1162,7 @@ useTaskDetailShortcuts({
 	task: () => task.value,
 	taskTitle: () => taskTitle.value,
 	onSave: saveTask,
+	onDoneAndBack: markDoneAndGoBack,
 })
 
 const showDeleteModal = ref(false)
@@ -1186,6 +1187,29 @@ async function toggleTaskDone() {
 		newTask,
 		toggleTaskDone,
 	)
+}
+
+async function markDoneAndGoBack() {
+	if (!canWrite.value || task.value.done) {
+		return
+	}
+
+	// Keydown handlers bypass Vue's errorHandler, so surface save errors here.
+	try {
+		await toggleTaskDone()
+	} catch (e) {
+		error(e)
+		return
+	}
+	goBack()
+}
+
+function goBack() {
+	if (lastProject.value) {
+		router.back()
+		return
+	}
+	router.push(projectRoute.value)
 }
 
 async function changeProject(project: ProjectResponse | null) {
@@ -1510,7 +1534,7 @@ h2 .button {
 .scroll-to-comments-button {
 	position: fixed;
 	// Position above the keyboard shortcuts button (which is at bottom: calc(1rem - 4px))
-	inset-block-end: 2.5rem;
+	inset-block-end: calc(var(--bottom-banners-end-height, 0px) + 2.5rem);
 	inset-inline-end: .75rem;
 	z-index: 10;
 	inline-size: 2rem;

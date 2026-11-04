@@ -195,6 +195,15 @@ function getBuildConfig(env: Record<string, string>) {
 					start_url: '.',
 					display: 'standalone',
 					background_color: '#000000',
+					share_target: {
+						action: './',
+						method: 'GET',
+						params: {
+							title: 'title',
+							text: 'description',
+							url: 'url',
+						},
+					},
 					shortcuts: [
 						{
 							name: 'Overview',
@@ -250,7 +259,6 @@ function getBuildConfig(env: Record<string, string>) {
 			},
 		},
 		build: {
-			target: 'esnext',
 			// required for sentry debugging: tells vite to create source maps
 			sourcemap: Boolean(env.SENTRY_AUTH_TOKEN),
 			rollupOptions: {

@@ -1,5 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
+import {ApiError} from '@/client/problem'
 import {getErrorText} from './index'
 
 describe('getErrorText', () => {
@@ -69,5 +70,16 @@ describe('getErrorText', () => {
 		})
 
 		expect(text).toBe('direct problem detail')
+	})
+
+	it('translates the code of an ApiError', () => {
+		const text = getErrorText(new ApiError({status: 404, code: 1001, detail: 'The user does not exist.'}))
+
+		expect(text).not.toBe('The user does not exist.')
+		expect(text).not.toBe('error.1001')
+	})
+
+	it('reads the detail of an ApiError without a code', () => {
+		expect(getErrorText(new ApiError({status: 502, detail: 'Bad Gateway'}))).toBe('Bad Gateway')
 	})
 })

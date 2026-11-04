@@ -163,6 +163,26 @@ func TestProjectAncestorsOnMove(t *testing.T) {
 	})
 }
 
+func TestProjectAncestorsMoveTooLarge(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	previous := maxProjectMoveAncestorRows
+	t.Cleanup(func() { maxProjectMoveAncestorRows = previous })
+
+	// 12 has a subtree of three (12, 25, 26); 28 is a top level project, so the move needs 3 rows.
+	before := projectAncestorsOf(t, s, 12, 25, 26)
+	maxProjectMoveAncestorRows = 2
+	err := moveProjectAncestors(s, 12, 28)
+	require.Error(t, err)
+	assert.True(t, IsErrProjectMoveTooLarge(err))
+	assert.ElementsMatch(t, before, projectAncestorsOf(t, s, 12, 25, 26))
+
+	maxProjectMoveAncestorRows = 3
+	require.NoError(t, moveProjectAncestors(s, 12, 28))
+}
+
 func TestProjectAncestorsWithoutClosureRows(t *testing.T) {
 	// 12 -> 27, with 25 and 26 below 12
 	const broken = int64(12)
@@ -325,6 +345,31 @@ func TestProjectAncestorsRebuildTerminatesOnParentCycle(t *testing.T) {
 		assert.True(t, has)
 		assert.Equal(t, PermissionAdmin, got)
 	}
+}
+
+func TestProjectAncestorsRebuildDeepChain(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Enough derived rows to span several insert batches.
+	const depth = 40
+	chain := make([]int64, 0, depth)
+	for i := range depth {
+		project := &Project{Title: "chain", OwnerID: 1}
+		if i > 0 {
+			project.ParentProjectID = Ptr(chain[i-1])
+		}
+		_, err := s.Insert(project)
+		require.NoError(t, err)
+		chain = append(chain, project.ID)
+	}
+
+	require.NoError(t, RebuildProjectAncestors(s))
+
+	rows := projectAncestorsOf(t, s, chain...)
+	require.Len(t, rows, depth*(depth+1)/2)
+	assert.Contains(t, rows, ProjectAncestor{ProjectID: chain[depth-1], AncestorID: chain[0], Depth: depth - 1})
 }
 
 func TestProjectAccessFollowsMove(t *testing.T) {

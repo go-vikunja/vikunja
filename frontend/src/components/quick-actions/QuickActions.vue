@@ -24,16 +24,17 @@
 				</div>
 				<input
 					ref="searchInput"
-					v-model="query"
 					v-focus
+					:value="query"
 					class="input"
 					:class="{'is-loading': loading}"
 					:placeholder="placeholder"
+					@input="updateQuery"
 					@keyup="search"
 					@keydown.down.prevent="select(0, 0)"
 					@keyup.prevent.delete="unselectCmd"
 					@keydown.prevent.enter="onEnter"
-					@keyup.prevent.esc="closeQuickActions"
+					@keydown.prevent.esc="closeQuickActions"
 				>
 				<QuickAddMagic
 					v-if="isNewTaskCommand"
@@ -42,6 +43,21 @@
 					:aria-label="$t('misc.closeQuickActions')"
 					class="close"
 					@click="closeQuickActions"
+				>
+					<Icon icon="times" />
+				</BaseButton>
+			</div>
+
+			<div
+				v-if="isNewTaskCommand && prefillDescription !== null"
+				class="prefill-description"
+			>
+				<Icon icon="link" />
+				<span class="prefill-description-title">{{ prefillDescription.url || prefillDescription.description }}</span>
+				<BaseButton
+					:aria-label="$t('quickActions.removePrefillDescription')"
+					class="prefill-description-remove"
+					@click="removePrefillDescription"
 				>
 					<Icon icon="times" />
 				</BaseButton>
@@ -85,7 +101,7 @@
 							@keydown.down.prevent="select(k, key + 1)"
 							@click.prevent.stop="doAction(r.type, i)"
 							@keyup.prevent.enter="doAction(r.type, i)"
-							@keyup.prevent.esc="searchInput?.focus()"
+							@keydown.prevent.esc="searchInput?.focus()"
 						>
 							<template v-if="r.type === ACTION_TYPE.LABELS">
 								<XLabel :label="i" />
@@ -142,6 +158,7 @@ import {useQuickAddTask} from '@/composables/useQuickAddTask'
 import {useAuthStore} from '@/stores/auth'
 import {useLabels} from '@/composables/useLabels'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {quickAddPrefillDescription, type QuickAddPrefill} from '@/helpers/quickAddPrefill'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
@@ -194,6 +211,7 @@ enum SEARCH_MODE {
 
 const query = ref('')
 const selectedCmd = ref<Command | null>(null)
+const prefillDescription = ref<Pick<QuickAddPrefill, 'url' | 'description'> | null>(null)
 
 const taskSearchParams = ref<TaskFilterParams | null>(null)
 const taskQuery = useTasks(
@@ -252,6 +270,11 @@ watchEffect(() => {
 
 function closeQuickActions() {
 	baseStore.setQuickActionsActive(false)
+}
+
+function removePrefillDescription() {
+	prefillDescription.value = null
+	searchInput.value?.focus()
 }
 
 const foundProjects = computed(() => {
@@ -370,6 +393,17 @@ const commands = computed<{ [key in COMMAND_TYPE]: Command }>(() => ({
 }))
 
 const placeholder = computed(() => selectedCmd.value?.placeholder || t('quickActions.placeholder'))
+
+watch(active, isActive => {
+	const prefill = baseStore.quickAddPrefill
+	if (!isActive || prefill === null) {
+		return
+	}
+	selectedCmd.value = commands.value.newTask
+	// Quoted so quick add magic leaves a page title like "Plan for tomorrow" alone.
+	query.value = prefill.title === '' ? '' : `"${prefill.title}"`
+	prefillDescription.value = prefill.url === '' && prefill.description === '' ? null : {url: prefill.url, description: prefill.description}
+}, {immediate: true})
 
 const currentProject = computed(() => {
 	if (!selectedProject.value || isSavedFilterProject(selectedProject.value)) {
@@ -509,6 +543,13 @@ const loading = useDelayedLoading(() =>
 	teamSearchLoading.value || createTeamMutation.isPending.value,
 )
 
+// Not v-model: it ignores input during IME composition, and Android keyboards
+// compose every word. The query would lag behind and the results re-render
+// under the finger once tapping one commits the composition.
+function updateQuery(event: Event) {
+	query.value = (event.target as HTMLInputElement).value
+}
+
 function search() {
 	searchTasks()
 }
@@ -602,7 +643,7 @@ function onEnter(event: KeyboardEvent) {
 }
 
 async function doCmd() {
-	if (results.value.length === 1 && results.value[0].items.length === 1) {
+	if (selectedCmd.value === null && results.value.length === 1 && results.value[0].items.length === 1) {
 		const result = results.value[0]
 		doAction(result.type, result.items[0])
 		openTaskAfterCreate = false
@@ -628,6 +669,7 @@ async function newTask() {
 	const task = await createNewTask({
 		title: query.value,
 		project_id: projectId,
+		description: prefillDescription.value === null ? undefined : quickAddPrefillDescription(prefillDescription.value),
 	})
 	success({message: t('task.createSuccess')})
 
@@ -718,6 +760,7 @@ function unselectCmd() {
 function reset() {
 	query.value = ''
 	selectedCmd.value = null
+	prefillDescription.value = null
 }
 
 const resultCount = computed(() => results.value.reduce((total, group) => total + group.items.length, 0))
@@ -801,6 +844,27 @@ onBeforeUnmount(() => {
 	margin-inline-start: .5rem;
 	background-color: var(--grey-100);
 	color: var(--grey-800);
+}
+
+.prefill-description {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	padding: .25rem .5rem .5rem 1rem;
+	color: var(--grey-600);
+	font-size: .9rem;
+}
+
+.prefill-description-title {
+	flex: 1;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.prefill-description-remove {
+	padding: 0 .5rem;
 }
 
 .results {

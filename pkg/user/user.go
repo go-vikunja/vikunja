@@ -121,6 +121,9 @@ type User struct {
 	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
 	Timezone   string `xorm:"varchar(255) null" json:"-"`
 
+	// The user who created this bot. Only set for bot users.
+	BotOwner *User `xorm:"-" json:"bot_owner,omitempty" readOnly:"true" doc:"The user who created this bot. Only set for bot users."`
+
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
 
@@ -158,7 +161,12 @@ func (u *User) RouteForDB() int64 {
 	return u.ID
 }
 
-func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
+// deliveredToLockedAccount marks notifications a locked account needs to recover from the lock.
+type deliveredToLockedAccount interface {
+	deliveredToLockedAccount()
+}
+
+func (u *User) ShouldNotify(notification notifications.Notification, sessions ...*xorm.Session) (bool, error) {
 	if u.IsBot() {
 		return false, nil
 	}
@@ -170,6 +178,9 @@ func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
 		defer s.Close()
 	}
 	_, err := getUser(s, &User{ID: u.ID}, true)
+	if _, recovery := notification.(deliveredToLockedAccount); recovery && IsErrAccountLocked(err) {
+		return true, nil
+	}
 	if IsErrUserStatusError(err) {
 		return false, nil
 	}
@@ -191,6 +202,11 @@ func (u *User) GetID() int64 {
 // IsBot reports whether this user is a bot (owned by another user).
 func (u *User) IsBot() bool {
 	return u.BotOwnerID > 0
+}
+
+// OwnsAvatarFile is false for the default avatar file, which every new account shares.
+func (u *User) OwnsAvatarFile() bool {
+	return u.AvatarFileID != 0 && u.AvatarFileID != config.DefaultSettingsAvatarFileID.GetInt64()
 }
 
 // TableName returns the table name for users
@@ -267,7 +283,53 @@ func GetUserByID(s *xorm.Session, id int64) (user *User, err error) {
 	}
 
 	u := *raw
+	if err := AttachBotOwners(s, &u); err != nil {
+		return &User{}, err
+	}
 	return &u, finishLoadedUser(&u)
+}
+
+// Unlike GetUserByID, also refuses accounts awaiting email confirmation, which is how admins freeze one.
+func GetUserByIDForAuth(s *xorm.Session, id int64) (*User, error) {
+	u, err := GetUserByID(s, id)
+	if err != nil {
+		return u, err
+	}
+	return u, checkUserAndBotOwnerCanAuthenticate(s, u)
+}
+
+func GetUserByUsernameForAuth(s *xorm.Session, username string) (*User, error) {
+	u, err := GetUserByUsername(s, username)
+	if err != nil {
+		return u, err
+	}
+	return u, checkUserAndBotOwnerCanAuthenticate(s, u)
+}
+
+// Disabling an owner doesn't touch their bots' status, so a bot inherits the owner's gate.
+func checkUserAndBotOwnerCanAuthenticate(s *xorm.Session, u *User) error {
+	if err := CheckUserCanAuthenticate(u); err != nil || !u.IsBot() {
+		return err
+	}
+	_, err := GetUserByIDForAuth(s, u.BotOwnerID)
+	return err
+}
+
+func CheckUserCanAuthenticate(u *User) error {
+	switch u.Status {
+	case StatusEmailConfirmationRequired:
+		return ErrEmailNotConfirmed{UserID: u.ID}
+	case StatusDisabled:
+		return &ErrAccountDisabled{UserID: u.ID}
+	case StatusAccountLocked:
+		return &ErrAccountLocked{UserID: u.ID}
+	case StatusActive:
+	}
+	return nil
+}
+
+func IsErrUserCannotAuthenticate(err error) bool {
+	return IsErrUserStatusError(err) || IsErrEmailNotConfirmed(err)
 }
 
 // GetUserByUsername gets a user from its username. This is an extra function to be able to add an extra error check.
@@ -319,7 +381,48 @@ func GetUsersByIDs(s *xorm.Session, userIDs []int64) (users map[int64]*User, err
 		copied := *u
 		users[id] = &copied
 	}
+
+	bots := make([]*User, 0, len(users))
+	for _, u := range users {
+		bots = append(bots, u)
+	}
+	if err := AttachBotOwners(s, bots...); err != nil {
+		return nil, err
+	}
 	return users, nil
+}
+
+// AttachBotOwners sets BotOwner on every bot in users, loading all owners in one query.
+// Owners skip the disabled/locked gate: a bot's activity stays visible after its owner is disabled.
+func AttachBotOwners(s *xorm.Session, users ...*User) error {
+	ownerIDs := make([]int64, 0, len(users))
+	for _, u := range users {
+		if u.IsBot() && u.BotOwner == nil {
+			ownerIDs = append(ownerIDs, u.BotOwnerID)
+		}
+	}
+	if len(ownerIDs) == 0 {
+		return nil
+	}
+
+	owners, err := db.RememberEach(s, ownerIDs, userMemoKey, func(missing []int64) (map[int64]*User, error) {
+		return GetUsersByCond(s, builder.In("id", missing))
+	})
+	if err != nil {
+		return err
+	}
+
+	copies := make(map[int64]*User, len(owners))
+	for id, o := range owners {
+		copied := *o
+		copies[id] = &copied
+	}
+	for _, u := range users {
+		if u.IsBot() && u.BotOwner == nil {
+			u.BotOwner = copies[u.BotOwnerID]
+		}
+	}
+	return nil
 }
 
 func GetUsersByCond(s *xorm.Session, cond builder.Cond) (users map[int64]*User, err error) {
@@ -398,7 +501,7 @@ func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User,
 }
 
 // CheckUserCredentials checks user credentials. The context carries request
-// metadata for the audit trail of failed attempts.
+// metadata for the audit trail of failed attempts. Rolls s back on a wrong password.
 func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
@@ -422,12 +525,7 @@ func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User
 		return &User{}, ErrEmailNotConfirmed{UserID: user.ID}
 	}
 
-	// Check the users password
-	err = CheckUserPassword(user, u.Password)
-	if err != nil {
-		if IsErrWrongUsernameOrPassword(err) {
-			handleFailedPassword(ctx, user)
-		}
+	if err := CheckUserPasswordCountingFailures(ctx, s, user, u.Password); err != nil {
 		return user, err
 	}
 
@@ -446,9 +544,26 @@ func (u *User) IsLocalUser() bool {
 	return u.Issuer == IssuerLocal
 }
 
+// CheckUserPasswordCountingFailures is CheckUserPassword, but a wrong password
+// counts toward the account lockout. It rolls back s on a wrong password.
+func CheckUserPasswordCountingFailures(ctx context.Context, s *xorm.Session, user *User, password string) error {
+	err := CheckUserPassword(user, password)
+	if IsErrWrongUsernameOrPassword(err) {
+		// Rolled back first: a lockout needs its own write lock on SQLite.
+		_ = s.Rollback()
+		handleFailedPassword(ctx, user)
+	}
+	return err
+}
+
 func handleFailedPassword(ctx context.Context, user *User) {
 	if err := events.DispatchWithContext(ctx, &LoginFailedEvent{User: user}); err != nil {
 		log.Errorf("Could not dispatch login failed event: %s", err)
+	}
+
+	// Already locked or disabled: counting on would resend the lockout mail.
+	if user.Status != StatusActive {
+		return
 	}
 
 	key := user.GetFailedPasswordAttemptsKey()
@@ -458,42 +573,26 @@ func handleFailedPassword(ctx context.Context, user *User) {
 		return
 	}
 
-	a, _, err := keyvalue.Get(key)
+	attempts, _, err := keyvalue.GetInt64(key)
 	if err != nil {
 		log.Errorf("Could not get failed password attempts for user %d: %s", user.ID, err)
 		return
 	}
-	attempts, ok := a.(int64)
-	if !ok {
-		attemptsStr, ok := a.(string)
-		if !ok {
-			log.Errorf("Unexpected type for failed password attempts: %v", a)
-			return
-		}
-		var err error
-		attempts, err = strconv.ParseInt(attemptsStr, 10, 64)
+	if attempts == 3 {
+		err = notifications.Notify(user, &FailedLoginAttemptNotification{
+			User: user,
+		})
 		if err != nil {
-			log.Errorf("Could not convert failed password attempts to int64: %v, value: %s", err, attemptsStr)
-			return
+			log.Errorf("Could not send invalid password mail to user: %s", err)
 		}
-	}
-	if attempts != 3 {
 		return
 	}
 
-	err = notifications.Notify(user, &FailedLoginAttemptNotification{
-		User: user,
-	})
-	if err != nil {
-		log.Errorf("Could not send invalid password mail to user: %s", err)
+	if attempts < maxFailedLoginAttempts {
 		return
 	}
 
-	err = keyvalue.Del(key)
-	if err != nil {
-		log.Errorf("Could not remove failed password attempts: %s", err)
-		return
-	}
+	lockAccount(user, key, &AccountLockedAfterInvalidPasswordNotification{User: user})
 }
 
 // CheckUserPassword checks and verifies a user's password. The user object needs to contain the hashed password from the database.
@@ -755,7 +854,10 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 	_, err = s.Where("id = ?", user.ID).
 		Cols("status").
 		Update(&User{Status: status})
-	return
+	if err != nil {
+		return err
+	}
+	return InvalidateSessionAuthCacheOnCommit(s, user.ID)
 }
 
 // GuardLastAdmin refuses demoting or deleting the last reachable admin; only active, non-deletion-scheduled admins count since the rest cannot log in.
@@ -825,5 +927,8 @@ func (u *User) SetStatus(s *xorm.Session, status Status) (err error) {
 		Where("id = ?", u.ID).
 		Cols("status").
 		Update(u)
-	return
+	if err != nil {
+		return err
+	}
+	return InvalidateSessionAuthCacheOnCommit(s, u.ID)
 }

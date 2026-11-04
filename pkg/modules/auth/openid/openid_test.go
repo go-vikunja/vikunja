@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"bytes"
 	"context"
 	"crypto"
 	"crypto/rand"
@@ -24,16 +25,26 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"image"
+	"image/png"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/avatar"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -161,6 +172,38 @@ func TestGetOrCreateUser(t *testing.T) {
 			"name":        team + " (" + provider.Name + ")",
 			"external_id": oidcID,
 			"is_public":   false,
+		}, false)
+	})
+
+	t.Run("existing user, non existing team from groups claim", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		group := "new sso group"
+		cl := &claims{
+			Email: "other-email-address@some.service.com",
+			Groups: stringList{
+				group,
+				"",
+			},
+		}
+
+		provider := &Provider{Name: "Vikunja Login"}
+		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		teamData := getTeamDataFromGroupsClaim(cl.Groups)
+		require.Len(t, teamData, 1, "empty group names must be skipped")
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", provider.Name)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        group + " (" + provider.Name + ")",
+			"external_id": group,
 		}, false)
 	})
 
@@ -301,6 +344,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		logged := captureWarnings(t)
 
 		cl := &claims{
 			Email:             "bot@example.com",
@@ -314,6 +358,7 @@ func TestGetOrCreateUser(t *testing.T) {
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		assert.True(t, user.IsErrAccountIsBot(err))
 		assert.Nil(t, u)
+		assert.NotContains(t, logged(), fallbackWarningMarker)
 	})
 	t.Run("ProviderFallback: Falls back to sub when preferred_username is empty", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -515,6 +560,164 @@ func TestGetOrCreateUser(t *testing.T) {
 	})
 }
 
+func captureWarnings(t *testing.T) func() string {
+	t.Helper()
+	dir := t.TempDir()
+	log.ConfigureStandardLogger(true, "file", dir, "WARNING", "text")
+	t.Cleanup(log.InitLogger)
+
+	return func() string {
+		t.Helper()
+		content, err := os.ReadFile(filepath.Join(dir, "standard.log"))
+		require.NoError(t, err)
+		return string(content)
+	}
+}
+
+const fallbackWarningMarker = "via the deprecated emailfallback/usernamefallback option"
+
+func expectedFallbackWarning(userID int) string {
+	return fmt.Sprintf(
+		`OpenID provider \"test\" matched local user %d %s. `+
+			"Both options will be removed in a future release; the user must link the provider from their account settings before then.",
+		userID, fallbackWarningMarker,
+	)
+}
+
+func TestFallbackLogsDeprecationWarning(t *testing.T) {
+	t.Run("username fallback match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		provider := &Provider{
+			Key:              "test",
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "user11",
+		}
+
+		u, err := getOrCreateUser(s, &claims{}, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, int64(11), u.ID)
+
+		out := logged()
+		assert.Contains(t, out, "level=WARN")
+		assert.Contains(t, out, expectedFallbackWarning(11))
+		assert.Equal(t, 1, strings.Count(out, fallbackWarningMarker))
+	})
+	t.Run("email fallback match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		cl := &claims{
+			Email:         "user11@example.com",
+			EmailVerified: true,
+		}
+		provider := &Provider{
+			Key:           "test",
+			EmailFallback: true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "unknown-subject",
+		}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, int64(11), u.ID)
+
+		out := logged()
+		assert.Contains(t, out, "level=WARN")
+		assert.Contains(t, out, expectedFallbackWarning(11))
+		assert.Equal(t, 1, strings.Count(out, fallbackWarningMarker))
+	})
+	t.Run("miss then hit", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		cl := &claims{
+			Email:             "user11@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "nobody",
+		}
+		provider := &Provider{
+			Key:              "test",
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "nobody-subject",
+		}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, int64(11), u.ID)
+
+		out := logged()
+		assert.Contains(t, out, expectedFallbackWarning(11))
+		assert.Equal(t, 1, strings.Count(out, fallbackWarningMarker))
+	})
+	t.Run("disabled user fallback match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		provider := &Provider{
+			Key:              "test",
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "user17",
+		}
+
+		u, err := getOrCreateUser(s, &claims{}, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, int64(17), u.ID)
+
+		out := logged()
+		assert.Contains(t, out, expectedFallbackWarning(17))
+		assert.Equal(t, 1, strings.Count(out, fallbackWarningMarker))
+	})
+	t.Run("no fallback match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		logged := captureWarnings(t)
+
+		cl := &claims{
+			Email:             "nobody@example.com",
+			EmailVerified:     true,
+			PreferredUsername: "nobody",
+		}
+		provider := &Provider{
+			Key:              "test",
+			UsernameFallback: true,
+			EmailFallback:    true,
+		}
+		idToken := &oidc.IDToken{
+			Issuer:  "https://some.issuer",
+			Subject: "nobody-subject",
+		}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		require.Equal(t, "https://some.issuer", u.Issuer)
+
+		assert.NotContains(t, logged(), fallbackWarningMarker)
+	})
+}
+
 // TestMergeClaims tests the mergeClaims function with different configurations including forceUserInfo
 func TestMergeClaims(t *testing.T) {
 	t.Run("ForceUserInfo enabled - should use userinfo values", func(t *testing.T) {
@@ -615,6 +818,20 @@ func TestMergeClaims(t *testing.T) {
 		assert.Equal(t, "userinfo_nickname", tokenClaims.PreferredUsername)
 	})
 
+	t.Run("Use groups from userinfo when the token has none", func(t *testing.T) {
+		tokenClaims := &claims{
+			Email: "token-email@example.com",
+		}
+		userinfoClaims := &claims{
+			Groups: stringList{"userinfo-group"},
+		}
+
+		err := mergeClaims(tokenClaims, userinfoClaims, false)
+		require.NoError(t, err)
+
+		assert.Equal(t, stringList{"userinfo-group"}, tokenClaims.Groups)
+	})
+
 	t.Run("Error when email is missing", func(t *testing.T) {
 		// Setup token claims with missing email
 		tokenClaims := &claims{
@@ -691,49 +908,119 @@ func TestEnforceTOTPIfRequired(t *testing.T) {
 	})
 }
 
-func TestSyncUserAvatarFromOpenID(t *testing.T) {
-	t.Run("empty picture URL resets openid provider to default", func(t *testing.T) {
+func TestResetOpenIDAvatar(t *testing.T) {
+	t.Run("resets openid provider to default", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		// Use the fixture user that has avatar_provider = "openid"
 		u, err := user.GetUserByID(s, 19)
 		require.NoError(t, err)
 		assert.Equal(t, "openid", u.AvatarProvider, "precondition: user should have openid avatar provider")
 
-		err = syncUserAvatarFromOpenID(s, u, "")
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		require.NoError(t, resetOpenIDAvatar(s, u))
+		require.NoError(t, s.Commit())
 
-		// Verify the avatar provider was reset to default in the database
 		db.AssertExists(t, "users", map[string]interface{}{
 			"id":              19,
 			"avatar_provider": "default",
 		}, false)
 	})
 
-	t.Run("empty picture URL does not reset non-openid provider", func(t *testing.T) {
+	t.Run("does not reset non-openid provider", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
 
-		// Use a regular user (avatar_provider is empty/"default")
 		u, err := user.GetUserByID(s, 1)
 		require.NoError(t, err)
 
-		err = syncUserAvatarFromOpenID(s, u, "")
-		require.NoError(t, err)
-		err = s.Commit()
-		require.NoError(t, err)
+		require.NoError(t, resetOpenIDAvatar(s, u))
+		require.NoError(t, s.Commit())
 
-		// Verify the avatar provider was NOT changed to "default" or anything else
 		s2 := db.NewSession()
 		defer s2.Close()
 		updatedUser, err := user.GetUserByID(s2, 1)
 		require.NoError(t, err)
 		assert.Empty(t, updatedUser.AvatarProvider, "avatar provider should remain empty for non-openid user")
+	})
+}
+
+func servePicture(t *testing.T) (url string, hits *atomic.Int32) {
+	t.Helper()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	t.Cleanup(func() { config.OutgoingRequestsAllowNonRoutableIPs.Set("false") })
+
+	picture := &bytes.Buffer{}
+	require.NoError(t, png.Encode(picture, image.NewNRGBA(image.Rect(0, 0, 8, 4))))
+	hits = &atomic.Int32{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits.Add(1)
+		w.Header().Set("Content-Type", "image/png")
+		_, _ = w.Write(picture.Bytes())
+	}))
+	t.Cleanup(srv.Close)
+	return srv.URL, hits
+}
+
+func TestGetOrCreateUserLeavesPictureToTheCaller(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	pictureURL, hits := servePicture(t)
+
+	s := db.NewSession()
+	defer s.Close()
+	cl := &claims{
+		Email:             "picture-later@example.com",
+		PreferredUsername: "pictureLaterUser",
+		Picture:           pictureURL,
+	}
+	idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "picture-later"}
+
+	u, err := getOrCreateUser(s, cl, &Provider{}, idToken)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	assert.Equal(t, int32(0), hits.Load())
+	s2 := db.NewSession()
+	defer s2.Close()
+	stored, err := user.GetUserByID(s2, u.ID)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), stored.AvatarFileID)
+	assert.Equal(t, config.DefaultSettingsAvatarProvider.GetString(), stored.AvatarProvider)
+}
+
+func TestSyncUserAvatarFromOpenID(t *testing.T) {
+	t.Run("stores the downloaded picture", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		pictureURL, hits := servePicture(t)
+
+		syncUserAvatarFromOpenID(t.Context(), 1, pictureURL)
+		avatar.WaitForProviderSyncsForTests()
+
+		assert.Equal(t, int32(1), hits.Load())
+		s := db.NewSession()
+		defer s.Close()
+		stored, err := user.GetUserByID(s, 1)
+		require.NoError(t, err)
+		assert.Equal(t, "openid", stored.AvatarProvider)
+		assert.NotZero(t, stored.AvatarFileID)
+	})
+
+	t.Run("busy decoder leaves the avatar unchanged", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		pictureURL, hits := servePicture(t)
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+
+		syncUserAvatarFromOpenID(t.Context(), 19, pictureURL)
+		avatar.WaitForProviderSyncsForTests()
+
+		assert.Equal(t, int32(1), hits.Load())
+		s := db.NewSession()
+		defer s.Close()
+		stored, err := user.GetUserByID(s, 19)
+		require.NoError(t, err)
+		assert.Equal(t, "openid", stored.AvatarProvider)
+		assert.Equal(t, int64(0), stored.AvatarFileID)
 	})
 }
 
@@ -754,6 +1041,29 @@ func TestEmailVerifiedClaimDecoding(t *testing.T) {
 			var cl claims
 			require.NoError(t, json.Unmarshal([]byte(body), &cl))
 			assert.Equal(t, want, bool(cl.EmailVerified))
+		})
+	}
+}
+
+func TestGroupsClaimDecoding(t *testing.T) {
+	// The groups claim is decoded for every provider, so no shape of it may
+	// break the whole claims parse.
+	cases := map[string]stringList{
+		`{"groups": ["a", "b"]}`: {
+			"a",
+			"b",
+		},
+		`{"groups": "a"}`:                {"a"},
+		`{"groups": ["a", 1, {"b": 2}]}`: {"a"},
+		`{"groups": {"a": "b"}}`:         nil,
+		`{"groups": null}`:               nil,
+		`{}`:                             nil,
+	}
+	for body, want := range cases {
+		t.Run(body, func(t *testing.T) {
+			var cl claims
+			require.NoError(t, json.Unmarshal([]byte(body), &cl))
+			assert.Equal(t, want, cl.Groups)
 		})
 	}
 }
@@ -890,4 +1200,39 @@ func TestOIDCIDTokenVerificationUsesConfiguredProxy(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
 	assert.Contains(t, proxiedPaths, "/jwks")
+}
+
+// The memory keyvalue store shallow-copies Provider, so Oauth2Config is shared across requests.
+func TestExchangeOidcTokensDoesNotMutateCachedRedirectURL(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	var receivedRedirectURI string
+	server := newMockOIDCServerWithAuthMethods([]string{authMethodPost}, func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		receivedRedirectURI = r.PostForm.Get("redirect_uri")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"invalid_client"}`))
+	})
+	defer server.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	_, _, _, _, err := exchangeOidcTokens(context.Background(), &Callback{Code: "code", RedirectURL: "https://example.com/callback"}, "provider1")
+	require.Error(t, err)
+	assert.Equal(t, "https://example.com/callback", receivedRedirectURI)
+
+	cached, err := getCachedProvider("provider1")
+	require.NoError(t, err)
+	assert.Empty(t, cached.Oauth2Config.RedirectURL)
 }

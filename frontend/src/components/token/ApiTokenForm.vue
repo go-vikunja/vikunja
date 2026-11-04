@@ -100,7 +100,7 @@ const defaultPresets: ApiTokenPreset[] = [
 			'tasks_comments': '*',
 			'tasks_relations': '*',
 			'labels': ['read_one', 'read_all', 'create'],
-			'projects': ['read_one', 'read_all', 'views_buckets_tasks'],
+			'projects': ['read_one', 'read_all', 'views_buckets_tasks_update'],
 			'projects_views': ['read_one', 'read_all'],
 			'projects_views_tasks': ['read_one', 'read_all'],
 		},

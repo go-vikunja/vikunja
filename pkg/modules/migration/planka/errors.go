@@ -119,3 +119,22 @@ func (err *ErrNoPlankaAtURL) HTTPError() web.HTTPError {
 		Message:  "Could not reach a Planka API at the given url. Check the url and that Vikunja can reach the instance.",
 	}
 }
+
+// ErrPlankaHostNotAllowed is returned when the planka url resolves to an address the ssrf protection blocks.
+type ErrPlankaHostNotAllowed struct{}
+
+func (err *ErrPlankaHostNotAllowed) Error() string {
+	return "The Planka url resolves to a non-routable ip address, set outgoingrequests.allownonroutableips to allow it"
+}
+
+// ErrCodePlankaHostNotAllowed holds the unique world-error code of this error
+const ErrCodePlankaHostNotAllowed = 14205
+
+// HTTPError holds the http error description
+func (err *ErrPlankaHostNotAllowed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodePlankaHostNotAllowed,
+		Message:  "The Planka URL points to a private or local network address, which Vikunja blocks by default. An administrator can allow it by setting outgoingrequests.allownonroutableips to true.",
+	}
+}

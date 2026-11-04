@@ -49,6 +49,13 @@ linters:
           msg: plain Sync drops every index the synced struct doesn't declare (#3244) — use partialSync; tx.Sync is only safe for brand-new tables (nolint with a reason)
         - pattern: ^(s|sess|tx)\.Context$
           msg: replacing a session context drops the memo pointer the write hook invalidates through, leaving stale permissions — use db.SetSessionContext
+    gocritic:
+      enabled-checks:
+        - ruleguard
+      settings:
+        ruleguard:
+          rules: ${base-path}/ruleguard/rules.go
+          failOn: all
     goheader:
       template-path: code-header-template.txt
     nestif:

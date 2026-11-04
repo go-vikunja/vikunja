@@ -39,11 +39,6 @@ func (m *Migrator) Name() string {
 	return "planka"
 }
 
-// AuthURL is empty: Planka has no OAuth flow, credentials are passed with the migrate request.
-func (m *Migrator) AuthURL() string {
-	return ""
-}
-
 // validate checks the request payload without talking to Planka.
 func (m *Migrator) validate() error {
 	if m.URL == "" || (m.Token == "" && (m.Username == "" || m.Password == "")) {

@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -263,4 +264,65 @@ func testManageInactiveBot(t *testing.T, status user.Status) {
 			}
 		})
 	}
+}
+
+func TestBotUser_OwnerSerializedOnCreatedBy(t *testing.T) {
+	t.Run("label", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		created := &Label{Title: "bot label", CreatedByID: 23}
+		_, err := s.Insert(created)
+		require.NoError(t, err)
+
+		l := &Label{ID: created.ID}
+		require.NoError(t, l.ReadOne(s, &user.User{ID: 21}))
+		j, err := json.Marshal(l)
+		require.NoError(t, err)
+		assert.Contains(t, string(j), `"bot_owner":{"id":21,`)
+		assert.NotContains(t, string(j), "user_bot_owner_a@example.com")
+	})
+	t.Run("task", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		created := &Task{Title: "bot task", ProjectID: 1, CreatedByID: 23, Index: 999}
+		_, err := s.Insert(created)
+		require.NoError(t, err)
+
+		task := &Task{ID: created.ID}
+		require.NoError(t, task.ReadOne(s, &user.User{ID: 1}))
+		require.NotNil(t, task.CreatedBy)
+		require.NotNil(t, task.CreatedBy.BotOwner)
+		assert.Equal(t, int64(21), task.CreatedBy.BotOwner.ID)
+		j, err := json.Marshal(task.CreatedBy)
+		require.NoError(t, err)
+		assert.Contains(t, string(j), `"bot_owner":{"id":21,`)
+	})
+	t.Run("human has no bot_owner key", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 1}
+		require.NoError(t, task.ReadOne(s, &user.User{ID: 1}))
+		j, err := json.Marshal(task)
+		require.NoError(t, err)
+		assert.NotContains(t, string(j), "bot_owner")
+	})
+}
+
+func TestBotUser_ReadOneIncludesOwner(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	bot := &BotUser{}
+	bot.ID = 23
+	require.NoError(t, bot.ReadOne(s, &user.User{ID: 21}))
+	require.NotNil(t, bot.BotOwner)
+	assert.Equal(t, int64(21), bot.BotOwner.ID)
+	assert.Empty(t, bot.BotOwner.Email)
 }

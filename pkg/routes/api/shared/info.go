@@ -17,6 +17,8 @@
 package shared
 
 import (
+	"slices"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
@@ -85,8 +87,49 @@ type OpenIDAuthInfo struct {
 
 // LegalInfo holds links to the instance's legal documents.
 type LegalInfo struct {
-	ImprintURL       string `json:"imprint_url"`
-	PrivacyPolicyURL string `json:"privacy_policy_url"`
+	ImprintURL       string      `json:"imprint_url" deprecated:"true" doc:"Deprecated: use links, which also contains this url."`
+	PrivacyPolicyURL string      `json:"privacy_policy_url" deprecated:"true" doc:"Deprecated: use links, which also contains this url."`
+	Links            []LegalLink `json:"links" doc:"All legal links, including the deprecated imprint and privacy policy urls."`
+}
+
+// LegalLink is a link to one of the instance's legal documents.
+type LegalLink struct {
+	Text string `json:"text"`
+	URL  string `json:"url"`
+}
+
+func buildLegalInfo() LegalInfo {
+	legal := LegalInfo{
+		ImprintURL:       config.LegalImprintURL.GetString(),
+		PrivacyPolicyURL: config.LegalPrivacyURL.GetString(),
+		Links:            []LegalLink{},
+	}
+
+	if legal.ImprintURL != "" {
+		legal.Links = append(legal.Links, LegalLink{
+			Text: "Imprint",
+			URL:  legal.ImprintURL,
+		})
+	}
+	if legal.PrivacyPolicyURL != "" {
+		legal.Links = append(legal.Links, LegalLink{
+			Text: "Privacy Policy",
+			URL:  legal.PrivacyPolicyURL,
+		})
+	}
+
+	for _, link := range config.GetLegalLinks() {
+		l := LegalLink{
+			Text: link.Text,
+			URL:  link.URL,
+		}
+		// Admins migrating off the deprecated keys may briefly have both set.
+		if !slices.Contains(legal.Links, l) {
+			legal.Links = append(legal.Links, l)
+		}
+	}
+
+	return legal
 }
 
 // BuildInfo assembles the public instance information returned by GET /info on
@@ -124,10 +167,7 @@ func BuildInfo() VikunjaInfos {
 			(&csvmigrator.Migrator{}).Name(),
 			(&planka.Migrator{}).Name(),
 		},
-		Legal: LegalInfo{
-			ImprintURL:       config.LegalImprintURL.GetString(),
-			PrivacyPolicyURL: config.LegalPrivacyURL.GetString(),
-		},
+		Legal: buildLegalInfo(),
 		AuthInfo: AuthInfo{
 			Local: LocalAuthInfo{
 				Enabled:             config.AuthLocalEnabled.GetBool(),

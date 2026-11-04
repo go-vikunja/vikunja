@@ -765,3 +765,25 @@ func TestViewLockOrder(t *testing.T) {
 	ids := viewLockOrder([]*ProjectView{{ID: 4}, {ID: 1}, {ID: 4}, {ID: 2}})
 	assert.Equal(t, []int64{1, 2, 4}, ids)
 }
+
+func TestAddPositionsToTasks(t *testing.T) {
+	t.Run("only includes positions of views in the task's project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// View 5 belongs to project 2, task 1 to project 1.
+		_, err := s.Insert(&TaskPosition{TaskID: 1, ProjectViewID: 5, Position: 10})
+		require.NoError(t, err)
+
+		task := &Task{ID: 1}
+		require.NoError(t, AddPositionsToTasks(s, []*Task{task}))
+
+		viewIDs := make([]int64, 0, len(task.Positions))
+		for _, p := range task.Positions {
+			viewIDs = append(viewIDs, p.ProjectViewID)
+		}
+		assert.Contains(t, viewIDs, int64(1))
+		assert.NotContains(t, viewIDs, int64(5))
+	})
+}

@@ -32,7 +32,7 @@
 		</div>
 
 		<div class="field">
-			<label class="label">{{ $t('task.comment.comment') }}</label>
+			<label class="label">{{ $t('timeTracking.commentLabel') }}</label>
 			<input
 				v-model="comment"
 				v-cy="'timeEntryComment'"
@@ -108,6 +108,13 @@
 				</XButton>
 			</template>
 		</div>
+		<p
+			v-if="backdatedStopAt !== null"
+			v-cy="'backdatedStopHint'"
+			class="help"
+		>
+			{{ $t('timeTracking.form.endsSpanningEntriesAt', {time: formatDayTime(backdatedStopAt, timeFormat)}) }}
+		</p>
 	</form>
 </template>
 
@@ -122,6 +129,9 @@ import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import {useTasks} from '@/composables/useTasks'
 import {ensureTask} from '@/client/queries/tasks'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
+import {formatDayTime} from '@/helpers/time/formatTimeRange'
+import {useTimeEntries, useTimeTracking} from '@/composables/useTimeTracking'
+import {useTimeFormat} from '@/composables/useTimeFormat'
 import {useCreateTimeEntryMutation, useUpdateTimeEntryMutation} from '@/client/queries/timeEntries'
 import type {UpdateTimeEntryInput} from '@/client/queries/timeEntries'
 import type {TimeEntryWritable} from '@/client/generated'
@@ -155,14 +165,51 @@ const createMutation = useCreateTimeEntryMutation()
 const updateMutation = useUpdateTimeEntryMutation()
 const authStore = useAuthStore()
 const projectList = useProjects()
+const {activeTimer} = useTimeTracking()
+const {store: timeFormat} = useTimeFormat()
 
 const isEditing = computed(() => props.entry != null)
 
 const formEl = ref<HTMLFormElement | null>(null)
 const selectedProject = ref<ProjectResponse | null>(null)
 const selectedTask = ref<TaskResponse | null>(null)
-const from = ref<Date | null>(new Date())
+const start = ref<{date: Date | null, chosen: boolean}>({
+	date: new Date(),
+	chosen: false,
+})
+const from = computed({
+	get: () => start.value.date,
+	set: date => {
+		start.value = {
+			date,
+			chosen: true,
+		}
+	},
+})
 const to = ref<Date | null>(null)
+
+// Mirrors the server: starting a timer at a past start ends the user's entries spanning it there.
+const backdateTo = computed(() => {
+	const date = start.value.date
+	if (isEditing.value || !start.value.chosen || date === null || date >= new Date()) {
+		return null
+	}
+	return date
+})
+const spanningFilter = computed(() => {
+	const at = backdateTo.value?.toISOString()
+	return at === undefined ? '' : `user_id = ${authStore.info?.id} && start_time < '${at}' && end_time > '${at}'`
+})
+const {entries: spanningEntries} = useTimeEntries(spanningFilter, {enabled: () => spanningFilter.value !== ''})
+const backdatedStopAt = computed(() => {
+	const at = backdateTo.value
+	if (at === null) {
+		return null
+	}
+	const runningStart = parseDateOrNull(activeTimer.value?.start_time)
+	const spansRunning = runningStart !== null && runningStart < at
+	return spansRunning || spanningEntries.value.length > 0 ? at : null
+})
 const comment = ref('')
 const isSaving = ref(false)
 
@@ -232,7 +279,10 @@ function reset() {
 	selectedTask.value = null
 	selectedProject.value = null
 	comment.value = ''
-	from.value = new Date()
+	start.value = {
+		date: new Date(),
+		chosen: false,
+	}
 	to.value = null
 }
 
@@ -291,8 +341,8 @@ async function submit(includeEnd: boolean) {
 	const draft = draftIdentity()
 	try {
 		const payload = buildPayload(includeEnd)
-		// A started timer begins now (click time), not when the form first loaded.
-		if (!includeEnd) {
+		// An untouched start would otherwise be when the form loaded, not click time.
+		if (!includeEnd && !start.value.chosen) {
 			payload.start_time = new Date().toISOString()
 		}
 		await createMutation.mutateAsync(payload)

@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
@@ -180,8 +181,7 @@ func (sess *Session) Delete(s *xorm.Session, a web.Auth) error {
 	if err != nil || deleted == 0 {
 		return err
 	}
-	events.DispatchOnCommit(s, &SessionsRevokedEvent{UserID: a.GetID(), SessionID: sess.ID})
-	return nil
+	return revokeSessions(s, &SessionsRevokedEvent{UserID: a.GetID(), SessionID: sess.ID})
 }
 
 // Sockets close only once the caller dispatches s's pending events.
@@ -193,8 +193,7 @@ func DeleteSessionByID(s *xorm.Session, id string) (*Session, error) {
 	if _, err := s.Where("id = ?", id).Delete(&Session{}); err != nil {
 		return nil, err
 	}
-	events.DispatchOnCommit(s, &SessionsRevokedEvent{UserID: session.UserID, SessionID: id})
-	return session, nil
+	return session, revokeSessions(s, &SessionsRevokedEvent{UserID: session.UserID, SessionID: id})
 }
 
 // UpdateSessionLastActive updates the last_active timestamp of a session.
@@ -234,7 +233,14 @@ func DeleteAllUserSessions(s *xorm.Session, userID int64) error {
 	if err != nil {
 		return err
 	}
-	events.DispatchOnCommit(s, &SessionsRevokedEvent{UserID: userID})
+	return revokeSessions(s, &SessionsRevokedEvent{UserID: userID})
+}
+
+func revokeSessions(s *xorm.Session, event *SessionsRevokedEvent) error {
+	if err := user.InvalidateSessionAuthCacheOnCommit(s, event.UserID); err != nil {
+		return err
+	}
+	events.DispatchOnCommit(s, event)
 	return nil
 }
 

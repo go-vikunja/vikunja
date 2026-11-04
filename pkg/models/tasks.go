@@ -108,7 +108,7 @@ type Task struct {
 	// An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.
 	Labels []*Label `xorm:"-" json:"labels" readOnly:"true" doc:"The labels on this task. Read-only here; use the label-task endpoints to add or remove labels."`
 	// The task color in hex
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The task color as a hex string without the leading '#'."`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"hexcolor" maxLength:"7" doc:"The task color as a hex string without the leading '#'."`
 	// Determines how far a task is left from being done
 	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done" doc:"How far the task is from done, between 0 and 1."`
 
@@ -170,6 +170,8 @@ type Task struct {
 	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
 	Position float64 `xorm:"-" json:"position" readOnly:"true" doc:"The task's position, saved per view. Only non-zero when the task is fetched through a view endpoint; use the task-position endpoint to change it."`
+
+	Positions []*TaskPosition `xorm:"-" json:"positions,omitempty" readOnly:"true" doc:"The task's stored position in each view of its project. Only present in create and duplicate responses."`
 
 	// Reactions on that task.
 	Reactions ReactionMap `xorm:"-" json:"reactions" readOnly:"true" doc:"Reactions on this task. Only present when requested via the reactions expand option."`
@@ -1297,6 +1299,14 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		return
 	}
 
+	can, err := (&Project{ID: ot.ProjectID}).CanWrite(s, a)
+	if err != nil {
+		return err
+	}
+	if !can {
+		return ErrGenericForbidden{}
+	}
+
 	if t.ProjectID == 0 {
 		t.ProjectID = ot.ProjectID
 	}
@@ -1309,11 +1319,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	// Old task has the stored reminders
 	ot.Reminders = reminders
-
-	// Update the assignees
-	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
-		return err
-	}
 
 	// All columns to update in a separate variable to be able to add to them
 	colsToUpdate := []string{
@@ -1340,12 +1345,20 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		for _, c := range colsToUpdate {
 			allowed[c] = true
 		}
+		// Not task columns; written separately below.
+		relationFields := map[string]bool{
+			"assignees":   true,
+			"reminders":   true,
+			"is_favorite": true,
+		}
 		cols := []string{}
 		for _, f := range fields {
-			if !allowed[f] {
+			if !allowed[f] && !relationFields[f] {
 				return ErrInvalidTaskColumn{Column: f}
 			}
-			cols = append(cols, f)
+			if !relationFields[f] {
+				cols = append(cols, f)
+			}
 			fieldSet[f] = true
 		}
 		colsToUpdate = cols
@@ -1392,6 +1405,15 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 		if !fieldSet["cover_image_attachment_id"] {
 			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
+		}
+		if !fieldSet["reminders"] {
+			t.Reminders = ot.Reminders
+		}
+	}
+
+	if len(fields) == 0 || fieldSet["assignees"] {
+		if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
+			return err
 		}
 	}
 
@@ -1558,6 +1580,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if err != nil {
 		return
 	}
+	if len(fields) > 0 && !fieldSet["is_favorite"] {
+		t.IsFavorite = wasFavorite
+	}
 	if t.IsFavorite && !wasFavorite {
 		if err := addToFavorites(s, t.ID, a, FavoriteKindTask); err != nil {
 			return err
@@ -1590,11 +1615,12 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 	// Which is why we merge the actual task struct with the one we got from the db
 	// The user struct overrides values in the actual one.
+	// Must happen before the merge, ot is what gets saved.
+	t.HexColor = utils.NormalizeHex(t.HexColor)
+
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
 		return err
 	}
-
-	t.HexColor = utils.NormalizeHex(t.HexColor)
 
 	//////
 	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
@@ -1677,6 +1703,17 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 // updateTasks updates multiple tasks with the same payload.
 // If fields is nil, it updates the default set of columns.
 func updateTasks(s *xorm.Session, a web.Auth, t *Task, ids []int64, fields []string) (tasks []*Task, err error) {
+	seen := make(map[int64]struct{}, len(ids))
+	uniqueIDs := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		uniqueIDs = append(uniqueIDs, id)
+	}
+	ids = uniqueIDs
+
 	// Ids may span projects; per-task locking would follow caller order, not view order.
 	existing := []*Task{}
 	err = s.Table(&Task{}).Where(builder.In("id", ids)).Distinct("project_id").Find(&existing)
@@ -1800,7 +1837,12 @@ func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*Pr
 }
 
 func addOneMonthToDate(d time.Time) time.Time {
-	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
+	// Clamp, otherwise time.Date rolls Feb 31 into March.
+	day := d.Day()
+	if lastDay := time.Date(d.Year(), d.Month()+2, 0, 0, 0, 0, 0, time.UTC).Day(); day > lastDay {
+		day = lastDay
+	}
+	return time.Date(d.Year(), d.Month()+1, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
 
 // addRepeatIntervalToTime advances t by whole multiples of duration until

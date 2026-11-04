@@ -115,6 +115,39 @@ func TestSavedFilter_ReadOne(t *testing.T) {
 	assert.NotNil(t, sf.Owner)
 }
 
+func TestSavedFilter_getSavedFiltersForUser(t *testing.T) {
+	t.Run("search is case-insensitive", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		filters, err := getSavedFiltersForUser(s, &user.User{ID: 1}, "TESTFILTER1")
+		require.NoError(t, err)
+		require.Len(t, filters, 1)
+		assert.Equal(t, int64(1), filters[0].ID)
+	})
+	t.Run("search ignores accents with unaccent", func(t *testing.T) {
+		if db.Type() != schemas.POSTGRES {
+			t.Skip("accent folding depends on the collation outside postgres")
+		}
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(1).Cols("title").Update(&SavedFilter{Title: "Manutenção"})
+		require.NoError(t, err)
+
+		filters, err := getSavedFiltersForUser(s, &user.User{ID: 1}, "manutencao")
+		require.NoError(t, err)
+		if !db.UnaccentAvailable() {
+			assert.Empty(t, filters)
+			return
+		}
+		require.Len(t, filters, 1)
+		assert.Equal(t, int64(1), filters[0].ID)
+	})
+}
+
 func TestSavedFilter_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -426,4 +459,12 @@ func TestSavedFilter_ZeroProjectUserGetsNoTaskPositions(t *testing.T) {
 			assert.Zero(t, positions())
 		})
 	}
+}
+
+func TestStaleFilterTaskIDs(t *testing.T) {
+	saved := map[int64]*TaskBucket{1: {TaskID: 1}, 2: {TaskID: 2}, 3: {TaskID: 3}}
+	matching := taskIDSet([]*Task{{ID: 2}, {ID: 4}})
+
+	assert.ElementsMatch(t, []int64{1, 3}, staleFilterTaskIDs(saved, matching))
+	assert.Empty(t, staleFilterTaskIDs(saved, taskIDSet([]*Task{{ID: 1}, {ID: 2}, {ID: 3}})))
 }

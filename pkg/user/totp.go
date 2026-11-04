@@ -18,7 +18,6 @@ package user
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -27,7 +26,6 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
@@ -91,8 +89,12 @@ func GetTOTPForUser(s *xorm.Session, user *User) (t *TOTP, err error) {
 	return
 }
 
-// EnrollTOTP creates a new TOTP entry for the user - it does not enable it yet.
-func EnrollTOTP(s *xorm.Session, user *User) (t *TOTP, err error) {
+// EnrollTOTP creates a new TOTP entry for the user once their password checks out - it does not enable it yet.
+func EnrollTOTP(s *xorm.Session, user *User, password string) (t *TOTP, err error) {
+	if err = CheckReauthPassword(user, password); err != nil {
+		return
+	}
+
 	isEnrolled, err := s.Where("user_id = ?", user.ID).Exist(&TOTP{})
 	if err != nil {
 		return
@@ -119,9 +121,13 @@ func EnrollTOTP(s *xorm.Session, user *User) (t *TOTP, err error) {
 	return
 }
 
-// EnableTOTP enables totp for a user. The provided passcode is used to verify the user has a working totp setup.
-func EnableTOTP(s *xorm.Session, passcode *TOTPPasscode) (err error) {
-	t, err := ValidateTOTPPasscode(s, passcode)
+// EnableTOTP enables totp for a user once their password checks out. The passcode verifies the user has a working totp setup.
+func EnableTOTP(s *xorm.Session, u *User, password, passcode string) (err error) {
+	if err = CheckReauthPassword(u, password); err != nil {
+		return
+	}
+
+	t, err := ValidateTOTPPasscode(s, &TOTPPasscode{User: u, Passcode: passcode})
 	if err != nil {
 		return
 	}
@@ -139,6 +145,30 @@ func DisableTOTP(s *xorm.Session, user *User) (err error) {
 		Where("user_id = ?", user.ID).
 		Delete(&TOTP{})
 	return
+}
+
+// Needs a passcode so a stolen session plus the password can't strip the second factor. Rolls s back on failure.
+func DisableTOTPWithReauth(s *xorm.Session, u *User, password, passcode string) error {
+	err := ThrottleReauth(u.ID, func() error {
+		if err := CheckUserPassword(u, password); err != nil {
+			return err
+		}
+		if passcode == "" {
+			return ErrInvalidTOTPPasscode{}
+		}
+		_, err := ValidateTOTPPasscode(s, &TOTPPasscode{User: u, Passcode: passcode})
+		return err
+	})
+	if err != nil {
+		// Rolled back first: HandleFailedTOTPAuth needs its own write lock on SQLite.
+		_ = s.Rollback()
+		if passcode != "" && IsErrInvalidTOTPPasscode(err) {
+			HandleFailedTOTPAuth(u)
+		}
+		return err
+	}
+
+	return DisableTOTP(s, u)
 }
 
 // ValidateTOTPPasscode validated totp codes of users.
@@ -206,11 +236,8 @@ func GetTOTPQrCodeAsJpegForUser(s *xorm.Session, user *User) ([]byte, error) {
 }
 
 // HandleFailedTOTPAuth records a failed TOTP attempt and locks the account
-// after 10 consecutive failures.
-//
-// Must not share the caller's session: the login handler rolls its session
-// back on auth failure, which would discard the lockout write
-// (GHSA-fgfv-pv97-6cmj). Opens its own session and commits independently.
+// after maxFailedLoginAttempts consecutive failures. Opens its own session,
+// see lockAccount.
 func HandleFailedTOTPAuth(user *User) {
 	log.Errorf("Invalid TOTP credentials provided for user %d", user.ID)
 
@@ -220,24 +247,10 @@ func HandleFailedTOTPAuth(user *User) {
 		return
 	}
 
-	a, _, err := keyvalue.Get(key)
+	attempts, _, err := keyvalue.GetInt64(key)
 	if err != nil {
 		log.Errorf("Could not get failed TOTP attempts for user %d: %s", user.ID, err)
 		return
-	}
-	// Redis backend returns the counter as a string; in-memory as int64.
-	attempts, ok := a.(int64)
-	if !ok {
-		attemptsStr, ok := a.(string)
-		if !ok {
-			log.Errorf("Unexpected type for failed TOTP attempts for user %d: %T", user.ID, a)
-			return
-		}
-		attempts, err = strconv.ParseInt(attemptsStr, 10, 64)
-		if err != nil {
-			log.Errorf("Could not convert failed TOTP attempts to int64 for user %d: %v, value: %s", user.ID, err, attemptsStr)
-			return
-		}
 	}
 
 	if attempts == 3 {
@@ -254,34 +267,9 @@ func HandleFailedTOTPAuth(user *User) {
 		return
 	}
 
-	if attempts < 10 {
+	if attempts < maxFailedLoginAttempts {
 		return
 	}
 
-	log.Infof("Blocking user account %d after 10 failed TOTP password attempts", user.ID)
-	s := db.NewSession()
-	defer s.Close()
-	defer events.CleanupPending(s)
-
-	if err := RequestUserPasswordResetToken(s, user); err != nil {
-		log.Errorf("Could not issue password reset token for user %d after 10 failed TOTP attempts: %s", user.ID, err)
-		_ = s.Rollback()
-		return
-	}
-	if err := notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTPNotification{User: user}, s); err != nil {
-		log.Errorf("Could not send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
-		_ = s.Rollback()
-		return
-	}
-	if err := user.SetStatus(s, StatusAccountLocked); err != nil {
-		log.Errorf("Could not lock user %d: %s", user.ID, err)
-		_ = s.Rollback()
-		return
-	}
-	events.DispatchOnCommit(s, &AccountLockedEvent{UserID: user.ID})
-	if err := s.Commit(); err != nil {
-		log.Errorf("Could not commit lockout for user %d: %s", user.ID, err)
-		return
-	}
-	events.DispatchPending(context.Background(), s)
+	lockAccount(user, key, &PasswordAccountLockedAfterInvalidTOTPNotification{User: user})
 }

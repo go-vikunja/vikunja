@@ -84,6 +84,24 @@ func TestTeam_Create(t *testing.T) {
 			"is_public":   true,
 		}, false)
 	})
+	t.Run("ignores client-set external id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{
+			Name:       "Testteam293_External",
+			ExternalID: "attacker-set",
+		}
+		err := team.Create(s, doer)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		assert.Empty(t, team.ExternalID)
+		db.AssertMissing(t, "teams", map[string]interface{}{
+			"external_id": "attacker-set",
+		})
+	})
 }
 
 func TestTeam_ReadOne(t *testing.T) {
@@ -313,6 +331,43 @@ func TestTeam_Update(t *testing.T) {
 		db.AssertExists(t, "teams", map[string]interface{}{
 			"id":   team.ID,
 			"name": "SomethingNew",
+		}, false)
+	})
+	t.Run("ignores client-set external id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{
+			ID:         1,
+			Name:       "SomethingNew",
+			ExternalID: "attacker-set",
+		}
+		err := team.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertMissing(t, "teams", map[string]interface{}{
+			"external_id": "attacker-set",
+		})
+	})
+	t.Run("keeps the existing external id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		team := &Team{
+			ID:         14,
+			Name:       "SomethingNew",
+			ExternalID: "attacker-set",
+		}
+		err := team.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"id":          14,
+			"external_id": "14",
 		}, false)
 	})
 	t.Run("empty name", func(t *testing.T) {

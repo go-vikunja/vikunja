@@ -19,8 +19,10 @@ package openid
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -486,5 +488,81 @@ func TestTokenEndpointAuthStyleFromDiscovery(t *testing.T) {
 		assert.Empty(t, authorization)
 		assert.Equal(t, "client1", clientID)
 		assert.Equal(t, "secret1", clientSecret)
+	})
+}
+
+func TestProviderLoadLogsFallbackDeprecationOnce(t *testing.T) {
+	server := newMockOIDCServer()
+	defer server.Close()
+
+	load := func(t *testing.T, key string, emailFallback, usernameFallback bool) {
+		t.Helper()
+		_, err := getProviderFromMap(map[string]interface{}{
+			"name":             "Test Provider",
+			"authurl":          server.URL,
+			"clientid":         "client1",
+			"clientsecret":     "secret1",
+			"emailfallback":    emailFallback,
+			"usernamefallback": usernameFallback,
+		}, key)
+		require.NoError(t, err)
+	}
+	expected := func(key, options string) string {
+		return fmt.Sprintf(
+			`OpenID provider \"%s\" has the deprecated option(s) %s enabled. `+
+				"They will be removed in a future release; users must link the provider from their account settings before then.",
+			key,
+			options,
+		)
+	}
+	const marker = "has the deprecated option(s)"
+
+	cases := []struct {
+		name             string
+		key              string
+		emailFallback    bool
+		usernameFallback bool
+		options          string
+	}{
+		{
+			name:             "both options",
+			key:              "startup-warn-both",
+			emailFallback:    true,
+			usernameFallback: true,
+			options:          "emailfallback, usernamefallback",
+		},
+		{
+			name:          "email fallback only",
+			key:           "startup-warn-email",
+			emailFallback: true,
+			options:       "emailfallback",
+		},
+		{
+			name:             "username fallback only",
+			key:              "startup-warn-username",
+			usernameFallback: true,
+			options:          "usernamefallback",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			logged := captureWarnings(t)
+
+			// A provider rebuild (cache cleanup, availability retry) must not repeat it.
+			load(t, tc.key, tc.emailFallback, tc.usernameFallback)
+			load(t, tc.key, tc.emailFallback, tc.usernameFallback)
+
+			out := logged()
+			assert.Contains(t, out, "level=WARN")
+			assert.Contains(t, out, expected(tc.key, tc.options))
+			assert.Equal(t, 1, strings.Count(out, marker))
+		})
+	}
+	t.Run("no fallback option", func(t *testing.T) {
+		logged := captureWarnings(t)
+
+		load(t, "startup-warn-none", false, false)
+
+		assert.NotContains(t, logged(), marker)
 	})
 }

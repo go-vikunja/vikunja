@@ -335,6 +335,8 @@ func (t *Team) ReadAll(s *xorm.Session, a web.Auth, search string, page int, per
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams [put]
 func (t *Team) Create(s *xorm.Session, a web.Auth) (err error) {
+	// Only team sync may set it; it marks the team as SSO-managed.
+	t.ExternalID = ""
 
 	err = t.CreateNewTeam(s, a, true)
 	if err != nil {
@@ -423,6 +425,8 @@ func (t *Team) Update(s *xorm.Session, _ web.Auth) (err error) {
 	if err != nil {
 		return
 	}
+
+	t.ExternalID = ""
 
 	_, err = s.ID(t.ID).UseBool("is_public").Update(t)
 	if err != nil {

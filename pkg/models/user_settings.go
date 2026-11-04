@@ -73,16 +73,28 @@ func ChangeUserPassword(ctx context.Context, s *xorm.Session, u *user.User, oldP
 		return user.ErrEmptyOldPassword{}
 	}
 
-	if _, err := user.CheckUserCredentials(ctx, s, &user.Login{Username: u.Username, Password: oldPassword}); err != nil {
+	target, err := user.GetUserByID(s, u.ID)
+	if err != nil {
+		return err
+	}
+	if !target.IsLocalUser() {
+		return &user.ErrAccountIsNotLocal{UserID: target.ID}
+	}
+
+	err = user.ThrottleReauth(target.ID, func() error {
+		return user.CheckUserPasswordCountingFailures(ctx, s, target, oldPassword)
+	})
+	if err != nil {
 		return err
 	}
 
-	return setUserPasswordAndInvalidateSessions(s, u, newPassword)
+	return SetUserPasswordAndInvalidateSessions(s, target, newPassword)
 }
 
-// setUserPasswordAndInvalidateSessions is shared by the self-service and admin
-// password flows: a changed password must always kill existing sessions.
-func setUserPasswordAndInvalidateSessions(s *xorm.Session, u *user.User, newPassword string) error {
+// SetUserPasswordAndInvalidateSessions is shared by every password-change
+// flow: a changed password must always kill existing sessions. Callers must
+// dispatch pending events after committing.
+func SetUserPasswordAndInvalidateSessions(s *xorm.Session, u *user.User, newPassword string) error {
 	if err := user.UpdateUserPassword(s, u, newPassword); err != nil {
 		return err
 	}

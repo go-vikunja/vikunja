@@ -17,16 +17,23 @@
 package commands
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"golang.org/x/term"
+
+	"code.vikunja.io/veans/internal/auth"
 	"code.vikunja.io/veans/internal/client"
 	"code.vikunja.io/veans/internal/config"
 	"code.vikunja.io/veans/internal/credentials"
 	"code.vikunja.io/veans/internal/output"
+	"code.vikunja.io/veans/internal/trust"
 )
 
 // runtime bundles the artifacts every non-init command needs: parsed config,
@@ -38,7 +45,7 @@ type runtime struct {
 	client *client.Client
 }
 
-func loadRuntime() (*runtime, error) {
+func loadRuntime(ctx context.Context) (*runtime, error) {
 	path, err := config.Find("")
 	if err != nil {
 		if errors.Is(err, config.ErrNotFound) {
@@ -51,7 +58,14 @@ func loadRuntime() (*runtime, error) {
 	if err != nil {
 		return nil, err
 	}
-	store := credentials.Default()
+	return newRuntime(ctx, cfg, defaultGate(auth.NewStdPrompter()), credentials.Default())
+}
+
+func newRuntime(ctx context.Context, cfg *config.Config, gate *trust.Gate, store credentials.Store) (*runtime, error) {
+	// Before store.Get: VEANS_TOKEN matches any server.
+	if err := gate.Check(cfg.Server); err != nil {
+		return nil, err
+	}
 	tok, err := store.Get(cfg.Server, cfg.Bot.Username)
 	if err != nil {
 		return nil, output.Wrap(output.CodeAuth, err,
@@ -62,11 +76,52 @@ func loadRuntime() (*runtime, error) {
 	if cfg.HTTPTimeout > 0 {
 		c.HTTPClient.Timeout = cfg.HTTPTimeout
 	}
-	return &runtime{
+	rt := &runtime{
 		cfg:    cfg,
 		store:  store,
 		client: c,
-	}, nil
+	}
+	if cfg.FrontendURL == "" {
+		rt.backfillFrontendURL(ctx)
+	}
+	return rt, nil
+}
+
+// nil without a terminal, so the trust gate fails closed for hooks, agents and CI.
+func interactive(p *auth.StdPrompter) trust.Prompter {
+	if term.IsTerminal(int(os.Stdin.Fd())) && term.IsTerminal(int(os.Stderr.Fd())) {
+		return p
+	}
+	return nil
+}
+
+func defaultGate(p *auth.StdPrompter) *trust.Gate {
+	return trust.Default(interactive(p))
+}
+
+// backfillFrontendURL migrates configs written before frontend_url existed.
+// Best-effort: on failure TaskURL falls back to Server and the next run retries.
+func (r *runtime) backfillFrontendURL(ctx context.Context) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	info, err := r.client.Info(ctx)
+	if err != nil {
+		return
+	}
+	r.cfg.FrontendURL = cmp.Or(info.FrontendURL, r.cfg.Server)
+	_ = r.cfg.Save()
+}
+
+// withURLs sets URL on tasks and their related tasks for agent output.
+func (r *runtime) withURLs(tasks ...*client.Task) {
+	for _, t := range tasks {
+		t.URL = r.cfg.TaskURL(t.ID)
+		for _, related := range t.RelatedTasks {
+			for _, task := range related {
+				task.URL = r.cfg.TaskURL(task.ID)
+			}
+		}
+	}
 }
 
 // resolveTaskID accepts PROJ-NN, #NN, or a bare integer and returns the

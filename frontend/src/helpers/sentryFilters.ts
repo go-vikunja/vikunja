@@ -1,3 +1,4 @@
+import {ApiError} from '@/client/problem'
 import {SENSITIVE_QUERY_PARAMS} from '@/helpers/sensitiveQueryParams'
 
 // Failed requests are surfaced to the user through the UI already, and an
@@ -49,6 +50,9 @@ const NETWORK_ERROR_PATTERNS = [
 	/networkerror/i,
 ]
 
+// Vue's DOM ops hitting a node a browser translator swapped out from under it.
+const DETACHED_NODE_ERROR_PATTERN = /\b(?:insertBefore|nextSibling|parentNode|removeChild)\b/
+
 const THIRD_PARTY_URL_PATTERN = /^(?:(?:chrome|moz|safari-web|safari|ms-browser)-extension:|iabjs:)/i
 
 type SentryEventLike = {
@@ -69,12 +73,17 @@ function isRequestError(e: unknown): boolean {
 		return true
 	}
 
+	// 5xx are server bugs we want to see.
+	if (e instanceof ApiError) {
+		return e.status < 500
+	}
+
 	return isApiErrorBody(e)
 }
 
-// API error bodies are thrown as parsed JSON, so they are always plain objects.
-// Requiring that keeps out DOMException and other Error subclasses, which also
-// carry a `code` and a `message`.
+// Problem bodies copied out of an ApiError, e.g. RefreshTokenError's cause.
+// Requiring a plain object keeps out DOMException and other Error subclasses,
+// which also carry a `code` and a `message`.
 function isApiErrorBody(e: unknown): boolean {
 	if (typeof e !== 'object' || e === null || Object.getPrototypeOf(e) !== Object.prototype) {
 		return false
@@ -136,6 +145,23 @@ function isEmptyObject(e: unknown): boolean {
 		&& Object.keys(e).length === 0
 }
 
+// Chrome's and Edge's translators replace text nodes Vue still references with
+// <font> wrappers. We never render <font> ourselves, only user HTML might.
+function isPageMachineTranslated(): boolean {
+	if (typeof document === 'undefined') {
+		return false
+	}
+
+	return Array.from(document.getElementsByTagName('font'))
+		.some(font => !font.closest('[data-user-content]'))
+}
+
+function isTranslatorDomError(e: unknown): boolean {
+	return e instanceof TypeError
+		&& DETACHED_NODE_ERROR_PATTERN.test(e.message)
+		&& isPageMachineTranslated()
+}
+
 export function shouldDropEvent(originalException: unknown, event?: SentryEventLike): boolean {
 	if (isNoisyMessage(event?.message)) {
 		return true
@@ -146,6 +172,10 @@ export function shouldDropEvent(originalException: unknown, event?: SentryEventL
 	}
 
 	if (hasThirdPartyTopFrame(event)) {
+		return true
+	}
+
+	if (isTranslatorDomError(originalException)) {
 		return true
 	}
 
@@ -188,6 +218,12 @@ export function isReportableResourceUrl(url: string, pageUrl: string): boolean {
 		return false
 	}
 
+	// API images arrive as blob: or data: urls, so a cross-origin one comes from
+	// user content, a custom logo or a browser extension, never from our bundle.
+	if (resource.origin !== page.origin) {
+		return false
+	}
+
 	// An empty, blank or fragment-only src resolves to the page itself, which is never a resource.
 	resource.hash = ''
 	page.hash = ''
@@ -209,18 +245,40 @@ export function stripNavigationFragment<T>(span: T): T {
 const SENSITIVE_PARAM_PATTERN = new RegExp(`((?:^|[?&#]|%3F|%26)(?:${SENSITIVE_QUERY_PARAMS.join('|')})(?:=|%3D))[^&#\\s"']*`, 'gi')
 
 export function redactSensitiveParams<T>(value: T): T {
+	return redact(value, new WeakMap())
+}
+
+// Events can hold cycles: console breadcrumbs keep the raw logged arguments
+// until Sentry normalizes the event, which happens after our event processor.
+function redact<T>(value: T, copies: WeakMap<object, unknown>): T {
 	if (typeof value === 'string') {
 		return value.replace(SENSITIVE_PARAM_PATTERN, '$1[Filtered]') as T
 	}
 
-	if (Array.isArray(value)) {
-		return value.map(redactSensitiveParams) as T
+	if (!value || typeof value !== 'object') {
+		return value
 	}
 
-	if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
-		return Object.fromEntries(
-			Object.entries(value).map(([key, v]) => [key, redactSensitiveParams(v)]),
-		) as T
+	if (copies.has(value)) {
+		return copies.get(value) as T
+	}
+
+	if (Array.isArray(value)) {
+		const copy: unknown[] = []
+		copies.set(value, copy)
+		for (const item of value) {
+			copy.push(redact(item, copies))
+		}
+		return copy as T
+	}
+
+	if (Object.getPrototypeOf(value) === Object.prototype) {
+		const copy: Record<string, unknown> = {}
+		copies.set(value, copy)
+		for (const [key, v] of Object.entries(value)) {
+			copy[key] = redact(v, copies)
+		}
+		return copy as T
 	}
 
 	return value

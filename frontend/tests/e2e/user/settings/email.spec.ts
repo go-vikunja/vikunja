@@ -20,7 +20,7 @@ async function confirmationLink(request: APIRequestContext, mailpitUrl: string, 
 	const response = await request.get(new URL(`/api/v1/message/${messageId}`, mailpitUrl).href)
 	expect(response.status()).toBe(200)
 	const mail: {Text: string} = await response.json()
-	const link = mail.Text.match(/https?:\/\/[^\s<>]+\?userEmailConfirm=[a-zA-Z0-9]+/)?.[0]
+	const link = mail.Text.match(/https?:\/\/[^\s<>]+#userEmailConfirm=[a-zA-Z0-9]+/)?.[0]
 	expect(link).toBeDefined()
 	return link!
 }

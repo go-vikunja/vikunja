@@ -28,6 +28,7 @@ vi.mock('@/message', () => ({
 
 import TimeEntryList from './TimeEntryList.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import User from '@/components/misc/User.vue'
 
 function mountList(
 	entries: Parameters<typeof normalizeTimeEntry>[0][],
@@ -69,7 +70,7 @@ describe('TimeEntryList', () => {
 	it('renders no NaN for an entry with an unusable start time', () => {
 		const wrapper = mountList([{
 			id: 1,
-			user_id: 1,
+			user: {id: 1},
 			task_id: 0,
 			project_id: 0,
 			start_time: '0001-01-01T00:00:00Z',
@@ -78,14 +79,14 @@ describe('TimeEntryList', () => {
 		}])
 
 		expect(wrapper.text()).not.toContain('NaN')
-		expect(wrapper.findAll('tbody td')[1]?.text()).toBe('')
 		expect(wrapper.findAll('tbody td')[2]?.text()).toBe('')
+		expect(wrapper.findAll('tbody td')[3]?.text()).toBe('')
 	})
 
 	it('shows the duration of a completed entry', () => {
 		const wrapper = mountList([{
 			id: 2,
-			user_id: 1,
+			user: {id: 1},
 			task_id: 0,
 			project_id: 0,
 			start_time: '2026-06-07T09:00:00Z',
@@ -93,18 +94,25 @@ describe('TimeEntryList', () => {
 			comment: '',
 		}])
 
-		expect(wrapper.findAll('tbody td')[2]?.text()).toBe('1h 30m')
+		expect(wrapper.findAll('tbody td')[3]?.text()).toBe('1h 30m')
 	})
 
 	const entry = {
 		id: 3,
-		user_id: 1,
+		user: {id: 1},
 		task_id: 0,
 		project_id: 0,
 		start_time: '2026-06-07T09:00:00Z',
 		end_time: '2026-06-07T10:00:00Z',
 		comment: '',
 	}
+
+	it('shows the user who tracked the entry', () => {
+		const user = {id: 2, username: 'user2', name: 'Someone'}
+		const wrapper = mountList([{...entry, user}])
+
+		expect(wrapper.findComponent(User).props('user')).toEqual(user)
+	})
 
 	it('shows the row actions to the owning user', () => {
 		expect(mountList([entry]).findAllComponents(BaseButton)).toHaveLength(2)

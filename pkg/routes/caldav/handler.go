@@ -92,8 +92,7 @@ func ProjectHandler(c *echo.Context) error {
 		}
 	}
 
-	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
-	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
+	logRequest(c.Request().Header, body)
 
 	// RFC 6578: intercept sync-collection REPORT before caldav-go sees it.
 	// caldav-go returns 412 (empty body) for unknown REPORT types, which causes
@@ -239,12 +238,21 @@ func PrincipalHandler(c *echo.Context) error {
 	// Restore the io.ReadCloser to its original state
 	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 
-	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
-	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
+	logRequest(c.Request().Header, body)
 
 	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())
 	return nil
+}
+
+const maxLoggedBodySize = 4096
+
+func logRequest(header http.Header, body []byte) {
+	if len(body) > maxLoggedBodySize {
+		body = body[:maxLoggedBodySize]
+	}
+	log.Debugf("[CALDAV] Request Body: %s", body)
+	log.Debugf("[CALDAV] Request Headers: %v", log.SafeHeaders(header))
 }
 
 // EntryHandler handles all request to principal resources
@@ -264,8 +272,7 @@ func EntryHandler(c *echo.Context) error {
 	// Restore the io.ReadCloser to its original state
 	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 
-	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
-	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
+	logRequest(c.Request().Header, body)
 
 	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
 	response.Write(c.Response())

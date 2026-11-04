@@ -156,3 +156,8 @@ func TestConvertFieldValue(t *testing.T) {
 		})
 	})
 }
+
+func TestDotEnvKeys(t *testing.T) {
+	keys := dotEnvKeys("VIKUNJA_DATABASE_PASSWORD=hunter2\nVIKUNJA_SERVICE_SECRET=a=b\n\n")
+	assert.Equal(t, []string{"VIKUNJA_DATABASE_PASSWORD", "VIKUNJA_SERVICE_SECRET"}, keys)
+}

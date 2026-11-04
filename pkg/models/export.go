@@ -19,8 +19,10 @@ package models
 import (
 	"archive/zip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"time"
 
@@ -34,15 +36,18 @@ import (
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
-func ExportUserData(s *xorm.Session, u *user.User) (err error) {
+// The caller deletes the replaced export only after committing.
+func ExportUserData(s *xorm.Session, u *user.User) (previousExportFileID int64, err error) {
 	dumpFile, err := os.CreateTemp("", "vikunja-export-*.zip")
 	if err != nil {
-		return fmt.Errorf("error creating temp file: %w", err)
+		return 0, fmt.Errorf("error creating temp file: %w", err)
 	}
 	tmpFilename := dumpFile.Name()
+	defer os.Remove(tmpFilename) // #nosec G703 -- path from internally created temp file
 	defer dumpFile.Close()
 
 	dumpWriter := zip.NewWriter(dumpFile)
@@ -51,27 +56,27 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	// Get the data
 	taskIDs, err := exportProjectsAndTasks(s, u, dumpWriter)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	// Task attachment files
 	err = exportTaskAttachments(s, dumpWriter, taskIDs)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	// Saved filters
 	err = exportSavedFilters(s, u, dumpWriter)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	// Background files
 	err = exportProjectBackgrounds(s, u, dumpWriter)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	// Vikunja Version
 	err = utils.WriteBytesToZip("VERSION", []byte(version.Version), dumpWriter)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// If we reuse the same file again, saving it as a file in Vikunja will save it as a file with 0 bytes in size.
@@ -81,39 +86,100 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 
 	exported, err := os.Open(tmpFilename) // #nosec G703 -- tmpFilename is generated internally, not from user input
 	if err != nil {
-		return err
+		return 0, err
 	}
+	defer exported.Close()
 
 	stat, err := exported.Stat()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	exportFile, err := files.CreateWithMimeAndSession(s, exported, tmpFilename, uint64(stat.Size()), u, "application/zip", false)
 	if err != nil {
-		return err
+		return 0, err
+	}
+	defer func() {
+		if err == nil {
+			return
+		}
+		// The caller's rollback drops the row, not the blob.
+		if rmErr := files.DeleteBlob(exportFile.ID); rmErr != nil && !errors.Is(rmErr, fs.ErrNotExist) {
+			log.Errorf("Could not remove blob %d of failed export for user %d: %s", exportFile.ID, u.ID, rmErr)
+		}
+	}()
+
+	current := &user.User{}
+	_, err = s.Where("id = ?", u.ID).Cols("export_file_id").Get(current)
+	if err != nil {
+		return 0, err
 	}
 
-	// Save the file id with the user
-	u.ExportFileID = exportFile.ID
-	_, err = s.
-		Where("id = ?", u.ID).
-		Cols("export_file_id").
-		Update(u)
+	err = replaceExportFileID(s, u.ID, current.ExportFileID, exportFile.ID)
 	if err != nil {
+		return 0, err
+	}
+	u.ExportFileID = exportFile.ID
+
+	// Send a notification
+	err = notifications.Notify(u, &DataExportReadyNotification{
+		User: u,
+	}, s)
+	if err != nil {
+		return 0, err
+	}
+
+	return current.ExportFileID, nil
+}
+
+// Fails if another export replaced oldID in the meantime, so the export it replaced isn't lost.
+func replaceExportFileID(s *xorm.Session, userID, oldID, newID int64) error {
+	var current builder.Cond = builder.Eq{"export_file_id": oldID}
+	if oldID == 0 {
+		current = builder.Or(current, builder.IsNull{"export_file_id"})
+	}
+	updated, err := s.
+		Where("id = ?", userID).
+		And(current).
+		Cols("export_file_id").
+		Update(&user.User{ExportFileID: newID})
+	if err != nil {
+		return err
+	}
+	if updated == 0 {
+		return fmt.Errorf("export file of user %d changed during the export", userID)
+	}
+	return nil
+}
+
+// Only logs errors: the caller's change is already committed.
+func deleteFileInNewSession(fileID int64) {
+	if fileID == 0 {
 		return
 	}
 
-	// Remove the old file
-	err = os.Remove(exported.Name()) // #nosec G703 -- path from internally created temp file
-	if err != nil {
+	s := db.NewSession()
+	defer s.Close()
+
+	if err := deleteFileIfExists(s, fileID); err != nil {
+		_ = s.Rollback()
+		log.Errorf("Could not remove file %d: %s", fileID, err)
+		return
+	}
+	if err := s.Commit(); err != nil {
+		log.Errorf("Could not remove file %d: %s", fileID, err)
+	}
+}
+
+func deleteFileIfExists(s *xorm.Session, fileID int64) error {
+	if fileID == 0 {
+		return nil
+	}
+	err := (&files.File{ID: fileID}).Delete(s)
+	if err != nil && !files.IsErrFileDoesNotExist(err) {
 		return err
 	}
-
-	// Send a notification
-	return notifications.Notify(u, &DataExportReadyNotification{
-		User: u,
-	}, s)
+	return nil
 }
 
 func getRawTasksForExport(s *xorm.Session, projectIDs []int64, a web.Auth) (tasks []*Task, err error) {
@@ -464,58 +530,62 @@ type UserExportStatus struct {
 }
 
 func RegisterOldExportCleanupCron() {
-	const logPrefix = "[User Export Cleanup Cron] "
-
-	err := cron.Schedule("0 * * * *", func() {
-		s := db.NewSession()
-		defer s.Close()
-
-		users := []*user.User{}
-		err := s.Where("export_file_id IS NOT NULL AND export_file_id != ?", 0).Find(&users)
-		if err != nil {
-			log.Errorf(logPrefix+"Could not get users with export files: %s", err)
-			return
-		}
-
-		fileIDs := []int64{}
-		for _, u := range users {
-			fileIDs = append(fileIDs, u.ExportFileID)
-		}
-
-		fs := []*files.File{}
-		err = s.Where("created < ?", time.Now().Add(-time.Hour*24*7)).In("id", fileIDs).Find(&fs)
-		if err != nil {
-			log.Errorf(logPrefix+"Could not get users with export files: %s", err)
-			return
-		}
-
-		if len(fs) == 0 {
-			return
-		}
-
-		log.Debugf(logPrefix+"Removing %d old user data exports...", len(fs))
-
-		for _, f := range fs {
-			err = f.Delete(s)
-			if err != nil {
-				log.Errorf(logPrefix+"Could not remove user export file %d: %s", f.ID, err)
-				return
-			}
-		}
-
-		_, err = s.In("export_file_id", fileIDs).Cols("export_file_id").Update(&user.User{})
-		if err != nil {
-			log.Errorf(logPrefix+"Could not update user export file state: %s", err)
-			return
-		}
-
-		log.Debugf(logPrefix+"Removed %d old user data exports...", len(fs))
-
-		if err := s.Commit(); err != nil {
-			log.Errorf(logPrefix+"Error committing export cleanup: %s", err)
-		}
-	})
+	err := cron.Schedule("0 * * * *", cleanupOldUserExports)
 	if err != nil {
 		log.Fatalf("Could not register old export cleanup cron: %s", err)
+	}
+}
+
+func cleanupOldUserExports() {
+	const logPrefix = "[User Export Cleanup Cron] "
+
+	s := db.NewSession()
+	defer s.Close()
+
+	users := []*user.User{}
+	err := s.Where("export_file_id IS NOT NULL AND export_file_id != ?", 0).Find(&users)
+	if err != nil {
+		log.Errorf(logPrefix+"Could not get users with export files: %s", err)
+		return
+	}
+
+	fileIDs := []int64{}
+	for _, u := range users {
+		fileIDs = append(fileIDs, u.ExportFileID)
+	}
+
+	fs := []*files.File{}
+	err = s.Where("created < ?", time.Now().Add(-time.Hour*24*7)).In("id", fileIDs).Find(&fs)
+	if err != nil {
+		log.Errorf(logPrefix+"Could not get users with export files: %s", err)
+		return
+	}
+
+	if len(fs) == 0 {
+		return
+	}
+
+	log.Debugf(logPrefix+"Removing %d old user data exports...", len(fs))
+
+	expiredIDs := make([]int64, 0, len(fs))
+	for _, f := range fs {
+		expiredIDs = append(expiredIDs, f.ID)
+		err = deleteFileIfExists(s, f.ID)
+		if err != nil {
+			log.Errorf(logPrefix+"Could not remove user export file %d: %s", f.ID, err)
+			return
+		}
+	}
+
+	_, err = s.In("export_file_id", expiredIDs).Cols("export_file_id").Update(&user.User{})
+	if err != nil {
+		log.Errorf(logPrefix+"Could not update user export file state: %s", err)
+		return
+	}
+
+	log.Debugf(logPrefix+"Removed %d old user data exports...", len(fs))
+
+	if err := s.Commit(); err != nil {
+		log.Errorf(logPrefix+"Error committing export cleanup: %s", err)
 	}
 }

@@ -105,12 +105,23 @@ func TestDeleteAllUserSessions(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
+	cacheKey := func() string {
+		key, err := user.SessionAuthCacheKey(2, "some-session")
+		require.NoError(t, err)
+		return key
+	}
+	before := cacheKey()
+
 	require.NoError(t, DeleteAllUserSessions(s, 2))
 	assert.Zero(t, events.CountDispatchedEvents((&SessionsRevokedEvent{}).Name()))
+	beforeCommit := cacheKey()
+	assert.NotEqual(t, before, beforeCommit, "must invalidate before commit")
 
 	require.NoError(t, s.Commit())
 	events.DispatchPending(context.Background(), s)
 
 	db.AssertMissing(t, "sessions", map[string]interface{}{"user_id": 2})
 	assert.Equal(t, &SessionsRevokedEvent{UserID: 2}, singleDispatchedEvent[*SessionsRevokedEvent](t))
+	// GHSA-4qvp-948j-4cgv: a request racing the transaction may have cached under beforeCommit.
+	assert.NotEqual(t, beforeCommit, cacheKey(), "must invalidate again once DispatchPending returns")
 }

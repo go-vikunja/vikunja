@@ -55,7 +55,7 @@ const navigationItems = computed(() => {
 		{
 			title: t('migrate.title'),
 			routeName: 'migrate.start',
-			activeRouteNames: ['migrate.service'],
+			activeRouteNames: ['migrate.service', 'migrate.csv'],
 			condition: migratorsEnabled.value,
 		},
 		{

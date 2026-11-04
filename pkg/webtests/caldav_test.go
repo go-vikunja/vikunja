@@ -1264,6 +1264,48 @@ func TestCaldavProppatch(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
 	})
 
+	t.Run("Duplicate properties get a single propstat", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		const dupBody = `<D:propertyupdate xmlns:D="DAV:"><D:set><D:prop><D:displayname>a</D:displayname></D:prop></D:set>` +
+			`<D:remove><D:prop><D:displayname/><D:displayname/></D:prop></D:remove></D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, dupBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+
+		var ms multistatus
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &ms))
+		require.Len(t, ms.Responses, 1)
+		require.Len(t, ms.Responses[0].Propstats, 1)
+	})
+
+	t.Run("Too many properties returns 413", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		var props strings.Builder
+		for i := range 101 {
+			fmt.Fprintf(&props, "<x:p%d/>", i)
+		}
+		body := `<D:propertyupdate xmlns:D="DAV:" xmlns:x="urn:x"><D:set><D:prop>` + props.String() + `</D:prop></D:set></D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, body, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Result().StatusCode)
+	})
+
+	t.Run("Overlong property namespace returns 400", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		body := `<D:propertyupdate xmlns:D="DAV:" xmlns:x="` + strings.Repeat("x", 257) + `"><D:set><D:prop><x:a/></D:prop></D:set></D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, body, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
+	})
+
+	t.Run("Oversized body returns 413", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		body := `<D:propertyupdate xmlns:D="DAV:"><D:set><D:prop><D:displayname>` + strings.Repeat("a", 64*1024) + `</D:displayname></D:prop></D:set></D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, body, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Result().StatusCode)
+	})
+
 	t.Run("Nonexistent project returns 404", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, setBody, nil, map[string]string{"project": "999999"})

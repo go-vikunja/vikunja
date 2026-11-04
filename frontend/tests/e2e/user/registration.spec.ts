@@ -69,7 +69,7 @@ test.describe('Registration', () => {
 			expect(response.status()).toBe(200)
 			const mail: {Text: string, To: {Address: string}[]} = await response.json()
 			expect(mail.To).toContainEqual(expect.objectContaining({Address: email}))
-			const confirmationUrl = mail.Text.match(/https?:\/\/[^\s<>]+\?userEmailConfirm=[a-zA-Z0-9]+/)?.[0]
+			const confirmationUrl = mail.Text.match(/https?:\/\/[^\s<>]+#userEmailConfirm=[a-zA-Z0-9]+/)?.[0]
 			expect(confirmationUrl).toBeDefined()
 			await page.goto(confirmationUrl!)
 			await expect(page.locator('div.message.success')).toContainText('You successfully confirmed your email')

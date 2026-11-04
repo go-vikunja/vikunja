@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,7 +44,7 @@ func TestTimeEntryListener(t *testing.T) {
 		license.SetForTests([]license.Feature{license.FeatureTimeTracking})
 		defer license.ResetForTests()
 
-		ev := &models.TimeEntryCreatedEvent{TimeEntry: &models.TimeEntry{ID: 4, UserID: 1}}
+		ev := &models.TimeEntryCreatedEvent{TimeEntry: &models.TimeEntry{ID: 4, User: &user.User{ID: 1}}}
 		events.TestListener(t, ev, &TimeEntryListener{wsEvent: "timer.created"})
 
 		require.Len(t, conn.send, 1)
@@ -61,7 +62,7 @@ func TestTimeEntryListener(t *testing.T) {
 		license.SetForTests([]license.Feature{license.FeatureTimeTracking})
 		defer license.ResetForTests()
 
-		ev := &models.TimeEntryUpdatedEvent{TimeEntry: &models.TimeEntry{ID: 4, UserID: 1}}
+		ev := &models.TimeEntryUpdatedEvent{TimeEntry: &models.TimeEntry{ID: 4, User: &user.User{ID: 1}}}
 		events.TestListener(t, ev, &TimeEntryListener{wsEvent: "timer.updated"})
 
 		require.Len(t, conn.send, 1)
@@ -75,7 +76,7 @@ func TestTimeEntryListener(t *testing.T) {
 		license.SetForTests([]license.Feature{license.FeatureTimeTracking})
 		defer license.ResetForTests()
 
-		ev := &models.TimeEntryDeletedEvent{TimeEntry: &models.TimeEntry{ID: 4, UserID: 1}}
+		ev := &models.TimeEntryDeletedEvent{TimeEntry: &models.TimeEntry{ID: 4, User: &user.User{ID: 1}}}
 		events.TestListener(t, ev, &TimeEntryListener{wsEvent: "timer.deleted"})
 
 		require.Len(t, conn.send, 1)
@@ -92,7 +93,7 @@ func TestTimeEntryListener(t *testing.T) {
 		GetHub().Register(conn)
 		license.ResetForTests() // free mode
 
-		ev := &models.TimeEntryUpdatedEvent{TimeEntry: &models.TimeEntry{ID: 4, UserID: 1}}
+		ev := &models.TimeEntryUpdatedEvent{TimeEntry: &models.TimeEntry{ID: 4, User: &user.User{ID: 1}}}
 		events.TestListener(t, ev, &TimeEntryListener{wsEvent: "timer.updated"})
 
 		assert.Empty(t, conn.send)
@@ -105,7 +106,7 @@ func TestTimeEntryListener(t *testing.T) {
 		license.SetForTests([]license.Feature{license.FeatureTimeTracking})
 		defer license.ResetForTests()
 
-		ev := &models.TimeEntryUpdatedEvent{TimeEntry: &models.TimeEntry{ID: 4, UserID: 1}}
+		ev := &models.TimeEntryUpdatedEvent{TimeEntry: &models.TimeEntry{ID: 4, User: &user.User{ID: 1}}}
 		events.TestListener(t, ev, &TimeEntryListener{wsEvent: "timer.updated"})
 
 		assert.Empty(t, other.send, "a different user must not receive the timer update")

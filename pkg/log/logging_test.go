@@ -17,6 +17,8 @@
 package log
 
 import (
+	"context"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
@@ -80,4 +82,27 @@ func TestConfigureStandardLoggerSetsPathBeforeHandler(t *testing.T) {
 	expectedPath := filepath.Join(tempDir, "standard.log")
 	_, err := os.Stat(expectedPath)
 	require.NoError(t, err, "Log file must be created in the configured path, not the default")
+}
+
+func TestMakeLogHandlerLevelAliases(t *testing.T) {
+	tests := []struct {
+		level    string
+		expected slog.Level
+	}{
+		{"CRITICAL", slog.LevelError},
+		{"ERROR", slog.LevelError},
+		{"WARNING", slog.LevelWarn},
+		{"NOTICE", slog.LevelInfo},
+		{"INFO", slog.LevelInfo},
+		{"DEBUG", slog.LevelDebug},
+		{"debug", slog.LevelDebug},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.level, func(t *testing.T) {
+			handler := makeLogHandler(true, "off", "standard", tt.level, "text")
+			assert.True(t, handler.Enabled(context.Background(), tt.expected))
+			assert.False(t, handler.Enabled(context.Background(), tt.expected-1))
+		})
+	}
 }

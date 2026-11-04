@@ -179,6 +179,20 @@ func TestParseFilter(t *testing.T) {
 
 		require.Error(t, err)
 	})
+	t.Run("word concatenator hints at && and ||", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("done = false and due_date >= 2026-01-01", "UTC")
+
+		var valueErr ErrInvalidTaskFilterValue
+		require.ErrorAs(t, err, &valueErr)
+		assert.Contains(t, valueErr.HTTPError().Message, "&&")
+	})
+	t.Run("invalid value without word concatenator has no hint", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("done = maybe", "UTC")
+
+		var valueErr ErrInvalidTaskFilterValue
+		require.ErrorAs(t, err, &valueErr)
+		assert.NotContains(t, valueErr.HTTPError().Message, "&&")
+	})
 	t.Run("multiple filters with AND", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("done = false && priority > 3", "UTC")
 

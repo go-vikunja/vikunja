@@ -40,6 +40,37 @@ func TestProjectDuplicate(t *testing.T) {
 		testProjectDuplicate(t, 35, 6)
 	})
 
+	t.Run("buckets above the per-view cap are copied", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		// Inserted directly: buckets from before the cap.
+		for range maxBucketsPerView {
+			_, err := s.Insert(&Bucket{Title: "pre-cap", ProjectViewID: 4, CreatedByID: u.ID})
+			require.NoError(t, err)
+		}
+		oldCount, err := s.Where("project_view_id = ?", 4).Count(&Bucket{})
+		require.NoError(t, err)
+		require.Greater(t, oldCount, int64(maxBucketsPerView))
+
+		l := &ProjectDuplicate{ProjectID: 1}
+		can, err := l.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, l.Create(s, u))
+
+		newView := &ProjectView{}
+		has, err := s.Where("project_id = ? AND view_kind = ?", l.Project.ID, ProjectViewKindKanban).Get(newView)
+		require.NoError(t, err)
+		require.True(t, has)
+		newCount, err := s.Where("project_view_id = ?", newView.ID).Count(&Bucket{})
+		require.NoError(t, err)
+		assert.Equal(t, oldCount, newCount)
+	})
+
 	t.Run("shares are not copied by default", func(t *testing.T) {
 		files.InitTestFileFixtures(t)
 		db.LoadAndAssertFixtures(t)

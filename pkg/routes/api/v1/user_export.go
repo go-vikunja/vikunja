@@ -57,7 +57,7 @@ func checkExportRequest(c *echo.Context) (s *xorm.Session, u *user.User, err err
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
-	err = user.CheckUserPassword(u, pass.Password)
+	err = user.CheckReauthPassword(u, pass.Password)
 	if err != nil {
 		s.Close()
 		return nil, nil, err

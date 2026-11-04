@@ -75,17 +75,9 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	// Saved-filter views also require the task to match the filter.
-	if filterID := GetSavedFilterIDFromProjectID(view.ProjectID); filterID > 0 {
-		return tp.canPositionTaskInSavedFilterView(s, a, view, filterID)
-	}
-
-	task, err := GetTaskByIDSimple(s, tp.TaskID)
-	if err != nil {
+	fits, err := taskFitsView(s, a, view, tp.TaskID)
+	if err != nil || !fits {
 		return false, err
-	}
-	if view.ProjectID != task.ProjectID {
-		return false, nil
 	}
 	canRead, _, err := view.CanRead(s, a)
 	if err != nil {
@@ -94,8 +86,20 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return canRead, nil
 }
 
+func taskFitsView(s *xorm.Session, a web.Auth, view *ProjectView, taskID int64) (bool, error) {
+	if filterID := GetSavedFilterIDFromProjectID(view.ProjectID); filterID > 0 {
+		return taskMatchesSavedFilterView(s, a, view, filterID, taskID)
+	}
+
+	task, err := GetTaskByIDSimple(s, taskID)
+	if err != nil {
+		return false, err
+	}
+	return view.ProjectID == task.ProjectID, nil
+}
+
 // Reuse fetch matching so relative dates use the saved filter owner's timezone.
-func (tp *TaskPosition) canPositionTaskInSavedFilterView(s *xorm.Session, a web.Auth, view *ProjectView, filterID int64) (bool, error) {
+func taskMatchesSavedFilterView(s *xorm.Session, a web.Auth, view *ProjectView, filterID, taskID int64) (bool, error) {
 	sf := &SavedFilter{ID: filterID}
 	canRead, _, err := sf.CanRead(s, a)
 	if err != nil {
@@ -109,7 +113,7 @@ func (tp *TaskPosition) canPositionTaskInSavedFilterView(s *xorm.Session, a web.
 	if err != nil {
 		return false, err
 	}
-	task, err := GetTaskByIDSimple(s, tp.TaskID)
+	task, err := GetTaskByIDSimple(s, taskID)
 	if err != nil {
 		return false, err
 	}
@@ -468,6 +472,39 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 		Where("project_view_id = ?", view.ID).
 		Find(&positions)
 	return
+}
+
+// AddPositionsToTasks fills Positions with each task's stored position in every
+// view of its own project.
+func AddPositionsToTasks(s *xorm.Session, tasks []*Task) error {
+	taskMap := make(map[int64]*Task, len(tasks))
+	ids := make([]int64, 0, len(tasks))
+	for _, t := range tasks {
+		if t == nil {
+			continue
+		}
+		taskMap[t.ID] = t
+		ids = append(ids, t.ID)
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	positions := []*TaskPosition{}
+	err := s.
+		Select("task_positions.*").
+		Join("INNER", "tasks", "tasks.id = task_positions.task_id").
+		Join("INNER", "project_views", "project_views.id = task_positions.project_view_id AND project_views.project_id = tasks.project_id").
+		In("task_positions.task_id", ids).
+		Find(&positions)
+	if err != nil {
+		return err
+	}
+	for _, p := range positions {
+		if t := taskMap[p.TaskID]; t != nil {
+			t.Positions = append(t.Positions, p)
+		}
+	}
+	return nil
 }
 
 // recalculateTaskPositionsForRepair recalculates positions for all tasks in a view

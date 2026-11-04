@@ -148,3 +148,46 @@ describe('CustomImage attachment id', () => {
 		expect(reloaded.editor.view.dom.querySelector('img')!.src).toBe('blob:real-attachment')
 	})
 })
+
+describe('CustomTableCell backgroundColor', () => {
+	const cell = (color: string) => `<table><tbody><tr><td data-background-color="${color}">x</td></tr></tbody></table>`
+
+	it.each([
+		'#fff',
+		'#a1b2c3',
+		'#a1b2c3d4',
+		'rgb(1, 2, 3)',
+		'rgba(1, 2, 3, 0.5)',
+		'red',
+	])('keeps %s', color => {
+		const {editor} = createEditor(cell(color))
+
+		const td = editor.view.dom.querySelector('td')!
+		expect(td.getAttribute('data-background-color')).toBe(color)
+		expect(td.style.backgroundColor).not.toBe('')
+		expect(editor.getHTML()).toContain(`data-background-color="${color}"`)
+	})
+
+	it.each([
+		'red;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999',
+		'url(https://attacker.example/x.png)',
+		'red !important',
+		'expression(alert(1))',
+	])('drops %s', color => {
+		const {editor} = createEditor(cell(color))
+
+		const td = editor.view.dom.querySelector('td')!
+		expect(td.hasAttribute('data-background-color')).toBe(false)
+		expect(td.getAttribute('style') ?? '').not.toContain('position')
+		expect(editor.getHTML()).not.toContain('data-background-color')
+	})
+
+	it('drops an unsafe value set programmatically', () => {
+		const {editor} = createEditor(cell('red'))
+
+		editor.chain().setTextSelection(3).setCellAttribute('backgroundColor', 'red;position:fixed').run()
+
+		expect(editor.getHTML()).not.toContain('position')
+		expect(editor.view.dom.querySelector('td')!.getAttribute('style') ?? '').not.toContain('position')
+	})
+})

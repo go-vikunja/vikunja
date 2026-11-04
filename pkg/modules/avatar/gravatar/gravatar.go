@@ -54,7 +54,7 @@ func (g *Provider) FlushCache(u *user.User) error {
 const keyPrefix = "gravatar_avatar_"
 
 // GetAvatar implements getting the avatar for the user
-func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error) {
+func (g *Provider) GetAvatar(ctx context.Context, user *user.User, size int64) ([]byte, string, error) {
 	sizeString := strconv.FormatInt(size, 10)
 	cacheKey := keyPrefix + user.Username + "_" + sizeString
 
@@ -75,7 +75,7 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 		}
 	}
 
-	result, err, _ := gravatarFetchGroup.Do(cacheKey, func() (interface{}, error) {
+	resultCh := gravatarFetchGroup.DoChan(cacheKey, func() (interface{}, error) {
 		cached, cacheErr := keyvalue.GetWithValue(cacheKey, &av)
 		if cacheErr != nil {
 			log.Errorf("Error retrieving gravatar from keyvalue store: %s", cacheErr)
@@ -89,10 +89,10 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 
 		// Keep the old 5s bound: the client's configured timeout defaults to 30s, which would
 		// stall the user-facing avatar request this runs inside.
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		fetchCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 		defer cancel()
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, config.AvatarGravatarBaseURL.GetString()+"/avatar/"+utils.Md5String(strings.ToLower(user.Email))+"?s="+sizeString+"&d=mp", nil)
+		req, err := http.NewRequestWithContext(fetchCtx, http.MethodGet, config.AvatarGravatarBaseURL.GetString()+"/avatar/"+utils.Md5String(strings.ToLower(user.Email))+"?s="+sizeString+"&d=mp", nil)
 		if err != nil {
 			return nil, err
 		}
@@ -123,17 +123,22 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 
 		return av, nil
 	})
-	if err != nil {
-		return nil, "", err
-	}
 
-	av = result.(avatar)
-	return av.Content, av.MimeType, nil
+	select {
+	case <-ctx.Done():
+		return nil, "", ctx.Err()
+	case res := <-resultCh:
+		if res.Err != nil {
+			return nil, "", res.Err
+		}
+		av = res.Val.(avatar)
+		return av.Content, av.MimeType, nil
+	}
 }
 
 // AsDataURI returns a base64 encoded data URI for the gravatar
-func (g *Provider) AsDataURI(user *user.User, size int64) (string, error) {
-	avatarData, mimeType, err := g.GetAvatar(user, size)
+func (g *Provider) AsDataURI(ctx context.Context, user *user.User, size int64) (string, error) {
+	avatarData, mimeType, err := g.GetAvatar(ctx, user, size)
 	if err != nil {
 		return "", err
 	}

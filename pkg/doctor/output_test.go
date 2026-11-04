@@ -48,3 +48,24 @@ Files (s3)
 
 `, buf.String())
 }
+
+func TestPrintGroupEscapesControlCharacters(t *testing.T) {
+	var buf bytes.Buffer
+
+	PrintGroup(&buf, CheckGroup{
+		Name: "Database",
+		Results: []CheckResult{
+			{Name: "Version", Passed: true, Value: "16.1\n  ✓ Fake: row\x1b[2J"},
+			{Name: "Connection", Passed: false, Error: "bad\r\nthing"},
+			{Name: "Extra", Passed: true, Value: "ok", Lines: []string{"x\ny"}},
+		},
+	})
+
+	assert.Equal(t, `Database
+  ✓ Version: 16.1\n  ✓ Fake: row\x1b[2J
+  ✗ Connection: bad\r\nthing
+  ✓ Extra: ok
+      x\ny
+
+`, buf.String())
+}

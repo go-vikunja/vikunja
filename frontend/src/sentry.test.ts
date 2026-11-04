@@ -36,9 +36,17 @@ beforeEach(() => {
 
 describe('sentry image load errors', () => {
 	it('reports an image that failed to load', () => {
-		failImage('https://example.com/missing.png')
+		const src = new URL('/assets/missing.png', window.location.href).href
+		failImage(src)
 
-		expect(captureMessage).toHaveBeenCalledWith('Failed to load image: https://example.com/missing.png', 'warning')
+		expect(captureMessage).toHaveBeenCalledWith(`Failed to load image: ${src}`, 'warning')
+	})
+
+	it('skips an image from another origin', () => {
+		// FRONTEND-OSS-263: injected by a browser extension
+		failImage('https://news.search.yahoo.co.jp/favicon.ico')
+
+		expect(captureMessage).not.toHaveBeenCalled()
 	})
 
 	it.each([
@@ -93,9 +101,16 @@ describe('sentry css load errors', () => {
 	}
 
 	it('reports a stylesheet that failed to load', () => {
-		failStylesheet('https://example.com/missing.css')
+		const href = new URL('/assets/missing.css', window.location.href).href
+		failStylesheet(href)
 
-		expect(captureMessage).toHaveBeenCalledWith('Failed to load css: https://example.com/missing.css', 'warning')
+		expect(captureMessage).toHaveBeenCalledWith(`Failed to load css: ${href}`, 'warning')
+	})
+
+	it('skips a stylesheet from another origin', () => {
+		failStylesheet('https://example.com/injected.css')
+
+		expect(captureMessage).not.toHaveBeenCalled()
 	})
 
 	it('skips a blob href, whose bytes never went over the network', () => {

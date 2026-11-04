@@ -153,7 +153,7 @@ func TestMCP_Catalog_EveryExposedOperationIsReachable(t *testing.T) {
 	c := newAllScopesMCPClient(t)
 	var reachable []string
 	for name := range c.toolNames() {
-		if name == "find_action" || name == "do_action" {
+		if name == "find_action" || name == "do_action" || name == "filter_syntax" {
 			continue
 		}
 		reachable = append(reachable, name)

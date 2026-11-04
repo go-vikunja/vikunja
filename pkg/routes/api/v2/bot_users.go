@@ -58,7 +58,7 @@ func RegisterBotUserRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "bots-create",
 		Summary:     "Create a bot user",
-		Description: "Creates a bot user owned by the authenticated user. The username must start with the 'bot-' prefix. Bots have no email or password and cannot create further bots. Requires a real user account — link shares cannot create bots.",
+		Description: "Creates a bot user owned by the authenticated user. The username must start with the 'bot-' prefix. Bots have no email or password and cannot create further bots. The owner becomes visible to anyone who can see the bot, as its bot_owner. Requires a real user account — link shares cannot create bots.",
 		Method:      http.MethodPost,
 		Path:        "/user/bots",
 		Tags:        tags,

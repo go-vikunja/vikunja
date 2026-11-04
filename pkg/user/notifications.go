@@ -49,7 +49,7 @@ func (n *EmailConfirmNotification) ToMail(lang string) *notifications.Mail {
 
 	return nn.
 		Line(i18n.T(lang, "notifications.email_confirm.confirm")).
-		Action(i18n.T(lang, "notifications.common.actions.confirm_email"), config.ServicePublicURL.GetString()+"?userEmailConfirm="+n.ConfirmToken).
+		Action(i18n.T(lang, "notifications.common.actions.confirm_email"), config.ServicePublicURL.GetString()+"#userEmailConfirm="+n.ConfirmToken).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
 
@@ -119,13 +119,15 @@ type ResetPasswordNotification struct {
 	Token *Token
 }
 
+func (n *ResetPasswordNotification) deliveredToLockedAccount() {}
+
 // ToMail returns the mail notification for ResetPasswordNotification
 func (n *ResetPasswordNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.password.reset.subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.password.reset.instructions")).
-		Action(i18n.T(lang, "notifications.common.actions.reset_password"), config.ServicePublicURL.GetString()+"?userPasswordReset="+n.Token.ClearTextToken).
+		Action(i18n.T(lang, "notifications.common.actions.reset_password"), config.ServicePublicURL.GetString()+"#userPasswordReset="+n.Token.ClearTextToken).
 		Line(i18n.T(lang, "notifications.password.reset.valid_duration")).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -191,6 +193,32 @@ func (n *PasswordAccountLockedAfterInvalidTOTPNotification) Name() string {
 	return "password.account.locked.after.invalid.totp"
 }
 
+// AccountLockedAfterInvalidPasswordNotification represents a AccountLockedAfterInvalidPasswordNotification notification
+type AccountLockedAfterInvalidPasswordNotification struct {
+	User *User
+}
+
+// ToMail returns the mail notification for AccountLockedAfterInvalidPasswordNotification
+func (n *AccountLockedAfterInvalidPasswordNotification) ToMail(lang string) *notifications.Mail {
+	resetURL := config.ServicePublicURL.GetString() + "get-password-reset"
+	return notifications.NewMail().
+		Subject(i18n.T(lang, "notifications.totp.account_locked.subject")).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.login.account_locked.message")).
+		Line(i18n.T(lang, "notifications.totp.account_locked.disabled")).
+		Line(i18n.T(lang, "notifications.totp.account_locked.reset_instructions", resetURL, resetURL))
+}
+
+// ToDB returns the AccountLockedAfterInvalidPasswordNotification notification in a format which can be saved in the db
+func (n *AccountLockedAfterInvalidPasswordNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *AccountLockedAfterInvalidPasswordNotification) Name() string {
+	return "account.locked.after.invalid.password"
+}
+
 // FailedLoginAttemptNotification represents a FailedLoginAttemptNotification notification
 type FailedLoginAttemptNotification struct {
 	User *User
@@ -229,7 +257,7 @@ func (n *AccountDeletionConfirmNotification) ToMail(lang string) *notifications.
 		Subject(i18n.T(lang, "notifications.account.deletion.confirm.subject")).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.request")).
-		Action(i18n.T(lang, "notifications.common.actions.confirm_account_deletion"), config.ServicePublicURL.GetString()+"?accountDeletionConfirm="+n.ConfirmToken).
+		Action(i18n.T(lang, "notifications.common.actions.confirm_account_deletion"), config.ServicePublicURL.GetString()+"#accountDeletionConfirm="+n.ConfirmToken).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.valid_duration")).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.schedule_info")).
 		Line(i18n.T(lang, "notifications.account.deletion.confirm.consequences")).

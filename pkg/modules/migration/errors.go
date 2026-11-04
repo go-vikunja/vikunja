@@ -118,6 +118,58 @@ func (err *ErrImportRowLimitExceeded) HTTPError() web.HTTPError {
 	}
 }
 
+type ErrImportItemLimitExceeded struct {
+	MaxItems int64
+}
+
+func (err *ErrImportItemLimitExceeded) Error() string {
+	return fmt.Sprintf("The import contains more than %d items", err.MaxItems)
+}
+
+const ErrCodeImportItemLimitExceeded = 14018
+
+func (err *ErrImportItemLimitExceeded) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeImportItemLimitExceeded,
+		Message:  "The import contains more items than the configured maximum.",
+	}
+}
+
+type ErrImportTooManyViews struct {
+	MaxViews int64
+}
+
+func (err *ErrImportTooManyViews) Error() string {
+	return fmt.Sprintf("A project in the import has more than %d views", err.MaxViews)
+}
+
+const ErrCodeImportTooManyViews = 14020
+
+func (err *ErrImportTooManyViews) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeImportTooManyViews,
+		Message:  fmt.Sprintf("A project in the import has more than %d views.", err.MaxViews),
+	}
+}
+
+type ErrInvalidOAuthState struct{}
+
+func (err *ErrInvalidOAuthState) Error() string {
+	return "The migration state is missing, expired or belongs to someone else"
+}
+
+const ErrCodeInvalidOAuthState = 14019
+
+func (err *ErrInvalidOAuthState) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidOAuthState,
+		Message:  "The migration state is invalid or expired. Please start the migration again.",
+	}
+}
+
 // ErrNotAZipFile represents a "ErrNotAZipFile" kind of error.
 type ErrNotAZipFile struct{}
 

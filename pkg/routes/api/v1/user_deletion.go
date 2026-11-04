@@ -67,7 +67,7 @@ func UserRequestDeletion(c *echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 		}
 
-		err = user.CheckUserPassword(u, deletionRequest.Password)
+		err = user.CheckReauthPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
 			return err
@@ -168,7 +168,7 @@ func UserCancelDeletion(c *echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 		}
 
-		err = user.CheckUserPassword(u, deletionRequest.Password)
+		err = user.CheckReauthPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
 			return err

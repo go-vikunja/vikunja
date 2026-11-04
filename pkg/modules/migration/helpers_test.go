@@ -17,12 +17,16 @@
 package migration
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -131,4 +135,20 @@ func TestDecodeJSONLimited(t *testing.T) {
 	t.Run("truncated", func(t *testing.T) {
 		require.ErrorIs(t, DecodeJSONLimited(strings.NewReader(`{"a":"xxxxxxxxxx"}`), &payload{}, 4), ErrResponseTooLarge)
 	})
+}
+
+func TestDownloadFileIsCappedAtMaxFileSize(t *testing.T) {
+	require.NoError(t, config.SetMaxFileSizeMBytesFromString("1MB"))
+	t.Cleanup(func() { _ = config.SetMaxFileSizeMBytesFromString(config.FilesMaxSize.GetString()) })
+	prevAllowNonRoutable := config.OutgoingRequestsAllowNonRoutableIPs.GetBool()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	t.Cleanup(func() { config.OutgoingRequestsAllowNonRoutableIPs.Set(prevAllowNonRoutable) })
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(bytes.Repeat([]byte("x"), 2*1024*1024))
+	}))
+	t.Cleanup(srv.Close)
+
+	_, err := DownloadFile(srv.URL)
+	assert.True(t, files.IsErrFileIsTooLarge(err), "got %v", err)
 }

@@ -43,6 +43,9 @@
                 "message": "Someone just tried to log in into your account with a wrong password three times in a row.",
                 "warning": "If this was not you, this could be someone else trying to break into your account.",
                 "enhance_security": "To enhance the security of you account you may want to set a stronger password or enable TOTP authentication in the settings:"
+            },
+            "account_locked": {
+                "message": "Someone tried to log in to your account with a wrong password too many times in a row."
             }
         },
         "account": {

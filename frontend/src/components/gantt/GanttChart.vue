@@ -115,7 +115,7 @@ import GanttRelationArrows from '@/components/gantt/GanttRelationArrows.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
-import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
+import {getNaturalDayCount, roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
 const props = defineProps<{
 	isLoading: boolean,
@@ -459,11 +459,7 @@ function computeBarX(date: Date): number {
 }
 
 function computeBarWidth(bar: GanttBarModel): number {
-	const diff = Math.ceil(
-		(roundToNaturalDayBoundary(bar.end).getTime() - roundToNaturalDayBoundary(bar.start, true).getTime()) /
-		MILLISECONDS_A_DAY,
-	)
-	return diff * dayWidthPixels.value
+	return getNaturalDayCount(bar.start, bar.end) * dayWidthPixels.value
 }
 
 // Compute relation arrows

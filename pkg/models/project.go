@@ -47,7 +47,7 @@ type Project struct {
 	// The unique project short identifier. Used to build task identifiers.
 	Identifier string `xorm:"varchar(10) null" json:"identifier" valid:"runelength(0|10)" minLength:"0" maxLength:"10" doc:"The unique project short identifier. Used to build task identifiers (e.g. PROJ-123)."`
 	// The hex color of this project
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The hex color of this project, without the leading #."`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"hexcolor" maxLength:"7" doc:"The hex color of this project, without the leading #."`
 
 	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
 	ParentProjectID *int64   `xorm:"bigint INDEX null" json:"parent_project_id" doc:"The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission."`

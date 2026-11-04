@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/richtext"
 )
 
@@ -362,14 +363,14 @@ func checklistsMarkdown(taskLists []plankaTaskList, tasksByList map[string][]pla
 		}
 		sort.SliceStable(tasks, func(i, j int) bool { return tasks[i].Position < tasks[j].Position })
 
-		md.WriteString("\n\n## " + tl.Name + "\n\n")
+		md.WriteString("\n\n## " + notifications.EscapeMarkdown(tl.Name) + "\n\n")
 		for _, t := range tasks {
 			if t.IsCompleted {
 				md.WriteString("- [x] ")
 			} else {
 				md.WriteString("- [ ] ")
 			}
-			md.WriteString(t.Name + "\n")
+			md.WriteString(notifications.EscapeMarkdown(t.Name) + "\n")
 		}
 	}
 	return md.String()
@@ -388,7 +389,7 @@ func linkAttachmentsMarkdown(attachments []plankaAttachment) string {
 		if name == "" {
 			name = a.Data.URL
 		}
-		md.WriteString("- [" + name + "](" + a.Data.URL + ")\n")
+		md.WriteString("- [" + notifications.EscapeMarkdown(name) + "](" + strings.ReplaceAll(notifications.EscapeMarkdown(a.Data.URL), " ", "%20") + ")\n")
 	}
 	return md.String()
 }
@@ -436,7 +437,7 @@ func customFieldsMarkdown(values []plankaCustomFieldValue, groups map[string]pla
 			title = "Custom fields"
 		}
 
-		md.WriteString("\n\n## " + title + "\n\n| Field | Value |\n| --- | --- |\n")
+		md.WriteString("\n\n## " + notifications.EscapeMarkdown(title) + "\n\n| Field | Value |\n| --- | --- |\n")
 		for _, v := range vals {
 			md.WriteString("| " + escapeTableCell(fields[v.CustomFieldID].Name) + " | " + escapeTableCell(v.Content) + " |\n")
 		}
@@ -445,5 +446,5 @@ func customFieldsMarkdown(values []plankaCustomFieldValue, groups map[string]pla
 }
 
 func escapeTableCell(s string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(s, "|", "\\|"), "\n", " ")
+	return strings.ReplaceAll(notifications.EscapeMarkdown(s), "\n", " ")
 }

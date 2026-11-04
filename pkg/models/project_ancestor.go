@@ -45,6 +45,8 @@ func (*ProjectAncestor) TableName() string {
 
 const projectAncestorInsertBatch = 500
 
+var maxProjectMoveAncestorRows = 50_000
+
 func insertProjectAncestorRows(s *xorm.Session, rows []*ProjectAncestor) error {
 	for chunk := range slices.Chunk(rows, projectAncestorInsertBatch) {
 		if _, err := s.Insert(chunk); err != nil {
@@ -127,6 +129,9 @@ func moveProjectAncestors(s *xorm.Session, projectID, newParentID int64) error {
 		if err != nil {
 			return err
 		}
+		if len(parentRows) > maxProjectMoveAncestorRows/len(subtree) {
+			return &ErrProjectMoveTooLarge{ProjectID: projectID, MaxAncestorRows: maxProjectMoveAncestorRows}
+		}
 	}
 
 	subtreeIDs := make([]int64, 0, len(subtree))
@@ -189,7 +194,15 @@ func RebuildProjectAncestors(s *xorm.Session) error {
 		parents[project.ID] = project.parentID()
 	}
 
-	rows := make([]*ProjectAncestor, 0, len(projects))
+	// Flushed per batch: deep trees derive far more rows than there are projects.
+	rows := make([]*ProjectAncestor, 0, projectAncestorInsertBatch)
+	flush := func() error {
+		if err := insertProjectAncestorRows(s, rows); err != nil {
+			return err
+		}
+		rows = rows[:0]
+		return nil
+	}
 	for _, project := range projects {
 		rows = append(rows, &ProjectAncestor{ProjectID: project.ID, AncestorID: project.ID})
 
@@ -204,8 +217,13 @@ func RebuildProjectAncestors(s *xorm.Session) error {
 			visited[current] = true
 			depth++
 			rows = append(rows, &ProjectAncestor{ProjectID: project.ID, AncestorID: current, Depth: depth})
+			if len(rows) >= projectAncestorInsertBatch {
+				if err := flush(); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
-	return insertProjectAncestorRows(s, rows)
+	return flush()
 }

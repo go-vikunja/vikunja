@@ -18,6 +18,7 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"regexp"
 	"strconv"
@@ -118,4 +119,13 @@ func TestI18nParamsContract(t *testing.T) {
 	}
 
 	assert.Equal(t, parametrisedCodes, coveredCodes, "every parametrised en.json error message must have a corresponding I18nParams test case")
+}
+
+func TestErrInvalidFilterExpressionHTTPErrorOmitsExpression(t *testing.T) {
+	err := ErrInvalidFilterExpression{Expression: "secret-filter", ExpressionError: errors.New("boom")}
+
+	httpErr := err.HTTPError()
+	assert.NotContains(t, httpErr.Message, "secret-filter")
+	assert.Contains(t, httpErr.Message, "boom")
+	assert.Contains(t, err.Error(), "secret-filter")
 }

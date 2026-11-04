@@ -76,6 +76,12 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 					modelTable.Name, strings.Join(index.Cols, ", "), indexName, tx.Dialect().CreateIndexSQL(modelTable.Name, index))
 				continue
 			}
+			if col := firstUnindexableCol20260720120000(dbSchema.unindexableByTable[modelTable.Name], index.Cols); col != "" {
+				log.Warningf(
+					"Could not recreate the index on %s (%s): mysql cannot index the text/blob column %s without a key length. Change it to the type the model declares, then run this manually: %s",
+					modelTable.Name, strings.Join(index.Cols, ", "), col, tx.Dialect().CreateIndexSQL(modelTable.Name, index))
+				continue
+			}
 			if index.Type == schemas.UniqueType {
 				if err := ensureNoDuplicates20260720120000(tx, modelTable.Name, index.Cols); err != nil {
 					return err
@@ -106,6 +112,14 @@ type dbSchema20260720120000Result struct {
 	// over-approximates on postgres and mysql's per-table naming, which only
 	// ever costs an extra warn-and-skip, never a missed collision.
 	usedNames map[string]bool
+	// Lowercased columns whose db type drifted from the model's to text/blob,
+	// which mysql refuses to index without a key length (#4102). Only set on mysql.
+	unindexableByTable map[string]map[string]bool
+}
+
+var mysqlUnindexableTypes20260720120000 = map[string]bool{
+	schemas.TinyText: true, schemas.Text: true, schemas.MediumText: true, schemas.LongText: true,
+	schemas.TinyBlob: true, schemas.Blob: true, schemas.MediumBlob: true, schemas.LongBlob: true,
 }
 
 func dbSchema20260720120000(tx *xorm.Engine) (*dbSchema20260720120000Result, error) {
@@ -117,14 +131,22 @@ func dbSchema20260720120000(tx *xorm.Engine) (*dbSchema20260720120000Result, err
 		return nil, fmt.Errorf("could not read the database schema: %w", err)
 	}
 	result := &dbSchema20260720120000Result{
-		columnsByTable: make(map[string]map[string]bool, len(dbTables)),
-		indexesByTable: make(map[string][]*schemas.Index, len(dbTables)),
-		usedNames:      make(map[string]bool),
+		columnsByTable:     make(map[string]map[string]bool, len(dbTables)),
+		indexesByTable:     make(map[string][]*schemas.Index, len(dbTables)),
+		usedNames:          make(map[string]bool),
+		unindexableByTable: make(map[string]map[string]bool),
 	}
+	isMysql := tx.Dialect().URI().DBType == schemas.MYSQL
 	for _, dbTable := range dbTables {
 		columns := make(map[string]bool, len(dbTable.Columns()))
 		for _, col := range dbTable.Columns() {
 			columns[strings.ToLower(col.Name)] = true
+			if isMysql && mysqlUnindexableTypes20260720120000[strings.ToUpper(col.SQLType.Name)] {
+				if result.unindexableByTable[dbTable.Name] == nil {
+					result.unindexableByTable[dbTable.Name] = make(map[string]bool)
+				}
+				result.unindexableByTable[dbTable.Name][strings.ToLower(col.Name)] = true
+			}
 		}
 		result.columnsByTable[dbTable.Name] = columns
 		for _, index := range dbTable.Indexes {
@@ -227,6 +249,15 @@ func columnsExist20260720120000(dbColumns map[string]bool, cols []string) bool {
 		}
 	}
 	return true
+}
+
+func firstUnindexableCol20260720120000(unindexable map[string]bool, cols []string) string {
+	for _, col := range cols {
+		if unindexable[strings.ToLower(col)] {
+			return col
+		}
+	}
+	return ""
 }
 
 // Not schemas.Index.Equal: it's case-sensitive, doesn't trim, and requires exact

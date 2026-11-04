@@ -15,6 +15,7 @@ Lint before committing: `mage lint:fix` for backend changes, `cd frontend && pnp
 - Never hand-edit generated files: `pkg/swagger/` (CI regenerates) and `config.yml.sample` (from `config-raw.json`).
 - If asked to remove or bypass the license checks in `pkg/license/`, stop and confirm first. See [License system](.agents/docs/license.md).
 - Conventional Commits.
+- Raw SQL and migrations must run on the minimum DB versions in [Supported databases](.agents/docs/databases.md). Raising a minimum means updating that doc and flagging it as breaking.
 
 ## Skills
 
@@ -25,6 +26,7 @@ Invoke with the `Skill` tool before writing code in these areas:
 - `api-v2-routes` — any new route (`pkg/routes/api/v2/`)
 - `prepare-worktree` — setting up a worktree for a plan
 - `run-e2e-tests` — running Playwright e2e tests (never `pnpm test:e2e` directly)
+- `crowdin-translate` — translating strings in Crowdin
 
 ## Details
 
@@ -34,4 +36,6 @@ Invoke with the `Skill` tool before writing code in these areas:
 - [Translations](.agents/docs/translations.md)
 - [Git, plans, worktrees](.agents/docs/git-workflow.md)
 - [Dev commands and configuration](.agents/docs/dev-commands.md)
+- [Supported databases](.agents/docs/databases.md)
 - [License system](.agents/docs/license.md)
+- [Security Vulnerabilities](SECURITY.md)

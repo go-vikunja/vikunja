@@ -171,6 +171,9 @@ func TestTaskIndexesAreNeverReused(t *testing.T) {
 		usr := &user.User{ID: 1}
 
 		s := db.NewSession()
+		// Project 2 belongs to user 3; the move out of it needs write access.
+		_, err := s.Insert(&ProjectUser{UserID: usr.ID, ProjectID: 2, Permission: PermissionWrite})
+		require.NoError(t, err)
 		created := &Task{Title: "move me", ProjectID: 2}
 		require.NoError(t, created.Create(s, usr))
 		assert.Equal(t, int64(3), created.Index)
@@ -252,6 +255,10 @@ func TestTaskIndexAliases(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+
+		// Project 2 belongs to user 3; moving back out of it needs write access.
+		_, err := s.Insert(&ProjectUser{UserID: 1, ProjectID: 2, Permission: PermissionWrite})
+		require.NoError(t, err)
 
 		firstMove := &Task{ID: 12, ProjectID: 2}
 		require.NoError(t, firstMove.Update(s, &user.User{ID: 1}))

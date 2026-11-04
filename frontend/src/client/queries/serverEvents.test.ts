@@ -31,14 +31,14 @@ vi.mock('@/message', () => ({
 
 const RUNNING_ENTRY = normalizeTimeEntry({
 	id: 4,
-	user_id: 7,
+	user: {id: 7},
 	start_time: '2026-09-19T08:00:00Z',
 	end_time: null,
 })
 
 const TASK_ENTRY = normalizeTimeEntry({
 	id: 9,
-	user_id: 7,
+	user: {id: 7},
 	task_id: 3,
 	start_time: '2026-09-19T08:00:00Z',
 	end_time: '2026-09-19T09:00:00Z',
@@ -67,7 +67,7 @@ it('ignores malformed payloads', () => {
 it('rejects timer entries that do not belong to the current user', () => {
 	const entry = {
 		id: 4,
-		user_id: 8,
+		user: {id: 8},
 		task_id: 1,
 	}
 	expect(parseServerCacheEvent('timer.created', entry, 7)).toBeNull()
@@ -78,18 +78,18 @@ it('rejects timer entries that do not belong to the current user', () => {
 	}, undefined)).toBeNull()
 	expect(parseServerCacheEvent('timer.created', {
 		...entry,
-		user_id: 7,
+		user: {id: 7},
 	}, 7)).not.toBeNull()
 })
 
 it('rejects timer entries with an unusable id or task id', () => {
 	expect(parseServerCacheEvent('timer.created', {
 		id: 0,
-		user_id: 7,
+		user: {id: 7},
 	}, 7)).toBeNull()
 	expect(parseServerCacheEvent('timer.created', {
 		id: 4,
-		user_id: 7,
+		user: {id: 7},
 		task_id: '1',
 	}, 7)).toBeNull()
 })

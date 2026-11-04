@@ -121,6 +121,7 @@
         "enable": "Enable",
         "tokensInactive": "API tokens of a disabled bot are rejected. Enable the bot to create or use tokens.",
         "badge": "Bot",
+        "badgeOwner": "Bot, created by {user}",
         "delete": {
           "header": "Delete this bot user",
           "text1": "Are you sure you want to delete the bot user \"{username}\"?",
@@ -609,6 +610,7 @@
       "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
       "collapse": "Collapse this bucket",
       "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks.",
+      "bucketLimitReachedShort": "Limit reached",
       "bucketOptions": "Bucket options"
     },
     "pseudo": {
@@ -985,6 +987,7 @@
       "altText": "Alt text",
       "altTextPlaceholder": "Describe this image",
       "toolbarLabel": "Text formatting",
+      "more": "More formatting options",
       "horizontalRule": "Horizontal Rule",
       "horizontalRuleTooltip": "Divide a section.",
       "text": "Text",
@@ -1147,6 +1150,7 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",
       "due": "Due {at}",
+      "overdue": "Overdue",
       "closeTaskDetail": "Close task detail",
       "title": "Task detail",
       "markAsDone": "Mark '{task}' as done",
@@ -1441,6 +1445,7 @@
     "task": {
       "title": "Task Page",
       "done": "Mark task done / undone",
+      "doneAndBack": "Mark task done and go back",
       "assign": "Assign this task to a user",
       "labels": "Add labels to this task",
       "dueDate": "Change the due date of this task",
@@ -1550,6 +1555,7 @@
     "newTeam": "Enter the name of the new team…",
     "createTask": "Create a task in the current project ({title})",
     "createProject": "Create a project",
+    "removePrefillDescription": "Remove the description",
     "results": "No results | {count} result | {count} results",
     "resultTypes": {
       "command": "Command",
@@ -1602,6 +1608,7 @@
     "1038": "The custom scope set by the OIDC provider is malformed. Please make sure the openid provider sets the data correctly for your scope. Check especially to have set an oidcID.",
     "1039": "This TOTP passcode has already been used. Please wait for the next passcode.",
     "1040": "This account is locked due to too many failed login attempts. You can reset your password to unlock it.",
+    "1041": "Too many failed attempts. Please wait a few minutes and try again.",
     "2001": "ID cannot be empty or 0.",
     "2002": "Some of the request data was invalid.",
     "2003": "The timezone '{timezone}' is invalid.",
@@ -1616,6 +1623,7 @@
     "3008": "The project is archived and can therefore only be accessed read only. This is also true for all tasks associated with this project.",
     "3016": "The parent project is archived. Un-archive the parent project first.",
     "3017": "The default project must be a project you can write to.",
+    "3020": "This project hierarchy is too large to be moved below the chosen parent project.",
     "4001": "The task title cannot be empty.",
     "4002": "The task does not exist.",
     "4003": "All bulk editing tasks must belong to the same project.",
@@ -1641,6 +1649,7 @@
     "4023": "Cannot create a task relation cycle.",
     "4034": "The file does not exist.",
     "4035": "The uploaded file exceeds the maximum configured file size.",
+    "4041": "This task hierarchy is too large to add more subtasks or parent tasks.",
     "6001": "The team name cannot be empty.",
     "6002": "The team does not exist.",
     "6004": "The team already has access to that project.",
@@ -1660,6 +1669,7 @@
     "10003": "You cannot remove the last bucket on a project.",
     "10004": "You cannot add the task to this bucket as it already exceeded the limit of tasks it can hold.",
     "10005": "There can be only one done bucket per project.",
+    "10007": "A project view can have at most 100 buckets.",
     "11001": "The saved filter does not exist.",
     "11002": "Saved filters are not available for link shares.",
     "12001": "The subscription entity type is invalid.",
@@ -1677,10 +1687,14 @@
     "14012": "The provided file does not contain any data.",
     "14013": "The export was created with a Vikunja version that is too old to import. Please create a new export with a more recent version.",
     "14016": "The import configuration could not be parsed. Please make sure it is a valid JSON object.",
+    "14018": "The import contains more items than the configured maximum.",
+    "14019": "The migration state is invalid or expired. Please start the migration again.",
+    "14020": "A project in the import has more views than allowed.",
     "14201": "Planka rejected the provided credentials. Check the URL and the API key or username and password.",
     "14202": "The Planka account requires an extra login step (two-factor code or accepting the terms). Log in to Planka in the browser once, or use an API key instead of username and password.",
     "14203": "A Planka URL and either an API key or username and password are required.",
-    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance."
+    "14204": "Could not reach a Planka API at the given URL. Check the URL and that Vikunja can reach the instance.",
+    "14205": "The Planka URL points to a private or local network address, which Vikunja blocks by default. An administrator can allow it by setting outgoingrequests.allownonroutableips to true."
   },
   "about": {
     "title": "About",
@@ -1692,8 +1706,10 @@
   "timeTracking": {
     "title": "Time tracking",
     "stop": "Stop timer",
+    "running": "Timer running",
     "logTime": "Log time",
     "editEntry": "Edit entry",
+    "commentLabel": "Comment",
     "form": {
       "task": "Task",
       "taskSearch": "Search for a task…",
@@ -1701,7 +1717,8 @@
       "save": "Save entry",
       "startTimer": "Start timer",
       "update": "Update entry",
-      "smartFill": "Fill from last entry"
+      "smartFill": "Fill from last entry",
+      "endsSpanningEntriesAt": "Starting this timer ends your overlapping time entries at {time}."
     },
     "list": {
       "emptyTask": "No time tracked for this task yet.",
@@ -1717,6 +1734,7 @@
     }
   },
   "time": {
+    "justNow": "just now",
     "units": {
       "seconds": "second|seconds",
       "minutes": "minute|minutes",

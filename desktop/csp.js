@@ -5,9 +5,8 @@ const CONTENT_SECURITY_POLICY = [
 	"script-src 'self'",
 	// TipTap, vue3-notification and the emoji picker append <style> elements at runtime.
 	"style-src 'self' 'unsafe-inline'",
-	// Task descriptions embed remote images; data: for bundled icons, blob: for avatars,
-	// project backgrounds and the TOTP QR code.
-	'img-src * data: blob:',
+	// https-only so stored descriptions can't probe loopback/LAN; API images are blob:, bundled icons data:.
+	"img-src 'self' https: data: blob:",
 	"font-src 'self'",
 	// The API URL is user-configurable to any remote instance and the realtime socket URL
 	// is derived from it, so no origin allowlist is possible.
