@@ -894,7 +894,7 @@ func TestEnforceTOTPIfRequired(t *testing.T) {
 		assert.True(t, user.IsErrInvalidTOTPPasscode(err))
 	})
 
-	t.Run("TOTP enabled - valid passcode succeeds", func(t *testing.T) {
+	t.Run("TOTP enabled - valid passcode succeeds and resets the failed attempts", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -903,8 +903,12 @@ func TestEnforceTOTPIfRequired(t *testing.T) {
 		require.NoError(t, err)
 
 		u := &user.User{ID: 10}
+		require.NoError(t, keyvalue.IncrBy(u.GetFailedTOTPAttemptsKey(), 3))
 		err = enforceTOTPIfRequired(s, u, passcode)
 		require.NoError(t, err)
+		_, exists, err := keyvalue.Get(u.GetFailedTOTPAttemptsKey())
+		require.NoError(t, err)
+		assert.False(t, exists)
 	})
 }
 

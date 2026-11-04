@@ -178,36 +178,14 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 	return iss.Issuer, nil
 }
 
-// enforceTOTPIfRequired mirrors the TOTP gate from pkg/routes/api/v1/login.go
-// for the OIDC flow. Returns nil when the user does not have TOTP enabled.
-// See GHSA-8jvc-mcx6-r4cg.
+// Not CheckTOTPCountingFailures: its rollback would drop a just-created user (GHSA-8jvc-mcx6-r4cg).
 func enforceTOTPIfRequired(s *xorm.Session, u *user.User, totpPasscode string) error {
-	totpEnabled, err := user.TOTPEnabledForUser(s, u)
-	if err != nil {
-		return err
-	}
-	if !totpEnabled {
-		return nil
-	}
-
-	if totpPasscode == "" {
-		return user.ErrInvalidTOTPPasscode{}
-	}
-
-	_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{
-		User:     u,
-		Passcode: totpPasscode,
-	})
-	if err != nil {
+	if err := user.CheckTOTPIfEnabled(s, u, totpPasscode); err != nil {
 		return err
 	}
 
 	// Reset the counter so old failed attempts don't trip a later lockout.
-	if err := keyvalue.Del(u.GetFailedTOTPAttemptsKey()); err != nil {
-		return err
-	}
-
-	return nil
+	return keyvalue.Del(u.GetFailedTOTPAttemptsKey())
 }
 
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code

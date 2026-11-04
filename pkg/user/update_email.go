@@ -62,10 +62,7 @@ func ChangeUserEmail(ctx context.Context, s *xorm.Session, u *User, password, ne
 		return &ErrAccountIsNotLocal{UserID: target.ID}
 	}
 
-	err = ThrottleReauth(target.ID, func() error {
-		return CheckUserPasswordCountingFailures(ctx, s, target, password)
-	})
-	if err != nil {
+	if err := CheckReauthPassword(ctx, s, target, password); err != nil {
 		return err
 	}
 	return UpdateEmail(s, &EmailUpdate{User: target, NewEmail: newEmail})

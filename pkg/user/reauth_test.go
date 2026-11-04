@@ -17,13 +17,16 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestThrottleReauth(t *testing.T) {
@@ -81,5 +84,52 @@ func TestThrottleReauth(t *testing.T) {
 			_ = ThrottleReauth(userID, wrong)
 		}
 		require.NoError(t, ThrottleReauth(other, ok))
+	})
+}
+
+func setupReauthUser(t *testing.T, id int64) (*xorm.Session, *User) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	t.Cleanup(func() { s.Close() })
+	u, err := GetUserByID(s, id)
+	require.NoError(t, err)
+	require.NoError(t, keyvalue.Del(reauthAttemptsKey(u.ID)))
+	require.NoError(t, keyvalue.Del(u.GetFailedTOTPAttemptsKey()))
+	require.NoError(t, keyvalue.Del(u.GetFailedPasswordAttemptsKey()))
+	return s, u
+}
+
+func kvCount(t *testing.T, key string) int64 {
+	n, _, err := keyvalue.GetInt64(key)
+	require.NoError(t, err)
+	return n
+}
+
+func TestReauthenticate(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("a wrong password counts toward the lockout and the throttle", func(t *testing.T) {
+		s, u := setupReauthUser(t, 10)
+
+		err := Reauthenticate(ctx, s, u, "wrong", "")
+		assert.True(t, IsErrWrongUsernameOrPassword(err), "got %v", err)
+		assert.Equal(t, int64(1), kvCount(t, u.GetFailedPasswordAttemptsKey()))
+		assert.Equal(t, int64(1), kvCount(t, reauthAttemptsKey(u.ID)))
+	})
+
+	t.Run("a user without TOTP only needs the password", func(t *testing.T) {
+		s, u := setupReauthUser(t, 1)
+
+		require.NoError(t, Reauthenticate(ctx, s, u, "12345678", ""))
+		assert.Equal(t, int64(0), kvCount(t, reauthAttemptsKey(u.ID)))
+	})
+
+	t.Run("a missing passcode is refused without counting toward the TOTP lockout", func(t *testing.T) {
+		s, u := setupReauthUser(t, 10)
+
+		err := Reauthenticate(ctx, s, u, "12345678", "")
+		assert.True(t, IsErrInvalidTOTPPasscode(err), "got %v", err)
+		assert.Equal(t, int64(0), kvCount(t, u.GetFailedTOTPAttemptsKey()))
+		assert.Equal(t, int64(1), kvCount(t, reauthAttemptsKey(u.ID)))
 	})
 }
