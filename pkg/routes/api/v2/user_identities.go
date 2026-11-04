@@ -52,11 +52,21 @@ func RegisterUserIdentityRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "user-identities-link",
 		Summary:     "Link an identity",
-		Description: "Links the OpenID Connect identity behind an authorization code to the authenticated user, so they can log in through that provider. Requires the current password, plus a totp passcode when totp is enabled; failures count toward the account lockout and are throttled per user (429). These are checked before the code is exchanged, so a rejected attempt can be retried with the same code. Relinking an identity already linked to the user returns it unchanged. Fails with 409 if the identity belongs to another user or the user already linked this provider. Local accounts only.",
+		Description: "Links the OpenID Connect identity behind an authorization code to the authenticated user, so they can log in through that provider. Requires the current password, plus a totp passcode when totp is enabled; failures count toward the account lockout and are throttled per user (429). These are checked before exchanging the code or consuming a prepared identity from the preview endpoint, so a rejected attempt can be retried with the same callback. Relinking an identity already linked to the user returns it unchanged. Fails with 409 if the identity belongs to another user or the user already linked this provider. Local accounts only.",
 		Method:      http.MethodPost,
 		Path:        "/user/settings/identities",
 		Tags:        tags,
 	}, userIdentitiesLink)
+
+	Register(api, huma.Operation{
+		OperationID:   "user-identities-preview",
+		Summary:       "Preview an identity before linking",
+		Description:   "Exchanges the authorization code and returns the account from the verified ID token for confirmation. The prepared identity is bound to the authenticated local user and the callback, and expires after at most five minutes. Repeating this request reuses the prepared identity; password and totp checks on the link endpoint do not consume it on failure.",
+		Method:        http.MethodPost,
+		Path:          "/user/settings/identities/preview",
+		DefaultStatus: http.StatusOK,
+		Tags:          tags,
+	}, userIdentitiesPreview)
 
 	Register(api, huma.Operation{
 		OperationID:   "user-identities-unlink",
@@ -104,6 +114,29 @@ func userIdentitiesLink(ctx context.Context, in *struct {
 	}
 	events.DispatchPending(ctx, s)
 	return &singleBody[openid.LinkedIdentity]{Body: identity}, nil
+}
+
+func userIdentitiesPreview(ctx context.Context, in *struct {
+	Body struct {
+		Provider    string `json:"provider" doc:"The provider key as returned by /info."`
+		Code        string `json:"code" doc:"The authorization code the provider redirected back with."`
+		RedirectURL string `json:"redirect_url" doc:"The redirect URL the authorization request was started with."`
+	}
+}) (*singleBody[openid.IdentityPreview], error) {
+	u, s, err := localUserFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	s.Close()
+	preview, err := openid.PreviewIdentity(ctx, u, &openid.LinkIdentityRequest{
+		Provider:    in.Body.Provider,
+		Code:        in.Body.Code,
+		RedirectURL: in.Body.RedirectURL,
+	})
+	if err != nil {
+		return nil, translateOpenIDError(err)
+	}
+	return &singleBody[openid.IdentityPreview]{Body: preview}, nil
 }
 
 func userIdentitiesUnlink(ctx context.Context, in *struct {
