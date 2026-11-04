@@ -132,7 +132,7 @@ func Remember[T any](s *xorm.Session, key string, fetch func() (T, error)) (T, e
 	return value, nil
 }
 
-// Forget drops key from the memo of s, for when a locking read saw a newer row than the memoized one.
+// Forget invalidates a memoized row after a locking read sees newer data.
 func Forget(s *xorm.Session, key string) {
 	if c, ok := cacheForSession(s); ok {
 		c.forget(key)

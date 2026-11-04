@@ -288,20 +288,30 @@ func TestTaskPosition_Update(t *testing.T) {
 		defer s.Close()
 
 		u := &user.User{ID: 1}
-		tp := &TaskPosition{TaskID: 1, ProjectViewID: 1, Position: 12345}
+		tp := &TaskPosition{
+			TaskID:        1,
+			ProjectViewID: 1,
+			Position:      12345,
+		}
 		can, err := tp.CanUpdate(s, u)
 		require.NoError(t, err)
 		require.True(t, can)
 
 		// Project 2 belongs to user 3 and is not shared with user 1.
-		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 2, Index: 9999})
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{
+			ProjectID: 2,
+			Index:     9999,
+		})
 		require.NoError(t, err)
 
 		err = tp.Update(s, u)
 		require.ErrorIs(t, err, ErrGenericForbidden{})
 		require.NoError(t, s.Commit())
 
-		db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 1, "position": 12345})
+		db.AssertMissing(t, "task_positions", map[string]interface{}{
+			"task_id":  1,
+			"position": 12345,
+		})
 	})
 }
 

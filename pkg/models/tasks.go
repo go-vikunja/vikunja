@@ -398,8 +398,7 @@ func lockingSession(s *xorm.Session) *xorm.Session {
 	return s
 }
 
-// Can* checks read the task unlocked, so a concurrent move into another project can land before the write.
-// Write paths call this to serialize with movers and recheck against the project the task is in now.
+// Serialize with task movers because Can* checks read the task without a lock.
 func lockTaskForWrite(s *xorm.Session, a web.Auth, taskID int64) (task Task, err error) {
 	task, err = GetTaskSimple(lockingSession(s), &Task{ID: taskID})
 	if err != nil {

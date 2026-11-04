@@ -502,7 +502,7 @@ func TestLinkSharing_AttachmentIsNotAttributedToCollidingUser(t *testing.T) {
 
 	share := &LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: PermissionWrite}
 
-	ta := TaskAttachment{TaskID: 13} // task 13 lives in project 2
+	ta := TaskAttachment{TaskID: 13}
 	content := []byte("testingstuff")
 	require.NoError(t, ta.NewAttachment(s, bytes.NewReader(content), "testfile", uint64(len(content)), share))
 

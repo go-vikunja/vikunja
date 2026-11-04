@@ -171,7 +171,10 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 // @Router /tasks/{taskID}/comments/{commentID} [post]
 func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 	// TaskID is optional here: only routes carrying it in the URL bind it, so fall back to the stored row.
-	saved := &TaskComment{ID: tc.ID, TaskID: tc.TaskID}
+	saved := &TaskComment{
+		ID:     tc.ID,
+		TaskID: tc.TaskID,
+	}
 	if err := getTaskCommentSimple(s, saved); err != nil {
 		return err
 	}

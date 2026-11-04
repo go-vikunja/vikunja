@@ -58,7 +58,11 @@ func TestTaskRelation_Create(t *testing.T) {
 		defer s.Close()
 		events.ClearDispatchedEvents()
 
-		share := &LinkSharing{ID: 2, ProjectID: 1, Permission: PermissionWrite}
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  1,
+			Permission: PermissionWrite,
+		}
 		rel := TaskRelation{
 			TaskID:       1,
 			OtherTaskID:  2,
@@ -435,7 +439,11 @@ func TestTaskRelation_Delete(t *testing.T) {
 		defer s.Close()
 		events.ClearDispatchedEvents()
 
-		share := &LinkSharing{ID: 2, ProjectID: 1, Permission: PermissionWrite}
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  1,
+			Permission: PermissionWrite,
+		}
 		rel := TaskRelation{
 			TaskID:       1,
 			OtherTaskID:  29,
