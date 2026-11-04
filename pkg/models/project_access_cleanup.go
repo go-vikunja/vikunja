@@ -39,7 +39,7 @@ type AccessLossCleanup struct {
 // No admin is around to ask during a login-time sync.
 func teamSyncAccessLossCleanup() AccessLossCleanup {
 	return AccessLossCleanup{
-		KeepWebhooks:     config.AuthTeamSyncTransferWebhooks.GetBool(),
+		KeepWebhooks:     true,
 		RevokeLinkShares: config.AuthTeamSyncRevokeLinkShares.GetBool(),
 	}
 }
@@ -140,17 +140,17 @@ func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, e
 			if userID == doerID || len(lost) == 0 {
 				continue
 			}
+			column := "created_by_id"
+			webhook := &Webhook{CreatedByID: doerID}
 			if doer == nil {
-				if err := transferWebhooksToProjectOwners(s, userID, lost, existing); err != nil {
-					return err
-				}
-				continue
+				column = "is_disabled"
+				webhook = &Webhook{IsDisabled: true}
 			}
 			_, err := s.In("project_id", lost).
 				And("created_by_id = ?", userID).
-				Cols("created_by_id").
+				Cols(column).
 				NoAutoTime().
-				Update(&Webhook{CreatedByID: doerID})
+				Update(webhook)
 			if err != nil {
 				return err
 			}
@@ -310,26 +310,6 @@ func deleteUserWebhooksAndLinkShares(s *xorm.Session, userID int64, projectIDs [
 		_, err := s.In("project_id", projectIDs).
 			And("shared_by_id = ?", userID).
 			Delete(&LinkSharing{})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func transferWebhooksToProjectOwners(s *xorm.Session, userID int64, projectIDs []int64, projects map[int64]*Project) error {
-	projectIDsByOwner := map[int64][]int64{}
-	for _, id := range projectIDs {
-		owner := projects[id].OwnerID
-		projectIDsByOwner[owner] = append(projectIDsByOwner[owner], id)
-	}
-
-	for ownerID, ids := range projectIDsByOwner {
-		_, err := s.In("project_id", ids).
-			And("created_by_id = ?", userID).
-			Cols("created_by_id").
-			NoAutoTime().
-			Update(&Webhook{CreatedByID: ownerID})
 		if err != nil {
 			return err
 		}

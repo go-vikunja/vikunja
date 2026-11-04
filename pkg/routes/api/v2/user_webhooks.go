@@ -80,8 +80,8 @@ func RegisterUserWebhookRoutes(api huma.API) {
 
 	Register(api, huma.Operation{
 		OperationID: "user-webhooks-update",
-		Summary:     "Update a user webhook's events",
-		Description: "Changes the events a user webhook subscribes to. Only the events list can be changed; target_url, secret and auth are immutable after creation. Only the owning user may update it.",
+		Summary:     "Update a user webhook",
+		Description: "Changes the subscribed events and optionally is_disabled. Omitting is_disabled preserves its state. The target URL and credentials remain unchanged. Only the owning user may update it.",
 		Method:      http.MethodPut,
 		Path:        "/user/settings/webhooks/{webhook}",
 		Tags:        tags,
@@ -137,19 +137,23 @@ func userWebhooksCreate(ctx context.Context, in *struct {
 
 func userWebhooksUpdate(ctx context.Context, in *struct {
 	ID   int64 `path:"webhook"`
-	Body models.Webhook
+	Body webhookUpdate
 }) (*singleBody[models.Webhook], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	in.Body.ID = in.ID
-	in.Body.UserID = a.GetID()
-	in.Body.ProjectID = 0
-	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
+	webhook := &models.Webhook{
+		ID:          in.ID,
+		UserID:      a.GetID(),
+		TargetURL:   in.Body.TargetURL,
+		Events:      in.Body.Events,
+		SetDisabled: in.Body.IsDisabled,
+	}
+	if err := handler.DoUpdate(ctx, webhook, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &singleBody[models.Webhook]{Body: &in.Body}, nil
+	return &singleBody[models.Webhook]{Body: webhook}, nil
 }
 
 func userWebhooksDelete(ctx context.Context, in *struct {
