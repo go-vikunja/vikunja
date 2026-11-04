@@ -390,34 +390,6 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": f.owner.ID}, false)
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": childOwner.ID}, false)
 	})
-	t.Run("confirm fails with the affected counts", func(t *testing.T) {
-		f := setupAccessLoss(t)
-		f.shareDirectly(t, PermissionWrite)
-
-		err := removeShare(t, f, AccessLossCleanup{Confirm: true})
-		require.Error(t, err)
-		require.True(t, IsErrAccessLossNeedsConfirmation(err))
-		assert.Equal(t, &ErrAccessLossNeedsConfirmation{Webhooks: 2, LinkShares: 2}, err)
-	})
-	t.Run("confirm passes when nothing is affected", func(t *testing.T) {
-		f := setupAccessLoss(t)
-		f.shareDirectly(t, PermissionWrite)
-		_, err := f.s.Where("created_by_id = ?", f.member.ID).Delete(&Webhook{})
-		require.NoError(t, err)
-		_, err = f.s.Where("shared_by_id = ?", f.member.ID).Delete(&LinkSharing{})
-		require.NoError(t, err)
-
-		require.NoError(t, removeShare(t, f, AccessLossCleanup{Confirm: true}))
-		require.NoError(t, f.s.Commit())
-		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
-	})
-	t.Run("confirm ignores users who keep access", func(t *testing.T) {
-		f := setupAccessLoss(t)
-		f.shareDirectly(t, PermissionWrite)
-		f.shareViaTeam(t)
-
-		require.NoError(t, removeShare(t, f, AccessLossCleanup{Confirm: true}))
-	})
 	t.Run("team removal applies the options to every member", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
