@@ -160,3 +160,52 @@ func TestCalendarBodyParsing(t *testing.T) {
 		assert.False(t, taskWithUIDExists(t, "uid-collection-params"))
 	})
 }
+
+func TestRejectedBodiesOnInaccessibleProjects(t *testing.T) {
+	// Project 1 belongs to another user, so every rejected body must look like a missing project.
+	const uid = "uid-inaccessible"
+	tests := []struct {
+		name    string
+		handler func(*echo.Context) error
+		method  string
+		path    string
+		body    string
+		params  echo.PathValues
+		// TaskHandler returns the error; ProjectHandler writes the 404 itself
+		returnsErr bool
+	}{
+		{
+			name:    "collection PUT with an oversized body",
+			handler: ProjectHandler,
+			method:  http.MethodPut,
+			path:    projectPath(1),
+			body:    calendarWithTask(uid, "DESCRIPTION:"+strings.Repeat("a", caldav2.MaxVCalendarSize)+"\r\n"),
+			params:  projectParams(1),
+		},
+		{
+			name:       "task PUT with too many property parameters",
+			handler:    TaskHandler,
+			method:     http.MethodPut,
+			path:       projectPath(1) + uid + ".ics",
+			body:       calendarWithTask(uid, tooManyParameters()),
+			params:     taskParams(1, uid),
+			returnsErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+
+			rec, err := callCaldavHandler(t, tt.handler, caldavFilterUser, tt.method, tt.path, tt.body, tt.params)
+			if tt.returnsErr {
+				require.Error(t, err)
+				assert.True(t, models.IsErrProjectDoesNotExist(err), "got %v", err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, rec.Code)
+			assert.Equal(t, "Project not found", rec.Body.String())
+		})
+	}
+}

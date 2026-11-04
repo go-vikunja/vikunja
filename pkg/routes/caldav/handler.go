@@ -85,11 +85,9 @@ func ProjectHandler(c *echo.Context) error {
 
 	logRequest(c.Request().Header, body)
 
-	if c.Request().Method == http.MethodPut && strings.HasPrefix(string(body), `BEGIN:VCALENDAR`) {
-		if err := checkCalendarBody(string(body)); err != nil {
-			return err
-		}
+	projectNotFound := func() error { return c.String(http.StatusNotFound, "Project not found") }
 
+	if c.Request().Method == http.MethodPut && strings.HasPrefix(string(body), `BEGIN:VCALENDAR`) {
 		s := db.NewSession()
 		canRead, err := storage.canReadCollection(s)
 		s.Close()
@@ -97,7 +95,11 @@ func ProjectHandler(c *echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
 		}
 		if !canRead {
-			return c.String(http.StatusNotFound, "Project not found")
+			return projectNotFound()
+		}
+
+		if err := checkCalendarBody(string(body)); err != nil {
+			return err
 		}
 
 		storage.task, _, err = caldav2.ParseTaskFromVTODO(string(body))
@@ -207,21 +209,22 @@ func TaskHandler(c *echo.Context) error {
 		return c.String(http.StatusNotFound, "Task not found")
 	}
 
+	storage := &VikunjaCaldavProjectStorage{
+		project: project,
+		task:    &models.Task{UID: taskUID},
+		user:    u,
+	}
+	projectNotFound := func() error { return models.ErrProjectDoesNotExist{ID: project.ID} }
+
 	if c.Request().Method == http.MethodPut {
 		body, err := io.ReadAll(io.LimitReader(c.Request().Body, caldav2.MaxVCalendarSize+1))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Could not read request body").Wrap(err)
 		}
 		if err := checkCalendarBody(string(body)); err != nil {
-			return err
+			return storage.rejectBody(err, projectNotFound)
 		}
 		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-	}
-
-	storage := &VikunjaCaldavProjectStorage{
-		project: project,
-		task:    &models.Task{UID: taskUID},
-		user:    u,
 	}
 
 	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
@@ -303,7 +306,24 @@ func EntryHandler(c *echo.Context) error {
 	return nil
 }
 
-// Runs before any permission check, so the parser never sees what it handles superlinearly.
+// Body checks precede caldav-go's access checks, so an unreadable collection must answer like a missing one.
+func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error, notFound func() error) error {
+	if vcls.project.ID == 0 {
+		return checkErr
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+	canRead, err := vcls.canReadCollection(s)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+	}
+	if !canRead {
+		return notFound()
+	}
+	return checkErr
+}
+
 func checkCalendarBody(body string) error {
 	err := caldav2.CheckVCalendarLimits(body)
 	switch {
