@@ -1689,6 +1689,7 @@
 		"stop": "Timer stoppen",
 		"logTime": "Zeit buchen",
 		"editEntry": "Eintrag bearbeiten",
+		"commentLabel": "Kommentar",
 		"form": {
 			"task": "Aufgabe",
 			"taskSearch": "Nach einer Aufgabe suchen…",
