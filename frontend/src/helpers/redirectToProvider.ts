@@ -22,7 +22,7 @@ export function isLinkingIdentity(state: unknown): boolean {
 }
 
 // Consumes only this flow's entries: Back/reload then fails the state check, other tabs' flows survive.
-export function endLinkFlow(state: unknown) {
+export function endOpenIdFlow(state: unknown) {
 	if (!isNonEmptyString(state)) {
 		return
 	}

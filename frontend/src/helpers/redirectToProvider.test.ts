@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, it, expect} from 'vitest'
 
-import {endLinkFlow, getAutoRedirectProvider, isLinkingIdentity, redirectToProvider} from './redirectToProvider'
+import {endOpenIdFlow, getAutoRedirectProvider, isLinkingIdentity, redirectToProvider} from './redirectToProvider'
 import type {IProvider} from '@/types/IProvider'
 
 const provider = {key: 'authentik', name: 'Authentik'} as IProvider
@@ -113,9 +113,9 @@ describe('redirectToProvider', () => {
 		redirectToProvider(fullProvider, {linking: true})
 		const linkState = localStorage.getItem('state')!
 
-		endLinkFlow('other-state')
-		endLinkFlow('')
-		endLinkFlow(null)
+		endOpenIdFlow('other-state')
+		endOpenIdFlow('')
+		endOpenIdFlow(null)
 
 		expect(isLinkingIdentity(linkState)).toBe(true)
 		expect(localStorage.getItem('state')).toBe(linkState)
@@ -125,7 +125,7 @@ describe('redirectToProvider', () => {
 		redirectToProvider(fullProvider, {linking: true})
 		const linkState = localStorage.getItem('state')!
 
-		endLinkFlow(linkState)
+		endOpenIdFlow(linkState)
 
 		expect(isLinkingIdentity(linkState)).toBe(false)
 		expect(localStorage.getItem('state')).toBeNull()
