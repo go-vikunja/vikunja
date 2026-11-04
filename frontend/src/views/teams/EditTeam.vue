@@ -143,7 +143,7 @@
 				</p>
 				<ProjectAccessCleanupList
 					v-model="cleanup"
-					:intro="$t('team.edit.leave.cleanupText')"
+					:intro="$t('project.share.accessCleanup.self.intro')"
 					perspective="self"
 				/>
 			</template>

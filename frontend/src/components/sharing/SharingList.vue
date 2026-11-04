@@ -195,7 +195,7 @@ const shareToDelete = ref(null) as Ref<Identified<Share> | null>
 const removingOwnShare = ref(false)
 const cleanup = ref(defaultAccessLossCleanup())
 const cleanupIntro = computed(() => removingOwnShare.value
-	? t('project.share.userTeam.removeOwnCleanupText')
+	? t('project.share.accessCleanup.self.intro')
 	: t('project.share.userTeam.removeCleanupText'))
 watch(shareToDelete, () => {
 	cleanup.value = defaultAccessLossCleanup()

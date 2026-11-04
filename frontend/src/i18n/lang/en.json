@@ -534,7 +534,6 @@
         "removeHeader": "Remove a {type} from the {sharable}",
         "removeText": "Are you sure you want to remove this {sharable} from the {type}? This cannot be undone!",
         "removeCleanupText": "Anyone who loses access to this project, or the projects under it, through this will also lose:",
-        "removeOwnCleanupText": "If you lose access to this project, or the projects under it, through this you will also lose:",
         "removeSuccess": "The {sharable} was successfully removed from the {type}.",
         "addedSuccess": "The {type} was successfully added.",
         "updatedSuccess": "The {type} was successfully added.",
@@ -549,6 +548,7 @@
           "revokeLinkShares": "Revoke link shares they created"
         },
         "self": {
+          "intro": "On projects you lose access to, you will also lose:",
           "assignments": "your task assignments",
           "subscriptions": "your subscriptions to tasks and projects",
           "webhooks": "webhooks you created",
@@ -1432,7 +1432,6 @@
         "title": "Leave team",
         "text1": "Are you sure you want to leave this team?",
         "text2": "You will lose access to all projects this team has access to. If you change your mind you'll need a team admin to add you again.",
-        "cleanupText": "On projects you lose access to, you will also lose:",
         "success": "You have successfully left the team."
       }
     },
