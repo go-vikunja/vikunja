@@ -53,6 +53,11 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, doer web.Auth, userI
 		return nil
 	}
 
+	// Confirm counts and revoked link shares are other users' data a link share can't access.
+	if _, isLinkShare := doer.(*LinkSharing); isLinkShare {
+		cleanup = AccessLossCleanup{}
+	}
+
 	descendantIDs := []int64{}
 	err := s.Table("project_ancestors").
 		Cols("project_id").
