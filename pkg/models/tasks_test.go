@@ -908,6 +908,34 @@ func TestTask_Delete(t *testing.T) {
 		require.True(t, has)
 		assert.NotNil(t, entry.EndTime)
 	})
+	t.Run("event payload carries no doer-scoped data", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		doer := &user.User{ID: 1}
+		_, err := s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 1, UserID: doer.ID})
+		require.NoError(t, err)
+
+		before := &Task{ID: 1}
+		require.NoError(t, before.ReadOne(s, doer))
+		require.NotEmpty(t, before.RelatedTasks)
+		require.True(t, before.IsFavorite)
+		require.NotNil(t, before.Subscription)
+
+		require.NoError(t, (&Task{ID: 1}).Delete(s, doer))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TaskDeletedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		deleted := dispatched[0].(*TaskDeletedEvent).Task
+		assert.Equal(t, int64(1), deleted.ID)
+		assert.Empty(t, deleted.RelatedTasks)
+		assert.False(t, deleted.IsFavorite)
+		assert.Nil(t, deleted.Subscription)
+	})
 }
 
 func TestHardDeleteTask(t *testing.T) {
