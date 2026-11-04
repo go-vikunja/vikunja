@@ -134,7 +134,8 @@
 				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}</p>
 				<ProjectAccessCleanupList
 					v-model="cleanup"
-					:intro="$t('project.share.userTeam.removeCleanupText')"
+					:intro="removingOwnShare ? $t('project.share.userTeam.removeOwnCleanupText') : $t('project.share.userTeam.removeCleanupText')"
+					:perspective="removingOwnShare ? 'self' : 'others'"
 				/>
 			</template>
 		</Modal>
@@ -167,6 +168,7 @@ const props = defineProps<{
 	add: (projectId: number, candidate: Identified<Candidate>) => Promise<unknown>
 	updatePermission: (projectId: number, share: Identified<Share>, permission: Permission) => Promise<unknown>
 	remove: (projectId: number, share: Identified<Share>, cleanup: AccessLossCleanup) => Promise<unknown>
+	isOwnShare?: (share: Identified<Share>) => boolean
 }>()
 
 const showSearchLoading = useDelayedLoading(() => props.searchLoading)
@@ -187,6 +189,7 @@ const unsharedCandidates = computed(() => props.candidates.filter(hasId).filter(
 const selected = ref(null) as Ref<Identified<Candidate> | null>
 const selectedPermission = ref<Record<number, Permission>>({})
 const shareToDelete = ref(null) as Ref<Identified<Share> | null>
+const removingOwnShare = computed(() => shareToDelete.value !== null && (props.isOwnShare?.(shareToDelete.value) ?? false))
 const cleanup = ref(defaultAccessLossCleanup())
 watch(shareToDelete, () => {
 	cleanup.value = defaultAccessLossCleanup()
