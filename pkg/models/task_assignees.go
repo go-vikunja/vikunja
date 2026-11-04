@@ -222,7 +222,6 @@ func (la *TaskAssginee) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	// The assignee's access is checked against this, so it must be the project the task is in now.
 	project, err := GetProjectSimpleByID(s, locked.ProjectID)
 	if err != nil {
 		return

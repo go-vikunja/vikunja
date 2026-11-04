@@ -138,15 +138,24 @@ func TestTaskBucket_Update(t *testing.T) {
 		require.True(t, can)
 
 		// User 1 can write to project 10 through a share, so only the view fit fails.
-		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 10, Index: 9999})
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{
+			ProjectID: 10,
+			Index:     9999,
+		})
 		require.NoError(t, err)
 
 		err = tb.Update(s, u)
 		require.ErrorIs(t, err, ErrGenericForbidden{})
 		require.NoError(t, s.Commit())
 
-		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "done": false}, false)
-		db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 1, "bucket_id": 3})
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":   1,
+			"done": false,
+		}, false)
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{
+			"task_id":   1,
+			"bucket_id": 3,
+		})
 	})
 	t.Run("moving a task to the done bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

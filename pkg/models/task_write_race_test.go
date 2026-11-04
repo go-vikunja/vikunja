@@ -29,8 +29,6 @@ import (
 	"xorm.io/xorm"
 )
 
-// Each write's permission check passes, then task 1 moves to project 2 (user 3's, not shared
-// with user 1) before the write, which must fail and leave the data untouched.
 func TestTaskChildWrites_TaskMovedToForbiddenProject(t *testing.T) {
 	u := &user.User{ID: 1}
 
@@ -41,25 +39,50 @@ func TestTaskChildWrites_TaskMovedToForbiddenProject(t *testing.T) {
 		assert func(t *testing.T)
 	}{
 		{
-			name:  "comment create",
-			can:   (&TaskComment{TaskID: 1}).CanCreate,
-			write: func(s *xorm.Session) error { return (&TaskComment{TaskID: 1, Comment: "raced"}).Create(s, u) },
+			name: "comment create",
+			can:  (&TaskComment{TaskID: 1}).CanCreate,
+			write: func(s *xorm.Session) error {
+				return (&TaskComment{
+					TaskID:  1,
+					Comment: "raced",
+				}).Create(s, u)
+			},
 			assert: func(t *testing.T) {
 				db.AssertMissing(t, "task_comments", map[string]interface{}{"comment": "raced"})
 			},
 		},
 		{
-			name:  "comment update",
-			can:   (&TaskComment{ID: 1, TaskID: 1}).CanUpdate,
-			write: func(s *xorm.Session) error { return (&TaskComment{ID: 1, TaskID: 1, Comment: "raced"}).Update(s, u) },
+			name: "comment update",
+			can: (&TaskComment{
+				ID:     1,
+				TaskID: 1,
+			}).CanUpdate,
+			write: func(s *xorm.Session) error {
+				return (&TaskComment{
+					ID:      1,
+					TaskID:  1,
+					Comment: "raced",
+				}).Update(s, u)
+			},
 			assert: func(t *testing.T) {
-				db.AssertMissing(t, "task_comments", map[string]interface{}{"id": 1, "comment": "raced"})
+				db.AssertMissing(t, "task_comments", map[string]interface{}{
+					"id":      1,
+					"comment": "raced",
+				})
 			},
 		},
 		{
-			name:  "comment delete",
-			can:   (&TaskComment{ID: 1, TaskID: 1}).CanDelete,
-			write: func(s *xorm.Session) error { return (&TaskComment{ID: 1, TaskID: 1}).Delete(s, u) },
+			name: "comment delete",
+			can: (&TaskComment{
+				ID:     1,
+				TaskID: 1,
+			}).CanDelete,
+			write: func(s *xorm.Session) error {
+				return (&TaskComment{
+					ID:     1,
+					TaskID: 1,
+				}).Delete(s, u)
+			},
 			assert: func(t *testing.T) {
 				db.AssertExists(t, "task_comments", map[string]interface{}{"id": 1}, false)
 			},
@@ -76,43 +99,87 @@ func TestTaskChildWrites_TaskMovedToForbiddenProject(t *testing.T) {
 			},
 		},
 		{
-			name:  "attachment delete",
-			can:   (&TaskAttachment{ID: 1, TaskID: 1}).CanDelete,
-			write: func(s *xorm.Session) error { return (&TaskAttachment{ID: 1, TaskID: 1}).Delete(s, u) },
+			name: "attachment delete",
+			can: (&TaskAttachment{
+				ID:     1,
+				TaskID: 1,
+			}).CanDelete,
+			write: func(s *xorm.Session) error {
+				return (&TaskAttachment{
+					ID:     1,
+					TaskID: 1,
+				}).Delete(s, u)
+			},
 			assert: func(t *testing.T) {
 				db.AssertExists(t, "task_attachments", map[string]interface{}{"id": 1}, false)
 			},
 		},
 		{
-			name:  "label add",
-			can:   (&LabelTask{TaskID: 1, LabelID: 1}).CanCreate,
-			write: func(s *xorm.Session) error { return (&LabelTask{TaskID: 1, LabelID: 1}).Create(s, u) },
+			name: "label add",
+			can: (&LabelTask{
+				TaskID:  1,
+				LabelID: 1,
+			}).CanCreate,
+			write: func(s *xorm.Session) error {
+				return (&LabelTask{
+					TaskID:  1,
+					LabelID: 1,
+				}).Create(s, u)
+			},
 			assert: func(t *testing.T) {
-				db.AssertMissing(t, "label_tasks", map[string]interface{}{"task_id": 1, "label_id": 1})
+				db.AssertMissing(t, "label_tasks", map[string]interface{}{
+					"task_id":  1,
+					"label_id": 1,
+				})
 			},
 		},
 		{
-			name:  "label remove",
-			can:   (&LabelTask{TaskID: 1, LabelID: 4}).CanDelete,
-			write: func(s *xorm.Session) error { return (&LabelTask{TaskID: 1, LabelID: 4}).Delete(s, u) },
+			name: "label remove",
+			can: (&LabelTask{
+				TaskID:  1,
+				LabelID: 4,
+			}).CanDelete,
+			write: func(s *xorm.Session) error {
+				return (&LabelTask{
+					TaskID:  1,
+					LabelID: 4,
+				}).Delete(s, u)
+			},
 			assert: func(t *testing.T) {
-				db.AssertExists(t, "label_tasks", map[string]interface{}{"task_id": 1, "label_id": 4}, false)
+				db.AssertExists(t, "label_tasks", map[string]interface{}{
+					"task_id":  1,
+					"label_id": 4,
+				}, false)
 			},
 		},
 		{
 			name: "label bulk",
 			can:  (&LabelTaskBulk{TaskID: 1}).CanCreate,
 			write: func(s *xorm.Session) error {
-				return (&LabelTaskBulk{TaskID: 1, Labels: []*Label{{ID: 1}}}).Create(s, u)
+				return (&LabelTaskBulk{
+					TaskID: 1,
+					Labels: []*Label{{ID: 1}},
+				}).Create(s, u)
 			},
 			assert: func(t *testing.T) {
-				db.AssertExists(t, "label_tasks", map[string]interface{}{"task_id": 1, "label_id": 4}, false)
+				db.AssertExists(t, "label_tasks", map[string]interface{}{
+					"task_id":  1,
+					"label_id": 4,
+				}, false)
 			},
 		},
 		{
-			name:  "assignee add",
-			can:   (&TaskAssginee{TaskID: 1, UserID: 1}).CanCreate,
-			write: func(s *xorm.Session) error { return (&TaskAssginee{TaskID: 1, UserID: 1}).Create(s, u) },
+			name: "assignee add",
+			can: (&TaskAssginee{
+				TaskID: 1,
+				UserID: 1,
+			}).CanCreate,
+			write: func(s *xorm.Session) error {
+				return (&TaskAssginee{
+					TaskID: 1,
+					UserID: 1,
+				}).Create(s, u)
+			},
 			assert: func(t *testing.T) {
 				db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": 1})
 			},
@@ -121,7 +188,10 @@ func TestTaskChildWrites_TaskMovedToForbiddenProject(t *testing.T) {
 			name: "assignee bulk",
 			can:  (&BulkAssignees{TaskID: 1}).CanCreate,
 			write: func(s *xorm.Session) error {
-				return (&BulkAssignees{TaskID: 1, Assignees: []*user.User{{ID: 1}}}).Create(s, u)
+				return (&BulkAssignees{
+					TaskID:    1,
+					Assignees: []*user.User{{ID: 1}},
+				}).Create(s, u)
 			},
 			assert: func(t *testing.T) {
 				db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": 1})
@@ -129,19 +199,38 @@ func TestTaskChildWrites_TaskMovedToForbiddenProject(t *testing.T) {
 		},
 		{
 			name: "relation create",
-			can:  (&TaskRelation{TaskID: 1, OtherTaskID: 2, RelationKind: RelationKindRelated}).CanCreate,
+			can: (&TaskRelation{
+				TaskID:       1,
+				OtherTaskID:  2,
+				RelationKind: RelationKindRelated,
+			}).CanCreate,
 			write: func(s *xorm.Session) error {
-				return (&TaskRelation{TaskID: 1, OtherTaskID: 2, RelationKind: RelationKindRelated}).Create(s, u)
+				return (&TaskRelation{
+					TaskID:       1,
+					OtherTaskID:  2,
+					RelationKind: RelationKindRelated,
+				}).Create(s, u)
 			},
 			assert: func(t *testing.T) {
-				db.AssertMissing(t, "task_relations", map[string]interface{}{"task_id": 1, "other_task_id": 2})
+				db.AssertMissing(t, "task_relations", map[string]interface{}{
+					"task_id":       1,
+					"other_task_id": 2,
+				})
 			},
 		},
 		{
 			name: "relation delete",
-			can:  (&TaskRelation{TaskID: 1, OtherTaskID: 29, RelationKind: RelationKindSubtask}).CanDelete,
+			can: (&TaskRelation{
+				TaskID:       1,
+				OtherTaskID:  29,
+				RelationKind: RelationKindSubtask,
+			}).CanDelete,
 			write: func(s *xorm.Session) error {
-				return (&TaskRelation{TaskID: 1, OtherTaskID: 29, RelationKind: RelationKindSubtask}).Delete(s, u)
+				return (&TaskRelation{
+					TaskID:       1,
+					OtherTaskID:  29,
+					RelationKind: RelationKindSubtask,
+				}).Delete(s, u)
 			},
 			assert: func(t *testing.T) {
 				db.AssertExists(t, "task_relations", map[string]interface{}{"id": 1}, false)
@@ -149,19 +238,39 @@ func TestTaskChildWrites_TaskMovedToForbiddenProject(t *testing.T) {
 		},
 		{
 			name: "reaction create",
-			can:  (&Reaction{EntityID: 1, EntityKindString: "tasks", Value: "🚀"}).CanCreate,
+			can: (&Reaction{
+				EntityID:         1,
+				EntityKindString: "tasks",
+				Value:            "🚀",
+			}).CanCreate,
 			write: func(s *xorm.Session) error {
-				return (&Reaction{EntityID: 1, EntityKindString: "tasks", Value: "🚀"}).Create(s, u)
+				return (&Reaction{
+					EntityID:         1,
+					EntityKindString: "tasks",
+					Value:            "🚀",
+				}).Create(s, u)
 			},
 			assert: func(t *testing.T) {
-				db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "value": "🚀"})
+				db.AssertMissing(t, "reactions", map[string]interface{}{
+					"entity_id": 1,
+					"value":     "🚀",
+				})
 			},
 		},
 		{
 			name: "reaction delete",
-			can:  (&Reaction{EntityID: 1, EntityKindString: "tasks", Value: "👋"}).CanDelete,
+			can: (&Reaction{
+				EntityID:         1,
+				EntityKindString: "tasks",
+				Value:            "👋",
+			}).CanDelete,
 			write: func(s *xorm.Session) error {
-				return (&Reaction{EntityID: 1, EntityKindString: "tasks", EntityKind: ReactionKindTask, Value: "👋"}).Delete(s, u)
+				return (&Reaction{
+					EntityID:         1,
+					EntityKindString: "tasks",
+					EntityKind:       ReactionKindTask,
+					Value:            "👋",
+				}).Delete(s, u)
 			},
 			assert: func(t *testing.T) {
 				db.AssertExists(t, "reactions", map[string]interface{}{"id": 1}, false)
@@ -172,7 +281,10 @@ func TestTaskChildWrites_TaskMovedToForbiddenProject(t *testing.T) {
 			can:   (&TaskDuplicate{TaskID: 1}).CanCreate,
 			write: func(s *xorm.Session) error { return (&TaskDuplicate{TaskID: 1}).Create(s, u) },
 			assert: func(t *testing.T) {
-				db.AssertMissing(t, "task_relations", map[string]interface{}{"other_task_id": 1, "relation_kind": RelationKindCopiedFrom})
+				db.AssertMissing(t, "task_relations", map[string]interface{}{
+					"other_task_id": 1,
+					"relation_kind": RelationKindCopiedFrom,
+				})
 			},
 		},
 	}
@@ -188,7 +300,10 @@ func TestTaskChildWrites_TaskMovedToForbiddenProject(t *testing.T) {
 			require.NoError(t, err)
 			require.True(t, can)
 
-			_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 2, Index: 9999})
+			_, err = s.ID(1).Cols("project_id", "index").Update(&Task{
+				ProjectID: 2,
+				Index:     9999,
+			})
 			require.NoError(t, err)
 
 			err = tc.write(s)

@@ -803,7 +803,10 @@ func TestTask_Delete(t *testing.T) {
 		require.True(t, can)
 
 		// Project 2 belongs to user 3 and is not shared with user 1.
-		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 2, Index: 9999})
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{
+			ProjectID: 2,
+			Index:     9999,
+		})
 		require.NoError(t, err)
 
 		err = task.Delete(s, u)

@@ -86,7 +86,6 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return canRead, nil
 }
 
-// The view fit goes stale on a move too, so it is rechecked under the lock.
 func lockTaskInView(s *xorm.Session, a web.Auth, view *ProjectView, taskID int64) error {
 	if _, err := lockTaskForWrite(s, a, taskID); err != nil {
 		return err

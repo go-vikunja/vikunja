@@ -65,7 +65,6 @@ func (td *TaskDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool,
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/duplicate [put]
 func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
-	// The copy lands in the original's project, so write access there is rechecked under the lock.
 	if _, err = lockTaskForWrite(s, doer, td.TaskID); err != nil {
 		return err
 	}
