@@ -386,7 +386,7 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		f.assertLinkSharesRevoked(t)
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookP})
 	})
-	t.Run("keeps webhooks by transferring them to the project owner", func(t *testing.T) {
+	t.Run("keeps webhooks by transferring them to the acting user", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
 
@@ -395,7 +395,7 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		f.assertWebhooksTransferredTo(t, f.owner)
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
 	})
-	t.Run("transfers each webhook to its own project's owner", func(t *testing.T) {
+	t.Run("transfers subtree webhooks to the doer despite different project owners", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
 		childOwner := &user.User{ID: 3}
@@ -405,7 +405,7 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		require.NoError(t, removeShare(t, f, AccessLossCleanup{KeepWebhooks: true}))
 		require.NoError(t, f.s.Commit())
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": f.owner.ID}, false)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": childOwner.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": f.owner.ID}, false)
 	})
 	t.Run("team removal applies the options to every member", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -463,16 +463,28 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		require.NoError(t, f.s.Commit())
 		f.assertWebhooksDeleted(t)
 	})
-	t.Run("deleting your own team cannot keep your webhooks", func(t *testing.T) {
+	t.Run("team deletion cleans the doer's hooks before transferring other members' hooks", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		team := f.shareViaTeam(t)
-		_, othersWebhook := f.addOtherMemberWithWebhook(t, team)
+		doer, doersWebhook := f.addOtherMemberWithWebhook(t, team)
+		_, err := f.s.Where("team_id = ? AND user_id = ?", team.ID, doer.ID).Cols("admin").Update(&TeamMember{Admin: true})
+		require.NoError(t, err)
+		canDelete, err := team.CanDelete(f.s, doer)
+		require.NoError(t, err)
+		require.True(t, canDelete)
 		team.AccessLossCleanup = AccessLossCleanup{KeepWebhooks: true}
 
-		require.NoError(t, team.Delete(f.s, f.member))
+		require.NoError(t, team.Delete(f.s, doer))
 		require.NoError(t, f.s.Commit())
-		f.assertWebhooksDeleted(t)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.owner.ID}, false)
+		f.assertWebhooksTransferredTo(t, doer)
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": doersWebhook})
+
+		events.ClearDispatchedEvents()
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: f.task,
+			Doer: f.owner,
+		}, &WebhookListener{EventName: "task.updated"})
+		assert.Empty(t, events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()))
 	})
 	t.Run("removing your own team from the project cannot keep your webhooks", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -487,7 +499,7 @@ func TestProjectAccessLossCleanupOptions(t *testing.T) {
 		require.NoError(t, tp.Delete(f.s, f.member))
 		require.NoError(t, f.s.Commit())
 		f.assertWebhooksDeleted(t)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.owner.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.member.ID}, false)
 	})
 	t.Run("team deletion applies the options", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -559,7 +571,7 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		require.NoError(t, f.s.Commit())
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP, "created_by_id": f.member.ID}, false)
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.owner.ID}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.member.ID}, false)
 	})
 	t.Run("a link share moving the project gets the default cleanup", func(t *testing.T) {
 		f := setupAccessLoss(t)
@@ -575,6 +587,7 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		require.NoError(t, err)
 
 		require.NoError(t, f.moveChildToTopLevelAs(t, adminShare, AccessLossCleanup{
+			KeepWebhooks:     true,
 			Confirm:          true,
 			RevokeLinkShares: true,
 		}))
@@ -672,13 +685,24 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 func TestWebhookListener_DeliversTransferredWebhook(t *testing.T) {
 	f := setupAccessLoss(t)
 	f.shareDirectly(t, PermissionWrite)
+	doer := &user.User{
+		ID:       3,
+		Username: "user3",
+	}
+	doerShare := &ProjectUser{
+		ProjectID:  f.parent.ID,
+		Username:   doer.Username,
+		Permission: PermissionAdmin,
+	}
+	require.NoError(t, doerShare.Create(f.s, f.owner))
 	pu := &ProjectUser{
 		ProjectID:         f.parent.ID,
 		Username:          f.member.Username,
 		AccessLossCleanup: AccessLossCleanup{KeepWebhooks: true},
 	}
-	require.NoError(t, pu.Delete(f.s, f.owner))
+	require.NoError(t, pu.Delete(f.s, doer))
 	require.NoError(t, f.s.Commit())
+	f.assertWebhooksTransferredTo(t, doer)
 
 	events.ClearDispatchedEvents()
 	events.TestListener(t, &TaskUpdatedEvent{
@@ -691,6 +715,16 @@ func TestWebhookListener_DeliversTransferredWebhook(t *testing.T) {
 		delivered[e.(*WebhookDeliveryEvent).WebhookID] = true
 	}
 	assert.True(t, delivered[f.webhookC], "the kept webhook should still be delivered")
+
+	require.NoError(t, doerShare.Delete(f.s, f.owner))
+	require.NoError(t, f.s.Commit())
+	f.assertWebhooksDeleted(t)
+	events.ClearDispatchedEvents()
+	events.TestListener(t, &TaskUpdatedEvent{
+		Task: f.task,
+		Doer: f.owner,
+	}, &WebhookListener{EventName: "task.updated"})
+	assert.Empty(t, events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()))
 }
 
 func TestWebhookListener_SkipsCreatorWithoutAccess(t *testing.T) {

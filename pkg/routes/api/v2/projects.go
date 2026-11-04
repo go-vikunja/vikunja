@@ -120,7 +120,7 @@ type projectReadBody struct {
 	models.Project
 	// Body fields, not query params: AutoPatch drops the query string on its GET→PUT round trip.
 	ConfirmAccessLoss bool `json:"confirm_access_loss,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. If any user would lose access to a project holding webhooks or link shares they created, fail with 409 and code 3018 without changing anything. i18n_params carries the webhooks and link_shares counts."`
-	KeepWebhooks      bool `json:"keep_webhooks,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted."`
+	KeepWebhooks      bool `json:"keep_webhooks,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access."`
 	RevokeLinkShares  bool `json:"revoke_link_shares,omitempty" writeOnly:"true" doc:"Only read when the update moves the project. Delete the link shares created by users who lose access. By default they keep working."`
 }
 

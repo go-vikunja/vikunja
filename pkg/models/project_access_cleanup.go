@@ -29,7 +29,7 @@ import (
 
 // AccessLossCleanup's zero value deletes webhooks and keeps link shares.
 type AccessLossCleanup struct {
-	// Kept webhooks move to the project owner: delivery checks the creator's access, so they'd stop firing otherwise.
+	// Kept webhooks move to the acting user and follow their access.
 	KeepWebhooks     bool
 	RevokeLinkShares bool
 	// Fails with ErrAccessLossNeedsConfirmation instead of cleaning up if anything is affected.
@@ -133,7 +133,6 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, doer web.Auth, userI
 	for _, userID := range userIDs {
 		lost := lostByUser[userID]
 		userCleanup := cleanup
-		// A kept webhook moves to the owner but still fires to the doer's URL.
 		if userID == doerID {
 			userCleanup.KeepWebhooks = false
 		}
@@ -150,8 +149,26 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, doer web.Auth, userI
 		if err != nil {
 			return err
 		}
-		if userCleanup.KeepWebhooks {
-			if err := transferWebhooksToProjectOwners(s, userID, lost, existing); err != nil {
+	}
+
+	// Delete the doer's original hooks before transferring other users' hooks to them.
+	if cleanup.KeepWebhooks {
+		for userID, lost := range lostByUser {
+			if userID == doerID || len(lost) == 0 {
+				continue
+			}
+			if doer == nil {
+				if err := transferWebhooksToProjectOwners(s, userID, lost, existing); err != nil {
+					return err
+				}
+				continue
+			}
+			_, err := s.In("project_id", lost).
+				And("created_by_id = ?", userID).
+				Cols("created_by_id").
+				NoAutoTime().
+				Update(&Webhook{CreatedByID: doerID})
+			if err != nil {
 				return err
 			}
 		}

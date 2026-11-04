@@ -107,14 +107,28 @@ func TestProjectUserRemovalCleanupOptions(t *testing.T) {
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhook.ID})
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.linkShare.ID}, false)
 	})
-	t.Run("keep webhooks and revoke link shares", func(t *testing.T) {
+	t.Run("non-owner admin receives kept webhooks and revokes link shares", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 		f := insertUser1DataInProject10(t)
 
-		rec := apiTokenReq(e, http.MethodDelete, "/api/v2/projects/10/users/user1?keep_webhooks=true&revoke_link_shares=true", userJWT(t, 6), "")
+		s := db.NewSession()
+		defer s.Close()
+		_, err = s.Insert(&models.ProjectUser{
+			ProjectID:  10,
+			UserID:     3,
+			Permission: models.PermissionAdmin,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		rec := apiTokenReq(e, http.MethodDelete, "/api/v2/projects/10/users/user1?keep_webhooks=true&revoke_link_shares=true", userJWT(t, 3), "")
 		assert.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
-		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhook.ID, "created_by_id": 6}, false)
+		db.AssertExists(t, "webhooks", map[string]interface{}{
+			"id":            f.webhook.ID,
+			"created_by_id": 3,
+			"target_url":    f.webhook.TargetURL,
+		}, false)
 		db.AssertMissing(t, "link_shares", map[string]interface{}{"id": f.linkShare.ID})
 	})
 }
