@@ -134,7 +134,7 @@
 				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}</p>
 				<ProjectAccessCleanupList
 					v-model="cleanup"
-					:intro="removingOwnShare ? $t('project.share.userTeam.removeOwnCleanupText') : $t('project.share.userTeam.removeCleanupText')"
+					:intro="cleanupIntro"
 					:perspective="removingOwnShare ? 'self' : 'others'"
 				/>
 			</template>
@@ -144,6 +144,7 @@
 
 <script setup lang="ts" generic="Candidate extends Record<string, unknown> & {id?: number}, Share extends {id?: number, permission?: number}">
 import {computed, ref, watch, type Ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {normalizeSharePermission} from '@/client/queries/projectShares'
 import {defaultAccessLossCleanup, type AccessLossCleanup} from '@/client/queries/accessLossCleanup'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
@@ -171,6 +172,8 @@ const props = defineProps<{
 	isOwnShare?: (share: Identified<Share>) => boolean
 }>()
 
+const {t} = useI18n()
+
 const showSearchLoading = useDelayedLoading(() => props.searchLoading)
 
 const search = defineModel<string>('search', {required: true})
@@ -191,6 +194,9 @@ const selectedPermission = ref<Record<number, Permission>>({})
 const shareToDelete = ref(null) as Ref<Identified<Share> | null>
 const removingOwnShare = ref(false)
 const cleanup = ref(defaultAccessLossCleanup())
+const cleanupIntro = computed(() => removingOwnShare.value
+	? t('project.share.userTeam.removeOwnCleanupText')
+	: t('project.share.userTeam.removeCleanupText'))
 watch(shareToDelete, () => {
 	cleanup.value = defaultAccessLossCleanup()
 })
