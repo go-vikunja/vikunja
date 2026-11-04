@@ -18,10 +18,10 @@ export function normalizeSharePermission(permission: unknown): Permission {
 	return permission === PERMISSIONS.ADMIN || permission === PERMISSIONS.READ_WRITE ? permission : PERMISSIONS.READ
 }
 
-async function invalidateShares(client: QueryClient, projectId: number, kind: 'users' | 'teams') {
+async function invalidateShares(client: QueryClient, projectId: number, kind: 'users' | 'teams', refetchType: 'active' | 'none' = 'active') {
 	await Promise.all([
-		client.invalidateQueries({queryKey: projectShareKeys[kind](projectId)}),
-		client.invalidateQueries({queryKey: projectKeys.detail(projectId)}),
+		client.invalidateQueries({queryKey: projectShareKeys[kind](projectId), refetchType}),
+		client.invalidateQueries({queryKey: projectKeys.detail(projectId), refetchType}),
 		client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		client.invalidateQueries({queryKey: userSearchKeys.all, refetchType: 'none'}),
 	])
@@ -36,7 +36,7 @@ function shareSuccess(kind: 'users' | 'teams', action: 'addedSuccess' | 'updated
 
 type UserShareInput = {projectId: number, username: string}
 type TeamShareInput = {projectId: number, teamId: number}
-type UserShareDeleteInput = UserShareInput & {cleanup: AccessLossCleanup}
+type UserShareDeleteInput = UserShareInput & {cleanup: AccessLossCleanup, isOwnShare: boolean}
 type TeamShareDeleteInput = TeamShareInput & {cleanup: AccessLossCleanup}
 
 export function projectUserSharesQuery(projectId: number) {
@@ -78,12 +78,14 @@ export function deleteProjectUserShareMutationOptions() {
 				query: cleanup,
 			})
 		},
-		onSuccess: (_data, {projectId, username}, client) => {
+		onSuccess: (_data, {projectId, username, isOwnShare}, client) => {
+			if (isOwnShare) client.removeQueries({queryKey: projectKeys.detail(projectId)})
 			client.setQueryData<UserWithPermission[]>(projectShareKeys.users(projectId), current => current?.filter(item => item.username !== username))
 		},
-		onSettled: ({projectId}, client) => Promise.all([
-			invalidateShares(client, projectId, 'users'),
-			invalidateAccessLossCleanup(client),
+		onSettled: ({projectId, isOwnShare}, client) => Promise.all([
+			invalidateShares(client, projectId, 'users', isOwnShare ? 'none' : 'active'),
+			invalidateAccessLossCleanup(client, isOwnShare ? 'none' : 'active'),
+			isOwnShare && client.invalidateQueries({queryKey: projectKeys.list()}),
 		]),
 		successMessage: () => shareSuccess('users', 'removeSuccess'),
 	})

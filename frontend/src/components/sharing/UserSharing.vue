@@ -13,7 +13,7 @@
 		:share-name="getDisplayName"
 		:add="(projectId, user) => createShare.mutateAsync({projectId, username: user.username})"
 		:update-permission="(projectId, share, permission) => updateShare.mutateAsync({projectId, username: share.username, permission})"
-		:remove="(projectId, share, cleanup) => deleteShare.mutateAsync({projectId, username: share.username, cleanup})"
+		:remove="removeShare"
 		:is-own-share="isOwnShare"
 	>
 		<template #candidate="{candidate}">
@@ -38,6 +38,8 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
+import {useRouter} from 'vue-router'
+import type {AccessLossCleanup} from '@/client/queries/accessLossCleanup'
 import {projectUserSharesQuery, useCreateProjectUserShareMutation, useUpdateProjectUserShareMutation, useDeleteProjectUserShareMutation} from '@/client/queries/projectShares'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {getDisplayName} from '@/helpers/user'
@@ -51,6 +53,7 @@ const props = defineProps<{
 }>()
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 function isOwnShare(share: {id?: number}) {
 	return share.id === authStore.info?.id
@@ -69,4 +72,10 @@ const candidates = computed(() => users.value.filter(hasUsername).filter(user =>
 const createShare = useCreateProjectUserShareMutation()
 const updateShare = useUpdateProjectUserShareMutation()
 const deleteShare = useDeleteProjectUserShareMutation()
+
+async function removeShare(projectId: number, share: {id?: number, username: string}, cleanup: AccessLossCleanup) {
+	const ownShare = isOwnShare(share)
+	await deleteShare.mutateAsync({projectId, username: share.username, cleanup, isOwnShare: ownShare})
+	if (ownShare) await router.push({name: 'home'})
+}
 </script>
