@@ -561,6 +561,27 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": othersWebhook, "created_by_id": f.owner.ID}, false)
 	})
+	t.Run("a link share moving the project gets the default cleanup", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		adminShare := &LinkSharing{
+			Hash:        "access-loss-admin-share",
+			ProjectID:   f.child.ID,
+			Permission:  PermissionAdmin,
+			SharingType: SharingTypeWithoutPassword,
+			SharedByID:  f.owner.ID,
+		}
+		_, err := f.s.Insert(adminShare)
+		require.NoError(t, err)
+
+		require.NoError(t, f.moveChildToTopLevelAs(t, adminShare, AccessLossCleanup{
+			Confirm:          true,
+			RevokeLinkShares: true,
+		}))
+		require.NoError(t, f.s.Commit())
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
+		db.AssertMissing(t, "webhooks", map[string]interface{}{"id": f.webhookC})
+	})
 	t.Run("covers grandchildren", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
