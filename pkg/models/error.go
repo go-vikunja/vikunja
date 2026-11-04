@@ -777,13 +777,11 @@ func (err *ErrProjectMoveTooLarge) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrAccessLossNeedsConfirmation represents an error where a change would make users lose access to a project holding webhooks or link shares they created.
 type ErrAccessLossNeedsConfirmation struct {
 	Webhooks   int64
 	LinkShares int64
 }
 
-// IsErrAccessLossNeedsConfirmation checks if an error is ErrAccessLossNeedsConfirmation.
 func IsErrAccessLossNeedsConfirmation(err error) bool {
 	_, ok := err.(*ErrAccessLossNeedsConfirmation)
 	return ok
@@ -793,10 +791,8 @@ func (err *ErrAccessLossNeedsConfirmation) Error() string {
 	return fmt.Sprintf("Users would lose access to projects holding their webhooks or link shares [Webhooks: %d, LinkShares: %d]", err.Webhooks, err.LinkShares)
 }
 
-// ErrCodeAccessLossNeedsConfirmation holds the unique world-error code of this error
 const ErrCodeAccessLossNeedsConfirmation = 3018
 
-// HTTPError holds the http error description
 func (err *ErrAccessLossNeedsConfirmation) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusConflict,
