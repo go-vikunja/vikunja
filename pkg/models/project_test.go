@@ -83,6 +83,23 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"project_view_id": kanbanView.ID,
 			}, false)
 		})
+		t.Run("background cannot be set", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			project := Project{
+				Title:              "with background",
+				BackgroundFileID:   1,
+				BackgroundBlurHash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
+			}
+			require.NoError(t, project.Create(s, usr))
+			require.NoError(t, s.Commit())
+			db.AssertExists(t, "projects", map[string]interface{}{
+				"id":                   project.ID,
+				"background_file_id":   0,
+				"background_blur_hash": "",
+			}, false)
+		})
 		t.Run("pseudo parent project id is rejected", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
