@@ -55,6 +55,7 @@ func (w *Webhook) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (w *Webhook) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	w.ID = 0
 	return w.canDoWebhook(s, a)
 }
 

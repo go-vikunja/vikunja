@@ -149,6 +149,38 @@ func TestHumaWebhook(t *testing.T) {
 			// parent project comes from the URL.
 			assert.Contains(t, rec.Body.String(), `"project_id":1`)
 		})
+		t.Run("Existing ID does not replace the requested destination", func(t *testing.T) {
+			rec, err := owned.testCreateWithUser(nil, nil, `{
+				"id":1,
+				"target_url":"https://example.com/new-destination",
+				"events":["task.updated"],
+				"secret":"new-secret",
+				"basic_auth_user":"new-user",
+				"basic_auth_password":"new-password"
+			}`)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusCreated, rec.Code)
+			var created struct {
+				ID int64 `json:"id"`
+			}
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
+			require.NotEqual(t, int64(1), created.ID)
+			db.AssertExists(t, "webhooks", map[string]interface{}{
+				"id":                  created.ID,
+				"project_id":          1,
+				"target_url":          "https://example.com/new-destination",
+				"secret":              "new-secret",
+				"basic_auth_user":     "new-user",
+				"basic_auth_password": "new-password",
+			}, false)
+			db.AssertExists(t, "webhooks", map[string]interface{}{
+				"id":                  1,
+				"target_url":          "https://example.com/webhook-fixture",
+				"secret":              "webhook-secret-fixture",
+				"basic_auth_user":     "webhook-user",
+				"basic_auth_password": "webhook-password",
+			}, false)
+		})
 		t.Run("Secret and basic auth are not echoed back", func(t *testing.T) {
 			rec, err := owned.testCreateWithUser(nil, nil,
 				`{"target_url":"https://example.com/secret","events":["task.updated"],"secret":"top-secret","basic_auth_user":"u","basic_auth_password":"p"}`)
