@@ -98,7 +98,7 @@ test.describe('Removing project access', () => {
 })
 
 test.describe('Moving a project', () => {
-	// The member can only reach the child through the parent's share; created through the API so the ancestor rows exist.
+	// Via the API so the ancestor rows exist.
 	async function setupMove(apiContext: APIRequestContext, token: string) {
 		const [, member] = await UserFactory.create(2)
 		const create = async (body: object) => {

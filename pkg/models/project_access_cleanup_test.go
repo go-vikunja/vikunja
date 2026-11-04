@@ -147,7 +147,6 @@ func (f *accessLossFixture) assertWebhooksTransferredTo(t *testing.T, u *user.Us
 	db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookC, "created_by_id": u.ID}, false)
 }
 
-// Moves the child out from under the shared parent, so the member loses access to the child only.
 func (f *accessLossFixture) moveChildToTopLevel(t *testing.T, cleanup AccessLossCleanup) error {
 	t.Helper()
 	detached := int64(0)
@@ -473,7 +472,6 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": f.task.ID, "user_id": f.member.ID})
 		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": f.task.ID, "user_id": f.member.ID})
 		db.AssertExists(t, "link_shares", map[string]interface{}{"id": f.shareC}, false)
-		// Parent access is untouched.
 		db.AssertExists(t, "webhooks", map[string]interface{}{"id": f.webhookP}, false)
 		db.AssertExists(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": f.parent.ID, "user_id": f.member.ID}, false)
 	})
