@@ -9,7 +9,7 @@ import {LinkShareFactory} from '../../factories/link_sharing'
 import {WebhookFactory} from '../../factories/webhook'
 import {createProjects} from '../project/prepareProjects'
 
-const DELETE_WEBHOOKS = 'Delete webhooks they created. Unchecked, they move to the project owner and keep working.'
+const DELETE_WEBHOOKS = 'Delete webhooks they created. Unchecked, they move to the project owner and keep working. Your own webhooks are always deleted.'
 const REVOKE_LINK_SHARES = 'Revoke link shares they created'
 
 async function createMemberData(projectId: number, memberId: number) {
