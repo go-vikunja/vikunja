@@ -169,6 +169,13 @@ func TestProject_Restore(t *testing.T) {
 
 		s := db.NewSession()
 		defer s.Close()
+		task := &Task{}
+		has, err := s.ID(53).Get(task)
+		require.NoError(t, err)
+		require.True(t, has)
+		// CalDAV clients only pick it up again when updated moves
+		assert.True(t, task.Updated.After(time.Date(2018, 12, 1, 1, 12, 4, 0, time.UTC)), "updated is %s", task.Updated)
+
 		can, _, err := (&Task{ID: 54}).CanRead(s, u1)
 		require.NoError(t, err)
 		assert.True(t, can)
@@ -244,7 +251,10 @@ func TestProject_Restore(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		trashProjectForTest(t, 1, u1)
 		require.NoError(t, restoreProjectForTest(t, 1, u1))
-		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51, "deleted_at": nil})
+		db.AssertCount(t, "tasks", builder.And(
+			builder.Eq{"id": 51},
+			builder.NotNull{"deleted_at"},
+		), 1)
 	})
 	t.Run("refused while the parent is in the trash", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -470,15 +480,23 @@ func TestProject_TrashHidesContents(t *testing.T) {
 
 	projects, _, _, err := (&Project{}).ReadAll(s, u1, "", 1, 500)
 	require.NoError(t, err)
+	projectIDs := []int64{}
 	for _, p := range projects.([]*Project) {
-		assert.NotContains(t, []int64{45, 46}, p.ID)
+		projectIDs = append(projectIDs, p.ID)
 	}
+	assert.Contains(t, projectIDs, int64(1))
+	assert.NotContains(t, projectIDs, int64(45))
+	assert.NotContains(t, projectIDs, int64(46))
 
 	tasks, _, _, err := (&TaskCollection{}).ReadAll(s, u1, "", 1, 500)
 	require.NoError(t, err)
+	taskIDs := []int64{}
 	for _, task := range tasks.([]*Task) {
-		assert.NotContains(t, []int64{53, 54}, task.ID)
+		taskIDs = append(taskIDs, task.ID)
 	}
+	assert.Contains(t, taskIDs, int64(1))
+	assert.NotContains(t, taskIDs, int64(53))
+	assert.NotContains(t, taskIDs, int64(54))
 }
 
 func TestGetTrashedProjects(t *testing.T) {
@@ -822,6 +840,26 @@ func TestDeleteExpiredProjects(t *testing.T) {
 		deleteExpiredProjects(trashedAt.Add(TrashRetention - time.Hour))
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
 	})
+	t.Run("sub-project trashed earlier expires before its parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u6 := &user.User{ID: 6}
+		now := time.Now()
+		// 27 -> 12 -> 25 -> 26
+		trashProjectForTest(t, 26, u6)
+		s := db.NewSession()
+		_, err := s.Table("projects").Where("id = ?", 26).Update(map[string]any{"deleted_at": now.Add(-TrashRetention - time.Hour)})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+		trashProjectForTest(t, 12, u6)
+
+		deleteExpiredProjects(now)
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 26})
+		db.AssertCount(t, "projects", builder.And(
+			builder.In("id", 12, 25),
+			builder.NotNull{"deleted_at"},
+		), 2)
+	})
 }
 
 func TestGetProjectCount(t *testing.T) {
@@ -916,9 +954,13 @@ func TestTimeEntry_TrashedProject(t *testing.T) {
 	// The project owner doesn't see other people's entries in it anymore
 	result, _, _, err = (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
 	require.NoError(t, err)
+	entryIDs := []int64{}
 	for _, e := range result.([]*TimeEntry) {
-		assert.NotContains(t, []int64{5, 6}, e.ID)
+		entryIDs = append(entryIDs, e.ID)
 	}
+	assert.Contains(t, entryIDs, int64(1))
+	assert.NotContains(t, entryIDs, int64(5))
+	assert.NotContains(t, entryIDs, int64(6))
 
 	read := &TimeEntry{ID: 6}
 	can, _, err := read.CanRead(s, u3)
@@ -1100,4 +1142,50 @@ func TestEmptyProjectTrash_OwnDeletionsOnly(t *testing.T) {
 	db.AssertMissing(t, "projects", map[string]interface{}{"id": 1})
 	db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
 	db.AssertExists(t, "projects", map[string]interface{}{"id": 46}, false)
+}
+
+func TestPurgeProject_KeepsTimeEntries(t *testing.T) {
+	u1 := &user.User{ID: 1}
+	// 5 is on project 45, 6 on its task 53
+	assertDetached := func(t *testing.T) {
+		t.Helper()
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
+		for _, id := range []int64{
+			5,
+			6,
+		} {
+			db.AssertExists(t, "time_entries", map[string]interface{}{
+				"id":         id,
+				"task_id":    0,
+				"project_id": 0,
+			}, false)
+		}
+	}
+
+	t.Run("purged directly", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		project := &Project{ID: 45}
+		can, err := project.CanDeletePermanently(s, u1)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, project.DeletePermanently(s, u1))
+		require.NoError(t, s.Commit())
+		assertDetached(t)
+	})
+	t.Run("emptying the trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		_, err := EmptyProjectTrash(s, u1, true)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		assertDetached(t)
+	})
+	t.Run("expired", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		deleteExpiredProjects(time.Now())
+		assertDetached(t)
+	})
 }
