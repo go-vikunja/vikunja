@@ -17,10 +17,12 @@ package caldavtests
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/richtext"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -34,8 +36,29 @@ func TestPUTRejectsTooManyAlarms(t *testing.T) {
 	}
 
 	rec := caldavPUT(t, e, "/dav/projects/36/too-many-alarms.ics", builder.Build())
-	assert.GreaterOrEqual(t, rec.Code, http.StatusBadRequest, "body: %s", rec.Body.String())
+	assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 
 	rec = caldavRequest(t, e, http.MethodGet, "/dav/projects/36/too-many-alarms.ics", "", nil)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestPUTRejectsTooManyTableCells(t *testing.T) {
+	e := setupTestEnv(t)
+
+	// One delimiter row wider than the whole cell budget.
+	table := "a\\n" + strings.Repeat("|", richtext.MaxTableCells) + "-"
+
+	t.Run("create", func(t *testing.T) {
+		rec := caldavPUT(t, e, "/dav/projects/36/too-many-cells.ics", NewVTodo("too-many-cells", "Too many cells").Description(table).Build())
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("update", func(t *testing.T) {
+		const path = "/dav/projects/36/too-many-cells-update.ics"
+		rec := caldavPUT(t, e, path, NewVTodo("too-many-cells-update", "Too many cells").Build())
+		assert.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+
+		rec = caldavPUT(t, e, path, NewVTodo("too-many-cells-update", "Too many cells").Description(table).Build())
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
 }
