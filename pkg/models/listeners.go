@@ -1645,23 +1645,27 @@ func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string,
 		return nil, err
 	}
 
+	parents := map[int64]*Project{}
+	if err := s.Unscoped().In("id", projectIDs).Find(&parents); err != nil {
+		return nil, err
+	}
+
 	for _, w := range candidates {
 		creator, exists := creators[w.CreatedByID]
 		if !exists || creator.Status != user.StatusActive {
 			continue
 		}
-		checked := project
-		if checked == nil {
-			// Purged: check the ancestor the webhook is on instead.
-			checked, err = getProjectIncludingTrash(s, w.ProjectID)
+		if configured := parents[w.ProjectID]; configured != nil && w.ProjectID != projectID {
+			canRead, err := webhookCreatorCanRead(s, configured, creator)
 			if err != nil {
 				return nil, err
 			}
+			if !canRead {
+				continue
+			}
 		}
-		// Nil when the webhook's own project went in the same purge: nothing left to check against.
-		if checked != nil {
-			// Backstop for access lost without an explicit removal, e.g. by moving the project.
-			canRead, err := webhookCreatorCanRead(s, checked, &user.User{ID: w.CreatedByID})
+		if project != nil {
+			canRead, err := webhookCreatorCanRead(s, project, creator)
 			if err != nil {
 				return nil, err
 			}
