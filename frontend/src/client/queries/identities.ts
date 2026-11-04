@@ -2,9 +2,11 @@ import {queryOptions} from '@tanstack/vue-query'
 import {
 	userIdentitiesList,
 	userIdentitiesLink,
+	userIdentitiesPreview,
 	userIdentitiesUnlink,
 	type LinkIdentityRequestWritable,
 	type LinkedIdentity,
+	type UserIdentitiesPreviewRequestWritable,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {useSecretMutation} from './secretMutation'
@@ -23,6 +25,13 @@ export function identitiesQuery() {
 			return data.items ?? []
 		},
 	})
+}
+
+export function usePreviewIdentityMutation() {
+	return useSecretMutation(contextMutationOptions({
+		mutationFn: async (body: UserIdentitiesPreviewRequestWritable) => (await userIdentitiesPreview({body})).data,
+		toastError: () => false,
+	}))
 }
 
 export function linkIdentityMutationOptions() {
