@@ -16,6 +16,7 @@ import {error, success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
+import {loadUserInfo} from '@/router/loadUserInfo'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -157,8 +158,9 @@ const router = createRouter({
 					name: 'user.settings.totp',
 					component: () => import('@/views/user/settings/TOTP.vue'),
 					beforeEnter: async () => {
+						const info = await loadUserInfo()
 						const {useConfigStore} = await import('@/stores/config')
-						if (!useConfigStore().totp_enabled || !useAuthStore().info?.is_local_user) {
+						if (!useConfigStore().totp_enabled || !info?.is_local_user) {
 							return {name: 'user.settings.general'}
 						}
 					},
@@ -621,19 +623,10 @@ router.beforeEach(async (to, from) => {
 	await authStore.checkAuth()
 
 	if (to.meta?.requiresAdminPanel) {
-		// Await config/auth hydration so the license check doesn't race the empty default
-		// on direct /admin navigation. appReady resolves without waiting on router.isReady(),
-		// so awaiting it here doesn't deadlock the initial navigation.
-		const baseStore = useBaseStore()
-		await baseStore.appReady
-		const configStore = useConfigStore()
-		const featureOn = configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
-		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
-		if (authStore.info?.is_admin === undefined) {
-			await authStore.refreshUserInfo()
-		}
-		const isAdmin = authStore.info?.is_admin === true
-		if (!featureOn || !isAdmin) {
+		// Also awaits config hydration, so the license check doesn't race the empty default.
+		const info = await loadUserInfo()
+		const featureOn = useConfigStore().isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
+		if (!featureOn || !info?.is_admin) {
 			return {name: 'not-found'}
 		}
 	}
