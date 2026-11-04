@@ -4,7 +4,10 @@ import {defaultAccessLossCleanup, type AccessLossChoice} from '@/client/queries/
 
 const ERR_CODE_ACCESS_LOSS_NEEDS_CONFIRMATION = 3018
 
-export type AccessLossCounts = {webhooks: number, linkShares: number}
+export type AccessLossCounts = {
+	webhooks: number
+	linkShares: number
+}
 
 function countsFrom(error: unknown): AccessLossCounts | null {
 	if (!(error instanceof ApiError) || error.code !== ERR_CODE_ACCESS_LOSS_NEEDS_CONFIRMATION) return null
