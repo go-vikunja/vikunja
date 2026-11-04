@@ -556,7 +556,10 @@
       },
       "accessLossConfirm": {
         "header": "Some users will lose access",
-        "text": "After this move, some users can no longer see this project or projects under it. They created {webhooks} webhooks and {linkShares} link shares there.",
+        "text": "After this move, some users can no longer see this project or projects under it. They created {created} there.",
+        "webhooks": "{count} webhook | {count} webhooks",
+        "linkShares": "{count} link share | {count} link shares",
+        "webhooksAndLinkShares": "{webhooks} and {linkShares}",
         "cleanupText": "Their access ends with the move, and they will also lose:"
       },
       "permission": {
@@ -1669,7 +1672,7 @@
     "3018": "This project is in the trash. Restore it first.",
     "3019": "The parent project is in the trash. Restore it first.",
     "3020": "This project hierarchy is too large to be moved below the chosen parent project.",
-    "3022": "Users would lose access to projects holding {webhooks} webhooks and {link_shares} link shares they created.",
+    "3022": "Users would lose access to projects holding webhooks or link shares they created (webhooks: {webhooks}, link shares: {link_shares}).",
     "4001": "The task title cannot be empty.",
     "4002": "The task does not exist.",
     "4003": "All bulk editing tasks must belong to the same project.",
