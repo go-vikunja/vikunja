@@ -530,6 +530,15 @@ definitions:
         description: A timestamp when this project was created. You cannot change
           this value.
         type: string
+      deleted_at:
+        description: When this project was moved to the trash. Trashed projects are
+          removed permanently 30 days later.
+        type: string
+      deleted_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: The user who moved this project to the trash. Only present on
+          trashed projects.
       description:
         description: The description of the project.
         type: string
@@ -883,6 +892,10 @@ definitions:
           A timestamp when this task was deleted. Soft-deleted tasks are kept for 30 days before they are removed permanently.
           omitzero keeps the field out of the JSON of regular tasks — it only ever appears on soft-deleted ones (the later trash listing).
         type: string
+      deleted_by:
+        allOf:
+        - $ref: '#/definitions/user.User'
+        description: Null for tasks soft-deleted before this was tracked.
       description:
         description: The task description.
         type: string
@@ -1933,6 +1946,7 @@ definitions:
     properties:
       code:
         type: integer
+      details: {}
       i18n_params:
         additionalProperties:
           type: string
@@ -3649,7 +3663,8 @@ paths:
       - project
   /projects/{id}:
     delete:
-      description: Delets a project
+      description: Moves a project and all its sub-projects to the trash. They are
+        deleted permanently after 30 days.
       parameters:
       - description: Project ID
         in: path
