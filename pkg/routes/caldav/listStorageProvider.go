@@ -1110,6 +1110,9 @@ type VikunjaProjectResourceAdapter struct {
 
 	isPrincipal  bool
 	isCollection bool
+
+	// Rendered once per request: a multistatus response asks for it per requested property.
+	content *string
 }
 
 // IsCollection checks if the resoure in the adapter is a collection
@@ -1153,6 +1156,14 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 
 // GetContent returns the content string of a resource (a task in our case)
 func (vlra *VikunjaProjectResourceAdapter) GetContent() string {
+	if vlra.content == nil {
+		content := vlra.renderContent()
+		vlra.content = &content
+	}
+	return *vlra.content
+}
+
+func (vlra *VikunjaProjectResourceAdapter) renderContent() string {
 	if vlra.project != nil && vlra.projectTasks != nil {
 		return caldav.GetCaldavTodosForTasks(vlra.project, vlra.projectTasks)
 	}
