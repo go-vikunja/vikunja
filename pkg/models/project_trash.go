@@ -588,11 +588,34 @@ func GetTrashedProjects(s *xorm.Session, a web.Auth, page, perPage int) (trashed
 	return trashed, total, nil
 }
 
-// EmptyProjectTrash purges every project in the auth's trash, including ones others deleted.
-func EmptyProjectTrash(s *xorm.Session, a web.Auth) (purged int, err error) {
+// CountProjectTrash counts the trash rows EmptyProjectTrash would purge. Each row takes its
+// trashed sub-projects along, so only who trashed the listed project counts.
+func CountProjectTrash(s *xorm.Session, a web.Auth) (*TrashCount, error) {
+	cond, err := trashedProjectsCond(s, a)
+	if err != nil {
+		return nil, err
+	}
+	count := &TrashCount{}
+	count.Total, err = s.Unscoped().Where(cond).Count(&Project{})
+	if err != nil {
+		return nil, err
+	}
+	count.ByOthers, err = s.Unscoped().Where(builder.And(cond, trashedByOthersCond("projects", a))).Count(&Project{})
+	if err != nil {
+		return nil, err
+	}
+	return count, nil
+}
+
+// EmptyProjectTrash purges every project in the auth's trash. Without includeOthers,
+// projects someone else trashed stay.
+func EmptyProjectTrash(s *xorm.Session, a web.Auth, includeOthers bool) (purged int, err error) {
 	cond, err := trashedProjectsCond(s, a)
 	if err != nil {
 		return 0, err
+	}
+	if !includeOthers {
+		cond = builder.And(cond, builder.Eq{"projects.deleted_by_id": a.GetID()})
 	}
 
 	projects := []*Project{}
