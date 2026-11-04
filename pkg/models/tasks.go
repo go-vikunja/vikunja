@@ -2209,6 +2209,9 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
+	if _, err = lockTaskForWrite(s, a, t.ID); err != nil {
+		return err
+	}
 
 	// duplicate the task for the event
 	fullTask := &Task{ID: t.ID}

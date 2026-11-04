@@ -791,6 +791,31 @@ func TestTask_Update(t *testing.T) {
 }
 
 func TestTask_Delete(t *testing.T) {
+	t.Run("task moved to a forbidden project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		task := &Task{ID: 1}
+		can, err := task.CanDelete(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// Project 2 belongs to user 3 and is not shared with user 1.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 2, Index: 9999})
+		require.NoError(t, err)
+
+		err = task.Delete(s, u)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+		require.NoError(t, s.Commit())
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		stillThere, err := s2.Where("id = ? AND project_id = ?", 1, 2).Exist(&Task{})
+		require.NoError(t, err)
+		assert.True(t, stillThere)
+	})
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
