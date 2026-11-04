@@ -111,6 +111,23 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 			assert.Empty(t, sharing.Password)
 		}
 	})
+	t.Run("no creator emails", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		share := &LinkSharing{
+			ProjectID: 1,
+		}
+		all, _, _, err := share.ReadAll(s, doer, "", 1, -1)
+		require.NoError(t, err)
+		shares := all.([]*LinkSharing)
+		require.NotEmpty(t, shares)
+		for _, sharing := range shares {
+			require.NotNil(t, sharing.SharedBy)
+			assert.Empty(t, sharing.SharedBy.Email)
+		}
+	})
 	t.Run("search", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
