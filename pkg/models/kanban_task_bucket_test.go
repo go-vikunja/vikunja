@@ -122,6 +122,32 @@ func TestTaskBucket_Update(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrBucketDoesNotBelongToProject(err))
 	})
+	t.Run("task moved out of the view's project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tb := &TaskBucket{
+			TaskID:        1,
+			BucketID:      3,
+			ProjectViewID: 4,
+			ProjectID:     1,
+		}
+		can, err := tb.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// User 1 can write to project 10 through a share, so only the view fit fails.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 10, Index: 9999})
+		require.NoError(t, err)
+
+		err = tb.Update(s, u)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{"id": 1, "done": false}, false)
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 1, "bucket_id": 3})
+	})
 	t.Run("moving a task to the done bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -400,7 +426,7 @@ func TestTaskBucket_Update(t *testing.T) {
 		// the bucket limit we set below.
 		sf := &SavedFilter{
 			Title:   "limit-filter",
-			Filters: &TaskCollection{Filter: "done = false"},
+			Filters: &TaskCollection{Filter: "done = false && project = 1"},
 		}
 		err := sf.Create(s, u)
 		require.NoError(t, err)
