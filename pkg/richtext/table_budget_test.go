@@ -68,6 +68,15 @@ func TestHTMLToMarkdownTableBudget(t *testing.T) {
 		assert.Less(t, len(got), len(input))
 	})
 
+	t.Run("one long cell does not pad every row of its column", func(t *testing.T) {
+		input := "<table><tr><td>" + strings.Repeat("x", 2000) + "</td></tr>" +
+			strings.Repeat("<tr><td></td></tr>", 200) + "</table>"
+
+		got, err := HTMLToMarkdown(input)
+		require.NoError(t, err)
+		assert.Less(t, len(got), len(input))
+	})
+
 	t.Run("large span-free table within the budget survives a round trip", func(t *testing.T) {
 		// 601 rows x 10 columns: within MaxTableCells, but over half of it.
 		md := strings.Repeat("| a ", 10) + "|\n" + strings.Repeat("|---", 10) + "|" + strings.Repeat("\n"+strings.Repeat("| 1 ", 10)+"|", 600)
@@ -82,7 +91,7 @@ func TestHTMLToMarkdownTableBudget(t *testing.T) {
 	t.Run("normal table with spans still renders as a table", func(t *testing.T) {
 		got, err := HTMLToMarkdown(`<table><tr><th colspan="2">a</th></tr><tr><td>1</td><td>2</td></tr></table>`)
 		require.NoError(t, err)
-		assert.Equal(t, "| a |   |\n|---|---|\n| 1 | 2 |", got)
+		assert.Equal(t, "| a |  |\n|---|---|\n| 1 | 2 |", got)
 	})
 }
 

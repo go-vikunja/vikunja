@@ -56,7 +56,8 @@ func newHTMLToMarkdownConverter() *converter.Converter {
 		converter.WithPlugins(
 			base.NewBasePlugin(),
 			commonmark.NewCommonmarkPlugin(),
-			table.NewTablePlugin(),
+			// Aligned padding repeats the widest cell's width on every row of its column.
+			table.NewTablePlugin(table.WithCellPaddingBehavior(table.CellPaddingBehaviorMinimal)),
 			strikethrough.NewStrikethroughPlugin(),
 		),
 	)
