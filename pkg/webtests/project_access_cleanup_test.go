@@ -126,14 +126,28 @@ func TestTeamAccessRemovalCleanupOptions(t *testing.T) {
 		f := insertUser1DataInProject10(t)
 		s := db.NewSession()
 		defer s.Close()
-		team := &models.Team{Name: "access loss v2", CreatedByID: 6}
+		team := &models.Team{
+			Name:        "access loss v2",
+			CreatedByID: 6,
+		}
 		_, err := s.Insert(team)
 		require.NoError(t, err)
-		_, err = s.Insert(&models.TeamMember{TeamID: team.ID, UserID: 6, Admin: true})
+		_, err = s.Insert(&models.TeamMember{
+			TeamID: team.ID,
+			UserID: 6,
+			Admin:  true,
+		})
 		require.NoError(t, err)
-		_, err = s.Insert(&models.TeamMember{TeamID: team.ID, UserID: 1})
+		_, err = s.Insert(&models.TeamMember{
+			TeamID: team.ID,
+			UserID: 1,
+		})
 		require.NoError(t, err)
-		_, err = s.Insert(&models.TeamProject{TeamID: team.ID, ProjectID: 10, Permission: models.PermissionWrite})
+		_, err = s.Insert(&models.TeamProject{
+			TeamID:     team.ID,
+			ProjectID:  10,
+			Permission: models.PermissionWrite,
+		})
 		require.NoError(t, err)
 		_, err = s.Where("project_id = 10 AND user_id = 1").Delete(&models.ProjectUser{})
 		require.NoError(t, err)
@@ -169,13 +183,30 @@ func TestProjectMoveCleanupOptions(t *testing.T) {
 		parent := &models.Project{Title: "move parent"}
 		require.NoError(t, parent.Create(s, owner))
 		parentID := parent.ID
-		child = &models.Project{Title: "move child", ParentProjectID: &parentID}
+		child = &models.Project{
+			Title:           "move child",
+			ParentProjectID: &parentID,
+		}
 		require.NoError(t, child.Create(s, owner))
-		_, err := s.Insert(&models.ProjectUser{ProjectID: parent.ID, UserID: 1, Permission: models.PermissionWrite})
+		_, err := s.Insert(&models.ProjectUser{
+			ProjectID:  parent.ID,
+			UserID:     1,
+			Permission: models.PermissionWrite,
+		})
 		require.NoError(t, err)
 		f = &accessLossV2Fixture{
-			webhook:   &models.Webhook{TargetURL: "https://example.com/move", Events: []string{"task.updated"}, ProjectID: child.ID, CreatedByID: 1},
-			linkShare: &models.LinkSharing{Hash: "access-loss-move", ProjectID: child.ID, SharingType: models.SharingTypeWithoutPassword, SharedByID: 1},
+			webhook: &models.Webhook{
+				TargetURL:   "https://example.com/move",
+				Events:      []string{"task.updated"},
+				ProjectID:   child.ID,
+				CreatedByID: 1,
+			},
+			linkShare: &models.LinkSharing{
+				Hash:        "access-loss-move",
+				ProjectID:   child.ID,
+				SharingType: models.SharingTypeWithoutPassword,
+				SharedByID:  1,
+			},
 		}
 		_, err = s.Insert(f.webhook)
 		require.NoError(t, err)

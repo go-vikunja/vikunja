@@ -89,7 +89,14 @@ func teamMembersRemove(ctx context.Context, in *struct {
 	if err != nil {
 		return nil, err
 	}
-	tm := &models.TeamMember{TeamID: in.TeamID, Username: in.Username, AccessLossCleanup: models.AccessLossCleanup{KeepWebhooks: in.KeepWebhooks, RevokeLinkShares: in.RevokeLinkShares}}
+	tm := &models.TeamMember{
+		TeamID:   in.TeamID,
+		Username: in.Username,
+		AccessLossCleanup: models.AccessLossCleanup{
+			KeepWebhooks:     in.KeepWebhooks,
+			RevokeLinkShares: in.RevokeLinkShares,
+		},
+	}
 	if err := handler.DoDelete(ctx, tm, a); err != nil {
 		return nil, translateDomainError(err)
 	}

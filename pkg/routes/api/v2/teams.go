@@ -184,7 +184,14 @@ func teamsDelete(ctx context.Context, in *struct {
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.DoDelete(ctx, &models.Team{ID: in.ID, AccessLossCleanup: models.AccessLossCleanup{KeepWebhooks: in.KeepWebhooks, RevokeLinkShares: in.RevokeLinkShares}}, a); err != nil {
+	team := &models.Team{
+		ID: in.ID,
+		AccessLossCleanup: models.AccessLossCleanup{
+			KeepWebhooks:     in.KeepWebhooks,
+			RevokeLinkShares: in.RevokeLinkShares,
+		},
+	}
+	if err := handler.DoDelete(ctx, team, a); err != nil {
 		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil

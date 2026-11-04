@@ -140,9 +140,12 @@ func projectUsersDelete(ctx context.Context, in *struct {
 		return nil, err
 	}
 	if err := handler.DoDelete(ctx, &models.ProjectUser{
-		ProjectID:         in.ProjectID,
-		Username:          in.Username,
-		AccessLossCleanup: models.AccessLossCleanup{KeepWebhooks: in.KeepWebhooks, RevokeLinkShares: in.RevokeLinkShares},
+		ProjectID: in.ProjectID,
+		Username:  in.Username,
+		AccessLossCleanup: models.AccessLossCleanup{
+			KeepWebhooks:     in.KeepWebhooks,
+			RevokeLinkShares: in.RevokeLinkShares,
+		},
 	}, a); err != nil {
 		return nil, translateDomainError(err)
 	}
