@@ -229,6 +229,46 @@ func getRawTasksForExport(s *xorm.Session, projectIDs []int64, a web.Auth) (task
 	return tasks, nil
 }
 
+type exportTaskReference struct {
+	ID        int64 `json:"id"`
+	ProjectID int64 `json:"project_id"`
+}
+
+// Related tasks are exported on their own; inlining them would repeat their content once per relation.
+type exportTask struct {
+	*TaskWithComments
+	RelatedTasks map[RelationKind][]*exportTaskReference `json:"related_tasks"`
+}
+
+type exportProject struct {
+	*ProjectWithTasksAndBuckets
+	Tasks []*exportTask `json:"tasks"`
+}
+
+func toExportProjects(projects []*ProjectWithTasksAndBuckets) []*exportProject {
+	exported := make([]*exportProject, 0, len(projects))
+	for _, p := range projects {
+		ep := &exportProject{ProjectWithTasksAndBuckets: p}
+		for _, t := range p.Tasks {
+			et := &exportTask{
+				TaskWithComments: t,
+				RelatedTasks:     make(map[RelationKind][]*exportTaskReference, len(t.RelatedTasks)),
+			}
+			for kind, related := range t.RelatedTasks {
+				for _, rt := range related {
+					et.RelatedTasks[kind] = append(et.RelatedTasks[kind], &exportTaskReference{
+						ID:        rt.ID,
+						ProjectID: rt.ProjectID,
+					})
+				}
+			}
+			ep.Tasks = append(ep.Tasks, et)
+		}
+		exported = append(exported, ep)
+	}
+	return exported
+}
+
 func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (taskIDs []int64, err error) {
 
 	// Get all projects
@@ -389,7 +429,7 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 		projectsMap[view.ProjectID].Positions = append(projectsMap[view.ProjectID].Positions, p)
 	}
 
-	data, err := json.Marshal(projects)
+	data, err := json.Marshal(toExportProjects(projects))
 	if err != nil {
 		return taskIDs, err
 	}
