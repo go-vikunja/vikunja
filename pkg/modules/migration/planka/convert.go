@@ -20,11 +20,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"sort"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/richtext"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // labelColors maps Planka label color names (server/api/models/Label.js COLORS) to the hex values
@@ -104,25 +105,18 @@ func (c *converter) countItems(n int) error {
 // These names are copied into every task or comment referencing them.
 const maxReferenceNameLength = 1024
 
-func truncateReferenceName(s string) string {
-	if len(s) <= maxReferenceNameLength {
-		return s
-	}
-	end := maxReferenceNameLength
-	for end > 0 && !utf8.RuneStart(s[end]) {
-		end--
-	}
-	return s[:end]
-}
-
 func convertPlankaToVikunja(data *plankaData, download attachmentDownloader) ([]*models.ProjectWithTasksAndBuckets, error) {
 	for id, u := range data.Users {
-		u.Name = truncateReferenceName(u.Name)
+		u.Name = utils.TruncateUTF8(u.Name, maxReferenceNameLength)
 		data.Users[id] = u
 	}
 	for id, g := range data.BaseCustomFieldGroups {
-		g.Name = truncateReferenceName(g.Name)
+		g.Name = utils.TruncateUTF8(g.Name, maxReferenceNameLength)
 		data.BaseCustomFieldGroups[id] = g
+	}
+	for id, f := range data.BaseCustomFields {
+		f.Name = utils.TruncateUTF8(f.Name, maxReferenceNameLength)
+		data.BaseCustomFields[id] = f
 	}
 
 	c := &converter{data: data, download: download}
@@ -261,17 +255,14 @@ func (c *converter) convertBoard(bd *plankaBoardData, project *models.ProjectWit
 	groupsByID := map[string]plankaCustomFieldGroup{}
 	for _, g := range bd.CustomFieldGroups {
 		if g.Name != nil {
-			g.Name = models.Ptr(truncateReferenceName(*g.Name))
+			g.Name = models.Ptr(utils.TruncateUTF8(*g.Name, maxReferenceNameLength))
 		}
 		groupsByID[g.ID] = g
 	}
 	fieldsByID := map[string]plankaCustomField{}
-	for id, f := range c.data.BaseCustomFields {
-		f.Name = truncateReferenceName(f.Name)
-		fieldsByID[id] = f
-	}
+	maps.Copy(fieldsByID, c.data.BaseCustomFields)
 	for _, f := range bd.CustomFields {
-		f.Name = truncateReferenceName(f.Name)
+		f.Name = utils.TruncateUTF8(f.Name, maxReferenceNameLength)
 		fieldsByID[f.ID] = f
 	}
 	cardsByList := map[string][]plankaCard{}
