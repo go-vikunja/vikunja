@@ -14,7 +14,7 @@
 		:add="(projectId, user) => createShare.mutateAsync({projectId, username: user.username})"
 		:update-permission="(projectId, share, permission) => updateShare.mutateAsync({projectId, username: share.username, permission})"
 		:remove="(projectId, share, cleanup) => deleteShare.mutateAsync({projectId, username: share.username, cleanup})"
-		:is-own-share="share => share.id === authStore.info?.id"
+		:is-own-share="isOwnShare"
 	>
 		<template #candidate="{candidate}">
 			<User
@@ -27,7 +27,7 @@
 			<td>{{ getDisplayName(share) }}</td>
 			<td>
 				<b
-					v-if="share.id === authStore.info?.id"
+					v-if="isOwnShare(share)"
 					class="is-success"
 				>{{ $t('project.share.userTeam.you') }}</b>
 			</td>
@@ -51,6 +51,10 @@ const props = defineProps<{
 }>()
 
 const authStore = useAuthStore()
+
+function isOwnShare(share: {id?: number}) {
+	return share.id === authStore.info?.id
+}
 
 function hasUsername<T extends {username?: string}>(user: T): user is T & {username: string} {
 	return Boolean(user.username)
