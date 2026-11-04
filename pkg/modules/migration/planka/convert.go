@@ -20,11 +20,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"maps"
 	"math"
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -101,7 +101,30 @@ func (c *converter) countItems(n int) error {
 	return migration.CheckItemCount(c.items)
 }
 
+// These names are copied into every task or comment referencing them.
+const maxReferenceNameLength = 1024
+
+func truncateReferenceName(s string) string {
+	if len(s) <= maxReferenceNameLength {
+		return s
+	}
+	end := maxReferenceNameLength
+	for end > 0 && !utf8.RuneStart(s[end]) {
+		end--
+	}
+	return s[:end]
+}
+
 func convertPlankaToVikunja(data *plankaData, download attachmentDownloader) ([]*models.ProjectWithTasksAndBuckets, error) {
+	for id, u := range data.Users {
+		u.Name = truncateReferenceName(u.Name)
+		data.Users[id] = u
+	}
+	for id, g := range data.BaseCustomFieldGroups {
+		g.Name = truncateReferenceName(g.Name)
+		data.BaseCustomFieldGroups[id] = g
+	}
+
 	c := &converter{data: data, download: download}
 	root, err := c.newProject("Migrated from Planka", "", nil)
 	if err != nil {
@@ -237,11 +260,18 @@ func (c *converter) convertBoard(bd *plankaBoardData, project *models.ProjectWit
 	}
 	groupsByID := map[string]plankaCustomFieldGroup{}
 	for _, g := range bd.CustomFieldGroups {
+		if g.Name != nil {
+			g.Name = models.Ptr(truncateReferenceName(*g.Name))
+		}
 		groupsByID[g.ID] = g
 	}
 	fieldsByID := map[string]plankaCustomField{}
-	maps.Copy(fieldsByID, c.data.BaseCustomFields)
+	for id, f := range c.data.BaseCustomFields {
+		f.Name = truncateReferenceName(f.Name)
+		fieldsByID[id] = f
+	}
 	for _, f := range bd.CustomFields {
+		f.Name = truncateReferenceName(f.Name)
 		fieldsByID[f.ID] = f
 	}
 	cardsByList := map[string][]plankaCard{}
