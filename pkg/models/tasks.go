@@ -18,6 +18,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"slices"
@@ -25,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -71,6 +73,20 @@ func validateTaskForCreation(t *Task) error {
 	}
 
 	return validateRepeatAfter(t.RepeatAfter)
+}
+
+const MaxTaskTitleLength = 1000
+const MaxRemindersPerTask = 100
+
+// validateTaskLimits only checks what an update changes, so tasks already over a limit stay editable. old is nil on create.
+func validateTaskLimits(t, old *Task) error {
+	if (old == nil || t.Title != old.Title) && utf8.RuneCountInString(t.Title) > MaxTaskTitleLength {
+		return InvalidFieldErrorWithMessage([]string{"title"}, fmt.Sprintf("The task title may be at most %d characters long.", MaxTaskTitleLength))
+	}
+	if (old == nil || len(t.Reminders) > len(old.Reminders)) && len(t.Reminders) > MaxRemindersPerTask {
+		return InvalidFieldErrorWithMessage([]string{"reminders"}, fmt.Sprintf("A task may have at most %d reminders.", MaxRemindersPerTask))
+	}
+	return nil
 }
 
 // Task represents a task in a project
@@ -1033,6 +1049,9 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
+	if err := validateTaskLimits(t, nil); err != nil {
+		return err
+	}
 	return createTask(s, t, a, true, true)
 }
 
@@ -1485,6 +1504,10 @@ func (t *Task) updateSingleTaskInViews(s *xorm.Session, a web.Auth, fields []str
 		if !fieldSet["reminders"] {
 			t.Reminders = ot.Reminders
 		}
+	}
+
+	if err := validateTaskLimits(t, &ot); err != nil {
+		return err
 	}
 
 	if len(fields) == 0 || fieldSet["assignees"] {
