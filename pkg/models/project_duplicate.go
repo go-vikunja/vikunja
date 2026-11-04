@@ -83,6 +83,8 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	log.Debugf("Duplicating project %d", pd.ProjectID)
 
+	wasArchived := pd.Project.IsArchived
+	pd.Project.IsArchived = false
 	pd.Project.ID = 0
 	pd.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
 	pd.Project.ParentProjectID = &pd.ParentProjectID
@@ -171,6 +173,14 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		}
 
 		log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+	}
+
+	if wasArchived {
+		pd.Project.IsArchived = true
+		err = UpdateProject(s, pd.Project, doer, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = pd.Project.ReadOne(s, doer)
