@@ -802,7 +802,7 @@ func (err *ErrAccessLossNeedsConfirmation) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusConflict,
 		Code:     ErrCodeAccessLossNeedsConfirmation,
 		Message: fmt.Sprintf(
-			"Users would lose access to projects holding %d webhooks and %d link shares they created. Say what to do with them by setting delete_webhooks and revoke_link_shares.",
+			"Users would lose access to projects holding %d webhooks and %d link shares they created. Set keep_webhooks and revoke_link_shares to choose what happens to them and resend without confirm_access_loss.",
 			err.Webhooks, err.LinkShares,
 		),
 		I18nParams: map[string]string{
