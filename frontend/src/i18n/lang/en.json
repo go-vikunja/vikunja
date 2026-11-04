@@ -550,7 +550,7 @@
         "self": {
           "assignments": "your task assignments",
           "subscriptions": "your subscriptions to tasks and projects",
-          "deleteWebhooks": "Delete webhooks you created. Unchecked, they move to the project owner and keep working.",
+          "webhooks": "webhooks you created",
           "revokeLinkShares": "Revoke link shares you created"
         }
       },
