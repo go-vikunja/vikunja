@@ -53,11 +53,6 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, doer web.Auth, userI
 		return nil
 	}
 
-	// Confirm counts and revoked link shares are other users' data a link share can't access.
-	if _, isLinkShare := doer.(*LinkSharing); isLinkShare {
-		cleanup = AccessLossCleanup{}
-	}
-
 	descendantIDs := []int64{}
 	err := s.Table("project_ancestors").
 		Cols("project_id").
@@ -79,44 +74,32 @@ func cleanupAfterProjectAccessLossForUsers(s *xorm.Session, doer web.Auth, userI
 	}
 
 	deletedIDs := make([]int64, 0, len(candidates))
-	liveIDs := make([]int64, 0, len(existing))
-	trashedIDs := []int64{}
 	for _, id := range candidates {
-		project, has := existing[id]
-		switch {
-		case !has:
+		if _, has := existing[id]; !has {
 			deletedIDs = append(deletedIDs, id)
-		case project.DeletedAt.IsZero():
-			liveIDs = append(liveIDs, id)
-		default:
-			trashedIDs = append(trashedIDs, id)
 		}
 	}
 
+	return cleanupProjectAccessLoss(s, doer, userIDs, existing, deletedIDs, nil, cleanup)
+}
+
+func cleanupProjectAccessLoss(s *xorm.Session, doer web.Auth, userIDs []int64, existing map[int64]*Project, deletedIDs []int64, before projectReadAccess, cleanup AccessLossCleanup) error {
+	// Confirm counts and revoked link shares are other users' data a link share can't access.
+	if _, isLinkShare := doer.(*LinkSharing); isLinkShare {
+		cleanup = AccessLossCleanup{}
+	}
+
+	access, err := getProjectReadAccessForUsers(s, userIDs, existing)
+	if err != nil {
+		return err
+	}
 	lostByUser := make(map[int64][]int64, len(userIDs))
 	for _, userID := range userIDs {
-		permissions, err := checkReadPermissionsForProjects(s, &user.User{ID: userID}, liveIDs)
-		if err != nil {
-			return err
-		}
-		lost := []int64{}
-		for id, permission := range permissions {
-			if !permission.canRead {
-				lost = append(lost, id)
+		for id := range existing {
+			if !access[userID][id] && (before == nil || before[userID][id]) {
+				lostByUser[userID] = append(lostByUser[userID], id)
 			}
 		}
-		if len(trashedIDs) > 0 {
-			access, err := getProjectAccessIncludingTrash(s, userID)
-			if err != nil {
-				return err
-			}
-			for _, id := range trashedIDs {
-				if _, has := access.permission(id); !has {
-					lost = append(lost, id)
-				}
-			}
-		}
-		lostByUser[userID] = lost
 	}
 
 	if cleanup.Confirm {
@@ -204,8 +187,13 @@ func checkAccessLossConfirmed(s *xorm.Session, projectIDsByUser map[int64][]int6
 	return nil
 }
 
-// Moving a project can drop access inherited from its old ancestors, with no share removed to trigger cleanup.
-func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, projectID int64, cleanup AccessLossCleanup) error {
+type projectMoveAccess struct {
+	userIDs  []int64
+	projects map[int64]*Project
+	access   projectReadAccess
+}
+
+func projectAccessBeforeMove(s *xorm.Session, projectID int64) (*projectMoveAccess, error) {
 	subtreeIDs := builder.Select("project_id").From("project_ancestors").Where(builder.Eq{"ancestor_id": projectID})
 	inSubtree := builder.Or(builder.Eq{"project_id": projectID}, builder.In("project_id", subtreeIDs))
 	taskIDs := builder.Select("id").From("tasks").Where(inSubtree)
@@ -213,7 +201,7 @@ func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, projectID int64, cl
 	webhookCreatorIDs := []int64{}
 	err := s.Table("webhooks").Cols("created_by_id").Where(inSubtree).Find(&webhookCreatorIDs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	linkShareCreatorIDs := []int64{}
@@ -224,7 +212,7 @@ func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, projectID int64, cl
 		And(builder.In("shared_by_id", builder.Select("id").From("users"))).
 		Find(&linkShareCreatorIDs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	subscriberIDs := []int64{}
@@ -238,20 +226,41 @@ func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, projectID int64, cl
 		)).
 		Find(&subscriberIDs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	assigneeIDs := []int64{}
 	err = s.Table("task_assignees").Cols("user_id").Where(builder.In("task_id", taskIDs)).Find(&assigneeIDs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	userIDs := slices.Concat(webhookCreatorIDs, linkShareCreatorIDs, subscriberIDs, assigneeIDs)
 	slices.Sort(userIDs)
 	userIDs = slices.Compact(userIDs)
 
-	return cleanupAfterProjectAccessLossForUsers(s, doer, userIDs, []int64{projectID}, cleanup)
+	projectIDs := []int64{projectID}
+	descendants := []int64{}
+	if err := s.Table("project_ancestors").Cols("project_id").Where("ancestor_id = ?", projectID).Find(&descendants); err != nil {
+		return nil, err
+	}
+	projects, err := GetProjectsMapByIDs(s, append(projectIDs, descendants...))
+	if err != nil {
+		return nil, err
+	}
+	access, err := getProjectReadAccessForUsers(s, userIDs, projects)
+	if err != nil {
+		return nil, err
+	}
+	return &projectMoveAccess{
+		userIDs:  userIDs,
+		projects: projects,
+		access:   access,
+	}, nil
+}
+
+func cleanupAfterProjectMove(s *xorm.Session, doer web.Auth, before *projectMoveAccess, cleanup AccessLossCleanup) error {
+	return cleanupProjectAccessLoss(s, doer, before.userIDs, before.projects, nil, before.access, cleanup)
 }
 
 // Keep in sync with ProjectAccessCleanupList.vue.
