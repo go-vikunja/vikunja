@@ -1726,7 +1726,7 @@ export type ProjectView = {
     /**
      * The kind of this view. One of list, gantt, table or kanban.
      */
-    view_kind?: 'list' | 'gantt' | 'table' | 'kanban';
+    view_kind?: 'list' | 'gantt' | 'table' | 'kanban' | 'calendar';
 };
 
 export type ProjectViewBucketConfiguration = {
@@ -1796,7 +1796,7 @@ export type ProjectViewReadBody = {
     /**
      * The kind of this view. One of list, gantt, table or kanban.
      */
-    view_kind?: 'list' | 'gantt' | 'table' | 'kanban';
+    view_kind?: 'list' | 'gantt' | 'table' | 'kanban' | 'calendar';
 };
 
 export type Provider = {
@@ -4329,7 +4329,7 @@ export type ProjectViewWritable = {
     /**
      * The kind of this view. One of list, gantt, table or kanban.
      */
-    view_kind?: 'list' | 'gantt' | 'table' | 'kanban';
+    view_kind?: 'list' | 'gantt' | 'table' | 'kanban' | 'calendar';
 };
 
 export type ProjectViewReadBodyWritable = {
@@ -4364,7 +4364,7 @@ export type ProjectViewReadBodyWritable = {
     /**
      * The kind of this view. One of list, gantt, table or kanban.
      */
-    view_kind?: 'list' | 'gantt' | 'table' | 'kanban';
+    view_kind?: 'list' | 'gantt' | 'table' | 'kanban' | 'calendar';
 };
 
 export type PublicInviteLinkWritable = {

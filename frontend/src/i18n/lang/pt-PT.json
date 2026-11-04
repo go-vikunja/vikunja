@@ -442,6 +442,20 @@
 			"deleteSuccess": "Esta vista foi eliminada com sucesso.",
 			"onlyAdminsCanEdit": "Apenas administradores do projeto podem editar esta vista.",
 			"updateSuccess": "A vista foi atualizada com sucesso."
+		},
+		"calendar": {
+			"title": "Calendário de tarefas",
+			"loading": "A carregar…",
+			"count": "Tarefas: {count}",
+			"deadline": "Prazo",
+			"create": "Cria uma tarefa",
+			"chooseProject": "Seleciona um projeto e uma data para a nova tarefa.",
+			"cancel": "Cancelar",
+			"retry": "Tentar novamente",
+			"hint": "Abre uma tarefa para veres os detalhes. Arrasta para reagendar; redimensiona para alterar a data de fim.",
+			"date": "Data",
+			"loadError": "Não foi possível carregar as tarefas. Tenta novamente.",
+			"saveError": "Não foi possível guardar as datas. A deslocação foi anulada."
 		}
 	},
 	"filters": {

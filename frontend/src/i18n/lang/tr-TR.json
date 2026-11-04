@@ -442,6 +442,20 @@
 			"deleteSuccess": "Görünüm başarıyla silindi.",
 			"onlyAdminsCanEdit": "Görünümleri yalnızca proje yöneticileri düzenleyebilir.",
 			"updateSuccess": "Görünüm başarıyla güncellendi."
+		},
+		"calendar": {
+			"title": "Görev takvimi",
+			"loading": "Yükleniyor…",
+			"count": "Görevler: {count}",
+			"deadline": "Son tarih",
+			"create": "Görev oluştur",
+			"chooseProject": "Yeni görev için bir proje ve tarih seçin.",
+			"cancel": "İptal",
+			"retry": "Yeniden dene",
+			"hint": "Ayrıntılar için bir görevi açın. Yeniden planlamak için sürükleyin; bitiş tarihini değiştirmek için boyutunu değiştirin.",
+			"date": "Tarih",
+			"loadError": "Görevler yüklenemedi. Lütfen yeniden deneyin.",
+			"saveError": "Tarihler kaydedilemedi. Taşıma geri alındı."
 		}
 	},
 	"filters": {

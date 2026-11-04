@@ -426,6 +426,20 @@
 			"deleteSuccess": "La vue a été correctement supprimée.",
 			"onlyAdminsCanEdit": "Seuls les administrateurs du projet peuvent modifier les vues.",
 			"updateSuccess": "La vue a été correctement mise à jour."
+		},
+		"calendar": {
+			"title": "Calendrier des tâches",
+			"loading": "Chargement…",
+			"count": "Tâches : {count}",
+			"deadline": "Échéance",
+			"create": "Créer une tâche",
+			"chooseProject": "Sélectionnez un projet et une date pour la nouvelle tâche.",
+			"cancel": "Annuler",
+			"retry": "Réessayer",
+			"hint": "Ouvrez une tâche pour voir les détails. Faites-la glisser pour la replanifier ; redimensionnez-la pour modifier sa date de fin.",
+			"date": "Date",
+			"loadError": "Impossible de charger les tâches. Veuillez réessayer.",
+			"saveError": "Impossible d’enregistrer les dates. Le déplacement a été annulé."
 		}
 	},
 	"filters": {

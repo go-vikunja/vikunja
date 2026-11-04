@@ -1,1 +1,18 @@
-{}
+{
+  "project": {
+    "calendar": {
+      "title": "Calendarul sarcinilor",
+      "loading": "Se încarcă…",
+      "count": "Sarcini: {count}",
+      "deadline": "Termen limită",
+      "create": "Creează o sarcină",
+      "chooseProject": "Selectează un proiect și o dată pentru noua sarcină.",
+      "cancel": "Anulează",
+      "retry": "Încearcă din nou",
+      "hint": "Deschide o sarcină pentru detalii. Trage pentru a o reprograma; redimensionează pentru a modifica data de încheiere.",
+      "date": "Dată",
+      "loadError": "Sarcinile nu au putut fi încărcate. Încearcă din nou.",
+      "saveError": "Datele nu au putut fi salvate. Mutarea a fost anulată."
+    }
+  }
+}

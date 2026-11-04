@@ -449,6 +449,20 @@
 			"deleteSuccess": "視圖刪除成功。",
 			"onlyAdminsCanEdit": "只有專案管理員才能編輯視圖。",
 			"updateSuccess": "視圖更新成功。"
+		},
+		"calendar": {
+			"title": "任務行事曆",
+			"loading": "載入中...",
+			"count": "任務數：{count}",
+			"deadline": "截止日期",
+			"create": "新增任務",
+			"chooseProject": "請選擇新任務的專案和日期。",
+			"cancel": "取消",
+			"retry": "重試",
+			"hint": "開啟任務以查看詳細資訊。拖曳以調整排程；調整大小以變更結束日期。",
+			"date": "日期",
+			"loadError": "無法載入任務，請重試。",
+			"saveError": "無法儲存日期，已復原移動。"
 		}
 	},
 	"filters": {

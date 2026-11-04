@@ -385,6 +385,20 @@
 			"deleteSuccess": "Atvaizdavimas buvo sėkmingai ištrintas.",
 			"onlyAdminsCanEdit": "Tik projekto administratoriai gali keisti atvaizdavimą.",
 			"updateSuccess": "Atvaizdavimas buvo sėkmingai atnaujintas."
+		},
+		"calendar": {
+			"title": "Užduočių kalendorius",
+			"loading": "Kraunama…",
+			"count": "Užduotys: {count}",
+			"deadline": "Terminas",
+			"create": "Sukurti užduotį",
+			"chooseProject": "Pasirinkite projektą ir naujos užduoties datą.",
+			"cancel": "Atšaukti",
+			"retry": "Bandyti dar kartą",
+			"hint": "Atverkite užduotį, kad pamatytumėte išsamią informaciją. Vilkite, kad pakeistumėte laiką; keiskite dydį, kad pakeistumėte pabaigos datą.",
+			"date": "Data",
+			"loadError": "Nepavyko įkelti užduočių. Bandykite dar kartą.",
+			"saveError": "Nepavyko išsaugoti datų. Perkėlimas atšauktas."
 		}
 	},
 	"filters": {

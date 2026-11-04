@@ -350,6 +350,20 @@
 			"titleRequired": "Kérjük, adjon meg egy címet.",
 			"delete": "Törölje ezt a nézetet",
 			"deleteText": "Biztosan eltávolítja ezt a nézetet? A továbbiakban nem lesz használható a projektben szereplő feladatok megtekintésére. Ez a művelet nem töröl semmilyen feladatot. Ezt nem lehet visszacsinálni!"
+		},
+		"calendar": {
+			"title": "Feladatnaptár",
+			"loading": "Betöltés…",
+			"count": "Feladatok: {count}",
+			"deadline": "Határidő",
+			"create": "Feladat létrehozása",
+			"chooseProject": "Válasszon projektet és dátumot az új feladathoz.",
+			"cancel": "Mégse",
+			"retry": "Újrapróbálkozás",
+			"hint": "Nyissa meg a feladatot a részletekhez. Húzással ütemezze át; átméretezéssel módosítsa a befejezési dátumát.",
+			"date": "Dátum",
+			"loadError": "Nem sikerült betölteni a feladatokat. Próbálja újra.",
+			"saveError": "Nem sikerült menteni a dátumokat. Az áthelyezés vissza lett vonva."
 		}
 	},
 	"filters": {

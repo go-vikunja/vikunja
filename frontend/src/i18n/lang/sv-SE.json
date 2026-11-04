@@ -445,6 +445,20 @@
 			"deleteSuccess": "Vyn raderades framgångsrikt.",
 			"onlyAdminsCanEdit": "Endast projektadministratörer kan redigera vyer.",
 			"updateSuccess": "Vyn uppdaterades framgångsrikt."
+		},
+		"calendar": {
+			"title": "Uppgiftskalender",
+			"loading": "Laddar…",
+			"count": "Uppgifter: {count}",
+			"deadline": "Tidsfrist",
+			"create": "Skapa en uppgift",
+			"chooseProject": "Välj ett projekt och ett datum för den nya uppgiften.",
+			"cancel": "Avbryt",
+			"retry": "Försök igen",
+			"hint": "Öppna en uppgift för detaljer. Dra för att ändra schemat; ändra storleken för att ändra slutdatumet.",
+			"date": "Datum",
+			"loadError": "Det gick inte att läsa in uppgifterna. Försök igen.",
+			"saveError": "Det gick inte att spara datumen. Flytten ångrades."
 		}
 	},
 	"filters": {

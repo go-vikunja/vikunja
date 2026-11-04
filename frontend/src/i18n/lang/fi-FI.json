@@ -399,6 +399,20 @@
 			"deleteSuccess": "Näkymä poistettiin onnistuneesti.",
 			"onlyAdminsCanEdit": "Vain projektin ylläpitäjät voivat muokata näkymiä.",
 			"updateSuccess": "Näkymä päivitettiin onnistuneesti."
+		},
+		"calendar": {
+			"title": "Tehtäväkalenteri",
+			"loading": "Ladataan…",
+			"count": "Tehtäviä: {count}",
+			"deadline": "Määräaika",
+			"create": "Luo tehtävä",
+			"chooseProject": "Valitse projekti ja päivämäärä uudelle tehtävälle.",
+			"cancel": "Peruuta",
+			"retry": "Yritä uudelleen",
+			"hint": "Avaa tehtävä nähdäksesi tiedot. Siirrä ajankohtaa vetämällä; muuta päättymispäivää muuttamalla kokoa.",
+			"date": "Päivämäärä",
+			"loadError": "Tehtäviä ei voitu ladata. Yritä uudelleen.",
+			"saveError": "Päivämääriä ei voitu tallentaa. Siirto kumottiin."
 		}
 	},
 	"filters": {

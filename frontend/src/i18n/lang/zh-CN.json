@@ -405,6 +405,20 @@
 			"deleteSuccess": "视图删除成功。",
 			"onlyAdminsCanEdit": "只有项目管理员才能编辑视图。",
 			"updateSuccess": "视图更新成功。"
+		},
+		"calendar": {
+			"title": "任务日历",
+			"loading": "载入中...",
+			"count": "任务数：{count}",
+			"deadline": "截止日期",
+			"create": "新建任务",
+			"chooseProject": "请选择新任务的项目和日期。",
+			"cancel": "取消",
+			"retry": "重试",
+			"hint": "打开任务以查看详情。拖动以调整日程；调整大小以更改结束日期。",
+			"date": "日期",
+			"loadError": "无法加载任务，请重试。",
+			"saveError": "无法保存日期，已撤销移动。"
 		}
 	},
 	"filters": {

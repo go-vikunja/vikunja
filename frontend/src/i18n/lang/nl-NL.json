@@ -577,6 +577,20 @@
 			"deleteSuccess": "De weergave is succesvol verwijderd.",
 			"onlyAdminsCanEdit": "Alleen projectbeheerders kunnen weergaven bewerken.",
 			"updateSuccess": "De weergave is succesvol bijgewerkt."
+		},
+		"calendar": {
+			"title": "Takenkalender",
+			"loading": "Bezig met laden…",
+			"count": "Taken: {count}",
+			"deadline": "Deadline",
+			"create": "Taak aanmaken",
+			"chooseProject": "Selecteer een project en een datum voor de nieuwe taak.",
+			"cancel": "Annuleren",
+			"retry": "Opnieuw proberen",
+			"hint": "Open een taak voor details. Sleep om de planning te wijzigen; pas de grootte aan om de einddatum te wijzigen.",
+			"date": "Datum",
+			"loadError": "Taken konden niet worden geladen. Probeer het opnieuw.",
+			"saveError": "Datums konden niet worden opgeslagen. De verplaatsing is ongedaan gemaakt."
 		}
 	},
 	"filters": {

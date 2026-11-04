@@ -1,1 +1,18 @@
-{}
+{
+  "project": {
+    "calendar": {
+      "title": "Taskokalendaro",
+      "loading": "Ŝargante…",
+      "count": "Taskoj: {count}",
+      "deadline": "Limdato",
+      "create": "Krei taskon",
+      "chooseProject": "Elektu projekton kaj daton por la nova tasko.",
+      "cancel": "Nuligi",
+      "retry": "Reprovi",
+      "hint": "Malfermu taskon por detaloj. Trenu por ŝanĝi la planitan daton; regrandigu por ŝanĝi ĝian findaton.",
+      "date": "Dato",
+      "loadError": "Ne eblis ŝargi la taskojn. Bonvolu reprovi.",
+      "saveError": "Ne eblis konservi la datojn. La movo estis malfarita."
+    }
+  }
+}

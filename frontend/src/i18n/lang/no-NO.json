@@ -433,6 +433,20 @@
 			"deleteSuccess": "Visningen ble slettet.",
 			"onlyAdminsCanEdit": "Bare administratorer kan redigere visninger.",
 			"updateSuccess": "Visningen ble oppdatert."
+		},
+		"calendar": {
+			"title": "Oppgavekalender",
+			"loading": "Laster…",
+			"count": "Oppgaver: {count}",
+			"deadline": "Frist",
+			"create": "Opprett en oppgave",
+			"chooseProject": "Velg et prosjekt og en dato for den nye oppgaven.",
+			"cancel": "Avbryt",
+			"retry": "Prøv igjen",
+			"hint": "Åpne en oppgave for detaljer. Dra for å flytte den; endre størrelsen for å endre sluttdatoen.",
+			"date": "Dato",
+			"loadError": "Kunne ikke laste oppgavene. Prøv igjen.",
+			"saveError": "Kunne ikke lagre datoene. Flyttingen ble angret."
 		}
 	},
 	"filters": {

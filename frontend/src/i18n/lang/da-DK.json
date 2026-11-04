@@ -566,6 +566,20 @@
 			"createSuccess": "Visningen blev oprettet.",
 			"titleRequired": "Angiv venligst en titel.",
 			"delete": "Slet denne visning"
+		},
+		"calendar": {
+			"title": "Opgavekalender",
+			"loading": "Indlæser…",
+			"count": "Opgaver: {count}",
+			"deadline": "Frist",
+			"create": "Opret en opgave",
+			"chooseProject": "Vælg et projekt og en dato til den nye opgave.",
+			"cancel": "Annuller",
+			"retry": "Prøv igen",
+			"hint": "Åbn en opgave for at se detaljer. Træk for at flytte den; tilpas størrelsen for at ændre slutdatoen.",
+			"date": "Dato",
+			"loadError": "Opgaverne kunne ikke indlæses. Prøv igen.",
+			"saveError": "Datoerne kunne ikke gemmes. Flytningen blev fortrudt."
 		}
 	},
 	"filters": {
