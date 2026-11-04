@@ -235,7 +235,7 @@ func writeSyncResponse(
 		sb.WriteString("        <D:getetag>" + xmlEscape(etag) + "</D:getetag>\n")
 		if includeCalendarData {
 			project := rr.project
-			calData := caldavpkg.GetCaldavTodosForTasks(project, []*models.TaskWithComments{t})
+			calData := caldavpkg.GetCaldavTodosForTasks(project, []*models.TaskWithComments{t}, rr.timeZone)
 			sb.WriteString("        <C:calendar-data>" + xmlEscape(calData) + "</C:calendar-data>\n")
 		}
 		sb.WriteString("      </D:prop>\n")

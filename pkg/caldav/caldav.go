@@ -90,6 +90,8 @@ type Config struct {
 	Name   string
 	ProdID string
 	Color  string
+	// TimeZone is the zone DTSTART, DUE and DTEND are written in; nil means UTC.
+	TimeZone *time.Location
 }
 
 // getCaldavColor sanitizes color at the output boundary (non-hex chars
@@ -160,6 +162,10 @@ X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:` + escapeICalText(config.Name) + `
 PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color)
 
+	zone := newCalendarZone(config.TimeZone)
+	// The VTIMEZONE goes here once the todos have shown which zone periods they use.
+	headerEnd := len(caldavtodos)
+
 	for _, t := range todos {
 		if t.UID == "" {
 			t.UID = makeCalDavTimeFromTimeStamp(t.Timestamp) + utils.Sha256(t.Summary)
@@ -171,9 +177,10 @@ UID:` + escapeICalText(t.UID) + `
 DTSTAMP:` + makeCalDavTimeFromTimeStamp(t.Timestamp) + `
 SUMMARY:` + escapeICalText(t.Summary) + getCaldavColor(t.Color)
 
+		allDay := zone.isAllDay(t.Start, t.End, t.DueDate)
 		if t.Start.Unix() > 0 {
 			caldavtodos += `
-DTSTART:` + makeCalDavTimeFromTimeStamp(t.Start)
+` + zone.dateProperty("DTSTART", t.Start, allDay)
 			if t.Duration != 0 && t.DueDate.Unix() == 0 {
 				caldavtodos += `
 DURATION:PT` + formatDuration(t.Duration)
@@ -181,7 +188,7 @@ DURATION:PT` + formatDuration(t.Duration)
 		}
 		if t.End.Unix() > 0 {
 			caldavtodos += `
-DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
+` + zone.dateProperty("DTEND", t.End, allDay)
 		}
 		if t.Description != "" {
 			// CalDAV clients show plain text, so emit markdown. On the near-impossible
@@ -217,7 +224,7 @@ ORGANIZER;CN=:` + escapeICalText(t.Organizer.Username)
 
 		if t.DueDate.Unix() > 0 {
 			caldavtodos += `
-DUE:` + makeCalDavTimeFromTimeStamp(t.DueDate)
+` + zone.dateProperty("DUE", t.DueDate, allDay)
 		}
 
 		if t.Created.Unix() > 0 {
@@ -233,7 +240,7 @@ PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 		if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
 			if t.RepeatMode == models.TaskRepeatModeMonth {
 				caldavtodos += `
-RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
+RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.In(zone.loc).Format("02") // Day of the month
 			} else {
 				freq, interval := getRruleFromInterval(t.RepeatAfter)
 				caldavtodos += `
@@ -258,6 +265,7 @@ LAST-MODIFIED:` + makeCalDavTimeFromTimeStamp(t.Updated)
 END:VTODO`
 	}
 
+	caldavtodos = caldavtodos[:headerEnd] + zone.vtimezone() + caldavtodos[headerEnd:]
 	caldavtodos += `
 END:VCALENDAR` // Need a line break
 
