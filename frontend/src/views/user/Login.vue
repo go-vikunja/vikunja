@@ -251,10 +251,6 @@ async function submit() {
 </script>
 
 <style lang="scss" scoped>
-.button {
-	margin: 0 0.4rem 0 0;
-}
-
 .reset-password-link {
 	display: inline-block;
 }
