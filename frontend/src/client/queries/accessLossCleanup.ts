@@ -1,11 +1,9 @@
 import type {QueryClient} from '@tanstack/vue-query'
+import type {ProjectUsersDeleteData} from '@/client/generated'
 import {linkShareKeys} from './linkShares'
 import {webhookKeys} from './webhooks'
 
-export type AccessLossCleanup = {
-	keep_webhooks: boolean
-	revoke_link_shares: boolean
-}
+export type AccessLossCleanup = Required<NonNullable<ProjectUsersDeleteData['query']>>
 
 // Asking first fails with 409 and the affected counts instead of applying the defaults.
 export type AccessLossChoice = AccessLossCleanup | {confirm_access_loss: true}
