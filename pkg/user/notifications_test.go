@@ -18,8 +18,10 @@ package user
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/notifications"
 
 	"github.com/stretchr/testify/assert"
@@ -78,4 +80,25 @@ func TestShouldNotify(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestIdentityLinkedNotification(t *testing.T) {
+	i18n.Init()
+	n := &IdentityLinkedNotification{
+		User: &User{
+			Username: "user1",
+			Timezone: "Europe/Berlin",
+		},
+		ProviderName: "Authentik",
+		Linked:       time.Date(2026, 11, 4, 9, 30, 0, 0, time.UTC),
+	}
+
+	mail := n.ToMail("en")
+	opts, err := notifications.RenderMail(mail, "en")
+	require.NoError(t, err)
+
+	assert.Equal(t, "Authentik was linked to your Vikunja account", opts.Subject)
+	assert.Contains(t, opts.Message, "Your Authentik account was linked to your Vikunja account on 2026-11-04 10:30 CET.")
+	assert.Contains(t, opts.Message, "change your password immediately, then unlink it in your account settings")
+	assert.Contains(t, opts.Message, "user/settings/linked-accounts")
 }

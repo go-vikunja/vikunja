@@ -20,8 +20,10 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
@@ -71,9 +73,11 @@ func runLink(t *testing.T, u *user.User, req *LinkIdentityRequest) (*LinkedIdent
 	t.Helper()
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 	identity, err := LinkIdentity(t.Context(), s, u, req)
 	if err == nil {
 		require.NoError(t, s.Commit())
+		events.DispatchPending(t.Context(), s)
 	}
 	return identity, err
 }
@@ -96,10 +100,13 @@ func TestLinkIdentity(t *testing.T) {
 		idp.configure(t)
 		idp.setClaims(map[string]any{"sub": "new-sub"})
 		u := loadIdentityTestUser(t, 2)
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 
 		identity, err := runLink(t, u, linkRequest(identityTestPassword))
 		require.NoError(t, err)
 
+		notifications.AssertSent(t, &user.IdentityLinkedNotification{})
 		assert.Equal(t, idp.URL, identity.Issuer)
 		assert.Equal(t, mockIDPProviderKey, identity.ProviderKey)
 		assert.Equal(t, "Provider One", identity.ProviderName)
@@ -214,8 +221,11 @@ func TestLinkIdentity(t *testing.T) {
 		first, err := runLink(t, u, linkRequest(identityTestPassword))
 		require.NoError(t, err)
 
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
 		second, err := runLink(t, u, linkRequest(identityTestPassword))
 		require.NoError(t, err)
+		notifications.AssertNotSent(t, &user.IdentityLinkedNotification{})
 
 		assert.Equal(t, first.ID, second.ID)
 		assert.Equal(t, mockIDPProviderKey, second.ProviderKey)

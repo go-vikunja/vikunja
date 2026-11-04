@@ -20,6 +20,9 @@ import (
 	"fmt"
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/notifications"
+
 	"xorm.io/xorm"
 )
 
@@ -61,15 +64,25 @@ func HasIdentityForIssuer(s *xorm.Session, userID int64, issuer string) (bool, e
 		Exist(&Identity{})
 }
 
-func CreateIdentity(s *xorm.Session, userID int64, issuer, subject string) (*Identity, error) {
+// CreateIdentity mails u about the new login method once s commits, so a
+// stolen session can't quietly add one.
+func CreateIdentity(s *xorm.Session, u *User, issuer, subject, providerName string) (*Identity, error) {
 	identity := &Identity{
-		UserID:  userID,
+		UserID:  u.ID,
 		Issuer:  issuer,
 		Subject: subject,
 	}
 	if _, err := s.Insert(identity); err != nil {
 		return nil, fmt.Errorf("inserting user identity: %w", err)
 	}
+
+	events.OnCommit(s, func() error {
+		return notifications.Notify(u, &IdentityLinkedNotification{
+			User:         u,
+			ProviderName: providerName,
+			Linked:       identity.Created,
+		})
+	})
 	return identity, nil
 }
 

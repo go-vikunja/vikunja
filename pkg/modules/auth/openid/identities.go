@@ -93,7 +93,7 @@ func LinkIdentity(ctx context.Context, s *xorm.Session, u *user.User, req *LinkI
 		}
 	}
 
-	newIdentity, err := user.CreateIdentity(s, u.ID, idToken.Issuer, idToken.Subject)
+	newIdentity, err := user.CreateIdentity(s, u, idToken.Issuer, idToken.Subject, provider.Name)
 	if err != nil {
 		return nil, err
 	}
