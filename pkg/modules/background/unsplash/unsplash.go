@@ -333,18 +333,8 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 		return
 	}
 
-	// Remove the old background if one exists
-	if project.BackgroundFileID != 0 {
-		file := files.File{ID: project.BackgroundFileID}
-		err = file.Delete(s)
-		if err != nil && !files.IsErrFileDoesNotExist(err) {
-			return err
-		}
-
-		err = models.RemoveUnsplashPhoto(s, project.BackgroundFileID)
-		if err != nil && !files.IsErrFileDoesNotExist(err) {
-			return err
-		}
+	if err := project.DeleteBackgroundFileIfExists(s); err != nil {
+		return err
 	}
 
 	// Save the relation that we got it from unsplash
