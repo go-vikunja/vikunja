@@ -132,7 +132,7 @@ func projectUsersUpdate(ctx context.Context, in *struct {
 func projectUsersDelete(ctx context.Context, in *struct {
 	ProjectID        int64  `path:"project"`
 	Username         string `path:"user"`
-	KeepWebhooks     bool   `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to the project owner so they keep firing. By default they are deleted. The caller's own webhooks are always deleted."`
+	KeepWebhooks     bool   `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access."`
 	RevokeLinkShares bool   `query:"revoke_link_shares" doc:"Delete the link shares created by users who lose access. By default they keep working."`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)

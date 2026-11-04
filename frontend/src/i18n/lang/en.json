@@ -544,7 +544,7 @@
         "others": {
           "assignments": "their task assignments",
           "subscriptions": "their subscriptions to tasks and projects",
-          "deleteWebhooks": "Delete webhooks they created. Unchecked, they move to the project owner and keep working. Your own webhooks are always deleted.",
+          "deleteWebhooks": "Delete webhooks they created. Unchecked, they transfer to you with the same destination and follow your project access. Your own webhooks are deleted if you lose access.",
           "revokeLinkShares": "Revoke link shares they created"
         },
         "self": {
