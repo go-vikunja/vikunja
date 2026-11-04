@@ -26,13 +26,12 @@ import (
 	"xorm.io/xorm"
 )
 
-// AccessLossCleanup decides what happens to the webhooks and link shares of users who lose access to a project.
-// The zero value deletes their webhooks and keeps their link shares.
+// AccessLossCleanup's zero value deletes webhooks and keeps link shares.
 type AccessLossCleanup struct {
 	// Kept webhooks move to the project owner: delivery checks the creator's access, so they'd stop firing otherwise.
 	KeepWebhooks     bool
 	RevokeLinkShares bool
-	// Confirm fails with ErrAccessLossNeedsConfirmation instead of cleaning up when any webhook or link share is affected.
+	// Fails with ErrAccessLossNeedsConfirmation instead of cleaning up if anything is affected.
 	Confirm bool
 }
 

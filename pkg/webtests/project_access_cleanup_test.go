@@ -120,7 +120,6 @@ func TestProjectUserRemovalCleanupOptions(t *testing.T) {
 }
 
 func TestTeamAccessRemovalCleanupOptions(t *testing.T) {
-	// Shares project 10 with a team holding user1 and user6, then drops user1's direct share.
 	setup := func(t *testing.T) (*accessLossV2Fixture, *models.Team) {
 		t.Helper()
 		f := insertUser1DataInProject10(t)
@@ -185,7 +184,6 @@ func TestTeamAccessRemovalCleanupOptions(t *testing.T) {
 }
 
 func TestProjectMoveCleanupOptions(t *testing.T) {
-	// user6 owns a parent shared with user1 and moves the child (holding user1's data) out from under it.
 	setup := func(t *testing.T) (child *models.Project, f *accessLossV2Fixture) {
 		t.Helper()
 		s := db.NewSession()

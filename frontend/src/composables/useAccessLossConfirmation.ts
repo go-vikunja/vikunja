@@ -17,7 +17,6 @@ function countsFrom(error: unknown): AccessLossCounts | null {
 	}
 }
 
-// Tries without asking first; only a 409 from the server opens the dialog.
 export function useAccessLossConfirmation() {
 	const counts = ref<AccessLossCounts | null>(null)
 	const cleanup = ref(defaultAccessLossCleanup())
