@@ -560,6 +560,28 @@ func TestProjectMoveAccessLossCleanup(t *testing.T) {
 
 		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true}))
 	})
+	t.Run("confirm ignores link shares of deleted users", func(t *testing.T) {
+		f := setupAccessLoss(t)
+		f.shareDirectly(t, PermissionWrite)
+		pu := &ProjectUser{
+			ProjectID:  f.child.ID,
+			Username:   f.member.Username,
+			Permission: PermissionRead,
+		}
+		require.NoError(t, pu.Create(f.s, f.owner))
+		share := &LinkSharing{
+			Hash:        "access-loss-deleted-sharer",
+			ProjectID:   f.child.ID,
+			SharingType: SharingTypeWithoutPassword,
+			SharedByID:  9999,
+		}
+		_, err := f.s.Insert(share)
+		require.NoError(t, err)
+
+		require.NoError(t, f.moveChildToTopLevel(t, AccessLossCleanup{Confirm: true}))
+		require.NoError(t, f.s.Commit())
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": share.ID}, false)
+	})
 	t.Run("a plain edit does not clean up", func(t *testing.T) {
 		f := setupAccessLoss(t)
 		f.shareDirectly(t, PermissionWrite)
