@@ -40,6 +40,7 @@ func HTMLToMarkdown(htmlInput string) (string, error) {
 	}
 
 	skipOversizedTables(doc)
+	flattenDeepNesting(doc, 0)
 
 	md, err := newHTMLToMarkdownConverter().ConvertNode(doc)
 	if err != nil {
