@@ -802,6 +802,32 @@ test.describe('Task', () => {
 			await expect(labelWrapper).not.toContainText(labels[0].title)
 		})
 
+		for (const {key, property} of [{key: 'l', property: 'labels'}, {key: 'a', property: 'assignees'}]) {
+			test(`Focuses the ${property} search input with the "${key}" shortcut when one is already set`, async ({authenticatedPage: page}) => {
+				const users = await UserFactory.create(2)
+				const tasks = await TaskFactory.create(1, {
+					id: 1,
+					project_id: 1,
+				})
+				const labels = await LabelFactory.create(1)
+				await LabelTaskFactory.create(1, {
+					task_id: tasks[0].id,
+					label_id: labels[0].id,
+				})
+				await TaskAssigneeFactory.create(1, {
+					task_id: tasks[0].id,
+					user_id: users[1].id,
+				})
+				await page.goto(`/tasks/${tasks[0].id}`)
+				await expect(page.locator('.task-view .property-labels .multiselect .input-wrapper')).toContainText(labels[0].title)
+				await expect(page.locator('.task-view .property-assignees .multiselect .input-wrapper span.assignee')).toHaveCount(1)
+
+				await page.locator('body').press(key)
+
+				await expect(page.locator(`.task-view .property-${property} .multiselect input.input`)).toBeFocused()
+			})
+		}
+
 		test('Can open due date with keyboard shortcut in task detail', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
