@@ -791,7 +791,7 @@ func (err *ErrAccessLossNeedsConfirmation) Error() string {
 	return fmt.Sprintf("Users would lose access to projects holding their webhooks or link shares [Webhooks: %d, LinkShares: %d]", err.Webhooks, err.LinkShares)
 }
 
-const ErrCodeAccessLossNeedsConfirmation = 3018
+const ErrCodeAccessLossNeedsConfirmation = 3022
 
 func (err *ErrAccessLossNeedsConfirmation) HTTPError() web.HTTPError {
 	return web.HTTPError{

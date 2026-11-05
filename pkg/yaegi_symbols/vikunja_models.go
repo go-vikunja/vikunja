@@ -47,7 +47,7 @@ func init() {
 		"EmptyTaskTrash":                                   reflect.ValueOf(models.EmptyTaskTrash),
 		"ErrCodeAPITokenDoesNotExist":                      reflect.ValueOf(constant.MakeFromLiteral("14017", token.INT, 0)),
 		"ErrCodeAPITokenInvalid":                           reflect.ValueOf(constant.MakeFromLiteral("14001", token.INT, 0)),
-		"ErrCodeAccessLossNeedsConfirmation":               reflect.ValueOf(constant.MakeFromLiteral("3018", token.INT, 0)),
+		"ErrCodeAccessLossNeedsConfirmation":               reflect.ValueOf(constant.MakeFromLiteral("3022", token.INT, 0)),
 		"ErrCodeAttachmentDoesNotBelongToTask":             reflect.ValueOf(constant.MakeFromLiteral("4020", token.INT, 0)),
 		"ErrCodeBucketDoesNotBelongToProject":              reflect.ValueOf(constant.MakeFromLiteral("10002", token.INT, 0)),
 		"ErrCodeBucketDoesNotExist":                        reflect.ValueOf(constant.MakeFromLiteral("10001", token.INT, 0)),
