@@ -84,7 +84,7 @@ func TestWebhookListener_SkipsDisabledDeletedProject(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, f.s.Commit())
 
-	matches, err := projectWebhooksForEvent(f.s, f.child.ID, "project.deleted")
+	matches, err := projectWebhooksForEvent(f.s, f.child.ID, "project.deleted", nil)
 	require.NoError(t, err)
 	require.Len(t, matches, 1)
 	assert.Equal(t, active.ID, matches[0].ID)

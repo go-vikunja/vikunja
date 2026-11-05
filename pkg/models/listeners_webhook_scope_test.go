@@ -56,7 +56,7 @@ func TestProjectWebhooksForEvent_RequiresConfiguredProjectAccess(t *testing.T) {
 	_, err := s.Insert(hook)
 	require.NoError(t, err)
 
-	matching, err := projectWebhooksForEvent(s, child.ID, "task.updated")
+	matching, err := projectWebhooksForEvent(s, child.ID, "task.updated", nil)
 	require.NoError(t, err)
 	require.Empty(t, matching)
 
@@ -65,7 +65,7 @@ func TestProjectWebhooksForEvent_RequiresConfiguredProjectAccess(t *testing.T) {
 		Username:   creator.Username,
 		Permission: PermissionRead,
 	}).Create(s, owner))
-	matching, err = projectWebhooksForEvent(s, child.ID, "task.updated")
+	matching, err = projectWebhooksForEvent(s, child.ID, "task.updated", nil)
 	require.NoError(t, err)
 	require.Len(t, matching, 1)
 	require.Equal(t, hook.ID, matching[0].ID)
