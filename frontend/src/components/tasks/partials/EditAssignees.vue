@@ -13,7 +13,7 @@
 		:autocomplete-enabled="false"
 		@search="findUser"
 		@select="addAssignee"
-		@focus="preloadUsers"
+		@focusin="preloadUsers"
 	>
 		<template #items="{items}">
 			<AssigneeList
