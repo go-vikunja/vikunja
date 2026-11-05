@@ -1,5 +1,6 @@
 import {readFile} from 'node:fs/promises'
 import {test, expect} from '../../support/fixtures'
+import {clickTaskAction} from '../../support/taskDetail'
 import {BucketFactory} from '../../factories/bucket'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
@@ -413,7 +414,7 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})).toBeVisible()
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
 
-		await page.locator('.task-view .action-buttons .button', {timeout: 3000}).filter({hasText: /^Move$/}).click()
+		await clickTaskAction(page, 'Move')
 		const multiselectInput = page.locator('.task-view .content.details .field .multiselect.control .input-wrapper input')
 		await expect(multiselectInput).toBeVisible({timeout: 5000})
 		await multiselectInput.click()
@@ -447,8 +448,7 @@ test.describe('Project View Kanban', () => {
 
 		await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})).toBeVisible()
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
-		await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'})).toBeVisible()
-		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
+		await clickTaskAction(page, 'Delete')
 
 		await expect(page.locator('.global-notification')).toContainText('The task has been moved to the trash.')
 
@@ -473,7 +473,7 @@ test.describe('Project View Kanban', () => {
 
 		const card = page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title})
 		await card.click()
-		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
+		await clickTaskAction(page, 'Delete')
 		await expect(page).toHaveURL(new RegExp(`/projects/1/${view.id}$`))
 		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).toBeVisible()
 		await expect(card).toHaveCount(0)

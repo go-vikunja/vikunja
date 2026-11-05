@@ -29,9 +29,8 @@ test.describe('Assignee search results in a narrow column', () => {
 		})
 
 		await page.goto(`/tasks/${tasks[0].id}`)
-		await page.locator('[data-cy="taskDetail.assign"]').click()
 
-		const multiselect = page.locator('.task-view .column.assignees .multiselect')
+		const multiselect = page.locator('.task-view .property-assignees .multiselect')
 		await multiselect.locator('input').click()
 		await expect(multiselect.locator('.search-results')).toBeVisible({timeout: 5000})
 
