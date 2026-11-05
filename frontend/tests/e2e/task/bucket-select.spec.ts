@@ -203,9 +203,10 @@ test.describe('Task Bucket Select', () => {
 	})
 
 	test('Renders the bucket dropdown above the remove assignee buttons', async ({authenticatedPage: page}) => {
+		// On mobile the property list sits right below the breadcrumb, so the bucket
+		// dropdown opens over the assignee avatars.
+		await page.setViewportSize({width: 390, height: 844})
 		const {project, view, task} = await createKanbanTaskInBucket()
-		// The dropdown is right-aligned to the bucket name in the breadcrumb, so it
-		// only reaches over the assignee avatars once the row is long enough.
 		// Start at 100 to keep the fixture's logged-in user (ID 1).
 		const users = await UserFactory.create(12, {
 			id: (i: number) => 100 + i,
@@ -220,7 +221,7 @@ test.describe('Task Bucket Select', () => {
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
 		await expect(page).toHaveURL(new RegExp(`/tasks/${task.id}`))
 
-		const removeButtons = page.locator('.task-view .column.assignees .remove-assignee')
+		const removeButtons = page.locator('.task-view .property-assignees .remove-assignee')
 		await expect(removeButtons).toHaveCount(users.length)
 
 		await page.locator('.task-view .subtitle .bucket-name').click()

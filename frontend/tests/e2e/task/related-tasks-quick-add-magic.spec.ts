@@ -1,4 +1,5 @@
 import {test, expect} from '../../support/fixtures'
+import {clickTaskAction} from '../../support/taskDetail'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
@@ -6,7 +7,7 @@ import {createDefaultViews} from '../project/prepareProjects'
 import {login} from '../../support/authenticateUser'
 
 async function openRelatedTasksForm(page) {
-	await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Relation'}).click()
+	await clickTaskAction(page, 'Add relation')
 	const input = page.locator('.task-relations .multiselect input').first()
 	await expect(input).toBeVisible()
 	return input
@@ -38,7 +39,7 @@ test.describe('Related tasks quick add magic', () => {
 
 		await relatedTaskLink.click()
 		await expect(page).toHaveURL(/\/tasks\/\d+/)
-		await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag').filter({hasText: 'Urgent'}))
+		await expect(page.locator('.task-view .property-labels .multiselect .input-wrapper span.tag').filter({hasText: 'Urgent'}))
 			.toBeVisible({timeout: 10000})
 	})
 
@@ -61,7 +62,7 @@ test.describe('Related tasks quick add magic', () => {
 
 		await relatedTaskLink.click()
 		// Priority 4 is "Urgent"
-		await expect(page.locator('.task-view .columns.details select').first()).toHaveValue('4', {timeout: 10000})
+		await expect(page.locator('.task-view .property-priority select').last()).toHaveValue('4', {timeout: 10000})
 	})
 
 	test('Creates the related task in another project via +project prefix', async ({authenticatedPage: page}) => {
