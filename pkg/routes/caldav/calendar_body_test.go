@@ -58,7 +58,9 @@ func callCaldavHandler(t *testing.T, handler func(*echo.Context) error, u *user.
 	req.Header.Set("Depth", "1")
 	c := echo.New().NewContext(req, rec)
 	c.Set("userBasicAuth", u)
-	c.SetPathValues(params)
+	if params != nil {
+		c.SetPathValues(params)
+	}
 
 	return rec, handler(c)
 }
