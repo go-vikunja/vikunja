@@ -16,6 +16,23 @@ test.describe('The Menu', () => {
 		await expect(page.locator('.menu-container')).not.toHaveClass(/is-active/)
 	})
 
+	test('Highlights Trash on both tabs', async ({authenticatedPage: page}) => {
+		const trashLink = page.locator('.menu-container').getByRole('link', {name: 'Trash', exact: true})
+		await expect(trashLink).not.toHaveClass(/router-link-exact-active/)
+		await trashLink.click()
+		await expect(page).toHaveURL(/\/trash\/tasks$/)
+		await expect(trashLink).toHaveClass(/router-link-exact-active/)
+
+		await page.getByRole('navigation', {name: 'Trash sections'}).getByRole('link', {name: 'Projects', exact: true}).click()
+		await expect(page).toHaveURL(/\/trash\/projects$/)
+		await expect(trashLink).toHaveClass(/router-link-exact-active/)
+		await page.reload()
+		await expect(trashLink).toHaveClass(/router-link-exact-active/)
+
+		await page.locator('.menu-container').getByRole('link', {name: 'Overview', exact: true}).click()
+		await expect(trashLink).not.toHaveClass(/router-link-exact-active/)
+	})
+
 	test('Can be toggled with keyboard shortcut on desktop', async ({authenticatedPage: page}) => {
 		await expect(page.locator('.menu-container')).toHaveClass(/is-active/)
 		await page.locator('body').click()
