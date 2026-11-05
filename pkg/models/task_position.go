@@ -365,6 +365,9 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	if err = lockViewsForPositionUpdate(s, []*ProjectView{view}); err != nil {
+		return err
+	}
 	if err = lockTaskInView(s, a, view, tp.TaskID); err != nil {
 		return err
 	}

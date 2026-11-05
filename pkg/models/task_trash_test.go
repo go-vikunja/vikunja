@@ -97,6 +97,82 @@ func purgedTaskDoers(t *testing.T) map[int64]*user.User {
 	return doers
 }
 
+func TestTaskRestoreRejectsMoveAfterPermissionCheck(t *testing.T) {
+	if db.Type() != schemas.MYSQL && db.Type() != schemas.POSTGRES {
+		t.Skip("Requires concurrent database transactions")
+	}
+	for _, canWriteTarget := range []bool{
+		false,
+		true,
+	} {
+		t.Run(map[bool]string{
+			false: "target is unreadable",
+			true:  "target remains writable",
+		}[canWriteTarget], func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			setup := db.NewSession()
+			_, err := setup.Insert(&ProjectUser{
+				UserID:     3,
+				ProjectID:  1,
+				Permission: PermissionWrite,
+			})
+			require.NoError(t, err)
+			if canWriteTarget {
+				_, err = setup.Insert(&ProjectUser{
+					UserID:     1,
+					ProjectID:  2,
+					Permission: PermissionWrite,
+				})
+				require.NoError(t, err)
+			}
+			require.NoError(t, setup.Commit())
+			_ = setup.Close()
+
+			restorer := db.NewSession()
+			defer restorer.Close()
+			defer events.CleanupPending(restorer)
+			task := &Task{ID: 51}
+			can, err := task.CanRestore(restorer, &user.User{ID: 1})
+			require.NoError(t, err)
+			require.True(t, can)
+
+			mover := db.NewSession()
+			defer mover.Close()
+			defer events.CleanupPending(mover)
+			other := &Task{ID: 51}
+			u3 := &user.User{ID: 3}
+			can, err = other.CanRestore(mover, u3)
+			require.NoError(t, err)
+			require.True(t, can)
+			require.NoError(t, other.Restore(mover, u3))
+			require.NoError(t, (&Task{
+				ID:        51,
+				Title:     "moved while restoring",
+				ProjectID: 2,
+			}).Update(mover, u3))
+			require.NoError(t, other.Delete(mover, u3))
+			require.NoError(t, mover.Commit())
+
+			err = task.Restore(restorer, &user.User{ID: 1})
+			if canWriteTarget {
+				require.ErrorIs(t, err, ErrGenericForbidden{})
+			} else {
+				require.True(t, IsErrTaskDoesNotExist(err), "got %v", err)
+			}
+			require.NoError(t, restorer.Rollback())
+			db.AssertExists(t, "tasks", map[string]interface{}{
+				"id":         51,
+				"project_id": 2,
+			}, false)
+			db.AssertMissing(t, "tasks", map[string]interface{}{
+				"id":         51,
+				"deleted_at": nil,
+			})
+			db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 51})
+		})
+	}
+}
+
 func TestTask_Restore(t *testing.T) {
 	u1 := &user.User{ID: 1}
 
@@ -141,6 +217,27 @@ func TestTask_Restore(t *testing.T) {
 		_, err := restoreTaskForTest(t, 51, u1)
 		require.NoError(t, err)
 
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":         51,
+			"project_view_id": 4,
+			"bucket_id":       3,
+		}, false)
+	})
+	t.Run("refreshes task state loaded during the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		defer events.CleanupPending(s)
+		task := &Task{ID: 51}
+		can, err := task.CanRestore(s, u1)
+		require.NoError(t, err)
+		require.True(t, can)
+		_, err = s.Unscoped().ID(task.ID).Cols("done").Update(&Task{Done: true})
+		require.NoError(t, err)
+
+		require.NoError(t, task.Restore(s, u1))
+		require.NoError(t, s.Commit())
+		assert.True(t, task.Done)
 		db.AssertExists(t, "task_buckets", map[string]interface{}{
 			"task_id":         51,
 			"project_view_id": 4,
@@ -246,12 +343,26 @@ func TestTask_Restore(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, can)
 
-		other := db.NewSession()
-		defer other.Close()
-		defer events.CleanupPending(other)
+		require.NoError(t, task.Restore(first, u1))
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		other := db.NewSession().Context(ctx)
+		done := make(chan struct{})
+		defer func() {
+			cancel()
+			_ = first.Rollback()
+			<-done
+			events.CleanupPending(other)
+			_ = other.Close()
+		}()
 		result := make(chan error, 1)
 		go func() {
-			_, err := (&Task{ID: 51}).CanRestore(other, u1)
+			defer close(done)
+			otherTask := &Task{ID: 51}
+			_, err := otherTask.CanRestore(other, u1)
+			if err == nil {
+				err = otherTask.Restore(other, u1)
+			}
 			result <- err
 		}()
 		select {
@@ -260,7 +371,6 @@ func TestTask_Restore(t *testing.T) {
 		case <-time.After(100 * time.Millisecond):
 		}
 
-		require.NoError(t, task.Restore(first, u1))
 		require.NoError(t, first.Commit())
 		select {
 		case err := <-result:
