@@ -59,7 +59,16 @@ async function scrollCard(isIntersecting: boolean) {
 	await flushPromises()
 }
 
-const recurringTask = normalizeTask({id: 7, project_id: 1, title: 'Water the plants', done: false, repeat_after: 86400})
+const recurringTask = normalizeTask({
+	id: 7,
+	project_id: 1,
+	title: 'Water the plants',
+	done: false,
+	repeat: {
+		freq: 'daily',
+		interval: 1,
+	},
+})
 
 const taskWithCover = normalizeTask({
 	id: 8,
@@ -118,6 +127,18 @@ describe('KanbanCard', () => {
 		await flushPromises()
 
 		expect(wrapper.emitted('taskCompletedRecurring')).toHaveLength(1)
+	})
+
+	it('shows the repeat icon on a recurring task', () => {
+		const wrapper = mountCard(recurringTask)
+
+		expect(wrapper.find('[icon="history"]').exists()).toBe(true)
+	})
+
+	it('shows no repeat icon on a task without a rule', () => {
+		const wrapper = mountCard(taskWithCover)
+
+		expect(wrapper.find('[icon="history"]').exists()).toBe(false)
 	})
 
 	it('does not load the cover while the card is off screen', async () => {

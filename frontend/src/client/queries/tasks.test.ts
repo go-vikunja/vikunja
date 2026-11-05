@@ -32,9 +32,17 @@ describe('task queries', () => {
 		expect(normalizeTask({id: 1})).toEqual({
 			id: 1, title: '', description: '', done: false, priority: 0, percent_done: 0, hex_color: '',
 			is_favorite: false, identifier: '', index: 0, position: 0, project_id: 0, bucket_id: 0,
-			repeat_after: 0, repeat_mode: 0, cover_image_attachment_id: 0,
+			repeats_from_current_date: false, cover_image_attachment_id: 0,
 			labels: [], assignees: [], reminders: [], attachments: [], related_tasks: {}, reactions: {},
 		})
+	})
+	it('keeps the repeat rule as sent and leaves it absent without one', () => {
+		const repeat = {freq: 'monthly', interval: 1, by_month_day: [28, 29, 30, 31], by_set_pos: [-1], read_only: true}
+		expect(normalizeTask({id: 1, repeat, repeats_from_current_date: true})).toMatchObject({
+			repeat,
+			repeats_from_current_date: true,
+		})
+		expect(normalizeTask({id: 1})).not.toHaveProperty('repeat')
 	})
 	it('replaces null collections and normalizes related tasks', () => {
 		const task = normalizeTask({

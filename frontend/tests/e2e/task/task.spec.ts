@@ -901,6 +901,28 @@ test.describe('Task', () => {
 			await expect(firstShortcut).toBeFocused()
 		})
 
+		test('Reopens the datepicker on Enter pressed right after Escape', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			const trigger = column.locator('.datepicker .show')
+			const popup = column.locator('.datepicker-popup')
+			await trigger.click()
+			await expect(popup).toBeVisible()
+
+			// No wait in between: the Enter must not be lost while the popup is still closing.
+			await page.keyboard.press('Escape')
+			await page.keyboard.press('Enter')
+			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+		})
+
 		test('Opens the due date popup via the keyboard shortcut when the task already has a due date', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
@@ -1064,6 +1086,61 @@ test.describe('Task', () => {
 			await expect(popup).not.toBeVisible()
 
 			await openDueDatePopupWithShortcut(page)
+		})
+
+		test('Reopens the due date popup from the shortcut pressed right after Escape', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const column = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'})
+			const trigger = column.locator('.datepicker .show')
+			const popup = column.locator('.datepicker .datepicker-popup')
+			await trigger.click()
+			await expect(popup).toBeVisible()
+
+			// No wait in between: the shortcut can arrive before the browser has reported the Escape close.
+			await page.keyboard.press('Escape')
+			await page.keyboard.press('d')
+			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+		})
+
+		test('Opens the due date popup from the shortcut once a slow save finishes', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {id: 1, done: false})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const popup = await openDueDatePopupWithShortcut(page)
+			let releaseSave!: () => void
+			const saveReleased = new Promise<void>(resolve => {
+				releaseSave = resolve
+			})
+			await page.route(url => /\/api\/v[12]\/tasks\/1$/.test(url.pathname), async route => {
+				if (route.request().method() === 'PATCH') {
+					await saveReleased
+				}
+				await route.fallback()
+			})
+			await popup.getByRole('button', {name: 'Tomorrow', exact: false}).click()
+			await popup.getByRole('button', {name: 'Confirm', exact: true}).click()
+			await expect(popup).not.toBeVisible()
+
+			// The picker is disabled while the task saves; the shortcut pressed now must not be lost.
+			const trigger = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.datepicker .show')
+			await expect(trigger).toBeDisabled()
+			await page.getByRole('button', {name: 'Set Due Date', exact: true}).press('d')
+			await expect(popup).not.toBeVisible()
+
+			releaseSave()
+			await expect(popup).toBeVisible()
+			await expect(trigger).toBeFocused()
+			await page.keyboard.press('Tab')
+			await expect(popup.locator('.datepicker__quick-select-date').first()).toBeFocused()
 		})
 
 		test('Can set a due date for a task', async ({authenticatedPage: page}) => {
