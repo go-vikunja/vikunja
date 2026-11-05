@@ -43,6 +43,9 @@
 				"message": "Jemand hat gerade dreimal hintereinander versucht, sich mit einem falschen Passwort bei deinem Account anzumelden.",
 				"warning": "Falls das nicht du warst, könnte jemand versuchen, in deinen Account einzudringen.",
 				"enhance_security": "Um die Sicherheit deines Accounts zu erhöhen, könntest du ein stärkeres Passwort einstellen oder die TOTP-Authentifizierung in den Einstellungen aktivieren:"
+			},
+			"account_locked": {
+				"message": "Jemand hat zu oft hintereinander versucht, sich mit einem falschen Passwort bei deinem Account anzumelden."
 			}
 		},
 		"account": {

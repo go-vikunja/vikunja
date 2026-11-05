@@ -451,13 +451,7 @@
 		},
 		"delete": {
 			"title": "\"{project}\" projesini sil",
-			"header": "Bu projeyi sil",
-			"text1": "Bu projeyi ve içindeki her şeyi silmek istediğinden emin misin?",
-			"text2": "Bütün görevler silinecektir ve BU İŞLEM GERİ ALINAMAZ!",
-			"success": "Proje başarıyla silindi.",
-			"tasksToDelete": "Yaklaşık {count} görev kalıcı olarak silinecek.",
-			"tasksAndChildProjectsToDelete": "Yaklaşık {tasks} görev ve {projects} alt proje kalıcı olarak silinecek.",
-			"noTasksToDelete": "Bu projede hiç görev yok, gönül rahatlığıyla silebilirsin."
+			"header": "Bu projeyi sil"
 		},
 		"duplicate": {
 			"title": "Bu projeyi kopyala",
@@ -1125,7 +1119,6 @@
 			"doneAt": "{0} tamamlandı",
 			"titleRequired": "Görev başlığı boş bırakılamaz.",
 			"updateSuccess": "Görev kaydedildi.",
-			"deleteSuccess": "Görev başarıyla silindi.",
 			"duplicateSuccess": "Görev kopyalandı.",
 			"noBucket": "Sütunsuz",
 			"bucketSelectLabel": "Kanban sütunu: {bucket}",
@@ -1140,11 +1133,6 @@
 			"organization": "Organizasyon",
 			"management": "Yönetim",
 			"dateAndTime": "Tarih ve saat",
-			"delete": {
-				"header": "Bu görevi sil",
-				"text1": "Bu görevi silmek istediğinden emin misin?",
-				"text2": "Bu göreve ait tüm ekler, hatırlatıcılar ve ilişkiler de silinecektir. Bu işlem geri alınamaz!"
-			},
 			"actions": {
 				"assign": "Kullanıcıya Ata",
 				"label": "Etiket Ekle",

@@ -234,13 +234,7 @@
 		},
 		"delete": {
 			"title": "מחיקת ״{project}״",
-			"header": "למחוק פרויקט זה",
-			"text1": "בטוח למחוק פרויקט זה וכל תכולתו?",
-			"text2": "זהירות! זה כולל כל המטלות ולא ניתן לשחזר אחר כך!",
-			"success": "הפרויקט נמחק בהצלחה.",
-			"tasksToDelete": "פעולה זו ימחק בערך {count} מטלות ללא אפשרות שחזור.",
-			"tasksAndChildProjectsToDelete": "פעולה זו ימחק בערך {tasks} מטלות ו-{projects} פרויקטים ללא אפשרות שחזור.",
-			"noTasksToDelete": "אין בפרויקט זה מטלות כלשהן, ניתן למחוק בבטחה."
+			"header": "למחוק פרויקט זה"
 		},
 		"duplicate": {
 			"title": "שכפול פרויקט",
@@ -697,16 +691,11 @@
 			"updated": "{0} עודכן",
 			"doneAt": "{0} הסתיים",
 			"updateSuccess": "המטלה נשמרה בהצלחה.",
-			"deleteSuccess": "המטלה נמחקה בהצלחה.",
 			"belongsToProject": "מטלה זו שייכת לפרויקט ׳{project}׳",
 			"due": "תאריך יעד ב-{at}",
 			"organization": "שם ארגון",
 			"management": "ניהול",
 			"dateAndTime": "תאריך ושעה",
-			"delete": {
-				"header": "למחוק מטלה זו",
-				"text1": "בטוח שברצונך למחוק מטלה זו?"
-			},
 			"actions": {
 				"assign": "לשייך למשתמש",
 				"label": "הוספת תווים",

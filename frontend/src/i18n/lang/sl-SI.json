@@ -230,13 +230,7 @@
 		},
 		"delete": {
 			"title": "Izbriši \"{project}\"",
-			"header": "Izbriši ta projekt",
-			"text1": "Ali ste prepričani, da želite izbrisati ta projekt in vso njegovo vsebino?",
-			"text2": "To vključuje vse naloge in GA NI MOGOČE RAZVELJAVITI!",
-			"success": "Projekt je bil uspešno izbrisan.",
-			"tasksToDelete": "S tem bo nepreklicno odstranjeno približno {count} nalog.",
-			"tasksAndChildProjectsToDelete": "S tem bo nepreklicno odstranjeno cca. {tasks} nalog in {projects} projektov.",
-			"noTasksToDelete": "Ta projekt ne vsebuje nobenih nalog, zato ga lahko varno izbrišete."
+			"header": "Izbriši ta projekt"
 		},
 		"duplicate": {
 			"title": "Podvoji ta projekt",
@@ -707,17 +701,11 @@
 			"updated": "Posodobil {0}",
 			"doneAt": "Končal {0}",
 			"updateSuccess": "Naloga je bila uspešno shranjena.",
-			"deleteSuccess": "Naloga je bila uspešno izbrisana.",
 			"belongsToProject": "Ta naloga pripada projektu '{project}'",
 			"due": "Rok {at}",
 			"organization": "Organizacija",
 			"management": "Poslovanje",
 			"dateAndTime": "Datum in čas",
-			"delete": {
-				"header": "Izbriši nalogo",
-				"text1": "Ste prepričani, da želite izbrisati to nalogo?",
-				"text2": "S tem boste odstranili tudi vse priloge, opomnike in relacije, povezane s to nalogo in tega ni mogoče razveljaviti!"
-			},
 			"actions": {
 				"assign": "Dodeli uporabniku",
 				"label": "Dodaj oznako",

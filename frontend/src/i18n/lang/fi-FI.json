@@ -273,13 +273,7 @@
 		},
 		"delete": {
 			"title": "Poista \"{project}\"",
-			"header": "Poista tämä projekti",
-			"text1": "Oletko varma, että haluat poistaa tämän projektin ja kaiken sen sisällön?",
-			"text2": "Tämä sisältää kaikki tehtävät ja TÄTÄ EI VOI PERUA!",
-			"success": "Projekti poistettiin onnistuneesti.",
-			"tasksToDelete": "Tämä poistaa pysyvästi noin {count} tehtävää.",
-			"tasksAndChildProjectsToDelete": "Tämä poistaa pysyvästi noin {tasks} tehtävää ja {projects} projektia.",
-			"noTasksToDelete": "Tämä projekti ei sisällä yhtään tehtävää, se pitäisi olla turvallinen poistaa."
+			"header": "Poista tämä projekti"
 		},
 		"duplicate": {
 			"title": "Monista tämä projekti",
@@ -683,17 +677,11 @@
 			"created": "Luotu {0} käyttäjältä {1}",
 			"updated": "Päivitetty {0}",
 			"updateSuccess": "Tehtävä tallennettiin onnistuneesti.",
-			"deleteSuccess": "Tehtävä poistettiin onnistuneesti.",
 			"belongsToProject": "Tämä tehtävä kuuluu '{project}' projektiin",
 			"due": "Erääntyy {at}",
 			"organization": "Organisaatio",
 			"management": "Hallinta",
 			"dateAndTime": "Päivä ja Aika",
-			"delete": {
-				"header": "Poista tämä tehtävä",
-				"text1": "Haluatko varmasti poistaa tämän tehtävän?",
-				"text2": "Tämä poistaa myös kaikki tähän tehtävään liittyvät liitteet, muistutukset ja relaatiot eikä sitä voi peruuttaa!"
-			},
 			"actions": {
 				"assign": "Osoita käyttäjälle",
 				"label": "Lisää Tunnisteita",

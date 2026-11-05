@@ -452,13 +452,7 @@
 		},
 		"delete": {
 			"title": "„{project}“ löschen",
-			"header": "Dieses Projekt löschen",
-			"text1": "Bist du sicher, dass du dieses Projekt und alle seine Inhalte löschen willst?",
-			"text2": "Dies umfasst alle Aufgaben und kann NICHT rückgängig gemacht werden!",
-			"success": "Das Projekt wurde erfolgreich gelöscht.",
-			"tasksToDelete": "Dies löscht unwiderruflich ca. {count} Aufgaben.",
-			"tasksAndChildProjectsToDelete": "Dies löscht unwiderruflich ca. {tasks} Aufgaben und {projects} Projekte.",
-			"noTasksToDelete": "Dieses Projekt enthält keine Aufgaben, es kann sicher gelöscht werden."
+			"header": "Dieses Projekt löschen"
 		},
 		"duplicate": {
 			"title": "Dupliziere dieses Projekt",
@@ -609,7 +603,8 @@
 			"bucketTitleSavedSuccess": "Der Spaltenname wurde erfolgreich gespeichert.",
 			"bucketLimitSavedSuccess": "Das Spaltenlimit wurde erfolgreich gespeichert.",
 			"collapse": "Spalte einklappen",
-			"bucketLimitReached": "Du hast das Limit dieses Buckets erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen.",
+			"bucketLimitReached": "Du hast das Limit dieser Spalte erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen.",
+			"bucketLimitReachedShort": "Limit erreicht",
 			"bucketOptions": "Bucketoptionen"
 		},
 		"pseudo": {
@@ -1127,7 +1122,6 @@
 			"doneAt": "Erledigt {0}",
 			"titleRequired": "Der Aufgabentitel darf nicht leer sein.",
 			"updateSuccess": "Die Aufgabe wurde erfolgreich gespeichert.",
-			"deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
 			"duplicateSuccess": "Die Aufgabe wurde erfolgreich dupliziert.",
 			"noBucket": "Keine Spalte",
 			"bucketSelectLabel": "Kanban bucket: {bucket}",
@@ -1135,6 +1129,7 @@
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
 			"due": "Fällig {at}",
+			"overdue": "Überfällig",
 			"closeTaskDetail": "Aufgabendetails schließen",
 			"title": "Aufgabendetails",
 			"markAsDone": "'{task}' als erledigt markieren",
@@ -1142,11 +1137,6 @@
 			"organization": "Organisation",
 			"management": "Verwaltung",
 			"dateAndTime": "Datum und Uhrzeit",
-			"delete": {
-				"header": "Diese Aufgabe löschen",
-				"text1": "Willst du diese Aufgabe wirklich löschen?",
-				"text2": "Dies wird auch alle Anhänge, Erinnerungen und Verknüpfungen, die zu dieser Aufgabe gehören löschen und kann nicht rückgängig gemacht werden!"
-			},
 			"actions": {
 				"assign": "Benutzer:in zuweisen",
 				"label": "Label hinzufügen",
@@ -1604,6 +1594,7 @@
 		"3008": "Dieses Projekt ist archiviert und kann deshalb nur gelesen werden. Dies gilt auch für alle Aufgaben, die mit diesem Projekt verbunden sind.",
 		"3016": "Das übergeordnete Projekt ist archiviert. Un-Archiviere es erst.",
 		"3017": "Das Standardprojekt muss ein Projekt sein, in das du schreiben kannst.",
+		"3020": "Diese Projekthierarchie ist zu groß, um unter das gewählte übergeordnete Projekt verschoben zu werden.",
 		"4001": "Der Titel darf nicht leer sein.",
 		"4002": "Diese Aufgabe existiert nicht.",
 		"4003": "Alle Massenbearbeitungen an Aufgaben müssen zum selben Projekt gehören.",
@@ -1629,6 +1620,7 @@
 		"4023": "Kann keinen Aufgabenbeziehungszyklus erstellen.",
 		"4034": "Die Datei existiert nicht.",
 		"4035": "Die hochgeladene Datei überschreitet die maximal konfigurierte Dateigröße.",
+		"4041": "Diese Aufgabenhierarchie ist zu groß, um weitere Unteraufgaben oder übergeordnete Aufgaben hinzuzufügen.",
 		"6001": "Der Teamname kann nicht leer sein.",
 		"6002": "Das Team existiert nicht.",
 		"6004": "Das Team hat bereits Zugriff auf dieses Projekt.",
@@ -1668,6 +1660,7 @@
 		"14016": "Die Importkonfiguration konnte nicht geparst werden. Bitte stellen Sie sicher, dass es sich um ein gültiges JSON-Objekt handelt.",
 		"14018": "Der Import enthält mehr Elemente als erlaubt sind.",
 		"14019": "Der Migrationsstatus ist ungültig oder abgelaufen. Bitte starte die Migration erneut.",
+		"14020": "Ein Projekt im Import hat mehr Ansichten als erlaubt.",
 		"14201": "Planka hat die angegebenen Anmeldedaten abgelehnt. Überprüfe die URL und den API-Schlüssel oder den Benutzernamen und das Passwort.",
 		"14202": "Das Planka-Konto erfordert einen zusätzlichen Anmeldeschritt (Zwei-Faktor-Code oder das Akzeptieren der Nutzungsbedingungen). Melde dich einmal im Browser bei Planka an oder verwende stattdessen einen API-Schlüssel anstelle von Benutzername und Passwort.",
 		"14203": "Eine Planka-URL und entweder ein API-Schlüssel oder Benutzername und Passwort sind erforderlich.",
@@ -1687,6 +1680,7 @@
 	"timeTracking": {
 		"title": "Zeiterfassung",
 		"stop": "Timer stoppen",
+		"running": "Timer läuft",
 		"logTime": "Zeit buchen",
 		"editEntry": "Eintrag bearbeiten",
 		"commentLabel": "Kommentar",

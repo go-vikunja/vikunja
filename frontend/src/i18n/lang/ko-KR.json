@@ -239,13 +239,7 @@
 		},
 		"delete": {
 			"title": "\"{project}\" 삭제 ",
-			"header": "프로젝트 삭제",
-			"text1": "이 프로젝트와 그 안에 모든 작업들을 지우시겠습니까?",
-			"text2": "여기에는 모든 할 일이 포함되며 실행 취소할 수 없습니다!",
-			"success": "프로젝트가 성공적으로 삭제되었습니다.",
-			"tasksToDelete": "이렇게 하면 약 {count}개의 할 일이 취소할 수 없게 제거됩니다.",
-			"tasksAndChildProjectsToDelete": "이렇게 하면 약 {tasks} 할 일 및 {projects} 프로젝트가 취소 불가능하게 제거됩니다.",
-			"noTasksToDelete": "이 프로젝트에는 할 일이 포함되어 있지 않으므로 삭제해도 안전합니다."
+			"header": "프로젝트 삭제"
 		},
 		"duplicate": {
 			"title": "프로젝트 복사",
@@ -717,17 +711,11 @@
 			"updated": "업데이트 {0}",
 			"doneAt": "완료 {0}",
 			"updateSuccess": "할 일이 성공적으로 저장되었습니다.",
-			"deleteSuccess": "할 일을 삭제했어요.",
 			"belongsToProject": "이 할 일은 '{project}' 프로젝트에 속해요.",
 			"due": "마감일 {at}",
 			"organization": "조직",
 			"management": "관리",
 			"dateAndTime": "날짜와 시간",
-			"delete": {
-				"header": "이 할 일을 삭제 하시겠습니까?",
-				"text1": "정말로 이 할 일을 삭제할까요?",
-				"text2": "할 일과 관련된 모든 첨부 파일, 미리알림 및 관계가 삭제되며 되돌릴 수 없어요!"
-			},
 			"actions": {
 				"assign": "사용자에게 할당",
 				"label": "레이블 추가",

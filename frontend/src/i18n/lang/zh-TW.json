@@ -320,13 +320,7 @@
 		},
 		"delete": {
 			"title": "刪除 \"{project}\"",
-			"header": "刪除此專案",
-			"text1": "確定要刪除此專案及其所有內容嗎？",
-			"text2": "這包含所有任務，且無法復原！",
-			"success": "專案已成功刪除。",
-			"tasksToDelete": "此操作將不可逆地移除約 {count} 筆任務，完成後將無法復原。",
-			"tasksAndChildProjectsToDelete": "這將不可逆地刪除 {tasks} 個任務和 {projects} 個專案。",
-			"noTasksToDelete": "此列表不包含任何任務，可以安全刪除。"
+			"header": "刪除此專案"
 		},
 		"duplicate": {
 			"title": "複製此專案",
@@ -843,7 +837,6 @@
 			"updated": "更新於 {0}",
 			"doneAt": "已完成 {0}",
 			"updateSuccess": "任務已儲存。",
-			"deleteSuccess": "任務已刪除。",
 			"belongsToProject": "此任務屬於專案「{project}」",
 			"back": "返回專案",
 			"due": "截止至 {at}",
@@ -851,11 +844,6 @@
 			"organization": "機構",
 			"management": "管理",
 			"dateAndTime": "日期與時間",
-			"delete": {
-				"header": "刪除此任務",
-				"text1": "您確定要移除此任務嗎？",
-				"text2": "此操作將一併移除與此任務相關的所有附件、提醒及關聯項目，且無法復原！"
-			},
 			"actions": {
 				"assign": "分配給用户",
 				"label": "新增標籤",

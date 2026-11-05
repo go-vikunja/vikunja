@@ -271,13 +271,7 @@
 		},
 		"delete": {
 			"title": "Radera \"{project}\"",
-			"header": "Radera detta projekt",
-			"text1": "Är du säker på att du vill radera detta projekt och projektets alla uppgifter?",
-			"text2": "Detta inkluderar alla uppgifter och KAN INTE ÅNGRAS!",
-			"success": "Projektet raderades framgångsrikt.",
-			"tasksToDelete": "Detta kommer oåterkalleligt ta bort ca. {count} uppgifter.",
-			"tasksAndChildProjectsToDelete": "Detta kommer att oåterkalleligt ta bort ungefär {tasks} uppgifter och {projects} projekt.",
-			"noTasksToDelete": "Detta projekt innehåller inga uppgifter, det borde vara säkert att radera."
+			"header": "Radera detta projekt"
 		},
 		"duplicate": {
 			"title": "Duplicera detta projekt",
@@ -785,7 +779,6 @@
 			"updated": "Uppdaterade {0}",
 			"doneAt": "Klar vid {0}",
 			"updateSuccess": "Uppgiften sparades framgångsrikt.",
-			"deleteSuccess": "Uppgiften raderades framgångsrikt.",
 			"belongsToProject": "Denna uppgift tillhör projektet '{project}'",
 			"back": "Tillbaka till projekt",
 			"due": "Förfaller {at}",
@@ -793,11 +786,6 @@
 			"organization": "Organisation",
 			"management": "Hantering",
 			"dateAndTime": "Datum och tid",
-			"delete": {
-				"header": "Radera denna uppgift",
-				"text1": "Är du säker på att du vill ta bort denna uppgift?",
-				"text2": "Detta kommer också att ta bort alla bilagor, påminnelser och relationer associerade med denna uppgift och kan inte ångras!"
-			},
 			"actions": {
 				"assign": "Tilldela till användare",
 				"label": "Lägg till etiketter",
