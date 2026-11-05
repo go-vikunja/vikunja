@@ -1,5 +1,7 @@
 <template>
-	<p class="tw:text-balance">{{ intro }}</p>
+	<p class="tw:text-balance">
+		{{ intro }}
+	</p>
 	<!-- Keep in sync with cleanupAfterProjectAccessLoss. -->
 	<ul class="cleanup-list">
 		<li>{{ $t(`project.share.accessCleanup.${perspective}.assignments`) }}</li>
