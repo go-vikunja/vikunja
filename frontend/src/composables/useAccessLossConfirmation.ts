@@ -2,7 +2,7 @@ import {onScopeDispose, ref} from 'vue'
 import {ApiError} from '@/client/problem'
 import {defaultAccessLossCleanup, type AccessLossChoice} from '@/client/queries/accessLossCleanup'
 
-const ERR_CODE_ACCESS_LOSS_NEEDS_CONFIRMATION = 3018
+const ERR_CODE_ACCESS_LOSS_NEEDS_CONFIRMATION = 3022
 
 export type AccessLossCounts = {
 	webhooks: number

@@ -7,7 +7,7 @@ function conflict() {
 	return new ApiError({
 		status: 409,
 		detail: 'conflict',
-		code: 3018,
+		code: 3022,
 		i18n_params: {
 			webhooks: '2',
 			link_shares: '1',
@@ -82,7 +82,7 @@ describe('useAccessLossConfirmation', () => {
 		firstRequest.reject(new ApiError({
 			status: 409,
 			detail: 'conflict',
-			code: 3018,
+			code: 3022,
 			i18n_params: {
 				webhooks: '9',
 				link_shares: '8',
@@ -132,12 +132,12 @@ describe('useAccessLossConfirmation', () => {
 		expect(attempt).toHaveBeenCalledOnce()
 	})
 
-	it('rethrows other errors', async () => {
+	it('rethrows project-in-trash errors', async () => {
 		const {run} = setup()
 		const error = new ApiError({
-			status: 403,
-			detail: 'forbidden',
-			code: 3001,
+			status: 404,
+			detail: 'in trash',
+			code: 3018,
 		})
 		await expect(run(vi.fn().mockRejectedValue(error))).rejects.toBe(error)
 	})
