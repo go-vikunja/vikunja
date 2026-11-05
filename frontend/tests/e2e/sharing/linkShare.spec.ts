@@ -5,6 +5,7 @@ import {BucketFactory} from '../../factories/bucket'
 import {LinkShareFactory} from '../../factories/link_sharing'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {TaskFactory} from '../../factories/task'
+import {TaskReminderFactory} from '../../factories/task_reminders'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
 import {login, setupApiUrl} from '../../support/authenticateUser'
@@ -116,6 +117,22 @@ test.describe('Link shares', () => {
 		await page.goto(`/tasks/${tasks[0].id}#share-auth-token=${share.hash}`)
 
 		await expect(page.locator('h1.title.input')).toContainText(tasks[0].title)
+	})
+
+	test('Shows a read-only task detail view to a link share without edit controls', async ({page}) => {
+		const {share, tasks} = await prepareLinkShare()
+		await TaskReminderFactory.create(1, {task_id: tasks[0].id})
+
+		await page.goto(`/tasks/${tasks[0].id}#share-auth-token=${share.hash}`)
+
+		const reminders = page.locator('.task-view .property-reminders')
+		await expect(reminders).toBeVisible()
+		await expect(page.locator('.task-view .sidebar-toolbar')).toHaveCount(0)
+		await expect(page.locator('.task-view .property-priority')).toHaveCount(0)
+		await expect(reminders.getByRole('button', {name: 'Add a reminder…'})).toHaveCount(0)
+
+		const reminderTrigger = reminders.locator('.reminder-detail > .simple-button')
+		await expect(reminderTrigger).toBeDisabled()
 	})
 
 	// Regression test for #2546: a logged-in user opening a public link share URL
