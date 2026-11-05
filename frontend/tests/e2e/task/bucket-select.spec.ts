@@ -8,7 +8,7 @@ import {TaskRelationFactory} from '../../factories/task_relation'
 import {TaskAssigneeFactory} from '../../factories/task_assignee'
 import {UserFactory} from '../../factories/user'
 
-async function createKanbanTaskInBucket() {
+async function createKanbanTaskInBucket(bucketCount = 2) {
 	const projects = await ProjectFactory.create(1)
 	const views = await ProjectViewFactory.create(1, {
 		id: 1,
@@ -16,7 +16,7 @@ async function createKanbanTaskInBucket() {
 		view_kind: 3,
 		bucket_configuration_mode: 1,
 	})
-	const buckets = await BucketFactory.create(2, {
+	const buckets = await BucketFactory.create(bucketCount, {
 		project_view_id: views[0].id,
 	})
 	const tasks = await TaskFactory.create(1, {
@@ -203,10 +203,9 @@ test.describe('Task Bucket Select', () => {
 	})
 
 	test('Renders the bucket dropdown above the remove assignee buttons', async ({authenticatedPage: page}) => {
-		// On mobile the property list sits right below the breadcrumb, so the bucket
-		// dropdown opens over the assignee avatars.
+		// On mobile the assignees row sits right below the breadcrumb; enough buckets make the dropdown reach over it.
 		await page.setViewportSize({width: 390, height: 844})
-		const {project, view, task} = await createKanbanTaskInBucket()
+		const {project, view, task} = await createKanbanTaskInBucket(6)
 		// Start at 100 to keep the fixture's logged-in user (ID 1).
 		const users = await UserFactory.create(12, {
 			id: (i: number) => 100 + i,
