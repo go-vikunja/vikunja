@@ -998,7 +998,7 @@ func TestCleanupAfterProjectAccessLoss_KeepsTrashedProjectsWithAccess(t *testing
 	require.NoError(t, err)
 
 	// User 1 still owns trashed project 45 and its child 46
-	require.NoError(t, cleanupAfterProjectAccessLossForUsers(s, []int64{1}, []int64{45}))
+	require.NoError(t, cleanupAfterProjectAccessLossForUsers(s, nil, []int64{1}, []int64{45}, AccessLossCleanup{}))
 	require.NoError(t, s.Commit())
 
 	db.AssertExists(t, "task_assignees", map[string]interface{}{
