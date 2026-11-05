@@ -131,7 +131,9 @@
 				}}</span>
 			</template>
 			<template #text>
-				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}</p>
+				<p class="tw:text-balance">
+					{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}
+				</p>
 				<ProjectAccessCleanupList
 					v-model="cleanup"
 					:intro="cleanupIntro"
