@@ -31,6 +31,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"xorm.io/builder"
@@ -38,7 +39,6 @@ import (
 	"xorm.io/xorm/names"
 	"xorm.io/xorm/schemas"
 
-	_ "github.com/go-sql-driver/mysql" // Because.
 	_ "github.com/jackc/pgx/v5/stdlib" // Because.
 	_ "github.com/mattn/go-sqlite3"    // Because.
 )
@@ -164,9 +164,25 @@ func initMysqlEngine() (engine *xorm.Engine, err error) {
 		host,
 		config.DatabaseDatabase.GetString(),
 		config.DatabaseTLS.GetString())
-	engine, err = xorm.NewEngine("mysql", connStr)
+	// Xorm has no transaction options, so every pooled connection needs this default.
+	engine, err = xorm.NewEngine("mysql", connStr+"&transaction_isolation=%27READ-COMMITTED%27")
 	if err != nil {
 		return
+	}
+	if err = engine.Ping(); err != nil {
+		var mysqlErr *mysql.MySQLError
+		if !errors.As(err, &mysqlErr) || mysqlErr.Number != 1193 {
+			_ = engine.Close()
+			return nil, err
+		}
+		if err = engine.Close(); err != nil {
+			return nil, err
+		}
+		// Older MariaDB releases use the legacy variable name.
+		engine, err = xorm.NewEngine("mysql", connStr+"&tx_isolation=%27READ-COMMITTED%27")
+		if err != nil {
+			return nil, err
+		}
 	}
 	engine.SetMaxOpenConns(config.DatabaseMaxOpenConnections.GetInt())
 	engine.SetMaxIdleConns(config.DatabaseMaxIdleConnections.GetInt())
@@ -295,6 +311,7 @@ func newPostgresEngine(queryExecMode string) (engine *xorm.Engine, err error) {
 		config.DatabaseSslRootCert.GetString(),
 		queryExecMode,
 	)
+	connStr += "&default_transaction_isolation=read%20committed"
 
 	engine, err = xorm.NewEngine("pgx", connStr)
 	if err != nil {
@@ -590,7 +607,7 @@ func WipeEverything() error {
 	return nil
 }
 
-// NewSession creates a new xorm session with an active transaction.
+// NewSession creates an active transaction (READ COMMITTED on MySQL and PostgreSQL).
 // The caller must call s.Commit() on success or s.Rollback() on error.
 // s.Close() will auto-rollback any uncommitted transaction.
 func NewSession() *xorm.Session {
