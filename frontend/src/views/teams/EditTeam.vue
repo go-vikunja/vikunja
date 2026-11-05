@@ -137,7 +137,7 @@
 			</template>
 
 			<template #text>
-				<p>
+				<p class="tw:text-balance">
 					{{ $t('team.edit.leave.text1') }}<br>
 					{{ $t('team.edit.leave.text2') }}
 				</p>
@@ -160,7 +160,7 @@
 			</template>
 
 			<template #text>
-				<p>
+				<p class="tw:text-balance">
 					{{ $t('team.edit.delete.text1') }}<br>
 					{{ $t('team.edit.delete.text2') }}
 				</p>
@@ -182,7 +182,7 @@
 			</template>
 
 			<template #text>
-				<p>
+				<p class="tw:text-balance">
 					{{ $t('team.edit.deleteUser.text1') }}<br>
 					{{ $t('team.edit.deleteUser.text2') }}
 				</p>
