@@ -1,7 +1,7 @@
 {
   "project": {
     "calendar": {
-      "title": "ปฏิทินงาน",
+      "title": "ปฏิทิน",
       "loading": "กำลังโหลด…",
       "count": "งาน: {count}",
       "deadline": "กำหนดส่ง",

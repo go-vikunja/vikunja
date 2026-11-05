@@ -30,9 +30,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 func timePtr(t time.Time) *time.Time { return &t }
+
+func timeEntryIDs(t *testing.T, result any) []int64 {
+	t.Helper()
+	entries, ok := result.([]*TimeEntry)
+	require.True(t, ok)
+	ids := make([]int64, 0, len(entries))
+	for _, e := range entries {
+		ids = append(ids, e.ID)
+	}
+	return ids
+}
 
 // Fixture access graph (pkg/db/fixtures): project 1 is owned by user1 only
 // (everyone else a stranger); task 1 lives in project 1. Project 3 is owned by
@@ -86,8 +98,11 @@ func TestTimeEntry_CanCreate(t *testing.T) {
 		{"on a readable project", &TimeEntry{ProjectID: 3}, &user.User{ID: 1}, true, nil},
 		{"stranger denied", &TimeEntry{ProjectID: 1}, &user.User{ID: 4}, false, nil},
 		{"both task and project is invalid", &TimeEntry{TaskID: 1, ProjectID: 1}, &user.User{ID: 1}, false, IsErrTimeEntryInvalidContainer},
-		{"neither task nor project is invalid", &TimeEntry{}, &user.User{ID: 1}, false, IsErrTimeEntryInvalidContainer},
+		{"without task or project", &TimeEntry{}, &user.User{ID: 1}, true, nil},
 		{"link share denied", &TimeEntry{ProjectID: 1}, &LinkSharing{ID: 1, ProjectID: 1}, false, nil},
+		{"favorites pseudo project is rejected", &TimeEntry{ProjectID: FavoritesPseudoProjectID}, &user.User{ID: 1}, false, IsErrProjectDoesNotExist},
+		// Saved filter 1 is owned by user1.
+		{"saved filter pseudo project is rejected", &TimeEntry{ProjectID: -2}, &user.User{ID: 1}, false, IsErrProjectDoesNotExist},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -160,13 +175,7 @@ func TestTimeEntry_ReadAll(t *testing.T) {
 
 			result, count, total, err := (&TimeEntry{}).ReadAll(s, tt.auth, "", 1, 50)
 			require.NoError(t, err)
-			entries, ok := result.([]*TimeEntry)
-			require.True(t, ok)
-
-			gotIDs := make([]int64, 0, len(entries))
-			for _, e := range entries {
-				gotIDs = append(gotIDs, e.ID)
-			}
+			gotIDs := timeEntryIDs(t, result)
 			assert.ElementsMatch(t, tt.wantIDs, gotIDs)
 			assert.Equal(t, len(tt.wantIDs), count)
 			assert.Equal(t, int64(len(tt.wantIDs)), total)
@@ -218,6 +227,7 @@ func TestTimeEntry_ReadAll_Filter(t *testing.T) {
 		{"by project negated", "project_id != 1", []int64{3}, false},
 		{"by start time", "start_time > '2018-12-01T11:00:00+00:00'", []int64{2, 3, 4}, false},
 		{"running timers via null end_time", "end_time = null", []int64{4}, false},
+		{"finished entries via not-null end_time", "end_time != null", []int64{1, 2, 3}, false},
 		{"compound and", "user_id = 1 && end_time = null", []int64{4}, false},
 		{"compound or", "user_id = 3 || task_id = 1", []int64{1, 3, 4}, false},
 		{"in list", "user_id in 1,3", []int64{1, 2, 3, 4}, false},
@@ -237,13 +247,37 @@ func TestTimeEntry_ReadAll_Filter(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			entries, ok := result.([]*TimeEntry)
-			require.True(t, ok)
-			gotIDs := make([]int64, 0, len(entries))
-			for _, e := range entries {
-				gotIDs = append(gotIDs, e.ID)
-			}
+			gotIDs := timeEntryIDs(t, result)
 			assert.ElementsMatch(t, tt.wantIDs, gotIDs)
+		})
+	}
+}
+
+func TestTimeEntry_NotNullFilterRendersIsNotNull(t *testing.T) {
+	tests := []struct {
+		field string
+		want  string
+	}{
+		{
+			field: "end_time",
+			want:  "end_time IS NOT NULL",
+		},
+		{
+			field: "task_id",
+			want:  "NOT (task_id=? OR task_id IS NULL)",
+		},
+		{
+			field: "project_id",
+			want:  "NOT ((task_id=? OR task_id IS NULL) AND (project_id=? OR project_id IS NULL))",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.field, func(t *testing.T) {
+			cond, err := resolveTimeEntryFilter(tt.field, taskFilterComparatorNotEquals, "null", time.UTC)
+			require.NoError(t, err)
+			sql, _, err := builder.ToSQL(cond)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, sql)
 		})
 	}
 }
@@ -270,12 +304,7 @@ func TestTimeEntry_ReadAll_Search(t *testing.T) {
 
 			result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, tt.search, 1, 50)
 			require.NoError(t, err)
-			entries, ok := result.([]*TimeEntry)
-			require.True(t, ok)
-			gotIDs := make([]int64, 0, len(entries))
-			for _, e := range entries {
-				gotIDs = append(gotIDs, e.ID)
-			}
+			gotIDs := timeEntryIDs(t, result)
 			assert.ElementsMatch(t, tt.wantIDs, gotIDs)
 		})
 	}
@@ -498,10 +527,7 @@ func TestTimeEntry_RunningTimerEndTimeIsNull(t *testing.T) {
 	found := &TimeEntry{Filter: "end_time = null"}
 	result, _, _, err := found.ReadAll(s, a, "", 1, 50)
 	require.NoError(t, err)
-	ids := []int64{}
-	for _, e := range result.([]*TimeEntry) {
-		ids = append(ids, e.ID)
-	}
+	ids := timeEntryIDs(t, result)
 	assert.Contains(t, ids, te.ID)
 }
 
@@ -815,6 +841,25 @@ func TestTimeEntry_Events(t *testing.T) {
 		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TimeEntryUpdatedEvent{})
 	})
+
+	t.Run("trashing a task dispatches updated with the owner and in_trash", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		events.ClearDispatchedEvents()
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, (&Task{ID: 1}).Delete(s, u))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TimeEntryUpdatedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		entry := dispatched[0].(*TimeEntryUpdatedEvent).TimeEntry
+		assert.Equal(t, int64(4), entry.ID)
+		require.NotNil(t, entry.User, "the websocket listener routes by entry.User")
+		assert.Equal(t, int64(1), entry.User.ID)
+		assert.True(t, entry.InTrash)
+	})
 }
 
 func TestTimeEntry_Delete(t *testing.T) {
@@ -872,5 +917,304 @@ func TestTimeEntry_TaskCount(t *testing.T) {
 		taskMap := map[int64]*Task{1: task1}
 		require.NoError(t, addTimeEntriesCountToTasks(s, u, []int64{1}, taskMap))
 		assert.Nil(t, task1.TimeEntriesCount, "an unlicensed instance must not expose counts")
+	})
+}
+
+func TestTimeEntry_PseudoProject(t *testing.T) {
+	t.Run("moving an entry onto favorites is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := (&TimeEntry{
+			ID:        2,
+			ProjectID: FavoritesPseudoProjectID,
+		}).CanUpdate(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err), "unexpected error type: %v", err)
+	})
+	t.Run("a stored entry on favorites is not readable by another user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    1,
+			ProjectID: FavoritesPseudoProjectID,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+
+		can, _, err := (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 2})
+		assert.False(t, can)
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err), "unexpected error type: %v", err)
+	})
+}
+
+// Task 51 is soft-deleted in the fixtures and lives in project 1.
+func TestTimeEntry_TrashedTask(t *testing.T) {
+	setup := func(t *testing.T) *TimeEntry {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    1,
+			TaskID:    51,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+		return entry
+	}
+
+	t.Run("listed and flagged", func(t *testing.T) {
+		entry := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+		require.NoError(t, err)
+		inTrash := map[int64]bool{}
+		for _, e := range result.([]*TimeEntry) {
+			inTrash[e.ID] = e.InTrash
+		}
+		require.Contains(t, inTrash, entry.ID)
+		assert.True(t, inTrash[entry.ID])
+		assert.False(t, inTrash[1])
+	})
+	t.Run("readable by project readers", func(t *testing.T) {
+		entry := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		read := &TimeEntry{ID: entry.ID}
+		can, _, err := read.CanRead(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.True(t, can)
+		assert.True(t, read.InTrash)
+
+		can, _, err = (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 2})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("hidden from its author without access to the live project", func(t *testing.T) {
+		setup(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    2,
+			TaskID:    51,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+		u2 := &user.User{ID: 2}
+
+		can, _, err := (&TimeEntry{ID: entry.ID}).CanRead(s, u2)
+		require.NoError(t, err)
+		assert.False(t, can)
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, u2, "", 1, 50)
+		require.NoError(t, err)
+		assert.NotContains(t, timeEntryIDs(t, result), entry.ID)
+	})
+	t.Run("read-only", func(t *testing.T) {
+		entry := setup(t)
+		s := db.NewSession()
+		defer s.Close()
+		u := &user.User{ID: 1}
+
+		can, err := (&TimeEntry{ID: entry.ID}).CanDelete(s, u)
+		require.NoError(t, err)
+		assert.False(t, can, "delete")
+
+		can, err = (&TimeEntry{
+			ID:        entry.ID,
+			Comment:   "edited",
+			StartTime: entry.StartTime,
+		}).CanUpdate(s, u)
+		require.NoError(t, err)
+		assert.False(t, can, "update in place")
+
+		can, err = (&TimeEntry{
+			ID:     1,
+			TaskID: 51,
+		}).CanUpdate(s, u)
+		require.NoError(t, err)
+		assert.False(t, can, "move onto a trashed task")
+
+		can, err = (&TimeEntry{TaskID: 51}).CanCreate(s, u)
+		require.NoError(t, err)
+		assert.False(t, can, "create")
+	})
+	t.Run("purging the task moves entries to its project", func(t *testing.T) {
+		entry := setup(t)
+
+		deleteExpiredTasks(time.Now())
+
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         entry.ID,
+			"task_id":    0,
+			"project_id": 1,
+		}, false)
+	})
+}
+
+func TestTimeEntry_WithoutContainer(t *testing.T) {
+	u1 := &user.User{ID: 1}
+	insert := func(t *testing.T) *TimeEntry {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewAutocommitSession()
+		defer s.Close()
+		entry := &TimeEntry{
+			UserID:    1,
+			StartTime: time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC),
+			EndTime:   timePtr(time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)),
+			Comment:   "no container",
+		}
+		_, err := s.Insert(entry)
+		require.NoError(t, err)
+		return entry
+	}
+
+	t.Run("only the author sees it", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		can, _, err := (&TimeEntry{ID: entry.ID}).CanRead(s, u1)
+		require.NoError(t, err)
+		assert.True(t, can)
+		can, _, err = (&TimeEntry{ID: entry.ID}).CanRead(s, &user.User{ID: 3})
+		require.NoError(t, err)
+		assert.False(t, can)
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, &user.User{ID: 3}, "", 1, 50)
+		require.NoError(t, err)
+		ids := timeEntryIDs(t, result)
+		assert.NotEmpty(t, ids)
+		assert.NotContains(t, ids, entry.ID)
+	})
+	t.Run("only the author modifies it", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		can, err := (&TimeEntry{ID: entry.ID}).CanDelete(s, u1)
+		require.NoError(t, err)
+		assert.True(t, can, "author delete")
+		can, err = (&TimeEntry{ID: entry.ID}).CanDelete(s, &user.User{ID: 3})
+		require.NoError(t, err)
+		assert.False(t, can, "other user delete")
+
+		edit := func() *TimeEntry {
+			return &TimeEntry{
+				ID:        entry.ID,
+				StartTime: entry.StartTime,
+				EndTime:   entry.EndTime,
+				Comment:   "edited",
+			}
+		}
+		can, err = edit().CanUpdate(s, u1)
+		require.NoError(t, err)
+		assert.True(t, can, "author update")
+		can, err = edit().CanUpdate(s, &user.User{ID: 3})
+		require.NoError(t, err)
+		assert.False(t, can, "other user update")
+	})
+	t.Run("moving it into an unreadable project is denied", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user1 has no access to project 2
+		can, err := (&TimeEntry{
+			ID:        entry.ID,
+			ProjectID: 2,
+			StartTime: entry.StartTime,
+			EndTime:   entry.EndTime,
+		}).CanUpdate(s, u1)
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("detaching hides it from project members", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		author := &user.User{ID: 3}
+
+		// Entry 3 is user3's on project 3, which user1 can read.
+		body := `{"project_id":null,` +
+			`"start_time":"2018-12-01T12:00:00Z","end_time":"2018-12-01T13:00:00Z"}`
+		te := &TimeEntry{}
+		require.NoError(t, json.Unmarshal([]byte(body), te))
+		te.ID = 3
+		can, err := te.CanUpdate(s, author)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, te.Update(s, author))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         3,
+			"task_id":    0,
+			"project_id": 0,
+		}, false)
+
+		can, _, err = (&TimeEntry{ID: 3}).CanRead(s, u1)
+		require.NoError(t, err)
+		assert.False(t, can)
+
+		result, _, _, err := (&TimeEntry{}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		ids := timeEntryIDs(t, result)
+		assert.NotEmpty(t, ids)
+		assert.NotContains(t, ids, int64(3))
+	})
+	t.Run("project_id = null filter", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		result, _, _, err := (&TimeEntry{Filter: "project_id = null"}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		entries := result.([]*TimeEntry)
+		require.Len(t, entries, 1)
+		assert.Equal(t, entry.ID, entries[0].ID)
+
+		result, _, _, err = (&TimeEntry{Filter: "project_id != null"}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		ids := timeEntryIDs(t, result)
+		assert.ElementsMatch(t, []int64{
+			1,
+			2,
+			3,
+			4,
+		}, ids)
+	})
+	t.Run("task_id = null filter", func(t *testing.T) {
+		entry := insert(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		result, _, _, err := (&TimeEntry{Filter: "task_id = null"}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		ids := timeEntryIDs(t, result)
+		assert.ElementsMatch(t, []int64{
+			2,
+			3,
+			entry.ID,
+		}, ids)
+
+		result, _, _, err = (&TimeEntry{Filter: "task_id != null"}).ReadAll(s, u1, "", 1, 50)
+		require.NoError(t, err)
+		ids = timeEntryIDs(t, result)
+		assert.ElementsMatch(t, []int64{
+			1,
+			4,
+		}, ids)
 	})
 }

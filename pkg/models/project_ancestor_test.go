@@ -245,8 +245,6 @@ func TestProjectAncestorsOnDelete(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	usr := &user.User{ID: 6, Username: "user6"}
-
 	// 12 has 25 as child and 26 as grandchild
 	removed := []int64{12, 25, 26}
 	survivors := []ProjectAncestor{}
@@ -260,7 +258,7 @@ func TestProjectAncestorsOnDelete(t *testing.T) {
 
 	project, err := GetProjectSimpleByID(s, 12)
 	require.NoError(t, err)
-	require.NoError(t, project.Delete(s, usr))
+	require.NoError(t, hardDeleteProject(s, project, nil))
 
 	assert.Empty(t, projectAncestorsOf(t, s, removed...))
 	assert.ElementsMatch(t, survivors, allProjectAncestors(t, s))
@@ -273,7 +271,7 @@ func TestProjectAncestorsOnRepair(t *testing.T) {
 		defer s.Close()
 
 		// 12 -> 27, dropping 27 orphans the whole subtree below 12
-		_, err := s.ID(27).Delete(&Project{})
+		_, err := s.ID(27).Unscoped().Delete(&Project{})
 		require.NoError(t, err)
 
 		result, err := RepairOrphanedProjects(s, false)
@@ -305,7 +303,7 @@ func TestProjectAncestorsOnRepair(t *testing.T) {
 
 		before := allProjectAncestors(t, s)
 
-		_, err := s.ID(27).Delete(&Project{})
+		_, err := s.ID(27).Unscoped().Delete(&Project{})
 		require.NoError(t, err)
 
 		result, err := RepairOrphanedProjects(s, true)

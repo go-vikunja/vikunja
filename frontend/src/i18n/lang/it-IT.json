@@ -271,13 +271,7 @@
 		},
 		"delete": {
 			"title": "Elimina \"{project}\"",
-			"header": "Elimina questo progetto",
-			"text1": "Sicuro di voler eliminare questo progetto e tutti i suoi contenuti?",
-			"text2": "Questo include tutte le attività e NON SI PUÒ TORNARE INDIETRO!",
-			"success": "Progetto eliminato con successo.",
-			"tasksToDelete": "Questo eliminerà definitivamente circa {count} attività.",
-			"tasksAndChildProjectsToDelete": "Questo rimuoverà irrevocabilmente circa {tasks} attività e {projects} progetti.",
-			"noTasksToDelete": "Questo progetto non contiene alcuna attività, puoi eliminarlo in sicurezza."
+			"header": "Elimina questo progetto"
 		},
 		"duplicate": {
 			"title": "Duplica il progetto",
@@ -444,7 +438,7 @@
 			"updateSuccess": "Vista aggiornata correttamente."
 		},
 		"calendar": {
-			"title": "Calendario delle attività",
+			"title": "Calendario",
 			"loading": "Caricamento…",
 			"count": "Attività: {count}",
 			"deadline": "Scadenza",
@@ -796,7 +790,6 @@
 			"updated": "Aggiornato {0}",
 			"doneAt": "Completato {0}",
 			"updateSuccess": "Attività salvata con successo.",
-			"deleteSuccess": "L'attività è stata eliminata con successo.",
 			"belongsToProject": "Questa attività appartiene al progetto '{project}'",
 			"back": "Torna al progetto",
 			"due": "Scadenza {at}",
@@ -804,11 +797,6 @@
 			"organization": "Organizza",
 			"management": "Gestisci",
 			"dateAndTime": "Data e ora",
-			"delete": {
-				"header": "Elimina questa attività",
-				"text1": "Sei sicuro di voler eliminare questa attività?",
-				"text2": "Questo rimuoverà anche tutti gli allegati, i promemoria e le relazioni associati a questa attività e non può essere ripristinato!"
-			},
 			"actions": {
 				"assign": "Assegna all'Utente",
 				"label": "Aggiungi Etichette",

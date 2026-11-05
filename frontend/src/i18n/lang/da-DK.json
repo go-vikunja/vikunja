@@ -411,13 +411,7 @@
 		},
 		"delete": {
 			"title": "Slet \"{project}\"",
-			"header": "Slet dette projekt",
-			"text1": "Er du sikker på, at du vil slette dette projekt og alt dets indhold?",
-			"text2": "Dette omfatter alle opgaver og KAN IKKE FORTRYDES!",
-			"success": "Projektet blev slettet.",
-			"tasksToDelete": "Dette vil uigenkaldeligt slette ca. {count} opgaver.",
-			"tasksAndChildProjectsToDelete": "Dette vil uigenkaldeligt slette ca. {tasks} opgaver og {projects} projekter.",
-			"noTasksToDelete": "Dette projekt indeholder ingen opgaver, så det bør være sikkert at slette det."
+			"header": "Slet dette projekt"
 		},
 		"duplicate": {
 			"title": "Kopier dette projekt",
@@ -568,7 +562,7 @@
 			"delete": "Slet denne visning"
 		},
 		"calendar": {
-			"title": "Opgavekalender",
+			"title": "Kalender",
 			"loading": "Indlæser…",
 			"count": "Opgaver: {count}",
 			"deadline": "Frist",
@@ -901,7 +895,6 @@
 			"doneAt": "Udført {0}",
 			"titleRequired": "Opgavetitlen må ikke være tom.",
 			"updateSuccess": "Opgaven blev gemt.",
-			"deleteSuccess": "Opgaven er blevet slettet.",
 			"duplicateSuccess": "Opgaven er blevet duplikeret.",
 			"noBucket": "Ingen kolonne",
 			"bucketSelectLabel": "Kanban kolonne: {bucket}",
@@ -916,11 +909,6 @@
 			"organization": "Organisation",
 			"management": "Styring",
 			"dateAndTime": "Dato og tid",
-			"delete": {
-				"header": "Slet denne opgave",
-				"text1": "Er du sikker på, at du vil slette denne opgave?",
-				"text2": "Dette vil også fjerne alle vedhæftede filer, påmindelser og relationer knyttet til denne opgave, og kan ikke fortrydes!"
-			},
 			"actions": {
 				"assign": "Tildel til bruger",
 				"label": "Tilføj Etiketter",

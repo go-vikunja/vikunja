@@ -1,7 +1,7 @@
 {
   "project": {
     "calendar": {
-      "title": "Kalendár úloh",
+      "title": "Kalendár",
       "loading": "Načítava sa…",
       "count": "Úlohy: {count}",
       "deadline": "Termín",

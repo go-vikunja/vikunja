@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
@@ -404,29 +405,26 @@ func backgroundRemove(ctx context.Context, in *struct {
 
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
-	project := &models.Project{ID: in.ProjectID}
-	can, err := project.CanWrite(s, a)
+	project, err := writableProjectForBackground(s, a, in.ProjectID)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-	if !can {
-		_ = s.Rollback()
-		return nil, huma.Error403Forbidden("forbidden")
+		return nil, err
 	}
 
-	if err := project.DeleteBackgroundFileIfExists(s); err != nil {
+	if err := project.RemoveBackground(s); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
-	if err := models.ClearProjectBackground(s, project.ID); err != nil {
+	if err := project.ReadOne(s, a); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 
 	return &singleBody[models.Project]{Body: project}, nil
 }

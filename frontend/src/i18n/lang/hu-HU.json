@@ -451,13 +451,7 @@
 		},
 		"delete": {
 			"title": "\"{project}\" törlése",
-			"header": "Projekt törlése",
-			"text1": "Biztosan törölni szeretnéd ezt a projektet és annak összes tartalmát?",
-			"text2": "Ez magában foglalja az összes feladatot és NEM VISSZAVONHATÓ!",
-			"success": "A projekt sikeresen törölve.",
-			"tasksToDelete": "Ezzel visszavonhatatlanul eltávolítunk kb. {count} feladatot.",
-			"tasksAndChildProjectsToDelete": "Ezzel visszavonhatatlanul eltávolítunk kb. {tasks} feladatot és {projects} projektet.",
-			"noTasksToDelete": "Ez a projekt nem tartalmaz feladatokat, biztonságosan törölhető."
+			"header": "Projekt törlése"
 		},
 		"duplicate": {
 			"title": "Projekt duplikálása",
@@ -654,7 +648,7 @@
 			"updateSuccess": "Nézet sikeresen módosítva."
 		},
 		"calendar": {
-			"title": "Feladatnaptár",
+			"title": "Naptár",
 			"loading": "Betöltés…",
 			"count": "Feladatok: {count}",
 			"deadline": "Határidő",
@@ -1140,7 +1134,6 @@
 			"doneAt": "Befejezve: {0}",
 			"titleRequired": "A feladat címe nem lehet üres.",
 			"updateSuccess": "A feladat mentése sikeres volt.",
-			"deleteSuccess": "A feladat sikeresen törölve.",
 			"duplicateSuccess": "A feladat sikeresen duplikálva.",
 			"noBucket": "Nincs vödör",
 			"bucketSelectLabel": "Kanban vödör: {bucket}",
@@ -1155,11 +1148,6 @@
 			"organization": "Szervezet",
 			"management": "Menedzsment",
 			"dateAndTime": "Dátum és idő",
-			"delete": {
-				"header": "Feladat törlése",
-				"text1": "Biztos törölni akarod ezt a feladatot?",
-				"text2": "Ezzel eltávolítja a feladathoz kapcsolódó összes mellékletet, emlékeztetőt és kapcsolatot is és nem vonható vissza!"
-			},
 			"actions": {
 				"assign": "Hozzárendelés felhasználóhoz",
 				"label": "Címkék hozzáadása",

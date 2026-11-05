@@ -1434,7 +1434,7 @@ END:VCALENDAR`
 	})
 
 	t.Run("Token older than the retention window returns 403 valid-sync-token", func(t *testing.T) {
-		staleToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-models.TaskDeleteRetention-time.Hour).Unix())
+		staleToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-models.TrashRetention-time.Hour).Unix())
 		rec := doSyncReport(t, staleToken)
 		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "valid-sync-token")
@@ -1465,6 +1465,102 @@ END:VCALENDAR`
 		body := rec.Body.String()
 		assert.Contains(t, body, "uid-caldav-test-parent-task.ics")
 		assert.Contains(t, body, "404 Not Found")
+	})
+}
+
+func TestCaldavSyncCollectionAfterPurge(t *testing.T) {
+	deletedAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)
+	purge := func(t *testing.T, taskID int64) {
+		t.Helper()
+		s := db.NewSession()
+		defer s.Close()
+		_, err := s.Unscoped().ID(taskID).Cols("deleted_at").NoAutoTime().Update(&models.Task{
+			DeletedAt: deletedAt,
+		})
+		require.NoError(t, err)
+		task := &models.Task{ID: taskID}
+		can, err := task.CanDeletePermanently(s, &testuser15)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, task.DeletePermanently(s, &testuser15))
+		_, err = s.ID(int64(36)).Cols("updated").NoAutoTime().Update(&models.Project{
+			Updated: deletedAt,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+	}
+	syncReport := func(t *testing.T, e *echo.Echo, token string) *httptest.ResponseRecorder {
+		t.Helper()
+		body := `<D:sync-collection xmlns:D="DAV:"><D:sync-token>` + token +
+			`</D:sync-token><D:sync-level>1</D:sync-level><D:prop><D:getetag/></D:prop></D:sync-collection>`
+		rec, err := newCaldavTestRequestWithUser(
+			t, e, "REPORT", caldav.ProjectHandler, &testuser15, body, nil,
+			map[string]string{
+				"project": "36",
+			},
+		)
+		require.NoError(t, err)
+		return rec
+	}
+	fullSync := func(t *testing.T, e *echo.Echo) string {
+		t.Helper()
+		rec := syncReport(t, e, "")
+		require.Equal(t, http.StatusMultiStatus, rec.Code)
+		response := struct {
+			SyncToken string `xml:"sync-token"`
+		}{}
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &response))
+		require.NotEmpty(t, response.SyncToken)
+		assert.NotContains(t, rec.Body.String(), "uid-caldav-test.ics")
+		return response.SyncToken
+	}
+
+	t.Run("purge invalidates older and same-second tokens", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		purge(t, 40)
+		for _, offset := range []time.Duration{
+			-time.Second,
+			0,
+		} {
+			token := fmt.Sprintf(`data:,"36-%d"`, deletedAt.Add(offset).Unix())
+			rec := syncReport(t, e, token)
+			assert.Equal(t, http.StatusForbidden, rec.Code)
+			assert.Contains(t, rec.Body.String(), "valid-sync-token")
+		}
+	})
+
+	t.Run("full resync produces a usable token", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		purge(t, 40)
+		token := fullSync(t, e)
+		rec := syncReport(t, e, token)
+		assert.Equal(t, http.StatusMultiStatus, rec.Code)
+	})
+
+	t.Run("purge generation leaves same-second live changes visible", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		purge(t, 40)
+		token := fullSync(t, e)
+		s := db.NewSession()
+		_, err := s.ID(int64(41)).Cols("updated").NoAutoTime().Update(&models.Task{
+			Updated: deletedAt,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+		rec := syncReport(t, e, token)
+		assert.Equal(t, http.StatusMultiStatus, rec.Code)
+		assert.Contains(t, rec.Body.String(), "uid-caldav-test-parent-task.ics")
+	})
+
+	t.Run("a second purge in the same second invalidates the resync token", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		purge(t, 40)
+		token := fullSync(t, e)
+		purge(t, 41)
+		rec := syncReport(t, e, token)
+		assert.Equal(t, http.StatusForbidden, rec.Code)
+		assert.Contains(t, rec.Body.String(), "valid-sync-token")
 	})
 }
 

@@ -262,13 +262,7 @@
 		},
 		"delete": {
 			"title": "Slett \"{project}\"",
-			"header": "Slett dette prosjektet",
-			"text1": "Er du sikker på at du vil slette dette prosjektet og alle relaterte data?",
-			"text2": "Dette inkluderer alle oppgaver og KAN IKKE ANGRES!",
-			"success": "Prosjektet ble slettet.",
-			"tasksToDelete": "Dette vil ugjenkallelig fjerne ca. {count} oppgaver.",
-			"tasksAndChildProjectsToDelete": "Dette vil ugjenkallelig fjerne ca. {tasks} oppgaver og {projects} prosjekter.",
-			"noTasksToDelete": "Dette prosjektet inneholder ingen oppgaver, det bør være trygt å slette."
+			"header": "Slett dette prosjektet"
 		},
 		"duplicate": {
 			"title": "Dupliser dette prosjektet",
@@ -435,7 +429,7 @@
 			"updateSuccess": "Visningen ble oppdatert."
 		},
 		"calendar": {
-			"title": "Oppgavekalender",
+			"title": "Kalender",
 			"loading": "Laster…",
 			"count": "Oppgaver: {count}",
 			"deadline": "Frist",
@@ -784,18 +778,12 @@
 			"updated": "Oppdatert for {0}",
 			"doneAt": "Ferdig for {0}",
 			"updateSuccess": "Oppgaven ble lagret.",
-			"deleteSuccess": "Oppgaven ble slettet.",
 			"belongsToProject": "Denne oppgaven tilhører prosjektet '{project}'",
 			"back": "Tilbake til prosjekt",
 			"due": "Forfaller {at}",
 			"organization": "Organisering",
 			"management": "Behandling",
 			"dateAndTime": "Dato og tid",
-			"delete": {
-				"header": "Slett denne oppgaven",
-				"text1": "Er du sikker på at du ønsker å slette denne oppgaven?",
-				"text2": "Dette vil også fjerne alle vedlegg, påminnelser og relasjoner knyttet til denne oppgaven og kan ikke angres!"
-			},
 			"actions": {
 				"assign": "Tildel bruker",
 				"label": "Legg til etikett",

@@ -20,10 +20,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/license"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -208,4 +211,119 @@ func timeEntryIDsFromReadAll(t *testing.T, body []byte) []int64 {
 		ids = append(ids, it.ID)
 	}
 	return ids
+}
+
+func TestHumaTimeEntry_WithoutContainer(t *testing.T) {
+	setup := func(t *testing.T) (*echo.Echo, string) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+		t.Cleanup(license.ResetForTests)
+		return e, humaTokenFor(t, &testuser1)
+	}
+	times := `"start_time":"2020-01-01T09:00:00Z","end_time":"2020-01-01T10:00:00Z"`
+
+	t.Run("create without task or project, visible only to the author", func(t *testing.T) {
+		e, token := setup(t)
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/time-entries", `{`+times+`,"comment":"solo"}`, token, "")
+		require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+		var created struct {
+			ID int64 `json:"id"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
+
+		path := "/api/v2/time-entries/" + strconv.FormatInt(created.ID, 10)
+		rec = humaRequest(t, e, http.MethodGet, path, "", token, "")
+		assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		rec = humaRequest(t, e, http.MethodGet, path, "", humaTokenFor(t, &testuser2), "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+	})
+
+	t.Run("only the author updates or deletes it", func(t *testing.T) {
+		e, token := setup(t)
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/time-entries", `{`+times+`,"comment":"solo"}`, token, "")
+		require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+		var created struct {
+			ID int64 `json:"id"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
+
+		path := "/api/v2/time-entries/" + strconv.FormatInt(created.ID, 10)
+		other := humaTokenFor(t, &testuser2)
+		rec = humaRequest(t, e, http.MethodPut, path, `{`+times+`,"comment":"hijacked"}`, other, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+		rec = humaRequest(t, e, http.MethodDelete, path, "", other, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":      created.ID,
+			"comment": "solo",
+		}, false)
+	})
+
+	t.Run("PUT with 0 detaches", func(t *testing.T) {
+		e, token := setup(t)
+		body := `{"task_id":0,"project_id":0,` + times + `}`
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", body, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
+	})
+
+	t.Run("tolerates legacy null on PUT", func(t *testing.T) {
+		e, token := setup(t)
+		body := `{"task_id":null,"project_id":null,` + times + `}`
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", body, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
+	})
+
+	t.Run("PUT with one key 0 detaches from the omitted one too", func(t *testing.T) {
+		e, token := setup(t)
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"task_id":0,`+times+`}`, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
+	})
+
+	t.Run("PUT without container keeps it", func(t *testing.T) {
+		e, token := setup(t)
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{`+times+`}`, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 1)
+	})
+
+	t.Run("PATCH with 0 detaches", func(t *testing.T) {
+		e, token := setup(t)
+		rec := humaRequest(
+			t, e, http.MethodPatch, "/api/v2/time-entries/2", `{"project_id":0}`, token,
+			"application/merge-patch+json",
+		)
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assertTimeEntryContainer(t, rec.Body.Bytes(), 0, 0)
+		db.AssertExists(t, "time_entries", map[string]interface{}{
+			"id":         2,
+			"task_id":    0,
+			"project_id": 0,
+		}, false)
+	})
+
+	t.Run("filter by no project", func(t *testing.T) {
+		e, token := setup(t)
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/time-entries/2", `{"project_id":0,`+times+`}`, token, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+
+		q := url.Values{"filter": {"project_id = null"}}
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/time-entries?"+q.Encode(), "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.ElementsMatch(t, []int64{2}, timeEntryIDsFromReadAll(t, rec.Body.Bytes()))
+	})
+}
+
+func assertTimeEntryContainer(t *testing.T, body []byte, taskID, projectID int64) {
+	t.Helper()
+	var entry struct {
+		TaskID    int64 `json:"task_id"`
+		ProjectID int64 `json:"project_id"`
+	}
+	require.NoError(t, json.Unmarshal(body, &entry), string(body))
+	assert.Equal(t, taskID, entry.TaskID, "task_id")
+	assert.Equal(t, projectID, entry.ProjectID, "project_id")
 }

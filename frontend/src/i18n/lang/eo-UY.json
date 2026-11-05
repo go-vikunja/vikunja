@@ -1,7 +1,7 @@
 {
   "project": {
     "calendar": {
-      "title": "Taskokalendaro",
+      "title": "Kalendaro",
       "loading": "Ŝargante…",
       "count": "Taskoj: {count}",
       "deadline": "Limdato",

@@ -390,13 +390,7 @@
 		},
 		"delete": {
 			"title": "Verwijder \"{project}\"",
-			"header": "Dit project verwijderen",
-			"text1": "Weet u zeker dat u dit project en alle inhoud wilt verwijderen?",
-			"text2": "Dit omvat alle taken en KAN NIET ONGEDAAN GEMAAKT WORDEN!",
-			"success": "Het project is succesvol verwijderd.",
-			"tasksToDelete": "Hiermee worden ca. {count} taken onherroepelijk verwijderd.",
-			"tasksAndChildProjectsToDelete": "Dit verwijdert onherroepelijk ca. {tasks} taken en {projects} projecten.",
-			"noTasksToDelete": "Dit project bevat geen taken, het kan veilig verwijderd worden."
+			"header": "Dit project verwijderen"
 		},
 		"duplicate": {
 			"title": "Dit project dupliceren",
@@ -579,7 +573,7 @@
 			"updateSuccess": "De weergave is succesvol bijgewerkt."
 		},
 		"calendar": {
-			"title": "Takenkalender",
+			"title": "Kalender",
 			"loading": "Bezig met laden…",
 			"count": "Taken: {count}",
 			"deadline": "Deadline",
@@ -1026,7 +1020,6 @@
 			"doneAt": "{0} voltooid",
 			"titleRequired": "De taaktitel mag niet leeg zijn.",
 			"updateSuccess": "De taak is succesvol opgeslagen.",
-			"deleteSuccess": "De taak is succesvol verwijderd.",
 			"duplicateSuccess": "De taak is succesvol gedupliceerd.",
 			"noBucket": "Geen categorie",
 			"bucketSelectLabel": "Kanban-categorie: {bucket}",
@@ -1041,11 +1034,6 @@
 			"organization": "Organisatie",
 			"management": "Beheer",
 			"dateAndTime": "Datum en tijd",
-			"delete": {
-				"header": "Verwijder deze taak",
-				"text1": "Weet je zeker dat je deze taak wilt verwijderen?",
-				"text2": "Dit zal ook alle bijlagen, herinneringen en relaties met deze taak verwijderen en kan niet ongedaan worden gemaakt!"
-			},
 			"actions": {
 				"assign": "Toewijzen aan gebruiker",
 				"label": "Labels toevoegen",

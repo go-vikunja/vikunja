@@ -1,7 +1,7 @@
 {
   "project": {
     "calendar": {
-      "title": "Calendarul sarcinilor",
+      "title": "Calendar",
       "loading": "Se încarcă…",
       "count": "Sarcini: {count}",
       "deadline": "Termen limită",

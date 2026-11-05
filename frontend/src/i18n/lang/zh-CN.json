@@ -247,13 +247,7 @@
 		},
 		"delete": {
 			"title": "删除\"{project}\"",
-			"header": "删除此项目",
-			"text1": "确认删除此项目及其所有任务？",
-			"text2": "这包括所有的任务，并且无法撤销!",
-			"success": "项目已成功删除。",
-			"tasksToDelete": "此操作无法撤消！将移除大约 {count} 个任务。",
-			"tasksAndChildProjectsToDelete": "删除将不可挽回。 {tasks} 任务和 {projects} 项目。",
-			"noTasksToDelete": "此列表不包含任何任务，可以安全删除。"
+			"header": "删除此项目"
 		},
 		"duplicate": {
 			"title": "复制此项目",
@@ -407,7 +401,7 @@
 			"updateSuccess": "视图更新成功。"
 		},
 		"calendar": {
-			"title": "任务日历",
+			"title": "日历",
 			"loading": "载入中...",
 			"count": "任务数：{count}",
 			"deadline": "截止日期",
@@ -753,18 +747,12 @@
 			"updated": "更新于 {0}",
 			"doneAt": "已完成 {0}",
 			"updateSuccess": "该任务已保存",
-			"deleteSuccess": "任务已删除",
 			"belongsToProject": "该任务属于项目'{project}'",
 			"back": "返回到项目",
 			"due": "截止至 {at}",
 			"organization": "机构",
 			"management": "管理",
 			"dateAndTime": "日期与时间",
-			"delete": {
-				"header": "删除此任务",
-				"text1": "确定要移除任务吗？",
-				"text2": "这将删除与此任务相关的所有附件、提醒和关联，无法撤消！"
-			},
 			"actions": {
 				"assign": "分配给用户",
 				"label": "添加标签",

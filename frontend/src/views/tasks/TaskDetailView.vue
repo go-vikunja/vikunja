@@ -1,15 +1,37 @@
 <template>
 	<div
 		ref="taskViewContainer"
+		tabindex="-1"
 		class="loader-container task-view-container"
 		:class="{
-			'is-loading': taskBusy || !visible,
+			'is-loading': taskBusy || (!visible && !hasTrashNotice),
 			'is-modal': isModal,
 		}"
 	>
+		<div
+			v-if="hasTrashNotice"
+			class="task-view"
+		>
+			<BaseButton
+				v-if="isModal"
+				class="is-pulled-end"
+				:aria-label="$t('misc.close')"
+				@click="$emit('close')"
+			>
+				<Icon icon="times" />
+			</BaseButton>
+			<TaskInTrashNotice
+				v-if="trashedTask"
+				:in-trash="trashedTask"
+			/>
+			<ProjectInTrashNotice
+				v-else-if="trashedProject"
+				:in-trash="trashedProject"
+			/>
+		</div>
 		<!-- Removing everything until the task is loaded to prevent empty initialization of other components -->
 		<div
-			v-if="visible"
+			v-else-if="visible"
 			class="task-view"
 		>
 			<BaseButton
@@ -599,7 +621,7 @@
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
-							@click="showDeleteModal = true"
+							@click="deleteTask()"
 						>
 							{{ $t('task.detail.actions.delete') }}
 						</XButton>
@@ -625,25 +647,6 @@
 		>
 			<Icon icon="chevron-down" />
 		</BaseButton>
-
-		<Modal
-			:enabled="showDeleteModal"
-			@close="showDeleteModal = false"
-			@submit="deleteTask()"
-		>
-			<template #header>
-				<span>{{ $t('task.detail.delete.header') }}</span>
-			</template>
-
-			<template #text>
-				<p class="tw:text-balance">
-					{{ $t('task.detail.delete.text1') }}
-				</p>
-				<p class="tw:text-balance">
-					{{ $t('task.detail.delete.text2') }}
-				</p>
-			</template>
-		</Modal>
 	</div>
 </template>
 
@@ -694,12 +697,15 @@ import BucketSelect from '@/components/tasks/partials/BucketSelect.vue'
 import Reactions from '@/components/input/Reactions.vue'
 
 import {getProjectTitle} from '@/helpers/getProjectTitle'
+import {getDefaultProjectView, getProjectViewId} from '@/helpers/projectView'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {getScrollParent} from '@/helpers/getScrollParent'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 import {taskLoadErrorAction} from './taskDetailError'
+import TaskInTrashNotice from '@/components/tasks/partials/TaskInTrashNotice.vue'
+import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 
 import {
 	useUpdateTaskMutation,
@@ -720,6 +726,8 @@ import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {error, success} from '@/message'
 import type {Action as MessageAction} from '@/message'
 import {useSetTaskSubscriptionMutation} from '@/client/queries/subscriptions'
+import {useRestoreTaskMutation} from '@/client/queries/trash'
+import {useFocusAfterRemoval} from '@/composables/useFocusAfterRemoval'
 
 const props = defineProps<{
 	taskId: number,
@@ -737,6 +745,7 @@ const {t} = useI18n({useScope: 'global'})
 const projectList = useProjects()
 const updateTask = useUpdateTaskMutation()
 const deleteTaskMutation = useDeleteTaskMutation()
+const restoreTaskMutation = useRestoreTaskMutation()
 const favoriteTask = useFavoriteTaskMutation()
 const duplicateTask = useDuplicateTaskMutation()
 const markTaskRead = useMarkTaskReadMutation()
@@ -817,8 +826,19 @@ const remindersDefaultRelativeTo = computed(() => {
 	}
 	return null
 })
-const taskNotFound = ref(false)
-const taskTitle = computed(() => task.value.title)
+const taskLoadError = computed(() => taskQuery.error.value ? taskLoadErrorAction(taskQuery.error.value) : null)
+const trashedTask = computed(() => taskLoadError.value?.action === 'inTrash'
+	? taskLoadError.value.inTrash
+	: null)
+const trashedProject = computed(() => taskLoadError.value?.action === 'projectInTrash'
+	? taskLoadError.value.inTrash
+	: null)
+const hasTrashNotice = computed(() => trashedTask.value !== null || trashedProject.value !== null)
+const taskNotFound = computed(() => hasTrashNotice.value || taskLoadError.value?.action === 'notFound')
+const taskTitle = computed(() => {
+	if (trashedProject.value) return t('trash.title')
+	return trashedTask.value ? t('trash.taskInTrashTitle') : task.value.title
+})
 useTitle(taskTitle)
 
 const lastProject = computed(() => {
@@ -902,6 +922,7 @@ async function scrollToHeading() {
 const attachmentsRef = ref<InstanceType<typeof Attachments> | null>(null)
 
 const taskViewContainer = ref<HTMLElement | null>(null)
+useFocusAfterRemoval(() => hasTrashNotice.value, () => taskViewContainer.value)
 const scrollContainer = ref<HTMLElement | null>(null)
 const contentBottomMarker = ref<HTMLElement | null>(null)
 const bottomMarkerVisible = ref(true)
@@ -1041,17 +1062,16 @@ watch(taskQuery.task, async (loaded, previous) => {
 	updateScrollable()
 	visible.value = true
 }, {immediate: true})
-watch(taskQuery.error, cause => {
-	if (!cause) return
-	const action = taskLoadErrorAction(cause)
-	if (action === 'ignore') return
-	if (action === 'notFound') {
-		taskNotFound.value = true
-		router.replace({name: 'not-found'})
-		return
+watch(taskLoadError, loadError => {
+	switch (loadError?.action) {
+		case 'notFound':
+			router.replace({name: 'not-found'})
+			break
+		case 'report':
+			error(taskQuery.error.value)
+			visible.value = true
+			break
 	}
-	error(cause)
-	visible.value = true
 })
 
 const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
@@ -1165,12 +1185,35 @@ useTaskDetailShortcuts({
 	onDoneAndBack: markDoneAndGoBack,
 })
 
-const showDeleteModal = ref(false)
-
 async function deleteTask() {
-	await deleteTaskMutation.mutateAsync(task.value.id!)
-	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'project.index', params: {projectId: task.value.project_id}})
+	const id = task.value.id!
+	const projectId = task.value.project_id
+	let viewId: number | undefined
+	try {
+		const destinationProject = await projectList.loadProject(projectId)
+		const view = destinationProject.views.find(view => view.id === getProjectViewId(projectId))
+			?? getDefaultProjectView(destinationProject.views, authStore.settings.frontend_settings.default_view)
+		viewId = view?.id
+		await deleteTaskMutation.mutateAsync(id)
+	} catch {
+		return
+	}
+	await router.push(viewId
+		? {
+			name: 'project.view',
+			params: {
+				projectId,
+				viewId,
+			},
+		}
+		: {
+			name: 'project.index',
+			params: {projectId},
+		})
+	success({message: t('task.detail.deleteSuccess')}, [{
+		title: t('task.undo'),
+		callback: () => restoreTaskMutation.mutate(id),
+	}], {takeFocus: true})
 }
 
 async function toggleTaskDone() {

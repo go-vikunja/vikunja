@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -597,6 +599,104 @@ func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectIsInTrash is returned instead of ErrProjectDoesNotExist to callers who could reach the trashed project.
+type ErrProjectIsInTrash struct {
+	ID         int64      `json:"id"`
+	DeletedAt  time.Time  `json:"deleted_at"`
+	DeletedBy  *user.User `json:"deleted_by,omitempty"`
+	CanRestore bool       `json:"can_restore"`
+	// The topmost trashed ancestor, which has to be restored instead.
+	TrashedRootID  int64 `json:"trashed_root_id,omitempty"`
+	CanRestoreRoot bool  `json:"can_restore_root"`
+}
+
+// IsErrProjectIsInTrash checks if an error is ErrProjectIsInTrash.
+func IsErrProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrProjectIsInTrash)
+	return ok
+}
+
+func (err ErrProjectIsInTrash) Error() string {
+	return fmt.Sprintf("The project is in the trash. [ID: %d]", err.ID)
+}
+
+// ErrCodeProjectIsInTrash holds the unique world-error code of this error
+const ErrCodeProjectIsInTrash = 3018
+
+// HTTPError holds the http error description
+func (err ErrProjectIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectIsInTrash,
+		Message:  "This project is in the trash. Restore it first.",
+		Details:  err,
+	}
+}
+
+// ErrParentProjectIsInTrash is returned when restoring a project whose parent is still in the trash.
+type ErrParentProjectIsInTrash struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectIsInTrash checks if an error is ErrParentProjectIsInTrash.
+func IsErrParentProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrParentProjectIsInTrash)
+	return ok
+}
+
+func (err ErrParentProjectIsInTrash) Error() string {
+	return fmt.Sprintf(
+		"Parent project is in the trash [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
+}
+
+// ErrCodeParentProjectIsInTrash holds the unique world-error code of this error
+const ErrCodeParentProjectIsInTrash = 3019
+
+// HTTPError holds the http error description
+func (err ErrParentProjectIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectIsInTrash,
+		Message:  "The parent project is in the trash. Restore it first.",
+	}
+}
+
+// ErrParentProjectDoesNotExist is returned when restoring a project whose parent row is gone.
+type ErrParentProjectDoesNotExist struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectDoesNotExist checks if an error is ErrParentProjectDoesNotExist.
+func IsErrParentProjectDoesNotExist(err error) bool {
+	_, ok := err.(ErrParentProjectDoesNotExist)
+	return ok
+}
+
+func (err ErrParentProjectDoesNotExist) Error() string {
+	return fmt.Sprintf(
+		"Parent project does not exist [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
+}
+
+// ErrCodeParentProjectDoesNotExist holds the unique world-error code of this error
+const ErrCodeParentProjectDoesNotExist = 3021
+
+// HTTPError holds the http error description
+func (err ErrParentProjectDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectDoesNotExist,
+		Message:  "The parent project does not exist anymore.",
+	}
+}
+
 // ErrParentProjectIsArchived represents an error, where a project's parent is archived
 type ErrParentProjectIsArchived struct {
 	ProjectID       int64
@@ -817,6 +917,61 @@ const ErrCodeTaskDoesNotExist = 4002
 // HTTPError holds the http error description
 func (err ErrTaskDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTaskDoesNotExist, Message: "This task does not exist"}
+}
+
+// ErrTaskIsInTrash is returned instead of ErrTaskDoesNotExist to callers who can read the trashed task's project.
+type ErrTaskIsInTrash struct {
+	ID         int64      `json:"id"`
+	ProjectID  int64      `json:"project_id"`
+	DeletedAt  time.Time  `json:"deleted_at"`
+	DeletedBy  *user.User `json:"deleted_by,omitempty"`
+	CanRestore bool       `json:"can_restore"`
+}
+
+// IsErrTaskIsInTrash checks if an error is a ErrTaskIsInTrash.
+func IsErrTaskIsInTrash(err error) bool {
+	_, ok := err.(ErrTaskIsInTrash)
+	return ok
+}
+
+func (err ErrTaskIsInTrash) Error() string {
+	return fmt.Sprintf("The task is in the trash. [ID: %d]", err.ID)
+}
+
+// ErrCodeTaskIsInTrash holds the unique world-error code of this error
+const ErrCodeTaskIsInTrash = 4040
+
+// HTTPError holds the http error description
+func (err ErrTaskIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTaskIsInTrash,
+		Message:  "This task is in the trash.",
+		Details:  err,
+	}
+}
+
+type ErrTaskIsNotInTrash struct {
+	ID int64
+}
+
+func IsErrTaskIsNotInTrash(err error) bool {
+	_, ok := err.(ErrTaskIsNotInTrash)
+	return ok
+}
+
+func (err ErrTaskIsNotInTrash) Error() string {
+	return fmt.Sprintf("The task is not in the trash. [ID: %d]", err.ID)
+}
+
+const ErrCodeTaskIsNotInTrash = 4042
+
+func (err ErrTaskIsNotInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskIsNotInTrash,
+		Message:  "This task is not in the trash.",
+	}
 }
 
 // ErrBulkTasksMustBeInSameProject represents a "ErrBulkTasksMustBeInSameProject" kind of error.
@@ -2939,7 +3094,7 @@ func (err ErrTimeEntryDoesNotExist) HTTPError() web.HTTPError {
 }
 
 // ErrTimeEntryInvalidContainer represents an error where a time entry is attached
-// to both a task and a project, or to neither (violating the XOR invariant).
+// to both a task and a project.
 type ErrTimeEntryInvalidContainer struct {
 	TaskID    int64
 	ProjectID int64
@@ -2952,7 +3107,7 @@ func IsErrTimeEntryInvalidContainer(err error) bool {
 }
 
 func (err ErrTimeEntryInvalidContainer) Error() string {
-	return fmt.Sprintf("Time entry must be attached to exactly one of task or project [TaskID: %v, ProjectID: %v]", err.TaskID, err.ProjectID)
+	return fmt.Sprintf("Time entry can be attached to a task or a project, not both [TaskID: %v, ProjectID: %v]", err.TaskID, err.ProjectID)
 }
 
 // ErrCodeTimeEntryInvalidContainer holds the unique world-error code of this error
@@ -2963,7 +3118,7 @@ func (err ErrTimeEntryInvalidContainer) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeTimeEntryInvalidContainer,
-		Message:  "A time entry must be attached to exactly one of a task or a project.",
+		Message:  "A time entry can be attached to a task or a project, not both.",
 	}
 }
 

@@ -1,7 +1,7 @@
 {
   "project": {
     "calendar": {
-      "title": "Calendari de tasques",
+      "title": "Calendari",
       "loading": "S'està carregant…",
       "count": "Tasques: {count}",
       "deadline": "Data límit",

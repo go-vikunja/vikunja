@@ -1,7 +1,7 @@
 {
   "project": {
     "calendar": {
-      "title": "Календар задатака",
+      "title": "Календар",
       "loading": "Учитавање…",
       "count": "Задаци: {count}",
       "deadline": "Рок",

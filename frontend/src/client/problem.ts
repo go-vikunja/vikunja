@@ -5,6 +5,7 @@ export class ApiError extends Error implements VikunjaErrorModel {
 	declare readonly status: number
 	declare readonly detail: string
 	declare readonly code?: number
+	declare readonly details?: unknown
 	declare readonly title?: string
 	declare readonly errors?: VikunjaErrorModel['errors']
 	declare readonly i18n_params?: VikunjaErrorModel['i18n_params']

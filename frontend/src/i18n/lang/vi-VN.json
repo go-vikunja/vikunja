@@ -235,13 +235,7 @@
 		},
 		"delete": {
 			"title": "Xóa \"{project}\"",
-			"header": "Xóa dự án này",
-			"text1": "Bạn có chắc muốn xóa dự án này cùng toàn bộ nội dung của dự án?",
-			"text2": "Điều này bao gồm tất cả các đầu việc và KHÔNG THỂ HOÀN TÁC!",
-			"success": "Dự án đã được xóa.",
-			"tasksToDelete": "Điều này sẽ ngay lập tức gỡ bảo khoảng {count} đầu việc.",
-			"tasksAndChildProjectsToDelete": "Điều này sẽ ngay lập tức gỡ bỏ khoảng {tasks} đầu việc và {projects} dự án.",
-			"noTasksToDelete": "Dự án này không bao gồm bất kì đầu việc nào, bạn có thể xóa nó."
+			"header": "Xóa dự án này"
 		},
 		"duplicate": {
 			"title": "Tạo bản sao dự án này",
@@ -386,7 +380,7 @@
 			"updateSuccess": "Chế độ xem được cập nhật thành công."
 		},
 		"calendar": {
-			"title": "Lịch tác vụ",
+			"title": "Lịch",
 			"loading": "Đang tải…",
 			"count": "Tác vụ: {count}",
 			"deadline": "Hạn chót",
@@ -726,17 +720,11 @@
 			"updated": "Đã cập nhật {0}",
 			"doneAt": "Hoàn thành {0}",
 			"updateSuccess": "Công việc đã được lưu.",
-			"deleteSuccess": "Công việc đã được xóa.",
 			"belongsToProject": "Tác vụ này thuộc về dự án '{project}'",
 			"due": "Đến hạn {at}",
 			"organization": "Tổ chức",
 			"management": "Quản lý",
 			"dateAndTime": "Ngày và giờ",
-			"delete": {
-				"header": "Xóa công công việc này",
-				"text1": "Bạn có chắc muốn xóa công việc này không?",
-				"text2": "Thao tác này cũng sẽ xóa tất cả tệp đính kèm, lời nhắc và liên kết đến công việc này. Nó không thể hoàn tác!"
-			},
 			"actions": {
 				"assign": "Chỉ định người",
 				"label": "Thêm nhãn",

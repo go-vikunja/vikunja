@@ -68,6 +68,28 @@ func (t *TaskDeletedEvent) Name() string {
 	return "task.deleted"
 }
 
+// TaskRestoredEvent fires when a task is restored from the trash.
+type TaskRestoredEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskRestoredEvent
+func (t *TaskRestoredEvent) Name() string {
+	return "task.restored"
+}
+
+// TaskPurgedEvent fires when a trashed task is permanently deleted. Doer is nil for the retention cron.
+type TaskPurgedEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskPurgedEvent
+func (t *TaskPurgedEvent) Name() string {
+	return "task.purged"
+}
+
 // TaskAssigneeCreatedEvent represents an event where a task has been assigned to a user
 type TaskAssigneeCreatedEvent struct {
 	Task     *Task      `json:"task"`
@@ -247,6 +269,30 @@ type ProjectUpdatedEvent struct {
 // Name defines the name for ProjectUpdatedEvent
 func (p *ProjectUpdatedEvent) Name() string {
 	return "project.updated"
+}
+
+// ProjectRestoredEvent fires when a project is restored from the trash.
+type ProjectRestoredEvent struct {
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
+}
+
+// Name defines the name for ProjectRestoredEvent
+func (p *ProjectRestoredEvent) Name() string {
+	return "project.restored"
+}
+
+// ProjectPurgedEvent fires for every project removed permanently, sub-projects included. Doer is nil for the system.
+type ProjectPurgedEvent struct {
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
+	// Webhook routing only, stripped from the payload: the closure rows are gone once the purge commits.
+	AncestorIDs []int64 `json:"ancestor_ids,omitempty"`
+}
+
+// Name defines the name for ProjectPurgedEvent
+func (p *ProjectPurgedEvent) Name() string {
+	return "project.purged"
 }
 
 // ProjectDeletedEvent represents an event where a project has been deleted

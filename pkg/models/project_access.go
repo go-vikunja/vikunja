@@ -31,9 +31,10 @@ import (
 // projectAccess is every project a user can reach, with the effective permission.
 // Absent id = no access.
 type projectAccess struct {
-	userID      int64
-	permissions map[int64]Permission
-	sortedIDs   []int64
+	userID         int64
+	includeTrashed bool
+	permissions    map[int64]Permission
+	sortedIDs      []int64
 }
 
 func (pa *projectAccess) permission(projectID int64) (Permission, bool) {
@@ -58,8 +59,17 @@ WITH grants (project_id, permission) AS (
     GROUP BY project_id
 )`
 
+// Trashed projects never have live descendants, so dropping trashed targets is enough.
+const liveProjectTargetJoin = `
+    INNER JOIN projects target ON target.id = pa.project_id AND target.deleted_at IS NULL`
+
 // Inherited admin is sticky (it could unshare the parent anyway); below that the nearest grant wins.
-const projectAccessQuery = projectAccessCTE + `
+func projectAccessSelect(includeTrashed bool) string {
+	targetJoin := liveProjectTargetJoin
+	if includeTrashed {
+		targetJoin = ""
+	}
+	return `
 SELECT id,
     CASE WHEN MAX(permission) = 2 THEN 2
          ELSE MAX(CASE WHEN nearest = 1 THEN permission END)
@@ -68,33 +78,54 @@ FROM (
     SELECT pa.project_id AS id, g.permission,
         ROW_NUMBER() OVER (PARTITION BY pa.project_id ORDER BY pa.depth) AS nearest
     FROM grants g
-    INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id
+    INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id` + targetJoin + `
 ) ranked
 GROUP BY id`
+}
 
-const projectAccessIDsQuery = projectAccessCTE + `
-SELECT DISTINCT pa.project_id AS id
-FROM grants g
-INNER JOIN project_ancestors pa ON pa.ancestor_id = g.project_id`
+func projectAccessQuery(includeTrashed bool) string {
+	return projectAccessCTE + projectAccessSelect(includeTrashed)
+}
+
+// Binds the user id three times, then the permission bounds.
+func projectAccessMinPermissionIDsQuery(includeTrashed bool) string {
+	return projectAccessCTE + `
+SELECT id FROM (` + projectAccessSelect(includeTrashed) + `) effective
+WHERE permission BETWEEN ? AND ?`
+}
 
 type projectAccessRow struct {
 	ID         int64 `xorm:"id"`
 	Permission int64 `xorm:"permission"`
 }
 
-// Resolves the whole reachable tree in one query, memoized per session.
+// Resolves the whole reachable tree in one query, memoized per session. Trashed projects are left out.
 func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, error) {
-	return db.Remember(s, "project-access-"+strconv.FormatInt(userID, 10), func() (*projectAccess, error) {
+	return getProjectAccess(s, userID, false)
+}
+
+// Only for trash operations, which act on projects nobody can otherwise reach.
+func getProjectAccessIncludingTrash(s *xorm.Session, userID int64) (*projectAccess, error) {
+	return getProjectAccess(s, userID, true)
+}
+
+func getProjectAccess(s *xorm.Session, userID int64, includeTrashed bool) (*projectAccess, error) {
+	key := "project-access-" + strconv.FormatInt(userID, 10)
+	if includeTrashed {
+		key = "project-access-with-trash-" + strconv.FormatInt(userID, 10)
+	}
+	return db.Remember(s, key, func() (*projectAccess, error) {
 		rows := []*projectAccessRow{}
-		err := s.SQL(projectAccessQuery, userID, userID, userID).Find(&rows)
+		err := s.SQL(projectAccessQuery(includeTrashed), userID, userID, userID).Find(&rows)
 		if err != nil {
 			return nil, err
 		}
 
 		pa := &projectAccess{
-			userID:      userID,
-			permissions: make(map[int64]Permission, len(rows)),
-			sortedIDs:   make([]int64, 0, len(rows)),
+			userID:         userID,
+			includeTrashed: includeTrashed,
+			permissions:    make(map[int64]Permission, len(rows)),
+			sortedIDs:      make([]int64, 0, len(rows)),
 		}
 		for _, r := range rows {
 			permission := Permission(r.Permission)
@@ -110,22 +141,27 @@ func getProjectAccessForUser(s *xorm.Session, userID int64) (*projectAccess, err
 	})
 }
 
-// Above this many ids the inlined list bloats the statement and defeats server-side
-// plan caching, so the subquery form with its three bind parameters wins.
+// Past this many ids the inlined list defeats plan caching; the subquery keeps binds fixed.
 const maxInListSize = 1000
 
-func (pa *projectAccess) cond(column string) builder.Cond {
-	if len(pa.sortedIDs) > maxInListSize {
-		return pa.condViaSubquery(column)
-	}
+func (pa *projectAccess) cond(column string, minPermission Permission) builder.Cond {
 	// The empty slice matters: an argument-less builder.In is dropped by Where and
 	// matches every row, while In with an empty slice renders as 0=1.
-	return builder.In(column, pa.sortedIDs)
+	ids := []int64{}
+	for _, id := range pa.sortedIDs {
+		if pa.permissions[id] >= minPermission {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) > maxInListSize {
+		return pa.condViaSubquery(column, minPermission)
+	}
+	return builder.In(column, ids)
 }
 
-// Keeps the bind parameter count at three whatever the tree size.
-func (pa *projectAccess) condViaSubquery(column string) builder.Cond {
-	return builder.In(column, builder.Expr(projectAccessIDsQuery, pa.userID, pa.userID, pa.userID))
+// The upper bound drops out-of-enum grants, like getProjectAccessForUser does.
+func (pa *projectAccess) condViaSubquery(column string, minPermission Permission) builder.Cond {
+	return builder.In(column, builder.Expr(projectAccessMinPermissionIDsQuery(pa.includeTrashed), pa.userID, pa.userID, pa.userID, int(minPermission), int(PermissionAdmin)))
 }
 
 // Includes projects inherited through a shared parent.
@@ -143,7 +179,7 @@ func accessibleProjectIDsCond(s *xorm.Session, a web.Auth, column string) (build
 	if err != nil {
 		return nil, err
 	}
-	return access.cond(column), nil
+	return access.cond(column, PermissionRead), nil
 }
 
 // GetAllParentProjects returns the project itself and every ancestor, keyed by id.
