@@ -153,3 +153,22 @@ test('the emoji picker retries a failed catalog request and dismisses on outside
 	await trigger.click()
 	await expect(picker).toHaveCount(0)
 })
+
+test('typing in the reaction picker search does not trigger task shortcuts', async ({authenticatedPage: page}) => {
+	const [project] = await ProjectFactory.create(1)
+	await createDefaultViews(project.id)
+	const [task] = await TaskFactory.create(1, {
+		id: 1,
+		project_id: project.id,
+		title: 'Shortcut-safe task',
+	})
+
+	await page.goto(`/tasks/${task.id}`)
+	await page.locator('.task-view .reactions.details').getByRole('button', {name: 'Add your reaction'}).click()
+	const picker = page.getByRole('region', {name: 'Emoji picker'})
+	const search = picker.getByRole('searchbox', {name: 'Search emoji'})
+	await expect(search).toBeVisible()
+
+	await search.press('l')
+	await expect(search).toHaveValue('l')
+})
