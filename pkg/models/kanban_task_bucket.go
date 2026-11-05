@@ -147,6 +147,7 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 	// mark task done if moved into or out of the done bucket
 	// Only change the done state if the task's done value actually changes
 	var doneChanged bool
+	var completionZone *time.Location // the zone a repeating task's completion was computed in
 	if view.DoneBucketID != 0 {
 		if view.DoneBucketID == b.BucketID && !task.Done {
 			doneChanged = true
@@ -154,7 +155,15 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 			if task.isRepeating() {
 				oldTask := *task
 				oldTask.Done = false
-				updateDone(&oldTask, task)
+				// Moving into the done bucket is a not-done → done transition. A
+				// saved-filter view has a negative pseudo project id, so the task's own project
+				// decides there; otherwise the destination project does (an internal project move).
+				zoneProjectID := b.ProjectID
+				if zoneProjectID <= 0 {
+					zoneProjectID = task.ProjectID
+				}
+				completionZone = resolveTaskZone(s, a, zoneProjectID)
+				updateDone(&oldTask, task, completionZone)
 				// A repeating task doesn't stay in the done bucket; route
 				// it back to the view's default bucket so the user sees
 				// the next iteration waiting in the "To-Do" column.
@@ -183,6 +192,8 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 		} else {
 			task.DoneAt = time.Time{}
 		}
+		// updateDone also decrements a COUNT rule, or clears an exhausted one, so the rule is
+		// persisted with the dates.
 		_, err = s.Where("id = ?", task.ID).
 			Cols(
 				"done",
@@ -190,13 +201,14 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 				"start_date",
 				"end_date",
 				"done_at",
+				"repeats",
 			).
 			Update(task)
 		if err != nil {
 			return
 		}
 
-		err = task.updateReminders(s, task)
+		err = task.updateReminders(s, task, reminderZone(s, a, task, completionZone))
 		if err != nil {
 			return
 		}
