@@ -47,6 +47,9 @@ func TestActiveUsers(t *testing.T) {
 	require.NoError(t, SetUserActive(&testAuth{id: 2}))
 	require.NoError(t, keyvalue.PutWithTTL(activeUsersKeyPrefix+"3", time.Now(), time.Nanosecond))
 	require.NoError(t, SetLinkShareActive(&testAuth{id: 1}))
+	// Give the TTL time to pass: on Windows the clock resolution is much
+	// coarser than a nanosecond, so an immediate count can still see the key.
+	time.Sleep(5 * time.Millisecond)
 
 	assert.Equal(t, 2, countActive(activeUsersKeyPrefix))
 	assert.Equal(t, 1, countActive(activeLinkSharesKeyPrefix))
@@ -65,6 +68,9 @@ func TestActiveUsersConcurrent(t *testing.T) {
 	for i := 100; i < 110; i++ {
 		require.NoError(t, keyvalue.PutWithTTL(activeUsersKeyPrefix+strconv.Itoa(i), time.Now(), time.Nanosecond))
 	}
+	// Give the TTL time to pass: on Windows the clock resolution is much
+	// coarser than a nanosecond, so the seeded keys need a moment to expire.
+	time.Sleep(5 * time.Millisecond)
 
 	var wg sync.WaitGroup
 	for i := 0; i < 50; i++ {

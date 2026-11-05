@@ -29,7 +29,7 @@ import (
 
 func TestAPITokenExpiringWeekNotification(t *testing.T) {
 	u := &user.User{ID: 1, Name: "Test User"}
-	token := &APIToken{ID: 42, Title: "My Token", ExpiresAt: time.Now().Add(7 * 24 * time.Hour)}
+	token := &APIToken{ID: 42, Title: "My Token", ExpiresAt: time.Now().Add(7*24*time.Hour - time.Minute)}
 
 	n := &APITokenExpiringWeekNotification{User: u, Token: token}
 
@@ -57,7 +57,7 @@ func TestAPITokenExpiringWeekNotification(t *testing.T) {
 
 func TestAPITokenExpiringDayNotification(t *testing.T) {
 	u := &user.User{ID: 1, Name: "Test User"}
-	token := &APIToken{ID: 99, Title: "CI Token", ExpiresAt: time.Now().Add(24 * time.Hour)}
+	token := &APIToken{ID: 99, Title: "CI Token", ExpiresAt: time.Now().Add(24*time.Hour - time.Minute)}
 
 	n := &APITokenExpiringDayNotification{User: u, Token: token}
 
