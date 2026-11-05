@@ -110,6 +110,27 @@ func getTaskByIDForAuth(s *xorm.Session, a web.Auth, taskID int64) (Task, error)
 
 // Restore brings a trashed task back into its default or done bucket, positioned like a new task.
 func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
+	views, err := lockProjectViewsForPositionUpdate(s, t.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	locked, err := getReadableTrashedTask(lockingSession(s), a, t.ID)
+	if IsErrTaskDoesNotExist(err) {
+		return taskRestoreError(s, a, t.ID, err)
+	}
+	if err != nil {
+		return err
+	}
+	can, err := trashedTaskAllows(s, a, locked, (*Project).CanWrite)
+	if err != nil {
+		return err
+	}
+	if !can || locked.ProjectID != t.ProjectID {
+		return ErrGenericForbidden{}
+	}
+	*t = *locked
+
 	restored, err := s.Table("tasks").
 		Where(builder.And(builder.Eq{"id": t.ID}, builder.NotNull{"deleted_at"})).
 		Update(map[string]any{
@@ -130,7 +151,7 @@ func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	if err := placeTasksInViews(s, a, t.ProjectID, []*Task{t}, true, nil); err != nil {
+	if err := placeTasksInViews(s, a, views, []*Task{t}, true, nil); err != nil {
 		return err
 	}
 

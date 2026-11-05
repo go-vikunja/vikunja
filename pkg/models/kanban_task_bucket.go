@@ -263,6 +263,9 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	if _, err = lockProjectViewsForPositionUpdate(s, view.ProjectID); err != nil {
+		return err
+	}
 	if err = lockTaskInView(s, a, view, b.TaskID); err != nil {
 		return err
 	}

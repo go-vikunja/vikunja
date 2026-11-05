@@ -18,7 +18,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"regexp"
 	"slices"
@@ -414,6 +413,42 @@ func lockTaskForWrite(s *xorm.Session, a web.Auth, taskID int64) (task Task, err
 		return Task{}, ErrGenericForbidden{}
 	}
 	return task, nil
+}
+
+func lockViewsAndTasksForWrite(s *xorm.Session, a web.Auth, taskIDs []int64, projectIDs ...int64) (tasks map[int64]Task, views []*ProjectView, err error) {
+	existing, err := GetTasksSimpleByIDs(s, taskIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+	tasks = make(map[int64]Task, len(existing))
+	for _, task := range existing {
+		tasks[task.ID] = *task
+		projectIDs = append(projectIDs, task.ProjectID)
+	}
+	for _, id := range taskIDs {
+		if _, exists := tasks[id]; !exists {
+			return nil, nil, ErrTaskDoesNotExist{ID: id}
+		}
+	}
+
+	views, err = lockProjectViewsForPositionUpdate(s, projectIDs...)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	orderedIDs := slices.Clone(taskIDs)
+	slices.Sort(orderedIDs)
+	for _, id := range slices.Compact(orderedIDs) {
+		task, err := lockTaskForWrite(s, a, id)
+		if err != nil {
+			return nil, nil, err
+		}
+		if task.ProjectID != tasks[id].ProjectID {
+			return nil, nil, ErrGenericForbidden{}
+		}
+		tasks[id] = task
+	}
+	return tasks, views, nil
 }
 
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
@@ -1080,6 +1115,14 @@ func resolveProvidedBuckets(s *xorm.Session, a web.Auth, projectID int64, tasks 
 
 // createTasks inserts row by row because multi-row inserts don't reliably return autoincrement ids on all supported databases.
 func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, updateAssignees bool, setBucket, preserveIndexes bool) (err error) {
+	views, err := lockProjectViewsForPositionUpdate(s, projectID)
+	if err != nil {
+		return err
+	}
+	return createTasksInViews(s, projectID, tasks, a, updateAssignees, setBucket, preserveIndexes, views)
+}
+
+func createTasksInViews(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, updateAssignees bool, setBucket, preserveIndexes bool, views []*ProjectView) (err error) {
 	if len(tasks) == 0 {
 		return nil
 	}
@@ -1134,7 +1177,7 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		return err
 	}
 
-	err = placeTasksInViews(s, a, projectID, tasks, setBucket, taskProvidedBucket)
+	err = placeTasksInViews(s, a, views, tasks, setBucket, taskProvidedBucket)
 	if err != nil {
 		return err
 	}
@@ -1186,12 +1229,7 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 	return
 }
 
-func placeTasksInViews(s *xorm.Session, a web.Auth, projectID int64, tasks []*Task, setBucket bool, providedBuckets map[int64]*Bucket) error {
-	views, err := lockProjectViewsForPositionUpdate(s, projectID)
-	if err != nil {
-		return err
-	}
-
+func placeTasksInViews(s *xorm.Session, a web.Auth, views []*ProjectView, tasks []*Task, setBucket bool, providedBuckets map[int64]*Bucket) error {
 	positions, taskBuckets, err := setTasksInBucketInViews(s, views, tasks, a, setBucket, providedBuckets)
 	if err != nil {
 		return err
@@ -1334,13 +1372,16 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	return t.updateSingleTask(s, a, nil)
 }
 
-//nolint:gocyclo
-func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (err error) {
-
-	ot, err := lockTaskForWrite(s, a, t.ID)
+func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) error {
+	tasks, views, err := lockViewsAndTasksForWrite(s, a, []int64{t.ID}, t.ProjectID)
 	if err != nil {
-		return
+		return err
 	}
+	return t.updateSingleTaskInViews(s, a, fields, tasks[t.ID], views)
+}
+
+//nolint:gocyclo
+func (t *Task) updateSingleTaskInViews(s *xorm.Session, a web.Auth, fields []string, ot Task, lockedViews []*ProjectView) (err error) {
 
 	if t.ProjectID == 0 {
 		t.ProjectID = ot.ProjectID
@@ -1487,18 +1528,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	views := []*ProjectView{}
 	if t.Done != ot.Done || t.ProjectID != ot.ProjectID {
-		// Locks both projects: a move rewrites task_positions in the old project too.
-		_, err = lockProjectViewsForPositionUpdate(s, ot.ProjectID, t.ProjectID)
-		if err != nil {
-			return
-		}
-
-		err = s.
-			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
-				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
-			Find(&views)
-		if err != nil {
-			return
+		for _, view := range lockedViews {
+			if view.ProjectID == t.ProjectID && view.ViewKind == ProjectViewKindKanban && view.BucketConfigurationMode == BucketConfigurationModeManual {
+				views = append(views, view)
+			}
 		}
 	}
 
@@ -1749,30 +1782,15 @@ func updateTasks(s *xorm.Session, a web.Auth, t *Task, ids []int64, fields []str
 	}
 	ids = uniqueIDs
 
-	// Ids may span projects; per-task locking would follow caller order, not view order.
-	existing := []*Task{}
-	err = s.Table(&Task{}).Where(builder.In("id", ids)).Distinct("project_id").Find(&existing)
+	existing, views, err := lockViewsAndTasksForWrite(s, a, ids, t.ProjectID)
 	if err != nil {
-		return nil, fmt.Errorf("could not load projects of tasks to update: %w", err)
-	}
-
-	projectIDs := make([]int64, 0, len(existing)+1)
-	for _, et := range existing {
-		projectIDs = append(projectIDs, et.ProjectID)
-	}
-	if t.ProjectID != 0 {
-		projectIDs = append(projectIDs, t.ProjectID)
-	}
-
-	_, err = lockProjectViewsForPositionUpdate(s, projectIDs...)
-	if err != nil {
-		return nil, fmt.Errorf("could not lock project views for bulk task update: %w", err)
+		return nil, err
 	}
 
 	for _, id := range ids {
 		nt := clone.Clone(t)
 		nt.ID = id
-		if err := nt.updateSingleTask(s, a, fields); err != nil {
+		if err := nt.updateSingleTaskInViews(s, a, fields, existing[id], views); err != nil {
 			return []*Task{}, err
 		}
 		tasks = append(tasks, nt)
@@ -2208,7 +2226,7 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
-	if _, err = lockTaskForWrite(s, a, t.ID); err != nil {
+	if _, _, err = lockViewsAndTasksForWrite(s, a, []int64{t.ID}); err != nil {
 		return err
 	}
 
@@ -2217,11 +2235,6 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	err = fullTask.ReadOne(s, a)
 	if err != nil {
 		return err
-	}
-
-	_, err = lockProjectViewsForPositionUpdate(s, fullTask.ProjectID)
-	if err != nil {
-		return
 	}
 
 	// Bucket and position rows are removed right away because bucket counts
