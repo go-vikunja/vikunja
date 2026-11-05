@@ -19,7 +19,7 @@ package db
 import (
 	"embed"
 	"fmt"
-	"path/filepath"
+	"path"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -44,7 +44,7 @@ func InitFixtures(tablenames ...string) (err error) {
 	// Otherwise, load all fixtures
 	if len(tablenames) > 0 {
 		for i, name := range tablenames {
-			tablenames[i] = filepath.Join(dir, name+".yml")
+			tablenames[i] = path.Join(dir, name+".yml")
 		}
 		testfiles = testfixtures.Files(tablenames...)
 	} else {
