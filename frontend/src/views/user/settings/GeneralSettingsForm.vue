@@ -250,6 +250,10 @@
 					@blur="enforceBackgroundBrightnessBounds"
 				/>
 			</FormField>
+			<FormCheckbox
+				v-model="settings.frontend_settings.extend_project_background_to_chrome"
+				:label="$t('user.settings.extendProjectBackgroundToChrome')"
+			/>
 		</div>
 	</Card>
 
