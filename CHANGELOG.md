@@ -7,6 +7,356 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.8.0] - 2026-11-05
+
+### Bug Fixes
+
+* *(admin)* Use tw prefix so invite links table scrolls horizontally
+* *(admin)* Keep users table within its card
+* *(admin)* Keep projects table headers and dates on one line
+* *(api)* Reject JSON bodies containing NUL on /api/v1
+* *(api)* Reject JSON bodies containing NUL on /api/v2
+* *(audit)* Cap captured User-Agent at 512 bytes
+* *(audit)* Never overwrite an existing rotated log file
+* *(auth)* Add spacing between password reset success message and login button
+* *(auth)* Restore spacing between stacked OpenID login buttons
+* *(backgrounds)* Cap the page number for the featured unsplash collection
+* *(backgrounds)* Clear backgrounds that point at files used elsewhere
+* *(caldav)* Reject non-VTODO and unparsable resources with 403 instead of 500
+* *(caldav)* Apply calendar-query filters to tasks
+* *(caldav)* Invalidate sync tokens after permanent deletion
+* *(caldav)* Build iCalendar output linearly, cap reminders and titles
+* *(caldav)* Only parse calendar bodies for PUT after access checks
+* *(caldav)* Render a resource's content once per request
+* *(caldav)* Answer requested props and multiget hrefs once
+* *(caldav)* Answer rejected bodies on unreadable projects with 404
+* *(caldav)* Answer task validation errors with 403 instead of 500
+* *(cli)* Invalidate sessions when resetting a password directly
+* *(cli)* Discard events after a failed user deletion
+* *(colors)* Use colorblind-safe preset and random label colors
+* *(db)* Rank accent-insensitive matches as exact
+* *(db)* Use read committed transactions
+* *(desktop)* Skip AppImage protocol handler for paths with backslashes
+* *(devenv)* Drop golangci-lint override now that nixpkgs ships 2.15 on go 1.27
+* *(doctor)* Don't follow OIDC discovery redirects to other origins
+* *(doctor)* Escape control characters in report values
+* *(editor)* Copy rich text as markdown to the plain-text clipboard
+* *(editor)* Hide edit button on comments the user can't edit
+* *(editor)* Limit implied table cells per document
+* *(events)* Allow new handlers while draining
+* *(events)* Record link shares as doer on relation, attachment and comment events
+* *(export)* Only replace the export file pointer if it is unchanged
+* *(export)* Export related tasks as references
+* *(filters)* Treat search terms containing operator substrings as search
+* *(filters)* Omit filter expression from invalid filter HTTP error (#4306)
+* *(filters)* Measure filter nesting with the parser's own scanner
+* *(filters)* Limit business day offsets in date math
+* *(frontend)* Balance import service icons across rows
+* *(frontend)* Match go-datemath in the datemath evaluator
+* *(frontend)* Keep floating buttons above the bottom banners
+* *(frontend)* Render favorites project description as text
+* *(frontend)* Restore task cards to kanban boards
+* *(frontend)* Preserve distinct toasts with actions
+* *(frontend)* Show project trash details when opening a task
+* *(frontend)* Synchronize reusable password fields with their model
+* *(frontend)* Avoid a fragment directive on the week-start selector
+* *(frontend)* Keep the shared clock independent of component hooks
+* *(frontend)* Consume the OpenID state on every callback
+* *(frontend)* Clear the csv import error once the preview is updated
+* *(gantt)* Memoize derived child dates to avoid exponential traversal
+* *(images)* Stop accepting TIFF uploads
+* *(images)* Limit the side length of decoded images
+* *(kanban)* Auto-scroll the board while dragging a task to off-screen buckets
+* *(kanban)* Mark full buckets with an icon, not only red count
+* *(kanban)* Expand collapsed buckets while dragging a task over them
+* *(link-shares)* Hide creator emails in the share list
+* *(mail)* Only expose the mail queue once the mailer started and bound enqueueing
+* *(mcp)* Forward fields body argument on tools without projection
+* *(mcp)* Allocate field projection map only when a field matches
+* *(mcp)* Hint at listing all actions when find_action matches nothing
+* *(migration)* Don't reuse a stale OAuth code when migrating again
+* *(migration)* Explain blocked private planka hosts
+* *(migration)* Recreate webhooks table missing its core columns
+* *(migration)* Subscribe creators and assignees to their existing tasks
+* *(migration)* Check filters.json item limit before decoding saved filters
+* *(migration)* Skip null positions and task buckets on import
+* *(migration)* Clean up stored import blobs when the import panics
+* *(migration)* Count views and per-view task positions in import item limit
+* *(migration)* Cap views per project on import
+* *(migration)* Mask credentials in urls of failed migration errors
+* *(migration)* Import repeated planka lists and cards only once
+* *(migration)* Cap planka names copied into every task and comment
+* *(migration)* Reject repeated csv column mappings, cap labels per row
+* *(notifications)* Add type icons and restyle toasts like in-app messages
+* *(notifications)* Space toasts out and span them across mobile screens
+* *(notifications)* Keep error toasts visible for 10 seconds
+* *(notifications)* Keep toasts above the bottom banners
+* *(notifications)* Anchor toasts to the start side in RTL
+* *(projects)* Reject moves that would create too many ancestor links
+* *(projects)* Describe move size limit accurately
+* *(projects)* Strip project card description HTML in linear time
+* *(projects)* Reserve identifiers and repair trashed orphans
+* *(projects)* Preserve trashed data during user cleanup
+* *(projects)* Defer background deletion until purge commits
+* *(projects)* Share background removal across API versions
+* *(projects)* Archive duplicates after copying attachments
+* *(projects)* Never take the background from a project create request
+* *(projects)* Only respread positions of projects the user can write
+* *(quick-actions)* Create the task instead of opening a lone search result
+* *(reminders)* Skip disabled subscribers
+* *(reminders)* Only remind subscribers
+* *(reminders)* Limit overdue task events to the recipient's projects
+* *(richtext)* Don't resolve mentions of other users' bots
+* *(richtext)* Bound the cells tables expand to during conversion
+* *(richtext)* Render markdown tables with minimal cell padding
+* *(richtext)* Flatten quotes and lists nested deeper than ten levels
+* *(routes)* Log the path of served frontend assets
+* *(routes)* Only bind JSON, form and multipart request bodies
+* *(security)* Disable MPTCP on listen sockets via GODEBUG
+* *(sentry)* Drop vue dom errors on machine-translated pages
+* *(settings)* Highlight import nav item on CSV import page
+* *(shortcuts)* Respect Latin keyboard layouts
+* *(shortcuts)* Ignore keydown events that are not KeyboardEvents
+* *(subscriptions)* Subscribe creators and assignees regardless of project subscriptions
+* *(tasks)* Mark overdue dates with an icon, not only red text
+* *(tasks)* Drop the dash before due dates in task rows
+* *(tasks)* Only return positions of the task's own project views
+* *(tasks)* Expand shared subtasks only once in the project list
+* *(tasks)* Cap the number of tasks visited by the relation cycle check
+* *(tasks)* Only create import relations between tasks of the imported batch
+* *(tasks)* Recheck write permission when a task moved between check and locked update
+* *(tasks)* Preserve project trash details in task errors
+* *(tasks)* Recheck write permission under the row lock before deleting a task
+* *(tasks)* Recheck write permission and view fit under the row lock for bucket and position moves
+* *(tasks)* Recheck child writes and relation endpoints under row locks
+* *(tasks)* Lock views before tasks and recheck restores
+* *(tasks)* Keep the deleting user's data out of the task deleted event
+* *(teams)* Only sync external team memberships of the current issuer
+* *(time-tracking)* Match task detail section header to related tasks
+* *(time-tracking)* Stop running timer at a backdated new timer's start
+* *(time-tracking)* End completed entries spanning a backdated timer's start
+* *(time-tracking)* Show running timer comment below its status
+* *(time-tracking)* Ignore client-supplied id when creating a time entry
+* *(time-tracking)* Remove private entries when deleting their author
+* *(time-tracking)* Enforce project trash container permissions
+* *(upcoming)* Highlight datemath ranges in the date picker calendar
+* *(user)* Reset failed attempt counter after account lockout
+* *(user)* Match exact username search literally on PostgreSQL
+* *(user)* Bind email confirmation to the token and pending address it was issued for
+* *(user)* Deliver password reset emails to locked accounts
+* *(user)* Verify the authenticated account's password on password change
+* *(user)* Count wrong passwords on password change toward account lockout
+* *(user)* Verify the authenticated account's password on email change
+* *(user)* Build the TOTP replay key from the normalized passcode
+* *(user)* Only take username, name and language when creating a bot
+* *(webhooks)* Route project trash events through ancestors
+* Separate time tracking comment label from action ([fbbd0a1](fbbd0a17199fbf9d13dffb5141c1501e0c789d7a))
+
+### Dependencies
+
+* *(deps)* Update postgres:18 docker digest to edb0c08
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.16.1 [security]
+* *(deps)* Update module github.com/labstack/echo/v5 to v5.4.1 [security]
+* *(deps)* Update dependency vite to v8.3.3 [security] (#4209)
+* *(deps)* Update dependency markdown-it to v15.0.3 [security] (#4211)
+* *(deps)* Update dependency electron to v43.8.1 [security] (#4232)
+* *(deps)* Update dependency dompurify to v3.4.17 [security] (#4233)
+* *(deps)* Update dependency serialize-javascript to v7.1.3 [security] (#4240)
+* *(deps)* Update dependency fast-uri@3 to v4.2.3 [security] (#4241)
+* *(deps)* Update dependency undici@7 to v8.12.2 [security] (#4243)
+* *(deps)* Update module github.com/go-chi/chi/v5 to v5.4.0 [security] (#4244)
+* *(deps)* Update dependency postcss to v8.5.31 (#4251)
+* *(deps)* Update dependency happy-dom to v21 [security] (#4247)
+* *(deps)* Update dependency undici@6 to v8.12.2 [security] (#4242)
+* *(deps)* Bump body-parser from 2.3.0 to 2.4.0 in /desktop
+* *(deps)* Update huma to v2.40.0
+* *(deps)* Update module golang.org/x/net to v0.62.0 [security]
+* *(deps)* Update module github.com/go-jose/go-jose/v4 to v4.1.6 [security]
+* *(deps)* Bump vue-i18n from 11.4.10 to 11.4.14 in /frontend
+* *(deps)* Update module github.com/labstack/echo/v4 to v4.16.3 [security]
+* *(deps)* Pin dependencies
+* *(deps)* Update dependency minimatch to v11 [security]
+* *(deps)* Update dev-dependencies
+* *(deps)* Retain TypeScript 6 for frontend tooling
+* *(deps)* Update pnpm to v12
+* *(deps)* Update aws-sdk-go
+* *(deps)* Update dependency @babel/core to v8.0.10
+* *(deps)* Bump follow-redirects from 1.16.1 to 1.16.2 in /frontend
+* *(deps)* Update dependency ip-address to v10.7.5
+* *(deps)* Update postgres:18 docker digest to 3a42645
+* *(deps)* Update dependency postcss to v8.5.32
+* *(deps)* Override @intlify/shared to patched version
+* *(deps-dev)* Bump vite from 8.3.0 to 8.3.3 in /frontend
+
+### Documentation
+
+* *(ai)* Add crowdin translate skill
+* *(config)* Clarify mailer forcessl and opportunistic starttls
+* *(config)* Mark openid emailfallback and usernamefallback as deprecated
+* *(quick-add-magic)* List spelled out relative dates in help
+* Document unaccent for accent-insensitive search ([c238056](c2380569b0068fc6ce2ecf4dca2911037f78b509))
+* Add security policy with threat model and known non-issues ([fb3a41a](fb3a41a5742bce49ced44fb1cf6c010cdf9b0597))
+
+### Features
+
+* *(api)* Return the user object instead of user_id on time entries
+* *(api)* Return all legal links from /info
+* *(api)* Include bot owner on bot user endpoints and created_by
+* *(api)* Support structured domain error details
+* *(api)* Expose project trash and subtree counts
+* *(api)* Add reauthenticated OIDC identity management endpoints
+* *(attachments)* Show checkerboard behind transparent images in lightbox (#4292)
+* *(auth)* Sync teams from oidc groups claim (#4311)
+* *(auth)* Log a deprecation warning on openid fallback matches
+* *(auth)* Warn once per provider about enabled fallback options
+* *(auth)* Persist linked OIDC identities and authenticate local accounts
+* *(auth)* Preview verified OIDC accounts and reject unavailable identities
+* *(config)* Add keyed legal links and deprecate imprinturl/privacyurl
+* *(db)* Detect unaccent extension on postgres
+* *(db)* Make ILIKE accent-insensitive when unaccent is available
+* *(frontend)* Add balancedRows helper to split items into even rows
+* *(frontend)* Mark task done and go back with Shift+T
+* *(frontend)* Add datemath evaluator
+* *(frontend)* Render configurable legal links
+* *(frontend)* Show bot owner in bot badge tooltip
+* *(frontend)* Open task glance tooltip instantly right after another one closed
+* *(frontend)* Log and edit private time entries
+* *(frontend)* Support read-only task rows
+* *(frontend)* Add task trash queries and cache invalidation
+* *(frontend)* Show trashed time entries read-only
+* *(frontend)* Add the task trash page
+* *(frontend)* Offer undo after deleting a task
+* *(frontend)* Show task trash restore notices
+* *(frontend)* Handle project count queries independently
+* *(frontend)* Add project trash queries and cache updates
+* *(frontend)* Add the project trash page
+* *(frontend)* Preview project deletion and offer undo
+* *(frontend)* Offer permitted trashed parent restoration
+* *(frontend)* Gate permanent deletion with server permissions
+* *(frontend)* Restore focus after removing trash rows and notices
+* *(frontend)* Pause action toast expiry on hover and focus
+* *(frontend)* Transfer focus to delete navigation toasts
+* *(frontend)* Confirm emptying other users trash
+* *(frontend)* Add strings for linked accounts and identity errors
+* *(frontend)* Add query module for linked identities
+* *(frontend)* Support OIDC linking redirects with account selection
+* *(frontend)* Add linked account settings and verified callback confirmation
+* *(migration)* Add a helper to mask credentials in error urls
+* *(migration)* Index the columns that reference stored files
+* *(models)* Add errors for linking user identities
+* *(projects)* Add trash metadata and access filtering
+* *(projects)* Trash and restore project trees
+* *(projects)* Expose blocked restore root details
+* *(projects)* Suspend link shares while projects are trashed
+* *(projects)* Skip trashed projects in reminder jobs
+* *(projects)* Exclude trashed projects from instance counts
+* *(projects)* Audit and announce permanent project deletion
+* *(projects)* Count trash and preserve other users deletions
+* *(pwa)* Register a share target for creating tasks
+* *(quick-add-magic)* Parse spelled out relative dates like "in two weeks"
+* *(table)* Add quick-add task input below the table view
+* *(tasks)* Allow disabling AddTask autofocus
+* *(tasks)* Prefill quick add from home query params
+* *(tasks)* Record who moves tasks to trash
+* *(tasks)* Add task trash lifecycle and permissions
+* *(tasks)* Audit and announce task trash events
+* *(time-tracking)* Show who tracked each time entry
+* *(time-tracking)* Hint when starting a timer backdates the running one
+* *(time-tracking)* Hint when a backdated timer ends completed entries
+* *(time-tracking)* Show and stop running timer on its task
+* *(time-tracking)* Preserve time logged against trashed tasks
+* *(time-tracking)* Support entries without a container
+* *(user)* Attach bot owner to bot users in central loaders
+* *(user)* Lock account after 10 failed password attempts
+* *(user)* Notify users when an OIDC identity is linked
+* *(utils)* Add CheckJSONForNUL to detect \u0000 escapes in JSON
+* *(veans)* Add cancellable ReadLineContext to the prompter
+* *(veans)* Accept a pasted OAuth redirect URL alongside the loopback callback
+* *(webhooks)* Allow selecting all events or a whole event group
+* Add basic auth config for health endpoints ([f77a1f9](f77a1f9ea0eea523f8a99a4f63f0bd95c57edda2))
+
+### Miscellaneous Tasks
+
+* *(client)* Regenerate frontend client for time entry create docs
+* *(dev)* Run paseo worktree setup inside devenv
+* *(devenv)* Update nixpkgs for pnpm 12.9
+* *(errors)* Use error codes not taken by other pending changes
+* *(frontend)* Regenerate API client for bot_owner
+* *(frontend)* Regenerate API client for health endpoint docs
+* *(frontend)* Regenerate API client for dropped TIFF support
+* *(frontend)* Generate container-free time entry client
+* *(frontend)* Regenerate the identity preview API client
+* *(i18n)* Update translations via Crowdin
+* *(plugins)* Regenerate the yaegi symbols for the identity endpoints
+* Generate task trash client and plugin symbols ([75721bb](75721bb82e8ae8c0c2f8da7b61ae9d54eae6f1c9))
+* Generate project trash client and plugin symbols ([d72e623](d72e623b7492226a789886f35cb0a346094a2bd9))
+* Mark generated frontend client as linguist-generated ([87e19fb](87e19fbbfd00ce2171bfb40d8f6f951b72360e8a))
+
+### Other
+
+* *(crowdin)* Allow triggering the sync manually
+* *(other)* Enable unaccent on the postgres test job
+* *(other)* [skip ci] Updated yaegi symbols
+* *(other)* [skip ci] Updated swagger docs
+
+### Performance
+
+* *(filters)* Look up matching tasks by id set when pruning filter kanban views
+* *(migration)* Check the imported task hierarchy for cycles once instead of per relation
+* *(projects)* Insert rebuilt project ancestors in batches
+* *(tasks)* Index task relations by other task and kind
+
+### Refactor
+
+* *(filters)* Drop hand-rolled filter depth counter
+* *(frontend)* Stack bottom banners in one container
+* *(frontend)* Share deleted-item attribution labels
+* *(frontend)* Share the view switch wrapper
+* *(frontend)* Handle project trash errors per query
+* *(frontend)* Share task and project trash notices
+* *(frontend)* Share trash list actions and state
+* *(frontend)* Resolve the default view before delete navigation
+* *(frontend)* Share loaded-user guards for admin and TOTP settings
+* *(frontend)* Share password and TOTP confirmation fields
+* *(openid)* Extract issuer to provider lookup from the admin user view
+* *(projects)* Centralize trashed project authorization
+* *(projects)* Return a dedicated trash list type
+* *(projects)* Build trash queries with the query builder
+* *(quick-add-magic)* Share number word parsing with repeat parser
+* *(routes)* Extract config-driven basic auth from metrics
+* *(tasks)* Extract hierarchy edge helper for the import cycle check
+* *(tasks)* Extract task view placement
+* *(tasks)* Extract locked write-permission recheck into lockTaskForWrite
+* *(time-tracking)* Extract elapsed timer into useElapsed
+* *(trash)* Share the retention setting
+* *(user)* Extract account lockout from TOTP failure handling
+* *(user)* Share password and TOTP reauthentication
+* *(utils)* Share rune-safe string truncation
+
+### Styling
+
+* *(frontend)* Give the bottom banners the toast shadow
+* *(projects)* Simplify and format project trash code
+* *(tasks)* Format literals and trim comments
+
+### Testing
+
+* *(api)* Cover NUL rejection in comment bodies on v1 and v2
+* *(e2e)* Cover searching a filtered list view for a term containing "in"
+* *(e2e)* Cover linked identity login, retries and duplicate rejection
+* *(frontend)* Cover task trash and kanban undo
+* *(frontend)* Cover the OpenID callback login flow
+* *(kanban)* Wait for the task card to be actionable before dragging it off screen
+* *(openid)* Pin callback login behaviour with a signing mock IdP
+* *(openid)* Count code exchanges in the mock IdP
+* *(projects)* Cover purge retention and stored invariants
+* *(projects)* Share trash admin and webhook test setup
+* *(table)* Cover creating tasks from the table view
+* *(tasks)* Grant write access where tests move tasks out of unwritable projects
+* *(tasks)* Cover race move to writable project and bulk update race
+* *(user)* Assert lockout event and notification
+* Pin error values for filter nesting and relation hierarchy limits ([294aad0](294aad055f407ddcd4913d94cb43e6253d5af904))
+
 ## [2.7.1] - 2026-10-20
 
 ### Bug Fixes
