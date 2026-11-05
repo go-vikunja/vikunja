@@ -8,7 +8,10 @@
 			<span>{{ $t('project.share.accessLossConfirm.header') }}</span>
 		</template>
 		<template #text>
-			<p v-if="counts" class="tw:text-balance">
+			<p
+				v-if="counts"
+				class="tw:text-balance"
+			>
 				{{ $t('project.share.accessLossConfirm.text', {created}) }}
 			</p>
 			<ProjectAccessCleanupList
