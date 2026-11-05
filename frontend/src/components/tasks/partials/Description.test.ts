@@ -3,6 +3,11 @@ import {shallowMount} from '@vue/test-utils'
 
 import Description from './Description.vue'
 
+vi.mock('vue-i18n', async (importOriginal) => ({
+	...await importOriginal<typeof import('vue-i18n')>(),
+	useI18n: () => ({t: (key: string) => key}),
+}))
+
 vi.mock('@/components/input/AsyncEditor', () => ({
 	default: {template: '<div class="tiptap__task-description stub-editor" />'},
 }))
