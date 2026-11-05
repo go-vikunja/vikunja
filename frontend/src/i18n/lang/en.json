@@ -1168,6 +1168,7 @@
       "removeDueDate": "Remove due date",
       "removeStartDate": "Remove start date",
       "removeEndDate": "Remove end date",
+      "removeColor": "Remove color",
       "removeRepeat": "Remove repeat interval",
       "removeAssignee": "Remove {user} as assignee",
       "move": "Move task to a different project",
@@ -1191,28 +1192,21 @@
       "title": "Task detail",
       "markAsDone": "Mark '{task}' as done",
       "scrollToBottom": "Scroll to bottom",
-      "organization": "Organization",
-      "management": "Management",
-      "dateAndTime": "Date and time",
+      "moreActions": "More actions",
+      "properties": {
+        "dueDate": "Due date",
+        "startDate": "Start date",
+        "endDate": "End date"
+      },
       "actions": {
-        "assign": "Assign to User",
-        "label": "Add Labels",
-        "priority": "Set Priority",
-        "dueDate": "Set Due Date",
-        "startDate": "Set Start Date",
-        "endDate": "Set End Date",
-        "reminders": "Set Reminders",
-        "repeatAfter": "Set Repeating Interval",
-        "percentDone": "Set Progress",
-        "attachments": "Add Attachments",
+        "attachments": "Add attachments",
         "timeTracking": "Track time",
-        "relatedTasks": "Add Relation",
+        "relatedTasks": "Add relation",
         "moveProject": "Move",
         "duplicate": "Duplicate",
-        "color": "Set Color",
         "delete": "Delete",
-        "favorite": "Add to Favorites",
-        "unfavorite": "Remove from Favorites"
+        "favorite": "Add to favorites",
+        "unfavorite": "Remove from favorites"
       }
     },
     "attributes": {
@@ -1304,6 +1298,7 @@
     },
     "assignee": {
       "placeholder": "Type to assign a user…",
+      "placeholderMore": "Assign another…",
       "selectPlaceholder": "Assign this user",
       "assignSuccess": "The user has been assigned successfully.",
       "unassignSuccess": "The user has been unassigned successfully."
@@ -1371,9 +1366,16 @@
       "dateAndTime": "Date and time"
     },
     "repeat": {
-      "everyDay": "Every Day",
-      "everyWeek": "Every Week",
-      "every30d": "Every 30 Days",
+      "everyDay": "Every day",
+      "everyWeek": "Every week",
+      "every30d": "Every 30 days",
+      "summary": {
+        "minutes": "Every minute | Every {count} minutes",
+        "hours": "Every hour | Every {count} hours",
+        "days": "Every day | Every {count} days",
+        "weeks": "Every week | Every {count} weeks",
+        "fromCurrentDate": "{interval}, from completion date"
+      },
       "mode": "Repeat mode",
       "monthly": "Monthly",
       "fromCurrentDate": "From completion date",

@@ -3,6 +3,7 @@
 		<select
 			v-model.number="percentDone"
 			:disabled="disabled || undefined"
+			:aria-label="$t('task.attributes.percentDone')"
 		>
 			<option
 				v-for="option in PERCENT_OPTIONS"
