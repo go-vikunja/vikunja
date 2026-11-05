@@ -18,6 +18,7 @@ package user
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -90,8 +91,8 @@ func GetTOTPForUser(s *xorm.Session, user *User) (t *TOTP, err error) {
 }
 
 // EnrollTOTP creates a new TOTP entry for the user once their password checks out - it does not enable it yet.
-func EnrollTOTP(s *xorm.Session, user *User, password string) (t *TOTP, err error) {
-	if err = CheckReauthPassword(user, password); err != nil {
+func EnrollTOTP(ctx context.Context, s *xorm.Session, user *User, password string) (t *TOTP, err error) {
+	if err = CheckReauthPassword(ctx, s, user, password); err != nil {
 		return
 	}
 
@@ -122,8 +123,8 @@ func EnrollTOTP(s *xorm.Session, user *User, password string) (t *TOTP, err erro
 }
 
 // EnableTOTP enables totp for a user once their password checks out. The passcode verifies the user has a working totp setup.
-func EnableTOTP(s *xorm.Session, u *User, password, passcode string) (err error) {
-	if err = CheckReauthPassword(u, password); err != nil {
+func EnableTOTP(ctx context.Context, s *xorm.Session, u *User, password, passcode string) (err error) {
+	if err = CheckReauthPassword(ctx, s, u, password); err != nil {
 		return
 	}
 
@@ -147,25 +148,17 @@ func DisableTOTP(s *xorm.Session, user *User) (err error) {
 	return
 }
 
-// Needs a passcode so a stolen session plus the password can't strip the second factor. Rolls s back on failure.
-func DisableTOTPWithReauth(s *xorm.Session, u *User, password, passcode string) error {
-	err := ThrottleReauth(u.ID, func() error {
-		if err := CheckUserPassword(u, password); err != nil {
-			return err
-		}
-		if passcode == "" {
-			return ErrInvalidTOTPPasscode{}
-		}
-		_, err := ValidateTOTPPasscode(s, &TOTPPasscode{User: u, Passcode: passcode})
+func DisableTOTPWithReauth(ctx context.Context, s *xorm.Session, u *User, password, passcode string) error {
+	if err := Reauthenticate(ctx, s, u, password, passcode); err != nil {
 		return err
-	})
+	}
+
+	enabled, err := TOTPEnabledForUser(s, u)
 	if err != nil {
-		// Rolled back first: HandleFailedTOTPAuth needs its own write lock on SQLite.
-		_ = s.Rollback()
-		if passcode != "" && IsErrInvalidTOTPPasscode(err) {
-			HandleFailedTOTPAuth(u)
-		}
 		return err
+	}
+	if !enabled {
+		return ErrTOTPNotEnabled{}
 	}
 
 	return DisableTOTP(s, u)

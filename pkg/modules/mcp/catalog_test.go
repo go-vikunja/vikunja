@@ -83,3 +83,44 @@ func TestCatalogTools_RejectsUnknownArguments(t *testing.T) {
 	assert.True(t, result.IsError)
 	assert.Contains(t, result.Content[0].(*sdk.TextContent).Text, "invalid arguments for find_action")
 }
+
+func TestCatalogTools_EmptyResultHasHint(t *testing.T) {
+	m, ctx := newTestCaller(t)
+	srv := sdk.NewServer(&sdk.Implementation{
+		Name:    "test",
+		Version: "1",
+	}, nil)
+	var catalog []*tool
+	for _, tl := range m.order {
+		if !tl.typed {
+			catalog = append(catalog, tl)
+		}
+	}
+	m.installCatalogTools(srv, catalog)
+	clientTransport, serverTransport := sdk.NewInMemoryTransports()
+	ss, err := srv.Connect(ctx, serverTransport, nil)
+	require.NoError(t, err)
+	defer ss.Close()
+	client := sdk.NewClient(&sdk.Implementation{
+		Name:    "test-client",
+		Version: "1",
+	}, nil)
+	cs, err := client.Connect(ctx, clientTransport, nil)
+	require.NoError(t, err)
+	defer cs.Close()
+
+	miss, err := cs.CallTool(ctx, &sdk.CallToolParams{
+		Name:      "find_action",
+		Arguments: map[string]any{"resource": "thing"},
+	})
+	require.NoError(t, err)
+	assert.False(t, miss.IsError)
+	assert.Contains(t, miss.Content[0].(*sdk.TextContent).Text, `"hint":"No action matched.`)
+
+	hit, err := cs.CallTool(ctx, &sdk.CallToolParams{
+		Name:      "find_action",
+		Arguments: map[string]any{"resource": "things"},
+	})
+	require.NoError(t, err)
+	assert.NotContains(t, hit.Content[0].(*sdk.TextContent).Text, "hint")
+}

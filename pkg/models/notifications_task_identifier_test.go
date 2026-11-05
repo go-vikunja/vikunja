@@ -69,6 +69,7 @@ func TestNotificationsIncludeProjectPrefix(t *testing.T) {
 	t.Run("task comment", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		grantUser1WriteOnProject3(t, s)
 
 		task, err := GetTaskByIDSimple(s, taskIdentifierTestTaskID)
 		require.NoError(t, err)
@@ -94,6 +95,7 @@ func TestNotificationsIncludeProjectPrefix(t *testing.T) {
 	t.Run("task assigned", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		grantUser1WriteOnProject3(t, s)
 
 		task, err := GetTaskByIDSimple(s, taskIdentifierTestTaskID)
 		require.NoError(t, err)

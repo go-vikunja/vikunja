@@ -58,7 +58,11 @@ func TestTaskRelation_Create(t *testing.T) {
 		defer s.Close()
 		events.ClearDispatchedEvents()
 
-		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  1,
+			Permission: PermissionWrite,
+		}
 		rel := TaskRelation{
 			TaskID:       1,
 			OtherTaskID:  2,
@@ -81,7 +85,7 @@ func TestTaskRelation_Create(t *testing.T) {
 
 		rel := TaskRelation{
 			TaskID:       1,
-			OtherTaskID:  13,
+			OtherTaskID:  32,
 			RelationKind: RelationKindSubtask,
 		}
 		err := rel.Create(s, &user.User{ID: 1})
@@ -90,7 +94,7 @@ func TestTaskRelation_Create(t *testing.T) {
 		require.NoError(t, err)
 		db.AssertExists(t, "task_relations", map[string]interface{}{
 			"task_id":       1,
-			"other_task_id": 13,
+			"other_task_id": 32,
 			"relation_kind": RelationKindSubtask,
 			"created_by_id": 1,
 		}, false)
@@ -435,7 +439,11 @@ func TestTaskRelation_Delete(t *testing.T) {
 		defer s.Close()
 		events.ClearDispatchedEvents()
 
-		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  1,
+			Permission: PermissionWrite,
+		}
 		rel := TaskRelation{
 			TaskID:       1,
 			OtherTaskID:  29,

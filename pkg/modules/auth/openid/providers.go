@@ -215,6 +215,19 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
+func FindProviderByIssuer(providers []*Provider, issuer string) *Provider {
+	for _, provider := range providers {
+		providerIssuer, err := provider.Issuer()
+		if err != nil {
+			continue
+		}
+		if providerIssuer == issuer {
+			return provider
+		}
+	}
+	return nil
+}
+
 // getCachedProvider returns the provider from keyvalue without re-establishing
 // the live OIDC connection, so the logout path never blocks on an unreachable OP.
 func getCachedProvider(key string) (provider *Provider, err error) {

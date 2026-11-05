@@ -18,6 +18,7 @@ package user
 
 import (
 	"strconv"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/i18n"
@@ -338,4 +339,39 @@ func (n *AccountDeletedNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *AccountDeletedNotification) Name() string {
 	return "user.deleted"
+}
+
+// IdentityLinkedNotification tells a user an OpenID identity was linked to their account.
+type IdentityLinkedNotification struct {
+	User         *User
+	ProviderName string
+	Linked       time.Time
+}
+
+// ToMail returns the mail notification for IdentityLinkedNotification
+func (n *IdentityLinkedNotification) ToMail(lang string) *notifications.Mail {
+	return notifications.NewMail().
+		Subject(i18n.T(lang, "notifications.identity.linked.subject", n.ProviderName)).
+		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
+		Line(i18n.T(lang, "notifications.identity.linked.message", notifications.EscapeMarkdown(n.ProviderName), n.linkedInUserTimezone().Format("2006-01-02 15:04 MST"))).
+		Line(i18n.T(lang, "notifications.identity.linked.warning")).
+		Action(i18n.T(lang, "notifications.common.actions.go_to_settings"), config.ServicePublicURL.GetString()+"user/settings/linked-accounts")
+}
+
+func (n *IdentityLinkedNotification) linkedInUserTimezone() time.Time {
+	loc, err := time.LoadLocation(n.User.Timezone)
+	if n.User.Timezone == "" || err != nil {
+		loc = config.GetTimeZone()
+	}
+	return n.Linked.In(loc)
+}
+
+// ToDB returns the IdentityLinkedNotification notification in a format which can be saved in the db
+func (n *IdentityLinkedNotification) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *IdentityLinkedNotification) Name() string {
+	return "identity.linked"
 }

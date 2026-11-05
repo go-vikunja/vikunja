@@ -171,6 +171,10 @@ func (t *Task) setTaskAssignees(assignees []*user.User) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/{userID} [delete]
 func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
+	if _, err = lockTaskForWrite(s, a, la.TaskID); err != nil {
+		return err
+	}
+
 	_, err = s.Delete(&TaskAssginee{TaskID: la.TaskID, UserID: la.UserID})
 	if err != nil {
 		return err
@@ -214,8 +218,11 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Router /tasks/{taskID}/assignees [put]
 func (la *TaskAssginee) Create(s *xorm.Session, a web.Auth) (err error) {
 
-	// Get the project to perform later checks
-	project, err := GetProjectSimpleByTaskID(s, la.TaskID)
+	locked, err := lockTaskForWrite(s, a, la.TaskID)
+	if err != nil {
+		return err
+	}
+	project, err := GetProjectSimpleByID(s, locked.ProjectID)
 	if err != nil {
 		return
 	}
@@ -374,7 +381,7 @@ type BulkAssignees struct {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/assignees/bulk [post]
 func (ba *BulkAssignees) Create(s *xorm.Session, a web.Auth) (err error) {
-	task, err := GetTaskByIDSimple(s, ba.TaskID)
+	task, err := lockTaskForWrite(s, a, ba.TaskID)
 	if err != nil {
 		return
 	}

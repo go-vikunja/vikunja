@@ -178,36 +178,14 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 	return iss.Issuer, nil
 }
 
-// enforceTOTPIfRequired mirrors the TOTP gate from pkg/routes/api/v1/login.go
-// for the OIDC flow. Returns nil when the user does not have TOTP enabled.
-// See GHSA-8jvc-mcx6-r4cg.
+// Not CheckTOTPCountingFailures: its rollback would drop a just-created user (GHSA-8jvc-mcx6-r4cg).
 func enforceTOTPIfRequired(s *xorm.Session, u *user.User, totpPasscode string) error {
-	totpEnabled, err := user.TOTPEnabledForUser(s, u)
-	if err != nil {
-		return err
-	}
-	if !totpEnabled {
-		return nil
-	}
-
-	if totpPasscode == "" {
-		return user.ErrInvalidTOTPPasscode{}
-	}
-
-	_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{
-		User:     u,
-		Passcode: totpPasscode,
-	})
-	if err != nil {
+	if err := user.CheckTOTPIfEnabled(s, u, totpPasscode); err != nil {
 		return err
 	}
 
 	// Reset the counter so old failed attempts don't trip a later lockout.
-	if err := keyvalue.Del(u.GetFailedTOTPAttemptsKey()); err != nil {
-		return err
-	}
-
-	return nil
+	return keyvalue.Del(u.GetFailedTOTPAttemptsKey())
 }
 
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code
@@ -277,7 +255,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	defer events.CleanupPending(s)
 
 	// Check if we have seen this user before
-	u, err := getOrCreateUser(s, cl, provider, idToken)
+	u, linked, err := getOrCreateUser(s, cl, provider, idToken)
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
@@ -328,7 +306,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 
 	events.DispatchPending(ctx, s)
 
-	if cl.Picture != "" {
+	if cl.Picture != "" && !linked {
 		syncUserAvatarFromOpenID(ctx, u.ID, cl.Picture)
 	}
 
@@ -481,7 +459,23 @@ func logFallbackDeprecation(provider *Provider, u *user.User) {
 	)
 }
 
-func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
+// Disabled or locked users are returned without error so the caller refuses the login.
+func getLinkedUser(s *xorm.Session, idToken *oidc.IDToken) (*user.User, bool, error) {
+	identity, found, err := user.GetIdentityByIssuerAndSubject(s, idToken.Issuer, idToken.Subject)
+	if err != nil || !found {
+		return nil, false, err
+	}
+	u, err := user.GetUserWithEmail(s, &user.User{ID: identity.UserID})
+	if err != nil && !user.IsErrUserStatusError(err) {
+		return nil, false, err
+	}
+	if u.IsBot() {
+		return nil, false, &user.ErrAccountIsBot{UserID: u.ID}
+	}
+	return u, true, nil
+}
+
+func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, linked bool, err error) {
 
 	// set defaults
 	fallbackMatchFound := false
@@ -494,14 +488,21 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		Subject: idToken.Subject,
 	})
 	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
-		return nil, err
+		return nil, false, err
 	}
 	alreadyCreatedFromIssuer = err == nil || user.IsErrUserStatusError(err)
 
 	// If the user exists but is disabled/locked, return early — don't update their profile or sync avatar.
 	// HandleCallback will reject the auth attempt.
 	if alreadyCreatedFromIssuer && user.IsErrUserStatusError(err) {
-		return u, nil
+		return u, false, nil
+	}
+
+	if !alreadyCreatedFromIssuer {
+		u, linked, err = getLinkedUser(s, idToken)
+		if err != nil || linked {
+			return u, linked, err
+		}
 	}
 
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
@@ -510,25 +511,21 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		for _, searchUser := range fallbackSearchUsers(cl, provider, idToken) {
 			u, err = user.GetUserWithEmail(s, searchUser)
 			if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
-				return nil, err
+				return nil, false, err
 			}
 			fallbackMatchFound = err == nil || user.IsErrUserStatusError(err)
 			if fallbackMatchFound {
 				logFallbackDeprecation(provider, u)
-			}
-
-			// Same as above: disabled/locked user found via fallback — return early.
-			if fallbackMatchFound && user.IsErrUserStatusError(err) {
-				return u, nil
-			}
-			if fallbackMatchFound {
+				if user.IsErrUserStatusError(err) {
+					return u, false, nil
+				}
 				break
 			}
 		}
 	}
 
 	if fallbackMatchFound && u.IsBot() {
-		return nil, &user.ErrAccountIsBot{UserID: u.ID}
+		return nil, false, &user.ErrAccountIsBot{UserID: u.ID}
 	}
 
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
@@ -546,23 +543,17 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 		u, err = auth.CreateUserWithRandomUsername(s, uu)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	} else if alreadyCreatedFromIssuer {
 
-		// try updating user.Name and/or user.Email if necessary
-		if cl.Email != u.Email {
-			u.Email = cl.Email
-		}
-		if cl.Name != u.Name {
-			u.Name = cl.Name
-		}
-
+		u.Email = cl.Email
+		u.Name = cl.Name
 		u.ExtraSettingsLinks = cl.ExtraSettingsLinks
 
 		u, err = user.UpdateUser(s, u, false)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	}
 
@@ -573,7 +564,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		}
 	}
 
-	return u, nil
+	return u, false, nil
 }
 
 // mergeClaims combines claims from token and userinfo based on the ForceUserInfo setting

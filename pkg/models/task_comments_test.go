@@ -73,6 +73,7 @@ func TestTaskComment_Create(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
@@ -100,6 +101,7 @@ func TestTaskComment_Create(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
@@ -159,7 +161,11 @@ func TestTaskComment_Delete(t *testing.T) {
 		defer s.Close()
 		events.ClearDispatchedEvents()
 
-		share := &LinkSharing{ID: 2, ProjectID: 2, Permission: PermissionWrite}
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  1,
+			Permission: PermissionWrite,
+		}
 		tc := &TaskComment{ID: 1, TaskID: 1}
 		require.NoError(t, tc.Delete(s, share))
 		require.NoError(t, s.Commit())

@@ -2750,6 +2750,91 @@ func (err *ErrOpenIDBadRequestWithDetails) Error() string {
 	return err.Message
 }
 
+// ErrUserIdentityLinkedToOtherUser represents an error where an OIDC identity
+// already belongs to another user, either linked or as an OIDC-created user.
+type ErrUserIdentityLinkedToOtherUser struct {
+	Issuer string
+}
+
+// IsErrUserIdentityLinkedToOtherUser checks if an error is ErrUserIdentityLinkedToOtherUser.
+func IsErrUserIdentityLinkedToOtherUser(err error) bool {
+	var e *ErrUserIdentityLinkedToOtherUser
+	return errors.As(err, &e)
+}
+
+func (err *ErrUserIdentityLinkedToOtherUser) Error() string {
+	return fmt.Sprintf("OpenID identity is already linked to another user [Issuer: %s]", err.Issuer)
+}
+
+// ErrCodeUserIdentityLinkedToOtherUser holds the unique world-error code of this error
+const ErrCodeUserIdentityLinkedToOtherUser = 15002
+
+// HTTPError holds the http error description
+func (err *ErrUserIdentityLinkedToOtherUser) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeUserIdentityLinkedToOtherUser,
+		Message:  "This account at the identity provider is already linked to another account.",
+	}
+}
+
+// ErrUserIdentityProviderAlreadyLinked represents an error where a user
+// already has an identity from the same issuer.
+type ErrUserIdentityProviderAlreadyLinked struct {
+	UserID int64
+	Issuer string
+}
+
+// IsErrUserIdentityProviderAlreadyLinked checks if an error is ErrUserIdentityProviderAlreadyLinked.
+func IsErrUserIdentityProviderAlreadyLinked(err error) bool {
+	var e *ErrUserIdentityProviderAlreadyLinked
+	return errors.As(err, &e)
+}
+
+func (err *ErrUserIdentityProviderAlreadyLinked) Error() string {
+	return fmt.Sprintf("User already has an identity from this issuer [UserID: %d, Issuer: %s]", err.UserID, err.Issuer)
+}
+
+// ErrCodeUserIdentityProviderAlreadyLinked holds the unique world-error code of this error
+const ErrCodeUserIdentityProviderAlreadyLinked = 15003
+
+// HTTPError holds the http error description
+func (err *ErrUserIdentityProviderAlreadyLinked) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeUserIdentityProviderAlreadyLinked,
+		Message:  "You already linked an account of this provider. Unlink it first.",
+	}
+}
+
+// ErrUserIdentityDoesNotExist represents an error where a linked identity
+// does not exist or belongs to another user.
+type ErrUserIdentityDoesNotExist struct {
+	ID int64
+}
+
+// IsErrUserIdentityDoesNotExist checks if an error is ErrUserIdentityDoesNotExist.
+func IsErrUserIdentityDoesNotExist(err error) bool {
+	var e *ErrUserIdentityDoesNotExist
+	return errors.As(err, &e)
+}
+
+func (err *ErrUserIdentityDoesNotExist) Error() string {
+	return fmt.Sprintf("Linked identity does not exist [ID: %d]", err.ID)
+}
+
+// ErrCodeUserIdentityDoesNotExist holds the unique world-error code of this error
+const ErrCodeUserIdentityDoesNotExist = 15004
+
+// HTTPError holds the http error description
+func (err *ErrUserIdentityDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeUserIdentityDoesNotExist,
+		Message:  "This linked account does not exist.",
+	}
+}
+
 // ==============
 // Session Errors
 // ==============

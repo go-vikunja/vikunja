@@ -84,7 +84,7 @@ func trashedTaskAllows(s *xorm.Session, a web.Auth, trashed *Task, can func(*Pro
 
 // CanRestore checks whether the auth may restore the trashed task.
 func (t *Task) CanRestore(s *xorm.Session, a web.Auth) (bool, error) {
-	can, err := t.canDoTrashedTask(lockingSession(s), a, (*Project).CanWrite)
+	can, err := t.canDoTrashedTask(s, a, (*Project).CanWrite)
 	if IsErrTaskDoesNotExist(err) {
 		return false, taskRestoreError(s, a, t.ID, err)
 	}

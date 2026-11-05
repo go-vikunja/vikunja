@@ -141,13 +141,34 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 // This action is irrevocable.
 // Public to allow deletion from the CLI.
 func DeleteUser(s *xorm.Session, u *user.User) (err error) {
+	ownedBots := []*user.User{}
+	if err = s.Where("bot_owner_id = ?", u.ID).Find(&ownedBots); err != nil {
+		return err
+	}
+	ownerIDs := []int64{u.ID}
+	for _, bot := range ownedBots {
+		ownerIDs = append(ownerIDs, bot.ID)
+	}
+	projects := []*Project{}
+	if err = s.Unscoped().In("owner_id", ownerIDs).Find(&projects); err != nil {
+		return err
+	}
+	projectIDs, _ := getProjectIDsFromProjects(projects)
+	views, err := lockProjectTreeViewsForPositionUpdate(s, projectIDs...)
+	if err != nil {
+		return err
+	}
+	return deleteUserInViews(s, u, views)
+}
+
+func deleteUserInViews(s *xorm.Session, u *user.User, views []*ProjectView) (err error) {
 	// Delete any bot users owned by this user first (cascades their data too).
 	var ownedBots []*user.User
 	if err = s.Where("bot_owner_id = ?", u.ID).Find(&ownedBots); err != nil {
 		return err
 	}
 	for _, bot := range ownedBots {
-		if err = DeleteUser(s, bot); err != nil {
+		if err = deleteUserInViews(s, bot, views); err != nil {
 			return err
 		}
 	}
@@ -162,7 +183,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 			// Child projects are deleted with their parent
 			continue
 		}
-		if err = hardDeleteProject(s, p, nil); err != nil {
+		if err = hardDeleteProjectInViews(s, p, nil, views); err != nil {
 			return err
 		}
 	}
@@ -186,6 +207,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		{"user_id", &Favorite{}},
 		{"owner_id", &APIToken{}},
 		{"created_by_id", &Webhook{}},
+		{"user_id", &user.Identity{}},
 	}
 
 	for _, entity := range relatedEntities {

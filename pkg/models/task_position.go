@@ -86,6 +86,20 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return canRead, nil
 }
 
+func lockTaskInView(s *xorm.Session, a web.Auth, view *ProjectView, taskID int64) error {
+	if _, err := lockTaskForWrite(s, a, taskID); err != nil {
+		return err
+	}
+	fits, err := taskFitsView(s, a, view, taskID)
+	if err != nil {
+		return err
+	}
+	if !fits {
+		return ErrGenericForbidden{}
+	}
+	return nil
+}
+
 func taskFitsView(s *xorm.Session, a web.Auth, view *ProjectView, taskID int64) (bool, error) {
 	if filterID := GetSavedFilterIDFromProjectID(view.ProjectID); filterID > 0 {
 		return taskMatchesSavedFilterView(s, a, view, filterID, taskID)
@@ -347,6 +361,17 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/position [post]
 func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
+	view, err := GetProjectViewByID(s, tp.ProjectViewID)
+	if err != nil {
+		return err
+	}
+	if err = lockViewsForPositionUpdate(s, []*ProjectView{view}); err != nil {
+		return err
+	}
+	if err = lockTaskInView(s, a, view, tp.TaskID); err != nil {
+		return err
+	}
+
 	err = updateTaskPosition(s, a, tp)
 	if err != nil {
 		return err

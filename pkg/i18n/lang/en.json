@@ -12,6 +12,13 @@
             "requested": "Someone requested to change the email address of your account to %[1]s. Your current address stays active until the new one is confirmed.",
             "warning": "If this wasn't you, change your password immediately and cancel the pending change in your account settings."
         },
+        "identity": {
+            "linked": {
+                "subject": "%[1]s was linked to your Vikunja account",
+                "message": "Your %[1]s account was linked to your Vikunja account on %[2]s. You can now log in with it.",
+                "warning": "If this wasn't you, change your password immediately, then unlink it in your account settings."
+            }
+        },
         "password": {
             "changed": {
                 "subject": "Your Password on Vikunja was changed",

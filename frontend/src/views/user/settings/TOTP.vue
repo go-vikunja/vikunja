@@ -4,14 +4,11 @@
 		:title="$t('user.settings.totp.title')"
 	>
 		<template v-if="status.isSuccess.value && !totp.enabled && !totp.secret">
-			<FormField
-				id="totpEnrollPassword"
-				v-model="totpPassword"
-				:label="$t('user.settings.totp.enterPassword')"
-				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-				autocomplete="current-password"
-				type="password"
-				@keyup.enter="totpEnroll"
+			<ReauthFields
+				v-model:password="totpPassword"
+				password-id="totpEnrollPassword"
+				:password-label="$t('user.settings.totp.enterPassword')"
+				@submit="totpEnroll"
 			/>
 			<XButton
 				:loading="enrollMutation.isPending.value"
@@ -36,24 +33,14 @@
 			<p>
 				{{ $t('user.settings.totp.confirmNotice') }}
 			</p>
-			<FormField
-				id="totpConfirmPassword"
-				v-model="totpPassword"
-				:label="$t('user.settings.totp.enterPassword')"
-				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-				autocomplete="current-password"
-				type="password"
-				@keyup.enter="totpConfirm"
-			/>
-			<FormField
-				id="totpConfirmPasscode"
-				v-model="totpConfirmPasscode"
-				:label="$t('user.settings.totp.passcode')"
-				autocomplete="one-time-code"
-				:placeholder="$t('user.settings.totp.passcodePlaceholder')"
-				type="text"
-				inputmode="numeric"
-				@keyup.enter="totpConfirm"
+			<ReauthFields
+				v-model:password="totpPassword"
+				v-model:passcode="totpConfirmPasscode"
+				password-id="totpConfirmPassword"
+				passcode-id="totpConfirmPasscode"
+				:password-label="$t('user.settings.totp.enterPassword')"
+				show-passcode
+				@submit="totpConfirm"
 			/>
 			<XButton
 				:loading="enableMutation.isPending.value"
@@ -75,24 +62,15 @@
 				</XButton>
 			</p>
 			<div v-if="totpDisableForm">
-				<FormField
-					id="currentPassword"
-					v-model="totpDisablePassword"
-					v-focus
-					:label="$t('user.settings.totp.enterPassword')"
-					:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-					type="password"
-					@keyup.enter="totpDisable"
-				/>
-				<FormField
-					id="totpDisablePasscode"
-					v-model="totpDisablePasscode"
-					:label="$t('user.settings.totp.passcode')"
-					autocomplete="one-time-code"
-					:placeholder="$t('user.settings.totp.passcodePlaceholder')"
-					type="text"
-					inputmode="numeric"
-					@keyup.enter="totpDisable"
+				<ReauthFields
+					v-model:password="totpDisablePassword"
+					v-model:passcode="totpDisablePasscode"
+					password-id="currentPassword"
+					passcode-id="totpDisablePasscode"
+					:password-label="$t('user.settings.totp.enterPassword')"
+					show-passcode
+					focus
+					@submit="totpDisable"
 				/>
 				<XButton
 					danger
@@ -127,7 +105,7 @@ import {
 	useEnableTotpMutation,
 	useDisableTotpMutation,
 } from '@/client/queries/totp'
-import FormField from '@/components/input/FormField.vue'
+import ReauthFields from '@/components/user/ReauthFields.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
