@@ -20,6 +20,7 @@ func init() {
 		"CreateTestEngine":               reflect.ValueOf(db.CreateTestEngine),
 		"DatabasePathMemory":             reflect.ValueOf(constant.MakeFromLiteral("\"memory\"", token.STRING, 0)),
 		"Dump":                           reflect.ValueOf(db.Dump),
+		"Forget":                         reflect.ValueOf(db.Forget),
 		"GetDialect":                     reflect.ValueOf(db.GetDialect),
 		"ILIKE":                          reflect.ValueOf(db.ILIKE),
 		"InitFixtures":                   reflect.ValueOf(db.InitFixtures),
