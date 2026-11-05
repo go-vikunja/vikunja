@@ -29,7 +29,7 @@
 		</div>
 
 		<ReminderDetail
-			:disabled="disabled"
+			v-if="!disabled"
 			:clear-after-update="true"
 			:default-relative-to="defaultRelativeTo"
 			:allow-absolute="allowAbsolute"
