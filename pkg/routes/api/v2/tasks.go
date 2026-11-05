@@ -21,14 +21,17 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/conditional"
+	"xorm.io/xorm"
 )
 
 // expandDoc lists the accepted expand values; shared between the by-id and
@@ -123,9 +126,108 @@ func RegisterTaskRoutes(api huma.API) {
 
 func init() { AddRouteRegistrar(RegisterTaskRoutes) }
 
+// repeats_rrule is declared on each v2 single-task body (read, create, write) rather than in a
+// shared embedded struct: Huma builds its $schema wrapper with reflect.StructOf, which panics on
+// an embedded single-pointer struct (TestRegisterAllCreatesAllSchemaLinks). It is never on
+// models.Task, so v1's wire shape and the list and bulk endpoints are unchanged.
+// TestTaskRuleTextSchema_OpenAPI keeps the three doc tags identical.
+
+// ruleTextOf is the one fill helper for repeats_rrule on every v2 single-task response: the
+// stored rule, or nil (absent) when the task does not repeat.
+func ruleTextOf(task *models.Task) *string {
+	if task.Repeats == "" {
+		return nil
+	}
+	text := task.Repeats
+	return &text
+}
+
+// applyRuleText is the one inbound helper: it hands a v2 body's repeats_rrule to the model as
+// Task.RepeatsText (nil when absent, "" to clear), which resolveV2Repeat maps onto the write
+// path. It never writes Task.Repeats, the trusted raw channel CalDAV, import and duplication
+// use: copying the text there would skip the rule-text validation and precedence.
+func applyRuleText(task *models.Task, text *string) {
+	task.RepeatsText = text
+}
+
 type taskReadOneBody struct {
 	models.Task
-	MaxPermission models.Permission `json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this task (0=read, 1=read/write, 2=admin)."`
+	MaxPermission  models.Permission `json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this task (0=read, 1=read/write, 2=admin)."`
+	RepeatsRRule   *string           `json:"repeats_rrule,omitempty" nullable:"true" doc:"The task's recurrence as RFC 5545 RRULE text (without DTSTART), e.g. FREQ=WEEKLY;BYDAY=MO. Any RFC 5545 rule part is accepted, plus BYEASTER as a documented extension. UNTIL must be a UTC date-time (ending in Z). On read, the stored rule exactly; absent when the task does not repeat. On write, whichever of repeat and repeats_rrule differs from the stored rule is the change; sending both changed and disagreeing is refused. An empty string clears the recurrence; null is treated as absent. Unchanged text (as a PATCH echoes it) is ignored and repeat decides, exactly as without this field: on PUT, omitting repeat clears the rule. A higher COUNT on otherwise unchanged text counts as unchanged, as for repeat, so COUNT cannot be raised through this field alone. Only single-task reads, create and update carry this field; list and bulk endpoints do not."`
+	InitialDueTime string            `json:"initial_due_time,omitempty" pattern:"^([01][0-9]|2[0-3]):[0-5][0-9]$" writeOnly:"true" doc:"Time of day, HH:MM in the task's effective zone, to seed the first occurrence of the task's rule when the task has no due date. The server picks the first instance strictly after now and it is stored as due_date. Never stored or returned. Needs a repeat rule after the write (repeat or repeats_rrule, on PATCH including the stored one); refused with 400 when the task has a due date (on PATCH send due_date null to replace one), has no rule, or is done. When no instance exists the task is saved without a due date and the response says why in reason."`
+}
+
+// taskCreateBody is the create input: the task plus its rule as text.
+type taskCreateBody struct {
+	models.Task
+	RepeatsRRule   *string `json:"repeats_rrule,omitempty" nullable:"true" doc:"The task's recurrence as RFC 5545 RRULE text (without DTSTART), e.g. FREQ=WEEKLY;BYDAY=MO. Any RFC 5545 rule part is accepted, plus BYEASTER as a documented extension. UNTIL must be a UTC date-time (ending in Z). On read, the stored rule exactly; absent when the task does not repeat. On write, whichever of repeat and repeats_rrule differs from the stored rule is the change; sending both changed and disagreeing is refused. An empty string clears the recurrence; null is treated as absent. Unchanged text (as a PATCH echoes it) is ignored and repeat decides, exactly as without this field: on PUT, omitting repeat clears the rule. A higher COUNT on otherwise unchanged text counts as unchanged, as for repeat, so COUNT cannot be raised through this field alone. Only single-task reads, create and update carry this field; list and bulk endpoints do not."`
+	InitialDueTime string  `json:"initial_due_time,omitempty" pattern:"^([01][0-9]|2[0-3]):[0-5][0-9]$" writeOnly:"true" doc:"Time of day, HH:MM in the task's effective zone, to seed the first occurrence of the task's rule when the task has no due date. The server picks the first instance strictly after now and it is stored as due_date. Never stored or returned. Needs a repeat rule after the write (repeat or repeats_rrule, on PATCH including the stored one); refused with 400 when the task has a due date (on PATCH send due_date null to replace one), has no rule, or is done. When no instance exists the task is saved without a due date and the response says why in reason."`
+}
+
+// taskWriteBody is the create and update output. It adds repeats_rrule, due_date_source and
+// reason to the task, not max_permission.
+type taskWriteBody struct {
+	models.Task
+	RepeatsRRule  *string `json:"repeats_rrule,omitempty" nullable:"true" doc:"The task's recurrence as RFC 5545 RRULE text (without DTSTART), e.g. FREQ=WEEKLY;BYDAY=MO. Any RFC 5545 rule part is accepted, plus BYEASTER as a documented extension. UNTIL must be a UTC date-time (ending in Z). On read, the stored rule exactly; absent when the task does not repeat. On write, whichever of repeat and repeats_rrule differs from the stored rule is the change; sending both changed and disagreeing is refused. An empty string clears the recurrence; null is treated as absent. Unchanged text (as a PATCH echoes it) is ignored and repeat decides, exactly as without this field: on PUT, omitting repeat clears the rule. A higher COUNT on otherwise unchanged text counts as unchanged, as for repeat, so COUNT cannot be raised through this field alone. Only single-task reads, create and update carry this field; list and bulk endpoints do not."`
+	DueDateSource string  `json:"due_date_source,omitempty" enum:"explicit,generated" readOnly:"true" doc:"Where the stored due_date came from: generated when this write chose it from initial_due_time, explicit for any other due date (sent by the client or already stored). Absent when the task has no due date."`
+	Reason        string  `json:"reason,omitempty" readOnly:"true" doc:"Why initial_due_time chose no due date, in the next-occurrence vocabulary, for example until_passed (the rule's UNTIL is before now) or no_occurrence (no instance between now and UNTIL or in the search window). Present only then; the task is saved without a due date."`
+}
+
+// newTaskWriteBody fills a write response. sel is the initial_due_time selection, zero when the
+// body had none: a date it chose is generated, any other stored due date is explicit.
+func newTaskWriteBody(task *models.Task, sel initialDueResult) *taskWriteBody {
+	body := &taskWriteBody{Task: *task, RepeatsRRule: ruleTextOf(task), Reason: sel.reason}
+	switch {
+	case sel.source != "":
+		body.DueDateSource = sel.source
+	case !task.DueDate.IsZero():
+		body.DueDateSource = models.DueDateSourceExplicit
+	}
+	return body
+}
+
+// initialDueTask is the CObject a v2 create or update runs when the body carries
+// initial_due_time: the task, with Create and Update selecting the first due date
+// (models.SelectInitialDue) in the handler's session before delegating, so the selection and the
+// write share one transaction and the write sees the chosen date as if the client had
+// sent it. Every other method, the Can* checks included, is the embedded task's.
+type initialDueTask struct {
+	*models.Task
+	hhmm string
+	now  time.Time
+	initialDueResult
+}
+
+// initialDueResult is what the selection reports to the write response: the source when it chose
+// a date, the reason when it chose none.
+type initialDueResult struct {
+	source, reason string
+}
+
+func (t *initialDueTask) Create(s *xorm.Session, a web.Auth) (err error) {
+	t.source, t.reason, err = models.SelectInitialDue(s, a, t.Task, t.hhmm, t.now, models.InitialDueCreate)
+	if err != nil {
+		return err
+	}
+	return t.Task.Create(s, a)
+}
+
+func (t *initialDueTask) Update(s *xorm.Session, a web.Auth) (err error) {
+	t.source, t.reason, err = models.SelectInitialDue(s, a, t.Task, t.hhmm, t.now, models.InitialDueUpdate)
+	if err != nil {
+		return err
+	}
+	return t.Task.Update(s, a)
+}
+
+// taskWrite is the CObject of a v2 single-task write: the task itself, exactly as without the
+// field, unless the body carries initial_due_time. now is the operation's one clock reading.
+func taskWrite(task *models.Task, hhmm string) (handler.CObject, *initialDueResult) {
+	if hhmm == "" {
+		return task, &initialDueResult{}
+	}
+	sel := &initialDueTask{Task: task, hhmm: hhmm, now: models.EngineNow()}
+	return sel, &sel.initialDueResult
 }
 
 func tasksRead(ctx context.Context, in *struct {
@@ -147,7 +249,7 @@ func tasksRead(ctx context.Context, in *struct {
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
+	body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission), RepeatsRRule: ruleTextOf(task)}
 	convertTasksToMarkdown(ctx, &body.Task)
 	return conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
 }
@@ -183,7 +285,7 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 	task := &models.Task{ProjectID: projectID, Index: in.Index, Expand: expand}
 	maxPermission, err := handler.DoReadOne(ctx, task, a)
 	if err == nil {
-		body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
+		body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission), RepeatsRRule: ruleTextOf(task)}
 		convertTasksToMarkdown(ctx, &body.Task)
 		response, err := conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
 		if err != nil {
@@ -244,25 +346,27 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 func tasksCreate(ctx context.Context, in *struct {
 	Project int64  `path:"project" doc:"The numeric id of the project to create the task in."`
 	Format  string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
-	Body    models.Task
-}) (*singleBody[models.Task], error) {
+	Body    taskCreateBody
+}) (*singleBody[taskWriteBody], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	task := &in.Body
+	task := &in.Body.Task
+	obj, sel := taskWrite(task, in.Body.InitialDueTime)
 	task.ProjectID = in.Project // URL wins over body
+	applyRuleText(task, in.Body.RepeatsRRule)
 	if err := convertToHTML(ctx, &task.Description); err != nil {
 		return nil, translateDomainError(err)
 	}
-	if err := handler.DoCreate(ctx, task, a); err != nil {
+	if err := handler.DoCreate(ctx, obj, a); err != nil {
 		return nil, translateDomainError(err)
 	}
 	if err := addPositionsToTasks(task); err != nil {
 		return nil, translateDomainError(err)
 	}
 	convertTasksToMarkdown(ctx, task)
-	return &singleBody[models.Task]{Body: task}, nil
+	return &singleBody[taskWriteBody]{Body: newTaskWriteBody(task, *sel)}, nil
 }
 
 func addPositionsToTasks(tasks ...*models.Task) error {
@@ -276,21 +380,23 @@ func tasksUpdate(ctx context.Context, in *struct {
 	ID     int64  `path:"task"`
 	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	Body   taskReadOneBody
-}) (*singleBody[models.Task], error) {
+}) (*singleBody[taskWriteBody], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	task := &in.Body.Task
+	obj, sel := taskWrite(task, in.Body.InitialDueTime)
 	task.ID = in.ID // URL wins over body
+	applyRuleText(task, in.Body.RepeatsRRule)
 	if err := convertToHTML(ctx, &task.Description); err != nil {
 		return nil, translateDomainError(err)
 	}
-	if err := handler.DoUpdate(ctx, task, a); err != nil {
+	if err := handler.DoUpdate(ctx, obj, a); err != nil {
 		return nil, translateDomainError(err)
 	}
 	convertTasksToMarkdown(ctx, task)
-	return &singleBody[models.Task]{Body: task}, nil
+	return &singleBody[taskWriteBody]{Body: newTaskWriteBody(task, *sel)}, nil
 }
 
 func tasksDelete(ctx context.Context, in *struct {
