@@ -86,7 +86,7 @@ async function mountDetail(taskId = 1, {visited = [], backdropView, stubs = {}}:
 		global: {
 			plugins: [createPinia(), router, [VueQueryPlugin, {queryClient}]],
 			mocks: {$t: (key: string) => key},
-			stubs: {Icon: true, XButton: true, Modal: true, ...stubs},
+			stubs: {Icon: true, XButton: true, Modal: true, TaskPropertyRow: false, ...stubs},
 			directives: {tooltip: () => {}, cy: () => {}, shortcut: () => {}},
 		},
 	})
