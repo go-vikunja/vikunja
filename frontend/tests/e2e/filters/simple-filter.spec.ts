@@ -184,6 +184,23 @@ test('preserves unknown label and project ids when another field changes', async
 	await expect(editor).not.toContainText('Unknown label #999')
 })
 
+test('saves the typed search when Enter is pressed in a saved filter', async ({authenticatedPage: page, apiContext, userToken}) => {
+	await SavedFilterFactory.create(1)
+	await page.goto('/projects/-2/settings/edit')
+	const editor = page.locator('.filter-editor')
+	await expect(editor.getByRole('tab', {
+		name: 'Simple',
+		exact: true,
+	})).toHaveAttribute('aria-selected', 'true')
+	const saved = page.waitForResponse(response => response.url().endsWith('/api/v2/filters/1') && response.request().method() === 'PUT')
+	const search = editor.getByRole('searchbox', {name: 'Search tasks'})
+	await search.fill('Task 1')
+	await search.press('Enter')
+	expect((await saved).ok()).toBe(true)
+	const stored = await apiContext.get('filters/1', {headers: {Authorization: `Bearer ${userToken}`}})
+	expect((await stored.json()).filters.s).toBe('Task 1')
+})
+
 test('applies a due preset, includes overdue tasks, and clears the range', async ({authenticatedPage: page}) => {
 	const popup = page.locator('.filter-popup')
 	await popup.getByRole('button', {
