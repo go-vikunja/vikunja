@@ -68,19 +68,21 @@ test('keeps an unsupported query in Advanced until explicitly cleared', async ({
 	await expect(page).not.toHaveURL(/filter=/)
 })
 
-test('applies an Advanced popup query only on Show results', async ({authenticatedPage: page}) => {
+test('does not apply an Advanced popup query when the popup is closed without Show results', async ({authenticatedPage: page}) => {
 	const popup = page.locator('.filter-popup')
 	await popup.getByRole('tab', {
 		name: 'Advanced',
 		exact: true,
 	}).click()
 	await popup.locator('.ProseMirror').fill('done = true')
-	await expect(page).not.toHaveURL(/filter=/)
-	await popup.getByRole('button', {
-		name: 'Show results',
+	await page.getByRole('button', {
+		name: 'Close dialog',
 		exact: true,
 	}).click()
-	await expect.poll(() => new URL(page.url()).searchParams.get('filter')).toBe('done = true')
+	await expect(popup).toBeHidden()
+	expect(new URL(page.url()).searchParams.get('filter')).toBeNull()
+	await expect(page.locator('.tasks')).toContainText('Task 1')
+	await expect(page.locator('.tasks')).toContainText('Task 2')
 })
 
 test('clears an Advanced plain-text search from the popup', async ({authenticatedPage: page}) => {
