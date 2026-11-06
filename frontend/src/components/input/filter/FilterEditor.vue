@@ -19,6 +19,7 @@ const props = defineProps<{
 	modelValue: string
 	search?: string
 	projectId?: number
+	label?: string
 }>()
 const emit = defineEmits<{
 	'update:modelValue': [value: string]
@@ -114,7 +115,7 @@ defineExpose({focus})
 		<div
 			class="is-flex mbe-3"
 			role="tablist"
-			:aria-label="t('filters.title')"
+			:aria-label="label ?? t('filters.title')"
 		>
 			<XButton
 				v-for="tab in (['simple', 'advanced'] as const)"

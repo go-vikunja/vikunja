@@ -183,15 +183,12 @@ function handleBubbleSave(event: FocusEvent) {
 			</template>
 		</FormField>
 
-		<label
-			class="label"
-			for="filter"
-		>
+		<p class="label">
 			{{ $t('project.views.filter') }}
-		</label>
+		</p>
 		<FilterEditor
-			id="filter"
 			v-model="view.filter.filter"
+			:label="$t('project.views.filter')"
 			:project-id="view.project_id"
 			class="mbe-1"
 		/>
@@ -268,6 +265,7 @@ function handleBubbleSave(event: FocusEvent) {
 
 						<FilterEditor
 							v-model="view.bucket_configuration[index].filter.filter"
+							:label="$t('project.views.filter')"
 							:project-id="view.project_id"
 							class="mbe-2"
 						/>
