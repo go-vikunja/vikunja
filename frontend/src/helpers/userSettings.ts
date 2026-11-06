@@ -29,6 +29,7 @@ export interface FrontendSettings {
 	show_last_viewed: boolean
 	sidebar_width: number | null
 	comment_sort_order: 'asc' | 'desc'
+	filter_editor_mode: 'simple' | 'advanced'
 	desktop_quick_entry_shortcut: string
 	quick_add_default_reminders: {relative_period?: number}[]
 	time_tracking_default_start?: string
@@ -84,6 +85,7 @@ export function defaultFrontendSettings(): FrontendSettings {
 		show_last_viewed: true,
 		sidebar_width: null,
 		comment_sort_order: 'asc',
+		filter_editor_mode: 'simple',
 		desktop_quick_entry_shortcut: 'CmdOrCtrl+Shift+A',
 		default_due_time: undefined,
 		time_tracking_default_start: '09:00',

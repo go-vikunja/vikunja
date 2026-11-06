@@ -34,8 +34,8 @@ vi.mock('vue-i18n', async importOriginal => ({
 	useI18n: () => ({t: (key: string) => key}),
 }))
 
-const FilterInputStub = defineComponent({
-	name: 'FilterInput',
+const FilterEditorStub = defineComponent({
+	name: 'FilterEditor',
 	props: {modelValue: {type: String, default: ''}},
 	emits: ['update:modelValue'],
 	template: '<div />',
@@ -61,7 +61,7 @@ function mountForm(modelValue: ProjectView = {
 			modelValue,
 		},
 		global: {
-			stubs: {FilterInput: FilterInputStub},
+			stubs: {FilterEditor: FilterEditorStub},
 			mocks: {$t: (key: string) => key},
 			directives: {focus: () => {}},
 		},
@@ -74,29 +74,29 @@ describe('ViewEditForm', () => {
 		labelState.isPending!.value = true
 	})
 
-	it('resolves saved label ids after labels finish loading', async () => {
+	it('keeps API label ids while labels finish loading', async () => {
 		const wrapper = mountForm()
-		expect(wrapper.findAllComponents(FilterInputStub).map(input => input.props('modelValue')))
+		expect(wrapper.findAllComponents(FilterEditorStub).map(input => input.props('modelValue')))
 			.toEqual(['labels = 1', 'labels = 1'])
 
 		labelState.labels!.value = [{id: 1, title: 'Work'}]
 		labelState.isPending!.value = false
 		await nextTick()
 
-		expect(wrapper.findAllComponents(FilterInputStub).map(input => input.props('modelValue')))
-			.toEqual(['labels = Work', 'labels = Work'])
+		expect(wrapper.findAllComponents(FilterEditorStub).map(input => input.props('modelValue')))
+			.toEqual(['labels = 1', 'labels = 1'])
 	})
 
 	it('keeps a filter edited before labels finish loading', async () => {
 		const wrapper = mountForm()
-		wrapper.findAllComponents(FilterInputStub)[0].vm.$emit('update:modelValue', 'labels = Personal')
+		wrapper.findAllComponents(FilterEditorStub)[0].vm.$emit('update:modelValue', 'labels in 2')
 		await nextTick()
 
 		labelState.labels!.value = [{id: 1, title: 'Work'}]
 		labelState.isPending!.value = false
 		await nextTick()
 
-		expect(wrapper.findAllComponents(FilterInputStub)[0].props('modelValue')).toBe('labels = Personal')
+		expect(wrapper.findAllComponents(FilterEditorStub)[0].props('modelValue')).toBe('labels in 2')
 	})
 
 	it('preserves model sorting when saving', async () => {
