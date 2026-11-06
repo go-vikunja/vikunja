@@ -85,12 +85,14 @@ function changeAdvanced(value: string) {
 	emit('change', 'advanced')
 }
 
-function clearAndUseSimple() {
+async function clearAndUseSimple() {
 	simple.value = emptySimpleFilter()
 	emit('update:modelValue', '')
 	emit('change', 'simple')
 	mode.value = 'simple'
 	saveMode('simple')
+	await nextTick()
+	document.getElementById(`${id}-simple`)?.focus()
 }
 
 function focus() {
