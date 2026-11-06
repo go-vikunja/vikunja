@@ -13,7 +13,6 @@
 			:project-id="projectId"
 			class="mbe-2"
 			@change="mode => change(mode === 'simple' ? 'always' : 'modelValue')"
-			@blur="change('blur')"
 			@update:search="change('always')"
 		/>
 		<div 

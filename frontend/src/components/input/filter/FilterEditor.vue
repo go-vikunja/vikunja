@@ -24,7 +24,6 @@ const emit = defineEmits<{
 	'update:modelValue': [value: string]
 	'update:search': [value: string]
 	'change': [mode: 'simple' | 'advanced']
-	'blur': []
 }>()
 const {t} = useI18n({useScope: 'global'})
 const auth = useAuthStore()
@@ -179,7 +178,6 @@ defineExpose({focus})
 					:project-id="projectId"
 					class="mbe-2"
 					@update:modelValue="changeAdvanced"
-					@focusout="emit('blur')"
 				/>
 				<FilterInputDocs />
 			</template>
