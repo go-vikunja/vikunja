@@ -3,6 +3,7 @@ import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {isDateMath, type SimpleFilter} from '@/helpers/simpleFilter'
 import type {Priority} from '@/constants/priorities'
+import {formatDate} from '@/helpers/time/formatDate'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
@@ -37,10 +38,18 @@ watch(() => model.value.due.range, range => {
 		return
 	}
 	dates.value = {
-		dateFrom: range?.from || null,
-		dateTo: range?.to || null,
+		dateFrom: toPickerDate(range?.from),
+		dateTo: toPickerDate(range?.to),
 	}
 }, {immediate: true})
+
+// The picker shows strings verbatim and Dates as UTC ISO; this is the format it writes itself.
+function toPickerDate(value: string | undefined): string | null {
+	if (!value) {
+		return null
+	}
+	return isDateMath(value) ? value : formatDate(value, 'YYYY-MM-DD HH:mm')
+}
 
 function serializeDate(value: Date | string | null): string {
 	if (!value) {
