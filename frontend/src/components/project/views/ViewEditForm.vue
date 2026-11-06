@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onBeforeMount, ref, watch} from 'vue'
+import {computed, onBeforeMount, ref, watch} from 'vue'
 
 import type {ProjectView, ProjectViewWritable, TaskCollection} from '@/client/generated'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
@@ -80,6 +80,8 @@ function transformViewFromApi(modelValue: ProjectViewFormValue): LoadedProjectVi
 }
 
 const view = ref<LoadedProjectView>(transformViewFromApi(createProjectViewDraft()))
+// Saved filter views have a negative project id.
+const filterProjectId = computed(() => (view.value.project_id ?? 0) > 0 ? view.value.project_id : undefined)
 
 onBeforeMount(() => {
 	const transformed = transformViewFromApi(props.modelValue)
@@ -189,7 +191,7 @@ function handleBubbleSave(event: FocusEvent) {
 		<FilterEditor
 			v-model="view.filter.filter"
 			:label="$t('project.views.filter')"
-			:project-id="view.project_id"
+			:project-id="filterProjectId"
 			class="mbe-1"
 		/>
 
@@ -266,7 +268,7 @@ function handleBubbleSave(event: FocusEvent) {
 						<FilterEditor
 							v-model="view.bucket_configuration[index].filter.filter"
 							:label="$t('project.views.filter')"
-							:project-id="view.project_id"
+							:project-id="filterProjectId"
 							class="mbe-2"
 						/>
 
