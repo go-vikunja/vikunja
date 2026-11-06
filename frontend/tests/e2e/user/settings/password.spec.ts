@@ -5,6 +5,8 @@ test('changes the password used for subsequent logins', async ({authenticatedPag
 	await page.goto('/user/settings/password-update')
 	await page.locator('#password').fill('updatedPassword123')
 	await page.locator('#currentPassword').fill(TEST_PASSWORD)
+	await expect(page.locator('#password')).toHaveValue('updatedPassword123')
+	await expect(page.locator('#password-error')).toBeHidden()
 	await page.getByRole('button', {name: 'Save', exact: true}).click()
 	await expect(page.locator('.global-notification')).toContainText('Success')
 	const login = await apiContext.post('login', {data: {username: currentUser.username, password: 'updatedPassword123'}})

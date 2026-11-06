@@ -31,8 +31,8 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					v-model="credentials.password"
 					@submit="resetPassword"
-					@update:modelValue="v => credentials.password = v"
 				/>
 			</div>
 
