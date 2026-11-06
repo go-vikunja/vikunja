@@ -677,6 +677,20 @@
 			"deleteSuccess": "Diese Ansicht wurde erfolgreich gelöscht.",
 			"onlyAdminsCanEdit": "Nur Projektadministrator:innen können Ansichten bearbeiten.",
 			"updateSuccess": "Die Ansicht wurde erfolgreich aktualisiert."
+		},
+		"calendar": {
+			"title": "Kaländer",
+			"loading": "Ladä…",
+			"count": "Ufgabe: {count}",
+			"deadline": "Frist",
+			"create": "Aufgabe erstellen",
+			"chooseProject": "Wähl es Projekt und es Datum für die neu Ufgab.",
+			"cancel": "Abbreche",
+			"retry": "Nomol versueche",
+			"hint": "Öffne e Ufgab für Details. Zieh si zum Verschiebe; ändere d Grössi, zum s Enddatum aazpasse.",
+			"date": "Datum",
+			"loadError": "D Ufgabe händ nöd chöne glade werde. Versuech es nomol.",
+			"saveError": "D Date händ nöd chöne gspeicheret werde. D Verschiebig isch rückgängig gmacht worde."
 		}
 	},
 	"filters": {

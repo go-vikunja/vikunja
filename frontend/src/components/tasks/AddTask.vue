@@ -82,9 +82,11 @@ import {reportSkippedLabels, useQuickAddTask} from '@/composables/useQuickAddTas
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
-const {autofocus = true} = defineProps<{
+const props = withDefaults(defineProps<{
+	projectId?: number,
+	defaultDueDate?: string,
 	autofocus?: boolean,
-}>()
+}>(), {autofocus: true})
 
 const emit = defineEmits<{
 	tasksAdded: [tasks: ITask[]],
@@ -152,7 +154,9 @@ async function addTask() {
 	reportSkippedLabels(skipped)
 
 	let currentProjectId = authStore.settings.default_project_id
-	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
+	if (typeof props.projectId !== 'undefined') {
+		currentProjectId = props.projectId
+	} else if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
 		currentProjectId = Number(router.currentRoute.value.params.projectId)
 	}
 
@@ -163,6 +167,7 @@ async function addTask() {
 			.filter(({title}) => title !== '')
 			.map(async ({title, project}) => ({
 				title,
+				...(props.defaultDueDate ? {due_date: props.defaultDueDate} : {}),
 				project_id: (project !== null
 					? await findProjectId({project, projectId: 0})
 					: currentProjectId) || authStore.settings.default_project_id || 0,

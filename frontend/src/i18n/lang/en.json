@@ -677,6 +677,20 @@
       "deleteSuccess": "The view was deleted successfully.",
       "onlyAdminsCanEdit": "Only project admins can edit views.",
       "updateSuccess": "The view was updated successfully."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "loading": "Loading…",
+      "count": "Tasks: {count}",
+      "deadline": "Deadline",
+      "create": "Create a task",
+      "chooseProject": "Select a project and date for the new task.",
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "hint": "Open a task for details. Drag to reschedule; resize to change its end date.",
+      "date": "Date",
+      "loadError": "Could not load tasks. Please try again.",
+      "saveError": "Could not save dates. The move was reverted."
     }
   },
   "filters": {
