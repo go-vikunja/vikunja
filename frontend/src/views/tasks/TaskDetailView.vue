@@ -362,6 +362,7 @@
 							<Datepicker
 								ref="dueDatePicker"
 								v-model="dueDateInput"
+								aria-labelledby="task-property-due-date-label"
 								:choose-date-label="$t('task.detail.chooseDueDate')"
 								:empty-label="$t('misc.notSet')"
 								:title="$t('task.detail.properties.dueDate')"
@@ -381,6 +382,7 @@
 						>
 							<Datepicker
 								v-model="startDateInput"
+								aria-labelledby="task-property-start-date-label"
 								:choose-date-label="$t('task.detail.chooseStartDate')"
 								:empty-label="$t('misc.notSet')"
 								:title="$t('task.detail.properties.startDate')"
@@ -400,6 +402,7 @@
 						>
 							<Datepicker
 								v-model="endDateInput"
+								aria-labelledby="task-property-end-date-label"
 								:choose-date-label="$t('task.detail.chooseEndDate')"
 								:empty-label="$t('misc.notSet')"
 								:title="$t('task.detail.properties.endDate')"

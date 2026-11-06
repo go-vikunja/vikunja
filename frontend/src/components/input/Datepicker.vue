@@ -9,9 +9,11 @@
 		>
 			<template #trigger="{toggle}">
 				<SimpleButton
+					:id="triggerId"
 					ref="triggerButton"
 					v-tooltip="date ? formatDateLong(date) : undefined"
 					class="show"
+					:aria-labelledby="ariaLabelledby ? `${ariaLabelledby} ${triggerId}` : undefined"
 					:disabled="disabled || undefined"
 					@click.stop="toggle()"
 				>
@@ -80,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, toRef, watch, nextTick} from 'vue'
+import {computed, ref, toRef, watch, nextTick, useId} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -103,6 +105,7 @@ const props = withDefaults(defineProps<{
 	// When the value is null, show this (italic) instead of chooseDateLabel.
 	emptyLabel?: string,
 	minDate?: Date | null,
+	ariaLabelledby?: string,
 }>(), {
 	chooseDateLabel: () => {
 		const {t} = useI18n({useScope: 'global'})
@@ -113,6 +116,7 @@ const props = withDefaults(defineProps<{
 	showShortcuts: true,
 	emptyLabel: '',
 	minDate: null,
+	ariaLabelledby: undefined,
 })
 
 const emit = defineEmits<{
@@ -157,6 +161,7 @@ function clear() {
 	updateData()
 }
 
+const triggerId = useId()
 const triggerButton = ref<InstanceType<typeof SimpleButton> | null>(null)
 const triggerEl = computed<HTMLElement | null>(() => triggerButton.value?.$el ?? null)
 
