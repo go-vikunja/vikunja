@@ -606,6 +606,34 @@ test.describe('Task', () => {
 			expect(apiAssignees.map((a: User) => a.id)).toEqual([userToAssign.id])
 		})
 
+		test('Moves from the assignee input to labels with Tab', async ({authenticatedPage: page}) => {
+			const users = await UserFactory.create(5, {
+				id: (i: number) => 100 + i,
+			}, false)
+			const projects = await ProjectFactory.create(1)
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+			})
+			await UserProjectFactory.create(5, {
+				project_id: projects[0].id,
+				user_id: (i: number) => users[i - 1].id,
+			})
+
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			const input = page.locator('.task-view .property-assignees .multiselect input')
+			const options = page.locator('.task-view .property-assignees .multiselect .search-result-button')
+
+			await input.click()
+			await expect(options.first()).toBeVisible({timeout: 5000})
+
+			await page.keyboard.press('Tab')
+			await expect(page.locator('.task-view .property-labels .multiselect input')).toBeFocused()
+			await expect(page.locator('.task-view .property-assignees .search-results')).toBeHidden()
+		})
+
 		test('Can remove an assignee from a task', async ({authenticatedPage: page}) => {
 			const users = await UserFactory.create(2)
 			const tasks = await TaskFactory.create(1, {
