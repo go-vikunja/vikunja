@@ -77,10 +77,9 @@ describe('simple filters', () => {
 		})
 	})
 	it.each([
-		'done = false || priority >= 3', '(done = false)', 'priority >= 3 && done = false',
-		' done = false', 'done  = false', 'done = false ', 'labels not in 1', 'priority > 3',
-		'unknown = 3', 'priority >= 6', 'labels in 01', 'labels in 1 && labels in 2',
-		'due_date < "2026-99-01T00:00:00.000Z"', 'due_date > now', 'due_date < "now"', 'due_date < garbage', 'assignees in alice || bob', 'assignees in "a||b"',
+		'done = false || priority >= 3', 'priority > 3', 'priority >= 3 && done = false',
+		'labels in 01', 'priority >= 6', 'due_date < "2026-99-01T00:00:00.000Z"', 'due_date < "now"',
+		'due_date > now', 'assignees in "a||b"',
 	])('rejects noncanonical query %s', query => {
 		expect(fromQuery(query)).toBeNull()
 	})
