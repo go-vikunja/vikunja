@@ -1,9 +1,14 @@
+import type {Page} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
 import {createProjects} from '../project/prepareProjects'
 import {TaskFactory} from '../../factories/task'
 import {LabelTaskFactory} from '../../factories/label_task'
 import {LabelFactory} from '../../factories/labels'
 import {SavedFilterFactory} from '../../factories/saved_filter'
+
+async function openFilters(page: Page) {
+	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+}
 
 test.beforeEach(async ({authenticatedPage: page, currentUser}) => {
 	await createProjects()
@@ -17,7 +22,7 @@ test.beforeEach(async ({authenticatedPage: page, currentUser}) => {
 		label_id: 1,
 	})
 	await page.goto('/projects/1/1')
-	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+	await openFilters(page)
 	await expect(page.locator('.filter-popup')).toBeVisible()
 })
 
@@ -41,13 +46,13 @@ test('selects a label in Simple and preserves the query across modes and reload'
 	await expect(popup.locator('.ProseMirror')).toContainText('labels in Important')
 	await page.reload()
 	await expect(page.locator('.tasks')).not.toContainText('Task 2')
-	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+	await openFilters(page)
 	await expect(page.locator('.filter-popup .ProseMirror')).toContainText('labels in Important')
 })
 
 test('keeps an unsupported query in Advanced until explicitly cleared', async ({authenticatedPage: page}) => {
 	await page.goto('/projects/1/1?filter=priority%20%3E%203')
-	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+	await openFilters(page)
 	const popup = page.locator('.filter-popup')
 	await expect(popup.getByRole('tab', {
 		name: 'Advanced',
@@ -88,7 +93,7 @@ test('does not apply an Advanced popup query when the popup is closed without Sh
 test('clears an Advanced plain-text search from the popup', async ({authenticatedPage: page}) => {
 	await page.goto('/projects/1/1?s=Task%201')
 	await expect(page.locator('.tasks')).not.toContainText('Task 2')
-	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+	await openFilters(page)
 	const popup = page.locator('.filter-popup')
 	await popup.getByRole('tab', {
 		name: 'Advanced',
