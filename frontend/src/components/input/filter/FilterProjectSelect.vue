@@ -12,8 +12,8 @@ const selected = computed(() => ids.value.map(id => ({
 	id,
 	title: projects.projects[id]?.title ?? t('filters.simple.unknownProject', {id}),
 })))
-const results = computed(() => projects.projectsArray
-	.filter(project => project.id > 0 && !project.is_archived && !ids.value.includes(project.id) &&
+const results = computed(() => projects.realProjects
+	.filter(project => !project.is_archived && !ids.value.includes(project.id) &&
 	project.title.toLowerCase().includes(query.value.toLowerCase()))
 	.map(project => ({
 		id: project.id,
