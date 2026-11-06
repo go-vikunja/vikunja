@@ -12,8 +12,8 @@
 			:autocomplete="autocomplete"
 			:aria-invalid="isValid !== true ? true : undefined"
 			:aria-describedby="errorId"
-			@keyup.enter="e => $emit('submit', e)"
-			@focusout="() => {validate(); validateAfterFirst = true}"
+			@keyup.enter="handleSubmit"
+			@focusout="e => {handleInput(e); validate(); validateAfterFirst = true}"
 			@keyup="() => {validateAfterFirst ? validate() : null}"
 			@input="handleInput"
 		>
@@ -71,12 +71,19 @@ const isValid = ref<true | string>(true)
 const validateAfterFirst = ref(false)
 const errorId = computed(() => isValid.value !== true ? `${props.id}-error` : undefined)
 
-const validate = useDebounceFn(() => {
-	const valid = validatePassword(props.modelValue, props.validateMinLength)
+function validateValue(value: string) {
+	const valid = validatePassword(value, props.validateMinLength)
 	isValid.value = valid === true ? true : t(valid)
-}, 100)
+}
 
-watchEffect(() => props.validateInitially && validate())
+const validate = useDebounceFn(() => validateValue(props.modelValue), 100)
+
+watchEffect(() => {
+	if (props.validateInitially) {
+		validateAfterFirst.value = true
+		validate()
+	}
+})
 
 function togglePasswordFieldType() {
 	passwordFieldType.value = passwordFieldType.value === 'password'
@@ -86,6 +93,14 @@ function togglePasswordFieldType() {
 
 function handleInput(e: Event) {
 	emit('update:modelValue', (e.target as HTMLInputElement).value)
+}
+
+function handleSubmit(e: Event) {
+	// Autofill may not fire an input event.
+	handleInput(e)
+	validateValue((e.target as HTMLInputElement).value)
+	validateAfterFirst.value = true
+	emit('submit', e)
 }
 </script>
 
