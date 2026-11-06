@@ -87,8 +87,7 @@ const emit = defineEmits<{
 const route = useRoute()
 const projectId = computed(() => {
 	if (typeof route.name === 'string' && route.name.startsWith('project.')) {
-		const id = Number(route.params.projectId)
-		return id > 0 ? id : undefined
+		return Number(route.params.projectId)
 	}
 
 	return undefined

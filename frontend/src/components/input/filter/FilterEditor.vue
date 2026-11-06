@@ -30,6 +30,8 @@ const {t} = useI18n({useScope: 'global'})
 const auth = useAuthStore()
 const updateSettings = useUpdateFrontendSettingsMutation()
 const parsed = computed(() => fromQuery(props.modelValue))
+// Saved filters and favorites have negative pseudo project ids.
+const realProjectId = computed(() => (props.projectId ?? 0) > 0 ? props.projectId : undefined)
 // eslint-disable-next-line vue/no-ref-object-reactivity-loss -- the watch on parsed takes over after setup
 const initial = parsed.value
 const mode = ref<'simple' | 'advanced'>(initial === null ? 'advanced' : auth.settings.frontend_settings.filter_editor_mode)
@@ -158,7 +160,7 @@ defineExpose({focus})
 			<template v-if="mode === 'simple'">
 				<SimpleFilterForm
 					:model-value="simple"
-					:project-id="projectId"
+					:project-id="realProjectId"
 					@update:modelValue="changeSimple"
 				/>
 				<label
@@ -179,7 +181,7 @@ defineExpose({focus})
 				<FilterInput
 					ref="advancedInput"
 					:model-value="modelValue || search"
-					:project-id="projectId"
+					:project-id="realProjectId"
 					class="mbe-2"
 					@update:modelValue="changeAdvanced"
 				/>
