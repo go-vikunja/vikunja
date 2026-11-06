@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
-import {filterEmojis, __resetEmojiCacheForTest, loadEmojis} from './emojiData'
+import {filterEmojis, __resetEmojiCacheForTest, loadEmojis, loadEmojiCatalog} from './emojiData'
 
 const fixture = [
 	{shortcodes: ['grinning', 'grinning_face'], annotation: 'grinning face', tags: ['face', 'grin'], emoji: '😀'},
@@ -53,6 +53,11 @@ describe('emojiData', () => {
 	it('caches the fetch promise across calls', async () => {
 		await loadEmojis()
 		await loadEmojis()
+		expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1)
+	})
+
+	it('shares one request between catalog and autocomplete', async () => {
+		await Promise.all([loadEmojiCatalog(), loadEmojis()])
 		expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1)
 	})
 })
