@@ -1455,7 +1455,6 @@ h2 .button {
 	gap: .375rem;
 	flex: 1;
 	min-block-size: 2rem;
-	padding: .25rem .5rem;
 	border-radius: $radius;
 	text-align: start;
 	color: var(--text);
