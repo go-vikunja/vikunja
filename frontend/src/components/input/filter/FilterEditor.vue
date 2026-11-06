@@ -161,11 +161,23 @@ defineExpose({focus})
 					:project-id="projectId"
 					@update:modelValue="changeSimple"
 				/>
+				<label
+					v-if="search !== undefined"
+					class="field is-block"
+				>
+					<span class="label">{{ t('filters.simple.search') }}</span>
+					<input
+						v-model="searchText"
+						type="search"
+						class="input"
+						@blur="emit('update:search', searchText)"
+					>
+				</label>
 			</template>
 			<template v-else>
 				<FilterInput
 					ref="advancedInput"
-					:model-value="modelValue"
+					:model-value="modelValue || search"
 					:project-id="projectId"
 					class="mbe-2"
 					@update:modelValue="changeAdvanced"
@@ -173,17 +185,5 @@ defineExpose({focus})
 				<FilterInputDocs />
 			</template>
 		</div>
-		<label
-			v-if="search !== undefined"
-			class="field is-block"
-		>
-			<span class="label">{{ t('filters.simple.search') }}</span>
-			<input
-				v-model="searchText"
-				type="search"
-				class="input"
-				@blur="emit('update:search', searchText)"
-			>
-		</label>
 	</div>
 </template>

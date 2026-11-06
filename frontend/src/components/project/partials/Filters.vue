@@ -12,7 +12,7 @@
 			v-model:search="params.s"
 			:project-id="projectId"
 			class="mbe-2"
-			@change="mode => change(mode === 'simple' ? 'always' : 'modelValue')"
+			@change="editorChanged"
 			@update:search="change('always')"
 		/>
 		<div 
@@ -145,6 +145,14 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 	}
 
 	emit('update:modelValue', newParams)
+}
+
+// The Advanced input shows `filter || s`, so it owns both.
+function editorChanged(mode: 'simple' | 'advanced') {
+	if (mode === 'advanced') {
+		params.value.s = ''
+	}
+	change(mode === 'simple' ? 'always' : 'modelValue')
 }
 
 function changeAndEmitButton() {
