@@ -18,8 +18,11 @@ package models
 
 import (
 	"fmt"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/web"
@@ -491,6 +494,43 @@ func (d *dbTaskSearcher) fetchAccessibleSubtasks(rootIDs []int64) ([]*Task, erro
 	return subtasks, nil
 }
 
+var taskIdentifierSearchRegex = regexp.MustCompile(`^(\S+)-([0-9]+)$`)
+
+// getTaskIdentifierFromSearchString returns the project identifier and index when
+// the whole search is a task identifier like "PROJ-12". Splits on the last hyphen,
+// since identifiers may contain one. The identifier comes back uppercase, as stored.
+func getTaskIdentifierFromSearchString(s string) (projectIdentifier string, index int64) {
+	match := taskIdentifierSearchRegex.FindStringSubmatch(strings.TrimSpace(s))
+	if match == nil || utf8.RuneCountInString(match[1]) > 10 {
+		return "", 0
+	}
+
+	index, err := strconv.ParseInt(match[2], 10, 64)
+	if err != nil || index <= 0 {
+		return "", 0
+	}
+
+	return strings.ToUpper(match[1]), index
+}
+
+// taskIdentifierSearchCond matches the task a search like "PROJ-12" names: index 12
+// in the project with identifier PROJ. It checks no permissions, it is only safe
+// OR-ed into a search that is still AND-ed with the user's project scope.
+func taskIdentifierSearchCond(search string, tableAlias string) builder.Cond {
+	projectIdentifier, index := getTaskIdentifierFromSearchString(search)
+	if index == 0 {
+		return nil
+	}
+
+	return builder.And(
+		builder.Eq{tableAlias + ".`index`": index},
+		builder.In(tableAlias+".project_id", builder.
+			Select("id").
+			From("projects").
+			Where(builder.Eq{"identifier": projectIdentifier})),
+	)
+}
+
 // buildParentSearchCondition mirrors the main query's search onto the parent_tasks
 // alias so an active search decides root membership the same way it decides the
 // result set. No boosts: they only affect scoring, membership is identical without them.
@@ -501,6 +541,9 @@ func buildParentSearchCondition(search string) builder.Cond {
 	cond := db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, search, "parent_tasks")
 	if searchIndex := getTaskIndexFromSearchString(search); searchIndex > 0 {
 		cond = builder.Or(cond, builder.Eq{"parent_tasks.`index`": searchIndex})
+	}
+	if identifierCond := taskIdentifierSearchCond(search, "parent_tasks"); identifierCond != nil {
+		cond = builder.Or(cond, identifierCond)
 	}
 	return cond
 }
@@ -538,6 +581,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	var where builder.Cond
 
 	searchIndex := getTaskIndexFromSearchString(opts.search)
+	identifierCond := taskIdentifierSearchCond(opts.search, "tasks")
 	if opts.search != "" {
 		// With the fuzzy cast the relevance score is a constant sum, not BM25: each
 		// query word matching a field adds 1.0 (exact/prefix) or 0.5 (one edit away),
@@ -548,6 +592,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 		if searchIndex > 0 {
 			where = builder.Or(where, builder.Eq{"tasks.`index`": searchIndex})
+		}
+
+		if identifierCond != nil {
+			where = builder.Or(where, identifierCond)
 		}
 	}
 
@@ -566,12 +614,14 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	// sorts by relevance — order by that score so tasks matching all query words
 	// rank above tasks matching only some.
 	//
-	// Limited to pure-text searches: numeric searches add an `OR index = N` branch,
-	// which pdb.score rejects as an unsupported query shape. pdb.score is also
-	// invalid SQL on sqlite/mysql/plain postgres, hence the ParadeDBAvailable() gate.
+	// Limited to pure-text searches: numeric and identifier searches add an
+	// `OR index = N` branch, which pdb.score rejects as an unsupported query shape.
+	// pdb.score is also invalid SQL on sqlite/mysql/plain postgres, hence the
+	// ParadeDBAvailable() gate.
 	wantsRelevanceRanking := db.ParadeDBAvailable() &&
 		opts.search != "" &&
 		searchIndex == 0 &&
+		identifierCond == nil &&
 		(!opts.userProvidedSort || relevanceSortRequested)
 
 	var projectIDCond builder.Cond

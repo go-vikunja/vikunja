@@ -356,3 +356,86 @@ func TestDBTaskSearcher_NoScopeReturnsNothing(t *testing.T) {
 	assert.Empty(t, tasks)
 	assert.Zero(t, count)
 }
+
+func Test_getTaskIdentifierFromSearchString(t *testing.T) {
+	tests := []struct {
+		name           string
+		search         string
+		wantIdentifier string
+		wantIndex      int64
+	}{
+		{name: "identifier", search: "TEST1-2", wantIdentifier: "TEST1", wantIndex: 2},
+		{name: "lowercase", search: "test1-2", wantIdentifier: "TEST1", wantIndex: 2},
+		{name: "surrounding spaces", search: "  TEST1-2 ", wantIdentifier: "TEST1", wantIndex: 2},
+		{name: "hyphen in identifier", search: "A-B-12", wantIdentifier: "A-B", wantIndex: 12},
+		{name: "ten character identifier", search: "ABCDEFGHIJ-1", wantIdentifier: "ABCDEFGHIJ", wantIndex: 1},
+		{name: "identifier too long", search: "ABCDEFGHIJK-1", wantIndex: 0},
+		{name: "index zero", search: "TEST1-0", wantIndex: 0},
+		{name: "no index", search: "TEST1-", wantIndex: 0},
+		{name: "no identifier", search: "-2", wantIndex: 0},
+		{name: "identifier inside text", search: "fix TEST1-2", wantIndex: 0},
+		{name: "index notation", search: "#2", wantIndex: 0},
+		{name: "plain text", search: "follow-up", wantIndex: 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			identifier, index := getTaskIdentifierFromSearchString(tt.search)
+			assert.Equal(t, tt.wantIdentifier, identifier)
+			assert.Equal(t, tt.wantIndex, index)
+		})
+	}
+}
+
+func TestTaskSearchByIdentifier(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	usr := &user.User{ID: 1}
+
+	// Index 1 exists in several of user 1's projects: task 1 is TEST1-1 (project 1),
+	// task 15 is TEST6-1 (project 6, shared with user 1).
+	search := func(query string) map[int64]int {
+		return searchTaskPositions(t, s, usr, &TaskCollection{}, query)
+	}
+
+	t.Run("matches only that project's task", func(t *testing.T) {
+		canRead, _, err := (&Project{ID: 6}).CanRead(s, usr)
+		require.NoError(t, err)
+		require.True(t, canRead)
+
+		found := search("TEST1-1")
+		assert.Contains(t, found, int64(1))
+		assert.NotContains(t, found, int64(15))
+
+		found = search("TEST6-1")
+		assert.Contains(t, found, int64(15))
+		assert.NotContains(t, found, int64(1))
+	})
+	t.Run("case-insensitive", func(t *testing.T) {
+		assert.Contains(t, search("test1-2"), int64(2))
+	})
+	t.Run("unknown identifier", func(t *testing.T) {
+		assert.Empty(t, search("NOPE-2"))
+	})
+	t.Run("identifier inside text does not match the task", func(t *testing.T) {
+		assert.NotContains(t, search("fix TEST1-2"), int64(2))
+	})
+	t.Run("project the user cannot read", func(t *testing.T) {
+		// Task 14 is TEST5-1, in a project only user 5 can see.
+		canRead, _, err := (&Project{ID: 5}).CanRead(s, usr)
+		require.NoError(t, err)
+		require.False(t, canRead)
+
+		assert.NotContains(t, search("TEST5-1"), int64(14))
+		assert.Contains(t, searchTaskPositions(t, s, &user.User{ID: 5}, &TaskCollection{}, "TEST5-1"), int64(14))
+	})
+	t.Run("tasks mentioning the identifier still match", func(t *testing.T) {
+		mention := &Task{Title: "follow-up on TEST1-2", ProjectID: 1}
+		require.NoError(t, mention.Create(s, usr))
+
+		found := search("TEST1-2")
+		assert.Contains(t, found, int64(2), "the task with that identifier")
+		assert.Contains(t, found, mention.ID, "the task mentioning it in its title")
+	})
+}

@@ -2614,3 +2614,39 @@ func TestTaskCollection_SavedFilterIncludeNulls(t *testing.T) {
 	}
 	assert.ElementsMatch(t, []int64{dated.ID, dateless.ID}, ids)
 }
+
+// TestTaskCollection_ExpandSubtasksSearchByIdentifier: a parent found by its
+// identifier is part of the result set, so a child matching the same search by
+// text is nested under it rather than returned as a second root.
+func TestTaskCollection_ExpandSubtasksSearchByIdentifier(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	project, parent, sub := setupSubtaskExpansionFixture(t, u, "search-identifier", func(_, sub *Task) {
+		sub.Title = "follow-up on SRCHID-1"
+	})
+
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.ID(project.ID).Cols("identifier").Update(&Project{Identifier: "SRCHID"})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	tasks, _, total, err := getRawTasksForProjects(s2, []*Project{project}, u, &taskSearchOptions{
+		expand: []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+		search: "srchid-1",
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(1), total, "only the parent is a root")
+	ids := map[int64]int{}
+	for _, tsk := range tasks {
+		ids[tsk.ID]++
+	}
+	assert.Equal(t, 1, ids[parent.ID], "parent present exactly once as the root")
+	assert.Equal(t, 1, ids[sub.ID], "child rides along nested, not as a second root")
+	assert.Len(t, tasks, 2)
+}
