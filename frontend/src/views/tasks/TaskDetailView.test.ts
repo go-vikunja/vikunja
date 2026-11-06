@@ -19,7 +19,6 @@ vi.mock('@/message', () => message)
 const projects = vi.hoisted(() => ({} as Record<number, unknown>))
 vi.mock('@/composables/useProjects', () => ({useProjects: () => ({projects})}))
 vi.mock('@/composables/useLabels', () => ({useLabels: () => ({filterLabelsByQuery: () => [], isPending: {value: false}, getLabelById: vi.fn()})}))
-vi.mock('vuemoji-picker', () => ({VuemojiPicker: {render: () => null}}))
 vi.mock('vue-i18n', async importOriginal => ({
 	...await importOriginal<typeof import('vue-i18n')>(),
 	useI18n: () => ({t: (key: string) => key}),
