@@ -124,7 +124,7 @@ const priority = computed({
 			<XButton
 				v-if="dates.dateFrom || dates.dateTo"
 				variant="tertiary"
-				@click="dates = {dateFrom: null, dateTo: null}; update({due: {...model.due, range: null}})"
+				@click="setDates({dateFrom: null, dateTo: null})"
 			>
 				{{ t('input.datepicker.clear') }}
 			</XButton>
