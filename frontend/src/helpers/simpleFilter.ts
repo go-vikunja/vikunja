@@ -17,9 +17,9 @@ export interface SimpleFilter {
 	projectIds: number[]
 	minPriority: Priority | null
 }
-const simpleUsername = /^[^\s,()&|=<>"']+$/
+const simpleUsername = /^[^\s,()&|=<>"'\\]+$/
 
-// The backend ignores quotes and splits values at &|(), so unsafe names can't be escaped.
+// The backend ignores quotes, splits values at &|() and treats \ as an escape, so unsafe names can't be escaped.
 export function isSimpleUsername(username: string): boolean {
 	return simpleUsername.test(username)
 }
