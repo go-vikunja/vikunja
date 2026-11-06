@@ -291,6 +291,7 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.tasks')).toContainText('Regular task 1')
 
 		await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+		await page.getByRole('tab', {name: 'Advanced', exact: true}).click()
 		await page.locator('.filter-popup .filter-input .ProseMirror').fill('meeting')
 		await page.locator('.filter-popup button').filter({hasText: 'Show results'}).click()
 

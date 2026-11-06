@@ -1,5 +1,12 @@
 import {test, expect} from '../../support/fixtures'
+import {updateUserSettings} from '../../support/updateUserSettings'
 import {createProjects} from '../project/prepareProjects'
+
+test.beforeEach(async ({apiContext, userToken}) => {
+	await updateUserSettings(apiContext, userToken, {
+		frontend_settings: {filter_editor_mode: 'advanced'},
+	})
+})
 
 test.describe('Filter input focus', () => {
 	test('only the wrapper shows a focus indicator', async ({authenticatedPage: page}) => {
