@@ -21,6 +21,9 @@ test.describe('Password Reset', () => {
 
 		const newPassword = 'newSecurePassword123'
 		await page.locator('input[id=password]').fill(newPassword)
+		await page.getByRole('button', {name: 'Show the password', exact: true}).click()
+		await expect(page.locator('#password')).toHaveValue(newPassword)
+		await expect(page.locator('#password-error')).toBeHidden()
 		await page.locator('button').filter({hasText: 'Reset your password'}).click()
 
 		await expect(page.locator('.message.success')).toContainText('The password was updated successfully.')

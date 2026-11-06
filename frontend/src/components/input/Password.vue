@@ -5,7 +5,7 @@
 			class="input"
 			name="password"
 			:placeholder="placeholder ?? $t('user.auth.passwordPlaceholder')"
-			:value="modelValue"
+			:value="password"
 			:autofocus="autofocus || undefined"
 			required
 			:type="passwordFieldType"
@@ -44,7 +44,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {validatePassword} from '@/helpers/validatePasswort'
 
 const props = withDefaults(defineProps<{
-	modelValue?: string,
 	id?: string,
 	placeholder?: string,
 	autofocus?: boolean,
@@ -53,7 +52,6 @@ const props = withDefaults(defineProps<{
 	validateMinLength?: boolean,
 	autocomplete?: string,
 }>(), {
-	modelValue: '',
 	id: 'password',
 	placeholder: undefined,
 	autofocus: false,
@@ -62,9 +60,9 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'update:modelValue': [value: string],
 	'submit': [event: Event],
 }>()
+const password = defineModel<string>({required: true})
 const {t} = useI18n()
 const passwordFieldType = ref('password')
 const isValid = ref<true | string>(true)
@@ -76,7 +74,7 @@ function validateValue(value: string) {
 	isValid.value = valid === true ? true : t(valid)
 }
 
-const validate = useDebounceFn(() => validateValue(props.modelValue), 100)
+const validate = useDebounceFn(() => validateValue(password.value), 100)
 
 watchEffect(() => {
 	if (props.validateInitially) {
@@ -92,7 +90,7 @@ function togglePasswordFieldType() {
 }
 
 function handleInput(e: Event) {
-	emit('update:modelValue', (e.target as HTMLInputElement).value)
+	password.value = (e.target as HTMLInputElement).value
 }
 
 function handleSubmit(e: Event) {
