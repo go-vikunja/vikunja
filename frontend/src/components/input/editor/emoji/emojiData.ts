@@ -1,3 +1,5 @@
+import emojiDataUrl from 'emoji-picker-element-data/en/emojibase/data.json?url'
+
 export interface EmojiEntry {
 	emoji: string
 	shortcode: string
@@ -29,9 +31,9 @@ export function __resetEmojiCacheForTest() {
 
 export function loadEmojiCatalog(): Promise<EmojiCatalogEntry[]> {
 	if (catalogCache) return catalogCache
-	catalogCache = fetch('/emojis.json')
+	catalogCache = fetch(emojiDataUrl)
 		.then(res => {
-			if (!res.ok) throw new Error(`emojis.json HTTP ${res.status}`)
+			if (!res.ok) throw new Error(`emoji data HTTP ${res.status}`)
 			return res.json() as Promise<EmojiCatalogEntry[]>
 		})
 		.catch(err => {
