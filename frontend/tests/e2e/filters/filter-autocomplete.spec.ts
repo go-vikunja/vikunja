@@ -1,14 +1,15 @@
 import {test, expect} from '../../support/fixtures'
 import {updateUserSettings} from '../../support/updateUserSettings'
 
+import {ProjectFactory} from '../../factories/project'
+import {TaskFactory} from '../../factories/task'
+import {ProjectViewFactory} from '../../factories/project_view'
+
 test.beforeEach(async ({apiContext, userToken}) => {
 	await updateUserSettings(apiContext, userToken, {
 		frontend_settings: {filter_editor_mode: 'advanced'},
 	})
 })
-import {ProjectFactory} from '../../factories/project'
-import {TaskFactory} from '../../factories/task'
-import {ProjectViewFactory} from '../../factories/project_view'
 
 /**
  * Tests for filter autocomplete functionality, specifically for:
