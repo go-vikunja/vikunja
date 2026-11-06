@@ -4,6 +4,7 @@ import {useI18n} from 'vue-i18n'
 import {isDateMath, type SimpleFilter} from '@/helpers/simpleFilter'
 import type {Priority} from '@/constants/priorities'
 import {formatDate} from '@/helpers/time/formatDate'
+import {createDateFromString} from '@/helpers/time/createDateFromString'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
@@ -59,7 +60,7 @@ function serializeDate(value: Date | string | null): string {
 	if (typeof value === 'string' && value.startsWith('now')) {
 		return isDateMath(value) ? value : ''
 	}
-	const date = new Date(value)
+	const date = createDateFromString(value)
 	return Number.isNaN(date.getTime()) ? '' : date.toISOString()
 }
 
