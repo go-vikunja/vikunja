@@ -171,6 +171,7 @@ defineExpose({focus})
 						type="search"
 						class="input"
 						@blur="emit('update:search', searchText)"
+						@keydown.enter="emit('update:search', searchText)"
 					>
 				</label>
 			</template>
