@@ -1,11 +1,40 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 import {filterEmojis, __resetEmojiCacheForTest, loadEmojis, loadEmojiCatalog} from './emojiData'
+import {maxSupportedEmojiVersion} from './emojiSupport'
+
+vi.mock('./emojiSupport', () => ({
+	maxSupportedEmojiVersion: vi.fn(() => Infinity),
+}))
 
 const fixture = [
-	{shortcodes: ['grinning', 'grinning_face'], annotation: 'grinning face', tags: ['face', 'grin'], emoji: '😀'},
-	{shortcodes: ['eyes'], annotation: 'eyes', tags: ['look'], emoji: '👀'},
-	{shortcodes: ['eyeglasses'], annotation: 'glasses', tags: ['eye'], emoji: '👓'},
-	{shortcodes: ['smile'], annotation: 'grinning face with smiling eyes', tags: ['eye', 'smile'], emoji: '😄'},
+	{
+		shortcodes: ['grinning', 'grinning_face'],
+		annotation: 'grinning face',
+		tags: ['face', 'grin'],
+		emoji: '😀',
+		version: 1,
+	},
+	{
+		shortcodes: ['eyes'],
+		annotation: 'eyes',
+		tags: ['look'],
+		emoji: '👀',
+		version: 1,
+	},
+	{
+		shortcodes: ['eyeglasses'],
+		annotation: 'glasses',
+		tags: ['eye'],
+		emoji: '👓',
+		version: 1,
+	},
+	{
+		shortcodes: ['smile'],
+		annotation: 'grinning face with smiling eyes',
+		tags: ['eye', 'smile'],
+		emoji: '😄',
+		version: 1,
+	},
 ]
 
 describe('emojiData', () => {
@@ -60,5 +89,58 @@ describe('emojiData', () => {
 	it('shares one request between catalog and autocomplete', async () => {
 		await Promise.all([loadEmojiCatalog(), loadEmojis()])
 		expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1)
+	})
+
+	it('drops emoji and skin variants newer than the OS renders', async () => {
+		vi.mocked(maxSupportedEmojiVersion).mockReturnValueOnce(15)
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => [
+				{
+					shortcodes: ['leftwards_pushing_hand'],
+					annotation: 'leftwards pushing hand',
+					emoji: '🫷',
+					group: 1,
+					version: 15,
+					skins: [
+						{
+							emoji: '🫷🏻',
+							tone: 1,
+							version: 15,
+						},
+						{
+							emoji: '🫷🏼',
+							tone: 2,
+							version: 16,
+						},
+					],
+				},
+				{
+					shortcodes: ['face_with_bags_under_eyes'],
+					annotation: 'face with bags under eyes',
+					emoji: '🫩',
+					group: 0,
+					version: 16,
+				},
+			],
+		}))
+
+		expect(await loadEmojiCatalog()).toEqual([
+			{
+				shortcodes: ['leftwards_pushing_hand'],
+				annotation: 'leftwards pushing hand',
+				emoji: '🫷',
+				group: 1,
+				version: 15,
+				skins: [
+					{
+						emoji: '🫷🏻',
+						tone: 1,
+						version: 15,
+					},
+				],
+			},
+		])
+		expect((await loadEmojis()).map(e => e.shortcode)).toEqual(['leftwards_pushing_hand'])
 	})
 })

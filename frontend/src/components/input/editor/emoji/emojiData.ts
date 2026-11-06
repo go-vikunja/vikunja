@@ -1,4 +1,5 @@
 import emojiDataUrl from 'emoji-picker-element-data/en/emojibase/data.json?url'
+import {maxSupportedEmojiVersion} from './emojiSupport'
 
 export interface EmojiEntry {
 	emoji: string
@@ -13,9 +14,11 @@ export interface EmojiCatalogEntry {
 	tags?: string[]
 	emoji: string
 	group: number
+	version: number
 	skins?: {
 		emoji: string
 		tone: number | number[]
+		version: number
 	}[]
 }
 
@@ -35,6 +38,15 @@ export function loadEmojiCatalog(): Promise<EmojiCatalogEntry[]> {
 		.then(res => {
 			if (!res.ok) throw new Error(`emoji data HTTP ${res.status}`)
 			return res.json() as Promise<EmojiCatalogEntry[]>
+		})
+		.then(entries => {
+			const maxVersion = maxSupportedEmojiVersion()
+			return entries
+				.filter(entry => entry.version <= maxVersion)
+				.map(entry => ({
+					...entry,
+					skins: entry.skins?.filter(skin => skin.version <= maxVersion),
+				}))
 		})
 		.catch(err => {
 			catalogCache = null
