@@ -70,8 +70,8 @@ function parseDate(value: string): string | null {
 	return null
 }
 
-export function fromQuery(query: string): SimpleFilter | null {
-	const filter: SimpleFilter = {
+export function emptySimpleFilter(): SimpleFilter {
+	return {
 		showDone: true,
 		due: {
 			range: null,
@@ -82,6 +82,10 @@ export function fromQuery(query: string): SimpleFilter | null {
 		projectIds: [],
 		minPriority: null,
 	}
+}
+
+export function fromQuery(query: string): SimpleFilter | null {
+	const filter = emptySimpleFilter()
 	let from: string | undefined
 	let to: string | undefined
 	for (const clause of query === '' ? [] : query.split(' && ')) {

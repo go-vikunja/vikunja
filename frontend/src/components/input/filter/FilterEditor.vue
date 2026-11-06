@@ -7,7 +7,7 @@ import {
 	watch,
 } from 'vue'
 import {useI18n} from 'vue-i18n'
-import {fromQuery, toQuery, type SimpleFilter} from '@/helpers/simpleFilter'
+import {emptySimpleFilter, fromQuery, toQuery, type SimpleFilter} from '@/helpers/simpleFilter'
 import {useAuthStore} from '@/stores/auth'
 import {useUpdateFrontendSettingsMutation} from '@/client/queries/account'
 import FilterInput from './FilterInput.vue'
@@ -30,33 +30,29 @@ const {t} = useI18n({useScope: 'global'})
 const auth = useAuthStore()
 const updateSettings = useUpdateFrontendSettingsMutation()
 const parsed = computed(() => fromQuery(props.modelValue))
-const mode = ref<'simple' | 'advanced'>('simple')
-const simple = ref(fromQuery('')!)
+// eslint-disable-next-line vue/no-ref-object-reactivity-loss -- the watch on parsed takes over after setup
+const initial = parsed.value
+const mode = ref<'simple' | 'advanced'>(initial === null ? 'advanced' : auth.settings.frontend_settings.filter_editor_mode)
+const simple = ref(initial ?? emptySimpleFilter())
 const searchText = ref('')
 const advancedInput = ref<InstanceType<typeof FilterInput>>()
 const root = ref<HTMLElement>()
 const id = useId()
 watch(() => props.search, value => { searchText.value = value ?? '' }, {immediate: true})
-let initialized = false
 watch(parsed, value => {
-	if (!initialized && value !== null) {
-		mode.value = auth.settings.frontend_settings.filter_editor_mode ?? 'simple'
-	}
-	initialized = true
 	if (value === null) {
 		mode.value = 'advanced'
 	} else if (toQuery(simple.value) !== props.modelValue) {
 		simple.value = value
 	}
-}, {immediate: true})
+})
 
 function selectMode(value: 'simple' | 'advanced') {
 	if (value === 'simple') {
-		const current = fromQuery(props.modelValue)
-		if (current === null) {
+		if (parsed.value === null) {
 			return
 		}
-		simple.value = current
+		simple.value = parsed.value
 	}
 	mode.value = value
 	saveMode(value)
@@ -91,7 +87,7 @@ function changeAdvanced(value: string) {
 }
 
 function clearAndUseSimple() {
-	simple.value = fromQuery('')!
+	simple.value = emptySimpleFilter()
 	emit('update:modelValue', '')
 	emit('change', 'simple')
 	mode.value = 'simple'

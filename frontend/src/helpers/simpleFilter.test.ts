@@ -1,17 +1,6 @@
 import {describe, expect, it} from 'vitest'
-import {fromQuery, toQuery, type SimpleFilter} from './simpleFilter'
+import {emptySimpleFilter, fromQuery, toQuery, type SimpleFilter} from './simpleFilter'
 
-const empty: SimpleFilter = {
-	showDone: true,
-	due: {
-		range: null,
-		includeOverdue: false,
-	},
-	labelIds: [],
-	assignees: [],
-	projectIds: [],
-	minPriority: null,
-}
 describe('simple filters', () => {
 	it.each<[Partial<SimpleFilter>, string]>([
 		[{}, ''],
@@ -49,7 +38,7 @@ describe('simple filters', () => {
 		}, 'done = false && labels in 2, 1 && assignees in alice && project in 4 && priority >= 5'],
 	])('generates and round trips %j', (fields, query) => {
 		const form = {
-			...empty,
+			...emptySimpleFilter(),
 			...fields,
 		}
 		expect(toQuery(form)).toBe(query)
@@ -65,7 +54,7 @@ describe('simple filters', () => {
 			includeOverdue: true,
 		}
 		expect(toQuery({
-			...empty,
+			...emptySimpleFilter(),
 			due,
 		})).toBe('due_date < now/d+1d')
 		expect(fromQuery('due_date < now/d+1d')?.due).toEqual({
