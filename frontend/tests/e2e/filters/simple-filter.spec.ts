@@ -59,11 +59,66 @@ test('keeps an unsupported query in Advanced until explicitly cleared', async ({
 	})).toHaveAttribute('aria-disabled', 'true')
 	await expect(popup.getByText('This filter is too advanced for Simple mode.')).toBeVisible()
 	await popup.getByRole('button', {name: 'Clear and use Simple'}).click()
-	await expect(popup.getByRole('tab', {
+	const simpleTab = popup.getByRole('tab', {
 		name: 'Simple',
 		exact: true,
-	})).toHaveAttribute('aria-selected', 'true')
+	})
+	await expect(simpleTab).toHaveAttribute('aria-selected', 'true')
+	await expect(simpleTab).toBeFocused()
 	await expect(page).not.toHaveURL(/filter=/)
+})
+
+test('applies an Advanced popup query only on Show results', async ({authenticatedPage: page}) => {
+	const popup = page.locator('.filter-popup')
+	await popup.getByRole('tab', {
+		name: 'Advanced',
+		exact: true,
+	}).click()
+	await popup.locator('.ProseMirror').fill('done = true')
+	await expect(page).not.toHaveURL(/filter=/)
+	await popup.getByRole('button', {
+		name: 'Show results',
+		exact: true,
+	}).click()
+	await expect.poll(() => new URL(page.url()).searchParams.get('filter')).toBe('done = true')
+})
+
+test('clears an Advanced plain-text search from the popup', async ({authenticatedPage: page}) => {
+	const popup = page.locator('.filter-popup')
+	const advancedTab = popup.getByRole('tab', {
+		name: 'Advanced',
+		exact: true,
+	})
+	const editor = popup.locator('.ProseMirror')
+	const showResults = popup.getByRole('button', {
+		name: 'Show results',
+		exact: true,
+	})
+	await advancedTab.click()
+	await editor.fill('Task 1')
+	await showResults.click()
+	await expect.poll(() => new URL(page.url()).searchParams.get('s')).toBe('Task 1')
+	await expect(page.locator('.tasks')).not.toContainText('Task 2')
+	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+	await advancedTab.click()
+	await expect(editor).toHaveText('Task 1')
+	await editor.press('ControlOrMeta+a')
+	await editor.press('Backspace')
+	await showResults.click()
+	await expect.poll(() => new URL(page.url()).searchParams.get('s') ?? '').toBe('')
+	await expect(page.locator('.tasks')).toContainText('Task 2')
+})
+
+test('keeps Advanced input while typing on the new saved filter page', async ({authenticatedPage: page}) => {
+	await page.goto('/filters/new')
+	await page.getByRole('tab', {
+		name: 'Advanced',
+		exact: true,
+	}).click()
+	const editor = page.locator('.filter-editor .ProseMirror')
+	await editor.press('ControlOrMeta+a')
+	await editor.pressSequentially('done = true')
+	await expect(editor).toHaveText('done = true')
 })
 
 test('keeps search separate and applies it on blur', async ({authenticatedPage: page}) => {
