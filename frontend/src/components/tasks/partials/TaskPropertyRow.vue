@@ -1,0 +1,303 @@
+<template>
+	<div
+		v-if="canWrite || isSet"
+		class="property"
+		:class="[`property-${name}`, {'is-set': isSet}]"
+	>
+		<dt :id="`task-property-${name}-label`">
+			<Icon :icon="icon" />
+			{{ label }}
+		</dt>
+		<dd>
+			<slot />
+			<BaseButton
+				v-if="removeLabel && isSet && canWrite"
+				v-tooltip="removeLabel"
+				class="remove"
+				:aria-label="removeLabel"
+				@click="emit('remove')"
+			>
+				<Icon icon="times" />
+			</BaseButton>
+		</dd>
+		<slot name="editor" />
+	</div>
+</template>
+
+<script setup lang="ts">
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+
+import BaseButton from '@/components/base/BaseButton.vue'
+
+defineProps<{
+	name: string,
+	icon: IconProp,
+	label: string,
+	isSet: boolean,
+	canWrite: boolean,
+	removeLabel?: string,
+}>()
+
+const emit = defineEmits<{
+	remove: [],
+}>()
+</script>
+
+<style lang="scss" scoped>
+.property {
+	display: grid;
+	grid-template-columns: minmax(6rem, 7.5rem) 1fr;
+	column-gap: .5rem;
+	align-items: start;
+	padding-block: .375rem;
+	border-block-end: 1px solid var(--grey-200);
+	transition: background-color $transition;
+
+	dt {
+		display: flex;
+		align-items: center;
+		gap: .5rem;
+		// Line up the label with the value's first line, whose control has its own vertical padding.
+		min-block-size: 2rem;
+		color: var(--grey-600);
+		font-weight: 500;
+		transition: color $transition;
+
+		svg {
+			inline-size: .875rem;
+			flex-shrink: 0;
+			color: var(--grey-400);
+			transition: color $transition;
+		}
+	}
+
+	dd {
+		min-inline-size: 0;
+		margin: 0;
+		display: flex;
+		align-items: center;
+		gap: .25rem;
+
+		// Slotted controls carry the parent's scope id, not this one.
+		> :deep(*) {
+			min-inline-size: 0;
+		}
+	}
+
+	// Between tablet and desktop the column is too narrow for label and value side by side.
+	@container task-sidebar (inline-size < 19rem) {
+		grid-template-columns: 1fr;
+
+		dt {
+			min-block-size: 1.5rem;
+		}
+	}
+
+	&.is-set dt {
+		color: var(--grey-700);
+
+		svg {
+			color: var(--primary);
+		}
+	}
+
+	.remove,
+	:deep(.reminders .remove),
+	:deep(.remove-assignee) {
+		color: var(--grey-500);
+		line-height: 1;
+		padding: .25rem;
+		border-radius: $radius;
+		transition: opacity $transition, color $transition;
+
+		&:hover,
+		&:focus-visible {
+			color: var(--danger);
+		}
+	}
+
+	@media (hover: hover) {
+		.remove,
+		:deep(.reminders .remove),
+		:deep(.remove-assignee) {
+			opacity: 0;
+		}
+
+		&:hover,
+		&:focus-within {
+			.remove,
+			:deep(.reminders .remove),
+			:deep(.remove-assignee) {
+				opacity: 1;
+			}
+		}
+	}
+
+	@media print {
+		.remove {
+			display: none;
+		}
+	}
+
+	&:not(.is-set) > dd :deep(select) {
+		color: var(--grey-600);
+		font-style: italic;
+	}
+}
+
+.property > dd {
+	:deep(.select) {
+		inline-size: 100%;
+
+		select {
+			inline-size: 100%;
+			background: transparent;
+			border-color: transparent;
+			box-shadow: none;
+			block-size: 2rem;
+			padding-block: 0;
+			padding-inline-start: .5rem;
+			line-height: 2rem;
+		}
+
+		&:not(.has-defaults):after {
+			opacity: 0;
+		}
+
+		&:hover:not(.has-defaults):after {
+			opacity: 1;
+		}
+
+		select:disabled {
+			color: var(--text);
+			opacity: 1;
+			cursor: default;
+		}
+
+		&:has(select:disabled)::after {
+			display: none;
+		}
+
+		select:not(:disabled) {
+			cursor: pointer;
+
+			&:hover,
+			&:focus {
+				background: var(--scheme-main);
+				border-color: var(--border);
+			}
+
+			&:focus-visible {
+				border-color: var(--primary);
+				@include focus-ring;
+			}
+		}
+	}
+
+	:deep(.multiselect) {
+		inline-size: 100%;
+		min-inline-size: 0;
+
+		input {
+			flex: 1 1 5rem;
+			min-inline-size: 5rem;
+			inline-size: auto;
+			text-overflow: ellipsis;
+		}
+
+		.tag {
+			max-inline-size: 100%;
+
+			> span {
+				min-inline-size: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+
+		.input-wrapper {
+			&:not(:focus-within, :hover) {
+				background: transparent;
+				border-color: transparent;
+			}
+		}
+	}
+
+	:deep(.datepicker) {
+		flex: 1;
+		min-inline-size: 0;
+
+		.show {
+			color: var(--text);
+			padding: .25rem .5rem;
+			transition: background-color $transition;
+			border-radius: $radius;
+			display: block;
+			inline-size: 100%;
+			min-block-size: 2rem;
+			text-align: start;
+
+			i {
+				color: var(--grey-600);
+			}
+
+			&:hover {
+				background: var(--scheme-main);
+			}
+		}
+
+		&.disabled .show:hover {
+			background: transparent;
+		}
+	}
+
+	:deep(.reminders) {
+		inline-size: 100%;
+
+		.reminder-input:last-child {
+			margin-block-end: 0;
+		}
+	}
+
+	:deep(.color-picker-container) {
+		justify-content: flex-start;
+		min-block-size: 2rem;
+		padding-inline-start: .5rem;
+	}
+
+	:deep(.color-bubble) {
+		inline-size: 1.25rem;
+		block-size: 1.25rem;
+		margin: .375rem .5rem;
+	}
+
+	// Overlapping avatars can't wrap, so a long list would overflow the row.
+	:deep(.assignees-list) {
+		flex-wrap: wrap;
+		gap: .375rem;
+		padding-block-start: .25rem;
+
+		.assignee:not(:first-child) {
+			margin-inline-start: 0;
+		}
+
+		.remove-assignee {
+			inset-block-start: -.25rem;
+			inset-inline: auto -.375rem;
+			inline-size: 1rem;
+			block-size: 1rem;
+			padding: 0;
+			font-size: .625rem;
+			box-shadow: var(--shadow-sm);
+		}
+
+		.user {
+			margin: 0;
+		}
+
+		.username {
+			display: none;
+		}
+	}
+}
+</style>
