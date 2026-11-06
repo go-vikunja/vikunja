@@ -7,7 +7,7 @@ test.describe('TipTap Editor Save', () => {
 		await ProjectFactory.create(1)
 	})
 
-	test('Copies code without markdown fences in preview and edit mode', async ({
+	test('Copies code without markdown fences only in preview mode', async ({
 		authenticatedPage: page,
 		apiContext,
 		userToken,
@@ -29,26 +29,25 @@ test.describe('TipTap Editor Save', () => {
 			exact: true,
 		})
 
-		for (const mode of ['preview', 'edit']) {
-			if (mode === 'edit') {
-				await description.locator('button.done-edit').click()
-			}
-			await expect(copyButtons).toHaveCount(2)
-			await copyButtons.first().click()
-			await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(code)
-			await copyButtons.nth(1).focus()
-			await page.keyboard.press('Enter')
-			await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(otherCode)
-		}
+		await expect(copyButtons).toHaveCount(2)
+		await copyButtons.first().click()
+		await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(code)
+		await copyButtons.nth(1).focus()
+		await page.keyboard.press('Enter')
+		await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(otherCode)
+
+		await description.locator('button.done-edit').click()
+		await expect(copyButtons).toHaveCount(0)
 
 		await editor.locator('pre code').first().click()
 		await page.keyboard.press('End')
 		await page.keyboard.type('echo updated')
 		const updatedCode = await editor.locator('pre code').first().textContent()
-		await copyButtons.first().click()
-		await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(updatedCode)
 		await page.getByTestId('saveEditor').filter({hasText: 'Save'}).click()
 		await expect(description.locator('h2 span.is-small.has-text-success')).toContainText('Saved!')
+		await expect(copyButtons).toHaveCount(2)
+		await copyButtons.first().click()
+		await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(updatedCode)
 		await page.reload()
 		await expect(copyButtons).toHaveCount(2)
 		const response = await apiContext.get(`tasks/${tasks[0].id}`, {

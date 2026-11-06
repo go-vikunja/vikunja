@@ -64,4 +64,8 @@ const copy = useCopyToClipboard()
 		}
 	}
 }
+
+.tiptap[contenteditable='true'] pre.code-block .code-block__copy {
+	display: none;
+}
 </style>
