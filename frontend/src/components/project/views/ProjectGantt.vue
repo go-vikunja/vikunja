@@ -40,6 +40,17 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
+					<FancyCheckbox
+						v-if="filters.projectId > 0"
+						v-model="includeSubprojects"
+						v-tooltip="includeSubprojectsFromView
+							? $t('project.views.includeSubprojectsFromView')
+							: $t('project.views.includeSubprojectsHint')"
+						:disabled="includeSubprojectsFromView"
+						is-block
+					>
+						{{ $t('project.views.includeSubprojects') }}
+					</FancyCheckbox>
 				</div>
 			</Card>
 
@@ -51,6 +62,7 @@
 				>
 					<GanttChart
 						:filters="filters"
+						:include-subprojects="includeSubprojects"
 						:tasks="tasks"
 						:is-loading="isLoading"
 						:default-task-start-date="defaultTaskStartDate"
@@ -81,6 +93,7 @@ import FormField from '@/components/input/FormField.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
@@ -101,6 +114,10 @@ const canWrite = computed(() =>
 )
 
 const {route, projectId, viewId} = toRefs(props)
+const currentView = computed(() => currentProject.value?.views.find(v => v.id === viewId.value))
+const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+// The api ors the view's own setting in, so the query param cannot turn it back off.
+const includeSubprojectsFromView = computed(() => currentView.value?.filter?.include_subprojects ?? false)
 const {
 	filters,
 	hasDefaultFilters,
@@ -109,7 +126,7 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, projectId, viewId)
+} = useGanttFilters(route, projectId, viewId, includeSubprojects)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 
