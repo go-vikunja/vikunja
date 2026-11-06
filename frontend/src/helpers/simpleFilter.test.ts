@@ -18,7 +18,6 @@ describe('simple filters', () => {
 		[{showDone: false}, 'done = false'],
 		[{labelIds: [2, 1]}, 'labels in 2, 1'],
 		[{assignees: ['alice', 'bob']}, 'assignees in alice, bob'],
-		[{assignees: ['alice', 'a||b']}, 'assignees in "alice, a||b"'],
 		[{projectIds: [3, 4]}, 'project in 3, 4'],
 		[{minPriority: 3}, 'priority >= 3'],
 		[{due: {
@@ -81,7 +80,7 @@ describe('simple filters', () => {
 		'done = false || priority >= 3', '(done = false)', 'priority >= 3 && done = false',
 		' done = false', 'done  = false', 'done = false ', 'labels not in 1', 'priority > 3',
 		'unknown = 3', 'priority >= 6', 'labels in 01', 'labels in 1 && labels in 2',
-		'due_date < "2026-99-01T00:00:00.000Z"', 'due_date > now', 'due_date < "now"', 'due_date < garbage', 'assignees in alice || bob',
+		'due_date < "2026-99-01T00:00:00.000Z"', 'due_date > now', 'due_date < "now"', 'due_date < garbage', 'assignees in alice || bob', 'assignees in "a||b"',
 	])('rejects noncanonical query %s', query => {
 		expect(fromQuery(query)).toBeNull()
 	})

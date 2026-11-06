@@ -4,6 +4,7 @@ import {useI18n} from 'vue-i18n'
 import Multiselect from '@/components/input/Multiselect.vue'
 import {useProjectUserSearch, useUserSearch} from '@/composables/useUserSearch'
 import {getDisplayName} from '@/helpers/user'
+import {isSimpleUsername} from '@/helpers/simpleFilter'
 
 const props = defineProps<{
 	projectId?: number
@@ -20,7 +21,7 @@ const selected = computed(() => usernames.value.map(username => ({
 	username,
 	title: username,
 })))
-const results = computed(() => users.value.flatMap(user => user.username && !usernames.value.includes(user.username)
+const results = computed(() => users.value.flatMap(user => user.username && isSimpleUsername(user.username) && !usernames.value.includes(user.username)
 	? [{
 		username: user.username,
 		title: `${getDisplayName(user)} (${user.username})`,

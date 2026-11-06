@@ -17,8 +17,13 @@ export interface SimpleFilter {
 	minPriority: Priority | null
 }
 const dateMath = /^now(?:[+-]\d+[smhdwMy]|\/[smhdwMy])*$/
-const usernameList = /^[^\s,()&|=<>"']+(?:, [^\s,()&|=<>"']+)*$/
+const simpleUsername = /^[^\s,()&|=<>"']+$/
 const isoDate = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+
+// The backend ignores quotes and splits values at &|(), so unsafe names can't be escaped.
+export function isSimpleUsername(username: string): boolean {
+	return simpleUsername.test(username)
+}
 
 function quoteDate(value: string): string {
 	return dateMath.test(value) ? value : JSON.stringify(value)
@@ -42,8 +47,7 @@ export function toQuery(filter: SimpleFilter): string {
 		clauses.push(`labels in ${filter.labelIds.join(', ')}`)
 	}
 	if (filter.assignees.length) {
-		const value = filter.assignees.join(', ')
-		clauses.push(`assignees in ${usernameList.test(value) ? value : JSON.stringify(value)}`)
+		clauses.push(`assignees in ${filter.assignees.join(', ')}`)
 	}
 	if (filter.projectIds.length) {
 		clauses.push(`project in ${filter.projectIds.join(', ')}`)
@@ -114,20 +118,11 @@ export function fromQuery(query: string): SimpleFilter | null {
 		}
 		const assignees = /^assignees in (.+)$/.exec(clause)
 		if (assignees) {
-			let value = assignees[1]
-			if (value.startsWith('"')) {
-				try {
-					value = JSON.parse(value)
-				} catch {
-					return null
-				}
-				if (typeof value !== 'string') {
-					return null
-				}
-			} else if (!usernameList.test(value)) {
+			const values = assignees[1].split(', ')
+			if (!values.every(isSimpleUsername)) {
 				return null
 			}
-			filter.assignees = value.split(', ')
+			filter.assignees = values
 			continue
 		}
 		const priority = /^priority >= ([0-5])$/.exec(clause)
