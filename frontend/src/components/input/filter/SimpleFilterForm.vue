@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {fromQuery, type SimpleFilter} from '@/helpers/simpleFilter'
+import {isDateMath, type SimpleFilter} from '@/helpers/simpleFilter'
 import type {Priority} from '@/constants/priorities'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
@@ -47,7 +47,7 @@ function serializeDate(value: Date | string | null): string {
 		return ''
 	}
 	if (typeof value === 'string' && value.startsWith('now')) {
-		return fromQuery(`due_date < ${value}`) === null ? '' : value
+		return isDateMath(value) ? value : ''
 	}
 	const date = new Date(value)
 	return Number.isNaN(date.getTime()) ? '' : date.toISOString()

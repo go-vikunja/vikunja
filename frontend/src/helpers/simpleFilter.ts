@@ -24,8 +24,12 @@ export function isSimpleUsername(username: string): boolean {
 	return simpleUsername.test(username)
 }
 
+export function isDateMath(value: string): boolean {
+	return dateMath.test(value)
+}
+
 function quoteDate(value: string): string {
-	return dateMath.test(value) ? value : JSON.stringify(value)
+	return isDateMath(value) ? value : JSON.stringify(value)
 }
 
 export function toQuery(filter: SimpleFilter): string {
@@ -58,7 +62,7 @@ export function toQuery(filter: SimpleFilter): string {
 }
 
 function parseDate(value: string): string | null {
-	if (dateMath.test(value)) {
+	if (isDateMath(value)) {
 		return value
 	}
 	if (value.startsWith('"') && value.endsWith('"')) {
