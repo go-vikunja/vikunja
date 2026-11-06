@@ -1028,6 +1028,33 @@
         "empty": "No emoji found"
       }
     },
+    "emojiPicker": {
+      "title": "Emoji picker",
+      "search": "Search emoji",
+      "skinTone": "Skin tone",
+      "categories": "Emoji categories",
+      "results": "Search results",
+      "loadError": "Could not load emoji.",
+      "tones": {
+        "light": "Light",
+        "mediumLight": "Medium light",
+        "medium": "Medium",
+        "mediumDark": "Medium dark",
+        "dark": "Dark"
+      },
+      "groups": {
+        "recent": "Recently used",
+        "smileys": "Smileys & emotion",
+        "people": "People & body",
+        "nature": "Animals & nature",
+        "food": "Food & drink",
+        "travel": "Travel & places",
+        "activities": "Activities",
+        "objects": "Objects",
+        "symbols": "Symbols",
+        "flags": "Flags"
+      }
+    },
     "multiselect": {
       "createPlaceholder": "Create",
       "selectPlaceholder": "Click or press enter to select",

@@ -43,11 +43,12 @@ describe('emojiData', () => {
 		expect(result[2].shortcode).toBe('smile')
 	})
 
-	it('limits results to 15', () => {
+	it('limits results to 15 by default', () => {
 		const big = Array.from({length: 100}, (_, i) => ({
 			shortcode: `foo_${String(i).padStart(3, '0')}`, emoji: '✨', annotation: '', tags: [],
 		}))
 		expect(filterEmojis(big, 'foo')).toHaveLength(15)
+		expect(filterEmojis(big, 'foo', Infinity)).toHaveLength(100)
 	})
 
 	it('caches the fetch promise across calls', async () => {
