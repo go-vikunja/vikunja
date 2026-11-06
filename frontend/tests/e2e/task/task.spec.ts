@@ -976,6 +976,22 @@ test.describe('Task', () => {
 			}
 		})
 
+		test('Names each date picker trigger after its property', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			for (const name of ['Due date Not set', 'Start date Not set', 'End date Not set']) {
+				await expect(page.locator('.task-view').getByRole('button', {
+					name,
+					exact: true,
+				})).toBeVisible()
+			}
+		})
+
 		test('Navigates the due date quick-select options with the arrow keys', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
