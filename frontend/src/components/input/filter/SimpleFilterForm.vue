@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, ref, useId, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {isDateMath, type SimpleFilter} from '@/helpers/simpleFilter'
 import type {Priority} from '@/constants/priorities'
@@ -17,6 +17,7 @@ const props = defineProps<{
 }>()
 const model = defineModel<SimpleFilter>({required: true})
 const {t} = useI18n({useScope: 'global'})
+const id = useId()
 
 function update(patch: Partial<SimpleFilter>) {
 	model.value = {
@@ -113,8 +114,15 @@ const priority = computed({
 				{{ t('filters.simple.showDone') }}
 			</FancyCheckbox>
 		</div>
-		<div class="field">
-			<div class="label">
+		<div
+			class="field"
+			role="group"
+			:aria-labelledby="`${id}-due`"
+		>
+			<div
+				:id="`${id}-due`"
+				class="label"
+			>
 				{{ t('task.attributes.dueDate') }}
 			</div>
 			<DatepickerWithRange
@@ -146,8 +154,15 @@ const priority = computed({
 				{{ t('task.show.overdue') }}
 			</FancyCheckbox>
 		</div>
-		<div class="field">
-			<div class="label">
+		<div
+			class="field"
+			role="group"
+			:aria-labelledby="`${id}-labels`"
+		>
+			<div
+				:id="`${id}-labels`"
+				class="label"
+			>
 				{{ t('task.attributes.labels') }}
 			</div>
 			<FilterLabelSelect
@@ -155,8 +170,15 @@ const priority = computed({
 				@update:modelValue="update({labelIds: $event})"
 			/>
 		</div>
-		<div class="field">
-			<div class="label">
+		<div
+			class="field"
+			role="group"
+			:aria-labelledby="`${id}-assignees`"
+		>
+			<div
+				:id="`${id}-assignees`"
+				class="label"
+			>
 				{{ t('task.attributes.assignees') }}
 			</div>
 			<FilterAssigneeSelect
@@ -168,8 +190,13 @@ const priority = computed({
 		<div
 			v-if="!props.projectId"
 			class="field"
+			role="group"
+			:aria-labelledby="`${id}-projects`"
 		>
-			<div class="label">
+			<div
+				:id="`${id}-projects`"
+				class="label"
+			>
 				{{ t('project.projects') }}
 			</div>
 			<FilterProjectSelect
@@ -177,8 +204,15 @@ const priority = computed({
 				@update:modelValue="update({projectIds: $event})"
 			/>
 		</div>
-		<div class="field">
-			<div class="label">
+		<div
+			class="field"
+			role="group"
+			:aria-labelledby="`${id}-priority`"
+		>
+			<div
+				:id="`${id}-priority`"
+				class="label"
+			>
 				{{ t('filters.simple.minPriority') }}
 			</div>
 			<PrioritySelect v-model="priority" />
