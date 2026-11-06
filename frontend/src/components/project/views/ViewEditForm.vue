@@ -107,7 +107,7 @@ function save() {
 			order_by: filterInput?.order_by ?? [],
 			filter: '',
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
-			s: filterInput?.s ?? '',
+			s: '',
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
