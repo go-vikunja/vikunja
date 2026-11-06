@@ -8,6 +8,7 @@ import {marked} from 'marked'
 
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import {VueNodeViewRenderer} from '@tiptap/vue-3'
 import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
 import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
@@ -27,6 +28,7 @@ import {createClipboardParser, fillRequiredContent, repairSliceContent} from './
 import {htmlHasFormatting} from './clipboardHtml'
 import {parseSpan, tableLimitedElementFromString} from './tableBudget'
 import {serializeClipboardText} from './clipboardText'
+import CodeBlockView from './CodeBlockView.vue'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
@@ -330,6 +332,10 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 
 		CodeBlockLowlight.configure({
 			lowlight: createLowlight(common),
+		}).extend({
+			addNodeView() {
+				return VueNodeViewRenderer(CodeBlockView)
+			},
 		}),
 		HardBreak.extend({
 			addKeyboardShortcuts() {

@@ -7,6 +7,81 @@ test.describe('TipTap Editor Save', () => {
 		await ProjectFactory.create(1)
 	})
 
+	test('Copies code without markdown fences in preview and edit mode', async ({
+		authenticatedPage: page,
+		apiContext,
+		userToken,
+	}) => {
+		const code = 'printf "<hello> & goodbye"\n\t  echo "indented"\n\n'
+		const otherCode = 'echo "another block"'
+		const tasks = await TaskFactory.create(1, {
+			id: 1,
+			description: '<p>Commands</p><pre><code class="language-bash">' +
+				'printf "&lt;hello&gt; &amp; goodbye"\n\t  echo "indented"\n\n' +
+				`</code></pre><pre><code>${otherCode}</code></pre>`,
+		})
+		await page.goto(`/tasks/${tasks[0].id}`)
+		const description = page.locator('.task-view .details.content.description')
+		const editor = description.locator('.tiptap__editor .tiptap.ProseMirror')
+		await expect(editor.locator('pre').first()).toHaveText(code)
+		const copyButtons = editor.getByRole('button', {
+			name: 'Copy to clipboard',
+			exact: true,
+		})
+
+		for (const mode of ['preview', 'edit']) {
+			if (mode === 'edit') {
+				await description.locator('button.done-edit').click()
+			}
+			await expect(copyButtons).toHaveCount(2)
+			await copyButtons.first().click()
+			await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(code)
+			await copyButtons.nth(1).focus()
+			await page.keyboard.press('Enter')
+			await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(otherCode)
+		}
+
+		await editor.locator('pre code').first().click()
+		await page.keyboard.press('End')
+		await page.keyboard.type('echo updated')
+		const updatedCode = await editor.locator('pre code').first().textContent()
+		await copyButtons.first().click()
+		await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(updatedCode)
+		await page.getByTestId('saveEditor').filter({hasText: 'Save'}).click()
+		await expect(description.locator('h2 span.is-small.has-text-success')).toContainText('Saved!')
+		await page.reload()
+		await expect(copyButtons).toHaveCount(2)
+		const response = await apiContext.get(`tasks/${tasks[0].id}`, {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect(response.ok()).toBeTruthy()
+		const storedTask = await response.json()
+		expect(storedTask.description).toContain('echo updated')
+		expect(storedTask.description).toContain('language-bash')
+		expect(storedTask.description).not.toContain('<button')
+		expect(storedTask.description).not.toContain('data-node-view')
+	})
+
+	test('Copies code when the Clipboard API is unavailable', async ({authenticatedPage: page}) => {
+		const code = 'echo "plain code"'
+		const tasks = await TaskFactory.create(1, {
+			id: 1,
+			description: `<pre><code>${code}</code></pre>`,
+		})
+		await page.goto(`/tasks/${tasks[0].id}`)
+		await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', {
+			configurable: true,
+			value: undefined,
+		}))
+		await page.locator('.task-view .details.content.description')
+			.getByRole('button', {
+				name: 'Copy to clipboard',
+				exact: true,
+			}).click()
+		await page.evaluate(() => Reflect.deleteProperty(navigator, 'clipboard'))
+		await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(code)
+	})
+
 	/**
 	 * Regression test for https://github.com/go-vikunja/vikunja/issues/1770
 	 *
