@@ -18,7 +18,6 @@ export interface SimpleFilter {
 }
 const dateMath = /^now(?:[+-]\d+[smhdwMy]|\/[smhdwMy])*$/
 const simpleUsername = /^[^\s,()&|=<>"']+$/
-const isoDate = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 // The backend ignores quotes and splits values at &|(), so unsafe names can't be escaped.
 export function isSimpleUsername(username: string): boolean {
@@ -64,7 +63,7 @@ function parseDate(value: string): string | null {
 	}
 	if (value.startsWith('"') && value.endsWith('"')) {
 		const date = value.slice(1, -1)
-		if (isoDate.test(date) && !Number.isNaN(Date.parse(date)) && new Date(date).toISOString() === date) {
+		if (!Number.isNaN(Date.parse(date)) && new Date(date).toISOString() === date) {
 			return date
 		}
 	}
@@ -106,9 +105,6 @@ export function fromQuery(query: string): SimpleFilter | null {
 		const ids = /^(labels|project) in ([1-9]\d*(?:, [1-9]\d*)*)$/.exec(clause)
 		if (ids) {
 			const values = ids[2].split(', ').map(Number)
-			if (values.some(id => !Number.isSafeInteger(id))) {
-				return null
-			}
 			if (ids[1] === 'labels') {
 				filter.labelIds = values
 			} else {
@@ -130,9 +126,6 @@ export function fromQuery(query: string): SimpleFilter | null {
 			return null
 		}
 		filter.minPriority = Number(priority[1]) as Priority
-	}
-	if (from !== undefined && to === undefined) {
-		return null
 	}
 	if (to !== undefined) {
 		filter.due = from !== undefined
