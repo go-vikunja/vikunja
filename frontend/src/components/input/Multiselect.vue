@@ -682,6 +682,7 @@ function focus() {
 		inline-size: 100%;
 		align-items: center;
 		border: none !important;
+		transition: none;
 		background: transparent;
 		block-size: auto;
 
