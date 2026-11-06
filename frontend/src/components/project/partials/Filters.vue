@@ -115,15 +115,9 @@ watch(
 	},
 )
 
-function change(event: 'blur' | 'modelValue' | 'always') {
-	if (event !== 'always') {
-		if (props.changeImmediately && event === 'blur') {
-			return
-		}
-
-		if (!props.changeImmediately && event === 'modelValue') {
-			return
-		}
+function change(event: 'modelValue' | 'always') {
+	if (event === 'modelValue' && !props.changeImmediately) {
+		return
 	}
 
 	let filter = params.value.filter ?? ''
