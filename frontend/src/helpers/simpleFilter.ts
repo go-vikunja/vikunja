@@ -1,4 +1,5 @@
 import type {Priority} from '@/constants/priorities'
+import {parseDateMath} from '@/helpers/time/parseDateMath'
 
 export interface DueFilter {
 	range: {
@@ -16,7 +17,6 @@ export interface SimpleFilter {
 	projectIds: number[]
 	minPriority: Priority | null
 }
-const dateMath = /^now(?:[+-]\d+[smhdwMy]|\/[smhdwMy])*$/
 const simpleUsername = /^[^\s,()&|=<>"']+$/
 
 // The backend ignores quotes and splits values at &|(), so unsafe names can't be escaped.
@@ -24,8 +24,9 @@ export function isSimpleUsername(username: string): boolean {
 	return simpleUsername.test(username)
 }
 
+// Absolute dates are datemath too, but they stay quoted ISO strings.
 export function isDateMath(value: string): boolean {
-	return dateMath.test(value)
+	return value.startsWith('now') && !/\s/.test(value) && parseDateMath(value) !== null
 }
 
 function quoteDate(value: string): string {

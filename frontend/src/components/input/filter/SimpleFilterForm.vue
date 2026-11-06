@@ -57,8 +57,8 @@ function serializeDate(value: Date | string | null): string {
 	if (!value) {
 		return ''
 	}
-	if (typeof value === 'string' && value.startsWith('now')) {
-		return isDateMath(value) ? value : ''
+	if (typeof value === 'string' && isDateMath(value)) {
+		return value
 	}
 	const date = createDateFromString(value)
 	return Number.isNaN(date.getTime()) ? '' : date.toISOString()

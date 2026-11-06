@@ -15,12 +15,12 @@ describe('simple filters', () => {
 		}}, 'due_date < now'],
 		[{due: {
 			range: {
-				from: 'now/d',
-				to: 'now/d+1d',
+				from: 'now/Q',
+				to: 'now/Q+1Q',
 			},
 			includeOverdue: false,
 		}},
-		'due_date > now/d && due_date < now/d+1d'],
+		'due_date > now/Q && due_date < now/Q+1Q'],
 		[{due: {
 			range: {
 				from: '2026-11-01T00:00:00.000Z',
