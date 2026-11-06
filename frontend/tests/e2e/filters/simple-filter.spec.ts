@@ -2,21 +2,8 @@ import {test, expect} from '../../support/fixtures'
 import {createProjects} from '../project/prepareProjects'
 import {TaskFactory} from '../../factories/task'
 import {LabelTaskFactory} from '../../factories/label_task'
-import {Factory} from '../../support/factory'
+import {LabelFactory} from '../../factories/labels'
 import {SavedFilterFactory} from '../../factories/saved_filter'
-
-class LabelFactory extends Factory {
-	static table = 'labels'
-	static factory() {
-		return {
-			id: 1,
-			title: 'Important',
-			created_by_id: 1,
-			created: new Date().toISOString(),
-			updated: new Date().toISOString(),
-		}
-	}
-}
 
 test.beforeEach(async ({authenticatedPage: page, currentUser}) => {
 	await createProjects()
@@ -24,7 +11,7 @@ test.beforeEach(async ({authenticatedPage: page, currentUser}) => {
 		project_id: 1,
 		title: (i: number) => `Task ${i}`,
 	})
-	await LabelFactory.create(1, {created_by_id: currentUser.id})
+	await LabelFactory.create(1, {id: 1, title: 'Important', created_by_id: currentUser.id})
 	await LabelTaskFactory.create(1, {
 		task_id: 1,
 		label_id: 1,
