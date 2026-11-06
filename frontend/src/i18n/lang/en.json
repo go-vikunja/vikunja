@@ -668,6 +668,7 @@
       "bucketConfig": "Bucket configuration",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
+      "bucketFilter": "Filter for {title}",
       "create": "Create view",
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
@@ -683,6 +684,20 @@
     }
   },
   "filters": {
+    "modes": {
+      "simple": "Simple",
+      "advanced": "Advanced",
+      "tooAdvanced": "This filter is too advanced for Simple mode.",
+      "clear": "Clear and use Simple"
+    },
+    "simple": {
+      "showDone": "Show completed tasks",
+      "minPriority": "Minimum priority",
+      "search": "Search tasks",
+      "unknownLabel": "Unknown label #{id}",
+      "unknownProject": "Unknown project #{id}",
+      "until": "until {date}"
+    },
     "title": "Filters",
     "clear": "Clear Filters",
     "showResults": "Show results",
