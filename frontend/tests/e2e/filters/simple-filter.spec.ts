@@ -86,28 +86,24 @@ test('does not apply an Advanced popup query when the popup is closed without Sh
 })
 
 test('clears an Advanced plain-text search from the popup', async ({authenticatedPage: page}) => {
-	const popup = page.locator('.filter-popup')
-	const advancedTab = popup.getByRole('tab', {
-		name: 'Advanced',
-		exact: true,
-	})
-	const editor = popup.locator('.ProseMirror')
-	const showResults = popup.getByRole('button', {
-		name: 'Show results',
-		exact: true,
-	})
-	await advancedTab.click()
-	await editor.fill('Task 1')
-	await showResults.click()
-	await expect.poll(() => new URL(page.url()).searchParams.get('s')).toBe('Task 1')
+	await page.goto('/projects/1/1?s=Task%201')
 	await expect(page.locator('.tasks')).not.toContainText('Task 2')
 	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
-	await advancedTab.click()
+	const popup = page.locator('.filter-popup')
+	await popup.getByRole('tab', {
+		name: 'Advanced',
+		exact: true,
+	}).click()
+	const editor = popup.locator('.ProseMirror')
 	await expect(editor).toHaveText('Task 1')
 	await editor.press('ControlOrMeta+a')
 	await editor.press('Backspace')
-	await showResults.click()
-	await expect.poll(() => new URL(page.url()).searchParams.get('s') ?? '').toBe('')
+	await popup.getByRole('button', {
+		name: 'Show results',
+		exact: true,
+	}).click()
+	await expect.poll(() => new URL(page.url()).searchParams.get('s')).toBeNull()
+	await expect(page.locator('.tasks')).toContainText('Task 1')
 	await expect(page.locator('.tasks')).toContainText('Task 2')
 })
 
