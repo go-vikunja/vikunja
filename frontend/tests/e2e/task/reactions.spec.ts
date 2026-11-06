@@ -130,7 +130,7 @@ test('the native picker supports categories, skin tones, recents and keyboard di
 test('the emoji picker retries a failed catalog request and dismisses on outside click', async ({authenticatedPage: page}) => {
 	const [project] = await ProjectFactory.create(1)
 	const [task] = await TaskFactory.create(1, {project_id: project.id})
-	await page.route('**/emojis.json', route => route.fulfill({
+	await page.route('**/data*.json', route => route.fulfill({
 		status: 503,
 		body: 'Unavailable',
 	}))
@@ -139,7 +139,7 @@ test('the emoji picker retries a failed catalog request and dismisses on outside
 	await trigger.click()
 	const picker = page.getByRole('region', {name: 'Emoji picker'})
 	await expect(picker.getByText('Could not load emoji.')).toBeVisible()
-	await page.unroute('**/emojis.json')
+	await page.unroute('**/data*.json')
 	await picker.getByRole('button', {name: 'Try again'}).click()
 	await expect(picker.getByRole('button', {
 		name: 'grinning face',
