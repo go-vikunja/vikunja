@@ -668,6 +668,7 @@
       "bucketConfig": "Bucket configuration",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
+      "bucketFilter": "Filter for {title}",
       "create": "Create view",
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",

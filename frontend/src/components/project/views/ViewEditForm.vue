@@ -265,7 +265,7 @@ function handleBubbleSave(event: FocusEvent) {
 
 						<FilterEditor
 							v-model="view.bucket_configuration[index].filter.filter"
-							:label="$t('project.views.filter')"
+							:label="$t('project.views.bucketFilter', {title: b.title})"
 							:project-id="view.project_id"
 							class="mbe-2"
 						/>
