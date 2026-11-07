@@ -146,56 +146,6 @@ const emit = defineEmits<{
 }
 
 .property > dd {
-	:deep(.select) {
-		inline-size: 100%;
-		// Bulma sizes the wrapper to --input-height; the margin matches the date rows' SimpleButton.
-		block-size: auto;
-		margin-block: .1rem;
-
-		select {
-			inline-size: 100%;
-			background: transparent;
-			border-color: transparent;
-			box-shadow: none;
-			block-size: 2rem;
-			padding-block: 0;
-			padding-inline-start: .5rem;
-			line-height: 2rem;
-		}
-
-		&:not(.has-defaults):after {
-			opacity: 0;
-		}
-
-		&:hover:not(.has-defaults):after {
-			opacity: 1;
-		}
-
-		select:disabled {
-			color: var(--text);
-			opacity: 1;
-			cursor: default;
-		}
-
-		&:has(select:disabled)::after {
-			display: none;
-		}
-
-		select:not(:disabled) {
-			cursor: pointer;
-
-			&:hover,
-			&:focus {
-				background: var(--scheme-main);
-			}
-
-			&:focus-visible {
-				border-color: var(--primary);
-				@include focus-ring;
-			}
-		}
-	}
-
 	:deep(.multiselect) {
 		inline-size: 100%;
 		min-inline-size: 0;
