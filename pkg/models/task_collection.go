@@ -339,6 +339,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 		tc.mergeRequestFilter(tf)
 
+		if sf.Filters.Search != "" {
+			search = sf.Filters.Search
+		}
+
 		return tc.ReadAll(s, a, search, page, perPage)
 	}
 

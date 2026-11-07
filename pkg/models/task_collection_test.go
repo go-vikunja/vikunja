@@ -2614,3 +2614,40 @@ func TestTaskCollection_SavedFilterIncludeNulls(t *testing.T) {
 	}
 	assert.ElementsMatch(t, []int64{dated.ID, dateless.ID}, ids)
 }
+
+func TestTaskCollection_SavedFilterSearch(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	u := &user.User{ID: 1}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	sf := &SavedFilter{
+		Title: "prio tasks",
+		Filters: &TaskCollection{
+			Filter: "project = 1",
+			Search: "prio",
+		},
+	}
+	require.NoError(t, sf.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	readIDs := func(search string) []int64 {
+		s := db.NewSession()
+		defer s.Close()
+
+		tc := &TaskCollection{ProjectID: getProjectIDFromSavedFilterID(sf.ID)}
+		result, _, _, err := tc.ReadAll(s, u, search, 1, 50)
+		require.NoError(t, err)
+
+		ids := []int64{}
+		for _, task := range result.([]*Task) {
+			ids = append(ids, task.ID)
+		}
+		return ids
+	}
+
+	assert.ElementsMatch(t, []int64{3, 4}, readIDs(""))
+	// Stored search wins over the request, like a view filter's search.
+	assert.ElementsMatch(t, []int64{3, 4}, readIDs("basic"))
+}
