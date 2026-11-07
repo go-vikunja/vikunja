@@ -42,6 +42,7 @@
 			edit-shortcut="KeyE"
 			:enable-discard-shortcut="true"
 			:enable-mentions="true"
+			:enable-link-previews="true"
 			:project-id="modelValue.project_id"
 			:storage-key="descriptionStorageKey"
 			@update:modelValue="saveWithDelay"
