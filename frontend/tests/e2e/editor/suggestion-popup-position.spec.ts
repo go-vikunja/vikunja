@@ -108,4 +108,28 @@ test.describe('Suggestion popup positioning', () => {
 			expect(Math.abs(box.x - anchor.x)).toBeLessThan(20)
 		}
 	})
+
+	test('Escape closes the popup without discarding the unsaved edit', async ({authenticatedPage: page}) => {
+		const tasks = await TaskFactory.create(1, {
+			id: 1,
+			project_id: projectId,
+			description: 'x',
+			index: 1,
+		})
+
+		await page.goto(`/tasks/${tasks[0].id}`)
+		await page.waitForLoadState('networkidle')
+
+		const editor = await openDescriptionEditor(page)
+		await editor.click()
+		await page.keyboard.press('End')
+		await editor.pressSequentially(' draft /', {delay: 60})
+
+		const popup = page.locator('.items').first()
+		await expect(popup).toBeVisible()
+
+		await page.keyboard.press('Escape')
+		await expect(popup).toBeHidden()
+		await expect(editor).toHaveText('x draft /')
+	})
 })
