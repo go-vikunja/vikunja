@@ -88,9 +88,17 @@ function setOverdue(includeOverdue: boolean) {
 	if (includeOverdue) {
 		update({due: {kind: 'before', to: to || 'now'}})
 	} else {
-		update({due: from && to ? {kind: 'between', from, to} : {kind: 'any'}})
+		update({due: to ? {kind: 'between', from: from || 'now', to} : {kind: 'any'}})
 	}
 }
+
+// The overdue query ignores From, so don't show one.
+const untilText = computed(() => {
+	const {due} = model.value
+	return due.kind === 'before' && due.to !== 'now'
+		? t('filters.simple.until', {date: toPickerDate(due.to)})
+		: null
+})
 
 const priority = computed({
 	get: () => model.value.minPriority ?? 0,
@@ -128,7 +136,7 @@ const priority = computed({
 						variant="secondary"
 						@click.prevent="toggle()"
 					>
-						{{ buttonText }}
+						{{ untilText ?? buttonText }}
 					</XButton>
 				</template>
 			</DatepickerWithRange>
