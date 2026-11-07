@@ -4014,7 +4014,7 @@ export type Webhook = {
      */
     readonly created?: string;
     /**
-     * The user who initially created the webhook target.
+     * The user whose access controls delivery. Changes when the webhook is transferred or re-enabled by another user.
      */
     readonly created_by?: User;
     /**
@@ -4025,6 +4025,10 @@ export type Webhook = {
      * The generated ID of this webhook target.
      */
     readonly id?: number;
+    /**
+     * Disabled webhooks do not deliver events. Re-enable explicitly through the update endpoint.
+     */
+    readonly is_disabled?: boolean;
     /**
      * The id of the project this webhook target belongs to.
      */
@@ -4041,6 +4045,26 @@ export type Webhook = {
      * The id of the user if this is a user-level webhook (mutually exclusive with project_id). Set from the route, not the body.
      */
     readonly user_id?: number;
+};
+
+export type WebhookUpdate = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The webhook events to subscribe to.
+     */
+    events?: Array<string> | null;
+    /**
+     * Omit to preserve the disabled state. Explicitly enabling a disabled webhook transfers it to the acting user.
+     */
+    is_disabled?: boolean;
+    /**
+     * The existing target URL. It cannot be changed.
+     */
+    target_url?: string;
+    [key: string]: unknown;
 };
 
 export type ApiTokenWritable = {
@@ -4865,6 +4889,10 @@ export type ProjectDuplicateWritable = {
 
 export type ProjectReadBodyWritable = {
     /**
+     * Only read when the update moves the project. If any user would lose access to a project holding webhooks or link shares they created, fail with 409 and code 3022 without changing anything. i18n_params carries the webhooks and link_shares counts.
+     */
+    ask_before_access_loss?: boolean;
+    /**
      * The description of the project.
      */
     description?: string;
@@ -4885,6 +4913,10 @@ export type ProjectReadBodyWritable = {
      */
     is_favorite?: boolean;
     /**
+     * Only read when the update moves the project. Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access.
+     */
+    keep_webhooks?: boolean;
+    /**
      * The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission.
      */
     parent_project_id?: number | null;
@@ -4892,6 +4924,10 @@ export type ProjectReadBodyWritable = {
      * The position of this project when listing all projects. See the tasks.position property for how positions work.
      */
     position?: number;
+    /**
+     * Only read when the update moves the project. Delete the link shares created by users who lose access. By default they keep working.
+     */
+    revoke_link_shares?: boolean;
     /**
      * The title of the project. You'll see this in the overview.
      */
@@ -5807,6 +5843,22 @@ export type WebhookWritable = {
      * The target URL where the POST request with the webhook payload will be made.
      */
     target_url?: string;
+};
+
+export type WebhookUpdateWritable = {
+    /**
+     * The webhook events to subscribe to.
+     */
+    events?: Array<string> | null;
+    /**
+     * Omit to preserve the disabled state. Explicitly enabling a disabled webhook transfers it to the acting user.
+     */
+    is_disabled?: boolean;
+    /**
+     * The existing target URL. It cannot be changed.
+     */
+    target_url?: string;
+    [key: string]: unknown;
 };
 
 export type AdminInviteLinksListData = {
@@ -8697,7 +8749,16 @@ export type ProjectTeamsDeleteData = {
         project: number;
         team: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access.
+         */
+        keep_webhooks?: boolean;
+        /**
+         * Delete the link shares created by users who lose access. By default they keep working.
+         */
+        revoke_link_shares?: boolean;
+    };
     url: '/projects/{project}/teams/{team}';
 };
 
@@ -8852,7 +8913,16 @@ export type ProjectUsersDeleteData = {
         project: number;
         user: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access.
+         */
+        keep_webhooks?: boolean;
+        /**
+         * Delete the link shares created by users who lose access. By default they keep working.
+         */
+        revoke_link_shares?: boolean;
+    };
     url: '/projects/{project}/users/{user}';
 };
 
@@ -9501,7 +9571,7 @@ export type WebhooksDeleteResponses = {
 export type WebhooksDeleteResponse = WebhooksDeleteResponses[keyof WebhooksDeleteResponses];
 
 export type WebhooksUpdateData = {
-    body: WebhookWritable;
+    body: WebhookUpdateWritable;
     path: {
         project: number;
         webhook: number;
@@ -11009,7 +11079,16 @@ export type TeamsDeleteData = {
     path: {
         id: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access.
+         */
+        keep_webhooks?: boolean;
+        /**
+         * Delete the link shares created by users who lose access. By default they keep working.
+         */
+        revoke_link_shares?: boolean;
+    };
     url: '/teams/{id}';
 };
 
@@ -11176,7 +11255,16 @@ export type TeamsMembersRemoveData = {
          */
         user: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access.
+         */
+        keep_webhooks?: boolean;
+        /**
+         * Delete the link shares created by users who lose access. By default they keep working.
+         */
+        revoke_link_shares?: boolean;
+    };
     url: '/teams/{team}/members/{user}';
 };
 
@@ -12821,7 +12909,7 @@ export type UserWebhooksDeleteResponses = {
 export type UserWebhooksDeleteResponse = UserWebhooksDeleteResponses[keyof UserWebhooksDeleteResponses];
 
 export type UserWebhooksUpdateData = {
-    body: WebhookWritable;
+    body: WebhookUpdateWritable;
     path: {
         webhook: number;
     };

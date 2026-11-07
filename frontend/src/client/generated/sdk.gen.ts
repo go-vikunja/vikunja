@@ -1448,7 +1448,7 @@ export const patchProjectsRead = <ThrowOnError extends boolean = true>(options: 
 /**
  * Update a project
  *
- * Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update.
+ * Replaces a project's fields. Requires write access (admin to reparent or delete). Use PATCH for a partial update. Moving the project removes the task assignments and subscriptions of users who lose access through the move; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares. Set ask_before_access_loss to return affected counts for confirmation before applying the move.
  */
 export const projectsUpdate = <ThrowOnError extends boolean = true>(options: Options<ProjectsUpdateData, ThrowOnError>): RequestResult<ProjectsUpdateResponses, ProjectsUpdateErrors, ThrowOnError> => (options.client ?? client).put<ProjectsUpdateResponses, ProjectsUpdateErrors, ThrowOnError>({
     security: [{
@@ -1861,7 +1861,7 @@ export const projectTeamsCreate = <ThrowOnError extends boolean = true>(options:
 /**
  * Remove a team from a project
  *
- * Revokes a team's access to the project. Only project admins may remove a share.
+ * Revokes a team's access to the project. Only project admins may remove a share. Users who lose access to a project or its child projects lose their task assignments and subscriptions there; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares.
  */
 export const projectTeamsDelete = <ThrowOnError extends boolean = true>(options: Options<ProjectTeamsDeleteData, ThrowOnError>): RequestResult<ProjectTeamsDeleteResponses, ProjectTeamsDeleteErrors, ThrowOnError> => (options.client ?? client).delete<ProjectTeamsDeleteResponses, ProjectTeamsDeleteErrors, ThrowOnError>({
     security: [{
@@ -1964,7 +1964,7 @@ export const projectsUsersSearch = <ThrowOnError extends boolean = true>(options
 /**
  * Remove a user's access to a project
  *
- * Revokes a user's direct access to the project, identified by username in the path. Only project admins may do this.
+ * Revokes a user's direct access to the project, identified by username in the path. Only project admins may do this. Users who lose access to a project or its child projects lose their task assignments and subscriptions there; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares.
  */
 export const projectUsersDelete = <ThrowOnError extends boolean = true>(options: Options<ProjectUsersDeleteData, ThrowOnError>): RequestResult<ProjectUsersDeleteResponses, ProjectUsersDeleteErrors, ThrowOnError> => (options.client ?? client).delete<ProjectUsersDeleteResponses, ProjectUsersDeleteErrors, ThrowOnError>({
     security: [{
@@ -2336,9 +2336,9 @@ export const webhooksDelete = <ThrowOnError extends boolean = true>(options: Opt
 });
 
 /**
- * Update a webhook target's events
+ * Update a webhook target
  *
- * Changes the events a webhook target subscribes to. Only the events list can be changed; target_url, secret and auth are immutable after creation. The webhook must belong to the project in the path, and write access to that project is required.
+ * Changes the subscribed events and optionally is_disabled. Omitting is_disabled preserves its state. Explicitly enabling a disabled webhook transfers it to the acting user. The target URL and credentials remain unchanged. The webhook must belong to the project in the path, and write access to that project is required.
  */
 export const webhooksUpdate = <ThrowOnError extends boolean = true>(options: Options<WebhooksUpdateData, ThrowOnError>): RequestResult<WebhooksUpdateResponses, WebhooksUpdateErrors, ThrowOnError> => (options.client ?? client).put<WebhooksUpdateResponses, WebhooksUpdateErrors, ThrowOnError>({
     security: [{
@@ -3225,7 +3225,7 @@ export const teamsCreate = <ThrowOnError extends boolean = true>(options: Option
 /**
  * Delete a team
  *
- * Deletes a team and revokes the access it granted to all of its members. Only a team admin may delete it.
+ * Deletes a team and revokes the access it granted to all of its members. Only a team admin may delete it. Users who lose access to a project or its child projects lose their task assignments and subscriptions there; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares.
  */
 export const teamsDelete = <ThrowOnError extends boolean = true>(options: Options<TeamsDeleteData, ThrowOnError>): RequestResult<TeamsDeleteResponses, TeamsDeleteErrors, ThrowOnError> => (options.client ?? client).delete<TeamsDeleteResponses, TeamsDeleteErrors, ThrowOnError>({
     security: [{
@@ -3332,7 +3332,7 @@ export const teamsMembersAdd = <ThrowOnError extends boolean = true>(options: Op
 /**
  * Remove a member from a team
  *
- * Removes a user from a team, revoking the access the team granted them. A team admin may remove anyone; a member may remove themselves. The last member of a team cannot be removed.
+ * Removes a user from a team, revoking the access the team granted them. A team admin may remove anyone; a member may remove themselves. The last member of a team cannot be removed. Users who lose access to a project or its child projects lose their task assignments and subscriptions there; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares.
  */
 export const teamsMembersRemove = <ThrowOnError extends boolean = true>(options: Options<TeamsMembersRemoveData, ThrowOnError>): RequestResult<TeamsMembersRemoveResponses, TeamsMembersRemoveErrors, ThrowOnError> => (options.client ?? client).delete<TeamsMembersRemoveResponses, TeamsMembersRemoveErrors, ThrowOnError>({
     security: [{
@@ -4541,9 +4541,9 @@ export const userWebhooksDelete = <ThrowOnError extends boolean = true>(options:
 });
 
 /**
- * Update a user webhook's events
+ * Update a user webhook
  *
- * Changes the events a user webhook subscribes to. Only the events list can be changed; target_url, secret and auth are immutable after creation. Only the owning user may update it.
+ * Changes the subscribed events and optionally is_disabled. Omitting is_disabled preserves its state. The target URL and credentials remain unchanged. Only the owning user may update it.
  */
 export const userWebhooksUpdate = <ThrowOnError extends boolean = true>(options: Options<UserWebhooksUpdateData, ThrowOnError>): RequestResult<UserWebhooksUpdateResponses, UserWebhooksUpdateErrors, ThrowOnError> => (options.client ?? client).put<UserWebhooksUpdateResponses, UserWebhooksUpdateErrors, ThrowOnError>({
     security: [{

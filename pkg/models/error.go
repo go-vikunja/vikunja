@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -773,6 +774,37 @@ func (err *ErrProjectMoveTooLarge) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeProjectMoveTooLarge,
 		Message:  "This project hierarchy is too large to be moved below the chosen parent project.",
+	}
+}
+
+type ErrAccessLossNeedsConfirmation struct {
+	Webhooks   int64
+	LinkShares int64
+}
+
+func IsErrAccessLossNeedsConfirmation(err error) bool {
+	_, ok := err.(*ErrAccessLossNeedsConfirmation)
+	return ok
+}
+
+func (err *ErrAccessLossNeedsConfirmation) Error() string {
+	return fmt.Sprintf("Users would lose access to projects holding their webhooks or link shares [Webhooks: %d, LinkShares: %d]", err.Webhooks, err.LinkShares)
+}
+
+const ErrCodeAccessLossNeedsConfirmation = 3022
+
+func (err *ErrAccessLossNeedsConfirmation) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeAccessLossNeedsConfirmation,
+		Message: fmt.Sprintf(
+			"Users would lose access to projects holding %d webhooks and %d link shares they created. Set keep_webhooks and revoke_link_shares to choose what happens to them and resend without ask_before_access_loss.",
+			err.Webhooks, err.LinkShares,
+		),
+		I18nParams: map[string]string{
+			"webhooks":    strconv.FormatInt(err.Webhooks, 10),
+			"link_shares": strconv.FormatInt(err.LinkShares, 10),
+		},
 	}
 }
 

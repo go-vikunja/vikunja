@@ -55,6 +55,7 @@ func (w *Webhook) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (w *Webhook) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	w.ID = 0
 	return w.canDoWebhook(s, a)
 }
 
@@ -75,11 +76,15 @@ func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 		// User routes set UserID, project routes the URL project.
 		if w.UserID > 0 {
-			return existing.ProjectID == 0 && existing.UserID == w.UserID && w.UserID == a.GetID(), nil
-		}
-		if existing.ProjectID == 0 || existing.ProjectID != w.ProjectID {
+			if existing.ProjectID != 0 || existing.UserID != w.UserID || w.UserID != a.GetID() {
+				return false, nil
+			}
+		} else if existing.ProjectID == 0 || existing.ProjectID != w.ProjectID {
 			return false, nil
 		}
+		events, disabled := w.Events, w.SetDisabled
+		*w = *existing
+		w.Events, w.SetDisabled = events, disabled
 	}
 
 	// User-level webhook: user owns it or is creating new

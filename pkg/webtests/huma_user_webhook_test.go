@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 
@@ -186,4 +187,27 @@ func TestHumaUserWebhook_DisabledByConfig(t *testing.T) {
 	token := humaTokenFor(t, &testuser1)
 	rec := humaRequest(t, e, http.MethodGet, "/api/v2/user/settings/webhooks", "", token, "")
 	assert.Equal(t, http.StatusNotFound, rec.Code, "route must be absent when webhooks are disabled; body: %s", rec.Body.String())
+}
+
+func TestHumaUserWebhook_DisabledState(t *testing.T) {
+	models.RegisterUserDirectedEventForWebhook(&models.TaskReminderFiredEvent{})
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+	path := "/api/v2/user/settings/webhooks/8"
+	rec := humaRequest(t, e, http.MethodPut, path, `{"target_url":"https://example.com/ignored","events":["task.reminder.fired"],"is_disabled":true}`, token, "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":          8,
+		"is_disabled": true,
+		"user_id":     1,
+	}, false)
+	rec = humaRequest(t, e, http.MethodPut, path, `{"target_url":"https://example.com/ignored","events":["task.reminder.fired"],"is_disabled":false}`, token, "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":            8,
+		"is_disabled":   false,
+		"user_id":       1,
+		"created_by_id": 1,
+	}, false)
 }

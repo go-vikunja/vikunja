@@ -6,16 +6,19 @@ import {
 import {
 	webhooksList,
 	webhooksCreate,
+	webhooksUpdate,
 	webhooksDelete,
 	webhooksEventsList,
 	userWebhooksList,
 	userWebhooksCreate,
+	userWebhooksUpdate,
 	userWebhooksDelete,
 	userWebhooksEvents,
 } from '@/client/generated'
 import type {
 	Webhook,
 	WebhookWritable,
+	WebhooksUpdateData,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {useSecretMutation} from './secretMutation'
@@ -29,6 +32,7 @@ import {i18n} from '@/i18n'
 export type WebhookScope = {kind: 'project', projectId: number} | {kind: 'user'}
 export type WebhookPage = Paginated<Webhook>
 export const webhookKeys = {
+	projects: ['webhooks', 'list', 'project'] as const,
 	scope: (scope: WebhookScope) => scope.kind === 'project'
 		? ['webhooks', 'list', 'project', scope.projectId] as const
 		: ['webhooks', 'list', 'user'] as const,
@@ -81,5 +85,27 @@ export function deleteWebhookMutationOptions() {
 		successMessage: () => i18n.global.t('project.webhooks.deleteSuccess'),
 	})
 }
+export function updateWebhookMutationOptions() {
+	return contextMutationOptions({
+		mutationFn: async ({scope, id, body}: {
+			scope: WebhookScope,
+			id: number,
+			body: WebhooksUpdateData['body'],
+		}) => (await (scope.kind === 'project'
+			? webhooksUpdate({
+				path: {
+					project: scope.projectId,
+					webhook: id,
+				},
+				body,
+			})
+			: userWebhooksUpdate({
+				path: {webhook: id},
+				body,
+			}))).data,
+		onSettled: ({scope}, client) => client.invalidateQueries({queryKey: webhookKeys.scope(scope)}),
+	})
+}
 export function useCreateWebhookMutation() { return useSecretMutation(createWebhookMutationOptions()) }
 export function useDeleteWebhookMutation() { return useMutation(deleteWebhookMutationOptions()) }
+export function useUpdateWebhookMutation() { return useSecretMutation(updateWebhookMutationOptions()) }

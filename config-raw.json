@@ -960,6 +960,17 @@
                             ]
                         }
                     ]
+                },
+                {
+                    "key": "teamsync",
+                    "comment": "Link share cleanup when OpenID or LDAP team sync removes project access. Webhooks are always retained and disabled until explicitly re-enabled.",
+                    "children": [
+                        {
+                            "key": "revokelinkshares",
+                            "default_value": "false",
+                            "comment": "If true, link shares the user created in projects they lost access to are deleted. Link shares keep working after their creator loses access, so enable this if team removal usually means offboarding."
+                        }
+                    ]
                 }
             ]
         },

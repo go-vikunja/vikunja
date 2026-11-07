@@ -57,7 +57,7 @@ func ReassignProjectOwner(s *xorm.Session, doer *user.User, projectID, newOwnerI
 	p.Owner = newOwner
 
 	if oldOwnerID != newOwnerID {
-		if err := cleanupAfterProjectAccessLoss(s, oldOwnerID, []int64{p.ID}); err != nil {
+		if err := cleanupAfterProjectAccessLoss(s, doer, oldOwnerID, []int64{p.ID}, AccessLossCleanup{}); err != nil {
 			return nil, err
 		}
 	}
