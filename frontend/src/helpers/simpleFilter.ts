@@ -82,11 +82,19 @@ export function emptySimpleFilter(): SimpleFilter {
 	}
 }
 
+// The backend resolves `project` to `project_id` and treats `=` with a single value like `in` on these fields.
+function canonicalClause(clause: string): string {
+	return clause
+		.replace(/^project_id /, 'project ')
+		.replace(/^(labels|assignees|project) = (?!.*,)/, '$1 in ')
+}
+
 export function fromQuery(query: string): SimpleFilter | null {
 	const filter = emptySimpleFilter()
 	let from: string | undefined
 	let to: string | undefined
-	for (const clause of query === '' ? [] : query.split(' && ')) {
+	const clauses = query === '' ? [] : query.split(' && ').map(canonicalClause)
+	for (const clause of clauses) {
 		if (clause === 'done = false') {
 			filter.showDone = false
 			continue
@@ -140,5 +148,5 @@ export function fromQuery(query: string): SimpleFilter | null {
 				to,
 			}
 	}
-	return toQuery(filter) === query ? filter : null
+	return toQuery(filter) === clauses.join(' && ') ? filter : null
 }
