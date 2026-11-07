@@ -1414,6 +1414,45 @@ test.describe('Task', () => {
 			await expect(openPopup.locator('button').filter({hasText: 'Confirm'})).toBeVisible()
 		})
 
+		test('Uses the regular date picker for an absolute reminder', async ({authenticatedPage: page, apiContext, userToken}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+				due_date: (new Date()).toISOString(),
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await page.locator('.task-view .property-reminders button').filter({hasText: 'Add a reminder'}).click()
+			const openPopup = page.locator('.reminder-options-popup.is-open')
+			await openPopup.locator('.option-button').filter({hasText: 'Date and time'}).click()
+
+			const picker = openPopup.locator('.datepicker-popup')
+			await expect(picker.locator('.date-shortcuts--list')).toBeVisible()
+			const summary = picker.locator('.datepicker-popup__summary')
+			const confirm = picker.locator('[data-cy="closeDatepicker"]')
+
+			const tomorrowShortcut = picker.locator('.datepicker__quick-select-date').filter({hasText: 'Tomorrow'})
+			const tomorrow = dayjs().add(1, 'day')
+
+			await tomorrowShortcut.click()
+			await expect(summary).toContainText(tomorrow.format('MMM D, YYYY'))
+			await picker.locator('.datepicker-popup__footer button').filter({hasText: 'Clear'}).click()
+			await expect(summary).toContainText('No date set')
+			await expect(confirm).toBeDisabled()
+
+			await tomorrowShortcut.click()
+			await confirm.click()
+			await expect(page.locator('.global-notification')).toContainText('Success')
+
+			const stored = await apiContext.get(`tasks/${tasks[0].id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			const reminders = (await stored.json()).reminders
+			expect(reminders).toHaveLength(1)
+			expect(reminders[0].relative_to).toBe('')
+			expect(dayjs(reminders[0].reminder).format('YYYY-MM-DD')).toBe(tomorrow.format('YYYY-MM-DD'))
+		})
+
 		test('Can set a priority for a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
