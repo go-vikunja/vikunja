@@ -320,7 +320,9 @@
 							/>
 						</TaskPropertyRow>
 
+						<!-- On the row because FormSelect's fragment root leaves PrioritySelect without an $el. -->
 						<TaskPropertyRow
+							:ref="e => setFieldRef('priority', e)"
 							name="priority"
 							icon="exclamation-circle"
 							:label="$t('task.attributes.priority')"
@@ -328,7 +330,6 @@
 							:can-write="canWrite"
 						>
 							<PrioritySelect
-								:ref="e => setFieldRef('priority', e)"
 								v-model="task.priority"
 								:disabled="!canWrite"
 								@update:modelValue="setPriority"
