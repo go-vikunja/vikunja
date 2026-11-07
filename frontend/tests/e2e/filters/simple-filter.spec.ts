@@ -189,6 +189,27 @@ test('preserves unknown label and project ids when another field changes', async
 	await expect(editor).not.toContainText('Unknown label #999')
 })
 
+test('opens the default open tasks filter in Simple without rewriting it', async ({authenticatedPage: page, apiContext, userToken, currentUser}) => {
+	const filter = `done = false && assignees = ${currentUser.username}`
+	await SavedFilterFactory.create(1, {filters: JSON.stringify({
+		filter,
+		s: '',
+		filter_include_nulls: false,
+	})})
+	await page.goto('/projects/-2/settings/edit')
+	const editor = page.locator('.filter-editor')
+	await expect(editor.getByRole('group', {name: 'Assignees'})).toContainText(currentUser.username)
+	await expect(editor.getByRole('tab', {
+		name: 'Simple',
+		exact: true,
+	})).toHaveAttribute('aria-selected', 'true')
+	await expect(editor.getByText('This filter is too advanced for Simple mode.')).toBeHidden()
+	await page.reload()
+	await expect(editor.getByRole('group', {name: 'Assignees'})).toContainText(currentUser.username)
+	const stored = await apiContext.get('filters/1', {headers: {Authorization: `Bearer ${userToken}`}})
+	expect((await stored.json()).filters.filter).toBe(filter)
+})
+
 test('saves the typed search when Enter is pressed in a saved filter', async ({authenticatedPage: page, apiContext, userToken}) => {
 	await SavedFilterFactory.create(1)
 	await page.goto('/projects/-2/settings/edit')
