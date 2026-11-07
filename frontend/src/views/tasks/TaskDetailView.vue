@@ -709,6 +709,7 @@ import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 
 import {
 	useUpdateTaskMutation,
+	useTaskRecurrenceMutation,
 	useDeleteTaskMutation,
 	useFavoriteTaskMutation,
 	useDuplicateTaskMutation,
@@ -744,6 +745,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const projectList = useProjects()
 const updateTask = useUpdateTaskMutation()
+const taskRecurrence = useTaskRecurrenceMutation()
 const deleteTaskMutation = useDeleteTaskMutation()
 const restoreTaskMutation = useRestoreTaskMutation()
 const favoriteTask = useFavoriteTaskMutation()
@@ -752,6 +754,7 @@ const markTaskRead = useMarkTaskReadMutation()
 const subscriptionMutation = useSetTaskSubscriptionMutation()
 const taskMutating = computed(() => [
 	updateTask,
+	taskRecurrence,
 	deleteTaskMutation,
 	favoriteTask,
 	duplicateTask,
@@ -1216,7 +1219,37 @@ async function deleteTask() {
 	}], {takeFocus: true})
 }
 
+async function completeRecurringTask(id: number, undoToken?: string) {
+	const result = await taskRecurrence.mutateAsync({id, undoToken})
+	if (task.value.id === id && result.task) {
+		seedTask(mergeTask(task.value, result.task))
+		setActiveFields()
+	}
+	const token = result.undo_token
+	success({message: t('task.detail.updateSuccess')}, token ? [{
+		title: t('task.undo'),
+		callback: async () => {
+			try {
+				await completeRecurringTask(id, token)
+			} catch {
+				// The mutation reports expired undo and conflicting edits.
+			}
+		},
+	}] : [])
+}
+
 async function toggleTaskDone() {
+	if (!canWrite.value || taskRecurrence.isPending.value) {
+		return
+	}
+
+	if (!task.value.done && ((task.value.repeat_after ?? 0) > 0
+		|| task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)) {
+		playPopSound()
+		await completeRecurringTask(task.value.id!)
+		return
+	}
+
 	const newTask = {
 		...task.value,
 		done: !task.value.done,

@@ -2757,6 +2757,21 @@ export type TaskReadOneBody = {
     readonly updated?: string;
 };
 
+export type TaskRecurrence = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The task after completion or undo.
+     */
+    readonly task?: Task;
+    /**
+     * Omit to complete the occurrence. To undo, send the token returned by completion.
+     */
+    undo_token?: string;
+};
+
 export type TaskRelation = {
     /**
      * A URL to the JSON Schema for this object.
@@ -2788,6 +2803,17 @@ export type TaskReminder = {
     relative_period?: number;
     relative_to?: string;
     reminder?: string;
+};
+
+export type TasksRecurrenceRequest = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * The token returned by completion. Omit to complete the occurrence.
+     */
+    undo_token?: string;
 };
 
 export type Team = {
@@ -5200,6 +5226,13 @@ export type TaskReadOneBodyWritable = {
     title?: string;
 };
 
+export type TaskRecurrenceWritable = {
+    /**
+     * Omit to complete the occurrence. To undo, send the token returned by completion.
+     */
+    undo_token?: string;
+};
+
 export type TaskRelationWritable = {
     /**
      * The id of the other task this relation points to.
@@ -5209,6 +5242,13 @@ export type TaskRelationWritable = {
      * The kind of relation, describing the direction from the base task to the other task (e.g. subtask, blocking, related). The inverse relation is created automatically.
      */
     relation_kind?: 'subtask' | 'parenttask' | 'related' | 'duplicateof' | 'duplicates' | 'blocking' | 'blocked' | 'precedes' | 'follows' | 'copiedfrom' | 'copiedto';
+};
+
+export type TasksRecurrenceRequestWritable = {
+    /**
+     * The token returned by completion. Omit to complete the occurrence.
+     */
+    undo_token?: string;
 };
 
 export type TeamWritable = {
@@ -10824,6 +10864,44 @@ export type TasksMarkReadResponses = {
 };
 
 export type TasksMarkReadResponse = TasksMarkReadResponses[keyof TasksMarkReadResponses];
+
+export type TasksRecurrenceData = {
+    body: TasksRecurrenceRequestWritable;
+    path: {
+        /**
+         * The numeric ID of the recurring task.
+         */
+        task: number;
+    };
+    query?: never;
+    url: '/tasks/{task}/recurrence';
+};
+
+export type TasksRecurrenceErrors = {
+    /**
+     * Conflict
+     */
+    409: VikunjaErrorModel;
+    /**
+     * Unprocessable Entity
+     */
+    422: VikunjaErrorModel;
+    /**
+     * Internal Server Error
+     */
+    500: VikunjaErrorModel;
+};
+
+export type TasksRecurrenceError = TasksRecurrenceErrors[keyof TasksRecurrenceErrors];
+
+export type TasksRecurrenceResponses = {
+    /**
+     * Created
+     */
+    201: TaskRecurrence;
+};
+
+export type TasksRecurrenceResponse = TasksRecurrenceResponses[keyof TasksRecurrenceResponses];
 
 export type TasksRelationsCreateData = {
     body: TaskRelationWritable;
