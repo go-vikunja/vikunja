@@ -11,7 +11,7 @@
 			:aria-labelledby="headerLabelId"
 			:aria-label="sheetLabel"
 			v-bind="attrs"
-			@cancel.prevent="$emit('close')"
+			@cancel.self.prevent="$emit('close')"
 		>
 			<div
 				class="modal-container"
