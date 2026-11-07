@@ -46,6 +46,25 @@ test.describe('Time tracking', () => {
 			await LicenseFactory.disable()
 		})
 
+		// The factory's entry must be stored at the real current instant, whatever zone the test runner
+		// (the Playwright Node process) is in. The database holds UTC and the "Today" filter compares
+		// UTC bounds, so a local wall-clock stamp is off by the runner's UTC offset, which is what
+		// made the tests below fail in New York between local midnight and the offset hour.
+		test('a factory entry is stored at the current instant', async ({apiContext, userToken, currentUser}) => {
+			await ProjectFactory.create(1, {id: 1, title: 'Stamp project', owner_id: currentUser.id}, false)
+			await TimeEntryFactory.create(1, {id: 1, project_id: 1, user_id: currentUser.id, comment: 'stamp check'}, false)
+			const now = Date.now()
+			const stored = await apiContext.get('/api/v2/time-entries', {headers: {Authorization: `Bearer ${userToken}`}})
+			expect(stored.ok()).toBeTruthy()
+			const entry = (await stored.json()).items.find((e: {comment: string}) => e.comment === 'stamp check')
+			expect(entry).toBeDefined()
+			const runnerOffset = -new Date(now).getTimezoneOffset()
+			for (const field of ['start_time', 'end_time']) {
+				const minutes = Math.abs(new Date(entry[field]).getTime() - now) / 60000
+				expect(minutes, `${field} ${entry[field]} vs now ${new Date(now).toISOString()} (runner UTC offset ${runnerOffset} min)`).toBeLessThan(2)
+			}
+		})
+
 		test('shows the page and the sidebar entry', async ({authenticatedPage: page}) => {
 			await page.goto('/')
 			await expect(page.locator('.menu-container').getByRole('link', {name: 'Time tracking'})).toBeVisible()

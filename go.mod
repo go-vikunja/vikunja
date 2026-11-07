@@ -60,6 +60,7 @@ require (
 	github.com/jaswdr/faker/v2 v2.9.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
+	github.com/kentonium3/rrule-go v1.9.0
 	github.com/labstack/echo-jwt/v5 v5.0.2
 	github.com/labstack/echo/v5 v5.4.2
 	github.com/lib/pq v1.12.3
