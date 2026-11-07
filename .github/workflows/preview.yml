@@ -43,7 +43,7 @@ jobs:
         with:
           # On pull_request_target, github.sha is the base branch head, so the
           # default ref would describe main instead of the PR commit.
-          ref: ${{ github.event.pull_request.head.sha }}
+          commit-ish: ${{ github.event.pull_request.head.sha }}
       - name: Login to GHCR
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
