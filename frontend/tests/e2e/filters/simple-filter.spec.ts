@@ -185,7 +185,7 @@ test('preserves unknown label and project ids when another field changes', async
 	await page.goto('/projects/-2/settings/edit')
 	await expect(editor).toContainText('Unknown label #999')
 	await expect(editor).toContainText('Unknown project #999')
-	await editor.locator('.multiselect').filter({hasText: 'Unknown label #999'}).getByRole('button', {name: 'Remove this item'}).click()
+	await editor.getByRole('button', {name: 'Remove label Unknown label #999'}).click()
 	await expect(editor).not.toContainText('Unknown label #999')
 })
 
