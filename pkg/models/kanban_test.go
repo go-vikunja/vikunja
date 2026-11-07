@@ -152,6 +152,47 @@ func TestBucket_ReadAll(t *testing.T) {
 		assert.NotNil(t, buckets[0].CreatedBy)
 		assert.Equal(t, int64(-2), buckets[0].CreatedByID)
 	})
+	t.Run("filter mode bucket search does not leak into other buckets", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		testuser := &user.User{ID: 1}
+		view := &ProjectView{
+			ID:                      4,
+			ProjectID:               1,
+			Title:                   "Kanban",
+			ViewKind:                ProjectViewKindKanban,
+			BucketConfigurationMode: BucketConfigurationModeFilter,
+			BucketConfiguration: []*ProjectViewBucketConfiguration{
+				{Title: "Basic", Filter: &TaskCollection{Search: "basic"}},
+				{Title: "Prioritized", Filter: &TaskCollection{Filter: "priority > 0"}},
+			},
+		}
+		require.NoError(t, view.Update(s, testuser))
+
+		// Buckets are iterated in map order, so repeat to hit the leaking order reliably.
+		for range 10 {
+			b := &TaskCollection{
+				ProjectViewID: 4,
+				ProjectID:     1,
+			}
+			result, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
+			require.NoError(t, err)
+
+			buckets := result.([]*Bucket)
+			require.Len(t, buckets, 2)
+			taskIDs := func(b *Bucket) []int64 {
+				ids := make([]int64, 0, len(b.Tasks))
+				for _, task := range b.Tasks {
+					ids = append(ids, task.ID)
+				}
+				return ids
+			}
+			require.ElementsMatch(t, []int64{10, 11, 12}, taskIDs(buckets[0]))
+			require.ElementsMatch(t, []int64{3, 4}, taskIDs(buckets[1]))
+		}
+	})
 }
 
 func TestBucket_Delete(t *testing.T) {
