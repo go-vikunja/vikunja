@@ -38,6 +38,8 @@ const textAlignClass = computed(() => TEXT_ALIGN_MAP[props.textAlign])
 .message-wrapper {
 	border-radius: $radius;
 	background: var(--white);
+	// Paints its own background, so it must not inherit e.g. the modal's white text
+	color: var(--text);
 }
 
 .message {
