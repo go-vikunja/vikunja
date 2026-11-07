@@ -10,23 +10,19 @@ describe('simple filters', () => {
 		[{projectIds: [3, 4]}, 'project in 3, 4'],
 		[{minPriority: 3}, 'priority >= 3'],
 		[{due: {
-			range: null,
-			includeOverdue: true,
+			kind: 'before',
+			to: 'now',
 		}}, 'due_date < now'],
 		[{due: {
-			range: {
-				from: 'now/Q',
-				to: 'now/Q+1Q',
-			},
-			includeOverdue: false,
+			kind: 'between',
+			from: 'now/Q',
+			to: 'now/Q+1Q',
 		}},
 		'due_date > now/Q && due_date < now/Q+1Q'],
 		[{due: {
-			range: {
-				from: '2026-11-01T00:00:00.000Z',
-				to: '2026-11-02T00:00:00.000Z',
-			},
-			includeOverdue: false,
+			kind: 'between',
+			from: '2026-11-01T00:00:00.000Z',
+			to: '2026-11-02T00:00:00.000Z',
 		}},
 		'due_date > "2026-11-01T00:00:00.000Z" && due_date < "2026-11-02T00:00:00.000Z"'],
 		[{
@@ -45,26 +41,6 @@ describe('simple filters', () => {
 		expect(fromQuery(query)).toEqual(form)
 	})
 
-	it('restores only the effective upper bound when including overdue', () => {
-		const due = {
-			range: {
-				from: 'now/d',
-				to: 'now/d+1d',
-			},
-			includeOverdue: true,
-		}
-		expect(toQuery({
-			...emptySimpleFilter(),
-			due,
-		})).toBe('due_date < now/d+1d')
-		expect(fromQuery('due_date < now/d+1d')?.due).toEqual({
-			range: {
-				from: '',
-				to: 'now/d+1d',
-			},
-			includeOverdue: true,
-		})
-	})
 	it.each([
 		'done = false || priority >= 3', 'due_date < "2026-99-01T00:00:00.000Z"', 'priority >= 3 && done = false',
 		'due_date > now', 'assignees in "a||b"', 'assignees in alice\\',

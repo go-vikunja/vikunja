@@ -1,13 +1,11 @@
 import type {Priority} from '@/constants/priorities'
 import {parseDateMath} from '@/helpers/time/parseDateMath'
 
-export interface DueFilter {
-	range: {
-		from: string
-		to: string
-	} | null
-	includeOverdue: boolean
-}
+// `before` includes overdue tasks; overdue only is `before` with `to: 'now'`.
+export type DueFilter =
+	| {kind: 'any'}
+	| {kind: 'before', to: string}
+	| {kind: 'between', from: string, to: string}
 
 export interface SimpleFilter {
 	showDone: boolean
@@ -38,14 +36,12 @@ export function toQuery(filter: SimpleFilter): string {
 	if (!filter.showDone) {
 		clauses.push('done = false')
 	}
-	const {range, includeOverdue} = filter.due
-	if (range) {
-		if (!includeOverdue) {
-			clauses.push(`due_date > ${quoteDate(range.from)}`)
-		}
-		clauses.push(`due_date < ${quoteDate(range.to)}`)
-	} else if (includeOverdue) {
-		clauses.push('due_date < now')
+	const {due} = filter
+	if (due.kind === 'between') {
+		clauses.push(`due_date > ${quoteDate(due.from)}`)
+	}
+	if (due.kind !== 'any') {
+		clauses.push(`due_date < ${quoteDate(due.to)}`)
 	}
 	if (filter.labelIds.length) {
 		clauses.push(`labels in ${filter.labelIds.join(', ')}`)
@@ -78,10 +74,7 @@ function parseDate(value: string): string | null {
 export function emptySimpleFilter(): SimpleFilter {
 	return {
 		showDone: true,
-		due: {
-			range: null,
-			includeOverdue: false,
-		},
+		due: {kind: 'any'},
 		labelIds: [],
 		assignees: [],
 		projectIds: [],
@@ -139,17 +132,12 @@ export function fromQuery(query: string): SimpleFilter | null {
 	if (to !== undefined) {
 		filter.due = from !== undefined
 			? {
-				range: {
-					from,
-					to,
-				},
-				includeOverdue: false,
+				kind: 'between',
+				from,
+				to,
 			} : {
-				range: to === 'now' ? null : {
-					from: '',
-					to,
-				},
-				includeOverdue: true,
+				kind: 'before',
+				to,
 			}
 	}
 	return toQuery(filter) === query ? filter : null

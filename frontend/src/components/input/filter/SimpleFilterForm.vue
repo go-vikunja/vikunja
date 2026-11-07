@@ -34,14 +34,18 @@ const dates = ref<{
 	dateFrom: null,
 	dateTo: null,
 })
-watch(() => model.value.due.range, range => {
-	if (serializeDate(dates.value.dateFrom) === (range?.from ?? '') &&
-		serializeDate(dates.value.dateTo) === (range?.to ?? '')) {
+// `before` keeps the picker's From locally, so unticking overdue restores the range.
+watch(() => model.value.due, due => {
+	const from = serializeDate(dates.value.dateFrom)
+	const to = serializeDate(dates.value.dateTo)
+	if (due.kind === 'between' ? from === due.from && to === due.to
+		: due.kind === 'before' ? to === due.to || (due.to === 'now' && !to)
+			: !from && !to) {
 		return
 	}
 	dates.value = {
-		dateFrom: toPickerDate(range?.from),
-		dateTo: toPickerDate(range?.to),
+		dateFrom: due.kind === 'between' ? toPickerDate(due.from) : null,
+		dateTo: due.kind === 'any' || due.to === 'now' ? null : toPickerDate(due.to),
 	}
 }, {immediate: true})
 
@@ -68,35 +72,24 @@ function setDates(value: typeof dates.value) {
 	dates.value = value
 	const from = serializeDate(value.dateFrom)
 	const to = serializeDate(value.dateTo)
+	const includeOverdue = model.value.due.kind === 'before'
 	if (!value.dateFrom && !value.dateTo) {
-		update({due: {
-			...model.value.due,
-			range: null,
-		}})
-		return
+		update({due: includeOverdue ? {kind: 'before', to: 'now'} : {kind: 'any'}})
+	} else if (includeOverdue && to) {
+		update({due: {kind: 'before', to}})
+	} else if (!includeOverdue && from && to) {
+		update({due: {kind: 'between', from, to}})
 	}
-	if ((!from || !to) && !(model.value.due.includeOverdue && to)) {
-		return
-	}
-	update({due: {
-		...model.value.due,
-		range: {
-			from,
-			to,
-		},
-	}})
 }
 
 function setOverdue(includeOverdue: boolean) {
 	const from = serializeDate(dates.value.dateFrom)
 	const to = serializeDate(dates.value.dateTo)
-	update({due: {
-		includeOverdue,
-		range: to && (from || includeOverdue) ? {
-			from,
-			to,
-		} : null,
-	}})
+	if (includeOverdue) {
+		update({due: {kind: 'before', to: to || 'now'}})
+	} else {
+		update({due: from && to ? {kind: 'between', from, to} : {kind: 'any'}})
+	}
 }
 
 const priority = computed({
@@ -149,7 +142,7 @@ const priority = computed({
 		</div>
 		<div class="field">
 			<FancyCheckbox
-				:model-value="model.due.includeOverdue"
+				:model-value="model.due.kind === 'before'"
 				@update:modelValue="setOverdue"
 			>
 				{{ t('task.show.overdue') }}
