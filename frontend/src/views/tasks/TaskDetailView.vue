@@ -660,7 +660,17 @@ function dateInput(field: 'due_date' | 'start_date' | 'end_date') {
 	return computed({
 		get: () => parseDateOrNull(task.value[field]),
 		set: (date: Date | string | null) => {
+			const hadStartAndDueDate = parseDateOrNull(task.value.start_date) && parseDateOrNull(task.value.due_date)
 			task.value[field] = parseDateOrNull(date)?.toISOString() ?? ''
+
+			// Default only when adding the missing date, so an explicitly cleared end date stays empty.
+			if (
+				field !== 'end_date' && !hadStartAndDueDate &&
+				!parseDateOrNull(task.value.end_date) &&
+				parseDateOrNull(task.value.start_date) && parseDateOrNull(task.value.due_date)
+			) {
+				task.value.end_date = task.value.due_date
+			}
 		},
 	})
 }
@@ -1052,16 +1062,6 @@ async function saveTask(
 	}
 
 	currentTask.hex_color = taskColor.value
-
-	// If no end date is being set, but a start date and due date,
-	// use the due date as the end date
-	if (
-		!parseDateOrNull(currentTask.end_date) &&
-		Boolean(parseDateOrNull(currentTask.start_date)) &&
-		Boolean(parseDateOrNull(currentTask.due_date))
-	) {
-		currentTask.end_date = currentTask.due_date
-	}
 
 	seedTask(mergeTask(task.value, await updateTask.mutateAsync({...currentTask, id: currentTask.id!})))
 	revealSectionsWithData()
