@@ -251,6 +251,34 @@ test('applies a due preset, includes overdue tasks, and clears the range', async
 
 })
 
+test('labels an overdue range by its end and restores a range when overdue is unticked after reload', async ({authenticatedPage: page}) => {
+	const popup = page.locator('.filter-popup')
+	await popup.getByRole('button', {
+		name: 'Select a date range',
+		exact: true,
+	}).click()
+	await page.locator('.datepicker-with-range.is-open').getByRole('button', {
+		name: 'Today',
+		exact: true,
+	}).click()
+	await popup.getByRole('tab', {
+		name: 'Simple',
+		exact: true,
+	}).click()
+	await popup.getByText('Show overdue tasks', {exact: true}).click()
+	await expect.poll(() => new URL(page.url()).searchParams.get('filter')).toBe('due_date < now/d+1d')
+	const until = popup.getByRole('button', {
+		name: 'until now/d+1d',
+		exact: true,
+	})
+	await expect(until).toBeVisible()
+	await page.reload()
+	await openFilters(page)
+	await expect(until).toBeVisible()
+	await popup.getByText('Show overdue tasks', {exact: true}).click()
+	await expect.poll(() => new URL(page.url()).searchParams.get('filter')).toBe('due_date > now && due_date < now/d+1d')
+})
+
 test('saves a view filter through the shared Simple editor', async ({authenticatedPage: page, apiContext, userToken}) => {
 	await page.goto('/projects/1/settings/views')
 	await page.getByRole('button', {
