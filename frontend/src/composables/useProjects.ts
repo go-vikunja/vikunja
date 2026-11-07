@@ -94,7 +94,6 @@ export function useProjects() {
 
 	const state = reactive({
 		projects,
-		realProjects,
 		projectsArray,
 		notArchivedRootProjects: rootProjects,
 		favoriteProject,

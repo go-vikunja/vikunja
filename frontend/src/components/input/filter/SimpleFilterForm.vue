@@ -10,11 +10,13 @@ import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import EditLabels from '@/components/tasks/partials/EditLabels.vue'
 import EditAssignees from '@/components/tasks/partials/EditAssignees.vue'
-import FilterProjectSelect from './FilterProjectSelect.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Icon from '@/components/misc/Icon'
 import {useLabels} from '@/composables/useLabels'
+import {useProjects} from '@/composables/useProjects'
+import {normalizeProject} from '@/client/queries/projects'
 import type {User} from '@/client/generated'
 
 const props = defineProps<{
@@ -119,6 +121,12 @@ const assignees = computed(() => model.value.assignees.map((username, index) => 
 function isSelectableAssignee(user: User) {
 	return user.username !== undefined && isSimpleUsername(user.username) && !model.value.assignees.includes(user.username)
 }
+
+const projectList = useProjects()
+const projects = computed(() => model.value.projectIds.map(id => projectList.projects[id] ?? normalizeProject({
+	id,
+	title: t('filters.simple.unknownProject', {id}),
+})))
 
 const priority = computed({
 	get: () => model.value.minPriority ?? 0,
@@ -229,9 +237,11 @@ const priority = computed({
 			>
 				{{ t('project.projects') }}
 			</div>
-			<FilterProjectSelect
-				:model-value="model.projectIds"
-				@update:modelValue="update({projectIds: $event})"
+			<ProjectSearch
+				multiple
+				:model-value="projects"
+				:aria-label="t('project.projects')"
+				@update:modelValue="update({projectIds: $event.map(project => project.id)})"
 			/>
 		</div>
 		<div
