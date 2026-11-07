@@ -134,6 +134,8 @@ function onKeydown(e: KeyboardEvent) {
 	if (e.key !== 'Escape' || !open.value) {
 		return
 	}
+	// preventDefault cancels a wrapping native <dialog>'s Escape close request.
+	e.preventDefault()
 	e.stopPropagation()
 	close()
 	focusTrigger()
