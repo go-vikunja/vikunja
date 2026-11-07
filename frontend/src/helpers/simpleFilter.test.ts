@@ -41,9 +41,24 @@ describe('simple filters', () => {
 		expect(fromQuery(query)).toEqual(form)
 	})
 
+	it.each<[string, Partial<SimpleFilter>]>([
+		['done = false && assignees = alice', {
+			showDone: false,
+			assignees: ['alice'],
+		}],
+		['labels = 1', {labelIds: [1]}],
+		['project = 2', {projectIds: [2]}],
+		['project_id in 2, 3', {projectIds: [2, 3]}],
+	])('accepts equivalent query %s', (query, fields) => {
+		expect(fromQuery(query)).toEqual({
+			...emptySimpleFilter(),
+			...fields,
+		})
+	})
+
 	it.each([
 		'done = false || priority >= 3', 'due_date < "2026-99-01T00:00:00.000Z"', 'priority >= 3 && done = false',
-		'due_date > now', 'assignees in "a||b"', 'assignees in alice\\',
+		'due_date > now', 'assignees in "a||b"', 'assignees in alice\\', 'labels = 1, 2',
 	])('rejects noncanonical query %s', query => {
 		expect(fromQuery(query)).toBeNull()
 	})
