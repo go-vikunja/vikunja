@@ -63,6 +63,7 @@
 					@keyup="search"
 					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
 					@keydown="clearKeyupGuard"
+					@keydown.enter.exact="preventFormSubmitWhileOpen"
 					@keydown.down.exact.prevent="() => preSelect(0)"
 					@keydown.esc="handleEscape"
 					@focus="handleFocus"
@@ -408,6 +409,13 @@ function closeSearchResults() {
 function handleFocusOut(e: FocusEvent) {
 	if (e.relatedTarget instanceof Node && !multiselectRoot.value?.contains(e.relatedTarget)) {
 		closeSearchResults()
+	}
+}
+
+// Enter picks a result on keyup; its keydown must not submit a surrounding form first.
+function preventFormSubmitWhileOpen(e: KeyboardEvent) {
+	if (searchResultsVisible.value) {
+		e.preventDefault()
 	}
 }
 
