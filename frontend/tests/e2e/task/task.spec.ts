@@ -1464,6 +1464,32 @@ test.describe('Task', () => {
 			await expect(page.locator('.bucket .task .footer .icon svg.fa-paperclip')).toBeVisible()
 		})
 
+		test('Keeps the task modal open when the attachment file picker is cancelled', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+			})
+			await TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
+
+			await page.goto(`/projects/${projects[0].id}/4`)
+			await page.locator('.bucket .task').filter({hasText: tasks[0].title}).click()
+			await expect(page.locator('dialog[open] .task-view')).toBeVisible()
+
+			const fileChooserPromise = page.waitForEvent('filechooser')
+			await clickTaskAction(page, 'Add attachments')
+			await fileChooserPromise
+			// What Chrome fires at the input when the native picker is dismissed.
+			await page.locator('.attachments input[type="file"]').dispatchEvent('cancel', {bubbles: true})
+
+			await uploadAttachmentAndVerify(page, tasks[0].id)
+			await expect(page.locator('dialog[open] .task-view')).toBeVisible()
+			await expect(page).toHaveURL(`/tasks/${tasks[0].id}`)
+		})
+
 		test('Opens a PDF attachment in a preview modal', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
