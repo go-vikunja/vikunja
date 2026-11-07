@@ -65,4 +65,30 @@ describe('useGanttFilters', () => {
 		expect(filters.value.dateFrom).toBe(new Date(2024, 0, 1).toISOString())
 		expect(filters.value.dateTo).toBe(new Date(2024, 1, 1).toISOString())
 	})
+
+	it('defaults the zoom to the day width floor and reads it from the route query', () => {
+		const withoutZoom = useGanttFilters(routeRef({
+			name: 'project.view',
+			params: {projectId: '5', viewId: '2759'},
+			query: {},
+			fullPath: '/projects/5/2759',
+		}), ref(5), ref(2759))
+		expect(withoutZoom.filters.value.zoom).toBe(30)
+
+		const withZoom = useGanttFilters(routeRef({
+			name: 'project.view',
+			params: {projectId: '5', viewId: '2759'},
+			query: {zoom: '8'},
+			fullPath: '/projects/5/2759?zoom=8',
+		}), ref(5), ref(2759))
+		expect(withZoom.filters.value.zoom).toBe(8)
+
+		const unknownZoom = useGanttFilters(routeRef({
+			name: 'project.view',
+			params: {projectId: '5', viewId: '2759'},
+			query: {zoom: 'hour'},
+			fullPath: '/projects/5/2759?zoom=hour',
+		}), ref(5), ref(2759))
+		expect(unknownZoom.filters.value.zoom).toBe(30)
+	})
 })
