@@ -2,6 +2,7 @@
 	<FormSelect
 		v-model.number="priority"
 		:disabled="disabled"
+		flat
 		:aria-label="$t('task.attributes.priority')"
 	>
 		<option :value="PRIORITIES.UNSET">

@@ -2,6 +2,7 @@
 	<FormSelect
 		v-model.number="percentDone"
 		:disabled="disabled"
+		flat
 		:aria-label="$t('task.attributes.percentDone')"
 	>
 		<option
