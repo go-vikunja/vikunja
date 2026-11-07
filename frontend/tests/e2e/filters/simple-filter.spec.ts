@@ -5,6 +5,9 @@ import {TaskFactory} from '../../factories/task'
 import {LabelTaskFactory} from '../../factories/label_task'
 import {LabelFactory} from '../../factories/labels'
 import {SavedFilterFactory} from '../../factories/saved_filter'
+import {UserFactory} from '../../factories/user'
+import {UserProjectFactory} from '../../factories/users_project'
+import {TaskAssigneeFactory} from '../../factories/task_assignee'
 
 async function openFilters(page: Page) {
 	await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
@@ -48,6 +51,25 @@ test('selects a label in Simple and preserves the query across modes and reload'
 	await expect(page.locator('.tasks')).not.toContainText('Task 2')
 	await openFilters(page)
 	await expect(page.locator('.filter-popup .ProseMirror')).toContainText('labels in Important')
+})
+
+test('filters by an assignee picked in Simple and drops it when removed', async ({authenticatedPage: page}) => {
+	await UserFactory.create(1, {id: 100, username: 'collaborator'}, false)
+	await UserProjectFactory.create(1, {project_id: 1, user_id: 100})
+	await TaskAssigneeFactory.create(1, {task_id: 1, user_id: 100})
+	await page.reload()
+	await openFilters(page)
+	const popup = page.locator('.filter-popup')
+	await popup.getByRole('combobox', {
+		name: 'Assignees',
+		exact: true,
+	}).pressSequentially('collaborator')
+	await popup.getByRole('option', {name: /collaborator/}).click()
+	await expect.poll(() => new URL(page.url()).searchParams.get('filter')).toBe('assignees in collaborator')
+	await expect(page.locator('.tasks')).toContainText('Task 1')
+	await expect(page.locator('.tasks')).not.toContainText('Task 2')
+	await popup.getByRole('button', {name: 'Remove collaborator as assignee'}).click()
+	await expect.poll(() => new URL(page.url()).searchParams.get('filter') ?? '').not.toContain('assignees')
 })
 
 test('keeps an unsupported query in Advanced until explicitly cleared', async ({authenticatedPage: page}) => {
