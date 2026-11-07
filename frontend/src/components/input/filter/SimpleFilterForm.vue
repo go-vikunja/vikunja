@@ -12,6 +12,8 @@ import FilterLabelSelect from './FilterLabelSelect.vue'
 import FilterAssigneeSelect from './FilterAssigneeSelect.vue'
 import FilterProjectSelect from './FilterProjectSelect.vue'
 import XButton from '@/components/input/Button.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
+import Icon from '@/components/misc/Icon'
 
 const props = defineProps<{
 	projectId?: number
@@ -127,26 +129,30 @@ const priority = computed({
 			>
 				{{ t('task.attributes.dueDate') }}
 			</div>
-			<DatepickerWithRange
-				:model-value="dates"
-				@update:modelValue="setDates"
-			>
-				<template #trigger="{toggle, buttonText}">
-					<XButton
-						variant="secondary"
-						@click.prevent="toggle()"
-					>
-						{{ untilText ?? buttonText }}
-					</XButton>
-				</template>
-			</DatepickerWithRange>
-			<XButton
-				v-if="dates.dateFrom || dates.dateTo"
-				variant="tertiary"
-				@click="setDates({dateFrom: null, dateTo: null})"
-			>
-				{{ t('input.datepicker.clear') }}
-			</XButton>
+			<div class="due-date">
+				<DatepickerWithRange
+					:model-value="dates"
+					@update:modelValue="setDates"
+				>
+					<template #trigger="{toggle, buttonText}">
+						<XButton
+							variant="secondary"
+							@click.prevent="toggle()"
+						>
+							{{ untilText ?? buttonText }}
+						</XButton>
+					</template>
+				</DatepickerWithRange>
+				<BaseButton
+					v-if="dates.dateFrom || dates.dateTo"
+					v-tooltip="t('input.datepicker.clear')"
+					class="clear-due-date"
+					:aria-label="t('input.datepicker.clear')"
+					@click="setDates({dateFrom: null, dateTo: null})"
+				>
+					<Icon icon="times" />
+				</BaseButton>
+			</div>
 		</div>
 		<div class="field">
 			<FancyCheckbox
@@ -221,3 +227,16 @@ const priority = computed({
 		</div>
 	</div>
 </template>
+
+<style lang="scss" scoped>
+.due-date {
+	display: flex;
+	align-items: center;
+}
+
+.clear-due-date {
+	color: var(--danger);
+	padding-inline-start: .5rem;
+	line-height: 1;
+}
+</style>
