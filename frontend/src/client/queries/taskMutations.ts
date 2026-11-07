@@ -1,6 +1,7 @@
 import {useMutation, type QueryClient} from '@tanstack/vue-query'
 import {
 	tasksCreate,
+	tasksRecurrence,
 	patchTasksRead,
 	tasksDelete,
 	tasksBulkCreate,
@@ -173,6 +174,23 @@ export function updateTaskMutationOptions(optimistic = false) {
 		},
 		onSettled: ({id}, client) => invalidateTaskMembership(client, id),
 	})
+}
+
+export function useTaskRecurrenceMutation() {
+	return useMutation(contextMutationOptions({
+		mutationFn: async ({id, undoToken}: {id: number, undoToken?: string}) => (await tasksRecurrence({
+			path: {task: id},
+			body: {undo_token: undoToken},
+		})).data,
+		onSuccess: ({task}, _input, client) => {
+			if (task) replaceTaskEverywhere(client, task)
+		},
+		onSettled: ({id}, client) => Promise.all([
+			invalidateTaskMembership(client, id, 'active'),
+			// Completion and Undo can move the card independently in each view.
+			client.invalidateQueries({queryKey: kanbanKeys.all, refetchType: 'active'}),
+		]),
+	}))
 }
 
 export function deleteTaskMutationOptions() {
