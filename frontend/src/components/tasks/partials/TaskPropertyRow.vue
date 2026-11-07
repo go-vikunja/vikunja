@@ -326,18 +326,23 @@ const emit = defineEmits<{
 		align-items: center;
 	}
 
-	// Overlapping avatars can't wrap, so a long list would overflow the row.
 	:deep(.assignees-list) {
 		flex-wrap: wrap;
 		gap: .25rem;
+		transition: margin-inline-start $transition;
 
 		// Otherwise the wrapper's gap still pushes the input away.
 		&:empty {
 			display: none;
 		}
 
-		.assignee:not(:first-child) {
-			margin-inline-start: 0;
+		.assignee {
+			// The task view's `*` opacity transition overrides AssigneeList's.
+			transition: margin-inline-start $transition;
+
+			&:not(:first-child) {
+				margin-inline-start: 0;
+			}
 		}
 
 		.avatar-wrapper {
@@ -365,6 +370,17 @@ const emit = defineEmits<{
 
 		.username {
 			display: none;
+		}
+	}
+}
+
+@media (hover: hover) {
+	// The list's margin offsets the avatars', so a wrapped line doesn't start outside the field.
+	.property:not(:hover, :focus-within) > dd :deep(.assignees-list) {
+		margin-inline-start: calc(.4375rem + .25rem);
+
+		.assignee {
+			margin-inline-start: calc(-.4375rem - .25rem);
 		}
 	}
 }
