@@ -19,7 +19,7 @@ import {createDefaultViews} from '../project/prepareProjects'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {pasteFile, pasteHtmlFromClipboard} from '../../support/commands'
 import {login} from '../../support/authenticateUser'
-import {clickTaskAction} from '../../support/taskDetail'
+import {clickTaskAction, openTaskActions} from '../../support/taskDetail'
 import type {Locator, Page} from '@playwright/test'
 import {readFileSync} from 'fs'
 import {join, dirname} from 'path'
@@ -1488,6 +1488,40 @@ test.describe('Task', () => {
 			await uploadAttachmentAndVerify(page, tasks[0].id)
 			await expect(page.locator('dialog[open] .task-view')).toBeVisible()
 			await expect(page).toHaveURL(`/tasks/${tasks[0].id}`)
+		})
+
+		test('Escape closes a menu or picker in the task modal before the modal itself', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+			})
+			await TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
+
+			await page.goto(`/projects/${projects[0].id}/4`)
+			await page.locator('.bucket .task').filter({hasText: tasks[0].title}).click()
+			const modal = page.locator('dialog[open] .task-view')
+			await expect(modal).toBeVisible()
+
+			const actionsMenu = await openTaskActions(page)
+			await expect(actionsMenu).toBeVisible()
+			await page.keyboard.press('Escape')
+			await expect(actionsMenu).toBeHidden()
+
+			await page.locator('.task-view .property-due-date .datepicker .show').click()
+			const datepicker = page.locator('.datepicker-popup')
+			await expect(datepicker).toBeVisible()
+			await page.keyboard.press('Escape')
+			await expect(datepicker).toBeHidden()
+			await expect(modal).toBeVisible()
+			await expect(page).toHaveURL(`/tasks/${tasks[0].id}`)
+
+			await page.keyboard.press('Escape')
+			await expect(modal).toBeHidden()
+			await expect(page).toHaveURL(`/projects/${projects[0].id}/4`)
 		})
 
 		test('Opens a PDF attachment in a preview modal', async ({authenticatedPage: page}) => {
