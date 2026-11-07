@@ -88,7 +88,7 @@ function setOverdue(includeOverdue: boolean) {
 	if (includeOverdue) {
 		update({due: {kind: 'before', to: to || 'now'}})
 	} else {
-		update({due: to ? {kind: 'between', from: from || 'now', to} : {kind: 'any'}})
+		update({due: to && to !== 'now' ? {kind: 'between', from: from || 'now', to} : {kind: 'any'}})
 	}
 }
 
