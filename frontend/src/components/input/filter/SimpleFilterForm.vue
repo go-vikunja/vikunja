@@ -8,12 +8,13 @@ import {createDateFromString} from '@/helpers/time/createDateFromString'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
-import FilterLabelSelect from './FilterLabelSelect.vue'
+import EditLabels from '@/components/tasks/partials/EditLabels.vue'
 import FilterAssigneeSelect from './FilterAssigneeSelect.vue'
 import FilterProjectSelect from './FilterProjectSelect.vue'
 import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Icon from '@/components/misc/Icon'
+import {useLabels} from '@/composables/useLabels'
 
 const props = defineProps<{
 	projectId?: number
@@ -102,6 +103,12 @@ const untilText = computed(() => {
 		: null
 })
 
+const {getLabelById} = useLabels()
+const labels = computed(() => model.value.labelIds.map(id => getLabelById(id) ?? {
+	id,
+	title: t('filters.simple.unknownLabel', {id}),
+}))
+
 const priority = computed({
 	get: () => model.value.minPriority ?? 0,
 	set: (value: number) => update({minPriority: value === 0 ? null : value as Priority}),
@@ -173,9 +180,11 @@ const priority = computed({
 			>
 				{{ t('task.attributes.labels') }}
 			</div>
-			<FilterLabelSelect
-				:model-value="model.labelIds"
-				@update:modelValue="update({labelIds: $event})"
+			<EditLabels
+				:model-value="labels"
+				:creatable="false"
+				:aria-label="t('task.attributes.labels')"
+				@update:modelValue="update({labelIds: $event.map(label => label.id!)})"
 			/>
 		</div>
 		<div
