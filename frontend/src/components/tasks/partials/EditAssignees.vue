@@ -40,7 +40,7 @@ import {useI18n} from 'vue-i18n'
 import User from '@/components/misc/User.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 
-import {useProjectUserSearch} from '@/composables/useUserSearch'
+import {useProjectUserSearch, useUserSearch} from '@/composables/useUserSearch'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useAddTaskAssigneeMutation, useRemoveTaskAssigneeMutation} from '@/client/queries/taskMutations'
@@ -51,11 +51,15 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IUser[] | undefined,
-	taskId: number,
-	projectId: number,
+	taskId?: number,
+	projectId?: number,
 	disabled?: boolean,
+	filter?: (user: IUser) => boolean,
 }>(), {
+	taskId: 0,
+	projectId: 0,
 	disabled: false,
+	filter: () => true,
 })
 
 const emit = defineEmits<{
@@ -69,7 +73,10 @@ const {t} = useI18n({useScope: 'global'})
 
 const userSearch = ref('')
 const searchEnabled = ref(false)
-const {users: userResults, isFetching: usersLoading} = useProjectUserSearch(() => props.projectId, userSearch, searchEnabled)
+const projectUserSearch = useProjectUserSearch(() => props.projectId, userSearch, searchEnabled)
+const globalUserSearch = useUserSearch(() => props.projectId > 0 ? '' : userSearch.value)
+const userResults = computed(() => props.projectId > 0 ? projectUserSearch.users.value : globalUserSearch.users.value)
+const usersLoading = computed(() => projectUserSearch.isFetching.value || globalUserSearch.isFetching.value)
 const assignees = ref<UserWithId[]>([])
 let isAdding = false
 
@@ -89,6 +96,11 @@ watch(
 )
 
 async function addAssignee(user: UserWithId) {
+	if (props.taskId === 0) {
+		emit('update:modelValue', assignees.value)
+		return
+	}
+
 	if (isAdding) {
 		return
 	}
@@ -105,11 +117,15 @@ async function addAssignee(user: UserWithId) {
 }
 
 async function removeAssignee(user: UserWithId) {
-	await removeAssigneeMutation.mutateAsync({user: user, taskId: props.taskId})
+	if (props.taskId !== 0) {
+		await removeAssigneeMutation.mutateAsync({user: user, taskId: props.taskId})
+	}
 
 	assignees.value = assignees.value.filter(a => a.id !== user.id)
 	emit('update:modelValue', assignees.value)
-	success({message: t('task.assignee.unassignSuccess')})
+	if (props.taskId !== 0) {
+		success({message: t('task.assignee.unassignSuccess')})
+	}
 }
 
 function findUser(query = '') {
@@ -121,7 +137,7 @@ function withIds(users: IUser[]): UserWithId[] {
 	return users.flatMap(user => user.id === undefined ? [] : [{...user, id: user.id}])
 }
 
-const foundUsers = computed(() => withIds(userResults.value)
+const foundUsers = computed(() => withIds(userResults.value.filter(props.filter))
 	.filter(({id}) => !assignees.value.some(assignee => assignee.id === id))
 	.map(user => ({...user, name: getDisplayName(user)}))
 	.sort((a, b) => {

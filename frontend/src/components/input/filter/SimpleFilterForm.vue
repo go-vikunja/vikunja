@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, ref, useId, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {isDateMath, type SimpleFilter} from '@/helpers/simpleFilter'
+import {isDateMath, isSimpleUsername, type SimpleFilter} from '@/helpers/simpleFilter'
 import type {Priority} from '@/constants/priorities'
 import {formatDate} from '@/helpers/time/formatDate'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
@@ -9,12 +9,13 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import EditLabels from '@/components/tasks/partials/EditLabels.vue'
-import FilterAssigneeSelect from './FilterAssigneeSelect.vue'
+import EditAssignees from '@/components/tasks/partials/EditAssignees.vue'
 import FilterProjectSelect from './FilterProjectSelect.vue'
 import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Icon from '@/components/misc/Icon'
 import {useLabels} from '@/composables/useLabels'
+import type {User} from '@/client/generated'
 
 const props = defineProps<{
 	projectId?: number
@@ -109,6 +110,16 @@ const labels = computed(() => model.value.labelIds.map(id => getLabelById(id) ??
 	title: t('filters.simple.unknownLabel', {id}),
 }))
 
+// The query only stores usernames; negative ids keep them distinct without colliding with real users.
+const assignees = computed(() => model.value.assignees.map((username, index) => ({
+	id: -(index + 1),
+	username,
+})))
+
+function isSelectableAssignee(user: User) {
+	return user.username !== undefined && isSimpleUsername(user.username) && !model.value.assignees.includes(user.username)
+}
+
 const priority = computed({
 	get: () => model.value.minPriority ?? 0,
 	set: (value: number) => update({minPriority: value === 0 ? null : value as Priority}),
@@ -198,10 +209,12 @@ const priority = computed({
 			>
 				{{ t('task.attributes.assignees') }}
 			</div>
-			<FilterAssigneeSelect
-				:model-value="model.assignees"
+			<EditAssignees
+				:model-value="assignees"
 				:project-id="props.projectId"
-				@update:modelValue="update({assignees: $event})"
+				:filter="isSelectableAssignee"
+				:aria-label="t('task.attributes.assignees')"
+				@update:modelValue="update({assignees: ($event ?? []).map(user => user.username!)})"
 			/>
 		</div>
 		<div
