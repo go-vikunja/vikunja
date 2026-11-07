@@ -14,6 +14,7 @@ import FilterInput from './FilterInput.vue'
 import FilterInputDocs from './FilterInputDocs.vue'
 import SimpleFilterForm from './SimpleFilterForm.vue'
 import XButton from '@/components/input/Button.vue'
+import FormField from '@/components/input/FormField.vue'
 
 const props = defineProps<{
 	modelValue: string
@@ -163,19 +164,14 @@ defineExpose({focus})
 					:project-id="realProjectId"
 					@update:modelValue="changeSimple"
 				/>
-				<label
+				<FormField
 					v-if="search !== undefined"
-					class="field is-block"
-				>
-					<span class="label">{{ t('filters.simple.search') }}</span>
-					<input
-						v-model="searchText"
-						type="search"
-						class="input"
-						@blur="emit('update:search', searchText)"
-						@keydown.enter="emit('update:search', searchText)"
-					>
-				</label>
+					v-model="searchText"
+					type="search"
+					:label="t('filters.simple.search')"
+					@blur="emit('update:search', searchText)"
+					@keydown.enter="emit('update:search', searchText)"
+				/>
 			</template>
 			<template v-else>
 				<FilterInput
