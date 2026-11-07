@@ -9,14 +9,11 @@ import {
 	type ProjectViewDraft,
 } from '@/client/queries/projectViews'
 
-import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
-import {useLabels} from '@/composables/useLabels'
-import {useProjects} from '@/composables/useProjects'
+import {hasFilterQuery} from '@/helpers/filters'
 
 import XButton from '@/components/input/Button.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
-import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
-import FilterInput from '@/components/input/filter/FilterInput.vue'
+import FilterEditor from '@/components/input/filter/FilterEditor.vue'
 import FormField from '@/components/input/FormField.vue'
 
 const props = withDefaults(defineProps<{
@@ -40,15 +37,8 @@ type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration
 		bucket_configuration: Array<{title: string, filter: EditableTaskCollection}>
 	}
 
-const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
-const projectList = useProjects()
-
 const transformFilterFromApi = (filterInput?: TaskCollection): EditableTaskCollection => {
-	const filterString = transformFilterStringFromApi(
-		filterInput?.filter ?? '',
-		labelId => getLabelById(labelId)?.title || null,
-		projectId => projectList.projects[projectId]?.title || null,
-	)
+	const filterString = filterInput?.filter ?? ''
 
 	const filter: EditableTaskCollection = {
 		sort_by: filterInput?.sort_by ?? [],
@@ -98,47 +88,6 @@ onBeforeMount(() => {
 		view.value = transformed
 	}
 
-	const initialFilter = transformed.filter.filter
-	const initialBuckets = transformed.bucket_configuration.map(bucket => ({
-		title: bucket.title,
-		filter: bucket.filter.filter,
-	}))
-
-	watch(isPending, pending => {
-		if (pending || !view.value) {
-			return
-		}
-
-		const resolved = transformViewFromApi(props.modelValue)
-		if (view.value.filter.filter === initialFilter) {
-			view.value.filter = {
-				...view.value.filter,
-				filter: resolved.filter.filter,
-			}
-		}
-
-		view.value.bucket_configuration = view.value.bucket_configuration.map((bucket, index) => {
-			const initial = initialBuckets[index]
-			const resolvedBucket = resolved.bucket_configuration[index]
-			if (
-				!initial ||
-				!resolvedBucket ||
-				bucket.title !== initial.title ||
-				bucket.filter.filter !== initial.filter
-			) {
-				return bucket
-			}
-
-			return {
-				...bucket,
-				filter: {
-					...bucket.filter,
-					filter: resolvedBucket.filter.filter,
-				},
-			}
-		})
-	}, {immediate: true})
-
 	watch(() => view.value?.view_kind, kind => {
 		if (kind === 'kanban' && view.value?.bucket_configuration_mode === 'none') {
 			view.value.bucket_configuration_mode = 'manual'
@@ -152,14 +101,7 @@ function save() {
 	}
 
 	const transformFilterForApi = (filterInput?: EditableTaskCollection): EditableTaskCollection => {
-		const filterString = transformFilterStringForApi(
-			filterInput?.filter || '',
-			labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
-			projectTitle => {
-				const found = projectList.findProjectByExactname(projectTitle)
-				return found?.id || null
-			},
-		)
+		const filterString = filterInput?.filter || ''
 		const filter: EditableTaskCollection = {
 			sort_by: filterInput?.sort_by ?? [],
 			order_by: filterInput?.order_by ?? [],
@@ -241,22 +183,15 @@ function handleBubbleSave(event: FocusEvent) {
 			</template>
 		</FormField>
 
-		<label
-			class="label"
-			for="filter"
-		>
+		<p class="label">
 			{{ $t('project.views.filter') }}
-		</label>
-		<FilterInput
-			id="filter"
+		</p>
+		<FilterEditor
 			v-model="view.filter.filter"
+			:label="$t('project.views.filter')"
 			:project-id="view.project_id"
 			class="mbe-1"
 		/>
-
-		<div class="is-size-7 mbe-2">
-			<FilterInputDocs />
-		</div>
 
 		<div class="field mbe-3">
 			<FancyCheckbox
@@ -328,16 +263,12 @@ function handleBubbleSave(event: FocusEvent) {
 							:placeholder="$t('project.share.links.namePlaceholder')"
 						/>
 
-						<FilterInput
+						<FilterEditor
 							v-model="view.bucket_configuration[index].filter.filter"
+							:label="$t('project.views.bucketFilter', {title: b.title})"
 							:project-id="view.project_id"
-							:input-label="$t('project.views.filter')"
 							class="mbe-2"
 						/>
-
-						<div class="is-size-7 mbe-2">
-							<FilterInputDocs />
-						</div>
 
 						<div class="field mbe-3">
 							<FancyCheckbox

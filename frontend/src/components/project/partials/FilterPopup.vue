@@ -24,6 +24,7 @@
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
+			@update:modelValue="updateFilters"
 		/>
 	</Modal>
 </template>
@@ -91,9 +92,13 @@ watch(modalOpen, (isOpen) => {
 	}
 })
 
-function showResults() {
+function updateFilters() {
 	const {s, ...rest} = value.value
 	emit('update:modelValue', {...props.modelValue, ...rest, q: s})
+}
+
+function showResults() {
+	updateFilters()
 	modalOpen.value = false
 }
 
