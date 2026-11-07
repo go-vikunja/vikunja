@@ -134,7 +134,9 @@ async function removeLabel(label: Label) {
 		labels.value.splice(idx, 1)
 	}
 	emit('update:modelValue', labels.value)
-	success({message: t('task.label.removeSuccess')})
+	if (props.taskId !== 0) {
+		success({message: t('task.label.removeSuccess')})
+	}
 }
 
 async function createAndAddLabel(title: string) {

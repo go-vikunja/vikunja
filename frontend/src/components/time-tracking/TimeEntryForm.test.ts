@@ -49,7 +49,6 @@ vi.mock('@/message', () => ({
 
 import TimeEntryForm from './TimeEntryForm.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
-import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import {queryClient} from '@/client/queryClient'
 import {normalizeProject, projectKeys} from '@/client/queries/projects'
 import type {TimeEntryResponse} from '@/client/queries/timeEntries'
@@ -237,7 +236,7 @@ describe('TimeEntryForm update container', () => {
 	it('sends 0 for both containers after the project is cleared', async () => {
 		const wrapper = mountForm({entry})
 		await flushPromises()
-		wrapper.findComponent(ProjectSearch).vm.$emit('update:modelValue', null)
+		wrapper.findComponent({name: 'ProjectSearch'}).vm.$emit('update:modelValue', null)
 
 		expect(await saveEdit(wrapper)).toStrictEqual({
 			path: {id: 2},
