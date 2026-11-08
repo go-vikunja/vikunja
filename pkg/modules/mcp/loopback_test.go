@@ -174,6 +174,14 @@ func TestCallTool_UsesTheResponseRequestID(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "generated-1", req.Header.Get(echo.HeaderXRequestID))
 }
+func TestCallTool_MarksTheRequestAsLoopback(t *testing.T) {
+	m, ctx := newTestCaller(t)
+	assert.False(t, IsLoopback(ctx))
+	tl := m.index["things_read"]
+	req, err := tl.newRequest(ctx, humabridge.EchoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
+	require.NoError(t, err)
+	assert.True(t, IsLoopback(req.Context()))
+}
 func TestCallTool_KeepsTheForwardedHost(t *testing.T) {
 	m, ctx := newTestCaller(t)
 	caller := humabridge.EchoContextFrom(ctx).Request()
