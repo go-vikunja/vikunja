@@ -1164,28 +1164,11 @@
 			"title": "Aufgabendetails",
 			"markAsDone": "'{task}' als erledigt markieren",
 			"scrollToBottom": "Nach unten scrollen",
-			"organization": "Organisation",
-			"management": "Verwaltung",
-			"dateAndTime": "Datum und Uhrzeit",
 			"actions": {
-				"assign": "Benutzer:in zuweisen",
-				"label": "Label hinzufügen",
-				"priority": "Priorität setzen",
-				"dueDate": "Fälligkeitsdatum setzen",
-				"startDate": "Startdatum setzen",
-				"endDate": "Enddatum setzen",
-				"reminders": "Erinnerungen setzen",
-				"repeatAfter": "Wiederholung setzen",
-				"percentDone": "Fortschritt einstellen",
-				"attachments": "Anhänge hinzufügen",
 				"timeTracking": "Zeit erfassen",
-				"relatedTasks": "Beziehung hinzufügen",
 				"moveProject": "Verschieben",
 				"duplicate": "Duplizieren",
-				"color": "Farbe setzen",
-				"delete": "Löschen",
-				"favorite": "Zu Favoriten hinzufügen",
-				"unfavorite": "Aus Favoriten entfernen"
+				"delete": "Löschen"
 			}
 		},
 		"attributes": {
@@ -1344,9 +1327,6 @@
 			"dateAndTime": "Datum und Uhrzeit"
 		},
 		"repeat": {
-			"everyDay": "Jeden Tag",
-			"everyWeek": "Jede Woche",
-			"every30d": "Alle 30 Tage",
 			"mode": "Wiederholungsmodus",
 			"monthly": "Monatlich",
 			"fromCurrentDate": "Ab Fertigstellungsdatum",

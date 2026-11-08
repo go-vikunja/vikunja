@@ -679,26 +679,9 @@
 			"updateSuccess": "Tehtävä tallennettiin onnistuneesti.",
 			"belongsToProject": "Tämä tehtävä kuuluu '{project}' projektiin",
 			"due": "Erääntyy {at}",
-			"organization": "Organisaatio",
-			"management": "Hallinta",
-			"dateAndTime": "Päivä ja Aika",
 			"actions": {
-				"assign": "Osoita käyttäjälle",
-				"label": "Lisää Tunnisteita",
-				"priority": "Aseta Priotiteetti",
-				"dueDate": "Aseta Eräpäivä",
-				"startDate": "Aseta Aloituspäivä",
-				"endDate": "Aseta Päättymispäivä",
-				"reminders": "Aseta Muistutuksia",
-				"repeatAfter": "Aseta Toistoväli",
-				"percentDone": "Aseta Edistymis Prosentti",
-				"attachments": "Lisää Liitteitä",
-				"relatedTasks": "Lisää Relaatio",
 				"moveProject": "Siirrä",
-				"color": "Aseta Väri",
-				"delete": "Poista",
-				"favorite": "Lisää Suosikkeihin",
-				"unfavorite": "Poista Suosikeista"
+				"delete": "Poista"
 			}
 		},
 		"attributes": {
@@ -811,9 +794,6 @@
 			"dateAndTime": "Päivä ja Aika"
 		},
 		"repeat": {
-			"everyDay": "Joka Päivä",
-			"everyWeek": "Joka Viikko",
-			"every30d": "30 päivän välein",
 			"mode": "Toistotila",
 			"monthly": "Kuukausittain",
 			"fromCurrentDate": "Valmistumispäivästä alkaen",

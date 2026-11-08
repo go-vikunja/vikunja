@@ -1134,28 +1134,11 @@
 			"title": "Деталі завдання",
 			"markAsDone": "Позначити '{task}' як виконане",
 			"scrollToBottom": "Прокрутити донизу",
-			"organization": "Уточнення",
-			"management": "Управління",
-			"dateAndTime": "Дата і час",
 			"actions": {
-				"assign": "Доручити",
-				"label": "Позначки",
-				"priority": "Встановити пріоритет",
-				"dueDate": "Встановити термін виконання",
-				"startDate": "Почати",
-				"endDate": "Встановити дату завершення",
-				"reminders": "Нагадування",
-				"repeatAfter": "Повторювати",
-				"percentDone": "Встановити прогрес",
-				"attachments": "Вкласти",
 				"timeTracking": "Відстежити час",
-				"relatedTasks": "Пов'язати",
 				"moveProject": "Перемістити",
 				"duplicate": "Дублювати",
-				"color": "Колір",
-				"delete": "Вилучити",
-				"favorite": "Додати до обраних",
-				"unfavorite": "Прибрати з обраних"
+				"delete": "Вилучити"
 			}
 		},
 		"attributes": {
@@ -1314,9 +1297,6 @@
 			"dateAndTime": "Дата і час"
 		},
 		"repeat": {
-			"everyDay": "Щодня",
-			"everyWeek": "Щотижня",
-			"every30d": "Кожні 30 днів",
 			"mode": "Спосіб",
 			"monthly": "Щомісяця",
 			"fromCurrentDate": "З дня закінчення",

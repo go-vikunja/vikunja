@@ -736,26 +736,9 @@
 			"belongsToProject": "该任务属于项目'{project}'",
 			"back": "返回到项目",
 			"due": "截止至 {at}",
-			"organization": "机构",
-			"management": "管理",
-			"dateAndTime": "日期与时间",
 			"actions": {
-				"assign": "分配给用户",
-				"label": "添加标签",
-				"priority": "设置优先级",
-				"dueDate": "设置截止日期",
-				"startDate": "设置开始日期",
-				"endDate": "设置结束日期",
-				"reminders": "设置提醒",
-				"repeatAfter": "设置重复间隔",
-				"percentDone": "设置进度",
-				"attachments": "添加附件",
-				"relatedTasks": "添加关联",
 				"moveProject": "移动",
-				"color": "设置颜色",
-				"delete": "删除",
-				"favorite": "添加至收藏",
-				"unfavorite": "从收藏中移除"
+				"delete": "删除"
 			}
 		},
 		"attributes": {
@@ -894,9 +877,6 @@
 			"dateAndTime": "日期与时间"
 		},
 		"repeat": {
-			"everyDay": "每天",
-			"everyWeek": "每周",
-			"every30d": "每 30 天",
 			"mode": "重复模式",
 			"monthly": "每月",
 			"fromCurrentDate": "添加完成日期",

@@ -841,27 +841,10 @@
 			"back": "返回專案",
 			"due": "截止至 {at}",
 			"scrollToBottom": "滾動至底部",
-			"organization": "機構",
-			"management": "管理",
-			"dateAndTime": "日期與時間",
 			"actions": {
-				"assign": "分配給用户",
-				"label": "新增標籤",
-				"priority": "設定優先級",
-				"dueDate": "設定截止日期",
-				"startDate": "設定開始日期",
-				"endDate": "設定結束日期",
-				"reminders": "設定提醒",
-				"repeatAfter": "設定重複間隔",
-				"percentDone": "設定進度",
-				"attachments": "新增附件",
-				"relatedTasks": "新增關聯",
 				"moveProject": "移動",
 				"duplicate": "複製",
-				"color": "設定顏色",
-				"delete": "刪除",
-				"favorite": "收藏",
-				"unfavorite": "移除收藏"
+				"delete": "刪除"
 			}
 		},
 		"attributes": {
@@ -991,9 +974,6 @@
 			"dateAndTime": "日期與時間"
 		},
 		"repeat": {
-			"everyDay": "每天",
-			"everyWeek": "每週",
-			"every30d": "每 30 天",
 			"monthly": "每月",
 			"hours": "小時",
 			"days": "天",

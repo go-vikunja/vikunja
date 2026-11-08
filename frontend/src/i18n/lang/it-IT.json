@@ -780,26 +780,9 @@
 			"back": "Torna al progetto",
 			"due": "Scadenza {at}",
 			"scrollToBottom": "Scorri in fondo",
-			"organization": "Organizza",
-			"management": "Gestisci",
-			"dateAndTime": "Data e ora",
 			"actions": {
-				"assign": "Assegna all'Utente",
-				"label": "Aggiungi Etichette",
-				"priority": "Imposta Priorità",
-				"dueDate": "Imposta data di scadenza",
-				"startDate": "Imposta Data Inizio",
-				"endDate": "Imposta Data Fine",
-				"reminders": "Imposta promemoria",
-				"repeatAfter": "Imposta Intervallo Ripetizione",
-				"percentDone": "Imposta Progresso",
-				"attachments": "Aggiungi Allegati",
-				"relatedTasks": "Aggiungi Relazione",
 				"moveProject": "Sposta",
-				"color": "Imposta Colore",
-				"delete": "Elimina",
-				"favorite": "Aggiungi ai Preferiti",
-				"unfavorite": "Rimuovi dai Preferiti"
+				"delete": "Elimina"
 			}
 		},
 		"attributes": {
@@ -939,9 +922,6 @@
 			"dateAndTime": "Data e ora"
 		},
 		"repeat": {
-			"everyDay": "Ogni Giorno",
-			"everyWeek": "Ogni Settimana",
-			"every30d": "Ogni 30 giorni",
 			"mode": "Modalità ripetizione",
 			"monthly": "Ogni mese",
 			"fromCurrentDate": "Dal completamento",

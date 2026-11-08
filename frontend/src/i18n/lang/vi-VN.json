@@ -708,26 +708,9 @@
 			"updateSuccess": "Công việc đã được lưu.",
 			"belongsToProject": "Tác vụ này thuộc về dự án '{project}'",
 			"due": "Đến hạn {at}",
-			"organization": "Tổ chức",
-			"management": "Quản lý",
-			"dateAndTime": "Ngày và giờ",
 			"actions": {
-				"assign": "Chỉ định người",
-				"label": "Thêm nhãn",
-				"priority": "Mức độ ưu tiên",
-				"dueDate": "Đặt ngày đến hạn",
-				"startDate": "Chọn ngày bắt đầu",
-				"endDate": "Chọn ngày kết thúc",
-				"reminders": "Thiết lập nhắc nhở",
-				"repeatAfter": "Chọn chu kì lặp",
-				"percentDone": "Đặt tiến trình",
-				"attachments": "Thêm Tệp đính kèm",
-				"relatedTasks": "Thêm Quan hệ",
 				"moveProject": "Di chuyển",
-				"color": "Đặt màu",
-				"delete": "Xóa",
-				"favorite": "Thêm vào mục yêu thích",
-				"unfavorite": "Xóa khỏi mục yêu thích"
+				"delete": "Xóa"
 			}
 		},
 		"attributes": {
@@ -862,9 +845,6 @@
 			"dateAndTime": "Ngày và giờ"
 		},
 		"repeat": {
-			"everyDay": "Mỗi ngày",
-			"everyWeek": "Mỗi tuần",
-			"every30d": "Mỗi 30 ngày",
 			"mode": "Chế độ lặp lại",
 			"monthly": "Hàng tháng",
 			"fromCurrentDate": "Từ ngày hoàn thành",

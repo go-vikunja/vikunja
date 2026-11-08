@@ -703,26 +703,9 @@
 			"updateSuccess": "Naloga je bila uspešno shranjena.",
 			"belongsToProject": "Ta naloga pripada projektu '{project}'",
 			"due": "Rok {at}",
-			"organization": "Organizacija",
-			"management": "Poslovanje",
-			"dateAndTime": "Datum in čas",
 			"actions": {
-				"assign": "Dodeli uporabniku",
-				"label": "Dodaj oznako",
-				"priority": "Nastavi prioriteto",
-				"dueDate": "Nastavi datum zapadlosti",
-				"startDate": "Nastavi začetni datum",
-				"endDate": "Nastavi končni datum",
-				"reminders": "Nastavi opomnike",
-				"repeatAfter": "Nastavi interval ponavljanja",
-				"percentDone": "Nastavi napredek",
-				"attachments": "Dodaj priloge",
-				"relatedTasks": "Dodaj relacijo",
 				"moveProject": "Premakni",
-				"color": "Nastavi barvo",
-				"delete": "Izbriši",
-				"favorite": "Dodaj med priljubljene",
-				"unfavorite": "Odstrani iz priljubljenih"
+				"delete": "Izbriši"
 			}
 		},
 		"attributes": {
@@ -857,9 +840,6 @@
 			"dateAndTime": "Datum in čas"
 		},
 		"repeat": {
-			"everyDay": "Vsak dan",
-			"everyWeek": "Vsak teden",
-			"every30d": "Vsakih 30 dni",
 			"mode": "Način ponavljanja",
 			"monthly": "Mesečno",
 			"fromCurrentDate": "Od datuma dokončanja",

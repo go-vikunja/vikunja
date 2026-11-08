@@ -1130,28 +1130,11 @@
 			"title": "Görev detayı",
 			"markAsDone": "'{task}' görevini tamamlandı işaretle",
 			"scrollToBottom": "En aşağı kaydır",
-			"organization": "Organizasyon",
-			"management": "Yönetim",
-			"dateAndTime": "Tarih ve saat",
 			"actions": {
-				"assign": "Kullanıcıya Ata",
-				"label": "Etiket Ekle",
-				"priority": "Öncelik Belirle",
-				"dueDate": "Bitiş Tarihi Belirle",
-				"startDate": "Başlangıç Tarihi Belirle",
-				"endDate": "Sonlanma Tarihi Belirle",
-				"reminders": "Hatırlatıcı Kur",
-				"repeatAfter": "Tekrarlama Aralığı Ayarla",
-				"percentDone": "İlerleme Durumu",
-				"attachments": "Dosya Ekle",
 				"timeTracking": "Zaman Tut",
-				"relatedTasks": "İlişki Ekle",
 				"moveProject": "Taşı",
 				"duplicate": "Kopyala",
-				"color": "Renk Belirle",
-				"delete": "Sil",
-				"favorite": "Favorilere Ekle",
-				"unfavorite": "Favorilerden Çıkar"
+				"delete": "Sil"
 			}
 		},
 		"attributes": {
@@ -1310,9 +1293,6 @@
 			"dateAndTime": "Tarih ve saat"
 		},
 		"repeat": {
-			"everyDay": "Her Gün",
-			"everyWeek": "Her Hafta",
-			"every30d": "Her 30 Günde Bir",
 			"mode": "Tekrarlama biçimi",
 			"monthly": "Aylık",
 			"fromCurrentDate": "Tamamlanma tarihinden itibaren",

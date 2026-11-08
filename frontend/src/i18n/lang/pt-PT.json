@@ -780,26 +780,9 @@
 			"back": "Volta ao projeto",
 			"due": "Vence {at}",
 			"scrollToBottom": "Rolar até ao fundo",
-			"organization": "Organização",
-			"management": "Gestão",
-			"dateAndTime": "Data e hora",
 			"actions": {
-				"assign": "Atribuir a Utilizador",
-				"label": "Adicionar Etiquetas",
-				"priority": "Definir Prioridade",
-				"dueDate": "Definir Data de Vencimento",
-				"startDate": "Definir Data de Início",
-				"endDate": "Definir Data de Fim",
-				"reminders": "Definir Lembretes",
-				"repeatAfter": "Definir Intervalo Recorrente",
-				"percentDone": "Definir Progresso",
-				"attachments": "Adicionar Anexos",
-				"relatedTasks": "Adicionar Relação",
 				"moveProject": "Mover",
-				"color": "Definir Cor",
-				"delete": "Eliminar",
-				"favorite": "Adicionar aos Favoritos",
-				"unfavorite": "Remover dos Favoritos"
+				"delete": "Eliminar"
 			}
 		},
 		"attributes": {
@@ -939,9 +922,6 @@
 			"dateAndTime": "Data e hora"
 		},
 		"repeat": {
-			"everyDay": "Todos os Dias",
-			"everyWeek": "Todas as Semanas",
-			"every30d": "A cada 30 Dias",
 			"mode": "Modo de repetição",
 			"monthly": "Mensal",
 			"fromCurrentDate": "Da data de conclusão",

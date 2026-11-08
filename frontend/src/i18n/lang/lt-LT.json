@@ -710,26 +710,9 @@
 			"updateSuccess": "Užduotis buvo sėkmingai išsaugota.",
 			"belongsToProject": "Ši užduotis priklauso projektui '{project}'",
 			"due": "Iki {at}",
-			"organization": "Organizacija",
-			"management": "Vadyba",
-			"dateAndTime": "Data ir laikas",
 			"actions": {
-				"assign": "Priskirti vartotojui",
-				"label": "Pridėti etiketes",
-				"priority": "Nustatyti prioritetą",
-				"dueDate": "Nustatyto termino datą",
-				"startDate": "Nustatyti pradžios datą",
-				"endDate": "Nustatyti pabaigos datą",
-				"reminders": "Nustatyti priminimus",
-				"repeatAfter": "Nustatyti pasikartojimo intervalą",
-				"percentDone": "Nustatyti progresą",
-				"attachments": "Pridėti prisegtukus",
-				"relatedTasks": "Pridėti ryšį",
 				"moveProject": "Perkelti",
-				"color": "Nustatyto spalvą",
-				"delete": "Ištrinti",
-				"favorite": "Pridėti prie mėgstamiausių",
-				"unfavorite": "Pašalinti iš mėgstamiausių"
+				"delete": "Ištrinti"
 			}
 		},
 		"attributes": {
@@ -864,9 +847,6 @@
 			"dateAndTime": "Data ir laikas"
 		},
 		"repeat": {
-			"everyDay": "Kiekvieną dieną",
-			"everyWeek": "Kiekvieną savaitę",
-			"every30d": "Kas 30 dienų",
 			"mode": "Kartojimo rėžimas",
 			"monthly": "Kas mėnesį",
 			"fromCurrentDate": "Nuo užbaigimo datos",

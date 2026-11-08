@@ -982,28 +982,11 @@
 			"title": "Детали задачи",
 			"markAsDone": "Отметить задачу «{task}» завершённой",
 			"scrollToBottom": "Прокрутить до конца страницы",
-			"organization": "Организация",
-			"management": "Управление",
-			"dateAndTime": "Дата и время",
 			"actions": {
-				"assign": "Назначить пользователю",
-				"label": "Добавить метки",
-				"priority": "Задать приоритет",
-				"dueDate": "Задать срок",
-				"startDate": "Задать дату начала",
-				"endDate": "Задать дату окончания",
-				"reminders": "Добавить напоминания",
-				"repeatAfter": "Задать интервал повтора",
-				"percentDone": "Задать прогресс",
-				"attachments": "Добавить вложения",
 				"timeTracking": "Учёт времени",
-				"relatedTasks": "Добавить связь",
 				"moveProject": "Переместить",
 				"duplicate": "Создать копию",
-				"color": "Выбрать цвет",
-				"delete": "Удалить",
-				"favorite": "Добавить в избранное",
-				"unfavorite": "Удалить из избранного"
+				"delete": "Удалить"
 			}
 		},
 		"attributes": {
@@ -1156,9 +1139,6 @@
 			"dateAndTime": "Конкретное время"
 		},
 		"repeat": {
-			"everyDay": "Каждый день",
-			"everyWeek": "Каждую неделю",
-			"every30d": "Каждые 30 дней",
 			"mode": "Режим повтора",
 			"monthly": "Ежемесячно",
 			"fromCurrentDate": "С даты завершения",

@@ -810,27 +810,10 @@
 			"back": "Zpět k projektu",
 			"due": "Termín {at}",
 			"scrollToBottom": "Přejít na konec",
-			"organization": "Organizace",
-			"management": "Management",
-			"dateAndTime": "Datum a čas",
 			"actions": {
-				"assign": "Přiřadit uživateli",
-				"label": "Přidat štítky",
-				"priority": "Nastavit prioritu",
-				"dueDate": "Nastavit termín",
-				"startDate": "Nastavit počáteční datum",
-				"endDate": "Nastavit koncové datum",
-				"reminders": "Nastavit připomenutí",
-				"repeatAfter": "Nastavit interval opakování",
-				"percentDone": "Nastavit průběh",
-				"attachments": "Přidat přílohy",
-				"relatedTasks": "Přidat vztah",
 				"moveProject": "Přesunout",
 				"duplicate": "Duplikovat",
-				"color": "Nastavit barvu",
-				"delete": "Smazat",
-				"favorite": "Přidat do oblíbených",
-				"unfavorite": "Odebrat z oblíbených"
+				"delete": "Smazat"
 			}
 		},
 		"attributes": {
@@ -973,9 +956,6 @@
 			"dateAndTime": "Datum a čas"
 		},
 		"repeat": {
-			"everyDay": "Každý den",
-			"everyWeek": "Každý týden",
-			"every30d": "Každých 30 dní",
 			"mode": "Režim opakování",
 			"monthly": "Měsíčně",
 			"fromCurrentDate": "Od data dokončení",

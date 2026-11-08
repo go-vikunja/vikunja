@@ -601,26 +601,9 @@
 			"updateSuccess": "Zadatak je uspješno spremljen.",
 			"belongsToProject": "Ovaj zadatak pripada projektu '{project}'",
 			"due": "Do {at}",
-			"organization": "Organizacija",
-			"management": "Menadžment",
-			"dateAndTime": "Datum i vrijeme",
 			"actions": {
-				"assign": "Dodijeli korisniku",
-				"label": "Dodaj oznaku",
-				"priority": "Postavi prioritet",
-				"dueDate": "Postavi datum dospijeća",
-				"startDate": "Postavi datum početka",
-				"endDate": "Postavi datum kraja",
-				"reminders": "Postavi podsjetnike",
-				"repeatAfter": "Postavite interval ponavljanja",
-				"percentDone": "Postavi napredak",
-				"attachments": "Dodaj privitke",
-				"relatedTasks": "Dodaj odnos",
 				"moveProject": "Pomakni",
-				"color": "Podesi boju",
-				"delete": "Izbriši",
-				"favorite": "Dodaj u Favorite",
-				"unfavorite": "Ukloni iz Favorita"
+				"delete": "Izbriši"
 			}
 		},
 		"attributes": {
