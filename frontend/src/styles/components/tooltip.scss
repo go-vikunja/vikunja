@@ -6,6 +6,10 @@
   border-radius: 5px;
 }
 
+.v-popper--theme-tooltip.is-multiline .v-popper__inner {
+  white-space: pre-line;
+}
+
 .dark .v-popper--theme-tooltip .v-popper__inner {
   background: var(--white);
   color: var(--grey-900);
