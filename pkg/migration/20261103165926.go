@@ -17,8 +17,14 @@
 package migration
 
 import (
+	"fmt"
+	"strings"
+
+	"code.vikunja.io/api/pkg/log"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 type taskRelations20261103165926 struct {
@@ -34,11 +40,26 @@ func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20261103165926",
 		Description: "Add index on task_relations (other_task_id, relation_kind) for the relation cycle check",
-		Migrate: func(tx *xorm.Engine) error {
-			return partialSync(tx, taskRelations20261103165926{})
-		},
+		Migrate:     addTaskRelationsOtherTaskKindIndex20261103165926,
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
 		},
 	})
+}
+
+func addTaskRelationsOtherTaskKindIndex20261103165926(tx *xorm.Engine) error {
+	if tx.Dialect().URI().DBType == schemas.MYSQL {
+		rows, err := tx.QueryString(`SELECT DATA_TYPE AS data_type FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'task_relations' AND COLUMN_NAME = 'relation_kind'`)
+		if err != nil {
+			return fmt.Errorf("could not read the type of task_relations.relation_kind: %w", err)
+		}
+		// DBs converted from sqlite carry TEXT here, which mysql can't index
+		// without a key length (#4374). The index is only a speedup.
+		if len(rows) > 0 && mysqlUnindexableTypes20260720120000[strings.ToUpper(rows[0]["data_type"])] {
+			log.Warningf("Could not create the index on task_relations (other_task_id, relation_kind): mysql cannot index the text column relation_kind without a key length. Change it to VARCHAR(50), then run this manually: CREATE INDEX IDX_task_relations_other_task_kind ON task_relations (other_task_id, relation_kind)")
+			return nil
+		}
+	}
+	return partialSync(tx, taskRelations20261103165926{})
 }
