@@ -38,6 +38,8 @@ const textAlignClass = computed(() => TEXT_ALIGN_MAP[props.textAlign])
 .message-wrapper {
 	border-radius: $radius;
 	background: var(--white);
+	// Modal dialogs set white text for their dark backdrop
+	color: var(--text);
 }
 
 .message {
