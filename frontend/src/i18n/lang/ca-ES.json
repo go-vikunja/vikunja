@@ -1,1 +1,18 @@
-{}
+{
+  "project": {
+    "calendar": {
+      "title": "Calendari",
+      "loading": "S'està carregant…",
+      "count": "Tasques: {count}",
+      "deadline": "Data límit",
+      "create": "Crea una tasca",
+      "chooseProject": "Seleccioneu un projecte i una data per a la tasca nova.",
+      "cancel": "Cancel·la",
+      "retry": "Torna-ho a provar",
+      "hint": "Obriu una tasca per veure'n els detalls. Arrossegueu-la per reprogramar-la; canvieu-ne la mida per modificar la data de finalització.",
+      "date": "Data",
+      "loadError": "No s'han pogut carregar les tasques. Torneu-ho a provar.",
+      "saveError": "No s'han pogut desar les dates. S'ha desfet el moviment."
+    }
+  }
+}

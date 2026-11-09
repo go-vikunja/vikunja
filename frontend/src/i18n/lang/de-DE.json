@@ -677,6 +677,20 @@
 			"deleteSuccess": "Diese Ansicht wurde erfolgreich gelöscht.",
 			"onlyAdminsCanEdit": "Nur Projektadministrator:innen können Ansichten bearbeiten.",
 			"updateSuccess": "Die Ansicht wurde erfolgreich aktualisiert."
+		},
+		"calendar": {
+			"title": "Kalender",
+			"loading": "Wird geladen…",
+			"count": "Aufgaben: {count}",
+			"deadline": "Frist",
+			"create": "Aufgabe erstellen",
+			"chooseProject": "Wähle ein Projekt und ein Datum für die neue Aufgabe.",
+			"cancel": "Abbrechen",
+			"retry": "Erneut versuchen",
+			"hint": "Öffne eine Aufgabe für Details. Ziehe sie zum Verschieben; ändere ihre Größe, um das Enddatum anzupassen.",
+			"date": "Datum",
+			"loadError": "Aufgaben konnten nicht geladen werden. Bitte versuche es erneut.",
+			"saveError": "Daten konnten nicht gespeichert werden. Die Verschiebung wurde rückgängig gemacht."
 		}
 	},
 	"filters": {

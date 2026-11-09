@@ -356,6 +356,20 @@
 			"delete": "Usuń ten widok",
 			"deleteText": "Czy na pewno chcesz usunąć ten widok? Nie będzie już możliwe wyświetlanie zadań w tym projekcie. Ta akcja nie usunie żadnych zadań. Tej operacji nie można cofnąć!",
 			"onlyAdminsCanEdit": "Tylko administratorzy projektu mogą edytować widoki."
+		},
+		"calendar": {
+			"title": "Kalendarz",
+			"loading": "Ładowanie…",
+			"count": "Zadania: {count}",
+			"deadline": "Termin",
+			"create": "Utwórz zadanie",
+			"chooseProject": "Wybierz projekt i datę dla nowego zadania.",
+			"cancel": "Anuluj",
+			"retry": "Spróbuj ponownie",
+			"hint": "Otwórz zadanie, aby zobaczyć szczegóły. Przeciągnij, aby zmienić termin; zmień rozmiar, aby zmienić datę zakończenia.",
+			"date": "Data",
+			"loadError": "Nie udało się wczytać zadań. Spróbuj ponownie.",
+			"saveError": "Nie udało się zapisać dat. Przeniesienie zostało cofnięte."
 		}
 	},
 	"filters": {

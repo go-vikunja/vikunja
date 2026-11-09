@@ -326,6 +326,20 @@
 			"secret": "Segredo",
 			"secretHint": "Se fornecido, todas as requisições para a URL de destino do webhook serão assinadas usando HMAC.",
 			"secretDocs": "Confira a documentação para obter mais detalhes sobre como usar segredos."
+		},
+		"calendar": {
+			"title": "Calendário",
+			"loading": "Carregando…",
+			"count": "Tarefas: {count}",
+			"deadline": "Prazo",
+			"create": "Criar uma tarefa",
+			"chooseProject": "Selecione um projeto e uma data para a nova tarefa.",
+			"cancel": "Cancelar",
+			"retry": "Tentar novamente",
+			"hint": "Abra uma tarefa para ver os detalhes. Arraste para reagendar; redimensione para alterar a data de término.",
+			"date": "Data",
+			"loadError": "Não foi possível carregar as tarefas. Tente novamente.",
+			"saveError": "Não foi possível salvar as datas. A movimentação foi desfeita."
 		}
 	},
 	"filters": {
