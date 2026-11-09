@@ -165,7 +165,7 @@ settings:
 overrides:
   minimatch: 11.0.1
   rollup: 4.63.3
-  basic-ftp: 6.2.3
+  basic-ftp: 6.2.6
   serialize-javascript: 7.1.3
   flatted: 3.4.4
   ip-address: 10.7.5
@@ -3614,8 +3614,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  basic-ftp@6.2.3:
-    resolution: {integrity: sha512-T7GYtQ2eKJUN5YORG7A8u2WfB9JMN0a4/wl3MI64qq2qTRfa3FXzoNq0DDojZDkDyStcL+TkfKsz4JHEZx5kGQ==}
+  basic-ftp@6.2.6:
+    resolution: {integrity: sha512-0EjZCaodOz6yiokv2JA1VyKGNdGxULZ+GGlPgG9tm4d+T/bHtX1hUch8CumDneBfpIbiSdn7TaCGwpM+gwsOlw==}
     engines: {node: '>=10.0.0'}
 
   bidi-js@1.1.0:
@@ -10669,7 +10669,7 @@ snapshots:
 
   baseline-browser-mapping@2.11.29: {}
 
-  basic-ftp@6.2.3: {}
+  basic-ftp@6.2.6: {}
 
   bidi-js@1.1.0:
     dependencies:
@@ -11682,7 +11682,7 @@ snapshots:
 
   get-uri@6.0.5(supports-color@10.2.2):
     dependencies:
-      basic-ftp: 6.2.3
+      basic-ftp: 6.2.6
       data-uri-to-buffer: 6.0.2
       debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
