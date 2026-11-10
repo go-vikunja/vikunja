@@ -923,11 +923,12 @@ onUnmounted(() => {
 }
 
 // Sticky so it stays reachable while the timeline scrolls; the negative margin keeps the bars
-// aligned with the timeline header.
+// aligned with the timeline header. Above the bar layer (.gantt-row-bars, z-index 4) so a bar
+// starting at the left edge of the range doesn't cover it.
 .gantt-row-grip {
 	position: sticky;
 	inset-inline-start: 0;
-	z-index: 3;
+	z-index: 5;
 	display: flex;
 	flex-shrink: 0;
 	align-items: center;
