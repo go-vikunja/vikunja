@@ -154,6 +154,11 @@
                     "comment": "If enabled, users will only find other users who are part of an existing team when they are searching for a user by their partial name. The other existing team may be created from openid. It is still possible to add users to teams with their exact email address even when this is enabled."
                 },
                 {
+                    "key": "enableglobalusersearch",
+                    "default_value": "false",
+                    "comment": "If enabled, the user search matches partial names, usernames and email addresses of all users, ignoring their discoverability settings, and returns the email addresses of matched users so people with the same name can be told apart. Intended for organisations where everyone should be able to find everyone. Warning: any logged-in user can then enumerate all accounts including their email addresses, so do not combine this with open registration. 'service.enableopenidteamusersearch' still applies on top of this."
+                },
+                {
                     "key": "ipextractionmethod",
                     "default_value": "direct",
                     "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header, but only honours it when the header value itself falls into a trusted range (loopback, private networks or 'service.trustedproxies') — it does not check who sent the header, so it cannot report public client IPs. Prefer 'xff' behind a reverse proxy. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
