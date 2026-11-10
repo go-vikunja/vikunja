@@ -4611,7 +4611,7 @@ export const authRefreshToken = <ThrowOnError extends boolean = true>(options?: 
 /**
  * Search users
  *
- * Searches users by username, name or full email. Matching by name or email requires the target user to have made themselves discoverable, unless both users share an external (OIDC/LDAP) team. Email addresses are never returned.
+ * Searches users and returns the best matches first: exact username, then usernames or names starting with q, then the rest, alphabetically by username. Results are paginated with a fixed page size of 25; total holds the number of matches. By default, usernames match exactly (case-insensitive), names match partially only for users who enabled discoverable_by_name, and emails match exactly only for users who enabled discoverable_by_email; users sharing an external (OIDC/LDAP) team can always find each other by name or exact email. Email addresses are not returned. When the instance enables global user search (global_user_search_enabled in /info), name, username and email match partially for every user regardless of their discoverability settings, q must be at least 2 characters, and email addresses are returned. If the instance restricts search to team members, only users sharing a team with the caller are returned. Other users' bots are never returned.
  */
 export const usersSearch = <ThrowOnError extends boolean = true>(options?: Options<UsersSearchData, ThrowOnError>): RequestResult<UsersSearchResponses, UsersSearchErrors, ThrowOnError> => (options?.client ?? client).get<UsersSearchResponses, UsersSearchErrors, ThrowOnError>({
     security: [{

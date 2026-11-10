@@ -3955,6 +3955,10 @@ export type VikunjaInfos = {
      */
     frontend_url?: string;
     /**
+     * Whether the user search matches every user partially by name, username and email and returns emails. When true, the per-user discoverable_by_name and discoverable_by_email settings have no effect.
+     */
+    global_user_search_enabled?: boolean;
+    /**
      * Links to the instance's legal documents.
      */
     legal?: LegalInfo;
@@ -5736,6 +5740,10 @@ export type VikunjaInfosWritable = {
      * The publicly configured frontend URL of this instance.
      */
     frontend_url?: string;
+    /**
+     * Whether the user search matches every user partially by name, username and email and returns emails. When true, the per-user discoverable_by_name and discoverable_by_email settings have no effect.
+     */
+    global_user_search_enabled?: boolean;
     /**
      * Links to the instance's legal documents.
      */
@@ -12927,9 +12935,13 @@ export type UsersSearchData = {
     path?: never;
     query?: {
         /**
-         * Search query matched against username, name or full email.
+         * Search query matched against username, name or email. Separate several queries with commas.
          */
         q?: string;
+        /**
+         * 1-based page number. The page size is fixed at 25.
+         */
+        page?: number;
     };
     url: '/users';
 };
