@@ -1,1 +1,193 @@
-{}
+{
+	"notifications": {
+		"greeting": "Hola %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, confirma la teva adreça de correu electrònic a Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Et donem la benvinguda a Vikunja!",
+			"confirm": "Per confirmar la teva adreça de correu electrònic, fes clic a l'enllaç següent:"
+		},
+		"email_change": {
+			"subject": "S'ha sol·licitat un canvi d'adreça de correu electrònic per al teu compte de Vikunja",
+			"requested": "Algú ha sol·licitat canviar l'adreça de correu electrònic del teu compte a %[1]s. La teva adreça actual continuarà activa fins que es confirmi la nova.",
+			"warning": "Si no has estat tu, canvia la teva contrasenya immediatament i cancel·la el canvi pendent a la configuració del teu compte."
+		},
+		"password": {
+			"changed": {
+				"subject": "S'ha canviat la teva contrasenya a Vikunja",
+				"success": "La contrasenya del teu compte s'ha canviat correctament.",
+				"warning": "Si no has estat tu, podria ser que algú hagi compromès el teu compte. En aquest cas, contacta amb l'administrador del servidor."
+			},
+			"reset": {
+				"subject": "Restableix la teva contrasenya a Vikunja",
+				"instructions": "Per restablir la teva contrasenya, fes clic a l'enllaç següent:",
+				"valid_duration": "Aquest enllaç serà vàlid durant 24 hores."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Algú acaba d'intentar iniciar la sessió al teu compte de Vikunja, però no ho ha aconseguit",
+				"message": "Algú acaba d'intentar iniciar la sessió al teu compte amb el nom d'usuari i la contrasenya correctes, però amb un codi TOTP incorrecte.",
+				"warning": "**Si no has estat tu, algú altre coneix la teva contrasenya. Hauries de crear-ne una de nova immediatament!**"
+			},
+			"account_locked": {
+				"subject": "Hem desactivat el teu compte a Vikunja.",
+				"message": "Algú ha intentat iniciar sessió amb les teves credencials, però no ha pogut proporcionar un codi TOTP vàlid.",
+				"disabled": "Després de 10 intents fallits, hem desactivat el teu compte i hem restablert la teva contrasenya. Per establir-ne una de nova, segueix les instruccions del correu electrònic de restabliment que t'acabem d'enviar.",
+				"reset_instructions": "Si no has rebut un correu electrònic amb les instruccions de restabliment, sempre pots sol·licitar-ne un de nou a [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Algú acaba d'intentar iniciar la sessió al teu compte de Vikunja, però no ha pogut proporcionar una contrasenya correcta.",
+				"message": "Algú acaba d'intentar iniciar sessió al teu compte amb una contrasenya incorrecta tres vegades seguides.",
+				"warning": "Si no has estat tu, podria ser algú altre intentant accedir al teu compte.",
+				"enhance_security": "Per millorar la seguretat del teu compte, pots establir una contrasenya més robusta o activar l'autenticació TOTP a la configuració:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Confirma la supressió del teu compte de Vikunja",
+					"request": "Has sol·licitat la supressió del teu compte. Per confirmar-ho, fes clic a l'enllaç següent:",
+					"valid_duration": "Aquest enllaç serà vàlid durant 24 hores.",
+					"schedule_info": "Un cop confirmis la supressió, la programarem per d'aquí a tres dies i t'enviarem un altre correu electrònic fins llavors.",
+					"consequences": "Si continues amb la supressió del teu compte, suprimirem tots els projectes i tasques que has creat. Tot el que hagis compartit amb un altre usuari o equip li transferirà la propietat.",
+					"changed_mind": "Si no has sol·licitat la supressió o has canviat d'opinió, pots ignorar aquest correu electrònic."
+				},
+				"scheduled": {
+					"subject_days": "El teu compte de Vikunja se suprimirà d'aquí a %[1]s dies",
+					"subject_tomorrow": "El teu compte de Vikunja se suprimirà demà",
+					"request_reminder": "Fa poc has sol·licitat la supressió del teu compte de Vikunja.",
+					"deletion_time_days": "Suprimirem el teu compte d'aquí a %[1]s dies.",
+					"deletion_time_tomorrow": "Suprimirem el teu compte demà.",
+					"changed_mind": "Si has canviat d'opinió, fes clic a l'enllaç següent per cancel·lar la supressió i segueix les instruccions que s'hi indiquen:"
+				},
+				"completed": {
+					"subject": "S'ha suprimit el teu compte de Vikunja",
+					"confirmation": "Tal com has sol·licitat, hem suprimit el teu compte de Vikunja.",
+					"permanent": "Aquesta supressió és permanent. Si no has creat una còpia de seguretat i necessites recuperar les teves dades ara, posa't en contacte amb l'administrador."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Recordatori per a \"%[1]s\" (%[2]s)",
+				"message": "Aquest és un recordatori amistós de la tasca \"%[1]s\" (%[2]s)."
+			},
+			"comment": {
+				"subject": "Re: %[1]s (%[2]s)",
+				"mentioned_subject": "%[1]s t'ha esmentat en un comentari a \"%[2]s\" (%[3]s)"
+			},
+			"assigned": {
+				"subject_to_assignee": "T'han assignat a \"%[1]s\" (%[2]s)",
+				"message_to_assignee": "%[1]s t'ha assignat a \"%[2]s\".",
+				"subject_to_others": "\"%[1]s\" (%[2]s) s'ha assignat a %[3]s",
+				"message_to_others": "%[1]s ha assignat aquesta tasca a %[2]s.",
+				"subject_to_others_self": "%[3]s s'ha autoassignat \"%[1]s\" (%[2]s)",
+				"message_to_others_self": "%[1]s s'ha autoassignat aquesta tasca."
+			},
+			"deleted": {
+				"subject": "S'ha suprimit \"%[1]s\" (%[2]s)",
+				"message": "%[1]s ha suprimit la tasca \"%[2]s\" (%[3]s)"
+			},
+			"created": {
+				"subject": "\"%[1]s\" (%[2]s) s'ha creat",
+				"message": "%[1]s ha creat la tasca \"%[2]s\" (%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s t'ha esmentat en una nova tasca \"%[2]s\" (%[3]s)",
+				"subject": "%[1]s t'ha esmentat en una tasca \"%[2]s\" (%[3]s)"
+			},
+			"overdue": {
+				"subject": "La tasca \"%[1]s\" (%[2]s) està endarrerida",
+				"message": "Aquest és un recordatori amistós de la tasca \"%[1]s\" (%[2]s), que va vèncer %[3]s i encara no s'ha fet.",
+				"multiple_subject": "Les teves tasques endarrerides",
+				"multiple_message": "Tens tasques endarrerides:",
+				"assigned_heading": "Assignat a tu",
+				"followed_heading": "Tasques que segueixes",
+				"overdue_since": "des de %[1]s",
+				"overdue_now": "ara",
+				"overdue": "vençuda %[1]s"
+			}
+		},
+		"project": {
+			"created": "%[1]s ha creat el projecte \"%[2]s\""
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s t'ha afegit a l'equip \"%[2]s\" a Vikunja",
+				"message": "%[1]s acaba d'afegir-te a l'equip %[2]s a Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "La teva exportació de dades de Vikunja està a punt",
+				"message": "La teva exportació de dades de Vikunja ja està a punt per baixar. Fes clic al botó següent per baixar-la:",
+				"availability": "La baixada estarà disponible durant els propers 7 dies."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "La migració de %[1]s a Vikunja s'ha completat",
+				"imported": "Vikunja ha importat totes les llistes/projectes, tasques, notes, recordatoris i fitxers de %[1]s als quals tens accés.",
+				"have_fun": "Passa-ho bé amb els teus projectes nous (vells)!"
+			},
+			"failed": {
+				"subject": "La migració de %[1]s a Vikunja ha fallat",
+				"message": "Sembla que el trasllat des de %[1]s no ha anat com estava previst aquesta vegada.",
+				"retry": "No et preocupis! Torna-ho a provar començant de la mateixa manera que abans. De vegades, aquests contratemps es produeixen per errors a %[1]s, però tornar-ho a provar sovint soluciona el problema.",
+				"error": "Ens hem trobat amb un petit error pel camí: `%[2]s`.",
+				"report": "Envia'ns un missatge sobre això [al fòrum](https://community.vikunja.io/) o a qualsevol dels llocs habituals perquè puguem veure per què ha fallat.",
+				"working_on_it": "Tenim el missatge d'error al radar i ja hi estem treballant per solucionar-lo aviat."
+			}
+		},
+		"api_token": {
+			"expiring": {
+				"week": {
+					"subject": "El teu token d'API \"%[1]s\" caduca aviat",
+					"message": "El teu token d'API \"%[1]s\" caducarà el %[2]s (d'aquí a %[3]s). Si encara el necessites, crea'n un de nou abans que caduqui."
+				},
+				"day": {
+					"subject": "El teu token d'API \"%[1]s\" caduca demà",
+					"message": "El teu token d'API \"%[1]s\" caducarà el %[2]s (d'aquí a %[3]s). Si encara el necessites, crea'n un de nou abans que caduqui."
+				},
+				"action": "Gestiona els tokens d'API"
+			}
+		},
+		"common": {
+			"have_nice_day": "Que tinguis un bon dia!",
+			"copy_url": "Si el botó de dalt no funciona, copia l'URL de sota i enganxa-la a la barra d'adreces del teu navegador:",
+			"actions": {
+				"open_task": "Obre la tasca a Vikunja",
+				"open_vikunja": "Obre Vikunja",
+				"open_project": "Obre el projecte",
+				"open_team": "Obre l'equip",
+				"download": "Baixa",
+				"reset_password": "Restableix la teva contrasenya",
+				"go_to_settings": "Ves a la configuració",
+				"confirm_email": "Confirma la teva adreça de correu electrònic",
+				"abort_deletion": "Atura la supressió",
+				"confirm_account_deletion": "Confirma la supressió del meu compte",
+				"change_notification_settings_link": "Pots canviar la configuració de les notificacions [aquí](%[1]s).",
+				"left_comment": "%[1]s ha deixat un comentari",
+				"mentioned_you_comment": "%[1]s t'ha esmentat en un comentari",
+				"mentioned_you": "%[1]s t'ha esmentat",
+				"mentioned_you_new_task": "%[1]s t'ha esmentat en una nova tasca"
+			}
+		}
+	},
+	"time": {
+		"since_years": "un any|%[1]d anys",
+		"since_weeks": "una setmana|%[1]d setmanes",
+		"since_days": "un dia|%[1]d dies",
+		"since_hours": "una hora|%[1]d hores",
+		"since_minutes": "un minut|%[1]d minuts",
+		"list_last_separator": "i"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "Notificacions de Vikunja per a %[1]s"
+		}
+	}
+}
