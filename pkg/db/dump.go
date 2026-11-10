@@ -105,6 +105,34 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 		log.Fatalf("Could not find table definition for table %s", table)
 	}
 
+	uniqueNullableCols := make(map[string]bool)
+	for _, index := range metaForCurrentTable.Indexes {
+		if index.Type == schemas.UniqueType {
+			for _, colInIndex := range index.Cols {
+				c := metaForCurrentTable.GetColumn(colInIndex)
+				if c != nil && c.Nullable {
+					uniqueNullableCols[strings.ToLower(colInIndex)] = true
+				}
+			}
+		}
+	}
+	for _, bean := range registeredTables {
+		tableInfo, err := x.TableInfo(bean)
+		if err == nil && tableInfo.Name == table {
+			for _, index := range tableInfo.Indexes {
+				if index.Type == schemas.UniqueType {
+					for _, colInIndex := range index.Cols {
+						c := tableInfo.GetColumn(colInIndex)
+						if c != nil && c.Nullable {
+							uniqueNullableCols[strings.ToLower(colInIndex)] = true
+						}
+					}
+				}
+			}
+			break
+		}
+	}
+
 	for _, content := range contents {
 		for colName, value := range content {
 			col := metaForCurrentTable.GetColumn(colName)
@@ -123,7 +151,19 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 			}
 
 			strVal, is := value.(string)
-			if !is || !col.SQLType.IsTime() {
+			if !is {
+				continue
+			}
+
+			// Empty strings in nullable unique columns were written as "" by dump (or older dumps)
+			// from SQL NULL. Inserting multiple "" into a unique column fails with a UNIQUE constraint
+			// violation. Restore them as nil so they become SQL NULL.
+			if strVal == "" && uniqueNullableCols[strings.ToLower(colName)] {
+				content[colName] = nil
+				continue
+			}
+
+			if !col.SQLType.IsTime() {
 				continue
 			}
 
