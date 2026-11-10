@@ -36,6 +36,7 @@
 							<template #searchResult="{option: user}">
 								<User
 									:avatar-size="24"
+									show-handle
 									:user="user"
 									class="m-0"
 								/>
@@ -68,6 +69,7 @@
 							<td>
 								<User
 									:avatar-size="24"
+									show-handle
 									:user="m"
 									class="m-0"
 								/>

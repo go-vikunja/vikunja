@@ -26,7 +26,7 @@
 		<template #searchResult="{option: user}">
 			<User
 				:avatar-size="24"
-				:show-username="true"
+				show-handle
 				:user="user"
 			/>
 		</template>

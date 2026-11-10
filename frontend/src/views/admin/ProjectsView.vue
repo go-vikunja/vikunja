@@ -26,7 +26,7 @@
 						<User
 							v-if="typeof option !== 'string'"
 							:avatar-size="24"
-							:show-username="true"
+							show-handle
 							:user="option"
 						/>
 					</template>
@@ -166,7 +166,7 @@
 							<template #searchResult="{option}">
 								<User
 									:avatar-size="24"
-									:show-username="true"
+									show-handle
 									:user="option"
 								/>
 							</template>

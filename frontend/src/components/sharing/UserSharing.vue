@@ -18,12 +18,19 @@
 		<template #candidate="{candidate}">
 			<User
 				:avatar-size="24"
-				:show-username="true"
+				show-handle
 				:user="candidate"
 			/>
 		</template>
 		<template #share="{share}">
-			<td>{{ getDisplayName(share) }}</td>
+			<td>
+				<User
+					:avatar-size="24"
+					show-handle
+					:user="share"
+					class="m-0"
+				/>
+			</td>
 			<td>
 				<b
 					v-if="share.id === authStore.info?.id"
