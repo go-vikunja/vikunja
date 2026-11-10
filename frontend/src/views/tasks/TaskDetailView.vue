@@ -182,7 +182,11 @@
 					/>
 				</div>
 
-				<aside class="column is-one-third action-buttons task-sidebar">
+				<aside
+					ref="sidebar"
+					class="column is-one-third action-buttons task-sidebar"
+					:style="{'--sidebar-height': `${sidebarHeight}px`}"
+				>
 					<div
 						v-if="canWrite"
 						class="sidebar-toolbar d-print-none"
@@ -839,6 +843,9 @@ useMutationObserver(
 onBeforeUnmount(() => debouncedMutationHandler.cancel())
 
 const {height: scrollContainerHeight} = useElementSize(scrollContainer)
+
+const sidebar = ref<HTMLElement | null>(null)
+const {height: sidebarHeight} = useElementSize(sidebar, undefined, {box: 'border-box'})
 watch(scrollContainerHeight, () => updateScrollable())
 
 onMounted(async () => {
@@ -1335,6 +1342,10 @@ h2 .button {
 	}
 }
 
+.is-modal .task-sidebar {
+	--sidebar-top: 1rem;
+}
+
 // keep the title clear of the modal's fixed close button
 .is-modal .heading {
 	@media screen and (min-width: $tablet) and (max-width: $desktop) {
@@ -1360,9 +1371,17 @@ h2 .button {
 	}
 }
 
-// Not sticky: the list can outgrow the viewport and its popups open downwards.
 .task-sidebar {
 	container: task-sidebar / inline-size;
+
+	--sidebar-top: #{$navbar-height + 1.5rem};
+
+	// A sidebar taller than the viewport gets a negative offset, so it sticks once its bottom is in view.
+	@media screen and (min-width: $tablet) {
+		position: sticky;
+		inset-block-start: min(var(--sidebar-top), calc(100dvh - var(--sidebar-height, 0px) - 1rem));
+		align-self: flex-start;
+	}
 
 	@media screen and (max-width: $tablet), print {
 		order: -1;
