@@ -324,6 +324,24 @@ describe('task mutations', () => {
 		expect(client.getQueryData(other)).toEqual(data)
 	})
 
+	it('reorders all-pages lists of the affected view', async () => {
+		const client = new QueryClient()
+		const byPosition = taskKeys.allList({project: 1, view: 2, params: {sort_by: ['position', 'id']}})
+		const byDate = taskKeys.allList({project: 1, view: 2, params: {sort_by: ['start_date']}})
+		const other = taskKeys.allList({project: 1, view: 3, params: {sort_by: ['position']}})
+		const data = [{id: 1, position: 1}, {id: 2, position: 2}]
+		client.setQueryData(byPosition, data)
+		client.setQueryData(byDate, data)
+		client.setQueryData(other, data)
+		sdk.tasksPositionUpdate.mockResolvedValue({data: {position: 3}})
+		await client.getMutationCache()
+			.build(client, updateTaskPositionMutationOptions())
+			.execute({taskId: 1, project_view_id: 2, position: 3})
+		expect(client.getQueryData<Task[]>(byPosition)?.map(task => task.id)).toEqual([2, 1])
+		expect(client.getQueryData<Task[]>(byDate)?.map(task => task.position)).toEqual([3, 2])
+		expect(client.getQueryData(other)).toEqual(data)
+	})
+
 	it('reorders descending lists in their own direction and leaves unsorted ones alone', async () => {
 		const client = new QueryClient()
 		const descending = taskKeys.list({

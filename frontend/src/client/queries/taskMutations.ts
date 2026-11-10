@@ -1,4 +1,4 @@
-import {useMutation, type QueryClient} from '@tanstack/vue-query'
+import {useMutation, type QueryClient, type QueryKey} from '@tanstack/vue-query'
 import {
 	tasksCreate,
 	patchTasksRead,
@@ -337,19 +337,22 @@ export function updateTaskPositionMutationOptions() {
 		mutationFn: async ({taskId, ...body}: TaskPositionWritable & {taskId: number}) =>
 			(await tasksPositionUpdate({path: {task: taskId}, body})).data,
 		onSuccess: (data, {taskId, project_view_id}, client) => {
-			for (const [key, list] of client.getQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists})) {
-				const params = taskKeys.paramsOf(key)
-				if (!list || !params || taskKeys.viewOf(key) !== project_view_id) continue
+			const reposition = (key: QueryKey, tasks: TaskResponse[]) => {
+				const params = taskKeys.paramsOf(key)!
 				const direction = params.order_by?.[0] === 'desc' ? -1 : 1
-				const items = list.items.map(task => task.id === taskId
+				const items = tasks.map(task => task.id === taskId
 					? {...task, position: data.position ?? task.position}
 					: task)
-				client.setQueryData(key, {
-					...list,
-					items: params.sort_by?.[0] === 'position'
-						? items.sort((a, b) => direction * (a.position - b.position))
-						: items,
-				})
+				return params.sort_by?.[0] === 'position'
+					? items.sort((a, b) => direction * (a.position - b.position))
+					: items
+			}
+			const isAffected = (key: QueryKey) => taskKeys.paramsOf(key) !== undefined && taskKeys.viewOf(key) === project_view_id
+			for (const [key, list] of client.getQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists})) {
+				if (list && isAffected(key)) client.setQueryData(key, {...list, items: reposition(key, list.items)})
+			}
+			for (const [key, tasks] of client.getQueriesData<TaskResponse[]>({queryKey: taskKeys.allLists})) {
+				if (tasks && isAffected(key)) client.setQueryData(key, reposition(key, tasks))
 			}
 			for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
 				if (board && kanbanKeys.viewOf(key) === project_view_id) client.setQueryData(key, {
