@@ -6,6 +6,7 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 
 import GanttChart from './GanttChart.vue'
 import GanttTimelineHeader from './GanttTimelineHeader.vue'
+import GanttVerticalGridLines from './GanttVerticalGridLines.vue'
 import en from '@/i18n/lang/en.json'
 import {i18n as globalI18n} from '@/i18n'
 import {normalizeTask, type TaskResponse} from '@/client/queries/tasks'
@@ -81,6 +82,15 @@ describe('GanttChart.vue', () => {
 				},
 			})
 		}
+
+		it('starts the timeline after the grip column only when rows can be reordered', () => {
+			const offsets = (reorderable: boolean) => {
+				const wrapper = mountReorderable(reorderable)
+				return [GanttTimelineHeader, GanttVerticalGridLines].map(c => wrapper.findComponent(c).attributes('style') ?? '')
+			}
+			expect(offsets(true)).toEqual(['margin-inline-start: 24px;', 'inset-inline-start: 24px;'])
+			expect(offsets(false)).toEqual(['margin-inline-start: 0px;', 'inset-inline-start: 0px;'])
+		})
 
 		it('shows a grip per row only when rows can be reordered', () => {
 			expect(mountReorderable(true).findAll('.gantt-row-grip')).toHaveLength(3)

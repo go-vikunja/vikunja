@@ -14,9 +14,11 @@
 			<GanttTimelineHeader
 				:timeline-data="timelineData"
 				:day-width-pixels="dayWidthPixels"
+				:style="{marginInlineStart: `${gripGutter}px`}"
 			/>
 
 			<GanttVerticalGridLines
+				:style="{insetInlineStart: `${gripGutter}px`}"
 				:timeline-data="timelineData"
 				:total-width="totalWidth"
 				:height="ganttRows.length * 40"
@@ -40,7 +42,7 @@
 							:style="{
 								top: `${band.startIndex * ROW_HEIGHT}px`,
 								height: `${(band.endIndex - band.startIndex + 1) * ROW_HEIGHT}px`,
-								left: `${band.left}px`,
+								left: `${gripGutter + band.left}px`,
 								width: `${band.width}px`,
 							}"
 						/>
@@ -62,6 +64,7 @@
 										v-if="reorderable"
 										type="button"
 										class="gantt-row-grip"
+										:class="{'is-alt': index % 2}"
 										:aria-label="$t('project.gantt.reorderRow', {task: ganttBars[index]?.[0]?.meta?.label ?? ''})"
 										@pointerdown="startRowDrag(index, $event)"
 									>
@@ -93,6 +96,7 @@
 						</div>
 						<GanttRelationArrows
 							v-if="relationArrows.length > 0"
+							:style="{insetInlineStart: `${gripGutter}px`}"
 							:arrows="relationArrows"
 							:width="totalWidth"
 							:height="totalHeight"
@@ -150,6 +154,10 @@ const emit = defineEmits<{
 }>()
 
 const DAY_WIDTH_PIXELS_MIN = 30
+const ROW_GRIP_WIDTH = 24
+// The grips get their own column; everything positioned on the timeline starts after it.
+const gripGutter = computed(() => props.reorderable ? ROW_GRIP_WIDTH : 0)
+const gripWidth = `${ROW_GRIP_WIDTH}px`
 const dayWidthPixels = ref(0)
 let resizeObserver: ResizeObserver | undefined
 
@@ -339,7 +347,7 @@ function updateDayWidthPixels() {
 	const marginRight = parseFloat(styles.marginRight) || 0
 
 	// max width without overflow
-	const maxWidth = rect.width - marginLeft - marginRight
+	const maxWidth = rect.width - marginLeft - marginRight - gripGutter.value
 
 	const dayCount = Math.ceil(
 		(dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY,
@@ -374,7 +382,7 @@ onBeforeUnmount(() => {
 })
 
 watch(
-	[dateFromDate, dateToDate],
+	[dateFromDate, dateToDate, gripGutter],
 	async () => {
 		await nextTick()
 		updateDayWidthPixels()
@@ -922,9 +930,8 @@ onUnmounted(() => {
 	inline-size: 100%;
 }
 
-// Sticky so it stays reachable while the timeline scrolls; the negative margin keeps the bars
-// aligned with the timeline header. Above the bar layer (.gantt-row-bars, z-index 4) so a bar
-// starting at the left edge of the range doesn't cover it.
+// Sticky and opaque so it stays reachable while the timeline scrolls and bars pass underneath;
+// above the bar layer (.gantt-row-bars, z-index 4).
 .gantt-row-grip {
 	position: sticky;
 	inset-inline-start: 0;
@@ -933,15 +940,19 @@ onUnmounted(() => {
 	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
-	inline-size: 1.5rem;
+	inline-size: v-bind(gripWidth);
 	block-size: 40px;
-	margin-inline-end: -1.5rem;
 	padding: 0;
 	border: 0;
-	background: transparent;
+	background: var(--white);
 	color: var(--grey-400);
 	cursor: grab;
 	touch-action: none;
+
+	// Same tint as .bg-row-alt in GanttRow, over the opaque base.
+	&.is-alt {
+		background: linear-gradient(hsla(var(--grey-100-hsl), .5), hsla(var(--grey-100-hsl), .5)), var(--white);
+	}
 
 	&:hover,
 	&:focus-visible {
