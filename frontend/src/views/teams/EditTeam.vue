@@ -21,12 +21,13 @@
 			<form
 				v-if="userIsAdmin && !team?.external_id"
 				class="p-4"
-				@submit.prevent="addUser"
+				@submit.prevent="addUsers"
 			>
 				<div class="field has-addons">
 					<div class="control is-expanded">
 						<Multiselect
-							v-model="newMember"
+							v-model="newMembers"
+							multiple
 							:loading="usersLoading"
 							:placeholder="$t('team.edit.search')"
 							:no-results-message="$t('user.search.noResultsExact')"
@@ -34,6 +35,14 @@
 							label="username"
 							@search="findUser"
 						>
+							<template #tagLabel="{item: user}">
+								<User
+									:avatar-size="16"
+									show-handle
+									is-inline
+									:user="user"
+								/>
+							</template>
 							<template #searchResult="{option: user}">
 								<User
 									:avatar-size="24"
@@ -47,7 +56,7 @@
 					<div class="control">
 						<XButton
 							icon="plus"
-							@click="addUser"
+							@click="addUsers"
 						>
 							{{ $t('team.edit.addUser') }}
 						</XButton>
@@ -200,7 +209,7 @@ import User from '@/components/misc/User.vue'
 import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
 import EditTeamForm from '@/components/teams/EditTeamForm.vue'
 import {getDisplayName} from '@/helpers/user'
-import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
+import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMembersMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
 import {useTeam} from '@/composables/useTeams'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
@@ -221,18 +230,19 @@ const userInfo = computed(() => authStore.info)
 const sortedMembers = computed(() => [...(team.value?.members ?? [])].sort((a, b) => getDisplayName(a).localeCompare(getDisplayName(b), undefined, {sensitivity: 'base'})))
 const updateMutation = useUpdateTeamMutation()
 const deleteMutation = useDeleteTeamMutation()
-const addMemberMutation = useAddTeamMemberMutation()
+const addMembersMutation = useAddTeamMembersMutation()
 const removeMemberMutation = useRemoveTeamMemberMutation()
 const leaveMutation = useLeaveTeamMutation()
 const toggleAdminMutation = useToggleTeamMemberAdminMutation()
 const teamLoading = computed(() => isFetching.value || updateMutation.isPending.value || deleteMutation.isPending.value)
 const showTeamLoading = useDelayedLoading(teamLoading)
-const membersLoading = computed(() => addMemberMutation.isPending.value || removeMemberMutation.isPending.value || toggleAdminMutation.isPending.value)
+const membersLoading = computed(() => addMembersMutation.isPending.value || removeMemberMutation.isPending.value || toggleAdminMutation.isPending.value)
 const userSearch = ref('')
 const {users: userResults, isFetching: usersLoading} = useUserSearch(userSearch)
-const foundUsers = computed(() => userResults.value.filter(u => u.id !== userInfo.value?.id && !team.value?.members?.some(member => member.id === u.id)))
+const newMembers = ref<ApiUser[]>([])
+const isMember = (user: ApiUser) => team.value?.members?.some(member => member.id === user.id) ?? false
+const foundUsers = computed(() => userResults.value.filter(u => u.id !== userInfo.value?.id && !isMember(u) && !newMembers.value.some(selected => selected.id === u.id)))
 const memberToDelete = ref<TeamUser>()
-const newMember = ref<ApiUser | null>(null)
 const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
 const showLeaveModal = ref(false)
@@ -264,15 +274,18 @@ function deleteMember() {
 	})
 }
 
-async function addUser() {
-	showMustSelectUserError.value = !newMember.value?.username
-	if (!newMember.value?.username) return
+async function addUsers() {
+	const usernames = newMembers.value.flatMap(user => user.username ? [user.username] : [])
+	showMustSelectUserError.value = usernames.length === 0
+	if (usernames.length === 0) return
 	try {
-		await addMemberMutation.mutateAsync({teamId: teamId.value, username: newMember.value.username})
+		await addMembersMutation.mutateAsync({teamId: teamId.value, usernames})
 	} catch {
+		// Some may have been added before the failure; keep only the rest selected.
+		newMembers.value = newMembers.value.filter(user => !isMember(user))
 		return
 	}
-	newMember.value = null
+	newMembers.value = []
 	userSearch.value = ''
 }
 

@@ -129,11 +129,16 @@ async function invalidateMembership(client: QueryClient, teamId?: number) {
 	])
 }
 
-export function addTeamMemberMutationOptions() {
+export function addTeamMembersMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async ({teamId, username}: MemberInput) => (await teamsMembersAdd({path: {team: teamId}, body: {username, admin: false}})).data,
+		mutationFn: async ({teamId, usernames}: {teamId: number, usernames: string[]}) => {
+			// One at a time, so a failure leaves a predictable prefix added.
+			for (const username of usernames) {
+				await teamsMembersAdd({path: {team: teamId}, body: {username, admin: false}})
+			}
+		},
 		onSettled: ({teamId}, client) => invalidateMembership(client, teamId),
-		successMessage: () => i18n.global.t('team.edit.userAddedSuccess'),
+		successMessage: (_data, {usernames}) => i18n.global.t('team.edit.userAddedSuccess', usernames.length),
 	})
 }
 
@@ -171,7 +176,7 @@ export function toggleTeamMemberAdminMutationOptions() {
 export const useCreateTeamMutation = () => useMutation(createTeamMutationOptions())
 export const useUpdateTeamMutation = () => useMutation(updateTeamMutationOptions())
 export const useDeleteTeamMutation = () => useMutation(deleteTeamMutationOptions())
-export const useAddTeamMemberMutation = () => useMutation(addTeamMemberMutationOptions())
+export const useAddTeamMembersMutation = () => useMutation(addTeamMembersMutationOptions())
 export const useRemoveTeamMemberMutation = () => useMutation(removeTeamMemberMutationOptions())
 export const useLeaveTeamMutation = () => useMutation(leaveTeamMutationOptions())
 export const useToggleTeamMemberAdminMutation = () => useMutation(toggleTeamMemberAdminMutationOptions())
