@@ -31,7 +31,12 @@
 								:key="`item${key}`"
 								class="tag mis-2 mbs-2"
 							>
-								{{ label !== '' ? item[label] : item }}
+								<slot
+									name="tagLabel"
+									:item="item"
+								>
+									{{ label !== '' ? item[label] : item }}
+								</slot>
 								<BaseButton
 									v-if="!disabled"
 									class="delete is-small"
@@ -279,6 +284,7 @@ const emit = defineEmits<{
 defineSlots<{
 	items?(props: {items: T[], remove: (item: T) => void}): unknown
 	tag?(props: {item: T}): unknown
+	tagLabel?(props: {item: T}): unknown
 	searchResult?(props: {option: T}): unknown
 	createOption?(props: {query: string}): unknown
 }>()
