@@ -16,6 +16,7 @@
 						:aria-label="$t('project.share.userTeam.search', {type: typeName})"
 						:search-results="unsharedCandidates"
 						:label="searchLabel"
+						:no-results-message="noResultsMessage"
 						@search="search = $event"
 					>
 						<template #searchResult="{option}">
@@ -156,6 +157,7 @@ const props = defineProps<{
 	candidates: Candidate[]
 	searchLoading: boolean
 	searchLabel: string
+	noResultsMessage: string
 	isMutating: boolean
 	typeName: string
 	typeNames: string

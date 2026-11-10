@@ -29,6 +29,7 @@
 							v-model="newMember"
 							:loading="usersLoading"
 							:placeholder="$t('team.edit.search')"
+							:no-results-message="$t('user.search.noResultsExact')"
 							:search-results="foundUsers"
 							label="username"
 							@search="findUser"

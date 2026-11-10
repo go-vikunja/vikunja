@@ -7,6 +7,7 @@
 		:candidates="teams"
 		:search-loading="isFetching"
 		search-label="name"
+		:no-results-message="$t('project.share.userTeam.noTeamsFound')"
 		:is-mutating="createShare.isPending.value || updateShare.isPending.value || deleteShare.isPending.value"
 		:type-name="$t('project.share.userTeam.typeTeam', 1)"
 		:type-names="$t('project.share.userTeam.typeTeam', 2)"

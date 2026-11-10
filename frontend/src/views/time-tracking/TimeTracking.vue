@@ -105,6 +105,7 @@
 					<Multiselect
 						v-model="selectedUser"
 						:placeholder="$t('timeTracking.browse.userSearch')"
+						:no-results-message="$t('user.search.noResultsExact')"
 						:loading="usersLoading"
 						:search-results="foundUsers"
 						label="username"

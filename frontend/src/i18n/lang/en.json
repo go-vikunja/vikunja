@@ -60,6 +60,10 @@
     "text": "Please check your network connection and try again."
   },
   "user": {
+    "search": {
+      "noResults": "No users found.",
+      "noResultsExact": "No users found. Enter the exact username. A name or full email address only finds people who allowed that in their settings."
+    },
     "auth": {
       "username": "Username",
       "usernameEmail": "Username Or Email Address",
@@ -529,6 +533,7 @@
         "shared": "Shared with these {type}",
         "you": "You",
         "notShared": "Not shared with any {type} yet.",
+        "noTeamsFound": "No teams found.",
         "remove": "Remove this {type}",
         "sharable": "project",
         "removeHeader": "Remove a {type} from the {sharable}",
