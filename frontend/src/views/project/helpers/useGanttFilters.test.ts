@@ -19,14 +19,19 @@ vi.mock('@/stores/viewFilters', () => ({
 	}),
 }))
 
+const taskList = vi.hoisted(() => ({toApiParams: null as null | ((filters: unknown) => {sort_by?: string[]})}))
+
 vi.mock('./useGanttTaskList', () => ({
-	useGanttTaskList: () => ({
-		tasks: ref(new Map()),
-		isLoading: ref(false),
-		loadTasks: vi.fn(),
-		addTask: vi.fn(),
-		updateTask: vi.fn(),
-	}),
+	useGanttTaskList: (_filters: unknown, toApiParams: (filters: unknown) => {sort_by?: string[]}) => {
+		taskList.toApiParams = toApiParams
+		return {
+			tasks: ref(new Map()),
+			isLoading: ref(false),
+			loadTasks: vi.fn(),
+			addTask: vi.fn(),
+			updateTask: vi.fn(),
+		}
+	},
 }))
 
 import {useGanttFilters} from './useGanttFilters'
@@ -64,5 +69,28 @@ describe('useGanttFilters', () => {
 
 		expect(filters.value.dateFrom).toBe(new Date(2024, 0, 1).toISOString())
 		expect(filters.value.dateTo).toBe(new Date(2024, 1, 1).toISOString())
+	})
+
+	it('sorts by start date unless the route asks for manual order', () => {
+		const route = routeRef({name: 'project.view', params: {projectId: '5', viewId: '2759'}, query: {}, fullPath: '/projects/5/2759'})
+
+		const {filters} = useGanttFilters(route, ref(5), ref(2759))
+
+		expect(filters.value.order).toBe('startDate')
+		expect(taskList.toApiParams?.(filters.value).sort_by).toEqual(['start_date', 'done', 'id'])
+	})
+
+	it('reads manual order from the route and sorts by the view position', () => {
+		const route = routeRef({
+			name: 'project.view',
+			params: {projectId: '5', viewId: '2759'},
+			query: {order: 'manual'},
+			fullPath: '/projects/5/2759?order=manual',
+		})
+
+		const {filters} = useGanttFilters(route, ref(5), ref(2759))
+
+		expect(filters.value.order).toBe('manual')
+		expect(taskList.toApiParams?.(filters.value).sort_by).toEqual(['position', 'id'])
 	})
 })

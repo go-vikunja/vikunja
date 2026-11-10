@@ -34,6 +34,18 @@
 							</XButton>
 						</div>
 					</div>
+					<FormField
+						id="order"
+						:label="$t('project.gantt.order')"
+					>
+						<template #default="{ id }">
+							<FormSelect
+								:id="id"
+								v-model="filters.order"
+								:options="orderOptions"
+							/>
+						</template>
+					</FormField>
 					<FancyCheckbox
 						v-model="filters.showTasksWithoutDates"
 						is-block
@@ -55,7 +67,9 @@
 						:is-loading="isLoading"
 						:default-task-start-date="defaultTaskStartDate"
 						:default-task-end-date="defaultTaskEndDate"
+						:reorderable="canWrite && filters.order === 'manual'"
 						@update:task="updateTask"
+						@update:position="updatePosition"
 					/>
 					<TaskForm
 						v-if="canWrite"
@@ -69,6 +83,7 @@
 
 <script setup lang="ts">
 import {computed, toRefs} from 'vue'
+import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
 
 import {useCurrentProject} from '@/composables/useCurrentProject'
@@ -78,10 +93,12 @@ import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import FormField from '@/components/input/FormField.vue'
+import FormSelect from '@/components/input/FormSelect.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {PERMISSIONS} from '@/constants/permissions'
+import {useUpdateTaskPositionMutation} from '@/client/queries/taskMutations'
 
 import type {DateISO} from '@/types/DateISO'
 import type {Task as ITask} from '@/client/generated'
@@ -110,6 +127,20 @@ const {
 	addTask,
 	updateTask,
 } = useGanttFilters(route, projectId, viewId)
+
+const {t} = useI18n({useScope: 'global'})
+const orderOptions = computed(() => [
+	{value: 'startDate', label: t('project.gantt.orderStartDate')},
+	{value: 'manual', label: t('project.gantt.orderManual')},
+])
+
+const positionMutation = useUpdateTaskPositionMutation()
+
+async function updatePosition(taskId: number, position: number) {
+	try {
+		await positionMutation.mutateAsync({taskId, position, project_view_id: viewId.value})
+	} catch { /* Mutation reports the error. */ }
+}
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 

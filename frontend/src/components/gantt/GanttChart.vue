@@ -44,33 +44,50 @@
 								width: `${band.width}px`,
 							}"
 						/>
+						<div
+							v-if="rowDrag?.reorder"
+							class="gantt-row-drop-indicator"
+							:style="{top: `${rowDrag.reorder.indicatorRow * ROW_HEIGHT}px`}"
+						/>
 						<div class="gantt-rows">
 							<GanttRow
 								v-for="(rowId, index) in ganttRows"
 								:id="rowId"
 								:key="rowId"
 								:index="index"
+								:class="{'is-row-dragged': rowDrag?.index === index}"
 							>
-								<div class="gantt-row-content">
-									<GanttRowBars
-										:bars="ganttBars[index] ?? []"
-										:total-width="totalWidth"
-										:date-from-date="dateFromDate"
-										:date-to-date="dateToDate"
-										:day-width-pixels="dayWidthPixels"
-										:is-dragging="isDragging"
-										:is-resizing="isResizing"
-										:drag-state="dragState"
-										:focused-row="focusedRow ?? null"
-										:focused-cell="focusedCell"
-										:row-id="rowId"
-										:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
-										:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
-										@barPointerDown="handleBarPointerDown"
-										@startResize="startResize"
-										@updateTask="updateGanttTask"
-										@toggleCollapse="toggleCollapse(Number(ganttBars[index]?.[0]?.id))"
-									/>
+								<div class="gantt-row-inner">
+									<button
+										v-if="reorderable"
+										type="button"
+										class="gantt-row-grip"
+										:aria-label="$t('project.gantt.reorderRow', {task: ganttBars[index]?.[0]?.meta?.label ?? ''})"
+										@pointerdown="startRowDrag(index, $event)"
+									>
+										<Icon icon="grip-lines" />
+									</button>
+									<div class="gantt-row-content">
+										<GanttRowBars
+											:bars="ganttBars[index] ?? []"
+											:total-width="totalWidth"
+											:date-from-date="dateFromDate"
+											:date-to-date="dateToDate"
+											:day-width-pixels="dayWidthPixels"
+											:is-dragging="isDragging"
+											:is-resizing="isResizing"
+											:drag-state="dragState"
+											:focused-row="focusedRow ?? null"
+											:focused-cell="focusedCell"
+											:row-id="rowId"
+											:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
+											:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
+											@barPointerDown="handleBarPointerDown"
+											@startResize="startResize"
+											@updateTask="updateGanttTask"
+											@toggleCollapse="toggleCollapse(Number(ganttBars[index]?.[0]?.id))"
+										/>
+									</div>
 								</div>
 							</GanttRow>
 						</div>
@@ -98,6 +115,7 @@ import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 import {getHexColor} from '@/helpers/task'
 import {buildGanttTaskTree, type GanttTaskTreeNode} from '@/helpers/ganttTaskTree'
 import {buildRelationArrows, type GanttBarPosition, type GanttArrow} from '@/helpers/ganttRelationArrows'
+import {getRowReorder, type ReorderRow, type RowReorder} from '@/helpers/ganttRowReorder'
 
 import type {Task as ITask} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
@@ -123,10 +141,12 @@ const props = defineProps<{
 	tasks: Map<number, TaskResponse>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
+	reorderable?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
+  (e: 'update:position', taskId: number, position: number): void
 }>()
 
 const DAY_WIDTH_PIXELS_MIN = 30
@@ -180,6 +200,7 @@ const timelineData = computed(() => {
 
 const ganttBars = ref<GanttBarModel[][]>([])
 const ganttRows = ref<string[]>([])
+const ganttRowNodes = ref<GanttTaskTreeNode[]>([])
 const cellsByRow = ref<Record<string, string[]>>({})
 
 // Hierarchy state
@@ -365,7 +386,9 @@ watch(
 watch(
 	[tasks, filters],
 	() => {
-		allNodes.value = buildGanttTaskTree(tasks.value)
+		allNodes.value = buildGanttTaskTree(tasks.value, {
+			childOrder: filters.value.order === 'manual' ? 'position' : 'relation',
+		})
 	},
 	{deep: true, immediate: true},
 )
@@ -376,6 +399,7 @@ watch(
 	() => {
 		const bars: GanttBarModel[] = []
 		const rows: string[] = []
+		const rowNodes: GanttTaskTreeNode[] = []
 		const cells: Record<string, string[]> = {}
 
 		visibleNodes.value.forEach((node, index) => {
@@ -396,6 +420,7 @@ watch(
 			}
 
 			bars.push(bar)
+			rowNodes.push(node)
 
 			const rowId = `row-${index}`
 			rows.push(rowId)
@@ -409,6 +434,7 @@ watch(
 
 		ganttBars.value = bars.map(bar => [bar])
 		ganttRows.value = rows
+		ganttRowNodes.value = rowNodes
 		cellsByRow.value = cells
 	},
 	{deep: true, immediate: true},
@@ -519,6 +545,47 @@ const parentGroupBands = computed(() => {
 
 	return bands
 })
+
+const reorderRows = computed<ReorderRow[]>(() => ganttRowNodes.value.map(node => ({
+	taskId: node.task.id,
+	parentId: node.task.related_tasks.parenttask?.find(p => tasks.value.has(p.id))?.id ?? null,
+	indentLevel: node.indentLevel,
+	position: node.task.position,
+})))
+
+const rowDrag = ref<{index: number, reorder: RowReorder | null} | null>(null)
+let stopRowDragListeners: (() => void) | null = null
+
+function startRowDrag(index: number, event: PointerEvent) {
+	event.preventDefault()
+	const rowsElement = (event.currentTarget as HTMLElement).closest('.gantt-rows') as HTMLElement
+	rowDrag.value = {index, reorder: null}
+	setCursor('grabbing')
+
+	const handleMove = (e: PointerEvent) => {
+		const offset = e.clientY - rowsElement.getBoundingClientRect().top
+		const slot = Math.min(Math.max(Math.round(offset / ROW_HEIGHT), 0), ganttRows.value.length)
+		rowDrag.value = {index, reorder: getRowReorder(reorderRows.value, index, slot)}
+	}
+
+	const handleStop = () => {
+		stopRowDragListeners?.()
+		const reorder = rowDrag.value?.reorder
+		if (reorder) {
+			emit('update:position', reorderRows.value[index].taskId, reorder.position)
+		}
+		rowDrag.value = null
+	}
+
+	stopRowDragListeners = () => {
+		document.removeEventListener('pointermove', handleMove)
+		document.removeEventListener('pointerup', handleStop)
+		clearCursor()
+		stopRowDragListeners = null
+	}
+	document.addEventListener('pointermove', handleMove)
+	document.addEventListener('pointerup', handleStop)
+}
 
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 	const task = tasks.value.get(Number(id))
@@ -809,6 +876,7 @@ onUnmounted(() => {
 		document.removeEventListener('pointerup', dragStopHandler)
 		dragStopHandler = null
 	}
+	stopRowDragListeners?.()
 	document.body.style.removeProperty('cursor')
 })
 </script>
@@ -843,9 +911,52 @@ onUnmounted(() => {
 	z-index: 2;
 }
 
+.gantt-row-inner {
+	display: flex;
+	align-items: center;
+}
+
 .gantt-row-content {
 	position: relative;
 	min-block-size: 40px;
 	inline-size: 100%;
+}
+
+// Sticky so it stays reachable while the timeline scrolls; the negative margin keeps the bars
+// aligned with the timeline header.
+.gantt-row-grip {
+	position: sticky;
+	inset-inline-start: 0;
+	z-index: 3;
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.5rem;
+	block-size: 40px;
+	margin-inline-end: -1.5rem;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--grey-400);
+	cursor: grab;
+	touch-action: none;
+
+	&:hover,
+	&:focus-visible {
+		color: var(--grey-700);
+	}
+}
+
+.is-row-dragged {
+	opacity: .5;
+}
+
+.gantt-row-drop-indicator {
+	position: absolute;
+	inset-inline: 0;
+	z-index: 4;
+	border-block-start: 2px dashed var(--primary);
+	pointer-events: none;
 }
 </style>
