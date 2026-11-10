@@ -675,6 +675,7 @@ func RegisterAddTaskToFilterViewCron() {
 		log.Debugf("%sFound %d kanban filter views with dates", logPrefix, len(kanbanFilterViews))
 
 		filterTasksCache := make(map[int64][]*Task)
+		filterTaskIDsCache := make(map[int64]map[int64]struct{})
 		newTaskBuckets := []*TaskBucket{}
 		newTaskPositions := []*TaskPosition{}
 
@@ -701,6 +702,7 @@ func RegisterAddTaskToFilterViewCron() {
 				}
 				tasks = resultTasks.([]*Task)
 				filterTasksCache[filterID] = tasks
+				filterTaskIDsCache[filterID] = taskIDSet(tasks)
 			}
 
 			// Get saved tasks in task_buckets and task_positions
@@ -754,7 +756,7 @@ func RegisterAddTaskToFilterViewCron() {
 			}
 
 			// Remove tasks that should not be there
-			if staleIDs := staleFilterTaskIDs(savedTaskBucketMap, tasks); len(staleIDs) > 0 {
+			if staleIDs := staleFilterTaskIDs(savedTaskBucketMap, filterTaskIDsCache[filterID]); len(staleIDs) > 0 {
 				staleTaskIDsByView[view.ID] = staleIDs
 				staleViews = append(staleViews, view)
 			}
@@ -809,16 +811,17 @@ func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBucke
 	}
 }
 
-func staleFilterTaskIDs(savedTaskBucketMap map[int64]*TaskBucket, tasks []*Task) (taskIDs []int64) {
+func taskIDSet(tasks []*Task) map[int64]struct{} {
+	ids := make(map[int64]struct{}, len(tasks))
+	for _, task := range tasks {
+		ids[task.ID] = struct{}{}
+	}
+	return ids
+}
+
+func staleFilterTaskIDs(savedTaskBucketMap map[int64]*TaskBucket, matchingTaskIDs map[int64]struct{}) (taskIDs []int64) {
 	for taskID := range savedTaskBucketMap {
-		found := false
-		for _, task := range tasks {
-			if task.ID == taskID {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if _, matches := matchingTaskIDs[taskID]; !matches {
 			taskIDs = append(taskIDs, taskID)
 		}
 	}

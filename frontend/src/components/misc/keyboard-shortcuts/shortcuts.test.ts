@@ -28,7 +28,7 @@ describe('keyboard shortcuts help data', () => {
 
 	it('uses the centralized show keyboard shortcuts binding for the help dialog trigger', () => {
 		expect(shortcutBindingToDisplay(SHORTCUTS.showKeyboardShortcuts)).toEqual({
-			keys: ['shift', '/'],
+			keys: ['?'],
 		})
 	})
 

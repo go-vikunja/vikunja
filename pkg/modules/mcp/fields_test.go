@@ -32,6 +32,7 @@ import (
 
 func init() {
 	exposedOperations["things-page"] = catalogTool
+	exposedOperations["things-bulk"] = catalogTool
 }
 
 func TestFieldTree_Apply(t *testing.T) {
@@ -53,6 +54,16 @@ func TestFieldTree_Apply(t *testing.T) {
 			map[string]any{"title": "b"},
 		},
 	}, got)
+}
+func TestFieldTree_ApplyNoMatchReturnsEmptyMap(t *testing.T) {
+	tree := parseFields([]string{"missing", "other.missing"})
+
+	// assert.Equal uses reflect.DeepEqual, so a nil map would not match.
+	assert.Equal(t, map[string]any{}, tree.apply(map[string]any{"id": 1, "title": "t"}))
+	assert.Equal(t, []any{map[string]any{}, map[string]any{}}, tree.apply([]any{
+		map[string]any{"id": 1},
+		map[string]any{"id": 2},
+	}))
 }
 func TestParseFields_WholeValueWins(t *testing.T) {
 	assert.Equal(t, fieldTree{"owner": nil}, parseFields([]string{"owner.name", "owner"}))
@@ -118,4 +129,25 @@ func TestCallTool_FieldsKeepsThePageEnvelope(t *testing.T) {
 	}, out["items"])
 	assert.Equal(t, json.Number("2"), out["total"])
 	assert.Equal(t, json.Number("1"), out["total_pages"])
+}
+func TestCallTool_FieldsBodyArgumentIsForwardedOnWrites(t *testing.T) {
+	cfg := huma.DefaultConfig("test", "1")
+	cfg.FieldsOptionalByDefault = true
+	_, api := humatest.New(t, cfg)
+	type bulk struct {
+		Fields []string `json:"fields"`
+	}
+	huma.Register(api, huma.Operation{
+		OperationID: "things-bulk",
+		Method:      http.MethodPut,
+		Path:        "/things/bulk",
+	}, func(_ context.Context, in *struct{ Body bulk }) (*struct{ Body bulk }, error) {
+		return &struct{ Body bulk }{Body: in.Body}, nil
+	})
+	mod, err := New(api, nil)
+	require.NoError(t, err)
+	m, ctx := newTestCallerFor(t, mod)
+	res, err := m.callTool(ctx, "things_bulk", json.RawMessage(`{"fields":["priority"]}`))
+	require.NoError(t, err)
+	assert.Equal(t, []any{"priority"}, echoResult(t, res)["fields"])
 }

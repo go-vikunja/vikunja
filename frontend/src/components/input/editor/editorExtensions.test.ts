@@ -1,8 +1,10 @@
+// @vitest-environment jsdom
+// happy-dom doesn't parse svg tr/td as foreign elements.
 import {describe, it, expect, afterEach, beforeEach, vi} from 'vitest'
 import {createPinia, setActivePinia} from 'pinia'
 import {nextTick, ref} from 'vue'
 import {Editor} from '@tiptap/core'
-import {createEditorExtensions, type EditorExtensionDeps} from './editorExtensions'
+import {createEditorExtensions, parseEditorHTML, type EditorExtensionDeps} from './editorExtensions'
 import {queryClient} from '@/client/queryClient'
 import {attachmentKeys} from '@/client/queries/attachments'
 
@@ -146,5 +148,96 @@ describe('CustomImage attachment id', () => {
 		const reloaded = createEditor(html)
 		await settle()
 		expect(reloaded.editor.view.dom.querySelector('img')!.src).toBe('blob:real-attachment')
+	})
+})
+
+describe('CustomTableCell backgroundColor', () => {
+	const cell = (color: string) => `<table><tbody><tr><td data-background-color="${color}">x</td></tr></tbody></table>`
+
+	it.each([
+		'#fff',
+		'#a1b2c3',
+		'#a1b2c3d4',
+		'rgb(1, 2, 3)',
+		'rgba(1, 2, 3, 0.5)',
+		'red',
+	])('keeps %s', color => {
+		const {editor} = createEditor(cell(color))
+
+		const td = editor.view.dom.querySelector('td')!
+		expect(td.getAttribute('data-background-color')).toBe(color)
+		expect(td.style.backgroundColor).not.toBe('')
+		expect(editor.getHTML()).toContain(`data-background-color="${color}"`)
+	})
+
+	it.each([
+		'red;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999',
+		'url(https://attacker.example/x.png)',
+		'red !important',
+		'expression(alert(1))',
+	])('drops %s', color => {
+		const {editor} = createEditor(cell(color))
+
+		const td = editor.view.dom.querySelector('td')!
+		expect(td.hasAttribute('data-background-color')).toBe(false)
+		expect(td.getAttribute('style') ?? '').not.toContain('position')
+		expect(editor.getHTML()).not.toContain('data-background-color')
+	})
+
+	it('drops an unsafe value set programmatically', () => {
+		const {editor} = createEditor(cell('red'))
+
+		editor.chain().setTextSelection(3).setCellAttribute('backgroundColor', 'red;position:fixed').run()
+
+		expect(editor.getHTML()).not.toContain('position')
+		expect(editor.view.dom.querySelector('td')!.getAttribute('style') ?? '').not.toContain('position')
+	})
+})
+
+describe('table cell spans', () => {
+	function spans(html: string) {
+		const {editor} = createEditor(html)
+		const attrs: {colspan: number, rowspan: number}[] = []
+		editor.state.doc.descendants(node => {
+			if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+				attrs.push({colspan: node.attrs.colspan, rowspan: node.attrs.rowspan})
+			}
+		})
+		return attrs
+	}
+
+	function firstColspanPerTable(editor: Editor) {
+		const colspans: number[] = []
+		editor.state.doc.descendants(node => {
+			if (node.type.name === 'table') {
+				colspans.push(node.firstChild!.firstChild!.attrs.colspan)
+			}
+		})
+		return colspans
+	}
+
+	it('keeps a normal span', () => {
+		expect(spans('<table><tr><td colspan="2" rowspan="3">x</td></tr></table>'))
+			.toEqual([{colspan: 2, rowspan: 3}])
+	})
+
+	it('keeps tables within the cell budget and drops the grid of later ones', () => {
+		// 6000 implied cells each, the second overruns the remaining budget
+		const table = `<table><tr>${'<td colspan="100">x</td>'.repeat(30)}</tr></table>`
+		const {editor} = createEditor('')
+		editor.commands.setContent(parseEditorHTML(editor, table + table))
+
+		expect(firstColspanPerTable(editor)).toEqual([100])
+	})
+
+	it.each([
+		['a rowspan', '<table><tr><td rowspan="100000000">x</td></tr></table>'],
+		['svg table parts', '<svg><tr><td colspan="20000">x</td></tr></svg>'],
+	])('drops the grid implied by %s', (_name, html) => {
+		const {editor} = createEditor('')
+		editor.commands.setContent(parseEditorHTML(editor, html))
+
+		expect(firstColspanPerTable(editor)).toEqual([])
+		expect(editor.getText()).toContain('x')
 	})
 })

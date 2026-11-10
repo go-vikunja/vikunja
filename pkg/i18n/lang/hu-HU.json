@@ -1,1 +1,136 @@
-{}
+{
+	"notifications": {
+		"greeting": "Üdv, %[1]s!",
+		"email_confirm": {
+			"subject": "%[1]s, kérlek, erősítsd meg a Vikunjában megadott email címed",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Üdvözöl a Vikunja!",
+			"confirm": "Az email címed megerősítéséhez kattints a linkre:"
+		},
+		"email_change": {
+			"subject": "E-mail cím módosítást kértek a Vikunja fiókodhoz",
+			"requested": "Valaki kérte, hogy a fiókod e-mail-címét a következőre módosítsuk: %[1]s. A jelenlegi címed addig marad aktív, amíg az újat meg nem erősítik.",
+			"warning": "Ha nem Te kezdeményezted, azonnal változtasd meg a jelszavad és vond vissza a függőben lévő módosítást a fiókbeállításokban!"
+		},
+		"password": {
+			"changed": {
+				"subject": "A Vikunja-jelszavad módosult",
+				"success": "A fiókjelszavad sikeresen módosult.",
+				"warning": "Ha nem te voltál, az azt jelenti hogy valaki hozzáfért a fiókodhoz. Ebben az esetben keresd meg a rendszergazdát."
+			},
+			"reset": {
+				"subject": "Vikunja jelszavad visszaállítása",
+				"instructions": "A jelszó átírásához kattints az alábbi linkre:",
+				"valid_duration": "A link 24 óráig lesz érvényes."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Valaki megpróbált belépni a Vikunja fiókodba, sikertelenül",
+				"message": "Valaki megpróbált belépni a Vikunja fiókodba helyes felhasználónévvel és jelszóval, de érvénytelen 2FA kóddal.",
+				"warning": "**Ha nem te voltál, valaki tudja a jelszavad! Azonnal változtasd meg! **"
+			},
+			"account_locked": {
+				"subject": "Letiltottuk Vikunja fiókodat",
+				"message": "Valaki megpróbált bejelentkezni a Te hitelesítő adataiddal, de nem adott meg érvényes 2FA kódot.",
+				"disabled": "10 sikertelen próbálkozás után letiltottuk a fiókodat és alaphelyzetbe állítottuk a jelszavadat. Új jelszó beállításához kövesd az imént elküldött jelszó-visszaállító e-mailben található utasításokat!",
+				"reset_instructions": "Ha nem kaptál e-mailt a visszaállítási utasításokkal, bármikor kérhetsz újat itt: [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Valaki megpróbált bejelentkezni a Vikunja-fiókodba, de nem adott meg helyes jelszót",
+				"message": "Valaki most megpróbált bejelentkezni a fiókodba és három egymást követő alkalommal hibás jelszót adott meg.",
+				"warning": "Ha nem Te voltál az, akkor lehet, hogy valaki más próbált betörni a fiókodba.",
+				"enhance_security": "A fiókod biztonságának növelése érdekében érdemes erősebb jelszót beállítanod, vagy a beállításokban engedélyezned a 2FA hitelesítést:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Kérlek, erősítsd meg Vikunja-fiókod törlését!",
+					"request": "Fiókod törlését kérted. Ennek megerősítéséhez kattints az alábbi linkre:",
+					"valid_duration": "A link 24 óráig lesz érvényes.",
+					"schedule_info": "Miután megerősíted a törlést, három napon belül ütemezzük a fiókod törlését és addig egy újabb e-mailt küldünk neked.",
+					"consequences": "Ha folytatod fiókod törlését, eltávolítjuk az összes általad létrehozott projektet és feladatot. Minden, amit egy másik felhasználóval, vagy csapattal megosztottál, az ő tulajdonukba kerül.",
+					"changed_mind": "Ha nem te kérted a törlést, vagy azóta meggondoltad magad, tekintsd ezt tárgytalannak!"
+				},
+				"scheduled": {
+					"subject_days": "A Vikunja fiókod %[1]s nap múlva törlődik",
+					"subject_tomorrow": "A Vikunja fiókod holnap törlődik",
+					"request_reminder": "Nemrég kérted Vikunja fiókod törlését.",
+					"deletion_time_days": "%[1]s nap múlva töröljük a fiókodat.",
+					"deletion_time_tomorrow": "Holnap töröljük a fiókodat.",
+					"changed_mind": "Ha meggondoltad magad, csak kattints az alábbi linkre a törlés lemondásához és kövesd az ott található utasításokat:"
+				},
+				"completed": {
+					"subject": "A Vikunja-fiókod töröltük",
+					"confirmation": "Kérésednek megfelelően töröltük a Vikunja-fiókod.",
+					"permanent": "Ez a törlés végleges. Ha nem készítettél biztonsági másolatot és szükséged van az adataidra, fordulj a rendszergazdához."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Emlékeztető: \"%[1]s\" (%[2]s)",
+				"message": "Baráti emlékeztető \"%[1]s\" (%[2]s) feladatról."
+			},
+			"comment": {
+				"subject": "Válasz: %[1]s (%[2]s)",
+				"mentioned_subject": "%[1]s megemlített egy hozzászólásban itt: \"%[2]s\" (%[3]s)"
+			},
+			"assigned": {
+				"subject_to_assignee": "Hozzárendeltek ehhez: \"%[1]s\" (%[2]s)",
+				"message_to_assignee": "%[1]s hozzárendelt \"%[2]s\" feladathoz.",
+				"subject_to_others": "„%[1]s” (%[2]s) -t hozzárendelték ehhez: %[3]s",
+				"message_to_others": "%[1]s hozzárendelte \"%[2]s\"-t a feladathoz.",
+				"subject_to_others_self": "%[3]s saját magához rendelte \"%[1]s\" (%[2]s) feladatot",
+				"message_to_others_self": "%[1]s hozzárendelte saját magához a feladatot."
+			},
+			"deleted": {
+				"subject": "\"%[1]s\" (%[2]s) törölve",
+				"message": "%[1]s törölte \"%[2]s\" (%[3]s) feladatot"
+			},
+			"created": {
+				"subject": "\"%[1]s\" (%[2]s) létrehozva",
+				"message": "%[1]s létrehozta \"%[2]s\" (%[3]s) feladatot"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s megemlített egy új feladatban \"%[2]s\" (%[3]s)",
+				"subject": "%[1]s megemlített \"%[2]s\" (%[3]s) feladatban"
+			},
+			"overdue": {
+				"subject": "\"%[1]s\" (%[2]s) feladat késésben",
+				"message": "Baráti emlékeztető, hogy \"%[1]s\" (%[2]s) feladattal %[3]s elmaradtál, és még nem készültél el vele.",
+				"multiple_subject": "Elmaradt feladataid",
+				"multiple_message": "Elmaradt feladataid vannak:",
+				"assigned_heading": "Hozzád rendelt",
+				"followed_heading": "Bekövetett feladataid",
+				"overdue_since": "%[1]s óta",
+				"overdue_now": "most",
+				"overdue": "%[1]s késésben"
+			}
+		},
+		"project": {
+			"created": "%[1]s létrehozta \"%[2]s\" projektet"
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s hozzáadott \"%[2]s\" Vikunja csoporthoz",
+				"message": "%[1]s hozzáadott téged %[2]s csoporthoz a Vikunján."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "A Vikunja exportod készen áll",
+				"message": "A Vikunja Exportod készen áll a letöltésre. Letöltéshez klikkelj az alábbi gombra:",
+				"availability": "A letöltésed 7 napig marad elérhető."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "%[1]s migrációd Vikunjára elkészült"
+			}
+		}
+	}
+}

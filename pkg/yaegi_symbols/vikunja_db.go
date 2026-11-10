@@ -20,6 +20,7 @@ func init() {
 		"CreateTestEngine":               reflect.ValueOf(db.CreateTestEngine),
 		"DatabasePathMemory":             reflect.ValueOf(constant.MakeFromLiteral("\"memory\"", token.STRING, 0)),
 		"Dump":                           reflect.ValueOf(db.Dump),
+		"Forget":                         reflect.ValueOf(db.Forget),
 		"GetDialect":                     reflect.ValueOf(db.GetDialect),
 		"ILIKE":                          reflect.ValueOf(db.ILIKE),
 		"InitFixtures":                   reflect.ValueOf(db.InitFixtures),
@@ -45,6 +46,7 @@ func init() {
 		"SetSessionContext":              reflect.ValueOf(db.SetSessionContext),
 		"TruncateAllTables":              reflect.ValueOf(db.TruncateAllTables),
 		"Type":                           reflect.ValueOf(db.Type),
+		"UnaccentAvailable":              reflect.ValueOf(db.UnaccentAvailable),
 		"WipeEverything":                 reflect.ValueOf(db.WipeEverything),
 
 		// type definitions

@@ -56,7 +56,7 @@ var findActionSpec = mustResolveSpec(toolFindAction, &jsonschema.Schema{
 		},
 		"resource": {
 			Type:        "string",
-			Description: "Return full schemas for actions under this prefix (e.g. task_labels, project_views, teams).",
+			Description: "Return full schemas for actions under this prefix (e.g. task_labels, tasks_relations, project_views, teams). Must match an action name prefix exactly.",
 		},
 	},
 	AdditionalProperties: falseSchema(),
@@ -94,7 +94,7 @@ func (m *Module) installCatalogTools(srv *mcp.Server, catalog []*tool) {
 	}
 	srv.AddTool(&mcp.Tool{
 		Name:        toolFindAction,
-		Description: "Discover additional Vikunja actions for: " + strings.Join(slices.Sorted(maps.Keys(areas)), ", ") + ". Returns only actions your token authorizes; pass action or resource for full input schemas. Invoke them with do_action.",
+		Description: "Discover additional Vikunja actions for: " + strings.Join(slices.Sorted(maps.Keys(areas)), ", ") + ". Returns only actions your token authorizes; pass action or resource for full input schemas. Call with no arguments to list all action names. Invoke them with do_action.",
 		InputSchema: findActionSpec.schema,
 	}, findActionHandler(catalog))
 	srv.AddTool(&mcp.Tool{
@@ -136,7 +136,12 @@ func findActionHandler(catalog []*tool) mcp.ToolHandler {
 			//nolint:nilerr // Domain errors use MCP tool results.
 			return invalidArgsResult(toolFindAction, err), nil
 		}
-		result := map[string]any{"actions": catalogActions(catalog, args.Action, args.Resource)}
+		actions := catalogActions(catalog, args.Action, args.Resource)
+		result := map[string]any{"actions": actions}
+		// Lets the model tell "wrong name" apart from "not authorized".
+		if len(actions) == 0 {
+			result["hint"] = "No action matched. Call find_action with no arguments to list all action names."
+		}
 		body, err := json.Marshal(result)
 		if err != nil {
 			return nil, fmt.Errorf("mcp: marshal find_action result: %w", err)

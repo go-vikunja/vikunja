@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -125,9 +126,14 @@ func createRequest(e *echo.Echo, method string, payload string, queryParam url.V
 	return
 }
 
+// testSessionID is the sessions.yml fixture row of a fixture user; user JWTs need a live session.
+func testSessionID(u *user.User) string {
+	return "test-session-" + strconv.FormatInt(u.ID, 10)
+}
+
 // addUserTokenToContext creates a JWT for the user and sets it on the echo context
 func addUserTokenToContext(t *testing.T, u *user.User, c *echo.Context) {
-	token, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	token, err := auth.NewUserJWTAuthtoken(u, testSessionID(u))
 	require.NoError(t, err)
 	tken, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
 		return []byte(config.ServiceSecret.GetString()), nil

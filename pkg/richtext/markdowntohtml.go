@@ -21,9 +21,12 @@ import (
 	"fmt"
 	"strings"
 
+	"code.vikunja.io/api/pkg/web"
+
 	"github.com/yuin/goldmark/v2/extension"
 	"github.com/yuin/goldmark/v2/parser"
 	"github.com/yuin/goldmark/v2/renderer/html"
+	"github.com/yuin/goldmark/v2/util"
 	"xorm.io/xorm"
 )
 
@@ -31,7 +34,11 @@ import (
 // inert, so the only active markup is what goldmark emits. This is what stops
 // user-supplied markdown from smuggling in scripts.
 var (
-	gfmParser   = parser.New(parser.WithExtensions(extension.GFMParser))
+	gfmParser = parser.New(
+		parser.WithExtensions(extension.GFMParser),
+		// Right before goldmark's table transformer (priority 200).
+		parser.WithParagraphTransformers(util.Prioritized[parser.ParagraphTransformer](tableBudgetTransformer{}, 199)),
+	)
 	gfmRenderer = html.New(html.WithExtensions(extension.GFMHTMLRenderer))
 
 	commonMarkParser   = parser.New()
@@ -51,19 +58,24 @@ func CommonMarkToHTML(md []byte) (string, error) {
 // lists into TipTap's <ul data-type="taskList"> form. Mentions are left as literal
 // "@username" — see MarkdownToHTMLWithMentions to resolve them.
 func MarkdownToHTML(md string) (string, error) {
-	return markdownToHTML(md, nil)
+	return markdownToHTML(md, nil, nil)
 }
 
 // MarkdownToHTMLWithMentions is MarkdownToHTML plus mention resolution: "@username"
-// matching an existing user becomes a <mention-user> tag. Needs a session.
-func MarkdownToHTMLWithMentions(s *xorm.Session, md string) (string, error) {
-	return markdownToHTML(md, s)
+// matching an existing user visible to viewer becomes a <mention-user> tag. Needs a session.
+func MarkdownToHTMLWithMentions(s *xorm.Session, viewer web.Auth, md string) (string, error) {
+	return markdownToHTML(md, s, viewer)
 }
 
-func markdownToHTML(md string, s *xorm.Session) (string, error) {
+func markdownToHTML(md string, s *xorm.Session, viewer web.Auth) (string, error) {
 	var buf bytes.Buffer
 	source := []byte(md)
-	if err := gfmRenderer.Render(&buf, source, gfmParser.Parse(source)); err != nil {
+	pc := parser.NewContext()
+	doc := gfmParser.Parse(source, parser.WithContext(pc))
+	if tablesExceedBudget(pc) {
+		return "", ErrTooManyTableCells
+	}
+	if err := gfmRenderer.Render(&buf, source, doc); err != nil {
 		return "", fmt.Errorf("converting markdown to html: %w", err)
 	}
 
@@ -77,7 +89,7 @@ func markdownToHTML(md string, s *xorm.Session) (string, error) {
 	}
 
 	if s != nil {
-		if err := rebuildMentions(s, nodes); err != nil {
+		if err := rebuildMentions(s, viewer, nodes); err != nil {
 			return "", err
 		}
 	}

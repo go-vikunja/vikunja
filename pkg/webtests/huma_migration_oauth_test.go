@@ -17,7 +17,11 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -80,7 +84,8 @@ func TestHumaMigrationOAuth(t *testing.T) {
 
 	t.Run("migrate kicks off the migration", func(t *testing.T) {
 		events.ClearDispatchedEvents()
-		rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/todoist/migrate", `{"code":"test-code"}`, token, "")
+		state := issuedOAuthState(t, e, "/api/v2", "todoist", token)
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/todoist/migrate", `{"code":"test-code","state":"`+state+`"}`, token, "")
 		// 200, not the wrapper's POST default 201: this queues a job, it does
 		// not create a REST resource.
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
@@ -103,8 +108,69 @@ func TestHumaMigrationOAuth_AlreadyRunning(t *testing.T) {
 	require.NoError(t, s.Commit())
 	_ = s.Close()
 
-	rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/todoist/migrate", `{"code":"test-code"}`, token, "")
+	state := issuedOAuthState(t, e, "/api/v2", "todoist", token)
+	rec := humaRequest(t, e, http.MethodPost, "/api/v2/migration/todoist/migrate", `{"code":"test-code","state":"`+state+`"}`, token, "")
 	assert.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
+}
+
+func issuedOAuthState(t *testing.T, e *echo.Echo, prefix, name, token string) string {
+	t.Helper()
+	rec := humaRequest(t, e, http.MethodGet, prefix+"/migration/"+name+"/auth", "", token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	var body struct {
+		URL string `json:"url"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	authURL, err := url.Parse(body.URL)
+	require.NoError(t, err)
+	query := authURL.Query()
+	if name == "trello" {
+		// trello's implicit flow carries the state in the return url
+		returnURL, err := url.Parse(query.Get("return_url"))
+		require.NoError(t, err)
+		query = returnURL.Query()
+	}
+	state := query.Get("state")
+	require.NotEmpty(t, state, "auth url %s carries no state", body.URL)
+	return state
+}
+
+// GHSA-xgw3-ccqg-f6ww
+func TestMigrationOAuth_State(t *testing.T) {
+	for _, prefix := range []string{"/api/v1", "/api/v2"} {
+		for _, name := range []string{"todoist", "trello", "microsoft-todo"} {
+			migrate := func(t *testing.T, e *echo.Echo, token, state string) *httptest.ResponseRecorder {
+				body := `{"code":"test-code"}`
+				if state != "" {
+					body = `{"code":"test-code","state":"` + state + `"}`
+				}
+				return humaRequest(t, e, http.MethodPost, prefix+"/migration/"+name+"/migrate", body, token, "")
+			}
+			assertRejected := func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
+				assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+				assert.Contains(t, rec.Body.String(), strconv.Itoa(migration.ErrCodeInvalidOAuthState), "body: %s", rec.Body.String())
+			}
+
+			t.Run(prefix+" "+name+" without state", func(t *testing.T) {
+				e := setupMigrationTestEnv(t)
+				assertRejected(t, migrate(t, e, humaTokenFor(t, &testuser1), ""))
+			})
+			t.Run(prefix+" "+name+" with another user's state", func(t *testing.T) {
+				e := setupMigrationTestEnv(t)
+				state := issuedOAuthState(t, e, prefix, name, humaTokenFor(t, &testuser2))
+				assertRejected(t, migrate(t, e, humaTokenFor(t, &testuser1), state))
+			})
+			t.Run(prefix+" "+name+" with the user's own state, once", func(t *testing.T) {
+				e := setupMigrationTestEnv(t)
+				token := humaTokenFor(t, &testuser1)
+				state := issuedOAuthState(t, e, prefix, name, token)
+				rec := migrate(t, e, token, state)
+				require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+				assertRejected(t, migrate(t, e, token, state))
+			})
+		}
+	}
 }
 
 func TestHumaMigrationOAuth_Unauthenticated(t *testing.T) {

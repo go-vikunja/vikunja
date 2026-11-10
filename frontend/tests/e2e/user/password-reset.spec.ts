@@ -16,8 +16,8 @@ test.describe('Password Reset', () => {
 		const tokenArray = await TokenFactory.create(1, {user_id: user.id as number, kind: 1})
 		const token: TokenAttributes = tokenArray[0] as TokenAttributes
 
-		await page.goto(`/?userPasswordReset=${token.token}`)
-		await expect(page).toHaveURL(`/password-reset?userPasswordReset=${token.token}`)
+		await page.goto(`/#userPasswordReset=${token.token}`)
+		await expect(page).toHaveURL(`/password-reset#userPasswordReset=${token.token}`)
 
 		const newPassword = 'newSecurePassword123'
 		await page.locator('input[id=password]').fill(newPassword)
@@ -35,8 +35,9 @@ test.describe('Password Reset', () => {
 	})
 
 	test('Should show an error for an invalid token', async ({page, apiContext}) => {
+		// links from emails sent before the token moved to the fragment
 		await page.goto('/?userPasswordReset=invalidtoken123')
-		await expect(page).toHaveURL('/password-reset?userPasswordReset=invalidtoken123')
+		await expect(page).toHaveURL('/password-reset#userPasswordReset=invalidtoken123')
 
 		// Attempt to reset password
 		const newPassword = 'newSecurePassword123'

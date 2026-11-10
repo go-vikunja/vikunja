@@ -26,6 +26,7 @@ Invoke with the `Skill` tool before writing code in these areas:
 - `api-v2-routes` — any new route (`pkg/routes/api/v2/`)
 - `prepare-worktree` — setting up a worktree for a plan
 - `run-e2e-tests` — running Playwright e2e tests (never `pnpm test:e2e` directly)
+- `crowdin-translate` — translating strings in Crowdin
 
 ## Details
 
@@ -37,3 +38,4 @@ Invoke with the `Skill` tool before writing code in these areas:
 - [Dev commands and configuration](.agents/docs/dev-commands.md)
 - [Supported databases](.agents/docs/databases.md)
 - [License system](.agents/docs/license.md)
+- [Security Vulnerabilities](SECURITY.md)

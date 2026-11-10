@@ -61,15 +61,8 @@ function refreshApp() {
 
 <style lang="scss" scoped>
 .update-notification {
-	position: fixed;
-	// FIXME: We should prevent usage of z-index or
-	// at least define it centrally
-	// the highest z-index of a modal is .hint-modal with 4500
-	z-index: 5000;
-	inset-block-end: 1rem;
-	inset-inline: 1rem;
-	max-inline-size: max-content;
-	margin-inline: auto;
+	max-inline-size: calc(100% - 1.5rem);
+	margin: 0 .75rem .75rem;
 
 	display: flex;
 	align-items: center;
@@ -78,6 +71,7 @@ function refreshApp() {
 	padding: .5rem .5rem .5rem 1rem;
 	background: $warning;
 	border-radius: $radius;
+	box-shadow: var(--shadow-md);
 	font-size: .9rem;
 	color: hsl(220.9, 39.3%, 11%); // color copied to avoid it changing in dark mode
 }

@@ -34,7 +34,7 @@ func TestGetAvatar(t *testing.T) {
 			Username: "johndoe",
 		}
 
-		avatar, mimeType, err := provider.GetAvatar(testUser, 128)
+		avatar, mimeType, err := provider.GetAvatar(t.Context(), testUser, 128)
 		require.NoError(t, err)
 		assert.NotNil(t, avatar)
 		assert.Equal(t, "image/svg+xml", mimeType)
@@ -60,7 +60,7 @@ func TestGetAvatar(t *testing.T) {
 			Username: "jane_smith",
 		}
 
-		avatar, mimeType, err := provider.GetAvatar(testUser, 64)
+		avatar, mimeType, err := provider.GetAvatar(t.Context(), testUser, 64)
 		require.NoError(t, err)
 		assert.NotNil(t, avatar)
 		assert.Equal(t, "image/svg+xml", mimeType)
@@ -83,10 +83,10 @@ func TestGetAvatar(t *testing.T) {
 			Username: "alice",
 		}
 
-		avatar1, _, err := provider.GetAvatar(testUser, 100)
+		avatar1, _, err := provider.GetAvatar(t.Context(), testUser, 100)
 		require.NoError(t, err)
 
-		avatar2, _, err := provider.GetAvatar(testUser, 200)
+		avatar2, _, err := provider.GetAvatar(t.Context(), testUser, 200)
 		require.NoError(t, err)
 
 		// Both should use the same colors (user ID 0 -> index 0)
@@ -110,7 +110,7 @@ func TestGetAvatar(t *testing.T) {
 			Username: "hacker",
 		}
 
-		avatar, mimeType, err := provider.GetAvatar(testUser, 50)
+		avatar, mimeType, err := provider.GetAvatar(t.Context(), testUser, 50)
 		require.NoError(t, err)
 		assert.Equal(t, "image/svg+xml", mimeType)
 
@@ -141,7 +141,7 @@ func TestGetAvatar(t *testing.T) {
 		}
 
 		for _, tc := range testCases {
-			avatar, mimeType, err := provider.GetAvatar(testUser, tc.size)
+			avatar, mimeType, err := provider.GetAvatar(t.Context(), testUser, tc.size)
 			require.NoError(t, err)
 			assert.Equal(t, "image/svg+xml", mimeType)
 
@@ -161,7 +161,7 @@ func TestGetAvatar(t *testing.T) {
 			Username: "",
 		}
 
-		_, _, err := provider.GetAvatar(testUser, 100)
+		_, _, err := provider.GetAvatar(t.Context(), testUser, 100)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no name or username")
 	})

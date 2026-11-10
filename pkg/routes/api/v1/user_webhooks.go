@@ -143,6 +143,7 @@ func UpdateUserWebhook(c *echo.Context) error {
 	if err := c.Bind(w); err != nil {
 		return err
 	}
+	w.UserID = u.ID
 
 	s := db.NewSession()
 	defer s.Close()
@@ -195,6 +196,7 @@ func DeleteUserWebhook(c *echo.Context) error {
 	if err := c.Bind(w); err != nil {
 		return err
 	}
+	w.UserID = u.ID
 
 	s := db.NewSession()
 	defer s.Close()

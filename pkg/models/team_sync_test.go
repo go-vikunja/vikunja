@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
@@ -146,5 +147,23 @@ func TestMigrateExternalTeamIDs(t *testing.T) {
 			"id":          free.ID,
 			"external_id": "new",
 		}, false)
+	})
+}
+
+func TestSyncExternalTeamsForUser(t *testing.T) {
+	t.Run("keeps memberships of other issuers", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u, err := user.GetUserByID(s, 10)
+		require.NoError(t, err)
+
+		err = SyncExternalTeamsForUser(s, u, []*Team{{ExternalID: "ldap-team", Name: "LDAP team"}}, user.IssuerLDAP, "LDAP")
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "team_members", map[string]any{"team_id": 14, "user_id": 10}, false)
+		db.AssertExists(t, "team_members", map[string]any{"team_id": 15, "user_id": 10}, false)
 	})
 }

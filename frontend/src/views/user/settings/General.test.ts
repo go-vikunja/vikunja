@@ -47,7 +47,6 @@ async function mountComponent() {
 				Card: {template: '<div><slot /></div>'},
 				ProjectSearch: true,
 				Multiselect: true,
-				FormSelect: true,
 				FormCheckbox: true,
 				ShortcutRecorder: true,
 				Reminders: true,
@@ -87,6 +86,20 @@ describe('General user settings', () => {
 
 		expect(errors).toEqual([])
 		expect(wrapper.text()).not.toContain('managed by')
+	})
+
+	it('renders the week-start selector without runtime directive warnings', async () => {
+		seedAccount()
+		const warnings: string[] = []
+		const warn = vi.spyOn(console, 'warn').mockImplementation(message => warnings.push(String(message)))
+		try {
+			wrapper = await mountComponent()
+			await flushPromises()
+			expect(warnings.filter(message => message.includes('Runtime directive'))).toEqual([])
+			expect(wrapper.find('select[data-cy=weekStartSelect]').exists()).toBe(true)
+		} finally {
+			warn.mockRestore()
+		}
 	})
 
 	it('marks a non-local user as external', async () => {

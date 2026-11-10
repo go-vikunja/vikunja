@@ -19,51 +19,20 @@ package apiv2
 
 import (
 	"context"
-	"encoding/json"
-	"io"
+	"maps"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/autopatch"
 	"github.com/labstack/echo/v5"
 )
-
-// formURLEncodedContentType is the content type the OAuth token endpoint accepts
-// in addition to JSON, per RFC 6749.
-const formURLEncodedContentType = "application/x-www-form-urlencoded"
-
-// formURLEncodedFormat lets Huma bind application/x-www-form-urlencoded request
-// bodies into the same json-tagged structs it uses for JSON: the form values are
-// re-marshaled to JSON and decoded via the standard path. Only string scalars
-// are produced, which is all the form-encoded endpoints (OAuth token) need.
-var formURLEncodedFormat = huma.Format{
-	Marshal: func(io.Writer, any) error {
-		// Responses are always JSON; this format is request-body only.
-		return huma.ErrUnknownContentType
-	},
-	Unmarshal: func(data []byte, v any) error {
-		values, err := url.ParseQuery(string(data))
-		if err != nil {
-			return err
-		}
-		flat := make(map[string]string, len(values))
-		for key := range values {
-			flat[key] = values.Get(key)
-		}
-		raw, err := json.Marshal(flat)
-		if err != nil {
-			return err
-		}
-		return json.Unmarshal(raw, v)
-	},
-}
 
 // GroupPrefix is the URL prefix the Echo group for /api/v2 is mounted at.
 const GroupPrefix = "/api/v2"
@@ -78,15 +47,17 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	// Real presence/format rules live in `valid:` tags, enforced by govalidator in
 	// the Register wrapper; leave the schema permissive so partial updates match v1.
 	cfg.FieldsOptionalByDefault = true
-	// Accept application/x-www-form-urlencoded bodies (the OAuth token endpoint)
-	// alongside JSON. Copy the default map so we don't mutate the package global.
-	formats := make(map[string]huma.Format, len(cfg.Formats)+1)
-	for ct, f := range cfg.Formats {
-		formats[ct] = f
+	jsonFormat := huma.DefaultJSONFormat
+	jsonFormat.Unmarshal = func(data []byte, v any) error {
+		if err := utils.CheckJSONForNUL(data); err != nil {
+			return err
+		}
+		return huma.DefaultJSONFormat.Unmarshal(data, v)
 	}
-	formats[formURLEncodedContentType] = formURLEncodedFormat
-	cfg.Formats = formats
-
+	// DefaultConfig shares huma's global DefaultFormats map; don't mutate it.
+	cfg.Formats = maps.Clone(cfg.Formats)
+	cfg.Formats["application/json"] = jsonFormat
+	cfg.Formats["json"] = jsonFormat
 	api := humabridge.NewWithGroup(e, g, GroupPrefix, cfg)
 	oapi := api.OpenAPI()
 	if oapi.Info != nil {

@@ -6,10 +6,16 @@ const mocks = vi.hoisted(() => ({
 	clear: vi.fn(),
 	configure: vi.fn(),
 	update: vi.fn(),
+	setAuthenticated: vi.fn(),
+	setSession: vi.fn(),
 }))
 
 vi.mock('@/stores/config', () => ({
 	useConfigStore: () => ({update: mocks.update}),
+}))
+
+vi.mock('@/stores/auth', () => ({
+	useAuthStore: () => ({setAuthenticated: mocks.setAuthenticated, setSession: mocks.setSession}),
 }))
 
 vi.mock('@/client/http', () => ({
@@ -27,6 +33,8 @@ describe('checkAndSetApiUrl query lifecycle', () => {
 		mocks.clear.mockReset()
 		mocks.configure.mockReset()
 		mocks.update.mockReset()
+		mocks.setAuthenticated.mockReset()
+		mocks.setSession.mockReset()
 	})
 
 	it('reconfigures the client and clears cache after accepting a different server', async () => {
@@ -114,5 +122,58 @@ describe('checkAndSetApiUrl query lifecycle', () => {
 		expect(localStorage.getItem('API_URL')).toBeNull()
 		expect(mocks.configure).not.toHaveBeenCalled()
 		expect(mocks.clear).not.toHaveBeenCalled()
+	})
+})
+
+describe('checkAndSetApiUrl stored credentials', () => {
+	beforeEach(() => {
+		window.API_URL = ''
+		localStorage.clear()
+		localStorage.setItem('token', 'jwt')
+		localStorage.setItem('desktopOAuthRefreshToken', 'refresh')
+		mocks.update.mockReset()
+		mocks.update.mockResolvedValue(true)
+		mocks.setAuthenticated.mockReset()
+		mocks.setSession.mockReset()
+	})
+
+	it('drops tokens and auth state when switching to another server', async () => {
+		localStorage.setItem('API_URL', 'https://old.example.com')
+
+		await checkAndSetApiUrl('https://attacker.example.com')
+
+		expect(localStorage.getItem('token')).toBeNull()
+		expect(localStorage.getItem('desktopOAuthRefreshToken')).toBeNull()
+		expect(mocks.setAuthenticated).toHaveBeenCalledWith(false)
+		expect(mocks.setSession).toHaveBeenCalledWith(null)
+	})
+
+	it.each([
+		['the same server', 'https://old.example.com', 'https://old.example.com/'],
+		['a legacy stored url', 'https://old.example.com/api/v1', 'https://old.example.com'],
+		['a same-origin stored url', '', ''],
+	])('keeps tokens when booting against %s', async (_, stored, input) => {
+		localStorage.setItem('API_URL', stored)
+
+		await checkAndSetApiUrl(input)
+
+		expect(localStorage.getItem('token')).toBe('jwt')
+		expect(localStorage.getItem('desktopOAuthRefreshToken')).toBe('refresh')
+		expect(mocks.setAuthenticated).not.toHaveBeenCalled()
+	})
+
+	it('keeps tokens when no server was stored yet', async () => {
+		await checkAndSetApiUrl('https://new.example.com')
+
+		expect(localStorage.getItem('token')).toBe('jwt')
+	})
+
+	it('keeps tokens when the new server is rejected', async () => {
+		localStorage.setItem('API_URL', 'https://old.example.com')
+		mocks.update.mockRejectedValue(new Error('unreachable'))
+
+		await expect(checkAndSetApiUrl('https://attacker.example.com')).rejects.toThrow('unreachable')
+
+		expect(localStorage.getItem('token')).toBe('jwt')
 	})
 })

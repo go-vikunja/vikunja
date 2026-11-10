@@ -392,6 +392,8 @@ function onPointerUp(event: PointerEvent) {
 	max-inline-size: 96vw;
 	max-block-size: 90vh;
 	object-fit: contain;
+	// Checkerboard so dark images with transparency stay visible on the dark backdrop.
+	background: repeating-conic-gradient(#cccccc 0 25%, #ffffff 0 50%) 0 0 / 16px 16px;
 	user-select: none;
 	-webkit-user-drag: none;
 	cursor: zoom-in;

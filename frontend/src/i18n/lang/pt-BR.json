@@ -209,12 +209,7 @@
 		},
 		"delete": {
 			"title": "Excluir \"{project}\"",
-			"header": "Excluir este projeto",
-			"text1": "Tem certeza de que deseja excluir este projeto e todas as suas tarefas?",
-			"text2": "Isso inclui todas as tarefas e NÃO PODE SER DESFEITO!",
-			"success": "Seu projeto foi excluído com sucesso.",
-			"tasksToDelete": "Isto irá remover permanentemente approx. {count} tarefas.",
-			"noTasksToDelete": "Este projeto não contém tarefas, é seguro excluir."
+			"header": "Excluir este projeto"
 		},
 		"duplicate": {
 			"title": "Duplicar este projeto",
@@ -581,17 +576,11 @@
 			"updated": "Atualizado {0}",
 			"doneAt": "Concluído {0}",
 			"updateSuccess": "A tarefa foi salva com sucesso.",
-			"deleteSuccess": "A tarefa foi excluída com sucesso.",
 			"belongsToProject": "Esta tarefa pertence ao projeto '{project}'",
 			"due": "Vence {at}",
 			"organization": "Organização",
 			"management": "Administração",
 			"dateAndTime": "Data e hora",
-			"delete": {
-				"header": "Excluir esta tarefa",
-				"text1": "Tem certeza que deseja remover esta tarefa?",
-				"text2": "Isto também irá remover todos os anexos, lembretes e relações associados a esta tarefa e não pode ser desfeito!"
-			},
 			"actions": {
 				"assign": "Atribuir usuário",
 				"label": "Adicionar etiquetas",

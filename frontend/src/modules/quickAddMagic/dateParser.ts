@@ -1,6 +1,7 @@
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {getDateWithTime, getUserDefaultTimeParts} from '@/helpers/time/getDateWithTime'
 import {replaceAll} from '@/helpers/replaceAll'
+import {numberWordsRegexGroup, parseAmount} from './numberWords'
 
 export interface dateParseResult {
 	newText: string,
@@ -244,7 +245,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 }
 
 export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
-	const regex = /(in [0-9]+ (hours?|days?|weeks?|months?))/ig
+	const regex = new RegExp(`(?:^| )(?<found>in (?<amount>[0-9]+|an?|${numberWordsRegexGroup}) (?<unit>minutes?|hours?|days?|weeks?|months?|years?))(?=$| )`, 'i')
 	const results = regex.exec(text)
 	if (results === null) {
 		return {
@@ -253,30 +254,32 @@ export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 		}
 	}
 
-	const foundText: string = results[0]
+	const {found, amount: amountText, unit} = results.groups!
+	const amount = /^an?$/i.test(amountText) ? 1 : parseAmount(amountText)
 	const date = new Date(now)
-	const parts = foundText.split(' ')
-	switch (parts[2]) {
-		case 'hours':
+	switch (unit.toLowerCase().replace(/s$/, '')) {
+		case 'minute':
+			date.setMinutes(date.getMinutes() + amount)
+			break
 		case 'hour':
-			date.setHours(date.getHours() + parseInt(parts[1]))
+			date.setHours(date.getHours() + amount)
 			break
-		case 'days':
 		case 'day':
-			date.setDate(date.getDate() + parseInt(parts[1]))
+			date.setDate(date.getDate() + amount)
 			break
-		case 'weeks':
 		case 'week':
-			date.setDate(date.getDate() + parseInt(parts[1]) * 7)
+			date.setDate(date.getDate() + amount * 7)
 			break
-		case 'months':
 		case 'month':
-			date.setMonth(date.getMonth() + parseInt(parts[1]))
+			date.setMonth(date.getMonth() + amount)
+			break
+		case 'year':
+			date.setFullYear(date.getFullYear() + amount)
 			break
 	}
 
 	return {
-		foundText,
+		foundText: found,
 		date,
 	}
 }

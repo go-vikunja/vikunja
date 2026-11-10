@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
 import {saveLastVisited} from '@/helpers/saveLastVisited'
+import {getSensitiveParam} from '@/helpers/sensitiveQueryParams'
 
 import {getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
@@ -15,6 +16,8 @@ import {error, success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
+import {loadUserInfo} from '@/router/loadUserInfo'
+import {canLinkAccounts} from '@/helpers/canLinkAccounts'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -156,8 +159,20 @@ const router = createRouter({
 					name: 'user.settings.totp',
 					component: () => import('@/views/user/settings/TOTP.vue'),
 					beforeEnter: async () => {
+						const info = await loadUserInfo()
 						const {useConfigStore} = await import('@/stores/config')
-						if (!useConfigStore().totp_enabled || !useAuthStore().info?.is_local_user) {
+						if (!useConfigStore().totp_enabled || !info?.is_local_user) {
+							return {name: 'user.settings.general'}
+						}
+					},
+				},
+				{
+					path: '/user/settings/linked-accounts',
+					name: 'user.settings.linked-accounts',
+					component: () => import('@/views/user/settings/LinkedAccounts.vue'),
+					beforeEnter: async () => {
+						const info = await loadUserInfo()
+						if (!canLinkAccounts(useConfigStore().auth.openid_connect, info)) {
 							return {name: 'user.settings.general'}
 						}
 					},
@@ -199,6 +214,7 @@ const router = createRouter({
 					props: route => ({
 						service: route.params.service as string,
 						code: route.query.code as string,
+						state: route.query.state as string,
 					}),
 				},
 			],
@@ -453,6 +469,30 @@ const router = createRouter({
 			},
 		},
 		{
+			path: '/trash',
+			component: () => import('@/views/trash/TrashView.vue'),
+			meta: {
+				title: 'trash.title',
+			},
+			children: [
+				{
+					path: '',
+					name: 'trash',
+					redirect: {name: 'trash.tasks'},
+				},
+				{
+					path: 'tasks',
+					name: 'trash.tasks',
+					component: () => import('@/views/trash/TrashTasks.vue'),
+				},
+				{
+					path: 'projects',
+					name: 'trash.projects',
+					component: () => import('@/views/trash/TrashProjects.vue'),
+				},
+			],
+		},
+		{
 			path: '/admin',
 			component: () => import('@/views/admin/AdminShell.vue'),
 			meta: {
@@ -502,9 +542,8 @@ export async function getAuthForRoute(to: RouteLocation, authStore: {
 		: ''
 
 	// Signed-in browsers bounce off the login page, so the token has to be redeemed here.
-	const rawConfirmToken = to.query.userEmailConfirm
-	const confirmToken = Array.isArray(rawConfirmToken) ? rawConfirmToken[0] : rawConfirmToken
-	if (typeof confirmToken === 'string' && confirmToken !== '' && authStore.authUser) {
+	const confirmToken = getSensitiveParam(to, 'userEmailConfirm')
+	if (confirmToken && authStore.authUser) {
 		try {
 			// info may predate a change requested in another session; re-read before judging.
 			await authStore.refreshUserInfo()
@@ -532,20 +571,17 @@ export async function getAuthForRoute(to: RouteLocation, authStore: {
 		return
 	}
 
-	// Check if password reset token is in query params
-	const resetToken = to.query.userPasswordReset as string | undefined
+	const resetToken = getSensitiveParam(to, 'userPasswordReset')
 	
-	// Redirect to password reset page if we have a token stored
 	if (resetToken && to.name !== 'user.password-reset.reset') {
-		return {name: 'user.password-reset.reset', query: { userPasswordReset: resetToken }}
+		return {name: 'user.password-reset.reset', hash: '#userPasswordReset=' + resetToken}
 	}
 
 	if (typeof resetToken === 'undefined' && to.name === 'user.password-reset.reset') {
 		return {name: 'user.login'}
 	}
 
-	// Check if email confirmation token is in query params
-	const emailConfirmToken = to.query.userEmailConfirm as string | undefined
+	const emailConfirmToken = getSensitiveParam(to, 'userEmailConfirm')
 	if (emailConfirmToken) {
 		// Save token to localStorage before redirecting
 		localStorage.setItem('emailConfirmToken', emailConfirmToken)
@@ -599,19 +635,10 @@ router.beforeEach(async (to, from) => {
 	await authStore.checkAuth()
 
 	if (to.meta?.requiresAdminPanel) {
-		// Await config/auth hydration so the license check doesn't race the empty default
-		// on direct /admin navigation. appReady resolves without waiting on router.isReady(),
-		// so awaiting it here doesn't deadlock the initial navigation.
-		const baseStore = useBaseStore()
-		await baseStore.appReady
-		const configStore = useConfigStore()
-		const featureOn = configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
-		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
-		if (authStore.info?.is_admin === undefined) {
-			await authStore.refreshUserInfo()
-		}
-		const isAdmin = authStore.info?.is_admin === true
-		if (!featureOn || !isAdmin) {
+		// Also awaits config hydration, so the license check doesn't race the empty default.
+		const info = await loadUserInfo()
+		const featureOn = useConfigStore().isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
+		if (!featureOn || !info?.is_admin) {
 			return {name: 'not-found'}
 		}
 	}
@@ -673,5 +700,6 @@ router.beforeEach(async (to, from) => {
 		return to.fullPath + to.hash
 	}
 })
+
 
 export default router

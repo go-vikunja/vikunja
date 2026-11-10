@@ -56,7 +56,7 @@ func TestMCP_Catalog_FindActionFollowsScopes(t *testing.T) {
 }
 func TestMCP_Catalog_FindActionDescriptionListsAuthorizedAreas(t *testing.T) {
 	desc := newMCPClient(t, mcpFullToken).toolDescription("find_action")
-	assert.Equal(t, "Discover additional Vikunja actions for: labels, project_views, sharing, tasks. Returns only actions your token authorizes; pass action or resource for full input schemas. Invoke them with do_action.", desc)
+	assert.Equal(t, "Discover additional Vikunja actions for: labels, project_views, sharing, tasks. Returns only actions your token authorizes; pass action or resource for full input schemas. Call with no arguments to list all action names. Invoke them with do_action.", desc)
 }
 func TestMCP_Catalog_FindActionReturnsSchemas(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)

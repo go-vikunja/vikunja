@@ -41,6 +41,28 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
 	})
+	t.Run("skips tasks in trashed projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Table("tasks").Where("id = ?", 53).Update(map[string]any{"due_date": "2018-11-30 00:00:00"})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskAssginee{
+			TaskID: 53,
+			UserID: 1,
+		})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
+		require.NoError(t, err)
+		uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+		require.NoError(t, err)
+		for _, ut := range uts {
+			assert.NotContains(t, ut.followed, int64(53))
+			assert.NotContains(t, ut.assigned, int64(53))
+		}
+	})
 	t.Run("undone overdue", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -533,4 +555,36 @@ func TestHasNonWebhookListener(t *testing.T) {
 		events.RegisterListener(name, &testOverdueListener{})
 		assert.True(t, hasNonWebhookListener(name))
 	})
+}
+
+func TestSendOverdueRemindersScopesProjectsPerUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	events.ClearDispatchedEvents()
+
+	task1 := &Task{ID: 1, ProjectID: 1}
+	task32 := &Task{ID: 32, ProjectID: 3}
+	uts := map[int64]*userWithTasks{
+		1: {user: &user.User{ID: 1}, assigned: map[int64]*Task{}, followed: map[int64]*Task{1: task1}},
+		3: {user: &user.User{ID: 3}, assigned: map[int64]*Task{}, followed: map[int64]*Task{32: task32}},
+	}
+
+	require.NoError(t, sendOverdueReminders(s, uts, false, false, true))
+
+	dispatched := events.GetDispatchedEvents((&TasksOverdueEvent{}).Name())
+	require.Len(t, dispatched, 2)
+	for _, e := range dispatched {
+		ev := e.(*TasksOverdueEvent)
+		switch ev.User.ID {
+		case 1:
+			assert.Len(t, ev.Projects, 1)
+			assert.Contains(t, ev.Projects, int64(1))
+		case 3:
+			assert.Len(t, ev.Projects, 1)
+			assert.Contains(t, ev.Projects, int64(3))
+		default:
+			t.Fatalf("unexpected user %d", ev.User.ID)
+		}
+	}
 }

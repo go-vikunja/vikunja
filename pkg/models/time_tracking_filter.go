@@ -38,7 +38,8 @@ func entriesForProjectCond(projectIDCond builder.Cond) builder.Cond {
 	return builder.Or(
 		projectIDCond,
 		builder.In("task_id",
-			builder.Select("id").From("tasks").Where(builder.And(projectIDCond, taskNotDeletedCond("tasks"))),
+			// Entries of trashed tasks stay visible, read-only
+			builder.Select("id").From("tasks").Where(projectIDCond),
 		),
 	)
 }
@@ -71,10 +72,11 @@ func timeEntryFilterCond(filter, filterTimezone string) (builder.Cond, error) {
 		}
 	}
 
-	return buildTimeEntryFilterCond(parsed, loc)
+	var budget businessDayBudget
+	return buildTimeEntryFilterCond(parsed, loc, &budget)
 }
 
-func buildTimeEntryFilterCond(groups []fexpr.ExprGroup, loc *time.Location) (builder.Cond, error) {
+func buildTimeEntryFilterCond(groups []fexpr.ExprGroup, loc *time.Location, budget *businessDayBudget) (builder.Cond, error) {
 	conds := make([]builder.Cond, 0, len(groups))
 	joins := make([]taskFilterConcatinator, 0, len(groups))
 
@@ -90,12 +92,12 @@ func buildTimeEntryFilterCond(groups []fexpr.ExprGroup, loc *time.Location) (bui
 		)
 		switch item := g.Item.(type) {
 		case []fexpr.ExprGroup: // a parenthesized sub-expression
-			cond, err = buildTimeEntryFilterCond(item, loc)
+			cond, err = buildTimeEntryFilterCond(item, loc, budget)
 		case fexpr.Expr:
 			var comparator taskFilterComparator
 			comparator, err = getFilterComparatorFromOp(item.Op)
 			if err == nil {
-				cond, err = resolveTimeEntryFilter(item.Left.Literal, comparator, item.Right.Literal, loc)
+				cond, err = resolveTimeEntryFilter(item.Left.Literal, comparator, item.Right.Literal, loc, budget)
 			}
 		}
 		if err != nil {
@@ -119,9 +121,13 @@ func buildTimeEntryFilterCond(groups []fexpr.ExprGroup, loc *time.Location) (bui
 	return result, nil
 }
 
-func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw string, loc *time.Location) (builder.Cond, error) {
+func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw string, loc *time.Location, budget *businessDayBudget) (builder.Cond, error) {
 	switch field {
 	case "user_id", "task_id":
+		if field == "task_id" && raw == "null" {
+			isNull := zeroOrNullCond(field)
+			return nullFilterCond(field, isNull, builder.Not{isNull}, comparator)
+		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
 			return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: raw}
@@ -129,6 +135,11 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 		return getFilterCond(&taskFilter{field: field, value: value, comparator: comparator, isNumeric: true}, false)
 
 	case "project", "project_id":
+		// A task always has a project, so "no project" means no container at all
+		if raw == "null" {
+			isNull := timeEntryWithoutContainerCond()
+			return nullFilterCond("project_id", isNull, builder.Not{isNull}, comparator)
+		}
 		value, err := timeEntryIntFilterValue(raw, comparator)
 		if err != nil {
 			return nil, ErrInvalidTimeEntryFilterValue{Field: "project_id", Value: raw}
@@ -155,9 +166,10 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 
 	case "start_time", "end_time":
 		if raw == "null" {
-			return nullTimeFilterCond(field, comparator)
+			// NotNull, not Not{IsNull}: that renders "NOT col IS NULL", which flips under MySQL HIGH_NOT_PRECEDENCE.
+			return nullFilterCond(field, builder.IsNull{field}, builder.NotNull{field}, comparator)
 		}
-		value, err := timeEntryTimeFilterValue(raw, loc)
+		value, err := timeEntryTimeFilterValue(raw, loc, budget)
 		if err != nil {
 			return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: raw}
 		}
@@ -168,13 +180,12 @@ func resolveTimeEntryFilter(field string, comparator taskFilterComparator, raw s
 	}
 }
 
-// nullTimeFilterCond handles `end_time = null` (running timers) and its negation.
-func nullTimeFilterCond(field string, comparator taskFilterComparator) (builder.Cond, error) {
+func nullFilterCond(field string, isNull, notNull builder.Cond, comparator taskFilterComparator) (builder.Cond, error) {
 	if comparator == taskFilterComparatorEquals {
-		return &builder.IsNull{field}, nil
+		return isNull, nil
 	}
 	if comparator == taskFilterComparatorNotEquals {
-		return &builder.NotNull{field}, nil
+		return notNull, nil
 	}
 	return nil, ErrInvalidTimeEntryFilterValue{Field: field, Value: "null"}
 }
@@ -197,9 +208,12 @@ func timeEntryIntFilterValue(raw string, comparator taskFilterComparator) (any, 
 
 // timeEntryTimeFilterValue mirrors the task filter's date handling: datemath
 // (now, now-7d) first, then explicit date formats.
-func timeEntryTimeFilterValue(raw string, loc *time.Location) (time.Time, error) {
+func timeEntryTimeFilterValue(raw string, loc *time.Location, budget *businessDayBudget) (time.Time, error) {
 	if loc == nil {
 		loc = config.GetTimeZone()
+	}
+	if err := budget.spend(raw); err != nil {
+		return time.Time{}, err
 	}
 	if expr, err := safeDatemathParse(raw); err == nil {
 		// UTC for the same reason as the task filter, see getValueForField.

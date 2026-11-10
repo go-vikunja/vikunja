@@ -236,13 +236,7 @@
 		},
 		"delete": {
 			"title": "Ištrinti \"{project}\"",
-			"header": "Ištrinti šį projektą",
-			"text1": "Ar esi tikra -s, kad nori ištrinti šį projektą su visu turiniu?",
-			"text2": "Tai reiškia su visomis užduotimis ir TO NEBUS GALIMA ATKURTI!",
-			"success": "Projektas buvo sėkmingai ištrintas.",
-			"tasksToDelete": "Tai negrįžtamai ištrins apytiksliai {count} užduotį.",
-			"tasksAndChildProjectsToDelete": "Tai negrįžtamai ištrins apytiksliai {tasks} užduotis ir {projects} projektus.",
-			"noTasksToDelete": "Šis projektas neturi jokių užduočių, todėl turėtų būti saugu ištrinti."
+			"header": "Ištrinti šį projektą"
 		},
 		"duplicate": {
 			"title": "Dubliuoti šį projektą",
@@ -714,17 +708,11 @@
 			"updated": "Atnaujinta {0}",
 			"doneAt": "Atlikta {0}",
 			"updateSuccess": "Užduotis buvo sėkmingai išsaugota.",
-			"deleteSuccess": "Užduotis buvo sėkmingai ištrinta.",
 			"belongsToProject": "Ši užduotis priklauso projektui '{project}'",
 			"due": "Iki {at}",
 			"organization": "Organizacija",
 			"management": "Vadyba",
 			"dateAndTime": "Data ir laikas",
-			"delete": {
-				"header": "Ištrinti šią užduotį",
-				"text1": "Ar esi tikra -s, kad nori ištrinti šią užduotį?",
-				"text2": "Tai taip pat ištrins visus prisegtukus, priminimus ir ryšius susietus su šia užduotimi ir to atstatyti nebus galima!"
-			},
 			"actions": {
 				"assign": "Priskirti vartotojui",
 				"label": "Pridėti etiketes",

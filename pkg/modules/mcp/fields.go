@@ -101,17 +101,24 @@ func (t fieldTree) apply(v any) any {
 		}
 		return out
 	case map[string]any:
-		out := make(map[string]any, len(t))
+		var out map[string]any
 		for k, sub := range t {
 			val, ok := x[k]
-			switch {
-			case !ok:
+			if !ok {
 				continue
-			case sub == nil:
+			}
+			if out == nil {
+				out = make(map[string]any, len(t))
+			}
+			if sub == nil {
 				out[k] = val
-			default:
+			} else {
 				out[k] = sub.apply(val)
 			}
+		}
+		if out == nil {
+			// Never fall back to the full object.
+			return map[string]any{}
 		}
 		return out
 	}

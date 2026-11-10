@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -275,6 +276,12 @@ func TestHumaOAuth(t *testing.T) {
 		form := url.Values{"grant_type": {"password"}, "client_id": {"vikunja"}}
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/token", form.Encode(), "", "application/x-www-form-urlencoded")
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("oversized form body", func(t *testing.T) {
+		form := url.Values{"grant_type": {"authorization_code"}, "code": {strings.Repeat("a", 64<<10)}}
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/token", form.Encode(), "", "application/x-www-form-urlencoded")
+		assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Code, rec.Body.String())
 	})
 }
 

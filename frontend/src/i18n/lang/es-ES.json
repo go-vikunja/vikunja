@@ -175,12 +175,7 @@
 		},
 		"delete": {
 			"title": "Eliminar \"{project}\"",
-			"header": "Eliminar este proyecto",
-			"text1": "¿Estás seguro de que quieres eliminar este proyecto y todo su contenido?",
-			"text2": "¡Esto incluye todas las tareas y NO SE PUEDE DESHACER!",
-			"success": "El proyecto se eliminó con éxito.",
-			"tasksToDelete": "Esto eliminará de forma definitiva aprox. {count} tareas.",
-			"noTasksToDelete": "Este proyecto no contiene tareas. Debería ser seguro eliminarlo."
+			"header": "Eliminar este proyecto"
 		},
 		"duplicate": {
 			"title": "Duplicar este proyecto",
@@ -488,14 +483,8 @@
 			"updated": "Actualizado {0}",
 			"doneAt": "Hecho {0}",
 			"updateSuccess": "La tarea se ha guardado con éxito.",
-			"deleteSuccess": "La tarea se ha eliminado con éxito.",
 			"belongsToProject": "Esta tarea pertenece al proyecto '{project}'",
 			"due": "Vence {at}",
-			"delete": {
-				"header": "Eliminar esta tarea",
-				"text1": "¿Está seguro que desea eliminar esta tarea?",
-				"text2": "También se eliminará todos los adjuntos, recordatorios y relaciones asociadas a esta tarea y ¡no se puede deshacer!"
-			},
 			"actions": {
 				"assign": "Asignar al Usuario",
 				"label": "Añadir Etiquetas",

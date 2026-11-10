@@ -31,6 +31,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -270,33 +271,6 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 	return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid JWT token.")
 }
 
-// ValidateAPITokenString looks up an API token by its raw string, checks expiry,
-// and returns the token and its owner. This is the shared validation logic used
-// by both the HTTP middleware and WebSocket auth.
-func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, error) {
-	s := db.NewReadSession()
-	defer s.Close()
-
-	token, err := models.GetTokenFromTokenString(s, tokenString)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if time.Now().After(token.ExpiresAt) {
-		return nil, nil, fmt.Errorf("API token %d expired on %s", token.ID, token.ExpiresAt.String())
-	}
-
-	u, err := user.GetUserByID(s, token.OwnerID)
-	if err != nil {
-		if user.IsErrUserStatusError(err) {
-			return nil, nil, fmt.Errorf("API token %d owner account is disabled or locked", token.ID)
-		}
-		return nil, nil, err
-	}
-
-	return token, u, nil
-}
-
 type UserTokenClaims struct {
 	UserID    int64
 	SessionID string
@@ -314,14 +288,25 @@ func ParseUserToken(tokenString string) (*UserTokenClaims, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
 	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
+	if !token.Valid || !IsUserToken(token) {
 		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
+	return UserTokenClaimsFromJWT(token)
+}
+
+func IsUserToken(token *jwt.Token) bool {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return false
+	}
 	typ, ok := claims["type"].(float64)
-	if !ok || int(typ) != AuthTypeUser {
+	return ok && int(typ) == AuthTypeUser
+}
+
+func UserTokenClaimsFromJWT(token *jwt.Token) (*UserTokenClaims, error) {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
 		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
@@ -343,8 +328,29 @@ func ParseUserToken(tokenString string) (*UserTokenClaims, error) {
 	}, nil
 }
 
+// Successes are cached for user.SessionAuthCacheTTL; session deletions and status changes bust the cache.
 func CheckUserTokenSession(claims *UserTokenClaims) error {
-	s := db.NewSession()
+	key, err := user.SessionAuthCacheKey(claims.UserID, claims.SessionID)
+	if err != nil {
+		log.Errorf("Could not read session check cache for user %d: %s", claims.UserID, err)
+		return checkUserTokenSessionInDB(claims)
+	}
+	if _, cached, err := keyvalue.Get(key); err == nil && cached {
+		return nil
+	}
+
+	if err := checkUserTokenSessionInDB(claims); err != nil {
+		return err
+	}
+
+	if err := keyvalue.PutWithTTL(key, true, user.SessionAuthCacheTTL); err != nil {
+		log.Errorf("Could not cache session check for user %d: %s", claims.UserID, err)
+	}
+	return nil
+}
+
+func checkUserTokenSessionInDB(claims *UserTokenClaims) error {
+	s := db.NewReadSession()
 	defer s.Close()
 
 	session, err := models.GetSessionByID(s, claims.SessionID)
@@ -358,8 +364,8 @@ func CheckUserTokenSession(claims *UserTokenClaims) error {
 		return err
 	}
 
-	_, err = user.GetUserByID(s, claims.UserID)
-	if user.IsErrUserDoesNotExist(err) || user.IsErrUserStatusError(err) {
+	_, err = user.GetUserByIDForAuth(s, claims.UserID)
+	if user.IsErrUserDoesNotExist(err) || user.IsErrUserCannotAuthenticate(err) {
 		return fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
 	}
 	return err
@@ -403,7 +409,7 @@ type RefreshResult struct {
 // rotates the refresh token, fetches the user, and generates a new JWT.
 // It handles its own DB session (open/commit/rollback).
 //
-// On user status errors (disabled/locked), the session is deleted before
+// When the user can no longer authenticate, the session is deleted before
 // returning the error so the caller can handle cleanup (e.g. clearing cookies).
 func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 	s := db.NewSession()
@@ -447,9 +453,9 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 		return nil, err
 	}
 
-	u, err := user.GetUserByID(s, session.UserID)
+	u, err := user.GetUserByIDForAuth(s, session.UserID)
 	if err != nil {
-		if user.IsErrUserStatusError(err) {
+		if user.IsErrUserCannotAuthenticate(err) {
 			if _, delErr := s.Where("id = ?", session.ID).Delete(&models.Session{}); delErr != nil {
 				_ = s.Rollback()
 				return nil, delErr
@@ -487,7 +493,7 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 // concurrent refresh: that would delete the cookie the winning refresh just set.
 func IsUnusableRefreshToken(err error) bool {
 	var expired *models.ErrSessionExpired
-	return errors.As(err, &expired) || user.IsErrUserStatusError(err)
+	return errors.As(err, &expired) || user.IsErrUserCannotAuthenticate(err)
 }
 
 // SessionIDFromContext reads the session id (the `sid` claim) off the user JWT

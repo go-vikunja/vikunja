@@ -27,6 +27,9 @@ import (
 	"xorm.io/xorm"
 )
 
+// Every kanban read runs one task query per bucket.
+const maxBucketsPerView = 100
+
 // Bucket represents a kanban bucket
 type Bucket struct {
 	// The unique, numeric id of this bucket.

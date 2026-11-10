@@ -25,13 +25,17 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"io/fs"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/textproto"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
@@ -147,11 +151,7 @@ func TestAvatarUpload(t *testing.T) {
 	})
 
 	t.Run("Undecodable image (SVG) rejected with 400", func(t *testing.T) {
-		// SVG sniffs as image/svg+xml, passing the mimetype prefix check, but
-		// image.Decode/DecodeConfig has no SVG decoder. Sent as octet-stream it
-		// bypasses the part content-type allow-list, so the byte-level decode
-		// validation in StoreUploadedAvatar is what must reject it. This must be
-		// a 400 (ErrNotAnImage), not a 500 from a failed decode deeper in storage.
+		// Sniffs as image/svg+xml but has no decoder: 400, not 500.
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 		token := humaTokenFor(t, &testuser1)
@@ -217,6 +217,43 @@ func pngWithClaimedDimensionsPatch(t *testing.T, width, height int) []byte {
 	return data
 }
 
+func TestAvatarUploadRemovesReplacedFile(t *testing.T) {
+	for _, path := range []string{avatarUploadPath, "/api/v1/user/settings/avatar/upload"} {
+		t.Run(path, func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			token := humaTokenFor(t, &testuser1)
+
+			upload := func() int64 {
+				body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+				req := httptest.NewRequest(http.MethodPut, path, body)
+				req.Header.Set("Content-Type", contentType)
+				req.Header.Set("Authorization", "Bearer "+token)
+				rec := httptest.NewRecorder()
+				e.ServeHTTP(rec, req)
+				require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+				s := db.NewSession()
+				defer s.Close()
+				u, err := user.GetUserByID(s, testuser1.ID)
+				require.NoError(t, err)
+				return u.AvatarFileID
+			}
+
+			oldID := upload()
+			require.NotZero(t, oldID)
+			_, err = files.FileStat(&files.File{ID: oldID})
+			require.NoError(t, err)
+
+			newID := upload()
+			require.NotEqual(t, oldID, newID)
+			db.AssertMissing(t, "files", map[string]interface{}{"id": oldID})
+			_, err = files.FileStat(&files.File{ID: oldID})
+			require.ErrorIs(t, err, fs.ErrNotExist)
+		})
+	}
+}
+
 // Guards image allocation bounds (GHSA-4vh2-39rq-rq8j).
 func TestAvatarUploadImageBounds(t *testing.T) {
 	t.Run("8000 by 8000 avatar upload is rejected", func(t *testing.T) {
@@ -227,6 +264,7 @@ func TestAvatarUploadImageBounds(t *testing.T) {
 		body, contentType := multipartAvatarBody(t, "avatar", "bomb.png", pngWithClaimedDimensionsPatch(t, 8000, 8000))
 		rec := uploadAvatarRequest(t, e, body, contentType, token)
 		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeImageTooLarge))
 	})
 
 	t.Run("avatar reads are fitted, never upscaled", func(t *testing.T) {
@@ -234,7 +272,10 @@ func TestAvatarUploadImageBounds(t *testing.T) {
 		require.NoError(t, err)
 		token := humaTokenFor(t, &testuser1)
 
-		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		// Larger than the smallest allowed avatar size (16), so a fit is observable.
+		src := &bytes.Buffer{}
+		require.NoError(t, png.Encode(src, image.NewRGBA(image.Rect(0, 0, 64, 64))))
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", src.Bytes())
 		rec := uploadAvatarRequest(t, e, body, contentType, token)
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 
@@ -247,14 +288,100 @@ func TestAvatarUploadImageBounds(t *testing.T) {
 		}
 
 		t.Run("smaller size scales down", func(t *testing.T) {
-			img := get(t, "4")
-			assert.Equal(t, 4, img.Bounds().Dx())
-			assert.Equal(t, 4, img.Bounds().Dy())
+			img := get(t, "16")
+			assert.Equal(t, 16, img.Bounds().Dx())
+			assert.Equal(t, 16, img.Bounds().Dy())
 		})
 		t.Run("larger size keeps the native size", func(t *testing.T) {
 			img := get(t, "1024")
-			assert.Equal(t, 8, img.Bounds().Dx(), "Fit must not upscale a small source")
-			assert.Equal(t, 8, img.Bounds().Dy())
+			assert.Equal(t, 64, img.Bounds().Dx(), "Fit must not upscale a small source")
+			assert.Equal(t, 64, img.Bounds().Dy())
 		})
+	})
+}
+
+func TestAvatarDecodeIsBounded(t *testing.T) {
+	t.Run("busy upload is a 503 and keeps the previous avatar", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		rec := uploadAvatarRequest(t, e, body, contentType, token)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		release := imageutils.ExhaustBudgetForTests(10 * time.Millisecond)
+		t.Cleanup(release)
+		body, contentType = multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		rec = uploadAvatarRequest(t, e, body, contentType, token)
+		assert.Equal(t, http.StatusServiceUnavailable, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeDecodeBusy))
+
+		release()
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/avatar/"+testuser1.Username+"?size=7", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		_, _, err = image.Decode(bytes.NewReader(rec.Body.Bytes()))
+		require.NoError(t, err, "the previous avatar must still be readable")
+	})
+
+	t.Run("queued upload holds no transaction", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		release := imageutils.ExhaustBudgetForTests(time.Minute)
+		t.Cleanup(release)
+
+		ctx := &doneSignalCtx{Context: t.Context(), waiting: make(chan struct{})}
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		req := httptest.NewRequest(http.MethodPut, avatarUploadPath, body).WithContext(ctx)
+		req.Header.Set("Content-Type", contentType)
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		finished := make(chan struct{})
+		go func() {
+			defer close(finished)
+			e.ServeHTTP(rec, req)
+		}()
+
+		select {
+		case <-ctx.waiting:
+		case <-time.After(5 * time.Second):
+			require.FailNow(t, "the upload never queued for decode capacity")
+		}
+		s := db.NewSession()
+		_, err = s.ID(testuser2.ID).Cols("name").Update(&user.User{Name: "written while an upload is queued"})
+		if err == nil {
+			err = s.Commit()
+		}
+		s.Close()
+		require.NoError(t, err)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":   testuser2.ID,
+			"name": "written while an upload is queued",
+		}, false)
+
+		release()
+		select {
+		case <-finished:
+		case <-time.After(10 * time.Second):
+			require.FailNow(t, "the upload did not finish after the budget was released")
+		}
+		assert.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("busy avatar read is a 503", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.png", pngBytes(t))
+		rec := uploadAvatarRequest(t, e, body, contentType, token)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		t.Cleanup(imageutils.ExhaustBudgetForTests(10 * time.Millisecond))
+		rec = humaRequest(t, e, http.MethodGet, "/api/v2/avatar/"+testuser1.Username+"?size=6", "", token, "")
+		assert.Equal(t, http.StatusServiceUnavailable, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeDecodeBusy))
 	})
 }

@@ -25,6 +25,8 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 
@@ -149,6 +151,49 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 			"name": "evil.bin",
 			"size": 0,
 		})
+	})
+	t.Run("dispatches events queued while importing saved filters", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		var zipBuf bytes.Buffer
+		zw := zip.NewWriter(&zipBuf)
+		for name, content := range map[string]string{
+			"VERSION":      "dev",
+			"data.json":    "[]",
+			"filters.json": `[{"title":"imported filter","filters":{"filter":"done = false"}}]`,
+		} {
+			w, err := zw.Create(name)
+			require.NoError(t, err)
+			_, err = w.Write([]byte(content))
+			require.NoError(t, err)
+		}
+		require.NoError(t, zw.Close())
+
+		m := &FileMigrator{}
+		u := &user.User{ID: 1}
+		reader := bytes.NewReader(zipBuf.Bytes())
+
+		events.ClearDispatchedEvents()
+		require.NoError(t, m.Migrate(u, reader, int64(reader.Len())))
+
+		s := db.NewSession()
+		defer s.Close()
+		sf := &models.SavedFilter{}
+		has, err := s.Where("title = ? AND owner_id = ?", "imported filter", u.ID).Get(sf)
+		require.NoError(t, err)
+		require.True(t, has)
+		filterViewIDs := []int64{}
+		require.NoError(t, s.Table("project_views").Where("project_id = ?", -sf.ID-1).Cols("id").Find(&filterViewIDs))
+		require.NotEmpty(t, filterViewIDs)
+
+		dispatched := events.GetDispatchedEvents((&models.TaskPositionsRecalculatedEvent{}).Name())
+		require.NotEmpty(t, dispatched)
+		for _, e := range dispatched {
+			recalculated, ok := e.(*models.TaskPositionsRecalculatedEvent)
+			require.True(t, ok, "dispatched %T", e)
+			require.NotEmpty(t, recalculated.NewTaskPositions)
+			assert.Contains(t, filterViewIDs, recalculated.NewTaskPositions[0].ProjectViewID)
+		}
 	})
 	t.Run("should not accept an old import", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

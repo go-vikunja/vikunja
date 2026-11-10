@@ -62,9 +62,13 @@ func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMess
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
 	}
-	fields, err := takeFields(args)
-	if err != nil {
-		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
+	var fields fieldTree
+	// Without a projection, fields is a body field of the route (e.g. tasks bulk update).
+	if t.spec.projection != noProjection {
+		fields, err = takeFields(args)
+		if err != nil {
+			return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
+		}
 	}
 	req, err := t.newRequest(ctx, ec, args)
 	if err != nil {

@@ -19,6 +19,7 @@ package caldav
 // This file tests logic related to handling tasks in CALDAV format
 
 import (
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -576,6 +577,37 @@ END:VCALENDAR`
 	})
 }
 
+// A plain parse error made caldav-go answer 500, which clients retry forever (#4248).
+func TestNonVTODOContentIsForbidden(t *testing.T) {
+	const eventContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//EN
+BEGIN:VEVENT
+UID:uid-caldav-test
+DTSTART:19700101T000000Z
+SUMMARY:Non-task event
+END:VEVENT
+END:VCALENDAR`
+
+	t.Run("create", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := storageFor(caldavFilterUser, 36)
+		_, err := storage.CreateResource(projectPath(36)+"uid-caldav-event.ics", eventContent)
+		require.ErrorIs(t, err, errs.ForbiddenError)
+	})
+
+	t.Run("update", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		storage := storageFor(caldavFilterUser, 36)
+		storage.task = &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}
+		_, err := storage.UpdateResource(projectPath(36)+"uid-caldav-test.ics", eventContent)
+		require.ErrorIs(t, err, errs.ForbiddenError)
+		db.AssertCount(t, "tasks", builder.Eq{"id": 40, "title": "Title Caldav Test"}, 1)
+	})
+}
+
 // TestGetResourcesByList_URLProjectConsistency covers GHSA-48ch-p4gq-x46x.
 func TestGetResourcesByList_URLProjectConsistency(t *testing.T) {
 	u := &user.User{
@@ -837,5 +869,71 @@ func TestPersistRelations_AuthorizesRelationUIDs(t *testing.T) {
 			"other_task_id": taskC.ID,
 			"relation_kind": models.RelationKindParenttask,
 		}, false)
+	})
+}
+
+// GHSA-c934-xjq2-mrg3
+func TestPersistRelations_BoundsPlaceholders(t *testing.T) {
+	setup := func(t *testing.T) (s *xorm.Session, proj *models.Project, taskA *models.Task, owner *user.User) {
+		t.Helper()
+		db.LoadAndAssertFixtures(t)
+		s = db.NewSession()
+
+		owner = &user.User{ID: 1}
+		proj = &models.Project{Title: "persist-rel fan-out project"}
+		require.NoError(t, proj.Create(s, owner))
+		taskA = &models.Task{Title: "persist-rel fan-out base", ProjectID: proj.ID, UID: "uid-persist-rel-fanout-base"}
+		require.NoError(t, taskA.Create(s, owner))
+		require.NoError(t, s.Commit())
+		return
+	}
+
+	t.Run("duplicate UIDs create one placeholder", func(t *testing.T) {
+		s, proj, taskA, owner := setup(t)
+		defer s.Close()
+
+		newRelations := map[models.RelationKind][]*models.Task{
+			models.RelationKindParenttask: {{UID: "uid-dup"}, {UID: "uid-dup"}, {UID: "uid-dup"}},
+		}
+		require.NoError(t, persistRelations(s, owner, &models.Task{ID: taskA.ID, ProjectID: proj.ID}, newRelations))
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "tasks", builder.Eq{"project_id": proj.ID, "title": "DUMMY-UID-uid-dup"}, 1)
+	})
+
+	t.Run("placeholders are capped per VTODO", func(t *testing.T) {
+		s, proj, taskA, owner := setup(t)
+		defer s.Close()
+
+		related := make([]*models.Task, 0, maxPlaceholdersPerVTODO+10)
+		for i := range maxPlaceholdersPerVTODO + 10 {
+			related = append(related, &models.Task{UID: fmt.Sprintf("uid-fanout-%d", i)})
+		}
+		newRelations := map[models.RelationKind][]*models.Task{models.RelationKindParenttask: related}
+		require.NoError(t, persistRelations(s, owner, &models.Task{ID: taskA.ID, ProjectID: proj.ID}, newRelations))
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "tasks", builder.Like{"title", "DUMMY-UID-uid-fanout-%"}, int64(maxPlaceholdersPerVTODO))
+	})
+
+	t.Run("existing tasks are linked beyond the placeholder cap", func(t *testing.T) {
+		s, proj, taskA, owner := setup(t)
+		defer s.Close()
+
+		related := make([]*models.Task, 0, maxPlaceholdersPerVTODO+10)
+		var existingIDs []int64
+		for i := range maxPlaceholdersPerVTODO + 10 {
+			existing := &models.Task{Title: "existing", ProjectID: proj.ID, UID: fmt.Sprintf("uid-existing-%d", i)}
+			require.NoError(t, existing.Create(s, owner))
+			existingIDs = append(existingIDs, existing.ID)
+			related = append(related, &models.Task{UID: existing.UID})
+		}
+		require.NoError(t, s.Commit())
+
+		newRelations := map[models.RelationKind][]*models.Task{models.RelationKindSubtask: related}
+		require.NoError(t, persistRelations(s, owner, &models.Task{ID: taskA.ID, ProjectID: proj.ID}, newRelations))
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "task_relations", builder.And(builder.Eq{"task_id": taskA.ID, "relation_kind": models.RelationKindSubtask}, builder.In("other_task_id", existingIDs)), int64(len(existingIDs)))
 	})
 }

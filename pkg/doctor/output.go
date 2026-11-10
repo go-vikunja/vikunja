@@ -19,6 +19,9 @@ package doctor
 import (
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/fatih/color"
 )
@@ -55,11 +58,28 @@ func printResult(w io.Writer, result CheckResult) {
 		}
 	}
 
-	fmt.Fprintf(w, "  %s %s: %s\n", marker, result.Name, value)
+	fmt.Fprintf(w, "  %s %s: %s\n", marker, escapeControl(result.Name), escapeControl(value))
 
 	for _, line := range result.Lines {
-		fmt.Fprintf(w, "      %s\n", line)
+		fmt.Fprintf(w, "      %s\n", escapeControl(line))
 	}
+}
+
+// Values can come from the database or remote providers; keep them on one line and free of terminal escapes.
+func escapeControl(s string) string {
+	if strings.IndexFunc(s, unicode.IsControl) == -1 {
+		return s
+	}
+	var b strings.Builder
+	for _, r := range s {
+		if unicode.IsControl(r) {
+			q := strconv.QuoteRune(r)
+			b.WriteString(q[1 : len(q)-1])
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
 // CountFailed returns the number of failed checks across all groups.

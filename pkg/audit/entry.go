@@ -113,6 +113,8 @@ const (
 	ActionTaskCreated           = "task.created"
 	ActionTaskUpdated           = "task.updated"
 	ActionTaskDeleted           = "task.deleted"
+	ActionTaskRestored          = "task.restored"
+	ActionTaskPurged            = "task.purged"
 	ActionTaskAssigneeAdded     = "task.assignee.added"
 	ActionTaskAssigneeRemoved   = "task.assignee.removed"
 	ActionTaskCommentCreated    = "task.comment.created"
@@ -126,6 +128,8 @@ const (
 	ActionProjectCreated        = "project.created"
 	ActionProjectUpdated        = "project.updated"
 	ActionProjectDeleted        = "project.deleted"
+	ActionProjectRestored       = "project.restored"
+	ActionProjectPurged         = "project.purged"
 	ActionProjectSharedWithUser = "project.shared.user"
 	ActionProjectSharedWithTeam = "project.shared.team"
 

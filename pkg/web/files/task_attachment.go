@@ -22,6 +22,7 @@ package files
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -62,20 +63,15 @@ func toAttachmentUploadError(err error) AttachmentUploadError {
 	return AttachmentUploadError{Message: err.Error()}
 }
 
-// WriteAttachmentDownload streams the attachment (or its inline image preview) to
-// the response and closes the file reader. The non-preview path delegates to
-// WriteFileDownload, which sets Cache-Control: no-cache; the preview branch returns
-// early, so it sets the same header itself.
-func WriteAttachmentDownload(w http.ResponseWriter, r *http.Request, ta *models.TaskAttachment, preview []byte) {
-	defer func() { _ = ta.File.File.Close() }()
+// WriteAttachmentPreview streams an inline image preview to the response and closes it.
+func WriteAttachmentPreview(w http.ResponseWriter, preview *models.TaskAttachmentPreview) {
+	defer func() { _ = preview.Close() }()
 
-	if preview != nil {
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Content-Type", "image/png")
-		w.Header().Set("Content-Length", strconv.Itoa(len(preview)))
-		_, _ = w.Write(preview)
-		return
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Type", preview.Mime)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if preview.Size >= 0 {
+		w.Header().Set("Content-Length", strconv.FormatInt(preview.Size, 10))
 	}
-
-	WriteFileDownload(w, r, ta.File)
+	_, _ = io.Copy(w, preview)
 }

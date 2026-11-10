@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	webfiles "code.vikunja.io/api/pkg/web/files"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -80,13 +81,14 @@ func RegisterTaskAttachmentRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "task-attachments-download",
 		Summary:     "Download a task attachment",
-		Description: "Returns the raw bytes of one attachment. Requires read access to the task. Pass preview_size to get a downscaled PNG preview instead — only for image attachments; for non-images or an unknown size the original file is returned. The Content-Type header carries the file's real mime type.",
+		Description: "Returns the raw bytes of one attachment. Requires read access to the task. For a downscaled image, use the preview endpoint.",
 		Method:      http.MethodGet,
 		Path:        "/tasks/{task}/attachments/{attachment}",
 		Tags:        tags,
 		// Spell out the binary response; a bare []byte Body would otherwise be
 		// modeled as a base64 JSON string instead of binary file data.
 		Responses: map[string]*huma.Response{
+			"default": defaultErrorResponse(api),
 			"200": {
 				Description: "The attachment file bytes. The Content-Type header carries the file's mime type.",
 				Content: map[string]*huma.MediaType{
@@ -97,6 +99,33 @@ func RegisterTaskAttachmentRoutes(api huma.API) {
 			},
 		},
 	}, taskAttachmentsDownload)
+
+	Register(api, huma.Operation{
+		OperationID: "task-attachments-preview",
+		Summary:     "Get a preview of a task attachment",
+		Description: "Returns a downscaled preview of an image attachment, as a JPEG or, when the image has transparency, as a PNG. Requires read access to the task. Never returns the original: when no preview can be made of the attachment (not an image, undecodable, or too large) the request fails with 422 and code 4038. Fails with 503 and code 4037 when the server is too busy generating other previews.",
+		Method:      http.MethodGet,
+		Path:        "/tasks/{task}/attachments/{attachment}/preview",
+		Tags:        tags,
+		Responses: map[string]*huma.Response{
+			"default": defaultErrorResponse(api),
+			"200": {
+				Description: "The preview image bytes.",
+				Content: map[string]*huma.MediaType{
+					"image/jpeg": {
+						Schema: &huma.Schema{Type: huma.TypeString, Format: "binary"},
+					},
+					"image/png": {
+						Schema: &huma.Schema{Type: huma.TypeString, Format: "binary"},
+					},
+				},
+			},
+			"422": {
+				Description: "The attachment has no preview (code 4038), or size is missing or invalid.",
+				Content:     defaultErrorResponse(api).Content,
+			},
+		},
+	}, taskAttachmentsPreview)
 
 	Register(api, huma.Operation{
 		OperationID: "task-attachments-delete",
@@ -150,13 +179,16 @@ func taskAttachmentsUpload(ctx context.Context, in *taskAttachmentUploadInput) (
 	success, failures, err := models.UploadTaskAttachments(s, a, in.TaskID, uploads)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 
 	return &taskAttachmentUploadBody{Body: webfiles.BuildUploadResult(success, failures)}, nil
 }
@@ -164,25 +196,44 @@ func taskAttachmentsUpload(ctx context.Context, in *taskAttachmentUploadInput) (
 // taskAttachmentsDownload exists because no handler.Do* fits a file body; bytes
 // stream from the StreamResponse callback without buffering — attachments can be large.
 func taskAttachmentsDownload(ctx context.Context, in *struct {
-	TaskID       int64  `path:"task" doc:"The id of the task the attachment belongs to."`
-	AttachmentID int64  `path:"attachment" doc:"The id of the attachment to download."`
-	PreviewSize  string `query:"preview_size" enum:"sm,md,lg,xl" doc:"If set and the attachment is an image, return a downscaled PNG preview instead of the original: sm=100px, md=200px, lg=400px, xl=800px. Ignored for non-image attachments."`
+	TaskID       int64 `path:"task" doc:"The id of the task the attachment belongs to."`
+	AttachmentID int64 `path:"attachment" doc:"The id of the attachment to download."`
 }) (*huma.StreamResponse, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	previewSize := models.GetPreviewSizeFromString(in.PreviewSize)
-	ta, preview, err := models.GetTaskAttachmentForDownload(a, in.TaskID, in.AttachmentID, previewSize)
+	file, err := models.GetTaskAttachmentForDownload(a, in.TaskID, in.AttachmentID)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	// Reader is independent of the session; stays valid for the StreamResponse callback.
 	return &huma.StreamResponse{Body: func(hctx huma.Context) {
+		defer func() { _ = file.File.Close() }()
 		c := humaecho.Unwrap(hctx)
-		webfiles.WriteAttachmentDownload((*c).Response(), (*c).Request(), ta, preview)
+		webfiles.WriteFileDownload((*c).Response(), (*c).Request(), file)
+	}}, nil
+}
+
+func taskAttachmentsPreview(ctx context.Context, in *struct {
+	TaskID       int64  `path:"task" doc:"The id of the task the attachment belongs to."`
+	AttachmentID int64  `path:"attachment" doc:"The id of the attachment to preview."`
+	Size         string `query:"size" required:"true" enum:"sm,md,lg,xl" doc:"The width of the preview: sm=100px, md=200px, lg=400px, xl=800px. Smaller images are not upscaled."`
+}) (*huma.StreamResponse, error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	preview, err := models.GetTaskAttachmentPreview(ctx, a, in.TaskID, in.AttachmentID, models.GetPreviewSizeFromString(in.Size))
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	return &huma.StreamResponse{Body: func(hctx huma.Context) {
+		webfiles.WriteAttachmentPreview((*humaecho.Unwrap(hctx)).Response(), preview)
 	}}, nil
 }
 

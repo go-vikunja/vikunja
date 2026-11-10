@@ -26,6 +26,7 @@ import (
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -39,7 +40,8 @@ type migrationAuthURLBody struct {
 // to the server. It is applied onto the concrete migrator (whose field carries
 // json:"code") so it works across migrators regardless of their field name.
 type migrationMigrateBody struct {
-	Code string `json:"code" doc:"The OAuth code obtained after authorizing against the auth url."`
+	Code  string `json:"code" doc:"The OAuth code obtained after authorizing against the auth url."`
+	State string `json:"state" doc:"The state the service handed back to the callback. It is single-use, expires after 10 minutes and only works for the user who requested the auth url."`
 }
 
 // RegisterMigrationOAuthRoutes wires the OAuth-based migrators (Todoist, Trello,
@@ -47,9 +49,9 @@ type migrationMigrateBody struct {
 // config flag and exposes the same three operations, so registration is driven
 // by one generic helper instead of three copy-pasted blocks.
 func RegisterMigrationOAuthRoutes(api huma.API) {
-	registerOAuthMigrator(api, config.MigrationTodoistEnable.GetBool(), func() migration.Migrator { return &todoist.Migration{} })
-	registerOAuthMigrator(api, config.MigrationTrelloEnable.GetBool(), func() migration.Migrator { return &trello.Migration{} })
-	registerOAuthMigrator(api, config.MigrationMicrosoftTodoEnable.GetBool(), func() migration.Migrator { return &microsofttodo.Migration{} })
+	registerOAuthMigrator(api, config.MigrationTodoistEnable.GetBool(), func() migration.OAuthMigrator { return &todoist.Migration{} })
+	registerOAuthMigrator(api, config.MigrationTrelloEnable.GetBool(), func() migration.OAuthMigrator { return &trello.Migration{} })
+	registerOAuthMigrator(api, config.MigrationMicrosoftTodoEnable.GetBool(), func() migration.OAuthMigrator { return &microsofttodo.Migration{} })
 }
 
 func init() { AddRouteRegistrar(RegisterMigrationOAuthRoutes) }
@@ -58,7 +60,7 @@ func init() { AddRouteRegistrar(RegisterMigrationOAuthRoutes) }
 // migrator. enabled gates the whole migrator (config early-return, no
 // middleware); factory produces a fresh migrator instance per request, matching
 // v1's MigrationStruct func so concurrent requests never share mutable state.
-func registerOAuthMigrator(api huma.API, enabled bool, factory func() migration.Migrator) {
+func registerOAuthMigrator(api huma.API, enabled bool, factory func() migration.OAuthMigrator) {
 	if !enabled {
 		return
 	}
@@ -69,16 +71,29 @@ func registerOAuthMigrator(api huma.API, enabled bool, factory func() migration.
 	Register(api, huma.Operation{
 		OperationID: "migration-" + name + "-auth",
 		Summary:     "Get the auth url for " + name,
-		Description: "Returns the OAuth url the user needs to authenticate against. The code obtained there is passed back to the migrate endpoint.",
+		Description: "Returns the OAuth url the user needs to authenticate against. The url embeds a fresh state bound to the authenticated user; the code and state obtained there are passed back to the migrate endpoint.",
 		Method:      http.MethodGet,
 		Path:        "/migration/" + name + "/auth",
 		Tags:        tags,
-	}, func(_ context.Context, _ *struct{}) (*migrationAuthURLBody, error) {
-		return &migrationAuthURLBody{Body: migrationHandler.AuthURL{URL: factory().AuthURL()}}, nil
+	}, func(ctx context.Context, _ *struct{}) (*migrationAuthURLBody, error) {
+		a, err := authFromCtx(ctx)
+		if err != nil {
+			return nil, err
+		}
+		u, err := user.GetFromAuth(a)
+		if err != nil {
+			return nil, translateDomainError(err)
+		}
+		authURL, err := migration.AuthURLForUser(factory(), u.ID)
+		if err != nil {
+			return nil, translateDomainError(err)
+		}
+		return &migrationAuthURLBody{Body: migrationHandler.AuthURL{URL: authURL}}, nil
 	})
 
-	registerMigrationStatus(api, name, tags, factory)
+	migrator := func() migration.Migrator { return factory() }
+	registerMigrationStatus(api, name, tags, migrator)
 	registerMigrationMigrate[migrationMigrateBody](api, name, tags,
-		"Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 412 if a migration for this service is already running.",
-		factory)
+		"Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 400 if the state is missing, expired, already used or was issued to another user, and with 412 if a migration for this service is already running.",
+		migrator)
 }

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -28,24 +29,22 @@ import (
 	"xorm.io/xorm"
 )
 
-// TimeEntry is a single tracked time span attached to either a task or a
-// project — exactly one of TaskID / ProjectID is set (XOR). A running live
-// timer is just an entry whose EndTime is still null.
-//
-// v2-only: doc: tags are the schema's source of truth (no v1 swaggo), and it
-// implements CRUDable + Permissions because the shared handler.Do* pipeline needs them.
+// TimeEntry is a tracked time span on a task, a project, or neither.
 type TimeEntry struct {
 	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"timeentry" readOnly:"true" doc:"The unique, numeric id of this time entry."`
 
-	UserID int64 `xorm:"bigint not null INDEX" json:"user_id" readOnly:"true" doc:"The id of the user who logged this time entry. Set by the server."`
+	UserID int64      `xorm:"bigint not null INDEX" json:"-"`
+	User   *user.User `xorm:"-" json:"user" readOnly:"true" doc:"The user who logged this time entry. Set by the server."`
 
-	TaskID    int64 `xorm:"bigint null INDEX" json:"task_id" doc:"The task this entry is attached to. Exactly one of task_id / project_id must be set."`
-	ProjectID int64 `xorm:"bigint null INDEX" json:"project_id" doc:"The project this entry is attached to directly. Exactly one of task_id / project_id must be set."`
+	TaskID    int64 `xorm:"bigint null INDEX" json:"task_id" doc:"The task this entry is attached to; 0 means none. At most one of task_id / project_id may be set. On update, omitting both keeps the current container; sending either replaces it."`
+	ProjectID int64 `xorm:"bigint null INDEX" json:"project_id" doc:"The project this entry is attached to directly; 0 means none. At most one of task_id / project_id may be set. Entries without task and project are only visible to their author."`
 
 	StartTime time.Time  `xorm:"not null INDEX" json:"start_time" doc:"When the tracked time started."`
 	EndTime   *time.Time `xorm:"null" json:"end_time" doc:"When the tracked time ended. Null means a live timer is still running."`
 
 	Comment string `xorm:"text null" json:"comment" doc:"An optional comment describing the logged time."`
+
+	InTrash bool `xorm:"-" json:"in_trash" readOnly:"true" doc:"Whether the entry's task or project is in the trash. Such entries are read-only; while a project is in the trash, only their author sees them."`
 
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this time entry was created. You cannot change this value."`
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this time entry was last updated. You cannot change this value."`
@@ -54,8 +53,26 @@ type TimeEntry struct {
 	Filter         string `xorm:"-" json:"-"`
 	FilterTimezone string `xorm:"-" json:"-"`
 
+	containerSent bool
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
+}
+
+// UnmarshalJSON records whether task_id/project_id were sent, so updates can tell detach from keep.
+func (te *TimeEntry) UnmarshalJSON(data []byte) error {
+	type plain TimeEntry
+	if err := json.Unmarshal(data, (*plain)(te)); err != nil {
+		return err
+	}
+	keys := map[string]json.RawMessage{}
+	if err := json.Unmarshal(data, &keys); err != nil {
+		return err
+	}
+	_, hasTask := keys["task_id"]
+	_, hasProject := keys["project_id"]
+	te.containerSent = hasTask || hasProject
+	return nil
 }
 
 // TableName is time_entries, not the xorm-default time_entry.
@@ -66,11 +83,15 @@ func (*TimeEntry) TableName() string {
 // --- CRUDable ---
 
 func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
+	te.ID = 0
 	te.UserID = a.GetID()
 
-	// Starting a new running timer auto-stops the previous one; a completed
-	// manual entry (EndTime set) must leave the running timer alone.
+	// Starting a new running timer ends the entries it overlaps and auto-stops the
+	// previous one; a completed manual entry (EndTime set) must leave both alone.
 	if te.EndTime == nil {
+		if err = endEntriesSpanning(s, te.UserID, te.StartTime); err != nil {
+			return err
+		}
 		if _, err = stopRunningTimerForUser(s, te.UserID); err != nil {
 			return err
 		}
@@ -92,12 +113,53 @@ func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	if err = addUsersToTimeEntries(s, []*TimeEntry{te}); err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &TimeEntryCreatedEvent{TimeEntry: te, Doer: doer})
 	return nil
 }
 
 func (te *TimeEntry) ReadOne(_ *xorm.Session, _ web.Auth) (err error) {
 	// entry got already fetched in CanRead, nothing left to do here
+	return nil
+}
+
+// endEntriesSpanning ends the user's entries that span at, so a timer started
+// there doesn't overlap them. A running timer counts as ending now.
+func endEntriesSpanning(s *xorm.Session, userID int64, at time.Time) error {
+	if !at.Before(time.Now()) {
+		return nil
+	}
+
+	// UTC: the driver drops a bound parameter's offset.
+	spanning := []*TimeEntry{}
+	err := s.Where(builder.And(
+		builder.Eq{"user_id": userID},
+		builder.Lt{"start_time": at.UTC()},
+		builder.Or(builder.IsNull{"end_time"}, builder.Gt{"end_time": at.UTC()}),
+	)).Find(&spanning)
+	if err != nil || len(spanning) == 0 {
+		return err
+	}
+
+	for _, entry := range spanning {
+		entry.EndTime = &at
+		if _, err = s.ID(entry.ID).Cols("end_time").Update(entry); err != nil {
+			return err
+		}
+	}
+
+	doer, err := user.GetUserByID(s, userID)
+	if err != nil {
+		return err
+	}
+	if err = addUsersToTimeEntries(s, spanning); err != nil {
+		return err
+	}
+	for _, entry := range spanning {
+		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: entry, Doer: doer})
+	}
 	return nil
 }
 
@@ -120,8 +182,34 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) 
 	if err != nil {
 		return nil, err
 	}
+	if err := addUsersToTimeEntries(s, []*TimeEntry{running}); err != nil {
+		return nil, err
+	}
 	events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: running, Doer: doer})
 	return running, nil
+}
+
+// Stops every user's running timer on the task, not just the doer's.
+func stopRunningTimersOnTrashedTask(s *xorm.Session, taskID int64, doer *user.User) error {
+	running := []*TimeEntry{}
+	if err := s.Where("task_id = ? AND end_time IS NULL", taskID).Find(&running); err != nil {
+		return err
+	}
+	// the websocket listener routes the event by entry.User
+	if err := addUsersToTimeEntries(s, running); err != nil {
+		return err
+	}
+	for _, entry := range running {
+		if err := entry.stop(s); err != nil {
+			return err
+		}
+		entry.InTrash = true
+		events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{
+			TimeEntry: entry,
+			Doer:      doer,
+		})
+	}
+	return nil
 }
 
 // StopRunningTimer stops the authenticated user's active timer and returns it,
@@ -145,13 +233,39 @@ func StopRunningTimer(s *xorm.Session, a web.Auth) (*TimeEntry, error) {
 }
 
 // readableTimeEntriesCond restricts a query to entries the auth can read: a
-// standalone entry on an accessible project, or one on a task in such a project.
+// standalone entry on an accessible project, one on a task in such a project,
+// or the auth's own entries without any container or in a trashed project.
 func readableTimeEntriesCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 	accessible, err := accessibleProjectIDsCond(s, a, "project_id")
 	if err != nil {
 		return nil, err
 	}
-	return entriesForProjectCond(accessible), nil
+	return builder.Or(
+		entriesForProjectCond(accessible),
+		builder.And(
+			builder.Eq{"user_id": a.GetID()},
+			builder.Or(timeEntryWithoutContainerCond(), timeEntryInTrashedProjectCond()),
+		),
+	), nil
+}
+
+func timeEntryWithoutContainerCond() builder.Cond {
+	return builder.And(
+		zeroOrNullCond("task_id"),
+		zeroOrNullCond("project_id"),
+	)
+}
+
+func zeroOrNullCond(col string) builder.Cond {
+	return builder.Or(builder.Eq{col: 0}, builder.IsNull{col})
+}
+
+func deleteUserPrivateTimeEntries(s *xorm.Session, userID int64) error {
+	_, err := s.Where(builder.And(
+		builder.Eq{"user_id": userID},
+		timeEntryWithoutContainerCond(),
+	)).Delete(&TimeEntry{})
+	return err
 }
 
 func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result any, resultCount int, numberOfTotalItems int64, err error) {
@@ -195,7 +309,32 @@ func (te *TimeEntry) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 		OrderBy("start_time ASC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&entries)
-	return entries, len(entries), total, err
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	if err = addUsersToTimeEntries(s, entries); err != nil {
+		return nil, 0, 0, err
+	}
+	if err = markTimeEntriesInTrash(s, entries); err != nil {
+		return nil, 0, 0, err
+	}
+	return entries, len(entries), total, nil
+}
+
+func addUsersToTimeEntries(s *xorm.Session, entries []*TimeEntry) error {
+	userIDs := make([]int64, 0, len(entries))
+	for _, entry := range entries {
+		userIDs = append(userIDs, entry.UserID)
+	}
+	users, err := user.GetUsersByIDs(s, userIDs)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		entry.User = users[entry.UserID]
+	}
+	return nil
 }
 
 func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
@@ -214,7 +353,7 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// task_id / project_id are listed so a reassignment (and the zero value of
-	// the side being cleared) is written; the XOR was validated in CanUpdate.
+	// the side being cleared) is written.
 	_, err = s.
 		Where("id = ?", te.ID).
 		Cols("task_id", "project_id", "start_time", "end_time", "comment").
@@ -234,6 +373,9 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	if err = addUsersToTimeEntries(s, []*TimeEntry{te}); err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: te, Doer: doer})
 	return nil
 }
@@ -241,6 +383,10 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 func (te *TimeEntry) Delete(s *xorm.Session, a web.Auth) (err error) {
 	entry, err := getTimeEntryByID(s, te.ID)
 	if err != nil {
+		return err
+	}
+	// the websocket listener routes the event by entry.User
+	if err = addUsersToTimeEntries(s, []*TimeEntry{entry}); err != nil {
 		return err
 	}
 	if _, err = s.Where("id = ?", te.ID).Delete(&TimeEntry{}); err != nil {
@@ -287,24 +433,39 @@ func (te *TimeEntry) canDoTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*T
 		}
 	}
 
-	switch {
-	case entry.TaskID != 0:
-		task, err := GetTaskByIDSimple(s, entry.TaskID)
+	projectID := entry.ProjectID
+	if entry.TaskID != 0 {
+		task := &Task{}
+		has, err := s.Unscoped().Where("id = ?", entry.TaskID).Get(task)
 		if err != nil {
 			return entry, false, -1, err
 		}
-		can, maxPerm, err := task.CanRead(s, a)
-		return entry, can, maxPerm, err
-	case entry.ProjectID != 0:
-		project, _, err := getProjectSimple(s, builder.Eq{"id": entry.ProjectID})
-		if err != nil {
-			return entry, false, -1, err
+		if !has {
+			return entry, false, -1, ErrTaskDoesNotExist{ID: entry.TaskID}
 		}
-		can, maxPerm, err := project.CanRead(s, a)
-		return entry, can, maxPerm, err
-	default:
-		return entry, false, 0, nil
+		projectID = task.ProjectID
 	}
+	if projectID == 0 {
+		// CanUpdate checks authorship first.
+		return entry, !fetch || entry.UserID == a.GetID(), int(PermissionWrite), nil
+	}
+	// Pseudo projects (favorites, saved filters) pass CanRead but can't hold entries.
+	if projectID < 0 {
+		return entry, false, -1, ErrProjectDoesNotExist{ID: projectID}
+	}
+
+	if err := entry.markInTrash(s); err != nil {
+		return entry, false, -1, err
+	}
+	can, maxPerm, err := (&Project{ID: projectID}).CanRead(s, a)
+	if !entry.InTrash {
+		return entry, can, maxPerm, err
+	}
+	// A trashed project errors here: its entries only reach the author.
+	if IsErrProjectIsInTrash(err) || IsErrProjectDoesNotExist(err) {
+		return entry, fetch && entry.UserID == a.GetID(), int(PermissionRead), nil
+	}
+	return entry, can, int(PermissionRead), err
 }
 
 func (te *TimeEntry) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
@@ -316,13 +477,17 @@ func (te *TimeEntry) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	if err != nil {
 		return false, maxPerm, err
 	}
+	if can {
+		if err = addUsersToTimeEntries(s, []*TimeEntry{entry}); err != nil {
+			return false, maxPerm, err
+		}
+	}
 	*te = *entry // ReadOne is a no-op; populate te here
 	return can, maxPerm, nil
 }
 
-// validateContainer enforces the XOR invariant: exactly one of task or project.
 func (te *TimeEntry) validateContainer() error {
-	if (te.TaskID == 0) == (te.ProjectID == 0) {
+	if te.TaskID != 0 && te.ProjectID != 0 {
 		return ErrTimeEntryInvalidContainer{TaskID: te.TaskID, ProjectID: te.ProjectID}
 	}
 	return nil
@@ -347,13 +512,13 @@ func (te *TimeEntry) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	_, can, _, err := te.canDoTimeEntry(s, a, false)
+	_, can, err := te.canDoLiveTimeEntry(s, a, false)
 	return can, err
 }
 
 // CanUpdate allows the author to edit their entry, including moving it between
 // task / project: on top of the author check it validates the (possibly new)
-// container (XOR) and requires read access to it, mirroring create.
+// container and requires read access to it, mirroring create.
 func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if _, isShareAuth := a.(*LinkSharing); isShareAuth {
 		return false, nil
@@ -366,10 +531,11 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	if existing.UserID != a.GetID() {
 		return false, nil
 	}
+	if err = markTimeEntriesInTrash(s, []*TimeEntry{existing}); err != nil || existing.InTrash {
+		return false, err
+	}
 
-	// A request that omits the container keeps the existing one — an entry
-	// always has exactly one, so "clearing" it is never valid.
-	if te.TaskID == 0 && te.ProjectID == 0 {
+	if te.TaskID == 0 && te.ProjectID == 0 && !te.containerSent {
 		te.TaskID = existing.TaskID
 		te.ProjectID = existing.ProjectID
 	}
@@ -377,8 +543,8 @@ func (te *TimeEntry) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	_, canReadContainer, _, err := te.canDoTimeEntry(s, a, false)
-	return canReadContainer, err
+	_, can, err := te.canDoLiveTimeEntry(s, a, false)
+	return can, err
 }
 
 func (te *TimeEntry) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
@@ -391,14 +557,101 @@ func (te *TimeEntry) canModify(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	entry, canRead, _, err := te.canDoTimeEntry(s, a, true)
-	if err != nil {
+	entry, can, err := te.canDoLiveTimeEntry(s, a, true)
+	if err != nil || !can {
 		return false, err
 	}
-	if !canRead {
-		return false, nil
-	}
 	return entry.UserID == a.GetID(), nil
+}
+
+// Entries in the trash are read-only.
+func (te *TimeEntry) canDoLiveTimeEntry(s *xorm.Session, a web.Auth, fetch bool) (*TimeEntry, bool, error) {
+	entry, can, _, err := te.canDoTimeEntry(s, a, fetch)
+	if err != nil {
+		return nil, false, err
+	}
+	return entry, can && !entry.InTrash, nil
+}
+
+func trashedProjectIDsQuery() *builder.Builder {
+	return builder.Select("id").From("projects").Where(builder.NotNull{"deleted_at"})
+}
+
+func taskInTrashCond() builder.Cond {
+	return builder.Or(
+		builder.NotNull{"deleted_at"},
+		builder.In("project_id", trashedProjectIDsQuery()),
+	)
+}
+
+// Narrower than timeEntryInTrashCond: a trashed task in a live project stays with the project's readers.
+func timeEntryInTrashedProjectCond() builder.Cond {
+	return builder.Or(
+		builder.In("project_id", trashedProjectIDsQuery()),
+		builder.In("task_id", builder.Select("id").
+			From("tasks").
+			Where(builder.In("project_id", trashedProjectIDsQuery())),
+		),
+	)
+}
+
+// Trashed task, trashed project, or task in a trashed project.
+func timeEntryInTrashCond() builder.Cond {
+	return builder.Or(
+		builder.In("project_id", trashedProjectIDsQuery()),
+		builder.In("task_id", builder.Select("id").From("tasks").Where(taskInTrashCond())),
+	)
+}
+
+// timeEntryInTrashCond for an entry that may not be stored yet.
+func (te *TimeEntry) markInTrash(s *xorm.Session) (err error) {
+	switch {
+	case te.TaskID != 0:
+		te.InTrash, err = s.Table("tasks").
+			Where(builder.And(
+				builder.Eq{"id": te.TaskID},
+				taskInTrashCond(),
+			)).
+			Exist()
+	case te.ProjectID != 0:
+		te.InTrash, err = s.Table("projects").
+			Where(builder.And(
+				builder.Eq{"id": te.ProjectID},
+				builder.NotNull{"deleted_at"},
+			)).
+			Exist()
+	}
+	return err
+}
+
+func markTimeEntriesInTrash(s *xorm.Session, entries []*TimeEntry) error {
+	ids := make([]int64, 0, len(entries))
+	for _, e := range entries {
+		ids = append(ids, e.ID)
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+
+	inTrashIDs := []int64{}
+	err := s.Table("time_entries").
+		Cols("id").
+		Where(builder.And(
+			builder.In("id", ids),
+			timeEntryInTrashCond(),
+		)).
+		Find(&inTrashIDs)
+	if err != nil {
+		return err
+	}
+	inTrash := make(map[int64]bool, len(inTrashIDs))
+	for _, id := range inTrashIDs {
+		inTrash[id] = true
+	}
+	for _, e := range entries {
+		e.InTrash = inTrash[e.ID]
+	}
+	return nil
 }
 
 // addTimeEntriesCountToTasks attaches each task's time-entry count for the

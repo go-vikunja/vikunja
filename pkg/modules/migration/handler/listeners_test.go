@@ -38,6 +38,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/getsentry/sentry-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -456,4 +457,68 @@ func TestFileMigrationListenerUserFacingStatusDistinguishesOutcomes(t *testing.T
 	require.NoError(t, json.Unmarshal(body, &wire))
 	assert.Equal(t, "detail", wire["error_kind"])
 	assert.Equal(t, "the import file is missing a VERSION entry", wire["error_message"])
+}
+
+const leakyTrelloError = `HTTP request failure on https://api.trello.com/1/members/me/boards: Get "https://api.trello.com/1/members/me/boards?key=appkey&token=usertoken": dial tcp: lookup api.trello.com: no such host`
+
+func runFailingMigration(t *testing.T, kind string) *migration.Status {
+	t.Helper()
+	clearMigrationStatus(t)
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+
+	failing := func() *stubMigrator {
+		return &stubMigrator{NameValue: kind, MigrateErr: &stubErr{Msg: leakyTrelloError}}
+	}
+	RegisterMigratorForEvents(func() migration.Migrator { return failing() })
+	u := getTestUser(t)
+	status, err := migration.ClaimMigration(failing(), u)
+	require.NoError(t, err)
+
+	events.TestListener(t, &MigrationRequestedEvent{
+		Migrator:          failing(),
+		MigratorKind:      kind,
+		User:              u,
+		MigrationStatusID: status.ID,
+	}, &MigrationListener{})
+
+	fetched, err := migration.GetMigrationStatusByID(status.ID)
+	require.NoError(t, err)
+	return fetched
+}
+
+func TestMigrationFailureRedactsCredentialsInStatus(t *testing.T) {
+	status := runFailingMigration(t, "leaky-stub")
+
+	assert.Equal(t, migration.ErrorKindDetail, status.ErrorKind)
+	assert.Contains(t, status.ErrorMessage, "no such host")
+	assert.NotContains(t, status.ErrorMessage, "usertoken")
+	assert.NotContains(t, status.ErrorMessage, "appkey")
+}
+
+func TestMigrationFailureRedactsCredentialsInErrorReport(t *testing.T) {
+	enableSentry(t)
+
+	var reported []string
+	client, err := sentry.NewClient(sentry.ClientOptions{
+		BeforeSend: func(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
+			for _, e := range event.Exception {
+				reported = append(reported, e.Value)
+			}
+			return nil
+		},
+	})
+	require.NoError(t, err)
+	hub := sentry.CurrentHub()
+	previous := hub.Client()
+	hub.BindClient(client)
+	t.Cleanup(func() { hub.BindClient(previous) })
+
+	runFailingMigration(t, "leaky-reported-stub")
+
+	require.NotEmpty(t, reported)
+	for _, value := range reported {
+		assert.NotContains(t, value, "usertoken")
+		assert.NotContains(t, value, "appkey")
+	}
 }

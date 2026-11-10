@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -40,7 +41,12 @@ const apiScopes = `tasks.read tasks.read.shared`
 var apiPrefix = `https://graph.microsoft.com/v1.0/me/todo/`
 
 type Migration struct {
-	Code string `json:"code"`
+	Code  string `json:"code"`
+	State string `json:"state"`
+}
+
+func (m *Migration) OAuthState() string {
+	return m.State
 }
 
 type apiTokenResponse struct {
@@ -134,13 +140,14 @@ func (dtt *dateTimeTimeZone) toTime() (t time.Time, err error) {
 // @Success 200 {object} handler.AuthURL "The auth url."
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/microsoft-todo/auth [get]
-func (m *Migration) AuthURL() string {
+func (m *Migration) AuthURL(state string) string {
 	return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize" +
 		"?client_id=" + config.MigrationMicrosoftTodoClientID.GetString() +
 		"&response_type=code" +
 		"&redirect_uri=" + config.MigrationMicrosoftTodoRedirectURL.GetString() +
 		"&response_mode=query" +
-		"&scope=" + apiScopes
+		"&scope=" + apiScopes +
+		"&state=" + url.QueryEscape(state)
 }
 
 // Name is used to get the name of the Microsoft Todo migration - we're using the docs here to annotate the status route.
@@ -179,7 +186,7 @@ func getMicrosoftGraphAuthToken(code string) (accessToken string, err error) {
 	}
 
 	token := &apiTokenResponse{}
-	err = json.NewDecoder(resp.Body).Decode(token)
+	err = migration.DecodeJSONLimited(resp.Body, token, migration.MaxResponseBytes)
 	return token.AccessToken, err
 }
 
@@ -197,9 +204,12 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	defer resp.Body.Close()
 
 	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(resp.Body)
+	read, err := buf.ReadFrom(io.LimitReader(resp.Body, migration.MaxResponseBytes+1))
 	if err != nil {
 		return err
+	}
+	if read > migration.MaxResponseBytes {
+		return migration.ErrResponseTooLarge
 	}
 
 	if resp.StatusCode > 399 {
@@ -229,6 +239,11 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 
 	log.Debugf("[Microsoft Todo Migration] Got %d projects", len(projects.Value))
 
+	itemCount := int64(len(projects.Value))
+	if err = migration.CheckItemCount(itemCount); err != nil {
+		return
+	}
+
 	for _, project := range projects.Value {
 		link := "lists/" + project.ID + "/tasks"
 		project.Tasks = []*task{}
@@ -246,6 +261,10 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 			log.Debugf("[Microsoft Todo Migration] Got %d tasks for project %s", len(tr.Value), project.ID)
 
 			project.Tasks = append(project.Tasks, tr.Value...)
+			itemCount += int64(len(tr.Value))
+			if err = migration.CheckItemCount(itemCount); err != nil {
+				return
+			}
 
 			if tr.Nextlink == "" {
 				break

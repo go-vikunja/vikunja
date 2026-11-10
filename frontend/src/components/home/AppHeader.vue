@@ -102,16 +102,11 @@
 					{{ $t('admin.title') }}
 				</DropdownItem>
 				<DropdownItem
-					v-if="imprintUrl"
-					:href="imprintUrl"
+					v-for="(link, index) in legalLinks"
+					:key="index"
+					:href="link.url"
 				>
-					{{ $t('navigation.imprint') }}
-				</DropdownItem>
-				<DropdownItem
-					v-if="privacyPolicyUrl"
-					:href="privacyPolicyUrl"
-				>
-					{{ $t('navigation.privacy') }}
+					{{ link.text }}
 				</DropdownItem>
 				<DropdownItem @click="baseStore.setKeyboardShortcutsActive(true)">
 					{{ $t('keyboardShortcuts.title') }}
@@ -153,6 +148,7 @@ import { useBaseStore } from '@/stores/base'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import {useCurrentProject} from '@/composables/useCurrentProject'
+import {useLegalLinks} from '@/composables/useLegalLinks'
 
 const baseStore = useBaseStore()
 const {currentProject} = useCurrentProject()
@@ -175,8 +171,7 @@ const pageTitle = computed(() => {
 const authStore = useAuthStore()
 
 const configStore = useConfigStore()
-const imprintUrl = computed(() => configStore.legal.imprint_url)
-const privacyPolicyUrl = computed(() => configStore.legal.privacy_policy_url)
+const legalLinks = useLegalLinks()
 const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL))
 </script>
 

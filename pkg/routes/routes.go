@@ -54,6 +54,8 @@ package routes
 import (
 	"context"
 	"log/slog"
+	"mime"
+	"net/http"
 	"strings"
 	"time"
 
@@ -145,6 +147,7 @@ func NewEcho() *echo.Echo {
 		// is added. Our route setup creates multiple groups with the same prefix
 		// (e.g. rate-limit subgroups of /api/v1), which would panic as duplicates.
 		NoGroupAutoRegister404Routes: true,
+		JSONSerializer:               jsonSerializer{},
 	})
 
 	e.IPExtractor = newIPExtractor(config.ServiceIPExtractionMethod.GetString(), config.ServiceTrustedProxies.GetString())
@@ -159,30 +162,7 @@ func NewEcho() *echo.Echo {
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogHTTPLevel.GetString(), config.LogFormat.GetString())
-		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-			LogStatus:    true,
-			LogURI:       true,
-			LogMethod:    true,
-			LogLatency:   true,
-			LogRemoteIP:  true,
-			LogUserAgent: true,
-			HandleError:  true,
-			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
-				attrs := []slog.Attr{
-					slog.String("remote_ip", v.RemoteIP),
-					slog.String("method", v.Method),
-					slog.String("uri", v.URI),
-					slog.Int("status", v.Status),
-					slog.Duration("latency", v.Latency),
-					slog.String("user_agent", v.UserAgent),
-				}
-				if v.Error != nil {
-					attrs = append(attrs, slog.String("err", v.Error.Error()))
-				}
-				httpLogger.LogAttrs(context.Background(), httpLogLevel(v.Status), "", attrs...)
-				return nil
-			},
-		}))
+		e.Use(httpRequestLogger(httpLogger))
 	}
 
 	// panic recover
@@ -197,6 +177,8 @@ func NewEcho() *echo.Echo {
 	}
 
 	setupSentry(e)
+
+	e.Binder = &bodyBinder{}
 
 	// Validation
 	e.Validator = &CustomValidator{}
@@ -262,7 +244,11 @@ func RegisterRoutes(e *echo.Echo) {
 	e.GET("/.well-known/change-password", ChangePasswordRedirect)
 
 	// healthcheck
-	e.GET("/health", HealthcheckHandler)
+	var healthMiddleware []echo.MiddlewareFunc
+	if auth := healthBasicAuth(); auth != nil {
+		healthMiddleware = append(healthMiddleware, auth)
+	}
+	e.GET("/health", HealthcheckHandler, healthMiddleware...)
 
 	setupStaticFrontendFilesHandler(e)
 
@@ -395,6 +381,24 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
+// Cross-site <form>s skip CORS preflight (GHSA-frf4-3prf-3vch); RFC 6749 requires them on the token endpoint.
+var formBodyAllowedPaths = map[string]bool{
+	"/api/v1/oauth/token": true,
+	"/api/v2/oauth/token": true,
+}
+
+func rejectFormBodies() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			mediaType, _, _ := mime.ParseMediaType(c.Request().Header.Get(echo.HeaderContentType))
+			if mediaType == echo.MIMEApplicationForm && !formBodyAllowedPaths[c.Path()] {
+				return echo.NewHTTPError(http.StatusUnsupportedMediaType, "application/x-www-form-urlencoded bodies are not accepted")
+			}
+			return next(c)
+		}
+	}
+}
+
 // match receives the matched echo route template, not the request URL.
 // v2 can't use an Echo sub-group here: that would split the Huma API and drop
 // the scoped ops from the OpenAPI spec.
@@ -465,6 +469,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
+	a.Use(rejectFormBodies())
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
 	a.Use(pathScoped(v2SessionRenewalPaths.has, refreshRateLimit))
@@ -476,6 +481,9 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	// Must come after rate limiting: the gate does a per-request admin DB read,
 	// so an unauthenticated flood to /api/v2/admin/* would otherwise be unbounded.
 	a.Use(gateV2AdminRoutes())
+	if auth := healthBasicAuth(); auth != nil {
+		a.Use(pathScoped(func(p string) bool { return p == "/api/v2/health" }, auth))
+	}
 
 	api := apiv2.NewAPI(e, a)
 
@@ -507,6 +515,7 @@ func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.Mid
 	// which causes stale data (e.g. newly team-shared projects not appearing
 	// until a hard refresh).
 	a.Use(noStoreCacheControl())
+	a.Use(rejectFormBodies())
 
 	// This is the group with no auth
 	// It is its own group to be able to rate limit this based on different heuristics
@@ -1010,7 +1019,7 @@ func registerMigrations(m *echo.Group) {
 	// Todoist
 	if config.MigrationTodoistEnable.GetBool() {
 		todoistMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
+			MigrationStruct: func() migration.OAuthMigrator {
 				return &todoist.Migration{}
 			},
 		}
@@ -1020,7 +1029,7 @@ func registerMigrations(m *echo.Group) {
 	// Trello
 	if config.MigrationTrelloEnable.GetBool() {
 		trelloMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
+			MigrationStruct: func() migration.OAuthMigrator {
 				return &trello.Migration{}
 			},
 		}
@@ -1030,7 +1039,7 @@ func registerMigrations(m *echo.Group) {
 	// Microsoft Todo
 	if config.MigrationMicrosoftTodoEnable.GetBool() {
 		microsoftTodoMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
+			MigrationStruct: func() migration.OAuthMigrator {
 				return &microsofttodo.Migration{}
 			},
 		}
@@ -1081,6 +1090,37 @@ func registerCalDavRoutes(c *echo.Group) {
 	c.Any("/projects/:project", caldav.ProjectHandler)
 	c.Any("/projects/:project/", caldav.ProjectHandler)
 	c.Any("/projects/:project/:task", caldav.TaskHandler) // Mostly used for editing
+}
+
+// Never the raw URI: share hashes ride in the path and reset/confirm tokens in the query.
+func httpRequestLogger(httpLogger *slog.Logger) echo.MiddlewareFunc {
+	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogStatus:    true,
+		LogMethod:    true,
+		LogLatency:   true,
+		LogRemoteIP:  true,
+		LogUserAgent: true,
+		HandleError:  true,
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			route := c.Path()
+			if asset, ok := c.Get(staticAssetLogPathKey).(string); ok && route == "" {
+				route = asset
+			}
+			attrs := []slog.Attr{
+				slog.String("remote_ip", v.RemoteIP),
+				slog.String("method", v.Method),
+				slog.String("route", route),
+				slog.Int("status", v.Status),
+				slog.Duration("latency", v.Latency),
+				slog.String("user_agent", v.UserAgent),
+			}
+			if v.Error != nil {
+				attrs = append(attrs, slog.String("err", v.Error.Error()))
+			}
+			httpLogger.LogAttrs(context.Background(), httpLogLevel(v.Status), "", attrs...)
+			return nil
+		},
+	})
 }
 
 // Level by status so log.httplevel can filter successful requests out

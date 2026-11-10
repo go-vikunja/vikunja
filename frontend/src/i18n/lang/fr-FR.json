@@ -261,13 +261,7 @@
 		},
 		"delete": {
 			"title": "Supprimer « {project} »",
-			"header": "Supprimer ce projet",
-			"text1": "Êtes-vous sûr·e de vouloir supprimer ce projet et tout son contenu ?",
-			"text2": "Ceci inclut toutes les tâches et NE PEUT PAS ÊTRE ANNULÉ !",
-			"success": "Le projet a bien été supprimé.",
-			"tasksToDelete": "Cela supprimera définitivement environ {count} tâches.",
-			"tasksAndChildProjectsToDelete": "Cela supprimera irrévocablement approx. {tasks} tâches et {projects} projets.",
-			"noTasksToDelete": "Ce projet ne contient aucune tâche, vous pouvez le supprimer sans problème."
+			"header": "Supprimer ce projet"
 		},
 		"duplicate": {
 			"title": "Dupliquer ce projet",
@@ -758,17 +752,11 @@
 			"updated": "Mis à jour {0}",
 			"doneAt": "Terminé {0}",
 			"updateSuccess": "Tâche enregistrée.",
-			"deleteSuccess": "Tâche supprimée.",
 			"belongsToProject": "Cette tâche appartient au projet « {project} »",
 			"due": "Échéance {at}",
 			"organization": "Organisation",
 			"management": "Gestion",
 			"dateAndTime": "Date et heure",
-			"delete": {
-				"header": "Supprimer cette tâche",
-				"text1": "Retirer cette tâche ?",
-				"text2": "Ceci supprimera également toutes les pièces jointes, les rappels et les relations associés à cette tâche et ne pourra pas être annulé !"
-			},
 			"actions": {
 				"assign": "Assigner à l'utilisateur",
 				"label": "Ajouter des étiquettes",

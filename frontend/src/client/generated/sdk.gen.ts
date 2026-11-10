@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape, urlSearchParamsBodySerializer } from './client/index.js';
-import type { AdminInviteLinksCreateData, AdminInviteLinksCreateErrors, AdminInviteLinksCreateResponses, AdminInviteLinksDeleteData, AdminInviteLinksDeleteErrors, AdminInviteLinksDeleteResponses, AdminInviteLinksListData, AdminInviteLinksListErrors, AdminInviteLinksListResponses, AdminOverviewData, AdminOverviewErrors, AdminOverviewResponses, AdminProjectsListData, AdminProjectsListErrors, AdminProjectsListResponses, AdminProjectsPatchOwnerData, AdminProjectsPatchOwnerErrors, AdminProjectsPatchOwnerResponses, AdminTeamsListData, AdminTeamsListErrors, AdminTeamsListResponses, AdminUsersCreateData, AdminUsersCreateErrors, AdminUsersCreateResponses, AdminUsersDeleteData, AdminUsersDeleteErrors, AdminUsersDeleteResponses, AdminUsersListData, AdminUsersListErrors, AdminUsersListResponses, AdminUsersPasswordResetEmailData, AdminUsersPasswordResetEmailErrors, AdminUsersPasswordResetEmailResponses, AdminUsersPatchAdminData, AdminUsersPatchAdminErrors, AdminUsersPatchAdminResponses, AdminUsersPatchStatusData, AdminUsersPatchStatusErrors, AdminUsersPatchStatusResponses, AdminUsersSetPasswordData, AdminUsersSetPasswordErrors, AdminUsersSetPasswordResponses, AuthConfirmEmailData, AuthConfirmEmailErrors, AuthConfirmEmailResponses, AuthLinkShareData, AuthLinkShareErrors, AuthLinkShareResponses, AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutErrors, AuthLogoutResponses, AuthOpenidCallbackData, AuthOpenidCallbackErrors, AuthOpenidCallbackResponses, AuthPasswordResetData, AuthPasswordResetErrors, AuthPasswordResetResponses, AuthPasswordTokenData, AuthPasswordTokenErrors, AuthPasswordTokenResponses, AuthRefreshTokenData, AuthRefreshTokenErrors, AuthRefreshTokenResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, AvatarGetData, AvatarGetErrors, AvatarGetResponses, BackgroundsUnsplashImageData, BackgroundsUnsplashImageErrors, BackgroundsUnsplashImageResponses, BackgroundsUnsplashSearchData, BackgroundsUnsplashSearchErrors, BackgroundsUnsplashSearchResponses, BackgroundsUnsplashThumbData, BackgroundsUnsplashThumbErrors, BackgroundsUnsplashThumbResponses, BotsCreateData, BotsCreateErrors, BotsCreateResponses, BotsDeleteData, BotsDeleteErrors, BotsDeleteResponses, BotsListData, BotsListErrors, BotsListResponses, BotsReadData, BotsReadErrors, BotsReadResponses, BotsUpdateData, BotsUpdateErrors, BotsUpdateResponses, BucketsCreateData, BucketsCreateErrors, BucketsCreateResponses, BucketsDeleteData, BucketsDeleteErrors, BucketsDeleteResponses, BucketsListData, BucketsListErrors, BucketsListResponses, BucketsUpdateData, BucketsUpdateErrors, BucketsUpdateResponses, CaldavTokensCreateData, CaldavTokensCreateErrors, CaldavTokensCreateResponses, CaldavTokensDeleteData, CaldavTokensDeleteErrors, CaldavTokensDeleteResponses, CaldavTokensListData, CaldavTokensListErrors, CaldavTokensListResponses, FiltersCreateData, FiltersCreateErrors, FiltersCreateResponses, FiltersDeleteData, FiltersDeleteErrors, FiltersDeleteResponses, FiltersReadData, FiltersReadErrors, FiltersReadResponses, FiltersUpdateData, FiltersUpdateErrors, FiltersUpdateResponses, HealthData, HealthErrors, HealthResponses, InfoData, InfoErrors, InfoResponses, InviteLinksCheckData, InviteLinksCheckErrors, InviteLinksCheckResponses, LabelsCreateData, LabelsCreateErrors, LabelsCreateResponses, LabelsDeleteData, LabelsDeleteErrors, LabelsDeleteResponses, LabelsListData, LabelsListErrors, LabelsListResponses, LabelsReadData, LabelsReadErrors, LabelsReadResponses, LabelsUpdateData, LabelsUpdateErrors, LabelsUpdateResponses, McpInfoData, McpInfoErrors, McpInfoResponses, MigrationCsvDetectData, MigrationCsvDetectErrors, MigrationCsvDetectResponses, MigrationCsvMigrateData, MigrationCsvMigrateErrors, MigrationCsvMigrateResponses, MigrationCsvPreviewData, MigrationCsvPreviewErrors, MigrationCsvPreviewResponses, MigrationCsvStatusData, MigrationCsvStatusErrors, MigrationCsvStatusResponses, MigrationMicrosoftTodoAuthData, MigrationMicrosoftTodoAuthErrors, MigrationMicrosoftTodoAuthResponses, MigrationMicrosoftTodoMigrateData, MigrationMicrosoftTodoMigrateErrors, MigrationMicrosoftTodoMigrateResponses, MigrationMicrosoftTodoStatusData, MigrationMicrosoftTodoStatusErrors, MigrationMicrosoftTodoStatusResponses, MigrationPlankaMigrateData, MigrationPlankaMigrateErrors, MigrationPlankaMigrateResponses, MigrationPlankaStatusData, MigrationPlankaStatusErrors, MigrationPlankaStatusResponses, MigrationTicktickMigrateData, MigrationTicktickMigrateErrors, MigrationTicktickMigrateResponses, MigrationTicktickStatusData, MigrationTicktickStatusErrors, MigrationTicktickStatusResponses, MigrationTodoistAuthData, MigrationTodoistAuthErrors, MigrationTodoistAuthResponses, MigrationTodoistMigrateData, MigrationTodoistMigrateErrors, MigrationTodoistMigrateResponses, MigrationTodoistStatusData, MigrationTodoistStatusErrors, MigrationTodoistStatusResponses, MigrationTrelloAuthData, MigrationTrelloAuthErrors, MigrationTrelloAuthResponses, MigrationTrelloMigrateData, MigrationTrelloMigrateErrors, MigrationTrelloMigrateResponses, MigrationTrelloStatusData, MigrationTrelloStatusErrors, MigrationTrelloStatusResponses, MigrationVikunjaFileMigrateData, MigrationVikunjaFileMigrateErrors, MigrationVikunjaFileMigrateResponses, MigrationVikunjaFileStatusData, MigrationVikunjaFileStatusErrors, MigrationVikunjaFileStatusResponses, MigrationWekanMigrateData, MigrationWekanMigrateErrors, MigrationWekanMigrateResponses, MigrationWekanStatusData, MigrationWekanStatusErrors, MigrationWekanStatusResponses, NotificationsAtomFeedData, NotificationsAtomFeedErrors, NotificationsAtomFeedResponses, NotificationsDeleteAllData, NotificationsDeleteAllErrors, NotificationsDeleteAllResponses, NotificationsListData, NotificationsListErrors, NotificationsListResponses, NotificationsMarkAllReadData, NotificationsMarkAllReadErrors, NotificationsMarkAllReadResponses, NotificationsMarkReadData, NotificationsMarkReadErrors, NotificationsMarkReadResponses, OauthAuthorizeData, OauthAuthorizeErrors, OauthAuthorizeResponses, OauthTokenData, OauthTokenErrors, OauthTokenResponses, PatchBotsReadData, PatchBotsReadErrors, PatchBotsReadResponses, PatchFiltersReadData, PatchFiltersReadErrors, PatchFiltersReadResponses, PatchLabelsReadData, PatchLabelsReadErrors, PatchLabelsReadResponses, PatchProjectsReadData, PatchProjectsReadErrors, PatchProjectsReadResponses, PatchProjectViewsReadData, PatchProjectViewsReadErrors, PatchProjectViewsReadResponses, PatchTaskCommentsReadData, PatchTaskCommentsReadErrors, PatchTaskCommentsReadResponses, PatchTasksReadData, PatchTasksReadErrors, PatchTasksReadResponses, PatchTeamsReadData, PatchTeamsReadErrors, PatchTeamsReadResponses, PatchTimeEntriesReadData, PatchTimeEntriesReadErrors, PatchTimeEntriesReadResponses, PatchUserGetAvatarProviderData, PatchUserGetAvatarProviderErrors, PatchUserGetAvatarProviderResponses, PatchUserSettingsReadData, PatchUserSettingsReadErrors, PatchUserSettingsReadResponses, ProjectsBackgroundDeleteData, ProjectsBackgroundDeleteErrors, ProjectsBackgroundDeleteResponses, ProjectsBackgroundGetData, ProjectsBackgroundGetErrors, ProjectsBackgroundGetResponses, ProjectsBackgroundUnsplashSetData, ProjectsBackgroundUnsplashSetErrors, ProjectsBackgroundUnsplashSetResponses, ProjectsBackgroundUploadData, ProjectsBackgroundUploadErrors, ProjectsBackgroundUploadResponses, ProjectsCreateData, ProjectsCreateErrors, ProjectsCreateResponses, ProjectsDeleteData, ProjectsDeleteErrors, ProjectsDeleteResponses, ProjectsDuplicateData, ProjectsDuplicateErrors, ProjectsDuplicateResponses, ProjectsListData, ProjectsListErrors, ProjectsListResponses, ProjectsReadData, ProjectsReadErrors, ProjectsReadResponses, ProjectsUpdateData, ProjectsUpdateErrors, ProjectsUpdateResponses, ProjectsUsersSearchData, ProjectsUsersSearchErrors, ProjectsUsersSearchResponses, ProjectTasksListData, ProjectTasksListErrors, ProjectTasksListResponses, ProjectTeamsCreateData, ProjectTeamsCreateErrors, ProjectTeamsCreateResponses, ProjectTeamsDeleteData, ProjectTeamsDeleteErrors, ProjectTeamsDeleteResponses, ProjectTeamsListData, ProjectTeamsListErrors, ProjectTeamsListResponses, ProjectTeamsUpdateData, ProjectTeamsUpdateErrors, ProjectTeamsUpdateResponses, ProjectTimeEntriesListData, ProjectTimeEntriesListErrors, ProjectTimeEntriesListResponses, ProjectUsersCreateData, ProjectUsersCreateErrors, ProjectUsersCreateResponses, ProjectUsersDeleteData, ProjectUsersDeleteErrors, ProjectUsersDeleteResponses, ProjectUsersListData, ProjectUsersListErrors, ProjectUsersListResponses, ProjectUsersUpdateData, ProjectUsersUpdateErrors, ProjectUsersUpdateResponses, ProjectViewBucketsTasksListData, ProjectViewBucketsTasksListErrors, ProjectViewBucketsTasksListResponses, ProjectViewsCreateData, ProjectViewsCreateErrors, ProjectViewsCreateResponses, ProjectViewsDeleteData, ProjectViewsDeleteErrors, ProjectViewsDeleteResponses, ProjectViewsListData, ProjectViewsListErrors, ProjectViewsListResponses, ProjectViewsReadData, ProjectViewsReadErrors, ProjectViewsReadResponses, ProjectViewsUpdateData, ProjectViewsUpdateErrors, ProjectViewsUpdateResponses, ProjectViewTasksListData, ProjectViewTasksListErrors, ProjectViewTasksListResponses, ReactionsCreateData, ReactionsCreateErrors, ReactionsCreateResponses, ReactionsDeleteData, ReactionsDeleteErrors, ReactionsDeleteResponses, ReactionsListData, ReactionsListErrors, ReactionsListResponses, SessionsDeleteData, SessionsDeleteErrors, SessionsDeleteResponses, SessionsListData, SessionsListErrors, SessionsListResponses, SharesCreateData, SharesCreateErrors, SharesCreateResponses, SharesDeleteData, SharesDeleteErrors, SharesDeleteResponses, SharesListData, SharesListErrors, SharesListResponses, SharesReadData, SharesReadErrors, SharesReadResponses, SubscriptionsCreateData, SubscriptionsCreateErrors, SubscriptionsCreateResponses, SubscriptionsDeleteData, SubscriptionsDeleteErrors, SubscriptionsDeleteResponses, TaskAssigneesBulkData, TaskAssigneesBulkErrors, TaskAssigneesBulkResponses, TaskAssigneesCreateData, TaskAssigneesCreateErrors, TaskAssigneesCreateResponses, TaskAssigneesDeleteData, TaskAssigneesDeleteErrors, TaskAssigneesDeleteResponses, TaskAssigneesListData, TaskAssigneesListErrors, TaskAssigneesListResponses, TaskAttachmentsDeleteData, TaskAttachmentsDeleteErrors, TaskAttachmentsDeleteResponses, TaskAttachmentsDownloadData, TaskAttachmentsDownloadErrors, TaskAttachmentsDownloadResponses, TaskAttachmentsListData, TaskAttachmentsListErrors, TaskAttachmentsListResponses, TaskAttachmentsUploadData, TaskAttachmentsUploadErrors, TaskAttachmentsUploadResponses, TaskBucketUpdateData, TaskBucketUpdateErrors, TaskBucketUpdateResponses, TaskCommentsCreateData, TaskCommentsCreateErrors, TaskCommentsCreateResponses, TaskCommentsDeleteData, TaskCommentsDeleteErrors, TaskCommentsDeleteResponses, TaskCommentsListData, TaskCommentsListErrors, TaskCommentsListResponses, TaskCommentsReadData, TaskCommentsReadErrors, TaskCommentsReadResponses, TaskCommentsUpdateData, TaskCommentsUpdateErrors, TaskCommentsUpdateResponses, TaskLabelsBulkReplaceData, TaskLabelsBulkReplaceErrors, TaskLabelsBulkReplaceResponses, TaskLabelsCreateData, TaskLabelsCreateErrors, TaskLabelsCreateResponses, TaskLabelsDeleteData, TaskLabelsDeleteErrors, TaskLabelsDeleteResponses, TaskLabelsListData, TaskLabelsListErrors, TaskLabelsListResponses, TasksBulkCreateData, TasksBulkCreateErrors, TasksBulkCreateResponses, TasksBulkUpdateData, TasksBulkUpdateErrors, TasksBulkUpdateResponses, TasksCreateData, TasksCreateErrors, TasksCreateResponses, TasksDeleteData, TasksDeleteErrors, TasksDeleteResponses, TasksDuplicateData, TasksDuplicateErrors, TasksDuplicateResponses, TasksListData, TasksListErrors, TasksListResponses, TasksMarkReadData, TasksMarkReadErrors, TasksMarkReadResponses, TasksPositionUpdateData, TasksPositionUpdateErrors, TasksPositionUpdateResponses, TasksReadByIndexData, TasksReadByIndexErrors, TasksReadByIndexResponses, TasksReadData, TasksReadErrors, TasksReadResponses, TasksRelationsCreateData, TasksRelationsCreateErrors, TasksRelationsCreateResponses, TasksRelationsDeleteData, TasksRelationsDeleteErrors, TasksRelationsDeleteResponses, TasksUpdateData, TasksUpdateErrors, TasksUpdateResponses, TaskTimeEntriesListData, TaskTimeEntriesListErrors, TaskTimeEntriesListResponses, TeamsCreateData, TeamsCreateErrors, TeamsCreateResponses, TeamsDeleteData, TeamsDeleteErrors, TeamsDeleteResponses, TeamsListData, TeamsListErrors, TeamsListResponses, TeamsMembersAddData, TeamsMembersAddErrors, TeamsMembersAddResponses, TeamsMembersRemoveData, TeamsMembersRemoveErrors, TeamsMembersRemoveResponses, TeamsMembersToggleAdminData, TeamsMembersToggleAdminErrors, TeamsMembersToggleAdminResponses, TeamsReadData, TeamsReadErrors, TeamsReadResponses, TeamsUpdateData, TeamsUpdateErrors, TeamsUpdateResponses, TimeEntriesCreateData, TimeEntriesCreateErrors, TimeEntriesCreateResponses, TimeEntriesDeleteData, TimeEntriesDeleteErrors, TimeEntriesDeleteResponses, TimeEntriesListData, TimeEntriesListErrors, TimeEntriesListResponses, TimeEntriesReadData, TimeEntriesReadErrors, TimeEntriesReadResponses, TimeEntriesTimerStopData, TimeEntriesTimerStopErrors, TimeEntriesTimerStopResponses, TimeEntriesUpdateData, TimeEntriesUpdateErrors, TimeEntriesUpdateResponses, TokenCheckData, TokenCheckErrors, TokenCheckResponses, TokenRenewData, TokenRenewErrors, TokenRenewResponses, TokenRoutesData, TokenRoutesErrors, TokenRoutesResponses, TokensCreateData, TokensCreateErrors, TokensCreateResponses, TokensDeleteData, TokensDeleteErrors, TokensDeleteResponses, TokensListData, TokensListErrors, TokensListResponses, TokenTestData, TokenTestErrors, TokenTestResponses, TotpDisableData, TotpDisableErrors, TotpDisableResponses, TotpEnableData, TotpEnableErrors, TotpEnableResponses, TotpEnrollData, TotpEnrollErrors, TotpEnrollResponses, TotpGetData, TotpGetErrors, TotpGetResponses, TotpQrcodeData, TotpQrcodeErrors, TotpQrcodeResponses, UserAvatarUploadData, UserAvatarUploadErrors, UserAvatarUploadResponses, UserCancelEmailUpdateData, UserCancelEmailUpdateErrors, UserCancelEmailUpdateResponses, UserChangePasswordData, UserChangePasswordErrors, UserChangePasswordResponses, UserDeletionCancelData, UserDeletionCancelErrors, UserDeletionCancelResponses, UserDeletionConfirmData, UserDeletionConfirmErrors, UserDeletionConfirmResponses, UserDeletionRequestData, UserDeletionRequestErrors, UserDeletionRequestResponses, UserExportDownloadData, UserExportDownloadErrors, UserExportDownloadResponses, UserExportRequestData, UserExportRequestErrors, UserExportRequestResponses, UserExportStatusData, UserExportStatusErrors, UserExportStatusResponses, UserGetAvatarProviderData, UserGetAvatarProviderErrors, UserGetAvatarProviderResponses, UserResendEmailConfirmationData, UserResendEmailConfirmationErrors, UserResendEmailConfirmationResponses, UserSetAvatarProviderData, UserSetAvatarProviderErrors, UserSetAvatarProviderResponses, UserSettingsReadData, UserSettingsReadErrors, UserSettingsReadResponses, UserShowData, UserShowErrors, UserShowResponses, UsersSearchData, UsersSearchErrors, UsersSearchResponses, UserTimezonesData, UserTimezonesErrors, UserTimezonesResponses, UserUpdateEmailData, UserUpdateEmailErrors, UserUpdateEmailResponses, UserUpdateSettingsData, UserUpdateSettingsErrors, UserUpdateSettingsResponses, UserWebhooksCreateData, UserWebhooksCreateErrors, UserWebhooksCreateResponses, UserWebhooksDeleteData, UserWebhooksDeleteErrors, UserWebhooksDeleteResponses, UserWebhooksEventsData, UserWebhooksEventsErrors, UserWebhooksEventsResponses, UserWebhooksListData, UserWebhooksListErrors, UserWebhooksListResponses, UserWebhooksUpdateData, UserWebhooksUpdateErrors, UserWebhooksUpdateResponses, WebhooksCreateData, WebhooksCreateErrors, WebhooksCreateResponses, WebhooksDeleteData, WebhooksDeleteErrors, WebhooksDeleteResponses, WebhooksEventsListData, WebhooksEventsListErrors, WebhooksEventsListResponses, WebhooksListData, WebhooksListErrors, WebhooksListResponses, WebhooksUpdateData, WebhooksUpdateErrors, WebhooksUpdateResponses } from './types.gen.js';
+import type { AdminInviteLinksCreateData, AdminInviteLinksCreateErrors, AdminInviteLinksCreateResponses, AdminInviteLinksDeleteData, AdminInviteLinksDeleteErrors, AdminInviteLinksDeleteResponses, AdminInviteLinksListData, AdminInviteLinksListErrors, AdminInviteLinksListResponses, AdminOverviewData, AdminOverviewErrors, AdminOverviewResponses, AdminProjectsListData, AdminProjectsListErrors, AdminProjectsListResponses, AdminProjectsPatchOwnerData, AdminProjectsPatchOwnerErrors, AdminProjectsPatchOwnerResponses, AdminTeamsListData, AdminTeamsListErrors, AdminTeamsListResponses, AdminUsersCreateData, AdminUsersCreateErrors, AdminUsersCreateResponses, AdminUsersDeleteData, AdminUsersDeleteErrors, AdminUsersDeleteResponses, AdminUsersListData, AdminUsersListErrors, AdminUsersListResponses, AdminUsersPasswordResetEmailData, AdminUsersPasswordResetEmailErrors, AdminUsersPasswordResetEmailResponses, AdminUsersPatchAdminData, AdminUsersPatchAdminErrors, AdminUsersPatchAdminResponses, AdminUsersPatchStatusData, AdminUsersPatchStatusErrors, AdminUsersPatchStatusResponses, AdminUsersSetPasswordData, AdminUsersSetPasswordErrors, AdminUsersSetPasswordResponses, AuthConfirmEmailData, AuthConfirmEmailErrors, AuthConfirmEmailResponses, AuthLinkShareData, AuthLinkShareErrors, AuthLinkShareResponses, AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutErrors, AuthLogoutResponses, AuthOpenidCallbackData, AuthOpenidCallbackErrors, AuthOpenidCallbackResponses, AuthPasswordResetData, AuthPasswordResetErrors, AuthPasswordResetResponses, AuthPasswordTokenData, AuthPasswordTokenErrors, AuthPasswordTokenResponses, AuthRefreshTokenData, AuthRefreshTokenErrors, AuthRefreshTokenResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, AvatarGetData, AvatarGetErrors, AvatarGetResponses, BackgroundsUnsplashImageData, BackgroundsUnsplashImageErrors, BackgroundsUnsplashImageResponses, BackgroundsUnsplashSearchData, BackgroundsUnsplashSearchErrors, BackgroundsUnsplashSearchResponses, BackgroundsUnsplashThumbData, BackgroundsUnsplashThumbErrors, BackgroundsUnsplashThumbResponses, BotsCreateData, BotsCreateErrors, BotsCreateResponses, BotsDeleteData, BotsDeleteErrors, BotsDeleteResponses, BotsListData, BotsListErrors, BotsListResponses, BotsReadData, BotsReadErrors, BotsReadResponses, BotsUpdateData, BotsUpdateErrors, BotsUpdateResponses, BucketsCreateData, BucketsCreateErrors, BucketsCreateResponses, BucketsDeleteData, BucketsDeleteErrors, BucketsDeleteResponses, BucketsListData, BucketsListErrors, BucketsListResponses, BucketsUpdateData, BucketsUpdateErrors, BucketsUpdateResponses, CaldavTokensCreateData, CaldavTokensCreateErrors, CaldavTokensCreateResponses, CaldavTokensDeleteData, CaldavTokensDeleteErrors, CaldavTokensDeleteResponses, CaldavTokensListData, CaldavTokensListErrors, CaldavTokensListResponses, FiltersCreateData, FiltersCreateErrors, FiltersCreateResponses, FiltersDeleteData, FiltersDeleteErrors, FiltersDeleteResponses, FiltersReadData, FiltersReadErrors, FiltersReadResponses, FiltersUpdateData, FiltersUpdateErrors, FiltersUpdateResponses, HealthData, HealthErrors, HealthResponses, InfoData, InfoErrors, InfoResponses, InviteLinksCheckData, InviteLinksCheckErrors, InviteLinksCheckResponses, LabelsCreateData, LabelsCreateErrors, LabelsCreateResponses, LabelsDeleteData, LabelsDeleteErrors, LabelsDeleteResponses, LabelsListData, LabelsListErrors, LabelsListResponses, LabelsReadData, LabelsReadErrors, LabelsReadResponses, LabelsUpdateData, LabelsUpdateErrors, LabelsUpdateResponses, McpInfoData, McpInfoErrors, McpInfoResponses, MigrationCsvDetectData, MigrationCsvDetectErrors, MigrationCsvDetectResponses, MigrationCsvMigrateData, MigrationCsvMigrateErrors, MigrationCsvMigrateResponses, MigrationCsvPreviewData, MigrationCsvPreviewErrors, MigrationCsvPreviewResponses, MigrationCsvStatusData, MigrationCsvStatusErrors, MigrationCsvStatusResponses, MigrationMicrosoftTodoAuthData, MigrationMicrosoftTodoAuthErrors, MigrationMicrosoftTodoAuthResponses, MigrationMicrosoftTodoMigrateData, MigrationMicrosoftTodoMigrateErrors, MigrationMicrosoftTodoMigrateResponses, MigrationMicrosoftTodoStatusData, MigrationMicrosoftTodoStatusErrors, MigrationMicrosoftTodoStatusResponses, MigrationPlankaMigrateData, MigrationPlankaMigrateErrors, MigrationPlankaMigrateResponses, MigrationPlankaStatusData, MigrationPlankaStatusErrors, MigrationPlankaStatusResponses, MigrationTicktickMigrateData, MigrationTicktickMigrateErrors, MigrationTicktickMigrateResponses, MigrationTicktickStatusData, MigrationTicktickStatusErrors, MigrationTicktickStatusResponses, MigrationTodoistAuthData, MigrationTodoistAuthErrors, MigrationTodoistAuthResponses, MigrationTodoistMigrateData, MigrationTodoistMigrateErrors, MigrationTodoistMigrateResponses, MigrationTodoistStatusData, MigrationTodoistStatusErrors, MigrationTodoistStatusResponses, MigrationTrelloAuthData, MigrationTrelloAuthErrors, MigrationTrelloAuthResponses, MigrationTrelloMigrateData, MigrationTrelloMigrateErrors, MigrationTrelloMigrateResponses, MigrationTrelloStatusData, MigrationTrelloStatusErrors, MigrationTrelloStatusResponses, MigrationVikunjaFileMigrateData, MigrationVikunjaFileMigrateErrors, MigrationVikunjaFileMigrateResponses, MigrationVikunjaFileStatusData, MigrationVikunjaFileStatusErrors, MigrationVikunjaFileStatusResponses, MigrationWekanMigrateData, MigrationWekanMigrateErrors, MigrationWekanMigrateResponses, MigrationWekanStatusData, MigrationWekanStatusErrors, MigrationWekanStatusResponses, NotificationsAtomFeedData, NotificationsAtomFeedErrors, NotificationsAtomFeedResponses, NotificationsDeleteAllData, NotificationsDeleteAllErrors, NotificationsDeleteAllResponses, NotificationsListData, NotificationsListErrors, NotificationsListResponses, NotificationsMarkAllReadData, NotificationsMarkAllReadErrors, NotificationsMarkAllReadResponses, NotificationsMarkReadData, NotificationsMarkReadErrors, NotificationsMarkReadResponses, OauthAuthorizeData, OauthAuthorizeErrors, OauthAuthorizeResponses, OauthTokenData, OauthTokenErrors, OauthTokenResponses, PatchBotsReadData, PatchBotsReadErrors, PatchBotsReadResponses, PatchFiltersReadData, PatchFiltersReadErrors, PatchFiltersReadResponses, PatchLabelsReadData, PatchLabelsReadErrors, PatchLabelsReadResponses, PatchProjectsReadData, PatchProjectsReadErrors, PatchProjectsReadResponses, PatchProjectViewsReadData, PatchProjectViewsReadErrors, PatchProjectViewsReadResponses, PatchTaskCommentsReadData, PatchTaskCommentsReadErrors, PatchTaskCommentsReadResponses, PatchTasksReadData, PatchTasksReadErrors, PatchTasksReadResponses, PatchTeamsReadData, PatchTeamsReadErrors, PatchTeamsReadResponses, PatchTimeEntriesReadData, PatchTimeEntriesReadErrors, PatchTimeEntriesReadResponses, PatchUserGetAvatarProviderData, PatchUserGetAvatarProviderErrors, PatchUserGetAvatarProviderResponses, PatchUserSettingsReadData, PatchUserSettingsReadErrors, PatchUserSettingsReadResponses, ProjectsBackgroundDeleteData, ProjectsBackgroundDeleteErrors, ProjectsBackgroundDeleteResponses, ProjectsBackgroundGetData, ProjectsBackgroundGetErrors, ProjectsBackgroundGetResponses, ProjectsBackgroundUnsplashSetData, ProjectsBackgroundUnsplashSetErrors, ProjectsBackgroundUnsplashSetResponses, ProjectsBackgroundUploadData, ProjectsBackgroundUploadErrors, ProjectsBackgroundUploadResponses, ProjectsCountData, ProjectsCountErrors, ProjectsCountResponses, ProjectsCreateData, ProjectsCreateErrors, ProjectsCreateResponses, ProjectsDeleteData, ProjectsDeleteErrors, ProjectsDeletePermanentlyData, ProjectsDeletePermanentlyErrors, ProjectsDeletePermanentlyResponses, ProjectsDeleteResponses, ProjectsDuplicateData, ProjectsDuplicateErrors, ProjectsDuplicateResponses, ProjectsListData, ProjectsListErrors, ProjectsListResponses, ProjectsReadData, ProjectsReadErrors, ProjectsReadResponses, ProjectsRestoreData, ProjectsRestoreErrors, ProjectsRestoreResponses, ProjectsTrashCountData, ProjectsTrashCountErrors, ProjectsTrashCountResponses, ProjectsTrashEmptyData, ProjectsTrashEmptyErrors, ProjectsTrashEmptyResponses, ProjectsTrashListData, ProjectsTrashListErrors, ProjectsTrashListResponses, ProjectsUpdateData, ProjectsUpdateErrors, ProjectsUpdateResponses, ProjectsUsersSearchData, ProjectsUsersSearchErrors, ProjectsUsersSearchResponses, ProjectTasksListData, ProjectTasksListErrors, ProjectTasksListResponses, ProjectTeamsCreateData, ProjectTeamsCreateErrors, ProjectTeamsCreateResponses, ProjectTeamsDeleteData, ProjectTeamsDeleteErrors, ProjectTeamsDeleteResponses, ProjectTeamsListData, ProjectTeamsListErrors, ProjectTeamsListResponses, ProjectTeamsUpdateData, ProjectTeamsUpdateErrors, ProjectTeamsUpdateResponses, ProjectTimeEntriesListData, ProjectTimeEntriesListErrors, ProjectTimeEntriesListResponses, ProjectUsersCreateData, ProjectUsersCreateErrors, ProjectUsersCreateResponses, ProjectUsersDeleteData, ProjectUsersDeleteErrors, ProjectUsersDeleteResponses, ProjectUsersListData, ProjectUsersListErrors, ProjectUsersListResponses, ProjectUsersUpdateData, ProjectUsersUpdateErrors, ProjectUsersUpdateResponses, ProjectViewBucketsTasksListData, ProjectViewBucketsTasksListErrors, ProjectViewBucketsTasksListResponses, ProjectViewsCreateData, ProjectViewsCreateErrors, ProjectViewsCreateResponses, ProjectViewsDeleteData, ProjectViewsDeleteErrors, ProjectViewsDeleteResponses, ProjectViewsListData, ProjectViewsListErrors, ProjectViewsListResponses, ProjectViewsReadData, ProjectViewsReadErrors, ProjectViewsReadResponses, ProjectViewsUpdateData, ProjectViewsUpdateErrors, ProjectViewsUpdateResponses, ProjectViewTasksListData, ProjectViewTasksListErrors, ProjectViewTasksListResponses, ReactionsCreateData, ReactionsCreateErrors, ReactionsCreateResponses, ReactionsDeleteData, ReactionsDeleteErrors, ReactionsDeleteResponses, ReactionsListData, ReactionsListErrors, ReactionsListResponses, SessionsDeleteData, SessionsDeleteErrors, SessionsDeleteResponses, SessionsListData, SessionsListErrors, SessionsListResponses, SharesCreateData, SharesCreateErrors, SharesCreateResponses, SharesDeleteData, SharesDeleteErrors, SharesDeleteResponses, SharesListData, SharesListErrors, SharesListResponses, SharesReadData, SharesReadErrors, SharesReadResponses, SubscriptionsCreateData, SubscriptionsCreateErrors, SubscriptionsCreateResponses, SubscriptionsDeleteData, SubscriptionsDeleteErrors, SubscriptionsDeleteResponses, TaskAssigneesBulkData, TaskAssigneesBulkErrors, TaskAssigneesBulkResponses, TaskAssigneesCreateData, TaskAssigneesCreateErrors, TaskAssigneesCreateResponses, TaskAssigneesDeleteData, TaskAssigneesDeleteErrors, TaskAssigneesDeleteResponses, TaskAssigneesListData, TaskAssigneesListErrors, TaskAssigneesListResponses, TaskAttachmentsDeleteData, TaskAttachmentsDeleteErrors, TaskAttachmentsDeleteResponses, TaskAttachmentsDownloadData, TaskAttachmentsDownloadErrors, TaskAttachmentsDownloadResponses, TaskAttachmentsListData, TaskAttachmentsListErrors, TaskAttachmentsListResponses, TaskAttachmentsPreviewData, TaskAttachmentsPreviewErrors, TaskAttachmentsPreviewResponses, TaskAttachmentsUploadData, TaskAttachmentsUploadErrors, TaskAttachmentsUploadResponses, TaskBucketUpdateData, TaskBucketUpdateErrors, TaskBucketUpdateResponses, TaskCommentsCreateData, TaskCommentsCreateErrors, TaskCommentsCreateResponses, TaskCommentsDeleteData, TaskCommentsDeleteErrors, TaskCommentsDeleteResponses, TaskCommentsListData, TaskCommentsListErrors, TaskCommentsListResponses, TaskCommentsReadData, TaskCommentsReadErrors, TaskCommentsReadResponses, TaskCommentsUpdateData, TaskCommentsUpdateErrors, TaskCommentsUpdateResponses, TaskLabelsBulkReplaceData, TaskLabelsBulkReplaceErrors, TaskLabelsBulkReplaceResponses, TaskLabelsCreateData, TaskLabelsCreateErrors, TaskLabelsCreateResponses, TaskLabelsDeleteData, TaskLabelsDeleteErrors, TaskLabelsDeleteResponses, TaskLabelsListData, TaskLabelsListErrors, TaskLabelsListResponses, TasksBulkCreateData, TasksBulkCreateErrors, TasksBulkCreateResponses, TasksBulkUpdateData, TasksBulkUpdateErrors, TasksBulkUpdateResponses, TasksCreateData, TasksCreateErrors, TasksCreateResponses, TasksDeleteData, TasksDeleteErrors, TasksDeletePermanentlyData, TasksDeletePermanentlyErrors, TasksDeletePermanentlyResponses, TasksDeleteResponses, TasksDuplicateData, TasksDuplicateErrors, TasksDuplicateResponses, TasksListData, TasksListErrors, TasksListResponses, TasksMarkReadData, TasksMarkReadErrors, TasksMarkReadResponses, TasksPositionUpdateData, TasksPositionUpdateErrors, TasksPositionUpdateResponses, TasksReadByIndexData, TasksReadByIndexErrors, TasksReadByIndexResponses, TasksReadData, TasksReadErrors, TasksReadResponses, TasksRelationsCreateData, TasksRelationsCreateErrors, TasksRelationsCreateResponses, TasksRelationsDeleteData, TasksRelationsDeleteErrors, TasksRelationsDeleteResponses, TasksRestoreData, TasksRestoreErrors, TasksRestoreResponses, TasksTrashCountData, TasksTrashCountErrors, TasksTrashCountResponses, TasksTrashEmptyData, TasksTrashEmptyErrors, TasksTrashEmptyResponses, TasksTrashListData, TasksTrashListErrors, TasksTrashListResponses, TasksUpdateData, TasksUpdateErrors, TasksUpdateResponses, TaskTimeEntriesListData, TaskTimeEntriesListErrors, TaskTimeEntriesListResponses, TeamsCreateData, TeamsCreateErrors, TeamsCreateResponses, TeamsDeleteData, TeamsDeleteErrors, TeamsDeleteResponses, TeamsListData, TeamsListErrors, TeamsListResponses, TeamsMembersAddData, TeamsMembersAddErrors, TeamsMembersAddResponses, TeamsMembersRemoveData, TeamsMembersRemoveErrors, TeamsMembersRemoveResponses, TeamsMembersToggleAdminData, TeamsMembersToggleAdminErrors, TeamsMembersToggleAdminResponses, TeamsReadData, TeamsReadErrors, TeamsReadResponses, TeamsUpdateData, TeamsUpdateErrors, TeamsUpdateResponses, TimeEntriesCreateData, TimeEntriesCreateErrors, TimeEntriesCreateResponses, TimeEntriesDeleteData, TimeEntriesDeleteErrors, TimeEntriesDeleteResponses, TimeEntriesListData, TimeEntriesListErrors, TimeEntriesListResponses, TimeEntriesReadData, TimeEntriesReadErrors, TimeEntriesReadResponses, TimeEntriesTimerStopData, TimeEntriesTimerStopErrors, TimeEntriesTimerStopResponses, TimeEntriesUpdateData, TimeEntriesUpdateErrors, TimeEntriesUpdateResponses, TokenCheckData, TokenCheckErrors, TokenCheckResponses, TokenRenewData, TokenRenewErrors, TokenRenewResponses, TokenRoutesData, TokenRoutesErrors, TokenRoutesResponses, TokensCreateData, TokensCreateErrors, TokensCreateResponses, TokensDeleteData, TokensDeleteErrors, TokensDeleteResponses, TokensListData, TokensListErrors, TokensListResponses, TokenTestData, TokenTestErrors, TokenTestResponses, TotpDisableData, TotpDisableErrors, TotpDisableResponses, TotpEnableData, TotpEnableErrors, TotpEnableResponses, TotpEnrollData, TotpEnrollErrors, TotpEnrollResponses, TotpGetData, TotpGetErrors, TotpGetResponses, TotpQrcodeData, TotpQrcodeErrors, TotpQrcodeResponses, UserAvatarUploadData, UserAvatarUploadErrors, UserAvatarUploadResponses, UserCancelEmailUpdateData, UserCancelEmailUpdateErrors, UserCancelEmailUpdateResponses, UserChangePasswordData, UserChangePasswordErrors, UserChangePasswordResponses, UserDeletionCancelData, UserDeletionCancelErrors, UserDeletionCancelResponses, UserDeletionConfirmData, UserDeletionConfirmErrors, UserDeletionConfirmResponses, UserDeletionRequestData, UserDeletionRequestErrors, UserDeletionRequestResponses, UserExportDownloadData, UserExportDownloadErrors, UserExportDownloadResponses, UserExportRequestData, UserExportRequestErrors, UserExportRequestResponses, UserExportStatusData, UserExportStatusErrors, UserExportStatusResponses, UserGetAvatarProviderData, UserGetAvatarProviderErrors, UserGetAvatarProviderResponses, UserIdentitiesLinkData, UserIdentitiesLinkErrors, UserIdentitiesLinkResponses, UserIdentitiesListData, UserIdentitiesListErrors, UserIdentitiesListResponses, UserIdentitiesPreviewData, UserIdentitiesPreviewErrors, UserIdentitiesPreviewResponses, UserIdentitiesUnlinkData, UserIdentitiesUnlinkErrors, UserIdentitiesUnlinkResponses, UserResendEmailConfirmationData, UserResendEmailConfirmationErrors, UserResendEmailConfirmationResponses, UserSetAvatarProviderData, UserSetAvatarProviderErrors, UserSetAvatarProviderResponses, UserSettingsReadData, UserSettingsReadErrors, UserSettingsReadResponses, UserShowData, UserShowErrors, UserShowResponses, UsersSearchData, UsersSearchErrors, UsersSearchResponses, UserTimezonesData, UserTimezonesErrors, UserTimezonesResponses, UserUpdateEmailData, UserUpdateEmailErrors, UserUpdateEmailResponses, UserUpdateSettingsData, UserUpdateSettingsErrors, UserUpdateSettingsResponses, UserWebhooksCreateData, UserWebhooksCreateErrors, UserWebhooksCreateResponses, UserWebhooksDeleteData, UserWebhooksDeleteErrors, UserWebhooksDeleteResponses, UserWebhooksEventsData, UserWebhooksEventsErrors, UserWebhooksEventsResponses, UserWebhooksListData, UserWebhooksListErrors, UserWebhooksListResponses, UserWebhooksUpdateData, UserWebhooksUpdateErrors, UserWebhooksUpdateResponses, WebhooksCreateData, WebhooksCreateErrors, WebhooksCreateResponses, WebhooksDeleteData, WebhooksDeleteErrors, WebhooksDeleteResponses, WebhooksEventsListData, WebhooksEventsListErrors, WebhooksEventsListResponses, WebhooksListData, WebhooksListErrors, WebhooksListResponses, WebhooksUpdateData, WebhooksUpdateErrors, WebhooksUpdateResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -508,7 +508,7 @@ export const filtersUpdate = <ThrowOnError extends boolean = true>(options: Opti
 /**
  * Healthcheck
  *
- * Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status "OK" when healthy, 500 otherwise. When OpenID Connect providers are configured, each provider's availability is reported too; an unavailable provider (typically because it was unreachable while Vikunja started) degrades the status but never fails the check, since initialization is retried automatically (with exponential backoff, after at most 15 minutes) and a restart would not help. Public — no authentication required.
+ * Reports whether the service and its dependencies (database, Redis if enabled) are reachable. Returns 200 with status "OK" when healthy, 500 otherwise. When OpenID Connect providers are configured, each provider's availability is reported too; an unavailable provider (typically because it was unreachable while Vikunja started) degrades the status but never fails the check, since initialization is retried automatically (with exponential backoff, after at most 15 minutes) and a restart would not help. Public unless `health.username` and `health.password` are configured, in which case it requires HTTP Basic auth with those credentials.
  */
 export const health = <ThrowOnError extends boolean = true>(options?: Options<HealthData, ThrowOnError>): RequestResult<HealthResponses, HealthErrors, ThrowOnError> => (options?.client ?? client).get<HealthResponses, HealthErrors, ThrowOnError>({ url: '/health', ...options });
 
@@ -805,7 +805,7 @@ export const migrationCsvStatus = <ThrowOnError extends boolean = true>(options?
 /**
  * Get the auth url for microsoft-todo
  *
- * Returns the OAuth url the user needs to authenticate against. The code obtained there is passed back to the migrate endpoint.
+ * Returns the OAuth url the user needs to authenticate against. The url embeds a fresh state bound to the authenticated user; the code and state obtained there are passed back to the migrate endpoint.
  */
 export const migrationMicrosoftTodoAuth = <ThrowOnError extends boolean = true>(options?: Options<MigrationMicrosoftTodoAuthData, ThrowOnError>): RequestResult<MigrationMicrosoftTodoAuthResponses, MigrationMicrosoftTodoAuthErrors, ThrowOnError> => (options?.client ?? client).get<MigrationMicrosoftTodoAuthResponses, MigrationMicrosoftTodoAuthErrors, ThrowOnError>({
     security: [{
@@ -824,7 +824,7 @@ export const migrationMicrosoftTodoAuth = <ThrowOnError extends boolean = true>(
 /**
  * Migrate from microsoft-todo
  *
- * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 412 if a migration for this service is already running.
+ * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 400 if the state is missing, expired, already used or was issued to another user, and with 412 if a migration for this service is already running.
  */
 export const migrationMicrosoftTodoMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationMicrosoftTodoMigrateData, ThrowOnError>): RequestResult<MigrationMicrosoftTodoMigrateResponses, MigrationMicrosoftTodoMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationMicrosoftTodoMigrateResponses, MigrationMicrosoftTodoMigrateErrors, ThrowOnError>({
     security: [{
@@ -951,7 +951,7 @@ export const migrationTicktickStatus = <ThrowOnError extends boolean = true>(opt
 /**
  * Get the auth url for todoist
  *
- * Returns the OAuth url the user needs to authenticate against. The code obtained there is passed back to the migrate endpoint.
+ * Returns the OAuth url the user needs to authenticate against. The url embeds a fresh state bound to the authenticated user; the code and state obtained there are passed back to the migrate endpoint.
  */
 export const migrationTodoistAuth = <ThrowOnError extends boolean = true>(options?: Options<MigrationTodoistAuthData, ThrowOnError>): RequestResult<MigrationTodoistAuthResponses, MigrationTodoistAuthErrors, ThrowOnError> => (options?.client ?? client).get<MigrationTodoistAuthResponses, MigrationTodoistAuthErrors, ThrowOnError>({
     security: [{
@@ -970,7 +970,7 @@ export const migrationTodoistAuth = <ThrowOnError extends boolean = true>(option
 /**
  * Migrate from todoist
  *
- * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 412 if a migration for this service is already running.
+ * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 400 if the state is missing, expired, already used or was issued to another user, and with 412 if a migration for this service is already running.
  */
 export const migrationTodoistMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationTodoistMigrateData, ThrowOnError>): RequestResult<MigrationTodoistMigrateResponses, MigrationTodoistMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationTodoistMigrateResponses, MigrationTodoistMigrateErrors, ThrowOnError>({
     security: [{
@@ -1012,7 +1012,7 @@ export const migrationTodoistStatus = <ThrowOnError extends boolean = true>(opti
 /**
  * Get the auth url for trello
  *
- * Returns the OAuth url the user needs to authenticate against. The code obtained there is passed back to the migrate endpoint.
+ * Returns the OAuth url the user needs to authenticate against. The url embeds a fresh state bound to the authenticated user; the code and state obtained there are passed back to the migrate endpoint.
  */
 export const migrationTrelloAuth = <ThrowOnError extends boolean = true>(options?: Options<MigrationTrelloAuthData, ThrowOnError>): RequestResult<MigrationTrelloAuthResponses, MigrationTrelloAuthErrors, ThrowOnError> => (options?.client ?? client).get<MigrationTrelloAuthResponses, MigrationTrelloAuthErrors, ThrowOnError>({
     security: [{
@@ -1031,7 +1031,7 @@ export const migrationTrelloAuth = <ThrowOnError extends boolean = true>(options
 /**
  * Migrate from trello
  *
- * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 412 if a migration for this service is already running.
+ * Starts a migration of the authenticated user's data from this service into Vikunja. The migration runs asynchronously; this returns once it has been queued. Refuses with 400 if the state is missing, expired, already used or was issued to another user, and with 412 if a migration for this service is already running.
  */
 export const migrationTrelloMigrate = <ThrowOnError extends boolean = true>(options: Options<MigrationTrelloMigrateData, ThrowOnError>): RequestResult<MigrationTrelloMigrateResponses, MigrationTrelloMigrateErrors, ThrowOnError> => (options.client ?? client).post<MigrationTrelloMigrateResponses, MigrationTrelloMigrateErrors, ThrowOnError>({
     security: [{
@@ -1328,9 +1328,66 @@ export const projectsCreate = <ThrowOnError extends boolean = true>(options: Opt
 });
 
 /**
+ * Empty the project trash
+ *
+ * Permanently deletes every project GET /projects/deleted would return, with their sub-projects. Projects other users moved to the trash are included unless include_others is false.
+ */
+export const projectsTrashEmpty = <ThrowOnError extends boolean = true>(options?: Options<ProjectsTrashEmptyData, ThrowOnError>): RequestResult<ProjectsTrashEmptyResponses, ProjectsTrashEmptyErrors, ThrowOnError> => (options?.client ?? client).delete<ProjectsTrashEmptyResponses, ProjectsTrashEmptyErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/projects/deleted',
+    ...options
+});
+
+/**
+ * List trashed projects
+ *
+ * Returns trashed projects the user is admin of, newest deletion first. A trashed sub-project is folded into its trashed ancestor and counted in trashed_sub_projects. Each project is purged 30 days after its own deleted_at. q is ignored. Not available to link shares.
+ */
+export const projectsTrashList = <ThrowOnError extends boolean = true>(options?: Options<ProjectsTrashListData, ThrowOnError>): RequestResult<ProjectsTrashListResponses, ProjectsTrashListErrors, ThrowOnError> => (options?.client ?? client).get<ProjectsTrashListResponses, ProjectsTrashListErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/projects/deleted',
+    ...options
+});
+
+/**
+ * Count what emptying the project trash deletes
+ *
+ * Counts the projects DELETE /projects/deleted would purge, and how many of them other users moved to the trash. Sub-projects are not counted separately; they go with the listed project.
+ */
+export const projectsTrashCount = <ThrowOnError extends boolean = true>(options?: Options<ProjectsTrashCountData, ThrowOnError>): RequestResult<ProjectsTrashCountResponses, ProjectsTrashCountErrors, ThrowOnError> => (options?.client ?? client).get<ProjectsTrashCountResponses, ProjectsTrashCountErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/projects/deleted/count',
+    ...options
+});
+
+/**
  * Delete a project
  *
- * Deletes a project together with its tasks, views, buckets and child projects. Only project admins may delete it.
+ * Moves a project and all its sub-projects to the trash. Only project admins may delete it. It can be restored for 30 days before it is deleted permanently with its tasks, views and buckets.
  */
 export const projectsDelete = <ThrowOnError extends boolean = true>(options: Options<ProjectsDeleteData, ThrowOnError>): RequestResult<ProjectsDeleteResponses, ProjectsDeleteErrors, ThrowOnError> => (options.client ?? client).delete<ProjectsDeleteResponses, ProjectsDeleteErrors, ThrowOnError>({
     security: [{
@@ -1409,6 +1466,63 @@ export const projectsUpdate = <ThrowOnError extends boolean = true>(options: Opt
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Count a project's contents
+ *
+ * Counts the live sub-projects, tasks and time entries of a project and everything below it, e.g. to tell what deleting it moves to the trash. Requires admin access.
+ */
+export const projectsCount = <ThrowOnError extends boolean = true>(options: Options<ProjectsCountData, ThrowOnError>): RequestResult<ProjectsCountResponses, ProjectsCountErrors, ThrowOnError> => (options.client ?? client).get<ProjectsCountResponses, ProjectsCountErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/projects/{id}/count',
+    ...options
+});
+
+/**
+ * Permanently delete a trashed project
+ *
+ * Purges a project that is already in the trash, with all its sub-projects and tasks. Time entries survive without a project, visible only to their authors. Requires admin access.
+ */
+export const projectsDeletePermanently = <ThrowOnError extends boolean = true>(options: Options<ProjectsDeletePermanentlyData, ThrowOnError>): RequestResult<ProjectsDeletePermanentlyResponses, ProjectsDeletePermanentlyErrors, ThrowOnError> => (options.client ?? client).delete<ProjectsDeletePermanentlyResponses, ProjectsDeletePermanentlyErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/projects/{id}/permanent',
+    ...options
+});
+
+/**
+ * Restore a project from the trash
+ *
+ * Restores the project with all its trashed sub-projects, whenever they were deleted. Tasks trashed on their own stay in the trash. Requires admin access; refused while the parent project is in the trash or archived.
+ */
+export const projectsRestore = <ThrowOnError extends boolean = true>(options: Options<ProjectsRestoreData, ThrowOnError>): RequestResult<ProjectsRestoreResponses, ProjectsRestoreErrors, ThrowOnError> => (options.client ?? client).post<ProjectsRestoreResponses, ProjectsRestoreErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/projects/{id}/restore',
+    ...options
 });
 
 /**
@@ -1517,7 +1631,7 @@ export const projectsBackgroundUnsplashSet = <ThrowOnError extends boolean = tru
 /**
  * Upload a project background
  *
- * Uploads an image via multipart/form-data under the "background" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project.
+ * Uploads an image via multipart/form-data under the "background" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project. A file that is not a decodable image of a supported format fails with 400, an image over the pixel or side length limit fails with 400 and code 4032, and the request fails with 503 and code 4037 when the server is too busy decoding other images.
  */
 export const projectsBackgroundUpload = <ThrowOnError extends boolean = true>(options: Options<ProjectsBackgroundUploadData, ThrowOnError>): RequestResult<ProjectsBackgroundUploadResponses, ProjectsBackgroundUploadErrors, ThrowOnError> => (options.client ?? client).put<ProjectsBackgroundUploadResponses, ProjectsBackgroundUploadErrors, ThrowOnError>({
     ...formDataBodySerializer,
@@ -2163,7 +2277,7 @@ export const projectViewTasksList = <ThrowOnError extends boolean = true>(option
 /**
  * List a project's webhooks
  *
- * Returns the webhook targets configured for the given project, paginated. Requires read access to the project. Secret and basic-auth credentials are never included.
+ * Returns the webhook targets configured for the given project, paginated. Requires write access to the project, because target URLs often carry the receiver's credential. Secret and basic-auth credentials are never included.
  */
 export const webhooksList = <ThrowOnError extends boolean = true>(options: Options<WebhooksListData, ThrowOnError>): RequestResult<WebhooksListResponses, WebhooksListErrors, ThrowOnError> => (options.client ?? client).get<WebhooksListResponses, WebhooksListErrors, ThrowOnError>({
     security: [{
@@ -2372,6 +2486,63 @@ export const tasksBulkUpdate = <ThrowOnError extends boolean = true>(options: Op
 });
 
 /**
+ * Empty the task trash
+ *
+ * Permanently deletes the tasks GET /tasks/deleted would return in projects the user is admin of. Tasks other users deleted are included unless include_others is false.
+ */
+export const tasksTrashEmpty = <ThrowOnError extends boolean = true>(options?: Options<TasksTrashEmptyData, ThrowOnError>): RequestResult<TasksTrashEmptyResponses, TasksTrashEmptyErrors, ThrowOnError> => (options?.client ?? client).delete<TasksTrashEmptyResponses, TasksTrashEmptyErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/deleted',
+    ...options
+});
+
+/**
+ * List trashed tasks
+ *
+ * Returns soft-deleted tasks in non-archived projects the user can write to, newest deletion first. Trashed tasks are purged 30 days after deleted_at. Not available to link shares.
+ */
+export const tasksTrashList = <ThrowOnError extends boolean = true>(options?: Options<TasksTrashListData, ThrowOnError>): RequestResult<TasksTrashListResponses, TasksTrashListErrors, ThrowOnError> => (options?.client ?? client).get<TasksTrashListResponses, TasksTrashListErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/deleted',
+    ...options
+});
+
+/**
+ * Count what emptying the task trash deletes
+ *
+ * Counts the tasks DELETE /tasks/deleted would purge, and how many of them other users deleted. Tasks deleted before the deleter was recorded count as deleted by others.
+ */
+export const tasksTrashCount = <ThrowOnError extends boolean = true>(options?: Options<TasksTrashCountData, ThrowOnError>): RequestResult<TasksTrashCountResponses, TasksTrashCountErrors, ThrowOnError> => (options?.client ?? client).get<TasksTrashCountResponses, TasksTrashCountErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/deleted/count',
+    ...options
+});
+
+/**
  * List a task's time entries
  *
  * Returns the time entries logged against the given task, across all users, paginated. Scoped to what you can read: an inaccessible or unknown task yields an empty list, not an error.
@@ -2393,7 +2564,7 @@ export const taskTimeEntriesList = <ThrowOnError extends boolean = true>(options
 /**
  * Delete a task
  *
- * Deletes a task. Requires write access to its project.
+ * Moves a task to the trash. Requires write access to its project. Trashed tasks can be restored for 30 days before they are deleted permanently.
  */
 export const tasksDelete = <ThrowOnError extends boolean = true>(options: Options<TasksDeleteData, ThrowOnError>): RequestResult<TasksDeleteResponses, TasksDeleteErrors, ThrowOnError> => (options.client ?? client).delete<TasksDeleteResponses, TasksDeleteErrors, ThrowOnError>({
     security: [{
@@ -2623,7 +2794,7 @@ export const taskAttachmentsDelete = <ThrowOnError extends boolean = true>(optio
 /**
  * Download a task attachment
  *
- * Returns the raw bytes of one attachment. Requires read access to the task. Pass preview_size to get a downscaled PNG preview instead — only for image attachments; for non-images or an unknown size the original file is returned. The Content-Type header carries the file's real mime type.
+ * Returns the raw bytes of one attachment. Requires read access to the task. For a downscaled image, use the preview endpoint.
  */
 export const taskAttachmentsDownload = <ThrowOnError extends boolean = true>(options: Options<TaskAttachmentsDownloadData, ThrowOnError>): RequestResult<TaskAttachmentsDownloadResponses, TaskAttachmentsDownloadErrors, ThrowOnError> => (options.client ?? client).get<TaskAttachmentsDownloadResponses, TaskAttachmentsDownloadErrors, ThrowOnError>({
     security: [{
@@ -2636,6 +2807,25 @@ export const taskAttachmentsDownload = <ThrowOnError extends boolean = true>(opt
             type: 'http'
         }],
     url: '/tasks/{task}/attachments/{attachment}',
+    ...options
+});
+
+/**
+ * Get a preview of a task attachment
+ *
+ * Returns a downscaled preview of an image attachment, as a JPEG or, when the image has transparency, as a PNG. Requires read access to the task. Never returns the original: when no preview can be made of the attachment (not an image, undecodable, or too large) the request fails with 422 and code 4038. Fails with 503 and code 4037 when the server is too busy generating other previews.
+ */
+export const taskAttachmentsPreview = <ThrowOnError extends boolean = true>(options: Options<TaskAttachmentsPreviewData, ThrowOnError>): RequestResult<TaskAttachmentsPreviewResponses, TaskAttachmentsPreviewErrors, ThrowOnError> => (options.client ?? client).get<TaskAttachmentsPreviewResponses, TaskAttachmentsPreviewErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/attachments/{attachment}/preview',
     ...options
 });
 
@@ -2869,6 +3059,25 @@ export const taskLabelsDelete = <ThrowOnError extends boolean = true>(options: O
 });
 
 /**
+ * Permanently delete a trashed task
+ *
+ * Purges a task that is already in the trash, with everything attached to it. Its time entries move to the task's project. Requires admin access to the project; not available to link shares.
+ */
+export const tasksDeletePermanently = <ThrowOnError extends boolean = true>(options: Options<TasksDeletePermanentlyData, ThrowOnError>): RequestResult<TasksDeletePermanentlyResponses, TasksDeletePermanentlyErrors, ThrowOnError> => (options.client ?? client).delete<TasksDeletePermanentlyResponses, TasksDeletePermanentlyErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/permanent',
+    ...options
+});
+
+/**
  * Set a task's position in a view
  *
  * Sets where a task sorts within one of its project's views. The position is per view, so this only affects the view named by project_view_id. Requires write access to the task. Positions below the minimum spacing make the server recalculate every position in the view, so the returned value may differ from the one sent.
@@ -2949,6 +3158,25 @@ export const tasksRelationsDelete = <ThrowOnError extends boolean = true>(option
             type: 'http'
         }],
     url: '/tasks/{task}/relations/{relationKind}/{otherTask}',
+    ...options
+});
+
+/**
+ * Restore a task from the trash
+ *
+ * Requires write access to the task's project; refused while the project is archived. The task returns to the default bucket (done bucket if done) and is positioned like a new task. Link shares with write access may restore.
+ */
+export const tasksRestore = <ThrowOnError extends boolean = true>(options: Options<TasksRestoreData, ThrowOnError>): RequestResult<TasksRestoreResponses, TasksRestoreErrors, ThrowOnError> => (options.client ?? client).post<TasksRestoreResponses, TasksRestoreErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/tasks/{task}/restore',
     ...options
 });
 
@@ -3161,7 +3389,7 @@ export const timeEntriesList = <ThrowOnError extends boolean = true>(options?: O
 /**
  * Create a time entry
  *
- * Logs a manual time entry for the authenticated user. Exactly one of task_id / project_id must be set.
+ * Logs a time entry for the authenticated user. Set task_id or project_id, or neither for an entry only you can see. Omit end_time to start a running timer: your entries spanning a past start_time end there, and a running timer that doesn't span it stops at now.
  */
 export const timeEntriesCreate = <ThrowOnError extends boolean = true>(options: Options<TimeEntriesCreateData, ThrowOnError>): RequestResult<TimeEntriesCreateResponses, TimeEntriesCreateErrors, ThrowOnError> => (options.client ?? client).post<TimeEntriesCreateResponses, TimeEntriesCreateErrors, ThrowOnError>({
     security: [{
@@ -3264,7 +3492,7 @@ export const patchTimeEntriesRead = <ThrowOnError extends boolean = true>(option
 /**
  * Update a time entry
  *
- * Updates a time entry. Only the author may update it. The entry can be moved between a task and a project — exactly one of task_id / project_id must be set, and you need read access to the new one. PUT replaces all editable fields; use PATCH for a partial update.
+ * Updates a time entry. Only the author may update it. The entry can be moved between a task, a project and neither — at most one of task_id / project_id may be set, and you need read access to the new one. Omitting both keeps the current container; sending either replaces it, so 0 for both detaches the entry. PUT replaces all editable fields; use PATCH for a partial update.
  */
 export const timeEntriesUpdate = <ThrowOnError extends boolean = true>(options: Options<TimeEntriesUpdateData, ThrowOnError>): RequestResult<TimeEntriesUpdateResponses, TimeEntriesUpdateErrors, ThrowOnError> => (options.client ?? client).put<TimeEntriesUpdateResponses, TimeEntriesUpdateErrors, ThrowOnError>({
     security: [{
@@ -3424,7 +3652,7 @@ export const botsList = <ThrowOnError extends boolean = true>(options?: Options<
 /**
  * Create a bot user
  *
- * Creates a bot user owned by the authenticated user. The username must start with the 'bot-' prefix. Bots have no email or password and cannot create further bots. Requires a real user account — link shares cannot create bots.
+ * Creates a bot user owned by the authenticated user. The username must start with the 'bot-' prefix. Bots have no email or password and cannot create further bots. The owner becomes visible to anyone who can see the bot, as its bot_owner. Requires a real user account — link shares cannot create bots.
  */
 export const botsCreate = <ThrowOnError extends boolean = true>(options: Options<BotsCreateData, ThrowOnError>): RequestResult<BotsCreateResponses, BotsCreateErrors, ThrowOnError> => (options.client ?? client).post<BotsCreateResponses, BotsCreateErrors, ThrowOnError>({
     security: [{
@@ -3768,7 +3996,7 @@ export const sessionsDelete = <ThrowOnError extends boolean = true>(options: Opt
 /**
  * Upload your avatar
  *
- * Uploads an image as the authenticated user's avatar and switches their avatar provider to "upload". The image is validated to be an image, resized server-side, and stored as PNG. Replaces any previously uploaded avatar (idempotent replace, hence PUT).
+ * Uploads an image as the authenticated user's avatar and switches their avatar provider to "upload". The image is validated to be an image, resized server-side, and stored as PNG. Replaces any previously uploaded avatar (idempotent replace, hence PUT). An image the server cannot decode fails with 400, an image over the pixel or side length limit fails with 400 and code 4032, and the request fails with 503 and code 4037 when the server is too busy decoding other images.
  */
 export const userAvatarUpload = <ThrowOnError extends boolean = true>(options: Options<UserAvatarUploadData, ThrowOnError>): RequestResult<UserAvatarUploadResponses, UserAvatarUploadErrors, ThrowOnError> => (options.client ?? client).put<UserAvatarUploadResponses, UserAvatarUploadErrors, ThrowOnError>({
     ...formDataBodySerializer,
@@ -3981,6 +4209,94 @@ export const userUpdateSettings = <ThrowOnError extends boolean = true>(options:
 });
 
 /**
+ * List linked identities
+ *
+ * Returns the OpenID Connect identities linked to the authenticated user. The provider is resolved from the identity's issuer; provider_key and provider_name are empty when no configured provider matches it anymore. Not paginated: page and per_page always describe a single page.
+ */
+export const userIdentitiesList = <ThrowOnError extends boolean = true>(options?: Options<UserIdentitiesListData, ThrowOnError>): RequestResult<UserIdentitiesListResponses, UserIdentitiesListErrors, ThrowOnError> => (options?.client ?? client).get<UserIdentitiesListResponses, UserIdentitiesListErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/user/settings/identities',
+    ...options
+});
+
+/**
+ * Link an identity
+ *
+ * Links the OpenID Connect identity behind an authorization code to the authenticated user, so they can log in through that provider. Requires the current password, plus a totp passcode when totp is enabled; failures count toward the account lockout and are throttled per user (429). These are checked before exchanging the code or consuming a prepared identity from the preview endpoint, so a rejected attempt can be retried with the same callback. Relinking an identity already linked to the user returns it unchanged. Fails with 409 if the identity belongs to another user or the user already linked this provider. Local accounts only.
+ */
+export const userIdentitiesLink = <ThrowOnError extends boolean = true>(options: Options<UserIdentitiesLinkData, ThrowOnError>): RequestResult<UserIdentitiesLinkResponses, UserIdentitiesLinkErrors, ThrowOnError> => (options.client ?? client).post<UserIdentitiesLinkResponses, UserIdentitiesLinkErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/user/settings/identities',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Preview an identity before linking
+ *
+ * Exchanges the authorization code and returns the account from the verified ID token for confirmation. The prepared identity is bound to the authenticated local user and the callback, and expires after at most five minutes. Repeating this request reuses the prepared identity; password and totp checks on the link endpoint do not consume it on failure.
+ */
+export const userIdentitiesPreview = <ThrowOnError extends boolean = true>(options: Options<UserIdentitiesPreviewData, ThrowOnError>): RequestResult<UserIdentitiesPreviewResponses, UserIdentitiesPreviewErrors, ThrowOnError> => (options.client ?? client).post<UserIdentitiesPreviewResponses, UserIdentitiesPreviewErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/user/settings/identities/preview',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Unlink an identity
+ *
+ * Removes a linked identity. Requires the current password, plus a totp passcode when totp is enabled; failures count toward the account lockout and are throttled per user (429). Another user's identity is a 404. Local accounts only.
+ */
+export const userIdentitiesUnlink = <ThrowOnError extends boolean = true>(options: Options<UserIdentitiesUnlinkData, ThrowOnError>): RequestResult<UserIdentitiesUnlinkResponses, UserIdentitiesUnlinkErrors, ThrowOnError> => (options.client ?? client).post<UserIdentitiesUnlinkResponses, UserIdentitiesUnlinkErrors, ThrowOnError>({
+    security: [{
+            key: 'JWTKeyAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }, {
+            key: 'APITokenAuth',
+            scheme: 'bearer',
+            type: 'http'
+        }],
+    url: '/user/settings/identities/{identity}/unlink',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * List CalDAV tokens
  *
  * Returns the authenticated user's CalDAV tokens, oldest first. Only the id and creation date are returned — never the token value, which is shown once on creation.
@@ -4059,7 +4375,7 @@ export const totpGet = <ThrowOnError extends boolean = true>(options?: Options<T
 /**
  * Disable totp
  *
- * Removes all totp settings for the authenticated user. Requires the current password for confirmation. Local accounts only.
+ * Removes all totp settings for the authenticated user. Requires the current password and a current totp passcode. Wrong passwords and passcodes are throttled per user (429). Local accounts only.
  */
 export const totpDisable = <ThrowOnError extends boolean = true>(options: Options<TotpDisableData, ThrowOnError>): RequestResult<TotpDisableResponses, TotpDisableErrors, ThrowOnError> => (options.client ?? client).post<TotpDisableResponses, TotpDisableErrors, ThrowOnError>({
     security: [{
@@ -4082,7 +4398,7 @@ export const totpDisable = <ThrowOnError extends boolean = true>(options: Option
 /**
  * Enable totp
  *
- * Activates a previously enrolled totp setting by confirming a passcode. All existing sessions are invalidated. Local accounts only.
+ * Activates a previously enrolled totp setting by confirming a passcode. Requires the current password; wrong passwords are throttled per user (429). All existing sessions are invalidated. Local accounts only.
  */
 export const totpEnable = <ThrowOnError extends boolean = true>(options: Options<TotpEnableData, ThrowOnError>): RequestResult<TotpEnableResponses, TotpEnableErrors, ThrowOnError> => (options.client ?? client).post<TotpEnableResponses, TotpEnableErrors, ThrowOnError>({
     security: [{
@@ -4105,9 +4421,9 @@ export const totpEnable = <ThrowOnError extends boolean = true>(options: Options
 /**
  * Enroll into totp
  *
- * Creates the totp secret for the authenticated user. The setup must still be confirmed via the enable endpoint before it takes effect. Local accounts only.
+ * Creates the totp secret for the authenticated user. Requires the current password; wrong passwords are throttled per user (429). The setup must still be confirmed via the enable endpoint before it takes effect. Local accounts only.
  */
-export const totpEnroll = <ThrowOnError extends boolean = true>(options?: Options<TotpEnrollData, ThrowOnError>): RequestResult<TotpEnrollResponses, TotpEnrollErrors, ThrowOnError> => (options?.client ?? client).post<TotpEnrollResponses, TotpEnrollErrors, ThrowOnError>({
+export const totpEnroll = <ThrowOnError extends boolean = true>(options: Options<TotpEnrollData, ThrowOnError>): RequestResult<TotpEnrollResponses, TotpEnrollErrors, ThrowOnError> => (options.client ?? client).post<TotpEnrollResponses, TotpEnrollErrors, ThrowOnError>({
     security: [{
             key: 'JWTKeyAuth',
             scheme: 'bearer',
@@ -4118,7 +4434,11 @@ export const totpEnroll = <ThrowOnError extends boolean = true>(options?: Option
             type: 'http'
         }],
     url: '/user/settings/totp/enroll',
-    ...options
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

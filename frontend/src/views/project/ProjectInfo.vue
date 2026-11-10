@@ -9,8 +9,14 @@
 			:show-close="true"
 			@close="goBack()"
 		>
+			<p
+				v-if="project?.id === -1"
+				class="has-text-start"
+			>
+				{{ $t('project.favoriteDescription') }}
+			</p>
 			<div
-				v-if="htmlDescription !== ''"
+				v-else-if="htmlDescription !== ''"
 				class="has-text-start"
 				data-user-content
 				v-html="htmlDescription"
@@ -27,26 +33,15 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
-import DOMPurify from 'dompurify'
 import {useProjects} from '@/composables/useProjects'
 import {useGoBack} from '@/composables/useGoBack'
-import {useI18n} from 'vue-i18n'
+import {sanitizeProjectDescription} from '@/helpers/sanitizeProjectDescription'
 
 const props = defineProps<{
 	projectId: number
 }>()
 
-const {t} = useI18n()
 const goBack = useGoBack()
-
-// ADD_ATTR re-permits target, which lets a link hand the opened page a live
-// window.opener back to this tab. rel must be forced here rather than allowed,
-// so a description carrying its own rel can't drop noopener.
-DOMPurify.addHook('afterSanitizeAttributes', node => {
-	if (node.hasAttribute('target')) {
-		node.setAttribute('rel', 'noopener noreferrer')
-	}
-})
 
 const projectList = useProjects()
 const project = computed(() => projectList.projects[props.projectId])
@@ -56,10 +51,6 @@ const htmlDescription = computed(() => {
 		return ''
 	}
 
-	if (project.value.id === -1) {
-		return t('project.favoriteDescription')
-	}
-
-	return DOMPurify.sanitize(description, {ADD_ATTR: ['target']})
+	return sanitizeProjectDescription(description)
 })
 </script>

@@ -1,10 +1,12 @@
 <template>
 	<div class="password-field">
 		<input
-			id="password"
+			:id="id"
 			class="input"
 			name="password"
-			:placeholder="$t('user.auth.passwordPlaceholder')"
+			:placeholder="placeholder ?? $t('user.auth.passwordPlaceholder')"
+			:value="modelValue"
+			:autofocus="autofocus || undefined"
 			required
 			:type="passwordFieldType"
 			:autocomplete="autocomplete"
@@ -43,12 +45,18 @@ import {validatePassword} from '@/helpers/validatePasswort'
 
 const props = withDefaults(defineProps<{
 	modelValue?: string,
+	id?: string,
+	placeholder?: string,
+	autofocus?: boolean,
 	// This prop is a workaround to trigger validation from the outside when the user never had focus in the input.
 	validateInitially?: boolean,
 	validateMinLength?: boolean,
 	autocomplete?: string,
 }>(), {
 	modelValue: '',
+	id: 'password',
+	placeholder: undefined,
+	autofocus: false,
 	validateMinLength: true,
 	autocomplete: 'current-password',
 })
@@ -59,14 +67,12 @@ const emit = defineEmits<{
 }>()
 const {t} = useI18n()
 const passwordFieldType = ref('password')
-const password = ref('')
-// eslint-disable-next-line vue/no-setup-props-reactivity-loss
-const isValid = ref<true | string>(props.validateInitially === true ? true : '')
+const isValid = ref<true | string>(true)
 const validateAfterFirst = ref(false)
-const errorId = computed(() => isValid.value !== true ? 'password-error' : undefined)
+const errorId = computed(() => isValid.value !== true ? `${props.id}-error` : undefined)
 
 const validate = useDebounceFn(() => {
-	const valid = validatePassword(password.value, props.validateMinLength)
+	const valid = validatePassword(props.modelValue, props.validateMinLength)
 	isValid.value = valid === true ? true : t(valid)
 }, 100)
 
@@ -79,8 +85,7 @@ function togglePasswordFieldType() {
 }
 
 function handleInput(e: Event) {
-	password.value = (e.target as HTMLInputElement)?.value
-	emit('update:modelValue', password.value)
+	emit('update:modelValue', (e.target as HTMLInputElement).value)
 }
 </script>
 

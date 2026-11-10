@@ -33,14 +33,14 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
-	// Get the project and check the permission
+	// Loaded ahead of the admin bypass: the scoped load is what rejects trashed projects.
 	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// We put the result of the is archived check in a separate variable to be able to return it later without
@@ -193,6 +193,9 @@ func requireProjectsByIDs(s *xorm.Session, projectIDs []int64) (map[int64]*Proje
 // CanRead checks if a user has read access to a project
 func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	permissions, err := checkReadPermissionsForProjects(s, a, []int64{p.ID})
+	if IsErrProjectDoesNotExist(err) {
+		return false, 0, trashedProjectReadError(s, a, p.ID, err)
+	}
 	if err != nil {
 		return false, 0, err
 	}
@@ -227,14 +230,13 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return sf.CanUpdate(s, a)
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
-	// Get the project
 	ol, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// Check if we're moving the project to a different parent project.
@@ -299,13 +301,13 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	if isInstanceAdmin(s, a) {
-		return true, nil
-	}
-
 	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return false, err
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// Check if we're dealing with a share auth

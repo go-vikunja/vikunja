@@ -179,7 +179,7 @@ func TestMCP_JWTRejected(t *testing.T) {
 	defer s.Close()
 	u, err := user.GetUserByID(s, 1)
 	require.NoError(t, err)
-	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	jwt, err := auth.NewUserJWTAuthtoken(u, testSessionID(u))
 	require.NoError(t, err)
 	req := mcpRequest(http.MethodPost, initializeBody)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)

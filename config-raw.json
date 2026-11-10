@@ -378,7 +378,7 @@
                 {
                     "key": "forcessl",
                     "default_value": "false",
-                    "comment": "By default, Vikunja will try to connect with starttls, use this option to force it to use ssl."
+                    "comment": "By default, Vikunja uses starttls if the mail server offers it and falls back to plaintext otherwise. Enable this to always connect with implicit TLS (usually port 465) and refuse unencrypted connections."
                 }
             ]
         },
@@ -568,6 +568,11 @@
                     "comment": "The maximum number of data rows parsed from one CSV import, including generic CSV and TickTick backup files."
                 },
                 {
+                    "key": "maxitems",
+                    "default_value": "100000",
+                    "comment": "The maximum number of projects, buckets, tasks, comments and attachments one import may contain, across all migrators."
+                },
+                {
                     "key": "vikunjafile",
                     "children": [
                         {
@@ -730,11 +735,29 @@
             "children": [
                 {
                     "key": "imprinturl",
-                    "default_value": ""
+                    "default_value": "",
+                    "comment": "Deprecated: add a legal.<link key> entry with the text \"Imprint\" instead."
                 },
                 {
                     "key": "privacyurl",
-                    "default_value": ""
+                    "default_value": "",
+                    "comment": "Deprecated: add a legal.<link key> entry with the text \"Privacy Policy\" instead."
+                },
+                {
+                    "key": "<link key>",
+                    "comment": "Any number of legal links. You can freely choose the `<link key>`, links are shown sorted by it, after the deprecated imprinturl and privacyurl.\nVia environment variables: VIKUNJA_LEGAL_<LINK KEY>_TEXT and VIKUNJA_LEGAL_<LINK KEY>_URL.",
+                    "children": [
+                        {
+                            "key": "text",
+                            "default_value": "",
+                            "comment": "The link text."
+                        },
+                        {
+                            "key": "url",
+                            "default_value": "",
+                            "comment": "The link target."
+                        }
+                    ]
                 }
             ]
         },
@@ -807,17 +830,17 @@
                                         {
                                             "key": "scope",
                                             "default_value": "openid email profile",
-                                            "comment": "The scope necessary to use oidc.\nIf you want to use the Feature to create and assign to Vikunja teams via oidc, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\ne.g. scope: openid email profile vikunja_scope"
+                                            "comment": "The scope necessary to use oidc.\nIf you want to use the Feature to create and assign to Vikunja teams via oidc, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\ne.g. scope: openid email profile vikunja_scope\nAlternatively, add the `groups` scope to create and assign the teams from your provider's `groups` claim instead, using each group name as the team's unique id.\ne.g. scope: openid email profile groups"
                                         },
                                         {
                                             "key": "usernamefallback",
                                             "default_value": "false",
-                                            "comment": "This option allows to look for a local account where the OIDC Issuer match the Vikunja local username. Allowed value is either `true` or `false`. If `emailfallback` is also enabled, a local account matching both username and email is preferred, then one matching the email alone.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
+                                            "comment": "Deprecated: will be removed in a future release. Users should link their provider from their account settings instead. This option allows to look for a local account where the OIDC Issuer match the Vikunja local username. Allowed value is either `true` or `false`. If `emailfallback` is also enabled, a local account matching both username and email is preferred, then one matching the email alone.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
                                         },
                                         {
                                             "key": "emailfallback",
                                             "default_value": "false",
-                                            "comment": "This option allows to look for a local account where the OIDC user's email match the Vikunja local email. Allowed value is either `true` or `false`. Requires the provider to send `email_verified: true`. Also applies when `usernamefallback` is enabled.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
+                                            "comment": "Deprecated: will be removed in a future release. Users should link their provider from their account settings instead. This option allows to look for a local account where the OIDC user's email match the Vikunja local email. Allowed value is either `true` or `false`. Requires the provider to send `email_verified: true`. Also applies when `usernamefallback` is enabled.\nUse with caution, this can allow the 3rd party provider to connect to *any* local account and therefore potential account hijaking."
                                         },
                                         {
                                             "key": "forceuserinfo",
@@ -963,6 +986,22 @@
                     "key": "pprof",
                     "default_value": "false",
                     "comment": "If set to true (and metrics are enabled), exposes the Go runtime profiler at `/debug/pprof/`, protected by the same basic auth as the metrics endpoint when username and password are set. Profiles reveal internals of the running process; only enable it on instances that are not reachable from the internet."
+                }
+            ]
+        },
+        {
+            "key": "health",
+            "comment": "Healthcheck endpoints (`/health` and `/api/v2/health`)",
+            "children": [
+                {
+                    "key": "username",
+                    "default_value": "",
+                    "comment": "If set to a non-empty value the health endpoints will require this as a username via basic auth in combination with the password below."
+                },
+                {
+                    "key": "password",
+                    "default_value": "",
+                    "comment": "If set to a non-empty value the health endpoints will require this as a password via basic auth in combination with the username below."
                 }
             ]
         },

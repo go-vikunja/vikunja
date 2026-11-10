@@ -5,7 +5,7 @@ export const PRIMARY_MODIFIER_KEY = isAppleDevice() ? '⌘' : 'ctrl'
 export const SHORTCUTS = {
 	toggleMenu: 'Mod+KeyE',
 	quickSearch: 'Mod+KeyK',
-	showKeyboardShortcuts: 'Shift+Slash',
+	showKeyboardShortcuts: '?',
 	navigation: {
 		overview: 'KeyG KeyO',
 		upcoming: 'KeyG KeyU',
@@ -16,6 +16,7 @@ export const SHORTCUTS = {
 	taskDetail: {
 		openProject: 'KeyU',
 		done: 'KeyT',
+		doneAndBack: 'Shift+KeyT',
 		favorite: 'KeyS',
 		labels: 'KeyL',
 		priority: 'KeyP',

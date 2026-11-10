@@ -32,7 +32,7 @@ func TestTaskByProjectIndex(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 
-	token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+	token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 	require.NoError(t, err)
 
 	do := func(path string) *httptest.ResponseRecorder {

@@ -52,6 +52,9 @@ const (
 </script>`
 )
 
+// Build artifacts carry no secrets, unlike SPA routes and query strings.
+const staticAssetLogPathKey = `static_asset_log_path`
+
 // Because the files are embedded into the final binary, we can be absolutely sure the etag will never change
 // and we can cache its generation pretty heavily.
 var etagCache map[string]string
@@ -180,6 +183,7 @@ func static() echo.MiddlewareFunc {
 				return err
 			}
 
+			c.Set(staticAssetLogPathKey, "/"+strings.TrimPrefix(name, rootPath))
 			return serveFile(c, file, info, etag)
 		}
 	}

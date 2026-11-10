@@ -10,7 +10,7 @@ import {flushPromises, shallowMount} from '@vue/test-utils'
 import {createPinia, setActivePinia} from 'pinia'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 import {createI18n} from 'vue-i18n'
-import type {Directive} from 'vue'
+import {ref, type Directive} from 'vue'
 
 import en from '@/i18n/lang/en.json'
 
@@ -22,11 +22,26 @@ const sdk = vi.hoisted(() => ({
 	timeEntriesCreate: vi.fn(async ({body}: {body: Record<string, unknown>}) => ({data: {
 		...body,
 		id: 1,
-		user_id: 1,
+		user: {id: 1},
+	}})),
+	timeEntriesUpdate: vi.fn(async ({path, body}: {
+		path: {id: number}
+		body: Record<string, unknown>
+	}) => ({data: {
+		...body,
+		id: path.id,
+		user: {id: 1},
 	}})),
 }))
 
 vi.mock('@/client/generated', () => sdk)
+
+const activeTimer = vi.hoisted(() => ({value: null as {start_time: string} | null}))
+const spanning = vi.hoisted(() => ({value: [] as unknown[]}))
+vi.mock('@/composables/useTimeTracking', () => ({
+	useTimeTracking: () => ({activeTimer: ref(activeTimer.value)}),
+	useTimeEntries: () => ({entries: ref(spanning.value)}),
+}))
 vi.mock('@/message', () => ({
 	error: vi.fn(),
 	success: vi.fn(),
@@ -34,6 +49,10 @@ vi.mock('@/message', () => ({
 
 import TimeEntryForm from './TimeEntryForm.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import {queryClient} from '@/client/queryClient'
+import {normalizeProject, projectKeys} from '@/client/queries/projects'
+import type {TimeEntryResponse} from '@/client/queries/timeEntries'
 
 const FORM_OPENED = new Date('2026-06-07T09:00:00Z')
 const CLICKED = new Date('2026-06-07T09:30:00Z')
@@ -44,11 +63,11 @@ const cy: Directive<HTMLElement, string> = {
 	},
 }
 
-function mountForm() {
+function mountForm(props: InstanceType<typeof TimeEntryForm>['$props'] = {taskId: 1}) {
 	const pinia = createPinia()
 	setActivePinia(pinia)
 	return shallowMount(TimeEntryForm, {
-		props: {taskId: 1},
+		props,
 		global: {
 			plugins: [
 				pinia,
@@ -106,5 +125,144 @@ describe('TimeEntryForm start timer', () => {
 		const body = await startTimerAt(wrapper, CLICKED)
 
 		expect(body?.start_time).toBe(chosen.toISOString())
+	})
+})
+
+describe('TimeEntryForm backdated stop hint', () => {
+	const hint = '[data-cy="backdatedStopHint"]'
+
+	beforeEach(() => {
+		vi.useFakeTimers({toFake: ['Date']})
+		vi.setSystemTime(CLICKED)
+	})
+
+	afterEach(() => {
+		activeTimer.value = null
+		spanning.value = []
+		vi.useRealTimers()
+	})
+
+	async function chooseStart(wrapper: ReturnType<typeof mountForm>, date: Date) {
+		wrapper.findAllComponents(Datepicker)[0]!.vm.$emit('update:modelValue', date)
+		await flushPromises()
+	}
+
+	it('shows when the chosen start backdates the running timer', async () => {
+		activeTimer.value = {start_time: '2026-06-07T08:00:00Z'}
+		const wrapper = mountForm()
+
+		await chooseStart(wrapper, new Date('2026-06-07T09:15:00Z'))
+
+		expect(wrapper.find(hint).exists()).toBe(true)
+	})
+
+	it('is hidden while the start is untouched', () => {
+		activeTimer.value = {start_time: '2026-06-07T08:00:00Z'}
+		const wrapper = mountForm()
+
+		expect(wrapper.find(hint).exists()).toBe(false)
+	})
+
+	it('is hidden without a running timer', async () => {
+		const wrapper = mountForm()
+
+		await chooseStart(wrapper, new Date('2026-06-07T09:15:00Z'))
+
+		expect(wrapper.find(hint).exists()).toBe(false)
+	})
+
+	it('shows when a completed entry spans the chosen start', async () => {
+		spanning.value = [{id: 2}]
+		const wrapper = mountForm()
+
+		await chooseStart(wrapper, new Date('2026-06-07T09:15:00Z'))
+
+		expect(wrapper.find(hint).exists()).toBe(true)
+	})
+
+	it('is hidden for a start in the future', async () => {
+		activeTimer.value = {start_time: '2026-06-07T08:00:00Z'}
+		spanning.value = [{id: 2}]
+		const wrapper = mountForm()
+
+		await chooseStart(wrapper, new Date('2026-06-07T10:00:00Z'))
+
+		expect(wrapper.find(hint).exists()).toBe(false)
+	})
+
+	it('is hidden when the chosen start is before the running timer', async () => {
+		activeTimer.value = {start_time: '2026-06-07T08:00:00Z'}
+		const wrapper = mountForm()
+
+		await chooseStart(wrapper, new Date('2026-06-07T07:00:00Z'))
+
+		expect(wrapper.find(hint).exists()).toBe(false)
+	})
+})
+
+describe('TimeEntryForm update container', () => {
+	const entry: TimeEntryResponse = {
+		id: 2,
+		task_id: 0,
+		project_id: 1,
+		comment: 'on project',
+		start_time: '2026-06-07T08:00:00.000Z',
+		end_time: '2026-06-07T09:00:00.000Z',
+		user: {id: 1},
+	}
+
+	beforeEach(() => {
+		sdk.timeEntriesUpdate.mockClear()
+		// useProjects reads the app-wide client, not the injected one.
+		queryClient.setQueryData(projectKeys.list(), {
+			projects: [normalizeProject({
+				id: 1,
+				title: 'Project 1',
+			})],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
+	})
+
+	afterEach(() => {
+		queryClient.clear()
+	})
+
+	async function saveEdit(wrapper: ReturnType<typeof mountForm>) {
+		await wrapper.find('[data-cy="updateTimeEntry"]').trigger('click')
+		await flushPromises()
+		return sdk.timeEntriesUpdate.mock.calls.at(-1)?.[0]
+	}
+
+	it('sends 0 for both containers after the project is cleared', async () => {
+		const wrapper = mountForm({entry})
+		await flushPromises()
+		wrapper.findComponent(ProjectSearch).vm.$emit('update:modelValue', null)
+
+		expect(await saveEdit(wrapper)).toStrictEqual({
+			path: {id: 2},
+			body: {
+				comment: 'on project',
+				start_time: '2026-06-07T08:00:00.000Z',
+				end_time: '2026-06-07T09:00:00.000Z',
+				task_id: 0,
+				project_id: 0,
+			},
+		})
+	})
+
+	it('omits both containers when the project is unchanged', async () => {
+		const wrapper = mountForm({entry})
+		await flushPromises()
+
+		expect(await saveEdit(wrapper)).toStrictEqual({
+			path: {id: 2},
+			body: {
+				comment: 'on project',
+				start_time: '2026-06-07T08:00:00.000Z',
+				end_time: '2026-06-07T09:00:00.000Z',
+			},
+		})
+
 	})
 })

@@ -17,12 +17,12 @@
 package openid
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -33,7 +33,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
@@ -98,6 +97,31 @@ func (b *boolish) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// stringList decodes a JSON string array or a single string — some OIDC
+// providers emit a lone group as a plain string. Other shapes decode to an
+// empty list, since the claim is parsed even for providers not requesting it.
+type stringList []string
+
+func (l *stringList) UnmarshalJSON(data []byte) error {
+	var raw any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	var values stringList
+	switch v := raw.(type) {
+	case string:
+		values = stringList{v}
+	case []any:
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				values = append(values, s)
+			}
+		}
+	}
+	*l = values
+	return nil
+}
+
 type claims struct {
 	Email              string                   `json:"email"`
 	EmailVerified      boolish                  `json:"email_verified"`
@@ -105,6 +129,7 @@ type claims struct {
 	PreferredUsername  string                   `json:"preferred_username"`
 	Nickname           string                   `json:"nickname"`
 	VikunjaGroups      []map[string]interface{} `json:"vikunja_groups"`
+	Groups             stringList               `json:"groups"`
 	Picture            string                   `json:"picture"`
 	ExtraSettingsLinks map[string]any           `json:"extra_settings_links"`
 }
@@ -153,36 +178,14 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 	return iss.Issuer, nil
 }
 
-// enforceTOTPIfRequired mirrors the TOTP gate from pkg/routes/api/v1/login.go
-// for the OIDC flow. Returns nil when the user does not have TOTP enabled.
-// See GHSA-8jvc-mcx6-r4cg.
+// Not CheckTOTPCountingFailures: its rollback would drop a just-created user (GHSA-8jvc-mcx6-r4cg).
 func enforceTOTPIfRequired(s *xorm.Session, u *user.User, totpPasscode string) error {
-	totpEnabled, err := user.TOTPEnabledForUser(s, u)
-	if err != nil {
-		return err
-	}
-	if !totpEnabled {
-		return nil
-	}
-
-	if totpPasscode == "" {
-		return user.ErrInvalidTOTPPasscode{}
-	}
-
-	_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{
-		User:     u,
-		Passcode: totpPasscode,
-	})
-	if err != nil {
+	if err := user.CheckTOTPIfEnabled(s, u, totpPasscode); err != nil {
 		return err
 	}
 
 	// Reset the counter so old failed attempts don't trip a later lockout.
-	if err := keyvalue.Del(u.GetFailedTOTPAttemptsKey()); err != nil {
-		return err
-	}
-
-	return nil
+	return keyvalue.Del(u.GetFailedTOTPAttemptsKey())
 }
 
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code
@@ -252,20 +255,16 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	defer events.CleanupPending(s)
 
 	// Check if we have seen this user before
-	u, err := getOrCreateUser(s, cl, provider, idToken) //nolint:contextcheck
+	u, linked, err := getOrCreateUser(s, cl, provider, idToken)
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
 		return nil, nil, err
 	}
 
-	if u.Status == user.StatusDisabled {
+	if err := user.CheckUserCanAuthenticate(u); err != nil {
 		_ = s.Rollback()
-		return nil, nil, &user.ErrAccountDisabled{UserID: u.ID}
-	}
-	if u.Status == user.StatusAccountLocked {
-		_ = s.Rollback()
-		return nil, nil, &user.ErrAccountLocked{UserID: u.ID}
+		return nil, nil, err
 	}
 
 	// Must run before team sync so a failed 2FA attempt cannot mutate team
@@ -285,7 +284,13 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 		return nil, nil, err
 	}
 
-	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
+	// Gated on the scope because some providers send groups without being asked.
+	var teamData []*models.Team
+	if slices.Contains(strings.Fields(provider.Scope), "groups") {
+		teamData = getTeamDataFromGroupsClaim(cl.Groups)
+	} else {
+		teamData = getTeamDataFromToken(cl.VikunjaGroups, provider)
+	}
 
 	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, provider.Name)
 	if err != nil {
@@ -300,6 +305,10 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 	}
 
 	events.DispatchPending(ctx, s)
+
+	if cl.Picture != "" && !linked {
+		syncUserAvatarFromOpenID(ctx, u.ID, cl.Picture)
+	}
 
 	return u, oidcData, nil
 }
@@ -359,47 +368,42 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 	return teamData
 }
 
-// Download and store a user's avatar from an OpenID provider
-func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) (err error) {
-	// If no picture URL is provided, reset the avatar provider if it was set to openid
-	if pictureURL == "" {
-		if u.AvatarProvider == "openid" {
-			u.AvatarProvider = "default"
-			_, err = s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
-			if err != nil {
-				return fmt.Errorf("error resetting avatar provider: %w", err)
-			}
-			avatar.FlushAllCaches(u)
+// The groups claim only carries names, so the name doubles as the external id.
+func getTeamDataFromGroupsClaim(groups []string) (teamData []*models.Team) {
+	teamData = []*models.Team{}
+	for _, name := range groups {
+		if name == "" {
+			continue
 		}
+		teamData = append(teamData, &models.Team{
+			Name:       name,
+			ExternalID: name,
+		})
+	}
+
+	return teamData
+}
+
+func resetOpenIDAvatar(s *xorm.Session, u *user.User) error {
+	if u.AvatarProvider != "openid" {
 		return nil
 	}
 
-	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
-
-	// Download avatar
-	avatarData, err := utils.DownloadImage(pictureURL)
+	u.AvatarProvider = "default"
+	_, err := s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
 	if err != nil {
-		return fmt.Errorf("error downloading avatar: %w", err)
+		return fmt.Errorf("error resetting avatar provider: %w", err)
 	}
-
-	// Process avatar, ensure 1:1 ratio
-	processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
-	if err != nil {
-		return fmt.Errorf("error processing avatar: %w", err)
-	}
-
-	// Set avatar provider to openid
-	u.AvatarProvider = "openid"
-
-	// Store avatar and update user
-	err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
-	if err != nil {
-		return fmt.Errorf("error storing avatar: %w", err)
-	}
-
 	avatar.FlushAllCaches(u)
-
 	return nil
+}
+
+func syncUserAvatarFromOpenID(ctx context.Context, userID int64, pictureURL string) {
+	log.Debugf("Found avatar URL for user %d: %s", userID, pictureURL)
+
+	avatar.SyncFromProviderAsync(ctx, userID, "openid", func(ctx context.Context) ([]byte, error) {
+		return utils.DownloadImage(ctx, pictureURL)
+	})
 }
 
 // fallbackSearchUsers builds the ordered list of local-user lookups used to link an OIDC
@@ -441,7 +445,37 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 	return searches
 }
 
-func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
+func logFallbackDeprecation(provider *Provider, u *user.User) {
+	// Bot logins are refused anyway, so the "link the provider" advice doesn't apply.
+	if u.IsBot() {
+		return
+	}
+
+	log.Warningf(
+		"OpenID provider %q matched local user %d via the deprecated emailfallback/usernamefallback option. "+
+			"Both options will be removed in a future release; the user must link the provider from their account settings before then.",
+		provider.Key,
+		u.ID,
+	)
+}
+
+// Disabled or locked users are returned without error so the caller refuses the login.
+func getLinkedUser(s *xorm.Session, idToken *oidc.IDToken) (*user.User, bool, error) {
+	identity, found, err := user.GetIdentityByIssuerAndSubject(s, idToken.Issuer, idToken.Subject)
+	if err != nil || !found {
+		return nil, false, err
+	}
+	u, err := user.GetUserWithEmail(s, &user.User{ID: identity.UserID})
+	if err != nil && !user.IsErrUserStatusError(err) {
+		return nil, false, err
+	}
+	if u.IsBot() {
+		return nil, false, &user.ErrAccountIsBot{UserID: u.ID}
+	}
+	return u, true, nil
+}
+
+func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, linked bool, err error) {
 
 	// set defaults
 	fallbackMatchFound := false
@@ -454,14 +488,21 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		Subject: idToken.Subject,
 	})
 	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
-		return nil, err
+		return nil, false, err
 	}
 	alreadyCreatedFromIssuer = err == nil || user.IsErrUserStatusError(err)
 
 	// If the user exists but is disabled/locked, return early — don't update their profile or sync avatar.
 	// HandleCallback will reject the auth attempt.
 	if alreadyCreatedFromIssuer && user.IsErrUserStatusError(err) {
-		return u, nil
+		return u, false, nil
+	}
+
+	if !alreadyCreatedFromIssuer {
+		u, linked, err = getLinkedUser(s, idToken)
+		if err != nil || linked {
+			return u, linked, err
+		}
 	}
 
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
@@ -470,22 +511,21 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		for _, searchUser := range fallbackSearchUsers(cl, provider, idToken) {
 			u, err = user.GetUserWithEmail(s, searchUser)
 			if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
-				return nil, err
+				return nil, false, err
 			}
 			fallbackMatchFound = err == nil || user.IsErrUserStatusError(err)
-
-			// Same as above: disabled/locked user found via fallback — return early.
-			if fallbackMatchFound && user.IsErrUserStatusError(err) {
-				return u, nil
-			}
 			if fallbackMatchFound {
+				logFallbackDeprecation(provider, u)
+				if user.IsErrUserStatusError(err) {
+					return u, false, nil
+				}
 				break
 			}
 		}
 	}
 
 	if fallbackMatchFound && u.IsBot() {
-		return nil, &user.ErrAccountIsBot{UserID: u.ID}
+		return nil, false, &user.ErrAccountIsBot{UserID: u.ID}
 	}
 
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
@@ -503,33 +543,28 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 		u, err = auth.CreateUserWithRandomUsername(s, uu)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	} else if alreadyCreatedFromIssuer {
 
-		// try updating user.Name and/or user.Email if necessary
-		if cl.Email != u.Email {
-			u.Email = cl.Email
-		}
-		if cl.Name != u.Name {
-			u.Name = cl.Name
-		}
-
+		u.Email = cl.Email
+		u.Name = cl.Name
 		u.ExtraSettingsLinks = cl.ExtraSettingsLinks
 
 		u, err = user.UpdateUser(s, u, false)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	}
 
-	// Try sync avatar if available
-	err = syncUserAvatarFromOpenID(s, u, cl.Picture)
-	if err != nil {
-		log.Errorf("Error syncing avatar for user %s: %v", u.Username, err)
+	// A picture is synced by AuthenticateCallback once the login committed.
+	if cl.Picture == "" {
+		if err := resetOpenIDAvatar(s, u); err != nil {
+			log.Errorf("Error resetting avatar for user %s: %v", u.Username, err)
+		}
 	}
 
-	return u, nil
+	return u, false, nil
 }
 
 // mergeClaims combines claims from token and userinfo based on the ForceUserInfo setting
@@ -558,6 +593,10 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 
 	if (forceUserInfo && len(cl2.VikunjaGroups) > 0) || len(cl.VikunjaGroups) == 0 {
 		cl.VikunjaGroups = cl2.VikunjaGroups
+	}
+
+	if (forceUserInfo && len(cl2.Groups) > 0) || len(cl.Groups) == 0 {
+		cl.Groups = cl2.Groups
 	}
 
 	if (forceUserInfo && len(cl2.ExtraSettingsLinks) > 0) || len(cl.ExtraSettingsLinks) == 0 {
@@ -622,7 +661,10 @@ func exchangeOidcTokens(ctx context.Context, cb *Callback, providerKey string) (
 
 	log.Debugf("Trying to authenticate user using provider: %s", provider.Key)
 
-	provider.Oauth2Config.RedirectURL = cb.RedirectURL
+	// Oauth2Config is shared with the cached provider and concurrent callbacks.
+	oauth2Config := *provider.Oauth2Config
+	oauth2Config.RedirectURL = cb.RedirectURL
+	provider.Oauth2Config = &oauth2Config
 	// Parse the access & ID token
 	oauth2Token, err := provider.Oauth2Config.Exchange(withHTTPClient(ctx), cb.Code)
 	if err != nil {

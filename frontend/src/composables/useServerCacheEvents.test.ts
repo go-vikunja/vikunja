@@ -80,7 +80,7 @@ function mountEvents() {
 
 const RUNNING_TIMER = {
 	id: 4,
-	user_id: USER_ID,
+	user: {id: USER_ID},
 	task_id: 3,
 	start_time: '2026-09-19T08:00:00Z',
 	end_time: null,
@@ -99,7 +99,7 @@ it('ignores an event for another user', async () => {
 	mountEvents()
 	ws.handlers.get('timer.created')!({data: {
 		...RUNNING_TIMER,
-		user_id: USER_ID + 1,
+		user: {id: USER_ID + 1},
 	}})
 	await flushPromises()
 	expect(client.getQueryData(timeEntryKeys.active(USER_ID))).toBeNull()

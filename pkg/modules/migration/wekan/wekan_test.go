@@ -309,6 +309,23 @@ func TestConvertWekanMultipleChecklists(t *testing.T) {
 	assert.Contains(t, desc, "Item B1")
 }
 
+func TestConvertWekanChecklistEscapesTitles(t *testing.T) {
+	board := &wekanBoard{
+		Title:      "Board",
+		Lists:      []wekanList{{ID: "list1", Title: "List", Sort: 1}},
+		Cards:      []wekanCard{{ID: "c1", Title: "Task", ListID: "list1", Sort: 1}},
+		Checklists: []wekanChecklist{{ID: "cl1", CardID: "c1", Title: "A < B & C", Sort: 1}},
+		ChecklistItems: []wekanChecklistItem{
+			{ID: "i1", ChecklistID: "cl1", CardID: "c1", Title: "<b>x</b> & y", Sort: 1},
+		},
+	}
+
+	result := convertWekanToVikunja(board)
+	desc := result[0].Tasks[0].Description
+	assert.Contains(t, desc, "<h2> A &lt; B &amp; C</h2>")
+	assert.Contains(t, desc, "<p>&lt;b&gt;x&lt;/b&gt; &amp; y</p>")
+}
+
 func TestParseWekanUnsupportedFieldsIgnored(t *testing.T) {
 	// WeKan exports include fields we don't import (swimlanes, activities, rules, etc.).
 	// Verify they are silently ignored and parsing succeeds.

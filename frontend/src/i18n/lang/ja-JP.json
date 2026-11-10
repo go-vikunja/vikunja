@@ -378,13 +378,7 @@
 		},
 		"delete": {
 			"title": "「{project}」の削除",
-			"header": "プロジェクトの削除",
-			"text1": "このプロジェクトを削除して本当によろしいですか？",
-			"text2": "このプロジェクトに含まれるタスクはすべて削除されます。この操作は元に戻せません。",
-			"success": "プロジェクトは正常に削除されました。",
-			"tasksToDelete": "約{count}件のタスクが抹消されます。",
-			"tasksAndChildProjectsToDelete": "これにより、約 {tasks} 件のタスクと {projects} 個のプロジェクトを削除します。",
-			"noTasksToDelete": "このプロジェクトにはタスクが含まれていないので問題なく削除できます。"
+			"header": "プロジェクトの削除"
 		},
 		"duplicate": {
 			"title": "プロジェクトの複製",
@@ -959,7 +953,6 @@
 			"updated": "{0}に更新",
 			"doneAt": "完了 {0}",
 			"updateSuccess": "タスクは正常に保存されました。",
-			"deleteSuccess": "タスクは正常に削除されました。",
 			"duplicateSuccess": "タスクは正常に複製されました。",
 			"noBucket": "バケットなし",
 			"bucketChangedSuccess": "タスクのバケットを変更しました。",
@@ -973,11 +966,6 @@
 			"organization": "組織",
 			"management": "管理",
 			"dateAndTime": "日付と時刻",
-			"delete": {
-				"header": "タスクの削除",
-				"text1": "このタスクを削除して本当によろしいですか？",
-				"text2": "このタスクに含まれるすべての添付ファイル、リマインダー、関連付けは削除されます。この操作は元に戻せません。"
-			},
 			"actions": {
 				"assign": "担当者の割り当て",
 				"label": "ラベルの追加",

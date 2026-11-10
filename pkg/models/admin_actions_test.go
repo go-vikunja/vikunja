@@ -229,6 +229,15 @@ func TestRequestPasswordResetAsAdmin_Events(t *testing.T) {
 		assert.Equal(t, int64(2), evt.User.ID)
 	})
 
+	t.Run("locked account still gets the reset email", func(t *testing.T) {
+		adminActionsSetup(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 18 is locked.
+		require.NoError(t, RequestPasswordResetAsAdmin(s, doer, 18))
+	})
+
 	t.Run("refused bot account dispatches nothing", func(t *testing.T) {
 		adminActionsSetup(t)
 		s := db.NewSession()

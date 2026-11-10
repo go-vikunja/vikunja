@@ -1,30 +1,22 @@
 <template>
 	<div class="legal-links">
-		<BaseButton
-			v-if="imprintUrl"
-			:href="imprintUrl"
+		<template
+			v-for="(link, index) in legalLinks"
+			:key="index"
 		>
-			{{ $t('navigation.imprint') }}
-		</BaseButton>
-		<span v-if="imprintUrl && privacyPolicyUrl"> | </span>
-		<BaseButton
-			v-if="privacyPolicyUrl"
-			:href="privacyPolicyUrl"
-		>
-			{{ $t('navigation.privacy') }}
-		</BaseButton>
+			<span v-if="index > 0"> | </span>
+			<BaseButton :href="link.url">
+				{{ link.text }}
+			</BaseButton>
+		</template>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {computed} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import {useConfigStore} from '@/stores/config'
+import {useLegalLinks} from '@/composables/useLegalLinks'
 
-const configStore = useConfigStore()
-
-const imprintUrl = computed(() => configStore.legal.imprint_url)
-const privacyPolicyUrl = computed(() => configStore.legal.privacy_policy_url)
+const legalLinks = useLegalLinks()
 </script>
 
 <style lang="scss" scoped>

@@ -152,7 +152,7 @@
 					{{ $t('misc.save') }}
 				</BaseButton>
 			</li>
-			<li v-if="!isEditing">
+			<li v-if="!isEditing && isEditEnabled">
 				<BaseButton
 					class="done-edit"
 					@click="() => setEdit()"
@@ -199,7 +199,7 @@ import {BubbleMenu} from '@tiptap/vue-3/menus'
 import Mention from '@tiptap/extension-mention'
 
 import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
-import {createEditorExtensions} from './editorExtensions'
+import {createEditorExtensions, parseEditorHTML} from './editorExtensions'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
@@ -420,7 +420,7 @@ function bubbleSave() {
 }
 
 function exitEditMode() {
-	editor.value?.commands.setContent(lastSavedState, {
+	editor.value?.commands.setContent(parseEditorHTML(editor.value, lastSavedState), {
 		...defaultSetContentOptions,
 		emitUpdate: false,
 	})
@@ -629,7 +629,7 @@ onMounted(async () => {
 		if (draft && isEditorContentEmpty(modelValue.value)) {
 			// Only load draft if current content is empty
 			// Set content and force edit mode for immediate editing
-			editor.value?.commands.setContent(draft, {
+			editor.value?.commands.setContent(parseEditorHTML(editor.value, draft), {
 				...defaultSetContentOptions,
 				emitUpdate: false,
 			})
@@ -652,7 +652,7 @@ onBeforeUnmount(() => {
 
 function setModeAndValue(value: string) {
 	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
-	editor.value?.commands.setContent(value, {
+	editor.value?.commands.setContent(parseEditorHTML(editor.value, value), {
 		...defaultSetContentOptions,
 		emitUpdate: false,
 	})
@@ -663,7 +663,7 @@ function setModeAndValue(value: string) {
 // Returns synchronously after the next tick to let DOM updates settle.
 async function setReplyContent(value: string) {
 	if (!editor.value) return
-	editor.value.commands.setContent(value, {
+	editor.value.commands.setContent(parseEditorHTML(editor.value, value), {
 		...defaultSetContentOptions,
 		emitUpdate: false,
 	})

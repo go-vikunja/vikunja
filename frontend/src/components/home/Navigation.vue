@@ -82,6 +82,14 @@
 						{{ $t('timeTracking.title') }}
 					</RouterLink>
 				</li>
+				<li>
+					<RouterLink :to="{ name: 'trash'}">
+						<span class="menu-item-icon icon">
+							<Icon icon="trash-alt" />
+						</span>
+						{{ $t('trash.title') }}
+					</RouterLink>
+				</li>
 			</menu>
 		</nav>
 

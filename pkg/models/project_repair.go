@@ -55,7 +55,8 @@ func RepairOrphanedProjects(s *xorm.Session, dryRun bool) (*RepairOrphanedProjec
 	for _, p := range orphans {
 		log.Infof("Re-parenting project %d (%s) from non-existent parent %d to top level",
 			p.ID, p.Title, p.parentID())
-		_, err = s.Where("id = ?", p.ID).
+		_, err = s.Unscoped().
+			Where("id = ?", p.ID).
 			Cols("parent_project_id").
 			Nullable("parent_project_id").
 			Update(&Project{ParentProjectID: noParentProjectID()})

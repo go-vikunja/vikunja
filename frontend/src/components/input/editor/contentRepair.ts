@@ -1,6 +1,8 @@
 import {DOMParser as ProseMirrorDOMParser, Fragment, Slice} from '@tiptap/pm/model'
 import type {ContentMatch, Node as ProseMirrorNode, ParseOptions, Schema} from '@tiptap/pm/model'
 
+import {limitTableCells} from './tableBudget'
+
 /**
  * ProseMirror happily builds nodes its own schema rejects, and only blows up later
  * while placing them: the html parser turns markdown like "- " into a listItem without
@@ -42,6 +44,7 @@ export function createClipboardParser(schema: Schema): ProseMirrorDOMParser {
 
 class RepairingClipboardParser extends ProseMirrorDOMParser {
 	parseSlice(dom: HTMLElement, options?: ParseOptions): Slice {
+		limitTableCells(dom)
 		return repairSliceContent(super.parseSlice(dom, options))
 	}
 }

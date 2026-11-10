@@ -17,6 +17,8 @@
 package botmarble
 
 import (
+	"context"
+
 	"code.vikunja.io/api/pkg/modules/avatar/marble"
 	"code.vikunja.io/api/pkg/user"
 )
@@ -33,11 +35,11 @@ var botColors = []string{
 // Provider renders marble-style avatars using the bot-specific palette.
 type Provider struct{}
 
-func (p *Provider) GetAvatar(u *user.User, size int64) ([]byte, string, error) {
+func (p *Provider) GetAvatar(_ context.Context, u *user.User, size int64) ([]byte, string, error) {
 	return marble.GenerateSVG(u, size, botColors)
 }
 
-func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
+func (p *Provider) AsDataURI(_ context.Context, u *user.User, size int64) (string, error) {
 	return marble.GenerateDataURI(u, size, botColors)
 }
 

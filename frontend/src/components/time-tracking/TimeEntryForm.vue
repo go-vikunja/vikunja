@@ -30,9 +30,16 @@
 				</Multiselect>
 			</div>
 		</div>
+		<p
+			v-if="showPrivateHint"
+			v-cy="'timeEntryPrivateHint'"
+			class="help mbe-3"
+		>
+			{{ $t('timeTracking.form.privateHint') }}
+		</p>
 
 		<div class="field">
-			<label class="label">{{ $t('task.comment.comment') }}</label>
+			<label class="label">{{ $t('timeTracking.commentLabel') }}</label>
 			<input
 				v-model="comment"
 				v-cy="'timeEntryComment'"
@@ -75,7 +82,6 @@
 			<template v-if="isEditing">
 				<XButton
 					v-cy="'updateTimeEntry'"
-					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="saveEntry"
 				>
@@ -91,7 +97,6 @@
 			<template v-else>
 				<XButton
 					v-cy="'saveTimeEntry'"
-					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="saveEntry"
 				>
@@ -100,7 +105,6 @@
 				<XButton
 					v-cy="'startTimer'"
 					variant="secondary"
-					:aria-disabled="!canSubmit || undefined"
 					:loading="isSaving"
 					@click="startTimer"
 				>
@@ -108,6 +112,13 @@
 				</XButton>
 			</template>
 		</div>
+		<p
+			v-if="backdatedStopAt !== null"
+			v-cy="'backdatedStopHint'"
+			class="help"
+		>
+			{{ $t('timeTracking.form.endsSpanningEntriesAt', {time: formatDayTime(backdatedStopAt, timeFormat)}) }}
+		</p>
 	</form>
 </template>
 
@@ -122,6 +133,9 @@ import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import {useTasks} from '@/composables/useTasks'
 import {ensureTask} from '@/client/queries/tasks'
 import {smartFillStart} from '@/helpers/time/smartFillStart'
+import {formatDayTime} from '@/helpers/time/formatTimeRange'
+import {useTimeEntries, useTimeTracking} from '@/composables/useTimeTracking'
+import {useTimeFormat} from '@/composables/useTimeFormat'
 import {useCreateTimeEntryMutation, useUpdateTimeEntryMutation} from '@/client/queries/timeEntries'
 import type {UpdateTimeEntryInput} from '@/client/queries/timeEntries'
 import type {TimeEntryWritable} from '@/client/generated'
@@ -155,6 +169,8 @@ const createMutation = useCreateTimeEntryMutation()
 const updateMutation = useUpdateTimeEntryMutation()
 const authStore = useAuthStore()
 const projectList = useProjects()
+const {activeTimer} = useTimeTracking()
+const {store: timeFormat} = useTimeFormat()
 
 const isEditing = computed(() => props.entry != null)
 
@@ -175,11 +191,33 @@ const from = computed({
 	},
 })
 const to = ref<Date | null>(null)
+
+// Mirrors the server: starting a timer at a past start ends the user's entries spanning it there.
+const backdateTo = computed(() => {
+	const date = start.value.date
+	if (isEditing.value || !start.value.chosen || date === null || date >= new Date()) {
+		return null
+	}
+	return date
+})
+const spanningFilter = computed(() => {
+	const at = backdateTo.value?.toISOString()
+	return at === undefined ? '' : `user_id = ${authStore.info?.id} && start_time < '${at}' && end_time > '${at}'`
+})
+const {entries: spanningEntries} = useTimeEntries(spanningFilter, {enabled: () => spanningFilter.value !== ''})
+const backdatedStopAt = computed(() => {
+	const at = backdateTo.value
+	if (at === null) {
+		return null
+	}
+	const runningStart = parseDateOrNull(activeTimer.value?.start_time)
+	const spansRunning = runningStart !== null && runningStart < at
+	return spansRunning || spanningEntries.value.length > 0 ? at : null
+})
 const comment = ref('')
 const isSaving = ref(false)
 
-// Task and project are mutually exclusive (XOR) — selecting one clears the other,
-// so applyTarget never picks a stale target the user has since changed.
+// Mutually exclusive so applyTarget never picks a stale target.
 watch(selectedTask, task => {
 	if (task !== null) {
 		selectedProject.value = null
@@ -199,12 +237,12 @@ const taskQuery = useTasks(
 const foundTasks = taskQuery.tasks
 function findTasks(query: string) { taskSearch.value = query }
 
-
-const canSubmit = computed(() =>
-	// In edit mode the entry already has a valid container; an update that sends
-	// neither keeps it, so don't block submit if the prefill lookup failed.
-	isEditing.value || props.taskId !== undefined || selectedTask.value !== null || selectedProject.value !== null,
-)
+// False until the edited entry's container is in the pickers; a failed lookup must not read as "detach".
+const containerLoaded = ref(false)
+const showPrivateHint = computed(() => props.taskId === undefined
+	&& selectedTask.value === null
+	&& selectedProject.value === null
+	&& (!isEditing.value || containerLoaded.value))
 
 function smartFill() {
 	from.value = smartFillStart(
@@ -215,7 +253,6 @@ function smartFill() {
 	to.value = new Date()
 }
 
-// Whichever of task / project is set lands on the payload (XOR — enforced by canSubmit).
 function applyTarget(payload: TimeEntryWritable) {
 	if (props.taskId !== undefined) {
 		payload.task_id = props.taskId
@@ -255,6 +292,7 @@ function reset() {
 watch(() => props.entry, async (entry, _previous, onCleanup) => {
 	let active = true
 	onCleanup(() => { active = false })
+	containerLoaded.value = false
 	if (entry == null) {
 		reset()
 		return
@@ -276,6 +314,7 @@ watch(() => props.entry, async (entry, _previous, onCleanup) => {
 			const task = await ensureTask(entry.task_id)
 			if (active && selectedProject.value === null && selectedTask.value === null) {
 				selectedTask.value = task
+				containerLoaded.value = true
 			}
 		} catch {
 			return
@@ -283,8 +322,28 @@ watch(() => props.entry, async (entry, _previous, onCleanup) => {
 	} else if (entry.project_id > 0) {
 		selectedTask.value = null
 		selectedProject.value = projectList.projects[entry.project_id] ?? null
+		containerLoaded.value = selectedProject.value !== null
+	} else {
+		selectedTask.value = null
+		selectedProject.value = null
+		containerLoaded.value = true
 	}
 }, {immediate: true})
+
+// Omitting both keys keeps the server-side container; sending 0 for both detaches it.
+function applyContainerChange(payload: UpdateTimeEntryInput, entry: ITimeEntry) {
+	if (props.taskId !== undefined) {
+		return
+	}
+	const taskId = selectedTask.value?.id ?? 0
+	const projectId = selectedProject.value?.id ?? 0
+	const unchanged = taskId === entry.task_id && projectId === entry.project_id
+	if (unchanged || (!containerLoaded.value && taskId === 0 && projectId === 0)) {
+		return
+	}
+	payload.task_id = taskId
+	payload.project_id = projectId
+}
 
 function draftIdentity() {
 	return JSON.stringify([
@@ -299,7 +358,7 @@ function draftIdentity() {
 }
 
 async function submit(includeEnd: boolean) {
-	if (!canSubmit.value || isSaving.value) {
+	if (isSaving.value) {
 		return
 	}
 	isSaving.value = true
@@ -323,7 +382,7 @@ async function submit(includeEnd: boolean) {
 
 async function submitUpdate() {
 	const entry = props.entry
-	if (!canSubmit.value || isSaving.value || entry == null) {
+	if (isSaving.value || entry == null) {
 		return
 	}
 	isSaving.value = true
@@ -336,10 +395,8 @@ async function submitUpdate() {
 			// A running entry stays running (null); a completed one can't be reopened,
 			// so keep its end if "To" was cleared (the API rejects clearing it).
 			end_time: to.value?.toISOString() ?? entry.end_time,
-			task_id: 0,
-			project_id: 0,
 		}
-		applyTarget(payload)
+		applyContainerChange(payload, entry)
 		await updateMutation.mutateAsync(payload)
 		if (draftIdentity() !== draft) return
 		emit('saved')

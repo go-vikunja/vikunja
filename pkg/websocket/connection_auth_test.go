@@ -300,7 +300,8 @@ func TestConnectionReauth(t *testing.T) {
 		s := setupDBTest(t)
 		url := startSocketServer(t)
 		c, _ := dialAndAuth(t, url, userToken(t, 1, sessionUser1A))
-		_, err := s.Where("id = ?", sessionUser1A).Delete(&models.Session{})
+		// Through the model so the cached session check is busted, as on every real revocation.
+		_, err := models.DeleteSessionByID(s, sessionUser1A)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 

@@ -154,6 +154,31 @@ func (c *Config) SaveAs(path string) error {
 	return os.WriteFile(path, buf, 0o644)
 }
 
+func (c *Config) SaveInRoot(root *os.Root, rel string) error {
+	buf, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+	if err := root.MkdirAll(filepath.Dir(rel), 0o755); err != nil {
+		return err
+	}
+	if err := root.WriteFile(rel, buf, 0o644); err != nil {
+		return err
+	}
+	c.path = filepath.Join(root.Name(), rel)
+	return nil
+}
+
+// os.Root so a repo-shipped .veans.yml symlink can't redirect the write.
+func (c *Config) Save() error {
+	root, err := os.OpenRoot(filepath.Dir(c.path))
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+	return c.SaveInRoot(root, filepath.Base(c.path))
+}
+
 // RepoRoot returns the root of the git repo containing `start` (defaulting
 // to cwd). When `start` is not in a git repo, RepoRoot returns the absolute
 // `start` so callers can still derive a sensible bot username.

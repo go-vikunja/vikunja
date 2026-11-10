@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -597,6 +599,104 @@ func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectIsInTrash is returned instead of ErrProjectDoesNotExist to callers who could reach the trashed project.
+type ErrProjectIsInTrash struct {
+	ID         int64      `json:"id"`
+	DeletedAt  time.Time  `json:"deleted_at"`
+	DeletedBy  *user.User `json:"deleted_by,omitempty"`
+	CanRestore bool       `json:"can_restore"`
+	// The topmost trashed ancestor, which has to be restored instead.
+	TrashedRootID  int64 `json:"trashed_root_id,omitempty"`
+	CanRestoreRoot bool  `json:"can_restore_root"`
+}
+
+// IsErrProjectIsInTrash checks if an error is ErrProjectIsInTrash.
+func IsErrProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrProjectIsInTrash)
+	return ok
+}
+
+func (err ErrProjectIsInTrash) Error() string {
+	return fmt.Sprintf("The project is in the trash. [ID: %d]", err.ID)
+}
+
+// ErrCodeProjectIsInTrash holds the unique world-error code of this error
+const ErrCodeProjectIsInTrash = 3018
+
+// HTTPError holds the http error description
+func (err ErrProjectIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectIsInTrash,
+		Message:  "This project is in the trash. Restore it first.",
+		Details:  err,
+	}
+}
+
+// ErrParentProjectIsInTrash is returned when restoring a project whose parent is still in the trash.
+type ErrParentProjectIsInTrash struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectIsInTrash checks if an error is ErrParentProjectIsInTrash.
+func IsErrParentProjectIsInTrash(err error) bool {
+	_, ok := err.(ErrParentProjectIsInTrash)
+	return ok
+}
+
+func (err ErrParentProjectIsInTrash) Error() string {
+	return fmt.Sprintf(
+		"Parent project is in the trash [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
+}
+
+// ErrCodeParentProjectIsInTrash holds the unique world-error code of this error
+const ErrCodeParentProjectIsInTrash = 3019
+
+// HTTPError holds the http error description
+func (err ErrParentProjectIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectIsInTrash,
+		Message:  "The parent project is in the trash. Restore it first.",
+	}
+}
+
+// ErrParentProjectDoesNotExist is returned when restoring a project whose parent row is gone.
+type ErrParentProjectDoesNotExist struct {
+	ProjectID       int64
+	ParentProjectID int64
+}
+
+// IsErrParentProjectDoesNotExist checks if an error is ErrParentProjectDoesNotExist.
+func IsErrParentProjectDoesNotExist(err error) bool {
+	_, ok := err.(ErrParentProjectDoesNotExist)
+	return ok
+}
+
+func (err ErrParentProjectDoesNotExist) Error() string {
+	return fmt.Sprintf(
+		"Parent project does not exist [ProjectID: %d, ParentProjectID: %d]",
+		err.ProjectID,
+		err.ParentProjectID,
+	)
+}
+
+// ErrCodeParentProjectDoesNotExist holds the unique world-error code of this error
+const ErrCodeParentProjectDoesNotExist = 3021
+
+// HTTPError holds the http error description
+func (err ErrParentProjectDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeParentProjectDoesNotExist,
+		Message:  "The parent project does not exist anymore.",
+	}
+}
+
 // ErrParentProjectIsArchived represents an error, where a project's parent is archived
 type ErrParentProjectIsArchived struct {
 	ProjectID       int64
@@ -645,6 +745,34 @@ func (err *ErrInvalidDefaultProject) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidDefaultProject,
 		Message:  "The default project must be a project you can write to.",
+	}
+}
+
+// ErrProjectMoveTooLarge represents an error where moving a project would create too many hierarchy links
+type ErrProjectMoveTooLarge struct {
+	ProjectID       int64
+	MaxAncestorRows int
+}
+
+// IsErrProjectMoveTooLarge checks if an error is ErrProjectMoveTooLarge.
+func IsErrProjectMoveTooLarge(err error) bool {
+	var e *ErrProjectMoveTooLarge
+	return errors.As(err, &e)
+}
+
+func (err *ErrProjectMoveTooLarge) Error() string {
+	return fmt.Sprintf("Project move creates too many ancestor links [ProjectID: %d, MaxAncestorRows: %d]", err.ProjectID, err.MaxAncestorRows)
+}
+
+// ErrCodeProjectMoveTooLarge holds the unique world-error code of this error
+const ErrCodeProjectMoveTooLarge = 3020
+
+// HTTPError holds the http error description
+func (err *ErrProjectMoveTooLarge) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeProjectMoveTooLarge,
+		Message:  "This project hierarchy is too large to be moved below the chosen parent project.",
 	}
 }
 
@@ -789,6 +917,61 @@ const ErrCodeTaskDoesNotExist = 4002
 // HTTPError holds the http error description
 func (err ErrTaskDoesNotExist) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusNotFound, Code: ErrCodeTaskDoesNotExist, Message: "This task does not exist"}
+}
+
+// ErrTaskIsInTrash is returned instead of ErrTaskDoesNotExist to callers who can read the trashed task's project.
+type ErrTaskIsInTrash struct {
+	ID         int64      `json:"id"`
+	ProjectID  int64      `json:"project_id"`
+	DeletedAt  time.Time  `json:"deleted_at"`
+	DeletedBy  *user.User `json:"deleted_by,omitempty"`
+	CanRestore bool       `json:"can_restore"`
+}
+
+// IsErrTaskIsInTrash checks if an error is a ErrTaskIsInTrash.
+func IsErrTaskIsInTrash(err error) bool {
+	_, ok := err.(ErrTaskIsInTrash)
+	return ok
+}
+
+func (err ErrTaskIsInTrash) Error() string {
+	return fmt.Sprintf("The task is in the trash. [ID: %d]", err.ID)
+}
+
+// ErrCodeTaskIsInTrash holds the unique world-error code of this error
+const ErrCodeTaskIsInTrash = 4040
+
+// HTTPError holds the http error description
+func (err ErrTaskIsInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTaskIsInTrash,
+		Message:  "This task is in the trash.",
+		Details:  err,
+	}
+}
+
+type ErrTaskIsNotInTrash struct {
+	ID int64
+}
+
+func IsErrTaskIsNotInTrash(err error) bool {
+	_, ok := err.(ErrTaskIsNotInTrash)
+	return ok
+}
+
+func (err ErrTaskIsNotInTrash) Error() string {
+	return fmt.Sprintf("The task is not in the trash. [ID: %d]", err.ID)
+}
+
+const ErrCodeTaskIsNotInTrash = 4042
+
+func (err ErrTaskIsNotInTrash) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeTaskIsNotInTrash,
+		Message:  "This task is not in the trash.",
+	}
 }
 
 // ErrBulkTasksMustBeInSameProject represents a "ErrBulkTasksMustBeInSameProject" kind of error.
@@ -1078,6 +1261,62 @@ func (err ErrTaskAttachmentIsTooLarge) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeTaskAttachmentIsTooLarge,
 		Message:  fmt.Sprintf("The task attachment exceeds the configured file size of %d bytes, filesize was %d", config.FilesMaxSize.GetInt64(), err.Size),
+	}
+}
+
+// ErrTaskAttachmentNotPreviewable represents an error where a preview was requested for an attachment that has none.
+type ErrTaskAttachmentNotPreviewable struct {
+	Err error
+}
+
+// IsErrTaskAttachmentNotPreviewable checks if an error is ErrTaskAttachmentNotPreviewable.
+func IsErrTaskAttachmentNotPreviewable(err error) bool {
+	var notPreviewable ErrTaskAttachmentNotPreviewable
+	return errors.As(err, &notPreviewable)
+}
+
+func (err ErrTaskAttachmentNotPreviewable) Error() string {
+	return fmt.Sprintf("Task attachment is not previewable: %v", err.Err)
+}
+
+func (err ErrTaskAttachmentNotPreviewable) Unwrap() error {
+	return err.Err
+}
+
+// ErrCodeTaskAttachmentNotPreviewable holds the unique world-error code of this error
+const ErrCodeTaskAttachmentNotPreviewable = 4038
+
+// HTTPError holds the http error description
+func (err ErrTaskAttachmentNotPreviewable) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnprocessableEntity,
+		Code:     ErrCodeTaskAttachmentNotPreviewable,
+		Message:  "This attachment has no preview.",
+	}
+}
+
+// ErrInvalidPreviewSize represents an error where a preview was requested in a size that does not exist.
+type ErrInvalidPreviewSize struct{}
+
+// IsErrInvalidPreviewSize checks if an error is ErrInvalidPreviewSize.
+func IsErrInvalidPreviewSize(err error) bool {
+	var invalid ErrInvalidPreviewSize
+	return errors.As(err, &invalid)
+}
+
+func (err ErrInvalidPreviewSize) Error() string {
+	return "Invalid task attachment preview size"
+}
+
+// ErrCodeInvalidPreviewSize holds the unique world-error code of this error
+const ErrCodeInvalidPreviewSize = 4039
+
+// HTTPError holds the http error description
+func (err ErrInvalidPreviewSize) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnprocessableEntity,
+		Code:     ErrCodeInvalidPreviewSize,
+		Message:  "The preview size must be one of sm, md, lg or xl.",
 	}
 }
 
@@ -1393,6 +1632,34 @@ func (err ErrTaskRelationCycle) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskRelationHierarchyTooLarge represents an error where a task hierarchy is too large to check for cycles
+type ErrTaskRelationHierarchyTooLarge struct {
+	TaskID   int64
+	MaxTasks int
+}
+
+// IsErrTaskRelationHierarchyTooLarge checks if an error is ErrTaskRelationHierarchyTooLarge.
+func IsErrTaskRelationHierarchyTooLarge(err error) bool {
+	var e ErrTaskRelationHierarchyTooLarge
+	return errors.As(err, &e)
+}
+
+func (err ErrTaskRelationHierarchyTooLarge) Error() string {
+	return fmt.Sprintf("Task hierarchy is too large to check for relation cycles [TaskID: %v, MaxTasks: %v]", err.TaskID, err.MaxTasks)
+}
+
+// ErrCodeTaskRelationHierarchyTooLarge holds the unique world-error code of this error
+const ErrCodeTaskRelationHierarchyTooLarge = 4041
+
+// HTTPError holds the http error description
+func (err ErrTaskRelationHierarchyTooLarge) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTaskRelationHierarchyTooLarge,
+		Message:  fmt.Sprintf("The task hierarchy contains more than %d tasks.", err.MaxTasks),
+	}
+}
+
 // ErrInvalidFilterExpression represents an error where the task filter expression was invalid
 type ErrInvalidFilterExpression struct {
 	Expression      string
@@ -1417,7 +1684,7 @@ func (err ErrInvalidFilterExpression) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidFilterExpression,
-		Message:  fmt.Sprintf("The filter expression '%s' is invalid: %v", err.Expression, err.ExpressionError),
+		Message:  fmt.Sprintf("The filter expression is invalid: %v", err.ExpressionError),
 	}
 }
 
@@ -2113,6 +2380,30 @@ func (err ErrTaskAlreadyExistsInBucket) HTTPError() web.HTTPError {
 	}
 }
 
+type ErrTooManyBuckets struct {
+	ProjectViewID int64
+	Max           int
+}
+
+func IsErrTooManyBuckets(err error) bool {
+	_, ok := err.(ErrTooManyBuckets)
+	return ok
+}
+
+func (err ErrTooManyBuckets) Error() string {
+	return fmt.Sprintf("Project view has too many buckets [ProjectViewID: %d, Max: %d]", err.ProjectViewID, err.Max)
+}
+
+const ErrCodeTooManyBuckets = 10007
+
+func (err ErrTooManyBuckets) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTooManyBuckets,
+		Message:  fmt.Sprintf("A project view can have at most %d buckets.", err.Max),
+	}
+}
+
 // =============
 // Saved Filters
 // =============
@@ -2459,6 +2750,91 @@ func (err *ErrOpenIDBadRequestWithDetails) Error() string {
 	return err.Message
 }
 
+// ErrUserIdentityLinkedToOtherUser represents an error where an OIDC identity
+// already belongs to another user, either linked or as an OIDC-created user.
+type ErrUserIdentityLinkedToOtherUser struct {
+	Issuer string
+}
+
+// IsErrUserIdentityLinkedToOtherUser checks if an error is ErrUserIdentityLinkedToOtherUser.
+func IsErrUserIdentityLinkedToOtherUser(err error) bool {
+	var e *ErrUserIdentityLinkedToOtherUser
+	return errors.As(err, &e)
+}
+
+func (err *ErrUserIdentityLinkedToOtherUser) Error() string {
+	return fmt.Sprintf("OpenID identity is already linked to another user [Issuer: %s]", err.Issuer)
+}
+
+// ErrCodeUserIdentityLinkedToOtherUser holds the unique world-error code of this error
+const ErrCodeUserIdentityLinkedToOtherUser = 15002
+
+// HTTPError holds the http error description
+func (err *ErrUserIdentityLinkedToOtherUser) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeUserIdentityLinkedToOtherUser,
+		Message:  "This account at the identity provider is already linked to another account.",
+	}
+}
+
+// ErrUserIdentityProviderAlreadyLinked represents an error where a user
+// already has an identity from the same issuer.
+type ErrUserIdentityProviderAlreadyLinked struct {
+	UserID int64
+	Issuer string
+}
+
+// IsErrUserIdentityProviderAlreadyLinked checks if an error is ErrUserIdentityProviderAlreadyLinked.
+func IsErrUserIdentityProviderAlreadyLinked(err error) bool {
+	var e *ErrUserIdentityProviderAlreadyLinked
+	return errors.As(err, &e)
+}
+
+func (err *ErrUserIdentityProviderAlreadyLinked) Error() string {
+	return fmt.Sprintf("User already has an identity from this issuer [UserID: %d, Issuer: %s]", err.UserID, err.Issuer)
+}
+
+// ErrCodeUserIdentityProviderAlreadyLinked holds the unique world-error code of this error
+const ErrCodeUserIdentityProviderAlreadyLinked = 15003
+
+// HTTPError holds the http error description
+func (err *ErrUserIdentityProviderAlreadyLinked) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusConflict,
+		Code:     ErrCodeUserIdentityProviderAlreadyLinked,
+		Message:  "You already linked an account of this provider. Unlink it first.",
+	}
+}
+
+// ErrUserIdentityDoesNotExist represents an error where a linked identity
+// does not exist or belongs to another user.
+type ErrUserIdentityDoesNotExist struct {
+	ID int64
+}
+
+// IsErrUserIdentityDoesNotExist checks if an error is ErrUserIdentityDoesNotExist.
+func IsErrUserIdentityDoesNotExist(err error) bool {
+	var e *ErrUserIdentityDoesNotExist
+	return errors.As(err, &e)
+}
+
+func (err *ErrUserIdentityDoesNotExist) Error() string {
+	return fmt.Sprintf("Linked identity does not exist [ID: %d]", err.ID)
+}
+
+// ErrCodeUserIdentityDoesNotExist holds the unique world-error code of this error
+const ErrCodeUserIdentityDoesNotExist = 15004
+
+// HTTPError holds the http error description
+func (err *ErrUserIdentityDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeUserIdentityDoesNotExist,
+		Message:  "This linked account does not exist.",
+	}
+}
+
 // ==============
 // Session Errors
 // ==============
@@ -2803,7 +3179,7 @@ func (err ErrTimeEntryDoesNotExist) HTTPError() web.HTTPError {
 }
 
 // ErrTimeEntryInvalidContainer represents an error where a time entry is attached
-// to both a task and a project, or to neither (violating the XOR invariant).
+// to both a task and a project.
 type ErrTimeEntryInvalidContainer struct {
 	TaskID    int64
 	ProjectID int64
@@ -2816,7 +3192,7 @@ func IsErrTimeEntryInvalidContainer(err error) bool {
 }
 
 func (err ErrTimeEntryInvalidContainer) Error() string {
-	return fmt.Sprintf("Time entry must be attached to exactly one of task or project [TaskID: %v, ProjectID: %v]", err.TaskID, err.ProjectID)
+	return fmt.Sprintf("Time entry can be attached to a task or a project, not both [TaskID: %v, ProjectID: %v]", err.TaskID, err.ProjectID)
 }
 
 // ErrCodeTimeEntryInvalidContainer holds the unique world-error code of this error
@@ -2827,7 +3203,7 @@ func (err ErrTimeEntryInvalidContainer) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeTimeEntryInvalidContainer,
-		Message:  "A time entry must be attached to exactly one of a task or a project.",
+		Message:  "A time entry can be attached to a task or a project, not both.",
 	}
 }
 

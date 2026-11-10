@@ -18,14 +18,17 @@ package files
 
 import (
 	"bytes"
+	"errors"
 	"image"
 	"image/png"
 	"io"
+	"io/fs"
 	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -168,6 +171,51 @@ func TestFile_Delete(t *testing.T) {
 	})
 }
 
+func TestFile_DeleteOnCommit(t *testing.T) {
+	t.Run("removes the blob and previews once dispatched", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		initFixtures(t)
+		f := &File{ID: 1}
+		require.NoError(t, f.SavePreview(PreviewMedium, []byte("preview")))
+
+		require.NoError(t, f.DeleteOnCommit(s))
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		_, err := FileStat(f)
+		require.NoError(t, err)
+
+		events.DispatchPending(t.Context(), s)
+		_, err = FileStat(f)
+		require.ErrorIs(t, err, fs.ErrNotExist)
+		_, _, err = f.OpenPreview(PreviewMedium)
+		require.ErrorIs(t, err, fs.ErrNotExist)
+	})
+	t.Run("keeps row and blob on rollback", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		initFixtures(t)
+		f := &File{ID: 1}
+
+		require.NoError(t, f.DeleteOnCommit(s))
+		require.NoError(t, s.Rollback())
+		events.CleanupPending(s)
+		events.DispatchPending(t.Context(), s)
+
+		db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+		_, err := FileStat(f)
+		require.NoError(t, err)
+	})
+	t.Run("Nonexisting", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		initFixtures(t)
+
+		err := (&File{ID: 9999}).DeleteOnCommit(s)
+		assert.True(t, IsErrFileDoesNotExist(err))
+	})
+}
+
 func TestFile_LoadFileByID(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		initFixtures(t)
@@ -207,6 +255,29 @@ func TestFileSave_UsesStorage(t *testing.T) {
 	written, err := io.ReadAll(rc)
 	require.NoError(t, err)
 	assert.Equal(t, content, written)
+}
+
+type failingWriteStorage struct {
+	*memStorage
+}
+
+func (failingWriteStorage) Write(string, io.ReadSeeker, uint64) error {
+	return errors.New("write failed")
+}
+
+func TestCreateWithMimeAndSession_RemovesRowWhenSaveFails(t *testing.T) {
+	initFixtures(t)
+	useStorage(t, failingWriteStorage{newMemStorage()})
+
+	s := db.NewSession()
+	defer s.Close()
+
+	file, err := CreateWithMimeAndSession(s, bytes.NewReader([]byte("content")), "failing.txt", 0, &testauth{id: 1}, "text/plain", true)
+	require.Error(t, err)
+	assert.Nil(t, file)
+
+	require.NoError(t, s.Commit())
+	db.AssertMissing(t, "files", map[string]interface{}{"name": "failing.txt"})
 }
 
 func TestFile_LoadFileMetaByID(t *testing.T) {

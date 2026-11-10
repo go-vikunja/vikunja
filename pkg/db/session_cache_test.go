@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/schemas"
 )
 
 func TestIsWriteStatement(t *testing.T) {
@@ -89,6 +90,70 @@ func TestRemember(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 42, third)
 	assert.Equal(t, 2, calls)
+}
+
+func TestForget(t *testing.T) {
+	config.InitDefaultConfig()
+	_, err := CreateTestEngine()
+	require.NoError(t, err)
+
+	s := NewSession()
+	defer s.Close()
+
+	calls := 0
+	fetch := func() (int, error) {
+		calls++
+		return calls, nil
+	}
+
+	first, err := Remember(s, "forget-test", fetch)
+	require.NoError(t, err)
+	Forget(s, "forget-test")
+	second, err := Remember(s, "forget-test", fetch)
+	require.NoError(t, err)
+	assert.Equal(t, 1, first)
+	assert.Equal(t, 2, second)
+}
+
+func TestForgetSeesCommittedUpdate(t *testing.T) {
+	config.InitDefaultConfig()
+	engine, err := CreateTestEngine()
+	require.NoError(t, err)
+	if Type() == schemas.SQLITE {
+		t.Skip("SQLite cannot commit a concurrent writer while a reader holds its snapshot")
+	}
+	require.NoError(t, engine.Sync(&memoTestRow{}))
+	t.Cleanup(func() { _ = engine.DropTables(&memoTestRow{}) })
+	row := &memoTestRow{Title: "before"}
+	_, err = engine.Insert(row)
+	require.NoError(t, err)
+
+	reader := NewSession()
+	defer reader.Close()
+	fetch := func() (memoTestRow, error) {
+		var loaded memoTestRow
+		_, err := reader.ID(row.ID).Get(&loaded)
+		return loaded, err
+	}
+	before, err := Remember(reader, "concurrent-row", fetch)
+	require.NoError(t, err)
+	require.Equal(t, "before", before.Title)
+
+	writer := NewSession()
+	defer writer.Close()
+	_, err = writer.ID(row.ID).Cols("title").Update(&memoTestRow{Title: "after"})
+	require.NoError(t, err)
+	require.NoError(t, writer.Commit())
+
+	var locked memoTestRow
+	has, err := reader.ID(row.ID).ForUpdate().Get(&locked)
+	require.NoError(t, err)
+	require.True(t, has)
+	require.Equal(t, "after", locked.Title)
+	Forget(reader, "concurrent-row")
+	after, err := Remember(reader, "concurrent-row", fetch)
+	require.NoError(t, err)
+	assert.Equal(t, "after", after.Title)
 }
 
 func TestRememberEach(t *testing.T) {

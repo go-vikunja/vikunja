@@ -35,3 +35,204 @@
   last_active: 2020-01-01 00:00:00
   created: 2020-01-01 00:00:00
   # refresh token in plaintext: testtoken_session_expired
+# One session per fixture user, used by test helpers that mint JWTs (sid = test-session-<user id>).
+- id: "test-session-1"
+  user_id: 1
+  token_hash: "8a54cf910506a6685127dec95af35f578df605311dfc78c20f54f2bde82b85b6"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-2"
+  user_id: 2
+  token_hash: "40451c053fef811309d985613ff1bbda8f732bfb1a1ba8ef5b40de1e8406082e"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-3"
+  user_id: 3
+  token_hash: "30a4c3dee2f5505a9844fbbf612eee2a4066e71e65ab9c0b6b8919b9a877242e"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-4"
+  user_id: 4
+  token_hash: "564fd999f04db97e382bd84ecea3c2417f910cb5a3e93a25aaef96b2a6f78547"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-5"
+  user_id: 5
+  token_hash: "7867c1e95b44eaf265387aebcdf78d0afc960485410dc5eb82217e98f582619d"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-6"
+  user_id: 6
+  token_hash: "00717015b37fe768d3b16e5fc316ce1c98ce2f03fb363a68649755566e2bbe9b"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-7"
+  user_id: 7
+  token_hash: "667e1e5b10e153d5fe9fb59456bd2be9568de75d2306c7762cd2602ade283bd9"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-8"
+  user_id: 8
+  token_hash: "7d204a1ebe37dc3a2c068bcc4a1661844c79256351f6069d5a60bddc52ff5927"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-9"
+  user_id: 9
+  token_hash: "8ba2d25a3b593404153301180a438c318f772ff5f238602bcb1d096a4e654673"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-10"
+  user_id: 10
+  token_hash: "e7d7287995374062e68bc97ac6ee9ffd67a81bab2021db644cf7e91b0106e400"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-11"
+  user_id: 11
+  token_hash: "5a3bc9cd6fce576d3c23bc8f5057351fbe52668aa632df9159bf7ad13d179ae8"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-12"
+  user_id: 12
+  token_hash: "eee08a0e7124e5087db9d3c0fbd836cdc31d363d1c0b1bc1c5583cb834a464fc"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-13"
+  user_id: 13
+  token_hash: "c2923a3d4d7f0f75e66db671140e3a2db1d9a44fc1f4e7308d35eebf1dcafb1e"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-14"
+  user_id: 14
+  token_hash: "e29376cdacf804f297a0218012926f439b906e712e34eeb48ffe6753c758b2bb"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-15"
+  user_id: 15
+  token_hash: "8cefe6551046e98c06a370b2b69cea600b42df9b9b904680533308ea8770e687"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-16"
+  user_id: 16
+  token_hash: "e7e1fa1b20a56d73f11d2cef1d48c19fded00b0903f5ac69cd67fb182af507a3"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-17"
+  user_id: 17
+  token_hash: "eb52cb5b20555cdbab7cb15f0ec7bb43b3207f97f5b25ae74e0c101482398209"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-18"
+  user_id: 18
+  token_hash: "b9d9a8d9721f94ec059f08b03cceb4d0c3f5cd652ee2772834b18e5d8bf09a2a"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-19"
+  user_id: 19
+  token_hash: "2843642828b5735b2707cee25a81060e8ab581372d82efffe8722a8e408c2b05"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-20"
+  user_id: 20
+  token_hash: "7cc1d3055850be747bbc36dfb5ef89959c4475e8aa736655182511730ab3c6f3"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-21"
+  user_id: 21
+  token_hash: "30c6cfa3286dc9efb208295a3712cb0bf3fc9eb1a1e6aab06f4e3fca144ce8da"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-22"
+  user_id: 22
+  token_hash: "775aa407545b638823016c8d5739eb8bbcfa9f79421eac97f97ddcaad9e95e9c"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-23"
+  user_id: 23
+  token_hash: "1df1191f85cc0bfe50bdd73104200bbbb0b3cd13fa81293fafc9a59fce10b450"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-24"
+  user_id: 24
+  token_hash: "abd508679ce02d95d776299323f0cf41413db2de76c03b3fffcefa36c7e401e3"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+- id: "test-session-25"
+  user_id: 25
+  token_hash: "70ab180e986d4d0bf5efd664773b5ed9298ebe59f9e87f0867abf2bcff2f7123"
+  device_info: "Test helper"
+  ip_address: "127.0.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00

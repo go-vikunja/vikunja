@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<Message
-			v-if="errorMessage"
+			v-if="errorMessage && !linking"
 			variant="danger"
 		>
 			{{ errorMessage }}
@@ -16,6 +16,15 @@
 		<Message v-if="loading && !needsTotp">
 			{{ $t('user.auth.authenticating') }}
 		</Message>
+
+		<LinkIdentityConfirm
+			v-if="linking"
+			:provider-key="route.params.provider as string"
+			:code="route.query.code as string"
+			:state="queryState"
+			:has-session="authStore.authUser"
+			:initial-error="errorMessage"
+		/>
 
 		<form
 			v-if="needsTotp"
@@ -59,7 +68,12 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
-import {redirectToProvider} from '@/helpers/redirectToProvider'
+import {
+	endOpenIdFlow,
+	isLinkingIdentity,
+	redirectToProvider,
+} from '@/helpers/redirectToProvider'
+import LinkIdentityConfirm from '@/components/user/LinkIdentityConfirm.vue'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
@@ -79,9 +93,13 @@ const configStore = useConfigStore()
 const loading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
 const errorMessageFromQuery = computed(() => route.query.error)
+// vue-router parses a bare `?state` as null.
+const queryState = computed(() => typeof route.query.state === 'string' ? route.query.state : '')
 
 const needsTotp = ref(false)
 const totpPasscode = ref('')
+
+const linking = ref(false)
 
 function pendingTotpKey(provider: string): string {
 	return `openid_pending_totp_${provider}`
@@ -101,15 +119,27 @@ async function authenticateWithCode() {
 		errorMessage.value = typeof route.query.message !== 'undefined'
 			? route.query.message as string
 			: t('user.auth.openIdGeneralError')
+		if (isLinkingIdentity(queryState.value)) {
+			linking.value = true
+			return
+		}
+		endOpenIdFlow(queryState.value)
 		return
 	}
 
-	const state = localStorage.getItem('state')
-	if (typeof route.query.state === 'undefined' || route.query.state !== state) {
+	const storedState = localStorage.getItem('state')
+	if (!storedState || queryState.value !== storedState) {
 		sessionStorage.removeItem(pendingTotpKey(providerKey))
 		errorMessage.value = t('user.auth.openIdStateError')
 		return
 	}
+
+	if (isLinkingIdentity(queryState.value)) {
+		linking.value = true
+		return
+	}
+
+	endOpenIdFlow(queryState.value)
 
 	// sessionStorage (not localStorage): per-tab, cleared on tab close.
 	const pendingPasscode = sessionStorage.getItem(pendingTotpKey(providerKey)) ?? undefined
