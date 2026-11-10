@@ -2,7 +2,7 @@
 	<div
 		ref="multiselectRoot"
 		class="multiselect"
-		:class="{'has-search-results': searchResultsVisible, 'is-disabled': disabled}"
+		:class="{'has-search-results': searchResultsVisible, 'is-disabled': disabled, 'opens-upwards': resultsAbove}"
 		tabindex="-1"
 		:aria-disabled="disabled"
 		@focus="focus"
@@ -13,6 +13,7 @@
 			:class="{'is-loading': showLoading || localLoading}"
 		>
 			<div
+				ref="inputWrapper"
 				class="input-wrapper input"
 				:class="{'has-multiple': hasMultiple, 'has-removal-button': removalAvailable && !disabled}"
 			>
@@ -83,8 +84,10 @@
 			<div
 				v-if="searchResultsVisible"
 				:id="listboxId"
+				ref="resultsEl"
 				class="search-results"
 				:class="{'search-results-inline': inline}"
+				:style="inline ? undefined : resultsStyle"
 				role="listbox"
 				:aria-label="accessibleName"
 				tabindex="-1"
@@ -172,6 +175,7 @@
 
 <script setup lang="ts" generic="T extends Record<string, unknown>">
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, useId, watch, type ComponentPublicInstance, type Ref} from 'vue'
+import {autoUpdate, computePosition, flip, size} from '@floating-ui/dom'
 import {useI18n} from 'vue-i18n'
 
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
@@ -326,6 +330,54 @@ const searchResultsVisible = computed(() => {
 		creationHintVisible.value
 	)
 })
+
+const inputWrapper = ref<HTMLElement | null>(null)
+const resultsEl = ref<HTMLElement | null>(null)
+const resultsStyle = ref<Record<string, string>>({})
+const resultsAbove = ref(false)
+// 4rem app header ($navbar-height) plus a small margin, same as Popup.
+const VIEWPORT_PADDING = {top: 72, right: 8, bottom: 8, left: 8}
+
+async function updateResultsPosition() {
+	if (!inputWrapper.value || !resultsEl.value) {
+		return
+	}
+	let maxBlockSize = 0
+	let inlineSize = 0
+	const {x, y, placement} = await computePosition(inputWrapper.value, resultsEl.value, {
+		placement: 'bottom-start',
+		strategy: 'fixed',
+		middleware: [
+			flip({padding: VIEWPORT_PADDING, fallbackStrategy: 'initialPlacement'}),
+			size({
+				padding: VIEWPORT_PADDING,
+				apply: ({availableHeight, rects}) => {
+					maxBlockSize = availableHeight
+					inlineSize = rects.reference.width
+				},
+			}),
+		],
+	})
+	resultsAbove.value = placement.startsWith('top')
+	resultsStyle.value = {
+		left: `${x}px`,
+		top: `${y}px`,
+		inlineSize: `${inlineSize}px`,
+		maxBlockSize: `min(50vh, ${Math.max(maxBlockSize, 0)}px)`,
+	}
+}
+
+let stopAutoUpdate: (() => void) | null = null
+watch([searchResultsVisible, resultsEl], ([visible, el]) => {
+	stopAutoUpdate?.()
+	stopAutoUpdate = null
+	if (!visible || !el || !inputWrapper.value || props.inline) {
+		resultsAbove.value = false
+		return
+	}
+	stopAutoUpdate = autoUpdate(inputWrapper.value, el, updateResultsPosition)
+}, {flush: 'post'})
+onBeforeUnmount(() => stopAutoUpdate?.())
 
 const queryHasExactMatch = computed(() => {
 	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value))
@@ -667,6 +719,15 @@ function focus() {
 	}
 }
 
+.has-search-results.opens-upwards .input-wrapper {
+	border-radius: 0 0 $radius $radius;
+
+	&, &:focus-within {
+		border-block-start-color: var(--grey-200) !important;
+		border-block-end-color: var(--primary) !important;
+	}
+}
+
 .search-results {
 	background: var(--white);
 	border-radius: 0 0 $radius $radius;
@@ -675,12 +736,16 @@ function focus() {
 
 	max-block-size: 50vh;
 	overflow: hidden auto;
-	position: absolute;
+	position: fixed;
 	z-index: 100;
-	inset-inline: 0;
-	inline-size: 100%;
 	box-sizing: border-box;
 	clip-path: inset(0);
+
+	.opens-upwards & {
+		border-radius: $radius $radius 0 0;
+		border-block-start: 1px solid var(--primary);
+		border-block-end: none;
+	}
 }
 
 .search-results-inline {
