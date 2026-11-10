@@ -47,7 +47,7 @@ const globalSearchMinLength = 2
 func SearchUsers(s *xorm.Session, search string, currentUser *User, page int) (users []*User, total int64, err error) {
 	cond := userSearchCond(search, currentUser, &ProjectUserOpts{})
 	if cond == nil {
-		return []*User{}, 0, nil
+		return nil, 0, nil
 	}
 	if page < 1 {
 		page = 1
