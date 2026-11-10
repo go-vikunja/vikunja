@@ -37,7 +37,10 @@ func RegisterUserSearchRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "users-search",
 		Summary:     "Search users",
-		Description: "Searches users by username, name or full email. Matching by name or email requires the target user to have made themselves discoverable, unless both users share an external (OIDC/LDAP) team. Email addresses are never returned.",
+		Description: "Searches users and returns the best matches first: exact username, then usernames or names starting with q, then the rest, alphabetically by username. Results are paginated with a fixed page size of 25; total holds the number of matches. " +
+			"By default, usernames match exactly (case-insensitive), names match partially only for users who enabled discoverable_by_name, and emails match exactly only for users who enabled discoverable_by_email; users sharing an external (OIDC/LDAP) team can always find each other by name or exact email. Email addresses are not returned. " +
+			"When the instance enables global user search (global_user_search_enabled in /info), name, username and email match partially for every user regardless of their discoverability settings, q must be at least 2 characters, and email addresses are returned. " +
+			"If the instance restricts search to team members, only users sharing a team with the caller are returned. Other users' bots are never returned.",
 		Method:      http.MethodGet,
 		Path:        "/users",
 		Tags:        []string{"user"},
@@ -56,7 +59,8 @@ func RegisterUserSearchRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterUserSearchRoutes) }
 
 func usersSearch(ctx context.Context, in *struct {
-	Q string `query:"q" doc:"Search query matched against username, name or full email."`
+	Q    string `query:"q" doc:"Search query matched against username, name or email. Separate several queries with commas."`
+	Page int    `query:"page" default:"1" minimum:"1" doc:"1-based page number. The page size is fixed at 25."`
 }) (*userListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -72,7 +76,7 @@ func usersSearch(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 
-	users, err := user.SearchUsers(s, in.Q, currentUser)
+	users, total, err := user.SearchUsers(s, in.Q, currentUser, in.Page)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -81,7 +85,7 @@ func usersSearch(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 
-	return &userListBody{Body: NewPaginated(users, int64(len(users)), 1, len(users))}, nil
+	return &userListBody{Body: NewPaginated(users, total, in.Page, user.SearchUsersPageSize)}, nil
 }
 
 func projectUsersSearch(ctx context.Context, in *struct {

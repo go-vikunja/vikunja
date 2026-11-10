@@ -30,7 +30,7 @@ import (
 
 // UserList gets all information about a list of users
 // @Summary Get users
-// @Description Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings, unless both users share an external team (synced via OIDC/LDAP), in which case they can always find each other.
+// @Description Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings, unless both users share an external team (synced via OIDC/LDAP), in which case they can always find each other. If service.enableglobalusersearch is enabled, name, username and email match partially for all users (at least 2 characters) and emails are returned. Returns at most the 25 best matches.
 // @tags user
 // @Accept json
 // @Produce json
@@ -52,7 +52,7 @@ func UserList(c *echo.Context) error {
 		return err
 	}
 
-	users, err := user.SearchUsers(s, search, currentUser)
+	users, _, err := user.SearchUsers(s, search, currentUser, 1)
 	if err != nil {
 		_ = s.Rollback()
 		return err
