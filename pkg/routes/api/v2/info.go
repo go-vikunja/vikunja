@@ -20,13 +20,20 @@ import (
 	"context"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
+// VikunjaInfos keeps the shared schema name; fields added here stay off the frozen /api/v1.
+type VikunjaInfos struct {
+	shared.VikunjaInfos
+	GlobalUserSearchEnabled bool `json:"global_user_search_enabled" doc:"Whether the user search matches every user partially by name, username and email and returns emails. When true, the per-user discoverable_by_name and discoverable_by_email settings have no effect."`
+}
+
 type infoBody struct {
-	Body shared.VikunjaInfos
+	Body VikunjaInfos
 }
 
 // RegisterInfoRoutes wires the public instance-info endpoint onto the Huma API.
@@ -47,5 +54,8 @@ func RegisterInfoRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterInfoRoutes) }
 
 func info(_ context.Context, _ *struct{}) (*infoBody, error) {
-	return &infoBody{Body: shared.BuildInfo()}, nil //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+	return &infoBody{Body: VikunjaInfos{
+		VikunjaInfos:            shared.BuildInfo(), //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+		GlobalUserSearchEnabled: config.ServiceEnableGlobalUserSearch.GetBool(),
+	}}, nil
 }
