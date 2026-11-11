@@ -1058,6 +1058,8 @@ definitions:
       filter_include_nulls:
         description: If set to true, the result will also include null values
         type: boolean
+      include_subprojects:
+        type: boolean
       order_by:
         description: The query parameter to order the items by. This can be either
           asc or desc, with asc being the default.
@@ -4286,6 +4288,12 @@ paths:
         name: view
         required: true
         type: integer
+      - description: If true, also returns tasks from all descendant subprojects the
+          user can access. A sort by position is ignored while this is set, as positions
+          are scoped to a single view.
+        in: query
+        name: include_subprojects
+        type: boolean
       - description: The page number. Used for pagination. If not provided, the first
           page of results is returned.
         in: query
