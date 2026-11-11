@@ -41,14 +41,14 @@
 		<CustomTransition name="fade">
 			<span
 				v-if="loading && saving"
-				class="is-inline-flex is-align-items-center"
+				class="save-status is-inline-flex is-align-items-center"
 			>
 				<span class="loader is-inline-block mie-2" />
 				{{ $t('misc.saving') }}
 			</span>
 			<span
 				v-else-if="!loading && showSavedMessage"
-				class="has-text-success is-inline-flex is-align-content-center"
+				class="save-status has-text-success is-inline-flex is-align-content-center"
 			>
 				<Icon
 					icon="check"
@@ -184,6 +184,7 @@ async function cancel(element: HTMLInputElement) {
 
 <style lang="scss" scoped>
 .heading {
+	position: relative;
 	display: flex;
 	justify-content: flex-start;
 	text-transform: none;
@@ -197,6 +198,14 @@ async function cancel(element: HTMLInputElement) {
 
 .title {
 	margin-block-end: 0;
+}
+
+// Out of flow so it doesn't squeeze the title while visible.
+.save-status {
+	position: absolute;
+	inset-block-start: 100%;
+	inset-inline-end: 0;
+	font-size: .875rem;
 }
 
 .title.input {
