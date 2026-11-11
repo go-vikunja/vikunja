@@ -6,12 +6,13 @@ const LABEL_REPLY = 'waiting for reply';
 const REVIEW_LABEL_SPEC = {
 	name: LABEL_REVIEW,
 	color: '0075ca',
-	description: "Maintainers' turn: the author replied or pushed since the last request for changes",
+	description: "Maintainers' turn to review",
 };
 const MAINTAINER_ASSOCIATIONS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
 
 const PR_FIELDS = `
   number
+  state
   isDraft
   authorAssociation
   author { login __typename }
@@ -31,6 +32,7 @@ const PR_FIELDS = `
 `;
 
 export function skipReason(pr) {
+	if (pr.state !== 'OPEN') return 'closed';
 	if (pr.isDraft) return 'draft';
 	if (MAINTAINER_ASSOCIATIONS.has(pr.authorAssociation)) return 'maintainer';
 	if (pr.author?.__typename === 'Bot') return 'bot';

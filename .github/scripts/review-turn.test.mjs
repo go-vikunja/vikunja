@@ -14,6 +14,7 @@ const REPLY = 'waiting for reply';
 
 const pr = (nodes, overrides = {}) => ({
 	number: 1,
+	state: 'OPEN',
 	isDraft: false,
 	authorAssociation: 'FIRST_TIME_CONTRIBUTOR',
 	author: { login: AUTHOR, __typename: 'User' },
@@ -121,4 +122,8 @@ test('a maintainer reviewing their own PR does not count as an ask', () => {
 test('answeredNow turns an outstanding ask into waiting for review', () => {
 	assert.equal(decideTurnLabel(pr([changesRequested(T.t1)])), REPLY);
 	assert.equal(decideTurnLabel(pr([changesRequested(T.t1)]), { answeredNow: true }), REVIEW);
+});
+
+test('closed PR is out of scope', () => {
+	assert.equal(decideTurnLabel(pr([], { state: 'CLOSED' })), null);
 });
