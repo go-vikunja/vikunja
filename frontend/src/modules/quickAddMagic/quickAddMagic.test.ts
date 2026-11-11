@@ -194,6 +194,20 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.date).toBeNull()
 		})
+		it('should not match a date word inside a longer word', () => {
+			for (const text of ['Plan trip next weekend', 'Read todays news', 'Review tomorrows agenda', 'Budget for next months', 'Fix tonights build']) {
+				const result = parseTaskText(text)
+
+				expect(result.text).toBe(text)
+				expect(result.date).toBeNull()
+			}
+		})
+		it('should still match a date word followed by punctuation', () => {
+			const result = parseTaskText('Call mom today, then gym')
+
+			const now = new Date()
+			expect(result?.date?.getDate()).toBe(now.getDate())
+		})
 		it('should ignore casing', () => {
 			const result = parseTaskText('Lorem Ipsum ToDay')
 
