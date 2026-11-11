@@ -3145,7 +3145,7 @@ export const tasksDeletePermanently = <ThrowOnError extends boolean = true>(opti
 /**
  * Set a task's position in a view
  *
- * Sets where a task sorts within one of its project's views. The position is per view, so this only affects the view named by project_view_id. Requires write access to the task. Positions below the minimum spacing make the server recalculate every position in the view, so the returned value may differ from the one sent.
+ * Sets where a task sorts within one of its project's views, or within a non-kanban view of an ancestor project that lists it through include_subprojects. The position is per view, so this only affects the view named by project_view_id. Requires write access to the task. Positions below the minimum spacing make the server recalculate every position in the view, so the returned value may differ from the one sent.
  */
 export const tasksPositionUpdate = <ThrowOnError extends boolean = true>(options: Options<TasksPositionUpdateData, ThrowOnError>): RequestResult<TasksPositionUpdateResponses, TasksPositionUpdateErrors, ThrowOnError> => (options.client ?? client).put<TasksPositionUpdateResponses, TasksPositionUpdateErrors, ThrowOnError>({
     security: [{
