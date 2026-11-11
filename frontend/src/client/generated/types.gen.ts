@@ -1591,6 +1591,37 @@ export type PasswordTokenRequest = {
     email?: string;
 };
 
+export type Preview = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Open Graph description, falling back to the page description.
+     */
+    description?: string;
+    /**
+     * Absolute HTTP(S) icon URL, or empty when unavailable.
+     */
+    favicon?: string;
+    /**
+     * Absolute HTTP(S) image URL, or empty when unavailable.
+     */
+    image?: string;
+    /**
+     * Name of the linked website.
+     */
+    site_name?: string;
+    /**
+     * Open Graph title, falling back to the HTML title.
+     */
+    title?: string;
+    /**
+     * Final HTTP(S) destination after redirects.
+     */
+    url?: string;
+};
+
 export type PreviewResult = {
     /**
      * A URL to the JSON Schema for this object.
@@ -4788,6 +4819,33 @@ export type PasswordTokenRequestWritable = {
     email?: string;
 };
 
+export type PreviewWritable = {
+    /**
+     * Open Graph description, falling back to the page description.
+     */
+    description?: string;
+    /**
+     * Absolute HTTP(S) icon URL, or empty when unavailable.
+     */
+    favicon?: string;
+    /**
+     * Absolute HTTP(S) image URL, or empty when unavailable.
+     */
+    image?: string;
+    /**
+     * Name of the linked website.
+     */
+    site_name?: string;
+    /**
+     * Open Graph title, falling back to the HTML title.
+     */
+    title?: string;
+    /**
+     * Final HTTP(S) destination after redirects.
+     */
+    url?: string;
+};
+
 export type PreviewResultWritable = {
     /**
      * The first few tasks that would be imported with the given config.
@@ -6878,6 +6936,36 @@ export type LabelsUpdateResponses = {
 };
 
 export type LabelsUpdateResponse = LabelsUpdateResponses[keyof LabelsUpdateResponses];
+
+export type LinkPreviewReadData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * External HTTP(S) URL to preview.
+         */
+        url: string;
+    };
+    url: '/link-preview';
+};
+
+export type LinkPreviewReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type LinkPreviewReadError = LinkPreviewReadErrors[keyof LinkPreviewReadErrors];
+
+export type LinkPreviewReadResponses = {
+    /**
+     * OK
+     */
+    200: Preview;
+};
+
+export type LinkPreviewReadResponse = LinkPreviewReadResponses[keyof LinkPreviewReadResponses];
 
 export type AuthLoginData = {
     body: LoginWritable;

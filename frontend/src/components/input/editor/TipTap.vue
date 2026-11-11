@@ -117,6 +117,10 @@
 				@close="closeLightbox"
 			/>
 		</div>
+		<LinkPreviews
+			v-if="enableLinkPreviews && !isEditing"
+			:content="editor?.getHTML() ?? modelValue"
+		/>
 
 		<input
 			v-if="isEditing"
@@ -203,6 +207,7 @@ import {createEditorExtensions, parseEditorHTML} from './editorExtensions'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
+import LinkPreviews from './LinkPreviews.vue'
 
 import type {BottomAction, UploadCallback} from './types'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -224,6 +229,7 @@ const props = withDefaults(defineProps<{
 	editShortcut?: string,
 	enableDiscardShortcut?: boolean,
 	enableMentions?: boolean,
+	enableLinkPreviews?: boolean,
 	projectId?: number,
 	storageKey?: string,
 }>(), {
@@ -235,6 +241,7 @@ const props = withDefaults(defineProps<{
 	editShortcut: '',
 	enableDiscardShortcut: false,
 	enableMentions: false,
+	enableLinkPreviews: false,
 	projectId: 0,
 	storageKey: '',
 })

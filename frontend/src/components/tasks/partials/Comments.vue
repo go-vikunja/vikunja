@@ -109,6 +109,7 @@
 						:show-save="true"
 						:enable-discard-shortcut="true"
 						:enable-mentions="true"
+						:enable-link-previews="true"
 						:project-id="projectId"
 						initial-mode="preview"
 						@update:modelValue="value => changeComment(c, value)"
