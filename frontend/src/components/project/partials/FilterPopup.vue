@@ -32,26 +32,23 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, nextTick} from 'vue'
+import {computed, ref, watch, nextTick, type DeepReadonly} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
 
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 import {type TaskFilterParams} from '@/client/queries/tasks'
-import {useProjects} from '@/composables/useProjects'
+import type {ProjectView} from '@/client/generated'
 import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
-	projectId?: number,
-	viewId?: number,
+	view?: ProjectView | DeepReadonly<ProjectView>,
 }>()
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams]
 }>()
-
-const projectList = useProjects()
 
 const value = ref<EditableTaskCollection>({
 	sort_by: [],
@@ -102,36 +99,15 @@ function showResults() {
 	modalOpen.value = false
 }
 
-const currentView = computed(() => {
-	if (!isProjectView.value || !props.projectId) {
-		return
-	}
-
-	return projectList.projects[props.projectId]?.views.find(v => v.id === props.viewId)
-})
-
-const isProjectView = computed(() => Boolean(props.projectId && props.projectId > 0 && props.viewId))
-
 // A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
-const supportsIncludeSubprojects = computed(() => isProjectView.value && currentView.value?.view_kind !== 'kanban')
+const supportsIncludeSubprojects = computed(() => (props.view?.project_id ?? 0) > 0 && props.view?.view_kind !== 'kanban')
 
-const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+const includeSubprojects = useIncludeSubprojects(() => props.view)
 
 // The api ors the view's own setting in, so the query param cannot turn it back off.
-const includeSubprojectsFromView = computed(() => currentView.value?.filter?.include_subprojects ?? false)
+const includeSubprojectsFromView = computed(() => props.view?.filter?.include_subprojects ?? false)
 
-const filterFromView = computed(() => {
-	if (!props.projectId || !props.viewId) {
-		return
-	}
-	
-	const project = projectList.projects[props.projectId]
-	if (!project) {
-		return
-	}
-	const view = project.views.find(v => v.id === props.viewId)
-	return view?.filter?.filter
-})
+const filterFromView = computed(() => props.view?.filter?.filter)
 </script>
 
 <style scoped lang="scss">
