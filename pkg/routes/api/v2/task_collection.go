@@ -93,15 +93,7 @@ type taskListFilters struct {
 	Expand             []string
 }
 
-func (in taskListAllInput) filters() taskListFilters {
-	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.IncludeSubprojects, in.SortBy, in.OrderBy, in.Expand}
-}
-
-func (in taskListProjectInput) filters() taskListFilters {
-	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.IncludeSubprojects, in.SortBy, in.OrderBy, in.Expand}
-}
-
-func (in taskListViewInput) filters() taskListFilters {
+func (in TaskListQueryParams) filters() taskListFilters {
 	return taskListFilters{in.Q, in.Filter, in.FilterTimezone, in.FilterIncludeNulls, in.IncludeSubprojects, in.SortBy, in.OrderBy, in.Expand}
 }
 
