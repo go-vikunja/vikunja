@@ -31,7 +31,7 @@ const (
 	typedTool
 )
 
-// Anything not listed stays off MCP; credentials, account, webhooks, shares, file transfer and admin routes are deliberately absent.
+// Anything not listed stays off MCP; credentials, account, webhooks, file transfer and admin routes are deliberately absent.
 var exposedOperations = map[string]toolTier{
 	"buckets-create":                  catalogTool,
 	"buckets-delete":                  catalogTool,
@@ -74,6 +74,10 @@ var exposedOperations = map[string]toolTier{
 	"projects-read":                   typedTool,
 	"projects-update":                 typedTool,
 	"projects-users-search":           catalogTool,
+	"shares-create":                   catalogTool,
+	"shares-delete":                   catalogTool,
+	"shares-list":                     catalogTool,
+	"shares-read":                     catalogTool,
 	"reactions-create":                catalogTool,
 	"reactions-delete":                catalogTool,
 	"reactions-list":                  catalogTool,
