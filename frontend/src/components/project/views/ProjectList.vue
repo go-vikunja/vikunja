@@ -148,7 +148,7 @@ const {setDraggedTask} = useTaskDragState()
 const {handleTaskDropToProject} = useTaskDragToProject()
 const {currentProject: project} = useCurrentProject()
 
-const includeSubprojects = useIncludeSubprojects(() => props.view)
+const {includeSubprojects} = useIncludeSubprojects(() => props.view)
 
 const ctaVisible = ref(false)
 

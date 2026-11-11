@@ -424,7 +424,7 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const includeSubprojects = useIncludeSubprojects(() => props.view)
+const {includeSubprojects} = useIncludeSubprojects(() => props.view)
 
 const taskList = useTaskList(
 	() => props.projectId, 

@@ -102,10 +102,7 @@ function showResults() {
 // A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
 const supportsIncludeSubprojects = computed(() => (props.view?.project_id ?? 0) > 0 && props.view?.view_kind !== 'kanban')
 
-const includeSubprojects = useIncludeSubprojects(() => props.view)
-
-// The api ors the view's own setting in, so the query param cannot turn it back off.
-const includeSubprojectsFromView = computed(() => props.view?.filter?.include_subprojects ?? false)
+const {includeSubprojects, fromView: includeSubprojectsFromView} = useIncludeSubprojects(() => props.view)
 
 const filterFromView = computed(() => props.view?.filter?.filter)
 </script>
