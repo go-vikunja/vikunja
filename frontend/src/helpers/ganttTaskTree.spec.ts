@@ -63,6 +63,21 @@ describe('buildGanttTaskTree', () => {
 		expect(result[2].indentLevel).toBe(1)
 	})
 
+	it('orders subtasks by their position when childOrder is position', () => {
+		const parent = makeTask(1, {
+			related_tasks: {subtask: [makeTask(2), makeTask(3)]},
+		})
+		// The API appends expanded subtasks after the sorted list, so map order is not position order.
+		const tasks = new Map<number, TaskResponse>([
+			[1, parent],
+			[2, makeTask(2, {position: 300, related_tasks: {parenttask: [makeTask(1)]}})],
+			[3, makeTask(3, {position: 100, related_tasks: {parenttask: [makeTask(1)]}})],
+		])
+
+		expect(buildGanttTaskTree(tasks, {childOrder: 'position'}).map(n => n.task.id)).toEqual([1, 3, 2])
+		expect(buildGanttTaskTree(tasks).map(n => n.task.id)).toEqual([1, 2, 3])
+	})
+
 	it('handles multi-level nesting', () => {
 		const grandchild = makeTask(3, {
 			related_tasks: {parenttask: [makeTask(2)]},

@@ -1,13 +1,15 @@
 import {describe, it, expect} from 'vitest'
+import {nextTick} from 'vue'
 import {mount} from '@vue/test-utils'
 import {createI18n} from 'vue-i18n'
 import {createRouter, createMemoryHistory} from 'vue-router'
 
 import GanttChart from './GanttChart.vue'
 import GanttTimelineHeader from './GanttTimelineHeader.vue'
+import GanttVerticalGridLines from './GanttVerticalGridLines.vue'
 import en from '@/i18n/lang/en.json'
 import {i18n as globalI18n} from '@/i18n'
-import type {TaskResponse} from '@/client/queries/tasks'
+import {normalizeTask, type TaskResponse} from '@/client/queries/tasks'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
@@ -22,6 +24,7 @@ const FILTERS: GanttFilters = {
 	dateFrom: '2026-08-01T00:00:00.000Z',
 	dateTo: '2026-10-01T00:00:00.000Z',
 	showTasksWithoutDates: false,
+	order: 'startDate',
 }
 
 function mountChart(isLoading: boolean) {
@@ -48,5 +51,64 @@ describe('GanttChart.vue', () => {
 		await wrapper.setProps({isLoading: false})
 
 		expect(wrapper.findComponent(GanttTimelineHeader).props('dayWidthPixels')).toBeGreaterThan(0)
+	})
+
+	describe('manual row order', () => {
+		function task(id: number, position: number): TaskResponse {
+			return normalizeTask({
+				id,
+				title: `Task ${id}`,
+				start_date: '2026-08-10T00:00:00.000Z',
+				end_date: '2026-08-20T00:00:00.000Z',
+				position,
+				related_tasks: {},
+			})
+		}
+
+		function mountReorderable(reorderable: boolean) {
+			return mount(GanttChart, {
+				shallow: true,
+				props: {
+					isLoading: false,
+					filters: {...FILTERS, order: 'manual'},
+					tasks: new Map([[1, task(1, 100)], [2, task(2, 200)], [3, task(3, 300)]]),
+					defaultTaskStartDate: FILTERS.dateFrom,
+					defaultTaskEndDate: FILTERS.dateTo,
+					reorderable,
+				},
+				global: {
+					plugins: [i18n, router],
+					stubs: {GanttChartBody: false, GanttChartPrimitive: false, GanttRow: false, GanttRowPrimitive: false},
+				},
+			})
+		}
+
+		it('starts the timeline after the grip column only when rows can be reordered', () => {
+			const offsets = (reorderable: boolean) => {
+				const wrapper = mountReorderable(reorderable)
+				return [GanttTimelineHeader, GanttVerticalGridLines].map(c => wrapper.findComponent(c).attributes('style') ?? '')
+			}
+			expect(offsets(true)).toEqual(['margin-inline-start: 24px;', 'inset-inline-start: 24px;'])
+			expect(offsets(false)).toEqual(['margin-inline-start: 0px;', 'inset-inline-start: 0px;'])
+		})
+
+		it('shows a grip per row only when rows can be reordered', () => {
+			expect(mountReorderable(true).findAll('.gantt-row-grip')).toHaveLength(3)
+			expect(mountReorderable(false).findAll('.gantt-row-grip')).toHaveLength(0)
+		})
+
+		it('emits the new position when a row is dropped on another slot', async () => {
+			const wrapper = mountReorderable(true)
+
+			await wrapper.findAll('.gantt-row-grip')[2].trigger('pointerdown', {clientY: 100})
+			document.dispatchEvent(new PointerEvent('pointermove', {clientY: 0}))
+			await nextTick()
+			expect(wrapper.find('.gantt-row-drop-indicator').exists()).toBe(true)
+
+			document.dispatchEvent(new PointerEvent('pointerup'))
+			await nextTick()
+			expect(wrapper.emitted('update:position')).toEqual([[3, 50]])
+			expect(wrapper.find('.gantt-row-drop-indicator').exists()).toBe(false)
+		})
 	})
 })

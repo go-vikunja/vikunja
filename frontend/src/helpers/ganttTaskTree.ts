@@ -13,11 +13,19 @@ export interface GanttTaskTreeNode {
 	hasDerivedDates: boolean
 }
 
+export interface GanttTaskTreeOptions {
+	// 'relation' keeps subtasks in the order of the parent's relations, 'position' sorts them by their view position.
+	childOrder?: 'relation' | 'position'
+}
+
 /**
  * Builds a hierarchical task tree from a flat task map using relatedTasks data,
  * then flattens it in depth-first order for Gantt row rendering.
  */
-export function buildGanttTaskTree(tasks: Map<number, TaskResponse>): GanttTaskTreeNode[] {
+export function buildGanttTaskTree(
+	tasks: Map<number, TaskResponse>,
+	{childOrder = 'relation'}: GanttTaskTreeOptions = {},
+): GanttTaskTreeNode[] {
 	// Step 1: Build parent -> children mapping
 	const childrenMap = new Map<number, number[]>()
 	const hasParentInView = new Set<number>()
@@ -27,6 +35,9 @@ export function buildGanttTaskTree(tasks: Map<number, TaskResponse>): GanttTaskT
 		const childIds = subtasks
 			.map(s => s.id)
 			.filter(id => tasks.has(id))
+		if (childOrder === 'position') {
+			childIds.sort((a, b) => tasks.get(a)!.position - tasks.get(b)!.position || a - b)
+		}
 
 		if (childIds.length > 0) {
 			childrenMap.set(taskId, childIds)

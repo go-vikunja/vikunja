@@ -21,7 +21,11 @@ export interface GanttFilters {
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
+	order: GanttOrder
 }
+
+// 'manual' shows rows in the order saved for the view (task positions), 'startDate' sorts them by date.
+export type GanttOrder = 'startDate' | 'manual'
 
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
 
@@ -46,6 +50,7 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>, projectId:
 		dateFrom: parseDateProp(route.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
 		dateTo: parseDateProp(route.query?.dateTo as DateKebab) || getDefaultDateTo(),
 		showTasksWithoutDates: parseBooleanProp(route.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		order: route.query?.order === 'manual' ? 'manual' : 'startDate',
 	}
 }
 
@@ -70,6 +75,10 @@ function ganttFiltersToRoute(filters: GanttFilters) {
 		query.showTasksWithoutDates = String(filters.showTasksWithoutDates)
 	}
 
+	if (filters.order === 'manual') {
+		query.order = filters.order
+	}
+
 	return {
 		name: 'project.view',
 		params: {
@@ -85,8 +94,9 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 	const dateTo = isoToKebabDate(filters.dateTo)
 
 	return {
-		sort_by: ['start_date', 'done', 'id'],
-		order_by: ['asc', 'asc', 'desc'],
+		...(filters.order === 'manual'
+			? {sort_by: ['position', 'id'], order_by: ['asc', 'asc']}
+			: {sort_by: ['start_date', 'done', 'id'], order_by: ['asc', 'asc', 'desc']}),
 		filter: '(' +
 			'(start_date >= "' + dateFrom + '" && start_date <= "' + dateTo + '") || ' +
 			'(end_date >= "' + dateFrom + '" && end_date <= "' + dateTo + '") || ' +
