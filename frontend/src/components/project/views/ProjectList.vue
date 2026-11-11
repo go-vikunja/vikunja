@@ -50,7 +50,6 @@
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
 						:group="taskDragGroup"
-						:sort="canReorderTasks"
 						:disabled="!canDragTasks || !isPositionSorting"
 						item-key="id"
 						tag="ul"
@@ -185,9 +184,6 @@ watch([projectId, () => props.viewId], () => { dragTasks.value = null })
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
-// A subproject's task has no position in this view, so the api drops the position sort.
-const canReorderTasks = computed(() => isPositionSorting.value && !includeSubprojects.value)
-
 const canWrite = computed(() => {
 	return typeof project.value?.max_permission === 'number' &&
 		project.value.max_permission > Permissions.READ &&
@@ -257,10 +253,6 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 
 		// If dropped outside this list
 		if (e.to !== e.from) {
-			return
-		}
-
-		if (!canReorderTasks.value) {
 			return
 		}
 
