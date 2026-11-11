@@ -19,7 +19,6 @@ jobs:
           GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           LABEL: ${{ github.event.label.name }}
-        # Canned messages live here. An unknown close/* label fails before anything is posted.
         run: |
           case "$LABEL" in
             close/no-issue)
