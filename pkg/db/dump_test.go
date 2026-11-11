@@ -169,13 +169,13 @@ func TestRestore(t *testing.T) {
 		has, err := engine.Get(row1)
 		require.NoError(t, err)
 		require.True(t, has)
-		assert.Equal(t, "", row1.TokenHash)
+		assert.Empty(t, row1.TokenHash)
 
 		row2 := &dumpRestoreTest{ID: 7}
 		has, err = engine.Get(row2)
 		require.NoError(t, err)
 		require.True(t, has)
-		assert.Equal(t, "", row2.TokenHash)
+		assert.Empty(t, row2.TokenHash)
 
 		row3 := &dumpRestoreTest{ID: 8}
 		has, err = engine.Get(row3)

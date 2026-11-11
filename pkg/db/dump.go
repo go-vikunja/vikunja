@@ -78,6 +78,45 @@ func Dump() (data map[string][]byte, err error) {
 	return
 }
 
+// nullableUniqueColumns returns the lowercased column names that are part of a
+// unique index and are nullable. It looks at both the database metadata and the
+// table info from the registered xorm beans because the two can disagree for
+// restores from dumps made on a different engine.
+func addUniqueNullableColumns(cols map[string]bool, t *schemas.Table) {
+	for _, index := range t.Indexes {
+		if index.Type != schemas.UniqueType {
+			continue
+		}
+		for _, colInIndex := range index.Cols {
+			c := t.GetColumn(colInIndex)
+			if c != nil && c.Nullable {
+				cols[strings.ToLower(colInIndex)] = true
+			}
+		}
+	}
+}
+
+func nullableUniqueColumns(table string, meta []*schemas.Table) map[string]bool {
+	cols := make(map[string]bool)
+
+	for _, m := range meta {
+		if m.Name == table {
+			addUniqueNullableColumns(cols, m)
+			break
+		}
+	}
+
+	for _, bean := range registeredTables {
+		tableInfo, err := x.TableInfo(bean)
+		if err == nil && tableInfo.Name == table {
+			addUniqueNullableColumns(cols, tableInfo)
+			break
+		}
+	}
+
+	return cols
+}
+
 // Restore restores a table with all its entries
 func Restore(table string, contents []map[string]interface{}) (err error) {
 	if err := validateTableName(table); err != nil {
@@ -105,33 +144,7 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 		log.Fatalf("Could not find table definition for table %s", table)
 	}
 
-	uniqueNullableCols := make(map[string]bool)
-	for _, index := range metaForCurrentTable.Indexes {
-		if index.Type == schemas.UniqueType {
-			for _, colInIndex := range index.Cols {
-				c := metaForCurrentTable.GetColumn(colInIndex)
-				if c != nil && c.Nullable {
-					uniqueNullableCols[strings.ToLower(colInIndex)] = true
-				}
-			}
-		}
-	}
-	for _, bean := range registeredTables {
-		tableInfo, err := x.TableInfo(bean)
-		if err == nil && tableInfo.Name == table {
-			for _, index := range tableInfo.Indexes {
-				if index.Type == schemas.UniqueType {
-					for _, colInIndex := range index.Cols {
-						c := tableInfo.GetColumn(colInIndex)
-						if c != nil && c.Nullable {
-							uniqueNullableCols[strings.ToLower(colInIndex)] = true
-						}
-					}
-				}
-			}
-			break
-		}
-	}
+	uniqueNullableCols := nullableUniqueColumns(table, meta)
 
 	for _, content := range contents {
 		for colName, value := range content {
