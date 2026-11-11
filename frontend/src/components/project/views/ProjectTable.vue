@@ -81,8 +81,7 @@
 				<FilterPopup
 					v-if="!isSavedFilterProject({id: projectId})"
 					v-model="params"
-					:view-id="viewId"
-					:project-id="projectId"
+					:view="currentView"
 					@update:modelValue="taskList.loadTasks()"
 				/>
 			</div>

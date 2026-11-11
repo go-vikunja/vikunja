@@ -10,8 +10,7 @@
 				<FilterPopup
 					v-if="!isSavedFilterProject(project)"
 					v-model="params"
-					:view-id="viewId"
-					:project-id="projectId"
+					:view="view ?? undefined"
 					@update:modelValue="updateFilters"
 				/>
 			</div>
