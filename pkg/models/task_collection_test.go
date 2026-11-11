@@ -1673,6 +1673,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			// User 1 reaches project 32 through team 1, and project 15 only through project 32.
 			name: "project tasks including subprojects",
 			fields: fields{
 				ProjectID:          32,
@@ -2775,33 +2776,6 @@ func TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess(t *testing.T) {
 
 	assert.Contains(t, returnedIDs, int64(36), "tasks of the requested project are returned")
 	assert.NotContains(t, returnedIDs, int64(35), "tasks of the archived subproject 21 are skipped")
-}
-
-// User 1 reaches project 32 through team 1, and project 15 only through project 32.
-func TestTaskCollection_ReadAll_IncludeSubprojectsInheritedAccess(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	u := &user.User{ID: 1}
-	c := &TaskCollection{
-		ProjectID:          32,
-		IncludeSubprojects: true,
-	}
-
-	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
-	require.NoError(t, err)
-
-	tasks, ok := res.([]*Task)
-	require.True(t, ok)
-
-	returnedIDs := make([]int64, 0, len(tasks))
-	for _, task := range tasks {
-		returnedIDs = append(returnedIDs, task.ID)
-	}
-
-	assert.Contains(t, returnedIDs, int64(21), "the requested project's own tasks")
-	assert.Contains(t, returnedIDs, int64(24), "tasks from the subproject reached through the parent")
 }
 
 // A subproject's task has no bucket in this view, so the flag is dropped for kanban.
