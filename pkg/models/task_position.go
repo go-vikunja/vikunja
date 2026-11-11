@@ -787,11 +787,11 @@ func DeleteOrphanedTaskPositions(s *xorm.Session, dryRun bool) (count int64, err
 	return s.Where(whereClause).Delete(&TaskPosition{})
 }
 
-// ensureTaskPositionsForSavedFilterView creates position rows for all tasks matching a saved
-// filter which don't have one in its view yet. This must run before the fetch query: healing
+// ensureTaskPositionsForView creates position rows in view for all tasks of projects matching
+// the filter which don't have one there yet. This must run before the fetch query: healing
 // afterwards means the query sorts fresh matches last (NULL position) and they jump to the top
 // on the next fetch once the position row exists.
-func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (err error) {
+func ensureTaskPositionsForView(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (err error) {
 	if len(projects) == 0 {
 		return nil
 	}
