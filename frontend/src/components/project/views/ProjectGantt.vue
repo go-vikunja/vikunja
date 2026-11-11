@@ -97,13 +97,14 @@ import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
-import type {Task as ITask} from '@/client/generated'
+import type {Task as ITask, ProjectView} from '@/client/generated'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
 	route: RouteLocationNormalized
 	viewId: number
+	view: ProjectView
 }>()
 
 
@@ -114,10 +115,9 @@ const canWrite = computed(() =>
 )
 
 const {route, projectId, viewId} = toRefs(props)
-const currentView = computed(() => currentProject.value?.views.find(v => v.id === viewId.value))
-const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+const includeSubprojects = useIncludeSubprojects(() => props.view)
 // The api ors the view's own setting in, so the query param cannot turn it back off.
-const includeSubprojectsFromView = computed(() => currentView.value?.filter?.include_subprojects ?? false)
+const includeSubprojectsFromView = computed(() => props.view.filter?.include_subprojects ?? false)
 const {
 	filters,
 	hasDefaultFilters,

@@ -108,6 +108,7 @@ watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
 		:project-id="projectId"
 		:is-loading-project="isLoadingProject"
 		:view-id
+		:view="currentView"
 	/>
 	<ProjectGantt
 		v-if="currentView?.view_kind === 'gantt'"
@@ -115,17 +116,20 @@ watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
 		:route
 		:is-loading-project="isLoadingProject"
 		:view-id
+		:view="currentView"
 	/>
 	<ProjectTable
 		v-if="currentView?.view_kind === 'table'"
 		:project-id="projectId"
 		:is-loading-project="isLoadingProject"
 		:view-id
+		:view="currentView"
 	/>
 	<ProjectKanban
 		v-if="currentView?.view_kind === 'kanban'"
 		:project-id="projectId"
 		:is-loading-project="isLoadingProject"
 		:view-id
+		:view="currentView"
 	/>
 </template>
