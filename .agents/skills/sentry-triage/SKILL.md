@@ -15,7 +15,7 @@ git pull --ff-only origin main     # in the main checkout. Worktrees branch from
 gh auth status
 ```
 
-Load Sentry MCP tools via `ToolSearch` (`select:mcp__sentry__search_issues,mcp__sentry__get_sentry_resource,mcp__sentry__update_issue,mcp__sentry__execute_sentry_tool,mcp__sentry__search_sentry_tools`).
+Load Sentry MCP tools via `ToolSearch` (`select:mcp__sentry__search_issues,mcp__sentry__get_sentry_resource,mcp__sentry__update_issue,mcp__sentry__get_issue_activity,mcp__sentry__get_issue_tag_values,mcp__sentry__search_issue_events`). Older Sentry MCP versions reach the last three through `execute_sentry_tool`.
 
 Sentry: org `vikunja`, `regionUrl: https://us.sentry.io`. Projects: `frontend-oss`, `api-oss`, `api-cloud`, `frontend-cloud`, `cloud-portal`, `app`. The `vikunja-eu` org is empty. `app` is the Flutter client in another repo: list its top issues in the survey, never dispatch fixes for it.
 
@@ -24,7 +24,7 @@ Sentry: org `vikunja`, `regionUrl: https://us.sentry.io`. Projects: `frontend-os
 Snoozed issues are invisible to `is:unresolved`. Sweep them before the survey, otherwise a fix that did not work hides for 14 days and then reappears with no context.
 
 - `search_issues` with `query: "is:ignored !project:app"`, `period: 90d`, `limit: 100`; also `query: "is:regressed"` and `query: "is:escalating"` for ones Sentry already woke up.
-- For each: `execute_sentry_tool get_issue_activity` to read our own comment (it names the fix PR or commit), then `get_issue_tag_values(tagKey: release)` to see which releases produced events after the snooze started.
+- For each: `get_issue_activity` to read our own comment (it names the fix PR or commit), then `get_issue_tag_values(tagKey: release)` to see which releases produced events after the snooze started.
 - Decide per issue by comparing the fix commit against the releases still producing events (`git merge-base --is-ancestor <fix-sha> <release-sha>`; release names are `v2.6.0-51-c9ab8c33`, the trailing hash is the commit):
   - No events since the snooze → `resolved`, reason "no events since <PR> deployed".
   - Events only from releases that predate the fix → deployment lag; extend the snooze 14 days once, mention it in the report.
