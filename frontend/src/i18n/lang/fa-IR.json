@@ -955,27 +955,10 @@
 			"title": "جزئیات وظیفه",
 			"markAsDone": "علامت‌گذاری '{task}' به عنوان انجام شده",
 			"scrollToBottom": "اسکرول به پایین",
-			"organization": "سازمان",
-			"management": "مدیریت",
-			"dateAndTime": "تاریخ و زمان",
 			"actions": {
-				"assign": "اختصاص به کاربر",
-				"label": "افزودن برچسب‌ها",
-				"priority": "تعیین اولویت",
-				"dueDate": "تعیین تاریخ سررسید",
-				"startDate": "تعیین تاریخ شروع",
-				"endDate": "تعیین تاریخ پایان",
-				"reminders": "تعیین یادآورها",
-				"repeatAfter": "تعیین فاصله تکرار",
-				"percentDone": "تعیین پیشرفت",
-				"attachments": "افزودن پیوست‌ها",
-				"relatedTasks": "افزودن رابطه",
 				"moveProject": "انتقال",
 				"duplicate": "تکرار",
-				"color": "تعیین رنگ",
-				"delete": "حذف",
-				"favorite": "افزودن به علاقه‌مندی‌ها",
-				"unfavorite": "حذف از علاقه‌مندی‌ها"
+				"delete": "حذف"
 			}
 		},
 		"attributes": {
@@ -1118,9 +1101,6 @@
 			"dateAndTime": "تاریخ و زمان"
 		},
 		"repeat": {
-			"everyDay": "هر روز",
-			"everyWeek": "هر هفته",
-			"every30d": "هر ۳۰ روز",
 			"mode": "حالت تکرار",
 			"monthly": "ماهانه",
 			"fromCurrentDate": "از تاریخ تکمیل",

@@ -331,6 +331,8 @@ if (props.enableMentions && props.projectId > 0) {
 if (props.enableDiscardShortcut) {
 	extensions.push(Extension.create({
 		name: 'escapeKey',
+		// Below the suggestion plugins, so Escape closes an open slash or emoji menu instead of discarding the edit.
+		priority: 1,
 
 		addKeyboardShortcuts() {
 			return {

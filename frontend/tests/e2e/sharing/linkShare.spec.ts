@@ -5,6 +5,7 @@ import {BucketFactory} from '../../factories/bucket'
 import {LinkShareFactory} from '../../factories/link_sharing'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {TaskFactory} from '../../factories/task'
+import {TaskReminderFactory} from '../../factories/task_reminders'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
 import {login, setupApiUrl} from '../../support/authenticateUser'
@@ -118,6 +119,22 @@ test.describe('Link shares', () => {
 		await expect(page.locator('h1.title.input')).toContainText(tasks[0].title)
 	})
 
+	test('Shows a read-only task detail view to a link share without edit controls', async ({page}) => {
+		const {share, tasks} = await prepareLinkShare()
+		await TaskReminderFactory.create(1, {task_id: tasks[0].id})
+
+		await page.goto(`/tasks/${tasks[0].id}#share-auth-token=${share.hash}`)
+
+		const reminders = page.locator('.task-view .property-reminders')
+		await expect(reminders).toBeVisible()
+		await expect(page.locator('.task-view .sidebar-toolbar')).toHaveCount(0)
+		await expect(page.locator('.task-view .property-priority')).toHaveCount(0)
+		await expect(reminders.getByRole('button', {name: 'Add a reminder…'})).toHaveCount(0)
+
+		const reminderTrigger = reminders.locator('.reminder-detail > .simple-button')
+		await expect(reminderTrigger).toBeDisabled()
+	})
+
 	// Regression test for #2546: a logged-in user opening a public link share URL
 	// used to get stuck on an empty NoAuthWrapper shell because the router
 	// guard bounced between /share/:hash/auth and the project view. Two
@@ -178,7 +195,6 @@ test.describe('Link share: label picker', () => {
 		const [task] = await TaskFactory.create(1, {
 			project_id: projects[0].id,
 		})
-		// A label on the task makes the labels field render without clicking "Add Labels" first.
 		const [label] = await LabelFactory.create(1)
 		await LabelTaskFactory.create(1, {
 			task_id: task.id,
@@ -191,11 +207,11 @@ test.describe('Link share: label picker', () => {
 
 		await page.goto(`/tasks/${task.id}#share-auth-token=${share.hash}`)
 
-		const labelInput = page.locator('.task-view .details.labels-list .multiselect input')
+		const labelInput = page.locator('.task-view .property-labels .multiselect input')
 		await expect(labelInput).toBeVisible()
 		await labelInput.fill('label-that-does-not-exist')
 
-		const searchResults = page.locator('.task-view .details.labels-list .multiselect .search-results')
+		const searchResults = page.locator('.task-view .property-labels .multiselect .search-results')
 		await expect(searchResults.locator('.search-result-hint')).toContainText('New labels can\'t be created from a shared link')
 		await expect(searchResults.locator('.is-create-option')).toHaveCount(0)
 	})

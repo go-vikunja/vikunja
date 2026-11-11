@@ -783,26 +783,9 @@
 			"back": "Tillbaka till projekt",
 			"due": "Förfaller {at}",
 			"scrollToBottom": "Skrolla till botten",
-			"organization": "Organisation",
-			"management": "Hantering",
-			"dateAndTime": "Datum och tid",
 			"actions": {
-				"assign": "Tilldela till användare",
-				"label": "Lägg till etiketter",
-				"priority": "Ange prioritet",
-				"dueDate": "Ange förfallodatum",
-				"startDate": "Ange startdatum",
-				"endDate": "Ange slutdatum",
-				"reminders": "Ställ in påminnelser",
-				"repeatAfter": "Ställ in upprepande intervall",
-				"percentDone": "Ställ in framsteg",
-				"attachments": "Lägg till bilagor",
-				"relatedTasks": "Lägg till förhållande",
 				"moveProject": "Flytta",
-				"color": "Ställ in färg",
-				"delete": "Radera",
-				"favorite": "Lägg till i favoriter",
-				"unfavorite": "Ta bort från favoriter"
+				"delete": "Radera"
 			}
 		},
 		"attributes": {
@@ -942,9 +925,6 @@
 			"dateAndTime": "Datum och tid"
 		},
 		"repeat": {
-			"everyDay": "Varje dag",
-			"everyWeek": "Varje vecka",
-			"every30d": "Var 30:e dag",
 			"mode": "Upprepningsläge",
 			"monthly": "Månatligen",
 			"fromCurrentDate": "Från datum för slutförande",

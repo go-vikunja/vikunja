@@ -679,26 +679,9 @@
 			"updateSuccess": "Zadanie zostało pomyślnie zapisane.",
 			"belongsToProject": "To zadanie należy do projektu '{project}'",
 			"due": "Termin {at}",
-			"organization": "Organizacja",
-			"management": "Zarządzanie",
-			"dateAndTime": "Data i czas",
 			"actions": {
-				"assign": "Przypisz do użytkownika",
-				"label": "Dodaj etykiety",
-				"priority": "Ustaw priorytet",
-				"dueDate": "Ustaw termin",
-				"startDate": "Ustaw datę rozpoczęcia",
-				"endDate": "Ustaw datę zakończenia",
-				"reminders": "Ustaw przypomnienia",
-				"repeatAfter": "Ustaw interwał powtarzania",
-				"percentDone": "Ustaw postęp",
-				"attachments": "Dodaj załączniki",
-				"relatedTasks": "Dodaj powiązanie",
 				"moveProject": "Przenieś",
-				"color": "Ustaw kolor",
-				"delete": "Usuń",
-				"favorite": "Dodaj do ulubionych",
-				"unfavorite": "Usuń z ulubionych"
+				"delete": "Usuń"
 			}
 		},
 		"attributes": {
@@ -832,9 +815,6 @@
 			"dateAndTime": "Data i czas"
 		},
 		"repeat": {
-			"everyDay": "Codziennie",
-			"everyWeek": "Co tydzień",
-			"every30d": "Co 30 dni",
 			"mode": "Tryb powtarzania",
 			"monthly": "Miesięczny",
 			"fromCurrentDate": "Od daty zakończenia",

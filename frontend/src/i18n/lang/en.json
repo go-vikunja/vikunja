@@ -689,7 +689,10 @@
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
       "deleteSuccess": "The view was deleted successfully.",
       "onlyAdminsCanEdit": "Only project admins can edit views.",
-      "updateSuccess": "The view was updated successfully."
+      "updateSuccess": "The view was updated successfully.",
+      "includeSubprojects": "Include subprojects",
+      "includeSubprojectsHint": "Show tasks from all subprojects of this project.",
+      "includeSubprojectsFromView": "Enabled in this view's settings. Change it there to turn it off."
     }
   },
   "filters": {
@@ -1041,6 +1044,33 @@
         "empty": "No emoji found"
       }
     },
+    "emojiPicker": {
+      "title": "Emoji picker",
+      "search": "Search emoji",
+      "skinTone": "Skin tone",
+      "categories": "Emoji categories",
+      "results": "Search results",
+      "loadError": "Could not load emoji.",
+      "tones": {
+        "light": "Light",
+        "mediumLight": "Medium light",
+        "medium": "Medium",
+        "mediumDark": "Medium dark",
+        "dark": "Dark"
+      },
+      "groups": {
+        "recent": "Recently used",
+        "smileys": "Smileys & emotion",
+        "people": "People & body",
+        "nature": "Animals & nature",
+        "food": "Food & drink",
+        "travel": "Travel & places",
+        "activities": "Activities",
+        "objects": "Objects",
+        "symbols": "Symbols",
+        "flags": "Flags"
+      }
+    },
     "multiselect": {
       "createPlaceholder": "Create",
       "selectPlaceholder": "Click or press enter to select",
@@ -1154,6 +1184,7 @@
       "removeDueDate": "Remove due date",
       "removeStartDate": "Remove start date",
       "removeEndDate": "Remove end date",
+      "removeColor": "Remove color",
       "removeRepeat": "Remove repeat interval",
       "removeAssignee": "Remove {user} as assignee",
       "move": "Move task to a different project",
@@ -1177,28 +1208,21 @@
       "title": "Task detail",
       "markAsDone": "Mark '{task}' as done",
       "scrollToBottom": "Scroll to bottom",
-      "organization": "Organization",
-      "management": "Management",
-      "dateAndTime": "Date and time",
+      "moreActions": "More actions",
+      "properties": {
+        "dueDate": "Due date",
+        "startDate": "Start date",
+        "endDate": "End date"
+      },
       "actions": {
-        "assign": "Assign to User",
-        "label": "Add Labels",
-        "priority": "Set Priority",
-        "dueDate": "Set Due Date",
-        "startDate": "Set Start Date",
-        "endDate": "Set End Date",
-        "reminders": "Set Reminders",
-        "repeatAfter": "Set Repeating Interval",
-        "percentDone": "Set Progress",
-        "attachments": "Add Attachments",
+        "attachments": "Add attachments",
         "timeTracking": "Track time",
-        "relatedTasks": "Add Relation",
+        "relatedTasks": "Add relation",
         "moveProject": "Move",
         "duplicate": "Duplicate",
-        "color": "Set Color",
         "delete": "Delete",
-        "favorite": "Add to Favorites",
-        "unfavorite": "Remove from Favorites"
+        "favorite": "Add to favorites",
+        "unfavorite": "Remove from favorites"
       }
     },
     "attributes": {
@@ -1290,6 +1314,7 @@
     },
     "assignee": {
       "placeholder": "Type to assign a user…",
+      "placeholderMore": "Assign another…",
       "selectPlaceholder": "Assign this user",
       "assignSuccess": "The user has been assigned successfully.",
       "unassignSuccess": "The user has been unassigned successfully."
@@ -1357,9 +1382,16 @@
       "dateAndTime": "Date and time"
     },
     "repeat": {
-      "everyDay": "Every Day",
-      "everyWeek": "Every Week",
-      "every30d": "Every 30 Days",
+      "everyDay": "Every day",
+      "everyWeek": "Every week",
+      "every30d": "Every 30 days",
+      "summary": {
+        "minutes": "Every minute | Every {count} minutes",
+        "hours": "Every hour | Every {count} hours",
+        "days": "Every day | Every {count} days",
+        "weeks": "Every week | Every {count} weeks",
+        "fromCurrentDate": "{interval}, from completion date"
+      },
       "mode": "Repeat mode",
       "monthly": "Monthly",
       "fromCurrentDate": "From completion date",

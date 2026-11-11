@@ -767,26 +767,9 @@
 			"belongsToProject": "Denne oppgaven tilhører prosjektet '{project}'",
 			"back": "Tilbake til prosjekt",
 			"due": "Forfaller {at}",
-			"organization": "Organisering",
-			"management": "Behandling",
-			"dateAndTime": "Dato og tid",
 			"actions": {
-				"assign": "Tildel bruker",
-				"label": "Legg til etikett",
-				"priority": "Angi prioritet",
-				"dueDate": "Angi forfall",
-				"startDate": "Angi startdato",
-				"endDate": "Angi sluttdato",
-				"reminders": "Angi påminnelser",
-				"repeatAfter": "Angi gjentakelsesintervall",
-				"percentDone": "Angi fremdrift",
-				"attachments": "Legg til vedlegg",
-				"relatedTasks": "Legg til relasjon",
 				"moveProject": "Flytt",
-				"color": "Angi farge",
-				"delete": "Slett",
-				"favorite": "Legg til i favoritter",
-				"unfavorite": "Fjern fra favoritter"
+				"delete": "Slett"
 			}
 		},
 		"attributes": {
@@ -921,9 +904,6 @@
 			"dateAndTime": "Dato og tid"
 		},
 		"repeat": {
-			"everyDay": "Hver dag",
-			"everyWeek": "Hver uke",
-			"every30d": "Hver 30. dag",
 			"mode": "Gjenta",
 			"monthly": "Månedlig",
 			"fromCurrentDate": "Fra fullføringsdato",

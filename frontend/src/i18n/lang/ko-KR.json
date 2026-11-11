@@ -713,26 +713,9 @@
 			"updateSuccess": "할 일이 성공적으로 저장되었습니다.",
 			"belongsToProject": "이 할 일은 '{project}' 프로젝트에 속해요.",
 			"due": "마감일 {at}",
-			"organization": "조직",
-			"management": "관리",
-			"dateAndTime": "날짜와 시간",
 			"actions": {
-				"assign": "사용자에게 할당",
-				"label": "레이블 추가",
-				"priority": "우선 순위 설정",
-				"dueDate": "마감일 설정",
-				"startDate": "시작 날짜 설정",
-				"endDate": "종료 날짜 설정",
-				"reminders": "미리 알림 설정",
-				"repeatAfter": "반복 간격 설정",
-				"percentDone": "진행율 설정",
-				"attachments": "첨부 파일 추가",
-				"relatedTasks": "관계 추가",
 				"moveProject": "이동",
-				"color": "색 설정",
-				"delete": "삭제",
-				"favorite": "즐겨찾기에 추가",
-				"unfavorite": "즐겨찾기에서 제거"
+				"delete": "삭제"
 			}
 		},
 		"attributes": {
@@ -867,9 +850,6 @@
 			"dateAndTime": "날짜와 시간"
 		},
 		"repeat": {
-			"everyDay": "매일",
-			"everyWeek": "매주",
-			"every30d": "30일마다",
 			"mode": "반복 모드",
 			"monthly": "매달",
 			"fromCurrentDate": "완료일로부터",

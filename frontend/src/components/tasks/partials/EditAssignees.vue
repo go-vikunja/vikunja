@@ -4,7 +4,7 @@
 		class="edit-assignees"
 		:class="{'has-assignees': assignees.length > 0}"
 		:loading="usersLoading"
-		:placeholder="$t('task.assignee.placeholder')"
+		:placeholder="assignees.length > 0 ? $t('task.assignee.placeholderMore') : $t('task.assignee.placeholder')"
 		:multiple="true"
 		:search-results="foundUsers"
 		:show-empty="true"
@@ -13,7 +13,7 @@
 		:autocomplete-enabled="false"
 		@search="findUser"
 		@select="addAssignee"
-		@focus="preloadUsers"
+		@focusin="preloadUsers"
 	>
 		<template #items="{items}">
 			<AssigneeList

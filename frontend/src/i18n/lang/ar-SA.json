@@ -521,26 +521,9 @@
 			"updateSuccess": "تم حفظ المهمة بنجاح.",
 			"belongsToProject": "هذه المهمة تنتمي إلى المشروع '{project}'",
 			"due": "مستحق في {at}",
-			"organization": "المؤسسة",
-			"management": "الإدارة",
-			"dateAndTime": "التاريخ والوقت",
 			"actions": {
-				"assign": "تكليف لمستخدم",
-				"label": "إضافة تسميات",
-				"priority": "حدد الأولوية",
-				"dueDate": "حدد تاريخ الاستحقاق",
-				"startDate": "حدد تاريخ البدء",
-				"endDate": "حدد تاريخ الانتهاء",
-				"reminders": "حدد التذكيرات",
-				"repeatAfter": "حدد الفاصل الزمني للتكرار",
-				"percentDone": "حدد مدى الإنجاز",
-				"attachments": "إضافة المرفقات",
-				"relatedTasks": "إضافة صلة",
 				"moveProject": "نقل",
-				"color": "تحديد اللون",
-				"delete": "حذف",
-				"favorite": "أضف إلى التفضيلات",
-				"unfavorite": "حذف من التفضيلات"
+				"delete": "حذف"
 			}
 		},
 		"attributes": {
@@ -666,9 +649,6 @@
 			"dateAndTime": "التاريخ والوقت"
 		},
 		"repeat": {
-			"everyDay": "يومياً",
-			"everyWeek": "أسبوعيا",
-			"every30d": "كل 30 يوماً",
 			"mode": "وضع التكرار",
 			"monthly": "شهرياً",
 			"each": "كل",

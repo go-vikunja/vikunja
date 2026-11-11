@@ -693,26 +693,9 @@
 			"updateSuccess": "המטלה נשמרה בהצלחה.",
 			"belongsToProject": "מטלה זו שייכת לפרויקט ׳{project}׳",
 			"due": "תאריך יעד ב-{at}",
-			"organization": "שם ארגון",
-			"management": "ניהול",
-			"dateAndTime": "תאריך ושעה",
 			"actions": {
-				"assign": "לשייך למשתמש",
-				"label": "הוספת תווים",
-				"priority": "קביעת עדיפות",
-				"dueDate": "קביעת תאריך יעד",
-				"startDate": "קביעת תאריך התחלה",
-				"endDate": "קביעת תאריך סיום",
-				"reminders": "קביעת תזכורות",
-				"repeatAfter": "קביעת מרווח חזרות",
-				"percentDone": "קביעת התקדמות",
-				"attachments": "צירוף מצורפים",
-				"relatedTasks": "הוספת יחוס",
 				"moveProject": "הזזה",
-				"color": "קביעת צבע",
-				"delete": "מחיקה",
-				"favorite": "הוספה למועדפים",
-				"unfavorite": "הסרה ממועדפים"
+				"delete": "מחיקה"
 			}
 		},
 		"attributes": {
@@ -794,9 +777,6 @@
 			"dateAndTime": "תאריך ושעה"
 		},
 		"repeat": {
-			"everyDay": "כל יום",
-			"everyWeek": "כל שבוע",
-			"every30d": "כל 30 ימים",
 			"monthly": "חודשי",
 			"fromCurrentDate": "מתאריך סיום",
 			"specifyAmount": "קביעת כמות…",

@@ -8,6 +8,7 @@ export interface GanttBarModel {
 	end: Date
 	meta?: {
 		label?: string
+		projectTitle?: string
 		color?: string
 		hasActualDates?: boolean
 		dateType?: GanttBarDateType

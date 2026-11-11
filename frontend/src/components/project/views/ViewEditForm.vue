@@ -36,7 +36,7 @@ const emit = defineEmits<{
 type ProjectViewFormValue = ProjectViewWritable & Pick<ProjectView, 'id' | 'project_id'>
 type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration'> &
 	Pick<ProjectView, 'id' | 'project_id'> & {
-		filter: EditableTaskCollection
+		filter: EditableTaskCollection & Required<Pick<TaskCollection, 'include_subprojects'>>
 		bucket_configuration: Array<{title: string, filter: EditableTaskCollection}>
 	}
 
@@ -81,7 +81,10 @@ function transformViewFromApi(modelValue: ProjectViewFormValue): LoadedProjectVi
 	return {
 		...modelValue,
 		...draft,
-		filter: transformFilterFromApi(modelValue.filter),
+		filter: {
+			...transformFilterFromApi(modelValue.filter),
+			include_subprojects: modelValue.filter?.include_subprojects ?? false,
+		},
 		bucket_configuration: (modelValue.bucket_configuration ?? []).map(bucket => ({
 			title: bucket.title ?? '',
 			filter: transformFilterFromApi(bucket.filter),
@@ -178,7 +181,10 @@ function save() {
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilterForApi(view.value.filter),
+		filter: {
+			...transformFilterForApi(view.value.filter),
+			include_subprojects: view.value.filter.include_subprojects,
+		},
 		bucket_configuration: view.value.bucket_configuration.map(bucket => ({
 			title: bucket.title,
 			filter: transformFilterForApi(bucket.filter),
@@ -256,6 +262,18 @@ function handleBubbleSave(event: FocusEvent) {
 
 		<div class="is-size-7 mbe-2">
 			<FilterInputDocs />
+		</div>
+
+		<div
+			v-if="view.view_kind !== 'kanban'"
+			class="field mbe-3"
+		>
+			<FancyCheckbox
+				v-model="view.filter.include_subprojects"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<div class="field mbe-3">

@@ -68,7 +68,7 @@ func TestAddTaskRelationsOtherTaskKindIndex20261103165926(t *testing.T) {
 	require.NoError(t, err)
 
 	before := taskRelationsTable20261103165926(t, x)
-	require.NoError(t, partialSync(x, taskRelations20261103165926{}))
+	require.NoError(t, addTaskRelationsOtherTaskKindIndex20261103165926(x))
 	after := taskRelationsTable20261103165926(t, x)
 
 	index, found := after.Indexes["other_task_kind"]
@@ -87,4 +87,29 @@ func TestAddTaskRelationsOtherTaskKindIndex20261103165926(t *testing.T) {
 	count, err := x.Count(&taskRelationsBefore20261103165926{})
 	require.NoError(t, err)
 	require.Equal(t, int64(1), count)
+}
+
+// DBs converted from sqlite carry relation_kind as TEXT, which mysql refuses to
+// index without a key length (#4374).
+func TestAddTaskRelationsOtherTaskKindIndexSkipsMysqlTextColumn20261103165926(t *testing.T) {
+	x, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	if x.Dialect().URI().DBType != schemas.MYSQL {
+		t.Skip("mysql-specific key length restriction")
+	}
+
+	table := taskRelationsBefore20261103165926{}
+	t.Cleanup(func() {
+		require.NoError(t, x.DropTables(table))
+	})
+	require.NoError(t, x.DropTables(table))
+	require.NoError(t, x.Sync2(table))
+
+	_, err = x.Exec("ALTER TABLE task_relations MODIFY relation_kind TEXT NOT NULL")
+	require.NoError(t, err)
+
+	require.NoError(t, addTaskRelationsOtherTaskKindIndex20261103165926(x))
+
+	_, found := taskRelationsTable20261103165926(t, x).Indexes["other_task_kind"]
+	require.False(t, found)
 }

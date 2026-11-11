@@ -117,14 +117,14 @@
 				"description": "Bot-Accounts gehören zu dir und können nur die API nutzen. Sie können zu Projekten, zugewiesenen Aufgaben hinzugefügt und mit API-Token authentifiziert werden und sich nicht selbst anmelden.",
 				"namePlaceholder": "Mein Assistent",
 				"create": "Bot Erstellen",
-				"createSuccess": "Der Bot \"{username}\" wurde erstellt.",
+				"createSuccess": "Der Bot „{username}“ wurde erstellt.",
 				"enable": "Aktivieren",
 				"tokensInactive": "API-Token eines deaktivierten Bots werden abgelehnt. Aktiviere den Bot, um Token zu erstellen oder zu verwenden.",
 				"badge": "Bot",
 				"badgeOwner": "Bot, erstellt von {user}",
 				"delete": {
 					"header": "Diesen Bot-Account löschen",
-					"text1": "Bist Du sicher, dass Du den Bot-Account \"{username}\" löschen möchtest?",
+					"text1": "Bist du sicher, dass du den Bot-Account „{username}“ löschen möchtest?",
 					"text2": "Dies ist unwiderruflich. Alle API-Token dieses Bots werden widerrufen."
 				}
 			},
@@ -225,6 +225,25 @@
 				"confirmSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
 				"disableSuccess": "Die Zwei-Faktor-Authentifizierung wurde erfolgreich deaktiviert."
 			},
+			"linkedAccounts": {
+				"title": "Verknüpfte Accounts",
+				"description": "Verknüpfe einen Account bei einem Identitätsanbieter, um dich zusätzlich zu deinem Passwort damit anzumelden.",
+				"provider": "Anbieter",
+				"linkedAt": "Verknüpft am",
+				"none": "Du hast noch keine Accounts verknüpft.",
+				"link": "{provider} verknüpfen",
+				"unlink": "Verknüpfung aufheben",
+				"unlinkHeader": "Verknüpfung mit {provider} aufheben",
+				"unlinkText": "Du wirst dich danach nicht mehr mit diesem Account anmelden können. Gib zur Bestätigung dein Passwort ein.",
+				"linkSuccess": "Der Account wurde erfolgreich verknüpft.",
+				"unlinkSuccess": "Die Verknüpfung des Accounts wurde erfolgreich aufgehoben.",
+				"confirmTitle": "{provider} mit deinem Account verknüpfen",
+				"confirmAccount": "Zu verknüpfender Account:",
+				"confirmText": "Gib dein Passwort ein, um diesen Account bei {provider} mit deinem Vikunja-Account zu verknüpfen. Danach kannst du dich mit beiden anmelden.",
+				"confirm": "Account verknüpfen",
+				"noSession": "Du musst angemeldet sein, um einen Account zu verknüpfen. Melde dich mit deinem Passwort an und starte die Verknüpfung erneut in den Einstellungen.",
+				"backToLinkedAccounts": "Zurück zu den verknüpften Accounts"
+			},
 			"caldav": {
 				"title": "CalDAV",
 				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
@@ -305,7 +324,7 @@
 				},
 				"delete": {
 					"header": "Dieses Token löschen",
-					"text1": "Bist Du sicher, dass Du das Token \"{token}\" löschen möchtest?",
+					"text1": "Bist du sicher, dass du das Token „{token}“ löschen möchtest?",
 					"text2": "Dies wird den Zugriff des Tokens auf alle Anwendungen oder Integrationen aufheben. Du kannst dies nicht rückgängig machen."
 				},
 				"attributes": {
@@ -317,7 +336,7 @@
 			},
 			"sessions": {
 				"title": "Sitzungen",
-				"description": "Das sind alle Geräte, die gerade in deinem Konto eingeloggt sind. Du kannst jede Sitzung widerrufen, um das jeweilige Gerät abzumelden. Es kann bis zu 10 Minuten dauern, bis der Widerruf vollständig wirksam wird.",
+				"description": "Das sind alle Geräte, die gerade in deinem Account eingeloggt sind. Du kannst jede Sitzung widerrufen, um das jeweilige Gerät abzumelden. Es kann bis zu 10 Minuten dauern, bis der Widerruf vollständig wirksam wird.",
 				"deviceInfo": "Gerät",
 				"ipAddress": "IP Adresse",
 				"lastActive": "Zuletzt aktiv",
@@ -353,7 +372,7 @@
 					},
 					"claudeDesktop": {
 						"open": "Öffne „Anpassen“ → „Connectors“ → „Benutzerdefinierten Connector hinzufügen“. Bei Team oder Enterprise fügt ein Owner ihn unter „Organisationseinstellungen“ → „Connectors“ hinzu.",
-						"url": "Benenne den Connector \"Vikunja\" und gib diese URL ein: {value}",
+						"url": "Benenne den Connector „Vikunja“ und gib diese URL ein: {value}",
 						"auth": "Setze die Authentifizierung auf „Keine Anmeldung“.",
 						"header": "Wähle unter Request Headers „authorization“ aus und füge diesen vollständigen Wert ein, einschließlich Bearer und des Leerzeichens, und füge dann den Connector hinzu: {value}",
 						"beta": "Anfrage-Header sind für einen begrenzten Kreis von Organisationen in der Beta. Wenn dieser Abschnitt fehlt, kannst du Vikunja noch nicht mit Claude verbinden."
@@ -378,7 +397,7 @@
 			"title": "Lösche deinen Vikunja-Account",
 			"text1": "Das Löschen deines Accounts ist dauerhaft und unwiderruflich. Alle Projekte, Aufgaben und zugehörige Daten werden gelöscht.",
 			"text2": "Zum Fortfahren gib bitte dein Passwort ein. Du erhältst eine E-Mail mit weiteren Anweisungen.",
-			"text3": "Klicks zum Fortfahren auf den Button unten. Du erhältst eine E-Mail mit weiteren Anweisungen.",
+			"text3": "Klicke zum Fortfahren auf den Button unten. Du erhältst eine E-Mail mit weiteren Anweisungen.",
 			"confirm": "Meinen Account löschen",
 			"requestSuccess": "Die Anfrage war erfolgreich. Du erhältst eine E-Mail mit weiteren Anweisungen.",
 			"passwordRequired": "Bitte gib dein Passwort ein.",
@@ -592,19 +611,19 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limit: {limit}",
-			"doneBucket": "Erledigt Spalte",
+			"doneBucket": "Erledigt-Spalte",
 			"doneBucketHint": "Alle Aufgaben, die in diese Spalte verschoben werden, werden automatisch als erledigt markiert.",
-			"doneBucketHintExtended": "Alle Aufgaben, die in die Erledigt Spalte verschoben wurden, werden automatisch als erledigt markiert. Aufgaben, die in einer anderen Spalte als Erledigt markiert wurden, werden auch in diese Spalte verschoben.",
-			"doneBucketSavedSuccess": "Erledigt Spalte gespeichert.",
+			"doneBucketHintExtended": "Alle Aufgaben, die in die Erledigt-Spalte verschoben werden, werden automatisch als erledigt markiert. Aufgaben, die anderswo als erledigt markiert werden, werden ebenfalls in diese Spalte verschoben.",
+			"doneBucketSavedSuccess": "Erledigt-Spalte gespeichert.",
 			"defaultBucket": "Standard-Spalte",
 			"defaultBucketHint": "Wenn Aufgaben ohne Angabe einer Spalte erstellt werden, werden sie zu dieser Spalte hinzugefügt.",
 			"defaultBucketSavedSuccess": "Die Standardspalte wurde erfolgreich gespeichert.",
 			"deleteLast": "Du kannst die letzte Spalte nicht entfernen.",
-			"addTaskPlaceholder": "Gebe einen Aufgabentitel ein …",
+			"addTaskPlaceholder": "Gib einen Aufgabentitel ein …",
 			"addTask": "Eine Aufgabe hinzufügen",
 			"addAnotherTask": "Weitere Aufgabe hinzufügen",
-			"addBucket": "Bucket erstellen",
-			"addBucketPlaceholder": "Gebe einen Spaltentitel ein…",
+			"addBucket": "Spalte erstellen",
+			"addBucketPlaceholder": "Gib einen Spaltentitel ein …",
 			"deleteHeaderBucket": "Spalte löschen",
 			"deleteBucketText1": "Bist du sicher, dass du diese Spalte löschen möchtest?",
 			"deleteBucketText2": "Dies löscht keine Aufgaben, sondern verschiebt sie in die Standardspalte.",
@@ -614,7 +633,7 @@
 			"collapse": "Spalte einklappen",
 			"bucketLimitReached": "Du hast das Limit dieser Spalte erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen.",
 			"bucketLimitReachedShort": "Limit erreicht",
-			"bucketOptions": "Bucketoptionen"
+			"bucketOptions": "Spaltenoptionen"
 		},
 		"pseudo": {
 			"favorites": {
@@ -628,6 +647,7 @@
 			"events": "Ereignisse",
 			"eventsHint": "Wähle alle Ereignisse aus, für die dieser Webhook Updates erhalten soll (innerhalb des aktuellen Projekts).",
 			"mustSelectEvents": "Du musst mindestens ein Ereignis auswählen.",
+			"selectAllEvents": "Alle auswählen",
 			"delete": "Diesen Webhook löschen",
 			"deleteText": "Bist du sicher, dass du diesen Webhook löschen möchtest? Externe Ziele werden nicht mehr über Ereignisse benachrichtigt.",
 			"deleteSuccess": "Der Webhook wurde erfolgreich gelöscht.",
@@ -644,8 +664,8 @@
 			"title": "Titel",
 			"actions": "Aktionen",
 			"kind": "Ansicht",
-			"bucketConfigMode": "Bucket-Konfigurationsmodus",
-			"bucketConfig": "Bucket-Konfiguration",
+			"bucketConfigMode": "Spaltenkonfigurationsmodus",
+			"bucketConfig": "Spaltenkonfiguration",
 			"bucketConfigManual": "Manuell",
 			"filter": "Filter",
 			"create": "Ansicht erstellen",
@@ -734,8 +754,8 @@
 					"priorityEqual": "Findet Aufgaben mit Priorität Level 4",
 					"dueDatePast": "Findet Aufgaben mit einem Fälligkeitsdatum in der Vergangenheit",
 					"undoneHighPriority": "Findet Aufgaben, die nicht erledigt sind und Priorität Level mindestens 3 haben",
-					"assigneesIn": "Findet Aufgaben, die entweder \"user1\" oder \"user2\" zugewiesen sind",
-					"createdByEqual": "Findet Aufgaben, die von \"user1\" erstellt wurden",
+					"assigneesIn": "Findet Aufgaben, die entweder „user1“ oder „user2“ zugewiesen sind",
+					"createdByEqual": "Findet Aufgaben, die von „user1“ erstellt wurden",
 					"priorityOneOrTwoPastDue": "Findet Aufgaben mit Priorität Level 1 oder 2 und einem Fälligkeitsdatum in der Vergangenheit"
 				}
 			}
@@ -798,7 +818,7 @@
 			"start": "Import starten"
 		},
 		"planka": {
-			"apiKeyHelp": "Ein API-Schlüssel muss für dein Konto von einem Planka-Administrator erstellt werden. Das Token aus dem Browser zu kopieren funktioniert nicht.",
+			"apiKeyHelp": "Ein API-Schlüssel muss für deinen Account von einem Planka-Administrator erstellt werden. Das Token aus dem Browser zu kopieren funktioniert nicht.",
 			"passwordHelp": "Funktioniert nur für lokale Planka-Konten ohne Zwei-Faktor-Authentifizierung, die sich mindestens einmal bei Planka angemeldet haben. Konten mit Single Sign-On benötigen einen API-Schlüssel."
 		},
 		"csv": {
@@ -1005,7 +1025,34 @@
 				"fixTables": "Tabellen reparieren"
 			},
 			"emoji": {
-				"empty": "Kein Emojis gefunden"
+				"empty": "Keine Emojis gefunden"
+			}
+		},
+		"emojiPicker": {
+			"title": "Emoji-Auswahl",
+			"search": "Emoji suchen",
+			"skinTone": "Hautfarbe",
+			"categories": "Emoji-Kategorien",
+			"results": "Suchergebnisse",
+			"loadError": "Emojis konnten nicht geladen werden.",
+			"tones": {
+				"light": "Hell",
+				"mediumLight": "Mittelhell",
+				"medium": "Mittel",
+				"mediumDark": "Mitteldunkel",
+				"dark": "Dunkel"
+			},
+			"groups": {
+				"recent": "Zuletzt verwendet",
+				"smileys": "Smileys & Emotionen",
+				"people": "Menschen & Körper",
+				"nature": "Tiere & Natur",
+				"food": "Essen & Trinken",
+				"travel": "Reisen & Orte",
+				"activities": "Aktivitäten",
+				"objects": "Objekte",
+				"symbols": "Symbole",
+				"flags": "Flaggen"
 			}
 		},
 		"multiselect": {
@@ -1121,6 +1168,7 @@
 			"removeDueDate": "Fälligkeitsdatum entfernen",
 			"removeStartDate": "Startdatum entfernen",
 			"removeEndDate": "Enddatum entfernen",
+			"removeColor": "Farbe entfernen",
 			"removeRepeat": "Wiederholungsintervall entfernen",
 			"removeAssignee": "{user} als Zugewiesenen entfernen",
 			"move": "Aufgabe in ein anderes Projekt verschieben",
@@ -1134,7 +1182,7 @@
 			"deleteSuccess": "Die Aufgabe wurde in den Papierkorb verschoben.",
 			"duplicateSuccess": "Die Aufgabe wurde erfolgreich dupliziert.",
 			"noBucket": "Keine Spalte",
-			"bucketSelectLabel": "Kanban bucket: {bucket}",
+			"bucketSelectLabel": "Kanban-Spalte: {bucket}",
 			"bucketChangedSuccess": "Die Spalte der Aufgabe wurde erfolgreich geändert.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
@@ -1142,30 +1190,23 @@
 			"overdue": "Überfällig",
 			"closeTaskDetail": "Aufgabendetails schließen",
 			"title": "Aufgabendetails",
-			"markAsDone": "'{task}' als erledigt markieren",
+			"markAsDone": "„{task}“ als erledigt markieren",
 			"scrollToBottom": "Nach unten scrollen",
-			"organization": "Organisation",
-			"management": "Verwaltung",
-			"dateAndTime": "Datum und Uhrzeit",
+			"moreActions": "Weitere Aktionen",
+			"properties": {
+				"dueDate": "Fälligkeitsdatum",
+				"startDate": "Startdatum",
+				"endDate": "Enddatum"
+			},
 			"actions": {
-				"assign": "Benutzer:in zuweisen",
-				"label": "Label hinzufügen",
-				"priority": "Priorität setzen",
-				"dueDate": "Fälligkeitsdatum setzen",
-				"startDate": "Startdatum setzen",
-				"endDate": "Enddatum setzen",
-				"reminders": "Erinnerungen setzen",
-				"repeatAfter": "Wiederholung setzen",
-				"percentDone": "Fortschritt einstellen",
 				"attachments": "Anhänge hinzufügen",
 				"timeTracking": "Zeit erfassen",
-				"relatedTasks": "Beziehung hinzufügen",
+				"relatedTasks": "Aufgabenbeziehung hinzufügen",
 				"moveProject": "Verschieben",
 				"duplicate": "Duplizieren",
-				"color": "Farbe setzen",
 				"delete": "Löschen",
 				"favorite": "Zu Favoriten hinzufügen",
-				"unfavorite": "Aus Favoriten entfernen"
+				"unfavorite": "Von Favoriten entfernen"
 			}
 		},
 		"attributes": {
@@ -1257,6 +1298,7 @@
 		},
 		"assignee": {
 			"placeholder": "Tippe, um jemanden zuzuweisen …",
+			"placeholderMore": "Weitere Person zuweisen …",
 			"selectPlaceholder": "Diese:n Benutzer:in zuweisen",
 			"assignSuccess": "Der:die Benutzer:in wurde erfolgreich zugewiesen.",
 			"unassignSuccess": "Benutzer:innenzuweisung aufgehoben."
@@ -1327,11 +1369,18 @@
 			"everyDay": "Jeden Tag",
 			"everyWeek": "Jede Woche",
 			"every30d": "Alle 30 Tage",
+			"summary": {
+				"minutes": "Jede Minute | Alle {count} Minuten",
+				"hours": "Jede Stunde | Alle {count} Stunden",
+				"days": "Jeden Tag | Alle {count} Tage",
+				"weeks": "Jede Woche | Alle {count} Wochen",
+				"fromCurrentDate": "{interval}, ab Fertigstellungsdatum"
+			},
 			"mode": "Wiederholungsmodus",
 			"monthly": "Monatlich",
 			"fromCurrentDate": "Ab Fertigstellungsdatum",
 			"each": "Alle",
-			"specifyAmount": "Gib einen Anzahl an …",
+			"specifyAmount": "Gib eine Anzahl an …",
 			"hours": "Stunden",
 			"days": "Tage",
 			"weeks": "Wochen",
@@ -1359,9 +1408,9 @@
 			"dateWeekday": "jeder Wochentag, wird das nächste Datum mit diesem Tag verwenden",
 			"dateCurrentYear": "wird das laufende Jahr nutzen",
 			"dateNth": "wird den {day}. des aktuellen Monats verwenden",
-			"dateTime": "Kombiniere eines der Datumsformate mit \"{time}\" (oder {timePM}), um eine Zeit festzulegen.",
+			"dateTime": "Kombiniere eines der Datumsformate mit „{time}“ (oder {timePM}), um eine Zeit festzulegen.",
 			"repeats": "Wiederholende Aufgaben",
-			"repeatsDescription": "Um eine Aufgabe als Wiederholung in einem Intervall festzulegen, füge einfach '{suffix}' dem Aufgabentext hinzu. Der Betrag muss eine Zahl sein und kann weggelassen werden, um nur den Typ zu verwenden (siehe Beispiele)."
+			"repeatsDescription": "Um eine Aufgabe als Wiederholung in einem Intervall festzulegen, füge einfach „{suffix}“ dem Aufgabentext hinzu. Der Betrag muss eine Zahl sein und kann weggelassen werden, um nur den Typ zu verwenden (siehe Beispiele)."
 		}
 	},
 	"team": {
@@ -1502,7 +1551,7 @@
 		"urlPlaceholder": "z.B. https://localhost:3456",
 		"change": "ändern",
 		"use": "Verwende die Vikunja-Installation unter „{0}“",
-		"error": "Vikunja Installation unter \"{domain}\" konnte nicht gefunden oder verwendet werden. Bitte prüfe, ob die URL das richtige Format hat und direkt darauf zugreifen kannst und versuche es erneut.",
+		"error": "Die Vikunja-Installation unter „{domain}“ konnte nicht gefunden oder verwendet werden. Bitte prüfe, ob die URL das richtige Format hat und du sie direkt aufrufen kannst, und versuche es erneut.",
 		"success": "Verwende die Vikunja-Installation unter „{domain}“.",
 		"urlRequired": "Eine Url ist erforderlich."
 	},
@@ -1577,22 +1626,22 @@
 		"1016": "Diese:r Benutzer:in verwendet TOTP nicht.",
 		"1017": "Falscher TOTP Code.",
 		"1018": "Die Avatareinstellungen sind falsch.",
-		"1019": "Der OpenID-Anbieter hat keine E-Mail-Adresse angegeben. Bitte stelle sicher, dass der OpenID-Anbieter öffentlich eine E-Mail-Adresse für dein Konto angibt.",
+		"1019": "Der OpenID-Anbieter hat keine E-Mail-Adresse angegeben. Bitte stelle sicher, dass der OpenID-Anbieter öffentlich eine E-Mail-Adresse für deinen Account angibt.",
 		"1020": "Dieser Account ist deaktiviert. Überprüfe deine E-Mails oder frage deinen Administrator.",
 		"1021": "Dieser Account wird von einem Drittanbieter verwaltet.",
 		"1022": "Der Anmeldename darf keine Leerzeichen enthalten.",
 		"1023": "Du kannst das nicht als Linkfreigabe tun.",
 		"1024": "Ungültige Claim-Daten für das Feld {field} des Typs {type}.",
-		"1025": "Die Zeitzone '{timezone}' ist ungültig. Bitte wähle eine gültige Zeitzone aus der Liste.",
+		"1025": "Die Zeitzone „{timezone}“ ist ungültig. Bitte wähle eine gültige Zeitzone aus der Liste.",
 		"1035": "Es gibt keine ausstehende E-Mail-Änderung, die bestätigt werden muss.",
 		"1036": "Bitte warte eine Minute, bevor du eine weitere Bestätigungs-E-Mail anforderst.",
 		"1038": "Der vom OIDC-Anbieter festgelegte benutzerdefinierte Scope ist falsch. Bitte stelle sicher, dass der OpenID-Anbieter die Daten für deinen Scope korrekt setzt. Prüfe insbesondere, ob eine oidcID festgelegt wurde.",
 		"1039": "Dieser TOTP-Zugangscode wurde bereits verwendet. Bitte warte auf das nächste Passwort.",
-		"1040": "Dieses Konto ist aufgrund zu vieler fehlgeschlagener Anmeldeversuche gesperrt. Du kannst dein Passwort zurücksetzen, um es zu entsperren.",
+		"1040": "Dieser Account ist aufgrund zu vieler fehlgeschlagener Anmeldeversuche gesperrt. Du kannst dein Passwort zurücksetzen, um ihn zu entsperren.",
 		"1041": "Zu viele fehlgeschlagene Versuche. Bitte warte einen Moment und probiere es nochmal.",
 		"2001": "Die ID kann nicht leer oder 0 sein.",
 		"2002": "Ein Teil der Anfragedaten ist ungültig.",
-		"2003": "Die Zeitzone '{timezone}' ist ungültig.",
+		"2003": "Die Zeitzone „{timezone}“ ist ungültig.",
 		"2005": "Dieser Einladungslink ist ungültig oder abgelaufen.",
 		"2006": "Dieser Einladungslink existiert nicht.",
 		"2007": "Extern verwaltete Teams können nicht mit einem Einladungslink verknüpft werden.",
@@ -1674,11 +1723,16 @@
 		"14018": "Der Import enthält mehr Elemente als erlaubt sind.",
 		"14019": "Der Migrationsstatus ist ungültig oder abgelaufen. Bitte starte die Migration erneut.",
 		"14020": "Ein Projekt im Import hat mehr Ansichten als erlaubt.",
-		"14201": "Planka hat die angegebenen Anmeldedaten abgelehnt. Überprüfe die URL und den API-Schlüssel oder den Benutzernamen und das Passwort.",
-		"14202": "Das Planka-Konto erfordert einen zusätzlichen Anmeldeschritt (Zwei-Faktor-Code oder das Akzeptieren der Nutzungsbedingungen). Melde dich einmal im Browser bei Planka an oder verwende stattdessen einen API-Schlüssel anstelle von Benutzername und Passwort.",
-		"14203": "Eine Planka-URL und entweder ein API-Schlüssel oder Benutzername und Passwort sind erforderlich.",
+		"14041": "Spalte {column} ist mehr als einmal zugeordnet. Ordne jede Spalte nur einem Attribut zu.",
+		"14042": "Zeile {row} der CSV-Datei hat mehr als {max} Labels.",
+		"14201": "Planka hat die angegebenen Anmeldedaten abgelehnt. Überprüfe die URL und den API-Schlüssel oder den Anmeldenamen und das Passwort.",
+		"14202": "Der Planka-Account erfordert einen zusätzlichen Anmeldeschritt (Zwei-Faktor-Code oder das Akzeptieren der Nutzungsbedingungen). Melde dich einmal im Browser bei Planka an oder verwende einen API-Schlüssel anstelle von Anmeldename und Passwort.",
+		"14203": "Eine Planka-URL und entweder ein API-Schlüssel oder Anmeldename und Passwort sind erforderlich.",
 		"14204": "Die Planka-API konnte unter der angegebenen URL nicht erreicht werden. Prüfe die URL und ob Vikunja die Instanz erreichen kann.",
 		"14205": "Die Planka-URL zeigt auf eine private oder lokale Netzwerkadresse, die Vikunja standardmäßig blockiert. Ein Admin kann das ändern, indem outgoingrequests.allownonroutableips eingeschaltet werden.",
+		"15002": "Dieser Account beim Identitätsanbieter ist bereits mit einem anderen Vikunja-Account verknüpft.",
+		"15003": "Du hast bereits einen Account dieses Anbieters verknüpft. Hebe zuerst dessen Verknüpfung auf.",
+		"15004": "Dieser verknüpfte Account existiert nicht.",
 		"error": "Fehler",
 		"success": "Erfolgreich",
 		"0001": "Das darfst du nicht tun."
@@ -1787,7 +1841,7 @@
 			"confirmDeleteTitle": "Account löschen?",
 			"confirmDeleteIntro": "Wie soll der Account {username} gelöscht werden?",
 			"deleteModeScheduled": "Löschung planen",
-			"deleteModeScheduledHelp": "\"Löschung planen\" sendet eine Bestätigungs-E-Mail, analog zu einer selbst ausgelösten Kontolöschung.",
+			"deleteModeScheduledHelp": "„Löschung planen“ sendet eine Bestätigungs-E-Mail, analog zu einer selbst ausgelösten Account-Löschung.",
 			"deleteModeNow": "Jetzt löschen",
 			"deleteModeNowHelp": "Sofort-Löschen entfernt den Account und seine Daten umgehend. Dies kann nicht rückgängig gemacht werden."
 		},

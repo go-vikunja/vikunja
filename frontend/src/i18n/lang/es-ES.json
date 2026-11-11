@@ -486,22 +486,8 @@
 			"belongsToProject": "Esta tarea pertenece al proyecto '{project}'",
 			"due": "Vence {at}",
 			"actions": {
-				"assign": "Asignar al Usuario",
-				"label": "Añadir Etiquetas",
-				"priority": "Establecer prioridad",
-				"dueDate": "Establecer Fecha Límite",
-				"startDate": "Establecer Fecha de Inicio",
-				"endDate": "Establecer Fecha de Fin",
-				"reminders": "Definir Recordatorios",
-				"repeatAfter": "Definir Intervalo de Repetición",
-				"percentDone": "Definir Progreso",
-				"attachments": "Añadir Adjuntos",
-				"relatedTasks": "Añadir una Relación",
 				"moveProject": "Mover",
-				"color": "Definir Color",
-				"delete": "Eliminar",
-				"favorite": "Añadir a Favoritos",
-				"unfavorite": "Sacar de Favoritos"
+				"delete": "Eliminar"
 			}
 		},
 		"attributes": {
@@ -627,8 +613,6 @@
 			"dateAndTime": "Fecha y hora"
 		},
 		"repeat": {
-			"everyDay": "Cada Día",
-			"everyWeek": "Cada Semana",
 			"mode": "Modo de repetición",
 			"monthly": "Mensualmente",
 			"each": "Cada",

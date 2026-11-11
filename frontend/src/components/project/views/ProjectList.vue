@@ -13,8 +13,7 @@
 				<FilterPopup
 					v-if="!isSavedFilterProject(project)"
 					v-model="params"
-					:view-id="viewId"
-					:project-id="projectId"
+					:view
 					@update:modelValue="loadTasks()"
 				/>
 			</div>
@@ -51,6 +50,7 @@
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
 						:group="{name: 'tasks', put: false}"
+						:sort="canReorderTasks"
 						:disabled="!canDragTasks || !isPositionSorting"
 						item-key="id"
 						tag="ul"
@@ -121,6 +121,7 @@ import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {eventToShortcutString} from '@/helpers/shortcut'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {TaskResponse} from '@/client/queries/tasks'
+import type {ProjectView} from '@/client/generated'
 import {isSavedFilterProject} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
@@ -132,6 +133,7 @@ const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
 	viewId: number,
+	view: ProjectView,
 }>()
 
 const draggable = draggableFor<TaskResponse>()
@@ -139,6 +141,11 @@ const draggable = draggableFor<TaskResponse>()
 const projectId = toRef(props, 'projectId')
 
 defineOptions({name: 'List'})
+
+const baseStore = useBaseStore()
+const {setDraggedTask} = useTaskDragState()
+const {handleTaskDropToProject} = useTaskDragToProject()
+const {currentProject: project} = useCurrentProject()
 
 const ctaVisible = ref(false)
 
@@ -152,6 +159,7 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
+	includeSubprojects,
 } = useTaskList(
 	() => projectId.value,
 	() => props.viewId,
@@ -159,6 +167,7 @@ const {
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
+	() => props.view,
 )
 const showLoading = useDelayedLoading(loading)
 
@@ -173,10 +182,8 @@ watch([projectId, () => props.viewId], () => { dragTasks.value = null })
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
-const baseStore = useBaseStore()
-const {setDraggedTask} = useTaskDragState()
-const {handleTaskDropToProject} = useTaskDragToProject()
-const {currentProject: project} = useCurrentProject()
+// A subproject's task has no position in this view, so the api drops the position sort.
+const canReorderTasks = computed(() => isPositionSorting.value && !includeSubprojects.value)
 
 const canWrite = computed(() => {
 	return typeof project.value?.max_permission === 'number' &&
@@ -230,15 +237,27 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 
 		// Check if dropped on a sidebar project
 		const {moved} = await handleTaskDropToProject(e, (task) => {
+			// The target project may still be in this list, so let the reload decide.
+			if (includeSubprojects.value) {
+				return
+			}
+
 			tasks.value = tasks.value.filter(t => t.id !== task.id)
 		})
 
 		if (moved) {
+			if (includeSubprojects.value) {
+				await loadTasks()
+			}
 			return
 		}
 
 		// If dropped outside this list
 		if (e.to !== e.from) {
+			return
+		}
+
+		if (!canReorderTasks.value) {
 			return
 		}
 

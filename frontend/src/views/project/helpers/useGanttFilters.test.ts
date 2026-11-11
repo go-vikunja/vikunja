@@ -29,6 +29,10 @@ vi.mock('./useGanttTaskList', () => ({
 	}),
 }))
 
+vi.mock('@/composables/useIncludeSubprojects', () => ({
+	useIncludeSubprojects: () => ({includeSubprojects: ref(false), fromView: ref(false), queryParam: ref(undefined)}),
+}))
+
 import {useGanttFilters} from './useGanttFilters'
 
 function routeRef(route: Partial<RouteLocationNormalized>): Ref<RouteLocationNormalized> {
@@ -46,7 +50,7 @@ describe('useGanttFilters', () => {
 			fullPath: '/tasks/3619',
 		})
 
-		const {filters} = useGanttFilters(route, ref(5), ref(2759))
+		const {filters} = useGanttFilters(route, ref(5), ref(2759), () => undefined)
 
 		expect(filters.value.projectId).toBe(5)
 		expect(filters.value.viewId).toBe(2759)
@@ -60,7 +64,7 @@ describe('useGanttFilters', () => {
 			fullPath: '/projects/5/2759?dateFrom=2024-01-01&dateTo=2024-02-01',
 		})
 
-		const {filters} = useGanttFilters(route, ref(5), ref(2759))
+		const {filters} = useGanttFilters(route, ref(5), ref(2759), () => undefined)
 
 		expect(filters.value.dateFrom).toBe(new Date(2024, 0, 1).toISOString())
 		expect(filters.value.dateTo).toBe(new Date(2024, 1, 1).toISOString())
@@ -72,7 +76,7 @@ describe('useGanttFilters', () => {
 			params: {projectId: '5', viewId: '2759'},
 			query: {},
 			fullPath: '/projects/5/2759',
-		}), ref(5), ref(2759))
+		}), ref(5), ref(2759), () => undefined)
 		expect(withoutZoom.filters.value.zoom).toBe(30)
 
 		const withZoom = useGanttFilters(routeRef({
@@ -80,7 +84,7 @@ describe('useGanttFilters', () => {
 			params: {projectId: '5', viewId: '2759'},
 			query: {zoom: '8'},
 			fullPath: '/projects/5/2759?zoom=8',
-		}), ref(5), ref(2759))
+		}), ref(5), ref(2759), () => undefined)
 		expect(withZoom.filters.value.zoom).toBe(8)
 
 		const unknownZoom = useGanttFilters(routeRef({
@@ -88,7 +92,7 @@ describe('useGanttFilters', () => {
 			params: {projectId: '5', viewId: '2759'},
 			query: {zoom: 'hour'},
 			fullPath: '/projects/5/2759?zoom=hour',
-		}), ref(5), ref(2759))
+		}), ref(5), ref(2759), () => undefined)
 		expect(unknownZoom.filters.value.zoom).toBe(30)
 	})
 })

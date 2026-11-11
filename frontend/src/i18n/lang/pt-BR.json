@@ -578,26 +578,9 @@
 			"updateSuccess": "A tarefa foi salva com sucesso.",
 			"belongsToProject": "Esta tarefa pertence ao projeto '{project}'",
 			"due": "Vence {at}",
-			"organization": "Organização",
-			"management": "Administração",
-			"dateAndTime": "Data e hora",
 			"actions": {
-				"assign": "Atribuir usuário",
-				"label": "Adicionar etiquetas",
-				"priority": "Definir prioridade",
-				"dueDate": "Definir prazo",
-				"startDate": "Definir data de início",
-				"endDate": "Definir data de término",
-				"reminders": "Definir lembretes",
-				"repeatAfter": "Definir Intervalo para Repetição",
-				"percentDone": "Definir progresso",
-				"attachments": "Adicionar anexos",
-				"relatedTasks": "Adicionar Relação",
 				"moveProject": "Mover",
-				"color": "Definir cor",
-				"delete": "Excluir",
-				"favorite": "Adicionar aos favoritos",
-				"unfavorite": "Remover dos favoritos"
+				"delete": "Excluir"
 			}
 		},
 		"attributes": {
@@ -727,9 +710,6 @@
 			"dateAndTime": "Data e hora"
 		},
 		"repeat": {
-			"everyDay": "Diariamente",
-			"everyWeek": "Toda semana",
-			"every30d": "A cada 30 dias",
 			"mode": "Modo repetição",
 			"monthly": "Mensalmente",
 			"each": "Cada",

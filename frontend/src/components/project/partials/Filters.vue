@@ -29,6 +29,16 @@
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
+			<FancyCheckbox
+				v-if="showIncludeSubprojectsToggle"
+				v-model="includeSubprojects"
+				v-tooltip="includeSubprojectsFromView
+					? $t('project.views.includeSubprojectsFromView')
+					: $t('project.views.includeSubprojectsHint')"
+				:disabled="includeSubprojectsFromView"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<FilterInputDocs />
@@ -40,7 +50,7 @@
 			<XButton
 				variant="secondary"
 				class="mie-2"
-				:disabled="filterQuery === ''"
+				:disabled="!hasActiveFilters"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
@@ -56,12 +66,14 @@
 </template>
 
 <script setup lang="ts" generic="T extends EditableTaskCollection">
-import {computed, ref, watch} from 'vue'
+import {computed, ref, watch, type DeepReadonly} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 import {useLabels} from '@/composables/useLabels'
 import {useProjects} from '@/composables/useProjects'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
+import type {ProjectView} from '@/client/generated'
 import {
 	hasFilterQuery,
 	transformFilterStringForApi,
@@ -76,12 +88,14 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	view?: ProjectView | DeepReadonly<ProjectView>,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	view: undefined,
 })
 
 const emit = defineEmits<{
@@ -116,6 +130,17 @@ watch(
 		filterQuery.value = filter || s
 	},
 )
+
+// A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
+const showIncludeSubprojectsToggle = computed(() => (props.view?.project_id ?? 0) > 0 && props.view?.view_kind !== 'kanban')
+
+const {
+	includeSubprojects,
+	fromView: includeSubprojectsFromView,
+	overridesView,
+} = useIncludeSubprojects(() => props.view)
+
+const hasActiveFilters = computed(() => filterQuery.value !== '' || params.value.filter_include_nulls || overridesView.value)
 
 const {getLabelByExactTitle} = useLabels()
 const projectList = useProjects()
@@ -187,6 +212,10 @@ function changeAndEmitButton() {
 
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
+	params.value.filter_include_nulls = false
+	if (overridesView.value) {
+		includeSubprojects.value = false
+	}
 	changeAndEmitButton()
 }
 
