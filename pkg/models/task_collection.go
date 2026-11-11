@@ -232,7 +232,7 @@ func ensureDefaultPositionSort(opts *taskSearchOptions, view *ProjectView) {
 
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket, forceFlatTasks bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
 	if view != nil && GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
-		err = ensureTaskPositionsForSavedFilterView(s, a, projects, view, opts)
+		err = ensureTaskPositionsForView(s, a, projects, view, opts)
 		if err != nil {
 			return nil, 0, 0, err
 		}
