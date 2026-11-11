@@ -114,7 +114,6 @@ import Pagination from '@/components/misc/Pagination.vue'
 import SortPopup from '@/components/project/partials/SortPopup.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
-import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
@@ -148,8 +147,6 @@ const {setDraggedTask} = useTaskDragState()
 const {handleTaskDropToProject} = useTaskDragToProject()
 const {currentProject: project} = useCurrentProject()
 
-const {includeSubprojects} = useIncludeSubprojects(() => props.view)
-
 const ctaVisible = ref(false)
 
 const drag = ref(false)
@@ -162,6 +159,7 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
+	includeSubprojects,
 } = useTaskList(
 	() => projectId.value,
 	() => props.viewId,
@@ -169,7 +167,7 @@ const {
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
-	() => includeSubprojects.value,
+	() => props.view,
 )
 const showLoading = useDelayedLoading(loading)
 

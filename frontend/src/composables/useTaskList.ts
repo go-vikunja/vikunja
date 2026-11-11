@@ -1,4 +1,4 @@
-import {ref, shallowRef, watch, computed, type ComputedGetter} from 'vue'
+import {ref, shallowRef, watch, computed, type ComputedGetter, type DeepReadonly} from 'vue'
 import {useRouter, isNavigationFailure} from 'vue-router'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
@@ -14,6 +14,8 @@ import {useTasks} from '@/composables/useTasks'
 import {error} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useViewFiltersStore} from '@/stores/viewFilters'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
+import type {ProjectView} from '@/client/generated'
 import {INCLUDE_SUBPROJECTS_QUERY_PARAM} from '@/constants/projectView'
 
 export type Order = 'asc' | 'desc' | 'none'
@@ -102,7 +104,7 @@ export function useTaskList(
 	projectViewIdGetter: ComputedGetter<number>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
 	expandGetter: ComputedGetter<TaskExpansion> = () => ['subtasks'],
-	includeSubprojectsGetter: ComputedGetter<boolean> = () => false,
+	viewGetter: ComputedGetter<ProjectView | DeepReadonly<ProjectView> | undefined> = () => undefined,
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -116,7 +118,7 @@ export function useTaskList(
 	const page = useRouteQuery('page', '1', { transform: normalizePageNumber })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
-	const includeSubprojects = computed(() => includeSubprojectsGetter())
+	const {includeSubprojects, queryParam: includeSubprojectsParam} = useIncludeSubprojects(viewGetter)
 
 	watch(filter, v => { params.value.filter = String(v ?? '') }, { immediate: true })
 	watch(s, v => { params.value.q = String(v ?? '') }, { immediate: true })
@@ -125,7 +127,6 @@ export function useTaskList(
 	watch(() => params.value.q, v => { s.value = v || undefined })
 
 	const sortQuery = useRouteQuery('sort')
-	const includeSubprojectsQuery = useRouteQuery<string | undefined>(INCLUDE_SUBPROJECTS_QUERY_PARAM)
 
 	const sortBy = computed<SortBy>({
 		get() {
@@ -142,7 +143,7 @@ export function useTaskList(
 	// Sidebar links omit the query, and project views are reused across navigation.
 	const syncedViewId = shallowRef<number>()
 	watch(
-		[projectViewId, sortQuery, filter, s, page, includeSubprojectsQuery],
+		[projectViewId, sortQuery, filter, s, page, includeSubprojectsParam],
 		([viewId, sortValue, filterValue, sValue, pageValue, includeValue]) => {
 			const viewIdChanged = viewId !== syncedViewId.value
 			syncedViewId.value = viewId
@@ -171,7 +172,7 @@ export function useTaskList(
 				filter: filterValue as string | undefined,
 				s: sValue as string | undefined,
 				page: pageValue,
-				includeSubprojects: includeValue as string | undefined,
+				includeSubprojects: includeValue,
 			})
 			if (Object.keys(query).length > 0) {
 				viewFiltersStore.setViewQuery(viewId, query)
