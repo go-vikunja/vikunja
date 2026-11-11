@@ -93,7 +93,6 @@ import FormField from '@/components/input/FormField.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
-import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
@@ -115,7 +114,6 @@ const canWrite = computed(() =>
 )
 
 const {route, projectId, viewId} = toRefs(props)
-const {includeSubprojects, fromView: includeSubprojectsFromView} = useIncludeSubprojects(() => props.view)
 const {
 	filters,
 	hasDefaultFilters,
@@ -124,7 +122,9 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, projectId, viewId, includeSubprojects)
+	includeSubprojects,
+	includeSubprojectsFromView,
+} = useGanttFilters(route, projectId, viewId, () => props.view)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 
