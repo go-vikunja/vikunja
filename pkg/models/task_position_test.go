@@ -822,3 +822,35 @@ func TestAddPositionsToTasks(t *testing.T) {
 		assert.NotContains(t, viewIDs, int64(5))
 	})
 }
+
+func TestRecalculateTaskPositions_KeepsSubprojectTasks(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := s.Insert([]*TaskPosition{
+		{TaskID: 21, ProjectViewID: 125, Position: 300},
+		{TaskID: 24, ProjectViewID: 125, Position: 100},
+		{TaskID: 24, ProjectViewID: 57, Position: 777},
+		// Task 1 is neither in project 32 nor below it.
+		{TaskID: 1, ProjectViewID: 125, Position: 200},
+	})
+	require.NoError(t, err)
+
+	view, err := GetProjectViewByID(s, 125)
+	require.NoError(t, err)
+	require.NoError(t, RecalculateTaskPositions(s, view, &LinkSharing{ID: 100, ProjectID: 32, Permission: PermissionWrite}))
+	require.NoError(t, s.Commit())
+
+	readSession := db.NewSession()
+	defer readSession.Close()
+	positions := []*TaskPosition{}
+	require.NoError(t, readSession.Where("project_view_id = ?", 125).OrderBy("position asc").Find(&positions))
+	taskIDs := make([]int64, 0, len(positions))
+	for _, p := range positions {
+		taskIDs = append(taskIDs, p.TaskID)
+	}
+	assert.Equal(t, []int64{24, 21}, taskIDs, "the subproject task keeps its row and its place before task 21")
+
+	db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 24, "project_view_id": 57, "position": 777}, false)
+}
