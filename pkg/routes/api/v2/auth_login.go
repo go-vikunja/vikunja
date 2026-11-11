@@ -21,13 +21,14 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/labstack/echo/v5"
 )
 
 // authTokenBody wraps the issued user JWT. The token is inlined rather than
@@ -95,7 +96,7 @@ func authLogin(ctx context.Context, in *struct{ Body user.Login }) (*authTokenBo
 		return nil, translateDomainError(err)
 	}
 
-	if ec := echoContextFromCtx(ctx); ec != nil {
+	if ec := humabridge.EchoContextFrom(ctx); ec != nil {
 		auth.WriteUserAuthCookies(ec, token)
 	}
 
@@ -106,9 +107,11 @@ func authLogin(ctx context.Context, in *struct{ Body user.Login }) (*authTokenBo
 
 func authLogout(ctx context.Context, _ *struct{}) (*logoutBody, error) {
 	var sid string
-	if ec := echoContextFromCtx(ctx); ec != nil {
+	var userID int64
+	if ec := humabridge.EchoContextFrom(ctx); ec != nil {
 		auth.ClearRefreshTokenCookie(ec)
 		sid = auth.SessionIDFromContext(ec)
+		userID = auth.SessionUserIDFromContext(ec)
 	}
 
 	oidcLogoutURL, err := shared.LogoutSession(sid) //nolint:contextcheck // OIDC provider discovery resolves from a cached, context-less map and runs on its own background context, like the OIDC callback.
@@ -116,20 +119,14 @@ func authLogout(ctx context.Context, _ *struct{}) (*logoutBody, error) {
 		return nil, translateDomainError(err)
 	}
 
+	if userID != 0 {
+		if err := events.DispatchWithContext(ctx, &user.LogoutEvent{UserID: userID}); err != nil {
+			log.Errorf("Could not dispatch logout event: %s", err)
+		}
+	}
+
 	out := &logoutBody{}
 	out.Body.Message = "Successfully logged out."
 	out.Body.OIDCLogoutURL = oidcLogoutURL
 	return out, nil
-}
-
-// echoContextFromCtx pulls the underlying *echo.Context off a Huma request
-// context so a handler can set cookies and headers the OpenAPI schema does not
-// model (the refresh-token cookie). Returns nil when the context carries no echo
-// context (it always does under the humabridge group middleware).
-func echoContextFromCtx(ctx context.Context) *echo.Context {
-	ec, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
-	if !ok || ec == nil {
-		return nil
-	}
-	return ec
 }

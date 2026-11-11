@@ -115,9 +115,10 @@
 </template>
 
 <script setup lang="ts">
+import type {VikunjaErrorModel} from '@/client/generated'
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRouter} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import Message from '@/components/misc/Message.vue'
@@ -127,9 +128,11 @@ import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import DesktopLogin from '@/views/user/DesktopLogin.vue'
 
 import {getErrorText} from '@/message'
-import {redirectToProvider} from '@/helpers/redirectToProvider'
+import {getAutoRedirectProvider, redirectToProvider} from '@/helpers/redirectToProvider'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
+import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
+import {ERROR_CODE_TOTP_REQUIRED} from '@/constants/auth'
 
 import {useAuthStore, JUST_LOGGED_OUT_KEY} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
@@ -139,16 +142,17 @@ import {useTitle} from '@/composables/useTitle'
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const {redirectIfSaved} = useRedirectToLastVisited()
 
-const registrationEnabled = computed(() => configStore.auth.local.registrationEnabled)
+const registrationEnabled = computed(() => configStore.auth.local.registration_enabled)
 const localAuthEnabled = computed(() => configStore.auth.local.enabled)
 const ldapAuthEnabled = computed(() => configStore.auth.ldap.enabled)
 
-const openidConnect = computed(() => configStore.auth.openidConnect)
+const openidConnect = computed(() => configStore.auth.openid_connect)
 const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidConnect.value.providers?.length > 0)
 
 const isLoading = computed(() => authStore.isLoading)
@@ -179,22 +183,23 @@ onBeforeMount(() => {
 		return
 	}
 
-	// Don't auto-redirect right after an explicit logout, otherwise we'd
-	// immediately re-authenticate the user we just logged out.
-	if (sessionStorage.getItem(JUST_LOGGED_OUT_KEY)) {
+	// Consumed on read so the next visit to the login page can auto-redirect again.
+	const justLoggedOut = sessionStorage.getItem(JUST_LOGGED_OUT_KEY) !== null
+	if (justLoggedOut) {
 		sessionStorage.removeItem(JUST_LOGGED_OUT_KEY)
-		return
 	}
 
-	// When the login page offers nothing but a single OIDC provider, skip it
-	// and send the user straight there.
-	if (
-		!localAuthEnabled.value &&
-		!ldapAuthEnabled.value &&
-		hasOpenIdProviders.value &&
-		openidConnect.value.providers.length === 1
-	) {
-		redirectToProvider(openidConnect.value.providers[0])
+	const autoRedirectProvider = getAutoRedirectProvider({
+		localAuthEnabled: localAuthEnabled.value,
+		ldapAuthEnabled: ldapAuthEnabled.value,
+		openIdEnabled: openidConnect.value.enabled,
+		providers: openidConnect.value.providers ?? [],
+		isDesktopApp: isDesktop,
+		justLoggedOut,
+		hasCopyableRedirect: route.hash.startsWith(REDIRECT_HASH_PREFIX),
+	})
+	if (autoRedirectProvider) {
+		redirectToProvider(autoRedirectProvider)
 	}
 })
 
@@ -213,7 +218,7 @@ async function submit() {
 	// Some browsers prevent Vue bindings from working with autofilled values.
 	// To work around this, we're manually getting the values here instead of relying on vue bindings.
 	// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
-	const credentials = {
+	const credentials: Parameters<typeof authStore.login>[0] = {
 		username: usernameRef.value?.value,
 		password: password.value,
 		longToken: rememberMe.value,
@@ -236,7 +241,7 @@ async function submit() {
 
 		redirectIfSaved()
 	} catch (e) {
-		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+		if ((e as VikunjaErrorModel)?.code === ERROR_CODE_TOTP_REQUIRED && !credentials.totpPasscode) {
 			return
 		}
 
@@ -246,10 +251,6 @@ async function submit() {
 </script>
 
 <style lang="scss" scoped>
-.button {
-	margin: 0 0.4rem 0 0;
-}
-
 .reset-password-link {
 	display: inline-block;
 }

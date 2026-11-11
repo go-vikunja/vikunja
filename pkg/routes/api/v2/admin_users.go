@@ -40,6 +40,10 @@ type adminUserBody struct {
 	Body *shared.AdminUser
 }
 
+type adminUserListBody struct {
+	Body Paginated[*shared.AdminUser]
+}
+
 // adminIsAdminPatchBody uses a pointer so an omitted is_admin leaves the flag unchanged
 // instead of silently demoting.
 type adminIsAdminPatchBody struct {
@@ -78,6 +82,15 @@ func RegisterAdminUserRoutes(api huma.API) {
 		Path:        "/admin/overview",
 		Tags:        tags,
 	}, adminOverview)
+
+	Register(api, huma.Operation{
+		OperationID: "admin-users-list",
+		Summary:     "List users (admin)",
+		Description: "Returns every user on the instance, paginated, with q matched against username and email. Exposes fields hidden from the normal user API (is_admin, status, auth provider). Each call is recorded in the audit log, since the response contains every user's email address. Restricted to instance admins on a licensed instance; unlicensed or non-admin callers get a 404, making the endpoint indistinguishable from one that is not registered.",
+		Method:      http.MethodGet,
+		Path:        "/admin/users",
+		Tags:        tags,
+	}, adminUsersList)
 
 	Register(api, huma.Operation{
 		OperationID: "admin-users-create",
@@ -146,6 +159,38 @@ func adminOverview(_ context.Context, _ *struct{}) (*adminOverviewBody, error) {
 		return nil, translateDomainError(err)
 	}
 	return &adminOverviewBody{Body: overview}, nil
+}
+
+func adminUsersList(ctx context.Context, in *ListParams) (*adminUserListBody, error) {
+	doer, err := adminDoerFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	users, total, err := models.ListUsersAsAdmin(s, doer, in.Q, in.Page, in.PerPage)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, translateDomainError(err)
+	}
+	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
+		return nil, translateDomainError(err)
+	}
+	events.DispatchPending(ctx, s)
+
+	providers, err := openid.GetAllProviders() //nolint:contextcheck // GetAllProviders reads a cached map; it takes no context, like the v1 admin handlers.
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	out := make([]*shared.AdminUser, 0, len(users))
+	for _, u := range users {
+		out = append(out, shared.NewAdminUser(u, providers)) //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+	}
+	return &adminUserListBody{Body: NewPaginated(out, total, in.Page, in.PerPage)}, nil
 }
 
 func adminUsersCreate(ctx context.Context, in *struct{ Body models.CreateUserBody }) (*adminUserBody, error) {

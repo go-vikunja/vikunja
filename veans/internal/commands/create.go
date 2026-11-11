@@ -45,7 +45,7 @@ func newCreateCmd() *cobra.Command {
 		Short:   "Create a new task",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rt, err := loadRuntime()
+			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -53,6 +53,7 @@ func newCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			rt.withURLs(task)
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}

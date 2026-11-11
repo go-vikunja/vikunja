@@ -20,15 +20,16 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web"
+	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/labstack/echo/v5"
 )
 
 // authFromCtx retrieves the authed user from a Huma handler context,
@@ -70,6 +71,7 @@ func translateDomainError(err error) error {
 		if vm, ok := se.(*vikunjaErrorModel); ok {
 			vm.Code = details.Code
 			vm.I18nParams = details.I18nParams
+			vm.Details = details.Details
 		}
 		return se
 	}
@@ -84,18 +86,13 @@ func translateDomainError(err error) error {
 		}
 		return se
 	}
-	// Shared transport-agnostic cores (e.g. auth.RefreshSession) signal HTTP
-	// semantics with *echo.HTTPError. v1 lets echo's error handler render it;
-	// without this it would fall through as a 500 on v2.
-	var he *echo.HTTPError
-	if errors.As(err, &he) {
-		msg := he.Message
-		if msg == "" {
-			msg = http.StatusText(he.Code)
-		}
-		return huma.NewError(he.Code, msg)
-	}
 	return err
+}
+
+// Same 403 body and denial log handler.DoReadOne produces, so hand-rolled read checks match the CRUD path.
+func errReadForbidden(a web.Auth) error {
+	log.Warningf("Tried to read while not having the permissions for it (User: %v)", a.GetID())
+	return translateDomainError(handler.ErrReadForbidden())
 }
 
 // invalidFieldDetails turns ValidationHTTPError's invalid_fields into RFC 9457
@@ -120,6 +117,19 @@ type vikunjaErrorModel struct {
 	huma.ErrorModel
 	Code       int               `json:"code,omitempty" readOnly:"true" doc:"Vikunja numeric error code; see https://vikunja.io/docs/errors/"`
 	I18nParams map[string]string `json:"i18n_params,omitempty" readOnly:"true" doc:"Dynamic values referenced by the error message, keyed by translation placeholder name, for client-side localisation."`
+	Details    any               `json:"details,omitempty" readOnly:"true" doc:"Error-specific data; its shape depends on code."`
+}
+
+// Huma skips its default error response once an operation declares any response; declaring 307 would drop the error schema.
+func defaultErrorResponse(api huma.API) *huma.Response {
+	return &huma.Response{
+		Description: "Error",
+		Content: map[string]*huma.MediaType{
+			"application/problem+json": {
+				Schema: api.OpenAPI().Components.Schemas.Schema(reflect.TypeOf(vikunjaErrorModel{}), true, "Error"),
+			},
+		},
+	}
 }
 
 func init() {

@@ -32,17 +32,25 @@
 		>
 			<TimeEntryForm
 				:entry="editingEntry"
-				:recent-entries="timeTrackingStore.browsedEntries"
+				:recent-entries="entries"
 				@saved="onSaved"
 				@cancel="editingEntry = null"
 			/>
 		</Card>
 
 		<TimeEntryList
-			:entries="timeTrackingStore.browsedEntries"
+			:entries="entries"
 			:empty-text="$t('timeTracking.list.emptyFiltered')"
+			:paged="totalPages > 1"
 			@edit="editingEntry = $event"
 			@delete="onDelete"
+		/>
+
+		<PaginationEmit
+			v-if="totalPages > 1"
+			:total-pages="totalPages"
+			:current-page="currentPage"
+			@pageChanged="currentPage = $event"
 		/>
 
 		<Modal
@@ -81,7 +89,7 @@
 						<Multiselect
 							v-model="selectedTask"
 							:placeholder="$t('timeTracking.form.taskSearch')"
-							:loading="taskService.loading"
+							:loading="taskQuery.isFetching.value"
 							:search-results="foundTasks"
 							label="title"
 							@search="findTasks"
@@ -97,7 +105,7 @@
 					<Multiselect
 						v-model="selectedUser"
 						:placeholder="$t('timeTracking.browse.userSearch')"
-						:loading="userService.loading"
+						:loading="usersLoading"
 						:search-results="foundUsers"
 						label="username"
 						@search="findUsers"
@@ -113,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, shallowReactive, watch, nextTick, onMounted} from 'vue'
+import {ref, computed, watch, nextTick, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -122,29 +130,32 @@ import Card from '@/components/misc/Card.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import Multiselect from '@/components/input/Multiselect.vue'
+import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import TimeEntryForm from '@/components/time-tracking/TimeEntryForm.vue'
 import TimeEntryList from '@/components/time-tracking/TimeEntryList.vue'
 
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
-import UserService from '@/services/user'
+import {useTasks} from '@/composables/useTasks'
+import {ensureTask} from '@/client/queries/tasks'
+import {searchUsers} from '@/client/queries/userSearch'
+import {useUserSearch} from '@/composables/useUserSearch'
 import {useTitle} from '@/composables/useTitle'
-import {useTimeTrackingStore} from '@/stores/timeTracking'
+import {useTimeEntries} from '@/composables/useTimeTracking'
+import {useDeleteTimeEntryMutation} from '@/client/queries/timeEntries'
 import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 
-import type {IProject} from '@/modelTypes/IProject'
-import type {ITask} from '@/modelTypes/ITask'
-import type {IUser} from '@/modelTypes/IUser'
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
+import type {ProjectResponse} from '@/client/queries/projects'
+import type {TaskResponse} from '@/client/queries/tasks'
+import type {User as IUser} from '@/client/generated'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const {t} = useI18n()
 const route = useRoute()
 const router = useRouter()
-const timeTrackingStore = useTimeTrackingStore()
+const deleteMutation = useDeleteTimeEntryMutation()
 const baseStore = useBaseStore()
-const projectStore = useProjectStore()
+const projectList = useProjects()
 
 useTitle(() => t('timeTracking.title'))
 
@@ -155,11 +166,21 @@ const formVisible = computed(() => showForm.value || editingEntry.value !== null
 function onSaved() {
 	editingEntry.value = null
 	showForm.value = false
-	timeTrackingStore.browseEntries(filter.value)
 }
 
-function onDelete(id: number) {
-	timeTrackingStore.removeEntry(id)
+async function onDelete(entry: ITimeEntry) {
+	if (deleteMutation.isPending.value) {
+		return
+	}
+	try {
+		await deleteMutation.mutateAsync({
+			id: entry.id,
+			taskId: entry.task_id,
+		})
+	} catch {
+		return
+	}
+	currentPage.value = Math.min(currentPage.value, Math.max(1, totalPages.value))
 }
 
 // --- Filter ---------------------------------------------------------------
@@ -169,8 +190,8 @@ const dateRange = ref<{dateFrom: Date | string | null, dateTo: Date | string | n
 	dateFrom: 'now/d',
 	dateTo: 'now/d+1d',
 })
-const selectedProject = ref<IProject | null>(null)
-const selectedTask = ref<ITask | null>(null)
+const selectedProject = ref<ProjectResponse | null>(null)
+const selectedTask = ref<TaskResponse | null>(null)
 const selectedUser = ref<IUser | null>(null)
 const filterModalOpen = ref(false)
 
@@ -197,24 +218,16 @@ const rangeLabel = computed(() => {
 	return t('input.datepickerRange.fromto', {from: dateValue(dateFrom), to: dateValue(dateTo)})
 })
 
-const taskService = shallowReactive(new TaskService())
-const foundTasks = ref<ITask[]>([])
-async function findTasks(query: string) {
-	if (query === '') {
-		foundTasks.value = []
-		return
-	}
-	foundTasks.value = await taskService.getAll({}, {s: query, sort_by: 'done'}) as ITask[]
-}
+const taskSearch = ref('')
+const taskQuery = useTasks(() => ({params: {q: taskSearch.value, sort_by: ['done']}}), {enabled: () => taskSearch.value !== ''})
+const foundTasks = taskQuery.tasks
+function findTasks(query: string) { taskSearch.value = query }
 
-const userService = shallowReactive(new UserService())
-const foundUsers = ref<IUser[]>([])
-async function findUsers(query: string) {
-	if (query === '') {
-		foundUsers.value = []
-		return
-	}
-	foundUsers.value = await userService.getAll({}, {s: query}) as IUser[]
+
+const userSearch = ref('')
+const {users: foundUsers, isFetching: usersLoading} = useUserSearch(userSearch)
+function findUsers(query: string) {
+	userSearch.value = query
 }
 
 // Datemath preset strings (now/M) pass through unchanged; a custom Date becomes
@@ -265,12 +278,22 @@ const filterQuery = computed(() => {
 		q.task = String(selectedTask.value.id)
 	}
 	if (selectedUser.value !== null) {
-		q.user = selectedUser.value.username
+		q.user = selectedUser.value.username ?? ''
 	}
 	return q
 })
 
 const ready = ref(false)
+const currentPage = ref(1)
+const {entries, totalPages} = useTimeEntries(() => filter.value, {
+	enabled: ready,
+	keepPrevious: true,
+	page: currentPage,
+})
+
+watch(filter, () => {
+	currentPage.value = 1
+})
 
 async function restoreFromQuery() {
 	const q = route.query
@@ -285,19 +308,19 @@ async function restoreFromQuery() {
 	// already carries the full filter — and the modal shows the real names.
 	await Promise.all([
 		typeof q.project === 'string'
-			? projectStore.loadProject(Number(q.project))
-				.then(p => { selectedProject.value = p as IProject })
+			? projectList.loadProject(Number(q.project))
+				.then(p => { selectedProject.value = p })
 				.catch(() => { /* project gone — drop the filter */ })
 			: Promise.resolve(),
 		typeof q.task === 'string'
-			? taskService.get(new TaskModel({id: Number(q.task)}))
-				.then(t => { selectedTask.value = t as ITask })
+			? ensureTask(Number(q.task))
+				.then(t => { selectedTask.value = t })
 				.catch(() => { /* task gone — drop the filter */ })
 			: Promise.resolve(),
 		typeof q.user === 'string'
-			? userService.getAll({}, {s: q.user})
+			? searchUsers(q.user)
 				.then(users => {
-					selectedUser.value = (users as IUser[]).find(u => u.username === q.user) ?? null
+					selectedUser.value = users.find(u => u.username === q.user) ?? null
 				})
 				.catch(() => { /* user not found — drop the filter */ })
 			: Promise.resolve(),
@@ -307,11 +330,9 @@ async function restoreFromQuery() {
 onMounted(async () => {
 	// Standalone page: drop any stale project so the app header shows this
 	// page's title instead of the last visited project.
-	baseStore.handleSetCurrentProject({project: null})
+	baseStore.setCurrentProject(null)
 	await restoreFromQuery()
 	ready.value = true
-	// One request with the fully-restored filter — no flicker through partial filters.
-	timeTrackingStore.browseEntries(filter.value)
 })
 
 // DatepickerWithRange only syncs its display from modelValue on change, and it
@@ -329,13 +350,6 @@ watch(filterQuery, q => {
 		return
 	}
 	router.replace({query: q}).catch(() => { /* ignore redundant navigation */ })
-})
-
-watch(filter, value => {
-	if (!ready.value) {
-		return
-	}
-	timeTrackingStore.browseEntries(value)
 })
 </script>
 

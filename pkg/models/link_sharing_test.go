@@ -111,6 +111,23 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 			assert.Empty(t, sharing.Password)
 		}
 	})
+	t.Run("no creator emails", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		share := &LinkSharing{
+			ProjectID: 1,
+		}
+		all, _, _, err := share.ReadAll(s, doer, "", 1, -1)
+		require.NoError(t, err)
+		shares := all.([]*LinkSharing)
+		require.NotEmpty(t, shares)
+		for _, sharing := range shares {
+			require.NotNil(t, sharing.SharedBy)
+			assert.Empty(t, sharing.SharedBy.Email)
+		}
+	})
 	t.Run("search", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -188,6 +205,36 @@ func TestLinkSharing_ReadOne(t *testing.T) {
 	})
 }
 
+// Guards by-ID hash disclosure (GHSA-qfwc-vx6f-3g6g).
+func TestLinkSharing_CanReadAdminOnly(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u1 := &user.User{ID: 1}
+
+	readOnly := &LinkSharing{ID: 99, ProjectID: 9}
+	can, _, err := readOnly.CanRead(s, u1)
+	require.NoError(t, err)
+	require.False(t, can, "a read-only member must not read link shares (the hash would leak)")
+
+	write := &LinkSharing{ID: 99, ProjectID: 10}
+	can, _, err = write.CanRead(s, u1)
+	require.NoError(t, err)
+	require.False(t, can, "a write member must not read link shares (the hash would leak)")
+
+	admin := &LinkSharing{ID: 99, ProjectID: 11}
+	can, _, err = admin.CanRead(s, u1)
+	require.NoError(t, err)
+	require.True(t, can, "a project admin may read link shares")
+
+	// Public authentication resolves shares by hash without a ProjectID.
+	byHash := &LinkSharing{ID: 1, Hash: "test"}
+	can, _, err = byHash.CanRead(s, u1)
+	require.NoError(t, err)
+	require.True(t, can, "resolving a share purely by its public hash must keep working")
+}
+
 // A link share id must never be mistaken for a users.id at a permission check.
 // See GHSA-32r8-5843-4qw2.
 func TestLinkSharing_GetID(t *testing.T) {
@@ -259,6 +306,22 @@ func TestGetLinkShareFromClaims(t *testing.T) {
 		assert.Equal(t, dbShare.ProjectID, got.ProjectID)
 		assert.Equal(t, dbShare.Permission, got.Permission)
 		assert.Equal(t, dbShare.SharedByID, got.SharedByID)
+	})
+
+	t.Run("share of a trashed project is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		dbShare, err := GetLinkShareByID(s, 1)
+		require.NoError(t, err)
+		require.NoError(t, (&Project{ID: dbShare.ProjectID}).Delete(s, &user.User{ID: 1}))
+
+		claims := buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, dbShare.Permission, dbShare.SharedByID)
+		_, err = GetLinkShareFromClaims(s, claims)
+		require.Error(t, err)
+		_, err = GetLinkShareByHash(s, dbShare.Hash)
+		assert.True(t, IsErrProjectShareDoesNotExist(err))
 	})
 
 	t.Run("deleted share is rejected", func(t *testing.T) {
@@ -456,7 +519,7 @@ func TestLinkSharing_AttachmentIsNotAttributedToCollidingUser(t *testing.T) {
 
 	share := &LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: PermissionWrite}
 
-	ta := TaskAttachment{TaskID: 32} // task 32 lives in project 2
+	ta := TaskAttachment{TaskID: 13}
 	content := []byte("testingstuff")
 	require.NoError(t, ta.NewAttachment(s, bytes.NewReader(content), "testfile", uint64(len(content)), share))
 

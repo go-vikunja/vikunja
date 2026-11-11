@@ -76,7 +76,7 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-delete",
 		Summary:     "Delete a project",
-		Description: "Deletes a project together with its tasks, views, buckets and child projects. Only project admins may delete it.",
+		Description: "Moves a project and all its sub-projects to the trash. Only project admins may delete it. It can be restored for 30 days before it is deleted permanently with its tasks, views and buckets.",
 		Method:      http.MethodDelete,
 		Path:        "/projects/{id}",
 		Tags:        tags,
@@ -136,12 +136,12 @@ func projectsRead(ctx context.Context, in *struct {
 	// CanRead returns a real permission for every readable project (including
 	// the Favorites pseudo-project and saved-filter-backed ones), so the field
 	// is always meaningful here — surfaced unconditionally like labels/views.
-	project.MaxPermission = models.Permission(maxPermission)
+	project.MaxPermission = models.Ptr(models.Permission(maxPermission))
 	body := &projectReadBody{Project: *project}
 	convertToMarkdown(ctx, &body.Description)
 	// No ETag/conditional read: a project response carries user-scoped, derived
-	// state (subscription, favorite, views, computed archived state) that
-	// changes without bumping project.Updated, so it's always served fresh.
+	// state (subscription, favorite, views) that changes without bumping
+	// project.Updated, so it's always served fresh.
 	return &singleBody[projectReadBody]{Body: body}, nil
 }
 
@@ -160,9 +160,6 @@ func projectsCreate(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	convertToMarkdown(ctx, &in.Body.Description)
-	// Create/Update don't compute the caller's permission; null says "read it"
-	// rather than echoing the zero value (0 = read), misleading for the owner.
-	in.Body.MaxPermission = models.PermissionUnknown
 	return &singleBody[models.Project]{Body: &in.Body}, nil
 }
 
@@ -185,7 +182,6 @@ func projectsUpdate(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	convertToMarkdown(ctx, &project.Description)
-	project.MaxPermission = models.PermissionUnknown // see projectsCreate
 	return &singleBody[models.Project]{Body: project}, nil
 }
 

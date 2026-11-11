@@ -46,6 +46,18 @@ type AuthorizeResponse struct {
 // HandleAuthorize handles POST /oauth/authorize.
 // It validates the OAuth parameters, creates an authorization code, and
 // returns it as JSON. Authentication is handled by the token middleware.
+// @Summary OAuth 2.0 authorize endpoint
+// @Description Creates an authorization code for an OAuth 2.0 client on behalf of the authenticated user. PKCE is required. API tokens cannot be used to authorize a client.
+// @tags auth
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param request body AuthorizeRequest true "The authorization request"
+// @Success 200 {object} AuthorizeResponse "The authorization code and the redirect URI to return it to."
+// @Failure 400 {object} web.HTTPError "response_type is not 'code', the redirect URI is invalid, or the PKCE challenge is missing."
+// @Failure 403 {object} models.Message "An API token was used to authorize an OAuth client."
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /oauth/authorize [post]
 func HandleAuthorize(c *echo.Context) error {
 	if c.Get("api_token") != nil {
 		return echo.NewHTTPError(http.StatusForbidden, "API tokens cannot be used to authorize OAuth clients")

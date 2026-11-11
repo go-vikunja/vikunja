@@ -5,7 +5,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 const configStore = useConfigStore()
 const hide = ref(false)
-const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
+const enabled = computed(() => configStore.demo_mode_enabled && !hide.value)
 </script>
 
 <template>
@@ -29,11 +29,8 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 
 <style scoped lang="scss">
 .demo-mode-banner {
-	position: fixed;
-	inset-block-end: 0;
-	inset-inline: 0;
+	position: relative;
 	background: var(--danger);
-	z-index: 100;
 	padding: .5rem;
 	text-align: center;
 	

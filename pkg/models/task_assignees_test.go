@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 )
 
 // TestTaskAssignee_DoerHasDisplayName guards against the regression in #2720: the doer attached to
@@ -61,6 +62,46 @@ func TestTaskAssignee_DoerHasDisplayName(t *testing.T) {
 		"notification doer must carry the display Name, not the username")
 }
 
+func TestTaskAssignee_CreateSubscribesProjectSubscriber(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	creator := &user.User{ID: 1}
+	task := &Task{
+		Title:     "Assigned",
+		ProjectID: 1,
+	}
+	require.NoError(t, task.Create(s, creator))
+	_, err := s.Insert(&ProjectUser{
+		UserID:     2,
+		ProjectID:  1,
+		Permission: PermissionRead,
+	})
+	require.NoError(t, err)
+	_, err = s.Insert(&Subscription{
+		EntityType: SubscriptionEntityProject,
+		EntityID:   1,
+		UserID:     2,
+	})
+	require.NoError(t, err)
+
+	require.NoError(t, (&TaskAssginee{TaskID: task.ID, UserID: 2}).Create(s, creator))
+	require.NoError(t, s.Commit())
+
+	db.AssertExists(t, "subscriptions", map[string]interface{}{
+		"entity_type": SubscriptionEntityTask,
+		"entity_id":   task.ID,
+		"user_id":     2,
+		"muted":       false,
+	}, false)
+	db.AssertCount(t, "subscriptions", builder.Eq{
+		"entity_type": SubscriptionEntityTask,
+		"entity_id":   task.ID,
+		"user_id":     2,
+	}, 1)
+}
+
 // TestDoerFromAuth_DisabledUser ensures resolving the event doer keeps working when acting on behalf
 // of a disabled account (e.g. user deletion deletes that user's tasks). The full user is still
 // returned with its display name, the disabled status error is swallowed.
@@ -77,4 +118,36 @@ func TestDoerFromAuth_DisabledUser(t *testing.T) {
 	doer := doerFromAuth(s, &user.User{ID: 17, Username: "user17"})
 	require.NotNil(t, doer)
 	require.Equal(t, int64(17), doer.ID)
+}
+
+// Guards assignee email disclosure (GHSA-8wvg-r2j4-3737).
+func TestTaskAssigneeReadAll_BlanksEmails(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	doer := &user.User{ID: 1}
+	ta := &TaskAssginee{TaskID: 30}
+
+	result, _, total, err := ta.ReadAll(s, doer, "", 1, -1)
+	require.NoError(t, err)
+	require.EqualValues(t, 2, total)
+
+	assignees, ok := result.([]*user.User)
+	require.True(t, ok, "ReadAll must return a []*user.User, got %T", result)
+	usernames := []string{}
+	for _, a := range assignees {
+		require.Empty(t, a.Email, "assignee email must be blanked")
+		usernames = append(usernames, a.Username)
+	}
+	require.ElementsMatch(t, []string{"user1", "user2"}, usernames)
+
+	result, _, total, err = ta.ReadAll(s, doer, "user2", 1, -1)
+	require.NoError(t, err)
+	require.EqualValues(t, 1, total)
+	assignees, ok = result.([]*user.User)
+	require.True(t, ok)
+	require.Len(t, assignees, 1)
+	require.Equal(t, "user2", assignees[0].Username)
+	require.Empty(t, assignees[0].Email)
 }

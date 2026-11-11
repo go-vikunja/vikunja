@@ -53,14 +53,8 @@ func resolveAuthProvider(u *user.User, providers []*openid.Provider) string {
 	case user.IssuerLDAP:
 		return "LDAP"
 	}
-	for _, provider := range providers {
-		issuerURL, err := provider.Issuer()
-		if err != nil {
-			continue
-		}
-		if issuerURL == u.Issuer {
-			return provider.Name
-		}
+	if provider := openid.FindProviderByIssuer(providers, u.Issuer); provider != nil {
+		return provider.Name
 	}
 	return u.Issuer
 }

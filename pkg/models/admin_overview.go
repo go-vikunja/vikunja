@@ -43,11 +43,11 @@ func BuildOverview(s *xorm.Session) (*Overview, error) {
 	if err != nil {
 		return nil, err
 	}
-	projects, err := s.Table("projects").Count()
+	projects, err := s.Count(&Project{})
 	if err != nil {
 		return nil, err
 	}
-	tasks, err := s.Table("tasks").Where("deleted_at IS NULL").Count()
+	tasks, err := s.Count(&Task{})
 	if err != nil {
 		return nil, err
 	}

@@ -17,9 +17,13 @@
 package webtests
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/notifications"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
 
@@ -36,6 +40,37 @@ func TestRegister(t *testing.T) {
 }`, nil, nil)
 		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `"username":"newUser"`)
+	})
+	t.Run("with mailer enabled requires email confirmation", func(t *testing.T) {
+		config.MailerEnabled.Set(true)
+		notifications.Fake()
+		t.Cleanup(func() {
+			config.MailerEnabled.Set(false)
+			notifications.Unfake()
+		})
+
+		rec, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
+  "username": "newUserUnconfirmed",
+  "password": "12345678",
+  "email": "unconfirmed-registration@example.com"
+}`, nil, nil)
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"username":"newUserUnconfirmed"`)
+
+		// Default-project update after registration must not reset the status to active.
+		db.AssertExists(t, "users", map[string]interface{}{
+			"username": "newUserUnconfirmed",
+			"status":   user.StatusEmailConfirmationRequired,
+		}, false)
+
+		s := db.NewSession()
+		defer s.Close()
+		_, err = user.CheckUserCredentials(context.Background(), s, &user.Login{
+			Username: "newUserUnconfirmed",
+			Password: "12345678",
+		})
+		require.Error(t, err)
+		assert.True(t, user.IsErrEmailNotConfirmed(err))
 	})
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{}`, nil, nil)

@@ -58,7 +58,7 @@ func TestListUsers(t *testing.T) {
 
 		all, err := user.ListAllUsers(s)
 		require.NoError(t, err)
-		assert.Len(t, all, 24)
+		assert.Len(t, all, 25)
 	})
 	t.Run("no search term", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -162,6 +162,17 @@ func TestListUsers(t *testing.T) {
 			"username": "user7",
 		}, false)
 	})
+	t.Run("username wildcard characters match literally", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		for _, search := range []string{"use_7", "user_", "_ser7", "user\\7"} {
+			all, err := user.ListUsers(s, search, user1, nil)
+			require.NoError(t, err)
+			assert.Empty(t, all, "search %q", search)
+		}
+	})
 	t.Run("discoverable by partial username, email and name when matching fuzzily", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -171,9 +182,7 @@ func TestListUsers(t *testing.T) {
 			MatchFuzzily: true,
 		})
 		require.NoError(t, err)
-		// 22 non-bot users have "user" in their username; the two bot
-		// fixtures are filtered out because they don't belong to user1
-		// and their usernames/names don't contain "user".
+		// Bot fixtures are excluded regardless of name match: they're not owned by user1.
 		assert.Len(t, all, 22)
 	})
 

@@ -143,10 +143,9 @@ func userWebhooksUpdate(ctx context.Context, in *struct {
 	if err != nil {
 		return nil, err
 	}
-	// canDoWebhook resolves the owner from the stored row, so only the id is
-	// needed to gate the update; the rest of the body's ownership fields are
-	// ignored. Update persists only the events list.
 	in.Body.ID = in.ID
+	in.Body.UserID = a.GetID()
+	in.Body.ProjectID = 0
 	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
@@ -160,7 +159,7 @@ func userWebhooksDelete(ctx context.Context, in *struct {
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.DoDelete(ctx, &models.Webhook{ID: in.ID}, a); err != nil {
+	if err := handler.DoDelete(ctx, &models.Webhook{ID: in.ID, UserID: a.GetID()}, a); err != nil {
 		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil

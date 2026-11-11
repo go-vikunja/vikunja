@@ -89,19 +89,23 @@
 </template>
 
 <script setup lang="ts">
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {computed, ref, watch, toRefs, nextTick, onMounted, onBeforeUnmount, onUnmounted} from 'vue'
 import {useRouter} from 'vue-router'
 import dayjs from 'dayjs'
 import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
-import {getHexColor} from '@/models/task'
+import {getHexColor} from '@/helpers/task'
 import {buildGanttTaskTree, type GanttTaskTreeNode} from '@/helpers/ganttTaskTree'
 import {buildRelationArrows, type GanttBarPosition, type GanttArrow} from '@/helpers/ganttRelationArrows'
 
-import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
+import type {Task as ITask} from '@/client/generated'
+import type {TaskResponse} from '@/client/queries/tasks'
+type ITaskPartialWithId = ITask & Required<Pick<ITask, 'id'>>
 import type {DateISO} from '@/types/DateISO'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 import type {GanttBarModel, GanttBarDateType} from '@/composables/useGanttBar'
+import {useProjects} from '@/composables/useProjects'
 
 import GanttChartBody from '@/components/gantt/GanttChartBody.vue'
 import GanttRow from '@/components/gantt/GanttRow.vue'
@@ -112,15 +116,18 @@ import GanttRelationArrows from '@/components/gantt/GanttRelationArrows.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
-import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
+import {getNaturalDayCount, roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
-	tasks: Map<ITask['id'], ITask>,
+	includeSubprojects?: boolean,
+	tasks: Map<number, TaskResponse>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-}>()
+}>(), {
+	includeSubprojects: false,
+})
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
@@ -128,12 +135,13 @@ const emit = defineEmits<{
 
 const DAY_WIDTH_PIXELS_MIN = 30
 const dayWidthPixels = ref(0)
-let resizeObserver: ResizeObserver
+let resizeObserver: ResizeObserver | undefined
 
 const {tasks, filters} = toRefs(props)
+const projectList = useProjects()
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
-const ganttContainer = ref(null)
+const ganttContainer = ref<HTMLElement | null>(null)
 const ganttChartBodyRef = ref<InstanceType<typeof GanttChartBody> | null>(null)
 const router = useRouter()
 
@@ -188,7 +196,7 @@ const visibleNodes = computed(() => {
 	const hiddenParents = new Set<number>()
 
 	for (const node of allNodes.value) {
-		const parents = node.task.relatedTasks?.parenttask ?? []
+		const parents = node.task.related_tasks.parenttask ?? []
 		const isHidden = parents.some(p =>
 			collapsedTaskIds.value.has(p.id) || hiddenParents.has(p.id),
 		)
@@ -210,7 +218,7 @@ const hiddenToAncestor = computed(() => {
 	const hiddenParents = new Set<number>()
 
 	for (const node of allNodes.value) {
-		const parents = node.task.relatedTasks?.parenttask ?? []
+		const parents = node.task.related_tasks.parenttask ?? []
 		const collapsedParent = parents.find(p =>
 			collapsedTaskIds.value.has(p.id),
 		)
@@ -245,13 +253,28 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
+function getTaskProjectTitle(task: ITask): string | undefined {
+	if (!props.includeSubprojects) {
+		return undefined
+	}
+
+	const isProjectContext = filters.value.projectId > 0
+	if (isProjectContext && task.project_id === filters.value.projectId) {
+		return undefined
+	}
+
+	return task.project_id ? projectList.projects[task.project_id]?.title : undefined
+}
+
 function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 	const t = node.task
 	const DEFAULT_SPAN_DAYS = 7
 
 	// Use derived dates for dateless parents
-	const effectiveEndDate = t.endDate || t.dueDate || (node.hasDerivedDates ? node.derivedEndDate : null)
-	const effectiveStartDate = t.startDate || (node.hasDerivedDates ? node.derivedStartDate : null)
+	const effectiveEndDate = parseDateOrNull(t.end_date)
+		|| parseDateOrNull(t.due_date)
+		|| (node.hasDerivedDates ? node.derivedEndDate : null)
+	const effectiveStartDate = parseDateOrNull(t.start_date) || (node.hasDerivedDates ? node.derivedStartDate : null)
 
 	let startDate: Date
 	let endDate: Date
@@ -279,7 +302,7 @@ function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 		dateType = 'both'
 	}
 
-	const taskColor = getHexColor(t.hexColor)
+	const taskColor = getHexColor(t.hex_color)
 
 	return {
 		id: String(t.id),
@@ -287,9 +310,13 @@ function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 		end: endDate,
 		meta: {
 			label: t.title,
+			projectTitle: getTaskProjectTitle(t),
 			task: t,
 			color: taskColor,
-			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),
+			hasActualDates: Boolean(
+				parseDateOrNull(t.start_date)
+				&& (parseDateOrNull(t.end_date) || parseDateOrNull(t.due_date)),
+			),
 			dateType,
 			isDone: t.done,
 			isParent: node.isParent,
@@ -322,17 +349,22 @@ function updateDayWidthPixels() {
 	)
 }
 
-onMounted(async () => {
-	await nextTick()
-	updateDayWidthPixels()
+// The container only exists once loading finished, so measure and observe when the element appears
+// instead of on mount - otherwise the day width stays 0 until the next window resize.
+watch(ganttContainer, el => {
+	resizeObserver?.disconnect()
+	resizeObserver = undefined
 
-	if (ganttContainer.value) {
-		resizeObserver = new ResizeObserver(updateDayWidthPixels)
-		resizeObserver.observe(ganttContainer.value)
+	if (!el) {
+		return
 	}
 
-	window.addEventListener('resize', updateDayWidthPixels)
-})
+	updateDayWidthPixels()
+	resizeObserver = new ResizeObserver(updateDayWidthPixels)
+	resizeObserver.observe(el)
+}, {flush: 'post', immediate: true})
+
+onMounted(() => window.addEventListener('resize', updateDayWidthPixels))
 
 onBeforeUnmount(() => {
 	resizeObserver?.disconnect()
@@ -369,7 +401,12 @@ watch(
 			const bar = transformTaskToGanttBar(node)
 
 			// Check if task is visible in the current date range
-			const hasAnyDate = Boolean(node.task.startDate || node.task.endDate || node.task.dueDate || node.hasDerivedDates)
+			const hasAnyDate = Boolean(
+				parseDateOrNull(node.task.start_date)
+				|| parseDateOrNull(node.task.end_date)
+				|| parseDateOrNull(node.task.due_date)
+				|| node.hasDerivedDates,
+			)
 			if (!filters.value.showTasksWithoutDates && !hasAnyDate) {
 				return
 			}
@@ -441,11 +478,7 @@ function computeBarX(date: Date): number {
 }
 
 function computeBarWidth(bar: GanttBarModel): number {
-	const diff = Math.ceil(
-		(roundToNaturalDayBoundary(bar.end).getTime() - roundToNaturalDayBoundary(bar.start, true).getTime()) /
-		MILLISECONDS_A_DAY,
-	)
-	return diff * dayWidthPixels.value
+	return getNaturalDayCount(bar.start, bar.end) * dayWidthPixels.value
 }
 
 // Compute relation arrows
@@ -514,33 +547,33 @@ function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 		id: Number(id),
 	}
 
-	const hasStartDate = Boolean(task.startDate)
-	const hasEndDate = Boolean(task.endDate)
-	const hasDueDate = Boolean(task.dueDate)
+	const hasStartDate = Boolean(parseDateOrNull(task.start_date))
+	const hasEndDate = Boolean(parseDateOrNull(task.end_date))
+	const hasDueDate = Boolean(parseDateOrNull(task.due_date))
 
 	if (hasStartDate && hasEndDate) {
 		// Both dates exist — update both
-		update.startDate = roundToNaturalDayBoundary(newStart, true)
-		update.endDate = roundToNaturalDayBoundary(newEnd)
+		update.start_date = roundToNaturalDayBoundary(newStart, true).toISOString()
+		update.end_date = roundToNaturalDayBoundary(newEnd).toISOString()
 	} else if (hasStartDate && !hasEndDate && hasDueDate) {
 		// startDate + dueDate (no endDate) — treat as fully dated
-		update.startDate = roundToNaturalDayBoundary(newStart, true)
-		update.dueDate = roundToNaturalDayBoundary(newEnd)
+		update.start_date = roundToNaturalDayBoundary(newStart, true).toISOString()
+		update.due_date = roundToNaturalDayBoundary(newEnd).toISOString()
 	} else if (hasStartDate && !hasEndDate) {
 		// startOnly — only update startDate, don't persist the synthetic end
-		update.startDate = roundToNaturalDayBoundary(newStart, true)
+		update.start_date = roundToNaturalDayBoundary(newStart, true).toISOString()
 	} else if (!hasStartDate && (hasEndDate || hasDueDate)) {
 		// endOnly / dueOnly — only update the end side
 		if (hasEndDate) {
-			update.endDate = roundToNaturalDayBoundary(newEnd)
+			update.end_date = roundToNaturalDayBoundary(newEnd).toISOString()
 		}
 		if (hasDueDate) {
-			update.dueDate = roundToNaturalDayBoundary(newEnd)
+			update.due_date = roundToNaturalDayBoundary(newEnd).toISOString()
 		}
 	} else {
 		// No dates at all — update both (existing behavior for dateless tasks)
-		update.startDate = roundToNaturalDayBoundary(newStart, true)
-		update.endDate = roundToNaturalDayBoundary(newEnd)
+		update.start_date = roundToNaturalDayBoundary(newStart, true).toISOString()
+		update.end_date = roundToNaturalDayBoundary(newEnd).toISOString()
 	}
 
 	emit('update:task', update)

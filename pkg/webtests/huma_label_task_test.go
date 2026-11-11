@@ -28,7 +28,7 @@ import (
 )
 
 // TestLabelTask is the nested-path test for labels-on-a-task under
-// /api/v2/tasks/{projecttask}/labels. It ports the full v1 model-level matrix
+// /api/v2/tasks/{task}/labels. It ports the full v1 model-level matrix
 // from pkg/models/label_task_test.go so the v2 HTTP surface independently
 // proves the permission contract once v1's routes are removed.
 //

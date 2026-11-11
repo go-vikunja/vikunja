@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"context"
 	"strings"
 
 	"code.vikunja.io/api/pkg/log"
@@ -131,7 +132,7 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 
 			// Fetch avatar data URI for this user
 			provider := avatar.GetProvider(u)
-			avatarDataURI, err := provider.AsDataURI(u, 20)
+			avatarDataURI, err := provider.AsDataURI(context.Background(), u, 20)
 			if err == nil && avatarDataURI != "" {
 				usernameToAvatarURI[u.Username] = avatarDataURI
 			}

@@ -60,6 +60,31 @@ func TestUserTokenHashing(t *testing.T) {
 		require.NotNil(t, got)
 		assert.Equal(t, created.ID, got.ID)
 	})
+	t.Run("wrong purpose fails", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		kinds := []TokenKind{
+			TokenPasswordReset,
+			TokenEmailConfirm,
+			TokenAccountDeletion,
+		}
+		for _, kind := range kinds {
+			created, err := generateToken(s, &User{ID: 1}, kind)
+			require.NoError(t, err)
+			for _, requestedKind := range kinds {
+				got, err := getToken(s, created.ClearTextToken, requestedKind)
+				require.NoError(t, err)
+				if requestedKind == kind {
+					require.NotNil(t, got)
+					assert.Equal(t, created.ID, got.ID)
+				} else {
+					assert.Nil(t, got, "token kind %d must not authorize kind %d", kind, requestedKind)
+				}
+			}
+		}
+	})
 	t.Run("wrong token fails", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

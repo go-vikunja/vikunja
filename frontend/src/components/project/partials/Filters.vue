@@ -50,6 +50,16 @@
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
+			<FancyCheckbox
+				v-if="showIncludeSubprojectsToggle"
+				v-model="includeSubprojects"
+				v-tooltip="includeSubprojectsFromView
+					? $t('project.views.includeSubprojectsFromView')
+					: $t('project.views.includeSubprojectsHint')"
+				:disabled="includeSubprojectsFromView"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<FilterInputDocs />
@@ -61,7 +71,7 @@
 			<XButton
 				variant="secondary"
 				class="mie-2"
-				:disabled="filterQuery === ''"
+				:disabled="!hasActiveFilters"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
@@ -76,16 +86,18 @@
 	</Card>
 </template>
 
-<script setup lang="ts">
-import {computed, ref, shallowReactive, watch} from 'vue'
+<script setup lang="ts" generic="T extends EditableTaskCollection">
+import {computed, ref, watch, type DeepReadonly} from 'vue'
+import {useQueryClient} from '@tanstack/vue-query'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
-import type {TaskFilterParams} from '@/services/taskCollection'
-import type {IProject} from '@/modelTypes/IProject'
-import {useLabelStore} from '@/stores/labels'
-import {useProjectStore} from '@/stores/projects'
-import SavedFilterService, {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
-import SavedFilterModel from '@/models/savedFilter'
+import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
+import {useLabels} from '@/composables/useLabels'
+import {useProjects} from '@/composables/useProjects'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
+import {getSavedFilterIdFromProjectId, type ProjectResponse} from '@/client/queries/projects'
+import {savedFilterQuery} from '@/client/queries/savedFilters'
+import type {ProjectView} from '@/client/generated'
 import {
 	hasFilterQuery,
 	transformFilterStringForApi,
@@ -95,12 +107,15 @@ import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
 
 const props = withDefaults(defineProps<{
-	modelValue: TaskFilterParams,
+	modelValue: T,
 	hasTitle?: boolean,
 	hasFooter?: boolean,
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	view?: ProjectView | DeepReadonly<ProjectView>,
+	// Cross-project saved filters only make sense in cross-project contexts
+	// (e.g. the planner), so single-project views keep them hidden.
 	showSavedFilters?: boolean,
 }>(), {
 	hasTitle: false,
@@ -108,25 +123,26 @@ const props = withDefaults(defineProps<{
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	view: undefined,
 	showSavedFilters: false,
 })
 
 const emit = defineEmits<{
-	'update:modelValue': [value: TaskFilterParams],
+	'update:modelValue': [value: T],
 	'showResults': [],
 	'close': [],
 }>()
 
 const route = useRoute()
 const projectId = computed(() => {
-	if (route.name?.startsWith('project.')) {
+	if (typeof route.name === 'string' && route.name.startsWith('project.')) {
 		return Number(route.params.projectId)
 	}
 
 	return undefined
 })
 
-const params = ref<TaskFilterParams>({
+const params = ref<EditableTaskCollection>({
 	sort_by: [],
 	order_by: [],
 	filter: '',
@@ -144,25 +160,37 @@ watch(
 	},
 )
 
-const labelStore = useLabelStore()
-const projectStore = useProjectStore()
+// A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
+const showIncludeSubprojectsToggle = computed(() => (props.view?.project_id ?? 0) > 0 && props.view?.view_kind !== 'kanban')
+
+const {
+	includeSubprojects,
+	fromView: includeSubprojectsFromView,
+	overridesView,
+} = useIncludeSubprojects(() => props.view)
+
+const hasActiveFilters = computed(() => filterQuery.value !== '' || params.value.filter_include_nulls || overridesView.value)
+
+const {getLabelByExactTitle, getLabelById} = useLabels()
+const projectList = useProjects()
 
 const filterInputRef = ref()
 
-const savedFilters = computed(() => projectStore.savedFilterProjects as IProject[])
-const savedFilterService = shallowReactive(new SavedFilterService())
+const queryClient = useQueryClient()
+
+const savedFilters = computed(() => projectList.savedFilterProjects)
 const loadingSavedFilterProjectId = ref(0)
 
-async function selectSavedFilter(project: IProject) {
+async function selectSavedFilter(project: ProjectResponse) {
 	loadingSavedFilterProjectId.value = project.id
 	try {
-		const savedFilter = await savedFilterService.get(new SavedFilterModel({
-			id: getSavedFilterIdFromProjectId(project.id),
-		}))
+		const savedFilter = await queryClient.ensureQueryData(
+			savedFilterQuery(getSavedFilterIdFromProjectId(project.id)),
+		)
 		filterQuery.value = transformFilterStringFromApi(
 			savedFilter.filters.filter || savedFilter.filters.s || '',
-			labelId => labelStore.getLabelById(labelId)?.title || null,
-			filterProjectId => projectStore.projects[filterProjectId]?.title || null,
+			labelId => getLabelById(labelId)?.title || null,
+			filterProjectId => projectList.projects[filterProjectId]?.title || null,
 		)
 		params.value.filter_include_nulls = !!savedFilter.filters.filter_include_nulls
 		change('always')
@@ -174,7 +202,7 @@ async function selectSavedFilter(project: IProject) {
 // Using watchDebounced to prevent the filter re-triggering itself.
 watch(
 	() => props.modelValue,
-	(value: TaskFilterParams) => {
+	(value: T) => {
 		params.value = {...value}
 	},
 	{
@@ -201,9 +229,9 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 
 	const filter = transformFilterStringForApi(
 		filterQuery.value,
-		labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
+		labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 		projectTitle => {
-			const found = projectStore.findProjectByExactname(projectTitle)
+			const found = projectList.findProjectByExactname(projectTitle)
 			return found?.id || null
 		},
 	)
@@ -216,6 +244,7 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 	}
 
 	const newParams = {
+		...props.modelValue,
 		...params.value,
 		filter: s === '' ? filter : '',
 		s,
@@ -229,12 +258,16 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 }
 
 function changeAndEmitButton() {
-	change()
+	change('always')
 	emit('showResults')
 }
 
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
+	params.value.filter_include_nulls = false
+	if (overridesView.value) {
+		includeSubprojects.value = false
+	}
 	changeAndEmitButton()
 }
 

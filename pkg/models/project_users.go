@@ -165,6 +165,11 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
+	err = cleanupAfterProjectAccessLoss(s, lu.UserID, []int64{lu.ProjectID})
+	if err != nil {
+		return err
+	}
+
 	err = updateProjectLastUpdated(s, &Project{ID: lu.ProjectID})
 	return
 }
@@ -185,6 +190,11 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/users [get]
 func (lu *ProjectUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+	// Link shares must not see the user directory of a project
+	if _, is := a.(*LinkSharing); is {
+		return nil, 0, 0, &user.ErrMustNotBeLinkShare{}
+	}
+
 	// Check if the user has access to the project
 	l := &Project{ID: lu.ProjectID}
 	canRead, _, err := l.CanRead(s, a)

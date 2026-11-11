@@ -1,0 +1,35 @@
+- id: 1
+  name: unlimited
+  token_hash: 2044fbdb55f9238637ff4adbdd07a491f8225a62b4db057bca43b73de9b3abad
+  created_by_id: 1
+  uses: 0
+  skip_email_confirm: true
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-01 15:13:12
+- id: 2
+  name: last-slot
+  token_hash: cfbb39f3ed7bd79b492febf803975d872e839d53e4ccf360ec41f373f3ae9acb
+  created_by_id: 1
+  uses: 1
+  skip_email_confirm: true
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-01 15:13:12
+  max_uses: 2
+- id: 3
+  name: exhausted
+  token_hash: ea4c55ca1f43fc93f10cc4c2f703e50d51f491cca91accda9c3267e65198e6fe
+  created_by_id: 1
+  uses: 1
+  skip_email_confirm: true
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-01 15:13:12
+  max_uses: 1
+- id: 4
+  name: expired
+  token_hash: fa64ea1e82e1206f828ab2a02917c7e92accb98e3b95881a1b4ad52b914b66e3
+  created_by_id: 1
+  uses: 0
+  skip_email_confirm: true
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-01 15:13:12
+  expires_at: 2018-12-01 15:13:12

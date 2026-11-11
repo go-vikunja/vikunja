@@ -19,12 +19,14 @@ package routes
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func newStaticTestEcho() *echo.Echo {
@@ -85,4 +87,29 @@ func TestStaticDoesNotHandleAPIRoutes(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, "pong", rec.Body.String())
+}
+
+func TestInjectAPIURL(t *testing.T) {
+	source, err := os.ReadFile("../../frontend/index.html")
+	require.NoError(t, err)
+	index := string(source)
+	require.Contains(t, index, "window.API_URL = ''")
+
+	tests := []struct {
+		publicURL string
+		want      string
+	}{
+		{publicURL: "", want: "window.API_URL = ''"},
+		{publicURL: "/", want: "window.API_URL = ''"},
+		{publicURL: "https://vikunja.example", want: "window.API_URL = 'https://vikunja.example'"},
+		{publicURL: "https://vikunja.example/", want: "window.API_URL = 'https://vikunja.example'"},
+		{publicURL: "https://example.com/vikunja/", want: "window.API_URL = 'https://example.com/vikunja'"},
+		{publicURL: "https://example.com/it's/", want: `window.API_URL = 'https://example.com/it\'s'`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.publicURL, func(t *testing.T) {
+			assert.Contains(t, injectAPIURL(index, tt.publicURL), tt.want)
+		})
+	}
 }

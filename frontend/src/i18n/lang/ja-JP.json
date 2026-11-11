@@ -66,7 +66,6 @@
 			"email": "メールアドレス",
 			"emailPlaceholder": "例: frederic{'@'}vikunja.io",
 			"password": "パスワード",
-			"passwordPlaceholder": "例: •••••••••••",
 			"forgotPassword": "パスワードをお忘れですか？",
 			"resetPassword": "パスワードの再設定",
 			"resetPasswordAction": "パスワード再設定リンクの送信",
@@ -128,7 +127,6 @@
 			"passwordUpdateSuccess": "パスワードは正常に更新されました。",
 			"updateEmailTitle": "メールアドレスの更新",
 			"updateEmailNew": "新しいメールアドレス",
-			"updateEmailSuccess": "メールアドレスは正常に更新されました。確認のためのリンクを送信しました。",
 			"general": {
 				"title": "一般設定",
 				"name": "名前",
@@ -380,13 +378,7 @@
 		},
 		"delete": {
 			"title": "「{project}」の削除",
-			"header": "プロジェクトの削除",
-			"text1": "このプロジェクトを削除して本当によろしいですか？",
-			"text2": "このプロジェクトに含まれるタスクはすべて削除されます。この操作は元に戻せません。",
-			"success": "プロジェクトは正常に削除されました。",
-			"tasksToDelete": "約{count}件のタスクが抹消されます。",
-			"tasksAndChildProjectsToDelete": "これにより、約 {tasks} 件のタスクと {projects} 個のプロジェクトを削除します。",
-			"noTasksToDelete": "このプロジェクトにはタスクが含まれていないので問題なく削除できます。"
+			"header": "プロジェクトの削除"
 		},
 		"duplicate": {
 			"title": "プロジェクトの複製",
@@ -961,7 +953,6 @@
 			"updated": "{0}に更新",
 			"doneAt": "完了 {0}",
 			"updateSuccess": "タスクは正常に保存されました。",
-			"deleteSuccess": "タスクは正常に削除されました。",
 			"duplicateSuccess": "タスクは正常に複製されました。",
 			"noBucket": "バケットなし",
 			"bucketChangedSuccess": "タスクのバケットを変更しました。",
@@ -972,32 +963,10 @@
 			"title": "タスクの詳細",
 			"markAsDone": "「{task}」を完了にする",
 			"scrollToBottom": "一番下まで移動",
-			"organization": "組織",
-			"management": "管理",
-			"dateAndTime": "日付と時刻",
-			"delete": {
-				"header": "タスクの削除",
-				"text1": "このタスクを削除して本当によろしいですか？",
-				"text2": "このタスクに含まれるすべての添付ファイル、リマインダー、関連付けは削除されます。この操作は元に戻せません。"
-			},
 			"actions": {
-				"assign": "担当者の割り当て",
-				"label": "ラベルの追加",
-				"priority": "優先度の設定",
-				"dueDate": "期日の設定",
-				"startDate": "開始日の設定",
-				"endDate": "終了日の設定",
-				"reminders": "リマインダーの設定",
-				"repeatAfter": "繰り返し間隔の設定",
-				"percentDone": "進捗状況の設定",
-				"attachments": "添付ファイルの追加",
-				"relatedTasks": "関連タスクの追加",
 				"moveProject": "移動",
 				"duplicate": "複製",
-				"color": "色の設定",
-				"delete": "削除",
-				"favorite": "お気に入りに追加",
-				"unfavorite": "お気に入りから削除"
+				"delete": "削除"
 			}
 		},
 		"attributes": {
@@ -1024,7 +993,6 @@
 			"doneAt": "完了日"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
 			"subscribedProject": "現在このプロジェクトを購読しており、変更通知が届きます。",
 			"notSubscribedProject": "このプロジェクトを購読していないため、変更通知は届きません。",
 			"subscribedTask": "現在このタスクを購読しており、変更通知が届きます。",
@@ -1144,9 +1112,6 @@
 			"dateAndTime": "日付と時刻"
 		},
 		"repeat": {
-			"everyDay": "毎日",
-			"everyWeek": "毎週",
-			"every30d": "30日ごと",
 			"mode": "繰り返しモード",
 			"monthly": "毎月",
 			"fromCurrentDate": "完了からの間隔",
@@ -1354,10 +1319,6 @@
 			"newProject": "新しいプロジェクトの作成",
 			"newTeam": "新しいチームの作成"
 		}
-	},
-	"date": {
-		"altFormatLong": "Y/n/j H:i",
-		"altFormatShort": "Y/n/j"
 	},
 	"reaction": {
 		"reactedWith": "{user}が{value}でリアクションしました",

@@ -39,7 +39,6 @@
 			"email": "电子邮箱地址",
 			"emailPlaceholder": "例如：xxxx{'@'}qq.com",
 			"password": "密码",
-			"passwordPlaceholder": "例如：···························",
 			"forgotPassword": "忘记密码",
 			"resetPassword": "重置密码",
 			"resetPasswordAction": "发送密码重置链接",
@@ -78,7 +77,6 @@
 			"passwordUpdateSuccess": "已成功更新密码",
 			"updateEmailTitle": "更新电子邮件地址",
 			"updateEmailNew": "新邮箱地址",
-			"updateEmailSuccess": "您的电子邮件地址已成功更新。我们已经向您发送了一个链接来确认。",
 			"general": {
 				"title": "通用设置",
 				"name": "我的名字",
@@ -249,13 +247,7 @@
 		},
 		"delete": {
 			"title": "删除\"{project}\"",
-			"header": "删除此项目",
-			"text1": "确认删除此项目及其所有任务？",
-			"text2": "这包括所有的任务，并且无法撤销!",
-			"success": "项目已成功删除。",
-			"tasksToDelete": "此操作无法撤消！将移除大约 {count} 个任务。",
-			"tasksAndChildProjectsToDelete": "删除将不可挽回。 {tasks} 任务和 {projects} 项目。",
-			"noTasksToDelete": "此列表不包含任何任务，可以安全删除。"
+			"header": "删除此项目"
 		},
 		"duplicate": {
 			"title": "复制此项目",
@@ -741,35 +733,12 @@
 			"updated": "更新于 {0}",
 			"doneAt": "已完成 {0}",
 			"updateSuccess": "该任务已保存",
-			"deleteSuccess": "任务已删除",
 			"belongsToProject": "该任务属于项目'{project}'",
 			"back": "返回到项目",
 			"due": "截止至 {at}",
-			"organization": "机构",
-			"management": "管理",
-			"dateAndTime": "日期与时间",
-			"delete": {
-				"header": "删除此任务",
-				"text1": "确定要移除任务吗？",
-				"text2": "这将删除与此任务相关的所有附件、提醒和关联，无法撤消！"
-			},
 			"actions": {
-				"assign": "分配给用户",
-				"label": "添加标签",
-				"priority": "设置优先级",
-				"dueDate": "设置截止日期",
-				"startDate": "设置开始日期",
-				"endDate": "设置结束日期",
-				"reminders": "设置提醒",
-				"repeatAfter": "设置重复间隔",
-				"percentDone": "设置进度",
-				"attachments": "添加附件",
-				"relatedTasks": "添加关联",
 				"moveProject": "移动",
-				"color": "设置颜色",
-				"delete": "删除",
-				"favorite": "添加至收藏",
-				"unfavorite": "从收藏中移除"
+				"delete": "删除"
 			}
 		},
 		"attributes": {
@@ -794,7 +763,6 @@
 			"doneAt": "完成于"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "你无法在此处取消订阅，因为你已通过其项目订阅了此任务。",
 			"subscribedProject": "你当前订阅了此项目，并将收到更改通知。",
 			"notSubscribedProject": "你没有订阅此项目，也不会收到更改通知。",
 			"subscribedTask": "你当前已订阅此任务并将收到更改通知。",
@@ -909,9 +877,6 @@
 			"dateAndTime": "日期与时间"
 		},
 		"repeat": {
-			"everyDay": "每天",
-			"everyWeek": "每周",
-			"every30d": "每 30 天",
 			"mode": "重复模式",
 			"monthly": "每月",
 			"fromCurrentDate": "添加完成日期",
@@ -1105,10 +1070,6 @@
 			"newProject": "新项目",
 			"newTeam": "新建团队"
 		}
-	},
-	"date": {
-		"altFormatLong": "Y.m.d H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} {value} 反应",

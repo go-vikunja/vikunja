@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -166,8 +167,7 @@ func rotateIfNeededLocked(addition int64) error {
 	_ = logFile.Close()
 	logFile = nil
 
-	rotatedPath := rotatedFileName(logfilePath, time.Now().UTC())
-	if err := os.Rename(logfilePath, rotatedPath); err != nil {
+	if err := rotateLogFile(logfilePath, time.Now().UTC()); err != nil {
 		// Reopen the original so logging continues even if rotation failed.
 		if openErr := openLogFileLocked(); openErr != nil {
 			return errors.Join(fmt.Errorf("could not rotate audit log: %w", err), openErr)
@@ -180,9 +180,21 @@ func rotateIfNeededLocked(addition int64) error {
 	return openLogFileLocked()
 }
 
-func rotatedFileName(path string, now time.Time) string {
+// Caller must hold mu so the free-name check and the rename can't race.
+func rotateLogFile(path string, now time.Time) error {
 	ext := filepath.Ext(path)
-	return strings.TrimSuffix(path, ext) + "-" + now.Format("20060102T150405.000") + ext
+	base := strings.TrimSuffix(path, ext) + "-" + now.Format("20060102T150405.000")
+	candidate := base + ext
+	for i := 1; ; i++ {
+		_, err := os.Lstat(candidate)
+		if errors.Is(err, fs.ErrNotExist) {
+			return os.Rename(path, candidate)
+		}
+		if err != nil {
+			return err
+		}
+		candidate = fmt.Sprintf("%s-%d%s", base, i, ext)
+	}
 }
 
 func cleanupRotatedFiles() {

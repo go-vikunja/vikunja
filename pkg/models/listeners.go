@@ -19,6 +19,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
@@ -39,10 +40,10 @@ import (
 func RegisterListeners() {
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
+	events.RegisterListener((&TaskCreatedEvent{}).Name(), &SendTaskCreatedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
-	events.RegisterListener((&TeamMemberRemovedEvent{}).Name(), &CleanupTaskAssignmentsAfterTeamRemoval{})
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
@@ -58,11 +59,16 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TasksBatchCreatedEvent{}).Name(), &UpdateTasksBatchInSavedFilterViews{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
+	// Same payload shape as TaskUpdatedEvent
+	events.RegisterListener((&TaskRestoredEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &MarkTaskUnreadOnComment{})
+	events.RegisterListener((&user.AccountLockedEvent{}).Name(), &RevokeSessionsOnAccountLock{})
 	if config.WebhooksEnabled.GetBool() {
 		RegisterEventForWebhook(&TaskCreatedEvent{})
 		RegisterEventForWebhook(&TaskUpdatedEvent{})
 		RegisterEventForWebhook(&TaskDeletedEvent{})
+		RegisterEventForWebhook(&TaskRestoredEvent{})
+		RegisterEventForWebhook(&TaskPurgedEvent{})
 		RegisterEventForWebhook(&TaskAssigneeCreatedEvent{})
 		RegisterEventForWebhook(&TaskAssigneeDeletedEvent{})
 		RegisterEventForWebhook(&TaskCommentCreatedEvent{})
@@ -74,6 +80,8 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&TaskRelationDeletedEvent{})
 		RegisterEventForWebhook(&ProjectUpdatedEvent{})
 		RegisterEventForWebhook(&ProjectDeletedEvent{})
+		RegisterEventForWebhook(&ProjectRestoredEvent{})
+		RegisterEventForWebhook(&ProjectPurgedEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithUserEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithTeamEvent{})
 		RegisterUserDirectedEventForWebhook(&TaskReminderFiredEvent{})
@@ -184,6 +192,21 @@ func registerEventsForAuditLogging() {
 			Target: audit.TaskTarget(e.Task.ID),
 		}
 	})
+	audit.RegisterEventForAudit(func(e *TaskRestoredEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTaskRestored,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TaskTarget(e.Task.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskPurgedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskPurged,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"project_id": e.Task.ProjectID},
+		}
+	})
 	audit.RegisterEventForAudit(func(e *TaskAssigneeCreatedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action:   audit.ActionTaskAssigneeAdded,
@@ -285,6 +308,20 @@ func registerEventsForAuditLogging() {
 			Target: audit.ProjectTarget(e.Project.ID),
 		}
 	})
+	audit.RegisterEventForAudit(func(e *ProjectRestoredEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionProjectRestored,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.ProjectTarget(e.Project.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectPurgedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionProjectPurged,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.ProjectTarget(e.Project.ID),
+		}
+	})
 	audit.RegisterEventForAudit(func(e *ProjectSharedWithUserEvent) *audit.Entry {
 		return &audit.Entry{
 			Action:   audit.ActionProjectSharedWithUser,
@@ -335,6 +372,13 @@ func registerEventsForAuditLogging() {
 	})
 
 	// Admin actions
+	audit.RegisterEventForAudit(func(e *AdminInviteLinkCreatedEvent) *audit.Entry {
+		return &audit.Entry{Action: audit.ActionAdminInviteLinkCreated, Actor: auditActorFromUser(e.Doer), Target: audit.Target{Type: "user_invite_link", ID: e.Link.ID}}
+	})
+	audit.RegisterEventForAudit(func(e *AdminInviteLinkDeletedEvent) *audit.Entry {
+		return &audit.Entry{Action: audit.ActionAdminInviteLinkDeleted, Actor: auditActorFromUser(e.Doer), Target: audit.Target{Type: "user_invite_link", ID: e.Link.ID}}
+	})
+
 	audit.RegisterEventForAudit(func(e *AdminUserCreatedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionAdminUserCreated,
@@ -361,6 +405,17 @@ func registerEventsForAuditLogging() {
 			Action: audit.ActionAdminUserStatusChanged,
 			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.UserTarget(e.User.ID),
+			Metadata: map[string]any{
+				"old_status": e.OldStatus,
+				"new_status": e.NewStatus,
+			},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *BotStatusChangedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionBotStatusChanged,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.UserTarget(e.Bot.ID),
 			Metadata: map[string]any{
 				"old_status": e.OldStatus,
 				"new_status": e.NewStatus,
@@ -423,6 +478,22 @@ func registerEventsForAuditLogging() {
 //////
 // Task Events
 
+// ensureTaskIdentifier fills in the identifier the simple task getters behind
+// event payloads leave empty.
+func ensureTaskIdentifier(s *xorm.Session, task *Task) error {
+	if task == nil || task.Identifier != "" {
+		return nil
+	}
+
+	project, err := GetProjectSimpleByID(s, task.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	task.setIdentifier(project)
+	return nil
+}
+
 func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notifications.NotificationWithSubject) (users map[int64]*user.User, err error) {
 	users, err = FindMentionedUsersInText(sess, text)
 	if err != nil {
@@ -437,7 +508,7 @@ func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notific
 
 	var notified int
 	for _, u := range users {
-		can, _, err := task.CanRead(sess, u)
+		can, _, err := (&Task{ID: task.ID}).CanRead(sess, u)
 		if err != nil {
 			return users, err
 		}
@@ -493,6 +564,8 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	event.Task.setIdentifier(project)
+
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
 		Task:      event.Task,
@@ -517,7 +590,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 			continue
 		}
 
-		can, _, err := event.Task.CanRead(sess, u)
+		can, _, err := (&Task{ID: event.Task.ID}).CanRead(sess, u)
 		if err != nil {
 			return err
 		}
@@ -568,8 +641,10 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task comment notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
-			continue
+			// Return so the event is retried: on SQLite the insert can hit
+			// SQLITE_BUSY_SNAPSHOT when a sibling listener wrote first.
+			_ = sess.Rollback()
+			return err
 		}
 	}
 
@@ -604,6 +679,8 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 	if err != nil {
 		return err
 	}
+
+	event.Task.setIdentifier(project)
 
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
@@ -656,6 +733,8 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	task.setIdentifier(project)
+
 	notifiedUsers := make(map[int64]bool)
 
 	for _, subscriber := range subscribers {
@@ -677,8 +756,88 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task assigned notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
+			_ = sess.Rollback()
+			return err
+		}
+
+		notifiedUsers[subscriber.UserID] = true
+	}
+
+	return sess.Commit()
+}
+
+// SendTaskCreatedNotification  represents a listener
+type SendTaskCreatedNotification struct {
+}
+
+// Name defines the name for the SendTaskCreatedNotification listener
+func (s *SendTaskCreatedNotification) Name() string {
+	return "task.created.notification.send"
+}
+
+// Handle is executed when the event SendTaskCreatedNotification listens on is fired
+func (s *SendTaskCreatedNotification) Handle(msg *message.Message) (err error) {
+	event := &TaskCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	if event.Task == nil {
+		return nil
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	event.Task.setIdentifier(project)
+
+	// A task can only be subscribed to through its project at this point, but going
+	// through the task resolves the whole project hierarchy for us.
+	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task created notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
+
+	// HandleTaskCreateMentions notifies these separately for the same event
+	mentioned, err := FindMentionedUsersInText(sess, event.Task.Description)
+	if err != nil {
+		return err
+	}
+
+	notifiedUsers := make(map[int64]bool)
+
+	for _, subscriber := range subscribers {
+		if subscriber.UserID == event.Doer.ID {
 			continue
+		}
+
+		if notifiedUsers[subscriber.UserID] {
+			continue
+		}
+
+		if _, has := mentioned[subscriber.UserID]; has {
+			continue
+		}
+
+		n := &TaskCreatedNotification{
+			Doer:    event.Doer,
+			Task:    event.Task,
+			Project: project,
+		}
+		err = notifications.Notify(subscriber.User, n, sess)
+		if err != nil {
+			// Return so the event is retried: on SQLite the insert can hit
+			// SQLITE_BUSY_SNAPSHOT when a sibling listener wrote first.
+			_ = sess.Rollback()
+			return err
 		}
 
 		notifiedUsers[subscriber.UserID] = true
@@ -712,6 +871,10 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	if err := ensureTaskIdentifier(sess, event.Task); err != nil {
+		return err
+	}
+
 	log.Debugf("Sending task deleted notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
 
 	for _, subscriber := range subscribers {
@@ -725,8 +888,8 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send task deleted notification to user %d for task %d: %s", subscriber.UserID, event.Task.ID, err)
-			continue
+			_ = sess.Rollback()
+			return err
 		}
 	}
 
@@ -761,6 +924,8 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
+
+	event.Task.setIdentifier(project)
 
 	n := &UserMentionedInTaskNotification{
 		Task:    event.Task,
@@ -803,6 +968,8 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
+
+	event.Task.setIdentifier(project)
 
 	n := &UserMentionedInTaskNotification{
 		Task:    event.Task,
@@ -911,7 +1078,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		return nil
 	}
 
-	return updateTasksInSavedFilterViews([]*Task{event.Task}, event.Doer)
+	return updateTasksInSavedFilterViews([]*Task{event.Task})
 }
 
 // UpdateTasksBatchInSavedFilterViews handles a whole creation batch in one pass, loading the saved filters only once.
@@ -935,127 +1102,72 @@ func (l *UpdateTasksBatchInSavedFilterViews) Handle(msg *message.Message) (err e
 		return nil
 	}
 
-	return updateTasksInSavedFilterViews(event.Tasks, event.Doer)
+	return updateTasksInSavedFilterViews(event.Tasks)
 }
 
-func updateTasksInSavedFilterViews(tasks []*Task, doer *user.User) (err error) {
-	// This operation is potentially very resource-heavy, because we don't know if a task is included
-	// in a filter until we evaluate that filter. We need to evaluate each filter individually - since
-	// there can be many filters, this can take a while to execute.
-	// For this reason, we do this in an asynchronous event listener.
-
+// Only filters of users who can see the task's project can contain it; evaluating the rest is the O(users) cost this avoids.
+func updateTasksInSavedFilterViews(tasks []*Task) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Get all saved filters with a manual kanban view
-	kanbanFilterViews := []*ProjectView{}
-	err = s.Where("project_id < 0 and view_kind = ? and bucket_configuration_mode = ?", ProjectViewKindKanban, BucketConfigurationModeManual).
-		Find(&kanbanFilterViews)
-	if err != nil {
-		return err
-	}
-
-	filterIDs := []int64{}
-	for _, view := range kanbanFilterViews {
-		filterIDs = append(filterIDs, GetSavedFilterIDFromProjectID(view.ProjectID))
-	}
-
-	filters := map[int64]*SavedFilter{}
-	err = s.In("id", filterIDs).Find(&filters)
-	if err != nil {
-		return err
-	}
-
-	err = dropFiltersWithInactiveOwners(s, filters)
-	if err != nil {
-		return err
-	}
-
-	var fallbackTimezone string
-	if doer != nil {
-		u, userErr := user.GetUserByID(s, doer.GetID())
-		if userErr == nil {
-			fallbackTimezone = u.Timezone
+	var tasksMissingProjectID []int64
+	for _, task := range tasks {
+		if task.ProjectID == 0 {
+			tasksMissingProjectID = append(tasksMissingProjectID, task.ID)
 		}
-		// When a link share triggered this event, the doer id is negative and won't match a users.id, so this fails.
-		// Similarly, when the doer has been deleted, the user will not exist.
-		// Only passing the value along when the user was retrieved successfully ensures the whole handler
-		// does not fail because of that.
-		// When the fallback is empty, it will be handled later anyhow.
+	}
+	if len(tasksMissingProjectID) > 0 {
+		loaded := []*Task{}
+		err = s.In("id", tasksMissingProjectID).Cols("id", "project_id").Find(&loaded)
+		if err != nil {
+			return err
+		}
+		projectIDByTaskID := make(map[int64]int64, len(loaded))
+		for _, t := range loaded {
+			projectIDByTaskID[t.ID] = t.ProjectID
+		}
+		for _, task := range tasks {
+			if pid, has := projectIDByTaskID[task.ID]; has {
+				task.ProjectID = pid
+			}
+		}
+	}
+
+	accessByProject, userIDs, err := getProjectAccessForTasks(s, tasks)
+	if err != nil || len(userIDs) == 0 {
+		return err
+	}
+
+	filters, timezoneByOwner, err := getActiveSavedFiltersOwnedBy(s, userIDs)
+	if err != nil || len(filters) == 0 {
+		return err
+	}
+
+	kanbanFilterViews, err := getKanbanFilterViewsForFilters(s, filters)
+	if err != nil || len(kanbanFilterViews) == 0 {
+		return err
+	}
+
+	viewsByTask, err := matchTasksToFilterViews(s, tasks, filters, kanbanFilterViews, accessByProject, timezoneByOwner)
+	if err != nil {
+		return err
+	}
+
+	state, err := preloadFilterViewState(s, viewsByTask)
+	if err != nil {
+		return err
+	}
+
+	// Locked once here: per-task locking inside the loop gives no global order.
+	err = lockViewsForPositionUpdate(s, kanbanFilterViews)
+	if err != nil {
+		return fmt.Errorf("could not lock kanban filter views: %w", err)
 	}
 
 	for _, task := range tasks {
-		taskBuckets := []*TaskBucket{}
-		taskPositions := []*TaskPosition{}
-
-		viewIDToCleanUp := []int64{}
-
-		for _, view := range kanbanFilterViews {
-			filter, exists := filters[GetSavedFilterIDFromProjectID(view.ProjectID)]
-			if !exists {
-				log.Debugf("Did not find filter for view %d", view.ID)
-				continue
-			}
-
-			taskBucket, taskPosition, err := addTaskToFilter(s, filter, view, fallbackTimezone, task)
-			if err != nil {
-				if IsErrInvalidFilterExpression(err) ||
-					IsErrInvalidTaskFilterValue(err) ||
-					IsErrInvalidTaskFilterConcatinator(err) ||
-					IsErrInvalidTaskFilterComparator(err) ||
-					IsErrInvalidTaskField(err) {
-					log.Debugf("Invalid filter expression for view %d, expression: %v", view.ID, view.Filter)
-					continue
-				}
-
-				// The owner may have been disabled or deleted after the check above.
-				if user.IsErrUserStatusError(err) || user.IsErrUserDoesNotExist(err) {
-					log.Debugf("Skipping view %d, owner %d is not available: %v", view.ID, filter.OwnerID, err)
-					continue
-				}
-
-				return err
-			}
-
-			if taskBucket != nil && taskPosition != nil {
-				taskBuckets = append(taskBuckets, taskBucket)
-				taskPositions = append(taskPositions, taskPosition)
-				viewIDToCleanUp = append(viewIDToCleanUp, view.ID)
-			}
-		}
-
-		if len(taskBuckets) > 0 || len(taskPositions) > 0 {
-			_, err = s.And(
-				builder.Eq{"task_id": task.ID},
-				builder.In("project_view_id", viewIDToCleanUp),
-			).
-				Delete(&TaskBucket{})
-			if err != nil {
-				return
-			}
-			_, err = s.And(
-				builder.Eq{"task_id": task.ID},
-				builder.In("project_view_id", viewIDToCleanUp),
-			).
-				Delete(&TaskPosition{})
-			if err != nil {
-				return
-			}
-
-			// Insert per task so a mid-loop recalculation sees earlier members' rows.
-			if len(taskBuckets) > 0 {
-				_, err = s.Insert(taskBuckets)
-				if err != nil {
-					return
-				}
-			}
-			if len(taskPositions) > 0 {
-				// A concurrent heal of the same view can insert a position row between the delete above and this insert, so skip existing rows instead of failing on the unique index.
-				err = bulkInsertTaskPositions(s, taskPositions, false)
-				if err != nil {
-					return
-				}
-			}
+		err = addTaskToFilterViews(s, task, viewsByTask[task.ID], state)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -1103,8 +1215,8 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
-			log.Errorf("Could not send project created notification to user %d for project %d: %s", subscriber.UserID, event.Project.ID, err)
-			continue
+			_ = sess.Rollback()
+			return err
 		}
 	}
 
@@ -1175,7 +1287,14 @@ func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
 		return nil
 	}
 
-	return webhook.sendWebhookPayload(evt.Payload)
+	if err := webhook.sendWebhookPayload(evt.Payload); err != nil {
+		// A target that is down or rejects the payload is the user's to fix, so
+		// don't report it — but still retry and eventually poison the message.
+		msg.Metadata.Set(events.MetadataSkipErrorReporting, "true")
+		return err
+	}
+
+	return nil
 }
 
 func getIDAsInt64(id interface{}) int64 {
@@ -1280,43 +1399,57 @@ func reloadDoerInEvent(s *xorm.Session, event map[string]interface{}) (doerID in
 	return doerID, nil
 }
 
-func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, doerID int64) error {
-	task, has := event["task"]
-	if !has || task == nil || doerID == 0 {
-		return nil
-	}
-
-	// guard the type assertion for task as well
-	t, ok := task.(map[string]interface{})
+func getTaskIDFromEvent(event map[string]interface{}) int64 {
+	t, ok := event["task"].(map[string]interface{})
 	if !ok {
-		return nil
+		return 0
 	}
+	return getIDAsInt64(t["id"])
+}
 
-	taskID, has := t["id"]
-	if !has || taskID == nil {
-		return nil
+// The payload's project_id is not trusted for routing; a stored task's project wins.
+func getProjectIDForEvent(s *xorm.Session, event map[string]interface{}) (int64, error) {
+	if id := getTaskIDFromEvent(event); id > 0 {
+		t, err := GetTaskByIDSimple(s, id)
+		if err == nil {
+			return t.ProjectID, nil
+		}
+		if !IsErrTaskDoesNotExist(err) {
+			return 0, err
+		}
 	}
+	return getProjectIDFromAnyEvent(event), nil
+}
 
-	id := getIDAsInt64(taskID)
+// Loads as the webhook creator since ReadOne never checks what relations, buckets and the subscription expose.
+func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, creatorID int64) (canRead bool, err error) {
+	id := getTaskIDFromEvent(event)
 	if id <= 0 {
-		return nil
+		return true, nil
 	}
 
+	creator := &user.User{ID: creatorID}
 	fullTask := Task{
 		ID: id,
 		Expand: []TaskCollectionExpandable{
 			TaskCollectionExpandBuckets,
 		},
 	}
-	err := fullTask.ReadOne(s, &user.User{ID: doerID})
-	if err != nil && !IsErrTaskDoesNotExist(err) {
-		return err
+	canRead, _, err = fullTask.CanRead(s, creator)
+	if IsErrTaskDoesNotExist(err) || IsErrTaskIsInTrash(err) {
+		// Already gone (task.deleted), keep the event's copy.
+		return true, nil
 	}
-	if err == nil {
-		event["task"] = fullTask
+	if err != nil || !canRead {
+		return false, err
 	}
 
-	return nil
+	err = fullTask.ReadOne(s, creator)
+	if err != nil {
+		return false, err
+	}
+	event["task"] = fullTask
+	return true, nil
 }
 
 func reloadProjectInEvent(s *xorm.Session, event map[string]interface{}, projectID, doerID int64) error {
@@ -1407,11 +1540,6 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 		return nil, 0, err
 	}
 
-	err = reloadTaskInEvent(s, event, doerID)
-	if err != nil {
-		return nil, doerID, err
-	}
-
 	err = reloadProjectInEvent(s, event, projectID, doerID)
 	if err != nil {
 		return nil, doerID, err
@@ -1430,6 +1558,126 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 	return event, doerID, nil
 }
 
+// Uses the closure table, not the parent walk, so a trashed tree's ancestors see project.deleted.
+func webhookProjectIDs(s *xorm.Session, projectID int64) ([]int64, error) {
+	ancestorIDs := []int64{}
+	err := s.Table(&ProjectAncestor{}).
+		Where(builder.Eq{"project_id": projectID}).
+		Cols("ancestor_id").
+		Find(&ancestorIDs)
+	if err != nil {
+		return nil, err
+	}
+	return append([]int64{projectID}, ancestorIDs...), nil
+}
+
+// popEventAncestorIDs removes the routing-only ancestor_ids of a purge event so it never reaches a payload.
+func popEventAncestorIDs(event map[string]interface{}) []int64 {
+	raw, _ := event["ancestor_ids"].([]interface{})
+	delete(event, "ancestor_ids")
+	ids := make([]int64, 0, len(raw))
+	for _, id := range raw {
+		ids = append(ids, getIDAsInt64(id))
+	}
+	return ids
+}
+
+// Nil once purged.
+func getProjectIncludingTrash(s *xorm.Session, projectID int64) (*Project, error) {
+	project, err := GetProjectSimpleByID(s, projectID)
+	if IsErrProjectDoesNotExist(err) {
+		project, err = getTrashedProject(s, projectID)
+	}
+	if IsErrProjectDoesNotExist(err) {
+		return nil, nil
+	}
+	return project, err
+}
+
+// Skips webhooks whose creator is inactive or can no longer read the project.
+// purgedAncestorIDs stands in for the closure rows a purge already deleted.
+func projectWebhooksForEvent(s *xorm.Session, projectID int64, eventName string, purgedAncestorIDs []int64) ([]*Webhook, error) {
+	matchingWebhooks := []*Webhook{}
+	if projectID <= 0 {
+		return matchingWebhooks, nil
+	}
+
+	projectIDs, err := webhookProjectIDs(s, projectID)
+	if err != nil {
+		return nil, err
+	}
+	projectIDs = append(projectIDs, purgedAncestorIDs...)
+
+	ws := []*Webhook{}
+	err = s.In("project_id", projectIDs).
+		OrderBy("id ASC").
+		Find(&ws)
+	if err != nil {
+		return nil, err
+	}
+
+	candidates := []*Webhook{}
+	creatorIDs := []int64{}
+	for _, w := range ws {
+		if slices.Contains(w.Events, eventName) {
+			candidates = append(candidates, w)
+			creatorIDs = append(creatorIDs, w.CreatedByID)
+		}
+	}
+	if len(candidates) == 0 {
+		return matchingWebhooks, nil
+	}
+	creators, err := user.GetUsersByIDs(s, creatorIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := getProjectIncludingTrash(s, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, w := range candidates {
+		creator, exists := creators[w.CreatedByID]
+		if !exists || creator.Status != user.StatusActive {
+			continue
+		}
+		checked := project
+		if checked == nil {
+			// Purged: check the ancestor the webhook is on instead.
+			checked, err = getProjectIncludingTrash(s, w.ProjectID)
+			if err != nil {
+				return nil, err
+			}
+		}
+		// Nil when the webhook's own project went in the same purge: nothing left to check against.
+		if checked != nil {
+			// Backstop for access lost without an explicit removal, e.g. by moving the project.
+			canRead, err := webhookCreatorCanRead(s, checked, &user.User{ID: w.CreatedByID})
+			if err != nil {
+				return nil, err
+			}
+			if !canRead {
+				continue
+			}
+		}
+		matchingWebhooks = append(matchingWebhooks, w)
+	}
+	return matchingWebhooks, nil
+}
+
+func webhookCreatorCanRead(s *xorm.Session, project *Project, creator *user.User) (bool, error) {
+	if !project.DeletedAt.IsZero() {
+		_, _, err := getReadableTrashedProject(s, creator, project.ID)
+		if IsErrProjectDoesNotExist(err) {
+			return false, nil
+		}
+		return err == nil, err
+	}
+	canRead, _, err := project.CanRead(s, creator)
+	return canRead, err
+}
+
 // Handle is executed when the event WebhookListener listens on is fired
 func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	var event map[string]interface{}
@@ -1441,7 +1689,10 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	projectID := getProjectIDFromAnyEvent(event)
+	projectID, err := getProjectIDForEvent(s, event)
+	if err != nil {
+		return err
+	}
 	isUserDirected := IsUserDirectedEvent(wl.EventName)
 
 	// For non-user-directed events, we need a project ID
@@ -1450,36 +1701,9 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
-	// Look up project-level webhooks
-	matchingWebhooks := []*Webhook{}
-	if projectID > 0 {
-		parents, err := GetAllParentProjects(s, projectID)
-		if err != nil {
-			return err
-		}
-
-		projectIDs := make([]int64, 0, len(parents)+1)
-		projectIDs = append(projectIDs, projectID)
-		for _, p := range parents {
-			projectIDs = append(projectIDs, p.ID)
-		}
-
-		ws := []*Webhook{}
-		err = s.In("project_id", projectIDs).
-			OrderBy("id ASC").
-			Find(&ws)
-		if err != nil {
-			return err
-		}
-
-		for _, w := range ws {
-			for _, e := range w.Events {
-				if e == wl.EventName {
-					matchingWebhooks = append(matchingWebhooks, w)
-					break
-				}
-			}
-		}
+	matchingWebhooks, err := projectWebhooksForEvent(s, projectID, wl.EventName, popEventAncestorIDs(event))
+	if err != nil {
+		return err
 	}
 
 	// Look up user-level webhooks for user-directed events
@@ -1526,6 +1750,18 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 			perWebhookEvent[k] = v
 		}
 
+		// Doer-less events (reminders, overdue) carry a server-built task and were never reloaded.
+		if doerID != 0 {
+			canRead, err := reloadTaskInEvent(s, perWebhookEvent, webhook.CreatedByID)
+			if err != nil {
+				log.Errorf("Could not load task for webhook %d: %s", webhook.ID, err)
+				continue
+			}
+			if !canRead {
+				continue
+			}
+		}
+
 		if _, has := perWebhookEvent["project"]; !has && webhook.ProjectID > 0 {
 			project, err := GetProjectSimpleByID(s, webhook.ProjectID)
 			if err != nil && !IsErrProjectDoesNotExist(err) {
@@ -1564,38 +1800,6 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 
 ///////
 // Team Events
-
-// CleanupTaskAssignmentsAfterTeamRemoval represents a listener
-type CleanupTaskAssignmentsAfterTeamRemoval struct{}
-
-// Name defines the name of the listener
-func (l *CleanupTaskAssignmentsAfterTeamRemoval) Name() string {
-	return "task.assignees.cleanup.team_removal"
-}
-
-// Handle cleans up task assignments and subscriptions for members removed from teams
-func (l *CleanupTaskAssignmentsAfterTeamRemoval) Handle(msg *message.Message) (err error) {
-	event := &TeamMemberRemovedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	if event == nil || event.Team == nil || event.Member == nil {
-		return nil
-	}
-
-	err = cleanupTaskMembersAfterTeamRemoval(s, event.Team.ID, event.Member.ID)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	return s.Commit()
-}
 
 // SendTeamMemberAddedNotification  represents a listener
 type SendTeamMemberAddedNotification struct {
@@ -1648,7 +1852,7 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
-	err = ExportUserData(sess, event.User)
+	previousExportFileID, err := ExportUserData(sess, event.User)
 	if err != nil {
 		_ = sess.Rollback()
 		return
@@ -1656,7 +1860,13 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 
 	log.Debugf("Done exporting user data for user %d...", event.User.ID)
 
-	return sess.Commit()
+	err = sess.Commit()
+	if err != nil {
+		return err
+	}
+
+	deleteFileInNewSession(previousExportFileID)
+	return nil
 }
 
 type MarkTaskUnreadOnComment struct {
@@ -1727,4 +1937,36 @@ func (s *MarkTaskUnreadOnComment) Handle(msg *message.Message) (err error) {
 	}
 
 	return sess.Commit()
+}
+
+// RevokeSessionsOnAccountLock deletes all sessions of a locked account.
+type RevokeSessionsOnAccountLock struct {
+}
+
+// Name defines the name for the RevokeSessionsOnAccountLock listener
+func (s *RevokeSessionsOnAccountLock) Name() string {
+	return "user.account.locked.revoke.sessions"
+}
+
+// Handle is executed when the event RevokeSessionsOnAccountLock listens on is fired
+func (s *RevokeSessionsOnAccountLock) Handle(msg *message.Message) (err error) {
+	event := &user.AccountLockedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+	defer events.CleanupPending(sess)
+
+	if err := DeleteAllUserSessions(sess, event.UserID); err != nil {
+		_ = sess.Rollback()
+		return err
+	}
+	if err := sess.Commit(); err != nil {
+		return err
+	}
+	events.DispatchPending(msg.Context(), sess)
+	return nil
 }

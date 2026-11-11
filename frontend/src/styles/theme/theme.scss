@@ -108,8 +108,12 @@ button.table {
   text-decoration: line-through;
 }
 
-.is-touch .handle {
-	opacity: 1 !important;
+// Pointer type, not touch-event support: a touchscreen desktop has both touch events
+// and hover, and there this would pin the handle over what it replaces on hover.
+@media (pointer: coarse) {
+  .handle {
+    opacity: 1 !important;
+  }
 }
 
 .dragging-disabled .handle {

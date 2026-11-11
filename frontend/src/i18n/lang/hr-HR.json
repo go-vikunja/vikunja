@@ -39,7 +39,6 @@
 			"email": "E-mail adresa",
 			"emailPlaceholder": "primjer frane{'@'}vikunja.io",
 			"password": "Lozinka",
-			"passwordPlaceholder": "primjer •••••••••••",
 			"forgotPassword": "Zaboravili ste lozinku?",
 			"resetPassword": "Ponovno postavite lozinku",
 			"resetPasswordAction": "Pošalji mi vezu za ponovno postavljanje lozinke",
@@ -70,7 +69,6 @@
 			"currentPasswordPlaceholder": "Vaša trenutna lozinka",
 			"passwordUpdateSuccess": "Lozinka je uspješno ažurirana.",
 			"updateEmailTitle": "Ažurirajte e-mail adresu",
-			"updateEmailSuccess": "Vaša email adresa je uspješno ažurirana. Poslali smo vam poveznicu da ju potvrdite.",
 			"general": {
 				"title": "Opće postavke",
 				"savedSuccess": "Postavke su uspješno spremljene.",
@@ -213,13 +211,7 @@
 		},
 		"delete": {
 			"title": "Izbriši \"{project}\"",
-			"header": "Izbriši ovaj projekt",
-			"text1": "Jeste li sigurni da želite izbrisati ovaj projekt i sav njegov sadržaj?",
-			"text2": "Ovo uključuje sve zadatke i NE MOŽE SE PONIŠTITI!",
-			"success": "Projekt je uspješno izbrisan.",
-			"tasksToDelete": "Time će se nepovratno ukloniti cca. {count} zadataka.",
-			"tasksAndChildProjectsToDelete": "Time će se nepovratno ukloniti cca. {tasks} zadataka i {projects} projekata.",
-			"noTasksToDelete": "Ovaj projekt ne sadrži nikakve zadatke, trebalo bi ga biti sigurno izbrisati."
+			"header": "Izbriši ovaj projekt"
 		},
 		"duplicate": {
 			"title": "Dupliciraj ovaj projekt",
@@ -607,34 +599,11 @@
 			"updated": "Ažurirao {0}",
 			"doneAt": "Završio {0}",
 			"updateSuccess": "Zadatak je uspješno spremljen.",
-			"deleteSuccess": "Zadatak je uspješno izbrisan.",
 			"belongsToProject": "Ovaj zadatak pripada projektu '{project}'",
 			"due": "Do {at}",
-			"organization": "Organizacija",
-			"management": "Menadžment",
-			"dateAndTime": "Datum i vrijeme",
-			"delete": {
-				"header": "Izbriši ovaj zadatak",
-				"text1": "Jeste li sigurni da želite izbrisati ovaj zadatak?",
-				"text2": "Ovo će također ukloniti sve privitke, podsjetnike i odnose povezane s ovim zadatkom i ne može se poništiti!"
-			},
 			"actions": {
-				"assign": "Dodijeli korisniku",
-				"label": "Dodaj oznaku",
-				"priority": "Postavi prioritet",
-				"dueDate": "Postavi datum dospijeća",
-				"startDate": "Postavi datum početka",
-				"endDate": "Postavi datum kraja",
-				"reminders": "Postavi podsjetnike",
-				"repeatAfter": "Postavite interval ponavljanja",
-				"percentDone": "Postavi napredak",
-				"attachments": "Dodaj privitke",
-				"relatedTasks": "Dodaj odnos",
 				"moveProject": "Pomakni",
-				"color": "Podesi boju",
-				"delete": "Izbriši",
-				"favorite": "Dodaj u Favorite",
-				"unfavorite": "Ukloni iz Favorita"
+				"delete": "Izbriši"
 			}
 		},
 		"attributes": {
@@ -658,7 +627,6 @@
 			"doneAt": "Dovršeno u"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Ovdje se ne možete odjaviti jer ste pretplaćeni na ovaj zadatak putem njegovog projekta.",
 			"subscribedProject": "Trenutno ste pretplaćeni na ovaj projekt i primat ćete obavijesti o promjenama.",
 			"notSubscribedProject": "Niste pretplaćeni na ovaj projekt i nećete primati obavijesti o promjenama.",
 			"subscribedTask": "Trenutno ste pretplaćeni na ovaj zadatak i primat ćete obavijesti o promjenama.",

@@ -25,11 +25,14 @@
 package bootstrap
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -41,6 +44,7 @@ import (
 	"code.vikunja.io/veans/internal/output"
 	"code.vikunja.io/veans/internal/picker"
 	"code.vikunja.io/veans/internal/status"
+	"code.vikunja.io/veans/internal/trust"
 )
 
 // Options configures Init. All fields are optional unless noted; missing
@@ -93,6 +97,8 @@ type Options struct {
 	// RepoRoot, if empty, is detected via git rev-parse from cwd.
 	RepoRoot string
 
+	Trust *trust.Gate
+
 	// Prompter is the seam tests use to script prompt answers. Defaults
 	// to auth.NewStdPrompter() (reads stdin, writes prompts to stderr)
 	// when nil.
@@ -131,7 +137,18 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	}
 	store := credentials.Default()
 
-	if err := confirmOverwriteExistingConfig(opts, prompter); err != nil {
+	// 1. Repo root, opened before the overwrite check so it sees symlinks.
+	repoRoot, root, err := openRepoRoot(ctx, opts.RepoRoot)
+	if err != nil {
+		return nil, err
+	}
+	defer root.Close()
+	dest, err := newConfigDest(root, repoRoot, opts.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := confirmOverwriteExistingConfig(opts, dest, prompter); err != nil {
 		return nil, err
 	}
 
@@ -145,15 +162,6 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 		}
 	}
 
-	// 1. Repo root + suggested bot username.
-	repoRoot := opts.RepoRoot
-	if repoRoot == "" {
-		var err error
-		repoRoot, err = config.RepoRoot(ctx, "")
-		if err != nil {
-			return nil, output.Wrap(output.CodeUnknown, err, "detect repo root: %v", err)
-		}
-	}
 	suggested := config.SuggestedBotUsername(repoRoot)
 	botUsername := normalizeBotUsername(opts.BotUsername, suggested)
 	progress(opts.Out, "Bot username will be %q", botUsername)
@@ -173,6 +181,13 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	// probes the plausible variants and returns the canonical base.
 	canonical, info, err := client.DiscoverServer(ctx, opts.Server)
 	if err != nil {
+		return nil, err
+	}
+	gate := opts.Trust
+	if gate == nil {
+		gate = trust.Default(nil)
+	}
+	if err := trustServer(gate, opts.Server, canonical); err != nil {
 		return nil, err
 	}
 	opts.Server = canonical
@@ -269,6 +284,7 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	// 12. Write .veans.yml.
 	cfg := &config.Config{
 		Server:            opts.Server,
+		FrontendURL:       cmp.Or(info.FrontendURL, opts.Server),
 		ProjectID:         project.ID,
 		ProjectIdentifier: project.Identifier,
 		ViewID:            view.ID,
@@ -278,7 +294,7 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 			UserID:   bot.ID,
 		},
 	}
-	if err := cfg.SaveAs(opts.ConfigPath); err != nil {
+	if err := dest.save(cfg); err != nil {
 		return nil, output.Wrap(output.CodeUnknown, err, "write %s: %v", opts.ConfigPath, err)
 	}
 	progress(opts.Out, "Wrote %s", opts.ConfigPath)
@@ -295,7 +311,7 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := installAgentHooks(repoRoot, choices, opts.Out); err != nil {
+	if err := installAgentHooks(root, choices, opts.Out); err != nil {
 		// Log but don't abort — the repo is configured.
 		fmt.Fprintf(opts.Out, "  ! hook install failed: %v (you can paste the snippets manually)\n", err)
 	}
@@ -307,19 +323,38 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	}, nil
 }
 
+func openRepoRoot(ctx context.Context, repoRoot string) (string, *os.Root, error) {
+	if repoRoot == "" {
+		var err error
+		repoRoot, err = config.RepoRoot(ctx, "")
+		if err != nil {
+			return "", nil, output.Wrap(output.CodeUnknown, err, "detect repo root: %v", err)
+		}
+	}
+	root, err := os.OpenRoot(repoRoot)
+	if err != nil {
+		return "", nil, output.Wrap(output.CodeUnknown, err, "open repo root: %v", err)
+	}
+	return repoRoot, root, nil
+}
+
+// Only an origin the user typed is trusted without asking.
+func trustServer(gate *trust.Gate, typed, canonical string) error {
+	typedScheme, _, explicit := strings.Cut(strings.TrimSpace(typed), "://")
+	canonicalScheme, _, _ := strings.Cut(canonical, "://")
+	if explicit && !strings.EqualFold(typedScheme, canonicalScheme) {
+		return gate.Check(canonical)
+	}
+	return gate.Record(canonical)
+}
+
 // confirmOverwriteExistingConfig refuses to silently clobber an existing
 // .veans.yml. The bot token in the credentials store is keyed on
 // (server, bot-username); a blind re-init can swap the project under
 // the agent's feet AND stomp the previous token in the keyring.
-func confirmOverwriteExistingConfig(opts *Options, p auth.Prompter) error {
-	if opts.OverwriteExistingConfig {
+func confirmOverwriteExistingConfig(opts *Options, dest configDest, p auth.Prompter) error {
+	if opts.OverwriteExistingConfig || !dest.exists() {
 		return nil
-	}
-	if _, err := os.Stat(opts.ConfigPath); err != nil {
-		// File doesn't exist (or we can't stat it — let SaveAs surface
-		// that error later). Either way, no overwrite confirmation is
-		// needed.
-		return nil //nolint:nilerr // intentional: any Stat error means "no existing file to overwrite"
 	}
 	ans, err := p.ReadLine(fmt.Sprintf(
 		"%s already exists. Overwrite (token + project + view get replaced)? [y/N]: ",
@@ -334,6 +369,64 @@ func confirmOverwriteExistingConfig(opts *Options, p auth.Prompter) error {
 	return output.New(output.CodeConflict,
 		"refusing to overwrite %s without confirmation (delete the file to re-init)",
 		opts.ConfigPath)
+}
+
+// In-repo paths go through os.Root so a hostile checkout's symlink can't redirect the write.
+type configDest struct {
+	path string
+	root *os.Root // nil outside the repo
+	rel  string
+}
+
+func newConfigDest(root *os.Root, repoRoot, path string) (configDest, error) {
+	rel, ok := repoRelative(repoRoot, path)
+	if !ok {
+		return configDest{path: path}, nil
+	}
+	// Fail before init creates the bot and its token.
+	if _, err := root.Stat(rel); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return configDest{}, output.Wrap(output.CodeValidation, err, "refusing to write %s: %v", path, err)
+	}
+	return configDest{path: path, root: root, rel: rel}, nil
+}
+
+// Lstat so a dangling link still asks before being written.
+func (d configDest) exists() bool {
+	var err error
+	if d.root != nil {
+		_, err = d.root.Lstat(d.rel)
+	} else {
+		_, err = os.Stat(d.path)
+	}
+	return err == nil
+}
+
+func (d configDest) save(cfg *config.Config) error {
+	if d.root == nil {
+		return cfg.SaveAs(d.path)
+	}
+	return cfg.SaveInRoot(d.root, d.rel)
+}
+
+// SameFile so aliases above the repo (macOS /tmp vs /private/tmp) match; in-repo symlinks are os.Root's job.
+func repoRelative(repoRoot, path string) (string, bool) {
+	rootInfo, err := os.Stat(repoRoot)
+	if err != nil {
+		return "", false
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return "", false
+	}
+	for dir := filepath.Dir(abs); ; dir = filepath.Dir(dir) {
+		if info, err := os.Stat(dir); err == nil && os.SameFile(info, rootInfo) {
+			rel, err := filepath.Rel(dir, abs)
+			return rel, err == nil
+		}
+		if dir == filepath.Dir(dir) {
+			return "", false
+		}
+	}
 }
 
 func normalizeBotUsername(override, suggested string) string {

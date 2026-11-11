@@ -31,7 +31,7 @@ import (
 )
 
 func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) {
-	apiToken, u, err := models.ValidateTokenAndGetOwner(s, token)
+	apiToken, u, err := models.ValidateTokenAndGetOwner(s, token, true)
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +121,8 @@ func checkUserCaldavTokens(s *xorm.Session, login *user.Login) (*user.User, erro
 		return nil, nil
 	}
 
-	usr, err := user.GetUserByUsername(s, login.Username)
-	if user.IsErrUserDoesNotExist(err) || user.IsErrUserStatusError(err) {
+	usr, err := user.GetUserByUsernameForAuth(s, login.Username)
+	if user.IsErrUserDoesNotExist(err) || user.IsErrUserCannotAuthenticate(err) {
 		return nil, nil
 	}
 	if err != nil {

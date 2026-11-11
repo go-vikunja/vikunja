@@ -63,8 +63,8 @@ func init() { AddRouteRegistrar(RegisterNotificationsFeedRoutes) }
 // validator) and streams the Atom feed; there is no handler.Do* for a non-JSON
 // body and the auth can't ride the group's JWT middleware.
 func notificationsAtomFeed(ctx context.Context, _ *struct{}) (*huma.StreamResponse, error) {
-	c, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
-	if !ok {
+	c := humabridge.EchoContextFrom(ctx)
+	if c == nil {
 		return nil, huma.Error500InternalServerError("could not resolve request context")
 	}
 

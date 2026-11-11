@@ -3,9 +3,10 @@
 		<h1>{{ $t('migrate.titleService', {name: migrator.name}) }}</h1>
 		<p>{{ $t('migrate.descriptionDo') }}</p>
 
-		<template v-if="message === '' && lastMigrationStartedAt === null && !migrationJustStarted">
-			<template v-if="isMigrating === false">
-				<template v-if="migrator.isFileMigrator">
+		<template v-if="!migrationRunning && previousMigrationFinishedAt === null">
+			<!-- the credentials form stays mounted while migrating so its input survives an error -->
+			<template v-if="isMigrating === false || migrator.kind === 'credentials'">
+				<template v-if="migrator.kind === 'file'">
 					<p>{{ $t('migrate.importUpload', {name: migrator.name}) }}</p>
 					<Message
 						v-if="migrationError"
@@ -18,21 +19,38 @@
 						ref="uploadInput"
 						class="is-hidden"
 						type="file"
-						@change="migrate"
+						@change="migrate()"
 					>
 					<XButton
-						:loading="migrationFileService.loading"
-						:disabled="migrationFileService.loading || undefined"
+						:loading="isBusy"
+						:disabled="isBusy || undefined"
 						@click="uploadInput?.click()"
 					>
 						{{ $t('migrate.upload') }}
 					</XButton>
 				</template>
+				<MigrationCredentialsForm
+					v-else-if="migrator.kind === 'credentials'"
+					:migrator-name="migrator.name"
+					:loading="isBusy"
+					:error="migrationError"
+					:api-key-help="apiKeyHelp"
+					:password-help="passwordHelp"
+					@submit="migrate"
+					@clearError="migrationError = ''"
+				/>
 				<template v-else>
 					<p>{{ $t('migrate.authorize', {name: migrator.name}) }}</p>
+					<Message
+						v-if="migrationError"
+						variant="danger"
+						class="mbe-4"
+					>
+						{{ migrationError }}
+					</Message>
 					<XButton
-						:loading="migrationService.loading"
-						:disabled="migrationService.loading || undefined"
+						:loading="isBusy"
+						:disabled="isBusy || undefined"
 						:href="authUrl"
 						:open-external-in-new-tab="false"
 					>
@@ -61,23 +79,15 @@
 				<p>{{ $t('migrate.inProgress') }}</p>
 			</div>
 		</template>
-		<div v-else-if="!migrationJustStarted && lastMigrationStartedAt && lastMigrationFinishedAt === null">
-			<Message class="mbe-4">
-				{{ $t('migrate.migrationInProgress') }}
-			</Message>
-			<XButton :to="{name: 'home'}">
-				{{ $t('home.goToOverview') }}
-			</XButton>
-		</div>
-		<div v-else-if="lastMigrationFinishedAt">
+		<div v-else-if="previousMigrationFinishedAt">
 			<p>
 				{{
-					$t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(lastMigrationFinishedAt)})
+					$t('migrate.alreadyMigrated1', {name: migrator.name, date: formatDateLong(previousMigrationFinishedAt)})
 				}}<br>
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
 			<div class="migration-buttons">
-				<XButton @click="migrate">
+				<XButton @click="confirmMigrateAgain">
 					{{ $t('migrate.confirm') }}
 				</XButton>
 				<XButton
@@ -91,16 +101,22 @@
 		</div>
 		<div v-else>
 			<Message
-				v-if="migrator.isFileMigrator"
+				ref="resultMessage"
+				:variant="migrationStore.hasFailed ? 'danger' : 'info'"
+				role="status"
+				aria-live="polite"
+				tabindex="-1"
 				class="mbe-4"
 			>
-				{{ message }}
-			</Message>
-			<Message
-				v-else
-				class="mbe-4"
-			>
-				{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
+				<template v-if="migrationStore.hasFailed">
+					{{ $t(migrationStore.failureKey, {service: migrator.name, reason: migrationStore.errorMessage}) }}
+				</template>
+				<template v-else-if="migrationStore.isFinished">
+					{{ $t('migrate.migrationFinished', {service: migrator.name}) }}
+				</template>
+				<template v-else>
+					{{ $t('migrate.migrationStartedWillReciveEmail', {service: migrator.name}) }}
+				</template>
 			</Message>
 
 			<XButton :to="{name: 'home'}">
@@ -111,9 +127,18 @@
 </template>
 
 <script lang="ts">
+function isKnownMigrator(service: unknown) {
+	return Object.prototype.hasOwnProperty.call(MIGRATORS, service as string)
+}
+
 export default {
 	beforeRouteEnter(to) {
-		if (MIGRATORS[to.params.service as string] === undefined) {
+		if (!isKnownMigrator(to.params.service)) {
+			return {name: 'not-found'}
+		}
+	},
+	beforeRouteUpdate(to) {
+		if (!isKnownMigrator(to.params.service)) {
 			return {name: 'not-found'}
 		}
 	},
@@ -121,118 +146,154 @@ export default {
 </script>
 
 <script setup lang="ts">
-import {computed, ref, shallowReactive} from 'vue'
+import {computed, nextTick, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRoute, useRouter} from 'vue-router'
 
 import Logo from '@/assets/logo.svg?component'
 import Message from '@/components/misc/Message.vue'
+import MigrationCredentialsForm, {type PlankaCredentials} from './MigrationCredentialsForm.vue'
 
-import AbstractMigrationService, {type MigrationConfig} from '@/services/migrator/abstractMigration'
-import AbstractMigrationFileService from '@/services/migrator/abstractMigrationFile'
+import {useQuery} from '@tanstack/vue-query'
+import {migrationStatusQuery, useMigrationAuthMutation, useStartMigrationMutation} from '@/client/queries/migration'
+
+import {isRequestContextAbort} from '@/client/requestContext'
 
 import {formatDateLong} from '@/helpers/time/formatDate'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
-import {MIGRATORS, type Migrator} from './migrators'
+import {MIGRATORS, isMigratorOfKind, type Migrator} from './migrators'
 import {useTitle} from '@/composables/useTitle'
-import {useProjectStore} from '@/stores/projects'
+import {useMigrationStore} from '@/stores/migration'
 import {getErrorText} from '@/message'
 
 const props = defineProps<{
 	service: string,
 	code?: string,
+	state?: string,
 }>()
 
 const PROGRESS_DOTS_COUNT = 8
 
-const {t} = useI18n({useScope: 'global'})
+const {t, te} = useI18n({useScope: 'global'})
+const route = useRoute()
+const router = useRouter()
 
 const progressDotsCount = ref(PROGRESS_DOTS_COUNT)
 const authUrl = ref('')
-const isMigrating = ref(false)
-const lastMigrationFinishedAt = ref<Date | null>(null)
-const lastMigrationStartedAt = ref<Date | null>(null)
-const message = ref('')
+const auth = useMigrationAuthMutation()
+const startMigration = useStartMigrationMutation()
+const isMigrating = computed(() => startMigration.isPending.value)
+const confirmedAgain = ref(false)
+const startedHere = ref(false)
+
 const migratorAuthCode = ref('')
-const migrationJustStarted = ref(false)
+const migratorAuthState = ref<string>()
 const migrationError = ref('')
 
-const migrator = computed<Migrator>(() => MIGRATORS[props.service])
+const migrator = computed<Migrator>(() => MIGRATORS[props.service as keyof typeof MIGRATORS])
 
-// eslint-disable-next-line vue/no-ref-object-reactivity-loss
-const migrationService = shallowReactive(new AbstractMigrationService(migrator.value.id))
-// eslint-disable-next-line vue/no-ref-object-reactivity-loss
-const migrationFileService = shallowReactive(new AbstractMigrationFileService(migrator.value.id))
+const apiKeyHelp = computed(() => {
+	const key = `migrate.${migrator.value.id}.apiKeyHelp`
+	return te(key) ? t(key) : ''
+})
+const passwordHelp = computed(() => {
+	const key = `migrate.${migrator.value.id}.passwordHelp`
+	return te(key) ? t(key) : ''
+})
 
+const status = useQuery(computed(() => ({
+	...migrationStatusQuery(migrator.value.id),
+	enabled: false,
+	meta: {handlesError: true},
+})))
+const isBusy = computed(() => isMigrating.value || auth.isPending.value || status.isFetching.value)
+const migrationRunning = computed(() => {
+	if (startedHere.value) return true
+	return parseDateOrNull(status.data.value?.started_at) !== null
+		&& parseDateOrNull(status.data.value?.finished_at) === null
+})
+const previousMigrationFinishedAt = computed(() => {
+	if (confirmedAgain.value || startedHere.value || migrator.value.kind === 'file') return null
+	return parseDateOrNull(status.data.value?.finished_at)
+})
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
+const migrationStore = useMigrationStore()
+
 async function initMigration() {
-	if (migrator.value.isFileMigrator) {
-		return
-	}
-
-	authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
-
-	const TOKEN_HASH_PREFIX = '#token='
-	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
-		? location.hash.substring(TOKEN_HASH_PREFIX.length)
-		: props.code as string
-
-	if (!migratorAuthCode.value) {
-		return
-	}
-	const {started_at, finished_at} = await migrationService.getStatus()
-	if (started_at) {
-		lastMigrationStartedAt.value = parseDateOrNull(started_at)
-	}
-	if (finished_at) {
-		lastMigrationFinishedAt.value = parseDateOrNull(finished_at)
-		if (lastMigrationFinishedAt.value) {
+	try {
+		const provider = migrator.value.id
+		const current = await status.refetch()
+		if (provider !== migrator.value.id) return
+		if (current.isError) throw current.error
+		if (migrationRunning.value) {
+			startedHere.value = true
+			migrationStore.start(provider)
 			return
 		}
+		if (!isMigratorOfKind(provider, 'oauth')) return
+		const authResult = await auth.mutateAsync(provider)
+		if (provider !== migrator.value.id) return
+		authUrl.value = authResult?.url ?? ''
+		const prefix = '#token='
+		migratorAuthCode.value = location.hash.startsWith(prefix) ? location.hash.substring(prefix.length) : props.code ?? ''
+		migratorAuthState.value = props.state
+		if (migratorAuthCode.value) {
+			// A reload or back navigation would otherwise re-import from the account that issued this code.
+			const {code: _code, state: _state, ...query} = route.query
+			await router.replace({query, hash: ''}).catch(() => {})
+		}
+		if (migratorAuthCode.value && previousMigrationFinishedAt.value === null) await migrate()
+	} catch (cause) {
+		if (!isRequestContextAbort(cause)) migrationError.value = getErrorText(cause)
 	}
-	
-	if (lastMigrationStartedAt.value && lastMigrationFinishedAt.value === null) {
-		return
-	}
-
-	await migrate()
 }
-
-initMigration()
+watch(() => props.service, () => {
+	confirmedAgain.value = false
+	startedHere.value = false
+	authUrl.value = ''
+	migrationError.value = ''
+	void initMigration()
+}, {immediate: true})
 
 const uploadInput = ref<HTMLInputElement | null>(null)
+const resultMessage = ref<InstanceType<typeof Message> | null>(null)
 
-async function migrate() {
-	isMigrating.value = true
-	lastMigrationFinishedAt.value = null
-	message.value = ''
+// the triggering button unmounts when the result message appears, so move focus there
+watch(migrationRunning, async (running) => {
+	if (!running) {
+		return
+	}
+	await nextTick()
+	resultMessage.value?.$el?.focus()
+})
+
+async function migrate(credentialsConfig?: PlankaCredentials) {
+	const provider = migrator.value.id
+	confirmedAgain.value = true
 	migrationError.value = ''
-
-	let migrationConfig: MigrationConfig | File = {code: migratorAuthCode.value}
-
-	if (migrator.value.isFileMigrator) {
-		if (uploadInput.value?.files?.length === 0) {
-			return
-		}
-		migrationConfig = uploadInput.value?.files?.[0] as File
-	}
-
 	try {
-		if (migrator.value.isFileMigrator) {
-			const result = await migrationFileService.migrate(migrationConfig as File)
-			message.value = result.message
-			const projectStore = useProjectStore()
-			return projectStore.loadAllProjects()
-		}
-		
-		await migrationService.migrate(migrationConfig as MigrationConfig)
-		migrationJustStarted.value = true
-	} catch (e) {
-		migrationError.value = getErrorText(e)
-	} finally {
-		isMigrating.value = false
+		if (isMigratorOfKind(provider, 'file')) {
+			const file = uploadInput.value?.files?.[0]
+			if (!file) return
+			await startMigration.mutateAsync({kind: 'file', provider, file})
+		} else if (isMigratorOfKind(provider, 'credentials')) {
+			if (!credentialsConfig) return
+			await startMigration.mutateAsync({kind: 'credentials', provider, body: credentialsConfig})
+		} else if (isMigratorOfKind(provider, 'oauth')) {
+			if (!migratorAuthCode.value) return
+			await startMigration.mutateAsync({kind: 'oauth', provider, body: {code: migratorAuthCode.value, state: migratorAuthState.value}})
+		} else return
+		migrationStore.start(provider)
+		if (provider === migrator.value.id) startedHere.value = true
+	} catch (cause) {
+		if (!isRequestContextAbort(cause)) migrationError.value = getErrorText(cause)
 	}
+}
+function confirmMigrateAgain() {
+	confirmedAgain.value = true
+	if (migrator.value.kind !== 'credentials') return migrate()
 }
 </script>
 

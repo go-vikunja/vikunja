@@ -19,39 +19,39 @@ package doctor
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/red"
+	"code.vikunja.io/api/pkg/utils"
 )
 
-// CheckOptionalServices returns check groups for all enabled optional services.
-func CheckOptionalServices() []CheckGroup {
-	var groups []CheckGroup
-
+// CheckOptionalServices runs the checks for all enabled optional services, passing
+// each group to emit as it completes.
+func CheckOptionalServices(emit func(CheckGroup)) {
 	if config.RedisEnabled.GetBool() {
-		groups = append(groups, checkRedis())
+		emit(checkRedis())
 	}
 
 	if config.MailerEnabled.GetBool() {
-		groups = append(groups, checkMailer())
+		emit(checkMailer())
 	}
 
 	if config.AuthLdapEnabled.GetBool() {
-		groups = append(groups, checkLDAP())
+		emit(checkLDAP())
 	}
 
 	if config.AuthOpenIDEnabled.GetBool() {
-		groups = append(groups, checkOpenID())
+		emit(checkOpenID())
 	}
-
-	return groups
 }
 
 func checkRedis() CheckGroup {
@@ -327,7 +327,17 @@ func checkOpenIDProvider(key string, rawProvider interface{}) (CheckResult, stri
 		}, ""
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := utils.NewUnguardedHTTPClient()
+	client.Timeout = 5 * time.Second
+	client.CheckRedirect = func(next *http.Request, via []*http.Request) error {
+		if next.URL.Scheme != req.URL.Scheme || !strings.EqualFold(next.URL.Host, req.URL.Host) {
+			return fmt.Errorf("refusing redirect to %s outside the configured provider origin", next.URL.Redacted())
+		}
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		return nil
+	}
 	resp, err := client.Do(req) // #nosec G704 -- URL is from configured OIDC provider endpoints
 	if err != nil {
 		return CheckResult{

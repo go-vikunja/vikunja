@@ -39,7 +39,6 @@
 			"email": "El. pašto adresas",
 			"emailPlaceholder": "pvz.: frederic{'@'}vikunja.io",
 			"password": "Slaptažodis",
-			"passwordPlaceholder": "pvz.: •••••••••••",
 			"forgotPassword": "Pamiršote slaptažodį?",
 			"resetPassword": "Pakeisti slaptažodį",
 			"resetPasswordAction": "Atsiųskite man slaptažodžio atnaujinimo nuorodą",
@@ -77,7 +76,6 @@
 			"passwordUpdateSuccess": "Slaptažodis buvo sėkmingai atnaujintas.",
 			"updateEmailTitle": "Atnaujink savo el. paštą",
 			"updateEmailNew": "Naujas el. pašto adresas",
-			"updateEmailSuccess": "El. paštas buvo sėkmingai atnaujintas. Nusiuntėme nuorodą patvirtinimui.",
 			"general": {
 				"title": "Bendriniai nustatymai",
 				"name": "Mano vardas",
@@ -238,13 +236,7 @@
 		},
 		"delete": {
 			"title": "Ištrinti \"{project}\"",
-			"header": "Ištrinti šį projektą",
-			"text1": "Ar esi tikra -s, kad nori ištrinti šį projektą su visu turiniu?",
-			"text2": "Tai reiškia su visomis užduotimis ir TO NEBUS GALIMA ATKURTI!",
-			"success": "Projektas buvo sėkmingai ištrintas.",
-			"tasksToDelete": "Tai negrįžtamai ištrins apytiksliai {count} užduotį.",
-			"tasksAndChildProjectsToDelete": "Tai negrįžtamai ištrins apytiksliai {tasks} užduotis ir {projects} projektus.",
-			"noTasksToDelete": "Šis projektas neturi jokių užduočių, todėl turėtų būti saugu ištrinti."
+			"header": "Ištrinti šį projektą"
 		},
 		"duplicate": {
 			"title": "Dubliuoti šį projektą",
@@ -716,34 +708,11 @@
 			"updated": "Atnaujinta {0}",
 			"doneAt": "Atlikta {0}",
 			"updateSuccess": "Užduotis buvo sėkmingai išsaugota.",
-			"deleteSuccess": "Užduotis buvo sėkmingai ištrinta.",
 			"belongsToProject": "Ši užduotis priklauso projektui '{project}'",
 			"due": "Iki {at}",
-			"organization": "Organizacija",
-			"management": "Vadyba",
-			"dateAndTime": "Data ir laikas",
-			"delete": {
-				"header": "Ištrinti šią užduotį",
-				"text1": "Ar esi tikra -s, kad nori ištrinti šią užduotį?",
-				"text2": "Tai taip pat ištrins visus prisegtukus, priminimus ir ryšius susietus su šia užduotimi ir to atstatyti nebus galima!"
-			},
 			"actions": {
-				"assign": "Priskirti vartotojui",
-				"label": "Pridėti etiketes",
-				"priority": "Nustatyti prioritetą",
-				"dueDate": "Nustatyto termino datą",
-				"startDate": "Nustatyti pradžios datą",
-				"endDate": "Nustatyti pabaigos datą",
-				"reminders": "Nustatyti priminimus",
-				"repeatAfter": "Nustatyti pasikartojimo intervalą",
-				"percentDone": "Nustatyti progresą",
-				"attachments": "Pridėti prisegtukus",
-				"relatedTasks": "Pridėti ryšį",
 				"moveProject": "Perkelti",
-				"color": "Nustatyto spalvą",
-				"delete": "Ištrinti",
-				"favorite": "Pridėti prie mėgstamiausių",
-				"unfavorite": "Pašalinti iš mėgstamiausių"
+				"delete": "Ištrinti"
 			}
 		},
 		"attributes": {
@@ -767,7 +736,6 @@
 			"doneAt": "Atlikta"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Čia nutraukti prenumeratos negalima, nes esi užsiprenumeravęs per projektą.",
 			"subscribedProject": "Esi užsiprenumeravęs šį projektą, todėl gausi pranešimus apie pakeitimus.",
 			"notSubscribedProject": "Nesi užsiprenumeravęs projekto naujienų, todėl negausi pranešimų apie pakeitimus.",
 			"subscribedTask": "Esi užsiprenumeravęs šios užduoties naujienas, todėl gausi pranešimus apie pakeitimus.",
@@ -879,9 +847,6 @@
 			"dateAndTime": "Data ir laikas"
 		},
 		"repeat": {
-			"everyDay": "Kiekvieną dieną",
-			"everyWeek": "Kiekvieną savaitę",
-			"every30d": "Kas 30 dienų",
 			"mode": "Kartojimo rėžimas",
 			"monthly": "Kas mėnesį",
 			"fromCurrentDate": "Nuo užbaigimo datos",
@@ -1064,10 +1029,6 @@
 			"newProject": "Naujas projektas",
 			"newTeam": "Nauja komanda"
 		}
-	},
-	"date": {
-		"altFormatLong": "d F Y, H:i",
-		"altFormatShort": "d M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} sureagavo su {value}",

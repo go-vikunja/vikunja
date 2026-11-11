@@ -20,7 +20,8 @@
 						<th v-if="!hideLabelColumn">
 							{{ $t('timeTracking.form.task') }}
 						</th>
-						<th>{{ $t('task.comment.comment') }}</th>
+						<th>{{ $t('misc.user') }}</th>
+						<th>{{ $t('timeTracking.commentLabel') }}</th>
 						<th class="nowrap">
 							{{ $t('timeTracking.list.time') }}
 						</th>
@@ -37,6 +38,13 @@
 						v-cy="'timeEntry'"
 					>
 						<td v-if="!hideLabelColumn">
+							<span
+								v-if="isPrivateEntry(row.entry)"
+								v-cy="'timeEntryNoProject'"
+								class="has-text-grey is-italic"
+							>
+								{{ $t('timeTracking.noProject') }}
+							</span>
 							<template
 								v-for="(project, i) in row.projectChain"
 								:key="project.id"
@@ -52,11 +60,25 @@
 						</td>
 						<td v-if="!hideLabelColumn">
 							<RouterLink
-								v-if="row.entry.taskId > 0"
-								:to="{ name: 'task.detail', params: { id: row.entry.taskId } }"
+								v-if="row.entry.task_id > 0 && !row.entry.in_trash"
+								:to="{ name: 'task.detail', params: { id: row.entry.task_id } }"
 							>
 								{{ row.taskIdentifier }}{{ row.taskTitle ? ` - ${row.taskTitle}` : '' }}
 							</RouterLink>
+							<span
+								v-else-if="row.entry.in_trash"
+								v-cy="'timeEntryInTrash'"
+								class="tag"
+							>
+								{{ $t('trash.inTrash') }}
+							</span>
+						</td>
+						<td class="nowrap">
+							<User
+								:user="row.entry.user"
+								:avatar-size="20"
+								is-inline
+							/>
 						</td>
 						<td class="has-text-grey">
 							{{ row.entry.comment }}
@@ -68,7 +90,7 @@
 							{{ row.seconds === null ? '' : formatDuration(row.seconds) }}
 						</td>
 						<td class="nowrap has-text-right">
-							<template v-if="row.entry.userId === currentUserId">
+							<template v-if="row.entry.user.id === currentUserId && !row.entry.in_trash">
 								<BaseButton
 									v-tooltip="$t('menu.edit')"
 									v-cy="'editTimeEntry'"
@@ -83,7 +105,7 @@
 									v-cy="'deleteTimeEntry'"
 									class="entry-action entry-delete"
 									:aria-label="$t('misc.delete')"
-									@click="emit('delete', row.entry.id)"
+									@click="emit('delete', row.entry)"
 								>
 									<Icon icon="trash-alt" />
 								</BaseButton>
@@ -94,10 +116,10 @@
 				<tfoot>
 					<tr>
 						<td
-							:colspan="hideLabelColumn ? 2 : 4"
+							:colspan="hideLabelColumn ? 3 : 5"
 							class="has-text-weight-bold"
 						>
-							{{ $t('timeTracking.list.total') }}
+							{{ $t(paged ? 'timeTracking.list.pageTotal' : 'timeTracking.list.total') }}
 						</td>
 						<td class="nowrap has-text-right has-text-weight-bold">
 							{{ formatDuration(totalSeconds) }}
@@ -111,23 +133,24 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch} from 'vue'
+import {computed} from 'vue'
 
 import Card from '@/components/misc/Card.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import User from '@/components/misc/User.vue'
 
-import TaskService from '@/services/task'
-import TaskModel from '@/models/task'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
+import {taskQuery} from '@/client/queries/tasks'
+import {useQueries} from '@tanstack/vue-query'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import {formatDate} from '@/helpers/time/formatDate'
+import {formatTimeRange} from '@/helpers/time/formatTimeRange'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {useTimeFormat} from '@/composables/useTimeFormat'
-import {TIME_FORMAT} from '@/constants/timeFormat'
+import {isPrivateEntry} from '@/client/queries/timeEntries'
 
-import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
-import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
+import type {TaskResponse} from '@/client/queries/tasks'
+import type {TimeEntryResponse as ITimeEntry} from '@/client/queries/timeEntries'
 
 const props = withDefaults(defineProps<{
 	entries: ITimeEntry[]
@@ -138,67 +161,64 @@ const props = withDefaults(defineProps<{
 	card?: boolean
 	// Override the empty-state message (defaults to the per-day wording).
 	emptyText?: string
+	// The entries are one page of a longer list, so the footer sum is page-local.
+	paged?: boolean
 }>(), {
 	hideLabelColumn: false,
 	card: true,
 	emptyText: '',
+	paged: false,
 })
 
 const emit = defineEmits<{
-	delete: [id: number]
+	delete: [entry: ITimeEntry]
 	edit: [entry: ITimeEntry]
 }>()
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const {store: timeFormat} = useTimeFormat()
 
 // Only the author can update/delete (enforced server-side); shared lists include
 // others' entries, so hide the controls on rows the current user doesn't own.
 const authStore = useAuthStore()
-const currentUserId = computed(() => authStore.info?.id)
+const currentUserId = computed(() => authStore.authUser ? authStore.info?.id : undefined)
 
-// Task entries carry only a task id; resolve the full task lazily (for its
-// title, identifier, and parent project) and cache it.
-const taskService = new TaskService()
-const tasks = ref<Record<number, ITask>>({})
-const inFlight = new Set<number>()
-async function ensureTask(taskId: number) {
-	if (taskId === 0 || tasks.value[taskId] !== undefined || inFlight.has(taskId)) {
-		return
+const taskIds = computed(() => props.hideLabelColumn
+	? []
+	// Trashed tasks can't be loaded
+	: [...new Set(props.entries.filter(entry => !entry.in_trash).map(entry => entry.task_id).filter(id => id > 0))])
+
+// Entries carry only a task id; the full task (title, identifier, parent project) is resolved lazily.
+const taskQueries = useQueries({
+	queries: computed(() => taskIds.value.map(id => taskQuery(id))),
+})
+const tasks = computed<Record<number, TaskResponse>>(() => Object.fromEntries(
+	taskQueries.value.flatMap(result => result.data ? [[result.data.id, result.data] as const] : []),
+))
+
+// null when the entry has no settled duration: still running, or unusable timestamps.
+function entrySeconds(entry: ITimeEntry): number | null {
+	const start = parseDateOrNull(entry.start_time)
+	const end = parseDateOrNull(entry.end_time)
+	if (start === null || end === null) {
+		return null
 	}
-	inFlight.add(taskId)
-	try {
-		tasks.value[taskId] = await taskService.get(new TaskModel({id: taskId}))
-	} catch {
-		// Leave unresolved — the row falls back to #<id>.
-	} finally {
-		inFlight.delete(taskId)
-	}
-}
-
-watch(() => props.entries, entries => {
-	entries.forEach(entry => ensureTask(entry.taskId))
-}, {immediate: true})
-
-function entrySeconds(entry: ITimeEntry): number {
-	const end = entry.endTime ?? new Date()
-	return Math.floor((end.getTime() - entry.startTime.getTime()) / 1000)
+	return Math.floor((end.getTime() - start.getTime()) / 1000)
 }
 
 const rows = computed(() => props.entries.map(entry => {
-	const task = entry.taskId > 0 ? tasks.value[entry.taskId] : undefined
-	const projectId = task?.projectId ?? (entry.projectId > 0 ? entry.projectId : 0)
-	const project = projectId > 0 ? projectStore.projects[projectId] as IProject | undefined : undefined
-	const ancestors = project ? projectStore.getAncestors(project) : []
+	const task = entry.task_id > 0 ? tasks.value[entry.task_id] : undefined
+	const projectId = task?.project_id ?? (entry.project_id > 0 ? entry.project_id : 0)
+	const project = projectId > 0 ? projectList.projects[projectId] : undefined
+	const ancestors = project ? projectList.getAncestors(project) : []
 
 	return {
 		entry,
 		// Full ancestor chain (root → leaf), each link-able.
 		projectChain: ancestors.map(p => ({id: p.id, title: getProjectTitle(p)})),
-		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.taskId > 0 ? `#${entry.taskId}` : ''),
+		taskIdentifier: task ? (task.identifier || `#${task.index}`) : (entry.task_id > 0 ? `#${entry.task_id}` : ''),
 		taskTitle: task?.title ?? '',
-		// A running entry (no end) has no settled duration — leave it blank.
-		seconds: entry.endTime !== null ? entrySeconds(entry) : null,
+		seconds: entrySeconds(entry),
 	}
 }))
 
@@ -210,16 +230,9 @@ function formatDuration(seconds: number): string {
 	return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
 }
 
-function formatTime(date: Date): string {
-	return formatDate(date, timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A')
-}
-
 function timeRange(entry: ITimeEntry): string {
-	const start = formatTime(entry.startTime)
-	if (entry.endTime === null) {
-		return `${start} – …`
-	}
-	return `${start} – ${formatTime(entry.endTime)}`
+	const start = parseDateOrNull(entry.start_time)
+	return start === null ? '' : formatTimeRange(start, parseDateOrNull(entry.end_time), timeFormat.value)
 }
 </script>
 

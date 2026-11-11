@@ -1,4 +1,4 @@
-name: Close stale "waiting for reply" issues and PRs
+name: Manage "waiting for reply" issues and PRs
 
 on:
   schedule:

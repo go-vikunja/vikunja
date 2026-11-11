@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import {onBeforeMount, ref, watch} from 'vue'
 
-import type {IProjectView} from '@/modelTypes/IProjectView'
-import type {IFilters} from '@/modelTypes/ISavedFilter'
+import type {ProjectView, ProjectViewWritable, TaskCollection} from '@/client/generated'
+import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
+import {
+	createProjectViewDraft,
+	createProjectViewUpdate,
+	type ProjectViewDraft,
+} from '@/client/queries/projectViews'
 
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
-import {useLabelStore} from '@/stores/labels'
-import {useProjectStore} from '@/stores/projects'
+import {useLabels} from '@/composables/useLabels'
+import {useProjects} from '@/composables/useProjects'
 
 import XButton from '@/components/input/Button.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
@@ -15,7 +20,7 @@ import FilterInput from '@/components/input/filter/FilterInput.vue'
 import FormField from '@/components/input/FormField.vue'
 
 const props = withDefaults(defineProps<{
-	modelValue: IProjectView,
+	modelValue: ProjectViewFormValue,
 	loading?: boolean,
 	showSaveButtons?: boolean,
 }>(), {
@@ -24,87 +29,146 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'update:modelValue': [value: IProjectView],
+	'update:modelValue': [value: ProjectViewFormValue],
 	'cancel': [],
 }>()
 
-const view = ref<IProjectView>()
-
-const labelStore = useLabelStore()
-const projectStore = useProjectStore()
-
-onBeforeMount(() => {
-	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
-		const filterString = transformFilterStringFromApi(
-			filterInput.filter,
-			labelId => labelStore.getLabelById(labelId)?.title || null,
-			projectId => projectStore.projects[projectId]?.title || null,
-		)
-
-		const filter: IFilters = {
-			filter: '',
-			s: '',
-		}
-		if (hasFilterQuery(filterString)) {
-			filter.filter = filterString
-		} else {
-			filter.s = filterString
-		}
-
-		if (filter.s === '') {
-			filter.s = filterInput.s
-		}
-
-		if (filter.filter === '') {
-			filter.filter = filter.s
-		}
-
-		// AbstractModel.assignData() runs objectToCamelCase recursively on all
-		// nested objects, which converts filter_include_nulls to filterIncludeNulls
-		// inside the filter object. IFilters intentionally uses snake_case keys to
-		// match the API query param format. We check both key forms here to handle
-		// data coming from either the API response (camelCased by assignData) or
-		// from a freshly constructed filter object (snake_case).
-		filter.filter_include_nulls = filterInput.filter_include_nulls
-			?? (filterInput as Record<string, unknown>).filterIncludeNulls as boolean
-			?? false
-
-		return filter
+type ProjectViewFormValue = ProjectViewWritable & Pick<ProjectView, 'id' | 'project_id'>
+type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration'> &
+	Pick<ProjectView, 'id' | 'project_id'> & {
+		filter: EditableTaskCollection & Required<Pick<TaskCollection, 'include_subprojects'>>
+		bucket_configuration: Array<{title: string, filter: EditableTaskCollection}>
 	}
 
-	const transformed = {
-		...props.modelValue,
-		filter: transformFilterFromApi(props.modelValue.filter),
-		bucketConfiguration: props.modelValue.bucketConfiguration.map(bc => ({
-			title: bc.title,
-			filter: transformFilterFromApi(bc.filter),
+const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
+const projectList = useProjects()
+
+const transformFilterFromApi = (filterInput?: TaskCollection): EditableTaskCollection => {
+	const filterString = transformFilterStringFromApi(
+		filterInput?.filter ?? '',
+		labelId => getLabelById(labelId)?.title || null,
+		projectId => projectList.projects[projectId]?.title || null,
+	)
+
+	const filter: EditableTaskCollection = {
+		sort_by: filterInput?.sort_by ?? [],
+		order_by: filterInput?.order_by ?? [],
+		filter: '',
+		filter_include_nulls: false,
+		s: '',
+	}
+	if (hasFilterQuery(filterString)) {
+		filter.filter = filterString
+	} else {
+		filter.s = filterString
+	}
+
+	if (filter.s === '') {
+		filter.s = filterInput?.s ?? ''
+	}
+
+	if (filter.filter === '') {
+		filter.filter = filter.s
+	}
+
+	filter.filter_include_nulls = filterInput?.filter_include_nulls ?? false
+
+	return filter
+}
+
+function transformViewFromApi(modelValue: ProjectViewFormValue): LoadedProjectView {
+	const draft = createProjectViewUpdate(modelValue)
+	return {
+		...modelValue,
+		...draft,
+		filter: {
+			...transformFilterFromApi(modelValue.filter),
+			include_subprojects: modelValue.filter?.include_subprojects ?? false,
+		},
+		bucket_configuration: (modelValue.bucket_configuration ?? []).map(bucket => ({
+			title: bucket.title ?? '',
+			filter: transformFilterFromApi(bucket.filter),
 		})),
 	}
+}
+
+const view = ref<LoadedProjectView>(transformViewFromApi(createProjectViewDraft()))
+
+onBeforeMount(() => {
+	const transformed = transformViewFromApi(props.modelValue)
 
 	if (JSON.stringify(view.value) !== JSON.stringify(transformed)) {
 		view.value = transformed
 	}
 
-	// Registered after view.value is set above, so the immediate run sees the loaded view.
-	watch(() => view.value?.viewKind, kind => {
-		if (kind === 'kanban' && view.value?.bucketConfigurationMode === 'none') {
-			view.value.bucketConfigurationMode = 'manual'
+	const initialFilter = transformed.filter.filter
+	const initialBuckets = transformed.bucket_configuration.map(bucket => ({
+		title: bucket.title,
+		filter: bucket.filter.filter,
+	}))
+
+	watch(isPending, pending => {
+		if (pending || !view.value) {
+			return
+		}
+
+		const resolved = transformViewFromApi(props.modelValue)
+		if (view.value.filter.filter === initialFilter) {
+			view.value.filter = {
+				...view.value.filter,
+				filter: resolved.filter.filter,
+			}
+		}
+
+		view.value.bucket_configuration = view.value.bucket_configuration.map((bucket, index) => {
+			const initial = initialBuckets[index]
+			const resolvedBucket = resolved.bucket_configuration[index]
+			if (
+				!initial ||
+				!resolvedBucket ||
+				bucket.title !== initial.title ||
+				bucket.filter.filter !== initial.filter
+			) {
+				return bucket
+			}
+
+			return {
+				...bucket,
+				filter: {
+					...bucket.filter,
+					filter: resolvedBucket.filter.filter,
+				},
+			}
+		})
+	}, {immediate: true})
+
+	watch(() => view.value?.view_kind, kind => {
+		if (kind === 'kanban' && view.value?.bucket_configuration_mode === 'none') {
+			view.value.bucket_configuration_mode = 'manual'
 		}
 	}, {immediate: true})
 })
 
 function save() {
-	const transformFilterForApi = (filterInput: IFilters): IFilters => {
+	if (!view.value) {
+		return
+	}
+
+	const transformFilterForApi = (filterInput?: EditableTaskCollection): EditableTaskCollection => {
 		const filterString = transformFilterStringForApi(
 			filterInput?.filter || '',
-			labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
+			labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
 			projectTitle => {
-				const found = projectStore.findProjectByExactname(projectTitle)
+				const found = projectList.findProjectByExactname(projectTitle)
 				return found?.id || null
 			},
 		)
-		const filter: IFilters = {
+		const filter: EditableTaskCollection = {
+			sort_by: filterInput?.sort_by ?? [],
+			order_by: filterInput?.order_by ?? [],
+			filter: '',
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
+			s: '',
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -117,10 +181,13 @@ function save() {
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilterForApi(view.value?.filter),
-		bucketConfiguration: view.value?.bucketConfiguration.map(bc => ({
-			title: bc.title,
-			filter: transformFilterForApi(bc.filter),
+		filter: {
+			...transformFilterForApi(view.value.filter),
+			include_subprojects: view.value.filter.include_subprojects,
+		},
+		bucket_configuration: view.value.bucket_configuration.map(bucket => ({
+			title: bucket.title,
+			filter: transformFilterForApi(bucket.filter),
 		})),
 	})
 }
@@ -131,8 +198,9 @@ function validateTitle() {
 	titleValid.value = view.value?.title !== ''
 }
 
-function handleBubbleSave() {
-	if (props.showSaveButtons) {
+function handleBubbleSave(event: FocusEvent) {
+	const form = event.currentTarget as HTMLFormElement | null
+	if (props.showSaveButtons || form?.contains(event.relatedTarget as Node | null)) {
 		return
 	}
 
@@ -160,7 +228,7 @@ function handleBubbleSave() {
 				<div class="select">
 					<select
 						:id="id"
-						v-model="view.viewKind"
+						v-model="view.view_kind"
 					>
 						<option value="list">
 							{{ $t('project.list.title') }}
@@ -188,12 +256,24 @@ function handleBubbleSave() {
 		<FilterInput
 			id="filter"
 			v-model="view.filter.filter"
-			:project-id="view.projectId"
+			:project-id="view.project_id"
 			class="mbe-1"
 		/>
 
 		<div class="is-size-7 mbe-2">
 			<FilterInputDocs />
+		</div>
+
+		<div
+			v-if="view.view_kind !== 'kanban'"
+			class="field mbe-3"
+		>
+			<FancyCheckbox
+				v-model="view.filter.include_subprojects"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<div class="field mbe-3">
@@ -205,7 +285,7 @@ function handleBubbleSave() {
 		</div>
 
 		<div
-			v-if="view.viewKind === 'kanban'"
+			v-if="view.view_kind === 'kanban'"
 			class="field"
 		>
 			<label
@@ -220,7 +300,7 @@ function handleBubbleSave() {
 			>
 				<label class="radio">
 					<input
-						v-model="view.bucketConfigurationMode"
+						v-model="view.bucket_configuration_mode"
 						type="radio"
 						name="configMode"
 						value="manual"
@@ -229,7 +309,7 @@ function handleBubbleSave() {
 				</label>
 				<label class="radio">
 					<input
-						v-model="view.bucketConfigurationMode"
+						v-model="view.bucket_configuration_mode"
 						type="radio"
 						name="configMode"
 						value="filter"
@@ -240,7 +320,7 @@ function handleBubbleSave() {
 		</div>
 
 		<div
-			v-if="view.viewKind === 'kanban' && view.bucketConfigurationMode === 'filter'"
+			v-if="view.view_kind === 'kanban' && view.bucket_configuration_mode === 'filter'"
 			class="field"
 		>
 			<label class="label">
@@ -248,27 +328,27 @@ function handleBubbleSave() {
 			</label>
 			<div class="control">
 				<div
-					v-for="(b, index) in view.bucketConfiguration"
+					v-for="(b, index) in view.bucket_configuration"
 					:key="'bucket_'+index"
 					class="filter-bucket"
 				>
 					<button
 						class="is-danger"
-						@click.prevent="() => view.bucketConfiguration.splice(index, 1)"
+						@click.prevent="() => view.bucket_configuration.splice(index, 1)"
 					>
 						<Icon icon="trash-alt" />
 					</button>
 					<div class="filter-bucket-form">
 						<FormField
 							:id="'bucket_'+index+'_title'"
-							v-model="view.bucketConfiguration[index].title"
+							v-model="view.bucket_configuration[index].title"
 							:label="$t('project.views.title')"
 							:placeholder="$t('project.share.links.namePlaceholder')"
 						/>
 
 						<FilterInput
-							v-model="view.bucketConfiguration[index].filter.filter"
-							:project-id="view.projectId"
+							v-model="view.bucket_configuration[index].filter.filter"
+							:project-id="view.project_id"
 							:input-label="$t('project.views.filter')"
 							class="mbe-2"
 						/>
@@ -279,7 +359,7 @@ function handleBubbleSave() {
 
 						<div class="field mbe-3">
 							<FancyCheckbox
-								v-model="view.bucketConfiguration[index].filter.filter_include_nulls"
+								v-model="view.bucket_configuration[index].filter.filter_include_nulls"
 							>
 								{{ $t('filters.attributes.includeNulls') }}
 							</FancyCheckbox>
@@ -290,7 +370,7 @@ function handleBubbleSave() {
 					<XButton
 						variant="secondary"
 						icon="plus"
-						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: '', filter_include_nulls: false}})"
+						@click="() => view.bucket_configuration.push({title: '', filter: {sort_by: [], order_by: [], filter: '', filter_include_nulls: false, s: ''}})"
 					>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>

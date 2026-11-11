@@ -177,3 +177,31 @@ func TestBasicAuthCredentials(t *testing.T) {
 		}
 	})
 }
+
+func TestBasicAuthEmailUnconfirmedUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	freeze := func(t *testing.T, id int64) {
+		s := db.NewSession()
+		defer s.Close()
+		require.NoError(t, user.SetUserStatus(s, &user.User{ID: id}, user.StatusEmailConfirmationRequired))
+		require.NoError(t, s.Commit())
+	}
+
+	t.Run("api token", func(t *testing.T) {
+		freeze(t, 15)
+		c := newAuthContext()
+		ok, err := BasicAuth(c, "user15", caldavTokenUser15Valid)
+		require.NoError(t, err)
+		assert.False(t, ok)
+		assert.Nil(t, c.Get("userBasicAuth"))
+	})
+
+	t.Run("caldav token", func(t *testing.T) {
+		freeze(t, 10)
+		c := newAuthContext()
+		ok, err := BasicAuth(c, "user10", "caldavtesttoken")
+		require.NoError(t, err)
+		assert.False(t, ok)
+		assert.Nil(t, c.Get("userBasicAuth"))
+	})
+}

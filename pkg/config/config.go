@@ -19,12 +19,14 @@ package config
 import (
 	"crypto/rand"
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 	_ "time/tzdata" // Imports time zone data instead of relying on the os
@@ -32,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/c2h5oh/datasize"
+	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 )
 
@@ -101,9 +104,11 @@ const (
 	AuthLdapAttributeEmail             Key = `auth.ldap.attribute.email`
 	AuthLdapAttributeDisplayname       Key = `auth.ldap.attribute.displayname`
 	AuthLdapAttributeMemberID          Key = `auth.ldap.attribute.memberid`
+	AuthLdapAttributeID                Key = `auth.ldap.attribute.id`
 
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
+	Legal           Key = `legal`
 
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`
@@ -145,6 +150,7 @@ const (
 	LogDatabase      Key = `log.database`
 	LogDatabaseLevel Key = `log.databaselevel`
 	LogHTTP          Key = `log.http`
+	LogHTTPLevel     Key = `log.httplevel`
 	LogPath          Key = `log.path`
 	LogEvents        Key = `log.events`
 	LogEventsLevel   Key = `log.eventslevel`
@@ -157,6 +163,8 @@ const (
 	RateLimitLimit             Key = `ratelimit.limit`
 	RateLimitStore             Key = `ratelimit.store`
 	RateLimitNoAuthRoutesLimit Key = `ratelimit.noauthlimit`
+	RateLimitTokenRefreshLimit Key = `ratelimit.tokenrefreshlimit`
+	RateLimitBasicAuthLimit    Key = `ratelimit.basicauthlimit`
 
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
@@ -183,6 +191,12 @@ const (
 	MigrationMicrosoftTodoClientID     Key = `migration.microsofttodo.clientid`
 	MigrationMicrosoftTodoClientSecret Key = `migration.microsofttodo.clientsecret`
 	MigrationMicrosoftTodoRedirectURL  Key = `migration.microsofttodo.redirecturl`
+	MigrationClaimTimeout              Key = `migration.claimtimeout`
+	MigrationMaxCSVRows                Key = `migration.maxcsvrows`
+	MigrationMaxItems                  Key = `migration.maxitems`
+	MigrationVikunjaFileMaxSize        Key = `migration.vikunjafile.maxsize`
+	MigrationVikunjaFileMaxFiles       Key = `migration.vikunjafile.maxfiles`
+	MigrationVikunjaFileMaxUserStorage Key = `migration.vikunjafile.maxuserstorage`
 
 	CorsEnable  Key = `cors.enable`
 	CorsOrigins Key = `cors.origins`
@@ -202,6 +216,10 @@ const (
 	MetricsEnabled  Key = `metrics.enabled`
 	MetricsUsername Key = `metrics.username`
 	MetricsPassword Key = `metrics.password`
+	MetricsPprof    Key = `metrics.pprof`
+
+	HealthUsername Key = `health.username`
+	HealthPassword Key = `health.password`
 
 	DefaultSettingsAvatarProvider              Key = `defaultsettings.avatar_provider`
 	DefaultSettingsAvatarFileID                Key = `defaultsettings.avatar_file_id`
@@ -308,6 +326,15 @@ func (k Key) setDefault(i interface{}) {
 	viper.SetDefault(string(k), i)
 }
 
+// Per-category log levels fall back to log.level unless set explicitly.
+func applyDefaultLogLevels() {
+	for _, k := range []Key{LogDatabaseLevel, LogHTTPLevel, LogEventsLevel, LogMailLevel} {
+		if k.GetString() == "" {
+			k.Set(LogLevel.GetString())
+		}
+	}
+}
+
 // getRootpathLocation determines the default root path for Vikunja data.
 // It prefers the current working directory, which respects systemd's
 // WorkingDirectory= setting and is the most intuitive default.
@@ -343,6 +370,14 @@ func InitDefaultConfig() {
 	initDefaultConfig()
 	// Callers who skip InitConfig still need a usable secret.
 	generateServiceSecretIfEmpty()
+}
+
+// ResetForTests drops every value a test set and re-applies the defaults, so a later
+// InitConfig sees what it would in a fresh process. Restoring a saved value with Set
+// instead leaves it at viper's override level, where it outranks anything InitConfig loads.
+func ResetForTests() {
+	viper.Reset()
+	InitDefaultConfig()
 }
 
 func initDefaultConfig() {
@@ -404,7 +439,7 @@ func initDefaultConfig() {
 	DatabasePath.setDefault(ResolvePath("vikunja.db"))
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
-	DatabaseMaxConnectionLifetime.setDefault(10000)
+	DatabaseMaxConnectionLifetime.setDefault(1800000)
 	DatabaseSslMode.setDefault("disable")
 	DatabaseSslCert.setDefault("")
 	DatabaseSslKey.setDefault("")
@@ -435,13 +470,14 @@ func initDefaultConfig() {
 	LogLevel.setDefault("INFO")
 	LogFormat.setDefault("text")
 	LogDatabase.setDefault("off")
-	LogDatabaseLevel.setDefault("WARNING")
+	LogDatabaseLevel.setDefault("")
 	LogHTTP.setDefault("stdout")
+	LogHTTPLevel.setDefault("")
 	LogPath.setDefault(ResolvePath("logs"))
 	LogEvents.setDefault("off")
-	LogEventsLevel.setDefault("INFO")
+	LogEventsLevel.setDefault("")
 	LogMail.setDefault("off")
-	LogMailLevel.setDefault("INFO")
+	LogMailLevel.setDefault("")
 	// Rate Limit
 	RateLimitEnabled.setDefault(false)
 	RateLimitKind.setDefault("user")
@@ -449,6 +485,8 @@ func initDefaultConfig() {
 	RateLimitPeriod.setDefault(60)
 	RateLimitStore.setDefault("memory")
 	RateLimitNoAuthRoutesLimit.setDefault(10)
+	RateLimitTokenRefreshLimit.setDefault(60)
+	RateLimitBasicAuthLimit.setDefault(10)
 	// Files
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
@@ -470,6 +508,12 @@ func initDefaultConfig() {
 	MigrationTodoistEnable.setDefault(false)
 	MigrationTrelloEnable.setDefault(false)
 	MigrationMicrosoftTodoEnable.setDefault(false)
+	MigrationClaimTimeout.setDefault("5m")
+	MigrationMaxCSVRows.setDefault(100000)
+	MigrationMaxItems.setDefault(100000)
+	MigrationVikunjaFileMaxSize.setDefault("256MB")
+	MigrationVikunjaFileMaxFiles.setDefault(10000)
+	MigrationVikunjaFileMaxUserStorage.setDefault("1GB")
 	// Avatar
 	AvatarGravaterExpiration.setDefault(3600)
 	AvatarGravatarBaseURL.setDefault("https://www.gravatar.com")
@@ -481,6 +525,7 @@ func initDefaultConfig() {
 	KeyvalueType.setDefault("memory")
 	// Metrics
 	MetricsEnabled.setDefault(false)
+	MetricsPprof.setDefault(false)
 	// Settings
 	DefaultSettingsAvatarProvider.setDefault("initials")
 	DefaultSettingsOverdueTaskRemindersEnabled.setDefault(true)
@@ -503,9 +548,11 @@ func initDefaultConfig() {
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
 	PluginsLoader.setDefault("native")
+}
 
-	// Migrate deprecated webhook config keys to outgoingrequests.*
-	// This allows removing the old keys in a single place later.
+// migrateDeprecatedWebhookKeys must run after the config file and env are
+// loaded, before that only defaults are visible.
+func migrateDeprecatedWebhookKeys() {
 	if WebhooksAllowNonRoutableIPs.GetBool() && !OutgoingRequestsAllowNonRoutableIPs.GetBool() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksAllowNonRoutableIPs, OutgoingRequestsAllowNonRoutableIPs)
 		OutgoingRequestsAllowNonRoutableIPs.Set("true")
@@ -518,8 +565,69 @@ func initDefaultConfig() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyPassword, OutgoingRequestsProxyPassword)
 		OutgoingRequestsProxyPassword.Set(proxyPassword)
 	}
-	// License
-	LicenseKey.setDefault("")
+}
+
+func warnDeprecatedLegalKeys() {
+	deprecated := []Key{
+		LegalImprintURL,
+		LegalPrivacyURL,
+	}
+	for _, k := range deprecated {
+		if k.GetString() != "" {
+			log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q with a text and url instead.", k, Legal+".<link key>")
+		}
+	}
+}
+
+// LegalLink is one legal.<link key> entry.
+type LegalLink struct {
+	Text string
+	URL  string
+}
+
+// GetLegalLinks returns the legal.<link key> entries sorted by key, skipping incomplete ones.
+func GetLegalLinks() []LegalLink {
+	found := make(map[string]LegalLink)
+	collectLegalLinks(viper.GetStringMap(string(Legal)), "", found)
+
+	keys := slices.Sorted(maps.Keys(found))
+	links := make([]LegalLink, 0, len(keys))
+	for _, key := range keys {
+		links = append(links, found[key])
+	}
+	return links
+}
+
+// Env vars split at every underscore, so VIKUNJA_LEGAL_TERMS_OF_SERVICE_URL
+// arrives as legal.terms.of.service.url. Rejoin the path to get the link key back.
+func collectLegalLinks(node map[string]any, prefix string, found map[string]LegalLink) {
+	for key, value := range node {
+		path := key
+		if prefix != "" {
+			path = prefix + "_" + key
+		}
+
+		// Skips the deprecated imprinturl/privacyurl, which are plain strings.
+		child, err := cast.ToStringMapE(value)
+		if err != nil {
+			continue
+		}
+
+		_, hasText := child["text"]
+		_, hasURL := child["url"]
+		if !hasText && !hasURL {
+			collectLegalLinks(child, path, found)
+			continue
+		}
+
+		link := LegalLink{
+			Text: cast.ToString(child["text"]),
+			URL:  cast.ToString(child["url"]),
+		}
+		if link.Text != "" && link.URL != "" {
+			found[path] = link
+		}
+	}
 }
 
 // generateServiceSecretIfEmpty sets a random service.secret when none was configured.
@@ -625,6 +733,46 @@ func setConfigFromEnv() error {
 	return viper.MergeConfigMap(configMap)
 }
 
+// configFileOverride pins the config file, bypassing the search path. Set via
+// the --config flag.
+var configFileOverride string
+
+// SetConfigFile pins the config file InitConfig will load. Must be called before
+// InitConfig.
+func SetConfigFile(path string) {
+	configFileOverride = path
+}
+
+// anchorRootpathToConfigFile resolves a relative rootpath against a pinned
+// config file's directory, so it belongs to the install and not the caller's cwd.
+func anchorRootpathToConfigFile() {
+	if configFileOverride == "" {
+		return
+	}
+
+	configDir, err := filepath.Abs(filepath.Dir(viper.ConfigFileUsed()))
+	if err != nil {
+		return
+	}
+
+	if !viper.InConfig(string(ServiceRootpath)) {
+		ServiceRootpath.setDefault(configDir)
+	}
+
+	// An explicitly set value outranks a default, so rewrite at override level.
+	if rootpath := ServiceRootpath.GetString(); !filepath.IsAbs(rootpath) {
+		ServiceRootpath.Set(filepath.Join(configDir, rootpath))
+	}
+}
+
+// initDefaultConfig computed these before the config file and env could change the rootpath.
+func anchorPathsToRootpath() {
+	DatabasePath.setDefault(ResolvePath("vikunja.db"))
+	LogPath.setDefault(ResolvePath("logs"))
+	PluginsDir.setDefault(ResolvePath("plugins"))
+	PluginsDir.Set(ResolvePath(PluginsDir.GetString()))
+}
+
 // InitConfig initializes the config, sets defaults etc.
 func InitConfig() {
 
@@ -639,20 +787,40 @@ func InitConfig() {
 	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 
 	// Load the config file
-	viper.AddConfigPath(ServiceRootpath.GetString())
-	viper.AddConfigPath("/etc/vikunja/")
-
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Debugf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
+	if configFileOverride != "" {
+		viper.SetConfigFile(configFileOverride)
 	} else {
-		viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
+		viper.AddConfigPath(ServiceRootpath.GetString())
+		viper.AddConfigPath("/etc/vikunja/")
+
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Debugf("No home directory found, not using config from ~/.config/vikunja/. Error was: %s\n", err.Error())
+		} else {
+			viper.AddConfigPath(path.Join(homeDir, ".config", "vikunja"))
+		}
+
+		viper.AddConfigPath(".")
+		// Must not run in the override branch: SetConfigName resets the
+		// explicitly set config file in viper.
+		viper.SetConfigName("config")
 	}
 
-	viper.AddConfigPath(".")
-	viper.SetConfigName("config")
+	err := viper.ReadInConfig()
 
-	err = viper.ReadInConfig()
+	// An explicitly requested config file that can't be read is fatal — silently
+	// falling back to defaults is how people end up debugging the wrong config.
+	if configFileOverride != "" && err != nil {
+		log.Fatalf("Could not read config file %s: %s", configFileOverride, err.Error())
+	}
+
+	anchorRootpathToConfigFile()
+
+	envErr := setConfigFromEnv()
+	readConfigValuesFromFiles()
+	anchorPathsToRootpath()
+
+	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 
 	if viper.ConfigFileUsed() != "" {
 		log.Infof("Using config file: %s", viper.ConfigFileUsed())
@@ -660,19 +828,14 @@ func InitConfig() {
 		if err != nil {
 			log.Warning(err.Error())
 			log.Warning("Using default config.")
-		} else {
-			log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 		}
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")
 	}
 
-	err = setConfigFromEnv()
-	if err != nil {
-		log.Warningf("Failed to set config from environment variables: %s", err.Error())
+	if envErr != nil {
+		log.Warningf("Failed to set config from environment variables: %s", envErr.Error())
 	}
-
-	readConfigValuesFromFiles()
 
 	// Deprecation: migrate service.JWTSecret → service.secret only when the
 	// user has not explicitly set service.secret (so the new key takes precedence).
@@ -685,7 +848,12 @@ func InitConfig() {
 		}
 	}
 
+	migrateDeprecatedWebhookKeys()
+	warnDeprecatedLegalKeys()
+
 	generateServiceSecretIfEmpty()
+
+	applyDefaultLogLevels()
 
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
 		log.Fatalf("Could not parse gravatarbaseurl: %s", err)
@@ -731,9 +899,18 @@ func InitConfig() {
 		MigrationMicrosoftTodoRedirectURL.Set(ServicePublicURL.GetString() + "migrate/microsoft-todo")
 	}
 
+	if tz := ServiceTimeZone.GetString(); tz == "" {
+		log.Warning("service.timezone is not configured, falling back to UTC")
+		ServiceTimeZone.Set("UTC")
+	} else if _, err := time.LoadLocation(tz); err != nil {
+		log.Warningf("Configured service.timezone %q is invalid (%s), falling back to UTC", tz, err)
+		ServiceTimeZone.Set("UTC")
+	}
+
 	if tz := DefaultSettingsTimezone.GetString(); tz == "" {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	} else if _, err := time.LoadLocation(tz); err != nil {
+		log.Warningf("Configured defaultsettings.timezone %q is invalid (%s), falling back to %s", tz, err, ServiceTimeZone.GetString())
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	}
 

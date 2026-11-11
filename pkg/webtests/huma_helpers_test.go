@@ -32,7 +32,7 @@ import (
 // drive the Echo+Huma stack directly without webHandlerTestV2.
 func humaTokenFor(t *testing.T, u *user.User) string {
 	t.Helper()
-	tok, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	tok, err := auth.NewUserJWTAuthtoken(u, testSessionID(u))
 	require.NoError(t, err)
 	return tok
 }

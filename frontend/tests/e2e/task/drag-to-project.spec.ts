@@ -69,6 +69,48 @@ async function createProjectsWithTasks() {
 }
 
 test.describe('Drag Task to Project in Sidebar', () => {
+	test.describe('With subprojects included', () => {
+		async function createParentWithSubproject() {
+			const parent = (await ProjectFactory.create(1, {id: 1, title: 'Parent Project'}))[0]
+			const subproject = (await ProjectFactory.create(1, {
+				id: 2,
+				title: 'Subproject',
+				parent_project_id: 1,
+			}, false))[0]
+
+			const parentList = (await ProjectViewFactory.create(1, {id: 1, project_id: 1, view_kind: 0}))[0]
+			await ProjectViewFactory.create(1, {id: 2, project_id: 2, view_kind: 0}, false)
+
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				title: 'Task in the subproject',
+				project_id: 2,
+			})
+
+			return {parent, subproject, parentList, task: tasks[0]}
+		}
+
+		test('Keeps a task visible when it is moved from a subproject to the parent', async ({authenticatedPage: page}) => {
+			const {parent, parentList, task} = await createParentWithSubproject()
+
+			await page.goto(`/projects/${parent.id}/${parentList.id}?include_subprojects=true`)
+
+			await expect(page.locator('.tasks')).toContainText(task.title)
+
+			const taskInList = page.locator('.tasks .single-task').filter({hasText: task.title})
+			const parentInSidebar = page.locator('li[data-project-id="' + parent.id + '"]')
+
+			// The parent's <li> wraps the subproject, so the centre would hit the child row.
+			await taskInList.dragTo(parentInSidebar, {targetPosition: {x: 30, y: 12}})
+
+			await expect(page.locator('.global-notification')).toContainText('moved to')
+
+			await expect(page.locator('.tasks')).toContainText(task.title)
+			await page.reload()
+			await expect(page.locator('.tasks')).toContainText(task.title)
+		})
+	})
+
 	test.describe('From List View', () => {
 		test('Can drag a task to another project in the sidebar', async ({authenticatedPage: page}) => {
 			const {sourceProject, targetProject, sourceListView, tasks} = await createProjectsWithTasks()
@@ -144,6 +186,67 @@ test.describe('Drag Task to Project in Sidebar', () => {
 			// Verify task appears in target project
 			await page.goto(`/projects/${targetProject.id}/3`)
 			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+		})
+
+		test('Dragging a card from a saved-filter kanban to a sidebar project removes it from the board', async ({authenticatedPage: page, apiContext, userToken}) => {
+			const headers = {Authorization: `Bearer ${userToken}`}
+			const projects = await ProjectFactory.create(2, {
+				title: i => i === 0 ? 'Source Project' : 'Target Project',
+			})
+			await ProjectViewFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				view_kind: 0,
+			})
+			await ProjectViewFactory.create(1, {
+				id: 2,
+				project_id: projects[1].id,
+				view_kind: 0,
+			}, false)
+
+			const filter = await apiContext.post('/api/v2/filters', {
+				headers,
+				data: {title: 'Source only', filters: {filter: `project = ${projects[0].id}`}},
+			})
+			expect(filter.ok()).toBeTruthy()
+			const filterProjectId = -(await filter.json()).id - 1
+
+			// Saved filters get no stored Kanban view, so seed one to exercise the pseudo-project board.
+			const [filterView] = await ProjectViewFactory.create(1, {
+				id: 80,
+				project_id: filterProjectId,
+				view_kind: 3,
+				bucket_configuration_mode: 1,
+			}, false)
+			const buckets = await BucketFactory.create(1, {project_view_id: filterView.id})
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				title: 'Filtered task',
+				project_id: projects[0].id,
+			})
+			await TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: filterView.id,
+			}, false)
+
+			const boardRoute = `/projects/${filterProjectId}/${filterView.id}`
+			await page.goto(boardRoute)
+			const card = page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title})
+			await expect(card).toBeVisible()
+
+			await card.dragTo(page.locator(`li[data-project-id="${projects[1].id}"]`))
+
+			await expect(page.locator('.global-notification')).toContainText('moved to')
+			await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title})).toHaveCount(0)
+
+			await page.reload()
+			await expect(page.locator('.kanban .bucket').first()).toBeVisible()
+			await expect(page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title})).toHaveCount(0)
+
+			const stored = await apiContext.get(`tasks/${tasks[0].id}`, {headers})
+			expect(stored.ok()).toBeTruthy()
+			expect((await stored.json()).project_id).toBe(projects[1].id)
 		})
 
 		test('Does not move task when dropped on the same project', async ({authenticatedPage: page}) => {
@@ -293,8 +396,8 @@ test.describe('Drag Task to Project in Sidebar', () => {
 			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 
 			// Intercept the task update API call and return an error
-			await page.route('**/api/v1/tasks/*', async (route) => {
-				if (route.request().method() === 'POST') {
+			await page.route('**/api/v2/tasks/*', async (route) => {
+				if (route.request().method() === 'PATCH') {
 					await route.fulfill({
 						status: 500,
 						contentType: 'application/json',

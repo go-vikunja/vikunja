@@ -37,7 +37,7 @@ func RegisterTaskAssigneeBulkRoutes(api huma.API) {
 		Summary:     "Replace all assignees of a task",
 		Description: "Replaces the task's full assignee set with the users in the body: users not in the list are unassigned, new ones are added. Pass an empty array to unassign everyone. Each assignee must have access to the task's project, and the caller needs write access to the task.",
 		Method:      http.MethodPut,
-		Path:        "/tasks/{projecttask}/assignees/bulk",
+		Path:        "/tasks/{task}/assignees/bulk",
 		Tags:        tags,
 	}, taskAssigneesBulk)
 }
@@ -45,7 +45,7 @@ func RegisterTaskAssigneeBulkRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterTaskAssigneeBulkRoutes) }
 
 func taskAssigneesBulk(ctx context.Context, in *struct {
-	TaskID int64 `path:"projecttask"`
+	TaskID int64 `path:"task"`
 	Body   models.BulkAssignees
 }) (*singleBody[models.BulkAssignees], error) {
 	a, err := authFromCtx(ctx)

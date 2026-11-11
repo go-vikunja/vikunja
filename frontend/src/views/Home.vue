@@ -25,7 +25,7 @@
 		/>
 		<ImportHint v-if="tasksLoaded" />
 		<div
-			v-if="authStore.settings.frontendSettings.showLastViewed !== false && projectHistory.length > 0"
+			v-if="authStore.settings.frontend_settings.show_last_viewed !== false && projectHistory.length > 0"
 			class="is-max-width-desktop has-text-start mbs-4"
 		>
 			<h2>{{ $t('home.lastViewed') }}</h2>
@@ -36,7 +36,7 @@
 			/>
 		</div>
 		<ShowTasks
-			v-if="projectStore.hasProjects"
+			v-if="projectList.hasProjects"
 			:key="showTasksKey"
 			:label-ids="labelIds"
 			class="show-tasks"
@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 
 import Message from '@/components/misc/Message.vue'
@@ -58,18 +58,33 @@ import ImportHint from '@/components/home/ImportHint.vue'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import {parseQuickAddPrefill, QUICK_ADD_PREFILL_PARAMS} from '@/helpers/quickAddPrefill'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
+import {useBaseStore} from '@/stores/base'
 
 const salutation = useDaytimeSalutation()
 
 const authStore = useAuthStore()
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const route = useRoute()
 const router = useRouter()
+const baseStore = useBaseStore()
+
+watch(() => route.query, query => {
+	const prefill = parseQuickAddPrefill(query)
+	if (prefill === null) {
+		return
+	}
+	baseStore.setQuickActionsActive(true, prefill)
+	// Stripped so a reload doesn't open the dialog again.
+	const rest = {...query}
+	QUICK_ADD_PREFILL_PARAMS.forEach(param => delete rest[param])
+	router.replace({name: 'home', query: rest})
+}, {immediate: true})
 
 const projectHistory = computed(() => {
 	// If we don't check this, it tries to load the project background right after logging out	
@@ -78,13 +93,13 @@ const projectHistory = computed(() => {
 	}
 	
 	return getHistory()
-		.map(l => projectStore.projects[l.id])
+		.map(l => projectList.projects[l.id])
 		.filter(l => Boolean(l))
 })
 
 const tasksLoaded = ref(false)
 
-const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
+const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletion_scheduled_at))
 
 // Extract label IDs from query parameter
 const labelIds = computed(() => {
@@ -92,7 +107,7 @@ const labelIds = computed(() => {
 	if (!labelsParam) {
 		return undefined
 	}
-	return Array.isArray(labelsParam) ? labelsParam : [labelsParam]
+	return Array.isArray(labelsParam) ? labelsParam.filter((id): id is string => id !== null) : [labelsParam]
 })
 
 // This is to reload the tasks list after adding a new task through the global task add.

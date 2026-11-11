@@ -18,7 +18,9 @@ package caldav
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -28,42 +30,53 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// propertyUpdateXML models RFC 4918 §9.2 <propertyupdate> just enough to
-// know which properties the client tried to change; we never apply them.
-type propertyUpdateXML struct {
-	XMLName xml.Name         `xml:"propertyupdate"`
-	Set     []propUpdateItem `xml:"set"`
-	Remove  []propUpdateItem `xml:"remove"`
-}
+const (
+	maxPropPatchBodySize       = 64 * 1024
+	maxPropPatchProperties     = 100
+	maxPropPatchNamespaceBytes = 256
+)
 
-type propUpdateItem struct {
-	Prop propNames `xml:"prop"`
-}
+var errTooManyProperties = errors.New("too many properties")
 
-type propNames struct {
-	Names []struct {
-		XMLName xml.Name
-	} `xml:",any"`
-}
-
+// parsePropertyUpdate returns the distinct property names under
+// <propertyupdate><set|remove><prop>. Properties are echoed back with their
+// namespace, so namespace length and property count are capped to bound the
+// response size.
 func parsePropertyUpdate(body string) ([]xml.Name, error) {
-	var pu propertyUpdateXML
-	if err := xml.Unmarshal([]byte(body), &pu); err != nil {
-		return nil, err
-	}
-
+	d := xml.NewDecoder(strings.NewReader(body))
+	seen := map[xml.Name]struct{}{}
 	var names []xml.Name
-	for _, item := range pu.Set {
-		for _, n := range item.Prop.Names {
-			names = append(names, n.XMLName)
+	var path []string
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return nil, err
+		}
+		switch t := tok.(type) {
+		case xml.StartElement:
+			if len(path) == 0 && t.Name.Local != "propertyupdate" {
+				return nil, fmt.Errorf("expected <propertyupdate>, got <%s>", t.Name.Local)
+			}
+			if len(path) == 3 && (path[1] == "set" || path[1] == "remove") && path[2] == "prop" {
+				if len(t.Name.Space) > maxPropPatchNamespaceBytes {
+					return nil, fmt.Errorf("namespace of <%s> too long", t.Name.Local)
+				}
+				if _, ok := seen[t.Name]; !ok {
+					if len(names) == maxPropPatchProperties {
+						return nil, errTooManyProperties
+					}
+					seen[t.Name] = struct{}{}
+					names = append(names, t.Name)
+				}
+			}
+			path = append(path, t.Name.Local)
+		case xml.EndElement:
+			path = path[:len(path)-1]
+			if len(path) == 0 {
+				return names, nil
+			}
 		}
 	}
-	for _, item := range pu.Remove {
-		for _, n := range item.Prop.Names {
-			names = append(names, n.XMLName)
-		}
-	}
-	return names, nil
 }
 
 // handlePropPatch answers PROPPATCH (RFC 4918 §9.2) without applying any
@@ -72,6 +85,10 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 // sabre/dav uses for protected properties. Clients treat this as best-effort
 // and keep syncing instead of aborting on the 501 caldav-go falls back to.
 func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User) error {
+	if len(body) > maxPropPatchBodySize {
+		return c.String(http.StatusRequestEntityTooLarge, "Request Entity Too Large")
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
@@ -84,6 +101,9 @@ func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTa
 	}
 
 	props, err := parsePropertyUpdate(body)
+	if errors.Is(err, errTooManyProperties) {
+		return c.String(http.StatusRequestEntityTooLarge, "Request Entity Too Large")
+	}
 	if err != nil {
 		return c.String(http.StatusBadRequest, "Bad Request")
 	}
@@ -108,7 +128,7 @@ func writePropPatchResponse(c *echo.Context, props []xml.Name) error {
 
 	c.Response().Header().Set("Content-Type", "application/xml; charset=utf-8")
 	c.Response().WriteHeader(http.StatusMultiStatus)
-	_, err := fmt.Fprint(c.Response(), sb.String())
+	_, err := io.WriteString(c.Response(), sb.String())
 	return err
 }
 

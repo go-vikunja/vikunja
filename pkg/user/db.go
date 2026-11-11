@@ -28,5 +28,6 @@ func GetTables() []interface{} {
 		&User{},
 		&TOTP{},
 		&Token{},
+		&Identity{},
 	}
 }

@@ -1,8 +1,11 @@
 import {test, expect} from '../../support/fixtures'
 import {LabelFactory} from '../../factories/labels'
 import {LabelTaskFactory} from '../../factories/label_task'
+import {BucketFactory} from '../../factories/bucket'
 import {LinkShareFactory} from '../../factories/link_sharing'
+import {TaskBucketFactory} from '../../factories/task_buckets'
 import {TaskFactory} from '../../factories/task'
+import {TaskReminderFactory} from '../../factories/task_reminders'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
 import {login, setupApiUrl} from '../../support/authenticateUser'
@@ -27,9 +30,60 @@ async function prepareLinkShare() {
 }
 
 test.describe('Link shares', () => {
+	test('creates named password shares, preserves view selections and deletes a share', async ({authenticatedPage: page, browser, baseURL}) => {
+		const [project] = await createProjects(1)
+		await page.goto(`/projects/${project.id}/settings/share`)
+		const panel = page.locator('.sharables-project')
+		await panel.getByRole('button', {name: 'Create a link share'}).click()
+		await panel.locator('#linkShareName').fill('Client link')
+		await panel.locator('#linkSharePassword').fill('client-password')
+		const createdResponse = page.waitForResponse(response => new URL(response.url()).pathname === `/api/v2/projects/${project.id}/shares` && response.request().method() === 'POST')
+		await panel.getByRole('button', {name: 'Share', exact: true}).click()
+		const created = await (await createdResponse).json()
+		expect(created.sharing_type).toBe(2)
+		expect(created.password ?? '').toBe('')
+		const row = panel.getByRole('row').filter({hasText: 'Client link'})
+		await expect(row).toBeVisible()
+		await row.getByRole('combobox').selectOption('2')
+		await expect(row.locator('input[readonly]')).toHaveValue(new RegExp(`/share/${created.hash}/auth\\?view=2$`))
+		await panel.getByRole('button', {name: 'Create a link share'}).click()
+		await panel.locator('#linkShareName').fill('Second link')
+		await panel.getByRole('button', {name: 'Share', exact: true}).click()
+		await expect(panel.getByRole('row').filter({hasText: 'Second link'})).toBeVisible()
+		await expect(row.getByRole('combobox')).toHaveValue('2')
+		const shareUrl = new URL(await row.locator('input[readonly]').inputValue())
+		expect(shareUrl.pathname + shareUrl.search).toBe(`/share/${created.hash}/auth?view=2`)
+
+		const guest = await browser.newContext({baseURL})
+		try {
+			const guestPage = await guest.newPage()
+			await setupApiUrl(guestPage)
+			await guestPage.goto(shareUrl.pathname + shareUrl.search)
+			const passwordInput = guestPage.locator('input#linkSharePassword')
+			await passwordInput.fill('wrong-password')
+			const rejected = guestPage.waitForResponse(r => r.url().includes(`/shares/${created.hash}/auth`) && r.request().method() === 'POST')
+			await guestPage.locator('.button').filter({hasText: 'Login'}).click()
+			expect((await rejected).status()).toBeGreaterThanOrEqual(400)
+			await expect(guestPage).toHaveURL(new RegExp(`/share/${created.hash}/auth`))
+			await passwordInput.fill('client-password')
+			await guestPage.locator('.button').filter({hasText: 'Login'}).click()
+			await expect(guestPage.locator('h1.title')).toContainText(project.title)
+			await expect(guestPage).toHaveURL(`/projects/${project.id}/2#share-auth-token=${created.hash}`)
+		} finally {
+			await guest.close()
+		}
+
+		await page.reload()
+		await expect(row).toBeVisible()
+		await row.getByRole('button', {name: 'Remove a link share'}).click()
+		await page.locator('dialog[open]').getByRole('button', {name: 'Do it!'}).click()
+		await expect(row).toHaveCount(0)
+		await expect(panel.getByRole('row').filter({hasText: 'Second link'})).toBeVisible()
+	})
+
 	// The anonymous link share tests below don't use the `authenticatedPage`
 	// fixture (which wires up the API URL via `login()`), so they'd otherwise
-	// hit the default `window.API_URL = '/api/v1'` relative path baked into
+	// hit the default same-origin `window.API_URL = ''` baked into
 	// index.html and never reach the API running on a different port.
 	test.beforeEach(async ({page}) => {
 		await setupApiUrl(page)
@@ -63,6 +117,22 @@ test.describe('Link shares', () => {
 		await page.goto(`/tasks/${tasks[0].id}#share-auth-token=${share.hash}`)
 
 		await expect(page.locator('h1.title.input')).toContainText(tasks[0].title)
+	})
+
+	test('Shows a read-only task detail view to a link share without edit controls', async ({page}) => {
+		const {share, tasks} = await prepareLinkShare()
+		await TaskReminderFactory.create(1, {task_id: tasks[0].id})
+
+		await page.goto(`/tasks/${tasks[0].id}#share-auth-token=${share.hash}`)
+
+		const reminders = page.locator('.task-view .property-reminders')
+		await expect(reminders).toBeVisible()
+		await expect(page.locator('.task-view .sidebar-toolbar')).toHaveCount(0)
+		await expect(page.locator('.task-view .property-priority')).toHaveCount(0)
+		await expect(reminders.getByRole('button', {name: 'Add a reminder…'})).toHaveCount(0)
+
+		const reminderTrigger = reminders.locator('.reminder-detail > .simple-button')
+		await expect(reminderTrigger).toBeDisabled()
 	})
 
 	// Regression test for #2546: a logged-in user opening a public link share URL
@@ -125,7 +195,6 @@ test.describe('Link share: label picker', () => {
 		const [task] = await TaskFactory.create(1, {
 			project_id: projects[0].id,
 		})
-		// A label on the task makes the labels field render without clicking "Add Labels" first.
 		const [label] = await LabelFactory.create(1)
 		await LabelTaskFactory.create(1, {
 			task_id: task.id,
@@ -138,11 +207,11 @@ test.describe('Link share: label picker', () => {
 
 		await page.goto(`/tasks/${task.id}#share-auth-token=${share.hash}`)
 
-		const labelInput = page.locator('.task-view .details.labels-list .multiselect input')
+		const labelInput = page.locator('.task-view .property-labels .multiselect input')
 		await expect(labelInput).toBeVisible()
 		await labelInput.fill('label-that-does-not-exist')
 
-		const searchResults = page.locator('.task-view .details.labels-list .multiselect .search-results')
+		const searchResults = page.locator('.task-view .property-labels .multiselect .search-results')
 		await expect(searchResults.locator('.search-result-hint')).toContainText('New labels can\'t be created from a shared link')
 		await expect(searchResults.locator('.is-create-option')).toHaveCount(0)
 	})
@@ -286,5 +355,68 @@ test.describe('Link share: quick add magic labels', () => {
 		// Link shares may not create labels: the label is skipped with an error, the task is still created.
 		await expect(page.locator('.global-notification')).toContainText('could not be created')
 		await expect(page.locator('.tasks')).toContainText('New task via share')
+	})
+})
+
+// Regression test for #3584: the link share shell wraps the router view in a
+// Card, which used to add Bulma's `.content` typography class around the whole
+// project view. The Kanban board is built from nested ul/li, so `.content ul`,
+// `.content ul ul` and `.content li + li` leaked margins that the logged-in
+// view (rendered without `.content`) never had.
+test.describe('Link share: Kanban margins', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('does not leak Bulma .content list margins into the Kanban board', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		const kanbanView = projects[0].views[3]
+		const buckets = await BucketFactory.create(1, {
+			project_view_id: kanbanView.id,
+		})
+		const tasks = await TaskFactory.create(2, {
+			project_id: projects[0].id,
+		})
+		for (const task of tasks) {
+			await TaskBucketFactory.create(1, {
+				task_id: task.id,
+				bucket_id: buckets[0].id,
+				project_view_id: kanbanView.id,
+			}, false)
+		}
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 0,
+		})
+
+		await page.goto(`/projects/${projects[0].id}/${kanbanView.id}#share-auth-token=${share.hash}`)
+
+		const bucketContainer = page.locator('ul.kanban-bucket-container')
+		await expect(bucketContainer).toBeVisible()
+		await expect(page.locator('.task-item')).toHaveCount(2)
+
+		const margins = await page.evaluate(() => {
+			const marginOf = (el: Element | null) => {
+				if (el === null) {
+					return null
+				}
+				const style = window.getComputedStyle(el)
+				return {
+					top: style.marginBlockStart,
+					start: style.marginInlineStart,
+				}
+			}
+
+			return {
+				bucketContainer: marginOf(document.querySelector('ul.kanban-bucket-container')),
+				taskList: marginOf(document.querySelector('.bucket ul.tasks')),
+				secondTask: marginOf(document.querySelectorAll('.bucket .task-item')[1] ?? null),
+			}
+		})
+
+		expect(margins.bucketContainer).toEqual({top: '0px', start: '0px'})
+		expect(margins.taskList).toEqual({top: '0px', start: '0px'})
+		expect(margins.secondTask).toEqual({top: '0px', start: '0px'})
 	})
 })

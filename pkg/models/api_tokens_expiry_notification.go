@@ -17,10 +17,13 @@
 package models
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 func init() {
@@ -41,7 +44,7 @@ func (n *APITokenExpiringWeekNotification) ToTitle(lang string) string {
 func (n *APITokenExpiringWeekNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.api_token.expiring.week.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"))).
+		Line(i18n.T(lang, "notifications.api_token.expiring.week.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"), utils.HumanizeDuration(time.Until(n.Token.ExpiresAt), lang))).
 		Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens").
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -71,7 +74,7 @@ func (n *APITokenExpiringDayNotification) ToTitle(lang string) string {
 func (n *APITokenExpiringDayNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.api_token.expiring.day.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"))).
+		Line(i18n.T(lang, "notifications.api_token.expiring.day.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"), utils.HumanizeDuration(time.Until(n.Token.ExpiresAt), lang))).
 		Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens").
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }

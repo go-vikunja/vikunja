@@ -19,7 +19,10 @@ package openid
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
+	"strings"
+	"sync"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -212,6 +215,19 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
+func FindProviderByIssuer(providers []*Provider, issuer string) *Provider {
+	for _, provider := range providers {
+		providerIssuer, err := provider.Issuer()
+		if err != nil {
+			continue
+		}
+		if providerIssuer == issuer {
+			return provider
+		}
+	}
+	return nil
+}
+
 // getCachedProvider returns the provider from keyvalue without re-establishing
 // the live OIDC connection, so the logout path never blocks on an unreachable OP.
 func getCachedProvider(key string) (provider *Provider, err error) {
@@ -255,6 +271,32 @@ func parseBoolField(pi map[string]interface{}, key string) (val bool, err error)
 	default:
 		return false, fmt.Errorf("expected bool, got %T", raw)
 	}
+}
+
+// Providers are rebuilt on cache cleanup and availability retries; warn once per process.
+var fallbackDeprecationWarned sync.Map
+
+func logFallbackOptionsDeprecation(key string, emailFallback, usernameFallback bool) {
+	var options []string
+	if emailFallback {
+		options = append(options, "emailfallback")
+	}
+	if usernameFallback {
+		options = append(options, "usernamefallback")
+	}
+	if len(options) == 0 {
+		return
+	}
+	if _, warned := fallbackDeprecationWarned.LoadOrStore(key, true); warned {
+		return
+	}
+
+	log.Warningf(
+		"OpenID provider %q has the deprecated option(s) %s enabled. "+
+			"They will be removed in a future release; users must link the provider from their account settings before then.",
+		key,
+		strings.Join(options, ", "),
+	)
 }
 
 func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provider, err error) {
@@ -329,6 +371,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	if err != nil {
 		log.Errorf("requireavailability is not a boolean for provider %s: %s", key, err)
 	}
+	logFallbackOptionsDeprecation(key, emailFallback, usernameFallback)
 
 	provider = &Provider{
 		Name:                name,
@@ -356,11 +399,14 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		return
 	}
 
+	// Discovery returns the OAuth2 endpoints, but not the auth style.
+	endpoint := provider.openIDProvider.Endpoint()
+	endpoint.AuthStyle = provider.discoveredTokenEndpointAuthStyle()
+
 	provider.Oauth2Config = &oauth2.Config{
 		ClientID:     provider.ClientID,
 		ClientSecret: provider.ClientSecret,
-		// Discovery returns the OAuth2 endpoints.
-		Endpoint: provider.openIDProvider.Endpoint(),
+		Endpoint:     endpoint,
 
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: []string{oidc.ScopeOpenID, "profile", "email"},
@@ -371,6 +417,48 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	provider.EndSessionURL = provider.discoveredEndSessionEndpoint()
 
 	return
+}
+
+const (
+	authMethodBasic = "client_secret_basic"
+	authMethodPost  = "client_secret_post"
+)
+
+func authStyleName(style oauth2.AuthStyle) string {
+	switch style {
+	case oauth2.AuthStyleInHeader:
+		return authMethodBasic
+	case oauth2.AuthStyleInParams:
+		return authMethodPost
+	case oauth2.AuthStyleAutoDetect:
+		return "auto"
+	default:
+		return "auto"
+	}
+}
+
+// Fallback preserves autodetection for OIDC providers that omit the discovery field.
+func (p *Provider) discoveredTokenEndpointAuthStyle() oauth2.AuthStyle {
+	if p.openIDProvider == nil {
+		return oauth2.AuthStyleAutoDetect
+	}
+
+	var meta struct {
+		TokenEndpointAuthMethodsSupported []string `json:"token_endpoint_auth_methods_supported"`
+	}
+	if err := p.openIDProvider.Claims(&meta); err != nil {
+		log.Debugf("Could not read token_endpoint_auth_methods_supported for provider %s: %v", p.Key, err)
+		return oauth2.AuthStyleAutoDetect
+	}
+
+	switch {
+	case slices.Contains(meta.TokenEndpointAuthMethodsSupported, authMethodBasic):
+		return oauth2.AuthStyleInHeader
+	case slices.Contains(meta.TokenEndpointAuthMethodsSupported, authMethodPost):
+		return oauth2.AuthStyleInParams
+	default:
+		return oauth2.AuthStyleAutoDetect
+	}
 }
 
 // CleanupSavedOpenIDProviders removes all cached provider state so the next

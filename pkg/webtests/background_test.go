@@ -54,6 +54,7 @@ func TestRemoveProjectBackgroundPreservesTitle(t *testing.T) {
 		assert.True(t, has)
 		assert.Equal(t, "Test35 with background", project.Title)
 		assert.Equal(t, int64(0), project.BackgroundFileID)
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
 	})
 }
 

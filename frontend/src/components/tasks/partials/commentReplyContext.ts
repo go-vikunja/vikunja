@@ -1,5 +1,5 @@
 import type {InjectionKey} from 'vue'
-import type {ITaskComment} from '@/modelTypes/ITaskComment'
+import type {TaskComment as ITaskComment} from '@/client/generated'
 
 export interface CommentReplyContext {
 	findComment: (id: number) => ITaskComment | undefined

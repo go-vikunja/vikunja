@@ -1,15 +1,16 @@
 <template>
 	<div
+		ref="card"
 		class="task loader-container draggable"
 		:class="{
-			'is-loading': loadingInternal || loading,
-			'draggable': !(loadingInternal || loading),
+			'is-loading': showLoading,
+			'draggable': !loadingInternal,
 			'has-light-text': !colorIsDark(color),
 			'has-custom-background-color': color ?? undefined,
 		}"
 		:style="{'background-color': color ?? undefined}"
 		:data-task-id="task.id"
-		:data-project-id="task.projectId"
+		:data-project-id="task.project_id"
 		:data-is-overdue="isOverdue || undefined"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
@@ -29,12 +30,7 @@
 						:is-done="task.done"
 						variant="small"
 					/>
-					<template v-if="task.identifier === ''">
-						#{{ task.index }}
-					</template>
-					<template v-else>
-						{{ task.identifier }}
-					</template>
+					{{ getTaskIdentifier(task) }}
 					<span
 						v-if="showTaskPosition"
 						class="tw:text-red-600 tw:ps-2"
@@ -43,15 +39,19 @@
 					</span>
 				</span>
 				<span
-					v-if="task.dueDate > 0"
-					v-tooltip="formatDateLong(task.dueDate)"
+					v-if="new Date(task.due_date ?? 0).getTime() > 0"
+					v-tooltip="formatDateLong(task.due_date)"
 					class="due-date"
 				>
 					<span class="icon">
-						<Icon :icon="['far', 'calendar-alt']" />
+						<OverdueIndicator v-if="isOverdue" />
+						<Icon
+							v-else
+							:icon="['far', 'calendar-alt']"
+						/>
 					</span>
-					<time :datetime="formatISO(task.dueDate)">
-						{{ formatDisplayDate(task.dueDate) }}
+					<time :datetime="formatISO(task.due_date)">
+						{{ formatDisplayDate(task.due_date) }}
 					</time>
 				</span>
 			</div>
@@ -77,9 +77,9 @@
 			</span>
 
 			<ProgressBar
-				v-if="task.percentDone > 0"
+				v-if="task.percent_done > 0"
 				class="task-progress"
-				:value="task.percentDone * 100"
+				:value="task.percent_done * 100"
 			/>
 			<div class="footer">
 				<Labels :labels="task.labels" />
@@ -103,7 +103,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="task.repeatAfter.amount > 0"
+					v-if="task.repeat_after > 0"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -127,59 +127,61 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import {useGlobalNow} from '@/composables/useGlobalNow'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
+import OverdueIndicator from '@/components/tasks/partials/OverdueIndicator.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from './ChecklistSummary.vue'
 import CommentCount from './CommentCount.vue'
 
-import {getHexColor} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
-import type {IProject} from '@/modelTypes/IProject'
-import {SUPPORTED_IMAGE_SUFFIX} from '@/models/attachment'
-import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
+import {getHexColor, getTaskIdentifier} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
+import type {TaskResponse} from '@/client/queries/tasks'
+import {canPreviewImage} from '@/helpers/attachmentPreview'
+import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
+import {ApiError} from '@/client/problem'
 
 import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
-import {useTaskStore} from '@/stores/tasks'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
-const props = withDefaults(defineProps<{
-	task: ITask,
-	projectId: IProject['id'],
-	loading?: boolean,
-}>(), {
-	loading: false,
-})
+const props = defineProps<{
+	task: TaskResponse,
+	projectId: number,
+}>()
 
 const emit = defineEmits<{
 	'taskCompletedRecurring': [task: ITask]
 }>()
 
 const router = useRouter()
+const updateTask = useUpdateTaskMutation()
 
 const loadingInternal = ref(false)
+const showLoading = useDelayedLoading(loadingInternal)
 
-const color = computed(() => getHexColor(props.task.hexColor))
+const color = computed(() => getHexColor(props.task.hex_color))
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 
 const projectTitle = computed(() => {
-	if (props.projectId === props.task.projectId) {
+	if (props.projectId === props.task.project_id) {
 		return
 	}
 	
-	const project = projectStore.projects[props.task.projectId]
+	const project = projectList.projects[props.task.project_id]
 	return project?.title
 })
 
@@ -188,18 +190,18 @@ const showTaskPosition = computed(() => window.DEBUG_TASK_POSITION)
 const {now} = useGlobalNow()
 const isOverdue = computed(() => (
 	!props.task.done &&
-	props.task.dueDate !== null &&
-	props.task.dueDate.getTime() > 0 &&
-	props.task.dueDate.getTime() <= now.value.getTime()
+	props.task.due_date !== null &&
+	new Date(props.task.due_date ?? 0).getTime() > 0 &&
+	new Date(props.task.due_date ?? 0).getTime() <= now.value.getTime()
 ))
 
-async function toggleTaskDone(task: ITask) {
-	const isRecurringTask = task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+async function toggleTaskDone(task: TaskResponse) {
+	const isRecurringTask = task.repeat_after > 0 || task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
 	const wasBeingMarkedDone = !task.done
 	
 	loadingInternal.value = true
 	try {
-		const updatedTask = await useTaskStore().update({
+		const updatedTask = await updateTask.mutateAsync({
 			...task,
 			done: !task.done,
 		})
@@ -227,26 +229,83 @@ function openTaskDetail() {
 
 const coverImageBlobUrl = ref<string | null>(null)
 
-async function maybeDownloadCoverImage() {
-	if (!props.task.coverImageAttachmentId) {
-		coverImageBlobUrl.value = null
-		return
-	}
-
-	const attachment = props.task.attachments.find(a => a.id === props.task.coverImageAttachmentId)
-	if (!attachment || !SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))) {
-		return
-	}
-
-	const attachmentService = new AttachmentService()
-	coverImageBlobUrl.value = await attachmentService.getBlobUrl(attachment, PREVIEW_SIZE.LG)
+function showCoverImage(url: string | null) {
+	releaseAttachmentUrl(coverImageBlobUrl.value)
+	coverImageBlobUrl.value = url
 }
 
+let coverRequest = 0
+let coverRetry: ReturnType<typeof setTimeout> | undefined
+// the server answers 503 while its preview queue is full
+const COVER_RETRY_DELAY = 5000
+
+async function maybeDownloadCoverImage(retryWhenBusy = true) {
+	clearTimeout(coverRetry)
+	const request = ++coverRequest
+	if (!props.task.cover_image_attachment_id) {
+		showCoverImage(null)
+		return
+	}
+
+	const attachment = props.task.attachments.find(a => a.id === props.task.cover_image_attachment_id)
+	if (!attachment || !canPreviewImage(attachment)) {
+		return
+	}
+
+	try {
+		const url = await fetchAttachmentUrl({id: attachment.id!, task_id: props.task.id}, 'lg')
+		if (request !== coverRequest) {
+			releaseAttachmentUrl(url)
+			return
+		}
+		showCoverImage(url)
+	} catch (error) {
+		// the cover is decorative, the card works without it
+		if (retryWhenBusy && request === coverRequest && error instanceof ApiError && error.status === 503) {
+			coverRetry = setTimeout(() => maybeDownloadCoverImage(false), COVER_RETRY_DELAY)
+		}
+	}
+}
+
+const card = useTemplateRef<HTMLElement>('card')
+const hasBeenVisible = ref(false)
+let visibilityObserver: IntersectionObserver | undefined
+
+// rootMargin only grows the viewport; buckets scroll on their own and need scrollMargin
+const COVER_PRELOAD_MARGIN = '200px'
+
+onMounted(() => {
+	visibilityObserver = new IntersectionObserver(
+		entries => {
+			if (!entries.some(entry => entry.isIntersecting)) {
+				return
+			}
+			hasBeenVisible.value = true
+			visibilityObserver?.disconnect()
+		},
+		{
+			rootMargin: COVER_PRELOAD_MARGIN,
+			scrollMargin: COVER_PRELOAD_MARGIN,
+		},
+	)
+	visibilityObserver.observe(card.value!)
+})
+
 watch(
-	() => props.task.coverImageAttachmentId,
-	maybeDownloadCoverImage,
-	{immediate: true},
+	[hasBeenVisible, () => props.task.cover_image_attachment_id],
+	([visible]) => {
+		if (visible) {
+			maybeDownloadCoverImage()
+		}
+	},
 )
+
+onBeforeUnmount(() => {
+	visibilityObserver?.disconnect()
+	clearTimeout(coverRetry)
+	coverRequest++
+	showCoverImage(null)
+})
 </script>
 
 <style lang="scss" scoped>

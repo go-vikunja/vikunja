@@ -55,12 +55,13 @@ func RegisterUserExportRoutes(api huma.API) {
 	}, userExportRequest)
 
 	Register(api, huma.Operation{
-		OperationID: "user-export-download",
-		Summary:     "Download the data export",
-		Description: "Streams the authenticated user's prepared data export as a zip file. Local users must confirm with their password. Fails with 404 if no export has been prepared. A POST (not GET) because the password is sent in the body.",
-		Method:      http.MethodPost,
-		Path:        "/user/export/download",
-		Tags:        tags,
+		OperationID:   "user-export-download",
+		Summary:       "Download the data export",
+		Description:   "Streams the authenticated user's prepared data export as a zip file. Local users must confirm with their password. Fails with 404 if no export has been prepared. A POST (not GET) because the password is sent in the body.",
+		Method:        http.MethodPost,
+		Path:          "/user/export/download",
+		Tags:          tags,
+		DefaultStatus: http.StatusOK,
 		// Spell out the binary response; the default would be modeled as JSON.
 		Responses: map[string]*huma.Response{
 			"200": {
@@ -95,7 +96,7 @@ func confirmExportPassword(ctx context.Context, s *xorm.Session, password string
 		return nil, err
 	}
 	if u.IsLocalUser() {
-		if err := user.CheckUserPassword(u, password); err != nil {
+		if err := user.CheckReauthPassword(ctx, s, u, password); err != nil {
 			return nil, translateDomainError(err)
 		}
 	}
@@ -136,18 +137,18 @@ func userExportDownload(ctx context.Context, in *userExportPasswordBody) (*huma.
 		return nil, err
 	}
 
-	exportFile, err := models.GetUserDataExportFile(u)
+	exportFile, err := models.GetUserDataExportFile(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
 
-	// The file reader comes from object storage, not the DB session, so it stays
-	// valid after the commit; the StreamResponse callback runs after this returns.
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		// The stream callback (which closes the reader) won't run on this error path.
-		_ = exportFile.File.Close()
+		return nil, translateDomainError(err)
+	}
+
+	if err := models.OpenUserDataExportFile(exportFile); err != nil {
 		return nil, translateDomainError(err)
 	}
 
@@ -168,7 +169,7 @@ func userExportStatus(ctx context.Context, _ *struct{}) (*userExportStatusBody, 
 		return nil, err
 	}
 
-	status, err := models.GetUserDataExportStatus(u)
+	status, err := models.GetUserDataExportStatus(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)

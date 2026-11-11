@@ -17,6 +17,8 @@
 package models
 
 import (
+	"fmt"
+
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
@@ -50,19 +52,24 @@ func (l *Label) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
 
 func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 
-	if _, is := a.(*LinkSharing); is {
+	// Link shares legitimately reach here through hasAccessToLabel, and are not
+	// users: a plain denial, not an error.
+	caller, err := user.GetFromAuth(a)
+	if user.IsErrMustNotBeLinkShare(err) {
 		return false, nil
+	}
+	if err != nil {
+		return false, err
 	}
 
 	lorig, err := getLabelByIDSimple(s, l.ID)
 	if err != nil {
 		return false, err
 	}
-	if lorig.CreatedByID == a.GetID() {
+	if lorig.CreatedByID == caller.ID {
 		return true, nil
 	}
 
-	// A bot owner inherits write/delete access to labels their bots created.
 	creator, err := user.GetUserByID(s, lorig.CreatedByID)
 	if err != nil {
 		if user.IsErrUserDoesNotExist(err) {
@@ -70,50 +77,64 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 		}
 		return false, err
 	}
-	return creator.IsBot() && creator.BotOwnerID == a.GetID(), nil
+	return creator.IsBotOwnedBy(caller), nil
+}
+
+// labelVisibleCond matches every label the caller may see: used on a task in a
+// project they can access, or created by their own bot identity. It is the one
+// definition of label visibility - single-label reads and the list must not drift.
+//
+// The cond is assembled from builder.And / builder.Or values and must be handed
+// to Where in one shot. Chaining xorm's session .Where/.Or/.And instead flattens
+// the SQL to `A OR B OR C AND D`, which leaked any label with any label_tasks row
+// to any authenticated user (GHSA-hj5c-mhh2-g7jq).
+func labelVisibleCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
+
+	// Must include projects inherited via a shared parent, otherwise users can
+	// remove but not re-add labels on tasks in child projects.
+	accessibleProjects, err := accessibleProjectIDsCond(s, a, "tasks.project_id")
+	if err != nil {
+		return nil, err
+	}
+
+	usedOnAccessibleTask := builder.In("labels.id",
+		builder.
+			Select("label_tasks.label_id").
+			From("label_tasks").
+			InnerJoin("tasks", "tasks.id = label_tasks.task_id").
+			Where(builder.And(accessibleProjects, taskNotDeletedCond("tasks"))),
+	)
+
+	accessBranches := []builder.Cond{usedOnAccessibleTask}
+	if _, isLinkShare := a.(*LinkSharing); !isLinkShare {
+		caller, err := user.GetFromAuth(a)
+		if err != nil {
+			return nil, err
+		}
+		accessBranches = append(accessBranches, user.SameBotIdentityCond(caller, "labels.created_by_id"))
+	}
+
+	visible := builder.Or(accessBranches...)
+	// Both consumers embed this in a builder.And, which silently drops an invalid
+	// cond - the query would then match every label instead of failing.
+	if visible == nil || !visible.IsValid() {
+		return nil, fmt.Errorf("refusing to return an empty label visibility condition for auth %d", a.GetID())
+	}
+
+	return visible, nil
 }
 
 // hasAccessToLabel reports whether the caller can read a label and, if so,
 // the caller's maximum permission on it.
-//
-// The access cond is assembled with explicit builder.And / builder.Or.
-// Chaining xorm's session .Where/.Or/.And instead flattens the SQL to
-// `A OR B OR C AND D`, which leaked any label with any label_tasks row
-// to any authenticated user (GHSA-hj5c-mhh2-g7jq).
 func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
 
-	_, isLinkShare := a.(*LinkSharing)
-
-	// Must include projects inherited via a shared parent, otherwise users can
-	// remove but not re-add labels on tasks in child projects.
-	accessibleProjects := accessibleProjectIDsSubquery(a, "project_id")
-
-	labelAttachedToAccessibleTask := builder.In(
-		"label_tasks.task_id",
-		builder.
-			Select("id").
-			From("tasks").
-			Where(builder.And(accessibleProjects, taskNotDeletedCond("tasks"))),
-	)
-
-	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
-	if !isLinkShare {
-		accessBranches = append(accessBranches,
-			builder.Eq{"labels.created_by_id": a.GetID()},
-			builder.In("labels.created_by_id",
-				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": a.GetID()}),
-			),
-		)
+	visible, err := labelVisibleCond(s, a)
+	if err != nil {
+		return false, 0, err
 	}
 
-	cond := builder.And(
-		builder.Eq{"labels.id": l.ID},
-		builder.Or(accessBranches...),
-	)
-
 	has, err = s.Table("labels").
-		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
-		Where(cond).
+		Where(builder.And(builder.Eq{"labels.id": l.ID}, visible)).
 		Exist(&Label{})
 	if err != nil || !has {
 		return

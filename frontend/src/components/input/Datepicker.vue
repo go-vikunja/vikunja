@@ -1,73 +1,87 @@
 <template>
 	<div class="datepicker">
-		<SimpleButton
-			ref="triggerButton"
-			class="show"
-			:disabled="disabled || undefined"
-			@click.stop="toggleDatePopup"
+		<Popup
+			v-model:open="show"
+			placement="bottom-start"
+			:anchor="triggerEl"
+			sheet-on-mobile
+			:sheet-title="dialogTitle"
 		>
-			<i v-if="date === null && emptyLabel !== ''">{{ emptyLabel }}</i>
-			<template v-else>
-				{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
-			</template>
-		</SimpleButton>
-
-		<CustomTransition name="fade">
-			<div
-				v-if="show"
-				ref="datepickerPopup"
-				class="datepicker-popup"
-				role="dialog"
-				:aria-label="chooseDateLabel"
-				tabindex="-1"
-				@keydown.esc.stop="closeViaEsc"
-			>
-				<DatepickerInline
-					v-model="date"
-					:show-shortcuts="showShortcuts"
-					@update:modelValue="updateData"
-				/>
-
-				<XButton
-					v-cy="'closeDatepicker'"
-					class="datepicker__close-button"
-					:shadow="false"
-					@click="close"
+			<template #trigger="{toggle}">
+				<SimpleButton
+					:id="triggerId"
+					ref="triggerButton"
+					v-tooltip="date ? formatDateLong(date) : undefined"
+					class="show"
+					:aria-labelledby="ariaLabelledby ? `${ariaLabelledby} ${triggerId}` : undefined"
+					:disabled="disabled || undefined"
+					@click.stop="toggle()"
 				>
-					{{ $t('misc.confirm') }}
-				</XButton>
-			</div>
-		</CustomTransition>
+					<i v-if="date === null && emptyLabel !== ''">{{ emptyLabel }}</i>
+					<template v-else>
+						{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
+					</template>
+				</SimpleButton>
+			</template>
+			<template #header-action>
+				<BaseButton
+					class="bottom-sheet__header-action"
+					@click.stop="clear"
+				>
+					{{ $t('input.datepicker.clear') }}
+				</BaseButton>
+			</template>
+			<template #content="{isOpen}">
+				<DatepickerPanel
+					v-if="isOpen"
+					:model-value="date"
+					:show-shortcuts="showShortcuts"
+					:min-date="minDate"
+					:role="isMobile ? undefined : 'dialog'"
+					:aria-label="isMobile ? undefined : dialogTitle"
+					tabindex="-1"
+					@update:modelValue="setDate"
+					@confirm="close"
+				/>
+			</template>
+		</Popup>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, onBeforeUnmount, toRef, watch, nextTick} from 'vue'
+import {computed, ref, toRef, watch, nextTick, useId} from 'vue'
+import {useI18n} from 'vue-i18n'
 
-import CustomTransition from '@/components/misc/CustomTransition.vue'
-import DatepickerInline from '@/components/input/DatepickerInline.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
+import Popup from '@/components/misc/Popup.vue'
+import DatepickerPanel from '@/components/input/DatepickerPanel.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
-import {formatDisplayDate} from '@/helpers/time/formatDate'
-import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {useI18n} from 'vue-i18n'
+import {useIsMobile} from '@/composables/useIsMobile'
 
 const props = withDefaults(defineProps<{
 	modelValue: Date | null | string,
 	chooseDateLabel?: string,
+	title?: string,
 	disabled?: boolean,
 	showShortcuts?: boolean,
 	// When the value is null, show this (italic) instead of chooseDateLabel.
 	emptyLabel?: string,
+	minDate?: Date | null,
+	ariaLabelledby?: string,
 }>(), {
 	chooseDateLabel: () => {
 		const {t} = useI18n({useScope: 'global'})
 		return t('input.datepicker.chooseDate')
 	},
+	title: '',
 	disabled: false,
 	showShortcuts: true,
 	emptyLabel: '',
+	minDate: null,
+	ariaLabelledby: undefined,
 })
 
 const emit = defineEmits<{
@@ -76,12 +90,13 @@ const emit = defineEmits<{
 	'closeOnChange': [value: boolean],
 }>()
 
+const isMobile = useIsMobile()
+
+const dialogTitle = computed(() => props.title || props.chooseDateLabel)
+
 const date = ref<Date | null>(null)
 const show = ref(false)
 const changed = ref(false)
-
-onMounted(() => document.addEventListener('click', hideDatePopup))
-onBeforeUnmount(() =>document.removeEventListener('click', hideDatePopup))
 
 const modelValue = toRef(props, 'modelValue')
 watch(
@@ -103,79 +118,49 @@ function updateData() {
 	emit('update:modelValue', date.value ?? null)
 }
 
-function toggleDatePopup() {
-	if (props.disabled) {
-		return
-	}
-
-	show.value = !show.value
+function setDate(value: Date | null) {
+	date.value = value
+	updateData()
 }
 
-const datepickerPopup = ref<HTMLElement | null>(null)
-const triggerButton = ref<InstanceType<typeof SimpleButton> | null>(null)
+function clear() {
+	setDate(null)
+}
 
-// nextTick: the popup only exists once the v-if transition renders it.
+const triggerId = useId()
+const triggerButton = ref<InstanceType<typeof SimpleButton> | null>(null)
+const triggerEl = computed<HTMLElement | null>(() => triggerButton.value?.$el ?? null)
+
 watch(show, async (isOpen) => {
 	if (!isOpen) {
+		emitClose()
 		return
 	}
 	await nextTick()
-	datepickerPopup.value?.focus()
+	if (!isMobile.value) {
+		triggerButton.value?.focus()
+	}
 })
 
-function hideDatePopup(e: MouseEvent) {
-	if (show.value && datepickerPopup.value) {
-		closeWhenClickedOutside(e, datepickerPopup.value, close)
-	}
-}
-
 function close() {
-	// Kind of dirty, but the timeout allows us to enter a time and click on "confirm" without
-	// having to click on another input field before it is actually used.
-	setTimeout(() => {
-		show.value = false
-		emit('close', changed.value)
-		if (changed.value) {
-			changed.value = false
-			emit('closeOnChange', changed.value)
-		}
-	}, 200)
+	show.value = false
 }
 
-function closeViaEsc() {
-	// close() defers unmount by 200ms; focus would otherwise drop to <body>.
-	triggerButton.value?.focus()
-	close()
+function open() {
+	if (!props.disabled) {
+		show.value = true
+	}
 }
+
+function emitClose() {
+	emit('close', changed.value)
+	if (changed.value) {
+		changed.value = false
+		emit('closeOnChange', changed.value)
+	}
+}
+
+defineExpose({
+	open,
+})
 </script>
-
-<style lang="scss" scoped>
-.datepicker {
-	input.input {
-		display: none;
-	}
-}
-
-.datepicker-popup {
-	position: absolute;
-	z-index: 99;
-	inline-size: 320px;
-	background: var(--white);
-	border-radius: $radius;
-	box-shadow: $shadow;
-
-	@media screen and (max-width: ($tablet)) {
-		inline-size: calc(100vw - 5rem);
-	}
-}
-
-.datepicker__close-button {
-	margin: 1rem;
-	inline-size: calc(100% - 2rem);
-}
-
-:deep(.flatpickr-calendar) {
-	margin: 0 auto 8px;
-	box-shadow: none;
-}
-</style>

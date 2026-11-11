@@ -82,7 +82,6 @@
 				"subject": "任务 \"%[1]s\" (%[2]s) 已经逾期",
 				"message": "这是一个友情提示任务 \"%[1]s\" (%[2]s) ，这个任务已经逾期了 %[3]s 但尚未完成。",
 				"multiple_subject": "您逾期的任务",
-				"multiple_message": "您有以下逾期任务：",
 				"overdue_since": "从 %[1]s",
 				"overdue_now": "现在",
 				"overdue": "逾期 %[1]s"

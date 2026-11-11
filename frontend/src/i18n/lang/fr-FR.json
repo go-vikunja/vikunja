@@ -39,7 +39,6 @@
 			"email": "Adresse électronique",
 			"emailPlaceholder": "p. ex. frederic{'@'}vikunja.io",
 			"password": "Mot de passe",
-			"passwordPlaceholder": "par ex. •••••••••••",
 			"forgotPassword": "Mot de passe oublié ?",
 			"resetPassword": "Réinitialiser votre mot de passe",
 			"resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
@@ -78,7 +77,6 @@
 			"passwordUpdateSuccess": "Le mot de passe a bien été mis à jour.",
 			"updateEmailTitle": "Mettre à jour votre adresse électronique",
 			"updateEmailNew": "Nouvelle adresse électronique",
-			"updateEmailSuccess": "L’adresse électronique a bien été mise à jour. Nous vous avons envoyé un lien pour confirmer ce changement.",
 			"general": {
 				"title": "Paramètres généraux",
 				"name": "Mon nom",
@@ -263,13 +261,7 @@
 		},
 		"delete": {
 			"title": "Supprimer « {project} »",
-			"header": "Supprimer ce projet",
-			"text1": "Êtes-vous sûr·e de vouloir supprimer ce projet et tout son contenu ?",
-			"text2": "Ceci inclut toutes les tâches et NE PEUT PAS ÊTRE ANNULÉ !",
-			"success": "Le projet a bien été supprimé.",
-			"tasksToDelete": "Cela supprimera définitivement environ {count} tâches.",
-			"tasksAndChildProjectsToDelete": "Cela supprimera irrévocablement approx. {tasks} tâches et {projects} projets.",
-			"noTasksToDelete": "Ce projet ne contient aucune tâche, vous pouvez le supprimer sans problème."
+			"header": "Supprimer ce projet"
 		},
 		"duplicate": {
 			"title": "Dupliquer ce projet",
@@ -760,34 +752,11 @@
 			"updated": "Mis à jour {0}",
 			"doneAt": "Terminé {0}",
 			"updateSuccess": "Tâche enregistrée.",
-			"deleteSuccess": "Tâche supprimée.",
 			"belongsToProject": "Cette tâche appartient au projet « {project} »",
 			"due": "Échéance {at}",
-			"organization": "Organisation",
-			"management": "Gestion",
-			"dateAndTime": "Date et heure",
-			"delete": {
-				"header": "Supprimer cette tâche",
-				"text1": "Retirer cette tâche ?",
-				"text2": "Ceci supprimera également toutes les pièces jointes, les rappels et les relations associés à cette tâche et ne pourra pas être annulé !"
-			},
 			"actions": {
-				"assign": "Assigner à l'utilisateur",
-				"label": "Ajouter des étiquettes",
-				"priority": "Définir la priorité",
-				"dueDate": "Définir l’échéance",
-				"startDate": "Définir la date de début",
-				"endDate": "Définir la date de fin",
-				"reminders": "Définir des rappels",
-				"repeatAfter": "Définir un intervalle de répétition",
-				"percentDone": "Définir la progression",
-				"attachments": "Ajouter des pièces jointes",
-				"relatedTasks": "Ajouter une relation",
 				"moveProject": "Déplacer",
-				"color": "Définir la couleur",
-				"delete": "Supprimer",
-				"favorite": "Ajouter aux favoris",
-				"unfavorite": "Retirer des favoris"
+				"delete": "Supprimer"
 			}
 		},
 		"attributes": {
@@ -811,7 +780,6 @@
 			"doneAt": "Fait le"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Impossible de se désabonner ici, car vous êtes abonné·e à cette tâche depuis son projet.",
 			"subscribedProject": "Vous êtes abonné·e à ce projet et vous recevrez ses notifications.",
 			"notSubscribedProject": "Vous n’êtes pas abonné·e à ce projet et vous ne recevrez pas de notifications.",
 			"subscribedTask": "Vous êtes abonné·e à cette tâche et vous recevrez ses notifications.",
@@ -923,9 +891,6 @@
 			"dateAndTime": "Date et heure"
 		},
 		"repeat": {
-			"everyDay": "Chaque jour",
-			"everyWeek": "Chaque semaine",
-			"every30d": "Tous les 30 jours",
 			"mode": "Mode de répétition",
 			"monthly": "Mensuel",
 			"fromCurrentDate": "À partir de la date d'achèvement",
@@ -1124,10 +1089,6 @@
 			"newProject": "Nouveau projet",
 			"newTeam": "Nouvelle équipe"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} a réagi avec {value}",

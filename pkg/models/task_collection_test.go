@@ -18,6 +18,7 @@ package models
 
 import (
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 
@@ -657,11 +658,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 
 	type fields struct {
-		ProjectID     int64
-		ProjectViewID int64
-		Projects      []*Project
-		SortBy        []string // Is a string, since this is the place where a query string comes from the user
-		OrderBy       []string
+		ProjectID          int64
+		ProjectViewID      int64
+		IncludeSubprojects bool
+		Projects           []*Project
+		SortBy             []string // Is a string, since this is the place where a query string comes from the user
+		OrderBy            []string
 
 		FilterIncludeNulls bool
 		Filter             string
@@ -1339,6 +1341,91 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "filter by creator username",
+			fields: fields{
+				Filter: "created_by = 'user6'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task15,
+				task16,
+				task17,
+				task18,
+				task19,
+				task20,
+				task21,
+				task22,
+				task23,
+				task24,
+				task25,
+				task26,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter by creator username in list",
+			fields: fields{
+				Filter: "created_by ?= 'user6'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task15,
+				task16,
+				task17,
+				task18,
+				task19,
+				task20,
+				task21,
+				task22,
+				task23,
+				task24,
+				task25,
+				task26,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter by creator username not equals",
+			fields: fields{
+				Filter: "created_by != 'user6'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,
+				task2,
+				task3,
+				task4,
+				task5,
+				task6,
+				task7,
+				task8,
+				task9,
+				task10,
+				task11,
+				task12,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task32,
+				task33,
+				task39,
+				task47,
+				task48,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filter by creator unknown username",
+			fields: fields{
+				Filter: "created_by = 'nonexistentuser'",
+			},
+			args:    defaultArgs,
+			want:    []*Task{},
+			wantErr: false,
+		},
+		{
 			name: "filter labels",
 			fields: fields{
 				Filter: "labels = 4",
@@ -1572,6 +1659,82 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want:    []*Task{},
 			wantErr: false,
 		},
+		{
+			name: "project tasks only by default",
+			fields: fields{
+				ProjectID: 32,
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task21,
+			},
+			wantErr: false,
+		},
+		{
+			// User 1 reaches project 32 through team 1, and project 15 only through project 32.
+			name: "project tasks including subprojects",
+			fields: fields{
+				ProjectID:          32,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task21,
+				task24,
+			},
+			wantErr: false,
+		},
+		{
+			name: "project tasks including subprojects recursively",
+			fields: fields{
+				ProjectID:          12,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task39,
+			},
+			wantErr: false,
+		},
+		{
+			// User 14 cannot access project 32 itself, so the whole request is denied.
+			name: "project tasks including subprojects without access to the requested project",
+			fields: fields{
+				ProjectID:          32,
+				IncludeSubprojects: true,
+			},
+			args: args{
+				a: &user.User{ID: 14},
+			},
+			wantErr: true,
+		},
+		{
+			// Inclusion only walks down, so the parent's task21 must not appear.
+			name: "subproject tasks including subprojects do not leak the parent project's tasks",
+			fields: fields{
+				ProjectID:          15,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task24,
+			},
+			wantErr: false,
+		},
 		// TODO filter parent project?
 		{
 			name: "filter by index",
@@ -1700,6 +1863,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 		},
 		{
+			name: "saved filter with sort order and include subprojects",
+			fields: fields{
+				ProjectID:          -2,
+				IncludeSubprojects: true,
+				SortBy:             []string{"title", "id"},
+				OrderBy:            []string{"desc", "asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task9,
+				task8,
+				task7,
+				task6,
+				task5,
+				task28,
+			},
+		},
+		{
 			name: "saved filter with sort order asc",
 			fields: fields{
 				ProjectID: -2,
@@ -1789,10 +1972,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			defer s.Close()
 
 			lt := &TaskCollection{
-				ProjectID:     tt.fields.ProjectID,
-				ProjectViewID: tt.fields.ProjectViewID,
-				SortBy:        tt.fields.SortBy,
-				OrderBy:       tt.fields.OrderBy,
+				ProjectID:          tt.fields.ProjectID,
+				ProjectViewID:      tt.fields.ProjectViewID,
+				IncludeSubprojects: tt.fields.IncludeSubprojects,
+				SortBy:             tt.fields.SortBy,
+				OrderBy:            tt.fields.OrderBy,
 
 				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
 
@@ -2001,8 +2185,7 @@ func TestTaskCollection_ExpandSubtasksPaginatesRoots(t *testing.T) {
 	u := &user.User{ID: 1}
 
 	project := &Project{Title: "pagination-roots", OwnerID: u.ID}
-	_, err := s.Insert(project)
-	require.NoError(t, err)
+	insertTestProject(t, s, project)
 
 	// 40 top-level tasks
 	topLevel := make([]*Task, 0, 40)
@@ -2013,7 +2196,7 @@ func TestTaskCollection_ExpandSubtasksPaginatesRoots(t *testing.T) {
 			CreatedByID: u.ID,
 			Index:       int64(i),
 		}
-		_, err = s.Insert(task)
+		_, err := s.Insert(task)
 		require.NoError(t, err)
 		topLevel = append(topLevel, task)
 	}
@@ -2027,7 +2210,7 @@ func TestTaskCollection_ExpandSubtasksPaginatesRoots(t *testing.T) {
 			CreatedByID: u.ID,
 			Index:       int64(41 + i),
 		}
-		_, err = s.Insert(sub)
+		_, err := s.Insert(sub)
 		require.NoError(t, err)
 
 		rel := &TaskRelation{
@@ -2157,8 +2340,7 @@ func setupSubtaskExpansionFixture(t *testing.T, u *user.User, title string, appl
 	defer s.Close()
 
 	project = &Project{Title: title, OwnerID: u.ID}
-	_, err := s.Insert(project)
-	require.NoError(t, err)
+	insertTestProject(t, s, project)
 
 	parent = &Task{Title: "parent", ProjectID: project.ID, CreatedByID: u.ID, Index: 1}
 	sub = &Task{Title: "sub", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
@@ -2166,7 +2348,7 @@ func setupSubtaskExpansionFixture(t *testing.T, u *user.User, title string, appl
 		apply(parent, sub)
 	}
 
-	_, err = s.Insert(parent)
+	_, err := s.Insert(parent)
 	require.NoError(t, err)
 	_, err = s.Insert(sub)
 	require.NoError(t, err)
@@ -2398,11 +2580,10 @@ func TestTaskCollection_ExpandSubtasksMultiParentCrossScope(t *testing.T) {
 	defer s.Close()
 
 	otherProject := &Project{Title: "multi-parent-out-of-scope", OwnerID: u.ID}
-	_, err := s.Insert(otherProject)
-	require.NoError(t, err)
+	insertTestProject(t, s, otherProject)
 
 	otherParent := &Task{Title: "out of scope parent", ProjectID: otherProject.ID, CreatedByID: u.ID, Index: 1}
-	_, err = s.Insert(otherParent)
+	_, err := s.Insert(otherParent)
 	require.NoError(t, err)
 
 	rel := &TaskRelation{TaskID: otherParent.ID, OtherTaskID: sub.ID, RelationKind: RelationKindSubtask}
@@ -2476,4 +2657,142 @@ func TestTaskCollection_DateFilterTimezoneBoundary(t *testing.T) {
 		}
 	}
 	assert.Truef(t, found, "task due %s (one hour before local midnight) should match", task.DueDate)
+}
+
+// TestTaskCollection_SavedFilterIncludeNulls guards #4009: the gantt view of a saved
+// filter sends filter_include_nulls to show dateless tasks. It must apply to the gantt's
+// date filter, but not leak into the saved filter's own conditions.
+func TestTaskCollection_SavedFilterIncludeNulls(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	u := &user.User{ID: 1}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	project := &Project{Title: "gantt saved filter", OwnerID: u.ID}
+	insertTestProject(t, s, project)
+
+	dated := &Task{Title: "dated", ProjectID: project.ID, CreatedByID: u.ID, Index: 1,
+		StartDate: time.Date(2020, 6, 1, 0, 0, 0, 0, time.UTC),
+		EndDate:   time.Date(2020, 6, 10, 0, 0, 0, 0, time.UTC)}
+	dateless := &Task{Title: "dateless", ProjectID: project.ID, CreatedByID: u.ID, Index: 2}
+	unassigned := &Task{Title: "dateless unassigned", ProjectID: project.ID, CreatedByID: u.ID, Index: 3}
+	for _, task := range []*Task{dated, dateless, unassigned} {
+		_, err := s.Insert(task)
+		require.NoError(t, err)
+	}
+	for _, task := range []*Task{dated, dateless} {
+		_, err := s.Insert(&TaskAssginee{TaskID: task.ID, UserID: u.ID})
+		require.NoError(t, err)
+	}
+
+	sf := &SavedFilter{
+		Title: "assigned to me",
+		Filters: &TaskCollection{
+			Filter: "done = false && project = " + strconv.FormatInt(project.ID, 10) + " && assignees in user1",
+		},
+	}
+	require.NoError(t, sf.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+
+	tc := &TaskCollection{
+		ProjectID:          getProjectIDFromSavedFilterID(sf.ID),
+		Filter:             "(start_date >= '2020-01-01T00:00:00' && start_date <= '2020-12-31T00:00:00') || (end_date >= '2020-01-01T00:00:00' && end_date <= '2020-12-31T00:00:00')",
+		FilterIncludeNulls: true,
+	}
+	result, _, _, err := tc.ReadAll(s2, u, "", 1, 50)
+	require.NoError(t, err)
+
+	ids := []int64{}
+	for _, task := range result.([]*Task) {
+		ids = append(ids, task.ID)
+	}
+	assert.ElementsMatch(t, []int64{dated.ID, dateless.ID}, ids)
+}
+
+func TestTaskCollection_SavedFilterSearch(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	u := &user.User{ID: 1}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	sf := &SavedFilter{
+		Title: "prio tasks",
+		Filters: &TaskCollection{
+			Filter: "project = 1",
+			Search: "prio",
+		},
+	}
+	require.NoError(t, sf.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	readIDs := func(search string) []int64 {
+		s := db.NewSession()
+		defer s.Close()
+
+		tc := &TaskCollection{ProjectID: getProjectIDFromSavedFilterID(sf.ID)}
+		result, _, _, err := tc.ReadAll(s, u, search, 1, 50)
+		require.NoError(t, err)
+
+		ids := []int64{}
+		for _, task := range result.([]*Task) {
+			ids = append(ids, task.ID)
+		}
+		return ids
+	}
+
+	assert.ElementsMatch(t, []int64{3, 4}, readIDs(""))
+	// Stored search wins over the request, like a view filter's search.
+	assert.ElementsMatch(t, []int64{3, 4}, readIDs("basic"))
+}
+
+// Read permissions are inherited downwards, so only an archived descendant drops out.
+func TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Project 22 is archived and owned by user 1, project 21 is its archived child.
+	u := &user.User{ID: 1}
+	c := &TaskCollection{
+		ProjectID:          22,
+		IncludeSubprojects: true,
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err, "an unreachable subproject must not fail the whole request")
+
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	returnedIDs := make([]int64, 0, len(tasks))
+	for _, task := range tasks {
+		returnedIDs = append(returnedIDs, task.ID)
+	}
+
+	assert.Contains(t, returnedIDs, int64(36), "tasks of the requested project are returned")
+	assert.NotContains(t, returnedIDs, int64(35), "tasks of the archived subproject 21 are skipped")
+}
+
+// A subproject's task has no bucket in this view, so the flag is dropped for kanban.
+func TestTaskCollection_ReadAll_IncludeSubprojectsIgnoredInKanban(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+	c := &TaskCollection{
+		ProjectID:          32,
+		ProjectViewID:      128, // kanban view of project 32
+		IncludeSubprojects: true,
+	}
+
+	_, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+
+	assert.False(t, c.IncludeSubprojects, "the flag must be cleared for a kanban view")
 }

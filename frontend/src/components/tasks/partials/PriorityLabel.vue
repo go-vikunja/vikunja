@@ -46,7 +46,7 @@ withDefaults(defineProps<{
 const authStore = useAuthStore()
 
 const minimumPriority = computed(() => {
-	return authStore.settings.frontendSettings.minimumPriority || priorities.MEDIUM
+	return authStore.settings.frontend_settings.minimum_priority || priorities.MEDIUM
 })
 </script>
 

@@ -1,9 +1,10 @@
-import type {ITask} from '@/modelTypes/ITask'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
+import type {TaskResponse} from '@/client/queries/tasks'
 
 const MAX_INDENT_LEVEL = 4
 
 export interface GanttTaskTreeNode {
-	task: ITask
+	task: TaskResponse
 	indentLevel: number
 	isParent: boolean
 	childIds: number[]
@@ -16,13 +17,13 @@ export interface GanttTaskTreeNode {
  * Builds a hierarchical task tree from a flat task map using relatedTasks data,
  * then flattens it in depth-first order for Gantt row rendering.
  */
-export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode[] {
+export function buildGanttTaskTree(tasks: Map<number, TaskResponse>): GanttTaskTreeNode[] {
 	// Step 1: Build parent -> children mapping
 	const childrenMap = new Map<number, number[]>()
 	const hasParentInView = new Set<number>()
 
 	for (const [taskId, task] of tasks) {
-		const subtasks = task.relatedTasks?.subtask ?? []
+		const subtasks = task.related_tasks.subtask ?? []
 		const childIds = subtasks
 			.map(s => s.id)
 			.filter(id => tasks.has(id))
@@ -31,7 +32,7 @@ export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode
 			childrenMap.set(taskId, childIds)
 		}
 
-		const parents = task.relatedTasks?.parenttask ?? []
+		const parents = task.related_tasks.parenttask ?? []
 		for (const parent of parents) {
 			if (tasks.has(parent.id)) {
 				hasParentInView.add(taskId)
@@ -50,6 +51,7 @@ export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode
 	// Step 3: Depth-first flatten
 	const result: GanttTaskTreeNode[] = []
 	const visited = new Set<number>()
+	const collectChildDates = createChildDatesCollector(tasks, childrenMap)
 
 	function visit(taskId: number, level: number) {
 		if (visited.has(taskId)) return
@@ -67,8 +69,8 @@ export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode
 		let derivedEndDate: Date | null = null
 		let hasDerivedDates = false
 
-		if (isParent && !task.startDate && !task.endDate && !task.dueDate) {
-			const dates = collectChildDates(childIds, tasks, childrenMap)
+		if (isParent && !parseDateOrNull(task.start_date) && !parseDateOrNull(task.end_date) && !parseDateOrNull(task.due_date)) {
+			const dates = collectChildDates(childIds)
 			derivedStartDate = dates.minStart
 			derivedEndDate = dates.maxEnd
 			hasDerivedDates = derivedStartDate !== null || derivedEndDate !== null
@@ -112,43 +114,55 @@ export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode
 	return result
 }
 
-function collectChildDates(
-	childIds: number[],
-	tasks: Map<number, ITask>,
-	childrenMap: Map<number, number[]>,
-): { minStart: Date | null; maxEnd: Date | null } {
-	let minStart: Date | null = null
-	let maxEnd: Date | null = null
-
-	for (const childId of childIds) {
-		const child = tasks.get(childId)
-		if (!child) continue
-
-		const start = child.startDate ? new Date(child.startDate) : null
-		const end = child.endDate || child.dueDate
-			? new Date((child.endDate || child.dueDate) as Date)
-			: null
-
-		if (start && (!minStart || start < minStart)) {
-			minStart = start
-		}
-		if (end && (!maxEnd || end > maxEnd)) {
-			maxEnd = end
-		}
-
-		// Recurse into grandchildren
-		const grandchildIds = childrenMap.get(childId) ?? []
-		if (grandchildIds.length > 0) {
-			const grandDates = collectChildDates(grandchildIds, tasks, childrenMap)
-			if (grandDates.minStart && (!minStart || grandDates.minStart < minStart)) {
-				minStart = grandDates.minStart
-			}
-			if (grandDates.maxEnd && (!maxEnd || grandDates.maxEnd > maxEnd)) {
-				maxEnd = grandDates.maxEnd
-			}
-		}
-	}
-
-	return {minStart, maxEnd}
+interface DateRange {
+	minStart: Date | null
+	maxEnd: Date | null
 }
 
+function mergeRange(into: DateRange, from: DateRange) {
+	if (from.minStart && (!into.minStart || from.minStart < into.minStart)) {
+		into.minStart = from.minStart
+	}
+	if (from.maxEnd && (!into.maxEnd || from.maxEnd > into.maxEnd)) {
+		into.maxEnd = from.maxEnd
+	}
+}
+
+// Memoized per task: relation graphs can be DAGs (shared descendants) or cyclic.
+function createChildDatesCollector(
+	tasks: Map<number, TaskResponse>,
+	childrenMap: Map<number, number[]>,
+) {
+	const subtreeRanges = new Map<number, DateRange>()
+	const inProgress = new Set<number>()
+
+	function subtreeRange(taskId: number): DateRange {
+		const cached = subtreeRanges.get(taskId)
+		if (cached) return cached
+
+		const range: DateRange = {minStart: null, maxEnd: null}
+		const task = tasks.get(taskId)
+		if (!task || inProgress.has(taskId)) return range
+
+		inProgress.add(taskId)
+		mergeRange(range, {
+			minStart: parseDateOrNull(task.start_date),
+			maxEnd: parseDateOrNull(task.end_date) ?? parseDateOrNull(task.due_date),
+		})
+		for (const childId of childrenMap.get(taskId) ?? []) {
+			mergeRange(range, subtreeRange(childId))
+		}
+		inProgress.delete(taskId)
+
+		subtreeRanges.set(taskId, range)
+		return range
+	}
+
+	return (childIds: number[]): DateRange => {
+		const range: DateRange = {minStart: null, maxEnd: null}
+		for (const childId of childIds) {
+			mergeRange(range, subtreeRange(childId))
+		}
+		return range
+	}
+}

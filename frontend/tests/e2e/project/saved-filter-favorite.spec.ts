@@ -29,7 +29,7 @@ test.describe('Saved Filter Favorites', () => {
 
 		// Click to mark as favorite
 		const favoritePromise = page.waitForResponse(response =>
-			response.url().includes('/filters/') && response.request().method() === 'POST',
+			response.url().includes('/api/v2/filters/') && response.request().method() === 'PATCH',
 		)
 		await favoriteButton.click()
 		await favoritePromise
@@ -64,7 +64,7 @@ test.describe('Saved Filter Favorites', () => {
 
 		// Click to remove from favorites
 		const unfavoritePromise = page.waitForResponse(response =>
-			response.url().includes('/filters/') && response.request().method() === 'POST',
+			response.url().includes('/api/v2/filters/') && response.request().method() === 'PATCH',
 		)
 		await favoriteButton.click()
 		await unfavoritePromise
@@ -93,7 +93,7 @@ test.describe('Saved Filter Favorites', () => {
 		await filterItem.hover()
 
 		const favoritePromise = page.waitForResponse(response =>
-			response.url().includes('/filters/') && response.request().method() === 'POST',
+			response.url().includes('/api/v2/filters/') && response.request().method() === 'PATCH',
 		)
 		await filterItem.locator('.favorite').click()
 		await favoritePromise

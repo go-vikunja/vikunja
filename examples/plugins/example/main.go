@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// Yaegi evaluates this at runtime via its exported factories, so there is no func main
+// and it must stay out of `go build ./...`.
+//go:build ignore
+
 package main
 
 import (

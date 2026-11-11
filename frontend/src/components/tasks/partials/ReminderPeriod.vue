@@ -51,7 +51,7 @@
 			class="select"
 		>
 			<select
-				v-model="period.relativeTo"
+				v-model="period.relative_to"
 				:aria-label="$t('task.reminder.periodRelativeTo')"
 				@change="updateData"
 			>
@@ -73,10 +73,10 @@
 import {ref, watch} from 'vue'
 
 import {periodToSeconds, type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
+import {createReminderDraft} from '@/helpers/task'
 
-import TaskReminderModel from '@/models/taskReminder'
 
-import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import type {TaskReminder as ITaskReminder} from '@/client/generated'
 import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 const props = withDefaults(defineProps<{
@@ -90,29 +90,29 @@ const emit = defineEmits<{
 	'update:modelValue': [ITaskReminder]
 }>()
 
-const reminder = ref<ITaskReminder>(new TaskReminderModel())
+const reminder = ref<ITaskReminder>(createReminderDraft())
 
 interface PeriodInput {
 	duration: number,
 	durationUnit: PeriodUnit,
-	relativeTo: IReminderPeriodRelativeTo,
+	relative_to: string,
 	sign: -1 | 1,
 }
 
 const period = ref<PeriodInput>({
 	duration: 0,
 	durationUnit: 'hours',
-	relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
+	relative_to: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 	sign: -1,
 })
 
 watch(
 	() => props.modelValue,
 	(value) => {
-		const p = secondsToPeriod(value?.relativePeriod)
+		const p = secondsToPeriod(value?.relative_period ?? 0)
 		period.value.durationUnit = p.unit
 		period.value.duration = Math.abs(p.amount)
-		period.value.relativeTo = props.lockRelativeTo ?? value?.relativeTo ?? REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
+		period.value.relative_to = props.lockRelativeTo || value?.relative_to || REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	},
 	{
 		immediate: true,
@@ -130,9 +130,9 @@ watch(
 )
 
 function updateData() {
-	reminder.value.relativePeriod = period.value.sign * periodToSeconds(Math.abs(period.value.duration), period.value.durationUnit)
-	reminder.value.relativeTo = period.value.relativeTo
-	reminder.value.reminder = null
+	reminder.value.relative_period = period.value.sign * periodToSeconds(Math.abs(period.value.duration), period.value.durationUnit)
+	reminder.value.relative_to = period.value.relative_to
+	reminder.value.reminder = ''
 
 	emit('update:modelValue', reminder.value)
 }

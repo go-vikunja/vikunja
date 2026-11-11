@@ -42,10 +42,7 @@ func (c *Client) Routes(ctx context.Context) (map[string]RouteGroup, error) {
 // the server are silently dropped, so the resulting permission map is
 // always valid for POST /tokens regardless of Vikunja version.
 //
-// The action names reflect Vikunja's actual route map (see GET /routes):
-// bucket CRUD and the bucket-task move endpoint live under the `projects`
-// group as `views_buckets*` and `views_buckets_tasks`, not a separate
-// `buckets` group.
+// Bucket keys are requested under both current and pre-GHSA-j5v7 names.
 func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 	wanted := map[string][]string{
 		// Read + write tasks across the project. The bot creates, updates,
@@ -56,16 +53,11 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 		},
 		// Project access: read project metadata, manage buckets & move
 		// tasks between them. tasks_by-index resolves #NN / PROJ-NN.
-		// The bucket-task MOVE (PUT .../buckets/:bucket/tasks) and the
-		// buckets-with-tasks LIST (GET .../buckets/tasks) collide on subkey
-		// `views_buckets_tasks`; which one gets the bare key vs the
-		// `_put`-suffixed key depends on unspecified route-init order, so we
-		// request BOTH and let the runtime intersection drop whichever the
-		// server didn't register.
 		"projects": {
 			"read_one", "read_all", "tasks_by-index",
-			"views_buckets", "views_buckets_put", "views_buckets_post",
-			"views_buckets_delete", "views_buckets_tasks", "views_buckets_tasks_put",
+			"views_buckets", "views_buckets_create", "views_buckets_update",
+			"views_buckets_delete", "views_buckets_tasks", "views_buckets_tasks_update",
+			"views_buckets_put", "views_buckets_post", "views_buckets_tasks_put",
 		},
 		"projects_views":  {"read_one", "read_all"},
 		"labels":          {"read_one", "read_all", "create", "update", "delete"},

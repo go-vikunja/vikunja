@@ -75,8 +75,7 @@ func (tc *TaskComment) Create(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err error) {
-	// Check if the task exists
-	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
+	task, err := lockTaskForWrite(s, a, tc.TaskID)
 	if err != nil {
 		return err
 	}
@@ -126,6 +125,9 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 	if err != nil {
 		return err
 	}
+	if _, err = lockTaskForWrite(s, a, tc.TaskID); err != nil {
+		return err
+	}
 
 	deleted, err := s.
 		ID(tc.ID).
@@ -139,7 +141,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
+	doer := doerFromAuth(s, a)
 	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err
@@ -168,6 +170,21 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [post]
 func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
+	// TaskID is optional here: only routes carrying it in the URL bind it, so fall back to the stored row.
+	saved := &TaskComment{
+		ID:     tc.ID,
+		TaskID: tc.TaskID,
+	}
+	if err := getTaskCommentSimple(s, saved); err != nil {
+		return err
+	}
+	tc.TaskID = saved.TaskID
+
+	task, err := lockTaskForWrite(s, a, tc.TaskID)
+	if err != nil {
+		return err
+	}
+
 	updated, err := s.
 		ID(tc.ID).
 		Cols("comment").
@@ -176,11 +193,6 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 		return ErrTaskCommentDoesNotExist{ID: tc.ID}
 	}
 
-	if err != nil {
-		return err
-	}
-
-	task, err := GetTaskSimple(s, &Task{ID: tc.TaskID})
 	if err != nil {
 		return err
 	}
@@ -245,13 +257,13 @@ func (tc *TaskComment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 		return err
 	}
 
-	// Get the author
-	author := &user.User{}
-	_, err = s.
-		Where("id = ?", tc.AuthorID).
-		Get(author)
-	tc.Author = author
-	return
+	authors, err := getUsersOrLinkSharesFromIDs(s, []int64{tc.AuthorID})
+	if err != nil {
+		return err
+	}
+
+	tc.Author = authors[tc.AuthorID]
+	return nil
 }
 
 // ReadAll returns all comments for a task

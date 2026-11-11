@@ -41,10 +41,13 @@ without breaking sessions in unrelated repos.
 
 1. Authenticates as you. Default is OAuth 2.0 Authorization Code + PKCE
    against Vikunja's built-in authorization server (Vikunja 2.3+ — no
-   client registration needed). veans prints an authorize URL; you open
-   it in your browser, sign in, and paste the resulting
-   `vikunja-veans-cli://callback?code=...` URL back into the CLI. The
-   browser will fail to open the custom scheme — that's expected; the
+   client registration needed). veans opens the authorize URL in your
+   browser and catches the redirect on a loopback port.
+
+   On a machine without a browser (e.g. over SSH), open the printed URL
+   on any machine, sign in, and paste the
+   `http://127.0.0.1:NNN/callback?code=...` URL the browser ends up on back
+   into the CLI. The page itself fails to load, which is expected; the
    address bar still has what we need.
 
    Alternative auth modes:
@@ -95,6 +98,7 @@ identifiers and bot username are for human-readable output.
 
 ```yaml
 server: https://vikunja.example.com
+frontend_url: https://vikunja.example.com/  # from /info; backfilled if missing
 project_id: 42
 project_identifier: PROJ        # may be "" — task IDs render as #NN then
 view_id: 7
@@ -115,10 +119,20 @@ Resolved in order on every command:
 
 1. **OS keychain** (macOS Keychain, Windows Credential Manager,
    libsecret/gnome-keyring on Linux), via `github.com/zalando/go-keyring`.
-2. **`VEANS_TOKEN`** env var (read-only). Optionally pin to a server with
-   `VEANS_SERVER`. Intended for CI / containers.
+2. **`VEANS_TOKEN`** env var (read-only). Intended for CI / containers.
 3. **`~/.config/veans/credentials.yml`** (mode 0600) — automatic fallback
-   when the keychain is unavailable. Honors `XDG_CONFIG_HOME`.
+   when the keychain is unavailable.
+
+## Trusted servers
+
+`.veans.yml` is checked into the repo, so veans only talks to its `server`
+once you trust it. `veans init` trusts the server you typed. Any other
+command run in a terminal shows the server's origin and asks once; the
+answer is stored in `~/.config/veans/trusted.json`.
+
+Without a terminal (agent hooks, CI) veans never asks: it refuses to send
+credentials, and `veans prime` renders without project data. In CI, set
+`VEANS_SERVER` to the server URL to declare it trusted.
 
 ## Mage targets
 
@@ -170,9 +184,8 @@ PR lands.
 
 ## Out of scope (for now)
 
-- OAuth 2.0 device flow (RFC 8628) — would let SSH'd / headless setups
-  authenticate without a browser-on-the-same-machine; not implemented
-  upstream yet.
+- OAuth 2.0 device flow (RFC 8628) — would replace the headless
+  paste-back step; not implemented upstream yet.
 - Project-scoped API tokens — Vikunja doesn't ship them yet. The
   credential schema's `scope` field is forward-compatible for when it does.
 - Auto-installing hook snippets. We print them; you paste them.

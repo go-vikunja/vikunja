@@ -28,48 +28,132 @@ export function parseKey(keyStr: string): ParsedKey {
 	}
 }
 
-export function matchesKey(event: KeyboardEvent, parsed: ParsedKey): boolean {
-	if (event.code !== parsed.code) return false
+export function matchesKey(event: Event, parsed: ParsedKey): boolean {
+	const shortcut = eventToShortcutString(event)
+	if (!shortcut) return false
+	const actual = parseKey(shortcut)
+	if (actual.code !== parsed.code) return false
 
 	const isMac = isAppleDevice()
 
 	const wantCtrl = parsed.ctrl || (!isMac && parsed.mod)
 	const wantMeta = parsed.meta || (isMac && parsed.mod)
 
-	if (event.ctrlKey !== wantCtrl) return false
-	if (event.altKey !== parsed.alt) return false
-	if (event.shiftKey !== parsed.shift) return false
-	if (event.metaKey !== wantMeta) return false
+	if (actual.ctrl !== wantCtrl) return false
+	if (actual.alt !== parsed.alt) return false
+	if (actual.shift !== parsed.shift) return false
+	if (actual.meta !== wantMeta) return false
 
 	return true
 }
 
-/**
- * Convert a KeyboardEvent to a normalized shortcut string (event.code-based).
- * Replacement for eventToHotkeyString from @github/hotkey.
- *
- * Examples:
- *   Ctrl+K press -> 'Control+KeyK'
- *   Cmd+K press  -> 'Meta+KeyK'
- *   plain T      -> 'KeyT'
- *   Shift+Delete -> 'Shift+Delete'
- */
-export function eventToShortcutString(event: KeyboardEvent): string {
-	// Skip modifier-only keys
-	if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key)) {
+// Typed as Event: autofill and password managers dispatch plain Events with type keydown.
+export function eventToShortcutString(event: Event): string {
+	if (!(event instanceof KeyboardEvent)) return ''
+	if (event.isComposing || event.keyCode === 229 || event.getModifierState('AltGraph')) return ''
+	if (['', 'Dead', 'Process', 'Compose', 'Unidentified', 'Control', 'Alt', 'Shift', 'Meta', 'AltGraph'].includes(event.key)) {
 		return ''
+	}
+
+	let key = event.key
+	if (/^[a-z]$/i.test(key)) {
+		key = `Key${key.toUpperCase()}`
+	} else if (/^\p{L}$/u.test(key) && !/\p{Script=Latin}/u.test(key) && /^Key[A-Z]$/.test(event.code)) {
+		// Preserve letter shortcuts when switching to a non-Latin input layout.
+		key = event.code
+	} else if (key === '.') {
+		key = 'Period'
+	} else if (key === '/') {
+		key = 'Slash'
 	}
 
 	const parts: string[] = []
 
 	if (event.ctrlKey) parts.push('Control')
 	if (event.altKey) parts.push('Alt')
-	if (event.shiftKey) parts.push('Shift')
+	// Punctuation includes the Shift used to produce it (e.g. Danish Shift++ → ?).
+	if (event.shiftKey && !/^[\p{P}\p{S}]$/u.test(event.key)) parts.push('Shift')
 	if (event.metaKey) parts.push('Meta')
 
-	parts.push(event.code)
+	parts.push(key)
 
 	return parts.join('+')
+}
+
+export interface ShortcutDisplay {
+	keys: string[]
+	combination?: 'then'
+}
+
+function modifierToDisplayKey(modifier: string): string {
+	switch (modifier) {
+		case 'Control':
+			return 'ctrl'
+		case 'Meta':
+			return '⌘'
+		case 'Alt':
+			return 'alt'
+		case 'Shift':
+			return 'shift'
+		case 'Mod':
+			return isAppleDevice() ? '⌘' : 'ctrl'
+		default:
+			return modifier.toLowerCase()
+	}
+}
+
+function codeToDisplayKey(code: string): string {
+	if (/^Key[A-Z]$/.test(code)) {
+		return code.slice(3).toLowerCase()
+	}
+
+	switch (code) {
+		case 'Slash':
+			return '/'
+		case 'Period':
+			return '.'
+		case 'Backspace':
+			return 'backspace'
+		case 'Delete':
+			return 'delete'
+		case 'Enter':
+			return 'enter'
+		case 'ArrowLeft':
+			return '←'
+		case 'ArrowRight':
+			return '→'
+		case 'ArrowUp':
+			return '↑'
+		case 'ArrowDown':
+			return '↓'
+		default:
+			return code.toLowerCase()
+	}
+}
+
+function bindingStepToDisplayKeys(step: string): string[] {
+	const parts = step.split('+')
+	const code = parts.pop() || ''
+
+	return [
+		...parts.map(modifierToDisplayKey),
+		codeToDisplayKey(code),
+	]
+}
+
+export function shortcutBindingToDisplay(binding: string): ShortcutDisplay {
+	const steps = binding.split(' ')
+
+	if (steps.length > 1) {
+		return {
+			keys: steps.flatMap(bindingStepToDisplayKeys),
+			combination: 'then',
+		}
+	}
+
+	return {
+		keys: bindingStepToDisplayKeys(binding),
+	}
 }
 
 // --- Form field detection ---
@@ -82,6 +166,12 @@ export function isFormField(target: EventTarget | null): boolean {
 	if (target.contentEditable === 'true') return true
 
 	return false
+}
+
+export function isTypingTarget(event: Event): boolean {
+	const target = (event as Event & {explicitOriginalTarget?: EventTarget}).explicitOriginalTarget || event.target
+	if (target instanceof Element && target.shadowRoot) return true
+	return isFormField(target)
 }
 
 // --- Install / Uninstall ---
@@ -118,9 +208,7 @@ function globalKeydownHandler(event: KeyboardEvent) {
 	if (event.isComposing) return
 	if (event.repeat) return
 
-	const target = (event as KeyboardEvent & {explicitOriginalTarget?: EventTarget}).explicitOriginalTarget || event.target
-	if (target?.shadowRoot) return
-	if (isFormField(target)) return
+	if (isTypingTarget(event)) return
 
 	// If sequences are in progress, only advance those — skip single-key shortcuts
 	if (activeSequences.length > 0) {

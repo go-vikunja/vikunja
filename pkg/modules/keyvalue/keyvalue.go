@@ -17,10 +17,12 @@
 package keyvalue
 
 import (
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
 	"code.vikunja.io/api/pkg/modules/keyvalue/redis"
 )
@@ -28,11 +30,13 @@ import (
 // Storage defines an interface for saving key-value pairs
 type Storage interface {
 	Put(key string, value interface{}) (err error)
+	PutWithTTL(key string, value interface{}, ttl time.Duration) (err error)
 	Get(key string) (value interface{}, exists bool, err error)
 	GetWithValue(key string, value interface{}) (exists bool, err error)
 	Del(key string) (err error)
 	IncrBy(key string, update int64) (err error)
 	DecrBy(key string, update int64) (err error)
+	IncrByWithTTL(key string, update int64, ttl time.Duration) (int64, error)
 	ListKeys(prefix string) ([]string, error)
 	DelPrefix(prefix string) error
 }
@@ -59,6 +63,15 @@ func Put(key string, value interface{}) error {
 	return store.Put(key, value)
 }
 
+// PutWithTTL puts a value in the storage backend which expires after ttl
+func PutWithTTL(key string, value interface{}, ttl time.Duration) error {
+	if ttl <= 0 {
+		// backends disagree on ttl<=0 (redis keeps forever, memory expires at once)
+		return store.Del(key)
+	}
+	return store.PutWithTTL(key, value, ttl)
+}
+
 // Get returns a value from a storage backend
 func Get(key string) (value interface{}, exists bool, err error) {
 	return store.Get(key)
@@ -66,6 +79,24 @@ func Get(key string) (value interface{}, exists bool, err error) {
 
 func GetWithValue(key string, value interface{}) (exists bool, err error) {
 	return store.GetWithValue(key, value)
+}
+
+// Redis returns IncrBy counters as decimal strings, which GetWithValue would try to gob-decode.
+func GetInt64(key string) (value int64, exists bool, err error) {
+	raw, exists, err := store.Get(key)
+	if err != nil || !exists {
+		return 0, exists, err
+	}
+	switch v := raw.(type) {
+	case int64:
+		return v, true, nil
+	case string:
+		value, err = strconv.ParseInt(v, 10, 64)
+		if err == nil {
+			return value, true, nil
+		}
+	}
+	return 0, true, &e.ErrValueHasWrongType{Key: key, ExpectedValue: "int64"}
 }
 
 // Del removes a save value from a storage backend
@@ -81,6 +112,11 @@ func IncrBy(key string, update int64) (err error) {
 // DecrBy increases a value at key by the amount in update
 func DecrBy(key string, update int64) (err error) {
 	return store.DecrBy(key, update)
+}
+
+// A key without an expiry gets ttl, so a counter's window starts at its first increment.
+func IncrByWithTTL(key string, update int64, ttl time.Duration) (int64, error) {
+	return store.IncrByWithTTL(key, update, ttl)
 }
 
 // ListKeys returns all keys beginning with prefix from the configured backend

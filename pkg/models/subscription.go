@@ -18,11 +18,10 @@ package models
 
 import (
 	"encoding/json"
-	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -108,13 +107,16 @@ type Subscription struct {
 	// The numeric ID of the subscription
 	ID int64 `xorm:"autoincr not null unique pk" json:"id" readOnly:"true" doc:"The numeric id of the subscription."`
 
-	EntityType SubscriptionEntityType `xorm:"index not null" json:"entity" readOnly:"true" doc:"The kind of entity this subscription is for. Either project or task; derived server-side from the request path."`
+	EntityType SubscriptionEntityType `xorm:"index not null unique(entity_user)" json:"entity" readOnly:"true" doc:"The kind of entity this subscription is for. Either project or task; derived server-side from the request path."`
 	Entity     string                 `xorm:"-" json:"-" param:"entity"`
 	// The id of the entity to subscribe to.
-	EntityID int64 `xorm:"bigint index not null" json:"entity_id" param:"entityID" readOnly:"true" doc:"The numeric id of the subscribed entity; taken from the request path."`
+	EntityID int64 `xorm:"bigint index not null unique(entity_user)" json:"entity_id" param:"entityID" readOnly:"true" doc:"The numeric id of the subscribed entity; taken from the request path."`
 
 	// The user who made this subscription
-	UserID int64 `xorm:"bigint index not null" json:"-"`
+	UserID int64 `xorm:"bigint index not null unique(entity_user)" json:"-"`
+
+	// Muted turns the row into an opt-out: it outranks any inherited subscription and is dropped while resolving.
+	Muted bool `xorm:"not null default false" json:"-" xml:"-"`
 
 	// A timestamp when this subscription was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this subscription was created. You cannot change this value."`
@@ -159,7 +161,32 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 
 	sb.ID = 0
 	sb.UserID = auth.GetID()
+	sb.Muted = false
 
+	own, err := getOwnSubscription(s, sb.EntityType, sb.EntityID, sb.UserID)
+	if err != nil {
+		return err
+	}
+	if own != nil {
+		if !own.Muted {
+			return &ErrSubscriptionAlreadyExists{
+				EntityID:   sb.EntityID,
+				EntityType: sb.EntityType,
+				UserID:     sb.UserID,
+			}
+		}
+
+		// Subscribing again lifts a previous opt-out.
+		sb.ID = own.ID
+		sb.Created = time.Now().UTC()
+		_, err = s.
+			Where("entity_id = ? AND entity_type = ? AND user_id = ?", sb.EntityID, sb.EntityType, sb.UserID).
+			Cols("muted", "created").
+			Update(&Subscription{Muted: false, Created: sb.Created})
+		return err
+	}
+
+	// Without an own row, only a parent entity can still make the user subscribed.
 	sub, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, auth)
 	if err != nil {
 		return err
@@ -178,7 +205,7 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 
 // Delete unsubscribes the current user to an entity
 // @Summary Unsubscribe the current user from an entity.
-// @Description Unsubscribes the current user to an entity.
+// @Description Unsubscribes the current user to an entity. If the subscription is inherited from a parent project, an opt-out is stored for this entity instead.
 // @tags subscriptions
 // @Accept json
 // @Produce json
@@ -191,12 +218,63 @@ func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [delete]
 func (sb *Subscription) Delete(s *xorm.Session, auth web.Auth) (err error) {
+	if err := sb.EntityType.validate(); err != nil {
+		return err
+	}
+
 	sb.UserID = auth.GetID()
 
 	_, err = s.
 		Where("entity_id = ? AND entity_type = ? AND user_id = ?", sb.EntityID, sb.EntityType, sb.UserID).
 		Delete(&Subscription{})
-	return
+	if err != nil {
+		return err
+	}
+
+	// Removing the row can uncover a parent entity's subscription, which only an explicit opt-out overrides.
+	inherited, err := GetSubscriptionForUser(s, sb.EntityType, sb.EntityID, auth)
+	if err != nil || inherited == nil {
+		return err
+	}
+
+	// CanDelete lets a user who lost access clean up their own row, so gate only the opt-out insert.
+	canRead, err := sb.canReadEntity(s, auth)
+	if err != nil || !canRead {
+		return err
+	}
+
+	sb.ID = 0
+	sb.Muted = true
+	_, err = s.Insert(sb)
+	return err
+}
+
+// subscribeUserImplicitly ignores inherited subscriptions so unsubscribing from the parent later keeps this one.
+func subscribeUserImplicitly(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, u *user.User) error {
+	own, err := getOwnSubscription(s, entityType, entityID, u.ID)
+	if err != nil || own != nil {
+		return err
+	}
+
+	_, err = s.Insert(&Subscription{
+		EntityType: entityType,
+		EntityID:   entityID,
+		UserID:     u.ID,
+	})
+	return err
+}
+
+// getOwnSubscription returns the row for exactly this entity, ignoring inherited subscriptions.
+func getOwnSubscription(s *xorm.Session, entityType SubscriptionEntityType, entityID, userID int64) (subscription *Subscription, err error) {
+	subscription = &Subscription{}
+	exists, err := s.
+		Where("entity_id = ? AND entity_type = ? AND user_id = ?", entityID, entityType, userID).
+		Get(subscription)
+	if err != nil || !exists {
+		return nil, err
+	}
+
+	return subscription, nil
 }
 
 func GetSubscriptionForUser(s *xorm.Session, entityType SubscriptionEntityType, entityID int64, a web.Auth) (subscription *SubscriptionWithUser, err error) {
@@ -262,14 +340,23 @@ func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType Subscription
 	}
 
 	rawSubscriptions := []*subscriptionResolved{}
-	entityIDString := utils.JoinInt64Slice(entityIDs, ", ")
+	idList := strings.TrimSuffix(strings.Repeat("?, ", len(entityIDs)), ", ")
+	idArgs := make([]any, 0, len(entityIDs))
+	for _, id := range entityIDs {
+		idArgs = append(idArgs, id)
+	}
+	var args []any
+	// arguments must follow the order of the placeholders in the query text
+	add := func(vals ...any) { args = append(args, vals...) }
 
 	var sUserCond string
+	var sUserArgs []any
 	if userOnly {
 		if u == nil {
 			return nil, &ErrMustProvideUser{}
 		}
-		sUserCond = " AND s.user_id = " + strconv.FormatInt(u.ID, 10)
+		sUserCond = " AND s.user_id = ?"
+		sUserArgs = []any{u.ID}
 	}
 
 	tNotDeletedCond := " AND t.deleted_at IS NULL"
@@ -279,6 +366,10 @@ func getSubscriptionsForEntitiesAndUser(s *xorm.Session, entityType Subscription
 
 	switch entityType {
 	case SubscriptionEntityProject:
+		add(idArgs...)
+		add(SubscriptionEntityProject)
+		add(sUserArgs...)
+		add(idArgs...)
 		err = s.SQL(`
 WITH RECURSIVE project_hierarchy AS (
     -- Base case: Start with the specified projects
@@ -288,7 +379,7 @@ WITH RECURSIVE project_hierarchy AS (
         0 AS level,
         id AS original_project_id
     FROM projects
-    WHERE id IN (`+entityIDString+`)
+    WHERE id IN (`+idList+`)
 
     UNION ALL
 
@@ -310,6 +401,7 @@ subscription_hierarchy AS (
         s.entity_id,
         s.created,
         s.user_id,
+        s.muted,
         CASE
             WHEN s.entity_id = ph.original_project_id THEN 1  -- Direct project match
             ELSE ph.level + 1  -- Parent projects
@@ -327,6 +419,7 @@ SELECT
     sh.entity_id,
     sh.created,
     sh.user_id,
+    sh.muted,
     CASE
         WHEN sh.priority = 1 THEN 'Direct Project'
         ELSE 'Parent Project'
@@ -340,10 +433,18 @@ FROM projects p
     FROM subscription_hierarchy
 ) sh ON p.id = sh.original_project_id AND sh.rn = 1
     LEFT JOIN users ON sh.user_id = users.id
-WHERE p.id IN (`+entityIDString+`)
-ORDER BY p.id, sh.user_id`, SubscriptionEntityProject).
+WHERE p.id IN (`+idList+`)
+ORDER BY p.id, sh.user_id`, args...).
 			Find(&rawSubscriptions)
 	case SubscriptionEntityTask:
+		add(idArgs...)
+		add(SubscriptionEntityTask)
+		add(idArgs...)
+		add(sUserArgs...)
+		add(SubscriptionEntityProject)
+		add(sUserArgs...)
+		add(SubscriptionEntityTask, SubscriptionEntityProject)
+		add(idArgs...)
 		err = s.SQL(`
 WITH RECURSIVE project_hierarchy AS (
     -- Base case: Start with the projects associated with the tasks
@@ -354,7 +455,7 @@ WITH RECURSIVE project_hierarchy AS (
         t.id AS task_id
     FROM tasks t
              JOIN projects p ON t.project_id = p.id
-    WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
+    WHERE t.id IN (`+idList+`)`+tNotDeletedCond+`
 
     UNION ALL
 
@@ -376,11 +477,12 @@ subscription_hierarchy AS (
         s.entity_id,
         s.created,
         s.user_id,
+        s.muted,
         1 AS priority,
         t.id AS task_id
     FROM subscriptions s
              JOIN tasks t ON s.entity_id = t.id
-    WHERE s.entity_type = ? AND t.id IN (`+entityIDString+`)`+tNotDeletedCond+sUserCond+`
+    WHERE s.entity_type = ? AND t.id IN (`+idList+`)`+tNotDeletedCond+sUserCond+`
 
     UNION ALL
 
@@ -391,6 +493,7 @@ subscription_hierarchy AS (
         s.entity_id,
         s.created,
         s.user_id,
+        s.muted,
         ph.level + 2 AS priority,
         ph.task_id
     FROM subscriptions s
@@ -405,6 +508,7 @@ SELECT
     sh.entity_id,
     sh.created,
     sh.user_id,
+    sh.muted,
     CASE
         WHEN sh.entity_type = ? THEN 'Task'
         WHEN sh.priority = ? THEN 'Direct Project'
@@ -419,9 +523,8 @@ FROM tasks t
     FROM subscription_hierarchy
 ) sh ON t.id = sh.task_id AND sh.rn = 1
     LEFT JOIN users ON sh.user_id = users.id
-WHERE t.id IN (`+entityIDString+`)`+tNotDeletedCond+`
-ORDER BY t.id, sh.user_id`,
-			SubscriptionEntityTask, SubscriptionEntityProject, SubscriptionEntityTask, SubscriptionEntityProject).
+WHERE t.id IN (`+idList+`)`+tNotDeletedCond+`
+ORDER BY t.id, sh.user_id`, args...).
 			Find(&rawSubscriptions)
 	}
 	if err != nil {
@@ -432,6 +535,11 @@ ORDER BY t.id, sh.user_id`,
 	for _, sub := range rawSubscriptions {
 
 		if sub.EntityID == 0 {
+			continue
+		}
+
+		// Already outranked the parent's subscription, so dropping it unsubscribes the user.
+		if sub.Muted {
 			continue
 		}
 

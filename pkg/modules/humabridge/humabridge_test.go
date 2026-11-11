@@ -42,7 +42,7 @@ func newGroupAPI() (*echo.Echo, huma.API) {
 
 // TestAdapterRoundtrip proves that a Huma operation registered against the
 // group-mounted adapter is served by Echo and that the echo.Context is
-// retrievable from the handler's context.Context via EchoContextKey.
+// retrievable from the handler's context.Context via EchoContextFrom.
 func TestAdapterRoundtrip(t *testing.T) {
 	e, api := newGroupAPI()
 
@@ -61,10 +61,9 @@ func TestAdapterRoundtrip(t *testing.T) {
 		Method:      "GET",
 		Path:        "/ping/{name}",
 	}, func(ctx context.Context, in *pingInput) (*pingOutput, error) {
-		_, ok := ctx.Value(humabridge.EchoContextKey).(*echo.Context)
 		out := &pingOutput{}
 		out.Body.Echo = in.Name
-		out.Body.HasEchoCtx = ok
+		out.Body.HasEchoCtx = humabridge.EchoContextFrom(ctx) != nil
 		return out, nil
 	})
 
@@ -159,18 +158,30 @@ func TestAutoPatchUnderGroup(t *testing.T) {
 		Body thing
 	}
 
+	type dispatchMarker struct {
+		route string
+		ok    bool
+	}
+	seen := map[string]dispatchMarker{}
+	record := func(ctx context.Context, method string) {
+		route, ok := humabridge.InternalDispatchRoute(ctx)
+		seen[method] = dispatchMarker{route: route, ok: ok}
+	}
+
 	huma.Register(api, huma.Operation{
 		OperationID: "thing-read",
 		Method:      "GET",
 		Path:        "/things/{id}",
-	}, func(_ context.Context, _ *thingInput) (*thingBody, error) {
+	}, func(ctx context.Context, _ *thingInput) (*thingBody, error) {
+		record(ctx, "GET")
 		return &thingBody{Body: stored}, nil
 	})
 	huma.Register(api, huma.Operation{
 		OperationID: "thing-update",
 		Method:      "PUT",
 		Path:        "/things/{id}",
-	}, func(_ context.Context, in *thingPutInput) (*thingBody, error) {
+	}, func(ctx context.Context, in *thingPutInput) (*thingBody, error) {
+		record(ctx, "PUT")
 		stored = in.Body
 		return &thingBody{Body: stored}, nil
 	})
@@ -184,4 +195,17 @@ func TestAutoPatchUnderGroup(t *testing.T) {
 	require.Equal(t, 200, rec.Code, "body: %s", rec.Body.String())
 	assert.Equal(t, "patched", stored.Title)
 	assert.Equal(t, "keep me", stored.Description, "merge patch must leave unrelated fields alone")
+
+	assert.Equal(t, dispatchMarker{route: testPrefix + "/things/:id", ok: true}, seen["GET"],
+		"autopatch's internal GET must carry the parent route")
+	assert.Equal(t, dispatchMarker{route: testPrefix + "/things/:id", ok: true}, seen["PUT"],
+		"autopatch's internal PUT must carry the parent route")
+
+	seen = map[string]dispatchMarker{}
+	req = httptest.NewRequest("GET", testPrefix+"/things/1", nil)
+	rec = httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	require.Equal(t, 200, rec.Code, "body: %s", rec.Body.String())
+
+	assert.Equal(t, dispatchMarker{}, seen["GET"], "a client request must never be marked as an internal dispatch")
 }

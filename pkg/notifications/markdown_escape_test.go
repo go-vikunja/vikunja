@@ -22,7 +22,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yuin/goldmark"
 )
 
 func TestEscapeMarkdown(t *testing.T) {
@@ -87,7 +86,7 @@ func TestEscapeMarkdown_RoundTripThroughGoldmark(t *testing.T) {
 			// Embed in a markdown link and a free paragraph.
 			md := "* [" + EscapeMarkdown(p) + "](https://vikunja.io/safe)\n\n" + EscapeMarkdown(p)
 			var buf bytes.Buffer
-			require.NoError(t, goldmark.Convert([]byte(md), &buf))
+			require.NoError(t, renderMarkdown([]byte(md), &buf))
 			html := buf.String()
 			// There must be exactly one <a href=, the safe one.
 			assert.Equal(t, 1, bytes.Count([]byte(html), []byte("<a href=")),

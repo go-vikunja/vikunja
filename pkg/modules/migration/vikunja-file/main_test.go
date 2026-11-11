@@ -23,9 +23,11 @@ import (
 	"code.vikunja.io/api/pkg/events"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
 )
 
@@ -41,6 +43,16 @@ func TestMain(m *testing.M) {
 	files.InitTests()
 	user.InitTests()
 	models.SetupTests()
+
+	// The storage quota query reads migration_status, which models.SetupTests does not sync.
+	x, err := db.CreateTestEngine()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := x.Sync2(&migration.Status{}); err != nil {
+		log.Fatal(err)
+	}
+
 	events.Fake()
 	os.Exit(m.Run())
 }

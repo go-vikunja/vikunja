@@ -83,7 +83,7 @@ func TestHumaRichText_FormatDocumented(t *testing.T) {
 	// Query param on the ops where it works (GET/POST/PUT), per entity.
 	assert.True(t, hasParam("/labels/{id}", "get", "format", "query"), "labels read must document ?format")
 	assert.True(t, hasParam("/labels", "post", "format", "query"), "labels create must document ?format")
-	assert.True(t, hasParam("/tasks/{projecttask}", "put", "format", "query"), "tasks update must document ?format")
+	assert.True(t, hasParam("/tasks/{task}", "put", "format", "query"), "tasks update must document ?format")
 
 	// PATCH must NOT advertise ?format — AutoPatch strips the query at runtime, so
 	// it would be a trap (markdown stored as HTML). Stripped by stripPatchFormatQuery.
@@ -263,6 +263,13 @@ func TestHumaRichText_Write(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		_, desc := decodeLabel(t, rec.Body.Bytes())
 		assert.Equal(t, "<p>Hello <strong>world</strong></p>", desc)
+	})
+
+	t.Run("markdown write with oversized tables is rejected", func(t *testing.T) {
+		table := strings.Repeat("|a", 200) + "|\n" + strings.Repeat("|-", 200) + "|\n" + strings.Repeat("x\n", 200)
+		body := fmt.Sprintf(`{"title":"w-table","description":%s,"hex_color":"112233"}`, mustJSON(table))
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/labels?format=markdown", body, token, "")
+		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 	})
 
 	t.Run("default write stores body verbatim", func(t *testing.T) {

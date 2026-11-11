@@ -1,6 +1,7 @@
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
-import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
+import {getDateWithTime, getUserDefaultTimeParts} from '@/helpers/time/getDateWithTime'
 import {replaceAll} from '@/helpers/replaceAll'
+import {numberWordsRegexGroup, parseAmount} from './numberWords'
 
 export interface dateParseResult {
 	newText: string,
@@ -29,6 +30,11 @@ function matchDateAtBoundary(text: string, pattern: string): RegExpExecArray | n
 		const matchEnd = result.index + result[0].length
 		const isAtStart = result.index === 0
 		const isAtEnd = matchEnd >= text.length
+
+		// A range like "31.12.2026 - 01.01.2027" describes the task, it is not a due date
+		const isRangeStart = /^[-–—] ?[0-9]+[./-][0-9]/.test(text.substring(matchEnd))
+		const isRangeEnd = /[0-9][./-][0-9]+\.? [-–—]$/.test(text.substring(0, result.index))
+		if (isRangeStart || isRangeEnd) continue
 
 		if (isAtStart || isAtEnd) return result
 
@@ -75,31 +81,25 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		const date: Date = new Date()
 		date.setDate(1)
 		date.setMonth(date.getMonth() + 1)
-		date.setHours(calculateNearestHours(date))
-		date.setMinutes(0)
-		date.setSeconds(0)
 
-		return addTimeToDate(text, date, 'next month')
+		return addTimeToDate(text, getDateWithTime(date), 'next month')
 	}
 	if (matchesDateExpr(text, 'end of month')) {
 		const curDate: Date = new Date()
 		const date: Date = new Date(curDate.getFullYear(), curDate.getMonth() + 1, 0)
-		date.setHours(calculateNearestHours(date))
-		date.setMinutes(0)
-		date.setSeconds(0)
 
-		return addTimeToDate(text, date, 'end of month')
+		return addTimeToDate(text, getDateWithTime(date), 'end of month')
 	}
 
 	let parsed = getDateFromWeekday(text, now)
 	if (parsed.date !== null) {
-		return addTimeToDate(text, parsed.date, parsed.foundText)
+		return addTimeToDate(text, parsed.date, parsed.foundText, true)
 	}
 
 	parsed = getDayFromText(text, now)
 	if (parsed.date !== null) {
 		const month = getMonthFromText(text, parsed.date)
-		return addTimeToDate(month.newText, month.date, parsed.foundText)
+		return addTimeToDate(month.newText, month.date, parsed.foundText, true)
 	}
 
 	parsed = getDateFromTextIn(text, now)
@@ -117,15 +117,15 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		}
 
 		return {
-			newText: replaceAll(text, parsed.foundText, ''),
+			newText: parsed.foundText ? replaceAll(text, parsed.foundText, '') : text,
 			date: parsed.date,
 		}
 	}
 
-	return addTimeToDate(text, parsed.date, parsed.foundText)
+	return addTimeToDate(text, parsed.date, parsed.foundText, true)
 }
 
-const addTimeToDate = (text: string, date: Date, previousMatch: string | null): dateParseResult => {
+const addTimeToDate = (text: string, date: Date, previousMatch: string | null, useDefaultTime = false): dateParseResult => {
 	previousMatch = previousMatch?.trim() || ''
 	text = replaceAll(text, previousMatch, '')
 	if (previousMatch === null) {
@@ -159,6 +159,12 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		date.setMinutes(minutes)
 		date.setSeconds(0)
 		date.setMilliseconds(0)
+	} else if (useDefaultTime) {
+		// Only a configured default applies, otherwise the time stays as parsed
+		const defaultTime = getUserDefaultTimeParts()
+		if (defaultTime !== null) {
+			date.setHours(defaultTime.hours, defaultTime.minutes, 0, 0)
+		}
 	}
 
 	const replace = results !== null ? results[0] : previousMatch
@@ -239,7 +245,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 }
 
 export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
-	const regex = /(in [0-9]+ (hours?|days?|weeks?|months?))/ig
+	const regex = new RegExp(`(?:^| )(?<found>in (?<amount>[0-9]+|an?|${numberWordsRegexGroup}) (?<unit>minutes?|hours?|days?|weeks?|months?|years?))(?=$| )`, 'i')
 	const results = regex.exec(text)
 	if (results === null) {
 		return {
@@ -248,30 +254,32 @@ export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 		}
 	}
 
-	const foundText: string = results[0]
+	const {found, amount: amountText, unit} = results.groups!
+	const amount = /^an?$/i.test(amountText) ? 1 : parseAmount(amountText)
 	const date = new Date(now)
-	const parts = foundText.split(' ')
-	switch (parts[2]) {
-		case 'hours':
+	switch (unit.toLowerCase().replace(/s$/, '')) {
+		case 'minute':
+			date.setMinutes(date.getMinutes() + amount)
+			break
 		case 'hour':
-			date.setHours(date.getHours() + parseInt(parts[1]))
+			date.setHours(date.getHours() + amount)
 			break
-		case 'days':
 		case 'day':
-			date.setDate(date.getDate() + parseInt(parts[1]))
+			date.setDate(date.getDate() + amount)
 			break
-		case 'weeks':
 		case 'week':
-			date.setDate(date.getDate() + parseInt(parts[1]) * 7)
+			date.setDate(date.getDate() + amount * 7)
 			break
-		case 'months':
 		case 'month':
-			date.setMonth(date.getMonth() + parseInt(parts[1]))
+			date.setMonth(date.getMonth() + amount)
+			break
+		case 'year':
+			date.setFullYear(date.getFullYear() + amount)
 			break
 	}
 
 	return {
-		foundText,
+		foundText: found,
 		date,
 	}
 }
@@ -397,7 +405,6 @@ const getMonthFromText = (text: string, date: Date) => {
 const getDateFromInterval = (interval: number): Date => {
 	const newDate = new Date()
 	newDate.setDate(newDate.getDate() + interval)
-	newDate.setHours(calculateNearestHours(newDate), 0, 0)
 
-	return newDate
+	return getDateWithTime(newDate)
 }

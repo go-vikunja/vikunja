@@ -1,4 +1,4 @@
-import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
+import {describe, it, expect, beforeEach, afterEach, vi, type MockInstance} from 'vitest'
 import {mount, flushPromises} from '@vue/test-utils'
 import {nextTick} from 'vue'
 import Modal from './Modal.vue'
@@ -11,47 +11,14 @@ const globalMocks = {
 	},
 }
 
-// jsdom does not implement HTMLDialogElement.showModal/close.
-// Provide stubs so that the [open] attribute — which CSS and our tests
-// check — is flipped the same way the real browser would.
-let showModalSpy: ReturnType<typeof vi.spyOn>
-let closeSpy: ReturnType<typeof vi.spyOn>
-let installedShowModal = false
-let installedClose = false
+let showModalSpy: MockInstance<HTMLDialogElement['showModal']>
 
 beforeEach(() => {
-	const proto = HTMLDialogElement.prototype
-	if (typeof proto.showModal !== 'function') {
-		proto.showModal = function () {}
-		installedShowModal = true
-	}
-	if (typeof proto.close !== 'function') {
-		proto.close = function () {}
-		installedClose = true
-	}
-	showModalSpy = vi.spyOn(proto, 'showModal').mockImplementation(function (this: HTMLDialogElement) {
-		this.setAttribute('open', '')
-	})
-	closeSpy = vi.spyOn(proto, 'close').mockImplementation(function (this: HTMLDialogElement) {
-		this.removeAttribute('open')
-	})
+	showModalSpy = vi.spyOn(HTMLDialogElement.prototype, 'showModal')
 })
 
 afterEach(() => {
 	showModalSpy.mockRestore()
-	closeSpy.mockRestore()
-	// Remove the prototype stubs we installed, so other test files see the
-	// original (unpatched) shape of HTMLDialogElement.
-	if (installedShowModal) {
-		// @ts-expect-error — removing the method we added
-		delete HTMLDialogElement.prototype.showModal
-		installedShowModal = false
-	}
-	if (installedClose) {
-		// @ts-expect-error — removing the method we added
-		delete HTMLDialogElement.prototype.close
-		installedClose = false
-	}
 	document.body.innerHTML = ''
 })
 
@@ -283,5 +250,104 @@ describe('Modal.vue — accessible name derivation', () => {
 		expect(dialog.hasAttribute('aria-labelledby')).toBe(false)
 
 		wrapper.unmount()
+	})
+})
+
+describe('Modal.vue — focus restoration', () => {
+	it('restores focus to the trigger when the modal is unmounted without a close transition', async () => {
+		const trigger = document.createElement('button')
+		document.body.append(trigger)
+		trigger.focus()
+
+		const wrapper = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="test-body">hi</p>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		const dialog = document.querySelector('dialog.modal-dialog') as HTMLDialogElement
+		expect(dialog.hasAttribute('open')).toBe(true)
+
+		// The browser moves focus into the top layer when the dialog opens and
+		// makes everything outside it inert; happy-dom does neither, so emulate
+		// both — without that, a focus() issued before dialog.close() would
+		// wrongly appear to work here.
+		const realFocus = HTMLElement.prototype.focus
+		trigger.blur()
+		const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus')
+			.mockImplementation(function (this: HTMLElement, options?: FocusOptions) {
+				const topLayer = document.querySelector('dialog[open]')
+				if (topLayer && !topLayer.contains(this)) return
+				realFocus.call(this, options)
+			})
+
+		// v-if teardown (Popup's sheet): no closeDialog(), straight to unmount.
+		wrapper.unmount()
+		focusSpy.mockRestore()
+
+		expect(document.activeElement).toBe(trigger)
+	})
+})
+
+describe('Modal.vue — nested body scroll lock', () => {
+	it('keeps the page locked while an outer modal is still open', async () => {
+		const outer = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="outer-body">outer</p>'},
+		})
+		const inner = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="inner-body">inner</p>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		expect(document.body.style.overflow).toBe('hidden')
+
+		await inner.setProps({enabled: false})
+		await new Promise(resolve => setTimeout(resolve, 200))
+		await flushPromises()
+
+		expect(document.body.style.overflow).toBe('hidden')
+
+		await outer.setProps({enabled: false})
+		await new Promise(resolve => setTimeout(resolve, 200))
+		await flushPromises()
+
+		expect(document.body.style.overflow).toBe('')
+
+		inner.unmount()
+		outer.unmount()
+		expect(document.body.style.overflow).toBe('')
+	})
+
+	it('keeps the page locked when an inner modal is unmounted instead of closed', async () => {
+		const outer = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="outer-body">outer</p>'},
+		})
+		const inner = mount(Modal, {
+			...globalMocks,
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="inner-body">inner</p>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		inner.unmount()
+		expect(document.body.style.overflow).toBe('hidden')
+
+		outer.unmount()
+		expect(document.body.style.overflow).toBe('')
 	})
 })

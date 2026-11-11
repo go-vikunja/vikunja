@@ -1,4 +1,5 @@
 import {test, expect} from '../../support/fixtures'
+import {updateUserSettings} from '../../support/updateUserSettings'
 
 test.describe('User Settings', () => {
 	test('Changes the user avatar', async ({authenticatedPage: page}) => {
@@ -96,8 +97,35 @@ test.describe('User Settings', () => {
 		const nameInput = page.locator('.general-settings input.input').first()
 		await expect(nameInput).toBeVisible({timeout: 10000})
 		await expect(nameInput).toBeEnabled()
+		await nameInput.fill('Settings Migration')
+		await page.locator('[data-cy=saveGeneralSettings]').click()
+		await expect(page.locator('.global-notification')).toContainText('Success')
+		await expect(page.locator('.username')).toHaveText('Settings Migration')
+		await page.reload()
+		await expect(nameInput).toHaveValue('Settings Migration')
 	})
-	test('Updates the week start day', async ({authenticatedPage: page}) => {
+
+	test('Keeps a setting changed elsewhere while the form is open', async ({authenticatedPage: page, apiContext, userToken}) => {
+		await page.goto('/user/settings/general')
+		await page.waitForLoadState('networkidle')
+
+		const nameInput = page.locator('.general-settings input.input').first()
+		await expect(nameInput).toBeVisible({timeout: 10000})
+		await expect(nameInput).toBeEnabled()
+
+		await updateUserSettings(apiContext, userToken, {frontend_settings: {sidebar_width: 422}})
+
+		await nameInput.fill('Edited While Stale')
+		await page.locator('[data-cy=saveGeneralSettings]').click()
+		await expect(page.locator('.global-notification')).toContainText('Success')
+
+		const storedUser = await apiContext.get('user', {headers: {Authorization: `Bearer ${userToken}`}})
+		const {settings} = await storedUser.json()
+		expect(settings.name).toBe('Edited While Stale')
+		expect(settings.frontend_settings.sidebar_width).toBe(422)
+	})
+
+	test('Updates the week start day', async ({authenticatedPage: page, apiContext, userToken}) => {
 		await page.goto('/user/settings/general')
 		await page.waitForLoadState('networkidle')
 
@@ -115,15 +143,15 @@ test.describe('User Settings', () => {
 
 		// Intercept the API request to verify it contains the correct setting
 		const settingsUpdatePromise = page.waitForResponse(response =>
-			response.url().includes('user/settings/general') && response.request().method() === 'POST',
+			response.url().includes('/api/v2/user/settings/general') && response.request().method() === 'PATCH',
 		)
 
 		await saveButton.click()
 
 		const response = await settingsUpdatePromise
-		const requestData = JSON.parse(response.request().postData() || '{}')
-		expect(requestData.week_start).toBe(3)
 		expect(response.ok()).toBe(true)
+		const storedUser = await apiContext.get('user', {headers: {Authorization: `Bearer ${userToken}`}})
+		expect((await storedUser.json()).settings.week_start).toBe(3)
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
 

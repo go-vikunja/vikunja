@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<Message
-			v-if="errorMessage"
+			v-if="errorMessage && !linking"
 			variant="danger"
 		>
 			{{ errorMessage }}
@@ -16,6 +16,15 @@
 		<Message v-if="loading && !needsTotp">
 			{{ $t('user.auth.authenticating') }}
 		</Message>
+
+		<LinkIdentityConfirm
+			v-if="linking"
+			:provider-key="route.params.provider as string"
+			:code="route.query.code as string"
+			:state="queryState"
+			:has-session="authStore.authUser"
+			:initial-error="errorMessage"
+		/>
 
 		<form
 			v-if="needsTotp"
@@ -50,6 +59,7 @@
 
 
 <script setup lang="ts">
+import type {VikunjaErrorModel} from '@/client/generated'
 import {ref, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
@@ -58,10 +68,16 @@ import {getErrorText} from '@/message'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
-import {redirectToProvider} from '@/helpers/redirectToProvider'
+import {
+	endOpenIdFlow,
+	isLinkingIdentity,
+	redirectToProvider,
+} from '@/helpers/redirectToProvider'
+import LinkIdentityConfirm from '@/components/user/LinkIdentityConfirm.vue'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
+import {ERROR_CODE_TOTP_REQUIRED} from '@/constants/auth'
 import type {IProvider} from '@/types/IProvider'
 
 defineOptions({name: 'Auth'})
@@ -77,16 +93,20 @@ const configStore = useConfigStore()
 const loading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
 const errorMessageFromQuery = computed(() => route.query.error)
+// vue-router parses a bare `?state` as null.
+const queryState = computed(() => typeof route.query.state === 'string' ? route.query.state : '')
 
 const needsTotp = ref(false)
 const totpPasscode = ref('')
+
+const linking = ref(false)
 
 function pendingTotpKey(provider: string): string {
 	return `openid_pending_totp_${provider}`
 }
 
 function findProvider(providerKey: string): IProvider | undefined {
-	return configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === providerKey)
+	return configStore.auth.openid_connect.providers?.find((p: IProvider) => p.key === providerKey)
 }
 
 async function authenticateWithCode() {
@@ -99,15 +119,27 @@ async function authenticateWithCode() {
 		errorMessage.value = typeof route.query.message !== 'undefined'
 			? route.query.message as string
 			: t('user.auth.openIdGeneralError')
+		if (isLinkingIdentity(queryState.value)) {
+			linking.value = true
+			return
+		}
+		endOpenIdFlow(queryState.value)
 		return
 	}
 
-	const state = localStorage.getItem('state')
-	if (typeof route.query.state === 'undefined' || route.query.state !== state) {
+	const storedState = localStorage.getItem('state')
+	if (!storedState || queryState.value !== storedState) {
 		sessionStorage.removeItem(pendingTotpKey(providerKey))
 		errorMessage.value = t('user.auth.openIdStateError')
 		return
 	}
+
+	if (isLinkingIdentity(queryState.value)) {
+		linking.value = true
+		return
+	}
+
+	endOpenIdFlow(queryState.value)
 
 	// sessionStorage (not localStorage): per-tab, cleared on tab close.
 	const pendingPasscode = sessionStorage.getItem(pendingTotpKey(providerKey)) ?? undefined
@@ -124,8 +156,7 @@ async function authenticateWithCode() {
 
 		redirectIfSaved()
 	} catch (e) {
-		const err = e as {response?: {data?: {code?: number}}}
-		if (err?.response?.data?.code === 1017) {
+		if ((e as VikunjaErrorModel)?.code === ERROR_CODE_TOTP_REQUIRED) {
 			needsTotp.value = true
 			return
 		}

@@ -1,0 +1,6 @@
+{
+  "items": [
+    {"id": "2100", "type": "project", "position": null, "name": "Archived card", "description": "old", "dueDate": null, "isClosed": false, "commentsTotal": 0, "listChangedAt": "2024-01-05T00:00:00.000Z", "boardId": "10", "listId": "1003", "creatorUserId": "1", "coverAttachmentId": null, "createdAt": "2024-01-01T00:00:00.000Z"}
+  ],
+  "included": {"cardMemberships": [], "cardLabels": [{"id": "9", "cardId": "2100", "labelId": "500"}], "taskLists": [], "tasks": [], "customFieldGroups": [], "customFields": [], "customFieldValues": [], "users": [], "attachments": []}
+}

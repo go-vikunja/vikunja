@@ -1,0 +1,21 @@
+- id: 1
+  user_id: 1
+  issuer: 'https://some.service.com'
+  subject: 'linked-user1'
+  created: 2018-12-01 15:13:12
+- id: 2
+  user_id: 1
+  issuer: 'https://other.service.com'
+  subject: 'linked-user1-other'
+  created: 2018-12-01 15:13:12
+- id: 3
+  user_id: 6
+  issuer: 'https://some.service.com'
+  subject: 'linked-user6'
+  created: 2018-12-01 15:13:12
+# user23 is a bot
+- id: 5
+  user_id: 23
+  issuer: 'https://some.service.com'
+  subject: 'linked-bot'
+  created: 2018-12-01 15:13:12

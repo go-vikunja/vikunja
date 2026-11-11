@@ -39,7 +39,6 @@
 			"email": "E-postadress",
 			"emailPlaceholder": "t.ex. frederic{'@'}vikunja.io",
 			"password": "Lösenord",
-			"passwordPlaceholder": "t.ex. •••••••••••",
 			"forgotPassword": "Har du glömt ditt lösenord?",
 			"resetPassword": "Återställ ditt lösenord",
 			"resetPasswordAction": "Skicka en länk för återställning av lösenord",
@@ -78,7 +77,6 @@
 			"passwordUpdateSuccess": "Lösenordet har uppdaterats.",
 			"updateEmailTitle": "Uppdatera din e-postadress",
 			"updateEmailNew": "Ny e-postadress",
-			"updateEmailSuccess": "Din e-postadress har uppdaterats. Vi har skickat en länk till dig för att bekräfta den.",
 			"general": {
 				"title": "Allmänna inställningar",
 				"name": "Mitt namn",
@@ -273,13 +271,7 @@
 		},
 		"delete": {
 			"title": "Radera \"{project}\"",
-			"header": "Radera detta projekt",
-			"text1": "Är du säker på att du vill radera detta projekt och projektets alla uppgifter?",
-			"text2": "Detta inkluderar alla uppgifter och KAN INTE ÅNGRAS!",
-			"success": "Projektet raderades framgångsrikt.",
-			"tasksToDelete": "Detta kommer oåterkalleligt ta bort ca. {count} uppgifter.",
-			"tasksAndChildProjectsToDelete": "Detta kommer att oåterkalleligt ta bort ungefär {tasks} uppgifter och {projects} projekt.",
-			"noTasksToDelete": "Detta projekt innehåller inga uppgifter, det borde vara säkert att radera."
+			"header": "Radera detta projekt"
 		},
 		"duplicate": {
 			"title": "Duplicera detta projekt",
@@ -787,36 +779,13 @@
 			"updated": "Uppdaterade {0}",
 			"doneAt": "Klar vid {0}",
 			"updateSuccess": "Uppgiften sparades framgångsrikt.",
-			"deleteSuccess": "Uppgiften raderades framgångsrikt.",
 			"belongsToProject": "Denna uppgift tillhör projektet '{project}'",
 			"back": "Tillbaka till projekt",
 			"due": "Förfaller {at}",
 			"scrollToBottom": "Skrolla till botten",
-			"organization": "Organisation",
-			"management": "Hantering",
-			"dateAndTime": "Datum och tid",
-			"delete": {
-				"header": "Radera denna uppgift",
-				"text1": "Är du säker på att du vill ta bort denna uppgift?",
-				"text2": "Detta kommer också att ta bort alla bilagor, påminnelser och relationer associerade med denna uppgift och kan inte ångras!"
-			},
 			"actions": {
-				"assign": "Tilldela till användare",
-				"label": "Lägg till etiketter",
-				"priority": "Ange prioritet",
-				"dueDate": "Ange förfallodatum",
-				"startDate": "Ange startdatum",
-				"endDate": "Ange slutdatum",
-				"reminders": "Ställ in påminnelser",
-				"repeatAfter": "Ställ in upprepande intervall",
-				"percentDone": "Ställ in framsteg",
-				"attachments": "Lägg till bilagor",
-				"relatedTasks": "Lägg till förhållande",
 				"moveProject": "Flytta",
-				"color": "Ställ in färg",
-				"delete": "Radera",
-				"favorite": "Lägg till i favoriter",
-				"unfavorite": "Ta bort från favoriter"
+				"delete": "Radera"
 			}
 		},
 		"attributes": {
@@ -842,7 +811,6 @@
 			"doneAt": "Klar vid"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Du kan inte avregistrera dig här eftersom du prenumererar på denna uppgift genom dess projekt.",
 			"subscribedProject": "Du prenumererar för närvarande på detta projekt och kommer att få notiser om ändringar.",
 			"notSubscribedProject": "Du prenumererar inte på detta projekt och kommer inte att få notiser om ändringar.",
 			"subscribedTask": "Du prenumererar för närvarande på denna uppgift och kommer att få notiser om ändringar.",
@@ -957,9 +925,6 @@
 			"dateAndTime": "Datum och tid"
 		},
 		"repeat": {
-			"everyDay": "Varje dag",
-			"everyWeek": "Varje vecka",
-			"every30d": "Var 30:e dag",
 			"mode": "Upprepningsläge",
 			"monthly": "Månatligen",
 			"fromCurrentDate": "Från datum för slutförande",
@@ -1164,10 +1129,6 @@
 			"newProject": "Nytt projekt",
 			"newTeam": "Nytt team"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} reagerade med {value}",

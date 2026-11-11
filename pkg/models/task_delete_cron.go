@@ -17,21 +17,23 @@
 package models
 
 import (
+	"context"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
 	"xorm.io/builder"
 )
 
-// TaskDeleteRetention is how long soft-deleted tasks are kept before permanent
+// TrashRetention is how long trashed tasks and projects are kept before permanent
 // removal. Hard-coded like the user deletion grace period.
-const TaskDeleteRetention = 30 * 24 * time.Hour
+const TrashRetention = 30 * 24 * time.Hour
 
 // RegisterTaskCleanupCron registers the cron job that permanently removes
-// tasks which were soft-deleted more than TaskDeleteRetention ago.
+// tasks which were soft-deleted more than TrashRetention ago.
 func RegisterTaskCleanupCron() {
 	err := cron.Schedule("0 * * * *", func() {
 		deleteExpiredTasks(time.Now())
@@ -47,7 +49,7 @@ func deleteExpiredTasks(now time.Time) {
 	err := s.Unscoped().
 		Where(builder.And(
 			builder.NotNull{"deleted_at"},
-			builder.Lt{"deleted_at": now.Add(-TaskDeleteRetention)},
+			builder.Lt{"deleted_at": now.Add(-TrashRetention)},
 		)).
 		Find(&tasks)
 	s.Close()
@@ -66,8 +68,9 @@ func deleteExpiredTasks(now time.Time) {
 		func() {
 			ts := db.NewSession()
 			defer ts.Close()
+			defer events.CleanupPending(ts)
 
-			err = hardDeleteTask(ts, task)
+			err = purgeTrashedTask(ts, task, nil)
 			if err != nil {
 				_ = ts.Rollback()
 				log.Errorf("Could not permanently delete task %d: %s", task.ID, err)
@@ -79,7 +82,9 @@ func deleteExpiredTasks(now time.Time) {
 			err = ts.Commit()
 			if err != nil {
 				log.Errorf("Could not commit transaction: %s", err)
+				return
 			}
+			events.DispatchPending(context.Background(), ts)
 		}()
 	}
 }

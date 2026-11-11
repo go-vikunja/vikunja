@@ -12,23 +12,16 @@
       "timeout": 600000
     }
   ],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "osvVulnerabilityAlerts": true,
   "packageRules": [
-    {
-      "matchPackageNames": [
-        "happy-dom"
-      ],
-      "extends": [
-        "schedule:weekly"
-      ]
-    },
     {
       "groupName": "caniuse-and-related",
       "matchPackageNames": [
         "caniuse-lite",
         "browserslist"
-      ],
-      "extends": [
-        "schedule:weekly"
       ]
     },
     {
@@ -55,10 +48,7 @@
       "matchDepTypes": [
         "devDependencies"
       ],
-      "groupName": "dev-dependencies",
-      "extends": [
-        "schedule:daily"
-      ]
+      "groupName": "dev-dependencies"
     },
     {
       "groupName": "playwright",
@@ -68,15 +58,42 @@
       ]
     },
     {
-      "description": "Update service containers used in CI at most once a week, in separate PRs",
+      "description": "Transitive pins exist for security only; alerts bypass the schedule",
+      "matchDepTypes": [
+        "pnpm.overrides",
+        "overrides"
+      ],
+      "groupName": "overrides",
+      "extends": [
+        "schedule:monthly"
+      ]
+    },
+    {
       "matchManagers": [
         "github-actions"
       ],
-      "matchDatasources": [
-        "docker"
+      "matchDepTypes": [
+        "action"
+      ],
+      "groupName": "github-actions",
+      "extends": [
+        "schedule:monthly"
+      ]
+    },
+    {
+      "groupName": "aws-sdk-go",
+      "matchPackageNames": [
+        "github.com/aws/aws-sdk-go-v2{/,}**",
+        "github.com/aws/smithy-go"
       ],
       "extends": [
-        "schedule:weekly"
+        "schedule:monthly"
+      ]
+    },
+    {
+      "groupName": "golang.org/x",
+      "matchPackageNames": [
+        "golang.org/x/**"
       ]
     },
     {
@@ -87,6 +104,9 @@
       "matchManagers": [
         "mise",
         "nvm"
+      ],
+      "extends": [
+        "schedule:monthly"
       ]
     },
     {
@@ -97,7 +117,34 @@
       "matchManagers": [
         "mise",
         "npm"
+      ],
+      "extends": [
+        "schedule:monthly"
       ]
+    },
+    {
+      "description": "xgo images are rebuilt per go release",
+      "groupName": "go",
+      "matchDepNames": [
+        "go",
+        "ghcr.io/techknowlogick/xgo"
+      ],
+      "matchManagers": [
+        "gomod",
+        "mise",
+        "dockerfile"
+      ],
+      "schedule": [
+        "before 6am on monday"
+      ],
+      "minimumReleaseAge": "2 days"
+    },
+    {
+      "description": "Let renovate move the floating go-1.N.x tag on go minors",
+      "matchDepNames": [
+        "ghcr.io/techknowlogick/xgo"
+      ],
+      "versioning": "regex:^go-(?<major>\\d+)\\.(?<minor>\\d+)\\.x$"
     }
   ]
 }

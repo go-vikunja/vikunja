@@ -1,19 +1,22 @@
-import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
+import {ref, shallowRef, watch, computed, type ComputedGetter, type DeepReadonly} from 'vue'
 import {useRouter, isNavigationFailure} from 'vue-router'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
-import TaskCollectionService, {
-	type ExpandTaskFilterParam,
+import {
 	getDefaultTaskFilterParams,
+	type TaskExpansion,
 	type TaskFilterParams,
-} from '@/services/taskCollection'
-import type {ITask} from '@/modelTypes/ITask'
+} from '@/client/queries/tasks'
+import {normalizePageNumber} from '@/client/queries/pagination'
+import {isRequestContextAbort} from '@/client/requestContext'
+import {useTasks} from '@/composables/useTasks'
 import {error} from '@/message'
-import type {IProject} from '@/modelTypes/IProject'
 import {useAuthStore} from '@/stores/auth'
 import {useViewFiltersStore} from '@/stores/viewFilters'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
+import type {ProjectView} from '@/client/generated'
+import {INCLUDE_SUBPROJECTS_QUERY_PARAM} from '@/constants/projectView'
 
 export type Order = 'asc' | 'desc' | 'none'
 
@@ -63,10 +66,11 @@ const SORT_BY_DEFAULT: SortBy = {
 }
 
 interface TaskListQueryState {
-	sort: string | undefined
-	filter: string | undefined
-	s: string | undefined
-	page: number
+	sort?: string
+	filter?: string
+	s?: string
+	page?: number
+	includeSubprojects?: string
 }
 
 export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
@@ -74,29 +78,21 @@ export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
 	if (state.sort) query.sort = state.sort
 	if (state.filter) query.filter = state.filter
 	if (state.s) query.s = state.s
-	if (state.page > 1) query.page = String(state.page)
+	if (state.page && state.page > 1) query.page = String(state.page)
+	if (state.includeSubprojects) query[INCLUDE_SUBPROJECTS_QUERY_PARAM] = state.includeSubprojects
 	return query
 }
 
-// This makes sure an id sort order is always sorted last.
-// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
-// precedence over everything else, making any other sort columns pretty useless.
-function formatSortOrder(sortBy, params) {
-	let hasIdFilter = false
-	const sortKeys = Object.keys(sortBy)
-	for (const s of sortKeys) {
-		if (s === 'id') {
-			sortKeys.splice(s, 1)
-			hasIdFilter = true
-			break
-		}
-	}
-	if (hasIdFilter) {
+// The id is only a tie-breaker for the explicitly selected sort fields.
+function formatSortOrder(sortBy: SortBy, params: TaskFilterParams): TaskFilterParams {
+	const sortKeys = Object.keys(sortBy) as (keyof SortBy)[]
+	const idIndex = sortKeys.indexOf('id')
+	if (idIndex >= 0) {
+		sortKeys.splice(idIndex, 1)
 		sortKeys.push('id')
 	}
 	params.sort_by = sortKeys
-	params.order_by = sortKeys.map(s => sortBy[s])
-
+	params.order_by = sortKeys.map(key => sortBy[key] ?? 'none')
 	return params
 }
 
@@ -104,10 +100,11 @@ function formatSortOrder(sortBy, params) {
  * This mixin provides a base set of methods and properties to get tasks.
  */
 export function useTaskList(
-	projectIdGetter: ComputedGetter<IProject['id']>,
-	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
+	projectIdGetter: ComputedGetter<number>,
+	projectViewIdGetter: ComputedGetter<number>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
-	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
+	expandGetter: ComputedGetter<TaskExpansion> = () => ['subtasks'],
+	viewGetter: ComputedGetter<ProjectView | DeepReadonly<ProjectView> | undefined> = () => undefined,
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -118,15 +115,16 @@ export function useTaskList(
 
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 
-	const page = useRouteQuery('page', '1', { transform: Number })
+	const page = useRouteQuery('page', '1', { transform: normalizePageNumber })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
+	const {includeSubprojects, queryParam: includeSubprojectsParam} = useIncludeSubprojects(viewGetter)
 
-	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
-	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })
+	watch(filter, v => { params.value.filter = String(v ?? '') }, { immediate: true })
+	watch(s, v => { params.value.q = String(v ?? '') }, { immediate: true })
 
 	watch(() => params.value.filter, v => { filter.value = v || undefined })
-	watch(() => params.value.s, v => { s.value = v || undefined })
+	watch(() => params.value.q, v => { s.value = v || undefined })
 
 	const sortQuery = useRouteQuery('sort')
 
@@ -141,35 +139,29 @@ export function useTaskList(
 		},
 	})
 
-	// Mirror the URL query bits this composable owns into the store so
-	// in-project tab switches and sidebar re-visits can restore them.
-	//
-	// `ProjectList`/`ProjectTable` are reused across project switches (no
-	// `:key` on them in ProjectView.vue), so setup runs only once. We track
-	// the last viewId we synced — on every viewId transition, if the URL has
-	// none of our params and the store has an entry, restore it via
-	// `router.replace` and skip writing back the empty state we'd otherwise
-	// clobber the saved entry with.
-	let lastSyncedViewId: number | undefined
+	const pendingQueryRestore = shallowRef<Promise<unknown>>()
+	// Sidebar links omit the query, and project views are reused across navigation.
+	const syncedViewId = shallowRef<number>()
 	watch(
-		[projectViewId, sortQuery, filter, s, page],
-		([viewId, sortValue, filterValue, sValue, pageValue]) => {
-			const viewIdChanged = viewId !== lastSyncedViewId
-			lastSyncedViewId = viewId
+		[projectViewId, sortQuery, filter, s, page, includeSubprojectsParam],
+		([viewId, sortValue, filterValue, sValue, pageValue, includeValue]) => {
+			const viewIdChanged = viewId !== syncedViewId.value
+			syncedViewId.value = viewId
 
-			// An invalid `?page=` becomes NaN via `transform: Number`; treat it as
-			// the default so it neither blocks restoration nor wipes stored state.
-			const currentPage = Number.isInteger(pageValue) ? pageValue : 1
-			const urlIsEmpty = !sortValue && !filterValue && !sValue && currentPage === 1
+			const urlIsEmpty = !sortValue && !filterValue && !sValue && pageValue === 1 && !includeValue
 			if (viewIdChanged && urlIsEmpty) {
 				const storedQuery = viewFiltersStore.getViewQuery(viewId)
 				if (Object.keys(storedQuery).length > 0) {
-					// Merge so unrelated query params on the route survive the restore.
-					// Swallow navigation failures (e.g. aborted/duplicated) so the
-					// ignored promise can't surface as an unhandled rejection.
-					router.replace({query: {...router.currentRoute.value.query, ...storedQuery}})
+					const restore = router.replace({query: {...router.currentRoute.value.query, ...storedQuery}})
+					pendingQueryRestore.value = restore
+					restore
 						.catch(failure => {
 							if (!isNavigationFailure(failure)) throw failure
+						})
+						.finally(() => {
+							if (pendingQueryRestore.value === restore) {
+								pendingQueryRestore.value = undefined
+							}
 						})
 					return
 				}
@@ -179,7 +171,8 @@ export function useTaskList(
 				sort: sortValue as string | undefined,
 				filter: filterValue as string | undefined,
 				s: sValue as string | undefined,
-				page: currentPage,
+				page: pageValue,
+				includeSubprojects: includeValue,
 			})
 			if (Object.keys(query).length > 0) {
 				viewFiltersStore.setViewQuery(viewId, query)
@@ -195,7 +188,7 @@ export function useTaskList(
 
 		// Relevance ranking only engages when no sort is sent, so omit the default
 		// sort while searching and let an explicit user sort still take precedence.
-		if (loadParams.s && !sortQuery.value) {
+		if (loadParams.q && !sortQuery.value) {
 			loadParams.sort_by = []
 			loadParams.order_by = []
 			return loadParams
@@ -205,9 +198,10 @@ export function useTaskList(
 	})
 
 	watch(
-		[params, sortBy, page],
+		[params, sortBy, page, includeSubprojects],
 		([, , newPage], [, , oldPage]) => {
-			if (newPage === oldPage) {
+			// A redundant page write can cancel the navigation restoring a saved sort.
+			if (newPage === oldPage && newPage !== 1) {
 				page.value = 1
 			}
 		},
@@ -216,46 +210,32 @@ export function useTaskList(
 	
 	const authStore = useAuthStore()
 	
-	const getAllTasksParams = computed(() => {
-		return [
-			{
-				projectId: projectId.value,
-				viewId: projectViewId.value,
-			},
-			{
-				...allParams.value,
-				filter_timezone: authStore.settings.timezone,
-				expand: expandGetter(),
-			},
-			page.value,
-		]
+	const scope = computed(() => ({
+		project: projectId.value,
+		view: projectViewId.value,
+		params: {
+			...allParams.value,
+			...(includeSubprojects.value ? {include_subprojects: true} : {}),
+			filter_timezone: authStore.settings.timezone,
+			expand: expandGetter(),
+		},
+	}))
+	const query = useTasks(scope, {
+		page,
+		// Scope updates before the restore decision is made; hold the fetch until then.
+		enabled: () => !pendingQueryRestore.value && projectViewId.value === syncedViewId.value,
+	})
+	const loading = query.isFetching
+	const {tasks, totalPages} = query
+
+	watch(query.error, cause => {
+		if (cause && !isRequestContextAbort(cause)) error(cause)
 	})
 
-	const taskCollectionService = shallowReactive(new TaskCollectionService())
-	const loading = computed(() => taskCollectionService.loading)
-	const totalPages = computed(() => taskCollectionService.totalPages)
-
-	const tasks = ref<ITask[]>([])
-	async function loadTasks(resetBeforeLoad: boolean = true) {
-		if(resetBeforeLoad) {
-			tasks.value = []
-		}
-		try {
-			tasks.value = await taskCollectionService.getAll(...getAllTasksParams.value)
-		} catch (e) {
-			error(e)
-		}
+	async function loadTasks() {
+		await query.refetch()
 		return tasks.value
 	}
-
-	// Only listen for query path changes
-	watch(() => JSON.stringify(getAllTasksParams.value), (newParams, oldParams) => {
-		if (oldParams === newParams) {
-			return
-		}
-
-		loadTasks()
-	}, { immediate: true })
 
 	return {
 		tasks,
@@ -265,5 +245,6 @@ export function useTaskList(
 		loadTasks,
 		params,
 		sortByParam: sortBy,
+		includeSubprojects,
 	}
 }

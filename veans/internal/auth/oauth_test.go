@@ -20,11 +20,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestGeneratePKCE_VerifierShape(t *testing.T) {
@@ -284,3 +286,101 @@ func TestRenderCallbackPage_SuccessNoErrorPath(t *testing.T) {
 type fakeError struct{ msg string }
 
 func (f *fakeError) Error() string { return f.msg }
+
+func TestParsePastedCallback(t *testing.T) {
+	for _, in := range []string{
+		"http://127.0.0.1:54321/callback?code=abc&state=xyz",
+		"  http://127.0.0.1:54321/callback?code=abc&state=xyz\n",
+		"code=abc&state=xyz",
+	} {
+		res, err := checkCallback(parsePastedCallback(in))
+		if err != nil {
+			t.Fatalf("%q: unexpected error: %v", in, err)
+		}
+		if res.code != "abc" || res.state != "xyz" {
+			t.Errorf("%q: got code=%q state=%q", in, res.code, res.state)
+		}
+	}
+}
+
+func TestParsePastedCallback_Errors(t *testing.T) {
+	for _, in := range []string{
+		"",
+		"http://127.0.0.1:54321/callback?state=xyz",
+		"http://127.0.0.1:54321/callback?error=access_denied&state=xyz",
+		"code=%zz",
+	} {
+		if _, err := checkCallback(parsePastedCallback(in)); err == nil {
+			t.Errorf("%q: want error", in)
+		}
+	}
+}
+
+// linePrompter feeds lines to ReadLineContext, then blocks until ctx is
+// done like StdPrompter does with no input, or returns io.EOF if eof is set.
+type linePrompter struct {
+	lines    []string
+	eof      bool
+	canceled chan struct{}
+}
+
+func (l *linePrompter) ReadLine(string) (string, error) { return "", nil }
+func (l *linePrompter) ReadLineContext(ctx context.Context, _ string) (string, error) {
+	if len(l.lines) > 0 {
+		line := l.lines[0]
+		l.lines = l.lines[1:]
+		return line, nil
+	}
+	if l.eof {
+		return "", io.EOF
+	}
+	<-ctx.Done()
+	close(l.canceled)
+	return "", ctx.Err()
+}
+func (l *linePrompter) ReadPassword(string) (string, error) { return "", nil }
+
+func TestWaitForCallback_Paste(t *testing.T) {
+	p := &linePrompter{lines: []string{"", "  ", "http://127.0.0.1:1/callback?code=abc&state=xyz"}}
+	res, err := waitForCallback(context.Background(), make(chan callbackResult), p, io.Discard)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.code != "abc" || res.state != "xyz" {
+		t.Errorf("got code=%q state=%q", res.code, res.state)
+	}
+}
+
+func TestWaitForCallback_LoopbackCancelsPasteRead(t *testing.T) {
+	p := &linePrompter{canceled: make(chan struct{})}
+	ch := make(chan callbackResult, 1)
+	ch <- callbackResult{code: "abc", state: "xyz"}
+	res, err := waitForCallback(context.Background(), ch, p, io.Discard)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.code != "abc" {
+		t.Errorf("code = %q, want abc", res.code)
+	}
+	select {
+	case <-p.canceled:
+	default:
+		t.Fatal("returned while the paste read was still in flight")
+	}
+}
+
+func TestWaitForCallback_EOFKeepsWaitingForLoopback(t *testing.T) {
+	p := &linePrompter{eof: true}
+	ch := make(chan callbackResult)
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		ch <- callbackResult{code: "abc", state: "xyz"}
+	}()
+	res, err := waitForCallback(context.Background(), ch, p, io.Discard)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.code != "abc" {
+		t.Errorf("code = %q, want abc", res.code)
+	}
+}

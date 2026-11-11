@@ -21,8 +21,9 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
-	user2 "code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/modules/humabridge"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -45,19 +46,19 @@ func RegisterRefreshTokenRoutes(api huma.API) {
 }
 
 func authRefreshToken(ctx context.Context, _ *struct{}) (*authTokenBody, error) {
-	ec := echoContextFromCtx(ctx)
+	ec := humabridge.EchoContextFrom(ctx)
 	if ec == nil {
-		return nil, huma.Error401Unauthorized("No refresh token provided.")
+		return nil, translateDomainError(&models.ErrNoRefreshToken{})
 	}
 
 	cookie, err := ec.Cookie(auth.RefreshTokenCookieName)
 	if err != nil || cookie.Value == "" {
-		return nil, huma.Error401Unauthorized("No refresh token provided.")
+		return nil, translateDomainError(&models.ErrNoRefreshToken{})
 	}
 
 	result, err := auth.RefreshSession(cookie.Value)
 	if err != nil {
-		if user2.IsErrUserStatusError(err) {
+		if auth.IsUnusableRefreshToken(err) {
 			auth.ClearRefreshTokenCookie(ec)
 		}
 		return nil, translateDomainError(err)

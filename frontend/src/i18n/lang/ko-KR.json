@@ -39,7 +39,6 @@
 			"email": "이메일 주소",
 			"emailPlaceholder": "이메일을 입력해주세요.",
 			"password": "비밀번호",
-			"passwordPlaceholder": "비밀번호를 입력해주세요.",
 			"forgotPassword": "비밀번호를 잊으셨나요?",
 			"resetPassword": "비밀번호 재설정",
 			"resetPasswordAction": "비밀번호 재설정 링크 보내기",
@@ -77,7 +76,6 @@
 			"passwordUpdateSuccess": "비밀번호가 성공적으로 변경되었습니다.",
 			"updateEmailTitle": "이메일 주소 변경",
 			"updateEmailNew": "새로운 이메일 주소",
-			"updateEmailSuccess": "승인 메일을 성공적으로 발송하였습니다. 확인하여 주십시오.",
 			"general": {
 				"title": "일반 설정",
 				"name": "나의 이름",
@@ -241,13 +239,7 @@
 		},
 		"delete": {
 			"title": "\"{project}\" 삭제 ",
-			"header": "프로젝트 삭제",
-			"text1": "이 프로젝트와 그 안에 모든 작업들을 지우시겠습니까?",
-			"text2": "여기에는 모든 할 일이 포함되며 실행 취소할 수 없습니다!",
-			"success": "프로젝트가 성공적으로 삭제되었습니다.",
-			"tasksToDelete": "이렇게 하면 약 {count}개의 할 일이 취소할 수 없게 제거됩니다.",
-			"tasksAndChildProjectsToDelete": "이렇게 하면 약 {tasks} 할 일 및 {projects} 프로젝트가 취소 불가능하게 제거됩니다.",
-			"noTasksToDelete": "이 프로젝트에는 할 일이 포함되어 있지 않으므로 삭제해도 안전합니다."
+			"header": "프로젝트 삭제"
 		},
 		"duplicate": {
 			"title": "프로젝트 복사",
@@ -719,34 +711,11 @@
 			"updated": "업데이트 {0}",
 			"doneAt": "완료 {0}",
 			"updateSuccess": "할 일이 성공적으로 저장되었습니다.",
-			"deleteSuccess": "할 일을 삭제했어요.",
 			"belongsToProject": "이 할 일은 '{project}' 프로젝트에 속해요.",
 			"due": "마감일 {at}",
-			"organization": "조직",
-			"management": "관리",
-			"dateAndTime": "날짜와 시간",
-			"delete": {
-				"header": "이 할 일을 삭제 하시겠습니까?",
-				"text1": "정말로 이 할 일을 삭제할까요?",
-				"text2": "할 일과 관련된 모든 첨부 파일, 미리알림 및 관계가 삭제되며 되돌릴 수 없어요!"
-			},
 			"actions": {
-				"assign": "사용자에게 할당",
-				"label": "레이블 추가",
-				"priority": "우선 순위 설정",
-				"dueDate": "마감일 설정",
-				"startDate": "시작 날짜 설정",
-				"endDate": "종료 날짜 설정",
-				"reminders": "미리 알림 설정",
-				"repeatAfter": "반복 간격 설정",
-				"percentDone": "진행율 설정",
-				"attachments": "첨부 파일 추가",
-				"relatedTasks": "관계 추가",
 				"moveProject": "이동",
-				"color": "색 설정",
-				"delete": "삭제",
-				"favorite": "즐겨찾기에 추가",
-				"unfavorite": "즐겨찾기에서 제거"
+				"delete": "삭제"
 			}
 		},
 		"attributes": {
@@ -770,7 +739,6 @@
 			"doneAt": "완료 시점"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "해당 프로젝트를 통해 이 할 일을 구독하고 있으므로 여기서 구독을 취소할 수 없습니다.",
 			"subscribedProject": "현재 이 프로젝트를 구독 중이며 변경 사항에 대한 알림을 받게 됩니다.",
 			"notSubscribedProject": "이 프로젝트를 구독하지 않으므로 변경 사항에 대한 알림을 받지 못합니다.",
 			"subscribedTask": "현재 이 할 일을 구독 중이며 변경 사항에 대한 알림을 받게 됩니다.",
@@ -882,9 +850,6 @@
 			"dateAndTime": "날짜와 시간"
 		},
 		"repeat": {
-			"everyDay": "매일",
-			"everyWeek": "매주",
-			"every30d": "30일마다",
 			"mode": "반복 모드",
 			"monthly": "매달",
 			"fromCurrentDate": "완료일로부터",
@@ -1067,10 +1032,6 @@
 			"newProject": "프로젝트 만들기",
 			"newTeam": "팀 만들기"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user}님이 {value}로 반응했습니다",

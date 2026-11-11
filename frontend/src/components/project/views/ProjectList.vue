@@ -11,10 +11,9 @@
 					v-model="sortByParam"
 				/>
 				<FilterPopup
-					v-if="!isSavedFilter(project)"
+					v-if="!isSavedFilterProject(project)"
 					v-model="params"
-					:view-id="viewId"
-					:project-id="projectId"
+					:view
 					@update:modelValue="loadTasks()"
 				/>
 			</div>
@@ -22,7 +21,7 @@
 
 		<template #default>
 			<div
-				:class="{ 'is-loading': loading }"
+				:class="{ 'is-loading': showLoading }"
 				class="loader-container is-max-width-desktop list-view"
 			>
 				<Card
@@ -31,7 +30,7 @@
 					class="has-overflow"
 				>
 					<AddTask
-						v-if="!project?.isArchived && canWrite"
+						v-if="!project?.is_archived && canWrite"
 						ref="addTaskRef"
 						class="list-view__add-task d-print-none"
 						@tasksAdded="updateTaskList"
@@ -40,7 +39,7 @@
 					<Nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 						{{ $t('project.list.empty') }}
 						<ButtonLink
-							v-if="project?.id > 0 && canWrite"
+							v-if="(project?.id ?? 0) > 0 && canWrite"
 							@click="focusNewTaskInput()"
 						>
 							{{ $t('project.list.newTaskCta') }}
@@ -51,6 +50,7 @@
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
 						:group="{name: 'tasks', put: false}"
+						:sort="canReorderTasks"
 						:disabled="!canDragTasks || !isPositionSorting"
 						item-key="id"
 						tag="ul"
@@ -71,7 +71,7 @@
 					>
 						<template #item="{element: t, index}">
 							<SingleTaskInProject
-								:ref="(el) => setTaskRef(el, index)"
+								:ref="(el) => setTaskRef(el as InstanceType<typeof SingleTaskInProject> | null, index)"
 								:show-list-color="false"
 								:can-mark-as-done="canWrite || isPseudoProject"
 								:the-task="t"
@@ -100,8 +100,9 @@
 
 
 <script setup lang="ts">
+import {useUpdateTaskPositionMutation} from '@/client/queries/taskMutations'
 import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
-import draggable from 'zhyswan-vuedraggable'
+import {draggableFor} from '@/components/base/Draggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
@@ -114,29 +115,37 @@ import SortPopup from '@/components/project/partials/SortPopup.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
+import {eventToShortcutString} from '@/helpers/shortcut'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import type {ITask} from '@/modelTypes/ITask'
-import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
+import type {TaskResponse} from '@/client/queries/tasks'
+import type {ProjectView} from '@/client/generated'
+import {isSavedFilterProject} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
-import {useTaskStore} from '@/stores/tasks'
+import {useTaskDragState} from '@/composables/useTaskDragState'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
-import type {IProject} from '@/modelTypes/IProject'
-import type {IProjectView} from '@/modelTypes/IProjectView'
-import TaskPositionService from '@/services/taskPosition'
-import TaskPositionModel from '@/models/taskPosition'
 
 const props = defineProps<{
-        isLoadingProject: boolean,
-        projectId: IProject['id'],
-        viewId: IProjectView['id'],
+	isLoadingProject: boolean,
+	projectId: number,
+	viewId: number,
+	view: ProjectView,
 }>()
+
+const draggable = draggableFor<TaskResponse>()
 
 const projectId = toRef(props, 'projectId')
 
 defineOptions({name: 'List'})
+
+const baseStore = useBaseStore()
+const {setDraggedTask} = useTaskDragState()
+const {handleTaskDropToProject} = useTaskDragToProject()
+const {currentProject: project} = useCurrentProject()
 
 const ctaVisible = ref(false)
 
@@ -150,6 +159,7 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
+	includeSubprojects,
 } = useTaskList(
 	() => projectId.value,
 	() => props.viewId,
@@ -157,41 +167,38 @@ const {
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
+	() => props.view,
 )
+const showLoading = useDelayedLoading(loading)
 
-const taskPositionService = ref(new TaskPositionService())
+const positionMutation = useUpdateTaskPositionMutation()
 
-// Saved filter composable for accessing filter data
-const _savedFilter = useSavedFilter(() => isSavedFilter({id: projectId.value}) ? projectId.value : undefined).filter
-
-const tasks = ref<ITask[]>([])
-watch(
-	allTasks,
-	() => {
-		const isFiltered = isSavedFilter({id: projectId.value})
-		tasks.value = ([...allTasks.value]).filter(t => shouldShowTaskInListView(t, allTasks.value, isFiltered))
-	},
-)
+const dragTasks = ref<TaskResponse[] | null>(null)
+const tasks = computed({
+	get: () => dragTasks.value ?? allTasks.value.filter(task => shouldShowTaskInListView(task, allTasks.value)),
+	set: value => { dragTasks.value = value },
+})
+watch([projectId, () => props.viewId], () => { dragTasks.value = null })
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
-const baseStore = useBaseStore()
-const taskStore = useTaskStore()
-const {handleTaskDropToProject} = useTaskDragToProject()
-const project = computed(() => baseStore.currentProject)
+// A subproject's task has no position in this view, so the api drops the position sort.
+const canReorderTasks = computed(() => isPositionSorting.value && !includeSubprojects.value)
 
 const canWrite = computed(() => {
-	return project.value?.maxPermission > Permissions.READ && project.value?.id > 0
+	return typeof project.value?.max_permission === 'number' &&
+		project.value.max_permission > Permissions.READ &&
+		project.value.id > 0
 })
 
-const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)
+const isPseudoProject = computed(() => isSavedFilterProject(project.value) || project.value?.id === -1)
 
 onMounted(async () => {
 	await nextTick()
 	ctaVisible.value = true
 })
 
-const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
+const canDragTasks = computed(() => canWrite.value || isSavedFilterProject(project.value))
 
 const isTouchDevice = ref(false)
 if (typeof window !== 'undefined') {
@@ -205,76 +212,79 @@ function focusNewTaskInput() {
 	addTaskRef.value?.focusTaskInput()
 }
 
-function updateTaskList(newTasks: ITask[]) {
-	if (!isPositionSorting.value) {
-		// reload tasks with current filter and sorting
-		loadTasks()
-	} else {
-		allTasks.value = [
-			...newTasks,
-			...allTasks.value,
-		]
-	}
-
+function updateTaskList() {
 	baseStore.setHasTasks(true)
 }
 
-function updateTasks(updatedTask: ITask) {
-	if (projectId.value < 0) {
-		// Reload tasks to keep saved filter results in sync
-		loadTasks(false)
-		return
-	}
-
-	for (let t = 0; t < tasks.value.length; t++) {
-		if (tasks.value[t].id === updatedTask.id) {
-			tasks.value[t] = updatedTask
-			break
-		}
-	}
+function updateTasks() {
+	if (projectId.value < 0) void loadTasks()
 }
 
 function handleDragStart(e: { item: HTMLElement }) {
 	drag.value = true
+	dragTasks.value = [...tasks.value]
 	const taskId = parseInt(e.item.dataset.taskId ?? '', 10)
 	const task = tasks.value.find(t => t.id === taskId)
 
 	if (task) {
-		taskStore.setDraggedTask(task)
+		setDraggedTask(task)
 	}
 }
 
-async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, newIndex: number }) {
+async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, item: HTMLElement, newIndex: number }) {
 	drag.value = false
+	try {
 
-	// Check if dropped on a sidebar project
-	const {moved} = await handleTaskDropToProject(e, (task) => {
-		tasks.value = tasks.value.filter(t => t.id !== task.id)
-	})
+		// Check if dropped on a sidebar project
+		const {moved} = await handleTaskDropToProject(e, (task) => {
+			// The target project may still be in this list, so let the reload decide.
+			if (includeSubprojects.value) {
+				return
+			}
 
-	if (moved) {
-		return
-	}
+			tasks.value = tasks.value.filter(t => t.id !== task.id)
+		})
 
-	// If dropped outside this list
-	if (e.to !== e.from) {
-		return
-	}
+		if (moved) {
+			if (includeSubprojects.value) {
+				await loadTasks()
+			}
+			return
+		}
 
-	const task = tasks.value[e.newIndex]
-	const taskBefore = tasks.value[e.newIndex - 1] ?? null
-	const taskAfter = tasks.value[e.newIndex + 1] ?? null
+		// If dropped outside this list
+		if (e.to !== e.from) {
+			return
+		}
 
-	const position = calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null)
+		if (!canReorderTasks.value) {
+			return
+		}
 
-	await taskPositionService.value.update(new TaskPositionModel({
-		position,
-		projectViewId: props.viewId,
-		taskId: task.id,
-	}))
-	tasks.value[e.newIndex] = {
-		...task,
-		position,
+		// e.newIndex is a DOM index: it counts elements still leaving the transition group, so it can
+		// point past the last task. The list is already reordered here, so resolve the task by its id.
+		const movedTaskId = parseInt(e.item.dataset.taskId ?? '', 10)
+		const newIndex = tasks.value.findIndex(t => t.id === movedTaskId)
+
+		if (newIndex === -1) {
+			return
+		}
+
+		const taskBefore = tasks.value[newIndex - 1] ?? null
+		const taskAfter = tasks.value[newIndex + 1] ?? null
+
+		const position = calculateItemPosition(
+			taskBefore !== null ? taskBefore.position : null,
+			taskAfter !== null ? taskAfter.position : null,
+		)
+
+		await positionMutation.mutateAsync({
+			position,
+			project_view_id: props.viewId,
+			taskId: movedTaskId,
+		})
+	} catch { /* Mutation reports the error. */ } finally {
+		dragTasks.value = null
 	}
 }
 
@@ -305,13 +315,14 @@ function handleListNavigation(e: KeyboardEvent) {
 		return
 	}
 
-	if (e.code === 'KeyJ') {
+	const shortcut = eventToShortcutString(e)
+	if (shortcut === 'KeyJ') {
 		e.preventDefault()
 		focusTask(Math.min(focusedIndex.value + 1, tasks.value.length - 1))
 		return
 	}
 
-	if (e.code === 'KeyK') {
+	if (shortcut === 'KeyK') {
 		e.preventDefault()
 		if (focusedIndex.value === -1) {
 			focusTask(tasks.value.length - 1)
@@ -328,11 +339,7 @@ function handleListNavigation(e: KeyboardEvent) {
 		return
 	}
 
-	if (e.code === 'Enter') {
-		if (e.isComposing) {
-			return
-		}
-
+	if (shortcut === 'Enter') {
 		// Links and buttons activate natively on Enter; leave them alone
 		if (e.target instanceof HTMLElement && e.target.closest('a, button, [role="button"]')) {
 			return
@@ -364,8 +371,6 @@ onBeforeUnmount(() => {
 	gap: .5rem;
 
 	:deep(.popup) {
-		inset-block-start: 3rem;
-		inset-inline-end: 0;
 		max-inline-size: 300px;
 	}
 }

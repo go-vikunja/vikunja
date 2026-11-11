@@ -54,6 +54,10 @@ func UpdateUserEmail(c *echo.Context) (err error) {
 		return models.ErrInvalidModel{Err: err}
 	}
 
+	if err := c.Validate(emailUpdate); err != nil {
+		return err
+	}
+
 	emailUpdate.User, err = user.GetCurrentUser(c)
 	if err != nil {
 		return err
@@ -72,5 +76,5 @@ func UpdateUserEmail(c *echo.Context) (err error) {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, models.Message{Message: "We sent you email with a link to confirm your email address."})
+	return c.JSON(http.StatusOK, models.Message{Message: user.EmailUpdateMessage()})
 }

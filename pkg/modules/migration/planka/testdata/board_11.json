@@ -1,0 +1,4 @@
+{
+  "item": {"id": "11", "position": 65536, "name": "Board B", "projectId": "100"},
+  "included": {"boardMemberships": [], "labels": [], "lists": [{"id": "1100", "type": "active", "position": 65536, "name": "Ideas", "boardId": "11"}], "cards": [], "cardMemberships": [], "cardLabels": [], "taskLists": [], "tasks": [], "customFieldGroups": [], "customFields": [], "customFieldValues": [], "users": [], "projects": [], "attachments": []}
+}

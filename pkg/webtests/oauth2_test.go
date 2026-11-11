@@ -82,7 +82,7 @@ func insertLegacyOAuthScopedToken(t *testing.T) string {
 
 	s := db.NewSession()
 	defer s.Close()
-	_, err := s.Insert(token)
+	_, err := s.Nullable("token_sha256").Insert(token)
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 
@@ -116,7 +116,7 @@ func TestOAuth2AuthorizeEndpoint(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+		token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 		require.NoError(t, err)
 
 		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", "S256", "teststate")
@@ -136,7 +136,7 @@ func TestOAuth2AuthorizeEndpoint(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+		token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 		require.NoError(t, err)
 
 		body := authorizeRequestBody("code", "vikunja", "https://evil.com/callback", "test", "S256", "")
@@ -148,7 +148,7 @@ func TestOAuth2AuthorizeEndpoint(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+		token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 		require.NoError(t, err)
 
 		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "", "", "")
@@ -199,7 +199,7 @@ func TestOAuth2AuthorizeEndpoint(t *testing.T) {
 func getAuthorizationCode(t *testing.T, e http.Handler, codeChallenge, state string) string {
 	t.Helper()
 
-	token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+	token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 	require.NoError(t, err)
 
 	body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", codeChallenge, "S256", state)

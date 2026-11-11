@@ -237,6 +237,16 @@ func TestTask(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"hex_color":"f0f0f0"`)
 				assert.NotContains(t, rec.Body.String(), `"hex_color":""`)
 			})
+			t.Run("Color with leading #", func(t *testing.T) {
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"hex_color":"#f0f0f0"}`)
+				require.NoError(t, err)
+				assert.Contains(t, rec.Body.String(), `"hex_color":"f0f0f0"`)
+			})
+			t.Run("Color not a hex color", func(t *testing.T) {
+				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"hex_color":"1234567"}`)
+				require.Error(t, err)
+				assert.Contains(t, err.(models.ValidationHTTPError).InvalidFields[0], "does not validate as hexcolor")
+			})
 			t.Run("Color unset", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "31"}, `{"hex_color":""}`)
 				require.NoError(t, err)

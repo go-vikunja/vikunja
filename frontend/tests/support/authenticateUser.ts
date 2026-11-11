@@ -1,6 +1,7 @@
 import type {Page, APIRequestContext} from '@playwright/test'
 import {UserFactory} from '../factories/user'
 import {TEST_PASSWORD} from './constants'
+import {apiRootUrl} from './apiUrl'
 
 /**
  * Sets up the API URL in the page's localStorage and window so the frontend
@@ -8,7 +9,7 @@ import {TEST_PASSWORD} from './constants'
  */
 export async function setupApiUrl(page: Page) {
 	// Use 127.0.0.1 instead of localhost to match the frontend's origin for CORS
-	const apiUrl = process.env.API_URL || 'http://127.0.0.1:3456/api/v1'
+	const apiUrl = apiRootUrl(process.env.API_URL || 'http://127.0.0.1:3456')
 	await page.addInitScript(({apiUrl}) => {
 		window.localStorage.setItem('API_URL', apiUrl)
 		window.API_URL = apiUrl

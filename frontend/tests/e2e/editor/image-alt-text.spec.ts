@@ -125,7 +125,7 @@ test.describe('Editor image alt text', () => {
 		await expect(editor).toBeVisible({timeout: 30_000})
 
 		const uploadPromise = page.waitForResponse(r =>
-			r.url().includes(`/tasks/${tasks[0].id}/attachments`) && r.request().method() === 'PUT',
+			r.url().includes(`/api/v2/tasks/${tasks[0].id}/attachments`) && r.request().method() === 'POST',
 		)
 		await description.locator('#tiptap__image-upload').setInputFiles(join(__dirname, '../../fixtures/image.jpg'))
 		await uploadPromise
@@ -152,7 +152,7 @@ test.describe('Editor image alt text', () => {
 		await expect(editor).toBeVisible({timeout: 30_000})
 
 		const uploadPromise = page.waitForResponse(r =>
-			r.url().includes(`/tasks/${tasks[0].id}/attachments`) && r.request().method() === 'PUT',
+			r.url().includes(`/api/v2/tasks/${tasks[0].id}/attachments`) && r.request().method() === 'POST',
 		)
 		await description.locator('#tiptap__image-upload').setInputFiles(join(__dirname, '../../fixtures/image.jpg'))
 		await uploadPromise

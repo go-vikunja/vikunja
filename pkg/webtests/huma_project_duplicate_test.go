@@ -46,6 +46,9 @@ func TestProjectDuplicateV2(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects/1/duplicate", `{}`, token, "")
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"duplicated_project"`)
+		// Never computed on this path, so it must be null — the zero value (0) would claim read.
+		assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+		assert.NotContains(t, rec.Body.String(), `"max_permission":0`)
 
 		var resp struct {
 			DuplicatedProject struct {

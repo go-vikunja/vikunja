@@ -17,6 +17,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
@@ -42,13 +43,25 @@ func NewXormLogger(configLogEnabled bool, configLogDatabase string, configLogDat
 	return xormLogger
 }
 
+// xorm hands every SQL statement with its arguments to Infof; formatting them only to have the handler
+// drop the record was measurable under load, so the level is checked first.
+func (x *XormLogger) enabled(level slog.Level) bool {
+	return x.logger.Enabled(context.Background(), level)
+}
+
 // Debug logs a debug string
 func (x *XormLogger) Debug(v ...interface{}) {
+	if !x.enabled(slog.LevelDebug) {
+		return
+	}
 	x.logger.Debug(fmt.Sprint(v...))
 }
 
 // Debugf logs a debug string
 func (x *XormLogger) Debugf(format string, v ...interface{}) {
+	if !x.enabled(slog.LevelDebug) {
+		return
+	}
 	x.logger.Debug(fmt.Sprintf(format, v...))
 }
 
@@ -64,11 +77,17 @@ func (x *XormLogger) Errorf(format string, v ...interface{}) {
 
 // Info logs an info string
 func (x *XormLogger) Info(v ...interface{}) {
+	if !x.enabled(slog.LevelInfo) {
+		return
+	}
 	x.logger.Info(fmt.Sprint(v...))
 }
 
 // Infof logs an info string
 func (x *XormLogger) Infof(format string, v ...interface{}) {
+	if !x.enabled(slog.LevelInfo) {
+		return
+	}
 	x.logger.Info(fmt.Sprintf(format, v...))
 }
 

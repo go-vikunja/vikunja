@@ -3,7 +3,7 @@
 		class="loader-container"
 		:class="{
 			'is-loading': isLoadingProject,
-			'is-archived': currentProject?.isArchived,
+			'is-archived': currentProject.is_archived,
 		}"
 	>
 		<h1 class="project-title-print">
@@ -21,8 +21,9 @@
 				class="switch-view-dropdown"
 			>
 				<template #trigger="{ toggleOpen, open }">
-					<BaseButton
-						class="switch-view switch-view-dropdown-trigger"
+					<SwitchView
+						:is="BaseButton"
+						class="switch-view-dropdown-trigger"
 						:aria-expanded="open"
 						@click="toggleOpen"
 					>
@@ -31,7 +32,7 @@
 							icon="chevron-down"
 							class="dropdown-icon"
 						/>
-					</BaseButton>
+					</SwitchView>
 				</template>
 				<template #default="{ close }">
 					<div @click="close">
@@ -48,10 +49,9 @@
 			</Dropdown>
 
 			<!-- Inline buttons, hidden when overflowing but kept in DOM for width measurement -->
-			<div
+			<SwitchView
 				v-if="views.length > 1"
 				ref="switchViewRef"
-				class="switch-view"
 				:class="{'switch-view--hidden': isOverflowing || !overflowChecked}"
 				:aria-hidden="isOverflowing || undefined"
 			>
@@ -65,12 +65,12 @@
 				>
 					{{ getViewTitle(view) }}
 				</BaseButton>
-			</div>
+			</SwitchView>
 			<slot name="header" />
 		</div>
 		<CustomTransition name="fade">
 			<Message
-				v-if="currentProject?.isArchived"
+				v-if="currentProject.is_archived"
 				variant="warning"
 				class="mbe-4"
 			>
@@ -84,7 +84,7 @@
 
 <script setup lang="ts">
 import {computed, ref, watch, nextTick, onMounted} from 'vue'
-import {useResizeObserver} from '@vueuse/core'
+import {unrefElement, useResizeObserver} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -93,39 +93,39 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Icon from '@/components/misc/Icon'
 import Message from '@/components/misc/Message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import SwitchView from '@/components/misc/SwitchView.vue'
 
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {useTitle} from '@/composables/useTitle'
 
-import {useBaseStore} from '@/stores/base'
-import {useProjectStore} from '@/stores/projects'
 import {useViewFiltersStore} from '@/stores/viewFilters'
+import {useCurrentProject} from '@/composables/useCurrentProject'
 
-import type {IProject} from '@/modelTypes/IProject'
-import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {ProjectView} from '@/client/generated'
+import {normalizeProject} from '@/client/queries/projects'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
-	projectId: IProject['id'],
-	viewId: IProjectView['id'],
+	projectId: number,
+	viewId: number,
 }>()
 
 const {t} = useI18n()
 
-const baseStore = useBaseStore()
-const projectStore = useProjectStore()
 const viewFiltersStore = useViewFiltersStore()
+const {currentProject: queriedProject} = useCurrentProject()
 
 const switchViewContainerRef = ref<HTMLElement>()
-const switchViewRef = ref<HTMLElement>()
+const switchViewRef = ref<InstanceType<typeof SwitchView>>()
 const isOverflowing = ref(false)
 const overflowChecked = ref(false)
 
 function checkOverflow() {
-	if (!switchViewRef.value || !switchViewContainerRef.value) {
+	const switchView = unrefElement(switchViewRef)
+	if (!switchView || !switchViewContainerRef.value) {
 		return
 	}
-	const buttonsWidth = switchViewRef.value.scrollWidth
+	const buttonsWidth = switchView.scrollWidth
 	const containerWidth = switchViewContainerRef.value.clientWidth
 	isOverflowing.value = buttonsWidth > containerWidth
 	overflowChecked.value = true
@@ -139,20 +139,13 @@ useResizeObserver(switchViewContainerRef, () => {
 	requestAnimationFrame(() => checkOverflow())
 })
 
-const currentProject = computed<IProject>(() => {
-	return baseStore.currentProject || {
-		id: 0,
-		title: '',
-		isArchived: false,
-		maxPermission: null,
-	}
-})
+const currentProject = computed(() => queriedProject.value ?? normalizeProject({id: 0}))
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
-const views = computed(() => projectStore.projects[props.projectId]?.views)
+const views = computed(() => currentProject.value.views)
 
 const activeViewTitle = computed(() => {
-	const activeView = views.value?.find((v: IProjectView) => v.id === props.viewId)
+	const activeView = views.value.find((view: ProjectView) => view.id === props.viewId)
 	return activeView ? getViewTitle(activeView) : ''
 })
 
@@ -161,7 +154,7 @@ watch(views, () => {
 	nextTick(() => checkOverflow())
 })
 
-function getViewTitle(view: IProjectView) {
+function getViewTitle(view: ProjectView) {
 	switch (view.title) {
 		case 'List':
 			return t('project.list.title')
@@ -173,14 +166,15 @@ function getViewTitle(view: IProjectView) {
 			return t('project.kanban.title')
 	}
 
-	return view.title
+	return view.title ?? ''
 }
 
-function getViewRoute(view: IProjectView) {
-	const storedQuery = viewFiltersStore.getViewQuery(view.id)
+function getViewRoute(view: ProjectView) {
+	const viewId = view.id ?? 0
+	const storedQuery = viewFiltersStore.getViewQuery(viewId)
 	return {
 		name: 'project.view',
-		params: {projectId: props.projectId, viewId: view.id},
+		params: {projectId: props.projectId, viewId},
 		query: storedQuery,
 	}
 }
@@ -201,15 +195,6 @@ function getViewRoute(view: IProjectView) {
 		justify-content: center;
 		flex-direction: column;
 	}
-}
-
-.switch-view {
-	background: var(--white);
-	display: inline-flex;
-	border-radius: $radius;
-	font-size: .75rem;
-	box-shadow: var(--shadow-sm);
-	padding: .5rem;
 }
 
 .switch-view--hidden {
@@ -234,30 +219,6 @@ function getViewRoute(view: IProjectView) {
 
 .dropdown-icon {
 	font-size: .6rem;
-}
-
-.switch-view-button {
-	padding: .25rem .5rem;
-	display: block;
-	white-space: nowrap;
-	border-radius: $radius;
-	transition: all 100ms;
-
-	&:not(:last-child) {
-		margin-inline-end: .5rem;
-	}
-
-	&:hover {
-		color: var(--switch-view-color);
-		background: var(--switch-view-active-background);
-	}
-
-	&.is-active {
-		color: var(--switch-view-color);
-		background: var(--switch-view-active-background);
-		font-weight: bold;
-		box-shadow: var(--shadow-xs);
-	}
 }
 
 // FIXME: this should be in notification and set via a prop

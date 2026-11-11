@@ -21,34 +21,61 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
+	"code.vikunja.io/api/pkg/web"
+
+	"github.com/yuin/goldmark/v2/extension"
+	"github.com/yuin/goldmark/v2/parser"
+	"github.com/yuin/goldmark/v2/renderer/html"
+	"github.com/yuin/goldmark/v2/util"
 	"xorm.io/xorm"
 )
 
-// markdownConverter renders GFM but never enables html.WithUnsafe() — raw HTML in
-// the markdown stays inert, so the only active markup is what goldmark emits. This
-// is what stops user-supplied markdown from smuggling in scripts.
-var markdownConverter = goldmark.New(
-	goldmark.WithExtensions(extension.GFM),
+// Neither renderer enables html.WithUnsafe() — raw HTML in the markdown stays
+// inert, so the only active markup is what goldmark emits. This is what stops
+// user-supplied markdown from smuggling in scripts.
+var (
+	gfmParser = parser.New(
+		parser.WithExtensions(extension.GFMParser),
+		// Right before goldmark's table transformer (priority 200).
+		parser.WithParagraphTransformers(util.Prioritized[parser.ParagraphTransformer](tableBudgetTransformer{}, 199)),
+	)
+	gfmRenderer = html.New(html.WithExtensions(extension.GFMHTMLRenderer))
+
+	commonMarkParser   = parser.New()
+	commonMarkRenderer = html.New()
 )
+
+// CommonMarkToHTML renders plain CommonMark (no GFM extensions) to HTML.
+func CommonMarkToHTML(md []byte) (string, error) {
+	var buf bytes.Buffer
+	if err := commonMarkRenderer.Render(&buf, md, commonMarkParser.Parse(md)); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
 
 // MarkdownToHTML converts GFM Markdown to canonical rich-text HTML, rewriting task
 // lists into TipTap's <ul data-type="taskList"> form. Mentions are left as literal
 // "@username" — see MarkdownToHTMLWithMentions to resolve them.
 func MarkdownToHTML(md string) (string, error) {
-	return markdownToHTML(md, nil)
+	return markdownToHTML(md, nil, nil)
 }
 
 // MarkdownToHTMLWithMentions is MarkdownToHTML plus mention resolution: "@username"
-// matching an existing user becomes a <mention-user> tag. Needs a session.
-func MarkdownToHTMLWithMentions(s *xorm.Session, md string) (string, error) {
-	return markdownToHTML(md, s)
+// matching an existing user visible to viewer becomes a <mention-user> tag. Needs a session.
+func MarkdownToHTMLWithMentions(s *xorm.Session, viewer web.Auth, md string) (string, error) {
+	return markdownToHTML(md, s, viewer)
 }
 
-func markdownToHTML(md string, s *xorm.Session) (string, error) {
+func markdownToHTML(md string, s *xorm.Session, viewer web.Auth) (string, error) {
 	var buf bytes.Buffer
-	if err := markdownConverter.Convert([]byte(md), &buf); err != nil {
+	source := []byte(md)
+	pc := parser.NewContext()
+	doc := gfmParser.Parse(source, parser.WithContext(pc))
+	if tablesExceedBudget(pc) {
+		return "", ErrTooManyTableCells
+	}
+	if err := gfmRenderer.Render(&buf, source, doc); err != nil {
 		return "", fmt.Errorf("converting markdown to html: %w", err)
 	}
 
@@ -62,7 +89,7 @@ func markdownToHTML(md string, s *xorm.Session) (string, error) {
 	}
 
 	if s != nil {
-		if err := rebuildMentions(s, nodes); err != nil {
+		if err := rebuildMentions(s, viewer, nodes); err != nil {
 			return "", err
 		}
 	}

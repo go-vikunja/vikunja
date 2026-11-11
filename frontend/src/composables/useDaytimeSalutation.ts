@@ -80,7 +80,7 @@ export function useDaytimeSalutation(now?: Ref<Date>) {
 	const name = computed(() => authStore.userDisplayName)
 	// Use the user's created timestamp as the per-user hash component.
 	// It's stable, unique per user, and doesn't leak the sequential user id.
-	const userKey = computed(() => authStore.info?.created?.getTime() ?? 0)
+	const userKey = computed(() => authStore.info?.created ? new Date(authStore.info.created).getTime() : 0)
 	const bucket = computed(() => hourToDaytime(currentDate.value))
 
 	return computed(() => {

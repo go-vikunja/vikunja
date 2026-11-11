@@ -11,13 +11,13 @@
 		filter=".drag-disabled"
 		:component-data="{
 			type: 'transition-group',
-			name: !drag ? 'flip-list' : null,
+			name: !isDraggingProject ? 'flip-list' : null,
 			class: [
 				'menu-list can-be-hidden',
 				{ 'dragging-disabled': !canEditOrder }
 			],
 		}"
-		@start="() => drag = true"
+		@start="() => isDraggingProject = true"
 		@end="saveProjectPosition"
 	>
 		<template #item="{element: project}">
@@ -35,44 +35,63 @@
 
 <script lang="ts" setup>
 import {ref, watch} from 'vue'
-import draggable from 'zhyswan-vuedraggable'
+import {draggableFor} from '@/components/base/Draggable'
 import type {SortableEvent} from 'sortablejs'
 
 import ProjectsNavigationItem from '@/components/home/ProjectsNavigationItem.vue'
 
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
-import type {IProject} from '@/modelTypes/IProject'
+import {useUpdateProjectMutation, type ProjectResponse} from '@/client/queries/projects'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
+import {useProjectDragState} from '@/composables/useProjectDragState'
 
 const props = defineProps<{
-	modelValue?: IProject[],
+	modelValue?: ProjectResponse[],
 	canEditOrder: boolean,
 	canCollapse?: boolean,
 }>()
+
 const emit = defineEmits<{
-	(e: 'update:modelValue', projects: IProject[]): void
+	(e: 'update:modelValue', projects: ProjectResponse[]): void
 }>()
 
-const drag = ref(false)
+const draggable = draggableFor<ProjectResponse>()
 
-const projectStore = useProjectStore()
+const {isDraggingProject} = useProjectDragState()
+
+const projectList = useProjects()
+const updateMutation = useUpdateProjectMutation()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
-const availableProjects = ref<IProject[]>([])
+const availableProjects = ref<ProjectResponse[]>([])
+// Mid-drag, Sortable has moved the dragged item's DOM node, possibly into another list. Patching
+// the list then anchors on that node, throws NotFoundError and leaves the sidebar half patched.
+let projectsChangedDuringDrag: ProjectResponse[] | null = null
 watch(
 	() => props.modelValue,
 	projects => {
+		if (isDraggingProject.value) {
+			projectsChangedDuringDrag = projects || []
+			return
+		}
 		availableProjects.value = projects || []
 	},
 	{immediate: true},
 )
+watch(isDraggingProject, dragging => {
+	if (dragging || projectsChangedDuringDrag === null) {
+		return
+	}
+	availableProjects.value = projectsChangedDuringDrag
+	projectsChangedDuringDrag = null
+})
 
-const projectUpdating = ref<{ [id: IProject['id']]: boolean }>({})
+const projectUpdating = ref<Record<number, boolean>>({})
 
 async function saveProjectPosition(e: SortableEvent) {
-	drag.value = false
+	isDraggingProject.value = false
 	if (!e.newIndex && e.newIndex !== 0) return
 
 	const projectsActive = availableProjects.value
@@ -85,12 +104,12 @@ async function saveProjectPosition(e: SortableEvent) {
 	if (!projectIdStr) return
 
 	const projectId = parseInt(projectIdStr)
-	const project = projectStore.projects[projectId]
+	const project = projectList.projects[projectId]
 	if (!project) return
 
 	const parentNode = e.to.parentNode as HTMLElement | null
 	const parentProjectIdFromDom = parentNode?.dataset?.projectId ? parseInt(parentNode.dataset.projectId) : 0
-	const parentProjectId = projectStore.getEffectiveParentProjectId(project, parentProjectIdFromDom)
+	const parentProjectId = projectList.getEffectiveParentProjectId(project, parentProjectIdFromDom)
 	const projectBefore = projectsActive[newIndex - 1] ?? null
 	const projectAfter = projectsActive[newIndex + 1] ?? null
 	projectUpdating.value[project.id] = true
@@ -101,12 +120,11 @@ async function saveProjectPosition(e: SortableEvent) {
 	)
 
 	try {
-		// create a copy of the project in order to not violate pinia manipulation
-		await projectStore.updateProject({
+		await updateMutation.mutateAsync({
 			...project,
 			position,
-			parentProjectId,
-		} as IProject)
+			parent_project_id: parentProjectId,
+		})
 		emit('update:modelValue', availableProjects.value)
 	} finally {
 		projectUpdating.value[project.id] = false

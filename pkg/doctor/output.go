@@ -19,6 +19,9 @@ package doctor
 import (
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/fatih/color"
 )
@@ -29,19 +32,20 @@ var (
 	bold       = color.New(color.Bold).SprintFunc()
 )
 
-// PrintResults writes all check groups to the given writer with colored output.
-func PrintResults(w io.Writer, groups []CheckGroup) {
+// PrintHeader writes the report header to the given writer.
+func PrintHeader(w io.Writer) {
 	fmt.Fprintln(w, bold("Vikunja Doctor"))
 	fmt.Fprintln(w, "==============")
 	fmt.Fprintln(w)
+}
 
-	for _, group := range groups {
-		fmt.Fprintln(w, bold(group.Name))
-		for _, result := range group.Results {
-			printResult(w, result)
-		}
-		fmt.Fprintln(w)
+// PrintGroup writes a single check group to the given writer with colored output.
+func PrintGroup(w io.Writer, group CheckGroup) {
+	fmt.Fprintln(w, bold(group.Name))
+	for _, result := range group.Results {
+		printResult(w, result)
 	}
+	fmt.Fprintln(w)
 }
 
 func printResult(w io.Writer, result CheckResult) {
@@ -54,11 +58,28 @@ func printResult(w io.Writer, result CheckResult) {
 		}
 	}
 
-	fmt.Fprintf(w, "  %s %s: %s\n", marker, result.Name, value)
+	fmt.Fprintf(w, "  %s %s: %s\n", marker, escapeControl(result.Name), escapeControl(value))
 
 	for _, line := range result.Lines {
-		fmt.Fprintf(w, "      %s\n", line)
+		fmt.Fprintf(w, "      %s\n", escapeControl(line))
 	}
+}
+
+// Values can come from the database or remote providers; keep them on one line and free of terminal escapes.
+func escapeControl(s string) string {
+	if strings.IndexFunc(s, unicode.IsControl) == -1 {
+		return s
+	}
+	var b strings.Builder
+	for _, r := range s {
+		if unicode.IsControl(r) {
+			q := strconv.QuoteRune(r)
+			b.WriteString(q[1 : len(q)-1])
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
 // CountFailed returns the number of failed checks across all groups.

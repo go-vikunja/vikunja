@@ -35,7 +35,7 @@ export const DAYJS_LOCALE_MAPPING = {
 	'he-il': 'he',
 	'sv-se': 'sv',
 	'el-gr': 'el',
-} as Record<SupportedLocale, ISOLanguage>
+} satisfies Record<Lowercase<Exclude<SupportedLocale, 'en'>>, ISOLanguage>
 
 export const DAYJS_LANGUAGE_IMPORTS = {
 	'de-de': () => import('dayjs/locale/de'),
@@ -69,14 +69,14 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'he-il': () => import('dayjs/locale/he'),
 	'sv-se': () => import('dayjs/locale/sv'),
 	'el-gr': () => import('dayjs/locale/el'),
-} as Record<SupportedLocale, () => Promise<ILocale>>
+} satisfies Record<Lowercase<Exclude<SupportedLocale, 'en'>>, () => Promise<unknown>>
 
 export async function loadDayJsLocale(language: SupportedLocale) {
 	if (language === 'en') {
 		return
 	}
 
-	await DAYJS_LANGUAGE_IMPORTS[language.toLowerCase()]()
+	await DAYJS_LANGUAGE_IMPORTS[language.toLowerCase() as keyof typeof DAYJS_LANGUAGE_IMPORTS]()
 }
 
 export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
@@ -84,11 +84,11 @@ export function useDayjsLanguageSync(dayjsGlobal: typeof dayjs) {
 	const dayjsLanguageLoaded = ref(false)
 	watch(
 		() => i18n.global.locale.value,
-		async (currentLanguage: string) => {
+		async (currentLanguage) => {
 			if (!dayjsGlobal) {
 				return
 			}
-			const dayjsLanguageCode = DAYJS_LOCALE_MAPPING[currentLanguage.toLowerCase()] || currentLanguage.toLowerCase()
+			const dayjsLanguageCode = DAYJS_LOCALE_MAPPING[currentLanguage.toLowerCase() as keyof typeof DAYJS_LOCALE_MAPPING] || currentLanguage.toLowerCase()
 			dayjsLanguageLoaded.value = dayjsGlobal.locale() === dayjsLanguageCode
 			if (dayjsLanguageLoaded.value) {
 				return

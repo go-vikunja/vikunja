@@ -83,12 +83,15 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	log.Debugf("Duplicating project %d", pd.ProjectID)
 
+	wasArchived := pd.Project.IsArchived
+	pd.Project.IsArchived = false
 	pd.Project.ID = 0
 	pd.Project.Identifier = "" // Reset the identifier to trigger regenerating a new one
 	pd.Project.ParentProjectID = &pd.ParentProjectID
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
 	pd.Project.Title += " - duplicate"
+	sourceBackgroundFileID, sourceBlurHash := pd.Project.BackgroundFileID, pd.Project.BackgroundBlurHash
 	err = CreateProject(s, pd.Project, doer, false, false)
 	if err != nil {
 		// If there is no available unique project identifier, just reset it.
@@ -115,7 +118,7 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	log.Debugf("Duplicated all views, buckets and positions from project %d into %d", pd.ProjectID, pd.Project.ID)
 
-	err = duplicateProjectBackground(s, pd, doer)
+	err = duplicateProjectBackground(s, pd, sourceBackgroundFileID, sourceBlurHash, doer)
 	if err != nil {
 		return
 	}
@@ -171,6 +174,14 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		}
 
 		log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+	}
+
+	if wasArchived {
+		pd.Project.IsArchived = true
+		err = UpdateProject(s, pd.Project, doer, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = pd.Project.ReadOne(s, doer)
@@ -290,17 +301,16 @@ func duplicateViews(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth, taskMa
 	return
 }
 
-func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.Auth) (err error) {
-	if pd.Project.BackgroundFileID == 0 {
+func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, sourceFileID int64, blurHash string, doer web.Auth) (err error) {
+	if sourceFileID == 0 {
 		return
 	}
 
-	log.Debugf("Duplicating background %d from project %d into %d", pd.Project.BackgroundFileID, pd.ProjectID, pd.Project.ID)
+	log.Debugf("Duplicating background %d from project %d into %d", sourceFileID, pd.ProjectID, pd.Project.ID)
 
-	f := &files.File{ID: pd.Project.BackgroundFileID}
-	err = f.LoadFileMetaByID()
+	f := &files.File{ID: sourceFileID}
+	err = f.LoadFileMetaByID(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {
-		pd.Project.BackgroundFileID = 0
 		return nil
 	}
 	if err != nil {
@@ -322,7 +332,7 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	}
 
 	// Get unsplash info if applicable
-	up, err := GetUnsplashPhotoByFileID(s, pd.Project.BackgroundFileID)
+	up, err := GetUnsplashPhotoByFileID(s, sourceFileID)
 	if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
 		return err
 	}
@@ -334,9 +344,11 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 		}
 	}
 
-	if err := SetProjectBackground(s, pd.Project.ID, file, pd.Project.BackgroundBlurHash); err != nil {
+	if err := SetProjectBackground(s, pd.Project.ID, file, blurHash); err != nil {
 		return err
 	}
+	pd.Project.BackgroundFileID = file.ID
+	pd.Project.BackgroundBlurHash = blurHash
 
 	log.Debugf("Duplicated project background from project %d into %d", pd.ProjectID, pd.Project.ID)
 
@@ -357,19 +369,20 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 	// This map contains the old task id as key and the new duplicated task id as value.
 	// It is used to map old task items to new ones.
 	newTaskIDs = make(map[int64]int64, len(tasks))
-	// Create + update all tasks (includes reminders)
 	oldTaskIDs := make([]int64, 0, len(tasks))
 	for _, t := range tasks {
-		oldID := t.ID
+		oldTaskIDs = append(oldTaskIDs, t.ID)
 		t.ID = 0
 		t.ProjectID = ld.Project.ID
 		t.UID = ""
-		err = createTask(s, t, doer, false, false)
-		if err != nil {
-			return nil, err
-		}
-		newTaskIDs[oldID] = t.ID
-		oldTaskIDs = append(oldTaskIDs, oldID)
+	}
+
+	err = createTasks(s, ld.Project.ID, tasks, doer, false, false, true)
+	if err != nil {
+		return nil, err
+	}
+	for i, t := range tasks {
+		newTaskIDs[oldTaskIDs[i]] = t.ID
 	}
 
 	log.Debugf("Duplicated all tasks from project %d into %d", ld.ProjectID, ld.Project.ID)
@@ -392,7 +405,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 			continue
 		}
 		attachment.File = &files.File{ID: attachment.FileID}
-		if err := attachment.File.LoadFileMetaByID(); err != nil {
+		if err := attachment.File.LoadFileMetaByID(s); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
 				log.Debugf("Not duplicating attachment %d (file %d) because it does not exist from project %d into %d", oldAttachmentID, attachment.FileID, ld.ProjectID, ld.Project.ID)
 				continue

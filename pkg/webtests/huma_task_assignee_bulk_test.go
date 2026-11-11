@@ -28,7 +28,7 @@ import (
 )
 
 // TestHumaTaskAssigneeBulk proves the v2 bulk-assignee replace contract:
-// PUT /tasks/{projecttask}/assignees/bulk swaps the task's full assignee set
+// PUT /tasks/{task}/assignees/bulk swaps the task's full assignee set
 // for the posted list. Like the single-assignee test it gates on write access
 // to the task's project (CanCreate → canDoTaskAssingee → project.CanUpdate).
 //

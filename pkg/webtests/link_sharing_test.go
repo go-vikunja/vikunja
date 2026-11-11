@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -101,21 +102,12 @@ func TestLinkSharing(t *testing.T) {
 			})
 		})
 		t.Run("Write access", func(t *testing.T) {
-			t.Run("read only", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"permission":0}`)
-				require.NoError(t, err)
-				assert.Contains(t, req.Body.String(), `"hash":`)
-			})
-			t.Run("write", func(t *testing.T) {
-				req, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"permission":1}`)
-				require.NoError(t, err)
-				assert.Contains(t, req.Body.String(), `"hash":`)
-			})
-			t.Run("admin", func(t *testing.T) {
-				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"permission":2}`)
+			// GHSA-fmmf-xq98-g327: managing link shares requires project admin.
+			for _, perm := range []string{"0", "1", "2"} {
+				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"permission":`+perm+`}`)
 				require.Error(t, err)
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
-			})
+			}
 		})
 		t.Run("Admin access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
@@ -133,6 +125,22 @@ func TestLinkSharing(t *testing.T) {
 				require.NoError(t, err)
 				assert.Contains(t, req.Body.String(), `"hash":`)
 			})
+		})
+		t.Run("ReadOne requires project admin", func(t *testing.T) {
+			// A by-ID read discloses the access-bearing hash (GHSA-qfwc-vx6f-3g6g).
+			insertTestShare(t, 7, 9)
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "9", "share": "7"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+
+			insertTestShare(t, 8, 10)
+			_, err = testHandler.testReadOneWithUser(nil, map[string]string{"project": "10", "share": "8"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+
+			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "1", "share": "1"})
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `"hash":"test"`)
 		})
 	})
 
@@ -327,19 +335,19 @@ func TestLinkSharing(t *testing.T) {
 				}
 				t.Run("ReadAll", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						rec, err := testHandlerProjectUserReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `[]`)
+						_, err := testHandlerProjectUserReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						rec, err := testHandlerProjectUserWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `[]`)
+						_, err := testHandlerProjectUserWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						rec, err := testHandlerProjectUserAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `"username":"user1"`)
+						_, err := testHandlerProjectUserAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 				})
 				t.Run("Create", func(t *testing.T) {
@@ -419,19 +427,19 @@ func TestLinkSharing(t *testing.T) {
 				}
 				t.Run("ReadAll", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
-						rec, err := testHandlerProjectTeamReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `[]`)
+						_, err := testHandlerProjectTeamReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
-						rec, err := testHandlerProjectTeamWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `[]`)
+						_, err := testHandlerProjectTeamWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
-						rec, err := testHandlerProjectTeamAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
-						require.NoError(t, err)
-						assert.Contains(t, rec.Body.String(), `"name":"testteam1"`)
+						_, err := testHandlerProjectTeamAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
+						require.Error(t, err)
+						assert.Contains(t, getHTTPErrorMessage(err), `link share`)
 					})
 				})
 				t.Run("Create", func(t *testing.T) {
@@ -899,5 +907,50 @@ func TestLinkSharing(t *testing.T) {
 		err = projectReadAllHandler.ReadAllWeb(c)
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, models.ErrCodeLinkShareTokenInvalid)
+	})
+}
+
+// GHSA-fmmf-xq98-g327
+func TestLinkSharingDelete(t *testing.T) {
+	del := func(e *echo.Echo, jwt string, project, share string) int {
+		return apiTokenReq(e, http.MethodDelete, "/api/v1/projects/"+project+"/shares/"+share, jwt, "").Code
+	}
+
+	t.Run("read member", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		insertTestShare(t, 40, 9)
+		code := del(e, userJWT(t, 1), "9", "40")
+		assert.Equal(t, http.StatusForbidden, code)
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": 40}, false)
+	})
+	t.Run("write member", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		insertTestShare(t, 41, 10)
+		code := del(e, userJWT(t, 1), "10", "41")
+		assert.Equal(t, http.StatusForbidden, code)
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": 41}, false)
+	})
+	t.Run("admin deletes every tier", func(t *testing.T) {
+		for _, c := range []struct {
+			project, share string
+			owner          int64
+		}{
+			{"1", "1", 1}, // read
+			{"2", "2", 3}, // write
+			{"3", "3", 3}, // admin
+		} {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, del(e, userJWT(t, c.owner), c.project, c.share))
+			db.AssertMissing(t, "link_shares", map[string]interface{}{"id": c.share})
+		}
+	})
+	t.Run("share from another project", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, del(e, userJWT(t, 1), "1", "2"))
+		db.AssertExists(t, "link_shares", map[string]interface{}{"id": 2}, false)
 	})
 }

@@ -39,7 +39,6 @@
 			"email": "Indirizzo e-mail",
 			"emailPlaceholder": "per es. frederic{'@'}vikunja.io",
 			"password": "Password",
-			"passwordPlaceholder": "es. ••••••••••••",
 			"forgotPassword": "Password dimenticata?",
 			"resetPassword": "Reimposta la tua password",
 			"resetPasswordAction": "Inviami il link per reimpostare la password",
@@ -78,7 +77,6 @@
 			"passwordUpdateSuccess": "Password aggiornata con successo.",
 			"updateEmailTitle": "Aggiorna l'indirizzo e-mail",
 			"updateEmailNew": "Nuovo indirizzo email",
-			"updateEmailSuccess": "Il tuo indirizzo e-mail è stato aggiornato correttamente. Ti abbiamo inviato un collegamento per confermarlo.",
 			"general": {
 				"title": "Impostazioni generali",
 				"name": "Il mio nome",
@@ -273,13 +271,7 @@
 		},
 		"delete": {
 			"title": "Elimina \"{project}\"",
-			"header": "Elimina questo progetto",
-			"text1": "Sicuro di voler eliminare questo progetto e tutti i suoi contenuti?",
-			"text2": "Questo include tutte le attività e NON SI PUÒ TORNARE INDIETRO!",
-			"success": "Progetto eliminato con successo.",
-			"tasksToDelete": "Questo eliminerà definitivamente circa {count} attività.",
-			"tasksAndChildProjectsToDelete": "Questo rimuoverà irrevocabilmente circa {tasks} attività e {projects} progetti.",
-			"noTasksToDelete": "Questo progetto non contiene alcuna attività, puoi eliminarlo in sicurezza."
+			"header": "Elimina questo progetto"
 		},
 		"duplicate": {
 			"title": "Duplica il progetto",
@@ -784,36 +776,13 @@
 			"updated": "Aggiornato {0}",
 			"doneAt": "Completato {0}",
 			"updateSuccess": "Attività salvata con successo.",
-			"deleteSuccess": "L'attività è stata eliminata con successo.",
 			"belongsToProject": "Questa attività appartiene al progetto '{project}'",
 			"back": "Torna al progetto",
 			"due": "Scadenza {at}",
 			"scrollToBottom": "Scorri in fondo",
-			"organization": "Organizza",
-			"management": "Gestisci",
-			"dateAndTime": "Data e ora",
-			"delete": {
-				"header": "Elimina questa attività",
-				"text1": "Sei sicuro di voler eliminare questa attività?",
-				"text2": "Questo rimuoverà anche tutti gli allegati, i promemoria e le relazioni associati a questa attività e non può essere ripristinato!"
-			},
 			"actions": {
-				"assign": "Assegna all'Utente",
-				"label": "Aggiungi Etichette",
-				"priority": "Imposta Priorità",
-				"dueDate": "Imposta data di scadenza",
-				"startDate": "Imposta Data Inizio",
-				"endDate": "Imposta Data Fine",
-				"reminders": "Imposta promemoria",
-				"repeatAfter": "Imposta Intervallo Ripetizione",
-				"percentDone": "Imposta Progresso",
-				"attachments": "Aggiungi Allegati",
-				"relatedTasks": "Aggiungi Relazione",
 				"moveProject": "Sposta",
-				"color": "Imposta Colore",
-				"delete": "Elimina",
-				"favorite": "Aggiungi ai Preferiti",
-				"unfavorite": "Rimuovi dai Preferiti"
+				"delete": "Elimina"
 			}
 		},
 		"attributes": {
@@ -839,7 +808,6 @@
 			"doneAt": "Completato il"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Non puoi annullare l'iscrizione perché sei iscritto a quest'attività tramite il suo progetto.",
 			"subscribedProject": "Sei iscritto a questo progetto e riceverai avvisato delle modifiche.",
 			"notSubscribedProject": "Non sei iscritto a questo progetto e non riceverai notifiche per le modifiche.",
 			"subscribedTask": "Sei iscritto a questa attività e verrai notificato delle modifiche.",
@@ -954,9 +922,6 @@
 			"dateAndTime": "Data e ora"
 		},
 		"repeat": {
-			"everyDay": "Ogni Giorno",
-			"everyWeek": "Ogni Settimana",
-			"every30d": "Ogni 30 giorni",
 			"mode": "Modalità ripetizione",
 			"monthly": "Ogni mese",
 			"fromCurrentDate": "Dal completamento",
@@ -1161,10 +1126,6 @@
 			"newProject": "Nuovo progetto",
 			"newTeam": "Nuovo gruppo"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} ha reagito con {value}",

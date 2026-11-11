@@ -17,9 +17,7 @@
 package files
 
 import (
-	"errors"
 	"io"
-	gofs "io/fs"
 )
 
 // Dump dumps all saved files
@@ -35,8 +33,7 @@ func Dump() (allFiles map[int64]io.ReadCloser, err error) {
 	for _, file := range files {
 		err = file.LoadFileByID()
 		if err != nil {
-			var pathError *gofs.PathError
-			if errors.As(err, &pathError) {
+			if IsErrFileDoesNotExist(err) {
 				continue
 			}
 			return

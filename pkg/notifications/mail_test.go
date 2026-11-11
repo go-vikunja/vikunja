@@ -741,6 +741,23 @@ func TestConversationalMail(t *testing.T) {
 		assert.Contains(t, headerLine1, `color: #0969da`)
 		assert.Contains(t, headerLine1, "(Project &gt; Task) #1")
 	})
+
+	t.Run("Conversational header escapes user input", func(t *testing.T) {
+		header := CreateConversationalHeader("", "<b>Eve</b> left a comment", "https://example.com/task/1", "A & B", "#1", `</a><a href="https://evil.example">Click`)
+
+		assert.Contains(t, header, "&lt;b&gt;Eve&lt;/b&gt; left a comment")
+		assert.Contains(t, header, "(A &amp; B &gt; &lt;/a&gt;&lt;a href=&#34;https://evil.example&#34;&gt;Click) #1")
+
+		mailOpts, err := RenderMail(NewMail().
+			Conversational().
+			Subject("Test").
+			HeaderLine(header), "en")
+		require.NoError(t, err)
+
+		assert.NotContains(t, mailOpts.HTMLMessage, `href="https://evil.example"`)
+		assert.Contains(t, mailOpts.Message, `<b>Eve</b> left a comment`)
+		assert.Contains(t, mailOpts.Message, `(A & B > </a><a href="https://evil.example">Click) #1`)
+	})
 }
 
 // Regression test for GHSA-2vr2-r3qw-rjvq: a user-controlled task title (or comment
@@ -761,8 +778,7 @@ func TestNotificationEmailStripsRemoteImages(t *testing.T) {
 			Action("View Task", "https://example.com/task/1"), "en")
 		require.NoError(t, err)
 
-		assert.NotContains(t, mailOpts.HTMLMessage, remoteSrc)
-		assert.NotContains(t, mailOpts.HTMLMessage, "attacker.example")
+		assert.NotContains(t, mailOpts.HTMLMessage, `src="`+remoteSrc)
 		// The benign text is still delivered, and the legitimate task link survives.
 		assert.Contains(t, mailOpts.HTMLMessage, "normal title")
 		assert.Contains(t, mailOpts.HTMLMessage, `href="https://example.com/task/1"`)

@@ -19,6 +19,7 @@ package webtests
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -49,10 +50,24 @@ func TestHumaSession(t *testing.T) {
 			require.NoError(t, err)
 
 			ids := sessionIDsFromReadAll(t, rec.Body.Bytes())
-			// User1 owns exactly sessions A and B; user2's session must never appear.
-			assert.ElementsMatch(t, []string{sessionUser1A, sessionUser1B}, ids,
-				"ReadAll must return exactly user1's two sessions; body: %s", rec.Body.String())
+			assert.ElementsMatch(t, []string{sessionUser1A, sessionUser1B, testSessionID(&testuser1)}, ids,
+				"ReadAll must return exactly user1's sessions; body: %s", rec.Body.String())
 			assert.NotContains(t, ids, sessionUser2, "user2's session must be hidden")
+		})
+		t.Run("Pages sessions with equal last_active by id", func(t *testing.T) {
+			// All fixture sessions of user1 share last_active.
+			for page, want := range map[string]string{
+				"1": testSessionID(&testuser1),
+				"2": sessionUser1B,
+				"3": sessionUser1A,
+			} {
+				rec, err := testHandler.testReadAllWithUser(url.Values{
+					"page":     {page},
+					"per_page": {"1"},
+				}, nil)
+				require.NoError(t, err)
+				assert.Equal(t, []string{want}, sessionIDsFromReadAll(t, rec.Body.Bytes()), "page %s", page)
+			}
 		})
 	})
 

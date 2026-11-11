@@ -1,36 +1,36 @@
 <template>
 	<div
 		class="task"
-		:data-is-overdue="task.dueDate <= new Date() && !task.done || undefined"
+		:data-is-overdue="isOverdue() || undefined"
 	>
 		<span>
 			<span
 				v-if="showProject && typeof project !== 'undefined'"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				class="task-project"
-				:class="{'mie-2': task.hexColor !== ''}"
+				:class="{'mie-2': task.hex_color !== ''}"
 			>
 				{{ project.title }}
 			</span>
 
 			<ColorBubble
-				v-if="task.hexColor !== ''"
-				:color="getHexColor(task.hexColor)"
+				v-if="task.hex_color !== ''"
+				:color="getHexColor(task.hex_color)"
 				class="mie-1"
 			/>
 
 			<PriorityLabel
-				:priority="task.priority"
+				:priority="task.priority ?? 0"
 				:done="task.done"
 			/>
 
 			<!-- Show any parent tasks to make it clear this task is a sub task of something -->
 			<span
-				v-if="typeof task.relatedTasks?.parenttask !== 'undefined'"
+				v-if="typeof task.related_tasks?.parenttask !== 'undefined'"
 				class="parent-tasks"
 			>
-				<template v-for="(pt, i) in task.relatedTasks.parenttask">
-					{{ pt.title }}<template v-if="(i + 1) < task.relatedTasks.parenttask.length">,&nbsp;</template>
+				<template v-for="(pt, i) in task.related_tasks.parenttask">
+					{{ pt.title }}<template v-if="(i + 1) < (task.related_tasks.parenttask?.length ?? 0)">,&nbsp;</template>
 				</template>
 				&rsaquo;
 			</span>
@@ -38,38 +38,42 @@
 		</span>
 
 		<Labels
-			v-if="task.labels.length > 0"
+			v-if="(task.labels?.length ?? 0) > 0"
 			class="labels mis-2 mie-1"
-			:labels="task.labels"
+			:labels="task.labels ?? []"
 		/>
 
 		<AssigneeList
-			v-if="task.assignees.length > 0"
-			:assignees="task.assignees"
+			v-if="(task.assignees?.length ?? 0) > 0"
+			:assignees="task.assignees ?? []"
 			:avatar-size="20"
 			class="mis-1"
 			:inline="true"
 		/>
 
 		<span
-			v-if="+new Date(task.dueDate) > 0"
-			v-tooltip="formatDateLong(task.dueDate)"
+			v-if="dueDate"
+			v-tooltip="formatDateLong(task.due_date)"
 			class="dueDate"
 		>
+			<OverdueIndicator
+				v-if="isOverdue()"
+				class="mie-1"
+			/>
 			<time
-				:datetime="formatISO(task.dueDate)"
+				:datetime="formatISO(task.due_date)"
 				class="is-italic"
 			>
-				– {{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}
+				{{ $t('task.detail.due', {at: formatDisplayDate(task.due_date)}) }}
 			</time>
 		</span>
 
 		<span>
 			<span
-				v-if="task.attachments.length > 0"
+				v-if="(task.attachments?.length ?? 0) > 0"
 				class="project-task-icon"
 				role="img"
-				:aria-label="$t('task.attributes.attachment', task.attachments.length)"
+				:aria-label="$t('task.attributes.attachment', (task.attachments?.length ?? 0))"
 			>
 				<Icon icon="paperclip" />
 			</span>
@@ -80,7 +84,7 @@
 				<Icon icon="align-left" />
 			</span>
 			<span
-				v-if="task.repeatAfter.amount > 0"
+				v-if="(task.repeat_after ?? 0) > 0"
 				class="project-task-icon"
 			>
 				<Icon icon="history" />
@@ -90,31 +94,33 @@
 		<ChecklistSummary :task="task" />
 
 		<progress
-			v-if="task.percentDone > 0"
+			v-if="(task.percent_done ?? 0) > 0"
 			class="progress is-small"
-			:value="task.percentDone * 100"
+			:value="(task.percent_done ?? 0) * 100"
 			max="100"
 		>
-			{{ task.percentDone * 100 }}%
+			{{ (task.percent_done ?? 0) * 100 }}%
 		</progress>
 	</div>
 </template>
 
 <script setup lang="ts">
 import {computed} from 'vue'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
-import {getHexColor} from '@/models/task'
-import type {ITask} from '@/modelTypes/ITask'
+import {getHexColor} from '@/helpers/task'
+import type {Task as ITask} from '@/client/generated'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
+import OverdueIndicator from '@/components/tasks/partials/OverdueIndicator.vue'
 
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{
@@ -124,9 +130,14 @@ const props = withDefaults(defineProps<{
 	showProject: false,
 })
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 
-const project = computed(() => projectStore.projects[props.task.projectId])
+const dueDate = computed(() => parseDateOrNull(props.task.due_date))
+// Not a computed: `new Date()` is no reactive dependency, so it would never refresh.
+function isOverdue() {
+	return dueDate.value !== null && dueDate.value <= new Date() && !props.task.done
+}
+const project = computed(() => projectList.projects[props.task.project_id ?? 0])
 </script>
 
 <style lang="scss" scoped>

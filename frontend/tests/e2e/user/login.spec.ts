@@ -2,6 +2,7 @@ import type {Page} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
+import {setupApiUrl} from '../../support/authenticateUser'
 import {TEST_PASSWORD} from '../../support/constants'
 
 interface LoginCredentials {
@@ -38,6 +39,7 @@ async function login(page: Page): Promise<void> {
 
 test.describe('Login', () => {
 	test.beforeEach(async ({page, apiContext}) => {
+		await setupApiUrl(page)
 		await UserFactory.create(1, {username: credentials.username})
 		await page.clock.setFixedTime(new Date(1625656161057)) // 13:00
 	})
@@ -47,6 +49,51 @@ test.describe('Login', () => {
 		await login(page)
 		await expect(page.locator('main h1')).toContainText(credentials.username)
 	})
+
+	for (const scenario of ['typed', 'blurred', 'retried', 'autofilled'] as const) {
+		test(`Should log in with Enter without flashing a password validation error (${scenario})`, async ({page}) => {
+			await page.goto('/login')
+			await page.locator('#username').fill(credentials.username)
+			if (scenario === 'retried') {
+				await page.getByRole('button', {name: 'Login', exact: true}).click()
+				await expect(page.locator('#password-error')).toBeVisible()
+			}
+			if (scenario === 'autofilled') {
+				await page.locator('#password').evaluate((input: HTMLInputElement, password) => {
+					input.value = password
+				}, credentials.password)
+			} else {
+				await page.locator('#password').pressSequentially(credentials.password)
+			}
+			if (scenario === 'blurred') {
+				await page.locator('#password').press('Tab')
+				await page.locator('#password').focus()
+			}
+			// Keep the form mounted while debounced validation runs.
+			await page.route('**/api/v2/login', async route => {
+				const response = await route.fetch()
+				await new Promise(resolve => setTimeout(resolve, 300))
+				await route.fulfill({response})
+			})
+			const errors = await page.evaluateHandle(() => {
+				const errors: string[] = []
+				const observer = new MutationObserver(() => {
+					const error = document.querySelector('#password-error')
+					if (error) errors.push(error.textContent ?? '')
+				})
+				observer.observe(document.body, {childList: true, subtree: true, characterData: true})
+				return errors
+			})
+
+			await page.locator('#password').press('Enter')
+			await expect(page).toHaveURL('/')
+			await expect(page.locator('main h1')).toContainText(credentials.username)
+			expect(await errors.jsonValue()).toEqual([])
+			await errors.dispose()
+			await page.reload()
+			await expect(page.locator('main h1')).toContainText(credentials.username)
+		})
+	}
 
 	test('Should fail with a bad password', async ({page}) => {
 		const fixture = {
@@ -69,6 +116,35 @@ test.describe('Login', () => {
 	test('Should redirect to /login when no user is logged in', async ({page}) => {
 		await page.goto('/')
 		await expect(page).toHaveURL(/\/login/)
+	})
+
+	test('Should refresh an expired token without a refresh cookie once and then drop it', async ({page}) => {
+		const refreshRequests: string[] = []
+		page.on('request', request => {
+			if (request.url().includes('/user/token/refresh')) {
+				refreshRequests.push(request.url())
+			}
+		})
+
+		// exp is relative to the fixed clock from beforeEach.
+		const payload = Buffer.from(JSON.stringify({
+			id: 1,
+			type: 1,
+			exp: Math.floor(1625656161057 / 1000) - 3600,
+		})).toString('base64')
+		await page.goto('/login')
+		await page.evaluate(token => localStorage.setItem('token', token), `header.${payload}.signature`)
+
+		await page.goto('/')
+		await expect(page).toHaveURL(/\/login/)
+		await expect(page.locator('input[id=username]')).toBeVisible()
+		await expect.poll(() => page.evaluate(() => localStorage.getItem('token'))).toBeNull()
+		expect(refreshRequests).toHaveLength(1)
+		expect(refreshRequests[0]).toContain('/api/v2/')
+
+		await page.reload()
+		await expect(page.locator('input[id=username]')).toBeVisible()
+		expect(refreshRequests).toHaveLength(1)
 	})
 
 	test('Should not show login form inside authenticated app shell after login', async ({page}) => {

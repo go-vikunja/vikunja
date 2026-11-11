@@ -28,7 +28,7 @@ func newShowCmd() *cobra.Command {
 		Short: "Show a task by PROJ-NN, #NN, or numeric ID",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rt, err := loadRuntime()
+			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -40,6 +40,7 @@ func newShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			rt.withURLs(task)
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}

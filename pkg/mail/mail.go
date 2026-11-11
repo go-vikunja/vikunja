@@ -87,12 +87,11 @@ func getClient() (*mail.Client, error) {
 
 // StartMailDaemon starts the mail daemon
 func StartMailDaemon() {
+	Queue = nil
+
 	if !config.MailerEnabled.GetBool() {
-		Queue = nil
 		return
 	}
-
-	Queue = make(chan *mail.Msg, config.MailerQueuelength.GetInt())
 
 	if config.MailerHost.GetString() == "" {
 		log.Warning("Mailer seems to be not configured! Please see the config docs for more details.")
@@ -106,8 +105,9 @@ func StartMailDaemon() {
 	}
 
 	// Read from local copies so StopMailDaemon can reset the package vars without racing the daemon.
-	queue := Queue
+	queue := make(chan *mail.Msg, config.MailerQueuelength.GetInt())
 	done := make(chan struct{})
+	Queue = queue
 	daemonDone = done
 
 	go func() {

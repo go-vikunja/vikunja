@@ -42,7 +42,7 @@ func TestAPITokenRoutesIncludesCaldav(t *testing.T) {
 	defer s.Close()
 	u, err := user.GetUserByID(s, 1)
 	require.NoError(t, err)
-	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	jwt, err := auth.NewUserJWTAuthtoken(u, testSessionID(u))
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/routes", nil)
@@ -182,7 +182,7 @@ func TestAPIToken(t *testing.T) {
 		defer s.Close()
 		u, err := user.GetUserByID(s, 1)
 		require.NoError(t, err)
-		jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+		jwt, err := auth.NewUserJWTAuthtoken(u, testSessionID(u))
 		require.NoError(t, err)
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
@@ -204,7 +204,7 @@ func userJWT(t *testing.T, id int64) string {
 	defer s.Close()
 	u, err := user.GetUserByID(s, id)
 	require.NoError(t, err)
-	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	jwt, err := auth.NewUserJWTAuthtoken(u, testSessionID(u))
 	require.NoError(t, err)
 	return jwt
 }

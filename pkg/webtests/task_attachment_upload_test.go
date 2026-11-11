@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -27,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/routes"
+	webfiles "code.vikunja.io/api/pkg/web/files"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -96,7 +98,7 @@ func TestTaskAttachmentUploadSize(t *testing.T) {
 			req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
 
 			// Add JWT token to request header for authentication
-			token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+			token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 			require.NoError(t, err)
 			req.Header.Set("Authorization", "Bearer "+token)
 
@@ -110,9 +112,31 @@ func TestTaskAttachmentUploadSize(t *testing.T) {
 
 			// If we expect an error, verify the error response includes code and message
 			if tt.expectedStatus == http.StatusRequestEntityTooLarge {
-				assert.Contains(t, rec.Body.String(), "4013") // Error code
+				assert.Contains(t, rec.Body.String(), "4035") // Error code
 				assert.Contains(t, rec.Body.String(), "uploaded file exceeds")
 			}
 		})
 	}
+}
+
+func TestTaskAttachmentUploadDispatchesCreatedEvent(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	body, contentType := multipartFilesBody(t, map[string][]byte{"event.txt": []byte("event")})
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/tasks/1/attachments", body)
+	req.Header.Set(echo.HeaderContentType, contentType)
+	token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	var resp webfiles.AttachmentUploadResult
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+	require.Empty(t, resp.Errors)
+	require.Len(t, resp.Success, 1)
+
+	assertAttachmentCreatedDispatched(t, 1, resp.Success[0].ID)
 }

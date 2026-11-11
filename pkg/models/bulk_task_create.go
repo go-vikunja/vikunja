@@ -50,8 +50,11 @@ func (btc *BulkTaskCreation) Create(s *xorm.Session, a web.Auth) (err error) {
 		if t == nil {
 			return ErrInvalidTaskInBulkCreation{Index: i, Err: ErrTaskCannotBeEmpty{}}
 		}
+		if err := validateTaskLimits(t, nil); err != nil {
+			return ErrInvalidTaskInBulkCreation{Index: i, Err: err}
+		}
 		t.Position = 0
 	}
 
-	return createTasks(s, btc.ProjectID, btc.Tasks, a, true, true)
+	return createTasks(s, btc.ProjectID, btc.Tasks, a, true, true, false)
 }

@@ -39,7 +39,6 @@
 			"email": "Địa chỉ Email",
 			"emailPlaceholder": "ví dụ: frederic{'@'}vikunja.io",
 			"password": "Mật khẩu",
-			"passwordPlaceholder": "ví dụ: •••••••••••",
 			"forgotPassword": "Bạn quên mật khẩu?",
 			"resetPassword": "Reset mật khẩu của bạn",
 			"resetPasswordAction": "Gửi cho tôi liên kết reset mật khẩu",
@@ -77,7 +76,6 @@
 			"passwordUpdateSuccess": "Mật khẩu đã được cập nhật thành công.",
 			"updateEmailTitle": "Cập nhật địa chỉ e-mail của bạn",
 			"updateEmailNew": "Địa chỉ email mới",
-			"updateEmailSuccess": "Địa chỉ email của bạn đã được cập nhật thành công. Chúng tôi đã gửi cho bạn một liên kết để xác nhận nó.",
 			"general": {
 				"title": "Cài đặt chung",
 				"name": "Tên của tôi",
@@ -237,13 +235,7 @@
 		},
 		"delete": {
 			"title": "Xóa \"{project}\"",
-			"header": "Xóa dự án này",
-			"text1": "Bạn có chắc muốn xóa dự án này cùng toàn bộ nội dung của dự án?",
-			"text2": "Điều này bao gồm tất cả các đầu việc và KHÔNG THỂ HOÀN TÁC!",
-			"success": "Dự án đã được xóa.",
-			"tasksToDelete": "Điều này sẽ ngay lập tức gỡ bảo khoảng {count} đầu việc.",
-			"tasksAndChildProjectsToDelete": "Điều này sẽ ngay lập tức gỡ bỏ khoảng {tasks} đầu việc và {projects} dự án.",
-			"noTasksToDelete": "Dự án này không bao gồm bất kì đầu việc nào, bạn có thể xóa nó."
+			"header": "Xóa dự án này"
 		},
 		"duplicate": {
 			"title": "Tạo bản sao dự án này",
@@ -714,34 +706,11 @@
 			"updated": "Đã cập nhật {0}",
 			"doneAt": "Hoàn thành {0}",
 			"updateSuccess": "Công việc đã được lưu.",
-			"deleteSuccess": "Công việc đã được xóa.",
 			"belongsToProject": "Tác vụ này thuộc về dự án '{project}'",
 			"due": "Đến hạn {at}",
-			"organization": "Tổ chức",
-			"management": "Quản lý",
-			"dateAndTime": "Ngày và giờ",
-			"delete": {
-				"header": "Xóa công công việc này",
-				"text1": "Bạn có chắc muốn xóa công việc này không?",
-				"text2": "Thao tác này cũng sẽ xóa tất cả tệp đính kèm, lời nhắc và liên kết đến công việc này. Nó không thể hoàn tác!"
-			},
 			"actions": {
-				"assign": "Chỉ định người",
-				"label": "Thêm nhãn",
-				"priority": "Mức độ ưu tiên",
-				"dueDate": "Đặt ngày đến hạn",
-				"startDate": "Chọn ngày bắt đầu",
-				"endDate": "Chọn ngày kết thúc",
-				"reminders": "Thiết lập nhắc nhở",
-				"repeatAfter": "Chọn chu kì lặp",
-				"percentDone": "Đặt tiến trình",
-				"attachments": "Thêm Tệp đính kèm",
-				"relatedTasks": "Thêm Quan hệ",
 				"moveProject": "Di chuyển",
-				"color": "Đặt màu",
-				"delete": "Xóa",
-				"favorite": "Thêm vào mục yêu thích",
-				"unfavorite": "Xóa khỏi mục yêu thích"
+				"delete": "Xóa"
 			}
 		},
 		"attributes": {
@@ -765,7 +734,6 @@
 			"doneAt": "Hoàn thành lúc"
 		},
 		"subscription": {
-			"subscribedTaskThroughParentProject": "Bạn không thể hủy theo dõi ở đây vì bạn đã theo dõi tác vụ này thông qua dự án của nó.",
 			"subscribedProject": "Bạn hiện đã đăng kí theo dõi dự án này và sẽ nhận được thông báo về các thay đổi của dự án.",
 			"notSubscribedProject": "Bạn chưa đăng kí theo dõi dự án này và sẽ không nhận được thông báo cho các thay đổi của dự án.",
 			"subscribedTask": "Bạn hiện đã đăng kí tác vụ này và sẽ nhận được thông báo cho các thay đổi của nó.",
@@ -877,9 +845,6 @@
 			"dateAndTime": "Ngày và giờ"
 		},
 		"repeat": {
-			"everyDay": "Mỗi ngày",
-			"everyWeek": "Mỗi tuần",
-			"every30d": "Mỗi 30 ngày",
 			"mode": "Chế độ lặp lại",
 			"monthly": "Hàng tháng",
 			"fromCurrentDate": "Từ ngày hoàn thành",
@@ -1062,10 +1027,6 @@
 			"newProject": "Dự án mới",
 			"newTeam": "Team mới"
 		}
-	},
-	"date": {
-		"altFormatLong": "j M Y, H:i",
-		"altFormatShort": "j M Y"
 	},
 	"reaction": {
 		"reactedWith": "{user} đã tương tác với {value}",

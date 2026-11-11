@@ -42,9 +42,21 @@ func TestChanged(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "capitalization only edit",
+			stored:   "<p>hello</p>",
+			incoming: "Hello",
+			want:     true,
+		},
+		{
 			name:     "line ending only difference",
 			stored:   "<p>line one</p><p>line two</p>",
 			incoming: "line one\r\n\r\nline two",
+			want:     false,
+		},
+		{
+			name:     "CRLF character references in code block",
+			stored:   "<pre><code>a&#13;&#10;b</code></pre>",
+			incoming: "```\na\nb\n```",
 			want:     false,
 		},
 		{

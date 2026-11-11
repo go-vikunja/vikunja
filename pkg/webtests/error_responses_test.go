@@ -49,7 +49,7 @@ func TestErrorResponseFormats(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get auth token for testuser1
-	token, err := auth.NewUserJWTAuthtoken(&testuser1, "test-session-id")
+	token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 	require.NoError(t, err)
 
 	t.Run("validation error returns invalid_fields in JSON body", func(t *testing.T) {

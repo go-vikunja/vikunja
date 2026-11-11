@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
@@ -60,11 +61,42 @@ func TestHumaTaskBulkCreate(t *testing.T) {
 		assert.Equal(t, "bulk c", result.Tasks[2].Title)
 	})
 
+	t.Run("Returns the stored positions for every view", func(t *testing.T) {
+		result, err := bulkPost("1", &testuser1, `{"tasks":[{"title":"positioned a"},{"title":"positioned b"}]}`)
+		require.NoError(t, err)
+		require.Len(t, result.Tasks, 2)
+
+		s := db.NewSession()
+		defer s.Close()
+		for _, task := range result.Tasks {
+			stored := []*models.TaskPosition{}
+			require.NoError(t, s.Where("task_id = ?", task.ID).Find(&stored))
+			require.NotEmpty(t, stored)
+			assertPositionsMatch(t, stored, task.Positions)
+		}
+	})
+
 	t.Run("URL project wins over body project_id", func(t *testing.T) {
 		result, err := bulkPost("1", &testuser1, `{"tasks":[{"title":"body project ignored","project_id":2}]}`)
 		require.NoError(t, err)
 		require.Len(t, result.Tasks, 1)
 		assert.Equal(t, int64(1), result.Tasks[0].ProjectID)
+	})
+
+	t.Run("Read-only indexes are ignored", func(t *testing.T) {
+		// Reload so project 1's counter (fixture: 34) is deterministic despite earlier subtests advancing it.
+		require.NoError(t, db.LoadFixtures())
+
+		result, err := bulkPost("1", &testuser1, `{"tasks":[{"title":"client max","index":9223372036854775807},{"title":"client preset","index":20}]}`)
+		require.NoError(t, err)
+		require.Len(t, result.Tasks, 2)
+		assert.Equal(t, int64(35), result.Tasks[0].Index)
+		assert.Equal(t, int64(36), result.Tasks[1].Index)
+
+		next, err := bulkPost("1", &testuser1, `{"tasks":[{"title":"next index"}]}`)
+		require.NoError(t, err)
+		require.Len(t, next.Tasks, 1)
+		assert.Equal(t, int64(37), next.Tasks[0].Index)
 	})
 
 	t.Run("Empty batch", func(t *testing.T) {

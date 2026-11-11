@@ -55,6 +55,7 @@
 			<!-- Main bar (regular task) -->
 			<rect
 				v-if="!bar.meta?.isParent"
+				v-tooltip="getBarTooltip(bar)"
 				:x="getBarX(bar)"
 				:y="4"
 				:width="getBarWidth(bar)"
@@ -75,6 +76,7 @@
 			<!-- Parent summary bar (full height with diamond endpoints) -->
 			<g
 				v-if="bar.meta?.isParent"
+				v-tooltip="getBarTooltip(bar)"
 				class="gantt-bar gantt-parent-bar"
 				role="button"
 				:aria-label="getBarAriaLabel(bar)"
@@ -167,7 +169,11 @@
 				:clip-path="`url(#clip-${bar.id})`"
 				aria-hidden="true"
 			>
-				{{ bar.meta?.label || bar.id }}
+				{{ bar.meta?.label || bar.id }}<tspan
+					v-if="bar.meta?.projectTitle"
+					class="gantt-bar-project"
+					dx="6"
+				>{{ bar.meta.projectTitle }}</tspan>
 			</text>
 		</GanttBarPrimitive>
 
@@ -212,8 +218,7 @@ import {useI18n} from 'vue-i18n'
 
 import type {GanttBarModel} from '@/composables/useGanttBar'
 import {getTextColor, LIGHT} from '@/helpers/color/getTextColor'
-import {MILLISECONDS_A_DAY} from '@/constants/date'
-import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
+import {getNaturalDayCount} from '@/helpers/time/roundToNaturalDayBoundary'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
@@ -250,6 +255,29 @@ const emit = defineEmits<{
 const {t} = useI18n({useScope: 'global'})
 
 const RESIZE_HANDLE_OFFSET = 3
+const LABEL_PADDING = 8
+
+let measureCtx: CanvasRenderingContext2D | null | undefined
+function measureLabel(text: string): number {
+	if (measureCtx === undefined) {
+		measureCtx = document.createElement('canvas').getContext('2d')
+		if (measureCtx) {
+			const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+			// Must match .gantt-bar-text font-size
+			measureCtx.font = `${rootFontSize * 0.85}px ${getComputedStyle(document.body).fontFamily}`
+		}
+	}
+	return measureCtx ? measureCtx.measureText(text).width : text.length * 8
+}
+
+// Tooltip only for bars too narrow to show their full label
+function getBarTooltip(bar: GanttBarModel): string | undefined {
+	const label = bar.meta?.label || bar.id
+	if (measureLabel(label) + LABEL_PADDING * 2 <= getBarWidth.value(bar)) {
+		return undefined
+	}
+	return label
+}
 
 function addDays(dateOrValue: Date | string | number, days: number): Date {
 	const date = new Date(dateOrValue)
@@ -266,15 +294,8 @@ function computeBarX(startDate: Date) {
 	return x
 }
 
-function getDaysDifference(startDate: Date, endDate: Date): number {
-	return Math.ceil(
-		(roundToNaturalDayBoundary(endDate).getTime() - roundToNaturalDayBoundary(startDate, true).getTime()) /
-MILLISECONDS_A_DAY,
-	)
-}
-
 function computeBarWidth(bar: GanttBarModel) {
-	const diff = getDaysDifference(bar.start, bar.end)
+	const diff = getNaturalDayCount(bar.start, bar.end)
 	const width = diff * props.dayWidthPixels
 	return width
 }
@@ -482,6 +503,11 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	font-size: .85rem;
 	pointer-events: none;
 	user-select: none;
+}
+
+.gantt-bar-project {
+	font-size: .9em;
+	opacity: .75;
 }
 
 .gantt-parent-bar {

@@ -1,9 +1,10 @@
 import {useI18n} from 'vue-i18n'
 
-import type {ITask} from '@/modelTypes/ITask'
-import {useTaskStore} from '@/stores/tasks'
-import {useProjectStore} from '@/stores/projects'
-import {success, error} from '@/message'
+import type {TaskResponse} from '@/client/queries/tasks'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
+import {useTaskDragState} from '@/composables/useTaskDragState'
+import {useProjects} from '@/composables/useProjects'
+import {success} from '@/message'
 
 /**
  * Finds a project ID from elements at a given mouse position.
@@ -57,8 +58,9 @@ export interface TaskDragToProjectResult {
  */
 export function useTaskDragToProject() {
 	const {t} = useI18n({useScope: 'global'})
-	const taskStore = useTaskStore()
-	const projectStore = useProjectStore()
+	const {draggedTask, setDraggedTask} = useTaskDragState()
+	const updateTask = useUpdateTaskMutation()
+	const projectList = useProjects()
 
 	/**
 	 * Attempts to move a dragged task to a project at the given mouse position.
@@ -70,12 +72,12 @@ export function useTaskDragToProject() {
 	 */
 	async function handleTaskDropToProject(
 		e: { originalEvent?: MouseEvent },
-		onSuccess?: (task: ITask, targetProjectId: number) => void,
+		onSuccess?: (task: TaskResponse, targetProjectId: number) => void,
 	): Promise<TaskDragToProjectResult> {
-		const draggedTask = taskStore.draggedTask
+		const dragged = draggedTask.value
 
-		if (!draggedTask || !e.originalEvent) {
-			taskStore.setDraggedTask(null)
+		if (!dragged || !e.originalEvent) {
+			setDraggedTask(null)
 			return {moved: false, targetProjectId: null}
 		}
 
@@ -83,32 +85,32 @@ export function useTaskDragToProject() {
 		const mouseY = e.originalEvent.clientY
 		const targetProjectId = findProjectIdAtPosition(mouseX, mouseY)
 
-		if (!targetProjectId || targetProjectId <= 0 || targetProjectId === draggedTask.projectId) {
-			taskStore.setDraggedTask(null)
+		if (!targetProjectId || targetProjectId <= 0 || targetProjectId === dragged.project_id) {
+			setDraggedTask(null)
 			return {moved: false, targetProjectId}
 		}
 
-		const targetProject = projectStore.projects[targetProjectId]
+		const targetProject = projectList.projects[targetProjectId]
 
 		try {
-			await taskStore.update({
-				...draggedTask,
-				projectId: targetProjectId,
+			await updateTask.mutateAsync({
+				...dragged,
+				id: dragged.id!,
+				project_id: targetProjectId,
 			})
 
 			if (onSuccess) {
-				onSuccess(draggedTask, targetProjectId)
+				onSuccess(dragged, targetProjectId)
 			}
 
 			success({message: t('task.movedToProject', {project: targetProject?.title || t('project.title')})})
 
 			return {moved: true, targetProjectId}
-		} catch (e) {
-			error(e)
+		} catch {
 			return {moved: false, targetProjectId}
 		} finally {
 			// Always clears drag state - callers should not clear again
-			taskStore.setDraggedTask(null)
+			setDraggedTask(null)
 		}
 	}
 

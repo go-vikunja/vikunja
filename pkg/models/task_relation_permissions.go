@@ -25,7 +25,15 @@ import (
 func (rel *TaskRelation) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	// A user can delete a relation if it can update the base task
 	baseTask := &Task{ID: rel.TaskID}
-	return baseTask.CanUpdate(s, a)
+	can, err := baseTask.CanUpdate(s, a)
+	if err != nil || !can {
+		return false, err
+	}
+
+	// Deletion also changes the other task's relation set.
+	otherTask := &Task{ID: rel.OtherTaskID}
+	can, _, err = otherTask.CanRead(s, a)
+	return can, err
 }
 
 // CanCreate checks if a user can create a new relation between two relations

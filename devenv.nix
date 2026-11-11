@@ -3,6 +3,11 @@
 let
   pkgs-unstable = import inputs.nixpkgs-unstable { system = pkgs.stdenv.system; };
 in {
+  # staticcheck 2026.1 tests panic when rebuilt with go 1.27; drop when nixpkgs ships a fixed release
+  overlays = [
+    (final: prev: { go-tools = prev.go-tools.overrideAttrs (_: { doCheck = false; }); })
+  ];
+
   scripts.patch-sass-embedded.exec = ''
   find node_modules/.pnpm/sass-embedded-linux-*/node_modules/sass-embedded-linux-*/dart-sass/src -name dart -print0 | xargs -I {} -0 patchelf --set-interpreter "$(<$NIX_CC/nix-support/dynamic-linker)" {}
   '';
@@ -38,7 +43,7 @@ in {
     
     go = {
       enable = true;
-      package = pkgs-unstable.go;
+      package = pkgs-unstable.go_1_27;
       enableHardeningWorkaround = true;
     };
   };

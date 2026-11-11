@@ -1,0 +1,213 @@
+import {hashKey, type QueryClient, type QueryKey} from '@tanstack/vue-query'
+import type {ProjectView, Task} from '@/client/generated'
+import {getDefaultBucketId, mapTasksDeep, mergeTask, removeTask} from '@/helpers/task'
+import {
+	normalizeTask,
+	taskKeys,
+	type PaginatedTaskResponse,
+	type TaskFilterParams,
+	type TaskResponse,
+} from './tasks'
+import {kanbanKeys, type BoardData} from './kanban'
+import {totalPagesFor} from './pagination'
+import {getCachedProject} from './projects'
+
+// Applies `update` to every cached copy of task `id` (detail, lists, boards, nested relations),
+// so a mutation response patches all mounted views without refetching them.
+export function mapTaskEverywhere(
+	client: QueryClient,
+	id: number,
+	update: (task: TaskResponse) => TaskResponse,
+) {
+	const map = (tasks: readonly TaskResponse[]) =>
+		mapTasksDeep(tasks, id, task => update(normalizeTask(task))).map(normalizeTask)
+	const holds = (tasks: readonly TaskResponse[]) => containsTask(tasks, id)
+	client.setQueriesData<TaskResponse[]>({queryKey: taskKeys.allLists}, current =>
+		current && holds(current) ? map(current) : undefined,
+	)
+	client.setQueriesData<TaskResponse>({queryKey: taskKeys.details}, current =>
+		current && holds([current]) ? map([current])[0] : undefined,
+	)
+	client.setQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists}, current =>
+		current && holds(current.items) ? {...current, items: map(current.items)} : undefined,
+	)
+	client.setQueriesData<BoardData>({queryKey: kanbanKeys.all}, current => {
+		if (!current) return undefined
+		const buckets = current.buckets.map(bucket =>
+			holds(bucket.tasks) ? {...bucket, tasks: map(bucket.tasks)} : bucket,
+		)
+		return buckets.some((bucket, index) => bucket !== current.buckets[index])
+			? {...current, buckets}
+			: undefined
+	})
+}
+
+// undefined: task absent, entry stays untouched
+type TaskRemoval = (tasks: readonly TaskResponse[], id: number) => TaskResponse[] | undefined
+
+// Relations cross projects, so a move only drops top-level membership.
+const dropMembership: TaskRemoval = (tasks, id) => tasks.some(task => task.id === id)
+	? tasks.filter(task => task.id !== id)
+	: undefined
+
+const dropEverywhere: TaskRemoval = (tasks, id) => containsTask(tasks, id)
+	? removeTask(tasks, id).map(normalizeTask)
+	: undefined
+
+// Favorites and saved filters span projects.
+const isRealProject = (project: number | null | undefined): project is number =>
+	typeof project === 'number' && project > 0
+
+function containsTask(tasks: readonly Task[], id: number): boolean {
+	return tasks.some(task => task.id === id
+		|| Object.values(task.related_tasks ?? {}).some(children => containsTask(children ?? [], id)))
+}
+
+export function taskQueryKeys(client: QueryClient, id: number): QueryKey[] {
+	return [
+		...client.getQueriesData<TaskResponse>({queryKey: taskKeys.details})
+			.filter(([, task]) => task && containsTask([task], id)),
+		...client.getQueriesData<TaskResponse[]>({queryKey: taskKeys.allLists})
+			.filter(([, tasks]) => tasks && containsTask(tasks, id)),
+		...client.getQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists})
+			.filter(([, list]) => list && containsTask(list.items, id)),
+		...client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})
+			.filter(([, board]) => board?.buckets.some(bucket => containsTask(bucket.tasks, id))),
+	].map(([key]) => key)
+}
+
+type CollectionRemoval = {kind: 'move', project: number} | {kind: 'delete'}
+
+function removeTaskFromCollections(client: QueryClient, id: number, removal: CollectionRemoval) {
+	const movedTo = removal.kind === 'move' ? removal.project : undefined
+	const remove: TaskRemoval = movedTo === undefined ? dropEverywhere : dropMembership
+	const inScope = (project: number | null | undefined) =>
+		movedTo === undefined || (isRealProject(project) && project !== movedTo)
+	for (const [key, tasks] of client.getQueriesData<TaskResponse[]>({queryKey: taskKeys.allLists})) {
+		if (!tasks || !inScope(taskKeys.projectOf(key))) continue
+		const items = remove(tasks, id)
+		if (items) client.setQueryData(key, items)
+	}
+	// Every cached page of a scope shares total and total_pages, not only the page holding the task.
+	const removedPerScope = new Map<string, number>()
+	const scopeOf = (key: QueryKey) => hashKey(key.slice(0, -1))
+	for (const [key, list] of client.getQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists})) {
+		if (!list || !inScope(taskKeys.projectOf(key))) continue
+		const items = remove(list.items, id)
+		if (!items) continue
+		client.setQueryData(key, {...list, items})
+		removedPerScope.set(scopeOf(key), (removedPerScope.get(scopeOf(key)) ?? 0) + list.items.length - items.length)
+	}
+	for (const [key, list] of client.getQueriesData<PaginatedTaskResponse>({queryKey: taskKeys.lists})) {
+		const removed = removedPerScope.get(scopeOf(key))
+		if (!list || !removed) continue
+		const total = Math.max(0, list.total - removed)
+		const total_pages = totalPagesFor(list, total)
+		client.setQueryData(key, {...list, total, total_pages})
+	}
+	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
+		if (!board || !inScope(kanbanKeys.projectOf(key))) continue
+		const next = removeFromBoard(board, id, remove)
+		if (next) client.setQueryData(key, next)
+	}
+}
+
+function removeFromBoard(board: BoardData, id: number, remove: TaskRemoval): BoardData | undefined {
+	const buckets = board.buckets.map(bucket => {
+		const tasks = remove(bucket.tasks, id)
+		if (!tasks) return bucket
+		return {...bucket, tasks, count: Math.max(0, bucket.count - (bucket.tasks.length - tasks.length))}
+	})
+	return buckets.some((bucket, index) => bucket !== board.buckets[index]) ? {...board, buckets} : undefined
+}
+
+// A move keeps pseudo-project boards (membership is server-decided), so the drag source drops its own card.
+export function removeTaskFromBoard(client: QueryClient, key: QueryKey, id: number) {
+	client.setQueryData<BoardData>(key, board => board && removeFromBoard(board, id, dropMembership))
+}
+
+export function replaceTaskEverywhere(client: QueryClient, updated: Task) {
+	if (updated.id === undefined) return
+	if (updated.project_id) {
+		removeTaskFromCollections(client, updated.id, {kind: 'move', project: updated.project_id})
+	}
+	mapTaskEverywhere(client, updated.id, current => normalizeTask(mergeTask(current, updated)))
+}
+
+export function removeTaskEverywhere(client: QueryClient, id: number) {
+	removeTaskFromCollections(client, id, {kind: 'delete'})
+	client.removeQueries({queryKey: [...taskKeys.details, id]})
+	client.setQueriesData<TaskResponse>({queryKey: taskKeys.details}, current =>
+		current ? removeTask([current], id).map(normalizeTask)[0] : current,
+	)
+}
+
+// Mirrors the server, which places a task without a stored position above the view's lowest one.
+function positionAboveBoard(board: BoardData, task: TaskResponse): number {
+	const lowest = Math.min(...board.buckets.flatMap(bucket => bucket.tasks.map(item => item.position)))
+	return Number.isFinite(lowest) && lowest > 0 ? lowest / 2 : task.index * 2 ** 16
+}
+
+// Filter buckets are server-decided and a filtered or searched board may not match the task.
+function canPatchBoard(view: ProjectView | undefined, params: TaskFilterParams | undefined): view is ProjectView {
+	return view !== undefined
+		&& view.bucket_configuration_mode !== 'filter'
+		&& !params?.filter
+		&& !params?.q
+}
+
+// Like the server, a done task goes to the done bucket even when another bucket was requested.
+function targetBucketId(view: ProjectView, board: BoardData, task: TaskResponse): number | undefined {
+	if (task.done && view.done_bucket_id) return view.done_bucket_id
+	// The response only echoes the requested bucket, which belongs to the one view it was requested for.
+	if (board.buckets.some(bucket => bucket.id === task.bucket_id)) return task.bucket_id
+	return getDefaultBucketId(view, board.buckets)
+}
+
+export function insertTaskIntoBoards(client: QueryClient, created: Task) {
+	const task = normalizeTask(created)
+	const unpatchable: QueryKey[] = []
+	for (const [key, board] of client.getQueriesData<BoardData>({queryKey: kanbanKeys.all})) {
+		const project = kanbanKeys.projectOf(key)
+		const viewId = kanbanKeys.viewOf(key)
+		if (!board || project === undefined || project !== task.project_id || viewId === undefined) continue
+		const view = getCachedProject(project, client)?.views?.find(item => item.id === viewId)
+		if (!canPatchBoard(view, kanbanKeys.paramsOf(key))) {
+			unpatchable.push(key)
+			continue
+		}
+		const target = targetBucketId(view, board, task)
+		if (target === undefined) continue
+		// A card left over from another tab would otherwise show twice.
+		const deduped = removeFromBoard(board, task.id, dropMembership) ?? board
+		const position = task.positions?.find(item => item.project_view_id === viewId)?.position
+			?? (task.position || positionAboveBoard(deduped, task))
+		client.setQueryData(key, {
+			...deduped,
+			buckets: deduped.buckets.map(bucket => bucket.id === target
+				? {...bucket, count: bucket.count + 1, tasks: [{...task, bucket_id: target, position}, ...bucket.tasks]}
+				: bucket),
+		})
+	}
+	for (const queryKey of unpatchable) {
+		void client.invalidateQueries({
+			queryKey,
+			exact: true,
+			refetchType: 'active',
+		})
+	}
+}
+
+export async function invalidateTaskMembership(
+	client: QueryClient,
+	id?: number,
+	refetchType: 'none' | 'active' = 'none',
+) {
+	await Promise.all([
+		client.invalidateQueries({queryKey: taskKeys.lists, refetchType}),
+		client.invalidateQueries({queryKey: taskKeys.allLists, refetchType}),
+		// Refetching a board returns only the first page per bucket, so mutations patch it instead of refetching.
+		client.invalidateQueries({queryKey: kanbanKeys.all, refetchType: 'none'}),
+		...(id === undefined ? [] : [client.invalidateQueries({queryKey: [...taskKeys.details, id], refetchType})]),
+	])
+}

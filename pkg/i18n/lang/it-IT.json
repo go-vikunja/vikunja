@@ -86,7 +86,6 @@
 				"subject": "L'attività \"%[1]s\" (%[2]s) è ​​in ritardo",
 				"message": "Questo è un promemoria amichevole dell'attività \"%[1]s\" (%[2]s) che è in ritardo di %[3]s e non è ancora stata completata.",
 				"multiple_subject": "I tuoi compiti in ritardo",
-				"multiple_message": "Hai i seguenti compiti scaduti:",
 				"overdue_since": "da %[1]s",
 				"overdue_now": "adesso",
 				"overdue": "in ritardo %[1]s"

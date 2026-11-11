@@ -25,6 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"code.vikunja.io/veans/internal/auth"
 	"code.vikunja.io/veans/internal/bootstrap"
 	"code.vikunja.io/veans/internal/config"
 )
@@ -72,6 +73,7 @@ revoke it at any time without affecting your own session.`,
 				}
 				path = filepath.Join(root, config.Filename)
 			}
+			p := auth.NewStdPrompter()
 			res, err := bootstrap.Init(cmd.Context(), &bootstrap.Options{
 				ConfigPath:          path,
 				Server:              f.server,
@@ -91,6 +93,8 @@ revoke it at any time without affecting your own session.`,
 				OpenCodeFlagSet:     cmd.Flags().Changed("install-opencode"),
 				NoHooks:             f.noHooks,
 				Out:                 os.Stderr,
+				Prompter:            p,
+				Trust:               defaultGate(p),
 			})
 			if err != nil {
 				return err

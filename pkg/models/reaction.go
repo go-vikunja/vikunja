@@ -123,15 +123,17 @@ func getReactionsForEntityIDs(s *xorm.Session, entityKind ReactionKind, entityID
 
 	reactionsWithTasks = make(map[int64]ReactionMap)
 	for _, reaction := range reactions {
+		// Rows written before user deletion cleaned up reactions, or by link shares, point at no user.
+		u, userExists := users[reaction.UserID]
+		if !userExists {
+			continue
+		}
+
 		if _, taskExists := reactionsWithTasks[reaction.EntityID]; !taskExists {
 			reactionsWithTasks[reaction.EntityID] = make(ReactionMap)
 		}
 
-		if _, has := reactionsWithTasks[reaction.EntityID][reaction.Value]; !has {
-			reactionsWithTasks[reaction.EntityID][reaction.Value] = []*user.User{}
-		}
-
-		reactionsWithTasks[reaction.EntityID][reaction.Value] = append(reactionsWithTasks[reaction.EntityID][reaction.Value], users[reaction.UserID])
+		reactionsWithTasks[reaction.EntityID][reaction.Value] = append(reactionsWithTasks[reaction.EntityID][reaction.Value], u)
 	}
 
 	return
@@ -160,6 +162,10 @@ func (r *Reaction) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 	r.UserID = u.ID
 
+	if err = r.lockTaskForWrite(s, a); err != nil {
+		return err
+	}
+
 	_, err = s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
 		Delete(&Reaction{})
 	return
@@ -186,6 +192,10 @@ func (r *Reaction) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 	r.UserID = u.ID
 
+	if err = r.lockTaskForWrite(s, a); err != nil {
+		return err
+	}
+
 	exists, err := s.Where("user_id = ? AND entity_id = ? AND entity_kind = ? AND value = ?", r.UserID, r.EntityID, r.EntityKind, r.Value).
 		Exist(&Reaction{})
 	if err != nil {
@@ -199,4 +209,13 @@ func (r *Reaction) Create(s *xorm.Session, a web.Auth) (err error) {
 	r.ID = 0
 	_, err = s.Insert(r)
 	return
+}
+
+func (r *Reaction) lockTaskForWrite(s *xorm.Session, a web.Auth) error {
+	t, err := r.getTask(s)
+	if err != nil {
+		return err
+	}
+	_, err = lockTaskForWrite(s, a, t.ID)
+	return err
 }

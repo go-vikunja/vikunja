@@ -1,79 +1,77 @@
 <script setup lang="ts">
-import type {IReactionPerEntity, ReactionKind} from '@/modelTypes/IReaction'
-import {VuemojiPicker} from 'vuemoji-picker'
-import ReactionService from '@/services/reactions'
-import ReactionModel from '@/models/reaction'
+import type {ReactionInput, ReactionUsers} from '@/client/queries/reactions'
+import EmojiPicker from '@/components/input/EmojiPicker.vue'
+import {useSetReactionMutation} from '@/client/queries/reactions'
 import BaseButton from '@/components/base/BaseButton.vue'
-import type {IUser} from '@/modelTypes/IUser'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {useI18n} from 'vue-i18n'
-import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
-import CustomTransition from '@/components/misc/CustomTransition.vue'
-import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+import {nextTick, ref, useId} from 'vue'
+import Popup from '@/components/misc/Popup.vue'
 import {useAuthStore} from '@/stores/auth'
-import {useColorScheme} from '@/composables/useColorScheme'
 
-const props = withDefaults(defineProps<{
-	entityKind: ReactionKind,
+type ReactionSubject = {
+	entityKind: 'tasks',
+	taskId?: never,
+} | {
+	entityKind: 'comments',
+	taskId: number,
+}
+
+const props = withDefaults(defineProps<ReactionSubject & {
 	entityId: number,
+	modelValue?: ReactionUsers,
 	disabled?: boolean,
 }>(), {
+	modelValue: undefined,
 	disabled: false,
 })
 
-const model = defineModel<IReactionPerEntity>()
-
 const authStore = useAuthStore()
 const {t} = useI18n()
-const reactionService = new ReactionService()
-const {isDark} = useColorScheme()
+const reactionMutation = useSetReactionMutation()
 
-async function addReaction(value: string) {
-	const reaction = new ReactionModel({
-		id: props.entityId,
-		kind: props.entityKind,
-		value,
-	})
-	await reactionService.create(reaction)
-	showEmojiPicker.value = false
-
-	if (typeof model.value === 'undefined') {
-		model.value = {}
+async function setReaction(value: string, remove: boolean) {
+	if (props.disabled || reactionMutation.isPending.value || !authStore.info) return
+	const user = {
+		id: authStore.info.id,
+		name: authStore.info.name,
+		username: authStore.info.username,
 	}
-
-	if (!authStore.info || !model.value) return
-
-	const modelValue = model.value
-	if (typeof modelValue[reaction.value] === 'undefined') {
-		modelValue[reaction.value] = [authStore.info]
-	} else {
-		modelValue[reaction.value]!.push(authStore.info)
+	const input: ReactionInput = props.entityKind === 'comments'
+		? {
+			kind: 'comments',
+			taskId: props.taskId,
+			id: props.entityId,
+			value,
+			remove,
+			user,
+		}
+		: {
+			kind: 'tasks',
+			id: props.entityId,
+			value,
+			remove,
+			user,
+		}
+	try {
+		await reactionMutation.mutateAsync(input)
+	} catch {
+		return
 	}
+	if (props.entityId !== input.id || props.entityKind !== input.kind) return
+	if (showEmojiPicker.value) closeEmojiPicker()
 }
 
-async function removeReaction(value: string) {
-	const reaction = new ReactionModel({
-		id: props.entityId,
-		kind: props.entityKind,
-		value,
-	})
-	await reactionService.delete(reaction)
-	showEmojiPicker.value = false
-
-	if (!model.value) return
-
-	const modelValue = model.value
-	const userIndex = modelValue[reaction.value]?.findIndex(u => u.id === authStore.info?.id) ?? -1
-	if (userIndex !== -1) {
-		modelValue[reaction.value]!.splice(userIndex, 1)
-	}
-	if(modelValue[reaction.value]!.length === 0) {
-		delete modelValue[reaction.value]
-	}
+function addReaction(value: string) {
+	return setReaction(value, false)
 }
 
-function getReactionTooltip(users: IUser[], value: string | number) {
-	const names = users.map(u => getDisplayName(u))
+function removeReaction(value: string) {
+	return setReaction(value, true)
+}
+
+function getReactionTooltip(users: ReactionUsers[string], value: string | number) {
+	const names = (users ?? []).map(u => getDisplayName(u))
 	const valueStr = String(value)
 
 	if (names.length === 1) {
@@ -96,40 +94,18 @@ function getReactionTooltip(users: IUser[], value: string | number) {
 }
 
 const showEmojiPicker = ref(false)
-const emojiPickerRef = ref<InstanceType<typeof VuemojiPicker> | null>(null)
+const emojiPickerButtonRef = ref<InstanceType<typeof BaseButton> | null>(null)
+const pickerId = useId()
 
-function hideEmojiPicker(e: MouseEvent) {
-	if (showEmojiPicker.value && emojiPickerRef.value?.$el) {
-		closeWhenClickedOutside(e, emojiPickerRef.value.$el, () => showEmojiPicker.value = false)
-	}
-}
-
-onMounted(() => document.addEventListener('click', hideEmojiPicker))
-onBeforeUnmount(() => document.removeEventListener('click', hideEmojiPicker))
-
-const emojiPickerButtonRef = ref<HTMLElement | null>(null)
-const reactionContainerRef = ref<HTMLElement | null>(null)
-const emojiPickerPosition = ref()
-
-function toggleEmojiPicker() {
-	if (!showEmojiPicker.value) {
-		const rect = emojiPickerButtonRef.value?.$el?.getBoundingClientRect()
-		const container = reactionContainerRef.value?.getBoundingClientRect()
-		if (rect && container) {
-			const left = rect.left - container.left + rect.width
-
-			emojiPickerPosition.value = {
-				'inset-inline-start': left === 0 ? undefined : left,
-			}
-		}
-	}
-
-	nextTick(() => showEmojiPicker.value = !showEmojiPicker.value)
+async function closeEmojiPicker() {
+	showEmojiPicker.value = false
+	await nextTick()
+	emojiPickerButtonRef.value?.$el?.focus()
 }
 
 function hasCurrentUserReactedWithEmoji(value: string | number): boolean {
-	if (!model.value || !authStore.info) return false
-	const user = model.value[String(value)]?.find(u => u.id === authStore.info!.id)
+	if (!props.modelValue || !authStore.info) return false
+	const user = props.modelValue[String(value)]?.find(u => u.id === authStore.info!.id)
 	return typeof user !== 'undefined'
 }
 
@@ -144,42 +120,48 @@ async function toggleReaction(value: string | number) {
 </script>
 
 <template>
-	<div
-		ref="reactionContainerRef"
-		class="reactions"
-	>
+	<div class="reactions">
 		<BaseButton
-			v-for="(users, value) in (model as IReactionPerEntity)"
+			v-for="(users, value) in modelValue"
 			:key="'button' + value"
 			v-tooltip="getReactionTooltip(users, value)"
 			class="reaction-button"
 			:class="{'current-user-has-reacted': hasCurrentUserReactedWithEmoji(value)}"
-			:disabled
+			:disabled="disabled"
+			:aria-disabled="reactionMutation.isPending.value || undefined"
+			:aria-pressed="hasCurrentUserReactedWithEmoji(value)"
 			@click="toggleReaction(value)"
 		>
-			{{ value }} {{ users.length }}
+			{{ value }} {{ users?.length }}
 		</BaseButton>
-		<BaseButton
+		<Popup
 			v-if="!disabled"
-			ref="emojiPickerButtonRef"
-			v-tooltip="$t('reaction.add')"
-			class="reaction-button"
-			@click.stop="toggleEmojiPicker"
+			v-model:open="showEmojiPicker"
+			:anchor="emojiPickerButtonRef?.$el"
+			placement="bottom-start"
 		>
-			<span class="is-sr-only">{{ $t('reaction.add') }}</span>
-			<Icon :icon="['far', 'face-laugh']" />
-		</BaseButton>
-		<CustomTransition name="fade">
-			<VuemojiPicker
-				v-if="showEmojiPicker"
-				ref="emojiPickerRef"
-				class="emoji-picker"
-				:style="{'inset-inline-start': emojiPickerPosition?.left + 'px'}"
-				data-source="/emojis.json"
-				:is-dark="isDark"
-				@emojiClick="detail => addReaction(detail.unicode)"
-			/>
-		</CustomTransition>
+			<template #trigger="{toggle}">
+				<BaseButton
+					ref="emojiPickerButtonRef"
+					v-tooltip="$t('reaction.add')"
+					class="reaction-button"
+					:aria-expanded="showEmojiPicker"
+					:aria-controls="showEmojiPicker ? pickerId : undefined"
+					@click.stop="toggle"
+				>
+					<span class="is-sr-only">{{ $t('reaction.add') }}</span>
+					<Icon :icon="['far', 'face-laugh']" />
+				</BaseButton>
+			</template>
+			<template #content>
+				<EmojiPicker
+					v-if="showEmojiPicker"
+					:id="pickerId"
+					@select="addReaction"
+					@keydown.esc.stop.prevent="closeEmojiPicker"
+				/>
+			</template>
+		</Popup>
 	</div>
 </template>
 
@@ -197,11 +179,5 @@ async function toggleReaction(value: string | number) {
 		border-color: var(--primary);
 		background-color: hsla(var(--primary-h), var(--primary-s), var(--primary-light-l), 0.5);
 	}
-}
-
-.emoji-picker {
-	position: absolute;
-	z-index: 99;
-	margin-block-start: .5rem;
 }
 </style>

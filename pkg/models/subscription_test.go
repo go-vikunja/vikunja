@@ -18,12 +18,15 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -441,4 +444,305 @@ func TestSubscription_NoCrossUserProjectInheritance(t *testing.T) {
 	sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 32, user2)
 	require.NoError(t, err)
 	assert.Nil(t, sub)
+}
+
+func TestSubscription_Mute(t *testing.T) {
+	// User 6 is subscribed to project 32 (subscription 8), task 21 belongs to it
+	u := &user.User{ID: 6}
+
+	mute := func(t *testing.T, s *xorm.Session, a web.Auth, entity string, entityID int64) {
+		sb := &Subscription{
+			Entity:   entity,
+			EntityID: entityID,
+		}
+
+		can, err := sb.CanDelete(s, a)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sb.Delete(s, a))
+	}
+
+	t.Run("unsubscribing from a task subscribed through its project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 21, u)
+		require.NoError(t, err)
+		assert.Nil(t, sub)
+
+		// The project subscription itself must stay untouched
+		sub, err = GetSubscriptionForUser(s, SubscriptionEntityProject, 32, u)
+		require.NoError(t, err)
+		require.NotNil(t, sub)
+		assert.Equal(t, int64(8), sub.ID)
+	})
+	t.Run("muted task is not notified", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 3 owns project 3, user 2 has it shared with them
+		owner := &user.User{ID: 3}
+		other := &user.User{ID: 2}
+		for _, a := range []web.Auth{owner, other} {
+			sb := &Subscription{Entity: "project", EntityID: 3}
+			can, err := sb.CanCreate(s, a)
+			require.NoError(t, err)
+			require.True(t, can)
+			require.NoError(t, sb.Create(s, a))
+		}
+
+		mute(t, s, other, "task", 32)
+
+		subs, err := GetSubscriptionsForEntity(s, SubscriptionEntityTask, 32)
+		require.NoError(t, err)
+		require.Len(t, subs, 1)
+		assert.Equal(t, owner.ID, subs[0].UserID)
+	})
+	t.Run("muting a project also mutes its children", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 25 is a child of project 12 which the user is subscribed to, project 26 is
+		// a child of 25
+		mute(t, s, u, "project", 25)
+
+		for _, projectID := range []int64{25, 26} {
+			sub, err := GetSubscriptionForUser(s, SubscriptionEntityProject, projectID, u)
+			require.NoError(t, err)
+			assert.Nil(t, sub)
+		}
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityProject, 12, u)
+		require.NoError(t, err)
+		require.NotNil(t, sub)
+		assert.Equal(t, int64(3), sub.ID)
+	})
+	t.Run("cannot unsubscribe twice", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 21,
+		}
+		can, err := sb.CanDelete(s, u)
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("needs read access to the entity", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 6 lost access to project 3, task 32 belongs to it
+		_, err := s.Insert(&Subscription{
+			UserID:     u.ID,
+			EntityType: SubscriptionEntityProject,
+			EntityID:   3,
+		})
+		require.NoError(t, err)
+
+		inherited, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 32, u)
+		require.NoError(t, err)
+		require.NotNil(t, inherited)
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 32,
+		}
+		can, err := sb.CanDelete(s, u)
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("removing an own subscription after losing access writes no opt-out", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 6 lost access to project 3, task 32 belongs to it
+		for _, sub := range []*Subscription{
+			{EntityType: SubscriptionEntityProject, EntityID: 3},
+			{EntityType: SubscriptionEntityTask, EntityID: 32},
+		} {
+			sub.UserID = u.ID
+			_, err := s.Insert(sub)
+			require.NoError(t, err)
+		}
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 32,
+		}
+		can, err := sb.CanDelete(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sb.Delete(s, u))
+
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   32,
+			"user_id":     u.ID,
+		})
+	})
+	t.Run("subscribing again lifts the mute", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 21,
+		}
+		can, err := sb.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sb.Create(s, u))
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 21, u)
+		require.NoError(t, err)
+		require.NotNil(t, sub)
+		assert.Equal(t, SubscriptionEntityType(SubscriptionEntityTask), sub.EntityType)
+
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   21,
+			"user_id":     u.ID,
+			"muted":       false,
+		}, false)
+		db.AssertCount(t, "subscriptions", builder.Eq{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   21,
+			"user_id":     u.ID,
+		}, 1)
+	})
+	t.Run("subscribing again refreshes created", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		backdated := time.Now().Add(-42 * time.Hour).UTC()
+		_, err := s.
+			Where("entity_id = ? AND entity_type = ? AND user_id = ?", 21, SubscriptionEntityTask, u.ID).
+			Cols("created").
+			Update(&Subscription{Created: backdated})
+		require.NoError(t, err)
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 21,
+		}
+		can, err := sb.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sb.Create(s, u))
+
+		own, err := getOwnSubscription(s, SubscriptionEntityTask, 21, u.ID)
+		require.NoError(t, err)
+		require.NotNil(t, own)
+		assert.True(t, own.Created.After(backdated.Add(time.Hour)), "created stayed at %s", own.Created)
+	})
+	t.Run("unsubscribing again after lifting the mute", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		sb := &Subscription{
+			Entity:   "task",
+			EntityID: 21,
+		}
+		can, err := sb.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sb.Create(s, u))
+
+		mute(t, s, u, "task", 21)
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 21, u)
+		require.NoError(t, err)
+		assert.Nil(t, sub)
+
+		require.NoError(t, s.Commit())
+		db.AssertCount(t, "subscriptions", builder.Eq{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   21,
+			"user_id":     u.ID,
+		}, 1)
+	})
+	t.Run("unsubscribing from a task with an own subscription and a subscribed project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Subscription 9 is on task 18, subscription 10 on project 9 which task 18 belongs to
+		mute(t, s, u, "task", 18)
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 18, u)
+		require.NoError(t, err)
+		assert.Nil(t, sub)
+
+		require.NoError(t, s.Commit())
+		db.AssertCount(t, "subscriptions", builder.Eq{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   18,
+			"user_id":     u.ID,
+		}, 1)
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   18,
+			"user_id":     u.ID,
+			"muted":       true,
+		}, false)
+	})
+	t.Run("mute outlives the subscription it was made against", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+		mute(t, s, u, "project", 32)
+
+		sb := &Subscription{
+			Entity:   "project",
+			EntityID: 32,
+		}
+		can, err := sb.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, sb.Create(s, u))
+
+		// A mute is user intent, so subscribing to the project again leaves the task muted
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 21, u)
+		require.NoError(t, err)
+		assert.Nil(t, sub)
+	})
+	t.Run("being assigned does not lift the mute", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		mute(t, s, u, "task", 21)
+
+		ta := &TaskAssginee{TaskID: 21, UserID: u.ID}
+		require.NoError(t, ta.Create(s, u))
+
+		sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 21, u)
+		require.NoError(t, err)
+		assert.Nil(t, sub)
+	})
 }

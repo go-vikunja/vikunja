@@ -66,7 +66,7 @@ func usersSearch(ctx context.Context, in *struct {
 	s := db.NewSession()
 	defer s.Close()
 
-	currentUser, err := models.GetUserOrLinkShareUser(s, a)
+	currentUser, err := user.GetFromAuth(a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -96,7 +96,7 @@ func projectUsersSearch(ctx context.Context, in *struct {
 	s := db.NewSession()
 	defer s.Close()
 
-	currentUser, err := models.GetUserOrLinkShareUser(s, a)
+	currentUser, err := user.GetFromAuth(a)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)

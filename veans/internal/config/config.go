@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,6 +46,10 @@ type Config struct {
 	ViewID            int64   `yaml:"view_id"`
 	Buckets           Buckets `yaml:"buckets"`
 	Bot               Bot     `yaml:"bot"`
+
+	// FrontendURL can differ from Server when the API sits behind another
+	// origin. Empty in configs written before it existed; TaskURL falls back.
+	FrontendURL string `yaml:"frontend_url,omitempty"`
 
 	// HTTPTimeout overrides the default 30s HTTP client timeout when
 	// non-zero. Accepts Go duration syntax in YAML ("60s", "5m", "1h30m").
@@ -80,6 +85,16 @@ func (c *Config) FormatTaskID(index int64) string {
 		return fmt.Sprintf("%s-%d", c.ProjectIdentifier, index)
 	}
 	return fmt.Sprintf("#%d", index)
+}
+
+// TaskURL is the web UI link to a task. The frontend renders it as a task
+// pill when it appears as an anchor whose text equals its href.
+func (c *Config) TaskURL(id int64) string {
+	base := c.FrontendURL
+	if base == "" {
+		base = c.Server
+	}
+	return strings.TrimRight(base, "/") + "/tasks/" + strconv.FormatInt(id, 10)
 }
 
 // Find walks upward from cwd looking for .veans.yml. Returns ErrNotFound if
@@ -137,6 +152,31 @@ func (c *Config) SaveAs(path string) error {
 		return err
 	}
 	return os.WriteFile(path, buf, 0o644)
+}
+
+func (c *Config) SaveInRoot(root *os.Root, rel string) error {
+	buf, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+	if err := root.MkdirAll(filepath.Dir(rel), 0o755); err != nil {
+		return err
+	}
+	if err := root.WriteFile(rel, buf, 0o644); err != nil {
+		return err
+	}
+	c.path = filepath.Join(root.Name(), rel)
+	return nil
+}
+
+// os.Root so a repo-shipped .veans.yml symlink can't redirect the write.
+func (c *Config) Save() error {
+	root, err := os.OpenRoot(filepath.Dir(c.path))
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+	return c.SaveInRoot(root, filepath.Base(c.path))
 }
 
 // RepoRoot returns the root of the git repo containing `start` (defaulting

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"math"
 	"os"
 	"strconv"
@@ -27,6 +28,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/web"
@@ -60,19 +62,35 @@ func (f *File) fileID() string {
 	return strconv.FormatInt(f.ID, 10)
 }
 
+// DeleteBlob removes a stored blob after its database row has been rolled back.
+func DeleteBlob(id int64) error {
+	return storage.Remove(strconv.FormatInt(id, 10))
+}
+
 // LoadFileByID returns a file by its ID
 func (f *File) LoadFileByID() (err error) {
 	f.File, err = storage.Open(f.fileID())
-	return
+	if err != nil {
+		// A db row without its blob is a broken install, not a server error.
+		if errors.Is(err, fs.ErrNotExist) {
+			return ErrFileDoesNotExist{FileID: f.ID}
+		}
+		return fmt.Errorf("failed to open file %d: %w", f.ID, err)
+	}
+	return nil
 }
 
-// LoadFileMetaByID loads everything about a file without loading the actual file
-func (f *File) LoadFileMetaByID() (err error) {
-	exists, err := x.Where("id = ?", f.ID).Get(f)
+// LoadFileMetaByID loads the file metadata using the caller's session — an engine
+// query under an open transaction needs a second pool connection and can deadlock the pool.
+func (f *File) LoadFileMetaByID(s *xorm.Session) (err error) {
+	exists, err := s.Where("id = ?", f.ID).Get(f)
+	if err != nil {
+		return err
+	}
 	if !exists {
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
-	return
+	return nil
 }
 
 // Create creates a new file from an FileHeader
@@ -177,12 +195,35 @@ func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string,
 
 	// Save the file to storage with its new ID as path
 	err = file.Save(f)
-	return
+	if err != nil {
+		// Callers may still commit the session, which would persist a blobless row.
+		if _, delErr := s.Where("id = ?", file.ID).Delete(&File{}); delErr != nil {
+			err = errors.Join(err, fmt.Errorf("failed to remove file row after save error: %w", delErr))
+		}
+		return nil, err
+	}
+	return file, nil
 }
 
 // Delete removes a file from the DB and the file system.
 // The caller is responsible for committing or rolling back the session.
-func (f *File) Delete(s *xorm.Session) (err error) {
+func (f *File) Delete(s *xorm.Session) error {
+	if err := f.deleteRow(s); err != nil {
+		return err
+	}
+	return f.removeBlob()
+}
+
+// The blob goes in events.DispatchPending(s), so a rolled back session keeps it.
+func (f *File) DeleteOnCommit(s *xorm.Session) error {
+	if err := f.deleteRow(s); err != nil {
+		return err
+	}
+	events.OnCommit(s, f.removeBlob)
+	return nil
+}
+
+func (f *File) deleteRow(s *xorm.Session) error {
 	deleted, err := s.Where("id = ?", f.ID).Delete(&File{})
 	if err != nil {
 		return err
@@ -190,8 +231,13 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 	if deleted == 0 {
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
+	return nil
+}
 
-	err = storage.Remove(f.fileID())
+func (f *File) removeBlob() error {
+	err := storage.Remove(f.fileID())
+	// After the file, so SavePreview catches a preview stored in between.
+	f.removePreviews()
 	if err != nil {
 		var perr *os.PathError
 		if errors.As(err, &perr) {

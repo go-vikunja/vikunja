@@ -1,10 +1,10 @@
-<script setup lang="ts">
-import type {IUser} from '@/modelTypes/IUser'
+<script setup lang="ts" generic="T extends IUser">
+import type {User as IUser} from '@/client/generated'
 import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/User.vue'
 
 withDefaults(defineProps<{
-	assignees: IUser[],
+	assignees: T[],
 	disabled?: boolean,
 	avatarSize?: number,
 	inline?: boolean,
@@ -17,7 +17,7 @@ withDefaults(defineProps<{
 })
 
 defineEmits<{
-	remove: [user: IUser],
+	remove: [user: T],
 }>()
 </script>
 
@@ -83,10 +83,6 @@ defineEmits<{
 			display: inline;
 			text-wrap: nowrap;
 		}
-
-		:deep(.user > .username) {
-			margin-inline-start: .5rem;
-		}
 	}
 }
 
@@ -115,6 +111,8 @@ defineEmits<{
 	font-size: .75rem;
 	inline-size: 18px;
 	block-size: 18px;
-	z-index: 100;
+	// Only needs to beat the overlapping sibling avatars, so keep it low enough
+	// for popups like the bucket dropdown (z-index 20) to paint above it.
+	z-index: 1;
 }
 </style>

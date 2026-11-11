@@ -20,21 +20,22 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
 
-var registeredMigrators map[string]*MigrationWeb
+var registeredMigrators map[string]func() migration.Migrator
 
 func init() {
-	registeredMigrators = make(map[string]*MigrationWeb)
+	registeredMigrators = make(map[string]func() migration.Migrator)
 }
 
 // MigrationWeb holds the web migration handler
 type MigrationWeb struct {
-	MigrationStruct func() migration.Migrator
+	MigrationStruct func() migration.OAuthMigrator
 }
 
 // AuthURL is returned to the user when requesting the auth url
@@ -48,35 +49,65 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
 	g.GET("/"+ms.Name()+"/status", mw.Status)
 	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
-	registeredMigrators[ms.Name()] = mw
+	RegisterMigratorForEvents(func() migration.Migrator { return mw.MigrationStruct() })
+}
+
+// RegisterMigratorForEvents makes a migrator known to the migration listener without exposing v1 routes.
+func RegisterMigratorForEvents(factory func() migration.Migrator) {
+	registeredMigrators[factory().Name()] = factory
 }
 
 // AuthURL is the web handler to get the auth url
 func (mw *MigrationWeb) AuthURL(c *echo.Context) error {
-	ms := mw.MigrationStruct()
-	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
+	u, err := user2.GetCurrentUser(c)
+	if err != nil {
+		return err
+	}
+	authURL, err := migration.AuthURLForUser(mw.MigrationStruct(), u.ID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, &AuthURL{URL: authURL})
 }
 
-// StartMigration kicks off a migration for the given user: it refuses with
-// migration.ErrMigrationAlreadyRunning if one is already in progress, then
-// dispatches the MigrationRequestedEvent that runs the migration asynchronously.
-// The migrator must already carry its request payload (e.g. the OAuth code).
-// Shared by the v1 and v2 HTTP layers so the orchestration lives in one place.
+// StartMigration validates credentials and dispatches a migration while holding its claim.
 func StartMigration(ms migration.Migrator, u *user2.User) error {
-	stats, err := migration.GetMigrationStatus(ms, u)
+	if om, ok := ms.(migration.OAuthMigrator); ok {
+		if err := migration.ConsumeOAuthState(om, u.ID); err != nil {
+			return err
+		}
+	}
+
+	status, err := migration.ClaimMigration(ms, u)
 	if err != nil {
 		return err
 	}
 
-	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
-		return &migration.ErrMigrationAlreadyRunning{StartedAt: stats.StartedAt}
+	if cc, ok := ms.(migration.CredentialsChecker); ok {
+		if err := cc.CheckCredentials(); err != nil {
+			failClaim(status, u, "failed credential check", migration.ErrorKindCredentials)
+			return err
+		}
 	}
 
-	return events.Dispatch(&MigrationRequestedEvent{
-		Migrator:     ms,
-		MigratorKind: ms.Name(),
-		User:         u,
-	})
+	if err := events.Dispatch(&MigrationRequestedEvent{
+		Migrator:          ms,
+		MigratorKind:      ms.Name(),
+		User:              u,
+		MigrationStatusID: status.ID,
+	}); err != nil {
+		failClaim(status, u, "failed event dispatch", migration.ErrorKindQueue)
+		return err
+	}
+
+	return nil
+}
+
+// failClaim releases the claim of a migration that never got going; logReason only reaches our log.
+func failClaim(status *migration.Status, u *user2.User, logReason string, kind migration.ErrorKind) {
+	if ferr := migration.FailMigration(status, kind); ferr != nil {
+		log.Errorf("[Migration] Could not release claim of migration %d for user %d after %s: %s", status.ID, u.ID, logReason, ferr)
+	}
 }
 
 // Migrate calls the migration method
@@ -87,18 +118,6 @@ func (mw *MigrationWeb) Migrate(c *echo.Context) error {
 	user, err := user2.GetCurrentUser(c)
 	if err != nil {
 		return err
-	}
-
-	stats, err := migration.GetMigrationStatus(ms, user)
-	if err != nil {
-		return err
-	}
-
-	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
-		return c.JSON(http.StatusPreconditionFailed, map[string]string{
-			"message":       "Migration already running",
-			"running_since": stats.StartedAt.String(),
-		})
 	}
 
 	// Bind user request stuff

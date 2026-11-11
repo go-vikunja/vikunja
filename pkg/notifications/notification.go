@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"slices"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 
@@ -120,7 +121,7 @@ type Notifiable interface {
 	RouteForDB() int64
 	// ShouldNotify provides a last-minute way to cancel a notification. It will be called immediately before
 	// sending a notification. An optional session can be passed to reuse an existing transaction.
-	ShouldNotify(sessions ...*xorm.Session) (should bool, err error)
+	ShouldNotify(notification Notification, sessions ...*xorm.Session) (should bool, err error)
 	// Lang provides the language which should be used for translations in the mail.
 	Lang() string
 }
@@ -136,7 +137,7 @@ func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.
 		return nil
 	}
 
-	should, err := notifiable.ShouldNotify(sessions...)
+	should, err := notifiable.ShouldNotify(notification, sessions...)
 	if err != nil || !should {
 		log.Debugf("Not notifying user %d because they are disabled", notifiable.RouteForDB())
 		return err
@@ -156,6 +157,10 @@ func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.
 }
 
 func notifyMail(notifiable Notifiable, notification Notification) error {
+	if !config.MailerEnabled.GetBool() {
+		return nil
+	}
+
 	mail := notification.ToMail(notifiable.Lang())
 	if mail == nil {
 		return nil

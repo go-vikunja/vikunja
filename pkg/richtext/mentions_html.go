@@ -23,6 +23,7 @@ import (
 	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	"golang.org/x/net/html"
 	"xorm.io/xorm"
@@ -34,9 +35,9 @@ import (
 var mentionTokenRegex = regexp.MustCompile(`@([\p{L}\p{N}_](?:[\p{L}\p{N}._-]*[\p{L}\p{N}_])?)`)
 
 // rebuildMentions replaces "@username" tokens with <mention-user> tags, resolving
-// against real users in one batched query. Unknown handles and tokens inside
-// code/links are left untouched.
-func rebuildMentions(s *xorm.Session, nodes []*html.Node) error {
+// against real users in one batched query. Unknown handles, other users' bots and
+// tokens inside code/links are left untouched.
+func rebuildMentions(s *xorm.Session, viewer web.Auth, nodes []*html.Node) error {
 	var textNodes []*html.Node
 	for _, n := range nodes {
 		collectMentionTextNodes(n, false, &textNodes)
@@ -65,8 +66,14 @@ func rebuildMentions(s *xorm.Session, nodes []*html.Node) error {
 		return fmt.Errorf("looking up mentioned users: %w", err)
 	}
 
+	// Link shares get nil and can't resolve any bot.
+	viewerUser, _ := viewer.(*user.User)
+
 	usersByName := make(map[string]*user.User, len(usersByID))
 	for _, u := range usersByID {
+		if u.IsBot() && (viewerUser == nil || !u.IsBotOwnedBy(viewerUser)) {
+			continue
+		}
 		usersByName[u.Username] = u
 	}
 	if len(usersByName) == 0 {

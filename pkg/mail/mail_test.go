@@ -22,12 +22,14 @@ import (
 	"net"
 	"strings"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/wneessen/go-mail"
 )
 
 // startSMTPSink runs a minimal SMTP server which accepts everything and
@@ -117,12 +119,12 @@ func TestStopMailDaemonDrainsQueue(t *testing.T) {
 	StartMailDaemon()
 
 	for i := range 3 {
-		SendMail(&Opts{
+		require.NoError(t, SendMail(&Opts{
 			To:          fmt.Sprintf("test%d@example.com", i),
 			Subject:     fmt.Sprintf("Test %d", i),
 			Message:     "Hello",
 			ContentType: ContentTypePlain,
-		})
+		}))
 	}
 
 	StopMailDaemon()
@@ -144,9 +146,8 @@ func TestStopMailDaemonMailerDisabled(t *testing.T) {
 func TestStopMailDaemonNeverStarted(t *testing.T) {
 	setupMailerConfig(t, "", 587)
 
-	// Empty host: StartMailDaemon creates the queue but never starts the daemon goroutine.
 	StartMailDaemon()
-	assert.NotNil(t, Queue)
+	assert.Nil(t, Queue)
 
 	assert.NotPanics(t, StopMailDaemon)
 	assert.Nil(t, Queue)
@@ -160,4 +161,29 @@ func TestStopMailDaemonCalledTwice(t *testing.T) {
 
 	assert.NotPanics(t, StopMailDaemon)
 	assert.NotPanics(t, StopMailDaemon)
+}
+
+func TestStartMailDaemonClientInitFails(t *testing.T) {
+	setupMailerConfig(t, "127.0.0.1", 0)
+
+	StartMailDaemon()
+
+	assert.Nil(t, Queue)
+	require.NoError(t, SendMail(&Opts{To: "test@example.com", ContentType: ContentTypePlain}))
+}
+
+func TestSendMailQueueFullTimesOut(t *testing.T) {
+	setupMailerConfig(t, "127.0.0.1", 587)
+
+	original := enqueueTimeout
+	enqueueTimeout = 10 * time.Millisecond
+	Queue = make(chan *mail.Msg)
+	t.Cleanup(func() {
+		enqueueTimeout = original
+		Queue = nil
+	})
+
+	err := SendMail(&Opts{To: "test@example.com", ContentType: ContentTypePlain})
+
+	require.Error(t, err)
 }

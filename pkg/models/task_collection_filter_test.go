@@ -17,16 +17,15 @@
 package models
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 
 	datemath "github.com/jszwedko/go-datemath"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"xorm.io/builder"
 )
 
 func TestParseFilter(t *testing.T) {
@@ -181,6 +180,20 @@ func TestParseFilter(t *testing.T) {
 
 		require.Error(t, err)
 	})
+	t.Run("word concatenator hints at && and ||", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("done = false and due_date >= 2026-01-01", "UTC")
+
+		var valueErr ErrInvalidTaskFilterValue
+		require.ErrorAs(t, err, &valueErr)
+		assert.Contains(t, valueErr.HTTPError().Message, "&&")
+	})
+	t.Run("invalid value without word concatenator has no hint", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("done = maybe", "UTC")
+
+		var valueErr ErrInvalidTaskFilterValue
+		require.ErrorAs(t, err, &valueErr)
+		assert.NotContains(t, valueErr.HTTPError().Message, "&&")
+	})
 	t.Run("multiple filters with AND", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("done = false && priority > 3", "UTC")
 
@@ -230,6 +243,33 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, "priority", result[0].field)
 		assert.Equal(t, taskFilterComparatorNotEquals, result[0].comparator)
 		assert.Equal(t, int64(3), result[0].value)
+	})
+	t.Run("created by resolves to usernames, not an int64 id", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("created_by in 'user1,user6'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "created_by", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
+	})
+	t.Run("created by usernames are trimmed of surrounding whitespace", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("created_by in 'user1, user6'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "created_by", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
+	})
+	t.Run("created by usernames drop empty entries from stray commas", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("created_by in 'user1, , user6,'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "created_by", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
 	})
 	t.Run("less than or equal comparator", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("percent_done <= 50", "UTC")
@@ -303,11 +343,7 @@ func TestParseFilter(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 		date := result[0].value.(time.Time)
-		if db.GetDialect() == builder.MYSQL {
-			assert.Equal(t, 1, date.Year())
-		} else {
-			assert.Equal(t, 0, date.Year())
-		}
+		assert.Equal(t, 1, date.Year())
 	})
 	t.Run("project with parentheses", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("( project = 1 )", "UTC")
@@ -478,5 +514,139 @@ func TestDateFilterTimezone(t *testing.T) {
 
 		assert.Equal(t, time.UTC, got.Location(), "filter boundary must be in UTC, got %s", got.Location())
 		assert.Equal(t, "2026-07-15 07:00:00", got.Format("2006-01-02 15:04:05"))
+	})
+}
+
+// A date filter boundary must never be normalized to a year below 1: MySQL's
+// driver refuses to encode such a parameter ("year is not in the range
+// [1, 9999]"). Parsing the zero-date sentinel in a timezone east of Greenwich
+// underflows into year 0 on the way to UTC. Sentry API-OSS-2Q.
+func TestZeroDateFilterBoundary(t *testing.T) {
+	// Europe/Berlin is LMT (+00:53) in year 1, so midnight there is year 0 in UTC.
+	for _, filter := range []string{
+		"due_date > 0001-01-01 00:00",
+		"due_date > 0001-01-01",
+		"due_date > 0000-01-01",
+		"due_date > 0001-01-01T00:00:00Z",
+	} {
+		t.Run(filter, func(t *testing.T) {
+			filters, err := getTaskFiltersFromFilterString(filter, "Europe/Berlin")
+			require.NoError(t, err)
+			require.Len(t, filters, 1)
+
+			got, ok := filters[0].value.(time.Time)
+			require.True(t, ok)
+
+			assert.Equal(t, time.UTC, got.Location())
+			assert.GreaterOrEqual(t, got.Year(), 1, "boundary %s must not underflow year 1, got %s", filter, got)
+			// Must still sort after the unset-date sentinel so "has a due date"
+			// filters don't match tasks without one.
+			assert.False(t, got.Before(time.Time{}), "boundary %s must not predate the zero date, got %s", filter, got)
+		})
+	}
+}
+
+func errWithin(t *testing.T, d time.Duration, fn func() error) error {
+	t.Helper()
+	done := make(chan error, 1)
+	go func() { done <- fn() }()
+	select {
+	case err := <-done:
+		return err
+	case <-time.After(d):
+		t.Fatalf("did not finish within %s", d)
+		return nil
+	}
+}
+
+func TestDatemathBusinessDayLimit(t *testing.T) {
+	tooLarge := []string{
+		"now+999999999999b",
+		"now-999999999999b",
+		"now+10001b",
+		"now+5000b+5001b",
+		"now+99999999999999999999999b",
+		"now+1b+9223372036854775807b",
+	}
+	allowed := []string{
+		"now+10000b",
+		"now-10000b",
+		"now+b",
+		"now+999999d",
+		"now+5000b-4000b",
+	}
+
+	tests := []struct {
+		name       string
+		field      string
+		parse      func(filter string) error
+		limitField func(error) (string, bool)
+	}{
+		{
+			name:  "task filter",
+			field: "due_date",
+			parse: func(filter string) error {
+				_, err := getTaskFiltersFromFilterString(filter, "UTC")
+				return err
+			},
+			limitField: func(err error) (string, bool) {
+				var e ErrInvalidTaskFilterValue
+				ok := errors.As(err, &e)
+				return e.Field, ok
+			},
+		},
+		{
+			name:  "time entry filter",
+			field: "start_time",
+			parse: func(filter string) error {
+				_, err := timeEntryFilterCond(filter, "UTC")
+				return err
+			},
+			limitField: func(err error) (string, bool) {
+				var e ErrInvalidTimeEntryFilterValue
+				ok := errors.As(err, &e)
+				return e.Field, ok
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, value := range tooLarge {
+				t.Run(value, func(t *testing.T) {
+					err := errWithin(t, 5*time.Second, func() error { return tt.parse(tt.field + " > " + value) })
+					require.Error(t, err)
+					field, ok := tt.limitField(err)
+					assert.True(t, ok, "got %v", err)
+					assert.Equal(t, tt.field, field)
+				})
+			}
+			for _, value := range allowed {
+				t.Run(value, func(t *testing.T) {
+					err := errWithin(t, 5*time.Second, func() error { return tt.parse(tt.field + " > " + value) })
+					require.NoError(t, err)
+				})
+			}
+			t.Run("summed across conditions", func(t *testing.T) {
+				err := tt.parse(tt.field + " > now+6000b || " + tt.field + " < now+6000b")
+				require.Error(t, err)
+				field, ok := tt.limitField(err)
+				assert.True(t, ok, "got %v", err)
+				assert.Equal(t, tt.field, field)
+			})
+		})
+	}
+}
+
+func TestDatemathBusinessDayLimitTaskValues(t *testing.T) {
+	t.Run("summed across in list values", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("due_date in now+6000b, now+6000b", "UTC")
+		var e ErrInvalidTaskFilterValue
+		require.ErrorAs(t, err, &e)
+		assert.Equal(t, "due_date", e.Field)
+	})
+	t.Run("text values are not counted", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString(`title like "order-20240101b" && due_date > now+6000b`, "UTC")
+		require.NoError(t, err)
 	})
 }

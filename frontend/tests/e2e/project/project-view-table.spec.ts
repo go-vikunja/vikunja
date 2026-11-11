@@ -1,6 +1,9 @@
 import {test, expect} from '../../support/fixtures'
 import {TaskFactory} from '../../factories/task'
-import {createProjects} from './prepareProjects'
+import {ProjectFactory} from '../../factories/project'
+import {UserFactory} from '../../factories/user'
+import {UserProjectFactory} from '../../factories/users_project'
+import {createDefaultViews, createProjects} from './prepareProjects'
 import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
 
 test.describe('Project View Table', () => {
@@ -45,6 +48,29 @@ test.describe('Project View Table', () => {
 		await expect(page.locator('.project-table table.table th').filter({hasText: 'Priority'})).toBeVisible()
 		// Verify Done column is now hidden
 		await expect(page.locator('.project-table table.table th').filter({hasText: /^Done$/})).not.toBeVisible()
+	})
+
+	test('Should show every priority for open and completed tasks', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const priorities = ['Unset', 'Low', 'Medium', 'High', 'Urgent', 'DO NOW']
+		const tasks = await TaskFactory.create(priorities.length * 2, {
+			project_id: 1,
+			title: (i: number) => `Priority task ${i}`,
+			priority: (i: number) => (i - 1) % priorities.length,
+			done: (i: number) => i > priorities.length,
+		})
+		await page.goto('/projects/1/3')
+		await page.getByRole('button', {name: 'Columns', exact: true}).click()
+		await page.locator('.columns-filter').getByText('Priority', {exact: true}).click()
+		await page.getByRole('button', {name: 'Columns', exact: true}).click()
+
+		for (const task of tasks) {
+			const row = page.locator('.project-table tbody tr').filter({
+				has: page.getByRole('link', {name: task.title, exact: true}),
+			})
+			await expect(row).toBeVisible()
+			await expect(row.locator('.priority-label')).toHaveText(priorities[task.priority])
+		}
 	})
 
 	test('Should navigate to the task when the title is clicked', async ({authenticatedPage: page}) => {
@@ -94,5 +120,54 @@ test.describe('Project View Table', () => {
 
 		// Verify only one task row is shown (the search result)
 		await expect(page.locator('.project-table table.table tbody tr')).toHaveCount(1)
+	})
+
+	test('Should create a task from the table view', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		await TaskFactory.create(1, {
+			project_id: 1,
+		})
+		await page.goto('/projects/1/3')
+		await expect(page.locator('.project-table tbody tr')).toHaveCount(1)
+
+		await page.locator('.project-table .task-add textarea').fill('Task from the table')
+		await page.locator('.project-table .task-add textarea').press('Enter')
+
+		await expect(page.locator('.project-table tbody tr')).toHaveCount(2)
+		await expect(page.locator('.project-table table.table')).toContainText('Task from the table')
+	})
+
+	test('Should not show the task input for an archived project', async ({authenticatedPage: page}) => {
+		await ProjectFactory.create(1, {
+			is_archived: true,
+		})
+		await createDefaultViews(1)
+		await TaskFactory.create(1, {
+			project_id: 1,
+		})
+		await page.goto('/projects/1/3')
+
+		await expect(page.locator('.project-table tbody tr')).toHaveCount(1)
+		await expect(page.locator('.project-table .task-add')).toHaveCount(0)
+	})
+
+	test('Should not show the task input for a project shared read only', async ({authenticatedPage: page}) => {
+		await UserFactory.create(2)
+		await ProjectFactory.create(2, {
+			owner_id: '{increment}',
+		})
+		await UserProjectFactory.create(1, {
+			project_id: 2,
+			user_id: 1,
+			permission: 0,
+		})
+		await createDefaultViews(2)
+		await TaskFactory.create(1, {
+			project_id: 2,
+		})
+		await page.goto('/projects/2/3')
+
+		await expect(page.locator('.project-table tbody tr')).toHaveCount(1)
+		await expect(page.locator('.project-table .task-add')).toHaveCount(0)
 	})
 })

@@ -25,6 +25,7 @@ func init() {
 		"ErrForbidden":                          reflect.ValueOf(&echo.ErrForbidden).Elem(),
 		"ErrInternalServerError":                reflect.ValueOf(&echo.ErrInternalServerError).Elem(),
 		"ErrInvalidCertOrKeyType":               reflect.ValueOf(&echo.ErrInvalidCertOrKeyType).Elem(),
+		"ErrInvalidJSONPCallback":               reflect.ValueOf(&echo.ErrInvalidJSONPCallback).Elem(),
 		"ErrInvalidKeyType":                     reflect.ValueOf(&echo.ErrInvalidKeyType).Elem(),
 		"ErrInvalidListenerNetwork":             reflect.ValueOf(&echo.ErrInvalidListenerNetwork).Elem(),
 		"ErrInvalidRedirectCode":                reflect.ValueOf(&echo.ErrInvalidRedirectCode).Elem(),
@@ -42,6 +43,8 @@ func init() {
 		"ExtractIPDirect":                       reflect.ValueOf(echo.ExtractIPDirect),
 		"ExtractIPFromRealIPHeader":             reflect.ValueOf(echo.ExtractIPFromRealIPHeader),
 		"ExtractIPFromXFFHeader":                reflect.ValueOf(echo.ExtractIPFromXFFHeader),
+		"ExtractSchemeDirect":                   reflect.ValueOf(echo.ExtractSchemeDirect),
+		"ExtractSchemeFromHeaders":              reflect.ValueOf(echo.ExtractSchemeFromHeaders),
 		"FormFieldBinder":                       reflect.ValueOf(echo.FormFieldBinder),
 		"HandlerName":                           reflect.ValueOf(echo.HandlerName),
 		"HeaderAccept":                          reflect.ValueOf(constant.MakeFromLiteral("\"Accept\"", token.STRING, 0)),
@@ -93,12 +96,14 @@ func init() {
 		"HeaderXUrlScheme":                      reflect.ValueOf(constant.MakeFromLiteral("\"X-Url-Scheme\"", token.STRING, 0)),
 		"HeaderXXSSProtection":                  reflect.ValueOf(constant.MakeFromLiteral("\"X-XSS-Protection\"", token.STRING, 0)),
 		"LegacyIPExtractor":                     reflect.ValueOf(echo.LegacyIPExtractor),
+		"LegacySchemeExtractor":                 reflect.ValueOf(echo.LegacySchemeExtractor),
 		"MIMEApplicationForm":                   reflect.ValueOf(constant.MakeFromLiteral("\"application/x-www-form-urlencoded\"", token.STRING, 0)),
 		"MIMEApplicationJSON":                   reflect.ValueOf(constant.MakeFromLiteral("\"application/json\"", token.STRING, 0)),
 		"MIMEApplicationJSONCharsetUTF8":        reflect.ValueOf(constant.MakeFromLiteral("\"application/json; charset=UTF-8\"", token.STRING, 0)),
 		"MIMEApplicationJavaScript":             reflect.ValueOf(constant.MakeFromLiteral("\"application/javascript\"", token.STRING, 0)),
 		"MIMEApplicationJavaScriptCharsetUTF8":  reflect.ValueOf(constant.MakeFromLiteral("\"application/javascript; charset=UTF-8\"", token.STRING, 0)),
 		"MIMEApplicationMsgpack":                reflect.ValueOf(constant.MakeFromLiteral("\"application/msgpack\"", token.STRING, 0)),
+		"MIMEApplicationProblemJSON":            reflect.ValueOf(constant.MakeFromLiteral("\"application/problem+json\"", token.STRING, 0)),
 		"MIMEApplicationProtobuf":               reflect.ValueOf(constant.MakeFromLiteral("\"application/protobuf\"", token.STRING, 0)),
 		"MIMEApplicationXML":                    reflect.ValueOf(constant.MakeFromLiteral("\"application/xml\"", token.STRING, 0)),
 		"MIMEApplicationXMLCharsetUTF8":         reflect.ValueOf(constant.MakeFromLiteral("\"application/xml; charset=UTF-8\"", token.STRING, 0)),
@@ -125,6 +130,7 @@ func init() {
 		"NotFoundRouteName":                     reflect.ValueOf(constant.MakeFromLiteral("\"echo_route_not_found_name\"", token.STRING, 0)),
 		"PROPFIND":                              reflect.ValueOf(constant.MakeFromLiteral("\"PROPFIND\"", token.STRING, 0)),
 		"PathValuesBinder":                      reflect.ValueOf(echo.PathValuesBinder),
+		"ProblemDetailsHTTPErrorHandler":        reflect.ValueOf(echo.ProblemDetailsHTTPErrorHandler),
 		"QUERY":                                 reflect.ValueOf(constant.MakeFromLiteral("\"QUERY\"", token.STRING, 0)),
 		"QueryParamsBinder":                     reflect.ValueOf(echo.QueryParamsBinder),
 		"REPORT":                                reflect.ValueOf(constant.MakeFromLiteral("\"REPORT\"", token.STRING, 0)),
@@ -142,7 +148,7 @@ func init() {
 		"TrustLoopback":                         reflect.ValueOf(echo.TrustLoopback),
 		"TrustPrivateNet":                       reflect.ValueOf(echo.TrustPrivateNet),
 		"UnwrapResponse":                        reflect.ValueOf(echo.UnwrapResponse),
-		"Version":                               reflect.ValueOf(constant.MakeFromLiteral("\"5.3.1\"", token.STRING, 0)),
+		"Version":                               reflect.ValueOf(constant.MakeFromLiteral("\"5.4.2\"", token.STRING, 0)),
 		"WrapHandler":                           reflect.ValueOf(echo.WrapHandler),
 		"WrapMiddleware":                        reflect.ValueOf(echo.WrapMiddleware),
 
@@ -168,6 +174,8 @@ func init() {
 		"MiddlewareFunc":         reflect.ValueOf((*echo.MiddlewareFunc)(nil)),
 		"PathValue":              reflect.ValueOf((*echo.PathValue)(nil)),
 		"PathValues":             reflect.ValueOf((*echo.PathValues)(nil)),
+		"ProblemError":           reflect.ValueOf((*echo.ProblemError)(nil)),
+		"ProblemErrorer":         reflect.ValueOf((*echo.ProblemErrorer)(nil)),
 		"Renderer":               reflect.ValueOf((*echo.Renderer)(nil)),
 		"Response":               reflect.ValueOf((*echo.Response)(nil)),
 		"Route":                  reflect.ValueOf((*echo.Route)(nil)),
@@ -175,6 +183,7 @@ func init() {
 		"Router":                 reflect.ValueOf((*echo.Router)(nil)),
 		"RouterConfig":           reflect.ValueOf((*echo.RouterConfig)(nil)),
 		"Routes":                 reflect.ValueOf((*echo.Routes)(nil)),
+		"SchemeExtractor":        reflect.ValueOf((*echo.SchemeExtractor)(nil)),
 		"StartConfig":            reflect.ValueOf((*echo.StartConfig)(nil)),
 		"TemplateRenderer":       reflect.ValueOf((*echo.TemplateRenderer)(nil)),
 		"TimeLayout":             reflect.ValueOf((*echo.TimeLayout)(nil)),
@@ -189,6 +198,7 @@ func init() {
 		"_HTTPStatusCoder":        reflect.ValueOf((*_github_com_labstack_echo_v5_HTTPStatusCoder)(nil)),
 		"_JSONSerializer":         reflect.ValueOf((*_github_com_labstack_echo_v5_JSONSerializer)(nil)),
 		"_MiddlewareConfigurator": reflect.ValueOf((*_github_com_labstack_echo_v5_MiddlewareConfigurator)(nil)),
+		"_ProblemErrorer":         reflect.ValueOf((*_github_com_labstack_echo_v5_ProblemErrorer)(nil)),
 		"_Renderer":               reflect.ValueOf((*_github_com_labstack_echo_v5_Renderer)(nil)),
 		"_Router":                 reflect.ValueOf((*_github_com_labstack_echo_v5_Router)(nil)),
 		"_Validator":              reflect.ValueOf((*_github_com_labstack_echo_v5_Validator)(nil)),
@@ -247,6 +257,16 @@ type _github_com_labstack_echo_v5_MiddlewareConfigurator struct {
 
 func (W _github_com_labstack_echo_v5_MiddlewareConfigurator) ToMiddleware() (echo.MiddlewareFunc, error) {
 	return W.WToMiddleware()
+}
+
+// _github_com_labstack_echo_v5_ProblemErrorer is an interface wrapper for ProblemErrorer type
+type _github_com_labstack_echo_v5_ProblemErrorer struct {
+	IValue        interface{}
+	WProblemError func() *echo.ProblemError
+}
+
+func (W _github_com_labstack_echo_v5_ProblemErrorer) ProblemError() *echo.ProblemError {
+	return W.WProblemError()
 }
 
 // _github_com_labstack_echo_v5_Renderer is an interface wrapper for Renderer type

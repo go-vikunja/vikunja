@@ -31,7 +31,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, watch, nextTick} from 'vue'
+import {ref, watch, nextTick, type ComponentPublicInstance} from 'vue'
 import type {EmojiEntry} from './emojiData'
 
 const props = defineProps<{
@@ -42,7 +42,7 @@ const props = defineProps<{
 const selectedIndex = ref(0)
 const itemEls = ref<HTMLElement[]>([])
 
-function setItemRef(el: Element | null, index: number) {
+function setItemRef(el: Element | ComponentPublicInstance | null, index: number) {
 	if (el instanceof HTMLElement) {
 		itemEls.value[index] = el
 	}

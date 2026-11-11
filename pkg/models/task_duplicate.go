@@ -49,7 +49,7 @@ func (td *TaskDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool,
 
 	// Need write access on the project to create tasks in it
 	p := &Project{ID: originalTask.ProjectID}
-	return p.CanUpdate(s, a)
+	return p.CanWrite(s, a)
 }
 
 // Create duplicates a task
@@ -65,6 +65,11 @@ func (td *TaskDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool,
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/duplicate [put]
 func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
+	_, views, err := lockViewsAndTasksForWrite(s, doer, []int64{td.TaskID})
+	if err != nil {
+		return err
+	}
+
 	// Get the original task with all details
 	originalTask := &Task{ID: td.TaskID}
 	err = originalTask.ReadOne(s, doer)
@@ -90,7 +95,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		Reminders:   originalTask.Reminders,
 	}
 
-	err = createTask(s, newTask, doer, true, true)
+	err = unwrapBulkCreateError(createTasksInViews(s, newTask.ProjectID, []*Task{newTask}, doer, true, true, false, views))
 	if err != nil {
 		return err
 	}
@@ -122,7 +127,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		attachment.ID = 0
 		attachment.TaskID = newTask.ID
 		attachment.File = &files.File{ID: attachment.FileID}
-		if err := attachment.File.LoadFileMetaByID(); err != nil {
+		if err := attachment.File.LoadFileMetaByID(s); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
 				continue
 			}

@@ -20,6 +20,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"sync"
@@ -30,9 +33,12 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
@@ -76,36 +82,14 @@ func TestHandleTaskUpdateLastUpdated(t *testing.T) {
 	})
 }
 
-// The listener evaluates every kanban filter view in the instance, so a filter owned by
-// a disabled user used to fail the handler for everyone: recalculating positions looks
-// up the owner, which errors out with "Account is disabled".
+// Access-filtering only excludes owners without access to the task's project, not disabled
+// ones: recalculating positions for a disabled owner's filter must not fail it for everyone.
 func TestUpdateTaskInSavedFilterViews_InactiveFilterOwner(t *testing.T) {
 	// Positions are crowded enough to force a recalculation when a task is added.
 	createCrowdedFilterView := func(t *testing.T, s *xorm.Session, filterID, viewID, ownerID int64) *ProjectView {
-		_, err := s.Insert(&SavedFilter{
-			ID:      filterID,
-			Title:   "filter",
-			OwnerID: ownerID,
-			Filters: &TaskCollection{Filter: "done = false"},
-		})
+		view, _ := createKanbanFilterView(t, s, filterID, viewID, ownerID, "done = false")
+		_, err := s.Insert(&TaskPosition{TaskID: 2, ProjectViewID: view.ID, Position: MinPositionSpacing / 2})
 		require.NoError(t, err)
-
-		view := &ProjectView{
-			ID:                      viewID,
-			ProjectID:               getProjectIDFromSavedFilterID(filterID),
-			Title:                   "kanban",
-			ViewKind:                ProjectViewKindKanban,
-			BucketConfigurationMode: BucketConfigurationModeManual,
-		}
-		_, err = s.Insert(view)
-		require.NoError(t, err)
-
-		_, err = s.Insert(&Bucket{ProjectViewID: view.ID, Title: "backlog", CreatedByID: ownerID})
-		require.NoError(t, err)
-
-		_, err = s.Insert(&TaskPosition{TaskID: 2, ProjectViewID: view.ID, Position: MinPositionSpacing / 2})
-		require.NoError(t, err)
-
 		return view
 	}
 
@@ -113,6 +97,9 @@ func TestUpdateTaskInSavedFilterViews_InactiveFilterOwner(t *testing.T) {
 	s := db.NewSession()
 	disabledOwnerView := createCrowdedFilterView(t, s, 9998, 9998, 17)
 	activeOwnerView := createCrowdedFilterView(t, s, 9999, 9999, 1)
+	// Filters of users without access are skipped anyway, so share project 1 with the disabled owner.
+	_, err := s.Insert(&ProjectUser{UserID: 17, ProjectID: 1, Permission: PermissionRead})
+	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	_ = s.Close()
 
@@ -141,26 +128,7 @@ func TestUpdateTasksBatchInSavedFilterViews(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 
-	_, err := s.Insert(&SavedFilter{
-		ID:      9999,
-		Title:   "filter",
-		OwnerID: 1,
-		Filters: &TaskCollection{Filter: "done = false"},
-	})
-	require.NoError(t, err)
-
-	view := &ProjectView{
-		ID:                      9999,
-		ProjectID:               getProjectIDFromSavedFilterID(9999),
-		Title:                   "kanban",
-		ViewKind:                ProjectViewKindKanban,
-		BucketConfigurationMode: BucketConfigurationModeManual,
-	}
-	_, err = s.Insert(view)
-	require.NoError(t, err)
-
-	_, err = s.Insert(&Bucket{ProjectViewID: view.ID, Title: "backlog", CreatedByID: 1})
-	require.NoError(t, err)
+	view, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
 	require.NoError(t, s.Commit())
 	_ = s.Close()
 
@@ -197,6 +165,294 @@ func TestUpdateTasksBatchInSavedFilterViews(t *testing.T) {
 	assert.NotZero(t, positionByTask[3])
 	// Each task lands on top of the view, so later batch members get smaller positions.
 	assert.Less(t, positionByTask[3], positionByTask[1])
+}
+
+func newKanbanView(t *testing.T, s *xorm.Session, viewID, projectID, ownerID int64) (*ProjectView, *Bucket) {
+	view := &ProjectView{
+		ID:                      viewID,
+		ProjectID:               projectID,
+		Title:                   "kanban",
+		ViewKind:                ProjectViewKindKanban,
+		BucketConfigurationMode: BucketConfigurationModeManual,
+	}
+	_, err := s.Insert(view)
+	require.NoError(t, err)
+
+	bucket := &Bucket{ProjectViewID: view.ID, Title: "backlog", CreatedByID: ownerID}
+	_, err = s.Insert(bucket)
+	require.NoError(t, err)
+
+	return view, bucket
+}
+
+func createKanbanFilterView(t *testing.T, s *xorm.Session, filterID, viewID, ownerID int64, filter string) (*ProjectView, *Bucket) {
+	_, err := s.Insert(&SavedFilter{
+		ID:      filterID,
+		Title:   "filter",
+		OwnerID: ownerID,
+		Filters: &TaskCollection{Filter: filter},
+	})
+	require.NoError(t, err)
+
+	return newKanbanView(t, s, viewID, getProjectIDFromSavedFilterID(filterID), ownerID)
+}
+
+// A filter can only contain tasks its owner can see, so filters of users without
+// access to the task's project must neither be evaluated nor receive rows.
+// Task 1 lives on project 1 (owner user 1), task 34 on project 20 (owner user 13); neither is shared.
+func TestUpdateTasksInSavedFilterViews_OnlyFiltersOfUsersWithAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	user1View, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+	user13View, _ := createKanbanFilterView(t, s, 9998, 9998, 13, "done = false")
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	events.TestListener(t, &TasksBatchCreatedEvent{
+		Tasks: []*Task{
+			{ID: 1, ProjectID: 1, Index: 1},
+			{ID: 34, ProjectID: 20, Index: 20},
+		},
+		Doer: &user.User{ID: 1},
+	}, &UpdateTasksBatchInSavedFilterViews{})
+
+	for _, table := range []string{"task_buckets", "task_positions"} {
+		db.AssertExists(t, table, map[string]interface{}{"task_id": 1, "project_view_id": user1View.ID}, false)
+		db.AssertExists(t, table, map[string]interface{}{"task_id": 34, "project_view_id": user13View.ID}, false)
+		db.AssertMissing(t, table, map[string]interface{}{"task_id": 34, "project_view_id": user1View.ID})
+		db.AssertMissing(t, table, map[string]interface{}{"task_id": 1, "project_view_id": user13View.ID})
+	}
+}
+
+// Access via share, team or ancestor ownership must feed the filter like direct ownership.
+func TestUpdateTasksInSavedFilterViews_AccessViaShareOrParent(t *testing.T) {
+	assertHasRows := func(t *testing.T, taskID, viewID int64) {
+		for _, table := range []string{"task_buckets", "task_positions"} {
+			db.AssertExists(t, table, map[string]interface{}{"task_id": taskID, "project_view_id": viewID}, false)
+		}
+	}
+	assertNoRows := func(t *testing.T, taskID, viewID int64) {
+		for _, table := range []string{"task_buckets", "task_positions"} {
+			db.AssertMissing(t, table, map[string]interface{}{"task_id": taskID, "project_view_id": viewID})
+		}
+	}
+
+	// Project 9 is owned by user 6 and shared read-only with user 1 only via users_projects id 3 (no team path); user 16 has no access.
+	t.Run("direct project share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		sharedView, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+		noAccessView, _ := createKanbanFilterView(t, s, 9998, 9998, 16, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 18, ProjectID: 9},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		assertHasRows(t, 18, sharedView.ID)
+		assertNoRows(t, 18, noAccessView.ID)
+	})
+
+	// Project 6 is owned by user 6 and shared read-only with team 2 (team_projects id 2), whose only member is user 1.
+	t.Run("team project share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		teamView, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+		noAccessView, _ := createKanbanFilterView(t, s, 9998, 9998, 16, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 15, ProjectID: 6},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		assertHasRows(t, 15, teamView.ID)
+		assertNoRows(t, 15, noAccessView.ID)
+	})
+
+	// Fresh parent/child pair so ancestor ownership is the only access path (project 19's
+	// owner, user 6, has a direct admin share on it too, which would otherwise mask this).
+	t.Run("parent project owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		const (
+			childProjectID int64 = 9991
+			taskID         int64 = 9990
+			parentOwnerID  int64 = 16
+			childOwnerID   int64 = 13
+			noAccessID     int64 = 2
+		)
+		parentProjectID := int64(9990)
+		insertTestProject(t, s, &Project{ID: parentProjectID, Title: "ancestor parent", Identifier: "ANCPARENT", OwnerID: parentOwnerID})
+		insertTestProject(t, s, &Project{ID: childProjectID, Title: "ancestor child", Identifier: "ANCCHILD", OwnerID: childOwnerID, ParentProjectID: &parentProjectID})
+		_, err := s.Insert(&Task{ID: taskID, Title: "child project task", ProjectID: childProjectID, Index: 1, CreatedByID: childOwnerID})
+		require.NoError(t, err)
+
+		parentOwnerView, _ := createKanbanFilterView(t, s, 9999, 9999, parentOwnerID, "done = false")
+		noAccessView, _ := createKanbanFilterView(t, s, 9998, 9998, noAccessID, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: taskID, ProjectID: childProjectID},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		assertHasRows(t, taskID, parentOwnerView.ID)
+		assertNoRows(t, taskID, noAccessView.ID)
+	})
+}
+
+// Tasks not matching the filter expression get no rows even though the owner can see them.
+func TestUpdateTasksInSavedFilterViews_TaskNotInFilter(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	view, _ := createKanbanFilterView(t, s, 9999, 9999, 1, "done = false")
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	// Task 2 is done.
+	events.TestListener(t, &TaskUpdatedEvent{
+		Task: &Task{ID: 2, ProjectID: 1},
+		Doer: &user.User{ID: 1},
+	}, &UpdateTaskInSavedFilterViews{})
+
+	db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 2, "project_view_id": view.ID})
+	db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 2, "project_view_id": view.ID})
+}
+
+// Covers multi-view fan-out and the per-view bucket_id LEFT JOIN match, neither tested above.
+func TestUpdateTasksInSavedFilterViews_BucketIDFilterAndMultipleViews(t *testing.T) {
+	t.Run("multiple views of one filter", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		// createKanbanFilterView already inserts the filter, so the second view only adds a ProjectView + Bucket.
+		view1, bucket1 := createKanbanFilterView(t, s, 9990, 9990, 1, "done = false")
+		view2, bucket2 := newKanbanView(t, s, 9991, view1.ProjectID, 1)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 1, ProjectID: 1},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		for _, vb := range []struct {
+			view   *ProjectView
+			bucket *Bucket
+		}{{view1, bucket1}, {view2, bucket2}} {
+			// Each view has its own default bucket; the task must land in that view's own bucket, not the other view's.
+			db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": vb.view.ID, "bucket_id": vb.bucket.ID}, false)
+			db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": vb.view.ID}, false)
+		}
+	})
+
+	t.Run("filter on bucket_id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+
+		const filterID, viewID int64 = 9992, 9992
+		view, _ := newKanbanView(t, s, viewID, getProjectIDFromSavedFilterID(filterID), 1)
+		bucket := &Bucket{ProjectViewID: view.ID, Title: "target", CreatedByID: 1}
+		_, err := s.Insert(bucket)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&SavedFilter{
+			ID:      filterID,
+			Title:   "bucket filter",
+			OwnerID: 1,
+			Filters: &TaskCollection{Filter: fmt.Sprintf("done = false && bucket_id = %d", bucket.ID)},
+		})
+		require.NoError(t, err)
+
+		plainView, _ := createKanbanFilterView(t, s, 9993, 9993, 1, "done = false")
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 1, ProjectID: 1},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		// The plain done=false filter is unaffected by the bucket_id filter's join path.
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": plainView.ID}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": plainView.ID}, false)
+
+		// Task 1 has no task_buckets row in this view yet, so the LEFT JOIN yields no match.
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": view.ID})
+		db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": view.ID})
+	})
+
+	t.Run("filter on bucket_id, task already in bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+
+		const filterID, viewID int64 = 9994, 9994
+		view, _ := newKanbanView(t, s, viewID, getProjectIDFromSavedFilterID(filterID), 1)
+		bucket := &Bucket{ProjectViewID: view.ID, Title: "target", CreatedByID: 1}
+		_, err := s.Insert(bucket)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&SavedFilter{
+			ID:      filterID,
+			Title:   "bucket filter",
+			OwnerID: 1,
+			Filters: &TaskCollection{Filter: fmt.Sprintf("done = false && bucket_id = %d", bucket.ID)},
+		})
+		require.NoError(t, err)
+
+		// Task 1 is already in the matching bucket for this view, so the join now matches it.
+		_, err = s.Insert(&TaskBucket{TaskID: 1, ProjectViewID: view.ID, BucketID: bucket.ID})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 1, ProjectID: 1},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		// The freshly computed position is written even though the bucket already existed.
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": view.ID, "bucket_id": bucket.ID}, false)
+		db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": view.ID}, false)
+
+		s3 := db.NewSession()
+		defer s3.Close()
+		position := &TaskPosition{}
+		has, err := s3.Where("task_id = ? AND project_view_id = ?", 1, view.ID).Get(position)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.NotZero(t, position.Position)
+	})
+}
+
+// A filter that fails to parse is logged and skipped, not treated as a listener error
+// that would abort processing for every other filter.
+func TestUpdateTasksInSavedFilterViews_InvalidFilterIsSkipped(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+
+	const brokenFilterID, brokenViewID int64 = 9995, 9995
+	// bogus_field has no corresponding Task struct field, so parsing rejects it with ErrInvalidTaskField.
+	brokenView, _ := createKanbanFilterView(t, s, brokenFilterID, brokenViewID, 1, "bogus_field = 1")
+
+	healthyView, _ := createKanbanFilterView(t, s, 9996, 9996, 1, "done = false")
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	events.TestListener(t, &TaskUpdatedEvent{
+		Task: &Task{ID: 1, ProjectID: 1},
+		Doer: &user.User{ID: 1},
+	}, &UpdateTaskInSavedFilterViews{})
+
+	db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": healthyView.ID}, false)
+	db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": healthyView.ID}, false)
+
+	db.AssertMissing(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": brokenView.ID})
+	db.AssertMissing(t, "task_positions", map[string]interface{}{"task_id": 1, "project_view_id": brokenView.ID})
 }
 
 // Subscriptions survive losing access to the entity they point at: nothing
@@ -300,6 +556,24 @@ func TestSubscriberNotifications_SkipUsersWithoutReadAccess(t *testing.T) {
 		assertOnlySubscriberWithAccessNotified(t, (&TaskDeletedNotification{}).Name())
 	})
 
+	t.Run("task created", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		subscribeBoth(t, s, SubscriptionEntityTask, taskID)
+
+		task, err := GetTaskByIDSimple(s, taskID)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+
+		events.TestListener(t, &TaskCreatedEvent{
+			Task: &task,
+			Doer: &user.User{ID: doerID},
+		}, &SendTaskCreatedNotification{})
+
+		assertOnlySubscriberWithAccessNotified(t, (&TaskCreatedNotification{}).Name())
+	})
+
 	// Subscribers are inherited from the parent project, but the notification
 	// discloses the newly created child, so the child is what gets checked.
 	t.Run("project created", func(t *testing.T) {
@@ -315,8 +589,7 @@ func TestSubscriberNotifications_SkipUsersWithoutReadAccess(t *testing.T) {
 			OwnerID:         doerID,
 			ParentProjectID: &parentID,
 		}
-		_, err := s.Insert(child)
-		require.NoError(t, err)
+		insertTestProject(t, s, child)
 		require.NoError(t, s.Commit())
 		_ = s.Close()
 
@@ -402,10 +675,10 @@ func TestSendTaskDeletedNotification(t *testing.T) {
 // names, so register once per process (relevant for -count > 1).
 var registerAuditEventsOnce sync.Once
 
-// A full personal data export is the most sensitive self-service action there
-// is. Driving it through the real router instead of calling the listener
-// directly is what makes this a regression test of the registration itself.
-func TestAuditUserDataExportRequested(t *testing.T) {
+// Driving events through the real router instead of calling the listener
+// directly is what makes these regression tests of the registration itself.
+func startAuditLogForTest(t *testing.T) string {
+	t.Helper()
 	logfile := filepath.Join(t.TempDir(), "audit.log")
 	config.AuditLogfile.Set(logfile)
 	require.NoError(t, audit.Init())
@@ -423,23 +696,359 @@ func TestAuditUserDataExportRequested(t *testing.T) {
 	ready, err := events.InitEventsForTesting(ctx)
 	require.NoError(t, err)
 	<-ready
+	return logfile
+}
 
-	require.NoError(t, events.Dispatch(&UserDataExportRequestedEvent{User: &user.User{ID: 42}}))
-
-	var content []byte
+func waitForAuditEntries(t *testing.T, logfile string, n int) []audit.Entry {
+	t.Helper()
+	var lines [][]byte
 	require.Eventually(t, func() bool {
 		c, err := os.ReadFile(logfile)
 		if err != nil {
 			return false
 		}
-		content = bytes.TrimSpace(c)
-		return len(content) > 0
-	}, 5*time.Second, 10*time.Millisecond, "expected an audit entry for the export request")
+		content := bytes.TrimSpace(c)
+		if len(content) == 0 {
+			return false
+		}
+		lines = bytes.Split(content, []byte("\n"))
+		return len(lines) >= n
+	}, 5*time.Second, 10*time.Millisecond, "expected %d audit entries", n)
 
-	var entry audit.Entry
-	require.NoError(t, json.Unmarshal(content, &entry))
+	entries := make([]audit.Entry, 0, len(lines))
+	for _, line := range lines {
+		var entry audit.Entry
+		require.NoError(t, json.Unmarshal(line, &entry))
+		entries = append(entries, entry)
+	}
+	return entries
+}
+
+// A full personal data export is the most sensitive self-service action there is.
+func TestAuditUserDataExportRequested(t *testing.T) {
+	logfile := startAuditLogForTest(t)
+
+	require.NoError(t, events.Dispatch(&UserDataExportRequestedEvent{User: &user.User{ID: 42}}))
+
+	entries := waitForAuditEntries(t, logfile, 1)
+	require.Len(t, entries, 1)
+	entry := entries[0]
 	assert.Equal(t, audit.ActionUserDataExportRequested, entry.Action)
 	assert.Equal(t, audit.UserActor(42), entry.Actor)
 	assert.Equal(t, audit.UserTarget(42), entry.Target)
 	assert.Equal(t, audit.OutcomeSuccess, entry.Outcome)
+}
+
+func TestAuditTaskPurged(t *testing.T) {
+	logfile := startAuditLogForTest(t)
+
+	require.NoError(t, events.Dispatch(&TaskPurgedEvent{
+		Task: &Task{
+			ID:        51,
+			ProjectID: 1,
+		},
+		Doer: &user.User{ID: 3},
+	}))
+	waitForAuditEntries(t, logfile, 1)
+	require.NoError(t, events.Dispatch(&TaskPurgedEvent{Task: &Task{
+		ID:        52,
+		ProjectID: 1,
+	}}))
+	entries := waitForAuditEntries(t, logfile, 2)
+	require.Len(t, entries, 2)
+
+	assert.Equal(t, audit.ActionTaskPurged, entries[0].Action)
+	assert.Equal(t, audit.ActorFromDoerID(3), entries[0].Actor)
+	assert.Equal(t, audit.TaskTarget(51), entries[0].Target)
+	assert.Equal(t, map[string]any{"project_id": float64(1)}, entries[0].Metadata)
+
+	assert.Equal(t, audit.ActionTaskPurged, entries[1].Action)
+	assert.Equal(t, audit.SystemActor(), entries[1].Actor, "retention cron")
+	assert.Equal(t, audit.TaskTarget(52), entries[1].Target)
+}
+
+func TestAuditProjectPurged(t *testing.T) {
+	logfile := startAuditLogForTest(t)
+
+	require.NoError(t, events.Dispatch(&ProjectPurgedEvent{
+		Project: &Project{ID: 45},
+		Doer:    &user.User{ID: 3},
+	}))
+	waitForAuditEntries(t, logfile, 1)
+	require.NoError(t, events.Dispatch(&ProjectPurgedEvent{Project: &Project{ID: 46}}))
+	entries := waitForAuditEntries(t, logfile, 2)
+	require.Len(t, entries, 2)
+
+	assert.Equal(t, audit.ActionProjectPurged, entries[0].Action)
+	assert.Equal(t, audit.ActorFromDoerID(3), entries[0].Actor)
+	assert.Equal(t, audit.ProjectTarget(45), entries[0].Target)
+
+	assert.Equal(t, audit.ActionProjectPurged, entries[1].Action)
+	assert.Equal(t, audit.SystemActor(), entries[1].Actor, "retention cron")
+	assert.Equal(t, audit.ProjectTarget(46), entries[1].Target)
+}
+
+func TestWebhookDeliveryListenerSkipsErrorReporting(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+
+	// httptest binds to loopback, which the SSRF-safe client blocks by default.
+	previousAllowNonRoutable := config.OutgoingRequestsAllowNonRoutableIPs.GetBool()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set(true)
+	previousClient := webhookClient
+	webhookClient = nil
+	t.Cleanup(func() {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set(previousAllowNonRoutable)
+		webhookClient = previousClient
+	})
+
+	s := db.NewSession()
+	webhook := &Webhook{
+		TargetURL:   ts.URL,
+		Events:      []string{"task.updated"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	_, err := s.Insert(webhook)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	_ = s.Close()
+
+	payload, err := json.Marshal(&WebhookDeliveryEvent{
+		WebhookID: webhook.ID,
+		Payload:   &WebhookPayload{EventName: "task.updated"},
+	})
+	require.NoError(t, err)
+
+	msg := message.NewMessage("test", payload)
+	err = (&WebhookDeliveryListener{}).Handle(msg)
+
+	require.Error(t, err)
+	assert.Equal(t, "true", msg.Metadata.Get(events.MetadataSkipErrorReporting))
+}
+
+// Existing rows must follow the task's done state into and out of the view's done bucket.
+func TestUpdateTasksInSavedFilterViews_DoneBucket(t *testing.T) {
+	setup := func(t *testing.T, taskID int64, startInDoneBucket bool) (view *ProjectView, defaultBucket, doneBucket *Bucket) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		view, defaultBucket = createKanbanFilterView(t, s, 9999, 9999, 1, "project = 1")
+		doneBucket = &Bucket{ProjectViewID: view.ID, Title: "done", CreatedByID: 1}
+		_, err := s.Insert(doneBucket)
+		require.NoError(t, err)
+		view.DoneBucketID = doneBucket.ID
+		_, err = s.ID(view.ID).Cols("done_bucket_id").Update(view)
+		require.NoError(t, err)
+
+		startBucket := defaultBucket
+		if startInDoneBucket {
+			startBucket = doneBucket
+		}
+		_, err = s.Insert(&TaskBucket{TaskID: taskID, ProjectViewID: view.ID, BucketID: startBucket.ID})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		_ = s.Close()
+		return
+	}
+
+	t.Run("done task moves to done bucket", func(t *testing.T) {
+		view, _, doneBucket := setup(t, 2, false)
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 2, ProjectID: 1, Done: true},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 2, "project_view_id": view.ID, "bucket_id": doneBucket.ID}, false)
+	})
+
+	t.Run("undone task moves out of done bucket", func(t *testing.T) {
+		view, defaultBucket, _ := setup(t, 1, true)
+
+		events.TestListener(t, &TaskUpdatedEvent{
+			Task: &Task{ID: 1, ProjectID: 1, Done: false},
+			Doer: &user.User{ID: 1},
+		}, &UpdateTaskInSavedFilterViews{})
+
+		db.AssertExists(t, "task_buckets", map[string]interface{}{"task_id": 1, "project_view_id": view.ID, "bucket_id": defaultBucket.ID}, false)
+	})
+}
+
+// GHSA-4hv6-xc92-j86g
+func TestTOTPAccountLockRevokesSessions(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	events.ClearDispatchedEvents()
+	u := &user.User{ID: 2}
+	// keyvalue store is process-global; reset counter between runs.
+	_ = keyvalue.Del(u.GetFailedTOTPAttemptsKey())
+
+	for i := 0; i < 10; i++ {
+		user.HandleFailedTOTPAuth(u)
+	}
+
+	locked := events.GetDispatchedEvents((&user.AccountLockedEvent{}).Name())
+	require.Len(t, locked, 1)
+	assert.Equal(t, &user.AccountLockedEvent{UserID: 2}, locked[0])
+	db.AssertExists(t, "sessions", map[string]interface{}{"user_id": 2}, false)
+
+	events.TestListener(t, locked[0], &RevokeSessionsOnAccountLock{})
+
+	db.AssertMissing(t, "sessions", map[string]interface{}{"user_id": 2})
+	db.AssertExists(t, "sessions", map[string]interface{}{"user_id": 1}, false)
+	assert.Equal(t, &SessionsRevokedEvent{UserID: 2}, singleDispatchedEvent[*SessionsRevokedEvent](t))
+}
+
+func webhookDeliveriesByID(t *testing.T) map[int64]*WebhookDeliveryEvent {
+	t.Helper()
+	delivered := map[int64]*WebhookDeliveryEvent{}
+	for _, e := range events.GetDispatchedEvents((&WebhookDeliveryEvent{}).Name()) {
+		d := e.(*WebhookDeliveryEvent)
+		delivered[d.WebhookID] = d
+	}
+	return delivered
+}
+
+func TestWebhookListener_RoutesByStoredTaskProject(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	events.ClearDispatchedEvents()
+
+	// Task 13 lives in project 2, which user 1 can't read.
+	forged := &TaskUpdatedEvent{
+		Task: &Task{ID: 13, ProjectID: 1},
+		Doer: &user.User{ID: 1},
+	}
+	events.TestListener(t, forged, &WebhookListener{EventName: "task.updated"})
+
+	delivered := webhookDeliveriesByID(t)
+	assert.NotContains(t, delivered, int64(1))
+	assert.Contains(t, delivered, int64(5), "project 2's own webhook should get the event")
+}
+
+func TestWebhookListener_TaskPayloadUsesCreatorAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// User 15 reads project 1 but not project 10 (related task 19); user 1 reads both.
+	_, err := s.Insert(&ProjectUser{UserID: 15, ProjectID: 1, Permission: PermissionRead})
+	require.NoError(t, err)
+	readerHook := &Webhook{
+		TargetURL:   "https://example.com/reader",
+		Events:      []string{"task.updated"},
+		ProjectID:   1,
+		CreatedByID: 15,
+	}
+	_, err = s.Insert(readerHook)
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskRelation{TaskID: 1, OtherTaskID: 19, RelationKind: RelationKindRelated, CreatedByID: 1})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	events.ClearDispatchedEvents()
+	events.TestListener(t, &TaskUpdatedEvent{Task: &Task{ID: 1, ProjectID: 1}, Doer: &user.User{ID: 1}}, &WebhookListener{EventName: "task.updated"})
+
+	relatedIDs := func(d *WebhookDeliveryEvent) []int64 {
+		require.NotNil(t, d)
+		task, ok := d.Payload.Data.(map[string]interface{})["task"].(Task)
+		require.True(t, ok, "task should be reloaded")
+		ids := []int64{}
+		for _, related := range task.RelatedTasks[RelationKindRelated] {
+			ids = append(ids, related.ID)
+		}
+		return ids
+	}
+
+	delivered := webhookDeliveriesByID(t)
+	assert.Contains(t, relatedIDs(delivered[1]), int64(19))
+	assert.NotContains(t, relatedIDs(delivered[readerHook.ID]), int64(19))
+}
+
+func TestWebhookListener_DeliversTaskDeletedForTrashedTask(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	hook := &Webhook{
+		TargetURL:   "https://example.com/deleted",
+		Events:      []string{"task.deleted"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	_, err := s.Insert(hook)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	doer := &user.User{ID: 1}
+	trashTaskForTest(t, 1, doer)
+
+	events.ClearDispatchedEvents()
+	events.TestListener(t, &TaskDeletedEvent{
+		Task: &Task{
+			ID:        1,
+			ProjectID: 1,
+			Title:     "task #1",
+		},
+		Doer: doer,
+	}, &WebhookListener{EventName: "task.deleted"})
+
+	delivered := webhookDeliveriesByID(t)
+	require.Contains(t, delivered, hook.ID)
+	task, ok := delivered[hook.ID].Payload.Data.(map[string]interface{})["task"].(map[string]interface{})
+	require.True(t, ok, "task should be the event's copy")
+	assert.Equal(t, "task #1", task["title"])
+}
+
+func TestWebhookListener_DeliversTaskPurged(t *testing.T) {
+	// Task 51 in project 1 is in the fixture trash, deleted long enough ago for the cron.
+	deliverPurge := func(t *testing.T, purge func(t *testing.T)) map[string]interface{} {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		hook := &Webhook{
+			TargetURL:   "https://example.com/purged",
+			Events:      []string{"task.purged"},
+			ProjectID:   1,
+			CreatedByID: 1,
+		}
+		_, err := s.Insert(hook)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		events.ClearDispatchedEvents()
+		purge(t)
+		purged := events.GetDispatchedEvents((&TaskPurgedEvent{}).Name())
+		require.Len(t, purged, 1)
+
+		events.ClearDispatchedEvents()
+		events.TestListener(t, purged[0], &WebhookListener{EventName: "task.purged"})
+
+		delivered := webhookDeliveriesByID(t)
+		require.Contains(t, delivered, hook.ID)
+		data, ok := delivered[hook.ID].Payload.Data.(map[string]interface{})
+		require.True(t, ok)
+		task, ok := data["task"].(map[string]interface{})
+		require.True(t, ok, "task should be the event's copy")
+		assert.InDelta(t, 51, task["id"], 0)
+		return data
+	}
+
+	t.Run("purged by a user", func(t *testing.T) {
+		data := deliverPurge(t, func(t *testing.T) {
+			require.NoError(t, deletePermanentlyForTest(t, 51, &user.User{ID: 1}))
+		})
+		doer, ok := data["doer"].(*user.User)
+		require.True(t, ok, "doer should be reloaded")
+		assert.Equal(t, int64(1), doer.ID)
+	})
+	t.Run("purged by the retention cron", func(t *testing.T) {
+		data := deliverPurge(t, func(t *testing.T) {
+			files.InitTestFileFixtures(t)
+			deleteExpiredTasks(time.Now())
+		})
+		assert.Nil(t, data["doer"])
+	})
 }

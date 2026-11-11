@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -280,6 +281,40 @@ func TestResolveTaskPositionConflicts(t *testing.T) {
 	})
 }
 
+func TestTaskPosition_Update(t *testing.T) {
+	t.Run("task moved to a forbidden project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		tp := &TaskPosition{
+			TaskID:        1,
+			ProjectViewID: 1,
+			Position:      12345,
+		}
+		can, err := tp.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// Project 2 belongs to user 3 and is not shared with user 1.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{
+			ProjectID: 2,
+			Index:     9999,
+		})
+		require.NoError(t, err)
+
+		err = tp.Update(s, u)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "task_positions", map[string]interface{}{
+			"task_id":  1,
+			"position": 12345,
+		})
+	})
+}
+
 func TestUpdateTaskPositionWithConflictResolution(t *testing.T) {
 	t.Run("resolves conflict on update", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -314,6 +349,52 @@ func TestUpdateTaskPositionWithConflictResolution(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEqual(t, pos1.Position, pos2.Position)
+	})
+
+	t.Run("falls back to full recalculation when neighbours are too close", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("project_view_id = ?", 93).Delete(&TaskPosition{})
+		require.NoError(t, err)
+
+		// The gap between the neighbours of the target position only leaves
+		// 0.01/3 for two conflicting tasks, less than MinPositionSpacing.
+		conflictPosition := 100.005
+		_, err = s.Insert(&TaskPosition{TaskID: 900, ProjectViewID: 93, Position: 100})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 901, ProjectViewID: 93, Position: conflictPosition})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 902, ProjectViewID: 93, Position: 100.01})
+		require.NoError(t, err)
+
+		tp := &TaskPosition{
+			TaskID:        903,
+			ProjectViewID: 93,
+			Position:      conflictPosition,
+		}
+
+		err = updateTaskPosition(s, nil, tp)
+		require.NoError(t, err)
+
+		var positions []*TaskPosition
+		err = s.Where("project_view_id = ?", 93).OrderBy("position ASC").Find(&positions)
+		require.NoError(t, err)
+		require.Len(t, positions, 4)
+
+		for i := 1; i < len(positions); i++ {
+			assert.Greater(t, positions[i].Position, positions[i-1].Position,
+				"position of task %d should be greater than the one of task %d",
+				positions[i].TaskID, positions[i-1].TaskID)
+			assert.GreaterOrEqual(t, positions[i].Position-positions[i-1].Position, MinPositionSpacing)
+		}
+
+		updated := &TaskPosition{}
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 903, 93).Get(updated)
+		require.NoError(t, err)
+		assert.InDelta(t, updated.Position, tp.Position, 0, "the returned position should be refreshed")
+		assert.Greater(t, tp.Position, 1000.0, "positions should have been spread over the full range")
 	})
 }
 
@@ -712,5 +793,32 @@ func TestBulkInsertTaskPositions(t *testing.T) {
 			builder.Eq{"project_view_id": 1},
 			builder.Gte{"task_id": 10000},
 		), 150)
+	})
+}
+
+func TestViewLockOrder(t *testing.T) {
+	ids := viewLockOrder([]*ProjectView{{ID: 4}, {ID: 1}, {ID: 4}, {ID: 2}})
+	assert.Equal(t, []int64{1, 2, 4}, ids)
+}
+
+func TestAddPositionsToTasks(t *testing.T) {
+	t.Run("only includes positions of views in the task's project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// View 5 belongs to project 2, task 1 to project 1.
+		_, err := s.Insert(&TaskPosition{TaskID: 1, ProjectViewID: 5, Position: 10})
+		require.NoError(t, err)
+
+		task := &Task{ID: 1}
+		require.NoError(t, AddPositionsToTasks(s, []*Task{task}))
+
+		viewIDs := make([]int64, 0, len(task.Positions))
+		for _, p := range task.Positions {
+			viewIDs = append(viewIDs, p.ProjectViewID)
+		}
+		assert.Contains(t, viewIDs, int64(1))
+		assert.NotContains(t, viewIDs, int64(5))
 	})
 }

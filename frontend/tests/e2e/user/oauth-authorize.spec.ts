@@ -51,7 +51,7 @@ test.describe('OAuth 2.0 Authorization Flow', () => {
 		// login redirectIfSaved() navigates back to /oauth/authorize and the
 		// component immediately POSTs to the API.
 		const authorizeResponsePromise = page.waitForResponse(
-			response => response.url().includes('/api/v1/oauth/authorize') && response.request().method() === 'POST',
+			response => response.url().includes('/api/v2/oauth/authorize') && response.request().method() === 'POST',
 			{timeout: 15000},
 		)
 
@@ -110,7 +110,7 @@ test.describe('OAuth 2.0 Authorization Flow', () => {
 		// The component POSTs as soon as it mounts with the existing session, so register the
 		// listener before navigating.
 		const authorizeResponsePromise = page.waitForResponse(
-			response => response.url().includes('/api/v1/oauth/authorize') && response.request().method() === 'POST',
+			response => response.url().includes('/api/v2/oauth/authorize') && response.request().method() === 'POST',
 			{timeout: 15000},
 		)
 

@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"fmt"
 	"net/url"
 
 	"code.vikunja.io/api/pkg/config"
@@ -50,7 +51,26 @@ func (p *Provider) discoveredEndSessionEndpoint() string {
 		log.Debugf("Could not read end_session_endpoint for provider %s: %v", p.Key, err)
 		return ""
 	}
+	if meta.EndSessionEndpoint == "" {
+		return ""
+	}
+	if _, err := parseEndSessionEndpoint(meta.EndSessionEndpoint); err != nil {
+		log.Warningf("Ignoring end_session_endpoint of provider %s: %v", p.Key, err)
+		return ""
+	}
 	return meta.EndSessionEndpoint
+}
+
+// The frontend navigates to this URL; a javascript: one would run on our origin.
+func parseEndSessionEndpoint(endpoint string) (*url.URL, error) {
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		return nil, fmt.Errorf("end-session endpoint %q is not an absolute http(s) URL", endpoint)
+	}
+	return u, nil
 }
 
 // BuildEndSessionURL builds an OpenID Connect RP-Initiated Logout 1.0 request URL
@@ -89,7 +109,8 @@ func buildEndSessionURL(endpoint, clientID, idToken, postLogoutRedirectURI strin
 		return "", nil
 	}
 
-	u, err := url.Parse(endpoint)
+	// Covers the static logouturl and providers cached before discovery validation.
+	u, err := parseEndSessionEndpoint(endpoint)
 	if err != nil {
 		return "", err
 	}

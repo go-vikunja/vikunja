@@ -36,6 +36,10 @@ func TestParseISO8601Duration(t *testing.T) {
 
 		assert.Equal(t, expected, dur)
 	})
+	t.Run("fractional hours", func(t *testing.T) {
+		assert.Equal(t, 90*time.Minute, ParseISO8601Duration("PT1.5H"))
+		assert.Equal(t, -90*time.Minute, ParseISO8601Duration("-PT1.5H"))
+	})
 	t.Run("weeks", func(t *testing.T) {
 		dur := ParseISO8601Duration("P1W")
 		expected, _ := time.ParseDuration("168h")

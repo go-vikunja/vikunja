@@ -22,6 +22,7 @@
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
 			:show-saved-filters="showSavedFilters"
+			:view
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
@@ -30,19 +31,18 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, nextTick} from 'vue'
+import {computed, ref, watch, nextTick, type DeepReadonly} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
 
-import {type TaskFilterParams} from '@/services/taskCollection'
-import {type IProjectView} from '@/modelTypes/IProjectView'
-import {type IProject} from '@/modelTypes/IProject'
-import {useProjectStore} from '@/stores/projects'
+import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
+import {type TaskFilterParams} from '@/client/queries/tasks'
+import type {ProjectView} from '@/client/generated'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
-	projectId?: IProject['id'],
-	viewId?: IProjectView['id'],
+	view?: ProjectView | DeepReadonly<ProjectView>,
 	// Cross-project saved filters only make sense in cross-project contexts
 	// (e.g. the planner), so single-project views keep them hidden.
 	showSavedFilters?: boolean,
@@ -52,15 +52,25 @@ const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams]
 }>()
 
-const projectStore = useProjectStore()
-
-const value = ref<TaskFilterParams>({})
+const value = ref<EditableTaskCollection>({
+	sort_by: [],
+	order_by: [],
+	filter: '',
+	filter_include_nulls: false,
+	s: '',
+})
 const filtersRef = ref()
 
 watch(
 	() => props.modelValue,
 	(modelValue: TaskFilterParams) => {
-		value.value = modelValue
+		value.value = {
+			sort_by: modelValue.sort_by ?? [],
+			order_by: modelValue.order_by ?? [],
+			filter: modelValue.filter ?? '',
+			filter_include_nulls: modelValue.filter_include_nulls ?? false,
+			s: modelValue.q ?? '',
+		}
 	},
 	{
 		immediate: true,
@@ -70,7 +80,8 @@ watch(
 
 const hasFilters = computed(() => {
 	return value.value.filter !== '' ||
-		value.value.s !== ''
+		value.value.s !== '' ||
+		overridesView.value
 })
 
 const modalOpen = ref(false)
@@ -85,26 +96,14 @@ watch(modalOpen, (isOpen) => {
 })
 
 function showResults() {
-	emit('update:modelValue', {
-		...value.value,
-		filter: value.value.filter,
-		s: value.value.s,
-	})
+	const {s, ...rest} = value.value
+	emit('update:modelValue', {...props.modelValue, ...rest, q: s})
 	modalOpen.value = false
 }
 
-const filterFromView = computed(() => {
-	if (!props.projectId || !props.viewId) {
-		return
-	}
-	
-	const project = projectStore.projects[props.projectId]
-	if (!project) {
-		return
-	}
-	const view = project.views.find(v => v.id === props.viewId)
-	return view?.filter?.filter
-})
+const {overridesView} = useIncludeSubprojects(() => props.view)
+
+const filterFromView = computed(() => props.view?.filter?.filter)
 </script>
 
 <style scoped lang="scss">

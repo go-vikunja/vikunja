@@ -1,19 +1,26 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRouteQuery} from '@vueuse/router'
 import {useTitle} from '@/composables/useTitle'
+import {useClampedPage} from '@/composables/useClampedPage'
 
 import XButton from '@/components/input/Button.vue'
 import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
+import Pagination from '@/components/misc/Pagination.vue'
+import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
-import BotUserService from '@/services/botUser'
-import ApiTokenService from '@/services/apiToken'
-import UserModel from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
-import type {IApiToken} from '@/modelTypes/IApiToken'
+import {botsQuery, useCreateBotMutation, useUpdateBotMutation, useDeleteBotMutation} from '@/client/queries/bots'
+import {clampPage, normalizePageNumber} from '@/client/queries/pagination'
+import {useQueries, useQuery} from '@tanstack/vue-query'
+import {botApiTokensQuery, useDeleteApiTokenMutation} from '@/client/queries/apiTokens'
+import type {ApiToken, BotUser} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
+import {getErrorText, success} from '@/message'
+
+type Bot = BotUser & Required<Pick<BotUser, 'id' | 'status'>>
 
 const STATUS_ACTIVE = 0
 const STATUS_DISABLED = 2
@@ -21,88 +28,99 @@ const STATUS_DISABLED = 2
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.bots.title'))
 
-const botService = new BotUserService()
-const tokenService = new ApiTokenService()
-const bots = ref<IUser[]>([])
+const page = useRouteQuery('page', '1', {transform: normalizePageNumber})
+const {data: botPage, isPlaceholderData} = useQuery(computed(() => botsQuery(page.value)))
+const createMutation = useCreateBotMutation()
+const updateMutation = useUpdateBotMutation()
+const deleteMutation = useDeleteBotMutation()
+const deleteTokenMutation = useDeleteApiTokenMutation()
+const bots = computed(() => (botPage.value?.items ?? []).filter((bot): bot is Bot => typeof bot.id === 'number' && bot.id > 0 && typeof bot.status === 'number'))
+const totalPages = computed(() => botPage.value?.total_pages ?? 0)
+const hasBots = computed(() => (botPage.value?.total ?? 0) > 0)
+useClampedPage(page, {data: botPage, isPlaceholderData})
 const newBotUsername = ref('')
 const newBotName = ref('')
 const createError = ref<string | null>(null)
 const showCreateForm = ref(false)
 
-const tokensByBot = ref<Record<number, IApiToken[]>>({})
+const tokenPages = ref<Record<number, number>>({})
+const tokenQueries = useQueries({queries: computed(() => bots.value.map(bot => botApiTokensQuery(
+	bot.id,
+	tokenPages.value[bot.id] ?? 1,
+)))})
+const tokenPageByBot = computed(() => Object.fromEntries(
+	bots.value.map((bot, index) => [bot.id, tokenQueries.value[index]?.data]),
+))
+watch(tokenQueries, results => bots.value.forEach((bot, index) => {
+	const result = results[index]
+	if (!result) return
+	const current = tokenPages.value[bot.id] ?? 1
+	const clamped = clampPage(current, result)
+	if (clamped !== current) tokenPages.value[bot.id] = clamped
+}))
 const newTokensByBot = ref<Record<number, string>>({})
 const showTokenForm = ref<Record<number, boolean>>({})
 const editingName = ref<Record<number, boolean>>({})
 const nameDraft = ref<Record<number, string>>({})
 
 const showDeleteModal = ref<boolean>(false)
-const botToDelete = ref<IUser>()
-
-async function loadBots() {
-	bots.value = await botService.getAll() as IUser[]
-	for (const bot of bots.value) {
-		await loadTokens(bot.id)
-	}
-}
-
-async function loadTokens(botId: number) {
-	tokensByBot.value[botId] = await tokenService.getAll({}, {owner_id: botId}) as IApiToken[]
-}
+const botToDelete = ref<Bot>()
 
 async function createBot() {
 	createError.value = null
 	const username = newBotUsername.value.startsWith('bot-') ? newBotUsername.value : `bot-${newBotUsername.value}`
-	const payload: Partial<IUser> = {username}
+	const payload: Pick<BotUser, 'username' | 'name'> = {username}
 	const trimmedName = newBotName.value.trim()
 	if (trimmedName !== '') {
 		payload.name = trimmedName
 	}
+	const before = botPage.value
 	try {
-		const created = await botService.create(new UserModel(payload))
-		bots.value.push(created as IUser)
+		const created = await createMutation.mutateAsync(payload)
 		newBotUsername.value = ''
 		newBotName.value = ''
 		showCreateForm.value = false
+		success({message: t('user.settings.bots.createSuccess', {username: created.username})})
+		if (before && before.per_page > 0) {
+			page.value = Math.ceil((before.total + 1) / before.per_page)
+		}
 	} catch (e: unknown) {
-		const err = e as {response?: {data?: {message?: string}}}
-		createError.value = err?.response?.data?.message ?? String(e)
+		createError.value = getErrorText(e)
 	}
 }
 
-async function toggleBotStatus(bot: IUser) {
-	const updated = new UserModel({
+async function toggleBotStatus(bot: Bot) {
+	const updated = {
 		...bot,
 		status: bot.status === STATUS_ACTIVE ? STATUS_DISABLED : STATUS_ACTIVE,
-	})
-	const result = await botService.update(updated) as IUser
-	const idx = bots.value.findIndex(b => b.id === bot.id)
-	if (idx >= 0) {
-		bots.value[idx] = result
 	}
+	try { await updateMutation.mutateAsync({id: bot.id, body: updated}) } catch { /* Mutation reports the error. */ }
 }
 
-function startEditName(bot: IUser) {
+function startEditName(bot: Bot) {
 	nameDraft.value[bot.id] = bot.name ?? ''
 	editingName.value[bot.id] = true
 }
 
-function cancelEditName(bot: IUser) {
+function cancelEditName(bot: Bot) {
 	editingName.value[bot.id] = false
 	delete nameDraft.value[bot.id]
 }
 
-async function saveBotName(bot: IUser) {
-	const updated = new UserModel({
+async function saveBotName(bot: Bot) {
+	const draft = nameDraft.value[bot.id]
+	const updated = {
 		...bot,
-		name: (nameDraft.value[bot.id] ?? '').trim(),
-	})
-	const result = await botService.update(updated) as IUser
-	const idx = bots.value.findIndex(b => b.id === bot.id)
-	if (idx >= 0) {
-		bots.value[idx] = result
+		name: (draft ?? '').trim(),
 	}
-	editingName.value[bot.id] = false
-	delete nameDraft.value[bot.id]
+	try {
+		await updateMutation.mutateAsync({id: bot.id, body: updated})
+		if (nameDraft.value[bot.id] !== draft) {
+			return
+		}
+		editingName.value[bot.id] = false
+		delete nameDraft.value[bot.id]
+	} catch { /* Mutation reports the error. */ }
 }
 
 async function deleteBot() {
@@ -110,53 +128,65 @@ async function deleteBot() {
 	if (!bot) {
 		return
 	}
-	await botService.delete(bot)
-	bots.value = bots.value.filter(b => b.id !== bot.id)
 	showDeleteModal.value = false
 	botToDelete.value = undefined
+	try {
+		await deleteMutation.mutateAsync(bot.id)
+		delete newTokensByBot.value[bot.id]
+		delete tokenPages.value[bot.id]
+	} catch { /* Mutation reports the error. */ }
 }
 
-function onTokenCreated(bot: IUser, token: IApiToken) {
-	newTokensByBot.value[bot.id] = token.token
+function onTokenCreated(bot: Bot, token: ApiToken) {
+	newTokensByBot.value[bot.id] = token.token ?? ''
 	showTokenForm.value[bot.id] = false
-	loadTokens(bot.id)
 }
 
-async function deleteToken(bot: IUser, token: IApiToken) {
-	await tokenService.delete(token)
-	await loadTokens(bot.id)
+async function deleteToken(token: ApiToken) {
+	if (!token.id) return
+	try { await deleteTokenMutation.mutateAsync(token.id) } catch { /* Mutation reports the error. */ }
 }
-
-onMounted(loadBots)
 </script>
 
 <template>
-	<div class="content">
+	<div
+		class="content loader-container"
+		:class="{'is-loading': isPlaceholderData}"
+	>
 		<h2>{{ $t('user.settings.bots.title') }}</h2>
 		<p>{{ $t('user.settings.bots.description') }}</p>
 
 		<div
-			v-if="bots.length === 0 || showCreateForm"
+			v-if="!hasBots || showCreateForm"
 			class="create-form"
 		>
 			<FormField
 				:label="$t('user.auth.username')"
 				:error="createError"
 			>
-				<input
-					v-model="newBotUsername"
-					class="input"
-					placeholder="bot-myassistant"
-				>
+				<template #default="{id}">
+					<input
+						:id="id"
+						v-model="newBotUsername"
+						class="input"
+						placeholder="bot-myassistant"
+					>
+				</template>
 			</FormField>
 			<FormField :label="$t('admin.users.nameLabel')">
-				<input
-					v-model="newBotName"
-					class="input"
-					:placeholder="$t('user.settings.bots.namePlaceholder')"
-				>
+				<template #default="{id}">
+					<input
+						:id="id"
+						v-model="newBotName"
+						class="input"
+						:placeholder="$t('user.settings.bots.namePlaceholder')"
+					>
+				</template>
 			</FormField>
-			<XButton @click="createBot">
+			<XButton
+				:loading="createMutation.isPending.value"
+				@click="createBot"
+			>
 				{{ $t('user.settings.bots.create') }}
 			</XButton>
 		</div>
@@ -241,7 +271,7 @@ onMounted(loadBots)
 					<code>{{ newTokensByBot[bot.id] }}</code>
 				</Message>
 				<div
-					v-if="(tokensByBot[bot.id] ?? []).length > 0"
+					v-if="(tokenPageByBot[bot.id]?.items ?? []).length > 0"
 					class="has-horizontal-overflow"
 				>
 					<table class="table">
@@ -257,16 +287,16 @@ onMounted(loadBots)
 						</thead>
 						<tbody>
 							<tr
-								v-for="token in tokensByBot[bot.id] ?? []"
+								v-for="token in tokenPageByBot[bot.id]?.items ?? []"
 								:key="token.id"
 							>
 								<td>{{ token.title }}</td>
-								<td>{{ formatDisplayDate(token.expiresAt) }}</td>
+								<td>{{ formatDisplayDate(token.expires_at) }}</td>
 								<td>{{ formatDisplayDate(token.created) }}</td>
 								<td class="has-text-end">
 									<XButton
 										variant="secondary"
-										@click="deleteToken(bot, token)"
+										@click="deleteToken(token)"
 									>
 										{{ $t('misc.delete') }}
 									</XButton>
@@ -275,10 +305,21 @@ onMounted(loadBots)
 						</tbody>
 					</table>
 				</div>
+				<PaginationEmit
+					:total-pages="tokenPageByBot[bot.id]?.total_pages ?? 0"
+					:current-page="tokenPages[bot.id] ?? 1"
+					@pageChanged="(page: number) => tokenPages[bot.id] = page"
+				/>
+				<p
+					v-if="bot.status !== STATUS_ACTIVE"
+					class="help"
+				>
+					{{ $t('user.settings.bots.tokensInactive') }}
+				</p>
 				<ApiTokenForm
-					v-if="showTokenForm[bot.id]"
+					v-else-if="showTokenForm[bot.id]"
 					:owner-id="bot.id"
-					@created="(token: IApiToken) => onTokenCreated(bot, token)"
+					@created="(token: ApiToken) => onTokenCreated(bot, token)"
 					@cancel="showTokenForm[bot.id] = false"
 				/>
 				<XButton
@@ -292,6 +333,11 @@ onMounted(loadBots)
 			</div>
 		</div>
 
+		<Pagination
+			:total-pages="totalPages"
+			:current-page="page"
+		/>
+
 		<Modal
 			:enabled="showDeleteModal"
 			@close="showDeleteModal = false"
@@ -302,8 +348,8 @@ onMounted(loadBots)
 			</template>
 
 			<template #text>
-				<p>
-					{{ $t('user.settings.bots.delete.text1', {username: botToDelete?.username}) }}<br>
+				<p v-if="botToDelete">
+					{{ $t('user.settings.bots.delete.text1', {username: botToDelete.username}) }}<br>
 					{{ $t('user.settings.bots.delete.text2') }}
 				</p>
 			</template>

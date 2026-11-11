@@ -1,16 +1,34 @@
-import {describe, it, expect, beforeEach, vi} from 'vitest'
+vi.mock('@/client/generated', () => ({
+	authLogin: sdk.authLogin,
+	authLogout: sdk.authLogout,
+	tokenRenew: sdk.tokenRenew,
+	userShow: sdk.userShow,
+}))
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
+import {nextTick} from 'vue'
 
 import {useAuthStore} from './auth'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
+import {RefreshTokenError, type RefreshFailure} from '@/helpers/auth'
 
-const {refreshTokenMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
+const sdk = vi.hoisted(() => ({
+	authLogin: vi.fn(),
+	authLogout: vi.fn(),
+	tokenRenew: vi.fn(),
+	userShow: vi.fn(),
+}))
+
+const {queryClientClearMock, refreshTokenMock, routerPushMock, getTokenMock} = vi.hoisted(() => ({
+	queryClientClearMock: vi.fn(),
 	refreshTokenMock: vi.fn(),
 	routerPushMock: vi.fn(),
 	getTokenMock: vi.fn(() => null as string | null),
 }))
 
-vi.mock('@/helpers/auth', () => ({
+vi.mock('@/helpers/auth', async (importOriginal) => ({
+	RefreshTokenError: (await importOriginal<typeof import('@/helpers/auth')>()).RefreshTokenError,
+	getAuthSessionEpoch: () => 0,
 	refreshToken: refreshTokenMock,
 	getToken: getTokenMock,
 	saveToken: vi.fn(),
@@ -21,26 +39,20 @@ vi.mock('@/router', () => ({
 	default: {push: routerPushMock},
 }))
 
+vi.mock('@/client/queryClient', async () => {
+	const {QueryClient} = await import('@tanstack/vue-query')
+	const queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})
+	const clear = queryClient.clear.bind(queryClient)
+	queryClient.clear = () => {clear(); queryClientClearMock()}
+	return {queryClient}
+})
+
 vi.mock('@/composables/useWebSocket', () => ({
-	useWebSocket: () => ({disconnect: vi.fn(), connect: vi.fn()}),
-}))
-
-function fakeHttp() {
-	return {
-		post: vi.fn().mockResolvedValue({data: {}}),
-		get: vi.fn().mockResolvedValue({data: {}}),
-		request: vi.fn().mockResolvedValue({data: {}}),
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
-
-vi.mock('@/helpers/fetcher', () => ({
-	HTTPFactory: () => fakeHttp(),
-	AuthenticatedHTTPFactory: () => fakeHttp(),
-	getApiBaseUrl: () => 'http://localhost/api/v1/',
+	useWebSocket: () => ({
+		disconnect: vi.fn(),
+		connect: vi.fn(),
+		closeStaleConnection: vi.fn(),
+	}),
 }))
 
 vi.mock('@/helpers/redirectToProvider', () => ({
@@ -49,12 +61,14 @@ vi.mock('@/helpers/redirectToProvider', () => ({
 	redirectToProviderOnLogout: vi.fn(),
 }))
 
-// A refresh failure that looks like a real network/HTTP error so renewToken's
-// "is this a genuine logout?" check (it inspects the error cause's status) fires.
-function refreshError() {
-	return new Error('Error renewing token: ', {
-		cause: {response: {status: 401}},
-	})
+function resetSdkMocks() {
+	for (const operation of Object.values(sdk)) {
+		operation.mockReset().mockResolvedValue({data: {}})
+	}
+}
+
+function refreshError(failure: RefreshFailure = {kind: 'rejected', status: 401}) {
+	return new RefreshTokenError(failure, undefined)
 }
 
 // A JWT carrying a not-yet-expired user session, so the checkAuth() call that
@@ -72,7 +86,9 @@ function freshUserJwt() {
 describe('auth store renewToken retry (issue #2863)', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
+		resetSdkMocks()
 		refreshTokenMock.mockReset()
+		queryClientClearMock.mockReset()
 		routerPushMock.mockReset()
 		getTokenMock.mockReset().mockReturnValue(null)
 	})
@@ -80,11 +96,11 @@ describe('auth store renewToken retry (issue #2863)', () => {
 	function setupExpiredUserSession(store: ReturnType<typeof useAuthStore>) {
 		store.setAuthenticated(true)
 		// Expired exp so renewToken treats a refresh failure as a real logout.
-		store.setUser({
+		store.setSession({
 			id: 1,
 			type: AUTH_TYPES.USER,
 			exp: Math.floor(Date.now() / 1000) - 60,
-		} as never, false)
+		})
 	}
 
 	it('does NOT log out when the first refresh fails but the retry succeeds', async () => {
@@ -111,13 +127,11 @@ describe('auth store renewToken retry (issue #2863)', () => {
 		expect(routerPushMock).not.toHaveBeenCalledWith({name: 'user.login'})
 	})
 
-	it('logs out when BOTH the refresh and its retry fail', async () => {
+	it('logs out without looping when BOTH the refresh and its retry are rejected', async () => {
 		const store = useAuthStore()
 		setupExpiredUserSession(store)
 
-		refreshTokenMock
-			.mockRejectedValueOnce(refreshError())
-			.mockRejectedValueOnce(refreshError())
+		refreshTokenMock.mockRejectedValue(refreshError({kind: 'rejected', status: 401}))
 
 		await store.renewToken()
 
@@ -125,15 +139,184 @@ describe('auth store renewToken retry (issue #2863)', () => {
 		expect(routerPushMock).toHaveBeenCalledWith({name: 'user.login'})
 	})
 
-	it('retries exactly once (no infinite loop) when the session is genuinely dead', async () => {
+	it('does not log out or retry immediately when the refresh of an expired session is rate limited', async () => {
 		const store = useAuthStore()
 		setupExpiredUserSession(store)
 
-		refreshTokenMock.mockRejectedValue(refreshError())
+		refreshTokenMock.mockRejectedValue(refreshError({kind: 'rate-limited'}))
 
 		await store.renewToken()
 
-		// Initial attempt + exactly one retry — never more.
-		expect(refreshTokenMock).toHaveBeenCalledTimes(2)
+		expect(refreshTokenMock).toHaveBeenCalledTimes(1)
+		expect(store.authenticated).toBe(true)
+		expect(routerPushMock).not.toHaveBeenCalled()
+	})
+
+	describe('with Retry-After', () => {
+		beforeEach(() => {
+			vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'Date']})
+		})
+
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+
+		it('renews again once Retry-After passed', async () => {
+			const store = useAuthStore()
+			setupExpiredUserSession(store)
+			refreshTokenMock
+				.mockRejectedValueOnce(refreshError({kind: 'rate-limited', retryAt: Date.now() + 30_000}))
+				.mockImplementationOnce(async () => {
+					getTokenMock.mockReturnValue(freshUserJwt())
+				})
+
+			await store.renewToken()
+			await vi.advanceTimersByTimeAsync(29_999)
+
+			expect(refreshTokenMock).toHaveBeenCalledTimes(1)
+
+			await vi.advanceTimersByTimeAsync(1)
+
+			expect(refreshTokenMock).toHaveBeenCalledTimes(2)
+			expect(store.authenticated).toBe(true)
+			expect(routerPushMock).not.toHaveBeenCalled()
+		})
+	})
+
+	it.each([
+		['a 5xx', refreshError({kind: 'server', status: 502})],
+		['an unclassified failure', new Error('No desktop OAuth refresh token available')],
+	])('does not log out an expired session when the refresh hits %s', async (_, error) => {
+		const store = useAuthStore()
+		setupExpiredUserSession(store)
+
+		refreshTokenMock.mockRejectedValue(error)
+
+		await store.renewToken()
+
+		expect(sdk.authLogout).not.toHaveBeenCalled()
+		expect(store.authenticated).toBe(true)
+		expect(routerPushMock).not.toHaveBeenCalled()
+	})
+})
+
+describe('auth store logout query lifecycle', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		localStorage.clear()
+		resetSdkMocks()
+		queryClientClearMock.mockReset()
+		routerPushMock.mockReset().mockResolvedValue(undefined)
+	})
+
+	it('clears server data before navigating away', async () => {
+		const store = useAuthStore()
+		store.setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
+		queryClientClearMock.mockReset()
+
+		await store.logout()
+
+		expect(queryClientClearMock).toHaveBeenCalledOnce()
+		expect(queryClientClearMock.mock.invocationCallOrder[0]).toBeLessThan(routerPushMock.mock.invocationCallOrder[0])
+	})
+
+	it('clears browser data after reactive logout cleanup', async () => {
+		const store = useAuthStore()
+		store.setAuthenticated(true)
+		store.setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
+		queryClientClearMock.mockReset()
+		localStorage.setItem('projectHistory', '[{"id":1}]')
+
+		const events: string[] = []
+		const clear = localStorage.clear.bind(localStorage)
+		const clearSpy = vi.spyOn(localStorage, 'clear').mockImplementation(() => {
+			events.push('storage')
+			clear()
+		})
+		queryClientClearMock.mockImplementation(() => {
+			events.push(`query:${store.authenticated}`)
+			localStorage.setItem('projectHistory', '[{"id":1}]')
+		})
+
+		await store.logout()
+		clearSpy.mockRestore()
+
+		expect(events).toEqual(['query:false', 'storage'])
+		expect(localStorage.getItem('projectHistory')).toBeNull()
+	})
+})
+
+describe('auth store query identity lifecycle', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		resetSdkMocks()
+		queryClientClearMock.mockReset()
+	})
+
+	async function seedIdentity(id: number, type: typeof AUTH_TYPES[keyof typeof AUTH_TYPES]) {
+		useAuthStore().setSession({
+			id,
+			type,
+			exp: 0,
+		})
+		await nextTick()
+		queryClientClearMock.mockReset()
+	}
+
+	it('clears server data when changing users', async () => {
+		await seedIdentity(1, AUTH_TYPES.USER)
+
+		useAuthStore().setSession({
+			id: 2,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
+		await nextTick()
+
+		expect(queryClientClearMock).toHaveBeenCalledOnce()
+	})
+
+	it('clears server data when changing from user to link share', async () => {
+		await seedIdentity(1, AUTH_TYPES.USER)
+
+		useAuthStore().setSession({
+			id: 1,
+			type: AUTH_TYPES.LINK_SHARE,
+			exp: 0,
+		})
+		await nextTick()
+
+		expect(queryClientClearMock).toHaveBeenCalledOnce()
+	})
+
+	it('preserves server data when authentication fails without an identity transition', async () => {
+		await seedIdentity(1, AUTH_TYPES.USER)
+		sdk.authLogin.mockRejectedValueOnce(new Error('invalid credentials'))
+
+		await expect(useAuthStore().login({username: 'user', password: 'wrong'})).rejects.toThrow('invalid credentials')
+		await nextTick()
+
+		expect(queryClientClearMock).not.toHaveBeenCalled()
+	})
+
+	it('preserves server data when renewing the same identity', async () => {
+		await seedIdentity(1, AUTH_TYPES.USER)
+
+		useAuthStore().setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 42,
+		})
+		await nextTick()
+
+		expect(queryClientClearMock).not.toHaveBeenCalled()
 	})
 })

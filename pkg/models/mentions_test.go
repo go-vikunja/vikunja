@@ -114,6 +114,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
@@ -171,6 +172,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		grantUser1WriteOnProject3(t, s)
 
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)

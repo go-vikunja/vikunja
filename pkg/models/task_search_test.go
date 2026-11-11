@@ -336,3 +336,23 @@ func TestTaskSearchTitleBoost(t *testing.T) {
 		assert.Less(t, pos[descBoth.ID], pos[titleHit.ID], "two description matches (2.0) must outrank one boosted title match (1.5)")
 	})
 }
+
+func TestDBTaskSearcher_NoScopeReturnsNothing(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	total, err := s.Count(&Task{})
+	require.NoError(t, err)
+	require.Positive(t, total)
+
+	searcher := &dbTaskSearcher{s: s, a: &user.User{ID: 1}}
+	tasks, count, err := searcher.Search(&taskSearchOptions{
+		page:    1,
+		perPage: 50,
+		sortby:  []*sortParam{{sortBy: taskPropertyID, orderBy: orderAscending}},
+	})
+	require.NoError(t, err)
+	assert.Empty(t, tasks)
+	assert.Zero(t, count)
+}

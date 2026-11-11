@@ -4,6 +4,6 @@ import {useAuthStore} from '@/stores/auth'
 
 export const useTimeFormat = createSharedComposable(() => {
 	const authStore = useAuthStore()
-	const store = computed(() => authStore.settings.frontendSettings.timeFormat)
+	const store = computed(() => authStore.settings.frontend_settings.time_format)
 	return {store}
 })

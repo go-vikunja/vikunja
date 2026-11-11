@@ -1,0 +1,43 @@
+name: Close PR by label
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  close:
+    if: startsWith(github.event.label.name, 'close/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment and close
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LABEL: ${{ github.event.label.name }}
+        run: |
+          case "$LABEL" in
+            close/no-issue)
+              body=$(cat <<'EOF'
+          Thanks for the PR. We only take feature PRs that have an issue where the change was discussed and agreed on first ([CONTRIBUTING.md](https://github.com/go-vikunja/vikunja/blob/main/CONTRIBUTING.md#ways-to-contribute)). This one doesn't have one, so it's being closed without a detailed review. If you open an issue and we agree on the approach there, comment here and we'll reopen.
+          EOF
+              ) ;;
+            close/ai-policy)
+              body=$(cat <<'EOF'
+          Closing this because it doesn't meet our [rules for AI-assisted contributions](https://github.com/go-vikunja/vikunja/blob/main/CONTRIBUTING.md#ai-assisted-contributions): disclose AI use, understand and test the change yourself before opening the PR, and have a human available for the review. Maintainer time is the scarcest resource this project has, so PRs that skip those steps are closed without a detailed review. You're welcome to resubmit once it meets them.
+          EOF
+              ) ;;
+            close/not-planned)
+              body=$(cat <<'EOF'
+          Thanks for the work on this. Closing it because the change isn't something we plan to add to Vikunja right now. That is a decision about project scope. For future features, opening an issue first avoids building something that won't be merged ([CONTRIBUTING.md](https://github.com/go-vikunja/vikunja/blob/main/CONTRIBUTING.md#ways-to-contribute)).
+          EOF
+              ) ;;
+            *)
+              echo "Unknown close label: $LABEL" >&2
+              exit 1 ;;
+          esac
+          gh pr close "$PR_NUMBER" --comment "$body"

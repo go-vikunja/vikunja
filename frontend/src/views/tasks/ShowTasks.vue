@@ -42,7 +42,10 @@
 			v-if="!showAll"
 			class="show-tasks-options"
 		>
-			<DatepickerWithRange @update:modelValue="setDate">
+			<DatepickerWithRange
+				:model-value="{dateFrom: dateFrom ?? null, dateTo: dateTo ?? null}"
+				@update:modelValue="setDate"
+			>
 				<template #trigger="{toggle}">
 					<XButton
 						variant="primary"
@@ -90,7 +93,7 @@
 					<SingleTaskInProject
 						:show-project="true"
 						:the-task="task"
-						:can-mark-as-done="(projectStore.projects[task.projectId]?.maxPermission ?? 0) > PERMISSIONS.READ"
+						:can-mark-as-done="(projectList.projects[task.project_id]?.max_permission ?? 0) > PERMISSIONS.READ"
 						@taskUpdated="updateTasks"
 					/>
 				</li>
@@ -98,7 +101,7 @@
 		</Card>
 		<div
 			v-else
-			:class="{ 'is-loading': loading}"
+			:class="{ 'is-loading': showLoading}"
 			class="spinner"
 		/>
 	</div>
@@ -121,13 +124,13 @@ import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import XLabel from '@/components/tasks/partials/Label.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
-import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
-import {useTaskStore} from '@/stores/tasks'
-import {useProjectStore} from '@/stores/projects'
-import {useLabelStore} from '@/stores/labels'
-import type {TaskFilterParams} from '@/services/taskCollection'
-import TaskCollectionService from '@/services/taskCollection'
+import {useProjects} from '@/composables/useProjects'
+import {useLabels} from '@/composables/useLabels'
+import type {TaskFilterParams} from '@/client/queries/tasks'
+import {useTasks} from '@/composables/useTasks'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import type {TaskScope} from '@/client/queries/tasks'
 import {PERMISSIONS} from '@/constants/permissions'
 
 const props = withDefaults(defineProps<{
@@ -145,22 +148,26 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'tasksLoaded': true,
-	'clearLabelFilter': void,
+	'tasksLoaded': [loaded: true],
+	'clearLabelFilter': [],
 }>()
 
 const authStore = useAuthStore()
-const taskStore = useTaskStore()
-const projectStore = useProjectStore()
-const labelStore = useLabelStore()
+const projectList = useProjects()
+const {getLabelById} = useLabels()
 
 const route = useRoute()
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 
-const tasks = ref<ITask[]>([])
+const taskScope = ref<TaskScope | null>(null)
+const taskQuery = useTasks(
+	() => taskScope.value ?? {},
+	{enabled: () => authStore.authenticated && taskScope.value !== null},
+)
+const tasks = taskQuery.tasks
 const showNothingToDo = ref<boolean>(false)
-const taskCollectionService = ref(new TaskCollectionService())
+
 
 setTimeout(() => showNothingToDo.value = true, 100)
 
@@ -171,14 +178,14 @@ const filteredLabels = computed(() => {
 		return []
 	}
 	return props.labelIds
-		.map(id => labelStore.getLabelById(Number(id)))
+		.map(id => getLabelById(Number(id)))
 		.filter(label => label !== null && label !== undefined)
 })
 
 const savedFilterIgnored = computed(() => {
 	return filteredLabels.value.length > 0
 		&& filterIdUsedOnOverview.value
-		&& typeof projectStore.projects[filterIdUsedOnOverview.value] !== 'undefined'
+		&& typeof projectList.projects[filterIdUsedOnOverview.value] !== 'undefined'
 })
 
 const pageTitle = computed(() => {
@@ -199,20 +206,23 @@ const pageTitle = computed(() => {
 })
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
-const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
-const filterIdUsedOnOverview = computed(() => authStore.settings?.frontendSettings?.filterIdUsedOnOverview)
+const loading = taskQuery.isFetching
+const showLoading = useDelayedLoading(loading)
+const filterIdUsedOnOverview = computed(() => authStore.settings?.frontend_settings?.filter_id_used_on_overview)
 
 interface dateStrings {
-	dateFrom: string,
-	dateTo: string,
+	dateFrom: Date | string | null,
+	dateTo: Date | string | null,
 }
 
 function setDate(dates: dateStrings) {
+	const from = dates.dateFrom ?? props.dateFrom
+	const to = dates.dateTo ?? props.dateTo
 	router.push({
 		name: route.name as string,
 		query: {
-			from: dates.dateFrom ?? props.dateFrom,
-			to: dates.dateTo ?? props.dateTo,
+			from: from instanceof Date ? from.toISOString() : from,
+			to: to instanceof Date ? to.toISOString() : to,
 			showOverdue: props.showOverdue ? 'true' : 'false',
 			showNulls: props.showNulls ? 'true' : 'false',
 		},
@@ -243,7 +253,7 @@ function clearLabelFilter() {
 	emit('clearLabelFilter')
 }
 
-async function loadPendingTasks(from: Date|string, to: Date|string, filterId: number | null | undefined) {
+async function loadPendingTasks(from: Date|string|undefined, to: Date|string|undefined, filterId: number | null | undefined) {
 	// FIXME: HACK! This should never happen.
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 	// Since this component is mounted as the home page before unauthenticated users get redirected
@@ -257,7 +267,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 		order_by: ['asc', 'desc'],
 		filter: 'done = false',
 		filter_include_nulls: props.showNulls,
-		s: '',
+		q: '',
 		expand: ['comment_count', 'is_unread'],
 	}
 
@@ -280,38 +290,28 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 	}
 
 	let projectId = null
-	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined'
+	if (showAll.value && filterId && typeof projectList.projects[filterId] !== 'undefined'
 		&& (!props.labelIds || props.labelIds.length === 0)) {
 		projectId = filterId
 	}
 
-	tasks.value = await taskStore.loadTasks(params, projectId)
-	emit('tasksLoaded', true)
+	taskScope.value = {project: projectId, params: {...params, filter_timezone: authStore.settings.timezone}}
 }
 
-// FIXME: this modification should happen in the store
-function updateTasks(updatedTask: ITask) {
-	for (let t = 0; t < tasks.value.length; t++) {
-		if (tasks.value[t].id === updatedTask.id) {
-			tasks.value[t] = updatedTask
-			// Move the task to the end of the done tasks if it is now done
-			if (updatedTask.done) {
-				tasks.value.splice(t, 1)
-				tasks.value.push(updatedTask)
-			}
-			break
-		}
-	}
-}
+watch(taskQuery.data, data => { if (data) emit('tasksLoaded', true) })
 
-// Use watch instead of watchEffect to prevent reloading tasks when unrelated settings change.
-// watchEffect would track all reactive dependencies accessed inside loadPendingTasks,
-// which includes the entire settings object. When sidebarWidth changes, the settings
-// object is replaced, triggering the watchEffect even though filterIdUsedOnOverview
-// hasn't changed. Using watch with explicit dependencies and immediate:true gives us
-// the same behavior but only triggers when these specific values actually change.
+function updateTasks() { return taskQuery.refetch() }
+
+// Keep sidebar setting changes from reloading tasks.
 watch(
-	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview],
+	[
+		() => props.dateFrom,
+		() => props.dateTo,
+		filterIdUsedOnOverview,
+		() => props.showOverdue,
+		() => props.showNulls,
+		() => props.labelIds,
+	],
 	([from, to, filterId]) => loadPendingTasks(from, to, filterId),
 	{immediate: true},
 )

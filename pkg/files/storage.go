@@ -17,6 +17,7 @@
 package files
 
 import (
+	"context"
 	"io"
 	"os"
 )
@@ -24,8 +25,21 @@ import (
 // FileStorage abstracts file storage operations across local, S3, and in-memory backends.
 type FileStorage interface {
 	Open(path string) (io.ReadCloser, error)
+	// OpenWithSize saves a Stat round trip; size is -1 when the backend does not report it.
+	OpenWithSize(path string) (content io.ReadCloser, size int64, err error)
 	Write(path string, content io.ReadSeeker, size uint64) error
 	Stat(path string) (os.FileInfo, error)
 	Remove(path string) error
 	MkdirAll(path string, perm os.FileMode) error
+
+	// Ensure prepares the backend for use. It is the only place allowed to create storage.
+	Ensure() error
+	ValidateBasePath() error
+}
+
+// contextStorage is implemented by backends doing network IO, so callers can bound
+// them with a deadline. Local and in-memory writes cannot block indefinitely.
+type contextStorage interface {
+	writeContext(ctx context.Context, path string, content io.ReadSeeker, size uint64) error
+	removeContext(ctx context.Context, path string) error
 }

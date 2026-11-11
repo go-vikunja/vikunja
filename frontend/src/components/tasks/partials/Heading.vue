@@ -3,8 +3,8 @@
 		<div class="tw:flex tw:items-center md:tw:items-stretch tw:flex-col tw:gap-1 task-properties">
 			<div class="tw:flex tw:items-center tw:gap-2">
 				<ColorBubble
-					v-if="task.hexColor !== ''"
-					:color="getHexColor(task.hexColor)"
+					v-if="task.hex_color !== ''"
+					:color="getHexColor(task.hex_color)"
 				/>
 				<BaseButton @click="copyUrl">
 					<span class="title task-id">
@@ -36,27 +36,19 @@
 			@keydown.enter.prevent.stop="!$event.isComposing && ($event.target as HTMLInputElement).blur()"
 			@keydown.esc.prevent.stop="!$event.isComposing && cancel($event.target as HTMLInputElement)"
 		>
-			{{ task.title.trim() }}
+			{{ (task.title ?? '').trim() }}
 		</h1>
-		<BaseButton
-			v-if="hasClose"
-			:aria-label="$t('task.detail.closeTaskDetail')"
-			class="close d-print-none"
-			@click="$emit('close')"
-		>
-			<Icon icon="times" />
-		</BaseButton>
 		<CustomTransition name="fade">
 			<span
 				v-if="loading && saving"
-				class="is-inline-flex is-align-items-center"
+				class="save-status is-inline-flex is-align-items-center"
 			>
 				<span class="loader is-inline-block mie-2" />
 				{{ $t('misc.saving') }}
 			</span>
 			<span
 				v-else-if="!loading && showSavedMessage"
-				class="has-text-success is-inline-flex is-align-content-center"
+				class="save-status has-text-success is-inline-flex is-align-content-center"
 			>
 				<Icon
 					icon="check"
@@ -80,10 +72,11 @@ import ColorBubble from '@/components/misc/ColorBubble.vue'
 import Done from '@/components/misc/Done.vue'
 
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {useTaskStore} from '@/stores/tasks'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 
-import type {ITask} from '@/modelTypes/ITask'
-import {getHexColor, getTaskIdentifier} from '@/models/task'
+import type {Task as ITask} from '@/client/generated'
+import {getHexColor, getTaskIdentifier} from '@/helpers/task'
 
 const props = defineProps<{
 	task: ITask,
@@ -107,8 +100,8 @@ async function copyUrl() {
 	await copy(absoluteURL)
 }
 
-const taskStore = useTaskStore()
-const loading = computed(() => taskStore.isLoading)
+const updateTask = useUpdateTaskMutation()
+const loading = useDelayedLoading(updateTask.isPending)
 
 const textIdentifier = computed(() => getTaskIdentifier(props.task))
 
@@ -144,7 +137,7 @@ watch(() => props.task.id, () => {
 
 function handleTitleInput(event: Event) {
 	const target = event.target as HTMLInputElement
-	titleHasChanges.value = target.textContent !== props.task.title
+	titleHasChanges.value = target.textContent !== (props.task.title ?? '')
 }
 
 async function save(element: HTMLElement) {
@@ -152,7 +145,7 @@ async function save(element: HTMLElement) {
 
 	// An empty title would be discarded by the api, so revert and tell the user instead of failing silently.
 	if (title.trim() === '') {
-		element.textContent = props.task.title
+		element.textContent = props.task.title ?? ''
 		titleHasChanges.value = false
 		error({message: t('task.detail.titleRequired')})
 		return
@@ -166,8 +159,9 @@ async function save(element: HTMLElement) {
 
 	try {
 		saving.value = true
-		const newTask = await taskStore.update({
+		const newTask = await updateTask.mutateAsync({
 			...props.task,
+			id: props.task.id!,
 			title,
 		})
 		emit('update:task', newTask)
@@ -182,7 +176,7 @@ async function save(element: HTMLElement) {
 }
 
 async function cancel(element: HTMLInputElement) {
-	element.textContent = props.task.title
+	element.textContent = props.task.title ?? ''
 	titleHasChanges.value = false
 	element.blur()
 }
@@ -190,6 +184,7 @@ async function cancel(element: HTMLInputElement) {
 
 <style lang="scss" scoped>
 .heading {
+	position: relative;
 	display: flex;
 	justify-content: flex-start;
 	text-transform: none;
@@ -205,9 +200,16 @@ async function cancel(element: HTMLInputElement) {
 	margin-block-end: 0;
 }
 
+// Out of flow so it doesn't squeeze the title while visible.
+.save-status {
+	position: absolute;
+	inset-block-start: 100%;
+	inset-inline-end: 0;
+	font-size: .875rem;
+}
+
 .title.input {
-	// 1.8rem is the font-size, 1.125 is the line-height, .3rem padding everywhere, 1px border around the whole thing.
-	min-block-size: calc(1.8rem * 1.125 + .6rem + 2px);
+	min-block-size: $task-title-height;
 	margin-inline-end: 0;
 
 	@media screen and (max-width: $tablet) {
@@ -225,22 +227,11 @@ async function cancel(element: HTMLInputElement) {
 	inline-size: .75rem;
 }
 
+// Modal renders its own fixed close button from $tablet up
 .close {
-	font-size: 2rem;
-	margin-inline-start: 0.5rem;
-	line-height: 1;
-
-	@media screen and (max-width: $tablet) {
-		display: none;
-	}
-	
-	@media screen and (min-width: #{$desktop + 1px}) {
-		display: none;
-	}
-}
-
-.task-properties .close {
 	display: none;
+	font-size: 2rem;
+	line-height: 1;
 	position: absolute;
 	inset-inline-end: 1.25rem;
 	inset-block-start: 1.1rem;
