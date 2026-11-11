@@ -12,6 +12,7 @@ import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 export interface FrontendSettings {
 	play_sound_when_done: boolean
@@ -38,7 +39,10 @@ export interface FrontendSettings {
 export function taskRemindersFromSettings(
 	reminders: Readonly<FrontendSettings['quick_add_default_reminders']> | undefined,
 ): TaskReminder[] {
-	return (reminders ?? []).map(reminder => ({relative_period: reminder.relative_period}))
+	return (reminders ?? []).map(reminder => ({
+		relative_period: reminder.relative_period,
+		relative_to: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
+	}))
 }
 
 export interface ExtraSettingsLink {
