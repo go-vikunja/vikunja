@@ -371,7 +371,6 @@ import type {TaskResponse} from '@/client/queries/tasks'
 import type {ProjectView} from '@/client/generated'
 import {useTableSort} from '@/composables/useTableSort'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
-import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {getTaskIdentifier} from '@/helpers/task'
 import { camelCase } from 'change-case'
@@ -424,14 +423,12 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const {includeSubprojects} = useIncludeSubprojects(() => props.view)
-
 const taskList = useTaskList(
 	() => props.projectId, 
 	() => props.viewId, 
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
-	() => includeSubprojects.value,
+	() => props.view,
 )
 
 const {

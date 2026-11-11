@@ -10,19 +10,21 @@ export function useIncludeSubprojects(
 ) {
 	// The api ors the view's own setting in, so the query param cannot turn it back off.
 	const fromView = computed(() => viewGetter()?.filter?.include_subprojects ?? false)
-	const query = useRouteQuery<string>(
-		INCLUDE_SUBPROJECTS_QUERY_PARAM,
-		() => String(fromView.value),
-	)
+	const param = useRouteQuery<string | undefined>(INCLUDE_SUBPROJECTS_QUERY_PARAM)
 
 	const includeSubprojects = computed({
-		get: () => query.value === 'true',
+		get: () => param.value === undefined ? fromView.value : param.value === 'true',
 		set: (value: boolean) => {
-			query.value = String(value)
+			param.value = value === fromView.value ? undefined : String(value)
 		},
 	})
 
 	const overridesView = computed(() => includeSubprojects.value && !fromView.value)
 
-	return {includeSubprojects, fromView, overridesView}
+	return {
+		includeSubprojects,
+		fromView,
+		overridesView,
+		queryParam: computed(() => param.value),
+	}
 }
