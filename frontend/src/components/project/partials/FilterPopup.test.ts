@@ -1,14 +1,6 @@
-import {describe, it, expect, vi, beforeEach} from 'vitest'
+import {describe, it, expect, vi} from 'vitest'
 import {shallowMount, flushPromises} from '@vue/test-utils'
 import {ref} from 'vue'
-import {createPinia, setActivePinia} from 'pinia'
-import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
-
-const sdk = vi.hoisted(() => ({
-	projectsList: vi.fn(async () => ({data: {items: [], total_pages: 1}})),
-}))
-
-vi.mock('@/client/generated', () => sdk)
 
 vi.mock('@/composables/useIncludeSubprojects', () => ({
 	useIncludeSubprojects: () => ref(false),
@@ -20,15 +12,12 @@ function mountPopup() {
 	return shallowMount(FilterPopup, {
 		props: {modelValue: {filter: '', q: '', filter_include_nulls: false, per_page: 50}},
 		global: {
-			plugins: [createPinia(), [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]],
 			mocks: {$t: (key: string) => key},
 		},
 	})
 }
 
 describe('FilterPopup', () => {
-	beforeEach(() => setActivePinia(createPinia()))
-
 	it('carries every field the filters edited to the parent', async () => {
 		const wrapper = mountPopup()
 		const filters = wrapper.findComponent({name: 'Filters'})
