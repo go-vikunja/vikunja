@@ -10,7 +10,7 @@
 				<FilterPopup
 					v-if="!isSavedFilterProject(project)"
 					v-model="params"
-					:view="view ?? undefined"
+					:view
 					@update:modelValue="updateFilters"
 				/>
 			</div>
@@ -46,7 +46,7 @@
 									@dragenter="() => expandWhileDragging(bucket)"
 								>
 									<span
-										v-if="bucket.id !== 0 && view?.done_bucket_id === bucket.id"
+										v-if="bucket.id !== 0 && view.done_bucket_id === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mie-2"
 										@click.stop="() => collapseBucket(bucket)"
@@ -126,7 +126,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.doneBucketHintExtended')"
-											:icon-class="{'has-text-success': bucket.id === view?.done_bucket_id}"
+											:icon-class="{'has-text-success': bucket.id === view.done_bucket_id}"
 											icon="check-double"
 											@click.stop="toggleDoneBucket(bucket)"
 										>
@@ -134,7 +134,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.defaultBucketHint')"
-											:icon-class="{'has-text-primary': bucket.id === view?.default_bucket_id}"
+											:icon-class="{'has-text-primary': bucket.id === view.default_bucket_id}"
 											icon="th"
 											@click.stop="toggleDefaultBucket(bucket)"
 										>
@@ -351,6 +351,7 @@ const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
 	viewId: number,
+	view: ProjectView,
 }>()
 const BucketDraggable = draggableFor<BucketResponse>()
 const TaskDraggable = draggableFor<TaskResponse>()
@@ -458,11 +459,10 @@ const bucketDraggableComponentData = computed(() => ({
 	],
 }))
 const {currentProject: project} = useCurrentProject()
-const view = computed(() => project.value?.views.find(view => view.id === props.viewId) as ProjectView || null)
 const canWrite = computed(() =>
 	typeof project.value?.max_permission === 'number' &&
 	project.value.max_permission > Permissions.READ &&
-	view.value?.bucket_configuration_mode === 'manual',
+	props.view.bucket_configuration_mode === 'manual',
 )
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 
@@ -826,8 +826,8 @@ function handleTaskDragStart(e: SortableEvent) {
 }
 
 function toggleDefaultBucket(bucket: BucketResponse) {
-	const currentView = view.value
-	if (!currentView?.id) {
+	const currentView = props.view
+	if (!currentView.id) {
 		return
 	}
 	const defaultBucketId = currentView.default_bucket_id === bucket.id
@@ -842,8 +842,8 @@ function toggleDefaultBucket(bucket: BucketResponse) {
 }
 
 function toggleDoneBucket(bucket: BucketResponse) {
-	const currentView = view.value
-	if (!currentView?.id) {
+	const currentView = props.view
+	if (!currentView.id) {
 		return
 	}
 	const doneBucketId = currentView.done_bucket_id === bucket.id

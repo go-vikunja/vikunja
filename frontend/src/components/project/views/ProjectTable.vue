@@ -81,7 +81,7 @@
 				<FilterPopup
 					v-if="!isSavedFilterProject({id: projectId})"
 					v-model="params"
-					:view="currentView"
+					:view
 					@update:modelValue="taskList.loadTasks()"
 				/>
 			</div>
@@ -368,6 +368,7 @@ import AddTask from '@/components/tasks/AddTask.vue'
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
 import type {TaskResponse} from '@/client/queries/tasks'
+import type {ProjectView} from '@/client/generated'
 import {useTableSort} from '@/composables/useTableSort'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
@@ -383,6 +384,7 @@ const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
 	viewId: number,
+	view: ProjectView,
 }>()
 
 const projectList = useProjects()
@@ -392,8 +394,6 @@ const canWrite = computed(() => typeof project.value?.max_permission === 'number
 	project.value.max_permission > Permissions.READ &&
 	project.value.id > 0 &&
 	!project.value.is_archived)
-
-const currentView = computed(() => project.value?.views.find(v => v.id === props.viewId))
 
 const columnsTrigger = ref<ComponentPublicInstance | null>(null)
 const columnsTriggerEl = computed<HTMLElement | null>(() => (columnsTrigger.value?.$el as HTMLElement) ?? null)
@@ -424,7 +424,7 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+const includeSubprojects = useIncludeSubprojects(() => props.view)
 
 const taskList = useTaskList(
 	() => props.projectId, 

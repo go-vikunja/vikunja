@@ -13,7 +13,7 @@
 				<FilterPopup
 					v-if="!isSavedFilterProject(project)"
 					v-model="params"
-					:view="currentView"
+					:view
 					@update:modelValue="loadTasks()"
 				/>
 			</div>
@@ -122,6 +122,7 @@ import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {eventToShortcutString} from '@/helpers/shortcut'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {TaskResponse} from '@/client/queries/tasks'
+import type {ProjectView} from '@/client/generated'
 import {isSavedFilterProject} from '@/client/queries/projects'
 
 import {useBaseStore} from '@/stores/base'
@@ -133,6 +134,7 @@ const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
 	viewId: number,
+	view: ProjectView,
 }>()
 
 const draggable = draggableFor<TaskResponse>()
@@ -145,9 +147,8 @@ const baseStore = useBaseStore()
 const {setDraggedTask} = useTaskDragState()
 const {handleTaskDropToProject} = useTaskDragToProject()
 const {currentProject: project} = useCurrentProject()
-const currentView = computed(() => project.value?.views.find(v => v.id === props.viewId))
 
-const includeSubprojects = useIncludeSubprojects(() => currentView.value)
+const includeSubprojects = useIncludeSubprojects(() => props.view)
 
 const ctaVisible = ref(false)
 
