@@ -22,5 +22,7 @@ export function useIncludeSubprojects(
 		},
 	})
 
-	return {includeSubprojects, fromView}
+	const overridesView = computed(() => includeSubprojects.value && !fromView.value)
+
+	return {includeSubprojects, fromView, overridesView}
 }

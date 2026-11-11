@@ -31,12 +31,11 @@
 			</FancyCheckbox>
 			<FancyCheckbox
 				v-if="showIncludeSubprojectsToggle"
+				v-model="includeSubprojects"
 				v-tooltip="includeSubprojectsFromView
 					? $t('project.views.includeSubprojectsFromView')
 					: $t('project.views.includeSubprojectsHint')"
-				:model-value="includeSubprojects"
 				:disabled="includeSubprojectsFromView"
-				@update:modelValue="(value: boolean) => emit('update:includeSubprojects', value)"
 			>
 				{{ $t('project.views.includeSubprojects') }}
 			</FancyCheckbox>
@@ -67,12 +66,14 @@
 </template>
 
 <script setup lang="ts" generic="T extends EditableTaskCollection">
-import {computed, ref, watch} from 'vue'
+import {computed, ref, watch, type DeepReadonly} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 import {useLabels} from '@/composables/useLabels'
 import {useProjects} from '@/composables/useProjects'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
+import type {ProjectView} from '@/client/generated'
 import {
 	hasFilterQuery,
 	transformFilterStringForApi,
@@ -87,23 +88,18 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
-	showIncludeSubprojectsToggle?: boolean,
-	includeSubprojects?: boolean,
-	includeSubprojectsFromView?: boolean,
+	view?: ProjectView | DeepReadonly<ProjectView>,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
-	showIncludeSubprojectsToggle: false,
-	includeSubprojects: false,
-	includeSubprojectsFromView: false,
+	view: undefined,
 })
 
 const emit = defineEmits<{
 	'update:modelValue': [value: T],
-	'update:includeSubprojects': [value: boolean],
 	'showResults': [],
 	'close': [],
 }>()
@@ -135,11 +131,16 @@ watch(
 	},
 )
 
-const hasActiveFilters = computed(() => {
-	// A flag coming from the view is not something clearing the filters can undo.
-	const subprojectsToggled = props.includeSubprojects && !props.includeSubprojectsFromView
-	return filterQuery.value !== '' || params.value.filter_include_nulls || subprojectsToggled
-})
+// A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
+const showIncludeSubprojectsToggle = computed(() => (props.view?.project_id ?? 0) > 0 && props.view?.view_kind !== 'kanban')
+
+const {
+	includeSubprojects,
+	fromView: includeSubprojectsFromView,
+	overridesView,
+} = useIncludeSubprojects(() => props.view)
+
+const hasActiveFilters = computed(() => filterQuery.value !== '' || params.value.filter_include_nulls || overridesView.value)
 
 const {getLabelByExactTitle} = useLabels()
 const projectList = useProjects()
@@ -212,9 +213,11 @@ function changeAndEmitButton() {
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
 	params.value.filter_include_nulls = false
-	if (!props.includeSubprojectsFromView) {
+	if (!includeSubprojectsFromView.value) {
 		params.value.include_subprojects = false
-		emit('update:includeSubprojects', false)
+	}
+	if (overridesView.value) {
+		includeSubprojects.value = false
 	}
 	changeAndEmitButton()
 }

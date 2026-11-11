@@ -17,13 +17,11 @@
 		<Filters
 			ref="filtersRef"
 			v-model="value"
-			v-model:include-subprojects="includeSubprojects"
 			:has-title="true"
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
-			:show-include-subprojects-toggle="supportsIncludeSubprojects"
-			:include-subprojects-from-view="includeSubprojectsFromView"
+			:view
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
@@ -79,7 +77,7 @@ watch(
 const hasFilters = computed(() => {
 	return value.value.filter !== '' ||
 		value.value.s !== '' ||
-		(includeSubprojects.value && !includeSubprojectsFromView.value)
+		overridesView.value
 })
 
 const modalOpen = ref(false)
@@ -99,10 +97,7 @@ function showResults() {
 	modalOpen.value = false
 }
 
-// A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
-const supportsIncludeSubprojects = computed(() => (props.view?.project_id ?? 0) > 0 && props.view?.view_kind !== 'kanban')
-
-const {includeSubprojects, fromView: includeSubprojectsFromView} = useIncludeSubprojects(() => props.view)
+const {overridesView} = useIncludeSubprojects(() => props.view)
 
 const filterFromView = computed(() => props.view?.filter?.filter)
 </script>
