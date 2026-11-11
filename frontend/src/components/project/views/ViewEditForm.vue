@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, onBeforeMount, ref, watch} from 'vue'
+import {onBeforeMount, ref, watch} from 'vue'
 
 import type {ProjectView, ProjectViewWritable, TaskCollection} from '@/client/generated'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
@@ -36,19 +36,9 @@ const emit = defineEmits<{
 type ProjectViewFormValue = ProjectViewWritable & Pick<ProjectView, 'id' | 'project_id'>
 type LoadedProjectView = Omit<ProjectViewDraft, 'filter' | 'bucket_configuration'> &
 	Pick<ProjectView, 'id' | 'project_id'> & {
-		filter: EditableTaskCollection
+		filter: EditableTaskCollection & Required<Pick<TaskCollection, 'include_subprojects'>>
 		bucket_configuration: Array<{title: string, filter: EditableTaskCollection}>
 	}
-
-// include_subprojects is optional on the filter, so the checkbox needs a boolean fallback.
-const includeSubprojects = computed({
-	get: () => view.value?.filter?.include_subprojects ?? false,
-	set: (value: boolean) => {
-		if (view.value?.filter) {
-			view.value.filter.include_subprojects = value
-		}
-	},
-})
 
 const {isPending, getLabelByExactTitle, getLabelById} = useLabels()
 const projectList = useProjects()
@@ -83,8 +73,6 @@ const transformFilterFromApi = (filterInput?: TaskCollection): EditableTaskColle
 
 	filter.filter_include_nulls = filterInput?.filter_include_nulls ?? false
 
-	filter.include_subprojects = filterInput?.include_subprojects ?? false
-
 	return filter
 }
 
@@ -93,7 +81,10 @@ function transformViewFromApi(modelValue: ProjectViewFormValue): LoadedProjectVi
 	return {
 		...modelValue,
 		...draft,
-		filter: transformFilterFromApi(modelValue.filter),
+		filter: {
+			...transformFilterFromApi(modelValue.filter),
+			include_subprojects: modelValue.filter?.include_subprojects ?? false,
+		},
 		bucket_configuration: (modelValue.bucket_configuration ?? []).map(bucket => ({
 			title: bucket.title ?? '',
 			filter: transformFilterFromApi(bucket.filter),
@@ -178,7 +169,6 @@ function save() {
 			filter: '',
 			filter_include_nulls: filterInput?.filter_include_nulls ?? false,
 			s: '',
-			include_subprojects: filterInput?.include_subprojects ?? false,
 		}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
@@ -191,7 +181,10 @@ function save() {
 
 	emit('update:modelValue', {
 		...view.value,
-		filter: transformFilterForApi(view.value.filter),
+		filter: {
+			...transformFilterForApi(view.value.filter),
+			include_subprojects: view.value.filter.include_subprojects,
+		},
 		bucket_configuration: view.value.bucket_configuration.map(bucket => ({
 			title: bucket.title,
 			filter: transformFilterForApi(bucket.filter),
@@ -276,7 +269,7 @@ function handleBubbleSave(event: FocusEvent) {
 			class="field mbe-3"
 		>
 			<FancyCheckbox
-				v-model="includeSubprojects"
+				v-model="view.filter.include_subprojects"
 				v-tooltip="$t('project.views.includeSubprojectsHint')"
 			>
 				{{ $t('project.views.includeSubprojects') }}
