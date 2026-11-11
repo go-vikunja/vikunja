@@ -581,12 +581,12 @@
 		},
 		"kanban": {
 			"title": "Kanban",
-			"limit": "Korlát: {limit}",
-			"doneBucket": "'Kész' vödör",
+			"limit": "Méretkorlát: {limit}",
+			"doneBucket": "'Kész' vödörré",
 			"doneBucketHint": "Ebbe a vödörbe helyezett feladatok meg lesznek jelölve befejezettként.",
 			"doneBucketHintExtended": "A 'kész' vödörbe áthelyezett feladatok automatikusan meg lesznek jelölve befejezettként. A máshol befejezettként megjelölt feladatok is átkerülnek a 'kész' vödörbe.",
 			"doneBucketSavedSuccess": "A kész vödör sikeresen elmentve.",
-			"defaultBucket": "Alapértelmezett vödör",
+			"defaultBucket": "Alapértelmezett vödörré",
 			"defaultBucketHint": "Mikor feladatokat hozol létre vödör kiválasztása nélkül, a rendszer ehhez a vödörhöz adja hozzá őket.",
 			"defaultBucketSavedSuccess": "Az alapértelmezett vödör sikeresen elmentve.",
 			"deleteLast": "Az utolsó vödröt nem lehet eltávolítani.",
@@ -1247,7 +1247,7 @@
 			}
 		},
 		"priority": {
-			"unset": "Beállítás törlése",
+			"unset": "Nincs megadva",
 			"low": "Alacsony",
 			"medium": "Közepes",
 			"high": "Magas",
