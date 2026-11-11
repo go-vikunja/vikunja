@@ -66,11 +66,11 @@ const SORT_BY_DEFAULT: SortBy = {
 }
 
 interface TaskListQueryState {
-	sort: string | undefined
-	filter: string | undefined
-	s: string | undefined
-	page: number
-	includeSubprojects?: string | undefined
+	sort?: string
+	filter?: string
+	s?: string
+	page?: number
+	includeSubprojects?: string
 }
 
 export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
@@ -78,7 +78,7 @@ export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
 	if (state.sort) query.sort = state.sort
 	if (state.filter) query.filter = state.filter
 	if (state.s) query.s = state.s
-	if (state.page > 1) query.page = String(state.page)
+	if (state.page && state.page > 1) query.page = String(state.page)
 	if (state.includeSubprojects) query[INCLUDE_SUBPROJECTS_QUERY_PARAM] = state.includeSubprojects
 	return query
 }
