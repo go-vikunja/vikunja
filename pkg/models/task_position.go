@@ -437,6 +437,18 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		opts.projectIDs = append(opts.projectIDs, p.ID)
 	}
 
+	if view.ProjectID > 0 && view.ViewKind != ProjectViewKindKanban {
+		// Ignores access so the rows do not depend on who triggers the recalc.
+		descendantIDs, err := subtreeIDs(s, view.ProjectID, builder.And(
+			builder.Gt{"project_ancestors.depth": 0},
+			builder.IsNull{"projects.deleted_at"},
+		))
+		if err != nil {
+			return err
+		}
+		opts.projectIDs = append(opts.projectIDs, descendantIDs...)
+	}
+
 	dbSearcher := &dbTaskSearcher{
 		s: s,
 		a: a,
