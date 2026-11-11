@@ -213,9 +213,6 @@ function changeAndEmitButton() {
 function clearFiltersAndEmit() {
 	filterQuery.value = ''
 	params.value.filter_include_nulls = false
-	if (!includeSubprojectsFromView.value) {
-		params.value.include_subprojects = false
-	}
 	if (overridesView.value) {
 		includeSubprojects.value = false
 	}
