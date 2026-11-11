@@ -3,7 +3,7 @@ import {shallowMount, flushPromises} from '@vue/test-utils'
 import {ref} from 'vue'
 
 vi.mock('@/composables/useIncludeSubprojects', () => ({
-	useIncludeSubprojects: () => ref(false),
+	useIncludeSubprojects: () => ({includeSubprojects: ref(false), fromView: ref(false)}),
 }))
 
 import FilterPopup from './FilterPopup.vue'

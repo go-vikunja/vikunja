@@ -18,7 +18,7 @@ vi.mock('@/client/generated', () => sdk)
 vi.mock('@/stores/auth', () => ({useAuthStore: () => ({settings: {timezone: 'UTC'}})}))
 vi.mock('@/message', () => ({error: vi.fn()}))
 vi.mock('@/composables/useIncludeSubprojects', () => ({
-	useIncludeSubprojects: () => ref(false),
+	useIncludeSubprojects: () => ({includeSubprojects: ref(false), fromView: ref(false)}),
 }))
 vi.mock('@/composables/useTaskDragToProject', () => ({
 	useTaskDragToProject: () => ({

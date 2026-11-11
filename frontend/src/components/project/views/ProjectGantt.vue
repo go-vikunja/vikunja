@@ -115,9 +115,7 @@ const canWrite = computed(() =>
 )
 
 const {route, projectId, viewId} = toRefs(props)
-const includeSubprojects = useIncludeSubprojects(() => props.view)
-// The api ors the view's own setting in, so the query param cannot turn it back off.
-const includeSubprojectsFromView = computed(() => props.view.filter?.include_subprojects ?? false)
+const {includeSubprojects, fromView: includeSubprojectsFromView} = useIncludeSubprojects(() => props.view)
 const {
 	filters,
 	hasDefaultFilters,
