@@ -17,16 +17,13 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -67,8 +64,6 @@ type taskUser struct {
 	User       *user.User `xorm:"extends"`
 	IsAssignee bool
 }
-
-const dbTimeFormat = `2006-01-02 15:04:05`
 
 //nolint:gocyclo
 func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (taskUsers []*taskUser, err error) {
@@ -245,180 +240,49 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	return
 }
 
-func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond builder.Cond) (reminderNotifications []*ReminderDueNotification, err error) {
-	now = utils.GetTimeWithoutNanoSeconds(now)
-	reminderNotifications = []*ReminderDueNotification{}
-
-	nextMinute := now.Add(1 * time.Minute)
-
-	log.Debugf("[Task Reminder Cron] Looking for reminders between %s and %s to send...", now, nextMinute)
-
+func getTaskRemindersInWindow(s *xorm.Session, window cron.Window, cond builder.Cond) ([]*ReminderDueNotification, error) {
 	reminders := []*TaskReminder{}
-	err = s.
-		Join("INNER", "tasks", "tasks.id = task_reminders.task_id").
-		// All reminders from -12h to +14h to include all time zones
-		Where("reminder >= ? and reminder < ?", now.Add(time.Hour*-12).Format(dbTimeFormat), nextMinute.Add(time.Hour*14).Format(dbTimeFormat)).
-		And("tasks.done = false").
-		And("tasks.deleted_at IS NULL").
-		Find(&reminders)
+	err := s.Join("INNER", "tasks", "tasks.id = task_reminders.task_id").
+		Where(builder.Gt{"reminder": window.From}).And(builder.Lte{"reminder": window.To}).
+		And(builder.Eq{"tasks.done": false}).And(builder.IsNull{"tasks.deleted_at"}).Find(&reminders)
 	if err != nil {
-		return
+		return nil, err
 	}
-
-	log.Debugf("[Task Reminder Cron] Found %d reminders", len(reminders))
-
-	if len(reminders) == 0 {
-		return
+	taskIDs := make([]int64, 0, len(reminders))
+	for _, reminder := range reminders {
+		taskIDs = append(taskIDs, reminder.TaskID)
 	}
-
-	var taskIDs []int64
-	for _, r := range reminders {
-		taskIDs = append(taskIDs, r.TaskID)
-	}
-
-	if len(taskIDs) == 0 {
-		return
-	}
-
-	usersWithReminders, err := getTaskUsersForTasks(s, taskIDs, cond)
+	users, err := getTaskUsersForTasks(s, taskIDs, cond)
 	if err != nil {
-		return
+		return nil, err
 	}
-
-	usersPerTask := make(map[int64][]*taskUser, len(usersWithReminders))
-	for _, ur := range usersWithReminders {
-		usersPerTask[ur.Task.ID] = append(usersPerTask[ur.Task.ID], ur)
-	}
-
-	seen := make(map[int64]map[int64]bool)
-
 	projects, err := GetProjectsMapSimpleByTaskIDs(s, taskIDs)
 	if err != nil {
-		return
+		return nil, err
 	}
-
-	// Time zone cache per time zone string to avoid parsing the same time zone over and over again
-	tzs := make(map[string]*time.Location)
-	// Figure out which reminders are actually due in the time zone of the users
-	for _, r := range reminders {
-
-		for _, u := range usersPerTask[r.TaskID] {
-
-			// This ensures we send each reminder only once to each user
-			if seen[r.TaskID] == nil {
-				seen[r.TaskID] = make(map[int64]bool)
-			}
-
-			if _, exists := seen[r.TaskID][u.User.ID]; exists {
+	perTask := make(map[int64][]*taskUser)
+	for _, u := range users {
+		perTask[u.Task.ID] = append(perTask[u.Task.ID], u)
+	}
+	seen := make(map[string]bool)
+	result := make([]*ReminderDueNotification, 0)
+	for _, reminder := range reminders {
+		for _, u := range perTask[reminder.TaskID] {
+			key := fmt.Sprintf("%d/%d/%d", reminder.TaskID, u.User.ID, reminder.Reminder.Unix())
+			project := projects[u.Task.ProjectID]
+			if seen[key] || project == nil || project.IsArchived {
 				continue
 			}
-
-			if u.User.Timezone == "" {
-				u.User.Timezone = config.GetTimeZone().String()
-			}
-
-			// I think this will break once there's more reminders than what we can handle in one minute
-			tz, exists := tzs[u.User.Timezone]
-			if !exists {
-				tz, err = time.LoadLocation(u.User.Timezone)
-				if err != nil {
-					return
-				}
-				tzs[u.User.Timezone] = tz
-			}
-
-			actualReminder := r.Reminder.In(tz)
-			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
-				seen[r.TaskID][u.User.ID] = true
-
-				project := projects[u.Task.ProjectID]
-				u.Task.setIdentifier(project)
-
-				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
-					User:         u.User,
-					Task:         u.Task,
-					Project:      project,
-					TaskReminder: r,
-				})
-			}
+			seen[key] = true
+			u.Task.setIdentifier(project)
+			result = append(result, &ReminderDueNotification{User: u.User, Task: u.Task, Project: project, TaskReminder: reminder})
 		}
 	}
-
-	return
+	return result, nil
 }
 
-// RegisterReminderCron registers a cron function which runs every minute to check if any reminders are due the
-// next minute to send emails.
 func RegisterReminderCron() {
-	webhookEnabled := config.WebhooksEnabled.GetBool()
-	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
-
-	if !emailEnabled && !webhookEnabled {
-		return
-	}
-
-	if !emailEnabled {
-		log.Info("Mailer is disabled, not sending reminders per mail")
-	}
-
-	tz := config.GetTimeZone()
-	log.Debugf("[Task Reminder Cron] Timezone is %s", tz)
-
-	err := cron.Schedule("* * * * *", func() {
-		s := db.NewSession()
-		defer s.Close()
-
-		now := time.Now()
-
-		// When only email is enabled, filter to email-enabled users for efficiency.
-		// When webhooks are enabled, we need all users so the event system can
-		// look up matching webhooks.
-		var cond builder.Cond
-		if emailEnabled && !webhookEnabled {
-			cond = builder.Eq{"users.email_reminders_enabled": true}
-		}
-
-		reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now, cond)
-		if err != nil {
-			log.Errorf("[Task Reminder Cron] Could not get tasks with reminders in the next minute: %s", err)
-			return
-		}
-
-		if len(reminders) == 0 {
-			return
-		}
-
-		log.Debugf("[Task Reminder Cron] Sending %d reminders", len(reminders))
-
-		for _, n := range reminders {
-			if emailEnabled && n.User.EmailRemindersEnabled {
-				err = notifications.Notify(n.User, n, s)
-				if err != nil {
-					log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
-					return
-				}
-			}
-
-			if webhookEnabled {
-				err = events.Dispatch(&TaskReminderFiredEvent{
-					Task:     n.Task,
-					User:     n.User,
-					Project:  n.Project,
-					Reminder: n.TaskReminder,
-				})
-				if err != nil {
-					log.Errorf("[Task Reminder Cron] Could not dispatch reminder event for task %d: %s", n.Task.ID, err)
-				}
-			}
-
-			log.Debugf("[Task Reminder Cron] Sent reminder for task %d to user %d", n.Task.ID, n.User.ID)
-		}
-
-		if err := s.Commit(); err != nil {
-			log.Errorf("[Task Reminder Cron] Could not commit: %s", err)
-		}
-	})
-	if err != nil {
-		log.Fatalf("Could not register reminder cron: %s", err)
+	if err := cron.Register("task-reminders", "* * * * *", enqueueTaskReminders); err != nil {
+		log.Fatalf("Register task reminders: %v", err)
 	}
 }

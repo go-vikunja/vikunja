@@ -21,96 +21,81 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/notifications"
+
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
-func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (usersWithTasks map[int64]*userWithTasks, err error) {
-	now = utils.GetTimeWithoutSeconds(now)
-	nextMinute := now.Add(1 * time.Minute)
+func overdueSlot(window cron.Window, timezone, clock string) (time.Time, error) {
+	if timezone == "" {
+		timezone = config.GetTimeZone().String()
+	}
+	location, err := time.LoadLocation(timezone)
+	if err != nil {
+		return time.Time{}, err
+	}
+	daily, err := time.Parse("15:04", clock)
+	if err != nil {
+		return time.Time{}, err
+	}
+	local := window.To.In(location)
+	slot := time.Date(local.Year(), local.Month(), local.Day(), daily.Hour(), daily.Minute(), 0, 0, location)
+	if slot.After(window.To) {
+		local = local.AddDate(0, 0, -1)
+		slot = time.Date(local.Year(), local.Month(), local.Day(), daily.Hour(), daily.Minute(), 0, 0, location)
+	}
+	if !slot.After(window.From) {
+		return time.Time{}, nil
+	}
+	return slot, nil
+}
 
+func getOverdueTasksInWindow(s *xorm.Session, window cron.Window, cond builder.Cond) (map[int64]*userWithTasks, error) {
 	var tasks []*Task
-	err = s.
-		Where("due_date is not null AND due_date < ? AND projects.is_archived = false", nextMinute.Add(time.Hour*14).Format(dbTimeFormat)).
-		Join("LEFT", "projects", "projects.id = tasks.project_id").
-		And("done = false").
-		Find(&tasks)
+	err := s.Join("INNER", "projects", "projects.id = tasks.project_id").
+		Where(builder.NotNull{"due_date"}).And(builder.Lt{"due_date": window.To}).
+		And(builder.Eq{"tasks.done": false, "projects.is_archived": false}).And(builder.IsNull{"tasks.deleted_at"}).Find(&tasks)
 	if err != nil {
-		return
+		return nil, err
 	}
-
-	if len(tasks) == 0 {
-		return
-	}
-
-	var taskIDs []int64
+	ids := make([]int64, 0, len(tasks))
 	for _, task := range tasks {
-		taskIDs = append(taskIDs, task.ID)
+		ids = append(ids, task.ID)
 	}
-
-	users, err := getTaskUsersForTasks(s, taskIDs, cond)
+	users, err := getTaskUsersForTasks(s, ids, cond)
 	if err != nil {
-		return
+		return nil, err
 	}
-
-	if len(users) == 0 {
-		return
-	}
-
-	uts := make(map[int64]*userWithTasks)
-	tzs := make(map[string]*time.Location)
-	for _, t := range users {
-		if t.User.Timezone == "" {
-			t.User.Timezone = config.GetTimeZone().String()
-		}
-
-		tz, exists := tzs[t.User.Timezone]
-		if !exists {
-			tz, err = time.LoadLocation(t.User.Timezone)
-			if err != nil {
-				return
-			}
-			tzs[t.User.Timezone] = tz
-		}
-
-		// If it is time for that current user, add the task to their project of overdue tasks
-		tm, err := time.Parse("15:04", t.User.OverdueTasksRemindersTime)
+	result := make(map[int64]*userWithTasks)
+	for _, tu := range users {
+		slot, err := overdueSlot(window, tu.User.Timezone, tu.User.OverdueTasksRemindersTime)
 		if err != nil {
-			return nil, err
+			log.Warningf("Invalid overdue reminder time for user %d: %v", tu.User.ID, err)
+			continue
 		}
-		overdueMailTime := time.Date(now.Year(), now.Month(), now.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
-		isTimeForReminder := overdueMailTime.After(now) || overdueMailTime.Equal(now.In(tz))
-		wasTimeForReminder := overdueMailTime.Before(nextMinute)
-		taskIsOverdueInUserTimezone := overdueMailTime.After(t.Task.DueDate.In(tz))
-		if isTimeForReminder && wasTimeForReminder && taskIsOverdueInUserTimezone {
-			ut, exists := uts[t.User.ID]
-			if !exists {
-				ut = &userWithTasks{
-					user:     t.User,
-					assigned: make(map[int64]*Task),
-					followed: make(map[int64]*Task),
-				}
-				uts[t.User.ID] = ut
-			}
-			if t.IsAssignee {
-				ut.assigned[t.Task.ID] = t.Task
-			} else {
-				ut.followed[t.Task.ID] = t.Task
-			}
+		if slot.IsZero() || !tu.Task.DueDate.Before(slot) {
+			continue
+		}
+		ut := result[tu.User.ID]
+		if ut == nil {
+			ut = &userWithTasks{user: tu.User, assigned: make(map[int64]*Task), followed: make(map[int64]*Task), slot: slot}
+			result[tu.User.ID] = ut
+		}
+		if tu.IsAssignee {
+			ut.assigned[tu.Task.ID] = tu.Task
+		} else {
+			ut.followed[tu.Task.ID] = tu.Task
 		}
 	}
-
-	return uts, nil
+	return result, nil
 }
 
 type userWithTasks struct {
+	slot     time.Time
 	user     *user.User
 	assigned map[int64]*Task
 	followed map[int64]*Task
@@ -120,115 +105,9 @@ func (ut *userWithTasks) allTasks() []*Task {
 	return append(mapToSlice(ut.assigned), mapToSlice(ut.followed)...)
 }
 
-// RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
 func RegisterOverdueReminderCron() {
-	webhookEnabled := config.WebhooksEnabled.GetBool()
-	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
-
-	if !emailEnabled && !webhookEnabled {
-		return
-	}
-
-	if !emailEnabled {
-		log.Info("Mailer is disabled, not sending overdue reminders per mail")
-	}
-
-	err := cron.Schedule("* * * * *", func() {
-		s := db.NewSession()
-		defer s.Close()
-
-		now := time.Now()
-
-		var cond builder.Cond
-		if emailEnabled && !webhookEnabled {
-			cond = builder.Eq{"users.overdue_tasks_reminders_enabled": true}
-		}
-
-		uts, err := getUndoneOverdueTasks(s, now, cond)
-		if err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not get undone overdue tasks in the next minute: %s", err)
-			return
-		}
-
-		if len(uts) == 0 {
-			return
-		}
-
-		log.Debugf("[Undone Overdue Tasks Reminder] Sending reminders to %d users", len(uts))
-
-		taskIDs := []int64{}
-		for _, ut := range uts {
-			for _, t := range ut.allTasks() {
-				taskIDs = append(taskIDs, t.ID)
-			}
-		}
-
-		projects, err := GetProjectsMapSimpleByTaskIDs(s, taskIDs)
-		if err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not get projects for tasks: %s", err)
-			return
-		}
-
-		for _, ut := range uts {
-			tasks := ut.allTasks()
-
-			if emailEnabled && ut.user.OverdueTasksRemindersEnabled {
-				var n notifications.Notification = &UndoneTasksOverdueNotification{
-					User:     ut.user,
-					Assigned: ut.assigned,
-					Followed: ut.followed,
-					Projects: projects,
-				}
-
-				if len(tasks) == 1 {
-					n = &UndoneTaskOverdueNotification{
-						User:    ut.user,
-						Task:    tasks[0],
-						Project: projects[tasks[0].ProjectID],
-					}
-				}
-
-				err = notifications.Notify(ut.user, n, s)
-				if err != nil {
-					log.Errorf("[Undone Overdue Tasks Reminder] Could not notify user %d: %s", ut.user.ID, err)
-					return
-				}
-			}
-
-			// Dispatch webhook events
-			if webhookEnabled {
-				// Per-task events
-				for _, t := range tasks {
-					err = events.Dispatch(&TaskOverdueEvent{
-						Task:    t,
-						User:    ut.user,
-						Project: projects[t.ProjectID],
-					})
-					if err != nil {
-						log.Errorf("[Undone Overdue Tasks Reminder] Could not dispatch overdue event for task %d: %s", t.ID, err)
-					}
-				}
-
-				// Batch event
-				err = events.Dispatch(&TasksOverdueEvent{
-					Tasks:    tasks,
-					User:     ut.user,
-					Projects: projects,
-				})
-				if err != nil {
-					log.Errorf("[Undone Overdue Tasks Reminder] Could not dispatch batch overdue event for user %d: %s", ut.user.ID, err)
-				}
-			}
-
-			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder for %d tasks to user %d", len(tasks), ut.user.ID)
-		}
-
-		if err := s.Commit(); err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not commit: %s", err)
-		}
-	})
-	if err != nil {
-		log.Fatalf("Could not register undone overdue tasks reminder cron: %s", err)
+	if err := cron.Register("overdue-reminders", "* * * * *", enqueueOverdueReminders); err != nil {
+		log.Fatalf("Register overdue reminders: %v", err)
 	}
 }
 
