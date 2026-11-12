@@ -33,7 +33,7 @@ Set `jobs.enabled=false` on API-only pods and run `vikunja worker` elsewhere. Di
 
 Retries use persisted exponential backoff. Five failed attempts park a job with its last error. Inspect with `vikunja jobs failed` and explicitly retry with `vikunja jobs replay <id>`. Payloads may contain rendered emails and private application data; restrict database access. Unknown payload versions are retried then parked, not silently discarded.
 
-Completed jobs retain their deduplication keys for `jobs.retention` (default 48h, required to exceed 24h), then are deleted in batches of 1,000. Parked jobs never expire automatically. SQL storage capacity is part of the queue budget. Imports remain on the local bus with their existing no-generic-retry behavior; other unmigrated listeners remain volatile.
+Completed jobs retain their deduplication keys for `jobs.retention` (default 48h, required to exceed 24h), then are deleted in batches of up to 500. Parked jobs never expire automatically. SQL storage capacity is part of the queue budget. Imports remain on the local bus with their existing no-generic-retry behavior; other unmigrated listeners remain volatile.
 
 ## Shutdown, probes and capacity
 
