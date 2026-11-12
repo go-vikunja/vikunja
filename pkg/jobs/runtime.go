@@ -188,7 +188,7 @@ func WaitForPendingHandlers() {
 		default:
 		}
 		count, err := runtime.queue.engine.Where(builder.Or(builder.Eq{"state": StateRunning}, builder.And(builder.Eq{"state": StateAvailable}, builder.Lte{"run_at": timestamp(time.Now())}))).Count(new(Job))
-		if err != nil || count == 0 {
+		if err == nil && count == 0 {
 			return
 		}
 		time.Sleep(20 * time.Millisecond)

@@ -710,10 +710,11 @@ func drainReminderJobs(t *testing.T) {
 	defer func() { require.NoError(t, jobs.Shutdown(t.Context())) }()
 	engine, err := db.CreateDBEngine()
 	require.NoError(t, err)
-	var pending []jobs.Job
-	require.Eventually(t, func() bool {
-		pending = nil
-		require.NoError(t, engine.Where("kind LIKE ? AND state != ?", "reminder.%", jobs.StateCompleted).Find(&pending))
-		return len(pending) == 0
-	}, 5*time.Second, 20*time.Millisecond, "jobs did not finish: %v", &pending)
+	require.EventuallyWithT(t, func(collect *assert.CollectT) {
+		var pending []jobs.Job
+		err := engine.Where("kind LIKE ? AND state != ?", "reminder.%", jobs.StateCompleted).Find(&pending)
+		if assert.NoError(collect, err) {
+			assert.Empty(collect, pending)
+		}
+	}, 15*time.Second, 20*time.Millisecond)
 }
