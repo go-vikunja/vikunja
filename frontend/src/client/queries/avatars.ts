@@ -23,9 +23,12 @@ function readAsDataUrl(blob: Blob) {
 	})
 }
 
+// Mirrors the sizes the API rounds up to.
+export type AvatarSize = 16 | 32 | 48 | 64 | 128 | 256 | 512 | 1024
+
 export const avatarKeys = {
 	user: (username: string) => ['avatars', username] as const,
-	image: (username: string, size: number) => ['avatars', username, size] as const,
+	image: (username: string, size: AvatarSize) => ['avatars', username, size] as const,
 	provider: ['avatar-provider'] as const,
 }
 
@@ -33,7 +36,7 @@ export function invalidateAvatarQueries(username: string) {
 	void queryClient.invalidateQueries({queryKey: avatarKeys.user(username)})
 }
 
-export function avatarQuery(username: string, size: number) {
+export function avatarQuery(username: string, size: AvatarSize) {
 	return queryOptions({
 		queryKey: avatarKeys.image(username, size),
 		queryFn: async ({signal}) => {

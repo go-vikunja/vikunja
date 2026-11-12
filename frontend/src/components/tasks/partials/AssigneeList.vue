@@ -1,17 +1,18 @@
 <script setup lang="ts" generic="T extends IUser">
 import type {User as IUser} from '@/client/generated'
+import type {AvatarSize} from '@/client/queries/avatars'
 import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/User.vue'
 
 withDefaults(defineProps<{
 	assignees: T[],
 	disabled?: boolean,
-	avatarSize?: number,
+	avatarSize?: AvatarSize,
 	inline?: boolean,
 	/** add this boolean prop to enable removal of assignees */
 	canRemove?: boolean,
 }>(), {
-	avatarSize: 30,
+	avatarSize: 32,
 	inline: false,
 	canRemove: false,
 })

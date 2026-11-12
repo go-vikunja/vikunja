@@ -18,17 +18,17 @@
 import {computed} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
 import {useObjectUrl} from '@vueuse/core'
-import {avatarQuery} from '@/client/queries/avatars'
+import {avatarQuery, type AvatarSize} from '@/client/queries/avatars'
 import type {User as IUser} from '@/client/generated'
 
 const props = withDefaults(defineProps<{
 	user?: Pick<IUser, 'username'> | null,
-	size?: number,
+	size?: AvatarSize,
 	// Empty by default: most avatars sit next to a visible name and are decorative.
 	alt?: string,
 }>(), {
 	user: undefined,
-	size: 50,
+	size: 48,
 	alt: '',
 })
 

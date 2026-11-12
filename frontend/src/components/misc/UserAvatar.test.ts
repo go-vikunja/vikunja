@@ -34,19 +34,19 @@ afterEach(() => {
 
 describe('UserAvatar', () => {
 	it('shares blob requests and releases component URLs on unmount', async () => {
-		const first = mountAvatar({user: {username: 'sam'}, size: 40})
-		mountAvatar({user: {username: 'sam'}, size: 40})
+		const first = mountAvatar({user: {username: 'sam'}, size: 48})
+		mountAvatar({user: {username: 'sam'}, size: 48})
 		await flushPromises()
 		expect(sdk.avatarGet).toHaveBeenCalledTimes(1)
 		expect(sdk.avatarGet).toHaveBeenCalledWith(expect.objectContaining({
 			path: {username: 'sam'},
-			query: {size: 40},
+			query: {size: 48},
 			parseAs: 'blob',
 		}))
 		const image = first.find('img')
 		expect(image.attributes('src')).toBe('blob:avatar')
-		expect(image.attributes('width')).toBe('40')
-		expect(image.attributes('height')).toBe('40')
+		expect(image.attributes('width')).toBe('48')
+		expect(image.attributes('height')).toBe('48')
 		expect(image.attributes('alt')).toBe('')
 		expect(URL.createObjectURL).toHaveBeenCalledTimes(2)
 		wrappers.splice(wrappers.indexOf(first), 1)[0].unmount()
@@ -59,7 +59,7 @@ describe('UserAvatar', () => {
 		expect(wrapper.find('img').attributes('alt')).toBe("sam's profile image")
 	})
 	it('does not refetch when rerendered with an equal user object', async () => {
-		const wrapper = mountAvatar({user: {username: 'sam'}, size: 40})
+		const wrapper = mountAvatar({user: {username: 'sam'}, size: 48})
 		await flushPromises()
 		await wrapper.setProps({user: {username: 'sam'}})
 		await flushPromises()
@@ -87,11 +87,11 @@ describe('UserAvatar', () => {
 		expect(URL.createObjectURL).not.toHaveBeenCalled()
 	})
 	it('renders a placeholder without a user or when loading fails', async () => {
-		const wrapper = mountAvatar({user: null, size: 40})
+		const wrapper = mountAvatar({user: null, size: 48})
 		await flushPromises()
 		expect(sdk.avatarGet).not.toHaveBeenCalled()
 		expect(wrapper.find('img').exists()).toBe(false)
-		expect(wrapper.attributes('style')).toContain('--user-avatar-size: 40px')
+		expect(wrapper.attributes('style')).toContain('--user-avatar-size: 48px')
 		sdk.avatarGet.mockRejectedValue(new Error('missing'))
 		await wrapper.setProps({user: {username: 'missing'}})
 		await flushPromises()
