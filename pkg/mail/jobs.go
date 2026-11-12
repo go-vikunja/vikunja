@@ -20,6 +20,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"net/mail"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -27,7 +30,6 @@ import (
 	"code.vikunja.io/api/pkg/jobs"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
-	gomail "github.com/wneessen/go-mail"
 	"xorm.io/xorm"
 )
 
@@ -79,7 +81,15 @@ func deliver(msg *message.Message) error {
 	if err := json.Unmarshal(msg.Payload, &payload); err != nil {
 		return err
 	}
-	mail, err := gomail.EMLToMsgFromString(payload.Message)
+	parsed, err := mail.ReadMessage(strings.NewReader(payload.Message))
+	if err != nil {
+		return err
+	}
+	from, err := parsed.Header.AddressList("From")
+	if err != nil {
+		return err
+	}
+	to, err := parsed.Header.AddressList("To")
 	if err != nil {
 		return err
 	}
@@ -87,7 +97,29 @@ func deliver(msg *message.Message) error {
 	if err != nil {
 		return err
 	}
-	return client.DialAndSendWithContext(msg.Context(), mail)
+	connection, err := client.DialToSMTPClientWithContext(msg.Context())
+	if err != nil {
+		return err
+	}
+	defer connection.Close()
+	stop := context.AfterFunc(msg.Context(), func() { _ = connection.Close() })
+	defer stop()
+	if err := connection.Mail(from[0].Address); err != nil {
+		return err
+	}
+	for _, recipient := range to {
+		if err := connection.Rcpt(recipient.Address); err != nil {
+			return err
+		}
+	}
+	writer, err := connection.Data()
+	if err != nil {
+		return err
+	}
+	if _, err := io.WriteString(writer, payload.Message); err != nil {
+		return err
+	}
+	return writer.Close()
 }
 
 func DeliverPending(ctx context.Context) error {

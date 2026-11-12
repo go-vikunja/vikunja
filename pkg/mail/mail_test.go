@@ -18,6 +18,7 @@ package mail
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
@@ -150,7 +151,11 @@ func TestDurableMailPayloadDeliversToSMTP(t *testing.T) {
 	s := engine.NewSession()
 	defer s.Close()
 	require.NoError(t, s.Begin())
-	require.NoError(t, Enqueue(s, &Opts{To: "smtp@example.com", Subject: "stored message", Message: "durable body"}, t.Name(), "smtp"))
+	const link = "https://tasks.example.com/#userEmailConfirm=confirmationtoken"
+	require.NoError(t, Enqueue(s, &Opts{
+		To: "smtp@example.com", Subject: "stored message", ContentType: ContentTypeMultipart,
+		Message: link, HTMLMessage: `<a href="` + link + `">Confirm</a>`,
+	}, t.Name(), "smtp"))
 	require.NoError(t, s.Commit())
 	var stored jobs.Job
 	found, err := engine.Where("queue = ? AND state = ?", t.Name(), jobs.StateAvailable).OrderBy("id DESC").Get(&stored)
@@ -159,5 +164,8 @@ func TestDurableMailPayloadDeliversToSMTP(t *testing.T) {
 	msg := message.NewMessage("smtp", []byte(stored.Payload))
 	msg.SetContext(t.Context())
 	require.NoError(t, deliver(msg))
-	assert.Len(t, received, 1)
+	require.Len(t, received, 1)
+	payload := delivery{}
+	require.NoError(t, json.Unmarshal([]byte(stored.Payload), &payload))
+	assert.Equal(t, payload.Message, <-received, "delivery must preserve rendered MIME and its confirmation links")
 }
