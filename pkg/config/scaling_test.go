@@ -57,6 +57,10 @@ func TestClusterConfiguration(t *testing.T) {
 		{name: "auto tls", change: func() { AutoTLSEnabled.Set(true) }, wantError: "autotls.enabled"},
 		{name: "empty namespace", change: func() { RedisPrefix.Set("") }, wantError: "redis.prefix"},
 		{name: "invalid concurrency", change: func() { EventsMaxConcurrentHandlers.Set(0) }, wantError: "events.maxconcurrenthandlers"},
+		{name: "zero attempts", change: func() { Key("jobs.queues.mail.maxattempts").Set(0) }, wantError: "maxattempts"},
+		{name: "negative attempts", change: func() { Key("jobs.queues.webhook-delivery.maxattempts").Set(-1) }, wantError: "maxattempts"},
+		{name: "short retry delay", change: func() { Key("jobs.queues.bulk-mail.retryinitialdelay").Set("500ms") }, wantError: "retryinitialdelay"},
+		{name: "retry cap below initial", change: func() { Key("jobs.queues.mail.retrymaxdelay").Set("1s") }, wantError: "retrymaxdelay"},
 		{name: "invalid shutdown", change: func() { ServiceShutdownTimeout.Set("invalid") }, wantError: "service.shutdowntimeout"},
 	}
 	for _, tc := range cases {

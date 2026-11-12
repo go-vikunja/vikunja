@@ -23,10 +23,14 @@ import (
 )
 
 func validateRuntimeConfig() error {
-	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks", "webhook-delivery"} {
 		prefix := "jobs.queues." + queue + "."
 		if Key(prefix+"concurrency").GetInt() < 1 || Key(prefix+"lease").GetDuration() < 30*time.Second || Key(prefix+"timeout").GetDuration() <= 0 {
 			return errors.New("job queues require positive concurrency/deadline and a lease of at least 30s")
+		}
+		initial := Key(prefix + "retryinitialdelay").GetDuration()
+		if Key(prefix+"maxattempts").GetInt() < 1 || initial < time.Second || Key(prefix+"retrymaxdelay").GetDuration() < initial {
+			return errors.New("job queues require positive maxattempts, retryinitialdelay of at least 1s and retrymaxdelay >= retryinitialdelay")
 		}
 	}
 	if EventsMaxConcurrentHandlers.GetInt() < 1 {

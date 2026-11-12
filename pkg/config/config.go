@@ -420,12 +420,20 @@ func initDefaultConfig() {
 	ServiceTrustedProxies.setDefault("")
 	ServiceClusterMode.setDefault(false)
 	JobsEnabled.setDefault(true)
-	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks", "webhook-delivery"} {
 		Key("jobs.queues." + queue + ".enabled").setDefault(true)
 		Key("jobs.queues." + queue + ".concurrency").setDefault(2)
 		Key("jobs.queues." + queue + ".lease").setDefault("60s")
 		Key("jobs.queues." + queue + ".timeout").setDefault("5m")
+		Key("jobs.queues." + queue + ".maxattempts").setDefault(5)
+		Key("jobs.queues." + queue + ".retryinitialdelay").setDefault("2s")
+		Key("jobs.queues." + queue + ".retrymaxdelay").setDefault("1h")
 	}
+	for _, queue := range []string{"mail", "bulk-mail", "webhook-delivery"} {
+		Key("jobs.queues." + queue + ".maxattempts").setDefault(12)
+		Key("jobs.queues." + queue + ".retryinitialdelay").setDefault("30s")
+	}
+	Key("jobs.queues.webhook-delivery.concurrency").setDefault(16)
 	ServiceEnableScheduler.setDefault(true)
 	ServiceEnableMigrations.setDefault(true)
 	ServiceShutdownTimeout.setDefault("30s")

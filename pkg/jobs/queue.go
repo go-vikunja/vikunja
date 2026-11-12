@@ -83,7 +83,7 @@ func Enqueue(s *xorm.Session, request Request) error {
 		Version:     1,
 		Payload:     string(request.Payload),
 		State:       StateAvailable,
-		MaxAttempts: DefaultAttempts,
+		MaxAttempts: retryPolicy(request.Queue).Attempts,
 		RunAt:       request.RunAt,
 	}
 	if request.UniqueKey == "" {
@@ -187,14 +187,21 @@ func (q *Queue) Renew(ctx context.Context, jobs []Job, now time.Time, lease time
 
 func (q *Queue) Fail(ctx context.Context, job Job, now time.Time, cause error, maxAttempts int) error {
 	state := StateAvailable
+	finished := time.Time{}
 	if job.Attempt >= maxAttempts {
 		state = StateFailed
+		finished = now
 	}
-	delay := min(time.Second*time.Duration(1<<min(job.Attempt, 12)), time.Hour)
+	delay := retryPolicy(job.Queue).Delay(job.Attempt)
 	s := q.engine.NewSession()
 	defer s.Close()
 	db.SetSessionContext(ctx, s)
-	_, err := s.Where(ownership(job)).Cols("state", "run_at", "last_error").Update(&Job{State: state, RunAt: now.Add(delay), LastError: cause.Error()})
+	_, err := s.Where(ownership(job)).Cols("state", "run_at", "last_error", "finished_at").Update(&Job{
+		State:      state,
+		RunAt:      now.Add(delay),
+		LastError:  cause.Error(),
+		FinishedAt: finished,
+	})
 	return err
 }
 
@@ -209,10 +216,17 @@ func (q *Queue) Rescue(ctx context.Context, now time.Time, limit int) (int64, er
 	var total int64
 	for _, job := range expired {
 		state := StateAvailable
+		finished := time.Time{}
 		if job.Attempt >= job.MaxAttempts {
 			state = StateFailed
+			finished = now
 		}
-		count, err := s.Where(ownership(job)).And(builder.Lte{"expires_at": timestamp(now)}).Cols("state", "run_at", "last_error").Update(&Job{State: state, RunAt: now, LastError: "worker claim expired"})
+		count, err := s.Where(ownership(job)).And(builder.Lte{"expires_at": timestamp(now)}).Cols("state", "run_at", "last_error", "finished_at").Update(&Job{
+			State:      state,
+			RunAt:      now,
+			LastError:  "worker claim expired",
+			FinishedAt: finished,
+		})
 		if err != nil {
 			return total, err
 		}
