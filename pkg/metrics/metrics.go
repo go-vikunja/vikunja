@@ -114,7 +114,7 @@ func countFromDatabase(key string) (int64, error) {
 		return 0, nil
 	}
 
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
 
 	query := s.Table(table)
