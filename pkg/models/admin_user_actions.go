@@ -154,11 +154,17 @@ func UpdateUserSettingsAsAdmin(s *xorm.Session, doer *user.User, id int64, setti
 		return nil, err
 	}
 
+	before := NewUserGeneralSettings(target)
 	if err := UpdateUserGeneralSettings(s, target, settings); err != nil {
 		return nil, err
 	}
 
-	events.DispatchOnCommit(s, &AdminUserSettingsUpdatedEvent{User: target, Doer: doer})
+	changed, err := changedGeneralSettings(before, NewUserGeneralSettings(target))
+	if err != nil {
+		return nil, err
+	}
+
+	events.DispatchOnCommit(s, &AdminUserSettingsUpdatedEvent{User: target, Doer: doer, ChangedFields: changed})
 	return target, nil
 }
 

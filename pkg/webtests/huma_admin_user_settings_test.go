@@ -55,6 +55,15 @@ func TestHumaAdminUserSettings(t *testing.T) {
 		evt := dispatched[0].(*models.AdminUserSettingsUpdatedEvent)
 		assert.Equal(t, int64(1), evt.User.ID)
 		assert.Equal(t, int64(2), evt.Doer.ID)
+		// PUT replaces everything, so unsent fields fall back to their zero value.
+		assert.Equal(t, []string{
+			"discoverable_by_name",
+			"email_reminders_enabled",
+			"overdue_tasks_reminders_enabled",
+			"overdue_tasks_reminders_time",
+			"timezone",
+			"week_start",
+		}, evt.ChangedFields)
 	})
 
 	t.Run("merge-patch changes only the sent fields", func(t *testing.T) {
