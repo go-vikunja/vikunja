@@ -19,16 +19,46 @@ package health
 import (
 	"context"
 	"errors"
+	"sync/atomic"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/red"
+	ws "code.vikunja.io/api/pkg/websocket"
 )
+
+var draining atomic.Bool
+var requireEvents atomic.Bool
+
+func RequireEvents() {
+	requireEvents.Store(true)
+}
+
+func BeginShutdown() {
+	draining.Store(true)
+}
 
 // Check verifies the main service dependencies are reachable.
 func Check() error {
+	if draining.Load() {
+		return errors.New("service is shutting down")
+	}
+	if requireEvents.Load() && !events.Available() {
+		return errors.New("event processing is unavailable")
+	}
+	if requireEvents.Load() && config.WebsocketRedisEnabled.GetBool() {
+		hub := ws.GetHub()
+		if hub == nil || !hub.Available() {
+			return errors.New("websocket fanout is unavailable")
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 	s := db.NewSession()
 	defer s.Close()
+	db.SetSessionContext(ctx, s)
 	if err := s.Ping(); err != nil {
 		return err
 	}
@@ -38,7 +68,7 @@ func Check() error {
 		if r == nil {
 			return errors.New("redis not initialized")
 		}
-		if err := r.Ping(context.Background()).Err(); err != nil {
+		if err := r.Ping(ctx).Err(); err != nil {
 			return err
 		}
 	}

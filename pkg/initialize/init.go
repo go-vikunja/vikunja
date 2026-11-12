@@ -18,14 +18,15 @@ package initialize
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/audit"
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/health"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
@@ -35,12 +36,10 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
-	migrationmodule "code.vikunja.io/api/pkg/modules/migration"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/plugins"
 	_ "code.vikunja.io/api/pkg/plugins/yaegi" // register yaegi plugin loader
 	"code.vikunja.io/api/pkg/red"
-	"code.vikunja.io/api/pkg/user"
 	ws "code.vikunja.io/api/pkg/websocket"
 )
 
@@ -75,9 +74,10 @@ func InitEngines() {
 		log.Fatal(err.Error())
 	}
 
-	err = db.CreateParadeDBIndexes()
-	if err != nil {
-		log.Fatal(err.Error())
+	if config.ServiceEnableMigrations.GetBool() {
+		if err := db.CreateParadeDBIndexes(); err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 }
 
@@ -92,7 +92,9 @@ func FullInitWithoutAsync() {
 	}
 
 	// Run the migrations
-	migration.Migrate(nil)
+	if config.ServiceEnableMigrations.GetBool() {
+		migration.Migrate(nil)
+	}
 
 	// Set Engine
 	InitEngines()
@@ -129,46 +131,33 @@ func FullInitWithoutAsync() {
 	plugins.Initialize()
 }
 
-// FullInit initializes all kinds of things in the right order
+// FullInit initializes the API and background services.
 func FullInit() {
-
 	FullInitWithoutAsync()
+	StartAsync()
+}
 
-	// Start the cron
-	cron.Init()
-	models.RegisterReminderCron()
-	models.RegisterOverdueReminderCron()
-	models.RegisterUserDeletionCron()
-	models.RegisterTaskCleanupCron()
-	models.RegisterOldExportCleanupCron()
-	migrationmodule.RegisterImportUploadCleanupCron()
-	models.RegisterAddTaskToFilterViewCron()
-	user.RegisterTokenCleanupCron()
-	models.RegisterSessionCleanupCron()
-	user.RegisterDeletionNotificationCron()
-	openid.CleanupSavedOpenIDProviders()
-	openid.RegisterEmptyOpenIDTeamCleanupCron()
-	openid.RegisterProviderAvailabilityCron()
-	models.RegisterAPITokenExpiryCheckCron()
-
-	// Initialize WebSocket hub
+func StartAsync() {
 	ws.InitHub()
-
-	// Start processing events
-	go func() {
-		models.RegisterListeners()
-		migrationHandler.RegisterListeners()
-		ws.RegisterListeners()
-		err := events.InitEvents()
-		if err != nil {
-			log.Fatal(err.Error())
+	if config.WebsocketRedisEnabled.GetBool() {
+		channel := fmt.Sprintf("%s:%d:websocket", config.RedisPrefix.GetString(), config.RedisDB.GetInt())
+		if err := ws.GetHub().StartRedis(context.Background(), red.GetRedis(), channel); err != nil {
+			log.Fatalf("Could not initialize websocket fanout: %s", err)
 		}
+	}
 
-		err = events.Dispatch(&BootedEvent{
-			BootedAt: time.Now(),
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
+	models.RegisterListeners()
+	migrationHandler.RegisterListeners()
+	ws.RegisterListeners()
+	if err := events.Start(context.Background()); err != nil {
+		log.Fatalf("Could not initialize events: %s", err)
+	}
+
+	health.RequireEvents()
+
+	// Jobs can publish events immediately, so start them after the consumers.
+	RegisterCron()
+	if err := events.Dispatch(&BootedEvent{BootedAt: time.Now()}); err != nil {
+		log.Fatalf("Could not dispatch boot event: %s", err)
+	}
 }

@@ -17,6 +17,11 @@
 package cron
 
 import (
+	"context"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
+
 	"github.com/robfig/cron/v3"
 )
 
@@ -24,17 +29,51 @@ var c *cron.Cron
 
 // Init starts the cron
 func Init() {
-	c = cron.New()
+	logger := schedulerLogger{}
+	c = cron.New(cron.WithChain(cron.SkipIfStillRunning(logger), cron.Recover(logger)))
 	c.Start()
 }
 
-// Schedule schedules a job as a cron job
-func Schedule(schedule string, f func()) (err error) {
-	_, err = c.AddFunc(schedule, f)
-	return
+// Schedule registers shared work on instances with the scheduler enabled.
+func Schedule(schedule string, f func()) error {
+	if !config.ServiceEnableScheduler.GetBool() {
+		_, err := cron.ParseStandard(schedule)
+		return err
+	}
+	return ScheduleLocal(schedule, f)
 }
 
-// Stop stops the cron scheduler
+// ScheduleLocal registers process maintenance independently of the shared scheduler.
+func ScheduleLocal(schedule string, f func()) error {
+	_, err := c.AddFunc(schedule, f)
+	return err
+}
+
+// Stop waits for running jobs after stopping new invocations.
 func Stop() {
-	c.Stop()
+	_ = StopWithContext(context.Background())
+}
+
+// StopWithContext bounds the drain; running callbacks cannot be cancelled.
+func StopWithContext(ctx context.Context) error {
+	if c == nil {
+		return nil
+	}
+	stopped := c.Stop()
+	select {
+	case <-stopped.Done():
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+type schedulerLogger struct{}
+
+func (schedulerLogger) Info(message string, values ...interface{}) {
+	log.Infof("[Cron] %s %v", message, values)
+}
+
+func (schedulerLogger) Error(err error, message string, values ...interface{}) {
+	log.Errorf("[Cron] %s: %v %v", message, err, values)
 }

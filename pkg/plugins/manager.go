@@ -60,13 +60,12 @@ func Initialize() {
 		return
 	}
 
-	paths := []string{config.PluginsDir.GetString()}
-	if err := manager.loadPlugins(paths); err != nil {
+	if err := Load(); err != nil {
 		log.Fatalf("Loading plugins failed: %v", err)
 	}
 
 	// Run plugin migrations after core migrations
-	if len(manager.migrationPlugs) > 0 {
+	if config.ServiceEnableMigrations.GetBool() && len(manager.migrationPlugs) > 0 {
 		migration.Migrate(nil)
 	}
 
@@ -75,6 +74,14 @@ func Initialize() {
 			log.Errorf("Plugin %s failed to init: %s", p.Name(), err)
 		}
 	}
+}
+
+// Load registers plugins and their migrations without running initialization hooks.
+func Load() error {
+	if !config.PluginsEnabled.GetBool() {
+		return nil
+	}
+	return manager.loadPlugins([]string{config.PluginsDir.GetString()})
 }
 
 // Shutdown calls Shutdown on all loaded plugins.
