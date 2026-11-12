@@ -319,6 +319,7 @@
 									/>
 									<td v-if="activeColumns.createdBy">
 										<User
+											class="created-by"
 											:avatar-size="32"
 											:show-username="false"
 											:user="t.created_by ?? {}"
@@ -483,6 +484,11 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 	.user {
 		margin: 0;
+	}
+
+	// Same ring as the assignee avatars so both columns render the same size.
+	.created-by :deep(.avatar) {
+		border: 2px solid var(--white);
 	}
 }
 
