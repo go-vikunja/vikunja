@@ -331,6 +331,7 @@ $user-dropdown-width-mobile: 5rem;
 .avatar {
 	border-radius: 100%;
 	vertical-align: middle;
+	inline-size: 40px;
 	block-size: 40px;
 	margin-inline-end: .5rem;
 }
