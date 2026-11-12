@@ -1697,6 +1697,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 
 	s := jobs.NewSession(msg)
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	projectID, err := getProjectIDForEvent(s, event)
 	if err != nil {
@@ -1800,7 +1801,11 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		}
 	}
 
-	return jobs.Commit(s, msg)
+	if err := jobs.Commit(s, msg); err != nil {
+		return err
+	}
+	events.DispatchPending(msg.Context(), s)
+	return nil
 }
 
 ///////
