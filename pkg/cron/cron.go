@@ -18,6 +18,10 @@ package cron
 
 import (
 	"context"
+	"time"
+
+	"code.vikunja.io/api/pkg/db"
+	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -32,15 +36,6 @@ func Init() {
 	logger := schedulerLogger{}
 	c = cron.New(cron.WithChain(cron.SkipIfStillRunning(logger), cron.Recover(logger)))
 	c.Start()
-}
-
-// Schedule registers shared work on instances with the scheduler enabled.
-func Schedule(schedule string, f func()) error {
-	if !config.ServiceEnableScheduler.GetBool() {
-		_, err := cron.ParseStandard(schedule)
-		return err
-	}
-	return ScheduleLocal(schedule, f)
 }
 
 // ScheduleLocal registers process maintenance independently of the shared scheduler.
@@ -76,4 +71,38 @@ func (schedulerLogger) Info(message string, values ...interface{}) {
 
 func (schedulerLogger) Error(err error, message string, values ...interface{}) {
 	log.Errorf("[Cron] %s: %v %v", message, err, values)
+}
+
+// Register schedules shared work with a transactional watermark.
+func Register(name, spec string, job Job) error {
+	if _, err := cron.ParseStandard(spec); err != nil {
+		return err
+	}
+	if !config.ServiceEnableScheduler.GetBool() {
+		return nil
+	}
+	engine, err := db.CreateDBEngine()
+	if err != nil {
+		return err
+	}
+	runner := NewRunner(engine)
+	if err := runner.Register(name, time.Now()); err != nil {
+		return err
+	}
+	if err := runner.registerLag(name); err != nil {
+		return err
+	}
+	return ScheduleLocal(spec, func() {
+		if _, err := runner.Tick(context.Background(), name, time.Now(), job); err != nil {
+			log.Errorf("[Cron] %s: %v", name, err)
+		}
+	})
+}
+
+// RegisterState coordinates callbacks which manage their own item transactions.
+func RegisterState(name, spec string, job func()) error {
+	return Register(name, spec, func(context.Context, *xorm.Session, Window) error {
+		job()
+		return nil
+	})
 }

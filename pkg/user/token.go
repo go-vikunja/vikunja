@@ -151,7 +151,7 @@ func CleanupOldTokens(s *xorm.Session) (deleted int64, err error) {
 func RegisterTokenCleanupCron() {
 	const logPrefix = "[User Token Cleanup Cron] "
 
-	err := cron.Schedule("0 * * * *", func() {
+	err := cron.RegisterState("expired-user-tokens", "0 * * * *", func() {
 		s := db.NewSession()
 		defer s.Close()
 

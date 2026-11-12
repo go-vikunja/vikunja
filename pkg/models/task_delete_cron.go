@@ -33,7 +33,7 @@ const TaskDeleteRetention = 30 * 24 * time.Hour
 // RegisterTaskCleanupCron registers the cron job that permanently removes
 // tasks which were soft-deleted more than TaskDeleteRetention ago.
 func RegisterTaskCleanupCron() {
-	err := cron.Schedule("0 * * * *", func() {
+	err := cron.RegisterState("deleted-task-cleanup", "0 * * * *", func() {
 		deleteExpiredTasks(time.Now())
 	})
 	if err != nil {

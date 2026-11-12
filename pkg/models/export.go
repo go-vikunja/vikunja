@@ -466,7 +466,7 @@ type UserExportStatus struct {
 func RegisterOldExportCleanupCron() {
 	const logPrefix = "[User Export Cleanup Cron] "
 
-	err := cron.Schedule("0 * * * *", func() {
+	err := cron.RegisterState("old-export-cleanup", "0 * * * *", func() {
 		s := db.NewSession()
 		defer s.Close()
 

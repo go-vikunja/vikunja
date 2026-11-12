@@ -238,6 +238,9 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 	if queryExecMode != "" {
 		connStr += "&default_query_exec_mode=" + url.QueryEscape(queryExecMode)
 	}
+	if config.ServiceClusterMode.GetBool() {
+		connStr += "&tcp_keepalives_idle=5&tcp_keepalives_interval=2&tcp_keepalives_count=2"
+	}
 	return connStr
 }
 

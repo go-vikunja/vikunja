@@ -28,6 +28,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func setupScheduler(t *testing.T, enabled bool) {
@@ -44,7 +45,7 @@ func setupScheduler(t *testing.T, enabled bool) {
 
 func TestCronDisabledDoesNotRegisterSharedJobs(t *testing.T) {
 	setupScheduler(t, false)
-	require.NoError(t, Schedule("* * * * *", func() { t.Error("shared job ran") }))
+	require.NoError(t, Register("disabled", "* * * * *", func(context.Context, *xorm.Session, Window) error { t.Error("shared job ran"); return nil }))
 	assert.Empty(t, c.Entries())
 }
 
@@ -60,7 +61,7 @@ func TestCronDisabledKeepsLocalMaintenance(t *testing.T) {
 
 func TestCronDisabledRejectsInvalidSchedule(t *testing.T) {
 	setupScheduler(t, false)
-	require.Error(t, Schedule("invalid", func() {}))
+	require.Error(t, Register("invalid", "invalid", func(context.Context, *xorm.Session, Window) error { return nil }))
 }
 
 func TestCronSkipsOverlappingInvocations(t *testing.T) {
@@ -68,7 +69,7 @@ func TestCronSkipsOverlappingInvocations(t *testing.T) {
 	started := make(chan struct{}, 2)
 	release := make(chan struct{})
 	var calls atomic.Int64
-	require.NoError(t, Schedule("0 0 1 1 *", func() {
+	require.NoError(t, ScheduleLocal("0 0 1 1 *", func() {
 		calls.Add(1)
 		started <- struct{}{}
 		<-release
@@ -101,7 +102,7 @@ func TestCronSkipsOverlappingInvocations(t *testing.T) {
 func TestCronRecoversPanicsBeforeAllowingNextRun(t *testing.T) {
 	setupScheduler(t, true)
 	calls := 0
-	require.NoError(t, Schedule("0 0 1 1 *", func() {
+	require.NoError(t, ScheduleLocal("0 0 1 1 *", func() {
 		calls++
 		if calls == 1 {
 			panic("failed job")
@@ -118,7 +119,7 @@ func TestCronDifferentJobsRunConcurrently(t *testing.T) {
 	started := make(chan struct{}, 2)
 	release := make(chan struct{})
 	for range 2 {
-		require.NoError(t, Schedule("0 0 1 1 *", func() {
+		require.NoError(t, ScheduleLocal("0 0 1 1 *", func() {
 			started <- struct{}{}
 			<-release
 		}))

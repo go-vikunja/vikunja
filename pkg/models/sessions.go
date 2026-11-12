@@ -222,7 +222,7 @@ func DeleteAllUserSessions(s *xorm.Session, userID int64) error {
 func RegisterSessionCleanupCron() {
 	const logPrefix = "[Session Cleanup Cron] "
 
-	err := cron.Schedule("0 * * * *", func() {
+	err := cron.RegisterState("expired-sessions", "0 * * * *", func() {
 		s := db.NewSession()
 		defer s.Close()
 
