@@ -72,6 +72,9 @@ func setupE2ETestEnv(ctx context.Context) (e *echo.Echo, err error) {
 	config.ServicePublicURL.Set("https://localhost")
 	config.WebhooksEnabled.Set(true)
 	config.OutgoingRequestsAllowNonRoutableIPs.Set(true)
+	// Keep real persisted retries within the test deadlines.
+	config.Key("jobs.queues.webhook-delivery.retryinitialdelay").Set("1s")
+	config.Key("jobs.queues.webhook-delivery.retrymaxdelay").Set("1s")
 
 	log.InitLogger()
 
