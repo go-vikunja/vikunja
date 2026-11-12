@@ -150,3 +150,16 @@ func TestSameBotIdentityCond(t *testing.T) {
 		})
 	}
 }
+
+func TestSameBotIdentityCondMissingOwner(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.ID(23).Cols("bot_owner_id").Update(&User{BotOwnerID: 9999})
+	require.NoError(t, err)
+
+	// A dangling owner ID must not become an identity member.
+	users := []*User{}
+	require.NoError(t, s.Where(SameBotIdentityCond(&User{ID: 23}, "bot_owner_id")).Find(&users))
+	assert.Empty(t, users)
+}

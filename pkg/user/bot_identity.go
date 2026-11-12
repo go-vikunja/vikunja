@@ -41,15 +41,14 @@ func SameBotIdentityCond(u *User, column string) builder.Cond {
 		return builder.In(column, []int64{})
 	}
 
-	root := builder.Select("bot_owner_id").From("users").
-		Where(builder.And(builder.Eq{"id": u.ID}, builder.Gt{"bot_owner_id": 0}))
-
-	return builder.In(column,
-		builder.Select("id").From("users").Where(builder.Or(
-			builder.Eq{"id": u.ID},
-			builder.Eq{"bot_owner_id": u.ID},
-			builder.In("id", root),
-			builder.In("bot_owner_id", root),
-		)),
-	)
+	// Separate indexed lookups avoid estimating the OR as most of the users table.
+	return builder.In(column, builder.Expr(`
+  SELECT id FROM users WHERE id = ?
+  UNION SELECT id FROM users WHERE bot_owner_id = ?
+  UNION SELECT id FROM users WHERE id IN (
+   SELECT bot_owner_id FROM users WHERE id = ? AND bot_owner_id > 0
+  )
+  UNION SELECT id FROM users WHERE bot_owner_id > 0 AND bot_owner_id IN (
+   SELECT bot_owner_id FROM users WHERE id = ? AND bot_owner_id > 0
+  )`, u.ID, u.ID, u.ID, u.ID))
 }
