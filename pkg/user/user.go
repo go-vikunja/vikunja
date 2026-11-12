@@ -751,14 +751,21 @@ func userUpdateColumns(s *xorm.Session, user, theUser *User, forceOverride bool)
 
 	if forceOverride {
 		// forceOverride is set in paths where we should apply the FrontendSettings update.
-		user.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
-		if err != nil {
-			return nil, err
-		}
 		cols = append(cols, "frontend_settings")
 	}
 
 	return cols, nil
+}
+
+// userUpdateRow marshals FrontendSettings into a copy so the caller keeps its decoded value.
+func userUpdateRow(user *User, forceOverride bool) (*User, error) {
+	row := *user
+	if !forceOverride {
+		return &row, nil
+	}
+	var err error
+	row.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
+	return &row, err
 }
 
 // UpdateUser updates a user
@@ -834,10 +841,15 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		return nil, err
 	}
 
+	row, err := userUpdateRow(user, forceOverride)
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = s.
 		ID(user.ID).
 		Cols(updateCols...).
-		Update(user)
+		Update(row)
 	if err != nil {
 		return &User{}, err
 	}
