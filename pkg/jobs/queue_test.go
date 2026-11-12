@@ -17,6 +17,7 @@
 package jobs
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -26,7 +27,41 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
+	"xorm.io/xorm/contexts"
+	"xorm.io/xorm/schemas"
 )
+
+type failClaimCommitHook struct{}
+
+func (failClaimCommitHook) BeforeProcess(c *contexts.ContextHook) (context.Context, error) {
+	return c.Ctx, nil
+}
+
+func (failClaimCommitHook) AfterProcess(c *contexts.ContextHook) error {
+	if c.SQL == "COMMIT" {
+		if err, ok := c.Ctx.Value(failClaimCommitHook{}).(error); ok {
+			return err
+		}
+	}
+	return c.Err
+}
+
+func TestQueueDoesNotDeliverUnconfirmedClaims(t *testing.T) {
+	e := queueTestEngine(t)
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		t.Skip("PostgreSQL claims use a single autocommit statement")
+	}
+	s := e.NewSession()
+	defer s.Close()
+	now := time.Now().UTC().Truncate(time.Second)
+	require.NoError(t, Enqueue(s, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), RunAt: now}))
+	e.AddHook(failClaimCommitHook{})
+	wantErr := errors.New("claim commit confirmation lost")
+	ctx := context.WithValue(t.Context(), failClaimCommitHook{}, wantErr)
+	batch, err := NewQueue(e, "unconfirmed").Claim(ctx, t.Name(), 1, now, time.Minute)
+	require.ErrorIs(t, err, wantErr)
+	require.Empty(t, batch, "uncertain claims must await rescue instead of starting handlers")
+}
 
 func TestQueueTransactionAndOwnership(t *testing.T) {
 	e := queueTestEngine(t)

@@ -124,7 +124,10 @@ func (q *Queue) Claim(ctx context.Context, queue string, limit int, now time.Tim
 		err := s.SQL(`UPDATE jobs SET state = 'running', attempt = attempt + 1, claimed_at = ?, claim_owner = ?, expires_at = ?
    WHERE id IN (SELECT id FROM jobs WHERE queue = ? AND state = 'available' AND run_at <= ? ORDER BY run_at, id LIMIT ? FOR UPDATE SKIP LOCKED)
    RETURNING *`, timestamp(now), q.owner, timestamp(now.Add(lease)), queue, timestamp(now), limit).Find(&jobs)
-		return jobs, err
+		if err != nil {
+			return nil, err
+		}
+		return jobs, nil
 	}
 	claimMu.Lock()
 	defer claimMu.Unlock()
@@ -145,7 +148,10 @@ func (q *Queue) Claim(ctx context.Context, queue string, limit int, now time.Tim
 			return nil, err
 		}
 	}
-	return jobs, s.Commit()
+	if err := s.Commit(); err != nil {
+		return nil, err
+	}
+	return jobs, nil
 }
 
 func ownership(job Job) builder.Cond {
