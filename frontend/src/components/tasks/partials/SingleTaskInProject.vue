@@ -513,6 +513,12 @@ defineExpose({
 		transform: translateY(-2px);
 	}
 
+	// Smaller than the fetched bucket so assignees don't grow the row.
+	.tasktext :deep(.user .avatar) {
+		inline-size: 25px;
+		block-size: 25px;
+	}
+
 	.avatar {
 		border-radius: 50%;
 		vertical-align: bottom;
