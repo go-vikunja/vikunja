@@ -19,6 +19,7 @@ package jobs
 import (
 	"context"
 	"errors"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -172,11 +173,13 @@ func (s *Subscriber) heartbeat() {
 			}
 			s.mu.Unlock()
 			for lease, batch := range batches {
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-				if _, err := s.queue.Renew(ctx, batch, time.Now(), lease); err != nil {
-					log.Errorf("Renew job claims: %v", err)
+				for chunk := range slices.Chunk(batch, 200) {
+					ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+					if _, err := s.queue.Renew(ctx, chunk, time.Now(), lease); err != nil {
+						log.Errorf("Renew job claims: %v", err)
+					}
+					cancel()
 				}
-				cancel()
 			}
 		case <-s.closing:
 			return

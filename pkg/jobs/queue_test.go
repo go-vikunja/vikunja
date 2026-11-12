@@ -25,13 +25,11 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestQueueTransactionAndOwnership(t *testing.T) {
-	config.InitDefaultConfig()
-	e, err := db.CreateTestEngine()
-	require.NoError(t, err)
-	require.NoError(t, e.Sync(new(Job)))
+	e := queueTestEngine(t)
 	q := NewQueue(e, "first")
 	now := time.Now().UTC().Truncate(time.Second)
 	req := Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: "one", RunAt: now}
@@ -78,10 +76,7 @@ func TestQueueTransactionAndOwnership(t *testing.T) {
 }
 
 func TestQueueRenewalCompletionAndRetention(t *testing.T) {
-	config.InitDefaultConfig()
-	e, err := db.CreateTestEngine()
-	require.NoError(t, err)
-	require.NoError(t, e.Sync(new(Job)))
+	e := queueTestEngine(t)
 	q := NewQueue(e, "renewal")
 	now := time.Now().UTC().Truncate(time.Second)
 	req := Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: "sent", RunAt: now}
@@ -120,4 +115,33 @@ func TestQueueRenewalCompletionAndRetention(t *testing.T) {
 	count, err = q.Cleanup(t.Context(), now.Add(49*time.Hour), 48*time.Hour, 100)
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, count)
+}
+
+func TestQueueUsesUTCForLocalClock(t *testing.T) {
+	e := queueTestEngine(t)
+	q := NewQueue(e, "local-clock")
+	now := time.Now().In(time.FixedZone("east", 3600)).Truncate(time.Second)
+	s := e.NewSession()
+	defer s.Close()
+	require.NoError(t, Enqueue(s, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: "local", RunAt: now}))
+	batch, err := q.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+	require.NoError(t, err)
+	require.Len(t, batch, 1)
+	require.NoError(t, Complete(s, batch[0], now))
+	require.NoError(t, Enqueue(s, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: "later", RunAt: now.Add(time.Minute)}))
+	batch, err = q.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+	require.NoError(t, err)
+	require.Empty(t, batch, "future work must stay scheduled")
+}
+
+func queueTestEngine(t *testing.T) *xorm.Engine {
+	t.Helper()
+	config.InitDefaultConfig()
+	e, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, e.Sync(new(Job)))
+	clearQueue := func() { _, err := e.Where("queue = ?", t.Name()).Delete(new(Job)); require.NoError(t, err) }
+	clearQueue()
+	t.Cleanup(clearQueue)
+	return e
 }

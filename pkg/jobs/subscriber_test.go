@@ -21,16 +21,11 @@ import (
 	"testing"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSubscriberDeadlineStopsRenewal(t *testing.T) {
-	config.InitDefaultConfig()
-	e, err := db.CreateTestEngine()
-	require.NoError(t, err)
-	require.NoError(t, e.Sync(new(Job)))
+	e := queueTestEngine(t)
 	s := e.NewSession()
 	defer s.Close()
 	require.NoError(t, Enqueue(s, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`)}))

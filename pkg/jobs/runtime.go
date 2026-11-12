@@ -187,7 +187,7 @@ func WaitForPendingHandlers() {
 			return
 		default:
 		}
-		count, err := runtime.queue.engine.Where(builder.Or(builder.Eq{"state": StateRunning}, builder.And(builder.Eq{"state": StateAvailable}, builder.Lte{"run_at": time.Now()}))).Count(new(Job))
+		count, err := runtime.queue.engine.Where(builder.Or(builder.Eq{"state": StateRunning}, builder.And(builder.Eq{"state": StateAvailable}, builder.Lte{"run_at": timestamp(time.Now())}))).Count(new(Job))
 		if err != nil || count == 0 {
 			return
 		}

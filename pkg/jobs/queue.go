@@ -131,7 +131,7 @@ func (q *Queue) Claim(ctx context.Context, queue string, limit int, now time.Tim
 	if err := s.Begin(); err != nil {
 		return nil, err
 	}
-	if err := s.Where(builder.Eq{"queue": queue, "state": StateAvailable}).And(builder.Lte{"run_at": now}).OrderBy("run_at, id").Limit(limit).Find(&jobs); err != nil {
+	if err := s.Where(builder.Eq{"queue": queue, "state": StateAvailable}).And(builder.Lte{"run_at": timestamp(now)}).OrderBy("run_at, id").Limit(limit).Find(&jobs); err != nil {
 		return nil, err
 	}
 	for i := range jobs {
@@ -153,7 +153,7 @@ func ownership(job Job) builder.Cond {
 }
 
 func Complete(s *xorm.Session, job Job, now time.Time) error {
-	affected, err := s.Where(ownership(job)).And(builder.Gt{"expires_at": now}).Cols("state", "finished_at").Update(&Job{State: StateCompleted, FinishedAt: now})
+	affected, err := s.Where(ownership(job)).And(builder.Gt{"expires_at": timestamp(now)}).Cols("state", "finished_at").Update(&Job{State: StateCompleted, FinishedAt: now})
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func (q *Queue) Renew(ctx context.Context, jobs []Job, now time.Time, lease time
 	s := q.engine.NewSession()
 	defer s.Close()
 	db.SetSessionContext(ctx, s)
-	return s.Where(builder.Or(conditions...)).And(builder.Gt{"expires_at": now}).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(lease)})
+	return s.Where(builder.Or(conditions...)).And(builder.Gt{"expires_at": timestamp(now)}).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(lease)})
 }
 
 func (q *Queue) Fail(ctx context.Context, job Job, now time.Time, cause error, maxAttempts int) error {
@@ -195,7 +195,7 @@ func (q *Queue) Rescue(ctx context.Context, now time.Time, limit int) (int64, er
 	defer s.Close()
 	db.SetSessionContext(ctx, s)
 	var expired []Job
-	if err := s.Where(builder.Eq{"state": StateRunning}).And(builder.Lte{"expires_at": now}).Limit(limit).Find(&expired); err != nil {
+	if err := s.Where(builder.Eq{"state": StateRunning}).And(builder.Lte{"expires_at": timestamp(now)}).Limit(limit).Find(&expired); err != nil {
 		return 0, err
 	}
 	var total int64
@@ -204,7 +204,7 @@ func (q *Queue) Rescue(ctx context.Context, now time.Time, limit int) (int64, er
 		if job.Attempt >= job.MaxAttempts {
 			state = StateFailed
 		}
-		count, err := s.Where(ownership(job)).And(builder.Lte{"expires_at": now}).Cols("state", "run_at", "last_error").Update(&Job{State: state, RunAt: now, LastError: "worker claim expired"})
+		count, err := s.Where(ownership(job)).And(builder.Lte{"expires_at": timestamp(now)}).Cols("state", "run_at", "last_error").Update(&Job{State: state, RunAt: now, LastError: "worker claim expired"})
 		if err != nil {
 			return total, err
 		}
@@ -220,8 +220,12 @@ func (q *Queue) Cleanup(ctx context.Context, now time.Time, retention time.Durat
 	s := q.engine.NewSession()
 	defer s.Close()
 	db.SetSessionContext(ctx, s)
+	if limit < 1 {
+		return 0, nil
+	}
+	limit = min(limit, 500)
 	var rows []Job
-	if err := s.Cols("id").Where(builder.Eq{"state": StateCompleted}).And(builder.Lt{"finished_at": now.Add(-retention)}).OrderBy("id").Limit(limit).Find(&rows); err != nil {
+	if err := s.Cols("id").Where(builder.Eq{"state": StateCompleted}).And(builder.Lt{"finished_at": timestamp(now.Add(-retention))}).OrderBy("id").Limit(limit).Find(&rows); err != nil {
 		return 0, err
 	}
 	ids := make([]int64, 0, len(rows))
