@@ -124,7 +124,7 @@ import XButton from '@/components/input/Button.vue'
 import {success} from '@/message'
 import {useI18n} from 'vue-i18n'
 
-const {subscribe, connected: wsConnected} = useWebSocket()
+const {subscribe, authenticated: wsAuthenticated} = useWebSocket()
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -144,8 +144,12 @@ const userInfo = computed(() => authStore.info)
 
 let unsubscribeWs: (() => void) | null = null
 let pollInterval: ReturnType<typeof setInterval> | null = null
+let notificationRequest = 0
+let needsRefresh = false
+let nextRefreshAt = 0
 
 const POLL_INTERVAL = 10000
+const HEALTHY_REFRESH_INTERVAL = 5 * 60 * 1000
 
 onMounted(async () => {
 	// Initial load via REST - wrapped in try/catch so the rest of setup
@@ -174,12 +178,9 @@ onMounted(async () => {
 	startPollingFallback()
 })
 
-// Reload notifications when WebSocket disconnects to catch any events
-// that may have been missed during the disconnect window
-watch(wsConnected, (isConnected, wasConnected) => {
-	if (wasConnected && !isConnected) {
-		loadNotifications().catch(e => console.warn('Failed to reload notifications after WS disconnect:', e))
-	}
+// Recover broadcasts missed between fallback polls.
+watch(wsAuthenticated, () => {
+	loadNotifications().catch(e => console.warn('Failed to reload notifications after WebSocket state change:', e))
 })
 
 onUnmounted(() => {
@@ -190,8 +191,12 @@ onUnmounted(() => {
 
 function startPollingFallback() {
 	pollInterval = setInterval(async () => {
-		if (!wsConnected.value && document.visibilityState === 'visible') {
-			await loadNotifications()
+		if ((!wsAuthenticated.value || needsRefresh || Date.now() >= nextRefreshAt) && document.visibilityState === 'visible') {
+			try {
+				await loadNotifications()
+			} catch (e) {
+				console.warn('Failed to refresh notifications:', e)
+			}
 		}
 	}, POLL_INTERVAL)
 }
@@ -204,8 +209,15 @@ function stopPollingFallback() {
 }
 
 async function loadNotifications() {
+	const request = ++notificationRequest
+	needsRefresh = true
 	const notificationService = new NotificationService()
-	allNotifications.value = await notificationService.getAll() as NotificationModel[]
+	const loaded = await notificationService.getAll() as NotificationModel[]
+	if (request === notificationRequest) {
+		allNotifications.value = loaded
+		needsRefresh = false
+		nextRefreshAt = Date.now() + HEALTHY_REFRESH_INTERVAL + Math.random() * 60000
+	}
 }
 
 function hidePopup(e: MouseEvent) {
