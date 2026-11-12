@@ -3288,7 +3288,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "If true, also returns tasks from all descendant subprojects the user can access. A sort by position is ignored while this is set, as positions are scoped to a single view.",
+                        "description": "If true, also returns tasks from all descendant subprojects the user can access. Their position in this view is stored separately from the one in their own project's views.",
                         "name": "include_subprojects",
                         "in": "query"
                     },
