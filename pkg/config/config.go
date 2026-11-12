@@ -529,7 +529,7 @@ func initDefaultConfig() {
 	// Settings
 	DefaultSettingsAvatarProvider.setDefault("initials")
 	DefaultSettingsOverdueTaskRemindersEnabled.setDefault(true)
-	DefaultSettingsOverdueTaskRemindersTime.setDefault("9:00")
+	DefaultSettingsOverdueTaskRemindersTime.setDefault("09:00")
 	// Webhook
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)

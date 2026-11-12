@@ -93,7 +93,7 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (u
 			remindersTime = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
 		}
 		if remindersTime == "" {
-			remindersTime = "9:00"
+			remindersTime = "09:00"
 		}
 		tm, err := time.Parse("15:04", remindersTime)
 		if err != nil {
