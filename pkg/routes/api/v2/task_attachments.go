@@ -167,7 +167,10 @@ func taskAttachmentsUpload(ctx context.Context, in *taskAttachmentUploadInput) (
 		return nil, err
 	}
 
-	s := db.NewSession()
+	s, err := db.NewWriteSession(ctx)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
 	defer s.Close()
 
 	formFiles := in.RawBody.Data().Files
