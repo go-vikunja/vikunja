@@ -39,7 +39,7 @@ type Bucket struct {
 	// The project this bucket belongs to.
 	ProjectID int64 `xorm:"-" json:"-" param:"project"`
 	// The project view this bucket belongs to.
-	ProjectViewID int64 `xorm:"bigint not null" json:"project_view_id" param:"view"`
+	ProjectViewID int64 `xorm:"bigint not null index" json:"project_view_id" param:"view"`
 	// All tasks which belong to this bucket.
 	Tasks []*Task `xorm:"-" json:"tasks,omitempty"`
 
