@@ -157,6 +157,10 @@ func TestEnqueueBatchReminderExpansionAtomicity(t *testing.T) {
 			require.NoError(t, engine.Where("kind LIKE ? AND kind <> ?", "reminder.%", "reminder.expand").Find(&rows))
 			if scenario == "success" {
 				require.Len(t, rows, 3)
+				for _, row := range rows {
+					want := map[string]string{"reminder.mail": "bulk-mail", "reminder.notification": "bulk-notifications", "reminder.webhook": "bulk-webhooks"}
+					assert.Equal(t, want[row.Kind], row.Queue)
+				}
 			} else {
 				require.Empty(t, rows, "no partially committed children")
 			}

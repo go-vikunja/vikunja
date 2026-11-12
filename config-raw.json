@@ -1384,6 +1384,47 @@
                             ]
                         },
                         {
+                            "key": "bulk-notifications",
+                            "children": [
+                                {
+                                    "key": "enabled",
+                                    "default_value": "true",
+                                    "comment": "Consume this queue in this process."
+                                },
+                                {
+                                    "key": "concurrency",
+                                    "default_value": "2",
+                                    "comment": "Maximum active handlers for this queue in each process. Budget these together with HTTP and cron database connections."
+                                },
+                                {
+                                    "key": "lease",
+                                    "default_value": "60s",
+                                    "comment": "Claim expiry without a heartbeat. Must be at least 30s; active claims renew every 15s."
+                                },
+                                {
+                                    "key": "timeout",
+                                    "default_value": "5m",
+                                    "comment": "Handler deadline. Expired handlers are cancelled and their claims stop renewing."
+                                },
+                                {
+                                    "key": "maxattempts",
+                                    "default_value": "5",
+                                    "comment": "Total attempts for newly enqueued jobs. Replay grants this many additional attempts. Existing jobs keep their stored budget."
+                                },
+                                {
+                                    "key": "retryinitialdelay",
+                                    "default_value": "2s",
+                                    "comment": "Initial retry ceiling, doubled after each failure up to retrymaxdelay. Each persisted delay is uniformly jittered between half the ceiling (rounded up to seconds) and the ceiling. Must be at least 1s."
+                                },
+                                {
+                                    "key": "retrymaxdelay",
+                                    "default_value": "1h",
+                                    "comment": "Maximum retry delay, at least retryinitialdelay. Replayed jobs preserve their attempt counter and capped backoff."
+                                }
+                            ],
+                            "comment": "Scheduled reminder notification creation, isolated from interactive notifications."
+                        },
+                        {
                             "key": "webhooks",
                             "children": [
                                 {
@@ -1422,6 +1463,47 @@
                                     "comment": "Maximum retry delay, at least retryinitialdelay. Replayed jobs preserve their attempt counter and capped backoff."
                                 }
                             ]
+                        },
+                        {
+                            "key": "bulk-webhooks",
+                            "children": [
+                                {
+                                    "key": "enabled",
+                                    "default_value": "true",
+                                    "comment": "Consume this queue in this process."
+                                },
+                                {
+                                    "key": "concurrency",
+                                    "default_value": "2",
+                                    "comment": "Maximum active handlers for this queue in each process. Budget these together with HTTP and cron database connections."
+                                },
+                                {
+                                    "key": "lease",
+                                    "default_value": "60s",
+                                    "comment": "Claim expiry without a heartbeat. Must be at least 30s; active claims renew every 15s."
+                                },
+                                {
+                                    "key": "timeout",
+                                    "default_value": "5m",
+                                    "comment": "Handler deadline. Expired handlers are cancelled and their claims stop renewing."
+                                },
+                                {
+                                    "key": "maxattempts",
+                                    "default_value": "5",
+                                    "comment": "Total attempts for newly enqueued jobs. Replay grants this many additional attempts. Existing jobs keep their stored budget."
+                                },
+                                {
+                                    "key": "retryinitialdelay",
+                                    "default_value": "2s",
+                                    "comment": "Initial retry ceiling, doubled after each failure up to retrymaxdelay. Each persisted delay is uniformly jittered between half the ceiling (rounded up to seconds) and the ceiling. Must be at least 1s."
+                                },
+                                {
+                                    "key": "retrymaxdelay",
+                                    "default_value": "1h",
+                                    "comment": "Maximum retry delay, at least retryinitialdelay. Replayed jobs preserve their attempt counter and capped backoff."
+                                }
+                            ],
+                            "comment": "Scheduled reminder and overdue webhook expansion. Final HTTP delivery uses webhook-delivery."
                         },
                         {
                             "key": "webhook-delivery",

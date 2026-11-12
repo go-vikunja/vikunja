@@ -786,7 +786,7 @@ func drainReminderJobs(t *testing.T) {
 			engine.SetMaxOpenConns(previousMax)
 		}()
 	}
-	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks", "reminder-expansion"} {
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "bulk-notifications", "webhooks", "bulk-webhooks", "reminder-expansion"} {
 		key := config.Key("jobs.queues." + queue + ".lease")
 		defer key.Set(key.GetDuration())
 		key.Set(5 * time.Second)

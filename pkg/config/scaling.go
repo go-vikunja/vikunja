@@ -23,7 +23,7 @@ import (
 )
 
 func validateRuntimeConfig() error {
-	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks", "webhook-delivery", "reminder-expansion"} {
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "bulk-notifications", "webhooks", "bulk-webhooks", "webhook-delivery", "reminder-expansion"} {
 		prefix := "jobs.queues." + queue + "."
 		if Key(prefix+"concurrency").GetInt() < 1 || Key(prefix+"lease").GetDuration() < 30*time.Second || Key(prefix+"timeout").GetDuration() <= 0 {
 			return errors.New("job queues require positive concurrency/deadline and a lease of at least 30s")

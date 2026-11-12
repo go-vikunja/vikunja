@@ -36,6 +36,13 @@ func TestHorizontalScalingDefaults(t *testing.T) {
 	assert.True(t, Key("jobs.queues.reminder-expansion.enabled").GetBool())
 	assert.Equal(t, 2, Key("jobs.queues.reminder-expansion.concurrency").GetInt())
 	assert.Equal(t, 5, Key("jobs.queues.reminder-expansion.maxattempts").GetInt())
+	for _, queue := range []string{"bulk-notifications", "bulk-webhooks"} {
+		prefix := "jobs.queues." + queue + "."
+		assert.True(t, Key(prefix+"enabled").GetBool())
+		assert.Equal(t, 2, Key(prefix+"concurrency").GetInt())
+		assert.Equal(t, 5, Key(prefix+"maxattempts").GetInt())
+		assert.Equal(t, "2s", Key(prefix+"retryinitialdelay").GetString())
+	}
 	assert.Equal(t, "vikunja", Key("redis.prefix").GetString())
 }
 
@@ -61,6 +68,8 @@ func TestClusterConfiguration(t *testing.T) {
 		{name: "empty namespace", change: func() { RedisPrefix.Set("") }, wantError: "redis.prefix"},
 		{name: "invalid concurrency", change: func() { EventsMaxConcurrentHandlers.Set(0) }, wantError: "events.maxconcurrenthandlers"},
 		{name: "invalid reminder expansion concurrency", change: func() { Key("jobs.queues.reminder-expansion.concurrency").Set(0) }, wantError: "concurrency"},
+		{name: "invalid bulk notification concurrency", change: func() { Key("jobs.queues.bulk-notifications.concurrency").Set(0) }, wantError: "concurrency"},
+		{name: "invalid bulk webhook retry", change: func() { Key("jobs.queues.bulk-webhooks.retryinitialdelay").Set("500ms") }, wantError: "retryinitialdelay"},
 		{name: "zero attempts", change: func() { Key("jobs.queues.mail.maxattempts").Set(0) }, wantError: "maxattempts"},
 		{name: "negative attempts", change: func() { Key("jobs.queues.webhook-delivery.maxattempts").Set(-1) }, wantError: "maxattempts"},
 		{name: "short retry delay", change: func() { Key("jobs.queues.bulk-mail.retryinitialdelay").Set("500ms") }, wantError: "retryinitialdelay"},

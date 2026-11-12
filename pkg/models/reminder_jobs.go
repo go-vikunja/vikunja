@@ -41,10 +41,10 @@ type reminderJob struct {
 
 func init() {
 	jobs.Register("reminder.mail", "bulk-mail", handleTaskReminder)
-	jobs.Register("reminder.notification", "notifications", handleTaskReminder)
-	jobs.Register("reminder.webhook", "webhooks", handleTaskReminder)
+	jobs.Register("reminder.notification", "bulk-notifications", handleTaskReminder)
+	jobs.Register("reminder.webhook", "bulk-webhooks", handleTaskReminder)
 	jobs.Register("overdue.mail", "bulk-mail", handleOverdueReminder)
-	jobs.Register("overdue.webhook", "webhooks", handleOverdueReminder)
+	jobs.Register("overdue.webhook", "bulk-webhooks", handleOverdueReminder)
 }
 
 func reminderMailEnabled() bool {
@@ -85,7 +85,7 @@ func enqueueOverdueReminders(_ context.Context, s *xorm.Session, window cron.Win
 				}
 			}
 			if single || batch {
-				return enqueueReminder(s, "overdue.webhook", "webhooks", payload)
+				return enqueueReminder(s, "overdue.webhook", "bulk-webhooks", payload)
 			}
 			return nil
 		})

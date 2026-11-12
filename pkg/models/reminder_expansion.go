@@ -102,11 +102,11 @@ func handleReminderExpansion(msg *message.Message) error {
 				return err
 			}
 		}
-		if err := enqueueReminder(s, "reminder.notification", "notifications", child); err != nil {
+		if err := enqueueReminder(s, "reminder.notification", "bulk-notifications", child); err != nil {
 			return err
 		}
 		if config.WebhooksEnabled.GetBool() || hasNonWebhookListener((&TaskReminderFiredEvent{}).Name()) {
-			if err := enqueueReminder(s, "reminder.webhook", "webhooks", child); err != nil {
+			if err := enqueueReminder(s, "reminder.webhook", "bulk-webhooks", child); err != nil {
 				return err
 			}
 		}

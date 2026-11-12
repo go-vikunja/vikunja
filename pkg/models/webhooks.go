@@ -120,7 +120,12 @@ func RegisterEventForWebhook(event events.Event) {
 	defer availableWebhookEventsLock.Unlock()
 
 	availableWebhookEvents[event.Name()] = true
-	events.RegisterDurableListener(event.Name(), "webhooks", &WebhookListener{
+	queue := "webhooks"
+	switch event.Name() {
+	case (&TaskReminderFiredEvent{}).Name(), (&TaskOverdueEvent{}).Name(), (&TasksOverdueEvent{}).Name():
+		queue = "bulk-webhooks"
+	}
+	events.RegisterDurableListener(event.Name(), queue, &WebhookListener{
 		EventName: event.Name(),
 	})
 }
