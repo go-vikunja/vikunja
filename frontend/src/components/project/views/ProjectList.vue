@@ -49,7 +49,7 @@
 					<draggable
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
-						:group="{name: 'tasks', put: false}"
+						:group="taskDragGroup"
 						:sort="canReorderTasks"
 						:disabled="!canDragTasks || !isPositionSorting"
 						item-key="id"
@@ -137,6 +137,9 @@ const props = defineProps<{
 }>()
 
 const draggable = draggableFor<TaskResponse>()
+
+// Must keep its identity: a new group object mid-drag makes Sortable reject the reorder.
+const taskDragGroup = {name: 'tasks', put: false}
 
 const projectId = toRef(props, 'projectId')
 
