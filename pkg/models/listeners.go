@@ -89,8 +89,8 @@ func RegisterListeners() {
 		RegisterUserDirectedEventForWebhook(&TaskOverdueEvent{})
 		RegisterUserDirectedEventForWebhook(&TasksOverdueEvent{})
 
-		// Internal delivery listener — one message per webhook with its own retry lifecycle
-		events.RegisterDurableListener((&WebhookDeliveryEvent{}).Name(), "webhooks", &WebhookDeliveryListener{})
+		// Isolate outbound requests from database fan-out.
+		events.RegisterDurableListener((&WebhookDeliveryEvent{}).Name(), "webhook-delivery", &WebhookDeliveryListener{})
 	}
 	if config.AuditEnabled.GetBool() {
 		registerEventsForAuditLogging()
@@ -1248,11 +1248,7 @@ type WebhookPayload struct {
 	Data      interface{} `json:"data"`
 }
 
-// WebhookDeliveryListener delivers one webhook per message. It is the
-// consumer for WebhookDeliveryEvent and owns the retry semantics: any
-// error returned from Handle triggers the watermill retry middleware
-// independently for this single delivery, with no effect on other
-// webhooks on the same parent event.
+// WebhookDeliveryListener retries each destination independently.
 type WebhookDeliveryListener struct{}
 
 // Name defines the name for the WebhookDeliveryListener listener
