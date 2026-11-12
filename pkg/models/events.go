@@ -584,8 +584,9 @@ func (e *AdminUserPasswordSetEvent) Name() string {
 
 // AdminUserSettingsUpdatedEvent represents an admin changing a user's general settings
 type AdminUserSettingsUpdatedEvent struct {
-	User *user.User `json:"user"`
-	Doer *user.User `json:"doer"`
+	User          *user.User `json:"user"`
+	Doer          *user.User `json:"doer"`
+	ChangedFields []string   `json:"changed_fields"`
 }
 
 // Name defines the name for AdminUserSettingsUpdatedEvent
