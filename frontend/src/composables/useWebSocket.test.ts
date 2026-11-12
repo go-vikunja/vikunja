@@ -64,6 +64,10 @@ function authErrorFrame() {
 	return new MessageEvent('message', {data: JSON.stringify({error: 'invalid_token'})})
 }
 
+function pongFrame() {
+	return new MessageEvent('message', {data: JSON.stringify({action: 'pong'})})
+}
+
 function tokenRefreshed(token: string) {
 	auth.token = token
 	refreshListeners.forEach(listener => listener())
@@ -92,6 +96,62 @@ afterEach(() => {
 	auth.token = 'token'
 	auth.expired = false
 	refreshToken.mockReset()
+})
+
+it('reconnects a silent authenticated socket without waiting for its close event', () => {
+	vi.useFakeTimers()
+	vi.spyOn(Math, 'random').mockReturnValue(.5)
+	const {ws, socket} = authenticatedSocket()
+	ws.subscribe('notification.created', vi.fn())
+	socket.send.mockClear()
+
+	vi.advanceTimersByTime(30000)
+	expect(socket.send).toHaveBeenCalledWith(JSON.stringify({action: 'ping'}))
+	vi.advanceTimersByTime(9999)
+	expect(ws.authenticated.value).toBe(true)
+	vi.advanceTimersByTime(1)
+	expect(socket.close).toHaveBeenCalledTimes(1)
+	expect(ws.authenticated.value).toBe(false)
+	expect(ws.mayHaveMissedEvents.value).toBe(true)
+	vi.advanceTimersByTime(1000)
+	expect(FakeSocket.instances).toHaveLength(2)
+
+	const replacement = FakeSocket.instances[1]
+	replacement.onopen?.()
+	replacement.onmessage?.(authSuccessFrame())
+	expect(replacement.send).toHaveBeenCalledWith(JSON.stringify({
+		action: 'subscribe',
+		event: 'notification.created',
+	}))
+	socket.onmessage?.(pongFrame())
+	socket.onclose?.()
+	expect(ws.authenticated.value).toBe(true)
+})
+
+it('keeps a healthy socket open while heartbeats are acknowledged', () => {
+	vi.useFakeTimers()
+	const {ws, socket} = authenticatedSocket()
+	for (let i = 0; i < 3; i++) {
+		vi.advanceTimersByTime(30000)
+		expect(socket.send).toHaveBeenLastCalledWith(JSON.stringify({action: 'ping'}))
+		vi.advanceTimersByTime(5000)
+		socket.onmessage?.(pongFrame())
+	}
+	expect(socket.close).not.toHaveBeenCalled()
+	expect(ws.authenticated.value).toBe(true)
+})
+
+it('cancels heartbeat timers when the user disconnects', () => {
+	vi.useFakeTimers()
+	const {ws, socket} = authenticatedSocket()
+	vi.advanceTimersByTime(30000)
+	expect(socket.send).toHaveBeenCalledWith(JSON.stringify({action: 'ping'}))
+	ws.disconnect()
+	socket.send.mockClear()
+	vi.advanceTimersByTime(60000)
+	expect(socket.send).not.toHaveBeenCalled()
+	expect(FakeSocket.instances).toHaveLength(1)
+	expect(ws.status.value).toBe('idle')
 })
 
 it('refreshes an expired token before authenticating', async () => {

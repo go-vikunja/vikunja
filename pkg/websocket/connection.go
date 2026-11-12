@@ -167,6 +167,16 @@ func (c *Connection) handleMessage(ctx context.Context, msg IncomingMessage) boo
 	switch msg.Action {
 	case ActionAuth:
 		return c.handleAuth(ctx, msg.Token)
+	case ActionPing:
+		if !c.IsAuthenticated() {
+			c.sendError("auth_required", "")
+			return true
+		}
+		select {
+		case c.send <- OutgoingMessage{Action: ActionPong}:
+		default:
+			log.Warningf("WebSocket: send buffer full for user %d", c.UserID())
+		}
 	case ActionSubscribe:
 		if !c.IsAuthenticated() {
 			c.sendError("auth_required", "")
