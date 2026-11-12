@@ -618,7 +618,8 @@ func NewSession() *xorm.Session {
 	s := x.NewSession()
 	attachSessionCache(s)
 	if err := s.Begin(); err != nil {
-		log.Fatalf("Failed to begin database transaction: %s", err)
+		_ = s.Close()
+		panic(fmt.Errorf("begin database transaction: %w", err))
 	}
 	return s
 }

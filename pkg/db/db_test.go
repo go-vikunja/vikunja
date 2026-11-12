@@ -18,15 +18,36 @@ package db
 
 import (
 	"errors"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
 )
+
+func TestNewSessionFailureDoesNotExit(t *testing.T) {
+	if os.Getenv("VIKUNJA_TEST_BEGIN_FAILURE") == "1" {
+		config.InitDefaultConfig()
+		log.InitLogger()
+		engine, err := xorm.NewEngine("sqlite3", ":memory:")
+		require.NoError(t, err)
+		require.NoError(t, engine.Close())
+		x = engine
+		require.PanicsWithError(t, "begin database transaction: sql: database is closed", func() { NewSession() })
+		return
+	}
+	command := exec.CommandContext(t.Context(), os.Args[0], "-test.run=^TestNewSessionFailureDoesNotExit$") //nolint:gosec // Re-executes this test binary.
+	command.Env = append(os.Environ(), "VIKUNJA_TEST_BEGIN_FAILURE=1")
+	output, err := command.CombinedOutput()
+	require.NoError(t, err, string(output))
+}
 
 func TestGetPostgreSQLConnectionString(t *testing.T) {
 	t.Run("with schema", func(t *testing.T) {
