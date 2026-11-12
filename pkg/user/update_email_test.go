@@ -73,7 +73,7 @@ func TestUpdateEmail(t *testing.T) {
 
 		sent := mail.SentMails()
 		require.Len(t, sent, 2)
-		assert.Equal(t, "new1@example.com", sent[0].To)
+		assert.ElementsMatch(t, []string{"new1@example.com", "user1@example.com"}, []string{sent[0].To, sent[1].To})
 
 		s2 := db.NewSession()
 		defer s2.Close()
@@ -206,8 +206,7 @@ func TestUpdateEmail(t *testing.T) {
 		require.NoError(t, s.Commit())
 		sent := mail.SentMails()
 		require.Len(t, sent, 2)
-		assert.Equal(t, "new1@example.com", sent[0].To)
-		assert.Equal(t, "user1@example.com", sent[1].To)
+		assert.ElementsMatch(t, []string{"new1@example.com", "user1@example.com"}, []string{sent[0].To, sent[1].To})
 	})
 }
 
