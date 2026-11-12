@@ -17,12 +17,16 @@
 package models
 
 import (
+	"sync"
+
 	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/notifications"
 )
+
+var syncTestTables sync.Once
 
 // SetupTests takes care of seting up the db, fixtures etc.
 // This is an extra function to be able to call the fixtures setup from the web tests.
@@ -33,19 +37,19 @@ func SetupTests() {
 		log.Fatal(err)
 	}
 
-	tables := []interface{}{}
-	tables = append(tables, GetTables()...)
-	tables = append(tables, notifications.GetTables()...)
+	syncTestTables.Do(func() {
+		tables := []interface{}{}
+		tables = append(tables, GetTables()...)
+		tables = append(tables, notifications.GetTables()...)
 
-	err = x.Sync2(tables...)
-	if err != nil {
-		log.Fatal(err)
-	}
+		if err := x.Sync2(tables...); err != nil {
+			log.Fatal(err)
+		}
 
-	err = db.CreateParadeDBIndexes()
-	if err != nil {
-		log.Fatal(err)
-	}
+		if err := db.CreateParadeDBIndexes(); err != nil {
+			log.Fatal(err)
+		}
+	})
 
 	err = db.InitTestFixtures(
 		"files",

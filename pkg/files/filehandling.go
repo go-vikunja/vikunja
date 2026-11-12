@@ -24,6 +24,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -168,6 +169,8 @@ func InitTestFileFixtures(t *testing.T) {
 	require.NoError(t, err)
 }
 
+var syncTestTables sync.Once
+
 // InitTests handles the actual bootstrapping of the test env
 func InitTests() {
 	var err error
@@ -176,10 +179,11 @@ func InitTests() {
 		log.Fatal(err)
 	}
 
-	err = x.Sync2(GetTables()...)
-	if err != nil {
-		log.Fatal(err)
-	}
+	syncTestTables.Do(func() {
+		if err := x.Sync2(GetTables()...); err != nil {
+			log.Fatal(err)
+		}
+	})
 
 	err = db.InitTestFixtures("files")
 	if err != nil {

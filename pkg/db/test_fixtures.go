@@ -20,6 +20,7 @@ import (
 	"embed"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -30,23 +31,32 @@ import (
 )
 
 var (
-	fixtures *testfixtures.Loader
+	fixtures    *testfixtures.Loader
+	loaderCache = map[string]*testfixtures.Loader{}
 	//go:embed fixtures
 	fixturesFS embed.FS
 )
 
 // InitFixtures initialize test fixtures for a test database
 func InitFixtures(tablenames ...string) (err error) {
+	// Building a loader introspects the database, so loaders are reused per table set.
+	cacheKey := strings.Join(tablenames, ",")
+	if l, ok := loaderCache[cacheKey]; ok {
+		fixtures = l
+		return nil
+	}
+
 	var testfiles func(loader *testfixtures.Loader) error
 	dir := "fixtures"
 
 	// If fixture table names are specified, load them
 	// Otherwise, load all fixtures
 	if len(tablenames) > 0 {
+		paths := make([]string, len(tablenames))
 		for i, name := range tablenames {
-			tablenames[i] = filepath.Join(dir, name+".yml")
+			paths[i] = filepath.Join(dir, name+".yml")
 		}
-		testfiles = testfixtures.Files(tablenames...)
+		testfiles = testfixtures.Files(paths...)
 	} else {
 		testfiles = testfixtures.Directory(dir)
 	}
@@ -64,8 +74,13 @@ func InitFixtures(tablenames ...string) (err error) {
 		loaderOptions = append(loaderOptions, testfixtures.SkipResetSequences())
 	}
 
-	fixtures, err = testfixtures.New(loaderOptions...)
-	return err
+	l, err := testfixtures.New(loaderOptions...)
+	if err != nil {
+		return err
+	}
+	loaderCache[cacheKey] = l
+	fixtures = l
+	return nil
 }
 
 // LoadFixtures load fixtures for a test database
