@@ -74,6 +74,21 @@ export type AdminSetPasswordBody = {
     new_password?: string;
 };
 
+export type AdminSettingsUser = {
+    /**
+     * Resolved auth provider name (e.g. 'LDAP' or an OIDC provider), empty for local accounts.
+     */
+    readonly auth_provider?: string;
+    /**
+     * The numeric ID of the user.
+     */
+    readonly id?: number;
+    /**
+     * The user's username.
+     */
+    readonly username?: string;
+};
+
 export type AdminStatusPatchBody = {
     /**
      * A URL to the JSON Schema for this object.
@@ -142,6 +157,67 @@ export type AdminUser = {
      * The username of the user. Is always unique. For bot users it must start with the 'bot-' prefix.
      */
     username?: string;
+};
+
+export type AdminUserSettingsBody = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * Project a task is filed under when created without an explicit project.
+     */
+    default_project_id?: number;
+    /**
+     * If true, the user can be found when searching for their exact email.
+     */
+    discoverable_by_email?: boolean;
+    /**
+     * If true, this user can be found by their name or parts of it when searching.
+     */
+    discoverable_by_name?: boolean;
+    /**
+     * If enabled, sends email reminders of tasks to the user.
+     */
+    email_reminders_enabled?: boolean;
+    /**
+     * Additional settings links provided by the OpenID provider. Server-controlled.
+     */
+    readonly extra_settings_links?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Arbitrary settings used only by the frontend. Any JSON value; stored and returned verbatim.
+     */
+    frontend_settings?: unknown;
+    /**
+     * The user's language.
+     */
+    language?: string;
+    /**
+     * The full name of the user.
+     */
+    name?: string;
+    /**
+     * If enabled, the user gets an email for their overdue tasks each morning.
+     */
+    overdue_tasks_reminders_enabled?: boolean;
+    /**
+     * The time the daily overdue-tasks summary is sent, as HH:MM.
+     */
+    overdue_tasks_reminders_time?: string;
+    /**
+     * The user's time zone, used to send task reminders in their local time.
+     */
+    timezone?: string;
+    /**
+     * The user these settings belong to.
+     */
+    readonly user?: AdminSettingsUser;
+    /**
+     * The day the week starts on: 0=sunday, 1=monday, … 6=saturday.
+     */
+    week_start?: number;
 };
 
 export type AttachmentUploadError = {
@@ -4107,6 +4183,53 @@ export type AdminUserWritable = {
     username?: string;
 };
 
+export type AdminUserSettingsBodyWritable = {
+    /**
+     * Project a task is filed under when created without an explicit project.
+     */
+    default_project_id?: number;
+    /**
+     * If true, the user can be found when searching for their exact email.
+     */
+    discoverable_by_email?: boolean;
+    /**
+     * If true, this user can be found by their name or parts of it when searching.
+     */
+    discoverable_by_name?: boolean;
+    /**
+     * If enabled, sends email reminders of tasks to the user.
+     */
+    email_reminders_enabled?: boolean;
+    /**
+     * Arbitrary settings used only by the frontend. Any JSON value; stored and returned verbatim.
+     */
+    frontend_settings?: unknown;
+    /**
+     * The user's language.
+     */
+    language?: string;
+    /**
+     * The full name of the user.
+     */
+    name?: string;
+    /**
+     * If enabled, the user gets an email for their overdue tasks each morning.
+     */
+    overdue_tasks_reminders_enabled?: boolean;
+    /**
+     * The time the daily overdue-tasks summary is sent, as HH:MM.
+     */
+    overdue_tasks_reminders_time?: string;
+    /**
+     * The user's time zone, used to send task reminders in their local time.
+     */
+    timezone?: string;
+    /**
+     * The day the week starts on: 0=sunday, 1=monday, … 6=saturday.
+     */
+    week_start?: number;
+};
+
 export type AttachmentUploadResultWritable = {
     /**
      * Per-file failures. A file that fails here does not fail the whole request; the others still upload.
@@ -6236,6 +6359,96 @@ export type AdminUsersPasswordResetEmailResponses = {
 };
 
 export type AdminUsersPasswordResetEmailResponse = AdminUsersPasswordResetEmailResponses[keyof AdminUsersPasswordResetEmailResponses];
+
+export type AdminUsersSettingsReadData = {
+    body?: never;
+    path: {
+        /**
+         * The numeric ID of the user.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/admin/users/{id}/settings/general';
+};
+
+export type AdminUsersSettingsReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type AdminUsersSettingsReadError = AdminUsersSettingsReadErrors[keyof AdminUsersSettingsReadErrors];
+
+export type AdminUsersSettingsReadResponses = {
+    /**
+     * OK
+     */
+    200: AdminUserSettingsBody;
+};
+
+export type AdminUsersSettingsReadResponse = AdminUsersSettingsReadResponses[keyof AdminUsersSettingsReadResponses];
+
+export type PatchAdminUsersSettingsReadData = {
+    body: Array<JsonPatchOp> | null;
+    path: {
+        /**
+         * The numeric ID of the user.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/admin/users/{id}/settings/general';
+};
+
+export type PatchAdminUsersSettingsReadErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type PatchAdminUsersSettingsReadError = PatchAdminUsersSettingsReadErrors[keyof PatchAdminUsersSettingsReadErrors];
+
+export type PatchAdminUsersSettingsReadResponses = {
+    /**
+     * OK
+     */
+    200: AdminUserSettingsBody;
+};
+
+export type PatchAdminUsersSettingsReadResponse = PatchAdminUsersSettingsReadResponses[keyof PatchAdminUsersSettingsReadResponses];
+
+export type AdminUsersSettingsUpdateData = {
+    body: AdminUserSettingsBodyWritable;
+    path: {
+        /**
+         * The numeric ID of the user.
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/admin/users/{id}/settings/general';
+};
+
+export type AdminUsersSettingsUpdateErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type AdminUsersSettingsUpdateError = AdminUsersSettingsUpdateErrors[keyof AdminUsersSettingsUpdateErrors];
+
+export type AdminUsersSettingsUpdateResponses = {
+    /**
+     * OK
+     */
+    200: AdminUserSettingsBody;
+};
+
+export type AdminUsersSettingsUpdateResponse = AdminUsersSettingsUpdateResponses[keyof AdminUsersSettingsUpdateResponses];
 
 export type AdminUsersPatchStatusData = {
     body: AdminStatusPatchBodyWritable;
