@@ -54,6 +54,12 @@ test('selects a label in Simple and preserves the query across modes and reload'
 	await expect(page.locator('.filter-popup .ProseMirror')).toContainText('labels in Important')
 })
 
+test('shows filter specific placeholders for labels and assignees in Simple', async ({authenticatedPage: page}) => {
+	const popup = page.locator('.filter-popup')
+	await expect(popup.getByRole('combobox', {name: 'Labels', exact: true})).toHaveAttribute('placeholder', 'Filter by label…')
+	await expect(popup.getByRole('combobox', {name: 'Assignees', exact: true})).toHaveAttribute('placeholder', 'Filter by assignee…')
+})
+
 test('filters by an assignee picked in Simple and drops it when removed', async ({authenticatedPage: page}) => {
 	await UserFactory.create(1, {id: 100, username: 'collaborator'}, false)
 	await UserProjectFactory.create(1, {project_id: 1, user_id: 100})

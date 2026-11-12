@@ -4,7 +4,7 @@
 		class="edit-assignees"
 		:class="{'has-assignees': assignees.length > 0}"
 		:loading="usersLoading"
-		:placeholder="assignees.length > 0 ? $t('task.assignee.placeholderMore') : $t('task.assignee.placeholder')"
+		:placeholder="placeholder ?? (assignees.length > 0 ? $t('task.assignee.placeholderMore') : $t('task.assignee.placeholder'))"
 		:multiple="true"
 		:search-results="foundUsers"
 		:show-empty="true"
@@ -55,11 +55,13 @@ const props = withDefaults(defineProps<{
 	projectId?: number,
 	disabled?: boolean,
 	filter?: (user: IUser) => boolean,
+	placeholder?: string,
 }>(), {
 	taskId: 0,
 	projectId: 0,
 	disabled: false,
 	filter: () => true,
+	placeholder: undefined,
 })
 
 const emit = defineEmits<{

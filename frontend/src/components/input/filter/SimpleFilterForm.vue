@@ -203,6 +203,7 @@ const priority = computed({
 				class="filter-labels"
 				:model-value="labels"
 				:creatable="false"
+				:placeholder="t('filters.simple.labelPlaceholder')"
 				:aria-label="t('task.attributes.labels')"
 				@update:modelValue="update({labelIds: $event.map(label => label.id!)})"
 			/>
@@ -222,6 +223,7 @@ const priority = computed({
 				:model-value="assignees"
 				:project-id="props.projectId"
 				:filter="isSelectableAssignee"
+				:placeholder="t('filters.simple.assigneePlaceholder')"
 				:aria-label="t('task.attributes.assignees')"
 				@update:modelValue="update({assignees: ($event ?? []).map(user => user.username!)})"
 			/>
