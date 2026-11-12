@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/health"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
@@ -154,6 +155,9 @@ func StartAsync() {
 	}
 
 	health.RequireEvents()
+	if err := jobs.Start(context.Background()); err != nil {
+		log.Fatalf("Could not start durable workers: %s", err)
+	}
 
 	// Jobs can publish events immediately, so start them after the consumers.
 	RegisterCron()

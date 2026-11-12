@@ -17,17 +17,25 @@
 package initialize
 
 import (
+	"context"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/jobs"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	migrationmodule "code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+	"xorm.io/xorm"
 )
 
 // RegisterCron starts shared schedules and process maintenance.
 func RegisterCron() {
 	cron.Init()
+	if err := cron.Register("job-maintenance", "* * * * *", func(ctx context.Context, _ *xorm.Session, _ cron.Window) error { return jobs.Maintain(ctx) }); err != nil {
+		log.Fatalf("Could not register durable job maintenance: %v", err)
+	}
 	models.RegisterReminderCron()
 	models.RegisterOverdueReminderCron()
 	models.RegisterUserDeletionCron()

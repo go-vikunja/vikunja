@@ -23,8 +23,8 @@ import (
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/health"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/license"
-	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/plugins"
 	ws "code.vikunja.io/api/pkg/websocket"
 )
@@ -54,15 +54,5 @@ func Shutdown(ctx context.Context) error {
 		return fmt.Errorf("drain events: %w", err)
 	}
 
-	done := make(chan struct{})
-	go func() {
-		mail.StopMailDaemon()
-		close(done)
-	}()
-	select {
-	case <-done:
-		return nil
-	case <-ctx.Done():
-		return fmt.Errorf("drain mail: %w", ctx.Err())
-	}
+	return jobs.Shutdown(ctx)
 }

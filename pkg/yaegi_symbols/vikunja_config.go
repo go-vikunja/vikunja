@@ -91,6 +91,8 @@ func init() {
 		"GetTimeZone":                                reflect.ValueOf(config.GetTimeZone),
 		"InitConfig":                                 reflect.ValueOf(config.InitConfig),
 		"InitDefaultConfig":                          reflect.ValueOf(config.InitDefaultConfig),
+		"JobsEnabled":                                reflect.ValueOf(config.JobsEnabled),
+		"JobsRetention":                              reflect.ValueOf(config.JobsRetention),
 		"KeyvalueType":                               reflect.ValueOf(config.KeyvalueType),
 		"LegalImprintURL":                            reflect.ValueOf(config.LegalImprintURL),
 		"LegalPrivacyURL":                            reflect.ValueOf(config.LegalPrivacyURL),

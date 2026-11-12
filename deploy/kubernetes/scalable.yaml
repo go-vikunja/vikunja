@@ -1,0 +1,141 @@
+# Replace every image with the same immutable image digest built from this code.
+# Create vikunja-secrets and run migrate.yaml before starting these workloads.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vikunja
+data:
+  VIKUNJA_SERVICE_CLUSTERMODE: "true"
+  VIKUNJA_SERVICE_ENABLESCHEDULER: "true"
+  VIKUNJA_SERVICE_ENABLEMIGRATIONS: "false"
+  VIKUNJA_SERVICE_SHUTDOWNTIMEOUT: "60s"
+  VIKUNJA_SERVICE_PUBLICURL: "https://tasks.example.com/"
+  VIKUNJA_SERVICE_INTERFACE: ":3456"
+  VIKUNJA_DATABASE_TYPE: "postgres"
+  VIKUNJA_DATABASE_MAXOPENCONNECTIONS: "20"
+  VIKUNJA_DATABASE_MAXIDLECONNECTIONS: "5"
+  VIKUNJA_REDIS_ENABLED: "true"
+  VIKUNJA_REDIS_PREFIX: "vikunja-production"
+  VIKUNJA_KEYVALUE_TYPE: "redis"
+  VIKUNJA_RATELIMIT_STORE: "redis"
+  VIKUNJA_WEBSOCKET_REDIS_ENABLED: "true"
+  VIKUNJA_FILES_TYPE: "s3"
+  VIKUNJA_FILES_S3_TEMPDIR: "/tmp"
+  VIKUNJA_LOG_FORMAT: "json"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vikunja
+spec:
+  selector:
+    app: vikunja
+    role: api
+  ports:
+    - name: http
+      port: 3456
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vikunja-api
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: vikunja
+      role: api
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: vikunja
+        role: api
+    spec:
+      terminationGracePeriodSeconds: 90
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: vikunja
+              role: api
+      containers:
+        - name: vikunja
+          image: vikunja/vikunja:REPLACE_WITH_YOUR_BUILD
+          args: ["web"]
+          ports:
+            - name: http
+              containerPort: 3456
+          envFrom:
+            - configMapRef:
+                name: vikunja
+            - secretRef:
+                name: vikunja-secrets
+          readinessProbe:
+            httpGet:
+              path: /api/v2/health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 4Gi
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: vikunja-api
+spec:
+  minAvailable: 8
+  selector:
+    matchLabels:
+      app: vikunja
+      role: api
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: vikunja-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: vikunja-api
+  minReplicas: 10
+  maxReplicas: 30
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 600

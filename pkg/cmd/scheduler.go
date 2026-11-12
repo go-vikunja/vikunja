@@ -31,24 +31,30 @@ import (
 
 func init() {
 	rootCmd.AddCommand(schedulerCmd)
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "worker",
+		Short: "Run durable workers without HTTP or shared scheduling",
+		Args:  cobra.NoArgs,
+		RunE:  func(cmd *cobra.Command, _ []string) error { return runBackground(cmd, false) },
+	})
 }
 
 var schedulerCmd = &cobra.Command{
 	Use:   "scheduler",
 	Short: "Runs scheduled background work without the HTTP server",
 	Args:  cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
-		defer stop()
+	RunE:  func(cmd *cobra.Command, _ []string) error { return runBackground(cmd, true) },
+}
 
-		initialize.FullInitWithoutAsync()
-		config.ServiceEnableScheduler.Set(true)
-		initialize.StartAsync()
-		log.Info("Scheduler started")
-		<-ctx.Done()
-
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), config.ServiceShutdownTimeout.GetDuration())
-		defer cancel()
-		return initialize.Shutdown(shutdownCtx)
-	},
+func runBackground(cmd *cobra.Command, scheduler bool) error {
+	ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	initialize.FullInitWithoutAsync()
+	config.ServiceEnableScheduler.Set(scheduler)
+	initialize.StartAsync()
+	log.Infof("Background workers started (scheduler=%t)", scheduler)
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), config.ServiceShutdownTimeout.GetDuration())
+	defer cancel()
+	return initialize.Shutdown(shutdownCtx)
 }

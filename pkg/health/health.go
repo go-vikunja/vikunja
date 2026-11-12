@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/red"
 	ws "code.vikunja.io/api/pkg/websocket"
 )
@@ -44,6 +45,9 @@ func BeginShutdown() {
 func Check() error {
 	if draining.Load() {
 		return errors.New("service is shutting down")
+	}
+	if requireEvents.Load() && !jobs.Available() {
+		return errors.New("durable job processing is unavailable")
 	}
 	if requireEvents.Load() && !events.Available() {
 		return errors.New("event processing is unavailable")

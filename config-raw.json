@@ -156,7 +156,7 @@
                 {
                     "key": "ipextractionmethod",
                     "default_value": "direct",
-                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header, but only honours it when the header value itself falls into a trusted range (loopback, private networks or 'service.trustedproxies') — it does not check who sent the header, so it cannot report public client IPs. Prefer 'xff' behind a reverse proxy. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
+                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers \u2014 use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header \u2014 use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header, but only honours it when the header value itself falls into a trusted range (loopback, private networks or 'service.trustedproxies') \u2014 it does not check who sent the header, so it cannot report public client IPs. Prefer 'xff' behind a reverse proxy. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
                 },
                 {
                     "key": "trustedproxies",
@@ -166,12 +166,12 @@
                 {
                     "key": "clustermode",
                     "default_value": "false",
-                    "comment": "Validate requirements for multiple replicas: a shared secret, external SQL, Redis shared state and WebSocket fanout, shared files, and externally run migrations. Default single-instance operation needs no extra services."
+                    "comment": "Validate PostgreSQL, shared Redis, a shared signing secret and file storage, and externally run migrations. Single-instance operation still supports SQLite and MySQL."
                 },
                 {
                     "key": "enablescheduler",
                     "default_value": "true",
-                    "comment": "Run global scheduled work in this process. Disable on API replicas and run exactly one vikunja scheduler process for the installation. Per-process maintenance still runs."
+                    "comment": "Run shared schedules in this process. Every replica may schedule; PostgreSQL row locks and durable watermarks coordinate each job. Per-process maintenance always runs."
                 },
                 {
                     "key": "enablemigrations",
@@ -181,7 +181,7 @@
                 {
                     "key": "shutdowntimeout",
                     "default_value": "30s",
-                    "comment": "Maximum graceful HTTP and background shutdown time. Kubernetes terminationGracePeriodSeconds must exceed this. Work is not durable if the process is killed before draining."
+                    "comment": "Maximum graceful HTTP and background shutdown time. Kubernetes terminationGracePeriodSeconds must exceed this. Durable jobs are rescued after an interrupted attempt; imports retain their existing retry behavior."
                 }
             ]
         },
@@ -393,12 +393,12 @@
                 {
                     "key": "queuelength",
                     "default_value": "100",
-                    "comment": "The length of the mail queue."
+                    "comment": "Deprecated and unused. Mail is stored in the jobs table; configure jobs.queues.mail.concurrency instead."
                 },
                 {
                     "key": "queuetimeout",
                     "default_value": "30",
-                    "comment": "The timeout in seconds after which the current open connection to the mailserver will be closed."
+                    "comment": "SMTP operation timeout in seconds (plus a three-second connection close margin)."
                 },
                 {
                     "key": "forcessl",
@@ -746,7 +746,7 @@
                                 {
                                     "key": "applicationid",
                                     "default_value": "",
-                                    "comment": "The unsplash application id is only used for pingback and required as per their api guidelines.\nYou can find the Application ID in the dashboard for your API application. It should be a numeric ID.\nIt will only show in the UI if your application has been approved for Enterprise usage, therefore if\nyou’re in Demo mode, you can also find the ID in the URL at the end: https://unsplash.com/oauth/applications/:application_id"
+                                    "comment": "The unsplash application id is only used for pingback and required as per their api guidelines.\nYou can find the Application ID in the dashboard for your API application. It should be a numeric ID.\nIt will only show in the UI if your application has been approved for Enterprise usage, therefore if\nyou\u2019re in Demo mode, you can also find the ID in the URL at the end: https://unsplash.com/oauth/applications/:application_id"
                                 }
                             ]
                         }
@@ -804,10 +804,10 @@
                         },
                         {
                             "key": "providers",
-                            "comment": "A list of enabled providers. You can freely choose the `<provider key>`. Note that you must add at least one key to a config file if you want to read values from an environment variable as the provider won't be known to Vikunja otherwise.",
+                            "comment": "A list of enabled providers. You can freely choose the `\u003cprovider key\u003e`. Note that you must add at least one key to a config file if you want to read values from an environment variable as the provider won't be known to Vikunja otherwise.",
                             "children": [
                                 {
-                                    "key": "<provider key>",
+                                    "key": "\u003cprovider key\u003e",
                                     "children": [
                                         {
                                             "key": "name",
@@ -921,7 +921,7 @@
                         },
                         {
                             "key": "groupsyncfilter",
-                            "default_value": "(&(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
+                            "default_value": "(\u0026(objectclass=*)(|(objectclass=group)(objectclass=groupOfNames)))",
                             "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`."
                         },
                         {
@@ -1084,7 +1084,7 @@
         },
         {
             "key": "audit",
-            "comment": "Audit logging writes structured JSONL records of authentication, authorization and data lifecycle events. Requires the licensed `audit_logs` feature — with `audit.enabled: true` but no active license, listeners are registered but nothing is written until a license with the feature becomes active.",
+            "comment": "Audit logging writes structured JSONL records of authentication, authorization and data lifecycle events. Requires the licensed `audit_logs` feature \u2014 with `audit.enabled: true` but no active license, listeners are registered but nothing is written until a license with the feature becomes active.",
             "children": [
                 {
                     "key": "enabled",
@@ -1149,7 +1149,7 @@
                 {
                     "key": "renewbefore",
                     "default_value": "30d",
-                    "comment": "A duration when certificates should be renewed before they expire. Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`."
+                    "comment": "A duration when certificates should be renewed before they expire. Valid time units are `ns`, `us` (or `\u00b5s`), `ms`, `s`, `m`, `h`."
                 }
             ]
         },
@@ -1163,7 +1163,7 @@
                 },
                 {
                     "key": "dir",
-                    "default_value": "<rootpath>plugins",
+                    "default_value": "\u003crootpath\u003eplugins",
                     "comment": "The directory where plugins are stored."
                 },
                 {
@@ -1205,6 +1205,126 @@
                     "key": "maxconcurrenthandlers",
                     "default_value": "16",
                     "comment": "Maximum event handlers executing simultaneously per process, including retries. Must be positive. This bounds execution, not the volatile in-memory event backlog; it is not a durable queue."
+                }
+            ]
+        },
+        {
+            "key": "jobs",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "true",
+                    "comment": "Consume durable jobs in this process. Disable for API-only replicas; enqueueing remains enabled."
+                },
+                {
+                    "key": "retention",
+                    "default_value": "48h",
+                    "comment": "Keep completed jobs and deduplication keys for this duration. Must exceed 24h. Parked jobs remain until replayed or deleted."
+                },
+                {
+                    "key": "queues",
+                    "children": [
+                        {
+                            "key": "mail",
+                            "children": [
+                                {
+                                    "key": "enabled",
+                                    "default_value": "true",
+                                    "comment": "Consume this queue in this process."
+                                },
+                                {
+                                    "key": "concurrency",
+                                    "default_value": "2",
+                                    "comment": "Maximum active handlers for this queue in each process. Budget these together with HTTP and cron database connections."
+                                },
+                                {
+                                    "key": "lease",
+                                    "default_value": "60s",
+                                    "comment": "Claim expiry without a heartbeat. Must be at least 30s; active claims renew every 15s."
+                                },
+                                {
+                                    "key": "timeout",
+                                    "default_value": "5m",
+                                    "comment": "Handler deadline. Expired handlers are cancelled and their claims stop renewing."
+                                }
+                            ]
+                        },
+                        {
+                            "key": "bulk-mail",
+                            "children": [
+                                {
+                                    "key": "enabled",
+                                    "default_value": "true",
+                                    "comment": "Consume this queue in this process."
+                                },
+                                {
+                                    "key": "concurrency",
+                                    "default_value": "2",
+                                    "comment": "Maximum active handlers for this queue in each process. Budget these together with HTTP and cron database connections."
+                                },
+                                {
+                                    "key": "lease",
+                                    "default_value": "60s",
+                                    "comment": "Claim expiry without a heartbeat. Must be at least 30s; active claims renew every 15s."
+                                },
+                                {
+                                    "key": "timeout",
+                                    "default_value": "5m",
+                                    "comment": "Handler deadline. Expired handlers are cancelled and their claims stop renewing."
+                                }
+                            ]
+                        },
+                        {
+                            "key": "notifications",
+                            "children": [
+                                {
+                                    "key": "enabled",
+                                    "default_value": "true",
+                                    "comment": "Consume this queue in this process."
+                                },
+                                {
+                                    "key": "concurrency",
+                                    "default_value": "2",
+                                    "comment": "Maximum active handlers for this queue in each process. Budget these together with HTTP and cron database connections."
+                                },
+                                {
+                                    "key": "lease",
+                                    "default_value": "60s",
+                                    "comment": "Claim expiry without a heartbeat. Must be at least 30s; active claims renew every 15s."
+                                },
+                                {
+                                    "key": "timeout",
+                                    "default_value": "5m",
+                                    "comment": "Handler deadline. Expired handlers are cancelled and their claims stop renewing."
+                                }
+                            ]
+                        },
+                        {
+                            "key": "webhooks",
+                            "children": [
+                                {
+                                    "key": "enabled",
+                                    "default_value": "true",
+                                    "comment": "Consume this queue in this process."
+                                },
+                                {
+                                    "key": "concurrency",
+                                    "default_value": "2",
+                                    "comment": "Maximum active handlers for this queue in each process. Budget these together with HTTP and cron database connections."
+                                },
+                                {
+                                    "key": "lease",
+                                    "default_value": "60s",
+                                    "comment": "Claim expiry without a heartbeat. Must be at least 30s; active claims renew every 15s."
+                                },
+                                {
+                                    "key": "timeout",
+                                    "default_value": "5m",
+                                    "comment": "Handler deadline. Expired handlers are cancelled and their claims stop renewing."
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         }
