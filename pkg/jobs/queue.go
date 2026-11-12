@@ -231,7 +231,7 @@ func (q *Queue) Cleanup(ctx context.Context, now time.Time, retention time.Durat
 	}
 	limit = min(limit, 500)
 	var rows []Job
-	if err := s.Cols("id").Where(builder.Eq{"state": StateCompleted}).And(builder.Lt{"finished_at": timestamp(now.Add(-retention))}).OrderBy("id").Limit(limit).Find(&rows); err != nil {
+	if err := s.Cols("id").Where(builder.Eq{"state": StateCompleted}).And(builder.Lt{"finished_at": timestamp(now.Add(-retention))}).OrderBy("finished_at").Limit(limit).Find(&rows); err != nil {
 		return 0, err
 	}
 	ids := make([]int64, 0, len(rows))

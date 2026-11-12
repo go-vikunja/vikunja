@@ -18,6 +18,7 @@ package jobs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -152,11 +153,36 @@ func Maintain(ctx context.Context) error {
 		return err
 	}
 	queue := NewQueue(engine, "maintenance")
-	if _, err := queue.Rescue(ctx, time.Now(), 1000); err != nil {
+	now := time.Now()
+	rescueErr := drainMaintenance(ctx, 5*time.Second, func(batchCtx context.Context) (int64, error) {
+		return queue.Rescue(batchCtx, now, 1000)
+	})
+	if err := ctx.Err(); err != nil {
 		return err
 	}
-	_, err = queue.Cleanup(ctx, time.Now(), config.JobsRetention.GetDuration(), 1000)
-	return err
+	cleanupErr := drainMaintenance(ctx, 5*time.Second, func(batchCtx context.Context) (int64, error) {
+		return queue.Cleanup(batchCtx, now, config.JobsRetention.GetDuration(), 500)
+	})
+	return errors.Join(rescueErr, cleanupErr)
+}
+
+func drainMaintenance(ctx context.Context, budget time.Duration, batch func(context.Context) (int64, error)) error {
+	batchCtx, cancel := context.WithTimeout(ctx, budget)
+	defer cancel()
+	for batchCtx.Err() == nil {
+		count, err := batch(batchCtx)
+		if err != nil {
+			if batchCtx.Err() != nil {
+				return ctx.Err()
+			}
+			return err
+		}
+		if count == 0 {
+			break
+		}
+	}
+	// Unfinished work resumes next tick when only this phase's budget expires.
+	return ctx.Err()
 }
 
 func Available() bool {
