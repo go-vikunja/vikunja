@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 
@@ -77,6 +78,7 @@ func notifyUsersScheduledForDeletion() {
 func notifyUserOfDeletion(user *User, number int) error {
 	s := db.NewSession()
 	defer s.Close()
+	defer jobs.DiscardPending(s)
 
 	err := notifications.NotifyQueued(user, &AccountDeletionNotification{
 		User:               user,
@@ -94,7 +96,11 @@ func notifyUserOfDeletion(user *User, number int) error {
 		return fmt.Errorf("could not update last deletion reminder sent date: %w", err)
 	}
 
-	return s.Commit()
+	if err := s.Commit(); err != nil {
+		return err
+	}
+	jobs.WakePending(s)
+	return nil
 }
 
 // RequestDeletion creates a user deletion confirm token and sends a notification to the user

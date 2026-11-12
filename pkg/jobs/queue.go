@@ -59,7 +59,7 @@ type Job struct {
 }
 
 func (*Job) TableName() string { return "jobs" }
-func (*Job) AfterInsert()      { Wake() }
+func (j *Job) AfterInsert()    { Wake(j.Queue) }
 func init()                    { db.RegisterTables([]interface{}{new(Job)}) }
 
 type Request struct {
@@ -97,6 +97,9 @@ func Enqueue(s *xorm.Session, request Request) error {
 		query = "INSERT INTO jobs (queue, kind, version, payload, state, attempt, max_attempts, run_at, unique_key) VALUES (?, ?, 1, ?, ?, 0, ?, ?, ?) ON DUPLICATE KEY UPDATE unique_key = unique_key"
 	}
 	_, err := s.Exec(query, job.Queue, job.Kind, job.Payload, job.State, job.MaxAttempts, timestamp(job.RunAt), key)
+	if err == nil {
+		wakeAfterCommit(s, job.Queue)
+	}
 	return err
 }
 
@@ -232,13 +235,4 @@ func (q *Queue) Replay(ctx context.Context, id int64) error {
 	}
 	_, err = s.ID(id).Where(builder.Eq{"state": StateFailed}).Cols("state", "run_at", "max_attempts").Update(&Job{State: StateAvailable, RunAt: time.Now(), MaxAttempts: job.Attempt + DefaultAttempts})
 	return err
-}
-
-var wake = make(chan struct{}, 1)
-
-func Wake() {
-	select {
-	case wake <- struct{}{}:
-	default:
-	}
 }

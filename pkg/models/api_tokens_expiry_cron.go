@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -114,6 +115,7 @@ func checkForExpiringAPITokensAt(now time.Time) {
 func sendTokenExpiryNotificationIfNew(u *user.User, n notifications.NotificationWithSubject) error {
 	s := db.NewSession()
 	defer s.Close()
+	defer jobs.DiscardPending(s)
 	existing, err := notifications.GetNotificationsForNameAndUser(s, u.ID, n.Name(), n.SubjectID())
 	if err != nil {
 		return err
@@ -126,5 +128,9 @@ func sendTokenExpiryNotificationIfNew(u *user.User, n notifications.Notification
 	if err := notifications.NotifyQueued(u, n, "mail", fmt.Sprintf("api-token/%d/%s", n.SubjectID(), n.Name()), s); err != nil {
 		return err
 	}
-	return s.Commit()
+	if err := s.Commit(); err != nil {
+		return err
+	}
+	jobs.WakePending(s)
+	return nil
 }

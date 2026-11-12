@@ -74,10 +74,13 @@ func (s *Subscriber) Subscribe(ctx context.Context, topic string) (<-chan *messa
 	}
 	out := make(chan *message.Message)
 	slots := make(chan struct{}, opts.Concurrency)
+	released := make(chan struct{}, 1)
+	wakeups, unwatch := watchQueue(topic)
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
 		defer close(out)
+		defer unwatch()
 		delay := 50 * time.Millisecond
 		for {
 			select {
@@ -87,6 +90,16 @@ func (s *Subscriber) Subscribe(ctx context.Context, topic string) (<-chan *messa
 				return
 			default:
 			}
+			if len(slots) == cap(slots) {
+				select {
+				case <-released:
+				case <-ctx.Done():
+					return
+				case <-s.closing:
+					return
+				}
+				continue
+			}
 			batch, err := s.queue.Claim(ctx, topic, cap(slots)-len(slots), time.Now(), opts.Lease)
 			if err != nil {
 				log.Errorf("Claim jobs from %s: %v", topic, err)
@@ -95,7 +108,8 @@ func (s *Subscriber) Subscribe(ctx context.Context, topic string) (<-chan *messa
 				timer := time.NewTimer(delay)
 				select {
 				case <-timer.C:
-				case <-wake:
+				case <-wakeups:
+				case <-released:
 				case <-ctx.Done():
 					timer.Stop()
 					return
@@ -118,7 +132,7 @@ func (s *Subscriber) Subscribe(ctx context.Context, topic string) (<-chan *messa
 				s.mu.Unlock()
 				s.wg.Add(1)
 				// Watermill replaces the message context after delivery.
-				go s.await(attemptCtx, msg, job, cancel, slots)
+				go s.await(attemptCtx, msg, job, cancel, slots, released)
 				select {
 				case out <- msg:
 				case <-s.closing:
@@ -132,10 +146,19 @@ func (s *Subscriber) Subscribe(ctx context.Context, topic string) (<-chan *messa
 	return out, nil
 }
 
-func (s *Subscriber) await(ctx context.Context, msg *message.Message, job Job, cancel context.CancelFunc, slots chan struct{}) {
+func (s *Subscriber) await(ctx context.Context, msg *message.Message, job Job, cancel context.CancelFunc, slots, released chan struct{}) {
 	defer s.wg.Done()
 	defer cancel()
-	defer func() { <-slots; s.mu.Lock(); delete(s.active, job.ID); s.mu.Unlock(); Wake() }()
+	defer func() {
+		<-slots
+		s.mu.Lock()
+		delete(s.active, job.ID)
+		s.mu.Unlock()
+		select {
+		case released <- struct{}{}:
+		default:
+		}
+	}()
 	select {
 	case <-msg.Acked():
 		if msg.Metadata.Get(completedMetadata) == "true" {
@@ -213,6 +236,7 @@ func Commit(session *xorm.Session, msg *message.Message) error {
 	if err := session.Commit(); err != nil {
 		return err
 	}
+	WakePending(session)
 	if durable {
 		msg.Metadata.Set(completedMetadata, "true")
 	}

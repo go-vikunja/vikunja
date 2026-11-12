@@ -22,6 +22,7 @@ import (
 	"slices"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/mail"
 
 	"code.vikunja.io/api/pkg/db"
@@ -143,6 +144,7 @@ func NotifyQueued(notifiable Notifiable, notification Notification, queue, key s
 	if owned {
 		s = db.NewSession()
 		defer s.Close()
+		defer jobs.DiscardPending(s)
 	} else {
 		s = sessions[0]
 	}
@@ -163,7 +165,10 @@ func NotifyQueued(notifiable Notifiable, notification Notification, queue, key s
 		return err
 	}
 	if owned {
-		return s.Commit()
+		if err := s.Commit(); err != nil {
+			return err
+		}
+		jobs.WakePending(s)
 	}
 	return nil
 }

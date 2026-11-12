@@ -323,7 +323,9 @@ func OnCommit(key any, fn func() error) {
 // Request metadata on the context (see WithRequestMeta) is copied onto each message.
 // Failures are logged; remaining callbacks and events still run.
 func DispatchPending(ctx context.Context, key any) {
-	jobs.Wake()
+	if session, ok := key.(*xorm.Session); ok {
+		jobs.WakePending(session)
+	}
 	val, ok := pendingEvents.LoadAndDelete(key)
 	if !ok {
 		return
@@ -346,5 +348,8 @@ func DispatchPending(ctx context.Context, key any) {
 // CleanupPending discards all pending events and callbacks for the given key without
 // running them. Call this when a transaction is rolled back.
 func CleanupPending(key any) {
+	if session, ok := key.(*xorm.Session); ok {
+		jobs.DiscardPending(session)
+	}
 	pendingEvents.Delete(key)
 }
