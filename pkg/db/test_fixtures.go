@@ -17,17 +17,20 @@
 package db
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/contexts"
 	"xorm.io/xorm/schemas"
 )
 
@@ -87,6 +90,28 @@ func InitFixtures(tablenames ...string) (err error) {
 	return nil
 }
 
+// Bumped at statement time, so rolled-back writes count too.
+var writeGeneration atomic.Uint64
+
+type writeCountingHook struct{}
+
+func (writeCountingHook) BeforeProcess(c *contexts.ContextHook) (context.Context, error) {
+	if isWriteStatement(c.SQL) || advancesSequence(c.SQL) {
+		writeGeneration.Add(1)
+	}
+	return c.Ctx, nil
+}
+
+func (writeCountingHook) AfterProcess(*contexts.ContextHook) error {
+	return nil
+}
+
+// Sequences move without a write verb.
+func advancesSequence(sqlStr string) bool {
+	lower := strings.ToLower(sqlStr)
+	return strings.Contains(lower, "setval") || strings.Contains(lower, "nextval")
+}
+
 // What the last successful load left behind: the loader and the write
 // generation it was taken at. A nil loader means the state is unknown.
 var (
@@ -118,7 +143,7 @@ func LoadFixtures() error {
 	// Copied from https://github.com/go-gitea/gitea/blob/master/models/test_fixtures.go#L39
 	// Now if we're running postgres we need to tell it to update the sequences
 	if x.Dialect().URI().DBType == schemas.POSTGRES {
-		// Raw handle: the hook would count our own sequence reset as a write.
+		// database/sql handle: xorm's would count our own sequence reset as a write.
 		stmts, err := sequenceResetStatements()
 		if err != nil {
 			fmt.Printf("Failed to generate sequence update: %v\n", err)
@@ -143,7 +168,7 @@ func LoadAndAssertFixtures(t *testing.T) {
 }
 
 func sequenceResetStatements() (stmts []string, err error) {
-	rows, err := x.DB().Query(`SELECT 'SELECT SETVAL(' ||
+	rows, err := x.DB().DB.Query(`SELECT 'SELECT SETVAL(' ||
 		quote_literal(quote_ident(PGT.schemaname) || '.' || quote_ident(S.relname)) ||
 		', COALESCE(MAX(' ||quote_ident(C.attname)|| '), 1) ) FROM ' ||
 		quote_ident(PGT.schemaname)|| '.'||quote_ident(T.relname)|| ';'
