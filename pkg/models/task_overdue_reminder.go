@@ -63,44 +63,108 @@ func overdueSlot(window cron.Window, timezone, clock string) (time.Time, error) 
 	return slot, nil
 }
 
-func getOverdueTasksInWindow(s *xorm.Session, window cron.Window, cond builder.Cond) (map[int64]*userWithTasks, error) {
-	var tasks []*Task
-	err := s.Join("INNER", "projects", "projects.id = tasks.project_id").
-		Where(builder.NotNull{"due_date"}).And(builder.Lt{"due_date": window.To}).
-		And(builder.Eq{"tasks.done": false, "projects.is_archived": false}).And(builder.And(builder.IsNull{"tasks.deleted_at"}, builder.IsNull{"projects.deleted_at"})).Find(&tasks)
-	if err != nil {
-		return nil, err
+func getOverdueUsersInWindow(s *xorm.Session, window cron.Window, cond builder.Cond) (map[int64]*userWithTasks, error) {
+	eligible := builder.And(
+		builder.Eq{"users.status": user.StatusActive},
+		builder.Or(builder.IsNull{"users.bot_owner_id"}, builder.Eq{"users.bot_owner_id": 0}),
+	)
+	if cond != nil {
+		eligible = eligible.And(cond)
 	}
-	ids := make([]int64, 0, len(tasks))
-	for _, task := range tasks {
-		ids = append(ids, task.ID)
-	}
-	users, err := getTaskUsersForTasks(s, ids, cond)
+	users, err := user.GetUsersByCond(s, eligible)
 	if err != nil {
 		return nil, err
 	}
 	result := make(map[int64]*userWithTasks)
-	for _, tu := range users {
-		slot, err := overdueSlot(window, tu.User.Timezone, tu.User.OverdueTasksRemindersTime)
+	for _, u := range users {
+		slot, err := overdueSlot(window, u.Timezone, u.OverdueTasksRemindersTime)
 		if err != nil {
-			log.Warningf("Invalid overdue reminder time for user %d: %v", tu.User.ID, err)
+			log.Warningf("Invalid overdue reminder time for user %d: %v", u.ID, err)
 			continue
 		}
-		if slot.IsZero() || !tu.Task.DueDate.Before(slot) {
-			continue
-		}
-		ut := result[tu.User.ID]
-		if ut == nil {
-			ut = &userWithTasks{user: tu.User, assigned: make(map[int64]*Task), followed: make(map[int64]*Task), slot: slot}
-			result[tu.User.ID] = ut
-		}
-		if tu.IsAssignee {
-			ut.assigned[tu.Task.ID] = tu.Task
-		} else {
-			ut.followed[tu.Task.ID] = tu.Task
+		if !slot.IsZero() {
+			result[u.ID] = &userWithTasks{user: u, assigned: make(map[int64]*Task), followed: make(map[int64]*Task), slot: slot}
 		}
 	}
 	return result, nil
+}
+
+func getOverdueTasksInWindow(s *xorm.Session, window cron.Window, cond builder.Cond) (map[int64]*userWithTasks, error) {
+	users, err := getOverdueUsersInWindow(s, window, cond)
+	if err != nil {
+		return nil, err
+	}
+	for id, ut := range users {
+		if err := ut.loadOverdueTasks(s); err != nil {
+			return nil, err
+		}
+		if len(ut.assigned)+len(ut.followed) == 0 {
+			delete(users, id)
+		}
+	}
+	return users, nil
+}
+
+func (ut *userWithTasks) loadOverdueTasks(s *xorm.Session) error {
+	const batchSize = 200
+	var after int64
+	for {
+		var tasks []*Task
+		err := s.Select("tasks.*").Join("INNER", "projects", "projects.id = tasks.project_id").
+			Where(builder.Gt{"tasks.id": after}).And(builder.Lt{"tasks.due_date": ut.slot}).
+			And(builder.Eq{"tasks.done": false, "projects.is_archived": false}).
+			And(builder.IsNull{"tasks.deleted_at"}).And(builder.IsNull{"projects.deleted_at"}).
+			And(`tasks.id IN (
+				SELECT entity_id FROM subscriptions WHERE entity_type = ? AND user_id = ? AND muted = ?
+				UNION
+				SELECT t.id FROM tasks t
+				JOIN project_ancestors pa ON pa.project_id = t.project_id
+				JOIN subscriptions sub ON sub.entity_id = pa.ancestor_id
+				WHERE sub.entity_type = ? AND sub.user_id = ? AND sub.muted = ?
+			)`, SubscriptionEntityTask, ut.user.ID, false, SubscriptionEntityProject, ut.user.ID, false).
+			OrderBy("tasks.id").Limit(batchSize).Find(&tasks)
+		if err != nil {
+			return err
+		}
+		if len(tasks) == 0 {
+			return nil
+		}
+		after = tasks[len(tasks)-1].ID
+		ids := make([]int64, 0, len(tasks))
+		for _, task := range tasks {
+			ids = append(ids, task.ID)
+		}
+		subs, err := GetSubscriptionsForEntitiesAndUser(s, SubscriptionEntityTask, ids, ut.user)
+		if err != nil {
+			return err
+		}
+		// The user-scoped subscription resolver does not check current read access.
+		subs, err = filterSubscriptionsByReadPermission(s, SubscriptionEntityTask, subs)
+		if err != nil {
+			return err
+		}
+		var assignees []*TaskAssginee
+		if err := s.In("task_id", ids).Where("user_id = ?", ut.user.ID).Find(&assignees); err != nil {
+			return err
+		}
+		assigned := make(map[int64]bool, len(assignees))
+		for _, a := range assignees {
+			assigned[a.TaskID] = true
+		}
+		for _, task := range tasks {
+			if len(subs[task.ID]) == 0 {
+				continue
+			}
+			if assigned[task.ID] {
+				ut.assigned[task.ID] = task
+			} else {
+				ut.followed[task.ID] = task
+			}
+		}
+		if len(tasks) < batchSize {
+			return nil
+		}
+	}
 }
 
 type userWithTasks struct {
@@ -112,6 +176,24 @@ type userWithTasks struct {
 
 func (ut *userWithTasks) allTasks() []*Task {
 	return append(mapToSlice(ut.assigned), mapToSlice(ut.followed)...)
+}
+
+func (ut *userWithTasks) projects(s *xorm.Session) (map[int64]*Project, error) {
+	seen := make(map[int64]bool)
+	var ids []int64
+	for _, task := range ut.allTasks() {
+		if !seen[task.ProjectID] {
+			seen[task.ProjectID] = true
+			ids = append(ids, task.ProjectID)
+		}
+	}
+	projects := make(map[int64]*Project)
+	for batch := range slices.Chunk(ids, 200) {
+		if err := s.In("id", batch).Find(&projects); err != nil {
+			return nil, err
+		}
+	}
+	return projects, nil
 }
 
 func RegisterOverdueReminderCron() {

@@ -103,7 +103,7 @@ func enqueueOverdueReminders(_ context.Context, s *xorm.Session, window cron.Win
 	if !single && !batch {
 		cond = builder.Eq{"users.overdue_tasks_reminders_enabled": true}
 	}
-	users, err := getOverdueTasksInWindow(s, window, cond)
+	users, err := getOverdueUsersInWindow(s, window, cond)
 	if err != nil {
 		return err
 	}
@@ -192,11 +192,7 @@ func handleOverdueReminder(msg *message.Message) error {
 		return nil
 	}
 	tasks := ut.allTasks()
-	ids := make([]int64, 0, len(tasks))
-	for _, task := range tasks {
-		ids = append(ids, task.ID)
-	}
-	projects, err := GetProjectsMapSimpleByTaskIDs(s, ids)
+	projects, err := ut.projects(s)
 	if err != nil {
 		return err
 	}
@@ -228,11 +224,7 @@ func handleOverdueReminder(msg *message.Message) error {
 
 func dispatchOverdueReminders(s *xorm.Session, ut *userWithTasks, single, batch bool) error {
 	tasks := ut.allTasks()
-	ids := make([]int64, 0, len(tasks))
-	for _, task := range tasks {
-		ids = append(ids, task.ID)
-	}
-	projects, err := GetProjectsMapSimpleByTaskIDs(s, ids)
+	projects, err := ut.projects(s)
 	if err != nil {
 		return err
 	}

@@ -168,6 +168,88 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 	})
 }
 
+func TestOverdueReminderLargeDataset(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	now := time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC)
+	const count = 33000
+	const recipientTasks = 450
+	for start := 0; start < count; start += 250 {
+		tasks := make([]*Task, 0, 250)
+		for i := start; i < start+250 && i < count; i++ {
+			projectID := int64(2)
+			if i < recipientTasks {
+				projectID = 1
+			}
+			tasks = append(tasks, &Task{ID: int64(100000 + i), Index: int64(100000 + i), Title: "Overdue at scale", ProjectID: projectID, CreatedByID: 1, DueDate: now.Add(-time.Hour)})
+		}
+		_, err := s.Insert(&tasks)
+		require.NoError(t, err)
+	}
+	_, err := s.Where("entity_type = ? AND entity_id = ? AND user_id = ?", SubscriptionEntityProject, 1, 1).Delete(&Subscription{})
+	require.NoError(t, err)
+	_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 1, UserID: 1})
+	require.NoError(t, err)
+
+	users, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.id": 1})
+	require.NoError(t, err)
+	require.Contains(t, users, int64(1))
+	assert.Contains(t, users[1].followed, int64(100000))
+	assert.Contains(t, users[1].followed, int64(100000+recipientTasks-1))
+	assert.NotContains(t, users[1].followed, int64(100000+count-1))
+	assert.GreaterOrEqual(t, len(users[1].followed), recipientTasks)
+	projects, err := users[1].projects(s)
+	require.NoError(t, err)
+	assert.Contains(t, projects, int64(1))
+}
+
+func TestOverdueReminderSubscriptionEligibility(t *testing.T) {
+	for _, tc := range []struct {
+		name         string
+		userID       int64
+		muteTask     bool
+		muteProject  bool
+		directTask   bool
+		wantReminder bool
+	}{
+		{name: "inherited", userID: 1, wantReminder: true},
+		{name: "task opt-out", userID: 1, muteTask: true},
+		{name: "project opt-out", userID: 1, muteProject: true},
+		{name: "direct task overrides project opt-out", userID: 1, muteProject: true, directTask: true, wantReminder: true},
+		{name: "lost access", userID: 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			parent := &Project{ID: 99900, Title: "Parent", OwnerID: 1}
+			insertTestProject(t, s, parent)
+			child := &Project{ID: 99901, Title: "Child", OwnerID: 1, ParentProjectID: &parent.ID}
+			insertTestProject(t, s, child)
+			now := time.Date(2018, 12, 1, 9, 0, 0, 0, time.UTC)
+			task := &Task{ID: 99900, Index: 1, Title: "Overdue", ProjectID: child.ID, CreatedByID: 1, DueDate: now.Add(-time.Hour)}
+			_, err := s.Insert(task)
+			require.NoError(t, err)
+			_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: parent.ID, UserID: tc.userID})
+			require.NoError(t, err)
+			if tc.muteProject {
+				_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: child.ID, UserID: tc.userID, Muted: true})
+				require.NoError(t, err)
+			}
+			if tc.muteTask || tc.directTask {
+				_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: tc.userID, Muted: tc.muteTask})
+				require.NoError(t, err)
+			}
+			users, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.id": tc.userID})
+			require.NoError(t, err)
+			gotReminder := users[tc.userID] != nil && users[tc.userID].followed[task.ID] != nil
+			assert.Equal(t, tc.wantReminder, gotReminder)
+		})
+	}
+}
+
 func TestGetTaskUsersForTasksPermissionFiltering(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
