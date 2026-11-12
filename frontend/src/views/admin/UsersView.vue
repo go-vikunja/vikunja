@@ -126,6 +126,14 @@
 						</template>
 					</FormField>
 
+					<XButton
+						class="admin-users__settings-link"
+						variant="secondary"
+						:to="{name: 'admin.userSettings', params: {id: detailTarget.id}}"
+					>
+						{{ $t('admin.users.editSettings') }}
+					</XButton>
+
 					<template v-if="!detailTarget.auth_provider">
 						<FormField :label="$t('admin.users.newPasswordLabel')">
 							<template #default="{id}">
@@ -502,6 +510,10 @@ async function doDelete(mode: DeleteUserMode) {
 	dd {
 		margin: 0;
 	}
+}
+
+.admin-users__settings-link {
+	margin-block-end: 1rem;
 }
 
 .admin-users__password-actions {
