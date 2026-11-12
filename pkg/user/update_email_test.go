@@ -202,6 +202,8 @@ func TestUpdateEmail(t *testing.T) {
 		mail.ResetSent()
 		require.NoError(t, UpdateEmail(s, &EmailUpdate{User: &User{ID: 1}, NewEmail: "new1@example.com"}))
 
+		assert.Empty(t, mail.SentMails())
+		require.NoError(t, s.Commit())
 		sent := mail.SentMails()
 		require.Len(t, sent, 2)
 		assert.Equal(t, "new1@example.com", sent[0].To)
@@ -270,6 +272,7 @@ func TestResendEmailConfirmation(t *testing.T) {
 		before, err := getTokensForKind(s, &User{ID: 1}, TokenEmailConfirm)
 		require.NoError(t, err)
 		require.Len(t, before, 1)
+		s = commitEmailRequest(t, s)
 		resetEmailConfirmationCooldown(t, 1)
 
 		mail.ResetSent()
@@ -279,6 +282,7 @@ func TestResendEmailConfirmation(t *testing.T) {
 		require.Len(t, after, 1)
 		assert.NotEqual(t, before[0].Token, after[0].Token)
 
+		require.NoError(t, s.Commit())
 		sent := mail.LastSent()
 		require.NotNil(t, sent)
 		assert.Equal(t, "new1@example.com", sent.To)
@@ -342,4 +346,13 @@ func TestChangeUserEmail(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "new1@example.com", updated.Email)
 	})
+}
+
+func commitEmailRequest(t *testing.T, s *xorm.Session) *xorm.Session {
+	t.Helper()
+	require.NoError(t, s.Commit())
+	require.NoError(t, s.Close())
+	next := db.NewSession()
+	t.Cleanup(func() { require.NoError(t, next.Close()) })
+	return next
 }
