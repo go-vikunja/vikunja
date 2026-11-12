@@ -561,6 +561,28 @@ func TestGetTaskUsersForTasksIsAssignee(t *testing.T) {
 }
 
 func TestSendDueReminders(t *testing.T) {
+	t.Run("rescues an expired reminder claim", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		resetReminderJobs(t)
+		engine, err := db.CreateDBEngine()
+		require.NoError(t, err)
+		_, err = engine.Insert(&jobs.Job{
+			Queue:       "notifications",
+			Kind:        "reminder.notification",
+			Version:     1,
+			Payload:     `{"task_id":27,"user_id":1,"at":"2018-12-01T01:12:04Z"}`,
+			State:       jobs.StateRunning,
+			Attempt:     1,
+			MaxAttempts: jobs.DefaultAttempts,
+			RunAt:       time.Now().Add(-time.Minute),
+			ClaimOwner:  "stopped-worker",
+			ExpiresAt:   time.Now().Add(-time.Second),
+		})
+		require.NoError(t, err)
+
+		drainReminderJobs(t)
+		assertSingleReminderNotification(t)
+	})
 	t.Run("stores in-app notification when mailer is disabled", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		resetReminderJobs(t)
@@ -582,7 +604,7 @@ func TestSendDueReminders(t *testing.T) {
 		s.Close()
 		drainReminderJobs(t)
 
-		assertSingleReminderNotification(t, 1, 27, 1)
+		assertSingleReminderNotification(t)
 	})
 	t.Run("queues mail only after commit when email reminders are on", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -607,7 +629,7 @@ func TestSendDueReminders(t *testing.T) {
 		sent := mail.SentMails()
 		require.Len(t, sent, 1)
 		assert.Equal(t, "user1@example.com", sent[0].To)
-		assertSingleReminderNotification(t, 1, 27, 1)
+		assertSingleReminderNotification(t)
 	})
 	t.Run("stores in-app notification without mail when the user disabled email reminders", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -629,7 +651,7 @@ func TestSendDueReminders(t *testing.T) {
 		drainReminderJobs(t)
 
 		assert.Empty(t, mail.SentMails())
-		assertSingleReminderNotification(t, 1, 27, 1)
+		assertSingleReminderNotification(t)
 	})
 }
 
@@ -648,17 +670,17 @@ func enableReminderMail(t *testing.T) {
 	})
 }
 
-func assertSingleReminderNotification(t *testing.T, userID, taskID, projectID int64) {
+func assertSingleReminderNotification(t *testing.T) {
 	t.Helper()
 
 	s := db.NewSession()
 	defer s.Close()
 
 	rows := []*notifications.DatabaseNotification{}
-	err := s.Where("notifiable_id = ? AND name = ?", userID, "task.reminder").Find(&rows)
+	err := s.Where("notifiable_id = ? AND name = ?", 1, "task.reminder").Find(&rows)
 	require.NoError(t, err)
 	require.Len(t, rows, 1)
-	assert.Equal(t, projectID, rows[0].ProjectID)
+	assert.Equal(t, int64(1), rows[0].ProjectID)
 
 	payload, err := json.Marshal(rows[0].Notification)
 	require.NoError(t, err)
@@ -668,7 +690,7 @@ func assertSingleReminderNotification(t *testing.T, userID, taskID, projectID in
 		} `json:"task"`
 	}
 	require.NoError(t, json.Unmarshal(payload, &parsed))
-	assert.Equal(t, taskID, parsed.Task.ID)
+	assert.Equal(t, int64(27), parsed.Task.ID)
 }
 
 func TestReminderDueNotificationToMail(t *testing.T) {
@@ -706,15 +728,28 @@ func resetReminderJobs(t *testing.T) {
 
 func drainReminderJobs(t *testing.T) {
 	t.Helper()
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
+		key := config.Key("jobs.queues." + queue + ".lease")
+		defer key.Set(key.GetDuration())
+		key.Set(5 * time.Second)
+	}
 	require.NoError(t, jobs.Start(t.Context()))
 	defer func() { require.NoError(t, jobs.Shutdown(t.Context())) }()
 	engine, err := db.CreateDBEngine()
 	require.NoError(t, err)
+	lastMaintenance := time.Time{}
 	require.EventuallyWithT(t, func(collect *assert.CollectT) {
+		if time.Since(lastMaintenance) >= time.Second {
+			if !assert.NoError(collect, jobs.Maintain(t.Context())) {
+				return
+			}
+			lastMaintenance = time.Now()
+			jobs.Wake()
+		}
 		var pending []jobs.Job
 		err := engine.Where("kind LIKE ? AND state != ?", "reminder.%", jobs.StateCompleted).Find(&pending)
 		if assert.NoError(collect, err) {
 			assert.Empty(collect, pending)
 		}
-	}, 15*time.Second, 20*time.Millisecond)
+	}, 15*time.Second, 100*time.Millisecond)
 }
