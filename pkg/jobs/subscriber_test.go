@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,4 +47,34 @@ func TestSubscriberDeadlineStopsRenewal(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("job was not delivered")
 	}
+}
+
+func TestSubscriberRouterContextMutation(t *testing.T) {
+	e := queueTestEngine(t)
+	previousMax := e.DB().Stats().MaxOpenConnections
+	e.SetMaxOpenConns(1)
+	t.Cleanup(func() { e.SetMaxOpenConns(previousMax) })
+	session := e.NewSession()
+	defer session.Close()
+	for range 100 {
+		require.NoError(t, Enqueue(session, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`)}))
+	}
+	sub := NewSubscriber(NewQueue(e, "router"), map[string]Options{t.Name(): {Concurrency: 2, Lease: time.Minute, Timeout: time.Minute}})
+	router, err := message.NewRouter(message.RouterConfig{}, watermill.NopLogger{})
+	require.NoError(t, err)
+	router.AddConsumerHandler(t.Name(), t.Name(), sub, func(*message.Message) error { return nil })
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	finished := make(chan error, 1)
+	go func() { finished <- router.Run(ctx) }()
+	<-router.Running()
+	t.Cleanup(func() {
+		require.NoError(t, router.Close())
+		require.NoError(t, <-finished)
+	})
+	require.Eventually(t, func() bool {
+		count, err := e.Where("queue = ? AND state = ?", t.Name(), StateCompleted).Count(new(Job))
+		require.NoError(t, err)
+		return count == 100
+	}, 10*time.Second, 10*time.Millisecond)
 }

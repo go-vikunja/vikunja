@@ -117,7 +117,8 @@ func (s *Subscriber) Subscribe(ctx context.Context, topic string) (<-chan *messa
 				s.active[job.ID] = activeClaim{job: job, ctx: attemptCtx, lease: opts.Lease}
 				s.mu.Unlock()
 				s.wg.Add(1)
-				go s.await(ctx, msg, job, cancel, slots)
+				// Watermill replaces the message context after delivery.
+				go s.await(attemptCtx, msg, job, cancel, slots)
 				select {
 				case out <- msg:
 				case <-s.closing:
@@ -151,7 +152,7 @@ func (s *Subscriber) await(ctx context.Context, msg *message.Message, job Job, c
 		if err := s.queue.Fail(context.WithoutCancel(ctx), job, time.Now(), cause, job.MaxAttempts); err != nil {
 			log.Errorf("Record job %d failure: %v", job.ID, err)
 		}
-	case <-msg.Context().Done():
+	case <-ctx.Done():
 		// Keep the slot until the cancelled handler returns, bounding stuck work.
 		select {
 		case <-msg.Acked():
