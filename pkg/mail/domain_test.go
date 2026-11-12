@@ -25,8 +25,7 @@ import (
 )
 
 func TestGetMailDomain(t *testing.T) {
-	publicURL := config.ServicePublicURL.GetString()
-	t.Cleanup(func() { config.ServicePublicURL.Set(publicURL) })
+	t.Cleanup(config.ResetForTests)
 	t.Run("falls back to os.Hostname when public URL is empty", func(t *testing.T) {
 		config.ServicePublicURL.Set("")
 		expectedHostname, err := os.Hostname()
