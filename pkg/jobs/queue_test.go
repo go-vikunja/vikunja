@@ -107,6 +107,42 @@ func TestQueueTransactionAndOwnership(t *testing.T) {
 	assert.Equal(t, "permanent", row.LastError)
 }
 
+func TestQueueClaimLimitSurvivesPlannerRescans(t *testing.T) {
+	e := queueTestEngine(t)
+	if e.Dialect().URI().DBType != schemas.POSTGRES {
+		t.Skip("PostgreSQL locking subquery regression")
+	}
+	previousMax := e.DB().Stats().MaxOpenConnections
+	e.SetMaxOpenConns(1)
+	t.Cleanup(func() { e.SetMaxOpenConns(previousMax) })
+	_, err := e.Exec("CREATE TEMP TABLE jobs (LIKE public.jobs INCLUDING ALL)")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_, err := e.Exec("DROP TABLE pg_temp.jobs")
+		require.NoError(t, err)
+	})
+	_, err = e.Exec("CREATE INDEX claim_limit_order ON jobs (queue, state, run_at, id)")
+	require.NoError(t, err)
+	now := time.Now().UTC().Truncate(time.Second)
+	_, err = e.Exec(`INSERT INTO pg_temp.jobs (queue, kind, payload, state, run_at)
+		SELECT ?, 'test', '{}', 'available', ? FROM generate_series(1, 64)`, t.Name(), timestamp(now))
+	require.NoError(t, err)
+	_, err = e.Exec("ANALYZE jobs")
+	require.NoError(t, err)
+	// Exercise a valid plan that rescans the locking subquery for each row.
+	for _, setting := range []string{"enable_hashagg", "enable_hashjoin", "enable_mergejoin", "enable_material", "enable_sort"} {
+		t.Cleanup(func() { _, resetErr := e.Exec("RESET " + setting); require.NoError(t, resetErr) })
+		_, err = e.Exec("SET " + setting + " = off")
+		require.NoError(t, err)
+	}
+	claimed, err := NewQueue(e, "bounded").Claim(t.Context(), t.Name(), 2, now, time.Minute)
+	require.NoError(t, err)
+	assert.Len(t, claimed, 2)
+	rows, err := e.QueryString("SELECT count(*) AS count FROM pg_temp.jobs WHERE state = 'running'")
+	require.NoError(t, err)
+	assert.Equal(t, "2", rows[0]["count"])
+}
+
 func TestQueueRenewalAndCompletion(t *testing.T) {
 	e := queueTestEngine(t)
 	q := NewQueue(e, "renewal")

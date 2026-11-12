@@ -123,9 +123,14 @@ func (q *Queue) Claim(ctx context.Context, queue string, limit int, now time.Tim
 	db.SetSessionContext(ctx, s)
 	var jobs []Job
 	if q.engine.Dialect().URI().DBType == schemas.POSTGRES {
-		err := s.SQL(`UPDATE jobs SET state = 'running', attempt = attempt + 1, claimed_at = ?, claim_owner = ?, expires_at = ?
-   WHERE id IN (SELECT id FROM jobs WHERE queue = ? AND state = 'available' AND run_at <= ? ORDER BY run_at, id LIMIT ? FOR UPDATE SKIP LOCKED)
-   RETURNING *`, timestamp(now), q.owner, timestamp(now.Add(lease)), queue, timestamp(now), limit).Find(&jobs)
+		// A locking CTE prevents rescans from claiming beyond the limit.
+		err := s.SQL(`WITH candidates AS (
+   SELECT id FROM jobs WHERE queue = ? AND state = 'available' AND run_at <= ?
+   ORDER BY run_at, id LIMIT ? FOR UPDATE SKIP LOCKED
+   )
+   UPDATE jobs SET state = 'running', attempt = attempt + 1, claimed_at = ?, claim_owner = ?, expires_at = ?
+   FROM candidates WHERE jobs.id = candidates.id
+   RETURNING jobs.*`, queue, timestamp(now), limit, timestamp(now), q.owner, timestamp(now.Add(lease))).Find(&jobs)
 		if err != nil {
 			return nil, err
 		}

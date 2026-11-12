@@ -80,3 +80,45 @@ func TestSubscriberRouterContextMutation(t *testing.T) {
 		return count == 0 && handled.Load() == 100
 	}, 10*time.Second, 10*time.Millisecond)
 }
+
+func TestSubscriberClaimsOnlyFreeSlots(t *testing.T) {
+	e := queueTestEngine(t)
+	session := e.NewSession()
+	defer session.Close()
+	for range 20 {
+		require.NoError(t, Enqueue(session, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`)}))
+	}
+	sub := NewSubscriber(NewQueue(e, "bounded"), map[string]Options{t.Name(): {Concurrency: 2, Lease: time.Minute, Timeout: time.Minute}})
+	defer sub.Close()
+	out, err := sub.Subscribe(t.Context(), t.Name())
+	require.NoError(t, err)
+	receive := func() *message.Message {
+		select {
+		case msg := <-out:
+			return msg
+		case <-time.After(5 * time.Second):
+			t.Fatal("job was not delivered")
+			return nil
+		}
+	}
+	first, second := receive(), receive()
+	defer second.Nack()
+	assertBounded := func(available int64) {
+		running, err := e.Where("queue = ? AND state = ?", t.Name(), StateRunning).Count(new(Job))
+		require.NoError(t, err)
+		require.EqualValues(t, 2, running)
+		untouched, err := e.Where("queue = ? AND state = ? AND attempt = 0", t.Name(), StateAvailable).Count(new(Job))
+		require.NoError(t, err)
+		require.Equal(t, available, untouched)
+		select {
+		case <-out:
+			t.Fatal("subscriber delivered beyond its available slots")
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
+	assertBounded(18)
+	first.Ack()
+	third := receive()
+	defer third.Nack()
+	assertBounded(17)
+}
