@@ -49,7 +49,10 @@ type UserRegister struct {
 // The caller is responsible for the registration-enabled gate and input
 // validation; both v1 and v2 share this body.
 func RegisterUser(ctx context.Context, in *UserRegister) (*user.User, error) {
-	s := db.NewSession()
+	s, err := db.NewWriteSession(ctx)
+	if err != nil {
+		return nil, err
+	}
 	defer s.Close()
 	// Discards events queued during a rolled-back transaction; a no-op once
 	// DispatchPending has run.
@@ -222,8 +225,11 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 // ResetPassword resets a user's password from a previously issued reset token
 // and invalidates all of that user's sessions, so a leaked password cannot be
 // used after a reset. Shared by v1 and v2.
-func ResetPassword(reset *user.PasswordReset) error {
-	s := db.NewSession()
+func ResetPassword(ctx context.Context, reset *user.PasswordReset) error {
+	s, err := db.NewWriteSession(ctx)
+	if err != nil {
+		return err
+	}
 	defer s.Close()
 	defer events.CleanupPending(s)
 
@@ -241,14 +247,17 @@ func ResetPassword(reset *user.PasswordReset) error {
 	if err := s.Commit(); err != nil {
 		return err
 	}
-	events.DispatchPending(context.Background(), s)
+	events.DispatchPending(ctx, s)
 	return nil
 }
 
 // RequestPasswordResetToken issues a password-reset token for the account with
 // the given email and sends it via email. Shared by v1 and v2.
-func RequestPasswordResetToken(req *user.PasswordTokenRequest) error {
-	s := db.NewSession()
+func RequestPasswordResetToken(ctx context.Context, req *user.PasswordTokenRequest) error {
+	s, err := db.NewWriteSession(ctx)
+	if err != nil {
+		return err
+	}
 	defer s.Close()
 
 	if err := user.RequestUserPasswordResetTokenByEmail(s, req); err != nil {
@@ -261,8 +270,11 @@ func RequestPasswordResetToken(req *user.PasswordTokenRequest) error {
 
 // ConfirmEmail confirms a newly registered user's email from the token sent to
 // them. Shared by v1 and v2.
-func ConfirmEmail(confirm *user.EmailConfirm) error {
-	s := db.NewSession()
+func ConfirmEmail(ctx context.Context, confirm *user.EmailConfirm) error {
+	s, err := db.NewWriteSession(ctx)
+	if err != nil {
+		return err
+	}
 	defer s.Close()
 
 	if err := user.ConfirmEmail(s, confirm); err != nil {

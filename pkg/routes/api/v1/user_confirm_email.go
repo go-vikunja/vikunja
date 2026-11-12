@@ -43,7 +43,7 @@ func UserConfirmEmail(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.").Wrap(err)
 	}
 
-	if err := shared.ConfirmEmail(&emailConfirm); err != nil {
+	if err := shared.ConfirmEmail(c.Request().Context(), &emailConfirm); err != nil {
 		return err
 	}
 

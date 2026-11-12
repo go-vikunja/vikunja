@@ -35,6 +35,7 @@ func init() {
 		"NewAutocommitSession":           reflect.ValueOf(db.NewAutocommitSession),
 		"NewReadSession":                 reflect.ValueOf(db.NewReadSession),
 		"NewSession":                     reflect.ValueOf(db.NewSession),
+		"NewWriteSession":                reflect.ValueOf(db.NewWriteSession),
 		"ParadeDBAvailable":              reflect.ValueOf(db.ParadeDBAvailable),
 		"RegisterConnectionPoolMetrics":  reflect.ValueOf(db.RegisterConnectionPoolMetrics),
 		"RegisterTables":                 reflect.ValueOf(db.RegisterTables),

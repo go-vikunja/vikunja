@@ -29,7 +29,10 @@ import (
 // CObject. Framework-agnostic: callable from both Echo (CreateWeb) and Huma.
 // Caller is responsible for body/path binding and validation before calling.
 func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
-	s := db.NewSession()
+	s, err := db.NewWriteSession(ctx)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)
@@ -136,7 +139,10 @@ func DoReadAll(ctx context.Context, obj CObject, a web.Auth, search string, page
 // CObject. Framework-agnostic. Caller is responsible for body/path binding
 // and validation before calling.
 func DoUpdate(ctx context.Context, obj CObject, a web.Auth) error {
-	s := db.NewSession()
+	s, err := db.NewWriteSession(ctx)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)
@@ -175,7 +181,10 @@ func DoUpdate(ctx context.Context, obj CObject, a web.Auth) error {
 // CObject. Framework-agnostic. Caller is responsible for path binding before
 // calling.
 func DoDelete(ctx context.Context, obj CObject, a web.Auth) error {
-	s := db.NewSession()
+	s, err := db.NewWriteSession(ctx)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)

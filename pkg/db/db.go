@@ -17,6 +17,7 @@
 package db
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -765,4 +766,28 @@ func CreateParadeDBIndexes() error {
 	}
 
 	return nil
+}
+
+// NewWriteSession reserves SQLite's writer before reads can acquire a stale WAL snapshot.
+func NewWriteSession(ctx context.Context) (*xorm.Session, error) {
+	s := x.NewSession()
+	attachSessionCache(s)
+	SetSessionContext(ctx, s)
+	if err := s.Begin(); err != nil {
+		_ = s.Close()
+		return nil, err
+	}
+	if err := reserveWrite(s); err != nil {
+		_ = s.Close()
+		return nil, err
+	}
+	return s, nil
+}
+
+func reserveWrite(s *xorm.Session) error {
+	if s.Engine().Dialect().URI().DBType != schemas.SQLITE {
+		return nil
+	}
+	_, err := s.Exec("UPDATE sqlite_sequence SET seq = seq WHERE 0")
+	return err
 }

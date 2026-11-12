@@ -154,8 +154,8 @@ func authRegister(ctx context.Context, in *struct{ Body registerUserRequest }) (
 	return &registerUserBody{Body: newUser}, nil
 }
 
-func authRequestPasswordToken(_ context.Context, in *struct{ Body user.PasswordTokenRequest }) (*messageBody, error) {
-	if err := shared.RequestPasswordResetToken(&in.Body); err != nil {
+func authRequestPasswordToken(ctx context.Context, in *struct{ Body user.PasswordTokenRequest }) (*messageBody, error) {
+	if err := shared.RequestPasswordResetToken(ctx, &in.Body); err != nil {
 		return nil, translateDomainError(err)
 	}
 	out := &messageBody{}
@@ -163,8 +163,8 @@ func authRequestPasswordToken(_ context.Context, in *struct{ Body user.PasswordT
 	return out, nil
 }
 
-func authResetPassword(_ context.Context, in *struct{ Body user.PasswordReset }) (*messageBody, error) {
-	if err := shared.ResetPassword(&in.Body); err != nil {
+func authResetPassword(ctx context.Context, in *struct{ Body user.PasswordReset }) (*messageBody, error) {
+	if err := shared.ResetPassword(ctx, &in.Body); err != nil {
 		return nil, translateDomainError(err)
 	}
 	out := &messageBody{}
@@ -172,8 +172,8 @@ func authResetPassword(_ context.Context, in *struct{ Body user.PasswordReset })
 	return out, nil
 }
 
-func authConfirmEmail(_ context.Context, in *struct{ Body user.EmailConfirm }) (*messageBody, error) {
-	if err := shared.ConfirmEmail(&in.Body); err != nil {
+func authConfirmEmail(ctx context.Context, in *struct{ Body user.EmailConfirm }) (*messageBody, error) {
+	if err := shared.ConfirmEmail(ctx, &in.Body); err != nil {
 		return nil, translateDomainError(err)
 	}
 	out := &messageBody{}

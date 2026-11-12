@@ -18,11 +18,14 @@ package db
 
 import (
 	"errors"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestGetPostgreSQLConnectionString(t *testing.T) {
@@ -77,4 +80,38 @@ func TestSanitizePostgresConnectionErrorWithShortPassword(t *testing.T) {
 	assert.NotContains(t, sanitized.Error(), "postgres:x@")
 	assert.Contains(t, sanitized.Error(), "postgres://<redacted>@")
 	assert.Contains(t, sanitized.Error(), "invalid IP-literal")
+}
+
+func TestSQLiteWriteReservation(t *testing.T) {
+	e, err := xorm.NewEngine("sqlite3", filepath.Join(t.TempDir(), "writers.db")+"?_journal_mode=WAL&_busy_timeout=1000")
+	require.NoError(t, err)
+	defer e.Close()
+	_, err = e.Exec("CREATE TABLE writes (id INTEGER PRIMARY KEY AUTOINCREMENT, value INTEGER)")
+	require.NoError(t, err)
+	_, err = e.Exec("INSERT INTO writes (value) VALUES (0)")
+	require.NoError(t, err)
+	foreground := e.NewSession()
+	defer foreground.Close()
+	require.NoError(t, foreground.Begin())
+	require.NoError(t, reserveWrite(foreground))
+	_, err = foreground.QueryString("SELECT value FROM writes")
+	require.NoError(t, err)
+	done := make(chan error, 1)
+	go func() {
+		_, err := e.Exec("UPDATE writes SET value = value + 1")
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+		t.Fatal("background writer committed during the foreground transaction")
+	case <-time.After(50 * time.Millisecond):
+	}
+	_, err = foreground.Exec("UPDATE writes SET value = value + 1")
+	require.NoError(t, err)
+	require.NoError(t, foreground.Commit())
+	require.NoError(t, <-done)
+	rows, err := e.QueryString("SELECT value FROM writes")
+	require.NoError(t, err)
+	require.Equal(t, "2", rows[0]["value"])
 }
