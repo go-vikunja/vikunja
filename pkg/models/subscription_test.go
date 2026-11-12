@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -29,6 +30,42 @@ import (
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
+
+func TestSubscriptionPermissionResolutionScalesWithRelevantProjects(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	setup := db.NewSession()
+	defer setup.Close()
+	const count = 256
+	subscriptions := make(map[int64][]*SubscriptionWithUser, count)
+	projectIDs := make(map[int64]int64, count)
+	for i := range count {
+		id := int64(100000 + i)
+		u := &user.User{ID: id, Username: fmt.Sprintf("reminder-owner-%d", i), Email: fmt.Sprintf("reminder-owner-%d@example.test", i)}
+		_, err := setup.Insert(u)
+		require.NoError(t, err)
+		insertTestProject(t, setup, &Project{ID: id, Title: "Private reminder project", OwnerID: id})
+		subscriptions[id] = []*SubscriptionWithUser{{Subscription: Subscription{EntityType: SubscriptionEntityProject, EntityID: id, UserID: id}, User: u}}
+		projectIDs[id] = id
+	}
+	require.NoError(t, setup.Commit())
+	s := db.NewSession()
+	defer s.Close()
+
+	resolve := func() {
+		resolved, err := filterSubscriptionsByProjectPermission(s, subscriptions, projectIDs)
+		require.NoError(t, err)
+		require.Len(t, resolved, count)
+		for id, recipients := range resolved {
+			require.Len(t, recipients, 1)
+			require.Equal(t, id, recipients[0].User.ID)
+		}
+	}
+	resolve()
+	allocations := testing.AllocsPerRun(1, resolve)
+	t.Logf("permission resolution: %.0f allocations for %d unrelated subscribers", allocations, count)
+	// Warm database memos isolate the user/project cross-product from driver allocations.
+	assert.Less(t, allocations, float64(count*100))
+}
 
 func TestSubscriptionGetTypeFromString(t *testing.T) {
 	t.Run("project", func(t *testing.T) {
