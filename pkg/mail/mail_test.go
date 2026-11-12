@@ -67,6 +67,12 @@ func startSMTPSink(t *testing.T) (port int, received chan string) {
 					switch {
 					case strings.HasPrefix(cmd, "EHLO"), strings.HasPrefix(cmd, "HELO"):
 						fmt.Fprintf(conn, "250-sink\r\n250 8BITMIME\r\n")
+					case strings.HasPrefix(cmd, "MAIL FROM:"), strings.HasPrefix(cmd, "RCPT TO:"):
+						if strings.Contains(cmd, ":<") && strings.Contains(cmd, ">") {
+							fmt.Fprintf(conn, "250 ok\r\n")
+						} else {
+							fmt.Fprintf(conn, "501 invalid envelope address\r\n")
+						}
 					case strings.HasPrefix(cmd, "DATA"):
 						fmt.Fprintf(conn, "354 go ahead\r\n")
 						var body strings.Builder

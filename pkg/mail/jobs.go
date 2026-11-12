@@ -104,11 +104,11 @@ func deliver(msg *message.Message) error {
 	defer connection.Close()
 	stop := context.AfterFunc(msg.Context(), func() { _ = connection.Close() })
 	defer stop()
-	if err := connection.Mail(from[0].Address); err != nil {
+	if err := connection.Mail((&mail.Address{Address: from[0].Address}).String()); err != nil {
 		return err
 	}
 	for _, recipient := range to {
-		if err := connection.Rcpt(recipient.Address); err != nil {
+		if err := connection.Rcpt((&mail.Address{Address: recipient.Address}).String()); err != nil {
 			return err
 		}
 	}
