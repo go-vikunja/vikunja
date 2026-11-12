@@ -17,6 +17,7 @@
 package memory
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"sync"
@@ -73,6 +74,24 @@ func (s *Storage) PutWithTTL(key string, value interface{}, ttl time.Duration) (
 	s.expires[key] = time.Now().Add(ttl)
 	s.sweepExpiredLocked()
 	return nil
+}
+
+// PutIfAbsent atomically claims a key until its positive TTL expires.
+func (s *Storage) PutIfAbsent(key string, value interface{}, ttl time.Duration) (bool, error) {
+	if ttl <= 0 {
+		return false, errors.New("keyvalue claim TTL must be positive")
+	}
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.expiredLocked(key)
+	if _, exists := s.store[key]; exists {
+		return false, nil
+	}
+	s.setLocked(key, value)
+	s.expires[key] = time.Now().Add(ttl)
+	s.sweepExpiredLocked()
+	return true, nil
 }
 
 // Expiry is only evaluated on access, so keys nothing reads again would pile up.

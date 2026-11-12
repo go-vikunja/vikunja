@@ -18,9 +18,9 @@ package metrics
 
 import (
 	"os"
-	"strconv"
 	"sync"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -41,43 +41,57 @@ type testAuth struct{ id int64 }
 func (a *testAuth) GetID() int64 { return a.id }
 
 func TestActiveUsers(t *testing.T) {
-	keyvalue.InitStorage()
+	synctest.Test(t, func(t *testing.T) {
+		keyvalue.InitStorage()
 
-	require.NoError(t, SetUserActive(&testAuth{id: 1}))
-	require.NoError(t, SetUserActive(&testAuth{id: 2}))
-	require.NoError(t, keyvalue.PutWithTTL(activeUsersKeyPrefix+"3", time.Now(), time.Nanosecond))
-	require.NoError(t, SetLinkShareActive(&testAuth{id: 1}))
+		require.NoError(t, SetUserActive(&testAuth{id: 1}))
+		require.NoError(t, SetUserActive(&testAuth{id: 2}))
+		require.NoError(t, SetLinkShareActive(&testAuth{id: 1}))
 
-	assert.Equal(t, 2, countActive(activeUsersKeyPrefix))
-	assert.Equal(t, 1, countActive(activeLinkSharesKeyPrefix))
+		assert.Equal(t, 2, countActive(activeUsersKeyPrefix))
+		assert.Equal(t, 1, countActive(activeLinkSharesKeyPrefix))
 
-	keys, err := keyvalue.ListKeys(activeUsersKeyPrefix)
-	require.NoError(t, err)
-	assert.ElementsMatch(t, []string{
-		activeUsersKeyPrefix + "1",
-		activeUsersKeyPrefix + "2",
-	}, keys)
+		time.Sleep(20 * time.Second)
+		require.NoError(t, SetUserActive(&testAuth{id: 2}))
+		time.Sleep(10*time.Second - time.Nanosecond)
+		assert.Equal(t, 2, countActive(activeUsersKeyPrefix))
+		assert.Equal(t, 1, countActive(activeLinkSharesKeyPrefix))
+
+		time.Sleep(time.Nanosecond)
+		assert.Equal(t, 1, countActive(activeUsersKeyPrefix))
+		assert.Zero(t, countActive(activeLinkSharesKeyPrefix))
+
+		keys, err := keyvalue.ListKeys(activeUsersKeyPrefix)
+		require.NoError(t, err)
+		assert.Equal(t, []string{activeUsersKeyPrefix + "2"}, keys)
+
+		time.Sleep(20 * time.Second)
+		assert.Zero(t, countActive(activeUsersKeyPrefix))
+	})
 }
 
 func TestActiveUsersConcurrent(t *testing.T) {
-	keyvalue.InitStorage()
+	synctest.Test(t, func(t *testing.T) {
+		keyvalue.InitStorage()
 
-	for i := 100; i < 110; i++ {
-		require.NoError(t, keyvalue.PutWithTTL(activeUsersKeyPrefix+strconv.Itoa(i), time.Now(), time.Nanosecond))
-	}
+		for i := int64(100); i < 110; i++ {
+			require.NoError(t, SetUserActive(&testAuth{id: i}))
+		}
+		time.Sleep(30 * time.Second)
 
-	var wg sync.WaitGroup
-	for i := 0; i < 50; i++ {
-		wg.Add(2)
-		go func(id int64) {
-			defer wg.Done()
-			assert.NoError(t, SetUserActive(&testAuth{id: id}))
-		}(int64(i))
-		go func() {
-			defer wg.Done()
-			countActive(activeUsersKeyPrefix)
-		}()
-	}
-	wg.Wait()
-	assert.Equal(t, 50, countActive(activeUsersKeyPrefix))
+		var wg sync.WaitGroup
+		for i := 0; i < 50; i++ {
+			wg.Add(2)
+			go func(id int64) {
+				defer wg.Done()
+				assert.NoError(t, SetUserActive(&testAuth{id: id}))
+			}(int64(i))
+			go func() {
+				defer wg.Done()
+				countActive(activeUsersKeyPrefix)
+			}()
+		}
+		wg.Wait()
+		assert.Equal(t, 50, countActive(activeUsersKeyPrefix))
+	})
 }

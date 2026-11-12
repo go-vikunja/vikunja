@@ -29,6 +29,7 @@ import (
 type Storage interface {
 	Put(key string, value interface{}) (err error)
 	PutWithTTL(key string, value interface{}, ttl time.Duration) (err error)
+	PutIfAbsent(key string, value interface{}, ttl time.Duration) (bool, error)
 	Get(key string) (value interface{}, exists bool, err error)
 	GetWithValue(key string, value interface{}) (exists bool, err error)
 	Del(key string) (err error)
@@ -67,6 +68,11 @@ func PutWithTTL(key string, value interface{}, ttl time.Duration) error {
 		return store.Del(key)
 	}
 	return store.PutWithTTL(key, value, ttl)
+}
+
+// PutIfAbsent atomically stores an expiring value if the key is absent. TTL must be positive.
+func PutIfAbsent(key string, value interface{}, ttl time.Duration) (bool, error) {
+	return store.PutIfAbsent(key, value, ttl)
 }
 
 // Get returns a value from a storage backend

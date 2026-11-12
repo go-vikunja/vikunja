@@ -17,6 +17,8 @@
 package user
 
 import (
+	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -56,6 +58,50 @@ func TestTOTPPasscodeCannotBeReused(t *testing.T) {
 	})
 	require.Error(t, err)
 	assert.True(t, IsErrTOTPPasscodeUsed(err), "expected ErrTOTPPasscodeUsed, got: %v", err)
+}
+
+func TestTOTPPasscodeConcurrentReplay(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	const attempts = 128
+
+	for range 10 {
+		passcode, err := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now())
+		require.NoError(t, err)
+		key := fmt.Sprintf("totp_used_10_%s", passcode)
+		require.NoError(t, keyvalue.Del(key))
+		t.Cleanup(func() { _ = keyvalue.Del(key) })
+
+		start := make(chan struct{})
+		results := make(chan error, attempts)
+		var ready sync.WaitGroup
+		ready.Add(attempts)
+		for range attempts {
+			go func() {
+				s := db.NewSession()
+				defer s.Close()
+				ready.Done()
+				<-start
+				_, err := ValidateTOTPPasscode(s, &TOTPPasscode{
+					User:     &User{ID: 10},
+					Passcode: passcode,
+				})
+				results <- err
+			}()
+		}
+		ready.Wait()
+		close(start)
+
+		accepted := 0
+		for range attempts {
+			err := <-results
+			if err == nil {
+				accepted++
+			} else {
+				require.True(t, IsErrTOTPPasscodeUsed(err), "unexpected error: %v", err)
+			}
+		}
+		require.Equal(t, 1, accepted, "a passcode must be accepted once across concurrent logins")
+	}
 }
 
 func TestHandleFailedTOTPAuthLocksAccount(t *testing.T) {

@@ -52,32 +52,38 @@ func (s *Storage) PutWithTTL(key string, value interface{}, ttl time.Duration) (
 	return s.put(key, value, ttl)
 }
 
-func (s *Storage) put(key string, value interface{}, ttl time.Duration) (err error) {
-
-	var v interface{}
-
+func marshalValue(value interface{}) (interface{}, error) {
 	switch value.(type) {
-	case int:
-		v = value
-	case int8:
-		v = value
-	case int16:
-		v = value
-	case int32:
-		v = value
-	case int64:
-		v = value
+	case int, int8, int16, int32, int64:
+		return value, nil
 	default:
 		var buf bytes.Buffer
 		enc := gob.NewEncoder(&buf)
-		err = enc.Encode(value)
-		if err != nil {
-			return err
+		if err := enc.Encode(value); err != nil {
+			return nil, err
 		}
-		return s.client.Set(context.Background(), key, buf.Bytes(), ttl).Err()
+		return buf.Bytes(), nil
 	}
+}
 
+func (s *Storage) put(key string, value interface{}, ttl time.Duration) error {
+	v, err := marshalValue(value)
+	if err != nil {
+		return err
+	}
 	return s.client.Set(context.Background(), key, v, ttl).Err()
+}
+
+// PutIfAbsent atomically claims a key until its positive TTL expires.
+func (s *Storage) PutIfAbsent(key string, value interface{}, ttl time.Duration) (bool, error) {
+	if ttl <= 0 {
+		return false, errors.New("keyvalue claim TTL must be positive")
+	}
+	v, err := marshalValue(value)
+	if err != nil {
+		return false, err
+	}
+	return s.client.SetNX(context.Background(), key, v, ttl).Result()
 }
 
 // Get retrieves a saved value from redis

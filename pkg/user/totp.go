@@ -153,17 +153,12 @@ func ValidateTOTPPasscode(s *xorm.Session, passcode *TOTPPasscode) (t *TOTP, err
 	// 90s = 30s TOTP window + clock skew
 	const totpUsedTTL = 90 * time.Second
 	usedKey := fmt.Sprintf("totp_used_%s_%s", strconv.FormatInt(passcode.User.ID, 10), passcode.Passcode)
-	_, exists, err := keyvalue.Get(usedKey)
+	claimed, err := keyvalue.PutIfAbsent(usedKey, true, totpUsedTTL)
 	if err != nil {
 		return nil, err
 	}
-	if exists {
+	if !claimed {
 		return nil, ErrTOTPPasscodeUsed{}
-	}
-
-	err = keyvalue.PutWithTTL(usedKey, true, totpUsedTTL)
-	if err != nil {
-		return nil, err
 	}
 
 	return

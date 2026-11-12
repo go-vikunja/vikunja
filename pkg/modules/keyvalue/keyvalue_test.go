@@ -18,7 +18,9 @@ package keyvalue
 
 import (
 	"errors"
+	"sync"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
@@ -159,45 +161,53 @@ func TestRememberForRecomputesWhenStoredValueCannotBeDeserialized(t *testing.T) 
 }
 
 func TestPutWithTTL(t *testing.T) {
-	t.Run("value exists before the ttl passed", func(t *testing.T) {
+	run := func(name string, test func(*testing.T)) {
+		t.Run(name, func(t *testing.T) { synctest.Test(t, test) })
+	}
+	run("value exists before the ttl passed", func(t *testing.T) {
 		store = memory.NewStorage()
 		require.NoError(t, PutWithTTL("foo", "bar", time.Minute))
+		time.Sleep(30 * time.Second)
 
 		val, exists, err := Get("foo")
 		require.NoError(t, err)
 		assert.True(t, exists)
 		assert.Equal(t, "bar", val)
 	})
-	t.Run("value is gone after the ttl passed", func(t *testing.T) {
+	run("value is gone after the ttl passed", func(t *testing.T) {
 		store = memory.NewStorage()
-		require.NoError(t, PutWithTTL("foo", "bar", time.Nanosecond))
+		require.NoError(t, PutWithTTL("foo", "bar", time.Minute))
+		time.Sleep(time.Minute)
 
 		_, exists, err := Get("foo")
 		require.NoError(t, err)
 		assert.False(t, exists)
 	})
-	t.Run("expired keys are not listed", func(t *testing.T) {
+	run("expired keys are not listed", func(t *testing.T) {
 		store = memory.NewStorage()
-		require.NoError(t, PutWithTTL("prefix_expired", "bar", time.Nanosecond))
-		require.NoError(t, PutWithTTL("prefix_valid", "bar", time.Minute))
+		require.NoError(t, PutWithTTL("prefix_expired", "bar", time.Minute))
+		require.NoError(t, PutWithTTL("prefix_valid", "bar", time.Hour))
+		time.Sleep(time.Minute)
 
 		keys, err := ListKeys("prefix_")
 		require.NoError(t, err)
 		assert.Equal(t, []string{"prefix_valid"}, keys)
 	})
-	t.Run("put clears an existing ttl", func(t *testing.T) {
+	run("put clears an existing ttl", func(t *testing.T) {
 		store = memory.NewStorage()
-		require.NoError(t, PutWithTTL("foo", "bar", time.Nanosecond))
+		require.NoError(t, PutWithTTL("foo", "bar", time.Minute))
 		require.NoError(t, Put("foo", "baz"))
+		time.Sleep(time.Minute)
 
 		val, exists, err := Get("foo")
 		require.NoError(t, err)
 		assert.True(t, exists)
 		assert.Equal(t, "baz", val)
 	})
-	t.Run("incrementing after ttl expiry starts fresh", func(t *testing.T) {
+	run("incrementing after ttl expiry starts fresh", func(t *testing.T) {
 		store = memory.NewStorage()
-		require.NoError(t, PutWithTTL("c", int64(5), time.Nanosecond))
+		require.NoError(t, PutWithTTL("c", int64(5), time.Minute))
+		time.Sleep(time.Minute)
 		require.NoError(t, IncrBy("c", 1))
 
 		val, exists, err := Get("c")
@@ -205,4 +215,70 @@ func TestPutWithTTL(t *testing.T) {
 		assert.True(t, exists)
 		assert.Equal(t, int64(1), val)
 	})
+}
+
+func TestPutIfAbsentConcurrent(t *testing.T) {
+	store = memory.NewStorage()
+	const attempts = 64
+	start := make(chan struct{})
+	claimed := make(chan bool, attempts)
+	errors := make(chan error, attempts)
+	var ready sync.WaitGroup
+	ready.Add(attempts)
+	for range attempts {
+		go func() {
+			ready.Done()
+			<-start
+			ok, err := PutIfAbsent("claim", "first", time.Minute)
+			claimed <- ok
+			errors <- err
+		}()
+	}
+	ready.Wait()
+	close(start)
+
+	winners := 0
+	for range attempts {
+		require.NoError(t, <-errors)
+		if <-claimed {
+			winners++
+		}
+	}
+	require.Equal(t, 1, winners)
+}
+
+func TestPutIfAbsentPreservesValueUntilExpiry(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		store = memory.NewStorage()
+		ok, err := PutIfAbsent("claim", "first", time.Minute)
+		require.NoError(t, err)
+		require.True(t, ok)
+
+		ok, err = PutIfAbsent("claim", "second", time.Hour)
+		require.NoError(t, err)
+		require.False(t, ok)
+		value, exists, err := Get("claim")
+		require.NoError(t, err)
+		require.True(t, exists)
+		require.Equal(t, "first", value)
+
+		time.Sleep(time.Minute)
+		ok, err = PutIfAbsent("claim", "second", time.Minute)
+		require.NoError(t, err)
+		require.True(t, ok)
+	})
+}
+
+func TestPutIfAbsentRejectsNonpositiveTTL(t *testing.T) {
+	store = memory.NewStorage()
+	require.NoError(t, Put("claim", "first"))
+	for _, ttl := range []time.Duration{0, -time.Second} {
+		ok, err := PutIfAbsent("claim", "second", ttl)
+		require.Error(t, err)
+		require.False(t, ok)
+	}
+	value, exists, err := Get("claim")
+	require.NoError(t, err)
+	require.True(t, exists)
+	require.Equal(t, "first", value)
 }
