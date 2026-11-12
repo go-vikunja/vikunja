@@ -41,9 +41,10 @@ func InitRedis() {
 	}
 
 	r = redis.NewClient(&redis.Options{
-		Addr:     config.RedisHost.GetString(),
-		Password: config.RedisPassword.GetString(),
-		DB:       config.RedisDB.GetInt(),
+		Addr:                  config.RedisHost.GetString(),
+		Password:              config.RedisPassword.GetString(),
+		DB:                    config.RedisDB.GetInt(),
+		ContextTimeoutEnabled: true,
 	})
 
 	err := r.Ping(context.Background()).Err()

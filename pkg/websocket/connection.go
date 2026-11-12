@@ -59,6 +59,12 @@ func NewConnection(ws *websocket.Conn, hub *Hub) *Connection {
 	}
 }
 
+func (c *Connection) closeNow() {
+	if c.ws != nil {
+		_ = c.ws.CloseNow()
+	}
+}
+
 // Subscribe adds an event subscription.
 func (c *Connection) Subscribe(event string) {
 	c.mu.Lock()
@@ -98,9 +104,7 @@ func (c *Connection) UserID() int64 {
 func (c *Connection) ReadLoop(ctx context.Context, cancel context.CancelFunc) {
 	defer func() {
 		cancel()
-		if c.IsAuthenticated() {
-			c.hub.Unregister(c)
-		}
+		c.hub.Unregister(c)
 		c.ws.Close(websocket.StatusNormalClosure, "")
 	}()
 

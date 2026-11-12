@@ -19,7 +19,9 @@ package websocket
 import (
 	"testing"
 
+	"code.vikunja.io/api/pkg/metrics"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHubRegisterUnregister(t *testing.T) {
@@ -36,6 +38,22 @@ func TestHubRegisterUnregister(t *testing.T) {
 	assert.Empty(t, h.connections[1])
 	_, exists := h.connections[1]
 	assert.False(t, exists, "map entry should be deleted when last connection is removed")
+}
+
+func TestHubConnectionMetrics(t *testing.T) {
+	InitHub()
+	subscribedConnection(GetHub(), 1)
+	subscribedConnection(GetHub(), 2)
+	families, err := metrics.GetRegistry().Gather()
+	require.NoError(t, err)
+	var count float64
+	for _, family := range families {
+		if family.GetName() == "vikunja_websocket_connections" {
+			count = family.GetMetric()[0].GetGauge().GetValue()
+		}
+	}
+	assert.InDelta(t, 2, count, 0.001)
+	GetHub().Shutdown()
 }
 
 func TestHubPublishToSubscribedConnection(t *testing.T) {

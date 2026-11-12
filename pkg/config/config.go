@@ -137,6 +137,15 @@ const (
 	RedisHost     Key = `redis.host`
 	RedisPassword Key = `redis.password`
 	RedisDB       Key = `redis.db`
+	RedisPrefix   Key = `redis.prefix`
+
+	ServiceClusterMode          Key = `service.clustermode`
+	ServiceEnableScheduler      Key = `service.enablescheduler`
+	ServiceEnableMigrations     Key = `service.enablemigrations`
+	ServiceShutdownTimeout      Key = `service.shutdowntimeout`
+	WebsocketRedisEnabled       Key = `websocket.redis.enabled`
+	EventsMaxConcurrentHandlers Key = `events.maxconcurrenthandlers`
+	FilesShared                 Key = `files.shared`
 
 	LogEnabled       Key = `log.enabled`
 	LogStandard      Key = `log.standard`
@@ -399,6 +408,13 @@ func initDefaultConfig() {
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
 	ServiceIPExtractionMethod.setDefault("direct")
 	ServiceTrustedProxies.setDefault("")
+	ServiceClusterMode.setDefault(false)
+	ServiceEnableScheduler.setDefault(true)
+	ServiceEnableMigrations.setDefault(true)
+	ServiceShutdownTimeout.setDefault("30s")
+	WebsocketRedisEnabled.setDefault(false)
+	EventsMaxConcurrentHandlers.setDefault(16)
+	FilesShared.setDefault(false)
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
@@ -455,6 +471,7 @@ func initDefaultConfig() {
 	RedisHost.setDefault("localhost:6379")
 	RedisPassword.setDefault("")
 	RedisDB.setDefault(0)
+	RedisPrefix.setDefault("vikunja")
 	// Logger
 	LogEnabled.setDefault(true)
 	LogStandard.setDefault("stdout")
@@ -770,6 +787,10 @@ func InitConfig() {
 			log.Warning("config: service.jwtsecret is deprecated and will be removed in a future release. Please use service.secret instead.")
 			ServiceSecret.Set(ServiceJWTSecret.GetString())
 		}
+	}
+
+	if err := validateRuntimeConfig(); err != nil {
+		log.Fatalf("Invalid runtime configuration: %s", err)
 	}
 
 	generateServiceSecretIfEmpty()

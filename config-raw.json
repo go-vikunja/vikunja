@@ -162,6 +162,26 @@
                     "key": "trustedproxies",
                     "default_value": "",
                     "comment": "Comma-separated list of CIDR ranges for trusted reverse proxies. Only used when service.ipextractionmethod is 'xff' or 'realip'. With 'xff', X-Forwarded-For is only trusted when the request comes from one of these addresses; with 'realip', the X-Real-IP value itself must be within these ranges. Example: '127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12'"
+                },
+                {
+                    "key": "clustermode",
+                    "default_value": "false",
+                    "comment": "Validate requirements for multiple replicas: a shared secret, external SQL, Redis shared state and WebSocket fanout, shared files, and externally run migrations. Default single-instance operation needs no extra services."
+                },
+                {
+                    "key": "enablescheduler",
+                    "default_value": "true",
+                    "comment": "Run global scheduled work in this process. Disable on API replicas and run exactly one vikunja scheduler process for the installation. Per-process maintenance still runs."
+                },
+                {
+                    "key": "enablemigrations",
+                    "default_value": "true",
+                    "comment": "Run core/plugin migrations and search-index setup at startup. Disable for clustered replicas and run vikunja migrate once per release before rollout."
+                },
+                {
+                    "key": "shutdowntimeout",
+                    "default_value": "30s",
+                    "comment": "Maximum graceful HTTP and background shutdown time. Kubernetes terminationGracePeriodSeconds must exceed this. Work is not durable if the process is killed before draining."
                 }
             ]
         },
@@ -292,6 +312,11 @@
                     "key": "db",
                     "default_value": "0",
                     "comment": "0 means default database"
+                },
+                {
+                    "key": "prefix",
+                    "default_value": "vikunja",
+                    "comment": "Installation namespace for WebSocket Pub/Sub channels; the Redis database number is also included. This does not namespace existing key-value keys; use a dedicated Redis database per installation."
                 }
             ]
         },
@@ -555,6 +580,11 @@
                             "comment": "When enabled, the S3 client will send UNSIGNED-PAYLOAD instead of computing a SHA256 hash for request signing. Some S3-compatible providers (such as Ceph RadosGW, Clever Cloud Cellar) do not correctly verify payload signatures and return XAmzContentSHA256Mismatch errors. Enabling this option works around the issue. Only applies over HTTPS."
                         }
                     ]
+                },
+                {
+                    "key": "shared",
+                    "default_value": "false",
+                    "comment": "Assert that the local file backend is mounted on the same shared read/write filesystem on every replica. Required with files.type=local in cluster mode. Does not provision a shared filesystem."
                 }
             ]
         },
@@ -1150,6 +1180,31 @@
                     "key": "key",
                     "default_value": "",
                     "comment": "The license key for Vikunja. If empty or absent, Vikunja runs in community mode with all non-licensed features available."
+                }
+            ]
+        },
+        {
+            "key": "websocket",
+            "children": [
+                {
+                    "key": "redis",
+                    "children": [
+                        {
+                            "key": "enabled",
+                            "default_value": "false",
+                            "comment": "Use the configured Redis server to deliver WebSocket updates across replicas. Requires redis.enabled. Domain event handlers continue running locally. Clients reload authoritative data after reconnecting."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "events",
+            "children": [
+                {
+                    "key": "maxconcurrenthandlers",
+                    "default_value": "16",
+                    "comment": "Maximum event handlers executing simultaneously per process, including retries. Must be positive. This bounds execution, not the volatile in-memory event backlog; it is not a durable queue."
                 }
             ]
         }

@@ -32,6 +32,7 @@ var globalHub *Hub
 // InitHub creates the global hub. Must be called once at startup.
 func InitHub() {
 	globalHub = NewHub()
+	registerHubMetrics()
 }
 
 // GetHub returns the global hub.
@@ -42,7 +43,7 @@ func GetHub() *Hub {
 // UpgradeHandler is the Echo handler for WebSocket upgrades at /api/v1/ws.
 // The upgrade happens without authentication - auth is done via the first message.
 func UpgradeHandler(c *echo.Context) error {
-	if globalHub == nil {
+	if globalHub == nil || !globalHub.Available() {
 		log.Errorf("WebSocket: hub not initialized")
 		return echo.NewHTTPError(http.StatusServiceUnavailable, "WebSocket hub not initialized")
 	}
@@ -56,6 +57,10 @@ func UpgradeHandler(c *echo.Context) error {
 	}
 
 	conn := NewConnection(ws, globalHub)
+	if !globalHub.track(conn) {
+		conn.closeNow()
+		return nil
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
