@@ -18,6 +18,7 @@ package user
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/config"
 
@@ -34,18 +35,41 @@ type ProjectUserOpts struct {
 	MatchFuzzily                bool
 }
 
-// SearchUsers performs the global user search shared by both API versions:
-// it lists users matching the search string and obfuscates their email
-// addresses before returning.
-func SearchUsers(s *xorm.Session, search string, currentUser *User) (users []*User, err error) {
-	users, err = ListUsers(s, search, currentUser, nil)
+// SearchUsersPageSize is the page size of the global user search.
+const SearchUsersPageSize = 25
+
+// globalSearchMinLength keeps a single letter from listing half the instance.
+const globalSearchMinLength = 2
+
+// SearchUsers performs the global user search shared by both API versions.
+// It returns one ranked page of matches plus the total number of matches.
+// Email addresses are only returned when service.enableglobalusersearch is on.
+func SearchUsers(s *xorm.Session, search string, currentUser *User, page int) (users []*User, total int64, err error) {
+	cond := userSearchCond(search, currentUser, &ProjectUserOpts{})
+	if cond == nil {
+		return nil, 0, nil
+	}
+	if page < 1 {
+		page = 1
+	}
+
+	order, args := db.SearchRelevanceOrder(strings.TrimSpace(sanitizeUserSearch(search)), "username", "name")
+	total, err = s.
+		Where(cond).
+		OrderBy(order, args...).
+		OrderBy("username ASC").
+		Limit(SearchUsersPageSize, (page-1)*SearchUsersPageSize).
+		FindAndCount(&users)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	for i := range users {
-		users[i].Email = ""
+
+	if !config.ServiceEnableGlobalUserSearch.GetBool() {
+		for _, u := range users {
+			u.Email = ""
+		}
 	}
-	return users, nil
+	return users, total, nil
 }
 
 // ListUsers returns a list with all users, filtered by an optional search string
@@ -54,12 +78,55 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		opts = &ProjectUserOpts{}
 	}
 
-	// Prevent searching for placeholders
-	search = strings.ReplaceAll(search, "%", "")
-
-	if (search == "" || strings.ReplaceAll(search, " ", "") == "") && !opts.ReturnAllIfNoSearchProvided {
+	cond := userSearchCond(search, currentUser, opts)
+	if cond == nil {
 		return
 	}
+
+	err = s.
+		Where(cond).
+		OrderBy("id").
+		Find(&users)
+
+	search = sanitizeUserSearch(search)
+outer:
+	for _, u := range users {
+		for _, part := range strings.Split(search, ",") {
+			if u.Email == part {
+				continue outer
+			}
+		}
+		u.Email = ""
+	}
+	return
+}
+
+// Prevent searching for placeholders
+func sanitizeUserSearch(search string) string {
+	return strings.ReplaceAll(search, "%", "")
+}
+
+func globalSearchParts(parts []string) []string {
+	kept := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if utf8.RuneCountInString(part) >= globalSearchMinLength {
+			kept = append(kept, part)
+		}
+	}
+	return kept
+}
+
+// userSearchCond returns nil when the search must not return anything.
+func userSearchCond(search string, currentUser *User, opts *ProjectUserOpts) builder.Cond {
+	search = sanitizeUserSearch(search)
+
+	if (search == "" || strings.ReplaceAll(search, " ", "") == "") && !opts.ReturnAllIfNoSearchProvided {
+		return nil
+	}
+
+	// Global mode ignores the per-user discoverability settings.
+	global := !opts.MatchFuzzily && config.ServiceEnableGlobalUserSearch.GetBool()
 
 	conds := []builder.Cond{}
 
@@ -75,11 +142,17 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		))
 
 	queryParts := strings.Split(search, ",")
+	if global {
+		queryParts = globalSearchParts(queryParts)
+		if len(queryParts) == 0 {
+			return nil
+		}
+	}
 
 	if search != "" {
 		for _, queryPart := range queryParts {
 
-			if opts.MatchFuzzily {
+			if opts.MatchFuzzily || global {
 				conds = append(conds,
 					db.ILIKE("name", queryPart),
 					db.ILIKE("username", queryPart),
@@ -114,7 +187,7 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		}
 	}
 
-	if !opts.MatchFuzzily {
+	if !opts.MatchFuzzily && !global {
 		conds = append(conds,
 			builder.And(
 				builder.In("email", queryParts),
@@ -142,7 +215,7 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 			)),
 		)
 
-		if !opts.MatchFuzzily {
+		if !opts.MatchFuzzily && !global {
 			cond = builder.And(
 				cond,
 				builder.Or(
@@ -194,24 +267,10 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		)
 	}
 
-	err = s.
-		Where(builder.Or(
-			builder.And(cond, notSomeoneElsesBot),
-			ownBotCond,
-		)).
-		OrderBy("id").
-		Find(&users)
-
-outer:
-	for _, u := range users {
-		for _, part := range strings.Split(search, ",") {
-			if u.Email == part {
-				continue outer
-			}
-		}
-		u.Email = ""
-	}
-	return
+	return builder.Or(
+		builder.And(cond, notSomeoneElsesBot),
+		ownBotCond,
+	)
 }
 
 // ListAllUsers returns all users

@@ -46,6 +46,26 @@ func TestHumaInfo(t *testing.T) {
 	assert.Equal(t, config.DatabaseType.GetString() != "sqlite", body["concurrent_writes"])
 }
 
+func TestHumaInfoGlobalUserSearchEnabled(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	prev := config.ServiceEnableGlobalUserSearch.GetBool()
+	t.Cleanup(func() { config.ServiceEnableGlobalUserSearch.Set(prev) })
+
+	for _, enabled := range []bool{false, true} {
+		config.ServiceEnableGlobalUserSearch.Set(enabled)
+
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/info", "", "", "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		var body map[string]any
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+		assert.Equal(t, enabled, body["global_user_search_enabled"])
+		assert.Contains(t, body, "version")
+	}
+}
+
 func TestHumaInfoLegalLinks(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)

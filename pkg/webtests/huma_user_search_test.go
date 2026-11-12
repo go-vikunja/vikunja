@@ -21,11 +21,14 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestHumaUserSearch covers the global user search. Emails must never leak.
+// TestHumaUserSearch covers the global user search. Emails must not leak
+// unless service.enableglobalusersearch is on.
 func TestHumaUserSearch(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -44,6 +47,69 @@ func TestHumaUserSearch(t *testing.T) {
 	t.Run("Unauthenticated", func(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/users?q=user2", "", "", "")
 		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+	})
+}
+
+type userSearchResponse struct {
+	Items []struct {
+		ID       int64  `json:"id"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	} `json:"items"`
+	Total      int64 `json:"total"`
+	Page       int   `json:"page"`
+	PerPage    int   `json:"per_page"`
+	TotalPages int64 `json:"total_pages"`
+}
+
+func TestHumaUserSearch_GlobalFlag(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	search := func(t *testing.T, q string) userSearchResponse {
+		t.Helper()
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/users?q="+q, "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		var body userSearchResponse
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+		return body
+	}
+
+	setFlag := func(t *testing.T, enabled bool) {
+		prev := config.ServiceEnableGlobalUserSearch.GetBool()
+		config.ServiceEnableGlobalUserSearch.Set(enabled)
+		t.Cleanup(func() { config.ServiceEnableGlobalUserSearch.Set(prev) })
+	}
+
+	t.Run("flag off", func(t *testing.T) {
+		setFlag(t, false)
+
+		body := search(t, "one%20else")
+		assert.Empty(t, body.Items)
+		assert.Zero(t, body.Total)
+
+		body = search(t, "user7")
+		require.Len(t, body.Items, 1)
+		assert.Empty(t, body.Items[0].Email)
+		assert.EqualValues(t, 1, body.Total)
+		assert.Equal(t, 25, body.PerPage)
+	})
+	t.Run("flag on", func(t *testing.T) {
+		setFlag(t, true)
+
+		body := search(t, "one%20else")
+		require.Len(t, body.Items, 1)
+		assert.Equal(t, "user11", body.Items[0].Username)
+		assert.Equal(t, "user11@example.com", body.Items[0].Email)
+		assert.EqualValues(t, 1, body.Total)
+		assert.Equal(t, 1, body.Page)
+		assert.Equal(t, 25, body.PerPage)
+		assert.EqualValues(t, 1, body.TotalPages)
+
+		body = search(t, "u")
+		assert.Empty(t, body.Items)
+		assert.Zero(t, body.Total)
 	})
 }
 

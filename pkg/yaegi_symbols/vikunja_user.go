@@ -159,6 +159,7 @@ func init() {
 		"SameBotIdentityCond":                  reflect.ValueOf(user.SameBotIdentityCond),
 		"ScheduleDeletion":                     reflect.ValueOf(user.ScheduleDeletion),
 		"SearchUsers":                          reflect.ValueOf(user.SearchUsers),
+		"SearchUsersPageSize":                  reflect.ValueOf(constant.MakeFromLiteral("25", token.INT, 0)),
 		"SessionAuthCacheKey":                  reflect.ValueOf(user.SessionAuthCacheKey),
 		"SessionAuthCacheTTL":                  reflect.ValueOf(user.SessionAuthCacheTTL),
 		"SetUserStatus":                        reflect.ValueOf(user.SetUserStatus),

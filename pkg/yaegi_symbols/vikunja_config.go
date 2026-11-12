@@ -175,6 +175,7 @@ func init() {
 		"ServiceDemoMode":                            reflect.ValueOf(config.ServiceDemoMode),
 		"ServiceEnableCaldav":                        reflect.ValueOf(config.ServiceEnableCaldav),
 		"ServiceEnableEmailReminders":                reflect.ValueOf(config.ServiceEnableEmailReminders),
+		"ServiceEnableGlobalUserSearch":              reflect.ValueOf(config.ServiceEnableGlobalUserSearch),
 		"ServiceEnableLinkSharing":                   reflect.ValueOf(config.ServiceEnableLinkSharing),
 		"ServiceEnableOpenIDTeamUserOnlySearch":      reflect.ValueOf(config.ServiceEnableOpenIDTeamUserOnlySearch),
 		"ServiceEnablePublicTeams":                   reflect.ValueOf(config.ServiceEnablePublicTeams),
