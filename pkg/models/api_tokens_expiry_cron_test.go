@@ -17,11 +17,18 @@
 package models
 
 import (
+	"context"
+	"errors"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/notifications"
+	"xorm.io/xorm/contexts"
 
 	"github.com/stretchr/testify/require"
 )
@@ -139,4 +146,54 @@ func TestCheckForExpiringAPITokens(t *testing.T) {
 		notifications.AssertNotSent(t, &APITokenExpiringWeekNotification{})
 		notifications.AssertNotSent(t, &APITokenExpiringDayNotification{})
 	})
+}
+
+type tokenNotificationInsertFailure struct{ enabled atomic.Bool }
+
+func (h *tokenNotificationInsertFailure) BeforeProcess(c *contexts.ContextHook) (context.Context, error) {
+	if h.enabled.Load() && strings.HasPrefix(c.SQL, "INSERT") && strings.Contains(c.SQL, "notifications") {
+		return c.Ctx, errors.New("notification insert failed")
+	}
+	return c.Ctx, nil
+}
+
+func (*tokenNotificationInsertFailure) AfterProcess(c *contexts.ContextHook) error { return c.Err }
+
+func expiringTokenForAtomicityTest(t *testing.T) (*APIToken, time.Time) {
+	t.Helper()
+	db.LoadAndAssertFixtures(t)
+	notifications.Unfake()
+	mail.Fake()
+	t.Cleanup(mail.ResetSent)
+	enabled := config.MailerEnabled.GetBool()
+	config.MailerEnabled.Set(true)
+	t.Cleanup(func() { config.MailerEnabled.Set(enabled) })
+	now := time.Now().UTC().Truncate(time.Second)
+	token := &APIToken{Title: t.Name(), TokenHash: t.Name(), OwnerID: 1, ExpiresAt: now.Add(6 * 24 * time.Hour), APIPermissions: APIPermissions{"tasks": {"read"}}}
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Insert(token)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	return token, now
+}
+
+func TestTokenExpiryRollsBackMailWhenNotificationFails(t *testing.T) {
+	token, now := expiringTokenForAtomicityTest(t)
+	engine, err := db.CreateDBEngine()
+	require.NoError(t, err)
+	hook := &tokenNotificationInsertFailure{}
+	hook.enabled.Store(true)
+	t.Cleanup(func() { hook.enabled.Store(false) })
+	engine.AddHook(hook)
+	checkForExpiringAPITokensAt(now)
+	require.Empty(t, mail.SentMails(), "mail must not commit when its notification marker fails")
+	hook.enabled.Store(false)
+	checkForExpiringAPITokensAt(now.Add(time.Hour))
+	require.Len(t, mail.SentMails(), 1, "rollback must leave the warning eligible for the next check")
+	s := db.NewSession()
+	defer s.Close()
+	rows, err := notifications.GetNotificationsForNameAndUser(s, 1, (&APITokenExpiringWeekNotification{}).Name(), token.ID)
+	require.NoError(t, err)
+	require.Len(t, rows, 1)
 }

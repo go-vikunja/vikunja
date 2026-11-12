@@ -28,7 +28,6 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"xorm.io/builder"
-	"xorm.io/xorm"
 )
 
 // RegisterAPITokenExpiryCheckCron registers the cron job that checks for
@@ -50,7 +49,7 @@ func checkForExpiringAPITokensAt(now time.Time) {
 	oneDay := now.Add(24 * time.Hour)
 	sevenDays := now.Add(7 * 24 * time.Hour)
 
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
 
 	// Find all tokens expiring within the next 7 days that haven't expired yet
@@ -91,7 +90,7 @@ func checkForExpiringAPITokensAt(now time.Time) {
 
 		// Send only the most urgent notification: 1-day if within 24h, otherwise 7-day
 		if token.ExpiresAt.Before(oneDay) || token.ExpiresAt.Equal(oneDay) {
-			if err := sendTokenExpiryNotificationIfNew(s, u, &APITokenExpiringDayNotification{
+			if err := sendTokenExpiryNotificationIfNew(u, &APITokenExpiringDayNotification{
 				User:  u,
 				Token: token,
 			}); err != nil {
@@ -100,23 +99,21 @@ func checkForExpiringAPITokensAt(now time.Time) {
 			continue
 		}
 
-		if err := sendTokenExpiryNotificationIfNew(s, u, &APITokenExpiringWeekNotification{
+		if err := sendTokenExpiryNotificationIfNew(u, &APITokenExpiringWeekNotification{
 			User:  u,
 			Token: token,
 		}); err != nil {
 			log.Errorf(logPrefix+"Error sending 7-day notification for token %d: %s", token.ID, err)
 		}
 	}
-
-	if err := s.Commit(); err != nil {
-		log.Errorf(logPrefix+"Error committing session: %s", err)
-	}
 }
 
 // sendTokenExpiryNotificationIfNew checks whether a notification with the same
 // name and subject (token ID) has already been sent for this user. If not, it
 // sends the notification (both email and DB).
-func sendTokenExpiryNotificationIfNew(s *xorm.Session, u *user.User, n notifications.NotificationWithSubject) error {
+func sendTokenExpiryNotificationIfNew(u *user.User, n notifications.NotificationWithSubject) error {
+	s := db.NewSession()
+	defer s.Close()
 	existing, err := notifications.GetNotificationsForNameAndUser(s, u.ID, n.Name(), n.SubjectID())
 	if err != nil {
 		return err
@@ -126,5 +123,8 @@ func sendTokenExpiryNotificationIfNew(s *xorm.Session, u *user.User, n notificat
 		return nil
 	}
 
-	return notifications.NotifyQueued(u, n, "mail", fmt.Sprintf("api-token/%d/%s", n.SubjectID(), n.Name()), s)
+	if err := notifications.NotifyQueued(u, n, "mail", fmt.Sprintf("api-token/%d/%s", n.SubjectID(), n.Name()), s); err != nil {
+		return err
+	}
+	return s.Commit()
 }
