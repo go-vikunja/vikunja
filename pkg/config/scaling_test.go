@@ -43,7 +43,8 @@ func TestClusterConfiguration(t *testing.T) {
 		wantError string
 	}{
 		{name: "valid"},
-		{name: "duplicate scheduler", change: func() { ServiceEnableScheduler.Set(true) }, wantError: "service.enablescheduler"},
+		{name: "scheduler on every replica", change: func() { ServiceEnableScheduler.Set(true) }},
+		{name: "mysql", change: func() { DatabaseType.Set("mysql") }, wantError: "database.type"},
 		{name: "missing secret", change: func() { ServiceSecret.Set("") }, wantError: "service.secret"},
 		{name: "sqlite", change: func() { DatabaseType.Set("sqlite") }, wantError: "database.type"},
 		{name: "local keys", change: func() { KeyvalueType.Set("memory") }, wantError: "keyvalue.type"},

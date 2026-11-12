@@ -23,6 +23,15 @@ import (
 )
 
 func validateRuntimeConfig() error {
+	if JobsRetention.GetDuration() <= 24*time.Hour {
+		return errors.New("jobs.retention must exceed 24h")
+	}
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
+		prefix := "jobs.queues." + queue + "."
+		if Key(prefix+"concurrency").GetInt() < 1 || Key(prefix+"lease").GetDuration() < 30*time.Second || Key(prefix+"timeout").GetDuration() <= 0 {
+			return errors.New("job queues require positive concurrency/deadline and a lease of at least 30s")
+		}
+	}
 	if EventsMaxConcurrentHandlers.GetInt() < 1 {
 		return errors.New("events.maxconcurrenthandlers must be positive")
 	}
@@ -41,14 +50,11 @@ func validateRuntimeConfig() error {
 	if !ServiceClusterMode.GetBool() {
 		return nil
 	}
-	if ServiceEnableScheduler.GetBool() {
-		return errors.New("service.clustermode requires service.enablescheduler=false; run exactly one vikunja scheduler process")
-	}
 	if ServiceSecret.GetString() == "" {
 		return errors.New("service.clustermode requires an explicitly configured shared service.secret")
 	}
-	if DatabaseType.GetString() != "postgres" && DatabaseType.GetString() != "mysql" {
-		return errors.New("service.clustermode requires database.type postgres or mysql")
+	if DatabaseType.GetString() != "postgres" {
+		return errors.New("service.clustermode requires database.type postgres")
 	}
 	if !RedisEnabled.GetBool() {
 		return errors.New("service.clustermode requires redis.enabled")

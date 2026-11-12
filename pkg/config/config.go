@@ -140,6 +140,8 @@ const (
 	RedisPrefix   Key = `redis.prefix`
 
 	ServiceClusterMode          Key = `service.clustermode`
+	JobsEnabled                 Key = `jobs.enabled`
+	JobsRetention               Key = `jobs.retention`
 	ServiceEnableScheduler      Key = `service.enablescheduler`
 	ServiceEnableMigrations     Key = `service.enablemigrations`
 	ServiceShutdownTimeout      Key = `service.shutdowntimeout`
@@ -409,6 +411,14 @@ func initDefaultConfig() {
 	ServiceIPExtractionMethod.setDefault("direct")
 	ServiceTrustedProxies.setDefault("")
 	ServiceClusterMode.setDefault(false)
+	JobsEnabled.setDefault(true)
+	JobsRetention.setDefault("48h")
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
+		Key("jobs.queues." + queue + ".enabled").setDefault(true)
+		Key("jobs.queues." + queue + ".concurrency").setDefault(2)
+		Key("jobs.queues." + queue + ".lease").setDefault("60s")
+		Key("jobs.queues." + queue + ".timeout").setDefault("5m")
+	}
 	ServiceEnableScheduler.setDefault(true)
 	ServiceEnableMigrations.setDefault(true)
 	ServiceShutdownTimeout.setDefault("30s")
