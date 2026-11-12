@@ -131,6 +131,41 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, uts, int64(1))
 	})
+	t.Run("user timezone local date differs from service date", func(t *testing.T) {
+		cases := []struct {
+			name          string
+			timezone      string
+			remindersTime string
+			now           string
+		}{
+			// 09:00 on Dec 2 in Sydney, still Dec 1 in UTC
+			{"ahead of service timezone", "Australia/Sydney", "09:00", "2018-12-01T22:00:00Z"},
+			// 23:00 on Dec 1 in New York, already Dec 2 in UTC
+			{"behind service timezone", "America/New_York", "23:00", "2018-12-02T04:00:00Z"},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+
+				_, err := s.ID(1).Cols("timezone", "overdue_tasks_reminders_time").Update(&user.User{
+					Timezone:                  tc.timezone,
+					OverdueTasksRemindersTime: tc.remindersTime,
+				})
+				require.NoError(t, err)
+
+				now, err := time.Parse(time.RFC3339, tc.now)
+				require.NoError(t, err)
+
+				uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+				require.NoError(t, err)
+				require.Contains(t, uts, int64(1))
+				assert.Contains(t, uts[1].followed, int64(5))
+				assert.Contains(t, uts[1].followed, int64(6))
+			})
+		}
+	})
 }
 
 func TestGetTaskUsersForTasksPermissionFiltering(t *testing.T) {
