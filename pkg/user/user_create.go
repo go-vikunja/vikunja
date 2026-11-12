@@ -93,9 +93,11 @@ func CreateUser(s *xorm.Session, user *User, options ...CreateUserOptions) (newU
 		return nil, err
 	}
 
-	events.DispatchOnCommit(s, &CreatedEvent{
+	if err := events.DispatchOnCommit(s, &CreatedEvent{
 		User: newUserOut,
-	})
+	}); err != nil {
+		return nil, err
+	}
 
 	// Don't send a mail if no mailer is configured
 	if !config.MailerEnabled.GetBool() || user.Issuer != IssuerLocal || (len(options) > 0 && options[0].SkipEmailConfirm) {
@@ -171,7 +173,9 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 		return nil, err
 	}
 
-	events.DispatchOnCommit(s, &CreatedEvent{User: newBot})
+	if err := events.DispatchOnCommit(s, &CreatedEvent{User: newBot}); err != nil {
+		return nil, err
+	}
 	return newBot, nil
 }
 

@@ -99,11 +99,13 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 		}
 	}
 
-	events.DispatchOnCommit(s, &TaskCommentCreatedEvent{
+	if err := events.DispatchOnCommit(s, &TaskCommentCreatedEvent{
 		Task:    &task,
 		Comment: tc,
 		Doer:    tc.Author,
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -145,11 +147,13 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskCommentDeletedEvent{
+	if err := events.DispatchOnCommit(s, &TaskCommentDeletedEvent{
 		Task:    &task,
 		Comment: tc,
 		Doer:    doer,
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -201,11 +205,13 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskCommentUpdatedEvent{
+	if err := events.DispatchOnCommit(s, &TaskCommentUpdatedEvent{
 		Task:    &task,
 		Comment: tc,
 		Doer:    doer,
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

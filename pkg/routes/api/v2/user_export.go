@@ -113,7 +113,9 @@ func userExportRequest(ctx context.Context, in *userExportPasswordBody) (*messag
 		return nil, err
 	}
 
-	events.DispatchOnCommit(s, &models.UserDataExportRequestedEvent{User: u})
+	if err := events.DispatchOnCommit(s, &models.UserDataExportRequestedEvent{User: u}); err != nil {
+		return nil, err
+	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()

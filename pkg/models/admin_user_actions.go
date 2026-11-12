@@ -63,9 +63,13 @@ func SetUserAdminFlag(s *xorm.Session, doer *user.User, id int64, isAdmin bool) 
 	}
 
 	if isAdmin {
-		events.DispatchOnCommit(s, &AdminUserAdminGrantedEvent{User: target, Doer: doer})
+		if err := events.DispatchOnCommit(s, &AdminUserAdminGrantedEvent{User: target, Doer: doer}); err != nil {
+			return nil, err
+		}
 	} else {
-		events.DispatchOnCommit(s, &AdminUserAdminRevokedEvent{User: target, Doer: doer})
+		if err := events.DispatchOnCommit(s, &AdminUserAdminRevokedEvent{User: target, Doer: doer}); err != nil {
+			return nil, err
+		}
 	}
 	return target, nil
 }
@@ -93,12 +97,14 @@ func SetUserStatusAsAdmin(s *xorm.Session, doer *user.User, id int64, status use
 	// Reflect the change on the returned struct; GetUserByID refuses disabled accounts.
 	target.Status = status
 
-	events.DispatchOnCommit(s, &AdminUserStatusChangedEvent{
+	if err := events.DispatchOnCommit(s, &AdminUserStatusChangedEvent{
 		User:      target,
 		Doer:      doer,
 		OldStatus: oldStatus,
 		NewStatus: status,
-	})
+	}); err != nil {
+		return nil, err
+	}
 	return target, nil
 }
 
@@ -127,7 +133,9 @@ func SetUserPasswordAsAdmin(s *xorm.Session, doer *user.User, id int64, newPassw
 		}
 	}
 
-	events.DispatchOnCommit(s, &AdminUserPasswordSetEvent{User: target, Doer: doer})
+	if err := events.DispatchOnCommit(s, &AdminUserPasswordSetEvent{User: target, Doer: doer}); err != nil {
+		return nil, err
+	}
 	return target, nil
 }
 
@@ -159,7 +167,9 @@ func RequestPasswordResetAsAdmin(s *xorm.Session, doer *user.User, id int64) err
 		return err
 	}
 
-	events.DispatchOnCommit(s, &AdminUserPasswordResetSentEvent{User: target, Doer: doer})
+	if err := events.DispatchOnCommit(s, &AdminUserPasswordResetSentEvent{User: target, Doer: doer}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -186,13 +196,17 @@ func DeleteUserAsAdmin(s *xorm.Session, doer *user.User, id int64, mode string) 
 		return err
 	}
 
-	events.DispatchOnCommit(s, &AdminUserDeletedEvent{User: target, Doer: doer, Mode: mode})
+	if err := events.DispatchOnCommit(s, &AdminUserDeletedEvent{User: target, Doer: doer, Mode: mode}); err != nil {
+		return err
+	}
 	return nil
 }
 
 // ListUsersAsAdmin queues an audit event because results include email addresses.
 func ListUsersAsAdmin(s *xorm.Session, doer *user.User, search string, page, perPage int) ([]*user.User, int64, error) {
-	events.DispatchOnCommit(s, &AdminUsersListedEvent{Doer: doer})
+	if err := events.DispatchOnCommit(s, &AdminUsersListedEvent{Doer: doer}); err != nil {
+		return nil, 0, err
+	}
 
 	query := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
 	if search != "" {

@@ -100,11 +100,13 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskAttachmentCreatedEvent{
+	if err := events.DispatchOnCommit(s, &TaskAttachmentCreatedEvent{
 		Task:       &task,
 		Attachment: ta,
 		Doer:       ta.CreatedBy,
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -465,11 +467,13 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskAttachmentDeletedEvent{
+	if err := events.DispatchOnCommit(s, &TaskAttachmentDeletedEvent{
 		Task:       &task,
 		Attachment: ta,
 		Doer:       doer,
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

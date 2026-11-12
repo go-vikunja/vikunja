@@ -118,7 +118,9 @@ func CreateInviteLinkAsAdmin(s *xorm.Session, doer *user.User, body *CreateInvit
 	}
 	// Audit events must never carry the clear token.
 	auditLink := *link
-	events.DispatchOnCommit(s, &AdminInviteLinkCreatedEvent{Link: &auditLink, Doer: doer})
+	if err := events.DispatchOnCommit(s, &AdminInviteLinkCreatedEvent{Link: &auditLink, Doer: doer}); err != nil {
+		return nil, err
+	}
 	link.ClearTextToken = token
 	return link, nil
 }
@@ -190,7 +192,9 @@ func DeleteInviteLinkAsAdmin(s *xorm.Session, doer *user.User, id int64) error {
 	if _, err := s.ID(id).Delete(&UserInviteLink{}); err != nil {
 		return fmt.Errorf("delete invite link: %w", err)
 	}
-	events.DispatchOnCommit(s, &AdminInviteLinkDeletedEvent{Link: link, Doer: doer})
+	if err := events.DispatchOnCommit(s, &AdminInviteLinkDeletedEvent{Link: link, Doer: doer}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -248,7 +252,9 @@ func RegisterUserViaInviteLink(s *xorm.Session, token string, u *user.User) (*us
 		if _, err := s.Insert(&TeamMember{TeamID: team.ID, UserID: created.ID}); err != nil {
 			return nil, fmt.Errorf("join invited team: %w", err)
 		}
-		events.DispatchOnCommit(s, &TeamMemberAddedEvent{Team: &Team{ID: team.ID, Name: team.Name}, Member: created, Doer: created})
+		if err := events.DispatchOnCommit(s, &TeamMemberAddedEvent{Team: &Team{ID: team.ID, Name: team.Name}, Member: created, Doer: created}); err != nil {
+			return nil, err
+		}
 	}
 	return created, nil
 }

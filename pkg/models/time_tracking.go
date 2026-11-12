@@ -92,7 +92,9 @@ func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	events.DispatchOnCommit(s, &TimeEntryCreatedEvent{TimeEntry: te, Doer: doer})
+	if err := events.DispatchOnCommit(s, &TimeEntryCreatedEvent{TimeEntry: te, Doer: doer}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -120,7 +122,9 @@ func stopRunningTimerForUser(s *xorm.Session, userID int64) (*TimeEntry, error) 
 	if err != nil {
 		return nil, err
 	}
-	events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: running, Doer: doer})
+	if err := events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: running, Doer: doer}); err != nil {
+		return nil, err
+	}
 	return running, nil
 }
 
@@ -234,7 +238,9 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: te, Doer: doer})
+	if err := events.DispatchOnCommit(s, &TimeEntryUpdatedEvent{TimeEntry: te, Doer: doer}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -251,7 +257,9 @@ func (te *TimeEntry) Delete(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-	events.DispatchOnCommit(s, &TimeEntryDeletedEvent{TimeEntry: entry, Doer: doer})
+	if err := events.DispatchOnCommit(s, &TimeEntryDeletedEvent{TimeEntry: entry, Doer: doer}); err != nil {
+		return err
+	}
 	return nil
 }
 

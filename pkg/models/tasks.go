@@ -1167,19 +1167,22 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 			}
 		}
 
-		events.DispatchOnCommit(s, &TaskCreatedEvent{
-			Task: t,
-			Doer: createdBy,
-		})
 	}
-
-	events.DispatchOnCommit(s, &TasksBatchCreatedEvent{
-		Tasks: tasks,
-		Doer:  createdBy,
-	})
+	if err := dispatchCreatedTasks(s, tasks, createdBy); err != nil {
+		return err
+	}
 
 	err = updateProjectLastUpdated(s, &Project{ID: projectID})
 	return
+}
+
+func dispatchCreatedTasks(s *xorm.Session, tasks []*Task, createdBy *user.User) error {
+	for _, task := range tasks {
+		if err := events.DispatchOnCommit(s, &TaskCreatedEvent{Task: task, Doer: createdBy}); err != nil {
+			return err
+		}
+	}
+	return events.DispatchOnCommit(s, &TasksBatchCreatedEvent{Tasks: tasks, Doer: createdBy})
 }
 
 func setTasksInBucketInViews(s *xorm.Session, views []*ProjectView, tasks []*Task, a web.Auth, setBucket bool, providedBuckets map[int64]*Bucket) ([]*TaskPosition, []*TaskBucket, error) {
@@ -1666,10 +1669,12 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 	t.Updated = nt.Updated
 
-	events.DispatchOnCommit(s, &TaskUpdatedEvent{
+	if err := events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: t,
 		Doer: doerFromAuth(s, a),
-	})
+	}); err != nil {
+		return err
+	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 }
@@ -2166,10 +2171,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskDeletedEvent{
+	if err := events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
 		Doer: doerFromAuth(s, a),
-	})
+	}); err != nil {
+		return err
+	}
 
 	// fullTask, not t: the receiver only has the id from the route param
 	err = updateProjectLastUpdated(s, &Project{ID: fullTask.ProjectID})
@@ -2361,9 +2368,11 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskUpdatedEvent{
+	if err := events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: &t,
 		Doer: doerFromAuth(s, auth),
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }

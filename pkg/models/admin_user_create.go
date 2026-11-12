@@ -62,7 +62,9 @@ func CreateUserAsAdmin(s *xorm.Session, doer *user.User, body *CreateUserBody) (
 
 	// Queued alongside the user.created event RegisterUser dispatched; both
 	// fire when the caller runs DispatchPending after this commit.
-	events.DispatchOnCommit(s, &AdminUserCreatedEvent{User: newUser, Doer: doer})
+	if err := events.DispatchOnCommit(s, &AdminUserCreatedEvent{User: newUser, Doer: doer}); err != nil {
+		return nil, err
+	}
 
 	if err := s.Commit(); err != nil {
 		return nil, err

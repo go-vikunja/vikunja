@@ -26,7 +26,9 @@ import (
 	"github.com/getsentry/sentry-go"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/errorreport"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	vmetrics "code.vikunja.io/api/pkg/metrics"
 	"github.com/ThreeDotsLabs/watermill"
@@ -34,6 +36,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
+	"xorm.io/xorm"
 )
 
 // activeHandlers tracks in-flight event handler goroutines so the test
@@ -49,7 +52,11 @@ func WaitForPendingHandlers() {
 	if r := currentRuntime(); r != nil {
 		r.waitForPendingHandlers()
 	}
+	jobs.WaitForPendingHandlers()
 	activeHandlers.Wait()
+	if r := currentRuntime(); r != nil {
+		r.waitForPendingHandlers()
+	}
 }
 
 // Event represents the event interface used by all events
@@ -209,6 +216,21 @@ func Dispatch(event Event) error {
 // context (see WithRequestMeta) onto the message metadata, so listeners can
 // attribute the event to the originating HTTP request.
 func DispatchWithContext(ctx context.Context, event Event) error {
+	if !isUnderTest && len(durableListeners[event.Name()]) > 0 {
+		s := db.NewSession()
+		defer s.Close()
+		db.SetSessionContext(ctx, s)
+		if err := enqueueDurable(s, event); err != nil {
+			return err
+		}
+		if err := s.Commit(); err != nil {
+			return err
+		}
+	}
+	return dispatchVolatile(ctx, event)
+}
+
+func dispatchVolatile(ctx context.Context, event Event) error {
 	if isUnderTest {
 		dispatchedTestEvents = append(dispatchedTestEvents, event)
 		return nil
@@ -251,12 +273,17 @@ var pendingEvents sync.Map // map[any]*pendingEventQueue
 // The key should be the *xorm.Session pointer associated with the transaction.
 // Call DispatchPending(key) after s.Commit() to actually dispatch the events.
 // Call CleanupPending(key) on rollback to discard them.
-func DispatchOnCommit(key any, event Event) {
+func DispatchOnCommit(key any, event Event) error {
+	session, _ := key.(*xorm.Session)
+	if err := enqueueDurable(session, event); err != nil {
+		return err
+	}
 	val, _ := pendingEvents.LoadOrStore(key, &pendingEventQueue{})
 	queue := val.(*pendingEventQueue)
 	queue.mu.Lock()
 	queue.events = append(queue.events, event)
 	queue.mu.Unlock()
+	return nil
 }
 
 // DispatchPending dispatches all events accumulated for the given key and removes them.
@@ -264,6 +291,7 @@ func DispatchOnCommit(key any, event Event) {
 // Request metadata on the context (see WithRequestMeta) is copied onto each message.
 // If any event fails to dispatch, the error is logged but remaining events are still dispatched.
 func DispatchPending(ctx context.Context, key any) {
+	jobs.Wake()
 	val, ok := pendingEvents.LoadAndDelete(key)
 	if !ok {
 		return
@@ -272,7 +300,7 @@ func DispatchPending(ctx context.Context, key any) {
 	// No need to lock here since we've already removed it from the map
 	// and this key won't receive new events
 	for _, event := range queue.events {
-		if err := DispatchWithContext(ctx, event); err != nil {
+		if err := dispatchVolatile(ctx, event); err != nil {
 			log.Errorf("Failed to dispatch event %s: %v", event.Name(), err)
 		}
 	}

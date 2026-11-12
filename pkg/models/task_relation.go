@@ -263,11 +263,13 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskRelationCreatedEvent{
+	if err := events.DispatchOnCommit(s, &TaskRelationCreatedEvent{
 		Task:     &task,
 		Relation: rel,
 		Doer:     doer,
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -345,10 +347,12 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskRelationDeletedEvent{
+	if err := events.DispatchOnCommit(s, &TaskRelationDeletedEvent{
 		Task:     &task,
 		Relation: rel,
 		Doer:     doer,
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }
