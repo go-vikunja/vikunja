@@ -42,7 +42,7 @@
 								<td class="is-breakable">
 									<User
 										:user="u"
-										:avatar-size="27"
+										:avatar-size="32"
 									/>
 								</td>
 								<td class="is-breakable">
