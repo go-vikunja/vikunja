@@ -21,7 +21,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"weak"
 
 	"xorm.io/xorm"
@@ -189,15 +188,9 @@ func RememberEach[T any](s *xorm.Session, ids []int64, key func(int64) string, f
 	return values, nil
 }
 
-// Bumped on every write statement, at statement time, so rolled-back writes count too.
-var writeGeneration atomic.Uint64
-
 type writeInvalidationHook struct{}
 
 func (writeInvalidationHook) BeforeProcess(c *contexts.ContextHook) (context.Context, error) {
-	if isWriteStatement(c.SQL) || advancesSequence(c.SQL) {
-		writeGeneration.Add(1)
-	}
 	if isWriteStatement(c.SQL) {
 		if cache, ok := c.Ctx.Value(sessionCacheCtxKey).(*sessionCache); ok {
 			cache.markDirty()
@@ -259,12 +252,6 @@ func leadingKeyword(sqlStr string) string {
 		j++
 	}
 	return sqlStr[i:j]
-}
-
-// SELECT setval(...) and nextval(...) change sequence state without being writes to the session.
-func advancesSequence(sqlStr string) bool {
-	return strings.Contains(sqlStr, "setval") || strings.Contains(sqlStr, "nextval") ||
-		strings.Contains(sqlStr, "SETVAL") || strings.Contains(sqlStr, "NEXTVAL")
 }
 
 // Anything not recognizable as a pure read counts as a write.
