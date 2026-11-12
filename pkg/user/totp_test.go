@@ -209,6 +209,10 @@ func TestEnableTOTPRequiresPassword(t *testing.T) {
 func TestTOTPPasscodeConcurrentReplay(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	const attempts = 128
+	engine, err := db.CreateDBEngine()
+	require.NoError(t, err)
+	defer engine.SetMaxOpenConns(engine.DB().Stats().MaxOpenConnections)
+	engine.SetMaxOpenConns(4)
 
 	for range 10 {
 		passcode, err := totp.GenerateCode("JBSWY3DPEHPK3PXP", time.Now())
@@ -225,10 +229,10 @@ func TestTOTPPasscodeConcurrentReplay(t *testing.T) {
 		for range attempts {
 			go func() {
 				defer finished.Done()
-				s := db.NewSession()
-				defer s.Close()
 				ready.Done()
 				<-start
+				s := db.NewSession()
+				defer s.Close()
 				_, err := ValidateTOTPPasscode(s, &TOTPPasscode{
 					User:     &User{ID: 10},
 					Passcode: passcode,
@@ -236,7 +240,15 @@ func TestTOTPPasscodeConcurrentReplay(t *testing.T) {
 				results <- err
 			}()
 		}
-		ready.Wait()
+		allReady := make(chan struct{})
+		go func() { ready.Wait(); close(allReady) }()
+		select {
+		case <-allReady:
+		case <-time.After(5 * time.Second):
+			close(start)
+			finished.Wait()
+			t.Fatal("workers blocked before the start barrier")
+		}
 		close(start)
 		finished.Wait()
 
