@@ -113,6 +113,33 @@ func TestQueueParkedTimeRecordedOnFailureAndRescue(t *testing.T) {
 	assert.True(t, rescued.FinishedAt.Equal(now))
 }
 
+func TestQueueReplayUsesCurrentBudgetWithoutResettingFence(t *testing.T) {
+	e := queueTestEngine(t)
+	config.Key("jobs.queues." + t.Name() + ".maxattempts").Set(12)
+	session := e.NewSession()
+	defer session.Close()
+	job := Job{
+		Queue:       t.Name(),
+		Kind:        "test",
+		Payload:     "{}",
+		State:       StateFailed,
+		Attempt:     5,
+		MaxAttempts: 5,
+		RunAt:       time.Now(),
+		FinishedAt:  time.Now(),
+	}
+	_, err := session.Insert(&job)
+	require.NoError(t, err)
+	require.NoError(t, NewQueue(e, "operator").Replay(t.Context(), job.ID))
+	var stored Job
+	_, err = session.ID(job.ID).Get(&stored)
+	require.NoError(t, err)
+	assert.Equal(t, 5, stored.Attempt)
+	assert.Equal(t, 17, stored.MaxAttempts)
+	assert.Equal(t, StateAvailable, stored.State)
+	assert.True(t, stored.FinishedAt.IsZero())
+}
+
 func TestQueueRetryJitterSpreadsWithinBounds(t *testing.T) {
 	policy := RetryPolicy{Attempts: 12, InitialDelay: 30 * time.Second, MaxDelay: time.Hour}
 	for _, test := range []struct {

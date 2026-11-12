@@ -236,17 +236,12 @@ func (q *Queue) Rescue(ctx context.Context, now time.Time, limit int) (int64, er
 }
 
 func (q *Queue) Replay(ctx context.Context, id int64) error {
-	s := q.engine.NewSession()
-	defer s.Close()
-	db.SetSessionContext(ctx, s)
-	var job Job
-	found, err := s.ID(id).Where(builder.Eq{"state": StateFailed}).Get(&job)
+	result, err := q.ReplaySelected(ctx, ReplayFilter{ID: id}, false)
 	if err != nil {
 		return err
 	}
-	if !found {
+	if result.Replayed == 0 {
 		return errors.New("parked job not found")
 	}
-	_, err = s.ID(id).Where(builder.Eq{"state": StateFailed}).Cols("state", "run_at", "max_attempts").Update(&Job{State: StateAvailable, RunAt: time.Now(), MaxAttempts: job.Attempt + DefaultAttempts})
-	return err
+	return nil
 }

@@ -52,14 +52,43 @@ func init() {
 			return nil
 		},
 	})
-	command.AddCommand(&cobra.Command{
-		Use:   "replay <job-id>",
-		Short: "Give a parked job five more attempts",
-		Args:  cobra.ExactArgs(1),
+	command.AddCommand(newJobReplayCommand())
+	rootCmd.AddCommand(command)
+}
+
+func newJobReplayCommand() *cobra.Command {
+	filter := jobs.ReplayFilter{}
+	var parkedAfter, parkedBefore string
+	var dryRun bool
+	command := &cobra.Command{
+		Use:   "replay [job-id]",
+		Short: "Replay parked jobs selected by ID, queue, kind, or parked-at time",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := strconv.ParseInt(args[0], 10, 64)
-			if err != nil || id <= 0 {
-				return fmt.Errorf("job ID must be a positive integer")
+			var err error
+			if filter.Limit < 1 {
+				return fmt.Errorf("replay limit must be between 1 and 1000")
+			}
+			if len(args) == 1 {
+				filter.ID, err = strconv.ParseInt(args[0], 10, 64)
+				if err != nil || filter.ID <= 0 {
+					return fmt.Errorf("job ID must be a positive integer")
+				}
+			}
+			if parkedAfter != "" {
+				filter.ParkedAfter, err = time.Parse(time.RFC3339, parkedAfter)
+				if err != nil {
+					return fmt.Errorf("invalid parked-after: %w", err)
+				}
+			}
+			if parkedBefore != "" {
+				filter.ParkedBefore, err = time.Parse(time.RFC3339, parkedBefore)
+				if err != nil {
+					return fmt.Errorf("invalid parked-before: %w", err)
+				}
+			}
+			if err = filter.Validate(); err != nil {
+				return err
 			}
 			initialize.FullInitWithoutAsync()
 			engine, err := db.CreateDBEngine()
@@ -68,8 +97,22 @@ func init() {
 			}
 			ctx, cancel := context.WithTimeout(cmd.Context(), 30*time.Second)
 			defer cancel()
-			return jobs.NewQueue(engine, "operator").Replay(ctx, id)
+			result, err := jobs.NewQueue(engine, "operator").ReplaySelected(ctx, filter, dryRun)
+			if err != nil {
+				return fmt.Errorf("replay stopped after %d changes (%d matched): %w", result.Replayed, result.Matched, err)
+			}
+			if filter.ID != 0 && result.Replayed == 0 && !dryRun {
+				return fmt.Errorf("parked job not found")
+			}
+			_, err = fmt.Fprintf(cmd.OutOrStdout(), "matched=%d replayed=%d limit=%d dry-run=%t\n", result.Matched, result.Replayed, filter.Limit, dryRun)
+			return err
 		},
-	})
-	rootCmd.AddCommand(command)
+	}
+	command.Flags().StringVar(&filter.Queue, "queue", "", "Queue to replay")
+	command.Flags().StringVar(&filter.Kind, "kind", "", "Job kind to replay")
+	command.Flags().StringVar(&parkedAfter, "parked-after", "", "Inclusive parked-at lower bound (RFC3339)")
+	command.Flags().StringVar(&parkedBefore, "parked-before", "", "Exclusive parked-at upper bound (RFC3339)")
+	command.Flags().IntVar(&filter.Limit, "limit", 100, "Maximum jobs to replay (1–1000)")
+	command.Flags().BoolVar(&dryRun, "dry-run", false, "Count matching parked jobs without changing them")
+	return command
 }
