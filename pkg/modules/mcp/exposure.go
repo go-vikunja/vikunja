@@ -101,6 +101,8 @@ var exposedOperations = map[string]toolTier{
 	"tasks-duplicate":                 catalogTool,
 	"tasks-list":                      typedTool,
 	"tasks-mark-read":                 catalogTool,
+	"tasks-occurrences":               typedTool,
+	"tasks-occurrences-preview":       typedTool,
 	"tasks-position-update":           catalogTool,
 	"tasks-read":                      typedTool,
 	"tasks-read-by-index":             catalogTool,

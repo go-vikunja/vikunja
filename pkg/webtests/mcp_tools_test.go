@@ -300,13 +300,13 @@ func TestMCP_Tools_CreateSchemaMarksRequired(t *testing.T) {
 func TestMCP_Tools_RESTValidationIsError(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
 	res := c.callTool("tasks_create", map[string]any{
-		"project":      1,
-		"title":        "invalid repeat",
-		"repeat_after": -1,
+		"project":   1,
+		"title":     "invalid color",
+		"hex_color": "zzzzzz",
 	})
 	assert.Equal(t, true, res["isError"])
 	assert.Contains(t, toolResultText(t, res), "422")
-	assert.Contains(t, toolResultText(t, res), "repeat_after")
+	assert.Contains(t, toolResultText(t, res), "hex_color")
 }
 func TestMCP_Tools_ExpandRequiresScopeOnLoopback(t *testing.T) {
 	c := newMCPClient(t, mcpFullToken)
