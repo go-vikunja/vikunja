@@ -21,28 +21,18 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestSetupE2ETestEnvDrainsPendingHandlers covers the flake where a webhook
-// delivery handler left over from a finished test still held a DB session while
-// the next test seeded fixtures, making LoadFixtures fail with
-// "database table is locked: webhooks".
-//
-// Cancelling the test context is not enough: sendWebhookPayload issues its HTTP
-// request with context.Background(), so an in-flight delivery outlives the
-// router shutdown. The webhook target below blocks until releaseAfter has
-// elapsed; if the second setup returns before that, it did not drain.
-func TestSetupE2ETestEnvDrainsPendingHandlers(t *testing.T) {
-	const releaseAfter = 500 * time.Millisecond
+// TestSetupE2ETestEnvCancelsInFlightWebhook keeps the target blocked while the
+// next setup drains the cancelled handler and replaces database fixtures.
+func TestSetupE2ETestEnvCancelsInFlightWebhook(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -66,6 +56,7 @@ func TestSetupE2ETestEnvDrainsPendingHandlers(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer target.Close()
+	defer releaseNow()
 
 	// Drop the example.com fixture webhook so only the blocking target fires.
 	require.NoError(t, db.LoadFixtures())
@@ -97,18 +88,15 @@ func TestSetupE2ETestEnvDrainsPendingHandlers(t *testing.T) {
 
 	cancel()
 
-	var released atomic.Bool
-	time.AfterFunc(releaseAfter, func() {
-		released.Store(true)
-		releaseNow()
-	})
-	defer releaseNow()
-
 	nextCtx, cancelNext := context.WithCancel(context.Background())
 	defer cancelNext()
 
-	_, err = setupE2ETestEnv(nextCtx)
-	require.NoError(t, err)
-
-	assert.True(t, released.Load(), "setupE2ETestEnv seeded fixtures while a webhook handler was still holding a DB session")
+	ready := make(chan error, 1)
+	go func() { _, err := setupE2ETestEnv(nextCtx); ready <- err }()
+	select {
+	case err := <-ready:
+		require.NoError(t, err)
+	case <-time.After(10 * time.Second):
+		t.Fatal("cancelled webhook prevented fixture setup while its target was blocked")
+	}
 }

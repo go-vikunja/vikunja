@@ -1260,19 +1260,8 @@ func (wdl *WebhookDeliveryListener) Name() string {
 	return "webhook.delivery.listener"
 }
 
-// Handle is executed when a WebhookDeliveryEvent is fired. It reloads the
-// webhook from the database by id (so secrets, target_url, and basic auth
-// credentials are always current) and performs the HTTP delivery.
-//
-// Special cases:
-//   - If the webhook row no longer exists (deleted between fan-out and
-//     delivery), Handle returns nil so the message is not retried.
-//   - A nil payload is treated as data corruption / version skew and
-//     returned as an error so the message is retried and eventually
-//     parked in the poison queue rather than silently dropped.
-//   - Any other error is returned so the watermill retry middleware
-//     retries this delivery with exponential backoff, and eventually
-//     parks it in the poison queue if all retries fail.
+// Handle reloads each webhook; deleted hooks are dropped.
+// Invalid payloads and transport errors consume the job's retry budget.
 func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
 	evt := &WebhookDeliveryEvent{}
 	if err := json.Unmarshal(msg.Payload, evt); err != nil {
@@ -1283,8 +1272,9 @@ func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
 		return fmt.Errorf("webhook delivery event for webhook %d has no payload", evt.WebhookID)
 	}
 
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
+	db.SetSessionContext(msg.Context(), s)
 
 	webhook := &Webhook{}
 	has, err := s.Where("id = ?", evt.WebhookID).Get(webhook)
@@ -1296,6 +1286,7 @@ func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
 		return nil
 	}
 
+	s.Close()
 	if err := webhook.sendWebhookPayloadContext(msg.Context(), evt.Payload, msg.UUID); err != nil {
 		// A target that is down or rejects the payload is the user's to fix, so
 		// don't report it — but still retry and eventually poison the message.
