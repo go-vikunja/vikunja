@@ -21,7 +21,7 @@ data:
   VIKUNJA_WEBSOCKET_REDIS_ENABLED: "true"
   VIKUNJA_FILES_TYPE: "s3"
   VIKUNJA_FILES_S3_TEMPDIR: "/tmp"
-  VIKUNJA_LOG_FORMAT: "json"
+  VIKUNJA_LOG_FORMAT: "structured"
 ---
 apiVersion: v1
 kind: Service
