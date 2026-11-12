@@ -14,7 +14,8 @@ export const cleanupItemText = (text: string, items: string[], prefix: string): 
 			.replace(new RegExp(`\\${prefix}"${escaped}" `, 'ig'), '')
 			.replace(new RegExp(`\\${prefix}"${escaped}"`, 'ig'), '')
 			.replace(new RegExp(`\\${prefix}${escaped} `, 'ig'), '')
-			.replace(new RegExp(`\\${prefix}${escaped}`, 'ig'), '')
+			// Only where the item ends, so removing "*work" leaves "*workshop" intact
+			.replace(new RegExp(`\\${prefix}${escaped}(?=\\s|$)`, 'ig'), '')
 	})
 	return text
 }

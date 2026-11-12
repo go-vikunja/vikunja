@@ -3,7 +3,7 @@ import {queryClient} from '@/client/queryClient'
 import {accountKeys} from '@/client/queries/account'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {parseTaskText, PrefixMode} from '.'
+import {cleanupItemText, parseTaskText, PrefixMode} from '.'
 import type {ParsedTaskText} from '.'
 import {parseDate} from './dateParser'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
@@ -940,6 +940,24 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('a')
 			expect(result.labels).toHaveLength(1)
 			expect(result.labels[0]).toBe('a (a)')
+		})
+		it('should not cut a label that starts with another label out of the text', () => {
+			const result = parseTaskText('Plan *work *workshop')
+
+			expect(result.text).toBe('Plan')
+			expect(result.labels).toEqual(['work', 'workshop'])
+		})
+		it('should not cut a label that starts with another label at the end of the text', () => {
+			const result = parseTaskText('Plan *work tasks *workshop')
+
+			expect(result.text).toBe('Plan tasks')
+			expect(result.labels).toEqual(['work', 'workshop'])
+		})
+	})
+
+	describe('cleanupItemText', () => {
+		it('should not cut an assignee that starts with another assignee out of the text', () => {
+			expect(cleanupItemText('Ask @john @johnny', ['john', 'johnny'], '@').trim()).toBe('Ask')
 		})
 	})
 
