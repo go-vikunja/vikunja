@@ -694,6 +694,8 @@
       "showDone": "Show completed tasks",
       "minPriority": "Minimum priority",
       "search": "Search tasks",
+      "labelPlaceholder": "Filter by label…",
+      "assigneePlaceholder": "Filter by assignee…",
       "unknownLabel": "Unknown label #{id}",
       "unknownProject": "Unknown project #{id}",
       "until": "until {date}"

@@ -2,7 +2,7 @@
 	<Multiselect
 		v-model="labels"
 		:loading="loading"
-		:placeholder="$t('task.label.placeholder')"
+		:placeholder="placeholder ?? $t('task.label.placeholder')"
 		:multiple="true"
 		:search-results="foundLabels"
 		label="title"
@@ -68,11 +68,13 @@ const props = withDefaults(defineProps<{
 	disabled?: boolean
 	creatable?: boolean
 	creationDisabledMessage?: string
+	placeholder?: string
 }>(), {
 	taskId: 0,
 	disabled: false,
 	creatable: true,
 	creationDisabledMessage: '',
+	placeholder: undefined,
 })
 
 const emit = defineEmits<{
