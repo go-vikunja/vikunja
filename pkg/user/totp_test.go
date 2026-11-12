@@ -219,10 +219,12 @@ func TestTOTPPasscodeConcurrentReplay(t *testing.T) {
 
 		start := make(chan struct{})
 		results := make(chan error, attempts)
-		var ready sync.WaitGroup
+		var ready, finished sync.WaitGroup
 		ready.Add(attempts)
+		finished.Add(attempts)
 		for range attempts {
 			go func() {
+				defer finished.Done()
 				s := db.NewSession()
 				defer s.Close()
 				ready.Done()
@@ -236,6 +238,7 @@ func TestTOTPPasscodeConcurrentReplay(t *testing.T) {
 		}
 		ready.Wait()
 		close(start)
+		finished.Wait()
 
 		accepted := 0
 		for range attempts {
