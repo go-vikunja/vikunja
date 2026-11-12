@@ -36,6 +36,8 @@ type Options struct {
 	Timeout     time.Duration
 }
 
+const completedMetadata = "job_completed"
+
 type attemptKey struct{}
 type activeClaim struct {
 	job   Job
@@ -135,6 +137,9 @@ func (s *Subscriber) await(ctx context.Context, msg *message.Message, job Job, c
 	defer func() { <-slots; s.mu.Lock(); delete(s.active, job.ID); s.mu.Unlock(); Wake() }()
 	select {
 	case <-msg.Acked():
+		if msg.Metadata.Get(completedMetadata) == "true" {
+			return
+		}
 		session := s.queue.engine.NewSession()
 		defer session.Close()
 		// Transactional handlers already completed their attempt with the effect.
@@ -195,7 +200,8 @@ func (s *Subscriber) Close() error {
 
 // Commit fences database effects against a rescued or timed-out attempt.
 func Commit(session *xorm.Session, msg *message.Message) error {
-	if job, durable := FromMessage(msg); durable {
+	job, durable := FromMessage(msg)
+	if durable {
 		if err := msg.Context().Err(); err != nil {
 			return err
 		}
@@ -203,7 +209,13 @@ func Commit(session *xorm.Session, msg *message.Message) error {
 			return err
 		}
 	}
-	return session.Commit()
+	if err := session.Commit(); err != nil {
+		return err
+	}
+	if durable {
+		msg.Metadata.Set(completedMetadata, "true")
+	}
+	return nil
 }
 
 func NewSession(msg *message.Message) *xorm.Session {
