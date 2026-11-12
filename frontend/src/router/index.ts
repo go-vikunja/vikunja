@@ -511,6 +511,12 @@ const router = createRouter({
 					component: () => import('@/views/admin/UsersView.vue'),
 				},
 				{
+					path: 'users/:id(\\d+)/settings',
+					name: 'admin.userSettings',
+					component: () => import('@/views/admin/UserSettingsView.vue'),
+					props: route => ({userId: Number(route.params.id as string)}),
+				},
+				{
 					path: 'projects',
 					name: 'admin.projects',
 					component: () => import('@/views/admin/ProjectsView.vue'),
