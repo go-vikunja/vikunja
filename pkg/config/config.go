@@ -914,6 +914,11 @@ func InitConfig() {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	}
 
+	// Older sample configs shipped "9:00"; the frontend's time input needs HH:MM.
+	if t, err := time.Parse("15:04", DefaultSettingsOverdueTaskRemindersTime.GetString()); err == nil {
+		DefaultSettingsOverdueTaskRemindersTime.Set(t.Format("15:04"))
+	}
+
 	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")
 	CorsOrigins.Set(append(CorsOrigins.GetStringSlice(), publicURL))
 
