@@ -103,7 +103,8 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (u
 				continue
 			}
 		}
-		overdueMailTime := time.Date(now.Year(), now.Month(), now.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
+		nowInTz := now.In(tz)
+		overdueMailTime := time.Date(nowInTz.Year(), nowInTz.Month(), nowInTz.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
 		isTimeForReminder := overdueMailTime.After(now) || overdueMailTime.Equal(now.In(tz))
 		wasTimeForReminder := overdueMailTime.Before(nextMinute)
 		taskIsOverdueInUserTimezone := overdueMailTime.After(t.Task.DueDate.In(tz))
