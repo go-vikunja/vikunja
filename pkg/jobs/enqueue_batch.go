@@ -37,8 +37,13 @@ func EnqueueBatch(s *xorm.Session, requests []Request) error {
 	}
 	const batchSize = 100
 	now := time.Now()
-	for start := 0; start < len(requests); start += batchSize {
-		batch := requests[start:min(start+batchSize, len(requests))]
+	for start := 0; start < len(requests); {
+		end := start + 1
+		for end < min(start+batchSize, len(requests)) && requests[end].Queue == requests[start].Queue && requests[end].Kind == requests[start].Kind {
+			end++
+		}
+		batch := requests[start:end]
+		start = end
 		values := make([]string, 0, len(batch))
 		args := make([]interface{}, 0, len(batch)*7+1)
 		args = append(args, "")
@@ -62,9 +67,15 @@ func EnqueueBatch(s *xorm.Session, requests []Request) error {
 			query += " ON CONFLICT (unique_key) DO NOTHING"
 		}
 		args[0] = query
-		if _, err := s.Exec(args...); err != nil {
+		result, err := s.Exec(args...)
+		if err != nil {
 			return err
 		}
+		count, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		countAfterCommit(s, "enqueued", batch[0].Queue, batch[0].Kind, count)
 		for _, request := range batch {
 			wakeAfterCommit(s, request.Queue)
 		}

@@ -22,6 +22,7 @@ import (
 	"weak"
 
 	"xorm.io/xorm"
+	"xorm.io/xorm/core"
 )
 
 var queueWakes = struct {
@@ -73,21 +74,35 @@ func Wake(queues ...string) {
 type pendingWake struct {
 	sync.Mutex
 	queues map[string]struct{}
+	counts map[metricLabel]int64
+	tx     *core.Tx
 }
 
 var pendingWakes sync.Map
+
+func pendingFor(s *xorm.Session) *pendingWake {
+	key := weak.Make(s)
+	item, loaded := pendingWakes.LoadOrStore(key, &pendingWake{queues: make(map[string]struct{}), counts: make(map[metricLabel]int64), tx: s.Tx()})
+	if !loaded {
+		runtime.AddCleanup(s, func(key weak.Pointer[xorm.Session]) { pendingWakes.Delete(key) }, key)
+	}
+	pending := item.(*pendingWake)
+	pending.Lock()
+	if pending.tx != s.Tx() {
+		pending.tx = s.Tx()
+		clear(pending.queues)
+		clear(pending.counts)
+	}
+	pending.Unlock()
+	return pending
+}
 
 func wakeAfterCommit(s *xorm.Session, queue string) {
 	if !s.IsInTx() {
 		Wake(queue)
 		return
 	}
-	key := weak.Make(s)
-	item, loaded := pendingWakes.LoadOrStore(key, &pendingWake{queues: make(map[string]struct{})})
-	if !loaded {
-		runtime.AddCleanup(s, func(key weak.Pointer[xorm.Session]) { pendingWakes.Delete(key) }, key)
-	}
-	pending := item.(*pendingWake)
+	pending := pendingFor(s)
 	pending.Lock()
 	pending.queues[queue] = struct{}{}
 	pending.Unlock()
@@ -105,6 +120,12 @@ func WakePending(s *xorm.Session) {
 	pending := value.(*pendingWake)
 	pending.Lock()
 	defer pending.Unlock()
+	if pending.tx != s.Tx() {
+		return
+	}
+	for label, count := range pending.counts {
+		jobCounters[label.event].WithLabelValues(label.queue, label.kind).Add(float64(count))
+	}
 	for queue := range pending.queues {
 		Wake(queue)
 	}

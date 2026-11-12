@@ -24,6 +24,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
@@ -199,6 +200,7 @@ func TestQueueUsesUTCForLocalClock(t *testing.T) {
 func queueTestEngine(t *testing.T) *xorm.Engine {
 	t.Helper()
 	config.InitDefaultConfig()
+	log.InitLogger()
 	e, err := db.CreateTestEngine()
 	require.NoError(t, err)
 	require.NoError(t, e.Sync(new(Job)))

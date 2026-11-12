@@ -39,6 +39,8 @@ Inspect parked work with `vikunja jobs failed`. Replay one job with `vikunja job
 
 Replay makes selected jobs immediately available and grants the queue's current attempt allowance. Attempt counters remain monotonic for ownership fencing, so later failures retain their existing exponential delay, capped as configured. Repeating a bounded replay selects the remaining parked rows. Payloads may contain rendered emails and private application data; restrict database access. Unknown payload versions are retried then parked, not silently discarded.
 
+The process counters `vikunja_jobs_enqueued_total`, `vikunja_jobs_completed_total`, `vikunja_jobs_failed_attempts_total`, `vikunja_jobs_rescued_total` and `vikunja_jobs_parked_total` have `queue` and `kind` labels. Enqueue and completion counts follow successful commits; duplicate live keys and stale attempts add nothing. Failed attempts count handler-reported failures; expired claims count as rescues, with exhausted claims also counted as parked. Each rescue and parking logs the job ID, queue, kind, attempt and last error. Alert on unexpected rescues or parking. Counters reset with the process and do not retain a durable per-job history.
+
 Successful completion deletes the job, including its deduplication key. Keys prevent duplicate enqueueing only while a job remains queued, running or parked; durable business state and scheduler watermarks prevent repeated completed work. Upgrades remove existing completed history in batches of 500. Parked jobs never expire automatically. SQL storage capacity is part of the queue budget. Imports remain on the local bus with their existing no-generic-retry behavior; other unmigrated listeners remain volatile.
 
 ## Shutdown, probes and capacity

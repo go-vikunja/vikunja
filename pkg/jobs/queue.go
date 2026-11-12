@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
@@ -87,7 +88,12 @@ func Enqueue(s *xorm.Session, request Request) error {
 		RunAt:       request.RunAt,
 	}
 	if request.UniqueKey == "" {
-		_, err := s.Insert(job)
+		tx := s.Tx()
+		_, err := s.After(func(any) {
+			if s.Tx() == tx {
+				jobCounters["enqueued"].WithLabelValues(job.Queue, job.Kind).Inc()
+			}
+		}).Insert(job)
 		return err
 	}
 	hash := sha256.Sum256([]byte(request.Queue + "\x00" + request.Kind + "\x00" + request.UniqueKey))
@@ -96,8 +102,13 @@ func Enqueue(s *xorm.Session, request Request) error {
 	if s.Engine().Dialect().URI().DBType == schemas.MYSQL {
 		query = "INSERT INTO jobs (queue, kind, version, payload, state, attempt, max_attempts, run_at, unique_key) VALUES (?, ?, 1, ?, ?, 0, ?, ?, ?) ON DUPLICATE KEY UPDATE unique_key = unique_key"
 	}
-	_, err := s.Exec(query, job.Queue, job.Kind, job.Payload, job.State, job.MaxAttempts, timestamp(job.RunAt), key)
+	result, err := s.Exec(query, job.Queue, job.Kind, job.Payload, job.State, job.MaxAttempts, timestamp(job.RunAt), key)
 	if err == nil {
+		count, countErr := result.RowsAffected()
+		if countErr != nil {
+			return countErr
+		}
+		countAfterCommit(s, "enqueued", job.Queue, job.Kind, count)
 		wakeAfterCommit(s, job.Queue)
 	}
 	return err
@@ -173,6 +184,7 @@ func Complete(s *xorm.Session, job Job, now time.Time) error {
 	if affected != 1 {
 		return ErrStaleClaim
 	}
+	countAfterCommit(s, "completed", job.Queue, job.Kind, 1)
 	return nil
 }
 
@@ -201,12 +213,19 @@ func (q *Queue) Fail(ctx context.Context, job Job, now time.Time, cause error, m
 	s := q.engine.NewSession()
 	defer s.Close()
 	db.SetSessionContext(ctx, s)
-	_, err := s.Where(ownership(job)).Cols("state", "run_at", "last_error", "finished_at").Update(&Job{
+	count, err := s.Where(ownership(job)).Cols("state", "run_at", "last_error", "finished_at").Update(&Job{
 		State:      state,
 		RunAt:      now.Add(delay),
 		LastError:  cause.Error(),
 		FinishedAt: finished,
 	})
+	if err == nil && count == 1 {
+		countAfterCommit(s, "failed_attempts", job.Queue, job.Kind, count)
+		if state == StateFailed {
+			countAfterCommit(s, "parked", job.Queue, job.Kind, count)
+			log.Warningf("[Jobs] parked job id=%d queue=%s kind=%s attempt=%d last_error=%q", job.ID, job.Queue, job.Kind, job.Attempt, cause.Error())
+		}
+	}
 	return err
 }
 
@@ -234,6 +253,14 @@ func (q *Queue) Rescue(ctx context.Context, now time.Time, limit int) (int64, er
 		})
 		if err != nil {
 			return total, err
+		}
+		if count == 1 {
+			countAfterCommit(s, "rescued", job.Queue, job.Kind, count)
+			log.Infof("[Jobs] rescued job id=%d queue=%s kind=%s attempt=%d last_error=%q", job.ID, job.Queue, job.Kind, job.Attempt, "worker claim expired")
+			if state == StateFailed {
+				countAfterCommit(s, "parked", job.Queue, job.Kind, count)
+				log.Warningf("[Jobs] parked job id=%d queue=%s kind=%s attempt=%d last_error=%q", job.ID, job.Queue, job.Kind, job.Attempt, "worker claim expired")
+			}
 		}
 		total += count
 	}
