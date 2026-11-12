@@ -14,6 +14,9 @@ export class TaskFactory extends Factory {
 			project_id: 1,
 			created_by_id: 1,
 			index: '{increment}',
+			// Raw DB columns: `repeats` holds the RRULE text (empty = not repeating).
+			repeats: '',
+			repeats_from_current_date: false,
 			created: now.toISOString(),
 			updated: now.toISOString(),
 		}

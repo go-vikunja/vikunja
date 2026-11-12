@@ -244,6 +244,130 @@ func (m *Migration) AuthURL(state string) string {
 		"&state=" + url.QueryEscape(state)
 }
 
+var todoistRecurrenceTimeRegex = regexp.MustCompile(`\s+(?:at|@)\s+.+$`)
+
+// todoistRecurrenceIntervalRegex is upstream's Todoist repeat grammar: an optional "every",
+// then a number or "other", then a unit, plural allowed. Whitespace is collapsed to single
+// spaces before matching, so the pattern only needs single spaces.
+var todoistRecurrenceIntervalRegex = regexp.MustCompile(`^(?:every )?(?:(\d+) |(other) )?(day|week|month|year)s?$`)
+
+// todoistRecurrenceKeywords are upstream's single-word repeat phrases, all with interval 1.
+var todoistRecurrenceKeywords = map[string]string{
+	"daily":    "DAILY",
+	"weekly":   "WEEKLY",
+	"monthly":  "MONTHLY",
+	"yearly":   "YEARLY",
+	"annually": "YEARLY",
+}
+
+// Map weekday names to RRULE BYDAY values
+var todoistRecurrenceWeekdays = map[string]string{
+	"monday":    "MO",
+	"tuesday":   "TU",
+	"wednesday": "WE",
+	"thursday":  "TH",
+	"friday":    "FR",
+	"saturday":  "SA",
+	"sunday":    "SU",
+}
+
+var todoistRecurrenceFreq = map[string]string{
+	"day":   "DAILY",
+	"week":  "WEEKLY",
+	"month": "MONTHLY",
+	"year":  "YEARLY",
+}
+
+// normalizeTodoistDueString lower-cases and trims the due string, drops the strict-recurrence
+// "!" (Vikunja doesn't differentiate), strips a trailing time-of-day clause ("every day at 9am",
+// "every day @ 9am") and collapses whitespace runs to single spaces. Vikunja recurrence has no
+// time-of-day component, and leaving it would stop the patterns from matching, silently
+// dropping the recurrence on import.
+func normalizeTodoistDueString(dueString string) string {
+	s := strings.ToLower(strings.TrimSpace(dueString))
+	s = strings.ReplaceAll(s, "!", "")
+	s = strings.TrimSpace(s)
+	s = todoistRecurrenceTimeRegex.ReplaceAllString(s, "")
+	return strings.Join(strings.Fields(s), " ")
+}
+
+// parseTodoistIntervalRepeat applies upstream's grammar to a normalised due string. It reports
+// whether the string matched; a match with an interval below 1 (or one too large to represent)
+// yields an empty rule, so a zero interval never reaches storage.
+func parseTodoistIntervalRepeat(s string) (rrule string, matched bool) {
+	if freq, ok := todoistRecurrenceKeywords[s]; ok {
+		return fmt.Sprintf("FREQ=%s;INTERVAL=1", freq), true
+	}
+
+	matches := todoistRecurrenceIntervalRegex.FindStringSubmatch(s)
+	if matches == nil {
+		return "", false
+	}
+
+	interval := 1
+	switch {
+	case matches[1] != "":
+		n, err := strconv.Atoi(matches[1])
+		if err != nil || n < 1 {
+			return "", true
+		}
+		interval = n
+	case matches[2] == "other":
+		interval = 2
+	}
+
+	return fmt.Sprintf("FREQ=%s;INTERVAL=%d", todoistRecurrenceFreq[matches[3]], interval), true
+}
+
+// todoistDueStringToRRule converts Todoist's natural language due string to an RRULE.
+// It first applies upstream's interval grammar ("every day", "daily", "2 weeks", "every other
+// year", ...) regardless of language, so a phrase upstream recognised never regresses. Only then
+// does it apply the additional English-only patterns (weekdays, weekends).
+// The lang parameter is the language code from the Todoist API (e.g. "en", "de", "ja"); non-English
+// strings that upstream's grammar doesn't match are skipped with a log message.
+func todoistDueStringToRRule(dueString, lang string) string {
+	if dueString == "" {
+		return ""
+	}
+
+	normalized := normalizeTodoistDueString(dueString)
+
+	if rrule, matched := parseTodoistIntervalRepeat(normalized); matched {
+		if rrule == "" {
+			log.Debugf("[Todoist Migration] Recurrence %q has no valid interval, leaving task non-repeating", dueString)
+		}
+		return rrule
+	}
+
+	// The remaining patterns are English only. Todoist's due.string is a natural language
+	// representation in the user's language.
+	if lang != "" && lang != "en" {
+		log.Debugf("[Todoist Migration] Skipping recurrence conversion for non-English due string (lang=%s): %s", lang, dueString)
+		return ""
+	}
+
+	// "every monday", "every tuesday", etc.
+	for dayName, dayCode := range todoistRecurrenceWeekdays {
+		if normalized == "every "+dayName {
+			return fmt.Sprintf("FREQ=WEEKLY;BYDAY=%s", dayCode)
+		}
+	}
+
+	// "every weekday" (Monday through Friday)
+	if normalized == "every weekday" || normalized == "weekdays" {
+		return "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+	}
+
+	// "every weekend"
+	if normalized == "every weekend" || normalized == "weekends" {
+		return "FREQ=WEEKLY;BYDAY=SA,SU"
+	}
+
+	// If we can't parse it, log and return empty (task will still be imported, just without recurrence)
+	log.Debugf("[Todoist Migration] Could not parse recurrence pattern: %s", normalized)
+	return ""
+}
+
 func parseDate(dateString string) (date time.Time, err error) {
 	if len(dateString) == 10 {
 		// We're probably dealing with a date in the form of 2021-11-23 without a time
@@ -263,72 +387,6 @@ func parseDate(dateString string) (date time.Time, err error) {
 	}
 
 	return date, err
-}
-
-// Matching the existing migration importers, months are treated as 30 days and years as 365.
-const (
-	secondsPerDay   int64 = 60 * 60 * 24
-	secondsPerWeek        = secondsPerDay * 7
-	secondsPerMonth       = secondsPerDay * 30
-	secondsPerYear        = secondsPerDay * 365
-)
-
-var repeatUnitSeconds = map[string]int64{
-	"day":   secondsPerDay,
-	"week":  secondsPerWeek,
-	"month": secondsPerMonth,
-	"year":  secondsPerYear,
-}
-
-var (
-	todoistRepeatRegex     = regexp.MustCompile(`^(?:every\s+)?(?:(\d+)\s+|(other)\s+)?(day|week|month|year)s?$`)
-	todoistRepeatTimeRegex = regexp.MustCompile(`\s+(?:at|@)\s+.*$`)
-)
-
-// parseTodoistRepeat translates Todoist's recurrence into a repeat interval in seconds.
-// Todoist exposes recurrence only as free text (e.g. "every 3 weeks"), so we parse the
-// common, unambiguous interval phrases. Patterns we can't represent (specific weekdays,
-// days of the month, non-English strings) return 0, leaving the task non-repeating. Only
-// the cadence is kept - the due date already anchors the actual day and time.
-func parseTodoistRepeat(due *dueDate) int64 {
-	if due == nil || !due.IsRecurring {
-		return 0
-	}
-
-	s := strings.ToLower(strings.TrimSpace(due.String))
-	// The time of day is already on the due date, drop it so "every day at 9am" still matches.
-	s = todoistRepeatTimeRegex.ReplaceAllString(s, "")
-
-	switch s {
-	case "daily":
-		return secondsPerDay
-	case "weekly":
-		return secondsPerWeek
-	case "monthly":
-		return secondsPerMonth
-	case "yearly", "annually":
-		return secondsPerYear
-	}
-
-	matches := todoistRepeatRegex.FindStringSubmatch(s)
-	if matches == nil {
-		log.Debugf("[Todoist Migration] Could not parse recurrence %q, leaving task non-repeating", due.String)
-		return 0
-	}
-
-	interval := int64(1)
-	switch {
-	case matches[1] != "":
-		n, err := strconv.ParseInt(matches[1], 10, 64)
-		if err != nil || n < 1 {
-			return 0
-		}
-		interval = n
-	case matches[2] == "other":
-		interval = 2
-	}
-
-	return interval * repeatUnitSeconds[matches[3]]
 }
 
 func isDownloadableURL(rawURL string) bool {
@@ -439,14 +497,18 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 			task.Priority = i.Priority
 		}
 
-		// Put the due date together
+		// Put the due date together and handle recurrence
 		if i.Due != nil {
 			dueDate, err := parseDate(i.Due.Date)
 			if err != nil {
 				return nil, err
 			}
 			task.DueDate = dueDate.In(config.GetTimeZone())
-			task.RepeatAfter = parseTodoistRepeat(i.Due)
+
+			// Convert Todoist recurrence to RRULE
+			if i.Due.IsRecurring {
+				task.Repeats = todoistDueStringToRRule(i.Due.String, i.Due.Lang)
+			}
 		}
 
 		// Put all labels together from earlier

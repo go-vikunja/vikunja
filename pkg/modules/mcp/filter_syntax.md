@@ -34,7 +34,8 @@ A filter is one or more conditions of the form `field operator value`.
 | `assignees` | text | username |
 | `created_by` | text | username |
 | `bucket_id` | number | Kanban bucket ID |
-| `id`, `index`, `repeat_after`, `hex_color`, `uid` | | |
+| `repeats` | text | the recurrence rule; `repeats != ''` repeats, `repeats = ''` doesn't repeat |
+| `id`, `index`, `hex_color`, `uid` | | |
 
 ## Dates
 

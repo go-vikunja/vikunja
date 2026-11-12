@@ -8,6 +8,38 @@ import iconButtonAccessibleName from './eslint-rules/icon-button-accessible-name
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+const restrictedApiImports = {
+	paths: [
+		{
+			name: 'axios',
+			message: 'Use the generated v2 client.',
+		},
+	],
+	patterns: [
+		{
+			group: [
+				'axios/*',
+				'**/services',
+				'**/services/**',
+				'**/models',
+				'**/models/**',
+				'**/modelTypes',
+				'**/modelTypes/**',
+			],
+			message: 'Use generated API types and resource queries.',
+		},
+	],
+}
+
+// Occurrence dates come only from the server's preview; this keeps a browser-side evaluator from coming back.
+const restrictedRecurrenceImports = {
+	group: [
+		'@/helpers/rrulePreview',
+		'**/helpers/rrulePreview',
+	],
+	message: 'Ask the server for occurrence dates through the occurrence preview query.',
+}
+
 export default [
 	js.configs.recommended,
 	...pluginVue.configs['flat/recommended'],
@@ -30,26 +62,8 @@ export default [
 		rules: {
 			'vikunja/icon-button-accessible-name': 'error',
 			'no-restricted-imports': ['error', {
-				paths: [
-					{
-						name: 'axios',
-						message: 'Use the generated v2 client.',
-					},
-				],
-				patterns: [
-					{
-						group: [
-							'axios/*',
-							'**/services',
-							'**/services/**',
-							'**/models',
-							'**/models/**',
-							'**/modelTypes',
-							'**/modelTypes/**',
-						],
-						message: 'Use generated API types and resource queries.',
-					},
-				],
+				...restrictedApiImports,
+				patterns: [...restrictedApiImports.patterns, restrictedRecurrenceImports],
 			}],
 
 			'quotes': ['error', 'single'],
@@ -175,5 +189,10 @@ export default [
 
 
 	},
-
+	{
+		files: ['src/helpers/**'],
+		rules: {
+			'no-restricted-imports': ['error', restrictedApiImports],
+		},
+	},
 ]

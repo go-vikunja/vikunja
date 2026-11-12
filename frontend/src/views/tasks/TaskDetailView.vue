@@ -446,33 +446,15 @@
 							:class="{'is-expanded': repeatEditorOpen}"
 							@remove="removeRepeatAfter"
 						>
-							<BaseButton
-								id="task-property-repeat-value"
-								aria-labelledby="task-property-repeat-label task-property-repeat-value"
-								class="property-value-button"
-								:class="{'property-empty': !isSet.repeatAfter}"
+							<RepeatAfter
+								:key="task.id"
+								ref="repeatAfterField"
+								:model-value="task"
 								:disabled="!canWrite"
-								:aria-expanded="canWrite ? repeatEditorOpen : undefined"
-								@click="repeatEditorOpen = !repeatEditorOpen"
-							>
-								{{ repeatSummary }}
-								<Icon
-									v-if="canWrite"
-									icon="chevron-down"
-									class="chevron"
-								/>
-							</BaseButton>
-							<template #editor>
-								<div
-									v-if="repeatEditorOpen && canWrite"
-									class="property-editor"
-								>
-									<RepeatAfter
-										:model-value="task"
-										@update:modelValue="saveTask($event)"
-									/>
-								</div>
-							</template>
+								:save="saveRepeat"
+								:write-outcome="repeatOutcome"
+								@update:open="repeatEditorOpen = $event"
+							/>
 						</TaskPropertyRow>
 
 						<TaskPropertyRow
@@ -526,7 +508,7 @@ import {klona} from 'klona/lite'
 
 import {useTask} from '@/composables/useTask'
 import {getHexColor} from '@/helpers/task'
-import {createTaskDraft, mergeTask, parseRepeatAfter} from '@/helpers/task'
+import {createTaskDraft, mergeTask} from '@/helpers/task'
 
 import type {Task as ITask} from '@/client/generated'
 import type {ProjectResponse} from '@/client/queries/projects'
@@ -555,7 +537,7 @@ import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/RelatedTasks.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
-import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
+import RepeatAfter, {type RepeatSaveOptions, type RepeatSaveResult} from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskPropertyRow from '@/components/tasks/partials/TaskPropertyRow.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
@@ -569,7 +551,7 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {getDefaultProjectView, getProjectViewId} from '@/helpers/projectView'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {getScrollParent} from '@/helpers/getScrollParent'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isRepeating} from '@/helpers/rrule'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 import {isTypingTarget, matchesKey, parseKey} from '@/helpers/shortcut'
@@ -583,6 +565,9 @@ import {
 	useFavoriteTaskMutation,
 	useDuplicateTaskMutation,
 	useMarkTaskReadMutation,
+	writeOutcomeOf,
+	type TaskInput,
+	type WriteOutcome,
 } from '@/client/queries/taskMutations'
 import {useProjects} from '@/composables/useProjects'
 import {useAuthStore} from '@/stores/auth'
@@ -643,10 +628,21 @@ const taskQuery = useTask(
 	],
 )
 const task = ref(createTaskDraft())
+// Only the save that asked the server to choose the due date reports on it, and only until the next save.
+const repeatOutcome = ref<WriteOutcome | null>(null)
 
 // Only fields edited here stay local; the rest follows the cache.
 function followServerFields(loaded: ITask) {
-	const {priority, percent_done, due_date, start_date, end_date, reminders, repeat_after, repeat_mode} = task.value
+	const {
+		priority,
+		percent_done,
+		due_date,
+		start_date,
+		end_date,
+		reminders,
+		repeat,
+		repeats_from_current_date,
+	} = task.value
 	task.value = {
 		...createTaskDraft(klona(loaded)),
 		priority,
@@ -655,8 +651,8 @@ function followServerFields(loaded: ITask) {
 		start_date,
 		end_date,
 		reminders,
-		repeat_after,
-		repeat_mode,
+		repeat,
+		repeats_from_current_date,
 	}
 }
 
@@ -874,6 +870,8 @@ type FieldType =
 	| 'reminders'
 	| 'timeTracking'
 
+const repeatAfterField = ref<InstanceType<typeof RepeatAfter> | null>(null)
+
 type SectionType = 'attachments' | 'moveProject' | 'relatedTasks' | 'timeTracking'
 
 const activeSections: Record<SectionType, boolean> = reactive({
@@ -907,8 +905,7 @@ const isSet = computed(() => ({
 	startDate: Boolean(parseDateOrNull(task.value.start_date)),
 	endDate: Boolean(parseDateOrNull(task.value.end_date)),
 	reminders: (task.value.reminders?.length ?? 0) > 0,
-	repeatAfter: (task.value.repeat_after ?? 0) > 0
-		|| task.value.repeat_mode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT,
+	repeatAfter: isRepeating(task.value.repeat),
 	color: Boolean(color.value),
 }))
 const hasAnyProperty = computed(() => Object.values(isSet.value).some(Boolean))
@@ -918,28 +915,12 @@ const favoriteLabel = computed(() => task.value.is_favorite
 	: t('task.detail.actions.favorite'))
 
 const repeatEditorOpen = ref(false)
-const repeatSummary = computed(() => {
-	if (!isSet.value.repeatAfter) {
-		return t('misc.notSet')
-	}
-	if (task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH) {
-		return t('task.repeat.monthly')
-	}
-	const fromCurrentDate = task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE
-	const {amount, type} = parseRepeatAfter(task.value.repeat_after ?? 0)
-	if (amount === 0) {
-		return t('task.repeat.fromCurrentDate')
-	}
-	const interval = t(`task.repeat.summary.${type}`, {count: amount}, amount)
-	return fromCurrentDate
-		? t('task.repeat.summary.fromCurrentDate', {interval})
-		: interval
-})
 
 watch(taskQuery.task, async (loaded, previous) => {
 	if (!loaded) return
 	if (loaded.id !== previous?.id) {
 		seedTask(loaded)
+		repeatOutcome.value = null
 		resetSections()
 	} else {
 		followServerFields(loaded)
@@ -1006,7 +987,10 @@ function setFieldActive(fieldName: FieldType) {
 		// Finish scrolling before the datepicker sheet locks the page.
 		scrollIntoView(el, datepicker ? 'instant' : 'smooth')
 
-		datepicker?.open()
+		// A read-only picker stays disabled, and the picker would otherwise keep the request for later.
+		if (canWrite.value) {
+			datepicker?.open()
+		}
 	})
 }
 
@@ -1052,8 +1036,9 @@ function openAttachments() {
 }
 
 async function saveTask(
-	currentTask: ITask | null = null,
+	currentTask: TaskInput | null = null,
 	undoCallback?: () => void,
+	{initialDueTime}: RepeatSaveOptions = {},
 ) {
 	if (currentTask === null) {
 		currentTask = klona(task.value)
@@ -1075,8 +1060,23 @@ async function saveTask(
 		currentTask.end_date = currentTask.due_date
 	}
 
-	seedTask(mergeTask(task.value, await updateTask.mutateAsync({...currentTask, id: currentTask.id!})))
-	revealSectionsWithData()
+	repeatOutcome.value = null
+	const savedId = currentTask.id
+	const saved = await updateTask.mutateAsync({...currentTask, id: currentTask.id!, initialDueTime})
+	// The person may have moved to another task while this save was in flight; only the cache follows it then.
+	if (savedId !== props.taskId || savedId !== task.value.id) {
+		return
+	}
+	const outcome = writeOutcomeOf(saved)
+	// An empty 304 means nothing changed, so the task on screen already is the stored one.
+	if (!outcome.unchanged) {
+		seedTask(mergeTask(task.value, saved))
+		revealSectionsWithData()
+		if (initialDueTime !== undefined) {
+			repeatOutcome.value = outcome
+		}
+	}
+	repeatAfterField.value?.cancelPreview?.()
 
 	let actions: MessageAction[] = []
 	if (undoCallback) {
@@ -1214,10 +1214,22 @@ async function setPercentDone(percentDone: number) {
 	return saveTask(newTask)
 }
 
+async function saveRepeat(next: TaskInput, options: RepeatSaveOptions): Promise<RepeatSaveResult> {
+	try {
+		await saveTask(next, undefined, options)
+		return {ok: true, outcome: repeatOutcome.value ?? {}}
+	} catch (cause) {
+		// The editor says the repeat was not saved; the update mutation has already shown the server's message.
+		return {ok: false, error: cause}
+	}
+}
+
 async function removeRepeatAfter() {
-	task.value.repeat_after = 0
-	task.value.repeat_mode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	await saveTask()
+	await saveTask({
+		...klona(task.value),
+		repeat: null,
+		repeats_from_current_date: false,
+	})
 }
 
 function setRelatedTasksActive() {

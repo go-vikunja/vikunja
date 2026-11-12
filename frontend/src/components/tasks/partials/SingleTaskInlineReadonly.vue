@@ -84,7 +84,7 @@
 				<Icon icon="align-left" />
 			</span>
 			<span
-				v-if="(task.repeat_after ?? 0) > 0"
+				v-if="isRepeating(task.repeat)"
 				class="project-task-icon"
 			>
 				<Icon icon="history" />
@@ -109,6 +109,7 @@ import {computed} from 'vue'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 import {getHexColor} from '@/helpers/task'
+import {isRepeating} from '@/helpers/rrule'
 import type {Task as ITask} from '@/client/generated'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'

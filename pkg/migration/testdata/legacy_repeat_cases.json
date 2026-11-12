@@ -1,0 +1,279 @@
+[
+  {
+    "_comment": "Legacy repeat_after/repeat_mode -> RFC 5545 rule cases, shared by the migration 20261022220000 converter test and the vikunja-file importer test. Each element: name (string), repeat_after (seconds, int), repeat_mode (0 default, 1 monthly, 2 from current date), due_date (RFC 3339 string or null), timezone (optional IANA zone the due day is read in: the zone of the task's project owner for the migration, of the importing user for the importer; absent means UTC), want_rule (string, empty means no rule), want_from_current_date (bool). Keep this format stable; add cases rather than change existing ones.",
+    "name": "default daily",
+    "repeat_after": 86400,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=DAILY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default every 2 days",
+    "repeat_after": 172800,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=DAILY;INTERVAL=2",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default weekly",
+    "repeat_after": 604800,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=WEEKLY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default every 2 weeks",
+    "repeat_after": 1209600,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=WEEKLY;INTERVAL=2",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default hourly",
+    "repeat_after": 3600,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=HOURLY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default minutely",
+    "repeat_after": 60,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=MINUTELY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default secondly remainder",
+    "repeat_after": 90,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=SECONDLY;INTERVAL=90",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default secondly under a minute",
+    "repeat_after": 30,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=SECONDLY;INTERVAL=30",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default no interval is empty",
+    "repeat_after": 0,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default negative interval is empty",
+    "repeat_after": -86400,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default daily due on the 31st has no month-end rule",
+    "repeat_after": 86400,
+    "repeat_mode": 0,
+    "due_date": "2026-01-31T12:00:00Z",
+    "want_rule": "FREQ=DAILY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "from current date daily",
+    "repeat_after": 86400,
+    "repeat_mode": 2,
+    "due_date": null,
+    "want_rule": "FREQ=DAILY;INTERVAL=1",
+    "want_from_current_date": true
+  },
+  {
+    "name": "from current date weekly",
+    "repeat_after": 604800,
+    "repeat_mode": 2,
+    "due_date": "2026-03-10T08:00:00Z",
+    "want_rule": "FREQ=WEEKLY;INTERVAL=1",
+    "want_from_current_date": true
+  },
+  {
+    "name": "from current date due on the 31st has no month-end rule",
+    "repeat_after": 86400,
+    "repeat_mode": 2,
+    "due_date": "2026-01-31T12:00:00Z",
+    "want_rule": "FREQ=DAILY;INTERVAL=1",
+    "want_from_current_date": true
+  },
+  {
+    "name": "from current date no interval is empty",
+    "repeat_after": 0,
+    "repeat_mode": 2,
+    "due_date": null,
+    "want_rule": "",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly ignores repeat_after",
+    "repeat_after": 86400,
+    "repeat_mode": 1,
+    "due_date": null,
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly without interval or due date",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": null,
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly due on the 15th",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-01-15T12:00:00Z",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly due on the 28th",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-01-28T12:00:00Z",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly due on the 29th",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-01-29T12:00:00Z",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29;BYSETPOS=-1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly due on the 30th",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-01-30T12:00:00Z",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29,30;BYSETPOS=-1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly due on the 31st",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-01-31T12:00:00Z",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29,30,31;BYSETPOS=-1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly due on the 31st with repeat_after set",
+    "repeat_after": 2592000,
+    "repeat_mode": 1,
+    "due_date": "2026-03-31T09:00:00Z",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29,30,31;BYSETPOS=-1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly due on Feb 29",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2024-02-29T12:00:00Z",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29;BYSETPOS=-1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly 23:30 UTC on the 30th read in UTC is the 30th",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-01-30T23:30:00Z",
+    "timezone": "UTC",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29,30;BYSETPOS=-1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly 23:30 UTC on the 30th read in Europe/Berlin is the 31st",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-01-30T23:30:00Z",
+    "timezone": "Europe/Berlin",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29,30,31;BYSETPOS=-1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly 23:30 UTC on the 31st read in Europe/Berlin is the 1st",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-01-31T23:30:00Z",
+    "timezone": "Europe/Berlin",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "monthly 20:00 New York on Jan 31 is Feb 1 in UTC",
+    "repeat_after": 0,
+    "repeat_mode": 1,
+    "due_date": "2026-02-01T01:00:00Z",
+    "timezone": "America/New_York",
+    "want_rule": "FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=28,29,30,31;BYSETPOS=-1",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default yearly (365 days, upstream's every-year preset)",
+    "repeat_after": 31536000,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=DAILY;INTERVAL=365",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default every 2 years",
+    "repeat_after": 63072000,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=DAILY;INTERVAL=730",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default yearly due on Feb 29 keeps the fixed 365-day step",
+    "repeat_after": 31536000,
+    "repeat_mode": 0,
+    "due_date": "2024-02-29T09:00:00Z",
+    "want_rule": "FREQ=DAILY;INTERVAL=365",
+    "want_from_current_date": false
+  },
+  {
+    "name": "default 366 days",
+    "repeat_after": 31622400,
+    "repeat_mode": 0,
+    "due_date": null,
+    "want_rule": "FREQ=DAILY;INTERVAL=366",
+    "want_from_current_date": false
+  },
+  {
+    "name": "from current date yearly",
+    "repeat_after": 31536000,
+    "repeat_mode": 2,
+    "due_date": "2024-02-29T09:00:00Z",
+    "want_rule": "FREQ=DAILY;INTERVAL=365",
+    "want_from_current_date": true
+  },
+  {
+    "name": "unknown mode is empty",
+    "repeat_after": 86400,
+    "repeat_mode": 99,
+    "due_date": null,
+    "want_rule": "",
+    "want_from_current_date": false
+  }
+]
