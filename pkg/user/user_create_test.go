@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/mail"
 	"github.com/stretchr/testify/require"
 )
@@ -52,6 +53,8 @@ func TestCreateUserConfirmationDeferred(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 			defer events.CleanupPending(s)
+			mailJobsBefore, err := s.Where("queue = ?", "mail").Count(new(jobs.Job))
+			require.NoError(t, err)
 			created, err := CreateUser(s, &User{Username: "invite-new", Email: "invite-new@example.com", Password: "12345678", Language: tc.language}, CreateUserOptions{SkipEmailConfirm: tc.skip})
 			require.NoError(t, err)
 			require.Nil(t, mail.LastSent())
@@ -64,6 +67,13 @@ func TestCreateUserConfirmationDeferred(t *testing.T) {
 				require.Equal(t, StatusEmailConfirmationRequired, created.Status)
 				require.EqualValues(t, 1, count)
 			}
+			mailJobsAfter, err := s.Where("queue = ?", "mail").Count(new(jobs.Job))
+			require.NoError(t, err)
+			expectedJobs := mailJobsBefore
+			if !tc.skip {
+				expectedJobs++
+			}
+			require.Equal(t, expectedJobs, mailJobsAfter, "confirmation mail must be stored in the registration transaction")
 			if tc.rollback {
 				require.NoError(t, s.Rollback())
 				events.CleanupPending(s)
@@ -75,6 +85,9 @@ func TestCreateUserConfirmationDeferred(t *testing.T) {
 				n, err := rs.Where("user_id = ?", created.ID).Count(&Token{})
 				require.NoError(t, err)
 				require.Zero(t, n)
+				mailJobsAfter, err = rs.Where("queue = ?", "mail").Count(new(jobs.Job))
+				require.NoError(t, err)
+				require.Equal(t, mailJobsBefore, mailJobsAfter)
 			} else {
 				require.NoError(t, s.Commit())
 			}
