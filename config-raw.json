@@ -1261,11 +1261,6 @@
                     "comment": "Consume durable jobs in this process. Disable for API-only replicas; enqueueing remains enabled."
                 },
                 {
-                    "key": "retention",
-                    "default_value": "48h",
-                    "comment": "Keep completed jobs and deduplication keys for this duration. Must exceed 24h. Parked jobs remain until replayed or deleted."
-                },
-                {
                     "key": "queues",
                     "children": [
                         {

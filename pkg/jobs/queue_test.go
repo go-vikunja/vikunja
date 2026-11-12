@@ -105,12 +105,9 @@ func TestQueueTransactionAndOwnership(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, StateFailed, row.State)
 	assert.Equal(t, "permanent", row.LastError)
-	count, err = q.Cleanup(t.Context(), now.Add(72*time.Hour), 48*time.Hour, 100)
-	require.NoError(t, err)
-	assert.Zero(t, count, "parked jobs must remain")
 }
 
-func TestQueueRenewalCompletionAndRetention(t *testing.T) {
+func TestQueueRenewalAndCompletion(t *testing.T) {
 	e := queueTestEngine(t)
 	q := NewQueue(e, "renewal")
 	now := time.Now().UTC().Truncate(time.Second)
@@ -144,12 +141,6 @@ func TestQueueRenewalCompletionAndRetention(t *testing.T) {
 	count, err = q.Renew(t.Context(), batch, now.Add(75*time.Second), time.Minute)
 	require.NoError(t, err)
 	assert.Zero(t, count)
-	count, err = q.Cleanup(t.Context(), now.Add(47*time.Hour), 48*time.Hour, 100)
-	require.NoError(t, err)
-	assert.Zero(t, count)
-	count, err = q.Cleanup(t.Context(), now.Add(49*time.Hour), 48*time.Hour, 100)
-	require.NoError(t, err)
-	assert.EqualValues(t, 1, count)
 }
 
 func TestQueueUsesUTCForLocalClock(t *testing.T) {
@@ -179,4 +170,32 @@ func queueTestEngine(t *testing.T) *xorm.Engine {
 	clearQueue()
 	t.Cleanup(clearQueue)
 	return e
+}
+
+func TestQueueCompletionDeletesLiveKeys(t *testing.T) {
+	for _, key := range []string{"", "once"} {
+		t.Run("key="+key, func(t *testing.T) {
+			e := queueTestEngine(t)
+			now := time.Now().UTC().Truncate(time.Second)
+			request := Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: key, RunAt: now}
+			s := e.NewSession()
+			defer s.Close()
+			require.NoError(t, Enqueue(s, request))
+			queue := NewQueue(e, "owner")
+			batch, err := queue.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+			require.NoError(t, err)
+			require.Len(t, batch, 1)
+			require.ErrorIs(t, Complete(s, batch[0], now.Add(time.Minute)), ErrStaleClaim)
+			require.NoError(t, Complete(s, batch[0], now))
+			found, err := e.ID(batch[0].ID).Exist(new(Job))
+			require.NoError(t, err)
+			require.False(t, found, "successful completion must remove the job and its live uniqueness guard")
+			require.ErrorIs(t, Complete(s, batch[0], now), ErrStaleClaim)
+			require.NoError(t, Enqueue(s, request))
+			replacement, err := queue.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+			require.NoError(t, err)
+			require.Len(t, replacement, 1, "completed keys must not suppress later enqueue attempts")
+			require.NotEqual(t, batch[0].ID, replacement[0].ID)
+		})
+	}
 }

@@ -29,11 +29,11 @@ Mail, reminder channels, webhook expansion/delivery and notification creation us
 
 The queues `mail`, `bulk-mail`, `notifications` and `webhooks` each default to two handlers per process. Bulk reminder mail cannot occupy interactive mail slots. Set `jobs.queues.<queue>.concurrency`, `.lease` and `.timeout`; defaults are 2, 60s and 5m. Heartbeats renew active claims every 15s. A handler deadline stops renewal; expired claims are rescued by the next minute's maintenance tick. Uncooperative cancelled handlers keep their local slot until they return, bounding local work.
 
-Set `jobs.enabled=false` on API-only pods and run `vikunja worker` elsewhere. Disable individual queues with `jobs.queues.<queue>.enabled=false` to dedicate pools. `vikunja scheduler` remains an optional headless role and participates in the same locking protocol. At least one process must run shared schedules for rescue and cleanup.
+Set `jobs.enabled=false` on API-only pods and run `vikunja worker` elsewhere. Disable individual queues with `jobs.queues.<queue>.enabled=false` to dedicate pools. `vikunja scheduler` remains an optional headless role and participates in the same locking protocol. At least one process must run shared schedules to rescue expired claims.
 
 Retries use persisted exponential backoff. Five failed attempts park a job with its last error. Inspect with `vikunja jobs failed` and explicitly retry with `vikunja jobs replay <id>`. Payloads may contain rendered emails and private application data; restrict database access. Unknown payload versions are retried then parked, not silently discarded.
 
-Completed jobs retain their deduplication keys for `jobs.retention` (default 48h, required to exceed 24h), then are deleted in batches of up to 500. Parked jobs never expire automatically. SQL storage capacity is part of the queue budget. Imports remain on the local bus with their existing no-generic-retry behavior; other unmigrated listeners remain volatile.
+Successful completion deletes the job, including its deduplication key. Keys prevent duplicate enqueueing only while a job remains queued, running or parked; durable business state and scheduler watermarks prevent repeated completed work. Upgrades remove existing completed history in batches of 500. Parked jobs never expire automatically. SQL storage capacity is part of the queue budget. Imports remain on the local bus with their existing no-generic-retry behavior; other unmigrated listeners remain volatile.
 
 ## Shutdown, probes and capacity
 

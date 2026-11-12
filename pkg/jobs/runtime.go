@@ -18,7 +18,6 @@ package jobs
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -154,16 +153,9 @@ func Maintain(ctx context.Context) error {
 	}
 	queue := NewQueue(engine, "maintenance")
 	now := time.Now()
-	rescueErr := drainMaintenance(ctx, 5*time.Second, func(batchCtx context.Context) (int64, error) {
+	return drainMaintenance(ctx, 5*time.Second, func(batchCtx context.Context) (int64, error) {
 		return queue.Rescue(batchCtx, now, 1000)
 	})
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	cleanupErr := drainMaintenance(ctx, 5*time.Second, func(batchCtx context.Context) (int64, error) {
-		return queue.Cleanup(batchCtx, now, config.JobsRetention.GetDuration(), 500)
-	})
-	return errors.Join(rescueErr, cleanupErr)
 }
 
 func drainMaintenance(ctx context.Context, budget time.Duration, batch func(context.Context) (int64, error)) error {

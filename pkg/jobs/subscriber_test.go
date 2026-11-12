@@ -18,6 +18,7 @@ package jobs
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -62,7 +63,8 @@ func TestSubscriberRouterContextMutation(t *testing.T) {
 	sub := NewSubscriber(NewQueue(e, "router"), map[string]Options{t.Name(): {Concurrency: 2, Lease: time.Minute, Timeout: time.Minute}})
 	router, err := message.NewRouter(message.RouterConfig{}, watermill.NopLogger{})
 	require.NoError(t, err)
-	router.AddConsumerHandler(t.Name(), t.Name(), sub, func(*message.Message) error { return nil })
+	var handled atomic.Int64
+	router.AddConsumerHandler(t.Name(), t.Name(), sub, func(*message.Message) error { handled.Add(1); return nil })
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
 	finished := make(chan error, 1)
@@ -73,8 +75,8 @@ func TestSubscriberRouterContextMutation(t *testing.T) {
 		require.NoError(t, <-finished)
 	})
 	require.Eventually(t, func() bool {
-		count, err := e.Where("queue = ? AND state = ?", t.Name(), StateCompleted).Count(new(Job))
+		count, err := e.Where("queue = ?", t.Name()).Count(new(Job))
 		require.NoError(t, err)
-		return count == 100
+		return count == 0 && handled.Load() == 100
 	}, 10*time.Second, 10*time.Millisecond)
 }

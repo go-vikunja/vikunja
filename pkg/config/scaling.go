@@ -23,9 +23,6 @@ import (
 )
 
 func validateRuntimeConfig() error {
-	if JobsRetention.GetDuration() <= 24*time.Hour {
-		return errors.New("jobs.retention must exceed 24h")
-	}
 	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
 		prefix := "jobs.queues." + queue + "."
 		if Key(prefix+"concurrency").GetInt() < 1 || Key(prefix+"lease").GetDuration() < 30*time.Second || Key(prefix+"timeout").GetDuration() <= 0 {

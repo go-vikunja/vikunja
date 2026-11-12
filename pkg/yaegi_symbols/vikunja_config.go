@@ -96,7 +96,6 @@ func init() {
 		"InitConfig":                                 reflect.ValueOf(config.InitConfig),
 		"InitDefaultConfig":                          reflect.ValueOf(config.InitDefaultConfig),
 		"JobsEnabled":                                reflect.ValueOf(config.JobsEnabled),
-		"JobsRetention":                              reflect.ValueOf(config.JobsRetention),
 		"KeyvalueType":                               reflect.ValueOf(config.KeyvalueType),
 		"Legal":                                      reflect.ValueOf(config.Legal),
 		"LegalImprintURL":                            reflect.ValueOf(config.LegalImprintURL),

@@ -44,15 +44,12 @@ func init() {
 
 func Enqueue(s *xorm.Session, opts *Opts, queue, key string) error {
 	if isUnderTest {
-		_, err := s.After(func(any) { sentMails = append(sentMails, opts) }).Insert(&jobs.Job{
-			Queue:      queue,
-			Kind:       "mail.send",
-			Version:    1,
-			Payload:    `{}`,
-			State:      jobs.StateCompleted,
-			RunAt:      time.Now(),
-			FinishedAt: time.Now(),
-		})
+		// XORM defers After until commit; the temporary row must not survive it.
+		job := &jobs.Job{Queue: queue, Kind: "mail.send", Version: 1, Payload: `{}`, State: jobs.StateAvailable, RunAt: time.Now()}
+		if _, err := s.After(func(any) { sentMails = append(sentMails, opts) }).Insert(job); err != nil {
+			return err
+		}
+		_, err := s.ID(job.ID).Delete(new(jobs.Job))
 		return err
 	}
 	if !config.MailerEnabled.GetBool() {

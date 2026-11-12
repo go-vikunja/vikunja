@@ -34,7 +34,6 @@ import (
 const (
 	StateAvailable  = "available"
 	StateRunning    = "running"
-	StateCompleted  = "completed"
 	StateFailed     = "failed"
 	DefaultAttempts = 5
 )
@@ -159,7 +158,7 @@ func ownership(job Job) builder.Cond {
 }
 
 func Complete(s *xorm.Session, job Job, now time.Time) error {
-	affected, err := s.Where(ownership(job)).And(builder.Gt{"expires_at": timestamp(now)}).Cols("state", "finished_at").Update(&Job{State: StateCompleted, FinishedAt: now})
+	affected, err := s.Where(ownership(job)).And(builder.Gt{"expires_at": timestamp(now)}).Delete(new(Job))
 	if err != nil {
 		return err
 	}
@@ -217,28 +216,6 @@ func (q *Queue) Rescue(ctx context.Context, now time.Time, limit int) (int64, er
 		total += count
 	}
 	return total, nil
-}
-
-func (q *Queue) Cleanup(ctx context.Context, now time.Time, retention time.Duration, limit int) (int64, error) {
-	if retention <= 24*time.Hour {
-		return 0, errors.New("job retention must exceed 24 hours")
-	}
-	s := q.engine.NewSession()
-	defer s.Close()
-	db.SetSessionContext(ctx, s)
-	if limit < 1 {
-		return 0, nil
-	}
-	limit = min(limit, 500)
-	var rows []Job
-	if err := s.Cols("id").Where(builder.Eq{"state": StateCompleted}).And(builder.Lt{"finished_at": timestamp(now.Add(-retention))}).OrderBy("finished_at").Limit(limit).Find(&rows); err != nil {
-		return 0, err
-	}
-	ids := make([]int64, 0, len(rows))
-	for _, row := range rows {
-		ids = append(ids, row.ID)
-	}
-	return s.Where(builder.In("id", ids)).And(builder.Eq{"state": StateCompleted}).Delete(new(Job))
 }
 
 func (q *Queue) Replay(ctx context.Context, id int64) error {

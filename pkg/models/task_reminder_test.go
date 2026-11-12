@@ -31,6 +31,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/schemas"
 )
 
 func TestReminderGetTasksInTheNextMinute(t *testing.T) {
@@ -728,6 +729,14 @@ func resetReminderJobs(t *testing.T) {
 
 func drainReminderJobs(t *testing.T) {
 	t.Helper()
+	engine, err := db.CreateDBEngine()
+	require.NoError(t, err)
+	if engine.Dialect().URI().DBType == schemas.SQLITE {
+		// Shared-memory SQLite lacks the production WAL/busy-timeout behavior.
+		previousMax := engine.DB().Stats().MaxOpenConnections
+		engine.SetMaxOpenConns(1)
+		defer engine.SetMaxOpenConns(previousMax)
+	}
 	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
 		key := config.Key("jobs.queues." + queue + ".lease")
 		defer key.Set(key.GetDuration())
@@ -735,8 +744,6 @@ func drainReminderJobs(t *testing.T) {
 	}
 	require.NoError(t, jobs.Start(t.Context()))
 	defer func() { require.NoError(t, jobs.Shutdown(t.Context())) }()
-	engine, err := db.CreateDBEngine()
-	require.NoError(t, err)
 	lastMaintenance := time.Time{}
 	require.EventuallyWithT(t, func(collect *assert.CollectT) {
 		if time.Since(lastMaintenance) >= time.Second {
@@ -747,7 +754,7 @@ func drainReminderJobs(t *testing.T) {
 			jobs.Wake()
 		}
 		var pending []jobs.Job
-		err := engine.Where("kind LIKE ? AND state != ?", "reminder.%", jobs.StateCompleted).Find(&pending)
+		err := engine.Where("kind LIKE ?", "reminder.%").Find(&pending)
 		if assert.NoError(collect, err) {
 			assert.Empty(collect, pending)
 		}

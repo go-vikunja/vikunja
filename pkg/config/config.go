@@ -146,7 +146,6 @@ const (
 
 	ServiceClusterMode          Key = `service.clustermode`
 	JobsEnabled                 Key = `jobs.enabled`
-	JobsRetention               Key = `jobs.retention`
 	ServiceEnableScheduler      Key = `service.enablescheduler`
 	ServiceEnableMigrations     Key = `service.enablemigrations`
 	ServiceShutdownTimeout      Key = `service.shutdowntimeout`
@@ -421,7 +420,6 @@ func initDefaultConfig() {
 	ServiceTrustedProxies.setDefault("")
 	ServiceClusterMode.setDefault(false)
 	JobsEnabled.setDefault(true)
-	JobsRetention.setDefault("48h")
 	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
 		Key("jobs.queues." + queue + ".enabled").setDefault(true)
 		Key("jobs.queues." + queue + ".concurrency").setDefault(2)
