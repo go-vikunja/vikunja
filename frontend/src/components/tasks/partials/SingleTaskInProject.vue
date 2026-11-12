@@ -1,7 +1,6 @@
 <template>
 	<div
 		:data-task-id="task.id"
-		:data-project-id="task.project_id"
 	>
 		<div
 			ref="taskRoot"
