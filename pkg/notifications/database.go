@@ -49,17 +49,9 @@ type DatabaseNotification struct {
 
 	// A timestamp when this notification was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this notification was created. You cannot change this value."`
-
-	// Carried in memory so AfterInsert can queue the mail only after the row
-	// is committed. Unexported, so neither xorm nor json touch them.
-	notification Notification
-	notifiable   Notifiable
 }
 
-// AfterInsert is called by XORM after the row is inserted. For transactional
-// sessions this runs during Commit(), guaranteeing the row is persisted before
-// the event fires and the mail is queued. A rolled-back transaction therefore
-// sends no mail, which keeps event-handler retries from duplicating it (#2971).
+// AfterInsert publishes the transient update after the notification commits.
 func (d *DatabaseNotification) AfterInsert() {
 	if err := events.Dispatch(&NotificationCreatedEvent{
 		NotificationID: d.ID,
@@ -68,12 +60,6 @@ func (d *DatabaseNotification) AfterInsert() {
 		log.Errorf("Failed to dispatch notification created event for notification %d: %v", d.ID, err)
 	}
 
-	if d.notification == nil || d.notifiable == nil {
-		return
-	}
-	if err := notifyMail(d.notifiable, d.notification); err != nil {
-		log.Errorf("Failed to send mail for notification %d: %v", d.ID, err)
-	}
 }
 
 // TableName resolves to a better table name for notifications

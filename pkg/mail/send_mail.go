@@ -22,6 +22,7 @@ import (
 	"io"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
@@ -128,17 +129,16 @@ func getMessage(opts *Opts) *mail.Msg {
 	return m
 }
 
-// SendMail puts a mail in the queue
-func SendMail(opts *Opts) {
+// SendMail records mail durably in its own transaction.
+func SendMail(opts *Opts) error {
 	if isUnderTest {
 		sentMails = append(sentMails, opts)
-		return
+		return nil
 	}
-
-	if !config.MailerEnabled.GetBool() || Queue == nil {
-		return
+	s := db.NewSession()
+	defer s.Close()
+	if err := Enqueue(s, opts, "mail", ""); err != nil {
+		return err
 	}
-
-	m := getMessage(opts)
-	Queue <- m
+	return s.Commit()
 }

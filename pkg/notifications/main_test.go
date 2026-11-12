@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 )
@@ -36,7 +37,7 @@ func SetupTests() {
 		log.Fatal(err)
 	}
 
-	err = x.Sync2(&DatabaseNotification{})
+	err = x.Sync2(&DatabaseNotification{}, new(jobs.Job))
 	if err != nil {
 		log.Fatal(err)
 	}

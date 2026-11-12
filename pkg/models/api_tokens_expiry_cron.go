@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -37,7 +38,7 @@ func RegisterAPITokenExpiryCheckCron() {
 		return
 	}
 
-	err := cron.Schedule("0 * * * *", func() { checkForExpiringAPITokensAt(time.Now()) })
+	err := cron.RegisterState("api-token-expiry", "0 * * * *", func() { checkForExpiringAPITokensAt(time.Now()) })
 	if err != nil {
 		log.Fatalf("Could not register API token expiry check cron: %s", err)
 	}
@@ -125,5 +126,5 @@ func sendTokenExpiryNotificationIfNew(s *xorm.Session, u *user.User, n notificat
 		return nil
 	}
 
-	return notifications.Notify(u, n, s)
+	return notifications.NotifyQueued(u, n, "mail", fmt.Sprintf("api-token/%d/%s", n.SubjectID(), n.Name()), s)
 }

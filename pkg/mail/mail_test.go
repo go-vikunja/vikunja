@@ -23,7 +23,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ThreeDotsLabs/watermill/message"
+
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/stretchr/testify/assert"
@@ -110,54 +114,48 @@ func setupMailerConfig(t *testing.T, host string, port int) {
 	})
 }
 
-func TestStopMailDaemonDrainsQueue(t *testing.T) {
+func TestMailQueueCommitsWithBusinessTransaction(t *testing.T) {
+	setupMailerConfig(t, "127.0.0.1", 1)
+	engine, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, engine.Sync(new(jobs.Job)))
+	opts := &Opts{To: "durable@example.com", Subject: "durable", Message: "hello"}
+	s := engine.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	require.NoError(t, Enqueue(s, opts, "mail", "rollback"))
+	require.NoError(t, s.Rollback())
+	count, err := engine.Count(new(jobs.Job))
+	require.NoError(t, err)
+	assert.Zero(t, count)
+	s = engine.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	require.NoError(t, Enqueue(s, opts, "mail", "commit"))
+	require.NoError(t, Enqueue(s, opts, "mail", "commit"))
+	require.NoError(t, s.Commit())
+	count, err = engine.Count(new(jobs.Job))
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, count)
+}
+
+func TestDurableMailPayloadDeliversToSMTP(t *testing.T) {
 	port, received := startSMTPSink(t)
 	setupMailerConfig(t, "127.0.0.1", port)
-
-	StartMailDaemon()
-
-	for i := range 3 {
-		SendMail(&Opts{
-			To:          fmt.Sprintf("test%d@example.com", i),
-			Subject:     fmt.Sprintf("Test %d", i),
-			Message:     "Hello",
-			ContentType: ContentTypePlain,
-		})
-	}
-
-	StopMailDaemon()
-
-	assert.Len(t, received, 3, "expected all queued mails to be delivered before StopMailDaemon returns")
-	assert.Nil(t, Queue)
-}
-
-func TestStopMailDaemonMailerDisabled(t *testing.T) {
-	config.InitDefaultConfig()
-	config.MailerEnabled.Set(false)
-
-	StartMailDaemon()
-	assert.Nil(t, Queue)
-
-	assert.NotPanics(t, StopMailDaemon)
-}
-
-func TestStopMailDaemonNeverStarted(t *testing.T) {
-	setupMailerConfig(t, "", 587)
-
-	// Empty host: StartMailDaemon creates the queue but never starts the daemon goroutine.
-	StartMailDaemon()
-	assert.NotNil(t, Queue)
-
-	assert.NotPanics(t, StopMailDaemon)
-	assert.Nil(t, Queue)
-}
-
-func TestStopMailDaemonCalledTwice(t *testing.T) {
-	port, _ := startSMTPSink(t)
-	setupMailerConfig(t, "127.0.0.1", port)
-
-	StartMailDaemon()
-
-	assert.NotPanics(t, StopMailDaemon)
-	assert.NotPanics(t, StopMailDaemon)
+	engine, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, engine.Sync(new(jobs.Job)))
+	s := engine.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	require.NoError(t, Enqueue(s, &Opts{To: "smtp@example.com", Subject: "stored message", Message: "durable body"}, "mail", "smtp"))
+	require.NoError(t, s.Commit())
+	var stored jobs.Job
+	found, err := engine.Where("kind = ? AND state = ?", "mail.send", jobs.StateAvailable).OrderBy("id DESC").Get(&stored)
+	require.NoError(t, err)
+	require.True(t, found)
+	msg := message.NewMessage("smtp", []byte(stored.Payload))
+	msg.SetContext(t.Context())
+	require.NoError(t, deliver(msg))
+	assert.Len(t, received, 1)
 }

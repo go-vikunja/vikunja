@@ -30,7 +30,7 @@ import (
 )
 
 func RegisterDeletionNotificationCron() {
-	err := cron.Schedule("0 * * * *", notifyUsersScheduledForDeletion)
+	err := cron.RegisterState("account-deletion-warnings", "0 * * * *", notifyUsersScheduledForDeletion)
 	if err != nil {
 		log.Errorf("Could not register deletion cron: %s", err.Error())
 	}
@@ -78,10 +78,10 @@ func notifyUserOfDeletion(user *User, number int) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	err := notifications.Notify(user, &AccountDeletionNotification{
+	err := notifications.NotifyQueued(user, &AccountDeletionNotification{
 		User:               user,
 		NotificationNumber: number,
-	}, s)
+	}, "mail", fmt.Sprintf("account-deletion/%d/%d/%d", user.ID, user.DeletionScheduledAt.Unix(), number), s)
 	if err != nil {
 		return fmt.Errorf("could not notify user: %w", err)
 	}
