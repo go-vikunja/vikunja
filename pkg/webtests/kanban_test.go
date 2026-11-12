@@ -73,16 +73,16 @@ func TestBucket(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 		})
-		t.Run("Ignores project_view_id from body", func(t *testing.T) {
+		t.Run("Rejects project_view_id from body", func(t *testing.T) {
 			// GHSA-569v-q83c-3j3g: mass-assigning project_view_id allowed
 			// relocating a bucket into another tenant's view.
-			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{
+			_, err := testHandler.testUpdateWithUser(nil, map[string]string{
 				"bucket":  "1",
 				"project": "1",
 				"view":    "4",
 			}, `{"title":"TestLoremIpsum","project_view_id":80}`)
-			require.NoError(t, err)
-			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToProject)
 			db.AssertExists(t, "buckets", map[string]interface{}{
 				"id":              1,
 				"project_view_id": 4,
@@ -249,15 +249,26 @@ func TestBucket(t *testing.T) {
 			require.Error(t, err)
 			assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotExist)
 		})
+		t.Run("Bucket of another view in the same project", func(t *testing.T) {
+			// Bucket 1 belongs to view 4; view 1 is another view of project 1.
+			_, err := testHandler.testDeleteWithUser(nil, map[string]string{
+				"project": "1",
+				"bucket":  "1",
+				"view":    "1",
+			})
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeBucketDoesNotBelongToProject)
+			db.AssertExists(t, "buckets", map[string]interface{}{"id": 1, "project_view_id": 4}, false)
+		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "20", "bucket": "5"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "20", "bucket": "5", "view": "80"})
 				require.Error(t, err)
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
-				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "6", "bucket": "6"})
+				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "6", "bucket": "6", "view": "24"})
 				require.Error(t, err)
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})

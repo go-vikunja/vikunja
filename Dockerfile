@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 FROM --platform=$BUILDPLATFORM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS frontendbuilder
 
 WORKDIR /build
@@ -14,7 +14,7 @@ COPY frontend/ ./
 ARG RELEASE_VERSION=dev
 RUN echo "{\"VERSION\": \"${RELEASE_VERSION/-g/-}\"}" > src/version.json && pnpm run build
 
-FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.27.x@sha256:8cc742b41f043a4fd45d2f63f1fcd12cb27949342df09efb5561f2aadfbe6da3 AS apibuilder
+FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.27.x@sha256:7d5cab968132bf21285686bde17e902e0af080a16d08b439deb7265b276ac6f9 AS apibuilder
 
 RUN go install github.com/magefile/mage@latest && \
     mv /go/bin/mage /usr/local/go/bin
@@ -56,6 +56,9 @@ USER 1000
 
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 ENV VIKUNJA_DATABASE_PATH=/db/vikunja.db
+# Mitigates CVE-2026-98432 (kernel IPv4 TCP use-after-free) by disabling MPTCP
+# on Vikunja's listen sockets. Remove once host kernels are patched.
+ENV GODEBUG=multipathtcp=0
 
 COPY --from=apibuilder /build/vikunja-* vikunja
 COPY --from=apibuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

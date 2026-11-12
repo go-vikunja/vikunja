@@ -33,7 +33,7 @@ defineExpose({
 	inline-size: 100%;
 	text-align: start;
 
-	&:hover {
+	&:not(:disabled):hover {
 		background: var(--white);
 	}
 }

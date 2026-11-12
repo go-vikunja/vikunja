@@ -18,9 +18,12 @@ package middleware
 
 import (
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/labstack/echo/v5"
 )
+
+const maxUserAgentLength = 512
 
 // RequestMeta stashes IP, User-Agent and the request ID on the request
 // context so events dispatched while handling the request carry them as
@@ -32,7 +35,7 @@ func RequestMeta() echo.MiddlewareFunc {
 			req := c.Request()
 			ctx := events.WithRequestMeta(req.Context(), &events.RequestMeta{
 				IP:        c.RealIP(),
-				UserAgent: req.UserAgent(),
+				UserAgent: utils.TruncateUTF8(req.UserAgent(), maxUserAgentLength),
 				RequestID: c.Response().Header().Get(echo.HeaderXRequestID),
 			})
 			c.SetRequest(req.WithContext(ctx))

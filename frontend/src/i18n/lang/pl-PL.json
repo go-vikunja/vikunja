@@ -216,13 +216,7 @@
 		},
 		"delete": {
 			"title": "Usuń \"{project}\"",
-			"header": "Usuń ten projekt",
-			"text1": "Czy na pewno chcesz usunąć ten projekt i całą jego zawartość?",
-			"text2": "Dotyczy to wszystkich zadań i tego NIE DA SIĘ COFNĄĆ!",
-			"success": "Projekt został pomyślnie usunięty.",
-			"tasksToDelete": "To nieodwracalnie usunie około {count} zadań.",
-			"tasksAndChildProjectsToDelete": "To nieodwracalnie usunie ok. {tasks} zadań i {projects} projektów.",
-			"noTasksToDelete": "Ten projekt nie zawiera żadnych zadań, więc można go bezpiecznie usunąć."
+			"header": "Usuń ten projekt"
 		},
 		"duplicate": {
 			"title": "Duplikuj ten projekt",
@@ -683,34 +677,11 @@
 			"updated": "Zaktualizowano {0}",
 			"doneAt": "Ukończone {0}",
 			"updateSuccess": "Zadanie zostało pomyślnie zapisane.",
-			"deleteSuccess": "Zadanie zostało pomyślnie usunięte.",
 			"belongsToProject": "To zadanie należy do projektu '{project}'",
 			"due": "Termin {at}",
-			"organization": "Organizacja",
-			"management": "Zarządzanie",
-			"dateAndTime": "Data i czas",
-			"delete": {
-				"header": "Usuń to zadanie",
-				"text1": "Czy na pewno chcesz usunąć to zadanie?",
-				"text2": "Spowoduje to również usunięcie wszystkich załączników, przypomnień i powiązań z tym zadaniem i nie będzie można tego cofnąć!"
-			},
 			"actions": {
-				"assign": "Przypisz do użytkownika",
-				"label": "Dodaj etykiety",
-				"priority": "Ustaw priorytet",
-				"dueDate": "Ustaw termin",
-				"startDate": "Ustaw datę rozpoczęcia",
-				"endDate": "Ustaw datę zakończenia",
-				"reminders": "Ustaw przypomnienia",
-				"repeatAfter": "Ustaw interwał powtarzania",
-				"percentDone": "Ustaw postęp",
-				"attachments": "Dodaj załączniki",
-				"relatedTasks": "Dodaj powiązanie",
 				"moveProject": "Przenieś",
-				"color": "Ustaw kolor",
-				"delete": "Usuń",
-				"favorite": "Dodaj do ulubionych",
-				"unfavorite": "Usuń z ulubionych"
+				"delete": "Usuń"
 			}
 		},
 		"attributes": {
@@ -844,9 +815,6 @@
 			"dateAndTime": "Data i czas"
 		},
 		"repeat": {
-			"everyDay": "Codziennie",
-			"everyWeek": "Co tydzień",
-			"every30d": "Co 30 dni",
 			"mode": "Tryb powtarzania",
 			"monthly": "Miesięczny",
 			"fromCurrentDate": "Od daty zakończenia",

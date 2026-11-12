@@ -1,15 +1,21 @@
 import {mutationOptions, type QueryClient, type QueryKey} from '@tanstack/vue-query'
-import {assertClientRequestContext, captureClientRequestContext, isClientRequestContextCurrent} from '@/client/requestContext'
+import {
+	assertClientRequestContext,
+	captureClientRequestContext,
+	isClientRequestContextCurrent,
+	isRequestContextAbort,
+	type ClientRequestContext,
+} from '@/client/requestContext'
 import {error, success} from '@/message'
 
 export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(options: {
-	mutationFn: (input: TInput) => Promise<TData>
+	mutationFn: (input: TInput, context: {request: ClientRequestContext, client: QueryClient}) => Promise<TData>
 	optimistic?: {
 		queryKeys: (input: TInput, client: QueryClient) => readonly QueryKey[]
 		update: (input: TInput, client: QueryClient) => TOptimistic
 	}
 	onSuccess?: (data: TData, input: TInput, client: QueryClient, optimistic: TOptimistic) => void
-	onSettled?: (input: TInput, client: QueryClient) => Promise<unknown>
+	onSettled?: (input: TInput, client: QueryClient, optimistic: TOptimistic) => Promise<unknown>
 	successMessage?: (data: TData, input: TInput) => string | undefined
 	toastError?: (input: TInput) => boolean
 }) {
@@ -25,9 +31,12 @@ export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(o
 			const previous = queryKeys.flatMap(queryKey => client.getQueriesData({queryKey}))
 			return {request, previous, optimistic: options.optimistic.update(input, client)}
 		},
-		mutationFn: async (input: TInput) => {
+		mutationFn: async (input: TInput, {client}) => {
 			const request = captureClientRequestContext()
-			const data = await options.mutationFn(input)
+			const data = await options.mutationFn(input, {
+				request,
+				client,
+			})
 			assertClientRequestContext(request)
 			return data
 		},
@@ -42,11 +51,11 @@ export function contextMutationOptions<TData, TInput, TOptimistic = undefined>(o
 			for (const [queryKey, previous] of context.previous) {
 				if (previous !== undefined) client.setQueryData(queryKey, previous)
 			}
-			if (options.toastError?.(input) ?? true) error(cause)
+			if (!isRequestContextAbort(cause) && (options.toastError?.(input) ?? true)) error(cause)
 		},
-		onSettled: async (_data, _cause, input, context, {client}) => {
-			if (context && isClientRequestContextCurrent(context.request)) {
-				await options.onSettled?.(input, client)
+		onSettled: async (_data, cause, input, context, {client}) => {
+			if (context && isClientRequestContextCurrent(context.request) && !isRequestContextAbort(cause)) {
+				await options.onSettled?.(input, client, context.optimistic)
 				assertClientRequestContext(context.request)
 			}
 		},

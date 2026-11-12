@@ -14,14 +14,14 @@ function getAcceptedBases(): AppBase[] {
 
 	// Permalinks the app generates (comment links, mails) use the configured frontend url,
 	// which can differ from the open origin.
-	const {frontendUrl} = useConfigStore()
-	if (!frontendUrl) {
+	const {frontend_url} = useConfigStore()
+	if (!frontend_url) {
 		return bases
 	}
 
 	let base: URL
 	try {
-		base = new URL(frontendUrl)
+		base = new URL(frontend_url)
 	} catch {
 		return bases
 	}

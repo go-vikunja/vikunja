@@ -15,7 +15,7 @@
 		</template>
 
 		<LinkSharing
-			v-if="linkSharingEnabled && userIsAdmin"
+			v-if="configStore.link_sharing_enabled && userIsAdmin"
 			:project-id="projectId"
 			class="mbs-4"
 		/>
@@ -56,7 +56,6 @@ useTitle(title)
 
 const configStore = useConfigStore()
 
-const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
 const userIsAdmin = computed(() => project.value?.max_permission === PERMISSIONS.ADMIN)
 
 const baseStore = useBaseStore()

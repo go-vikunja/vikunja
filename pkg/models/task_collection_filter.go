@@ -17,7 +17,6 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -59,6 +58,8 @@ type taskFilter struct {
 	comparator taskFilterComparator
 	isNumeric  bool
 	join       taskFilterConcatinator
+	// Only set on nested groups: include nulls for this group even if the rest of the filter doesn't.
+	includeNulls bool
 }
 
 // clampDateToDriverRange lifts boundaries with year < 1 back into year 1:
@@ -115,7 +116,7 @@ func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.T
 	return value, err
 }
 
-func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *taskFilter, err error) {
+func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location, budget *businessDayBudget) (filter *taskFilter, err error) {
 	filter = &taskFilter{
 		join: filterConcatAnd,
 	}
@@ -135,7 +136,7 @@ func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *t
 	case []fexpr.ExprGroup:
 		values := make([]*taskFilter, 0, len(v))
 		for _, expression := range v {
-			subfilter, err := parseFilterFromExpression(expression, loc)
+			subfilter, err := parseFilterFromExpression(expression, loc, budget)
 			if err != nil {
 				return nil, err
 			}
@@ -161,7 +162,7 @@ func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *t
 		return nil, err
 	}
 
-	reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value, loc)
+	reflectValue, filter.value, err = getNativeValueForTaskField(filter.field, filter.comparator, value, loc, budget)
 	if err != nil {
 		return nil, ErrInvalidTaskFilterValue{
 			Field: filter.field,
@@ -278,36 +279,24 @@ func validateFilterComplexity(filter string) error {
 		return &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-byte limit", maxFilterBytes)}
 	}
 
-	depth := 0
-	for i := 0; i < len(filter); {
-		switch c := filter[i]; c {
-		case '\'', '"':
-			if end := quotedRunEnd(filter, i); end > 0 {
-				i = end
-				continue
-			}
-			i++
-		case '(':
-			depth++
-			if depth > maxFilterDepth {
-				return &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-level nesting limit", maxFilterDepth)}
-			}
-			i++
-		case ')':
-			depth--
-			if depth < 0 {
-				return &ErrInvalidFilterExpression{
-					Expression:      filter,
-					ExpressionError: errors.New("unexpected closing parenthesis"),
-				}
-			}
-			i++
-		default:
-			i++
+	return nil
+}
+
+// Uses fexpr's own scanner so comments and quotes are read exactly as Parse reads them.
+func filterGroupDepthExceeds(filter string, remaining int) bool {
+	scanner := fexpr.NewScanner([]byte(filter))
+	for {
+		t, err := scanner.Scan()
+		if err != nil || t.Type == fexpr.TokenEOF {
+			return false
+		}
+		if t.Type != fexpr.TokenGroup {
+			continue
+		}
+		if remaining == 0 || filterGroupDepthExceeds(t.Literal, remaining-1) {
+			return true
 		}
 	}
-
-	return nil
 }
 
 func prepareFilterForParsing(filter string) (string, error) {
@@ -319,6 +308,9 @@ func prepareFilterForParsing(filter string) (string, error) {
 	filter = preprocessFilterString(filter)
 	if err := validateFilterComplexity(filter); err != nil {
 		return "", err
+	}
+	if filterGroupDepthExceeds(filter, maxFilterDepth) {
+		return "", &ErrFilterTooComplex{Reason: fmt.Sprintf("it exceeds the %d-level nesting limit", maxFilterDepth)}
 	}
 
 	return filter, nil
@@ -354,9 +346,10 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 		}
 	}
 
+	var budget businessDayBudget
 	filters = make([]*taskFilter, 0, len(parsedFilter))
 	for _, f := range parsedFilter {
-		parsedFilter, err := parseFilterFromExpression(f, loc)
+		parsedFilter, err := parseFilterFromExpression(f, loc, &budget)
 		if err != nil {
 			return nil, err
 		}
@@ -425,6 +418,31 @@ func getFilterComparatorFromOp(op fexpr.SignOp) (taskFilterComparator, error) {
 	}
 }
 
+// MaxDatemathBusinessDays caps the summed "b" offsets of a filter's date values; go-datemath adds them one day at a time.
+const MaxDatemathBusinessDays = 10000
+
+var datemathBusinessDayOffset = regexp.MustCompile(`[+-](\d*)b`)
+
+type businessDayBudget int
+
+func (b *businessDayBudget) spend(value string) error {
+	for _, match := range datemathBusinessDayOffset.FindAllStringSubmatch(value, -1) {
+		days := 1
+		if match[1] != "" {
+			var err error
+			days, err = strconv.Atoi(match[1])
+			if err != nil {
+				days = MaxDatemathBusinessDays + 1
+			}
+		}
+		if days > MaxDatemathBusinessDays-int(*b) {
+			return fmt.Errorf("business day offsets exceed %d days", MaxDatemathBusinessDays)
+		}
+		*b += businessDayBudget(days)
+	}
+	return nil
+}
+
 // safeDatemathParse wraps datemath.Parse with a recover to catch panics from
 // the datemath lexer when given malformed input (e.g. "no" triggers a
 // "scanner internal error" panic in the generated lexer).
@@ -437,7 +455,7 @@ func safeDatemathParse(s string) (expr datemath.Expression, err error) {
 	return datemath.Parse(s)
 }
 
-func getValueForField(field reflect.StructField, rawValue string, loc *time.Location) (value interface{}, err error) {
+func getValueForField(field reflect.StructField, rawValue string, loc *time.Location, budget *businessDayBudget) (value interface{}, err error) {
 
 	if loc == nil {
 		loc = config.GetTimeZone()
@@ -456,6 +474,9 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 		value, err = strconv.ParseBool(rawValue)
 	case reflect.Struct:
 		if field.Type == schemas.TimeType {
+			if err = budget.spend(rawValue); err != nil {
+				return
+			}
 			var t datemath.Expression
 			var tt time.Time
 			t, err = safeDatemathParse(rawValue)
@@ -496,7 +517,7 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 	return
 }
 
-func getNativeValueForTaskField(fieldName string, comparator taskFilterComparator, value string, loc *time.Location) (reflectField *reflect.StructField, nativeValue interface{}, err error) {
+func getNativeValueForTaskField(fieldName string, comparator taskFilterComparator, value string, loc *time.Location, budget *businessDayBudget) (reflectField *reflect.StructField, nativeValue interface{}, err error) {
 
 	realFieldName := strings.ReplaceAll(strcase.ToCamel(fieldName), "Id", "ID")
 
@@ -529,7 +550,7 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		vals := strings.Split(value, ",")
 		valueSlice := []interface{}{}
 		for _, val := range vals {
-			v, err := getValueForField(field, val, loc)
+			v, err := getValueForField(field, val, loc, budget)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -538,6 +559,6 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		return nil, valueSlice, nil
 	}
 
-	val, err := getValueForField(field, value, loc)
+	val, err := getValueForField(field, value, loc, budget)
 	return &field, val, err
 }

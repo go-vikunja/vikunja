@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="content loader-container is-max-width-desktop"
-		:class="{ 'is-loading': isFetching}"
+		:class="{ 'is-loading': loading}"
 	>
 		<XButton
 			:to="{name:'teams.create'}"
@@ -39,20 +39,33 @@
 				{{ $t('team.create.title') }}.
 			</RouterLink>
 		</p>
+		<Pagination
+			:total-pages="totalPages"
+			:current-page="page"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import {useRouteQuery} from '@vueuse/router'
 
 import Card from '@/components/misc/Card.vue'
-import {useTeams} from '@/composables/useTeams'
+import Pagination from '@/components/misc/Pagination.vue'
+import {normalizePageNumber} from '@/client/queries/pagination'
+import {useClampedPage} from '@/composables/useClampedPage'
+import {useTeamsPage} from '@/composables/useTeams'
 import { useTitle } from '@/composables/useTitle'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('team.title'))
 
-const {teams, isFetching} = useTeams()
+const page = useRouteQuery('page', '1', {transform: normalizePageNumber})
+const teamsPage = useTeamsPage(page)
+const {teams, totalPages, isFetching} = teamsPage
+useClampedPage(page, teamsPage)
+const loading = useDelayedLoading(isFetching)
 </script>
 
 <style lang="scss" scoped>

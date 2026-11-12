@@ -1,5 +1,5 @@
 import type {MutationOptions} from '@tanstack/vue-query'
-import {QueryClient} from '@tanstack/vue-query'
+import {QueryClient, QueryObserver} from '@tanstack/vue-query'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import type {Project} from '@/client/generated'
@@ -21,24 +21,24 @@ const sdk = vi.hoisted(() => ({
 const requestContext = vi.hoisted(() => ({
 	identity: {id: 1, type: 1} as {id: number; type: number} | null,
 	sessionEpoch: 1,
-	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+	apiBaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
-vi.mock('@/message', () => ({success: vi.fn()}))
+vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/helpers/auth', () => ({
 	getAuthSessionEpoch: () => requestContext.sessionEpoch,
 	getToken: () => null,
 	getTokenIdentity: () => requestContext.identity,
+	onTokenRefreshed: () => {},
 }))
-vi.mock('@/helpers/fetcher', () => ({
-	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+vi.mock('@/helpers/apiUrl', () => ({
+	getApiBaseUrl: () => requestContext.apiBaseUrl,
 }))
 
 import {
 	createProjectMutationOptions,
 	createProjectDraft,
-	deleteProjectMutationOptions,
 	duplicateProjectMutationOptions,
 	findProjectByExactTitle,
 	getCachedProject,
@@ -46,6 +46,7 @@ import {
 	getSavedFilterIdFromProjectId,
 	isSavedFilterProject,
 	normalizeProject,
+	projectCountQuery,
 	projectKeys,
 	projectQuery,
 	patchProjectFavoriteMutationOptions,
@@ -54,6 +55,9 @@ import {
 	updateProjectMutationOptions,
 } from './projects'
 import {taskKeys} from './tasks'
+import {deleteProjectMutationOptions} from './trash'
+import {ApiError} from '@/client/problem'
+import {error} from '@/message'
 
 function execute<TData, TVariables, TContext>(
 	options: MutationOptions<TData, Error, TVariables, TContext>,
@@ -92,13 +96,14 @@ function serverProject(overrides: Partial<ProjectResponse> = {}): ProjectRespons
 beforeEach(() => {
 	requestContext.identity = {id: 1, type: 1}
 	requestContext.sessionEpoch = 1
-	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+	requestContext.apiBaseUrl = 'https://identity-a.example/api/v2/'
 })
 
 describe('project queries', () => {
 	beforeEach(() => {
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
+		vi.mocked(error).mockClear()
 	})
 
 	it('reads the detail before falling back to the navigation list', () => {
@@ -152,7 +157,7 @@ describe('project queries', () => {
 		expect(result.favoriteProject?.id).toBe(-1)
 		expect(result.savedFilterProjects.map(project => project.id)).toEqual([-2, -3])
 		expect(sdk.projectsList).toHaveBeenCalledExactlyOnceWith({
-			query: {is_archived: true, expand: 'permissions', page: 1, per_page: 1000},
+			query: {is_archived: true, expand: 'permissions', page: 1},
 		})
 	})
 
@@ -187,6 +192,36 @@ describe('project queries', () => {
 		expect(projectQuery(-2).enabled).toBe(true)
 		expect(projectQuery(-1).enabled).toBe(true)
 		expect(projectQuery(0).enabled).toBe(false)
+	})
+
+	it('leaves only the in-trash failure of a project read to the view', async () => {
+		const inTrash = new ApiError({
+			status: 404,
+			code: 3018,
+			detail: 'in trash',
+			details: {
+				id: 1,
+				deleted_at: '2026-01-01T00:00:00Z',
+				can_restore: true,
+			},
+		})
+		const failed = new ApiError({
+			status: 500,
+			detail: 'boom',
+		})
+		sdk.projectsRead.mockRejectedValueOnce(inTrash).mockRejectedValueOnce(failed)
+
+		await expect(queryClient.fetchQuery(projectQuery(1))).rejects.toBe(inTrash)
+		await expect(queryClient.fetchQuery({
+			...projectQuery(2),
+			retry: false,
+		})).rejects.toBe(failed)
+
+		expect(error).toHaveBeenCalledExactlyOnceWith(failed)
+	})
+
+	it('lets the caller handle project count errors', () => {
+		expect(projectCountQuery(1).meta).toEqual({handlesError: true})
 	})
 
 })
@@ -249,10 +284,163 @@ describe('project drafts and cache mutations', () => {
 		Object.values(sdk).forEach(mock => mock.mockReset())
 	})
 
+	describe.each(['success', 'failure'] as const)('with an active list after %s', outcome => {
+		it.each(delayedMutationCases)('does not reload any project pages after $name', async ({mock, run, response}) => {
+			const initial = [serverProject(), serverProject({
+				id: 2,
+				parent_project_id: 1,
+			})]
+			sdk.projectsList.mockImplementation(async ({query: {page}}) => ({
+				data: {
+					items: [initial[page - 1]],
+					total_pages: 2,
+				},
+			}))
+			await queryClient.fetchQuery(projectsQuery())
+			expect(sdk.projectsList).toHaveBeenCalledTimes(2)
+			const unsubscribe = new QueryObserver(queryClient, {
+				queryKey: listKey,
+				queryFn: projectsQuery().queryFn,
+				staleTime: Infinity,
+			}).subscribe(() => {})
+			sdk.projectsList.mockClear()
+
+			try {
+				if (outcome === 'success') {
+					mock.mockResolvedValue(response)
+					await run()
+				} else {
+					mock.mockRejectedValue(new Error('Request failed'))
+					await expect(run()).rejects.toThrow('Request failed')
+					expect(queryClient.getQueryData<ProjectListResult>(listKey)?.projects).toEqual(initial)
+				}
+				expect(sdk.projectsList).not.toHaveBeenCalled()
+				expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
+			} finally {
+				unsubscribe()
+			}
+		})
+	})
+
+	it.each([
+		{
+			change: 'archive',
+			before: false,
+			after: true,
+		},
+		{
+			change: 'unarchive',
+			before: true,
+			after: false,
+		},
+	])('reloads descendants after $change', async ({before, after}) => {
+		const parent = serverProject({
+			is_archived: before,
+			position: 100,
+		})
+		const child = serverProject({
+			id: 2,
+			parent_project_id: 1,
+			is_archived: before,
+		})
+		const grandchild = serverProject({
+			id: 3,
+			parent_project_id: 2,
+			is_archived: before,
+		})
+		queryClient.setQueryData(listKey, {
+			projects: [parent, child, grandchild],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
+		const updated = {
+			...parent,
+			is_archived: after,
+		}
+		sdk.projectsUpdate.mockResolvedValue({data: updated})
+		sdk.projectsList.mockResolvedValue({
+			data: {
+				items: [updated, {...child, is_archived: after}, {...grandchild, is_archived: after}],
+				total_pages: 1,
+			},
+		})
+		const unsubscribe = new QueryObserver(queryClient, {
+			queryKey: listKey,
+			queryFn: projectsQuery().queryFn,
+			staleTime: Infinity,
+		}).subscribe(() => {})
+		try {
+			await updateProject(updated)
+			expect(sdk.projectsList).toHaveBeenCalledOnce()
+			expect(queryClient.getQueryData<ProjectListResult>(listKey)?.projects.map(p => p.is_archived))
+				.toEqual([after, after, after])
+		} finally {
+			unsubscribe()
+		}
+	})
+
+	it('keeps individually archived children unchanged during a rename', async () => {
+		const parent = serverProject({position: 100})
+		const child = serverProject({
+			id: 2,
+			parent_project_id: 1,
+			is_archived: true,
+		})
+		queryClient.setQueryData(listKey, {
+			projects: [parent, child],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
+		sdk.projectsUpdate.mockResolvedValue({data: {...parent, title: 'Renamed'}})
+		await updateProject({...parent, title: 'Renamed'})
+		expect(queryClient.getQueryData<ProjectListResult>(listKey)?.projects).toEqual([
+			child,
+			{...parent, title: 'Renamed'},
+		])
+	})
+
+	it.each([
+		{
+			change: 'move',
+			input: {parent_project_id: 9},
+			output: {parent_project_id: 9},
+		},
+		{
+			change: 'position healing',
+			input: {position: 0.05},
+			output: {position: 100},
+		},
+	])('reloads derived project data after $change', async ({input, output}) => {
+		const parent = serverProject({position: 200})
+		queryClient.setQueryData(listKey, {
+			projects: [parent],
+			favoriteProject: null,
+			savedFilterProjects: [],
+		})
+		sdk.projectsUpdate.mockResolvedValue({data: {...parent, ...output}})
+		sdk.projectsList.mockResolvedValue({
+			data: {
+				items: [{...parent, ...output}],
+				total_pages: 1,
+			},
+		})
+		const unsubscribe = new QueryObserver(queryClient, {
+			queryKey: listKey,
+			queryFn: projectsQuery().queryFn,
+			staleTime: Infinity,
+		}).subscribe(() => {})
+		try {
+			await updateProject({...parent, ...input})
+			expect(sdk.projectsList).toHaveBeenCalledOnce()
+		} finally {
+			unsubscribe()
+		}
+	})
+
 	describe.each([
 		['identity', () => { requestContext.identity = {id: 2, type: 1} }],
 		['session', () => { requestContext.sessionEpoch++ }],
-		['API URL', () => { requestContext.apiV2BaseUrl = 'https://identity-b.example/api/v2/' }],
+		['API URL', () => { requestContext.apiBaseUrl = 'https://identity-b.example/api/v2/' }],
 	] as const)('after the %s changes', (_name, switchContext) => {
 		it.each(delayedMutationCases)('discards a delayed $name completion', async ({mock, run, response}) => {
 			const identityAProject = serverProject({title: 'Identity A project'})
@@ -351,7 +539,7 @@ describe('project drafts and cache mutations', () => {
 	it('does not seed the detail cache from a sparse create response', async () => {
 		const created = {id: 5, title: 'Created', hex_color: 'abcdef'}
 		const hydrated = serverProject({id: 5, title: 'Created', hex_color: 'abcdef'})
-		const normalizedCreated = {...hydrated, hex_color: '#abcdef'}
+		const normalizedCreated = {...hydrated, hex_color: '#abcdef', max_permission: 2}
 		queryClient.setQueryData(listKey, {projects: [], favoriteProject: null, savedFilterProjects: []})
 		sdk.projectsCreate.mockResolvedValue({data: created})
 		sdk.projectsRead.mockResolvedValue({data: hydrated})
@@ -437,32 +625,6 @@ describe('project drafts and cache mutations', () => {
 			title: 'Project',
 			is_favorite: true,
 		})
-	})
-
-	it('removes a deleted project, all descendants, and their detail entries', async () => {
-		queryClient.setQueryData(listKey, {
-			projects: [
-				serverProject({id: 1}),
-				serverProject({id: 2, parent_project_id: 1}),
-				serverProject({id: 3, parent_project_id: 2}),
-				serverProject({id: 4}),
-			],
-			favoriteProject: null,
-			savedFilterProjects: [serverProject({id: -2})],
-		})
-		for (const id of [1, 2, 3, 4]) {
-			queryClient.setQueryData(projectKeys.detail(id), serverProject({id}))
-		}
-		sdk.projectsDelete.mockResolvedValue({data: undefined})
-
-		await deleteProject(1)
-
-		expect(sdk.projectsDelete).toHaveBeenCalledWith({path: {id: 1}})
-		expect(queryClient.getQueryData<{projects: Project[]}>(listKey)?.projects.map(project => project.id)).toEqual([4])
-		expect(queryClient.getQueryData(projectKeys.detail(1))).toBeUndefined()
-		expect(queryClient.getQueryData(projectKeys.detail(2))).toBeUndefined()
-		expect(queryClient.getQueryData(projectKeys.detail(3))).toBeUndefined()
-		expect(queryClient.getQueryData(projectKeys.detail(4))).toBeDefined()
 	})
 
 	it('duplicates a project under a parent and caches the duplicate as admin', async () => {

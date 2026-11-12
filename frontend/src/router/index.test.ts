@@ -42,25 +42,25 @@ describe('settings route matching', () => {
 	})
 })
 
-function route(query: RouteLocation['query'] = {}) {
+function route(query: RouteLocation['query'] = {}, hash = '', name = 'home') {
 	return {
-		name: 'home',
-		hash: '',
+		name,
+		hash,
 		query,
 		params: {},
 		fullPath: '/',
 	} as unknown as RouteLocation
 }
 
-function authStoreStub({pendingEmail = 'new@example.com', ...overrides}: {pendingEmail?: string} & Record<string, unknown> = {}) {
-	const server = {pendingEmail}
+function authStoreStub({pending_email = 'new@example.com', ...overrides}: {pending_email?: string} & Record<string, unknown> = {}) {
+	const server = {pending_email}
 	const store = {
 		authUser: true,
 		authLinkShare: false,
 		// stale on purpose: this session was opened before the change was requested elsewhere
-		info: {pendingEmail: ''},
+		info: {pending_email: ''},
 		verifyEmail: vi.fn(async () => {
-			server.pendingEmail = ''
+			server.pending_email = ''
 			return true
 		}),
 		refreshUserInfo: vi.fn(async () => {
@@ -107,7 +107,7 @@ describe('getAuthForRoute email confirmation', () => {
 	})
 
 	it('does not claim success when nothing was pending', async () => {
-		const authStore = authStoreStub({pendingEmail: '', info: {pendingEmail: 'stale@example.com'}})
+		const authStore = authStoreStub({pending_email: '', info: {pending_email: 'stale@example.com'}})
 
 		const result = await getAuthForRoute(route({userEmailConfirm: 'token-123'}), authStore)
 
@@ -133,5 +133,56 @@ describe('getAuthForRoute email confirmation', () => {
 		await getAuthForRoute(route({userEmailConfirm: ''}), authStore)
 
 		expect(authStore.verifyEmail).not.toHaveBeenCalled()
+	})
+})
+
+describe('getAuthForRoute account tokens in the fragment', () => {
+	const loggedOut = () => authStoreStub({authUser: false})
+
+	beforeEach(() => {
+		localStorage.clear()
+	})
+
+	it('redeems an email confirmation token for a signed-in user', async () => {
+		const authStore = authStoreStub()
+
+		await getAuthForRoute(route({}, '#userEmailConfirm=token-123'), authStore)
+
+		expect(authStore.verifyEmail).toHaveBeenCalledWith('token-123')
+	})
+
+	it('stores an email confirmation token for the login page', async () => {
+		const result = await getAuthForRoute(route({}, '#userEmailConfirm=token-123'), loggedOut())
+
+		expect(localStorage.getItem('emailConfirmToken')).toBe('token-123')
+		expect(result).toEqual({name: 'user.login'})
+	})
+
+	it.each([
+		['fragment', {}, '#userPasswordReset=token-123'],
+		['query', {userPasswordReset: 'token-123'}, ''],
+	])('moves a password reset token from the %s to the reset page fragment', async (_, query, hash) => {
+		const result = await getAuthForRoute(route(query, hash), loggedOut())
+
+		expect(result).toEqual({name: 'user.password-reset.reset', hash: '#userPasswordReset=token-123'})
+	})
+
+	it('stays on the reset page when the fragment carries the token', async () => {
+		const result = await getAuthForRoute(route({}, '#userPasswordReset=token-123', 'user.password-reset.reset'), loggedOut())
+
+		expect(result).toBeUndefined()
+	})
+
+	it('leaves the reset page without a token', async () => {
+		const result = await getAuthForRoute(route({}, '', 'user.password-reset.reset'), loggedOut())
+
+		expect(result).toEqual({name: 'user.login'})
+	})
+})
+
+describe('scroll restoration', () => {
+	it('scrolls a new route to the top left', () => {
+		const route = router.currentRoute.value
+		expect(router.options.scrollBehavior?.(route, route, null)).toEqual({left: 0, top: 0})
 	})
 })

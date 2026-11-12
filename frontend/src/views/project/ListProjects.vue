@@ -47,6 +47,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useStorage} from '@vueuse/core'
 
 import {useProjects} from '@/composables/useProjects'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const {t} = useI18n()
 const projectList = useProjects()
@@ -54,7 +55,7 @@ const projectList = useProjects()
 useTitle(() => t('project.title'))
 const showArchived = useStorage('showArchived', false)
 
-const loading = computed(() => projectList.isLoading)
+const loading = useDelayedLoading(() => projectList.isLoading)
 const projects = computed(() => {
 	return showArchived.value
 		? projectList.projectsArray

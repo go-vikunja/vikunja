@@ -9,7 +9,7 @@ import {createSuggestionPopup, type SuggestionPopup} from '../suggestionPopup'
 
 export const EmojiSuggestionPluginKey = new PluginKey('emojiSuggestion')
 
-interface SuggestionProps {
+export interface SuggestionProps {
 	editor: Editor
 	range: Range
 	query: string

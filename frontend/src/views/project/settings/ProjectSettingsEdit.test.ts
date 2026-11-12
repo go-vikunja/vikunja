@@ -41,7 +41,7 @@ vi.mock('@/stores/base', () => ({
 }))
 
 vi.mock('@/composables/useTitle', () => ({useTitle: vi.fn()}))
-vi.mock('vue-router', () => ({useRouter: () => ({back: vi.fn()})}))
+vi.mock('@/composables/useGoBack', () => ({useGoBack: () => vi.fn()}))
 vi.mock('vue-i18n', async importOriginal => ({
 	...await importOriginal<typeof import('vue-i18n')>(),
 	useI18n: () => ({t: (key: string) => key}),

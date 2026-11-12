@@ -39,21 +39,39 @@ import (
 	"xorm.io/xorm"
 )
 
-// activeHandlers tracks in-flight event handler goroutines so the test
-// endpoint can wait for them to finish before truncating tables.
-var activeHandlers sync.WaitGroup
+type handlerTracker struct {
+	idle    *sync.Cond
+	pending int
+}
 
-// WaitForPendingHandlers blocks until all currently in-flight event handler
-// goroutines have completed (including retries). This is intended for the
-// testing endpoint to avoid connection starvation: async handlers from the
-// previous test can hold SQLite connections, starving the next test's seed
-// request.
+var activeHandlers = handlerTracker{idle: sync.NewCond(&sync.Mutex{})}
+
+func (h *handlerTracker) start() {
+	h.idle.L.Lock()
+	h.pending++
+	h.idle.L.Unlock()
+}
+
+func (h *handlerTracker) finish() {
+	h.idle.L.Lock()
+	defer h.idle.L.Unlock()
+	h.pending--
+	if h.pending == 0 {
+		h.idle.Broadcast()
+	}
+}
+
+// WaitForPendingHandlers drains in-flight handlers before test fixtures are reset.
 func WaitForPendingHandlers() {
 	if r := currentRuntime(); r != nil {
 		r.waitForPendingHandlers()
 	}
 	jobs.WaitForPendingHandlers()
-	activeHandlers.Wait()
+	activeHandlers.idle.L.Lock()
+	for activeHandlers.pending > 0 {
+		activeHandlers.idle.Wait()
+	}
+	activeHandlers.idle.L.Unlock()
 	if r := currentRuntime(); r != nil {
 		r.waitForPendingHandlers()
 	}
@@ -140,8 +158,8 @@ func startEvents(ctx context.Context, testing bool) (<-chan struct{}, error) {
 			case <-ctx.Done():
 				return nil, ctx.Err()
 			}
-			activeHandlers.Add(1)
-			defer activeHandlers.Done()
+			activeHandlers.start()
+			defer activeHandlers.finish()
 			return h(msg)
 		}
 	})
@@ -261,13 +279,18 @@ func dispatchVolatile(ctx context.Context, event Event) error {
 	return r.publish(event.Name(), msg)
 }
 
-// pendingEventQueue holds the pending events and a mutex for thread-safe access
 type pendingEventQueue struct {
-	mu     sync.Mutex
-	events []Event
+	mu        sync.Mutex
+	events    []Event
+	callbacks []func() error
 }
 
 var pendingEvents sync.Map // map[any]*pendingEventQueue
+
+func pendingQueue(key any) *pendingEventQueue {
+	val, _ := pendingEvents.LoadOrStore(key, &pendingEventQueue{})
+	return val.(*pendingEventQueue)
+}
 
 // DispatchOnCommit stores an event to be dispatched later, after a transaction commits.
 // The key should be the *xorm.Session pointer associated with the transaction.
@@ -278,18 +301,27 @@ func DispatchOnCommit(key any, event Event) error {
 	if err := enqueueDurable(session, event); err != nil {
 		return err
 	}
-	val, _ := pendingEvents.LoadOrStore(key, &pendingEventQueue{})
-	queue := val.(*pendingEventQueue)
+	queue := pendingQueue(key)
 	queue.mu.Lock()
 	queue.events = append(queue.events, event)
 	queue.mu.Unlock()
 	return nil
 }
 
-// DispatchPending dispatches all events accumulated for the given key and removes them.
-// Call this after s.Commit(). Safe to call even if no events were registered.
+// OnCommit registers fn to run synchronously in DispatchPending(key), before the pending
+// events are published. CleanupPending(key) discards it. Errors are logged.
+func OnCommit(key any, fn func() error) {
+	queue := pendingQueue(key)
+	queue.mu.Lock()
+	queue.callbacks = append(queue.callbacks, fn)
+	queue.mu.Unlock()
+}
+
+// DispatchPending runs the OnCommit callbacks and dispatches all events accumulated for the
+// given key, then removes them.
+// Call this after s.Commit(). Safe to call even if nothing was registered.
 // Request metadata on the context (see WithRequestMeta) is copied onto each message.
-// If any event fails to dispatch, the error is logged but remaining events are still dispatched.
+// Failures are logged; remaining callbacks and events still run.
 func DispatchPending(ctx context.Context, key any) {
 	jobs.Wake()
 	val, ok := pendingEvents.LoadAndDelete(key)
@@ -299,6 +331,11 @@ func DispatchPending(ctx context.Context, key any) {
 	queue := val.(*pendingEventQueue)
 	// No need to lock here since we've already removed it from the map
 	// and this key won't receive new events
+	for _, fn := range queue.callbacks {
+		if err := fn(); err != nil {
+			log.Errorf("Failed to run on-commit callback: %v", err)
+		}
+	}
 	for _, event := range queue.events {
 		if err := dispatchVolatile(ctx, event); err != nil {
 			log.Errorf("Failed to dispatch event %s: %v", event.Name(), err)
@@ -306,8 +343,8 @@ func DispatchPending(ctx context.Context, key any) {
 	}
 }
 
-// CleanupPending discards all pending events for the given key without dispatching.
-// Call this when a transaction is rolled back.
+// CleanupPending discards all pending events and callbacks for the given key without
+// running them. Call this when a transaction is rolled back.
 func CleanupPending(key any) {
 	pendingEvents.Delete(key)
 }

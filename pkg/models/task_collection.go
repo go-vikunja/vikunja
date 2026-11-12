@@ -24,13 +24,15 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ProjectID     int64 `param:"project" json:"-"`
-	ProjectViewID int64 `param:"view" json:"-"`
+	ProjectID          int64 `param:"project" json:"-"`
+	ProjectViewID      int64 `param:"view" json:"-"`
+	IncludeSubprojects bool  `json:"include_subprojects,omitempty" query:"include_subprojects"`
 
 	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
 
@@ -40,7 +42,7 @@ type TaskCollection struct {
 	OrderBy []string `query:"order_by" json:"order_by" doc:"The order for each sort_by field, either asc or desc. Defaults to asc."`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
-	Filter string `query:"filter" json:"filter" doc:"The filter query to match tasks by. See https://vikunja.io/docs/filters."`
+	Filter string `query:"filter" json:"filter" doc:"The filter query to match tasks by, e.g. \"done = false && due_date < now+7d\". Combine conditions with && or || (not and/or) and group them with parentheses. Operators: =, !=, >, >=, <, <=, like, in, not in. See https://vikunja.io/docs/filters."`
 	// The time zone which should be used for date match (statements like "now" resolve to different actual times)
 	FilterTimezone string `query:"filter_timezone" json:"-"`
 
@@ -57,6 +59,9 @@ type TaskCollection struct {
 	Expand []TaskCollectionExpandable `query:"expand" json:"-"`
 
 	isSavedFilter bool
+	// Request filter on a saved filter which includes nulls. Kept apart so
+	// include-nulls doesn't leak into the saved filter's own conditions.
+	nullableFilter string
 
 	// forceFlatTasks makes ReadAll always return []*Task, never []*Bucket, even
 	// for a kanban view. v1's single tasks endpoint is polymorphic; v2 splits it
@@ -130,6 +135,10 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 			continue
 		}
 
+		if s == taskPropertyPosition && tf.IncludeSubprojects {
+			continue
+		}
+
 		if s == taskPropertyPosition && projectView != nil {
 			param.projectViewID = projectView.ID
 		}
@@ -154,13 +163,71 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 	}
 
 	opts.parsedFilters, err = getTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
-	return opts, err
+	if err != nil || tf.nullableFilter == "" {
+		return opts, err
+	}
+
+	nullable, err := getTaskFiltersFromFilterString(tf.nullableFilter, tf.FilterTimezone)
+	if err != nil {
+		return nil, err
+	}
+	groups := []*taskFilter{{value: nullable, join: filterConcatAnd, includeNulls: true}}
+	if len(opts.parsedFilters) > 0 {
+		groups = append(groups, &taskFilter{value: opts.parsedFilters, join: filterConcatAnd})
+		opts.filter = "(" + tf.nullableFilter + ") && (" + tf.Filter + ")"
+	} else {
+		opts.filter = tf.nullableFilter
+	}
+	opts.parsedFilters = groups
+	return opts, nil
+}
+
+func (tf *TaskCollection) mergeRequestFilter(request *TaskCollection) {
+	switch {
+	case request.Filter == "":
+	case tf.Filter == "":
+		tf.Filter = request.Filter
+		tf.FilterIncludeNulls = tf.FilterIncludeNulls || request.FilterIncludeNulls
+	case request.FilterIncludeNulls && !tf.FilterIncludeNulls:
+		tf.nullableFilter = request.Filter
+	default:
+		tf.Filter = "(" + request.Filter + ") && (" + tf.Filter + ")"
+	}
 }
 
 // SetForceFlatTasks makes ReadAll return a flat []*Task even for a kanban view.
 // The v2 tasks endpoint uses it; v1 leaves it unset for the polymorphic shape.
 func (tf *TaskCollection) SetForceFlatTasks() {
 	tf.forceFlatTasks = true
+}
+
+// A subproject's task has no bucket in the parent's kanban view, so it would be mis-bucketed.
+func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth, view *ProjectView) {
+	tf.IncludeSubprojects = tf.IncludeSubprojects &&
+		tf.ProjectID > 0 &&
+		!tf.isSavedFilter
+
+	if view != nil && view.ViewKind == ProjectViewKindKanban {
+		tf.IncludeSubprojects = false
+	}
+
+	if _, is := a.(*LinkSharing); is {
+		tf.IncludeSubprojects = false
+	}
+}
+
+func ensureDefaultPositionSort(opts *taskSearchOptions, view *ProjectView) {
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyPosition {
+			return
+		}
+	}
+
+	opts.sortby = append(opts.sortby, &sortParam{
+		projectViewID: view.ID,
+		sortBy:        taskPropertyPosition,
+		orderBy:       orderAscending,
+	})
 }
 
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket, forceFlatTasks bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
@@ -210,7 +277,43 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		}
 	}
 
-	return []*Project{{ID: tf.ProjectID}}, nil
+	if !tf.IncludeSubprojects || tf.ProjectID <= 0 {
+		return []*Project{{ID: tf.ProjectID}}, nil
+	}
+
+	subprojectIDs, err := getAccessibleSubprojectIDs(s, a, tf.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	relevantProjects := make([]*Project, 0, len(subprojectIDs)+1)
+	relevantProjects = append(relevantProjects, &Project{ID: tf.ProjectID})
+	for _, id := range subprojectIDs {
+		relevantProjects = append(relevantProjects, &Project{ID: id})
+	}
+
+	return relevantProjects, nil
+}
+
+// Descendants the auth cannot access are skipped rather than failing the request.
+func getAccessibleSubprojectIDs(s *xorm.Session, a web.Auth, parentProjectID int64) (ids []int64, err error) {
+	accessible, err := accessibleProjectIDsCond(s, a, "projects.id")
+	if err != nil {
+		return nil, err
+	}
+
+	ids = []int64{}
+	err = s.
+		Table(&ProjectAncestor{}).
+		Join("INNER", "projects", "projects.id = project_ancestors.project_id").
+		Where(builder.Eq{"project_ancestors.ancestor_id": parentProjectID}.
+			And(builder.Gt{"project_ancestors.depth": 0}).
+			And(builder.Eq{"projects.is_archived": false}).
+			And(accessible)).
+		Cols("project_ancestors.project_id").
+		Find(&ids)
+
+	return ids, err
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
@@ -247,6 +350,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Produce json
 // @Param id path int true "The project ID."
 // @Param view path int true "The project view ID."
+// @Param include_subprojects query bool false "If true, also returns tasks from all descendant subprojects the user can access. A sort by position is ignored while this is set, as positions are scoped to a single view."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -305,12 +409,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.Expand = tf.Expand
 		tc.forceFlatTasks = tf.forceFlatTasks
 
-		if tf.Filter != "" {
-			if tc.Filter != "" {
-				tc.Filter = "(" + tf.Filter + ") && (" + tc.Filter + ")"
-			} else {
-				tc.Filter = tf.Filter
-			}
+		tc.mergeRequestFilter(tf)
+
+		if sf.Filters.Search != "" {
+			search = sf.Filters.Search
 		}
 
 		return tc.ReadAll(s, a, search, page, perPage)
@@ -344,6 +446,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			if view.Filter.FilterIncludeNulls {
 				tf.FilterIncludeNulls = true
 			}
+
+			if view.Filter.IncludeSubprojects {
+				tf.IncludeSubprojects = true
+			}
 		}
 
 		if strings.Contains(tf.Filter, taskPropertyBucketID) {
@@ -354,6 +460,8 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			}
 		}
 	}
+
+	tf.normalizeIncludeSubprojects(a, view)
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)
 	if err != nil {
@@ -373,21 +481,8 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.expand = tf.Expand
 	opts.isSavedFilter = tf.isSavedFilter
 
-	if view != nil {
-		var hasOrderByPosition bool
-		for _, param := range opts.sortby {
-			if param.sortBy == taskPropertyPosition {
-				hasOrderByPosition = true
-				break
-			}
-		}
-		if !hasOrderByPosition {
-			opts.sortby = append(opts.sortby, &sortParam{
-				projectViewID: view.ID,
-				sortBy:        taskPropertyPosition,
-				orderBy:       orderAscending,
-			})
-		}
+	if view != nil && !tf.IncludeSubprojects {
+		ensureDefaultPositionSort(opts, view)
 	}
 
 	shareAuth, is := a.(*LinkSharing)

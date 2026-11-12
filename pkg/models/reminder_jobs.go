@@ -72,11 +72,11 @@ func enqueueTaskReminders(_ context.Context, s *xorm.Session, window cron.Window
 				if err := enqueueReminder(s, "reminder.mail", "bulk-mail", payload); err != nil {
 					return err
 				}
-				if err := enqueueReminder(s, "reminder.notification", "notifications", payload); err != nil {
-					return err
-				}
 			}
-			if config.WebhooksEnabled.GetBool() {
+			if err := enqueueReminder(s, "reminder.notification", "notifications", payload); err != nil {
+				return err
+			}
+			if config.WebhooksEnabled.GetBool() || hasNonWebhookListener((&TaskReminderFiredEvent{}).Name()) {
 				return enqueueReminder(s, "reminder.webhook", "webhooks", payload)
 			}
 			return nil
@@ -92,7 +92,18 @@ func enqueueTaskReminders(_ context.Context, s *xorm.Session, window cron.Window
 }
 
 func enqueueOverdueReminders(_ context.Context, s *xorm.Session, window cron.Window) error {
-	users, err := getOverdueTasksInWindow(s, window, nil)
+	single, batch, err := overdueEventsWithListeners(s)
+	if err != nil {
+		return err
+	}
+	if !reminderMailEnabled() && !single && !batch {
+		return nil
+	}
+	var cond builder.Cond
+	if !single && !batch {
+		cond = builder.Eq{"users.overdue_tasks_reminders_enabled": true}
+	}
+	users, err := getOverdueTasksInWindow(s, window, cond)
 	if err != nil {
 		return err
 	}
@@ -104,7 +115,7 @@ func enqueueOverdueReminders(_ context.Context, s *xorm.Session, window cron.Win
 					return err
 				}
 			}
-			if config.WebhooksEnabled.GetBool() {
+			if single || batch {
 				return enqueueReminder(s, "overdue.webhook", "webhooks", payload)
 			}
 			return nil
@@ -127,7 +138,7 @@ func handleTaskReminder(msg *message.Message) error {
 	s := jobs.NewSession(msg)
 	defer s.Close()
 	defer events.CleanupPending(s)
-	reminders, err := getTaskRemindersInWindow(s, cron.Window{From: payload.At.Add(-time.Second), To: payload.At}, builder.Eq{"users.id": payload.UserID})
+	reminders, err := getTaskRemindersInWindow(s, cron.Window{From: payload.At.Add(-time.Second), To: payload.At}, builder.Eq{"users.id": payload.UserID}, payload.TaskID)
 	if err != nil {
 		return err
 	}
@@ -144,14 +155,11 @@ func handleTaskReminder(msg *message.Message) error {
 			s.Close()
 			return notifications.SendMailNow(msg.Context(), reminder.User, reminder)
 		case "reminder.notification":
-			if !reminderMailEnabled() || !reminder.User.EmailRemindersEnabled {
-				return nil
-			}
 			if err := notifications.NotifyDB(reminder.User, reminder, s); err != nil {
 				return err
 			}
 		case "reminder.webhook":
-			if !config.WebhooksEnabled.GetBool() {
+			if !config.WebhooksEnabled.GetBool() && !hasNonWebhookListener((&TaskReminderFiredEvent{}).Name()) {
 				return nil
 			}
 			if err := events.DispatchOnCommit(s, &TaskReminderFiredEvent{Task: reminder.Task, User: reminder.User, Project: reminder.Project, Reminder: reminder.TaskReminder}); err != nil {
@@ -204,20 +212,39 @@ func handleOverdueReminder(msg *message.Message) error {
 		s.Close()
 		return notifications.SendMailNow(msg.Context(), ut.user, n)
 	}
-	if !config.WebhooksEnabled.GetBool() {
-		return nil
+	single, batch, err := overdueEventsWithListeners(s)
+	if err != nil {
+		return err
 	}
-	for _, task := range tasks {
-		if err := events.DispatchOnCommit(s, &TaskOverdueEvent{Task: task, User: ut.user, Project: projects[task.ProjectID]}); err != nil {
-			return err
-		}
-	}
-	if err := events.DispatchOnCommit(s, &TasksOverdueEvent{Tasks: tasks, User: ut.user, Projects: projects}); err != nil {
+	if err := dispatchOverdueReminders(s, ut, single, batch); err != nil {
 		return err
 	}
 	if err := jobs.Commit(s, msg); err != nil {
 		return err
 	}
 	events.DispatchPending(msg.Context(), s)
+	return nil
+}
+
+func dispatchOverdueReminders(s *xorm.Session, ut *userWithTasks, single, batch bool) error {
+	tasks := ut.allTasks()
+	ids := make([]int64, 0, len(tasks))
+	for _, task := range tasks {
+		ids = append(ids, task.ID)
+	}
+	projects, err := GetProjectsMapSimpleByTaskIDs(s, ids)
+	if err != nil {
+		return err
+	}
+	if single {
+		for _, task := range tasks {
+			if err := events.DispatchOnCommit(s, &TaskOverdueEvent{Task: task, User: ut.user, Project: projects[task.ProjectID]}); err != nil {
+				return err
+			}
+		}
+	}
+	if batch {
+		return events.DispatchOnCommit(s, &TasksOverdueEvent{Tasks: tasks, User: ut.user, Projects: projects})
+	}
 	return nil
 }

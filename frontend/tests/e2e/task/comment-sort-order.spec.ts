@@ -199,7 +199,7 @@ test.describe('Comment sort order', () => {
 	test('uses saved setting on page load', async ({page, apiContext}) => {
 		// Create a user with commentSortOrder already set to desc
 		const user = (await UserFactory.create(1, {
-			frontend_settings: JSON.stringify({commentSortOrder: 'desc'}),
+			frontend_settings: JSON.stringify({comment_sort_order: 'desc'}),
 		}))[0]
 		const project = (await ProjectFactory.create(1, {owner_id: user.id}))[0]
 		await TaskFactory.create(1, {id: 1, project_id: project.id, created_by_id: user.id})

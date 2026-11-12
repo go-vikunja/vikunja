@@ -166,6 +166,66 @@ func TestConfirmEmailAppliesPendingEmail(t *testing.T) {
 		assert.Empty(t, tokens)
 	})
 
+	t.Run("token rotated by a newer change", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		resetEmailConfirmationCooldown(t, 1)
+		mail.ResetSent()
+		require.NoError(t, UpdateEmail(s, &EmailUpdate{User: &User{ID: 1}, NewEmail: "new1@example.com"}))
+		oldToken, err := getToken(s, confirmTokenFromSentMail(t), TokenEmailConfirm)
+		require.NoError(t, err)
+		require.NotNil(t, oldToken)
+
+		resetEmailConfirmationCooldown(t, 1)
+		require.NoError(t, UpdateEmail(s, &EmailUpdate{User: &User{ID: 1}, NewEmail: "other1@example.com"}))
+		current, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+
+		err = confirmEmailWithToken(s, oldToken, current)
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidEmailConfirmToken(err))
+
+		updated, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+		assert.Equal(t, "user1@example.com", updated.Email)
+		assert.Equal(t, "other1@example.com", updated.PendingEmail)
+	})
+
+	t.Run("pending email replaced after it was read", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		config.MailerEnabled.Set(true)
+		defer config.MailerEnabled.Set(false)
+
+		resetEmailConfirmationCooldown(t, 1)
+		mail.ResetSent()
+		require.NoError(t, UpdateEmail(s, &EmailUpdate{User: &User{ID: 1}, NewEmail: "new1@example.com"}))
+		token, err := getToken(s, confirmTokenFromSentMail(t), TokenEmailConfirm)
+		require.NoError(t, err)
+		require.NotNil(t, token)
+		stale, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+
+		_, err = s.Where("id = ?", 1).Cols("pending_email").Update(&User{PendingEmail: "other1@example.com"})
+		require.NoError(t, err)
+
+		err = confirmEmailWithToken(s, token, stale)
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidEmailConfirmToken(err))
+
+		updated, err := GetUserWithEmail(s, &User{ID: 1})
+		require.NoError(t, err)
+		assert.Equal(t, "user1@example.com", updated.Email)
+		assert.Equal(t, "other1@example.com", updated.PendingEmail)
+	})
+
 	t.Run("locked user keeps their email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

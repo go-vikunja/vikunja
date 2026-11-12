@@ -7,7 +7,7 @@ import {i18n} from '@/i18n'
 import {createSharedComposable} from '@vueuse/core'
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
 import {useDateDisplay} from '@/composables/useDateDisplay'
-import {useGlobalNow} from '@/composables/useGlobalNow'
+import {GLOBAL_NOW_INTERVAL, useGlobalNow} from '@/composables/useGlobalNow'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {DATE_DISPLAY, type DateDisplay} from '@/constants/dateDisplay'
 import {TIME_FORMAT, type TimeFormat} from '@/constants/timeFormat'
@@ -31,16 +31,17 @@ export const formatDate = (date: Date | string | null | undefined, f: string) =>
 		return ''
 	}
 
-	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
+	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase() as keyof typeof DAYJS_LOCALE_MAPPING] ?? 'en'
 
 	return dayjs(parsed).locale(locale).format(f)
 }
 
-export function formatDateLong(date) {
-	return formatDate(date, 'LLLL')
+export function formatDateLong(date: Date | string | null | undefined) {
+	const {store: timeFormat} = useTimeFormat()
+	return formatDisplayDateFormat(date, DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR, timeFormat.value)
 }
 
-export function formatDateShort(date) {
+export function formatDateShort(date: Date | string | null | undefined) {
 	return formatDate(date, 'lll')
 }
 
@@ -50,12 +51,17 @@ export const formatDateSince = (date: Date | string | null | undefined) => {
 		return ''
 	}
 
-	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
+	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase() as keyof typeof DAYJS_LOCALE_MAPPING] ?? 'en'
 
 	// Computing the relative string against the shared, ticking `now` (instead of fromNow's
 	// internal Date.now()) makes every reactive caller re-render on the 60s tick, so open views
 	// don't keep showing a stale "x minutes ago".
 	const {now} = useGlobalNow()
+
+	// `now` lags up to one tick, so fresh dates would otherwise read "in a few seconds".
+	if (Math.abs(parsed.getTime() - now.value.getTime()) < GLOBAL_NOW_INTERVAL) {
+		return i18n.global.t('time.justNow')
+	}
 
 	return dayjs(parsed).locale(locale).from(now.value)
 }

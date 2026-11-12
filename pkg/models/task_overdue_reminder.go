@@ -17,7 +17,10 @@
 package models
 
 import (
+	"slices"
 	"time"
+
+	"code.vikunja.io/api/pkg/events"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
@@ -37,6 +40,12 @@ func overdueSlot(window cron.Window, timezone, clock string) (time.Time, error) 
 	location, err := time.LoadLocation(timezone)
 	if err != nil {
 		return time.Time{}, err
+	}
+	if clock == "" {
+		clock = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
+	}
+	if clock == "" {
+		clock = "09:00"
 	}
 	daily, err := time.Parse("15:04", clock)
 	if err != nil {
@@ -58,7 +67,7 @@ func getOverdueTasksInWindow(s *xorm.Session, window cron.Window, cond builder.C
 	var tasks []*Task
 	err := s.Join("INNER", "projects", "projects.id = tasks.project_id").
 		Where(builder.NotNull{"due_date"}).And(builder.Lt{"due_date": window.To}).
-		And(builder.Eq{"tasks.done": false, "projects.is_archived": false}).And(builder.IsNull{"tasks.deleted_at"}).Find(&tasks)
+		And(builder.Eq{"tasks.done": false, "projects.is_archived": false}).And(builder.And(builder.IsNull{"tasks.deleted_at"}, builder.IsNull{"projects.deleted_at"})).Find(&tasks)
 	if err != nil {
 		return nil, err
 	}
@@ -117,4 +126,37 @@ func mapToSlice(m map[int64]*Task) []*Task {
 		tasks = append(tasks, t)
 	}
 	return tasks
+}
+
+// hasNonWebhookListener catches listeners registered by plugins.
+func hasNonWebhookListener(eventName string) bool {
+	return slices.ContainsFunc(events.ListenersFor(eventName), func(l events.Listener) bool {
+		_, isWebhook := l.(*WebhookListener)
+		return !isWebhook
+	})
+}
+
+// overdueEventsWithListeners lets the cron skip dispatching events nobody handles,
+// since each dispatched event costs the webhook listener a db session.
+func overdueEventsWithListeners(s *xorm.Session) (single, batch bool, err error) {
+	singleName := (&TaskOverdueEvent{}).Name()
+	batchName := (&TasksOverdueEvent{}).Name()
+
+	single = hasNonWebhookListener(singleName)
+	batch = hasNonWebhookListener(batchName)
+	if single && batch {
+		return
+	}
+
+	webhooks := []*Webhook{}
+	err = s.Cols("events").Find(&webhooks)
+	if err != nil {
+		return
+	}
+
+	for _, w := range webhooks {
+		single = single || slices.Contains(w.Events, singleName)
+		batch = batch || slices.Contains(w.Events, batchName)
+	}
+	return
 }

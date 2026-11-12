@@ -56,7 +56,6 @@
 
 <script setup lang="ts">
 import {computed, nextTick, ref} from 'vue'
-import {useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
@@ -65,6 +64,7 @@ import Filters from '@/components/project/partials/Filters.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
 
 import {useIsAlive} from '@/composables/useIsAlive'
+import {useGoBack} from '@/composables/useGoBack'
 import {useSavedFilter} from '@/composables/useSavedFilter'
 import {getSavedFilterIdFromProjectId} from '@/client/queries/projects'
 import {useUpdateSavedFilterMutation} from '@/client/queries/savedFilters'
@@ -73,7 +73,7 @@ const props = defineProps<{
 	projectId: number,
 }>()
 
-const router = useRouter()
+const goBack = useGoBack()
 
 const alive = useIsAlive()
 
@@ -122,7 +122,7 @@ async function save() {
 		return
 	}
 	if (saved) {
-		router.back()
+		goBack()
 	}
 }
 </script>

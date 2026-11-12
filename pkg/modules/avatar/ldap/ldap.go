@@ -17,21 +17,23 @@
 package ldap
 
 import (
+	"context"
+
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 )
 
 type Provider struct{}
 
-func (p *Provider) GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error) {
+func (p *Provider) GetAvatar(ctx context.Context, user *user.User, size int64) (avatar []byte, mimeType string, err error) {
 	up := upload.Provider{}
 
-	return up.GetAvatar(user, size)
+	return up.GetAvatar(ctx, user, size)
 }
 
-func (p *Provider) AsDataURI(user *user.User, size int64) (string, error) {
+func (p *Provider) AsDataURI(ctx context.Context, user *user.User, size int64) (string, error) {
 	up := upload.Provider{}
-	return up.AsDataURI(user, size)
+	return up.AsDataURI(ctx, user, size)
 }
 
 func (p *Provider) FlushCache(u *user.User) error {

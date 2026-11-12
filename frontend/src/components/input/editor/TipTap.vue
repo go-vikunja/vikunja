@@ -152,7 +152,7 @@
 					{{ $t('misc.save') }}
 				</BaseButton>
 			</li>
-			<li v-if="!isEditing">
+			<li v-if="!isEditing && isEditEnabled">
 				<BaseButton
 					class="done-edit"
 					@click="() => setEdit()"
@@ -199,7 +199,7 @@ import {BubbleMenu} from '@tiptap/vue-3/menus'
 import Mention from '@tiptap/extension-mention'
 
 import {taskLinkCurrentProjectIdKey} from './taskLinkContext'
-import {createEditorExtensions} from './editorExtensions'
+import {createEditorExtensions, parseEditorHTML} from './editorExtensions'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
 import ImageLightbox from '@/components/misc/ImageLightbox.vue'
@@ -210,6 +210,7 @@ import XButton from '@/components/input/Button.vue'
 
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
+import {getScrollParent} from '@/helpers/getScrollParent'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
 import {error} from '@/message'
@@ -330,6 +331,8 @@ if (props.enableMentions && props.projectId > 0) {
 if (props.enableDiscardShortcut) {
 	extensions.push(Extension.create({
 		name: 'escapeKey',
+		// Below the suggestion plugins, so Escape closes an open slash or emoji menu instead of discarding the edit.
+		priority: 1,
 
 		addKeyboardShortcuts() {
 			return {
@@ -419,7 +422,7 @@ function bubbleSave() {
 }
 
 function exitEditMode() {
-	editor.value?.commands.setContent(lastSavedState, {
+	editor.value?.commands.setContent(parseEditorHTML(editor.value, lastSavedState), {
 		...defaultSetContentOptions,
 		emitUpdate: false,
 	})
@@ -434,12 +437,24 @@ function exitEditMode() {
 	}
 }
 
-function setEditIfApplicable(event: MouseEvent) {
+async function setEditIfApplicable(event: MouseEvent) {
 	if (!props.isEditEnabled) return
 	if (isEditing.value) return
 	if (getLightboxImage(event.target) !== null) return
 
-	setEdit()
+	const view = editor.value?.view
+	const pos = view?.posAtCoords({left: event.clientX, top: event.clientY})?.pos
+	if (view === undefined || pos === undefined) {
+		setEdit()
+		return
+	}
+
+	// The toolbar appearing above pushes the content down; scroll it back so the clicked text stays under the pointer.
+	const topBefore = view.coordsAtPos(pos).top
+	internalMode.value = 'edit'
+	await nextTick()
+	getScrollParent(view.dom).scrollBy(0, view.coordsAtPos(pos).top - topBefore)
+	editor.value?.commands.focus(pos)
 }
 
 function setEdit(focus: boolean = true) {
@@ -523,6 +538,7 @@ async function addImage(event: Event) {
 		return
 	}
 
+	if (!(event.target instanceof Element)) return
 	const url = await inputPrompt(event.target.getBoundingClientRect(), t('input.editor.urlPlaceholder'), '', editor.value)
 
 	if (url) {
@@ -615,10 +631,14 @@ onMounted(async () => {
 		if (draft && isEditorContentEmpty(modelValue.value)) {
 			// Only load draft if current content is empty
 			// Set content and force edit mode for immediate editing
-			editor.value?.commands.setContent(draft, {emitUpdate: false})
+			editor.value?.commands.setContent(parseEditorHTML(editor.value, draft), {
+				...defaultSetContentOptions,
+				emitUpdate: false,
+			})
 			internalMode.value = 'edit'
-			// Update the model so parent sees the restored content
-			modelValue.value = draft
+			// The normalized HTML, not the raw draft: a mismatch would make the
+			// modelValue watcher reset the editor into preview mode.
+			modelValue.value = editor.value?.getHTML() ?? draft
 			return
 		}
 	}
@@ -634,7 +654,7 @@ onBeforeUnmount(() => {
 
 function setModeAndValue(value: string) {
 	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
-	editor.value?.commands.setContent(value, {
+	editor.value?.commands.setContent(parseEditorHTML(editor.value, value), {
 		...defaultSetContentOptions,
 		emitUpdate: false,
 	})
@@ -645,7 +665,7 @@ function setModeAndValue(value: string) {
 // Returns synchronously after the next tick to let DOM updates settle.
 async function setReplyContent(value: string) {
 	if (!editor.value) return
-	editor.value.commands.setContent(value, {
+	editor.value.commands.setContent(parseEditorHTML(editor.value, value), {
 		...defaultSetContentOptions,
 		emitUpdate: false,
 	})
@@ -661,7 +681,8 @@ defineExpose({setReplyContent})
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function setFocusToEditor(event: KeyboardEvent) {
-	const target = event.target as HTMLElement
+	const target = event.target
+	if (!(target instanceof HTMLElement)) return
 	if (target.shadowRoot) {
 		return
 	}
@@ -669,9 +690,9 @@ function setFocusToEditor(event: KeyboardEvent) {
 	const shortcutString = eventToShortcutString(event)
 	if (!shortcutString) return
 	if (shortcutString !== props.editShortcut ||
-		event.target.tagName.toLowerCase() === 'input' ||
-		event.target.tagName.toLowerCase() === 'textarea' ||
-		event.target.contentEditable === 'true') {
+		target.tagName.toLowerCase() === 'input' ||
+		target.tagName.toLowerCase() === 'textarea' ||
+		target.contentEditable === 'true') {
 		return
 	}
 
@@ -740,15 +761,17 @@ function handleEscapeKey(event: KeyboardEvent) {
 	// Don't preventDefault - let ProseMirror's extension handle the actual exit
 }
 
-function clickTasklistCheckbox(event: MouseEvent) {
+function clickTasklistCheckbox(event: Event) {
 	event.stopImmediatePropagation()
 
-	const target = event.target as HTMLElement
+	const target = event.target
+	if (!(target instanceof HTMLElement)) return
 	if (target.localName !== 'p') {
 		return
 	}
 
-	event.target.parentNode.parentNode.firstChild.click()
+	const label = target.parentElement?.parentElement?.firstElementChild
+	if (label instanceof HTMLElement) label.click()
 }
 
 watch(

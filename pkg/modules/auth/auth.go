@@ -31,6 +31,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humabridge"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -81,24 +82,19 @@ func getRefreshTokenCookiePaths() []string {
 // path-scoped so the browser only sends it on refresh requests. A single
 // cookie at Path=/api would ship the long-lived token on every API request.
 // Browsers match cookie paths by prefix, so each endpoint needs its own.
+//
+// SameSite=Lax, not None: CORS allows localhost origins by default.
 func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	secure := strings.HasPrefix(config.ServicePublicURL.GetString(), "https")
-	// SameSite=None so the cookie survives split-origin deployments where the
-	// frontend and API are on different hosts, but browsers only accept that
-	// with Secure=true; fall back to Lax on plain HTTP (local dev, E2E tests).
-	sameSite := http.SameSiteLaxMode
-	if secure {
-		sameSite = http.SameSiteNoneMode
-	}
 	for _, path := range getRefreshTokenCookiePaths() {
-		c.SetCookie(&http.Cookie{ //nolint:gosec // G124: Secure/SameSite are intentionally conditional on the https scheme (see above); HttpOnly is always set.
+		c.SetCookie(&http.Cookie{ //nolint:gosec // G124: plain-http instances need the cookie too.
 			Name:     RefreshTokenCookieName,
 			Value:    token,
 			Path:     path,
 			MaxAge:   maxAge,
 			HttpOnly: true,
 			Secure:   secure,
-			SameSite: sameSite,
+			SameSite: http.SameSiteLaxMode,
 		})
 	}
 }
@@ -275,60 +271,104 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 	return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid JWT token.")
 }
 
-// ValidateAPITokenString looks up an API token by its raw string, checks expiry,
-// and returns the token and its owner. This is the shared validation logic used
-// by both the HTTP middleware and WebSocket auth.
-func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, error) {
-	s := db.NewReadSession()
-	defer s.Close()
-
-	token, err := models.GetTokenFromTokenString(s, tokenString)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if time.Now().After(token.ExpiresAt) {
-		return nil, nil, fmt.Errorf("API token %d expired on %s", token.ID, token.ExpiresAt.String())
-	}
-
-	u, err := user.GetUserByID(s, token.OwnerID)
-	if err != nil {
-		if user.IsErrUserStatusError(err) {
-			return nil, nil, fmt.Errorf("API token %d owner account is disabled or locked", token.ID)
-		}
-		return nil, nil, err
-	}
-
-	return token, u, nil
+type UserTokenClaims struct {
+	UserID    int64
+	SessionID string
+	ExpiresAt time.Time
 }
 
-// GetUserIDFromToken parses a raw JWT token string and returns the user ID.
-// Only regular user tokens are accepted (not link shares).
-// Returns 0 and an error if the token is invalid.
-func GetUserIDFromToken(tokenString string) (int64, error) {
+// ErrUserTokenRejected marks errors that retrying cannot fix.
+var ErrUserTokenRejected = errors.New("user token rejected")
+
+// ParseUserToken skips the session check: a valid result may belong to a revoked session.
+func ParseUserToken(tokenString string) (*UserTokenClaims, error) {
 	token, err := jwt.Parse(tokenString, func(_ *jwt.Token) (any, error) {
 		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	if err != nil {
-		return 0, err
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
+	}
+	if !token.Valid || !IsUserToken(token) {
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
+	return UserTokenClaimsFromJWT(token)
+}
+
+func IsUserToken(token *jwt.Token) bool {
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return 0, jwt.ErrTokenInvalidClaims
-	}
-
-	typ, ok := claims["type"].(float64)
-	if !ok || int(typ) != AuthTypeUser {
-		return 0, jwt.ErrTokenInvalidClaims
-	}
-
-	userIDFloat, ok := claims["id"].(float64)
 	if !ok {
-		return 0, jwt.ErrTokenInvalidClaims
+		return false
+	}
+	typ, ok := claims["type"].(float64)
+	return ok && int(typ) == AuthTypeUser
+}
+
+func UserTokenClaimsFromJWT(token *jwt.Token) (*UserTokenClaims, error) {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
 	}
 
-	return int64(userIDFloat), nil
+	userID, ok := claims["id"].(float64)
+	if !ok {
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
+	}
+
+	sid, _ := claims["sid"].(string)
+	exp, err := claims.GetExpirationTime()
+	if err != nil || exp == nil || sid == "" {
+		return nil, fmt.Errorf("%w: %w", ErrUserTokenRejected, jwt.ErrTokenInvalidClaims)
+	}
+
+	return &UserTokenClaims{
+		UserID:    int64(userID),
+		SessionID: sid,
+		ExpiresAt: exp.Time,
+	}, nil
+}
+
+// Successes are cached for user.SessionAuthCacheTTL; session deletions and status changes bust the cache.
+func CheckUserTokenSession(claims *UserTokenClaims) error {
+	key, err := user.SessionAuthCacheKey(claims.UserID, claims.SessionID)
+	if err != nil {
+		log.Errorf("Could not read session check cache for user %d: %s", claims.UserID, err)
+		return checkUserTokenSessionInDB(claims)
+	}
+	if _, cached, err := keyvalue.Get(key); err == nil && cached {
+		return nil
+	}
+
+	if err := checkUserTokenSessionInDB(claims); err != nil {
+		return err
+	}
+
+	if err := keyvalue.PutWithTTL(key, true, user.SessionAuthCacheTTL); err != nil {
+		log.Errorf("Could not cache session check for user %d: %s", claims.UserID, err)
+	}
+	return nil
+}
+
+func checkUserTokenSessionInDB(claims *UserTokenClaims) error {
+	s := db.NewReadSession()
+	defer s.Close()
+
+	session, err := models.GetSessionByID(s, claims.SessionID)
+	if err == nil && session.UserID != claims.UserID {
+		err = &models.ErrSessionNotFound{}
+	}
+	if models.IsErrSessionNotFound(err) {
+		return fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = user.GetUserByIDForAuth(s, claims.UserID)
+	if user.IsErrUserDoesNotExist(err) || user.IsErrUserCannotAuthenticate(err) {
+		return fmt.Errorf("%w: %w", ErrUserTokenRejected, err)
+	}
+	return err
 }
 
 func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User, err error) {
@@ -369,7 +409,7 @@ type RefreshResult struct {
 // rotates the refresh token, fetches the user, and generates a new JWT.
 // It handles its own DB session (open/commit/rollback).
 //
-// On user status errors (disabled/locked), the session is deleted before
+// When the user can no longer authenticate, the session is deleted before
 // returning the error so the caller can handle cleanup (e.g. clearing cookies).
 func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 	s := db.NewSession()
@@ -413,9 +453,9 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 		return nil, err
 	}
 
-	u, err := user.GetUserByID(s, session.UserID)
+	u, err := user.GetUserByIDForAuth(s, session.UserID)
 	if err != nil {
-		if user.IsErrUserStatusError(err) {
+		if user.IsErrUserCannotAuthenticate(err) {
 			if _, delErr := s.Where("id = ?", session.ID).Delete(&models.Session{}); delErr != nil {
 				_ = s.Rollback()
 				return nil, delErr
@@ -453,7 +493,7 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 // concurrent refresh: that would delete the cookie the winning refresh just set.
 func IsUnusableRefreshToken(err error) bool {
 	var expired *models.ErrSessionExpired
-	return errors.As(err, &expired) || user.IsErrUserStatusError(err)
+	return errors.As(err, &expired) || user.IsErrUserCannotAuthenticate(err)
 }
 
 // SessionIDFromContext reads the session id (the `sid` claim) off the user JWT
@@ -474,6 +514,24 @@ func SessionIDFromContext(c *echo.Context) string {
 	}
 	sid, _ := claims["sid"].(string)
 	return sid
+}
+
+// SessionUserIDFromContext returns the user id of a user JWT, or 0 for link
+// shares, API tokens and unauthenticated requests.
+func SessionUserIDFromContext(c *echo.Context) int64 {
+	jwtinf, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return 0
+	}
+	claims, ok := jwtinf.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0
+	}
+	if typ, ok := claims["type"].(float64); !ok || int(typ) != AuthTypeUser {
+		return 0
+	}
+	id, _ := claims["id"].(float64)
+	return int64(id)
 }
 
 // GetAuthFromContext retrieves the authenticated web.Auth from a plain

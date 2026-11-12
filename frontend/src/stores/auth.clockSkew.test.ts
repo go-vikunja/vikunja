@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 
 // Issue #4006: exp is set by the server clock; the browser clock may disagree by more than the JWT TTL.
 
@@ -30,36 +30,28 @@ function issueToken(): string {
 	return `header.${btoa(JSON.stringify(payload))}.signature`
 }
 
-function fakeHttp() {
-	return {
-		post: server.post,
-		get: vi.fn().mockResolvedValue({
-			data: {
-				id: 1,
-				username: 'user1',
-				settings: {},
-			},
-		}),
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
+vi.mock('@/client/generated', async (importOriginal) => ({
+	...await importOriginal<typeof import('@/client/generated')>(),
+	authLogin: () => server.post('login'),
+	authLogout: () => server.post('user/logout'),
+	authRefreshToken: () => server.post('user/token/refresh'),
+	tokenRenew: () => server.post('user/token'),
+	userShow: async () => ({
+		data: {
+			id: 1,
+			username: 'user1',
 		},
-	}
-}
-
-vi.mock('@/helpers/fetcher', () => ({
-	apiV2Url: (path: string) => `/api/v2/${path}`,
-	HTTPFactory: () => fakeHttp(),
-	AuthenticatedHTTPFactory: () => fakeHttp(),
+	}),
 }))
 
 vi.mock('@/router', () => ({
 	default: {push: vi.fn()},
 }))
 
-vi.mock('@/client/queryClient', () => ({
-	queryClient: {clear: vi.fn()},
-}))
+vi.mock('@/client/queryClient', async () => {
+	const {QueryClient} = await import('@tanstack/vue-query')
+	return {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}
+})
 
 vi.mock('@/composables/useWebSocket', () => ({
 	useWebSocket: () => ({
@@ -106,7 +98,7 @@ describe('auth store with a skewed browser clock', () => {
 		server.refreshFails = false
 		server.post.mockReset().mockImplementation(async (url: string) => {
 			if (url.includes('token/refresh') && server.refreshFails) {
-				throw {response: {status: 401}}
+				throw {status: 401}
 			}
 			if (url === 'user/logout') {
 				return {data: {}}

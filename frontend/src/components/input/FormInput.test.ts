@@ -1,6 +1,7 @@
 import {describe, it, expect, vi} from 'vitest'
 import {mount} from '@vue/test-utils'
 import FormInput from './FormInput.vue'
+import {LOADING_TIMEOUT} from '@/stores/helper'
 
 describe('FormInput', () => {
 	it('renders a Bulma-classed input', () => {
@@ -48,9 +49,15 @@ describe('FormInput', () => {
 		expect(typeof wrapper.props('modelValue')).toBe('number')
 	})
 
-	it('applies is-loading class when loading', () => {
+	it('applies is-loading class once loading outlasts the delay', async () => {
+		vi.useFakeTimers()
 		const wrapper = mount(FormInput, {props: {loading: true}})
+		expect(wrapper.find('input').classes()).not.toContain('is-loading')
+
+		await vi.advanceTimersByTimeAsync(LOADING_TIMEOUT)
+
 		expect(wrapper.find('input').classes()).toContain('is-loading')
+		vi.useRealTimers()
 	})
 
 	it('applies disabled class and attribute when disabled', () => {

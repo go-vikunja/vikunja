@@ -152,6 +152,47 @@ func TestBucket_ReadAll(t *testing.T) {
 		assert.NotNil(t, buckets[0].CreatedBy)
 		assert.Equal(t, int64(-2), buckets[0].CreatedByID)
 	})
+	t.Run("filter mode bucket search does not leak into other buckets", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		testuser := &user.User{ID: 1}
+		view := &ProjectView{
+			ID:                      4,
+			ProjectID:               1,
+			Title:                   "Kanban",
+			ViewKind:                ProjectViewKindKanban,
+			BucketConfigurationMode: BucketConfigurationModeFilter,
+			BucketConfiguration: []*ProjectViewBucketConfiguration{
+				{Title: "Basic", Filter: &TaskCollection{Search: "basic"}},
+				{Title: "Prioritized", Filter: &TaskCollection{Filter: "priority > 0"}},
+			},
+		}
+		require.NoError(t, view.Update(s, testuser))
+
+		// Buckets are iterated in map order, so repeat to hit the leaking order reliably.
+		for range 10 {
+			b := &TaskCollection{
+				ProjectViewID: 4,
+				ProjectID:     1,
+			}
+			result, _, _, err := b.ReadAll(s, testuser, "", -1, 0)
+			require.NoError(t, err)
+
+			buckets := result.([]*Bucket)
+			require.Len(t, buckets, 2)
+			taskIDs := func(b *Bucket) []int64 {
+				ids := make([]int64, 0, len(b.Tasks))
+				for _, task := range b.Tasks {
+					ids = append(ids, task.ID)
+				}
+				return ids
+			}
+			require.ElementsMatch(t, []int64{10, 11, 12}, taskIDs(buckets[0]))
+			require.ElementsMatch(t, []int64{3, 4}, taskIDs(buckets[1]))
+		}
+	})
 }
 
 func TestBucket_Delete(t *testing.T) {
@@ -223,6 +264,83 @@ func TestBucket_Delete(t *testing.T) {
 			"id":             b.ProjectViewID,
 			"done_bucket_id": 0,
 		}, false)
+	})
+}
+
+// GHSA-p697-wq4x-grpj
+func TestBucket_Create(t *testing.T) {
+	u := &user.User{ID: 1}
+
+	fillView := func(t *testing.T, s *xorm.Session, viewID int64, upTo int) {
+		t.Helper()
+		existing, err := s.Where("project_view_id = ?", viewID).Count(&Bucket{})
+		require.NoError(t, err)
+		for i := int(existing); i < upTo; i++ {
+			_, err = s.Insert(&Bucket{Title: "filler", ProjectViewID: viewID, CreatedByID: u.ID})
+			require.NoError(t, err)
+		}
+	}
+
+	t.Run("below the cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fillView(t, s, 4, maxBucketsPerView-1)
+		b := &Bucket{
+			Title:         "last one",
+			ProjectID:     1,
+			ProjectViewID: 4,
+		}
+		can, err := b.CanCreate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, b.Create(s, u))
+	})
+	t.Run("at the cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fillView(t, s, 4, maxBucketsPerView)
+		b := &Bucket{
+			Title:         "one too many",
+			ProjectID:     1,
+			ProjectViewID: 4,
+		}
+		can, err := b.CanCreate(s, u)
+		require.Error(t, err)
+		assert.True(t, IsErrTooManyBuckets(err))
+		assert.False(t, can)
+	})
+	t.Run("at the cap without permission", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fillView(t, s, 4, maxBucketsPerView)
+		b := &Bucket{
+			ProjectID:     1,
+			ProjectViewID: 4,
+		}
+		can, err := b.CanCreate(s, &user.User{ID: 2})
+		require.NoError(t, err)
+		assert.False(t, can)
+	})
+	t.Run("create itself is uncapped for import and duplication", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		fillView(t, s, 4, maxBucketsPerView)
+		b := &Bucket{
+			Title:         "imported",
+			ProjectViewID: 4,
+		}
+		require.NoError(t, b.Create(s, u))
+		count, err := s.Where("project_view_id = ?", 4).Count(&Bucket{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(maxBucketsPerView+1), count)
 	})
 }
 
@@ -319,7 +437,7 @@ func TestBucket_CanUpdate(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		b := &Bucket{ID: 19, ProjectID: 21}
+		b := &Bucket{ID: 19, ProjectID: 21, ProjectViewID: 84}
 		_, err := b.CanUpdate(s, &user.User{ID: 1})
 		assert.True(t, IsErrProjectIsArchived(err))
 	})
@@ -328,7 +446,7 @@ func TestBucket_CanUpdate(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		b := &Bucket{ID: 20, ProjectID: 22}
+		b := &Bucket{ID: 20, ProjectID: 22, ProjectViewID: 88}
 		_, err := b.CanUpdate(s, &user.User{ID: 1})
 		assert.True(t, IsErrProjectIsArchived(err))
 	})
@@ -337,9 +455,55 @@ func TestBucket_CanUpdate(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		b := &Bucket{ID: 1, ProjectID: 1}
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 4}
 		can, err := b.CanUpdate(s, &user.User{ID: 1})
 		require.NoError(t, err)
 		assert.True(t, can)
+	})
+	t.Run("bucket of another view in the same project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Bucket 1 lives on view 4; view 1 is another view of project 1.
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 1}
+		can, err := b.CanUpdate(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrBucketDoesNotBelongToProject(err))
+		assert.False(t, can)
+	})
+}
+
+func TestBucket_CanDelete(t *testing.T) {
+	t.Run("bucket of the url view", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 4}
+		can, err := b.CanDelete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.True(t, can)
+	})
+	t.Run("bucket of another view in the same project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 1}
+		can, err := b.CanDelete(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrBucketDoesNotBelongToProject(err))
+		assert.False(t, can)
+	})
+	t.Run("no write access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		b := &Bucket{ID: 1, ProjectID: 1, ProjectViewID: 4}
+		can, err := b.CanDelete(s, &user.User{ID: 15})
+		require.NoError(t, err)
+		assert.False(t, can)
 	})
 }

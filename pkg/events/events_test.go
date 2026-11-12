@@ -18,7 +18,12 @@ package events
 
 import (
 	"context"
+	"errors"
+	"runtime"
 	"testing"
+	"time"
+
+	"code.vikunja.io/api/pkg/log"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -98,6 +103,52 @@ func TestDispatchPendingNoEvents(t *testing.T) {
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
 }
 
+func TestOnCommit(t *testing.T) {
+	log.InitLogger()
+
+	t.Run("runs on DispatchPending before events", func(t *testing.T) {
+		Fake()
+		key := new(int)
+		var calls []int
+		var dispatchedBeforeCallback int
+
+		OnCommit(key, func() error {
+			dispatchedBeforeCallback = CountDispatchedEvents("test.event")
+			calls = append(calls, 1)
+			return errors.New("failing callback must not stop the others")
+		})
+		require.NoError(t, DispatchOnCommit(key, &testEvent{}))
+		OnCommit(key, func() error {
+			calls = append(calls, 2)
+			return nil
+		})
+		assert.Empty(t, calls)
+
+		DispatchPending(context.Background(), key)
+
+		assert.Equal(t, []int{1, 2}, calls)
+		assert.Zero(t, dispatchedBeforeCallback)
+		assert.Equal(t, 1, CountDispatchedEvents("test.event"))
+
+		DispatchPending(context.Background(), key)
+		assert.Equal(t, []int{1, 2}, calls, "must run only once")
+	})
+	t.Run("dropped by CleanupPending", func(t *testing.T) {
+		Fake()
+		key := new(int)
+		called := false
+
+		OnCommit(key, func() error {
+			called = true
+			return nil
+		})
+		CleanupPending(key)
+		DispatchPending(context.Background(), key)
+
+		assert.False(t, called)
+	})
+}
+
 func TestShouldReportPoisonedMessage(t *testing.T) {
 	t.Run("no metadata", func(t *testing.T) {
 		assert.True(t, shouldReportPoisonedMessage(message.Metadata{}))
@@ -118,6 +169,10 @@ func TestDurableEventJoinsBusinessTransaction(t *testing.T) {
 	engine, err := db.CreateTestEngine()
 	require.NoError(t, err)
 	require.NoError(t, engine.Sync(new(jobs.Job)))
+	t.Cleanup(func() {
+		_, err := engine.Where("kind = ?", "test.event.durable.test").Delete(new(jobs.Job))
+		require.NoError(t, err)
+	})
 	before := isUnderTest
 	isUnderTest = false
 	t.Cleanup(func() { isUnderTest = before })
@@ -129,7 +184,7 @@ func TestDurableEventJoinsBusinessTransaction(t *testing.T) {
 	require.NoError(t, s.Begin())
 	require.NoError(t, DispatchOnCommit(s, &testEvent{}))
 	require.NoError(t, s.Rollback())
-	count, err := engine.Count(new(jobs.Job))
+	count, err := engine.Where("kind = ?", "test.event.durable.test").Count(new(jobs.Job))
 	require.NoError(t, err)
 	assert.Zero(t, count)
 	s = engine.NewSession()
@@ -138,7 +193,7 @@ func TestDurableEventJoinsBusinessTransaction(t *testing.T) {
 	require.NoError(t, s.Begin())
 	require.NoError(t, DispatchOnCommit(s, &testEvent{}))
 	require.NoError(t, s.Commit())
-	count, err = engine.Count(new(jobs.Job))
+	count, err = engine.Where("kind = ?", "test.event.durable.test").Count(new(jobs.Job))
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, count)
 }
@@ -147,3 +202,40 @@ type durableTestListener struct{}
 
 func (*durableTestListener) Name() string                  { return "durable.test" }
 func (*durableTestListener) Handle(*message.Message) error { return nil }
+func TestWaitForPendingHandlersDuringNewDelivery(t *testing.T) {
+	previous := runtime.GOMAXPROCS(1)
+	defer runtime.GOMAXPROCS(previous)
+
+	activeHandlers.start()
+	started := make(chan struct{})
+	returned := make(chan any, 1)
+	go func() {
+		defer func() { returned <- recover() }()
+		close(started)
+		WaitForPendingHandlers()
+	}()
+	<-started
+	runtime.Gosched()
+
+	// A redelivery starts before the drain waiter resumes.
+	activeHandlers.finish()
+	activeHandlers.start()
+	runtime.Gosched()
+
+	select {
+	case result := <-returned:
+		activeHandlers.finish()
+		// Returning in the gap between deliveries is valid; panicking is not.
+		assert.Nil(t, result, "drain panicked during redelivery")
+		return
+	default:
+	}
+
+	activeHandlers.finish()
+	select {
+	case result := <-returned:
+		assert.Nil(t, result, "drain panicked")
+	case <-time.After(time.Second):
+		t.Fatal("drain did not return after all handlers finished")
+	}
+}

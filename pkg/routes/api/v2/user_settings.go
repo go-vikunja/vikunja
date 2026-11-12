@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
@@ -110,9 +111,18 @@ func RegisterUserSettingsRoutes(api huma.API) {
 	}, userResendEmailConfirmation)
 
 	Register(api, huma.Operation{
+		OperationID: "user-settings-read",
+		Summary:     "Get the current user's general settings",
+		Description: "Returns the same settings as the settings field of GET /user.",
+		Method:      http.MethodGet,
+		Path:        "/user/settings/general",
+		Tags:        tags,
+	}, userGetSettings)
+
+	Register(api, huma.Operation{
 		OperationID: "user-update-settings",
 		Summary:     "Update the current user's general settings",
-		Description: "Replaces the authenticated user's general settings (name, reminders, discoverability, default project, week start, language, timezone, frontend settings).",
+		Description: "Replaces the authenticated user's general settings (name, reminders, discoverability, default project, week start, language, timezone, frontend settings). Use PATCH to change only some of them; it merges into frontend_settings key by key.",
 		Method:      http.MethodPut,
 		Path:        "/user/settings/general",
 		Tags:        tags,
@@ -225,6 +235,7 @@ func runUserAction(ctx context.Context, action func(*xorm.Session, *user.User) e
 
 	s := db.NewSession()
 	defer s.Close()
+	defer events.CleanupPending(s)
 
 	if err := action(s, doer); err != nil {
 		_ = s.Rollback()
@@ -234,6 +245,7 @@ func runUserAction(ctx context.Context, action func(*xorm.Session, *user.User) e
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
+	events.DispatchPending(ctx, s)
 
 	return &singleBody[userActionMessageBody]{Body: &userActionMessageBody{Message: message}}, nil
 }
@@ -249,6 +261,31 @@ func userUpdateSettings(ctx context.Context, in *struct {
 
 		return models.UpdateUserGeneralSettings(s, u, &in.Body)
 	}, "The settings were updated successfully.")
+}
+
+func userGetSettings(ctx context.Context, _ *struct{}) (*singleBody[models.UserGeneralSettings], error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	doer, err := user.GetFromAuth(a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := user.GetUserWithEmail(s, &user.User{ID: doer.ID})
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+	if err := s.Commit(); err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	return &singleBody[models.UserGeneralSettings]{Body: models.NewUserGeneralSettings(u)}, nil
 }
 
 func userGetAvatarProvider(ctx context.Context, _ *struct{}) (*singleBody[userAvatarProviderBody], error) {

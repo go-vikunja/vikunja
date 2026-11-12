@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -85,8 +86,7 @@ func TestTask_Create(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		// user6 is subscribed to project 12 (fixture), so the inherited subscription must not
-		// be duplicated with a task level one
+		// user6 is subscribed to project 12 (fixture)
 		usr6 := &user.User{ID: 6, Username: "user6"}
 		task := &Task{
 			Title:     "Lorem",
@@ -97,10 +97,16 @@ func TestTask_Create(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		db.AssertMissing(t, "subscriptions", map[string]interface{}{
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
 			"entity_type": SubscriptionEntityTask,
 			"entity_id":   task.ID,
-		})
+			"user_id":     usr6.ID,
+			"muted":       false,
+		}, false)
+		db.AssertCount(t, "subscriptions", builder.Eq{
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+		}, 1)
 	})
 	t.Run("created by link share is not subscribed", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -251,6 +257,76 @@ func TestTask_Update(t *testing.T) {
 			"title":       "test10000",
 			"description": "Lorem Ipsum Dolor",
 			"project_id":  1,
+		}, false)
+	})
+	t.Run("task moved to a forbidden project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 1, Title: "test10000"}
+		can, err := task.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// Project 2 belongs to user 3 and is not shared with user 1.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 2, Index: 9999})
+		require.NoError(t, err)
+
+		err = task.Update(s, u)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         1,
+			"title":      "task #1",
+			"project_id": 2,
+		}, false)
+	})
+	t.Run("task moved to a writable project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{ID: 1, Title: "test10000"}
+		can, err := task.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// User 1 has write access to project 10 through a share.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{ProjectID: 10, Index: 9999})
+		require.NoError(t, err)
+
+		err = task.Update(s, u)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":         1,
+			"title":      "test10000",
+			"project_id": 10,
+		}, false)
+	})
+	t.Run("hex color with leading #", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			ID:        1,
+			Title:     "test",
+			ProjectID: 1,
+			HexColor:  "#f0f0f0",
+		}
+		err := task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.Equal(t, "f0f0f0", task.HexColor)
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":        1,
+			"hex_color": "f0f0f0",
 		}, false)
 	})
 	t.Run("nonexistant task", func(t *testing.T) {
@@ -715,6 +791,34 @@ func TestTask_Update(t *testing.T) {
 }
 
 func TestTask_Delete(t *testing.T) {
+	t.Run("task moved to a forbidden project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		task := &Task{ID: 1}
+		can, err := task.CanDelete(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// Project 2 belongs to user 3 and is not shared with user 1.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{
+			ProjectID: 2,
+			Index:     9999,
+		})
+		require.NoError(t, err)
+
+		err = task.Delete(s, u)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+		require.NoError(t, s.Commit())
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		stillThere, err := s2.Where("id = ? AND project_id = ?", 1, 2).Exist(&Task{})
+		require.NoError(t, err)
+		assert.True(t, stillThere)
+	})
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -766,6 +870,71 @@ func TestTask_Delete(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, has)
 		assert.True(t, project.Updated.After(deletedTask.Created))
+		assert.Equal(t, int64(1), deletedTask.DeletedByID)
+	})
+	t.Run("link share is recorded as deleter", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := (&Task{ID: 13}).Delete(s, &LinkSharing{
+			ID:         2,
+			ProjectID:  2,
+			Permission: PermissionWrite,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":            13,
+			"deleted_by_id": -2,
+		}, false)
+	})
+	t.Run("stops running timers on the task", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := (&Task{ID: 1}).Delete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Fixture 4 is user 1's running timer on task 1
+		s2 := db.NewSession()
+		defer s2.Close()
+		entry := &TimeEntry{}
+		has, err := s2.Where("id = ?", 4).Get(entry)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.NotNil(t, entry.EndTime)
+	})
+	t.Run("event payload carries no doer-scoped data", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		doer := &user.User{ID: 1}
+		_, err := s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: 1, UserID: doer.ID})
+		require.NoError(t, err)
+
+		before := &Task{ID: 1}
+		require.NoError(t, before.ReadOne(s, doer))
+		require.NotEmpty(t, before.RelatedTasks)
+		require.True(t, before.IsFavorite)
+		require.NotNil(t, before.Subscription)
+
+		require.NoError(t, (&Task{ID: 1}).Delete(s, doer))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TaskDeletedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		deleted := dispatched[0].(*TaskDeletedEvent).Task
+		assert.Equal(t, int64(1), deleted.ID)
+		assert.Empty(t, deleted.RelatedTasks)
+		assert.False(t, deleted.IsFavorite)
+		assert.Nil(t, deleted.Subscription)
 	})
 }
 
@@ -794,9 +963,17 @@ func TestHardDeleteTask(t *testing.T) {
 	_, err = s.Insert(&Reaction{EntityID: 1, EntityKind: ReactionKindComment, UserID: 1, Value: "👍"})
 	require.NoError(t, err)
 
-	err = hardDeleteTask(s, &Task{ID: 1})
+	err = hardDeleteTask(s, &Task{
+		ID:        1,
+		ProjectID: 1,
+	})
 	require.NoError(t, err)
+	_, err = files.FileStat(&files.File{ID: 1})
+	require.NoError(t, err, "blob must survive until commit")
 	require.NoError(t, s.Commit())
+	events.DispatchPending(t.Context(), s)
+	_, err = files.FileStat(&files.File{ID: 1})
+	require.Error(t, err)
 
 	db.AssertMissing(t, "tasks", map[string]interface{}{"id": 1})
 	for _, table := range []string{
@@ -820,6 +997,35 @@ func TestHardDeleteTask(t *testing.T) {
 	db.AssertMissing(t, "reactions", map[string]interface{}{"entity_id": 1, "entity_kind": ReactionKindComment})
 	// The attachment files are gone too
 	db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+	db.AssertMissing(t, "time_entries", map[string]interface{}{"task_id": 1})
+	db.AssertExists(t, "time_entries", map[string]interface{}{
+		"id":         1,
+		"task_id":    0,
+		"project_id": 1,
+	}, false)
+	db.AssertExists(t, "time_entries", map[string]interface{}{
+		"id":         4,
+		"task_id":    0,
+		"project_id": 1,
+	}, false)
+}
+
+func TestHardDeleteTask_RollbackKeepsAttachmentBlobs(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	files.InitTestFileFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	require.NoError(t, hardDeleteTask(s, &Task{
+		ID:        1,
+		ProjectID: 1,
+	}))
+	require.NoError(t, s.Rollback())
+	events.CleanupPending(s)
+
+	db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+	_, err := files.FileStat(&files.File{ID: 1})
+	require.NoError(t, err)
 }
 
 func TestUpdateTasksHelper(t *testing.T) {
@@ -1673,4 +1879,55 @@ func TestGetTaskByIDSimpleMemo(t *testing.T) {
 	afterWrite, err := GetTaskByIDSimple(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, behindTheBackTitle, afterWrite.Title)
+}
+
+func TestAddOneMonthToDate(t *testing.T) {
+	// addOneMonthToDate returns times in the configured time zone
+	loc := config.GetTimeZone()
+	tests := []struct {
+		name string
+		in   time.Time
+		want time.Time
+	}{
+		{
+			name: "regular day",
+			in:   time.Date(2027, time.January, 15, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.February, 15, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "january 31 clamps to february 28 in a non-leap year",
+			in:   time.Date(2027, time.January, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.February, 28, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "january 31 clamps to february 29 in a leap year",
+			in:   time.Date(2028, time.January, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2028, time.February, 29, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "march 31 clamps to april 30",
+			in:   time.Date(2027, time.March, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.April, 30, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "october 31 clamps to november 30",
+			in:   time.Date(2027, time.October, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.November, 30, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "december rolls into january of the next year",
+			in:   time.Date(2027, time.December, 31, 9, 0, 0, 0, loc),
+			want: time.Date(2028, time.January, 31, 9, 0, 0, 0, loc),
+		},
+		{
+			name: "february 28 advances to march 28",
+			in:   time.Date(2027, time.February, 28, 9, 0, 0, 0, loc),
+			want: time.Date(2027, time.March, 28, 9, 0, 0, 0, loc),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, addOneMonthToDate(tt.in))
+		})
+	}
 }

@@ -1,6 +1,6 @@
 <template>
 	<Modal
-		@close="$router.back()"
+		@close="goBack()"
 		@submit="remove()"
 	>
 		<template #header>
@@ -21,6 +21,7 @@ import {computed} from 'vue'
 import {useRouter} from 'vue-router'
 
 import {useIsAlive} from '@/composables/useIsAlive'
+import {useGoBack} from '@/composables/useGoBack'
 
 import ErrorMessage from '@/components/misc/Error.vue'
 
@@ -32,6 +33,7 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+const goBack = useGoBack()
 
 const filterId = computed(() => getSavedFilterIdFromProjectId(props.projectId))
 

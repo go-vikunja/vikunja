@@ -108,10 +108,13 @@ const (
 
 	ActionUserCreated             = "user.created"
 	ActionUserDataExportRequested = "user.data_export.requested"
+	ActionBotStatusChanged        = "bot.status.changed"
 
 	ActionTaskCreated           = "task.created"
 	ActionTaskUpdated           = "task.updated"
 	ActionTaskDeleted           = "task.deleted"
+	ActionTaskRestored          = "task.restored"
+	ActionTaskPurged            = "task.purged"
 	ActionTaskAssigneeAdded     = "task.assignee.added"
 	ActionTaskAssigneeRemoved   = "task.assignee.removed"
 	ActionTaskCommentCreated    = "task.comment.created"
@@ -125,6 +128,8 @@ const (
 	ActionProjectCreated        = "project.created"
 	ActionProjectUpdated        = "project.updated"
 	ActionProjectDeleted        = "project.deleted"
+	ActionProjectRestored       = "project.restored"
+	ActionProjectPurged         = "project.purged"
 	ActionProjectSharedWithUser = "project.shared.user"
 	ActionProjectSharedWithTeam = "project.shared.team"
 
@@ -142,6 +147,7 @@ const (
 	ActionAdminUserPasswordSet       = "admin.user.password.set"        // #nosec G101 -- action identifier, not a credential
 	ActionAdminUserPasswordResetSent = "admin.user.password_reset.sent" // #nosec G101
 	ActionAdminUserDeleted           = "admin.user.deleted"
+	ActionAdminUserSettingsUpdated   = "admin.user.settings.updated"
 	ActionAdminProjectOwnerChanged   = "admin.project.owner.changed"
 	ActionAdminUsersListed           = "admin.users.listed"
 	ActionAdminAccessDenied          = "admin.access.denied"

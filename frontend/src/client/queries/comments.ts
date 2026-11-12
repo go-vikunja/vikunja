@@ -21,7 +21,7 @@ import {
 	mapTaskEverywhere,
 } from './taskCache'
 import {
-	pageSizeFor,
+	toPaginated,
 	totalPagesFor,
 	type Paginated,
 } from './pagination'
@@ -37,8 +37,7 @@ export type CommentPage = Paginated<CommentResponse>
 export const commentKeys = {
 	all: ['comments'] as const,
 	task: (taskId: number) => ['comments', taskId] as const,
-	page: (taskId: number, order: CommentOrder, page: number, perPage: number) =>
-		['comments', taskId, order, page, perPage] as const,
+	page: (taskId: number, order: CommentOrder, page: number) => ['comments', taskId, order, page] as const,
 	orderOf: (key: QueryKey): CommentOrder | undefined => key[0] === 'comments'
 		? key[2] as CommentOrder
 		: undefined,
@@ -53,10 +52,9 @@ export function normalizeComment(comment: TaskComment): CommentResponse {
 	}
 }
 
-export function commentsQuery(taskId: number, order: CommentOrder, page: number, perPage: number) {
-	const clampedPerPage = pageSizeFor(perPage)
+export function commentsQuery(taskId: number, order: CommentOrder, page: number) {
 	return queryOptions<CommentPage, Error, CommentPage, ReturnType<typeof commentKeys.page>>({
-		queryKey: commentKeys.page(taskId, order, page, clampedPerPage),
+		queryKey: commentKeys.page(taskId, order, page),
 		enabled: taskId > 0,
 		queryFn: async ({signal}): Promise<CommentPage> => {
 			const {data} = await taskCommentsList({
@@ -64,18 +62,13 @@ export function commentsQuery(taskId: number, order: CommentOrder, page: number,
 				query: {
 					order_by: order,
 					page,
-					per_page: clampedPerPage,
 				},
 				signal,
 			})
-			return {
+			return toPaginated({
 				...data,
-				items: (data.items ?? []).map(normalizeComment),
-				page: data.page ?? page,
-				per_page: data.per_page ?? clampedPerPage,
-				total: data.total ?? 0,
-				total_pages: data.total_pages ?? 0,
-			}
+				items: data.items?.map(normalizeComment),
+			}, page)
 		},
 		// Not keepPreviousData: it would show the previous task's comments.
 		placeholderData: (

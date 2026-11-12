@@ -19,6 +19,7 @@ package client
 import (
 	"context"
 	"errors"
+	"net"
 	"net/url"
 	"strings"
 
@@ -40,8 +41,8 @@ const defaultAPIPort = "3456"
 //
 // Mirrors the discovery the Vikunja web frontend does in
 // helpers/checkAndSetApiUrl.ts: try the URL as-given, with the API path
-// appended, and with the default :3456 port — across http / https. The
-// first response that parses as Info wins.
+// appended, and with the default :3456 port. The first response that
+// parses as Info wins.
 func DiscoverServer(ctx context.Context, input string) (string, *Info, error) {
 	input = strings.TrimSpace(input)
 	if input == "" {
@@ -83,9 +84,10 @@ func serverCandidates(input string) ([]string, error) {
 	trimmed = strings.TrimSuffix(trimmed, "/api/v2")
 	trimmed = strings.TrimRight(trimmed, "/")
 
+	typedScheme := strings.HasPrefix(trimmed, "http://") || strings.HasPrefix(trimmed, "https://")
 	withScheme := trimmed
-	if !strings.HasPrefix(withScheme, "http://") && !strings.HasPrefix(withScheme, "https://") {
-		withScheme = defaultScheme(trimmed) + "://" + trimmed
+	if !typedScheme {
+		withScheme = "https://" + trimmed
 	}
 
 	u, err := url.Parse(withScheme)
@@ -96,10 +98,16 @@ func serverCandidates(input string) ([]string, error) {
 		return nil, errors.New("missing host")
 	}
 
+	// No http fallback: an on-path attacker blocking https would get the credentials sent next.
+	schemes := []string{"https"}
+	if u.Scheme == "http" || (!typedScheme && isLoopback(u.Hostname())) {
+		schemes = []string{"http", "https"}
+	}
+
 	// Build the candidate set, dedup-preserving-order. The order here
 	// is the search policy: as-given, with default port, then the
-	// opposite scheme for each. Stops on the first one that responds
-	// with a parseable Info.
+	// other allowed scheme for each. Stops on the first one that
+	// responds with a parseable Info.
 	var bases []string
 	add := func(scheme, host, path string) {
 		base := scheme + "://" + host + strings.TrimRight(path, "/")
@@ -116,12 +124,6 @@ func serverCandidates(input string) ([]string, error) {
 	if u.Port() == "" {
 		hosts = append(hosts, u.Hostname()+":"+defaultAPIPort)
 	}
-	schemes := []string{u.Scheme}
-	if u.Scheme == "https" {
-		schemes = append(schemes, "http")
-	} else {
-		schemes = append(schemes, "https")
-	}
 	for _, s := range schemes {
 		for _, h := range hosts {
 			add(s, h, u.Path)
@@ -130,19 +132,10 @@ func serverCandidates(input string) ([]string, error) {
 	return bases, nil
 }
 
-// defaultScheme picks http for loopback hosts and https for everything
-// else — matches the heuristic most CLIs use when a scheme isn't typed.
-func defaultScheme(input string) string {
-	host := input
-	if i := strings.IndexByte(host, '/'); i >= 0 {
-		host = host[:i]
+func isLoopback(host string) bool {
+	if host == "localhost" {
+		return true
 	}
-	if i := strings.IndexByte(host, ':'); i >= 0 {
-		host = host[:i]
-	}
-	switch host {
-	case "localhost", "127.0.0.1", "[::1]", "::1":
-		return "http"
-	}
-	return "https"
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }

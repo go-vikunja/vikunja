@@ -1,12 +1,15 @@
-import {describe, expect, it} from 'vitest'
+import {afterEach, describe, expect, it} from 'vitest'
 import {Schema} from '@tiptap/pm/model'
+import {EditorState} from '@tiptap/pm/state'
+import {EditorView} from '@tiptap/pm/view'
+import type {Label} from '@/client/generated'
 
 import {decorateDocument} from './highlighter'
 
 const schema = new Schema({
 	nodes: {
 		doc: {content: 'paragraph+'},
-		paragraph: {content: 'text*'},
+		paragraph: {content: 'text*', toDOM: () => ['p', 0]},
 		text: {inline: true},
 	},
 })
@@ -15,6 +18,19 @@ function filterDocument(value: string) {
 	return schema.node('doc', null, [
 		schema.node('paragraph', null, [schema.text(value)]),
 	])
+}
+
+const views: EditorView[] = []
+afterEach(() => views.splice(0).forEach(view => view.destroy()))
+
+function renderHighlights(text: string, labels: Label[] = []) {
+	const doc = filterDocument(text)
+	const view = new EditorView(document.createElement('div'), {
+		state: EditorState.create({doc}),
+		decorations: () => decorateDocument(doc, labels),
+	})
+	views.push(view)
+	return view
 }
 
 describe('filter highlighter', () => {
@@ -28,29 +44,25 @@ describe('filter highlighter', () => {
 	})
 
 	it('marks unquoted date values as clickable', () => {
-		const decorations = decorateDocument(filterDocument('dueDate < now/w+1w'), []).find()
-		const dateValue = decorations.find(d => d.type?.attrs?.class === 'date-value')
-		expect(dateValue).toBeDefined()
-		expect(dateValue?.type?.attrs?.['data-date-value']).toBe('now/w+1w')
+		const view = renderHighlights('dueDate < now/w+1w')
+		const dateValue = view.dom.querySelector('.date-value')
+		expect(dateValue?.textContent).toBe('now/w+1w')
+		expect(dateValue?.getAttribute('data-date-value')).toBe('now/w+1w')
 	})
 
 	it('marks unquoted label values', () => {
 		const text = 'labels = Work'
-		const decorations = decorateDocument(filterDocument(text), [{id: 1, title: 'Work', hex_color: 'ff006e'}]).find()
-		const labelValue = decorations.find(d => d.type?.attrs?.class === 'label-value')
-		expect(labelValue).toBeDefined()
-		const valueStart = text.lastIndexOf('Work')
-		expect(labelValue?.from).toBe(valueStart + 1)
-		expect(labelValue?.to).toBe(valueStart + 1 + 'Work'.length)
+		const view = renderHighlights(text, [{id: 1, title: 'Work', hex_color: 'ff006e'}])
+		const labelValue = view.dom.querySelector('.label-value')
+		expect(labelValue?.textContent).toBe('Work')
+		expect(labelValue && view.posAtDOM(labelValue, 0)).toBe(text.lastIndexOf('Work') + 1)
 	})
 
 	it('marks the value, not the field name, when field and value share a name', () => {
 		const text = 'dueDate < dueDate'
-		const decorations = decorateDocument(filterDocument(text), []).find()
-		const dateValue = decorations.find(d => d.type?.attrs?.class === 'date-value')
-		expect(dateValue).toBeDefined()
-		const valueStart = text.lastIndexOf('dueDate')
-		expect(dateValue?.from).toBe(valueStart + 1)
-		expect(dateValue?.to).toBe(valueStart + 1 + 'dueDate'.length)
+		const view = renderHighlights(text)
+		const dateValue = view.dom.querySelector('.date-value')
+		expect(dateValue?.textContent).toBe('dueDate')
+		expect(dateValue && view.posAtDOM(dateValue, 0)).toBe(text.lastIndexOf('dueDate') + 1)
 	})
 })

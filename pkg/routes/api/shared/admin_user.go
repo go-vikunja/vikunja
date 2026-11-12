@@ -42,25 +42,20 @@ func NewAdminUser(u *user.User, providers []*openid.Provider) *AdminUser {
 		Status:       u.Status,
 		Issuer:       u.Issuer,
 		Subject:      u.Subject,
-		AuthProvider: resolveAuthProvider(u, providers),
+		AuthProvider: ResolveAuthProvider(u, providers),
 	}
 }
 
-func resolveAuthProvider(u *user.User, providers []*openid.Provider) string {
+// ResolveAuthProvider returns the provider name shown to admins: "" for local accounts, "LDAP" for LDAP, the issuer if no provider matches.
+func ResolveAuthProvider(u *user.User, providers []*openid.Provider) string {
 	switch u.Issuer {
 	case "", user.IssuerLocal:
 		return ""
 	case user.IssuerLDAP:
 		return "LDAP"
 	}
-	for _, provider := range providers {
-		issuerURL, err := provider.Issuer()
-		if err != nil {
-			continue
-		}
-		if issuerURL == u.Issuer {
-			return provider.Name
-		}
+	if provider := openid.FindProviderByIssuer(providers, u.Issuer); provider != nil {
+		return provider.Name
 	}
 	return u.Issuer
 }

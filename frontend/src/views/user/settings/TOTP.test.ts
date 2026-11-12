@@ -1,3 +1,6 @@
+import {VueQueryPlugin} from '@tanstack/vue-query'
+import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import {setActivePinia, createPinia} from 'pinia'
@@ -5,39 +8,29 @@ import {createI18n} from 'vue-i18n'
 import TOTP from './TOTP.vue'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
+import {AUTH_TYPES} from '@/constants/auth'
 import en from '@/i18n/lang/en.json'
 
-const get = vi.fn()
-const enroll = vi.fn()
-const enable = vi.fn()
-const disable = vi.fn()
-const qrcode = vi.fn(async () => new Blob(['fake-jpeg-bytes']))
+const {get, enroll, enable, disable, qrcode} = vi.hoisted(() => ({
+	get: vi.fn(),
+	enroll: vi.fn(),
+	enable: vi.fn(),
+	disable: vi.fn(),
+	qrcode: vi.fn(async () => ({data: new Blob(['fake-jpeg-bytes'])})),
+}))
 
-vi.mock('@/services/totp', () => ({
-	default: class {
-		loading = false
-		get = get
-		enroll = enroll
-		enable = enable
-		disable = disable
-		qrcode = qrcode
-	},
+vi.mock('@/client/generated', () => ({
+	totpGet: get,
+	totpEnroll: enroll,
+	totpEnable: enable,
+	totpDisable: disable,
+	totpQrcode: qrcode,
 }))
 
 vi.mock('@/message', () => ({
 	success: vi.fn(),
 	error: vi.fn(),
 }))
-
-// Avoid the avatar request triggered by setUser.
-vi.mock('@/models/user', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/models/user')>()
-	return {
-		...original,
-		fetchAvatarBlobUrl: vi.fn(async () => ''),
-		invalidateAvatarCache: vi.fn(),
-	}
-})
 
 const i18n = createI18n({legacy: false, locale: 'en', messages: {en}})
 
@@ -47,7 +40,7 @@ let errors: unknown[] = []
 function mountComponent() {
 	return mount(TOTP, {
 		global: {
-			plugins: [i18n],
+			plugins: [i18n, [VueQueryPlugin, {queryClient}]],
 			stubs: {
 				Card: {template: '<div><slot /></div>'},
 				XButton: {
@@ -74,6 +67,7 @@ async function mountAndSettle() {
 // Enabled responses omit the secret, so the UI must rely on `enabled` alone.
 describe('TOTP settings', () => {
 	beforeEach(() => {
+		queryClient.clear()
 		setActivePinia(createPinia())
 		errors = []
 		get.mockReset()
@@ -83,13 +77,18 @@ describe('TOTP settings', () => {
 		qrcode.mockClear()
 
 		const configStore = useConfigStore()
-		configStore.totpEnabled = true
+		configStore.totp_enabled = true
 		const authStore = useAuthStore()
-		authStore.setUser({
+		authStore.setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
+		queryClient.setQueryData(accountKeys.user(1), {
 			id: 1,
 			username: 'user1',
-			isLocalUser: true,
-		} as never)
+			is_local_user: true,
+		})
 	})
 
 	afterEach(() => {
@@ -98,7 +97,7 @@ describe('TOTP settings', () => {
 	})
 
 	it('shows the enroll button when totp is not enrolled', async () => {
-		get.mockRejectedValueOnce({response: {data: {code: 1016}}})
+		get.mockRejectedValueOnce({code: 1016})
 
 		const w = await mountAndSettle()
 
@@ -107,8 +106,42 @@ describe('TOTP settings', () => {
 		expect(errors).toEqual([])
 	})
 
+	it('offers enrollment only once the status is known', async () => {
+		let settleStatus: (reason: unknown) => void = () => {}
+		get.mockReturnValueOnce(new Promise((_resolve, reject) => {
+			settleStatus = reject
+		}))
+
+		const w = await mountAndSettle()
+
+		expect(w.text()).not.toContain('Enroll')
+		settleStatus({code: 1016})
+		await flushPromises()
+		expect(w.text()).toContain('Enroll')
+	})
+
+	it('keeps the enrollment secret out of the mutation cache once enrolled', async () => {
+		get.mockRejectedValueOnce({code: 1016})
+		const enrolled = {
+			secret: 'SHAREDSECRET',
+			enabled: false,
+			url: 'otpauth://totp/x',
+		}
+		enroll.mockResolvedValueOnce({data: enrolled})
+		get.mockResolvedValueOnce({data: enrolled})
+
+		const w = await mountAndSettle()
+		await w.findAll('button').find(b => b.text() === 'Enroll')!.trigger('click')
+		await flushPromises()
+
+		expect(enroll).toHaveBeenCalledTimes(1)
+		expect(enroll).toHaveBeenCalledWith({body: {password: ''}})
+		expect(w.text()).toContain('SHAREDSECRET')
+		await vi.waitFor(() => expect(queryClient.getMutationCache().getAll()).toEqual([]))
+	})
+
 	it('shows the enrollment UI with the qrcode while enrollment is incomplete', async () => {
-		get.mockResolvedValueOnce({secret: 'SHAREDSECRET', enabled: false, url: 'otpauth://totp/x'})
+		get.mockResolvedValueOnce({data: {secret: 'SHAREDSECRET', enabled: false, url: 'otpauth://totp/x'}})
 
 		const w = await mountAndSettle()
 
@@ -118,7 +151,7 @@ describe('TOTP settings', () => {
 	})
 
 	it('shows the disable UI without the secret or a qrcode request when totp is enabled', async () => {
-		get.mockResolvedValueOnce({secret: '', enabled: true, url: ''})
+		get.mockResolvedValueOnce({data: {enabled: true}})
 
 		const w = await mountAndSettle()
 

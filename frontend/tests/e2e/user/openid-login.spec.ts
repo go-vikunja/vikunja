@@ -1,7 +1,9 @@
+import {setupApiUrl} from '../../support/authenticateUser'
 import {test, expect} from '../../support/fixtures'
 
 test.describe('OpenID Login', () => {
 	test('logs in via Dex provider', async ({page}) => {
+		await setupApiUrl(page)
 		await page.goto('/login')
 		await page.locator('text=Dex').click()
 
@@ -18,4 +20,5 @@ test.describe('OpenID Login', () => {
 		await expect(page.locator('main.app-content .content h1')).toContainText('test')
 		await expect(page.locator('.show-tasks h2')).toContainText('Current Tasks')
 	})
+
 })

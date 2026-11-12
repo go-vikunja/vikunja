@@ -5,7 +5,7 @@ import {projectKeys} from './projects'
 const sdk = vi.hoisted(() => ({projectUsersList: vi.fn(), projectUsersCreate: vi.fn(), projectUsersUpdate: vi.fn(), projectUsersDelete: vi.fn(), projectTeamsList: vi.fn(), projectTeamsCreate: vi.fn(), projectTeamsUpdate: vi.fn(), projectTeamsDelete: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
-vi.mock('@/helpers/fetcher', () => ({getApiV2BaseUrl: () => '/api/v2/'}))
+vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => 1, getToken: () => null, getTokenIdentity: () => null}))
 
 import {projectShareKeys, projectUserSharesQuery, projectTeamSharesQuery, normalizeSharePermission, createProjectUserShareMutationOptions, updateProjectUserShareMutationOptions, deleteProjectUserShareMutationOptions, createProjectTeamShareMutationOptions, updateProjectTeamShareMutationOptions, deleteProjectTeamShareMutationOptions} from './projectShares'
@@ -22,8 +22,8 @@ describe('project shares', () => {
 		sdk.projectTeamsList.mockResolvedValue({data: {items: [{id: 2}], total_pages: 1}})
 		expect(await client.fetchQuery(projectUserSharesQuery(7))).toEqual([{id: 1}])
 		expect(await client.fetchQuery(projectTeamSharesQuery(7))).toEqual([{id: 2}])
-		expect(sdk.projectUsersList).toHaveBeenCalledExactlyOnceWith({path: {project: 7}, query: {page: 1, per_page: 1000}, signal: expect.any(AbortSignal)})
-		expect(sdk.projectTeamsList).toHaveBeenCalledExactlyOnceWith({path: {project: 7}, query: {page: 1, per_page: 1000}, signal: expect.any(AbortSignal)})
+		expect(sdk.projectUsersList).toHaveBeenCalledExactlyOnceWith({path: {project: 7}, query: {page: 1}, signal: expect.any(AbortSignal)})
+		expect(sdk.projectTeamsList).toHaveBeenCalledExactlyOnceWith({path: {project: 7}, query: {page: 1}, signal: expect.any(AbortSignal)})
 	})
 
 	it.each([undefined, -1, 3, '2', null])('defaults invalid permission %s to read', permission => {

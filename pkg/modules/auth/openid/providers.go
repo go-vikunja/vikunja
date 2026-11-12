@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"strings"
+	"sync"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -213,6 +215,19 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
+func FindProviderByIssuer(providers []*Provider, issuer string) *Provider {
+	for _, provider := range providers {
+		providerIssuer, err := provider.Issuer()
+		if err != nil {
+			continue
+		}
+		if providerIssuer == issuer {
+			return provider
+		}
+	}
+	return nil
+}
+
 // getCachedProvider returns the provider from keyvalue without re-establishing
 // the live OIDC connection, so the logout path never blocks on an unreachable OP.
 func getCachedProvider(key string) (provider *Provider, err error) {
@@ -256,6 +271,32 @@ func parseBoolField(pi map[string]interface{}, key string) (val bool, err error)
 	default:
 		return false, fmt.Errorf("expected bool, got %T", raw)
 	}
+}
+
+// Providers are rebuilt on cache cleanup and availability retries; warn once per process.
+var fallbackDeprecationWarned sync.Map
+
+func logFallbackOptionsDeprecation(key string, emailFallback, usernameFallback bool) {
+	var options []string
+	if emailFallback {
+		options = append(options, "emailfallback")
+	}
+	if usernameFallback {
+		options = append(options, "usernamefallback")
+	}
+	if len(options) == 0 {
+		return
+	}
+	if _, warned := fallbackDeprecationWarned.LoadOrStore(key, true); warned {
+		return
+	}
+
+	log.Warningf(
+		"OpenID provider %q has the deprecated option(s) %s enabled. "+
+			"They will be removed in a future release; users must link the provider from their account settings before then.",
+		key,
+		strings.Join(options, ", "),
+	)
 }
 
 func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provider, err error) {
@@ -330,6 +371,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	if err != nil {
 		log.Errorf("requireavailability is not a boolean for provider %s: %s", key, err)
 	}
+	logFallbackOptionsDeprecation(key, emailFallback, usernameFallback)
 
 	provider = &Provider{
 		Name:                name,

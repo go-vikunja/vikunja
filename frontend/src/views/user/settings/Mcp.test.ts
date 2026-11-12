@@ -3,23 +3,40 @@ import {flushPromises, mount, type VueWrapper} from '@vue/test-utils'
 import {createI18n} from 'vue-i18n'
 import {createPinia, setActivePinia} from 'pinia'
 import Mcp from './Mcp.vue'
+import {VueQueryPlugin, QueryClient} from '@tanstack/vue-query'
 import en from '@/i18n/lang/en.json'
 import type {ConnectionSettings} from '@/client/generated'
-import type {ApiTokenPreset} from '@/modelTypes/IApiTokenSettings'
+import type {ApiTokenPreset} from '@/helpers/apiToken'
 
-const sdk = vi.hoisted(() => ({mcpInfo: vi.fn()}))
+const sdk = vi.hoisted(() => ({
+	mcpInfo: vi.fn(),
+	tokensList: vi.fn(),
+}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/composables/useTitle', () => ({useTitle: vi.fn()}))
 
-const getAll = vi.fn(async () => [
-	{id: 1, title: 'My assistant', permissions: {mcp: ['access']}, expiresAt: new Date('2036-01-01'), created: new Date()},
-	{id: 2, title: 'Private API token', permissions: {tasks: ['read_all']}, expiresAt: new Date('2036-01-01'), created: new Date()},
-])
-vi.mock('@/services/apiToken', () => ({default: class {getAll = getAll}}))
+const getAll = sdk.tokensList
+const tokenRows = [
+	{
+		id: 1,
+		title: 'My assistant',
+		permissions: {mcp: ['access']},
+		expires_at: '2036-01-01T00:00:00Z',
+		created: '2026-01-01T00:00:00Z',
+	},
+	{
+		id: 2,
+		title: 'Private API token',
+		permissions: {tasks: ['read_all']},
+		expires_at: '2036-01-01T00:00:00Z',
+		created: '2026-01-01T00:00:00Z',
+	},
+]
 let wrapper: VueWrapper
 beforeEach(() => {
 	setActivePinia(createPinia())
 	getAll.mockClear()
+	getAll.mockResolvedValue({data: {items: tokenRows, total_pages: 1}})
 	sdk.mcpInfo.mockReset()
 	sdk.mcpInfo.mockResolvedValue({data: {
 		endpoint: 'https://example.com/api/v2/mcp',
@@ -32,7 +49,10 @@ afterEach(() => wrapper?.unmount())
 function mountSettings() {
 	wrapper = mount(Mcp, {
 		global: {
-			plugins: [createI18n({legacy: false, locale: 'en', messages: {en}})],
+			plugins: [
+				createI18n({legacy: false, locale: 'en', messages: {en}}),
+				[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}],
+			],
 			stubs: {
 				Card: {template: '<div><slot /></div>'},
 				ApiTokenForm: true,
@@ -64,7 +84,7 @@ describe('MCP settings', () => {
 		await flushPromises()
 		expect(wrapper.findComponent({name: 'McpClientGuide'}).exists()).toBe(false)
 		expect(wrapper.html()).not.toContain('tk_secret')
-		expect(getAll).toHaveBeenCalledTimes(2)
+		expect(getAll).toHaveBeenCalledTimes(1)
 	})
 
 	it.each<ConnectionSettings>([

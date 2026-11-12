@@ -1,4 +1,6 @@
 import type {Editor, Range} from '@tiptap/core'
+import type {SuggestionProps, SuggestionKeyDownProps} from '@tiptap/suggestion'
+import type {CommandProps} from './commands'
 import {VueRenderer} from '@tiptap/vue-3'
 
 import CommandsList from './CommandsList.vue'
@@ -7,13 +9,6 @@ import {createSuggestionPopup, type SuggestionPopup} from './suggestionPopup'
 
 type TranslateFunction = (key: string) => string
 
-interface SuggestionProps {
-	editor: Editor
-	clientRect?: () => DOMRect
-	command: (item: {command: (params: {editor: Editor, range: Range}) => void}) => void
-	items: unknown[]
-	event?: KeyboardEvent
-}
 
 export default function suggestionSetup(t: TranslateFunction) {
 	return {
@@ -173,7 +168,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 			let popup: SuggestionPopup | null = null
 
 			return {
-				onStart: (props: SuggestionProps) => {
+				onStart: (props: SuggestionProps<CommandProps>) => {
 					component = new VueRenderer(CommandsList, {
 						// using vue 2:
 						// parent: this,
@@ -194,12 +189,12 @@ export default function suggestionSetup(t: TranslateFunction) {
 					)
 				},
 
-				onUpdate(props: SuggestionProps) {
+				onUpdate(props: SuggestionProps<CommandProps>) {
 					component.updateProps(props)
 					popup?.reposition()
 				},
 
-				onKeyDown(props: SuggestionProps) {
+				onKeyDown(props: SuggestionKeyDownProps) {
 					if (props.event && props.event.key === 'Escape') {
 						if (props.event.isComposing) {
 							return false

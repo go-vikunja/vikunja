@@ -18,12 +18,16 @@ package webtests
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"sort"
 	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes"
 
@@ -90,11 +94,10 @@ func TestHumaWebhook(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `webhook-password`)
 			assert.NotContains(t, rec.Body.String(), `webhook-secret-fixture`)
 		})
-		t.Run("Read-only share can list", func(t *testing.T) {
-			rec, err := readShared.testReadAllWithUser(nil, nil)
-			require.NoError(t, err)
-			ids := webhookIDsFromReadAll(t, rec.Body.Bytes())
-			assert.ElementsMatch(t, []int64{2}, ids, "body: %s", rec.Body.String())
+		t.Run("Read-only share cannot list", func(t *testing.T) {
+			_, err := readShared.testReadAllWithUser(nil, nil)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Write share can list", func(t *testing.T) {
 			rec, err := writeShared.testReadAllWithUser(nil, nil)
@@ -106,6 +109,34 @@ func TestHumaWebhook(t *testing.T) {
 			_, err := forbidden.testReadAllWithUser(nil, nil)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+		t.Run("Pagination is ordered by id, stable across pages", func(t *testing.T) {
+			// project 1 already holds fixture webhook #1; add three more so
+			// page contents can be pinned by id rather than just counted.
+			created := make([]int64, 0, 3)
+			for i := 0; i < 3; i++ {
+				rec, err := owned.testCreateWithUser(nil, nil,
+					fmt.Sprintf(`{"target_url":"https://example.com/page-%d","events":["task.updated"]}`, i))
+				require.NoError(t, err)
+				var wh struct {
+					ID int64 `json:"id"`
+				}
+				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &wh))
+				created = append(created, wh.ID)
+			}
+			want := append([]int64{1}, created...)
+			sort.Slice(want, func(i, j int) bool { return want[i] < want[j] })
+
+			rec, err := owned.testReadAllWithUser(url.Values{"per_page": {"2"}, "page": {"1"}}, nil)
+			require.NoError(t, err)
+			page1 := webhookIDsFromReadAll(t, rec.Body.Bytes())
+
+			rec, err = owned.testReadAllWithUser(url.Values{"per_page": {"2"}, "page": {"2"}}, nil)
+			require.NoError(t, err)
+			page2 := webhookIDsFromReadAll(t, rec.Body.Bytes())
+
+			assert.Equal(t, want[:2], page1, "page 1 must list the two lowest ids in ascending order")
+			assert.Equal(t, want[2:], page2, "page 2 must list the remaining ids in ascending order")
 		})
 	})
 
@@ -156,6 +187,13 @@ func TestHumaWebhook(t *testing.T) {
 			require.Error(t, err)
 			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
 		})
+		t.Run("Project 0 cannot create a user webhook", func(t *testing.T) {
+			models.RegisterUserDirectedEventForWebhook(&models.TaskReminderFiredEvent{})
+			_, err := on("0").testCreateWithUser(nil, nil,
+				`{"target_url":"https://example.com/pwned","events":["task.reminder.fired"],"user_id":1,"project_id":0}`)
+			require.Error(t, err)
+			db.AssertMissing(t, "webhooks", map[string]interface{}{"target_url": "https://example.com/pwned"})
+		})
 		t.Run("Missing target url", func(t *testing.T) {
 			// Omitted required target_url is rejected before the handler → 422.
 			_, err := owned.testCreateWithUser(nil, nil, `{"events":["task.updated"]}`)
@@ -201,10 +239,15 @@ func TestHumaWebhook(t *testing.T) {
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
+		t.Run("Webhook of another project", func(t *testing.T) {
+			// webhook #3 lives in project 10, which user1 can write, but not in project 1.
+			_, err := owned.testUpdateWithUser(nil, map[string]string{"webhook": "3"},
+				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
 		t.Run("Forbidden", func(t *testing.T) {
 			// webhook #5 lives in project 2, which user1 cannot access at all.
-			// canDoWebhook resolves the parent from the webhook row, so the URL
-			// project is irrelevant — the real project (2) gates the check.
 			_, err := forbidden.testUpdateWithUser(nil, map[string]string{"webhook": "5"},
 				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
 			require.Error(t, err)
@@ -230,6 +273,15 @@ func TestHumaWebhook(t *testing.T) {
 			_, err := forbidden.testDeleteWithUser(nil, map[string]string{"webhook": "5"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+		t.Run("User webhook via a project route", func(t *testing.T) {
+			// webhook #8 is user1's own user-level webhook.
+			_, err := owned.testDeleteWithUser(nil, map[string]string{"webhook": "8"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+			_, err = on("0").testDeleteWithUser(nil, map[string]string{"webhook": "8"})
+			require.Error(t, err)
+			db.AssertExists(t, "webhooks", map[string]interface{}{"id": 8}, false)
 		})
 		t.Run("Write share can delete", func(t *testing.T) {
 			rec, err := writeShared.testDeleteWithUser(nil, map[string]string{"webhook": "3"})

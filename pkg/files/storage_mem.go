@@ -36,14 +36,19 @@ func newMemStorage() *memStorage {
 }
 
 func (m *memStorage) Open(name string) (io.ReadCloser, error) {
+	content, _, err := m.OpenWithSize(name)
+	return content, err
+}
+
+func (m *memStorage) OpenWithSize(name string) (io.ReadCloser, int64, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	data, ok := m.files[name]
 	if !ok {
-		return nil, &os.PathError{Op: "open", Path: name, Err: os.ErrNotExist}
+		return nil, 0, &os.PathError{Op: "open", Path: name, Err: os.ErrNotExist}
 	}
-	return io.NopCloser(bytes.NewReader(data)), nil
+	return io.NopCloser(bytes.NewReader(data)), int64(len(data)), nil
 }
 
 func (m *memStorage) Write(name string, content io.ReadSeeker, _ uint64) error {

@@ -205,7 +205,7 @@ import {linkSharesQuery, createLinkShareDraft, useCreateLinkShareMutation, useDe
 import {PERMISSIONS} from '@/constants/permissions'
 import FormField from '@/components/input/FormField.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {useConfigStore} from '@/stores/config'
 import {useProjectViews} from '@/composables/useProjectViews'
 
@@ -237,9 +237,6 @@ async function add(projectId: number) {
 		await createMutation.mutateAsync({projectId, share: draft.value})
 	} catch {
 		return
-	} finally {
-		// Evicts the plaintext password from the mutation cache.
-		createMutation.reset()
 	}
 	if (props.projectId === projectId) {
 		draft.value = createLinkShareDraft()
@@ -266,7 +263,7 @@ const selectedViews = computed(() => {
 
 const shareLinks = computed(() => Object.fromEntries(linkShares.value.map(share => {
 	const viewId = selectedViews.value[share.id]
-	return [share.id, `${configStore.frontendUrl}share/${share.hash}/auth${viewId ? `?view=${viewId}` : ''}`]
+	return [share.id, `${configStore.frontend_url}share/${share.hash}/auth${viewId ? `?view=${viewId}` : ''}`]
 })))
 </script>
 

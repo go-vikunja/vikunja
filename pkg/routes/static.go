@@ -52,6 +52,9 @@ const (
 </script>`
 )
 
+// Build artifacts carry no secrets, unlike SPA routes and query strings.
+const staticAssetLogPathKey = `static_asset_log_path`
+
 // Because the files are embedded into the final binary, we can be absolutely sure the etag will never change
 // and we can cache its generation pretty heavily.
 var etagCache map[string]string
@@ -106,13 +109,7 @@ func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 		}
 
 		scriptConfigString = strings.ReplaceAll(buf.String(), `<div id="app"></div>`, `<div id="app"></div>`+scriptConfig)
-
-		publicURL := config.ServicePublicURL.GetString()
-		if publicURL == "" {
-			publicURL = "/"
-		}
-
-		scriptConfigString = strings.ReplaceAll(scriptConfigString, "'/api/v1'", "'"+publicURL+"api/v1'")
+		scriptConfigString = injectAPIURL(scriptConfigString, config.ServicePublicURL.GetString())
 	}
 
 	reader := strings.NewReader(scriptConfigString)
@@ -123,6 +120,13 @@ func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 	}
 
 	return serveFile(c, reader, info, "")
+}
+
+// injectAPIURL points the frontend at the public URL. The frontend appends the
+// /api/vN suffix itself; an empty value means the frontend's own origin.
+func injectAPIURL(index, publicURL string) string {
+	apiURL := template.JSEscapeString(strings.TrimSuffix(publicURL, "/"))
+	return strings.Replace(index, "window.API_URL = ''", "window.API_URL = '"+apiURL+"'", 1)
 }
 
 // Copied from echo's middleware.StaticWithConfig simplified and adjusted for caching
@@ -179,6 +183,7 @@ func static() echo.MiddlewareFunc {
 				return err
 			}
 
+			c.Set(staticAssetLogPathKey, "/"+strings.TrimPrefix(name, rootPath))
 			return serveFile(c, file, info, etag)
 		}
 	}

@@ -47,7 +47,7 @@ type Project struct {
 	// The unique project short identifier. Used to build task identifiers.
 	Identifier string `xorm:"varchar(10) null" json:"identifier" valid:"runelength(0|10)" minLength:"0" maxLength:"10" doc:"The unique project short identifier. Used to build task identifiers (e.g. PROJ-123)."`
 	// The hex color of this project
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The hex color of this project, without the leading #."`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"hexcolor" maxLength:"7" doc:"The hex color of this project, without the leading #."`
 
 	OwnerID         int64    `xorm:"bigint INDEX not null" json:"-"`
 	ParentProjectID *int64   `xorm:"bigint INDEX null" json:"parent_project_id" doc:"The id of the parent project, or 0 for a top-level project. Always present in responses. Omit it on a write to leave the parent unchanged; sending an explicit 0 detaches the project to the top level and requires admin permission."`
@@ -60,7 +60,7 @@ type Project struct {
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived" doc:"Whether the project is archived. Archived projects are read-only."`
 
 	// The id of the file this project has set as background
-	BackgroundFileID int64 `xorm:"null" json:"-"`
+	BackgroundFileID int64 `xorm:"null index" json:"-"`
 	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /projects/{projectID}/background
 	BackgroundInformation interface{} `xorm:"-" json:"background_information" readOnly:"true" doc:"Extra information about the background (e.g. attribution). When not null, the background is available at /projects/{projectID}/background."`
 	// Contains a very small version of the project background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
@@ -85,6 +85,13 @@ type Project struct {
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this project was created. You cannot change this value."`
 	// A timestamp when this project was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this project was last updated. You cannot change this value."`
+	// When this project was moved to the trash. Trashed projects are removed permanently 30 days later.
+	DeletedAt time.Time `xorm:"deleted datetime null INDEX 'deleted_at'" json:"deleted_at,omitzero" readOnly:"true" doc:"When this project was moved to the trash. Trashed projects are removed permanently 30 days later."`
+	// The user who moved this project to the trash. Only present on trashed projects.
+	DeletedBy   *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this project to the trash. Only present on trashed projects."`
+	DeletedByID int64      `xorm:"bigint null 'deleted_by_id'" json:"-"`
+
+	LastPurgedAt time.Time `xorm:"null" json:"-"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -213,7 +220,7 @@ var FavoritesPseudoProject = Project{
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
 func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived, false)
+	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -250,11 +257,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	return prs, resultCount, totalItems, err
 }
 
-func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived, listAll bool) (projects []*Project, resultCount int, totalItems int64, err error) {
-	if listAll {
-		return getRawProjectsUnscoped(s, search, page, perPage, isArchived)
-	}
-
+func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, is := a.(*LinkSharing)
 	if is {
@@ -303,9 +306,89 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 	return prs, resultCount, totalItems, err
 }
 
+// ListAllProjectsOptions always includes archived projects.
+type ListAllProjectsOptions struct {
+	Search                 string
+	Page                   int
+	PerPage                int
+	OwnerID                int64
+	ExcludeDefaultProjects bool
+	SortBy                 []string
+	OrderBy                []string
+}
+
+var adminProjectSortColumns = map[string]string{
+	"id":      "id",
+	"title":   "title",
+	"owner":   "(SELECT username FROM users WHERE users.id = projects.owner_id)",
+	"created": "created",
+	"updated": "updated",
+}
+
+func adminProjectOrderBy(sortBy, orderBy []string) (string, error) {
+	parts := make([]string, 0, len(sortBy)+1)
+	for i, field := range sortBy {
+		col, ok := adminProjectSortColumns[field]
+		if !ok {
+			return "", ErrInvalidData{Message: fmt.Sprintf("invalid sort_by field %q", field)}
+		}
+		dir := "ASC"
+		if i < len(orderBy) {
+			switch orderBy[i] {
+			case "asc":
+			case "desc":
+				dir = "DESC"
+			default:
+				return "", ErrInvalidData{Message: fmt.Sprintf("invalid order_by value %q", orderBy[i])}
+			}
+		}
+		parts = append(parts, col+" "+dir)
+	}
+	// Tiebreaker keeps pagination stable when the sort column has duplicates.
+	parts = append(parts, "id DESC")
+	return strings.Join(parts, ", "), nil
+}
+
 // ListAllProjects returns every project with owners hydrated; callers must authorize since this bypasses the per-user permission filter.
-func ListAllProjects(s *xorm.Session, search string, page, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
-	projects, resultCount, totalItems, err = getAllRawProjects(s, nil, search, page, perPage, isArchived, true)
+func ListAllProjects(s *xorm.Session, opts *ListAllProjectsOptions) (projects []*Project, resultCount int, totalItems int64, err error) {
+	orderBy, err := adminProjectOrderBy(opts.SortBy, opts.OrderBy)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	conds := []builder.Cond{}
+	if opts.Search != "" {
+		conds = append(conds, projectSearchCond(opts.Search))
+	}
+	if opts.OwnerID > 0 {
+		conds = append(conds, builder.Eq{"owner_id": opts.OwnerID})
+	}
+	if opts.ExcludeDefaultProjects {
+		// Only count a project as default for its own owner; anyone can point their default at a foreign project.
+		conds = append(conds, builder.NotExists(
+			builder.Select("1").From("users").Where(builder.And(
+				builder.Expr("users.id = projects.owner_id"),
+				builder.Expr("users.default_project_id = projects.id"),
+			)),
+		))
+	}
+	var where = builder.Expr("1 = 1")
+	if len(conds) > 0 {
+		where = builder.And(conds...)
+	}
+
+	limit, start := getLimitFromPageIndex(opts.Page, opts.PerPage)
+	query := s.Where(where).OrderBy(orderBy)
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+
+	projects = []*Project{}
+	if err = query.Find(&projects); err != nil {
+		return nil, 0, 0, err
+	}
+
+	totalItems, err = s.Where(where).Count(&Project{})
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -322,39 +405,6 @@ func ListAllProjects(s *xorm.Session, search string, page, perPage int, isArchiv
 		if o, ok := owners[p.OwnerID]; ok {
 			p.Owner = o
 		}
-	}
-
-	return projects, resultCount, totalItems, nil
-}
-
-func getRawProjectsUnscoped(s *xorm.Session, search string, page, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
-	limit, start := getLimitFromPageIndex(page, perPage)
-
-	conds := []builder.Cond{}
-	if !isArchived {
-		conds = append(conds, builder.Eq{"is_archived": false})
-	}
-	if search != "" {
-		conds = append(conds, projectSearchCond(search))
-	}
-	var where = builder.Expr("1 = 1")
-	if len(conds) > 0 {
-		where = builder.And(conds...)
-	}
-
-	query := s.Where(where).OrderBy("id DESC")
-	if limit > 0 {
-		query = query.Limit(limit, start)
-	}
-
-	projects = []*Project{}
-	if err = query.Find(&projects); err != nil {
-		return nil, 0, 0, err
-	}
-
-	totalItems, err = s.Where(where).Count(&Project{})
-	if err != nil {
-		return nil, 0, 0, err
 	}
 
 	return projects, len(projects), totalItems, nil
@@ -603,7 +653,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 		return nil, 0, nil
 	}
 
-	conds := []builder.Cond{access.cond("id")}
+	conds := []builder.Cond{access.cond("id", PermissionRead)}
 	if !opts.getArchived {
 		conds = append(conds, builder.Eq{"is_archived": false})
 	}
@@ -613,7 +663,8 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 	where := builder.And(conds...)
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	query := s.Where(where).OrderBy("position")
+	// Positions tie across sibling groups; id keeps LIMIT/OFFSET pages disjoint.
+	query := s.Where(where).OrderBy("position, id")
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
@@ -924,7 +975,9 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 
 	// Check if the identifier is unique and not empty
 	if project.Identifier != "" {
+		// Trashed projects keep theirs so a restore can't collide
 		exists, err := s.
+			Unscoped().
 			Where("identifier = ?", project.Identifier).
 			And("id != ?", project.ID).
 			Exist(&Project{})
@@ -951,6 +1004,8 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.ID = 0
+	project.BackgroundFileID = 0
+	project.BackgroundBlurHash = ""
 	if doer.IsBot() {
 		project.OwnerID = doer.BotOwnerID
 		owner, err := user.GetUserByID(s, doer.BotOwnerID)
@@ -1251,7 +1306,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	// Healing before the write would leave the project at its tiny position and every
 	// further move to the top would trigger another recalculation.
 	if l.Position < 0.1 {
-		err = recalculateProjectPositions(s, l.parentID())
+		err = recalculateProjectPositions(s, auth, l.parentID(), l.ID)
 		if err != nil {
 			return err
 		}
@@ -1267,7 +1322,8 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	return
 }
 
-func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
+// Positions are global, so siblings the doer can only read keep theirs.
+func recalculateProjectPositions(s *xorm.Session, a web.Auth, parentProjectID, projectID int64) (err error) {
 
 	// Root projects may store their parent as NULL instead of 0 and would never be healed.
 	var parentCond builder.Cond = builder.Eq{"parent_project_id": parentProjectID}
@@ -1275,9 +1331,15 @@ func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err er
 		parentCond = builder.Or(parentCond, builder.IsNull{"parent_project_id"})
 	}
 
+	writable, err := projectIDsWithPermissionCond(s, a, "id", PermissionWrite)
+	if err != nil {
+		return err
+	}
+
 	allProjects := []*Project{}
 	err = s.
-		Where(parentCond).
+		// Instance admins pass CanUpdate without any grant on the project.
+		Where(builder.And(parentCond, builder.Or(writable, builder.Eq{"id": projectID}))).
 		OrderBy("position asc, id asc").
 		Find(&allProjects)
 	if err != nil {
@@ -1380,15 +1442,18 @@ func (p *Project) Create(s *xorm.Session, a web.Auth) (err error) {
 	return fullProject.ReadOne(s, a)
 }
 
+// Others' defaults don't count: anyone with write access can set one.
 func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
 	return s.
-		Where("default_project_id = ?", p.ID).
-		Exist(&user.User{})
+		Table("users").
+		Join("INNER", "projects", "projects.id = users.default_project_id AND projects.owner_id = users.id").
+		Where("projects.id = ?", p.ID).
+		Exist()
 }
 
 // Delete implements the delete method of CRUDable
 // @Summary Deletes a project
-// @Description Delets a project
+// @Description Moves a project and all its sub-projects to the trash. They are deleted permanently after 30 days.
 // @tags project
 // @Produce json
 // @Security JWTKeyAuth
@@ -1399,151 +1464,27 @@ func (p *Project) isDefaultProject(s *xorm.Session) (is bool, err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id} [delete]
 func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
-
-	isDefaultProject, err := p.isDefaultProject(s)
-	if err != nil {
-		return err
-	}
-	// Owners should be allowed to delete the default project
-	if isDefaultProject && p.OwnerID != a.GetID() {
-		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
-	}
-
-	// Lock first: the task loop below deletes task_positions rows before the views are dropped further down.
-	_, err = lockProjectViewsForPositionUpdate(s, p.ID)
-	if err != nil {
-		return err
-	}
-
-	// Hard-delete all tasks on that project, including soft-deleted ones —
-	// there is nothing to restore them into once the project is gone.
-	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
-	tasks := []*Task{}
-	err = s.Unscoped().Where("project_id = ?", p.ID).Find(&tasks)
-	if err != nil {
-		return
-	}
-
-	for _, task := range tasks {
-		err = hardDeleteTask(s, task)
-		if err != nil {
-			return err
-		}
-	}
-
+	// The handler passes a stub without owner_id.
 	fullProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
 		return
 	}
 
-	err = fullProject.DeleteBackgroundFileIfExists(s)
-	if err != nil {
-		return
-	}
-
-	// If we're deleting a default project, remove it as default
-	if isDefaultProject {
-		_, err = s.Where("default_project_id = ?", p.ID).
-			Cols("default_project_id").
-			Update(&user.User{DefaultProjectID: 0})
-		if err != nil {
-			return
-		}
-	}
-
-	// Delete related project entities
-	views, err := getViewsForProject(s, p.ID)
-	if err != nil {
-		return
-	}
-	viewIDs := []int64{}
-	for _, v := range views {
-		viewIDs = append(viewIDs, v.ID)
-	}
-
-	_, err = s.In("project_view_id", viewIDs).Delete(&Bucket{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.In("id", viewIDs).Delete(&ProjectView{})
-	if err != nil {
-		return
-	}
-
-	err = removeFromFavorite(s, p.ID, a, FavoriteKindProject)
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&LinkSharing{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&ProjectUser{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&TeamProject{})
-	if err != nil {
-		return
-	}
-
-	err = deleteProjectAncestors(s, p.ID)
-	if err != nil {
-		return
-	}
-
-	_, err = s.Where("project_id = ?", p.ID).Delete(&TaskIndexAlias{})
-	if err != nil {
-		return
-	}
-
-	_, err = s.ID(p.ID).Delete(&ProjectTaskCounter{})
-	if err != nil {
-		return
-	}
-
-	// Delete the project
-	_, err = s.ID(p.ID).Delete(&Project{})
-	if err != nil {
-		return
-	}
-
-	if err := events.DispatchOnCommit(s, &ProjectDeletedEvent{
-		Project: fullProject,
-		Doer:    doerFromAuth(s, a),
-	}); err != nil {
-		return err
-	}
-
-	childProjects := []*Project{}
-	err = s.Where("parent_project_id = ?", fullProject.ID).Find(&childProjects)
-	if err != nil {
-		return
-	}
-
-	for _, child := range childProjects {
-		err = child.Delete(s, a)
-		if err != nil {
-			return
-		}
-	}
-
-	return
+	return trashProject(s, fullProject, a)
 }
 
-// DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
-// if one exists
+// DeleteBackgroundFileIfExists drops the file row of the project background, if any.
 func (p *Project) DeleteBackgroundFileIfExists(s *xorm.Session) (err error) {
 	if p.BackgroundFileID == 0 {
 		return
 	}
 
+	if err = RemoveUnsplashPhoto(s, p.BackgroundFileID); err != nil {
+		return err
+	}
+
 	file := files.File{ID: p.BackgroundFileID}
-	err = file.Delete(s)
+	err = file.DeleteOnCommit(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		return nil
 	}
@@ -1572,6 +1513,19 @@ func ClearProjectBackground(s *xorm.Session, projectID int64) (err error) {
 		Cols("background_file_id", "background_blur_hash").
 		Update(&Project{})
 	return
+}
+
+// RemoveBackground deletes the background file and clears the background fields.
+func (p *Project) RemoveBackground(s *xorm.Session) error {
+	if err := p.DeleteBackgroundFileIfExists(s); err != nil {
+		return err
+	}
+	if err := ClearProjectBackground(s, p.ID); err != nil {
+		return err
+	}
+	p.BackgroundFileID = 0
+	p.BackgroundBlurHash = ""
+	return nil
 }
 
 const archiveStateUpdateBatch = 500

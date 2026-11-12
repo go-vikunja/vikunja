@@ -18,7 +18,7 @@
 					:id="textareaId"
 					ref="newTaskInput"
 					v-model="newTaskTitle"
-					v-focus
+					v-focus="autofocus"
 					class="add-task-textarea input"
 					:class="{'textarea-empty': newTaskTitle === ''}"
 					:placeholder="$t('project.list.addPlaceholder')"
@@ -34,7 +34,7 @@
 			<p class="control">
 				<XButton
 					class="add-task-button"
-					:disabled="newTaskTitle === '' || loading || undefined"
+					:disabled="newTaskTitle === '' || showLoading || undefined"
 					icon="plus"
 					:loading="loading"
 					:aria-label="$t('project.list.add')"
@@ -80,6 +80,11 @@ import {useConfigStore} from '@/stores/config'
 import {reportSkippedLabels, useQuickAddTask} from '@/composables/useQuickAddTask'
 
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
+
+const {autofocus = true} = defineProps<{
+	autofocus?: boolean,
+}>()
 
 const emit = defineEmits<{
 	tasksAdded: [tasks: ITask[]],
@@ -94,6 +99,7 @@ const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const {createNewTasksBulk, findProjectId, ensureLabelsExist, isLoading: loading} = useQuickAddTask()
+const showLoading = useDelayedLoading(loading)
 const createRelationMutation = useCreateTaskRelationMutation()
 const router = useRouter()
 
@@ -132,12 +138,12 @@ async function addTask() {
 	// Keyed by the title the task had before quick add magic parsed it. A Map,
 	// because a user-entered `__proto__` would corrupt plain-object lookups.
 	const createdTasks = new Map<ITask['title'], ITask>()
-	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontendSettings.quickAddMagicMode)
+	const tasksToCreate = parseSubtasksViaIndention(newTaskTitle.value, authStore.settings.frontend_settings.quick_add_magic_mode)
 
 	// We ensure all labels exist prior to passing them down to the create task method
 	// In the store it will only ever see one task at a time so there's no way to reliably 
 	// check if a new label was created before (because everything happens async).
-	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontendSettings.quickAddMagicMode) ?? [])
+	const allLabels = tasksToCreate.map(({title}) => getLabelsFromPrefix(title, authStore.settings.frontend_settings.quick_add_magic_mode) ?? [])
 	const requestedLabels = [...new Set(allLabels.flat())]
 	const {skipped} = await ensureLabelsExist(requestedLabels, context)
 	assertClientRequestContext(context)
@@ -145,7 +151,7 @@ async function addTask() {
 	// Skipped labels (e.g. link shares may not create them) don't block task creation; just tell the user.
 	reportSkippedLabels(skipped)
 
-	let currentProjectId = authStore.settings.defaultProjectId
+	let currentProjectId = authStore.settings.default_project_id
 	if (typeof router.currentRoute.value.params.projectId !== 'undefined') {
 		currentProjectId = Number(router.currentRoute.value.params.projectId)
 	}
@@ -159,7 +165,7 @@ async function addTask() {
 				title,
 				project_id: (project !== null
 					? await findProjectId({project, projectId: 0})
-					: currentProjectId) || authStore.settings.defaultProjectId || 0,
+					: currentProjectId) || authStore.settings.default_project_id || 0,
 			})))
 
 		// Input like a lone bullet passes the empty check but parses to nothing.
@@ -212,7 +218,7 @@ async function addTask() {
 		}
 
 		try {
-			await runWrites(tasksToCreate, createRelation, configStore.concurrentWrites)
+			await runWrites(tasksToCreate, createRelation, configStore.concurrent_writes)
 		} catch (e) {
 			// The tasks themselves exist by now — reporting and moving on beats
 			// restoring the input and letting the user duplicate all of them.
@@ -230,7 +236,7 @@ async function addTask() {
 		}
 	} catch (e) {
 		newTaskTitle.value = taskTitleBackup
-		if (e?.message === 'NO_PROJECT') {
+		if (e instanceof Error && e.message === 'NO_PROJECT') {
 			errorMessage.value = t('project.create.addProjectRequired')
 			return
 		}

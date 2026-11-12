@@ -21,7 +21,11 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeleteExpiredTasks(t *testing.T) {
@@ -31,10 +35,14 @@ func TestDeleteExpiredTasks(t *testing.T) {
 	t.Run("older than the retention period", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		files.InitTestFileFixtures(t)
+		events.ClearDispatchedEvents()
 
-		deleteExpiredTasks(deletedAt.Add(TaskDeleteRetention + 24*time.Hour))
+		deleteExpiredTasks(deletedAt.Add(TrashRetention + 24*time.Hour))
 
 		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 51})
+		doers := purgedTaskDoers(t)
+		require.Contains(t, doers, int64(51))
+		assert.Nil(t, doers[51], "the cron purges as the system")
 		db.AssertMissing(t, "task_reminders", map[string]interface{}{"task_id": 51})
 		db.AssertMissing(t, "label_tasks", map[string]interface{}{"task_id": 51})
 		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_id": 51, "entity_type": SubscriptionEntityTask})
@@ -43,7 +51,7 @@ func TestDeleteExpiredTasks(t *testing.T) {
 	t.Run("newer than the retention period", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		deleteExpiredTasks(deletedAt.Add(TaskDeleteRetention - 24*time.Hour))
+		deleteExpiredTasks(deletedAt.Add(TrashRetention - 24*time.Hour))
 
 		db.AssertExists(t, "tasks", map[string]interface{}{"id": 51}, false)
 		db.AssertExists(t, "task_reminders", map[string]interface{}{"task_id": 51}, false)

@@ -2,13 +2,15 @@ import {useMutation} from '@tanstack/vue-query'
 import {
 	taskAttachmentsDelete,
 	taskAttachmentsDownload,
+	taskAttachmentsPreview,
 	taskAttachmentsUpload,
 } from '@/client/generated'
 import type {
 	TaskAttachment,
-	TaskAttachmentsDownloadData,
+	TaskAttachmentsPreviewData,
 } from '@/client/generated'
 import {i18n} from '@/i18n'
+import {expectBlob} from './blobResponse'
 import {contextMutationOptions} from './contextMutation'
 import {
 	invalidateTaskMembership,
@@ -22,21 +24,27 @@ export const attachmentKeys = {
 	blob: (taskId: number, id: number, size?: PreviewSize) => [...attachmentKeys.blobsFor(taskId, id), size] as const,
 }
 
-export type PreviewSize = NonNullable<TaskAttachmentsDownloadData['query']>['preview_size']
+export type PreviewSize = TaskAttachmentsPreviewData['query']['size']
 export type AttachmentIdentity = Required<Pick<TaskAttachment, 'id' | 'task_id'>>
 
 export async function attachmentBlob(attachment: AttachmentIdentity, size?: PreviewSize, signal?: AbortSignal) {
-	const {data} = await taskAttachmentsDownload({
-		path: {
-			task: attachment.task_id,
-			attachment: attachment.id,
-		},
-		query: {preview_size: size},
-		parseAs: 'blob',
-		signal,
-	})
-	if (!(data instanceof Blob)) throw new Error('Attachment response was not a blob')
-	return data
+	const path = {
+		task: attachment.task_id,
+		attachment: attachment.id,
+	}
+	const {data} = size === undefined
+		? await taskAttachmentsDownload({
+			path,
+			parseAs: 'blob',
+			signal,
+		})
+		: await taskAttachmentsPreview({
+			path,
+			query: {size},
+			parseAs: 'blob',
+			signal,
+		})
+	return expectBlob(data, 'Attachment')
 }
 
 export function uploadAttachmentsMutationOptions(shouldNotify: () => boolean = () => true) {

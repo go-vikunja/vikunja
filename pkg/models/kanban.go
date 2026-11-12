@@ -27,6 +27,9 @@ import (
 	"xorm.io/xorm"
 )
 
+// Every kanban read runs one task query per bucket.
+const maxBucketsPerView = 100
+
 // Bucket represents a kanban bucket
 type Bucket struct {
 	// The unique, numeric id of this bucket.
@@ -229,6 +232,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 	}
 
 	originalFilter := opts.filter
+	originalSearch := opts.search
 	for id, bucket := range bucketMap {
 
 		if !strings.Contains(originalFilter, taskPropertyBucketID) {
@@ -240,6 +244,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 					bucketFilter = "(" + view.BucketConfiguration[id].Filter.Filter + ")"
 				}
 
+				opts.search = originalSearch
 				if view.BucketConfiguration[id].Filter.Search != "" {
 					opts.search = view.BucketConfiguration[id].Filter.Search
 				}

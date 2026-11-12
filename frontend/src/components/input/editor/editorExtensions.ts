@@ -1,13 +1,14 @@
 import {nextTick, toValue, type MaybeRefOrGetter, type Ref} from 'vue'
 
 import StarterKit from '@tiptap/starter-kit'
-import {createNodeFromContent, Extension, mergeAttributes, type Editor, type Extensions} from '@tiptap/core'
+import {Extension, mergeAttributes, type Editor, type Extensions} from '@tiptap/core'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
-import {Fragment} from '@tiptap/pm/model'
+import {DOMParser as ProseMirrorDOMParser, type Node as ProseMirrorNode} from '@tiptap/pm/model'
 import {marked} from 'marked'
 
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import {VueNodeViewRenderer} from '@tiptap/vue-3'
 import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
 import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
@@ -25,6 +26,9 @@ import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import {TaskLink, LINK_HTML_ATTRIBUTES} from './taskLink'
 import {createClipboardParser, fillRequiredContent, repairSliceContent} from './contentRepair'
 import {htmlHasFormatting} from './clipboardHtml'
+import {parseSpan, tableLimitedElementFromString} from './tableBudget'
+import {serializeClipboardText} from './clipboardText'
+import CodeBlockView from './CodeBlockView.vue'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
@@ -36,8 +40,37 @@ import type {UploadCallback} from './types'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
+import {getApiRootUrl} from '@/helpers/apiUrl'
 
 type ImageNodeKey = `${ITask['id']}-${IAttachment['id']}`
+
+// stored srcs predate the v2 flip, so the version segment is matched, not compared
+const ATTACHMENT_URL = /^(.*?)(?:\/api\/v[12])?\/tasks\/(\d+)\/attachments\/(\d+)$/
+
+interface AttachmentRef {
+	taskId: number
+	attachmentId: number
+}
+
+function parseAttachmentUrl(url: unknown): AttachmentRef | null {
+	if (typeof url !== 'string') {
+		return null
+	}
+
+	const match = ATTACHMENT_URL.exec(url)
+	if (match === null) {
+		return null
+	}
+
+	if (match[1] !== getApiRootUrl()) {
+		return null
+	}
+
+	return {
+		taskId: Number(match[2]),
+		attachmentId: Number(match[3]),
+	}
+}
 
 export interface EditorExtensionDeps {
 	t: (key: string) => string
@@ -51,20 +84,54 @@ export interface EditorExtensionDeps {
 	uploadAndInsertFiles: (files: File[] | FileList) => void
 }
 
+// the value lands in a style attribute, anything beyond a plain color allows CSS injection
+const SAFE_CSS_COLOR = /^(#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\([\d\s.,%]+\)|[a-z]+)$/i
+
+function safeCssColor(value: unknown): string | null {
+	return typeof value === 'string' && SAFE_CSS_COLOR.test(value.trim()) ? value.trim() : null
+}
+
+function spanAttribute(name: 'colspan' | 'rowspan') {
+	return {
+		default: 1,
+		parseHTML: (element: HTMLElement) => parseSpan(element, name),
+	}
+}
+
+export function parseEditorHTML(editor: Editor, html: string): ProseMirrorNode {
+	return ProseMirrorDOMParser.fromSchema(editor.schema).parse(tableLimitedElementFromString(html), editor.options.parseOptions)
+}
+
+const CustomTableHeader = TableHeader.extend({
+	addAttributes() {
+		return {
+			...this.parent?.(),
+			colspan: spanAttribute('colspan'),
+			rowspan: spanAttribute('rowspan'),
+		}
+	},
+})
+
 const CustomTableCell = TableCell.extend({
 	addAttributes() {
 		return {
 			// extend the existing attributes …
 			...this.parent?.(),
+			colspan: spanAttribute('colspan'),
+			rowspan: spanAttribute('rowspan'),
 
 			// and add a new one …
 			backgroundColor: {
 				default: null,
-				parseHTML: (element: HTMLElement) => element.getAttribute('data-background-color'),
+				parseHTML: (element: HTMLElement) => safeCssColor(element.getAttribute('data-background-color')),
 				renderHTML: (attributes) => {
+					const color = safeCssColor(attributes.backgroundColor)
+					if (color === null) {
+						return {}
+					}
 					return {
-						'data-background-color': attributes.backgroundColor,
-						style: `background-color: ${attributes.backgroundColor}`,
+						'data-background-color': color,
+						style: `background-color: ${color}`,
 					}
 				},
 			},
@@ -146,13 +213,10 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 			}
 		},
 		renderHTML({HTMLAttributes}) {
-			if (HTMLAttributes.src?.startsWith(window.API_URL) || HTMLAttributes['data-src']?.startsWith(window.API_URL)) {
-				const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
-
-				// The url is something like /tasks/<id>/attachments/<id>
-				const parts = imageUrl.slice(window.API_URL.length + 1).split('/')
-				const taskId = Number(parts[1])
-				const attachmentId = Number(parts[3])
+			const imageUrl = HTMLAttributes['data-src'] ?? HTMLAttributes.src
+			const attachment = parseAttachmentUrl(imageUrl)
+			if (attachment !== null) {
+				const {taskId, attachmentId} = attachment
 				const nodeKey: ImageNodeKey = `${taskId}-${attachmentId}`
 				const id = 'tiptap-image-' + nodeKey
 
@@ -196,6 +260,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 					props: {
 						clipboardParser: createClipboardParser(this.editor.schema),
 						transformPasted: slice => repairSliceContent(slice),
+						clipboardTextSerializer: slice => serializeClipboardText(slice.content, this.editor.schema),
 
 						handlePaste: (view, event) => {
 
@@ -235,11 +300,12 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 								return false
 							}
 
-							const parsed = createNodeFromContent(marked.parse(text) as string, this.editor.schema, {
-								parseOptions: {preserveWhitespace: 'full', ...this.editor.options.parseOptions},
-							})
+							const parsed = ProseMirrorDOMParser.fromSchema(this.editor.schema).parseSlice(
+								tableLimitedElementFromString(marked.parse(text) as string),
+								{preserveWhitespace: 'full', ...this.editor.options.parseOptions},
+							)
 
-							this.editor.commands.insertContent(fillRequiredContent(Fragment.from(parsed)))
+							this.editor.commands.insertContent(fillRequiredContent(parsed.content))
 							return true
 						},
 					},
@@ -266,6 +332,10 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 
 		CodeBlockLowlight.configure({
 			lowlight: createLowlight(common),
+		}).extend({
+			addNodeView() {
+				return VueNodeViewRenderer(CodeBlockView)
+			},
 		}),
 		HardBreak.extend({
 			addKeyboardShortcuts() {
@@ -308,7 +378,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 			resizable: true,
 		}),
 		TableRow,
-		TableHeader,
+		CustomTableHeader,
 		// Custom TableCell with backgroundColor attribute
 		CustomTableCell,
 

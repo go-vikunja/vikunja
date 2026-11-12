@@ -30,10 +30,11 @@ import (
 
 func resetAPITokenRoutes(t *testing.T) {
 	t.Helper()
-	previous, previousV2 := apiTokenRoutes, apiTokenRoutesV2
-	t.Cleanup(func() { apiTokenRoutes, apiTokenRoutesV2 = previous, previousV2 })
+	previous, previousV2, previousNonCRUD := apiTokenRoutes, apiTokenRoutesV2, nonCRUDRoutes
+	t.Cleanup(func() { apiTokenRoutes, apiTokenRoutesV2, nonCRUDRoutes = previous, previousV2, previousNonCRUD })
 	apiTokenRoutes = make(map[string]APITokenRoute)
 	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	nonCRUDRoutes = make(map[string]map[string][]*RouteDetail)
 }
 
 func TestCanDoAPIRoute_BulkLabelTask(t *testing.T) {
@@ -554,4 +555,58 @@ func TestAPIToken_CanUseRoute(t *testing.T) {
 	assert.False(t, token.CanUseRoute("/api/v2/tasks", "GET"))
 	var nilToken *APIToken
 	assert.False(t, nilToken.CanUseRoute("/api/v2/tasks/:projecttask", "GET"))
+}
+
+// GHSA-j5v7-qcwp-5g32
+func TestCollectRoutes_NonCRUDKeysIgnoreOrder(t *testing.T) {
+	routes := []echo.RouteInfo{
+		{Method: "GET", Path: "/api/v1/projects/:project/background"},
+		{Method: "DELETE", Path: "/api/v1/projects/:project/background"},
+		{Method: "DELETE", Path: "/api/v2/projects/:project/background"},
+		{Method: "GET", Path: "/api/v2/projects/:project/background"},
+	}
+	for name, order := range map[string][]int{"v1 first": {0, 1, 2, 3}, "v2 first": {2, 3, 1, 0}} {
+		t.Run(name, func(t *testing.T) {
+			resetAPITokenRoutes(t)
+			for _, i := range order {
+				CollectRoutesForAPITokenUsage(routes[i], true)
+			}
+			for _, table := range []map[string]APITokenRoute{apiTokenRoutes, apiTokenRoutesV2} {
+				require.Contains(t, table["projects"], "background")
+				require.Contains(t, table["projects"], "background_delete")
+				assert.Equal(t, "GET", table["projects"]["background"].Method)
+				assert.Equal(t, "DELETE", table["projects"]["background_delete"].Method)
+			}
+		})
+	}
+}
+
+// Plugin routes collide once params are stripped; that must not crash startup.
+func TestCollectRoutes_PluginKeyCollisionSkipsRoute(t *testing.T) {
+	routes := []echo.RouteInfo{
+		{Method: "GET", Path: "/api/v1/plugins/foo/items"},
+		{Method: "GET", Path: "/api/v1/plugins/foo/items/:id"},
+	}
+	for name, order := range map[string][]int{"list first": {0, 1}, "detail first": {1, 0}} {
+		t.Run(name, func(t *testing.T) {
+			resetAPITokenRoutes(t)
+			require.NotPanics(t, func() {
+				for _, i := range order {
+					CollectRoutesForAPITokenUsage(routes[i], true)
+				}
+			})
+			assert.Equal(t, APITokenRoute{
+				"foo_items": {Method: "GET", Path: "/api/v1/plugins/foo/items"},
+			}, apiTokenRoutes["plugins"])
+			assert.Empty(t, apiTokenRoutesV2)
+		})
+	}
+}
+
+func TestCollectRoutes_CoreKeyCollisionPanics(t *testing.T) {
+	resetAPITokenRoutes(t)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/projects/:project/background"}, true)
+	assert.Panics(t, func() {
+		CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/projects/background/:project"}, true)
+	})
 }

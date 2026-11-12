@@ -271,13 +271,7 @@
 		},
 		"delete": {
 			"title": "Eliminar \"{project}\"",
-			"header": "Eliminar este projeto",
-			"text1": "Tens a certeza que prentedes apagar este projeto e todo o seu conteúdo?",
-			"text2": "Isto inclui todas as tarefas e NÃO PODE SER REVERTIDO!",
-			"success": "O projeto foi eliminado com sucesso.",
-			"tasksToDelete": "Isto irá remover irremediavelmente aprox. {count} tarefas.",
-			"tasksAndChildProjectsToDelete": "Isto irá remover irremediavelmente cerca de {tasks} tarefas e {projects} projetos.",
-			"noTasksToDelete": "Este projeto não contém tarefas, deve ser seguro eliminá-lo."
+			"header": "Eliminar este projeto"
 		},
 		"duplicate": {
 			"title": "Duplicar este projeto",
@@ -782,36 +776,13 @@
 			"updated": "Atualizada {0}",
 			"doneAt": "Concluído {0}",
 			"updateSuccess": "A tarefa foi salva com sucesso.",
-			"deleteSuccess": "A tarefa foi eliminada com sucesso.",
 			"belongsToProject": "Esta tarefa pertence ao projeto '{project}'",
 			"back": "Volta ao projeto",
 			"due": "Vence {at}",
 			"scrollToBottom": "Rolar até ao fundo",
-			"organization": "Organização",
-			"management": "Gestão",
-			"dateAndTime": "Data e hora",
-			"delete": {
-				"header": "Eliminar esta tarefa",
-				"text1": "Tens a certeza que pretendes eliminar esta tarefa?",
-				"text2": "Isto vai também eliminar todos os anexos, lembretes e relações associadas a esta tarefa, e não pode ser revertido!"
-			},
 			"actions": {
-				"assign": "Atribuir a Utilizador",
-				"label": "Adicionar Etiquetas",
-				"priority": "Definir Prioridade",
-				"dueDate": "Definir Data de Vencimento",
-				"startDate": "Definir Data de Início",
-				"endDate": "Definir Data de Fim",
-				"reminders": "Definir Lembretes",
-				"repeatAfter": "Definir Intervalo Recorrente",
-				"percentDone": "Definir Progresso",
-				"attachments": "Adicionar Anexos",
-				"relatedTasks": "Adicionar Relação",
 				"moveProject": "Mover",
-				"color": "Definir Cor",
-				"delete": "Eliminar",
-				"favorite": "Adicionar aos Favoritos",
-				"unfavorite": "Remover dos Favoritos"
+				"delete": "Eliminar"
 			}
 		},
 		"attributes": {
@@ -951,9 +922,6 @@
 			"dateAndTime": "Data e hora"
 		},
 		"repeat": {
-			"everyDay": "Todos os Dias",
-			"everyWeek": "Todas as Semanas",
-			"every30d": "A cada 30 Dias",
 			"mode": "Modo de repetição",
 			"monthly": "Mensal",
 			"fromCurrentDate": "Da data de conclusão",

@@ -1,7 +1,7 @@
 <template>
 	<Modal
 		variant="hint-modal"
-		@close="$router.back()"
+		@close="goBack()"
 	>
 		<Card
 			class="has-no-shadow"
@@ -16,7 +16,7 @@
 				v-focus
 				:label="$t('filters.attributes.title')"
 				:class="{ 'is-danger': !titleValid }"
-				:disabled="isLoading"
+				:disabled="showLoading"
 				:placeholder="$t('filters.attributes.titlePlaceholder')"
 				type="text"
 				:error="titleValid ? null : $t('filters.create.titleRequired')"
@@ -27,16 +27,16 @@
 					id="description"
 					:key="filter.id"
 					v-model="filter.description"
-					:class="{ 'disabled': isLoading}"
-					:disabled="isLoading"
+					:class="{ 'disabled': showLoading}"
+					:disabled="showLoading"
 					:placeholder="$t('filters.attributes.descriptionPlaceholder')"
 				/>
 			</FormField>
 			<FormField :label="$t('filters.title')">
 				<Filters
 					v-model="filter.filters"
-					:class="{ 'disabled': isLoading}"
-					:disabled="isLoading"
+					:class="{ 'disabled': showLoading}"
+					:disabled="showLoading"
 					class="has-no-shadow has-no-border"
 					:has-footer="false"
 					:change-immediately="true"
@@ -46,7 +46,7 @@
 			<template #footer>
 				<XButton
 					:loading="isLoading"
-					:disabled="isLoading || !titleValid"
+					:disabled="showLoading || !titleValid"
 					class="is-fullwidth"
 					@click="create()"
 				>
@@ -66,10 +66,13 @@ import Filters from '@/components/project/partials/Filters.vue'
 
 import {getProjectIdFromSavedFilterId} from '@/client/queries/projects'
 import {useIsAlive} from '@/composables/useIsAlive'
+import {useGoBack} from '@/composables/useGoBack'
 import {useSavedFilterDraft} from '@/composables/useSavedFilter'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useCreateSavedFilterMutation} from '@/client/queries/savedFilters'
 
 const router = useRouter()
+const goBack = useGoBack()
 
 const alive = useIsAlive()
 
@@ -81,6 +84,7 @@ const {
 } = useSavedFilterDraft()
 const createMutation = useCreateSavedFilterMutation(() => alive.value)
 const isLoading = createMutation.isPending
+const showLoading = useDelayedLoading(isLoading)
 
 async function create() {
 	if (isLoading.value) {

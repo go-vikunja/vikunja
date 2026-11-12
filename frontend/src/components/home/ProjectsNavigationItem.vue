@@ -2,7 +2,7 @@
 	<li
 		class="list-menu loader-container is-loading-small"
 		:class="{
-			'is-loading': isLoading,
+			'is-loading': showLoading,
 			'is-drop-target': isDropTarget,
 		}"
 		:data-project-id="project.id"
@@ -95,6 +95,7 @@ import {computed, ref, onUnmounted, watch} from 'vue'
 import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragState} from '@/composables/useTaskDragState'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useStorage} from '@vueuse/core'
 
 import type {ProjectResponse} from '@/client/queries/projects'
@@ -118,6 +119,8 @@ const props = defineProps<{
 	canCollapse?: boolean,
 	canEditOrder?: boolean,
 }>()
+
+const showLoading = useDelayedLoading(() => props.isLoading)
 
 const {draggedTask} = useTaskDragState()
 const isHoveredDuringDrag = ref(false)

@@ -18,7 +18,7 @@ import {getRandomColorHex} from '@/helpers/color/randomColor'
 import {runWrites} from '@/helpers/runWrites'
 import {error} from '@/message'
 import {i18n} from '@/i18n'
-import {taskRemindersFromSettings} from '@/modelTypes/IUserSettings'
+import {taskRemindersFromSettings} from '@/helpers/userSettings'
 import {
 	assertClientRequestContext,
 	captureClientRequestContext,
@@ -88,7 +88,7 @@ export function useQuickAddTask() {
 	}
 
 	async function build(input: Partial<Task>, context: ClientRequestContext) {
-		const mode = auth.settings.frontendSettings.quickAddMagicMode
+		const mode = auth.settings.frontend_settings.quick_add_magic_mode
 		const parsed = parseTaskText(input.title ?? '', mode)
 		// A title that is only magic stays a literal title: nothing parsed out of it may move or decorate the task.
 		const magicOnly = !parsed.text
@@ -106,7 +106,7 @@ export function useQuickAddTask() {
 			return user ? {...user, match} : undefined
 		}))
 		assertClientRequestContext(context)
-		const defaults = taskRemindersFromSettings(auth.settings.frontendSettings.quickAddDefaultReminders)
+		const defaults = taskRemindersFromSettings(auth.settings.frontend_settings.quick_add_default_reminders)
 		return {
 			task: buildQuickAddTask(
 				parsed,
@@ -127,7 +127,7 @@ export function useQuickAddTask() {
 		await runWrites(labels, label => {
 			assertClientRequestContext(context)
 			return addLabel.mutateAsync({taskId: task.id!, label: {...label, id: label.id!}})
-		}, config.concurrentWrites)
+		}, config.concurrent_writes)
 		return {task: {...task, labels: [...(task.labels ?? []), ...labels]}, skipped}
 	}
 
@@ -136,7 +136,7 @@ export function useQuickAddTask() {
 		await runWrites(built.task.assignees ?? [], user => {
 			assertClientRequestContext(context)
 			return addAssignee.mutateAsync({taskId: task.id!, user: {...user, id: user.id!}})
-		}, config.concurrentWrites)
+		}, config.concurrent_writes)
 		return addLabelsToTask(
 			{task: {...task, assignees: built.task.assignees}, parsedLabels: built.parsedLabels},
 			context,
@@ -167,7 +167,7 @@ export function useQuickAddTask() {
 			} catch {
 				assertClientRequestContext(context)
 			}
-		}, config.concurrentWrites)
+		}, config.concurrent_writes)
 		return result
 	}
 

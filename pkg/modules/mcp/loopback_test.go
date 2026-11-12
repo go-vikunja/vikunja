@@ -35,7 +35,10 @@ import (
 
 func newTestCaller(t *testing.T) (*Module, context.Context) {
 	t.Helper()
-	m := newTestModule(t)
+	return newTestCallerFor(t, newTestModule(t))
+}
+func newTestCallerFor(t *testing.T, m *Module) (*Module, context.Context) {
+	t.Helper()
 	m.authorize = func(*models.APIToken, string, string) bool { return true }
 	caller := httptest.NewRequest(http.MethodPost, "/api/v2/mcp", nil)
 	caller.Header.Set("Authorization", "Bearer tk_test")
@@ -170,6 +173,14 @@ func TestCallTool_UsesTheResponseRequestID(t *testing.T) {
 	req, err := tl.newRequest(ctx, ec, map[string]json.RawMessage{"id": json.RawMessage(`1`)})
 	require.NoError(t, err)
 	assert.Equal(t, "generated-1", req.Header.Get(echo.HeaderXRequestID))
+}
+func TestCallTool_MarksTheRequestAsLoopback(t *testing.T) {
+	m, ctx := newTestCaller(t)
+	assert.False(t, IsLoopback(ctx))
+	tl := m.index["things_read"]
+	req, err := tl.newRequest(ctx, humabridge.EchoContextFrom(ctx), map[string]json.RawMessage{"id": json.RawMessage(`1`)})
+	require.NoError(t, err)
+	assert.True(t, IsLoopback(req.Context()))
 }
 func TestCallTool_KeepsTheForwardedHost(t *testing.T) {
 	m, ctx := newTestCaller(t)

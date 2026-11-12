@@ -46,6 +46,20 @@ func GetCaldavTokens(u *User) (tokens []*Token, err error) {
 	return getTokensForKind(s, u, TokenCaldavAuth)
 }
 
+// GetCaldavTokensPage returns one 1-based page of the user's CalDAV tokens, oldest first, and their total count.
+func GetCaldavTokensPage(u *User, page, perPage int) (tokens []*Token, total int64, err error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	tokens = []*Token{}
+	total, err = s.
+		Where("kind = ? AND user_id = ?", TokenCaldavAuth, u.ID).
+		OrderBy("id ASC").
+		Limit(perPage, (page-1)*perPage).
+		FindAndCount(&tokens)
+	return
+}
+
 // GetCaldavTokensWithSession is like GetCaldavTokens but uses an existing
 // database session instead of creating a new one. This avoids nested sessions
 // which cause deadlocks with SQLite's single-writer model.

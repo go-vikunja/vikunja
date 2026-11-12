@@ -146,7 +146,7 @@ func (share *LinkSharing) toUser() *user.User {
 
 // Create creates a new link share for a given project
 // @Summary Share a project via link
-// @Description Share a project via link. The user needs to have write-access to the project to be able do this.
+// @Description Share a project via link. The user needs to be admin of the project to be able do this.
 // @tags sharing
 // @Accept json
 // @Produce json
@@ -241,13 +241,7 @@ func (share *LinkSharing) Update(_ *xorm.Session, _ web.Auth) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares [get]
 func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	// Don't allow link share authenticated users to list link shares
-	if _, is := a.(*LinkSharing); is {
-		return nil, 0, 0, ErrGenericForbidden{}
-	}
-
-	project := &Project{ID: share.ProjectID}
-	can, err := project.IsAdmin(s, a)
+	can, err := share.canDoLinkShare(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -281,12 +275,9 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		userIDs = append(userIDs, s.SharedByID)
 	}
 
-	users := make(map[int64]*user.User)
-	if len(userIDs) > 0 {
-		err = s.In("id", userIDs).Find(&users)
-		if err != nil {
-			return nil, 0, 0, err
-		}
+	users, err := user.GetUsersByIDs(s, userIDs)
+	if err != nil {
+		return nil, 0, 0, err
 	}
 
 	for _, s := range shares {
@@ -309,7 +300,7 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 // Delete removes a link share
 // @Summary Remove a link share
-// @Description Remove a link share. The user needs to have write-access to the project to be able do this.
+// @Description Remove a link share. The user needs to be admin of the project to be able do this.
 // @tags sharing
 // @Accept json
 // @Produce json
@@ -322,8 +313,14 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares/{share} [delete]
 func (share *LinkSharing) Delete(s *xorm.Session, _ web.Auth) (err error) {
-	_, err = s.Where("id = ? AND project_id = ?", share.ID, share.ProjectID).Delete(share)
-	return
+	deleted, err := s.Where("id = ? AND project_id = ?", share.ID, share.ProjectID).Delete(&LinkSharing{})
+	if err != nil {
+		return err
+	}
+	if deleted == 0 {
+		return ErrProjectShareDoesNotExist{ID: share.ID}
+	}
+	return nil
 }
 
 // GetLinkShareByHash returns a link share by hash
@@ -333,10 +330,22 @@ func GetLinkShareByHash(s *xorm.Session, hash string) (share *LinkSharing, err e
 	if err != nil {
 		return
 	}
+	if has {
+		has, err = linkShareProjectIsLive(s, share)
+		if err != nil {
+			return
+		}
+	}
 	if !has {
 		return share, ErrProjectShareDoesNotExist{Hash: hash}
 	}
 	return
+}
+
+func linkShareProjectIsLive(s *xorm.Session, share *LinkSharing) (bool, error) {
+	return s.Table("projects").
+		Where(builder.And(builder.Eq{"id": share.ProjectID}, builder.IsNull{"deleted_at"})).
+		Exist()
 }
 
 // GetProjectByShareHash returns a link share by its hash
@@ -356,6 +365,12 @@ func GetLinkShareByID(s *xorm.Session, id int64) (share *LinkSharing, err error)
 	has, err := s.Where("id = ?", id).Get(share)
 	if err != nil {
 		return
+	}
+	if has {
+		has, err = linkShareProjectIsLive(s, share)
+		if err != nil {
+			return
+		}
 	}
 	if !has {
 		return share, ErrProjectShareDoesNotExist{ID: id}

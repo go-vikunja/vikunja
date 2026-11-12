@@ -17,8 +17,11 @@
 package files
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"net/http/httptest"
 	"testing"
 
 	"code.vikunja.io/api/pkg/models"
@@ -61,5 +64,48 @@ func TestBuildUploadResult(t *testing.T) {
 			assert.Equal(t, "first", r.Errors[0].Message)
 			assert.Equal(t, "second", r.Errors[1].Message)
 		}
+	})
+}
+
+type trackedCloser struct {
+	io.Reader
+	closed int
+}
+
+func (c *trackedCloser) Close() error {
+	c.closed++
+	return nil
+}
+
+func TestWriteAttachmentPreview(t *testing.T) {
+	t.Run("preview", func(t *testing.T) {
+		content := &trackedCloser{Reader: bytes.NewReader([]byte("preview"))}
+		rec := httptest.NewRecorder()
+
+		WriteAttachmentPreview(rec, &models.TaskAttachmentPreview{
+			ReadCloser: content,
+			Mime:       "image/jpeg",
+			Size:       7,
+		})
+
+		assert.Equal(t, "preview", rec.Body.String())
+		assert.Equal(t, "image/jpeg", rec.Header().Get("Content-Type"))
+		assert.Equal(t, "7", rec.Header().Get("Content-Length"))
+		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
+		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+		assert.Equal(t, 1, content.closed)
+	})
+
+	t.Run("preview of unknown size", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+
+		WriteAttachmentPreview(rec, &models.TaskAttachmentPreview{
+			ReadCloser: io.NopCloser(bytes.NewReader([]byte("preview"))),
+			Mime:       "image/jpeg",
+			Size:       -1,
+		})
+
+		assert.Equal(t, "preview", rec.Body.String())
+		assert.Empty(t, rec.Header().Get("Content-Length"))
 	})
 }

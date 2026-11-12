@@ -31,9 +31,19 @@ func (w *Webhook) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 		return w.UserID == a.GetID(), int(PermissionRead), nil
 	}
 
-	// Project-level webhook: delegate to project
-	p := &Project{ID: w.ProjectID}
-	return p.CanRead(s, a)
+	can, err := canReadProjectWebhooks(s, w.ProjectID, a)
+	return can, int(PermissionWrite), err
+}
+
+// Target URLs often embed the receiver's credential, so reading them needs write.
+// Archived projects stay listable.
+func canReadProjectWebhooks(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	p := &Project{ID: projectID}
+	can, err := p.CanWrite(s, a)
+	if IsErrProjectIsArchived(err) {
+		return can, nil
+	}
+	return can, err
 }
 
 func (w *Webhook) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
@@ -54,7 +64,6 @@ func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	// Load the webhook from DB to check ownership
 	if w.ID > 0 {
 		existing := &Webhook{ID: w.ID}
 		has, err := s.Get(existing)
@@ -64,8 +73,13 @@ func (w *Webhook) canDoWebhook(s *xorm.Session, a web.Auth) (bool, error) {
 		if !has {
 			return false, nil
 		}
-		w.UserID = existing.UserID
-		w.ProjectID = existing.ProjectID
+		// User routes set UserID, project routes the URL project.
+		if w.UserID > 0 {
+			return existing.ProjectID == 0 && existing.UserID == w.UserID && w.UserID == a.GetID(), nil
+		}
+		if existing.ProjectID == 0 || existing.ProjectID != w.ProjectID {
+			return false, nil
+		}
 	}
 
 	// User-level webhook: user owns it or is creating new

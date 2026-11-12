@@ -189,6 +189,7 @@ import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
 
 import {useTasks} from '@/composables/useTasks'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useCreateTaskRelationMutation, useDeleteTaskRelationMutation, useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import {createTaskDraft, getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'
@@ -230,12 +231,12 @@ type TaskRelation = {kind: IRelationKind, task: ITask}
 
 const createRelation = useCreateTaskRelationMutation()
 const deleteRelation = useDeleteTaskRelationMutation()
-const isSaving = computed(() => createRelation.isPending.value || deleteRelation.isPending.value)
+const isSaving = useDelayedLoading(() => createRelation.isPending.value || deleteRelation.isPending.value)
 
 const relatedTasks = computed(() => props.initialRelatedTasks ?? {})
 
 const newTaskRelation: TaskRelation = reactive({
-	kind: authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind,
+	kind: authStore.settings.frontend_settings.default_task_relation_type as IRelationKind,
 	task: createTaskDraft(),
 })
 
@@ -307,7 +308,7 @@ async function addTaskRelation() {
 		relation_kind: newTaskRelation.kind,
 	})
 	newTaskRelation.task = createTaskDraft()
-	newTaskRelation.kind = authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind
+	newTaskRelation.kind = authStore.settings.frontend_settings.default_task_relation_type as IRelationKind
 	saved.value = true
 	showNewRelationForm.value = false
 	setTimeout(() => {

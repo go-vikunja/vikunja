@@ -18,6 +18,8 @@ package apiv2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -148,6 +150,11 @@ func convertToHTML(ctx context.Context, fields ...*string) error {
 		return nil
 	}
 
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
@@ -155,7 +162,10 @@ func convertToHTML(ctx context.Context, fields ...*string) error {
 		if field == nil {
 			continue
 		}
-		htmlDesc, err := richtext.MarkdownToHTMLWithMentions(s, *field)
+		htmlDesc, err := richtext.MarkdownToHTMLWithMentions(s, a, *field)
+		if errors.Is(err, richtext.ErrTooManyTableCells) {
+			return models.ErrInvalidData{Message: fmt.Sprintf("Tables may have at most %d cells in total.", richtext.MaxTableCells)}
+		}
 		if err != nil {
 			return err
 		}

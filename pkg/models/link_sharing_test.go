@@ -111,6 +111,23 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 			assert.Empty(t, sharing.Password)
 		}
 	})
+	t.Run("no creator emails", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		share := &LinkSharing{
+			ProjectID: 1,
+		}
+		all, _, _, err := share.ReadAll(s, doer, "", 1, -1)
+		require.NoError(t, err)
+		shares := all.([]*LinkSharing)
+		require.NotEmpty(t, shares)
+		for _, sharing := range shares {
+			require.NotNil(t, sharing.SharedBy)
+			assert.Empty(t, sharing.SharedBy.Email)
+		}
+	})
 	t.Run("search", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -289,6 +306,22 @@ func TestGetLinkShareFromClaims(t *testing.T) {
 		assert.Equal(t, dbShare.ProjectID, got.ProjectID)
 		assert.Equal(t, dbShare.Permission, got.Permission)
 		assert.Equal(t, dbShare.SharedByID, got.SharedByID)
+	})
+
+	t.Run("share of a trashed project is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		dbShare, err := GetLinkShareByID(s, 1)
+		require.NoError(t, err)
+		require.NoError(t, (&Project{ID: dbShare.ProjectID}).Delete(s, &user.User{ID: 1}))
+
+		claims := buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, dbShare.Permission, dbShare.SharedByID)
+		_, err = GetLinkShareFromClaims(s, claims)
+		require.Error(t, err)
+		_, err = GetLinkShareByHash(s, dbShare.Hash)
+		assert.True(t, IsErrProjectShareDoesNotExist(err))
 	})
 
 	t.Run("deleted share is rejected", func(t *testing.T) {
@@ -486,7 +519,7 @@ func TestLinkSharing_AttachmentIsNotAttributedToCollidingUser(t *testing.T) {
 
 	share := &LinkSharing{ID: 2, Hash: "test2", ProjectID: 2, Permission: PermissionWrite}
 
-	ta := TaskAttachment{TaskID: 32} // task 32 lives in project 2
+	ta := TaskAttachment{TaskID: 13}
 	content := []byte("testingstuff")
 	require.NoError(t, ta.NewAttachment(s, bytes.NewReader(content), "testfile", uint64(len(content)), share))
 

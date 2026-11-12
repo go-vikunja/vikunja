@@ -23,7 +23,9 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
@@ -162,7 +164,7 @@ func (sess *Session) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, pe
 
 	err = s.
 		Where(where).
-		OrderBy("last_active DESC").
+		OrderBy("last_active DESC, id DESC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&sessions)
 	if err != nil {
@@ -175,8 +177,23 @@ func (sess *Session) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, pe
 
 // Delete deletes a session by ID, scoped to the owning user.
 func (sess *Session) Delete(s *xorm.Session, a web.Auth) error {
-	_, err := s.Where("id = ? AND user_id = ?", sess.ID, a.GetID()).Delete(&Session{})
-	return err
+	deleted, err := s.Where("id = ? AND user_id = ?", sess.ID, a.GetID()).Delete(&Session{})
+	if err != nil || deleted == 0 {
+		return err
+	}
+	return revokeSessions(s, &SessionsRevokedEvent{UserID: a.GetID(), SessionID: sess.ID})
+}
+
+// Sockets close only once the caller dispatches s's pending events.
+func DeleteSessionByID(s *xorm.Session, id string) (*Session, error) {
+	session, err := GetSessionByID(s, id)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := s.Where("id = ?", id).Delete(&Session{}); err != nil {
+		return nil, err
+	}
+	return session, revokeSessions(s, &SessionsRevokedEvent{UserID: session.UserID, SessionID: id})
 }
 
 // UpdateSessionLastActive updates the last_active timestamp of a session.
@@ -213,7 +230,20 @@ func RotateRefreshToken(s *xorm.Session, session *Session) (newRawToken string, 
 // DeleteAllUserSessions removes all sessions for a user (e.g., on password change).
 func DeleteAllUserSessions(s *xorm.Session, userID int64) error {
 	_, err := s.Where("user_id = ?", userID).Delete(&Session{})
-	return err
+	if err != nil {
+		return err
+	}
+	return revokeSessions(s, &SessionsRevokedEvent{UserID: userID})
+}
+
+func revokeSessions(s *xorm.Session, event *SessionsRevokedEvent) error {
+	if err := user.InvalidateSessionAuthCacheOnCommit(s, event.UserID); err != nil {
+		return err
+	}
+	if err := events.DispatchOnCommit(s, event); err != nil {
+		return err
+	}
+	return nil
 }
 
 // RegisterSessionCleanupCron registers a cron to delete sessions whose refresh

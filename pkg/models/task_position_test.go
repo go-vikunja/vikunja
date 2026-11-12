@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -277,6 +278,40 @@ func TestResolveTaskPositionConflicts(t *testing.T) {
 			assert.Greater(t, p.Position, 0.0)
 			assert.Less(t, p.Position, 1000.0)
 		}
+	})
+}
+
+func TestTaskPosition_Update(t *testing.T) {
+	t.Run("task moved to a forbidden project after the permission check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		tp := &TaskPosition{
+			TaskID:        1,
+			ProjectViewID: 1,
+			Position:      12345,
+		}
+		can, err := tp.CanUpdate(s, u)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		// Project 2 belongs to user 3 and is not shared with user 1.
+		_, err = s.ID(1).Cols("project_id", "index").Update(&Task{
+			ProjectID: 2,
+			Index:     9999,
+		})
+		require.NoError(t, err)
+
+		err = tp.Update(s, u)
+		require.ErrorIs(t, err, ErrGenericForbidden{})
+		require.NoError(t, s.Commit())
+
+		db.AssertMissing(t, "task_positions", map[string]interface{}{
+			"task_id":  1,
+			"position": 12345,
+		})
 	})
 }
 
@@ -764,4 +799,26 @@ func TestBulkInsertTaskPositions(t *testing.T) {
 func TestViewLockOrder(t *testing.T) {
 	ids := viewLockOrder([]*ProjectView{{ID: 4}, {ID: 1}, {ID: 4}, {ID: 2}})
 	assert.Equal(t, []int64{1, 2, 4}, ids)
+}
+
+func TestAddPositionsToTasks(t *testing.T) {
+	t.Run("only includes positions of views in the task's project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// View 5 belongs to project 2, task 1 to project 1.
+		_, err := s.Insert(&TaskPosition{TaskID: 1, ProjectViewID: 5, Position: 10})
+		require.NoError(t, err)
+
+		task := &Task{ID: 1}
+		require.NoError(t, AddPositionsToTasks(s, []*Task{task}))
+
+		viewIDs := make([]int64, 0, len(task.Positions))
+		for _, p := range task.Positions {
+			viewIDs = append(viewIDs, p.ProjectViewID)
+		}
+		assert.Contains(t, viewIDs, int64(1))
+		assert.NotContains(t, viewIDs, int64(5))
+	})
 }

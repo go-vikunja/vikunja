@@ -1264,6 +1264,48 @@ func TestCaldavProppatch(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
 	})
 
+	t.Run("Duplicate properties get a single propstat", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		const dupBody = `<D:propertyupdate xmlns:D="DAV:"><D:set><D:prop><D:displayname>a</D:displayname></D:prop></D:set>` +
+			`<D:remove><D:prop><D:displayname/><D:displayname/></D:prop></D:remove></D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, dupBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+
+		var ms multistatus
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &ms))
+		require.Len(t, ms.Responses, 1)
+		require.Len(t, ms.Responses[0].Propstats, 1)
+	})
+
+	t.Run("Too many properties returns 413", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		var props strings.Builder
+		for i := range 101 {
+			fmt.Fprintf(&props, "<x:p%d/>", i)
+		}
+		body := `<D:propertyupdate xmlns:D="DAV:" xmlns:x="urn:x"><D:set><D:prop>` + props.String() + `</D:prop></D:set></D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, body, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Result().StatusCode)
+	})
+
+	t.Run("Overlong property namespace returns 400", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		body := `<D:propertyupdate xmlns:D="DAV:" xmlns:x="` + strings.Repeat("x", 257) + `"><D:set><D:prop><x:a/></D:prop></D:set></D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, body, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
+	})
+
+	t.Run("Oversized body returns 413", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		body := `<D:propertyupdate xmlns:D="DAV:"><D:set><D:prop><D:displayname>` + strings.Repeat("a", 64*1024) + `</D:displayname></D:prop></D:set></D:propertyupdate>`
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, body, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Result().StatusCode)
+	})
+
 	t.Run("Nonexistent project returns 404", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, setBody, nil, map[string]string{"project": "999999"})
@@ -1392,7 +1434,7 @@ END:VCALENDAR`
 	})
 
 	t.Run("Token older than the retention window returns 403 valid-sync-token", func(t *testing.T) {
-		staleToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-models.TaskDeleteRetention-time.Hour).Unix())
+		staleToken := fmt.Sprintf(`data:,"36-%d"`, time.Now().Add(-models.TrashRetention-time.Hour).Unix())
 		rec := doSyncReport(t, staleToken)
 		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
 		assert.Contains(t, rec.Body.String(), "valid-sync-token")
@@ -1423,6 +1465,102 @@ END:VCALENDAR`
 		body := rec.Body.String()
 		assert.Contains(t, body, "uid-caldav-test-parent-task.ics")
 		assert.Contains(t, body, "404 Not Found")
+	})
+}
+
+func TestCaldavSyncCollectionAfterPurge(t *testing.T) {
+	deletedAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)
+	purge := func(t *testing.T, taskID int64) {
+		t.Helper()
+		s := db.NewSession()
+		defer s.Close()
+		_, err := s.Unscoped().ID(taskID).Cols("deleted_at").NoAutoTime().Update(&models.Task{
+			DeletedAt: deletedAt,
+		})
+		require.NoError(t, err)
+		task := &models.Task{ID: taskID}
+		can, err := task.CanDeletePermanently(s, &testuser15)
+		require.NoError(t, err)
+		require.True(t, can)
+		require.NoError(t, task.DeletePermanently(s, &testuser15))
+		_, err = s.ID(int64(36)).Cols("updated").NoAutoTime().Update(&models.Project{
+			Updated: deletedAt,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+	}
+	syncReport := func(t *testing.T, e *echo.Echo, token string) *httptest.ResponseRecorder {
+		t.Helper()
+		body := `<D:sync-collection xmlns:D="DAV:"><D:sync-token>` + token +
+			`</D:sync-token><D:sync-level>1</D:sync-level><D:prop><D:getetag/></D:prop></D:sync-collection>`
+		rec, err := newCaldavTestRequestWithUser(
+			t, e, "REPORT", caldav.ProjectHandler, &testuser15, body, nil,
+			map[string]string{
+				"project": "36",
+			},
+		)
+		require.NoError(t, err)
+		return rec
+	}
+	fullSync := func(t *testing.T, e *echo.Echo) string {
+		t.Helper()
+		rec := syncReport(t, e, "")
+		require.Equal(t, http.StatusMultiStatus, rec.Code)
+		response := struct {
+			SyncToken string `xml:"sync-token"`
+		}{}
+		require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &response))
+		require.NotEmpty(t, response.SyncToken)
+		assert.NotContains(t, rec.Body.String(), "uid-caldav-test.ics")
+		return response.SyncToken
+	}
+
+	t.Run("purge invalidates older and same-second tokens", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		purge(t, 40)
+		for _, offset := range []time.Duration{
+			-time.Second,
+			0,
+		} {
+			token := fmt.Sprintf(`data:,"36-%d"`, deletedAt.Add(offset).Unix())
+			rec := syncReport(t, e, token)
+			assert.Equal(t, http.StatusForbidden, rec.Code)
+			assert.Contains(t, rec.Body.String(), "valid-sync-token")
+		}
+	})
+
+	t.Run("full resync produces a usable token", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		purge(t, 40)
+		token := fullSync(t, e)
+		rec := syncReport(t, e, token)
+		assert.Equal(t, http.StatusMultiStatus, rec.Code)
+	})
+
+	t.Run("purge generation leaves same-second live changes visible", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		purge(t, 40)
+		token := fullSync(t, e)
+		s := db.NewSession()
+		_, err := s.ID(int64(41)).Cols("updated").NoAutoTime().Update(&models.Task{
+			Updated: deletedAt,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+		rec := syncReport(t, e, token)
+		assert.Equal(t, http.StatusMultiStatus, rec.Code)
+		assert.Contains(t, rec.Body.String(), "uid-caldav-test-parent-task.ics")
+	})
+
+	t.Run("a second purge in the same second invalidates the resync token", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		purge(t, 40)
+		token := fullSync(t, e)
+		purge(t, 41)
+		rec := syncReport(t, e, token)
+		assert.Equal(t, http.StatusForbidden, rec.Code)
+		assert.Contains(t, rec.Body.String(), "valid-sync-token")
 	})
 }
 

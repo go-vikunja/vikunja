@@ -222,6 +222,76 @@ func TestHumaUserUpdateSettings(t *testing.T) {
 	})
 }
 
+func TestHumaUserSettings_Patch(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+	const path = "/api/v2/user/settings/general"
+
+	readSettings := func(t *testing.T) map[string]any {
+		t.Helper()
+		rec := humaRequest(t, e, http.MethodGet, path, "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		var settings map[string]any
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &settings))
+		return settings
+	}
+
+	rec := humaRequest(t, e, http.MethodPut, path, `{
+		"name":"Before Patch",
+		"week_start":1,
+		"overdue_tasks_reminders_time":"10:00",
+		"timezone":"Europe/Berlin",
+		"frontend_settings":{"sidebar_width":300,"color_schema":"dark"}
+	}`, token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	t.Run("Get returns the stored settings", func(t *testing.T) {
+		settings := readSettings(t)
+		assert.Equal(t, "Before Patch", settings["name"])
+		assert.InDelta(t, 1, settings["week_start"], 0)
+		assert.Equal(t, "10:00", settings["overdue_tasks_reminders_time"])
+		assert.Equal(t, "Europe/Berlin", settings["timezone"])
+		assert.Equal(t, map[string]any{
+			"sidebar_width": float64(300),
+			"color_schema":  "dark",
+		}, settings["frontend_settings"])
+	})
+	t.Run("Patch keeps fields it does not mention", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPatch, path, `{"name":"Patched"}`, token, "application/merge-patch+json")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		settings := readSettings(t)
+		assert.Equal(t, "Patched", settings["name"])
+		assert.InDelta(t, 1, settings["week_start"], 0)
+		assert.Equal(t, "10:00", settings["overdue_tasks_reminders_time"])
+		assert.Equal(t, "Europe/Berlin", settings["timezone"])
+		assert.Equal(t, map[string]any{
+			"sidebar_width": float64(300),
+			"color_schema":  "dark",
+		}, settings["frontend_settings"])
+	})
+	t.Run("Patch merges into frontend settings", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPatch, path, `{"frontend_settings":{"sidebar_width":400}}`, token, "application/merge-patch+json")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		settings := readSettings(t)
+		assert.Equal(t, "Patched", settings["name"])
+		assert.InDelta(t, 1, settings["week_start"], 0)
+		assert.Equal(t, map[string]any{
+			"sidebar_width": float64(400),
+			"color_schema":  "dark",
+		}, settings["frontend_settings"])
+	})
+	t.Run("Unauthenticated", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodGet, path, "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+
+		rec = humaRequest(t, e, http.MethodPatch, path, `{"name":"x"}`, "", "application/merge-patch+json")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+	})
+}
+
 func TestHumaUserAvatarProvider(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)

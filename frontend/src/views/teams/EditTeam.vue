@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="loader-container is-max-width-desktop"
-		:class="{ 'is-loading': teamLoading }"
+		:class="{ 'is-loading': showTeamLoading }"
 	>
 		<EditTeamForm
 			v-if="team && userIsAdmin && !team.external_id"
@@ -141,6 +141,10 @@
 					{{ $t('team.edit.leave.text1') }}<br>
 					{{ $t('team.edit.leave.text2') }}
 				</p>
+				<ProjectAccessCleanupList
+					:intro="$t('team.edit.leave.cleanupText')"
+					perspective="self"
+				/>
 			</template>
 		</Modal>
 
@@ -159,6 +163,7 @@
 					{{ $t('team.edit.delete.text1') }}<br>
 					{{ $t('team.edit.delete.text2') }}
 				</p>
+				<ProjectAccessCleanupList :intro="$t('team.edit.delete.cleanupText')" />
 			</template>
 		</Modal>
 
@@ -177,6 +182,7 @@
 					{{ $t('team.edit.deleteUser.text1') }}<br>
 					{{ $t('team.edit.deleteUser.text2') }}
 				</p>
+				<ProjectAccessCleanupList :intro="$t('team.edit.deleteUser.cleanupText')" />
 			</template>
 		</Modal>
 	</div>
@@ -188,11 +194,13 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
+import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
 import EditTeamForm from '@/components/teams/EditTeamForm.vue'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
 import {useTeam} from '@/composables/useTeams'
 import {useUserSearch} from '@/composables/useUserSearch'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {PERMISSIONS} from '@/constants/permissions'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'
@@ -215,6 +223,7 @@ const removeMemberMutation = useRemoveTeamMemberMutation()
 const leaveMutation = useLeaveTeamMutation()
 const toggleAdminMutation = useToggleTeamMemberAdminMutation()
 const teamLoading = computed(() => isFetching.value || updateMutation.isPending.value || deleteMutation.isPending.value)
+const showTeamLoading = useDelayedLoading(teamLoading)
 const membersLoading = computed(() => addMemberMutation.isPending.value || removeMemberMutation.isPending.value || toggleAdminMutation.isPending.value)
 const userSearch = ref('')
 const {users: userResults, isFetching: usersLoading} = useUserSearch(userSearch)

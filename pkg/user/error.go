@@ -953,3 +953,26 @@ func (err ErrNoPendingEmail) HTTPError() web.HTTPError {
 		Message:  "There is no pending email change to confirm.",
 	}
 }
+
+type ErrTooManyReauthAttempts struct {
+	UserID int64
+}
+
+func IsErrTooManyReauthAttempts(err error) bool {
+	_, ok := err.(ErrTooManyReauthAttempts)
+	return ok
+}
+
+func (err ErrTooManyReauthAttempts) Error() string {
+	return fmt.Sprintf("Too many failed re-authentication attempts [UserID: %d]", err.UserID)
+}
+
+const ErrCodeTooManyReauthAttempts = 1041
+
+func (err ErrTooManyReauthAttempts) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusTooManyRequests,
+		Code:     ErrCodeTooManyReauthAttempts,
+		Message:  "Too many failed attempts. Please wait a few minutes and try again.",
+	}
+}

@@ -1,6 +1,6 @@
 <template>
 	<div
-		:class="{ 'is-loading': update.isPending.value }"
+		:class="{ 'is-loading': updating }"
 		class="defer-task loading-container"
 		@click.stop
 		@mousedown.stop
@@ -47,6 +47,7 @@ import {useDebounceFn} from '@vueuse/core'
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 
 import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import type {Task as ITask} from '@/client/generated'
 
 const props = defineProps<{
@@ -58,6 +59,7 @@ const emit = defineEmits<{
 }>()
 
 const update = useUpdateTaskMutation()
+const updating = useDelayedLoading(update.isPending)
 const task = ref<ITask>()
 
 // We're saving the due date separately to prevent null errors in very short periods where the task is null.
@@ -95,7 +97,7 @@ async function updateDueDate() {
 		return
 	}
 
-	if (+new Date(dueDate.value) === +lastValue.value) {
+	if (lastValue.value != null && +new Date(dueDate.value) === +lastValue.value) {
 		return
 	}
 

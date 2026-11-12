@@ -17,13 +17,21 @@
 package models
 
 import (
+	"bytes"
+	"context"
 	"testing"
+	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestDeleteUser(t *testing.T) {
@@ -47,6 +55,93 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 9}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 10}, false)
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 11}, false)
+	})
+	t.Run("purges the user's trashed projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		_, err := s.Table("projects").In("id", []int64{
+			45,
+			46,
+		}).Update(map[string]any{"owner_id": 6})
+		require.NoError(t, err)
+
+		events.ClearDispatchedEvents()
+		require.NoError(t, DeleteUser(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 45})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 46})
+		doers := purgedProjectDoers(t)
+		assert.Contains(t, doers, int64(45))
+		assert.Contains(t, doers, int64(46))
+		assert.Nil(t, doers[45], "the system purges")
+	})
+	t.Run("hands a shared trashed project over", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		_, err := s.Table("projects").In("id", []int64{
+			45,
+			46,
+		}).Update(map[string]any{"owner_id": 6})
+		require.NoError(t, err)
+		_, err = s.Insert(&ProjectUser{
+			ProjectID:  45,
+			UserID:     4,
+			Permission: PermissionRead,
+		})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":       45,
+			"owner_id": 4,
+		}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 46}, false)
+		db.AssertExists(t, "users_projects", map[string]interface{}{
+			"project_id": 45,
+			"user_id":    4,
+			"permission": PermissionAdmin,
+		}, false)
+	})
+	t.Run("keeps a trashed sub-project under someone else's trashed parent", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		_, err := s.Table("projects").Where("id = ?", 46).Update(map[string]any{"owner_id": 6})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 6}))
+		require.NoError(t, s.Commit())
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 45}, false)
+		db.AssertExists(t, "projects", map[string]interface{}{"id": 46}, false)
+	})
+	t.Run("removes linked identities", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		db.AssertExists(t, "user_identities", map[string]interface{}{"user_id": 6}, false)
+
+		err := DeleteUser(s, &user.User{ID: 6})
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "user_identities", map[string]interface{}{"user_id": 6})
+		db.AssertExists(t, "user_identities", map[string]interface{}{"user_id": 1}, false)
 	})
 	t.Run("user with no projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -166,4 +261,187 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertMissing(t, "subscriptions", map[string]interface{}{"user_id": 4})
 		db.AssertMissing(t, "team_members", map[string]interface{}{"user_id": 4})
 	})
+}
+
+// GHSA-4hv6-xc92-j86g
+func TestDeleteUser_RevokesSessions(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	events.ClearDispatchedEvents()
+
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	require.NoError(t, DeleteUser(s, u))
+	assert.Zero(t, events.CountDispatchedEvents((&SessionsRevokedEvent{}).Name()))
+	require.NoError(t, s.Commit())
+	events.DispatchPending(context.Background(), s)
+
+	db.AssertMissing(t, "sessions", map[string]interface{}{"user_id": 1})
+	revoked := events.GetDispatchedEvents((&SessionsRevokedEvent{}).Name())
+	require.Len(t, revoked, 1)
+	require.Equal(t, &SessionsRevokedEvent{UserID: 1}, revoked[0])
+}
+
+func TestDeleteUser_RemovesReactions(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+
+	db.AssertExists(t, "reactions", map[string]interface{}{"user_id": 1}, false)
+
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	require.NoError(t, DeleteUser(s, u))
+	require.NoError(t, s.Commit())
+
+	db.AssertMissing(t, "reactions", map[string]interface{}{"user_id": 1})
+}
+
+func TestDeleteUser_RemovesTimeEntriesWithoutContainer(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	notifications.Fake()
+	t.Cleanup(notifications.Unfake)
+
+	start := time.Date(2018, 12, 1, 10, 0, 0, 0, time.UTC)
+	own := &TimeEntry{
+		UserID:    1,
+		StartTime: start,
+	}
+	ownInProject := &TimeEntry{
+		UserID:    1,
+		ProjectID: 3,
+		StartTime: start,
+	}
+	ownOnForeignTask := &TimeEntry{
+		UserID:    1,
+		TaskID:    32,
+		StartTime: start,
+	}
+	other := &TimeEntry{
+		UserID:    3,
+		StartTime: start,
+	}
+	_, err := s.Insert(own, ownInProject, ownOnForeignTask, other)
+	require.NoError(t, err)
+
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	require.NoError(t, DeleteUser(s, u))
+	require.NoError(t, s.Commit())
+
+	db.AssertMissing(t, "time_entries", map[string]interface{}{"id": own.ID})
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": ownInProject.ID}, false)
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": ownOnForeignTask.ID}, false)
+	db.AssertExists(t, "time_entries", map[string]interface{}{"id": other.ID}, false)
+}
+
+// GHSA-hq66-9qg8-jwqg
+func TestDeleteUser_DoesNotPromoteSharesOnProjectsNotOwned(t *testing.T) {
+	t.Run("user share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		project := &Project{Title: "owned by user1", OwnerID: 1}
+		insertTestProject(t, s, project)
+		_, err := s.Insert(&ProjectUser{ProjectID: project.ID, UserID: 4, Permission: PermissionRead})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "projects", map[string]interface{}{"id": project.ID, "owner_id": 1}, false)
+		db.AssertMissing(t, "users_projects", map[string]interface{}{"user_id": 4})
+	})
+	t.Run("team share", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		project := &Project{Title: "owned by user1", OwnerID: 1}
+		insertTestProject(t, s, project)
+		_, err := s.Insert(&TeamProject{ProjectID: project.ID, TeamID: 9, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&TeamMember{TeamID: 9, UserID: 4})
+		require.NoError(t, err)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "projects", map[string]interface{}{"id": project.ID, "owner_id": 1}, false)
+		db.AssertExists(t, "team_projects", map[string]interface{}{"project_id": project.ID, "team_id": 9, "permission": PermissionRead}, false)
+	})
+}
+
+// GHSA-7gmh-4fw6-8xc5
+func TestDeleteUser_RemovesExportAndAvatarFiles(t *testing.T) {
+	setup := func(t *testing.T) (s *xorm.Session, avatar *files.File) {
+		db.LoadAndAssertFixtures(t)
+		files.InitTestFileFixtures(t)
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		s = db.NewSession()
+		t.Cleanup(func() {
+			events.CleanupPending(s)
+			_ = s.Close()
+		})
+		avatar, err := files.CreateWithSession(s, bytes.NewReader([]byte("avatar")), "avatar.png", 6, &user.User{ID: 4})
+		require.NoError(t, err)
+		_, err = s.ID(4).Cols("export_file_id", "avatar_file_id").Update(&user.User{ExportFileID: 1, AvatarFileID: avatar.ID})
+		require.NoError(t, err)
+		return s, avatar
+	}
+
+	t.Run("removes both", func(t *testing.T) {
+		s, avatar := setup(t)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		assertBlobExists(t, 1)
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		db.AssertMissing(t, "files", map[string]interface{}{"id": avatar.ID})
+		assertBlobMissing(t, 1)
+		assertBlobMissing(t, avatar.ID)
+	})
+	t.Run("keeps the shared default avatar", func(t *testing.T) {
+		s, avatar := setup(t)
+		config.DefaultSettingsAvatarFileID.Set(avatar.ID)
+		t.Cleanup(func() { config.DefaultSettingsAvatarFileID.Set(0) })
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		db.AssertExists(t, "files", map[string]interface{}{"id": avatar.ID}, false)
+		_, err := files.FileStat(avatar)
+		require.NoError(t, err)
+	})
+	t.Run("keeps files when the deletion rolls back", func(t *testing.T) {
+		s, _ := setup(t)
+
+		require.NoError(t, DeleteUser(s, &user.User{ID: 4}))
+		require.NoError(t, s.Rollback())
+		events.CleanupPending(s)
+
+		db.AssertExists(t, "files", map[string]interface{}{"id": 1}, false)
+		assertBlobExists(t, 1)
+	})
+}
+
+func assertBlobExists(t *testing.T, fileID int64) {
+	t.Helper()
+	_, err := files.FileStat(&files.File{ID: fileID})
+	require.NoError(t, err)
 }

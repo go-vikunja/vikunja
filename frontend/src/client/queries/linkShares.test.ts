@@ -4,7 +4,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 const sdk = vi.hoisted(() => ({sharesList: vi.fn(), sharesCreate: vi.fn(), sharesDelete: vi.fn()}))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
-vi.mock('@/helpers/fetcher', () => ({getApiV2BaseUrl: () => '/api/v2/'}))
+vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => 1, getToken: () => null, getTokenIdentity: () => null}))
 
 import {linkShareKeys, linkSharesQuery, createLinkShareDraft, createLinkShareMutationOptions, deleteLinkShareMutationOptions} from './linkShares'
@@ -20,7 +20,7 @@ describe('link shares', () => {
 		sdk.sharesList.mockResolvedValueOnce({data: {items: [{id: 1}], total_pages: 1}})
 		expect(await client.fetchQuery(linkSharesQuery(7))).toEqual([{id: 1}])
 		expect(sdk.sharesList).toHaveBeenCalledOnce()
-		expect(sdk.sharesList).toHaveBeenCalledWith({path: {project: 7}, query: {page: 1, per_page: 1000}, signal: expect.any(AbortSignal)})
+		expect(sdk.sharesList).toHaveBeenCalledWith({path: {project: 7}, query: {page: 1}, signal: expect.any(AbortSignal)})
 	})
 
 	it('creates with a password, caches only the returned share and invalidates only its project', async () => {

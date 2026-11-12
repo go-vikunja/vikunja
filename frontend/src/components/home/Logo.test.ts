@@ -5,11 +5,11 @@ import {ref} from 'vue'
 import Logo from './Logo.vue'
 
 vi.mock('@/stores/auth', () => ({
-	useAuthStore: () => ({settings: {frontendSettings: {allowIconChanges: false}}}),
+	useAuthStore: () => ({settings: {frontend_settings: {allow_icon_changes: false}}}),
 }))
 
 vi.mock('@/stores/config', () => ({
-	useConfigStore: () => ({allowIconChanges: false}),
+	useConfigStore: () => ({allow_icon_changes: false}),
 }))
 
 vi.mock('@/composables/useColorScheme', () => ({

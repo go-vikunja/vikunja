@@ -30,10 +30,13 @@ func ListTeamsAsAdmin(s *xorm.Session, search string, page, perPage int) ([]Invi
 	limit, start := getLimitFromPageIndex(page, perPage)
 	teams := []InviteLinkTeam{}
 	cond := builder.Or(builder.IsNull{"external_id"}, builder.Eq{"external_id": ""})
+	query := s.Limit(limit, start)
 	if search != "" {
 		cond = cond.And(db.ILIKE("name", search))
+		order, args := db.SearchRelevanceOrder(search, "name")
+		query = query.OrderBy(order, args...)
 	}
-	total, err := s.Where(cond).Limit(limit, start).OrderBy("id ASC").FindAndCount(&teams)
+	total, err := query.Where(cond).OrderBy("id ASC").FindAndCount(&teams)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list invite teams: %w", err)
 	}

@@ -9,9 +9,11 @@
 		>
 			<template #trigger="{toggle}">
 				<SimpleButton
+					:id="triggerId"
 					ref="triggerButton"
 					v-tooltip="date ? formatDateLong(date) : undefined"
 					class="show"
+					:aria-labelledby="ariaLabelledby ? `${ariaLabelledby} ${triggerId}` : undefined"
 					:disabled="disabled || undefined"
 					@click.stop="toggle()"
 				>
@@ -23,75 +25,40 @@
 			</template>
 			<template #header-action>
 				<BaseButton
-					class="datepicker-popup__clear"
+					class="bottom-sheet__header-action"
 					@click.stop="clear"
 				>
 					{{ $t('input.datepicker.clear') }}
 				</BaseButton>
 			</template>
 			<template #content="{isOpen}">
-				<div
+				<DatepickerPanel
 					v-if="isOpen"
-					class="datepicker-popup"
-					:class="{'datepicker-popup--no-shortcuts': !showShortcuts}"
+					:model-value="date"
+					:show-shortcuts="showShortcuts"
+					:min-date="minDate"
 					:role="isMobile ? undefined : 'dialog'"
 					:aria-label="isMobile ? undefined : dialogTitle"
 					tabindex="-1"
-				>
-					<DatepickerInline
-						v-model="date"
-						:show-shortcuts="showShortcuts"
-						:shortcuts-layout="isMobile ? 'chips' : 'sidebar'"
-						:large="isMobile"
-						:min-date="minDate"
-						@update:modelValue="updateData"
-						@quickSelectConfirmed="close"
-					/>
-
-					<div class="datepicker-popup__footer">
-						<div class="datepicker-popup__summary">
-							<Icon
-								:icon="['far', 'calendar-check']"
-								class="datepicker-popup__summary-icon"
-							/>
-							<span>{{ date === null ? $t('input.datepicker.noDate') : formatDate(date, summaryFormat) }}</span>
-						</div>
-						<XButton
-							v-if="!isMobile"
-							variant="secondary"
-							:shadow="false"
-							@click.stop="clear"
-						>
-							{{ $t('input.datepicker.clear') }}
-						</XButton>
-						<XButton
-							v-cy="'closeDatepicker'"
-							class="datepicker__close-button"
-							:shadow="false"
-							@click.stop="close"
-						>
-							{{ $t('misc.confirm') }}
-						</XButton>
-					</div>
-				</div>
+					@update:modelValue="setDate"
+					@confirm="close"
+				/>
 			</template>
 		</Popup>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, toRef, watch, nextTick} from 'vue'
+import {computed, ref, toRef, watch, nextTick, useId} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Popup from '@/components/misc/Popup.vue'
-import DatepickerInline from '@/components/input/DatepickerInline.vue'
+import DatepickerPanel from '@/components/input/DatepickerPanel.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
-import {formatDate, formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
-import {useTimeFormat} from '@/composables/useTimeFormat'
-import {TIME_FORMAT} from '@/constants/timeFormat'
 import {useIsMobile} from '@/composables/useIsMobile'
 
 const props = withDefaults(defineProps<{
@@ -103,6 +70,7 @@ const props = withDefaults(defineProps<{
 	// When the value is null, show this (italic) instead of chooseDateLabel.
 	emptyLabel?: string,
 	minDate?: Date | null,
+	ariaLabelledby?: string,
 }>(), {
 	chooseDateLabel: () => {
 		const {t} = useI18n({useScope: 'global'})
@@ -113,6 +81,7 @@ const props = withDefaults(defineProps<{
 	showShortcuts: true,
 	emptyLabel: '',
 	minDate: null,
+	ariaLabelledby: undefined,
 })
 
 const emit = defineEmits<{
@@ -124,9 +93,6 @@ const emit = defineEmits<{
 const isMobile = useIsMobile()
 
 const dialogTitle = computed(() => props.title || props.chooseDateLabel)
-
-const {store: timeFormat} = useTimeFormat()
-const summaryFormat = computed(() => timeFormat.value === TIME_FORMAT.HOURS_24 ? 'ddd, ll HH:mm' : 'ddd, ll hh:mm A')
 
 const date = ref<Date | null>(null)
 const show = ref(false)
@@ -152,11 +118,16 @@ function updateData() {
 	emit('update:modelValue', date.value ?? null)
 }
 
-function clear() {
-	date.value = null
+function setDate(value: Date | null) {
+	date.value = value
 	updateData()
 }
 
+function clear() {
+	setDate(null)
+}
+
+const triggerId = useId()
 const triggerButton = ref<InstanceType<typeof SimpleButton> | null>(null)
 const triggerEl = computed<HTMLElement | null>(() => triggerButton.value?.$el ?? null)
 
@@ -193,79 +164,3 @@ defineExpose({
 	open,
 })
 </script>
-
-<style lang="scss" scoped>
-.datepicker-popup {
-	position: relative;
-	background: var(--white);
-	border: 1px solid var(--grey-200);
-	border-radius: $radius-large;
-	box-shadow: var(--shadow-md);
-	overflow: hidden;
-	inline-size: 548px;
-	max-inline-size: calc(100vw - 2rem);
-
-	&--no-shortcuts {
-		inline-size: 380px;
-	}
-
-	.bottom-sheet & {
-		inline-size: 100%;
-		max-inline-size: none;
-		border: 0;
-		border-radius: 0;
-		box-shadow: none;
-	}
-}
-
-.datepicker-popup__clear {
-	color: var(--primary);
-	font-family: $family-sans-serif;
-	font-weight: 700;
-	font-size: .85rem;
-	text-transform: uppercase;
-	letter-spacing: .04em;
-}
-
-.datepicker-popup__footer {
-	display: flex;
-	align-items: center;
-	gap: .75rem;
-	padding: .75rem 1rem;
-	border-block-start: 1px solid var(--grey-200);
-	background: var(--grey-50);
-
-	.bottom-sheet & {
-		flex-direction: column;
-		align-items: stretch;
-		gap: .5rem;
-		padding-block-end: 1rem;
-		background: var(--white);
-	}
-}
-
-.datepicker-popup__summary {
-	display: flex;
-	align-items: center;
-	gap: .5rem;
-	flex: 1;
-	min-inline-size: 0;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	font-size: .85rem;
-	font-weight: 600;
-	color: var(--grey-700);
-	font-variant-numeric: tabular-nums;
-}
-
-.datepicker-popup__summary-icon {
-	color: var(--primary);
-}
-
-.datepicker__close-button {
-	.bottom-sheet & {
-		min-block-size: 44px;
-	}
-}
-</style>

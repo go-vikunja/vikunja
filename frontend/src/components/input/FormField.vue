@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, useSlots, useId, ref, useAttrs} from 'vue'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 interface Props {
 	modelValue?: string | number
@@ -17,6 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
 	'update:modelValue': [value: string | number]
 }>()
+const showLoading = useDelayedLoading(() => props.loading)
 
 function handleInput(event: Event) {
 	const value = (event.target as HTMLInputElement).value
@@ -54,7 +56,7 @@ const inputClasses = computed(() => [
 	'input',
 	{
 		'disabled': props.disabled,
-		'is-loading': props.loading,
+		'is-loading': showLoading.value,
 	},
 ])
 

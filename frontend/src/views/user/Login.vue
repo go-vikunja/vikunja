@@ -115,6 +115,7 @@
 </template>
 
 <script setup lang="ts">
+import type {VikunjaErrorModel} from '@/client/generated'
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
@@ -131,6 +132,7 @@ import {getAutoRedirectProvider, redirectToProvider} from '@/helpers/redirectToP
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
+import {ERROR_CODE_TOTP_REQUIRED} from '@/constants/auth'
 
 import {useAuthStore, JUST_LOGGED_OUT_KEY} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
@@ -146,11 +148,11 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const {redirectIfSaved} = useRedirectToLastVisited()
 
-const registrationEnabled = computed(() => configStore.auth.local.registrationEnabled)
+const registrationEnabled = computed(() => configStore.auth.local.registration_enabled)
 const localAuthEnabled = computed(() => configStore.auth.local.enabled)
 const ldapAuthEnabled = computed(() => configStore.auth.ldap.enabled)
 
-const openidConnect = computed(() => configStore.auth.openidConnect)
+const openidConnect = computed(() => configStore.auth.openid_connect)
 const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidConnect.value.providers?.length > 0)
 
 const isLoading = computed(() => authStore.isLoading)
@@ -216,7 +218,7 @@ async function submit() {
 	// Some browsers prevent Vue bindings from working with autofilled values.
 	// To work around this, we're manually getting the values here instead of relying on vue bindings.
 	// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
-	const credentials = {
+	const credentials: Parameters<typeof authStore.login>[0] = {
 		username: usernameRef.value?.value,
 		password: password.value,
 		longToken: rememberMe.value,
@@ -239,7 +241,7 @@ async function submit() {
 
 		redirectIfSaved()
 	} catch (e) {
-		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+		if ((e as VikunjaErrorModel)?.code === ERROR_CODE_TOTP_REQUIRED && !credentials.totpPasscode) {
 			return
 		}
 
@@ -249,10 +251,6 @@ async function submit() {
 </script>
 
 <style lang="scss" scoped>
-.button {
-	margin: 0 0.4rem 0 0;
-}
-
 .reset-password-link {
 	display: inline-block;
 }

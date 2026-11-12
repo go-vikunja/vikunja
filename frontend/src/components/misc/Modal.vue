@@ -11,7 +11,7 @@
 			:aria-labelledby="headerLabelId"
 			:aria-label="sheetLabel"
 			v-bind="attrs"
-			@cancel.prevent="$emit('close')"
+			@cancel.self.prevent="$emit('close')"
 		>
 			<div
 				class="modal-container"
@@ -505,6 +505,15 @@ $modal-width: 1024px;
 	justify-content: space-between;
 	padding: .5rem 1rem .75rem;
 	flex-shrink: 0;
+
+	:deep(.bottom-sheet__header-action) {
+		color: var(--primary);
+		font-family: $family-sans-serif;
+		font-weight: 700;
+		font-size: .85rem;
+		text-transform: uppercase;
+		letter-spacing: .04em;
+	}
 }
 
 .bottom-sheet__title {

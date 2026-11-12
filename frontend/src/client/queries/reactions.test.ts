@@ -221,7 +221,7 @@ it('keeps the cache and toasts once when the request fails', async () => {
 })
 
 it('patches every cached comment page without staling the task lists', async () => {
-	for (const order of ['asc', 'desc'] as const) client.setQueryData(commentKeys.page(1, order, 1, 50), {
+	for (const order of ['asc', 'desc'] as const) client.setQueryData(commentKeys.page(1, order, 1), {
 		items: [{
 			id: 2,
 			comment: 'hi',
@@ -254,13 +254,13 @@ it('patches every cached comment page without staling the task lists', async () 
 		user: {id: 1},
 	})
 	for (const order of ['asc', 'desc'] as const) {
-		expect(client.getQueryData(commentKeys.page(1, order, 1, 50))).toMatchObject({
+		expect(client.getQueryData(commentKeys.page(1, order, 1))).toMatchObject({
 			items: [{
 				id: 2,
 				reactions: {'👍': [{id: 3}, {id: 1}]},
 			}],
 		})
-		expect(client.getQueryState(commentKeys.page(1, order, 1, 50))?.isInvalidated).toBe(true)
+		expect(client.getQueryState(commentKeys.page(1, order, 1))?.isInvalidated).toBe(true)
 	}
 	expect(client.getQueryState(taskKeys.detail(1))?.isInvalidated).toBe(false)
 	expect(client.getQueryState(taskKeys.list({project: 1, view: 1}))?.isInvalidated).toBe(false)

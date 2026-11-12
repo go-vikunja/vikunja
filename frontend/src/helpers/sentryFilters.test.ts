@@ -1,7 +1,8 @@
-import {describe, it, expect} from 'vitest'
-import {AxiosError} from 'axios'
+import {afterEach, describe, it, expect} from 'vitest'
+import {reactive} from 'vue'
 
-import {shouldDropEvent, stripNavigationFragment} from './sentryFilters'
+import {ApiError} from '@/client/problem'
+import {isReportableResourceUrl, redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './sentryFilters'
 
 // Object.assign instead of `new Error(msg, {cause})`: the vitest tsconfig
 // targets a lib without the two-argument Error constructor.
@@ -15,16 +16,16 @@ function browserDomException(message: string, name: string, code: number): DOMEx
 }
 
 describe('shouldDropEvent', () => {
-	it('drops a plain AxiosError', () => {
-		expect(shouldDropEvent(new AxiosError('Request failed'))).toBe(true)
+	it('drops a plain fetch error', () => {
+		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
 	})
 
-	it('drops an error wrapping an AxiosError as cause', () => {
-		expect(shouldDropEvent(errorWithCause('Error renewing token: ', new AxiosError('Request failed')))).toBe(true)
+	it('drops an error wrapping a fetch error as cause', () => {
+		expect(shouldDropEvent(errorWithCause('Error renewing token: ', new TypeError('Failed to fetch')))).toBe(true)
 	})
 
-	it('drops an error with an AxiosError two levels deep', () => {
-		const inner = errorWithCause('inner', new AxiosError('Request failed'))
+	it('drops an error with a fetch error two levels deep', () => {
+		const inner = errorWithCause('inner', new TypeError('Failed to fetch'))
 
 		expect(shouldDropEvent(errorWithCause('outer', inner))).toBe(true)
 	})
@@ -248,6 +249,42 @@ describe('shouldDropEvent with empty events', () => {
 })
 
 
+describe('shouldDropEvent on a machine-translated page', () => {
+	afterEach(() => {
+		document.body.innerHTML = ''
+	})
+
+	// What Chrome's and Edge's built-in translators leave behind.
+	function translatePage() {
+		document.body.innerHTML = '<span><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Hecho</font></font></span>'
+	}
+
+	it.each([
+		'Cannot read properties of null (reading \'nextSibling\')',
+		'Cannot read properties of null (reading \'insertBefore\')',
+		'can\'t access property "parentNode", e is null',
+		'null is not an object (evaluating \'e.nextSibling\')',
+	])('drops a vue patch error: %s', message => {
+		translatePage()
+		expect(shouldDropEvent(new TypeError(message))).toBe(true)
+	})
+
+	it('keeps the same error on an untranslated page', () => {
+		document.body.innerHTML = '<span>Done</span>'
+		expect(shouldDropEvent(new TypeError('Cannot read properties of null (reading \'nextSibling\')'))).toBe(false)
+	})
+
+	it('keeps it when the only font element is user content', () => {
+		document.body.innerHTML = '<div data-user-content><p><font color="red">pasted</font></p></div>'
+		expect(shouldDropEvent(new TypeError('Cannot read properties of null (reading \'nextSibling\')'))).toBe(false)
+	})
+
+	it('keeps an unrelated error on a translated page', () => {
+		translatePage()
+		expect(shouldDropEvent(new TypeError('Cannot read properties of undefined (reading \'id\')'))).toBe(false)
+	})
+})
+
 describe('stripNavigationFragment', () => {
 	it.each(['browser.request', 'browser.domContentLoadedEvent', 'navigation.navigate', 'navigation.reload', 'navigation.back_forward'])('removes the original fragment from %s while preserving timing data', op => {
 		const span = {op, description: 'https://example.com/register?lang=en#invite-link=secret', startTimestamp: 1, endTimestamp: 2}
@@ -257,5 +294,148 @@ describe('stripNavigationFragment', () => {
 
 	it.each([null, undefined, {op: 'navigation.navigate'}, {op: 'resource.script', description: 'https://example.com/app.js#hash'}])('preserves other recording data: %j', span => {
 		expect(stripNavigationFragment(span)).toBe(span)
+	})
+})
+
+describe('generated transport errors', () => {
+	it('drops 4xx v2 problems without legacy message fields', () => {
+		expect(shouldDropEvent({status: 404, detail: 'Not found'})).toBe(true)
+	})
+
+	it('drops a rate-limited Echo body once its status is stamped on', () => {
+		expect(shouldDropEvent({
+			message: 'rate limit exceeded',
+			status: 429,
+			detail: 'rate limit exceeded',
+		})).toBe(true)
+	})
+
+	it('drops a 4xx ApiError', () => {
+		expect(shouldDropEvent(new ApiError({status: 404, detail: '404 page not found'}))).toBe(true)
+	})
+
+	it('drops a 4xx ApiError without a code', () => {
+		expect(shouldDropEvent(new ApiError({status: 403, detail: 'Forbidden'}))).toBe(true)
+	})
+
+	it('reports a 5xx ApiError', () => {
+		expect(shouldDropEvent(new ApiError({status: 502, detail: 'Bad Gateway'}))).toBe(false)
+	})
+
+	it('reports a 5xx ApiError with a code', () => {
+		expect(shouldDropEvent(new ApiError({status: 500, code: 1, detail: 'Internal'}))).toBe(false)
+	})
+
+	it('drops an error wrapping a 4xx ApiError as cause', () => {
+		expect(shouldDropEvent(errorWithCause('outer', new ApiError({status: 404, detail: 'Not found'})))).toBe(true)
+	})
+
+	it('reports 5xx v2 problems', () => {
+		expect(shouldDropEvent({status: 500, detail: 'Unavailable'})).toBe(false)
+	})
+
+	it('reports a 5xx Echo body once its status is stamped on', () => {
+		expect(shouldDropEvent({
+			message: 'Internal Server Error',
+			status: 500,
+			detail: 'Internal Server Error',
+		})).toBe(false)
+	})
+
+	it('drops fetch network failures', () => {
+		expect(shouldDropEvent(new TypeError('Failed to fetch'))).toBe(true)
+	})
+})
+
+describe('redactSensitiveParams', () => {
+	it.each([
+		['https://vikunja.example/?userPasswordReset=abc123', 'https://vikunja.example/?userPasswordReset=[Filtered]'],
+		['/login?foo=1&accountDeletionConfirm=abc123&bar=2', '/login?foo=1&accountDeletionConfirm=[Filtered]&bar=2'],
+		['/?userEmailConfirm=abc123#hash', '/?userEmailConfirm=[Filtered]#hash'],
+		['userPasswordReset=abc123', 'userPasswordReset=[Filtered]'],
+		['/login%3FuserPasswordReset%3Dabc123', '/login%3FuserPasswordReset%3D[Filtered]'],
+		['/tasks/1?view=list', '/tasks/1?view=list'],
+	])('redacts %s', (input, expected) => {
+		expect(redactSensitiveParams(input)).toBe(expected)
+	})
+
+	it('redacts nested strings in an event', () => {
+		const event = {
+			request: {url: 'https://vikunja.example/?userPasswordReset=abc123'},
+			breadcrumbs: [{category: 'navigation', data: {from: '/', to: '/?accountDeletionConfirm=abc123'}}],
+			urls: ['https://vikunja.example/?userEmailConfirm=abc123'],
+			level: 'error',
+			count: 1,
+		}
+
+		expect(redactSensitiveParams(event)).toEqual({
+			request: {url: 'https://vikunja.example/?userPasswordReset=[Filtered]'},
+			breadcrumbs: [{category: 'navigation', data: {from: '/', to: '/?accountDeletionConfirm=[Filtered]'}}],
+			urls: ['https://vikunja.example/?userEmailConfirm=[Filtered]'],
+			level: 'error',
+			count: 1,
+		})
+	})
+
+	// Console breadcrumbs carry the raw logged arguments until Sentry normalizes
+	// the event, which happens after our event processor.
+	it('handles a cyclic object', () => {
+		const route: Record<string, unknown> = {path: '/?userPasswordReset=abc123'}
+		route.children = [{parent: route}]
+
+		const redacted = redactSensitiveParams({breadcrumbs: [{data: {arguments: [route]}}]})
+		const copy = redacted.breadcrumbs[0].data.arguments[0]
+
+		expect(copy.path).toBe('/?userPasswordReset=[Filtered]')
+		expect((copy.children as {parent: unknown}[])[0].parent).toBe(copy)
+	})
+
+	it('handles a cyclic reactive object', () => {
+		const project = reactive<Record<string, unknown>>({title: '/?accountDeletionConfirm=abc123', childProjects: []})
+		;(project.childProjects as unknown[]).push({parentProject: project})
+
+		const redacted = redactSensitiveParams({extra: {project}})
+
+		expect(redacted.extra.project.title).toBe('/?accountDeletionConfirm=[Filtered]')
+		expect((redacted.extra.project.childProjects as {parentProject: unknown}[])[0].parentProject).toBe(redacted.extra.project)
+	})
+})
+
+describe('isReportableResourceUrl', () => {
+	const page = 'https://app.vikunja.cloud/tasks/395132'
+
+	it.each([
+		'https://app.vikunja.cloud/assets/logo.png',
+		'https://app.vikunja.cloud/tasks/395132/cover.png',
+	])('reports %s, which the browser fetched over the network', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(true)
+	})
+
+	it.each([
+		// FRONTEND-OSS-263: favicons a browser extension injected into /register
+		'https://news.search.yahoo.co.jp/favicon.ico',
+		'https://auctions.search.yahoo.co.jp/favicon.ico',
+		'http://app.vikunja.cloud/assets/logo.png',
+		'https://app.vikunja.cloud:8443/assets/logo.png',
+	])('skips %s, which is not served from our origin', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
+	})
+
+	it.each([
+		'data:image/svg+xml;base64,PHN2ZyAvPg==',
+		'blob:https://app.vikunja.cloud/47479b89-bed9-427b-a859-a447f21d5034',
+		'cid:part1.abcdef@example.com',
+		'filesystem:https://app.vikunja.cloud/temporary/avatar.png',
+		'about:blank',
+	])('skips %s, whose bytes never went over the network', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
+	})
+
+	it.each(['', ' ', 'not a url'])('skips an unresolvable src: %j', url => {
+		expect(isReportableResourceUrl(url, page)).toBe(false)
+	})
+
+	it.each([page, `${page}#`, `${page}#section`])('skips %s, which is the page itself', url => {
+		expect(isReportableResourceUrl(url, `${page}#other`)).toBe(false)
 	})
 })

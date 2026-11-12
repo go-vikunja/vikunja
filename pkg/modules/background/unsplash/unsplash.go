@@ -49,6 +49,8 @@ func init() {
 const (
 	unsplashAPIURL = `https://api.unsplash.com/`
 	cachePrefix    = `unsplash_photo_`
+	// Every page of the featured collection is cached in memory.
+	maxEmptySearchPage = 100
 )
 
 // Provider represents an unsplash image provider
@@ -163,6 +165,12 @@ func (p *Provider) Search(_ *xorm.Session, search string, page int64) (result []
 
 	// If we don't have a search query, return results from the unsplash featured collection
 	if search == "" {
+		if page > maxEmptySearchPage {
+			return []*background.Image{}, nil
+		}
+		if page < 1 {
+			page = 1
+		}
 
 		var existsForPage bool
 
@@ -325,18 +333,8 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 		return
 	}
 
-	// Remove the old background if one exists
-	if project.BackgroundFileID != 0 {
-		file := files.File{ID: project.BackgroundFileID}
-		err = file.Delete(s)
-		if err != nil && !files.IsErrFileDoesNotExist(err) {
-			return err
-		}
-
-		err = models.RemoveUnsplashPhoto(s, project.BackgroundFileID)
-		if err != nil && !files.IsErrFileDoesNotExist(err) {
-			return err
-		}
+	if err := project.DeleteBackgroundFileIfExists(s); err != nil {
+		return err
 	}
 
 	// Save the relation that we got it from unsplash
@@ -380,9 +378,12 @@ func pingbackByPhotoID(photoID string) {
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
-	_, err = utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
+	} else {
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
 	}
 	log.Debugf("Pinged unsplash for photo %s", photoID)
 }

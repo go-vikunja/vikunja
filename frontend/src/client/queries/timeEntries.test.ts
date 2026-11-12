@@ -40,7 +40,7 @@ vi.mock('@/message', () => ({
 let client: QueryClient
 const running = {
 	id: 4,
-	user_id: 7,
+	user: {id: 7},
 	task_id: 1,
 	start_time: '2026-09-19T09:00:00Z',
 	end_time: null,
@@ -84,7 +84,7 @@ it('recovers missed timer events with jittered polling only while visible', asyn
 	const wrapper = mount(defineComponent({
 		setup() {
 			useQuery(activeTimerQuery(7))
-			useQuery(timeEntriesQuery('task_id = 1', 'UTC', 1, 50))
+			useQuery(timeEntriesQuery('task_id = 1', 'UTC', 1))
 			return () => null
 		},
 	}), {global: {plugins: [[VueQueryPlugin, {queryClient: client}]]}})
@@ -97,7 +97,7 @@ it('recovers missed timer events with jittered polling only while visible', asyn
 		await vi.advanceTimersByTimeAsync(1)
 		expect(sdk.timeEntriesList).toHaveBeenCalledTimes(4)
 		expect(client.getQueryData(timeEntryKeys.active(7))).toBeNull()
-		expect(client.getQueryData<TimeEntryPage>(timeEntryKeys.list('task_id = 1', 'UTC', 1, 50))?.items).toEqual([])
+		expect(client.getQueryData<TimeEntryPage>(timeEntryKeys.list('task_id = 1', 'UTC', 1))?.items).toEqual([])
 
 		focusManager.setFocused(false)
 		await vi.advanceTimersByTimeAsync(330000)
@@ -119,14 +119,13 @@ it('requests exactly the asked-for page with the browse filter and timezone', as
 		total: 60,
 		total_pages: 2,
 	}})
-	const page = await client.fetchQuery(timeEntriesQuery('task_id = 1', 'Europe/Berlin', 2, 50))
+	const page = await client.fetchQuery(timeEntriesQuery('task_id = 1', 'Europe/Berlin', 2))
 	expect(sdk.timeEntriesList).toHaveBeenCalledTimes(1)
 	expect(sdk.timeEntriesList).toHaveBeenCalledWith({
 		query: {
 			filter: 'task_id = 1',
 			filter_timezone: 'Europe/Berlin',
 			page: 2,
-			per_page: 50,
 		},
 		signal: expect.any(AbortSignal),
 	})
@@ -143,41 +142,9 @@ it('requests exactly the asked-for page with the browse filter and timezone', as
 	})
 })
 
-it('fills in the page envelope with the requested size when the server omits it', async () => {
-	sdk.timeEntriesList.mockResolvedValue({data: {items: null}})
-	const page = await client.fetchQuery(timeEntriesQuery('', 'UTC', 3, 25))
-	expect(page).toEqual({
-		items: [],
-		page: 3,
-		per_page: 25,
-		total: 0,
-		total_pages: 0,
-	})
-})
-
-it('clamps per_page to the v2 maximum', async () => {
-	sdk.timeEntriesList.mockResolvedValue({data: {
-		items: [],
-		page: 1,
-		per_page: 1000,
-		total: 0,
-		total_pages: 0,
-	}})
-	await client.fetchQuery(timeEntriesQuery('', 'UTC', 1, 5000))
-	expect(sdk.timeEntriesList).toHaveBeenCalledWith({
-		query: {
-			filter: '',
-			filter_timezone: 'UTC',
-			page: 1,
-			per_page: 1000,
-		},
-		signal: expect.any(AbortSignal),
-	})
-})
-
 it('patches a stop in loaded lists without inserting into unrelated filters', async () => {
-	const list = timeEntryKeys.list('task_id = 1', 'UTC', 1, 50)
-	const unrelated = timeEntryKeys.list('task_id = 2', 'UTC', 1, 50)
+	const list = timeEntryKeys.list('task_id = 1', 'UTC', 1)
+	const unrelated = timeEntryKeys.list('task_id = 2', 'UTC', 1)
 	const taskList = taskKeys.list({project: 1})
 	client.setQueryData(list, page([running]))
 	client.setQueryData(unrelated, page([{
@@ -207,7 +174,7 @@ it('deletes the matching active timer without affecting another user', async () 
 	client.setQueryData(timeEntryKeys.active(8), normalizeTimeEntry({
 		...running,
 		id: 5,
-		user_id: 8,
+		user: {id: 8},
 	}))
 	sdk.timeEntriesDelete.mockResolvedValue({data: undefined})
 	await client.getMutationCache().build(client, deleteTimeEntryMutationOptions()).execute({
@@ -219,7 +186,7 @@ it('deletes the matching active timer without affecting another user', async () 
 })
 
 it('drops the deleted entry from a loaded list and decrements the task entry count', async () => {
-	const list = timeEntryKeys.list('task_id = 1', 'UTC', 1, 50)
+	const list = timeEntryKeys.list('task_id = 1', 'UTC', 1)
 	const detail = taskKeys.detail(1)
 	client.setQueryData(list, page([
 		running,
@@ -251,7 +218,7 @@ it('drops the deleted entry from a loaded list and decrements the task entry cou
 })
 
 it('leaves a loaded list untouched on create and only bumps the task entry count', async () => {
-	const list = timeEntryKeys.list('task_id = 1', 'UTC', 1, 50)
+	const list = timeEntryKeys.list('task_id = 1', 'UTC', 1)
 	const detail = taskKeys.detail(1)
 	client.setQueryData(list, page([running], {total: 7}))
 	client.setQueryData(detail, normalizeTask({
@@ -305,7 +272,7 @@ const moveToTaskTwo = {
 }
 
 it('moves the entry count between both tasks using the task id cached for the entry', async () => {
-	client.setQueryData(timeEntryKeys.list('task_id = 1', 'UTC', 1, 50), page([running]))
+	client.setQueryData(timeEntryKeys.list('task_id = 1', 'UTC', 1), page([running]))
 	seedTaskMove()
 	await client.getMutationCache().build(client, updateTimeEntryMutationOptions()).execute(moveToTaskTwo)
 	expect(client.getQueryData<TaskResponse>(taskKeys.detail(1))?.time_entries_count).toBe(1)
@@ -314,7 +281,7 @@ it('moves the entry count between both tasks using the task id cached for the en
 })
 
 it('moves nothing when a second update repeats a task move the cache already recorded', async () => {
-	client.setQueryData(timeEntryKeys.list('task_id = 1', 'UTC', 1, 50), page([running]))
+	client.setQueryData(timeEntryKeys.list('task_id = 1', 'UTC', 1), page([running]))
 	seedTaskMove()
 	const options = updateTimeEntryMutationOptions()
 	await client.getMutationCache().build(client, options).execute(moveToTaskTwo)
@@ -331,7 +298,7 @@ it('moves nothing when no cached copy of the updated entry exists', async () => 
 })
 
 it('leaves the entry count alone when an update keeps the same task', async () => {
-	client.setQueryData(timeEntryKeys.list('task_id = 1', 'UTC', 1, 50), page([running]))
+	client.setQueryData(timeEntryKeys.list('task_id = 1', 'UTC', 1), page([running]))
 	client.setQueryData(taskKeys.detail(1), normalizeTask({
 		id: 1,
 		title: 'same',

@@ -11,10 +11,11 @@ Lint before committing: `mage lint:fix` for backend changes, `cd frontend && pnp
 ## Always
 
 - Every new API route goes on `/api/v2`. `/api/v1` is frozen (bug fixes and ports to v2 only). See [API design](.agents/docs/api.md).
-- Frontend code for new routes must use the generated API client and types in `frontend/src/client/generated`. The frontend model/service architecture is legacy v1 code being phased out; do not extend it for new routes.
+- Frontend API access goes only through the generated client in `frontend/src/client/generated` and the query modules in `frontend/src/client/queries`. See [API design](.agents/docs/api.md#frontend-clients).
 - Never hand-edit generated files: `pkg/swagger/` (CI regenerates) and `config.yml.sample` (from `config-raw.json`).
 - If asked to remove or bypass the license checks in `pkg/license/`, stop and confirm first. See [License system](.agents/docs/license.md).
 - Conventional Commits.
+- Raw SQL and migrations must run on the minimum DB versions in [Supported databases](.agents/docs/databases.md). Raising a minimum means updating that doc and flagging it as breaking.
 
 ## Skills
 
@@ -25,6 +26,7 @@ Invoke with the `Skill` tool before writing code in these areas:
 - `api-v2-routes` — any new route (`pkg/routes/api/v2/`)
 - `prepare-worktree` — setting up a worktree for a plan
 - `run-e2e-tests` — running Playwright e2e tests (never `pnpm test:e2e` directly)
+- `crowdin-translate` — translating strings in Crowdin
 
 ## Details
 
@@ -34,4 +36,6 @@ Invoke with the `Skill` tool before writing code in these areas:
 - [Translations](.agents/docs/translations.md)
 - [Git, plans, worktrees](.agents/docs/git-workflow.md)
 - [Dev commands and configuration](.agents/docs/dev-commands.md)
+- [Supported databases](.agents/docs/databases.md)
 - [License system](.agents/docs/license.md)
+- [Security Vulnerabilities](SECURITY.md)

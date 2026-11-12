@@ -40,6 +40,17 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
+					<FancyCheckbox
+						v-if="filters.projectId > 0"
+						v-model="includeSubprojects"
+						v-tooltip="includeSubprojectsFromView
+							? $t('project.views.includeSubprojectsFromView')
+							: $t('project.views.includeSubprojectsHint')"
+						:disabled="includeSubprojectsFromView"
+						is-block
+					>
+						{{ $t('project.views.includeSubprojects') }}
+					</FancyCheckbox>
 				</div>
 			</Card>
 
@@ -51,6 +62,7 @@
 				>
 					<GanttChart
 						:filters="filters"
+						:include-subprojects="includeSubprojects"
 						:tasks="tasks"
 						:is-loading="isLoading"
 						:default-task-start-date="defaultTaskStartDate"
@@ -84,13 +96,14 @@ import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import type {DateISO} from '@/types/DateISO'
-import type {Task as ITask} from '@/client/generated'
+import type {Task as ITask, ProjectView} from '@/client/generated'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
 	route: RouteLocationNormalized
 	viewId: number
+	view: ProjectView
 }>()
 
 
@@ -109,7 +122,9 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, projectId, viewId)
+	includeSubprojects,
+	includeSubprojectsFromView,
+} = useGanttFilters(route, projectId, viewId, () => props.view)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 

@@ -1,18 +1,18 @@
 import {createPinia, setActivePinia} from 'pinia'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {AUTH_TYPES} from '@/constants/auth'
 import {queryClient} from '@/client/queryClient'
 import {projectKeys, type ProjectResponse} from '@/client/queries/projects'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
-	post: vi.fn(),
 }))
 
 const sdk = vi.hoisted(() => ({
 	projectsBackgroundGet: vi.fn(),
 	projectsRead: vi.fn(),
+	userShow: vi.fn(),
 }))
 
 vi.mock('@/client/generated', async (importOriginal) => ({
@@ -30,23 +30,6 @@ vi.mock('@/helpers/auth', () => ({
 		auth.token = token
 	}),
 }))
-
-vi.mock('@/helpers/fetcher', () => ({
-	AuthenticatedHTTPFactory: () => fakeHttp(),
-	HTTPFactory: () => fakeHttp(),
-}))
-
-function fakeHttp() {
-	return {
-		post: auth.post,
-		get: vi.fn(),
-		request: vi.fn(),
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
 
 vi.mock('@/router', () => ({
 	default: {push: vi.fn(), isReady: vi.fn().mockResolvedValue(undefined)},
@@ -94,7 +77,7 @@ vi.mock('@/composables/useMenuActive', async () => {
 })
 
 import {useAuthStore} from './auth'
-import {useBaseStore} from './base'
+import {ERROR_RATE_LIMITED, useBaseStore} from './base'
 
 function project(id: number): ProjectResponse {
 	return {
@@ -125,7 +108,6 @@ describe('base store identity reset', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		auth.token = null
-		auth.post.mockReset()
 		queryClient.clear()
 		Object.values(sdk).forEach(mock => mock.mockReset())
 		window.URL.revokeObjectURL = vi.fn()
@@ -171,7 +153,11 @@ describe('base store identity reset', () => {
 		const baseStore = useBaseStore()
 		await baseStore.appReady
 
-		authStore.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
+		authStore.setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
 		seedProjectWithBackground(42)
 
 		baseStore.setCurrentProject(project(42))
@@ -180,7 +166,10 @@ describe('base store identity reset', () => {
 		expect(baseStore.currentProjectId).toBe(42)
 		await vi.waitFor(() => expect(baseStore.background).toBe('blob:new-background'))
 
-		authStore.setUser(next as never, false)
+		authStore.setSession({
+			...next,
+			exp: 0,
+		})
 
 		if (!resets) {
 			expect(baseStore.background).toBe('blob:new-background')
@@ -192,5 +181,19 @@ describe('base store identity reset', () => {
 		expect(baseStore.currentProjectId).toBe(0)
 		expect(baseStore.hasTasks).toBe(false)
 		await vi.waitFor(() => expect(baseStore.background).toBe(''))
+	})
+
+	it('shows the rate limit error when the first user request is rate limited', async () => {
+		auth.token = `header.${btoa(JSON.stringify({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: Math.floor(Date.now() / 1000) + 3600,
+		}))}.signature`
+		sdk.userShow.mockRejectedValue({status: 429})
+
+		const store = useBaseStore()
+		await store.appReady
+
+		expect(store.error).toBe(ERROR_RATE_LIMITED)
 	})
 })

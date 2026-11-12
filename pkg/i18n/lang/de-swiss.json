@@ -12,6 +12,13 @@
 			"requested": "Jemand hat beantragt, die E-Mail-Adresse deines Kontos in %[1]s zu ändern. Deine aktuelle Adresse bleibt aktiv, bis die neue bestätigt ist.",
 			"warning": "Wenn Du das nicht warst, ändere sofort dein Passwort und breche die ausstehende Änderung in den Kontoeinstellungen ab."
 		},
+		"identity": {
+			"linked": {
+				"subject": "%[1]s wurde mit deinem Vikunja-Account verknüpft",
+				"message": "Dein Account bei %[1]s wurde am %[2]s mit deinem Vikunja-Account verknüpft. Du kannst dich jetzt damit anmelden.",
+				"warning": "Wenn du das nicht warst, ändere sofort dein Passwort und hebe danach die Verknüpfung in deinen Account-Einstellungen auf."
+			}
+		},
 		"password": {
 			"changed": {
 				"subject": "Dein Passwort bei Vikunja wurde geändert",
@@ -43,6 +50,9 @@
 				"message": "Jemand hat gerade dreimal hintereinander versucht, sich mit einem falschen Passwort bei deinem Account anzumelden.",
 				"warning": "Falls das nicht du warst, könnte jemand versuchen, in deinen Account einzudringen.",
 				"enhance_security": "Um die Sicherheit deines Accounts zu erhöhen, könntest du ein stärkeres Passwort einstellen oder die TOTP-Authentifizierung in den Einstellungen aktivieren:"
+			},
+			"account_locked": {
+				"message": "Jemand hat zu oft hintereinander versucht, sich mit einem falschen Passwort bei deinem Account anzumelden."
 			}
 		},
 		"account": {

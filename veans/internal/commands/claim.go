@@ -32,7 +32,7 @@ func newClaimCmd() *cobra.Command {
 		Short: "Claim a task: assign the bot, move to In Progress, tag with branch",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rt, err := loadRuntime()
+			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -81,6 +81,7 @@ func newClaimCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			rt.withURLs(task)
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}

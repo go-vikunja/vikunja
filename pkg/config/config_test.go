@@ -149,3 +149,132 @@ func TestResolvePath(t *testing.T) {
 		})
 	}
 }
+
+func TestDeprecatedWebhookKeysMigration(t *testing.T) {
+	t.Run("migrates webhooks.* from the config file", func(t *testing.T) {
+		initConfigFromYAML(t, "webhooks:\n  proxyurl: http://mole:8080\n  proxypassword: secret\n  allownonroutableips: true\n")
+
+		assert.Equal(t, "http://mole:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "secret", OutgoingRequestsProxyPassword.GetString())
+		assert.True(t, OutgoingRequestsAllowNonRoutableIPs.GetBool())
+	})
+	t.Run("migrates webhooks.* from the environment", func(t *testing.T) {
+		t.Setenv("VIKUNJA_WEBHOOKS_PROXYURL", "http://mole:8080")
+		t.Setenv("VIKUNJA_WEBHOOKS_PROXYPASSWORD", "secret")
+		t.Setenv("VIKUNJA_WEBHOOKS_ALLOWNONROUTABLEIPS", "true")
+		initConfigFromYAML(t, "")
+
+		assert.Equal(t, "http://mole:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "secret", OutgoingRequestsProxyPassword.GetString())
+		assert.True(t, OutgoingRequestsAllowNonRoutableIPs.GetBool())
+	})
+	t.Run("outgoingrequests.* wins over webhooks.*", func(t *testing.T) {
+		initConfigFromYAML(t, "webhooks:\n  proxyurl: http://old:8080\n  proxypassword: old\noutgoingrequests:\n  proxyurl: http://new:8080\n  proxypassword: new\n")
+
+		assert.Equal(t, "http://new:8080", OutgoingRequestsProxyURL.GetString())
+		assert.Equal(t, "new", OutgoingRequestsProxyPassword.GetString())
+	})
+}
+
+func TestTimezoneFallback(t *testing.T) {
+	t.Run("empty service.timezone falls back to UTC", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: \"\"\n")
+		assert.Equal(t, "UTC", ServiceTimeZone.GetString())
+		assert.Equal(t, "UTC", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("invalid service.timezone falls back to UTC", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: Invalid/Nonexistent\n")
+		assert.Equal(t, "UTC", ServiceTimeZone.GetString())
+		assert.Equal(t, "UTC", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("valid service.timezone is preserved", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: America/New_York\n")
+		assert.Equal(t, "America/New_York", ServiceTimeZone.GetString())
+		assert.Equal(t, "America/New_York", DefaultSettingsTimezone.GetString())
+	})
+	t.Run("invalid defaultsettings.timezone falls back to service.timezone", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  timezone: Europe/Berlin\ndefaultsettings:\n  timezone: Bad/Timezone\n")
+		assert.Equal(t, "Europe/Berlin", DefaultSettingsTimezone.GetString())
+	})
+}
+
+func TestPathsFollowRootpath(t *testing.T) {
+	assertPathsUnder := func(t *testing.T, root string) {
+		t.Helper()
+		assert.Equal(t, filepath.Join(root, "vikunja.db"), DatabasePath.GetString())
+		assert.Equal(t, filepath.Join(root, "logs"), LogPath.GetString())
+		assert.Equal(t, filepath.Join(root, "plugins"), PluginsDir.GetString())
+	}
+
+	t.Run("rootpath from a search-path config file", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\n")
+
+		assertPathsUnder(t, "/pinned/root")
+	})
+	t.Run("rootpath from the environment", func(t *testing.T) {
+		t.Setenv("VIKUNJA_SERVICE_ROOTPATH", "/env/root")
+		initConfigFromYAML(t, "")
+
+		assertPathsUnder(t, "/env/root")
+	})
+	t.Run("rootpath from a pinned config file", func(t *testing.T) {
+		dir := t.TempDir()
+		configPath := filepath.Join(dir, "config.yml")
+		require.NoError(t, os.WriteFile(configPath, []byte("cors:\n  enable: false\nservice:\n  rootpath: /pinned/root\n"), 0600))
+		SetConfigFile(configPath)
+		t.Cleanup(func() {
+			SetConfigFile("")
+			viper.Reset()
+		})
+
+		viper.Reset()
+		InitConfig()
+
+		assertPathsUnder(t, "/pinned/root")
+	})
+	t.Run("explicit paths win", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\nlog:\n  path: /var/log/vikunja\n")
+
+		assert.Equal(t, "/var/log/vikunja", LogPath.GetString())
+	})
+	t.Run("relative plugins.dir is resolved against rootpath", func(t *testing.T) {
+		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\nplugins:\n  dir: custom-plugins\n")
+
+		assert.Equal(t, "/pinned/root/custom-plugins", PluginsDir.GetString())
+	})
+}
+
+func TestGetLegalLinks(t *testing.T) {
+	t.Run("from the config file, sorted by key", func(t *testing.T) {
+		initConfigFromYAML(t, "legal:\n  imprinturl: https://example.com/old\n  terms:\n    text: Terms\n    url: https://example.com/terms\n  imprint:\n    text: Imprint\n    url: https://example.com/imprint\n  incomplete:\n    text: No url\n")
+
+		assert.Equal(t, []LegalLink{
+			{
+				Text: "Imprint",
+				URL:  "https://example.com/imprint",
+			},
+			{
+				Text: "Terms",
+				URL:  "https://example.com/terms",
+			},
+		}, GetLegalLinks())
+	})
+	t.Run("from the environment, with underscores in the link key", func(t *testing.T) {
+		t.Setenv("VIKUNJA_LEGAL_FOOBAR_TEXT", "foobar")
+		t.Setenv("VIKUNJA_LEGAL_FOOBAR_URL", "https://foo.bar")
+		t.Setenv("VIKUNJA_LEGAL_TERMS_OF_SERVICE_TEXT", "Terms of Service")
+		t.Setenv("VIKUNJA_LEGAL_TERMS_OF_SERVICE_URL", "https://example.com/tos")
+		initConfigFromYAML(t, "")
+
+		assert.Equal(t, []LegalLink{
+			{
+				Text: "foobar",
+				URL:  "https://foo.bar",
+			},
+			{
+				Text: "Terms of Service",
+				URL:  "https://example.com/tos",
+			},
+		}, GetLegalLinks())
+	})
+}

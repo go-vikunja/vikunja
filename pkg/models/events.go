@@ -68,6 +68,28 @@ func (t *TaskDeletedEvent) Name() string {
 	return "task.deleted"
 }
 
+// TaskRestoredEvent fires when a task is restored from the trash.
+type TaskRestoredEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskRestoredEvent
+func (t *TaskRestoredEvent) Name() string {
+	return "task.restored"
+}
+
+// TaskPurgedEvent fires when a trashed task is permanently deleted. Doer is nil for the retention cron.
+type TaskPurgedEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskPurgedEvent
+func (t *TaskPurgedEvent) Name() string {
+	return "task.purged"
+}
+
 // TaskAssigneeCreatedEvent represents an event where a task has been assigned to a user
 type TaskAssigneeCreatedEvent struct {
 	Task     *Task      `json:"task"`
@@ -247,6 +269,30 @@ type ProjectUpdatedEvent struct {
 // Name defines the name for ProjectUpdatedEvent
 func (p *ProjectUpdatedEvent) Name() string {
 	return "project.updated"
+}
+
+// ProjectRestoredEvent fires when a project is restored from the trash.
+type ProjectRestoredEvent struct {
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
+}
+
+// Name defines the name for ProjectRestoredEvent
+func (p *ProjectRestoredEvent) Name() string {
+	return "project.restored"
+}
+
+// ProjectPurgedEvent fires for every project removed permanently, sub-projects included. Doer is nil for the system.
+type ProjectPurgedEvent struct {
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
+	// Webhook routing only, stripped from the payload: the closure rows are gone once the purge commits.
+	AncestorIDs []int64 `json:"ancestor_ids,omitempty"`
+}
+
+// Name defines the name for ProjectPurgedEvent
+func (p *ProjectPurgedEvent) Name() string {
+	return "project.purged"
 }
 
 // ProjectDeletedEvent represents an event where a project has been deleted
@@ -487,6 +533,17 @@ func (e *AdminUserAdminRevokedEvent) Name() string {
 	return "admin.user.admin.revoked"
 }
 
+// SessionsRevokedEvent represents sessions of a user being deleted. An empty SessionID means all of them.
+type SessionsRevokedEvent struct {
+	UserID    int64  `json:"user_id"`
+	SessionID string `json:"session_id"`
+}
+
+// Name defines the name for SessionsRevokedEvent
+func (e *SessionsRevokedEvent) Name() string {
+	return "user.sessions.revoked"
+}
+
 // AdminUserStatusChangedEvent represents a user's account status being changed by an admin
 type AdminUserStatusChangedEvent struct {
 	User      *user.User  `json:"user"`
@@ -500,6 +557,19 @@ func (e *AdminUserStatusChangedEvent) Name() string {
 	return "admin.user.status.changed"
 }
 
+// BotStatusChangedEvent represents a bot's status being changed by its owner
+type BotStatusChangedEvent struct {
+	Bot       *user.User  `json:"bot"`
+	Doer      *user.User  `json:"doer"`
+	OldStatus user.Status `json:"old_status"`
+	NewStatus user.Status `json:"new_status"`
+}
+
+// Name defines the name for BotStatusChangedEvent
+func (e *BotStatusChangedEvent) Name() string {
+	return "bot.status.changed"
+}
+
 // AdminUserPasswordSetEvent represents an admin setting a user's password.
 // It carries no password material.
 type AdminUserPasswordSetEvent struct {
@@ -510,6 +580,18 @@ type AdminUserPasswordSetEvent struct {
 // Name defines the name for AdminUserPasswordSetEvent
 func (e *AdminUserPasswordSetEvent) Name() string {
 	return "admin.user.password.set"
+}
+
+// AdminUserSettingsUpdatedEvent represents an admin changing a user's general settings
+type AdminUserSettingsUpdatedEvent struct {
+	User          *user.User `json:"user"`
+	Doer          *user.User `json:"doer"`
+	ChangedFields []string   `json:"changed_fields"`
+}
+
+// Name defines the name for AdminUserSettingsUpdatedEvent
+func (e *AdminUserSettingsUpdatedEvent) Name() string {
+	return "admin.user.settings.updated"
 }
 
 // AdminUserPasswordResetSentEvent represents an admin triggering the

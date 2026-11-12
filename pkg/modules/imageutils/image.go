@@ -18,30 +18,21 @@ package imageutils
 
 import (
 	"image"
-	"io"
 )
 
 // MaxPixels bounds allocations from attacker-controlled dimensions.
 const MaxPixels = 50_000_000 // 50 megapixels
+
+// MaxSide bounds resampling memory, which grows with the longer side; it equals JPEG's own limit.
+const MaxSide = 65_535
 
 // Division avoids overflow from multiplying hostile dimensions.
 func ValidateConfig(cfg image.Config) error {
 	if cfg.Width <= 0 || cfg.Height <= 0 {
 		return &ErrImageTooLarge{Width: cfg.Width, Height: cfg.Height}
 	}
-	if cfg.Width > MaxPixels/cfg.Height {
+	if cfg.Width > MaxSide || cfg.Height > MaxSide || cfg.Width > MaxPixels/cfg.Height {
 		return &ErrImageTooLarge{Width: cfg.Width, Height: cfg.Height}
 	}
 	return nil
-}
-
-func ValidateReader(r io.Reader) (image.Config, error) {
-	cfg, _, err := image.DecodeConfig(r)
-	if err != nil {
-		return image.Config{}, err
-	}
-	if err := ValidateConfig(cfg); err != nil {
-		return image.Config{}, err
-	}
-	return cfg, nil
 }

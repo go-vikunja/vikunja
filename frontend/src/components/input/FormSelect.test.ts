@@ -1,6 +1,7 @@
-import {describe, it, expect} from 'vitest'
+import {describe, it, expect, vi} from 'vitest'
 import {mount} from '@vue/test-utils'
 import FormSelect from './FormSelect.vue'
+import {LOADING_TIMEOUT} from '@/stores/helper'
 
 describe('FormSelect', () => {
 	it('renders the Bulma select wrapper and a native select', () => {
@@ -65,9 +66,15 @@ describe('FormSelect', () => {
 		expect(typeof wrapper.props('modelValue')).toBe('number')
 	})
 
-	it('applies is-loading on the wrapper when loading', () => {
+	it('applies is-loading on the wrapper once loading outlasts the delay', async () => {
+		vi.useFakeTimers()
 		const wrapper = mount(FormSelect, {props: {loading: true}})
+		expect(wrapper.find('div.select').classes()).not.toContain('is-loading')
+
+		await vi.advanceTimersByTimeAsync(LOADING_TIMEOUT)
+
 		expect(wrapper.find('div.select').classes()).toContain('is-loading')
+		vi.useRealTimers()
 	})
 
 	it('applies disabled to the native select', () => {

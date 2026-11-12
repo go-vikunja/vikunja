@@ -2,7 +2,7 @@
 	<Multiselect
 		v-model="labels"
 		:loading="loading"
-		:placeholder="$t('task.label.placeholder')"
+		:placeholder="placeholder ?? $t('task.label.placeholder')"
 		:multiple="true"
 		:search-results="foundLabels"
 		label="title"
@@ -68,11 +68,13 @@ const props = withDefaults(defineProps<{
 	disabled?: boolean
 	creatable?: boolean
 	creationDisabledMessage?: string
+	placeholder?: string
 }>(), {
 	taskId: 0,
 	disabled: false,
 	creatable: true,
 	creationDisabledMessage: '',
+	placeholder: undefined,
 })
 
 const emit = defineEmits<{
@@ -134,7 +136,9 @@ async function removeLabel(label: Label) {
 		labels.value.splice(idx, 1)
 	}
 	emit('update:modelValue', labels.value)
-	success({message: t('task.label.removeSuccess')})
+	if (props.taskId !== 0) {
+		success({message: t('task.label.removeSuccess')})
+	}
 }
 
 async function createAndAddLabel(title: string) {

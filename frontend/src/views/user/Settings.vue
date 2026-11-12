@@ -11,6 +11,7 @@ import {useI18n} from 'vue-i18n'
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
+import {canLinkAccounts} from '@/helpers/canLinkAccounts'
 
 import SideNavShell from '@/components/misc/SideNavShell.vue'
 
@@ -20,12 +21,8 @@ useTitle(() => t('user.settings.title'))
 const configStore = useConfigStore()
 const authStore = useAuthStore()
 
-const totpEnabled = computed(() => configStore.totpEnabled)
-const caldavEnabled = computed(() => configStore.caldavEnabled)
 const migratorsEnabled = computed(() => configStore.migratorsEnabled)
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
-const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
-const webhooksEnabled = computed(() => configStore.webhooksEnabled)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 
 const navigationItems = computed(() => {
 	const items = [
@@ -50,7 +47,12 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.settings.totp.title'),
 			routeName: 'user.settings.totp',
-			condition: totpEnabled.value && isLocalUser.value,
+			condition: configStore.totp_enabled && isLocalUser.value,
+		},
+		{
+			title: t('user.settings.linkedAccounts.title'),
+			routeName: 'user.settings.linked-accounts',
+			condition: canLinkAccounts(configStore.auth.openid_connect, authStore.currentAccount),
 		},
 		{
 			title: t('user.export.title'),
@@ -59,13 +61,13 @@ const navigationItems = computed(() => {
 		{
 			title: t('migrate.title'),
 			routeName: 'migrate.start',
-			activeRouteNames: ['migrate.service'],
+			activeRouteNames: ['migrate.service', 'migrate.csv'],
 			condition: migratorsEnabled.value,
 		},
 		{
 			title: t('user.settings.caldav.title'),
 			routeName: 'user.settings.caldav',
-			condition: caldavEnabled.value,
+			condition: configStore.caldav_enabled,
 		},
 		{
 			title: 'MCP',
@@ -86,7 +88,7 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.settings.webhooks.title'),
 			routeName: 'user.settings.webhooks',
-			condition: webhooksEnabled.value,
+			condition: configStore.webhooks_enabled,
 		},
 		{
 			title: t('user.settings.bots.title'),
@@ -95,12 +97,12 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.deletion.title'),
 			routeName: 'user.settings.deletion',
-			condition: userDeletionEnabled.value,
+			condition: configStore.user_deletion_enabled,
 		},
 	]
 
 	return items.filter(({condition}) => condition !== false)
 })
 
-const extraSettingsLinks = computed(() => Object.values(authStore.settings.extraSettingsLinks ?? {}))
+const extraSettingsLinks = computed(() => Object.values(authStore.settings.extra_settings_links ?? {}))
 </script>

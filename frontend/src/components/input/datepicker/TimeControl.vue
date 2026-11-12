@@ -5,11 +5,13 @@
 				:icon="['far', 'clock']"
 				class="time-control__icon"
 			/>
+			<!-- Step buttons are mouse-only so Tab goes hours → minutes; arrow keys step the inputs. -->
 			<div class="time-control__segment">
 				<button
 					v-tooltip="$t('input.datepicker.time.hourUp')"
 					type="button"
 					class="time-control__step"
+					tabindex="-1"
 					:aria-label="$t('input.datepicker.time.hourUp')"
 					@click.stop="step('hours', 1)"
 				>
@@ -21,7 +23,10 @@
 					inputmode="numeric"
 					:value="displayHours"
 					:aria-label="$t('input.datepicker.time.hours')"
+					@focus="selectAll"
+					@input="advanceWhenHourComplete"
 					@change="onInput('hours', $event)"
+					@keydown.enter.stop.prevent="confirm('hours', $event)"
 					@keydown.up.prevent="step('hours', 1)"
 					@keydown.down.prevent="step('hours', -1)"
 				>
@@ -29,6 +34,7 @@
 					v-tooltip="$t('input.datepicker.time.hourDown')"
 					type="button"
 					class="time-control__step"
+					tabindex="-1"
 					:aria-label="$t('input.datepicker.time.hourDown')"
 					@click.stop="step('hours', -1)"
 				>
@@ -41,18 +47,22 @@
 					v-tooltip="$t('input.datepicker.time.minuteUp')"
 					type="button"
 					class="time-control__step"
+					tabindex="-1"
 					:aria-label="$t('input.datepicker.time.minuteUp')"
 					@click.stop="step('minutes', 5)"
 				>
 					<Icon icon="chevron-up" />
 				</button>
 				<input
+					ref="minutesInput"
 					class="time-control__value"
 					type="text"
 					inputmode="numeric"
 					:value="pad(minutes)"
 					:aria-label="$t('input.datepicker.time.minutes')"
+					@focus="selectAll"
 					@change="onInput('minutes', $event)"
+					@keydown.enter.stop.prevent="confirm('minutes', $event)"
 					@keydown.up.prevent="step('minutes', 1)"
 					@keydown.down.prevent="step('minutes', -1)"
 				>
@@ -60,6 +70,7 @@
 					v-tooltip="$t('input.datepicker.time.minuteDown')"
 					type="button"
 					class="time-control__step"
+					tabindex="-1"
 					:aria-label="$t('input.datepicker.time.minuteDown')"
 					@click.stop="step('minutes', -5)"
 				>
@@ -92,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick} from 'vue'
+import {computed, nextTick, useTemplateRef} from 'vue'
 
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
@@ -105,9 +116,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	update: [value: {hours: number, minutes: number}]
+	confirm: []
 }>()
 
 const PRESETS = [9, 12, 17]
+
+const minutesInput = useTemplateRef<HTMLInputElement>('minutesInput')
 
 const {store: timeFormat} = useTimeFormat()
 const is24h = computed(() => timeFormat.value === TIME_FORMAT.HOURS_24)
@@ -148,6 +162,26 @@ async function onInput(part: 'hours' | 'minutes', event: Event) {
 	}
 
 	target.value = part === 'hours' ? displayHours.value : pad(props.minutes)
+}
+
+function selectAll(event: FocusEvent) {
+	(event.target as HTMLInputElement).select()
+}
+
+async function advanceWhenHourComplete(event: Event) {
+	const {value} = event.target as HTMLInputElement
+	// A single digit is complete once no second digit could still form a valid hour.
+	const maxLeadingDigit = is24h.value ? 2 : 1
+	if (!/^\d+$/.test(value) || (value.length === 1 && Number(value) <= maxLeadingDigit)) {
+		return
+	}
+	await onInput('hours', event)
+	minutesInput.value?.focus()
+}
+
+async function confirm(part: 'hours' | 'minutes', event: KeyboardEvent) {
+	await onInput(part, event)
+	emit('confirm')
 }
 
 function toggleMeridiem() {

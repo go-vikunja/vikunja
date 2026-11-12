@@ -237,7 +237,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useUploadAttachmentsMutation, useDeleteAttachmentMutation} from '@/client/queries/attachments'
 import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/helpers/attachmentPreview'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 

@@ -7,7 +7,7 @@
 			<div class="field has-addons">
 				<p
 					class="control is-expanded"
-					:class="{ 'is-loading': searchLoading }"
+					:class="{ 'is-loading': showSearchLoading }"
 				>
 					<Multiselect
 						v-model="selected"
@@ -28,7 +28,7 @@
 				</p>
 				<p class="control">
 					<XButton
-						:class="{'is-loading': isMutating}"
+						:loading="isMutating"
 						:aria-disabled="!selected || isMutating || undefined"
 						@click="addSelected()"
 					>
@@ -127,11 +127,12 @@
 		>
 			<template #header>
 				<span>{{
-					$t('project.share.userTeam.removeHeader', {type: typeName, sharable: $t('project.list.title')})
+					$t('project.share.userTeam.removeHeader', {type: typeName, sharable: $t('project.share.userTeam.sharable')})
 				}}</span>
 			</template>
 			<template #text>
-				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.list.title')}) }}</p>
+				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}</p>
+				<ProjectAccessCleanupList :intro="$t('project.share.userTeam.removeCleanupText')" />
 			</template>
 		</Modal>
 	</div>
@@ -141,8 +142,10 @@
 import {computed, ref, watch, type Ref} from 'vue'
 import {normalizeSharePermission} from '@/client/queries/projectShares'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/Nothing.vue'
+import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupList.vue'
 
 type Identified<T extends {id?: number}> = T & {id: number}
 
@@ -161,6 +164,8 @@ const props = defineProps<{
 	updatePermission: (projectId: number, share: Identified<Share>, permission: Permission) => Promise<unknown>
 	remove: (projectId: number, share: Identified<Share>) => Promise<unknown>
 }>()
+
+const showSearchLoading = useDelayedLoading(() => props.searchLoading)
 
 const search = defineModel<string>('search', {required: true})
 

@@ -20,26 +20,35 @@
 	</template>
 	<section v-else-if="baseStore.error !== ''">
 		<NoAuthWrapper>
-			<p v-if="baseStore.error === ERROR_NO_API_URL">
-				{{ $t('ready.noApiUrlConfigured') }}
-			</p>
 			<Message
-				v-else
+				v-if="baseStore.error === ERROR_RATE_LIMITED"
 				variant="danger"
 				class="mbe-4"
 			>
-				<p>
-					{{ $t('ready.errorOccured') }}<br>
-					{{ baseStore.error }}
-				</p>
-				<p>
-					{{ $t('ready.checkApiUrl') }}
-				</p>
+				{{ $t('ready.rateLimited') }}
 			</Message>
-			<ApiConfig
-				:configure-open="true"
-				@foundApi="baseStore.loadApp()"
-			/>
+			<template v-else>
+				<p v-if="baseStore.error === ERROR_NO_API_URL">
+					{{ $t('ready.noApiUrlConfigured') }}
+				</p>
+				<Message
+					v-else
+					variant="danger"
+					class="mbe-4"
+				>
+					<p>
+						{{ $t('ready.errorOccured') }}<br>
+						{{ baseStore.error }}
+					</p>
+					<p>
+						{{ $t('ready.checkApiUrl') }}
+					</p>
+				</Message>
+				<ApiConfig
+					:configure-open="true"
+					@foundApi="baseStore.loadApp()"
+				/>
+			</template>
 		</NoAuthWrapper>
 	</section>
 	<CustomTransition name="fade">
@@ -66,7 +75,7 @@ import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
 import {ERROR_NO_API_URL} from '@/helpers/checkAndSetApiUrl'
 
 import {useOnline} from '@/composables/useOnline'
-import {useBaseStore} from '@/stores/base'
+import {ERROR_RATE_LIMITED, useBaseStore} from '@/stores/base'
 
 const online = useOnline()
 const baseStore = useBaseStore()

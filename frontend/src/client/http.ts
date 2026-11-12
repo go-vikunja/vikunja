@@ -6,9 +6,10 @@ import {
 	captureClientRequestContext,
 	type ClientRequestContext,
 } from '@/client/requestContext'
+import {normalizeProblemBody} from '@/client/problem'
 import {getToken, getTokenIdentity, refreshToken} from '@/helpers/auth'
-import {getApiV2BaseUrl} from '@/helpers/fetcher'
-import {AUTH_TYPES} from '@/modelTypes/IUser'
+import {getApiBaseUrl} from '@/helpers/apiUrl'
+import {AUTH_TYPES} from '@/constants/auth'
 
 async function getProblemCode(response: Response): Promise<number | null> {
 	try {
@@ -64,7 +65,7 @@ async function fenceResponseBody(
 
 export function configureApiClient(): void {
 	client.setConfig({
-		baseUrl: getApiV2BaseUrl(),
+		baseUrl: getApiBaseUrl(),
 		credentials: 'include',
 		throwOnError: true,
 	})
@@ -155,4 +156,6 @@ export function configureApiClient(): void {
 		const retryResponse = await (options.fetch ?? globalThis.fetch)(retry)
 		return fenceResponseBody(retryResponse, context, options)
 	})
+
+	client.interceptors.error.use((error, response) => normalizeProblemBody(error, response))
 }

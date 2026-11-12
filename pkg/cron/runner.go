@@ -96,7 +96,7 @@ func (r *Runner) Tick(ctx context.Context, name string, to time.Time, job Job) (
 			return false, err
 		}
 		// State-driven callbacks may work through other sessions for minutes.
-		if _, err = s.Exec("SET LOCAL idle_in_transaction_session_timeout = 0"); err != nil {
+		if _, err = s.Exec("SELECT set_config('idle_in_transaction_session_timeout', '0', true) WHERE current_setting('server_version_num')::integer >= 90600"); err != nil {
 			return false, err
 		}
 	}

@@ -31,7 +31,7 @@
 			<template v-if="unsplashBackgroundEnabled">
 				<input
 					v-model="backgroundSearchInput"
-					:class="{'is-loading': backgroundSearchQuery.isFetching.value}"
+					:class="{'is-loading': searching}"
 					class="input is-expanded"
 					:placeholder="$t('project.background.searchPlaceholder')"
 					type="text"
@@ -83,7 +83,7 @@
 					variant="secondary"
 					@click="backgroundSearchQuery.fetchNextPage()"
 				>
-					{{ backgroundSearchQuery.isFetchingNextPage.value ? $t('misc.loading') : $t('project.background.loadMore') }}
+					{{ loadingMore ? $t('misc.loading') : $t('project.background.loadMore') }}
 				</XButton>
 			</template>
 		</template>
@@ -103,7 +103,7 @@
 			</XButton>
 			<XButton
 				variant="secondary"
-				@click.prevent.stop="$router.back()"
+				@click.prevent.stop="goBack()"
 			>
 				{{ $t('misc.close') }}
 			</XButton>
@@ -116,7 +116,7 @@
 import {computed, ref} from 'vue'
 import {useInfiniteQuery, useQuery} from '@tanstack/vue-query'
 import {useI18n} from 'vue-i18n'
-import {useRoute, useRouter} from 'vue-router'
+import {useRoute} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import type {Image} from '@/client/generated'
@@ -135,6 +135,8 @@ import {PERMISSIONS} from '@/constants/permissions'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {useGoBack} from '@/composables/useGoBack'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
@@ -145,13 +147,13 @@ const SEARCH_DEBOUNCE = 300
 
 const {t} = useI18n({useScope: 'global'})
 const route = useRoute()
-const router = useRouter()
+const goBack = useGoBack()
 const configStore = useConfigStore()
 
 useTitle(() => t('project.background.title'))
 
-const unsplashBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('unsplash'))
-const uploadBackgroundEnabled = computed(() => configStore.enabledBackgroundProviders.includes('upload'))
+const unsplashBackgroundEnabled = computed(() => configStore.enabled_background_providers.includes('unsplash'))
+const uploadBackgroundEnabled = computed(() => configStore.enabled_background_providers.includes('upload'))
 const projectId = computed(() => Number(route.params.projectId))
 const project = useQuery(computed(() => projectQuery(projectId.value)))
 const canWrite = computed(() => project.data.value !== undefined && (project.data.value.max_permission ?? 0) >= PERMISSIONS.READ_WRITE)
@@ -179,6 +181,8 @@ const backgroundMutationLoading = computed(() =>
 	uploadBackgroundMutation.isPending.value ||
 	deleteBackgroundMutation.isPending.value,
 )
+const searching = useDelayedLoading(backgroundSearchQuery.isFetching)
+const loadingMore = useDelayedLoading(backgroundSearchQuery.isFetchingNextPage)
 
 async function setBackground(backgroundId: string) {
 	if (setBackgroundMutation.isPending.value) {
@@ -205,7 +209,7 @@ async function removeBackground() {
 	const id = projectId.value
 	const updated = await deleteBackgroundMutation.mutateAsync({projectId: id}).catch(() => undefined)
 	if (updated && isCurrentProject(id)) {
-		router.back()
+		goBack()
 	}
 }
 </script>

@@ -33,7 +33,10 @@ function mountWrapper(projectId: number) {
 		},
 		global: {
 			mocks: {$t: (key: string) => key},
-			stubs: {RouterLink: true},
+			stubs: {
+				RouterLink: true,
+				SwitchView: false,
+			},
 		},
 	})
 }

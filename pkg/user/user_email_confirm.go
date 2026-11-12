@@ -19,6 +19,7 @@ package user
 import (
 	"time"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -50,6 +51,7 @@ func ConfirmEmail(s *xorm.Session, c *EmailConfirm) (err error) {
 	if token.UserID < 1 {
 		return ErrInvalidEmailConfirmToken{Token: c.Token}
 	}
+	token.ClearTextToken = c.Token
 
 	user, err := GetUserWithEmail(s, &User{ID: token.UserID})
 	if err != nil {
@@ -59,13 +61,20 @@ func ConfirmEmail(s *xorm.Session, c *EmailConfirm) (err error) {
 		}
 	}
 
+	return confirmEmailWithToken(s, token, user)
+}
+
+func confirmEmailWithToken(s *xorm.Session, token *Token, user *User) (err error) {
+	invalidToken := ErrInvalidEmailConfirmToken{Token: token.ClearTextToken}
+	confirmedPendingEmail := user.PendingEmail
+
 	var cols []string
 	if user.PendingEmail != "" {
 		if time.Since(token.Created) > emailChangeTokenValidity {
 			if err := removeTokenByID(s, user, TokenEmailConfirm, token.ID); err != nil {
 				return err
 			}
-			return ErrInvalidEmailConfirmToken{Token: c.Token}
+			return invalidToken
 		}
 
 		// Someone else may have claimed the address since the change was requested.
@@ -75,6 +84,16 @@ func ConfirmEmail(s *xorm.Session, c *EmailConfirm) (err error) {
 		user.Email = user.PendingEmail
 		user.PendingEmail = ""
 		cols = append(cols, "email", "pending_email")
+	}
+
+	// A concurrent email change rotates the tokens; a token that is already gone must not confirm the new address.
+	consumed, err := s.Where("id = ? AND user_id = ? AND kind = ?", token.ID, user.ID, TokenEmailConfirm).
+		Delete(&Token{})
+	if err != nil {
+		return
+	}
+	if consumed != 1 {
+		return invalidToken
 	}
 
 	err = removeTokens(s, user, TokenEmailConfirm)
@@ -88,12 +107,22 @@ func ConfirmEmail(s *xorm.Session, c *EmailConfirm) (err error) {
 	}
 
 	if len(cols) == 0 {
-		return ErrInvalidEmailConfirmToken{Token: c.Token}
+		return invalidToken
 	}
 
-	_, err = s.
-		Where("id = ?", user.ID).
+	var pendingCond builder.Cond = builder.Eq{"pending_email": confirmedPendingEmail}
+	if confirmedPendingEmail == "" {
+		pendingCond = builder.Or(pendingCond, builder.IsNull{"pending_email"})
+	}
+	updated, err := s.
+		Where(builder.And(builder.Eq{"id": user.ID}, pendingCond)).
 		Cols(cols...).
 		Update(user)
+	if err != nil {
+		return
+	}
+	if updated != 1 {
+		return invalidToken
+	}
 	return
 }

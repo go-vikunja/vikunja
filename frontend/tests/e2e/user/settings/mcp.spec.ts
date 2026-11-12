@@ -10,7 +10,7 @@ test('creates a scoped MCP token and shows connection instructions once', async 
 	await page.getByRole('button', {name: 'Create a token'}).click()
 	await expect(page.getByRole('checkbox', {name: /access$/})).toBeChecked()
 	await expect(page.getByRole('checkbox', {name: /access$/})).toBeDisabled()
-	const created = page.waitForResponse(r => r.url().endsWith('/tokens') && r.request().method() === 'PUT')
+	const created = page.waitForResponse(r => r.url().endsWith('/tokens') && r.request().method() === 'POST')
 	await page.getByRole('button', {name: 'Create token', exact: true}).click()
 	const response = await created
 	expect(response.ok()).toBeTruthy()
@@ -41,5 +41,7 @@ test('creates a scoped MCP token and shows connection instructions once', async 
 	await expect(page.locator('body')).not.toContainText(token.token)
 	await page.getByRole('button', {name: 'Delete', exact: true}).click()
 	await page.locator('[data-cy="modalPrimary"]').click()
+	await expect(page.locator('tbody tr')).toHaveCount(0)
+	await page.reload()
 	await expect(page.locator('tbody tr')).toHaveCount(0)
 })

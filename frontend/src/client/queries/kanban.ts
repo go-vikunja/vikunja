@@ -53,6 +53,7 @@ export const kanbanKeys = {
 		[...kanbanKeys.view(project, view), params] as const,
 	projectOf: (key: QueryKey): number | undefined => key[1] as number | undefined,
 	viewOf: (key: QueryKey): number | undefined => key[2] as number | undefined,
+	paramsOf: (key: QueryKey): TaskFilterParams | undefined => key[3] as TaskFilterParams | undefined,
 }
 
 // Own key root: everything under kanbanKeys holds BoardData.

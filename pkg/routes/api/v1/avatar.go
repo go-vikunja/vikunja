@@ -18,6 +18,7 @@ package v1
 
 import (
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
@@ -36,7 +37,7 @@ import (
 // @tags user
 // @Produce octet-stream
 // @Param username path string true "The username of the user who's avatar you want to get"
-// @Param size query int false "The size of the avatar you want to get. If bigger than the max configured size this will be adjusted to the maximum size."
+// @Param size query int false "The size of the avatar you want to get. Rounded up to 16, 32, 48, 64, 128, 256, 512 or 1024 and capped at the max configured size."
 // @Success 200 {file} blob "The avatar"
 // @Failure 404 {object} models.Message "The user does not exist."
 // @Failure 500 {object} models.Message "Internal error"
@@ -44,9 +45,6 @@ import (
 func GetAvatar(c *echo.Context) error {
 	// Get the username
 	username := c.Param("username")
-
-	s := db.NewSession()
-	defer s.Close()
 
 	size := c.QueryParam("size")
 	var sizeInt int64 = 250 // Default size of 250
@@ -59,7 +57,7 @@ func GetAvatar(c *echo.Context) error {
 		}
 	}
 
-	a, mimeType, err := avatar.GetAvatarForUsername(s, username, sizeInt)
+	a, mimeType, err := avatar.GetAvatarForUsername(c.Request().Context(), username, sizeInt)
 	if err != nil {
 		return err
 	}
@@ -78,41 +76,45 @@ func GetAvatar(c *echo.Context) error {
 // @Success 200 {object} models.Message "The avatar was set successfully."
 // @Failure 400 {object} models.Message "File is no image."
 // @Failure 403 {object} models.Message "File too large."
+// @Failure 503 {object} models.Message "The server is busy decoding other images."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/settings/avatar/upload [put]
 func UploadAvatar(c *echo.Context) (err error) {
-
-	s := db.NewSession()
-	defer s.Close()
-
 	uc, err := user.GetCurrentUser(c)
 	if err != nil {
 		return err
 	}
+
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	a, err := avatar.PrepareUpload(c.Request().Context(), src)
+	if errors.Is(err, avatar.ErrNotAnImage) {
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
+	}
+	if err != nil {
+		return err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+	defer events.CleanupPending(s)
+
 	u, err := user.GetUserByID(s, uc.ID)
 	if err != nil {
 		_ = s.Rollback()
 		return err
 	}
 
-	// Get + upload the image
-	file, err := c.FormFile("avatar")
-	if err != nil {
+	if err := avatar.SaveUploaded(s, u, a); err != nil {
 		_ = s.Rollback()
-		return err
-	}
-	src, err := file.Open()
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	defer src.Close()
-
-	if err := avatar.StoreUploadedAvatar(s, u, src); err != nil {
-		_ = s.Rollback()
-		if errors.Is(err, avatar.ErrNotAnImage) {
-			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
-		}
 		return err
 	}
 
@@ -120,6 +122,7 @@ func UploadAvatar(c *echo.Context) (err error) {
 		_ = s.Rollback()
 		return err
 	}
+	events.DispatchPending(c.Request().Context(), s)
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Avatar was uploaded successfully."})
 }

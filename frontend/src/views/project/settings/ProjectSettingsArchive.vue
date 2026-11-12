@@ -1,6 +1,6 @@
 <template>
 	<Modal
-		@close="$router.back()"
+		@close="goBack()"
 		@submit="archiveProject()"
 	>
 		<template #header>
@@ -15,11 +15,12 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {useRouter, useRoute} from 'vue-router'
+import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import {useUpdateProjectMutation} from '@/client/queries/projects'
 import {useTitle} from '@/composables/useTitle'
+import {useGoBack} from '@/composables/useGoBack'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjects} from '@/composables/useProjects'
@@ -29,10 +30,10 @@ defineOptions({name: 'ProjectSettingArchive'})
 const {t} = useI18n({useScope: 'global'})
 const projectList = useProjects()
 const updateMutation = useUpdateProjectMutation(t('project.archive.success'))
-const router = useRouter()
+const goBack = useGoBack()
 const route = useRoute()
 
-const project = computed(() => projectList.projects[route.params.projectId])
+const project = computed(() => projectList.projects[Number(route.params.projectId)])
 useTitle(() => project.value?.title ? t('project.archive.title', {project: project.value.title}) : '')
 
 async function archiveProject() {
@@ -47,7 +48,7 @@ async function archiveProject() {
 		})
 		useBaseStore().setCurrentProject(newProject)
 	} finally {
-		router.back()
+		goBack()
 	}
 }
 </script>

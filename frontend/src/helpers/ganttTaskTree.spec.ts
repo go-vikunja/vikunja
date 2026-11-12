@@ -138,5 +138,66 @@ describe('buildGanttTaskTree', () => {
 		expect(result[0].derivedEndDate?.toISOString()).toContain('2026-03-15')
 		expect(result[0].hasDerivedDates).toBe(true)
 	})
-})
 
+	it('derives dates for diamond-shaped relation graphs in linear time', () => {
+		// Every node links to both nodes of the next layer: 2^30 paths without memoization.
+		const layers = 30
+		const id = (layer: number, i: number) => layer * 2 + i + 1
+		const tasks = new Map<number, TaskResponse>()
+		tasks.set(0, makeTask(0, {
+			start_date: undefined,
+			end_date: undefined,
+			related_tasks: {subtask: [makeTask(id(0, 0)), makeTask(id(0, 1))]},
+		}))
+		for (let layer = 0; layer < layers; layer++) {
+			for (let i = 0; i < 2; i++) {
+				const isLast = layer === layers - 1
+				const parents = layer === 0
+					? [makeTask(0)]
+					: [makeTask(id(layer - 1, 0)), makeTask(id(layer - 1, 1))]
+				tasks.set(id(layer, i), makeTask(id(layer, i), {
+					start_date: isLast ? new Date(`2026-03-0${i + 1}`).toISOString() : undefined,
+					end_date: isLast ? new Date(`2026-03-1${i + 1}`).toISOString() : undefined,
+					related_tasks: {
+						parenttask: parents,
+						subtask: isLast ? [] : [makeTask(id(layer + 1, 0)), makeTask(id(layer + 1, 1))],
+					},
+				}))
+			}
+		}
+
+		const start = performance.now()
+		const result = buildGanttTaskTree(tasks)
+		expect(performance.now() - start).toBeLessThan(1000)
+
+		expect(result).toHaveLength(tasks.size)
+		expect(result[0].derivedStartDate?.toISOString()).toContain('2026-03-01')
+		expect(result[0].derivedEndDate?.toISOString()).toContain('2026-03-12')
+	})
+
+	it('does not loop forever on cyclic subtask relations', () => {
+		const tasks = new Map<number, TaskResponse>([
+			[1, makeTask(1, {
+				start_date: undefined,
+				end_date: undefined,
+				related_tasks: {subtask: [makeTask(2)]},
+			})],
+			[2, makeTask(2, {
+				start_date: undefined,
+				end_date: undefined,
+				related_tasks: {parenttask: [makeTask(1), makeTask(3)], subtask: [makeTask(3)]},
+			})],
+			[3, makeTask(3, {
+				start_date: new Date('2026-03-05').toISOString(),
+				end_date: new Date('2026-03-20').toISOString(),
+				related_tasks: {parenttask: [makeTask(2)], subtask: [makeTask(2)]},
+			})],
+		])
+
+		const result = buildGanttTaskTree(tasks)
+
+		expect(result).toHaveLength(3)
+		expect(result[0].derivedStartDate?.toISOString()).toContain('2026-03-05')
+		expect(result[0].derivedEndDate?.toISOString()).toContain('2026-03-20')
+	})
+})

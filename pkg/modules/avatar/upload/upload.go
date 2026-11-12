@@ -18,6 +18,7 @@ package upload
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/gob"
 	"fmt"
@@ -47,6 +48,8 @@ type Provider struct {
 
 const CacheKeyPrefix = "avatar_upload_"
 
+const maxAvatarSide = 1024
+
 // FlushCache removes cached avatars for a user
 func (p *Provider) FlushCache(u *user.User) error {
 	return keyvalue.DelPrefix(CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_")
@@ -59,14 +62,15 @@ type CachedAvatar struct {
 }
 
 // GetAvatar returns an uploaded user avatar
-func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+func (p *Provider) GetAvatar(ctx context.Context, u *user.User, size int64) (avatar []byte, mimeType string, err error) {
 	// size is converted to int below for imaging.Resize; reject values that
 	// would be negative or overflow on platforms where int is 32 bits.
 	if size <= 0 || size > math.MaxInt32 {
 		return nil, "", fmt.Errorf("invalid avatar size %d", size)
 	}
 
-	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(size, 10)
+	// The file id keeps a late write from a request that loaded the replaced file off the current key.
+	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(u.AvatarFileID, 10) + "_" + strconv.FormatInt(size, 10)
 
 	cachedAvatar, err := keyvalue.RememberValue(cacheKey, func() (CachedAvatar, error) {
 		log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)
@@ -86,18 +90,11 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 			return CachedAvatar{}, err
 		}
 
-		// Reject hostile dimensions before decoding (GHSA-4vh2-39rq-rq8j).
-		if _, err := imageutils.ValidateReader(bytes.NewReader(data)); err != nil {
-			return CachedAvatar{}, err
-		}
-		img, _, err := image.Decode(bytes.NewReader(data))
-		if err != nil {
-			return CachedAvatar{}, err
-		}
-		// Fit bounds both dimensions without upscaling.
-		resizedImg := imaging.Fit(img, int(size), int(size), imaging.Lanczos)
 		buf := &bytes.Buffer{}
-		if err := png.Encode(buf, resizedImg); err != nil {
+		err = imageutils.Decode(ctx, imageutils.BytesOpener(data), func(img image.Image, _ string) error {
+			return png.Encode(buf, imaging.Fit(img, int(size), int(size), imaging.Lanczos))
+		})
+		if err != nil {
 			return CachedAvatar{}, err
 		}
 
@@ -119,8 +116,8 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 }
 
 // AsDataURI returns a base64 encoded data URI for the uploaded avatar
-func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
-	avatarData, mimeType, err := p.GetAvatar(u, size)
+func (p *Provider) AsDataURI(ctx context.Context, u *user.User, size int64) (string, error) {
+	avatarData, mimeType, err := p.GetAvatar(ctx, u, size)
 	if err != nil {
 		return "", err
 	}
@@ -132,51 +129,68 @@ func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
 	return dataURI, nil
 }
 
-func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
+type EncodedAvatar struct {
+	png []byte
+}
 
-	// Remove the old file if one exists
-	if u.AvatarFileID != 0 {
-		f := &files.File{ID: u.AvatarFileID}
-		if err := f.Delete(s); err != nil {
-			if !files.IsErrFileDoesNotExist(err) {
-				return err
-			}
-		}
-		u.AvatarFileID = 0
-	}
-
-	data, err := io.ReadAll(src)
-	if err != nil {
-		return
-	}
-	if _, err := imageutils.ValidateReader(bytes.NewReader(data)); err != nil {
-		return err
-	}
-	img, _, err := image.Decode(bytes.NewReader(data))
-	if err != nil {
-		return
-	}
-	// Fit bounds both dimensions without upscaling.
-	resizedImg := imaging.Fit(img, 1024, 1024, imaging.Lanczos)
+// May queue for decode capacity; call outside a transaction.
+func PrepareAvatar(ctx context.Context, raw []byte) (*EncodedAvatar, error) {
 	buf := &bytes.Buffer{}
-	err = png.Encode(buf, resizedImg)
+	err := imageutils.Decode(ctx, imageutils.BytesOpener(raw), func(img image.Image, _ string) error {
+		return png.Encode(buf, imaging.Fit(centeredSquare(img), maxAvatarSide, maxAvatarSide, imaging.Lanczos))
+	})
 	if err != nil {
-		return
+		return nil, err
 	}
+	return &EncodedAvatar{png: buf.Bytes()}, nil
+}
 
-	err = (&Provider{}).FlushCache(u)
-	if err != nil {
-		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
+// Zero-copy where possible: a full-resolution copy would escape the decode budget.
+func centeredSquare(img image.Image) image.Image {
+	b := img.Bounds()
+	side := min(b.Dx(), b.Dy())
+	sub, ok := img.(interface {
+		SubImage(image.Rectangle) image.Image
+	})
+	if !ok {
+		return imaging.CropCenter(img, side, side)
 	}
+	topLeft := b.Min.Add(image.Pt((b.Dx()-side)/2, (b.Dy()-side)/2))
+	return sub.SubImage(image.Rectangle{Min: topLeft, Max: topLeft.Add(image.Pt(side, side))})
+}
 
-	// Save the file
-	f, err := files.CreateWithMimeAndSession(s, bytes.NewReader(buf.Bytes()), "avatar.png", uint64(buf.Len()), u, "image/png", true)
+// SaveAvatar removes the replaced avatar blob in events.DispatchPending(s).
+func SaveAvatar(s *xorm.Session, u *user.User, provider string, a *EncodedAvatar) (err error) {
+	oldAvatarFileID := u.AvatarFileID
+	ownsOldAvatar := u.OwnsAvatarFile()
+	oldProvider := u.AvatarProvider
+	defer func() {
+		if err != nil {
+			u.AvatarFileID = oldAvatarFileID
+			u.AvatarProvider = oldProvider
+		}
+	}()
+
+	f, err := files.CreateWithMimeAndSession(s, bytes.NewReader(a.png), "avatar.png", uint64(len(a.png)), u, "image/png", true)
 	if err != nil {
 		return err
 	}
 
 	u.AvatarFileID = f.ID
+	u.AvatarProvider = provider
 
 	_, err = user.UpdateUser(s, u, false)
-	return
+	if err != nil {
+		return err
+	}
+
+	// Log only: the new avatar is already persisted.
+	if ownsOldAvatar {
+		old := &files.File{ID: oldAvatarFileID}
+		if delErr := old.DeleteOnCommit(s); delErr != nil && !files.IsErrFileDoesNotExist(delErr) {
+			log.Errorf("Could not delete old avatar file %d of user %d: %s", oldAvatarFileID, u.ID, delErr)
+		}
+	}
+
+	return nil
 }

@@ -18,16 +18,17 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
-// loadAdminTargetUser fetches a user by ID for the admin actions, returning
-// ErrUserDoesNotExist for an invalid ID or a missing row.
-func loadAdminTargetUser(s *xorm.Session, id int64) (*user.User, error) {
+// GetUserAsAdmin loads any user by ID, including disabled and locked accounts.
+func GetUserAsAdmin(s *xorm.Session, id int64) (*user.User, error) {
 	if id < 1 {
 		return nil, user.ErrUserDoesNotExist{UserID: id}
 	}
@@ -46,7 +47,7 @@ func loadAdminTargetUser(s *xorm.Session, id int64) (*user.User, error) {
 // reachable admin is refused via GuardLastAdmin. It does not commit; the caller
 // owns the transaction.
 func SetUserAdminFlag(s *xorm.Session, doer *user.User, id int64, isAdmin bool) (*user.User, error) {
-	target, err := loadAdminTargetUser(s, id)
+	target, err := GetUserAsAdmin(s, id)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,7 @@ func SetUserAdminFlag(s *xorm.Session, doer *user.User, id int64, isAdmin bool) 
 // blocks login, so it is equivalent to demotion). It does not commit; the caller
 // owns the transaction.
 func SetUserStatusAsAdmin(s *xorm.Session, doer *user.User, id int64, status user.Status) (*user.User, error) {
-	target, err := loadAdminTargetUser(s, id)
+	target, err := GetUserAsAdmin(s, id)
 	if err != nil {
 		return nil, err
 	}
@@ -90,12 +91,26 @@ func SetUserStatusAsAdmin(s *xorm.Session, doer *user.User, id int64, status use
 		}
 	}
 
-	oldStatus := target.Status
-	if err := user.SetUserStatus(s, target, status); err != nil {
+	if err := ChangeUserStatus(s, doer, target, status); err != nil {
 		return nil, err
 	}
-	// Reflect the change on the returned struct; GetUserByID refuses disabled accounts.
+	return target, nil
+}
+
+// ChangeUserStatus skips the last-admin guard.
+func ChangeUserStatus(s *xorm.Session, doer *user.User, target *user.User, status user.Status) error {
+	oldStatus := target.Status
+	if err := user.SetUserStatus(s, target, status); err != nil {
+		return err
+	}
+	// Reflect the change on the caller's struct; GetUserByID refuses disabled accounts.
 	target.Status = status
+
+	if status != user.StatusActive {
+		if err := DeleteAllUserSessions(s, target.ID); err != nil {
+			return err
+		}
+	}
 
 	if err := events.DispatchOnCommit(s, &AdminUserStatusChangedEvent{
 		User:      target,
@@ -103,9 +118,9 @@ func SetUserStatusAsAdmin(s *xorm.Session, doer *user.User, id int64, status use
 		OldStatus: oldStatus,
 		NewStatus: status,
 	}); err != nil {
-		return nil, err
+		return err
 	}
-	return target, nil
+	return nil
 }
 
 // SetUserPasswordAsAdmin sets a new password for a local account and
@@ -114,7 +129,7 @@ func SetUserStatusAsAdmin(s *xorm.Session, doer *user.User, id int64, status use
 // old-password verification runs here to catch them. It does not commit; the
 // caller owns the transaction.
 func SetUserPasswordAsAdmin(s *xorm.Session, doer *user.User, id int64, newPassword string) (*user.User, error) {
-	target, err := loadAdminTargetUser(s, id)
+	target, err := GetUserAsAdmin(s, id)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +138,7 @@ func SetUserPasswordAsAdmin(s *xorm.Session, doer *user.User, id int64, newPassw
 		return nil, &user.ErrAccountIsNotLocal{UserID: target.ID}
 	}
 
-	if err := setUserPasswordAndInvalidateSessions(s, target, newPassword); err != nil {
+	if err := SetUserPasswordAndInvalidateSessions(s, target, newPassword); err != nil {
 		return nil, err
 	}
 
@@ -139,12 +154,36 @@ func SetUserPasswordAsAdmin(s *xorm.Session, doer *user.User, id int64, newPassw
 	return target, nil
 }
 
+// UpdateUserSettingsAsAdmin checks the default project against the target
+// user's permissions, not the admin's.
+func UpdateUserSettingsAsAdmin(s *xorm.Session, doer *user.User, id int64, settings *UserGeneralSettings) (*user.User, error) {
+	target, err := GetUserAsAdmin(s, id)
+	if err != nil {
+		return nil, err
+	}
+
+	before := NewUserGeneralSettings(target)
+	if err := UpdateUserGeneralSettings(s, target, settings); err != nil {
+		return nil, err
+	}
+
+	changed, err := changedGeneralSettings(before, NewUserGeneralSettings(target))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := events.DispatchOnCommit(s, &AdminUserSettingsUpdatedEvent{User: target, Doer: doer, ChangedFields: changed}); err != nil {
+		return nil, err
+	}
+	return target, nil
+}
+
 // RequestPasswordResetAsAdmin triggers the self-service password-reset email
 // for a local account. The caller must ensure the mailer is enabled —
 // RequestUserPasswordResetToken silently skips the email otherwise. It does
 // not commit; the caller owns the transaction.
 func RequestPasswordResetAsAdmin(s *xorm.Session, doer *user.User, id int64) error {
-	target, err := loadAdminTargetUser(s, id)
+	target, err := GetUserAsAdmin(s, id)
 	if err != nil {
 		return err
 	}
@@ -154,12 +193,12 @@ func RequestPasswordResetAsAdmin(s *xorm.Session, doer *user.User, id int64) err
 	}
 
 	// notifications.Notify silently drops emails for accounts ShouldNotify
-	// refuses (bots, disabled or locked accounts); surface that instead of
+	// refuses (bots, disabled accounts); surface that instead of
 	// reporting a sent email.
 	if target.IsBot() {
 		return ErrInvalidData{Message: "bot accounts cannot receive password-reset emails"}
 	}
-	if _, err := user.GetUserByID(s, id); err != nil {
+	if _, err := user.GetUserByID(s, id); err != nil && !user.IsErrAccountLocked(err) {
 		return err
 	}
 
@@ -178,7 +217,7 @@ func RequestPasswordResetAsAdmin(s *xorm.Session, doer *user.User, id int64) err
 // reachable admin is refused via GuardLastAdmin. It does not commit; the caller
 // owns the transaction.
 func DeleteUserAsAdmin(s *xorm.Session, doer *user.User, id int64, mode string) error {
-	target, err := loadAdminTargetUser(s, id)
+	target, err := GetUserAsAdmin(s, id)
 	if err != nil {
 		return err
 	}
@@ -208,11 +247,16 @@ func ListUsersAsAdmin(s *xorm.Session, doer *user.User, search string, page, per
 		return nil, 0, err
 	}
 
-	query := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
+	query := s.Limit(perPage, (page-1)*perPage)
 	if search != "" {
-		q := "%" + search + "%"
-		query = query.Where("username LIKE ? OR email LIKE ?", q, q)
+		query = query.Where(builder.Or(
+			db.ILIKE("username", search),
+			db.ILIKE("email", search),
+		))
+		order, args := db.SearchRelevanceOrder(search, "username", "email")
+		query = query.OrderBy(order, args...)
 	}
+	query = query.OrderBy("id ASC")
 
 	var users []*user.User
 	total, err := query.FindAndCount(&users)

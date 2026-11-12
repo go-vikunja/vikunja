@@ -85,7 +85,7 @@
 				/>
 
 				<Popup
-					v-if="+new Date(task.due_date) > 0"
+					v-if="task.due_date && +new Date(task.due_date) > 0"
 					placement="bottom-start"
 					:anchor="dueDateTriggerEl"
 					sheet-on-mobile
@@ -97,13 +97,17 @@
 							v-tooltip="formatDateLong(task.due_date)"
 							class="dueDate"
 							@click.prevent.stop="toggle()"
-						>	
+						>
+							<OverdueIndicator
+								v-if="isOverdue"
+								class="mie-1"
+							/>
 							<time
 								:datetime="formatISO(task.due_date)"
 								class="is-italic"
 								:aria-expanded="isOpen ? 'true' : 'false'"
 							>
-								– {{ $t('task.detail.due', {at: dueDateFormatted}) }}
+								{{ $t('task.detail.due', {at: dueDateFormatted}) }}
 							</time>
 						</BaseButton>
 					</template>
@@ -158,7 +162,7 @@
 			/>
 
 			<RouterLink
-				v-if="showProjectSeparately"
+				v-if="showProjectSeparately && project"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				:to="{ name: 'project.index', params: { projectId: task.project_id } }"
 				class="task-project"
@@ -186,7 +190,7 @@
 			</BaseButton>
 			<slot />
 		</div>
-		<template v-if="typeof task.related_tasks?.subtask !== 'undefined'">
+		<template v-if="expandsSubtasks && typeof task.related_tasks?.subtask !== 'undefined'">
 			<template v-for="subtask in task.related_tasks.subtask">
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
@@ -203,8 +207,16 @@
 	</div>
 </template>
 
+<script lang="ts">
+import type {InjectionKey} from 'vue'
+
+// Subtasks form a DAG: without dedup, a task shared by several parents renders once per path.
+const MAX_SUBTASK_DEPTH = 5
+const subtaskTreeKey: InjectionKey<{expandedTaskIds: Set<number>, depth: number}> = Symbol('subtaskTree')
+</script>
+
 <script setup lang="ts">
-import {ref, watch, onMounted, computed} from 'vue'
+import {ref, watch, onMounted, onBeforeUnmount, computed, inject, provide} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {getHexColor} from '@/helpers/task'
@@ -214,6 +226,7 @@ import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 import DeferTask from '@/components/tasks/partials/DeferTask.vue'
+import OverdueIndicator from '@/components/tasks/partials/OverdueIndicator.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 
@@ -236,6 +249,7 @@ import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useGlobalNow} from '@/composables/useGlobalNow'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -268,6 +282,25 @@ const {t} = useI18n({useScope: 'global'})
 
 const task = computed(() => props.theTask)
 
+const parentTree = inject(subtaskTreeKey, null)
+const subtaskTree = {
+	expandedTaskIds: parentTree?.expandedTaskIds ?? new Set<number>(),
+	depth: parentTree ? parentTree.depth + 1 : 0,
+}
+provide(subtaskTreeKey, subtaskTree)
+
+// Claimed once at setup, which runs in depth-first render order, so re-renders keep the first occurrence expanded.
+function claimSubtaskExpansion(taskId: number | undefined): boolean {
+	if (taskId === undefined || subtaskTree.depth >= MAX_SUBTASK_DEPTH || subtaskTree.expandedTaskIds.has(taskId)) {
+		return false
+	}
+	subtaskTree.expandedTaskIds.add(taskId)
+	onBeforeUnmount(() => subtaskTree.expandedTaskIds.delete(taskId))
+	return true
+}
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss -- claim is intentionally fixed per instance
+const expandsSubtasks = claimSubtaskExpansion(props.theTask.id)
+
 const isRepeating = computed(() => (task.value.repeat_after ?? 0) > 0
 	|| ((task.value.repeat_after ?? 0) === 0
 		&& task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
@@ -275,7 +308,7 @@ const isRepeating = computed(() => (task.value.repeat_after ?? 0) > 0
 const projectList = useProjects()
 const updateTask = useUpdateTaskMutation(true)
 const favoriteTask = useFavoriteTaskMutation()
-const isLoading = computed(() => updateTask.isPending.value || favoriteTask.isPending.value)
+const isLoading = useDelayedLoading(() => updateTask.isPending.value || favoriteTask.isPending.value)
 
 const project = computed(() => projectList.projects[task.value.project_id ?? 0])
 const projectColor = computed(() => project.value?.hex_color ?? '')
@@ -376,10 +409,10 @@ async function toggleFavorite() {
 const taskRoot = ref<HTMLElement | null>(null)
 const dueDateTrigger = ref<InstanceType<typeof BaseButton> | null>(null)
 const dueDateTriggerEl = computed<HTMLElement | null>(() => dueDateTrigger.value?.$el ?? null)
-const taskLinkRef = ref<HTMLElement | null>(null)
+const taskLinkRef = ref<InstanceType<typeof BaseButton> | null>(null)
 
 function hasTextSelected() {
-	const isTextSelected = window.getSelection().toString()
+	const isTextSelected = window.getSelection()?.toString()
 	return !(typeof isTextSelected === 'undefined' || isTextSelected === '' || isTextSelected === '\n')
 }
 

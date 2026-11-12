@@ -20,7 +20,7 @@ export function useRouteFilters<CurrentFilters extends Filters>(
 ) : UseRouteFiltersReturn<CurrentFilters> {
 	const router = useRouter()
 
-	const filters = ref<CurrentFilters>(routeToFilters(route.value))
+	const filters = ref(routeToFilters(route.value)) as Ref<CurrentFilters>
 
 	const routeFromFiltersFullPath = computed(() => router.resolve(filtersToRoute(filters.value)).fullPath)
 

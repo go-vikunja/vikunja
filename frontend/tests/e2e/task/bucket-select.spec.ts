@@ -8,7 +8,7 @@ import {TaskRelationFactory} from '../../factories/task_relation'
 import {TaskAssigneeFactory} from '../../factories/task_assignee'
 import {UserFactory} from '../../factories/user'
 
-async function createKanbanTaskInBucket() {
+async function createKanbanTaskInBucket(bucketCount = 2) {
 	const projects = await ProjectFactory.create(1)
 	const views = await ProjectViewFactory.create(1, {
 		id: 1,
@@ -16,7 +16,7 @@ async function createKanbanTaskInBucket() {
 		view_kind: 3,
 		bucket_configuration_mode: 1,
 	})
-	const buckets = await BucketFactory.create(2, {
+	const buckets = await BucketFactory.create(bucketCount, {
 		project_view_id: views[0].id,
 	})
 	const tasks = await TaskFactory.create(1, {
@@ -203,9 +203,9 @@ test.describe('Task Bucket Select', () => {
 	})
 
 	test('Renders the bucket dropdown above the remove assignee buttons', async ({authenticatedPage: page}) => {
-		const {project, view, task} = await createKanbanTaskInBucket()
-		// The dropdown is right-aligned to the bucket name in the breadcrumb, so it
-		// only reaches over the assignee avatars once the row is long enough.
+		// On mobile the assignees row sits right below the breadcrumb; enough buckets make the dropdown reach over it.
+		await page.setViewportSize({width: 390, height: 844})
+		const {project, view, task} = await createKanbanTaskInBucket(6)
 		// Start at 100 to keep the fixture's logged-in user (ID 1).
 		const users = await UserFactory.create(12, {
 			id: (i: number) => 100 + i,
@@ -220,7 +220,7 @@ test.describe('Task Bucket Select', () => {
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
 		await expect(page).toHaveURL(new RegExp(`/tasks/${task.id}`))
 
-		const removeButtons = page.locator('.task-view .column.assignees .remove-assignee')
+		const removeButtons = page.locator('.task-view .property-assignees .remove-assignee')
 		await expect(removeButtons).toHaveCount(users.length)
 
 		await page.locator('.task-view .subtitle .bucket-name').click()

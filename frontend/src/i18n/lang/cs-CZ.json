@@ -292,13 +292,7 @@
 		},
 		"delete": {
 			"title": "Smazat \"{project}\"",
-			"header": "Odstranit tento projekt",
-			"text1": "Opravdu chcete smazat projekt a všechny jeho úkoly?",
-			"text2": "To zahrnuje všechny úkoly a JE TO NEVRATNÉ!",
-			"success": "Projekt byl úspěšně smazán.",
-			"tasksToDelete": "Neodvolatelně tím odstraníme asi {count} úloh.",
-			"tasksAndChildProjectsToDelete": "Chystáte se neodvolatelně odstranit nějaké úkoly (cca {tasks}) a projekty (cca {projects}).",
-			"noTasksToDelete": "Tento projekt neobsahuje žádné úkoly, mělo by být bezpečné ho smazat."
+			"header": "Odstranit tento projekt"
 		},
 		"duplicate": {
 			"title": "Duplikovat projekt",
@@ -811,38 +805,15 @@
 			"updated": "Aktualizováno {0}",
 			"doneAt": "Dokončeno {0}",
 			"updateSuccess": "Úkol byl úspěšně uložen.",
-			"deleteSuccess": "Úkol byl úspěšně smazán.",
 			"duplicateSuccess": "Úkol byl úspěšně duplikován.",
 			"belongsToProject": "Tento úkol patří do projektu '{project}'",
 			"back": "Zpět k projektu",
 			"due": "Termín {at}",
 			"scrollToBottom": "Přejít na konec",
-			"organization": "Organizace",
-			"management": "Management",
-			"dateAndTime": "Datum a čas",
-			"delete": {
-				"header": "Smazat tento úkol",
-				"text1": "Opravdu chcete odstranit tento úkol?",
-				"text2": "Tímto také odstraníte všechny přílohy, připomenutí a vztahy spojené s tímto úkolem a nelze je vrátit zpět!"
-			},
 			"actions": {
-				"assign": "Přiřadit uživateli",
-				"label": "Přidat štítky",
-				"priority": "Nastavit prioritu",
-				"dueDate": "Nastavit termín",
-				"startDate": "Nastavit počáteční datum",
-				"endDate": "Nastavit koncové datum",
-				"reminders": "Nastavit připomenutí",
-				"repeatAfter": "Nastavit interval opakování",
-				"percentDone": "Nastavit průběh",
-				"attachments": "Přidat přílohy",
-				"relatedTasks": "Přidat vztah",
 				"moveProject": "Přesunout",
 				"duplicate": "Duplikovat",
-				"color": "Nastavit barvu",
-				"delete": "Smazat",
-				"favorite": "Přidat do oblíbených",
-				"unfavorite": "Odebrat z oblíbených"
+				"delete": "Smazat"
 			}
 		},
 		"attributes": {
@@ -985,9 +956,6 @@
 			"dateAndTime": "Datum a čas"
 		},
 		"repeat": {
-			"everyDay": "Každý den",
-			"everyWeek": "Každý týden",
-			"every30d": "Každých 30 dní",
 			"mode": "Režim opakování",
 			"monthly": "Měsíčně",
 			"fromCurrentDate": "Od data dokončení",

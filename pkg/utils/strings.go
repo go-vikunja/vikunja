@@ -16,7 +16,10 @@
 
 package utils
 
-import "strconv"
+import (
+	"strconv"
+	"unicode/utf8"
+)
 
 func JoinInt64Slice(ints []int64, delim string) string {
 	b := ""
@@ -28,4 +31,15 @@ func JoinInt64Slice(ints []int64, delim string) string {
 	}
 
 	return b
+}
+
+func TruncateUTF8(s string, maxBytes int) string {
+	if len(s) <= maxBytes {
+		return s
+	}
+	end := maxBytes
+	for end > 0 && !utf8.RuneStart(s[end]) {
+		end--
+	}
+	return s[:end]
 }

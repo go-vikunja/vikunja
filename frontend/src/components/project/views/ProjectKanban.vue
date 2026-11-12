@@ -10,8 +10,7 @@
 				<FilterPopup
 					v-if="!isSavedFilterProject(project)"
 					v-model="params"
-					:view-id="viewId"
-					:project-id="projectId"
+					:view
 					@update:modelValue="updateFilters"
 				/>
 			</div>
@@ -20,10 +19,10 @@
 		<template #default>
 			<div class="kanban-view">
 				<div
-					:class="{ 'is-loading': initialLoading }"
+					:class="{ 'is-loading': showInitialLoading, 'is-dragging': drag || dragBucket }"
 					class="kanban kanban-bucket-container loader-container"
 				>
-					<draggable
+					<BucketDraggable
 						v-bind="DRAG_OPTIONS"
 						:model-value="buckets"
 						group="buckets"
@@ -38,15 +37,16 @@
 						<template #item="{element: bucket, index: bucketIndex }">
 							<li
 								class="bucket"
-								:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
+								:class="{'is-collapsed': isCollapsed(bucket)}"
 								:data-bucket-id="bucket.id"
 							>
 								<div
 									class="bucket-header"
 									@click="() => unCollapseBucket(bucket)"
+									@dragenter="() => expandWhileDragging(bucket)"
 								>
 									<span
-										v-if="bucket.id !== 0 && view?.done_bucket_id === bucket.id"
+										v-if="bucket.id !== 0 && view.done_bucket_id === bucket.id"
 										v-tooltip="$t('project.kanban.doneBucketHint')"
 										class="icon is-small has-text-success mie-2"
 										@click.stop="() => collapseBucket(bucket)"
@@ -66,10 +66,20 @@
 									</h2>
 									<span
 										v-if="bucket.limit > 0 || alwaysShowBucketTaskCount"
-										:class="{'is-max': bucket.limit > 0 && bucket.count >= bucket.limit}"
+										v-tooltip="isBucketFull(bucket) ? $t('project.kanban.bucketLimitReached') : ''"
+										:class="{'is-max': isBucketFull(bucket)}"
 										class="limit"
 									>
+										<Icon
+											v-if="isBucketFull(bucket)"
+											icon="exclamation-circle"
+											class="mie-1"
+										/>
 										{{ bucket.limit > 0 ? `${bucket.count}/${bucket.limit}` : bucket.count }}
+										<span
+											v-if="isBucketFull(bucket)"
+											class="is-sr-only"
+										>{{ $t('project.kanban.bucketLimitReachedShort') }}</span>
 									</span>
 									<Dropdown
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
@@ -116,7 +126,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.doneBucketHintExtended')"
-											:icon-class="{'has-text-success': bucket.id === view?.done_bucket_id}"
+											:icon-class="{'has-text-success': bucket.id === view.done_bucket_id}"
 											icon="check-double"
 											@click.stop="toggleDoneBucket(bucket)"
 										>
@@ -124,7 +134,7 @@
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.defaultBucketHint')"
-											:icon-class="{'has-text-primary': bucket.id === view?.default_bucket_id}"
+											:icon-class="{'has-text-primary': bucket.id === view.default_bucket_id}"
 											icon="th"
 											@click.stop="toggleDefaultBucket(bucket)"
 										>
@@ -149,7 +159,7 @@
 									</Dropdown>
 								</div>
 
-								<draggable
+								<TaskDraggable
 									v-bind="DRAG_OPTIONS"
 									:handle="taskDragHandle"
 									:delay="isTouchDevice ? 300 : 1000"
@@ -175,7 +185,7 @@
 											>
 												<div
 													class="control"
-													:class="{'is-loading': initialLoading || taskLoading}"
+													:class="{'is-loading': showTaskLoading}"
 												>
 													<input
 														v-model="newTaskText"
@@ -199,12 +209,12 @@
 											</div>
 											<XButton
 												v-else
-												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
+												v-tooltip="isBucketFull(bucket) ? $t('project.kanban.bucketLimitReached') : ''"
 												class="is-fullwidth has-text-centered"
 												:shadow="false"
 												icon="plus"
 												variant="secondary"
-												:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
+												:disabled="isBucketFull(bucket)"
 												@click="toggleShowNewTaskInput(bucket.id)"
 											>
 												{{
@@ -234,10 +244,10 @@
 											/>
 										</li>
 									</template>
-								</draggable>
+								</TaskDraggable>
 							</li>
 						</template>
-					</draggable>
+					</BucketDraggable>
 
 					<div
 						v-if="canWrite && !initialLoading && buckets.length > 0"
@@ -247,8 +257,8 @@
 							v-if="showNewBucketInput"
 							v-model="newBucketTitle"
 							v-focus.always
-							:class="{'is-loading': initialLoading}"
-							:disabled="initialLoading || undefined"
+							:class="{'is-loading': showInitialLoading}"
+							:disabled="showInitialLoading || undefined"
 							class="input"
 							:placeholder="$t('project.kanban.addBucketPlaceholder')"
 							type="text"
@@ -306,11 +316,13 @@ import {useQuery, useQueryClient} from '@tanstack/vue-query'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
-import draggable from 'zhyswan-vuedraggable'
+import {draggableFor} from '@/components/base/Draggable'
+import type {SortableEvent} from 'sortablejs'
 
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 
 import {useQuickAddTask} from '@/composables/useQuickAddTask'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useTaskDragState} from '@/composables/useTaskDragState'
 import {useAuthStore} from '@/stores/auth'
 
@@ -339,7 +351,10 @@ const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
 	viewId: number,
+	view: ProjectView,
 }>()
+const BucketDraggable = draggableFor<BucketResponse>()
+const TaskDraggable = draggableFor<TaskResponse>()
 
 const projectId = toRef(props, 'projectId')
 
@@ -350,6 +365,9 @@ const DRAG_OPTIONS = {
 	dragClass: 'task-dragging',
 	delayOnTouchOnly: true,
 	delay: 1000,
+	// With native drag sortable leaves the board to the browser's auto-scroll: Chrome's edge zone is ~20px, Firefox has none.
+	forceAutoScrollFallback: true,
+	scrollSensitivity: 100,
 } as const
 
 const MIN_SCROLL_HEIGHT_PERCENT = 0.25
@@ -363,7 +381,7 @@ const {createNewTask, isLoading: quickAddLoading} = useQuickAddTask()
 const {setDraggedTask} = useTaskDragState()
 const authStore = useAuthStore()
 
-const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontendSettings.alwaysShowBucketTaskCount)
+const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontend_settings.always_show_bucket_task_count)
 const {handleTaskDropToProject} = useTaskDragToProject()
 const positionMutation = useUpdateTaskPositionMutation()
 const moveMutation = useMoveTaskMutation()
@@ -391,6 +409,7 @@ const newTaskInputFocused = ref(false)
 
 const showSetLimitInput = ref(false)
 const collapsedBuckets = ref<CollapsedBuckets>({})
+const dragExpandedBuckets = ref(new Set<number>())
 
 // URL-synchronized filter parameters
 const filter = useRouteQuery('filter')
@@ -440,11 +459,10 @@ const bucketDraggableComponentData = computed(() => ({
 	],
 }))
 const {currentProject: project} = useCurrentProject()
-const view = computed(() => project.value?.views.find(view => view.id === props.viewId) as ProjectView || null)
 const canWrite = computed(() =>
 	typeof project.value?.max_permission === 'number' &&
 	project.value.max_permission > Permissions.READ &&
-	view.value?.bucket_configuration_mode === 'manual',
+	props.view.bucket_configuration_mode === 'manual',
 )
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 
@@ -509,6 +527,8 @@ const initialLoading = board.isLoading
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
 
 const taskLoading = computed(() => quickAddLoading.value || positionMutation.isPending.value)
+const showInitialLoading = useDelayedLoading(initialLoading)
+const showTaskLoading = useDelayedLoading(() => initialLoading.value || taskLoading.value)
 
 watch(
 	projectId,
@@ -555,10 +575,11 @@ function updateTasks(bucketId: number, tasks: BucketResponse['tasks']) {
 		: bucket)
 }
 
-async function updateTaskPosition(e) {
+async function updateTaskPosition(e: SortableEvent & {originalEvent?: MouseEvent}) {
 	const project = projectId.value
 	const view = props.viewId
 	drag.value = false
+	dragExpandedBuckets.value.clear()
 	try {
 		const {moved} = await handleTaskDropToProject(e, task => {
 			// A moved task stays in a pseudo-project board (favorites, saved filters) until the board is re-read.
@@ -623,7 +644,7 @@ async function addTaskToBucket(bucketId: number) {
 	scrollTaskContainerToTop(bucketId)
 
 	const bucket = getBucketById(bucketId)
-	if (bucket && bucket.limit && bucket.count >= bucket.limit) {
+	if (bucket && isBucketFull(bucket)) {
 		toggleShowNewTaskInput(bucketId)
 	}
 }
@@ -755,7 +776,7 @@ async function saveBucketLimit(bucketId: number, limit: number) {
 	}, saveBucketLimitMutation)
 }
 
-const setBucketLimitCancel = ref<number | null>(null)
+const setBucketLimitCancel = ref<ReturnType<typeof setTimeout> | null>(null)
 
 async function setBucketLimit(bucketId: number, now: boolean = false) {
 	const limit = parseInt(bucketLimitInputRef.value?.value || '')
@@ -769,6 +790,10 @@ async function setBucketLimit(bucketId: number, now: boolean = false) {
 	}
 
 	setBucketLimitCancel.value = setTimeout(saveBucketLimit, 2500, bucketId, limit)
+}
+
+function isBucketFull(bucket: BucketResponse) {
+	return bucket.limit > 0 && bucket.count >= bucket.limit
 }
 
 function shouldAcceptDrop(bucket: BucketResponse) {
@@ -787,9 +812,9 @@ function dragstart(bucket: BucketResponse) {
 	sourceBucket.value = bucket.id
 }
 
-function handleTaskDragStart(e) {
-	const taskId = parseInt(e.item.dataset.taskId, 10)
-	const bucketIndex = parseInt(e.from.dataset.bucketIndex, 10)
+function handleTaskDragStart(e: SortableEvent) {
+	const taskId = Number(e.item.dataset.taskId)
+	const bucketIndex = Number(e.from.dataset.bucketIndex)
 	const bucket = buckets.value[bucketIndex]
 	const task = bucket?.tasks.find(t => t.id === taskId)
 
@@ -801,8 +826,8 @@ function handleTaskDragStart(e) {
 }
 
 function toggleDefaultBucket(bucket: BucketResponse) {
-	const currentView = view.value
-	if (!currentView?.id) {
+	const currentView = props.view
+	if (!currentView.id) {
 		return
 	}
 	const defaultBucketId = currentView.default_bucket_id === bucket.id
@@ -817,8 +842,8 @@ function toggleDefaultBucket(bucket: BucketResponse) {
 }
 
 function toggleDoneBucket(bucket: BucketResponse) {
-	const currentView = view.value
-	if (!currentView?.id) {
+	const currentView = props.view
+	if (!currentView.id) {
 		return
 	}
 	const doneBucketId = currentView.done_bucket_id === bucket.id
@@ -835,6 +860,17 @@ function toggleDoneBucket(bucket: BucketResponse) {
 function collapseBucket(bucket: BucketResponse) {
 	collapsedBuckets.value[bucket.id] = true
 	saveCollapsedBucketState(projectIdWithFallback.value, collapsedBuckets.value)
+}
+
+function isCollapsed(bucket: BucketResponse) {
+	return collapsedBuckets.value[bucket.id] && !dragExpandedBuckets.value.has(bucket.id)
+}
+
+// Collapsed buckets hide their task list, leaving nothing to drop on.
+function expandWhileDragging(bucket: BucketResponse) {
+	if (drag.value && collapsedBuckets.value[bucket.id]) {
+		dragExpandedBuckets.value.add(bucket.id)
+	}
 }
 
 function unCollapseBucket(bucket: BucketResponse) {
@@ -884,6 +920,11 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		block-size: calc(#{$crazy-height-calculation} - #{$filter-container-height} + 9px);
 		scroll-snap-type: x mandatory;
 		margin: 0 -0.5rem;
+
+		// Snapping undoes sortable's small auto-scroll steps, so the board never scrolls while dragging.
+		&.is-dragging {
+			scroll-snap-type: none;
+		}
 	}
 
 	&-bucket-container {
@@ -1010,6 +1051,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		.limit {
 			padding: 0 .5rem;
 			font-weight: bold;
+			white-space: nowrap;
 
 			&.is-max {
 				color: var(--danger-text);

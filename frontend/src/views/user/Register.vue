@@ -18,7 +18,7 @@
 			</RouterLink>
 		</template>
 	</template>
-	<div v-else-if="isInvite || configStore.auth.local.registrationEnabled">
+	<div v-else-if="isInvite || configStore.auth.local.registration_enabled">
 		<Message
 			v-if="isInvite && inviteState.status === 'ready' && inviteState.link.teams?.length"
 			class="mbe-4"
@@ -78,10 +78,10 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					v-model="credentials.password"
 					:validate-initially="validatePasswordInitially"
 					autocomplete="new-password"
 					@submit="submit"
-					@update:modelValue="v => credentials.password = v"
 				/>
 				<p
 					v-if="passwordError"
@@ -102,7 +102,7 @@
 			</XButton>
 
 			<Message
-				v-if="configStore.demoModeEnabled"
+				v-if="configStore.demo_mode_enabled"
 				variant="warning"
 				class="mbs-4"
 			>

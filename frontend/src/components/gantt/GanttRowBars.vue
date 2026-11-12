@@ -169,7 +169,11 @@
 				:clip-path="`url(#clip-${bar.id})`"
 				aria-hidden="true"
 			>
-				{{ bar.meta?.label || bar.id }}
+				{{ bar.meta?.label || bar.id }}<tspan
+					v-if="bar.meta?.projectTitle"
+					class="gantt-bar-project"
+					dx="6"
+				>{{ bar.meta.projectTitle }}</tspan>
 			</text>
 		</GanttBarPrimitive>
 
@@ -214,8 +218,7 @@ import {useI18n} from 'vue-i18n'
 
 import type {GanttBarModel} from '@/composables/useGanttBar'
 import {getTextColor, LIGHT} from '@/helpers/color/getTextColor'
-import {MILLISECONDS_A_DAY} from '@/constants/date'
-import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
+import {getNaturalDayCount} from '@/helpers/time/roundToNaturalDayBoundary'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
@@ -291,15 +294,8 @@ function computeBarX(startDate: Date) {
 	return x
 }
 
-function getDaysDifference(startDate: Date, endDate: Date): number {
-	return Math.ceil(
-		(roundToNaturalDayBoundary(endDate).getTime() - roundToNaturalDayBoundary(startDate, true).getTime()) /
-MILLISECONDS_A_DAY,
-	)
-}
-
 function computeBarWidth(bar: GanttBarModel) {
-	const diff = getDaysDifference(bar.start, bar.end)
+	const diff = getNaturalDayCount(bar.start, bar.end)
 	const width = diff * props.dayWidthPixels
 	return width
 }
@@ -507,6 +503,11 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	font-size: .85rem;
 	pointer-events: none;
 	user-select: none;
+}
+
+.gantt-bar-project {
+	font-size: .9em;
+	opacity: .75;
 }
 
 .gantt-parent-bar {

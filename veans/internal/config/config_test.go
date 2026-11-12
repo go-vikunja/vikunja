@@ -50,6 +50,25 @@ func TestFormatTaskID(t *testing.T) {
 	}
 }
 
+func TestTaskURL(t *testing.T) {
+	cases := []struct {
+		name string
+		cfg  Config
+		want string
+	}{
+		{"frontend url wins", Config{Server: "https://api.example.com", FrontendURL: "https://vikunja.example.com/"}, "https://vikunja.example.com/tasks/42"},
+		{"falls back to server", Config{Server: "https://vikunja.example.com"}, "https://vikunja.example.com/tasks/42"},
+		{"keeps subpath", Config{FrontendURL: "https://example.com/vikunja/"}, "https://example.com/vikunja/tasks/42"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.cfg.TaskURL(42); got != tc.want {
+				t.Errorf("got %q want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestFindAndLoadRoundtrip(t *testing.T) {
 	dir := t.TempDir()
 	deeper := filepath.Join(dir, "a", "b", "c")
@@ -89,5 +108,65 @@ func TestFindMissing(t *testing.T) {
 	dir := t.TempDir()
 	if _, err := Find(dir); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestSave_SymlinkOutsideDirRefused(t *testing.T) {
+	base := t.TempDir()
+	repo := filepath.Join(base, "repo")
+	if err := os.Mkdir(repo, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	victim := filepath.Join(base, "victim.yml")
+	const original = "server: https://x\nproject_id: 1\n"
+	if err := os.WriteFile(victim, []byte(original), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(repo, Filename)
+	if err := os.Symlink(victim, link); err != nil {
+		t.Fatal(err)
+	}
+
+	c, err := Load(link)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.FrontendURL = "https://changed"
+	if err := c.Save(); err == nil {
+		t.Fatal("expected an error writing through a symlink escaping the config dir")
+	}
+	if buf, _ := os.ReadFile(victim); string(buf) != original {
+		t.Fatalf("victim changed: %q", buf)
+	}
+}
+
+func TestSave_InDirSymlinkWorks(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "conf"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(dir, "conf", "veans.yml")
+	if err := os.WriteFile(target, []byte("server: https://x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, Filename)
+	if err := os.Symlink(filepath.Join("conf", "veans.yml"), link); err != nil {
+		t.Fatal(err)
+	}
+
+	c, err := Load(link)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.FrontendURL = "https://changed"
+	if err := c.Save(); err != nil {
+		t.Fatal(err)
+	}
+	saved, err := Load(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if saved.FrontendURL != "https://changed" {
+		t.Fatalf("frontend_url = %q", saved.FrontendURL)
 	}
 }

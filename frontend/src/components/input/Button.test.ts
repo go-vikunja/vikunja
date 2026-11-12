@@ -1,6 +1,7 @@
 import {describe, it, expect, vi} from 'vitest'
 import {mount} from '@vue/test-utils'
 import Button from './Button.vue'
+import {LOADING_TIMEOUT} from '@/stores/helper'
 
 describe('Button', () => {
 	it('wraps long labels by default', () => {
@@ -53,6 +54,18 @@ describe('Button', () => {
 		expect(document.activeElement).toBe(button.element)
 
 		wrapper.unmount()
+	})
+
+	it('blocks clicks immediately but delays the spinner', async () => {
+		vi.useFakeTimers()
+		const wrapper = mount(Button, {props: {loading: true}})
+		expect(wrapper.attributes('aria-disabled')).toBe('true')
+		expect(wrapper.classes()).not.toContain('is-loading')
+
+		await vi.advanceTimersByTimeAsync(LOADING_TIMEOUT)
+
+		expect(wrapper.classes()).toContain('is-loading')
+		vi.useRealTimers()
 	})
 
 	it('emits click when not loading', async () => {

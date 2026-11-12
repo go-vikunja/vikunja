@@ -44,6 +44,13 @@ var (
 	errNoCaller     = errors.New("mcp: no caller request in context")
 )
 
+type loopbackKey struct{}
+
+// IsLoopback reports whether ctx belongs to a request dispatched by an MCP tool call.
+func IsLoopback(ctx context.Context) bool {
+	return ctx.Value(loopbackKey{}) != nil
+}
+
 func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, error) {
 	t, ok := m.index[name]
 	if !ok {
@@ -62,6 +69,14 @@ func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMess
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
 	}
+	var fields fieldTree
+	// Without a projection, fields is a body field of the route (e.g. tasks bulk update).
+	if t.spec.projection != noProjection {
+		fields, err = takeFields(args)
+		if err != nil {
+			return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
+		}
+	}
 	req, err := t.newRequest(ctx, ec, args)
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
@@ -75,7 +90,11 @@ func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMess
 			log.Errorf("[mcp] could not dispatch api token used event: %s", err)
 		}
 	}
-	return parseResponse(rec)
+	result, err := parseResponse(rec)
+	if err != nil {
+		return nil, err
+	}
+	return t.spec.projection.apply(fields, result), nil
 }
 func (t *tool) newRequest(ctx context.Context, ec *echo.Context, args map[string]json.RawMessage) (*http.Request, error) {
 	caller := ec.Request()
@@ -123,7 +142,7 @@ func (t *tool) newRequest(ctx context.Context, ec *echo.Context, args map[string
 	if len(query) > 0 {
 		target += "?" + query.Encode()
 	}
-	req, err := http.NewRequestWithContext(ctx, t.op.Method, target, reader)
+	req, err := http.NewRequestWithContext(context.WithValue(ctx, loopbackKey{}, true), t.op.Method, target, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +260,10 @@ const maxErrorTextRunes = 2000
 const scopeHint = "the API token lacks a scope required by this call (check route and expand scopes)"
 
 func errorText(rec *httptest.ResponseRecorder) string {
-	text, isProblem := problemText(rec)
+	text, code, isProblem := problemText(rec)
+	if filterErrorCodes[code] {
+		return truncateRunes(text, maxErrorTextRunes) + " — " + filterErrorHint
+	}
 	if rec.Code != http.StatusUnauthorized {
 		return truncateRunes(text, maxErrorTextRunes)
 	}
@@ -251,10 +273,11 @@ func errorText(rec *httptest.ResponseRecorder) string {
 	}
 	return truncateRunes(text, maxErrorTextRunes) + " — " + scopeHint
 }
-func problemText(rec *httptest.ResponseRecorder) (text string, isProblem bool) {
+func problemText(rec *httptest.ResponseRecorder) (text string, code int, isProblem bool) {
 	var problem struct {
 		Title  string `json:"title"`
 		Detail string `json:"detail"`
+		Code   int    `json:"code"`
 		Errors []struct {
 			Location string `json:"location"`
 			Message  string `json:"message"`
@@ -262,7 +285,7 @@ func problemText(rec *httptest.ResponseRecorder) (text string, isProblem bool) {
 	}
 	body := rec.Body.Bytes()
 	if err := json.Unmarshal(body, &problem); err != nil || problem.Title == "" {
-		return fmt.Sprintf("%d: %s", rec.Code, strings.TrimSpace(string(body))), false
+		return fmt.Sprintf("%d: %s", rec.Code, strings.TrimSpace(string(body))), 0, false
 	}
 	var b strings.Builder
 	fmt.Fprintf(&b, "%d %s", rec.Code, problem.Title)
@@ -283,7 +306,7 @@ func problemText(rec *httptest.ResponseRecorder) (text string, isProblem bool) {
 			b.WriteString(")")
 		}
 	}
-	return b.String(), true
+	return b.String(), problem.Code, true
 }
 func truncateRunes(s string, limit int) string {
 	if len(s) <= limit {

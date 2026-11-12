@@ -81,7 +81,7 @@
 						<CustomTransition name="fade">
 							<span
 								v-if="
-									loading &&
+									showLoading &&
 										saving === c.id
 								"
 								class="is-inline-flex"
@@ -91,7 +91,7 @@
 							</span>
 							<span
 								v-else-if="
-									!loading &&
+									!showLoading &&
 										saved === c.id
 								"
 								class="has-text-success"
@@ -154,7 +154,7 @@
 					<div class="form">
 						<CustomTransition name="fade">
 							<span
-								v-if="loading && creating"
+								v-if="showLoading && creating"
 								class="is-inline-flex"
 							>
 								<span class="loader is-inline-block mie-2" />
@@ -169,7 +169,7 @@
 								v-model="newCommentText"
 								:class="{
 									'is-loading':
-										loading &&
+										showLoading &&
 										!isCommentEdit,
 								}"
 								:upload-callback="attachmentUpload"
@@ -215,6 +215,7 @@
 </template>
 
 <script setup lang="ts">
+import {useUpdateFrontendSettingsMutation} from '@/client/queries/account'
 import {ref, computed, nextTick, provide, watch, onBeforeUnmount} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -239,11 +240,12 @@ import {generateAttachmentUrl} from '@/helpers/attachments'
 import {useUploadAttachmentsMutation} from '@/client/queries/attachments'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {clearEditorDraft} from '@/helpers/editorDraftStorage'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {commentReplyContextKey, scrollAndHighlightComment} from '@/components/tasks/partials/commentReplyContext'
 
 const props = withDefaults(defineProps<{
@@ -259,22 +261,24 @@ const copy = useCopyToClipboard()
 const {t} = useI18n({useScope: 'global'})
 const configStore = useConfigStore()
 const authStore = useAuthStore()
+const updateFrontendSettings = useUpdateFrontendSettingsMutation()
 
 const localSortOrder = ref<'asc' | 'desc' | null>(null)
-const commentSortOrder = computed(() => localSortOrder.value ?? authStore.settings.frontendSettings.commentSortOrder ?? 'asc')
+const commentSortOrder = computed(() => localSortOrder.value ?? authStore.settings.frontend_settings.comment_sort_order ?? 'asc')
 
 const currentPage = ref(1)
 const commentQuery = useQuery(computed(() => ({
-	...commentsQuery(props.taskId, commentSortOrder.value, currentPage.value, configStore.maxItemsPerPage),
-	enabled: configStore.taskCommentsEnabled && props.taskId > 0,
+	...commentsQuery(props.taskId, commentSortOrder.value, currentPage.value),
+	enabled: configStore.task_comments_enabled && props.taskId > 0,
 })))
 const comments = computed(() => commentQuery.data.value?.items ?? [])
 const totalPages = computed(() => commentQuery.data.value?.total_pages ?? 0)
 const createMutation = useCreateCommentMutation()
 const updateMutation = useUpdateCommentMutation()
 const deleteMutation = useDeleteCommentMutation()
-const listPending = computed(() => commentQuery.isLoading.value)
+const listPending = useDelayedLoading(commentQuery.isLoading)
 const loading = computed(() => createMutation.isPending.value || updateMutation.isPending.value)
+const showLoading = useDelayedLoading(loading)
 const commentDrafts = ref<Record<number, string>>({})
 
 const showDeleteModal = ref(false)
@@ -289,7 +293,7 @@ const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
 const currentUserId = computed(() => authStore.info?.id ?? null)
-const enabled = computed(() => configStore.taskCommentsEnabled)
+const enabled = computed(() => configStore.task_comments_enabled)
 const actions = computed(() => {
 	if (!props.canWrite) {
 		return {}
@@ -309,7 +313,6 @@ const actions = computed(() => {
 	}))
 })
 
-const frontendUrl = computed(() => configStore.frontendUrl)
 const commentStorageKey = computed(() => `task-comment-${props.taskId}`)
 
 const commentsRef = ref<HTMLElement | null>(null)
@@ -387,18 +390,20 @@ async function changePage(page: number) {
 
 async function toggleSortOrder() {
 	const newOrder = commentSortOrder.value === 'asc' ? 'desc' : 'asc'
-	if (!authStore.isLinkShareAuth) {
-		await authStore.saveUserSettings({
-			settings: {
-				...authStore.settings,
-				frontendSettings: {
-					...authStore.settings.frontendSettings,
-					commentSortOrder: newOrder,
-					quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
-				},
-			},
-			showMessage: false,
-		})
+	const session = authStore.session
+	if (session && !authStore.isLinkShareAuth) {
+		localSortOrder.value = newOrder
+		try {
+			await updateFrontendSettings.mutateAsync({
+				id: session.id,
+				type: session.type,
+				frontendSettings: {comment_sort_order: newOrder},
+			})
+		} catch {
+			return
+		} finally {
+			localSortOrder.value = null
+		}
 	} else {
 		localSortOrder.value = newOrder
 	}
@@ -519,7 +524,8 @@ async function deleteComment(id: number | null) {
 }
 
 function getCommentUrl(commentId: string) {
-	const baseUrl = frontendUrl.value.endsWith('/') ? frontendUrl.value.slice(0, -1) : frontendUrl.value
+	const frontendUrl = configStore.frontend_url
+	const baseUrl = frontendUrl.endsWith('/') ? frontendUrl.slice(0, -1) : frontendUrl
 	const url = new URL(location.pathname + location.search, baseUrl)
 	url.hash = `comment-${commentId}`
 	return url.toString()

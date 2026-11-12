@@ -99,8 +99,37 @@ test.describe('Suggestion popup positioning', () => {
 		// The page has to actually scroll for this test to mean anything.
 		expect(Math.abs(anchorAfter!.y - anchorBefore!.y)).toBeGreaterThan(50)
 
-		const offsetBefore = popupBefore!.y - anchorBefore!.y
-		const offsetAfter = popupAfter!.y - anchorAfter!.y
-		expect(Math.abs(offsetAfter - offsetBefore)).toBeLessThan(15)
+		expect(popupBefore).not.toBeNull()
+		expect(popupAfter).not.toBeNull()
+		for (const [anchor, box] of [[anchorBefore!, popupBefore!], [anchorAfter!, popupAfter!]]) {
+			const below = Math.abs(box.y - anchor.y - anchor.height - 8)
+			const above = Math.abs(anchor.y - box.y - box.height - 8)
+			expect(Math.min(below, above)).toBeLessThan(15)
+			expect(Math.abs(box.x - anchor.x)).toBeLessThan(20)
+		}
+	})
+
+	test('Escape closes the popup without discarding the unsaved edit', async ({authenticatedPage: page}) => {
+		const tasks = await TaskFactory.create(1, {
+			id: 1,
+			project_id: projectId,
+			description: 'x',
+			index: 1,
+		})
+
+		await page.goto(`/tasks/${tasks[0].id}`)
+		await page.waitForLoadState('networkidle')
+
+		const editor = await openDescriptionEditor(page)
+		await editor.click()
+		await page.keyboard.press('End')
+		await editor.pressSequentially(' draft /', {delay: 60})
+
+		const popup = page.locator('.items').first()
+		await expect(popup).toBeVisible()
+
+		await page.keyboard.press('Escape')
+		await expect(popup).toBeHidden()
+		await expect(editor).toHaveText('x draft /')
 	})
 })

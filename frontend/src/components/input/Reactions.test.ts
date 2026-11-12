@@ -21,7 +21,7 @@ const OTHER_USER = {
 vi.mock('@/stores/auth', () => ({
 	useAuthStore: () => ({
 		info: CURRENT_USER,
-		settings: {frontendSettings: {colorSchema: 'light'}},
+		settings: {frontend_settings: {color_schema: 'light'}},
 	}),
 }))
 
@@ -34,11 +34,11 @@ vi.mock('@/message', () => ({
 	success: vi.fn(),
 }))
 
-vi.mock('vuemoji-picker', () => ({
-	VuemojiPicker: {
-		name: 'VuemojiPicker',
-		template: '<div />',
-		emits: ['emojiClick'],
+vi.mock('@/components/input/EmojiPicker.vue', () => ({
+	default: {
+		name: 'EmojiPicker',
+		template: '<div class="emoji-picker" />',
+		emits: ['select'],
 	},
 }))
 
@@ -124,7 +124,7 @@ describe('Reactions', () => {
 		await nextTick()
 		expect(wrapper.find('.emoji-picker').exists()).toBe(true)
 
-		wrapper.findComponent({name: 'VuemojiPicker'}).vm.$emit('emojiClick', {unicode: '👍'})
+		wrapper.findComponent({name: 'EmojiPicker'}).vm.$emit('select', '👍')
 		await nextTick()
 		await wrapper.setProps({entityId: 2})
 

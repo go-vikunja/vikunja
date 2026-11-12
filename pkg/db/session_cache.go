@@ -60,6 +60,12 @@ func (c *sessionCache) set(key string, value any) {
 	c.values[key] = value
 }
 
+func (c *sessionCache) forget(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.values, key)
+}
+
 func (c *sessionCache) markDirty() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -124,6 +130,13 @@ func Remember[T any](s *xorm.Session, key string, fetch func() (T, error)) (T, e
 	}
 	c.set(key, value)
 	return value, nil
+}
+
+// Forget invalidates a memoized row after a locking read sees newer data.
+func Forget(s *xorm.Session, key string) {
+	if c, ok := cacheForSession(s); ok {
+		c.forget(key)
+	}
 }
 
 // RememberEach is Remember for id-keyed batch loads: memoized ids are served and fetch runs once

@@ -53,7 +53,7 @@ describe('useProjects', () => {
 	beforeEach(() => {
 		queryClient.clear()
 		removeToken()
-		window.API_URL = 'https://identity-a.example/api/v1/'
+		window.API_URL = 'https://identity-a.example'
 		saveToken(token(1), false)
 	})
 

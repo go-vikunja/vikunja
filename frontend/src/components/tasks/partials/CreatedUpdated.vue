@@ -47,7 +47,7 @@
 import {computed} from 'vue'
 import type {Task as ITask} from '@/client/generated'
 import {formatISO, formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
-import {getDisplayName} from '@/models/user'
+import {getDisplayName} from '@/helpers/user'
 
 const props = defineProps<{
 	task: ITask,

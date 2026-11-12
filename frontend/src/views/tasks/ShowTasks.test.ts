@@ -15,7 +15,7 @@ vi.mock('@/client/generated', () => sdk)
 
 const auth = reactive({
 	authenticated: true,
-	settings: {frontendSettings: {filterIdUsedOnOverview: undefined, sidebarWidth: 250}},
+	settings: {frontend_settings: {filter_id_used_on_overview: undefined, sidebar_width: 250}},
 })
 
 vi.mock('@/stores/auth', () => ({useAuthStore: () => auth}))
@@ -103,7 +103,7 @@ describe('Upcoming filters', () => {
 		await mountUpcoming()
 		await flushPromises()
 
-		auth.settings = {frontendSettings: {filterIdUsedOnOverview: undefined, sidebarWidth: 300}}
+		auth.settings = {frontend_settings: {filter_id_used_on_overview: undefined, sidebar_width: 300}}
 		await flushPromises()
 		expect(sdk.tasksList).toHaveBeenCalledTimes(1)
 	})

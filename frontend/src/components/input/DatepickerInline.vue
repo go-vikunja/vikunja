@@ -8,7 +8,7 @@
 			layout="chips"
 			:active="date"
 			@select="setShortcut"
-			@confirm="emit('quickSelectConfirmed')"
+			@confirm="emit('confirm')"
 		/>
 
 		<div class="datepicker-inline__body">
@@ -17,7 +17,7 @@
 				layout="list"
 				:active="date"
 				@select="setShortcut"
-				@confirm="emit('quickSelectConfirmed')"
+				@confirm="emit('confirm')"
 			/>
 			<CalendarMonth
 				class="datepicker-inline__calendar"
@@ -32,6 +32,7 @@
 			:hours="date?.getHours() ?? defaultTime.hours"
 			:minutes="date?.getMinutes() ?? defaultTime.minutes"
 			@update="setTime"
+			@confirm="emit('confirm')"
 		/>
 	</div>
 </template>
@@ -63,7 +64,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
 	'update:modelValue': [Date | null],
-	'quickSelectConfirmed': [],
+	'confirm': [],
 }>()
 
 const date = ref<Date | null>(null)
@@ -78,7 +79,7 @@ watch(
 
 const authStore = useAuthStore()
 // Noon when the user has no default due time configured.
-const defaultTime = computed(() => parseUserDefaultTime(authStore.settings.frontendSettings.defaultDueTime) ?? {hours: 12, minutes: 0})
+const defaultTime = computed(() => parseUserDefaultTime(authStore.settings.frontend_settings.default_due_time) ?? {hours: 12, minutes: 0})
 
 function update(value: Date | null) {
 	// The calendar only compares days, so a picked day can still carry a time before minDate.

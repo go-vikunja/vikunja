@@ -2,7 +2,7 @@
 	<aside
 		:class="{'is-active': baseStore.menuActive, 'is-resizing': isResizing}"
 		class="menu-container"
-		:style="{'--sidebar-width': sidebarWidth}"
+		:style="{'--sidebar-width': sidebarWidthStyle}"
 	>
 		<nav
 			class="menu top-menu"
@@ -80,6 +80,17 @@
 							<Icon :icon="['far', 'clock']" />
 						</span>
 						{{ $t('timeTracking.title') }}
+					</RouterLink>
+				</li>
+				<li>
+					<RouterLink
+						:to="{ name: 'trash'}"
+						:class="{'router-link-exact-active': $route.name === 'trash.tasks' || $route.name === 'trash.projects'}"
+					>
+						<span class="menu-item-icon icon">
+							<Icon icon="trash-alt" />
+						</span>
+						{{ $t('trash.title') }}
 					</RouterLink>
 				</li>
 			</menu>
@@ -161,7 +172,7 @@ const configStore = useConfigStore()
 
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
-const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
+const {sidebarWidthStyle, isResizing, startResize, isMobile} = useSidebarResize()
 
 const projects = computed(() => projectList.notArchivedRootProjects)
 const favoriteProjects = computed(() => projectList.favoriteProjects)

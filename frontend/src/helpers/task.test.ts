@@ -20,7 +20,8 @@ import type {Bucket, Task} from '@/client/generated'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useAuthStore} from '@/stores/auth'
-import UserSettingsModel from '@/models/userSettings'
+import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 
 describe('task domain helpers', () => {
 	beforeEach(() => {
@@ -180,13 +181,19 @@ describe('task domain helpers', () => {
 	describe('repeating quick add without a date', () => {
 		afterEach(() => {
 			vi.useRealTimers()
+			queryClient.clear()
 		})
 		it('sets the first due date to today at the default due time', () => {
 			vi.useFakeTimers()
 			vi.setSystemTime(new Date(2026, 8, 23, 9, 15))
-			const settings = new UserSettingsModel()
-			settings.frontendSettings.defaultDueTime = '14:30'
-			useAuthStore().setUserSettings(settings)
+			const {settings} = useAuthStore()
+			queryClient.setQueryData(accountKeys.user(0), {settings: {
+				...settings,
+				frontend_settings: {
+					...settings.frontend_settings,
+					default_due_time: '14:30',
+				},
+			}})
 			const defaults = [{relative_period: -900, relative_to: 'due_date'}]
 			const parsed = parseTaskText('Call mom every day', PrefixMode.Default)
 			const task = buildQuickAddTask(

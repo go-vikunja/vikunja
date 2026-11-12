@@ -13,10 +13,11 @@ import {
 import type {
 	TimeEntry,
 	TimeEntryWritable,
+	User,
 } from '@/client/generated'
 import {contextMutationOptions} from './contextMutation'
 import {
-	pageSizeFor,
+	toPaginated,
 	totalPagesFor,
 	type Paginated,
 } from './pagination'
@@ -25,16 +26,21 @@ import {
 	mapTaskEverywhere,
 } from './taskCache'
 
-export type TimeEntryResponse = Omit<TimeEntry, 'id' | 'user_id' | 'task_id' | 'project_id' | 'comment'> &
-	Required<Pick<TimeEntry, 'id' | 'user_id' | 'task_id' | 'project_id' | 'comment'>>
+export type TimeEntryResponse = Omit<TimeEntry, 'id' | 'user' | 'task_id' | 'project_id' | 'comment'> &
+	Required<Pick<TimeEntry, 'id' | 'task_id' | 'project_id' | 'comment'>> &
+	{user: User & Required<Pick<User, 'id'>>}
 
 export type TimeEntryPage = Paginated<TimeEntryResponse>
+
+export function isPrivateEntry(entry: Pick<TimeEntryResponse, 'task_id' | 'project_id'>): boolean {
+	return entry.task_id === 0 && entry.project_id === 0
+}
 
 export function normalizeTimeEntry(entry: TimeEntry): TimeEntryResponse {
 	return {
 		...entry,
 		id: entry.id ?? 0,
-		user_id: entry.user_id ?? 0,
+		user: {...entry.user, id: entry.user?.id ?? 0},
 		task_id: entry.task_id ?? 0,
 		project_id: entry.project_id ?? 0,
 		comment: entry.comment ?? '',
@@ -44,16 +50,14 @@ export function normalizeTimeEntry(entry: TimeEntry): TimeEntryResponse {
 export const timeEntryKeys = {
 	all: ['time-entries'] as const,
 	lists: ['time-entries', 'list'] as const,
-	list: (filter: string, timezone: string, page: number, perPage: number) =>
-		['time-entries', 'list', filter, timezone, page, perPage] as const,
+	list: (filter: string, timezone: string, page: number) => ['time-entries', 'list', filter, timezone, page] as const,
 	activeTimers: ['time-entries', 'active'] as const,
 	active: (userId: number) => ['time-entries', 'active', userId] as const,
 }
 
-export function timeEntriesQuery(filter: string, timezone: string, page: number, perPage: number) {
-	const clampedPerPage = pageSizeFor(perPage)
+export function timeEntriesQuery(filter: string, timezone: string, page: number) {
 	return queryOptions({
-		queryKey: timeEntryKeys.list(filter, timezone, page, clampedPerPage),
+		queryKey: timeEntryKeys.list(filter, timezone, page),
 		refetchInterval: 5 * 60 * 1000 + Math.random() * 60000,
 		refetchIntervalInBackground: false,
 		queryFn: async ({signal}): Promise<TimeEntryPage> => {
@@ -62,18 +66,13 @@ export function timeEntriesQuery(filter: string, timezone: string, page: number,
 					filter,
 					filter_timezone: timezone,
 					page,
-					per_page: clampedPerPage,
 				},
 				signal,
 			})
-			return {
+			return toPaginated({
 				...data,
-				items: (data.items ?? []).map(normalizeTimeEntry),
-				page: data.page ?? page,
-				per_page: data.per_page ?? clampedPerPage,
-				total: data.total ?? 0,
-				total_pages: data.total_pages ?? 0,
-			}
+				items: data.items?.map(normalizeTimeEntry),
+			}, page)
 		},
 	})
 }
@@ -107,7 +106,7 @@ export function patchTimeEntry(client: QueryClient, entry: TimeEntry) {
 			}
 			: undefined,
 	)
-	client.setQueryData<TimeEntryResponse | null>(timeEntryKeys.active(normalized.user_id), current => {
+	client.setQueryData<TimeEntryResponse | null>(timeEntryKeys.active(normalized.user.id), current => {
 		if (current === undefined) return current
 		if (!entry.end_time) return normalized
 		return current?.id === entry.id ? null : current

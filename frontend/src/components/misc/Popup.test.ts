@@ -207,3 +207,69 @@ describe('Popup', () => {
 		wrapper.unmount()
 	})
 })
+
+// Safari < 17 and Firefox < 125 have no Popover API, so the component has to show, hide and dismiss
+// the box without the browser's help.
+describe('Popup without the Popover API', () => {
+	const {showPopover, hidePopover} = HTMLElement.prototype
+
+	beforeEach(() => {
+		showPopoverSpy.mockRestore()
+		hidePopoverSpy.mockRestore()
+		delete (HTMLElement.prototype as Partial<HTMLElement>).showPopover
+		delete (HTMLElement.prototype as Partial<HTMLElement>).hidePopover
+	})
+
+	afterEach(() => {
+		HTMLElement.prototype.showPopover = showPopover
+		HTMLElement.prototype.hidePopover = hidePopover
+	})
+
+	it('opens the popup when the trigger is clicked', async () => {
+		const wrapper = mount(Popup, mountOptions)
+
+		await wrapper.find('.trigger').trigger('click')
+
+		expect(wrapper.emitted('update:open')).toEqual([[true]])
+		expect(wrapper.find('.popup').classes()).toContain('is-open')
+
+		wrapper.unmount()
+	})
+
+	it('closes the popup on an outside click', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+
+		document.body.dispatchEvent(new Event('click', {bubbles: true}))
+		await flushPromises()
+
+		expect(wrapper.emitted('update:open')).toEqual([[false]])
+		expect(wrapper.find('.popup').classes()).not.toContain('is-open')
+
+		wrapper.unmount()
+	})
+
+	it('closes the popup on Escape', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+
+		window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}))
+		await flushPromises()
+
+		expect(wrapper.emitted('update:open')).toEqual([[false]])
+
+		wrapper.unmount()
+	})
+
+	it('does not reopen when the trigger click is what closed it', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+
+		await wrapper.find('.trigger').trigger('click')
+
+		expect(wrapper.emitted('update:open')).toEqual([[false]])
+		expect(wrapper.find('.popup').classes()).not.toContain('is-open')
+
+		wrapper.unmount()
+	})
+})

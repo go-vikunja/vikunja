@@ -6,7 +6,7 @@ import {TextSelection} from '@tiptap/pm/state'
 
 import {createEditorExtensions, type EditorExtensionDeps} from './editorExtensions'
 
-window.API_URL = 'http://localhost:3456/api/v1'
+window.API_URL = 'http://localhost:3456'
 
 function createEditor(content: string) {
 	const holder = document.createElement('div')
@@ -92,5 +92,16 @@ describe('pasting html the schema cannot hold', () => {
 		pasteHTML(editor, copied.innerHTML, 6)
 
 		expect(editor.getHTML()).toBe('<p>hello</p><ol><li><p>one</p></li><li><p>two</p></li></ol><p></p>')
+	})
+})
+
+describe('pasting tables', () => {
+	it('drops the grid of a table whose spans imply too many cells', () => {
+		const editor = createEditor('<p></p>')
+
+		pasteHTML(editor, '<table><tr><td colspan="100000000">x</td></tr></table>')
+
+		expect(editor.getHTML()).not.toContain('<table')
+		expect(editor.getText()).toContain('x')
 	})
 })

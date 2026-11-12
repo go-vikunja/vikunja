@@ -2,6 +2,8 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {client} from './generated/client.gen'
 import {configureApiClient} from './http'
+import {InvalidApiUrlProvidedError} from '@/helpers/apiUrl'
+import {ApiError} from './problem'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
@@ -27,10 +29,22 @@ const problem = (code: number, detail = 'request failed') => new Response(JSON.s
 	headers: {'Content-Type': 'application/problem+json'},
 })
 
+// Echo rejects some /api/v2 requests before Huma and answers with a v1-shaped body.
+const echoError = (status: number, body: {code?: number, message: string}) => new Response(JSON.stringify(body), {
+	status,
+	headers: {'Content-Type': 'application/json'},
+})
+
 const ok = () => new Response(JSON.stringify({ok: true}), {
 	status: 200,
 	headers: {'Content-Type': 'application/json'},
 })
+
+async function expectApiError(request: Promise<unknown>, fields: Record<string, unknown>) {
+	const rejection = await request.then(() => undefined, (e: unknown) => e)
+	expect(rejection).toBeInstanceOf(ApiError)
+	expect(rejection).toMatchObject(fields)
+}
 
 const BrowserRequest = globalThis.Request
 
@@ -107,7 +121,7 @@ describe('configureApiClient', () => {
 	let responses: Response[]
 
 	beforeEach(() => {
-		window.API_URL = 'https://api.example.com/root/api/v1'
+		window.API_URL = 'https://api.example.com/root'
 		auth.token = null
 		auth.type = null
 		auth.id = 1
@@ -134,8 +148,8 @@ describe('configureApiClient', () => {
 		expect(requests[0].credentials).toBe('include')
 	})
 
-	it('supports a root-relative API base', async () => {
-		window.API_URL = '/api/v1'
+	it('supports the same-origin default', async () => {
+		window.API_URL = ''
 		configureApiClient()
 
 		await client.get({url: '/probe'})
@@ -177,7 +191,7 @@ describe('configureApiClient', () => {
 
 		const request = client.get({url: '/probe'})
 		await vi.waitFor(() => expect(requests).toHaveLength(1))
-		window.API_URL = 'https://other.example/api/v1'
+		window.API_URL = 'https://other.example'
 		configureApiClient()
 		response.resolve(ok())
 
@@ -185,7 +199,7 @@ describe('configureApiClient', () => {
 	})
 
 	it('rejects a request built for an outdated configured API before sending', async () => {
-		window.API_URL = 'https://other.example/api/v1'
+		window.API_URL = 'https://other.example'
 
 		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
 
@@ -193,36 +207,36 @@ describe('configureApiClient', () => {
 	})
 
 	it('rejects an outdated nested API base before sending', async () => {
-		window.API_URL = 'https://api.example.com/root/api/v2/tenant-a/api/v1'
+		window.API_URL = 'https://api.example.com/root/tenant-a'
 		configureApiClient()
-		window.API_URL = 'https://api.example.com/root/api/v1'
+		window.API_URL = 'https://api.example.com/root'
 
 		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
 
 		expect(requests).toHaveLength(0)
 	})
 
-	it('rejects an outdated API base with an extra trailing slash', async () => {
-		window.API_URL = 'https://api.example.com/root/api/v2//'
+	it('treats an extra trailing slash as the same API base', async () => {
+		window.API_URL = 'https://api.example.com/root//'
 		configureApiClient()
 		window.API_URL = 'https://api.example.com/root/api/v1'
 
-		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+		await client.get({url: '/probe'})
 
-		expect(requests).toHaveLength(0)
+		expect(requests[0].url).toBe('https://api.example.com/root/api/v2/probe')
 	})
 
-	it('rejects a missing API base before sending', async () => {
+	it('refuses to configure a missing API base and sends nothing', async () => {
 		window.API_URL = undefined as unknown as string
-		configureApiClient()
 
-		await expect(client.get({url: '/probe'})).rejects.toMatchObject({name: 'AbortError'})
+		expect(() => configureApiClient()).toThrow(InvalidApiUrlProvidedError)
 
+		await expect(client.get({url: '/probe'})).rejects.toBeInstanceOf(InvalidApiUrlProvidedError)
 		expect(requests).toHaveLength(0)
 	})
 
 	it('rejects a root-relative API base that canonicalizes to another origin', async () => {
-		window.API_URL = '/\\evil.example/api/v1'
+		window.API_URL = '/\\evil.example'
 		configureApiClient()
 		auth.token = 'current-token'
 
@@ -232,7 +246,7 @@ describe('configureApiClient', () => {
 	})
 
 	it('rejects a whitespace-obscured cross-origin API base', async () => {
-		window.API_URL = '/\t/evil.example/api/v1'
+		window.API_URL = '/\t/evil.example'
 		configureApiClient()
 		auth.token = 'current-token'
 
@@ -567,5 +581,109 @@ describe('configureApiClient', () => {
 
 		expect(auth.refreshToken).toHaveBeenCalledOnce()
 		expect(requests).toHaveLength(2)
+	})
+
+	it('stamps the response status onto an Echo error body', async () => {
+		responses = [echoError(429, {message: 'Too Many Requests'})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			message: 'Too Many Requests',
+			detail: 'Too Many Requests',
+			status: 429,
+		})
+	})
+
+	it('keeps the Echo error code while stamping the status', async () => {
+		responses = [echoError(401, {
+			code: 11,
+			message: 'missing, malformed, expired or otherwise invalid token provided',
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			code: 11,
+			message: 'missing, malformed, expired or otherwise invalid token provided',
+			detail: 'missing, malformed, expired or otherwise invalid token provided',
+			status: 401,
+		})
+	})
+
+	it('throws a problem body as an ApiError', async () => {
+		responses = [new Response(JSON.stringify({
+			$schema: 'https://example.com/schemas/ErrorModel.json',
+			status: 500,
+			title: 'Internal Server Error',
+			detail: 'Oo',
+		}), {
+			status: 500,
+			headers: {'Content-Type': 'application/problem+json'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			name: 'ApiError',
+			message: 'Oo',
+			status: 500,
+			title: 'Internal Server Error',
+			detail: 'Oo',
+		})
+	})
+
+	it('keeps the code of a problem body', async () => {
+		responses = [new Response(JSON.stringify({
+			status: 403,
+			code: 4004,
+			detail: 'forbidden',
+		}), {
+			status: 403,
+			headers: {'Content-Type': 'application/problem+json'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			status: 403,
+			code: 4004,
+			detail: 'forbidden',
+		})
+	})
+
+	it('turns a plain-text proxy error into an ApiError', async () => {
+		responses = [new Response('Bad Gateway', {
+			status: 502,
+			headers: {'Content-Type': 'text/plain; charset=utf-8'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			message: 'Bad Gateway',
+			status: 502,
+			detail: 'Bad Gateway',
+		})
+	})
+
+	it('turns a plain-text 404 into an ApiError', async () => {
+		responses = [new Response('404 page not found\n', {
+			status: 404,
+			headers: {'Content-Type': 'text/plain; charset=utf-8'},
+		})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			status: 404,
+			detail: '404 page not found',
+		})
+	})
+
+	it('falls back to the status text for an empty error body', async () => {
+		responses = [new Response('', {status: 503, statusText: 'Service Unavailable'})]
+
+		await expectApiError(client.get({url: '/probe'}), {
+			status: 503,
+			detail: 'Service Unavailable',
+		})
+	})
+
+	it('leaves a transport failure untouched', async () => {
+		const failure = new TypeError('Failed to fetch')
+		vi.stubGlobal('fetch', vi.fn(async () => {
+			throw failure
+		}))
+
+		await expect(client.get({url: '/probe'})).rejects.toBe(failure)
 	})
 })

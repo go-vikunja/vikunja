@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"slices"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/mail"
 
 	"code.vikunja.io/api/pkg/db"
@@ -122,7 +123,7 @@ type Notifiable interface {
 	RouteForDB() int64
 	// ShouldNotify provides a last-minute way to cancel a notification. It will be called immediately before
 	// sending a notification. An optional session can be passed to reuse an existing transaction.
-	ShouldNotify(sessions ...*xorm.Session) (should bool, err error)
+	ShouldNotify(notification Notification, sessions ...*xorm.Session) (should bool, err error)
 	// Lang provides the language which should be used for translations in the mail.
 	Lang() string
 }
@@ -145,7 +146,7 @@ func NotifyQueued(notifiable Notifiable, notification Notification, queue, key s
 	} else {
 		s = sessions[0]
 	}
-	should, err := notifiable.ShouldNotify(s)
+	should, err := notifiable.ShouldNotify(notification, s)
 	if err != nil || !should {
 		return err
 	}
@@ -168,7 +169,7 @@ func NotifyQueued(notifiable Notifiable, notification Notification, queue, key s
 }
 
 func NotifyDB(notifiable Notifiable, notification Notification, s *xorm.Session) error {
-	should, err := notifiable.ShouldNotify(s)
+	should, err := notifiable.ShouldNotify(notification, s)
 	if err != nil || !should {
 		return err
 	}
@@ -184,6 +185,9 @@ func SendMailNow(ctx context.Context, notifiable Notifiable, notification Notifi
 }
 
 func prepareMail(notifiable Notifiable, notification Notification) (*mail.Opts, error) {
+	if !config.MailerEnabled.GetBool() {
+		return nil, nil
+	}
 	m := notification.ToMail(notifiable.Lang())
 	if m == nil {
 		return nil, nil

@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -49,6 +50,17 @@ func TestHumaProjectBackgroundDelete(t *testing.T) {
 		require.True(t, has)
 		assert.Equal(t, "Test35 with background", project.Title)
 		assert.Equal(t, int64(0), project.BackgroundFileID)
+		db.AssertMissing(t, "files", map[string]interface{}{"id": 1})
+		var body struct {
+			Title string `json:"title"`
+			Owner *struct {
+				ID int64 `json:"id"`
+			} `json:"owner"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+		assert.Equal(t, "Test35 with background", body.Title)
+		require.NotNil(t, body.Owner)
+		assert.Equal(t, int64(6), body.Owner.ID)
 	})
 	t.Run("Read-only user is forbidden", func(t *testing.T) {
 		// testuser15 has read-only (permission 0) access to project 35.

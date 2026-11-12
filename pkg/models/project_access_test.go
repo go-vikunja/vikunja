@@ -92,46 +92,67 @@ func TestGetProjectAccessForUser(t *testing.T) {
 	})
 }
 
-func TestGetProjectAccessForUser_GrantsAreGreatestOf(t *testing.T) {
-	t.Run("a lower direct grant does not lower the inherited permission", func(t *testing.T) {
+// GHSA-pjr3-86v4-5p7w
+func TestGetProjectAccessForUser_NearestGrantWins(t *testing.T) {
+	// 27 -> 12 -> 25 -> 26, all inheriting user 1's read on 27.
+	accessWith := func(t *testing.T, grants ...*ProjectUser) *projectAccess {
+		t.Helper()
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		defer s.Close()
+		t.Cleanup(func() { s.Close() })
+		for _, g := range grants {
+			g.UserID = 1
+			_, err := s.Insert(g)
+			require.NoError(t, err)
+		}
+		access, err := getProjectAccessForUser(s, 1)
+		require.NoError(t, err)
+		return access
+	}
+	assertPermission := func(t *testing.T, access *projectAccess, projectID int64, want Permission) {
+		t.Helper()
+		got, has := access.permission(projectID)
+		assert.True(t, has)
+		assert.Equal(t, want, got, "project %d", projectID)
+	}
 
+	t.Run("an inherited admin is not lowered by a child grant", func(t *testing.T) {
 		// User 1 is admin on project 29 and therefore on its child 14, which user 6 owns.
-		_, err := s.Insert(&ProjectUser{ProjectID: 14, UserID: 1, Permission: PermissionRead})
-		require.NoError(t, err)
-
-		access, err := getProjectAccessForUser(s, 1)
-		require.NoError(t, err)
-		got, has := access.permission(14)
-		assert.True(t, has)
-		assert.Equal(t, PermissionAdmin, got)
+		access := accessWith(t, &ProjectUser{ProjectID: 14, Permission: PermissionRead})
+		assertPermission(t, access, 14, PermissionAdmin)
 	})
-
-	t.Run("a higher direct grant wins and propagates down", func(t *testing.T) {
+	t.Run("a child read lowers an inherited write", func(t *testing.T) {
+		access := accessWith(t,
+			&ProjectUser{ProjectID: 12, Permission: PermissionWrite},
+			&ProjectUser{ProjectID: 25, Permission: PermissionRead},
+		)
+		assertPermission(t, access, 12, PermissionWrite)
+		assertPermission(t, access, 25, PermissionRead)
+		assertPermission(t, access, 26, PermissionRead)
+	})
+	t.Run("a child write raises an inherited read", func(t *testing.T) {
+		access := accessWith(t, &ProjectUser{ProjectID: 25, Permission: PermissionWrite})
+		assertPermission(t, access, 12, PermissionRead)
+		assertPermission(t, access, 25, PermissionWrite)
+		assertPermission(t, access, 26, PermissionWrite)
+	})
+	t.Run("the owner stays admin despite a lower share", func(t *testing.T) {
+		access := accessWith(t, &ProjectUser{ProjectID: 1, Permission: PermissionRead})
+		assertPermission(t, access, 1, PermissionAdmin)
+	})
+	t.Run("a user and a team grant on the same project take the higher", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
-
-		// 27 -> 12 -> 25 -> 26, all inheriting user 1's read on 27.
-		_, err := s.Insert(&ProjectUser{ProjectID: 25, UserID: 1, Permission: PermissionWrite})
+		// User 1 is a member of team 1.
+		_, err := s.Insert(&ProjectUser{ProjectID: 2, UserID: 1, Permission: PermissionRead})
+		require.NoError(t, err)
+		_, err = s.Insert(&TeamProject{ProjectID: 2, TeamID: 1, Permission: PermissionWrite})
 		require.NoError(t, err)
 
 		access, err := getProjectAccessForUser(s, 1)
 		require.NoError(t, err)
-
-		got, has := access.permission(25)
-		assert.True(t, has)
-		assert.Equal(t, PermissionWrite, got)
-
-		got, has = access.permission(26)
-		assert.True(t, has)
-		assert.Equal(t, PermissionWrite, got)
-
-		got, has = access.permission(12)
-		assert.True(t, has)
-		assert.Equal(t, PermissionRead, got)
+		assertPermission(t, access, 2, PermissionWrite)
 	})
 }
 
@@ -151,6 +172,7 @@ func TestGetProjectAccessForUser_OutOfEnumGrantIsNoGrant(t *testing.T) {
 			_, has := access.permission(2)
 			assert.False(t, has)
 			assert.NotContains(t, access.sortedIDs, int64(2))
+			assert.NotContains(t, projectIDsMatching(t, s, access.condViaSubquery("id", PermissionRead)), int64(2))
 		})
 	}
 }
@@ -176,16 +198,30 @@ func TestProjectAccessCond(t *testing.T) {
 
 	t.Run("no access matches nothing", func(t *testing.T) {
 		empty := &projectAccess{userID: 1}
-		assert.Empty(t, projectIDsMatching(t, s, empty.cond("id")))
+		assert.Empty(t, projectIDsMatching(t, s, empty.cond("id", PermissionRead)))
 	})
 
-	t.Run("subquery fallback matches the same projects with bounded parameters", func(t *testing.T) {
-		fallback := access.condViaSubquery("id")
-		assert.Equal(t, projectIDsMatching(t, s, access.cond("id")), projectIDsMatching(t, s, fallback))
+	minPermissions := map[string]Permission{
+		"read":  PermissionRead,
+		"write": PermissionWrite,
+		"admin": PermissionAdmin,
+	}
+	for name, minPermission := range minPermissions {
+		t.Run("subquery fallback matches the list with bounded parameters at "+name, func(t *testing.T) {
+			ids := projectIDsMatching(t, s, access.cond("id", minPermission))
+			assert.NotEmpty(t, ids)
+			fallback := access.condViaSubquery("id", minPermission)
+			assert.Equal(t, ids, projectIDsMatching(t, s, fallback))
 
-		_, args, err := builder.ToSQL(fallback)
-		require.NoError(t, err)
-		assert.Len(t, args, 3)
+			_, args, err := builder.ToSQL(fallback)
+			require.NoError(t, err)
+			assert.Len(t, args, 5)
+		})
+	}
+
+	t.Run("min permission narrows the list", func(t *testing.T) {
+		writable := projectIDsMatching(t, s, access.cond("id", PermissionWrite))
+		assert.Less(t, len(writable), len(access.sortedIDs))
 	})
 
 	t.Run("link share is confined to its project", func(t *testing.T) {

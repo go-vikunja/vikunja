@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
@@ -35,6 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
+	"github.com/samedi/caldav-go/lib"
 	"xorm.io/xorm"
 )
 
@@ -285,7 +287,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 }
 
 // GetResourcesByFilters fetches a project of resources with a filter
-func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *data.ResourceFilter) ([]data.Resource, error) {
+func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, filter *data.ResourceFilter) ([]data.Resource, error) {
 
 	// If we already have a project saved, that means the user is making a REPORT request to find out if
 	// anything changed, in that case we need to return all tasks.
@@ -300,6 +302,9 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 			}
 			r := data.NewResource(taskURL(vcls.project.ID, &vcls.project.Tasks[i].Task), &rr)
 			r.Name = vcls.project.Tasks[i].Title
+			if !matchesTodoFilter(filter, &r) {
+				continue
+			}
 			resources = append(resources, r)
 		}
 		return resources, nil
@@ -315,6 +320,24 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, _ *
 	return []data.Resource{r}, nil
 	// For now, filtering is disabled.
 	// return vcls.GetResources(rpath, false)
+}
+
+// caldav-go only evaluates time-range on VEVENTs, so a VTODO query with one would match
+// nothing. Those keep getting every task, the client narrows them down itself.
+func matchesTodoFilter(filter *data.ResourceFilter, r *data.Resource) bool {
+	if filter == nil || filter.GetTimeRangeFilter() != nil {
+		return true
+	}
+	return filter.Match(todoResource{r})
+}
+
+// caldav-go reports every non-collection resource as a VEVENT.
+type todoResource struct {
+	*data.Resource
+}
+
+func (todoResource) ComponentName() string {
+	return lib.VTODO
 }
 
 // WebDAV requires every Depth: 1 child to live under the collection's own URI.
@@ -565,7 +588,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to parse VTODO in CreateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
 		_ = s.Rollback()
-		return nil, err
+		return nil, errs.ForbiddenError
 	}
 
 	vTask.ProjectID = vcls.project.ID
@@ -601,11 +624,11 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 	}
 
 	// Inbound CalDAV descriptions are markdown; store them as canonical HTML.
-	if err := applyDescriptionFromMarkdown(s, vTask, ""); err != nil {
+	if err := applyDescriptionFromMarkdown(s, vcls.user, vTask, ""); err != nil {
 		log.Errorf("[CALDAV] Failed to convert description in CreateResource: %v", err)
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		return nil, err
+		return nil, caldavTaskWriteError(err)
 	}
 
 	// Create the task
@@ -614,7 +637,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to create task in CreateResource: %v, task: %+v", err, vTask)
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		return nil, err
+		return nil, caldavTaskWriteError(err)
 	}
 
 	vcls.task.ID = vTask.ID
@@ -655,13 +678,13 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 // applyDescriptionFromMarkdown converts a task's inbound CalDAV description
 // (markdown) to canonical HTML, rebuilding @mentions. Unchanged markdown keeps the
 // stored HTML verbatim, so a no-op read-modify-write doesn't churn it or move Updated.
-func applyDescriptionFromMarkdown(s *xorm.Session, vTask *models.Task, storedHTML string) error {
+func applyDescriptionFromMarkdown(s *xorm.Session, viewer *user2.User, vTask *models.Task, storedHTML string) error {
 	if !richtext.Changed(storedHTML, vTask.Description) {
 		vTask.Description = storedHTML
 		return nil
 	}
 
-	htmlDesc, err := richtext.MarkdownToHTMLWithMentions(s, vTask.Description)
+	htmlDesc, err := richtext.MarkdownToHTMLWithMentions(s, viewer, vTask.Description)
 	if err != nil {
 		return err
 	}
@@ -685,7 +708,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to parse VTODO in UpdateResource: %v", err)
 		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
 		_ = s.Rollback()
-		return nil, err
+		return nil, errs.ForbiddenError
 	}
 
 	// At this point, we already have the right task in vcls.task, so we can use that ID directly
@@ -755,11 +778,11 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	}
 
 	// Inbound markdown → canonical HTML, kept verbatim when unchanged.
-	if err := applyDescriptionFromMarkdown(s, vTask, stored.Description); err != nil {
+	if err := applyDescriptionFromMarkdown(s, vcls.user, vTask, stored.Description); err != nil {
 		log.Errorf("[CALDAV] Failed to convert description in UpdateResource: %v", err)
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		return nil, err
+		return nil, caldavTaskWriteError(err)
 	}
 
 	// Overlay only what the VTODO expressed; everything else keeps its stored value.
@@ -798,7 +821,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to update task in UpdateResource: %v, task: %+v", err, base)
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		return nil, err
+		return nil, caldavTaskWriteError(err)
 	}
 
 	// nil = CATEGORIES absent, leave labels alone; non-nil (even empty) = explicit set.
@@ -984,6 +1007,9 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 	return
 }
 
+// Bounds the tasks a single VTODO can mint via unknown RELATED-TO UIDs.
+const maxPlaceholdersPerVTODO = 50
+
 // Persist new relations provided by the VTODO entry:
 func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
 
@@ -994,10 +1020,19 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 
 	// Inaccessible and missing UIDs must remain indistinguishable.
 	allUIDs := make([]string, 0)
-	for _, relatedTasksInVTODO := range newRelations {
+	dedupedRelations := make(map[models.RelationKind][]*models.Task, len(newRelations))
+	for relationType, relatedTasksInVTODO := range newRelations {
+		seen := make(map[string]bool, len(relatedTasksInVTODO))
+		deduped := make([]*models.Task, 0, len(relatedTasksInVTODO))
 		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
+			if seen[relatedTaskInVTODO.UID] {
+				continue
+			}
+			seen[relatedTaskInVTODO.UID] = true
+			deduped = append(deduped, relatedTaskInVTODO)
 			allUIDs = append(allUIDs, relatedTaskInVTODO.UID)
 		}
+		dedupedRelations[relationType] = deduped
 	}
 	accessibleTasksByUID := make(map[string]*models.Task)
 	if len(allUIDs) > 0 {
@@ -1010,8 +1045,10 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 		}
 	}
 
+	placeholders := 0
+
 	// Ensure the current relations exist:
-	for relationType, relatedTasksInVTODO := range newRelations {
+	for relationType, relatedTasksInVTODO := range dedupedRelations {
 		// Persist each relation independently:
 		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
 
@@ -1028,6 +1065,11 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 
 			// Placeholders stay in the caller's project so CanCreate applies.
 			if createDummy {
+				// Dropped, not rejected: the client keeps syncing the rest of the VTODO.
+				if placeholders >= maxPlaceholdersPerVTODO {
+					continue
+				}
+				placeholders++
 				relatedTask = &models.Task{
 					ProjectID: task.ProjectID,
 					Title:     "DUMMY-UID-" + relatedTaskInVTODO.UID,
@@ -1069,6 +1111,9 @@ type VikunjaProjectResourceAdapter struct {
 
 	isPrincipal  bool
 	isCollection bool
+
+	// Rendered once per request: a multistatus response asks for it per requested property.
+	content *string
 }
 
 // IsCollection checks if the resoure in the adapter is a collection
@@ -1103,11 +1148,23 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 		}
 	}
 
-	return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(latest.Unix(), 10) + `"`
+	etag := strconv.FormatInt(vlra.project.ID, 10) + "-" + strconv.FormatInt(latest.Unix(), 10)
+	if !vlra.project.LastPurgedAt.IsZero() {
+		etag += ";purge=" + strconv.FormatInt(vlra.project.LastPurgedAt.Unix(), 10)
+	}
+	return `"` + etag + `"`
 }
 
 // GetContent returns the content string of a resource (a task in our case)
 func (vlra *VikunjaProjectResourceAdapter) GetContent() string {
+	if vlra.content == nil {
+		content := vlra.renderContent()
+		vlra.content = &content
+	}
+	return *vlra.content
+}
+
+func (vlra *VikunjaProjectResourceAdapter) renderContent() string {
 	if vlra.project != nil && vlra.projectTasks != nil {
 		return caldav.GetCaldavTodosForTasks(vlra.project, vlra.projectTasks)
 	}
@@ -1201,4 +1258,13 @@ func addTaskResource(collectionProjectID int64, task *models.Task, rr *VikunjaPr
 	taskResourceInstance := data.NewResource(taskURL(collectionProjectID, task), rr)
 	taskResourceInstance.Name = task.Title
 	*resources = append(*resources, taskResourceInstance)
+}
+
+// caldav-go answers anything but its own errors with 500.
+func caldavTaskWriteError(err error) error {
+	var validationErr models.ValidationHTTPError
+	if errors.As(err, &validationErr) || errors.Is(err, richtext.ErrTooManyTableCells) {
+		return errs.ForbiddenError
+	}
+	return err
 }

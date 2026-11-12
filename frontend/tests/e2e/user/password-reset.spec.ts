@@ -1,3 +1,4 @@
+import {setupApiUrl} from '../../support/authenticateUser'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory, type UserAttributes} from '../../factories/user'
 import {TokenFactory, type TokenAttributes} from '../../factories/token'
@@ -6,6 +7,7 @@ test.describe('Password Reset', () => {
 	let user: UserAttributes
 
 	test.beforeEach(async ({page, apiContext}) => {
+		await setupApiUrl(page)
 		const users = await UserFactory.create(1)
 		user = users[0] as UserAttributes
 	})
@@ -14,11 +16,14 @@ test.describe('Password Reset', () => {
 		const tokenArray = await TokenFactory.create(1, {user_id: user.id as number, kind: 1})
 		const token: TokenAttributes = tokenArray[0] as TokenAttributes
 
-		await page.goto(`/?userPasswordReset=${token.token}`)
-		await expect(page).toHaveURL(`/password-reset?userPasswordReset=${token.token}`)
+		await page.goto(`/#userPasswordReset=${token.token}`)
+		await expect(page).toHaveURL(`/password-reset#userPasswordReset=${token.token}`)
 
 		const newPassword = 'newSecurePassword123'
 		await page.locator('input[id=password]').fill(newPassword)
+		await page.getByRole('button', {name: 'Show the password', exact: true}).click()
+		await expect(page.locator('#password')).toHaveValue(newPassword)
+		await expect(page.locator('#password-error')).toBeHidden()
 		await page.locator('button').filter({hasText: 'Reset your password'}).click()
 
 		await expect(page.locator('.message.success')).toContainText('The password was updated successfully.')
@@ -33,8 +38,9 @@ test.describe('Password Reset', () => {
 	})
 
 	test('Should show an error for an invalid token', async ({page, apiContext}) => {
+		// links from emails sent before the token moved to the fragment
 		await page.goto('/?userPasswordReset=invalidtoken123')
-		await expect(page).toHaveURL('/password-reset?userPasswordReset=invalidtoken123')
+		await expect(page).toHaveURL('/password-reset#userPasswordReset=invalidtoken123')
 
 		// Attempt to reset password
 		const newPassword = 'newSecurePassword123'

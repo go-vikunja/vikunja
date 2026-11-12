@@ -19,12 +19,14 @@ package config
 import (
 	"crypto/rand"
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 	_ "time/tzdata" // Imports time zone data instead of relying on the os
@@ -32,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/c2h5oh/datasize"
+	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 )
 
@@ -101,9 +104,11 @@ const (
 	AuthLdapAttributeEmail             Key = `auth.ldap.attribute.email`
 	AuthLdapAttributeDisplayname       Key = `auth.ldap.attribute.displayname`
 	AuthLdapAttributeMemberID          Key = `auth.ldap.attribute.memberid`
+	AuthLdapAttributeID                Key = `auth.ldap.attribute.id`
 
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
+	Legal           Key = `legal`
 
 	DatabaseType                  Key = `database.type`
 	DatabaseHost                  Key = `database.host`
@@ -199,6 +204,7 @@ const (
 	MigrationMicrosoftTodoRedirectURL  Key = `migration.microsofttodo.redirecturl`
 	MigrationClaimTimeout              Key = `migration.claimtimeout`
 	MigrationMaxCSVRows                Key = `migration.maxcsvrows`
+	MigrationMaxItems                  Key = `migration.maxitems`
 	MigrationVikunjaFileMaxSize        Key = `migration.vikunjafile.maxsize`
 	MigrationVikunjaFileMaxFiles       Key = `migration.vikunjafile.maxfiles`
 	MigrationVikunjaFileMaxUserStorage Key = `migration.vikunjafile.maxuserstorage`
@@ -222,6 +228,9 @@ const (
 	MetricsUsername Key = `metrics.username`
 	MetricsPassword Key = `metrics.password`
 	MetricsPprof    Key = `metrics.pprof`
+
+	HealthUsername Key = `health.username`
+	HealthPassword Key = `health.password`
 
 	DefaultSettingsAvatarProvider              Key = `defaultsettings.avatar_provider`
 	DefaultSettingsAvatarFileID                Key = `defaultsettings.avatar_file_id`
@@ -528,6 +537,7 @@ func initDefaultConfig() {
 	MigrationMicrosoftTodoEnable.setDefault(false)
 	MigrationClaimTimeout.setDefault("5m")
 	MigrationMaxCSVRows.setDefault(100000)
+	MigrationMaxItems.setDefault(100000)
 	MigrationVikunjaFileMaxSize.setDefault("256MB")
 	MigrationVikunjaFileMaxFiles.setDefault(10000)
 	MigrationVikunjaFileMaxUserStorage.setDefault("1GB")
@@ -546,7 +556,7 @@ func initDefaultConfig() {
 	// Settings
 	DefaultSettingsAvatarProvider.setDefault("initials")
 	DefaultSettingsOverdueTaskRemindersEnabled.setDefault(true)
-	DefaultSettingsOverdueTaskRemindersTime.setDefault("9:00")
+	DefaultSettingsOverdueTaskRemindersTime.setDefault("09:00")
 	// Webhook
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)
@@ -565,9 +575,11 @@ func initDefaultConfig() {
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
 	PluginsLoader.setDefault("native")
+}
 
-	// Migrate deprecated webhook config keys to outgoingrequests.*
-	// This allows removing the old keys in a single place later.
+// migrateDeprecatedWebhookKeys must run after the config file and env are
+// loaded, before that only defaults are visible.
+func migrateDeprecatedWebhookKeys() {
 	if WebhooksAllowNonRoutableIPs.GetBool() && !OutgoingRequestsAllowNonRoutableIPs.GetBool() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksAllowNonRoutableIPs, OutgoingRequestsAllowNonRoutableIPs)
 		OutgoingRequestsAllowNonRoutableIPs.Set("true")
@@ -580,8 +592,69 @@ func initDefaultConfig() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyPassword, OutgoingRequestsProxyPassword)
 		OutgoingRequestsProxyPassword.Set(proxyPassword)
 	}
-	// License
-	LicenseKey.setDefault("")
+}
+
+func warnDeprecatedLegalKeys() {
+	deprecated := []Key{
+		LegalImprintURL,
+		LegalPrivacyURL,
+	}
+	for _, k := range deprecated {
+		if k.GetString() != "" {
+			log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q with a text and url instead.", k, Legal+".<link key>")
+		}
+	}
+}
+
+// LegalLink is one legal.<link key> entry.
+type LegalLink struct {
+	Text string
+	URL  string
+}
+
+// GetLegalLinks returns the legal.<link key> entries sorted by key, skipping incomplete ones.
+func GetLegalLinks() []LegalLink {
+	found := make(map[string]LegalLink)
+	collectLegalLinks(viper.GetStringMap(string(Legal)), "", found)
+
+	keys := slices.Sorted(maps.Keys(found))
+	links := make([]LegalLink, 0, len(keys))
+	for _, key := range keys {
+		links = append(links, found[key])
+	}
+	return links
+}
+
+// Env vars split at every underscore, so VIKUNJA_LEGAL_TERMS_OF_SERVICE_URL
+// arrives as legal.terms.of.service.url. Rejoin the path to get the link key back.
+func collectLegalLinks(node map[string]any, prefix string, found map[string]LegalLink) {
+	for key, value := range node {
+		path := key
+		if prefix != "" {
+			path = prefix + "_" + key
+		}
+
+		// Skips the deprecated imprinturl/privacyurl, which are plain strings.
+		child, err := cast.ToStringMapE(value)
+		if err != nil {
+			continue
+		}
+
+		_, hasText := child["text"]
+		_, hasURL := child["url"]
+		if !hasText && !hasURL {
+			collectLegalLinks(child, path, found)
+			continue
+		}
+
+		link := LegalLink{
+			Text: cast.ToString(child["text"]),
+			URL:  cast.ToString(child["url"]),
+		}
+		if link.Text != "" && link.URL != "" {
+			found[path] = link
+		}
+	}
 }
 
 // generateServiceSecretIfEmpty sets a random service.secret when none was configured.
@@ -717,12 +790,14 @@ func anchorRootpathToConfigFile() {
 	if rootpath := ServiceRootpath.GetString(); !filepath.IsAbs(rootpath) {
 		ServiceRootpath.Set(filepath.Join(configDir, rootpath))
 	}
+}
 
-	// The default baked in initDefaultConfig() points at the caller's cwd, which
-	// would split the database off from the rest of the pinned install.
-	if !viper.InConfig(string(DatabasePath)) {
-		DatabasePath.setDefault(ResolvePath("vikunja.db"))
-	}
+// initDefaultConfig computed these before the config file and env could change the rootpath.
+func anchorPathsToRootpath() {
+	DatabasePath.setDefault(ResolvePath("vikunja.db"))
+	LogPath.setDefault(ResolvePath("logs"))
+	PluginsDir.setDefault(ResolvePath("plugins"))
+	PluginsDir.Set(ResolvePath(PluginsDir.GetString()))
 }
 
 // InitConfig initializes the config, sets defaults etc.
@@ -768,25 +843,26 @@ func InitConfig() {
 
 	anchorRootpathToConfigFile()
 
+	envErr := setConfigFromEnv()
+	readConfigValuesFromFiles()
+	anchorPathsToRootpath()
+
+	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
+
 	if viper.ConfigFileUsed() != "" {
 		log.Infof("Using config file: %s", viper.ConfigFileUsed())
 
 		if err != nil {
 			log.Warning(err.Error())
 			log.Warning("Using default config.")
-		} else {
-			log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 		}
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")
 	}
 
-	err = setConfigFromEnv()
-	if err != nil {
-		log.Warningf("Failed to set config from environment variables: %s", err.Error())
+	if envErr != nil {
+		log.Warningf("Failed to set config from environment variables: %s", envErr.Error())
 	}
-
-	readConfigValuesFromFiles()
 
 	// Deprecation: migrate service.JWTSecret → service.secret only when the
 	// user has not explicitly set service.secret (so the new key takes precedence).
@@ -799,9 +875,9 @@ func InitConfig() {
 		}
 	}
 
-	if err := validateRuntimeConfig(); err != nil {
-		log.Fatalf("Invalid runtime configuration: %s", err)
-	}
+	mustValidateRuntimeConfig()
+	migrateDeprecatedWebhookKeys()
+	warnDeprecatedLegalKeys()
 
 	generateServiceSecretIfEmpty()
 
@@ -851,10 +927,24 @@ func InitConfig() {
 		MigrationMicrosoftTodoRedirectURL.Set(ServicePublicURL.GetString() + "migrate/microsoft-todo")
 	}
 
+	if tz := ServiceTimeZone.GetString(); tz == "" {
+		log.Warning("service.timezone is not configured, falling back to UTC")
+		ServiceTimeZone.Set("UTC")
+	} else if _, err := time.LoadLocation(tz); err != nil {
+		log.Warningf("Configured service.timezone %q is invalid (%s), falling back to UTC", tz, err)
+		ServiceTimeZone.Set("UTC")
+	}
+
 	if tz := DefaultSettingsTimezone.GetString(); tz == "" {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	} else if _, err := time.LoadLocation(tz); err != nil {
+		log.Warningf("Configured defaultsettings.timezone %q is invalid (%s), falling back to %s", tz, err, ServiceTimeZone.GetString())
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
+	}
+
+	// Older sample configs shipped "9:00"; the frontend's time input needs HH:MM.
+	if t, err := time.Parse("15:04", DefaultSettingsOverdueTaskRemindersTime.GetString()); err == nil {
+		DefaultSettingsOverdueTaskRemindersTime.Set(t.Format("15:04"))
 	}
 
 	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")
@@ -891,4 +981,10 @@ func GetMaxFileSizeInMBytes() uint64 {
 		return 20
 	}
 	return maxFileSizeInBytes
+}
+
+func mustValidateRuntimeConfig() {
+	if err := validateRuntimeConfig(); err != nil {
+		log.Fatalf("Invalid runtime configuration: %s", err)
+	}
 }

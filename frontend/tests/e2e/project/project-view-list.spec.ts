@@ -4,6 +4,7 @@ import {TaskFactory} from '../../factories/task'
 import {TaskRelationFactory} from '../../factories/task_relation'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
+import {ProjectViewFactory} from '../../factories/project_view'
 import {createProjects} from './prepareProjects'
 import {BucketFactory} from '../../factories/bucket'
 import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
@@ -82,6 +83,26 @@ test.describe('Project View List', () => {
 		await page.locator('.tasks .task .tasktext').filter({hasText: tasks[0].title}).first().click()
 
 		await expect(page).toHaveURL(new RegExp(`/tasks/${tasks[0].id}`))
+	})
+
+	test('Should mark overdue tasks with an icon, not only by color', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const [overdue] = await TaskFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			due_date: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+		})
+		const [future] = await TaskFactory.create(1, {
+			id: 2,
+			project_id: 1,
+			due_date: new Date(Date.now() + 3 * 86_400_000).toISOString(),
+		}, false)
+		await page.goto('/projects/1/1')
+
+		const overdueRow = page.locator('.tasks .task').filter({hasText: overdue.title})
+		await expect(overdueRow.locator('.overdue-indicator svg')).toBeVisible()
+		await expect(overdueRow.locator('.overdue-indicator')).toContainText('Overdue')
+		await expect(page.locator('.tasks .task').filter({hasText: future.title}).locator('.overdue-indicator')).toHaveCount(0)
 	})
 
 	test('Should not see any elements for a project which is shared read only', async ({authenticatedPage: page}) => {
@@ -253,5 +274,29 @@ test.describe('Project View List', () => {
 
 		// Only one task should be visible (the searchable one)
 		await expect(page.locator('.tasks .task')).toHaveCount(1)
+	})
+
+	test('Should search in a view with a filter when the term contains a filter operator', async ({authenticatedPage: page}) => {
+		await ProjectFactory.create(1, {title: 'First Project'})
+		await ProjectViewFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			view_kind: 0,
+			filter: JSON.stringify({filter: 'done = false'}),
+		})
+		// "meeting" contains the "in" operator
+		const {searchableTask} = await createTasksWithSearch()
+
+		await page.goto('/projects/1/1')
+		await expect(page.locator('.tasks')).toContainText('Regular task 1')
+
+		await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+		await page.getByRole('tab', {name: 'Advanced', exact: true}).click()
+		await page.locator('.filter-popup .filter-input .ProseMirror').fill('meeting')
+		await page.locator('.filter-popup button').filter({hasText: 'Show results'}).click()
+
+		await expect(page).toHaveURL(/s=meeting/)
+		await expect(page.locator('.tasks .task')).toHaveCount(1)
+		await expect(page.locator('.tasks')).toContainText(searchableTask.title)
 	})
 })

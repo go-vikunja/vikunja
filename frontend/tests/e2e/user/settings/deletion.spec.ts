@@ -32,24 +32,22 @@ test.describe('Account deletion', () => {
 			token: deletionToken,
 		}, false)
 
-		// Confirm the deletion via API — this is the write that sets deletion_scheduled_at.
-		const confirm = await apiContext.post('user/deletion/confirm', {
-			headers: {Authorization: `Bearer ${userToken}`},
-			data: {token: deletionToken},
-		})
-		expect(confirm.ok()).toBe(true)
-
-		await gotoUserSettings(page, 'deletion')
+		await page.goto(`/user/settings/deletion?accountDeletionConfirm=${deletionToken}`)
 		// Scheduled-state copy: "We will delete your Vikunja account at ..."
 		await expect(page.locator('.card')).toContainText(/we will delete your Vikunja account/i)
+		await expect(page).not.toHaveURL(/accountDeletionConfirm/)
 
 		await page.locator('#currentPasswordAccountDelete').fill(TEST_PASSWORD)
 		const cancel = page.waitForResponse(r => r.url().includes('/user/deletion/cancel'))
 		await page.getByRole('button', {name: /cancel the deletion/i}).click()
 		await cancel
 
-		await expect(page.locator('.global-notification .vue-notification.success')).toBeVisible()
+		await expect(page.locator('.global-notification .vue-notification.success').filter({hasText: 'We will not delete'})).toBeVisible()
 		// And the non-scheduled branch (the "Delete account" form) reappears.
 		await expect(page.locator('.card .button.is-danger')).toBeVisible()
+		await page.reload()
+		await expect(page.locator('.card .button.is-danger')).toBeVisible()
+		const account = await apiContext.get('user', {headers: {Authorization: `Bearer ${userToken}`}})
+		expect((await account.json()).deletion_scheduled_at).toMatch(/^0001-/)
 	})
 })

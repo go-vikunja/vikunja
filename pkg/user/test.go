@@ -17,6 +17,8 @@
 package user
 
 import (
+	"sync"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
@@ -26,6 +28,8 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 )
 
+var syncTestTables sync.Once
+
 // InitTests handles the actual bootstrapping of the test env
 func InitTests() {
 	x, err := db.CreateTestEngine()
@@ -33,12 +37,13 @@ func InitTests() {
 		log.Fatal(err)
 	}
 
-	err = x.Sync2(append(GetTables(), new(jobs.Job))...)
-	if err != nil {
-		log.Fatal(err)
-	}
+	syncTestTables.Do(func() {
+		if err := x.Sync2(append(GetTables(), new(jobs.Job))...); err != nil {
+			log.Fatal(err)
+		}
+	})
 
-	err = db.InitTestFixtures("users", "user_tokens", "totp")
+	err = db.InitTestFixtures("users", "user_tokens", "totp", "user_identities")
 	if err != nil {
 		log.Fatal(err)
 	}

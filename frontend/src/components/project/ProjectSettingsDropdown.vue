@@ -149,8 +149,8 @@ const props = withDefaults(defineProps<{
 const subscriptionMutation = useSetProjectSubscriptionMutation()
 
 const configStore = useConfigStore()
-const backgroundsEnabled = computed(() => configStore.enabledBackgroundProviders?.length > 0)
+const backgroundsEnabled = computed(() => configStore.enabled_background_providers?.length > 0)
 
 const authStore = useAuthStore()
-const isDefaultProject = computed(() => props.project?.id === authStore.settings.defaultProjectId)
+const isDefaultProject = computed(() => props.project?.id === authStore.settings.default_project_id)
 </script>

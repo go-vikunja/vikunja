@@ -1,8 +1,8 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
+	projectsCount,
 	projectsCreate,
-	projectsDelete,
 	projectsDuplicate,
 	projectsList,
 	projectsRead,
@@ -17,14 +17,13 @@ import type {
 import {queryClient} from '@/client/queryClient'
 import {PERMISSIONS} from '@/constants/permissions'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
-import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {i18n} from '@/i18n'
 
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
-import {API_MAX_PER_PAGE} from './pagination'
 import {setSubscription} from './subscriptionRequests'
 import {taskKeys} from './tasks'
+import {isProjectInTrashError} from './trashErrors'
 
 export type ProjectResponse = Omit<Project,
 	'id' |
@@ -79,6 +78,7 @@ export const projectKeys = {
 	all: ['projects'] as const,
 	list: () => ['projects', 'list'] as const,
 	detail: (id: number) => ['projects', 'detail', id] as const,
+	count: (id: number) => ['projects', 'detail', id, 'count'] as const,
 }
 
 export function createProjectDraft(project: Partial<ProjectWritable> = {}): ProjectDraft {
@@ -155,7 +155,7 @@ function partitionProjects(projects: Project[]): ProjectListResult {
 
 async function fetchAllProjects(): Promise<ProjectListResult> {
 	const projects = await fetchAllPages(async page => (await projectsList({
-		query: {is_archived: true, expand: 'permissions', page, per_page: API_MAX_PER_PAGE},
+		query: {is_archived: true, expand: 'permissions', page},
 	})).data)
 	return partitionProjects(projects)
 }
@@ -176,6 +176,8 @@ export function projectQuery(id: number) {
 			return normalizeProject(data)
 		},
 		enabled: id !== 0,
+		// All consumers suppress trash errors; ProjectView renders the notice.
+		meta: {handlesError: isProjectInTrashError},
 	})
 }
 
@@ -277,20 +279,20 @@ function mergeProjectMetadata(previous: ProjectResponse, updated: ProjectRespons
 }
 
 // Project callers let failures reach the global Vue error handler, which toasts them.
-const toastError = () => false
+export const toastError = () => false
 
 export function createProjectMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async (project: ProjectWritable) => {
 			const {data} = await projectsCreate({body: projectBody(project)})
-			return normalizeProject(data)
+			return normalizeProject({...data, max_permission: PERMISSIONS.ADMIN})
 		},
 		onSuccess: (created, _input, client) => {
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? replaceProjectInList(current, created) : current,
 			)
 		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		successMessage: () => i18n.global.t('project.create.createdSuccess'),
 		toastError,
 	})
@@ -308,15 +310,22 @@ export function updateProjectMutationOptions(successMessage?: string) {
 		optimistic: {
 			queryKeys: ({id}) => [projectKeys.list(), projectKeys.detail(id)],
 			update: ({id, ...project}, client) => {
+				const previous = getCachedProject(id, client)
+				const refetchList = !previous
+					|| previous.is_archived !== project.is_archived
+					|| previous.parent_project_id !== project.parent_project_id
 				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 					current ? mapProjectNavigationItem(current, id, existing => normalizeProject({...existing, ...project})) : current,
 				)
 				client.setQueryData<ProjectResponse>(projectKeys.detail(id), current =>
 					current ? normalizeProject({...current, ...project}) : current,
 				)
+				return {refetchList}
 			},
 		},
-		onSuccess: (updated, _input, client) => {
+		onSuccess: (updated, input, client, context) => {
+			// Position healing renumbers siblings whose new positions are absent from the response.
+			context.refetchList ||= updated.position !== input.position
 			client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
 				current ? mapProjectNavigationItem(current, updated.id, previous =>
 					mergeProjectMetadata(previous, updated),
@@ -326,8 +335,12 @@ export function updateProjectMutationOptions(successMessage?: string) {
 				current ? mergeProjectMetadata(current, updated) : current,
 			)
 		},
-		onSettled: ({id}, client) => Promise.all([
-			client.invalidateQueries({queryKey: projectKeys.list()}),
+		onSettled: ({id}, client, context) => Promise.all([
+			// Archive and parent changes affect descendants beyond the patched project.
+			client.invalidateQueries({
+				queryKey: projectKeys.list(),
+				refetchType: context.refetchList ? 'active' : 'none',
+			}),
 			client.invalidateQueries({queryKey: projectKeys.detail(id)}),
 		]),
 		successMessage: () => successMessage,
@@ -364,7 +377,7 @@ export function patchProjectFavoriteMutationOptions() {
 			)
 		},
 		onSettled: ({id}, client) => Promise.all([
-			client.invalidateQueries({queryKey: projectKeys.list()}),
+			client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 			client.invalidateQueries({queryKey: projectKeys.detail(id)}),
 		]),
 		toastError,
@@ -407,29 +420,23 @@ function descendantIds(projects: readonly ProjectResponse[], projectId: number):
 	return [projectId, ...children.flatMap(project => descendantIds(projects, project.id))]
 }
 
-export function deleteProjectMutationOptions() {
-	return contextMutationOptions({
-		mutationFn: async (id: number) => {
-			await projectsDelete({path: {id}})
-		},
-		optimistic: {
-			queryKeys: () => [projectKeys.list()],
-			update: (id, client) => {
-				const list = client.getQueryData<ProjectListResult>(projectKeys.list())
-				const ids = new Set(list ? descendantIds(list.projects, id) : [id])
-				client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
-					current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
-				)
-				return ids
-			},
-		},
-		onSuccess: (_data, id, client, ids) => {
-			ids.forEach(projectId => client.removeQueries({queryKey: projectKeys.detail(projectId)}))
-			removeProjectFromHistory({id})
-		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
-		successMessage: () => i18n.global.t('project.delete.success'),
-		toastError,
+export function removeProjectSubtree(client: QueryClient, id: number): Set<number> {
+	const list = client.getQueryData<ProjectListResult>(projectKeys.list())
+	const ids = new Set(list ? descendantIds(list.projects, id) : [id])
+	client.setQueryData<ProjectListResult>(projectKeys.list(), current =>
+		current ? {...current, projects: current.projects.filter(project => !ids.has(project.id))} : current,
+	)
+	return ids
+}
+
+export function projectCountQuery(id: number) {
+	return queryOptions({
+		queryKey: projectKeys.count(id),
+		queryFn: async ({signal}) => (await projectsCount({path: {id}, signal})).data,
+		staleTime: 0,
+		enabled: id > 0,
+		// ProjectSettingsDelete renders a fallback text instead.
+		meta: {handlesError: true},
 	})
 }
 
@@ -454,7 +461,7 @@ export function duplicateProjectMutationOptions() {
 				current ? replaceProjectInList(current, duplicate) : current,
 			)
 		},
-		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list()}),
+		onSettled: (_input, client) => client.invalidateQueries({queryKey: projectKeys.list(), refetchType: 'none'}),
 		successMessage: () => i18n.global.t('project.duplicate.success'),
 		toastError,
 	})
@@ -474,10 +481,6 @@ export function usePatchProjectFavoriteMutation() {
 
 export function useSetProjectSubscriptionMutation() {
 	return useMutation(setProjectSubscriptionMutationOptions())
-}
-
-export function useDeleteProjectMutation() {
-	return useMutation(deleteProjectMutationOptions())
 }
 
 export function useDuplicateProjectMutation() {

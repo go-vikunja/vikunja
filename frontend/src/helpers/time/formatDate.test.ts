@@ -1,7 +1,8 @@
 import {beforeEach, describe, expect, it} from 'vitest'
 import {createPinia, setActivePinia} from 'pinia'
 
-import {dateIsValid, formatDate, formatISO} from './formatDate'
+import {dateIsValid, formatDate, formatDateSince, formatISO} from './formatDate'
+import {useGlobalNow} from '@/composables/useGlobalNow'
 
 describe('dateIsValid', () => {
 	it.each([
@@ -48,5 +49,24 @@ describe('formatDate', () => {
 		['the api zero time', '0001-01-01T00:00:00Z'],
 	])('returns an empty string for %s', (_name, date) => {
 		expect(formatDate(date, 'YYYY-MM-DD')).toBe('')
+	})
+})
+
+describe('formatDateSince', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	it.each([
+		['a few seconds ago', -10_000],
+		['slightly ahead of the lagging now', 30_000],
+	])('returns "just now" for a date %s', (_name, offset) => {
+		const {now} = useGlobalNow()
+		expect(formatDateSince(new Date(now.value.getTime() + offset))).toBe('just now')
+	})
+
+	it('returns a relative time for older dates', () => {
+		const {now} = useGlobalNow()
+		expect(formatDateSince(new Date(now.value.getTime() - 5 * 60_000))).toBe('5 minutes ago')
 	})
 })

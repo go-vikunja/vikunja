@@ -13,6 +13,7 @@ import {
 	timeEntryKeys,
 	type TimeEntryResponse,
 } from './timeEntries'
+import {notificationKeys} from './notifications'
 import {commentKeys} from './comments'
 import {taskKeys} from './tasks'
 import {
@@ -36,8 +37,8 @@ export type ServerCacheEvent =
 		entry: TimeEntryResponse,
 	}
 	| {
-		kind: 'comments',
-		taskId: number,
+		kind: 'notifications',
+		taskId?: number,
 	}
 	| {
 		kind: 'subscribed',
@@ -56,7 +57,7 @@ export function parseServerCacheEvent(
 ): ServerCacheEvent | null {
 	if (!isRecord(data)) return null
 	if (event === 'timer.created' || event === 'timer.updated' || event === 'timer.deleted') {
-		if (currentUserId === undefined || data.user_id !== currentUserId) return null
+		if (currentUserId === undefined || !isRecord(data.user) || data.user.id !== currentUserId) return null
 		if (typeof data.id !== 'number' || data.id <= 0) return null
 		if (data.task_id !== undefined && data.task_id !== null && typeof data.task_id !== 'number') return null
 		return {
@@ -64,11 +65,13 @@ export function parseServerCacheEvent(
 			entry: normalizeTimeEntry(data as TimeEntry),
 		}
 	}
-	if (event === 'notification.created' && data.name === 'task.comment' && isRecord(data.notification)) {
-		const task = data.notification.task
-		if (isRecord(task) && typeof task.id === 'number' && task.id > 0) return {
-			kind: 'comments',
-			taskId: task.id,
+	if (event === 'notification.created') {
+		const task = data.name === 'task.comment' && isRecord(data.notification) ? data.notification.task : undefined
+		const taskId = isRecord(task) && typeof task.id === 'number' && task.id > 0 ? task.id : undefined
+		if (taskId === undefined && !(typeof data.id === 'number' && data.id > 0)) return null
+		return {
+			kind: 'notifications',
+			taskId,
 		}
 	}
 	return null
@@ -78,6 +81,7 @@ const startsWith = (key: QueryKey, prefix: readonly unknown[]) => prefix.every((
 const isTaskDetailKey = (key: QueryKey) => startsWith(key, taskKeys.details)
 
 const SUBSCRIBE_SWEEP_KEYS = [
+	notificationKeys.all,
 	timeEntryKeys.all,
 	commentKeys.all,
 	taskKeys.details,
@@ -109,10 +113,14 @@ export function serverCacheEventMutationOptions() {
 					...(previousTaskId === event.entry.task_id ? [] : [invalidateCachedTask(client, previousTaskId)]),
 				])
 			}
-			if (event.kind === 'comments') {
+			if (event.kind === 'notifications') {
+				const taskId = event.taskId
 				return Promise.all([
-					client.invalidateQueries({queryKey: commentKeys.task(event.taskId)}),
-					invalidateCachedTask(client, event.taskId),
+					client.invalidateQueries({queryKey: notificationKeys.all}),
+					...(taskId === undefined ? [] : [
+						client.invalidateQueries({queryKey: commentKeys.task(taskId)}),
+						invalidateCachedTask(client, taskId),
+					]),
 				])
 			}
 			if (event.kind === 'subscribed') {
@@ -125,6 +133,7 @@ export function serverCacheEventMutationOptions() {
 			}
 			return Promise.all([
 				client.invalidateQueries({queryKey: timeEntryKeys.all}),
+				client.invalidateQueries({queryKey: notificationKeys.all}),
 				client.invalidateQueries({queryKey: commentKeys.all}),
 				client.invalidateQueries({queryKey: taskKeys.details}),
 				invalidateTaskMembership(client),

@@ -5,8 +5,13 @@ import {
 	getToken,
 	getTokenIdentity,
 	getTokenType,
+	isTokenExpired,
+	MAX_RETRY_AFTER_MS,
+	onTokenRefreshed,
 	refreshToken,
+	RefreshTokenError,
 	removeToken,
+	type RefreshFailure,
 } from './auth'
 
 let resolvePost: ((value: unknown) => void) | null = null
@@ -17,10 +22,13 @@ const post = vi.hoisted(() => vi.fn(() => {
 	})
 }))
 
-vi.mock('@/helpers/fetcher', () => ({
-	apiV2Url: (path: string) => `/api/v2/${path}`,
-	HTTPFactory: () => ({post}),
+const apiUrls = vi.hoisted(() => ({base: '/api/v2'}))
+
+vi.mock('@/helpers/apiUrl', () => ({
+	getApiBaseUrl: () => apiUrls.base,
 }))
+
+vi.mock('@/client/generated', () => ({authRefreshToken: post}))
 
 const desktop = vi.hoisted(() => ({
 	isDesktop: false,
@@ -62,6 +70,23 @@ describe('getTokenIdentity', () => {
 	})
 })
 
+describe('isTokenExpired', () => {
+	function tokenExpiringIn(seconds: number) {
+		const payload = btoa(JSON.stringify({exp: Date.now() / 1000 + seconds}))
+		return `header.${payload}.signature`
+	}
+
+	it('treats a token as valid until its exp', () => {
+		expect(isTokenExpired(tokenExpiringIn(1))).toBe(false)
+		expect(isTokenExpired(tokenExpiringIn(-1))).toBe(true)
+	})
+
+	it('treats a token expiring within the margin as expired', () => {
+		expect(isTokenExpired(tokenExpiringIn(1), 5)).toBe(true)
+		expect(isTokenExpired(tokenExpiringIn(10), 5)).toBe(false)
+	})
+})
+
 describe('getAuthSessionEpoch', () => {
 	it('advances when tokens are removed', () => {
 		const before = getAuthSessionEpoch()
@@ -74,6 +99,19 @@ describe('getAuthSessionEpoch', () => {
 
 function settlePost() {
 	resolvePost?.({data: {token: FAKE_TOKEN}})
+}
+
+function rateLimitedResponse(headers: Record<string, string>) {
+	return {
+		error: {message: 'Too Many Requests'},
+		response: new Response(null, {status: 429, headers}),
+	}
+}
+
+// A fresh module, like a page load: the rate-limit gate deliberately survives removeToken().
+async function loadFreshAuth() {
+	vi.resetModules()
+	return import('./auth')
 }
 
 describe('refreshToken in-flight dedup', () => {
@@ -118,7 +156,7 @@ describe('refreshToken in-flight dedup', () => {
 		expect(requestSpy).toHaveBeenCalledWith('vikunja-token-refresh', expect.any(Function))
 		// ...and the in-flight dedup still collapsed both calls into one POST.
 		expect(post).toHaveBeenCalledTimes(1)
-		expect(post).toHaveBeenCalledWith('/api/v2/user/token/refresh')
+		expect(post).toHaveBeenCalledWith(expect.objectContaining({baseUrl: 'http://localhost:3000/api/v2'}))
 	})
 
 	it('coalesces concurrent calls into a single POST on insecure HTTP (no Web Locks)', async () => {
@@ -199,49 +237,220 @@ describe('refreshToken in-flight dedup', () => {
 	})
 })
 
-describe('refreshToken v1 cookie fallback', () => {
+describe('onTokenRefreshed', () => {
+	const listener = vi.fn()
+	let unsubscribe: () => void
+
+	beforeEach(() => {
+		unsubscribe = onTokenRefreshed(listener)
+		post.mockClear()
+		listener.mockClear()
+		removeToken()
+		localStorage.clear()
+	})
+
+	afterEach(() => {
+		unsubscribe()
+	})
+
+	it('notifies once per coalesced refresh after the new token is saved', async () => {
+		const seenTokens: (string | null)[] = []
+		listener.mockImplementation(() => seenTokens.push(getToken()))
+		const p1 = refreshToken(true)
+		const p2 = refreshToken(true)
+		settlePost()
+		await Promise.all([p1, p2])
+
+		expect(listener).toHaveBeenCalledTimes(1)
+		expect(seenTokens).toEqual([FAKE_TOKEN])
+	})
+
+	it('keeps notifying other listeners when one throws', async () => {
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+		const unsubscribeThrowing = onTokenRefreshed(() => {
+			throw new Error('boom')
+		})
+		try {
+			const p = refreshToken(true)
+			settlePost()
+			await p
+			await Promise.resolve()
+
+			expect(errorSpy).toHaveBeenCalledTimes(1)
+			expect(listener).toHaveBeenCalledTimes(1)
+		} finally {
+			unsubscribeThrowing()
+			errorSpy.mockRestore()
+		}
+	})
+
+	it('does not notify after unsubscribing', async () => {
+		unsubscribe()
+		const p = refreshToken(true)
+		settlePost()
+		await p
+
+		expect(listener).not.toHaveBeenCalled()
+	})
+
+	it('does not notify when the refresh fails', async () => {
+		post.mockResolvedValueOnce({error: {}, response: new Response(null, {status: 401})})
+
+		await refreshToken(true).catch(() => {})
+
+		expect(listener).not.toHaveBeenCalled()
+	})
+})
+
+describe('refreshToken across a server switch', () => {
+	beforeEach(() => {
+		resolvePost = null
+		post.mockClear()
+		removeToken()
+		localStorage.clear()
+		apiUrls.base = 'http://first/api/v2'
+	})
+
+	afterEach(() => {
+		apiUrls.base = '/api/v2'
+	})
+
+	it('does not save the token when the user switched servers while the refresh was in flight', async () => {
+		const p = refreshToken(true)
+		expect(post).toHaveBeenCalledTimes(1)
+
+		apiUrls.base = 'http://second/api/v2'
+
+		settlePost()
+		await p
+
+		expect(localStorage.getItem('token')).toBeNull()
+		expect(getToken()).toBeNull()
+	})
+})
+
+describe('refreshToken failure', () => {
 	beforeEach(() => {
 		post.mockClear()
 		removeToken()
 		localStorage.clear()
 	})
 
-	it.each([
-		['401', {response: {status: 401}}],
-		['404 (e.g. misconfigured API_URL)', {response: {status: 404}}],
-		['no response (e.g. network/CORS error)', new Error('Network Error')],
-	])('retries against v1 when the v2 refresh fails with %s', async (_label, rejection) => {
-		post.mockRejectedValueOnce(rejection)
-		post.mockResolvedValueOnce({data: {token: FAKE_TOKEN}})
+	const bodyErrorCases: [string, Error, RefreshFailure | undefined][] = [
+		['a body parse', new SyntaxError('bad json'), undefined],
+		['a mid-body network', new TypeError('network'), {kind: 'network'}],
+	]
 
-		await refreshToken(true)
+	it.each(bodyErrorCases)('rethrows %s error unchanged instead of stamping the 200 status', async (_, err, failure) => {
+		post.mockResolvedValueOnce({error: err, response: new Response(null, {status: 200})})
 
-		expect(post).toHaveBeenNthCalledWith(1, '/api/v2/user/token/refresh')
-		expect(post).toHaveBeenNthCalledWith(2, 'user/token/refresh')
-		expect(localStorage.getItem('token')).toBe(FAKE_TOKEN)
+		const caught = await refreshToken(true).catch((e: unknown) => e)
+
+		expect((caught as Error).cause).toBe(err)
+		expect((caught as Partial<RefreshTokenError>).failure).toEqual(failure)
 	})
 
-	it('does not retry against v1 when the v2 refresh is rate limited (429)', async () => {
-		post.mockRejectedValueOnce({response: {status: 429}})
+	const statusCases: [string, number, unknown, RefreshFailure, Record<string, string>?][] = [
+		['a rejected refresh token', 401, {code: 16002, detail: 'gone'}, {kind: 'rejected', status: 401, code: 16002}],
+		['a proxy error page', 400, '<html>400</html>', {kind: 'rejected', status: 400}],
+		['a rate limit', 429, {message: 'Too Many Requests'}, {kind: 'rate-limited'}],
+		['a rate limit with an HTTP-date Retry-After', 429, {message: 'Too Many Requests'}, {kind: 'rate-limited'}, {'Retry-After': 'Wed, 21 Oct 2015 07:28:00 GMT'}],
+		['a server error', 502, {}, {kind: 'server', status: 502}],
+	]
 
-		await expect(refreshToken(true)).rejects.toThrow('Error renewing token')
+	it.each(statusCases)('classifies %s by the response status', async (_, status, body, failure, headers) => {
+		post.mockResolvedValueOnce({error: body, response: new Response(null, {status, headers})})
 
-		expect(post).toHaveBeenCalledTimes(1)
-		expect(localStorage.getItem('token')).toBeNull()
+		const caught = await refreshToken(true).catch((e: unknown) => e)
+
+		expect(post).toHaveBeenCalledWith(expect.objectContaining({
+			baseUrl: 'http://localhost:3000/api/v2',
+			throwOnError: false,
+		}))
+		expect(caught).toBeInstanceOf(RefreshTokenError)
+		expect((caught as RefreshTokenError).failure).toEqual(failure)
+		expect((caught as RefreshTokenError).cause).toMatchObject({status})
 	})
+	describe('Retry-After on a rate limit', () => {
+		const NOW = Date.parse('2015-10-21T07:27:00Z')
+		let auth: typeof import('./auth')
 
-	it('does not fall back to v1 when logout happens between the v2 failure and the fallback call', async () => {
-		// removeToken() runs synchronously as part of the v2 call rejecting, simulating
-		// a logout landing in the gap before the v1 fallback would otherwise fire.
-		post.mockImplementationOnce(() => {
-			removeToken()
-			return Promise.reject({response: {status: 404}})
+		beforeEach(async () => {
+			vi.useFakeTimers({toFake: ['Date'], now: NOW})
+			auth = await loadFreshAuth()
 		})
 
-		await refreshToken(true)
+		afterEach(() => {
+			vi.useRealTimers()
+		})
 
-		expect(post).toHaveBeenCalledTimes(1)
-		expect(localStorage.getItem('token')).toBeNull()
+		async function rateLimitedRetryAt(headers: Record<string, string>) {
+			post.mockResolvedValueOnce(rateLimitedResponse(headers))
+			const caught = await auth.refreshToken(true).catch((e: unknown) => e)
+			expect(caught).toBeInstanceOf(auth.RefreshTokenError)
+			const {failure} = caught as RefreshTokenError
+			expect(failure.kind).toBe('rate-limited')
+			return failure.kind === 'rate-limited' ? failure.retryAt : 'not rate-limited'
+		}
+
+		it.each([
+			['an hour', '3600'],
+			['an overflowing value', '9'.repeat(400)],
+		])('caps %s', async (_, value) => {
+			expect(await rateLimitedRetryAt({'Retry-After': value})).toBe(NOW + MAX_RETRY_AFTER_MS)
+		})
+	})
+})
+
+describe('refreshToken after a rate limit with Retry-After', () => {
+	const NOW = Date.parse('2015-10-21T07:27:00Z')
+	let auth: typeof import('./auth')
+
+	beforeEach(async () => {
+		vi.useFakeTimers({toFake: ['Date'], now: NOW})
+		resolvePost = null
+		post.mockClear()
+		localStorage.clear()
+		auth = await loadFreshAuth()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		apiUrls.base = '/api/v2'
+	})
+
+	it('rethrows the rate limit without a request until Retry-After passed, across a logout', async () => {
+		post.mockResolvedValueOnce(rateLimitedResponse({'Retry-After': '30'}))
+		const rateLimit = await auth.refreshToken(true).catch((e: unknown) => e)
+		expect(rateLimit).toBeInstanceOf(auth.RefreshTokenError)
+
+		vi.setSystemTime(NOW + 29_999)
+		auth.removeToken()
+
+		await expect(auth.refreshToken(true)).rejects.toBe(rateLimit)
+		expect(post).toHaveBeenCalledOnce()
+
+		vi.setSystemTime(NOW + 30_000)
+		post.mockResolvedValueOnce({data: {token: FAKE_TOKEN}})
+
+		await auth.refreshToken(true)
+
+		expect(post).toHaveBeenCalledTimes(2)
+		expect(auth.getToken()).toBe(FAKE_TOKEN)
+	})
+
+	it('refreshes against another API server before Retry-After passed', async () => {
+		apiUrls.base = 'http://first/api/v2'
+		post.mockResolvedValueOnce(rateLimitedResponse({'Retry-After': '30'}))
+		await auth.refreshToken(true).catch(() => {})
+
+		apiUrls.base = 'http://second/api/v2'
+		post.mockResolvedValueOnce({data: {token: FAKE_TOKEN}})
+
+		await auth.refreshToken(true)
+
+		expect(post).toHaveBeenCalledTimes(2)
+		expect(auth.getToken()).toBe(FAKE_TOKEN)
 	})
 })
 

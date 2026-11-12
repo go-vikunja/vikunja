@@ -16,6 +16,7 @@ func init() {
 		"AuditRotationMaxSizeMB":                     reflect.ValueOf(config.AuditRotationMaxSizeMB),
 		"AuthLdapAttributeDisplayname":               reflect.ValueOf(config.AuthLdapAttributeDisplayname),
 		"AuthLdapAttributeEmail":                     reflect.ValueOf(config.AuthLdapAttributeEmail),
+		"AuthLdapAttributeID":                        reflect.ValueOf(config.AuthLdapAttributeID),
 		"AuthLdapAttributeMemberID":                  reflect.ValueOf(config.AuthLdapAttributeMemberID),
 		"AuthLdapAttributeUsername":                  reflect.ValueOf(config.AuthLdapAttributeUsername),
 		"AuthLdapAvatarSyncAttribute":                reflect.ValueOf(config.AuthLdapAvatarSyncAttribute),
@@ -87,13 +88,17 @@ func init() {
 		"FilesShared":                                reflect.ValueOf(config.FilesShared),
 		"FilesType":                                  reflect.ValueOf(config.FilesType),
 		"GetConfigValueFromFile":                     reflect.ValueOf(config.GetConfigValueFromFile),
+		"GetLegalLinks":                              reflect.ValueOf(config.GetLegalLinks),
 		"GetMaxFileSizeInMBytes":                     reflect.ValueOf(config.GetMaxFileSizeInMBytes),
 		"GetTimeZone":                                reflect.ValueOf(config.GetTimeZone),
+		"HealthPassword":                             reflect.ValueOf(config.HealthPassword),
+		"HealthUsername":                             reflect.ValueOf(config.HealthUsername),
 		"InitConfig":                                 reflect.ValueOf(config.InitConfig),
 		"InitDefaultConfig":                          reflect.ValueOf(config.InitDefaultConfig),
 		"JobsEnabled":                                reflect.ValueOf(config.JobsEnabled),
 		"JobsRetention":                              reflect.ValueOf(config.JobsRetention),
 		"KeyvalueType":                               reflect.ValueOf(config.KeyvalueType),
+		"Legal":                                      reflect.ValueOf(config.Legal),
 		"LegalImprintURL":                            reflect.ValueOf(config.LegalImprintURL),
 		"LegalPrivacyURL":                            reflect.ValueOf(config.LegalPrivacyURL),
 		"LicenseKey":                                 reflect.ValueOf(config.LicenseKey),
@@ -127,6 +132,7 @@ func init() {
 		"MetricsUsername":                            reflect.ValueOf(config.MetricsUsername),
 		"MigrationClaimTimeout":                      reflect.ValueOf(config.MigrationClaimTimeout),
 		"MigrationMaxCSVRows":                        reflect.ValueOf(config.MigrationMaxCSVRows),
+		"MigrationMaxItems":                          reflect.ValueOf(config.MigrationMaxItems),
 		"MigrationMicrosoftTodoClientID":             reflect.ValueOf(config.MigrationMicrosoftTodoClientID),
 		"MigrationMicrosoftTodoClientSecret":         reflect.ValueOf(config.MigrationMicrosoftTodoClientSecret),
 		"MigrationMicrosoftTodoEnable":               reflect.ValueOf(config.MigrationMicrosoftTodoEnable),
@@ -213,6 +219,7 @@ func init() {
 		"WebsocketRedisEnabled":                      reflect.ValueOf(config.WebsocketRedisEnabled),
 
 		// type definitions
-		"Key": reflect.ValueOf((*config.Key)(nil)),
+		"Key":       reflect.ValueOf((*config.Key)(nil)),
+		"LegalLink": reflect.ValueOf((*config.LegalLink)(nil)),
 	}
 }

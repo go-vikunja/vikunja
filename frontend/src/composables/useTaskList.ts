@@ -1,19 +1,22 @@
-import {ref, shallowRef, watch, computed, type ComputedGetter} from 'vue'
+import {ref, shallowRef, watch, computed, type ComputedGetter, type DeepReadonly} from 'vue'
 import {useRouter, isNavigationFailure} from 'vue-router'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
 import {
 	getDefaultTaskFilterParams,
-	normalizePageNumber,
 	type TaskExpansion,
 	type TaskFilterParams,
 } from '@/client/queries/tasks'
+import {normalizePageNumber} from '@/client/queries/pagination'
 import {isRequestContextAbort} from '@/client/requestContext'
 import {useTasks} from '@/composables/useTasks'
 import {error} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useViewFiltersStore} from '@/stores/viewFilters'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
+import type {ProjectView} from '@/client/generated'
+import {INCLUDE_SUBPROJECTS_QUERY_PARAM} from '@/constants/projectView'
 
 export type Order = 'asc' | 'desc' | 'none'
 
@@ -63,10 +66,11 @@ const SORT_BY_DEFAULT: SortBy = {
 }
 
 interface TaskListQueryState {
-	sort: string | undefined
-	filter: string | undefined
-	s: string | undefined
-	page: number
+	sort?: string
+	filter?: string
+	s?: string
+	page?: number
+	includeSubprojects?: string
 }
 
 export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
@@ -74,29 +78,21 @@ export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
 	if (state.sort) query.sort = state.sort
 	if (state.filter) query.filter = state.filter
 	if (state.s) query.s = state.s
-	if (state.page > 1) query.page = String(state.page)
+	if (state.page && state.page > 1) query.page = String(state.page)
+	if (state.includeSubprojects) query[INCLUDE_SUBPROJECTS_QUERY_PARAM] = state.includeSubprojects
 	return query
 }
 
-// This makes sure an id sort order is always sorted last.
-// When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
-// precedence over everything else, making any other sort columns pretty useless.
-function formatSortOrder(sortBy, params) {
-	let hasIdFilter = false
-	const sortKeys = Object.keys(sortBy)
-	for (const s of sortKeys) {
-		if (s === 'id') {
-			sortKeys.splice(s, 1)
-			hasIdFilter = true
-			break
-		}
-	}
-	if (hasIdFilter) {
+// The id is only a tie-breaker for the explicitly selected sort fields.
+function formatSortOrder(sortBy: SortBy, params: TaskFilterParams): TaskFilterParams {
+	const sortKeys = Object.keys(sortBy) as (keyof SortBy)[]
+	const idIndex = sortKeys.indexOf('id')
+	if (idIndex >= 0) {
+		sortKeys.splice(idIndex, 1)
 		sortKeys.push('id')
 	}
 	params.sort_by = sortKeys
-	params.order_by = sortKeys.map(s => sortBy[s])
-
+	params.order_by = sortKeys.map(key => sortBy[key] ?? 'none')
 	return params
 }
 
@@ -108,6 +104,7 @@ export function useTaskList(
 	projectViewIdGetter: ComputedGetter<number>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
 	expandGetter: ComputedGetter<TaskExpansion> = () => ['subtasks'],
+	viewGetter: ComputedGetter<ProjectView | DeepReadonly<ProjectView> | undefined> = () => undefined,
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -121,6 +118,7 @@ export function useTaskList(
 	const page = useRouteQuery('page', '1', { transform: normalizePageNumber })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
+	const {includeSubprojects, queryParam: includeSubprojectsParam} = useIncludeSubprojects(viewGetter)
 
 	watch(filter, v => { params.value.filter = String(v ?? '') }, { immediate: true })
 	watch(s, v => { params.value.q = String(v ?? '') }, { immediate: true })
@@ -145,12 +143,12 @@ export function useTaskList(
 	// Sidebar links omit the query, and project views are reused across navigation.
 	const syncedViewId = shallowRef<number>()
 	watch(
-		[projectViewId, sortQuery, filter, s, page],
-		([viewId, sortValue, filterValue, sValue, pageValue]) => {
+		[projectViewId, sortQuery, filter, s, page, includeSubprojectsParam],
+		([viewId, sortValue, filterValue, sValue, pageValue, includeValue]) => {
 			const viewIdChanged = viewId !== syncedViewId.value
 			syncedViewId.value = viewId
 
-			const urlIsEmpty = !sortValue && !filterValue && !sValue && pageValue === 1
+			const urlIsEmpty = !sortValue && !filterValue && !sValue && pageValue === 1 && !includeValue
 			if (viewIdChanged && urlIsEmpty) {
 				const storedQuery = viewFiltersStore.getViewQuery(viewId)
 				if (Object.keys(storedQuery).length > 0) {
@@ -174,6 +172,7 @@ export function useTaskList(
 				filter: filterValue as string | undefined,
 				s: sValue as string | undefined,
 				page: pageValue,
+				includeSubprojects: includeValue,
 			})
 			if (Object.keys(query).length > 0) {
 				viewFiltersStore.setViewQuery(viewId, query)
@@ -199,7 +198,7 @@ export function useTaskList(
 	})
 
 	watch(
-		[params, sortBy, page],
+		[params, sortBy, page, includeSubprojects],
 		([, , newPage], [, , oldPage]) => {
 			// A redundant page write can cancel the navigation restoring a saved sort.
 			if (newPage === oldPage && newPage !== 1) {
@@ -216,6 +215,7 @@ export function useTaskList(
 		view: projectViewId.value,
 		params: {
 			...allParams.value,
+			...(includeSubprojects.value ? {include_subprojects: true} : {}),
 			filter_timezone: authStore.settings.timezone,
 			expand: expandGetter(),
 		},
@@ -245,5 +245,6 @@ export function useTaskList(
 		loadTasks,
 		params,
 		sortByParam: sortBy,
+		includeSubprojects,
 	}
 }

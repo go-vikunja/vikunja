@@ -17,13 +17,17 @@
 package models
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestTaskRelation_Create(t *testing.T) {
@@ -48,6 +52,32 @@ func TestTaskRelation_Create(t *testing.T) {
 			"created_by_id": 1,
 		}, false)
 	})
+	t.Run("link share is the event doer", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  1,
+			Permission: PermissionWrite,
+		}
+		rel := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  2,
+			RelationKind: RelationKindSubtask,
+		}
+		require.NoError(t, rel.Create(s, share))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TaskRelationCreatedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		doer := dispatched[0].(*TaskRelationCreatedEvent).Doer
+		require.NotNil(t, doer)
+		assert.Equal(t, share.GetID(), doer.ID)
+	})
 	t.Run("Two Tasks In Different Projects", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -55,7 +85,7 @@ func TestTaskRelation_Create(t *testing.T) {
 
 		rel := TaskRelation{
 			TaskID:       1,
-			OtherTaskID:  13,
+			OtherTaskID:  32,
 			RelationKind: RelationKindSubtask,
 		}
 		err := rel.Create(s, &user.User{ID: 1})
@@ -64,7 +94,7 @@ func TestTaskRelation_Create(t *testing.T) {
 		require.NoError(t, err)
 		db.AssertExists(t, "task_relations", map[string]interface{}{
 			"task_id":       1,
-			"other_task_id": 13,
+			"other_task_id": 32,
 			"relation_kind": RelationKindSubtask,
 			"created_by_id": 1,
 		}, false)
@@ -184,6 +214,25 @@ func TestTaskRelation_Create(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrTaskRelationCycle(err))
 	})
+	t.Run("hierarchy too large to check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		previous := maxTaskRelationCycleCheckVisits
+		maxTaskRelationCycleCheckVisits = 2
+		t.Cleanup(func() { maxTaskRelationCycleCheckVisits = previous })
+
+		for _, pair := range [][2]int64{{1, 2}, {2, 3}} {
+			rel := TaskRelation{TaskID: pair[0], OtherTaskID: pair[1], RelationKind: RelationKindSubtask}
+			require.NoError(t, rel.Create(s, &user.User{ID: 1}))
+		}
+
+		rel := TaskRelation{TaskID: 3, OtherTaskID: 4, RelationKind: RelationKindSubtask}
+		err := rel.Create(s, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.Equal(t, ErrTaskRelationHierarchyTooLarge{TaskID: 1, MaxTasks: 2}, err)
+	})
 	t.Run("cycle with one parenttask", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -274,6 +323,88 @@ func TestTaskRelation_Create(t *testing.T) {
 	})
 }
 
+func TestCreateTaskRelationsForImport(t *testing.T) {
+	doer := &user.User{ID: 1}
+	importTasks := func(t *testing.T, s *xorm.Session, count int) []*Task {
+		tasks := make([]*Task, count)
+		for i := range tasks {
+			tasks[i] = &Task{Title: fmt.Sprintf("imported %d", i), RelatedTasks: RelatedTaskMap{}}
+		}
+		require.NoError(t, CreateTasksForImport(s, 1, tasks, doer))
+		return tasks
+	}
+	relate := func(task *Task, kind RelationKind, other *Task) {
+		task.RelatedTasks[kind] = append(task.RelatedTasks[kind], other)
+	}
+
+	t.Run("long chain is not limited by the cycle check cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		previous := maxTaskRelationCycleCheckVisits
+		maxTaskRelationCycleCheckVisits = 2
+		t.Cleanup(func() { maxTaskRelationCycleCheckVisits = previous })
+
+		tasks := importTasks(t, s, 4)
+		relate(tasks[0], RelationKindSubtask, tasks[1])
+		relate(tasks[1], RelationKindSubtask, tasks[2])
+		relate(tasks[3], RelationKindParenttask, tasks[2])
+		relate(tasks[2], RelationKindSubtask, tasks[3])
+		relate(tasks[0], RelationKindRelated, tasks[3])
+
+		require.NoError(t, CreateTaskRelationsForImport(s, tasks, doer))
+		require.NoError(t, s.Commit())
+
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       tasks[2].ID,
+			"other_task_id": tasks[3].ID,
+			"relation_kind": RelationKindSubtask,
+		}, false)
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       tasks[3].ID,
+			"other_task_id": tasks[2].ID,
+			"relation_kind": RelationKindParenttask,
+		}, false)
+	})
+	t.Run("cycle", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tasks := importTasks(t, s, 3)
+		relate(tasks[0], RelationKindSubtask, tasks[1])
+		relate(tasks[1], RelationKindSubtask, tasks[2])
+		relate(tasks[0], RelationKindParenttask, tasks[2])
+
+		err := CreateTaskRelationsForImport(s, tasks, doer)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskRelationCycle(err))
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "task_relations", map[string]interface{}{
+			"task_id":       tasks[0].ID,
+			"other_task_id": tasks[1].ID,
+		})
+	})
+	t.Run("related task outside the batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		tasks := importTasks(t, s, 2)
+		relate(tasks[0], RelationKindSubtask, tasks[1])
+		relate(tasks[1], RelationKindSubtask, &Task{ID: 1})
+
+		err := CreateTaskRelationsForImport(s, tasks, doer)
+		require.Error(t, err)
+		assert.False(t, IsErrTaskRelationCycle(err))
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "task_relations", map[string]interface{}{
+			"task_id": tasks[0].ID,
+		})
+	})
+}
+
 func TestTaskRelation_Delete(t *testing.T) {
 	u := &user.User{ID: 1}
 
@@ -301,6 +432,32 @@ func TestTaskRelation_Delete(t *testing.T) {
 			"other_task_id": 1,
 			"relation_kind": RelationKindParenttask,
 		})
+	})
+	t.Run("link share is the event doer", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		events.ClearDispatchedEvents()
+
+		share := &LinkSharing{
+			ID:         2,
+			ProjectID:  1,
+			Permission: PermissionWrite,
+		}
+		rel := TaskRelation{
+			TaskID:       1,
+			OtherTaskID:  29,
+			RelationKind: RelationKindSubtask,
+		}
+		require.NoError(t, rel.Delete(s, share))
+		require.NoError(t, s.Commit())
+		events.DispatchPending(context.Background(), s)
+
+		dispatched := events.GetDispatchedEvents((&TaskRelationDeletedEvent{}).Name())
+		require.Len(t, dispatched, 1)
+		doer := dispatched[0].(*TaskRelationDeletedEvent).Doer
+		require.NotNil(t, doer)
+		assert.Equal(t, share.GetID(), doer.ID)
 	})
 	t.Run("Not existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

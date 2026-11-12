@@ -45,8 +45,7 @@ func (b *BotUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) { return 
 func (b *BotUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) { return b.isOwner(s, a) }
 
 func (b *BotUser) isOwner(s *xorm.Session, a web.Auth) (bool, error) {
-	// A link share is not a user and can never own a bot: a plain denial, same
-	// shape as any other non-owner, not an error.
+	// A link share can never own a bot: plain denial, not an error.
 	caller, err := user.GetFromAuth(a)
 	if user.IsErrMustNotBeLinkShare(err) {
 		return false, nil
@@ -55,12 +54,9 @@ func (b *BotUser) isOwner(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	u, err := user.GetUserByID(s, b.ID)
-	if err != nil {
-		if user.IsErrUserDoesNotExist(err) {
-			return false, nil
-		}
+	// A foreign bot surfaces as ErrUserDoesNotExist (404), same as a missing one.
+	if _, err := getOwnedBot(s, b.ID, caller); err != nil {
 		return false, err
 	}
-	return u.IsBotOwnedBy(caller), nil
+	return true, nil
 }

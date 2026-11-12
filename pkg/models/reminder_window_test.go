@@ -28,8 +28,8 @@ import (
 )
 
 // Retain the historical selector fixtures while testing the new window API separately.
-func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond builder.Cond) ([]*ReminderDueNotification, error) {
-	return getTaskRemindersInWindow(s, cron.Window{From: now.Add(-time.Second), To: now.Add(time.Minute - time.Second)}, cond)
+func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) ([]*ReminderDueNotification, error) {
+	return getTaskRemindersInWindow(s, cron.Window{From: now.Add(-time.Second), To: now.Add(time.Minute - time.Second)}, nil)
 }
 func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (map[int64]*userWithTasks, error) {
 	return getOverdueTasksInWindow(s, cron.Window{From: now.Add(-time.Second), To: now.Add(time.Minute - time.Second)}, cond)

@@ -22,16 +22,15 @@ const buckets = [
 
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
+const project = vi.hoisted(() => ({
+	id: 1,
+	title: 'Test',
+	max_permission: 2,
+	views: [{id: 10, view_kind: 'kanban', bucket_configuration_mode: 'manual'}],
+}))
 vi.mock('@/composables/useCurrentProject', () => ({
 	useCurrentProject: () => ({
-		currentProject: {
-			value: {
-				id: 1,
-				title: 'Test',
-				max_permission: 2,
-				views: [{id: 10, view_kind: 'kanban', bucket_configuration_mode: 'manual'}],
-			},
-		},
+		currentProject: {value: project},
 		isPending: {value: false},
 	}),
 }))
@@ -55,10 +54,10 @@ vi.mock('@/composables/useTaskDragToProject', () => ({
 vi.mock('@/stores/auth', () => ({
 	useAuthStore: () => ({
 		settings: {
-			frontendSettings: {
-				alwaysShowBucketTaskCount: false,
-				quickAddMagicMode: 'vikunja',
-				quickAddDefaultReminders: [],
+			frontend_settings: {
+				always_show_bucket_task_count: false,
+				quick_add_magic_mode: 'vikunja',
+				quick_add_default_reminders: [],
 			},
 		},
 	}),
@@ -86,16 +85,20 @@ vi.mock('vue-i18n', async importOriginal => ({
 }))
 
 import ProjectKanban from './ProjectKanban.vue'
+import {projectKeys} from '@/client/queries/projects'
 
 let queryClient: QueryClient
 
 async function mountKanban(stubs: Record<string, unknown> = {}, projectId = 1) {
 	queryClient = new QueryClient()
+	// ProjectView only mounts a board once the project with its views is cached.
+	queryClient.setQueryData(projectKeys.detail(project.id), project)
 	const wrapper = shallowMount(ProjectKanban, {
 		props: {
 			isLoadingProject: false,
 			projectId,
 			viewId: 10,
+			view: {id: 10, view_kind: 'kanban', bucket_configuration_mode: 'manual'},
 		},
 		global: {
 			plugins: [createPinia(), [VueQueryPlugin, {queryClient}]],
@@ -195,8 +198,33 @@ describe('ProjectKanban', () => {
 		expect(loadBucketPage).not.toHaveBeenCalled()
 	})
 
+	it('marks the board as dragging while a task is dragged', async () => {
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
+		const event = taskDragEndEvent(11)
+
+		taskDraggable(wrapper).vm.$emit('start', event)
+		await nextTick()
+		expect(wrapper.find('.kanban').classes()).toContain('is-dragging')
+
+		taskDraggable(wrapper).vm.$emit('end', event)
+		await flushPromises()
+		expect(wrapper.find('.kanban').classes()).not.toContain('is-dragging')
+	})
+
+	it('marks the board as dragging while a bucket is dragged', async () => {
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
+
+		wrapper.findAllComponents(draggable)[0].vm.$emit('start')
+		await nextTick()
+		expect(wrapper.find('.kanban').classes()).toContain('is-dragging')
+
+		wrapper.findAllComponents(draggable)[0].vm.$emit('end', dragEndEvent('2'))
+		await flushPromises()
+		expect(wrapper.find('.kanban').classes()).not.toContain('is-dragging')
+	})
+
 	it('does not refetch the board after a task was dropped on another project', async () => {
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 		drop.result = {moved: true, targetProjectId: 2}
 		loadBoard.mockClear()
 
@@ -207,7 +235,7 @@ describe('ProjectKanban', () => {
 	})
 
 	it('drops the card from a saved filter board when the task moved to another project', async () => {
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB}, -2)
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB}, -2)
 		drop.result = {moved: true, targetProjectId: 2}
 
 		taskDraggable(wrapper).vm.$emit('end', taskDragEndEvent(11))
@@ -218,7 +246,7 @@ describe('ProjectKanban', () => {
 	})
 
 	it('leaves a real project board to the mutation when the task moved to another project', async () => {
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 		drop.result = {moved: true, targetProjectId: 2}
 
 		taskDraggable(wrapper).vm.$emit('end', taskDragEndEvent(11))
@@ -229,7 +257,7 @@ describe('ProjectKanban', () => {
 	})
 
 	it('re-enables the add task input once the create settles, without a board request', async () => {
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 		let resolveCreate!: (value: unknown) => void
 		sdk.tasksCreate.mockImplementation(() => new Promise(resolve => { resolveCreate = resolve }))
 
@@ -251,7 +279,7 @@ describe('ProjectKanban', () => {
 	it('closes the add task input when the created task fills the bucket limit', async () => {
 		loadBoard.mockResolvedValue({data: {items: [{...buckets[0], count: 1, limit: 2}, buckets[1], buckets[2]]}})
 		sdk.tasksCreate.mockResolvedValue({data: {id: 12, title: 'New task', project_id: 1, bucket_id: 1}})
-		const wrapper = await mountKanban({draggable: DRAGGABLE_STUB})
+		const wrapper = await mountKanban({BucketDraggable: DRAGGABLE_STUB, TaskDraggable: DRAGGABLE_STUB})
 
 		;(wrapper.vm as unknown as {toggleShowNewTaskInput: (id: number) => void}).toggleShowNewTaskInput(1)
 		await nextTick()

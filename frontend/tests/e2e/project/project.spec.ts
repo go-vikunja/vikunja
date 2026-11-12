@@ -96,6 +96,46 @@ test.describe('Projects', () => {
 		await expect(page.getByRole('link', {name: projects[0].title})).not.toBeVisible()
 	})
 
+	// Opened directly, the dialog is the first history entry, so there is nothing to go back to.
+	test('Should close a directly opened edit dialog on cancel', async ({authenticatedPage: page}) => {
+		const projectId = projects[0].id
+		await page.goto(`/projects/${projectId}/settings/edit`)
+
+		const dialog = page.getByRole('dialog', {name: 'Edit This Project'})
+		await dialog.getByRole('button', {name: 'Cancel', exact: true}).click()
+
+		await expect(page).toHaveURL(new RegExp(`/projects/${projectId}/\\d+$`))
+		await expect(dialog).toHaveCount(0)
+	})
+
+	test('Should close a directly opened edit dialog after saving', async ({authenticatedPage: page}) => {
+		const projectId = projects[0].id
+		await page.goto(`/projects/${projectId}/settings/edit`)
+
+		const dialog = page.getByRole('dialog', {name: 'Edit This Project'})
+		await dialog.locator('input#title').fill('Renamed directly')
+		await dialog.getByRole('button', {name: 'Save', exact: true}).click()
+
+		await expect(page).toHaveURL(new RegExp(`/projects/${projectId}/\\d+$`))
+		await expect(dialog).toHaveCount(0)
+		await expect(page.locator('.project-title')).toContainText('Renamed directly')
+	})
+
+	test('Should keep the project when cancelling a directly opened delete dialog', async ({authenticatedPage: page, apiContext, userToken}) => {
+		const projectId = projects[0].id
+		await page.goto(`/projects/${projectId}/settings/delete`)
+
+		const dialog = page.getByRole('dialog', {name: 'Delete this project'})
+		await dialog.getByRole('button', {name: 'Cancel', exact: true}).click()
+
+		await expect(page).toHaveURL(new RegExp(`/projects/${projectId}/\\d+$`))
+		await expect(dialog).toHaveCount(0)
+		const response = await apiContext.get(`projects/${projectId}`, {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect(response.ok()).toBe(true)
+	})
+
 	test('Should archive a project', async ({authenticatedPage: page}) => {
 		const projectId = projects[0].id
 		const listViewId = projects[0].views[0].id

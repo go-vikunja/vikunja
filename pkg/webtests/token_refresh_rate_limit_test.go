@@ -18,12 +18,14 @@ package webtests
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/routes"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -78,6 +80,15 @@ func TestTokenRefreshRateLimit(t *testing.T) {
 	// Fresh instance: v1 and v2 count against the same per-IP budget, so reusing
 	// the outer e would carry over budget already spent above.
 	t.Run("v1 and v2 share the renewal budget", func(t *testing.T) {
+		// CORS is read at registration, so it must be set before building e.
+		prevEnable, prevOrigins := config.CorsEnable.GetBool(), config.CorsOrigins.GetStringSlice()
+		config.CorsEnable.Set(true)
+		config.CorsOrigins.Set([]string{"http://localhost:*"})
+		t.Cleanup(func() {
+			config.CorsEnable.Set(prevEnable)
+			config.CorsOrigins.Set(prevOrigins)
+		})
+
 		e := routes.NewEcho()
 		routes.RegisterRoutes(e)
 
@@ -93,8 +104,28 @@ func TestTokenRefreshRateLimit(t *testing.T) {
 			assert.Equal(t, strconv.Itoa(len(paths)-i-1), rec.Header().Get("X-RateLimit-Remaining"), "request %d (%s)", i, path)
 		}
 
-		rec := humaRequest(t, e, http.MethodPost, "/api/v1/user/token/refresh", "", "", "")
-		assert.Equal(t, http.StatusTooManyRequests, rec.Code, "body: %s", rec.Body.String())
-		assert.Equal(t, "0", rec.Header().Get("X-RateLimit-Remaining"))
+		for _, path := range []string{
+			"/api/v1/user/token/refresh",
+			"/api/v2/user/token/refresh",
+		} {
+			req := httptest.NewRequest(http.MethodPost, path, nil)
+			req.Header.Set(echo.HeaderOrigin, "http://localhost:5173")
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, req)
+			assert.Equal(t, http.StatusTooManyRequests, rec.Code, "path: %s, body: %s", path, rec.Body.String())
+			assert.Equal(t, "0", rec.Header().Get("X-RateLimit-Remaining"), "path: %s", path)
+			assertRetryAfter(t, rec)
+			// A cross-origin frontend can only read Retry-After if CORS exposes it.
+			assert.Equal(t, "http://localhost:5173", rec.Header().Get(echo.HeaderAccessControlAllowOrigin), "path: %s", path)
+			assert.Contains(t, rec.Header().Values(echo.HeaderAccessControlExposeHeaders), echo.HeaderRetryAfter, "path: %s", path)
+		}
 	})
+}
+
+func assertRetryAfter(t *testing.T, rec *httptest.ResponseRecorder) {
+	t.Helper()
+	retryAfter, err := strconv.Atoi(rec.Header().Get("Retry-After"))
+	require.NoError(t, err, "Retry-After: %q", rec.Header().Get("Retry-After"))
+	assert.GreaterOrEqual(t, retryAfter, 1)
+	assert.LessOrEqual(t, retryAfter, 61)
 }

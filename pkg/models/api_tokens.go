@@ -21,6 +21,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -99,8 +100,14 @@ func (*APIToken) TableName() string {
 
 func GetAPITokenByID(s *xorm.Session, id int64) (token *APIToken, err error) {
 	token = &APIToken{}
-	_, err = s.Where("id = ?", id).
+	has, err := s.Where("id = ?", id).
 		Get(token)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, ErrAPITokenDoesNotExist{TokenID: id}
+	}
 	return
 }
 
@@ -134,12 +141,8 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	if t.OwnerID == 0 {
 		t.OwnerID = caller.ID
 	} else if t.OwnerID != caller.ID {
-		botUser, err := user.GetUserByID(s, t.OwnerID)
-		if err != nil {
+		if _, err := getOwnedBot(s, t.OwnerID, caller); err != nil {
 			return err
-		}
-		if !botUser.IsBotOwnedBy(caller) {
-			return &user.ErrBotNotOwned{UserID: t.OwnerID}
 		}
 	}
 
@@ -199,12 +202,8 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 
 	ownerID := caller.ID
 	if t.OwnerID != 0 && t.OwnerID != caller.ID {
-		botUser, lookupErr := user.GetUserByID(s, t.OwnerID)
-		if lookupErr != nil {
-			return nil, 0, 0, lookupErr
-		}
-		if !botUser.IsBotOwnedBy(caller) {
-			return nil, 0, 0, &user.ErrBotNotOwned{UserID: t.OwnerID}
+		if _, err := getOwnedBot(s, t.OwnerID, caller); err != nil {
+			return nil, 0, 0, err
 		}
 		ownerID = t.OwnerID
 	}
@@ -220,6 +219,7 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 
 	err = s.
 		Where(where).
+		OrderBy("id ASC").
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&tokens)
 	if err != nil {
@@ -350,28 +350,32 @@ func backfillTokenSha256(id int64, hash string) {
 	}
 }
 
-// ValidateTokenAndGetOwner looks up a raw token string, checks it is not expired,
-// and returns both the APIToken and its owner. Callers are responsible for checking
-// permissions on the returned token (e.g. CanDoAPIRoute or HasCaldavAccess).
-// Returns (nil, nil, nil) if the token is invalid or expired, or if the owner
-// account is disabled/locked.
-func ValidateTokenAndGetOwner(s *xorm.Session, rawToken string) (*APIToken, *user.User, error) {
-	apiToken, err := GetTokenFromTokenString(s, rawToken)
-	if err != nil {
-		if IsErrAPITokenInvalid(err) {
+// Callers still check the token's permissions (CanDoAPIRoute, HasCaldavAccess).
+// softFail turns a rejected token into (nil, nil, nil); other errors are returned either way.
+func ValidateTokenAndGetOwner(s *xorm.Session, rawToken string, softFail bool) (*APIToken, *user.User, error) {
+	reject := func(err error) (*APIToken, *user.User, error) {
+		if softFail {
 			return nil, nil, nil
 		}
 		return nil, nil, err
 	}
 
-	if time.Now().After(apiToken.ExpiresAt) {
-		return nil, nil, nil
+	apiToken, err := GetTokenFromTokenString(s, rawToken)
+	if err != nil {
+		if IsErrAPITokenInvalid(err) {
+			return reject(err)
+		}
+		return nil, nil, err
 	}
 
-	u, err := user.GetUserByID(s, apiToken.OwnerID)
+	if time.Now().After(apiToken.ExpiresAt) {
+		return reject(fmt.Errorf("API token %d expired on %s", apiToken.ID, apiToken.ExpiresAt.String()))
+	}
+
+	u, err := user.GetUserByIDForAuth(s, apiToken.OwnerID)
 	if err != nil {
-		if user.IsErrUserStatusError(err) {
-			return nil, nil, nil
+		if user.IsErrUserCannotAuthenticate(err) {
+			return reject(fmt.Errorf("API token %d owner cannot authenticate: %w", apiToken.ID, err))
 		}
 		return nil, nil, err
 	}

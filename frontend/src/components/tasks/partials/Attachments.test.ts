@@ -1,5 +1,6 @@
 import {describe, it, expect, vi, afterEach} from 'vitest'
 import {defineComponent, h, nextTick} from 'vue'
+import {createPinia} from 'pinia'
 import {mount, flushPromises, type VueWrapper} from '@vue/test-utils'
 import {QueryClient, useQuery, VueQueryPlugin} from '@tanstack/vue-query'
 import Modal from '@/components/misc/Modal.vue'
@@ -63,7 +64,7 @@ function mountAttachments() {
 	const wrapper = mount(TaskHost, {
 		attachTo: document.body,
 		global: {
-			plugins: [[VueQueryPlugin, {queryClient}]],
+			plugins: [createPinia(), [VueQueryPlugin, {queryClient}]],
 			components: {XButton, BaseButton, Modal},
 			stubs: {
 				Icon: true,

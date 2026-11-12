@@ -1,3 +1,6 @@
+import {assert} from 'vitest'
+import {queryClient} from '@/client/queryClient'
+import {accountKeys} from '@/client/queries/account'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {parseTaskText, PrefixMode} from '.'
@@ -10,20 +13,21 @@ import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import {setActivePinia, createPinia} from 'pinia'
 import {useAuthStore} from '@/stores/auth'
 
-function setDefaultDueTime(defaultDueTime?: string) {
+function setDefaultDueTime(default_due_time?: string) {
 	const authStore = useAuthStore()
-	authStore.setUserSettings({
+	queryClient.setQueryData(accountKeys.user(0), {settings: {
 		...authStore.settings,
-		frontendSettings: {
-			...authStore.settings.frontendSettings,
-			defaultDueTime,
+		frontend_settings: {
+			...authStore.settings.frontend_settings,
+			default_due_time,
 		},
-	})
+	}})
 }
 
 describe('Parse Task Text', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
+		queryClient.clear()
 		setActivePinia(createPinia())
 		useAuthStore()
 	})
@@ -41,6 +45,42 @@ describe('Parse Task Text', () => {
 		expect(result.date).not.toBeNull()
 		expect(result.date?.getHours()).toBe(14)
 		expect(result.date?.getMinutes()).toBe(30)
+	})
+
+	it.each([
+		'Epic test task 2026-10-13',
+		'Epic test task 13.10.2026',
+		'Epic test task oct 13',
+		'Epic test task friday',
+		'Epic test task 17th',
+	])('uses the configured default due time for date-only text "%s"', text => {
+		setDefaultDueTime('23:59')
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate(text)
+
+		expect(result.date).not.toBeNull()
+		expect(result.date?.getHours()).toBe(23)
+		expect(result.date?.getMinutes()).toBe(59)
+	})
+
+	it('prefers an explicit time over the configured default due time', () => {
+		setDefaultDueTime('23:59')
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate('Epic test task 2026-10-13 at 15:00')
+
+		expect(result.date?.getHours()).toBe(15)
+		expect(result.date?.getMinutes()).toBe(0)
+	})
+
+	it('keeps midnight for explicit dates when no default due time is configured', () => {
+		vi.setSystemTime(new Date(2026, 7, 4, 9, 15))
+
+		const result = parseDate('Epic test task 2026-10-13')
+
+		expect(result.date?.getHours()).toBe(0)
+		expect(result.date?.getMinutes()).toBe(0)
 	})
 
 	it('falls back to the existing default due time when no user value is configured', () => {
@@ -482,6 +522,34 @@ describe('Parse Task Text', () => {
 				expect(result.date).toBeNull()
 			})
 		})
+		describe('Should not parse dates which are part of a date range', () => {
+			const cases = [
+				'31.12.2026 - 01.01.2027 Happy new year',
+				'Happy new year 31.12.2026 - 01.01.2027',
+				'31.12.2026 – 01.01.2027 Happy new year',
+				'12/31/2026 - 01/01/2027 Happy new year',
+				'2026-12-31 - 2027-01-01 Happy new year',
+				'31.12 - 01.01 Happy new year',
+			]
+
+			cases.forEach(c => {
+				it(`should not parse a date from '${c}'`, () => {
+					const result = parseTaskText(c)
+
+					expect(result.text).toBe(c)
+					expect(result.date).toBeNull()
+				})
+			})
+
+			it('should still parse a date after a dash which is not a range', () => {
+				const result = parseTaskText('Meeting - 31.12.2026')
+
+				expect(result.text).toBe('Meeting -')
+				expect(result.date?.getFullYear()).toBe(2026)
+				expect(result.date?.getMonth()).toBe(11)
+				expect(result.date?.getDate()).toBe(31)
+			})
+		})
 		describe('Should still parse dates at text boundaries', () => {
 			const now = new Date()
 			now.setFullYear(2021, 5, 24)
@@ -703,7 +771,8 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date?.getFullYear()}-${date?.getMonth() + 1}-${date?.getDate()}`).toBe(cases[c])
+					assert.isNotNull(date)
+					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`).toBe(cases[c])
 					expect(text.trim()).toBe('Lorem Ipsum')
 				}
 				
@@ -742,6 +811,16 @@ describe('Parse Task Text', () => {
 				'in 4 weeks': '2021-7-22 12:0',
 				'in 1 month': '2021-7-24 12:0',
 				'in 3 months': '2021-9-24 12:0',
+				'in 30 minutes': '2021-6-24 12:30',
+				'in 1 year': '2022-6-24 12:0',
+				'in two weeks': '2021-7-8 12:0',
+				'in Two Weeks': '2021-7-8 12:0',
+				'in three days': '2021-6-27 12:0',
+				'in twelve months': '2022-6-24 12:0',
+				'in a week': '2021-7-1 12:0',
+				'in an hour': '2021-6-24 13:0',
+				'in a year': '2022-6-24 12:0',
+				'Something in two days at 10:00': '2021-6-26 10:0',
 				'Something in 5 days at 10:00': '2021-6-29 10:0',
 				'Something 17th at 10:00': '2021-7-17 10:0',
 				'Something sep 17 at 10:00': '2021-9-17 10:0',
@@ -766,13 +845,15 @@ describe('Parse Task Text', () => {
 						return
 					}
 
-					expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe(cases[c])
+					assert.isNotNull(date)
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe(cases[c])
 				})
 			}
 
 			it('should replace the text in title case', () => {
 				const {date, newText} = parseDate('Some task Mar 8th', now)
 
+				assert.isNotNull(date)
 				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
 				expect(newText).toBe('Some task')
 			})
@@ -780,8 +861,22 @@ describe('Parse Task Text', () => {
 			it('should replace the text in lowercase', () => {
 				const {date, newText} = parseDate('Some task mar 8th', now)
 
+				assert.isNotNull(date)
 				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
 				expect(newText).toBe('Some task')
+			})
+
+			it('should remove a spelled out relative date from the text', () => {
+				const {date, newText} = parseDate('Call mom in two weeks', now)
+
+				assert.isNotNull(date)
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`).toBe('2021-7-8')
+				expect(newText).toBe('Call mom')
+			})
+
+			it('should not parse a relative date from inside a word', () => {
+				expect(parseDate('Meet in a weekend', now).date).toBeNull()
+				expect(parseDate('Check plugin 2 days', now).date).toBeNull()
 			})
 		})
 	})

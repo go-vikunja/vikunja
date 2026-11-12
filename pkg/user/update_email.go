@@ -50,11 +50,22 @@ func EmailUpdateMessage() string {
 // (kicking off confirmation when the mailer is enabled). Shared by the v1 and
 // v2 email-update handlers; only HTTP input binding stays in the handlers.
 func ChangeUserEmail(ctx context.Context, s *xorm.Session, u *User, password, newEmail string) error {
-	verified, err := CheckUserCredentials(ctx, s, &Login{Username: u.Username, Password: password})
+	if password == "" {
+		return ErrNoUsernamePassword{}
+	}
+
+	target, err := GetUserByID(s, u.ID)
 	if err != nil {
 		return err
 	}
-	return UpdateEmail(s, &EmailUpdate{User: verified, NewEmail: newEmail})
+	if !target.IsLocalUser() {
+		return &ErrAccountIsNotLocal{UserID: target.ID}
+	}
+
+	if err := CheckReauthPassword(ctx, s, target, password); err != nil {
+		return err
+	}
+	return UpdateEmail(s, &EmailUpdate{User: target, NewEmail: newEmail})
 }
 
 // UpdateEmail stages the address as PendingEmail until confirmed; with the mailer off it applies immediately.
@@ -139,18 +150,11 @@ func emailConfirmationCooldownKey(userID int64) string {
 func sendEmailConfirmation(s *xorm.Session, u *User) (err error) {
 	// Kept outside the db so the cooldown survives cancelling the change or rotating tokens.
 	cooldownKey := emailConfirmationCooldownKey(u.ID)
-	lastSent, exists, err := keyvalue.Get(cooldownKey)
+	sentAt, exists, err := keyvalue.GetInt64(cooldownKey)
 	if err != nil {
 		return
 	}
 	if exists {
-		var sentAt int64
-		switch v := lastSent.(type) {
-		case int64:
-			sentAt = v
-		case float64:
-			sentAt = int64(v)
-		}
 		if time.Since(time.Unix(sentAt, 0)) < emailConfirmationResendCooldown {
 			return ErrEmailConfirmationCooldown{UserID: u.ID}
 		}

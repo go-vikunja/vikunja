@@ -76,6 +76,7 @@ func newTestAPI(t *testing.T) huma.API {
 	},
 		func(_ context.Context, in *struct {
 			Q      string   `query:"q"`
+			Filter string   `query:"filter" doc:"Filter things."`
 			Page   int      `query:"page" default:"1" minimum:"1"`
 			Expand []string `query:"expand,explode" enum:"a,b"`
 			Format string   `query:"format" enum:"html,markdown"`

@@ -289,7 +289,7 @@ func TestReminderDueNotification_TitleIsMarkdownEscaped(t *testing.T) {
 	config.ServicePublicURL.Set("https://vikunja.example.com/")
 
 	n := &ReminderDueNotification{
-		User:    &user.User{ID: 1, Name: "alice"},
+		User:    &user.User{ID: 1, Name: "alice", EmailRemindersEnabled: true},
 		Task:    &Task{ID: 99, Title: "![](https://evil.com/track.png)"},
 		Project: &Project{ID: 1, Title: "proj"},
 	}

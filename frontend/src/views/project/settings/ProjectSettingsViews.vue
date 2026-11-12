@@ -14,7 +14,7 @@ import ViewEditForm from '@/components/project/views/ViewEditForm.vue'
 import XButton from '@/components/input/Button.vue'
 import {PERMISSIONS} from '@/constants/permissions'
 import Message from '@/components/misc/Message.vue'
-import draggable from 'zhyswan-vuedraggable'
+import {draggableFor} from '@/components/base/Draggable'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import {useProject} from '@/composables/useProject'
 import {useProjectViews} from '@/composables/useProjectViews'
@@ -23,6 +23,8 @@ import ErrorMessage from '@/components/misc/Error.vue'
 const props = defineProps<{
 	projectId: number
 }>()
+
+const draggable = draggableFor<ProjectView>()
 
 const query = useProjectViews(() => props.projectId)
 // useProject snapshots its project, which suits the permission check but would freeze the table.

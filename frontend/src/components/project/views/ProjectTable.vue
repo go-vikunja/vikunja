@@ -81,8 +81,7 @@
 				<FilterPopup
 					v-if="!isSavedFilterProject({id: projectId})"
 					v-model="params"
-					:view-id="viewId"
-					:project-id="projectId"
+					:view
 					@update:modelValue="taskList.loadTasks()"
 				/>
 			</div>
@@ -103,7 +102,7 @@
 								<tr>
 									<th
 										v-if="activeColumns.index"
-										:aria-sort="ariaSort(sortBy.index)"
+										:aria-sort="ariaSort('index')"
 									>
 										#
 										<Sort
@@ -114,7 +113,7 @@
 									</th>
 									<th
 										v-if="activeColumns.done"
-										:aria-sort="ariaSort(sortBy.done)"
+										:aria-sort="ariaSort('done')"
 									>
 										{{ $t('task.attributes.done') }}
 										<Sort
@@ -128,7 +127,7 @@
 									</th>
 									<th
 										v-if="activeColumns.title"
-										:aria-sort="ariaSort(sortBy.title)"
+										:aria-sort="ariaSort('title')"
 									>
 										{{ $t('task.attributes.title') }}
 										<Sort
@@ -139,7 +138,7 @@
 									</th>
 									<th
 										v-if="activeColumns.priority"
-										:aria-sort="ariaSort(sortBy.priority)"
+										:aria-sort="ariaSort('priority')"
 									>
 										{{ $t('task.attributes.priority') }}
 										<Sort
@@ -156,7 +155,7 @@
 									</th>
 									<th
 										v-if="activeColumns.dueDate"
-										:aria-sort="ariaSort(sortBy.due_date)"
+										:aria-sort="ariaSort('due_date')"
 									>
 										{{ $t('task.attributes.dueDate') }}
 										<Sort
@@ -170,7 +169,7 @@
 									</th>
 									<th
 										v-if="activeColumns.startDate"
-										:aria-sort="ariaSort(sortBy.start_date)"
+										:aria-sort="ariaSort('start_date')"
 									>
 										{{ $t('task.attributes.startDate') }}
 										<Sort
@@ -181,7 +180,7 @@
 									</th>
 									<th
 										v-if="activeColumns.endDate"
-										:aria-sort="ariaSort(sortBy.end_date)"
+										:aria-sort="ariaSort('end_date')"
 									>
 										{{ $t('task.attributes.endDate') }}
 										<Sort
@@ -192,7 +191,7 @@
 									</th>
 									<th
 										v-if="activeColumns.percentDone"
-										:aria-sort="ariaSort(sortBy.percent_done)"
+										:aria-sort="ariaSort('percent_done')"
 									>
 										{{ $t('task.attributes.percentDone') }}
 										<Sort
@@ -203,7 +202,7 @@
 									</th>
 									<th
 										v-if="activeColumns.doneAt"
-										:aria-sort="ariaSort(sortBy.done_at)"
+										:aria-sort="ariaSort('done_at')"
 									>
 										{{ $t('task.attributes.doneAt') }}
 										<Sort
@@ -214,7 +213,7 @@
 									</th>
 									<th
 										v-if="activeColumns.created"
-										:aria-sort="ariaSort(sortBy.created)"
+										:aria-sort="ariaSort('created')"
 									>
 										{{ $t('task.attributes.created') }}
 										<Sort
@@ -225,7 +224,7 @@
 									</th>
 									<th
 										v-if="activeColumns.updated"
-										:aria-sort="ariaSort(sortBy.updated)"
+										:aria-sort="ariaSort('updated')"
 									>
 										{{ $t('task.attributes.updated') }}
 										<Sort
@@ -273,7 +272,6 @@
 									<td v-if="activeColumns.priority">
 										<PriorityLabel
 											:priority="t.priority"
-											:done="t.done"
 											:show-all="true"
 										/>
 									</td>
@@ -331,6 +329,12 @@
 						</table>
 					</div>
 
+					<AddTask
+						v-if="canWrite"
+						class="table-view__add-task d-print-none"
+						:autofocus="false"
+					/>
+
 					<Pagination
 						:total-pages="totalPages"
 						:current-page="currentPage"
@@ -359,23 +363,36 @@ import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import Popup from '@/components/misc/Popup.vue'
+import AddTask from '@/components/tasks/AddTask.vue'
 
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
 import type {TaskResponse} from '@/client/queries/tasks'
+import type {ProjectView} from '@/client/generated'
+import {useTableSort} from '@/composables/useTableSort'
+import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {getTaskIdentifier} from '@/helpers/task'
 import { camelCase } from 'change-case'
 import {isSavedFilterProject} from '@/client/queries/projects'
 import {useProjects} from '@/composables/useProjects'
+import {useCurrentProject} from '@/composables/useCurrentProject'
+import {PERMISSIONS as Permissions} from '@/constants/permissions'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
 	projectId: number,
 	viewId: number,
+	view: ProjectView,
 }>()
 
 const projectList = useProjects()
+const {currentProject: project} = useCurrentProject()
+
+const canWrite = computed(() => typeof project.value?.max_permission === 'number' &&
+	project.value.max_permission > Permissions.READ &&
+	project.value.id > 0 &&
+	!project.value.is_archived)
 
 const columnsTrigger = ref<ComponentPublicInstance | null>(null)
 const columnsTriggerEl = computed<HTMLElement | null>(() => (columnsTrigger.value?.$el as HTMLElement) ?? null)
@@ -411,15 +428,16 @@ const taskList = useTaskList(
 	() => props.viewId, 
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
+	() => props.view,
 )
 
 const {
-	loading,
 	params,
 	totalPages,
 	currentPage,
 	sortByParam,
 } = taskList
+const loading = useDelayedLoading(taskList.loading)
 const tasks: Ref<TaskResponse[]> = taskList.tasks
 
 watch(
@@ -428,45 +446,12 @@ watch(
 	{deep: true},
 )
 
-function ariaSort(order: 'asc' | 'desc' | 'none' | undefined): 'ascending' | 'descending' | undefined {
-	if (order === 'asc') {
-		return 'ascending'
-	}
-	if (order === 'desc') {
-		return 'descending'
-	}
-	return undefined
-}
-
-// Allow sorting by multiple columns only when ctrl is pressed
-function sort(property: keyof SortBy, event?: MouseEvent) {
-	const ctrlPressed = event?.ctrlKey || event?.metaKey
-
-	const currentOrder = sortBy.value[property]
-	let newOrder: 'asc' | 'desc' | 'none' | undefined = undefined
-	if (typeof currentOrder === 'undefined' || currentOrder === 'none') {
-		newOrder = 'desc'
-	} else if (currentOrder === 'desc') {
-		newOrder = 'asc'
-	}
-
-	if (!ctrlPressed) {
-		sortBy.value = {} as SortBy
-	}
-
-	if (newOrder) {
-		sortBy.value[property] = newOrder
-	} else {
-		delete sortBy.value[property]
-	}
-
-	setActiveColumnsSortParam()
-}
+const {sort, ariaSort} = useTableSort<keyof SortBy>(sortBy, setActiveColumnsSortParam)
 
 function setActiveColumnsSortParam() {
-	sortByParam.value = Object.keys(sortBy.value)
+	sortByParam.value = (Object.keys(sortBy.value) as (keyof SortBy)[])
 		.filter(prop => activeColumns.value[camelCase(prop) as keyof typeof activeColumns.value])
-		.reduce((obj, key) => {
+		.reduce<SortBy>((obj, key) => {
 			obj[key] = sortBy.value[key]
 			return obj
 		}, {})
@@ -499,6 +484,10 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	.user {
 		margin: 0;
 	}
+}
+
+.table-view__add-task {
+	padding: 1rem;
 }
 
 .columns-filter {

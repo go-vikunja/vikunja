@@ -21,6 +21,8 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/humabridge"
 	"code.vikunja.io/api/pkg/routes/api/shared"
@@ -105,14 +107,22 @@ func authLogin(ctx context.Context, in *struct{ Body user.Login }) (*authTokenBo
 
 func authLogout(ctx context.Context, _ *struct{}) (*logoutBody, error) {
 	var sid string
+	var userID int64
 	if ec := humabridge.EchoContextFrom(ctx); ec != nil {
 		auth.ClearRefreshTokenCookie(ec)
 		sid = auth.SessionIDFromContext(ec)
+		userID = auth.SessionUserIDFromContext(ec)
 	}
 
 	oidcLogoutURL, err := shared.LogoutSession(sid) //nolint:contextcheck // OIDC provider discovery resolves from a cached, context-less map and runs on its own background context, like the OIDC callback.
 	if err != nil {
 		return nil, translateDomainError(err)
+	}
+
+	if userID != 0 {
+		if err := events.DispatchWithContext(ctx, &user.LogoutEvent{UserID: userID}); err != nil {
+			log.Errorf("Could not dispatch logout event: %s", err)
+		}
 	}
 
 	out := &logoutBody{}

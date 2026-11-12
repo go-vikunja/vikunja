@@ -24,11 +24,41 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestUserTimezoneDefaultFallback(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &User{
+		ID:       1,
+		Timezone: "",
+	}
+	updated, err := UpdateUser(s, u, false)
+	require.NoError(t, err)
+	assert.NotEmpty(t, updated.Timezone)
+	_, err = time.LoadLocation(updated.Timezone)
+	require.NoError(t, err)
+
+	created, err := CreateUser(s, &User{
+		Username: "tzfallbackuser",
+		Email:    "tzfallbackuser@example.com",
+		Password: "testpassword",
+		Timezone: "",
+	})
+	require.NoError(t, err)
+	assert.NotEmpty(t, created.Timezone)
+	_, err = time.LoadLocation(created.Timezone)
+	require.NoError(t, err)
+}
 
 func TestCreateBotUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
@@ -46,6 +76,48 @@ func TestCreateBotUser(t *testing.T) {
 		assert.Equal(t, StatusActive, bot.Status)
 		assert.Empty(t, bot.Email)
 		assert.Empty(t, bot.Password)
+	})
+	t.Run("only username and name are taken from the input", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+
+		bot, err := CreateBotUser(s, &User{
+			Username:     "bot-privileged",
+			Name:         "Privileged",
+			IsAdmin:      true,
+			ExportFileID: 1,
+			PendingEmail: "bot@example.com",
+			Subject:      "sub",
+		}, owner)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		assert.Equal(t, "Privileged", bot.Name)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":             bot.ID,
+			"is_admin":       false,
+			"export_file_id": 0,
+			"pending_email":  "",
+			"subject":        "",
+		}, false)
+	})
+	t.Run("keeps the requested language", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+
+		bot, err := CreateBotUser(s, &User{
+			Username: "bot-polyglot",
+			Language: "de-DE",
+		}, owner)
+		require.NoError(t, err)
+		assert.Equal(t, "de-DE", bot.Language)
 	})
 	t.Run("empty username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -382,6 +454,66 @@ func TestCheckUserCredentials(t *testing.T) {
 		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "12345"})
 		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
+	})
+	t.Run("locks account after 10 wrong passwords", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u := &User{ID: 1}
+		key := u.GetFailedPasswordAttemptsKey()
+		// keyvalue store is process-global; reset counter between runs.
+		_ = keyvalue.Del(key)
+		gen := sessionAuthGeneration(t, u.ID)
+		events.ClearDispatchedEvents()
+		notifications.Fake()
+		t.Cleanup(notifications.Unfake)
+
+		for i := range 10 {
+			s := db.NewSession()
+			_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "wrong"})
+			require.True(t, IsErrWrongUsernameOrPassword(err), "attempt %d: got %v", i+1, err)
+			// Login handlers roll back on failure; the lockout must survive that.
+			require.NoError(t, s.Rollback())
+			require.NoError(t, s.Close())
+		}
+
+		s := db.NewSession()
+		defer s.Close()
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountLocked(err), "expected ErrAccountLocked, got: %v", err)
+		assert.Equal(t, gen+2, sessionAuthGeneration(t, u.ID))
+
+		locked := events.GetDispatchedEvents((&AccountLockedEvent{}).Name())
+		require.Len(t, locked, 1)
+		assert.Equal(t, &AccountLockedEvent{UserID: u.ID}, locked[0])
+		notifications.AssertSent(t, &AccountLockedAfterInvalidPasswordNotification{})
+
+		tokens, err := getTokensForKind(s, u, TokenPasswordReset)
+		require.NoError(t, err)
+		assert.NotEmpty(t, tokens)
+
+		_, exists, err := keyvalue.Get(key)
+		require.NoError(t, err)
+		assert.False(t, exists, "counter must be cleared so a reset account isn't relocked by the next typo")
+	})
+	t.Run("does not count wrong passwords on a locked account", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u := &User{ID: 1}
+		key := u.GetFailedPasswordAttemptsKey()
+		_ = keyvalue.Del(key)
+
+		s := db.NewSession()
+		defer s.Close()
+		require.NoError(t, u.SetStatus(s, StatusAccountLocked))
+		require.NoError(t, s.Commit())
+
+		s2 := db.NewSession()
+		defer s2.Close()
+		_, err := CheckUserCredentials(context.Background(), s2, &Login{Username: "user1", Password: "wrong"})
+		require.True(t, IsErrWrongUsernameOrPassword(err))
+
+		_, exists, err := keyvalue.Get(key)
+		require.NoError(t, err)
+		assert.False(t, exists)
 	})
 	t.Run("nonexistant user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -979,4 +1111,155 @@ func TestGetUserByID_AfterBatchLoadKeepsStatusCheck(t *testing.T) {
 	afterWrite, err := GetUserByID(s, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "behind the back", afterWrite.Username)
+}
+
+func TestGetUserForAuth(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	for _, tc := range []struct {
+		name     string
+		id       int64
+		username string
+		wantErr  func(error) bool
+	}{
+		{"active", 1, "user1", nil},
+		{"email confirmation required", 4, "user4", IsErrEmailNotConfirmed},
+		{"disabled", 17, "user17", IsErrAccountDisabled},
+		{"locked", 18, "user18", IsErrAccountLocked},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			byID, err := GetUserByIDForAuth(s, tc.id)
+			byName, nameErr := GetUserByUsernameForAuth(s, tc.username)
+			if tc.wantErr == nil {
+				require.NoError(t, err)
+				require.NoError(t, nameErr)
+				assert.Equal(t, tc.id, byID.ID)
+				assert.Equal(t, tc.id, byName.ID)
+				return
+			}
+			assert.True(t, tc.wantErr(err), "by id: got %v", err)
+			assert.True(t, tc.wantErr(nameErr), "by username: got %v", nameErr)
+			assert.True(t, IsErrUserCannotAuthenticate(err))
+		})
+	}
+}
+
+// TOK-BOT-01
+func TestGetUserForAuthChecksBotOwner(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := GetUserByIDForAuth(s, 23)
+	require.NoError(t, err)
+
+	require.NoError(t, SetUserStatus(s, &User{ID: 21}, StatusDisabled))
+
+	_, err = GetUserByIDForAuth(s, 23)
+	assert.True(t, IsErrAccountDisabled(err), "by id: got %v", err)
+	_, err = GetUserByUsernameForAuth(s, "bot-owner-a-assistant")
+	assert.True(t, IsErrAccountDisabled(err), "by username: got %v", err)
+}
+
+func TestGetUserBotOwner(t *testing.T) {
+	t.Run("by id", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		bot, err := GetUserByID(s, 23)
+		require.NoError(t, err)
+		require.NotNil(t, bot.BotOwner)
+		assert.Equal(t, int64(21), bot.BotOwner.ID)
+		assert.Equal(t, "user_bot_owner_a", bot.BotOwner.Username)
+		assert.Empty(t, bot.BotOwner.Email)
+	})
+	t.Run("batch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		users, err := GetUsersByIDs(s, []int64{1, 23, 24, 25})
+		require.NoError(t, err)
+		require.Len(t, users, 4)
+		assert.Nil(t, users[1].BotOwner)
+		for botID, ownerID := range map[int64]int64{23: 21, 24: 22, 25: 21} {
+			require.NotNil(t, users[botID].BotOwner, "bot %d", botID)
+			assert.Equal(t, ownerID, users[botID].BotOwner.ID, "bot %d", botID)
+			assert.Empty(t, users[botID].BotOwner.Email, "bot %d", botID)
+		}
+	})
+	t.Run("human has none", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		assert.Nil(t, u.BotOwner)
+
+		j, err := json.Marshal(u)
+		require.NoError(t, err)
+		assert.NotContains(t, string(j), "bot_owner")
+	})
+	t.Run("disabled owner is still attached", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, SetUserStatus(s, &User{ID: 21}, StatusDisabled))
+
+		bot, err := GetUserByID(s, 23)
+		require.NoError(t, err)
+		require.NotNil(t, bot.BotOwner)
+		assert.Equal(t, int64(21), bot.BotOwner.ID)
+
+		users, err := GetUsersByIDs(s, []int64{25})
+		require.NoError(t, err)
+		require.NotNil(t, users[25].BotOwner)
+		assert.Equal(t, int64(21), users[25].BotOwner.ID)
+	})
+	t.Run("locked owner is still attached", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		require.NoError(t, SetUserStatus(s, &User{ID: 22}, StatusAccountLocked))
+
+		bot, err := GetUserByID(s, 24)
+		require.NoError(t, err)
+		require.NotNil(t, bot.BotOwner)
+		assert.Equal(t, int64(22), bot.BotOwner.ID)
+	})
+	t.Run("missing owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(24).Cols("bot_owner_id").Update(&User{BotOwnerID: 999999})
+		require.NoError(t, err)
+
+		bot, err := GetUserByID(s, 24)
+		require.NoError(t, err)
+		assert.Nil(t, bot.BotOwner)
+	})
+	t.Run("does not leak into the memo", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		first, err := GetUserByID(s, 23)
+		require.NoError(t, err)
+		first.BotOwner.Name = "mutated"
+
+		second, err := GetUserByID(s, 23)
+		require.NoError(t, err)
+		assert.NotEqual(t, "mutated", second.BotOwner.Name)
+
+		owner, err := GetUserByID(s, 21)
+		require.NoError(t, err)
+		assert.NotEqual(t, "mutated", owner.Name)
+	})
 }

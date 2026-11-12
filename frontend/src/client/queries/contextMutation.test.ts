@@ -9,7 +9,7 @@ vi.mock('@/helpers/auth', () => ({
 	getToken: () => null,
 	getTokenIdentity: () => null,
 }))
-vi.mock('@/helpers/fetcher', () => ({getApiV2BaseUrl: () => '/api/v2/'}))
+vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 
 import {contextMutationOptions} from './contextMutation'
 
@@ -51,6 +51,22 @@ describe('contextMutationOptions', () => {
 		expect(error).toHaveBeenCalledWith(cause)
 	})
 
+	it('does not toast a request-context abort while the context is current', async () => {
+		await expect(execute({mutationFn: async () => {
+			throw new DOMException('Account changed', 'AbortError')
+		}})).rejects.toMatchObject({name: 'AbortError'})
+		expect(error).not.toHaveBeenCalled()
+	})
+
+	it('skips onSettled after a request-context abort', async () => {
+		const onSettled = vi.fn(async () => {})
+		await expect(execute({
+			mutationFn: async () => { throw new DOMException('Account changed', 'AbortError') },
+			onSettled,
+		})).rejects.toMatchObject({name: 'AbortError'})
+		expect(onSettled).not.toHaveBeenCalled()
+	})
+
 	it('suppresses the error toast after the context changed', async () => {
 		await expect(execute({mutationFn: async () => {
 			session.epoch++
@@ -71,7 +87,7 @@ describe('contextMutationOptions', () => {
 	it('does not toast success without a successMessage', async () => {
 		const onSettled = vi.fn(async () => {})
 		await execute({mutationFn: async () => 'done', onSettled})
-		expect(onSettled).toHaveBeenCalledWith(1, client)
+		expect(onSettled).toHaveBeenCalledWith(1, client, undefined)
 		expect(success).not.toHaveBeenCalled()
 	})
 
@@ -105,6 +121,24 @@ describe('contextMutationOptions optimistic updates', () => {
 			onSuccess,
 		})
 		expect(onSuccess).toHaveBeenCalledWith('done', 1, client, 'snapshot')
+	})
+
+	it.each(['success', 'failure'])('passes optimistic context to onSettled after %s', async outcome => {
+		const onSettled = vi.fn(async () => {})
+		const result = execute({
+			mutationFn: async () => {
+				if (outcome === 'failure') throw new Error('denied')
+				return 'done'
+			},
+			optimistic: optimistic(vi.fn(() => 'snapshot')),
+			onSettled,
+		})
+		if (outcome === 'failure') {
+			await expect(result).rejects.toThrow('denied')
+		} else {
+			await result
+		}
+		expect(onSettled).toHaveBeenCalledWith(1, client, 'snapshot')
 	})
 
 	it('rolls back only the keys the factory fenced off', async () => {

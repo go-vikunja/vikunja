@@ -32,7 +32,7 @@ for (const kind of ['user', 'team'] as const) {
 		await page.reload()
 		await expect(row.locator('td.type')).toHaveText('Read & write')
 		await row.getByRole('button', {name: `Remove this ${kind}`}).click()
-		const removeDialog = page.getByRole('dialog', {name: `Remove a ${kind} from the List`})
+		const removeDialog = page.getByRole('dialog', {name: `Remove a ${kind} from the project`})
 		await removeDialog.getByRole('button', {name: 'Cancel', exact: true}).click()
 		await expect(removeDialog).toHaveCount(0)
 		await expect(row).toBeVisible()

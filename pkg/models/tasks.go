@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -74,6 +75,20 @@ func validateTaskForCreation(t *Task) error {
 	return validateRepeatAfter(t.RepeatAfter)
 }
 
+const MaxTaskTitleLength = 1000
+const MaxRemindersPerTask = 100
+
+// validateTaskLimits only checks what an update changes, so tasks already over a limit stay editable. old is nil on create.
+func validateTaskLimits(t, old *Task) error {
+	if (old == nil || t.Title != old.Title) && utf8.RuneCountInString(t.Title) > MaxTaskTitleLength {
+		return InvalidFieldErrorWithMessage([]string{"title"}, fmt.Sprintf("The task title may be at most %d characters long.", MaxTaskTitleLength))
+	}
+	if (old == nil || len(t.Reminders) > len(old.Reminders)) && len(t.Reminders) > MaxRemindersPerTask {
+		return InvalidFieldErrorWithMessage([]string{"reminders"}, fmt.Sprintf("A task may have at most %d reminders.", MaxRemindersPerTask))
+	}
+	return nil
+}
+
 // Task represents a task in a project
 type Task struct {
 	// The unique, numeric id of this task.
@@ -108,7 +123,7 @@ type Task struct {
 	// An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.
 	Labels []*Label `xorm:"-" json:"labels" readOnly:"true" doc:"The labels on this task. Read-only here; use the label-task endpoints to add or remove labels."`
 	// The task color in hex
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The task color as a hex string without the leading '#'."`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"hexcolor" maxLength:"7" doc:"The task color as a hex string without the leading '#'."`
 	// Determines how far a task is left from being done
 	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done" doc:"How far the task is from done, between 0 and 1."`
 
@@ -171,12 +186,18 @@ type Task struct {
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
 	Position float64 `xorm:"-" json:"position" readOnly:"true" doc:"The task's position, saved per view. Only non-zero when the task is fetched through a view endpoint; use the task-position endpoint to change it."`
 
+	Positions []*TaskPosition `xorm:"-" json:"positions,omitempty" readOnly:"true" doc:"The task's stored position in each view of its project. Only present in create and duplicate responses."`
+
 	// Reactions on that task.
 	Reactions ReactionMap `xorm:"-" json:"reactions" readOnly:"true" doc:"Reactions on this task. Only present when requested via the reactions expand option."`
 
 	// The user who initially created the task.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who created this task. Set by the server."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
+
+	// Null for tasks soft-deleted before this was tracked.
+	DeletedBy   *user.User `xorm:"-" json:"deleted_by,omitempty" readOnly:"true" doc:"The user who moved this task to the trash. Only present on soft-deleted tasks, and absent there for tasks deleted before this was recorded."`
+	DeletedByID int64      `xorm:"bigint null 'deleted_by_id'" json:"-"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -392,6 +413,60 @@ func lockingSession(s *xorm.Session) *xorm.Session {
 	return s
 }
 
+// Serialize with task movers because Can* checks read the task without a lock.
+func lockTaskForWrite(s *xorm.Session, a web.Auth, taskID int64) (task Task, err error) {
+	task, err = GetTaskSimple(lockingSession(s), &Task{ID: taskID})
+	if err != nil {
+		return Task{}, err
+	}
+	db.Forget(s, taskMemoKey(taskID))
+
+	can, err := (&Project{ID: task.ProjectID}).CanWrite(s, a)
+	if err != nil {
+		return Task{}, err
+	}
+	if !can {
+		return Task{}, ErrGenericForbidden{}
+	}
+	return task, nil
+}
+
+func lockViewsAndTasksForWrite(s *xorm.Session, a web.Auth, taskIDs []int64, projectIDs ...int64) (tasks map[int64]Task, views []*ProjectView, err error) {
+	existing, err := GetTasksSimpleByIDs(s, taskIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+	tasks = make(map[int64]Task, len(existing))
+	for _, task := range existing {
+		tasks[task.ID] = *task
+		projectIDs = append(projectIDs, task.ProjectID)
+	}
+	for _, id := range taskIDs {
+		if _, exists := tasks[id]; !exists {
+			return nil, nil, ErrTaskDoesNotExist{ID: id}
+		}
+	}
+
+	views, err = lockProjectViewsForPositionUpdate(s, projectIDs...)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	orderedIDs := slices.Clone(taskIDs)
+	slices.Sort(orderedIDs)
+	for _, id := range slices.Compact(orderedIDs) {
+		task, err := lockTaskForWrite(s, a, id)
+		if err != nil {
+			return nil, nil, err
+		}
+		if task.ProjectID != tasks[id].ProjectID {
+			return nil, nil, ErrGenericForbidden{}
+		}
+		tasks[id] = task
+	}
+	return tasks, views, nil
+}
+
 // GetTaskByIDSimple returns a raw task without extra data by the task ID
 func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 	if taskID < 1 {
@@ -406,13 +481,19 @@ func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 // GetTaskByProjectAndIndex returns a task by its per-project index.
 // Returns ErrTaskDoesNotExist if nothing matches.
 func GetTaskByProjectAndIndex(s *xorm.Session, projectID, index int64) (task Task, err error) {
+	return getTaskByProjectAndIndex(s, projectID, index, false)
+}
+
+func getTaskByProjectAndIndex(s *xorm.Session, projectID, index int64, unscoped bool) (task Task, err error) {
 	if projectID < 1 || index < 1 {
 		return Task{}, ErrTaskDoesNotExist{}
 	}
 
-	has, err := s.
-		Where("project_id = ? AND `index` = ?", projectID, index).
-		Get(&task)
+	q := s.Where("project_id = ? AND `index` = ?", projectID, index)
+	if unscoped {
+		q = q.Unscoped()
+	}
+	has, err := q.Get(&task)
 	if err != nil {
 		return Task{}, err
 	}
@@ -430,7 +511,8 @@ func (t *Task) resolveIDFromProjectAndIndex(s *xorm.Session) error {
 	if t.ID != 0 || t.ProjectID < 1 || t.Index < 1 {
 		return nil
 	}
-	resolved, err := GetTaskByProjectAndIndex(s, t.ProjectID, t.Index)
+	// Unscoped so a trashed task resolves and CanRead can report it as in the trash.
+	resolved, err := getTaskByProjectAndIndex(s, t.ProjectID, t.Index, true)
 	if err != nil {
 		return err
 	}
@@ -722,6 +804,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		if i.CreatedByID != 0 {
 			userIDs = append(userIDs, i.CreatedByID)
 		}
+		if i.DeletedByID != 0 {
+			userIDs = append(userIDs, i.DeletedByID)
+		}
 		projectIDs = append(projectIDs, i.ProjectID)
 	}
 
@@ -824,6 +909,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		// Make created by user objects
 		if createdBy, has := users[task.CreatedByID]; has {
 			task.CreatedBy = createdBy
+		}
+		if deletedBy, has := users[task.DeletedByID]; has {
+			task.DeletedBy = deletedBy
 		}
 
 		// Add the reminders
@@ -961,6 +1049,9 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
+	if err := validateTaskLimits(t, nil); err != nil {
+		return err
+	}
 	return createTask(s, t, a, true, true)
 }
 
@@ -1043,6 +1134,14 @@ func resolveProvidedBuckets(s *xorm.Session, a web.Auth, projectID int64, tasks 
 
 // createTasks inserts row by row because multi-row inserts don't reliably return autoincrement ids on all supported databases.
 func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, updateAssignees bool, setBucket, preserveIndexes bool) (err error) {
+	views, err := lockProjectViewsForPositionUpdate(s, projectID)
+	if err != nil {
+		return err
+	}
+	return createTasksInViews(s, projectID, tasks, a, updateAssignees, setBucket, preserveIndexes, views)
+}
+
+func createTasksInViews(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, updateAssignees bool, setBucket, preserveIndexes bool, views []*ProjectView) (err error) {
 	if len(tasks) == 0 {
 		return nil
 	}
@@ -1097,42 +1196,9 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 		return err
 	}
 
-	views, err := lockProjectViewsForPositionUpdate(s, projectID)
+	err = placeTasksInViews(s, a, views, tasks, setBucket, taskProvidedBucket)
 	if err != nil {
 		return err
-	}
-
-	positions, taskBuckets, err := setTasksInBucketInViews(s, views, tasks, a, setBucket, taskProvidedBucket)
-	if err != nil {
-		return err
-	}
-
-	if len(positions) > 0 {
-		positions, err = filterNewTaskPositions(s, positions)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(positions) > 0 {
-		err = bulkInsertTaskPositions(s, positions, false)
-		if err != nil {
-			return
-		}
-
-		err = resolvePositionConflictsAfterInsert(s, positions)
-		if err != nil {
-			return
-		}
-	}
-
-	// Keep statements well below the parameter limits of all supported databases.
-	const taskBucketBatchSize = 100
-	for chunk := range slices.Chunk(taskBuckets, taskBucketBatchSize) {
-		_, err = s.Insert(chunk)
-		if err != nil {
-			return
-		}
 	}
 
 	// Link shares can't have subscriptions
@@ -1167,8 +1233,18 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 			}
 		}
 
+		if err := events.DispatchOnCommit(s, &TaskCreatedEvent{
+			Task: t,
+			Doer: createdBy,
+		}); err != nil {
+			return err
+		}
 	}
-	if err := dispatchCreatedTasks(s, tasks, createdBy); err != nil {
+
+	if err := events.DispatchOnCommit(s, &TasksBatchCreatedEvent{
+		Tasks: tasks,
+		Doer:  createdBy,
+	}); err != nil {
 		return err
 	}
 
@@ -1176,13 +1252,41 @@ func createTasks(s *xorm.Session, projectID int64, tasks []*Task, a web.Auth, up
 	return
 }
 
-func dispatchCreatedTasks(s *xorm.Session, tasks []*Task, createdBy *user.User) error {
-	for _, task := range tasks {
-		if err := events.DispatchOnCommit(s, &TaskCreatedEvent{Task: task, Doer: createdBy}); err != nil {
+func placeTasksInViews(s *xorm.Session, a web.Auth, views []*ProjectView, tasks []*Task, setBucket bool, providedBuckets map[int64]*Bucket) error {
+	positions, taskBuckets, err := setTasksInBucketInViews(s, views, tasks, a, setBucket, providedBuckets)
+	if err != nil {
+		return err
+	}
+
+	if len(positions) > 0 {
+		positions, err = filterNewTaskPositions(s, positions)
+		if err != nil {
 			return err
 		}
 	}
-	return events.DispatchOnCommit(s, &TasksBatchCreatedEvent{Tasks: tasks, Doer: createdBy})
+
+	if len(positions) > 0 {
+		err = bulkInsertTaskPositions(s, positions, false)
+		if err != nil {
+			return err
+		}
+
+		err = resolvePositionConflictsAfterInsert(s, positions)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Keep statements well below the parameter limits of all supported databases.
+	const taskBucketBatchSize = 100
+	for chunk := range slices.Chunk(taskBuckets, taskBucketBatchSize) {
+		_, err = s.Insert(chunk)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func setTasksInBucketInViews(s *xorm.Session, views []*ProjectView, tasks []*Task, a web.Auth, setBucket bool, providedBuckets map[int64]*Bucket) ([]*TaskPosition, []*TaskBucket, error) {
@@ -1291,14 +1395,16 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	return t.updateSingleTask(s, a, nil)
 }
 
-//nolint:gocyclo
-func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (err error) {
-
-	// Row lock so concurrent movers serialize; bypasses the session memo so the read is not the earlier permission-check copy.
-	ot, err := GetTaskSimple(lockingSession(s), &Task{ID: t.ID})
+func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) error {
+	tasks, views, err := lockViewsAndTasksForWrite(s, a, []int64{t.ID}, t.ProjectID)
 	if err != nil {
-		return
+		return err
 	}
+	return t.updateSingleTaskInViews(s, a, fields, tasks[t.ID], views)
+}
+
+//nolint:gocyclo
+func (t *Task) updateSingleTaskInViews(s *xorm.Session, a web.Auth, fields []string, ot Task, lockedViews []*ProjectView) (err error) {
 
 	if t.ProjectID == 0 {
 		t.ProjectID = ot.ProjectID
@@ -1312,11 +1418,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	// Old task has the stored reminders
 	ot.Reminders = reminders
-
-	// Update the assignees
-	if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
-		return err
-	}
 
 	// All columns to update in a separate variable to be able to add to them
 	colsToUpdate := []string{
@@ -1343,12 +1444,20 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		for _, c := range colsToUpdate {
 			allowed[c] = true
 		}
+		// Not task columns; written separately below.
+		relationFields := map[string]bool{
+			"assignees":   true,
+			"reminders":   true,
+			"is_favorite": true,
+		}
 		cols := []string{}
 		for _, f := range fields {
-			if !allowed[f] {
+			if !allowed[f] && !relationFields[f] {
 				return ErrInvalidTaskColumn{Column: f}
 			}
-			cols = append(cols, f)
+			if !relationFields[f] {
+				cols = append(cols, f)
+			}
 			fieldSet[f] = true
 		}
 		colsToUpdate = cols
@@ -1396,6 +1505,19 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		if !fieldSet["cover_image_attachment_id"] {
 			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
 		}
+		if !fieldSet["reminders"] {
+			t.Reminders = ot.Reminders
+		}
+	}
+
+	if err := validateTaskLimits(t, &ot); err != nil {
+		return err
+	}
+
+	if len(fields) == 0 || fieldSet["assignees"] {
+		if err := ot.updateTaskAssignees(s, t.Assignees, a); err != nil {
+			return err
+		}
 	}
 
 	if err := validateRepeatAfter(t.RepeatAfter); err != nil {
@@ -1433,18 +1555,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	views := []*ProjectView{}
 	if t.Done != ot.Done || t.ProjectID != ot.ProjectID {
-		// Locks both projects: a move rewrites task_positions in the old project too.
-		_, err = lockProjectViewsForPositionUpdate(s, ot.ProjectID, t.ProjectID)
-		if err != nil {
-			return
-		}
-
-		err = s.
-			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
-				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
-			Find(&views)
-		if err != nil {
-			return
+		for _, view := range lockedViews {
+			if view.ProjectID == t.ProjectID && view.ViewKind == ProjectViewKindKanban && view.BucketConfigurationMode == BucketConfigurationModeManual {
+				views = append(views, view)
+			}
 		}
 	}
 
@@ -1561,6 +1675,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if err != nil {
 		return
 	}
+	if len(fields) > 0 && !fieldSet["is_favorite"] {
+		t.IsFavorite = wasFavorite
+	}
 	if t.IsFavorite && !wasFavorite {
 		if err := addToFavorites(s, t.ID, a, FavoriteKindTask); err != nil {
 			return err
@@ -1593,11 +1710,12 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// For whatever reason, xorm dont detect if done is updated, so we need to update this every time by hand
 	// Which is why we merge the actual task struct with the one we got from the db
 	// The user struct overrides values in the actual one.
+	// Must happen before the merge, ot is what gets saved.
+	t.HexColor = utils.NormalizeHex(t.HexColor)
+
 	if err := mergo.Merge(&ot, t, mergo.WithOverride); err != nil {
 		return err
 	}
-
-	t.HexColor = utils.NormalizeHex(t.HexColor)
 
 	//////
 	// Mergo does ignore nil values. Because of that, we need to check all parameters and set the updated to
@@ -1682,30 +1800,26 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 // updateTasks updates multiple tasks with the same payload.
 // If fields is nil, it updates the default set of columns.
 func updateTasks(s *xorm.Session, a web.Auth, t *Task, ids []int64, fields []string) (tasks []*Task, err error) {
-	// Ids may span projects; per-task locking would follow caller order, not view order.
-	existing := []*Task{}
-	err = s.Table(&Task{}).Where(builder.In("id", ids)).Distinct("project_id").Find(&existing)
-	if err != nil {
-		return nil, fmt.Errorf("could not load projects of tasks to update: %w", err)
+	seen := make(map[int64]struct{}, len(ids))
+	uniqueIDs := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		uniqueIDs = append(uniqueIDs, id)
 	}
+	ids = uniqueIDs
 
-	projectIDs := make([]int64, 0, len(existing)+1)
-	for _, et := range existing {
-		projectIDs = append(projectIDs, et.ProjectID)
-	}
-	if t.ProjectID != 0 {
-		projectIDs = append(projectIDs, t.ProjectID)
-	}
-
-	_, err = lockProjectViewsForPositionUpdate(s, projectIDs...)
+	existing, views, err := lockViewsAndTasksForWrite(s, a, ids, t.ProjectID)
 	if err != nil {
-		return nil, fmt.Errorf("could not lock project views for bulk task update: %w", err)
+		return nil, err
 	}
 
 	for _, id := range ids {
 		nt := clone.Clone(t)
 		nt.ID = id
-		if err := nt.updateSingleTask(s, a, fields); err != nil {
+		if err := nt.updateSingleTaskInViews(s, a, fields, existing[id], views); err != nil {
 			return []*Task{}, err
 		}
 		tasks = append(tasks, nt)
@@ -1805,7 +1919,12 @@ func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*Pr
 }
 
 func addOneMonthToDate(d time.Time) time.Time {
-	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
+	// Clamp, otherwise time.Date rolls Feb 31 into March.
+	day := d.Day()
+	if lastDay := time.Date(d.Year(), d.Month()+2, 0, 0, 0, 0, 0, time.UTC).Day(); day > lastDay {
+		day = lastDay
+	}
+	return time.Date(d.Year(), d.Month()+1, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
 
 // addRepeatIntervalToTime advances t by whole multiples of duration until
@@ -2136,6 +2255,9 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
+	if _, _, err = lockViewsAndTasksForWrite(s, a, []int64{t.ID}); err != nil {
+		return err
+	}
 
 	// duplicate the task for the event
 	fullTask := &Task{ID: t.ID}
@@ -2143,16 +2265,15 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
-
-	_, err = lockProjectViewsForPositionUpdate(s, fullTask.ProjectID)
-	if err != nil {
-		return
-	}
+	// The event reaches every subscriber and webhook, not only the doer.
+	fullTask.RelatedTasks = make(RelatedTaskMap)
+	fullTask.IsFavorite = false
+	fullTask.Subscription = nil
 
 	// Bucket and position rows are removed right away because bucket counts
-	// don't join the tasks table and would leak soft-deleted tasks; the heal
-	// routines re-create them on restore. All other related data is kept until
-	// the cleanup cron permanently deletes the task.
+	// don't join the tasks table and would leak soft-deleted tasks; Restore
+	// places the task again. All other related data is kept until the cleanup
+	// cron permanently deletes the task.
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
 	if err != nil {
 		return
@@ -2161,6 +2282,17 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
 	if err != nil {
 		return
+	}
+
+	doer := doerFromAuth(s, a)
+
+	if err = stopRunningTimersOnTrashedTask(s, t.ID, doer); err != nil {
+		return err
+	}
+
+	_, err = s.ID(t.ID).Cols("deleted_by_id").NoAutoTime().Update(&Task{DeletedByID: doer.ID})
+	if err != nil {
+		return err
 	}
 
 	// The deleted tag on Task.DeletedAt turns this into an update setting
@@ -2173,7 +2305,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	if err := events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
-		Doer: doerFromAuth(s, a),
+		Doer: doer,
 	}); err != nil {
 		return err
 	}
@@ -2215,7 +2347,7 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 		if attachment.File == nil {
 			continue
 		}
-		err = attachment.File.Delete(s)
+		err = attachment.File.DeleteOnCommit(s)
 		if err != nil && !files.IsErrFileDoesNotExist(err) {
 			return err
 		}
@@ -2284,6 +2416,17 @@ func hardDeleteTask(s *xorm.Session, t *Task) (err error) {
 	}
 
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskIndexAlias{})
+	if err != nil {
+		return
+	}
+
+	// Tracked time outlives the task
+	_, err = s.Table("time_entries").
+		Where("task_id = ?", t.ID).
+		Update(map[string]any{
+			"task_id":    0,
+			"project_id": t.ProjectID,
+		})
 	if err != nil {
 		return
 	}

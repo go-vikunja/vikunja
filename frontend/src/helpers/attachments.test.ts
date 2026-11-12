@@ -1,18 +1,27 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest'
 
-import {fetchAttachmentBlob, fetchAttachmentUrl, releaseAttachmentUrl} from './attachments'
+import {fetchAttachmentBlob, fetchAttachmentUrl, generateAttachmentUrl, releaseAttachmentUrl} from './attachments'
 import {queryClient} from '@/client/queryClient'
 import {attachmentKeys} from '@/client/queries/attachments'
 
-const {getBlobUrl} = vi.hoisted(() => ({getBlobUrl: vi.fn()}))
+const {
+	getBlobUrl,
+	getPreview,
+} = vi.hoisted(() => ({
+	getBlobUrl: vi.fn(),
+	getPreview: vi.fn(),
+}))
 
 const requestContext = vi.hoisted(() => ({
 	identity: {id: 1, type: 1} as {id: number, type: number} | null,
 	sessionEpoch: 1,
-	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+	apiBaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
-vi.mock('@/client/generated', () => ({taskAttachmentsDownload: getBlobUrl}))
+vi.mock('@/client/generated', () => ({
+	taskAttachmentsDownload: getBlobUrl,
+	taskAttachmentsPreview: getPreview,
+}))
 vi.mock('@/message', () => ({
 	error: vi.fn(),
 	success: vi.fn(),
@@ -23,9 +32,9 @@ vi.mock(import('@/helpers/auth'), async importOriginal => ({
 	getToken: () => null,
 	getTokenIdentity: () => requestContext.identity,
 }))
-vi.mock(import('@/helpers/fetcher'), async importOriginal => ({
+vi.mock(import('@/helpers/apiUrl'), async importOriginal => ({
 	...await importOriginal(),
-	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+	getApiBaseUrl: () => requestContext.apiBaseUrl,
 }))
 
 const attachment = {task_id: 5, id: 9}
@@ -35,10 +44,11 @@ beforeEach(() => {
 	vi.unstubAllGlobals()
 	requestContext.identity = {id: 1, type: 1}
 	requestContext.sessionEpoch = 1
-	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+	requestContext.apiBaseUrl = 'https://identity-a.example/api/v2/'
 	URL.createObjectURL = vi.fn(blob => (blob as Blob & {testUrl?: string}).testUrl ?? 'blob:real-attachment')
 	queryClient.removeQueries({queryKey: attachmentKeys.blobs})
 	getBlobUrl.mockReset()
+	getPreview.mockReset()
 	window.URL.revokeObjectURL = vi.fn()
 })
 
@@ -171,9 +181,9 @@ describe('fetchAttachmentBlob', () => {
 		expect(getBlobUrl).toHaveBeenCalledTimes(2)
 	})
 
-	it('caches every preview size separately', async () => {
+	it('requests previews from the preview route and caches every size separately', async () => {
 		getBlobUrl.mockResolvedValueOnce({data: new Blob(['original'])})
-			.mockResolvedValueOnce({data: new Blob(['md'])})
+		getPreview.mockResolvedValueOnce({data: new Blob(['md'])})
 			.mockResolvedValueOnce({data: new Blob(['lg'])})
 
 		expect(await (await fetchAttachmentBlob(attachment)).text()).toBe('original')
@@ -181,7 +191,17 @@ describe('fetchAttachmentBlob', () => {
 		expect(await (await fetchAttachmentBlob(attachment, 'lg')).text()).toBe('lg')
 		expect(await (await fetchAttachmentBlob(attachment, 'md')).text()).toBe('md')
 
-		expect(getBlobUrl).toHaveBeenCalledTimes(3)
+		expect(getBlobUrl).toHaveBeenCalledOnce()
+		expect(getBlobUrl).toHaveBeenCalledWith(expect.not.objectContaining({query: expect.anything()}))
+		expect(getPreview).toHaveBeenCalledTimes(2)
+		expect(getPreview).toHaveBeenNthCalledWith(1, expect.objectContaining({
+			path: {
+				task: 5,
+				attachment: 9,
+			},
+			query: {size: 'md'},
+		}))
+		expect(getPreview).toHaveBeenNthCalledWith(2, expect.objectContaining({query: {size: 'lg'}}))
 	})
 
 	it('caches every attachment separately', async () => {
@@ -217,5 +237,12 @@ describe('releaseAttachmentUrl', () => {
 		releaseAttachmentUrl(undefined)
 
 		expect(window.URL.revokeObjectURL).not.toHaveBeenCalled()
+	})
+})
+
+describe('generateAttachmentUrl', () => {
+	it('points at the attachment under the configured API base', () => {
+		requestContext.apiBaseUrl = 'https://x/prefix/api/v2'
+		expect(generateAttachmentUrl(5, 9)).toBe('https://x/prefix/api/v2/tasks/5/attachments/9')
 	})
 })

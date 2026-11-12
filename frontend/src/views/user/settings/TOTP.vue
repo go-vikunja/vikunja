@@ -1,16 +1,23 @@
 <template>
 	<Card
-		v-if="totpEnabled && isLocalUser"
+		v-if="configStore.totp_enabled && isLocalUser"
 		:title="$t('user.settings.totp.title')"
 	>
-		<XButton
-			v-if="!totp.enabled && totp.secret === ''"
-			:loading="totpService.loading"
-			@click="totpEnroll()"
-		>
-			{{ $t('user.settings.totp.enroll') }}
-		</XButton>
-		<template v-else-if="totp.secret !== '' && !totp.enabled">
+		<template v-if="status.isSuccess.value && !totp.enabled && !totp.secret">
+			<ReauthFields
+				v-model:password="totpPassword"
+				password-id="totpEnrollPassword"
+				:password-label="$t('user.settings.totp.enterPassword')"
+				@submit="totpEnroll"
+			/>
+			<XButton
+				:loading="enrollMutation.isPending.value"
+				@click="totpEnroll"
+			>
+				{{ $t('user.settings.totp.enroll') }}
+			</XButton>
+		</template>
+		<template v-else-if="isEnrolling">
 			<p>
 				{{ $t('user.settings.totp.finishSetupPart1') }}
 				<strong>{{ totp.secret }}</strong><br>
@@ -26,17 +33,19 @@
 			<p>
 				{{ $t('user.settings.totp.confirmNotice') }}
 			</p>
-			<FormField
-				id="totpConfirmPasscode"
-				v-model="totpConfirmPasscode"
-				:label="$t('user.settings.totp.passcode')"
-				autocomplete="one-time-code"
-				:placeholder="$t('user.settings.totp.passcodePlaceholder')"
-				type="text"
-				inputmode="numeric"
-				@keyup.enter="totpConfirm"
+			<ReauthFields
+				v-model:password="totpPassword"
+				v-model:passcode="totpConfirmPasscode"
+				password-id="totpConfirmPassword"
+				passcode-id="totpConfirmPasscode"
+				:password-label="$t('user.settings.totp.enterPassword')"
+				show-passcode
+				@submit="totpConfirm"
 			/>
-			<XButton @click="totpConfirm">
+			<XButton
+				:loading="enableMutation.isPending.value"
+				@click="totpConfirm"
+			>
 				{{ $t('misc.confirm') }}
 			</XButton>
 		</template>
@@ -53,17 +62,19 @@
 				</XButton>
 			</p>
 			<div v-if="totpDisableForm">
-				<FormField
-					id="currentPassword"
-					v-model="totpDisablePassword"
-					v-focus
-					:label="$t('user.settings.totp.enterPassword')"
-					:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-					type="password"
-					@keyup.enter="totpDisable"
+				<ReauthFields
+					v-model:password="totpDisablePassword"
+					v-model:passcode="totpDisablePasscode"
+					password-id="currentPassword"
+					passcode-id="totpDisablePasscode"
+					:password-label="$t('user.settings.totp.enterPassword')"
+					show-passcode
+					focus
+					@submit="totpDisable"
 				/>
 				<XButton
 					danger
+					:loading="disableMutation.isPending.value"
 					@click="totpDisable"
 				>
 					{{ $t('user.settings.totp.disable') }}
@@ -71,7 +82,7 @@
 				<XButton
 					variant="tertiary"
 					class="mis-2"
-					@click="totpDisableForm = false"
+					@click="closeDisableForm()"
 				>
 					{{ $t('misc.cancel') }}
 				</XButton>
@@ -82,80 +93,84 @@
 
 
 <script lang="ts" setup>
-import {computed, ref, shallowReactive} from 'vue'
+import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import TotpService from '@/services/totp'
-import TotpModel from '@/models/totp'
-import FormField from '@/components/input/FormField.vue'
-
-import {success} from '@/message'
+import {useQuery} from '@tanstack/vue-query'
+import {useObjectUrl} from '@vueuse/core'
+import {
+	totpQuery,
+	totpQrQuery,
+	useEnrollTotpMutation,
+	useEnableTotpMutation,
+	useDisableTotpMutation,
+} from '@/client/queries/totp'
+import ReauthFields from '@/components/user/ReauthFields.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
-import type {ITotp} from '@/modelTypes/ITotp'
 
 defineOptions({name: 'UserSettingsTotp'})
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.totp.title')} - ${t('user.settings.title')}`)
 
-const totpService = shallowReactive(new TotpService())
-const totp = ref<ITotp>(new TotpModel())
-const totpQR = ref('')
 const totpConfirmPasscode = ref('')
+const totpPassword = ref('')
 const totpDisableForm = ref(false)
 const totpDisablePassword = ref('')
+const totpDisablePasscode = ref('')
 
 const configStore = useConfigStore()
 const authStore = useAuthStore()
-const totpEnabled = computed(() => configStore.totpEnabled)
-const isLocalUser = computed(() => authStore.info?.isLocalUser)
+const isLocalUser = computed(() => authStore.info?.is_local_user)
 
-totpStatus()
+const status = useQuery(computed(() => ({
+	...totpQuery(),
+	enabled: Boolean(configStore.totp_enabled && isLocalUser.value),
+})))
+const totp = computed(() => status.data.value ?? {})
+const isEnrolling = computed(() => Boolean(totp.value.secret) && !totp.value.enabled)
+const qr = useQuery(computed(() => ({...totpQrQuery(), enabled: isEnrolling.value})))
+const totpQR = useObjectUrl(computed(() => isEnrolling.value ? qr.data.value : undefined))
+const enrollMutation = useEnrollTotpMutation()
+const enableMutation = useEnableTotpMutation()
+const disableMutation = useDisableTotpMutation()
 
-async function totpStatus() {
-	if (!totpEnabled.value || !isLocalUser.value) {
-		return
-	}
-	try {
-		totp.value = await totpService.get({})
-		// Enabled responses omit the secret, so only request a QR code during enrollment.
-		if (!totp.value.enabled) {
-			totpSetQrCode()
-		}
-	} catch(e: unknown) {
-		// Error code 1016 means totp is not enabled, we don't need an error in that case.
-		const err = e as {response?: {data?: {code?: number}}}
-		if (err.response?.data?.code === 1016) {
-			totp.value = new TotpModel()
-			return
-		}
-
-		throw e
-	}
-}
-
-async function totpSetQrCode() {
-	const qr = await totpService.qrcode()
-	totpQR.value = window.URL.createObjectURL(qr)
-}
-
-async function totpEnroll() {
-	totp.value = await totpService.enroll()
-	totpSetQrCode()
+function totpEnroll() {
+	if (enrollMutation.isPending.value) return
+	enrollMutation.mutate(totpPassword.value)
 }
 
 async function totpConfirm() {
-	await totpService.enable({passcode: totpConfirmPasscode.value})
-	success({message: t('user.settings.totp.confirmSuccess')})
-	await authStore.logout()
+	if (enableMutation.isPending.value) return
+	try {
+		await enableMutation.mutateAsync({
+			passcode: totpConfirmPasscode.value,
+			password: totpPassword.value,
+		})
+		totpPassword.value = ''
+		await authStore.logout()
+	} catch { return }
+}
+
+function closeDisableForm() {
+	totpDisableForm.value = false
+	totpDisablePassword.value = ''
+	totpDisablePasscode.value = ''
 }
 
 async function totpDisable() {
-	await totpService.disable({password: totpDisablePassword.value})
-	totp.value = new TotpModel()
-	success({message: t('user.settings.totp.disableSuccess')})
+	if (disableMutation.isPending.value) return
+	try {
+		await disableMutation.mutateAsync({
+			password: totpDisablePassword.value,
+			totp_passcode: totpDisablePasscode.value,
+		})
+	} catch {
+		return
+	}
+	closeDisableForm()
 }
 </script>

@@ -28,7 +28,7 @@ const props = defineProps<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const tooltip = computed(() => t('task.attributes.comment', props.task.comment_count))
+const tooltip = computed(() => t('task.attributes.comment', props.task.comment_count ?? 0))
 </script>
 
 <style scoped lang="scss">

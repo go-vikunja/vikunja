@@ -1,11 +1,7 @@
 import type {App} from 'vue'
 import type {Router} from 'vue-router'
-import {shouldDropEvent, stripNavigationFragment} from './helpers/sentryFilters'
+import {isReportableResourceUrl, redactSensitiveParams, shouldDropEvent, stripNavigationFragment} from './helpers/sentryFilters'
 import {VERSION} from './version.json'
-
-function withoutFragment(url: string) {
-	return url.split('#')[0]
-}
 
 export default async function setupSentry(app: App, router: Router) {
 	const Sentry = await import('@sentry/vue')
@@ -14,6 +10,8 @@ export default async function setupSentry(app: App, router: Router) {
 		app,
 		dsn: window.SENTRY_DSN ?? '',
 		release: `vikunja-frontend@${VERSION}`,
+		// Props of login and password forms hold plaintext credentials.
+		attachProps: false,
 
 		// cache offline errors
 		transport: Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
@@ -28,7 +26,7 @@ export default async function setupSentry(app: App, router: Router) {
 					if (event.type === 5 && event.data.tag === 'performanceSpan') {
 						event.data.payload = stripNavigationFragment(event.data.payload)
 					}
-					return event
+					return redactSensitiveParams(event)
 				},
 			}),
 		],
@@ -61,7 +59,7 @@ export default async function setupSentry(app: App, router: Router) {
 		],
 
 
-		beforeSendSpan: stripNavigationFragment,
+		beforeSendSpan: span => redactSensitiveParams(stripNavigationFragment(span)),
 		beforeSend(event, hint) {
 			if (shouldDropEvent(hint.originalException, event)) {
 				return null
@@ -71,6 +69,9 @@ export default async function setupSentry(app: App, router: Router) {
 		},
 	})
 
+	// Unlike beforeSend, this also runs for transactions and replay events.
+	Sentry.addEventProcessor(event => redactSensitiveParams(event))
+
 	// from https://docs.sentry.io/platforms/javascript/guides/vue/troubleshooting/
 	// under "Capturing resource 404s"
 	document.body.addEventListener(
@@ -79,8 +80,7 @@ export default async function setupSentry(app: App, router: Router) {
 			const target = event.target
 
 			if (target instanceof HTMLImageElement) {
-				// An empty, blank or fragment-only src resolves to the page itself, which is never an image.
-				if (!target.src || withoutFragment(target.src) === withoutFragment(document.URL)) return
+				if (!isReportableResourceUrl(target.src, document.URL)) return
 				// Users can put any src into their descriptions and comments, a broken one is not our bug.
 				if (target.closest('[data-user-content]')) return
 
@@ -89,6 +89,8 @@ export default async function setupSentry(app: App, router: Router) {
 					'warning',
 				)
 			} else if (target instanceof HTMLLinkElement) {
+				if (!isReportableResourceUrl(target.href, document.URL)) return
+
 				Sentry.captureMessage(
 					`Failed to load css: ${target.href}`,
 					'warning',

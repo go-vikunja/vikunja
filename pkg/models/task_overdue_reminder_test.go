@@ -21,7 +21,9 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
@@ -38,6 +40,28 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		tasks, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
+	})
+	t.Run("skips tasks in trashed projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Table("tasks").Where("id = ?", 53).Update(map[string]any{"due_date": "2018-11-30 00:00:00"})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskAssginee{
+			TaskID: 53,
+			UserID: 1,
+		})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
+		require.NoError(t, err)
+		uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+		require.NoError(t, err)
+		for _, ut := range uts {
+			assert.NotContains(t, ut.followed, int64(53))
+			assert.NotContains(t, ut.assigned, int64(53))
+		}
 	})
 	t.Run("undone overdue", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -89,6 +113,58 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		tasks, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
+	})
+	t.Run("unparseable reminder time does not fail for other users", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(2).Cols("overdue_tasks_reminders_time").Update(&user.User{
+			OverdueTasksRemindersTime: "xx:yy",
+		})
+		require.NoError(t, err)
+
+		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
+		require.NoError(t, err)
+
+		uts, err := getUndoneOverdueTasks(s, now, nil)
+		require.NoError(t, err)
+		require.Contains(t, uts, int64(1))
+	})
+	t.Run("user timezone local date differs from service date", func(t *testing.T) {
+		cases := []struct {
+			name          string
+			timezone      string
+			remindersTime string
+			now           string
+		}{
+			// 09:00 on Dec 2 in Sydney, still Dec 1 in UTC
+			{"ahead of service timezone", "Australia/Sydney", "09:00", "2018-12-01T22:00:00Z"},
+			// 23:00 on Dec 1 in New York, already Dec 2 in UTC
+			{"behind service timezone", "America/New_York", "23:00", "2018-12-02T04:00:00Z"},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+
+				_, err := s.ID(1).Cols("timezone", "overdue_tasks_reminders_time").Update(&user.User{
+					Timezone:                  tc.timezone,
+					OverdueTasksRemindersTime: tc.remindersTime,
+				})
+				require.NoError(t, err)
+
+				now, err := time.Parse(time.RFC3339, tc.now)
+				require.NoError(t, err)
+
+				uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+				require.NoError(t, err)
+				require.Contains(t, uts, int64(1))
+				assert.Contains(t, uts[1].followed, int64(5))
+				assert.Contains(t, uts[1].followed, int64(6))
+			})
+		}
 	})
 }
 
@@ -463,4 +539,91 @@ func TestOverdueTaskNotificationsIncludeSubscribers(t *testing.T) {
 
 		assert.False(t, hasSubscriber, "subscriber without project access should not receive notification")
 	})
+}
+
+func TestOverdueEventsWithListeners(t *testing.T) {
+	t.Run("no webhook subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		single, batch, err := overdueEventsWithListeners(s)
+		require.NoError(t, err)
+		assert.False(t, single)
+		assert.False(t, batch)
+	})
+	t.Run("batch event subscribed", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&Webhook{
+			TargetURL:   "https://example.com/overdue",
+			Events:      []string{"task.updated", (&TasksOverdueEvent{}).Name()},
+			UserID:      1,
+			CreatedByID: 1,
+		})
+		require.NoError(t, err)
+
+		single, batch, err := overdueEventsWithListeners(s)
+		require.NoError(t, err)
+		assert.False(t, single)
+		assert.True(t, batch)
+	})
+}
+
+type testOverdueListener struct{}
+
+func (*testOverdueListener) Handle(*message.Message) error { return nil }
+func (*testOverdueListener) Name() string                  { return "testOverdueListener" }
+
+func TestHasNonWebhookListener(t *testing.T) {
+	// Unique names: the listener registry is global and has no unregister.
+	t.Run("webhook listener only", func(t *testing.T) {
+		name := "test.overdue.webhook-only"
+		events.RegisterListener(name, &WebhookListener{EventName: name})
+		assert.False(t, hasNonWebhookListener(name))
+	})
+	t.Run("plugin listener", func(t *testing.T) {
+		name := "test.overdue.plugin"
+		events.RegisterListener(name, &WebhookListener{EventName: name})
+		events.RegisterListener(name, &testOverdueListener{})
+		assert.True(t, hasNonWebhookListener(name))
+	})
+}
+
+func TestSendOverdueRemindersScopesProjectsPerUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	events.ClearDispatchedEvents()
+
+	task1 := &Task{ID: 1, ProjectID: 1}
+	task32 := &Task{ID: 32, ProjectID: 3}
+	uts := map[int64]*userWithTasks{
+		1: {user: &user.User{ID: 1}, assigned: map[int64]*Task{}, followed: map[int64]*Task{1: task1}},
+		3: {user: &user.User{ID: 3}, assigned: map[int64]*Task{}, followed: map[int64]*Task{32: task32}},
+	}
+
+	for _, ut := range uts {
+		require.NoError(t, dispatchOverdueReminders(s, ut, false, true))
+	}
+	require.NoError(t, s.Commit())
+	events.DispatchPending(t.Context(), s)
+
+	dispatched := events.GetDispatchedEvents((&TasksOverdueEvent{}).Name())
+	require.Len(t, dispatched, 2)
+	for _, e := range dispatched {
+		ev := e.(*TasksOverdueEvent)
+		switch ev.User.ID {
+		case 1:
+			assert.Len(t, ev.Projects, 1)
+			assert.Contains(t, ev.Projects, int64(1))
+		case 3:
+			assert.Len(t, ev.Projects, 1)
+			assert.Contains(t, ev.Projects, int64(3))
+		default:
+			t.Fatalf("unexpected user %d", ev.User.ID)
+		}
+	}
 }

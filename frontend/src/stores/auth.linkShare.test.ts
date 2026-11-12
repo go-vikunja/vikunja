@@ -1,13 +1,21 @@
+vi.mock('@/client/generated', () => ({
+	authLinkShare: sdk.authLinkShare,
+	tokenRenew: sdk.tokenRenew,
+}))
 import {createPinia, setActivePinia} from 'pinia'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 
 import {queryClient} from '@/client/queryClient'
 import {labelKeys} from '@/client/queries/labels'
-import {AUTH_TYPES, type AuthType} from '@/modelTypes/IUser'
+import {AUTH_TYPES, type AuthType} from '@/constants/auth'
 
 const auth = vi.hoisted(() => ({
 	token: null as string | null,
-	post: vi.fn(),
+}))
+
+const sdk = vi.hoisted(() => ({
+	authLinkShare: vi.fn(),
+	tokenRenew: vi.fn(),
 }))
 
 vi.mock('@/helpers/auth', () => ({
@@ -20,23 +28,6 @@ vi.mock('@/helpers/auth', () => ({
 		auth.token = token
 	}),
 }))
-
-vi.mock('@/helpers/fetcher', () => ({
-	AuthenticatedHTTPFactory: () => fakeHttp(),
-	HTTPFactory: () => fakeHttp(),
-}))
-
-function fakeHttp() {
-	return {
-		post: auth.post,
-		get: vi.fn(),
-		request: vi.fn(),
-		interceptors: {
-			request: {use: vi.fn()},
-			response: {use: vi.fn()},
-		},
-	}
-}
 
 vi.mock('@/router', () => ({
 	default: {push: vi.fn()},
@@ -71,17 +62,22 @@ describe('link share auth query lifecycle', () => {
 		setActivePinia(createPinia())
 		queryClient.clear()
 		auth.token = jwt(AUTH_TYPES.USER, 1)
-		auth.post.mockReset()
+		sdk.authLinkShare.mockReset()
+		sdk.tokenRenew.mockReset()
 	})
 
 	it('removes the previous user query cache when entering a link share', async () => {
 		const store = useAuthStore()
 		store.setAuthenticated(true)
-		store.setUser({id: 1, type: AUTH_TYPES.USER} as never, false)
+		store.setSession({
+			id: 1,
+			type: AUTH_TYPES.USER,
+			exp: 0,
+		})
 		queryClient.setQueryData(labelKeys.all, [{id: 1, title: 'private'}])
 		queryClient.setQueryData(['projects'], [{id: 1, title: 'private'}])
 		const linkToken = jwt(AUTH_TYPES.LINK_SHARE, 2)
-		auth.post.mockResolvedValue({data: {token: linkToken, project_id: 42}})
+		sdk.authLinkShare.mockResolvedValue({data: {token: linkToken, project_id: 42}})
 
 		await store.linkShareAuth({hash: 'share', password: 'secret'})
 
@@ -92,10 +88,10 @@ describe('link share auth query lifecycle', () => {
 	it('keeps the link share label cache during token renewal', async () => {
 		const store = useAuthStore()
 		const linkToken = jwt(AUTH_TYPES.LINK_SHARE, 2)
-		auth.post.mockResolvedValueOnce({data: {token: linkToken, project_id: 42}})
+		sdk.authLinkShare.mockResolvedValueOnce({data: {token: linkToken, project_id: 42}})
 		await store.linkShareAuth({hash: 'share', password: 'secret'})
 		queryClient.setQueryData(labelKeys.all, [{id: 2, title: 'shared'}])
-		auth.post.mockResolvedValueOnce({data: {token: jwt(AUTH_TYPES.LINK_SHARE, 2)}})
+		sdk.tokenRenew.mockResolvedValueOnce({data: {token: jwt(AUTH_TYPES.LINK_SHARE, 2)}})
 
 		await store.renewToken()
 

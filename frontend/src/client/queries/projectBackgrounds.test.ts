@@ -17,7 +17,7 @@ const sdk = vi.hoisted(() => ({
 const requestContext = vi.hoisted(() => ({
 	identity: {id: 1, type: 1} as {id: number, type: number} | null,
 	sessionEpoch: 1,
-	apiV2BaseUrl: 'https://identity-a.example/api/v2/',
+	apiBaseUrl: 'https://identity-a.example/api/v2/',
 }))
 
 vi.mock('@/client/generated', () => sdk)
@@ -27,8 +27,8 @@ vi.mock('@/helpers/auth', () => ({
 	getToken: () => null,
 	getTokenIdentity: () => requestContext.identity,
 }))
-vi.mock('@/helpers/fetcher', () => ({
-	getApiV2BaseUrl: () => requestContext.apiV2BaseUrl,
+vi.mock('@/helpers/apiUrl', () => ({
+	getApiBaseUrl: () => requestContext.apiBaseUrl,
 }))
 
 import {
@@ -89,7 +89,7 @@ function resetMocks() {
 	vi.mocked(error).mockReset()
 	requestContext.identity = {id: 1, type: 1}
 	requestContext.sessionEpoch = 1
-	requestContext.apiV2BaseUrl = 'https://identity-a.example/api/v2/'
+	requestContext.apiBaseUrl = 'https://identity-a.example/api/v2/'
 }
 
 describe('project background queries', () => {
@@ -100,9 +100,9 @@ describe('project background queries', () => {
 		sdk.backgroundsUnsplashThumb.mockResolvedValue({data: 'not an image'})
 
 		await expect(queryClient.fetchQuery({...projectBackgroundQuery(7), retry: false}))
-			.rejects.toThrowError('Background response was not an image')
+			.rejects.toThrowError('Background response was not a blob')
 		await expect(queryClient.fetchQuery({...unsplashBackgroundThumbnailQuery('image-1'), retry: false}))
-			.rejects.toThrowError('Background response was not an image')
+			.rejects.toThrowError('Background response was not a blob')
 	})
 
 	it('returns raw Unsplash search pages and paginates while pages are not empty', async () => {

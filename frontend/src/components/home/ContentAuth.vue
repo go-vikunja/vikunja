@@ -18,7 +18,7 @@
 				class="app-container-background background-fade-in d-print-none"
 				:style="{
 					'background-image': background && `url(${background})`,
-					'filter': backgroundBrightness && `brightness(${backgroundBrightness}%)`
+					'filter': backgroundBrightness ? `brightness(${backgroundBrightness}%)` : undefined
 				}"
 			/>
 			<Navigation class="d-print-none" />
@@ -30,7 +30,7 @@
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
 				]"
-				:style="{'--sidebar-width': sidebarWidth}"
+				:style="{'--sidebar-width': sidebarWidthStyle}"
 			>
 				<BaseButton
 					v-show="menuActive"
@@ -96,10 +96,10 @@ import {useAuthStore} from '@/stores/auth'
 
 const authStore = useAuthStore()
 const backgroundBrightness = computed(() =>
-	authStore.settings?.frontendSettings?.backgroundBrightness,
+	authStore.settings?.frontend_settings?.background_brightness,
 )
 
-const {sidebarWidth} = useSidebarResize()
+const {sidebarWidthStyle} = useSidebarResize()
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 
@@ -128,7 +128,6 @@ watch(() => route.name as string, (routeName) => {
 				'tasks.range',
 				'labels.index',
 				'migrate.start',
-				'migrate.wunderlist',
 				'projects.index',
 			].includes(routeName) ||
 			routeName.startsWith('user.settings')
@@ -252,7 +251,7 @@ onBeforeUnmount(() => {
 
 .keyboard-shortcuts-button {
 	position: fixed;
-	inset-block-end: calc(1rem - 4px);
+	inset-block-end: calc(var(--bottom-banners-end-height, 0px) + 1rem - 4px);
 	inset-inline-end: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
 	color: var(--grey-500);

@@ -12,11 +12,11 @@ vi.mock('@/client/queries/projects', async importOriginal => ({
 }))
 
 vi.mock('@/stores/auth', () => ({
-	useAuthStore: () => ({settings: {defaultProjectId: 0}}),
+	useAuthStore: () => ({settings: {default_project_id: 0}}),
 }))
 
 vi.mock('@/stores/config', () => ({
-	useConfigStore: () => ({enabledBackgroundProviders: []}),
+	useConfigStore: () => ({enabled_background_providers: []}),
 }))
 
 const DropdownStub = defineComponent({

@@ -1,3 +1,4 @@
+import {useUpdateFrontendSettingsMutation} from '@/client/queries/account'
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {useAuthStore} from '@/stores/auth'
 
@@ -25,7 +26,7 @@ function setupWatcher(authStore: ReturnType<typeof useAuthStore>) {
 	watcherInitialized = true
 
 	watch(
-		() => authStore.settings?.frontendSettings?.sidebarWidth,
+		() => authStore.settings?.frontend_settings?.sidebar_width,
 		(newWidth) => {
 			if (isResizing.value) return
 
@@ -40,6 +41,7 @@ function setupWatcher(authStore: ReturnType<typeof useAuthStore>) {
 
 export function useSidebarResize() {
 	const authStore = useAuthStore()
+	const updateFrontendSettings = useUpdateFrontendSettingsMutation()
 	const isMobile = useIsMobile()
 
 	// Initialize width from settings only once
@@ -47,7 +49,7 @@ export function useSidebarResize() {
 		if (initialized) return
 		initialized = true
 
-		const savedWidth = authStore.settings?.frontendSettings?.sidebarWidth
+		const savedWidth = authStore.settings?.frontend_settings?.sidebar_width
 		if (savedWidth !== null && savedWidth !== undefined) {
 			currentWidth.value = clampWidth(savedWidth)
 		}
@@ -56,7 +58,7 @@ export function useSidebarResize() {
 	// Register settings watcher only once
 	setupWatcher(authStore)
 
-	const sidebarWidth = computed(() => {
+	const sidebarWidthStyle = computed(() => {
 		if (isMobile.value) {
 			return '70vw'
 		}
@@ -124,29 +126,26 @@ export function useSidebarResize() {
 	}
 
 	async function saveWidth() {
-		const savedWidth = authStore.settings?.frontendSettings?.sidebarWidth
+		const savedWidth = authStore.settings?.frontend_settings?.sidebar_width
 		// Only save if width actually changed
 		if (savedWidth === currentWidth.value) return
 
-		const newSettings = {
-			...authStore.settings,
-			frontendSettings: {
-				...authStore.settings.frontendSettings,
-				sidebarWidth: currentWidth.value,
-				quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
-			},
-		}
-		await authStore.saveUserSettings({
-			settings: newSettings,
-			showMessage: false,
-		})
+		const session = authStore.session
+		if (!session) return
+		try {
+			await updateFrontendSettings.mutateAsync({
+				id: session.id,
+				type: session.type,
+				frontendSettings: {sidebar_width: currentWidth.value},
+			})
+		} catch { return }
 	}
 
 	// Cleanup on unmount
 	onUnmounted(stopResize)
 
 	return {
-		sidebarWidth,
+		sidebarWidthStyle,
 		currentWidth,
 		isResizing,
 		startResize,

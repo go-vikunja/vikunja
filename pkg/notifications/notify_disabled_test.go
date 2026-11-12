@@ -28,10 +28,12 @@ import (
 
 type disabledMailNotifiable struct{}
 
-func (d *disabledMailNotifiable) RouteForMail() (string, error)                 { return "test@example.com", nil }
-func (d *disabledMailNotifiable) RouteForDB() int64                             { return 1 }
-func (d *disabledMailNotifiable) ShouldNotify(_ ...*xorm.Session) (bool, error) { return true, nil }
-func (d *disabledMailNotifiable) Lang() string                                  { return "en" }
+func (d *disabledMailNotifiable) RouteForMail() (string, error) { return "test@example.com", nil }
+func (d *disabledMailNotifiable) RouteForDB() int64             { return 1 }
+func (d *disabledMailNotifiable) ShouldNotify(_ Notification, _ ...*xorm.Session) (bool, error) {
+	return true, nil
+}
+func (d *disabledMailNotifiable) Lang() string { return "en" }
 
 type disabledMailNotification struct{}
 

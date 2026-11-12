@@ -27,7 +27,7 @@ function expectStaleContext(context: ReturnType<typeof captureClientRequestConte
 describe('client request context', () => {
 	beforeEach(() => {
 		removeToken()
-		window.API_URL = 'https://identity-a.example/api/v1/'
+		window.API_URL = 'https://identity-a.example'
 		saveToken(token(1), false)
 	})
 
@@ -58,9 +58,17 @@ describe('client request context', () => {
 	it('rejects a different API URL', () => {
 		const context = captureClientRequestContext()
 
-		window.API_URL = 'https://identity-b.example/api/v1/'
+		window.API_URL = 'https://identity-b.example'
 
 		expectStaleContext(context)
+	})
+
+	it('treats a legacy suffixed URL for the same server as the same API', () => {
+		const context = captureClientRequestContext()
+
+		window.API_URL = 'https://identity-a.example/api/v1/'
+
+		expect(isClientRequestContextCurrent(context)).toBe(true)
 	})
 
 	it('recognizes its own abort and nothing else', () => {

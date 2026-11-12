@@ -115,6 +115,39 @@ func TestSavedFilter_ReadOne(t *testing.T) {
 	assert.NotNil(t, sf.Owner)
 }
 
+func TestSavedFilter_getSavedFiltersForUser(t *testing.T) {
+	t.Run("search is case-insensitive", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		filters, err := getSavedFiltersForUser(s, &user.User{ID: 1}, "TESTFILTER1")
+		require.NoError(t, err)
+		require.Len(t, filters, 1)
+		assert.Equal(t, int64(1), filters[0].ID)
+	})
+	t.Run("search ignores accents with unaccent", func(t *testing.T) {
+		if db.Type() != schemas.POSTGRES {
+			t.Skip("accent folding depends on the collation outside postgres")
+		}
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(1).Cols("title").Update(&SavedFilter{Title: "Manutenção"})
+		require.NoError(t, err)
+
+		filters, err := getSavedFiltersForUser(s, &user.User{ID: 1}, "manutencao")
+		require.NoError(t, err)
+		if !db.UnaccentAvailable() {
+			assert.Empty(t, filters)
+			return
+		}
+		require.Len(t, filters, 1)
+		assert.Equal(t, int64(1), filters[0].ID)
+	})
+}
+
 func TestSavedFilter_Update(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -391,4 +424,47 @@ func TestSavedFilter_Permissions(t *testing.T) {
 			assert.False(t, can)
 		})
 	})
+}
+
+// GHSA-fprf-r6rv-xg99
+func TestSavedFilter_ZeroProjectUserGetsNoTaskPositions(t *testing.T) {
+	for _, filter := range []string{"", "done = false"} {
+		t.Run("filter "+filter, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			u := &user.User{Username: "no-projects", Email: "no-projects@example.com", Status: user.StatusActive}
+			_, err := s.Insert(u)
+			require.NoError(t, err)
+
+			sf := &SavedFilter{Title: "test", Filters: &TaskCollection{Filter: filter}}
+			require.NoError(t, sf.Create(s, u))
+
+			projectID := getProjectIDFromSavedFilterID(sf.ID)
+			viewIDs := func() []int64 {
+				var ids []int64
+				require.NoError(t, s.Table("project_views").Where("project_id = ?", projectID).Cols("id").Find(&ids))
+				return ids
+			}
+			positions := func() int64 {
+				count, err := s.In("project_view_id", viewIDs()).Count(&TaskPosition{})
+				require.NoError(t, err)
+				return count
+			}
+			assert.Zero(t, positions())
+
+			view := &ProjectView{ProjectID: projectID, Title: "extra", ViewKind: ProjectViewKindList}
+			require.NoError(t, view.Create(s, u))
+			assert.Zero(t, positions())
+		})
+	}
+}
+
+func TestStaleFilterTaskIDs(t *testing.T) {
+	saved := map[int64]*TaskBucket{1: {TaskID: 1}, 2: {TaskID: 2}, 3: {TaskID: 3}}
+	matching := taskIDSet([]*Task{{ID: 2}, {ID: 4}})
+
+	assert.ElementsMatch(t, []int64{1, 3}, staleFilterTaskIDs(saved, matching))
+	assert.Empty(t, staleFilterTaskIDs(saved, taskIDSet([]*Task{{ID: 1}, {ID: 2}, {ID: 3}})))
 }

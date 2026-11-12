@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {roundToNaturalDayBoundary} from './roundToNaturalDayBoundary'
+import {getNaturalDayCount, roundToNaturalDayBoundary} from './roundToNaturalDayBoundary'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 
 describe('roundToNaturalDayBoundary', () => {
@@ -26,5 +26,22 @@ describe('roundToNaturalDayBoundary', () => {
 				MILLISECONDS_A_DAY,
 		)
 		expect(diff).toBe(1)
+	})
+
+	it('gives same-day tasks ending before noon a width of one day', () => {
+		const start = new Date('2024-01-01T08:00:00')
+		const end = new Date('2024-01-01T10:00:00')
+		expect(getNaturalDayCount(start, end)).toBe(1)
+	})
+
+	it('gives tasks with identical start and end at midnight a width of one day', () => {
+		const date = new Date('2024-01-01T00:00:00')
+		expect(getNaturalDayCount(date, date)).toBe(1)
+	})
+
+	it('still counts multi-day spans', () => {
+		const start = new Date('2024-01-01T08:00:00')
+		expect(getNaturalDayCount(start, new Date('2024-01-03T18:00:00'))).toBe(3)
+		expect(getNaturalDayCount(start, new Date('2024-01-03T10:00:00'))).toBe(2)
 	})
 })

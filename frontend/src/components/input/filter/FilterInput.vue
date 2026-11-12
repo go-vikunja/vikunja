@@ -100,9 +100,7 @@ const editor = useEditor({
 		},
 	},
 	extensions: [
-		StarterKit.configure({
-			history: false, // We'll handle history ourselves
-		}),
+		StarterKit,
 		Placeholder.configure({
 			placeholder: t('filters.query.placeholder'),
 		}),
@@ -315,7 +313,12 @@ defineExpose({
 		outline: none;
 		white-space: pre-wrap;
 		padding: 0 !important;
-		
+
+		// The wrapper's border is the focus indicator
+		&:focus-visible {
+			box-shadow: none;
+		}
+
 		.field {
 			color: var(--code-literal);
 		}

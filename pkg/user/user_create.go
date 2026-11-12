@@ -76,6 +76,9 @@ func CreateUser(s *xorm.Session, user *User, options ...CreateUserOptions) (newU
 	user.DefaultProjectID = config.DefaultSettingsDefaultProjectID.GetInt64()
 	user.WeekStart = config.DefaultSettingsWeekStart.GetInt()
 	user.Timezone = config.DefaultSettingsTimezone.GetString()
+	if user.Timezone == "" {
+		user.Timezone = config.GetTimeZone().String()
+	}
 
 	if user.Language == "" {
 		user.Language = config.DefaultSettingsLanguage.GetString()
@@ -157,12 +160,28 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 		return nil, err
 	}
 
-	bot.ID = 0
-	bot.BotOwnerID = owner.ID
-	bot.Status = StatusActive
-	bot.Issuer = IssuerLocal
-	bot.Password = ""
-	bot.Email = ""
+	*bot = User{
+		Username:                  bot.Username,
+		Name:                      bot.Name,
+		BotOwnerID:                owner.ID,
+		Status:                    StatusActive,
+		Issuer:                    IssuerLocal,
+		AvatarProvider:            config.DefaultSettingsAvatarProvider.GetString(),
+		AvatarFileID:              config.DefaultSettingsAvatarFileID.GetInt64(),
+		OverdueTasksRemindersTime: config.DefaultSettingsOverdueTaskRemindersTime.GetString(),
+		WeekStart:                 config.DefaultSettingsWeekStart.GetInt(),
+		Timezone:                  config.DefaultSettingsTimezone.GetString(),
+		Language:                  bot.Language,
+	}
+	if bot.Language == "" {
+		bot.Language = config.DefaultSettingsLanguage.GetString()
+	}
+	if bot.OverdueTasksRemindersTime == "" {
+		bot.OverdueTasksRemindersTime = "09:00"
+	}
+	if bot.Timezone == "" {
+		bot.Timezone = config.GetTimeZone().String()
+	}
 
 	if _, err := s.Insert(bot); err != nil {
 		return nil, err

@@ -31,6 +31,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"xorm.io/builder"
@@ -38,7 +39,6 @@ import (
 	"xorm.io/xorm/names"
 	"xorm.io/xorm/schemas"
 
-	_ "github.com/go-sql-driver/mysql" // Because.
 	_ "github.com/jackc/pgx/v5/stdlib" // Because.
 	_ "github.com/mattn/go-sqlite3"    // Because.
 )
@@ -49,6 +49,8 @@ var (
 	// paradedbInstalled marks whether the paradedb extension is available
 	// and can be used for full text search.
 	paradedbInstalled bool
+	// unaccentAvailable makes ILIKE accent-insensitive on postgres.
+	unaccentAvailable bool
 )
 
 var postgresConnectionCredentials = regexp.MustCompile(`(?i)(postgres(?:ql)?://)[^@\s"]+@`)
@@ -162,9 +164,25 @@ func initMysqlEngine() (engine *xorm.Engine, err error) {
 		host,
 		config.DatabaseDatabase.GetString(),
 		config.DatabaseTLS.GetString())
-	engine, err = xorm.NewEngine("mysql", connStr)
+	// Xorm has no transaction options, so every pooled connection needs this default.
+	engine, err = xorm.NewEngine("mysql", connStr+"&transaction_isolation=%27READ-COMMITTED%27")
 	if err != nil {
 		return
+	}
+	if err = engine.Ping(); err != nil {
+		var mysqlErr *mysql.MySQLError
+		if !errors.As(err, &mysqlErr) || mysqlErr.Number != 1193 {
+			_ = engine.Close()
+			return nil, err
+		}
+		if err = engine.Close(); err != nil {
+			return nil, err
+		}
+		// Older MariaDB releases use the legacy variable name.
+		engine, err = xorm.NewEngine("mysql", connStr+"&tx_isolation=%27READ-COMMITTED%27")
+		if err != nil {
+			return nil, err
+		}
 	}
 	engine.SetMaxOpenConns(config.DatabaseMaxOpenConnections.GetInt())
 	engine.SetMaxIdleConns(config.DatabaseMaxIdleConnections.GetInt())
@@ -219,12 +237,14 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 		dbParam = "&"
 	}
 	host, port := parsePostgreSQLHostPort(dbHost)
+	// PathEscape leaves '@' and ':' alone, which pgx then reads as userinfo delimiters.
+	userInfo := url.UserPassword(dbUser, dbPasswd).String()
 	if host[0] == '/' { // looks like a unix socket
-		connStr = fmt.Sprintf("postgres://%s:%s@:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s&host=%s",
-			url.PathEscape(dbUser), url.PathEscape(dbPasswd), port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, host)
+		connStr = fmt.Sprintf("postgres://%s@:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s&host=%s",
+			userInfo, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert, host)
 	} else {
-		connStr = fmt.Sprintf("postgres://%s:%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
-			url.PathEscape(dbUser), url.PathEscape(dbPasswd), host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
+		connStr = fmt.Sprintf("postgres://%s@%s:%s/%s%ssslmode=%s&sslcert=%s&sslkey=%s&sslrootcert=%s",
+			userInfo, host, port, dbName, dbParam, dbSslMode, dbSslCert, dbSslKey, dbSslRootCert)
 	}
 	// Pin search_path so raw SQL resolves to the same schema as xorm-built statements (#3118).
 	// Quoting preserves case; public stays so extension operators (e.g. ParadeDB's |||) keep resolving.
@@ -265,6 +285,7 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 	}
 
 	checkParadeDB(engine)
+	checkUnaccent(engine)
 	if !paradedbInstalled {
 		return engine, nil
 	}
@@ -293,6 +314,7 @@ func newPostgresEngine(queryExecMode string) (engine *xorm.Engine, err error) {
 		config.DatabaseSslRootCert.GetString(),
 		queryExecMode,
 	)
+	connStr += "&default_transaction_isolation=read%20committed"
 
 	engine, err = xorm.NewEngine("pgx", connStr)
 	if err != nil {
@@ -588,7 +610,7 @@ func WipeEverything() error {
 	return nil
 }
 
-// NewSession creates a new xorm session with an active transaction.
+// NewSession creates an active transaction (READ COMMITTED on MySQL and PostgreSQL).
 // The caller must call s.Commit() on success or s.Rollback() on error.
 // s.Close() will auto-rollback any uncommitted transaction.
 func NewSession() *xorm.Session {
@@ -660,6 +682,23 @@ func checkParadeDB(engine *xorm.Engine) {
 
 	paradedbInstalled = true
 	log.Debug("ParadeDB extension detected, using @@@ search operator")
+}
+
+// checkUnaccent calls unaccent() instead of querying pg_extension so an
+// extension outside the search_path counts as unavailable.
+func checkUnaccent(engine *xorm.Engine) {
+	if engine.Dialect().URI().DBType != schemas.POSTGRES {
+		return
+	}
+
+	var result string
+	if _, err := engine.SQL("SELECT unaccent('a')").Get(&result); err != nil {
+		log.Debugf("unaccent extension not available, search stays accent-sensitive: %v", err)
+		return
+	}
+
+	unaccentAvailable = true
+	log.Info("unaccent extension detected, search is accent-insensitive")
 }
 
 func CreateParadeDBIndexes() error {

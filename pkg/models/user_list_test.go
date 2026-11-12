@@ -162,6 +162,17 @@ func TestListUsers(t *testing.T) {
 			"username": "user7",
 		}, false)
 	})
+	t.Run("username wildcard characters match literally", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		for _, search := range []string{"use_7", "user_", "_ser7", "user\\7"} {
+			all, err := user.ListUsers(s, search, user1, nil)
+			require.NoError(t, err)
+			assert.Empty(t, all, "search %q", search)
+		}
+	})
 	t.Run("discoverable by partial username, email and name when matching fuzzily", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

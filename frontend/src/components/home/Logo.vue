@@ -17,8 +17,8 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const { isDark } = useColorScheme()
 
-const Logo = computed(() => configStore.allowIconChanges
-	&& authStore.settings.frontendSettings.allowIconChanges
+const Logo = computed(() => configStore.allow_icon_changes
+	&& authStore.settings.frontend_settings.allow_icon_changes
 	&& now.value.getMonth() === 5
 	? LogoFullPride
 	: LogoFull)

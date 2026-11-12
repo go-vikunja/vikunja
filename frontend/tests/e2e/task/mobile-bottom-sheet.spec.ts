@@ -27,13 +27,10 @@ async function openDueDateSheet(page: Page) {
 
 	await page.goto(`/tasks/${TASK_ID}`)
 
-	const setDueDateButton = page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'})
-	await expect(setDueDateButton).toBeVisible({timeout: 10000})
+	const datepickerShow = page.locator('.task-view .property-due-date .datepicker .show')
+	await expect(datepickerShow).toBeVisible({timeout: 10000})
 	expect(await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight)).toBe(true)
-	await setDueDateButton.click()
-
-	const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
-	await expect(datepickerShow).toBeVisible()
+	await datepickerShow.click()
 
 	const panel = page.locator('.bottom-sheet__panel')
 	await expect(panel).toBeVisible()
