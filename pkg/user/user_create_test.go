@@ -69,11 +69,7 @@ func TestCreateUserConfirmationDeferred(t *testing.T) {
 			}
 			mailJobsAfter, err := s.Where("queue = ?", "mail").Count(new(jobs.Job))
 			require.NoError(t, err)
-			expectedJobs := mailJobsBefore
-			if !tc.skip {
-				expectedJobs++
-			}
-			require.Equal(t, expectedJobs, mailJobsAfter, "confirmation mail must be stored in the registration transaction")
+			require.Equal(t, mailJobsBefore, mailJobsAfter, "fake mail must not leave claimable jobs")
 			if tc.rollback {
 				require.NoError(t, s.Rollback())
 				events.CleanupPending(s)
@@ -94,7 +90,7 @@ func TestCreateUserConfirmationDeferred(t *testing.T) {
 			if tc.skip || tc.rollback {
 				require.Empty(t, mail.SentMails())
 			} else {
-				require.Len(t, mail.SentMails(), 1, "confirmation must be queued before Commit returns")
+				require.Len(t, mail.SentMails(), 1, "confirmation must be captured when registration commits")
 				sent := mail.LastSent()
 				require.Equal(t, "invite-new@example.com", sent.To)
 				require.Contains(t, sent.Message, tc.welcome)
