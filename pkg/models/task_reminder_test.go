@@ -34,6 +34,50 @@ import (
 	"xorm.io/xorm/schemas"
 )
 
+func TestReminderLargeWindowBatchesExpansionJobs(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	setup := db.NewSession()
+	defer setup.Close()
+	const count = 22000
+	now := time.Date(2026, 11, 12, 20, 5, 0, 0, time.UTC)
+	for start := 0; start < count; start += 250 {
+		tasks := make([]*Task, 0, 250)
+		reminders := make([]*TaskReminder, 0, 250)
+		for i := start; i < start+250 && i < count; i++ {
+			id := int64(100000 + i)
+			tasks = append(tasks, &Task{ID: id, Index: id, Title: "Simultaneous reminder", ProjectID: 1, CreatedByID: 1})
+			reminders = append(reminders, &TaskReminder{TaskID: id, Reminder: now})
+		}
+		_, err := setup.Insert(&tasks)
+		require.NoError(t, err)
+		_, err = setup.Insert(&reminders)
+		require.NoError(t, err)
+	}
+	_, err := setup.Insert(&TaskReminder{TaskID: 100000, Reminder: now})
+	require.NoError(t, err)
+	_, err = setup.Where("entity_type = ? AND entity_id = ?", SubscriptionEntityProject, 1).Delete(&Subscription{})
+	require.NoError(t, err)
+	_, err = setup.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 1, UserID: 1})
+	require.NoError(t, err)
+	require.NoError(t, setup.Commit())
+	s := db.NewSession()
+	defer s.Close()
+	resetReminderJobs(t)
+	require.NoError(t, enqueueTaskReminders(t.Context(), s, cron.Window{From: now.Add(-time.Minute), To: now}))
+	rows := []jobs.Job{}
+	require.NoError(t, s.Where("kind LIKE ?", "reminder.%").Find(&rows))
+	require.Len(t, rows, count)
+	seen := make(map[int64]bool, count)
+	for _, row := range rows {
+		require.Equal(t, "reminder.expand", row.Kind)
+		var payload reminderJob
+		require.NoError(t, json.Unmarshal([]byte(row.Payload), &payload))
+		require.Zero(t, payload.UserID, "recipient discovery belongs to the worker")
+		require.False(t, seen[payload.TaskID])
+		seen[payload.TaskID] = true
+	}
+}
+
 func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 	t.Run("Found Tasks", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -732,12 +776,17 @@ func drainReminderJobs(t *testing.T) {
 	engine, err := db.CreateDBEngine()
 	require.NoError(t, err)
 	if engine.Dialect().URI().DBType == schemas.SQLITE {
-		// Shared-memory SQLite lacks the production WAL/busy-timeout behavior.
+		// Keep the in-memory DB alive when cancellation discards a worker connection.
+		keeper, err := engine.DB().Conn(t.Context())
+		require.NoError(t, err)
 		previousMax := engine.DB().Stats().MaxOpenConnections
-		engine.SetMaxOpenConns(1)
-		defer engine.SetMaxOpenConns(previousMax)
+		engine.SetMaxOpenConns(2) // One keeper and one active connection serialize SQLite writes.
+		defer func() {
+			require.NoError(t, keeper.Close())
+			engine.SetMaxOpenConns(previousMax)
+		}()
 	}
-	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks"} {
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks", "reminder-expansion"} {
 		key := config.Key("jobs.queues." + queue + ".lease")
 		defer key.Set(key.GetDuration())
 		key.Set(5 * time.Second)

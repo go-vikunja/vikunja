@@ -60,37 +60,6 @@ func enqueueReminder(s *xorm.Session, kind, queue string, payload reminderJob) e
 	return jobs.Enqueue(s, jobs.Request{Queue: queue, Kind: kind, Payload: data, UniqueKey: key})
 }
 
-func enqueueTaskReminders(_ context.Context, s *xorm.Session, window cron.Window) error {
-	reminders, err := getTaskRemindersInWindow(s, window, nil)
-	if err != nil {
-		return err
-	}
-	for _, reminder := range reminders {
-		itemErr, txErr := jobs.Isolate(s, func() error {
-			payload := reminderJob{TaskID: reminder.Task.ID, UserID: reminder.User.ID, At: reminder.TaskReminder.Reminder}
-			if reminderMailEnabled() && reminder.User.EmailRemindersEnabled {
-				if err := enqueueReminder(s, "reminder.mail", "bulk-mail", payload); err != nil {
-					return err
-				}
-			}
-			if err := enqueueReminder(s, "reminder.notification", "notifications", payload); err != nil {
-				return err
-			}
-			if config.WebhooksEnabled.GetBool() || hasNonWebhookListener((&TaskReminderFiredEvent{}).Name()) {
-				return enqueueReminder(s, "reminder.webhook", "webhooks", payload)
-			}
-			return nil
-		})
-		if txErr != nil {
-			return txErr
-		}
-		if itemErr != nil {
-			log.Errorf("Enqueue task reminder for task %d/user %d: %v", reminder.Task.ID, reminder.User.ID, itemErr)
-		}
-	}
-	return nil
-}
-
 func enqueueOverdueReminders(_ context.Context, s *xorm.Session, window cron.Window) error {
 	single, batch, err := overdueEventsWithListeners(s)
 	if err != nil {

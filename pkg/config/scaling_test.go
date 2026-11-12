@@ -33,6 +33,9 @@ func TestHorizontalScalingDefaults(t *testing.T) {
 	assert.False(t, Key("service.clustermode").GetBool())
 	assert.False(t, Key("websocket.redis.enabled").GetBool())
 	assert.Equal(t, 16, Key("events.maxconcurrenthandlers").GetInt())
+	assert.True(t, Key("jobs.queues.reminder-expansion.enabled").GetBool())
+	assert.Equal(t, 2, Key("jobs.queues.reminder-expansion.concurrency").GetInt())
+	assert.Equal(t, 5, Key("jobs.queues.reminder-expansion.maxattempts").GetInt())
 	assert.Equal(t, "vikunja", Key("redis.prefix").GetString())
 }
 
@@ -57,6 +60,7 @@ func TestClusterConfiguration(t *testing.T) {
 		{name: "auto tls", change: func() { AutoTLSEnabled.Set(true) }, wantError: "autotls.enabled"},
 		{name: "empty namespace", change: func() { RedisPrefix.Set("") }, wantError: "redis.prefix"},
 		{name: "invalid concurrency", change: func() { EventsMaxConcurrentHandlers.Set(0) }, wantError: "events.maxconcurrenthandlers"},
+		{name: "invalid reminder expansion concurrency", change: func() { Key("jobs.queues.reminder-expansion.concurrency").Set(0) }, wantError: "concurrency"},
 		{name: "zero attempts", change: func() { Key("jobs.queues.mail.maxattempts").Set(0) }, wantError: "maxattempts"},
 		{name: "negative attempts", change: func() { Key("jobs.queues.webhook-delivery.maxattempts").Set(-1) }, wantError: "maxattempts"},
 		{name: "short retry delay", change: func() { Key("jobs.queues.bulk-mail.retryinitialdelay").Set("500ms") }, wantError: "retryinitialdelay"},

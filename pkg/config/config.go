@@ -420,7 +420,7 @@ func initDefaultConfig() {
 	ServiceTrustedProxies.setDefault("")
 	ServiceClusterMode.setDefault(false)
 	JobsEnabled.setDefault(true)
-	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks", "webhook-delivery"} {
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "webhooks", "webhook-delivery", "reminder-expansion"} {
 		Key("jobs.queues." + queue + ".enabled").setDefault(true)
 		Key("jobs.queues." + queue + ".concurrency").setDefault(2)
 		Key("jobs.queues." + queue + ".lease").setDefault("60s")
