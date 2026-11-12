@@ -470,7 +470,7 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 
 func finishLoadedUser(u *User) error {
 	if u.OverdueTasksRemindersTime == "" {
-		u.OverdueTasksRemindersTime = "9:00"
+		u.OverdueTasksRemindersTime = "09:00"
 	}
 
 	if u.Status == StatusDisabled {

@@ -175,7 +175,7 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 		bot.Language = config.DefaultSettingsLanguage.GetString()
 	}
 	if bot.OverdueTasksRemindersTime == "" {
-		bot.OverdueTasksRemindersTime = "9:00"
+		bot.OverdueTasksRemindersTime = "09:00"
 	}
 	if bot.Timezone == "" {
 		bot.Timezone = config.GetTimeZone().String()
