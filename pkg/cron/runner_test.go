@@ -37,6 +37,8 @@ func TestRunnerWindowsAndRollback(t *testing.T) {
 	e, err := db.CreateTestEngine()
 	require.NoError(t, err)
 	require.NoError(t, e.Sync(new(State))) //nolint:forbidigo // Test-only schema.
+	_, err = e.Where("job = ?", t.Name()).Delete(new(State))
+	require.NoError(t, err)
 	r := NewRunner(e)
 	start := time.Date(2026, 11, 12, 8, 0, 0, 0, time.UTC)
 	require.NoError(t, r.Register(t.Name(), start))
@@ -72,6 +74,8 @@ func TestRunnerCatchupAndOverlap(t *testing.T) {
 	e, err := db.CreateTestEngine()
 	require.NoError(t, err)
 	require.NoError(t, e.Sync(new(State))) //nolint:forbidigo // Test-only schema.
+	_, err = e.Where("job = ?", t.Name()).Delete(new(State))
+	require.NoError(t, err)
 	r := NewRunner(e)
 	start := time.Date(2026, 11, 12, 8, 0, 0, 0, time.UTC)
 	require.NoError(t, r.Register(t.Name(), start))
@@ -107,6 +111,8 @@ func TestRunnerPostgresExcludesOtherReplicaAcrossTicks(t *testing.T) {
 		t.Skip("PostgreSQL row-lock test")
 	}
 	require.NoError(t, e.Sync(new(State)))
+	_, err = e.Where("job = ?", t.Name()).Delete(new(State))
+	require.NoError(t, err)
 	first, second := NewRunner(e), NewRunner(e)
 	now := time.Now().UTC().Truncate(time.Minute)
 	require.NoError(t, first.Register(t.Name(), now))
