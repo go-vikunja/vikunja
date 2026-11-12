@@ -1,19 +1,14 @@
 import {Factory} from '../support/factory'
 
-// Local "YYYY-MM-DD HH:MM:SS" (the format the DB fixtures use), not ISO-with-Z.
-// start_time is filtered with datemath day windows that resolve to local time,
-// and the comparison is lexical — a UTC-stamped value falls outside "today"
-// near midnight.
-function sqlDateTime(d: Date): string {
-	const pad = (n: number) => String(n).padStart(2, '0')
-	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-}
-
 export class TimeEntryFactory extends Factory {
 	static table = 'time_entries'
 
 	static factory() {
-		const now = sqlDateTime(new Date())
+		// UTC, like every other factory: the seeder reads a zone-less string as UTC
+		// (pkg/db/dump.go), so a local wall-clock stamp would be stored off by the
+		// runner's UTC offset and fall outside the "Today" filter after local midnight.
+		// The current instant is inside "today" in every zone.
+		const now = new Date().toISOString()
 
 		return {
 			id: '{increment}',

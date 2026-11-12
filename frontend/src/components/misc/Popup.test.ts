@@ -29,24 +29,40 @@ import Popup from './Popup.vue'
 // drives into an attribute the tests can assert on.
 const POPOVER_OPEN = 'popover-open'
 
-function dispatchToggle(element: HTMLElement, newState: 'open' | 'closed') {
-	element.dispatchEvent(Object.assign(new Event('toggle'), {newState}))
+function dispatchToggle(element: HTMLElement, newState: 'open' | 'closed', type: 'beforetoggle' | 'toggle' = 'toggle') {
+	element.dispatchEvent(Object.assign(new Event(type), {newState}))
 }
 
+// Browsers fire beforetoggle while the state changes and toggle afterwards.
 HTMLElement.prototype.showPopover = function showPopover(this: HTMLElement) {
+	dispatchToggle(this, 'open', 'beforetoggle')
 	this.setAttribute(POPOVER_OPEN, '')
 	dispatchToggle(this, 'open')
 }
 
 HTMLElement.prototype.hidePopover = function hidePopover(this: HTMLElement) {
+	dispatchToggle(this, 'closed', 'beforetoggle')
 	this.removeAttribute(POPOVER_OPEN)
 	dispatchToggle(this, 'closed')
 }
 
-// What the browser does on an outside click or Escape.
-function lightDismiss(element: HTMLElement) {
+// What the browser does on an outside click or Escape. It queues the toggle event as a task, so input
+// already waiting can run before it: `deferToggle` returns that late event for the test to fire.
+function lightDismiss(element: HTMLElement, {deferToggle = false} = {}) {
+	dispatchToggle(element, 'closed', 'beforetoggle')
 	element.removeAttribute(POPOVER_OPEN)
-	dispatchToggle(element, 'closed')
+	const fire = () => dispatchToggle(element, 'closed')
+	if (deferToggle) return fire
+	fire()
+	return () => {}
+}
+
+function pressKey(key: string) {
+	window.dispatchEvent(new KeyboardEvent('keydown', {key}))
+}
+
+function pressPointer() {
+	window.dispatchEvent(new Event('pointerdown'))
 }
 
 const slots = {
@@ -157,11 +173,83 @@ describe('Popup', () => {
 		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
 		await flushPromises()
 
+		pressPointer()
 		lightDismiss(wrapper.find('.popup').element as HTMLElement)
 		await wrapper.find('.trigger').trigger('click')
 
 		expect(wrapper.emitted('update:open')).toEqual([[false]])
 		expect(wrapper.find('.popup').attributes(POPOVER_OPEN)).toBeUndefined()
+
+		wrapper.unmount()
+	})
+
+	it('reopens on a key press right after Escape, before the browser\'s toggle event arrives', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+		const popup = wrapper.find('.popup').element as HTMLElement
+
+		pressKey('Escape')
+		const lateToggle = lightDismiss(popup, {deferToggle: true})
+		pressKey('Enter')
+		await wrapper.find('.trigger').trigger('click')
+		await flushPromises()
+		lateToggle()
+		await flushPromises()
+
+		// The popup was open again before the browser finished hiding it, so the parent sees no close.
+		expect(wrapper.emitted('update:open')).toEqual([[true]])
+		expect(popup.hasAttribute(POPOVER_OPEN)).toBe(true)
+
+		wrapper.unmount()
+	})
+
+	it('reopens on a key press right after Escape, once the browser\'s toggle event has arrived', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+		const popup = wrapper.find('.popup').element as HTMLElement
+
+		pressKey('Escape')
+		lightDismiss(popup)
+		pressKey('Enter')
+		await wrapper.find('.trigger').trigger('click')
+		await flushPromises()
+
+		expect(wrapper.emitted('update:open')).toEqual([[false], [true]])
+		expect(popup.hasAttribute(POPOVER_OPEN)).toBe(true)
+
+		wrapper.unmount()
+	})
+
+	it('opens again when asked to before the browser\'s toggle event arrives', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+		const popup = wrapper.find('.popup').element as HTMLElement
+
+		pressKey('Escape')
+		const lateToggle = lightDismiss(popup, {deferToggle: true})
+		;(wrapper.vm as unknown as {openPopup: () => void}).openPopup()
+		await flushPromises()
+		lateToggle()
+		await flushPromises()
+
+		expect(popup.hasAttribute(POPOVER_OPEN)).toBe(true)
+		expect(wrapper.emitted('update:open')).toEqual([[true]])
+
+		wrapper.unmount()
+	})
+
+	it('tells the parent about a light dismiss only once the browser has finished hiding', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+
+		pressKey('Escape')
+		const lateToggle = lightDismiss(wrapper.find('.popup').element as HTMLElement, {deferToggle: true})
+		await flushPromises()
+		expect(wrapper.emitted('update:open')).toBeUndefined()
+
+		lateToggle()
+		await flushPromises()
+		expect(wrapper.emitted('update:open')).toEqual([[false]])
 
 		wrapper.unmount()
 	})
@@ -257,6 +345,20 @@ describe('Popup without the Popover API', () => {
 		await flushPromises()
 
 		expect(wrapper.emitted('update:open')).toEqual([[false]])
+
+		wrapper.unmount()
+	})
+
+	it('reopens on a key press right after Escape', async () => {
+		const wrapper = mount(Popup, {...mountOptions, props: {open: true}})
+		await flushPromises()
+
+		pressKey('Escape')
+		pressKey('Enter')
+		await wrapper.find('.trigger').trigger('click')
+
+		expect(wrapper.emitted('update:open')).toEqual([[false], [true]])
+		expect(wrapper.find('.popup').classes()).toContain('is-open')
 
 		wrapper.unmount()
 	})

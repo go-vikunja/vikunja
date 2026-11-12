@@ -1,8 +1,7 @@
 import type {Bucket, ProjectView, Task, TaskReminder, User} from '@/client/generated'
-import {REPEAT_TYPES, type IRepeatAfter} from '@/types/IRepeatAfter'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import type {TaskInput} from '@/client/queries/taskMutations'
+import {repeatFromSettings} from '@/helpers/rrule'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
-import {secondsToPeriod, periodToSeconds} from '@/helpers/time/period'
 import {getDateWithTime} from '@/helpers/time/getDateWithTime'
 import {cleanupItemText, PREFIXES, type ParsedTaskText, type PrefixMode} from '@/modules/quickAddMagic'
 
@@ -23,8 +22,7 @@ export function createTaskDraft(data: Partial<Task> = {}) {
 		comments: data.comments ?? [],
 		project_id: data.project_id ?? 0,
 		bucket_id: data.bucket_id ?? 0,
-		repeat_after: data.repeat_after ?? 0,
-		repeat_mode: data.repeat_mode ?? 0,
+		repeats_from_current_date: data.repeats_from_current_date ?? false,
 		percent_done: data.percent_done ?? 0,
 		hex_color: data.hex_color ?? '',
 		is_favorite: data.is_favorite ?? false,
@@ -53,21 +51,12 @@ export function getHexColor(color?: string): string | undefined {
 	return color.startsWith('#') ? color : `#${color}`
 }
 
-export function parseRepeatAfter(seconds = 0): IRepeatAfter {
-	const {unit, amount} = secondsToPeriod(seconds)
-	return {type: unit, amount}
-}
-
-// Nested related tasks are plain API objects, so repeat arrives as a parsed object, raw seconds, or not at all.
-export function repeatAfterToSeconds(repeat?: number | IRepeatAfter | null): number {
-	if (typeof repeat === 'number') return repeat
-	return repeat?.amount ? periodToSeconds(repeat.amount, repeat.type) : 0
-}
-
-export function mergeTask(task: Task, updated: Task): Task {
+export function mergeTask(task: TaskInput, updated: Task): Task {
 	return {
 		...task,
 		...updated,
+		// The API omits a cleared rule, so a response without repeat means none.
+		repeat: updated.repeat,
 		// Write responses carry no view context, so cached per-view values win.
 		position: task.position ?? updated.position,
 		bucket_id: task.bucket_id ?? updated.bucket_id,
@@ -165,16 +154,16 @@ export function buildQuickAddTask(
 		: parsed.text
 	// Without a due date, a repeating task never becomes due.
 	const dueDate = (parsed.date ?? (parsed.repeats ? getDateWithTime(new Date()) : null))?.toISOString()
+	const repeat = parsed.repeats
+		? repeatFromSettings(parsed.repeats.amount, parsed.repeats.type)
+		: null
 	return createTaskDraft({
 		...input,
 		title,
 		due_date: dueDate,
 		priority: parsed.priority ?? 0,
 		assignees: assignees.map(({match: _match, ...user}) => user),
-		repeat_after: repeatAfterToSeconds(parsed.repeats),
-		repeat_mode: parsed.repeats?.type === REPEAT_TYPES.Months && parsed.repeats.amount === 1
-			? TASK_REPEAT_MODES.REPEAT_MODE_MONTH
-			: TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT,
+		repeat: repeat ?? undefined,
 		reminders: buildDefaultRemindersForQuickAdd(defaults, dueDate),
 	})
 }
