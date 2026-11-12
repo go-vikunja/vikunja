@@ -49,6 +49,7 @@ func EnqueueBatch(s *xorm.Session, requests []Request) error {
 		args = append(args, "")
 		for _, request := range batch {
 			at := request.RunAt
+			databaseDefault := at.IsZero() && s.Engine().Dialect().URI().DBType == schemas.POSTGRES
 			if at.IsZero() {
 				at = now
 			}
@@ -57,8 +58,14 @@ func EnqueueBatch(s *xorm.Session, requests []Request) error {
 				hash := sha256.Sum256([]byte(request.Queue + "\x00" + request.Kind + "\x00" + request.UniqueKey))
 				key = hex.EncodeToString(hash[:])
 			}
-			values = append(values, "(?, ?, 1, ?, ?, 0, ?, ?, ?)")
-			args = append(args, request.Queue, request.Kind, string(request.Payload), StateAvailable, retryPolicy(request.Queue).Attempts, timestamp(at), key)
+			args = append(args, request.Queue, request.Kind, string(request.Payload), StateAvailable, retryPolicy(request.Queue).Attempts)
+			if databaseDefault {
+				values = append(values, "(?, ?, 1, ?, ?, 0, ?, "+postgresClock+", ?)")
+			} else {
+				values = append(values, "(?, ?, 1, ?, ?, 0, ?, ?, ?)")
+				args = append(args, timestamp(at))
+			}
+			args = append(args, key)
 		}
 		query := "INSERT INTO jobs (queue, kind, version, payload, state, attempt, max_attempts, run_at, unique_key) VALUES " + strings.Join(values, ",")
 		if s.Engine().Dialect().URI().DBType == schemas.MYSQL {

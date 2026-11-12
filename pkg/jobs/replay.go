@@ -25,6 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"xorm.io/builder"
+	"xorm.io/xorm/schemas"
 )
 
 type ReplayFilter struct {
@@ -99,6 +100,9 @@ func (q *Queue) ReplaySelected(ctx context.Context, filter ReplayFilter, dryRun 
 			return result, fmt.Errorf("job %d attempt count cannot be increased", job.ID)
 		}
 		var changed int64
+		if q.engine.Dialect().URI().DBType == schemas.POSTGRES {
+			s.SetExpr("run_at", postgresClock)
+		}
 		changed, err = s.ID(job.ID).Where(builder.Eq{"state": StateFailed, "attempt": job.Attempt}).
 			Cols("state", "run_at", "max_attempts", "finished_at").Update(&Job{
 			State:       StateAvailable,

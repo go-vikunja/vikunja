@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
+	"xorm.io/xorm/schemas"
 )
 
 func TestQueueRetryScheduleUsesConfiguration(t *testing.T) {
@@ -59,9 +60,18 @@ func TestQueueRetryScheduleUsesConfiguration(t *testing.T) {
 			require.True(t, found)
 			assert.Equal(t, StateAvailable, stored.State)
 			assert.False(t, stored.RunAt.Before(now.Add(delay/2)), "retry before jitter lower bound")
-			assert.False(t, stored.RunAt.After(now.Add(delay)), "retry above capped backoff")
+			upper := now
+			if e.Dialect().URI().DBType == schemas.POSTGRES {
+				upper = databaseNow(t, e)
+			}
+			assert.False(t, stored.RunAt.After(upper.Add(delay)), "retry above capped backoff")
 		}
-		now = now.Add(delay)
+		if e.Dialect().URI().DBType == schemas.POSTGRES {
+			_, err := session.Where("queue = ?", t.Name()).Cols("run_at").Update(&Job{RunAt: now})
+			require.NoError(t, err)
+		} else {
+			now = now.Add(delay)
+		}
 	}
 }
 
@@ -101,7 +111,11 @@ func TestQueueParkedTimeRecordedOnFailureAndRescue(t *testing.T) {
 	_, err = session.ID(job.ID).Get(&failed)
 	require.NoError(t, err)
 	assert.Equal(t, StateFailed, failed.State)
-	assert.True(t, failed.FinishedAt.Equal(now))
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		assert.WithinDuration(t, now, failed.FinishedAt, 2*time.Second)
+	} else {
+		assert.True(t, failed.FinishedAt.Equal(now))
+	}
 	_, err = session.ID(job.ID).Cols("state", "finished_at").Update(&Job{State: StateRunning})
 	require.NoError(t, err)
 	count, err := queue.Rescue(t.Context(), now, 1)
@@ -110,7 +124,11 @@ func TestQueueParkedTimeRecordedOnFailureAndRescue(t *testing.T) {
 	var rescued Job
 	_, err = session.Where(builder.Eq{"id": job.ID}).Get(&rescued)
 	require.NoError(t, err)
-	assert.True(t, rescued.FinishedAt.Equal(now))
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		assert.WithinDuration(t, now, rescued.FinishedAt, 2*time.Second)
+	} else {
+		assert.True(t, rescued.FinishedAt.Equal(now))
+	}
 }
 
 func TestQueueReplayUsesCurrentBudgetWithoutResettingFence(t *testing.T) {

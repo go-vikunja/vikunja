@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"xorm.io/builder"
+	"xorm.io/xorm/schemas"
 )
 
 func (r *Runner) registerLag(name string) error {
@@ -31,6 +32,14 @@ func (r *Runner) registerLag(name string) error {
 		Help:        "Seconds since the last committed scheduling watermark.",
 		ConstLabels: prometheus.Labels{"job": name},
 	}, func() float64 {
+		if r.engine.Dialect().URI().DBType == schemas.POSTGRES {
+			var row struct{ Lag float64 }
+			found, err := r.engine.SQL("SELECT GREATEST(0, EXTRACT(EPOCH FROM ((clock_timestamp() AT TIME ZONE 'UTC') - last_run_until))) AS lag FROM cron_state WHERE job = ?", name).Get(&row)
+			if err != nil || !found {
+				return 0
+			}
+			return row.Lag
+		}
 		state := State{}
 		found, err := r.engine.Where(builder.Eq{"job": name}).Get(&state)
 		if err != nil || !found {

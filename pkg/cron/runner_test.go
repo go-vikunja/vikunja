@@ -41,8 +41,15 @@ func TestRunnerWindowsAndRollback(t *testing.T) {
 	require.NoError(t, err)
 	r := NewRunner(e)
 	start := time.Date(2026, 11, 12, 8, 0, 0, 0, time.UTC)
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		start = time.Now().UTC().Truncate(time.Minute).Add(-time.Minute)
+	}
 	require.NoError(t, r.Register(t.Name(), start))
 	require.NoError(t, r.Register(t.Name(), start.Add(time.Hour)))
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		_, err = e.Where("job = ?", t.Name()).Cols("last_run_until").Update(&State{LastRunUntil: start})
+		require.NoError(t, err)
+	}
 	calls := 0
 	failure := errors.New("failed run")
 	job := func(_ context.Context, _ *xorm.Session, w Window) error {
@@ -79,6 +86,11 @@ func TestRunnerCatchupAndOverlap(t *testing.T) {
 	r := NewRunner(e)
 	start := time.Date(2026, 11, 12, 8, 0, 0, 0, time.UTC)
 	require.NoError(t, r.Register(t.Name(), start))
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		start = time.Now().UTC().Add(-48 * time.Hour)
+		_, err = e.Where("job = ?", t.Name()).Cols("last_run_until").Update(&State{LastRunUntil: start})
+		require.NoError(t, err)
+	}
 	started := make(chan struct{})
 	release := make(chan struct{})
 	done := make(chan error, 1)
@@ -114,8 +126,10 @@ func TestRunnerPostgresExcludesOtherReplicaAcrossTicks(t *testing.T) {
 	_, err = e.Where("job = ?", t.Name()).Delete(new(State))
 	require.NoError(t, err)
 	first, second := NewRunner(e), NewRunner(e)
-	now := time.Now().UTC().Truncate(time.Minute)
+	now := time.Now().UTC().Truncate(time.Minute).Add(-time.Minute)
 	require.NoError(t, first.Register(t.Name(), now))
+	_, err = e.Where("job = ?", t.Name()).Cols("last_run_until").Update(&State{LastRunUntil: now})
+	require.NoError(t, err)
 	started, release := make(chan struct{}), make(chan struct{})
 	done := make(chan error, 1)
 	go func() {

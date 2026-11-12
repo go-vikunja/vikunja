@@ -57,6 +57,10 @@ func (r *Runner) Register(name string, now time.Time) error {
 	defer s.Close()
 	// Concurrent startup must preserve the existing watermark.
 	query := "INSERT INTO cron_state (job, last_run_until) VALUES (?, ?) ON CONFLICT (job) DO NOTHING"
+	if r.engine.Dialect().URI().DBType == schemas.POSTGRES {
+		_, err := s.Exec("INSERT INTO cron_state (job, last_run_until) VALUES (?, clock_timestamp() AT TIME ZONE 'UTC') ON CONFLICT (job) DO NOTHING", name)
+		return err
+	}
 	if r.engine.Dialect().URI().DBType == schemas.MYSQL {
 		query = "INSERT INTO cron_state (job, last_run_until) VALUES (?, ?) ON DUPLICATE KEY UPDATE job = job"
 	}
@@ -91,10 +95,16 @@ func (r *Runner) Tick(ctx context.Context, name string, to time.Time, job Job) (
 		return false, err
 	}
 	if postgres {
-		found, err := s.SQL("SELECT job, last_run_until FROM cron_state WHERE job = ? FOR UPDATE SKIP LOCKED", name).Get(&state)
+		var locked struct {
+			LastRunUntil time.Time
+			DatabaseNow  time.Time
+		}
+		found, err := s.SQL("SELECT last_run_until, clock_timestamp() AT TIME ZONE 'UTC' AS database_now FROM cron_state WHERE job = ? FOR UPDATE SKIP LOCKED", name).Get(&locked)
 		if err != nil || !found {
 			return false, err
 		}
+		state.LastRunUntil = locked.LastRunUntil
+		to = locked.DatabaseNow.UTC().Truncate(time.Minute)
 		// State-driven callbacks may work through other sessions for minutes.
 		if _, err = s.Exec("SELECT set_config('idle_in_transaction_session_timeout', '0', true) WHERE current_setting('server_version_num')::integer >= 90600"); err != nil {
 			return false, err

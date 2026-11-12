@@ -88,6 +88,10 @@ func TestQueueTransactionAndOwnership(t *testing.T) {
 	require.Len(t, got, 1)
 	assert.Equal(t, 1, got[0].Attempt)
 	stale := got[0]
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		_, err = e.ID(stale.ID).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(-time.Second)})
+		require.NoError(t, err)
+	}
 	count, err := q.Rescue(t.Context(), now.Add(61*time.Second), 100)
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, count)
@@ -118,6 +122,9 @@ func TestQueueClaimLimitSurvivesPlannerRescans(t *testing.T) {
 	t.Cleanup(func() { e.SetMaxOpenConns(previousMax) })
 	_, err := e.Exec("CREATE TEMP TABLE jobs (LIKE public.jobs INCLUDING ALL)")
 	require.NoError(t, err)
+	_, err = e.Exec("SET search_path = pg_temp, public")
+	require.NoError(t, err)
+	t.Cleanup(func() { _, err := e.Exec("RESET search_path"); require.NoError(t, err) })
 	t.Cleanup(func() {
 		_, err := e.Exec("DROP TABLE pg_temp.jobs")
 		require.NoError(t, err)
@@ -223,7 +230,15 @@ func TestQueueCompletionDeletesLiveKeys(t *testing.T) {
 			batch, err := queue.Claim(t.Context(), t.Name(), 1, now, time.Minute)
 			require.NoError(t, err)
 			require.Len(t, batch, 1)
-			require.ErrorIs(t, Complete(s, batch[0], now.Add(time.Minute)), ErrStaleClaim)
+			if e.Dialect().URI().DBType == schemas.POSTGRES {
+				_, err = e.ID(batch[0].ID).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(-time.Second)})
+				require.NoError(t, err)
+				require.ErrorIs(t, Complete(s, batch[0], now), ErrStaleClaim)
+				_, err = e.ID(batch[0].ID).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(time.Minute)})
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, Complete(s, batch[0], now.Add(time.Minute)), ErrStaleClaim)
+			}
 			require.NoError(t, Complete(s, batch[0], now))
 			found, err := e.ID(batch[0].ID).Exist(new(Job))
 			require.NoError(t, err)

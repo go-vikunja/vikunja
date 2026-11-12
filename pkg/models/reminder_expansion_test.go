@@ -33,6 +33,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm/contexts"
+	"xorm.io/xorm/schemas"
 )
 
 func TestEnqueueBatchReminderExpansionWindow(t *testing.T) {
@@ -169,4 +170,53 @@ func TestEnqueueBatchReminderExpansionAtomicity(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunnerPostgresClockSelectsReminderWindow(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	resetReminderJobs(t)
+	session := db.NewReadSession()
+	defer session.Close()
+	e := session.Engine()
+	if e.Dialect().URI().DBType != schemas.POSTGRES {
+		t.Skip("PostgreSQL database clock integration")
+	}
+	require.NoError(t, e.Sync(new(cron.State)))
+	var clock struct{ Now time.Time }
+	_, err := session.SQL("SELECT clock_timestamp() AT TIME ZONE 'UTC' AS now").Get(&clock)
+	require.NoError(t, err)
+	minute := clock.Now.Truncate(time.Minute)
+	due, future := minute.Add(-30*time.Second), minute.Add(2*time.Minute)
+	_, err = session.Insert(&TaskReminder{TaskID: 1, Reminder: due}, &TaskReminder{TaskID: 2, Reminder: future})
+	require.NoError(t, err)
+	name := t.Name()
+	_, err = e.Where("job = ?", name).Delete(new(cron.State))
+	require.NoError(t, err)
+	t.Cleanup(func() { _, err := e.Where("job = ?", name).Delete(new(cron.State)); require.NoError(t, err) })
+	runner := cron.NewRunner(e)
+	require.NoError(t, runner.Register(name, clock.Now.Add(3*time.Minute)))
+	_, err = e.Where("job = ?", name).Cols("last_run_until").Update(&cron.State{LastRunUntil: minute.Add(-time.Minute)})
+	require.NoError(t, err)
+	ran, err := runner.Tick(t.Context(), name, clock.Now.Add(3*time.Minute), enqueueTaskReminders)
+	require.NoError(t, err)
+	require.True(t, ran)
+	var rows []jobs.Job
+	require.NoError(t, e.Where("kind = ?", "reminder.expand").Find(&rows))
+	require.Len(t, rows, 1, "fast caller must not enqueue the future reminder")
+	assert.Contains(t, rows[0].Payload, `"task_id":1`)
+	ahead := minute.Add(10 * time.Minute)
+	_, err = e.Where("job = ?", name).Cols("last_run_until").Update(&cron.State{LastRunUntil: ahead})
+	require.NoError(t, err)
+	_, err = session.Insert(&TaskReminder{TaskID: 3, Reminder: minute.Add(-time.Second)})
+	require.NoError(t, err)
+	ran, err = runner.Tick(t.Context(), name, ahead.Add(time.Minute), enqueueTaskReminders)
+	require.NoError(t, err)
+	require.False(t, ran)
+	var state cron.State
+	_, err = e.Where("job = ?", name).Get(&state)
+	require.NoError(t, err)
+	assert.True(t, state.LastRunUntil.Equal(ahead))
+	count, err := e.Where("kind = ?", "reminder.expand").Count(new(jobs.Job))
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, count, "already-ahead cursors require explicit repair; reminders behind them are not replayed")
 }

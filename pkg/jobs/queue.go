@@ -75,7 +75,8 @@ func Enqueue(s *xorm.Session, request Request) error {
 	if request.Queue == "" || request.Kind == "" || !json.Valid(request.Payload) {
 		return errors.New("job requires a queue, kind and JSON payload")
 	}
-	if request.RunAt.IsZero() {
+	postgres := s.Engine().Dialect().URI().DBType == schemas.POSTGRES
+	if request.RunAt.IsZero() && !postgres {
 		request.RunAt = time.Now()
 	}
 	job := &Job{
@@ -88,6 +89,9 @@ func Enqueue(s *xorm.Session, request Request) error {
 		RunAt:       request.RunAt,
 	}
 	if request.UniqueKey == "" {
+		if postgres && request.RunAt.IsZero() {
+			s.SetExpr("run_at", postgresClock)
+		}
 		tx := s.Tx()
 		_, err := s.After(func(any) {
 			if s.Tx() == tx {
@@ -98,11 +102,21 @@ func Enqueue(s *xorm.Session, request Request) error {
 	}
 	hash := sha256.Sum256([]byte(request.Queue + "\x00" + request.Kind + "\x00" + request.UniqueKey))
 	key := hex.EncodeToString(hash[:])
-	query := "INSERT INTO jobs (queue, kind, version, payload, state, attempt, max_attempts, run_at, unique_key) VALUES (?, ?, 1, ?, ?, 0, ?, ?, ?) ON CONFLICT (unique_key) DO NOTHING"
-	if s.Engine().Dialect().URI().DBType == schemas.MYSQL {
-		query = "INSERT INTO jobs (queue, kind, version, payload, state, attempt, max_attempts, run_at, unique_key) VALUES (?, ?, 1, ?, ?, 0, ?, ?, ?) ON DUPLICATE KEY UPDATE unique_key = unique_key"
+	runAtSQL := "?"
+	args := []any{job.Queue, job.Kind, job.Payload, job.State, job.MaxAttempts}
+	if postgres && request.RunAt.IsZero() {
+		runAtSQL = postgresClock
+	} else {
+		args = append(args, timestamp(job.RunAt))
 	}
-	result, err := s.Exec(query, job.Queue, job.Kind, job.Payload, job.State, job.MaxAttempts, timestamp(job.RunAt), key)
+	args = append(args, key)
+	query := "INSERT INTO jobs (queue, kind, version, payload, state, attempt, max_attempts, run_at, unique_key) VALUES (?, ?, 1, ?, ?, 0, ?, " + runAtSQL + ", ?)"
+	if s.Engine().Dialect().URI().DBType == schemas.MYSQL {
+		query += " ON DUPLICATE KEY UPDATE unique_key = unique_key"
+	} else {
+		query += " ON CONFLICT (unique_key) DO NOTHING"
+	}
+	result, err := s.Exec(append([]any{query}, args...)...)
 	if err == nil {
 		count, countErr := result.RowsAffected()
 		if countErr != nil {
@@ -135,13 +149,7 @@ func (q *Queue) Claim(ctx context.Context, queue string, limit int, now time.Tim
 	var jobs []Job
 	if q.engine.Dialect().URI().DBType == schemas.POSTGRES {
 		// A locking CTE prevents rescans from claiming beyond the limit.
-		err := s.SQL(`WITH candidates AS (
-   SELECT id FROM jobs WHERE queue = ? AND state = 'available' AND run_at <= ?
-   ORDER BY run_at, id LIMIT ? FOR UPDATE SKIP LOCKED
-   )
-   UPDATE jobs SET state = 'running', attempt = attempt + 1, claimed_at = ?, claim_owner = ?, expires_at = ?
-   FROM candidates WHERE jobs.id = candidates.id
-   RETURNING jobs.*`, queue, timestamp(now), limit, timestamp(now), q.owner, timestamp(now.Add(lease))).Find(&jobs)
+		err := s.SQL(postgresClaimSQL, queue, limit, q.owner, lease.Seconds()).Find(&jobs)
 		if err != nil {
 			return nil, err
 		}
@@ -177,7 +185,11 @@ func ownership(job Job) builder.Cond {
 }
 
 func Complete(s *xorm.Session, job Job, now time.Time) error {
-	affected, err := s.Where(ownership(job)).And(builder.Gt{"expires_at": timestamp(now)}).Delete(new(Job))
+	expiry := builder.Cond(builder.Gt{"expires_at": timestamp(now)})
+	if s.Engine().Dialect().URI().DBType == schemas.POSTGRES {
+		expiry = builder.Expr("expires_at > (SELECT " + postgresClock + ")")
+	}
+	affected, err := s.Where(ownership(job)).And(expiry).Delete(new(Job))
 	if err != nil {
 		return err
 	}
@@ -199,26 +211,26 @@ func (q *Queue) Renew(ctx context.Context, jobs []Job, now time.Time, lease time
 	s := q.engine.NewSession()
 	defer s.Close()
 	db.SetSessionContext(ctx, s)
+	if q.engine.Dialect().URI().DBType == schemas.POSTGRES {
+		condition, args, err := builder.ToSQL(builder.Or(conditions...))
+		if err != nil {
+			return 0, err
+		}
+		return execRows(s, "WITH clock AS (SELECT "+postgresClock+" AS now) UPDATE jobs SET expires_at = clock.now + ? * INTERVAL '1 second' FROM clock WHERE ("+condition+") AND expires_at > clock.now", append([]any{lease.Seconds()}, args...)...)
+	}
 	return s.Where(builder.Or(conditions...)).And(builder.Gt{"expires_at": timestamp(now)}).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(lease)})
 }
 
 func (q *Queue) Fail(ctx context.Context, job Job, now time.Time, cause error, maxAttempts int) error {
 	state := StateAvailable
-	finished := time.Time{}
 	if job.Attempt >= maxAttempts {
 		state = StateFailed
-		finished = now
 	}
 	delay := retryPolicy(job.Queue).Delay(job.Attempt)
 	s := q.engine.NewSession()
 	defer s.Close()
 	db.SetSessionContext(ctx, s)
-	count, err := s.Where(ownership(job)).Cols("state", "run_at", "last_error", "finished_at").Update(&Job{
-		State:      state,
-		RunAt:      now.Add(delay),
-		LastError:  cause.Error(),
-		FinishedAt: finished,
-	})
+	count, err := updateFailedClaim(s, job, now, state, delay, cause.Error(), false)
 	if err == nil && count == 1 {
 		countAfterCommit(s, "failed_attempts", job.Queue, job.Kind, count)
 		if state == StateFailed {
@@ -234,23 +246,20 @@ func (q *Queue) Rescue(ctx context.Context, now time.Time, limit int) (int64, er
 	defer s.Close()
 	db.SetSessionContext(ctx, s)
 	var expired []Job
-	if err := s.Where(builder.Eq{"state": StateRunning}).And(builder.Lte{"expires_at": timestamp(now)}).Limit(limit).Find(&expired); err != nil {
+	expiry := builder.Cond(builder.Lte{"expires_at": timestamp(now)})
+	if q.engine.Dialect().URI().DBType == schemas.POSTGRES {
+		expiry = builder.Expr("expires_at <= (SELECT " + postgresClock + ")")
+	}
+	if err := s.Where(builder.Eq{"state": StateRunning}).And(expiry).Limit(limit).Find(&expired); err != nil {
 		return 0, err
 	}
 	var total int64
 	for _, job := range expired {
 		state := StateAvailable
-		finished := time.Time{}
 		if job.Attempt >= job.MaxAttempts {
 			state = StateFailed
-			finished = now
 		}
-		count, err := s.Where(ownership(job)).And(builder.Lte{"expires_at": timestamp(now)}).Cols("state", "run_at", "last_error", "finished_at").Update(&Job{
-			State:      state,
-			RunAt:      now,
-			LastError:  "worker claim expired",
-			FinishedAt: finished,
-		})
+		count, err := updateFailedClaim(s, job, now, state, 0, "worker claim expired", true)
 		if err != nil {
 			return total, err
 		}
