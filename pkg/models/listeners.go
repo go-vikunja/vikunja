@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -36,16 +37,16 @@ import (
 
 // RegisterListeners registers all event listeners
 func RegisterListeners() {
-	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
-	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
-	events.RegisterListener((&TaskCreatedEvent{}).Name(), &SendTaskCreatedNotification{})
-	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
-	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
-	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
+	events.RegisterDurableListener((&TaskCommentCreatedEvent{}).Name(), "notifications", &SendTaskCommentNotification{})
+	events.RegisterDurableListener((&TaskAssigneeCreatedEvent{}).Name(), "notifications", &SendTaskAssignedNotification{})
+	events.RegisterDurableListener((&TaskCreatedEvent{}).Name(), "notifications", &SendTaskCreatedNotification{})
+	events.RegisterDurableListener((&TaskDeletedEvent{}).Name(), "notifications", &SendTaskDeletedNotification{})
+	events.RegisterDurableListener((&ProjectCreatedEvent{}).Name(), "notifications", &SendProjectCreatedNotification{})
+	events.RegisterDurableListener((&TeamMemberAddedEvent{}).Name(), "notifications", &SendTeamMemberAddedNotification{})
 	events.RegisterListener((&TeamMemberRemovedEvent{}).Name(), &CleanupTaskAssignmentsAfterTeamRemoval{})
-	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
-	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
-	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
+	events.RegisterDurableListener((&TaskCommentUpdatedEvent{}).Name(), "notifications", &HandleTaskCommentEditMentions{})
+	events.RegisterDurableListener((&TaskCreatedEvent{}).Name(), "notifications", &HandleTaskCreateMentions{})
+	events.RegisterDurableListener((&TaskUpdatedEvent{}).Name(), "notifications", &HandleTaskUpdatedMentions{})
 	events.RegisterListener((&UserDataExportRequestedEvent{}).Name(), &HandleUserDataExport{})
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
@@ -81,7 +82,7 @@ func RegisterListeners() {
 		RegisterUserDirectedEventForWebhook(&TasksOverdueEvent{})
 
 		// Internal delivery listener — one message per webhook with its own retry lifecycle
-		events.RegisterListener((&WebhookDeliveryEvent{}).Name(), &WebhookDeliveryListener{})
+		events.RegisterDurableListener((&WebhookDeliveryEvent{}).Name(), "webhooks", &WebhookDeliveryListener{})
 	}
 	if config.AuditEnabled.GetBool() {
 		registerEventsForAuditLogging()
@@ -508,7 +509,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
-	sess := db.NewSession()
+	sess := jobs.NewSession(msg)
 	defer sess.Close()
 
 	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
@@ -600,7 +601,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		}
 	}
 
-	return sess.Commit()
+	return jobs.Commit(sess, msg)
 }
 
 // HandleTaskCommentEditMentions  represents a listener
@@ -624,7 +625,7 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 		return nil
 	}
 
-	sess := db.NewSession()
+	sess := jobs.NewSession(msg)
 	defer sess.Close()
 
 	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
@@ -645,7 +646,7 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 	if err != nil {
 		return err
 	}
-	return sess.Commit()
+	return jobs.Commit(sess, msg)
 }
 
 // SendTaskAssignedNotification  represents a listener
@@ -665,7 +666,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
-	sess := db.NewSession()
+	sess := jobs.NewSession(msg)
 	defer sess.Close()
 
 	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
@@ -715,7 +716,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		notifiedUsers[subscriber.UserID] = true
 	}
 
-	return sess.Commit()
+	return jobs.Commit(sess, msg)
 }
 
 // SendTaskCreatedNotification  represents a listener
@@ -739,7 +740,7 @@ func (s *SendTaskCreatedNotification) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
-	sess := db.NewSession()
+	sess := jobs.NewSession(msg)
 	defer sess.Close()
 
 	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
@@ -795,7 +796,7 @@ func (s *SendTaskCreatedNotification) Handle(msg *message.Message) (err error) {
 		notifiedUsers[subscriber.UserID] = true
 	}
 
-	return sess.Commit()
+	return jobs.Commit(sess, msg)
 }
 
 // SendTaskDeletedNotification  represents a listener
@@ -815,7 +816,7 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
-	sess := db.NewSession()
+	sess := jobs.NewSession(msg)
 	defer sess.Close()
 
 	subscribers, err := GetSubscriptionsForDeletedTask(sess, event.Task)
@@ -845,7 +846,7 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 	}
 
-	return sess.Commit()
+	return jobs.Commit(sess, msg)
 }
 
 // HandleTaskCreateMentions  represents a listener
@@ -869,7 +870,7 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
-	sess := db.NewSession()
+	sess := jobs.NewSession(msg)
 	defer sess.Close()
 
 	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
@@ -889,7 +890,7 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
-	return sess.Commit()
+	return jobs.Commit(sess, msg)
 }
 
 // HandleTaskUpdatedMentions  represents a listener
@@ -913,7 +914,7 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 		return nil
 	}
 
-	sess := db.NewSession()
+	sess := jobs.NewSession(msg)
 	defer sess.Close()
 
 	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
@@ -934,7 +935,7 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
-	return sess.Commit()
+	return jobs.Commit(sess, msg)
 }
 
 // HandleTaskUpdateLastUpdated  represents a listener
@@ -1146,7 +1147,7 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		return err
 	}
 
-	sess := db.NewSession()
+	sess := jobs.NewSession(msg)
 	defer sess.Close()
 
 	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityProject, event.Project.ID)
@@ -1172,7 +1173,7 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		}
 	}
 
-	return sess.Commit()
+	return jobs.Commit(sess, msg)
 }
 
 // WebhookListener represents a listener
@@ -1239,7 +1240,7 @@ func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
 		return nil
 	}
 
-	if err := webhook.sendWebhookPayload(evt.Payload); err != nil {
+	if err := webhook.sendWebhookPayloadContext(msg.Context(), evt.Payload, msg.UUID); err != nil {
 		// A target that is down or rejects the payload is the user's to fix, so
 		// don't report it — but still retry and eventually poison the message.
 		msg.Metadata.Set(events.MetadataSkipErrorReporting, "true")
@@ -1509,7 +1510,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
-	s := db.NewSession()
+	s := jobs.NewSession(msg)
 	defer s.Close()
 
 	projectID := getProjectIDFromAnyEvent(event)
@@ -1613,7 +1614,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 			}
 		}
 
-		dispatchErr := events.Dispatch(&WebhookDeliveryEvent{
+		dispatchErr := events.DispatchOnCommit(s, &WebhookDeliveryEvent{
 			WebhookID: webhook.ID,
 			Payload: &WebhookPayload{
 				EventName: wl.EventName,
@@ -1622,15 +1623,11 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 			},
 		})
 		if dispatchErr != nil {
-			// A dispatch failure here means the in-process event bus is broken —
-			// there is nothing useful to retry per-webhook and we do not want
-			// to fail the parent message (which would re-fan-out and duplicate
-			// any deliveries that did succeed). Log and move on.
-			log.Errorf("Could not dispatch webhook.delivery for webhook %d: %s", webhook.ID, dispatchErr)
+			return dispatchErr
 		}
 	}
 
-	return nil
+	return jobs.Commit(s, msg)
 }
 
 ///////
@@ -1690,11 +1687,20 @@ func (s *SendTeamMemberAddedNotification) Handle(msg *message.Message) (err erro
 		return nil
 	}
 
-	return notifications.Notify(event.Member, &TeamMemberAddedNotification{
+	sess := jobs.NewSession(msg)
+	defer sess.Close()
+	member, err := user.GetUserByID(sess, event.Member.ID)
+	if err != nil {
+		return err
+	}
+	if err := notifications.Notify(member, &TeamMemberAddedNotification{
 		Member: event.Member,
 		Doer:   event.Doer,
 		Team:   event.Team,
-	})
+	}, sess); err != nil {
+		return err
+	}
+	return jobs.Commit(sess, msg)
 }
 
 // HandleUserDataExport  represents a listener

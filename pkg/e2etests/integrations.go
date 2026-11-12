@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -62,6 +63,9 @@ func setupE2ETestEnv(ctx context.Context) (e *echo.Echo, err error) {
 	// Handlers from the previous test outlive its cancelled context and hold DB
 	// sessions, which makes LoadFixtures below fail with "database table is locked".
 	events.WaitForPendingHandlers()
+	if err = jobs.Shutdown(context.WithoutCancel(ctx)); err != nil {
+		return nil, err
+	}
 
 	config.InitDefaultConfig()
 	config.ServicePublicURL.Set("https://localhost")
@@ -73,6 +77,12 @@ func setupE2ETestEnv(ctx context.Context) (e *echo.Echo, err error) {
 	files.InitTests()
 	user.InitTests()
 	models.SetupTests() //nolint:contextcheck
+	cleanup := db.NewAutocommitSession()
+	_, err = cleanup.Where("id > ?", 0).Delete(new(jobs.Job))
+	cleanup.Close()
+	if err != nil {
+		return nil, err
+	}
 	keyvalue.InitStorage()
 
 	err = db.LoadFixtures()
@@ -101,6 +111,9 @@ func setupE2ETestEnv(ctx context.Context) (e *echo.Echo, err error) {
 
 	// Wait for the router to be ready before proceeding.
 	<-ready
+	if err = jobs.Start(ctx); err != nil {
+		return nil, err
+	}
 
 	e = routes.NewEcho()     //nolint:contextcheck
 	routes.RegisterRoutes(e) //nolint:contextcheck
