@@ -17,7 +17,7 @@
 					<User
 						v-else-if="item.fieldType === 'users'"
 						:user="(item.item as unknown as IUser)"
-						:avatar-size="20"
+						:avatar-size="16"
 						class="filter-autocomplete__user"
 					/>
 					<div

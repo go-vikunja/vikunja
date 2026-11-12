@@ -17,7 +17,7 @@
 	>
 		<template #candidate="{candidate}">
 			<User
-				:avatar-size="24"
+				:avatar-size="32"
 				:show-username="true"
 				:user="candidate"
 			/>

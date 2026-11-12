@@ -35,7 +35,7 @@
 						>
 							<template #searchResult="{option: user}">
 								<User
-									:avatar-size="24"
+									:avatar-size="32"
 									:user="user"
 									class="m-0"
 								/>
@@ -67,7 +67,7 @@
 						>
 							<td>
 								<User
-									:avatar-size="24"
+									:avatar-size="32"
 									:user="m"
 									class="m-0"
 								/>

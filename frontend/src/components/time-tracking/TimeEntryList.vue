@@ -76,7 +76,7 @@
 						<td class="nowrap">
 							<User
 								:user="row.entry.user"
-								:avatar-size="20"
+								:avatar-size="16"
 								is-inline
 							/>
 						</td>

@@ -46,7 +46,7 @@
 		<AssigneeList
 			v-if="(task.assignees?.length ?? 0) > 0"
 			:assignees="task.assignees ?? []"
-			:avatar-size="20"
+			:avatar-size="16"
 			class="mis-1"
 			:inline="true"
 		/>

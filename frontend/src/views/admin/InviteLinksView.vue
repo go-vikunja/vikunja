@@ -49,7 +49,7 @@
 							<User
 								v-if="link.created_by"
 								:user="link.created_by"
-								:avatar-size="24"
+								:avatar-size="32"
 							/>
 							<template v-else>
 								{{ $t('admin.inviteLinks.creatorDeleted') }}

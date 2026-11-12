@@ -77,7 +77,7 @@
 					>
 						<UserAvatar
 							:user="authStore.info"
-							:size="40"
+							:size="48"
 							class="avatar"
 						/>
 						<span class="username">{{ authStore.userDisplayName }}</span>

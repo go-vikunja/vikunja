@@ -13,7 +13,7 @@
 			<template v-if="parent">
 				<UserAvatar
 					:user="parent.author"
-					:size="20"
+					:size="16"
 					class="comment-quote__avatar"
 				/>
 				<span class="comment-quote__author">{{ authorName }}</span>

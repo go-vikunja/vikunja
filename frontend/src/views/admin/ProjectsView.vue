@@ -25,7 +25,7 @@
 					<template #searchResult="{option}">
 						<User
 							v-if="typeof option !== 'string'"
-							:avatar-size="24"
+							:avatar-size="32"
 							:show-username="true"
 							:user="option"
 						/>
@@ -108,7 +108,7 @@
 									<User
 										v-if="p.owner"
 										:user="p.owner"
-										:avatar-size="24"
+										:avatar-size="32"
 									/>
 								</td>
 								<td class="is-nowrap admin-projects__created">
@@ -165,7 +165,7 @@
 						>
 							<template #searchResult="{option}">
 								<User
-									:avatar-size="24"
+									:avatar-size="32"
 									:show-username="true"
 									:user="option"
 								/>

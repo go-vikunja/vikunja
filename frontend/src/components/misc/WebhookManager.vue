@@ -290,7 +290,7 @@ function doDelete() {
 					<td>{{ formatDateShort(w.created) }}</td>
 					<td>
 						<User
-							:avatar-size="25"
+							:avatar-size="32"
 							:user="w.created_by ?? {}"
 						/>
 					</td>

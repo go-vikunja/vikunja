@@ -115,7 +115,7 @@
 				<AssigneeList
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
-					:avatar-size="24"
+					:avatar-size="32"
 				/>
 				<ChecklistSummary
 					:task="task"

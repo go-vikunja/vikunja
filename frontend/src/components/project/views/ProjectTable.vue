@@ -282,7 +282,7 @@
 										<AssigneeList
 											v-if="t.assignees.length > 0"
 											:assignees="t.assignees"
-											:avatar-size="28"
+											:avatar-size="32"
 											class="mis-1"
 											:inline="true"
 										/>
@@ -319,7 +319,7 @@
 									/>
 									<td v-if="activeColumns.createdBy">
 										<User
-											:avatar-size="27"
+											:avatar-size="32"
 											:show-username="false"
 											:user="t.created_by ?? {}"
 										/>

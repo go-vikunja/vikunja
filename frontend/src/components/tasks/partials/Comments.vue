@@ -52,7 +52,7 @@
 					<div class="comment-info">
 						<UserAvatar
 							:user="c.author"
-							:size="20"
+							:size="16"
 							class="image is-avatar d-print-none"
 						/>
 						<strong>{{ getDisplayName(c.author) }}</strong>

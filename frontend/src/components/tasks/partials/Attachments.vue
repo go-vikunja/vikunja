@@ -64,7 +64,7 @@
 					<p class="attachment-info-meta">
 						<User
 							:user="a.created_by ?? {}"
-							:avatar-size="20"
+							:avatar-size="16"
 							:show-username="false"
 							:is-inline="true"
 						/>
