@@ -283,3 +283,44 @@ func TestPinPropfindMissingTaskURL(t *testing.T) {
 		expectCalendar(href, "Project 36 for Caldav tests", user15Principal),
 	})
 }
+
+// RFC 4918 treats an empty PROPFIND body as allprop; today it yields bare hrefs.
+func TestPinPropfindEmptyBody(t *testing.T) {
+	for path, href := range map[string]string{
+		"/dav/":                   "/dav",
+		"/dav/principals/user15/": "/dav/projects",
+		"/dav/projects":           "/dav/projects",
+		"/dav/projects/36":        "/dav/projects/36",
+		pinTaskHref:               pinTaskHref,
+	} {
+		t.Run(path, func(t *testing.T) {
+			e := setupTestEnv(t)
+
+			rec := caldavPROPFIND(t, e, path, "0", "")
+
+			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+			assertDAVResponses(t, rec, []expectedDAVResponse{{href: href}})
+		})
+	}
+}
+
+// The unknown property is echoed in the 404 propstat without its namespace.
+func TestPinPropfindUnknownNamespace(t *testing.T) {
+	e := setupTestEnv(t)
+	body := `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:" xmlns:X="urn:x-vikunja-unknown">
+  <D:prop>
+    <D:displayname/>
+    <X:bogus/>
+  </D:prop>
+</D:propfind>`
+
+	rec := caldavPROPFIND(t, e, "/dav/projects/36", "0", body)
+
+	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+	assertDAVResponses(t, rec, []expectedDAVResponse{{
+		href:     "/dav/projects/36",
+		ok:       map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
+		notFound: []xml.Name{{Space: "", Local: "bogus"}},
+	}})
+}
