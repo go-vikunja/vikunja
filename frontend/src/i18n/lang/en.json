@@ -681,6 +681,7 @@
       "bucketConfig": "Bucket configuration",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
+      "bucketFilter": "Filter for {title}",
       "create": "Create view",
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
@@ -696,6 +697,22 @@
     }
   },
   "filters": {
+    "modes": {
+      "simple": "Simple",
+      "advanced": "Advanced",
+      "tooAdvanced": "This filter is too advanced for Simple mode.",
+      "clear": "Clear and use Simple"
+    },
+    "simple": {
+      "showDone": "Show completed tasks",
+      "minPriority": "Minimum priority",
+      "search": "Search tasks",
+      "labelPlaceholder": "Filter by label…",
+      "assigneePlaceholder": "Filter by assignee…",
+      "unknownLabel": "Unknown label #{id}",
+      "unknownProject": "Unknown project #{id}",
+      "until": "until {date}"
+    },
     "title": "Filters",
     "clear": "Clear Filters",
     "showResults": "Show results",
@@ -1850,6 +1867,10 @@
       "setPasswordSuccess": "The password of {username} was updated.",
       "sendResetEmail": "Send password-reset email",
       "sendResetEmailSuccess": "A password-reset email was sent to {username}.",
+      "editSettings": "Edit settings",
+      "settingsTitle": "Settings of {username}",
+      "settingsEditingOther": "You are editing the settings of {username}, not your own. Changes apply to their account.",
+      "backToUsers": "Back to users",
       "createdSuccess": "User {username} created.",
       "updatedSuccess": "User {username} updated.",
       "deletedSuccess": "User {username} deleted.",

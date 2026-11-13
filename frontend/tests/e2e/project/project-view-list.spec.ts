@@ -105,6 +105,34 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.tasks .task').filter({hasText: future.title}).locator('.overdue-indicator')).toHaveCount(0)
 	})
 
+	test('Should show the last change in the task glance tooltip', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const day = 86_400_000
+		const created = new Date(Date.now() - 10 * day).toISOString()
+		const [changed] = await TaskFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			created,
+			updated: new Date(Date.now() - 2 * day).toISOString(),
+		})
+		const [unchanged] = await TaskFactory.create(1, {
+			id: 2,
+			project_id: 1,
+			created,
+			updated: created,
+		}, false)
+		await page.goto('/projects/1/1')
+
+		await page.locator('.tasks .task .task-link').filter({hasText: changed.title}).hover()
+		const changedTooltip = page.locator('.task-glance-tooltip').filter({hasText: changed.title})
+		await expect(changedTooltip.locator('.task-glance-updated')).toContainText('2 days ago')
+
+		await page.locator('.tasks .task .task-link').filter({hasText: unchanged.title}).hover()
+		const unchangedTooltip = page.locator('.task-glance-tooltip').filter({hasText: unchanged.title})
+		await expect(unchangedTooltip.locator('.task-glance-created')).toBeVisible()
+		await expect(unchangedTooltip.locator('.task-glance-updated')).toHaveCount(0)
+	})
+
 	test('Should not see any elements for a project which is shared read only', async ({authenticatedPage: page}) => {
 		await UserFactory.create(2)
 		await UserProjectFactory.create(1, {
@@ -291,6 +319,7 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.tasks')).toContainText('Regular task 1')
 
 		await page.locator('.filter-container button').filter({hasText: 'Filters'}).click()
+		await page.getByRole('tab', {name: 'Advanced', exact: true}).click()
 		await page.locator('.filter-popup .filter-input .ProseMirror').fill('meeting')
 		await page.locator('.filter-popup button').filter({hasText: 'Show results'}).click()
 

@@ -12,6 +12,7 @@ import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 export interface FrontendSettings {
 	play_sound_when_done: boolean
@@ -29,6 +30,7 @@ export interface FrontendSettings {
 	show_last_viewed: boolean
 	sidebar_width: number | null
 	comment_sort_order: 'asc' | 'desc'
+	filter_editor_mode: 'simple' | 'advanced'
 	desktop_quick_entry_shortcut: string
 	quick_add_default_reminders: {relative_period?: number}[]
 	time_tracking_default_start?: string
@@ -38,7 +40,10 @@ export interface FrontendSettings {
 export function taskRemindersFromSettings(
 	reminders: Readonly<FrontendSettings['quick_add_default_reminders']> | undefined,
 ): TaskReminder[] {
-	return (reminders ?? []).map(reminder => ({relative_period: reminder.relative_period}))
+	return (reminders ?? []).map(reminder => ({
+		relative_period: reminder.relative_period,
+		relative_to: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
+	}))
 }
 
 export interface ExtraSettingsLink {
@@ -84,6 +89,7 @@ export function defaultFrontendSettings(): FrontendSettings {
 		show_last_viewed: true,
 		sidebar_width: null,
 		comment_sort_order: 'asc',
+		filter_editor_mode: 'simple',
 		desktop_quick_entry_shortcut: 'CmdOrCtrl+Shift+A',
 		default_due_time: undefined,
 		time_tracking_default_start: '09:00',

@@ -1041,7 +1041,7 @@
                 },
                 {
                     "key": "overdue_tasks_reminders_time",
-                    "default_value": "9:00",
+                    "default_value": "09:00",
                     "comment": "When to send the overdue task reminder email."
                 },
                 {

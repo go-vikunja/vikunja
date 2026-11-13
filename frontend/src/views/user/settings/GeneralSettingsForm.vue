@@ -2,7 +2,7 @@
 	<Card
 		:title="$t('user.settings.sections.personalInformation')"
 		class="general-settings"
-		:loading="loading"
+		:loading="saving"
 	>
 		<div class="field-group">
 			<FormField
@@ -21,9 +21,10 @@
 				v-if="isExternalUser"
 				class="help"
 			>
-				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info?.auth_provider}) }}
+				{{ $t('user.settings.general.externalUserNameChange', {provider: authProvider}) }}
 			</p>
 			<FormField
+				v-if="ownAccount"
 				:label="$t('user.settings.general.defaultProject')"
 				layout="two-col"
 			>
@@ -35,7 +36,7 @@
 	<Card
 		:title="$t('user.settings.sections.taskAndNotifications')"
 		class="general-settings section-block"
-		:loading="loading"
+		:loading="saving"
 	>
 		<div class="field-group">
 			<FormField
@@ -69,7 +70,7 @@
 				{{ $t('user.settings.general.defaultDueTimeDescription') }}
 			</p>
 			<FormField
-				v-if="hasFilters"
+				v-if="ownAccount && hasFilters"
 				:label="$t('user.settings.general.filterUsedOnOverview')"
 				layout="two-col"
 			>
@@ -107,7 +108,7 @@
 	<Card
 		:title="$t('user.settings.sections.localization')"
 		class="general-settings section-block"
-		:loading="loading"
+		:loading="saving"
 	>
 		<div class="field-group">
 			<FormField
@@ -179,7 +180,7 @@
 	<Card
 		:title="$t('user.settings.sections.appearance')"
 		class="general-settings section-block"
-		:loading="loading"
+		:loading="saving"
 	>
 		<div class="field-group">
 			<FormField
@@ -254,10 +255,10 @@
 	</Card>
 
 	<Card
-		v-if="isDesktop"
+		v-if="ownAccount && isDesktop"
 		:title="$t('user.settings.sections.desktop')"
 		class="general-settings section-block"
-		:loading="loading"
+		:loading="saving"
 	>
 		<div class="field-group">
 			<FormField
@@ -275,7 +276,7 @@
 	<Card
 		:title="$t('user.settings.sections.privacy')"
 		class="general-settings section-block"
-		:loading="loading"
+		:loading="saving"
 	>
 		<div class="field-group">
 			<FormCheckbox
@@ -294,7 +295,7 @@
 			<XButton
 				v-if="isDirty"
 				v-cy="'saveGeneralSettings'"
-				:loading="loading"
+				:loading="saving"
 				class="is-fullwidth"
 				@click="updateSettings()"
 			>
@@ -309,10 +310,9 @@
 import {
 	createUserSettingsDraft,
 	diffUserSettings,
-	useUpdateSettingsMutation,
-	type AccountIdentity,
+	type UserSettingsEdits,
 } from '@/client/queries/account'
-import {computed, ref, type Ref} from 'vue'
+import {computed, ref, type DeepReadonly, type Ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import isEqual from 'fast-deep-equal'
 
@@ -326,16 +326,12 @@ import FormInput from '@/components/input/FormInput.vue'
 import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 
-import {SUPPORTED_LOCALES, setLanguage} from '@/i18n'
-import {error} from '@/message'
+import {SUPPORTED_LOCALES} from '@/i18n'
 import {useQuery} from '@tanstack/vue-query'
 import {timezonesQuery} from '@/client/queries/account'
 import {formatDisplayDateFormat} from '@/helpers/time/formatDate'
 
-import {useTitle} from '@/composables/useTitle'
-
 import {useProjects} from '@/composables/useProjects'
-import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 import {taskRemindersFromSettings, type UserSettings} from '@/helpers/userSettings'
 import {isSavedFilterProject} from '@/client/queries/projects'
@@ -350,14 +346,24 @@ import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
-const props = defineProps<{identity: AccountIdentity}>()
+const props = defineProps<{
+	initialSettings: DeepReadonly<UserSettings>
+	isExternalUser: boolean
+	authProvider?: string
+	saving: boolean
+	// False when an admin edits someone else: hides fields tied to the editor's projects or device.
+	ownAccount: boolean
+}>()
+
+const emit = defineEmits<{
+	save: [edits: UserSettingsEdits, submitted: UserSettings]
+}>()
 
 defineOptions({name: 'UserSettingsGeneralForm'})
 
 const isDesktop = isDesktopApp()
 
 const {t} = useI18n({useScope: 'global'})
-useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
 
 const DEFAULT_PROJECT_ID = 0
 
@@ -429,12 +435,13 @@ const languageOptions = computed(() =>
 		.sort((a, b) => a.label.localeCompare(b.label)),
 )
 
-const authStore = useAuthStore()
-const updateUserSettings = useUpdateSettingsMutation()
 const configStore = useConfigStore()
 const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
-const settings = ref(createUserSettingsDraft(authStore.settings))
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss -- seeded once; parents key the form
+const seed = createUserSettingsDraft(props.initialSettings)
+const savedSettings = ref(seed)
+const settings = ref(createUserSettingsDraft(seed))
 
 const quickAddDefaultReminders = computed({
 	get: () => taskRemindersFromSettings(settings.value.frontend_settings.quick_add_default_reminders),
@@ -445,8 +452,7 @@ const quickAddDefaultReminders = computed({
 	},
 })
 
-const initialSettings = ref(createUserSettingsDraft(authStore.settings))
-const isDirty = computed(() => !isEqual(settings.value, initialSettings.value))
+const isDirty = computed(() => !isEqual(settings.value, savedSettings.value))
 
 function enforceBackgroundBrightnessBounds() {
 	const value = Number(settings.value.frontend_settings.background_brightness)
@@ -500,8 +506,6 @@ const {
 	timezoneObject,
 } = useAvailableTimezones(settings)
 
-const isExternalUser = computed(() => authStore.info?.is_local_user === false)
-
 const projectList = useProjects()
 const defaultProject = computed({
 	get: () => projectList.projects[settings.value.default_project_id],
@@ -519,25 +523,18 @@ const filterUsedInOverview = computed({
 	},
 })
 const hasFilters = computed(() => projectList.projectsArray.some(isSavedFilterProject))
-const loading = updateUserSettings.isPending
 
-async function updateSettings() {
-	if (loading.value) return
+function updateSettings() {
+	if (props.saving) return
 	const submitted = createUserSettingsDraft(settings.value)
-	const edits = diffUserSettings(initialSettings.value, submitted)
-	if (configStore.demo_mode_enabled) delete edits.language
-	try {
-		await updateUserSettings.mutateAsync({
-			id: props.identity.id,
-			type: props.identity.type,
-			edits,
-		})
-	} catch {
-		return
-	}
-	if (configStore.demo_mode_enabled) setLanguage(submitted.language).catch(error)
-	initialSettings.value = submitted
+	emit('save', diffUserSettings(savedSettings.value, submitted), submitted)
 }
+
+defineExpose({
+	markSaved(submitted: UserSettings) {
+		savedSettings.value = submitted
+	},
+})
 </script>
 
 <style lang="scss" scoped>

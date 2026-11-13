@@ -26,7 +26,7 @@
 						<thead>
 							<tr>
 								<th>{{ $t('misc.id') }}</th>
-								<th>{{ $t('user.auth.username') }}</th>
+								<th>{{ $t('admin.users.nameLabel') }}</th>
 								<th>{{ $t('user.auth.email') }}</th>
 								<th>{{ $t('admin.users.status') }}</th>
 								<th>{{ $t('task.attributes.created') }}</th>
@@ -40,7 +40,10 @@
 							>
 								<td>{{ u.id }}</td>
 								<td class="is-breakable">
-									<BreakableText :text="u.username ?? ''" />
+									<User
+										:user="u"
+										:avatar-size="27"
+									/>
 								</td>
 								<td class="is-breakable">
 									<BreakableText :text="u.email ?? ''" />
@@ -80,9 +83,16 @@
 					class="has-no-shadow"
 					:title="$t('admin.users.detailsTitle', {username: detailTarget.username})"
 				>
+					<User
+						class="admin-users__detail-user"
+						:user="detailTarget"
+						:avatar-size="48"
+					/>
 					<dl class="admin-users__meta">
 						<dt>{{ $t('misc.id') }}</dt>
 						<dd>{{ detailTarget.id }}</dd>
+						<dt>{{ $t('user.auth.username') }}</dt>
+						<dd>{{ detailTarget.username }}</dd>
 						<dt>{{ $t('user.auth.email') }}</dt>
 						<dd>{{ detailTarget.email }}</dd>
 						<dt>{{ $t('admin.users.issuer') }}</dt>
@@ -125,6 +135,14 @@
 							/>
 						</template>
 					</FormField>
+
+					<XButton
+						class="admin-users__settings-link"
+						variant="secondary"
+						:to="{name: 'admin.userSettings', params: {id: detailTarget.id}}"
+					>
+						{{ $t('admin.users.editSettings') }}
+					</XButton>
 
 					<template v-if="!detailTarget.auth_provider">
 						<FormField :label="$t('admin.users.newPasswordLabel')">
@@ -341,6 +359,7 @@ import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 import BreakableText from '@/components/misc/BreakableText.vue'
+import User from '@/components/misc/User.vue'
 
 type AdminUserRow = AdminUser & {id: number}
 const {t} = useI18n({useScope: 'global'})
@@ -487,6 +506,10 @@ async function doDelete(mode: DeleteUserMode) {
 	}
 }
 
+.admin-users__detail-user {
+	margin-block-end: 1rem;
+}
+
 .admin-users__meta {
 	display: grid;
 	grid-template-columns: auto 1fr;
@@ -502,6 +525,10 @@ async function doDelete(mode: DeleteUserMode) {
 	dd {
 		margin: 0;
 	}
+}
+
+.admin-users__settings-link {
+	margin-block-end: 1rem;
 }
 
 .admin-users__password-actions {

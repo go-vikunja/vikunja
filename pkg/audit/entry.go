@@ -147,6 +147,7 @@ const (
 	ActionAdminUserPasswordSet       = "admin.user.password.set"        // #nosec G101 -- action identifier, not a credential
 	ActionAdminUserPasswordResetSent = "admin.user.password_reset.sent" // #nosec G101
 	ActionAdminUserDeleted           = "admin.user.deleted"
+	ActionAdminUserSettingsUpdated   = "admin.user.settings.updated"
 	ActionAdminProjectOwnerChanged   = "admin.project.owner.changed"
 	ActionAdminUsersListed           = "admin.users.listed"
 	ActionAdminAccessDenied          = "admin.access.denied"

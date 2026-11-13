@@ -722,7 +722,11 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .property-labels .multiselect .input-wrapper span.tag')).toContainText(newLabelText)
 		})
 
-		test('Can create a new label with the keyboard', async ({authenticatedPage: page}) => {
+		test('Requires a second Enter to create a new label', async ({
+			authenticatedPage: page,
+			apiContext,
+			userToken,
+		}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				project_id: 1,
@@ -736,15 +740,79 @@ test.describe('Task', () => {
 			const createOption = page.locator('.task-view .property-labels .multiselect .search-results .is-create-option')
 			await expect(createOption).toContainText(newLabelText)
 
-			await labelInput.press('ArrowDown')
+			await labelInput.press('Enter')
 			await expect(createOption).toBeFocused()
+			const before = await apiContext.get(`tasks/${tasks[0].id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(before.ok()).toBe(true)
+			expect((await before.json()).labels ?? []).toEqual([])
+
 			await page.keyboard.press('Enter')
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
 			await expect(page.locator('.task-view .property-labels .multiselect .input-wrapper span.tag')).toHaveCount(1)
 			await expect(page.locator('.task-view .property-labels .multiselect .input-wrapper span.tag')).toContainText(newLabelText)
 			await expect(labelInput).toBeFocused()
+
+			const after = await apiContext.get(`tasks/${tasks[0].id}`, {
+				headers: {Authorization: `Bearer ${userToken}`},
+			})
+			expect(after.ok()).toBe(true)
+			expect((await after.json()).labels.map((label: Label) => label.title)).toEqual([newLabelText])
+
+			await page.reload()
+			await expect(page.locator('.task-view .property-labels .multiselect .input-wrapper span.tag'))
+				.toHaveText([newLabelText])
 		})
+
+		for (const {query, expectedTitle} of [
+			{
+				query: 'ni',
+				expectedTitle: 'a nix',
+			},
+			{
+				query: 'nix',
+				expectedTitle: 'nix',
+			},
+		]) {
+			test(`Completes label "${query}" as "${expectedTitle}" on Enter`, async ({
+				authenticatedPage: page,
+				apiContext,
+				userToken,
+			}) => {
+				const [task] = await TaskFactory.create(1, {project_id: projects[0].id})
+				const labels = await LabelFactory.create(3, {
+					title: (index: number) => ['a nix', 'nix', 'nixos'][index - 1],
+					description: '',
+				})
+				const expectedLabel = labels.find((label: Label) => label.title === expectedTitle)!
+
+				await page.goto(`/tasks/${task.id}`)
+
+				const picker = page.locator('.task-view .property-labels .multiselect')
+				const input = picker.getByRole('combobox')
+				await input.pressSequentially('nixos')
+				await expect(picker.getByRole('option', {name: 'nixos Click or press enter to select'})).toBeVisible()
+
+				// Replace the query without keyup so Enter must refresh the previous search results.
+				await input.fill(query)
+				await input.press('Enter')
+
+				await expect(page.locator('.global-notification')).toContainText('Success')
+				await expect(picker.locator('.input-wrapper span.tag')).toHaveText([expectedTitle])
+				await expect(input).toBeFocused()
+
+				const response = await apiContext.get(`tasks/${task.id}`, {
+					headers: {Authorization: `Bearer ${userToken}`},
+				})
+				expect(response.ok()).toBe(true)
+				expect((await response.json()).labels.map((label: Label) => label.id)).toEqual([expectedLabel.id])
+
+				await page.reload()
+				await expect(picker.locator('.input-wrapper span.tag')).toHaveText([expectedTitle])
+			})
+		}
 
 		test('Can add an existing label to a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {

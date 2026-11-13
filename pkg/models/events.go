@@ -582,6 +582,18 @@ func (e *AdminUserPasswordSetEvent) Name() string {
 	return "admin.user.password.set"
 }
 
+// AdminUserSettingsUpdatedEvent represents an admin changing a user's general settings
+type AdminUserSettingsUpdatedEvent struct {
+	User          *user.User `json:"user"`
+	Doer          *user.User `json:"doer"`
+	ChangedFields []string   `json:"changed_fields"`
+}
+
+// Name defines the name for AdminUserSettingsUpdatedEvent
+func (e *AdminUserSettingsUpdatedEvent) Name() string {
+	return "admin.user.settings.updated"
+}
+
 // AdminUserPasswordResetSentEvent represents an admin triggering the
 // password-reset email for a user. It carries no reset token.
 type AdminUserPasswordResetSentEvent struct {

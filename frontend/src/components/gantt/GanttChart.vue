@@ -116,7 +116,6 @@ import GanttTimelineHeader from '@/components/gantt/GanttTimelineHeader.vue'
 import GanttRelationArrows from '@/components/gantt/GanttRelationArrows.vue'
 import Loading from '@/components/misc/Loading.vue'
 
-import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {
 	GANTT_ZOOM_MAX,
 	GANTT_ZOOM_MIN,
@@ -128,7 +127,7 @@ import {
 	timelineGroupOffsets,
 	timelineUnitsForDayWidth,
 } from '@/helpers/time/ganttTimeline'
-import {getNaturalDayCount, roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
+import {getCalendarDayDiff, getNaturalDayCount, roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
 const props = withDefaults(defineProps<{
 	isLoading: boolean,
@@ -178,10 +177,7 @@ let dragStopHandler: (() => void) | null = null
 const dateFromDate = computed(() => dayjs(filters.value.dateFrom).startOf('day').toDate())
 const dateToDate = computed(() => dayjs(filters.value.dateTo).endOf('day').toDate())
 
-const dayCount = computed(() => Math.max(
-	1,
-	Math.ceil((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY),
-))
+const dayCount = computed(() => getCalendarDayDiff(dateFromDate.value, dateToDate.value) + 1)
 
 const fitDayWidthPixels = computed(() => containerWidth.value / dayCount.value)
 
@@ -574,11 +570,7 @@ const barPositions = computed(() => {
 })
 
 function computeBarX(date: Date): number {
-	const diff = Math.ceil(
-		(roundToNaturalDayBoundary(date, true).getTime() - dateFromDate.value.getTime()) /
-		MILLISECONDS_A_DAY,
-	)
-	return diff * dayWidthPixels.value
+	return getCalendarDayDiff(dateFromDate.value, date) * dayWidthPixels.value
 }
 
 function computeBarWidth(bar: GanttBarModel): number {

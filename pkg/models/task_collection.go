@@ -18,6 +18,7 @@ package models
 
 import (
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -135,10 +136,6 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 			continue
 		}
 
-		if s == taskPropertyPosition && tf.IncludeSubprojects {
-			continue
-		}
-
 		if s == taskPropertyPosition && projectView != nil {
 			param.projectViewID = projectView.ID
 		}
@@ -231,8 +228,8 @@ func ensureDefaultPositionSort(opts *taskSearchOptions, view *ProjectView) {
 }
 
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket, forceFlatTasks bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
-	if view != nil && GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
-		err = ensureTaskPositionsForSavedFilterView(s, a, projects, view, opts)
+	if view != nil {
+		err = ensureTaskPositionsForView(s, a, projectsToHealInView(projects, view), view, opts)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -250,6 +247,16 @@ func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, v
 	}
 
 	return getTasksForProjects(s, projects, a, opts, view)
+}
+
+// projectsToHealInView returns the projects whose tasks get no row in view on creation.
+func projectsToHealInView(projects []*Project, view *ProjectView) []*Project {
+	if GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
+		return projects
+	}
+	return slices.DeleteFunc(slices.Clone(projects), func(p *Project) bool {
+		return p.ID == view.ProjectID
+	})
 }
 
 func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskCollection) (projects []*Project, err error) {
@@ -350,7 +357,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Produce json
 // @Param id path int true "The project ID."
 // @Param view path int true "The project view ID."
-// @Param include_subprojects query bool false "If true, also returns tasks from all descendant subprojects the user can access. A sort by position is ignored while this is set, as positions are scoped to a single view."
+// @Param include_subprojects query bool false "If true, also returns tasks from all descendant subprojects the user can access. Their position in this view is stored separately from the one in their own project's views."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -481,7 +488,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.expand = tf.Expand
 	opts.isSavedFilter = tf.isSavedFilter
 
-	if view != nil && !tf.IncludeSubprojects {
+	if view != nil {
 		ensureDefaultPositionSort(opts, view)
 	}
 
