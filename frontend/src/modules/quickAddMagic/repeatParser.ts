@@ -74,7 +74,7 @@ export const getRepeats = (text: string): repeatParsedResult => {
 	}
 
 	return {
-		textWithoutMatched: text.replace(matchedText, ''),
+		textWithoutMatched: text.slice(0, results.index) + text.slice(results.index + matchedText.length),
 		repeats: {
 			amount,
 			type,
