@@ -6,6 +6,7 @@ import {useViewFiltersStore} from '@/stores/viewFilters'
 import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
 import {parseDateProp} from '@/helpers/time/parseDateProp'
 import {parseBooleanProp} from '@/helpers/time/parseBooleanProp'
+import {DEFAULT_GANTT_ZOOM, parseGanttZoom} from '@/helpers/time/ganttTimeline'
 import {useRouteFilters, type UseRouteFiltersReturn} from '@/composables/useRouteFilters'
 import {useGanttTaskList, type UseGanttTaskListReturn} from './useGanttTaskList'
 import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
@@ -24,6 +25,7 @@ export interface GanttFilters {
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
+	zoom: number
 }
 
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
@@ -49,6 +51,7 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>, projectId:
 		dateFrom: parseDateProp(route.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
 		dateTo: parseDateProp(route.query?.dateTo as DateKebab) || getDefaultDateTo(),
 		showTasksWithoutDates: parseBooleanProp(route.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		zoom: parseGanttZoom(route.query?.zoom) ?? DEFAULT_GANTT_ZOOM,
 	}
 }
 
@@ -73,6 +76,10 @@ function ganttFiltersToRoute(filters: GanttFilters) {
 		query.showTasksWithoutDates = String(filters.showTasksWithoutDates)
 	}
 
+	if (filters.zoom !== DEFAULT_GANTT_ZOOM) {
+		query.zoom = String(filters.zoom)
+	}
+
 	return {
 		name: 'project.view',
 		params: {
@@ -83,7 +90,7 @@ function ganttFiltersToRoute(filters: GanttFilters) {
 	}
 }
 
-const GANTT_QUERY_PARAMS = ['dateFrom', 'dateTo', 'showTasksWithoutDates']
+const GANTT_QUERY_PARAMS = ['dateFrom', 'dateTo', 'showTasksWithoutDates', 'zoom']
 
 // useRouteFilters rebuilds the url from gantt filters alone; carry the rest over, in place.
 function ganttFiltersToRoutePreservingQuery(
