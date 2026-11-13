@@ -120,10 +120,9 @@ func TestPinReportCalendarQuery(t *testing.T) {
 		},
 	}
 
+	e := setupTestEnv(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			e := setupTestEnv(t)
-
 			rec := caldavREPORT(t, e, "/dav/projects/36", calendarQueryWithTodoFilter(tc.filter))
 
 			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())

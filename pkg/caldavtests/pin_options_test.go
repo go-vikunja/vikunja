@@ -50,10 +50,9 @@ func TestPinOPTIONS(t *testing.T) {
 		{name: "task in project the user cannot see", path: "/dav/projects/1/any.ics", status: http.StatusOK, allow: allowReadWrite},
 	}
 
+	e := setupTestEnv(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			e := setupTestEnv(t)
-
 			rec := caldavOPTIONS(t, e, tc.path)
 
 			assert.Equal(t, tc.status, rec.Code, "Body:\n%s", rec.Body.String())

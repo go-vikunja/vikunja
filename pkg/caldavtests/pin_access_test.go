@@ -156,9 +156,10 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 		{name: "owned project, unrelated user", project: "36", username: testuser1.Username, want: collectionExpectation{404, 404, 404, 404, ""}},
 	}
 
+	// Every write here is denied, so the cases share one fixture load.
+	e := setupTestEnv(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			e := setupTestEnv(t)
 			auth := basicAuthHeader(tc.username, fixturePassword)
 			collection := "/dav/projects/" + tc.project
 
