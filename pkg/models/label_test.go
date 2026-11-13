@@ -1076,3 +1076,37 @@ func TestLabel_DeleteRemovesTaskAssociations(t *testing.T) {
 	db.AssertMissing(t, "label_tasks", map[string]interface{}{"label_id": 8})
 	db.AssertExists(t, "label_tasks", map[string]interface{}{"label_id": 4, "task_id": 1}, false)
 }
+
+func TestLabel_ReadAllOverlappingVisibilityPagination(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	_, err := s.Insert(
+		&Label{ID: 100, Title: "visibility overlap a", CreatedByID: 1},
+		&Label{ID: 101, Title: "visibility overlap b", CreatedByID: 2},
+		&Label{ID: 102, Title: "visibility overlap hidden", CreatedByID: 13},
+	)
+	require.NoError(t, err)
+	_, err = s.Insert(
+		&LabelTask{LabelID: 100, TaskID: 1},
+		&LabelTask{LabelID: 100, TaskID: 2},
+		&LabelTask{LabelID: 101, TaskID: 1},
+		&LabelTask{LabelID: 101, TaskID: 2},
+		&LabelTask{LabelID: 102, TaskID: 34},
+	)
+	require.NoError(t, err)
+
+	for page, want := range []int64{100, 101} {
+		labels, count, total, err := GetLabelsForUser(s, &user.User{ID: 1}, []string{"visibility overlap"}, page+1, 1)
+		require.NoError(t, err)
+		require.Len(t, labels, 1)
+		assert.Equal(t, want, labels[0].ID)
+		assert.Equal(t, 1, count)
+		assert.Equal(t, int64(2), total)
+	}
+	labels, count, total, err := GetLabelsForUser(s, &user.User{ID: 1}, []string{"visibility overlap"}, 3, 1)
+	require.NoError(t, err)
+	assert.Empty(t, labels)
+	assert.Zero(t, count)
+	assert.Equal(t, int64(2), total)
+}

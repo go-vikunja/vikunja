@@ -22,6 +22,8 @@ interface WebSocketEvent {
 const RECONNECT_BASE_DELAY = 1000
 const RECONNECT_MAX_DELAY = 30000
 const FIRST_CONNECTION_TIMEOUT = 5000
+const HEARTBEAT_INTERVAL = 30000
+const HEARTBEAT_TIMEOUT = 10000
 // The server clock offset comes from whole-second iat, so our server time can lag by up to a second.
 const TOKEN_EXPIRY_MARGIN_SECONDS = 5
 
@@ -29,6 +31,8 @@ let socket: WebSocket | null = null
 let socketContext: ClientRequestContext | null = null
 let reconnectAttempt = 0
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+let heartbeatTimer: ReturnType<typeof setTimeout> | null = null
+let heartbeatTimeout: ReturnType<typeof setTimeout> | null = null
 const subscriptions = new Map<string, Set<MessageCallback>>()
 const status = ref<'idle' | 'connecting' | 'authenticating' | 'authenticated'>('idle')
 const authenticated = computed(() => status.value === 'authenticated')
@@ -95,7 +99,33 @@ function resubscribeAll() {
 	}
 }
 
+function stopHeartbeat() {
+	if (heartbeatTimer) clearTimeout(heartbeatTimer)
+	if (heartbeatTimeout) clearTimeout(heartbeatTimeout)
+	heartbeatTimer = null
+	heartbeatTimeout = null
+}
+
+// Browser JavaScript cannot observe protocol pings from a server that disappears.
+function scheduleHeartbeat(connection: WebSocket) {
+	stopHeartbeat()
+	heartbeatTimer = setTimeout(() => {
+		if (socket !== connection) return
+		if (socketContext && !isClientRequestContextCurrent(socketContext)) {
+			closeStaleConnection()
+			return
+		}
+		sendMessage({action: 'ping'})
+		heartbeatTimeout = setTimeout(() => {
+			if (socket !== connection) return
+			closeSocket()
+			scheduleReconnect()
+		}, HEARTBEAT_TIMEOUT)
+	}, HEARTBEAT_INTERVAL)
+}
+
 function closeSocket() {
+	stopHeartbeat()
 	socket?.close()
 	socket = null
 	socketContext = null
@@ -130,6 +160,12 @@ function handleMessage(event: MessageEvent) {
 		// The server never acks a subscribe, so the send time is the earliest point events can reach us.
 		subscribedAt.value = Date.now()
 		setFirstConnectionSettled(true)
+		if (socket) scheduleHeartbeat(socket)
+		return
+	}
+
+	if (msg.action === 'pong' && status.value === 'authenticated' && socket) {
+		scheduleHeartbeat(socket)
 		return
 	}
 

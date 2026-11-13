@@ -84,9 +84,11 @@ func RequestUserDataExport(c *echo.Context) error {
 	}
 	defer s.Close()
 
-	events.DispatchOnCommit(s, &models.UserDataExportRequestedEvent{
+	if err := events.DispatchOnCommit(s, &models.UserDataExportRequestedEvent{
 		User: u,
-	})
+	}); err != nil {
+		return err
+	}
 
 	err = s.Commit()
 	if err != nil {

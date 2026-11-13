@@ -36,7 +36,7 @@ import (
 
 // RegisterUserDeletionCron registers the cron job that actually removes users who are scheduled to delete.
 func RegisterUserDeletionCron() {
-	err := cron.Schedule("0 * * * *", deleteUsers)
+	err := cron.RegisterState("scheduled-user-deletions", "0 * * * *", deleteUsers)
 	if err != nil {
 		log.Errorf("Could not register deletion cron: %s", err.Error())
 	}

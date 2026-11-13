@@ -18,12 +18,36 @@ package db
 
 import (
 	"errors"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
+	"time"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
+
+func TestNewSessionFailureDoesNotExit(t *testing.T) {
+	if os.Getenv("VIKUNJA_TEST_BEGIN_FAILURE") == "1" {
+		config.InitDefaultConfig()
+		log.InitLogger()
+		engine, err := xorm.NewEngine("sqlite3", ":memory:")
+		require.NoError(t, err)
+		require.NoError(t, engine.Close())
+		x = engine
+		require.PanicsWithError(t, "begin database transaction: sql: database is closed", func() { NewSession() })
+		return
+	}
+	command := exec.CommandContext(t.Context(), os.Args[0], "-test.run=^TestNewSessionFailureDoesNotExit$") //nolint:gosec // Re-executes this test binary.
+	command.Env = append(os.Environ(), "VIKUNJA_TEST_BEGIN_FAILURE=1")
+	output, err := command.CombinedOutput()
+	require.NoError(t, err, string(output))
+}
 
 func TestGetPostgreSQLConnectionString(t *testing.T) {
 	t.Run("with schema", func(t *testing.T) {
@@ -77,4 +101,38 @@ func TestSanitizePostgresConnectionErrorWithShortPassword(t *testing.T) {
 	assert.NotContains(t, sanitized.Error(), "postgres:x@")
 	assert.Contains(t, sanitized.Error(), "postgres://<redacted>@")
 	assert.Contains(t, sanitized.Error(), "invalid IP-literal")
+}
+
+func TestSQLiteWriteReservation(t *testing.T) {
+	e, err := xorm.NewEngine("sqlite3", filepath.Join(t.TempDir(), "writers.db")+"?_journal_mode=WAL&_busy_timeout=1000")
+	require.NoError(t, err)
+	defer e.Close()
+	_, err = e.Exec("CREATE TABLE writes (id INTEGER PRIMARY KEY AUTOINCREMENT, value INTEGER)")
+	require.NoError(t, err)
+	_, err = e.Exec("INSERT INTO writes (value) VALUES (0)")
+	require.NoError(t, err)
+	foreground := e.NewSession()
+	defer foreground.Close()
+	require.NoError(t, foreground.Begin())
+	require.NoError(t, reserveWrite(foreground))
+	_, err = foreground.QueryString("SELECT value FROM writes")
+	require.NoError(t, err)
+	done := make(chan error, 1)
+	go func() {
+		_, err := e.Exec("UPDATE writes SET value = value + 1")
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+		t.Fatal("background writer committed during the foreground transaction")
+	case <-time.After(50 * time.Millisecond):
+	}
+	_, err = foreground.Exec("UPDATE writes SET value = value + 1")
+	require.NoError(t, err)
+	require.NoError(t, foreground.Commit())
+	require.NoError(t, <-done)
+	rows, err := e.QueryString("SELECT value FROM writes")
+	require.NoError(t, err)
+	require.Equal(t, "2", rows[0]["value"])
 }

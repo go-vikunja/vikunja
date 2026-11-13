@@ -154,3 +154,11 @@ it('clears to a single empty page without creating an absent cache', async () =>
 	await client.getMutationCache().build(client, clearNotificationsMutationOptions()).execute(undefined)
 	expect(client.getQueryCache().getAll()).toHaveLength(0)
 })
+
+it('reconciles notifications periodically even while connected', () => {
+ const healthy = toValue(notificationsQuery())
+ expect(healthy.refetchInterval).toBeGreaterThanOrEqual(300000)
+ expect(healthy.refetchInterval).toBeLessThan(360000)
+ expect(healthy.refetchIntervalInBackground).toBe(false)
+ expect(toValue(notificationsQuery(false)).refetchInterval).toBe(10000)
+})

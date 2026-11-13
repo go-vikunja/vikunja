@@ -276,10 +276,12 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	if b.Task != nil {
-		events.DispatchOnCommit(s, &TaskUpdatedEvent{
+		if err := events.DispatchOnCommit(s, &TaskUpdatedEvent{
 			Task: b.Task,
 			Doer: doerFromAuth(s, a),
-		})
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

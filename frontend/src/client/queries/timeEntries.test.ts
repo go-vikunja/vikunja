@@ -4,7 +4,9 @@ import {
 	it,
 	vi,
 } from 'vitest'
-import {QueryClient} from '@tanstack/vue-query'
+import {QueryClient, VueQueryPlugin, focusManager, useQuery} from '@tanstack/vue-query'
+import {defineComponent} from 'vue'
+import {mount} from '@vue/test-utils'
 import {
 	activeTimerQuery,
 	createTimeEntryMutationOptions,
@@ -72,6 +74,41 @@ it('resolves the active timer to null without a request when there is no user id
 	const result = await client.fetchQuery(activeTimerQuery(0))
 	expect(result).toBeNull()
 	expect(sdk.timeEntriesList).not.toHaveBeenCalled()
+})
+
+it('recovers missed timer events with jittered polling only while visible', async () => {
+	vi.useFakeTimers()
+	const random = vi.spyOn(Math, 'random').mockReturnValue(0.5)
+	focusManager.setFocused(true)
+	sdk.timeEntriesList.mockResolvedValue({data: {items: [running]}})
+	const wrapper = mount(defineComponent({
+		setup() {
+			useQuery(activeTimerQuery(7))
+			useQuery(timeEntriesQuery('task_id = 1', 'UTC', 1))
+			return () => null
+		},
+	}), {global: {plugins: [[VueQueryPlugin, {queryClient: client}]]}})
+	try {
+		await vi.advanceTimersByTimeAsync(0)
+		expect(sdk.timeEntriesList).toHaveBeenCalledTimes(2)
+		sdk.timeEntriesList.mockResolvedValue({data: {items: []}})
+		await vi.advanceTimersByTimeAsync(329999)
+		expect(sdk.timeEntriesList).toHaveBeenCalledTimes(2)
+		await vi.advanceTimersByTimeAsync(1)
+		expect(sdk.timeEntriesList).toHaveBeenCalledTimes(4)
+		expect(client.getQueryData(timeEntryKeys.active(7))).toBeNull()
+		expect(client.getQueryData<TimeEntryPage>(timeEntryKeys.list('task_id = 1', 'UTC', 1))?.items).toEqual([])
+
+		focusManager.setFocused(false)
+		await vi.advanceTimersByTimeAsync(330000)
+		expect(sdk.timeEntriesList).toHaveBeenCalledTimes(4)
+	} finally {
+		wrapper.unmount()
+		client.clear()
+		focusManager.setFocused(undefined)
+		random.mockRestore()
+		vi.useRealTimers()
+	}
 })
 
 it('requests exactly the asked-for page with the browse filter and timezone', async () => {

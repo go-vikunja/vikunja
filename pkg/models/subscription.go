@@ -609,8 +609,7 @@ func filterSubscriptionsByReadPermission(s *xorm.Session, entityType Subscriptio
 // the project each entity belongs to.
 func filterSubscriptionsByProjectPermission(s *xorm.Session, subscriptions map[int64][]*SubscriptionWithUser, projectIDForEntity map[int64]int64) (map[int64][]*SubscriptionWithUser, error) {
 	subscribers := make(map[int64]*user.User)
-	projectIDs := make([]int64, 0, len(projectIDForEntity))
-	seenProjectID := make(map[int64]bool, len(projectIDForEntity))
+	projectsBySubscriber := make(map[int64]map[int64]struct{})
 	for entityID, subs := range subscriptions {
 		projectID, has := projectIDForEntity[entityID]
 		if !has {
@@ -624,16 +623,18 @@ func filterSubscriptionsByProjectPermission(s *xorm.Session, subscriptions map[i
 
 			if _, has := subscribers[sub.User.ID]; !has {
 				subscribers[sub.User.ID] = sub.User
+				projectsBySubscriber[sub.User.ID] = make(map[int64]struct{})
 			}
-			if !seenProjectID[projectID] {
-				seenProjectID[projectID] = true
-				projectIDs = append(projectIDs, projectID)
-			}
+			projectsBySubscriber[sub.User.ID][projectID] = struct{}{}
 		}
 	}
 
 	readable := make(map[int64]map[int64]*projectReadPermission, len(subscribers))
 	for userID, u := range subscribers {
+		projectIDs := make([]int64, 0, len(projectsBySubscriber[userID]))
+		for projectID := range projectsBySubscriber[userID] {
+			projectIDs = append(projectIDs, projectID)
+		}
 		permissions, err := checkReadPermissionsForProjects(s, u, projectIDs)
 		if err != nil {
 			return nil, err

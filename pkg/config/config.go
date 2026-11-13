@@ -142,6 +142,16 @@ const (
 	RedisHost     Key = `redis.host`
 	RedisPassword Key = `redis.password`
 	RedisDB       Key = `redis.db`
+	RedisPrefix   Key = `redis.prefix`
+
+	ServiceClusterMode          Key = `service.clustermode`
+	JobsEnabled                 Key = `jobs.enabled`
+	ServiceEnableScheduler      Key = `service.enablescheduler`
+	ServiceEnableMigrations     Key = `service.enablemigrations`
+	ServiceShutdownTimeout      Key = `service.shutdowntimeout`
+	WebsocketRedisEnabled       Key = `websocket.redis.enabled`
+	EventsMaxConcurrentHandlers Key = `events.maxconcurrenthandlers`
+	FilesShared                 Key = `files.shared`
 
 	LogEnabled       Key = `log.enabled`
 	LogStandard      Key = `log.standard`
@@ -408,6 +418,28 @@ func initDefaultConfig() {
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
 	ServiceIPExtractionMethod.setDefault("direct")
 	ServiceTrustedProxies.setDefault("")
+	ServiceClusterMode.setDefault(false)
+	JobsEnabled.setDefault(true)
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "bulk-notifications", "webhooks", "bulk-webhooks", "webhook-delivery", "reminder-expansion"} {
+		Key("jobs.queues." + queue + ".enabled").setDefault(true)
+		Key("jobs.queues." + queue + ".concurrency").setDefault(2)
+		Key("jobs.queues." + queue + ".lease").setDefault("60s")
+		Key("jobs.queues." + queue + ".timeout").setDefault("5m")
+		Key("jobs.queues." + queue + ".maxattempts").setDefault(5)
+		Key("jobs.queues." + queue + ".retryinitialdelay").setDefault("2s")
+		Key("jobs.queues." + queue + ".retrymaxdelay").setDefault("1h")
+	}
+	for _, queue := range []string{"mail", "bulk-mail", "webhook-delivery"} {
+		Key("jobs.queues." + queue + ".maxattempts").setDefault(12)
+		Key("jobs.queues." + queue + ".retryinitialdelay").setDefault("30s")
+	}
+	Key("jobs.queues.webhook-delivery.concurrency").setDefault(16)
+	ServiceEnableScheduler.setDefault(true)
+	ServiceEnableMigrations.setDefault(true)
+	ServiceShutdownTimeout.setDefault("30s")
+	WebsocketRedisEnabled.setDefault(false)
+	EventsMaxConcurrentHandlers.setDefault(16)
+	FilesShared.setDefault(false)
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
@@ -464,6 +496,7 @@ func initDefaultConfig() {
 	RedisHost.setDefault("localhost:6379")
 	RedisPassword.setDefault("")
 	RedisDB.setDefault(0)
+	RedisPrefix.setDefault("vikunja")
 	// Logger
 	LogEnabled.setDefault(true)
 	LogStandard.setDefault("stdout")
@@ -848,6 +881,7 @@ func InitConfig() {
 		}
 	}
 
+	mustValidateRuntimeConfig()
 	migrateDeprecatedWebhookKeys()
 	warnDeprecatedLegalKeys()
 
@@ -953,4 +987,10 @@ func GetMaxFileSizeInMBytes() uint64 {
 		return 20
 	}
 	return maxFileSizeInBytes
+}
+
+func mustValidateRuntimeConfig() {
+	if err := validateRuntimeConfig(); err != nil {
+		log.Fatalf("Invalid runtime configuration: %s", err)
+	}
 }

@@ -55,14 +55,9 @@ func UploadTaskAttachment(c *echo.Context) error {
 		return err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
 	// Multipart form
 	form, err := c.MultipartForm()
 	if err != nil {
-		_ = s.Rollback()
-		events.CleanupPending(s)
 		if errors.Is(err, http.ErrNotMultipart) {
 			return echo.NewHTTPError(http.StatusBadRequest, "No multipart form provided").Wrap(err)
 		}
@@ -81,6 +76,12 @@ func UploadTaskAttachment(c *echo.Context) error {
 		defer f.Close()
 		uploads = append(uploads, &models.AttachmentToUpload{Reader: f, Filename: file.Filename, Size: uint64(file.Size)})
 	}
+
+	s, err := db.NewWriteSession(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	defer s.Close()
 
 	success, failures, err := models.UploadTaskAttachments(s, auth, taskAttachment.TaskID, uploads)
 	if err != nil {

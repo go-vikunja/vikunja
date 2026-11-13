@@ -97,24 +97,32 @@ func labelVisibleCond(s *xorm.Session, a web.Auth) (builder.Cond, error) {
 		return nil, err
 	}
 
-	usedOnAccessibleTask := builder.In("labels.id",
-		builder.
-			Select("label_tasks.label_id").
-			From("label_tasks").
-			InnerJoin("tasks", "tasks.id = label_tasks.task_id").
-			Where(builder.And(accessibleProjects, taskNotDeletedCond("tasks"))),
-	)
+	accessibleLabelIDs := builder.Select("label_tasks.label_id").
+		From("label_tasks").
+		InnerJoin("tasks", "tasks.id = label_tasks.task_id").
+		Where(builder.And(accessibleProjects, taskNotDeletedCond("tasks")))
 
-	accessBranches := []builder.Cond{usedOnAccessibleTask}
+	visible := builder.In("labels.id", accessibleLabelIDs)
 	if _, isLinkShare := a.(*LinkSharing); !isLinkShare {
 		caller, err := user.GetFromAuth(a)
 		if err != nil {
 			return nil, err
 		}
-		accessBranches = append(accessBranches, user.SameBotIdentityCond(caller, "labels.created_by_id"))
+		taskSQL, taskArgs, err := accessibleLabelIDs.ToSQL()
+		if err != nil {
+			return nil, err
+		}
+		creatorSQL, creatorArgs, err := builder.Select("labels.id").From("labels").
+			Where(user.SameBotIdentityCond(caller, "labels.created_by_id")).ToSQL()
+		if err != nil {
+			return nil, err
+		}
+
+		// Union IDs before the outer lookup; OR-ing memberships scans every label.
+		// builder.Union parenthesizes each SELECT, which SQLite does not support here.
+		visible = builder.In("labels.id", builder.Expr(taskSQL+" UNION "+creatorSQL, append(taskArgs, creatorArgs...)...))
 	}
 
-	visible := builder.Or(accessBranches...)
 	// Both consumers embed this in a builder.And, which silently drops an invalid
 	// cond - the query would then match every label instead of failing.
 	if visible == nil || !visible.IsValid() {

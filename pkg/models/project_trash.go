@@ -93,10 +93,12 @@ func trashProject(s *xorm.Session, project *Project, a web.Auth) error {
 	}
 
 	for _, p := range projects {
-		events.DispatchOnCommit(s, &ProjectDeletedEvent{
+		if err := events.DispatchOnCommit(s, &ProjectDeletedEvent{
 			Project: p,
 			Doer:    doer,
-		})
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -232,11 +234,13 @@ func hardDeleteProjectTree(s *xorm.Session, p *Project, doer *user.User, ancesto
 	if err != nil {
 		return
 	}
-	events.DispatchOnCommit(s, &ProjectPurgedEvent{
+	if err := events.DispatchOnCommit(s, &ProjectPurgedEvent{
 		Project:     p,
 		Doer:        doer,
 		AncestorIDs: ancestorIDs,
-	})
+	}); err != nil {
+		return err
+	}
 
 	children := []*Project{}
 	err = s.Unscoped().Where("parent_project_id = ?", p.ID).Find(&children)
@@ -456,10 +460,12 @@ func (p *Project) Restore(s *xorm.Session, a web.Auth) error {
 	}
 	doer := doerFromAuth(s, a)
 	for _, project := range restored {
-		events.DispatchOnCommit(s, &ProjectRestoredEvent{
+		if err := events.DispatchOnCommit(s, &ProjectRestoredEvent{
 			Project: project,
 			Doer:    doer,
-		})
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -659,7 +665,7 @@ func EmptyProjectTrash(s *xorm.Session, a web.Auth, includeOthers bool) (purged 
 
 // RegisterProjectCleanupCron purges projects trashed more than TrashRetention ago.
 func RegisterProjectCleanupCron() {
-	err := cron.Schedule("30 * * * *", func() {
+	err := cron.RegisterState("project-trash-cleanup", "30 * * * *", func() {
 		deleteExpiredProjects(time.Now())
 	})
 	if err != nil {

@@ -20,9 +20,9 @@ import (
 	"embed"
 	"fmt"
 	"io"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
@@ -129,24 +129,16 @@ func getMessage(opts *Opts) *mail.Msg {
 	return m
 }
 
-var enqueueTimeout = 10 * time.Second
-
-// SendMail puts a mail in the queue
+// SendMail records mail durably in its own transaction.
 func SendMail(opts *Opts) error {
 	if isUnderTest {
 		sentMails = append(sentMails, opts)
 		return nil
 	}
-
-	if !config.MailerEnabled.GetBool() || Queue == nil {
-		return nil
+	s := db.NewSession()
+	defer s.Close()
+	if err := Enqueue(s, opts, "mail", ""); err != nil {
+		return err
 	}
-
-	m := getMessage(opts)
-	select {
-	case Queue <- m:
-		return nil
-	case <-time.After(enqueueTimeout):
-		return fmt.Errorf("mail queue is full, could not queue mail within %s", enqueueTimeout)
-	}
+	return s.Commit()
 }

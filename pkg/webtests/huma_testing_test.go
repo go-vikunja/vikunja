@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -60,14 +61,10 @@ func setupTestingEnv(t *testing.T, token string) *echo.Echo {
 	events.Fake()
 	keyvalue.InitStorage()
 
-	// models.SetupTests only syncs models + notifications tables, but
-	// TruncateAllTables walks *every* registered table — including ones created
-	// by migration in production (license_status, migration_status) plus
-	// xormigrate's "migration" tracking table. Create them here so truncate-all
-	// doesn't hit "no such table" (the same gap that kept v1 from testing it).
+	// Truncate-all also visits tables normally created by migrations.
 	engine, err := db.CreateTestEngine()
 	require.NoError(t, err)
-	extraTables := append(append([]any{new(xormigrate.Migration)}, license.GetTables()...), migration.GetTables()...)
+	extraTables := append(append([]any{new(xormigrate.Migration), new(cron.State)}, license.GetTables()...), migration.GetTables()...)
 	require.NoError(t, engine.Sync2(extraTables...))
 
 	require.NoError(t, db.LoadFixtures())

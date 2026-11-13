@@ -142,10 +142,9 @@ const {authenticated, isAwaitingFirstConnection} = useWebSocket()
 const authStore = useAuthStore()
 const router = useRouter()
 const inbox = useInfiniteQuery(computed(() => ({
-	...notificationsQuery(),
+	...notificationsQuery(authenticated.value),
 	// A fetch before the socket subscribes would be refetched by the subscribe sweep.
 	enabled: !isAwaitingFirstConnection(),
-	refetchInterval: authenticated.value ? false : 10_000,
 })))
 const readMutation = useMarkNotificationReadMutation()
 const readAllMutation = useMarkAllNotificationsReadMutation()

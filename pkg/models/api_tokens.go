@@ -156,11 +156,13 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &APITokenIssuedEvent{
+	if err := events.DispatchOnCommit(s, &APITokenIssuedEvent{
 		TokenID: t.ID,
 		DoerID:  caller.ID,
 		OwnerID: t.OwnerID,
-	})
+	}); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -252,10 +254,12 @@ func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &APITokenRevokedEvent{
+	if err := events.DispatchOnCommit(s, &APITokenRevokedEvent{
 		TokenID: t.ID,
 		DoerID:  caller.ID,
-	})
+	}); err != nil {
+		return err
+	}
 
 	return nil
 }

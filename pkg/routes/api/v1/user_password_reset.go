@@ -48,7 +48,7 @@ func UserResetPassword(c *echo.Context) error {
 		return err
 	}
 
-	if err := shared.ResetPassword(&pwReset); err != nil {
+	if err := shared.ResetPassword(c.Request().Context(), &pwReset); err != nil {
 		return err
 	}
 
@@ -77,7 +77,7 @@ func UserRequestResetPasswordToken(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
-	if err := shared.RequestPasswordResetToken(&pwTokenReset); err != nil {
+	if err := shared.RequestPasswordResetToken(c.Request().Context(), &pwTokenReset); err != nil {
 		return err
 	}
 

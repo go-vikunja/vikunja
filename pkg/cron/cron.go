@@ -17,6 +17,15 @@
 package cron
 
 import (
+	"context"
+	"time"
+
+	"code.vikunja.io/api/pkg/db"
+	"xorm.io/xorm"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
+
 	"github.com/robfig/cron/v3"
 )
 
@@ -24,17 +33,76 @@ var c *cron.Cron
 
 // Init starts the cron
 func Init() {
-	c = cron.New()
+	logger := schedulerLogger{}
+	c = cron.New(cron.WithChain(cron.SkipIfStillRunning(logger), cron.Recover(logger)))
 	c.Start()
 }
 
-// Schedule schedules a job as a cron job
-func Schedule(schedule string, f func()) (err error) {
-	_, err = c.AddFunc(schedule, f)
-	return
+// ScheduleLocal registers process maintenance independently of the shared scheduler.
+func ScheduleLocal(schedule string, f func()) error {
+	_, err := c.AddFunc(schedule, f)
+	return err
 }
 
-// Stop stops the cron scheduler
+// Stop waits for running jobs after stopping new invocations.
 func Stop() {
-	c.Stop()
+	_ = StopWithContext(context.Background())
+}
+
+// StopWithContext bounds the drain; running callbacks cannot be cancelled.
+func StopWithContext(ctx context.Context) error {
+	if c == nil {
+		return nil
+	}
+	stopped := c.Stop()
+	select {
+	case <-stopped.Done():
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+type schedulerLogger struct{}
+
+func (schedulerLogger) Info(message string, values ...interface{}) {
+	log.Infof("[Cron] %s %v", message, values)
+}
+
+func (schedulerLogger) Error(err error, message string, values ...interface{}) {
+	log.Errorf("[Cron] %s: %v %v", message, err, values)
+}
+
+// Register schedules shared work with a transactional watermark.
+func Register(name, spec string, job Job) error {
+	if _, err := cron.ParseStandard(spec); err != nil {
+		return err
+	}
+	if !config.ServiceEnableScheduler.GetBool() {
+		return nil
+	}
+	engine, err := db.CreateDBEngine()
+	if err != nil {
+		return err
+	}
+	runner := NewRunner(engine)
+	if err := runner.Register(name, time.Now()); err != nil {
+		return err
+	}
+	if err := runner.registerLag(name); err != nil {
+		return err
+	}
+	return ScheduleLocal(spec, func() {
+		if _, err := runner.Tick(context.Background(), name, time.Now(), job); err != nil {
+			log.Errorf("[Cron] %s: %v", name, err)
+		}
+	})
+}
+
+// RegisterState coordinates callbacks which manage their own item transactions.
+func RegisterState(name, spec string, job func()) error {
+	return Register(name, spec, func(context.Context, *xorm.Session, Window) error {
+		job()
+		return nil
+	})
 }

@@ -17,12 +17,15 @@
 package notifications
 
 import (
+	"context"
 	"encoding/json"
 	"slices"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/jobs"
+	"code.vikunja.io/api/pkg/mail"
+
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
 
 	"xorm.io/xorm"
 )
@@ -126,87 +129,113 @@ type Notifiable interface {
 	Lang() string
 }
 
-// Notify notifies a notifiable of a notification.
-// An optional xorm session can be passed to reuse an existing transaction for the DB notification.
-// For persisted notifications the mail is queued from DatabaseNotification.AfterInsert,
-// i.e. only once the row is committed, so a rolled-back transaction (and its
-// event-handler retry) cannot duplicate mails (#2971).
-func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.Session) (err error) {
+// Notify commits notification content and its mail job together.
+func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.Session) error {
+	return NotifyQueued(notifiable, notification, "mail", "", sessions...)
+}
+
+func NotifyQueued(notifiable Notifiable, notification Notification, queue, key string, sessions ...*xorm.Session) error {
 	if isUnderTest {
 		sentTestNotifications = append(sentTestNotifications, notification)
 		return nil
 	}
-
-	should, err := notifiable.ShouldNotify(notification, sessions...)
-	if err != nil || !should {
-		log.Debugf("Not notifying user %d because they are disabled", notifiable.RouteForDB())
-		return err
-	}
-
 	var s *xorm.Session
-	if len(sessions) > 0 && sessions[0] != nil {
+	owned := len(sessions) == 0 || sessions[0] == nil
+	if owned {
+		s = db.NewSession()
+		defer s.Close()
+		defer jobs.DiscardPending(s)
+	} else {
 		s = sessions[0]
 	}
-
-	mailDeferred, err := notifyDB(notifiable, notification, s)
-	if err != nil || mailDeferred {
+	should, err := notifiable.ShouldNotify(notification, s)
+	if err != nil || !should {
 		return err
 	}
-
-	return notifyMail(notifiable, notification)
-}
-
-func notifyMail(notifiable Notifiable, notification Notification) error {
-	if !config.MailerEnabled.GetBool() {
-		return nil
-	}
-
-	mail := notification.ToMail(notifiable.Lang())
-	if mail == nil {
-		return nil
-	}
-
-	if mail.subject == "" {
-		if t, is := notification.(Titler); is {
-			mail.subject = t.ToTitle(notifiable.Lang())
-		}
-	}
-
-	to, err := notifiable.RouteForMail()
+	opts, err := prepareMail(notifiable, notification)
 	if err != nil {
 		return err
 	}
-	mail.To(to)
-
-	if threadID, is := notification.(ThreadID); is {
-		mail.ThreadID(threadID.ThreadID())
+	if opts != nil {
+		if err := mail.Enqueue(s, opts, queue, key); err != nil {
+			return err
+		}
 	}
-
-	return SendMail(mail, notifiable.Lang())
+	if err := notifyDB(notifiable, notification, s); err != nil {
+		return err
+	}
+	if owned {
+		if err := s.Commit(); err != nil {
+			return err
+		}
+		jobs.WakePending(s)
+	}
+	return nil
 }
 
-// notifyDB inserts the notification row if the notification has a DB
-// representation. mailDeferred reports that the mail will be queued from
-// AfterInsert once the (possibly caller-owned) transaction commits, so the
-// caller must not send it.
-func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (mailDeferred bool, err error) {
+func NotifyDB(notifiable Notifiable, notification Notification, s *xorm.Session) error {
+	should, err := notifiable.ShouldNotify(notification, s)
+	if err != nil || !should {
+		return err
+	}
+	return notifyDB(notifiable, notification, s)
+}
 
+func SendMailNow(ctx context.Context, notifiable Notifiable, notification Notification) error {
+	opts, err := prepareMail(notifiable, notification)
+	if err != nil || opts == nil {
+		return err
+	}
+	return mail.Deliver(ctx, opts)
+}
+
+func prepareMail(notifiable Notifiable, notification Notification) (*mail.Opts, error) {
+	if !config.MailerEnabled.GetBool() {
+		return nil, nil
+	}
+	m := notification.ToMail(notifiable.Lang())
+	if m == nil {
+		return nil, nil
+	}
+	if m.subject == "" {
+		if t, ok := notification.(Titler); ok {
+			m.subject = t.ToTitle(notifiable.Lang())
+		}
+	}
+	to, err := notifiable.RouteForMail()
+	if err != nil {
+		return nil, err
+	}
+	m.To(to)
+	if thread, ok := notification.(ThreadID); ok {
+		m.ThreadID(thread.ThreadID())
+	}
+	return RenderMail(m, notifiable.Lang())
+}
+
+func notifyMail(notifiable Notifiable, notification Notification) error {
+	opts, err := prepareMail(notifiable, notification)
+	if err != nil || opts == nil {
+		return err
+	}
+	return mail.SendMail(opts)
+}
+
+func notifyDB(notifiable Notifiable, notification Notification, s *xorm.Session) error {
 	dbContent := notification.ToDB()
 	if dbContent == nil {
-		return false, nil
+		return nil
 	}
 
 	content, err := json.Marshal(dbContent)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
 		Notification: json.RawMessage(content),
 		Name:         notification.Name(),
-		notification: notification,
-		notifiable:   notifiable,
 	}
 
 	if subject, is := notification.(SubjectID); is {
@@ -214,19 +243,6 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 	}
 	dbNotification.ProjectID = ProjectIDOf(notification)
 
-	if existingSession != nil {
-		_, err = existingSession.Insert(dbNotification)
-		return err == nil, err
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
 	_, err = s.Insert(dbNotification)
-	if err != nil {
-		_ = s.Rollback()
-		return false, err
-	}
-
-	return true, s.Commit()
+	return err
 }

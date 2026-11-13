@@ -110,3 +110,30 @@ func TestConnectionRejectsActionsBeforeAuth(t *testing.T) {
 	assert.Equal(t, "auth_required", msg.Error)
 	assert.False(t, conn.IsSubscribed("notification.created"))
 }
+
+func TestConnectionHeartbeatRequiresAuthentication(t *testing.T) {
+	for name, authenticated := range map[string]bool{
+		"unauthenticated": false,
+		"authenticated":   true,
+	} {
+		t.Run(name, func(t *testing.T) {
+			conn := &Connection{
+				authenticated: authenticated,
+				send:          make(chan OutgoingMessage, 1),
+			}
+			assert.True(t, conn.handleMessage(context.Background(), IncomingMessage{Action: "ping"}))
+			select {
+			case reply := <-conn.send:
+				if authenticated {
+					assert.Equal(t, "pong", reply.Action)
+					assert.Empty(t, reply.Error)
+				} else {
+					assert.Equal(t, "auth_required", reply.Error)
+					assert.Empty(t, reply.Action)
+				}
+			default:
+				t.Fatal("heartbeat received no response")
+			}
+		})
+	}
+}

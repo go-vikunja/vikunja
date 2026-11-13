@@ -25,6 +25,11 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/jobs"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,7 +46,7 @@ func TestDispatchOnCommit(t *testing.T) {
 	// Use a simple key (in real use this is a *xorm.Session)
 	key := new(int)
 
-	DispatchOnCommit(key, &testEvent{})
+	require.NoError(t, DispatchOnCommit(key, &testEvent{}))
 
 	// Event should NOT be dispatched yet
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
@@ -58,9 +63,9 @@ func TestDispatchOnCommitMultipleEvents(t *testing.T) {
 
 	key := new(int)
 
-	DispatchOnCommit(key, &testEvent{})
-	DispatchOnCommit(key, &testEvent{})
-	DispatchOnCommit(key, &testEvent{})
+	require.NoError(t, DispatchOnCommit(key, &testEvent{}))
+	require.NoError(t, DispatchOnCommit(key, &testEvent{}))
+	require.NoError(t, DispatchOnCommit(key, &testEvent{}))
 
 	assert.Equal(t, 0, CountDispatchedEvents("test.event"))
 
@@ -74,8 +79,8 @@ func TestCleanupPending(t *testing.T) {
 
 	key := new(int)
 
-	DispatchOnCommit(key, &testEvent{})
-	DispatchOnCommit(key, &testEvent{})
+	require.NoError(t, DispatchOnCommit(key, &testEvent{}))
+	require.NoError(t, DispatchOnCommit(key, &testEvent{}))
 
 	// Simulate rollback — discard events
 	CleanupPending(key)
@@ -112,7 +117,7 @@ func TestOnCommit(t *testing.T) {
 			calls = append(calls, 1)
 			return errors.New("failing callback must not stop the others")
 		})
-		DispatchOnCommit(key, &testEvent{})
+		require.NoError(t, DispatchOnCommit(key, &testEvent{}))
 		OnCommit(key, func() error {
 			calls = append(calls, 2)
 			return nil
@@ -159,6 +164,44 @@ func TestShouldReportPoisonedMessage(t *testing.T) {
 	})
 }
 
+func TestDurableEventJoinsBusinessTransaction(t *testing.T) {
+	config.InitDefaultConfig()
+	engine, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, engine.Sync(new(jobs.Job)))
+	t.Cleanup(func() {
+		_, err := engine.Where("kind = ?", "test.event.durable.test").Delete(new(jobs.Job))
+		require.NoError(t, err)
+	})
+	before := isUnderTest
+	isUnderTest = false
+	t.Cleanup(func() { isUnderTest = before })
+	RegisterDurableListener("test.event", "notifications", &durableTestListener{})
+	t.Cleanup(func() { delete(durableListeners, "test.event") })
+	s := engine.NewSession()
+	defer s.Close()
+	defer CleanupPending(s)
+	require.NoError(t, s.Begin())
+	require.NoError(t, DispatchOnCommit(s, &testEvent{}))
+	require.NoError(t, s.Rollback())
+	count, err := engine.Where("kind = ?", "test.event.durable.test").Count(new(jobs.Job))
+	require.NoError(t, err)
+	assert.Zero(t, count)
+	s = engine.NewSession()
+	defer s.Close()
+	defer CleanupPending(s)
+	require.NoError(t, s.Begin())
+	require.NoError(t, DispatchOnCommit(s, &testEvent{}))
+	require.NoError(t, s.Commit())
+	count, err = engine.Where("kind = ?", "test.event.durable.test").Count(new(jobs.Job))
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, count)
+}
+
+type durableTestListener struct{}
+
+func (*durableTestListener) Name() string                  { return "durable.test" }
+func (*durableTestListener) Handle(*message.Message) error { return nil }
 func TestWaitForPendingHandlersDuringNewDelivery(t *testing.T) {
 	previous := runtime.GOMAXPROCS(1)
 	defer runtime.GOMAXPROCS(previous)

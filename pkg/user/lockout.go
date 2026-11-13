@@ -53,7 +53,10 @@ func lockAccount(user *User, attemptsKey string, n notifications.Notification) {
 		_ = s.Rollback()
 		return
 	}
-	events.DispatchOnCommit(s, &AccountLockedEvent{UserID: user.ID})
+	if err := events.DispatchOnCommit(s, &AccountLockedEvent{UserID: user.ID}); err != nil {
+		log.Errorf("Could not enqueue account lock event for user %d: %s", user.ID, err)
+		return
+	}
 	if err := s.Commit(); err != nil {
 		log.Errorf("Could not commit lockout for user %d: %s", user.ID, err)
 		return

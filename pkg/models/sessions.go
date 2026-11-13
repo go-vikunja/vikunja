@@ -240,7 +240,9 @@ func revokeSessions(s *xorm.Session, event *SessionsRevokedEvent) error {
 	if err := user.InvalidateSessionAuthCacheOnCommit(s, event.UserID); err != nil {
 		return err
 	}
-	events.DispatchOnCommit(s, event)
+	if err := events.DispatchOnCommit(s, event); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -250,7 +252,7 @@ func revokeSessions(s *xorm.Session, event *SessionsRevokedEvent) error {
 func RegisterSessionCleanupCron() {
 	const logPrefix = "[Session Cleanup Cron] "
 
-	err := cron.Schedule("0 * * * *", func() {
+	err := cron.RegisterState("expired-sessions", "0 * * * *", func() {
 		s := db.NewSession()
 		defer s.Close()
 

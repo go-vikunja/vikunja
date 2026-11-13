@@ -33,6 +33,7 @@
 package license
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -376,7 +377,7 @@ func loadOrCreateInstanceID() (string, error) {
 }
 
 func loadCachedStatus() (*Status, error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
 
 	status := &Status{}
@@ -449,7 +450,10 @@ func cacheResponse(resp *Response) error {
 		return err
 	}
 
-	s := db.NewSession()
+	s, err := db.NewWriteSession(context.Background())
+	if err != nil {
+		return err
+	}
 	defer s.Close()
 
 	_, err = s.Where("instance_id = ?", instanceID).Update(&Status{
@@ -518,10 +522,13 @@ func backgroundLoop(key string) {
 }
 
 func clearCache() error {
-	s := db.NewSession()
+	s, err := db.NewWriteSession(context.Background())
+	if err != nil {
+		return err
+	}
 	defer s.Close()
 
-	_, err := s.Where("instance_id = ?", instanceID).Update(&Status{
+	_, err = s.Where("instance_id = ?", instanceID).Update(&Status{
 		Response:    "{}",
 		ValidatedAt: time.Time{},
 	})

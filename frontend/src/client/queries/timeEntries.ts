@@ -58,6 +58,8 @@ export const timeEntryKeys = {
 export function timeEntriesQuery(filter: string, timezone: string, page: number) {
 	return queryOptions({
 		queryKey: timeEntryKeys.list(filter, timezone, page),
+		refetchInterval: 5 * 60 * 1000 + Math.random() * 60000,
+		refetchIntervalInBackground: false,
 		queryFn: async ({signal}): Promise<TimeEntryPage> => {
 			const {data} = await timeEntriesList({
 				query: {
@@ -78,6 +80,8 @@ export function timeEntriesQuery(filter: string, timezone: string, page: number)
 export function activeTimerQuery(userId: number) {
 	return queryOptions({
 		queryKey: timeEntryKeys.active(userId),
+		refetchInterval: 5 * 60 * 1000 + Math.random() * 60000,
+		refetchIntervalInBackground: false,
 		queryFn: async ({signal}) => {
 			if (userId <= 0) return null
 			const {data} = await timeEntriesList({

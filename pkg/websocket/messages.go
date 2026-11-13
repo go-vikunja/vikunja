@@ -21,10 +21,12 @@ const (
 	ActionAuth        = "auth"
 	ActionSubscribe   = "subscribe"
 	ActionUnsubscribe = "unsubscribe"
+	ActionPing        = "ping"
 
 	// Server actions
 	ActionAuthSuccess  = "auth.success"
 	ActionUnsubscribed = "unsubscribed"
+	ActionPong         = "pong"
 )
 
 // IncomingMessage represents a message from the client.

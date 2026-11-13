@@ -17,8 +17,12 @@
 package cmd
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/initialize"
+	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/migration"
+	"code.vikunja.io/api/pkg/plugins"
 	"github.com/spf13/cobra"
 )
 
@@ -41,6 +45,16 @@ var migrateCmd = &cobra.Command{
 	},
 	Run: func(_ *cobra.Command, _ []string) {
 		migration.Migrate(nil)
+		initialize.InitEngines()
+		license.Init()
+		defer license.Shutdown()
+		if err := plugins.Load(); err != nil {
+			log.Fatalf("Loading plugin migrations failed: %s", err)
+		}
+		migration.Migrate(nil)
+		if err := db.CreateParadeDBIndexes(); err != nil {
+			log.Fatalf("Creating search indexes failed: %s", err)
+		}
 	},
 }
 

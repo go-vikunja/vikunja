@@ -635,7 +635,7 @@ func addTaskToFilterViews(s *xorm.Session, task *Task, views []filterView, state
 func RegisterAddTaskToFilterViewCron() {
 	const logPrefix = "[Add Task To Filter View Cron] "
 
-	err := cron.Schedule("* * * * *", func() {
+	err := cron.RegisterState("saved-filter-membership", "* * * * *", func() {
 		s := db.NewSession()
 		defer s.Close()
 

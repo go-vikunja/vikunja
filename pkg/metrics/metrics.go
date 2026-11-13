@@ -26,6 +26,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"golang.org/x/sync/singleflight"
 )
 
 const (
@@ -54,6 +55,8 @@ var countTables = map[string]string{
 }
 
 var registry *prometheus.Registry
+
+var countLoads singleflight.Group
 
 func GetRegistry() *prometheus.Registry {
 	if registry == nil {
@@ -102,9 +105,19 @@ func InitMetrics() {
 // directly from the database and cached for countCacheTTL, so repeated scrapes don't
 // hit the database on every request.
 func GetCount(key string) (int64, error) {
-	return keyvalue.RememberFor(key, countCacheTTL, func() (int64, error) {
+	return getCachedCount(key, func() (int64, error) {
 		return countFromDatabase(key)
 	})
+}
+
+func getCachedCount(key string, load func() (int64, error)) (int64, error) {
+	value, err, _ := countLoads.Do(key, func() (any, error) {
+		return keyvalue.RememberFor(key, countCacheTTL, load)
+	})
+	if err != nil {
+		return 0, err
+	}
+	return value.(int64), nil
 }
 
 // countFromDatabase runs a COUNT(*) for the table backing the given metric key.
@@ -114,7 +127,7 @@ func countFromDatabase(key string) (int64, error) {
 		return 0, nil
 	}
 
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
 
 	query := s.Table(table)

@@ -162,7 +162,7 @@ func cleanupImportUploads() {
 }
 
 func RegisterImportUploadCleanupCron() {
-	if err := cron.Schedule("0 * * * *", cleanupImportUploads); err != nil {
+	if err := cron.RegisterState("abandoned-import-uploads", "0 * * * *", cleanupImportUploads); err != nil {
 		log.Fatalf("[Migration] Could not register the import upload cleanup cron: %s", err)
 	}
 }

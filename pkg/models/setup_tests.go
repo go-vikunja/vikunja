@@ -21,6 +21,7 @@ import (
 
 	_ "code.vikunja.io/api/pkg/config" // To trigger its init() which initializes the config
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/notifications"
@@ -38,7 +39,7 @@ func SetupTests() {
 	}
 
 	syncTestTables.Do(func() {
-		tables := []interface{}{}
+		tables := []interface{}{new(jobs.Job)}
 		tables = append(tables, GetTables()...)
 		tables = append(tables, notifications.GetTables()...)
 

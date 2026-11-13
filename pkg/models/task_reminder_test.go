@@ -22,14 +22,61 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/schemas"
 )
+
+func TestReminderLargeWindowBatchesExpansionJobs(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	setup := db.NewSession()
+	defer setup.Close()
+	const count = 22000
+	now := time.Date(2026, 11, 12, 20, 5, 0, 0, time.UTC)
+	for start := 0; start < count; start += 250 {
+		tasks := make([]*Task, 0, 250)
+		reminders := make([]*TaskReminder, 0, 250)
+		for i := start; i < start+250 && i < count; i++ {
+			id := int64(100000 + i)
+			tasks = append(tasks, &Task{ID: id, Index: id, Title: "Simultaneous reminder", ProjectID: 1, CreatedByID: 1})
+			reminders = append(reminders, &TaskReminder{TaskID: id, Reminder: now})
+		}
+		_, err := setup.Insert(&tasks)
+		require.NoError(t, err)
+		_, err = setup.Insert(&reminders)
+		require.NoError(t, err)
+	}
+	_, err := setup.Insert(&TaskReminder{TaskID: 100000, Reminder: now})
+	require.NoError(t, err)
+	_, err = setup.Where("entity_type = ? AND entity_id = ?", SubscriptionEntityProject, 1).Delete(&Subscription{})
+	require.NoError(t, err)
+	_, err = setup.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 1, UserID: 1})
+	require.NoError(t, err)
+	require.NoError(t, setup.Commit())
+	s := db.NewSession()
+	defer s.Close()
+	resetReminderJobs(t)
+	require.NoError(t, enqueueTaskReminders(t.Context(), s, cron.Window{From: now.Add(-time.Minute), To: now}))
+	rows := []jobs.Job{}
+	require.NoError(t, s.Where("kind LIKE ?", "reminder.%").Find(&rows))
+	require.Len(t, rows, count)
+	seen := make(map[int64]bool, count)
+	for _, row := range rows {
+		require.Equal(t, "reminder.expand", row.Kind)
+		var payload reminderJob
+		require.NoError(t, json.Unmarshal([]byte(row.Payload), &payload))
+		require.Zero(t, payload.UserID, "recipient discovery belongs to the worker")
+		require.False(t, seen[payload.TaskID])
+		seen[payload.TaskID] = true
+	}
+}
 
 func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 	t.Run("Found Tasks", func(t *testing.T) {
@@ -559,8 +606,31 @@ func TestGetTaskUsersForTasksIsAssignee(t *testing.T) {
 }
 
 func TestSendDueReminders(t *testing.T) {
+	t.Run("rescues an expired reminder claim", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		resetReminderJobs(t)
+		engine, err := db.CreateDBEngine()
+		require.NoError(t, err)
+		_, err = engine.Insert(&jobs.Job{
+			Queue:       "notifications",
+			Kind:        "reminder.notification",
+			Version:     1,
+			Payload:     `{"task_id":27,"user_id":1,"at":"2018-12-01T01:12:04Z"}`,
+			State:       jobs.StateRunning,
+			Attempt:     1,
+			MaxAttempts: jobs.DefaultAttempts,
+			RunAt:       time.Now().Add(-time.Minute),
+			ClaimOwner:  "stopped-worker",
+			ExpiresAt:   time.Now().Add(-time.Second),
+		})
+		require.NoError(t, err)
+
+		drainReminderJobs(t)
+		assertSingleReminderNotification(t)
+	})
 	t.Run("stores in-app notification when mailer is disabled", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		resetReminderJobs(t)
 		oldMailer := config.MailerEnabled.GetBool()
 		config.MailerEnabled.Set(false)
 		t.Cleanup(func() { config.MailerEnabled.Set(oldMailer) })
@@ -573,14 +643,17 @@ func TestSendDueReminders(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
 		require.NoError(t, err)
-		err = sendDueReminders(s, now, false)
+		err = enqueueTaskReminders(t.Context(), s, cron.Window{From: now.Add(-time.Second), To: now.Add(time.Minute - time.Second)})
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
+		s.Close()
+		drainReminderJobs(t)
 
-		assertSingleReminderNotification(t, 1, 27, 1)
+		assertSingleReminderNotification(t)
 	})
 	t.Run("queues mail only after commit when email reminders are on", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		resetReminderJobs(t)
 		enableReminderMail(t)
 
 		s := db.NewSession()
@@ -591,18 +664,21 @@ func TestSendDueReminders(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
 		require.NoError(t, err)
-		err = sendDueReminders(s, now, false)
+		err = enqueueTaskReminders(t.Context(), s, cron.Window{From: now.Add(-time.Second), To: now.Add(time.Minute - time.Second)})
 		require.NoError(t, err)
 		assert.Empty(t, mail.SentMails())
 		require.NoError(t, s.Commit())
+		s.Close()
+		drainReminderJobs(t)
 
 		sent := mail.SentMails()
 		require.Len(t, sent, 1)
 		assert.Equal(t, "user1@example.com", sent[0].To)
-		assertSingleReminderNotification(t, 1, 27, 1)
+		assertSingleReminderNotification(t)
 	})
 	t.Run("stores in-app notification without mail when the user disabled email reminders", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
+		resetReminderJobs(t)
 		enableReminderMail(t)
 
 		s := db.NewSession()
@@ -613,12 +689,14 @@ func TestSendDueReminders(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
 		require.NoError(t, err)
-		err = sendDueReminders(s, now, false)
+		err = enqueueTaskReminders(t.Context(), s, cron.Window{From: now.Add(-time.Second), To: now.Add(time.Minute - time.Second)})
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
+		s.Close()
+		drainReminderJobs(t)
 
 		assert.Empty(t, mail.SentMails())
-		assertSingleReminderNotification(t, 1, 27, 1)
+		assertSingleReminderNotification(t)
 	})
 }
 
@@ -637,17 +715,17 @@ func enableReminderMail(t *testing.T) {
 	})
 }
 
-func assertSingleReminderNotification(t *testing.T, userID, taskID, projectID int64) {
+func assertSingleReminderNotification(t *testing.T) {
 	t.Helper()
 
 	s := db.NewSession()
 	defer s.Close()
 
 	rows := []*notifications.DatabaseNotification{}
-	err := s.Where("notifiable_id = ? AND name = ?", userID, "task.reminder").Find(&rows)
+	err := s.Where("notifiable_id = ? AND name = ?", 1, "task.reminder").Find(&rows)
 	require.NoError(t, err)
 	require.Len(t, rows, 1)
-	assert.Equal(t, projectID, rows[0].ProjectID)
+	assert.Equal(t, int64(1), rows[0].ProjectID)
 
 	payload, err := json.Marshal(rows[0].Notification)
 	require.NoError(t, err)
@@ -657,7 +735,7 @@ func assertSingleReminderNotification(t *testing.T, userID, taskID, projectID in
 		} `json:"task"`
 	}
 	require.NoError(t, json.Unmarshal(payload, &parsed))
-	assert.Equal(t, taskID, parsed.Task.ID)
+	assert.Equal(t, int64(27), parsed.Task.ID)
 }
 
 func TestReminderDueNotificationToMail(t *testing.T) {
@@ -683,4 +761,51 @@ func TestReminderDueNotificationToMail(t *testing.T) {
 		n.User.EmailRemindersEnabled = true
 		assert.NotNil(t, n.ToMail("en"))
 	})
+}
+
+func resetReminderJobs(t *testing.T) {
+	t.Helper()
+	engine, err := db.CreateDBEngine()
+	require.NoError(t, err)
+	_, err = engine.Where("kind LIKE ?", "reminder.%").Delete(new(jobs.Job))
+	require.NoError(t, err)
+}
+
+func drainReminderJobs(t *testing.T) {
+	t.Helper()
+	engine, err := db.CreateDBEngine()
+	require.NoError(t, err)
+	if engine.Dialect().URI().DBType == schemas.SQLITE {
+		// Keep the in-memory DB alive when cancellation discards a worker connection.
+		keeper, err := engine.DB().Conn(t.Context())
+		require.NoError(t, err)
+		previousMax := engine.DB().Stats().MaxOpenConnections
+		engine.SetMaxOpenConns(2) // One keeper and one active connection serialize SQLite writes.
+		defer func() {
+			require.NoError(t, keeper.Close())
+			engine.SetMaxOpenConns(previousMax)
+		}()
+	}
+	for _, queue := range []string{"mail", "bulk-mail", "notifications", "bulk-notifications", "webhooks", "bulk-webhooks", "reminder-expansion"} {
+		key := config.Key("jobs.queues." + queue + ".lease")
+		defer key.Set(key.GetDuration())
+		key.Set(5 * time.Second)
+	}
+	require.NoError(t, jobs.Start(t.Context()))
+	defer func() { require.NoError(t, jobs.Shutdown(t.Context())) }()
+	lastMaintenance := time.Time{}
+	require.EventuallyWithT(t, func(collect *assert.CollectT) {
+		if time.Since(lastMaintenance) >= time.Second {
+			if !assert.NoError(collect, jobs.Maintain(t.Context())) {
+				return
+			}
+			lastMaintenance = time.Now()
+			jobs.Wake()
+		}
+		var pending []jobs.Job
+		err := engine.Where("kind LIKE ?", "reminder.%").Find(&pending)
+		if assert.NoError(collect, err) {
+			assert.Empty(collect, pending)
+		}
+	}, 15*time.Second, 100*time.Millisecond)
 }

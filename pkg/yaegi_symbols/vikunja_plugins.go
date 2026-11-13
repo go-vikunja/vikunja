@@ -13,6 +13,7 @@ func init() {
 	Symbols["code.vikunja.io/api/pkg/plugins/plugins"] = map[string]reflect.Value{
 		// function, constant and variable definitions
 		"Initialize":           reflect.ValueOf(plugins.Initialize),
+		"Load":                 reflect.ValueOf(plugins.Load),
 		"ManagerInstance":      reflect.ValueOf(plugins.ManagerInstance),
 		"NewRegistry":          reflect.ValueOf(plugins.NewRegistry),
 		"RegisterPluginRoutes": reflect.ValueOf(plugins.RegisterPluginRoutes),

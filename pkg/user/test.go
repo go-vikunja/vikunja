@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -37,7 +38,7 @@ func InitTests() {
 	}
 
 	syncTestTables.Do(func() {
-		if err := x.Sync2(GetTables()...); err != nil {
+		if err := x.Sync2(append(GetTables(), new(jobs.Job))...); err != nil {
 			log.Fatal(err)
 		}
 	})

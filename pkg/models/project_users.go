@@ -115,11 +115,13 @@ func (lu *ProjectUser) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &ProjectSharedWithUserEvent{
+	if err := events.DispatchOnCommit(s, &ProjectSharedWithUserEvent{
 		Project: l,
 		User:    u,
 		Doer:    doerFromAuth(s, a),
-	})
+	}); err != nil {
+		return err
+	}
 
 	err = updateProjectLastUpdated(s, l)
 	return

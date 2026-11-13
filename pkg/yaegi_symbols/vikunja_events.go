@@ -14,6 +14,7 @@ func init() {
 	Symbols["code.vikunja.io/api/pkg/events/events"] = map[string]reflect.Value{
 		// function, constant and variable definitions
 		"AssertDispatched":           reflect.ValueOf(events.AssertDispatched),
+		"Available":                  reflect.ValueOf(events.Available),
 		"CleanupPending":             reflect.ValueOf(events.CleanupPending),
 		"ClearDispatchedEvents":      reflect.ValueOf(events.ClearDispatchedEvents),
 		"CountDispatchedEvents":      reflect.ValueOf(events.CountDispatchedEvents),
@@ -31,8 +32,11 @@ func init() {
 		"MetadataKeyUserAgent":       reflect.ValueOf(constant.MakeFromLiteral("\"request_user_agent\"", token.STRING, 0)),
 		"MetadataSkipErrorReporting": reflect.ValueOf(constant.MakeFromLiteral("\"skip_error_reporting\"", token.STRING, 0)),
 		"OnCommit":                   reflect.ValueOf(events.OnCommit),
+		"RegisterDurableListener":    reflect.ValueOf(events.RegisterDurableListener),
 		"RegisterListener":           reflect.ValueOf(events.RegisterListener),
 		"RequestMetaFromContext":     reflect.ValueOf(events.RequestMetaFromContext),
+		"Shutdown":                   reflect.ValueOf(events.Shutdown),
+		"Start":                      reflect.ValueOf(events.Start),
 		"TestListener":               reflect.ValueOf(events.TestListener),
 		"Unfake":                     reflect.ValueOf(events.Unfake),
 		"WaitForPendingHandlers":     reflect.ValueOf(events.WaitForPendingHandlers),

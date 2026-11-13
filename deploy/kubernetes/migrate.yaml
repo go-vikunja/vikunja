@@ -1,0 +1,19 @@
+# Run once per release, before the API and scheduler rollout; wait for completion.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vikunja-migrate
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: vikunja/vikunja:REPLACE_WITH_YOUR_BUILD
+          args: ["migrate"]
+          envFrom:
+            - configMapRef:
+                name: vikunja
+            - secretRef:
+                name: vikunja-secrets

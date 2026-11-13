@@ -193,7 +193,7 @@ func buildPayload(key string) (*CheckRequest, error) {
 }
 
 func getUserCounts() (UserCounts, error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
 
 	var counts UserCounts

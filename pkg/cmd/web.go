@@ -27,14 +27,13 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/cron"
+	"code.vikunja.io/api/pkg/health"
 	"code.vikunja.io/api/pkg/initialize"
-	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
@@ -67,7 +66,7 @@ func setupUnixSocket() (net.Listener, error) {
 	return cfg.Listen(context.Background(), "unix", path)
 }
 
-func setupAutoTLS(server *http.Server) {
+func setupAutoTLS(server *http.Server) error {
 	if config.ServiceUnixSocket.GetString() != "" {
 		log.Warning("Auto tls is enabled but listening on a unix socket is enabled as well. The latter will be ignored.")
 	}
@@ -131,7 +130,7 @@ func setupAutoTLS(server *http.Server) {
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Errorf("Server error: %v", err)
 	}
-	log.Info("shutting down...")
+	return err
 }
 
 var webCmd = &cobra.Command{
@@ -156,10 +155,10 @@ var webCmd = &cobra.Command{
 			ReadHeaderTimeout: 10 * time.Second,
 		}
 
-		// Start server
+		serverErrors := make(chan error, 1)
 		go func() {
 			if config.AutoTLSEnabled.GetBool() {
-				setupAutoTLS(server)
+				serverErrors <- setupAutoTLS(server)
 				return
 			}
 
@@ -178,25 +177,29 @@ var webCmd = &cobra.Command{
 				err = server.ListenAndServe()
 			}
 
-			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Errorf("Server error: %v", err)
-			}
-			log.Info("shutting down...")
+			serverErrors <- err
 		}()
 
-		// Wait for interrupt signal to gracefully shut down the server with
-		// a timeout of 10 seconds.
 		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, os.Interrupt)
-		<-quit
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+		defer signal.Stop(quit)
+		var serverErr error
+		select {
+		case <-quit:
+		case serverErr = <-serverErrors:
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), config.ServiceShutdownTimeout.GetDuration())
 		defer cancel()
 		log.Infof("Shutting down...")
+		health.BeginShutdown()
 		if err := server.Shutdown(ctx); err != nil {
 			log.Fatalf("Server shutdown failed: %v", err)
 		}
-		cron.Stop()
-		license.Shutdown() // See the package comment in pkg/license/license.go before removing.
-		plugins.Shutdown()
+		if err := initialize.Shutdown(ctx); err != nil {
+			log.Fatalf("Background shutdown failed: %s", err)
+		}
+		if serverErr != nil && !errors.Is(serverErr, http.ErrServerClosed) {
+			log.Fatalf("Server failed: %s", serverErr)
+		}
 	},
 }

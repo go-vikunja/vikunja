@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 
@@ -30,7 +31,7 @@ import (
 )
 
 func RegisterDeletionNotificationCron() {
-	err := cron.Schedule("0 * * * *", notifyUsersScheduledForDeletion)
+	err := cron.RegisterState("account-deletion-warnings", "0 * * * *", notifyUsersScheduledForDeletion)
 	if err != nil {
 		log.Errorf("Could not register deletion cron: %s", err.Error())
 	}
@@ -77,11 +78,12 @@ func notifyUsersScheduledForDeletion() {
 func notifyUserOfDeletion(user *User, number int) error {
 	s := db.NewSession()
 	defer s.Close()
+	defer jobs.DiscardPending(s)
 
-	err := notifications.Notify(user, &AccountDeletionNotification{
+	err := notifications.NotifyQueued(user, &AccountDeletionNotification{
 		User:               user,
 		NotificationNumber: number,
-	}, s)
+	}, "mail", fmt.Sprintf("account-deletion/%d/%d/%d", user.ID, user.DeletionScheduledAt.Unix(), number), s)
 	if err != nil {
 		return fmt.Errorf("could not notify user: %w", err)
 	}
@@ -94,7 +96,11 @@ func notifyUserOfDeletion(user *User, number int) error {
 		return fmt.Errorf("could not update last deletion reminder sent date: %w", err)
 	}
 
-	return s.Commit()
+	if err := s.Commit(); err != nil {
+		return err
+	}
+	jobs.WakePending(s)
+	return nil
 }
 
 // RequestDeletion creates a user deletion confirm token and sends a notification to the user

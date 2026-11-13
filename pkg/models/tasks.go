@@ -1233,16 +1233,20 @@ func createTasksInViews(s *xorm.Session, projectID int64, tasks []*Task, a web.A
 			}
 		}
 
-		events.DispatchOnCommit(s, &TaskCreatedEvent{
+		if err := events.DispatchOnCommit(s, &TaskCreatedEvent{
 			Task: t,
 			Doer: createdBy,
-		})
+		}); err != nil {
+			return err
+		}
 	}
 
-	events.DispatchOnCommit(s, &TasksBatchCreatedEvent{
+	if err := events.DispatchOnCommit(s, &TasksBatchCreatedEvent{
 		Tasks: tasks,
 		Doer:  createdBy,
-	})
+	}); err != nil {
+		return err
+	}
 
 	err = updateProjectLastUpdated(s, &Project{ID: projectID})
 	return
@@ -1783,10 +1787,12 @@ func (t *Task) updateSingleTaskInViews(s *xorm.Session, a web.Auth, fields []str
 	}
 	t.Updated = nt.Updated
 
-	events.DispatchOnCommit(s, &TaskUpdatedEvent{
+	if err := events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: t,
 		Doer: doerFromAuth(s, a),
-	})
+	}); err != nil {
+		return err
+	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 }
@@ -2297,10 +2303,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskDeletedEvent{
+	if err := events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
 		Doer: doer,
-	})
+	}); err != nil {
+		return err
+	}
 
 	// fullTask, not t: the receiver only has the id from the route param
 	err = updateProjectLastUpdated(s, &Project{ID: fullTask.ProjectID})
@@ -2503,9 +2511,11 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskUpdatedEvent{
+	if err := events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: &t,
 		Doer: doerFromAuth(s, auth),
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }

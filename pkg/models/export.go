@@ -570,7 +570,7 @@ type UserExportStatus struct {
 }
 
 func RegisterOldExportCleanupCron() {
-	err := cron.Schedule("0 * * * *", cleanupOldUserExports)
+	err := cron.RegisterState("old-export-cleanup", "0 * * * *", cleanupOldUserExports)
 	if err != nil {
 		log.Fatalf("Could not register old export cleanup cron: %s", err)
 	}

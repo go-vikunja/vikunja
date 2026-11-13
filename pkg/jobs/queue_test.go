@@ -1,0 +1,254 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+package jobs
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
+	"xorm.io/xorm/contexts"
+	"xorm.io/xorm/schemas"
+)
+
+type failClaimCommitHook struct{}
+
+func (failClaimCommitHook) BeforeProcess(c *contexts.ContextHook) (context.Context, error) {
+	return c.Ctx, nil
+}
+
+func (failClaimCommitHook) AfterProcess(c *contexts.ContextHook) error {
+	if c.SQL == "COMMIT" {
+		if err, ok := c.Ctx.Value(failClaimCommitHook{}).(error); ok {
+			return err
+		}
+	}
+	return c.Err
+}
+
+func TestQueueDoesNotDeliverUnconfirmedClaims(t *testing.T) {
+	e := queueTestEngine(t)
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		t.Skip("PostgreSQL claims use a single autocommit statement")
+	}
+	s := e.NewSession()
+	defer s.Close()
+	now := time.Now().UTC().Truncate(time.Second)
+	require.NoError(t, Enqueue(s, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), RunAt: now}))
+	e.AddHook(failClaimCommitHook{})
+	wantErr := errors.New("claim commit confirmation lost")
+	ctx := context.WithValue(t.Context(), failClaimCommitHook{}, wantErr)
+	batch, err := NewQueue(e, "unconfirmed").Claim(ctx, t.Name(), 1, now, time.Minute)
+	require.ErrorIs(t, err, wantErr)
+	require.Empty(t, batch, "uncertain claims must await rescue instead of starting handlers")
+}
+
+func TestQueueTransactionAndOwnership(t *testing.T) {
+	e := queueTestEngine(t)
+	q := NewQueue(e, "first")
+	now := time.Now().UTC().Truncate(time.Second)
+	req := Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: "one", RunAt: now}
+	s := e.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	require.NoError(t, Enqueue(s, req))
+	require.NoError(t, s.Rollback())
+	got, err := q.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+	require.NoError(t, err)
+	require.Empty(t, got)
+	s = e.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	require.NoError(t, Enqueue(s, req))
+	require.NoError(t, Enqueue(s, req))
+	require.NoError(t, s.Commit())
+	got, err = q.Claim(t.Context(), t.Name(), 2, now, time.Minute)
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, 1, got[0].Attempt)
+	stale := got[0]
+	if e.Dialect().URI().DBType == schemas.POSTGRES {
+		_, err = e.ID(stale.ID).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(-time.Second)})
+		require.NoError(t, err)
+	}
+	count, err := q.Rescue(t.Context(), now.Add(61*time.Second), 100)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, count)
+	q2 := NewQueue(e, "second")
+	got, err = q2.Claim(t.Context(), t.Name(), 1, now.Add(61*time.Second), time.Minute)
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	s = e.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	require.ErrorIs(t, Complete(s, stale, now), ErrStaleClaim)
+	require.NoError(t, s.Rollback())
+	require.NoError(t, q2.Fail(t.Context(), got[0], now, errors.New("permanent"), 2))
+	row := Job{}
+	_, err = e.ID(got[0].ID).Get(&row)
+	require.NoError(t, err)
+	assert.Equal(t, StateFailed, row.State)
+	assert.Equal(t, "permanent", row.LastError)
+}
+
+func TestQueueClaimLimitSurvivesPlannerRescans(t *testing.T) {
+	e := queueTestEngine(t)
+	if e.Dialect().URI().DBType != schemas.POSTGRES {
+		t.Skip("PostgreSQL locking subquery regression")
+	}
+	previousMax := e.DB().Stats().MaxOpenConnections
+	e.SetMaxOpenConns(1)
+	t.Cleanup(func() { e.SetMaxOpenConns(previousMax) })
+	_, err := e.Exec("CREATE TEMP TABLE jobs (LIKE public.jobs INCLUDING ALL)")
+	require.NoError(t, err)
+	_, err = e.Exec("SET search_path = pg_temp, public")
+	require.NoError(t, err)
+	t.Cleanup(func() { _, err := e.Exec("RESET search_path"); require.NoError(t, err) })
+	t.Cleanup(func() {
+		_, err := e.Exec("DROP TABLE pg_temp.jobs")
+		require.NoError(t, err)
+	})
+	_, err = e.Exec("CREATE INDEX claim_limit_order ON jobs (queue, state, run_at, id)")
+	require.NoError(t, err)
+	now := time.Now().UTC().Truncate(time.Second)
+	_, err = e.Exec(`INSERT INTO pg_temp.jobs (queue, kind, payload, state, run_at)
+		SELECT ?, 'test', '{}', 'available', ? FROM generate_series(1, 64)`, t.Name(), timestamp(now))
+	require.NoError(t, err)
+	_, err = e.Exec("ANALYZE jobs")
+	require.NoError(t, err)
+	// Exercise a valid plan that rescans the locking subquery for each row.
+	for _, setting := range []string{"enable_hashagg", "enable_hashjoin", "enable_mergejoin", "enable_material", "enable_sort"} {
+		t.Cleanup(func() { _, resetErr := e.Exec("RESET " + setting); require.NoError(t, resetErr) })
+		_, err = e.Exec("SET " + setting + " = off")
+		require.NoError(t, err)
+	}
+	claimed, err := NewQueue(e, "bounded").Claim(t.Context(), t.Name(), 2, now, time.Minute)
+	require.NoError(t, err)
+	assert.Len(t, claimed, 2)
+	rows, err := e.QueryString("SELECT count(*) AS count FROM pg_temp.jobs WHERE state = 'running'")
+	require.NoError(t, err)
+	assert.Equal(t, "2", rows[0]["count"])
+}
+
+func TestQueueRenewalAndCompletion(t *testing.T) {
+	e := queueTestEngine(t)
+	q := NewQueue(e, "renewal")
+	now := time.Now().UTC().Truncate(time.Second)
+	req := Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: "sent", RunAt: now}
+	s := e.NewSession()
+	defer s.Close()
+	require.NoError(t, Enqueue(s, req))
+	batch, err := q.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+	require.NoError(t, err)
+	require.Len(t, batch, 1)
+	count, err := q.Renew(t.Context(), batch, now.Add(30*time.Second), time.Minute)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, count)
+	count, err = q.Rescue(t.Context(), now.Add(70*time.Second), 100)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+	require.NoError(t, s.Begin())
+	require.NoError(t, Complete(s, batch[0], now.Add(70*time.Second)))
+	require.NoError(t, s.Rollback())
+	stored := Job{}
+	_, err = e.ID(batch[0].ID).Get(&stored)
+	require.NoError(t, err)
+	assert.Equal(t, StateRunning, stored.State, "completion rolls back with effects")
+	s = e.NewSession()
+	defer s.Close()
+	require.NoError(t, Complete(s, batch[0], now.Add(70*time.Second)))
+	require.NoError(t, Enqueue(s, req))
+	count, err = e.Where("queue = ?", t.Name()).Count(new(Job))
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, count)
+	count, err = q.Renew(t.Context(), batch, now.Add(75*time.Second), time.Minute)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+}
+
+func TestQueueUsesUTCForLocalClock(t *testing.T) {
+	e := queueTestEngine(t)
+	q := NewQueue(e, "local-clock")
+	now := time.Now().In(time.FixedZone("east", 3600)).Truncate(time.Second)
+	s := e.NewSession()
+	defer s.Close()
+	require.NoError(t, Enqueue(s, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: "local", RunAt: now}))
+	batch, err := q.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+	require.NoError(t, err)
+	require.Len(t, batch, 1)
+	require.NoError(t, Complete(s, batch[0], now))
+	require.NoError(t, Enqueue(s, Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: "later", RunAt: now.Add(time.Minute)}))
+	batch, err = q.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+	require.NoError(t, err)
+	require.Empty(t, batch, "future work must stay scheduled")
+}
+
+func queueTestEngine(t *testing.T) *xorm.Engine {
+	t.Helper()
+	config.InitDefaultConfig()
+	log.InitLogger()
+	e, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, e.Sync(new(Job)))
+	clearQueue := func() { _, err := e.Where("queue = ?", t.Name()).Delete(new(Job)); require.NoError(t, err) }
+	clearQueue()
+	t.Cleanup(clearQueue)
+	return e
+}
+
+func TestQueueCompletionDeletesLiveKeys(t *testing.T) {
+	for _, key := range []string{"", "once"} {
+		t.Run("key="+key, func(t *testing.T) {
+			e := queueTestEngine(t)
+			now := time.Now().UTC().Truncate(time.Second)
+			request := Request{Queue: t.Name(), Kind: "test", Payload: []byte(`{}`), UniqueKey: key, RunAt: now}
+			s := e.NewSession()
+			defer s.Close()
+			require.NoError(t, Enqueue(s, request))
+			queue := NewQueue(e, "owner")
+			batch, err := queue.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+			require.NoError(t, err)
+			require.Len(t, batch, 1)
+			if e.Dialect().URI().DBType == schemas.POSTGRES {
+				_, err = e.ID(batch[0].ID).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(-time.Second)})
+				require.NoError(t, err)
+				require.ErrorIs(t, Complete(s, batch[0], now), ErrStaleClaim)
+				_, err = e.ID(batch[0].ID).Cols("expires_at").Update(&Job{ExpiresAt: now.Add(time.Minute)})
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, Complete(s, batch[0], now.Add(time.Minute)), ErrStaleClaim)
+			}
+			require.NoError(t, Complete(s, batch[0], now))
+			found, err := e.ID(batch[0].ID).Exist(new(Job))
+			require.NoError(t, err)
+			require.False(t, found, "successful completion must remove the job and its live uniqueness guard")
+			require.ErrorIs(t, Complete(s, batch[0], now), ErrStaleClaim)
+			require.NoError(t, Enqueue(s, request))
+			replacement, err := queue.Claim(t.Context(), t.Name(), 1, now, time.Minute)
+			require.NoError(t, err)
+			require.Len(t, replacement, 1, "completed keys must not suppress later enqueue attempts")
+			require.NotEqual(t, batch[0].ID, replacement[0].ID)
+		})
+	}
+}

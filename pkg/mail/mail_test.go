@@ -18,18 +18,21 @@ package mail
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
 	"testing"
-	"time"
+
+	"github.com/ThreeDotsLabs/watermill/message"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/jobs"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wneessen/go-mail"
 )
 
 // startSMTPSink runs a minimal SMTP server which accepts everything and
@@ -64,6 +67,12 @@ func startSMTPSink(t *testing.T) (port int, received chan string) {
 					switch {
 					case strings.HasPrefix(cmd, "EHLO"), strings.HasPrefix(cmd, "HELO"):
 						fmt.Fprintf(conn, "250-sink\r\n250 8BITMIME\r\n")
+					case strings.HasPrefix(cmd, "MAIL FROM:"), strings.HasPrefix(cmd, "RCPT TO:"):
+						if strings.Contains(cmd, ":<") && strings.Contains(cmd, ">") {
+							fmt.Fprintf(conn, "250 ok\r\n")
+						} else {
+							fmt.Fprintf(conn, "501 invalid envelope address\r\n")
+						}
 					case strings.HasPrefix(cmd, "DATA"):
 						fmt.Fprintf(conn, "354 go ahead\r\n")
 						var body strings.Builder
@@ -112,78 +121,57 @@ func setupMailerConfig(t *testing.T, host string, port int) {
 	})
 }
 
-func TestStopMailDaemonDrainsQueue(t *testing.T) {
+func TestMailQueueCommitsWithBusinessTransaction(t *testing.T) {
+	setupMailerConfig(t, "127.0.0.1", 1)
+	engine, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, engine.Sync(new(jobs.Job)))
+	t.Cleanup(func() { _, err := engine.Where("queue = ?", t.Name()).Delete(new(jobs.Job)); require.NoError(t, err) })
+	opts := &Opts{To: "durable@example.com", Subject: "durable", Message: "hello"}
+	s := engine.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	require.NoError(t, Enqueue(s, opts, t.Name(), "rollback"))
+	require.NoError(t, s.Rollback())
+	count, err := engine.Where("queue = ?", t.Name()).Count(new(jobs.Job))
+	require.NoError(t, err)
+	assert.Zero(t, count)
+	s = engine.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	require.NoError(t, Enqueue(s, opts, t.Name(), "commit"))
+	require.NoError(t, Enqueue(s, opts, t.Name(), "commit"))
+	require.NoError(t, s.Commit())
+	count, err = engine.Where("queue = ?", t.Name()).Count(new(jobs.Job))
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, count)
+}
+
+func TestDurableMailPayloadDeliversToSMTP(t *testing.T) {
 	port, received := startSMTPSink(t)
 	setupMailerConfig(t, "127.0.0.1", port)
-
-	StartMailDaemon()
-
-	for i := range 3 {
-		require.NoError(t, SendMail(&Opts{
-			To:          fmt.Sprintf("test%d@example.com", i),
-			Subject:     fmt.Sprintf("Test %d", i),
-			Message:     "Hello",
-			ContentType: ContentTypePlain,
-		}))
-	}
-
-	StopMailDaemon()
-
-	assert.Len(t, received, 3, "expected all queued mails to be delivered before StopMailDaemon returns")
-	assert.Nil(t, Queue)
-}
-
-func TestStopMailDaemonMailerDisabled(t *testing.T) {
-	config.InitDefaultConfig()
-	config.MailerEnabled.Set(false)
-
-	StartMailDaemon()
-	assert.Nil(t, Queue)
-
-	assert.NotPanics(t, StopMailDaemon)
-}
-
-func TestStopMailDaemonNeverStarted(t *testing.T) {
-	setupMailerConfig(t, "", 587)
-
-	StartMailDaemon()
-	assert.Nil(t, Queue)
-
-	assert.NotPanics(t, StopMailDaemon)
-	assert.Nil(t, Queue)
-}
-
-func TestStopMailDaemonCalledTwice(t *testing.T) {
-	port, _ := startSMTPSink(t)
-	setupMailerConfig(t, "127.0.0.1", port)
-
-	StartMailDaemon()
-
-	assert.NotPanics(t, StopMailDaemon)
-	assert.NotPanics(t, StopMailDaemon)
-}
-
-func TestStartMailDaemonClientInitFails(t *testing.T) {
-	setupMailerConfig(t, "127.0.0.1", 0)
-
-	StartMailDaemon()
-
-	assert.Nil(t, Queue)
-	require.NoError(t, SendMail(&Opts{To: "test@example.com", ContentType: ContentTypePlain}))
-}
-
-func TestSendMailQueueFullTimesOut(t *testing.T) {
-	setupMailerConfig(t, "127.0.0.1", 587)
-
-	original := enqueueTimeout
-	enqueueTimeout = 10 * time.Millisecond
-	Queue = make(chan *mail.Msg)
-	t.Cleanup(func() {
-		enqueueTimeout = original
-		Queue = nil
-	})
-
-	err := SendMail(&Opts{To: "test@example.com", ContentType: ContentTypePlain})
-
-	require.Error(t, err)
+	engine, err := db.CreateTestEngine()
+	require.NoError(t, err)
+	require.NoError(t, engine.Sync(new(jobs.Job)))
+	t.Cleanup(func() { _, err := engine.Where("queue = ?", t.Name()).Delete(new(jobs.Job)); require.NoError(t, err) })
+	s := engine.NewSession()
+	defer s.Close()
+	require.NoError(t, s.Begin())
+	const link = "https://tasks.example.com/#userEmailConfirm=confirmationtoken"
+	require.NoError(t, Enqueue(s, &Opts{
+		To: "smtp@example.com", Subject: "stored message", ContentType: ContentTypeMultipart,
+		Message: link, HTMLMessage: `<a href="` + link + `">Confirm</a>`,
+	}, t.Name(), "smtp"))
+	require.NoError(t, s.Commit())
+	var stored jobs.Job
+	found, err := engine.Where("queue = ? AND state = ?", t.Name(), jobs.StateAvailable).OrderBy("id DESC").Get(&stored)
+	require.NoError(t, err)
+	require.True(t, found)
+	msg := message.NewMessage("smtp", []byte(stored.Payload))
+	msg.SetContext(t.Context())
+	require.NoError(t, deliver(msg))
+	require.Len(t, received, 1)
+	payload := delivery{}
+	require.NoError(t, json.Unmarshal([]byte(stored.Payload), &payload))
+	assert.Equal(t, payload.Message, <-received, "delivery must preserve rendered MIME and its confirmation links")
 }

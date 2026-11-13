@@ -214,7 +214,7 @@ func randomJitter(limit time.Duration) time.Duration {
 // they were unreachable while Vikunja started. Retries are paced with
 // capped exponential backoff.
 func RegisterProviderAvailabilityCron() {
-	err := cron.Schedule("* * * * *", retryUnavailableProviders)
+	err := cron.ScheduleLocal("* * * * *", retryUnavailableProviders)
 	if err != nil {
 		log.Fatalf("Could not register openid provider availability cron: %s", err)
 	}

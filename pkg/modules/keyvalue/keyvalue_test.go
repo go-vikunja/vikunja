@@ -19,7 +19,9 @@ package keyvalue
 import (
 	"errors"
 	"strconv"
+	"sync"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
@@ -281,4 +283,70 @@ func TestGetInt64(t *testing.T) {
 			assert.True(t, e.IsErrValueHasWrongType(err))
 		})
 	}
+}
+
+func TestPutIfAbsentConcurrent(t *testing.T) {
+	store = memory.NewStorage()
+	const attempts = 64
+	start := make(chan struct{})
+	claimed := make(chan bool, attempts)
+	errors := make(chan error, attempts)
+	var ready sync.WaitGroup
+	ready.Add(attempts)
+	for range attempts {
+		go func() {
+			ready.Done()
+			<-start
+			ok, err := PutIfAbsent("claim", "first", time.Minute)
+			claimed <- ok
+			errors <- err
+		}()
+	}
+	ready.Wait()
+	close(start)
+
+	winners := 0
+	for range attempts {
+		require.NoError(t, <-errors)
+		if <-claimed {
+			winners++
+		}
+	}
+	require.Equal(t, 1, winners)
+}
+
+func TestPutIfAbsentPreservesValueUntilExpiry(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		store = memory.NewStorage()
+		ok, err := PutIfAbsent("claim", "first", time.Minute)
+		require.NoError(t, err)
+		require.True(t, ok)
+
+		ok, err = PutIfAbsent("claim", "second", time.Hour)
+		require.NoError(t, err)
+		require.False(t, ok)
+		value, exists, err := Get("claim")
+		require.NoError(t, err)
+		require.True(t, exists)
+		require.Equal(t, "first", value)
+
+		time.Sleep(time.Minute)
+		ok, err = PutIfAbsent("claim", "second", time.Minute)
+		require.NoError(t, err)
+		require.True(t, ok)
+	})
+}
+
+func TestPutIfAbsentRejectsNonpositiveTTL(t *testing.T) {
+	store = memory.NewStorage()
+	require.NoError(t, Put("claim", "first"))
+	for _, ttl := range []time.Duration{0, -time.Second} {
+		ok, err := PutIfAbsent("claim", "second", ttl)
+		require.Error(t, err)
+		require.False(t, ok)
+	}
+	value, exists, err := Get("claim")
+	require.NoError(t, err)
+	require.True(t, exists)
+	require.Equal(t, "first", value)
 }

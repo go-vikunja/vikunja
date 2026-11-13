@@ -17,6 +17,7 @@
 package db
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -257,6 +258,9 @@ func getPostgreSQLConnectionString(dbHost, dbUser, dbPasswd, dbName, dbSchema, d
 	}
 	if queryExecMode != "" {
 		connStr += "&default_query_exec_mode=" + url.QueryEscape(queryExecMode)
+	}
+	if config.ServiceClusterMode.GetBool() {
+		connStr += "&tcp_keepalives_idle=5&tcp_keepalives_interval=2&tcp_keepalives_count=2"
 	}
 	return connStr
 }
@@ -614,7 +618,8 @@ func NewSession() *xorm.Session {
 	s := x.NewSession()
 	attachSessionCache(s)
 	if err := s.Begin(); err != nil {
-		log.Fatalf("Failed to begin database transaction: %s", err)
+		_ = s.Close()
+		panic(fmt.Errorf("begin database transaction: %w", err))
 	}
 	return s
 }
@@ -762,4 +767,28 @@ func CreateParadeDBIndexes() error {
 	}
 
 	return nil
+}
+
+// NewWriteSession reserves SQLite's writer before reads can acquire a stale WAL snapshot.
+func NewWriteSession(ctx context.Context) (*xorm.Session, error) {
+	s := x.NewSession()
+	attachSessionCache(s)
+	SetSessionContext(ctx, s)
+	if err := s.Begin(); err != nil {
+		_ = s.Close()
+		return nil, err
+	}
+	if err := reserveWrite(s); err != nil {
+		_ = s.Close()
+		return nil, err
+	}
+	return s, nil
+}
+
+func reserveWrite(s *xorm.Session) error {
+	if s.Engine().Dialect().URI().DBType != schemas.SQLITE {
+		return nil
+	}
+	_, err := s.Exec("UPDATE sqlite_sequence SET seq = seq WHERE 0")
+	return err
 }

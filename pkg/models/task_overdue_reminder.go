@@ -17,119 +17,160 @@
 package models
 
 import (
-	"fmt"
 	"slices"
+	"strconv"
+	"strings"
 	"time"
+
+	"code.vikunja.io/api/pkg/events"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
+
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/notifications"
+
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/utils"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
-func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (usersWithTasks map[int64]*userWithTasks, err error) {
-	now = utils.GetTimeWithoutSeconds(now)
-	nextMinute := now.Add(1 * time.Minute)
-
-	var tasks []*Task
-	err = s.
-		Where(builder.And(
-			builder.NotNull{"due_date"},
-			builder.Lt{"due_date": nextMinute.Add(time.Hour * 14).Format(dbTimeFormat)},
-			builder.Eq{"projects.is_archived": false},
-			builder.IsNull{"projects.deleted_at"},
-			builder.Eq{"done": false},
-		)).
-		Join("LEFT", "projects", "projects.id = tasks.project_id").
-		Find(&tasks)
+func overdueSlot(window cron.Window, timezone, clock string) (time.Time, error) {
+	if timezone == "" {
+		timezone = config.GetTimeZone().String()
+	}
+	location, err := time.LoadLocation(timezone)
 	if err != nil {
-		return
+		return time.Time{}, err
 	}
-
-	if len(tasks) == 0 {
-		return
+	if clock == "" {
+		clock = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
 	}
-
-	var taskIDs []int64
-	for _, task := range tasks {
-		taskIDs = append(taskIDs, task.ID)
+	if clock == "" {
+		clock = "09:00"
 	}
-
-	users, err := getTaskUsersForTasks(s, taskIDs, cond)
+	daily, err := time.Parse("15:04", clock)
 	if err != nil {
-		return
+		return time.Time{}, err
 	}
-
-	if len(users) == 0 {
-		return
+	local := window.To.In(location)
+	slot := time.Date(local.Year(), local.Month(), local.Day(), daily.Hour(), daily.Minute(), 0, 0, location)
+	if slot.After(window.To) {
+		local = local.AddDate(0, 0, -1)
+		slot = time.Date(local.Year(), local.Month(), local.Day(), daily.Hour(), daily.Minute(), 0, 0, location)
 	}
+	if !slot.After(window.From) {
+		return time.Time{}, nil
+	}
+	return slot, nil
+}
 
-	uts := make(map[int64]*userWithTasks)
-	tzs := make(map[string]*time.Location)
-	for _, t := range users {
-		if t.User.Timezone == "" {
-			t.User.Timezone = config.GetTimeZone().String()
-		}
-
-		tz, exists := tzs[t.User.Timezone]
-		if !exists {
-			tz, err = time.LoadLocation(t.User.Timezone)
-			if err != nil {
-				return
-			}
-			tzs[t.User.Timezone] = tz
-		}
-
-		// If it is time for that current user, add the task to their project of overdue tasks
-		remindersTime := t.User.OverdueTasksRemindersTime
-		if remindersTime == "" {
-			remindersTime = config.DefaultSettingsOverdueTaskRemindersTime.GetString()
-		}
-		if remindersTime == "" {
-			remindersTime = "09:00"
-		}
-		tm, err := time.Parse("15:04", remindersTime)
+func getOverdueUsersInWindow(s *xorm.Session, window cron.Window, cond builder.Cond) (map[int64]*userWithTasks, error) {
+	eligible := builder.And(
+		builder.Eq{"users.status": user.StatusActive},
+		builder.Or(builder.IsNull{"users.bot_owner_id"}, builder.Eq{"users.bot_owner_id": 0}),
+	)
+	if cond != nil {
+		eligible = eligible.And(cond)
+	}
+	users, err := user.GetUsersByCond(s, eligible)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[int64]*userWithTasks)
+	for _, u := range users {
+		slot, err := overdueSlot(window, u.Timezone, u.OverdueTasksRemindersTime)
 		if err != nil {
-			tm, err = time.Parse("3:04", remindersTime)
-			if err != nil {
-				log.Errorf("[Undone Overdue Tasks Reminder] Could not parse reminder time %q for user %d: %v", t.User.OverdueTasksRemindersTime, t.User.ID, err)
+			log.Warningf("Invalid overdue reminder time for user %d: %v", u.ID, err)
+			continue
+		}
+		if !slot.IsZero() {
+			result[u.ID] = &userWithTasks{user: u, assigned: make(map[int64]*Task), followed: make(map[int64]*Task), slot: slot}
+		}
+	}
+	return result, nil
+}
+
+func getOverdueTasksInWindow(s *xorm.Session, window cron.Window, cond builder.Cond) (map[int64]*userWithTasks, error) {
+	users, err := getOverdueUsersInWindow(s, window, cond)
+	if err != nil {
+		return nil, err
+	}
+	for id, ut := range users {
+		if err := ut.loadOverdueTasks(s); err != nil {
+			return nil, err
+		}
+		if len(ut.assigned)+len(ut.followed) == 0 {
+			delete(users, id)
+		}
+	}
+	return users, nil
+}
+
+func (ut *userWithTasks) loadOverdueTasks(s *xorm.Session) error {
+	const batchSize = 200
+	var after int64
+	for {
+		var tasks []*Task
+		err := s.Select("tasks.*").Join("INNER", "projects", "projects.id = tasks.project_id").
+			Where(builder.Gt{"tasks.id": after}).And(builder.Lt{"tasks.due_date": ut.slot}).
+			And(builder.Eq{"tasks.done": false, "projects.is_archived": false}).
+			And(builder.IsNull{"tasks.deleted_at"}).And(builder.IsNull{"projects.deleted_at"}).
+			And(`tasks.id IN (
+				SELECT entity_id FROM subscriptions WHERE entity_type = ? AND user_id = ? AND muted = ?
+				UNION
+				SELECT t.id FROM tasks t
+				JOIN project_ancestors pa ON pa.project_id = t.project_id
+				JOIN subscriptions sub ON sub.entity_id = pa.ancestor_id
+				WHERE sub.entity_type = ? AND sub.user_id = ? AND sub.muted = ?
+			)`, SubscriptionEntityTask, ut.user.ID, false, SubscriptionEntityProject, ut.user.ID, false).
+			OrderBy("tasks.id").Limit(batchSize).Find(&tasks)
+		if err != nil {
+			return err
+		}
+		if len(tasks) == 0 {
+			return nil
+		}
+		after = tasks[len(tasks)-1].ID
+		ids := make([]int64, 0, len(tasks))
+		for _, task := range tasks {
+			ids = append(ids, task.ID)
+		}
+		subs, err := GetSubscriptionsForEntitiesAndUser(s, SubscriptionEntityTask, ids, ut.user)
+		if err != nil {
+			return err
+		}
+		// The user-scoped subscription resolver does not check current read access.
+		subs, err = filterSubscriptionsByReadPermission(s, SubscriptionEntityTask, subs)
+		if err != nil {
+			return err
+		}
+		var assignees []*TaskAssginee
+		if err := s.In("task_id", ids).Where("user_id = ?", ut.user.ID).Find(&assignees); err != nil {
+			return err
+		}
+		assigned := make(map[int64]bool, len(assignees))
+		for _, a := range assignees {
+			assigned[a.TaskID] = true
+		}
+		for _, task := range tasks {
+			if len(subs[task.ID]) == 0 {
 				continue
 			}
-		}
-		nowInTz := now.In(tz)
-		overdueMailTime := time.Date(nowInTz.Year(), nowInTz.Month(), nowInTz.Day(), tm.Hour(), tm.Minute(), 0, 0, tz)
-		isTimeForReminder := overdueMailTime.After(now) || overdueMailTime.Equal(now.In(tz))
-		wasTimeForReminder := overdueMailTime.Before(nextMinute)
-		taskIsOverdueInUserTimezone := overdueMailTime.After(t.Task.DueDate.In(tz))
-		if isTimeForReminder && wasTimeForReminder && taskIsOverdueInUserTimezone {
-			ut, exists := uts[t.User.ID]
-			if !exists {
-				ut = &userWithTasks{
-					user:     t.User,
-					assigned: make(map[int64]*Task),
-					followed: make(map[int64]*Task),
-				}
-				uts[t.User.ID] = ut
-			}
-			if t.IsAssignee {
-				ut.assigned[t.Task.ID] = t.Task
+			if assigned[task.ID] {
+				ut.assigned[task.ID] = task
 			} else {
-				ut.followed[t.Task.ID] = t.Task
+				ut.followed[task.ID] = task
 			}
+		}
+		if len(tasks) < batchSize {
+			return nil
 		}
 	}
-
-	return uts, nil
 }
 
 type userWithTasks struct {
+	slot     time.Time
 	user     *user.User
 	assigned map[int64]*Task
 	followed map[int64]*Task
@@ -137,6 +178,38 @@ type userWithTasks struct {
 
 func (ut *userWithTasks) allTasks() []*Task {
 	return append(mapToSlice(ut.assigned), mapToSlice(ut.followed)...)
+}
+
+func (ut *userWithTasks) projects(s *xorm.Session) (map[int64]*Project, error) {
+	seen := make(map[int64]bool)
+	var ids []int64
+	for _, task := range ut.allTasks() {
+		if !seen[task.ProjectID] {
+			seen[task.ProjectID] = true
+			ids = append(ids, task.ProjectID)
+		}
+	}
+	projects := make(map[int64]*Project)
+	for batch := range slices.Chunk(ids, 200) {
+		if err := s.In("id", batch).Find(&projects); err != nil {
+			return nil, err
+		}
+	}
+	return projects, nil
+}
+
+func RegisterOverdueReminderCron() {
+	if err := cron.Register("overdue-reminders", "* * * * *", enqueueOverdueReminders); err != nil {
+		log.Fatalf("Register overdue reminders: %v", err)
+	}
+}
+
+func mapToSlice(m map[int64]*Task) []*Task {
+	tasks := make([]*Task, 0, len(m))
+	for _, t := range m {
+		tasks = append(tasks, t)
+	}
+	return tasks
 }
 
 // hasNonWebhookListener catches listeners registered by plugins.
@@ -172,148 +245,79 @@ func overdueEventsWithListeners(s *xorm.Session) (single, batch bool, err error)
 	return
 }
 
-// RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
-func RegisterOverdueReminderCron() {
-	webhookEnabled := config.WebhooksEnabled.GetBool()
-	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
-
-	if !emailEnabled && !webhookEnabled {
-		return
+// Eligibility is batched per recipient; the listener still checks current creator access.
+func overdueEventsForRecipient(s *xorm.Session, ut *userWithTasks) (singleTasks []*Task, batch bool, err error) {
+	singleName := (&TaskOverdueEvent{}).Name()
+	batchName := (&TasksOverdueEvent{}).Name()
+	allSingle := hasNonWebhookListener(singleName)
+	batch = hasNonWebhookListener(batchName)
+	tasks := ut.allTasks()
+	if len(tasks) == 0 || allSingle && batch {
+		return tasks, batch, nil
 	}
 
-	if !emailEnabled {
-		log.Info("Mailer is disabled, not sending overdue reminders per mail")
+	descendants := make(map[int64]map[int64]bool)
+	projectIDs := []int64{}
+	for _, task := range tasks {
+		if descendants[task.ProjectID] == nil {
+			descendants[task.ProjectID] = map[int64]bool{task.ProjectID: true}
+			projectIDs = append(projectIDs, task.ProjectID)
+		}
 	}
-
-	err := cron.Schedule("* * * * *", func() {
-		s := db.NewSession()
-		defer s.Close()
-
-		now := time.Now()
-
-		var dispatchSingle, dispatchBatch bool
-		if webhookEnabled {
-			var err error
-			dispatchSingle, dispatchBatch, err = overdueEventsWithListeners(s)
-			if err != nil {
-				log.Errorf("[Undone Overdue Tasks Reminder] Could not check for overdue event listeners: %s", err)
-				return
-			}
+	ancestors := []ProjectAncestor{}
+	if err := s.Where("project_id IN (" + overdueProjectIDList(projectIDs) + ")").Find(&ancestors); err != nil {
+		return nil, false, err
+	}
+	for _, ancestor := range ancestors {
+		if descendants[ancestor.AncestorID] == nil {
+			descendants[ancestor.AncestorID] = make(map[int64]bool)
 		}
-
-		if !emailEnabled && !dispatchSingle && !dispatchBatch {
-			return
-		}
-
-		var cond builder.Cond
-		if !dispatchSingle && !dispatchBatch {
-			cond = builder.Eq{"users.overdue_tasks_reminders_enabled": true}
-		}
-
-		uts, err := getUndoneOverdueTasks(s, now, cond)
-		if err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not get undone overdue tasks in the next minute: %s", err)
-			return
-		}
-
-		if len(uts) == 0 {
-			return
-		}
-
-		log.Debugf("[Undone Overdue Tasks Reminder] Sending reminders to %d users", len(uts))
-
-		if err := sendOverdueReminders(s, uts, emailEnabled, dispatchSingle, dispatchBatch); err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] %s", err)
-			return
-		}
-
-		if err := s.Commit(); err != nil {
-			log.Errorf("[Undone Overdue Tasks Reminder] Could not commit: %s", err)
-		}
-	})
+		descendants[ancestor.AncestorID][ancestor.ProjectID] = true
+	}
+	hookProjectIDs := make([]int64, 0, len(descendants))
+	for id := range descendants {
+		hookProjectIDs = append(hookProjectIDs, id)
+	}
+	hooks := []*Webhook{}
+	err = s.Cols("project_id", "user_id", "events").Where(builder.Or(
+		builder.Expr("project_id IN ("+overdueProjectIDList(hookProjectIDs)+")"),
+		builder.And(builder.Eq{"user_id": ut.user.ID}, builder.Or(builder.IsNull{"project_id"}, builder.Eq{"project_id": 0})),
+	)).Find(&hooks)
 	if err != nil {
-		log.Fatalf("Could not register undone overdue tasks reminder cron: %s", err)
+		return nil, false, err
 	}
-}
-
-func sendOverdueReminders(s *xorm.Session, uts map[int64]*userWithTasks, emailEnabled, dispatchSingle, dispatchBatch bool) error {
-	taskIDs := []int64{}
-	for _, ut := range uts {
-		for _, t := range ut.allTasks() {
-			taskIDs = append(taskIDs, t.ID)
-		}
-	}
-
-	allProjects, err := GetProjectsMapSimpleByTaskIDs(s, taskIDs)
-	if err != nil {
-		return fmt.Errorf("could not get projects for tasks: %w", err)
-	}
-
-	for _, ut := range uts {
-		tasks := ut.allTasks()
-
-		projects := make(map[int64]*Project, len(tasks))
-		for _, t := range tasks {
-			if p, has := allProjects[t.ProjectID]; has {
-				projects[t.ProjectID] = p
-			}
-		}
-
-		if emailEnabled && ut.user.OverdueTasksRemindersEnabled {
-			var n notifications.Notification = &UndoneTasksOverdueNotification{
-				User:     ut.user,
-				Assigned: ut.assigned,
-				Followed: ut.followed,
-				Projects: projects,
-			}
-
-			if len(tasks) == 1 {
-				n = &UndoneTaskOverdueNotification{
-					User:    ut.user,
-					Task:    tasks[0],
-					Project: projects[tasks[0].ProjectID],
+	eligibleProjects := make(map[int64]bool)
+	for _, hook := range hooks {
+		if hook.ProjectID > 0 {
+			if slices.Contains(hook.Events, singleName) {
+				for id := range descendants[hook.ProjectID] {
+					eligibleProjects[id] = true
 				}
 			}
-
-			err = notifications.Notify(ut.user, n, s)
-			if err != nil {
-				return fmt.Errorf("could not notify user %d: %w", ut.user.ID, err)
-			}
+			continue
 		}
-
-		if dispatchSingle {
-			for _, t := range tasks {
-				err = events.Dispatch(&TaskOverdueEvent{
-					Task:    t,
-					User:    ut.user,
-					Project: projects[t.ProjectID],
-				})
-				if err != nil {
-					log.Errorf("[Undone Overdue Tasks Reminder] Could not dispatch overdue event for task %d: %s", t.ID, err)
-				}
-			}
-		}
-
-		if dispatchBatch {
-			err = events.Dispatch(&TasksOverdueEvent{
-				Tasks:    tasks,
-				User:     ut.user,
-				Projects: projects,
-			})
-			if err != nil {
-				log.Errorf("[Undone Overdue Tasks Reminder] Could not dispatch batch overdue event for user %d: %s", ut.user.ID, err)
-			}
-		}
-
-		log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder for %d tasks to user %d", len(tasks), ut.user.ID)
+		allSingle = allSingle || slices.Contains(hook.Events, singleName)
+		batch = batch || slices.Contains(hook.Events, batchName)
 	}
-	return nil
+	for _, task := range tasks {
+		if allSingle || eligibleProjects[task.ProjectID] {
+			singleTasks = append(singleTasks, task)
+		}
+	}
+	return singleTasks, batch, nil
 }
 
-func mapToSlice(m map[int64]*Task) []*Task {
-	tasks := make([]*Task, 0, len(m))
-	for _, t := range m {
-		tasks = append(tasks, t)
+// Numeric IDs avoid bind limits for recipients spanning many projects.
+func overdueProjectIDList(ids []int64) string {
+	if len(ids) == 0 {
+		return "NULL"
 	}
-	return tasks
+	var result strings.Builder
+	for i, id := range ids {
+		if i > 0 {
+			result.WriteByte(',')
+		}
+		result.WriteString(strconv.FormatInt(id, 10))
+	}
+	return result.String()
 }

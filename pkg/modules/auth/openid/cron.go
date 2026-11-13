@@ -56,7 +56,7 @@ func RemoveEmptySSOTeams(s *xorm.Session) (err error) {
 func RegisterEmptyOpenIDTeamCleanupCron() {
 	const logPrefix = "[Empty openid Team Cleanup Cron] "
 
-	err := cron.Schedule("* * * * *", func() {
+	err := cron.RegisterState("empty-openid-teams", "* * * * *", func() {
 		s := db.NewSession()
 		defer s.Close()
 

@@ -120,7 +120,12 @@ func RegisterEventForWebhook(event events.Event) {
 	defer availableWebhookEventsLock.Unlock()
 
 	availableWebhookEvents[event.Name()] = true
-	events.RegisterListener(event.Name(), &WebhookListener{
+	queue := "webhooks"
+	switch event.Name() {
+	case (&TaskReminderFiredEvent{}).Name(), (&TaskOverdueEvent{}).Name(), (&TasksOverdueEvent{}).Name():
+		queue = "bulk-webhooks"
+	}
+	events.RegisterDurableListener(event.Name(), queue, &WebhookListener{
 		EventName: event.Name(),
 	})
 }
@@ -351,13 +356,17 @@ func getWebhookHTTPClient() (client *http.Client) {
 	return
 }
 
-func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
+func (w *Webhook) sendWebhookPayload(p *WebhookPayload) error {
+	return w.sendWebhookPayloadContext(context.Background(), p, "")
+}
+
+func (w *Webhook) sendWebhookPayloadContext(ctx context.Context, p *WebhookPayload, deliveryID string) (err error) {
 	payload, err := json.Marshal(p)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, w.TargetURL, bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, w.TargetURL, bytes.NewReader(payload))
 	if err != nil {
 		return err
 	}
@@ -378,6 +387,9 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 
 	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
 	req.Header.Add("Content-Type", "application/json")
+	if deliveryID != "" {
+		req.Header.Set("X-Vikunja-Delivery", deliveryID)
+	}
 
 	client := getWebhookHTTPClient()
 	res, err := client.Do(req) // #nosec G704 -- URL is user-configured webhook target

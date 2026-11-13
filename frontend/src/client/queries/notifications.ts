@@ -23,9 +23,11 @@ export const NOTIFICATIONS_PER_PAGE = 20
 export type NotificationPage = Paginated<DatabaseNotification>
 export type NotificationPages = InfiniteData<NotificationPage, number>
 
-export function notificationsQuery() {
+export function notificationsQuery(connected = true) {
 	return infiniteQueryOptions({
 		queryKey: notificationKeys.all,
+		refetchInterval: connected ? 5 * 60 * 1000 + Math.random() * 60000 : 10000,
+		refetchIntervalInBackground: false,
 		queryFn: async ({pageParam, signal}): Promise<NotificationPage> => {
 			const {data} = await notificationsList({
 				query: {

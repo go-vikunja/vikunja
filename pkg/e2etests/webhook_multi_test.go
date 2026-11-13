@@ -172,21 +172,14 @@ func TestWebhookGoodDeliveredOnceDespiteSiblingRetries(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, rec.Body.String(), `"title":"2569 no-duplicate test"`)
 
-	// Wait long enough for the bad webhook to exhaust its retries.
-	// InitEventsForTesting configures 3 retries at 50ms initial, 2x multiplier,
-	// max 1s — so the total window is ~350ms. Wait 3s to be safe.
-	time.Sleep(3 * time.Second)
+	require.Eventually(t, func() bool { return atomic.LoadInt32(&badCount) >= 3 }, 15*time.Second, 50*time.Millisecond)
 
 	got := atomic.LoadInt32(&goodCount)
 	assert.Equal(t, int32(1), got,
 		"good webhook should be delivered exactly once; got %d deliveries", got)
 
-	// The bad webhook should have been retried by the watermill retry
-	// middleware. We assert at least 3 attempts (1 initial + 2 retries) to
-	// prove retries actually fired — we don't assert an exact count because
-	// watermill's gochannel pubsub resends nacked messages, so a permanently
-	// failing delivery runs through multiple retry cycles within the wait
-	// window rather than stopping at MaxRetries+1.
+	// Retries are persisted as separate job attempts.
+
 	gotBad := atomic.LoadInt32(&badCount)
 	assert.GreaterOrEqual(t, gotBad, int32(3),
 		"bad webhook should be retried at least 3 times; got %d", gotBad)

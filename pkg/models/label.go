@@ -37,7 +37,7 @@ type Label struct {
 	// The color this label has in hex format.
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"hexcolor" maxLength:"7" doc:"The color this label has in hex format."`
 
-	CreatedByID int64 `xorm:"bigint not null" json:"-"`
+	CreatedByID int64 `xorm:"bigint not null index" json:"-"`
 	// The user who created this label
 	CreatedBy *user.User `xorm:"-" json:"created_by" readOnly:"true" doc:"The user who created this label."`
 

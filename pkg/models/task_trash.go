@@ -155,10 +155,12 @@ func (t *Task) Restore(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchOnCommit(s, &TaskRestoredEvent{
+	if err := events.DispatchOnCommit(s, &TaskRestoredEvent{
 		Task: t,
 		Doer: doerFromAuth(s, a),
-	})
+	}); err != nil {
+		return err
+	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 }
@@ -177,10 +179,12 @@ func purgeTrashedTask(s *xorm.Session, t *Task, doer *user.User) error {
 			return err
 		}
 	}
-	events.DispatchOnCommit(s, &TaskPurgedEvent{
+	if err := events.DispatchOnCommit(s, &TaskPurgedEvent{
 		Task: t,
 		Doer: doer,
-	})
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
