@@ -214,6 +214,8 @@ func TestPinPropfindMatrix(t *testing.T) {
 		},
 	}
 
+	// PROPFIND does not write, so all subtests share one fixture load.
+	e := setupTestEnv(t)
 	for _, kind := range kinds {
 		for _, depth := range []string{"0", "1", "infinity"} {
 			expected := kind.shallow
@@ -231,8 +233,6 @@ func TestPinPropfindMatrix(t *testing.T) {
 				}
 
 				t.Run(name, func(t *testing.T) {
-					e := setupTestEnv(t)
-
 					rec := caldavRequest(t, e, "PROPFIND", kind.path, PropfindDiscoveryProps, headers)
 
 					require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
@@ -286,6 +286,7 @@ func TestPinPropfindMissingTaskURL(t *testing.T) {
 
 // RFC 4918 treats an empty PROPFIND body as allprop; today it yields bare hrefs.
 func TestPinPropfindEmptyBody(t *testing.T) {
+	e := setupTestEnv(t)
 	for path, href := range map[string]string{
 		"/dav/":                   "/dav",
 		"/dav/principals/user15/": "/dav/projects",
@@ -294,8 +295,6 @@ func TestPinPropfindEmptyBody(t *testing.T) {
 		pinTaskHref:               pinTaskHref,
 	} {
 		t.Run(path, func(t *testing.T) {
-			e := setupTestEnv(t)
-
 			rec := caldavPROPFIND(t, e, path, "0", "")
 
 			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
