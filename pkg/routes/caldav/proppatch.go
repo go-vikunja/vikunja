@@ -20,7 +20,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -112,29 +111,9 @@ func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTa
 }
 
 func writePropPatchResponse(c *echo.Context, props []xml.Name) error {
-	var sb strings.Builder
-	sb.WriteString(`<?xml version="1.0" encoding="utf-8"?>` + "\n")
-	sb.WriteString(`<D:multistatus xmlns:D="DAV:">` + "\n")
-	sb.WriteString("  <D:response>\n")
-	sb.WriteString("    <D:href>" + xmlEscape(c.Request().URL.Path) + "</D:href>\n")
-	for _, p := range props {
-		sb.WriteString("    <D:propstat>\n")
-		sb.WriteString("      <D:prop>" + propTag(p) + "</D:prop>\n")
-		sb.WriteString("      <D:status>HTTP/1.1 403 Forbidden</D:status>\n")
-		sb.WriteString("    </D:propstat>\n")
+	r := propstatResponse{href: c.Request().URL.Path, propstats: make([]propstat, len(props))}
+	for i, p := range props {
+		r.propstats[i] = propstat{status: http.StatusForbidden, props: []prop{{name: p}}}
 	}
-	sb.WriteString("  </D:response>\n")
-	sb.WriteString("</D:multistatus>\n")
-
-	c.Response().Header().Set("Content-Type", "application/xml; charset=utf-8")
-	c.Response().WriteHeader(http.StatusMultiStatus)
-	_, err := io.WriteString(c.Response(), sb.String())
-	return err
-}
-
-func propTag(name xml.Name) string {
-	if name.Space == "" {
-		return "<" + name.Local + "/>"
-	}
-	return `<` + name.Local + ` xmlns="` + xmlEscape(name.Space) + `"/>`
+	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
 }

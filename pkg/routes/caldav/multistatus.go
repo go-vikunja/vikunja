@@ -44,7 +44,8 @@ var nsPrefixes = map[string]string{
 
 const rootNamespaces = ` xmlns:D="` + nsDAV + `" xmlns:C="` + nsCalDAV + `" xmlns:CS="` + nsCalendarServer + `"`
 
-func davName(local string) xml.Name { return xml.Name{Space: nsDAV, Local: local} }
+func davName(local string) xml.Name    { return xml.Name{Space: nsDAV, Local: local} }
+func calDAVName(local string) xml.Name { return xml.Name{Space: nsCalDAV, Local: local} }
 
 // propValue is the content of a property element.
 type propValue interface {
