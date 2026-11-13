@@ -688,7 +688,9 @@ func TestSendOverdueRemindersScopesProjectsPerUser(t *testing.T) {
 	}
 
 	for _, ut := range uts {
-		require.NoError(t, dispatchOverdueReminders(s, ut, false, true))
+		_, err := s.Insert(&Webhook{UserID: ut.user.ID, CreatedByID: ut.user.ID, TargetURL: "https://example.com", Events: []string{(&TasksOverdueEvent{}).Name()}})
+		require.NoError(t, err)
+		require.NoError(t, dispatchOverdueReminders(s, ut))
 	}
 	require.NoError(t, s.Commit())
 	events.DispatchPending(t.Context(), s)

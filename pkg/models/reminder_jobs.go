@@ -161,14 +161,14 @@ func handleOverdueReminder(msg *message.Message) error {
 		return nil
 	}
 	tasks := ut.allTasks()
-	projects, err := ut.projects(s)
-	if err != nil {
-		return err
-	}
 	job, _ := jobs.FromMessage(msg)
 	if job.Kind == "overdue.mail" {
 		if !reminderMailEnabled() || !ut.user.OverdueTasksRemindersEnabled {
 			return nil
+		}
+		projects, err := ut.projects(s)
+		if err != nil {
+			return err
 		}
 		var n notifications.Notification = &UndoneTasksOverdueNotification{User: ut.user, Assigned: ut.assigned, Followed: ut.followed, Projects: projects}
 		if len(tasks) == 1 {
@@ -177,11 +177,7 @@ func handleOverdueReminder(msg *message.Message) error {
 		s.Close()
 		return notifications.SendMailNow(msg.Context(), ut.user, n)
 	}
-	single, batch, err := overdueEventsWithListeners(s)
-	if err != nil {
-		return err
-	}
-	if err := dispatchOverdueReminders(s, ut, single, batch); err != nil {
+	if err := dispatchOverdueReminders(s, ut); err != nil {
 		return err
 	}
 	if err := jobs.Commit(s, msg); err != nil {
@@ -191,17 +187,19 @@ func handleOverdueReminder(msg *message.Message) error {
 	return nil
 }
 
-func dispatchOverdueReminders(s *xorm.Session, ut *userWithTasks, single, batch bool) error {
+func dispatchOverdueReminders(s *xorm.Session, ut *userWithTasks) error {
+	singleTasks, batch, err := overdueEventsForRecipient(s, ut)
+	if err != nil || len(singleTasks) == 0 && !batch {
+		return err
+	}
 	tasks := ut.allTasks()
 	projects, err := ut.projects(s)
 	if err != nil {
 		return err
 	}
-	if single {
-		for _, task := range tasks {
-			if err := events.DispatchOnCommit(s, &TaskOverdueEvent{Task: task, User: ut.user, Project: projects[task.ProjectID]}); err != nil {
-				return err
-			}
+	for _, task := range singleTasks {
+		if err := events.DispatchOnCommit(s, &TaskOverdueEvent{Task: task, User: ut.user, Project: projects[task.ProjectID]}); err != nil {
+			return err
 		}
 	}
 	if batch {

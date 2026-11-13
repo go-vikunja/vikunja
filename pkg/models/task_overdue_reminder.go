@@ -18,6 +18,8 @@ package models
 
 import (
 	"slices"
+	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
@@ -241,4 +243,81 @@ func overdueEventsWithListeners(s *xorm.Session) (single, batch bool, err error)
 		batch = batch || slices.Contains(w.Events, batchName)
 	}
 	return
+}
+
+// Eligibility is batched per recipient; the listener still checks current creator access.
+func overdueEventsForRecipient(s *xorm.Session, ut *userWithTasks) (singleTasks []*Task, batch bool, err error) {
+	singleName := (&TaskOverdueEvent{}).Name()
+	batchName := (&TasksOverdueEvent{}).Name()
+	allSingle := hasNonWebhookListener(singleName)
+	batch = hasNonWebhookListener(batchName)
+	tasks := ut.allTasks()
+	if len(tasks) == 0 || allSingle && batch {
+		return tasks, batch, nil
+	}
+
+	descendants := make(map[int64]map[int64]bool)
+	projectIDs := []int64{}
+	for _, task := range tasks {
+		if descendants[task.ProjectID] == nil {
+			descendants[task.ProjectID] = map[int64]bool{task.ProjectID: true}
+			projectIDs = append(projectIDs, task.ProjectID)
+		}
+	}
+	ancestors := []ProjectAncestor{}
+	if err := s.Where("project_id IN (" + overdueProjectIDList(projectIDs) + ")").Find(&ancestors); err != nil {
+		return nil, false, err
+	}
+	for _, ancestor := range ancestors {
+		if descendants[ancestor.AncestorID] == nil {
+			descendants[ancestor.AncestorID] = make(map[int64]bool)
+		}
+		descendants[ancestor.AncestorID][ancestor.ProjectID] = true
+	}
+	hookProjectIDs := make([]int64, 0, len(descendants))
+	for id := range descendants {
+		hookProjectIDs = append(hookProjectIDs, id)
+	}
+	hooks := []*Webhook{}
+	err = s.Cols("project_id", "user_id", "events").Where(builder.Or(
+		builder.Expr("project_id IN ("+overdueProjectIDList(hookProjectIDs)+")"),
+		builder.And(builder.Eq{"user_id": ut.user.ID}, builder.Or(builder.IsNull{"project_id"}, builder.Eq{"project_id": 0})),
+	)).Find(&hooks)
+	if err != nil {
+		return nil, false, err
+	}
+	eligibleProjects := make(map[int64]bool)
+	for _, hook := range hooks {
+		if hook.ProjectID > 0 {
+			if slices.Contains(hook.Events, singleName) {
+				for id := range descendants[hook.ProjectID] {
+					eligibleProjects[id] = true
+				}
+			}
+			continue
+		}
+		allSingle = allSingle || slices.Contains(hook.Events, singleName)
+		batch = batch || slices.Contains(hook.Events, batchName)
+	}
+	for _, task := range tasks {
+		if allSingle || eligibleProjects[task.ProjectID] {
+			singleTasks = append(singleTasks, task)
+		}
+	}
+	return singleTasks, batch, nil
+}
+
+// Numeric IDs avoid bind limits for recipients spanning many projects.
+func overdueProjectIDList(ids []int64) string {
+	if len(ids) == 0 {
+		return "NULL"
+	}
+	var result strings.Builder
+	for i, id := range ids {
+		if i > 0 {
+			result.WriteByte(',')
+		}
+		result.WriteString(strconv.FormatInt(id, 10))
+	}
+	return result.String()
 }
