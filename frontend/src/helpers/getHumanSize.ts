@@ -9,7 +9,7 @@ const SIZES = [
 export function getHumanSize(inputSize: number) {
 	let iterator = 0
 	let size = inputSize
-	while (size > 1024) {
+	while (size >= 1024 && iterator < SIZES.length - 1) {
 		size /= 1024
 		iterator++
 	}
