@@ -73,8 +73,10 @@ export const getRepeats = (text: string): repeatParsedResult => {
 		matchedText = matchedText.substring(0, matchedText.length - 1)
 	}
 
+	// Cut at the match itself: replacing the first occurrence of the text would hit an
+	// earlier word that starts the same way ("weekly-report weekly").
 	return {
-		textWithoutMatched: text.replace(matchedText, ''),
+		textWithoutMatched: text.slice(0, results.index) + text.slice(results.index + matchedText.length),
 		repeats: {
 			amount,
 			type,

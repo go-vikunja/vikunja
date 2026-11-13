@@ -1192,5 +1192,21 @@ describe('Parse Task Text', () => {
 				expect(result?.repeats).toBeNull()
 			})
 		})
+
+		it('should remove the matched recurring period, not an earlier word starting with it', () => {
+			const result = parseTaskText('Update weekly-report weekly')
+
+			expect(result.text).toBe('Update weekly-report')
+			expect(result?.repeats?.type).toBe('weeks')
+			expect(result?.repeats?.amount).toBe(1)
+		})
+
+		it('should remove the matched "every" period, not an earlier one inside a word', () => {
+			const result = parseTaskText('Check every day-planner every day')
+
+			expect(result.text).toBe('Check every day-planner')
+			expect(result?.repeats?.type).toBe('days')
+			expect(result?.repeats?.amount).toBe(1)
+		})
 	})
 })
