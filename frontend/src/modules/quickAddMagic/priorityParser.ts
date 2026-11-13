@@ -8,6 +8,10 @@ export const getPriority = (text: string, prefix: string): number | null => {
 	}
 
 	for (const p of ps) {
+		// Only a whole number is a priority: "!2fa" or "!3rd" is part of the title
+		if (!/^\d+$/.test(p)) {
+			continue
+		}
 		for (const pi of Object.values(PRIORITIES)) {
 			if (pi === parseInt(p)) {
 				return parseInt(p)
