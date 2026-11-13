@@ -10,7 +10,8 @@ function cleanupTitle(title: string) {
 	return title.replace(/^((\* |\+ |- )(\[ \] )?)/g, '')
 }
 
-const spaceRegex = /^ */
+// Indention can be spaces or tabs (lists pasted from outliners and editors often use tabs)
+const spaceRegex = /^[ \t]*/
 
 /**
  * @param taskTitles should be multiple lines of task tiles with indention to declare their parent/subtask
