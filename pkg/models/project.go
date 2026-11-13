@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -1026,6 +1027,10 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.HexColor = utils.NormalizeHex(project.HexColor)
+
+	if config.ServiceDefaultIncludeSubprojects.GetBool() {
+		project.IncludeSubprojects = true
+	}
 
 	if project.ParentProjectID == nil {
 		project.ParentProjectID = noParentProjectID()
