@@ -1,6 +1,5 @@
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {getDateWithTime, getUserDefaultTimeParts} from '@/helpers/time/getDateWithTime'
-import {replaceAll} from '@/helpers/replaceAll'
 import {numberWordsRegexGroup, parseAmount} from './numberWords'
 
 export interface dateParseResult {
@@ -14,6 +13,21 @@ interface dateFoundResult {
 }
 
 const monthsRegexGroup = '(january|february|march|april|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
+
+/**
+ * Removes every whole-word occurrence of `search`, ignoring case. A date word inside a
+ * longer word stays: "Book Tomorrowland tickets tomorrow" keeps "Tomorrowland".
+ */
+function removeWholeWords(text: string, search: string): string {
+	if (search === '') {
+		return text
+	}
+	const escaped = search.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+	// Only an edge that is a word character needs a boundary; " at 5pm" starts with a space.
+	const before = /^[a-z0-9_]/i.test(search) ? '(?<![a-z0-9_])' : ''
+	const after = /[a-z0-9_]$/i.test(search) ? '(?![a-z0-9_])' : ''
+	return text.replace(new RegExp(`${before}${escaped}${after}`, 'gi'), '')
+}
 
 /**
  * Matches a date regex against text, rejecting matches that appear in the middle
@@ -119,7 +133,7 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 		}
 
 		return {
-			newText: parsed.foundText ? replaceAll(text, parsed.foundText, '') : text,
+			newText: parsed.foundText ? removeWholeWords(text, parsed.foundText) : text,
 			date: parsed.date,
 		}
 	}
@@ -129,7 +143,7 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 
 const addTimeToDate = (text: string, date: Date, previousMatch: string | null, useDefaultTime = false): dateParseResult => {
 	previousMatch = previousMatch?.trim() || ''
-	text = replaceAll(text, previousMatch, '')
+	text = removeWholeWords(text, previousMatch)
 	if (previousMatch === null) {
 		return {
 			newText: text,
@@ -171,7 +185,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null, u
 
 	const replace = results !== null ? results[0] : previousMatch
 	return {
-		newText: replaceAll(text, replace, '').trim(),
+		newText: removeWholeWords(text, replace).trim(),
 		date,
 	}
 }
@@ -399,7 +413,7 @@ const getMonthFromText = (text: string, date: Date) => {
 	const fullDate = new Date(`${results[0]} 1 ${(new Date()).getFullYear()}`)
 	date.setMonth(fullDate.getMonth())
 	return {
-		newText: replaceAll(text, results[0], ''),
+		newText: removeWholeWords(text, results[0]),
 		date,
 	}
 }

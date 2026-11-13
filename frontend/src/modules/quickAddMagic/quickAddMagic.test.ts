@@ -1093,6 +1093,32 @@ describe('Parse Task Text', () => {
 		})
 	})
 
+	describe('Date words inside other words', () => {
+		it('should not cut a date word out of a longer word', () => {
+			const result = parseTaskText('Book Tomorrowland tickets tomorrow')
+
+			expect(result.text).toBe('Book Tomorrowland tickets')
+			const tomorrow = new Date()
+			tomorrow.setDate(tomorrow.getDate() + 1)
+			expect(result?.date?.getDate()).toBe(tomorrow.getDate())
+		})
+
+		it('should not cut a month name out of a longer word', () => {
+			const result = parseTaskText('Plan Junebug launch 5th june')
+
+			expect(result.text).toBe('Plan Junebug launch')
+			expect(result?.date?.getMonth()).toBe(5)
+			expect(result?.date?.getDate()).toBe(5)
+		})
+
+		it('should not cut a weekday out of a longer word', () => {
+			const result = parseTaskText('Prepare fridaynight playlist friday')
+
+			expect(result.text).toBe('Prepare fridaynight playlist')
+			expect(result?.date?.getDay()).toBe(5)
+		})
+	})
+
 	describe('Recurring Dates', () => {
 		const cases = {
 			'every 1 hour': {type: 'hours', amount: 1},
