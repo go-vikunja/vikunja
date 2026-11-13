@@ -640,6 +640,7 @@ describe('Parse Task Text', () => {
 
 			const prefix = [
 				'next ',
+				'this ',
 				'',
 			]
 
