@@ -681,7 +681,7 @@
       "updateSuccess": "The view was updated successfully.",
       "includeSubprojects": "Include subprojects",
       "includeSubprojectsHint": "Show tasks from all subprojects of this project.",
-      "includeSubprojectsFromView": "Enabled in this view's settings. Change it there to turn it off."
+      "includeSubprojectsFromView": "Enabled in this view's or project's settings. Change it there to turn it off."
     }
   },
   "filters": {

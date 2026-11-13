@@ -3,13 +3,19 @@ import {useRouteQuery} from '@vueuse/router'
 
 import type {ProjectView} from '@/client/generated'
 import {INCLUDE_SUBPROJECTS_QUERY_PARAM} from '@/constants/projectView'
+import {useProjects} from '@/composables/useProjects'
 
 // The view's own flag is only the default; toggling writes a query param instead.
 export function useIncludeSubprojects(
 	viewGetter: ComputedGetter<ProjectView | DeepReadonly<ProjectView> | undefined>,
 ) {
 	// The api ors the view's own setting in, so the query param cannot turn it back off.
-	const fromView = computed(() => viewGetter()?.filter?.include_subprojects ?? false)
+	const projectList = useProjects()
+	const fromView = computed(() => {
+		const view = viewGetter()
+		return (view?.filter?.include_subprojects ?? false)
+			|| (projectList.projects[view?.project_id ?? 0]?.include_subprojects ?? false)
+	})
 	const param = useRouteQuery<string | undefined>(INCLUDE_SUBPROJECTS_QUERY_PARAM)
 
 	const includeSubprojects = computed({
