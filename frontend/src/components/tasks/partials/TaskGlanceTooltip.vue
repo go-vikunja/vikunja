@@ -189,6 +189,9 @@ function scheduleShow() {
 		clearTimeout(hoverTimeout)
 	}
 
+	// A card drag keeps the pointer or focus on the trigger, so mouseleave and focusout never fire.
+	document.addEventListener('dragstart', hide)
+
 	const isWarm = Date.now() - lastHiddenAt < WARM_WINDOW
 	hoverTimeout = setTimeout(async () => {
 		hoverTimeout = null
@@ -214,6 +217,7 @@ function hide() {
 
 	showTooltip.value = false
 	document.removeEventListener('keydown', handleKeydown)
+	document.removeEventListener('dragstart', hide)
 	describedElement?.removeAttribute('aria-describedby')
 	describedElement = null
 }
