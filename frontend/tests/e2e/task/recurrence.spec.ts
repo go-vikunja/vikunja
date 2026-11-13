@@ -27,10 +27,10 @@ test.describe('Task recurrence', () => {
 		expect((await response.json()).repeat_after).toBe(86400)
 	})
 
-	test('completing a recurring task reopens with advanced due date', async ({
+	test('undo restores the previous schedule of a recurring task', async ({
 		authenticatedPage: page, apiContext, userToken,
 	}) => {
-		const originalDue = new Date(Date.now() + 86_400_000)
+		const originalDue = new Date(Math.floor(Date.now() / 1000) * 1000 + 86_400_000)
 		const [task] = await TaskFactory.create(1, {
 			id: 1,
 			project_id: 1,
@@ -59,6 +59,22 @@ test.describe('Task recurrence', () => {
 		// Tolerance of <5s absorbs sub-second timestamp round-tripping between
 		// the JS Date → ISO string → backend time.Time → JSON response path.
 		expect(newDue - originalDue.getTime()).toBeCloseTo(86_400_000, -4)
+
+		const undone = page.waitForResponse(r =>
+			new URL(r.url()).pathname.endsWith(`/tasks/${task.id}`) && r.request().method() === 'PATCH',
+		)
+		await page.getByRole('button', {name: 'Undo', exact: true}).click()
+		expect((await undone).ok()).toBe(true)
+		await page.reload()
+		await expect(page.getByRole('button', {name: 'Mark task done!'})).toBeVisible()
+
+		const restored = await apiContext.get(`tasks/${task.id}`, {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect(restored.ok()).toBe(true)
+		const previous = await restored.json()
+		expect(previous.done).toBe(false)
+		expect(new Date(previous.due_date).getTime()).toBe(originalDue.getTime())
 	})
 
 	test('monthly repeat mode hides the amount field', async ({authenticatedPage: page}) => {

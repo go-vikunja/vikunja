@@ -1217,6 +1217,10 @@ async function deleteTask() {
 }
 
 async function toggleTaskDone() {
+	if (!canWrite.value || updateTask.isPending.value) {
+		return
+	}
+
 	const newTask = {
 		...task.value,
 		done: !task.value.done,
@@ -1226,10 +1230,40 @@ async function toggleTaskDone() {
 		playPopSound()
 	}
 
-	await saveTask(
-		newTask,
-		toggleTaskDone,
-	)
+	const recurring = newTask.done && ((newTask.repeat_after ?? 0) > 0
+		|| newTask.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH)
+	if (!recurring) {
+		await saveTask(newTask, toggleTaskDone)
+		return
+	}
+
+	const {id, start_date, end_date, due_date, reminders, description} = klona(task.value)
+	let undoing = false
+	await saveTask(newTask, async () => {
+		if (undoing || updateTask.isPending.value) {
+			return
+		}
+
+		undoing = true
+		try {
+			const restored = await updateTask.mutateAsync({
+				id: id!,
+				done: false,
+				start_date,
+				end_date,
+				due_date,
+				reminders,
+				description,
+			})
+			if (task.value.id === id) {
+				seedTask(mergeTask(task.value, restored))
+				setActiveFields()
+			}
+		} catch {
+			// The task mutation reports the save error.
+			undoing = false
+		}
+	})
 }
 
 async function markDoneAndGoBack() {
