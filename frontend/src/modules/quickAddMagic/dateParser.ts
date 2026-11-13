@@ -287,7 +287,7 @@ export const getDateFromTextIn = (text: string, now: Date = new Date()) => {
 }
 
 const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundResult => {
-	const matcher = /(^| )(next )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)($| )/g
+	const matcher = /(^| )(next |this )?(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun)($| )/g
 	const results: string[] | null = matcher.exec(text.toLowerCase()) // The i modifier does not seem to work.
 	if (results === null) {
 		return {
