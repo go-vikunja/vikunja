@@ -16,7 +16,7 @@ vi.mock('@floating-ui/dom', () => ({
 
 // The real one reaches into the auth store for the date display setting.
 vi.mock('@/helpers/time/formatDate', () => ({
-	formatDisplayDate: () => '2024-01-01',
+	formatDisplayDate: (date: string) => date,
 }))
 
 import TaskGlanceTooltip from './TaskGlanceTooltip.vue'
@@ -41,10 +41,10 @@ const task = createTaskDraft({
 	created_by: {id: 1, username: 'test', name: 'Test User'},
 })
 
-function mountTooltip() {
+function mountTooltip(tooltipTask = task) {
 	return mount(TaskGlanceTooltip, {
 		attachTo: document.body,
-		props: {task},
+		props: {task: tooltipTask},
 		slots: {
 			default: '<a href="/tasks/1" id="task-link">Test task</a>',
 		},
@@ -177,6 +177,49 @@ describe('TaskGlanceTooltip.vue — keyboard accessibility', () => {
 
 		expect(removeEventListener).toHaveBeenCalledWith('keydown', expect.any(Function))
 		removeEventListener.mockRestore()
+	})
+})
+
+describe('TaskGlanceTooltip.vue — dates', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+		systemTime += 1_000_000
+		vi.setSystemTime(systemTime)
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	async function showTooltipFor(taskProps: Partial<typeof task>) {
+		const wrapper = mountTooltip({...task, ...taskProps})
+		await wrapper.get('.task-glance-trigger').trigger('mouseenter')
+		await advancePastDelay()
+		return wrapper
+	}
+
+	it('does not show an update for a task that was never changed', async () => {
+		const wrapper = await showTooltipFor({
+			created: '2024-01-01T10:00:00Z',
+			updated: '2024-01-01T10:00:00Z',
+		})
+
+		expect(document.body.querySelector('.task-glance-created')).not.toBeNull()
+		expect(document.body.querySelector('.task-glance-updated')).toBeNull()
+
+		wrapper.unmount()
+	})
+
+	it('shows the update of a changed task', async () => {
+		const wrapper = await showTooltipFor({
+			created: '2024-01-01T10:00:00Z',
+			updated: '2024-01-05T10:00:00Z',
+		})
+
+		expect(document.body.querySelector('.task-glance-updated')?.textContent).toContain('2024-01-05T10:00:00Z')
+
+		wrapper.unmount()
 	})
 })
 
