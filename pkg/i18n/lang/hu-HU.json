@@ -12,6 +12,13 @@
 			"requested": "Valaki kérte, hogy a fiókod e-mail-címét a következőre módosítsuk: %[1]s. A jelenlegi címed addig marad aktív, amíg az újat meg nem erősítik.",
 			"warning": "Ha nem Te kezdeményezted, azonnal változtasd meg a jelszavad és vond vissza a függőben lévő módosítást a fiókbeállításokban!"
 		},
+		"identity": {
+			"linked": {
+				"subject": "%[1]s kapcsolva lett Vikunja fiókodhoz.",
+				"message": "%[1]s fiókod kapcsolva lett Vikunja fiókodhoz, %[2]s. Már azzal is bejelentkezhetsz.",
+				"warning": "Ha nem te voltál, azonnal változtass jelszót, majd kapcsold szét a fiókod beállításainál!"
+			}
+		},
 		"password": {
 			"changed": {
 				"subject": "A Vikunja-jelszavad módosult",
@@ -43,6 +50,9 @@
 				"message": "Valaki most megpróbált bejelentkezni a fiókodba és három egymást követő alkalommal hibás jelszót adott meg.",
 				"warning": "Ha nem Te voltál az, akkor lehet, hogy valaki más próbált betörni a fiókodba.",
 				"enhance_security": "A fiókod biztonságának növelése érdekében érdemes erősebb jelszót beállítanod, vagy a beállításokban engedélyezned a 2FA hitelesítést:"
+			},
+			"account_locked": {
+				"message": "Valaki rossz jelszóval próbált belépni a fiókodba, egyhuzamban sokszor."
 			}
 		},
 		"account": {
@@ -129,8 +139,65 @@
 		},
 		"migration": {
 			"done": {
-				"subject": "%[1]s migrációd Vikunjára elkészült"
+				"subject": "%[1]s migrációd Vikunjára elkészült",
+				"imported": "A Vikunja importált minden listát/projektet, feladatot, jegyzetet, emlékeztetőt és fájlt, amihez hozzáférésed volt, %[1]s forrásból.",
+				"have_fun": "Élvezd az új (régi) projektjeidet!"
+			},
+			"failed": {
+				"subject": "A migráció %[1]s forrásból a Vikunjába sikertelen",
+				"message": "Úgy tűnik az átemelés %[1]s forrásból ezúttal nem a tervek szerint alakult.",
+				"retry": "Semmi gond! Csak próbáld meg újra ugyanúgy, ahogyan korábban tetted. Néha előfordulnak ilyen fennakadások a %[1]s oldalán jelentkező technikai hibák miatt, de az újbóli próbálkozás gyakran megoldja a problémát.",
+				"error": "Egy kis hibára bukkantunk: `%[2]s`.",
+				"report": "Kérjük hogy írj nekünk erről [a fórumban](https://community.vikunja.io/) , vagy a szokásos helyeken, hogy meg tudjuk nézni, miért jelentkezett a hiba.",
+				"working_on_it": "Egy hibaüzenet tűnt fel a radarunkon, azon vagyunk hogy megoldjuk minél hamarabb."
 			}
+		},
+		"api_token": {
+			"expiring": {
+				"week": {
+					"subject": "API-tokened \"%[1]s\" hamarosan lejár!",
+					"message": "\"%[1]s\" API-tokened %[2]s napján le fog járni (%[3]s múlva). Ha továbbra is szükséged van rá, hozz létre egy új tokent, mielőtt lejár!"
+				},
+				"day": {
+					"subject": "\"%[1]s\" API-tokened holnap lejár",
+					"message": "\"%[1]s\" API-tokened %[2]s napján le fog járni (%[3]s múlva). Ha továbbra is szükséged van rá, hozz létre egy új tokent, mielőtt lejár!"
+				},
+				"action": "API-tokenek kezelése"
+			}
+		},
+		"common": {
+			"have_nice_day": "Legyen szép napod!",
+			"copy_url": "Ha a gomb nem működne, a lenti URL-t és másold be a böngésződ címsorába:",
+			"actions": {
+				"open_task": "Feladat megnyitása Vikunjában",
+				"open_vikunja": "Vikunja megnyitása",
+				"open_project": "Projekt megnyitása",
+				"open_team": "Csapat megnyitása",
+				"download": "Letöltés",
+				"reset_password": "Jelszó visszaállítása",
+				"go_to_settings": "Ugrás a Beállításokra",
+				"confirm_email": "E-mail cím megerősítése",
+				"abort_deletion": "Törlés megszakítása",
+				"confirm_account_deletion": "Fiók törlésének megerősítése",
+				"change_notification_settings_link": "[Itt](%[1]s) módosíthatod értesítési beállításaid.",
+				"left_comment": "%[1]s hozzászólt",
+				"mentioned_you_comment": "%[1]s megemlített egy hozzászólásban",
+				"mentioned_you": "%[1]s megemlített",
+				"mentioned_you_new_task": "%[1]s megemlített egy új feladatban"
+			}
+		}
+	},
+	"time": {
+		"since_years": "egy éve|%[1]d éve",
+		"since_weeks": "egy hete|%[1]d hete",
+		"since_days": "egy napja|%[1]d napja",
+		"since_hours": "egy órája|%[1]d órája",
+		"since_minutes": "egy perce|%[1]d perce",
+		"list_last_separator": "és"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "Vikunja értesítések: %[1]s"
 		}
 	}
 }
