@@ -20,7 +20,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -228,29 +227,9 @@ func canSetCalendarColor(s *xorm.Session, project *models.Project, u *user.User)
 }
 
 func writePropPatchResponse(c *echo.Context, results []propPatchResult) error {
-	var sb strings.Builder
-	sb.WriteString(`<?xml version="1.0" encoding="utf-8"?>` + "\n")
-	sb.WriteString(`<D:multistatus xmlns:D="DAV:">` + "\n")
-	sb.WriteString("  <D:response>\n")
-	sb.WriteString("    <D:href>" + xmlEscape(c.Request().URL.Path) + "</D:href>\n")
-	for _, r := range results {
-		sb.WriteString("    <D:propstat>\n")
-		sb.WriteString("      <D:prop>" + propTag(r.name) + "</D:prop>\n")
-		fmt.Fprintf(&sb, "      <D:status>HTTP/1.1 %d %s</D:status>\n", r.status, http.StatusText(r.status))
-		sb.WriteString("    </D:propstat>\n")
+	r := propstatResponse{href: c.Request().URL.Path, propstats: make([]propstat, len(results))}
+	for i, res := range results {
+		r.propstats[i] = propstat{status: res.status, props: []prop{{name: res.name}}}
 	}
-	sb.WriteString("  </D:response>\n")
-	sb.WriteString("</D:multistatus>\n")
-
-	c.Response().Header().Set("Content-Type", "application/xml; charset=utf-8")
-	c.Response().WriteHeader(http.StatusMultiStatus)
-	_, err := io.WriteString(c.Response(), sb.String())
-	return err
-}
-
-func propTag(name xml.Name) string {
-	if name.Space == "" {
-		return "<" + name.Local + "/>"
-	}
-	return `<` + name.Local + ` xmlns="` + xmlEscape(name.Space) + `"/>`
+	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
 }

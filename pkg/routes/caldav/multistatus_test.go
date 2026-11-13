@@ -50,8 +50,6 @@ func renderMultistatus(t *testing.T, ms multistatus) string {
 }
 
 func TestMultistatusWriter(t *testing.T) {
-	calName := func(local string) xml.Name { return xml.Name{Space: nsCalDAV, Local: local} }
-
 	t.Run("escapes text and hrefs", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
 			propResponse(`/dav/projects/1/a&b<c"d.ics`, []prop{
@@ -80,7 +78,7 @@ func TestMultistatusWriter(t *testing.T) {
 	t.Run("round-trips line breaks and replaces invalid characters", func(t *testing.T) {
 		const data = "BEGIN:VCALENDAR\r\nSUMMARY:a\tb\x01\xff\r\nEND:VCALENDAR\r\n"
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
-			propResponse("/x", []prop{{name: calName("calendar-data"), value: textValue(data)}}, nil),
+			propResponse("/x", []prop{{name: calDAVName("calendar-data"), value: textValue(data)}}, nil),
 		}})
 
 		var parsed struct {
@@ -170,11 +168,11 @@ func TestMultistatusWriter(t *testing.T) {
 	t.Run("child elements with attributes", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
 			propResponse("/x", []prop{
-				{name: calName("supported-calendar-component-set"), value: elementsValue{
-					{name: calName("comp"), attrs: []attr{{name: "name", value: "VTODO"}}},
-					{name: calName("comp"), attrs: []attr{{name: "name", value: `a"&`}}},
+				{name: calDAVName("supported-calendar-component-set"), value: elementsValue{
+					{name: calDAVName("comp"), attrs: []attr{{name: "name", value: "VTODO"}}},
+					{name: calDAVName("comp"), attrs: []attr{{name: "name", value: `a"&`}}},
 				}},
-				{name: davName("resourcetype"), value: elementsValue{{name: davName("collection")}, {name: calName("calendar")}}},
+				{name: davName("resourcetype"), value: elementsValue{{name: davName("collection")}, {name: calDAVName("calendar")}}},
 				{name: davName("resourcetype")},
 			}, nil),
 		}})
