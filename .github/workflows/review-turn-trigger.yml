@@ -1,0 +1,17 @@
+name: Review turn trigger
+
+# No-op: only exists to fire review-turn.yml via workflow_run, which gets a
+# write token even for fork PRs.
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Review on PR $PR_NUMBER"
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
