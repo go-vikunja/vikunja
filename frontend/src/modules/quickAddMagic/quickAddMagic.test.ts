@@ -597,6 +597,18 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ispum v1.1.1')
 			expect(result.date).toBeNull()
 		})
+		describe('Dates that do not exist', () => {
+			const cases = ['apr 31', '31 apr', '2/30', '31.04', '2026-02-30']
+			for (const c of cases) {
+				it(`should not roll ${c} over into the next month`, () => {
+					const result = parseTaskText(`Pay rent ${c}`)
+
+					expect(result.text).toBe(`Pay rent ${c}`)
+					expect(result.date).toBeNull()
+				})
+			}
+		})
+
 		it('should not recognize dates in urls', () => {
 			const text = 'https://some-url.org/blog/2019/1/233526-some-more-text'
 			const result = parseTaskText(text)
