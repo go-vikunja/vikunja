@@ -1139,6 +1139,25 @@ describe('Parse Task Text', () => {
 			})
 		}
 
+		const capitalizedCases = {
+			'Weekly': {type: 'weeks', amount: 1},
+			'Daily': {type: 'days', amount: 1},
+			'Every Day': {type: 'days', amount: 1},
+			'every Month': {type: 'months', amount: 1},
+			'Every Two Weeks': {type: 'weeks', amount: 2},
+			'EVERY 3 YEARS': {type: 'years', amount: 3},
+		} as Record<string, IRepeatAfter>
+
+		for (const c of Object.keys(capitalizedCases)) {
+			it(`should parse ${c} regardless of case as every ${capitalizedCases[c].amount} ${capitalizedCases[c].type}`, () => {
+				const result = parseTaskText(`Lorem Ipsum ${c}`)
+
+				expect(result.text).toBe('Lorem Ipsum')
+				expect(result?.repeats?.type).toBe(capitalizedCases[c].type)
+				expect(result?.repeats?.amount).toBe(capitalizedCases[c].amount)
+			})
+		}
+
 		const wordCases = [
 			'annually',
 			'biannually',
