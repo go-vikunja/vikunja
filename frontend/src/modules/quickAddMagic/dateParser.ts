@@ -188,12 +188,14 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 	let results: RegExpExecArray | null
 	let foundText: string | null = ''
 	let containsYear = true
+	// The day the text asked for: `Date` rolls an impossible one like "apr 31" over into the next month.
+	let day: number | null = null
 
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or "06/24/2021" or "27/01" or "01/27"
 	for (const datePattern of datePatterns) {
 		results = matchDateAtBoundary(text, datePattern)
 		if (results !== null) {
-			const {day, month, year, found} = {...results.groups}
+			const {day: dayText, month, year, found} = {...results.groups}
 			let tmp_year = year
 
 			if (tmp_year === undefined) {
@@ -201,8 +203,12 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 				containsYear = false
 			}
 
-			result = `${month}/${day}/${tmp_year}`
-			result = !isNaN(new Date(result).getTime()) ? result : `${day}/${month}/${tmp_year}`
+			result = `${month}/${dayText}/${tmp_year}`
+			day = Number(dayText)
+			if (isNaN(new Date(result).getTime())) {
+				result = `${dayText}/${month}/${tmp_year}`
+				day = Number(month)
+			}
 			result = !isNaN(new Date(result).getTime()) ? result : null
 
 			if(result !== null){
@@ -218,6 +224,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 		results = monthRegex.exec(text)
 		result = results === null ? null : `${results[0]} ${now.getFullYear()}`.trim()
 		foundText = results === null ? '' : results[0].trim()
+		day = results === null ? null : Number(results[0].match(/[0-9]+/)?.[0])
 		containsYear = false
 	}
 
@@ -238,6 +245,13 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 
 	if (!containsYear && date < now) {
 		date.setFullYear(date.getFullYear() + 1)
+	}
+
+	if (day !== null && date.getDate() !== day) {
+		return {
+			foundText: null,
+			date: null,
+		}
 	}
 
 	return {
