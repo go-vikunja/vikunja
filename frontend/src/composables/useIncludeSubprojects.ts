@@ -13,8 +13,16 @@ export function useIncludeSubprojects(
 	const projectList = useProjects()
 	const fromView = computed(() => {
 		const view = viewGetter()
-		return (view?.filter?.include_subprojects ?? false)
-			|| (projectList.projects[view?.project_id ?? 0]?.include_subprojects ?? false)
+
+		if (view === undefined) {
+			return false
+		}
+
+		const project = projectList.projects[view.project_id ?? 0]
+		const viewIncludesSubprojects = view.filter?.include_subprojects === true
+		const projectIncludesSubprojects = project?.include_subprojects === true
+
+		return viewIncludesSubprojects || projectIncludesSubprojects
 	})
 	const param = useRouteQuery<string | undefined>(INCLUDE_SUBPROJECTS_QUERY_PARAM)
 
