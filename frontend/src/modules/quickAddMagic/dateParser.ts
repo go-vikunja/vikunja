@@ -47,7 +47,9 @@ function matchDateAtBoundary(text: string, pattern: string): RegExpExecArray | n
 }
 
 function matchesDateExpr(text: string, dateExpr: string): boolean {
-	return text.match(new RegExp('(^| )' + dateExpr, 'gi')) !== null
+	// The expression must end the word: "next weekend", "todays" or "next months"
+	// would otherwise match and leave "end" or "s" behind in the title.
+	return text.match(new RegExp('(^| )' + dateExpr + '(?![a-z0-9_])', 'gi')) !== null
 }
 
 export const parseDate = (text: string, now: Date = new Date()): dateParseResult => {
