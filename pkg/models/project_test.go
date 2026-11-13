@@ -234,6 +234,26 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 		})
 	})
 
+	t.Run("update include subprojects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project := Project{
+			ID:                 1,
+			Title:              "Test1",
+			IncludeSubprojects: true,
+		}
+		err := project.Update(s, usr)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":                  project.ID,
+			"include_subprojects": true,
+		}, false)
+	})
+
 	t.Run("update", func(t *testing.T) {
 		t.Run("normal", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
