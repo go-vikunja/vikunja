@@ -2568,7 +2568,7 @@ export type TaskCollection = {
      */
     order_by?: Array<string> | null;
     /**
-     * A search term to match tasks by their title.
+     * A search term to match tasks by their title or description. A plain number also matches a task's number: either the index shown in the UI or the id from the task URL. "#12" only matches the index.
      */
     s?: string;
     /**
