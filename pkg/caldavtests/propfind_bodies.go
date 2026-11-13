@@ -75,6 +75,27 @@ const PropfindCurrentUserPrivilegeSet = `<?xml version="1.0" encoding="utf-8" ?>
   </D:prop>
 </D:propfind>`
 
+// PropfindDiscoveryProps requests every property the characterization tests pin.
+const PropfindDiscoveryProps = `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:CS="http://calendarserver.org/ns/">
+  <D:prop>
+    <D:resourcetype/>
+    <D:displayname/>
+    <D:current-user-principal/>
+    <C:calendar-home-set/>
+    <D:principal-URL/>
+    <C:supported-calendar-component-set/>
+    <D:getcontenttype/>
+    <D:owner/>
+    <D:getetag/>
+    <CS:getctag/>
+    <D:getlastmodified/>
+    <D:getcontentlength/>
+    <D:sync-token/>
+    <C:calendar-description/>
+  </D:prop>
+</D:propfind>`
+
 // ReportCalendarQuery is a calendar-query REPORT requesting all VTODOs.
 // RFC 4791 §7.8
 const ReportCalendarQuery = `<?xml version="1.0" encoding="utf-8" ?>
