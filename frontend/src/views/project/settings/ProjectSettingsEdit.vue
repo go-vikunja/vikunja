@@ -58,6 +58,14 @@
 					</FormField>
 				</div>
 			</div>
+
+			<FancyCheckbox
+				v-model="project.include_subprojects"
+				v-tooltip="$t('project.edit.includeSubprojectsHint')"
+				:disabled="isLoading"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</template>
 	</CreateEdit>
 </template>
@@ -70,6 +78,7 @@ import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FormField from '@/components/input/FormField.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
 

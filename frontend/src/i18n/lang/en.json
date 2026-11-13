@@ -494,6 +494,7 @@
       "title": "Edit \"{project}\"",
       "titlePlaceholder": "The project title goes here…",
       "identifierTooltip": "The project identifier can be used to uniquely identify a task across projects. You can set it to empty to disable it.",
+      "includeSubprojectsHint": "Show the tasks of all subprojects in this project's list, table and gantt views.",
       "identifier": "Project Identifier",
       "identifierPlaceholder": "The project identifier goes here…",
       "description": "Description",
