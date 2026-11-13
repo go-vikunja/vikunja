@@ -1531,7 +1531,7 @@
   },
   "update": {
     "available": "A new version of Vikunja is available.",
-    "do": "Reload"
+    "do": "Refresh"
   },
   "menu": {
     "edit": "Edit",
