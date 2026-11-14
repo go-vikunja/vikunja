@@ -213,7 +213,8 @@ func TestCaldavDiscovery(t *testing.T) {
 		assert.Equal(t, 207, rec.Result().StatusCode)
 
 		responseBody := rec.Body.String()
-		assert.Contains(t, responseBody, "/dav/projects/")
+		assert.Contains(t, responseBody, "<D:response><D:href>/dav/projects</D:href>")
+		assert.Contains(t, responseBody, "<D:current-user-principal><D:href>/dav/principals/user15/</D:href></D:current-user-principal>")
 	})
 
 	t.Run("Principal discovery points to normalized project home set path", func(t *testing.T) {

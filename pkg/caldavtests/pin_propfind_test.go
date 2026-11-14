@@ -96,14 +96,13 @@ func expectPrincipal(href, displayName string) expectedDAVResponse {
 	}
 }
 
-// current-user-principal differs from the principal's, because ProjectHandler passes the home set as the user.
-func expectHomeSet(currentUserPrincipal string) expectedDAVResponse {
+func expectHomeSet() expectedDAVResponse {
 	return expectedDAVResponse{
 		href: "/dav/projects",
 		ok: map[xml.Name]string{
 			davName("resourcetype"):                     resourceTypeHome,
 			davName("displayname"):                      "projects",
-			davName("current-user-principal"):           currentUserPrincipal,
+			davName("current-user-principal"):           user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
 			davName("owner"):                            "/dav/",
@@ -117,13 +116,13 @@ func expectHomeSet(currentUserPrincipal string) expectedDAVResponse {
 	}
 }
 
-func expectCalendar(href, title, currentUserPrincipal string) expectedDAVResponse {
+func expectCalendar(href, title string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: href,
 		ok: map[xml.Name]string{
 			davName("resourcetype"):                     resourceTypeCalendar,
 			davName("displayname"):                      title,
-			davName("current-user-principal"):           currentUserPrincipal,
+			davName("current-user-principal"):           user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
 			davName("owner"):                            "/dav/",
@@ -139,13 +138,13 @@ func expectCalendar(href, title, currentUserPrincipal string) expectedDAVRespons
 	}
 }
 
-func expectTask(href, title, currentUserPrincipal string) expectedDAVResponse {
+func expectTask(href, title string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: href,
 		ok: map[xml.Name]string{
 			davName("resourcetype"):           "",
 			davName("displayname"):            title,
-			davName("current-user-principal"): currentUserPrincipal,
+			davName("current-user-principal"): user15Principal,
 			davName("getcontenttype"):         "text/calendar; component=vcalendar",
 			davName("owner"):                  "/dav/",
 			davName("getetag"):                anyValue,
@@ -160,10 +159,10 @@ func expectTask(href, title, currentUserPrincipal string) expectedDAVResponse {
 	}
 }
 
-func project36Tasks(currentUserPrincipal string) []expectedDAVResponse {
+func project36Tasks() []expectedDAVResponse {
 	out := make([]expectedDAVResponse, 0, len(project36TaskTitles))
 	for href, title := range project36TaskTitles {
-		out = append(out, expectTask(href, title, currentUserPrincipal))
+		out = append(out, expectTask(href, title))
 	}
 	return out
 }
@@ -185,12 +184,12 @@ func TestPinPropfindMatrix(t *testing.T) {
 		deep    []expectedDAVResponse
 	}
 
-	homeDeep := []expectedDAVResponse{expectHomeSet("/dav/projects/")}
+	homeDeep := []expectedDAVResponse{expectHomeSet()}
 	for href, title := range user15Projects {
-		homeDeep = append(homeDeep, expectCalendar(href, title, "/dav/projects/"))
+		homeDeep = append(homeDeep, expectCalendar(href, title))
 	}
 
-	task := expectTask(pinTaskHref, "Title Caldav Test", user15Principal)
+	task := expectTask(pinTaskHref, "Title Caldav Test")
 
 	kinds := []resourceKind{
 		{
@@ -214,16 +213,16 @@ func TestPinPropfindMatrix(t *testing.T) {
 		{
 			name:    "home set",
 			path:    "/dav/projects",
-			shallow: []expectedDAVResponse{expectHomeSet("/dav/projects/")},
+			shallow: []expectedDAVResponse{expectHomeSet()},
 			deep:    homeDeep,
 		},
 		{
 			name:    "project collection",
 			path:    "/dav/projects/36",
-			shallow: []expectedDAVResponse{expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", "/dav/projects/")},
+			shallow: []expectedDAVResponse{expectCalendar("/dav/projects/36", "Project 36 for Caldav tests")},
 			deep: append(
-				[]expectedDAVResponse{expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", "/dav/projects/")},
-				project36Tasks("/dav/projects/")...,
+				[]expectedDAVResponse{expectCalendar("/dav/projects/36", "Project 36 for Caldav tests")},
+				project36Tasks()...,
 			),
 		},
 		{
