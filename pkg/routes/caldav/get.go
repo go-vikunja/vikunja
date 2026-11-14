@@ -88,6 +88,9 @@ func getTask(c *echo.Context, u *user.User, t taskTarget) error {
 func writeCalendar(c *echo.Context, contentType, etag string, modified time.Time, body string) error {
 	h := c.Response().Header()
 	h.Set("ETag", etag)
+	if etag != "" && preconditionsOf(c.Request().Header).notModified(etag) {
+		return c.NoContent(http.StatusNotModified)
+	}
 	h.Set("Last-Modified", lastModified(modified))
 	if c.Request().Method == http.MethodHead {
 		h.Set("Content-Type", contentType)
