@@ -84,6 +84,8 @@ func handle(c *echo.Context, resolve targetResolver) error {
 		return serveOptions(c, u, t)
 	case http.MethodGet, http.MethodHead:
 		return serveGet(c, u, t)
+	case http.MethodDelete:
+		return serveDelete(c, u, t)
 	}
 
 	switch t := t.(type) {
