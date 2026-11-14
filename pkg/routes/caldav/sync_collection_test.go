@@ -29,16 +29,14 @@ import (
 func TestSyncTokenPurgeGeneration(t *testing.T) {
 	updated := time.Unix(1_700_000_000, 0).UTC()
 	purged := updated.Add(time.Hour)
-	rr := VikunjaProjectResourceAdapter{
-		project: &models.ProjectWithTasksAndBuckets{
-			Project: models.Project{
-				ID:           36,
-				Updated:      updated,
-				LastPurgedAt: purged,
-			},
+	project := &models.ProjectWithTasksAndBuckets{
+		Project: models.Project{
+			ID:           36,
+			Updated:      updated,
+			LastPurgedAt: purged,
 		},
 	}
-	token := syncTokenPrefix + rr.CalculateEtag()
+	token := syncTokenPrefix + collectionETag(project, nil)
 	projectID, timestamp, generation, ok := parseSyncToken(token)
 	require.True(t, ok)
 	assert.Equal(t, int64(36), projectID)
