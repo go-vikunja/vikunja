@@ -134,9 +134,12 @@ func servePropfind(c *echo.Context, u *user.User, t target) error {
 		return writeError(c, err)
 	}
 
-	body, err := io.ReadAll(c.Request().Body)
+	body, err := io.ReadAll(io.LimitReader(c.Request().Body, maxPropRequestBodySize+1))
 	if err != nil {
 		return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
+	}
+	if len(body) > maxPropRequestBodySize {
+		return writeError(c, errBodyTooLarge)
 	}
 	logRequest(c.Request().Header, body)
 	req, err := parsePropfind(string(body))
