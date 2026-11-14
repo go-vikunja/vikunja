@@ -229,8 +229,7 @@ func RegisterRoutes(e *echo.Echo) {
 		// Reserve the failure budget before bcrypt runs.
 		wkg.Use(basicAuthRateLimit)
 		wkg.Use(middleware.BasicAuth(caldav.BasicAuth))
-		wkg.Any("/caldav", caldav.PrincipalHandler)
-		wkg.Any("/caldav/", caldav.PrincipalHandler)
+		registerCalDavRoute(wkg, "/caldav", caldav.PrincipalHandler, caldavReadOnlyMethods)
 		c := e.Group("/dav")
 		c.Use(basicAuthRateLimit)
 		registerCalDavRoutes(c)
@@ -1076,21 +1075,34 @@ func registerMigrations(m *echo.Group) {
 	csvFileMigrator.RegisterRoutes(m)
 }
 
-func registerCalDavRoutes(c *echo.Group) {
+var (
+	caldavReadOnlyMethods = []string{http.MethodOptions, http.MethodGet, http.MethodHead, echo.PROPFIND}
+	caldavHomeSetMethods  = []string{http.MethodOptions, echo.PROPFIND}
+	caldavCalendarMethods = []string{
+		http.MethodOptions, http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete,
+		echo.PROPFIND, echo.REPORT, "PROPPATCH",
+	}
+)
 
-	// Basic auth middleware
+func registerCalDavRoutes(c *echo.Group) {
 	c.Use(middleware.BasicAuth(caldav.BasicAuth))
 
 	// THIS is the entry point for caldav clients, otherwise projects will show up double
-	c.Any("", caldav.EntryHandler)
-	c.Any("/", caldav.EntryHandler)
-	c.Any("/principals/*", caldav.PrincipalHandler)
-	c.Any("/principals/*/", caldav.PrincipalHandler)
-	c.Any("/projects", caldav.ProjectHandler)
-	c.Any("/projects/", caldav.ProjectHandler)
-	c.Any("/projects/:project", caldav.ProjectHandler)
-	c.Any("/projects/:project/", caldav.ProjectHandler)
-	c.Any("/projects/:project/:task", caldav.TaskHandler) // Mostly used for editing
+	registerCalDavRoute(c, "", caldav.EntryHandler, caldavReadOnlyMethods)
+	registerCalDavRoute(c, "/principals/*", caldav.PrincipalHandler, caldavReadOnlyMethods)
+	registerCalDavRoute(c, "/projects", caldav.ProjectHandler, caldavHomeSetMethods)
+	registerCalDavRoute(c, "/projects/:project", caldav.ProjectHandler, caldavCalendarMethods)
+	c.Match(caldavCalendarMethods, "/projects/:project/:task", caldav.TaskHandler)
+	c.Any("/projects/:project/:task", caldav.TaskHandler)
+}
+
+// registerCalDavRoute registers path with and without a trailing slash: Apple clients append one.
+// Any other method still reaches the handler, behind the same auth and access checks.
+func registerCalDavRoute(g *echo.Group, path string, handler echo.HandlerFunc, methods []string) {
+	for _, p := range []string{path, path + "/"} {
+		g.Match(methods, p, handler)
+		g.Any(p, handler)
+	}
 }
 
 // Never the raw URI: share hashes ride in the path and reset/confirm tokens in the query.
