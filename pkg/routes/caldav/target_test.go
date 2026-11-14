@@ -167,7 +167,7 @@ func TestNewStorage(t *testing.T) {
 
 	principal := newStorage(caldavFilterUser, principalTarget{})
 	assert.Nil(t, principal.project)
-	assert.Equal(t, principalTarget{}, principal.target)
+	assert.Nil(t, principal.task)
 
 	homeSet := newStorage(caldavFilterUser, homeSetTarget{})
 	require.NotNil(t, homeSet.project)
