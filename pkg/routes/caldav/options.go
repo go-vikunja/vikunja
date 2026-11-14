@@ -31,18 +31,11 @@ const (
 	allowReadWrite = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
 	allowReadOnly  = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
 	// The home set only lists the collections in it.
-	allowHomeSet = "OPTIONS, PROPFIND"
+	allowHomeSet = "OPTIONS, PROPFIND, REPORT"
 )
 
 func serveOptions(c *echo.Context, u *user.User, t target) error {
-	allow := allowReadWrite
-	var err error
-	switch t := t.(type) {
-	case collectionTarget:
-		allow, err = collectionAllow(u, t)
-	case taskTarget:
-		allow, err = collectionAllow(u, t.collection)
-	}
+	allow, err := allowed(u, t)
 	if err != nil {
 		return writeError(c, err)
 	}
