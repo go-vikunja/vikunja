@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"net/url"
+	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/models"
@@ -34,6 +35,10 @@ const PrincipalBasePath = DavBasePath + `/principals`
 
 func principalPathForUser(username string) string {
 	return PrincipalBasePath + `/` + username + `/`
+}
+
+func collectionHref(projectID int64) string {
+	return ProjectBasePath + "/" + strconv.FormatInt(projectID, 10)
 }
 
 // WebDAV requires every Depth: 1 child to live under the collection's own URI.
