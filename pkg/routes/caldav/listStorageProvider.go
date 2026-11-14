@@ -17,22 +17,16 @@
 package caldav
 
 import (
-	"context"
 	"errors"
 	"net/url"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/richtext"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
 	"github.com/samedi/caldav-go/lib"
@@ -419,544 +413,72 @@ func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data
 
 // CreateResource creates a new resource
 func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (*data.Resource, error) {
-
 	if vcls.project == nil {
 		return nil, errs.ForbiddenError
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	// Denying here would make PUT an oracle for collections every other verb answers 404 for.
-	canRead, err := vcls.collection().canRead(s, vcls.user)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, err
-	}
-	if !canRead {
-		_ = s.Rollback()
-		log.Debugf("User %v tried to create a caldav resource in project %v which they are not allowed to access", vcls.user.Username, vcls.project.ID)
-		return nil, errs.ResourceNotFoundError
-	}
-
-	vTask, _, err := caldav.ParseTaskFromVTODO(content)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to parse VTODO in CreateResource: %v", err)
-		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
-		_ = s.Rollback()
-		return nil, errs.ForbiddenError
-	}
-
-	vTask.ProjectID = vcls.project.ID
-
-	// A client PUTting a UID that already exists is syncing a stale href - typically after
-	// the task moved to another project or out of this collection. Creating a second task
-	// would silently fork it (#3482), and answering 403 would strand the client on a
-	// permanent denial, so 404 and let it resync to the real collection.
-	if vTask.UID != "" {
-		existing, err := models.GetTasksByUIDs(s, []string{vTask.UID}, vcls.user)
+	var vTask *models.Task
+	err := writeTransaction(func(s *xorm.Session) error {
+		c, err := vcls.collection().checkRead(s, vcls.user)
 		if err != nil {
-			_ = s.Rollback()
-			return nil, err
+			return err
 		}
-		if len(existing) > 0 {
-			_ = s.Rollback()
-			log.Debugf("[CALDAV] Refusing to create task with already existing UID %s in project %d", vTask.UID, vcls.project.ID)
-			return nil, errs.ResourceNotFoundError
+		vTask, _, err = parseTaskBody(content)
+		if err != nil {
+			return err
 		}
-	}
-
-	// Check the permissions
-	canCreate, err := denyArchived(vTask.CanCreate(s, vcls.user))
+		return createTask(s, vcls.user, c, vTask)
+	})
 	if err != nil {
-		log.Errorf("[CALDAV] Permission check failed in CreateResource for user %s, project %d: %v", vcls.user.Username, vcls.project.ID, err)
-		_ = s.Rollback()
-		return nil, err
-	}
-	if !canCreate {
-		log.Warningf("[CALDAV] User %s does not have permission to create task in project %d", vcls.user.Username, vcls.project.ID)
-		_ = s.Rollback()
-		return nil, errs.ForbiddenError
-	}
-
-	// Inbound CalDAV descriptions are markdown; store them as canonical HTML.
-	if err := applyDescriptionFromMarkdown(s, vcls.user, vTask, ""); err != nil {
-		log.Errorf("[CALDAV] Failed to convert description in CreateResource: %v", err)
-		_ = s.Rollback()
-		events.CleanupPending(s)
 		return nil, toLibraryError(err)
 	}
 
-	// Create the task
-	err = vTask.Create(s, vcls.user)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to create task in CreateResource: %v, task: %+v", err, vTask)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, toLibraryError(err)
-	}
-
-	vcls.task.ID = vTask.ID
-	err = persistLabels(s, vcls.user, vcls.task, vTask.Labels)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to persist labels in CreateResource: %v, labels: %+v", err, vTask.Labels)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, err
-	}
-
-	vcls.task.ProjectID = vcls.project.ID
-	err = persistRelations(s, vcls.user, vcls.task, vTask.RelatedTasks)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to persist relations in CreateResource: %v, relations: %+v", err, vTask.RelatedTasks)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, err
-	}
-
-	if err := s.Commit(); err != nil {
-		log.Errorf("[CALDAV] Failed to commit transaction in CreateResource: %v", err)
-		events.CleanupPending(s)
-		return nil, err
-	}
-
-	events.DispatchPending(context.Background(), s)
-
-	// Build up the proper response
-	rr := VikunjaProjectResourceAdapter{
-		project: vcls.project,
-		task:    vTask,
-	}
-	r := data.NewResource(rpath, &rr)
+	r := data.NewResource(rpath, &VikunjaProjectResourceAdapter{project: vcls.project, task: vTask})
 	return &r, nil
-}
-
-// applyDescriptionFromMarkdown converts a task's inbound CalDAV description
-// (markdown) to canonical HTML, rebuilding @mentions. Unchanged markdown keeps the
-// stored HTML verbatim, so a no-op read-modify-write doesn't churn it or move Updated.
-func applyDescriptionFromMarkdown(s *xorm.Session, viewer *user2.User, vTask *models.Task, storedHTML string) error {
-	if !richtext.Changed(storedHTML, vTask.Description) {
-		vTask.Description = storedHTML
-		return nil
-	}
-
-	htmlDesc, err := richtext.MarkdownToHTMLWithMentions(s, viewer, vTask.Description)
-	if err != nil {
-		return err
-	}
-	vTask.Description = htmlDesc
-	return nil
 }
 
 // UpdateResource updates a resource
 func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
-
-	s := db.NewSession()
-	defer s.Close()
-
-	if err := vcls.collection().checkWrite(s, vcls.user, vcls.task); err != nil {
-		_ = s.Rollback()
-		return nil, toLibraryError(err)
-	}
-
-	vTask, props, err := caldav.ParseTaskFromVTODO(content)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to parse VTODO in UpdateResource: %v", err)
-		log.Debugf("[CALDAV] VTODO content that failed to parse: %s", content)
-		_ = s.Rollback()
-		return nil, errs.ForbiddenError
-	}
-
-	// At this point, we already have the right task in vcls.task, so we can use that ID directly
-	vTask.ID = vcls.task.ID
-
-	// Explicitly set the ProjectID in case the task now belongs to a different project:
-	vTask.ProjectID = vcls.project.ID
-	if models.IsPseudoProjectID(vcls.project.ID) {
-		// A pseudo id is no project to move the task into; leave it where it lives.
-		vTask.ProjectID = vcls.task.ProjectID
-	}
-
-	// Check the permissions
-	canUpdate, err := denyArchived(vTask.CanUpdate(s, vcls.user))
-	if err != nil {
-		log.Errorf("[CALDAV] Permission check failed in UpdateResource for user %s, task %d: %v", vcls.user.Username, vcls.task.ID, err)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, err
-	}
-	if !canUpdate {
-		log.Warningf("[CALDAV] User %s does not have permission to update task %d", vcls.user.Username, vcls.task.ID)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, errs.ForbiddenError
-	}
-
-	// vcls.task comes from an earlier, already committed session - overlaying onto it would lose concurrent writes.
-	storedTasks, err := models.GetTasksByUIDs(s, []string{vcls.task.UID}, vcls.user)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to re-read task in UpdateResource: %v", err)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, err
-	}
-	if len(storedTasks) < 1 {
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, errs.ResourceNotFoundError
-	}
-
-	// tasks.uid has no unique index, so a UID can match several tasks - pick the one the permission check was made against.
-	var stored *models.Task
-	for _, t := range storedTasks {
-		if t.ID == vcls.task.ID {
-			stored = t
-			break
+	var updated *models.Task
+	err := writeTransaction(func(s *xorm.Session) error {
+		c := readableCollection{vcls.collection()}
+		if err := c.checkWrite(s, vcls.user, vcls.task); err != nil {
+			return err
 		}
-	}
-	if stored == nil {
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, errs.ResourceNotFoundError
-	}
-
-	// Re-assert GHSA-48ch-p4gq-x46x: the GetResource guard ran in a different, already committed session.
-	inCollection, err := vcls.collection().holds(s, vcls.user, stored)
-	if err != nil {
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, err
-	}
-	if !inCollection {
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, errs.ResourceNotFoundError
-	}
-
-	// Inbound markdown → canonical HTML, kept verbatim when unchanged.
-	if err := applyDescriptionFromMarkdown(s, vcls.user, vTask, stored.Description); err != nil {
-		log.Errorf("[CALDAV] Failed to convert description in UpdateResource: %v", err)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, toLibraryError(err)
-	}
-
-	// Overlay only what the VTODO expressed; everything else keeps its stored value.
-	base := *stored
-	if props.Title {
-		base.Title = vTask.Title
-	}
-	if props.Description {
-		base.Description = vTask.Description
-	}
-	if props.Done {
-		base.Done = vTask.Done
-	}
-	if props.Priority {
-		base.Priority = vTask.Priority
-	}
-	if props.DueDate {
-		base.DueDate = vTask.DueDate
-	}
-	if props.StartDate {
-		base.StartDate = vTask.StartDate
-	}
-	if props.EndDate {
-		base.EndDate = vTask.EndDate
-	}
-	if props.Color {
-		base.HexColor = vTask.HexColor
-	}
-	// nil = no VALARM, keep stored reminders; non-nil (even empty) = client owns the alarm set.
-	if vTask.Reminders != nil {
-		base.Reminders = vTask.Reminders
-	}
-
-	err = base.Update(s, vcls.user)
-	if err != nil {
-		log.Errorf("[CALDAV] Failed to update task in UpdateResource: %v, task: %+v", err, base)
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return nil, toLibraryError(err)
-	}
-
-	// nil = CATEGORIES absent, leave labels alone; non-nil (even empty) = explicit set.
-	if vTask.Labels != nil {
-		err = persistLabels(s, vcls.user, &base, vTask.Labels)
+		vTask, props, err := parseTaskBody(content)
 		if err != nil {
-			log.Errorf("[CALDAV] Failed to persist labels in UpdateResource: %v, labels: %+v", err, vTask.Labels)
-			_ = s.Rollback()
-			events.CleanupPending(s)
-			return nil, err
+			return err
 		}
-		base.Labels = vTask.Labels
-	}
-
-	// RELATED-TO has no explicit-clear form, so relations can be added or replaced via CalDAV, never removed.
-	if len(vTask.RelatedTasks) > 0 {
-		err = persistRelations(s, vcls.user, &base, vTask.RelatedTasks)
+		storedTasks, err := models.GetTasksByUIDs(s, []string{vcls.task.UID}, vcls.user)
 		if err != nil {
-			log.Errorf("[CALDAV] Failed to persist relations in UpdateResource: %v, relations: %+v", err, vTask.RelatedTasks)
-			_ = s.Rollback()
-			events.CleanupPending(s)
-			return nil, err
+			return err
 		}
-		base.RelatedTasks = vTask.RelatedTasks
+		var stored *models.Task
+		for _, t := range storedTasks {
+			if t.ID == vcls.task.ID {
+				stored = t
+			}
+		}
+		if stored == nil {
+			return errNotFound
+		}
+		updated, err = updateTask(s, vcls.user, c, stored, vTask, props)
+		return err
+	})
+	if err != nil {
+		return nil, toLibraryError(err)
 	}
 
-	if err := s.Commit(); err != nil {
-		log.Errorf("[CALDAV] Failed to commit transaction in UpdateResource: %v", err)
-		events.CleanupPending(s)
-		return nil, err
-	}
-
-	events.DispatchPending(context.Background(), s)
-
-	// base, not vTask: Update wrote back the Updated timestamp the etag is built from.
-	rr := VikunjaProjectResourceAdapter{
-		project: vcls.project,
-		task:    &base,
-	}
-	r := data.NewResource(rpath, &rr)
+	r := data.NewResource(rpath, &VikunjaProjectResourceAdapter{project: vcls.project, task: updated})
 	return &r, nil
 }
 
 // DeleteResource deletes a resource
 func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	if err := vcls.collection().checkWrite(s, vcls.user, vcls.task); err != nil {
-		_ = s.Rollback()
-		return toLibraryError(err)
-	}
-
-	if vcls.task == nil {
-		_ = s.Rollback()
-		return nil
-	}
-
-	canDelete, err := denyArchived(vcls.task.CanDelete(s, vcls.user))
-	if err != nil {
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return err
-	}
-	if !canDelete {
-		events.CleanupPending(s)
-		return errs.ForbiddenError
-	}
-
-	err = vcls.task.Delete(s, vcls.user)
-	if err != nil {
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return err
-	}
-
-	err = s.Commit()
-	if err != nil {
-		events.CleanupPending(s)
-		return err
-	}
-
-	events.DispatchPending(context.Background(), s)
-
-	return nil
-}
-
-func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*models.Label) (err error) {
-
-	labelTitles := []string{}
-
-	for _, label := range labels {
-		labelTitles = append(labelTitles, label.Title)
-	}
-
-	u := &user2.User{
-		ID: a.GetID(),
-	}
-
-	// Using readall ensures the current user has the permission to see the labels they provided via caldav.
-	existingLabels, _, _, err := models.GetLabelsForUser(s, u, labelTitles, 0, 0)
-	if err != nil {
-		return err
-	}
-
-	labelMap := make(map[string]*models.Label)
-	for i := range existingLabels {
-		labelMap[existingLabels[i].Title] = &existingLabels[i].Label
-	}
-
-	for _, label := range labels {
-		if l, has := labelMap[label.Title]; has {
-			*label = *l
-			continue
-		}
-
-		err = label.Create(s, a)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Create the label <-> task relation
-	return task.UpdateTaskLabels(s, a, labels)
-}
-
-func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
-
-	// Get the existing task with details:
-	existingTask := &models.Task{ID: task.ID}
-	// FIXME: Optimize to get only required attributes (ie. RelatedTasks).
-	err = existingTask.ReadOne(s, a)
-	if err != nil {
-		return
-	}
-
-	for relationKind, relatedTasks := range existingTask.RelatedTasks {
-
-		// Only process CalDAV-compatible relation kinds (parenttask, subtask).
-		// Other kinds (related, blocking, etc.) are never set via CalDAV and
-		// should not be removed here.
-		if relationKind != models.RelationKindParenttask && relationKind != models.RelationKindSubtask {
-			continue
-		}
-
-		// For subtask relations: only consider removal if the VTODO explicitly
-		// declares RELATED-TO;RELTYPE=CHILD (i.e., subtask kind is a key in
-		// newRelations). Subtask relations are often auto-created as inverses
-		// when child tasks declare RELATED-TO;RELTYPE=PARENT pointing to this
-		// task. Removing them just because this task's VTODO doesn't mention
-		// RELATED-TO;RELTYPE=CHILD would break those child-declared links.
-		if relationKind == models.RelationKindSubtask {
-			if _, hasSubtaskKind := newRelations[models.RelationKindSubtask]; !hasSubtaskKind {
-				continue
-			}
-		}
-
-		for _, relatedTask := range relatedTasks {
-			relationInNewList := slices.ContainsFunc(newRelations[relationKind], func(newRelation *models.Task) bool { return newRelation.UID == relatedTask.UID })
-
-			if !relationInNewList {
-				rel := models.TaskRelation{
-					TaskID:       task.ID,
-					OtherTaskID:  relatedTask.ID,
-					RelationKind: relationKind,
-				}
-				// Skip forbidden relations without aborting the sync.
-				canDelete, canDeleteErr := rel.CanDelete(s, a)
-				if canDeleteErr != nil {
-					return canDeleteErr
-				}
-				if !canDelete {
-					continue
-				}
-				err = rel.Delete(s, a)
-				if err != nil {
-					return
-				}
-			}
-		}
-	}
-
-	return
-}
-
-// Bounds the tasks a single VTODO can mint via unknown RELATED-TO UIDs.
-const maxPlaceholdersPerVTODO = 50
-
-// Persist new relations provided by the VTODO entry:
-func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
-
-	err = removeStaleRelations(s, a, task, newRelations)
-	if err != nil {
-		return err
-	}
-
-	// Inaccessible and missing UIDs must remain indistinguishable.
-	allUIDs := make([]string, 0)
-	dedupedRelations := make(map[models.RelationKind][]*models.Task, len(newRelations))
-	for relationType, relatedTasksInVTODO := range newRelations {
-		seen := make(map[string]bool, len(relatedTasksInVTODO))
-		deduped := make([]*models.Task, 0, len(relatedTasksInVTODO))
-		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
-			if seen[relatedTaskInVTODO.UID] {
-				continue
-			}
-			seen[relatedTaskInVTODO.UID] = true
-			deduped = append(deduped, relatedTaskInVTODO)
-			allUIDs = append(allUIDs, relatedTaskInVTODO.UID)
-		}
-		dedupedRelations[relationType] = deduped
-	}
-	accessibleTasksByUID := make(map[string]*models.Task)
-	if len(allUIDs) > 0 {
-		accessibleTasks, err := models.GetTasksByUIDs(s, allUIDs, a)
-		if err != nil {
-			return err
-		}
-		for _, accessibleTask := range accessibleTasks {
-			accessibleTasksByUID[accessibleTask.UID] = accessibleTask
-		}
-	}
-
-	placeholders := 0
-
-	// Ensure the current relations exist:
-	for relationType, relatedTasksInVTODO := range dedupedRelations {
-		// Persist each relation independently:
-		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
-
-			var relatedTask *models.Task
-			createDummy := false
-
-			// Get the task from the DB:
-			if accessible, has := accessibleTasksByUID[relatedTaskInVTODO.UID]; has {
-				relatedTask = accessible
-			} else {
-				relatedTask = relatedTaskInVTODO
-				createDummy = true
-			}
-
-			// Placeholders stay in the caller's project so CanCreate applies.
-			if createDummy {
-				// Dropped, not rejected: the client keeps syncing the rest of the VTODO.
-				if placeholders >= maxPlaceholdersPerVTODO {
-					continue
-				}
-				placeholders++
-				relatedTask = &models.Task{
-					ProjectID: task.ProjectID,
-					Title:     "DUMMY-UID-" + relatedTaskInVTODO.UID,
-					UID:       relatedTaskInVTODO.UID,
-				}
-				err = relatedTask.Create(s, a)
-				if err != nil {
-					return err
-				}
-			}
-
-			// Create the relation:
-			rel := models.TaskRelation{
-				TaskID:       task.ID,
-				OtherTaskID:  relatedTask.ID,
-				RelationKind: relationType,
-			}
-			canCreate, canCreateErr := rel.CanCreate(s, a)
-			if canCreateErr != nil {
-				return canCreateErr
-			}
-			if !canCreate {
-				continue
-			}
-			createErr := rel.Create(s, a)
-			if createErr != nil && !models.IsErrRelationAlreadyExists(createErr) {
-				return createErr
-			}
-		}
-	}
-	return nil
+	err := writeTransaction(func(s *xorm.Session) error {
+		return deleteTask(s, vcls.user, readableCollection{vcls.collection()}, vcls.task)
+	})
+	return toLibraryError(err)
 }
 
 // VikunjaProjectResourceAdapter holds the actual resource
