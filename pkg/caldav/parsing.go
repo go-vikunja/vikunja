@@ -191,7 +191,10 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 	var caldavtodos []*Todo
 	for _, t := range projectTasks {
 
-		duration := t.EndDate.Sub(t.StartDate)
+		var duration time.Duration
+		if t.EndDate.Unix() > 0 && t.StartDate.Unix() > 0 && t.EndDate.After(t.StartDate) {
+			duration = t.EndDate.Sub(t.StartDate)
+		}
 		var categories []string
 		for _, label := range t.Labels {
 			categories = append(categories, label.Title)
