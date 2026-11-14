@@ -232,3 +232,31 @@ func TestPinMalformedTaskURLs(t *testing.T) {
 	assert.Equal(t, http.StatusOK, caldavGET(t, e, pinTaskHref).Code, "the task must survive")
 	assert.NotContains(t, caldavGET(t, e, pinTaskHref).Body.String(), "Overwritten")
 }
+
+// tasks.uid has no unique index: the same UID in another readable project must not hide
+// the task living in the project the URL names.
+func TestPinSameUIDInAnotherProject(t *testing.T) {
+	e := setupTestEnv(t)
+
+	s := db.NewSession()
+	_, err := s.Insert(&models.Task{Title: "Duplicate UID task", UID: "uid-caldav-test", ProjectID: 38, Index: 999, CreatedByID: testuser15.ID})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	const duplicate = "/dav/projects/38/uid-caldav-test.ics"
+	rec := caldavGET(t, e, duplicate)
+	require.Equal(t, http.StatusOK, rec.Code, "Body:\n%s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), "SUMMARY:Duplicate UID task")
+
+	rec = caldavPUT(t, e, duplicate, NewVTodo("uid-caldav-test", "Duplicate updated").Build())
+	require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
+	assert.Contains(t, caldavGET(t, e, duplicate).Body.String(), "SUMMARY:Duplicate updated")
+
+	original := caldavGET(t, e, pinTaskHref).Body.String()
+	assert.Contains(t, original, "SUMMARY:Title Caldav Test")
+
+	require.Equal(t, http.StatusNoContent, caldavDELETE(t, e, duplicate).Code)
+	assert.Equal(t, http.StatusNotFound, caldavGET(t, e, duplicate).Code)
+	assert.Equal(t, http.StatusOK, caldavGET(t, e, pinTaskHref).Code)
+}

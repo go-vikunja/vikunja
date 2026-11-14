@@ -47,16 +47,17 @@ func findTask(s *xorm.Session, u *user.User, c collectionTarget, uid string) (*m
 		return nil, nil
 	}
 
-	task := tasks[0]
-	if task.ProjectID == c.project.ID {
-		return task, nil
-	}
-	// The URL project must match the task's real project (GHSA-48ch-p4gq-x46x).
 	if !c.isPseudo() {
+		// The URL project must match the task's real project (GHSA-48ch-p4gq-x46x). tasks.uid
+		// has no unique index, so a same-UID task in another project must not shadow it.
+		for _, task := range tasks {
+			if task.ProjectID == c.project.ID {
+				return task, nil
+			}
+		}
 		return nil, nil
 	}
 
-	// tasks.uid has no unique index, so the first candidate may be a same-UID sibling.
 	for _, candidate := range tasks {
 		in, err := c.contains(s, u, candidate.ID)
 		if err != nil {
