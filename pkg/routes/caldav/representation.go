@@ -47,9 +47,9 @@ func collectionETag(p *models.ProjectWithTasksAndBuckets, tasks []*models.TaskWi
 	return `"` + etag + `"`
 }
 
-// Pinned: caldav-go formats the time as it comes, without converting it to UTC first.
+// http.TimeFormat always says GMT, whatever location the time is in.
 func lastModified(t time.Time) string {
-	return t.Format(http.TimeFormat)
+	return t.UTC().Format(http.TimeFormat)
 }
 
 func renderTask(t *models.Task) string {
