@@ -49,8 +49,7 @@ func findTask(s *xorm.Session, u *user.User, c collectionTarget, uid string) (*m
 	}
 
 	task := tasks[0]
-	// Pinned: the empty project of /dav/projects//<uid>.ics skips the check, see resolveTask.
-	if c.project.ID == 0 || task.ProjectID == c.project.ID {
+	if task.ProjectID == c.project.ID {
 		return task, nil
 	}
 	// The URL project must match the task's real project (GHSA-48ch-p4gq-x46x).
