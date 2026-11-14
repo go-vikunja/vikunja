@@ -175,14 +175,14 @@ SUMMARY:` + escapeICalText(t.Summary) + getCaldavColor(t.Color))
 		if t.Start.Unix() > 0 {
 			b.WriteString(`
 DTSTART:` + makeCalDavTimeFromTimeStamp(t.Start))
-			if t.Duration != 0 && t.DueDate.Unix() == 0 {
-				b.WriteString(`
-DURATION:PT` + formatDuration(t.Duration))
+			duration := t.Duration
+			if duration <= 0 && t.End.Unix() > 0 && t.End.After(t.Start) {
+				duration = t.End.Sub(t.Start)
 			}
-		}
-		if t.End.Unix() > 0 {
-			b.WriteString(`
-DTEND:` + makeCalDavTimeFromTimeStamp(t.End))
+			if duration > 0 && t.DueDate.Unix() <= 0 {
+				b.WriteString(`
+DURATION:PT` + formatDuration(duration))
+			}
 		}
 		if t.Description != "" {
 			// CalDAV clients show plain text, so emit markdown. On the near-impossible
