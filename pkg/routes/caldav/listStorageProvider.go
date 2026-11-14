@@ -35,9 +35,6 @@ const ProjectBasePath = DavBasePath + `/projects`
 // PrincipalBasePath is the base path for all principal resources
 const PrincipalBasePath = DavBasePath + `/principals`
 
-// ProjectHomeSetPath is the CalDAV home-set path Apple clients use after discovery.
-const ProjectHomeSetPath = ProjectBasePath + `/`
-
 // VikunjaCaldavProjectStorage represents a project storage
 type VikunjaCaldavProjectStorage struct {
 	// Used when handling a project

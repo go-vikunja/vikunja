@@ -181,7 +181,8 @@ func selfReferencing[R hrefed]() propTable[R] {
 // because clients start discovery there.
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
-		{propCalendarHomeSet, always[R](hrefsValue{ProjectHomeSetPath})},
+		// Without the trailing slash, as clients knew it before the rewrite.
+		{propCalendarHomeSet, always[R](hrefsValue{ProjectBasePath})},
 		{propPrincipalURL, func(ctx propContext, _ R) (propValue, bool) { return hrefsValue{ctx.principal}, true }},
 	}
 }

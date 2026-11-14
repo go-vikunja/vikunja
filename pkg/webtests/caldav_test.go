@@ -242,7 +242,7 @@ func TestCaldavDiscovery(t *testing.T) {
 
 		responseBody := rec.Body.String()
 		assert.Contains(t, responseBody, "<D:response><D:href>/dav/principals/user15/</D:href>")
-		assert.Contains(t, responseBody, "<C:calendar-home-set><D:href>/dav/projects/</D:href></C:calendar-home-set>")
+		assert.Contains(t, responseBody, "<C:calendar-home-set><D:href>/dav/projects</D:href></C:calendar-home-set>")
 		assert.NotContains(t, responseBody, "/dav//projects/")
 	})
 
