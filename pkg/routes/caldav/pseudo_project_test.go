@@ -99,14 +99,19 @@ func TestSavedFilterCollection_ChildHrefs(t *testing.T) {
 	pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
 	rpath := projectPath(pseudoID)
 
-	resources, err := filterStorage(pseudoID).GetResources(rpath, true)
+	s := db.NewSession()
+	defer s.Close()
+	readable, err := collectionFor(pseudoID).checkRead(s, caldavFilterUser)
+	require.NoError(t, err)
+	resources, err := loadCollectionResources(s, caldavFilterUser, readable, collectionHref(pseudoID), true)
 	require.NoError(t, err)
 	require.Len(t, resources, caldavFilterTaskCount+1)
 
-	// resources[0] is the collection itself; caldav-go strips its trailing slash.
+	// resources[0] is the collection itself.
 	for _, r := range resources[1:] {
-		assert.True(t, strings.HasPrefix(r.Path, rpath),
-			"href %q must be nested under the collection %q", r.Path, rpath)
+		href := r.(*taskResource).href
+		assert.True(t, strings.HasPrefix(href, rpath),
+			"href %q must be nested under the collection %q", href, rpath)
 	}
 }
 
@@ -366,21 +371,27 @@ func TestCollectionWritability(t *testing.T) {
 	})
 }
 
-// caldav-go maps only its own errs sentinels, so a propagated permission error answers
-// 500 while an unknown id answers 404 - which tells the client the collection exists.
-func TestGetResources_UnreadableCollectionIsNotFound(t *testing.T) {
+// A 403 or 500 here, while an unknown id answers 404, would tell the client the collection exists.
+func TestPropfind_UnreadableCollectionIsNotFound(t *testing.T) {
 	t.Run("a saved filter of another user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		_, err := filterStorage(foreignFilterProjectID).GetResources(projectPath(foreignFilterProjectID), true)
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		rec, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", projectPath(foreignFilterProjectID), "", projectParams(foreignFilterProjectID))
+		requireHTTPStatus(t, http.StatusNotFound, rec, err)
 	})
 
 	t.Run("a project the user has no access to", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		_, err := storageFor(caldavOtherUser, inaccessibleProjectID).GetResources(projectPath(inaccessibleProjectID), true)
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		rec, err := callCaldavHandler(t, ProjectHandler, caldavOtherUser, "PROPFIND", projectPath(inaccessibleProjectID), "", projectParams(inaccessibleProjectID))
+		requireHTTPStatus(t, http.StatusNotFound, rec, err)
+	})
+
+	t.Run("a bad body does not answer before the access check", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		rec, err := callCaldavHandler(t, ProjectHandler, caldavOtherUser, "PROPFIND", projectPath(inaccessibleProjectID), tooManyProps(), projectParams(inaccessibleProjectID))
+		requireHTTPStatus(t, http.StatusNotFound, rec, err)
 	})
 }
 
