@@ -80,6 +80,10 @@ func storageFor(u *user.User, projectID int64) *VikunjaCaldavProjectStorage {
 	}
 }
 
+func collectionFor(projectID int64) collectionTarget {
+	return collectionTarget{project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: projectID}}}
+}
+
 func filterStorage(pseudoProjectID int64) *VikunjaCaldavProjectStorage {
 	return storageFor(caldavFilterUser, pseudoProjectID)
 }
@@ -231,7 +235,7 @@ END:VCALENDAR`
 	})
 }
 
-// canReadCollection used to have to tolerate ErrProjectDoesNotExist because CanRead
+// canRead used to have to tolerate ErrProjectDoesNotExist because CanRead
 // errored out for instance admins on a pseudo id; d5332ac3b fixed that in the model.
 func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
@@ -247,13 +251,13 @@ func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 	admin := &user.User{ID: 2, IsAdmin: true}
 
 	t.Run("favorites", func(t *testing.T) {
-		can, err := storageFor(admin, models.FavoritesPseudoProjectID).canReadCollection(s)
+		can, err := collectionFor(models.FavoritesPseudoProjectID).canRead(s, admin)
 		require.NoError(t, err)
 		assert.True(t, can)
 	})
 
 	t.Run("a saved filter of another user", func(t *testing.T) {
-		can, err := storageFor(admin, foreignFilterProjectID).canReadCollection(s)
+		can, err := collectionFor(foreignFilterProjectID).canRead(s, admin)
 		require.NoError(t, err)
 		assert.False(t, can)
 	})
@@ -518,13 +522,13 @@ func TestCollectionContainsAll_Chunked(t *testing.T) {
 		t.Cleanup(func() { membershipQueryChunkSize = previous })
 	}
 
-	membersOf := func(t *testing.T, storage *VikunjaCaldavProjectStorage, taskIDs []int64) map[int64]bool {
+	membersOf := func(t *testing.T, projectID int64, taskIDs []int64) map[int64]bool {
 		t.Helper()
 
 		s := db.NewSession()
 		defer s.Close()
 
-		members, err := storage.collectionContainsAll(s, taskIDs)
+		members, err := collectionFor(projectID).containsAll(s, caldavFilterUser, taskIDs)
 		require.NoError(t, err)
 		return members
 	}
@@ -537,7 +541,7 @@ func TestCollectionContainsAll_Chunked(t *testing.T) {
 
 		require.Len(t, slices.Collect(slices.Chunk(candidates, membershipQueryChunkSize)), 3,
 			"the candidates must span more than one query")
-		assert.Equal(t, allMembers, membersOf(t, filterStorage(pseudoID), candidates))
+		assert.Equal(t, allMembers, membersOf(t, pseudoID, candidates))
 	})
 
 	t.Run("one query per candidate resolves the same members", func(t *testing.T) {
@@ -546,7 +550,7 @@ func TestCollectionContainsAll_Chunked(t *testing.T) {
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
 
-		assert.Equal(t, allMembers, membersOf(t, filterStorage(pseudoID), candidates))
+		assert.Equal(t, allMembers, membersOf(t, pseudoID, candidates))
 	})
 
 	t.Run("a single chunk resolves the same members", func(t *testing.T) {
@@ -555,7 +559,7 @@ func TestCollectionContainsAll_Chunked(t *testing.T) {
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
 
 		require.Len(t, slices.Collect(slices.Chunk(candidates, membershipQueryChunkSize)), 1)
-		assert.Equal(t, allMembers, membersOf(t, filterStorage(pseudoID), candidates))
+		assert.Equal(t, allMembers, membersOf(t, pseudoID, candidates))
 	})
 
 	t.Run("no candidates means no query", func(t *testing.T) {
@@ -564,7 +568,7 @@ func TestCollectionContainsAll_Chunked(t *testing.T) {
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
 
-		assert.Empty(t, membersOf(t, filterStorage(pseudoID), nil))
+		assert.Empty(t, membersOf(t, pseudoID, nil))
 	})
 
 	// Whichever chunk trips the permission error, the answer is "no members" - not the
@@ -573,7 +577,7 @@ func TestCollectionContainsAll_Chunked(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		useChunkSize(t, 3)
 
-		assert.Empty(t, membersOf(t, filterStorage(foreignFilterProjectID), candidates))
+		assert.Empty(t, membersOf(t, foreignFilterProjectID, candidates))
 	})
 }
 
