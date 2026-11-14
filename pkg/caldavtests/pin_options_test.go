@@ -46,9 +46,9 @@ func TestPinOPTIONS(t *testing.T) {
 		{name: "read-only shared project", path: "/dav/projects/26", status: http.StatusOK, allow: allowReadOnly},
 		{name: "project the user cannot see", path: "/dav/projects/1", status: http.StatusNotFound},
 		{name: "missing project", path: "/dav/projects/99999", status: http.StatusNotFound},
-		// TaskHandler has no OPTIONS special case, so the collection's restrictions do not apply.
-		{name: "task in read-only shared project", path: "/dav/projects/26/any.ics", status: http.StatusOK, allow: allowReadWrite},
-		{name: "task in project the user cannot see", path: "/dav/projects/1/any.ics", status: http.StatusOK, allow: allowReadWrite},
+		{name: "task in read-only shared project", path: "/dav/projects/26/any.ics", status: http.StatusOK, allow: allowReadOnly},
+		{name: "task in project the user cannot see", path: "/dav/projects/1/any.ics", status: http.StatusNotFound},
+		{name: "task in favorites", path: "/dav/projects/-1/any.ics", status: http.StatusOK, allow: allowReadWrite},
 	}
 
 	e := setupTestEnv(t)
