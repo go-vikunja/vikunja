@@ -53,63 +53,106 @@ func (allPropRequest) isPropfindRequest()  {}
 func (propNameRequest) isPropfindRequest() {}
 
 func parsePropfind(body string) (propfindRequest, error) {
+	var props propCollector
+	err := walkXML(body, func(path []xml.Name, tok xml.Token) error {
+		if t, isStart := tok.(xml.StartElement); isStart {
+			return props.visit(path, t)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return props.request(), nil
+}
+
+// walkXML calls visit for every token inside the root element, with the open elements
+// enclosing it, root first. An empty body visits nothing.
+func walkXML(body string, visit func(path []xml.Name, tok xml.Token) error) error {
 	d := xml.NewDecoder(strings.NewReader(body))
-	var named, include []xml.Name
-	var sawProp, sawPropName bool
-	seen := map[xml.Name]struct{}{}
 	var path []xml.Name
-tokens:
 	for {
 		tok, err := d.Token()
 		if errors.Is(err, io.EOF) && len(path) == 0 {
-			break
+			return nil
 		}
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errMalformedBody, err)
+			return fmt.Errorf("%w: %w", errMalformedBody, err)
 		}
 		switch t := tok.(type) {
 		case xml.CharData:
-			if len(path) == 0 && len(bytes.TrimSpace(t)) > 0 {
-				return nil, fmt.Errorf("%w: text outside the root element", errMalformedBody)
+			if len(path) == 0 {
+				if len(bytes.TrimSpace(t)) > 0 {
+					return fmt.Errorf("%w: text outside the root element", errMalformedBody)
+				}
+				continue
+			}
+			if err := visit(path, t); err != nil {
+				return err
 			}
 		case xml.StartElement:
-			if len(path) == 1 && t.Name.Space == nsDAV {
-				switch t.Name.Local {
-				case "prop":
-					sawProp = true
-				case "propname":
-					sawPropName = true
-				}
-			}
-			if len(path) == 2 && path[1].Space == nsDAV && (path[1].Local == "prop" || path[1].Local == "include") {
-				if _, dup := seen[t.Name]; !dup {
-					if len(seen) == maxPropfindProperties {
-						return nil, fmt.Errorf("%w: more than %d properties", errMalformedBody, maxPropfindProperties)
-					}
-					seen[t.Name] = struct{}{}
-					if path[1].Local == "prop" {
-						named = append(named, t.Name)
-					} else {
-						include = append(include, t.Name)
-					}
-				}
+			if err := visit(path, t); err != nil {
+				return err
 			}
 			path = append(path, t.Name)
 		case xml.EndElement:
 			path = path[:len(path)-1]
 			if len(path) == 0 {
-				break tokens
+				return nil
+			}
+			if err := visit(path, t); err != nil {
+				return err
 			}
 		}
 	}
+}
 
-	switch {
-	case sawProp:
-		return propRequest{names: named}, nil
-	case sawPropName:
-		return propNameRequest{}, nil
+// propCollector collects what the DAV:prop, DAV:allprop, DAV:include and DAV:propname
+// children of a request's root ask for.
+type propCollector struct {
+	named, include       []xml.Name
+	sawProp, sawPropName bool
+	seen                 map[xml.Name]struct{}
+}
+
+func (p *propCollector) visit(path []xml.Name, t xml.StartElement) error {
+	if len(path) == 1 && t.Name.Space == nsDAV {
+		switch t.Name.Local {
+		case "prop":
+			p.sawProp = true
+		case "propname":
+			p.sawPropName = true
+		}
 	}
-	return allPropRequest{include: include}, nil
+	if len(path) != 2 || path[1].Space != nsDAV || (path[1].Local != "prop" && path[1].Local != "include") {
+		return nil
+	}
+	if _, dup := p.seen[t.Name]; dup {
+		return nil
+	}
+	if len(p.seen) == maxPropfindProperties {
+		return fmt.Errorf("%w: more than %d properties", errMalformedBody, maxPropfindProperties)
+	}
+	if p.seen == nil {
+		p.seen = map[xml.Name]struct{}{}
+	}
+	p.seen[t.Name] = struct{}{}
+	if path[1].Local == "prop" {
+		p.named = append(p.named, t.Name)
+	} else {
+		p.include = append(p.include, t.Name)
+	}
+	return nil
+}
+
+func (p *propCollector) request() propfindRequest {
+	switch {
+	case p.sawProp:
+		return propRequest{names: p.named}
+	case p.sawPropName:
+		return propNameRequest{}
+	}
+	return allPropRequest{include: p.include}
 }
 
 // propfindLoader loads the resources a PROPFIND answers, once access is granted.
