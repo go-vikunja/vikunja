@@ -58,13 +58,10 @@ func project36TaskHrefs() []string {
 func TestPinReportCalendarMultiget(t *testing.T) {
 	e := setupTestEnv(t)
 	const missing = "/dav/projects/36/nonexistent-uid.ics"
+	// Exists and is readable, but lives outside the requested collection.
+	const outside = "/dav/projects/38/uid-caldav-test-child-task-2.ics"
 
-	rec := caldavREPORT(t, e, "/dav/projects/36", ReportCalendarMultiget(
-		pinTaskHref,
-		missing,
-		// Exists and is readable, but lives outside the requested collection: silently skipped.
-		"/dav/projects/38/uid-caldav-test-child-task-2.ics",
-	))
+	rec := caldavREPORT(t, e, "/dav/projects/36", ReportCalendarMultiget(pinTaskHref, missing, outside))
 
 	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
 	assertDAVResponses(t, rec, []expectedDAVResponse{
@@ -76,6 +73,7 @@ func TestPinReportCalendarMultiget(t *testing.T) {
 			},
 		},
 		{href: missing, status: http.StatusNotFound},
+		{href: outside, status: http.StatusNotFound},
 	})
 }
 
