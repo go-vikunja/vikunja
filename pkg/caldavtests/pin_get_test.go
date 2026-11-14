@@ -85,9 +85,12 @@ func TestPinGETNonCalendarResources(t *testing.T) {
 	t.Run("home set", func(t *testing.T) {
 		e := setupTestEnv(t)
 
-		rec := caldavGET(t, e, "/dav/projects")
+		for _, method := range []string{http.MethodGet, http.MethodHead} {
+			rec := caldavRequest(t, e, method, "/dav/projects", "", nil)
 
-		assert.Equal(t, http.StatusInternalServerError, rec.Code, "Body:\n%s", rec.Body.String())
+			assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "%s. Body:\n%s", method, rec.Body.String())
+			assert.Equal(t, allowHomeSet, rec.Header().Get("Allow"), method)
+		}
 	})
 
 	// An empty calendar body with an empty ETag and a zero Last-Modified.

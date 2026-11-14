@@ -24,11 +24,7 @@ import (
 	"reflect"
 	"strings"
 
-	"code.vikunja.io/api/pkg/db"
-
-	caldav2 "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go"
@@ -119,28 +115,6 @@ func readAndLogBody(c *echo.Context) []byte {
 func serveProjects(c *echo.Context, u *user.User, t target) error {
 	storage := newStorage(u, t)
 	body := readAndLogBody(c)
-
-	if c.Request().Method == http.MethodPut && strings.HasPrefix(string(body), `BEGIN:VCALENDAR`) {
-		s := db.NewSession()
-		canRead, err := storage.collection().canRead(s, u)
-		s.Close()
-		if err != nil {
-			return writeError(c, err)
-		}
-		if !canRead {
-			return writeError(c, errNotFound)
-		}
-
-		if err := caldav2.CheckVCalendarLimits(string(body)); err != nil {
-			return writeError(c, err)
-		}
-
-		storage.task, _, err = caldav2.ParseTaskFromVTODO(string(body))
-		if err != nil {
-			log.Warningf("[CALDAV] Failed to parse task: %v", err)
-			return writeError(c, models.ErrInvalidData{Message: "Invalid task"})
-		}
-	}
 
 	// RFC 6578: intercept sync-collection REPORT before caldav-go sees it.
 	// caldav-go returns 412 (empty body) for unknown REPORT types, which causes

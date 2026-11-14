@@ -176,7 +176,8 @@ func TestPinPUTOnCollection(t *testing.T) {
 
 		rec := caldavPUT(t, e, "/dav/projects", NewVTodo("pin-put-on-home", "Via home").Build())
 
-		assert.Equal(t, http.StatusNotFound, rec.Code, "Body:\n%s", rec.Body.String())
+		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "Body:\n%s", rec.Body.String())
+		assert.Equal(t, allowHomeSet, rec.Header().Get("Allow"))
 		assertETagHeader(t, rec, false)
 	})
 }

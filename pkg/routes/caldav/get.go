@@ -38,7 +38,7 @@ func serveGet(c *echo.Context, u *user.User, t target) error {
 		// Pinned: caldav-go answers these as an empty calendar object.
 		return writeCalendar(c, contentTypeTask, "", time.Time{}, "")
 	case homeSetTarget:
-		return serveProjects(c, u, t)
+		return homeSetMethodNotAllowed(c)
 	case collectionTarget:
 		return getCollection(c, u, t)
 	case taskTarget:
