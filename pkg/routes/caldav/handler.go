@@ -21,9 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
@@ -58,28 +56,58 @@ func caldavConfig(storage data.Storage, principalPath string) caldav.Config {
 	}
 }
 
-// ProjectHandler returns all tasks from a project
-func ProjectHandler(c *echo.Context) error {
-	project, err := getProjectFromParam(c)
-	if err != nil {
-		return writeError(c, err)
-	}
+// EntryHandler serves /dav/.
+func EntryHandler(c *echo.Context) error { return handle(c, resolveEntry) }
 
+// PrincipalHandler serves /dav/principals/<user>/ and /.well-known/caldav.
+func PrincipalHandler(c *echo.Context) error { return handle(c, resolvePrincipal) }
+
+// ProjectHandler serves the home set /dav/projects and the collections below it.
+func ProjectHandler(c *echo.Context) error { return handle(c, resolveProjects) }
+
+// TaskHandler serves a single task below a collection.
+func TaskHandler(c *echo.Context) error { return handle(c, resolveTask) }
+
+func handle(c *echo.Context, resolve targetResolver) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
 		return writeError(c, err)
 	}
 
-	storage := &VikunjaCaldavProjectStorage{
-		project: project,
-		user:    u,
+	t, err := resolve(c, u)
+	if err != nil {
+		return writeError(c, err)
 	}
 
-	body, _ := io.ReadAll(c.Request().Body)
-	// Restore the io.ReadCloser to its original state
-	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	switch t := t.(type) {
+	case entryTarget, principalTarget:
+		readAndLogBody(c)
+		return serveLibrary(c, newStorage(u, t), principalPathForUser(u.Username))
+	case homeSetTarget, collectionTarget:
+		return serveProjects(c, u, t)
+	case taskTarget:
+		return serveTask(c, u, t)
+	}
+	return writeError(c, fmt.Errorf("unhandled caldav target %T", t))
+}
 
+func serveLibrary(c *echo.Context, storage *VikunjaCaldavProjectStorage, principalPath string) error {
+	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPath))
+	response.Write(c.Response())
+	return nil
+}
+
+func readAndLogBody(c *echo.Context) []byte {
+	body, _ := io.ReadAll(c.Request().Body)
+	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	logRequest(c.Request().Header, body)
+	return body
+}
+
+// serveProjects serves the home set and collections.
+func serveProjects(c *echo.Context, u *user.User, t target) error {
+	storage := newStorage(u, t)
+	body := readAndLogBody(c)
 
 	if c.Request().Method == http.MethodPut && strings.HasPrefix(string(body), `BEGIN:VCALENDAR`) {
 		s := db.NewSession()
@@ -111,27 +139,32 @@ func ProjectHandler(c *echo.Context) error {
 		return handleSyncCollectionReport(c, string(body), storage)
 	}
 
+	collection, isCollection := t.(collectionTarget)
+	if !isCollection {
+		// Pinned: no PROPPATCH or OPTIONS special case for the home set.
+		return serveLibrary(c, storage, ProjectHomeSetPath)
+	}
+
 	// caldav-go has no PROPPATCH dispatch case and falls back to a blanket 501;
-	// intercept it here, same as the sync-collection REPORT above. The home-set
-	// root (project.ID == 0) still falls through to that 501, unhandled for now.
-	if c.Request().Method == "PROPPATCH" && storage.project.ID != 0 {
-		log.Debugf("[CALDAV] PROPPATCH for project %d by user %s", storage.project.ID, u.Username)
-		return handlePropPatch(c, string(body), storage.project, u, propPatchCollection)
+	// intercept it here, same as the sync-collection REPORT above.
+	if c.Request().Method == "PROPPATCH" {
+		log.Debugf("[CALDAV] PROPPATCH for project %d by user %s", collection.project.ID, u.Username)
+		return handlePropPatch(c, string(body), collection.project, u, propPatchCollection)
 	}
 
 	// caldav-go advertises PUT and DELETE unconditionally; a collection the user cannot
 	// write to always answers those with 403, so clients would retry forever.
-	if c.Request().Method == http.MethodOptions && storage.project.ID != 0 {
+	if c.Request().Method == http.MethodOptions {
 		s := db.NewSession()
 		defer s.Close()
 
-		canWrite, err := denyArchived(storage.project.CanWrite(s, u))
+		canWrite, err := denyArchived(collection.project.CanWrite(s, u))
 		if err != nil {
 			return writeError(c, err)
 		}
 
 		if !canWrite {
-			// getProjectFromParam does no permission check, so answering 200 here
+			// The collection was loaded without a permission check, so answering 200 here
 			// would leak which project and filter ids exist.
 			can, err := storage.canReadCollection(s)
 			if err != nil {
@@ -143,8 +176,8 @@ func ProjectHandler(c *echo.Context) error {
 
 			// A pseudo collection cannot be written to as a collection, but PUT and DELETE
 			// of the tasks it aggregates go through to their real projects.
-			if !models.IsPseudoProjectID(storage.project.ID) {
-				log.Debugf("[CALDAV] OPTIONS for read-only project %d by user %s", storage.project.ID, u.Username)
+			if !models.IsPseudoProjectID(collection.project.ID) {
+				log.Debugf("[CALDAV] OPTIONS for read-only project %d by user %s", collection.project.ID, u.Username)
 				c.Response().Header().Set("DAV", "1, 3, calendar-access")
 				c.Response().Header().Set("Allow", "GET, HEAD, OPTIONS, PROPFIND, REPORT")
 				return c.NoContent(http.StatusOK)
@@ -152,59 +185,23 @@ func ProjectHandler(c *echo.Context) error {
 		}
 	}
 
-	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, ProjectHomeSetPath))
-	response.Write(c.Response())
-	return nil
+	return serveLibrary(c, storage, ProjectHomeSetPath)
 }
 
-// TaskHandler is the handler which manages updating/deleting a single task
-func TaskHandler(c *echo.Context) error {
-	project, err := getProjectFromParam(c)
-
+func serveTask(c *echo.Context, u *user.User, t taskTarget) error {
 	// A task resource has no settable properties; it gets a 207 refusal
-	// rather than caldav-go's blanket 501 (see ProjectHandler).
+	// rather than caldav-go's blanket 501.
 	if c.Request().Method == "PROPPATCH" {
-		if err != nil {
-			return writeError(c, err)
-		}
-
-		u, err := getBasicAuthUserFromContext(c)
-		if err != nil {
-			return writeError(c, err)
-		}
-
 		body, err := io.ReadAll(c.Request().Body)
 		if err != nil {
 			return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
 		}
 		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 
-		return handlePropPatch(c, string(body), project, u, propPatchTask)
+		return handlePropPatch(c, string(body), t.collection.project, u, propPatchTask)
 	}
 
-	if err != nil {
-		return writeError(c, err)
-	}
-
-	u, err := getBasicAuthUserFromContext(c)
-	if err != nil {
-		return writeError(c, err)
-	}
-
-	// Whether c.Param("task") arrives decoded depends on router config and on which
-	// bytes were escaped; the escaped path is unambiguous, so decode that instead.
-	esc := c.Request().URL.EscapedPath()
-	seg := esc[strings.LastIndex(esc, "/")+1:]
-	taskUID, err := url.PathUnescape(strings.TrimSuffix(seg, ".ics"))
-	if err != nil {
-		return writeError(c, errNotFound)
-	}
-
-	storage := &VikunjaCaldavProjectStorage{
-		project: project,
-		task:    &models.Task{UID: taskUID},
-		user:    u,
-	}
+	storage := newStorage(u, t)
 	if c.Request().Method == http.MethodPut {
 		body, err := io.ReadAll(io.LimitReader(c.Request().Body, caldav2.MaxVCalendarSize+1))
 		if err != nil {
@@ -216,49 +213,7 @@ func TaskHandler(c *echo.Context) error {
 		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}
 
-	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
-	response.Write(c.Response())
-	return nil
-}
-
-// Sub-paths and foreign usernames must 404 (RFC 4918) instead of falling
-// through to the merged principal pseudo-resource, which would silently serve
-// the authenticated user's data and act as a username enumeration oracle.
-// /.well-known/caldav also routes here (RFC 6764 bootstrap).
-func isOwnPrincipalPath(path, username string) bool {
-	if strings.TrimSuffix(path, "/") == "/.well-known/caldav" {
-		return true
-	}
-	rest := strings.TrimPrefix(strings.TrimPrefix(path, PrincipalBasePath), "/")
-	return strings.TrimSuffix(rest, "/") == username
-}
-
-// PrincipalHandler handles all request to principal resources
-func PrincipalHandler(c *echo.Context) error {
-	u, err := getBasicAuthUserFromContext(c)
-	if err != nil {
-		return writeError(c, err)
-	}
-
-	if !isOwnPrincipalPath(c.Request().URL.Path, u.Username) {
-		return writeError(c, errNotFound)
-	}
-
-	storage := &VikunjaCaldavProjectStorage{
-		user:        u,
-		isPrincipal: true,
-	}
-
-	// Try to parse a task from the request payload
-	body, _ := io.ReadAll(c.Request().Body)
-	// Restore the io.ReadCloser to its original state
-	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-
-	logRequest(c.Request().Header, body)
-
-	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
-	response.Write(c.Response())
-	return nil
+	return serveLibrary(c, storage, principalPathForUser(u.Username))
 }
 
 const maxLoggedBodySize = 4096
@@ -271,32 +226,9 @@ func logRequest(header http.Header, body []byte) {
 	log.Debugf("[CALDAV] Request Headers: %v", log.SafeHeaders(header))
 }
 
-// EntryHandler handles all request to principal resources
-func EntryHandler(c *echo.Context) error {
-	u, err := getBasicAuthUserFromContext(c)
-	if err != nil {
-		return writeError(c, err)
-	}
-
-	storage := &VikunjaCaldavProjectStorage{
-		user:    u,
-		isEntry: true,
-	}
-
-	// Try to parse a task from the request payload
-	body, _ := io.ReadAll(c.Request().Body)
-	// Restore the io.ReadCloser to its original state
-	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-
-	logRequest(c.Request().Header, body)
-
-	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPathForUser(u.Username)))
-	response.Write(c.Response())
-	return nil
-}
-
 // Body checks precede caldav-go's access checks, so an unreadable collection must answer like a missing one.
 func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error) error {
+	// The empty project of /dav/projects//<uid>.ics, see resolveTask.
 	if vcls.project.ID == 0 {
 		return checkErr
 	}
@@ -311,43 +243,4 @@ func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error) error {
 		return errNotFound
 	}
 	return checkErr
-}
-
-func getProjectFromParam(c *echo.Context) (project *models.ProjectWithTasksAndBuckets, err error) {
-	param := c.Param("project")
-	if param == "" {
-		return &models.ProjectWithTasksAndBuckets{}, nil
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	intParam, err := strconv.ParseInt(param, 10, 64)
-	if err != nil {
-		// The project ID given is not an integer, it cannot exist
-		return nil, models.ErrProjectDoesNotExist{}
-	}
-
-	if intParam == models.FavoritesPseudoProjectID {
-		return &models.ProjectWithTasksAndBuckets{Project: models.FavoritesPseudoProject}, nil
-	}
-
-	if intParam < models.FavoritesPseudoProjectID {
-		var sf *models.SavedFilter
-		sf, err = models.GetSavedFilterSimpleByID(s, models.GetSavedFilterIDFromProjectID(intParam))
-		if err != nil {
-			return nil, err
-		}
-
-		project = &models.ProjectWithTasksAndBuckets{Project: *sf.ToProject()}
-		return
-	}
-
-	p, err := models.GetProjectSimpleByID(s, intParam)
-	if err != nil {
-		return nil, err
-	}
-
-	project = &models.ProjectWithTasksAndBuckets{Project: *p}
-	return
 }

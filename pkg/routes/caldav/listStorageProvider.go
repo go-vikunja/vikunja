@@ -59,9 +59,8 @@ type VikunjaCaldavProjectStorage struct {
 	// Used when handling a single task, like updating
 	task *models.Task
 	// The current user
-	user        *user2.User
-	isPrincipal bool
-	isEntry     bool // Entry level handling should only return a link to the principal url
+	user   *user2.User
+	target target
 }
 
 // GetResources returns either all projects, links to the principal, or only one project, depending on the request
@@ -79,16 +78,15 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	// response to go something like "hey, for /dav/, the calendar home is /dav/projects" since it requested /dav/
 	// and not /dav/projects. I'm not sure if thats a bug in the client or in caldav-go.
 
-	if vcls.isEntry {
+	switch vcls.target.(type) {
+	case entryTarget:
 		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
 		})
 		return []data.Resource{r}, nil
-	}
-
-	// If the request wants the principal url, we'll return that and nothing else
-	if vcls.isPrincipal {
+	case principalTarget:
+		// The principal answers with the home set and nothing else.
 		r := data.NewResource(ProjectHomeSetPath, &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
