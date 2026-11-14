@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
@@ -319,8 +318,4 @@ func loadOwner(s *xorm.Session, u *user.User, p *models.Project) (string, error)
 		p.Owner = owner
 	}
 	return ownerName(u, p), nil
-}
-
-func collectionHref(projectID int64) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(projectID, 10)
 }
