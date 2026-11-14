@@ -174,7 +174,7 @@ type entryResource struct{ href string }
 func (r *entryResource) ownHref() string { return r.href }
 
 var entryProps = append(propTable[*entryResource]{
-	{propResourceType, always[*entryResource](elementsValue{collectionType, principalType})},
+	{propResourceType, always[*entryResource](elementsValue{collectionType})},
 	{propDisplayName, lastSegment[*entryResource]},
 	{propCurrentUserPrincipal, currentUserPrincipal[*entryResource]},
 	{propSupportedComponents, always[*entryResource](supportedComponents)},
@@ -192,7 +192,7 @@ type principalResource struct{ href string }
 func (r *principalResource) ownHref() string { return r.href }
 
 var principalProps = append(propTable[*principalResource]{
-	{propResourceType, always[*principalResource](elementsValue{collectionType})},
+	{propResourceType, always[*principalResource](elementsValue{collectionType, principalType})},
 	{propDisplayName, lastSegment[*principalResource]},
 	{propCurrentUserPrincipal, currentUserPrincipal[*principalResource]},
 	{propSupportedComponents, always[*principalResource](supportedComponents)},
