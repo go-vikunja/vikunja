@@ -112,15 +112,6 @@ tokens:
 	return allPropRequest{include: include}, nil
 }
 
-// hrefOnlyResponse is what caldav-go answered when no property was asked for by name.
-type hrefOnlyResponse struct{ href string }
-
-func (r hrefOnlyResponse) writeResponse(w *xmlWriter, _ bool) {
-	w.open(davName("response"))
-	w.textElement(davName("href"), r.href)
-	w.close(davName("response"))
-}
-
 // propfindLoader loads the resources a PROPFIND answers, once access is granted.
 type propfindLoader func(s *xorm.Session, deep bool) ([]davResource, error)
 
