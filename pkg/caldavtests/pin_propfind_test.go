@@ -56,7 +56,7 @@ var user15Projects = map[string]string{
 
 func expectEntry() expectedDAVResponse {
 	return expectedDAVResponse{
-		href: "/dav",
+		href: "/dav/",
 		ok: map[xml.Name]string{
 			davName("resourcetype"):                     resourceTypeEntry,
 			davName("displayname"):                      "dav",
@@ -74,13 +74,13 @@ func expectEntry() expectedDAVResponse {
 	}
 }
 
-// The principal answers with the home set's href.
-func expectPrincipal() expectedDAVResponse {
+// href is the principal path, or the well-known path the principal was asked as.
+func expectPrincipal(href, displayName string) expectedDAVResponse {
 	return expectedDAVResponse{
-		href: "/dav/projects",
+		href: href,
 		ok: map[xml.Name]string{
 			davName("resourcetype"):                     resourceTypeHome,
-			davName("displayname"):                      "projects",
+			davName("displayname"):                      displayName,
 			davName("current-user-principal"):           user15Principal,
 			calName("calendar-home-set"):                homeSetHref,
 			davName("principal-URL"):                    user15Principal,
@@ -202,14 +202,14 @@ func TestPinPropfindMatrix(t *testing.T) {
 		{
 			name:    "principal",
 			path:    "/dav/principals/user15/",
-			shallow: []expectedDAVResponse{expectPrincipal()},
-			deep:    []expectedDAVResponse{expectPrincipal()},
+			shallow: []expectedDAVResponse{expectPrincipal(user15Principal, "user15")},
+			deep:    []expectedDAVResponse{expectPrincipal(user15Principal, "user15")},
 		},
 		{
 			name:    "well-known",
 			path:    "/.well-known/caldav",
-			shallow: []expectedDAVResponse{expectPrincipal()},
-			deep:    []expectedDAVResponse{expectPrincipal()},
+			shallow: []expectedDAVResponse{expectPrincipal("/.well-known/caldav", "caldav")},
+			deep:    []expectedDAVResponse{expectPrincipal("/.well-known/caldav", "caldav")},
 		},
 		{
 			name:    "home set",
@@ -305,8 +305,8 @@ func TestPinPropfindMissingTaskURL(t *testing.T) {
 func TestPinPropfindEmptyBody(t *testing.T) {
 	e := setupTestEnv(t)
 	for path, href := range map[string]string{
-		"/dav/":                   "/dav",
-		"/dav/principals/user15/": "/dav/projects",
+		"/dav/":                   "/dav/",
+		"/dav/principals/user15/": user15Principal,
 		"/dav/projects":           "/dav/projects",
 		"/dav/projects/36":        "/dav/projects/36",
 		pinTaskHref:               pinTaskHref,
