@@ -29,7 +29,7 @@ import (
 const (
 	pinTaskHref     = "/dav/projects/36/uid-caldav-test.ics"
 	user15Principal = "/dav/principals/user15/"
-	homeSetHref     = "/dav/projects/"
+	homeSetHref     = "/dav/projects"
 	zeroLastMod     = "Mon, 01 Jan 0001 00:00:00 GMT"
 
 	resourceTypeHome      = "{DAV:}collection"
