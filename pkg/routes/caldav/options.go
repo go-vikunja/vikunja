@@ -35,12 +35,15 @@ const (
 
 func serveOptions(c *echo.Context, u *user.User, t target) error {
 	allow := allowReadWrite
-	if collection, is := t.(collectionTarget); is {
-		var err error
-		allow, err = collectionAllow(u, collection)
-		if err != nil {
-			return writeError(c, err)
-		}
+	var err error
+	switch t := t.(type) {
+	case collectionTarget:
+		allow, err = collectionAllow(u, t)
+	case taskTarget:
+		allow, err = collectionAllow(u, t.collection)
+	}
+	if err != nil {
+		return writeError(c, err)
 	}
 
 	c.Response().Header().Set("DAV", davCompliance)
