@@ -79,8 +79,11 @@ func handle(c *echo.Context, resolve targetResolver) error {
 		return writeError(c, err)
 	}
 
-	if c.Request().Method == http.MethodOptions {
+	switch c.Request().Method {
+	case http.MethodOptions:
 		return serveOptions(c, u, t)
+	case http.MethodGet, http.MethodHead:
+		return serveGet(c, u, t)
 	}
 
 	switch t := t.(type) {
