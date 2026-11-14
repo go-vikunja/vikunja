@@ -17,6 +17,7 @@
 package caldavtests
 
 import (
+	"encoding/xml"
 	"net/http"
 	"testing"
 	"time"
@@ -254,4 +255,35 @@ func TestConditionalRequests(t *testing.T) {
 			"GET with matching If-None-Match should return 304 Not Modified. Got %d.\n"+
 				"If this fails, the server doesn't support conditional GET — clients re-download unnecessarily.", rec2.Code)
 	})
+}
+
+func TestSyncCollectionMemberProperties(t *testing.T) {
+	e := setupTestEnv(t)
+
+	rec := caldavREPORT(t, e, "/dav/projects/36", `<?xml version="1.0" encoding="utf-8" ?>
+<D:sync-collection xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:X="urn:example">
+  <D:sync-token/>
+  <D:sync-level>1</D:sync-level>
+  <D:prop><D:getetag/><C:calendar-data/><D:displayname/><X:unknown/></D:prop>
+</D:sync-collection>`)
+	require.Equal(t, http.StatusMultiStatus, rec.Code, "Body:\n%s", rec.Body.String())
+	var synced davResponse
+	for _, r := range parseDAVResponses(t, rec) {
+		if r.Href == pinTaskHref {
+			synced = r
+		}
+	}
+	require.Equal(t, pinTaskHref, synced.Href, "Body:\n%s", rec.Body.String())
+
+	rec = caldavREPORT(t, e, "/dav/projects/36", ReportCalendarMultiget(pinTaskHref))
+	require.Equal(t, http.StatusMultiStatus, rec.Code, "Body:\n%s", rec.Body.String())
+	fetched := parseDAVResponses(t, rec)
+	require.Len(t, fetched, 1)
+
+	// The same task looks the same, whichever report fetched it.
+	for _, name := range []xml.Name{davName("getetag"), calName("calendar-data")} {
+		assert.Equal(t, fetched[0].Propstats[200][name].canonical(), synced.Propstats[200][name].canonical(), "%v", name)
+	}
+	assert.Equal(t, "Title Caldav Test", synced.Propstats[200][davName("displayname")].canonical())
+	assert.Contains(t, synced.Propstats[404], xml.Name{Space: "urn:example", Local: "unknown"})
 }

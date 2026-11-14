@@ -247,7 +247,7 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			case calendarQueryRequest:
 				responses, err = answerCalendarQuery(s, u, readable, req, ctx)
 			case syncCollectionRequest:
-				return handleSyncCollectionReport(c, req, newStorage(u, t))
+				return handleSyncCollectionReport(c, s, u, readable, req, ctx)
 			}
 			if err != nil {
 				return writeError(c, err)

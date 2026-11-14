@@ -18,16 +18,15 @@ package caldav
 
 import (
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	caldavpkg "code.vikunja.io/api/pkg/caldav"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
+	"xorm.io/xorm"
 )
 
 const (
@@ -83,55 +82,37 @@ func writeForbiddenValidSyncToken(c *echo.Context) error {
 	return writeDAVError(c, http.StatusForbidden, davName("valid-sync-token"))
 }
 
-// handleSyncCollectionReport handles a CalDAV REPORT sync-collection
-// request (RFC 6578):
+// handleSyncCollectionReport answers a sync-collection REPORT (RFC 6578) on a collection
+// the user can read:
 //   - Empty sync-token  → return all tasks (initial sync or forced full resync)
 //   - Valid sync-token  → return only tasks changed/created since the token timestamp
 //     plus 404 entries for tasks deleted since then
 //   - Invalid/unknown token → 403 + <D:valid-sync-token/> so client resets
-func handleSyncCollectionReport(c *echo.Context, req syncCollectionRequest, storage *VikunjaCaldavProjectStorage) error {
+func handleSyncCollectionReport(c *echo.Context, s *xorm.Session, u *user.User, collection readableCollection, req syncCollectionRequest, ctx propContext) error {
 	rawToken := req.token
-	named, _ := req.props.(propRequest)
-	includeCalendarData := slices.Contains(named.names, propCalendarData)
+	projectID := collection.project.ID
 
-	projectID := storage.project.ID
-
-	log.Debugf("[CALDAV sync-collection] project=%d token=%q calendar-data=%v", projectID, rawToken, includeCalendarData)
+	log.Debugf("[CALDAV sync-collection] project=%d token=%q", projectID, rawToken)
 
 	// Deletions are looked up by project_id, which no task row ever has for a
 	// pseudo project, so a delta here would never contain tombstones. Checked
 	// before loading the collection because clients poll this path forever.
-	if rawToken != "" && models.IsPseudoProjectID(projectID) {
-		s := db.NewSession()
-		defer s.Close()
-
-		// Without this the 403 would leak which saved filter ids exist.
-		can, err := storage.collection().canRead(s, storage.user)
-		if err != nil {
-			return writeError(c, err)
-		}
-		if !can {
-			return writeError(c, errNotFound)
-		}
-
+	if rawToken != "" && collection.isPseudo() {
 		log.Debugf("[CALDAV sync-collection] project=%d is a pseudo project → 403 valid-sync-token to force a full resync", projectID)
 		return writeForbiddenValidSyncToken(c)
 	}
 
-	rr, err := storage.getProjectRessource(true)
+	tasks, err := readCollectionTasks(s, u, collection)
 	if err != nil {
-		return writeError(c, fromLibraryError(err))
+		return writeError(c, err)
 	}
-
-	newEtag := rr.CalculateEtag()
-	newEtagClean := strings.Trim(newEtag, `"`)
-	newToken := syncTokenPrefix + `"` + newEtagClean + `"`
+	newToken := syncTokenPrefix + collectionETag(collection.project, tasks)
 
 	// A pseudo project gets a token here that the branch above will always
 	// reject; RFC 6578 mandates a sync-token in the multistatus regardless.
 	if rawToken == "" {
-		log.Debugf("[CALDAV sync-collection] project=%d empty token → full sync (%d tasks)", projectID, len(rr.projectTasks))
-		return writeSyncResponse(c, rr, rr.projectTasks, nil, newToken, includeCalendarData)
+		log.Debugf("[CALDAV sync-collection] project=%d empty token → full sync (%d tasks)", projectID, len(tasks))
+		return writeSyncResponse(c, s, u, collection, req, ctx, tasks, nil, newToken)
 	}
 
 	tokenProjectID, tokenTS, tokenPurgeGeneration, ok := parseSyncToken(rawToken)
@@ -146,8 +127,8 @@ func handleSyncCollectionReport(c *echo.Context, req syncCollectionRequest, stor
 	}
 
 	purgeGeneration := int64(0)
-	if !rr.project.LastPurgedAt.IsZero() {
-		purgeGeneration = rr.project.LastPurgedAt.Unix()
+	if !collection.project.LastPurgedAt.IsZero() {
+		purgeGeneration = collection.project.LastPurgedAt.Unix()
 	}
 	if tokenPurgeGeneration != purgeGeneration {
 		return writeForbiddenValidSyncToken(c)
@@ -165,55 +146,55 @@ func handleSyncCollectionReport(c *echo.Context, req syncCollectionRequest, stor
 	// would miss a change in the same second the token was minted.
 	// Re-reporting is cheap — the etag is unchanged, so clients skip the download.
 	var changedTasks []*models.TaskWithComments
-	for _, t := range rr.projectTasks {
+	for _, t := range tasks {
 		if !t.Updated.Before(tokenTS) || !t.Created.Before(tokenTS) {
 			changedTasks = append(changedTasks, t)
 		}
 	}
 
-	s := db.NewSession()
-	defer s.Close()
 	deletions, err := models.GetDeletedTasksSince(s, projectID, tokenTS)
 	if err != nil {
-		_ = s.Rollback()
-		return writeError(c, err)
-	}
-	if err := s.Commit(); err != nil {
 		return writeError(c, err)
 	}
 
 	log.Debugf("[CALDAV sync-collection] project=%d delta: %d changed tasks, %d deletions since %v → newToken=%q",
 		projectID, len(changedTasks), len(deletions), tokenTS.UTC(), newToken)
-	return writeSyncResponse(c, rr, changedTasks, deletions, newToken, includeCalendarData)
+	return writeSyncResponse(c, s, u, collection, req, ctx, changedTasks, deletions, newToken)
 }
 
 // writeSyncResponse writes the RFC 6578 §3.8/3.9 207 Multistatus response:
-// changed tasks as 200 entries, deleted tasks as 404 entries.
+// changed tasks with the requested properties, deleted tasks as 404 entries.
 func writeSyncResponse(
 	c *echo.Context,
-	rr VikunjaProjectResourceAdapter,
+	s *xorm.Session,
+	u *user.User,
+	collection readableCollection,
+	req syncCollectionRequest,
+	ctx propContext,
 	tasks []*models.TaskWithComments,
 	deletions []*models.Task,
 	newToken string,
-	includeCalendarData bool,
 ) error {
+	if err := s.Commit(); err != nil {
+		return writeError(c, err)
+	}
+
 	ms := multistatus{
 		syncToken: newToken,
 		responses: make([]msResponse, 0, len(tasks)+len(deletions)),
+		minimal:   prefersMinimal(c),
 	}
 
+	// readCollectionTasks loaded the owner.
+	owner := ownerName(u, &collection.project.Project)
+	props := reportProps(req.props)
 	for _, t := range tasks {
-		etag := `"` + strconv.FormatInt(t.ID, 10) + `-` + strconv.FormatInt(t.Updated.Unix(), 10) + `"`
-		props := []prop{{name: davName("getetag"), value: textValue(etag)}}
-		if includeCalendarData {
-			calData := caldavpkg.GetCaldavTodosForTasks(rr.project, []*models.TaskWithComments{t})
-			props = append(props, prop{name: calDAVName("calendar-data"), value: textValue(calData)})
-		}
-		ms.responses = append(ms.responses, propResponse(taskURL(rr.project.ID, &t.Task), props, nil))
+		resource := &taskResource{href: taskURL(collection.project.ID, &t.Task), task: &t.Task, owner: owner}
+		ms.responses = append(ms.responses, resource.answer(ctx, props))
 	}
 
 	for _, d := range deletions {
-		ms.responses = append(ms.responses, statusResponse{href: taskURL(rr.project.ID, d), status: http.StatusNotFound})
+		ms.responses = append(ms.responses, statusResponse{href: taskURL(collection.project.ID, d), status: http.StatusNotFound})
 	}
 
 	return writeMultistatus(c, ms)
