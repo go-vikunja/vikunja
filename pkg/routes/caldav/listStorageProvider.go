@@ -27,7 +27,6 @@ import (
 	user2 "code.vikunja.io/api/pkg/user"
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
-	"github.com/samedi/caldav-go/lib"
 )
 
 // DavBasePath is the base url path
@@ -63,24 +62,6 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(string, bool) ([]data.Reso
 
 func principalPathForUser(username string) string {
 	return PrincipalBasePath + `/` + username + `/`
-}
-
-// caldav-go only evaluates time-range on VEVENTs, so a VTODO query with one would match
-// nothing. Those keep getting every task, the client narrows them down itself.
-func matchesTodoFilter(filter *data.ResourceFilter, r *data.Resource) bool {
-	if filter == nil || filter.GetTimeRangeFilter() != nil {
-		return true
-	}
-	return filter.Match(todoResource{r})
-}
-
-// caldav-go reports every non-collection resource as a VEVENT.
-type todoResource struct {
-	*data.Resource
-}
-
-func (todoResource) ComponentName() string {
-	return lib.VTODO
 }
 
 // WebDAV requires every Depth: 1 child to live under the collection's own URI.

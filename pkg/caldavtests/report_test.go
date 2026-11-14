@@ -17,8 +17,10 @@
 package caldavtests
 
 import (
+	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	ics "github.com/arran4/golang-ical"
 	"github.com/stretchr/testify/assert"
@@ -247,5 +249,53 @@ func TestReportCalendarMultiget(t *testing.T) {
 		// ETags should match between PROPFIND and REPORT
 		assert.Equal(t, propfindEtag, reportEtag,
 			"ETag from PROPFIND and calendar-multiget should match")
+	})
+}
+
+func TestReportCalendarQueryTimeRange(t *testing.T) {
+	// RFC 4791 §9.9: which VTODOs a time-range matches depends on DTSTART, DUE (or
+	// DURATION), COMPLETED and CREATED. The fixture tasks in project 36 are only due,
+	// on 2023-03-01 15:00 UTC.
+	e := setupTestEnv(t)
+
+	const (
+		startAndDue = "/dav/projects/36/time-range-start-and-due.ics"
+		startOnly   = "/dav/projects/36/time-range-start-only.ics"
+	)
+	rec := caldavPUT(t, e, startAndDue, NewVTodo("time-range-start-and-due", "Start and due").
+		DtStart(time.Date(2031, time.June, 1, 10, 0, 0, 0, time.UTC)).
+		Due(time.Date(2031, time.June, 3, 10, 0, 0, 0, time.UTC)).
+		Build())
+	require.Equal(t, http.StatusCreated, rec.Code, "Body:\n%s", rec.Body.String())
+	rec = caldavPUT(t, e, startOnly, NewVTodo("time-range-start-only", "Start only").
+		DtStart(time.Date(2031, time.June, 10, 10, 0, 0, 0, time.UTC)).
+		Build())
+	require.Equal(t, http.StatusCreated, rec.Code, "Body:\n%s", rec.Body.String())
+
+	tests := []struct {
+		name      string
+		timeRange string
+		hrefs     []string
+	}{
+		{name: "between start and due", timeRange: `start="20310602T000000Z" end="20310602T120000Z"`, hrefs: []string{startAndDue}},
+		{name: "around a start", timeRange: `start="20310605T000000Z" end="20310611T000000Z"`, hrefs: []string{startOnly}},
+		{name: "after everything", timeRange: `start="20320101T000000Z" end="20320102T000000Z"`},
+		{name: "open start", timeRange: `end="20230302T000000Z"`, hrefs: project36TaskHrefs()},
+		{name: "open end", timeRange: `start="20310604T000000Z"`, hrefs: []string{startOnly}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := caldavREPORT(t, e, "/dav/projects/36", calendarQueryWithTodoFilter(`<C:time-range `+tc.timeRange+`/>`))
+
+			require.Equal(t, http.StatusMultiStatus, rec.Code, "Body:\n%s", rec.Body.String())
+			assertDAVResponses(t, rec, etagOnly(tc.hrefs...))
+		})
+	}
+
+	t.Run("a malformed time-range fails the valid-filter precondition", func(t *testing.T) {
+		rec := caldavREPORT(t, e, "/dav/projects/36", calendarQueryWithTodoFilter(`<C:time-range start="2031-06-01"/>`))
+
+		assert.Equal(t, http.StatusForbidden, rec.Code)
+		assert.Contains(t, rec.Body.String(), "<C:valid-filter/>")
 	})
 }

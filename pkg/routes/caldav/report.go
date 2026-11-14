@@ -31,7 +31,6 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go/data"
 	"xorm.io/xorm"
 )
 
@@ -57,9 +56,8 @@ type multigetRequest struct {
 
 // calendarQueryRequest is a calendar-query (RFC 4791 §7.8).
 type calendarQueryRequest struct {
-	props propfindRequest
-	// The filter element as caldav-go's filter parser reads it.
-	filterXML string
+	props  propfindRequest
+	filter calendarFilter
 }
 
 // syncCollectionRequest is a sync-collection (RFC 6578 §3.2).
@@ -73,94 +71,128 @@ func (calendarQueryRequest) isReportRequest()  {}
 func (syncCollectionRequest) isReportRequest() {}
 
 func parseReport(body string) (reportRequest, error) {
-	var (
-		root      xml.Name
-		props     propCollector
-		hrefs     []string
-		seenHref  = map[string]bool{}
-		token     string
-		sawFilter bool
-		elements  int
-		// The href or sync-token being read.
-		text *strings.Builder
-	)
-	err := walkXML(body, func(p []xml.Name, tok xml.Token) error {
-		switch t := tok.(type) {
-		case xml.StartElement:
-			if len(p) == 0 {
-				root = t.Name
-				return nil
-			}
-			elements++
-			if elements > maxReportElements {
-				return fmt.Errorf("%w: more than %d elements", errBodyTooLarge, maxReportElements)
-			}
-			if len(p) >= maxReportDepth {
-				return fmt.Errorf("%w: nested deeper than %d elements", errBodyTooLarge, maxReportDepth)
-			}
-			if len(p) == 1 && t.Name == calDAVName("filter") {
-				sawFilter = true
-			}
-			if len(p) == 1 && (t.Name == davName("href") || t.Name == davName("sync-token")) {
-				text = &strings.Builder{}
-			}
-			return props.visit(p, t)
-		case xml.CharData:
-			if len(p) == 2 && text != nil {
-				text.Write(t)
-			}
-		case xml.EndElement:
-			if len(p) != 1 || text == nil {
-				return nil
-			}
-			switch t.Name {
-			case davName("href"):
-				href := text.String()
-				if !seenHref[href] {
-					if len(hrefs) == maxMultigetHrefs {
-						return fmt.Errorf("%w: more than %d hrefs", errBodyTooLarge, maxMultigetHrefs)
-					}
-					seenHref[href] = true
-					hrefs = append(hrefs, href)
-				}
-			case davName("sync-token"):
-				token = strings.TrimSpace(text.String())
-			}
-			text = nil
-		}
-		return nil
-	})
-	if err != nil {
+	p := reportParser{seenHref: map[string]bool{}}
+	if err := walkXML(body, p.visit); err != nil {
 		return nil, err
 	}
 
-	switch root {
+	switch p.root {
 	case xml.Name{}:
 		return nil, fmt.Errorf("%w: empty body", errMalformedBody)
 	case calDAVName("calendar-multiget"):
-		return multigetRequest{props: props.request(), hrefs: hrefs}, nil
+		return multigetRequest{props: p.props.request(), hrefs: p.hrefs}, nil
 	case calDAVName("calendar-query"):
 		// RFC 4791 §9.5: the filter is required.
-		if !sawFilter {
+		if p.filter == nil {
 			return nil, fmt.Errorf("%w: calendar-query without a filter", errMalformedBody)
 		}
-		return calendarQueryRequest{props: props.request(), filterXML: libraryFilterXML(body)}, nil
+		filter, err := parseFilter(p.filter)
+		if err != nil {
+			return nil, err
+		}
+		return calendarQueryRequest{props: p.props.request(), filter: filter}, nil
 	case davName("sync-collection"):
-		return syncCollectionRequest{props: props.request(), token: token}, nil
+		return syncCollectionRequest{props: p.props.request(), token: p.token}, nil
 	}
 	return nil, errUnsupportedReport
 }
 
-// Pinned: what caldav-go handed its filter parser, "<></>" without a filter element.
-func libraryFilterXML(body string) string {
-	var raw struct {
-		Filter struct {
-			XMLName xml.Name
-			Inner   string `xml:",innerxml"`
-		} `xml:"urn:ietf:params:xml:ns:caldav filter"`
+// reportParser collects the parts of a REPORT body any report type may have.
+type reportParser struct {
+	root     xml.Name
+	props    propCollector
+	hrefs    []string
+	seenHref map[string]bool
+	token    string
+	elements int
+	// The href or sync-token being read.
+	text *strings.Builder
+	// The filter element, and the open elements in it.
+	filter         *xmlElement
+	filterStack    []*xmlElement
+	filterElements int
+}
+
+func (p *reportParser) visit(path []xml.Name, tok xml.Token) error {
+	switch t := tok.(type) {
+	case xml.StartElement:
+		return p.start(path, t)
+	case xml.CharData:
+		if len(p.filterStack) > 0 {
+			p.filterStack[len(p.filterStack)-1].text += string(t)
+		}
+		if len(path) == 2 && p.text != nil {
+			p.text.Write(t)
+		}
+	case xml.EndElement:
+		if len(p.filterStack) > 0 {
+			p.filterStack = p.filterStack[:len(p.filterStack)-1]
+			return nil
+		}
+		if len(path) == 1 && p.text != nil {
+			return p.endText(t.Name)
+		}
 	}
-	_ = xml.Unmarshal([]byte(body), &raw)
-	return "<" + raw.Filter.XMLName.Local + ">" + raw.Filter.Inner + "</" + raw.Filter.XMLName.Local + ">"
+	return nil
+}
+
+func (p *reportParser) start(path []xml.Name, t xml.StartElement) error {
+	if len(path) == 0 {
+		p.root = t.Name
+		return nil
+	}
+	p.elements++
+	if p.elements > maxReportElements {
+		return fmt.Errorf("%w: more than %d elements", errBodyTooLarge, maxReportElements)
+	}
+	if len(path) >= maxReportDepth {
+		return fmt.Errorf("%w: nested deeper than %d elements", errBodyTooLarge, maxReportDepth)
+	}
+	if len(p.filterStack) > 0 || (len(path) == 1 && t.Name == calDAVName("filter")) {
+		return p.openFilterElement(t)
+	}
+	if len(path) == 1 && (t.Name == davName("href") || t.Name == davName("sync-token")) {
+		p.text = &strings.Builder{}
+	}
+	return p.props.visit(path, t)
+}
+
+func (p *reportParser) endText(name xml.Name) error {
+	text := p.text.String()
+	p.text = nil
+	switch name {
+	case davName("href"):
+		if p.seenHref[text] {
+			return nil
+		}
+		if len(p.hrefs) == maxMultigetHrefs {
+			return fmt.Errorf("%w: more than %d hrefs", errBodyTooLarge, maxMultigetHrefs)
+		}
+		p.seenHref[text] = true
+		p.hrefs = append(p.hrefs, text)
+	case davName("sync-token"):
+		p.token = strings.TrimSpace(text)
+	}
+	return nil
+}
+
+func (p *reportParser) openFilterElement(t xml.StartElement) error {
+	p.filterElements++
+	if p.filterElements > maxFilterElements {
+		return fmt.Errorf("%w: more than %d filter elements", errBodyTooLarge, maxFilterElements)
+	}
+	el := &xmlElement{name: t.Name, attrs: t.Copy().Attr}
+	if len(p.filterStack) == 0 {
+		if p.filter != nil {
+			return invalidFilter("more than one filter")
+		}
+		p.filter = el
+	} else {
+		parent := p.filterStack[len(p.filterStack)-1]
+		parent.children = append(parent.children, el)
+	}
+	p.filterStack = append(p.filterStack, el)
+	return nil
 }
 
 // reportAnswer answers a parsed REPORT on a resource the user was granted access to.
@@ -413,24 +445,14 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 		return []msResponse{collection.answer(ctx, props)}, nil
 	}
 
-	// Pinned: caldav-go failed with a 500 on a filter it could not parse.
-	filter, err := data.ParseResourceFilters(req.filterXML)
-	if err != nil {
-		return nil, err
-	}
-
 	var responses []msResponse
 	for _, t := range tasks {
-		task := &t.Task
-		href := taskURL(c.project.ID, task)
-		adapter := &VikunjaProjectResourceAdapter{project: c.project, task: task}
-		r := data.NewResource(href, adapter)
-		if !matchesTodoFilter(filter, &r) {
-			continue
-		}
+		href := taskURL(c.project.ID, &t.Task)
 		// Pinned: two tasks with the same UID answer under the same href.
-		resource := &taskResource{href: href, task: task, owner: owner, rendered: adapter.content}
-		responses = append(responses, resource.answer(ctx, props))
+		candidate := &queryCandidate{resource: &taskResource{href: href, task: &t.Task, owner: owner}}
+		if req.filter.matches(candidate) {
+			responses = append(responses, candidate.resource.answer(ctx, props))
+		}
 	}
 	return responses, nil
 }
