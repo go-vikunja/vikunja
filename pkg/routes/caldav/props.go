@@ -18,7 +18,6 @@ package caldav
 
 import (
 	"encoding/xml"
-	"net/http"
 	"path"
 	"slices"
 	"strconv"
@@ -132,12 +131,11 @@ func textIfSet(s string) (propValue, bool) {
 	return textValue(s), s != ""
 }
 
-// Pinned: caldav-go formats in the server's zone and labels it GMT.
 func modTime(t time.Time) (propValue, bool) {
 	if t.IsZero() {
 		return nil, false
 	}
-	return textValue(t.Format(http.TimeFormat)), true
+	return textValue(lastModified(t)), true
 }
 
 func ownerPrincipal(username string) (propValue, bool) {
