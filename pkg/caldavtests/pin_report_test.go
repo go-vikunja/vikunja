@@ -19,6 +19,7 @@ package caldavtests
 import (
 	"encoding/xml"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -85,8 +86,35 @@ func TestPinReportUnknownType(t *testing.T) {
   <C:time-range start="20060104T140000Z" end="20060105T220000Z"/>
 </C:free-busy-query>`)
 
-	assert.Equal(t, http.StatusPreconditionFailed, rec.Code)
-	assert.Empty(t, rec.Body.String())
+	assertSupportedReport(t, rec)
+}
+
+// RFC 3253 §3.6: a report the resource does not support fails the supported-report precondition.
+func assertSupportedReport(t *testing.T, rec *httptest.ResponseRecorder) {
+	t.Helper()
+	require.Equal(t, http.StatusForbidden, rec.Code, "Body:\n%s", rec.Body.String())
+	var body struct {
+		XMLName xml.Name  `xml:"DAV: error"`
+		Failed  []xmlNode `xml:",any"`
+	}
+	require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &body), "Body:\n%s", rec.Body.String())
+	require.Len(t, body.Failed, 1)
+	assert.Equal(t, davName("supported-report"), body.Failed[0].XMLName)
+}
+
+func TestPinReportMalformedBody(t *testing.T) {
+	e := setupTestEnv(t)
+
+	for name, body := range map[string]string{"empty": "", "not XML": "<<<", "truncated": `<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">`} {
+		t.Run(name, func(t *testing.T) {
+			rec := caldavREPORT(t, e, "/dav/projects/36", body)
+			assert.Equal(t, http.StatusBadRequest, rec.Code, "Body:\n%s", rec.Body.String())
+
+			// The body is only looked at once access is granted.
+			rec = caldavRequest(t, e, "REPORT", "/dav/projects/36", body, map[string]string{"Authorization": basicAuthHeader(testuser1.Username, fixturePassword)})
+			assert.Equal(t, http.StatusNotFound, rec.Code, "Body:\n%s", rec.Body.String())
+		})
+	}
 }
 
 func TestPinReportCalendarQuery(t *testing.T) {
@@ -155,7 +183,7 @@ func TestPinReportTargets(t *testing.T) {
 	tests := []struct {
 		name string
 		path string
-		// nil: the status alone is pinned, with an empty body.
+		// nil: the status alone is pinned.
 		query, multiget             []expectedDAVResponse
 		queryStatus, multigetStatus int
 		syncStatus, unknownStatus   int
@@ -163,17 +191,17 @@ func TestPinReportTargets(t *testing.T) {
 		{
 			name: "entry", path: "/dav/",
 			query: noData("/dav"), multiget: noData("/dav"), queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusPreconditionFailed, unknownStatus: http.StatusPreconditionFailed,
+			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
 		},
 		{
 			name: "principal", path: user15Principal,
 			query: noData("/dav/principals/user15"), multiget: noData("/dav/principals/user15"), queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusPreconditionFailed, unknownStatus: http.StatusPreconditionFailed,
+			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
 		},
 		{
 			name: "well-known", path: "/.well-known/caldav",
 			query: noData("/.well-known/caldav"), multiget: noData("/.well-known/caldav"), queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusPreconditionFailed, unknownStatus: http.StatusPreconditionFailed,
+			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
 		},
 		{
 			name: "home set", path: "/dav/projects",
@@ -184,7 +212,7 @@ func TestPinReportTargets(t *testing.T) {
 			// The filter and the hrefs are ignored, the task answers for itself.
 			name: "task", path: pinTaskHref,
 			query: task, multiget: task, queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusPreconditionFailed, unknownStatus: http.StatusPreconditionFailed,
+			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
 		},
 		{
 			name: "missing task", path: "/dav/projects/36/nonexistent-uid.ics",
@@ -199,11 +227,12 @@ func TestPinReportTargets(t *testing.T) {
 			check := func(t *testing.T, body string, status int, want []expectedDAVResponse) {
 				t.Helper()
 				rec := caldavREPORT(t, e, tc.path, body)
+				if status == http.StatusForbidden {
+					assertSupportedReport(t, rec)
+					return
+				}
 				require.Equal(t, status, rec.Code, "Body:\n%s", rec.Body.String())
 				if want == nil {
-					if status != http.StatusNotFound {
-						assert.Empty(t, rec.Body.String())
-					}
 					return
 				}
 				assertDAVResponses(t, rec, want)
