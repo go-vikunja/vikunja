@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"slices"
 	"strconv"
@@ -371,45 +372,14 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 
 		// save and override the updated unix date to not break any later etag checks
 		updated := vcls.task.Updated
-		tasks, err := models.GetTasksByUIDs(s, []string{vcls.task.UID}, vcls.user)
+		task, err := findTask(s, vcls.user, vcls.collection(), vcls.task.UID)
 		if err != nil {
 			_ = s.Rollback()
-			if models.IsErrTaskDoesNotExist(err) {
-				return nil, false, errs.ResourceNotFoundError
-			}
 			return nil, false, err
 		}
-
-		if len(tasks) < 1 {
+		if task == nil {
 			_ = s.Rollback()
 			return nil, false, errs.ResourceNotFoundError
-		}
-		task := tasks[0]
-
-		// The URL project must match the task's real project (GHSA-48ch-p4gq-x46x).
-		if vcls.project != nil && vcls.project.ID != 0 && task.ProjectID != vcls.project.ID {
-			if !models.IsPseudoProjectID(vcls.project.ID) {
-				_ = s.Rollback()
-				return nil, false, errs.ResourceNotFoundError
-			}
-
-			// tasks.uid has no unique index, so the first candidate may be a same-UID sibling.
-			task = nil
-			for _, candidate := range tasks {
-				inCollection, err := vcls.collection().contains(s, vcls.user, candidate.ID)
-				if err != nil {
-					_ = s.Rollback()
-					return nil, false, err
-				}
-				if inCollection {
-					task = candidate
-					break
-				}
-			}
-			if task == nil {
-				_ = s.Rollback()
-				return nil, false, errs.ResourceNotFoundError
-			}
 		}
 
 		if err := s.Commit(); err != nil {
@@ -1017,28 +987,12 @@ func (vlra *VikunjaProjectResourceAdapter) IsCalendar() bool {
 func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 
 	if vlra.task != nil {
-		return `"` + strconv.FormatInt(vlra.task.ID, 10) + `-` + strconv.FormatInt(vlra.task.Updated.Unix(), 10) + `"`
+		return taskETag(vlra.task)
 	}
-
 	if vlra.project == nil {
 		return ""
 	}
-
-	// For collections, use the latest modification time across all tasks
-	// so that the etag (and derived ctag/sync-token) changes whenever
-	// any task in the project is added, modified, or deleted.
-	latest := vlra.project.Updated
-	for _, t := range vlra.projectTasks {
-		if t.Updated.After(latest) {
-			latest = t.Updated
-		}
-	}
-
-	etag := strconv.FormatInt(vlra.project.ID, 10) + "-" + strconv.FormatInt(latest.Unix(), 10)
-	if !vlra.project.LastPurgedAt.IsZero() {
-		etag += ";purge=" + strconv.FormatInt(vlra.project.LastPurgedAt.Unix(), 10)
-	}
-	return `"` + etag + `"`
+	return collectionETag(vlra.project, vlra.projectTasks)
 }
 
 // GetContent returns the content string of a resource (a task in our case)
@@ -1052,14 +1006,11 @@ func (vlra *VikunjaProjectResourceAdapter) GetContent() string {
 
 func (vlra *VikunjaProjectResourceAdapter) renderContent() string {
 	if vlra.project != nil && vlra.projectTasks != nil {
-		return caldav.GetCaldavTodosForTasks(vlra.project, vlra.projectTasks)
+		return renderCollection(vlra.project, vlra.projectTasks)
 	}
-
 	if vlra.task != nil {
-		project := models.ProjectWithTasksAndBuckets{Tasks: []*models.TaskWithComments{{Task: *vlra.task}}}
-		return caldav.GetCaldavTodosForTasks(&project, project.Tasks)
+		return renderTask(vlra.task)
 	}
-
 	return ""
 }
 
@@ -1089,42 +1040,14 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 		return
 	}
 
-	can, err := vcls.collection().canRead(s, vcls.user)
+	projectTasks, err := readCollectionTasks(s, vcls.user, vcls.collection())
 	if err != nil {
 		_ = s.Rollback()
-		return
-	}
-	if !can {
-		_ = s.Rollback()
-		log.Debugf("User %v tried to access a caldav resource (Project %v) which they are not allowed to access", vcls.user.Username, vcls.project.ID)
-		// Any other error becomes a 500 in caldav-go, which would tell the client the collection exists.
-		return rr, errs.ResourceNotFoundError
-	}
-	err = vcls.project.ReadOne(s, vcls.user)
-	if err != nil {
-		_ = s.Rollback()
-		return
-	}
-
-	projectTasks := vcls.project.Tasks
-	if projectTasks == nil {
-		tk := models.TaskCollection{
-			ProjectID: vcls.project.ID,
+		if errors.Is(err, errNotFound) {
+			// Any other error becomes a 500 in caldav-go, which would tell the client the collection exists.
+			return rr, errs.ResourceNotFoundError
 		}
-		iface, _, _, err := tk.ReadAll(s, vcls.user, "", 0, -1)
-		if err != nil {
-			_ = s.Rollback()
-			return rr, err
-		}
-		tasks, ok := iface.([]*models.Task)
-		if !ok {
-			panic("Tasks returned from TaskCollection.ReadAll are not []*models.Task!")
-		}
-
-		for _, t := range tasks {
-			projectTasks = append(projectTasks, &models.TaskWithComments{Task: *t})
-		}
-		vcls.project.Tasks = projectTasks
+		return rr, err
 	}
 
 	if err := s.Commit(); err != nil {
