@@ -22,11 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
 	"github.com/samedi/caldav-go/data"
-	"github.com/samedi/caldav-go/errs"
 )
 
 // DavBasePath is the base url path
@@ -49,10 +47,6 @@ type VikunjaCaldavProjectStorage struct {
 	task *models.Task
 	// The current user
 	user *user2.User
-}
-
-func (vcls *VikunjaCaldavProjectStorage) collection() collectionTarget {
-	return collectionTarget{project: vcls.project}
 }
 
 // GetResources only satisfies data.Storage: PROPFIND is served in-house.
@@ -177,39 +171,4 @@ func (vlra *VikunjaProjectResourceAdapter) GetModTime() time.Time {
 	}
 
 	return time.Time{}
-}
-
-func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) (rr VikunjaProjectResourceAdapter, err error) {
-	s := db.NewSession()
-	defer s.Close()
-
-	if vcls.project == nil {
-		return
-	}
-
-	readable, err := vcls.collection().checkRead(s, vcls.user)
-	var projectTasks []*models.TaskWithComments
-	if err == nil {
-		projectTasks, err = readCollectionTasks(s, vcls.user, readable)
-	}
-	if err != nil {
-		_ = s.Rollback()
-		if errors.Is(err, errNotFound) {
-			// Any other error becomes a 500 in caldav-go, which would tell the client the collection exists.
-			return rr, errs.ResourceNotFoundError
-		}
-		return rr, err
-	}
-
-	if err := s.Commit(); err != nil {
-		return rr, err
-	}
-
-	rr = VikunjaProjectResourceAdapter{
-		project:      vcls.project,
-		projectTasks: projectTasks,
-		isCollection: isCollection,
-	}
-
-	return
 }
