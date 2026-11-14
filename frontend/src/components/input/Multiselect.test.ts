@@ -400,3 +400,58 @@ describe('Multiselect.vue — capped results hint', () => {
 		wrapper.unmount()
 	})
 })
+
+describe('Multiselect.vue — no results message', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	function mountEmpty(props: Record<string, unknown> = {}) {
+		return mountMultiselect({searchResults: [], noResultsMessage: 'nothing found', ...props})
+	}
+
+	it('shows the message once a search returned nothing', async () => {
+		const wrapper = mountEmpty()
+		await openResults(wrapper)
+
+		const hint = wrapper.find('.search-result-hint')
+		expect(hint.text()).toBe('nothing found')
+		expect(hint.attributes('aria-disabled')).toBe('true')
+
+		wrapper.unmount()
+	})
+
+	it('stays hidden while the search is still loading', async () => {
+		const wrapper = mountEmpty({loading: true})
+		await openResults(wrapper)
+
+		expect(wrapper.find('.search-result-hint').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('stays hidden when there are results', async () => {
+		const wrapper = mountEmpty({searchResults})
+		await openResults(wrapper)
+
+		expect(wrapper.find('.search-result-hint').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('stays hidden for a preselected value nobody searched for', async () => {
+		const wrapper = mountEmpty({multiple: false, modelValue: {title: 'Alpha'}})
+		await wrapper.find('input[role="combobox"]').trigger('focus')
+		vi.advanceTimersByTime(300)
+		await nextTick()
+
+		expect(wrapper.find('.search-result-hint').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+})

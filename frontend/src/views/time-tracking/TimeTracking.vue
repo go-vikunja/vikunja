@@ -105,13 +105,18 @@
 					<Multiselect
 						v-model="selectedUser"
 						:placeholder="$t('timeTracking.browse.userSearch')"
+						:no-results-message="$t('user.search.noResultsExact')"
 						:loading="usersLoading"
 						:search-results="foundUsers"
 						label="username"
 						@search="findUsers"
 					>
 						<template #searchResult="{option}">
-							{{ option.username }}
+							<User
+								:avatar-size="24"
+								show-handle
+								:user="option"
+							/>
 						</template>
 					</Multiselect>
 				</div>
@@ -130,6 +135,7 @@ import Card from '@/components/misc/Card.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import Multiselect from '@/components/input/Multiselect.vue'
+import User from '@/components/misc/User.vue'
 import PaginationEmit from '@/components/misc/PaginationEmit.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import TimeEntryForm from '@/components/time-tracking/TimeEntryForm.vue'

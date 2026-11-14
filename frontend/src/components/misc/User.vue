@@ -22,7 +22,10 @@
 		<span
 			v-if="showUsername"
 			class="username"
-		>{{ displayName }}</span>
+		>{{ displayName }}<span
+			v-if="handle"
+			class="handle"
+		>@{{ handle }}</span></span>
 	</div>
 </template>
 
@@ -37,10 +40,13 @@ import type {User as IUser} from '@/client/generated'
 const props = withDefaults(defineProps<{
 	user: Pick<IUser, 'name' | 'username' | 'bot_owner_id' | 'bot_owner'> & {botOwnerId?: number},
 	showUsername?: boolean,
+	/** Appends the unique @username so people sharing a name can be told apart. */
+	showHandle?: boolean,
 	avatarSize?: number,
 	isInline?: boolean,
 }>(), {
 	showUsername: true,
+	showHandle: false,
 	avatarSize: 50,
 	isInline: false,
 })
@@ -48,6 +54,7 @@ const props = withDefaults(defineProps<{
 const {t} = useI18n({useScope: 'global'})
 
 const displayName = computed(() => getDisplayName(props.user))
+const handle = computed(() => props.showHandle && props.user.username !== displayName.value ? props.user.username : '')
 const isBot = computed(() => (props.user.bot_owner_id ?? props.user.botOwnerId ?? 0) > 0)
 const botBadgeLabel = computed(() => props.user.bot_owner
 	? t('user.settings.bots.badgeOwner', {user: getDisplayName(props.user.bot_owner)})
@@ -76,6 +83,12 @@ const botBadgeLabel = computed(() => props.user.bot_owner
 	block-size: var(--avatar-size);
 	border-radius: 100%;
 	vertical-align: middle;
+}
+
+.handle {
+	margin-inline-start: .5rem;
+	font-size: .75rem;
+	color: var(--grey-500);
 }
 
 .bot-badge {

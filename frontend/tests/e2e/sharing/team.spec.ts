@@ -198,11 +198,63 @@ test.describe('Team', () => {
 		await expect(multiselect.locator('.search-result-button').filter({hasText: user.username})).toBeVisible({timeout: 5000})
 
 		await input.press('Enter')
-		await expect(input).toHaveValue(user.username)
-		await expect(page.getByText('Please select a user.')).toBeHidden()
+		await expect(multiselect.locator('.tag').filter({hasText: user.username})).toBeVisible()
+		await expect(input).toHaveValue('')
+		await expect(page.getByText('Please select at least one user.')).toBeHidden()
 
 		await input.press('Enter')
 		await expect(page.locator('table.table tr').filter({hasText: user.username})).toBeVisible()
+	})
+
+	test('Adds several selected users at once and lets one be deselected first', async ({authenticatedPage: page}) => {
+		await TeamMemberFactory.create(1, {
+			team_id: 1,
+			admin: true,
+		})
+		await TeamFactory.create(1, {
+			id: 1,
+		})
+		const users = await UserFactory.create(3, {id: (i: number) => 100 + i}, false)
+
+		await page.goto('/teams/1/edit')
+		const teamMembersCard = page.locator('.card').filter({hasText: 'Team Members'})
+		const multiselect = teamMembersCard.locator('.card-content .multiselect')
+		const input = multiselect.locator('.input-wrapper input')
+
+		for (const user of users) {
+			await input.click()
+			await input.pressSequentially(user.username, {delay: 10})
+			await multiselect.locator('.search-result-button').filter({hasText: user.username}).click()
+			await expect(multiselect.locator('.tag').filter({hasText: user.username})).toBeVisible()
+		}
+
+		await multiselect.locator('.tag').filter({hasText: users[1].username}).getByRole('button', {name: 'Remove this item'}).click()
+		await expect(multiselect.locator('.tag')).toHaveCount(2)
+		await teamMembersCard.locator('.card-content .button').filter({hasText: 'Add to team'}).click()
+
+		const rows = page.locator('table.table tr')
+		await expect(rows.filter({hasText: users[0].username})).toBeVisible()
+		await expect(rows.filter({hasText: users[2].username})).toBeVisible()
+		await expect(rows.filter({hasText: users[1].username})).toHaveCount(0)
+		await expect(multiselect.locator('.tag')).toHaveCount(0)
+	})
+
+	test('Explains an empty member search', async ({authenticatedPage: page}) => {
+		await TeamMemberFactory.create(1, {
+			team_id: 1,
+			admin: true,
+		})
+		await TeamFactory.create(1, {
+			id: 1,
+		})
+
+		await page.goto('/teams/1/edit')
+		const multiselect = page.locator('.card').filter({hasText: 'Team Members'}).locator('.card-content .multiselect')
+		const input = multiselect.locator('.input-wrapper input')
+
+		await input.click()
+		await input.pressSequentially('nobody-has-this-name', {delay: 10})
+		await expect(multiselect.locator('.search-result-hint')).toContainText('No users found.')
 	})
 
 	test('Clears member search results when the search input is cleared', async ({authenticatedPage: page}) => {

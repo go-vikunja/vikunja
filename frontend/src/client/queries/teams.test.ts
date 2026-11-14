@@ -14,7 +14,7 @@ vi.mock('@/helpers/auth', () => ({getAuthSessionEpoch: () => session.epoch, getT
 vi.mock('@/helpers/apiUrl', () => ({getApiBaseUrl: () => '/api/v2/'}))
 
 import {PICKER_PAGE_SIZE} from './pagination'
-import {teamKeys, teamsPageQuery, teamSearchQuery, createTeamMutationOptions, updateTeamMutationOptions, deleteTeamMutationOptions, addTeamMemberMutationOptions, removeTeamMemberMutationOptions, leaveTeamMutationOptions, toggleTeamMemberAdminMutationOptions} from './teams'
+import {teamKeys, teamsPageQuery, teamSearchQuery, createTeamMutationOptions, updateTeamMutationOptions, deleteTeamMutationOptions, addTeamMembersMutationOptions, removeTeamMemberMutationOptions, leaveTeamMutationOptions, toggleTeamMemberAdminMutationOptions} from './teams'
 
 function teamPage(items: Team[], page = 1, total = items.length) {
 	return {
@@ -132,12 +132,23 @@ describe('teams', () => {
 		expect(sdk.teamsRead).not.toHaveBeenCalled()
 	})
 
-	it('invalidates the parent after adding a member without inventing a user', async () => {
+	it('invalidates the parent after adding members without inventing users', async () => {
 		client.setQueryData(teamKeys.detail(1), {id: 1, members: []})
 		sdk.teamsMembersAdd.mockResolvedValue({data: {id: 99, username: 'sam'}})
-		await client.getMutationCache().build(client, addTeamMemberMutationOptions()).execute({teamId: 1, username: 'sam'})
+		await client.getMutationCache().build(client, addTeamMembersMutationOptions()).execute({teamId: 1, usernames: ['sam', 'kim']})
+		expect(sdk.teamsMembersAdd.mock.calls.map(([options]) => options.body.username)).toEqual(['sam', 'kim'])
 		expect(client.getQueryData<TeamReadBody>(teamKeys.detail(1))?.members).toEqual([])
 		expect(client.getQueryState(teamKeys.detail(1))?.isInvalidated).toBe(true)
+		expect(success).toHaveBeenCalledTimes(1)
+	})
+
+	it('stops adding members at the first failure and still refreshes the team', async () => {
+		client.setQueryData(teamKeys.detail(1), {id: 1, members: []})
+		sdk.teamsMembersAdd.mockResolvedValueOnce({data: {id: 99, username: 'sam'}}).mockRejectedValueOnce(new Error('denied'))
+		await expect(client.getMutationCache().build(client, addTeamMembersMutationOptions()).execute({teamId: 1, usernames: ['sam', 'kim', 'lou']})).rejects.toThrow('denied')
+		expect(sdk.teamsMembersAdd).toHaveBeenCalledTimes(2)
+		expect(client.getQueryState(teamKeys.detail(1))?.isInvalidated).toBe(true)
+		expect(success).not.toHaveBeenCalled()
 	})
 
 	it('keeps failed membership changes out of the cache', async () => {

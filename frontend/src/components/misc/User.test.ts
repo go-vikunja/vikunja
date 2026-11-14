@@ -13,9 +13,9 @@ const i18n = createI18n({
 	messages: {en},
 })
 
-function mountUser(user: InstanceType<typeof User>['$props']['user']) {
+function mountUser(user: InstanceType<typeof User>['$props']['user'], showHandle = false) {
 	return mount(User, {
-		props: {user},
+		props: {user, showHandle},
 		global: {
 			plugins: [i18n],
 			directives: {tooltip: {}},
@@ -39,4 +39,12 @@ it('shows a plain bot badge without an owner', () => {
 
 it('shows no badge for humans', () => {
 	expect(mountUser({username: 'human'}).find('.bot-badge').exists()).toBe(false)
+})
+
+it('appends the username to tell apart people sharing a name', () => {
+	expect(mountUser({name: 'Thomas Müller', username: 'tmueller2'}, true).find('.handle').text()).toBe('@tmueller2')
+})
+
+it('does not repeat the username when it already is the display name', () => {
+	expect(mountUser({username: 'tmueller2'}, true).find('.handle').exists()).toBe(false)
 })

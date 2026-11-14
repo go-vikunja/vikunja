@@ -8,6 +8,7 @@
 		:multiple="true"
 		:search-results="foundUsers"
 		:show-empty="true"
+		:no-results-message="$t('user.search.noResults')"
 		label="name"
 		:select-placeholder="$t('task.assignee.selectPlaceholder')"
 		:autocomplete-enabled="false"
@@ -26,7 +27,7 @@
 		<template #searchResult="{option: user}">
 			<User
 				:avatar-size="24"
-				:show-username="true"
+				show-handle
 				:user="user"
 			/>
 		</template>

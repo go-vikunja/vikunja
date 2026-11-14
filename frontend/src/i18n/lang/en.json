@@ -60,6 +60,10 @@
     "text": "Please check your network connection and try again."
   },
   "user": {
+    "search": {
+      "noResults": "No users found.",
+      "noResultsExact": "No users found. Enter the exact username. A name or full email address only finds people who allowed that in their settings."
+    },
     "auth": {
       "username": "Username",
       "usernameEmail": "Username Or Email Address",
@@ -529,6 +533,7 @@
         "shared": "Shared with these {type}",
         "you": "You",
         "notShared": "Not shared with any {type} yet.",
+        "noTeamsFound": "No teams found.",
         "remove": "Remove this {type}",
         "sharable": "project",
         "removeHeader": "Remove a {type} from the {sharable}",
@@ -1443,15 +1448,15 @@
     "edit": {
       "title": "Edit Team \"{team}\"",
       "members": "Team Members",
-      "search": "Type to search a user…",
+      "search": "Type to search for users…",
       "addUser": "Add to team",
       "makeMember": "Make Member",
       "makeAdmin": "Make Admin",
       "success": "The team was successfully updated.",
-      "userAddedSuccess": "The team member was successfully added.",
+      "userAddedSuccess": "The team member was successfully added. | {count} team members were successfully added.",
       "madeMember": "The team member was successfully made member.",
       "madeAdmin": "The team member was successfully made admin.",
-      "mustSelectUser": "Please select a user.",
+      "mustSelectUser": "Please select at least one user.",
       "delete": {
         "header": "Delete the team",
         "text1": "Are you sure you want to delete this team and all of its members?",

@@ -32,7 +32,12 @@
 								:key="`item${key}`"
 								class="tag mis-2 mbs-2"
 							>
-								{{ label !== '' ? item[label] : item }}
+								<slot
+									name="tagLabel"
+									:item="item"
+								>
+									{{ label !== '' ? item[label] : item }}
+								</slot>
 								<BaseButton
 									v-if="!disabled"
 									class="delete is-small"
@@ -161,6 +166,15 @@
 				</div>
 
 				<div
+					v-if="noResultsVisible"
+					class="search-result-hint"
+					role="option"
+					aria-disabled="true"
+				>
+					{{ noResultsMessage }}
+				</div>
+
+				<div
 					v-if="creationHintVisible"
 					class="search-result-hint"
 					role="option"
@@ -220,6 +234,8 @@ const props = withDefaults(defineProps<{
 	confirmCreateOnEnter?: boolean
 	/** When set and `creatable` is false, shows a non-interactive hint row explaining why a non-matching query can't be added. */
 	creationDisabledMessage?: string
+	/** When set, shown in place of the results once a search returned nothing. */
+	noResultsMessage?: string
 	/** The text shown next to the new value option. */
 	createPlaceholder?: string
 	/** The text shown next to an option. */
@@ -250,6 +266,7 @@ const props = withDefaults(defineProps<{
 	creatable: false,
 	confirmCreateOnEnter: false,
 	creationDisabledMessage: '',
+	noResultsMessage: '',
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
 	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
 	multiple: false,
@@ -288,6 +305,7 @@ const emit = defineEmits<{
 defineSlots<{
 	items?(props: {items: T[], remove: (item: T) => void}): unknown
 	tag?(props: {item: T}): unknown
+	tagLabel?(props: {item: T}): unknown
 	searchResult?(props: {option: T}): unknown
 	createOption?(props: {query: string}): unknown
 }>()
@@ -310,6 +328,8 @@ const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const localLoading = ref(false)
 const showLoading = useDelayedLoading(() => props.loading)
 const showSearchResults = ref(false)
+// A preset or just-typed query has no results yet, which is not the same as a search finding none.
+const searchedQuery = ref<string | null>(null)
 
 // Split by `multiple` so the multiple value can never hold a single item or the query text.
 const selectedItems = ref([]) as Ref<T[]>
@@ -344,7 +364,8 @@ const searchResultsVisible = computed(() => {
 	return showSearchResults.value && (
 		(filteredSearchResults.value.length > 0) ||
 		(props.creatable && query.value !== '') ||
-		creationHintVisible.value
+		creationHintVisible.value ||
+		noResultsVisible.value
 	)
 })
 
@@ -408,6 +429,15 @@ const creatableAvailable = computed(() => props.creatable && query.value !== '' 
 // Shown in place of the create option when creation is disabled and the query matches nothing, so the field doesn't look dead.
 const creationHintVisible = computed(() => props.creationDisabledMessage !== '' && !props.creatable && query.value !== '' && !queryHasExactMatch.value)
 
+const noResultsVisible = computed(() => props.noResultsMessage !== ''
+	&& query.value !== ''
+	&& searchedQuery.value === query.value
+	&& filteredSearchResults.value.length === 0
+	&& !props.creatable
+	&& !creationHintVisible.value
+	&& !props.loading
+	&& !localLoading.value)
+
 const moreResultsHintVisible = computed(() => searchResults.value.length > 0
 	&& props.totalResults !== undefined
 	&& props.totalResults > searchResults.value.length)
@@ -455,6 +485,7 @@ function search(e?: KeyboardEvent) {
 
 	searchTimeout.value = setTimeout(() => {
 		emit('search', query.value)
+		searchedQuery.value = query.value
 		setTimeout(() => {
 			localLoading.value = false
 		}, 100) // The duration of the loading timeout of the services
