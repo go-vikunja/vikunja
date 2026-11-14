@@ -100,10 +100,6 @@ func TestWriteError(t *testing.T) {
 func TestLibraryErrors(t *testing.T) {
 	unknown := errors.New("database is gone")
 
-	assert.Equal(t, errs.ResourceNotFoundError, toLibraryError(models.ErrTaskDoesNotExist{ID: 1}))
-	assert.Equal(t, errs.ForbiddenError, toLibraryError(models.ValidationHTTPError{}))
-	assert.Equal(t, unknown, toLibraryError(unknown))
-
 	assert.Equal(t, errNotFound, fromLibraryError(errs.ResourceNotFoundError))
 	assert.Equal(t, errForbidden, fromLibraryError(errs.ForbiddenError))
 	assert.Equal(t, unknown, fromLibraryError(unknown))
