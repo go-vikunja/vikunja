@@ -19,7 +19,6 @@ package caldav
 import (
 	"errors"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -66,144 +65,6 @@ func principalPathForUser(username string) string {
 	return PrincipalBasePath + `/` + username + `/`
 }
 
-// GetResourcesByList fetches a list of resources from a slice of paths
-func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (resources []data.Resource, err error) {
-
-	// Path format: /dav/projects/{projectID}/{uid}.ics.
-	// Remember the href's project ID per uid so the consistency check below
-	// can drop tasks requested via the wrong project (GHSA-48ch-p4gq-x46x).
-	var uids []string
-	uidURLProjects := map[string]int64{}
-	for _, path := range rpaths {
-		parts := strings.Split(path, "/")
-		if len(parts) < 5 {
-			continue
-		}
-		// Skip malformed hrefs: without these guards an empty/non-numeric
-		// project would bypass the consistency check, and an empty UID
-		// would query for tasks with empty/NULL uids.
-		if !strings.HasSuffix(parts[4], ".ics") {
-			continue
-		}
-		// echo does not decode path params either, so hrefs travel percent-encoded end to end.
-		uid, uerr := url.PathUnescape(strings.TrimSuffix(parts[4], ".ics"))
-		if uerr != nil || uid == "" {
-			continue
-		}
-		urlProjectID, perr := strconv.ParseInt(parts[3], 10, 64)
-		if perr != nil {
-			continue
-		}
-		uids = append(uids, uid)
-		uidURLProjects[uid] = urlProjectID
-	}
-
-	if len(uids) == 0 {
-		return
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	// GetTasksByUIDs...
-	// Parse these into resources...
-	tasks, err := models.GetTasksByUIDs(s, uids, vcls.user)
-	if err != nil {
-		_ = s.Rollback()
-		return
-	}
-
-	// One membership lookup for the whole request: a multiget REPORT can name thousands
-	// of hrefs and TaskCollection.ReadAll is expensive.
-	var candidates []int64
-	for _, t := range tasks {
-		urlProjectID, ok := uidURLProjects[t.UID]
-		if !ok || urlProjectID == t.ProjectID {
-			continue
-		}
-		if !models.IsPseudoProjectID(urlProjectID) || vcls.project == nil || urlProjectID != vcls.project.ID {
-			continue
-		}
-		candidates = append(candidates, t.ID)
-	}
-
-	members, err := vcls.collection().containsAll(s, vcls.user, candidates)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, err
-	}
-
-	emitted := make(map[string]bool, len(tasks))
-	for _, t := range tasks {
-		urlProjectID, ok := uidURLProjects[t.UID]
-		if !ok {
-			continue
-		}
-		// Closes the URL-path leak for calendar-multiget REPORTs (GHSA-48ch-p4gq-x46x).
-		if urlProjectID != t.ProjectID {
-			if !models.IsPseudoProjectID(urlProjectID) || vcls.project == nil || urlProjectID != vcls.project.ID {
-				continue
-			}
-			if !members[t.ID] {
-				continue
-			}
-		}
-		// tasks.uid has no unique index, so two same-UID tasks would map to one href.
-		href := taskURL(urlProjectID, t)
-		if emitted[href] {
-			continue
-		}
-		emitted[href] = true
-		rr := VikunjaProjectResourceAdapter{
-			task: t,
-		}
-		addTaskResource(urlProjectID, t, &rr, &resources)
-	}
-
-	err = s.Commit()
-	if err != nil {
-		return nil, err
-	}
-
-	return
-}
-
-// GetResourcesByFilters fetches a project of resources with a filter
-func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(rpath string, filter *data.ResourceFilter) ([]data.Resource, error) {
-
-	// If we already have a project saved, that means the user is making a REPORT request to find out if
-	// anything changed, in that case we need to return all tasks.
-	// That project is coming from a previous "getProjectRessource" in L177
-	if vcls.project.Tasks != nil {
-		var resources []data.Resource
-		for i := range vcls.project.Tasks {
-			rr := VikunjaProjectResourceAdapter{
-				project:      vcls.project,
-				task:         &vcls.project.Tasks[i].Task,
-				isCollection: false,
-			}
-			r := data.NewResource(taskURL(vcls.project.ID, &vcls.project.Tasks[i].Task), &rr)
-			r.Name = vcls.project.Tasks[i].Title
-			if !matchesTodoFilter(filter, &r) {
-				continue
-			}
-			resources = append(resources, r)
-		}
-		return resources, nil
-	}
-
-	// This is used to get all
-	rr, err := vcls.getProjectRessource(false)
-	if err != nil {
-		return nil, err
-	}
-	r := data.NewResource(vcls.hrefFor(rpath), &rr)
-	r.Name = vcls.project.Title
-	return []data.Resource{r}, nil
-	// For now, filtering is disabled.
-	// return vcls.GetResources(rpath, false)
-}
-
 // caldav-go only evaluates time-range on VEVENTs, so a VTODO query with one would match
 // nothing. Those keep getting every task, the client narrows them down itself.
 func matchesTodoFilter(filter *data.ResourceFilter, r *data.Resource) bool {
@@ -232,66 +93,28 @@ func encodeURIPathSegment(segment string) string {
 	return strings.ReplaceAll(url.PathEscape(segment), "&", "%26")
 }
 
-// caldav-go builds rpath from the decoded request path, so echoing it back for a
-// task resource would undo the encoding taskURL applied.
-func (vcls *VikunjaCaldavProjectStorage) hrefFor(rpath string) string {
-	if strings.HasSuffix(rpath, ".ics") && vcls.project != nil && vcls.task != nil && vcls.task.UID != "" {
-		return taskURL(vcls.project.ID, vcls.task)
-	}
-	return rpath
-}
-
-// GetResource fetches a single resource
-func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resource, bool, error) {
-
-	// If the task is not nil, we need to get the task and not the project
-	if vcls.task != nil {
-		s := db.NewSession()
-		defer s.Close()
-
-		task, err := findTask(s, vcls.user, vcls.collection(), vcls.task.UID)
-		if err != nil {
-			_ = s.Rollback()
-			return nil, false, err
-		}
-		if task == nil {
-			_ = s.Rollback()
-			return nil, false, errs.ResourceNotFoundError
-		}
-
-		if err := s.Commit(); err != nil {
-			return nil, false, err
-		}
-
-		vcls.task = task
-
-		rr := VikunjaProjectResourceAdapter{
-			project: vcls.project,
-			task:    vcls.task,
-		}
-		r := data.NewResource(vcls.hrefFor(rpath), &rr)
-		return &r, true, nil
-	}
-
-	// Otherwise get the project with all tasks
-	rr, err := vcls.getProjectRessource(true)
-	if err != nil {
-		return nil, false, err
-	}
-	r := data.NewResource(rpath, &rr)
-	return &r, true, nil
-}
-
-// GetShallowResource gets a resource without children
-// Since Vikunja has no children, this is the same as GetResource
-func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data.Resource, bool, error) {
-	// Since Vikunja has no children, this just returns the same as GetResource()
-	// FIXME: This should just get the project with no tasks whatsoever, nothing else
-	return vcls.GetResource(rpath)
-}
-
-// Only REPORT still reaches caldav-go.
+// caldav-go only answers the methods nobody handles, with 501, and never asks the storage.
 var errNotThroughLibrary = errors.New("caldav: not served through caldav-go")
+
+// GetResourcesByList only satisfies data.Storage.
+func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList([]string) ([]data.Resource, error) {
+	return nil, errNotThroughLibrary
+}
+
+// GetResourcesByFilters only satisfies data.Storage.
+func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(string, *data.ResourceFilter) ([]data.Resource, error) {
+	return nil, errNotThroughLibrary
+}
+
+// GetResource only satisfies data.Storage.
+func (vcls *VikunjaCaldavProjectStorage) GetResource(string) (*data.Resource, bool, error) {
+	return nil, false, errNotThroughLibrary
+}
+
+// GetShallowResource only satisfies data.Storage.
+func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(string) (*data.Resource, bool, error) {
+	return nil, false, errNotThroughLibrary
+}
 
 // CreateResource only satisfies data.Storage.
 func (vcls *VikunjaCaldavProjectStorage) CreateResource(string, string) (*data.Resource, error) {
@@ -408,10 +231,4 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 	}
 
 	return
-}
-
-func addTaskResource(collectionProjectID int64, task *models.Task, rr *VikunjaProjectResourceAdapter, resources *[]data.Resource) {
-	taskResourceInstance := data.NewResource(taskURL(collectionProjectID, task), rr)
-	taskResourceInstance.Name = task.Title
-	*resources = append(*resources, taskResourceInstance)
 }

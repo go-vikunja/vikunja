@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -77,32 +78,6 @@ func parseSyncToken(token string) (projectID int64, ts time.Time, purgeGeneratio
 	return pid, time.Unix(unixSec, 0).UTC(), purgeGeneration, true
 }
 
-// extractSyncTokenFromBody pulls the <D:sync-token> text content from the
-// raw REPORT body. Returns "" if not present.
-func extractSyncTokenFromBody(body string) string {
-	const openTag = "<sync-token>"
-	const openTagNS = ":sync-token>"
-	lower := strings.ToLower(body)
-
-	for _, open := range []string{openTag, openTagNS} {
-		startIdx := strings.Index(lower, strings.ToLower(open))
-		if startIdx < 0 {
-			continue
-		}
-		valueStart := startIdx + len(open)
-		endIdx := strings.Index(body[valueStart:], "<")
-		if endIdx < 0 {
-			continue
-		}
-		return strings.TrimSpace(body[valueStart : valueStart+endIdx])
-	}
-	return ""
-}
-
-func requestsCalendarData(body string) bool {
-	return strings.Contains(body, "calendar-data")
-}
-
 // RFC 6578 §3.6: tells the client to full-resync with an empty token.
 func writeForbiddenValidSyncToken(c *echo.Context) error {
 	return writeDAVError(c, http.StatusForbidden, davName("valid-sync-token"))
@@ -114,9 +89,10 @@ func writeForbiddenValidSyncToken(c *echo.Context) error {
 //   - Valid sync-token  → return only tasks changed/created since the token timestamp
 //     plus 404 entries for tasks deleted since then
 //   - Invalid/unknown token → 403 + <D:valid-sync-token/> so client resets
-func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCaldavProjectStorage) error {
-	rawToken := extractSyncTokenFromBody(body)
-	includeCalendarData := requestsCalendarData(body)
+func handleSyncCollectionReport(c *echo.Context, req syncCollectionRequest, storage *VikunjaCaldavProjectStorage) error {
+	rawToken := req.token
+	named, _ := req.props.(propRequest)
+	includeCalendarData := slices.Contains(named.names, propCalendarData)
 
 	projectID := storage.project.ID
 
