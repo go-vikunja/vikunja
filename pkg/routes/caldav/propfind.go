@@ -36,8 +36,6 @@ import (
 // Same cap caldav-go had.
 const maxPropfindProperties = 200
 
-var errTooManyRequestedProps = fmt.Errorf("%w: more than %d properties", errMalformedBody, maxPropfindProperties)
-
 // propfindRequest is what a PROPFIND body asks for (RFC 4918 §9.1).
 type propfindRequest interface{ isPropfindRequest() }
 
@@ -133,7 +131,7 @@ func (p *propCollector) visit(path []xml.Name, t xml.StartElement) error {
 		return nil
 	}
 	if len(p.seen) == maxPropfindProperties {
-		return errTooManyRequestedProps
+		return fmt.Errorf("%w: more than %d properties", errMalformedBody, maxPropfindProperties)
 	}
 	if p.seen == nil {
 		p.seen = map[xml.Name]struct{}{}

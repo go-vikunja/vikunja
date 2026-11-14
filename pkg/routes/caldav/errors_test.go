@@ -46,6 +46,7 @@ func TestErrorStatus(t *testing.T) {
 		{"task does not exist", models.ErrTaskDoesNotExist{ID: 1}, http.StatusNotFound},
 		{"forbidden", errForbidden, http.StatusForbidden},
 		{"archived project", models.ErrProjectIsArchived{ProjectID: 1}, http.StatusForbidden},
+		{"failed precondition", fmt.Errorf("report: %w", errUnsupportedReport), http.StatusForbidden},
 		{"validation", models.ValidationHTTPError{}, http.StatusForbidden},
 		{"too many table cells", fmt.Errorf("description: %w", richtext.ErrTooManyTableCells), http.StatusForbidden},
 		{"body too large", errBodyTooLarge, http.StatusRequestEntityTooLarge},
@@ -84,6 +85,14 @@ func TestWriteError(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 		assert.Empty(t, rec.Body.String())
+	})
+
+	t.Run("failed precondition answers with its error body", func(t *testing.T) {
+		rec, err := run("REPORT", errUnsupportedReport)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusForbidden, rec.Code)
+		assert.Contains(t, rec.Body.String(), "<D:error")
+		assert.Contains(t, rec.Body.String(), "<D:supported-report/>")
 	})
 
 	t.Run("unknown error goes to the error handler without its message", func(t *testing.T) {

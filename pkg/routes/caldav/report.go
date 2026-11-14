@@ -18,7 +18,6 @@ package caldav
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -45,7 +44,7 @@ const (
 	maxReportDepth    = 16
 )
 
-var errUnsupportedReport = errors.New("caldav: unsupported report")
+var errUnsupportedReport = preconditionError{precondition: davName("supported-report"), reason: "unsupported report"}
 
 // reportRequest is what a REPORT body asks for.
 type reportRequest interface{ isReportRequest() }
@@ -180,10 +179,6 @@ func serveReport(c *echo.Context, u *user.User, t target) error {
 	logRequest(c.Request().Header, body)
 
 	req, err := parseReport(string(body))
-	if errors.Is(err, errUnsupportedReport) || (errors.Is(err, errMalformedBody) && !errors.Is(err, errTooManyRequestedProps)) {
-		// Pinned: caldav-go answered any report it did not know, or could not read, with an empty 412.
-		return c.NoContent(http.StatusPreconditionFailed)
-	}
 	if err != nil {
 		return writeError(c, err)
 	}
@@ -206,7 +201,7 @@ func authorizeReport(c *echo.Context, s *xorm.Session, u *user.User, t target) (
 			case calendarQueryRequest:
 				props = req.props
 			default:
-				return c.NoContent(http.StatusPreconditionFailed)
+				return writeError(c, errUnsupportedReport)
 			}
 			named, _ := props.(propRequest)
 			return writeMultistatus(c, multistatus{
@@ -267,7 +262,7 @@ func authorizeReport(c *echo.Context, s *xorm.Session, u *user.User, t target) (
 			case calendarQueryRequest:
 				props = req.props
 			default:
-				return c.NoContent(http.StatusPreconditionFailed)
+				return writeError(c, errUnsupportedReport)
 			}
 			if err := s.Commit(); err != nil {
 				return writeError(c, err)
