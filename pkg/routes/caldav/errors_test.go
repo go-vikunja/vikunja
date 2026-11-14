@@ -105,11 +105,3 @@ func TestWriteError(t *testing.T) {
 		assert.ErrorIs(t, err, cause)
 	})
 }
-
-func TestLibraryErrors(t *testing.T) {
-	unknown := errors.New("database is gone")
-
-	assert.Equal(t, errNotFound, fromLibraryError(errs.ResourceNotFoundError))
-	assert.Equal(t, errForbidden, fromLibraryError(errs.ForbiddenError))
-	assert.Equal(t, unknown, fromLibraryError(unknown))
-}

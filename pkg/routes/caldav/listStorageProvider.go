@@ -20,7 +20,6 @@ import (
 	"errors"
 	"net/url"
 	"strings"
-	"time"
 
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
@@ -49,7 +48,7 @@ type VikunjaCaldavProjectStorage struct {
 	user *user2.User
 }
 
-// GetResources only satisfies data.Storage: PROPFIND is served in-house.
+// GetResources only satisfies data.Storage.
 func (vcls *VikunjaCaldavProjectStorage) GetResources(string, bool) ([]data.Resource, error) {
 	return nil, errNotThroughLibrary
 }
@@ -104,71 +103,4 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(string, string) (*data.R
 // DeleteResource only satisfies data.Storage.
 func (vcls *VikunjaCaldavProjectStorage) DeleteResource(string) error {
 	return errNotThroughLibrary
-}
-
-// VikunjaProjectResourceAdapter holds the actual resource
-type VikunjaProjectResourceAdapter struct {
-	project      *models.ProjectWithTasksAndBuckets
-	projectTasks []*models.TaskWithComments
-	task         *models.Task
-
-	isCollection bool
-
-	// Rendered once per request: a multistatus response asks for it per requested property.
-	content *string
-}
-
-// IsCollection checks if the resoure in the adapter is a collection
-func (vlra *VikunjaProjectResourceAdapter) IsCollection() bool {
-	// If the discovery does not work, setting this to true makes it work again.
-	return vlra.isCollection
-}
-
-// CalculateEtag returns the etag of a resource
-func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
-
-	if vlra.task != nil {
-		return taskETag(vlra.task)
-	}
-	if vlra.project == nil {
-		return ""
-	}
-	return collectionETag(vlra.project, vlra.projectTasks)
-}
-
-// GetContent returns the content string of a resource (a task in our case)
-func (vlra *VikunjaProjectResourceAdapter) GetContent() string {
-	if vlra.content == nil {
-		content := vlra.renderContent()
-		vlra.content = &content
-	}
-	return *vlra.content
-}
-
-func (vlra *VikunjaProjectResourceAdapter) renderContent() string {
-	if vlra.project != nil && vlra.projectTasks != nil {
-		return renderCollection(vlra.project, vlra.projectTasks)
-	}
-	if vlra.task != nil {
-		return renderTask(vlra.task)
-	}
-	return ""
-}
-
-// GetContentSize is the size of a caldav content
-func (vlra *VikunjaProjectResourceAdapter) GetContentSize() int64 {
-	return int64(len(vlra.GetContent()))
-}
-
-// GetModTime returns when the resource was last modified
-func (vlra *VikunjaProjectResourceAdapter) GetModTime() time.Time {
-	if vlra.task != nil {
-		return vlra.task.Updated
-	}
-
-	if vlra.project != nil {
-		return vlra.project.Updated
-	}
-
-	return time.Time{}
 }
