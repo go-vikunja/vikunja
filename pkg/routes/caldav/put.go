@@ -34,14 +34,8 @@ import (
 
 func servePut(c *echo.Context, u *user.User, t target) error {
 	switch t := t.(type) {
-	case entryTarget, principalTarget:
-		// Pinned: caldav-go finds an empty resource here, then refuses to update it.
-		if !preconditionsOf(c.Request().Header).allowUpdate("") {
-			return c.NoContent(http.StatusPreconditionFailed)
-		}
-		return writeError(c, errForbidden)
-	case homeSetTarget:
-		return homeSetMethodNotAllowed(c)
+	case entryTarget, principalTarget, homeSetTarget:
+		return methodNotAllowed(c, u, t)
 	case collectionTarget:
 		return putOnCollection(c, u, t)
 	case taskTarget:
