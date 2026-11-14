@@ -197,13 +197,19 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 			return loadCollectionResources(s, u, readable, collectionHref(t.project.ID), deep)
 		}, homeSet, nil
 	case taskTarget:
-		readable, err := t.collection.checkRead(s, u)
-		if err != nil {
+		if _, err := t.collection.checkRead(s, u); err != nil {
 			return nil, propContext{}, err
 		}
-		// Pinned: a task URL answers as its collection, whether the task exists or not.
-		return func(s *xorm.Session, deep bool) ([]davResource, error) {
-			return loadCollectionResources(s, u, readable, taskHref(t.collection.project.ID, t.uid), deep)
+		// A task has no members, so Depth: 1 answers like Depth: 0.
+		return func(s *xorm.Session, _ bool) ([]davResource, error) {
+			task, err := findTask(s, u, t.collection, t.uid)
+			if err != nil {
+				return nil, err
+			}
+			if task == nil {
+				return nil, errNotFound
+			}
+			return []davResource{&taskResource{href: taskURL(t.collection.project.ID, task), task: task}}, nil
 		}, principal, nil
 	}
 	return nil, propContext{}, fmt.Errorf("unhandled caldav target %T", t)
