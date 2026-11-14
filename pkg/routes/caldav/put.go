@@ -81,7 +81,6 @@ func putOnCollection(c *echo.Context, u *user.User, collection collectionTarget)
 type putAddressing interface {
 	parse(body string) (*models.Task, caldav2.ParsedVTODOProperties, error)
 	taskUID(parsed *models.Task) string
-	etag(stored, parsed *models.Task) string
 }
 
 type taskPut struct{ uid string }
@@ -91,8 +90,6 @@ func (taskPut) parse(body string) (*models.Task, caldav2.ParsedVTODOProperties, 
 }
 
 func (p taskPut) taskUID(*models.Task) string { return p.uid }
-
-func (taskPut) etag(stored, _ *models.Task) string { return taskETag(stored) }
 
 type collectionPut struct{}
 
@@ -106,16 +103,6 @@ func (collectionPut) parse(body string) (*models.Task, caldav2.ParsedVTODOProper
 }
 
 func (collectionPut) taskUID(parsed *models.Task) string { return parsed.UID }
-
-// Pinned: caldav-go compared If-Match against an ETag carrying the body's DTSTAMP.
-func (collectionPut) etag(stored, parsed *models.Task) string {
-	if parsed.Updated.Unix() > 0 {
-		withDTStamp := *stored
-		withDTStamp.Updated = parsed.Updated
-		return taskETag(&withDTStamp)
-	}
-	return taskETag(stored)
-}
 
 func put(c *echo.Context, u *user.User, collection collectionTarget, body string, addressing putAddressing) error {
 	conditions := preconditionsOf(c.Request().Header)
@@ -151,7 +138,7 @@ func put(c *echo.Context, u *user.User, collection collectionTarget, body string
 			return nil
 		}
 
-		if !conditions.allowUpdate(addressing.etag(stored, vTask)) {
+		if !conditions.allowUpdate(taskETag(stored)) {
 			return nil
 		}
 		updated, err := updateTask(s, u, readable, stored, vTask, props)
