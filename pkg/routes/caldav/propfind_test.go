@@ -20,6 +20,7 @@ import (
 	"encoding/xml"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -104,4 +105,12 @@ func TestPropfindMalformedBody(t *testing.T) {
 
 	rec, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", projectPath(36), "this is not xml", projectParams(36))
 	requireHTTPStatus(t, http.StatusBadRequest, rec, err)
+}
+
+func TestPropfindBodyTooLarge(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	body := propfindWithProps(`<D:getetag/>`) + strings.Repeat(" ", maxPropRequestBodySize)
+	rec, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", projectPath(36), body, projectParams(36))
+	requireHTTPStatus(t, http.StatusRequestEntityTooLarge, rec, err)
 }

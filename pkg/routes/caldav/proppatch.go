@@ -29,7 +29,8 @@ import (
 )
 
 const (
-	maxPropPatchBodySize       = 64 * 1024
+	// Bounds PROPFIND bodies too.
+	maxPropRequestBodySize     = 64 * 1024
 	maxPropPatchProperties     = 100
 	maxPropPatchNamespaceBytes = 256
 )
@@ -83,7 +84,7 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 // sabre/dav uses for protected properties. Clients treat this as best-effort
 // and keep syncing instead of aborting on the 501 caldav-go falls back to.
 func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User) error {
-	if len(body) > maxPropPatchBodySize {
+	if len(body) > maxPropRequestBodySize {
 		return writeError(c, errBodyTooLarge)
 	}
 
