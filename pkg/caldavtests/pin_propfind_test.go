@@ -167,9 +167,7 @@ func TestPinPropfindMatrix(t *testing.T) {
 		homeChildren = append(homeChildren, expectCalendar(href, title, "/dav/projects/"))
 	}
 
-	// A task URL answers with the whole project collection under the task's href, and
-	// Depth: 1 then lists every task of the project, repeating the requested href.
-	taskURLAsCollection := expectCalendar(pinTaskHref, "Project 36 for Caldav tests", user15Principal)
+	task := expectTask(pinTaskHref, "Title Caldav Test", user15Principal)
 
 	kinds := []resourceKind{
 		{
@@ -209,8 +207,9 @@ func TestPinPropfindMatrix(t *testing.T) {
 		{
 			name:    "task resource",
 			path:    pinTaskHref,
-			shallow: []expectedDAVResponse{taskURLAsCollection},
-			deep:    append([]expectedDAVResponse{taskURLAsCollection}, project36Tasks(user15Principal)...),
+			shallow: []expectedDAVResponse{task},
+			// A task has no members.
+			deep: []expectedDAVResponse{task},
 		},
 	}
 
@@ -250,7 +249,7 @@ func TestPinPropfindMatrix(t *testing.T) {
 	}
 }
 
-func TestPinPropfindTaskURLReportsProjectETag(t *testing.T) {
+func TestPinPropfindTaskURLReportsTaskETag(t *testing.T) {
 	e := setupTestEnv(t)
 
 	etagOf := func(path string) string {
@@ -263,25 +262,21 @@ func TestPinPropfindTaskURLReportsProjectETag(t *testing.T) {
 		return etag
 	}
 
-	projectETag := etagOf("/dav/projects/36")
-	assert.Equal(t, projectETag, etagOf(pinTaskHref))
+	taskETag := etagOf(pinTaskHref)
+	assert.NotEqual(t, etagOf("/dav/projects/36"), taskETag)
 
 	get := caldavGET(t, e, pinTaskHref)
 	require.Equal(t, 200, get.Code)
-	assert.NotEqual(t, projectETag, get.Header().Get("ETag"), "GET answers with the task's own ETag")
+	assert.Equal(t, taskETag, get.Header().Get("ETag"))
 }
 
-// The task URL is not looked up at all: a UID that does not exist still answers with the project.
 func TestPinPropfindMissingTaskURL(t *testing.T) {
 	e := setupTestEnv(t)
-	const href = "/dav/projects/36/does-not-exist.ics"
 
-	rec := caldavPROPFIND(t, e, href, "0", PropfindDiscoveryProps)
-
-	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
-	assertDAVResponses(t, rec, []expectedDAVResponse{
-		expectCalendar(href, "Project 36 for Caldav tests", user15Principal),
-	})
+	for _, depth := range []string{"0", "1"} {
+		rec := caldavPROPFIND(t, e, "/dav/projects/36/does-not-exist.ics", depth, PropfindDiscoveryProps)
+		assert.Equal(t, 404, rec.Code, "Depth %s. Body:\n%s", depth, rec.Body.String())
+	}
 }
 
 // RFC 4918 treats an empty PROPFIND body as allprop; today it yields bare hrefs.
