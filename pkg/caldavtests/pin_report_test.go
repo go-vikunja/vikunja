@@ -171,14 +171,12 @@ const (
 )
 
 func TestPinReportTargets(t *testing.T) {
-	// Everything a resource without calendar data answers to a query or multiget.
-	noData := func(href string) []expectedDAVResponse {
-		return []expectedDAVResponse{{href: href, notFound: []xml.Name{davName("getetag"), calName("calendar-data")}}}
-	}
 	task := []expectedDAVResponse{{
 		href: pinTaskHref,
 		ok:   map[xml.Name]string{davName("getetag"): anyValue, calName("calendar-data"): anyValue},
 	}}
+	// They hold no calendar data, so they take no REPORT at all.
+	const noReports = http.StatusMethodNotAllowed
 
 	tests := []struct {
 		name string
@@ -187,26 +185,28 @@ func TestPinReportTargets(t *testing.T) {
 		query, multiget             []expectedDAVResponse
 		queryStatus, multigetStatus int
 		syncStatus, unknownStatus   int
+		// The Allow header of a 405.
+		allow string
 	}{
 		{
-			name: "entry", path: "/dav/",
-			query: noData("/dav"), multiget: noData("/dav"), queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
+			name: "entry", path: "/dav/", allow: allowEntry,
+			queryStatus: noReports, multigetStatus: noReports,
+			syncStatus: noReports, unknownStatus: noReports,
 		},
 		{
-			name: "principal", path: user15Principal,
-			query: noData("/dav/principals/user15"), multiget: noData("/dav/principals/user15"), queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
+			name: "principal", path: user15Principal, allow: allowEntry,
+			queryStatus: noReports, multigetStatus: noReports,
+			syncStatus: noReports, unknownStatus: noReports,
 		},
 		{
-			name: "well-known", path: "/.well-known/caldav",
-			query: noData("/.well-known/caldav"), multiget: noData("/.well-known/caldav"), queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
+			name: "well-known", path: "/.well-known/caldav", allow: allowEntry,
+			queryStatus: noReports, multigetStatus: noReports,
+			syncStatus: noReports, unknownStatus: noReports,
 		},
 		{
-			name: "home set", path: "/dav/projects",
-			queryStatus: http.StatusNotFound, multigetStatus: http.StatusNotFound,
-			syncStatus: http.StatusNotFound, unknownStatus: http.StatusNotFound,
+			name: "home set", path: "/dav/projects", allow: allowHomeSet,
+			queryStatus: noReports, multigetStatus: noReports,
+			syncStatus: noReports, unknownStatus: noReports,
 		},
 		{
 			// The filter and the hrefs are ignored, the task answers for itself.
@@ -232,6 +232,9 @@ func TestPinReportTargets(t *testing.T) {
 					return
 				}
 				require.Equal(t, status, rec.Code, "Body:\n%s", rec.Body.String())
+				if status == http.StatusMethodNotAllowed {
+					assert.Equal(t, tc.allow, rec.Header().Get("Allow"))
+				}
 				if want == nil {
 					return
 				}
@@ -256,7 +259,7 @@ func TestPinReportCalendarQueryWithoutFilter(t *testing.T) {
   <D:prop><D:getetag/></D:prop>
 </C:calendar-query>`)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code, "Body:\n%s", rec.Body.String())
+	assert.Equal(t, http.StatusBadRequest, rec.Code, "Body:\n%s", rec.Body.String())
 }
 
 // A collection without tasks answers a calendar-query with itself.
