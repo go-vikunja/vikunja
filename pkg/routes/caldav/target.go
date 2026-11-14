@@ -96,15 +96,10 @@ func resolveProjects(c *echo.Context, _ *user.User) (target, error) {
 }
 
 func resolveTask(c *echo.Context, _ *user.User) (target, error) {
-	// Pinned: /dav/projects//<uid>.ics routes here with an empty project param, and
-	// the storage then serves the task without checking which collection it is in.
-	project := &models.ProjectWithTasksAndBuckets{}
-	if param := c.Param("project"); param != "" {
-		var err error
-		project, err = loadCollection(param)
-		if err != nil {
-			return nil, err
-		}
+	// /dav/projects//<uid>.ics routes here too, with an empty project param.
+	project, err := loadCollection(c.Param("project"))
+	if err != nil {
+		return nil, err
 	}
 
 	// Whether c.Param("task") arrives decoded depends on router config and on which
@@ -112,7 +107,7 @@ func resolveTask(c *echo.Context, _ *user.User) (target, error) {
 	esc := c.Request().URL.EscapedPath()
 	seg := esc[strings.LastIndex(esc, "/")+1:]
 	uid, err := url.PathUnescape(strings.TrimSuffix(seg, ".ics"))
-	if err != nil {
+	if err != nil || uid == "" {
 		return nil, errNotFound
 	}
 
