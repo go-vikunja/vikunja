@@ -19,6 +19,7 @@ package caldav
 import (
 	"encoding/xml"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
@@ -147,4 +148,27 @@ func TestPropfindOwner(t *testing.T) {
 		body := ownerOf(t, TaskHandler, projectPath(36)+"uid-caldav-test.ics", taskParams(36, "uid-caldav-test"))
 		assert.Contains(t, body, "<D:owner>"+principalHref(caldavFilterUser.Username)+"</D:owner>")
 	})
+}
+
+func TestPropfindZeroLastModifiedIsNotFound(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	for name, call := range map[string]func() (*httptest.ResponseRecorder, error){
+		"entry": func() (*httptest.ResponseRecorder, error) {
+			return callCaldavHandler(t, EntryHandler, caldavFilterUser, "PROPFIND", "/dav/", propfindWithProps(`<D:getlastmodified/>`), nil)
+		},
+		"principal": func() (*httptest.ResponseRecorder, error) {
+			return callCaldavHandler(t, PrincipalHandler, caldavFilterUser, "PROPFIND", principalPathForUser(caldavFilterUser.Username), propfindWithProps(`<D:getlastmodified/>`), nil)
+		},
+		"home set": func() (*httptest.ResponseRecorder, error) {
+			return callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", ProjectBasePath, propfindWithProps(`<D:getlastmodified/>`), nil)
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			rec, err := call()
+			requireHTTPStatus(t, http.StatusMultiStatus, rec, err)
+			assert.NotContains(t, rec.Body.String(), "0001")
+			assert.Contains(t, rec.Body.String(), "<D:propstat><D:prop><D:getlastmodified/></D:prop><D:status>HTTP/1.1 404 Not Found</D:status></D:propstat>")
+		})
+	}
 }

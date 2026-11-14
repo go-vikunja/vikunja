@@ -122,8 +122,11 @@ func textIfSet(s string) (propValue, bool) {
 	return textValue(s), s != ""
 }
 
-// Pinned: caldav-go formats in the server's zone and labels it GMT, zero time included.
+// Pinned: caldav-go formats in the server's zone and labels it GMT.
 func modTime(t time.Time) (propValue, bool) {
+	if t.IsZero() {
+		return nil, false
+	}
 	return textValue(t.Format(http.TimeFormat)), true
 }
 
@@ -173,7 +176,6 @@ var entryProps = append(propTable[*entryResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*entryResource]},
 	{propSupportedComponents, always[*entryResource](supportedComponents)},
 	{propGetContentType, always[*entryResource](textValue(contentTypeCollection))},
-	{propGetLastModified, func(propContext, *entryResource) (propValue, bool) { return modTime(time.Time{}) }},
 }, slices.Concat(principalDiscovery[*entryResource](), selfReferencing[*entryResource]())...)
 
 func (r *entryResource) answer(ctx propContext, req propfindRequest) msResponse {
@@ -191,7 +193,6 @@ var principalProps = append(propTable[*principalResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*principalResource]},
 	{propSupportedComponents, always[*principalResource](supportedComponents)},
 	{propGetContentType, always[*principalResource](textValue(contentTypeCollection))},
-	{propGetLastModified, func(propContext, *principalResource) (propValue, bool) { return modTime(time.Time{}) }},
 }, slices.Concat(principalDiscovery[*principalResource](), selfReferencing[*principalResource]())...)
 
 func (r *principalResource) answer(ctx propContext, req propfindRequest) msResponse {
@@ -209,7 +210,6 @@ var homeSetProps = append(propTable[*homeSetResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*homeSetResource]},
 	{propSupportedComponents, always[*homeSetResource](supportedComponents)},
 	{propGetContentType, always[*homeSetResource](textValue(contentTypeCollection))},
-	{propGetLastModified, func(propContext, *homeSetResource) (propValue, bool) { return modTime(time.Time{}) }},
 }, selfReferencing[*homeSetResource]()...)
 
 func (r *homeSetResource) answer(ctx propContext, req propfindRequest) msResponse {
