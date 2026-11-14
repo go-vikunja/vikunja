@@ -37,18 +37,38 @@ func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 }
 
 // EntryHandler serves /dav/.
-func EntryHandler(c *echo.Context) error { return handle(c, resolveEntry) }
+func EntryHandler(c *echo.Context) error { return handle(c, resolveEntry, serveMethod) }
 
 // PrincipalHandler serves /dav/principals/<user>/ and /.well-known/caldav.
-func PrincipalHandler(c *echo.Context) error { return handle(c, resolvePrincipal) }
+func PrincipalHandler(c *echo.Context) error { return handle(c, resolvePrincipal, serveMethod) }
 
 // ProjectHandler serves the home set /dav/projects and the collections below it.
-func ProjectHandler(c *echo.Context) error { return handle(c, resolveProjects) }
+func ProjectHandler(c *echo.Context) error { return handle(c, resolveProjects, serveMethod) }
 
 // TaskHandler serves a single task below a collection.
-func TaskHandler(c *echo.Context) error { return handle(c, resolveTask) }
+func TaskHandler(c *echo.Context) error { return handle(c, resolveTask, serveMethod) }
 
-func handle(c *echo.Context, resolve targetResolver) error {
+// EntryMethodNotAllowed answers the methods EntryHandler is not routed for.
+func EntryMethodNotAllowed(c *echo.Context) error {
+	return handle(c, resolveEntry, methodNotAllowed)
+}
+
+// PrincipalMethodNotAllowed answers the methods PrincipalHandler is not routed for.
+func PrincipalMethodNotAllowed(c *echo.Context) error {
+	return handle(c, resolvePrincipal, methodNotAllowed)
+}
+
+// ProjectMethodNotAllowed answers the methods ProjectHandler is not routed for.
+func ProjectMethodNotAllowed(c *echo.Context) error {
+	return handle(c, resolveProjects, methodNotAllowed)
+}
+
+// TaskMethodNotAllowed answers the methods TaskHandler is not routed for.
+func TaskMethodNotAllowed(c *echo.Context) error {
+	return handle(c, resolveTask, methodNotAllowed)
+}
+
+func handle(c *echo.Context, resolve targetResolver, serve func(*echo.Context, *user.User, target) error) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
 		return writeError(c, err)
@@ -58,7 +78,10 @@ func handle(c *echo.Context, resolve targetResolver) error {
 	if err != nil {
 		return writeError(c, err)
 	}
+	return serve(c, u, t)
+}
 
+func serveMethod(c *echo.Context, u *user.User, t target) error {
 	switch c.Request().Method {
 	case http.MethodOptions:
 		return serveOptions(c, u, t)
@@ -80,8 +103,7 @@ func handle(c *echo.Context, resolve targetResolver) error {
 			return servePropPatch(c, u, t.collection.project)
 		}
 	}
-
-	return c.NoContent(http.StatusNotImplemented)
+	return methodNotAllowed(c, u, t)
 }
 
 func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets) error {
