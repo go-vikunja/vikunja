@@ -32,7 +32,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go/ixml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -105,13 +104,6 @@ func TestTaskUIDHrefRoundTrip(t *testing.T) {
 			href := taskURL(caldavHrefProjectID, &models.Task{UID: tc.uid})
 			require.Equal(t, tc.href, href)
 
-			// ixml.HrefTag does no escaping, so an unencoded href produces broken XML.
-			var parsed struct {
-				Href string `xml:",chardata"`
-			}
-			require.NoError(t, xml.Unmarshal([]byte(ixml.HrefTag(href)), &parsed))
-			assert.Equal(t, href, parsed.Href)
-
 			setup := func(t *testing.T) {
 				db.LoadAndAssertFixtures(t)
 				insertTaskWithUID(t, tc.uid, 98)
@@ -146,8 +138,7 @@ func TestTaskUIDHrefRoundTrip(t *testing.T) {
 					rec = serve(e, req)
 					require.Equal(t, http.StatusMultiStatus, rec.Code)
 
-					// caldav-go builds the href from the decoded request path, so an
-					// echoed one would be forged or unescaped.
+					// An href echoed from the decoded request path would be forged or unescaped.
 					var multistatus struct {
 						Responses []struct {
 							Href string `xml:"href"`

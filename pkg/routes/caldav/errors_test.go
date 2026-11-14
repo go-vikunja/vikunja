@@ -28,7 +28,6 @@ import (
 	"code.vikunja.io/api/pkg/richtext"
 
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -57,7 +56,6 @@ func TestErrorStatus(t *testing.T) {
 		{"invalid data", models.ErrInvalidData{Message: "x"}, http.StatusBadRequest},
 		{"unknown", errors.New("database is gone"), http.StatusInternalServerError},
 		{"forbidden without read access is not mapped", models.ErrGenericForbidden{}, http.StatusInternalServerError},
-		{"library sentinel is not a domain error", errs.ResourceNotFoundError, http.StatusInternalServerError},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

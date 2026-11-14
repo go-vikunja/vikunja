@@ -17,20 +17,15 @@
 package caldav
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"reflect"
-	"strings"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go"
-	"github.com/samedi/caldav-go/data"
-	"github.com/samedi/caldav-go/lib"
 )
 
 func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
@@ -39,18 +34,6 @@ func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 		return &user.User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(c.Get("userBasicAuth")))
 	}
 	return u, nil
-}
-
-// Per request, never through caldav-go's setup globals: those let concurrent
-// requests of different users answer each other with the wrong storage.
-func caldavConfig(storage data.Storage, principalPath string) caldav.Config {
-	return caldav.Config{
-		Storage: storage,
-		// caldav-go renders current-user-principal as "/<name>/", so pass the path
-		// without surrounding slashes or the href ends up with a double slash.
-		User:                &data.CalUser{Name: strings.Trim(principalPath, "/")},
-		SupportedComponents: []string{lib.VCALENDAR, lib.VTODO},
-	}
 }
 
 // EntryHandler serves /dav/.
@@ -98,21 +81,7 @@ func handle(c *echo.Context, resolve targetResolver) error {
 		}
 	}
 
-	readAndLogBody(c)
-	return serveLibrary(c, newStorage(u, t), principalPathForUser(u.Username))
-}
-
-func serveLibrary(c *echo.Context, storage *VikunjaCaldavProjectStorage, principalPath string) error {
-	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPath))
-	response.Write(c.Response())
-	return nil
-}
-
-func readAndLogBody(c *echo.Context) []byte {
-	body, _ := io.ReadAll(c.Request().Body)
-	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-	logRequest(c.Request().Header, body)
-	return body
+	return c.NoContent(http.StatusNotImplemented)
 }
 
 // Vikunja keeps no client-set properties, so PROPPATCH refuses all of them, rather than
