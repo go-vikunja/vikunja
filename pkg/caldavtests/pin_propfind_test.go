@@ -32,10 +32,11 @@ const (
 	homeSetHref     = "/dav/projects/"
 	zeroLastMod     = "Mon, 01 Jan 0001 00:00:00 GMT"
 
-	resourceTypeHome     = "{DAV:}collection"
-	resourceTypeEntry    = "{DAV:}collection {DAV:}principal"
-	resourceTypeCalendar = "{DAV:}collection {urn:ietf:params:xml:ns:caldav}calendar"
-	supportedComps       = "{urn:ietf:params:xml:ns:caldav}comp[name=VCALENDAR] {urn:ietf:params:xml:ns:caldav}comp[name=VTODO]"
+	resourceTypeHome      = "{DAV:}collection"
+	resourceTypeEntry     = "{DAV:}collection"
+	resourceTypePrincipal = "{DAV:}collection {DAV:}principal"
+	resourceTypeCalendar  = "{DAV:}collection {urn:ietf:params:xml:ns:caldav}calendar"
+	supportedComps        = "{urn:ietf:params:xml:ns:caldav}comp[name=VCALENDAR] {urn:ietf:params:xml:ns:caldav}comp[name=VTODO]"
 )
 
 var project36TaskTitles = map[string]string{
@@ -79,7 +80,7 @@ func expectPrincipal(href, displayName string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: href,
 		ok: map[xml.Name]string{
-			davName("resourcetype"):                     resourceTypeHome,
+			davName("resourcetype"):                     resourceTypePrincipal,
 			davName("displayname"):                      displayName,
 			davName("current-user-principal"):           user15Principal,
 			calName("calendar-home-set"):                homeSetHref,
