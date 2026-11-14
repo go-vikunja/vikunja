@@ -29,6 +29,7 @@ import (
 const (
 	pinTaskHref     = "/dav/projects/36/uid-caldav-test.ics"
 	user15Principal = "/dav/principals/user15/"
+	homeSetHref     = "/dav/projects/"
 	zeroLastMod     = "Mon, 01 Jan 0001 00:00:00 GMT"
 
 	resourceTypeHome     = "{DAV:}collection"
@@ -60,8 +61,8 @@ func expectEntry() expectedDAVResponse {
 			davName("resourcetype"):                     resourceTypeEntry,
 			davName("displayname"):                      "dav",
 			davName("current-user-principal"):           user15Principal,
-			calName("calendar-home-set"):                "/dav",
-			davName("principal-URL"):                    "/dav",
+			calName("calendar-home-set"):                homeSetHref,
+			davName("principal-URL"):                    user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
 			davName("getlastmodified"):                  zeroLastMod,
@@ -73,17 +74,16 @@ func expectEntry() expectedDAVResponse {
 	}
 }
 
-// The principal URL and the home set both answer with the home-set resource; only
-// current-user-principal differs, because ProjectHandler passes the home set as the user.
-func expectHomeSet(currentUserPrincipal string) expectedDAVResponse {
+// The principal answers with the home set's href.
+func expectPrincipal() expectedDAVResponse {
 	return expectedDAVResponse{
 		href: "/dav/projects",
 		ok: map[xml.Name]string{
 			davName("resourcetype"):                     resourceTypeHome,
 			davName("displayname"):                      "projects",
-			davName("current-user-principal"):           currentUserPrincipal,
-			calName("calendar-home-set"):                "/dav/projects",
-			davName("principal-URL"):                    "/dav/projects",
+			davName("current-user-principal"):           user15Principal,
+			calName("calendar-home-set"):                homeSetHref,
+			davName("principal-URL"):                    user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
 			davName("owner"):                            "/dav/",
@@ -96,6 +96,27 @@ func expectHomeSet(currentUserPrincipal string) expectedDAVResponse {
 	}
 }
 
+// current-user-principal differs from the principal's, because ProjectHandler passes the home set as the user.
+func expectHomeSet(currentUserPrincipal string) expectedDAVResponse {
+	return expectedDAVResponse{
+		href: "/dav/projects",
+		ok: map[xml.Name]string{
+			davName("resourcetype"):                     resourceTypeHome,
+			davName("displayname"):                      "projects",
+			davName("current-user-principal"):           currentUserPrincipal,
+			calName("supported-calendar-component-set"): supportedComps,
+			davName("getcontenttype"):                   "text/calendar",
+			davName("owner"):                            "/dav/",
+			davName("getlastmodified"):                  zeroLastMod,
+		},
+		notFound: []xml.Name{
+			davName("getetag"), csGetCTag,
+			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
+			calName("calendar-home-set"), davName("principal-URL"),
+		},
+	}
+}
+
 func expectCalendar(href, title, currentUserPrincipal string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: href,
@@ -103,8 +124,6 @@ func expectCalendar(href, title, currentUserPrincipal string) expectedDAVRespons
 			davName("resourcetype"):                     resourceTypeCalendar,
 			davName("displayname"):                      title,
 			davName("current-user-principal"):           currentUserPrincipal,
-			calName("calendar-home-set"):                href,
-			davName("principal-URL"):                    href,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
 			davName("owner"):                            "/dav/",
@@ -113,7 +132,10 @@ func expectCalendar(href, title, currentUserPrincipal string) expectedDAVRespons
 			davName("getlastmodified"):                  anyValue,
 			davName("sync-token"):                       anyValue,
 		},
-		notFound: []xml.Name{davName("getcontentlength"), calName("calendar-description")},
+		notFound: []xml.Name{
+			davName("getcontentlength"), calName("calendar-description"),
+			calName("calendar-home-set"), davName("principal-URL"),
+		},
 	}
 }
 
@@ -124,8 +146,6 @@ func expectTask(href, title, currentUserPrincipal string) expectedDAVResponse {
 			davName("resourcetype"):           "",
 			davName("displayname"):            title,
 			davName("current-user-principal"): currentUserPrincipal,
-			calName("calendar-home-set"):      href,
-			davName("principal-URL"):          href,
 			davName("getcontenttype"):         "text/calendar; component=vcalendar",
 			davName("owner"):                  "/dav/",
 			davName("getetag"):                anyValue,
@@ -133,7 +153,10 @@ func expectTask(href, title, currentUserPrincipal string) expectedDAVResponse {
 			davName("getlastmodified"):        anyValue,
 			davName("getcontentlength"):       anyValue,
 		},
-		notFound: []xml.Name{calName("supported-calendar-component-set"), davName("sync-token"), calName("calendar-description")},
+		notFound: []xml.Name{
+			calName("supported-calendar-component-set"), davName("sync-token"), calName("calendar-description"),
+			calName("calendar-home-set"), davName("principal-URL"),
+		},
 	}
 }
 
@@ -179,14 +202,14 @@ func TestPinPropfindMatrix(t *testing.T) {
 		{
 			name:    "principal",
 			path:    "/dav/principals/user15/",
-			shallow: []expectedDAVResponse{expectHomeSet(user15Principal)},
-			deep:    []expectedDAVResponse{expectHomeSet(user15Principal)},
+			shallow: []expectedDAVResponse{expectPrincipal()},
+			deep:    []expectedDAVResponse{expectPrincipal()},
 		},
 		{
 			name:    "well-known",
 			path:    "/.well-known/caldav",
-			shallow: []expectedDAVResponse{expectHomeSet(user15Principal)},
-			deep:    []expectedDAVResponse{expectHomeSet(user15Principal)},
+			shallow: []expectedDAVResponse{expectPrincipal()},
+			deep:    []expectedDAVResponse{expectPrincipal()},
 		},
 		{
 			name:    "home set",

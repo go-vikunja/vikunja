@@ -20,6 +20,7 @@ import (
 	"encoding/xml"
 	"net/http"
 	"path"
+	"slices"
 	"strconv"
 	"time"
 
@@ -29,6 +30,8 @@ import (
 // propContext is what all resources of one request share.
 type propContext struct {
 	currentUserPrincipal string
+	// The requesting user's principal.
+	principal string
 }
 
 // davResource is a resource whose properties are loaded and can be answered without a query.
@@ -138,10 +141,17 @@ func ownHref[R hrefed](_ propContext, r R) (propValue, bool) {
 // Pinned: caldav-go answers these with the href of whatever resource was asked.
 func selfReferencing[R hrefed]() propTable[R] {
 	return propTable[R]{
-		{propCalendarHomeSet, ownHref[R]},
-		{propPrincipalURL, ownHref[R]},
 		{propPrincipalCollections, ownHref[R]},
 		{propCalendarUserAddress, ownHref[R]},
+	}
+}
+
+// RFC 4791 §6.2.1 and RFC 4918 §16: these belong to the principal; /dav/ answers them too
+// because clients start discovery there.
+func principalDiscovery[R any]() propTable[R] {
+	return propTable[R]{
+		{propCalendarHomeSet, always[R](hrefsValue{ProjectHomeSetPath})},
+		{propPrincipalURL, func(ctx propContext, _ R) (propValue, bool) { return hrefsValue{ctx.principal}, true }},
 	}
 }
 
@@ -161,10 +171,29 @@ var entryProps = append(propTable[*entryResource]{
 	{propSupportedComponents, always[*entryResource](supportedComponents)},
 	{propGetContentType, always[*entryResource](textValue(contentTypeCollection))},
 	{propGetLastModified, func(propContext, *entryResource) (propValue, bool) { return modTime(time.Time{}) }},
-}, selfReferencing[*entryResource]()...)
+}, slices.Concat(principalDiscovery[*entryResource](), selfReferencing[*entryResource]())...)
 
 func (r *entryResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return entryProps.answer(ctx, r, r.href, req)
+}
+
+// principalResource is the requesting user's principal.
+type principalResource struct{ href string }
+
+func (r *principalResource) ownHref() string { return r.href }
+
+var principalProps = append(propTable[*principalResource]{
+	{propResourceType, always[*principalResource](elementsValue{collectionType})},
+	{propDisplayName, lastSegment[*principalResource]},
+	{propCurrentUserPrincipal, currentUserPrincipal[*principalResource]},
+	{propSupportedComponents, always[*principalResource](supportedComponents)},
+	{propGetContentType, always[*principalResource](textValue(contentTypeCollection))},
+	{propOwner, always[*principalResource](pinnedOwner)},
+	{propGetLastModified, func(propContext, *principalResource) (propValue, bool) { return modTime(time.Time{}) }},
+}, slices.Concat(principalDiscovery[*principalResource](), selfReferencing[*principalResource]())...)
+
+func (r *principalResource) answer(ctx propContext, req propfindRequest) msResponse {
+	return principalProps.answer(ctx, r, r.href, req)
 }
 
 // homeSetResource is /dav/projects.
