@@ -200,7 +200,7 @@ func TestClientTasksOrgSubtasks(t *testing.T) {
 		// Parent arrives later — no RELATED-TO
 		parent := NewVTodo("tasks-rev-parent", "Main Task").Build()
 		rec = caldavPUT(t, e, "/dav/projects/36/tasks-rev-parent.ics", parent)
-		require.Equal(t, 201, rec.Code)
+		require.Equal(t, 204, rec.Code)
 
 		// Verify bidirectional relations
 		rec = caldavGET(t, e, "/dav/projects/36/tasks-rev-parent.ics")
