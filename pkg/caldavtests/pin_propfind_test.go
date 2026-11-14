@@ -301,7 +301,7 @@ func TestPinPropfindMissingTaskURL(t *testing.T) {
 
 // RFC 4918 §9.1: an empty body is allprop. Everything the resource has, except calendar-data.
 func TestPinPropfindAllprop(t *testing.T) {
-	// Not in PropfindDiscoveryProps; caldav-go answers both with the resource's own href.
+	// Not in PropfindDiscoveryProps; both answer the resource's own href.
 	withSelfReferences := func(r expectedDAVResponse) expectedDAVResponse {
 		r.ok[davName("principal-collection-set")] = r.href
 		r.ok[calName("calendar-user-address-set")] = r.href

@@ -33,7 +33,6 @@ import (
 	"xorm.io/xorm"
 )
 
-// Same cap caldav-go had.
 const maxPropfindProperties = 200
 
 // propfindRequest is what a PROPFIND body asks for (RFC 4918 §9.1).

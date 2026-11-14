@@ -29,10 +29,8 @@ import (
 	"xorm.io/xorm"
 )
 
-const (
-	// Token scheme prefix, matching what caldav-go generates.
-	syncTokenPrefix = "data:,"
-)
+// Clients hold tokens with this prefix.
+const syncTokenPrefix = "data:,"
 
 func parseSyncToken(token string) (projectID int64, ts time.Time, purgeGeneration int64, ok bool) {
 	// Quotes may sit outside or inside the data:, prefix.

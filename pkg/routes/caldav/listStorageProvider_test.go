@@ -565,7 +565,7 @@ func storedTask(t *testing.T, u *user.User, uid string, id int64) *models.Task {
 	return nil
 }
 
-// A plain parse error made caldav-go answer 500, which clients retry forever (#4248).
+// A plain parse error would answer 500, which clients retry forever (#4248).
 func TestNonVTODOContentIsForbidden(t *testing.T) {
 	const eventContent = `BEGIN:VCALENDAR
 VERSION:2.0

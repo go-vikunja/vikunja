@@ -84,8 +84,6 @@ func handle(c *echo.Context, resolve targetResolver) error {
 	return c.NoContent(http.StatusNotImplemented)
 }
 
-// Vikunja keeps no client-set properties, so PROPPATCH refuses all of them, rather than
-// caldav-go's blanket 501.
 func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets) error {
 	body, err := io.ReadAll(c.Request().Body)
 	if err != nil {

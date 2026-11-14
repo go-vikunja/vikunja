@@ -82,7 +82,7 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 // change: Vikunja doesn't support client-set collection metadata, so every
 // submitted property is refused with 403, the same "polite refusal" shape
 // sabre/dav uses for protected properties. Clients treat this as best-effort
-// and keep syncing instead of aborting on the 501 caldav-go falls back to.
+// and keep syncing, where a 501 would make them abort.
 func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User) error {
 	if len(body) > maxPropRequestBodySize {
 		return writeError(c, errBodyTooLarge)

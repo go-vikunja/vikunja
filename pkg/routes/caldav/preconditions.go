@@ -21,9 +21,8 @@ import (
 	"strings"
 )
 
-// preconditions are a request's If-Match and If-None-Match headers. Pinned: like caldav-go,
-// writes compare only the first If-Match value, as an exact string, and only check
-// If-None-Match for "*".
+// preconditions are a request's If-Match and If-None-Match headers. Pinned: writes compare
+// only the first If-Match value, as an exact string, and check If-None-Match only for "*".
 type preconditions struct {
 	ifMatch     []string
 	ifNoneMatch []string

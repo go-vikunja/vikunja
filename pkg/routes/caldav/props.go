@@ -168,7 +168,7 @@ func ownHref[R hrefed](_ propContext, r R) (propValue, bool) {
 	return hrefsValue{r.ownHref()}, true
 }
 
-// Pinned: caldav-go answered these with the href of whatever resource was asked.
+// Pinned: answered with the href of whatever resource was asked.
 func selfReferencing[R hrefed]() propTable[R] {
 	return propTable[R]{
 		{propPrincipalCollections, ownHref[R]},

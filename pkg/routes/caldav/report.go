@@ -273,8 +273,7 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			return nil, err
 		}
 		resource := &taskResource{href: taskURL(t.collection.project.ID, task), task: task, owner: owner}
-		// Pinned: caldav-go answered a query or multiget on a task with the task, whatever
-		// the filter or the hrefs.
+		// Pinned: a query or multiget on a task answers the task, whatever the filter or hrefs.
 		return func(c *echo.Context, s *xorm.Session, req reportRequest) error {
 			var props propfindRequest
 			switch req := req.(type) {
@@ -297,7 +296,7 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 	return nil, fmt.Errorf("unhandled caldav target %T", t)
 }
 
-// Pinned: caldav-go answered allprop and propname in a REPORT with no properties at all.
+// Pinned: allprop and propname in a REPORT answer no properties at all.
 func reportProps(req propfindRequest) propfindRequest {
 	if named, ok := req.(propRequest); ok {
 		return named
@@ -440,7 +439,7 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 	props := reportProps(req.props)
 
 	if tasks == nil {
-		// Pinned: caldav-go answered a query on a collection without tasks with the collection.
+		// Pinned: a query on a collection without tasks answers the collection itself.
 		collection := &collectionResource{href: collectionHref(c.project.ID), project: c.project, owner: owner}
 		return []msResponse{collection.answer(ctx, props)}, nil
 	}
