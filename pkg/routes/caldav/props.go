@@ -96,10 +96,6 @@ func (t propTable[R]) resolveAll(ctx propContext, r R, names []xml.Name) (found 
 			found = append(found, prop{name: name, value: value})
 			continue
 		}
-		// Pinned: caldav-go dropped namespaces it had no prefix for.
-		if _, known := nsPrefixes[name.Space]; !known {
-			name.Space = ""
-		}
 		missing = append(missing, name)
 	}
 	return found, missing
