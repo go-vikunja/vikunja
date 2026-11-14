@@ -500,7 +500,11 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 		return
 	}
 
-	projectTasks, err := readCollectionTasks(s, vcls.user, vcls.collection())
+	readable, err := vcls.collection().checkRead(s, vcls.user)
+	var projectTasks []*models.TaskWithComments
+	if err == nil {
+		projectTasks, err = readCollectionTasks(s, vcls.user, readable)
+	}
 	if err != nil {
 		_ = s.Rollback()
 		if errors.Is(err, errNotFound) {
