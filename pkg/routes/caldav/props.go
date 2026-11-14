@@ -127,8 +127,12 @@ func modTime(t time.Time) (propValue, bool) {
 	return textValue(t.Format(http.TimeFormat)), true
 }
 
-// Pinned: caldav-go answers the first path segment, not the owner's principal.
-const pinnedOwner = textValue(DavBasePath + "/")
+func ownerPrincipal(username string) (propValue, bool) {
+	if username == "" {
+		return nil, false
+	}
+	return hrefsValue{principalPathForUser(username)}, true
+}
 
 // hrefed is any resource that answers some properties with its own href.
 type hrefed interface{ ownHref() string }
@@ -187,7 +191,6 @@ var principalProps = append(propTable[*principalResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*principalResource]},
 	{propSupportedComponents, always[*principalResource](supportedComponents)},
 	{propGetContentType, always[*principalResource](textValue(contentTypeCollection))},
-	{propOwner, always[*principalResource](pinnedOwner)},
 	{propGetLastModified, func(propContext, *principalResource) (propValue, bool) { return modTime(time.Time{}) }},
 }, slices.Concat(principalDiscovery[*principalResource](), selfReferencing[*principalResource]())...)
 
@@ -206,7 +209,6 @@ var homeSetProps = append(propTable[*homeSetResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*homeSetResource]},
 	{propSupportedComponents, always[*homeSetResource](supportedComponents)},
 	{propGetContentType, always[*homeSetResource](textValue(contentTypeCollection))},
-	{propOwner, always[*homeSetResource](pinnedOwner)},
 	{propGetLastModified, func(propContext, *homeSetResource) (propValue, bool) { return modTime(time.Time{}) }},
 }, selfReferencing[*homeSetResource]()...)
 
@@ -220,6 +222,8 @@ type collectionResource struct {
 	project *models.ProjectWithTasksAndBuckets
 	// nil when the tasks were not loaded or there are none.
 	tasks []*models.TaskWithComments
+	// Username; empty if the owner no longer exists.
+	owner string
 }
 
 func (r *collectionResource) ownHref() string { return r.href }
@@ -234,7 +238,7 @@ var collectionProps = append(propTable[*collectionResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*collectionResource]},
 	{propSupportedComponents, always[*collectionResource](supportedComponents)},
 	{propGetContentType, always[*collectionResource](textValue(contentTypeCollection))},
-	{propOwner, always[*collectionResource](pinnedOwner)},
+	{propOwner, func(_ propContext, r *collectionResource) (propValue, bool) { return ownerPrincipal(r.owner) }},
 	{propGetETag, func(_ propContext, r *collectionResource) (propValue, bool) { return textValue(r.etag()), true }},
 	{propGetCTag, func(_ propContext, r *collectionResource) (propValue, bool) { return textValue(r.etag()), true }},
 	{propSyncToken, func(_ propContext, r *collectionResource) (propValue, bool) {
@@ -257,6 +261,8 @@ func (r *collectionResource) answer(ctx propContext, req propfindRequest) msResp
 type taskResource struct {
 	href string
 	task *models.Task
+	// The collection's owner.
+	owner string
 	// Rendering costs as much as a GET, so it happens at most once per resource.
 	rendered *string
 }
@@ -276,7 +282,7 @@ var taskProps = append(propTable[*taskResource]{
 	{propDisplayName, func(_ propContext, r *taskResource) (propValue, bool) { return textValue(r.task.Title), true }},
 	{propCurrentUserPrincipal, currentUserPrincipal[*taskResource]},
 	{propGetContentType, always[*taskResource](textValue(contentTypeTask))},
-	{propOwner, always[*taskResource](pinnedOwner)},
+	{propOwner, func(_ propContext, r *taskResource) (propValue, bool) { return ownerPrincipal(r.owner) }},
 	{propGetETag, func(_ propContext, r *taskResource) (propValue, bool) { return textValue(taskETag(r.task)), true }},
 	{propGetCTag, func(_ propContext, r *taskResource) (propValue, bool) { return textValue(taskETag(r.task)), true }},
 	{propGetLastModified, func(_ propContext, r *taskResource) (propValue, bool) { return modTime(r.task.Updated) }},

@@ -206,7 +206,11 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 			if task == nil {
 				return nil, errNotFound
 			}
-			return []davResource{&taskResource{href: taskURL(t.collection.project.ID, task), task: task}}, nil
+			owner, err := loadOwner(s, u, &t.collection.project.Project)
+			if err != nil {
+				return nil, err
+			}
+			return []davResource{&taskResource{href: taskURL(t.collection.project.ID, task), task: task, owner: owner}}, nil
 		}, ctx, nil
 	}
 	return nil, propContext{}, fmt.Errorf("unhandled caldav target %T", t)
@@ -229,6 +233,8 @@ func loadHomeSet(s *xorm.Session, u *user.User) ([]davResource, error) {
 		resources = append(resources, &collectionResource{
 			href:    collectionHref(p.ID),
 			project: &models.ProjectWithTasksAndBuckets{Project: *p},
+			// ReadAll loaded all owners at once.
+			owner: ownerName(u, p),
 		})
 	}
 	return resources, nil
@@ -240,7 +246,9 @@ func loadCollectionResources(s *xorm.Session, u *user.User, c readableCollection
 		return nil, err
 	}
 
-	resources := []davResource{&collectionResource{href: href, project: c.project, tasks: tasks}}
+	// readCollectionTasks loaded the owner.
+	owner := ownerName(u, &c.project.Project)
+	resources := []davResource{&collectionResource{href: href, project: c.project, tasks: tasks, owner: owner}}
 	if !deep {
 		return resources, nil
 	}
@@ -253,9 +261,31 @@ func loadCollectionResources(s *xorm.Session, u *user.User, c readableCollection
 			continue
 		}
 		emitted[href] = true
-		resources = append(resources, &taskResource{href: href, task: &t.Task})
+		resources = append(resources, &taskResource{href: href, task: &t.Task, owner: owner})
 	}
 	return resources, nil
+}
+
+// Favorites and saved filters belong to the user looking at them.
+func ownerName(u *user.User, p *models.Project) string {
+	if models.IsPseudoProjectID(p.ID) {
+		return u.Username
+	}
+	if p.Owner == nil {
+		return ""
+	}
+	return p.Owner.Username
+}
+
+func loadOwner(s *xorm.Session, u *user.User, p *models.Project) (string, error) {
+	if p.Owner == nil && !models.IsPseudoProjectID(p.ID) {
+		owner, err := user.GetUserByID(s, p.OwnerID)
+		if err != nil && !user.IsErrUserDoesNotExist(err) {
+			return "", err
+		}
+		p.Owner = owner
+	}
+	return ownerName(u, p), nil
 }
 
 func collectionHref(projectID int64) string {

@@ -24,7 +24,9 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -113,4 +115,36 @@ func TestPropfindBodyTooLarge(t *testing.T) {
 	body := propfindWithProps(`<D:getetag/>`) + strings.Repeat(" ", maxPropRequestBodySize)
 	rec, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", projectPath(36), body, projectParams(36))
 	requireHTTPStatus(t, http.StatusRequestEntityTooLarge, rec, err)
+}
+
+func TestPropfindOwner(t *testing.T) {
+	owner := propfindWithProps(`<D:owner/>`)
+	ownerOf := func(t *testing.T, handler func(*echo.Context) error, path string, params echo.PathValues) string {
+		t.Helper()
+		rec, err := callCaldavHandler(t, handler, caldavFilterUser, "PROPFIND", path, owner, params)
+		requireHTTPStatus(t, http.StatusMultiStatus, rec, err)
+		return rec.Body.String()
+	}
+
+	t.Run("a saved filter belongs to the user looking at it", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
+
+		body := ownerOf(t, ProjectHandler, projectPath(pseudoID), projectParams(pseudoID))
+		assert.Equal(t, 1+caldavFilterTaskCount, strings.Count(body, "<D:owner>"+principalHref(caldavFilterUser.Username)+"</D:owner>"), body)
+	})
+
+	t.Run("Favorites belong to the user looking at them", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		body := ownerOf(t, ProjectHandler, projectPath(models.FavoritesPseudoProjectID), projectParams(models.FavoritesPseudoProjectID))
+		assert.Contains(t, body, "<D:owner>"+principalHref(caldavFilterUser.Username)+"</D:owner>")
+	})
+
+	t.Run("a task URL answers its project's owner", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		body := ownerOf(t, TaskHandler, projectPath(36)+"uid-caldav-test.ics", taskParams(36, "uid-caldav-test"))
+		assert.Contains(t, body, "<D:owner>"+principalHref(caldavFilterUser.Username)+"</D:owner>")
+	})
 }
