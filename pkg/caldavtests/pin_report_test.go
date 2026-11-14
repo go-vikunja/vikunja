@@ -125,9 +125,13 @@ func TestPinReportCalendarQuery(t *testing.T) {
 	}{
 		{name: "VTODO comp-filter only", hrefs: project36TaskHrefs()},
 		{
-			// No fixture task falls into this range; time-range is not evaluated for VTODOs.
-			name:   "time-range",
+			// Every fixture task is due 2023-03-01 15:00 UTC.
+			name:   "time-range after the due dates",
 			filter: `<C:time-range start="20300101T000000Z" end="20300102T000000Z"/>`,
+		},
+		{
+			name:   "time-range around the due dates",
+			filter: `<C:time-range start="20230301T000000Z" end="20230302T000000Z"/>`,
 			hrefs:  project36TaskHrefs(),
 		},
 		{
