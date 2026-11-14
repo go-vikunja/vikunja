@@ -22,7 +22,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -75,12 +74,13 @@ func (syncCollectionRequest) isReportRequest() {}
 
 func parseReport(body string) (reportRequest, error) {
 	var (
-		root     xml.Name
-		props    propCollector
-		hrefs    []string
-		seenHref = map[string]bool{}
-		token    string
-		elements int
+		root      xml.Name
+		props     propCollector
+		hrefs     []string
+		seenHref  = map[string]bool{}
+		token     string
+		sawFilter bool
+		elements  int
 		// The href or sync-token being read.
 		text *strings.Builder
 	)
@@ -97,6 +97,9 @@ func parseReport(body string) (reportRequest, error) {
 			}
 			if len(p) >= maxReportDepth {
 				return fmt.Errorf("%w: nested deeper than %d elements", errBodyTooLarge, maxReportDepth)
+			}
+			if len(p) == 1 && t.Name == calDAVName("filter") {
+				sawFilter = true
 			}
 			if len(p) == 1 && (t.Name == davName("href") || t.Name == davName("sync-token")) {
 				text = &strings.Builder{}
@@ -137,6 +140,10 @@ func parseReport(body string) (reportRequest, error) {
 	case calDAVName("calendar-multiget"):
 		return multigetRequest{props: props.request(), hrefs: hrefs}, nil
 	case calDAVName("calendar-query"):
+		// RFC 4791 §9.5: the filter is required.
+		if !sawFilter {
+			return nil, fmt.Errorf("%w: calendar-query without a filter", errMalformedBody)
+		}
 		return calendarQueryRequest{props: props.request(), filterXML: libraryFilterXML(body)}, nil
 	case davName("sync-collection"):
 		return syncCollectionRequest{props: props.request(), token: token}, nil
@@ -160,11 +167,16 @@ func libraryFilterXML(body string) string {
 type reportAnswer func(c *echo.Context, s *xorm.Session, req reportRequest) error
 
 func serveReport(c *echo.Context, u *user.User, t target) error {
+	switch t.(type) {
+	case entryTarget, principalTarget, homeSetTarget:
+		return methodNotAllowed(c, u, t)
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
 	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
-	answer, err := authorizeReport(c, s, u, t)
+	answer, err := authorizeReport(s, u, t)
 	if err != nil {
 		return writeError(c, err)
 	}
@@ -185,33 +197,10 @@ func serveReport(c *echo.Context, u *user.User, t target) error {
 	return answer(c, s, req)
 }
 
-func authorizeReport(c *echo.Context, s *xorm.Session, u *user.User, t target) (reportAnswer, error) {
+func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, error) {
 	ctx := propContext{principal: principalPathForUser(u.Username)}
 
 	switch t := t.(type) {
-	case entryTarget, principalTarget:
-		// Pinned: caldav-go answered a query or multiget here with the requested resource and
-		// none of its properties.
-		href := path.Clean(c.Request().URL.Path)
-		return func(c *echo.Context, _ *xorm.Session, req reportRequest) error {
-			var props propfindRequest
-			switch req := req.(type) {
-			case multigetRequest:
-				props = req.props
-			case calendarQueryRequest:
-				props = req.props
-			default:
-				return writeError(c, errUnsupportedReport)
-			}
-			named, _ := props.(propRequest)
-			return writeMultistatus(c, multistatus{
-				responses: []msResponse{propResponse(href, nil, named.names)},
-				minimal:   prefersMinimal(c),
-			})
-		}, nil
-	case homeSetTarget:
-		// Pinned: caldav-go found no resource at the home set.
-		return nil, errNotFound
 	case collectionTarget:
 		readable, err := t.checkRead(s, u)
 		if err != nil {
@@ -424,7 +413,7 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 		return []msResponse{collection.answer(ctx, props)}, nil
 	}
 
-	// Pinned: caldav-go failed with a 500 on a filter it could not parse, or none at all.
+	// Pinned: caldav-go failed with a 500 on a filter it could not parse.
 	filter, err := data.ParseResourceFilters(req.filterXML)
 	if err != nil {
 		return nil, err
