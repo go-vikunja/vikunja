@@ -57,15 +57,6 @@ func (t propTable[R]) resolve(ctx propContext, r R, name xml.Name) (propValue, b
 	return nil, false
 }
 
-func (t propTable[R]) has(name xml.Name) bool {
-	for _, def := range t {
-		if def.name == name {
-			return true
-		}
-	}
-	return false
-}
-
 func (t propTable[R]) answer(ctx propContext, r R, href string, req propfindRequest) msResponse {
 	switch req := req.(type) {
 	case propRequest:
@@ -105,10 +96,6 @@ func (t propTable[R]) resolveAll(ctx propContext, r R, names []xml.Name) (found 
 		if value, has := t.resolve(ctx, r, name); has {
 			found = append(found, prop{name: name, value: value})
 			continue
-		}
-		// Pinned: caldav-go dropped namespaces of unknown properties it had no prefix for.
-		if _, known := nsPrefixes[name.Space]; !known && !t.has(name) {
-			name.Space = ""
 		}
 		missing = append(missing, name)
 	}

@@ -362,7 +362,7 @@ func TestPinPropfindPropname(t *testing.T) {
 	}
 }
 
-// The unknown property is echoed in the 404 propstat without its namespace.
+// The unknown property is echoed in the 404 propstat with its namespace.
 func TestPinPropfindUnknownNamespace(t *testing.T) {
 	e := setupTestEnv(t)
 	body := `<?xml version="1.0" encoding="utf-8" ?>
@@ -379,6 +379,6 @@ func TestPinPropfindUnknownNamespace(t *testing.T) {
 	assertDAVResponses(t, rec, []expectedDAVResponse{{
 		href:     "/dav/projects/36",
 		ok:       map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
-		notFound: []xml.Name{{Space: "", Local: "bogus"}},
+		notFound: []xml.Name{{Space: "urn:x-vikunja-unknown", Local: "bogus"}},
 	}})
 }
