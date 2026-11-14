@@ -360,8 +360,6 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 		s := db.NewSession()
 		defer s.Close()
 
-		// save and override the updated unix date to not break any later etag checks
-		updated := vcls.task.Updated
 		task, err := findTask(s, vcls.user, vcls.collection(), vcls.task.UID)
 		if err != nil {
 			_ = s.Rollback()
@@ -377,10 +375,6 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 		}
 
 		vcls.task = task
-
-		if updated.Unix() > 0 {
-			vcls.task.Updated = updated
-		}
 
 		rr := VikunjaProjectResourceAdapter{
 			project: vcls.project,
