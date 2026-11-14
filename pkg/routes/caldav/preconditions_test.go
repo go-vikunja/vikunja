@@ -54,3 +54,30 @@ func TestPreconditions(t *testing.T) {
 		})
 	}
 }
+
+func TestPreconditionsNotModified(t *testing.T) {
+	const etag = `"40-1700000000"`
+
+	tests := []struct {
+		name        string
+		ifNoneMatch []string
+		want        bool
+	}{
+		{name: "absent"},
+		{name: "matching", ifNoneMatch: []string{etag}, want: true},
+		{name: "star", ifNoneMatch: []string{"*"}, want: true},
+		{name: "stale", ifNoneMatch: []string{`"stale"`}},
+		{name: "unquoted", ifNoneMatch: []string{"40-1700000000"}},
+		{name: "weak", ifNoneMatch: []string{"W/" + etag}, want: true},
+		{name: "in a list", ifNoneMatch: []string{`"stale", ` + etag}, want: true},
+		{name: "in a second header", ifNoneMatch: []string{`"stale"`, etag}, want: true},
+		{name: "prefix of the etag", ifNoneMatch: []string{`"40-17"`}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			p := preconditionsOf(http.Header{"If-None-Match": tc.ifNoneMatch})
+			assert.Equal(t, tc.want, p.notModified(etag))
+		})
+	}
+}

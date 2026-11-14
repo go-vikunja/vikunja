@@ -16,10 +16,14 @@
 
 package caldav
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 // preconditions are a request's If-Match and If-None-Match headers. Pinned: like caldav-go,
-// If-Match compares only its first value, as an exact string.
+// writes compare only the first If-Match value, as an exact string, and only check
+// If-None-Match for "*".
 type preconditions struct {
 	ifMatch     []string
 	ifNoneMatch []string
@@ -45,4 +49,18 @@ func (p preconditions) allowUpdate(etag string) bool {
 
 func (p preconditions) allowDelete(etag string) bool {
 	return p.ifMatches(etag)
+}
+
+// notModified is If-None-Match on GET and HEAD: the weak comparison over the whole list
+// of RFC 9110 §13.1.2.
+func (p preconditions) notModified(etag string) bool {
+	for _, value := range p.ifNoneMatch {
+		for _, candidate := range strings.Split(value, ",") {
+			candidate = strings.TrimSpace(candidate)
+			if candidate == "*" || strings.TrimPrefix(candidate, "W/") == strings.TrimPrefix(etag, "W/") {
+				return true
+			}
+		}
+	}
+	return false
 }
