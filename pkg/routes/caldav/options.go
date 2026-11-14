@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"fmt"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
@@ -79,7 +80,26 @@ func collectionAllow(u *user.User, collection collectionTarget) (string, error) 
 	return allowReadOnly, nil
 }
 
-func homeSetMethodNotAllowed(c *echo.Context) error {
-	c.Response().Header().Set("Allow", allowHomeSet)
+// allowed is what t answers to, for the Allow header.
+func allowed(u *user.User, t target) (string, error) {
+	switch t := t.(type) {
+	case entryTarget, principalTarget:
+		return allowReadOnly, nil
+	case homeSetTarget:
+		return allowHomeSet, nil
+	case collectionTarget:
+		return collectionAllow(u, t)
+	case taskTarget:
+		return collectionAllow(u, t.collection)
+	}
+	return "", fmt.Errorf("unhandled caldav target %T", t)
+}
+
+func methodNotAllowed(c *echo.Context, u *user.User, t target) error {
+	allow, err := allowed(u, t)
+	if err != nil {
+		return writeError(c, err)
+	}
+	c.Response().Header().Set("Allow", allow)
 	return c.NoContent(http.StatusMethodNotAllowed)
 }
