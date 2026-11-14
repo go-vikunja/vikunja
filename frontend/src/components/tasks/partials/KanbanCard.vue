@@ -315,12 +315,17 @@ $task-background: var(--white);
 	user-select: none;
 	cursor: pointer;
 	box-shadow: var(--shadow-xs);
+	transition: box-shadow $transition;
 	display: block;
 
 	font-size: .9rem;
 	border-radius: $radius;
 	background: $task-background;
 	overflow: hidden;
+
+	&:hover {
+		box-shadow: var(--shadow-md);
+	}
 
 	&.loader-container.is-loading::after {
 		inline-size: 1.5rem;
