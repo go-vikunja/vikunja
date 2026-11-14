@@ -162,9 +162,9 @@ func TestPinPropfindMatrix(t *testing.T) {
 		deep    []expectedDAVResponse
 	}
 
-	homeChildren := make([]expectedDAVResponse, 0, len(user15Projects))
+	homeDeep := []expectedDAVResponse{expectHomeSet("/dav/projects/")}
 	for href, title := range user15Projects {
-		homeChildren = append(homeChildren, expectCalendar(href, title, "/dav/projects/"))
+		homeDeep = append(homeDeep, expectCalendar(href, title, "/dav/projects/"))
 	}
 
 	task := expectTask(pinTaskHref, "Title Caldav Test", user15Principal)
@@ -192,8 +192,7 @@ func TestPinPropfindMatrix(t *testing.T) {
 			name:    "home set",
 			path:    "/dav/projects",
 			shallow: []expectedDAVResponse{expectHomeSet("/dav/projects/")},
-			// No response for the home set itself.
-			deep: homeChildren,
+			deep:    homeDeep,
 		},
 		{
 			name:    "project collection",

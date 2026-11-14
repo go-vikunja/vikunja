@@ -155,7 +155,7 @@ END:VCALENDAR`
 }
 
 func TestCaldavDiscovery(t *testing.T) {
-	t.Run("Project home set depth 1 includes child projects but not itself", func(t *testing.T) {
+	t.Run("Project home set depth 1 includes itself first, then the child projects", func(t *testing.T) {
 		e, _ := setupTestEnv()
 
 		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
@@ -182,10 +182,9 @@ func TestCaldavDiscovery(t *testing.T) {
 
 		responseBody := rec.Body.String()
 		assert.Contains(t, responseBody, "/dav/projects/36")
-		// Only response-level hrefs: current-user-principal props legitimately
-		// contain /dav/projects/ (the Apple home-set workaround).
-		assert.NotContains(t, responseBody, "<d:response><d:href>/dav/projects/</d:href>")
-		assert.NotContains(t, responseBody, "<D:response><D:href>/dav/projects/</D:href>")
+		home := strings.Index(responseBody, "<D:response><D:href>/dav/projects</D:href>")
+		require.GreaterOrEqual(t, home, 0, "the home set must answer for itself")
+		assert.Less(t, home, strings.Index(responseBody, "<D:href>/dav/projects/36</D:href>"), "the home set comes first")
 	})
 
 	t.Run("Project home set depth 0 returns the home set itself", func(t *testing.T) {
