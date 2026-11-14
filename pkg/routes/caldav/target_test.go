@@ -54,10 +54,15 @@ func TestResolveTarget(t *testing.T) {
 	})
 
 	t.Run("own principal", func(t *testing.T) {
-		for _, path := range []string{"/dav/principals/user15", "/dav/principals/user15/", "/.well-known/caldav", "/.well-known/caldav/"} {
+		for path, href := range map[string]string{
+			"/dav/principals/user15":  "/dav/principals/user15/",
+			"/dav/principals/user15/": "/dav/principals/user15/",
+			"/.well-known/caldav":     "/.well-known/caldav",
+			"/.well-known/caldav/":    "/.well-known/caldav/",
+		} {
 			got, err := resolveFor(t, resolvePrincipal, path, nil)
 			require.NoError(t, err, path)
-			assert.Equal(t, principalTarget{}, got, path)
+			assert.Equal(t, principalTarget{href: href}, got, path)
 		}
 	})
 

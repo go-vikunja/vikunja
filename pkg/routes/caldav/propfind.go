@@ -175,12 +175,11 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 	switch t := t.(type) {
 	case entryTarget:
 		return func(*xorm.Session, bool) ([]davResource, error) {
-			return []davResource{&entryResource{href: DavBasePath}}, nil
+			return []davResource{&entryResource{href: DavBasePath + "/"}}, nil
 		}, principal, nil
 	case principalTarget:
-		// Pinned: the principal answers with the home set's href.
 		return func(*xorm.Session, bool) ([]davResource, error) {
-			return []davResource{&principalResource{href: ProjectBasePath}}, nil
+			return []davResource{&principalResource{href: t.href}}, nil
 		}, principal, nil
 	case homeSetTarget:
 		return func(s *xorm.Session, deep bool) ([]davResource, error) {
