@@ -338,7 +338,11 @@ func (todoResource) ComponentName() string {
 
 // WebDAV requires every Depth: 1 child to live under the collection's own URI.
 func taskURL(collectionProjectID int64, task *models.Task) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + encodeURIPathSegment(task.UID) + `.ics`
+	return taskHref(collectionProjectID, task.UID)
+}
+
+func taskHref(collectionProjectID int64, uid string) string {
+	return collectionHref(collectionProjectID) + `/` + encodeURIPathSegment(uid) + `.ics`
 }
 
 // url.PathEscape leaves & alone, and caldav-go writes hrefs into XML unescaped.
