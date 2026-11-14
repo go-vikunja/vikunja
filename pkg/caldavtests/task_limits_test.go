@@ -62,3 +62,16 @@ func TestPUTRejectsTooManyTableCells(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
 }
+
+// The placeholder for an unknown RELATED-TO uid is titled after it, so an overlong uid
+// fails the placeholder's title validation.
+func TestPUTRejectsRelationsFailingValidation(t *testing.T) {
+	e := setupTestEnv(t)
+	parent := strings.Repeat("p", models.MaxTaskTitleLength)
+
+	rec := caldavPUT(t, e, "/dav/projects/36/overlong-relation.ics", NewVTodo("overlong-relation", "Overlong relation").RelatedToParent(parent).Build())
+	assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+
+	rec = caldavRequest(t, e, http.MethodGet, "/dav/projects/36/overlong-relation.ics", "", nil)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}

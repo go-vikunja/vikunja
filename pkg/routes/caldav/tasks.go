@@ -18,7 +18,6 @@ package caldav
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 
@@ -189,11 +188,11 @@ func createTask(s *xorm.Session, u *user.User, c readableCollection, vTask *mode
 	created := &models.Task{ID: vTask.ID, ProjectID: vTask.ProjectID}
 	if err := persistLabels(s, u, created, vTask.Labels); err != nil {
 		log.Errorf("[CALDAV] Failed to persist labels in createTask: %v, labels: %+v", err, vTask.Labels)
-		return pinnedInternal(err)
+		return err
 	}
 	if err := persistRelations(s, u, created, vTask.RelatedTasks); err != nil {
 		log.Errorf("[CALDAV] Failed to persist relations in createTask: %v, relations: %+v", err, vTask.RelatedTasks)
-		return pinnedInternal(err)
+		return err
 	}
 	return nil
 }
@@ -276,7 +275,7 @@ func updateTask(s *xorm.Session, u *user.User, c readableCollection, stored, vTa
 	if vTask.Labels != nil {
 		if err := persistLabels(s, u, &base, vTask.Labels); err != nil {
 			log.Errorf("[CALDAV] Failed to persist labels in updateTask: %v, labels: %+v", err, vTask.Labels)
-			return nil, pinnedInternal(err)
+			return nil, err
 		}
 		base.Labels = vTask.Labels
 	}
@@ -285,7 +284,7 @@ func updateTask(s *xorm.Session, u *user.User, c readableCollection, stored, vTa
 	if len(vTask.RelatedTasks) > 0 {
 		if err := persistRelations(s, u, &base, vTask.RelatedTasks); err != nil {
 			log.Errorf("[CALDAV] Failed to persist relations in updateTask: %v, relations: %+v", err, vTask.RelatedTasks)
-			return nil, pinnedInternal(err)
+			return nil, err
 		}
 		base.RelatedTasks = vTask.RelatedTasks
 	}
@@ -307,11 +306,6 @@ func deleteTask(s *xorm.Session, u *user.User, c readableCollection, task *model
 		return errForbidden
 	}
 	return task.Delete(s, u)
-}
-
-// Pinned: caldav-go answered every label and relation error with 500, whatever it was.
-func pinnedInternal(err error) error {
-	return errors.New(err.Error())
 }
 
 // applyDescriptionFromMarkdown converts a task's inbound CalDAV description
