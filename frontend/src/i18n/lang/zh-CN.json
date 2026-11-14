@@ -1014,10 +1014,6 @@
 			"title": "甘特图"
 		}
 	},
-	"update": {
-		"available": "有新版本可用。",
-		"do": "立即更新"
-	},
 	"menu": {
 		"edit": "编辑",
 		"archive": "归档",
@@ -1055,7 +1051,6 @@
 	"quickActions": {
 		"commands": "命令",
 		"placeholder": "输入命令或搜索…",
-		"hint": "可以使用 {project} 将搜索限制在项目中。 将 {project} 或 {label}（标签）与搜索查询相结合，可以搜索有这些标签或在该项目中的任务。 {assignee} 仅适用于在团队中搜索。",
 		"tasks": "任务",
 		"projects": "项目",
 		"teams": "团队",

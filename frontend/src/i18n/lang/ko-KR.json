@@ -977,10 +977,6 @@
 			"projects": "프로젝트로 이동"
 		}
 	},
-	"update": {
-		"available": "업데이트가 있습니다!",
-		"do": "지금 업데이트"
-	},
 	"menu": {
 		"edit": "편집",
 		"archive": "보관",
@@ -1017,7 +1013,6 @@
 	"quickActions": {
 		"commands": "명령",
 		"placeholder": "명령을 입력하거나 검색...",
-		"hint": "{project}를 사용하여 검색을 특정 프로젝트로 제한할 수 있습니다. {project} 또는 {label}(레이블)을 검색 쿼리와 결합하여 해당 레이블이 있거나 해당 프로젝트에 있는 할 일을 검색하세요. {assignee}를 사용하여 팀만 검색할 수도 있습니다.",
 		"tasks": "할 일",
 		"projects": "프로젝트",
 		"teams": "팀",

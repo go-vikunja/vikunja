@@ -1532,10 +1532,6 @@
 			"shrinkTaskRight": "Feladat zsugorítása a végdátumtól"
 		}
 	},
-	"update": {
-		"available": "Frissítés elérhető!",
-		"do": "Frissítés most"
-	},
 	"menu": {
 		"edit": "Szerkesztés",
 		"archive": "Archiválás",
@@ -1581,7 +1577,6 @@
 		"notLoggedIn": "Először jelentkezz be a Vikunja főablakba.",
 		"commands": "Parancsok",
 		"placeholder": "Írjon be egy parancsot vagy keressen…",
-		"hint": "A {project} használatával egy projekten belül kereshetsz. Kombináld a keresésed {project}, vagy {label} (címke) jelöléssel, hogy csak a kiválasztott projektben lévő, vagy a megadott címkével ellátott feladatok közt keress. A {assignee} használatával csapatokat kereshetsz.",
 		"tasks": "Feladatok",
 		"projects": "Projektek",
 		"teams": "Csapatok",

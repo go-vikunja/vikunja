@@ -974,10 +974,6 @@
 			"projects": "Eiti į projektus"
 		}
 	},
-	"update": {
-		"available": "Galimas atnaujinimas!",
-		"do": "Atnaujinti Dabar"
-	},
 	"menu": {
 		"edit": "Keisti",
 		"archive": "Archyvas",
@@ -1014,7 +1010,6 @@
 	"quickActions": {
 		"commands": "Nurodymai",
 		"placeholder": "Rašykite komandą arba ieškokite…",
-		"hint": "Gai naudoti {project} sutrumpinti projektų paiešką. Sujungti {project} ar {label} (etiketes) paieškos užklausoje norint ieškoti užduoties su tomis etiketėmis ar tame projekte. Naudok {assignee} norėdama(-s) ieškoti komandu.",
 		"tasks": "Užduotys",
 		"projects": "Projektai",
 		"teams": "Komandos",

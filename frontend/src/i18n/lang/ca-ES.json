@@ -1448,10 +1448,6 @@
 			"shrinkTaskRight": "Redueix la tasca des de la data de finalització"
 		}
 	},
-	"update": {
-		"available": "Hi ha una actualització disponible!",
-		"do": "Actualitza ara"
-	},
 	"menu": {
 		"edit": "Edita",
 		"archive": "Arxiva",
@@ -1497,7 +1493,6 @@
 		"notLoggedIn": "Inicia primer la sessió a la finestra principal de Vikunja.",
 		"commands": "Ordres",
 		"placeholder": "Escriu una ordre o cerca…",
-		"hint": "Pots utilitzar {project} per limitar la cerca a un projecte. Combina {project} o {label} (etiquetes) amb una consulta de cerca per cercar una tasca amb aquestes etiquetes o en aquest projecte. Utilitza {assignee} per cercar només equips.",
 		"tasks": "Tasques",
 		"projects": "Projectes",
 		"teams": "Equips",

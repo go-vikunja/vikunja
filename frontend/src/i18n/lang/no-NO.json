@@ -1048,10 +1048,6 @@
 			"shrinkTaskRight": "Krymp oppgave fra sluttdato"
 		}
 	},
-	"update": {
-		"available": "Det er en oppdatering tilgjengelig!",
-		"do": "Oppdater nå"
-	},
 	"menu": {
 		"edit": "Rediger",
 		"archive": "Arkiv",
@@ -1089,7 +1085,6 @@
 	"quickActions": {
 		"commands": "Kommandoer",
 		"placeholder": "Skriv en kommando eller søk…",
-		"hint": "Du kan bruke {project} for å begrense søket til et prosjekt. Kombiner {project} eller {label} (etiketter) med et søk for å søke etter en oppgave med disse etikettene eller på det prosjektet. Bruk {assignee} for bare å søke etter gruppe.",
 		"tasks": "Oppgaver",
 		"projects": "Prosjekter",
 		"teams": "Grupper",

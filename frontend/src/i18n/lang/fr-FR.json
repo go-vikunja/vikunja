@@ -1034,10 +1034,6 @@
 			"shrinkTaskRight": "Réduire la tâche à partir de la date de fin"
 		}
 	},
-	"update": {
-		"available": "Une mise à jour est disponible !",
-		"do": "Mettre à jour maintenant"
-	},
 	"menu": {
 		"edit": "Modifier",
 		"archive": "Archiver",
@@ -1074,7 +1070,6 @@
 	"quickActions": {
 		"commands": "Commandes",
 		"placeholder": "Saisir une commande ou une recherche…",
-		"hint": "Vous pouvez utiliser {project} pour limiter la recherche à un projet. Combinez {project} ou {label} (étiquettes) avec une requête de recherche pour rechercher une tâche avec ces étiquettes ou avec ce projet. Utilisez {assignee} pour rechercher uniquement des équipes.",
 		"tasks": "Tâches",
 		"projects": "Projets",
 		"teams": "Équipes",

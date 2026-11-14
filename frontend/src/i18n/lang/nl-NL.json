@@ -1323,10 +1323,6 @@
 			"shrinkTaskRight": "Verklein taak vanaf einddatum"
 		}
 	},
-	"update": {
-		"available": "Er is een update beschikbaar!",
-		"do": "Nu bijwerken"
-	},
 	"menu": {
 		"edit": "Bewerken",
 		"archive": "Archiveren",
@@ -1367,7 +1363,6 @@
 		"notLoggedIn": "Log eerst in op het Vikunja hoofdscherm.",
 		"commands": "Opdrachten",
 		"placeholder": "Typ een opdracht of zoek…",
-		"hint": "Je kunt {project} gebruiken om het zoeken te beperken tot een project. Combineer {project} of {label} (labels) met een zoekopdracht om te zoeken naar een taak met deze labels of op dat project. Gebruik {assignee} om alleen te zoeken naar teams.",
 		"tasks": "Taken",
 		"projects": "Projecten",
 		"teams": "Teams",

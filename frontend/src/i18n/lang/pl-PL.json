@@ -942,10 +942,6 @@
 			"projects": "Przejdź do projektów"
 		}
 	},
-	"update": {
-		"available": "Dostępna jest aktualizacja!",
-		"do": "Aktualizuj teraz"
-	},
 	"menu": {
 		"edit": "Edytuj",
 		"archive": "Archiwizuj",
@@ -982,7 +978,6 @@
 	"quickActions": {
 		"commands": "Polecenia",
 		"placeholder": "Wpisz polecenie lub wyszukiwaną frazę…",
-		"hint": "Możesz użyć {project}, aby ograniczyć wyszukiwanie do projektu. Połącz {project} lub {label} (etykiety) z zapytaniem wyszukiwania, aby szukać zadania z tymi etykietami lub w tym projekcie. Użyj {assignee}, aby szukać tylko zespołów.",
 		"tasks": "Zadania",
 		"projects": "Projekty",
 		"teams": "Zespoły",

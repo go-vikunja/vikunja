@@ -497,7 +497,7 @@
 			"identifier": "Projektkürzel",
 			"identifierPlaceholder": "Das Projektkürzel kommt hierhin…",
 			"description": "Beschreibung",
-			"descriptionPlaceholder": "Gib eine Beschreibung für dieses Projekt ein, drücke '/' für mehr Optionen…",
+			"descriptionPlaceholder": "Gib eine Beschreibung für dieses Projekt ein, drücke „/“ für mehr Optionen…",
 			"color": "Farbe",
 			"success": "Das Projekt wurde erfolgreich aktualisiert."
 		},
@@ -668,6 +668,7 @@
 			"bucketConfig": "Spaltenkonfiguration",
 			"bucketConfigManual": "Manuell",
 			"filter": "Filter",
+			"bucketFilter": "Filter für {title}",
 			"create": "Ansicht erstellen",
 			"createSuccess": "Die Ansicht wurde erfolgreich erstellt.",
 			"titleRequired": "Bitte gib einen Titel ein.",
@@ -676,10 +677,29 @@
 			"deleteText": "Bist du sicher, dass du diese Ansicht entfernen möchtest? Es wird nicht mehr möglich sein, sie zu verwenden, um Aufgaben in diesem Projekt anzuzeigen. Diese Aktion löscht keine Aufgaben. Dies kann nicht rückgängig gemacht werden!",
 			"deleteSuccess": "Diese Ansicht wurde erfolgreich gelöscht.",
 			"onlyAdminsCanEdit": "Nur Projektadministrator:innen können Ansichten bearbeiten.",
-			"updateSuccess": "Die Ansicht wurde erfolgreich aktualisiert."
+			"updateSuccess": "Die Ansicht wurde erfolgreich aktualisiert.",
+			"includeSubprojects": "Aufgaben aus Unterprojekten ebenfalls anzeigen",
+			"includeSubprojectsHint": "Aufgaben aus allen Unterprojekten dieses Projekts anzeigen.",
+			"includeSubprojectsFromView": "In den Einstellungen dieser Ansicht aktiviert. Ändere es dort, um es auszuschalten."
 		}
 	},
 	"filters": {
+		"modes": {
+			"simple": "Einfach",
+			"advanced": "Erweitert",
+			"tooAdvanced": "Dieser Filter ist zu komplex für den einfachen Modus.",
+			"clear": "Zurücksetzen und den einfachen Modus verwenden"
+		},
+		"simple": {
+			"showDone": "Erledigte Aufgaben anzeigen",
+			"minPriority": "Mindestpriorität",
+			"search": "Aufgaben durchsuchen",
+			"labelPlaceholder": "Nach Label filtern…",
+			"assigneePlaceholder": "Nach Zugewiesenen filtern…",
+			"unknownLabel": "Unbekanntes Label #{id}",
+			"unknownProject": "Unbekanntes Projekt #{id}",
+			"until": "bis {date}"
+		},
 		"title": "Filter",
 		"clear": "Filter zurücksetzen",
 		"showResults": "Ergebnisse anzeigen",
@@ -690,7 +710,7 @@
 			"title": "Titl",
 			"titlePlaceholder": "De Name für de g'speicheret Filter chunt da ahne…",
 			"description": "Beschriibig",
-			"descriptionPlaceholder": "Gib eine Beschreibung für diesen Filter ein, drücke '/' für mehr Optionen…",
+			"descriptionPlaceholder": "Gib eine Beschreibung für diesen Filter ein, drücke „/“ für mehr Optionen…",
 			"includeNulls": "Uufgabe ohni Wert iihbezieh"
 		},
 		"create": {
@@ -724,7 +744,7 @@
 					"endDate": "Das Enddatum der Aufgabe",
 					"doneAt": "Datum und Uhrzeit, an dem die Aufgabe als erledigt markiert wurde",
 					"assignees": "Die der Aufgabe Zugewiesenen",
-					"createdBy": "Der:die Benutzer:in, der die Aufgabe erstellt hat (abgeglichen mit dem Nutzernamen)",
+					"createdBy": "Die Person, die die Aufgabe erstellt hat (abgeglichen mit dem Anmeldenamen)",
 					"labels": "Die der Aufgabe zugeordneten Labels",
 					"project": "Das Projekt, zu dem die Aufgabe gehört (nur verfügbar für gespeicherte Filter, nicht auf Projektebene)",
 					"reminders": "Die Erinnerungen einer Aufgabe als Datumsfeld, gibt alle Aufgaben mit mindestens einer Erinnerung zurück, die dem Filter entspricht",
@@ -819,7 +839,7 @@
 		},
 		"planka": {
 			"apiKeyHelp": "Ein API-Schlüssel muss für deinen Account von einem Planka-Administrator erstellt werden. Das Token aus dem Browser zu kopieren funktioniert nicht.",
-			"passwordHelp": "Funktioniert nur für lokale Planka-Konten ohne Zwei-Faktor-Authentifizierung, die sich mindestens einmal bei Planka angemeldet haben. Konten mit Single Sign-On benötigen einen API-Schlüssel."
+			"passwordHelp": "Funktioniert nur für lokale Planka-Accounts ohne Zwei-Faktor-Authentifizierung, die sich mindestens einmal bei Planka angemeldet haben. Accounts mit Single Sign-On benötigen einen API-Schlüssel."
 		},
 		"csv": {
 			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
@@ -1271,7 +1291,7 @@
 			"loading": "Kommentär werded gladä…",
 			"edited": "beartbeitet am {date}",
 			"creating": "Kommentar wird erstellt…",
-			"placeholder": "Füge deinen Kommentar hinzu, drücke '/' für weitere Optionen…",
+			"placeholder": "Füge deinen Kommentar hinzu, drücke „/“ für mehr Optionen…",
 			"comment": "Kommentar",
 			"delete": "De Kommentar chüble",
 			"deleteText1": "Bisch du dir sicher, dass du de Kommentar chüble wetsch?",
@@ -1294,7 +1314,7 @@
 			"1week": "Ei Wuche"
 		},
 		"description": {
-			"placeholder": "Gib eine Beschreibung ein, drücke '/' für mehr Optionen…"
+			"placeholder": "Gib eine Beschreibung ein, drücke „/“ für mehr Optionen…"
 		},
 		"assignee": {
 			"placeholder": "Schriib, um en User zuezwiise…",
@@ -1459,7 +1479,7 @@
 			"namePlaceholder": "Teamname da ahgeh…",
 			"nameRequired": "Bitte gib en Name an.",
 			"description": "Beschriibig",
-			"descriptionPlaceholder": "Gib eine Beschreibung für dieses Team ein, drücke '/' für mehr Optionen…",
+			"descriptionPlaceholder": "Gib eine Beschreibung für dieses Team ein, drücke „/“ für mehr Optionen…",
 			"admin": "Chef",
 			"member": "Mitglied",
 			"isPublic": "Öffentliches Team",
@@ -1529,10 +1549,6 @@
 			"shrinkTaskRight": "Das Enddatum verringern"
 		}
 	},
-	"update": {
-		"available": "Es ist ein Update verfügbar!",
-		"do": "Jetzt aktualisierä"
-	},
 	"menu": {
 		"edit": "Bearbeitä",
 		"archive": "Archiviere",
@@ -1578,7 +1594,6 @@
 		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
 		"commands": "Befehl",
 		"placeholder": "Schriib en Befehl oder suech…",
-		"hint": "Du kannst {project} verwenden, um die Suche auf ein Projekt zu beschränken. Kombiniere {project} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf diesem Projekt zu suchen. Verwende {assignee}, um nur nach Teams zu suchen.",
 		"tasks": "Uufgabe",
 		"projects": "Projekte",
 		"teams": "Teams",
@@ -1834,6 +1849,10 @@
 			"setPasswordSuccess": "Das Passwort von {username} wurde geändert.",
 			"sendResetEmail": "E-Mail zum Zurücksetzen des Passworts senden",
 			"sendResetEmailSuccess": "Eine E-Mail zum Zurücksetzen des Passworts wurde an {username} gesendet.",
+			"editSettings": "Einstellungen bearbeiten",
+			"settingsTitle": "Einstellungen von {username}",
+			"settingsEditingOther": "Du bearbeitest die Einstellungen von {username}, nicht deine eigenen. Änderungen gelten für den Account von {username}.",
+			"backToUsers": "Zurück zu den Accounts",
 			"createdSuccess": "Account {username} erstellt.",
 			"updatedSuccess": "Account {username} aktualisiert.",
 			"deletedSuccess": "Account {username} gelöscht.",

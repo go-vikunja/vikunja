@@ -1445,10 +1445,6 @@
 			"shrinkTaskRight": "Bitiş tarihini öne çekerek daralt"
 		}
 	},
-	"update": {
-		"available": "Yeni bir güncelleme var!",
-		"do": "Hemen Güncelle"
-	},
 	"menu": {
 		"edit": "Düzenle",
 		"archive": "Arşivle",
@@ -1494,7 +1490,6 @@
 		"notLoggedIn": "Lütfen önce ana Vikunja penceresinden giriş yap.",
 		"commands": "Komutlar",
 		"placeholder": "Bir komut yaz veya arama yap…",
-		"hint": "Aramayı belirli bir projeyle sınırlandırmak için {project} yazabilirsin. Belirli etiketleri veya projeleri aramak için {project} veya {label} parametrelerini arama teriminle birleştir. Yalnızca ekipleri aramak için {assignee} kullan.",
 		"tasks": "Görevler",
 		"projects": "Projeler",
 		"teams": "Ekipler",

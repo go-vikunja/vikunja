@@ -1139,10 +1139,6 @@
 			"shrinkTaskRight": "Reducer opgaven fra slutdatoen"
 		}
 	},
-	"update": {
-		"available": "Der er en opdatering tilgængelig!",
-		"do": "Opdater nu"
-	},
 	"menu": {
 		"edit": "Rediger",
 		"archive": "Arkiver",

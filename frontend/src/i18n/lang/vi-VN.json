@@ -972,10 +972,6 @@
 			"projects": "Điều hướng đến dự án"
 		}
 	},
-	"update": {
-		"available": "Đã có bản cập nhật!",
-		"do": "Cập nhật bây giờ"
-	},
 	"menu": {
 		"edit": "Chỉnh sửa",
 		"archive": "Lưu trữ",
@@ -1012,7 +1008,6 @@
 	"quickActions": {
 		"commands": "Các lệnh",
 		"placeholder": "Gõ một lệnh hoặc tìm kiếm…",
-		"hint": "Bạn có thể sử dụng {project} để hạn chế tìm kiếm một dự án. Kết hợp {project} hoặc {label} (các nhãn) với một truy vấn tìm kiếm để tìm kiếm một tác vụ với các nhãn đó hoặc trong dự án đó. Sử dụng {assignee} để chỉ tìm theo các đội nhóm.",
 		"tasks": "Tác vụ",
 		"projects": "Dự án",
 		"teams": "Team",

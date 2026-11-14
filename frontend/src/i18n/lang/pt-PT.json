@@ -1070,10 +1070,6 @@
 			"shrinkTaskRight": "Encolher tarefa a partir da data de fim"
 		}
 	},
-	"update": {
-		"available": "Existe uma atualização disponível!",
-		"do": "Atualizar Agora"
-	},
 	"menu": {
 		"edit": "Editar",
 		"archive": "Arquivar",
@@ -1111,7 +1107,6 @@
 	"quickActions": {
 		"commands": "Comandos",
 		"placeholder": "Escreve um comando ou pesquisa…",
-		"hint": "Podes utilizar {project} para limitar a pesquisa a um projeto. Combina {project} ou {label} (etiquetas) com uma pesquisa para procurar uma tarefa com essas etiquetas ou nesse projeto. Utiliza {assignee} para pesquisares apenas por equipas.",
 		"tasks": "Tarefas",
 		"projects": "Projetos",
 		"teams": "Equipas",
