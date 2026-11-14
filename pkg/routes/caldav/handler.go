@@ -84,8 +84,6 @@ func handle(c *echo.Context, resolve targetResolver) error {
 	return c.NoContent(http.StatusNotImplemented)
 }
 
-// Only a collection's calendar-color is settable; everything else is refused,
-// rather than caldav-go's blanket 501.
 func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets, target propPatchTarget) error {
 	body, err := io.ReadAll(c.Request().Body)
 	if err != nil {

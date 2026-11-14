@@ -316,8 +316,7 @@ func TestProjectHandlerOPTIONS(t *testing.T) {
 	})
 }
 
-// ProjectHandler answers OPTIONS with a reduced Allow header whenever this call denies for
-// a real project, because caldav-go would otherwise advertise PUT and DELETE unconditionally.
+// OPTIONS drops PUT and DELETE from the Allow header whenever this call denies for a real project.
 func TestCollectionWritability(t *testing.T) {
 	canWrite := func(t *testing.T, u *user.User, projectID int64) bool {
 		t.Helper()
@@ -583,8 +582,7 @@ func favoriteTask(t *testing.T, taskID int64, u *user.User) {
 	require.NoError(t, s.Commit())
 }
 
-// Project.CanWrite returns ErrProjectIsArchived as its error; propagating it made
-// caldav-go answer 500 instead of 403.
+// Project.CanWrite returns ErrProjectIsArchived as its error; it must answer 403, not 500.
 func TestArchivedProject_WritesAreForbidden(t *testing.T) {
 	const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0

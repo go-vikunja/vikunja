@@ -119,7 +119,7 @@ type propPatchResult struct {
 }
 
 // Only a collection's calendar-color is settable; everything else gets
-// sabre/dav's 403 "polite refusal", which clients tolerate unlike caldav-go's 501.
+// sabre/dav's 403 "polite refusal", which clients tolerate where a 501 would make them abort.
 func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User, target propPatchTarget) error {
 	if len(body) > maxPropRequestBodySize {
 		return writeError(c, errBodyTooLarge)

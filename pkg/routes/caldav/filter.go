@@ -310,7 +310,7 @@ func parseParamFilter(el *xmlElement) (paramFilter, error) {
 
 func parseTextMatch(el *xmlElement) (textMatch, error) {
 	match := textMatch{
-		// caldav-go trimmed it too: pretty-printed bodies indent the text.
+		// Pretty-printed bodies indent the text.
 		value:    strings.TrimSpace(el.text),
 		foldCase: true,
 	}

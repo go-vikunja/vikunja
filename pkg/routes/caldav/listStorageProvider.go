@@ -41,7 +41,7 @@ func taskURL(collectionProjectID int64, task *models.Task) string {
 	return collectionHref(collectionProjectID) + `/` + encodeURIPathSegment(task.UID) + `.ics`
 }
 
-// url.PathEscape leaves & alone, and caldav-go writes hrefs into XML unescaped.
+// & too, which url.PathEscape leaves alone: clients compare the hrefs they stored byte for byte.
 func encodeURIPathSegment(segment string) string {
 	return strings.ReplaceAll(url.PathEscape(segment), "&", "%26")
 }
