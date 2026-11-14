@@ -79,6 +79,10 @@ func handle(c *echo.Context, resolve targetResolver) error {
 		return writeError(c, err)
 	}
 
+	if c.Request().Method == http.MethodOptions {
+		return serveOptions(c, u, t)
+	}
+
 	switch t := t.(type) {
 	case entryTarget, principalTarget:
 		readAndLogBody(c)
@@ -141,7 +145,7 @@ func serveProjects(c *echo.Context, u *user.User, t target) error {
 
 	collection, isCollection := t.(collectionTarget)
 	if !isCollection {
-		// Pinned: no PROPPATCH or OPTIONS special case for the home set.
+		// Pinned: no PROPPATCH special case for the home set.
 		return serveLibrary(c, storage, ProjectHomeSetPath)
 	}
 
@@ -150,39 +154,6 @@ func serveProjects(c *echo.Context, u *user.User, t target) error {
 	if c.Request().Method == "PROPPATCH" {
 		log.Debugf("[CALDAV] PROPPATCH for project %d by user %s", collection.project.ID, u.Username)
 		return handlePropPatch(c, string(body), collection.project, u, propPatchCollection)
-	}
-
-	// caldav-go advertises PUT and DELETE unconditionally; a collection the user cannot
-	// write to always answers those with 403, so clients would retry forever.
-	if c.Request().Method == http.MethodOptions {
-		s := db.NewSession()
-		defer s.Close()
-
-		canWrite, err := collection.canWrite(s, u)
-		if err != nil {
-			return writeError(c, err)
-		}
-
-		if !canWrite {
-			// The collection was loaded without a permission check, so answering 200 here
-			// would leak which project and filter ids exist.
-			can, err := storage.collection().canRead(s, u)
-			if err != nil {
-				return writeError(c, err)
-			}
-			if !can {
-				return writeError(c, errNotFound)
-			}
-
-			// A pseudo collection cannot be written to as a collection, but PUT and DELETE
-			// of the tasks it aggregates go through to their real projects.
-			if !models.IsPseudoProjectID(collection.project.ID) {
-				log.Debugf("[CALDAV] OPTIONS for read-only project %d by user %s", collection.project.ID, u.Username)
-				c.Response().Header().Set("DAV", "1, 3, calendar-access")
-				c.Response().Header().Set("Allow", "GET, HEAD, OPTIONS, PROPFIND, REPORT")
-				return c.NoContent(http.StatusOK)
-			}
-		}
 	}
 
 	return serveLibrary(c, storage, ProjectHomeSetPath)
