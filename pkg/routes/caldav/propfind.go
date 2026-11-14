@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -57,16 +58,20 @@ func parsePropfind(body string) (propfindRequest, error) {
 	var sawProp, sawPropName bool
 	seen := map[xml.Name]struct{}{}
 	var path []xml.Name
+tokens:
 	for {
 		tok, err := d.Token()
 		if errors.Is(err, io.EOF) && len(path) == 0 {
 			break
 		}
 		if err != nil {
-			// Pinned: caldav-go ignored bodies it could not parse.
-			return allPropRequest{}, nil //nolint:nilerr
+			return nil, fmt.Errorf("%w: %w", errMalformedBody, err)
 		}
 		switch t := tok.(type) {
+		case xml.CharData:
+			if len(path) == 0 && len(bytes.TrimSpace(t)) > 0 {
+				return nil, fmt.Errorf("%w: text outside the root element", errMalformedBody)
+			}
 		case xml.StartElement:
 			if len(path) == 1 && t.Name.Space == nsDAV {
 				switch t.Name.Local {
@@ -92,6 +97,9 @@ func parsePropfind(body string) (propfindRequest, error) {
 			path = append(path, t.Name)
 		case xml.EndElement:
 			path = path[:len(path)-1]
+			if len(path) == 0 {
+				break tokens
+			}
 		}
 	}
 
