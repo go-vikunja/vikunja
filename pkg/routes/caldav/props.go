@@ -176,8 +176,8 @@ func selfReferencing[R hrefed]() propTable[R] {
 	}
 }
 
-// RFC 4791 §6.2.1 and RFC 3744 §4.2: these belong to the principal; /dav/ answers them too
-// because clients start discovery there.
+// RFC 4791 §6.2.1 and RFC 3744 §4.2: these belong to the principal. /dav/ and the home set
+// answer them too: clients start discovery there, Apple Reminders at /dav/projects/ (#2417).
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
 		// Without the trailing slash, as clients knew it before the rewrite.
@@ -235,7 +235,7 @@ var homeSetProps = append(propTable[*homeSetResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*homeSetResource]},
 	{propSupportedComponents, always[*homeSetResource](supportedComponents)},
 	{propGetContentType, always[*homeSetResource](textValue(contentTypeCollection))},
-}, selfReferencing[*homeSetResource]()...)
+}, slices.Concat(principalDiscovery[*homeSetResource](), selfReferencing[*homeSetResource]())...)
 
 func (r *homeSetResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return homeSetProps.answer(ctx, r, r.href, req)
