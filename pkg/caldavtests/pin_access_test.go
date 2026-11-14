@@ -38,7 +38,7 @@ var (
 	}
 	readWriteAccess = accessExpectation{
 		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadWrite,
-		putUpdate: 201, putCreate: 201, del: 204,
+		putUpdate: 204, putCreate: 201, del: 204,
 	}
 	noAccess = accessExpectation{
 		propfind: 404, get: 404, report: 404, options: 404,
@@ -76,7 +76,7 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	ownerGet := func() *httptest.ResponseRecorder {
 		return caldavRequest(t, e, http.MethodGet, task, "", map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)})
 	}
-	if want.putUpdate != http.StatusCreated {
+	if want.putUpdate != http.StatusNoContent {
 		assert.NotContains(t, ownerGet().Body.String(), "Updated by "+username, "denied PUT must not change %s", task)
 	}
 

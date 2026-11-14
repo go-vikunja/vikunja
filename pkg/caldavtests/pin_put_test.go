@@ -99,18 +99,17 @@ func TestPinPUTUpdatePreconditions(t *testing.T) {
 		{
 			name:    "no headers",
 			headers: func(string) map[string]string { return nil },
-			// 201 rather than 200/204 for an update.
-			status: http.StatusCreated,
+			status:  http.StatusNoContent,
 		},
 		{
 			name:    "matching If-Match",
 			headers: func(etag string) map[string]string { return map[string]string{"If-Match": etag} },
-			status:  http.StatusCreated,
+			status:  http.StatusNoContent,
 		},
 		{
 			name:    "If-Match star",
 			headers: func(string) map[string]string { return map[string]string{"If-Match": "*"} },
-			status:  http.StatusCreated,
+			status:  http.StatusNoContent,
 		},
 		{
 			name:    "stale If-Match",
@@ -134,7 +133,7 @@ func TestPinPUTUpdatePreconditions(t *testing.T) {
 			rec := caldavPUTWith(t, e, path, NewVTodo(uid, "Updated").Build(), tc.headers(etag))
 
 			require.Equal(t, tc.status, rec.Code, "Body:\n%s", rec.Body.String())
-			updated := tc.status == http.StatusCreated
+			updated := tc.status == http.StatusNoContent
 			assertETagHeader(t, rec, updated)
 			if updated {
 				assertSummary(t, e, path, "Updated")
@@ -167,7 +166,7 @@ func TestPinPUTOnCollection(t *testing.T) {
 
 		rec := caldavPUT(t, e, "/dav/projects/36", NewVTodo("uid-caldav-test", "Overwritten via collection").Build())
 
-		require.Equal(t, http.StatusCreated, rec.Code, "Body:\n%s", rec.Body.String())
+		require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
 		assertETagHeader(t, rec, true)
 		assertSummary(t, e, pinTaskHref, "Overwritten via collection")
 	})

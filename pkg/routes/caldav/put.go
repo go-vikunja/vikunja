@@ -164,7 +164,7 @@ func put(c *echo.Context, u *user.User, collection collectionTarget, body string
 		if err != nil {
 			return err
 		}
-		status, etag = http.StatusCreated, taskETag(updated)
+		status, etag = http.StatusNoContent, taskETag(updated)
 		return nil
 	})
 	if err != nil {
