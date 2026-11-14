@@ -226,8 +226,8 @@ func loadHomeSet(s *xorm.Session, u *user.User) ([]davResource, error) {
 		return nil, fmt.Errorf("unexpected project result type %T", result)
 	}
 
-	// Pinned: the home set itself is not part of its Depth: 1 listing.
-	resources := make([]davResource, 0, len(projects))
+	resources := make([]davResource, 0, len(projects)+1)
+	resources = append(resources, &homeSetResource{href: ProjectBasePath})
 	for _, p := range projects {
 		resources = append(resources, &collectionResource{
 			href:    collectionHref(p.ID),
