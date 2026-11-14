@@ -229,7 +229,7 @@ func RegisterRoutes(e *echo.Echo) {
 		// Reserve the failure budget before bcrypt runs.
 		wkg.Use(basicAuthRateLimit)
 		wkg.Use(middleware.BasicAuth(caldav.BasicAuth))
-		registerCalDavRoute(wkg, "/caldav", caldav.PrincipalHandler, caldavReadOnlyMethods)
+		registerCalDavRoute(wkg, "/caldav", caldav.PrincipalHandler, caldav.PrincipalMethodNotAllowed, caldavReadOnlyMethods)
 		c := e.Group("/dav")
 		c.Use(basicAuthRateLimit)
 		registerCalDavRoutes(c)
@@ -1088,20 +1088,21 @@ func registerCalDavRoutes(c *echo.Group) {
 	c.Use(middleware.BasicAuth(caldav.BasicAuth))
 
 	// THIS is the entry point for caldav clients, otherwise projects will show up double
-	registerCalDavRoute(c, "", caldav.EntryHandler, caldavReadOnlyMethods)
-	registerCalDavRoute(c, "/principals/*", caldav.PrincipalHandler, caldavReadOnlyMethods)
-	registerCalDavRoute(c, "/projects", caldav.ProjectHandler, caldavHomeSetMethods)
-	registerCalDavRoute(c, "/projects/:project", caldav.ProjectHandler, caldavCalendarMethods)
+	registerCalDavRoute(c, "", caldav.EntryHandler, caldav.EntryMethodNotAllowed, caldavReadOnlyMethods)
+	registerCalDavRoute(c, "/principals/*", caldav.PrincipalHandler, caldav.PrincipalMethodNotAllowed, caldavReadOnlyMethods)
+	registerCalDavRoute(c, "/projects", caldav.ProjectHandler, caldav.ProjectMethodNotAllowed, caldavHomeSetMethods)
+	registerCalDavRoute(c, "/projects/:project", caldav.ProjectHandler, caldav.ProjectMethodNotAllowed, caldavCalendarMethods)
 	c.Match(caldavCalendarMethods, "/projects/:project/:task", caldav.TaskHandler)
-	c.Any("/projects/:project/:task", caldav.TaskHandler)
+	c.Any("/projects/:project/:task", caldav.TaskMethodNotAllowed)
 }
 
 // registerCalDavRoute registers path with and without a trailing slash: Apple clients append one.
-// Any other method still reaches the handler, behind the same auth and access checks.
-func registerCalDavRoute(g *echo.Group, path string, handler echo.HandlerFunc, methods []string) {
+// Every other method goes to notAllowed, a group route so it still passes BasicAuth first; the
+// router's own 405 would skip group middleware.
+func registerCalDavRoute(g *echo.Group, path string, handler, notAllowed echo.HandlerFunc, methods []string) {
 	for _, p := range []string{path, path + "/"} {
 		g.Match(methods, p, handler)
-		g.Any(p, handler)
+		g.Any(p, notAllowed)
 	}
 }
 
