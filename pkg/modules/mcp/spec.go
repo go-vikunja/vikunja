@@ -56,7 +56,8 @@ const formatArgHint = "Pass format=markdown to exchange rich-text fields as Mark
 
 const serverInstructions = `Rich-text fields (task and project descriptions, comments) are HTML by default. Pass format: "markdown" on read, list and update tools to exchange them as GFM Markdown.
 Read and list tools return every field by default; pass fields to get only the ones you need.
-Filter queries combine conditions with && and ||, not "and"/"or". Call ` + toolFilterSyntax + ` for the full filter syntax.`
+Filter queries combine conditions with && and ||, not "and"/"or". Call ` + toolFilterSyntax + ` for the full filter syntax.
+For clickable task or project-share links, pass web_ui_bases with user-supplied Web UI URLs and labels. Ask for a base if unknown. Never infer it from the MCP endpoint. Bases apply only to this call. Ordinary task URLs require the usual authentication. Project share URLs carry access capabilities. Create shares only on explicit request.`
 
 func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	props := map[string]*jsonschema.Schema{}
@@ -128,6 +129,12 @@ func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 				required = append(required, "title")
 			}
 		}
+	}
+	if linkKindFor(op.OperationID) != "" {
+		if _, clash := props[webUIBasesParam]; clash {
+			return nil, fmt.Errorf("mcp: %s: %q collides with the Web UI bases argument", op.OperationID, webUIBasesParam)
+		}
+		props[webUIBasesParam] = webUIBasesSchema()
 	}
 	proj := projectionFor(oapi, op)
 	if proj != noProjection {
