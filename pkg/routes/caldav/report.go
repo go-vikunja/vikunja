@@ -227,7 +227,7 @@ func authorizeReport(c *echo.Context, s *xorm.Session, u *user.User, t target) (
 			var err error
 			switch req := req.(type) {
 			case multigetRequest:
-				responses, err = answerMultiget(s, u, readable, c.Request().URL.Path, req, ctx)
+				responses, err = answerMultiget(s, u, readable, req, ctx)
 			case calendarQueryRequest:
 				responses, err = answerCalendarQuery(s, u, readable, req, ctx)
 			case syncCollectionRequest:
@@ -293,12 +293,12 @@ func prefersMinimal(c *echo.Context) bool {
 	return c.Request().Header.Get("Prefer") == "return=minimal"
 }
 
-func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, requestPath string, req multigetRequest, ctx propContext) ([]msResponse, error) {
-	// Pinned: caldav-go dropped every href that does not start with the request path.
-	prefix := path.Clean(requestPath)
+func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req multigetRequest, ctx propContext) ([]msResponse, error) {
+	// Only members are looked up; anything else is not found here (RFC 4791 §7.9).
+	members := collectionHref(c.project.ID) + "/"
 	hrefs := make([]string, 0, len(req.hrefs))
 	for _, href := range req.hrefs {
-		if strings.HasPrefix(href, prefix) {
+		if strings.HasPrefix(href, members) {
 			hrefs = append(hrefs, href)
 		}
 	}
@@ -313,8 +313,8 @@ func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, request
 	}
 
 	props := reportProps(req.props)
-	responses := make([]msResponse, 0, len(hrefs))
-	for _, href := range hrefs {
+	responses := make([]msResponse, 0, len(req.hrefs))
+	for _, href := range req.hrefs {
 		task, found := tasks[href]
 		if !found {
 			responses = append(responses, statusResponse{href: href, status: http.StatusNotFound})
