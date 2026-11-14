@@ -30,7 +30,6 @@ import (
 
 // propContext is what all resources of one request share.
 type propContext struct {
-	currentUserPrincipal string
 	// The requesting user's principal.
 	principal string
 }
@@ -126,7 +125,7 @@ func always[R any](v propValue) propResolver[R] {
 }
 
 func currentUserPrincipal[R any](ctx propContext, _ R) (propValue, bool) {
-	return hrefsValue{ctx.currentUserPrincipal}, true
+	return hrefsValue{ctx.principal}, true
 }
 
 func textIfSet(s string) (propValue, bool) {

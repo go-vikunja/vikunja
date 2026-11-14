@@ -94,8 +94,8 @@ func TestConcurrentRequestsDoNotShareState(t *testing.T) {
 		mine      string
 		theirs    []string
 	}{
-		{caldavFilterUser, 36, "Title Caldav Test", []string{"task #1", ProjectBasePath + "/1/"}},
-		{caldavOtherUser, 1, "task #1", []string{"Title Caldav Test", ProjectBasePath + "/36/"}},
+		{caldavFilterUser, 36, "Title Caldav Test", []string{"task #1", ProjectBasePath + "/1/", principalHref(caldavOtherUser.Username)}},
+		{caldavOtherUser, 1, "task #1", []string{"Title Caldav Test", ProjectBasePath + "/36/", principalHref(caldavFilterUser.Username)}},
 	}
 
 	// A single pair of requests only rarely interleaves inside the setup-then-handle window,
@@ -134,7 +134,7 @@ func TestConcurrentRequestsDoNotShareState(t *testing.T) {
 		require.NoError(t, r.err)
 		assert.Contains(t, r.body, caller.mine,
 			"%s must see its own tasks", caller.user.Username)
-		assert.Contains(t, r.body, "<D:href>"+ProjectHomeSetPath+"</D:href>")
+		assert.Contains(t, r.body, principalHref(caller.user.Username))
 		for _, theirs := range caller.theirs {
 			assert.NotContains(t, r.body, theirs,
 				"%s must not see %q of the other user", caller.user.Username, theirs)

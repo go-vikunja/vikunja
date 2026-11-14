@@ -167,27 +167,24 @@ func servePropfind(c *echo.Context, u *user.User, t target) error {
 }
 
 func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader, propContext, error) {
-	principalPath := principalPathForUser(u.Username)
-	principal := propContext{currentUserPrincipal: principalPath, principal: principalPath}
-	// Pinned: caldav-go was configured with the home set as the user of these targets.
-	homeSet := propContext{currentUserPrincipal: ProjectHomeSetPath, principal: principalPath}
+	ctx := propContext{principal: principalPathForUser(u.Username)}
 
 	switch t := t.(type) {
 	case entryTarget:
 		return func(*xorm.Session, bool) ([]davResource, error) {
 			return []davResource{&entryResource{href: DavBasePath + "/"}}, nil
-		}, principal, nil
+		}, ctx, nil
 	case principalTarget:
 		return func(*xorm.Session, bool) ([]davResource, error) {
 			return []davResource{&principalResource{href: t.href}}, nil
-		}, principal, nil
+		}, ctx, nil
 	case homeSetTarget:
 		return func(s *xorm.Session, deep bool) ([]davResource, error) {
 			if !deep {
 				return []davResource{&homeSetResource{href: ProjectBasePath}}, nil
 			}
 			return loadHomeSet(s, u)
-		}, homeSet, nil
+		}, ctx, nil
 	case collectionTarget:
 		readable, err := t.checkRead(s, u)
 		if err != nil {
@@ -195,7 +192,7 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 		}
 		return func(s *xorm.Session, deep bool) ([]davResource, error) {
 			return loadCollectionResources(s, u, readable, collectionHref(t.project.ID), deep)
-		}, homeSet, nil
+		}, ctx, nil
 	case taskTarget:
 		if _, err := t.collection.checkRead(s, u); err != nil {
 			return nil, propContext{}, err
@@ -210,7 +207,7 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 				return nil, errNotFound
 			}
 			return []davResource{&taskResource{href: taskURL(t.collection.project.ID, task), task: task}}, nil
-		}, principal, nil
+		}, ctx, nil
 	}
 	return nil, propContext{}, fmt.Errorf("unhandled caldav target %T", t)
 }
