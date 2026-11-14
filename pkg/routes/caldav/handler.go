@@ -111,7 +111,7 @@ func serveProjects(c *echo.Context, u *user.User, t target) error {
 
 	if c.Request().Method == http.MethodPut && strings.HasPrefix(string(body), `BEGIN:VCALENDAR`) {
 		s := db.NewSession()
-		canRead, err := storage.canReadCollection(s)
+		canRead, err := storage.collection().canRead(s, u)
 		s.Close()
 		if err != nil {
 			return writeError(c, err)
@@ -158,7 +158,7 @@ func serveProjects(c *echo.Context, u *user.User, t target) error {
 		s := db.NewSession()
 		defer s.Close()
 
-		canWrite, err := denyArchived(collection.project.CanWrite(s, u))
+		canWrite, err := collection.canWrite(s, u)
 		if err != nil {
 			return writeError(c, err)
 		}
@@ -166,7 +166,7 @@ func serveProjects(c *echo.Context, u *user.User, t target) error {
 		if !canWrite {
 			// The collection was loaded without a permission check, so answering 200 here
 			// would leak which project and filter ids exist.
-			can, err := storage.canReadCollection(s)
+			can, err := storage.collection().canRead(s, u)
 			if err != nil {
 				return writeError(c, err)
 			}
@@ -235,7 +235,7 @@ func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error) error {
 
 	s := db.NewSession()
 	defer s.Close()
-	canRead, err := vcls.canReadCollection(s)
+	canRead, err := vcls.collection().canRead(s, vcls.user)
 	if err != nil {
 		return err
 	}
