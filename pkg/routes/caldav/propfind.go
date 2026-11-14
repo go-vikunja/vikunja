@@ -167,9 +167,10 @@ func servePropfind(c *echo.Context, u *user.User, t target) error {
 }
 
 func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader, propContext, error) {
-	principal := propContext{currentUserPrincipal: principalPathForUser(u.Username)}
+	principalPath := principalPathForUser(u.Username)
+	principal := propContext{currentUserPrincipal: principalPath, principal: principalPath}
 	// Pinned: caldav-go was configured with the home set as the user of these targets.
-	homeSet := propContext{currentUserPrincipal: ProjectHomeSetPath}
+	homeSet := propContext{currentUserPrincipal: ProjectHomeSetPath, principal: principalPath}
 
 	switch t := t.(type) {
 	case entryTarget:
@@ -177,9 +178,9 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 			return []davResource{&entryResource{href: DavBasePath}}, nil
 		}, principal, nil
 	case principalTarget:
-		// Pinned: the principal answers as the home set.
+		// Pinned: the principal answers with the home set's href.
 		return func(*xorm.Session, bool) ([]davResource, error) {
-			return []davResource{&homeSetResource{href: ProjectBasePath}}, nil
+			return []davResource{&principalResource{href: ProjectBasePath}}, nil
 		}, principal, nil
 	case homeSetTarget:
 		return func(s *xorm.Session, deep bool) ([]davResource, error) {
