@@ -22,6 +22,9 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -183,6 +186,34 @@ func TestPinPUTOnCollection(t *testing.T) {
 
 		require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
 		assertSummary(t, e, pinTaskHref, "Matched via collection")
+	})
+
+	t.Run("body without UID creates a task", func(t *testing.T) {
+		e := setupTestEnv(t)
+
+		s := db.NewSession()
+		uidless := &models.Task{Title: "Task without uid", ProjectID: 36, Index: 999, CreatedByID: testuser15.ID}
+		_, err := s.Insert(uidless)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		body := "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VTODO\r\nSUMMARY:Created without uid\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
+		rec := caldavPUT(t, e, "/dav/projects/36", body)
+
+		require.Equal(t, http.StatusCreated, rec.Code, "Body:\n%s", rec.Body.String())
+		assertETagHeader(t, rec, true)
+
+		s = db.NewSession()
+		defer s.Close()
+		stored, err := models.GetTaskByIDSimple(s, uidless.ID)
+		require.NoError(t, err)
+		assert.Equal(t, "Task without uid", stored.Title)
+		created := &models.Task{}
+		has, err := s.Where("title = ? AND project_id = ?", "Created without uid", 36).Get(created)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.NotEmpty(t, created.UID)
 	})
 
 	t.Run("home set", func(t *testing.T) {

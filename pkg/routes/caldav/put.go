@@ -122,9 +122,13 @@ func put(c *echo.Context, u *user.User, collection collectionTarget, body string
 			return err
 		}
 
-		stored, err := findTask(s, u, collection, addressing.taskUID(vTask))
-		if err != nil {
-			return err
+		// A body without UID names no stored task; creating it gives it one.
+		var stored *models.Task
+		if uid := addressing.taskUID(vTask); uid != "" {
+			stored, err = findTask(s, u, collection, uid)
+			if err != nil {
+				return err
+			}
 		}
 
 		if stored == nil {
