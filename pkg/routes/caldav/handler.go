@@ -86,6 +86,8 @@ func handle(c *echo.Context, resolve targetResolver) error {
 		return serveGet(c, u, t)
 	case http.MethodDelete:
 		return serveDelete(c, u, t)
+	case http.MethodPut:
+		return servePut(c, u, t)
 	}
 
 	switch t := t.(type) {
@@ -178,17 +180,6 @@ func serveTask(c *echo.Context, u *user.User, t taskTarget) error {
 	}
 
 	storage := newStorage(u, t)
-	if c.Request().Method == http.MethodPut {
-		body, err := io.ReadAll(io.LimitReader(c.Request().Body, caldav2.MaxVCalendarSize+1))
-		if err != nil {
-			return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
-		}
-		if err := caldav2.CheckVCalendarLimits(string(body)); err != nil {
-			return writeError(c, storage.rejectBody(err))
-		}
-		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-	}
-
 	return serveLibrary(c, storage, principalPathForUser(u.Username))
 }
 
@@ -200,23 +191,4 @@ func logRequest(header http.Header, body []byte) {
 	}
 	log.Debugf("[CALDAV] Request Body: %s", body)
 	log.Debugf("[CALDAV] Request Headers: %v", log.SafeHeaders(header))
-}
-
-// Body checks precede caldav-go's access checks, so an unreadable collection must answer like a missing one.
-func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error) error {
-	// The empty project of /dav/projects//<uid>.ics, see resolveTask.
-	if vcls.project.ID == 0 {
-		return checkErr
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-	canRead, err := vcls.collection().canRead(s, vcls.user)
-	if err != nil {
-		return err
-	}
-	if !canRead {
-		return errNotFound
-	}
-	return checkErr
 }
