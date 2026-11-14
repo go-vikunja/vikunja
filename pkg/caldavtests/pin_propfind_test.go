@@ -298,22 +298,67 @@ func TestPinPropfindMissingTaskURL(t *testing.T) {
 	}
 }
 
-// RFC 4918 treats an empty PROPFIND body as allprop; today it yields bare hrefs.
-func TestPinPropfindEmptyBody(t *testing.T) {
-	e := setupTestEnv(t)
-	for path, href := range map[string]string{
-		"/dav/":                   "/dav/",
-		"/dav/principals/user15/": user15Principal,
-		"/dav/projects":           "/dav/projects",
-		"/dav/projects/36":        "/dav/projects/36",
-		pinTaskHref:               pinTaskHref,
-	} {
-		t.Run(path, func(t *testing.T) {
-			rec := caldavPROPFIND(t, e, path, "0", "")
+// RFC 4918 §9.1: an empty body is allprop. Everything the resource has, except calendar-data.
+func TestPinPropfindAllprop(t *testing.T) {
+	// Not in PropfindDiscoveryProps; caldav-go answers both with the resource's own href.
+	withSelfReferences := func(r expectedDAVResponse) expectedDAVResponse {
+		r.ok[davName("principal-collection-set")] = r.href
+		r.ok[calName("calendar-user-address-set")] = r.href
+		r.notFound = nil
+		return r
+	}
 
-			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
-			assertDAVResponses(t, rec, []expectedDAVResponse{{href: href}})
-		})
+	e := setupTestEnv(t)
+	for path, want := range map[string]expectedDAVResponse{
+		"/dav/":                   expectEntry(),
+		"/dav/principals/user15/": expectPrincipal(user15Principal, "user15"),
+		"/dav/projects":           expectHomeSet(),
+		"/dav/projects/36":        expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", user15Principal),
+		pinTaskHref:               expectTask(pinTaskHref, "Title Caldav Test"),
+	} {
+		for name, body := range map[string]string{"empty body": "", "allprop": PropfindAllProps} {
+			t.Run(path+" "+name, func(t *testing.T) {
+				rec := caldavPROPFIND(t, e, path, "0", body)
+
+				require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+				assertDAVResponses(t, rec, []expectedDAVResponse{withSelfReferences(want)})
+			})
+		}
+	}
+
+	t.Run("include adds calendar-data", func(t *testing.T) {
+		rec := caldavPROPFIND(t, e, pinTaskHref, "0", `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <D:allprop/>
+  <D:include><C:calendar-data/></D:include>
+</D:propfind>`)
+
+		require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+		want := withSelfReferences(expectTask(pinTaskHref, "Title Caldav Test"))
+		want.ok[calName("calendar-data")] = anyValue
+		assertDAVResponses(t, rec, []expectedDAVResponse{want})
+	})
+}
+
+// RFC 4918 §9.1: propname answers the names allprop would, without values.
+func TestPinPropfindPropname(t *testing.T) {
+	e := setupTestEnv(t)
+	allprop := parseDAVResponses(t, caldavPROPFIND(t, e, "/dav/projects/36", "1", PropfindAllProps))
+
+	rec := caldavPROPFIND(t, e, "/dav/projects/36", "1", `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:"><D:propname/></D:propfind>`)
+	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+
+	names := parseDAVResponses(t, rec)
+	require.Len(t, names, len(allprop))
+	for i, r := range names {
+		assert.Equal(t, allprop[i].Href, r.Href)
+		require.Len(t, r.Propstats, 1, r.Href)
+		assert.ElementsMatch(t, propNames(allprop[i].Propstats[200]), propNames(r.Propstats[200]), r.Href)
+		for name, value := range r.Propstats[200] {
+			assert.Empty(t, value.canonical(), "%s %v", r.Href, name)
+			assert.Empty(t, value.Children, "%s %v", r.Href, name)
+		}
 	}
 }
 

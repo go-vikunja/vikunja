@@ -67,15 +67,41 @@ func (t propTable[R]) has(name xml.Name) bool {
 }
 
 func (t propTable[R]) answer(ctx propContext, r R, href string, req propfindRequest) msResponse {
-	named, ok := req.(propRequest)
-	if !ok || len(named.names) == 0 {
-		// Pinned: caldav-go only answers properties asked for by name.
-		return hrefOnlyResponse{href: href}
+	switch req := req.(type) {
+	case propRequest:
+		found, missing := t.resolveAll(ctx, r, req.names)
+		return propResponse(href, found, missing)
+	case allPropRequest:
+		var found []prop
+		answered := map[xml.Name]bool{}
+		for _, def := range t {
+			if explicitOnly[def.name] {
+				continue
+			}
+			if value, has := def.resolve(ctx, r); has {
+				found = append(found, prop{name: def.name, value: value})
+				answered[def.name] = true
+			}
+		}
+		included, missing := t.resolveAll(ctx, r, slices.DeleteFunc(slices.Clone(req.include), func(n xml.Name) bool { return answered[n] }))
+		return propResponse(href, append(found, included...), missing)
+	case propNameRequest:
+		var names []prop
+		for _, def := range t {
+			if explicitOnly[def.name] {
+				continue
+			}
+			if _, has := def.resolve(ctx, r); has {
+				names = append(names, prop{name: def.name})
+			}
+		}
+		return propResponse(href, names, nil)
 	}
+	return propResponse(href, nil, nil)
+}
 
-	var found []prop
-	var missing []xml.Name
-	for _, name := range named.names {
+func (t propTable[R]) resolveAll(ctx propContext, r R, names []xml.Name) (found []prop, missing []xml.Name) {
+	for _, name := range names {
 		if value, has := t.resolve(ctx, r, name); has {
 			found = append(found, prop{name: name, value: value})
 			continue
@@ -86,8 +112,12 @@ func (t propTable[R]) answer(ctx propContext, r R, href string, req propfindRequ
 		}
 		missing = append(missing, name)
 	}
-	return propResponse(href, found, missing)
+	return found, missing
 }
+
+// RFC 4791 §9.6 defines calendar-data for REPORT, not as a property allprop owes
+// (RFC 4918 §9.1); answering it would send every task body on an allprop Depth: 1.
+var explicitOnly = map[xml.Name]bool{propCalendarData: true}
 
 var (
 	propResourceType         = davName("resourcetype")
