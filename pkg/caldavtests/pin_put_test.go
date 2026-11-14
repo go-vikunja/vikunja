@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -169,6 +170,19 @@ func TestPinPUTOnCollection(t *testing.T) {
 		require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
 		assertETagHeader(t, rec, true)
 		assertSummary(t, e, pinTaskHref, "Overwritten via collection")
+	})
+
+	t.Run("existing UID with the stored ETag in If-Match", func(t *testing.T) {
+		e := setupTestEnv(t)
+		etag := caldavGET(t, e, pinTaskHref).Header().Get("ETag")
+		require.NotEmpty(t, etag)
+
+		// The body's DTSTAMP has nothing to do with the stored task's ETag.
+		body := NewVTodo("uid-caldav-test", "Matched via collection").DtStamp(time.Date(2024, 5, 6, 7, 8, 9, 0, time.UTC)).Build()
+		rec := caldavPUTWith(t, e, "/dav/projects/36", body, map[string]string{"If-Match": etag})
+
+		require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
+		assertSummary(t, e, pinTaskHref, "Matched via collection")
 	})
 
 	t.Run("home set", func(t *testing.T) {
