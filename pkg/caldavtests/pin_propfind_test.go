@@ -68,10 +68,9 @@ func expectEntry() expectedDAVResponse {
 			davName("principal-URL"):                    user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
-			davName("getlastmodified"):                  zeroLastMod,
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag,
+			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
 			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
 		},
 	}
@@ -89,10 +88,9 @@ func expectPrincipal(href, displayName string) expectedDAVResponse {
 			davName("principal-URL"):                    user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
-			davName("getlastmodified"):                  zeroLastMod,
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag,
+			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
 			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
 		},
 	}
@@ -107,10 +105,9 @@ func expectHomeSet() expectedDAVResponse {
 			davName("current-user-principal"):           user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
-			davName("getlastmodified"):                  zeroLastMod,
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag,
+			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
 			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
 			calName("calendar-home-set"), davName("principal-URL"),
 		},
