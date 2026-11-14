@@ -120,6 +120,16 @@
 					:task="task"
 					class="checklist"
 				/>
+				<span
+					v-tooltip="{content: updatedTooltip, popperClass: 'is-multiline'}"
+					class="updated"
+				>
+					<Icon :icon="['far', 'clock']" />
+					<span class="is-sr-only">{{ updatedLabel }}</span>
+					<time :datetime="formatISO(task.updated)">
+						{{ formatDateSince(task.updated) }}
+					</time>
+				</span>
 			</div>
 		</div>
 	</div>
@@ -128,6 +138,7 @@
 <script lang="ts" setup>
 import {computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch} from 'vue'
 import {useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 
 import {useGlobalNow} from '@/composables/useGlobalNow'
 
@@ -140,13 +151,14 @@ import ChecklistSummary from './ChecklistSummary.vue'
 import CommentCount from './CommentCount.vue'
 
 import {getHexColor, getTaskIdentifier} from '@/helpers/task'
+import {getDisplayName} from '@/helpers/user'
 import type {Task as ITask} from '@/client/generated'
 import type {TaskResponse} from '@/client/queries/tasks'
 import {canPreviewImage} from '@/helpers/attachmentPreview'
 import {fetchAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 import {ApiError} from '@/client/problem'
 
-import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDateSince, formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useUpdateTaskMutation} from '@/client/queries/taskMutations'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
@@ -166,6 +178,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const {t} = useI18n({useScope: 'global'})
 const updateTask = useUpdateTaskMutation()
 
 const loadingInternal = ref(false)
@@ -193,6 +206,19 @@ const isOverdue = computed(() => (
 	new Date(props.task.due_date ?? 0).getTime() > 0 &&
 	new Date(props.task.due_date ?? 0).getTime() <= now.value.getTime()
 ))
+
+// The server sets updated to created on creation, so equal values mean the task was never changed.
+const wasUpdated = computed(() => +new Date(props.task.created ?? 0) !== +new Date(props.task.updated ?? 0))
+
+const updatedLabel = computed(() => t(wasUpdated.value ? 'task.attributes.updated' : 'task.attributes.created'))
+
+const updatedTooltip = computed(() => {
+	const created = t('task.detail.created', [formatDateLong(props.task.created), getDisplayName(props.task.created_by)])
+	if (!wasUpdated.value) {
+		return created
+	}
+	return `${t('task.detail.updated', [formatDateLong(props.task.updated)])}\n${created}`
+})
 
 async function toggleTaskDone(task: TaskResponse) {
 	const isRecurringTask = task.repeat_after > 0 || task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
@@ -400,6 +426,15 @@ $task-background: var(--white);
 		}
 	}
 
+	.updated {
+		display: flex;
+		align-items: center;
+		gap: .25rem;
+		padding: 0 .25rem;
+		font-size: .75rem;
+		color: var(--grey-500);
+	}
+
 	.footer .icon,
 	.due-date,
 	.priority-label {
@@ -433,7 +468,7 @@ $task-background: var(--white);
 		}
 
 		// beat component-level color: var(--grey-500) so secondary text tracks the guaranteed main text color
-		.task-id, .project-title {
+		.task-id, .project-title, .updated {
 			color: inherit;
 		}
 
@@ -459,7 +494,7 @@ $task-background: var(--white);
 		}
 
 		// beat component-level color: var(--grey-500) so secondary text tracks the guaranteed main text color
-		.task-id, .project-title {
+		.task-id, .project-title, .updated {
 			color: inherit;
 		}
 
