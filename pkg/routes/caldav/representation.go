@@ -17,7 +17,9 @@
 package caldav
 
 import (
+	"net/http"
 	"strconv"
+	"time"
 
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/models"
@@ -43,6 +45,11 @@ func collectionETag(p *models.ProjectWithTasksAndBuckets, tasks []*models.TaskWi
 		etag += ";purge=" + strconv.FormatInt(p.LastPurgedAt.Unix(), 10)
 	}
 	return `"` + etag + `"`
+}
+
+// Pinned: caldav-go formats the time as it comes, without converting it to UTC first.
+func lastModified(t time.Time) string {
+	return t.Format(http.TimeFormat)
 }
 
 func renderTask(t *models.Task) string {
