@@ -88,6 +88,7 @@ function serverProject(overrides: Partial<ProjectResponse> = {}): ProjectRespons
 		is_favorite: false,
 		parent_project_id: 0,
 		position: 0,
+		include_subprojects: false,
 		views: [],
 		...overrides,
 	}
@@ -533,6 +534,7 @@ describe('project drafts and cache mutations', () => {
 			is_favorite: false,
 			parent_project_id: 0,
 			position: 0,
+			include_subprojects: false,
 		})
 	})
 
@@ -576,6 +578,7 @@ describe('project drafts and cache mutations', () => {
 				is_favorite: false,
 				parent_project_id: 0,
 				position: 0,
+				include_subprojects: false,
 			},
 		})
 		expect(queryClient.getQueryData<Project>(projectKeys.detail(1))).toMatchObject({

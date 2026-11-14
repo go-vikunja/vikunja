@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -58,6 +59,8 @@ type Project struct {
 
 	// Whether a project is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived" doc:"Whether the project is archived. Archived projects are read-only."`
+
+	IncludeSubprojects bool `xorm:"not null default false" json:"include_subprojects" doc:"Whether the list, table and gantt views of this project also show the tasks of its subprojects, as if each view had include_subprojects set. New projects get the server's service.defaultincludesubprojects."`
 
 	// The id of the file this project has set as background
 	BackgroundFileID int64 `xorm:"null index" json:"-"`
@@ -1025,6 +1028,10 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 
 	project.HexColor = utils.NormalizeHex(project.HexColor)
 
+	if config.ServiceDefaultIncludeSubprojects.GetBool() {
+		project.IncludeSubprojects = true
+	}
+
 	if project.ParentProjectID == nil {
 		project.ParentProjectID = noParentProjectID()
 	}
@@ -1238,6 +1245,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		"is_archived",
 		"identifier",
 		"hex_color",
+		"include_subprojects",
 		"position",
 	}
 	// Only touch parent_project_id when it was actually sent, otherwise a

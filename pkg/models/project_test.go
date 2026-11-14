@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -232,6 +233,46 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"description": project.Description,
 			}, false)
 		})
+	})
+
+	t.Run("create with include subprojects as the server default", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		previous := config.ServiceDefaultIncludeSubprojects.GetBool()
+		config.ServiceDefaultIncludeSubprojects.Set(true)
+		defer config.ServiceDefaultIncludeSubprojects.Set(previous)
+
+		project := Project{Title: "test"}
+		err := project.Create(s, usr)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":                  project.ID,
+			"include_subprojects": true,
+		}, false)
+	})
+
+	t.Run("update include subprojects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project := Project{
+			ID:                 1,
+			Title:              "Test1",
+			IncludeSubprojects: true,
+		}
+		err := project.Update(s, usr)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		db.AssertExists(t, "projects", map[string]interface{}{
+			"id":                  project.ID,
+			"include_subprojects": true,
+		}, false)
 	})
 
 	t.Run("update", func(t *testing.T) {

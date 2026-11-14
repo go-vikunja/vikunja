@@ -94,6 +94,11 @@
                     "comment": "Whether task comments should be enabled or not"
                 },
                 {
+                    "key": "defaultincludesubprojects",
+                    "default_value": "false",
+                    "comment": "Whether newly created projects show the tasks of their subprojects in their list, table and gantt views. Users can change it per project."
+                },
+                {
                     "key": "enabletotp",
                     "default_value": "true",
                     "comment": "Whether totp is enabled. In most cases you want to leave that enabled."

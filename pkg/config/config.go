@@ -63,6 +63,7 @@ const (
 	ServiceEnableTaskAttachments          Key = `service.enabletaskattachments`
 	ServiceTimeZone                       Key = `service.timezone`
 	ServiceEnableTaskComments             Key = `service.enabletaskcomments`
+	ServiceDefaultIncludeSubprojects      Key = `service.defaultincludesubprojects`
 	ServiceEnableTotp                     Key = `service.enabletotp`
 	ServiceTestingtoken                   Key = `service.testingtoken`
 	ServiceEnableEmailReminders           Key = `service.enableemailreminders`
@@ -398,6 +399,7 @@ func initDefaultConfig() {
 	ServiceEnableTaskAttachments.setDefault(true)
 	ServiceTimeZone.setDefault("GMT")
 	ServiceEnableTaskComments.setDefault(true)
+	ServiceDefaultIncludeSubprojects.setDefault(false)
 	ServiceEnableTotp.setDefault(true)
 	ServiceEnableEmailReminders.setDefault(true)
 	ServiceEnableUserDeletion.setDefault(true)
