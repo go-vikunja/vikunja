@@ -169,7 +169,7 @@ func ownHref[R hrefed](_ propContext, r R) (propValue, bool) {
 	return hrefsValue{r.ownHref()}, true
 }
 
-// Pinned: caldav-go answers these with the href of whatever resource was asked.
+// Pinned: caldav-go answered these with the href of whatever resource was asked.
 func selfReferencing[R hrefed]() propTable[R] {
 	return propTable[R]{
 		{propPrincipalCollections, ownHref[R]},
@@ -177,7 +177,7 @@ func selfReferencing[R hrefed]() propTable[R] {
 	}
 }
 
-// RFC 4791 §6.2.1 and RFC 4918 §16: these belong to the principal; /dav/ answers them too
+// RFC 4791 §6.2.1 and RFC 3744 §4.2: these belong to the principal; /dav/ answers them too
 // because clients start discovery there.
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
