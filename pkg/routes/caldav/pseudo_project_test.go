@@ -37,6 +37,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // Tasks 40-46 in the fixtures are the only ones with a caldav uid and the only ones
@@ -133,37 +134,35 @@ STATUS:COMPLETED
 END:VTODO
 END:VCALENDAR`
 
-	// The PUT and DELETE flows in caldav-go both resolve the resource first, which is what
-	// puts the full task - including its real project - into the storage.
-	resolve := func(t *testing.T, storage *VikunjaCaldavProjectStorage, rpath string) {
+	// The PUT and DELETE handlers resolve the task through the collection before writing.
+	findAndWrite := func(t *testing.T, projectID int64, write func(s *xorm.Session, c readableCollection, stored *models.Task) error) error {
 		t.Helper()
 
-		storage.task = &models.Task{UID: "uid-caldav-test"}
-		_, found, err := storage.GetResource(rpath)
-		require.NoError(t, err)
-		require.True(t, found)
+		return writeTransaction(func(s *xorm.Session) error {
+			c, err := collectionFor(projectID).checkRead(s, caldavFilterUser)
+			require.NoError(t, err)
+			stored, err := findTask(s, caldavFilterUser, c.collectionTarget, "uid-caldav-test")
+			require.NoError(t, err)
+			require.NotNil(t, stored)
+			return write(s, c, stored)
+		})
 	}
 
 	t.Run("create through a filter is forbidden", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
-		storage := filterStorage(pseudoID)
-		storage.task = &models.Task{UID: "uid-caldav-new"}
 
-		_, err := storage.CreateResource(projectPath(pseudoID)+"uid-caldav-new.ics", newTaskContent)
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		_, err := createFromBody(caldavFilterUser, pseudoID, newTaskContent)
+		require.ErrorIs(t, err, errForbidden)
 		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
 	})
 
 	t.Run("create through favorites is forbidden", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		storage := filterStorage(models.FavoritesPseudoProjectID)
-		storage.task = &models.Task{UID: "uid-caldav-new"}
-
-		_, err := storage.CreateResource(projectPath(models.FavoritesPseudoProjectID)+"uid-caldav-new.ics", newTaskContent)
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		_, err := createFromBody(caldavFilterUser, models.FavoritesPseudoProjectID, newTaskContent)
+		require.ErrorIs(t, err, errForbidden)
 		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
 	})
 
@@ -171,11 +170,13 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
-		rpath := projectPath(pseudoID) + "uid-caldav-test.ics"
-		storage := filterStorage(pseudoID)
-		resolve(t, storage, rpath)
 
-		_, err := storage.UpdateResource(rpath, doneTaskContent)
+		err := findAndWrite(t, pseudoID, func(s *xorm.Session, c readableCollection, stored *models.Task) error {
+			vTask, props, err := parseTaskBody(doneTaskContent)
+			require.NoError(t, err)
+			_, err = updateTask(s, caldavFilterUser, c, stored, vTask, props)
+			return err
+		})
 		require.NoError(t, err)
 		db.AssertCount(t, "tasks", builder.Eq{
 			"id":         40,
@@ -189,11 +190,11 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
-		rpath := projectPath(pseudoID) + "uid-caldav-test.ics"
-		storage := filterStorage(pseudoID)
-		resolve(t, storage, rpath)
 
-		require.NoError(t, storage.DeleteResource(rpath))
+		err := findAndWrite(t, pseudoID, func(s *xorm.Session, c readableCollection, stored *models.Task) error {
+			return deleteTask(s, caldavFilterUser, c, stored)
+		})
+		require.NoError(t, err)
 		// Deletion only stamps deleted_at, so mere existence of the row proves nothing.
 		db.AssertCount(t, "tasks", builder.And(builder.Eq{"id": 40}, builder.IsNull{"deleted_at"}), 0)
 	})
@@ -202,11 +203,9 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingNothing)
-		storage := filterStorage(pseudoID)
-		storage.task = &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}
 
-		_, err := storage.UpdateResource(projectPath(pseudoID)+"uid-caldav-test.ics", doneTaskContent)
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		_, err := updateFromBody(caldavFilterUser, pseudoID, &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}, doneTaskContent)
+		require.ErrorIs(t, err, errNotFound)
 		db.AssertCount(t, "tasks", builder.Eq{"id": 40, "title": "Title Caldav Test"}, 1)
 	})
 
@@ -214,11 +213,9 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingNothing)
-		storage := filterStorage(pseudoID)
-		storage.task = &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}
 
-		err := storage.DeleteResource(projectPath(pseudoID) + "uid-caldav-test.ics")
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		err := deleteStored(caldavFilterUser, pseudoID, &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36})
+		require.ErrorIs(t, err, errNotFound)
 		db.AssertCount(t, "tasks", builder.And(builder.Eq{"id": 40}, builder.IsNull{"deleted_at"}), 1)
 	})
 
@@ -226,11 +223,8 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 
 		// Project 3 is owned by user 3 and shared read-only with user 1.
-		storage := storageFor(caldavOtherUser, 3)
-		storage.task = &models.Task{UID: "uid-caldav-new"}
-
-		_, err := storage.UpdateResource(projectPath(3)+"uid-caldav-new.ics", newTaskContent)
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		_, err := updateFromBody(caldavOtherUser, 3, &models.Task{UID: "uid-caldav-new"}, newTaskContent)
+		require.ErrorIs(t, err, errForbidden)
 		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
 	})
 }
@@ -625,11 +619,8 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 		archiveProject(t, 36)
 
-		storage := storageFor(caldavFilterUser, 36)
-		storage.task = &models.Task{UID: "uid-caldav-new"}
-
-		_, err := storage.CreateResource(projectPath(36)+"uid-caldav-new.ics", taskContent)
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		_, err := createFromBody(caldavFilterUser, 36, taskContent)
+		require.ErrorIs(t, err, errForbidden)
 		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
 	})
 
@@ -637,11 +628,8 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 		archiveProject(t, 36)
 
-		storage := storageFor(caldavFilterUser, 36)
-		storage.task = &models.Task{ID: 40, UID: "uid-caldav-test"}
-
-		_, err := storage.UpdateResource(projectPath(36)+"uid-caldav-test.ics", taskContent)
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		_, err := updateFromBody(caldavFilterUser, 36, &models.Task{ID: 40, UID: "uid-caldav-test"}, taskContent)
+		require.ErrorIs(t, err, errForbidden)
 		db.AssertCount(t, "tasks", builder.Eq{"id": 40, "title": "Title Caldav Test"}, 1)
 	})
 
@@ -649,11 +637,8 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 		archiveProject(t, 36)
 
-		storage := storageFor(caldavFilterUser, 36)
-		storage.task = &models.Task{ID: 40, UID: "uid-caldav-test"}
-
-		err := storage.DeleteResource(projectPath(36) + "uid-caldav-test.ics")
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		err := deleteStored(caldavFilterUser, 36, &models.Task{ID: 40, UID: "uid-caldav-test"})
+		require.ErrorIs(t, err, errForbidden)
 		// Deletion only stamps deleted_at, so mere existence of the row proves nothing.
 		db.AssertCount(t, "tasks", builder.And(builder.Eq{"id": 40}, builder.IsNull{"deleted_at"}), 1)
 	})
@@ -664,15 +649,13 @@ END:VCALENDAR`
 		favoriteTask(t, 40, caldavFilterUser)
 		archiveProject(t, 36)
 
-		rpath := projectPath(models.FavoritesPseudoProjectID) + "uid-caldav-test.ics"
-		storage := filterStorage(models.FavoritesPseudoProjectID)
-		storage.task = &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}
+		task := &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}
 
-		_, err := storage.UpdateResource(rpath, taskContent)
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		_, err := updateFromBody(caldavFilterUser, models.FavoritesPseudoProjectID, task, taskContent)
+		require.ErrorIs(t, err, errForbidden)
 		db.AssertCount(t, "tasks", builder.Eq{"id": 40, "title": "Title Caldav Test"}, 1)
 
-		require.ErrorIs(t, storage.DeleteResource(rpath), errs.ForbiddenError)
+		require.ErrorIs(t, deleteStored(caldavFilterUser, models.FavoritesPseudoProjectID, task), errForbidden)
 		db.AssertCount(t, "tasks", builder.And(builder.Eq{"id": 40}, builder.IsNull{"deleted_at"}), 1)
 	})
 
@@ -682,29 +665,24 @@ END:VCALENDAR`
 		archiveProject(t, 36)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
-		storage := filterStorage(pseudoID)
-		storage.task = &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}
 
-		_, err := storage.UpdateResource(projectPath(pseudoID)+"uid-caldav-test.ics", taskContent)
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		_, err := updateFromBody(caldavFilterUser, pseudoID, &models.Task{ID: 40, UID: "uid-caldav-test", ProjectID: 36}, taskContent)
+		require.ErrorIs(t, err, errNotFound)
 		db.AssertCount(t, "tasks", builder.Eq{"id": 40, "title": "Title Caldav Test"}, 1)
 	})
 
 	t.Run("archival inherited from a parent project is forbidden too", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		storage := storageFor(caldavOtherUser, inheritedArchivedProjectID)
-		storage.task = &models.Task{UID: "uid-caldav-new"}
-
-		_, err := storage.CreateResource(projectPath(inheritedArchivedProjectID)+"uid-caldav-new.ics", taskContent)
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		_, err := createFromBody(caldavOtherUser, inheritedArchivedProjectID, taskContent)
+		require.ErrorIs(t, err, errForbidden)
 		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
 	})
 }
 
-// caldav-go dispatches a PUT whose resource GetResource could not find to CreateResource,
-// so CreateResource decides the answer for stale hrefs and unreadable collections alike.
-func TestCreateResource_MissesBeforeDenials(t *testing.T) {
+// A PUT whose task the lookup could not find goes on to create it, so createTask decides
+// the answer for stale hrefs and unreadable collections alike.
+func TestCreateTask_MissesBeforeDenials(t *testing.T) {
 	const newTaskContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Vikunja Todo App//EN
@@ -725,18 +703,23 @@ SUMMARY:Recreated through the filter
 END:VTODO
 END:VCALENDAR`
 
-	create := func(t *testing.T, storage *VikunjaCaldavProjectStorage, uid, content string) error {
+	create := func(t *testing.T, u *user.User, projectID int64, uid, content string) error {
 		t.Helper()
 
-		storage.task = &models.Task{UID: uid}
-		// caldav-go only reaches CreateResource once GetResource reported a miss.
-		_, found, err := storage.GetResource(projectPath(storage.project.ID) + uid + ".ics")
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
-		require.False(t, found)
+		return writeTransaction(func(s *xorm.Session) error {
+			c, err := collectionFor(projectID).checkRead(s, u)
+			if err != nil {
+				return err
+			}
+			// The handler only creates once the lookup reported a miss.
+			stored, err := findTask(s, u, c.collectionTarget, uid)
+			require.NoError(t, err)
+			require.Nil(t, stored)
 
-		storage.task = &models.Task{UID: uid}
-		_, err = storage.CreateResource(projectPath(storage.project.ID)+uid+".ics", content)
-		return err
+			vTask, _, err := parseTaskBody(content)
+			require.NoError(t, err)
+			return createTask(s, u, c, vTask)
+		})
 	}
 
 	t.Run("a task the pseudo collection does not contain is not found", func(t *testing.T) {
@@ -744,24 +727,24 @@ END:VCALENDAR`
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingNothing)
 
-		err := create(t, filterStorage(pseudoID), "uid-caldav-test", existingTaskContent)
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		err := create(t, caldavFilterUser, pseudoID, "uid-caldav-test", existingTaskContent)
+		require.ErrorIs(t, err, errNotFound)
 		db.AssertCount(t, "tasks", builder.Eq{"uid": "uid-caldav-test"}, 1)
 	})
 
 	t.Run("a saved filter of another user is not found", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		err := create(t, filterStorage(foreignFilterProjectID), "uid-caldav-new", newTaskContent)
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		err := create(t, caldavFilterUser, foreignFilterProjectID, "uid-caldav-new", newTaskContent)
+		require.ErrorIs(t, err, errNotFound)
 		db.AssertCount(t, "tasks", builder.Eq{"uid": "uid-caldav-new"}, 0)
 	})
 
 	t.Run("a project the user has no access to is not found", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		err := create(t, storageFor(caldavOtherUser, inaccessibleProjectID), "uid-caldav-new", newTaskContent)
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		err := create(t, caldavOtherUser, inaccessibleProjectID, "uid-caldav-new", newTaskContent)
+		require.ErrorIs(t, err, errNotFound)
 		db.AssertCount(t, "tasks", builder.Eq{"uid": "uid-caldav-new"}, 0)
 	})
 
@@ -769,15 +752,15 @@ END:VCALENDAR`
 		db.LoadAndAssertFixtures(t)
 
 		// Project 3 is owned by user 3 and shared read-only with user 1.
-		err := create(t, storageFor(caldavOtherUser, 3), "uid-caldav-new", newTaskContent)
-		require.ErrorIs(t, err, errs.ForbiddenError)
+		err := create(t, caldavOtherUser, 3, "uid-caldav-new", newTaskContent)
+		require.ErrorIs(t, err, errForbidden)
 		db.AssertCount(t, "tasks", builder.Eq{"uid": "uid-caldav-new"}, 0)
 	})
 
 	t.Run("a new task in a writable project is created", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		err := create(t, storageFor(caldavFilterUser, 36), "uid-caldav-new", newTaskContent)
+		err := create(t, caldavFilterUser, 36, "uid-caldav-new", newTaskContent)
 		require.NoError(t, err)
 		db.AssertCount(t, "tasks", builder.Eq{
 			"uid":        "uid-caldav-new",

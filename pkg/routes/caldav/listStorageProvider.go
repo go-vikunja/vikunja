@@ -29,7 +29,6 @@ import (
 	"github.com/samedi/caldav-go/data"
 	"github.com/samedi/caldav-go/errs"
 	"github.com/samedi/caldav-go/lib"
-	"xorm.io/xorm"
 )
 
 // DavBasePath is the base url path
@@ -408,74 +407,22 @@ func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data
 	return vcls.GetResource(rpath)
 }
 
-// CreateResource creates a new resource
-func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (*data.Resource, error) {
-	if vcls.project == nil {
-		return nil, errs.ForbiddenError
-	}
+// Writes never reach caldav-go: PUT and DELETE are served in-house.
+var errWriteThroughLibrary = errors.New("caldav: writes do not go through caldav-go")
 
-	var vTask *models.Task
-	err := writeTransaction(func(s *xorm.Session) error {
-		c, err := vcls.collection().checkRead(s, vcls.user)
-		if err != nil {
-			return err
-		}
-		vTask, _, err = parseTaskBody(content)
-		if err != nil {
-			return err
-		}
-		return createTask(s, vcls.user, c, vTask)
-	})
-	if err != nil {
-		return nil, toLibraryError(err)
-	}
-
-	r := data.NewResource(rpath, &VikunjaProjectResourceAdapter{project: vcls.project, task: vTask})
-	return &r, nil
+// CreateResource only satisfies data.Storage.
+func (vcls *VikunjaCaldavProjectStorage) CreateResource(string, string) (*data.Resource, error) {
+	return nil, errWriteThroughLibrary
 }
 
-// UpdateResource updates a resource
-func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
-	var updated *models.Task
-	err := writeTransaction(func(s *xorm.Session) error {
-		c := readableCollection{vcls.collection()}
-		if err := c.checkWrite(s, vcls.user, vcls.task); err != nil {
-			return err
-		}
-		vTask, props, err := parseTaskBody(content)
-		if err != nil {
-			return err
-		}
-		storedTasks, err := models.GetTasksByUIDs(s, []string{vcls.task.UID}, vcls.user)
-		if err != nil {
-			return err
-		}
-		var stored *models.Task
-		for _, t := range storedTasks {
-			if t.ID == vcls.task.ID {
-				stored = t
-			}
-		}
-		if stored == nil {
-			return errNotFound
-		}
-		updated, err = updateTask(s, vcls.user, c, stored, vTask, props)
-		return err
-	})
-	if err != nil {
-		return nil, toLibraryError(err)
-	}
-
-	r := data.NewResource(rpath, &VikunjaProjectResourceAdapter{project: vcls.project, task: updated})
-	return &r, nil
+// UpdateResource only satisfies data.Storage.
+func (vcls *VikunjaCaldavProjectStorage) UpdateResource(string, string) (*data.Resource, error) {
+	return nil, errWriteThroughLibrary
 }
 
-// DeleteResource deletes a resource
-func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
-	err := writeTransaction(func(s *xorm.Session) error {
-		return deleteTask(s, vcls.user, readableCollection{vcls.collection()}, vcls.task)
-	})
-	return toLibraryError(err)
+// DeleteResource only satisfies data.Storage.
+func (vcls *VikunjaCaldavProjectStorage) DeleteResource(string) error {
+	return errWriteThroughLibrary
 }
 
 // VikunjaProjectResourceAdapter holds the actual resource
