@@ -17,13 +17,10 @@
 package caldav
 
 import (
-	"errors"
 	"net/url"
 	"strings"
 
 	"code.vikunja.io/api/pkg/models"
-	user2 "code.vikunja.io/api/pkg/user"
-	"github.com/samedi/caldav-go/data"
 )
 
 // DavBasePath is the base url path
@@ -34,21 +31,6 @@ const ProjectBasePath = DavBasePath + `/projects`
 
 // PrincipalBasePath is the base path for all principal resources
 const PrincipalBasePath = DavBasePath + `/principals`
-
-// VikunjaCaldavProjectStorage represents a project storage
-type VikunjaCaldavProjectStorage struct {
-	// Used when handling a project
-	project *models.ProjectWithTasksAndBuckets
-	// Used when handling a single task, like updating
-	task *models.Task
-	// The current user
-	user *user2.User
-}
-
-// GetResources only satisfies data.Storage.
-func (vcls *VikunjaCaldavProjectStorage) GetResources(string, bool) ([]data.Resource, error) {
-	return nil, errNotThroughLibrary
-}
 
 func principalPathForUser(username string) string {
 	return PrincipalBasePath + `/` + username + `/`
@@ -62,42 +44,4 @@ func taskURL(collectionProjectID int64, task *models.Task) string {
 // url.PathEscape leaves & alone, and caldav-go writes hrefs into XML unescaped.
 func encodeURIPathSegment(segment string) string {
 	return strings.ReplaceAll(url.PathEscape(segment), "&", "%26")
-}
-
-// caldav-go only answers the methods nobody handles, with 501, and never asks the storage.
-var errNotThroughLibrary = errors.New("caldav: not served through caldav-go")
-
-// GetResourcesByList only satisfies data.Storage.
-func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList([]string) ([]data.Resource, error) {
-	return nil, errNotThroughLibrary
-}
-
-// GetResourcesByFilters only satisfies data.Storage.
-func (vcls *VikunjaCaldavProjectStorage) GetResourcesByFilters(string, *data.ResourceFilter) ([]data.Resource, error) {
-	return nil, errNotThroughLibrary
-}
-
-// GetResource only satisfies data.Storage.
-func (vcls *VikunjaCaldavProjectStorage) GetResource(string) (*data.Resource, bool, error) {
-	return nil, false, errNotThroughLibrary
-}
-
-// GetShallowResource only satisfies data.Storage.
-func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(string) (*data.Resource, bool, error) {
-	return nil, false, errNotThroughLibrary
-}
-
-// CreateResource only satisfies data.Storage.
-func (vcls *VikunjaCaldavProjectStorage) CreateResource(string, string) (*data.Resource, error) {
-	return nil, errNotThroughLibrary
-}
-
-// UpdateResource only satisfies data.Storage.
-func (vcls *VikunjaCaldavProjectStorage) UpdateResource(string, string) (*data.Resource, error) {
-	return nil, errNotThroughLibrary
-}
-
-// DeleteResource only satisfies data.Storage.
-func (vcls *VikunjaCaldavProjectStorage) DeleteResource(string) error {
-	return errNotThroughLibrary
 }

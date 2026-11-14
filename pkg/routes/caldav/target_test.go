@@ -161,29 +161,3 @@ func TestResolveTarget(t *testing.T) {
 		assert.Equal(t, int64(models.FavoritesPseudoProjectID), got.(taskTarget).collection.project.ID)
 	})
 }
-
-func TestNewStorage(t *testing.T) {
-	project := &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}}
-
-	entry := newStorage(caldavFilterUser, entryTarget{})
-	assert.Nil(t, entry.project)
-	assert.Nil(t, entry.task)
-	assert.Equal(t, caldavFilterUser, entry.user)
-
-	principal := newStorage(caldavFilterUser, principalTarget{})
-	assert.Nil(t, principal.project)
-	assert.Nil(t, principal.task)
-
-	homeSet := newStorage(caldavFilterUser, homeSetTarget{})
-	require.NotNil(t, homeSet.project)
-	assert.Zero(t, homeSet.project.ID)
-
-	collection := newStorage(caldavFilterUser, collectionTarget{project: project})
-	assert.Same(t, project, collection.project)
-	assert.Nil(t, collection.task)
-
-	task := newStorage(caldavFilterUser, taskTarget{collection: collectionTarget{project: project}, uid: "a/b"})
-	assert.Same(t, project, task.project)
-	require.NotNil(t, task.task)
-	assert.Equal(t, "a/b", task.task.UID)
-}
