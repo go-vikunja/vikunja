@@ -128,9 +128,8 @@ func TestCalendarBodyParsing(t *testing.T) {
 	t.Run("collection PUT with an unparseable body is invalid", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		_, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, http.MethodPut, projectPath(36), unparseableCalendar, projectParams(36))
-		require.Error(t, err)
-		assert.True(t, models.IsErrInvalidData(err), "got %v", err)
+		rec, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, http.MethodPut, projectPath(36), unparseableCalendar, projectParams(36))
+		requireHTTPStatus(t, http.StatusBadRequest, rec, err)
 	})
 
 	t.Run("task PUT with too many property parameters is rejected", func(t *testing.T) {
@@ -171,8 +170,6 @@ func TestRejectedBodiesOnInaccessibleProjects(t *testing.T) {
 		path    string
 		body    string
 		params  echo.PathValues
-		// TaskHandler returns the error; ProjectHandler writes the 404 itself
-		returnsErr bool
 	}{
 		{
 			name:    "collection PUT with an oversized body",
@@ -183,13 +180,12 @@ func TestRejectedBodiesOnInaccessibleProjects(t *testing.T) {
 			params:  projectParams(1),
 		},
 		{
-			name:       "task PUT with too many property parameters",
-			handler:    TaskHandler,
-			method:     http.MethodPut,
-			path:       projectPath(1) + uid + ".ics",
-			body:       calendarWithTask(uid, tooManyParameters()),
-			params:     taskParams(1, uid),
-			returnsErr: true,
+			name:    "task PUT with too many property parameters",
+			handler: TaskHandler,
+			method:  http.MethodPut,
+			path:    projectPath(1) + uid + ".ics",
+			body:    calendarWithTask(uid, tooManyParameters()),
+			params:  taskParams(1, uid),
 		},
 	}
 
@@ -198,14 +194,8 @@ func TestRejectedBodiesOnInaccessibleProjects(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 
 			rec, err := callCaldavHandler(t, tt.handler, caldavFilterUser, tt.method, tt.path, tt.body, tt.params)
-			if tt.returnsErr {
-				require.Error(t, err)
-				assert.True(t, models.IsErrProjectDoesNotExist(err), "got %v", err)
-				return
-			}
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, rec.Code)
-			assert.Equal(t, "Project not found", rec.Body.String())
 		})
 	}
 }

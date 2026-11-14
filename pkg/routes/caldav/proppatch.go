@@ -18,7 +18,6 @@ package caldav
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -37,7 +36,7 @@ const (
 	maxPropPatchNamespaceBytes = 256
 )
 
-var errTooManyProperties = errors.New("too many properties")
+var errTooManyProperties = fmt.Errorf("%w: too many properties", errBodyTooLarge)
 
 var calendarColorProp = xml.Name{Space: "http://apple.com/ns/ical/", Local: "calendar-color"}
 
@@ -66,16 +65,16 @@ func parsePropertyUpdate(body string) ([]*propPatchInstruction, error) {
 	for {
 		tok, err := d.Token()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %w", errMalformedBody, err)
 		}
 		switch t := tok.(type) {
 		case xml.StartElement:
 			if len(path) == 0 && t.Name.Local != "propertyupdate" {
-				return nil, fmt.Errorf("expected <propertyupdate>, got <%s>", t.Name.Local)
+				return nil, fmt.Errorf("%w: expected <propertyupdate>, got <%s>", errMalformedBody, t.Name.Local)
 			}
 			if len(path) == 3 && (path[1] == "set" || path[1] == "remove") && path[2] == "prop" {
 				if len(t.Name.Space) > maxPropPatchNamespaceBytes {
-					return nil, fmt.Errorf("namespace of <%s> too long", t.Name.Local)
+					return nil, fmt.Errorf("%w: namespace of <%s> too long", errMalformedBody, t.Name.Local)
 				}
 				current = seen[t.Name]
 				if current == nil {
@@ -122,7 +121,7 @@ type propPatchResult struct {
 // sabre/dav's 403 "polite refusal", which clients tolerate unlike caldav-go's 501.
 func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User, target propPatchTarget) error {
 	if len(body) > maxPropPatchBodySize {
-		return c.String(http.StatusRequestEntityTooLarge, "Request Entity Too Large")
+		return writeError(c, errBodyTooLarge)
 	}
 
 	s := db.NewSession()
@@ -130,27 +129,24 @@ func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTa
 
 	can, _, err := project.CanRead(s, u)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 	if !can {
-		return c.String(http.StatusForbidden, "Forbidden")
+		return writeError(c, errForbidden)
 	}
 
 	instructions, err := parsePropertyUpdate(body)
-	if errors.Is(err, errTooManyProperties) {
-		return c.String(http.StatusRequestEntityTooLarge, "Request Entity Too Large")
-	}
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Bad Request")
+		return writeError(c, err)
 	}
 
 	results, err := applyPropPatch(s, instructions, &project.Project, u, target)
 	if err != nil {
 		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 	if err := s.Commit(); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 
 	return writePropPatchResponse(c, results)
