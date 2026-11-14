@@ -18,7 +18,6 @@ package caldav
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -62,16 +61,13 @@ func caldavConfig(storage data.Storage, principalPath string) caldav.Config {
 // ProjectHandler returns all tasks from a project
 func ProjectHandler(c *echo.Context) error {
 	project, err := getProjectFromParam(c)
-	if err != nil && models.IsErrProjectDoesNotExist(err) {
-		return c.String(http.StatusNotFound, "Project not found")
-	}
 	if err != nil {
-		return err
+		return writeError(c, err)
 	}
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -85,27 +81,25 @@ func ProjectHandler(c *echo.Context) error {
 
 	logRequest(c.Request().Header, body)
 
-	projectNotFound := func() error { return c.String(http.StatusNotFound, "Project not found") }
-
 	if c.Request().Method == http.MethodPut && strings.HasPrefix(string(body), `BEGIN:VCALENDAR`) {
 		s := db.NewSession()
 		canRead, err := storage.canReadCollection(s)
 		s.Close()
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+			return writeError(c, err)
 		}
 		if !canRead {
-			return projectNotFound()
+			return writeError(c, errNotFound)
 		}
 
-		if err := checkCalendarBody(string(body)); err != nil {
-			return err
+		if err := caldav2.CheckVCalendarLimits(string(body)); err != nil {
+			return writeError(c, err)
 		}
 
 		storage.task, _, err = caldav2.ParseTaskFromVTODO(string(body))
 		if err != nil {
 			log.Warningf("[CALDAV] Failed to parse task: %v", err)
-			return models.ErrInvalidData{Message: "Invalid task"}
+			return writeError(c, models.ErrInvalidData{Message: "Invalid task"})
 		}
 	}
 
@@ -133,7 +127,7 @@ func ProjectHandler(c *echo.Context) error {
 
 		canWrite, err := denyArchived(storage.project.CanWrite(s, u))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+			return writeError(c, err)
 		}
 
 		if !canWrite {
@@ -141,10 +135,10 @@ func ProjectHandler(c *echo.Context) error {
 			// would leak which project and filter ids exist.
 			can, err := storage.canReadCollection(s)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+				return writeError(c, err)
 			}
 			if !can {
-				return c.String(http.StatusNotFound, "Project not found")
+				return writeError(c, errNotFound)
 			}
 
 			// A pseudo collection cannot be written to as a collection, but PUT and DELETE
@@ -170,21 +164,18 @@ func TaskHandler(c *echo.Context) error {
 	// PROPPATCH on a task resource gets the same 207/403 refusal as on a
 	// collection, rather than caldav-go's blanket 501 (see ProjectHandler).
 	if c.Request().Method == "PROPPATCH" {
-		if err != nil && models.IsErrProjectDoesNotExist(err) {
-			return c.String(http.StatusNotFound, "Project not found")
-		}
 		if err != nil {
-			return err
+			return writeError(c, err)
 		}
 
 		u, err := getBasicAuthUserFromContext(c)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+			return writeError(c, err)
 		}
 
 		body, err := io.ReadAll(c.Request().Body)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Could not read request body").Wrap(err)
+			return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
 		}
 		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 
@@ -192,12 +183,12 @@ func TaskHandler(c *echo.Context) error {
 	}
 
 	if err != nil {
-		return err
+		return writeError(c, err)
 	}
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 
 	// Whether c.Param("task") arrives decoded depends on router config and on which
@@ -206,7 +197,7 @@ func TaskHandler(c *echo.Context) error {
 	seg := esc[strings.LastIndex(esc, "/")+1:]
 	taskUID, err := url.PathUnescape(strings.TrimSuffix(seg, ".ics"))
 	if err != nil {
-		return c.String(http.StatusNotFound, "Task not found")
+		return writeError(c, errNotFound)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -214,15 +205,13 @@ func TaskHandler(c *echo.Context) error {
 		task:    &models.Task{UID: taskUID},
 		user:    u,
 	}
-	projectNotFound := func() error { return models.ErrProjectDoesNotExist{ID: project.ID} }
-
 	if c.Request().Method == http.MethodPut {
 		body, err := io.ReadAll(io.LimitReader(c.Request().Body, caldav2.MaxVCalendarSize+1))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Could not read request body").Wrap(err)
+			return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
 		}
-		if err := checkCalendarBody(string(body)); err != nil {
-			return storage.rejectBody(err, projectNotFound)
+		if err := caldav2.CheckVCalendarLimits(string(body)); err != nil {
+			return writeError(c, storage.rejectBody(err))
 		}
 		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}
@@ -248,11 +237,11 @@ func isOwnPrincipalPath(path, username string) bool {
 func PrincipalHandler(c *echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 
 	if !isOwnPrincipalPath(c.Request().URL.Path, u.Username) {
-		return c.String(http.StatusNotFound, "Not found")
+		return writeError(c, errNotFound)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -286,7 +275,7 @@ func logRequest(header http.Header, body []byte) {
 func EntryHandler(c *echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -307,7 +296,7 @@ func EntryHandler(c *echo.Context) error {
 }
 
 // Body checks precede caldav-go's access checks, so an unreadable collection must answer like a missing one.
-func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error, notFound func() error) error {
+func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error) error {
 	if vcls.project.ID == 0 {
 		return checkErr
 	}
@@ -316,23 +305,12 @@ func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error, notFound fun
 	defer s.Close()
 	canRead, err := vcls.canReadCollection(s)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return err
 	}
 	if !canRead {
-		return notFound()
+		return errNotFound
 	}
 	return checkErr
-}
-
-func checkCalendarBody(body string) error {
-	err := caldav2.CheckVCalendarLimits(body)
-	switch {
-	case errors.Is(err, caldav2.ErrVCalendarTooLarge):
-		return echo.NewHTTPError(http.StatusRequestEntityTooLarge, err.Error())
-	case err != nil:
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	return nil
 }
 
 func getProjectFromParam(c *echo.Context) (project *models.ProjectWithTasksAndBuckets, err error) {

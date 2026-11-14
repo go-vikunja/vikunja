@@ -17,7 +17,6 @@
 package caldav
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,7 +27,6 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go/errs"
 )
 
 const (
@@ -134,10 +132,10 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 		// Without this the 403 would leak which saved filter ids exist.
 		can, err := storage.canReadCollection(s)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+			return writeError(c, err)
 		}
 		if !can {
-			return c.String(http.StatusNotFound, "Project not found")
+			return writeError(c, errNotFound)
 		}
 
 		log.Debugf("[CALDAV sync-collection] project=%d is a pseudo project → 403 valid-sync-token to force a full resync", projectID)
@@ -145,12 +143,8 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 	}
 
 	rr, err := storage.getProjectRessource(true)
-	if errors.Is(err, errs.ResourceNotFoundError) {
-		return c.String(http.StatusNotFound, "Project not found")
-	}
 	if err != nil {
-		log.Errorf("[CALDAV sync-collection] Failed to load project resource: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, fromLibraryError(err))
 	}
 
 	newEtag := rr.CalculateEtag()
@@ -206,11 +200,10 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 	deletions, err := models.GetDeletedTasksSince(s, projectID, tokenTS)
 	if err != nil {
 		_ = s.Rollback()
-		log.Errorf("[CALDAV sync-collection] Failed to fetch deletions for project %d: %v", projectID, err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 	if err := s.Commit(); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 
 	log.Debugf("[CALDAV sync-collection] project=%d delta: %d changed tasks, %d deletions since %v → newToken=%q",

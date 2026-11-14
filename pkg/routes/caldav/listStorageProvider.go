@@ -18,8 +18,8 @@ package caldav
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"slices"
 	"strconv"
@@ -359,10 +359,9 @@ func (vcls *VikunjaCaldavProjectStorage) hrefFor(rpath string) string {
 	return rpath
 }
 
-// Project.CanWrite reports archival through its error return; caldav-go has no case for
-// that error and would answer 500, so collapse it into a plain denial.
+// Project.CanWrite reports archival through its error return; collapse that into a plain denial.
 func denyArchived(can bool, err error) (bool, error) {
-	if models.IsErrProjectIsArchived(err) {
+	if err != nil && errorStatus(err) == http.StatusForbidden {
 		return false, nil
 	}
 	return can, err
@@ -628,7 +627,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to convert description in CreateResource: %v", err)
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		return nil, caldavTaskWriteError(err)
+		return nil, toLibraryError(err)
 	}
 
 	// Create the task
@@ -637,7 +636,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to create task in CreateResource: %v, task: %+v", err, vTask)
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		return nil, caldavTaskWriteError(err)
+		return nil, toLibraryError(err)
 	}
 
 	vcls.task.ID = vTask.ID
@@ -782,7 +781,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to convert description in UpdateResource: %v", err)
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		return nil, caldavTaskWriteError(err)
+		return nil, toLibraryError(err)
 	}
 
 	// Overlay only what the VTODO expressed; everything else keeps its stored value.
@@ -821,7 +820,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		log.Errorf("[CALDAV] Failed to update task in UpdateResource: %v, task: %+v", err, base)
 		_ = s.Rollback()
 		events.CleanupPending(s)
-		return nil, caldavTaskWriteError(err)
+		return nil, toLibraryError(err)
 	}
 
 	// nil = CATEGORIES absent, leave labels alone; non-nil (even empty) = explicit set.
@@ -1258,13 +1257,4 @@ func addTaskResource(collectionProjectID int64, task *models.Task, rr *VikunjaPr
 	taskResourceInstance := data.NewResource(taskURL(collectionProjectID, task), rr)
 	taskResourceInstance.Name = task.Title
 	*resources = append(*resources, taskResourceInstance)
-}
-
-// caldav-go answers anything but its own errors with 500.
-func caldavTaskWriteError(err error) error {
-	var validationErr models.ValidationHTTPError
-	if errors.As(err, &validationErr) || errors.Is(err, richtext.ErrTooManyTableCells) {
-		return errs.ForbiddenError
-	}
-	return err
 }
