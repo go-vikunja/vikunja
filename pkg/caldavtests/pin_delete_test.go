@@ -40,7 +40,8 @@ func TestPinDELETE(t *testing.T) {
 
 		rec := caldavDELETE(t, e, "/dav/projects")
 
-		assert.Equal(t, http.StatusInternalServerError, rec.Code, "Body:\n%s", rec.Body.String())
+		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "Body:\n%s", rec.Body.String())
+		assert.Equal(t, allowHomeSet, rec.Header().Get("Allow"))
 	})
 
 	t.Run("stale If-Match", func(t *testing.T) {

@@ -27,6 +27,7 @@ const (
 	davComplianceHeader = "1, 3, calendar-access"
 	allowReadWrite      = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
 	allowReadOnly       = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
+	allowHomeSet        = "OPTIONS, PROPFIND"
 )
 
 func TestPinOPTIONS(t *testing.T) {

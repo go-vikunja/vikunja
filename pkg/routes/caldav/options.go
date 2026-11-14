@@ -29,6 +29,8 @@ const (
 	davCompliance  = "1, 3, calendar-access"
 	allowReadWrite = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
 	allowReadOnly  = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
+	// The home set only lists the collections in it.
+	allowHomeSet = "OPTIONS, PROPFIND"
 )
 
 func serveOptions(c *echo.Context, u *user.User, t target) error {
@@ -72,4 +74,9 @@ func collectionAllow(u *user.User, collection collectionTarget) (string, error) 
 		return allowReadWrite, nil
 	}
 	return allowReadOnly, nil
+}
+
+func homeSetMethodNotAllowed(c *echo.Context) error {
+	c.Response().Header().Set("Allow", allowHomeSet)
+	return c.NoContent(http.StatusMethodNotAllowed)
 }

@@ -36,7 +36,7 @@ func serveDelete(c *echo.Context, u *user.User, t target) error {
 		}
 		return writeError(c, errForbidden)
 	case homeSetTarget:
-		return serveProjects(c, u, t)
+		return homeSetMethodNotAllowed(c)
 	case collectionTarget:
 		return deleteCollection(c, u, t)
 	case taskTarget:
