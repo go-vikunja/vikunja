@@ -13,7 +13,8 @@
 		:share-name="getDisplayName"
 		:add="(projectId, user) => createShare.mutateAsync({projectId, username: user.username})"
 		:update-permission="(projectId, share, permission) => updateShare.mutateAsync({projectId, username: share.username, permission})"
-		:remove="(projectId, share) => deleteShare.mutateAsync({projectId, username: share.username})"
+		:remove="removeShare"
+		:is-own-share="isOwnShare"
 	>
 		<template #candidate="{candidate}">
 			<User
@@ -26,7 +27,7 @@
 			<td>{{ getDisplayName(share) }}</td>
 			<td>
 				<b
-					v-if="share.id === authStore.info?.id"
+					v-if="isOwnShare(share)"
 					class="is-success"
 				>{{ $t('project.share.userTeam.you') }}</b>
 			</td>
@@ -37,6 +38,8 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
+import {useRouter} from 'vue-router'
+import type {AccessLossCleanup} from '@/client/queries/accessLossCleanup'
 import {projectUserSharesQuery, useCreateProjectUserShareMutation, useUpdateProjectUserShareMutation, useDeleteProjectUserShareMutation} from '@/client/queries/projectShares'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {getDisplayName} from '@/helpers/user'
@@ -50,6 +53,11 @@ const props = defineProps<{
 }>()
 
 const authStore = useAuthStore()
+const router = useRouter()
+
+function isOwnShare(share: {id?: number}) {
+	return share.id === authStore.info?.id
+}
 
 function hasUsername<T extends {username?: string}>(user: T): user is T & {username: string} {
 	return Boolean(user.username)
@@ -64,4 +72,18 @@ const candidates = computed(() => users.value.filter(hasUsername).filter(user =>
 const createShare = useCreateProjectUserShareMutation()
 const updateShare = useUpdateProjectUserShareMutation()
 const deleteShare = useDeleteProjectUserShareMutation()
+
+async function removeShare(projectId: number, share: {
+	id?: number,
+	username: string,
+}, cleanup: AccessLossCleanup) {
+	const ownShare = isOwnShare(share)
+	await deleteShare.mutateAsync({
+		projectId,
+		username: share.username,
+		cleanup,
+		isOwnShare: ownShare,
+	})
+	if (ownShare) await router.push({name: 'home'})
+}
 </script>

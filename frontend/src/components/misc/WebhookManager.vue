@@ -1,13 +1,14 @@
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue'
+import {computed, nextTick, ref, watch} from 'vue'
 
-import type {WebhookWritable} from '@/client/generated'
+import type {Webhook, WebhookWritable} from '@/client/generated'
 import {useQuery} from '@tanstack/vue-query'
 import {
 	webhooksQuery,
 	webhookEventsQuery,
 	useCreateWebhookMutation,
 	useDeleteWebhookMutation,
+	useUpdateWebhookMutation,
 	type WebhookScope,
 } from '@/client/queries/webhooks'
 import {useClampedPage} from '@/composables/useClampedPage'
@@ -37,7 +38,13 @@ useClampedPage(currentPage, {data: webhookData, isPlaceholderData})
 const availableEvents = computed(() => eventData.value ?? [])
 const createMutation = useCreateWebhookMutation()
 const deleteMutation = useDeleteWebhookMutation()
-const loading = computed(() => isFetching.value || createMutation.isPending.value || deleteMutation.isPending.value)
+const updateMutation = useUpdateWebhookMutation()
+const loading = computed(() =>
+	isFetching.value
+	|| createMutation.isPending.value
+	|| deleteMutation.isPending.value
+	|| updateMutation.isPending.value,
+)
 function emptyDraft(): WebhookWritable & {target_url: string} {
 	return {target_url: '', secret: '', basic_auth_user: '', basic_auth_password: '', events: []}
 }
@@ -127,6 +134,26 @@ async function create() {
 function confirmDelete(webhookId: number) {
 	webhookIdToDelete.value = webhookId
 	showDeleteModal.value = true
+}
+
+async function enable(webhook: Webhook, event: MouseEvent) {
+	if (!webhook.id) return
+	const deleteButton = (event.currentTarget as HTMLButtonElement).nextElementSibling as HTMLButtonElement
+	try {
+		await updateMutation.mutateAsync({
+			scope: props.scope,
+			id: webhook.id,
+			body: {
+				target_url: webhook.target_url,
+				events: webhook.events,
+				is_disabled: false,
+			},
+		})
+	} catch {
+		return
+	}
+	await nextTick()
+	deleteButton.focus()
 }
 
 function doDelete() {
@@ -285,6 +312,12 @@ function doDelete() {
 				>
 					<td class="webhook-target-url">
 						{{ w.target_url }}
+						<p
+							v-if="w.is_disabled"
+							class="help"
+						>
+							{{ $t('project.webhooks.disabledWarning') }}
+						</p>
 					</td>
 					<td>{{ (w.events ?? []).join(', ') }}</td>
 					<td>{{ formatDateShort(w.created) }}</td>
@@ -296,6 +329,14 @@ function doDelete() {
 					</td>
 
 					<td class="actions">
+						<XButton
+							v-if="w.is_disabled"
+							icon="play"
+							:loading="updateMutation.isPending.value"
+							@click="enable(w, $event)"
+						>
+							{{ $t('project.webhooks.enable') }}
+						</XButton>
 						<XButton
 							danger
 							icon="trash-alt"

@@ -76,7 +76,7 @@ func RegisterTeamRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "teams-delete",
 		Summary:     "Delete a team",
-		Description: "Deletes a team and revokes the access it granted to all of its members. Only a team admin may delete it.",
+		Description: "Deletes a team and revokes the access it granted to all of its members. Only a team admin may delete it. Users who lose access to a project or its child projects lose their task assignments and subscriptions there; keep_webhooks and revoke_link_shares decide what happens to their webhooks and link shares.",
 		Method:      http.MethodDelete,
 		Path:        "/teams/{id}",
 		Tags:        tags,
@@ -176,13 +176,22 @@ func teamsUpdate(ctx context.Context, in *struct {
 }
 
 func teamsDelete(ctx context.Context, in *struct {
-	ID int64 `path:"id"`
+	ID               int64 `path:"id"`
+	KeepWebhooks     bool  `query:"keep_webhooks" doc:"Keep the webhooks created by users who lose access, transferring them to you without changing their destination. Delivery follows your project access. By default they are deleted. Your own webhooks are deleted if you lose access."`
+	RevokeLinkShares bool  `query:"revoke_link_shares" doc:"Delete the link shares created by users who lose access. By default they keep working."`
 }) (*emptyBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.DoDelete(ctx, &models.Team{ID: in.ID}, a); err != nil {
+	team := &models.Team{
+		ID: in.ID,
+		AccessLossCleanup: models.AccessLossCleanup{
+			KeepWebhooks:     in.KeepWebhooks,
+			RevokeLinkShares: in.RevokeLinkShares,
+		},
+	}
+	if err := handler.DoDelete(ctx, team, a); err != nil {
 		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil

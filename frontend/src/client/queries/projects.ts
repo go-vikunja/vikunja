@@ -19,6 +19,7 @@ import {PERMISSIONS} from '@/constants/permissions'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {i18n} from '@/i18n'
 
+import {invalidateAccessLossCleanup, type AccessLossChoice} from './accessLossCleanup'
 import {contextMutationOptions} from './contextMutation'
 import {fetchAllPages} from './fetchAllPages'
 import {setSubscription} from './subscriptionRequests'
@@ -66,7 +67,10 @@ type ProjectDraft = Required<Pick<ProjectWritable,
 	'position'
 >>
 
-type UpdateProjectInput = ProjectDraft & {id: number}
+type UpdateProjectInput = ProjectDraft & {
+	id: number,
+	accessLoss?: AccessLossChoice,
+}
 
 type DuplicateProjectInput = {
 	projectId: number
@@ -300,16 +304,19 @@ export function createProjectMutationOptions() {
 
 export function updateProjectMutationOptions(successMessage?: string) {
 	return contextMutationOptions({
-		mutationFn: async ({id, ...project}: UpdateProjectInput) => {
+		mutationFn: async ({id, accessLoss, ...project}: UpdateProjectInput) => {
 			const {data} = await projectsUpdate({
 				path: {id},
-				body: projectBody(project),
+				body: {
+					...projectBody(project),
+					...accessLoss,
+				},
 			})
 			return normalizeProject({...project, ...data})
 		},
 		optimistic: {
 			queryKeys: ({id}) => [projectKeys.list(), projectKeys.detail(id)],
-			update: ({id, ...project}, client) => {
+			update: ({id, accessLoss: _accessLoss, ...project}, client) => {
 				const previous = getCachedProject(id, client)
 				const refetchList = !previous
 					|| previous.is_archived !== project.is_archived
@@ -335,7 +342,8 @@ export function updateProjectMutationOptions(successMessage?: string) {
 				current ? mergeProjectMetadata(current, updated) : current,
 			)
 		},
-		onSettled: ({id}, client, context) => Promise.all([
+		onSettled: ({id, accessLoss}, client, context) => Promise.all([
+			accessLoss && invalidateAccessLossCleanup(client),
 			// Archive and parent changes affect descendants beyond the patched project.
 			client.invalidateQueries({
 				queryKey: projectKeys.list(),

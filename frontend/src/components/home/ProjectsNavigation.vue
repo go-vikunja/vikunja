@@ -31,6 +31,12 @@
 			/>
 		</template>
 	</draggable>
+	<AccessLossConfirmModal
+		v-model:cleanup="accessLossCleanup"
+		:counts="accessLossCounts"
+		@confirm="confirmAccessLoss"
+		@cancel="cancelAccessLoss"
+	/>
 </template>
 
 <script lang="ts" setup>
@@ -45,6 +51,8 @@ import {useUpdateProjectMutation, type ProjectResponse} from '@/client/queries/p
 
 import {useProjects} from '@/composables/useProjects'
 import {useProjectDragState} from '@/composables/useProjectDragState'
+import {useAccessLossConfirmation} from '@/composables/useAccessLossConfirmation'
+import AccessLossConfirmModal from '@/components/sharing/AccessLossConfirmModal.vue'
 
 const props = defineProps<{
 	modelValue?: ProjectResponse[],
@@ -62,6 +70,13 @@ const {isDraggingProject} = useProjectDragState()
 
 const projectList = useProjects()
 const updateMutation = useUpdateProjectMutation()
+const {
+	counts: accessLossCounts,
+	cleanup: accessLossCleanup,
+	run: withAccessLossConfirmation,
+	confirm: confirmAccessLoss,
+	cancel: cancelAccessLoss,
+} = useAccessLossConfirmation()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
@@ -120,11 +135,16 @@ async function saveProjectPosition(e: SortableEvent) {
 	)
 
 	try {
-		await updateMutation.mutateAsync({
+		const moved = await withAccessLossConfirmation(accessLoss => updateMutation.mutateAsync({
 			...project,
 			position,
 			parent_project_id: parentProjectId,
-		})
+			accessLoss,
+		}))
+		if (!moved) {
+			availableProjects.value = props.modelValue || []
+			return
+		}
 		emit('update:modelValue', availableProjects.value)
 	} finally {
 		projectUpdating.value[project.id] = false

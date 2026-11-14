@@ -106,6 +106,8 @@ const (
 	AuthLdapAttributeMemberID          Key = `auth.ldap.attribute.memberid`
 	AuthLdapAttributeID                Key = `auth.ldap.attribute.id`
 
+	AuthTeamSyncRevokeLinkShares Key = `auth.teamsync.revokelinkshares`
+
 	LegalImprintURL Key = `legal.imprinturl`
 	LegalPrivacyURL Key = `legal.privacyurl`
 	Legal           Key = `legal`
@@ -429,6 +431,7 @@ func initDefaultConfig() {
 	AuthLdapAttributeEmail.setDefault("mail")
 	AuthLdapAttributeDisplayname.setDefault("displayName")
 	AuthLdapAttributeMemberID.setDefault("member")
+	AuthTeamSyncRevokeLinkShares.setDefault(false)
 
 	// Database
 	DatabaseType.setDefault("sqlite")

@@ -149,6 +149,38 @@ func TestHumaWebhook(t *testing.T) {
 			// parent project comes from the URL.
 			assert.Contains(t, rec.Body.String(), `"project_id":1`)
 		})
+		t.Run("Existing ID does not replace the requested destination", func(t *testing.T) {
+			rec, err := owned.testCreateWithUser(nil, nil, `{
+				"id":1,
+				"target_url":"https://example.com/new-destination",
+				"events":["task.updated"],
+				"secret":"new-secret",
+				"basic_auth_user":"new-user",
+				"basic_auth_password":"new-password"
+			}`)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusCreated, rec.Code)
+			var created struct {
+				ID int64 `json:"id"`
+			}
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
+			require.NotEqual(t, int64(1), created.ID)
+			db.AssertExists(t, "webhooks", map[string]interface{}{
+				"id":                  created.ID,
+				"project_id":          1,
+				"target_url":          "https://example.com/new-destination",
+				"secret":              "new-secret",
+				"basic_auth_user":     "new-user",
+				"basic_auth_password": "new-password",
+			}, false)
+			db.AssertExists(t, "webhooks", map[string]interface{}{
+				"id":                  1,
+				"target_url":          "https://example.com/webhook-fixture",
+				"secret":              "webhook-secret-fixture",
+				"basic_auth_user":     "webhook-user",
+				"basic_auth_password": "webhook-password",
+			}, false)
+		})
 		t.Run("Secret and basic auth are not echoed back", func(t *testing.T) {
 			rec, err := owned.testCreateWithUser(nil, nil,
 				`{"target_url":"https://example.com/secret","events":["task.updated"],"secret":"top-secret","basic_auth_user":"u","basic_auth_password":"p"}`)
@@ -399,4 +431,52 @@ func webhookIDsFromReadAll(t *testing.T, body []byte) []int64 {
 		ids = append(ids, it.ID)
 	}
 	return ids
+}
+
+func TestHumaWebhook_DisabledState(t *testing.T) {
+	models.RegisterEventForWebhook(&models.TaskUpdatedEvent{})
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	s := db.NewSession()
+	defer s.Close()
+	webhook := &models.Webhook{
+		ProjectID:   1,
+		CreatedByID: 2,
+		TargetURL:   "https://example.com/preserved",
+		Events:      []string{"task.updated"},
+		IsDisabled:  true,
+	}
+	_, err = s.Insert(webhook)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	path := fmt.Sprintf("/api/v2/projects/1/webhooks/%d", webhook.ID)
+	token := humaTokenFor(t, &testuser1)
+
+	rec := humaRequest(t, e, http.MethodPut, path, `{"id":9999,"project_id":2,"secret":"ignored","target_url":"https://example.com/ignored","events":["task.updated"]}`, token, "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"is_disabled":true`)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":            webhook.ID,
+		"is_disabled":   true,
+		"created_by_id": 2,
+	}, false)
+
+	rec = humaRequest(t, e, http.MethodPut, path, `{"target_url":"https://example.com/ignored","events":["task.updated"],"is_disabled":false}`, humaTokenFor(t, &testuser6), "")
+	require.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":            webhook.ID,
+		"is_disabled":   true,
+		"created_by_id": 2,
+	}, false)
+
+	rec = humaRequest(t, e, http.MethodPut, path, `{"target_url":"https://example.com/ignored","events":["task.updated"],"is_disabled":false}`, token, "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"is_disabled":false`)
+	assert.Contains(t, rec.Body.String(), `"target_url":"https://example.com/preserved"`)
+	db.AssertExists(t, "webhooks", map[string]interface{}{
+		"id":            webhook.ID,
+		"is_disabled":   false,
+		"created_by_id": 1,
+		"target_url":    "https://example.com/preserved",
+	}, false)
 }

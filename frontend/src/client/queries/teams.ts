@@ -6,6 +6,7 @@ import {
 } from '@tanstack/vue-query'
 import {teamsList, teamsRead, teamsCreate, teamsUpdate, teamsDelete, teamsMembersAdd, teamsMembersRemove, teamsMembersToggleAdmin} from '@/client/generated'
 import type {Team, TeamReadBody, TeamWritable, TeamMemberWritable} from '@/client/generated'
+import {invalidateAccessLossCleanup, type AccessLossCleanup} from './accessLossCleanup'
 import {contextMutationOptions} from './contextMutation'
 import {
 	PICKER_PAGE_SIZE,
@@ -110,16 +111,27 @@ export function updateTeamMutationOptions() {
 	})
 }
 
+type TeamDeleteInput = {
+	id: number
+	cleanup: AccessLossCleanup
+}
+
 export function deleteTeamMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (id: number) => { await teamsDelete({path: {id}}) },
-		onSuccess: (_data, id, client) => removeCachedTeam(client, id),
-		onSettled: (_id, client) => invalidateTeams(client),
+		mutationFn: async ({id, cleanup}: TeamDeleteInput) => {
+			await teamsDelete({
+				path: {id},
+				query: cleanup,
+			})
+		},
+		onSuccess: (_data, {id}, client) => removeCachedTeam(client, id),
+		onSettled: (_input, client) => Promise.all([invalidateTeams(client), invalidateAccessLossCleanup(client)]),
 		successMessage: () => i18n.global.t('team.edit.delete.success'),
 	})
 }
 
 type MemberInput = {teamId: number} & Required<Pick<TeamMemberWritable, 'username'>>
+type MemberRemoveInput = MemberInput & {cleanup: AccessLossCleanup}
 
 async function invalidateMembership(client: QueryClient, teamId?: number) {
 	await Promise.all([
@@ -137,15 +149,24 @@ export function addTeamMemberMutationOptions() {
 	})
 }
 
-async function removeTeamMember({teamId, username}: MemberInput) {
-	await teamsMembersRemove({path: {team: teamId, user: username}})
+async function removeTeamMember({teamId, username, cleanup}: MemberRemoveInput) {
+	await teamsMembersRemove({
+		path: {
+			team: teamId,
+			user: username,
+		},
+		query: cleanup,
+	})
 }
 
 export function removeTeamMemberMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: removeTeamMember,
 		onSuccess: (_data, {teamId, username}, client) => updateCachedTeam(client, teamId, team => ({...team, members: team.members?.filter(member => member.username !== username)})),
-		onSettled: ({teamId}, client) => invalidateMembership(client, teamId),
+		onSettled: ({teamId}, client) => Promise.all([
+			invalidateMembership(client, teamId),
+			invalidateAccessLossCleanup(client),
+		]),
 		successMessage: () => i18n.global.t('team.edit.deleteUser.success'),
 	})
 }
@@ -154,7 +175,10 @@ export function leaveTeamMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: removeTeamMember,
 		onSuccess: (_data, {teamId}, client) => client.removeQueries({queryKey: teamKeys.detail(teamId), exact: true}),
-		onSettled: (_input, client) => invalidateMembership(client),
+		onSettled: (_input, client) => Promise.all([
+			invalidateMembership(client),
+			invalidateAccessLossCleanup(client),
+		]),
 		successMessage: () => i18n.global.t('team.edit.leave.success'),
 	})
 }

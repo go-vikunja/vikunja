@@ -93,6 +93,9 @@ type Project struct {
 
 	LastPurgedAt time.Time `xorm:"null" json:"-"`
 
+	AccessLossCleanup   AccessLossCleanup `xorm:"-" json:"-"`
+	AskBeforeAccessLoss bool              `xorm:"-" json:"-"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
@@ -1271,6 +1274,14 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		}
 	}
 
+	var accessBeforeMove *projectMoveAccess
+	if parentChanged {
+		accessBeforeMove, err = projectAccessBeforeMove(s, project.ID)
+		if err != nil {
+			return err
+		}
+	}
+
 	project.HexColor = utils.NormalizeHex(project.HexColor)
 
 	_, err = s.
@@ -1284,6 +1295,11 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	if parentChanged {
 		err = moveProjectAncestors(s, project.ID, project.parentID())
+		if err != nil {
+			return err
+		}
+
+		err = cleanupAfterProjectMove(s, auth, accessBeforeMove, project.AccessLossCleanup, project.AskBeforeAccessLoss)
 		if err != nil {
 			return err
 		}
