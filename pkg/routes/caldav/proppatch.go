@@ -120,29 +120,25 @@ type propPatchResult struct {
 
 // Only a collection's calendar-color is settable; everything else gets
 // sabre/dav's 403 "polite refusal", which clients tolerate where a 501 would make them abort.
-func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets, target propPatchTarget) error {
+func servePropPatch(c *echo.Context, u *user.User, collection collectionTarget, target propPatchTarget) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
+	if _, err := collection.checkRead(s, u); err != nil {
+		return writeError(c, err)
+	}
+
 	body, err := readBody(c, maxPropRequestBodySize)
 	if err != nil {
 		return writeError(c, err)
 	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	can, _, err := project.CanRead(s, u)
-	if err != nil {
-		return writeError(c, err)
-	}
-	if !can {
-		return writeError(c, errForbidden)
-	}
-
 	instructions, err := parsePropertyUpdate(string(body))
 	if err != nil {
 		return writeError(c, err)
 	}
 
-	results, err := applyPropPatch(s, instructions, &project.Project, u, target)
+	results, err := applyPropPatch(s, instructions, &collection.project.Project, u, target)
 	if err != nil {
 		_ = s.Rollback()
 		return writeError(c, err)
