@@ -106,3 +106,41 @@ func TestPinWritesOnEntryAndPrincipal(t *testing.T) {
 		}
 	}
 }
+
+// Apple clients append a slash to collection paths; both spellings must answer alike.
+func TestPinTrailingSlash(t *testing.T) {
+	entry := map[string]int{
+		http.MethodOptions: 200, http.MethodGet: 200, http.MethodHead: 200, "PROPFIND": 207,
+		http.MethodPut: 405, http.MethodDelete: 405, "REPORT": 405, "PROPPATCH": 405,
+	}
+	homeSet := map[string]int{
+		http.MethodOptions: 200, http.MethodGet: 405, http.MethodHead: 405, "PROPFIND": 207,
+		http.MethodPut: 405, http.MethodDelete: 405, "REPORT": 405, "PROPPATCH": 405,
+	}
+	// Empty bodies: PUT without a VCALENDAR is 412, REPORT and PROPPATCH are malformed.
+	collection := map[string]int{
+		http.MethodOptions: 200, http.MethodGet: 200, http.MethodHead: 200, "PROPFIND": 207,
+		http.MethodPut: 412, http.MethodDelete: 405, "REPORT": 400, "PROPPATCH": 400,
+	}
+
+	e := setupTestEnv(t)
+	for path, statuses := range map[string]map[string]int{
+		"/dav":                   entry,
+		"/.well-known/caldav":    entry,
+		"/dav/principals/user15": entry,
+		"/dav/projects":          homeSet,
+		"/dav/projects/36":       collection,
+	} {
+		for method, status := range statuses {
+			t.Run(method+" "+path, func(t *testing.T) {
+				without := caldavRequest(t, e, method, path, "", nil)
+				with := caldavRequest(t, e, method, path+"/", "", nil)
+
+				assert.Equal(t, status, without.Code)
+				assert.Equal(t, status, with.Code)
+				assert.Equal(t, without.Header().Get("Allow"), with.Header().Get("Allow"))
+				assert.Equal(t, without.Header().Get("DAV"), with.Header().Get("DAV"))
+			})
+		}
+	}
+}
