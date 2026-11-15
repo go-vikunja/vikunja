@@ -23,7 +23,6 @@ import (
 	"reflect"
 
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
@@ -106,13 +105,17 @@ func serveMethod(c *echo.Context, u *user.User, t target) error {
 	return methodNotAllowed(c, u, t)
 }
 
-func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets, target propPatchTarget) error {
-	body, err := io.ReadAll(c.Request().Body)
+// readBody reads the request body, refusing more than limit bytes.
+func readBody(c *echo.Context, limit int) ([]byte, error) {
+	body, err := io.ReadAll(io.LimitReader(c.Request().Body, int64(limit)+1))
 	if err != nil {
-		return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
+		return nil, fmt.Errorf("%w: %w", errMalformedBody, err)
+	}
+	if len(body) > limit {
+		return nil, errBodyTooLarge
 	}
 	logRequest(c.Request().Header, body)
-	return handlePropPatch(c, string(body), project, u, target)
+	return body, nil
 }
 
 const maxLoggedBodySize = 4096

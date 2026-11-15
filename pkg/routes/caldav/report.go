@@ -19,7 +19,6 @@ package caldav
 import (
 	"encoding/xml"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"slices"
@@ -213,14 +212,10 @@ func serveReport(c *echo.Context, u *user.User, t target) error {
 		return writeError(c, err)
 	}
 
-	body, err := io.ReadAll(io.LimitReader(c.Request().Body, maxReportBodySize+1))
+	body, err := readBody(c, maxReportBodySize)
 	if err != nil {
-		return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
+		return writeError(c, err)
 	}
-	if len(body) > maxReportBodySize {
-		return writeError(c, errBodyTooLarge)
-	}
-	logRequest(c.Request().Header, body)
 
 	req, err := parseReport(string(body))
 	if err != nil {
