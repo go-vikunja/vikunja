@@ -34,7 +34,7 @@ const ProjectBasePath = DavBasePath + `/projects`
 const PrincipalBasePath = DavBasePath + `/principals`
 
 func principalPathForUser(username string) string {
-	return PrincipalBasePath + `/` + username + `/`
+	return PrincipalBasePath + `/` + encodeURIPathSegment(username) + `/`
 }
 
 func collectionHref(projectID int64) string {
