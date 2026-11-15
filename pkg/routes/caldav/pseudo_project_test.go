@@ -263,23 +263,24 @@ func TestProjectHandlerOPTIONS(t *testing.T) {
 		return rec
 	}
 
-	t.Run("a saved filter advertises PUT and DELETE", func(t *testing.T) {
+	// DELETE of a collection URL is refused, so only PUT is advertised.
+	t.Run("a saved filter advertises PUT", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
 		rec := options(t, caldavFilterUser, pseudoID)
 		require.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Header().Get("Allow"), "PUT")
-		assert.Contains(t, rec.Header().Get("Allow"), "DELETE")
+		assert.NotContains(t, rec.Header().Get("Allow"), "DELETE")
 	})
 
-	t.Run("favorites advertise PUT and DELETE", func(t *testing.T) {
+	t.Run("favorites advertise PUT", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		rec := options(t, caldavFilterUser, models.FavoritesPseudoProjectID)
 		require.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Header().Get("Allow"), "PUT")
-		assert.Contains(t, rec.Header().Get("Allow"), "DELETE")
+		assert.NotContains(t, rec.Header().Get("Allow"), "DELETE")
 	})
 
 	t.Run("a read-only share does not", func(t *testing.T) {

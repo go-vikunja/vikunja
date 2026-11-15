@@ -31,7 +31,7 @@ import (
 
 type methodExpectation struct {
 	getTask, optionsTask, getCollection, optionsCollection, deleteCollection int
-	allow                                                                    string
+	allowTask, allowCollection                                               string
 	putUpdate, putUpdateViaCollection, putCreate, putCreateViaCollection     int
 	deleteTask                                                               int
 }
@@ -39,13 +39,13 @@ type methodExpectation struct {
 var (
 	methodsReadOnly = methodExpectation{
 		getTask: 200, optionsTask: 200, getCollection: 200, optionsCollection: 200, deleteCollection: 405,
-		allow:     allowReadOnly,
+		allowTask: allowReadOnly, allowCollection: allowReadOnly,
 		putUpdate: 403, putUpdateViaCollection: 403, putCreate: 403, putCreateViaCollection: 403,
 		deleteTask: 403,
 	}
 	methodsReadWrite = methodExpectation{
 		getTask: 200, optionsTask: 200, getCollection: 200, optionsCollection: 200, deleteCollection: 405,
-		allow:     allowReadWrite,
+		allowTask: allowReadWrite, allowCollection: allowCollectionReadWrite,
 		putUpdate: 204, putUpdateViaCollection: 204, putCreate: 201, putCreateViaCollection: 201,
 		deleteTask: 204,
 	}
@@ -71,12 +71,18 @@ func assertMethods(t *testing.T, e *echo.Echo, username, project, taskUID, owner
 	}
 
 	for path, status := range map[string]int{task: want.optionsTask, collection: want.optionsCollection} {
+		allow := want.allowTask
+		if path == collection {
+			allow = want.allowCollection
+		}
 		rec := caldavRequest(t, e, http.MethodOptions, path, "", as)
 		assert.Equal(t, status, rec.Code, "OPTIONS %s", path)
-		assert.Equal(t, want.allow, rec.Header().Get("Allow"), "OPTIONS %s Allow", path)
+		assert.Equal(t, allow, rec.Header().Get("Allow"), "OPTIONS %s Allow", path)
 	}
 
-	assert.Equal(t, want.deleteCollection, caldavRequest(t, e, http.MethodDelete, collection, "", as).Code, "DELETE %s", collection)
+	deleteCollection := caldavRequest(t, e, http.MethodDelete, collection, "", as)
+	assert.Equal(t, want.deleteCollection, deleteCollection.Code, "DELETE %s", collection)
+	assert.Equal(t, want.allowCollection, deleteCollection.Header().Get("Allow"), "DELETE %s Allow", collection)
 
 	ownerGet := func() string {
 		rec := caldavRequest(t, e, http.MethodGet, task, "", map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)})
