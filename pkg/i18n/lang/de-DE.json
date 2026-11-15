@@ -62,7 +62,7 @@
 					"request": "Du hast die Löschung deines Accounts beantragt. Um dies zu bestätigen, klicke bitte auf den Link unten:",
 					"valid_duration": "Dieser Link ist 24 Stunden gültig.",
 					"schedule_info": "Sobald du die Löschung bestätigst, planen wir die Löschung deines Accounts in drei Tagen und senden dir bis dahin eine weitere E-Mail.",
-					"consequences": "Wenn du mit der Löschung deines Accounts fortfährst, werden wir alle deine erstellten Projekte und Aufgaben löschen. Alles, was du mit anderen Nutzer:innen oder Teams geteilt hast, wird an diese übertragen.",
+					"consequences": "Wenn du mit der Löschung deines Accounts fortfährst, werden wir alle deine erstellten Projekte und Aufgaben löschen. Alles, was du mit anderen Nutzern oder Teams geteilt hast, wird an diese übertragen.",
 					"changed_mind": "Falls du die Löschung nicht beantragt hast oder deine Meinung geändert hast, kannst du diese E-Mail einfach ignorieren."
 				},
 				"scheduled": {
