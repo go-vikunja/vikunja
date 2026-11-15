@@ -56,7 +56,7 @@ var (
 	}
 )
 
-// assertMethods runs every in-house method as username against an existing task, reads
+// assertMethods runs every method as username against an existing task, reads
 // first and deleting writes last, and checks that denied writes left the task alone.
 func assertMethods(t *testing.T, e *echo.Echo, username, project, taskUID, ownerUsername string, want methodExpectation) {
 	t.Helper()

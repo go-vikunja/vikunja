@@ -63,7 +63,7 @@ func errorStatus(err error) int {
 	case errors.Is(err, errForbidden),
 		isError[preconditionError](err),
 		isError[models.ErrProjectIsArchived](err),
-		// Pinned: 403, not 400.
+		// Pinned: validation errors answer 403, not 400.
 		isError[models.ValidationHTTPError](err),
 		errors.Is(err, richtext.ErrTooManyTableCells):
 		return http.StatusForbidden

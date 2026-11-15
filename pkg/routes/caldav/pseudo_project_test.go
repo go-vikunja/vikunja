@@ -222,8 +222,7 @@ END:VCALENDAR`
 	})
 }
 
-// canRead used to have to tolerate ErrProjectDoesNotExist because CanRead
-// errored out for instance admins on a pseudo id; d5332ac3b fixed that in the model.
+// CanRead on a pseudo id must not error for instance admins (fixed in the model, d5332ac3b).
 func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})

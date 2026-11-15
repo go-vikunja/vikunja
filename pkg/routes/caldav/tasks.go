@@ -341,13 +341,11 @@ func persistLabels(s *xorm.Session, a web.Auth, task *models.Task, labels []*mod
 		}
 	}
 
-	// Create the label <-> task relation
 	return task.UpdateTaskLabels(s, a, labels)
 }
 
 func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
 
-	// Get the existing task with details:
 	existingTask := &models.Task{ID: task.ID}
 	// FIXME: Optimize to get only required attributes (ie. RelatedTasks).
 	err = existingTask.ReadOne(s, a)
@@ -407,7 +405,6 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 // Bounds the tasks a single VTODO can mint via unknown RELATED-TO UIDs.
 const maxPlaceholdersPerVTODO = 50
 
-// Persist new relations provided by the VTODO entry:
 func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelations map[models.RelationKind][]*models.Task) (err error) {
 
 	err = removeStaleRelations(s, a, task, newRelations)
@@ -444,15 +441,12 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 
 	placeholders := 0
 
-	// Ensure the current relations exist:
 	for relationType, relatedTasksInVTODO := range dedupedRelations {
-		// Persist each relation independently:
 		for _, relatedTaskInVTODO := range relatedTasksInVTODO {
 
 			var relatedTask *models.Task
 			createDummy := false
 
-			// Get the task from the DB:
 			if accessible, has := accessibleTasksByUID[relatedTaskInVTODO.UID]; has {
 				relatedTask = accessible
 			} else {
@@ -478,7 +472,6 @@ func persistRelations(s *xorm.Session, a web.Auth, task *models.Task, newRelatio
 				}
 			}
 
-			// Create the relation:
 			rel := models.TaskRelation{
 				TaskID:       task.ID,
 				OtherTaskID:  relatedTask.ID,
