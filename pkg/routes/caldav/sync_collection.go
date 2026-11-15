@@ -185,7 +185,7 @@ func writeSyncResponse(
 
 	// readCollectionTasks loaded the owner.
 	owner := ownerName(u, &collection.project.Project)
-	props := reportProps(req.props)
+	props := syncProps(req.props)
 	for _, t := range tasks {
 		resource := &taskResource{href: taskURL(collection.project.ID, &t.Task), task: &t.Task, owner: owner}
 		ms.responses = append(ms.responses, resource.answer(ctx, props))
@@ -196,4 +196,12 @@ func writeSyncResponse(
 	}
 
 	return writeMultistatus(c, ms)
+}
+
+// Pinned: allprop and propname in a sync-collection answer no properties at all.
+func syncProps(req propfindRequest) propfindRequest {
+	if named, ok := req.(propRequest); ok {
+		return named
+	}
+	return propRequest{}
 }

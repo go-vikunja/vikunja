@@ -283,20 +283,12 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 				return writeError(c, err)
 			}
 			return writeMultistatus(c, multistatus{
-				responses: []msResponse{resource.answer(ctx, reportProps(props))},
+				responses: []msResponse{resource.answer(ctx, props)},
 				minimal:   prefersMinimal(c.Request().Header),
 			})
 		}, nil
 	}
 	return nil, fmt.Errorf("unhandled caldav target %T", t)
-}
-
-// Pinned: allprop and propname in a REPORT answer no properties at all.
-func reportProps(req propfindRequest) propfindRequest {
-	if named, ok := req.(propRequest); ok {
-		return named
-	}
-	return propRequest{}
 }
 
 func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req multigetRequest, ctx propContext) ([]msResponse, error) {
@@ -318,7 +310,6 @@ func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req mul
 		return nil, err
 	}
 
-	props := reportProps(req.props)
 	responses := make([]msResponse, 0, len(req.hrefs))
 	for _, href := range req.hrefs {
 		task, found := tasks[href]
@@ -326,7 +317,7 @@ func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req mul
 			responses = append(responses, statusResponse{href: href, status: http.StatusNotFound})
 			continue
 		}
-		responses = append(responses, (&taskResource{href: href, task: task, owner: owner}).answer(ctx, props))
+		responses = append(responses, (&taskResource{href: href, task: task, owner: owner}).answer(ctx, req.props))
 	}
 	return responses, nil
 }
@@ -427,7 +418,7 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 		return nil, err
 	}
 	owner := ownerName(u, &c.project.Project)
-	props := reportProps(req.props)
+	props := req.props
 
 	if tasks == nil {
 		// Pinned: a query on a collection without tasks answers the collection itself.
