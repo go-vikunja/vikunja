@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
+	"xorm.io/xorm"
 )
 
 const (
@@ -82,12 +83,13 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 // submitted property is refused with 403, the same "polite refusal" shape
 // sabre/dav uses for protected properties. Clients treat this as best-effort
 // and keep syncing, where a 501 would make them abort.
-func servePropPatch(c *echo.Context, u *user.User, collection collectionTarget) error {
+func servePropPatch(c *echo.Context, u *user.User, t target) error {
 	s := db.NewSession()
 	defer s.Close()
 
 	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
-	if _, err := collection.checkRead(s, u); err != nil {
+	href, err := propPatchHref(s, u, t)
+	if err != nil {
 		return writeError(c, err)
 	}
 
@@ -100,13 +102,33 @@ func servePropPatch(c *echo.Context, u *user.User, collection collectionTarget) 
 		return writeError(c, err)
 	}
 
-	return writePropPatchResponse(c, props)
-}
-
-func writePropPatchResponse(c *echo.Context, props []xml.Name) error {
-	r := propstatResponse{href: c.Request().URL.Path, propstats: make([]propstat, len(props))}
+	r := propstatResponse{href: href, propstats: make([]propstat, len(props))}
 	for i, p := range props {
 		r.propstats[i] = propstat{status: http.StatusForbidden, props: []prop{{name: p}}}
 	}
 	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
+}
+
+// propPatchHref checks access to t and returns the href it answers under.
+func propPatchHref(s *xorm.Session, u *user.User, t target) (string, error) {
+	switch t := t.(type) {
+	case collectionTarget:
+		if _, err := t.checkRead(s, u); err != nil {
+			return "", err
+		}
+		return collectionHref(t.project.ID), nil
+	case taskTarget:
+		if _, err := t.collection.checkRead(s, u); err != nil {
+			return "", err
+		}
+		task, err := findTask(s, u, t.collection, t.uid)
+		if err != nil {
+			return "", err
+		}
+		if task == nil {
+			return "", errNotFound
+		}
+		return taskURL(t.collection.project.ID, task), nil
+	}
+	return "", fmt.Errorf("unhandled caldav target %T", t)
 }

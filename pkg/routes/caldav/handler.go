@@ -95,11 +95,9 @@ func serveMethod(c *echo.Context, u *user.User, t target) error {
 	case "REPORT":
 		return serveReport(c, u, t)
 	case "PROPPATCH":
-		switch t := t.(type) {
-		case collectionTarget:
+		switch t.(type) {
+		case collectionTarget, taskTarget:
 			return servePropPatch(c, u, t)
-		case taskTarget:
-			return servePropPatch(c, u, t.collection)
 		}
 	}
 	return methodNotAllowed(c, u, t)
