@@ -34,8 +34,8 @@ func TestPinUnsupportedMethods(t *testing.T) {
 		"/dav/principals/user15/": allowEntry,
 		"/dav/projects":           allowHomeSet,
 		"/dav/projects/":          allowHomeSet,
-		"/dav/projects/36":        allowReadWrite,
-		"/dav/projects/36/":       allowReadWrite,
+		"/dav/projects/36":        allowCollectionReadWrite,
+		"/dav/projects/36/":       allowCollectionReadWrite,
 		pinTaskHref:               allowReadWrite,
 	}
 

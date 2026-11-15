@@ -27,9 +27,11 @@ import (
 )
 
 const (
-	davCompliance  = "1, 3, calendar-access"
-	allowReadWrite = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
-	allowReadOnly  = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
+	davCompliance      = "1, 3, calendar-access"
+	allowTaskReadWrite = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
+	// A collection cannot be deleted over CalDAV.
+	allowCollectionReadWrite = "GET, HEAD, PUT, OPTIONS, PROPFIND, REPORT"
+	allowReadOnly            = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
 	// Entry and principal hold no calendar data, so no report applies to them.
 	allowEntry = "GET, HEAD, OPTIONS, PROPFIND"
 	// The home set only lists the collections in it.
@@ -49,7 +51,7 @@ func serveOptions(c *echo.Context, u *user.User, t target) error {
 
 // Advertising PUT and DELETE on a collection the user cannot write to would make clients
 // retry the 403 forever.
-func collectionAllow(u *user.User, collection collectionTarget) (string, error) {
+func collectionAllow(u *user.User, collection collectionTarget, readWrite string) (string, error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -58,7 +60,7 @@ func collectionAllow(u *user.User, collection collectionTarget) (string, error) 
 		return "", err
 	}
 	if canWrite {
-		return allowReadWrite, nil
+		return readWrite, nil
 	}
 
 	// The collection was loaded without a permission check, so answering here would
@@ -70,7 +72,7 @@ func collectionAllow(u *user.User, collection collectionTarget) (string, error) 
 	// A pseudo collection cannot be written to as a collection, but PUT and DELETE
 	// of the tasks it aggregates go through to their real projects.
 	if collection.isPseudo() {
-		return allowReadWrite, nil
+		return readWrite, nil
 	}
 	return allowReadOnly, nil
 }
@@ -83,9 +85,9 @@ func allowed(u *user.User, t target) (string, error) {
 	case homeSetTarget:
 		return allowHomeSet, nil
 	case collectionTarget:
-		return collectionAllow(u, t)
+		return collectionAllow(u, t, allowCollectionReadWrite)
 	case taskTarget:
-		return collectionAllow(u, t.collection)
+		return collectionAllow(u, t.collection, allowTaskReadWrite)
 	}
 	return "", fmt.Errorf("unhandled caldav target %T", t)
 }

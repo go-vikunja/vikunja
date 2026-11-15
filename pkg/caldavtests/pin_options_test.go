@@ -26,9 +26,11 @@ import (
 const (
 	davComplianceHeader = "1, 3, calendar-access"
 	allowReadWrite      = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
-	allowReadOnly       = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
-	allowEntry          = "GET, HEAD, OPTIONS, PROPFIND"
-	allowHomeSet        = "OPTIONS, PROPFIND"
+	// DELETE of a collection answers 405, so it is not advertised there.
+	allowCollectionReadWrite = "GET, HEAD, PUT, OPTIONS, PROPFIND, REPORT"
+	allowReadOnly            = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
+	allowEntry               = "GET, HEAD, OPTIONS, PROPFIND"
+	allowHomeSet             = "OPTIONS, PROPFIND"
 )
 
 func TestPinOPTIONS(t *testing.T) {
@@ -42,7 +44,8 @@ func TestPinOPTIONS(t *testing.T) {
 		{name: "well-known", path: "/.well-known/caldav", status: http.StatusOK, allow: allowEntry},
 		{name: "principal", path: "/dav/principals/user15/", status: http.StatusOK, allow: allowEntry},
 		{name: "home set", path: "/dav/projects", status: http.StatusOK, allow: allowHomeSet},
-		{name: "own project", path: "/dav/projects/36", status: http.StatusOK, allow: allowReadWrite},
+		{name: "own project", path: "/dav/projects/36", status: http.StatusOK, allow: allowCollectionReadWrite},
+		{name: "favorites", path: "/dav/projects/-1", status: http.StatusOK, allow: allowCollectionReadWrite},
 		{name: "task in own project", path: pinTaskHref, status: http.StatusOK, allow: allowReadWrite},
 		{name: "read-only shared project", path: "/dav/projects/26", status: http.StatusOK, allow: allowReadOnly},
 		{name: "project the user cannot see", path: "/dav/projects/1", status: http.StatusNotFound},

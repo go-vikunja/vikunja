@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
@@ -32,21 +31,11 @@ func serveDelete(c *echo.Context, u *user.User, t target) error {
 	case entryTarget, principalTarget, homeSetTarget:
 		return methodNotAllowed(c, u, t)
 	case collectionTarget:
-		return deleteCollection(c, u, t)
+		return methodNotAllowed(c, u, t)
 	case taskTarget:
 		return deleteTaskTarget(c, u, t)
 	}
 	return writeError(c, fmt.Errorf("unhandled caldav target %T", t))
-}
-
-func deleteCollection(c *echo.Context, u *user.User, collection collectionTarget) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	if _, err := collection.checkRead(s, u); err != nil {
-		return writeError(c, err)
-	}
-	return c.NoContent(http.StatusMethodNotAllowed)
 }
 
 func deleteTaskTarget(c *echo.Context, u *user.User, t taskTarget) error {
