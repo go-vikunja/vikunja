@@ -78,14 +78,15 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 	}
 }
 
-// handlePropPatch answers PROPPATCH (RFC 4918 §9.2) without applying any
+// servePropPatch answers PROPPATCH (RFC 4918 §9.2) without applying any
 // change: Vikunja doesn't support client-set collection metadata, so every
 // submitted property is refused with 403, the same "polite refusal" shape
 // sabre/dav uses for protected properties. Clients treat this as best-effort
 // and keep syncing, where a 501 would make them abort.
-func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User) error {
-	if len(body) > maxPropRequestBodySize {
-		return writeError(c, errBodyTooLarge)
+func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets) error {
+	body, err := readBody(c, maxPropRequestBodySize)
+	if err != nil {
+		return writeError(c, err)
 	}
 
 	s := db.NewSession()
@@ -99,7 +100,7 @@ func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTa
 		return writeError(c, errForbidden)
 	}
 
-	props, err := parsePropertyUpdate(body)
+	props, err := parsePropertyUpdate(string(body))
 	if err != nil {
 		return writeError(c, err)
 	}
