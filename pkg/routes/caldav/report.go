@@ -255,7 +255,7 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			if err := s.Commit(); err != nil {
 				return writeError(c, err)
 			}
-			return writeMultistatus(c, multistatus{responses: responses, minimal: prefersMinimal(c)})
+			return writeMultistatus(c, multistatus{responses: responses, minimal: prefersMinimal(c.Request().Header)})
 		}, nil
 	case taskTarget:
 		if _, err := t.collection.checkRead(s, u); err != nil {
@@ -289,7 +289,7 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			}
 			return writeMultistatus(c, multistatus{
 				responses: []msResponse{resource.answer(ctx, reportProps(props))},
-				minimal:   prefersMinimal(c),
+				minimal:   prefersMinimal(c.Request().Header),
 			})
 		}, nil
 	}
@@ -302,10 +302,6 @@ func reportProps(req propfindRequest) propfindRequest {
 		return named
 	}
 	return propRequest{}
-}
-
-func prefersMinimal(c *echo.Context) bool {
-	return c.Request().Header.Get("Prefer") == "return=minimal"
 }
 
 func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req multigetRequest, ctx propContext) ([]msResponse, error) {

@@ -190,7 +190,7 @@ func servePropfind(c *echo.Context, u *user.User, t target) error {
 
 	ms := multistatus{
 		responses: make([]msResponse, len(resources)),
-		minimal:   c.Request().Header.Get("Prefer") == "return=minimal",
+		minimal:   prefersMinimal(c.Request().Header),
 	}
 	for i, r := range resources {
 		ms.responses[i] = r.answer(ctx, req)
