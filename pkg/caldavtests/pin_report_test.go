@@ -20,6 +20,7 @@ import (
 	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -278,4 +279,34 @@ func TestPinReportCalendarQueryOnEmptyCollection(t *testing.T) {
 		ok:       map[xml.Name]string{davName("getetag"): anyValue},
 		notFound: []xml.Name{calName("calendar-data")},
 	}})
+}
+
+// allprop and propname in a REPORT answer like they do in a PROPFIND (calendar-data stays explicit-only).
+func TestPinReportAllpropAndPropname(t *testing.T) {
+	e := setupTestEnv(t)
+	responseFor := func(t *testing.T, rec *httptest.ResponseRecorder) string {
+		t.Helper()
+		require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+		body := rec.Body.String()
+		start := strings.Index(body, "<D:response><D:href>"+pinTaskHref+"</D:href>")
+		require.GreaterOrEqual(t, start, 0, "Body:\n%s", body)
+		end := start + strings.Index(body[start:], "</D:response>") + len("</D:response>")
+		return body[start:end]
+	}
+
+	for name, selector := range map[string]string{"allprop": "<D:allprop/>", "propname": "<D:propname/>"} {
+		t.Run(name, func(t *testing.T) {
+			want := responseFor(t, caldavPROPFIND(t, e, pinTaskHref, "0", `<D:propfind xmlns:D="DAV:">`+selector+`</D:propfind>`))
+			assert.NotContains(t, want, "calendar-data")
+
+			multiget := `<C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + selector +
+				`<D:href>` + pinTaskHref + `</D:href></C:calendar-multiget>`
+			assert.Equal(t, want, responseFor(t, caldavREPORT(t, e, "/dav/projects/36", multiget)), "multiget")
+
+			query := `<C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + selector +
+				`<C:filter><C:comp-filter name="VCALENDAR"><C:comp-filter name="VTODO"/></C:comp-filter></C:filter></C:calendar-query>`
+			assert.Equal(t, want, responseFor(t, caldavREPORT(t, e, "/dav/projects/36", query)), "calendar-query")
+			assert.Equal(t, want, responseFor(t, caldavREPORT(t, e, pinTaskHref, query)), "calendar-query on the task")
+		})
+	}
 }
