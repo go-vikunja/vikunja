@@ -35,7 +35,7 @@ const (
 func serveGet(c *echo.Context, u *user.User, t target) error {
 	switch t := t.(type) {
 	case entryTarget, principalTarget:
-		// Pinned: answered as an empty calendar object.
+		// Pinned: an empty 200 with an empty ETag and a year-0001 Last-Modified.
 		return writeCalendar(c, contentTypeTask, "", time.Time{}, "")
 	case homeSetTarget:
 		return methodNotAllowed(c, u, t)
