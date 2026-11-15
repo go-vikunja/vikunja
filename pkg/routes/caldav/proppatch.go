@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
@@ -83,23 +82,19 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 // submitted property is refused with 403, the same "polite refusal" shape
 // sabre/dav uses for protected properties. Clients treat this as best-effort
 // and keep syncing, where a 501 would make them abort.
-func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets) error {
+func servePropPatch(c *echo.Context, u *user.User, collection collectionTarget) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
+	if _, err := collection.checkRead(s, u); err != nil {
+		return writeError(c, err)
+	}
+
 	body, err := readBody(c, maxPropRequestBodySize)
 	if err != nil {
 		return writeError(c, err)
 	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	can, _, err := project.CanRead(s, u)
-	if err != nil {
-		return writeError(c, err)
-	}
-	if !can {
-		return writeError(c, errForbidden)
-	}
-
 	props, err := parsePropertyUpdate(string(body))
 	if err != nil {
 		return writeError(c, err)

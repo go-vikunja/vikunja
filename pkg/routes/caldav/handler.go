@@ -97,9 +97,9 @@ func serveMethod(c *echo.Context, u *user.User, t target) error {
 	case "PROPPATCH":
 		switch t := t.(type) {
 		case collectionTarget:
-			return servePropPatch(c, u, t.project)
+			return servePropPatch(c, u, t)
 		case taskTarget:
-			return servePropPatch(c, u, t.collection.project)
+			return servePropPatch(c, u, t.collection)
 		}
 	}
 	return methodNotAllowed(c, u, t)

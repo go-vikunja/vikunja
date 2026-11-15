@@ -1314,12 +1314,12 @@ func TestCaldavProppatch(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
 	})
 
-	t.Run("Project without access returns 403", func(t *testing.T) {
+	t.Run("Project without access returns 404", func(t *testing.T) {
 		e, _ := setupTestEnv()
-		// testuser6 has no access to project 36.
+		// testuser6 has no access to project 36; it must look like a missing one.
 		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser6, setBody, nil, map[string]string{"project": "36"})
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
 	})
 
 	t.Run("PROPPATCH on a task resource returns 207 with a 403 propstat", func(t *testing.T) {
