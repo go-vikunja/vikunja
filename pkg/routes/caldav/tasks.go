@@ -98,23 +98,6 @@ func readCollectionTasks(s *xorm.Session, u *user.User, c readableCollection) ([
 	return projectTasks, nil
 }
 
-// readableCollection is a collection the user was checked to be able to read.
-type readableCollection struct {
-	collectionTarget
-}
-
-func (c collectionTarget) checkRead(s *xorm.Session, u *user.User) (readableCollection, error) {
-	can, err := c.canRead(s, u)
-	if err != nil {
-		return readableCollection{}, err
-	}
-	if !can {
-		log.Debugf("User %v tried to access a caldav resource (Project %v) which they are not allowed to access", u.Username, c.project.ID)
-		return readableCollection{}, errNotFound
-	}
-	return readableCollection{c}, nil
-}
-
 // writeTransaction commits fn's writes and dispatches their events, or drops both.
 func writeTransaction(fn func(s *xorm.Session) error) error {
 	s := db.NewSession()
