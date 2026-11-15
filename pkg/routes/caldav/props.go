@@ -162,7 +162,7 @@ func ownerPrincipal(username string) (propValue, bool) {
 	return hrefsValue{principalPathForUser(username)}, true
 }
 
-// hrefed is any resource that answers some properties with its own href.
+// hrefed is a resource whose displayname is the last segment of its href.
 type hrefed interface{ ownHref() string }
 
 func principalCollections[R any]() propDef[R] {
@@ -178,9 +178,9 @@ func calendarUserAddress[R any]() propDef[R] {
 // answer them too: clients start discovery there, Apple Reminders at /dav/projects/ (#2417).
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
-		// Without the trailing slash, as clients knew it before the rewrite.
+		// No trailing slash: existing clients stored it that way.
 		{propCalendarHomeSet, always[R](hrefsValue{ProjectBasePath})},
-		{propPrincipalURL, func(ctx propContext, _ R) (propValue, bool) { return hrefsValue{ctx.principal}, true }},
+		{propPrincipalURL, currentUserPrincipal[R]},
 	}
 }
 
@@ -254,8 +254,6 @@ type collectionResource struct {
 	owner string
 }
 
-func (r *collectionResource) ownHref() string { return r.href }
-
 func (r *collectionResource) etag() string { return collectionETag(r.project, r.tasks) }
 
 var collectionProps = propTable[*collectionResource]{
@@ -298,8 +296,6 @@ type taskResource struct {
 	// Rendering costs as much as a GET, so it happens at most once per resource.
 	rendered *string
 }
-
-func (r *taskResource) ownHref() string { return r.href }
 
 func (r *taskResource) content() string {
 	if r.rendered == nil {
