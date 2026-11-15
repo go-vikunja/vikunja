@@ -180,7 +180,7 @@ func writeSyncResponse(
 	ms := multistatus{
 		syncToken: newToken,
 		responses: make([]msResponse, 0, len(tasks)+len(deletions)),
-		minimal:   prefersMinimal(c),
+		minimal:   prefersMinimal(c.Request().Header),
 	}
 
 	// readCollectionTasks loaded the owner.

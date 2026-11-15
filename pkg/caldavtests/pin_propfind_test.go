@@ -269,6 +269,21 @@ func TestPinPropfindMatrix(t *testing.T) {
 	}
 }
 
+// RFC 7240: Prefer is a list, so return=minimal counts next to other preferences.
+func TestPinPreferMinimalInList(t *testing.T) {
+	e := setupTestEnv(t)
+	prefer := "respond-async, return=minimal"
+
+	propfind := caldavRequest(t, e, "PROPFIND", "/dav/projects/36", PropfindDiscoveryProps, map[string]string{"Depth": "0", "Prefer": prefer})
+	require.Equal(t, 207, propfind.Code, "Body:\n%s", propfind.Body.String())
+	assert.Equal(t, "return=minimal", propfind.Header().Get("Preference-Applied"))
+	assert.NotContains(t, propfind.Body.String(), "404 Not Found")
+
+	report := caldavRequest(t, e, "REPORT", "/dav/projects/36", ReportCalendarQuery, map[string]string{"Prefer": prefer})
+	require.Equal(t, 207, report.Code, "Body:\n%s", report.Body.String())
+	assert.Equal(t, "return=minimal", report.Header().Get("Preference-Applied"))
+}
+
 func TestPinPropfindTaskURLReportsTaskETag(t *testing.T) {
 	e := setupTestEnv(t)
 
