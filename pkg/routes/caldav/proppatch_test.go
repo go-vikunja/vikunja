@@ -108,7 +108,7 @@ func proppatch(t *testing.T, u *user.User, projectID int64, body string) map[xml
 
 	rec, err := callCaldavHandler(t, ProjectHandler, u, "PROPPATCH", projectPath(projectID), body, projectParams(projectID))
 	requireHTTPStatus(t, http.StatusMultiStatus, rec, err)
-	statuses, _ := parseMultistatus(t, rec).props(t, projectPath(projectID))
+	statuses, _ := parseMultistatus(t, rec).props(t, collectionHref(projectID))
 	return statuses
 }
 

@@ -120,12 +120,13 @@ type propPatchResult struct {
 
 // Only a collection's calendar-color is settable; everything else gets
 // sabre/dav's 403 "polite refusal", which clients tolerate where a 501 would make them abort.
-func servePropPatch(c *echo.Context, u *user.User, collection collectionTarget, target propPatchTarget) error {
+func servePropPatch(c *echo.Context, u *user.User, t target) error {
 	s := db.NewSession()
 	defer s.Close()
 
 	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
-	if _, err := collection.checkRead(s, u); err != nil {
+	res, err := resolvePropPatch(s, u, t)
+	if err != nil {
 		return writeError(c, err)
 	}
 
@@ -138,7 +139,7 @@ func servePropPatch(c *echo.Context, u *user.User, collection collectionTarget, 
 		return writeError(c, err)
 	}
 
-	results, err := applyPropPatch(s, instructions, &collection.project.Project, u, target)
+	results, err := applyPropPatch(s, instructions, res.project, u, res.kind)
 	if err != nil {
 		_ = s.Rollback()
 		return writeError(c, err)
@@ -147,7 +148,7 @@ func servePropPatch(c *echo.Context, u *user.User, collection collectionTarget, 
 		return writeError(c, err)
 	}
 
-	return writePropPatchResponse(c, results)
+	return writePropPatchResponse(c, res.href, results)
 }
 
 // applyPropPatch is all-or-nothing as RFC 4918 §9.2 demands: one refused
@@ -220,10 +221,40 @@ func canSetCalendarColor(s *xorm.Session, project *models.Project, u *user.User)
 	return denyArchived(project.CanUpdate(s, u))
 }
 
-func writePropPatchResponse(c *echo.Context, results []propPatchResult) error {
-	r := propstatResponse{href: c.Request().URL.Path, propstats: make([]propstat, len(results))}
+func writePropPatchResponse(c *echo.Context, href string, results []propPatchResult) error {
+	r := propstatResponse{href: href, propstats: make([]propstat, len(results))}
 	for i, res := range results {
 		r.propstats[i] = propstat{status: res.status, props: []prop{{name: res.name}}}
 	}
 	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
+}
+
+type propPatchResource struct {
+	href    string
+	project *models.Project
+	kind    propPatchTarget
+}
+
+// resolvePropPatch checks access to t and returns the href it answers under.
+func resolvePropPatch(s *xorm.Session, u *user.User, t target) (propPatchResource, error) {
+	switch t := t.(type) {
+	case collectionTarget:
+		if _, err := t.checkRead(s, u); err != nil {
+			return propPatchResource{}, err
+		}
+		return propPatchResource{collectionHref(t.project.ID), &t.project.Project, propPatchCollection}, nil
+	case taskTarget:
+		if _, err := t.collection.checkRead(s, u); err != nil {
+			return propPatchResource{}, err
+		}
+		task, err := findTask(s, u, t.collection, t.uid)
+		if err != nil {
+			return propPatchResource{}, err
+		}
+		if task == nil {
+			return propPatchResource{}, errNotFound
+		}
+		return propPatchResource{taskURL(t.collection.project.ID, task), &t.collection.project.Project, propPatchTask}, nil
+	}
+	return propPatchResource{}, fmt.Errorf("unhandled caldav target %T", t)
 }

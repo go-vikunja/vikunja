@@ -48,3 +48,32 @@ func TestPinPropPatchAccess(t *testing.T) {
 		}
 	})
 }
+
+func TestPinPropPatchTarget(t *testing.T) {
+	e := setupTestEnv(t)
+
+	t.Run("answers under the canonical href", func(t *testing.T) {
+		const href = "/dav/projects/36/pp%20a%26b.ics"
+		require.Equal(t, http.StatusCreated, caldavPUT(t, e, href, NewVTodo("pp a&b", "Reserved").Build()).Code)
+
+		for path, want := range map[string]string{
+			href:                "/dav/projects/36/pp%20a%26b.ics",
+			pinTaskHref:         pinTaskHref,
+			"/dav/projects/36/": "/dav/projects/36",
+		} {
+			rec := caldavRequest(t, e, "PROPPATCH", path, proppatchDisplayName, nil)
+			require.Equal(t, http.StatusMultiStatus, rec.Code, "PROPPATCH %s:\n%s", path, rec.Body.String())
+			ms := parseMultistatus(t, rec)
+			require.Len(t, ms.Responses, 1)
+			assert.Equal(t, want, ms.Responses[0].Href, "PROPPATCH %s", path)
+		}
+	})
+
+	t.Run("a task that is not in the collection is missing", func(t *testing.T) {
+		// uid-caldav-test lives in project 36; user15 can read 38 too.
+		for _, path := range []string{"/dav/projects/36/does-not-exist.ics", "/dav/projects/38/uid-caldav-test.ics"} {
+			rec := caldavRequest(t, e, "PROPPATCH", path, proppatchDisplayName, nil)
+			assert.Equal(t, http.StatusNotFound, rec.Code, "PROPPATCH %s", path)
+		}
+	})
+}
