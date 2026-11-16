@@ -17,8 +17,6 @@
 package caldav
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -29,7 +27,6 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go/errs"
 )
 
 const (
@@ -106,14 +103,9 @@ func requestsCalendarData(body string) bool {
 	return strings.Contains(body, "calendar-data")
 }
 
-// writeForbiddenValidSyncToken writes the RFC 6578 §3.6 error response,
-// telling the client to full-resync with an empty token.
+// RFC 6578 §3.6: tells the client to full-resync with an empty token.
 func writeForbiddenValidSyncToken(c *echo.Context) error {
-	c.Response().Header().Set("Content-Type", "application/xml; charset=utf-8")
-	c.Response().WriteHeader(http.StatusForbidden)
-	_, err := fmt.Fprint(c.Response(), `<?xml version="1.0" encoding="utf-8"?>`+"\n"+
-		`<D:error xmlns:D="DAV:"><D:valid-sync-token/></D:error>`)
-	return err
+	return writeDAVError(c, http.StatusForbidden, davName("valid-sync-token"))
 }
 
 // handleSyncCollectionReport handles a CalDAV REPORT sync-collection
@@ -140,10 +132,10 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 		// Without this the 403 would leak which saved filter ids exist.
 		can, err := storage.canReadCollection(s)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+			return writeError(c, err)
 		}
 		if !can {
-			return c.String(http.StatusNotFound, "Project not found")
+			return writeError(c, errNotFound)
 		}
 
 		log.Debugf("[CALDAV sync-collection] project=%d is a pseudo project → 403 valid-sync-token to force a full resync", projectID)
@@ -151,12 +143,8 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 	}
 
 	rr, err := storage.getProjectRessource(true)
-	if errors.Is(err, errs.ResourceNotFoundError) {
-		return c.String(http.StatusNotFound, "Project not found")
-	}
 	if err != nil {
-		log.Errorf("[CALDAV sync-collection] Failed to load project resource: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, fromLibraryError(err))
 	}
 
 	newEtag := rr.CalculateEtag()
@@ -212,11 +200,10 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 	deletions, err := models.GetDeletedTasksSince(s, projectID, tokenTS)
 	if err != nil {
 		_ = s.Rollback()
-		log.Errorf("[CALDAV sync-collection] Failed to fetch deletions for project %d: %v", projectID, err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 	if err := s.Commit(); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 
 	log.Debugf("[CALDAV sync-collection] project=%d delta: %d changed tasks, %d deletions since %v → newToken=%q",
@@ -234,52 +221,24 @@ func writeSyncResponse(
 	newToken string,
 	includeCalendarData bool,
 ) error {
-	var sb strings.Builder
-	sb.WriteString(`<?xml version="1.0" encoding="utf-8"?>` + "\n")
-	sb.WriteString(`<D:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + "\n")
+	ms := multistatus{
+		syncToken: newToken,
+		responses: make([]msResponse, 0, len(tasks)+len(deletions)),
+	}
 
 	for _, t := range tasks {
-		href := taskURL(rr.project.ID, &t.Task)
 		etag := `"` + strconv.FormatInt(t.ID, 10) + `-` + strconv.FormatInt(t.Updated.Unix(), 10) + `"`
-
-		sb.WriteString("  <D:response>\n")
-		sb.WriteString("    <D:href>" + xmlEscape(href) + "</D:href>\n")
-		sb.WriteString("    <D:propstat>\n")
-		sb.WriteString("      <D:prop>\n")
-		sb.WriteString("        <D:getetag>" + xmlEscape(etag) + "</D:getetag>\n")
+		props := []prop{{name: davName("getetag"), value: textValue(etag)}}
 		if includeCalendarData {
-			project := rr.project
-			calData := caldavpkg.GetCaldavTodosForTasks(project, []*models.TaskWithComments{t})
-			sb.WriteString("        <C:calendar-data>" + xmlEscape(calData) + "</C:calendar-data>\n")
+			calData := caldavpkg.GetCaldavTodosForTasks(rr.project, []*models.TaskWithComments{t})
+			props = append(props, prop{name: calDAVName("calendar-data"), value: textValue(calData)})
 		}
-		sb.WriteString("      </D:prop>\n")
-		sb.WriteString("      <D:status>HTTP/1.1 200 OK</D:status>\n")
-		sb.WriteString("    </D:propstat>\n")
-		sb.WriteString("  </D:response>\n")
+		ms.responses = append(ms.responses, propResponse(taskURL(rr.project.ID, &t.Task), props, nil))
 	}
 
 	for _, d := range deletions {
-		href := taskURL(rr.project.ID, d)
-		sb.WriteString("  <D:response>\n")
-		sb.WriteString("    <D:href>" + xmlEscape(href) + "</D:href>\n")
-		sb.WriteString("    <D:status>HTTP/1.1 404 Not Found</D:status>\n")
-		sb.WriteString("  </D:response>\n")
+		ms.responses = append(ms.responses, statusResponse{href: taskURL(rr.project.ID, d), status: http.StatusNotFound})
 	}
 
-	sb.WriteString("  <D:sync-token>" + xmlEscape(newToken) + "</D:sync-token>\n")
-	sb.WriteString("</D:multistatus>\n")
-
-	c.Response().Header().Set("Content-Type", "application/xml; charset=utf-8")
-	c.Response().WriteHeader(http.StatusMultiStatus)
-	_, err := fmt.Fprint(c.Response(), sb.String())
-	return err
-}
-
-func xmlEscape(s string) string {
-	s = strings.ReplaceAll(s, "&", "&amp;")
-	s = strings.ReplaceAll(s, "<", "&lt;")
-	s = strings.ReplaceAll(s, ">", "&gt;")
-	s = strings.ReplaceAll(s, `"`, "&quot;")
-	s = strings.ReplaceAll(s, "'", "&#39;")
-	return s
+	return writeMultistatus(c, ms)
 }

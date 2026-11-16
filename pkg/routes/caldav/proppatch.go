@@ -18,9 +18,7 @@ package caldav
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -36,7 +34,7 @@ const (
 	maxPropPatchNamespaceBytes = 256
 )
 
-var errTooManyProperties = errors.New("too many properties")
+var errTooManyProperties = fmt.Errorf("%w: too many properties", errBodyTooLarge)
 
 // parsePropertyUpdate returns the distinct property names under
 // <propertyupdate><set|remove><prop>. Properties are echoed back with their
@@ -50,16 +48,16 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 	for {
 		tok, err := d.Token()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %w", errMalformedBody, err)
 		}
 		switch t := tok.(type) {
 		case xml.StartElement:
 			if len(path) == 0 && t.Name.Local != "propertyupdate" {
-				return nil, fmt.Errorf("expected <propertyupdate>, got <%s>", t.Name.Local)
+				return nil, fmt.Errorf("%w: expected <propertyupdate>, got <%s>", errMalformedBody, t.Name.Local)
 			}
 			if len(path) == 3 && (path[1] == "set" || path[1] == "remove") && path[2] == "prop" {
 				if len(t.Name.Space) > maxPropPatchNamespaceBytes {
-					return nil, fmt.Errorf("namespace of <%s> too long", t.Name.Local)
+					return nil, fmt.Errorf("%w: namespace of <%s> too long", errMalformedBody, t.Name.Local)
 				}
 				if _, ok := seen[t.Name]; !ok {
 					if len(names) == maxPropPatchProperties {
@@ -86,7 +84,7 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 // and keep syncing instead of aborting on the 501 caldav-go falls back to.
 func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User) error {
 	if len(body) > maxPropPatchBodySize {
-		return c.String(http.StatusRequestEntityTooLarge, "Request Entity Too Large")
+		return writeError(c, errBodyTooLarge)
 	}
 
 	s := db.NewSession()
@@ -94,47 +92,24 @@ func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTa
 
 	can, _, err := project.CanRead(s, u)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "internal server error").Wrap(err)
+		return writeError(c, err)
 	}
 	if !can {
-		return c.String(http.StatusForbidden, "Forbidden")
+		return writeError(c, errForbidden)
 	}
 
 	props, err := parsePropertyUpdate(body)
-	if errors.Is(err, errTooManyProperties) {
-		return c.String(http.StatusRequestEntityTooLarge, "Request Entity Too Large")
-	}
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Bad Request")
+		return writeError(c, err)
 	}
 
 	return writePropPatchResponse(c, props)
 }
 
 func writePropPatchResponse(c *echo.Context, props []xml.Name) error {
-	var sb strings.Builder
-	sb.WriteString(`<?xml version="1.0" encoding="utf-8"?>` + "\n")
-	sb.WriteString(`<D:multistatus xmlns:D="DAV:">` + "\n")
-	sb.WriteString("  <D:response>\n")
-	sb.WriteString("    <D:href>" + xmlEscape(c.Request().URL.Path) + "</D:href>\n")
-	for _, p := range props {
-		sb.WriteString("    <D:propstat>\n")
-		sb.WriteString("      <D:prop>" + propTag(p) + "</D:prop>\n")
-		sb.WriteString("      <D:status>HTTP/1.1 403 Forbidden</D:status>\n")
-		sb.WriteString("    </D:propstat>\n")
+	r := propstatResponse{href: c.Request().URL.Path, propstats: make([]propstat, len(props))}
+	for i, p := range props {
+		r.propstats[i] = propstat{status: http.StatusForbidden, props: []prop{{name: p}}}
 	}
-	sb.WriteString("  </D:response>\n")
-	sb.WriteString("</D:multistatus>\n")
-
-	c.Response().Header().Set("Content-Type", "application/xml; charset=utf-8")
-	c.Response().WriteHeader(http.StatusMultiStatus)
-	_, err := io.WriteString(c.Response(), sb.String())
-	return err
-}
-
-func propTag(name xml.Name) string {
-	if name.Space == "" {
-		return "<" + name.Local + "/>"
-	}
-	return `<` + name.Local + ` xmlns="` + xmlEscape(name.Space) + `"/>`
+	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
 }
