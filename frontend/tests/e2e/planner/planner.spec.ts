@@ -106,10 +106,13 @@ test.describe('Planner', () => {
 		// and falls back to the default project — without one it only errors.
 		const token = await page.evaluate(() => localStorage.getItem('token'))
 		await updateUserSettings(apiContext, token!, {
-			defaultProjectId: projects[0].id,
+			// Snake case, as the settings endpoint and the auth store both spell it.
+			// A camelCase key is accepted with a 2xx and then dropped, so the write
+			// looks fine and AddTask still finds no default project.
+			default_project_id: projects[0].id,
 			// Required-and-validated by the settings endpoint; omitting it 400s the
 			// whole payload and the default project silently never lands.
-			overdueTasksRemindersTime: '9:00',
+			overdue_tasks_reminders_time: '9:00',
 		})
 		await page.reload()
 		// The store must have the new setting before AddTask reads it.
