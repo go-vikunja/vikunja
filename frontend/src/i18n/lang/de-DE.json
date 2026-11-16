@@ -793,7 +793,7 @@
 			"dueDateAsc": "Fälligkeitsdatum (frühestes zuerst)",
 			"dueDateDesc": "Fälligkeitsdatum (spätestes zuerst)",
 			"startDateAsc": "Startdatum (frühestes zuerst)",
-			"startDateDesc": "Enddatum (frühestes zuerst)",
+			"startDateDesc": "Startdatum (frühestes zuerst)",
 			"endDateAsc": "Enddatum (frühestes zuerst)",
 			"endDateDesc": "Endkeitsdatum (spätestes zuerst)",
 			"percentDoneDesc": "% erledigt (am meisten erledigt zuerst)",
