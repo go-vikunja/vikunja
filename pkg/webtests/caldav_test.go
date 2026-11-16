@@ -422,7 +422,7 @@ END:VTODO`
 		const childVTODO = vtodoHeader + vtodoChildTaskStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, childVTODO, nil, map[string]string{"project": "36", "task": "uid_child_import"})
 		require.NoError(t, err)
-		assert.Equal(t, 201, rec.Result().StatusCode)
+		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		const vtodoParentTaskStub = `BEGIN:VTODO
 UID:uid_parent_import
@@ -436,7 +436,7 @@ END:VTODO`
 		const parentVTODO = vtodoHeader + vtodoParentTaskStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_import"})
 		require.NoError(t, err)
-		assert.Equal(t, 201, rec.Result().StatusCode)
+		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
 		require.NoError(t, err)
@@ -483,7 +483,7 @@ END:VTODO`
 		const parentVTODO = vtodoHeader + vtodoParentStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_no_reltype"})
 		require.NoError(t, err)
-		assert.Equal(t, 201, rec.Result().StatusCode)
+		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		// Step 3: Verify relations at the DB level.
 		s := db.NewSession()
@@ -567,7 +567,7 @@ END:VTODO`
 		const parentUpdatedVTODO = vtodoHeader + vtodoParentUpdatedStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentUpdatedVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_resync"})
 		require.NoError(t, err)
-		assert.Equal(t, 201, rec.Result().StatusCode)
+		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		// Step 4: Verify relations still intact after parent re-sync.
 		s := db.NewSession()
@@ -646,7 +646,7 @@ END:VTODO`
 		const parentVTODO = vtodoHeader + vtodoParentStub + vtodoFooter
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_multi_parent"})
 		require.NoError(t, err)
-		assert.Equal(t, 201, rec.Result().StatusCode)
+		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		// Step 4: Verify all relations intact and no DUMMY tasks.
 		s := db.NewSession()
@@ -1600,7 +1600,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
 		require.NoError(t, err)
-		assert.Equal(t, 201, rec.Result().StatusCode)
+		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		task := getTask(t, "uid-caldav-test")
 		assert.Equal(t, "Updated title", task.Title)
@@ -1627,7 +1627,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
 		require.NoError(t, err)
-		assert.Equal(t, 201, rec.Result().StatusCode)
+		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		task := getTask(t, "uid-caldav-test")
 		assert.Equal(t, "Just a title change", task.Title)
@@ -1651,7 +1651,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
 		require.NoError(t, err)
-		assert.Equal(t, 201, rec.Result().StatusCode)
+		assert.Equal(t, 204, rec.Result().StatusCode)
 
 		task := getTask(t, "uid-caldav-test")
 		assert.InDelta(t, 0.5, task.PercentDone, 0.0001, "percent_done must survive a PUT that doesn't carry PERCENT-COMPLETE")
@@ -1681,7 +1681,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
 		require.NoError(t, err)
-		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Equal(t, 204, rec.Result().StatusCode)
 
 		task := getTask(t, "uid-caldav-test")
 		assert.Equal(t, "Just a title change", task.Title)
@@ -1715,7 +1715,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, updateVtodoNoCategories, nil, map[string]string{"project": "36", "task": "uid-caldav-labels-test"})
 		require.NoError(t, err)
-		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Equal(t, 204, rec.Result().StatusCode)
 
 		task := getTask(t, "uid-caldav-labels-test")
 		assert.Equal(t, "Task with labels, updated", task.Title)
@@ -1730,7 +1730,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, updateVtodoNewCategories, nil, map[string]string{"project": "36", "task": "uid-caldav-labels-test"})
 		require.NoError(t, err)
-		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Equal(t, 204, rec.Result().StatusCode)
 
 		task = getTask(t, "uid-caldav-labels-test")
 		require.Len(t, task.Labels, 1, "CATEGORIES present must replace labels")
@@ -1761,7 +1761,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, updateVtodoEmptyCategories, nil, map[string]string{"project": "36", "task": "uid-caldav-labels-clear-test"})
 		require.NoError(t, err)
-		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Equal(t, 204, rec.Result().StatusCode)
 
 		task := getTask(t, "uid-caldav-labels-clear-test")
 		assert.Equal(t, "Task with labels, cleared", task.Title)
@@ -1791,7 +1791,7 @@ END:VTODO` + vtodoFooter
 		// Re-PUT the exact same VTODO, as a client echoing the resource back on update.
 		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-dtend-test"})
 		require.NoError(t, err)
-		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Equal(t, 204, rec.Result().StatusCode)
 
 		task = getTask(t, "uid-caldav-dtend-test")
 		require.False(t, task.EndDate.IsZero())
@@ -1840,7 +1840,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
 		require.NoError(t, err)
-		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Equal(t, 204, rec.Result().StatusCode)
 
 		after := getTask(t, "uid-caldav-test")
 		assert.False(t, after.Done, "a repeating task reopens instead of staying done")
@@ -1870,7 +1870,7 @@ END:VTODO` + vtodoFooter
 
 		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo, nil, map[string]string{"project": "36", "task": "uid-caldav-test"})
 		require.NoError(t, err)
-		require.Equal(t, 201, rec.Result().StatusCode)
+		require.Equal(t, 204, rec.Result().StatusCode)
 
 		after := getTask(t, "uid-caldav-test")
 		assert.False(t, after.Done, "a repeating task reopens instead of staying done")

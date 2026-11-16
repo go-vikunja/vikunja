@@ -239,7 +239,6 @@ func TestConditionalRequests(t *testing.T) {
 	})
 
 	t.Run("GET with matching If-None-Match returns 304", func(t *testing.T) {
-		t.Skip("Known limitation: caldav-go does not implement If-None-Match conditional requests")
 		e := setupTestEnv(t)
 
 		// Get the task and its ETag

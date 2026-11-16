@@ -21,6 +21,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +41,7 @@ var (
 	}
 	readWriteAccess = accessExpectation{
 		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadWrite,
-		putUpdate: 201, putCreate: 201, del: 204,
+		putUpdate: 204, putCreate: 201, del: 204,
 	}
 	noAccess = accessExpectation{
 		propfind: 404, get: 404, report: 404, options: 404,
@@ -76,7 +79,7 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	ownerGet := func() *httptest.ResponseRecorder {
 		return caldavRequest(t, e, http.MethodGet, task, "", map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)})
 	}
-	if want.putUpdate != http.StatusCreated {
+	if want.putUpdate != http.StatusNoContent {
 		assert.NotContains(t, ownerGet().Body.String(), "Updated by "+username, "denied PUT must not change %s", task)
 	}
 
@@ -197,4 +200,63 @@ func TestPinAccessForeignPrincipal(t *testing.T) {
 		rec := caldavPROPFIND(t, e, path, "0", PropfindDiscoveryProps)
 		assert.Equal(t, http.StatusNotFound, rec.Code, "PROPFIND %s", path)
 	}
+}
+
+// Neither URL names a collection and a task, so neither may fall back to a lookup by UID alone.
+func TestPinMalformedTaskURLs(t *testing.T) {
+	e := setupTestEnv(t)
+
+	// Without it a lookup of the empty UID finds nothing and the empty-UID case passes by accident.
+	s := db.NewSession()
+	_, err := s.Insert(&models.Task{Title: "Task without uid", ProjectID: 36, Index: 999, CreatedByID: testuser15.ID})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	putAs := map[string]string{"Content-Type": "text/calendar; charset=utf-8"}
+	for _, path := range []string{"/dav/projects//uid-caldav-test.ics", "/dav/projects/36/.ics"} {
+		t.Run(path, func(t *testing.T) {
+			for _, method := range []string{http.MethodGet, http.MethodHead, http.MethodDelete, http.MethodOptions} {
+				rec := caldavRequest(t, e, method, path, "", nil)
+				assert.Equal(t, http.StatusNotFound, rec.Code, "%s. Body:\n%s", method, rec.Body.String())
+			}
+
+			rec := caldavPROPFIND(t, e, path, "0", PropfindResourceProperties)
+			assert.Equal(t, http.StatusNotFound, rec.Code, "PROPFIND. Body:\n%s", rec.Body.String())
+
+			rec = caldavRequest(t, e, http.MethodPut, path, NewVTodo("uid-caldav-test", "Overwritten").Build(), putAs)
+			assert.Equal(t, http.StatusNotFound, rec.Code, "PUT. Body:\n%s", rec.Body.String())
+		})
+	}
+
+	assert.Equal(t, http.StatusOK, caldavGET(t, e, pinTaskHref).Code, "the task must survive")
+	assert.NotContains(t, caldavGET(t, e, pinTaskHref).Body.String(), "Overwritten")
+}
+
+// tasks.uid has no unique index: the same UID in another readable project must not hide
+// the task living in the project the URL names.
+func TestPinSameUIDInAnotherProject(t *testing.T) {
+	e := setupTestEnv(t)
+
+	s := db.NewSession()
+	_, err := s.Insert(&models.Task{Title: "Duplicate UID task", UID: "uid-caldav-test", ProjectID: 38, Index: 999, CreatedByID: testuser15.ID})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	const duplicate = "/dav/projects/38/uid-caldav-test.ics"
+	rec := caldavGET(t, e, duplicate)
+	require.Equal(t, http.StatusOK, rec.Code, "Body:\n%s", rec.Body.String())
+	assert.Contains(t, rec.Body.String(), "SUMMARY:Duplicate UID task")
+
+	rec = caldavPUT(t, e, duplicate, NewVTodo("uid-caldav-test", "Duplicate updated").Build())
+	require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
+	assert.Contains(t, caldavGET(t, e, duplicate).Body.String(), "SUMMARY:Duplicate updated")
+
+	original := caldavGET(t, e, pinTaskHref).Body.String()
+	assert.Contains(t, original, "SUMMARY:Title Caldav Test")
+
+	require.Equal(t, http.StatusNoContent, caldavDELETE(t, e, duplicate).Code)
+	assert.Equal(t, http.StatusNotFound, caldavGET(t, e, duplicate).Code)
+	assert.Equal(t, http.StatusOK, caldavGET(t, e, pinTaskHref).Code)
 }
