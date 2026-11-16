@@ -20,13 +20,20 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"slices"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/user"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
+
+// MaxFrontendSettingsSize is the largest marshalled frontend_settings value in
+// bytes. It stays below the 65,535 bytes of the MySQL TEXT column.
+const MaxFrontendSettingsSize = 32 * 1024
 
 // UserGeneralSettings is the single user-settings wire struct shared by v1 and
 // v2 — both the update request body and the nested settings on GET /user. A
@@ -44,7 +51,7 @@ type UserGeneralSettings struct {
 	WeekStart                    int    `json:"week_start" valid:"range(0|6)" minimum:"0" maximum:"6" doc:"The day the week starts on: 0=sunday, 1=monday, … 6=saturday."`
 	Language                     string `json:"language" doc:"The user's language."`
 	Timezone                     string `json:"timezone" doc:"The user's time zone, used to send task reminders in their local time."`
-	FrontendSettings             any    `json:"frontend_settings" doc:"Arbitrary settings used only by the frontend. Any JSON value; stored and returned verbatim."`
+	FrontendSettings             any    `json:"frontend_settings" doc:"Arbitrary settings used only by the frontend. A JSON object of at most 32 KiB; stored and returned verbatim."`
 	// Server/OpenID-provided; populated on read, ignored on write.
 	ExtraSettingsLinks map[string]any `json:"extra_settings_links" readOnly:"true" doc:"Additional settings links provided by the OpenID provider. Server-controlled."`
 }
@@ -107,6 +114,10 @@ func SetUserPasswordAndInvalidateSessions(s *xorm.Session, u *user.User, newPass
 // Lives here (not in pkg/user) because the avatar flush needs pkg/modules/avatar,
 // which pkg/user cannot import.
 func UpdateUserGeneralSettings(s *xorm.Session, u *user.User, settings *UserGeneralSettings) error {
+	if err := checkFrontendSettings(settings.FrontendSettings); err != nil {
+		return err
+	}
+
 	// Unchanged, so a default the user lost access to doesn't block saving.
 	if settings.DefaultProjectID != 0 && settings.DefaultProjectID != u.DefaultProjectID {
 		if err := checkDefaultProject(s, u, settings.DefaultProjectID); err != nil {
@@ -171,6 +182,74 @@ func settingsFieldsJSON(settings *UserGeneralSettings) (map[string]json.RawMessa
 	}
 	delete(fields, "extra_settings_links")
 	return fields, nil
+}
+
+// checkFrontendSettings accepts no value or a JSON object up to
+// MaxFrontendSettingsSize. Clients crash on other JSON types.
+func checkFrontendSettings(settings any) error {
+	raw, err := json.Marshal(settings)
+	if err != nil {
+		return err
+	}
+	if bytes.Equal(raw, []byte("null")) {
+		return nil
+	}
+	if raw[0] != '{' {
+		return InvalidFieldErrorWithMessage([]string{"frontend_settings"}, "The frontend settings must be a JSON object.")
+	}
+	if len(raw) > MaxFrontendSettingsSize {
+		return InvalidFieldErrorWithMessage([]string{"frontend_settings"}, "The frontend settings are too large.")
+	}
+	return nil
+}
+
+// A var, so a test can make the batches small.
+var frontendSettingsResetBatch = 500
+
+// A text column, so xorm returns the raw stored value and does not decode it.
+type storedFrontendSettings struct {
+	ID               int64  `xorm:"bigint autoincr not null unique pk"`
+	FrontendSettings string `xorm:"text null"`
+}
+
+func (storedFrontendSettings) TableName() string {
+	return "users"
+}
+
+// ResetInvalidFrontendSettings sets every stored frontend_settings value that
+// checkFrontendSettings rejects to NULL. Otherwise the user cannot save any
+// general setting, because a settings PATCH sends the stored value back.
+// A restore needs it: restored rows skip the migration that does the same.
+func ResetInvalidFrontendSettings(s *xorm.Session) error {
+	lastID := int64(0)
+	for {
+		rows := []*storedFrontendSettings{}
+		err := s.
+			Where(builder.Gt{"id": lastID}).
+			And("frontend_settings IS NOT NULL").
+			OrderBy("id").
+			Limit(frontendSettingsResetBatch).
+			Find(&rows)
+		if err != nil {
+			return fmt.Errorf("could not read frontend settings: %w", err)
+		}
+
+		for _, row := range rows {
+			var settings any
+			if err := json.Unmarshal([]byte(row.FrontendSettings), &settings); err == nil && checkFrontendSettings(settings) == nil {
+				continue
+			}
+			if _, err := s.Exec("UPDATE users SET frontend_settings = NULL WHERE id = ?", row.ID); err != nil {
+				return err
+			}
+			log.Infof("Reset the frontend settings of user %d: not a JSON object or larger than %d bytes", row.ID, MaxFrontendSettingsSize)
+		}
+
+		if len(rows) < frontendSettingsResetBatch {
+			return nil
+		}
+		lastID = rows[len(rows)-1].ID
+	}
 }
 
 func checkDefaultProject(s *xorm.Session, u *user.User, projectID int64) error {

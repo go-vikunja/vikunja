@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -26,6 +27,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/schemas"
 )
 
 func TestChangeUserPassword(t *testing.T) {
@@ -71,4 +73,42 @@ func TestSetUserPasswordAndInvalidateSessions(t *testing.T) {
 	require.NoError(t, user.CheckUserPassword(u, "newpassword"))
 	db.AssertMissing(t, "sessions", map[string]any{"user_id": 2})
 	assert.Equal(t, &SessionsRevokedEvent{UserID: 2}, singleDispatchedEvent[*SessionsRevokedEvent](t))
+}
+
+func TestResetInvalidFrontendSettings(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	// Batches of 2 spread the six users over several batches.
+	defer func(batch int) { frontendSettingsResetBatch = batch }(frontendSettingsResetBatch)
+	frontendSettingsResetBatch = 2
+	s := db.NewSession()
+	defer s.Close()
+
+	values := map[int64]string{
+		1: `{"color_schema":"dark"}`,
+		2: `{"a":"` + strings.Repeat("a", MaxFrontendSettingsSize-8) + `"}`,
+		3: `{"a":"` + strings.Repeat("a", MaxFrontendSettingsSize-7) + `"}`,
+		4: `[1,2]`,
+		5: `"dark"`,
+	}
+	// Postgres stores frontend_settings in a json column, which rejects invalid JSON.
+	if db.Type() != schemas.POSTGRES {
+		values[6] = `{"color_schema":`
+	}
+	for id, value := range values {
+		_, err := s.Exec("UPDATE users SET frontend_settings = ? WHERE id = ?", value, id)
+		require.NoError(t, err)
+	}
+
+	require.NoError(t, ResetInvalidFrontendSettings(s))
+	require.NoError(t, s.Commit())
+
+	stored, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{"color_schema": "dark"}, stored.FrontendSettings)
+	db.AssertMissing(t, "users", map[string]any{"id": 2, "frontend_settings": nil})
+	for id := range values {
+		if id > 2 {
+			db.AssertExists(t, "users", map[string]any{"id": id, "frontend_settings": nil}, false)
+		}
+	}
 }
