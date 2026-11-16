@@ -50,6 +50,14 @@ func propfindWithProps(props ...string) string {
 </D:propfind>`
 }
 
+func tooManyProps() string {
+	props := make([]string, 0, maxPropfindProperties+1)
+	for i := range maxPropfindProperties + 1 {
+		props = append(props, `<X:p`+strconv.Itoa(i)+` xmlns:X="urn:example"/>`)
+	}
+	return propfindWithProps(props...)
+}
+
 func multigetWithProps(props ...string) string {
 	return multiget(props, "/dav/projects/36/uid-caldav-test.ics")
 }
@@ -114,12 +122,7 @@ func TestRequestedProperties(t *testing.T) {
 	t.Run("PROPFIND with too many properties is rejected", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		// caldav-go caps requests at 200 properties.
-		props := make([]string, 0, 201)
-		for i := range 201 {
-			props = append(props, `<X:p`+strconv.Itoa(i)+` xmlns:X="urn:example"/>`)
-		}
-		rec, err := callCaldavHandler(t, PrincipalHandler, caldavFilterUser, "PROPFIND", principalPathForUser(caldavFilterUser.Username), propfindWithProps(props...), nil)
+		rec, err := callCaldavHandler(t, PrincipalHandler, caldavFilterUser, "PROPFIND", principalPathForUser(caldavFilterUser.Username), tooManyProps(), nil)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})

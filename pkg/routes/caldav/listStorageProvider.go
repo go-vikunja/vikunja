@@ -50,131 +50,20 @@ type VikunjaCaldavProjectStorage struct {
 	// Used when handling a single task, like updating
 	task *models.Task
 	// The current user
-	user   *user2.User
-	target target
+	user *user2.User
 }
 
 func (vcls *VikunjaCaldavProjectStorage) collection() collectionTarget {
 	return collectionTarget{project: vcls.project}
 }
 
-// GetResources returns either all projects, links to the principal, or only one project, depending on the request
-func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren bool) ([]data.Resource, error) {
-
-	// It looks like we need to have the same handler for returning both the calendar home set and the user principal
-	// Since the client seems to ignore the whatever is being returned in the first request and just makes a second one
-	// to the same url but requesting the calendar home instead
-	// The problem with this is caldav-go just return whatever resource it gets and making that the requested path
-	// And for us here, there is no easy (I can think of at least one hacky way) to figure out if the client is requesting
-	// the home or principal url. Ough.
-
-	// Ok, maybe the problem is more the client making a request to /dav/ and getting a response which says
-	// something like "hey, for /dav/projects, the calendar home is /dav/projects", but the client expects a
-	// response to go something like "hey, for /dav/, the calendar home is /dav/projects" since it requested /dav/
-	// and not /dav/projects. I'm not sure if thats a bug in the client or in caldav-go.
-
-	switch vcls.target.(type) {
-	case entryTarget:
-		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
-			isPrincipal:  true,
-			isCollection: true,
-		})
-		return []data.Resource{r}, nil
-	case principalTarget:
-		// The principal answers with the home set and nothing else.
-		r := data.NewResource(ProjectHomeSetPath, &VikunjaProjectResourceAdapter{
-			isPrincipal:  true,
-			isCollection: true,
-		})
-		return []data.Resource{r}, nil
-	}
-
-	// If vcls.project.ID is != 0, this means the user is doing a PROPFIND request to /projects/:project
-	// Which means we need to get only one project
-	if vcls.project != nil && vcls.project.ID != 0 {
-		rr, err := vcls.getProjectRessource(true)
-		if err != nil {
-			return nil, err
-		}
-		r := data.NewResource(vcls.hrefFor(rpath), &rr)
-		r.Name = vcls.project.Title
-
-		// If the request is withChildren (Depth: 1), we need to return all tasks of the project
-		if withChildren {
-			resources := []data.Resource{r}
-
-			emitted := make(map[string]bool, len(vcls.project.Tasks))
-			for i := range vcls.project.Tasks {
-				task := &vcls.project.Tasks[i].Task
-				// tasks.uid has no unique index, so two same-UID tasks would map to one href.
-				href := taskURL(vcls.project.ID, task)
-				if emitted[href] {
-					continue
-				}
-				emitted[href] = true
-
-				taskResource := VikunjaProjectResourceAdapter{
-					project:      vcls.project,
-					task:         task,
-					isCollection: false,
-				}
-				addTaskResource(vcls.project.ID, task, &taskResource, &resources)
-			}
-			return resources, nil
-		}
-		return []data.Resource{r}, nil
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	// Otherwise get all projects
-	theprojects, _, _, err := vcls.project.ReadAll(s, vcls.user, "", -1, 50)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, err
-	}
-	if err := s.Commit(); err != nil {
-		return nil, err
-	}
-	projects := theprojects.([]*models.Project)
-
-	if !withChildren {
-		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
-			isPrincipal:  true,
-			isCollection: true,
-		})
-		return []data.Resource{r}, nil
-	}
-
-	var resources []data.Resource
-	for _, l := range projects {
-		rr := VikunjaProjectResourceAdapter{
-			project: &models.ProjectWithTasksAndBuckets{
-				Project: *l,
-			},
-			isCollection: true,
-		}
-		r := data.NewResource(ProjectBasePath+"/"+strconv.FormatInt(l.ID, 10), &rr)
-		r.Name = l.Title
-		resources = append(resources, r)
-	}
-
-	return resources, nil
-}
-
-func withTrailingSlash(path string) string {
-	if path == "" {
-		return ProjectHomeSetPath
-	}
-	if strings.HasSuffix(path, "/") {
-		return path
-	}
-	return path + "/"
+// GetResources only satisfies data.Storage: PROPFIND is served in-house.
+func (vcls *VikunjaCaldavProjectStorage) GetResources(string, bool) ([]data.Resource, error) {
+	return nil, errNotThroughLibrary
 }
 
 func principalPathForUser(username string) string {
-	return withTrailingSlash(PrincipalBasePath + `/` + username)
+	return PrincipalBasePath + `/` + username + `/`
 }
 
 // GetResourcesByList fetches a list of resources from a slice of paths
@@ -335,7 +224,7 @@ func (todoResource) ComponentName() string {
 
 // WebDAV requires every Depth: 1 child to live under the collection's own URI.
 func taskURL(collectionProjectID int64, task *models.Task) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(collectionProjectID, 10) + `/` + encodeURIPathSegment(task.UID) + `.ics`
+	return collectionHref(collectionProjectID) + `/` + encodeURIPathSegment(task.UID) + `.ics`
 }
 
 // url.PathEscape leaves & alone, and caldav-go writes hrefs into XML unescaped.
@@ -401,22 +290,22 @@ func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data
 	return vcls.GetResource(rpath)
 }
 
-// Writes never reach caldav-go: PUT and DELETE are served in-house.
-var errWriteThroughLibrary = errors.New("caldav: writes do not go through caldav-go")
+// Only REPORT still reaches caldav-go.
+var errNotThroughLibrary = errors.New("caldav: not served through caldav-go")
 
 // CreateResource only satisfies data.Storage.
 func (vcls *VikunjaCaldavProjectStorage) CreateResource(string, string) (*data.Resource, error) {
-	return nil, errWriteThroughLibrary
+	return nil, errNotThroughLibrary
 }
 
 // UpdateResource only satisfies data.Storage.
 func (vcls *VikunjaCaldavProjectStorage) UpdateResource(string, string) (*data.Resource, error) {
-	return nil, errWriteThroughLibrary
+	return nil, errNotThroughLibrary
 }
 
 // DeleteResource only satisfies data.Storage.
 func (vcls *VikunjaCaldavProjectStorage) DeleteResource(string) error {
-	return errWriteThroughLibrary
+	return errNotThroughLibrary
 }
 
 // VikunjaProjectResourceAdapter holds the actual resource
@@ -425,7 +314,6 @@ type VikunjaProjectResourceAdapter struct {
 	projectTasks []*models.TaskWithComments
 	task         *models.Task
 
-	isPrincipal  bool
 	isCollection bool
 
 	// Rendered once per request: a multistatus response asks for it per requested property.
@@ -436,11 +324,6 @@ type VikunjaProjectResourceAdapter struct {
 func (vlra *VikunjaProjectResourceAdapter) IsCollection() bool {
 	// If the discovery does not work, setting this to true makes it work again.
 	return vlra.isCollection
-}
-
-// IsCalendar is false for the home sets, which only contain the project calendars.
-func (vlra *VikunjaProjectResourceAdapter) IsCalendar() bool {
-	return !vlra.isPrincipal
 }
 
 // CalculateEtag returns the etag of a resource
@@ -500,7 +383,11 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 		return
 	}
 
-	projectTasks, err := readCollectionTasks(s, vcls.user, vcls.collection())
+	readable, err := vcls.collection().checkRead(s, vcls.user)
+	var projectTasks []*models.TaskWithComments
+	if err == nil {
+		projectTasks, err = readCollectionTasks(s, vcls.user, readable)
+	}
 	if err != nil {
 		_ = s.Rollback()
 		if errors.Is(err, errNotFound) {

@@ -85,7 +85,6 @@ func TestETagBehavior(t *testing.T) {
 	})
 
 	t.Run("PROPFIND ETag matches GET ETag", func(t *testing.T) {
-		t.Skip("Known bug: caldav-go formats ETags differently in HTTP headers vs XML properties")
 		e := setupTestEnv(t)
 
 		// Get ETag via GET

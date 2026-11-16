@@ -108,12 +108,12 @@ func TestCalendarBodyParsing(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("collection requests other than PUT do not parse the body", func(t *testing.T) {
+	t.Run("a calendar body on a collection PROPFIND is a malformed PROPFIND body", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		rec, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", projectPath(36), unparseableCalendar, projectParams(36))
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusMultiStatus, rec.Code)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
 	t.Run("collection PUT with access still creates the task", func(t *testing.T) {
