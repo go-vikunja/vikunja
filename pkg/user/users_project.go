@@ -161,6 +161,36 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		}
 	}
 
+	// Fuzzy matching is exempt: it only lists users who already have access
+	// to the project, so restricting it would hide shared outsiders.
+	if config.ServiceRestrictSearchToExternalTeams.GetBool() && !opts.MatchFuzzily {
+		var inExternalTeam bool
+		inExternalTeam, err = s.
+			Table("team_members").
+			Join("INNER", "teams", "teams.id = team_members.team_id").
+			Where(builder.And(
+				builder.Eq{"team_members.user_id": currentUser.ID},
+				builder.Neq{"teams.external_id": ""},
+			)).
+			Exist()
+		if err != nil {
+			return nil, err
+		}
+
+		if inExternalTeam {
+			cond = builder.And(
+				cond,
+				builder.Or(
+					builder.In("id", externalTeamMemberIDs),
+					builder.And(
+						builder.In("email", queryParts),
+						builder.Eq{"discoverable_by_email": true},
+					),
+				),
+			)
+		}
+	}
+
 	notSomeoneElsesBot := builder.Or(
 		builder.IsNull{"bot_owner_id"},
 		builder.Eq{"bot_owner_id": 0},
