@@ -123,14 +123,10 @@ func TestTaskUIDHrefRoundTrip(t *testing.T) {
 			t.Run("multiget resolves the href", func(t *testing.T) {
 				setup(t)
 
-				resources, err := storageFor(caldavFilterUser, caldavHrefProjectID).GetResourcesByList([]string{href})
-				require.NoError(t, err)
-				require.Len(t, resources, 1, "the server must resolve the href it emitted")
-				assert.Equal(t, href, resources[0].Path)
-
-				content, found := resources[0].GetContentData()
-				require.True(t, found)
-				assert.Contains(t, content, "UID:"+tc.uid)
+				tasks := resolveHrefs(t, caldavFilterUser, caldavHrefProjectID, href)
+				require.Len(t, tasks, 1, "the server must resolve the href it emitted")
+				require.Contains(t, tasks, href)
+				assert.Equal(t, tc.uid, tasks[href].UID)
 			})
 
 			for _, unescapePathParamValues := range []bool{false, true} {
@@ -166,13 +162,11 @@ func TestTaskUIDHrefRoundTrip(t *testing.T) {
 	}
 }
 
-func TestGetResourcesByList_MalformedEscape(t *testing.T) {
+func TestMultigetTasks_MalformedEscape(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 
 	insertTaskWithUID(t, "uid-caldav-%zz", 98)
 
-	resources, err := storageFor(caldavFilterUser, caldavHrefProjectID).
-		GetResourcesByList([]string{"/dav/projects/36/uid-caldav-%zz.ics"})
-	require.NoError(t, err)
-	assert.Empty(t, resources, "an href that is not valid percent-encoding is not an href we emitted")
+	tasks := resolveHrefs(t, caldavFilterUser, caldavHrefProjectID, "/dav/projects/36/uid-caldav-%zz.ics")
+	assert.Empty(t, tasks, "an href that is not valid percent-encoding is not an href we emitted")
 }

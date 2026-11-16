@@ -19,6 +19,7 @@ package caldavtests
 import (
 	"encoding/xml"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,13 +59,10 @@ func project36TaskHrefs() []string {
 func TestPinReportCalendarMultiget(t *testing.T) {
 	e := setupTestEnv(t)
 	const missing = "/dav/projects/36/nonexistent-uid.ics"
+	// Exists and is readable, but lives outside the requested collection.
+	const outside = "/dav/projects/38/uid-caldav-test-child-task-2.ics"
 
-	rec := caldavREPORT(t, e, "/dav/projects/36", ReportCalendarMultiget(
-		pinTaskHref,
-		missing,
-		// Exists and is readable, but lives outside the requested collection: silently skipped.
-		"/dav/projects/38/uid-caldav-test-child-task-2.ics",
-	))
+	rec := caldavREPORT(t, e, "/dav/projects/36", ReportCalendarMultiget(pinTaskHref, missing, outside))
 
 	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
 	assertDAVResponses(t, rec, []expectedDAVResponse{
@@ -76,6 +74,7 @@ func TestPinReportCalendarMultiget(t *testing.T) {
 			},
 		},
 		{href: missing, status: http.StatusNotFound},
+		{href: outside, status: http.StatusNotFound},
 	})
 }
 
@@ -87,8 +86,35 @@ func TestPinReportUnknownType(t *testing.T) {
   <C:time-range start="20060104T140000Z" end="20060105T220000Z"/>
 </C:free-busy-query>`)
 
-	assert.Equal(t, http.StatusPreconditionFailed, rec.Code)
-	assert.Empty(t, rec.Body.String())
+	assertSupportedReport(t, rec)
+}
+
+// RFC 3253 §3.6: a report the resource does not support fails the supported-report precondition.
+func assertSupportedReport(t *testing.T, rec *httptest.ResponseRecorder) {
+	t.Helper()
+	require.Equal(t, http.StatusForbidden, rec.Code, "Body:\n%s", rec.Body.String())
+	var body struct {
+		XMLName xml.Name  `xml:"DAV: error"`
+		Failed  []xmlNode `xml:",any"`
+	}
+	require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &body), "Body:\n%s", rec.Body.String())
+	require.Len(t, body.Failed, 1)
+	assert.Equal(t, davName("supported-report"), body.Failed[0].XMLName)
+}
+
+func TestPinReportMalformedBody(t *testing.T) {
+	e := setupTestEnv(t)
+
+	for name, body := range map[string]string{"empty": "", "not XML": "<<<", "truncated": `<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">`} {
+		t.Run(name, func(t *testing.T) {
+			rec := caldavREPORT(t, e, "/dav/projects/36", body)
+			assert.Equal(t, http.StatusBadRequest, rec.Code, "Body:\n%s", rec.Body.String())
+
+			// The body is only looked at once access is granted.
+			rec = caldavRequest(t, e, "REPORT", "/dav/projects/36", body, map[string]string{"Authorization": basicAuthHeader(testuser1.Username, fixturePassword)})
+			assert.Equal(t, http.StatusNotFound, rec.Code, "Body:\n%s", rec.Body.String())
+		})
+	}
 }
 
 func TestPinReportCalendarQuery(t *testing.T) {
@@ -99,9 +125,13 @@ func TestPinReportCalendarQuery(t *testing.T) {
 	}{
 		{name: "VTODO comp-filter only", hrefs: project36TaskHrefs()},
 		{
-			// No fixture task falls into this range; time-range is not evaluated for VTODOs.
-			name:   "time-range",
+			// Every fixture task is due 2023-03-01 15:00 UTC.
+			name:   "time-range after the due dates",
 			filter: `<C:time-range start="20300101T000000Z" end="20300102T000000Z"/>`,
+		},
+		{
+			name:   "time-range around the due dates",
+			filter: `<C:time-range start="20230301T000000Z" end="20230302T000000Z"/>`,
 			hrefs:  project36TaskHrefs(),
 		},
 		{
@@ -129,4 +159,123 @@ func TestPinReportCalendarQuery(t *testing.T) {
 			assertDAVResponses(t, rec, etagOnly(tc.hrefs...))
 		})
 	}
+}
+
+const (
+	reportSyncCollection = `<?xml version="1.0" encoding="utf-8" ?>
+<D:sync-collection xmlns:D="DAV:">
+  <D:sync-token/>
+  <D:sync-level>1</D:sync-level>
+  <D:prop><D:getetag/></D:prop>
+</D:sync-collection>`
+	reportFreeBusy = `<?xml version="1.0" encoding="utf-8" ?>
+<C:free-busy-query xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <C:time-range start="20060104T140000Z" end="20060105T220000Z"/>
+</C:free-busy-query>`
+)
+
+func TestPinReportTargets(t *testing.T) {
+	task := []expectedDAVResponse{{
+		href: pinTaskHref,
+		ok:   map[xml.Name]string{davName("getetag"): anyValue, calName("calendar-data"): anyValue},
+	}}
+	// They hold no calendar data, so they take no REPORT at all.
+	const noReports = http.StatusMethodNotAllowed
+
+	tests := []struct {
+		name string
+		path string
+		// nil: the status alone is pinned.
+		query, multiget             []expectedDAVResponse
+		queryStatus, multigetStatus int
+		syncStatus, unknownStatus   int
+		// The Allow header of a 405.
+		allow string
+	}{
+		{
+			name: "entry", path: "/dav/", allow: allowEntry,
+			queryStatus: noReports, multigetStatus: noReports,
+			syncStatus: noReports, unknownStatus: noReports,
+		},
+		{
+			name: "principal", path: user15Principal, allow: allowEntry,
+			queryStatus: noReports, multigetStatus: noReports,
+			syncStatus: noReports, unknownStatus: noReports,
+		},
+		{
+			name: "well-known", path: "/.well-known/caldav", allow: allowEntry,
+			queryStatus: noReports, multigetStatus: noReports,
+			syncStatus: noReports, unknownStatus: noReports,
+		},
+		{
+			name: "home set", path: "/dav/projects", allow: allowHomeSet,
+			queryStatus: noReports, multigetStatus: noReports,
+			syncStatus: noReports, unknownStatus: noReports,
+		},
+		{
+			// The filter and the hrefs are ignored, the task answers for itself.
+			name: "task", path: pinTaskHref,
+			query: task, multiget: task, queryStatus: 207, multigetStatus: 207,
+			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
+		},
+		{
+			name: "missing task", path: "/dav/projects/36/nonexistent-uid.ics",
+			queryStatus: http.StatusNotFound, multigetStatus: http.StatusNotFound,
+			syncStatus: http.StatusNotFound, unknownStatus: http.StatusNotFound,
+		},
+	}
+
+	e := setupTestEnv(t)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			check := func(t *testing.T, body string, status int, want []expectedDAVResponse) {
+				t.Helper()
+				rec := caldavREPORT(t, e, tc.path, body)
+				if status == http.StatusForbidden {
+					assertSupportedReport(t, rec)
+					return
+				}
+				require.Equal(t, status, rec.Code, "Body:\n%s", rec.Body.String())
+				if status == http.StatusMethodNotAllowed {
+					assert.Equal(t, tc.allow, rec.Header().Get("Allow"))
+				}
+				if want == nil {
+					return
+				}
+				assertDAVResponses(t, rec, want)
+			}
+
+			t.Run("calendar-query", func(t *testing.T) { check(t, ReportCalendarQuery, tc.queryStatus, tc.query) })
+			t.Run("calendar-multiget", func(t *testing.T) {
+				check(t, ReportCalendarMultiget(pinTaskHref, "/dav/projects/38/uid-caldav-test-child-task-2.ics"), tc.multigetStatus, tc.multiget)
+			})
+			t.Run("sync-collection", func(t *testing.T) { check(t, reportSyncCollection, tc.syncStatus, nil) })
+			t.Run("unknown", func(t *testing.T) { check(t, reportFreeBusy, tc.unknownStatus, nil) })
+		})
+	}
+}
+
+func TestPinReportCalendarQueryWithoutFilter(t *testing.T) {
+	e := setupTestEnv(t)
+
+	rec := caldavREPORT(t, e, "/dav/projects/36", `<?xml version="1.0" encoding="utf-8" ?>
+<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:D="DAV:">
+  <D:prop><D:getetag/></D:prop>
+</C:calendar-query>`)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code, "Body:\n%s", rec.Body.String())
+}
+
+// A collection without tasks answers a calendar-query with itself.
+func TestPinReportCalendarQueryOnEmptyCollection(t *testing.T) {
+	e := setupTestEnv(t)
+
+	rec := caldavREPORT(t, e, "/dav/projects/-1", ReportCalendarQuery)
+
+	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+	assertDAVResponses(t, rec, []expectedDAVResponse{{
+		href:     "/dav/projects/-1",
+		ok:       map[xml.Name]string{davName("getetag"): anyValue},
+		notFound: []xml.Name{calName("calendar-data")},
+	}})
 }

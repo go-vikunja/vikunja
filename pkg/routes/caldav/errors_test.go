@@ -46,6 +46,7 @@ func TestErrorStatus(t *testing.T) {
 		{"task does not exist", models.ErrTaskDoesNotExist{ID: 1}, http.StatusNotFound},
 		{"forbidden", errForbidden, http.StatusForbidden},
 		{"archived project", models.ErrProjectIsArchived{ProjectID: 1}, http.StatusForbidden},
+		{"failed precondition", fmt.Errorf("report: %w", errUnsupportedReport), http.StatusForbidden},
 		{"validation", models.ValidationHTTPError{}, http.StatusForbidden},
 		{"too many table cells", fmt.Errorf("description: %w", richtext.ErrTooManyTableCells), http.StatusForbidden},
 		{"body too large", errBodyTooLarge, http.StatusRequestEntityTooLarge},
@@ -86,6 +87,14 @@ func TestWriteError(t *testing.T) {
 		assert.Empty(t, rec.Body.String())
 	})
 
+	t.Run("failed precondition answers with its error body", func(t *testing.T) {
+		rec, err := run("REPORT", errUnsupportedReport)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusForbidden, rec.Code)
+		assert.Contains(t, rec.Body.String(), "<D:error")
+		assert.Contains(t, rec.Body.String(), "<D:supported-report/>")
+	})
+
 	t.Run("unknown error goes to the error handler without its message", func(t *testing.T) {
 		cause := errors.New("database is gone")
 		_, err := run(http.MethodGet, cause)
@@ -95,12 +104,4 @@ func TestWriteError(t *testing.T) {
 		assert.Equal(t, "internal server error", he.Message)
 		assert.ErrorIs(t, err, cause)
 	})
-}
-
-func TestLibraryErrors(t *testing.T) {
-	unknown := errors.New("database is gone")
-
-	assert.Equal(t, errNotFound, fromLibraryError(errs.ResourceNotFoundError))
-	assert.Equal(t, errForbidden, fromLibraryError(errs.ForbiddenError))
-	assert.Equal(t, unknown, fromLibraryError(unknown))
 }

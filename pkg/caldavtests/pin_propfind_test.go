@@ -29,7 +29,7 @@ import (
 const (
 	pinTaskHref     = "/dav/projects/36/uid-caldav-test.ics"
 	user15Principal = "/dav/principals/user15/"
-	homeSetHref     = "/dav/projects/"
+	homeSetHref     = "/dav/projects"
 	zeroLastMod     = "Mon, 01 Jan 0001 00:00:00 GMT"
 
 	resourceTypeHome      = "{DAV:}collection"
@@ -103,13 +103,14 @@ func expectHomeSet() expectedDAVResponse {
 			davName("resourcetype"):                     resourceTypeHome,
 			davName("displayname"):                      "projects",
 			davName("current-user-principal"):           user15Principal,
+			calName("calendar-home-set"):                homeSetHref,
+			davName("principal-URL"):                    user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
 		},
 		notFound: []xml.Name{
 			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
 			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
-			calName("calendar-home-set"), davName("principal-URL"),
 		},
 	}
 }
