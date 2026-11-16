@@ -122,6 +122,7 @@
 					class="checklist"
 				/>
 				<span
+					v-if="showUpdated"
 					v-tooltip="{content: updatedTooltip, popperClass: 'is-multiline'}"
 					class="updated"
 				>
@@ -168,6 +169,7 @@ import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {useProjects} from '@/composables/useProjects'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps<{
 	task: TaskResponse,
@@ -180,6 +182,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
+const authStore = useAuthStore()
 const updateTask = useUpdateTaskMutation()
 
 const loadingInternal = ref(false)
@@ -207,6 +210,8 @@ const isOverdue = computed(() => (
 	new Date(props.task.due_date ?? 0).getTime() > 0 &&
 	new Date(props.task.due_date ?? 0).getTime() <= now.value.getTime()
 ))
+
+const showUpdated = computed(() => authStore.settings.frontend_settings.show_kanban_card_updated)
 
 // The server sets updated to created on creation, so equal values mean the task was never changed.
 const wasUpdated = computed(() => +new Date(props.task.created ?? 0) !== +new Date(props.task.updated ?? 0))

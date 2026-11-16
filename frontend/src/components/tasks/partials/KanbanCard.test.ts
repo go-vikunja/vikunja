@@ -27,6 +27,12 @@ const attachments = vi.hoisted(() => ({
 
 vi.mock('@/helpers/attachments', () => attachments)
 
+const frontendSettings = vi.hoisted(() => ({show_kanban_card_updated: true}))
+
+vi.mock('@/stores/auth', () => ({
+	useAuthStore: () => ({settings: {frontend_settings: frontendSettings}}),
+}))
+
 import KanbanCard from './KanbanCard.vue'
 
 class FakeIntersectionObserver {
@@ -131,6 +137,7 @@ describe('KanbanCard', () => {
 		attachments.fetchAttachmentUrl.mockReset()
 		attachments.releaseAttachmentUrl.mockReset()
 		errorHandler.mockReset()
+		frontendSettings.show_kanban_card_updated = true
 		FakeIntersectionObserver.instances = []
 		vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver)
 	})
@@ -316,6 +323,13 @@ describe('KanbanCard', () => {
 		await vi.runAllTimersAsync()
 
 		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledOnce()
+	})
+
+	it('hides the last change when the user setting is off', () => {
+		frontendSettings.show_kanban_card_updated = false
+		const wrapper = mountCard(changedTask)
+
+		expect(wrapper.find('.updated').exists()).toBe(false)
 	})
 
 	it('labels a task that was never changed with its creation', () => {

@@ -238,6 +238,10 @@
 				v-model="settings.frontend_settings.always_show_bucket_task_count"
 				:label="$t('user.settings.general.alwaysShowBucketTaskCount')"
 			/>
+			<FormCheckbox
+				v-model="settings.frontend_settings.show_kanban_card_updated"
+				:label="$t('user.settings.general.showKanbanCardUpdated')"
+			/>
 			<FormField
 				:label="$t('user.settings.backgroundBrightness.title')"
 				layout="two-col"

@@ -200,7 +200,26 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).toContainText(tasks[0].title)
 	})
 
-	test('Shows when a card was last changed', async ({authenticatedPage: page}) => {
+	test('Hides when a card was last changed by default', async ({authenticatedPage: page}) => {
+		const [task] = await TaskFactory.create(1, {project_id: 1})
+		await TaskBucketFactory.create(1, {
+			task_id: task.id,
+			bucket_id: buckets[0].id,
+			project_view_id: buckets[0].project_view_id,
+		}, false)
+		await page.goto('/projects/1/4')
+
+		const card = page.locator('.kanban .task').filter({hasText: task.title})
+		await expect(card).toBeVisible()
+		await expect(card.locator('.updated')).toHaveCount(0)
+	})
+
+	test('Shows when a card was last changed when the setting is enabled', async ({authenticatedPage: page, apiContext, userToken}) => {
+		await updateUserSettings(apiContext, userToken, {
+			frontend_settings: {
+				show_kanban_card_updated: true,
+			},
+		})
 		const day = 86_400_000
 		const [task] = await TaskFactory.create(1, {
 			project_id: 1,
