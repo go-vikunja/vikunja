@@ -17,20 +17,14 @@
 package caldav
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"reflect"
-	"strings"
 
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go"
-	"github.com/samedi/caldav-go/data"
-	"github.com/samedi/caldav-go/lib"
 )
 
 func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
@@ -41,31 +35,39 @@ func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 	return u, nil
 }
 
-// Per request, never through caldav-go's setup globals: those let concurrent
-// requests of different users answer each other with the wrong storage.
-func caldavConfig(storage data.Storage, principalPath string) caldav.Config {
-	return caldav.Config{
-		Storage: storage,
-		// caldav-go renders current-user-principal as "/<name>/", so pass the path
-		// without surrounding slashes or the href ends up with a double slash.
-		User:                &data.CalUser{Name: strings.Trim(principalPath, "/")},
-		SupportedComponents: []string{lib.VCALENDAR, lib.VTODO},
-	}
-}
-
 // EntryHandler serves /dav/.
-func EntryHandler(c *echo.Context) error { return handle(c, resolveEntry) }
+func EntryHandler(c *echo.Context) error { return handle(c, resolveEntry, serveMethod) }
 
 // PrincipalHandler serves /dav/principals/<user>/ and /.well-known/caldav.
-func PrincipalHandler(c *echo.Context) error { return handle(c, resolvePrincipal) }
+func PrincipalHandler(c *echo.Context) error { return handle(c, resolvePrincipal, serveMethod) }
 
 // ProjectHandler serves the home set /dav/projects and the collections below it.
-func ProjectHandler(c *echo.Context) error { return handle(c, resolveProjects) }
+func ProjectHandler(c *echo.Context) error { return handle(c, resolveProjects, serveMethod) }
 
 // TaskHandler serves a single task below a collection.
-func TaskHandler(c *echo.Context) error { return handle(c, resolveTask) }
+func TaskHandler(c *echo.Context) error { return handle(c, resolveTask, serveMethod) }
 
-func handle(c *echo.Context, resolve targetResolver) error {
+// EntryMethodNotAllowed answers the methods EntryHandler is not routed for.
+func EntryMethodNotAllowed(c *echo.Context) error {
+	return handle(c, resolveEntry, methodNotAllowed)
+}
+
+// PrincipalMethodNotAllowed answers the methods PrincipalHandler is not routed for.
+func PrincipalMethodNotAllowed(c *echo.Context) error {
+	return handle(c, resolvePrincipal, methodNotAllowed)
+}
+
+// ProjectMethodNotAllowed answers the methods ProjectHandler is not routed for.
+func ProjectMethodNotAllowed(c *echo.Context) error {
+	return handle(c, resolveProjects, methodNotAllowed)
+}
+
+// TaskMethodNotAllowed answers the methods TaskHandler is not routed for.
+func TaskMethodNotAllowed(c *echo.Context) error {
+	return handle(c, resolveTask, methodNotAllowed)
+}
+
+func handle(c *echo.Context, resolve targetResolver, serve func(*echo.Context, *user.User, target) error) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
 		return writeError(c, err)
@@ -75,7 +77,10 @@ func handle(c *echo.Context, resolve targetResolver) error {
 	if err != nil {
 		return writeError(c, err)
 	}
+	return serve(c, u, t)
+}
 
+func serveMethod(c *echo.Context, u *user.User, t target) error {
 	switch c.Request().Method {
 	case http.MethodOptions:
 		return serveOptions(c, u, t)
@@ -90,40 +95,25 @@ func handle(c *echo.Context, resolve targetResolver) error {
 	case "REPORT":
 		return serveReport(c, u, t)
 	case "PROPPATCH":
-		switch t := t.(type) {
-		case collectionTarget:
-			return servePropPatch(c, u, t.project)
-		case taskTarget:
-			return servePropPatch(c, u, t.collection.project)
+		switch t.(type) {
+		case collectionTarget, taskTarget:
+			return servePropPatch(c, u, t)
 		}
 	}
-
-	readAndLogBody(c)
-	return serveLibrary(c, newStorage(u, t), principalPathForUser(u.Username))
+	return methodNotAllowed(c, u, t)
 }
 
-func serveLibrary(c *echo.Context, storage *VikunjaCaldavProjectStorage, principalPath string) error {
-	response := caldav.HandleRequestWithConfig(c.Request(), caldavConfig(storage, principalPath))
-	response.Write(c.Response())
-	return nil
-}
-
-func readAndLogBody(c *echo.Context) []byte {
-	body, _ := io.ReadAll(c.Request().Body)
-	c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-	logRequest(c.Request().Header, body)
-	return body
-}
-
-// Vikunja keeps no client-set properties, so PROPPATCH refuses all of them, rather than
-// caldav-go's blanket 501.
-func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets) error {
-	body, err := io.ReadAll(c.Request().Body)
+// readBody reads the request body, refusing more than limit bytes.
+func readBody(c *echo.Context, limit int) ([]byte, error) {
+	body, err := io.ReadAll(io.LimitReader(c.Request().Body, int64(limit)+1))
 	if err != nil {
-		return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
+		return nil, fmt.Errorf("%w: %w", errMalformedBody, err)
+	}
+	if len(body) > limit {
+		return nil, errBodyTooLarge
 	}
 	logRequest(c.Request().Header, body)
-	return handlePropPatch(c, string(body), project, u)
+	return body, nil
 }
 
 const maxLoggedBodySize = 4096

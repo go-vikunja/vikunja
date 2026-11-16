@@ -31,8 +31,18 @@ func TestPinDELETE(t *testing.T) {
 		rec := caldavDELETE(t, e, "/dav/projects/36")
 
 		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "Body:\n%s", rec.Body.String())
+		assert.Equal(t, allowCollectionReadWrite, rec.Header().Get("Allow"))
 		assert.Empty(t, rec.Body.String())
 		assert.Equal(t, http.StatusOK, caldavGET(t, e, pinTaskHref).Code)
+	})
+
+	t.Run("pseudo collection", func(t *testing.T) {
+		e := setupTestEnv(t)
+
+		rec := caldavDELETE(t, e, "/dav/projects/-1")
+
+		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "Body:\n%s", rec.Body.String())
+		assert.Equal(t, allowCollectionReadWrite, rec.Header().Get("Allow"))
 	})
 
 	t.Run("home set", func(t *testing.T) {

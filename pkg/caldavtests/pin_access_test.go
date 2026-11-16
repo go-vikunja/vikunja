@@ -40,7 +40,7 @@ var (
 		putUpdate: 403, putCreate: 403, del: 403,
 	}
 	readWriteAccess = accessExpectation{
-		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadWrite,
+		propfind: 207, get: 200, report: 207, options: 200, allow: allowCollectionReadWrite,
 		putUpdate: 204, putCreate: 201, del: 204,
 	}
 	noAccess = accessExpectation{
@@ -154,7 +154,7 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 		{name: "archived own project", project: "22", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadOnly}},
 		{name: "archived project, unrelated user", project: "22", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
 		// Saved filter 1 (pseudo project -2) belongs to user1.
-		{name: "own saved filter", project: "-2", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadWrite}},
+		{name: "own saved filter", project: "-2", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowCollectionReadWrite}},
 		{name: "saved filter, unrelated user", project: "-2", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
 		{name: "owned project, unrelated user", project: "36", username: testuser1.Username, want: collectionExpectation{404, 404, 404, 404, ""}},
 	}

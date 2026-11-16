@@ -161,28 +161,25 @@ func ownerPrincipal(username string) (propValue, bool) {
 	return hrefsValue{principalPathForUser(username)}, true
 }
 
-// hrefed is any resource that answers some properties with its own href.
+// hrefed is a resource whose displayname is the last segment of its href.
 type hrefed interface{ ownHref() string }
 
-func ownHref[R hrefed](_ propContext, r R) (propValue, bool) {
-	return hrefsValue{r.ownHref()}, true
+func principalCollections[R any]() propDef[R] {
+	return propDef[R]{propPrincipalCollections, always[R](hrefsValue{PrincipalBasePath + "/"})}
 }
 
-// Pinned: caldav-go answered these with the href of whatever resource was asked.
-func selfReferencing[R hrefed]() propTable[R] {
-	return propTable[R]{
-		{propPrincipalCollections, ownHref[R]},
-		{propCalendarUserAddress, ownHref[R]},
-	}
+// Without scheduling there is no mailto: address to give, so the principal is the address.
+func calendarUserAddress[R any]() propDef[R] {
+	return propDef[R]{propCalendarUserAddress, currentUserPrincipal[R]}
 }
 
 // RFC 4791 §6.2.1 and RFC 3744 §4.2: these belong to the principal. /dav/ and the home set
 // answer them too: clients start discovery there, Apple Reminders at /dav/projects/ (#2417).
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
-		// Without the trailing slash, as clients knew it before the rewrite.
+		// No trailing slash: existing clients stored it that way.
 		{propCalendarHomeSet, always[R](hrefsValue{ProjectBasePath})},
-		{propPrincipalURL, func(ctx propContext, _ R) (propValue, bool) { return hrefsValue{ctx.principal}, true }},
+		{propPrincipalURL, currentUserPrincipal[R]},
 	}
 }
 
@@ -201,7 +198,9 @@ var entryProps = append(propTable[*entryResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*entryResource]},
 	{propSupportedComponents, always[*entryResource](supportedComponents)},
 	{propGetContentType, always[*entryResource](textValue(contentTypeCollection))},
-}, slices.Concat(principalDiscovery[*entryResource](), selfReferencing[*entryResource]())...)
+	principalCollections[*entryResource](),
+	calendarUserAddress[*entryResource](),
+}, principalDiscovery[*entryResource]()...)
 
 func (r *entryResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return entryProps.answer(ctx, r, r.href, req)
@@ -218,7 +217,9 @@ var principalProps = append(propTable[*principalResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*principalResource]},
 	{propSupportedComponents, always[*principalResource](supportedComponents)},
 	{propGetContentType, always[*principalResource](textValue(contentTypeCollection))},
-}, slices.Concat(principalDiscovery[*principalResource](), selfReferencing[*principalResource]())...)
+	principalCollections[*principalResource](),
+	calendarUserAddress[*principalResource](),
+}, principalDiscovery[*principalResource]()...)
 
 func (r *principalResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return principalProps.answer(ctx, r, r.href, req)
@@ -235,7 +236,8 @@ var homeSetProps = append(propTable[*homeSetResource]{
 	{propCurrentUserPrincipal, currentUserPrincipal[*homeSetResource]},
 	{propSupportedComponents, always[*homeSetResource](supportedComponents)},
 	{propGetContentType, always[*homeSetResource](textValue(contentTypeCollection))},
-}, slices.Concat(principalDiscovery[*homeSetResource](), selfReferencing[*homeSetResource]())...)
+	principalCollections[*homeSetResource](),
+}, principalDiscovery[*homeSetResource]()...)
 
 func (r *homeSetResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return homeSetProps.answer(ctx, r, r.href, req)
@@ -251,11 +253,9 @@ type collectionResource struct {
 	owner string
 }
 
-func (r *collectionResource) ownHref() string { return r.href }
-
 func (r *collectionResource) etag() string { return collectionETag(r.project, r.tasks) }
 
-var collectionProps = append(propTable[*collectionResource]{
+var collectionProps = propTable[*collectionResource]{
 	{propResourceType, always[*collectionResource](elementsValue{collectionType, calendarType})},
 	{propDisplayName, func(_ propContext, r *collectionResource) (propValue, bool) {
 		return textValue(r.project.Title), true
@@ -276,7 +276,8 @@ var collectionProps = append(propTable[*collectionResource]{
 		}
 		return textIfSet(renderCollection(r.project, r.tasks))
 	}},
-}, selfReferencing[*collectionResource]()...)
+	principalCollections[*collectionResource](),
+}
 
 func (r *collectionResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return collectionProps.answer(ctx, r, r.href, req)
@@ -292,8 +293,6 @@ type taskResource struct {
 	rendered *string
 }
 
-func (r *taskResource) ownHref() string { return r.href }
-
 func (r *taskResource) content() string {
 	if r.rendered == nil {
 		content := renderTask(r.task)
@@ -302,7 +301,7 @@ func (r *taskResource) content() string {
 	return *r.rendered
 }
 
-var taskProps = append(propTable[*taskResource]{
+var taskProps = propTable[*taskResource]{
 	{propResourceType, always[*taskResource](nil)},
 	{propDisplayName, func(_ propContext, r *taskResource) (propValue, bool) { return textValue(r.task.Title), true }},
 	{propCurrentUserPrincipal, currentUserPrincipal[*taskResource]},
@@ -315,7 +314,8 @@ var taskProps = append(propTable[*taskResource]{
 		return textValue(strconv.Itoa(len(r.content()))), true
 	}},
 	{propCalendarData, func(_ propContext, r *taskResource) (propValue, bool) { return textIfSet(r.content()) }},
-}, selfReferencing[*taskResource]()...)
+	principalCollections[*taskResource](),
+}
 
 func (r *taskResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return taskProps.answer(ctx, r, r.href, req)

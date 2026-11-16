@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
@@ -33,7 +32,6 @@ import (
 	"xorm.io/xorm"
 )
 
-// Same cap caldav-go had.
 const maxPropfindProperties = 200
 
 // propfindRequest is what a PROPFIND body asks for (RFC 4918 §9.1).
@@ -168,14 +166,10 @@ func servePropfind(c *echo.Context, u *user.User, t target) error {
 		return writeError(c, err)
 	}
 
-	body, err := io.ReadAll(io.LimitReader(c.Request().Body, maxPropRequestBodySize+1))
+	body, err := readBody(c, maxPropRequestBodySize)
 	if err != nil {
-		return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
+		return writeError(c, err)
 	}
-	if len(body) > maxPropRequestBodySize {
-		return writeError(c, errBodyTooLarge)
-	}
-	logRequest(c.Request().Header, body)
 	req, err := parsePropfind(string(body))
 	if err != nil {
 		return writeError(c, err)
@@ -192,7 +186,7 @@ func servePropfind(c *echo.Context, u *user.User, t target) error {
 
 	ms := multistatus{
 		responses: make([]msResponse, len(resources)),
-		minimal:   c.Request().Header.Get("Prefer") == "return=minimal",
+		minimal:   prefersMinimal(c.Request().Header),
 	}
 	for i, r := range resources {
 		ms.responses[i] = r.answer(ctx, req)
@@ -320,8 +314,4 @@ func loadOwner(s *xorm.Session, u *user.User, p *models.Project) (string, error)
 		p.Owner = owner
 	}
 	return ownerName(u, p), nil
-}
-
-func collectionHref(projectID int64) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(projectID, 10)
 }

@@ -23,9 +23,9 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
+	"xorm.io/xorm"
 )
 
 const (
@@ -78,39 +78,57 @@ func parsePropertyUpdate(body string) ([]xml.Name, error) {
 	}
 }
 
-// handlePropPatch answers PROPPATCH (RFC 4918 §9.2) without applying any
+// servePropPatch answers PROPPATCH (RFC 4918 §9.2) without applying any
 // change: Vikunja doesn't support client-set collection metadata, so every
 // submitted property is refused with 403, the same "polite refusal" shape
 // sabre/dav uses for protected properties. Clients treat this as best-effort
-// and keep syncing instead of aborting on the 501 caldav-go falls back to.
-func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User) error {
-	if len(body) > maxPropRequestBodySize {
-		return writeError(c, errBodyTooLarge)
-	}
-
+// and keep syncing, where a 501 would make them abort.
+func servePropPatch(c *echo.Context, u *user.User, t target) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	can, _, err := project.CanRead(s, u)
-	if err != nil {
-		return writeError(c, err)
-	}
-	if !can {
-		return writeError(c, errForbidden)
-	}
-
-	props, err := parsePropertyUpdate(body)
+	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
+	href, err := propPatchHref(s, u, t)
 	if err != nil {
 		return writeError(c, err)
 	}
 
-	return writePropPatchResponse(c, props)
-}
+	body, err := readBody(c, maxPropRequestBodySize)
+	if err != nil {
+		return writeError(c, err)
+	}
+	props, err := parsePropertyUpdate(string(body))
+	if err != nil {
+		return writeError(c, err)
+	}
 
-func writePropPatchResponse(c *echo.Context, props []xml.Name) error {
-	r := propstatResponse{href: c.Request().URL.Path, propstats: make([]propstat, len(props))}
+	r := propstatResponse{href: href, propstats: make([]propstat, len(props))}
 	for i, p := range props {
 		r.propstats[i] = propstat{status: http.StatusForbidden, props: []prop{{name: p}}}
 	}
 	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
+}
+
+// propPatchHref checks access to t and returns the href it answers under.
+func propPatchHref(s *xorm.Session, u *user.User, t target) (string, error) {
+	switch t := t.(type) {
+	case collectionTarget:
+		if _, err := t.checkRead(s, u); err != nil {
+			return "", err
+		}
+		return collectionHref(t.project.ID), nil
+	case taskTarget:
+		if _, err := t.collection.checkRead(s, u); err != nil {
+			return "", err
+		}
+		task, err := findTask(s, u, t.collection, t.uid)
+		if err != nil {
+			return "", err
+		}
+		if task == nil {
+			return "", errNotFound
+		}
+		return taskURL(t.collection.project.ID, task), nil
+	}
+	return "", fmt.Errorf("unhandled caldav target %T", t)
 }

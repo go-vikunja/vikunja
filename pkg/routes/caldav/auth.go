@@ -134,7 +134,6 @@ func checkUserCaldavTokens(s *xorm.Session, login *user.Login) (*user.User, erro
 		log.Errorf("Error while getting tokens for caldav auth: %v", err)
 		return nil, err
 	}
-	// Looping over all tokens until we find one that matches
 	for _, token := range tokens {
 		err = bcrypt.CompareHashAndPassword([]byte(token.Token), []byte(login.Password))
 		if err != nil {
