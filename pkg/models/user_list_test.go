@@ -19,6 +19,7 @@ package models
 import (
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
@@ -359,5 +360,114 @@ func TestListUsers(t *testing.T) {
 			}
 		}
 		assert.True(t, foundBot, "owner A's bot (id=23) should appear in results when no search is provided and ReturnAllIfNoSearchProvided is true")
+	})
+}
+
+// User 10 is in external teams 14 and 15 and shares team 14 with user 11.
+// User 12 (discoverable_by_name) and user 7 (discoverable_by_email) are outsiders.
+func TestListUsersRestrictSearchToExternalTeams(t *testing.T) {
+	user1 := &user.User{ID: 1}
+	user10 := &user.User{ID: 10}
+
+	enable := func(t *testing.T) {
+		config.ServiceRestrictSearchToExternalTeams.Set(true)
+		t.Cleanup(func() { config.ServiceRestrictSearchToExternalTeams.Set(false) })
+	}
+	search := func(t *testing.T, query string, currentUser *user.User) []int64 {
+		s := db.NewSession()
+		defer s.Close()
+		users, err := user.ListUsers(s, query, currentUser, nil)
+		require.NoError(t, err)
+		ids := []int64{}
+		for _, u := range users {
+			ids = append(ids, u.ID)
+		}
+		return ids
+	}
+
+	t.Run("disabled keeps finding outsiders", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		assert.Equal(t, []int64{12}, search(t, "with space", user10))
+		assert.Equal(t, []int64{7}, search(t, "user7", user10))
+	})
+	t.Run("outsider not found by partial name", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+
+		assert.Empty(t, search(t, "with space", user10))
+	})
+	t.Run("outsider not found by exact username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+
+		assert.Empty(t, search(t, "user7", user10))
+	})
+	t.Run("external team member found by name and username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+
+		assert.Equal(t, []int64{11}, search(t, "Some one else", user10))
+		assert.Equal(t, []int64{11}, search(t, "user11", user10))
+	})
+	t.Run("outsider found by exact email when discoverable by email", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+
+		assert.Equal(t, []int64{7}, search(t, "user7@example.com", user10))
+	})
+	t.Run("sharing only a local team does not count", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+		s := db.NewSession()
+		_, err := s.Insert(&TeamMember{TeamID: 13, UserID: 12})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.Empty(t, search(t, "with space", user10))
+	})
+	t.Run("searcher without external team unaffected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+
+		assert.Equal(t, []int64{12}, search(t, "with space", user1))
+		assert.Equal(t, []int64{7}, search(t, "user7", user1))
+	})
+	t.Run("own bot still found", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+		s := db.NewSession()
+		_, err := s.Insert(&TeamMember{TeamID: 14, UserID: 21})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		assert.Contains(t, search(t, "Owner A Assistant", &user.User{ID: 21}), int64(23))
+	})
+	t.Run("combined with openid team user search", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+		config.ServiceEnableOpenIDTeamUserOnlySearch.Set(true)
+		t.Cleanup(func() { config.ServiceEnableOpenIDTeamUserOnlySearch.Set(false) })
+
+		assert.Equal(t, []int64{11}, search(t, "Some one else", user10))
+		assert.Empty(t, search(t, "with space", user10))
+		assert.Equal(t, []int64{7}, search(t, "user7@example.com", user10))
+	})
+	t.Run("project users still include outsiders with access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		enable(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 10 has access to project 29 via team 13, user 12 directly.
+		users, err := ListUsersFromProject(s, &Project{ID: 29}, user10, "")
+		require.NoError(t, err)
+		ids := []int64{}
+		for _, u := range users {
+			ids = append(ids, u.ID)
+		}
+		assert.Contains(t, ids, int64(12))
 	})
 }
