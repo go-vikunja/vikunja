@@ -102,9 +102,9 @@
 						:done="task.done"
 					/>
 					<span
-						v-if="task.percentDone > 0"
+						v-if="task.percent_done > 0"
 						class="task-percent"
-					>{{ Math.round(task.percentDone * 100) }}%</span>
+					>{{ Math.round(task.percent_done * 100) }}%</span>
 				</span>
 			</li>
 		</ul>
@@ -116,19 +116,19 @@ import {computed, ref} from 'vue'
 
 import {useI18n} from 'vue-i18n'
 
-import type {ITask} from '@/modelTypes/ITask'
-import type {TaskFilterParams} from '@/services/taskCollection'
+import type {TaskResponse} from '@/client/queries/tasks'
+import type {TaskFilterParams} from '@/client/queries/tasks'
 import {formatDate} from '@/helpers/time/formatDate'
 import {PLANNER_SIDEBAR_SORTS, type PlannerSidebarSort} from './helpers/usePlannerTasks'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {plannerTaskColor} from './helpers/taskColor'
 import {overdueAnchor} from './helpers/overdue'
 
 defineProps<{
-	tasks: ITask[]
-	overdueTasks: ITask[]
+	tasks: TaskResponse[]
+	overdueTasks: TaskResponse[]
 }>()
 
 const emit = defineEmits<{
@@ -181,22 +181,22 @@ function onDrop(event: DragEvent) {
 	}
 }
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 
-function taskColor(task: ITask): string {
-	return plannerTaskColor(task.hexColor, projectStore.projects[task.projectId]?.hexColor)
+function taskColor(task: TaskResponse): string {
+	return plannerTaskColor(task.hex_color, projectList.projects[task.project_id]?.hex_color)
 }
 
-function projectName(task: ITask): string {
-	return projectStore.projects[task.projectId]?.title ?? ''
+function projectName(task: TaskResponse): string {
+	return projectList.projects[task.project_id]?.title ?? ''
 }
 
-function overdueDateLabel(task: ITask): string {
+function overdueDateLabel(task: TaskResponse): string {
 	const anchor = overdueAnchor(task)
 	return anchor ? formatDate(anchor, 'll') : ''
 }
 
-function onDragStart(event: DragEvent, task: ITask) {
+function onDragStart(event: DragEvent, task: TaskResponse) {
 	event.dataTransfer?.setData('text/plain', String(task.id))
 	if (event.dataTransfer) {
 		event.dataTransfer.effectAllowed = 'move'

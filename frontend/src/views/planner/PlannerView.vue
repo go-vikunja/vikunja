@@ -31,6 +31,13 @@
 
 				<div class="mode-toggle">
 					<XButton
+						:variant="viewMode === 'month' ? 'primary' : 'secondary'"
+						:shadow="false"
+						@click="viewMode = 'month'"
+					>
+						{{ $t('planner.month') }}
+					</XButton>
+					<XButton
 						:variant="viewMode === 'week' ? 'primary' : 'secondary'"
 						:shadow="false"
 						@click="viewMode = 'week'"
@@ -46,7 +53,20 @@
 					</XButton>
 				</div>
 
-				<div class="zoom-controls">
+				<BaseButton
+					class="sidebar-toggle"
+					:class="{'is-active': sidebarVisible}"
+					:aria-label="sidebarVisible ? $t('planner.hideSidebar') : $t('planner.showSidebar')"
+					:aria-pressed="sidebarVisible"
+					@click="sidebarVisible = !sidebarVisible"
+				>
+					<Icon icon="table-columns" />
+				</BaseButton>
+
+				<div
+					v-if="viewMode !== 'month'"
+					class="zoom-controls"
+				>
 					<BaseButton
 						:aria-label="$t('planner.zoomOut')"
 						@click="zoomOut"
@@ -80,6 +100,7 @@
 
 		<div class="planner-body">
 			<PlannerSidebar
+				v-if="sidebarVisible"
 				v-model:filter="sidebarFilter"
 				v-model:sort="sidebarSort"
 				:tasks="sidebarTasks"
@@ -87,7 +108,17 @@
 				@openTask="openTask"
 				@unschedule="unscheduleTask"
 			/>
+			<MonthGrid
+				v-if="viewMode === 'month'"
+				:days="days"
+				:tasks="visibleGridTasks"
+				:month="monthStart.toDate()"
+				@openTask="openTask"
+				@dropAllDay="onDropAllDay"
+				@createAllDay="onCreateAllDay"
+			/>
 			<CalendarGrid
+				v-else
 				:days="days"
 				:tasks="visibleGridTasks"
 				:slot-minutes="slotMinutes"
@@ -122,7 +153,8 @@ import {useI18n} from 'vue-i18n'
 import {useStorage} from '@vueuse/core'
 import dayjs from 'dayjs'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {TaskResponse} from '@/client/queries/tasks'
+import type {Task} from '@/client/generated'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Loading from '@/components/misc/Loading.vue'
 import Message from '@/components/misc/Message.vue'
@@ -130,15 +162,18 @@ import PlannerSidebar from './PlannerSidebar.vue'
 import PlannerSettings from './PlannerSettings.vue'
 import PlannerCreateTaskModal from './PlannerCreateTaskModal.vue'
 import CalendarGrid from './grid/CalendarGrid.vue'
+import MonthGrid from './grid/MonthGrid.vue'
 
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {setTitle} from '@/helpers/setTitle'
 import {formatDate} from '@/helpers/time/formatDate'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
-import type {TaskFilterParams} from '@/services/taskCollection'
+import type {TaskFilterParams} from '@/client/queries/tasks'
 import {useCalendarSettings} from './helpers/useCalendarSettings'
 import {usePlannerTimeFormatter} from './helpers/usePlannerTimeFormatter'
 import {usePlannerTasks, type PlannerRange, type PlannerSidebarSort, PLANNER_SIDEBAR_SORTS, DEFAULT_PLANNER_SIDEBAR_SORT} from './helpers/usePlannerTasks'
+import {PLANNER_VIEW_MODES, type PlannerViewMode} from './helpers/types'
 
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
@@ -146,16 +181,22 @@ const {settings} = useCalendarSettings()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
-const viewMode = useStorage<'week' | 'day'>('planner-view-mode', 'week')
+const viewMode = useStorage<PlannerViewMode>('planner-view-mode', 'week')
+// An earlier build only stored 'week' | 'day'; reset anything unrecognised.
+if (!PLANNER_VIEW_MODES.includes(viewMode.value)) {
+	viewMode.value = 'week'
+}
 const anchor = ref(new Date())
 // filter_include_nulls must be defined: Filters.vue binds it to a Boolean
 // FancyCheckbox, which warns on undefined.
-const sidebarFilter = ref<TaskFilterParams>({filter: '', s: '', filter_include_nulls: false} as TaskFilterParams)
+const sidebarFilter = ref<TaskFilterParams>({filter: '', q: '', filter_include_nulls: false} as TaskFilterParams)
 const sidebarSort = useStorage<PlannerSidebarSort>('planner-sidebar-sort', DEFAULT_PLANNER_SIDEBAR_SORT)
 // An earlier build stored this as an object; reset any value that isn't a known option.
 if (!PLANNER_SIDEBAR_SORTS.includes(sidebarSort.value)) {
 	sidebarSort.value = DEFAULT_PLANNER_SIDEBAR_SORT
 }
+
+const sidebarVisible = useStorage('planner-sidebar-visible', true)
 
 const pxPerHour = useStorage('planner-px-per-hour', 48)
 const userZoomed = useStorage('planner-user-zoomed', false)
@@ -174,13 +215,23 @@ watch([dayStartHour, dayEndHour], () => userZoomed.value = false)
 
 // Respect the user's configured first day of the week (0 = Sunday … 6 = Saturday).
 function startOfWeek(date: Date): dayjs.Dayjs {
-	const weekStart = authStore.settings.weekStart ?? 0
+	const weekStart = authStore.settings.week_start ?? 0
 	const day = dayjs(date).startOf('day')
 	const diff = (day.day() - weekStart + 7) % 7
 	return day.subtract(diff, 'day')
 }
 
+// The month grid always renders whole weeks, so it runs from the week holding
+// the 1st to the week holding the last day — 4 to 6 rows depending on the month.
+const monthStart = computed(() => dayjs(anchor.value).startOf('month'))
+
 const days = computed<Date[]>(() => {
+	if (viewMode.value === 'month') {
+		const start = startOfWeek(monthStart.value.toDate())
+		const endOfMonth = monthStart.value.endOf('month')
+		const weeks = Math.ceil(endOfMonth.diff(start, 'day') / 7)
+		return Array.from({length: weeks * 7}, (_, i) => start.add(i, 'day').toDate())
+	}
 	if (viewMode.value === 'day') {
 		return [dayjs(anchor.value).startOf('day').toDate()]
 	}
@@ -199,6 +250,9 @@ const range = computed<PlannerRange>(() => ({
 }))
 
 const rangeLabel = computed(() => {
+	if (viewMode.value === 'month') {
+		return formatDate(monthStart.value.toDate(), 'MMMM YYYY')
+	}
 	if (viewMode.value === 'day') {
 		return formatDate(anchor.value, 'LL')
 	}
@@ -208,9 +262,9 @@ const rangeLabel = computed(() => {
 })
 
 const overdueEnabled = computed(() => settings.value.showOverdue)
-const {sidebarTasks, gridTasks, overdueTasks, isLoading, loadError, updateTask, scheduleTask} = usePlannerTasks(range, sidebarFilter, sidebarSort, overdueEnabled)
+const {sidebarTasks, gridTasks, overdueTasks, isLoading, loadError, updateTask, scheduleTask, refresh} = usePlannerTasks(range, sidebarFilter, sidebarSort, overdueEnabled)
 
-function findTask(taskId: number): ITask | undefined {
+function findTask(taskId: number): TaskResponse | undefined {
 	return gridTasks.value.get(taskId)
 		?? sidebarTasks.value.find(t => t.id === taskId)
 		?? overdueTasks.value.find(t => t.id === taskId)
@@ -225,13 +279,19 @@ const visibleGridTasks = computed(() =>
 const slotMinutes = computed(() => Math.max(Math.round(settings.value.slotMinutes) || 0, 5))
 const defaultDurationMinutes = computed(() => Math.max(Math.round(settings.value.defaultDurationMinutes) || 0, 5))
 
-// Page by the visible window (day=1, full week=7, rolling=daysToShow).
+// Page by the visible window (month=1 month, day=1, full week=7, rolling=daysToShow).
+function page(direction: 1 | -1) {
+	anchor.value = viewMode.value === 'month'
+		? monthStart.value.add(direction, 'month').toDate()
+		: dayjs(anchor.value).add(direction * days.value.length, 'day').toDate()
+}
+
 function goPrev() {
-	anchor.value = dayjs(anchor.value).subtract(days.value.length, 'day').toDate()
+	page(-1)
 }
 
 function goNext() {
-	anchor.value = dayjs(anchor.value).add(days.value.length, 'day').toDate()
+	page(1)
 }
 
 function goToday() {
@@ -256,19 +316,20 @@ function zoomOut() {
 	pxPerHour.value = Math.max(pxPerHour.value - 12, 16)
 }
 
-function hasPastDue(task: ITask | undefined): boolean {
-	return !!task?.dueDate && dayjs(task.dueDate).isBefore(dayjs().startOf('day'))
+function hasPastDue(task: TaskResponse | undefined): boolean {
+	const dueDate = task && parseDateOrNull(task.due_date)
+	return !!dueDate && dayjs(dueDate).isBefore(dayjs().startOf('day'))
 }
 
 function onDropTask({taskId, minutes, day}: {taskId: number, minutes: number, day: Date}) {
 	const start = dayjs(day).startOf('day').add(minutes, 'minute')
 	const end = start.add(defaultDurationMinutes.value, 'minute')
-	const partial: Parameters<typeof updateTask>[0] = {id: taskId, startDate: start.toDate(), endDate: end.toDate()}
+	const partial: Parameters<typeof updateTask>[0] = {id: taskId, start_date: start.toDate(), end_date: end.toDate()}
 	// Rescheduling an overdue task also defers its missed deadline — otherwise
 	// it would stay "overdue" despite now being planned. Future deadlines are
 	// left alone: timeboxing work doesn't move its due date.
 	if (hasPastDue(findTask(taskId))) {
-		partial.dueDate = end.toDate()
+		partial.due_date = end.toDate()
 	}
 	updateTask(partial)
 }
@@ -278,10 +339,10 @@ function onDropTask({taskId, minutes, day}: {taskId: number, minutes: number, da
 function unscheduleTask(taskId: number) {
 	const task = findTask(taskId)
 	// Dropping an already-unscheduled task back onto the sidebar changes nothing.
-	if (task && !task.startDate && !task.endDate && !task.dueDate) {
+	if (task && !parseDateOrNull(task.start_date) && !parseDateOrNull(task.end_date) && !parseDateOrNull(task.due_date)) {
 		return
 	}
-	updateTask({id: taskId, startDate: null, endDate: null, dueDate: null})
+	updateTask({id: taskId, start_date: null, end_date: null, due_date: null})
 }
 
 function onUpdateBlock({taskId, start, end}: {taskId: number, start: Date | null, end: Date | null}) {
@@ -290,7 +351,7 @@ function onUpdateBlock({taskId, start, end}: {taskId: number, start: Date | null
 		unscheduleTask(taskId)
 		return
 	}
-	updateTask({id: taskId, startDate: start, endDate: end})
+	updateTask({id: taskId, start_date: start, end_date: end})
 }
 
 function onDropAllDay({taskId, day}: {taskId: number, day: Date}) {
@@ -298,14 +359,14 @@ function onDropAllDay({taskId, day}: {taskId: number, day: Date}) {
 	const task = findTask(taskId)
 	// A due-only task dropped on a day keeps its due-only nature: the drag
 	// moves the deadline instead of converting it to an all-day span.
-	if (task && !task.startDate && !task.endDate && task.dueDate) {
-		updateTask({id: taskId, dueDate: midnight})
+	if (task && !parseDateOrNull(task.start_date) && !parseDateOrNull(task.end_date) && parseDateOrNull(task.due_date)) {
+		updateTask({id: taskId, due_date: midnight})
 		return
 	}
 	// All-day = start and end pinned to midnight of that day.
-	const partial: Parameters<typeof updateTask>[0] = {id: taskId, startDate: midnight, endDate: midnight}
+	const partial: Parameters<typeof updateTask>[0] = {id: taskId, start_date: midnight, end_date: midnight}
 	if (hasPastDue(task)) {
-		partial.dueDate = midnight
+		partial.due_date = midnight
 	}
 	updateTask(partial)
 }
@@ -340,13 +401,15 @@ function onCreateAllDay({day}: {day: Date}) {
 
 // AddTask emits the whole batch at once, so every line of a multi-line input
 // lands in the same painted slot.
-function onCreated(tasks: ITask[]) {
+async function onCreated(tasks: Task[]) {
 	const ctx = createCtx.value
 	if (!ctx) {
 		return
 	}
-	tasks.forEach(task => scheduleTask(task, {startDate: ctx.startDate, endDate: ctx.endDate}))
 	createCtx.value = null
+	const ids = tasks.map(task => task.id).filter((id): id is number => id !== undefined)
+	await Promise.all(ids.map(id => scheduleTask(id, {start_date: ctx.startDate, end_date: ctx.endDate})))
+	await refresh()
 }
 
 function openTask(taskId: number) {
@@ -359,7 +422,7 @@ function openTask(taskId: number) {
 
 // Standalone page: drop any stale project so the app header shows the planner
 // title instead of the last visited project.
-onMounted(() => baseStore.handleSetCurrentProject({project: null}))
+onMounted(() => baseStore.setCurrentProject(null))
 
 watchEffect(() => setTitle(t('planner.title')))
 </script>
@@ -424,6 +487,21 @@ watchEffect(() => setTitle(t('planner.title')))
 .zoom-controls {
 	display: flex;
 	gap: .25rem;
+}
+
+.sidebar-toggle {
+	display: inline-flex;
+	padding: .25rem .4rem;
+	border-radius: $radius;
+	color: var(--grey-500);
+
+	&:hover {
+		color: var(--grey-700);
+	}
+
+	&.is-active {
+		color: var(--primary);
+	}
 }
 
 .planner-body {

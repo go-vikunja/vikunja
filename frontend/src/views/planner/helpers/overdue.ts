@@ -1,9 +1,18 @@
 import dayjs from 'dayjs'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {TaskResponse} from '@/client/queries/tasks'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 
 export function overdueCutoff(): dayjs.Dayjs {
 	return dayjs().startOf('day')
+}
+
+// Sort key and date label for the overdue list, and the date isOverdue judges:
+// a scheduled block's end, else a start-only task's start, else a due date.
+export function overdueAnchor(task: TaskResponse): Date | null {
+	return parseDateOrNull(task.end_date)
+		?? parseDateOrNull(task.start_date)
+		?? parseDateOrNull(task.due_date)
 }
 
 /**
@@ -13,25 +22,10 @@ export function overdueCutoff(): dayjs.Dayjs {
  * schedule reaching into today or the future is never overdue here even if
  * its due date already passed — it is planned, so rescheduling resolved it.
  */
-export function isOverdue(task: ITask, cutoff: dayjs.Dayjs = overdueCutoff()): boolean {
+export function isOverdue(task: TaskResponse, cutoff: dayjs.Dayjs = overdueCutoff()): boolean {
 	if (task.done) {
 		return false
 	}
-	if (task.endDate) {
-		return dayjs(task.endDate).isBefore(cutoff)
-	}
-	if (task.startDate) {
-		return dayjs(task.startDate).isBefore(cutoff)
-	}
-	if (task.dueDate) {
-		return dayjs(task.dueDate).isBefore(cutoff)
-	}
-	return false
-}
-
-// Sort key and date label for the overdue list: the date that made the task
-// overdue, so it must follow the same precedence as isOverdue — otherwise a
-// task overdue via its past end date would be labelled with a future due date.
-export function overdueAnchor(task: ITask): Date | null {
-	return task.endDate ?? task.startDate ?? task.dueDate ?? null
+	const anchor = overdueAnchor(task)
+	return anchor !== null && dayjs(anchor).isBefore(cutoff)
 }

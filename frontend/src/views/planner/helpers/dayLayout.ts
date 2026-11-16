@@ -1,12 +1,13 @@
 import dayjs from 'dayjs'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {TaskResponse} from '@/client/queries/tasks'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {expandOccurrences, allDayCoveredDays} from './expandOccurrences'
 import {packColumns} from './packColumns'
 import type {PlannedOccurrence} from './types'
 
 export interface AllDayItem {
-	task: ITask
+	task: TaskResponse
 	isGhost: boolean
 }
 
@@ -26,19 +27,21 @@ export function dayKey(day: Date | dayjs.Dayjs): string {
 
 // A task with a start and end both pinned to local midnight has no time-of-day
 // and belongs in the all-day row, not as a (zero-height or full-column) block.
-export function isAllDayTask(task: ITask): boolean {
-	if (!task.startDate || !task.endDate) {
+export function isAllDayTask(task: TaskResponse): boolean {
+	const startDate = parseDateOrNull(task.start_date)
+	const endDate = parseDateOrNull(task.end_date)
+	if (!startDate || !endDate) {
 		return false
 	}
-	const start = dayjs(task.startDate)
-	const end = dayjs(task.endDate)
+	const start = dayjs(startDate)
+	const end = dayjs(endDate)
 	return start.hour() === 0 && start.minute() === 0 && end.hour() === 0 && end.minute() === 0
 }
 
 // Expand every task once across the whole visible range and bucket the
 // occurrences into the days they overlap — one recurrence walk per task
 // instead of one per (task, day).
-export function timedBlocksByDay(tasks: ITask[], days: Date[]): Map<string, TimedBlock[]> {
+export function timedBlocksByDay(tasks: TaskResponse[], days: Date[]): Map<string, TimedBlock[]> {
 	const blocks = new Map<string, TimedBlock[]>()
 	if (days.length === 0) {
 		return blocks
@@ -52,7 +55,7 @@ export function timedBlocksByDay(tasks: ITask[], days: Date[]): Map<string, Time
 	const rangeEnd = dayjs(days[days.length - 1]).startOf('day').add(1, 'day')
 
 	for (const task of tasks) {
-		if (!task.startDate || !task.endDate || isAllDayTask(task)) {
+		if (!parseDateOrNull(task.start_date) || !parseDateOrNull(task.end_date) || isAllDayTask(task)) {
 			continue
 		}
 		for (const occurrence of expandOccurrences(task, rangeStart.toDate(), rangeEnd.toDate())) {
@@ -98,7 +101,15 @@ export function timedBlocksByDay(tasks: ITask[], days: Date[]): Map<string, Time
 	return blocks
 }
 
-export function allDayItemsByDay(tasks: ITask[], days: Date[]): Map<string, AllDayItem[]> {
+// Buckets tasks into the days they appear on. `spansDays` picks which tasks are
+// laid out across their whole range; the rest anchor to a single date. The week
+// grid only spreads all-day tasks (timed ones render as blocks in the columns),
+// while the month grid spreads everything that has both a start and an end.
+function itemsByDay(
+	tasks: TaskResponse[],
+	days: Date[],
+	spansDays: (task: TaskResponse) => boolean,
+): Map<string, AllDayItem[]> {
 	const map = new Map<string, AllDayItem[]>()
 	if (days.length === 0) {
 		return map
@@ -110,18 +121,31 @@ export function allDayItemsByDay(tasks: ITask[], days: Date[]): Map<string, AllD
 	const to = dayjs(days[days.length - 1]).add(1, 'day').toDate()
 
 	for (const task of tasks) {
-		if (isAllDayTask(task)) {
+		if (spansDays(task)) {
 			for (const [key, isGhost] of allDayCoveredDays(task, from, to)) {
 				map.get(key)?.push({task, isGhost})
 			}
-		} else if (!task.startDate || !task.endDate) {
+		} else if (!parseDateOrNull(task.start_date) || !parseDateOrNull(task.end_date)) {
 			// Tasks with no time block (due-only, start-only or end-only) anchor
 			// to their single date so they don't vanish from the planner.
-			const anchor = task.startDate ?? task.endDate ?? task.dueDate
+			const anchor = parseDateOrNull(task.start_date)
+				?? parseDateOrNull(task.end_date)
+				?? parseDateOrNull(task.due_date)
 			if (anchor) {
 				map.get(dayKey(anchor))?.push({task, isGhost: false})
 			}
 		}
 	}
 	return map
+}
+
+export function allDayItemsByDay(tasks: TaskResponse[], days: Date[]): Map<string, AllDayItem[]> {
+	return itemsByDay(tasks, days, isAllDayTask)
+}
+
+// Month cells list every task on each day it covers, timed blocks included,
+// since the month grid has no time axis to place them on.
+export function monthItemsByDay(tasks: TaskResponse[], days: Date[]): Map<string, AllDayItem[]> {
+	return itemsByDay(tasks, days, task =>
+		Boolean(parseDateOrNull(task.start_date) && parseDateOrNull(task.end_date)))
 }

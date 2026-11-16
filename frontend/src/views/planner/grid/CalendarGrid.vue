@@ -104,8 +104,8 @@ import {computed, nextTick, onMounted, provide, ref, watch} from 'vue'
 import {useEventListener} from '@vueuse/core'
 import dayjs from 'dayjs'
 
-import type {ITask} from '@/modelTypes/ITask'
-import {useProjectStore} from '@/stores/projects'
+import type {TaskResponse} from '@/client/queries/tasks'
+import {useProjects} from '@/composables/useProjects'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {getTextColor} from '@/helpers/color/getTextColor'
@@ -118,7 +118,7 @@ import {useLongPress} from '../helpers/useLongPress'
 
 const props = defineProps<{
 	days: Date[]
-	tasks: ITask[]
+	tasks: TaskResponse[]
 	slotMinutes: number
 	dayStartHour: number
 	dayEndHour: number
@@ -137,7 +137,7 @@ const emit = defineEmits<{
 	'update:pxPerHour': [value: number]
 }>()
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const {store: timeFormat} = useTimeFormat()
 const bodyEl = ref<HTMLElement | null>(null)
 const scrollbarWidth = ref(0)
@@ -168,7 +168,7 @@ function onAllDayDragLeave(event: DragEvent, day: Date) {
 	}
 }
 
-function onChipDragStart(event: DragEvent, task: ITask) {
+function onChipDragStart(event: DragEvent, task: TaskResponse) {
 	event.dataTransfer?.setData('text/plain', String(task.id))
 	if (event.dataTransfer) {
 		event.dataTransfer.effectAllowed = 'move'
@@ -249,13 +249,13 @@ function measureScrollbar() {
 	}
 }
 
-function taskColor(task: ITask): string {
-	return plannerTaskColor(task.hexColor, projectStore.projects[task.projectId]?.hexColor)
+function taskColor(task: TaskResponse): string {
+	return plannerTaskColor(task.hex_color, projectList.projects[task.project_id]?.hex_color)
 }
 
 // All-day chips are single-line; surface the project name via the tooltip.
-function chipTitle(task: ITask): string {
-	const project = projectStore.projects[task.projectId]?.title
+function chipTitle(task: TaskResponse): string {
+	const project = projectList.projects[task.project_id]?.title
 	return project ? `${task.title} · ${project}` : task.title
 }
 

@@ -1,4 +1,4 @@
-import {getHexColor} from '@/models/task'
+import {getHexColor} from '@/helpers/task'
 
 // The bar/chip colour for a task: its own colour first (matching every other
 // view), falling back to its project's and then the theme primary.

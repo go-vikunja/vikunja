@@ -29,9 +29,9 @@
 				:done="occurrence.task.done"
 			/>
 			<span
-				v-if="occurrence.task.percentDone > 0"
+				v-if="occurrence.task.percent_done > 0"
 				class="block-percent"
-			>{{ Math.round(occurrence.task.percentDone * 100) }}%</span>
+			>{{ Math.round(occurrence.task.percent_done * 100) }}%</span>
 		</span>
 		<div
 			v-if="!occurrence.isGhost"
@@ -60,7 +60,7 @@
 import {computed, inject, onBeforeUnmount, ref} from 'vue'
 import dayjs from 'dayjs'
 
-import {useProjectStore} from '@/stores/projects'
+import {useProjects} from '@/composables/useProjects'
 import {getTextColor} from '@/helpers/color/getTextColor'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
@@ -84,7 +84,7 @@ const emit = defineEmits<{
 	update: [payload: {taskId: number, start: Date | null, end: Date | null}]
 }>()
 
-const projectStore = useProjectStore()
+const projectList = useProjects()
 const blockEl = ref<HTMLElement | null>(null)
 const allDayDropTarget = inject(ALL_DAY_DROP_TARGET, ref(null))
 
@@ -96,11 +96,11 @@ const previewPos = ref({x: 0, y: 0})
 const previewSize = ref({w: 0, h: 0})
 
 const color = computed(() => plannerTaskColor(
-	props.occurrence.task.hexColor,
-	projectStore.projects[props.occurrence.task.projectId]?.hexColor,
+	props.occurrence.task.hex_color,
+	projectList.projects[props.occurrence.task.project_id]?.hex_color,
 ))
 
-const projectName = computed(() => projectStore.projects[props.occurrence.task.projectId]?.title ?? '')
+const projectName = computed(() => projectList.projects[props.occurrence.task.project_id]?.title ?? '')
 const textColor = computed(() => getTextColor(color.value))
 
 // One parser per block — instantiating one per tooltip recompute is wasted work.

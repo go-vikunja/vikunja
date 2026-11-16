@@ -2,19 +2,16 @@ import {describe, it, expect} from 'vitest'
 import dayjs from 'dayjs'
 
 import {isOverdue, overdueAnchor} from './overdue'
-import type {ITask} from '@/modelTypes/ITask'
+import type {TaskResponse} from '@/client/queries/tasks'
 
 const today = dayjs('2026-07-02').startOf('day')
 
-function makeTask(overrides: Partial<ITask>): ITask {
+function makeTask(overrides: Partial<TaskResponse>): TaskResponse {
 	return {
 		id: 1,
 		done: false,
-		startDate: null,
-		endDate: null,
-		dueDate: null,
 		...overrides,
-	} as ITask
+	} as TaskResponse
 }
 
 describe('isOverdue', () => {
@@ -24,43 +21,43 @@ describe('isOverdue', () => {
 
 	it('is true for a block that ended yesterday', () => {
 		const task = makeTask({
-			startDate: new Date('2026-07-01T10:00:00'),
-			endDate: new Date('2026-07-01T11:00:00'),
+			start_date: new Date('2026-07-01T10:00:00').toISOString(),
+			end_date: new Date('2026-07-01T11:00:00').toISOString(),
 		})
 		expect(isOverdue(task, today)).toBe(true)
 	})
 
 	it('is false for a block spanning midnight into today', () => {
 		const task = makeTask({
-			startDate: new Date('2026-07-01T23:00:00'),
-			endDate: new Date('2026-07-02T01:00:00'),
+			start_date: new Date('2026-07-01T23:00:00').toISOString(),
+			end_date: new Date('2026-07-02T01:00:00').toISOString(),
 		})
 		expect(isOverdue(task, today)).toBe(false)
 	})
 
 	it('is true for a due-only task with a past due date', () => {
-		expect(isOverdue(makeTask({dueDate: new Date('2026-06-30T09:00:00')}), today)).toBe(true)
+		expect(isOverdue(makeTask({due_date: new Date('2026-06-30T09:00:00').toISOString()}), today)).toBe(true)
 	})
 
 	it('is false for a due-only task due today', () => {
-		expect(isOverdue(makeTask({dueDate: new Date('2026-07-02T09:00:00')}), today)).toBe(false)
+		expect(isOverdue(makeTask({due_date: new Date('2026-07-02T09:00:00').toISOString()}), today)).toBe(false)
 	})
 
 	it('is false for a past-due task that is rescheduled into the future', () => {
 		const task = makeTask({
-			dueDate: new Date('2026-06-30T09:00:00'),
-			startDate: new Date('2026-07-03T10:00:00'),
-			endDate: new Date('2026-07-03T11:00:00'),
+			due_date: new Date('2026-06-30T09:00:00').toISOString(),
+			start_date: new Date('2026-07-03T10:00:00').toISOString(),
+			end_date: new Date('2026-07-03T11:00:00').toISOString(),
 		})
 		expect(isOverdue(task, today)).toBe(false)
 	})
 
 	it('is true for a start-only task whose start day passed', () => {
-		expect(isOverdue(makeTask({startDate: new Date('2026-06-29T10:00:00')}), today)).toBe(true)
+		expect(isOverdue(makeTask({start_date: new Date('2026-06-29T10:00:00').toISOString()}), today)).toBe(true)
 	})
 
 	it('is false for done tasks regardless of dates', () => {
-		expect(isOverdue(makeTask({done: true, dueDate: new Date('2026-06-01T09:00:00')}), today)).toBe(false)
+		expect(isOverdue(makeTask({done: true, due_date: new Date('2026-06-01T09:00:00').toISOString()}), today)).toBe(false)
 	})
 })
 
@@ -74,9 +71,9 @@ describe('overdueAnchor', () => {
 		// must not surface as the (red) overdue label.
 		const endDate = new Date('2026-06-30T11:00:00')
 		const task = makeTask({
-			startDate: new Date('2026-06-30T10:00:00'),
-			endDate,
-			dueDate: new Date('2026-07-10T09:00:00'),
+			start_date: new Date('2026-06-30T10:00:00').toISOString(),
+			end_date: endDate.toISOString(),
+			due_date: new Date('2026-07-10T09:00:00').toISOString(),
 		})
 		expect(isOverdue(task, today)).toBe(true)
 		expect(overdueAnchor(task)).toEqual(endDate)
@@ -84,9 +81,9 @@ describe('overdueAnchor', () => {
 
 	it('falls back to the start date, then the due date', () => {
 		const startDate = new Date('2026-06-29T10:00:00')
-		expect(overdueAnchor(makeTask({startDate}))).toEqual(startDate)
+		expect(overdueAnchor(makeTask({start_date: startDate.toISOString()}))).toEqual(startDate)
 
 		const dueDate = new Date('2026-06-30T09:00:00')
-		expect(overdueAnchor(makeTask({dueDate}))).toEqual(dueDate)
+		expect(overdueAnchor(makeTask({due_date: dueDate.toISOString()}))).toEqual(dueDate)
 	})
 })

@@ -1,8 +1,8 @@
 import dayjs from 'dayjs'
 
-import type {ITask} from '@/modelTypes/ITask'
-import type {IRepeatAfter} from '@/types/IRepeatAfter'
+import type {TaskResponse} from '@/client/queries/tasks'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import type {PlannedOccurrence} from './types'
 
 // Guard against pathological repeat intervals projecting forever. This is a
@@ -10,17 +10,6 @@ import type {PlannedOccurrence} from './types'
 // be large enough that realistic short intervals cover the maximum 31-day
 // window (31 days of five-minute steps ≈ 9k occurrences).
 const MAX_OCCURRENCES = 10_000
-
-const TYPE_TO_SECONDS: Record<IRepeatAfter['type'], number> = {
-	seconds: 1,
-	minutes: 60,
-	hours: 3600,
-	days: 86400,
-	weeks: 604800,
-	// The task edit UI only produces hours/days/weeks; these are defensive.
-	months: 30 * 86400,
-	years: 365 * 86400,
-}
 
 type RepeatStep =
 	| {kind: 'fixed', seconds: number}
@@ -41,23 +30,20 @@ function advance(date: dayjs.Dayjs, step: RepeatStep): dayjs.Dayjs {
 		: date.add(step.seconds, 'second')
 }
 
-function getRepeatStep(task: ITask): RepeatStep | null {
-	// Monthly mode repeats on the same day each month regardless of repeatAfter.
-	if (task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH) {
+function getRepeatStep(task: TaskResponse): RepeatStep | null {
+	// Monthly mode repeats on the same day each month regardless of repeat_after.
+	if (task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH) {
 		return {kind: 'month'}
 	}
 
 	// From-current-date mode computes the next occurrence from the moment the
 	// task is completed, which is unknowable ahead of time — projected ghosts
 	// would show slots the backend will never schedule, so don't project any.
-	if (task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE) {
+	if (task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE) {
 		return null
 	}
 
-	const seconds = typeof task.repeatAfter === 'number'
-		? task.repeatAfter
-		: (task.repeatAfter?.amount ?? 0) * TYPE_TO_SECONDS[task.repeatAfter?.type ?? 'seconds']
-
+	const seconds = task.repeat_after
 	if (seconds <= 0) {
 		return null
 	}
@@ -99,13 +85,15 @@ function coarseJump(
  * recurring task (whose start the backend has already advanced) does not draw
  * both the finished slot and its next occurrence.
  */
-export function expandOccurrences(task: ITask, from: Date, to: Date): PlannedOccurrence[] {
-	if (!task.startDate || !task.endDate) {
+export function expandOccurrences(task: TaskResponse, from: Date, to: Date): PlannedOccurrence[] {
+	const start = parseDateOrNull(task.start_date)
+	const end = parseDateOrNull(task.end_date)
+	if (!start || !end) {
 		return []
 	}
 
-	const realStart = dayjs(task.startDate)
-	const realEnd = dayjs(task.endDate)
+	const realStart = dayjs(start)
+	const realEnd = dayjs(end)
 	const durationMs = realEnd.diff(realStart)
 	const rangeStart = dayjs(from)
 	const rangeEnd = dayjs(to)
@@ -151,16 +139,18 @@ export function expandOccurrences(task: ITask, from: Date, to: Date): PlannedOcc
  * expandOccurrences' range test excludes, so they get their own day-granular
  * expansion here — one recurrence walk per task for the whole range.
  */
-export function allDayCoveredDays(task: ITask, from: Date, to: Date): Map<string, boolean> {
+export function allDayCoveredDays(task: TaskResponse, from: Date, to: Date): Map<string, boolean> {
 	const covered = new Map<string, boolean>()
-	if (!task.startDate || !task.endDate) {
+	const start = parseDateOrNull(task.start_date)
+	const end = parseDateOrNull(task.end_date)
+	if (!start || !end) {
 		return covered
 	}
 
 	const rangeStart = dayjs(from).startOf('day')
 	const rangeEnd = dayjs(to).startOf('day')
-	const realStart = dayjs(task.startDate).startOf('day')
-	const realEnd = dayjs(task.endDate).startOf('day')
+	const realStart = dayjs(start).startOf('day')
+	const realEnd = dayjs(end).startOf('day')
 	const spanDays = Math.max(realEnd.diff(realStart, 'day'), 0)
 
 	const mark = (start: dayjs.Dayjs, isGhost: boolean) => {

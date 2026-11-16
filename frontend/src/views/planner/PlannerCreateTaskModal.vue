@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue'
 
-import type {ITask} from '@/modelTypes/ITask'
+import type {Task} from '@/client/generated'
 import Modal from '@/components/misc/Modal.vue'
 import Card from '@/components/misc/Card.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
@@ -33,7 +33,7 @@ defineProps<{
 }>()
 
 defineEmits<{
-	created: [tasks: ITask[]]
+	created: [tasks: Task[]]
 	close: []
 }>()
 
