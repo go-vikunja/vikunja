@@ -166,6 +166,49 @@ describe('TaskGlanceTooltip.vue — keyboard accessibility', () => {
 		wrapper.unmount()
 	})
 
+	it('does not show while a drag is in progress', async () => {
+		const wrapper = mountTooltip()
+		const trigger = wrapper.get('.task-glance-trigger')
+
+		await trigger.trigger('mouseenter')
+		document.dispatchEvent(new Event('dragstart'))
+		await advancePastDelay()
+		expect(findTooltip()).toBeNull()
+
+		wrapper.unmount()
+	})
+
+	it('hides an open tooltip when a drag starts', async () => {
+		const wrapper = mountTooltip()
+		const trigger = wrapper.get('.task-glance-trigger')
+
+		await trigger.trigger('mouseenter')
+		await advancePastDelay()
+		expect(findTooltip()).not.toBeNull()
+
+		document.dispatchEvent(new Event('dragstart'))
+		await nextTick()
+		expect(findTooltip()).toBeNull()
+
+		wrapper.unmount()
+	})
+
+	it('removes the document dragstart listener on unmount', async () => {
+		const addEventListener = vi.spyOn(document, 'addEventListener')
+		const removeEventListener = vi.spyOn(document, 'removeEventListener')
+		const wrapper = mountTooltip()
+
+		await wrapper.get('.task-glance-trigger').trigger('mouseenter')
+		const dragstartHandler = addEventListener.mock.calls.find(([type]) => type === 'dragstart')?.[1]
+
+		wrapper.unmount()
+
+		expect(dragstartHandler).toBeDefined()
+		expect(removeEventListener).toHaveBeenCalledWith('dragstart', dragstartHandler)
+		addEventListener.mockRestore()
+		removeEventListener.mockRestore()
+	})
+
 	it('removes the document keydown listener on unmount', async () => {
 		const removeEventListener = vi.spyOn(document, 'removeEventListener')
 		const wrapper = mountTooltip()

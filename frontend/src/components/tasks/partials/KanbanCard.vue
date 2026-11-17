@@ -56,16 +56,18 @@
 			</div>
 			
 			<h3>
-				<RouterLink
-					:to="{ name: 'task.detail', params: {id: task.id} }"
-					class="kanban-card__title-link"
-					draggable="false"
-					@click.exact.prevent.stop="openTaskDetail()"
-					@click.ctrl.stop
-					@click.meta.stop
-				>
-					{{ task.title }}
-				</RouterLink>
+				<TaskGlanceTooltip :task="task">
+					<RouterLink
+						:to="{ name: 'task.detail', params: {id: task.id} }"
+						class="kanban-card__title-link"
+						draggable="false"
+						@click.exact.prevent.stop="openTaskDetail()"
+						@click.ctrl.stop
+						@click.meta.stop
+					>
+						{{ task.title }}
+					</RouterLink>
+				</TaskGlanceTooltip>
 			</h3>
 			
 			<span
@@ -138,6 +140,7 @@ import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from './ChecklistSummary.vue'
 import CommentCount from './CommentCount.vue'
+import TaskGlanceTooltip from './TaskGlanceTooltip.vue'
 
 import {getHexColor, getTaskIdentifier} from '@/helpers/task'
 import type {Task as ITask} from '@/client/generated'

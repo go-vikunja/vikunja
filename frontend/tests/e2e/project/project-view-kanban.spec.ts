@@ -200,6 +200,15 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).toContainText(tasks[0].title)
 	})
 
+	test('Shows the task glance tooltip when hovering a card title', async ({authenticatedPage: page}) => {
+		const tasks = await createTaskWithBuckets(buckets)
+		await page.goto('/projects/1/4')
+
+		await page.locator('.kanban .kanban-card__title-link').filter({hasText: tasks[0].title}).hover()
+
+		await expect(page.locator('.task-glance-tooltip')).toContainText(tasks[0].title)
+	})
+
 	test('Expands a collapsed bucket while dragging a task over it', async ({authenticatedPage: page}) => {
 		const tasks = await createTaskWithBuckets(buckets)
 		await page.goto('/projects/1/4')
