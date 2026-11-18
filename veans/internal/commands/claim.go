@@ -18,7 +18,6 @@ package commands
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/spf13/cobra"
 
@@ -27,11 +26,16 @@ import (
 )
 
 func newClaimCmd() *cobra.Command {
+	var fieldsRaw string
 	cmd := &cobra.Command{
 		Use:   "claim <id>",
 		Short: "Claim a task: assign the bot, move to In Progress, tag with branch",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fields, err := parseFields(fieldsRaw)
+			if err != nil {
+				return err
+			}
 			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
@@ -44,10 +48,10 @@ func newClaimCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			rt.withURLs(task)
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
+			return rt.printTask(cmd.OutOrStdout(), fields, task)
 		},
 	}
+	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
 }
 

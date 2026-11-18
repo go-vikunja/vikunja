@@ -150,7 +150,11 @@ If `create`/`update` fail after changing the task, the error also carries
 failed and later steps with `veans update`, don't create it again.
 
 `show`/`create`/`update`/`claim` return a single task; `list` returns
-an array. Useful fields:
+an array. Pass `--fields identifier,url` (any task keys, comma-separated)
+to print only those keys, in that order — cheaper than the whole task and
+safer than grepping it. Tasks nested under `related_tasks` come without
+their `description`; `veans show` the related task if you need it.
+Useful fields:
 
 - `id` (numeric, internal) — pass to `api` calls
 - `index` (per-project) — what `{{ .TaskIDExample }}` resolves to
