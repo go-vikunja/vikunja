@@ -1514,7 +1514,7 @@ test.describe('Task', () => {
 			await openPopup.locator('.option-button').filter({hasText: 'Date and time'}).click()
 
 			const picker = openPopup.locator('.datepicker-popup')
-			await expect(picker.locator('.date-shortcuts--list')).toBeVisible()
+			await expect(picker.locator('.date-shortcuts--chips')).toBeVisible()
 			const summary = picker.locator('.datepicker-popup__summary')
 			const confirm = picker.locator('[data-cy="closeDatepicker"]')
 

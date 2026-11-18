@@ -4,6 +4,7 @@
 			v-model:open="show"
 			placement="bottom-start"
 			:anchor="triggerEl"
+			:prefer-larger-side="compact"
 			sheet-on-mobile
 			:sheet-title="dialogTitle"
 		>
@@ -37,6 +38,7 @@
 					:model-value="date"
 					:show-shortcuts="showShortcuts"
 					:min-date="minDate"
+					:compact="compact"
 					:role="isMobile ? undefined : 'dialog'"
 					:aria-label="isMobile ? undefined : dialogTitle"
 					tabindex="-1"
@@ -71,6 +73,8 @@ const props = withDefaults(defineProps<{
 	emptyLabel?: string,
 	minDate?: Date | null,
 	ariaLabelledby?: string,
+	// Keeps the open picker narrow, for fields beside content it must not cover.
+	compact?: boolean,
 }>(), {
 	chooseDateLabel: () => {
 		const {t} = useI18n({useScope: 'global'})
@@ -82,6 +86,7 @@ const props = withDefaults(defineProps<{
 	emptyLabel: '',
 	minDate: null,
 	ariaLabelledby: undefined,
+	compact: false,
 })
 
 const emit = defineEmits<{
