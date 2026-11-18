@@ -17,6 +17,7 @@
 package migration
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -46,16 +47,12 @@ func (userFrontendSettings20261116092100) TableName() string {
 
 // validFrontendSettings20261116092100 mirrors the check of the settings update:
 // a JSON object of at most maxFrontendSettingsSize20261116092100 bytes.
-func validFrontendSettings20261116092100(raw string) bool {
-	var settings map[string]any
-	if err := json.Unmarshal([]byte(raw), &settings); err != nil || settings == nil {
-		return false
-	}
-	marshalled, err := json.Marshal(settings)
-	if err != nil {
-		return false
-	}
-	return len(marshalled) <= maxFrontendSettingsSize20261116092100
+// It checks the stored bytes and does not decode them, so the size check
+// comes first and is cheap.
+func validFrontendSettings20261116092100(stored string) bool {
+	raw := bytes.TrimSpace([]byte(stored))
+	return len(raw) > 0 && len(raw) <= maxFrontendSettingsSize20261116092100 &&
+		raw[0] == '{' && json.Valid(raw)
 }
 
 // resetInvalidFrontendSettings20261116092100 sets every frontend_settings value

@@ -203,6 +203,16 @@ func checkFrontendSettings(settings any) error {
 	return nil
 }
 
+// validStoredFrontendSettings applies the rule of checkFrontendSettings to a
+// stored value. It checks the stored bytes and does not decode them, so the
+// size check comes first and is cheap. A value that Vikunja stored has the
+// same length as its marshalled form.
+func validStoredFrontendSettings(stored string) bool {
+	raw := bytes.TrimSpace([]byte(stored))
+	return len(raw) > 0 && len(raw) <= MaxFrontendSettingsSize &&
+		raw[0] == '{' && json.Valid(raw)
+}
+
 // A var, so a test can make the batches small.
 var frontendSettingsResetBatch = 500
 
@@ -235,8 +245,7 @@ func ResetInvalidFrontendSettings(s *xorm.Session) error {
 		}
 
 		for _, row := range rows {
-			var settings any
-			if err := json.Unmarshal([]byte(row.FrontendSettings), &settings); err == nil && checkFrontendSettings(settings) == nil {
+			if validStoredFrontendSettings(row.FrontendSettings) {
 				continue
 			}
 			if _, err := s.Exec("UPDATE users SET frontend_settings = NULL WHERE id = ?", row.ID); err != nil {
