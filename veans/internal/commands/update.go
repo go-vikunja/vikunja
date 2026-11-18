@@ -19,6 +19,7 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -44,6 +45,8 @@ type updateFlags struct {
 	comment          string
 	reason           string
 	ifUnchangedSince string
+	parent           string
+	noParent         bool
 }
 
 func newUpdateCmd() *cobra.Command {
@@ -85,6 +88,9 @@ func newUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&f.comment, "comment", "c", "", "post a comment as part of this update")
 	cmd.Flags().StringVar(&f.reason, "reason", "", "rationale (required when --status scrapped)")
 	cmd.Flags().StringVar(&f.ifUnchangedSince, "if-unchanged-since", "", "RFC3339 timestamp; abort if the task has changed since")
+	cmd.Flags().StringVar(&f.parent, "parent", "", "set the parent task (replaces any existing parent)")
+	cmd.Flags().BoolVar(&f.noParent, "no-parent", false, "remove the parent task")
+	cmd.MarkFlagsMutuallyExclusive("parent", "no-parent")
 	return cmd
 }
 
@@ -124,6 +130,16 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 		newStatus = s
 		if s == status.Scrapped && strings.TrimSpace(f.reason) == "" {
 			return nil, output.New(output.CodeValidation, "--reason is required when --status scrapped")
+		}
+	}
+
+	var parentID int64
+	if f.parent != "" {
+		if parentID, err = rt.resolveTaskID(ctx, f.parent); err != nil {
+			return nil, err
+		}
+		if parentID == id {
+			return nil, output.New(output.CodeValidation, "a task cannot be its own parent")
 		}
 	}
 
@@ -231,7 +247,14 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 		}
 	}
 
-	if len(f.addLabels) > 0 || len(f.removeLabels) > 0 || bucketTransitionTarget != 0 {
+	parentChanged := f.parent != "" || f.noParent
+	if parentChanged {
+		if err := setParent(ctx, rt, current, parentID, progress); err != nil {
+			return nil, err
+		}
+	}
+
+	if len(f.addLabels) > 0 || len(f.removeLabels) > 0 || bucketTransitionTarget != 0 || parentChanged {
 		fresh, err := rt.client.GetTask(ctx, id)
 		if err == nil {
 			updated = fresh
@@ -243,6 +266,36 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 
 // composeDescription folds --description / --description-replace-* / --description-append
 // into the existing body. Returns (new, changed, error).
+// setParent makes parentID the task's only parent; 0 removes all parents.
+func setParent(ctx context.Context, rt *runtime, task *client.Task, parentID int64, progress *steps) error {
+	hasParent := false
+	for _, p := range task.RelatedTasks["parenttask"] {
+		if p == nil {
+			continue
+		}
+		if p.ID == parentID {
+			hasParent = true
+			continue
+		}
+		step := fmt.Sprintf("remove parent %d", p.ID)
+		if p.Identifier != "" {
+			step = "remove parent " + p.Identifier
+		}
+		if err := rt.client.DeleteRelation(ctx, task.ID, p.ID, "parenttask"); err != nil {
+			return progress.fail(step, err)
+		}
+		progress.done(step)
+	}
+	if parentID == 0 || hasParent {
+		return nil
+	}
+	if _, err := rt.client.CreateRelation(ctx, task.ID, parentID, "parenttask"); err != nil {
+		return progress.fail("set parent", err)
+	}
+	progress.done("set parent")
+	return nil
+}
+
 func composeDescription(existing string, f *updateFlags) (string, bool, error) {
 	if f.descriptionIsSet {
 		// --description replaces wholesale.
