@@ -47,6 +47,8 @@ type updateFlags struct {
 	ifUnchangedSince string
 	parent           string
 	noParent         bool
+	addBlockedBy     []string
+	removeBlockedBy  []string
 }
 
 func newUpdateCmd() *cobra.Command {
@@ -91,6 +93,8 @@ func newUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&f.parent, "parent", "", "set the parent task (replaces any existing parent)")
 	cmd.Flags().BoolVar(&f.noParent, "no-parent", false, "remove the parent task")
 	cmd.MarkFlagsMutuallyExclusive("parent", "no-parent")
+	cmd.Flags().StringSliceVar(&f.addBlockedBy, "blocked-by-add", nil, "task IDs that block this one (repeatable)")
+	cmd.Flags().StringSliceVar(&f.removeBlockedBy, "blocked-by-remove", nil, "task IDs that no longer block this one (repeatable)")
 	return cmd
 }
 
@@ -141,6 +145,15 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 		if parentID == id {
 			return nil, output.New(output.CodeValidation, "a task cannot be its own parent")
 		}
+	}
+
+	addBlockers, err := resolveRefs(ctx, rt, f.addBlockedBy)
+	if err != nil {
+		return nil, err
+	}
+	removeBlockers, err := resolveRefs(ctx, rt, f.removeBlockedBy)
+	if err != nil {
+		return nil, err
 	}
 
 	// Build the merge-patch payload from only the changed fields. PATCH leaves
@@ -254,7 +267,37 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 		}
 	}
 
-	if len(f.addLabels) > 0 || len(f.removeLabels) > 0 || bucketTransitionTarget != 0 || parentChanged {
+	blocked := map[int64]bool{}
+	for _, b := range current.RelatedTasks["blocked"] {
+		if b != nil {
+			blocked[b.ID] = true
+		}
+	}
+	for i, blockerID := range addBlockers {
+		if blocked[blockerID] {
+			continue
+		}
+		step := "blocked-by-add " + f.addBlockedBy[i]
+		if _, err := rt.client.CreateRelation(ctx, id, blockerID, "blocked"); err != nil {
+			return nil, progress.fail(step, err)
+		}
+		blocked[blockerID] = true
+		progress.done(step)
+	}
+	for i, blockerID := range removeBlockers {
+		if !blocked[blockerID] {
+			continue
+		}
+		step := "blocked-by-remove " + f.removeBlockedBy[i]
+		if err := rt.client.DeleteRelation(ctx, id, blockerID, "blocked"); err != nil {
+			return nil, progress.fail(step, err)
+		}
+		delete(blocked, blockerID)
+		progress.done(step)
+	}
+	relationsChanged := parentChanged || len(addBlockers) > 0 || len(removeBlockers) > 0
+
+	if len(f.addLabels) > 0 || len(f.removeLabels) > 0 || bucketTransitionTarget != 0 || relationsChanged {
 		fresh, err := rt.client.GetTask(ctx, id)
 		if err == nil {
 			updated = fresh
@@ -266,6 +309,17 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 
 // composeDescription folds --description / --description-replace-* / --description-append
 // into the existing body. Returns (new, changed, error).
+func resolveRefs(ctx context.Context, rt *runtime, refs []string) ([]int64, error) {
+	ids := make([]int64, len(refs))
+	for i, ref := range refs {
+		var err error
+		if ids[i], err = rt.resolveTaskID(ctx, ref); err != nil {
+			return nil, err
+		}
+	}
+	return ids, nil
+}
+
 // setParent makes parentID the task's only parent; 0 removes all parents.
 func setParent(ctx context.Context, rt *runtime, task *client.Task, parentID int64, progress *steps) error {
 	hasParent := false
