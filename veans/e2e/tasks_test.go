@@ -19,6 +19,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -158,4 +159,69 @@ func taskHasLabelTitle(t *client.Task, title string) bool {
 		}
 	}
 	return false
+}
+
+// TestFields_AllCommands pins --fields on every task-printing command and
+// the default stripping of nested related-task descriptions.
+func TestFields_AllCommands(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	out, errOut, code := h.Run(t, ws, "create", "parent", "-d", "<p>parent body</p>")
+	if code != 0 {
+		t.Fatalf("create parent exit %d\n%s", code, errOut)
+	}
+	parent := decodeTask(t, out)
+	parentRef := strconv.FormatInt(parent.Index, 10)
+
+	out, errOut, code = h.Run(t, ws, "create", "child", "--parent", parentRef, "--fields", "identifier,url")
+	if code != 0 {
+		t.Fatalf("create --fields exit %d\n%s", code, errOut)
+	}
+	var created map[string]any
+	if err := json.Unmarshal([]byte(out), &created); err != nil {
+		t.Fatalf("decode %s: %v", out, err)
+	}
+	if len(created) != 2 || created["identifier"] == nil || created["url"] == nil {
+		t.Fatalf("create --fields should print only identifier and url: %s", out)
+	}
+	childRef := strings.TrimPrefix(created["identifier"].(string), loadConfig(t, ws).ProjectIdentifier+"-")
+
+	for _, args := range [][]string{
+		{"show", childRef},
+		{"update", childRef, "--priority", "2"},
+		{"claim", childRef},
+	} {
+		out, errOut, code := h.Run(t, ws, append(args, "--fields", "identifier,url")...)
+		if code != 0 {
+			t.Fatalf("%v exit %d\n%s", args, code, errOut)
+		}
+		if got := strings.TrimSpace(out); !strings.HasPrefix(got, `{"identifier":`) || strings.Count(got, `"url"`) != 1 {
+			t.Fatalf("%v --fields: %s", args, got)
+		}
+	}
+
+	out, errOut, code = h.Run(t, ws, "list", "--fields", "identifier")
+	if code != 0 {
+		t.Fatalf("list --fields exit %d\n%s", code, errOut)
+	}
+	var listed []map[string]any
+	if err := json.Unmarshal([]byte(out), &listed); err != nil {
+		t.Fatal(err)
+	}
+	if len(listed) != 2 || len(listed[0]) != 1 {
+		t.Fatalf("list --fields: %s", out)
+	}
+
+	if _, errOut, code = h.Run(t, ws, "show", childRef, "--fields", "bogus"); code == 0 || !strings.Contains(errOut, "VALIDATION_ERROR") {
+		t.Fatalf("unknown field should fail validation: exit %d %s", code, errOut)
+	}
+
+	// Default output: whole task, nested parent without its description.
+	out, _, _ = h.Run(t, ws, "show", childRef)
+	if strings.Contains(out, "parent body") {
+		t.Fatalf("nested related-task description leaked: %s", out)
+	}
+	if !hasParent(decodeTask(t, out), parent.ID) {
+		t.Fatalf("show lost the relation: %s", out)
+	}
 }

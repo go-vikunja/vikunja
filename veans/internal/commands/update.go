@@ -18,7 +18,6 @@ package commands
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -53,12 +52,17 @@ type updateFlags struct {
 
 func newUpdateCmd() *cobra.Command {
 	f := &updateFlags{}
+	var fieldsRaw string
 	cmd := &cobra.Command{
 		Use:     "update <id>",
 		Aliases: []string{"u"},
 		Short:   "Update a task by PROJ-NN, #NN, or numeric ID",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fields, err := parseFields(fieldsRaw)
+			if err != nil {
+				return err
+			}
 			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
@@ -74,8 +78,7 @@ func newUpdateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			rt.withURLs(task)
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
+			return rt.printTask(cmd.OutOrStdout(), fields, task)
 		},
 	}
 	cmd.Flags().StringVarP(&f.statusName, "status", "s", "", "transition to a status")
@@ -95,6 +98,7 @@ func newUpdateCmd() *cobra.Command {
 	cmd.MarkFlagsMutuallyExclusive("parent", "no-parent")
 	cmd.Flags().StringSliceVar(&f.addBlockedBy, "blocked-by-add", nil, "task IDs that block this one (repeatable)")
 	cmd.Flags().StringSliceVar(&f.removeBlockedBy, "blocked-by-remove", nil, "task IDs that no longer block this one (repeatable)")
+	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
 }
 

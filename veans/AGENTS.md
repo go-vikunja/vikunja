@@ -255,9 +255,12 @@ Everything else (`list`, `show`, `create`, `update`, `claim`, `api`,
   update on `update`, so a status transition can't clobber freshly
   attached labels. Comments for `--status scrapped` post **before**
   the bucket move so the audit trail reads in chronological order.
-- Agent-facing commands return the task via `json.NewEncoder(...).Encode(task)`.
-  Adding new top-level keys to `client.Task` is an implicit API
-  change — bump `prime`'s "useful fields" note alongside.
+- Agent-facing commands print through `runtime.printTask` / `printTasks`
+  (`render.go`): it fills URLs, drops nested related-task descriptions and
+  applies `--fields`, which is parsed before any request. Adding new
+  top-level keys to `client.Task` is an implicit API change (they also
+  become valid `--fields` names) — bump `prime`'s "useful fields" note
+  alongside.
 
 ## Things to *not* do
 
