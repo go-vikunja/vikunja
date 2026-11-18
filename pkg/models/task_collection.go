@@ -468,6 +468,14 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		}
 	}
 
+	if !tf.IncludeSubprojects && tf.ProjectID > 0 && !tf.isSavedFilter {
+		project, err := GetProjectSimpleByID(s, tf.ProjectID)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		tf.IncludeSubprojects = project.IncludeSubprojects
+	}
+
 	tf.normalizeIncludeSubprojects(a, view)
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)

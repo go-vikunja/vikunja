@@ -32,6 +32,7 @@ function project(overrides: Partial<ProjectResponse> = {}): ProjectResponse {
 		is_favorite: false,
 		parent_project_id: 0,
 		position: 0,
+		include_subprojects: false,
 		views: [],
 		background_information: {provider: 'upload'},
 		background_blur_hash: 'hash-one',

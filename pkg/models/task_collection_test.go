@@ -2852,3 +2852,50 @@ func TestTaskCollection_ReadAll_IncludeSubprojectsPositions(t *testing.T) {
 		}), "default position sort")
 	})
 }
+
+func TestTaskCollection_ReadAll_IncludeSubprojectsFromProject(t *testing.T) {
+	readIDs := func(t *testing.T, s *xorm.Session, c *TaskCollection) []int64 {
+		res, _, _, err := c.ReadAll(s, &user.User{ID: 1}, "", 0, 50)
+		require.NoError(t, err)
+		tasks, ok := res.([]*Task)
+		require.True(t, ok)
+		ids := make([]int64, 0, len(tasks))
+		for _, task := range tasks {
+			ids = append(ids, task.ID)
+		}
+		return ids
+	}
+
+	t.Run("project setting includes subproject tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(32).Cols("include_subprojects").Update(&Project{IncludeSubprojects: true})
+		require.NoError(t, err)
+
+		assert.Contains(t, readIDs(t, s, &TaskCollection{ProjectID: 32, ProjectViewID: 125}), int64(24))
+	})
+
+	t.Run("without the project setting subproject tasks are left out", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		assert.NotContains(t, readIDs(t, s, &TaskCollection{ProjectID: 32, ProjectViewID: 125}), int64(24))
+	})
+
+	t.Run("project setting is ignored in kanban", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.ID(32).Cols("include_subprojects").Update(&Project{IncludeSubprojects: true})
+		require.NoError(t, err)
+
+		c := &TaskCollection{ProjectID: 32, ProjectViewID: 128}
+		_, _, _, err = c.ReadAll(s, &user.User{ID: 1}, "", 0, 50)
+		require.NoError(t, err)
+		assert.False(t, c.IncludeSubprojects)
+	})
+}

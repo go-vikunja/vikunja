@@ -35,6 +35,7 @@ export type ProjectResponse = Omit<Project,
 	'is_favorite' |
 	'parent_project_id' |
 	'position' |
+	'include_subprojects' |
 	'views'
 > & {
 	id: number
@@ -46,6 +47,7 @@ export type ProjectResponse = Omit<Project,
 	is_favorite: boolean
 	parent_project_id: number
 	position: number
+	include_subprojects: boolean
 	views: ProjectView[]
 }
 
@@ -63,7 +65,8 @@ type ProjectDraft = Required<Pick<ProjectWritable,
 	'is_archived' |
 	'is_favorite' |
 	'parent_project_id' |
-	'position'
+	'position' |
+	'include_subprojects'
 >>
 
 type UpdateProjectInput = ProjectDraft & {id: number}
@@ -91,6 +94,7 @@ export function createProjectDraft(project: Partial<ProjectWritable> = {}): Proj
 		is_favorite: false,
 		parent_project_id: 0,
 		position: 0,
+		include_subprojects: false,
 		...project,
 	}
 }
@@ -113,6 +117,7 @@ export function normalizeProject(project: Project): ProjectResponse {
 		is_favorite: project.is_favorite ?? false,
 		parent_project_id: project.parent_project_id ?? 0,
 		position: project.position ?? 0,
+		include_subprojects: project.include_subprojects ?? false,
 		views: [...(project.views ?? [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
 	}
 }
@@ -243,6 +248,7 @@ function projectBody(project: ProjectWritable): ProjectWritable {
 		is_favorite: project.is_favorite,
 		parent_project_id: project.parent_project_id,
 		position: project.position,
+		include_subprojects: project.include_subprojects,
 	}
 }
 
