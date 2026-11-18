@@ -120,6 +120,8 @@ const (
 	DatabaseMaxOpenConnections    Key = `database.maxopenconnections`
 	DatabaseMaxIdleConnections    Key = `database.maxidleconnections`
 	DatabaseMaxConnectionLifetime Key = `database.maxconnectionlifetime`
+	DatabaseConnectRetryInterval  Key = `database.connectretryinterval`
+	DatabaseConnectRetryTimeout   Key = `database.connectretrytimeout`
 	DatabaseSslMode               Key = `database.sslmode`
 	DatabaseSslCert               Key = `database.sslcert`
 	DatabaseSslKey                Key = `database.sslkey`
@@ -442,6 +444,8 @@ func initDefaultConfig() {
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
 	DatabaseMaxConnectionLifetime.setDefault(1800000)
+	DatabaseConnectRetryInterval.setDefault(0)
+	DatabaseConnectRetryTimeout.setDefault(0)
 	DatabaseSslMode.setDefault("disable")
 	DatabaseSslCert.setDefault("")
 	DatabaseSslKey.setDefault("")
