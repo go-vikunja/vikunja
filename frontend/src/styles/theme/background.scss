@@ -52,3 +52,30 @@
     opacity: 1;
   }
 }
+
+.app-chrome-background {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  transform: scale(1.05);
+}
+
+body.has-project-chrome-background {
+  .navbar,
+  .menu-container {
+    background: hsla(var(--grey-100-hsl), 0.72);
+  }
+
+  @media screen and (max-width: $tablet) {
+    .menu-container {
+      background: hsla(var(--grey-100-hsl), 0.88);
+    }
+  }
+}

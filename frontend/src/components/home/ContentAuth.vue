@@ -10,9 +10,15 @@
 		</BaseButton>
 		<div
 			class="app-container"
-			:class="{'has-background': background || blurHash}"
+			:class="{'has-background': background || blurHash, 'has-chrome-background': chromeBackgroundEnabled}"
 			:style="{'background-image': blurHash && `url(${blurHash})`}"
 		>
+			<div
+				v-if="chromeBackgroundEnabled"
+				class="app-chrome-background background-fade-in is-visible d-print-none"
+				:style="chromeBackgroundStyle"
+				aria-hidden="true"
+			/>
 			<div
 				:class="{'is-visible': background}"
 				class="app-container-background background-fade-in d-print-none"
@@ -93,8 +99,10 @@ import {useSidebarResize} from '@/composables/useSidebarResize'
 import {useWebSocket} from '@/composables/useWebSocket'
 import {useServerCacheEvents} from '@/composables/useServerCacheEvents'
 import {useAuthStore} from '@/stores/auth'
+import {useProjectChromeBackground} from '@/composables/useProjectChromeBackground'
 
 const authStore = useAuthStore()
+const {enabled: chromeBackgroundEnabled, chromeBackgroundStyle} = useProjectChromeBackground()
 const backgroundBrightness = computed(() =>
 	authStore.settings?.frontend_settings?.background_brightness,
 )
