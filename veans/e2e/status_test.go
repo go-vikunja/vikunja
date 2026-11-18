@@ -73,3 +73,69 @@ func TestCreate_NonTodoStatus(t *testing.T) {
 		})
 	}
 }
+
+// Vikunja un-marks a task leaving the done bucket, so scrapped lands in the
+// Scrapped bucket with done=false, even when the task was completed before.
+func TestUpdate_Scrapped(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+	cfg := loadConfig(t, ws)
+
+	for _, from := range []string{"todo", "completed"} {
+		t.Run("from "+from, func(t *testing.T) {
+			out, errOut, code := h.Run(t, ws, "create", "to scrap", "-s", from)
+			if code != 0 {
+				t.Fatalf("create exit %d\n%s", code, errOut)
+			}
+			created := decodeTask(t, out)
+
+			out, errOut, code = h.Run(t, ws, "update", strconv.FormatInt(created.Index, 10),
+				"-s", "scrapped", "--reason", "probe")
+			if code != 0 {
+				t.Fatalf("update exit %d\nstdout: %s\nstderr: %s", code, out, errOut)
+			}
+			printed := decodeTask(t, out)
+			server := h.GetTask(t, created.ID)
+			if got := server.CurrentBucketID(cfg.ViewID); got != cfg.Buckets.Scrapped {
+				t.Fatalf("bucket = %d, want scrapped %d", got, cfg.Buckets.Scrapped)
+			}
+			if server.Done || printed.Done {
+				t.Fatalf("scrapped task should not be done (server=%v printed=%v)", server.Done, printed.Done)
+			}
+		})
+	}
+}
+
+func TestListReady_ScrappedBlockerDoesNotBlock(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	out, errOut, code := h.Run(t, ws, "create", "blocker")
+	if code != 0 {
+		t.Fatalf("create blocker exit %d\n%s", code, errOut)
+	}
+	blocker := decodeTask(t, out)
+	out, errOut, code = h.Run(t, ws, "create", "dependent", "--blocked-by", strconv.FormatInt(blocker.Index, 10))
+	if code != 0 {
+		t.Fatalf("create dependent exit %d\n%s", code, errOut)
+	}
+	dependent := decodeTask(t, out)
+
+	if _, errOut, code = h.Run(t, ws, "update", strconv.FormatInt(blocker.Index, 10),
+		"-s", "scrapped", "--reason", "probe"); code != 0 {
+		t.Fatalf("scrap blocker exit %d\n%s", code, errOut)
+	}
+
+	out, errOut, code = h.Run(t, ws, "list", "--ready")
+	if code != 0 {
+		t.Fatalf("list --ready exit %d\n%s", code, errOut)
+	}
+	var ready []*client.Task
+	if err := json.Unmarshal([]byte(out), &ready); err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range ready {
+		if r.ID == dependent.ID {
+			return
+		}
+	}
+	t.Fatalf("dependent of a scrapped blocker should be ready; got %d ready tasks", len(ready))
+}

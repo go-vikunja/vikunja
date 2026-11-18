@@ -91,10 +91,17 @@ func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, err
 	// Apply client-side filters AND-style. Pre-allocate as an empty
 	// (non-nil) slice so an empty result still encodes as `[]`, not `null` —
 	// the agent contract is "raw array".
+	scrapped := map[int64]bool{}
+	for _, t := range tasks {
+		if t.CurrentBucketID(rt.cfg.ViewID) == rt.cfg.Buckets.Scrapped {
+			scrapped[t.ID] = true
+		}
+	}
+
 	out := make([]*client.Task, 0, len(tasks))
 	for _, t := range tasks {
 		taskBucket := t.CurrentBucketID(rt.cfg.ViewID)
-		if f.ready && !isReady(t, rt.cfg.Buckets.Todo, rt.cfg.ViewID) {
+		if f.ready && !isReady(t, rt.cfg.Buckets.Todo, rt.cfg.ViewID, scrapped) {
 			continue
 		}
 		if f.mine {
@@ -139,14 +146,15 @@ func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, err
 }
 
 // isReady reports whether t is ready to start: in the Todo bucket, not done,
-// and not blocked by any incomplete task. "blocked" is the relation kind on
-// the dependent task — parenttask / subtask have no bearing on readiness.
-func isReady(t *client.Task, todoBucket, viewID int64) bool {
+// and not blocked by any task that is neither done nor scrapped. "blocked" is
+// the relation kind on the dependent task — parenttask / subtask have no
+// bearing on readiness. Related tasks carry no buckets, hence the scrapped set.
+func isReady(t *client.Task, todoBucket, viewID int64, scrapped map[int64]bool) bool {
 	if t.Done || t.CurrentBucketID(viewID) != todoBucket {
 		return false
 	}
 	for _, b := range t.RelatedTasks["blocked"] {
-		if b != nil && !b.Done {
+		if b != nil && !b.Done && !scrapped[b.ID] {
 			return false
 		}
 	}

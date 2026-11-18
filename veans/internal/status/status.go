@@ -83,8 +83,10 @@ func (s Status) BucketTitle() string {
 }
 
 // Done reports whether tasks in this status should have done=true.
+// Scrapped is not done: Vikunja un-marks a task once it leaves the view's
+// done bucket, so done=true can't stick in the Scrapped bucket.
 func (s Status) Done() bool {
-	return s == Completed || s == Scrapped
+	return s == Completed
 }
 
 // Parse normalizes user input. Accepts the canonical hyphenated form, plus

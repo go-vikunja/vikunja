@@ -226,7 +226,7 @@ func TestRunUpdate_ScrappedOrdersCommentUpdateMove(t *testing.T) {
 	want := []recordedCall{
 		{http.MethodGet, "/api/v2/tasks/42"},                            // current task fetch
 		{http.MethodPost, "/api/v2/tasks/42/comments"},                  // "Scrapped: obsolete"
-		{http.MethodPatch, "/api/v2/tasks/42"},                          // field update (done=true)
+		{http.MethodPatch, "/api/v2/tasks/42"},                          // field update (done=false)
 		{http.MethodPut, "/api/v2/projects/7/views/1/buckets/14/tasks"}, // bucket move to Scrapped
 		{http.MethodGet, "/api/v2/tasks/42"},                            // refetch with new bucket
 	}
