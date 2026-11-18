@@ -631,11 +631,11 @@ function getCommentUrl(commentId: string) {
 }
 
 .comments-container {
-	scroll-margin-block-start: 4rem;
+	scroll-margin-block-start: calc(4rem + var(--app-top-inset, 0px));
 }
 
 .media.comment {
-	scroll-margin-block-start: 4rem;
+	scroll-margin-block-start: calc(4rem + var(--app-top-inset, 0px));
 	transition: background-color .3s ease-out;
 	border-radius: $radius;
 }

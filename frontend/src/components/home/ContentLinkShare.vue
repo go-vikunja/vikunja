@@ -150,6 +150,10 @@ const isFullWidth = computed(() => {
 </script>
 
 <style lang="scss" scoped>
+.link-share-container {
+	padding-block-start: var(--app-top-inset, 0);
+}
+
 .link-share-container.has-background .view {
 	background-color: transparent;
 	border: none;

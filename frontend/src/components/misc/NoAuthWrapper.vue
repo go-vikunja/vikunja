@@ -87,6 +87,8 @@ useTitle(() => title.value)
 	background: var(--site-background) url("@/assets/llama.svg?url") no-repeat
 		fixed bottom left;
 	min-block-size: 100vh;
+	// The Dock toolbar overlays the page; useDockAppOffset supplies its inset.
+	padding-block-start: var(--app-top-inset, 0);
 	display: flex;
 	flex-direction: column;
 	place-items: center;
