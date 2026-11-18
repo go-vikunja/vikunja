@@ -634,3 +634,79 @@ func TestEscapeICalText(t *testing.T) {
 		})
 	}
 }
+
+func TestParseTodosVTodoNoDTEnd(t *testing.T) {
+	cfg := &Config{Name: "test", ProdID: "Vikunja"}
+	ts := time.Date(2026, 1, 1, 8, 0, 0, 0, time.UTC)
+	start := time.Date(2026, 1, 1, 9, 0, 0, 0, time.UTC)
+	end := time.Date(2026, 1, 1, 11, 30, 0, 0, time.UTC)
+	due := time.Date(2026, 1, 1, 17, 0, 0, 0, time.UTC)
+
+	t.Run("task with start and end but no due date exports duration and no dtend", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{
+			UID:       "todo-1",
+			Summary:   "Task with start and end",
+			Timestamp: ts,
+			Start:     start,
+			End:       end,
+		}})
+		assert.Contains(t, out, "DTSTART:20260101T090000Z")
+		assert.Contains(t, out, "DURATION:PT2H30M0S")
+		assert.NotContains(t, out, "DTEND")
+		assert.NotContains(t, out, "DUE:")
+	})
+
+	t.Run("task with start, end, and due date exports due and no dtend or duration", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{
+			UID:       "todo-2",
+			Summary:   "Task with start, end and due",
+			Timestamp: ts,
+			Start:     start,
+			End:       end,
+			DueDate:   due,
+		}})
+		assert.Contains(t, out, "DTSTART:20260101T090000Z")
+		assert.Contains(t, out, "DUE:20260101T170000Z")
+		assert.NotContains(t, out, "DTEND")
+		assert.NotContains(t, out, "DURATION")
+	})
+
+	t.Run("task with end date only exports neither dtend nor duration", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{
+			UID:       "todo-3",
+			Summary:   "Task with end only",
+			Timestamp: ts,
+			End:       end,
+		}})
+		assert.NotContains(t, out, "DTEND")
+		assert.NotContains(t, out, "DURATION")
+		assert.NotContains(t, out, "DUE:")
+	})
+
+	t.Run("task with start and duration exports duration and no dtend", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{
+			UID:       "todo-4",
+			Summary:   "Task with duration",
+			Timestamp: ts,
+			Start:     start,
+			Duration:  45 * time.Minute,
+		}})
+		assert.Contains(t, out, "DTSTART:20260101T090000Z")
+		assert.Contains(t, out, "DURATION:PT0H45M0S")
+		assert.NotContains(t, out, "DTEND")
+		assert.NotContains(t, out, "DUE:")
+	})
+
+	t.Run("task with equal start and end exports no duration or dtend", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{
+			UID:       "todo-5",
+			Summary:   "Task with zero duration",
+			Timestamp: ts,
+			Start:     start,
+			End:       start,
+		}})
+		assert.Contains(t, out, "DTSTART:20260101T090000Z")
+		assert.NotContains(t, out, "DURATION")
+		assert.NotContains(t, out, "DTEND")
+	})
+}
