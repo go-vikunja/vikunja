@@ -126,7 +126,10 @@ oddly, suspect one of these:
   buckets-with-tasks LIST is bare `views_buckets_tasks`; bucket CRUD is
   `views_buckets_{create,update,delete}`. Older servers used `_put`/`_post`
   suffixes (and an order-dependent bare/`_put` collision), so the bot requests
-  both naming schemes.
+  both naming schemes. A token minted by a veans build that predates the
+  rename only holds the bare key, which the renamed server maps to the LIST:
+  every bucket move then 401s (code 11) while reads work. `veans login`
+  re-mints with the current scopes.
 - `client.PermissionsForBot()` calls `GET /routes` at runtime and
   grants only the intersection of what we want and what the server
   exposes. **Don't hard-code permission group names** — they drift
@@ -232,6 +235,10 @@ Everything else (`list`, `show`, `create`, `update`, `claim`, `api`,
   `RATE_LIMITED`, `BOT_USERS_UNAVAILABLE`, `NOT_CONFIGURED`,
   `UNKNOWN`. Don't add ad-hoc strings — wrap with `output.New` /
   `output.Wrap`.
+- **Multi-step mutations report partial progress.** `create`/`update`
+  track steps with `steps` (`internal/commands/steps.go`); a failure after
+  the task changed adds `task`, `completed` and `failed` to the envelope
+  and keeps the inner code.
 - **No `globals.JSON`, no dual rendering paths.** If you find yourself
   reaching for "if interactive, do X" on an agent-facing command,
   stop — it's not interactive, an agent is on the other end.
