@@ -127,6 +127,31 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 	return addTimeToDate(text, parsed.date, parsed.foundText, true)
 }
 
+/**
+ * Hours and minutes of a matched "at" time, or null when it is not a time of day
+ * ("at 25", "at 9:75" or "at 13pm"), so the text stays in the title.
+ */
+function parseTimeOfDay(time: string): {hours: number, minutes: number} | null {
+	const [hourPart, minutePart = '0'] = time.split(':')
+	let hours = parseInt(hourPart)
+	const minutes = parseInt(minutePart)
+	const meridiem = time.toLowerCase().match(/([ap])m$/)?.[1]
+	if (meridiem !== undefined) {
+		if (hours < 1 || hours > 12) {
+			return null
+		}
+		if (meridiem === 'p' && hours !== 12) {
+			hours += 12
+		} else if (meridiem === 'a' && hours === 12) {
+			hours = 0
+		}
+	}
+	if (hours > 23 || minutes > 59) {
+		return null
+	}
+	return {hours, minutes}
+}
+
 const addTimeToDate = (text: string, date: Date, previousMatch: string | null, useDefaultTime = false): dateParseResult => {
 	previousMatch = previousMatch?.trim() || ''
 	text = replaceAll(text, previousMatch, '')
@@ -137,28 +162,15 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null, u
 		}
 	}
 
-	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9])?( ?(a|p)m)?)'
+	// The time must end the number: "at 1230" is not "at 12" followed by "30".
+	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9])?( ?(a|p)m)?)(?![0-9:])'
 	const matcher = new RegExp(timeRegex, 'ig')
 	const results = matcher.exec(text)
+	const time = results !== null ? parseTimeOfDay(results[2]) : null
 
-	if (results !== null) {
-		const time = results[2]
-		const parts = time.split(':')
-		let hours = parseInt(parts[0])
-		let minutes = 0
-		if (time.toLowerCase().endsWith('pm')) {
-			if (hours !== 12) {
-				hours += 12
-			}
-		} else if (time.toLowerCase().endsWith('am') && hours === 12) {
-			hours = 0
-		}
-		if (parts.length > 1) {
-			minutes = parseInt(parts[1])
-		}
-
-		date.setHours(hours)
-		date.setMinutes(minutes)
+	if (time !== null) {
+		date.setHours(time.hours)
+		date.setMinutes(time.minutes)
 		date.setSeconds(0)
 		date.setMilliseconds(0)
 	} else if (useDefaultTime) {
@@ -169,7 +181,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null, u
 		}
 	}
 
-	const replace = results !== null ? results[0] : previousMatch
+	const replace = results !== null && time !== null ? results[0] : previousMatch
 	return {
 		newText: replaceAll(text, replace, '').trim(),
 		date,
