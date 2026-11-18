@@ -139,3 +139,44 @@ func TestListReady_ScrappedBlockerDoesNotBlock(t *testing.T) {
 	}
 	t.Fatalf("dependent of a scrapped blocker should be ready; got %d ready tasks", len(ready))
 }
+
+func TestUpdate_Parent(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	mk := func(title string) *client.Task {
+		out, errOut, code := h.Run(t, ws, "create", title)
+		if code != 0 {
+			t.Fatalf("create %q exit %d\n%s", title, code, errOut)
+		}
+		return decodeTask(t, out)
+	}
+	first, second, child := mk("first parent"), mk("second parent"), mk("child")
+	childRef := strconv.FormatInt(child.Index, 10)
+
+	update := func(args ...string) *client.Task {
+		t.Helper()
+		out, errOut, code := h.Run(t, ws, append([]string{"update", childRef}, args...)...)
+		if code != 0 {
+			t.Fatalf("update %v exit %d\nstdout: %s\nstderr: %s", args, code, out, errOut)
+		}
+		return decodeTask(t, out)
+	}
+
+	printed := update("--parent", strconv.FormatInt(first.Index, 10))
+	if !hasParent(printed, first.ID) {
+		t.Fatalf("parent not set: %+v", printed.RelatedTasks)
+	}
+
+	// Setting a new parent replaces the old one.
+	update("--parent", strconv.FormatInt(second.Index, 10))
+	server := h.GetTask(t, child.ID)
+	if !hasParent(server, second.ID) || hasParent(server, first.ID) {
+		t.Fatalf("parent not replaced: %+v", server.RelatedTasks["parenttask"])
+	}
+
+	update("--no-parent")
+	server = h.GetTask(t, child.ID)
+	if n := len(server.RelatedTasks["parenttask"]); n != 0 {
+		t.Fatalf("parent not removed: %+v", server.RelatedTasks["parenttask"])
+	}
+}

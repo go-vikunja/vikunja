@@ -191,6 +191,7 @@ veans update {{ .TaskIDExample }} -s in-review --comment '<p>Summary of changesâ
 veans update {{ .TaskIDExample }} --description-append '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>new step</p></li></ul>'
 veans update {{ .TaskIDExample }} --description-replace-old 'data-checked="false"><p>step 1</p>' --description-replace-new 'data-checked="true"><p>step 1</p>'
 veans update {{ .TaskIDExample }} --label-add bug --label-remove flaky
+veans update {{ .TaskIDExample }} --parent <parent-id>   # set/replace parent; --no-parent removes it
 veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: replaced by {{ .TaskIDExample }}"
 
 veans claim {{ .TaskIDExample }}                 # assign yourself + In Progress + branch label
