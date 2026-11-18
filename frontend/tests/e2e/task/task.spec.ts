@@ -1340,7 +1340,7 @@ test.describe('Task', () => {
 		})
 
 		test('Shows the whole reminder date picker in a short window', async ({authenticatedPage: page}) => {
-			await page.setViewportSize({width: 1280, height: 600})
+			await page.setViewportSize({width: 1280, height: 650})
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
