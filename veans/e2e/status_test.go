@@ -180,3 +180,41 @@ func TestUpdate_Parent(t *testing.T) {
 		t.Fatalf("parent not removed: %+v", server.RelatedTasks["parenttask"])
 	}
 }
+
+func TestUpdate_BlockedBy(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	mk := func(title string) *client.Task {
+		out, errOut, code := h.Run(t, ws, "create", title)
+		if code != 0 {
+			t.Fatalf("create %q exit %d\n%s", title, code, errOut)
+		}
+		return decodeTask(t, out)
+	}
+	a, b, task := mk("blocker a"), mk("blocker b"), mk("blocked")
+	ref := func(x *client.Task) string { return strconv.FormatInt(x.Index, 10) }
+	blockers := func() map[int64]bool {
+		got := map[int64]bool{}
+		for _, r := range h.GetTask(t, task.ID).RelatedTasks["blocked"] {
+			got[r.ID] = true
+		}
+		return got
+	}
+	update := func(args ...string) {
+		t.Helper()
+		if _, errOut, code := h.Run(t, ws, append([]string{"update", ref(task)}, args...)...); code != 0 {
+			t.Fatalf("update %v exit %d\n%s", args, code, errOut)
+		}
+	}
+
+	update("--blocked-by-add", ref(a), "--blocked-by-add", ref(b))
+	if got := blockers(); !got[a.ID] || !got[b.ID] || len(got) != 2 {
+		t.Fatalf("after add: %v", got)
+	}
+
+	// Re-adding is a no-op; removing a non-blocker too.
+	update("--blocked-by-add", ref(a), "--blocked-by-remove", ref(b), "--blocked-by-remove", ref(task))
+	if got := blockers(); !got[a.ID] || len(got) != 1 {
+		t.Fatalf("after remove: %v", got)
+	}
+}
