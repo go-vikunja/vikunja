@@ -82,11 +82,9 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 			return nil, err
 		}
 	}
-	blockerIDs := make([]int64, len(f.blockedBy))
-	for i, ref := range f.blockedBy {
-		if blockerIDs[i], err = rt.resolveTaskID(ctx, ref); err != nil {
-			return nil, err
-		}
+	blockerIDs, err := resolveRefs(ctx, rt, f.blockedBy)
+	if err != nil {
+		return nil, err
 	}
 
 	created, err := rt.client.CreateTask(ctx, rt.cfg.ProjectID, &client.Task{

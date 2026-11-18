@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -359,4 +360,61 @@ func decodePatchBody(t *testing.T, raw []byte) map[string]any {
 		t.Fatalf("decode patch body %q: %v", string(raw), err)
 	}
 	return body
+}
+
+// Blocker refs resolve by index; adding an existing blocker or removing an
+// absent one is a no-op, like --label-add / --label-remove.
+func TestRunUpdate_BlockedByAddRemove(t *testing.T) {
+	var (
+		mu    sync.Mutex
+		calls []recordedCall
+	)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		calls = append(calls, recordedCall{method: r.Method, path: r.URL.Path})
+		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v2/tasks/42":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"id": 42, "index": 1, "updated": "2026-01-01T00:00:00Z",
+				"related_tasks": map[string]any{"blocked": []any{map[string]any{"id": 70}}},
+			})
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v2/projects/7/tasks":
+			idx, _ := strconv.ParseInt(strings.TrimPrefix(r.URL.Query().Get("filter"), "index = "), 10, 64)
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"items": []any{map[string]any{"id": idx * 10, "index": idx}}, "total_pages": 1,
+			})
+		case r.Method == http.MethodPost && r.URL.Path == "/api/v2/tasks/42/relations":
+			_ = json.NewEncoder(w).Encode(map[string]any{})
+		case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/v2/tasks/42/relations/blocked/"):
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			http.Error(w, "unexpected", http.StatusInternalServerError)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	rt := newTestRuntime(srv.URL)
+
+	if _, err := runUpdate(context.Background(), rt, 42, &updateFlags{
+		addBlockedBy:    []string{"5", "7"}, // 7 already blocks
+		removeBlockedBy: []string{"7", "9"}, // 9 doesn't block
+	}); err != nil {
+		t.Fatalf("runUpdate: %v", err)
+	}
+
+	var mutations []recordedCall
+	for _, c := range calls {
+		if c.method != http.MethodGet {
+			mutations = append(mutations, c)
+		}
+	}
+	want := []recordedCall{
+		{http.MethodPost, "/api/v2/tasks/42/relations"},
+		{http.MethodDelete, "/api/v2/tasks/42/relations/blocked/70"},
+	}
+	if !reflect.DeepEqual(mutations, want) {
+		t.Fatalf("mutations:\nwant: %#v\ngot:  %#v", want, mutations)
+	}
 }
