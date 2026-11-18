@@ -24,7 +24,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"code.vikunja.io/veans/internal/client"
-	"code.vikunja.io/veans/internal/output"
 	"code.vikunja.io/veans/internal/status"
 )
 
@@ -76,6 +75,20 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 		return nil, err
 	}
 
+	// Resolve refs first so a typo fails before anything is created.
+	var parentID int64
+	if f.parent != "" {
+		if parentID, err = rt.resolveTaskID(ctx, f.parent); err != nil {
+			return nil, err
+		}
+	}
+	blockerIDs := make([]int64, len(f.blockedBy))
+	for i, ref := range f.blockedBy {
+		if blockerIDs[i], err = rt.resolveTaskID(ctx, ref); err != nil {
+			return nil, err
+		}
+	}
+
 	created, err := rt.client.CreateTask(ctx, rt.cfg.ProjectID, &client.Task{
 		Title:       strings.TrimSpace(title),
 		Description: f.description,
@@ -88,48 +101,45 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 		return nil, err
 	}
 
-	// Vikunja places newly-created tasks in the view's default bucket
-	// regardless of bucket_id in the create payload — move it explicitly
-	// when the requested status isn't Todo.
+	progress := &steps{task: rt.cfg.FormatTaskID(created.Index), completed: []string{"create"}}
+
+	// Recent servers honor bucket_id on create; older ones put the task in
+	// the default bucket, so move explicitly.
 	if st != status.Todo {
 		if err := rt.client.MoveTaskToBucket(ctx,
 			rt.cfg.ProjectID, rt.cfg.ViewID, bucketID, created.ID); err != nil {
-			return nil, output.Wrap(output.CodeUnknown, err, "set initial bucket: %v", err)
+			return nil, progress.fail("set bucket", err)
 		}
+		progress.done("set bucket")
 	}
 
-	// Attach labels (lazily creating them under veans: namespace).
 	for _, raw := range f.labels {
 		title := normalizeLabelTitle(raw)
+		step := "label " + title
 		l, err := getOrCreateLabelByTitle(ctx, rt.client, title)
 		if err != nil {
-			return nil, output.Wrap(output.CodeUnknown, err, "label %q: %v", title, err)
+			return nil, progress.fail(step, err)
 		}
 		if err := rt.client.AddLabelToTask(ctx, created.ID, l.ID); err != nil {
-			return nil, err
+			return nil, progress.fail(step, err)
 		}
+		progress.done(step)
 	}
 
-	// Parent relation.
 	if f.parent != "" {
-		parentID, err := rt.resolveTaskID(ctx, f.parent)
-		if err != nil {
-			return nil, err
-		}
+		step := "parent " + f.parent
 		if _, err := rt.client.CreateRelation(ctx, created.ID, parentID, "parenttask"); err != nil {
-			return nil, err
+			return nil, progress.fail(step, err)
 		}
+		progress.done(step)
 	}
 
-	// Blocked-by relations.
-	for _, ref := range f.blockedBy {
-		blockerID, err := rt.resolveTaskID(ctx, ref)
-		if err != nil {
-			return nil, err
+	for i, ref := range f.blockedBy {
+		step := "blocked-by " + ref
+		if _, err := rt.client.CreateRelation(ctx, created.ID, blockerIDs[i], "blocked"); err != nil {
+			return nil, progress.fail(step, err)
 		}
-		if _, err := rt.client.CreateRelation(ctx, created.ID, blockerID, "blocked"); err != nil {
-			return nil, err
-		}
+		progress.done(step)
 	}
 
 	// Re-fetch so the response reflects the labels and any post-create state.

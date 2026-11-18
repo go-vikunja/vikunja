@@ -144,6 +144,11 @@ stderr as `{"code":"...","error":"..."}` with non-zero exit; branch on
 `code` (NOT_FOUND, CONFLICT, VALIDATION_ERROR, AUTH_ERROR,
 RATE_LIMITED, NOT_CONFIGURED, BOT_USERS_UNAVAILABLE, UNKNOWN).
 
+If `create`/`update` fail after changing the task, the error also carries
+`task` (its identifier), `completed` (steps that went through) and
+`failed` (the step that didn't). The task exists — retry only the
+failed and later steps with `veans update`, don't create it again.
+
 `show`/`create`/`update`/`claim` return a single task; `list` returns
 an array. Useful fields:
 
