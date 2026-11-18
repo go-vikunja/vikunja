@@ -173,6 +173,9 @@ func TestPutWithTTL(t *testing.T) {
 	t.Run("value is gone after the ttl passed", func(t *testing.T) {
 		store = memory.NewStorage()
 		require.NoError(t, PutWithTTL("foo", "bar", time.Nanosecond))
+		// Give the TTL time to pass: on Windows the clock resolution is much
+		// coarser than a nanosecond, so an immediate Get can still see the key.
+		time.Sleep(5 * time.Millisecond)
 
 		_, exists, err := Get("foo")
 		require.NoError(t, err)
@@ -182,6 +185,7 @@ func TestPutWithTTL(t *testing.T) {
 		store = memory.NewStorage()
 		require.NoError(t, PutWithTTL("prefix_expired", "bar", time.Nanosecond))
 		require.NoError(t, PutWithTTL("prefix_valid", "bar", time.Minute))
+		time.Sleep(5 * time.Millisecond)
 
 		keys, err := ListKeys("prefix_")
 		require.NoError(t, err)
@@ -200,6 +204,7 @@ func TestPutWithTTL(t *testing.T) {
 	t.Run("incrementing after ttl expiry starts fresh", func(t *testing.T) {
 		store = memory.NewStorage()
 		require.NoError(t, PutWithTTL("c", int64(5), time.Nanosecond))
+		time.Sleep(5 * time.Millisecond)
 		require.NoError(t, IncrBy("c", 1))
 
 		val, exists, err := Get("c")

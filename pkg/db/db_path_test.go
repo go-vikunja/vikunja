@@ -35,6 +35,16 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+// absPath keeps Unix-style test fixtures absolute on every platform: on
+// Windows a fixed volume is prepended so paths like /var/lib/vikunja behave as
+// absolute paths there, too.
+func absPath(p string) string {
+	if runtime.GOOS == "windows" {
+		return "C:" + filepath.FromSlash(p)
+	}
+	return p
+}
+
 func Test_resolveDatabasePath(t *testing.T) {
 	mockUserDataDir := func(path string) func() (string, error) {
 		return func() (string, error) {
@@ -57,117 +67,117 @@ func Test_resolveDatabasePath(t *testing.T) {
 			name: "memory database",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "memory",
-				RootPath:       "/opt/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				RootPath:       absPath("/opt/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
 			expected:    "memory",
 		},
 
 		{
 			name: "absolute path should be used as-is",
 			cfg: DatabasePathConfig{
-				ConfiguredPath: "/var/lib/vikunja/vikunja.db",
-				RootPath:       "/opt/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				ConfiguredPath: absPath("/var/lib/vikunja/vikunja.db"),
+				RootPath:       absPath("/opt/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/var/lib/vikunja/vikunja.db",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/var/lib/vikunja/vikunja.db"),
 		},
 		{
 			name: "absolute path with different rootpath still used as-is",
 			cfg: DatabasePathConfig{
-				ConfiguredPath: "/data/mydb.db",
-				RootPath:       "/custom/path",
-				ExecutablePath: "/opt/vikunja",
+				ConfiguredPath: absPath("/data/mydb.db"),
+				RootPath:       absPath("/custom/path"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/data/mydb.db",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/data/mydb.db"),
 		},
 
 		{
 			name: "relative path with explicit rootpath",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "vikunja.db",
-				RootPath:       "/var/lib/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				RootPath:       absPath("/var/lib/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/var/lib/vikunja/vikunja.db",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/var/lib/vikunja/vikunja.db"),
 		},
 		{
 			name: "relative subdirectory path with explicit rootpath",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "data/vikunja.db",
-				RootPath:       "/var/lib/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				RootPath:       absPath("/var/lib/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/var/lib/vikunja/data/vikunja.db",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/var/lib/vikunja/data/vikunja.db"),
 		},
 
 		{
 			name: "relative path with default rootpath uses user data dir",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "vikunja.db",
-				RootPath:       "/opt/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				RootPath:       absPath("/opt/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/home/user/.local/share/vikunja/vikunja.db",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/home/user/.local/share/vikunja/vikunja.db"),
 		},
 
 		{
 			name: "os.Executable failure falls back to user data dir",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "vikunja.db",
-				RootPath:       "/opt/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				RootPath:       absPath("/opt/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/home/user/.local/share/vikunja/vikunja.db",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/home/user/.local/share/vikunja/vikunja.db"),
 		},
 
 		{
 			name: "falls back to rootpath when userDataDir fails",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "vikunja.db",
-				RootPath:       "/opt/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				RootPath:       absPath("/opt/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
 			userDataDir: mockUserDataDirError,
-			expected:    "/opt/vikunja/vikunja.db",
+			expected:    absPath("/opt/vikunja/vikunja.db"),
 		},
 
 		{
 			name: "empty configured path with explicit rootpath",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "",
-				RootPath:       "/var/lib/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				RootPath:       absPath("/var/lib/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/var/lib/vikunja",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/var/lib/vikunja"),
 		},
 		{
 			name: "empty configured path with default rootpath",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "",
-				RootPath:       "/opt/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				RootPath:       absPath("/opt/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/home/user/.local/share/vikunja",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/home/user/.local/share/vikunja"),
 		},
 		{
 			name: "path with dots normalized",
 			cfg: DatabasePathConfig{
-				ConfiguredPath: "/var/lib/vikunja/../vikunja/./db.db",
-				RootPath:       "/opt/vikunja",
-				ExecutablePath: "/opt/vikunja",
+				ConfiguredPath: absPath("/var/lib/vikunja/../vikunja/./db.db"),
+				RootPath:       absPath("/opt/vikunja"),
+				ExecutablePath: absPath("/opt/vikunja"),
 			},
-			userDataDir: mockUserDataDir("/home/user/.local/share/vikunja"),
-			expected:    "/var/lib/vikunja/db.db",
+			userDataDir: mockUserDataDir(absPath("/home/user/.local/share/vikunja")),
+			expected:    absPath("/var/lib/vikunja/db.db"),
 		},
 	}
 
@@ -190,14 +200,14 @@ func Test_resolveDatabasePath_Integration(t *testing.T) {
 	t.Run("with explicitly configured rootpath", func(t *testing.T) {
 		cfg := DatabasePathConfig{
 			ConfiguredPath: "vikunja.db",
-			RootPath:       "/custom/path",
-			ExecutablePath: "/opt/vikunja",
+			RootPath:       absPath("/custom/path"),
+			ExecutablePath: absPath("/opt/vikunja"),
 		}
 
 		result, err := resolveDatabasePath(cfg, resolveUserDataDir)
 		require.NoError(t, err)
 
-		expected := filepath.Join("/custom/path", "vikunja.db")
+		expected := filepath.Join(absPath("/custom/path"), "vikunja.db")
 		assert.Equal(t, expected, result)
 	})
 
@@ -236,14 +246,14 @@ func Test_resolveDatabasePath_Integration(t *testing.T) {
 	t.Run("with subdirectory path", func(t *testing.T) {
 		cfg := DatabasePathConfig{
 			ConfiguredPath: "data/vikunja.db",
-			RootPath:       "/custom/path",
-			ExecutablePath: "/opt/vikunja",
+			RootPath:       absPath("/custom/path"),
+			ExecutablePath: absPath("/opt/vikunja"),
 		}
 
 		result, err := resolveDatabasePath(cfg, resolveUserDataDir)
 		require.NoError(t, err)
 
-		expected := filepath.Join("/custom/path", "data", "vikunja.db")
+		expected := filepath.Join(absPath("/custom/path"), "data", "vikunja.db")
 		assert.Equal(t, expected, result)
 	})
 }

@@ -57,7 +57,7 @@ func TestWebhookErrorResponseBodyIsTruncated(t *testing.T) {
 	t.Cleanup(func() {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set(previousAllowNonRoutable)
 		webhookClient = previousClient
-		log.InitLogger()
+		log.Close()
 	})
 
 	w := &Webhook{ID: 42, TargetURL: ts.URL}

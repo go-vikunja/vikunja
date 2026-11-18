@@ -29,6 +29,7 @@ import (
 
 func TestConfigureStandardLoggerWithPath(t *testing.T) {
 	tempDir := t.TempDir()
+	t.Cleanup(Close)
 
 	ConfigureStandardLogger(true, "file", tempDir, "INFO", "text")
 
@@ -44,6 +45,7 @@ func TestConfigureStandardLoggerWithPath(t *testing.T) {
 
 func TestMakeLogHandlerCreatesCorrectLogFile(t *testing.T) {
 	tempDir := t.TempDir()
+	t.Cleanup(Close)
 	logPath = tempDir
 
 	tests := []struct {
@@ -71,6 +73,7 @@ func TestMakeLogHandlerCreatesCorrectLogFile(t *testing.T) {
 
 func TestConfigureStandardLoggerSetsPathBeforeHandler(t *testing.T) {
 	tempDir := t.TempDir()
+	t.Cleanup(Close)
 
 	// This test verifies the fix for issue #2020
 	// The path must be set BEFORE makeLogHandler is called

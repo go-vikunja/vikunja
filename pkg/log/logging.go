@@ -36,6 +36,22 @@ func IsInitialized() bool {
 // This value is a mere fallback for other modules that could but shouldn't be used before calling ConfigureLogger
 var logPath = "."
 
+// logFiles keeps the handles of log files opened for output "file", keyed by
+// file name, so they can be closed. On Windows an open handle prevents
+// removing the file (e.g. in tests), so consumers should call Close when they
+// are done with it.
+var logFiles = make(map[string]*os.File)
+
+// Close closes all log files opened for output "file", if any, and resets the
+// logger to stdout. It is safe to call when no files were opened.
+func Close() {
+	for name, f := range logFiles {
+		_ = f.Close()
+		delete(logFiles, name)
+	}
+	InitLogger()
+}
+
 // InitLogger initializes the global log handler
 func InitLogger() {
 	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
@@ -126,6 +142,13 @@ func getLogWriter(logfmt string, logfile string) (writer io.Writer) {
 		if err != nil {
 			Fatalf("Could not create logfile %s: %s", fullLogFilePath, err.Error())
 		}
+		// Close a previously opened log file of the same name before replacing
+		// it, so the old handle is not leaked (relevant on Windows, where it
+		// blocks deletion).
+		if old := logFiles[logfile]; old != nil {
+			_ = old.Close()
+		}
+		logFiles[logfile] = f
 		writer = f
 	case "stderr":
 		writer = os.Stderr

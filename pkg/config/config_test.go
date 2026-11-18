@@ -19,12 +19,23 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// absPath keeps Unix-style test fixtures absolute on every platform: on
+// Windows a fixed volume is prepended so paths like /var/lib/vikunja behave as
+// absolute paths there, too.
+func absPath(p string) string {
+	if runtime.GOOS == "windows" {
+		return "C:" + filepath.FromSlash(p)
+	}
+	return p
+}
 
 // initConfigFromYAML runs InitConfig against a config file in a temporary directory.
 // cors.enable is turned off because InitConfig aborts when it is on without a publicurl.
@@ -110,10 +121,12 @@ func TestGetRootpathLocation(t *testing.T) {
 }
 
 func TestResolvePath(t *testing.T) {
+	rootPath := absPath("/var/lib/vikunja")
+
 	// Save and restore rootpath
 	original := ServiceRootpath.GetString()
 	defer ServiceRootpath.Set(original)
-	ServiceRootpath.Set("/var/lib/vikunja")
+	ServiceRootpath.Set(rootPath)
 
 	tests := []struct {
 		name     string
@@ -122,23 +135,23 @@ func TestResolvePath(t *testing.T) {
 	}{
 		{
 			name:     "absolute path returned as-is",
-			input:    "/etc/vikunja/config.yml",
-			expected: "/etc/vikunja/config.yml",
+			input:    absPath("/etc/vikunja/config.yml"),
+			expected: absPath("/etc/vikunja/config.yml"),
 		},
 		{
 			name:     "relative path joined with rootpath",
 			input:    "files",
-			expected: "/var/lib/vikunja/files",
+			expected: filepath.Join(rootPath, "files"),
 		},
 		{
 			name:     "relative subdir path joined with rootpath",
 			input:    "data/vikunja.db",
-			expected: "/var/lib/vikunja/data/vikunja.db",
+			expected: filepath.Join(rootPath, "data/vikunja.db"),
 		},
 		{
 			name:     "empty string returns rootpath",
 			input:    "",
-			expected: "/var/lib/vikunja",
+			expected: rootPath,
 		},
 	}
 
@@ -207,20 +220,23 @@ func TestPathsFollowRootpath(t *testing.T) {
 	}
 
 	t.Run("rootpath from a search-path config file", func(t *testing.T) {
-		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\n")
+		rootPath := absPath("/pinned/root")
+		initConfigFromYAML(t, "service:\n  rootpath: "+rootPath+"\n")
 
-		assertPathsUnder(t, "/pinned/root")
+		assertPathsUnder(t, rootPath)
 	})
 	t.Run("rootpath from the environment", func(t *testing.T) {
-		t.Setenv("VIKUNJA_SERVICE_ROOTPATH", "/env/root")
+		rootPath := absPath("/env/root")
+		t.Setenv("VIKUNJA_SERVICE_ROOTPATH", rootPath)
 		initConfigFromYAML(t, "")
 
-		assertPathsUnder(t, "/env/root")
+		assertPathsUnder(t, rootPath)
 	})
 	t.Run("rootpath from a pinned config file", func(t *testing.T) {
+		rootPath := absPath("/pinned/root")
 		dir := t.TempDir()
 		configPath := filepath.Join(dir, "config.yml")
-		require.NoError(t, os.WriteFile(configPath, []byte("cors:\n  enable: false\nservice:\n  rootpath: /pinned/root\n"), 0600))
+		require.NoError(t, os.WriteFile(configPath, []byte("cors:\n  enable: false\nservice:\n  rootpath: "+rootPath+"\n"), 0600))
 		SetConfigFile(configPath)
 		t.Cleanup(func() {
 			SetConfigFile("")
@@ -230,17 +246,19 @@ func TestPathsFollowRootpath(t *testing.T) {
 		viper.Reset()
 		InitConfig()
 
-		assertPathsUnder(t, "/pinned/root")
+		assertPathsUnder(t, rootPath)
 	})
 	t.Run("explicit paths win", func(t *testing.T) {
-		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\nlog:\n  path: /var/log/vikunja\n")
+		logPath := absPath("/var/log/vikunja")
+		initConfigFromYAML(t, "service:\n  rootpath: "+absPath("/pinned/root")+"\nlog:\n  path: "+logPath+"\n")
 
-		assert.Equal(t, "/var/log/vikunja", LogPath.GetString())
+		assert.Equal(t, logPath, LogPath.GetString())
 	})
 	t.Run("relative plugins.dir is resolved against rootpath", func(t *testing.T) {
-		initConfigFromYAML(t, "service:\n  rootpath: /pinned/root\nplugins:\n  dir: custom-plugins\n")
+		rootPath := absPath("/pinned/root")
+		initConfigFromYAML(t, "service:\n  rootpath: "+rootPath+"\nplugins:\n  dir: custom-plugins\n")
 
-		assert.Equal(t, "/pinned/root/custom-plugins", PluginsDir.GetString())
+		assert.Equal(t, filepath.Join(rootPath, "custom-plugins"), PluginsDir.GetString())
 	})
 }
 
