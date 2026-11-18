@@ -26,11 +26,13 @@ import (
 )
 
 func newClaimCmd() *cobra.Command {
-	var fieldsRaw string
+	var (
+		fieldsRaw string
+		taskIDArg int64
+	)
 	cmd := &cobra.Command{
-		Use:   "claim <id>",
+		Use:   "claim <PROJ-NN|#NN|NN> | claim --id <task id>",
 		Short: "Claim a task: assign the bot, move to In Progress, tag with branch",
-		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fields, err := parseFields(fieldsRaw)
 			if err != nil {
@@ -40,7 +42,7 @@ func newClaimCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			id, err := rt.resolveTaskID(cmd.Context(), args[0])
+			id, err := rt.taskID(cmd.Context(), args, taskIDArg)
 			if err != nil {
 				return err
 			}
@@ -51,6 +53,7 @@ func newClaimCmd() *cobra.Command {
 			return rt.printTask(cmd.OutOrStdout(), fields, task)
 		},
 	}
+	cmd.Args = addTaskIDFlag(cmd, &taskIDArg)
 	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
 }

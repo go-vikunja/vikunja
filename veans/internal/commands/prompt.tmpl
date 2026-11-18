@@ -156,7 +156,9 @@ safer than grepping it. Tasks nested under `related_tasks` come without
 their `description`; `veans show` the related task if you need it.
 Useful fields:
 
-- `id` (numeric, internal) — pass to `api` calls
+- `id` (numeric, internal) — pass to `api` calls, or to `show` / `update`
+  / `claim` as `--id <id>`. A bare number argument (`veans show 25`) is
+  read as the project index, not this id.
 - `index` (per-project) — what `{{ .TaskIDExample }}` resolves to
 - `url` — web UI link; use it to reference the task (see "Referencing
   other tasks")

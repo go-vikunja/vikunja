@@ -52,12 +52,14 @@ type updateFlags struct {
 
 func newUpdateCmd() *cobra.Command {
 	f := &updateFlags{}
-	var fieldsRaw string
+	var (
+		fieldsRaw string
+		taskIDArg int64
+	)
 	cmd := &cobra.Command{
-		Use:     "update <id>",
+		Use:     "update <PROJ-NN|#NN|NN> | update --id <task id>",
 		Aliases: []string{"u"},
-		Short:   "Update a task by PROJ-NN, #NN, or numeric ID",
-		Args:    cobra.ExactArgs(1),
+		Short:   "Update a task by PROJ-NN, #NN, NN (project index), or --id <task id>",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fields, err := parseFields(fieldsRaw)
 			if err != nil {
@@ -70,7 +72,7 @@ func newUpdateCmd() *cobra.Command {
 			f.descriptionIsSet = cmd.Flags().Changed("description")
 			f.priorityIsSet = cmd.Flags().Changed("priority")
 
-			id, err := rt.resolveTaskID(cmd.Context(), args[0])
+			id, err := rt.taskID(cmd.Context(), args, taskIDArg)
 			if err != nil {
 				return err
 			}
@@ -98,6 +100,7 @@ func newUpdateCmd() *cobra.Command {
 	cmd.MarkFlagsMutuallyExclusive("parent", "no-parent")
 	cmd.Flags().StringSliceVar(&f.addBlockedBy, "blocked-by-add", nil, "task IDs that block this one (repeatable)")
 	cmd.Flags().StringSliceVar(&f.removeBlockedBy, "blocked-by-remove", nil, "task IDs that no longer block this one (repeatable)")
+	cmd.Args = addTaskIDFlag(cmd, &taskIDArg)
 	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
 }
