@@ -123,6 +123,8 @@ Resolved in order on every command:
 3. **`~/.config/veans/credentials.yml`** (mode 0600) — automatic fallback
    when the keychain is unavailable.
 
+Set `VEANS_NO_KEYRING=1` to skip the keychain entirely.
+
 ## Trusted servers
 
 `.veans.yml` is checked into the repo, so veans only talks to its `server`

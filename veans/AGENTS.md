@@ -186,9 +186,9 @@ oddly, suspect one of these:
   is narrowed. Concurrent writers (e.g. two `veans login` runs) are
   serialized via `flock` on `<path>.lock` (Unix only; Windows is a
   no-op stub since the audience is Linux/macOS).
-- E2e tests override `HOME` per test and `filterEnv(..., "VEANS_")`
-  strips any inherited `VEANS_TOKEN` so the developer's keyring
-  stays untouched. Don't bypass the credentials package in tests —
+- E2e tests override `HOME` per test, set `VEANS_NO_KEYRING=1` (a keychain
+  lookup under a fake HOME makes macOS prompt to reset the login keychain),
+  and `filterEnv(..., "VEANS_")` strips any inherited `VEANS_TOKEN`. Don't bypass the credentials package in tests —
   leaks between tests will surface as the wrong bot token.
 
 ## Trust gate
