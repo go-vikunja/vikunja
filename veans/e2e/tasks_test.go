@@ -225,3 +225,39 @@ func TestFields_AllCommands(t *testing.T) {
 		t.Fatalf("show lost the relation: %s", out)
 	}
 }
+
+// TestTaskIDFlag pins --id on show/update/claim and the not-found hint
+// when a numeric task id is passed where an index is expected.
+func TestTaskIDFlag(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	out, errOut, code := h.Run(t, ws, "create", "by id")
+	if code != 0 {
+		t.Fatalf("create exit %d\n%s", code, errOut)
+	}
+	created := decodeTask(t, out)
+	id := strconv.FormatInt(created.ID, 10)
+
+	for _, args := range [][]string{
+		{"show", "--id", id},
+		{"update", "--id", id, "--priority", "3"},
+		{"claim", "--id", id},
+	} {
+		out, errOut, code := h.Run(t, ws, append(args, "--fields", "id")...)
+		if code != 0 {
+			t.Fatalf("%v exit %d\n%s", args, code, errOut)
+		}
+		if got := strings.TrimSpace(out); got != `{"id":`+id+`}` {
+			t.Fatalf("%v printed %s", args, got)
+		}
+	}
+
+	_, errOut, code = h.Run(t, ws, "show", "999999")
+	if code == 0 || !strings.Contains(errOut, "NOT_FOUND") || !strings.Contains(errOut, "--id 999999") {
+		t.Fatalf("bare-number not-found should point at --id: exit %d %s", code, errOut)
+	}
+	_, errOut, code = h.Run(t, ws, "show", "1", "--id", id)
+	if code == 0 || !strings.Contains(errOut, "VALIDATION_ERROR") {
+		t.Fatalf("ref plus --id should fail validation: exit %d %s", code, errOut)
+	}
+}

@@ -206,7 +206,9 @@ oddly, suspect one of these:
 
 - Project `Identifier` is `runelength(0|10)`, can be empty. When empty,
   `Config.FormatTaskID` renders `#NN`; otherwise `PROJ-NN`. Both are
-  accepted by `runtime.resolveTaskID` along with bare integers.
+  accepted by `runtime.resolveTaskID` along with bare integers, which are
+  the project **index**, never the numeric task id. Commands that take a
+  task use `addTaskIDFlag` / `runtime.taskID` so `--id <task id>` works too.
 - Bot username must start with `bot-`; the server enforces it. Hyphens,
   digits, lowercase letters allowed; no spaces, no commas, no
   `link-share-N` pattern. `config.SuggestedBotUsername` does the

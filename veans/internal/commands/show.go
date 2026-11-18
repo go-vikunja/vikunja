@@ -21,11 +21,13 @@ import (
 )
 
 func newShowCmd() *cobra.Command {
-	var fieldsRaw string
+	var (
+		fieldsRaw string
+		taskIDArg int64
+	)
 	cmd := &cobra.Command{
-		Use:   "show <id>",
-		Short: "Show a task by PROJ-NN, #NN, or numeric ID",
-		Args:  cobra.ExactArgs(1),
+		Use:   "show <PROJ-NN|#NN|NN> | show --id <task id>",
+		Short: "Show a task by PROJ-NN, #NN, NN (project index), or --id <task id>",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fields, err := parseFields(fieldsRaw)
 			if err != nil {
@@ -35,7 +37,7 @@ func newShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			id, err := rt.resolveTaskID(cmd.Context(), args[0])
+			id, err := rt.taskID(cmd.Context(), args, taskIDArg)
 			if err != nil {
 				return err
 			}
@@ -46,6 +48,7 @@ func newShowCmd() *cobra.Command {
 			return rt.printTask(cmd.OutOrStdout(), fields, task)
 		},
 	}
+	cmd.Args = addTaskIDFlag(cmd, &taskIDArg)
 	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
 }

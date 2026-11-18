@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
 	"code.vikunja.io/veans/internal/auth"
@@ -112,6 +113,43 @@ func (r *runtime) backfillFrontendURL(ctx context.Context) {
 	_ = r.cfg.Save()
 }
 
+// addTaskIDFlag registers --id and returns the Args validator that requires
+// exactly one of the positional ref and --id.
+func addTaskIDFlag(cmd *cobra.Command, id *int64) cobra.PositionalArgs {
+	cmd.Flags().Int64Var(id, "id", 0,
+		"numeric task id (as in veans api paths and relations) instead of PROJ-NN / #NN / NN")
+	return func(cmd *cobra.Command, args []string) error {
+		hasID := cmd.Flags().Changed("id")
+		switch {
+		case hasID && len(args) > 0:
+			return output.New(output.CodeValidation, "pass a task reference or --id, not both")
+		case !hasID && len(args) != 1:
+			return output.New(output.CodeValidation, "expected one task reference (PROJ-NN, #NN, NN) or --id <task id>")
+		case hasID && *id <= 0:
+			return output.New(output.CodeValidation, "--id must be a positive task id")
+		}
+		return nil
+	}
+}
+
+// taskID resolves the command's task from its positional ref or --id. A task
+// from another project is rejected, like a PROJ-NN with the wrong prefix.
+func (r *runtime) taskID(ctx context.Context, args []string, id int64) (int64, error) {
+	if len(args) > 0 {
+		return r.resolveTaskID(ctx, args[0])
+	}
+	t, err := r.client.GetTask(ctx, id)
+	if err != nil {
+		return 0, err
+	}
+	if t.ProjectID != r.cfg.ProjectID {
+		return 0, output.New(output.CodeValidation,
+			"task %d belongs to project %d, but this repo's .veans.yml uses project %d",
+			id, t.ProjectID, r.cfg.ProjectID)
+	}
+	return id, nil
+}
+
 // resolveTaskID accepts PROJ-NN, #NN, or a bare integer and returns the
 // numeric task ID. The project identifier from .veans.yml is used to verify
 // the prefix matches; mismatches error out so an agent can't accidentally
@@ -133,7 +171,14 @@ func (r *runtime) resolveTaskID(ctx context.Context, raw string) (int64, error) 
 
 	// Bare integer — treat as task index in the configured project.
 	if n, err := strconv.ParseInt(raw, 10, 64); err == nil {
-		return r.lookupByIndex(ctx, n)
+		id, err := r.lookupByIndex(ctx, n)
+		var oe *output.Error
+		if errors.As(err, &oe) && oe.Code == output.CodeNotFound {
+			return 0, output.Wrap(output.CodeNotFound, err,
+				"%s (a bare number is read as the project index, not the numeric task id; show, update and claim take the task id via --id %d)",
+				oe.Message, n)
+		}
+		return id, err
 	}
 
 	// PROJ-NN form
