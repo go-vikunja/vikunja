@@ -93,10 +93,19 @@ function confirmShortcut(date: Date) {
 	flex-direction: column;
 	gap: .125rem;
 	padding: .75rem;
-	background: var(--grey-50);
 	border-inline-end: 1px solid var(--grey-200);
 	inline-size: 13rem;
 	flex-shrink: 0;
+	// The calendar sets the height; the list stretches to it and scrolls.
+	contain: size;
+	overflow-y: auto;
+	// Scroll shadows: the local covers scroll with the content and hide the fixed shadows at either end.
+	background:
+		linear-gradient(var(--grey-50) 30%, transparent) top / 100% 2.5rem no-repeat local,
+		linear-gradient(transparent, var(--grey-50) 70%) bottom / 100% 2.5rem no-repeat local,
+		radial-gradient(farthest-side at 50% 0, hsla(var(--grey-500-hsl), .25), transparent) top / 100% 1rem no-repeat scroll,
+		radial-gradient(farthest-side at 50% 100%, hsla(var(--grey-500-hsl), .25), transparent) bottom / 100% 1rem no-repeat scroll,
+		var(--grey-50);
 
 	.date-shortcuts__heading {
 		font-size: .7rem;
