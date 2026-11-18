@@ -171,13 +171,13 @@ Trust your JSON parser; we won't add new fields without notice.
 | `in-progress` | In Progress    | false     | `veans claim` or `update -s in-progress` |
 | `in-review`   | In Review      | false     | you, when work is finished               |
 | `completed`   | Done           | true      | humans / merge hook only                 |
-| `scrapped`    | Scrapped       | true      | you, with --reason                       |
+| `scrapped`    | Scrapped       | false     | you, with --reason                       |
 
 # Common commands
 
 ```
 veans list                         # all tasks, tree view
-veans list --ready                 # ready to start (Todo + not blocked)
+veans list --ready                 # ready to start (Todo + not blocked; done/scrapped blockers don't count)
 veans list --mine                  # tasks assigned to you
 veans list --branch                # tasks tagged with the current git branch
 veans list --filter "priority > 3"  # raw Vikunja filter expression
