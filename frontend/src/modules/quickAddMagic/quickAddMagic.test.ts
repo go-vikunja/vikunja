@@ -1023,6 +1023,18 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum !9999')
 			expect(result.priority).toBe(null)
 		})
+		it('should not parse a priority from a word that starts with a number', () => {
+			const result = parseTaskText('Set up !2fa for the admin account')
+
+			expect(result.text).toBe('Set up !2fa for the admin account')
+			expect(result.priority).toBe(null)
+		})
+		it('should skip a word that starts with a number and use a later priority', () => {
+			const result = parseTaskText('Set up !2fa !4')
+
+			expect(result.text).toBe('Set up !2fa')
+			expect(result.priority).toBe(4)
+		})
 		it('should not parse an invalid priority but use the first valid one it finds', () => {
 			const result = parseTaskText('Lorem Ipsum !9999 !1')
 
