@@ -101,6 +101,11 @@ export const parseDate = (text: string, now: Date = new Date()): dateParseResult
 	parsed = getDayFromText(text, now)
 	if (parsed.date !== null) {
 		const month = getMonthFromText(text, parsed.date)
+		// A day and month that already passed this year ("5th jan") mean next year,
+		// the same as "jan 5" does.
+		if (month.newText !== text && month.date < now) {
+			month.date.setFullYear(month.date.getFullYear() + 1)
+		}
 		return addTimeToDate(month.newText, month.date, parsed.foundText, true)
 	}
 

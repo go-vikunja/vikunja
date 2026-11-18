@@ -447,6 +447,20 @@ describe('Parse Task Text', () => {
 			expect(result?.date?.getDate()).toBe(expectedDate.getDate())
 			expect(result?.date?.getMonth()).toBe(expectedDate.getMonth())
 		})
+		it('should move a day and month that already passed to next year, with or without an ordinal', () => {
+			const now = new Date(2026, 10, 13, 10, 0)
+			const asDay = (text: string) => {
+				const date = parseTaskText(`Lorem Ipsum ${text}`, PrefixMode.Default, new Date(now)).date
+				return date ? `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}` : null
+			}
+
+			expect(asDay('jan 5')).toBe('2027-1-5')
+			expect(asDay('5th jan')).toBe('2027-1-5')
+			expect(asDay('Jan 5th')).toBe('2027-1-5')
+			expect(asDay('10th november')).toBe('2027-11-10')
+			expect(asDay('13th nov')).toBe('2026-11-13')
+			expect(asDay('20th november')).toBe('2026-11-20')
+		})
 		it('should recognize dates of the month in the future', () => {
 			const nextDay = new Date(+new Date() + MILLISECONDS_A_DAY)
 			const result = parseTaskText(`Lorem Ipsum ${nextDay.getDate()}nd`)
@@ -737,17 +751,17 @@ describe('Parse Task Text', () => {
 				'Jun 21': '2022-6-21',
 				'june 21': '2022-6-21',
 				'June 21': '2022-6-21',
-				'21st June': '2021-6-21',
-				'2nd March': '2021-3-2',
-				'2nd march': '2021-3-2',
-				'3rd April': '2021-4-3',
-				'1st January': '2021-1-1',
+				'21st June': '2022-6-21',
+				'2nd March': '2022-3-2',
+				'2nd march': '2022-3-2',
+				'3rd April': '2022-4-3',
+				'1st January': '2022-1-1',
 				'22nd December': '2021-12-22',
 				'23rd October': '2021-10-23',
 				'4th July': '2021-7-4',
 				'15th August': '2021-8-15',
 				'31st December': '2021-12-31',
-				'5th Mar': '2021-3-5',
+				'5th Mar': '2022-3-5',
 				'12th Sep': '2021-9-12',
 				'jul 21': '2021-7-21',
 				'Jul 21': '2021-7-21',
@@ -842,13 +856,13 @@ describe('Parse Task Text', () => {
 				'Something at 10:00 in 5 days': '2021-6-29 10:0',
 				'Something at 10:00 17th': '2021-7-17 10:0',
 				'Something at 10:00 sep 17th': '2021-9-17 10:0',
-				'2nd March at 5': '2021-3-2 5:0',
-				'2nd March at 5pm': '2021-3-2 17:0',
-				'2nd March @ 14:00': '2021-3-2 14:0',
-				'3rd April at 10:30': '2021-4-3 10:30',
+				'2nd March at 5': '2022-3-2 5:0',
+				'2nd March at 5pm': '2022-3-2 17:0',
+				'2nd March @ 14:00': '2022-3-2 14:0',
+				'3rd April at 10:30': '2022-4-3 10:30',
 				'15th August @ 9am': '2021-8-15 9:0',
-				'21st June at 18:45': '2021-6-21 18:45',
-				'5th Mar at 3pm': '2021-3-5 15:0',
+				'21st June at 18:45': '2022-6-21 18:45',
+				'5th Mar at 3pm': '2022-3-5 15:0',
 			} as Record<string, string>
 
 			for (const c of Object.keys(cases)) {
@@ -868,7 +882,7 @@ describe('Parse Task Text', () => {
 				const {date, newText} = parseDate('Some task Mar 8th', now)
 
 				assert.isNotNull(date)
-				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2022-3-8 12:0')
 				expect(newText).toBe('Some task')
 			})
 
@@ -876,7 +890,7 @@ describe('Parse Task Text', () => {
 				const {date, newText} = parseDate('Some task mar 8th', now)
 
 				assert.isNotNull(date)
-				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2021-3-8 12:0')
+				expect(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`).toBe('2022-3-8 12:0')
 				expect(newText).toBe('Some task')
 			})
 
