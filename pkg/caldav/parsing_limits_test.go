@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,7 +46,7 @@ func TestCheckVCalendarLimits(t *testing.T) {
 		content := vtodoWithLine("X-TEST" + paramList(MaxPropertyParameters, plainParamName) + ":v")
 		require.NoError(t, CheckVCalendarLimits(content))
 
-		_, _, err := ParseTaskFromVTODO(content)
+		_, _, err := ParseTaskFromVTODO(content, time.UTC)
 		require.NoError(t, err)
 	})
 
@@ -53,7 +54,7 @@ func TestCheckVCalendarLimits(t *testing.T) {
 		content := vtodoWithLine("X-TEST" + paramList(MaxPropertyParameters+1, plainParamName) + ":v")
 		require.ErrorIs(t, CheckVCalendarLimits(content), ErrTooManyPropertyParameters)
 
-		_, _, err := ParseTaskFromVTODO(content)
+		_, _, err := ParseTaskFromVTODO(content, time.UTC)
 		require.ErrorIs(t, err, ErrTooManyPropertyParameters)
 	})
 
@@ -79,7 +80,7 @@ func TestCheckVCalendarLimits(t *testing.T) {
 		content := vtodoWithLine("DESCRIPTION;X-NOTE=" + quoted + ":" + description)
 		require.NoError(t, CheckVCalendarLimits(content))
 
-		task, _, err := ParseTaskFromVTODO(content)
+		task, _, err := ParseTaskFromVTODO(content, time.UTC)
 		require.NoError(t, err)
 		assert.Contains(t, task.Description, "text, more; ")
 	})
@@ -88,7 +89,7 @@ func TestCheckVCalendarLimits(t *testing.T) {
 		content := vtodoWithLine("DESCRIPTION:" + strings.Repeat("a", MaxVCalendarSize))
 		require.ErrorIs(t, CheckVCalendarLimits(content), ErrVCalendarTooLarge)
 
-		_, _, err := ParseTaskFromVTODO(content)
+		_, _, err := ParseTaskFromVTODO(content, time.UTC)
 		require.ErrorIs(t, err, ErrVCalendarTooLarge)
 	})
 }
