@@ -49,6 +49,8 @@ import {computed, onScopeDispose, ref, watch, watchEffect} from 'vue'
 import {onClickOutside, onKeyStroke} from '@vueuse/core'
 import {autoUpdate, computePosition, flip, offset, shift, size, type Placement} from '@floating-ui/dom'
 
+import {appTopInset} from '@/composables/useDockAppOffset'
+
 import Modal from '@/components/misc/Modal.vue'
 import {useIsMobile} from '@/composables/useIsMobile'
 
@@ -191,6 +193,10 @@ async function updatePosition() {
 		return
 	}
 	let availableBlockSize = 0
+	const padding = {
+		...VIEWPORT_PADDING,
+		top: VIEWPORT_PADDING.top + appTopInset(),
+	}
 	const {x, y} = await computePosition(props.anchor, popup.value, {
 		placement: props.placement,
 		strategy: 'fixed',
@@ -199,10 +205,10 @@ async function updatePosition() {
 		// viewport. Capping to the space below the anchor instead hid the confirm button in a tiny box.
 		middleware: [
 			offset(4),
-			flip({padding: VIEWPORT_PADDING, fallbackStrategy: 'initialPlacement'}),
-			shift({padding: VIEWPORT_PADDING, crossAxis: true}),
+			flip({padding, fallbackStrategy: 'initialPlacement'}),
+			shift({padding, crossAxis: true}),
 			size({
-				padding: VIEWPORT_PADDING,
+				padding,
 				apply: ({availableHeight}) => {
 					availableBlockSize = availableHeight
 				},

@@ -202,7 +202,7 @@ const savedFilterProjects = computed(() => projectList.savedFilterProjects)
 	padding: 1rem 0;
 	transition: transform $transition-duration ease-in;
 	position: fixed;
-	inset-block-start: $navbar-height;
+	inset-block-start: calc(#{$navbar-height} + var(--app-top-inset, 0px));
 	inset-block-end: 0;
 	inset-inline-start: 0;
 	transform: translateX(-100%);
@@ -214,7 +214,7 @@ const savedFilterProjects = computed(() => projectList.savedFilterProjects)
 	}
 
 	@media screen and (max-width: $tablet) {
-		inset-block-start: 0;
+		inset-block-start: var(--app-top-inset, 0);
 		inline-size: 70vw;
 		z-index: 20;
 	}

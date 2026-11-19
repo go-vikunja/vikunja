@@ -327,7 +327,7 @@ $modal-width: 1024px;
 	block-size: 100%;
 	max-block-size: 100dvh;
 	overflow: auto;
-	padding-block-start: env(safe-area-inset-top);
+	padding-block-start: calc(env(safe-area-inset-top) + var(--app-top-inset, 0px));
 	padding-block-end: env(safe-area-inset-bottom);
 
 }
@@ -338,14 +338,14 @@ $modal-width: 1024px;
 	text-align: center;
 	position: absolute;
 	// fine to use top/left since we're only using this to position it centered
-	inset-block-start: 50%;
+	inset-block-start: calc(50% + var(--app-top-inset, 0px) / 2);
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
 	// Cap centered content to the viewport and scroll inside it. Without this a
 	// taller-than-viewport modal centres its top edge above the viewport, where
 	// the container's overflow can't scroll to it (the .top variant overrides
 	// both values below).
-	max-block-size: calc(100dvh - 2rem);
+	max-block-size: calc(100dvh - 2rem - var(--app-top-inset, 0px));
 	overflow: auto;
 
 	[dir="rtl"] & {
@@ -373,9 +373,9 @@ $modal-width: 1024px;
 
 // anchored below the top edge instead of centered, used for QuickActions
 .top .modal-content {
-	inset-block-start: 3rem;
+	inset-block-start: calc(3rem + var(--app-top-inset, 0px));
 	transform: translate(-50%, 0);
-	max-block-size: calc(100dvh - 6rem);
+	max-block-size: calc(100dvh - 6rem - var(--app-top-inset, 0px));
 	overflow: auto;
 
 	[dir="rtl"] & {
@@ -537,27 +537,27 @@ $modal-width: 1024px;
 .close {
 	$close-button-padding: 26px;
 	position: fixed;
-	inset-block-start: .5rem;
+	inset-block-start: calc(.5rem + var(--app-top-inset, 0px));
 	inset-inline-end: $close-button-padding;
 	color: var(--white);
 	font-size: 2rem;
 
 	@media screen and (min-width: $desktop) and (width <= calc(#{$desktop	} + #{$close-button-min-space})) {
-		inset-block-start: calc(5px + $modal-margin);
+		inset-block-start: calc(5px + $modal-margin + var(--app-top-inset, 0px));
 		inset-inline-end: 50%;
 		// we align the close button to the modal until there is enough space outside for it
 		transform: translateX(calc((#{$modal-width} / 2) - #{$close-button-padding}));
 
 		// fullscreen has no card to hug — keep the corner position instead
 		.fullscreen & {
-			inset-block-start: .5rem;
+			inset-block-start: calc(.5rem + var(--app-top-inset, 0px));
 			inset-inline-end: $close-button-padding;
 			transform: none;
 		}
 	}
 
 	@media screen and (min-width: $tablet) and (max-width: #{$desktop + $close-button-min-space}) {
-		inset-block-start: .75rem;
+		inset-block-start: calc(.75rem + var(--app-top-inset, 0px));
 	}
 }
 
@@ -569,7 +569,7 @@ $modal-width: 1024px;
 	.modal-container {
 		block-size: auto;
 		min-block-size: 100dvh;
-		padding-block-start: env(safe-area-inset-top);
+		padding-block-start: calc(env(safe-area-inset-top) + var(--app-top-inset, 0px));
 		padding-block-end: env(safe-area-inset-bottom);
 	}
 
@@ -595,7 +595,7 @@ $modal-width: 1024px;
 	:deep(.card) {
 		border: none !important;
 		border-radius: 0 !important;
-		min-block-size: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+		min-block-size: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--app-top-inset, 0px));
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
@@ -634,7 +634,7 @@ $modal-width: 1024px;
 	flex-direction: column;
 	justify-content: center;
 	padding: 0 1rem;
-	min-block-size: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+	min-block-size: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--app-top-inset, 0px));
 }
 
 .modal-content :deep(.card .card-header-icon.close) {

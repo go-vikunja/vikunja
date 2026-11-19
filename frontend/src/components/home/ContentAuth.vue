@@ -161,7 +161,7 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .menu-hide-button {
 	position: fixed;
-	inset-block-start: 0.5rem;
+	inset-block-start: calc(0.5rem + var(--app-top-inset, 0px));
 	inset-inline-end: 0.5rem;
 	z-index: 31;
 	inline-size: 3rem;
@@ -185,10 +185,10 @@ onBeforeUnmount(() => {
 }
 
 .app-container {
-	min-block-size: calc(100vh - 65px);
+	min-block-size: calc(100vh - 65px - var(--app-top-inset, 0px));
 
 	@media screen and (max-width: $tablet) {
-		padding-block-start: $navbar-height;
+		padding-block-start: calc(#{$navbar-height} + var(--app-top-inset, 0px));
 	}
 }
 
@@ -205,11 +205,11 @@ onBeforeUnmount(() => {
 	@media screen and (max-width: $tablet) {
 		margin-inline-start: 0;
 		margin-inline-end: 0;
-		min-block-size: calc(100vh - 4rem);
+		min-block-size: calc(100vh - 4rem - var(--app-top-inset, 0px));
 	}
 
 	@media screen and (min-width: $tablet) {
-		padding: $navbar-height + 1.5rem 1.5rem 0 1.5rem;
+		padding: calc(#{$navbar-height + 1.5rem} + var(--app-top-inset, 0px)) 1.5rem 0 1.5rem;
 	}
 
 	&.is-menu-enabled {
@@ -220,7 +220,7 @@ onBeforeUnmount(() => {
 
 	// Used to make sure the spinner is always in the middle while loading
 	> .loader-container {
-		min-block-size: calc(100vh - #{$navbar-height + 1.5rem + 1rem});
+		min-block-size: calc(100vh - #{$navbar-height + 1.5rem + 1rem} - var(--app-top-inset, 0px));
 	}
 
 	// FIXME: This should be somehow defined inside Card.vue

@@ -230,7 +230,7 @@ function clearAll() { clearMutation.mutate() }
 		font-size: .85rem;
 
 		@media screen and (max-width: $tablet) {
-			max-block-size: calc(100vh - 1rem - #{$navbar-height});
+			max-block-size: calc(100vh - 1rem - #{$navbar-height} - var(--app-top-inset, 0px));
 		}
 
 		.head {
