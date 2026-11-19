@@ -156,6 +156,7 @@
 				"playSoundWhenDone": "Spil es Tönli ab, wenn en Task als fertig markiert wird",
 				"allowIconChanges": "Zu bestimmten Zeiten spezielle Logos anzeigen",
 				"alwaysShowBucketTaskCount": "Immer die Anzahl der Aufgaben pro Kanban-Spalte anzeigen",
+				"showKanbanCardUpdated": "Zeige auf der Kanban-Karte, wann eine Aufgabe zuletzt geändert wurde",
 				"defaultTaskRelationType": "Standard-Aufgabenbeziehungstyp",
 				"weekStart": "D'Wuche fangt ah am",
 				"weekStartSunday": "Sunntig",
@@ -1549,6 +1550,10 @@
 			"shrinkTaskRight": "Das Enddatum verringern"
 		}
 	},
+	"update": {
+		"available": "Eine neue Version von Vikunja ist verfügbar.",
+		"do": "Neu laden"
+	},
 	"menu": {
 		"edit": "Bearbeitä",
 		"archive": "Archiviere",
@@ -1594,6 +1599,7 @@
 		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
 		"commands": "Befehl",
 		"placeholder": "Schriib en Befehl oder suech…",
+		"hint": "Du kannst {project} verwenden, um die Suche auf ein Projekt zu beschränken. Kombiniere {project} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf diesem Projekt zu suchen. Verwende {assignee}, um nur nach Teams zu suchen. Wenn du nach einer Zahl suchst, findest du Aufgaben, die diese Nummer haben, etweder als die Nummer an der Aufgabe oder die Nummer in der URL.",
 		"tasks": "Uufgabe",
 		"projects": "Projekte",
 		"teams": "Teams",

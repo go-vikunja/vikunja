@@ -155,7 +155,8 @@
 				"discoverableByEmail": "Engedély a többi felhasználónak, hogy teljes e-mail cím alapján felvegyen tagként csapatokhoz vagy projektekhez",
 				"playSoundWhenDone": "Hang lejátszása feladatok készre jelölésekor",
 				"allowIconChanges": "Különleges logók megjelenítése bizonyos időszakoknál",
-				"alwaysShowBucketTaskCount": "Mindig mutasd a feladatszámot a Kanban vödrökön",
+				"alwaysShowBucketTaskCount": "Feladatok számának mutatása Kanban vödrökön (mindig)",
+				"showKanbanCardUpdated": "Feladatok módosítási idejének mutatása Kanban kártyákon",
 				"defaultTaskRelationType": "Alapértelmezett feladatkapcsolat típus",
 				"weekStart": "A hét kezdőnapja",
 				"weekStartSunday": "Vasárnap",
@@ -668,6 +669,7 @@
 			"bucketConfig": "Vödörkonfiguráció",
 			"bucketConfigManual": "Kézi",
 			"filter": "Szűrő",
+			"bucketFilter": "{title} szűrése",
 			"create": "Létrehozás",
 			"createSuccess": "Nézet létrehozva.",
 			"titleRequired": "Kérlek, adj meg egy címet!",
@@ -683,6 +685,22 @@
 		}
 	},
 	"filters": {
+		"modes": {
+			"simple": "Alap",
+			"advanced": "Bővített",
+			"tooAdvanced": "Ez a szűrés túl összetett az alap módnak.",
+			"clear": "Törlés és váltás alapra"
+		},
+		"simple": {
+			"showDone": "Befejezettek is",
+			"minPriority": "Minimális prioritás",
+			"search": "Feladatok keresése",
+			"labelPlaceholder": "Szűrés címkére...",
+			"assigneePlaceholder": "Szűrés megbízottra...",
+			"unknownLabel": "Ismeretlen címke #{id}",
+			"unknownProject": "Ismeretlen projekt #{id}",
+			"until": "{date}-ig"
+		},
 		"title": "Szűrők",
 		"clear": "Törlés",
 		"showResults": "Szűrés",
@@ -1532,6 +1550,10 @@
 			"shrinkTaskRight": "Feladat zsugorítása a végdátumtól"
 		}
 	},
+	"update": {
+		"available": "Új Vikunjaverzió érhető el.",
+		"do": "Frissítés"
+	},
 	"menu": {
 		"edit": "Szerkesztés",
 		"archive": "Archiválás",
@@ -1577,6 +1599,7 @@
 		"notLoggedIn": "Először jelentkezz be a Vikunja főablakba.",
 		"commands": "Parancsok",
 		"placeholder": "Írjon be egy parancsot vagy keressen…",
+		"hint": "{project} egy projekten belülre szűkíti a keresést, {label} pedig címkére. Kombináld őket a kereséseddel, hogy adott projektben lévő, vagy címkével jelölt feladatokat kapj. {assignee} segítségével csapatokra szűrhetsz. Szám beírásával a feladatnézetben kiírt sorszámra vagy az URL-ben látható feladatazonosítóra keresel.",
 		"tasks": "Feladatok",
 		"projects": "Projektek",
 		"teams": "Csapatok",
@@ -1832,6 +1855,10 @@
 			"setPasswordSuccess": "{username} jelszava frissítésre került.",
 			"sendResetEmail": "Jelszó-visszaállítási e-mail küldése",
 			"sendResetEmailSuccess": "A jelszó-visszaállító e-mail elküldve a következő címzettnek: {username}.",
+			"editSettings": "Beállítások",
+			"settingsTitle": "{username} beállításai",
+			"settingsEditingOther": "Ezek {username} beállításai, nem a sajátjaid. A módosítások az ő fiójkát érintik.",
+			"backToUsers": "Vissza a felhasználókhoz",
 			"createdSuccess": "{username} felhasználó létrehozva.",
 			"updatedSuccess": "{username} felhasználó frissítve.",
 			"deletedSuccess": "A(z) {username} felhasználó törölve lett.",
