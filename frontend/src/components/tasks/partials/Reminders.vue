@@ -16,6 +16,7 @@
 				:disabled="disabled"
 				:default-relative-to="defaultRelativeTo"
 				:allow-absolute="allowAbsolute"
+				:compact="compact"
 				@update:modelValue="updateData"
 			/>
 			<BaseButton
@@ -33,6 +34,7 @@
 			:clear-after-update="true"
 			:default-relative-to="defaultRelativeTo"
 			:allow-absolute="allowAbsolute"
+			:compact="compact"
 			@update:modelValue="addNewReminder"
 		/>
 	</div>
@@ -56,11 +58,13 @@ const props = withDefaults(defineProps<{
 	defaultRelativeTo?: IReminderPeriodRelativeTo | null,
 	disabled?: boolean,
 	allowAbsolute?: boolean,
+	compact?: boolean,
 }>(), {
 	modelValue: () => [],
 	defaultRelativeTo: null,
 	disabled: false,
 	allowAbsolute: true,
+	compact: false,
 })
 
 const emit = defineEmits<{

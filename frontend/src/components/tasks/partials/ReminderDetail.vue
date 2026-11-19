@@ -3,6 +3,7 @@
 		<Popup
 			placement="bottom-start"
 			:anchor="triggerEl"
+			:prefer-larger-side="compact"
 			sheet-on-mobile
 			:sheet-title="$t('task.attributes.reminders')"
 			@update:open="showFormSwitch = null"
@@ -38,6 +39,7 @@
 							v-if="isOpen"
 							v-model="reminderDate"
 							:confirm-disabled="reminderDate === null"
+							:compact="compact"
 							@confirm="confirmAndClose(close)"
 						/>
 					</template>
@@ -125,12 +127,14 @@ const props = withDefaults(defineProps<{
 	defaultRelativeTo?: IReminderPeriodRelativeTo | null,
 	allowAbsolute?: boolean,
 	disabled?: boolean,
+	compact?: boolean,
 }>(), {
 	modelValue: () => createReminderDraft(),
 	clearAfterUpdate: false,
 	defaultRelativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 	allowAbsolute: true,
 	disabled: false,
+	compact: false,
 })
 
 const emit = defineEmits<{
