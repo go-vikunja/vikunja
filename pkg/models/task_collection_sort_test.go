@@ -52,7 +52,7 @@ func TestSortParamValidation(t *testing.T) {
 			taskPropertyDueDate,
 			taskPropertyCreatedByID,
 			taskPropertyProjectID,
-			taskPropertyRepeatAfter,
+			taskPropertyRepeats,
 			taskPropertyPriority,
 			taskPropertyStartDate,
 			taskPropertyEndDate,
