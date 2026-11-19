@@ -134,7 +134,8 @@
 						<Icon icon="align-left" />
 					</span>
 					<span
-						v-if="isRepeating"
+						v-if="taskIsRepeating"
+						v-tooltip="repeatTooltip"
 						class="project-task-icon"
 					>
 						<Icon icon="history" />
@@ -246,8 +247,10 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useGlobalNow} from '@/composables/useGlobalNow'
+import {dueDateOf, isRepeating, recurrenceZone} from '@/helpers/rrule'
+import {describeRepeatRule} from '@/helpers/rruleDescribe'
+import {useAuthStore} from '@/stores/auth'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 
 const props = withDefaults(defineProps<{
@@ -277,9 +280,19 @@ function getTaskById(taskId: number | undefined): ITask | undefined {
 	return props.allTasks.find(t => t.id === taskId)
 }
 
-const {t} = useI18n({useScope: 'global'})
+const {t, locale} = useI18n({useScope: 'global'})
+const authStore = useAuthStore()
 
 const task = computed(() => props.theTask)
+
+const taskIsRepeating = computed(() => isRepeating(task.value.repeat))
+const repeatTooltip = computed(() => describeRepeatRule(task.value.repeat, {
+	t: (key, params, plural) => plural === undefined ? t(key, params ?? {}) : t(key, params ?? {}, plural),
+	locale: locale.value,
+	weekStart: authStore.settings.week_start ?? 0,
+	zone: recurrenceZone(authStore.settings),
+	dueDate: dueDateOf(task.value),
+}))
 
 const parentTree = inject(subtaskTreeKey, null)
 const subtaskTree = {
@@ -299,10 +312,6 @@ function claimSubtaskExpansion(taskId: number | undefined): boolean {
 }
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss -- claim is intentionally fixed per instance
 const expandsSubtasks = claimSubtaskExpansion(props.theTask.id)
-
-const isRepeating = computed(() => (task.value.repeat_after ?? 0) > 0
-	|| ((task.value.repeat_after ?? 0) === 0
-		&& task.value.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
 
 const projectList = useProjects()
 const updateTask = useUpdateTaskMutation(true)
@@ -349,19 +358,45 @@ const isOverdue = computed(() => (
 	new Date(task.value.due_date ?? 0).getTime() <= now.value.getTime()
 ))
 
-let oldTask: ITask
+// What an Undo reverts: the task as it was before the check, and as that completion left it. Each
+// toast keeps its own, so undoing an earlier check still restores that check's state.
+type UndoContext = {snapshot: ITask, completed: ITask}
 
-async function markAsDone(checked: boolean, wasReverted: boolean = false) {
-	if (!wasReverted) oldTask = {...task.value}
+// Completing a rule that ends after a number of times lowers its remaining count.
+function countWasLowered(before: ITask, after: ITask) {
+	const was = before.repeat?.count ?? 0
+	const now = after.repeat?.count ?? 0
+	return was > 0 && now > 0 && now < was
+}
+
+// The server keeps the stored count when a save raises it on an otherwise unchanged rule, since a
+// stale tab could send one, so Undo clears the rule and then sets the one the task had before.
+async function restoreLoweredCount(snapshot: ITask, done: boolean) {
+	await updateTask.mutateAsync({...snapshot, id: snapshot.id!, done, repeat: null})
+	return updateTask.mutateAsync({...snapshot, id: snapshot.id!, done})
+}
+
+async function markAsDone(checked: boolean, undo?: UndoContext) {
+	const snapshot = undo?.snapshot ?? {...task.value}
 
 	// Fire the request immediately and with the intended done value snapshotted, so a re-render or
 	// teardown during the animation delay can neither drop the save nor make it send a stale state.
-	const source = wasReverted && isRepeating.value ? oldTask : task.value
-	const updatePromise = updateTask.mutateAsync({
-		...source,
-		id: source.id!,
-		done: checked,
-	}).catch(() => undefined)
+	// Undo restores the task as it was before the check whenever it had a repeat, including one the
+	// completion ended. A read-only repeat has parts the structured repeat cannot carry, so it is never
+	// written back: Undo then leaves the stored rule as the completion left it.
+	const editable = isRepeating(snapshot.repeat) && !snapshot.repeat?.read_only
+	const restore = undo !== undefined && (taskIsRepeating.value || editable)
+	// The write leaves a read-only repeat out altogether, so the stored rule is never touched.
+	const restored = snapshot.repeat?.read_only ? {...snapshot, repeat: undefined} : snapshot
+	const source = restore ? restored : task.value
+	const save = restore && editable && countWasLowered(undo.snapshot, undo.completed)
+		? restoreLoweredCount(source, checked)
+		: updateTask.mutateAsync({
+			...source,
+			id: source.id!,
+			done: checked,
+		})
+	const updatePromise = save.catch(() => undefined)
 
 	const finish = async () => {
 		const newTask = await updatePromise
@@ -369,7 +404,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 
 		updateDueDate()
 
-		if (wasReverted) {
+		if (undo) {
 			return
 		}
 
@@ -379,13 +414,13 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 		emit('taskUpdated', newTask)
 
 		let message = t('task.doneSuccess')
-		if (!task.value.done && !isRepeating.value) {
+		if (!task.value.done && !taskIsRepeating.value) {
 			message = t('task.undoneSuccess')
 		}
 
 		success({message}, [{
 			title: t('task.undo'),
-			callback: () => undoDone(checked),
+			callback: () => undoDone(checked, {snapshot, completed: newTask}),
 		}])
 	}
 
@@ -396,8 +431,8 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 	}
 }
 
-function undoDone(checked: boolean) {
-	markAsDone(!checked, true)
+function undoDone(checked: boolean, undo: UndoContext) {
+	markAsDone(!checked, undo)
 }
 
 async function toggleFavorite() {

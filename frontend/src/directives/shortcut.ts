@@ -8,6 +8,15 @@ const directive = <Directive<HTMLElement,string>>{
 		}
 		install(el, value)
 	},
+	updated(el, {value, oldValue}) {
+		if(value === oldValue) {
+			return
+		}
+		uninstall(el)
+		if(value !== '') {
+			install(el, value)
+		}
+	},
 	beforeUnmount(el) {
 		uninstall(el)
 	},

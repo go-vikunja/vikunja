@@ -89,7 +89,7 @@ const API_ONLY_FILTER_FIELDS = [
 	'description',
 	'project_id',
 	'created_by_id',
-	'repeat_after',
+	'repeats',
 	'hex_color',
 	'uid',
 	'position',

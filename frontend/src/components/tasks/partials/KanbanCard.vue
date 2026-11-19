@@ -102,7 +102,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="task.repeat_after > 0"
+					v-if="isRepeating(task.repeat)"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -167,7 +167,7 @@ import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {useProjects} from '@/composables/useProjects'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isRepeating} from '@/helpers/rrule'
 import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps<{
@@ -226,7 +226,7 @@ const updatedTooltip = computed(() => {
 })
 
 async function toggleTaskDone(task: TaskResponse) {
-	const isRecurringTask = task.repeat_after > 0 || task.repeat_mode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+	const isRecurringTask = isRepeating(task.repeat)
 	const wasBeingMarkedDone = !task.done
 	
 	loadingInternal.value = true
