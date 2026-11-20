@@ -5,8 +5,6 @@ import {
 	createReminderDraft,
 	getTaskIdentifier,
 	getHexColor,
-	parseRepeatAfter,
-	repeatAfterToSeconds,
 	mergeTask,
 	mapTasksDeep,
 	removeTask,
@@ -17,8 +15,6 @@ import {
 } from './task'
 import {parseTaskText, PREFIXES, PrefixMode, type ParsedTaskText} from '@/modules/quickAddMagic'
 import type {Bucket, Task} from '@/client/generated'
-import type {IRepeatAfter} from '@/types/IRepeatAfter'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useAuthStore} from '@/stores/auth'
 import {queryClient} from '@/client/queryClient'
 import {accountKeys} from '@/client/queries/account'
@@ -31,9 +27,17 @@ describe('task domain helpers', () => {
 		expect(createTaskDraft({title: ' New task ', due_date: '2026-09-17T12:00:00Z'})).toMatchObject({
 			title: 'New task',
 			due_date: '2026-09-17T12:00:00Z',
-			repeat_after: 0,
+			repeats_from_current_date: false,
 		})
+		expect(createTaskDraft()).not.toHaveProperty('repeat')
 		expect(createTaskDraft({labels: undefined}).labels).toEqual([])
+	})
+	it('keeps a draft\'s repeat rule and repeat mode', () => {
+		const repeat = {freq: 'weekly', interval: 2}
+		expect(createTaskDraft({repeat, repeats_from_current_date: true})).toMatchObject({
+			repeat,
+			repeats_from_current_date: true,
+		})
 	})
 	it('fills wire defaults for reminders', () => {
 		expect(createReminderDraft()).toEqual({relative_period: 0, relative_to: '', reminder: ''})
@@ -56,14 +60,6 @@ describe('task domain helpers', () => {
 		expect(getHexColor('aabbcc')).toBe('#aabbcc')
 		expect(getHexColor('#aabbcc')).toBe('#aabbcc')
 		expect(getHexColor('#')).toBeUndefined()
-	})
-	it('converts repeat periods at the form boundary', () => {
-		expect(parseRepeatAfter(604800)).toEqual({type: 'weeks', amount: 1})
-		expect(repeatAfterToSeconds({type: 'days', amount: 3})).toBe(259200)
-		expect(repeatAfterToSeconds({type: 'minutes', amount: 30})).toBe(1800)
-		expect(repeatAfterToSeconds(3600)).toBe(3600)
-		expect(repeatAfterToSeconds(undefined)).toBe(0)
-		expect(repeatAfterToSeconds({type: 'days'} as IRepeatAfter)).toBe(0)
 	})
 	it('replaces nested tasks without losing view positions or expansions', () => {
 		const tasks: Task[] = [{
@@ -161,22 +157,33 @@ describe('task domain helpers', () => {
 			title: '*label',
 			project_id: 1,
 			priority: 0,
-			repeat_after: 0,
-			repeat_mode: 0,
+			repeats_from_current_date: false,
 			labels: [],
 		})
 	})
-	it('marks monthly repeats with the month repeat mode instead of an interval', () => {
-		const parsed = parseTaskText('Task every month', PrefixMode.Default)
+	it.each([
+		{text: 'Task every month', repeat: {freq: 'monthly', interval: 1}},
+		{text: 'Task every 2 weeks', repeat: {freq: 'weekly', interval: 2}},
+		{text: 'Task daily', repeat: {freq: 'daily', interval: 1}},
+		{text: 'Task biannually', repeat: {freq: 'monthly', interval: 6}},
+	])('maps quick add "$text" to a structured repeat', ({text, repeat}) => {
 		const task = buildQuickAddTask(
-			parsed,
-			{title: 'Task every month', project_id: 1},
+			parseTaskText(text, PrefixMode.Default),
+			{title: text, project_id: 1},
 			PREFIXES[PrefixMode.Default],
 			[],
 		)
 		expect(task.title).toBe('Task')
-		expect(task.repeat_mode).toBe(TASK_REPEAT_MODES.REPEAT_MODE_MONTH)
-		expect(task.repeat_after).toBe(0)
+		expect(task.repeat).toEqual(repeat)
+	})
+	it('adds no repeat when quick add parses none', () => {
+		const task = buildQuickAddTask(
+			parseTaskText('Task tomorrow', PrefixMode.Default),
+			{title: 'Task tomorrow', project_id: 1},
+			PREFIXES[PrefixMode.Default],
+			[],
+		)
+		expect(task.repeat).toBeUndefined()
 	})
 	describe('repeating quick add without a date', () => {
 		afterEach(() => {
@@ -218,6 +225,12 @@ describe('task domain helpers', () => {
 			)
 			expect(task.due_date).toBe(new Date(2026, 8, 23, 11, 42).toISOString())
 		})
+	})
+	it('takes the repeat rule from a write response, which omits a cleared one', () => {
+		const cached: Task = {id: 1, title: 'old', repeat: {freq: 'daily', interval: 1}}
+		expect(mergeTask(cached, {id: 1, title: 'new'}).repeat).toBeUndefined()
+		expect(mergeTask(cached, {id: 1, repeat: {freq: 'weekly', interval: 1}}).repeat)
+			.toEqual({freq: 'weekly', interval: 1})
 	})
 	it('retains embedded resources omitted from a task write response', () => {
 		const task = {id: 1, labels: [{id: 2}], related_tasks: {subtask: [{id: 3}]}, assignees: [{id: 4}]}

@@ -114,14 +114,15 @@ func TestHumaTaskBulkCreate(t *testing.T) {
 	})
 
 	t.Run("Invalid nested field fails at the boundary", func(t *testing.T) {
-		// hex_color is caught by Huma's schema, repeat_after by its `valid:` tag.
+		// Length and type are caught by Huma's schema; the hex_color pattern only by its nested `valid:` tag.
 		for _, tc := range []struct {
 			name     string
 			payload  string
 			location string
 		}{
 			{"hex_color", `{"tasks":[{"title":"ok"},{"title":"bad color","hex_color":"ff00ff11"}]}`, "body.tasks[1].hex_color"},
-			{"repeat_after", `{"tasks":[{"title":"ok"},{"title":"bad repeat","repeat_after":-1}]}`, "body.tasks[1].repeat_after"},
+			{"repeat", `{"tasks":[{"title":"ok"},{"title":"bad repeat","repeat":{"freq":"daily","interval":"often"}}]}`, "body.tasks[1].repeat.interval"},
+			{"hex_color pattern", `{"tasks":[{"title":"ok"},{"title":"bad color","hex_color":"zzzzzz"}]}`, "body.tasks[1].hex_color"},
 		} {
 			t.Run(tc.name, func(t *testing.T) {
 				h := &webHandlerTestV2{user: &testuser1, basePath: "/api/v2/projects/1/tasks/bulk", t: t, e: base.e}
@@ -141,8 +142,8 @@ func TestHumaTaskBulkCreate(t *testing.T) {
 	})
 
 	t.Run("Invalid task names its index", func(t *testing.T) {
-		// The ten-year cap is a model-level rule, so it fails with the payload index instead of as a field error.
-		_, err := bulkPost("1", &testuser1, `{"tasks":[{"title":"ok"},{"title":"bad repeat","repeat_after":999999999999}]}`)
+		// The RRULE policy is a model-level rule, so it fails with the payload index instead of as a field error.
+		_, err := bulkPost("1", &testuser1, `{"tasks":[{"title":"ok"},{"title":"bad repeat","repeat":{"freq":"hourly","interval":1,"by_hour":[9]}}]}`)
 		require.Error(t, err)
 		assert.Equal(t, http.StatusBadRequest, getHTTPErrorCode(err))
 		assertHandlerErrorCode(t, err, models.ErrCodeInvalidTaskInBulkCreation)

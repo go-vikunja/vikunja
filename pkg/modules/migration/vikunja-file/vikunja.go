@@ -29,6 +29,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -386,6 +387,32 @@ func (v *FileMigrator) ValidateFile(file io.ReaderAt, size int64) error {
 	return err
 }
 
+// importingUserZone returns the stored zone of the user an import runs as, else the server zone.
+// The user is re-fetched by id: the import runs from an event, and the event's user carries no
+// zone (user.User.Timezone is not serialised). A disabled or locked user's row still counts, as
+// in the task-zone resolver; an empty, "Local" or invalid name falls back. Zone data never fails
+// an import.
+func importingUserZone(u *user.User) *time.Location {
+	s := db.NewSession()
+	defer s.Close()
+
+	stored, err := user.GetUserByID(s, u.ID)
+	if err != nil && !user.IsErrUserStatusError(err) {
+		log.Debugf(logPrefix+"Reading legacy repeats in the server zone: could not load user %d: %v", u.ID, err)
+		return config.GetTimeZone()
+	}
+	if stored.Timezone == "" || stored.Timezone == "Local" {
+		log.Debugf(logPrefix+"Reading legacy repeats in the server zone: user %d has no zone", u.ID)
+		return config.GetTimeZone()
+	}
+	loc, err := time.LoadLocation(stored.Timezone)
+	if err != nil {
+		log.Debugf(logPrefix+"Reading legacy repeats in the server zone: user %d has an invalid zone: %v", u.ID, err)
+		return config.GetTimeZone()
+	}
+	return loc
+}
+
 // Migrate takes a vikunja file export, parses it and imports everything in it into Vikunja.
 // @Summary Import all projects, tasks etc. from a Vikunja data export
 // @Description Imports all projects, tasks, notes, reminders, subtasks and files from a Vikunjda data export into Vikunja.
@@ -482,6 +509,9 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	projects := []*models.ProjectWithTasksAndBuckets{}
 	if err := json.Unmarshal(bufData.Bytes(), &projects); err != nil {
 		return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read data: %w", err)}
+	}
+	if err := applyImportedRecurrence(projects, bufData.Bytes(), importingUserZone(user)); err != nil {
+		return &migration.ErrInvalidImportFile{Err: fmt.Errorf("could not read the legacy repeat data: %w", err)}
 	}
 
 	var filters []*models.SavedFilter

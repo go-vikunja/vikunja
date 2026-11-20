@@ -514,14 +514,15 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 	task28 := &Task{
 		ID:           28,
-		Title:        "task #28 with repeat after, start_date, end_date and due_date",
+		Title:        "task #28 with repeats, start_date, end_date and due_date",
 		Identifier:   "TEST1-13",
 		Index:        13,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		RepeatAfter:  3600,
+		Repeats:      "FREQ=HOURLY;INTERVAL=1",
+		Repeat:       &TaskRepeat{Freq: "hourly", Interval: 1},
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		DueDate:      time.Unix(1543789524, 0).In(loc),
@@ -2851,4 +2852,50 @@ func TestTaskCollection_ReadAll_IncludeSubprojectsPositions(t *testing.T) {
 			IncludeSubprojects: true,
 		}), "default position sort")
 	})
+}
+
+// The RRULE predicate must apply both to ancestor-view healing and numeric search.
+func TestTaskCollection_IncludeSubprojectsRepeatFilterAndNumericSearch(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	const rule = "FREQ=DAILY;INTERVAL=1"
+	_, err := s.Table("tasks").Where("id = ?", 24).Update(map[string]interface{}{
+		"repeats": rule,
+		"title":   "recurring descendant", // Numeric queries must match the id/index, not the title.
+	})
+	require.NoError(t, err)
+
+	read := func(search string) []*Task {
+		c := &TaskCollection{
+			ProjectID:          32,
+			ProjectViewID:      125,
+			IncludeSubprojects: true,
+			Filter:             "repeats = '" + rule + "'",
+		}
+		res, _, _, readErr := c.ReadAll(s, &user.User{ID: 6}, search, 0, 50)
+		require.NoError(t, readErr)
+		tasks, ok := res.([]*Task)
+		require.True(t, ok)
+		return tasks
+	}
+
+	// Task 24 belongs to child project 15 and starts without a row in view 125.
+	for _, search := range []string{"", "24", "1", "#1"} {
+		tasks := read(search)
+		require.Len(t, tasks, 1)
+		assert.Equal(t, int64(24), tasks[0].ID)
+		assert.Equal(t, rule, tasks[0].Repeats)
+		require.NotNil(t, tasks[0].Repeat)
+		assert.Equal(t, "daily", tasks[0].Repeat.Freq)
+	}
+	assert.Empty(t, read("21"), "numeric search must not bypass the RRULE filter")
+	assert.Empty(t, read("#24"), "hash-prefixed search must match the index, not the id")
+
+	var positions []TaskPosition
+	require.NoError(t, s.Where("project_view_id = ?", 125).Find(&positions))
+	require.Len(t, positions, 1, "only the matching descendant should be healed")
+	assert.Equal(t, int64(24), positions[0].TaskID)
+	assert.Greater(t, positions[0].Position, float64(0))
 }
