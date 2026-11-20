@@ -8,6 +8,7 @@ import {normalizeSharePermission} from './projectShares'
 import {i18n} from '@/i18n'
 
 export const linkShareKeys = {
+	all: ['link-shares'] as const,
 	list: (projectId: number) => ['link-shares', projectId] as const,
 }
 
