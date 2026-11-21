@@ -223,6 +223,9 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 			builder.Or(botSearchConds...),
 		)
 	}
+	if opts.AdditionalCond != nil {
+		ownBotCond = builder.And(ownBotCond, opts.AdditionalCond)
+	}
 
 	err = s.
 		Where(builder.Or(
