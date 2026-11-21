@@ -40,7 +40,7 @@ Humans skim tasks. Every description and comment must be short:
 - While working: check off checklist items with `--description-replace-old`
   / `--description-replace-new` (exact, unique match).
 - Files worth keeping (screenshots, logs): `--attach PATH` on `create` or
-  `update`, repeatable.
+  `update`, repeatable. To show screenshots in a comment, see "Images".
 - Sub-work that could be assigned separately: a subtask via `--parent`.
 - Done: `veans update {{ .TaskIDExample }} -s in-review --comment '<ul><li>…</li></ul>'`.
   **Never close tasks yourself** — humans or the merge hook do.
@@ -71,6 +71,20 @@ link text; the UI renders it as a pill:
 `<a href="{{ .TaskURLExample }}">{{ .TaskURLExample }}</a>`. Never build the URL
 from the identifier.
 
+## Images
+
+Attach first, then embed each image with its attachment `url` (match by
+`file.name`) — two calls, since the url only exists after the upload:
+
+```
+veans update {{ .TaskIDExample }} --attach ./settings.png --attach ./export.png --fields attachments
+veans update {{ .TaskIDExample }} --comment '<p>Settings: switches theme.</p><img src="<url of settings.png>" alt="Settings page">
+<p>Export: downloads CSV or JSON.</p><img src="<url of export.png>" alt="Export dialog">'
+```
+
+Use `url` exactly as printed; any other link or a local path renders broken.
+Always set `alt`; give screenshots distinct file names.
+
 # Output
 
 All commands print JSON on stdout. Errors go to stderr as
@@ -83,7 +97,7 @@ has `task`, `completed` and `failed`: retry only the failed steps with
 `--fields identifier,url` limits output to those keys. Key fields: `id`
 (internal; use with `--id` or `api` — a bare number means the project index),
 `index`, `url`, `done`, `title`, `description`, `buckets[]`, `assignees[]`,
-`labels[]`, `attachments[]` (`file.name`, `file.mime`, `file.size`).
+`labels[]`, `attachments[]` (`url`, `file.name`, `file.mime`, `file.size`).
 `related_tasks` omit `description`.
 
 # Statuses
