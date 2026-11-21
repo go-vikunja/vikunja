@@ -4,10 +4,37 @@
 		"text": "Żądana strona nie istnieje."
 	},
 	"home": {
-		"welcomeNight": "Dobry wieczór {username}!",
+		"welcomeNight": "Dobry wieczór, {username}!",
+		"welcomeNightOwl": "Cześć, nocny marku {username}",
+		"welcomeNightBurning": "Pracujesz po nocach, {username}?",
+		"welcomeNightQuiet": "Godziny ciszy, {username}",
+		"welcomeNightLate": "Już późno, {username}",
+		"welcomeNightMoonlit": "Planujesz przy świetle księżyca, {username}?",
 		"welcomeMorning": "Dzień dobry {username}!",
+		"welcomeMorningHey": "Hej {username}, zaczynamy?",
+		"welcomeMorningFresh": "Nowy początek, {username}",
+		"welcomeMorningCoffee": "Kawa i do pracy, {username}?",
+		"welcomeMorningRise": "Wstawaj i planuj, {username}",
+		"welcomeMorningBack": "Witaj ponownie, {username}",
+		"welcomeMondayFresh": "Nowy tydzień, {username}",
+		"welcomeTuesday": "Przyjemnego wtorku, {username}",
+		"welcomeWednesdayMid": "Już połowa tygodnia, {username}",
+		"welcomeThursday": "Już prawie, {username}",
+		"welcomeFridayPush": "Piątkowa spinka, {username}?",
+		"welcomeSaturday": "Tryb weekendowy, {username}",
+		"welcomeSundaySession": "Niedzielna sesja, {username}?",
 		"welcomeDay": "Hej {username}!",
+		"welcomeDayBack": "Znowu do pracy, {username}",
+		"welcomeDayFocus": "Skupmy się, {username}",
+		"welcomeDayKeepGoing": "Tak trzymaj, {username}",
+		"welcomeDayWhatsNext": "Co dalej, {username}?",
+		"welcomeDayGood": "Dobrego popołudnia, {username}",
 		"welcomeEvening": "Dobry wieczór {username}!",
+		"welcomeEveningWind": "Kończysz na dziś, {username}?",
+		"welcomeEveningReturns": "{username} powraca",
+		"welcomeEveningWrap": "Czas kończyć, {username}?",
+		"welcomeEveningOneMore": "Jeszcze jedna rzecz, {username}?",
+		"welcomeEveningStill": "Wciąż przy tym siedzisz, {username}?",
 		"lastViewed": "Ostatnio oglądane",
 		"addToHomeScreen": "Dodaj tę aplikację do ekranu głównego, aby uzyskać szybszy dostęp i lepsze wrażenia.",
 		"goToOverview": "Przejdź do podsumowania",
@@ -25,6 +52,7 @@
 		"loading": "Vikunja się ładuje…",
 		"errorOccured": "Wystąpił błąd:",
 		"checkApiUrl": "Sprawdź, czy adres URL interfejsu API jest poprawny.",
+		"rateLimited": "Serwer otrzymał zbyt wiele żądań. Odczekaj chwilę i odśwież stronę.",
 		"noApiUrlConfigured": "Nie skonfigurowano adresu URL interfejsu API. Ustaw go poniżej:"
 	},
 	"offline": {
@@ -39,9 +67,11 @@
 			"email": "Adres e-mail",
 			"emailPlaceholder": "np. frederic{'@'}vikunja.io",
 			"password": "Hasło",
+			"passwordPlaceholder": "Twoje hasło",
 			"forgotPassword": "Zapomniałeś hasła?",
 			"resetPassword": "Zresetuj swoje hasło",
 			"resetPasswordAction": "Wyślij mi link do resetowania hasła",
+			"resetPasswordSuccess": "Sprawdź skrzynkę! Znajdziesz tam e-mail z instrukcjami resetowania hasła.",
 			"confirmEmailSuccess": "Pomyślnie zatwierdzono e-mail! Możesz się teraz zalogować.",
 			"totpTitle": "Kod uwierzytelniania dwuskładnikowego",
 			"totpPlaceholder": "np. 123456",
@@ -51,6 +81,15 @@
 			"authenticating": "Uwierzytelnianie…",
 			"openIdStateError": "Stan się nie zgadza, odmowa kontynuacji!",
 			"openIdGeneralError": "Wystąpił błąd podczas uwierzytelniania wobec aplikacji zewnętrznej.",
+			"openIdTotpRequired": "Twoje konto wymaga uwierzytelniania dwuskładnikowego. Wprowadź kod TOTP i zaloguj się ponownie.",
+			"openIdTotpSubmit": "Kontynuuj",
+			"oauthMissingParams": "Brak wymaganych parametrów OAuth: {params}",
+			"oauthRedirectedToApp": "Przekierowano Cię do aplikacji. Możesz zamknąć tę kartę.",
+			"desktopTryDemo": "Wypróbuj demo",
+			"desktopCustomServer": "Własny adres URL serwera",
+			"desktopCustomServerDescription": "Aby rozpocząć, wprowadź adres URL swojego serwera Vikunja.",
+			"desktopWaitingForAuth": "Oczekiwanie na uwierzytelnienie…",
+			"desktopOAuthError": "Uwierzytelnianie nie powiodło się: {error}",
 			"logout": "Wyloguj",
 			"emailInvalid": "Proszę podać poprawny adres e-mail.",
 			"usernameRequired": "Proszę podać nazwę użytkownika.",
@@ -58,48 +97,175 @@
 			"usernameMustNotLookLikeUrl": "Nazwa użytkownika nie może wyglądać jak adres URL.",
 			"passwordRequired": "Proszę podać hasło.",
 			"passwordNotMin": "Hasło musi zawierać co najmniej 8 znaków.",
+			"passwordNotMax": "Hasło może mieć maksymalnie 72 znaki.",
 			"showPassword": "Pokaż hasło",
 			"hidePassword": "Ukryj hasło",
 			"noAccountYet": "Nie masz jeszcze konta?",
 			"alreadyHaveAnAccount": "Masz już konto?",
 			"remember": "Pozostań zalogowany",
-			"registrationDisabled": "Rejestracja jest wyłączona."
+			"registrationDisabled": "Rejestracja jest wyłączona.",
+			"passwordResetTokenMissing": "Brak tokenu resetowania hasła.",
+			"registrationFailed": "Wystąpił błąd podczas rejestracji. Sprawdź wprowadzone dane i spróbuj ponownie.",
+			"registrationConfirmEmail": "Konto zostało pomyślnie utworzone! Sprawdź skrzynkę i kliknij link w e-mailu potwierdzającym przed zalogowaniem.",
+			"inviteInvalid": "Ten link zaproszenia jest nieprawidłowy lub wygasł.",
+			"inviteLoadFailed": "Nie udało się wczytać tego zaproszenia. Spróbuj ponownie.",
+			"inviteTeams": "Dołączysz do: {teams}"
 		},
 		"settings": {
+			"bots": {
+				"title": "Konta botów",
+				"description": "Boty to należące do Ciebie konta dostępne wyłącznie przez API. Można dodawać je do projektów, przypisywać im zadania i uwierzytelniać tokenami API. Nie mogą logować się interaktywnie.",
+				"namePlaceholder": "Mój asystent",
+				"create": "Utwórz bota",
+				"createSuccess": "Bot „{username}” został utworzony.",
+				"enable": "Włącz",
+				"tokensInactive": "Tokeny API wyłączonego bota są odrzucane. Włącz bota, aby tworzyć tokeny lub ich używać.",
+				"badge": "Bot",
+				"badgeOwner": "Bot utworzony przez: {user}",
+				"delete": {
+					"header": "Usuń tego bota",
+					"text1": "Czy na pewno chcesz usunąć bota „{username}”?",
+					"text2": "Tej operacji nie można cofnąć. Wszystkie tokeny API należące do tego bota zostaną unieważnione."
+				}
+			},
 			"title": "Ustawienia",
 			"newPasswordTitle": "Zaktualizuj swoje hasło",
+			"newPassword": "Nowe hasło",
+			"currentPassword": "Obecne hasło",
 			"currentPasswordPlaceholder": "Twoje aktualne hasło",
 			"passwordUpdateSuccess": "Hasło zostało pomyślnie zaktualizowane.",
 			"updateEmailTitle": "Zaktualizuj swój adres e-mail",
+			"updateEmailNew": "Nowy adres e-mail",
+			"updateEmailSuccess": "Adres e-mail został pomyślnie zaktualizowany.",
+			"updateEmailPending": "Nowy adres e-mail {email} czeka na potwierdzenie. Dopóki nie klikniesz wysłanego tam linku, obecny adres pozostanie aktywny.",
+			"updateEmailPendingSuccess": "Wysłaliśmy link potwierdzający na nowy adres. Obecny adres pozostanie aktywny do czasu potwierdzenia.",
+			"updateEmailResend": "Wyślij ponownie e-mail potwierdzający",
+			"updateEmailResendSuccess": "Wysłaliśmy nowy link potwierdzający.",
+			"updateEmailCancel": "Anuluj zmianę",
+			"updateEmailCancelSuccess": "Zmiana adresu e-mail została anulowana.",
+			"updateEmailConfirmed": "Nowy adres e-mail został potwierdzony.",
 			"general": {
 				"title": "Ustawienia główne",
+				"name": "Moja nazwa",
+				"newName": "Nowa nazwa",
 				"savedSuccess": "Ustawienia zostały pomyślnie zaktualizowane.",
+				"emailReminders": "Wysyłaj mi przypomnienia o zadaniach e-mailem",
 				"overdueReminders": "Wyślij mi podsumowanie moich zaległych zadań codziennie",
 				"discoverableByName": "Pozwól innym użytkownikom dodać mnie jako członka zespołów lub projektów, gdy szukają mojego imienia",
 				"discoverableByEmail": "Pozwól innym użytkownikom dodać mnie jako członka drużyn lub projektów podczas wyszukiwania mojego pełnego adresu e-mail",
 				"playSoundWhenDone": "Odtwórz dźwięk podczas oznaczania zadań jako ukończonych",
+				"allowIconChanges": "Pokazuj specjalne logo w określonych porach",
+				"alwaysShowBucketTaskCount": "Zawsze pokazuj liczbę zadań w kolumnach Kanban",
+				"showKanbanCardUpdated": "Pokaż kiedy zadanie zostało ostatnio zmienione na kartach Kanban",
+				"defaultTaskRelationType": "Domyślny typ powiązania zadania",
 				"weekStart": "Tydzień zaczyna się od",
 				"weekStartSunday": "niedzieli",
 				"weekStartMonday": "poniedziałku",
+				"weekStartTuesday": "wtorku",
+				"weekStartWednesday": "środy",
+				"weekStartThursday": "czwartku",
+				"weekStartFriday": "piątku",
+				"weekStartSaturday": "soboty",
 				"language": "Język",
+				"defaultProject": "Domyślny projekt",
+				"defaultView": "Domyślny widok",
+				"timezone": "Strefa czasowa",
 				"overdueTasksRemindersTime": "Czas przypomnienia o zaległych zadaniach na e-mail",
-				"filterUsedOnOverview": "Zapisany filtr używany na stronie przeglądania"
+				"quickAddDefaultReminders": "Domyślne przypomnienia dla szybkiego dodawania",
+				"quickAddDefaultRemindersDescription": "Te przypomnienia będą automatycznie dodawane do każdego zadania utworzonego przez szybkie dodawanie, które ma termin realizacji.",
+				"quickAddDefaultRemindersHint": "Dodaj jedno lub więcej przypomnień względem terminu zadania. Pozostaw puste, aby wyłączyć.",
+				"filterUsedOnOverview": "Zapisany filtr używany na stronie przeglądania",
+				"showLastViewed": "Pokazuj ostatnio oglądane projekty na stronie przeglądu",
+				"minimumPriority": "Minimalny widoczny priorytet zadania",
+				"dateDisplay": "Format wyświetlania daty",
+				"dateDisplayOptions": {
+					"relative": "Względny (np. 3 dni temu)",
+					"mm-dd-yyyy": "MM-DD-RRRR",
+					"dd-mm-yyyy": "DD-MM-RRRR",
+					"yyyy-mm-dd": "RRRR-MM-DD",
+					"mm/dd/yyyy": "MM/DD/RRRR",
+					"dd/mm/yyyy": "DD/MM/RRRR",
+					"yyyy/mm/dd": "RRRR/MM/DD"
+				},
+				"timeFormat": "Format czasu",
+				"defaultDueTime": "Domyślna godzina terminu",
+				"defaultDueTimeDescription": "Używana jako domyślna godzina przy ustawianiu terminu zadania bez podawania godziny, w tym przy wyborze daty w kalendarzu oraz w szybkim dodawaniu.",
+				"timeTrackingDefaultStart": "Godzina rozpoczęcia dla inteligentnego wypełniania wpisów czasu",
+				"timeFormatOptions": {
+					"12h": "12-godzinny (AM/PM)",
+					"24h": "24-godzinny (HH:mm)"
+				},
+				"externalUserNameChange": "Twoja nazwa jest zarządzana przez dostawcę logowania ({provider}). Aby ją zmienić, zaktualizuj ją tam."
+			},
+			"sections": {
+				"personalInformation": "Dane osobowe",
+				"taskAndNotifications": "Projekty i zadania",
+				"privacy": "Prywatność",
+				"localization": "Język i region",
+				"appearance": "Wygląd i zachowanie",
+				"desktop": "Aplikacja desktopowa"
+			},
+			"desktop": {
+				"quickEntryShortcut": "Skrót szybkiego wpisu",
+				"shortcutRecorderPlaceholder": "Kliknij, aby ustawić skrót",
+				"shortcutRecorderRecording": "Naciśnij kombinację klawiszy…",
+				"shortcutRecorderClear": "Wyczyść skrót"
 			},
 			"totp": {
 				"title": "Uwierzytelnianie dwuskładnikowe",
 				"enroll": "Włącz",
+				"finishSetupPart1": "Aby zakończyć konfigurację, użyj tego sekretu w aplikacji TOTP (Google Authenticator lub podobnej):",
 				"finishSetupPart2": "Następnie przepisz poniżej kod autoryzacyjny ze swojej aplikacji.",
 				"scanQR": "Możesz również zeskanować ten kod QR:",
 				"passcode": "Kod autoryzacyjny",
+				"passcodePlaceholder": "Kod wygenerowany przez aplikację TOTP",
+				"confirmNotice": "Włączenie uwierzytelniania dwuskładnikowego wyloguje Cię ze wszystkich sesji i konieczne będzie ponowne zalogowanie.",
 				"setupSuccess": "Pomyślnie skonfigurowałeś uwierzytelnianie dwuskładnikowe!",
 				"enterPassword": "Wprowadź hasło",
 				"disable": "Wyłącz uwierzytelnianie dwuskładnikowe",
+				"confirmSuccess": "Uwierzytelnianie dwuskładnikowe zostało pomyślnie włączone!",
 				"disableSuccess": "Uwierzytelnianie dwuskładnikowe zostało pomyślnie wyłączone."
+			},
+			"linkedAccounts": {
+				"title": "Powiązane konta",
+				"description": "Powiąż konto u dostawcy tożsamości, aby logować się nim oprócz hasła.",
+				"provider": "Dostawca",
+				"linkedAt": "Powiązano",
+				"none": "Nie powiązano jeszcze żadnych kont.",
+				"link": "Powiąż {provider}",
+				"unlink": "Odłącz",
+				"unlinkHeader": "Odłącz {provider}",
+				"unlinkText": "Logowanie tym kontem nie będzie już możliwe. Wprowadź hasło, aby potwierdzić.",
+				"linkSuccess": "Konto zostało pomyślnie powiązane.",
+				"unlinkSuccess": "Konto zostało pomyślnie odłączone.",
+				"confirmTitle": "Powiąż {provider} ze swoim kontem",
+				"confirmAccount": "Konto do powiązania:",
+				"confirmText": "Wprowadź hasło, aby powiązać konto {provider} ze swoim kontem Vikunja. Następnie będzie można logować się dowolnym z nich.",
+				"confirm": "Powiąż konto",
+				"noSession": "Aby powiązać konto, musisz być zalogowany. Zaloguj się hasłem i rozpocznij ponownie z poziomu ustawień.",
+				"backToLinkedAccounts": "Wróć do powiązanych kont"
 			},
 			"caldav": {
 				"title": "CalDAV",
+				"howTo": "Możesz połączyć Vikunję z klientami CalDAV, aby przeglądać wszystkie swoje zadania i zarządzać nimi z różnych klientów. Wprowadź ten adres URL w kliencie:",
+				"urlLabel": "Adres URL CalDAV",
 				"more": "Więcej informacji o CalDAV w Vikunji",
-				"tokens": "Tokeny CalDAV"
+				"tokens": "Tokeny CalDAV",
+				"tokensHowTo": "Do uwierzytelniania CalDAV możesz użyć zwykłego hasła do konta lub dedykowanego tokena CalDAV.",
+				"createToken": "Utwórz token CalDAV",
+				"tokenCreated": "Oto nowy token: {token}",
+				"deleteSuccess": "Token CalDAV został pomyślnie usunięty.",
+				"wontSeeItAgain": "Zapisz go lub przechowaj bezpiecznie — nie będzie można go ponownie zobaczyć.",
+				"mustUseToken": "Aby używać CalDAV z dowolnym klientem zewnętrznym, musisz utworzyć token CalDAV. Wprowadź token w polu hasła w kliencie.",
+				"usernameIs": "Twoja nazwa użytkownika CalDAV to: {0}",
+				"apiTokenHint": "Możesz też użyć tokena API z uprawnieniem CalDAV. Utwórz go w {link}."
+			},
+			"feeds": {
+				"title": "Kanał Atom",
+				"howTo": "Możesz subskrybować powiadomienia Vikunja w dowolnym czytniku kanałów zgodnym z Atom. Użyj tego adresu URL:",
+				"usernameIs": "Twoja nazwa użytkownika dla kanału to: {0}",
+				"apiTokenHint": "Uwierzytelnij się tokenem API z uprawnieniem {scope}. Utwórz go w {link}.",
+				"tokenTitle": "Kanał Atom"
 			},
 			"avatar": {
 				"title": "Awatar",
@@ -109,7 +275,9 @@
 				"upload": "Prześlij",
 				"uploadAvatar": "Prześlij awatar",
 				"statusUpdateSuccess": "Status awatara został pomyślnie zaktualizowany!",
-				"setSuccess": "Awatar został pomyślnie ustawiony!"
+				"setSuccess": "Awatar został pomyślnie ustawiony!",
+				"ldap": "Twój awatar jest automatycznie synchronizowany z usługi katalogowej Twojej organizacji (LDAP). Informacje o tym, jak go zmienić, możesz uzyskać od zespołu IT.",
+				"openid": "Twój awatar jest automatycznie synchronizowany od dostawcy logowania ({provider}). Aby go zmienić, zaktualizuj go tam."
 			},
 			"quickAddMagic": {
 				"title": "Tryb Quick Add Magic",
@@ -125,6 +293,13 @@
 					"dark": "Ciemny"
 				}
 			},
+			"backgroundBrightness": {
+				"title": "Jasność tła"
+			},
+			"webhooks": {
+				"title": "Powiadomienia webhook",
+				"description": "Skonfiguruj adresy URL webhooków, aby otrzymywać żądania POST przy przypomnieniach lub przekroczeniu terminu. Te webhooki otrzymują zdarzenia ze wszystkich Twoich projektów."
+			},
 			"apiTokens": {
 				"title": "Tokeny API",
 				"general": "Tokeny API pozwalają korzystać z API Vikunja bez danych uwierzytelniających użytkownika.",
@@ -136,9 +311,18 @@
 				"90d": "90 dni",
 				"permissionExplanation": "Uprawnienia pozwalają określić, co token API ma prawo robić.",
 				"titleRequired": "Tytuł jest wymagany",
+				"expiryInvalid": "Wybierz datę wygaśnięcia w przyszłości.",
+				"permissionRequired": "Wybierz co najmniej jedno uprawnienie z listy.",
 				"expired": "Ten token wygasł {ago}.",
 				"tokenCreatedSuccess": "Oto twój nowy token: {token}",
 				"tokenCreatedNotSeeAgain": "Przechowuj go w bezpiecznym miejscu, nie zobaczysz go ponownie!",
+				"presets": {
+					"title": "Gotowe zestawy",
+					"readOnly": "Tylko do odczytu",
+					"tasks": "Zarządzanie zadaniami",
+					"projects": "Zarządzanie projektami",
+					"fullAccess": "Pełny dostęp"
+				},
 				"delete": {
 					"header": "Usuń ten token",
 					"text1": "Czy na pewno chcesz usunąć token \"{token}\"?",
@@ -149,6 +333,64 @@
 					"titlePlaceholder": "Wprowadź tytuł, który później rozpoznasz",
 					"expiresAt": "Wygasa",
 					"permissions": "Uprawnienia"
+				}
+			},
+			"sessions": {
+				"title": "Sesje",
+				"description": "To wszystkie urządzenia aktualnie zalogowane na Twoim koncie. Możesz unieważnić dowolną sesję, aby wylogować dane urządzenie. Pełne unieważnienie może potrwać do 10 minut.",
+				"deviceInfo": "Urządzenie",
+				"ipAddress": "Adres IP",
+				"lastActive": "Ostatnia aktywność",
+				"current": "Bieżąca sesja",
+				"delete": {
+					"header": "Unieważnij sesję",
+					"text": "Czy na pewno chcesz unieważnić tę sesję? Urządzenie zostanie wylogowane. Pełne wygaśnięcie sesji może potrwać do 10 minut."
+				},
+				"deleteSuccess": "Sesja została pomyślnie unieważniona. Pełne wygaśnięcie sesji może potrwać do 10 minut.",
+				"noOtherSessions": "Brak innych aktywnych sesji."
+			},
+			"mcp": {
+				"intro": "Połącz asystenta AI ze swoimi zadaniami, projektami i etykietami za pomocą Model Context Protocol (MCP).",
+				"more": "Więcej informacji o MCP w Vikunji",
+				"endpoint": "Punkt końcowy MCP",
+				"tokens": "Tokeny MCP",
+				"manageTokens": "Zarządzaj wszystkimi tokenami API",
+				"created": "Twój token MCP jest gotowy. Wybierz poniżej klienta, aby go podłączyć.",
+				"client": "Którego klienta używasz?",
+				"chooseClient": "Wybierz klienta",
+				"clientHelp": "Przewodnik konfiguracji: {client}",
+				"typedPreset": "Narzędzia typowane: odczyt i zapis",
+				"clients": {
+					"claudeCode": {
+						"command": "Uruchom to polecenie w terminalu: {value}",
+						"verify": "Uruchom sesję Claude Code i wpisz /mcp, aby sprawdzić połączenie."
+					},
+					"codex": {
+						"environment": "Ustaw token w środowisku powłoki: {value}",
+						"command": "Dodaj serwer MCP: {value}",
+						"config": "Możesz też dodać to do ~/.codex/config.toml po ustawieniu zmiennej środowiskowej: {value}",
+						"note": "Uruchamiaj Codex z powłoki, w której ustawiono VIKUNJA_MCP_TOKEN. Ustawiaj go ponownie w każdej nowej powłoce lub przechowuj bezpiecznie w środowisku powłoki."
+					},
+					"claudeDesktop": {
+						"open": "Otwórz Customize → Connectors → Add custom connector. W planie Team lub Enterprise właściciel dodaje go w Organization settings → Connectors.",
+						"url": "Nazwij konektor Vikunja i wprowadź ten adres URL: {value}",
+						"auth": "Ustaw Authentication na No sign-in.",
+						"header": "W sekcji Request headers wybierz authorization i wklej całą tę wartość, wraz z Bearer i ze spacją, a następnie dodaj konektor: {value}",
+						"beta": "Request headers są w wersji beta dla ograniczonego zestawu organizacji. Jeśli ta sekcja jest niedostępna, łączenie Vikunji nie jest jeszcze możliwe na Twoim koncie."
+					},
+					"mistral": {
+						"open": "Na lewym pasku bocznym otwórz Context → Connectors → Add Connector → Add Custom Connector.",
+						"url": "Nazwij konektor Vikunja, wprowadź ten adres URL i wybierz Connect: {value}",
+						"token": "Wybierz uwierzytelnianie HTTP Bearer i wklej ten token: {value}"
+					},
+					"chatgpt": {
+						"unavailable": "ChatGPT wymaga OAuth do połączenia z Vikunją. MCP OAuth nie jest jeszcze obsługiwany, więc tego tokena nie można użyć w ChatGPT."
+					},
+					"other": {
+						"title": "Inne",
+						"url": "Użyj transportu streamable HTTP z tym punktem końcowym: {value}",
+						"header": "Wysyłaj ten nagłówek autoryzacji z każdym żądaniem: {value}"
+					}
 				}
 			}
 		},
@@ -174,13 +416,16 @@
 			"descriptionPasswordRequired": "Wprowadź hasło, aby kontynuować:",
 			"request": "Generuj kopię moich danych Vikunja",
 			"success": "Pomyślnie zażądałeś danych Vikunja! Wyślemy Ci e-mail, gdy będą gotowe do pobrania.",
-			"downloadTitle": "Pobierz wyeksportowane dane Vikunja"
+			"downloadTitle": "Pobierz wyeksportowane dane Vikunja",
+			"ready": "Twój eksport jest gotowy do pobrania. Możesz go pobrać do {0}.",
+			"requestNew": "Zamów kolejny eksport"
 		}
 	},
 	"project": {
 		"archivedMessage": "Ten projekt jest zarchiwizowany. Nie można utworzyć lub edytować dla niego nowych zadań.",
 		"archived": "Zarchiwizowane",
 		"showArchived": "Pokaż zarchiwizowane",
+		"title": "Tytuł",
 		"color": "Kolor",
 		"projects": "Projekty",
 		"parent": "Projekt nadrzędny",
@@ -189,6 +434,12 @@
 		"shared": "Projekty udostępnione",
 		"noDescriptionAvailable": "Brak opisu projektu.",
 		"inboxTitle": "Własna lista",
+		"myOpenTasksFilterTitle": "Moje otwarte zadania",
+		"favorite": "Oznacz ten projekt jako ulubiony",
+		"unfavorite": "Usuń ten projekt z ulubionych",
+		"openSettingsMenu": "Otwórz menu ustawień projektu",
+		"description": "Opis projektu",
+		"favoriteDescription": "Ten projekt ma wszystkie zadania oznaczone jako ulubione.",
 		"create": {
 			"header": "Nowy projekt",
 			"titlePlaceholder": "Tu wpisz tytuł projektu…",
@@ -212,16 +463,31 @@
 			"poweredByUnsplash": "Wspierane przez Unsplash",
 			"loadMore": "Załaduj więcej zdjęć",
 			"success": "Tło zostało ustawione pomyślnie!",
-			"removeSuccess": "Tło zostało pomyślnie usunięte!"
+			"removeSuccess": "Tło zostało pomyślnie usunięte!",
+			"searchError": "Nie udało się wczytać teł z Unsplash.",
+			"retry": "Spróbuj ponownie",
+			"setBackground": "Ustaw jako tło projektu",
+			"setBackgroundBy": "Ustaw zdjęcie autorstwa {author} jako tło projektu",
+			"noPermission": "Aby zmienić tło tego projektu, potrzebujesz uprawnień do zapisu."
 		},
 		"delete": {
 			"title": "Usuń \"{project}\"",
-			"header": "Usuń ten projekt"
+			"header": "Usuń ten projekt",
+			"success": "Projekt został przeniesiony do kosza.",
+			"toTrash": "Przenosi ten projekt i {tasks} do kosza. Zostaną one trwale usunięte po {days} dniach.",
+			"toTrashFallback": "Przenosi ten projekt wraz z całą zawartością do kosza. Zostanie on trwale usunięty po {days} dniach.",
+			"toTrashWithSubProjects": "Przenosi ten projekt, {subProjects} i {tasks} do kosza. Zostaną one trwale usunięte po {days} dniach.",
+			"subProjects": "{count} podprojekt|{count} podprojektów",
+			"tasks": "brak zadań|{count} zadanie|{count} zadań",
+			"timeEntries": "{entries} od {people} zostaną zachowane, ale po {days} dniach zostaną odłączone od projektu.",
+			"timeEntryCount": "{count} wpis czasu|{count} wpisów czasu",
+			"people": "{count} osoba|{count} osób"
 		},
 		"duplicate": {
 			"title": "Duplikuj ten projekt",
 			"label": "Duplikuj",
 			"text": "Wybierz projekt nadrzędny, który będzie zawierał zduplikowany projekt:",
+			"shares": "Kopiuj udostępnienia (użytkowników, zespoły i udostępnienia linkiem) do duplikatu",
 			"success": "Projekt został pomyślnie zduplikowany."
 		},
 		"edit": {
@@ -264,11 +530,34 @@
 				"shared": "Udostępniono tym {type}",
 				"you": "Ty",
 				"notShared": "Nie udostępniono jeszcze żadnym {type}.",
+				"remove": "Usuń: {type}",
+				"sharable": "projekt",
 				"removeHeader": "Usuń {type} z {sharable}",
 				"removeText": "Czy na pewno chcesz usunąć ten {sharable} z {type}? Nie można tego cofnąć!",
+				"removeCleanupText": "Każdy, kto w wyniku tej operacji utraci dostęp do tego projektu lub projektów podrzędnych, utraci również:",
 				"removeSuccess": "{sharable} został pomyślnie usunięty z {type}.",
 				"addedSuccess": "{type} został pomyślnie dodany.",
-				"updatedSuccess": "{type} został pomyślnie zaktualizowany."
+				"updatedSuccess": "{type} został pomyślnie zaktualizowany.",
+				"search": "Szukaj: {type}",
+				"permissionFor": "Uprawnienia ({sharable})"
+			},
+			"accessCleanup": {
+				"others": {
+					"assignments": "ich przypisania zadań",
+					"subscriptions": "ich subskrypcje zadań i projektów",
+					"webhooks": "utworzone przez nich webhooki"
+				},
+				"self": {
+					"assignments": "Twoje przypisania zadań",
+					"subscriptions": "Twoje subskrypcje zadań i projektów",
+					"webhooks": "utworzone przez Ciebie webhooki"
+				}
+			},
+			"permission": {
+				"title": "Uprawnienia",
+				"read": "Tylko do odczytu",
+				"readWrite": "Odczyt i zapis",
+				"admin": "Administrator"
 			},
 			"attributes": {
 				"link": "Link",
@@ -284,7 +573,8 @@
 			"addPlaceholder": "Dodaj zadanie…",
 			"empty": "Ten projekt jest obecnie pusty.",
 			"newTaskCta": "Utwórz zadanie.",
-			"editTask": "Edytuj zadanie"
+			"editTask": "Edytuj zadanie",
+			"sort": "Sortuj"
 		},
 		"gantt": {
 			"title": "Gantt",
@@ -292,11 +582,32 @@
 			"default": "Domyślnie",
 			"month": "Miesiąc",
 			"day": "Dzień",
-			"hour": "Godzina"
+			"hour": "Godzina",
+			"chartLabel": "Wykres Gantta projektu",
+			"taskBarsForRow": "Paski zadań dla wiersza {rowId}",
+			"taskBarLabel": "Zadanie: {task}. Od {startDate} do {endDate}. {dateType}. Kliknij, aby edytować; przeciągnij, aby przesunąć.",
+			"scheduledDates": "Zaplanowane daty",
+			"estimatedDates": "Szacowane daty",
+			"resizeStartDate": "Zmień datę rozpoczęcia zadania {task}",
+			"resizeEndDate": "Zmień datę zakończenia zadania {task}",
+			"timelineHeader": "Nagłówek osi czasu z miesiącami i dniami",
+			"monthsRow": "Wiersz miesięcy",
+			"daysRow": "Wiersz dni",
+			"monthLabel": "Miesiąc: {month}",
+			"dayLabel": "Dzień: {date}, {weekday}",
+			"dayLabelToday": "Dzisiaj: {date}, {weekday}",
+			"taskAriaLabel": "Zadanie: {task}",
+			"taskAriaLabelById": "Zadanie {id}",
+			"partialDatesStart": "Tylko data rozpoczęcia (bez daty końcowej)",
+			"partialDatesEnd": "Tylko data zakończenia (bez daty początkowej)",
+			"expandGroup": "Rozwiń grupę: {task}",
+			"collapseGroup": "Zwiń grupę: {task}",
+			"toggleRelationArrows": "Przełącz strzałki powiązań"
 		},
 		"table": {
 			"title": "Tabela",
-			"columns": "Kolumny"
+			"columns": "Kolumny",
+			"sortBy": "Sortuj według: {column}"
 		},
 		"kanban": {
 			"title": "Kanban",
@@ -320,7 +631,10 @@
 			"deleteBucketSuccess": "Kolumna została pomyślnie usunięta.",
 			"bucketTitleSavedSuccess": "Tytuł kolumny został pomyślnie zapisany.",
 			"bucketLimitSavedSuccess": "Limit kolumny został pomyślnie zapisany.",
-			"collapse": "Zwiń tę kolumnę"
+			"collapse": "Zwiń tę kolumnę",
+			"bucketLimitReached": "Osiągnięto limit kolumn. Usuń zadania lub zwiększ limit, aby dodać nowe zadania.",
+			"bucketLimitReachedShort": "Osiągnięto limit",
+			"bucketOptions": "Opcje kolumny"
 		},
 		"pseudo": {
 			"favorites": {
@@ -332,12 +646,17 @@
 			"targetUrl": "Docelowy URL",
 			"targetUrlInvalid": "Podaj prawidłowy adres URL.",
 			"events": "Eventy",
+			"eventsHint": "Wybierz wszystkie zdarzenia, o których ten webhook ma otrzymywać powiadomienia (w obrębie bieżącego projektu).",
 			"mustSelectEvents": "Musisz wybrać co najmniej jeden event.",
+			"selectAllEvents": "Wybierz wszystkie",
 			"delete": "Usuń ten webhook",
 			"deleteText": "Czy na pewno chcesz usunąć ten webhook? Zewnętrzne adresy nie będą już powiadamiane o jego eventach.",
 			"deleteSuccess": "Webhook został pomyślnie usunięty.",
 			"create": "Stwórz webhook",
 			"secret": "Sekret",
+			"basicauthuser": "Użytkownik Basic Auth",
+			"basicauthpassword": "Hasło Basic Auth",
+			"basicauthlink": "Używać Basic Auth?",
 			"secretHint": "Jeśli podane, wszystkie żądania do adresu docelowego webhooka zostaną podpisane przy użyciu HMAC.",
 			"secretDocs": "Sprawdź dokumentację, aby uzyskać więcej informacji na temat korzystania z sekretów."
 		},
@@ -350,18 +669,44 @@
 			"bucketConfig": "Konfiguracja kolumny",
 			"bucketConfigManual": "Instrukcja",
 			"filter": "Filtr",
+			"bucketFilter": "Filtr: {title}",
 			"create": "Utwórz widok",
 			"createSuccess": "Widok utworzony pomyślnie.",
 			"titleRequired": "Proszę podać tytuł.",
 			"delete": "Usuń ten widok",
+			"edit": "Edytuj ten widok",
 			"deleteText": "Czy na pewno chcesz usunąć ten widok? Nie będzie już możliwe wyświetlanie zadań w tym projekcie. Ta akcja nie usunie żadnych zadań. Tej operacji nie można cofnąć!",
-			"onlyAdminsCanEdit": "Tylko administratorzy projektu mogą edytować widoki."
+			"deleteSuccess": "Widok został pomyślnie usunięty.",
+			"onlyAdminsCanEdit": "Tylko administratorzy projektu mogą edytować widoki.",
+			"updateSuccess": "Widok został pomyślnie zaktualizowany.",
+			"includeSubprojects": "Uwzględnij podprojekty",
+			"includeSubprojectsHint": "Pokazuj zadania ze wszystkich podprojektów tego projektu.",
+			"includeSubprojectsFromView": "Włączono w ustawieniach tego widoku. Zmień to tam, aby wyłączyć."
 		}
 	},
 	"filters": {
+		"modes": {
+			"simple": "Prosty",
+			"advanced": "Zaawansowany",
+			"tooAdvanced": "Ten filtr jest zbyt zaawansowany dla trybu prostego.",
+			"clear": "Wyczyść i użyj trybu prostego"
+		},
+		"simple": {
+			"showDone": "Pokazuj ukończone zadania",
+			"minPriority": "Minimalny priorytet",
+			"search": "Szukaj zadań",
+			"labelPlaceholder": "Filtruj według etykiety…",
+			"assigneePlaceholder": "Filtruj według przypisanej osoby…",
+			"unknownLabel": "Nieznana etykieta #{id}",
+			"unknownProject": "Nieznany projekt #{id}",
+			"until": "do {date}"
+		},
 		"title": "Filtry",
 		"clear": "Wyczyść filtry",
 		"showResults": "Wyświetl wyniki",
+		"noResults": "Brak wyników",
+		"fromView": "Bieżący widok również ma ustawiony filtr:",
+		"fromViewBoth": "Zostanie użyty razem z tym, co wpiszesz tutaj.",
 		"attributes": {
 			"title": "Tytuł",
 			"titlePlaceholder": "Tu wpisz tytuł filtra stałego…",
@@ -372,6 +717,7 @@
 		"create": {
 			"title": "Nowy filtr stały",
 			"description": "Zapisany filtr to wirtualny projekt, który jest obliczany na podstawie zestawu filtrów za każdym razem, gdy jest dostępny.",
+			"action": "Utwórz zapisany filtr",
 			"titleRequired": "Podaj tytuł dla filtra."
 		},
 		"delete": {
@@ -384,10 +730,12 @@
 			"success": "Filtr został pomyślnie zapisany."
 		},
 		"query": {
+			"label": "Zapytanie filtrujące",
 			"placeholder": "Wpisz zapytanie wyszukiwania lub filtruj…",
 			"help": {
 				"intro": "Aby filtrować zadania, możesz użyć składni zapytań podobnej do SQL. Pola dostępne do filtrowania to:",
 				"link": "Jak to działa?",
+				"canUseDatemath": "Możesz użyć działań na datach, aby ustawić daty względne. Kliknij wartość daty w zapytaniu, aby dowiedzieć się więcej.",
 				"fields": {
 					"done": "Czy zadanie zostało zakończone, czy nie",
 					"priority": "Priorytet zadania (1-5)",
@@ -397,8 +745,12 @@
 					"endDate": "Data zakończenia zadania",
 					"doneAt": "Data i czas ukończenia zadania",
 					"assignees": "Osoby przypisane do zadania",
+					"createdBy": "Użytkownik, który utworzył zadanie (dopasowywany po nazwie użytkownika)",
 					"labels": "Etykiety przypisane do zadania",
-					"project": "Projekt, do którego należy zadanie (dostępne tylko dla zapisanych filtrów, nie na poziomie projektu)"
+					"project": "Projekt, do którego należy zadanie (dostępne tylko dla zapisanych filtrów, nie na poziomie projektu)",
+					"reminders": "Przypomnienia zadania jako pole daty; zwróci wszystkie zadania z co najmniej jednym przypomnieniem pasującym do zapytania",
+					"created": "Data i godzina utworzenia zadania",
+					"updated": "Data i godzina ostatniej zmiany zadania"
 				},
 				"operators": {
 					"intro": "Dostępne operatory do filtrowania to:",
@@ -408,7 +760,9 @@
 					"greaterThanOrEqual": "Większe niż lub równe",
 					"lessThan": "Mniejsze niż",
 					"lessThanOrEqual": "Mniejsze niż lub równe",
-					"like": "Pasuje do wzorca (używając symbolu %)"
+					"like": "Pasuje do wzorca (używając symbolu %)",
+					"in": "Pasuje do dowolnej wartości z listy rozdzielonej przecinkami",
+					"notIn": "Pasuje do dowolnej wartości spoza listy rozdzielonej przecinkami"
 				},
 				"logicalOperators": {
 					"intro": "Aby połączyć wiele warunków, możesz użyć następujących operatorów logicznych:",
@@ -422,9 +776,33 @@
 					"dueDatePast": "Dopasowuje zadania z terminem wykonania w przeszłości",
 					"undoneHighPriority": "Dopasowuje niewykonane zadania z poziomem 3 lub wyższym",
 					"assigneesIn": "Dopasowuje zadania przypisane do \"user1\" lub \"user2\"",
+					"createdByEqual": "Pasuje do zadań utworzonych przez „user1”",
 					"priorityOneOrTwoPastDue": "Dopasowuje zadania z poziomem 1 lub 2 i terminem wykonania w przeszłości"
 				}
 			}
+		}
+	},
+	"sorting": {
+		"manually": "Ręcznie",
+		"apply": "Zastosuj sortowanie",
+		"description": "Wybierz sposób sortowania zadań na tej liście. Przy sortowaniu ręcznym możesz przeciągać zadania, aby zmienić ich kolejność.",
+		"options": {
+			"titleAsc": "Tytuł (A–Z)",
+			"titleDesc": "Tytuł (Z–A)",
+			"priorityDesc": "Priorytet (od najwyższego)",
+			"priorityAsc": "Priorytet (od najniższego)",
+			"dueDateAsc": "Termin (od najwcześniejszego)",
+			"dueDateDesc": "Termin (od najpóźniejszego)",
+			"startDateAsc": "Data rozpoczęcia (od najwcześniejszej)",
+			"startDateDesc": "Data rozpoczęcia (od najpóźniejszej)",
+			"endDateAsc": "Data zakończenia (od najwcześniejszej)",
+			"endDateDesc": "Data zakończenia (od najpóźniejszej)",
+			"percentDoneDesc": "% ukończenia (od najwyższego)",
+			"percentDoneAsc": "% ukończenia (od najniższego)",
+			"createdDesc": "Utworzono (od najnowszych)",
+			"createdAsc": "Utworzono (od najstarszych)",
+			"updatedDesc": "Zaktualizowano (od najnowszych)",
+			"updatedAsc": "Zaktualizowano (od najstarszych)"
 		}
 	},
 	"migrate": {
@@ -441,7 +819,52 @@
 		"importUpload": "Aby zaimportować dane z {name} do Vikunja, kliknij przycisk poniżej, aby wybrać plik.",
 		"upload": "Prześlij plik",
 		"migrationStartedWillReciveEmail": "Vikunja zaimportuje teraz twoje listy/projekty, zadania, notatki, przypomnienia i pliki z {service}. Ponieważ zajmuje to trochę czasu, wyślemy Ci wiadomość e-mail, gdy skończymy. Możesz teraz zamknąć to okno.",
-		"migrationInProgress": "Migracja jest w toku. Poczekaj, aż zostanie zakończona."
+		"migrationFinished": "Import z {service} zakończył się. Wszystko, co zaimportowano, jest już dostępne w Twoich projektach.",
+		"migrationFailed": "Import z {service} nie powiódł się: {reason}",
+		"failure": {
+			"reported": "Import z {service} nie powiódł się. Otrzymaliśmy powiadomienie o błędzie i pracujemy nad poprawką.",
+			"interrupted": "Import z {service} został przerwany przed ukończeniem. Rozpocznij go ponownie.",
+			"credentials": "Nie udało się zweryfikować danych logowania do {service}. Połącz się ponownie.",
+			"queue": "Nie udało się zakolejkować importu z {service}. Rozpocznij go ponownie.",
+			"upload": "Nie udało się zapisać przesłanego pliku. Prześlij go ponownie."
+		},
+		"migrationInProgress": "Migracja jest w toku. Poczekaj, aż zostanie zakończona.",
+		"credentials": {
+			"description": "Podaj adres swojej instancji {name} i sposób logowania dla Vikunji. Vikunja importuje wszystkie projekty i tablice, do których masz dostęp; dane logowania są używane tylko na potrzeby tego importu i nie są przechowywane.",
+			"url": "Adres URL {name}",
+			"authMethod": "Zaloguj się przez",
+			"apiKey": "Klucz API",
+			"apiKeyRequired": "Podaj klucz API.",
+			"authPassword": "Nazwa użytkownika i hasło",
+			"start": "Rozpocznij import"
+		},
+		"planka": {
+			"apiKeyHelp": "Klucz API musi utworzyć dla Twojego konta administrator Planka. Skopiowanie tokena z przeglądarki nie działa.",
+			"passwordHelp": "Działa tylko dla lokalnych kont Planka bez uwierzytelniania dwuskładnikowego, które zalogowały się do Planka co najmniej raz. Konta korzystające z logowania jednokrotnego wymagają klucza API."
+		},
+		"csv": {
+			"description": "Importuj zadania z pliku CSV z własnym mapowaniem kolumn.",
+			"uploadDescription": "Wybierz plik CSV do importu. Plik powinien zawierać dane zadań z nagłówkami w pierwszym wierszu.",
+			"selectFile": "Wybierz plik CSV",
+			"columnMappingDescription": "Przypisz każdą kolumnę pliku CSV do atrybutu zadania. Vikunja automatycznie wykryła najbardziej prawdopodobne przypisania. Podgląd poniżej zaktualizuje się automatycznie po zmianie ustawień.",
+			"parsingOptions": "Opcje przetwarzania",
+			"delimiter": "Separator",
+			"dateFormat": "Format daty",
+			"skipRows": "Pomiń wiersze",
+			"mapColumns": "Mapuj kolumny",
+			"example": "np.",
+			"preview": "Podgląd",
+			"previewDescription": "Pokazano pierwsze 5 z {count} zadań, które zostaną zaimportowane.",
+			"import": "Importuj zadania",
+			"untitled": "Zadanie bez tytułu",
+			"ignore": "Ignoruj",
+			"delimiters": {
+				"comma": "Przecinek (,)",
+				"semicolon": "Średnik (;)",
+				"tab": "Tabulator",
+				"pipe": "Kreska pionowa (|)"
+			}
+		}
 	},
 	"label": {
 		"title": "Etykiety",
@@ -470,14 +893,23 @@
 		"authenticating": "Uwierzytelnianie…",
 		"passwordRequired": "Ten udostępniony projekt wymaga hasła. Proszę, wprowadź je poniżej:",
 		"error": "Wystąpił błąd.",
-		"invalidPassword": "Hasło jest nieprawidłowe."
+		"invalidPassword": "Hasło jest nieprawidłowe.",
+		"accessDenied": "Odmowa dostępu. Sprawdź uprawnienia i spróbuj ponownie.",
+		"serverError": "Wystąpił błąd serwera. Spróbuj ponownie później.",
+		"projectLoadError": "Nie udało się wczytać informacji o projekcie.",
+		"retry": "Ponów"
 	},
 	"navigation": {
 		"overview": "Przegląd",
 		"upcoming": "Nadchodzące",
 		"settings": "Ustawienia",
 		"imprint": "Odcisk",
-		"privacy": "Polityka prywatności"
+		"privacy": "Polityka prywatności",
+		"closeSidebar": "Zamknij pasek boczny",
+		"home": "Strona główna Vikunja",
+		"toggleChildProjects": "Przełącz podprojekty",
+		"main": "Nawigacja główna",
+		"savedFilters": "Zapisane filtry"
 	},
 	"misc": {
 		"loading": "Ładowanie…",
@@ -508,9 +940,27 @@
 		"created": "Utworzono",
 		"createdBy": "Utworzone przez {0}",
 		"actions": "Akcje",
-		"cannotBeUndone": "Tego nie da się cofnąć!"
+		"cannotBeUndone": "Tego nie da się cofnąć!",
+		"avatarOfUser": "Zdjęcie profilowe użytkownika {user}",
+		"closeBanner": "Zamknij baner",
+		"closeDialog": "Zamknij okno",
+		"imagePreview": "Podgląd obrazu",
+		"zoomIn": "Powiększ",
+		"zoomOut": "Pomniejsz",
+		"resetZoom": "Przywróć powiększenie",
+		"imageLoadFailed": "Nie udało się wczytać obrazu",
+		"videoPreview": "Podgląd wideo",
+		"pdfPreview": "Podgląd PDF",
+		"videoLoadFailed": "Nie można odtworzyć tego wideo w przeglądarce.",
+		"closeQuickActions": "Zamknij szybkie akcje",
+		"skipToContent": "Przejdź do głównej treści",
+		"sortBy": "Sortuj według",
+		"dateRange": "Zakres dat",
+		"notSet": "Nie ustawiono",
+		"user": "Użytkownik"
 	},
 	"input": {
+		"projectColor": "Kolor projektu",
 		"resetColor": "Resetuj kolor",
 		"datepicker": {
 			"today": "Dziś",
@@ -519,10 +969,29 @@
 			"thisWeekend": "W ten weekend",
 			"laterThisWeek": "Pod koniec tego tygodnia",
 			"nextWeek": "W następnym tygodniu",
-			"chooseDate": "Wybierz datę"
+			"nextWeekend": "Następny weekend",
+			"endOfMonth": "Koniec miesiąca",
+			"inAMonth": "Za miesiąc",
+			"chooseDate": "Wybierz datę",
+			"quickSelect": "Szybki wybór",
+			"clear": "Wyczyść",
+			"noDate": "Nie ustawiono daty",
+			"previousMonth": "Poprzedni miesiąc",
+			"nextMonth": "Następny miesiąc",
+			"time": {
+				"hours": "Godziny",
+				"minutes": "Minuty",
+				"hourUp": "O godzinę później",
+				"hourDown": "O godzinę wcześniej",
+				"minuteUp": "Pięć minut później",
+				"minuteDown": "Pięć minut wcześniej"
+			},
+			"month": "Miesiąc",
+			"year": "Rok"
 		},
 		"editor": {
 			"edit": "Edytuj",
+			"label": "Edytor tekstu sformatowanego",
 			"heading1": "Nagłówek 1",
 			"heading1Tooltip": "Nagłówek H1.",
 			"heading2": "Nagłówek 2",
@@ -542,8 +1011,13 @@
 			"orderedList": "Lista uporządkowana",
 			"orderedListTooltip": "Stwórz listę numerowaną.",
 			"link": "Link",
+			"urlPlaceholder": "Adres URL",
 			"image": "Obraz",
 			"imageTooltip": "Prześlij obraz ze swojego komputera.",
+			"altText": "Tekst alternatywny",
+			"altTextPlaceholder": "Opisz ten obraz",
+			"toolbarLabel": "Formatowanie tekstu",
+			"more": "Więcej opcji formatowania",
 			"horizontalRule": "Linia pozioma",
 			"horizontalRuleTooltip": "Podziel sekcję.",
 			"text": "Tekst",
@@ -570,11 +1044,44 @@
 				"toggleHeaderCell": "Przełącz nagłówek komórki",
 				"mergeOrSplit": "Połącz lub podziel",
 				"fixTables": "Napraw tabele"
+			},
+			"emoji": {
+				"empty": "Nie znaleziono emotek"
+			}
+		},
+		"emojiPicker": {
+			"title": "Wybór emoji",
+			"search": "Szukaj emoji",
+			"skinTone": "Odcień skóry",
+			"categories": "Kategorie emoji",
+			"results": "Wyniki wyszukiwania",
+			"loadError": "Nie udało się wczytać emoji.",
+			"tones": {
+				"light": "Jasny",
+				"mediumLight": "Średnio jasny",
+				"medium": "Średni",
+				"mediumDark": "Średnio ciemny",
+				"dark": "Ciemny"
+			},
+			"groups": {
+				"recent": "Ostatnio używane",
+				"smileys": "Emotikony i emocje",
+				"people": "Ludzie i ciało",
+				"nature": "Zwierzęta i przyroda",
+				"food": "Jedzenie i napoje",
+				"travel": "Podróże i miejsca",
+				"activities": "Aktywności",
+				"objects": "Przedmioty",
+				"symbols": "Symbole",
+				"flags": "Flagi"
 			}
 		},
 		"multiselect": {
 			"createPlaceholder": "Utwórz",
-			"selectPlaceholder": "Kliknij lub naciśnij Enter, aby wybrać"
+			"selectPlaceholder": "Kliknij lub naciśnij Enter, aby wybrać",
+			"removeItem": "Usuń ten element",
+			"clear": "Wyczyść wybór",
+			"moreResultsHint": "Pokazano pierwsze {shown} z {total} wyników. Doprecyzuj wyszukiwanie, aby znaleźć pozostałe."
 		},
 		"datepickerRange": {
 			"to": "Do",
@@ -583,6 +1090,7 @@
 			"date": "Data",
 			"ranges": {
 				"today": "Dziś",
+				"tomorrow": "Jutro",
 				"thisWeek": "W tym tygodniu",
 				"restOfThisWeek": "Reszta tego tygodnia",
 				"nextWeek": "Następny tydzień",
@@ -653,35 +1161,73 @@
 	"task": {
 		"new": "Utwórz zadanie",
 		"createSuccess": "Zadanie zostało pomyślnie utworzone.",
+		"bulkCreateUnexpectedResponse": "Serwer zwrócił nieoczekiwaną liczbę utworzonych zadań.",
 		"addReminder": "Dodaj przypomnienie…",
+		"removeReminder": "Usuń to przypomnienie",
 		"doneSuccess": "Zadanie zostało pomyślnie oznaczone jako ukończone.",
 		"undoneSuccess": "Zadanie zostało pomyślnie otwarte ponownie.",
+		"readOnlyCheckbox": "Masz tylko dostęp do odczytu tego zadania i nie możesz oznaczyć go jako wykonane.",
+		"movedToProject": "Zadanie zostało przeniesione do projektu {project}.",
 		"undo": "Cofnij",
 		"checklistTotal": "{checked} z {total} zadań",
 		"checklistAllDone": "{total} zadań",
 		"show": {
 			"titleCurrent": "Bieżące zadania",
+			"noDates": "Pokazuj zadania bez daty",
 			"overdue": "Pokaż zaległe zadania",
 			"fromuntil": "Zadania od {from} do {until}",
 			"select": "Wybierz zakres dat",
-			"noTasks": "Brak zadań do wykonania – miłego dnia!"
+			"noTasks": "Brak zadań do wykonania – miłego dnia!",
+			"filterByLabel": "Filtrowanie według etykiety {label}",
+			"clearLabelFilter": "Wyczyść filtr etykiety",
+			"savedFilterIgnored": "Zapisany filtr strony głównej nie jest stosowany podczas przeglądania zadań według etykiety."
 		},
 		"detail": {
 			"chooseDueDate": "Kliknij tutaj, aby ustawić termin",
 			"chooseStartDate": "Kliknij tutaj, aby ustawić datę rozpoczęcia",
 			"chooseEndDate": "Kliknij tutaj, aby ustawić datę zakończenia",
+			"removeDueDate": "Usuń termin",
+			"removeStartDate": "Usuń datę rozpoczęcia",
+			"removeEndDate": "Usuń datę zakończenia",
+			"removeColor": "Usuń kolor",
+			"removeRepeat": "Usuń interwał powtarzania",
+			"removeAssignee": "Usuń przypisanie: {user}",
 			"move": "Przenieś zadanie do innego projektu",
 			"done": "Oznacz zadanie jako ukończone!",
 			"undone": "Otwórz zadanie ponownie",
 			"created": "Utworzono {0} przez {1}",
 			"updated": "Zaktualizowano {0}",
 			"doneAt": "Ukończone {0}",
+			"titleRequired": "Tytuł zadania nie może być pusty.",
 			"updateSuccess": "Zadanie zostało pomyślnie zapisane.",
+			"deleteSuccess": "Zadanie zostało przeniesione do kosza.",
+			"duplicateSuccess": "Zadanie zostało pomyślnie zduplikowane.",
+			"noBucket": "Brak kolumny",
+			"bucketSelectLabel": "Kolumna Kanban: {bucket}",
+			"bucketChangedSuccess": "Kolumna zadania została pomyślnie zmieniona.",
 			"belongsToProject": "To zadanie należy do projektu '{project}'",
+			"back": "Wróć do projektu",
 			"due": "Termin {at}",
+			"overdue": "Po terminie",
+			"closeTaskDetail": "Zamknij szczegóły zadania",
+			"title": "Szczegóły zadania",
+			"markAsDone": "Oznacz „{task}” jako wykonane",
+			"scrollToBottom": "Przewiń do dołu",
+			"moreActions": "Więcej akcji",
+			"properties": {
+				"dueDate": "Termin",
+				"startDate": "Data rozpoczęcia",
+				"endDate": "Data zakończenia"
+			},
 			"actions": {
+				"attachments": "Dodaj załączniki",
+				"timeTracking": "Śledź czas",
+				"relatedTasks": "Dodaj powiązanie",
 				"moveProject": "Przenieś",
-				"delete": "Usuń"
+				"duplicate": "Duplikuj",
+				"delete": "Usuń",
+				"favorite": "Dodaj do ulubionych",
+				"unfavorite": "Usuń z ulubionych"
 			}
 		},
 		"attributes": {
@@ -696,15 +1242,21 @@
 			"labels": "Etykiety",
 			"percentDone": "Postęp",
 			"priority": "Priorytet",
+			"project": "Projekt",
 			"relatedTasks": "Powiązane zadania",
 			"reminders": "Przypomnienia",
 			"repeat": "Powtarzanie",
+			"comment": "Komentarz: {count}|Komentarze: {count}",
+			"commentCount": "Liczba komentarzy",
+			"attachment": "Załącznik: {count}|Załączniki: {count}",
 			"startDate": "Data rozpoczęcia",
 			"title": "Tytuł",
 			"updated": "Zaktualizowano",
 			"doneAt": "Wykonano"
 		},
 		"subscription": {
+			"subscribedTaskThroughProject": "Subskrybujesz to zadanie przez jego projekt. Rezygnacja tutaj zatrzyma powiadomienia tylko dla tego zadania.",
+			"subscribedProjectThroughParentProject": "Subskrybujesz ten projekt przez projekt nadrzędny. Rezygnacja tutaj zatrzyma powiadomienia dla tego projektu i wszystkiego w nim.",
 			"subscribedProject": "Jesteś obecnie zapisany do tego projektu i będziesz otrzymywać powiadomienia o zmianach.",
 			"notSubscribedProject": "Nie jesteś zapisany do tego projektu i nie będziesz otrzymywać powiadomień o zmianach.",
 			"subscribedTask": "Jesteś obecnie zapisany do tego zadania i będziesz otrzymywać powiadomienia o zmianach.",
@@ -725,11 +1277,15 @@
 			"delete": "Usuń załącznik",
 			"deleteTooltip": "Usuń ten załącznik",
 			"deleteText1": "Czy na pewno chcesz usunąć załącznik {filename}?",
+			"deleteSuccess": "Załącznik został pomyślnie usunięty.",
 			"copyUrlTooltip": "Skopiuj adres URL tego załącznika do użycia w tekście",
 			"setAsCover": "Ustaw jako okładkę",
 			"unsetAsCover": "Usuń okładkę",
 			"successfullyChangedCoverImage": "Obraz okładki został pomyślnie zmieniony.",
-			"usedAsCover": "Obraz okładki"
+			"usedAsCover": "Obraz okładki",
+			"play": "Odtwórz",
+			"playFile": "Odtwórz {file}",
+			"audioError": "Nie udało się odtworzyć tego pliku audio."
 		},
 		"comment": {
 			"title": "Komentarze",
@@ -741,7 +1297,16 @@
 			"delete": "Usuń ten komentarz",
 			"deleteText1": "Czy na pewno chcesz usunąć ten komentarz?",
 			"deleteSuccess": "Komentarz został pomyślnie usunięty.",
-			"addedSuccess": "Komentarz został pomyślnie dodany."
+			"addedSuccess": "Komentarz został pomyślnie dodany.",
+			"permalink": "Skopiuj bezpośredni link do tego komentarza",
+			"sortNewestFirst": "Najnowsze najpierw",
+			"sortOldestFirst": "Najstarsze najpierw",
+			"reply": "Odpowiedz",
+			"jumpToOriginal": "Przejdź do oryginalnego komentarza",
+			"deletedComment": "usunięty komentarz"
+		},
+		"mention": {
+			"noUsersFound": "Nie znaleziono użytkowników"
 		},
 		"deferDueDate": {
 			"title": "Odroczenie terminu",
@@ -754,6 +1319,7 @@
 		},
 		"assignee": {
 			"placeholder": "Wpisz, aby przypisać użytkownika…",
+			"placeholderMore": "Przypisz kolejną osobę…",
 			"selectPlaceholder": "Przypisz tego użytkownika",
 			"assignSuccess": "Użytkownik został pomyślnie przypisany.",
 			"unassignSuccess": "Użytkownik został pomyślnie usunięty."
@@ -761,9 +1327,12 @@
 		"label": {
 			"placeholder": "Wpisz, aby dodać etykietę…",
 			"createPlaceholder": "Dodaj jako nową etykietę",
+			"linkShareCannotCreate": "Za pomocą udostępnionego linku nie można tworzyć nowych etykiet. Można dodawać tylko etykiety już używane w tym projekcie.",
+			"removeLabel": "Usuń etykietę {label}",
 			"addSuccess": "Etykieta została pomyślnie dodana.",
 			"removeSuccess": "Etykieta została pomyślnie usunięta.",
 			"addCreateSuccess": "Etykieta została pomyślnie utworzona i dodana.",
+			"createFailed": "Nie udało się utworzyć tych etykiet i nie zostały dodane: {labels}",
 			"delete": {
 				"header": "Usuń tę etykietę",
 				"text1": "Czy na pewno chcesz usunąć tę etykietę?",
@@ -808,6 +1377,9 @@
 			"after": "{amount} {unit} po {type}",
 			"beforeShort": "przed",
 			"afterShort": "po",
+			"periodUnit": "Jednostka czasu",
+			"periodDirection": "Przed lub po",
+			"periodRelativeTo": "Względem",
 			"onDueDate": "W terminie",
 			"onStartDate": "Data rozpoczęcia",
 			"onEndDate": "Data zakończenia",
@@ -815,6 +1387,16 @@
 			"dateAndTime": "Data i czas"
 		},
 		"repeat": {
+			"everyDay": "Codziennie",
+			"everyWeek": "Co tydzień",
+			"every30d": "Co 30 dni",
+			"summary": {
+				"minutes": "Co minutę|Co {count} min",
+				"hours": "Co godzinę|Co {count} godz.",
+				"days": "Codziennie|Co {count} dni",
+				"weeks": "Co tydzień|Co {count} tyg.",
+				"fromCurrentDate": "{interval}, od daty ukończenia"
+			},
 			"mode": "Tryb powtarzania",
 			"monthly": "Miesięczny",
 			"fromCurrentDate": "Od daty zakończenia",
@@ -827,6 +1409,7 @@
 		},
 		"quickAddMagic": {
 			"hint": "Użyj magicznych prefiksów, aby zdefiniować terminy, osoby przypisane i inne właściwości zadania.",
+			"quickEntryHint": "Używaj magicznych prefiksów do dat, etykiet i nie tylko. Otwórz główną aplikację Vikunja i sprawdź podpowiedź przy polu zadania, aby dowiedzieć się więcej.",
 			"title": "Quick Add Magic",
 			"intro": "Podczas tworzenia zadania możesz użyć specjalnych słów kluczowych, aby bezpośrednio dodać atrybuty do nowo utworzonego zadania. Pozwala to na znacznie szybsze dodawanie powszechnie używanych atrybutów do zadań.",
 			"multiple": "Możesz użyć tego wielokrotnie.",
@@ -843,6 +1426,7 @@
 			"project4": "Na przykład: {prefix}\"Projekt ze spacjami\".",
 			"dateAndTime": "Data i godzina",
 			"date": "Dowolna data może być użyta jako termin wykonania nowego zadania. Możesz wykorzystać datę w dowolnym z podanych formatów:",
+			"dateWeekday": "dowolny dzień tygodnia — zostanie użyta najbliższa data przypadająca na ten dzień",
 			"dateCurrentYear": "spowoduje wybranie bieżącego roku",
 			"dateNth": "spowoduje wybranie {day}-stego dnia bieżącego miesiąca",
 			"dateTime": "Połącz dowolny format daty z \"{time}\" (lub {timePM}), aby ustawić godzinę.",
@@ -873,18 +1457,21 @@
 				"header": "Usuń zespół",
 				"text1": "Czy na pewno chcesz usunąć ten zespół i wszystkich jego członków?",
 				"text2": "Wszyscy członkowie zespołu stracą dostęp do projektów udostępnionych temu zespołowi. TEGO NIE MOŻNA COFNIĘĆ!",
+				"cleanupText": "W projektach, do których członkowie zespołu utracą dostęp, zostaną również usunięte:",
 				"success": "Zespół został pomyślnie usunięty."
 			},
 			"deleteUser": {
 				"header": "Usuń użytkownika z zespołu",
 				"text1": "Czy na pewno chcesz usunąć tego użytkownika z zespołu?",
 				"text2": "Straci on dostęp do wszystkich projektów, do których zespół ma dostęp. TEGO NIE MOŻNA COFNIĘĆ!",
+				"cleanupText": "W projektach, do których ten użytkownik utraci dostęp, zostaną również usunięte:",
 				"success": "Użytkownik został pomyślnie usunięty z zespołu."
 			},
 			"leave": {
 				"title": "Opuść zespół",
 				"text1": "Czy na pewno chcesz opuścić ten zespół?",
 				"text2": "Stracisz dostęp do wszystkich projektów, do których zespół ma dostęp. Jeśli zmienisz zdanie, będziesz potrzebować administratora zespołu, aby cię ponownie dodać.",
+				"cleanupText": "W projektach, do których utracisz dostęp, zostaną również usunięte:",
 				"success": "Pomyślnie opuściłeś zespół."
 			}
 		},
@@ -912,6 +1499,7 @@
 		"task": {
 			"title": "Widok zadań",
 			"done": "Oznacz zadanie jako wykonane / niewykonane",
+			"doneAndBack": "Oznacz zadanie jako wykonane i wróć",
 			"assign": "Przypisz to zadanie do użytkownika",
 			"labels": "Dodaj etykiety do tego zadania",
 			"dueDate": "Zmień termin wykonania tego zadania",
@@ -924,7 +1512,12 @@
 			"delete": "Usuń to zadanie",
 			"priority": "Zmień priorytet tego zadania",
 			"favorite": "Oznacz to zadanie jako ulubione / nieulubione",
-			"save": "Zapisz bieżące zadanie"
+			"openProject": "Otwórz projekt tego zadania",
+			"save": "Zapisz bieżące zadanie",
+			"copyIdentifier": "Kopiuj identyfikator zadania do schowka",
+			"copyIdentifierAndTitle": "Kopiuj identyfikator i tytuł zadania do schowka",
+			"copyIdentifierTitleAndUrl": "Kopiuj identyfikator, tytuł i adres URL zadania do schowka",
+			"copyUrl": "Kopiuj adres URL zadania do schowka"
 		},
 		"project": {
 			"title": "Widoki projektu",
@@ -940,7 +1533,26 @@
 			"labels": "Przejdź do etykiet",
 			"teams": "Przejdź do zespołów",
 			"projects": "Przejdź do projektów"
+		},
+		"list": {
+			"title": "Lista zadań",
+			"navigateDown": "Podświetl następne zadanie",
+			"navigateUp": "Podświetl poprzednie zadanie",
+			"open": "Otwórz podświetlone zadanie"
+		},
+		"gantt": {
+			"title": "Wykres Gantta",
+			"moveTaskLeft": "Przenieś zadanie na wcześniejszą datę",
+			"moveTaskRight": "Przenieś zadanie na późniejszą datę",
+			"expandTaskLeft": "Przesuń datę rozpoczęcia zadania wcześniej",
+			"expandTaskRight": "Przesuń datę zakończenia zadania później",
+			"shrinkTaskLeft": "Skróć zadanie od daty rozpoczęcia",
+			"shrinkTaskRight": "Skróć zadanie od daty zakończenia"
 		}
+	},
+	"update": {
+		"available": "Dostępna jest nowa wersja Vikunja.",
+		"do": "Odśwież"
 	},
 	"menu": {
 		"edit": "Edytuj",
@@ -972,12 +1584,22 @@
 	"notification": {
 		"title": "Powiadomienia",
 		"none": "Nie masz żadnych powiadomień. Miłego dnia!",
+		"explainer": "Powiadomienia pojawią się tutaj, gdy wystąpią akcje, projekty lub zadania, które subskrybujesz.",
+		"read": "Przeczytane",
+		"unread": "Nieprzeczytane",
 		"markAllRead": "Oznacz wszystkie powiadomienia jako przeczytane",
-		"markAllReadSuccess": "Pomyślnie zaznaczono wszystkie powiadomienia jako przeczytane."
+		"markAllReadSuccess": "Pomyślnie zaznaczono wszystkie powiadomienia jako przeczytane.",
+		"subscribeFeed": "Subskrybuj powiadomienia przez kanał Atom",
+		"clearAll": "Wyczyść powiadomienia",
+		"clearAllSuccess": "Wszystkie powiadomienia zostały wyczyszczone.",
+		"loadMore": "Wczytaj starsze powiadomienia"
 	},
 	"quickActions": {
+		"title": "Wyszukiwanie i szybkie akcje",
+		"notLoggedIn": "Najpierw zaloguj się w głównym oknie Vikunja.",
 		"commands": "Polecenia",
 		"placeholder": "Wpisz polecenie lub wyszukiwaną frazę…",
+		"hint": "Możesz użyć {project}, aby ograniczyć wyszukiwanie do projektu. Połącz {project} lub {label} (etykiety) z frazą wyszukiwania, aby znaleźć zadanie z tymi etykietami lub w tym projekcie. Użyj {assignee}, aby wyszukiwać tylko zespoły. Wyszukanie liczby znajdzie zadanie o tym numerze — zarówno ten wyświetlany na zadaniu, jak i ten z jego adresu URL.",
 		"tasks": "Zadania",
 		"projects": "Projekty",
 		"teams": "Zespoły",
@@ -987,6 +1609,15 @@
 		"newTeam": "Wpisz nazwę nowego zespołu…",
 		"createTask": "Utwórz zadanie w bieżącym projekcie ({title})",
 		"createProject": "Utwórz projekt",
+		"removePrefillDescription": "Usuń opis",
+		"results": "Brak wyników|{count} wynik|{count} wyników",
+		"resultTypes": {
+			"command": "Polecenie",
+			"task": "Zadanie",
+			"project": "Projekt",
+			"team": "Zespół",
+			"label": "Etykieta"
+		},
 		"cmds": {
 			"newTask": "Nowe zadanie",
 			"newProject": "Nowy projekt",
@@ -1012,15 +1643,42 @@
 		"1012": "Adres e-mail użytkownika nie został potwierdzony.",
 		"1013": "Nowe hasło jest puste.",
 		"1014": "Stare hasło jest puste.",
+		"1015": "Uwierzytelnianie TOTP jest już włączone dla tego użytkownika.",
+		"1016": "Uwierzytelnianie TOTP nie jest włączone dla tego użytkownika.",
+		"1017": "Kod TOTP jest nieprawidłowy.",
 		"1018": "Ustawienie typu awatara użytkownika jest nieprawidłowe.",
+		"1019": "Dostawca OpenID nie przekazał adresu e-mail. Upewnij się, że dostawca openid publicznie udostępnia adres e-mail dla Twojego konta.",
+		"1020": "To konto jest wyłączone. Sprawdź e-maile lub skontaktuj się z administratorem.",
+		"1021": "To konto jest zarządzane przez zewnętrznego dostawcę uwierzytelniania.",
+		"1022": "Nazwa użytkownika nie może zawierać spacji.",
+		"1023": "Nie możesz tego zrobić jako udostępnienie linkiem.",
+		"1024": "Nieprawidłowe dane oświadczenia dla pola {field} typu {type}.",
+		"1025": "Strefa czasowa „{timezone}” jest nieprawidłowa. Wybierz prawidłową strefę czasową z listy.",
+		"1035": "Nie ma oczekującej zmiany adresu e-mail do potwierdzenia.",
+		"1036": "Odczekaj minutę przed ponownym żądaniem e-maila potwierdzającego.",
+		"1038": "Niestandardowy zakres ustawiony przez dostawcę OIDC jest nieprawidłowy. Upewnij się, że dostawca openid poprawnie ustawia dane dla Twojego zakresu. Sprawdź w szczególności, czy ustawiono oidcID.",
+		"1039": "Ten kod TOTP został już użyty. Poczekaj na następny kod.",
+		"1040": "To konto zostało zablokowane z powodu zbyt wielu nieudanych prób logowania. Możesz zresetować hasło, aby je odblokować.",
+		"1041": "Zbyt wiele nieudanych prób. Odczekaj kilka minut i spróbuj ponownie.",
 		"2001": "ID nie może być puste lub równe 0.",
 		"2002": "Niektóre dane żądania były nieprawidłowe.",
+		"2003": "Strefa czasowa „{timezone}” jest nieprawidłowa.",
+		"2005": "Ten link zaproszenia jest nieprawidłowy lub wygasł.",
+		"2006": "Ten link zaproszenia nie istnieje.",
+		"2007": "Zewnętrznie zarządzanych zespołów nie można przypisać do linku zaproszenia.",
 		"3001": "Projekt nie istnieje.",
 		"3004": "Musisz mieć uprawnienia do odczytu w tym projekcie, aby wykonać tę akcję.",
 		"3005": "Nazwa projektu nie może być pusta.",
 		"3006": "Udostępnienie projektu nie istnieje.",
 		"3007": "Projekt z tym identyfikatorem już istnieje.",
 		"3008": "Projekt jest zarchiwizowany i dlatego można go tylko przeglądać. To samo dotyczy wszystkich zadań związanych z tym projektem.",
+		"3016": "Projekt nadrzędny jest zarchiwizowany. Najpierw odarchiwizuj projekt nadrzędny.",
+		"3017": "Domyślny projekt musi być projektem, do którego masz uprawnienia do zapisu.",
+		"3018": "Ten projekt znajduje się w koszu. Najpierw go przywróć.",
+		"3019": "Projekt nadrzędny znajduje się w koszu. Najpierw go przywróć.",
+		"3020": "Ta hierarchia projektów jest zbyt duża, aby przenieść ją pod wybrany projekt nadrzędny.",
+		"4001": "Tytuł zadania nie może być pusty.",
+		"4002": "Zadanie nie istnieje.",
 		"4003": "Wszystkie zadania do edycji zbiorczej muszą należeć do tego samego projektu.",
 		"4004": "Potrzebujesz co najmniej jednego zadania do edycji zbiorczej zadań.",
 		"4005": "Nie masz uprawnień, aby zobaczyć to zadanie.",
@@ -1038,12 +1696,22 @@
 		"4017": "Nieprawidłowe porównanie filtra zadań.",
 		"4018": "Nieprawidłowe połączenie filtra zadań.",
 		"4019": "Nieprawidłowa wartość filtra zadań.",
+		"4020": "Ten załącznik nie należy do tego zadania.",
+		"4021": "Ten użytkownik jest już przypisany do tego zadania.",
+		"4022": "Podaj, względem czego ma być ustawiona data przypomnienia.",
+		"4023": "Nie można utworzyć cyklu powiązań zadań.",
+		"4034": "Plik nie istnieje.",
+		"4035": "Przesłany plik przekracza maksymalny skonfigurowany rozmiar.",
+		"4040": "To zadanie znajduje się w koszu.",
+		"4041": "Ta hierarchia zadań jest zbyt duża, aby dodać więcej podzadań lub zadań nadrzędnych.",
 		"6001": "Nazwa zespołu nie może być pusta.",
 		"6002": "Zespół nie istnieje.",
 		"6004": "Zespół już ma dostęp do tego projektu.",
 		"6005": "Użytkownik jest już członkiem tego zespołu.",
 		"6006": "Nie można usunąć ostatniego członka zespołu.",
 		"6007": "Zespół nie ma dostępu do projektu, aby wykonać tę akcję.",
+		"6008": "Nie znaleziono zespołu dla podanego identyfikatora OIDC i wystawcy.",
+		"6009": "Nie znaleziono zespołów z właściwością oidcId dla użytkownika.",
 		"7002": "Użytkownik już ma dostęp do tego projektu.",
 		"7003": "Nie masz dostępu do tego projektu.",
 		"8001": "Ta etykieta już istnieje w tym zadaniu.",
@@ -1055,20 +1723,82 @@
 		"10003": "Nie można usunąć ostatniego zasobnika w projekcie.",
 		"10004": "Nie możesz dodać zadania do tego zasobnika, ponieważ przekroczyło już limit zadań, które może pomieścić.",
 		"10005": "W projekcie może być tylko jeden zasobnik zrobiony.",
+		"10007": "Widok projektu może mieć maksymalnie 100 kolumn.",
 		"11001": "Filtr stały nie istnieje.",
 		"11002": "Filtry stałe nie są dostępne dla udostępnionych linków.",
 		"12001": "Typ subskrypcji jest nieprawidłowy.",
 		"12002": "Subskrybujesz już tę jednostkę lub jej jednostkę nadrzędną.",
+		"12003": "Musisz podać użytkownika, aby pobrać subskrypcje.",
 		"13001": "Ten udostępniony link wymaga hasła do uwierzytelnienia, ale nie został podany.",
+		"13002": "Podane hasło udostępnienia linkiem jest nieprawidłowe.",
+		"13003": "Podany token udostępnienia linkiem jest nieprawidłowy.",
+		"14001": "Podany token API jest nieprawidłowy.",
+		"14002": "Uprawnienie {permission} grupy {group} jest nieprawidłowe.",
+		"14005": "Migracja z tej usługi jest już w toku. Poczekaj, aż się zakończy.",
+		"14009": "Przesłany plik ZIP nie zawiera pliku danych Vikunja. Upewnij się, że przesyłasz eksport Vikunja.",
+		"14010": "Nie udało się przetworzyć przesłanego pliku. Upewnij się, że jest to prawidłowy plik eksportu.",
+		"14011": "Przesłany plik nie jest prawidłowym plikiem ZIP.",
+		"14012": "Przesłany plik nie zawiera żadnych danych.",
+		"14013": "Eksport został utworzony w wersji Vikunja zbyt starej do importu. Utwórz nowy eksport w nowszej wersji.",
+		"14016": "Nie udało się przetworzyć konfiguracji importu. Upewnij się, że jest to prawidłowy obiekt JSON.",
+		"14018": "Import zawiera więcej elementów niż skonfigurowane maksimum.",
+		"14019": "Stan migracji jest nieprawidłowy lub wygasł. Rozpocznij migrację ponownie.",
+		"14020": "Projekt w imporcie ma więcej widoków niż dozwolono.",
+		"14041": "Kolumna {column} jest zmapowana więcej niż raz. Przypisz każdą kolumnę tylko do jednego atrybutu.",
+		"14042": "Wiersz {row} pliku CSV ma więcej niż {max} etykiet.",
+		"14201": "Planka odrzuciła podane dane logowania. Sprawdź adres URL i klucz API lub nazwę użytkownika i hasło.",
+		"14202": "Konto Planka wymaga dodatkowego kroku logowania (kod dwuskładnikowy lub akceptacja regulaminu). Zaloguj się raz do Planka w przeglądarce lub użyj klucza API zamiast nazwy użytkownika i hasła.",
+		"14203": "Wymagany jest adres URL Planka oraz klucz API lub nazwa użytkownika i hasło.",
+		"14204": "Nie udało się połączyć z API Planka pod podanym adresem URL. Sprawdź adres i upewnij się, że Vikunja może połączyć się z instancją.",
+		"14205": "Adres URL Planka wskazuje na prywatny lub lokalny adres sieciowy, który Vikunja domyślnie blokuje. Administrator może go zezwolić, ustawiając outgoingrequests.allownonroutableips na true.",
+		"15002": "To konto u dostawcy tożsamości jest już powiązane z innym kontem Vikunja.",
+		"15003": "Masz już powiązane konto tego dostawcy. Najpierw je odłącz.",
+		"15004": "To powiązane konto nie istnieje.",
 		"error": "Błąd",
 		"success": "Sukces",
 		"0001": "Nie jesteś upoważniony, aby to zrobić."
 	},
 	"about": {
 		"title": "O aplikacji",
-		"version": "Wersja: {version}"
+		"version": "Wersja: {version}",
+		"frontendVersion": "Wersja frontendu: {version}",
+		"apiVersion": "Wersja API: {version}",
+		"proActive": "Pro aktywne"
+	},
+	"timeTracking": {
+		"title": "Śledzenie czasu",
+		"stop": "Zatrzymaj licznik",
+		"running": "Licznik działa",
+		"logTime": "Zarejestruj czas",
+		"editEntry": "Edytuj wpis",
+		"commentLabel": "Komentarz",
+		"form": {
+			"task": "Zadanie",
+			"taskSearch": "Szukaj zadania…",
+			"commentPlaceholder": "Nad czym pracowałeś?",
+			"save": "Zapisz wpis",
+			"startTimer": "Uruchom licznik",
+			"update": "Zaktualizuj wpis",
+			"smartFill": "Wypełnij na podstawie ostatniego wpisu",
+			"endsSpanningEntriesAt": "Uruchomienie tego licznika zakończy nakładające się wpisy czasu o {time}.",
+			"privateHint": "Bez projektu lub zadania ten wpis widzisz tylko Ty."
+		},
+		"list": {
+			"emptyTask": "To zadanie nie ma jeszcze zarejestrowanego czasu.",
+			"emptyFiltered": "Brak zarejestrowanego czasu dla wybranych filtrów.",
+			"total": "Razem",
+			"pageTotal": "Razem na tej stronie",
+			"time": "Czas",
+			"duration": "Czas trwania"
+		},
+		"browse": {
+			"selectRange": "Wybierz zakres",
+			"userSearch": "Szukaj użytkownika…"
+		},
+		"noProject": "Brak projektu"
 	},
 	"time": {
+		"justNow": "przed chwilą",
 		"units": {
 			"seconds": "sekunda|sekundy",
 			"minutes": "minuta|minut",
@@ -1077,5 +1807,151 @@
 			"weeks": "tydzień|tygodni",
 			"years": "rok|lat"
 		}
+	},
+	"admin": {
+		"title": "Administracja",
+		"labels": {
+			"users": "Użytkownicy",
+			"tasks": "Zadania"
+		},
+		"overview": {
+			"shares": "Udostępnienia",
+			"linkSharesShort": "link",
+			"teamSharesShort": "zespół",
+			"userSharesShort": "użytkownik",
+			"version": "Wersja",
+			"license": "Licencja",
+			"licenseValidUntil": "Ważna do",
+			"licenseExpiresIn": "za {days} dni",
+			"licenseLastVerified": "Ostatnia weryfikacja",
+			"licenseNever": "nigdy",
+			"licenseLastCheckFailed": "ostatnia weryfikacja nie powiodła się",
+			"licenseFeatures": "Funkcje",
+			"licenseInstance": "ID instancji",
+			"licenseManage": "Zarządzaj"
+		},
+		"searchUsersPlaceholder": "Szukaj po nazwie użytkownika lub adresie e-mail…",
+		"users": {
+			"status": "Stan",
+			"details": "Szczegóły",
+			"detailsTitle": "Użytkownik: {username}",
+			"issuer": "Wystawca",
+			"issuerLocal": "Lokalny",
+			"issuerUrl": "Adres URL wystawcy",
+			"subject": "Podmiot",
+			"statusActive": "Aktywny",
+			"statusEmailConfirmation": "Wymagane potwierdzenie e-mail",
+			"statusDisabled": "Wyłączony",
+			"statusLocked": "Konto zablokowane",
+			"isAdminLabel": "Administrator",
+			"addUser": "Dodaj użytkownika",
+			"createTitle": "Utwórz użytkownika",
+			"nameLabel": "Nazwa",
+			"skipEmailConfirm": "Pomiń potwierdzenie adresu e-mail",
+			"createSubmit": "Utwórz użytkownika",
+			"saveButton": "Zapisz zmiany",
+			"newPasswordLabel": "Nowe hasło",
+			"setPassword": "Ustaw hasło",
+			"setPasswordSuccess": "Hasło użytkownika {username} zostało zaktualizowane.",
+			"sendResetEmail": "Wyślij e-mail do resetowania hasła",
+			"sendResetEmailSuccess": "E-mail do resetowania hasła został wysłany do {username}.",
+			"editSettings": "Edytuj ustawienia",
+			"settingsTitle": "Ustawienia użytkownika {username}",
+			"settingsEditingOther": "Edytujesz ustawienia użytkownika {username}, a nie własne. Zmiany będą dotyczyć jego konta.",
+			"backToUsers": "Wróć do użytkowników",
+			"createdSuccess": "Użytkownik {username} został utworzony.",
+			"updatedSuccess": "Użytkownik {username} został zaktualizowany.",
+			"deletedSuccess": "Użytkownik {username} został usunięty.",
+			"deleteScheduledSuccess": "Użytkownik {username} otrzyma e-mail z potwierdzeniem, aby zaplanować usunięcie.",
+			"confirmDeleteTitle": "Usunąć użytkownika?",
+			"confirmDeleteIntro": "Jak usunąć użytkownika {username}?",
+			"deleteModeScheduled": "Zaplanuj usunięcie",
+			"deleteModeScheduledHelp": "Zaplanowanie usunięcia wysyła użytkownikowi e-mail z potwierdzeniem, podobnie jak przy samodzielnym usunięciu konta.",
+			"deleteModeNow": "Usuń teraz",
+			"deleteModeNowHelp": "Usunięcie teraz natychmiast usuwa użytkownika i wszystkie jego dane. Tej operacji nie można cofnąć."
+		},
+		"projects": {
+			"ownerLabel": "Właściciel",
+			"reassignOwner": "Zmień właściciela",
+			"reassignTitle": "Zmień właściciela: {title}",
+			"reassignedSuccess": "Właściciel projektu został zmieniony.",
+			"newOwnerLabel": "Nowy właściciel",
+			"searchPlaceholder": "Szukaj projektów…",
+			"filterByOwner": "Filtruj według właściciela",
+			"hideDefaultProjects": "Ukryj domyślne projekty"
+		},
+		"inviteLinks": {
+			"title": "Linki zaproszeń",
+			"create": "Utwórz link zaproszenia",
+			"name": "Nazwa linku",
+			"teams": "Zespoły do dołączenia",
+			"maxUses": "Maksymalna liczba użyć",
+			"unlimited": "Bez limitu",
+			"uses": "Użycia",
+			"expiresAt": "Wygasa",
+			"neverExpires": "Nigdy nie wygasa",
+			"createdBy": "Utworzony przez",
+			"skipEmailConfirm": "Pomiń potwierdzenie adresu e-mail",
+			"shownOnce": "Ten link jest wyświetlany tylko raz. Skopiuj go przed zamknięciem tego okna.",
+			"url": "Link zaproszenia",
+			"copy": "Kopiuj link",
+			"copied": "Link skopiowany",
+			"delete": "Usuń link zaproszenia",
+			"deleteConfirm": "Usunąć „{name}”? Osoby nie będą już mogły zarejestrować się za pomocą tego linku. Istniejące konta pozostaną aktywne.",
+			"deleted": "Link zaproszenia został usunięty.",
+			"empty": "Nie ma jeszcze linków zaproszeń. Utwórz link, aby zaprosić osoby do tej instancji.",
+			"futureExpiry": "Wybierz datę wygaśnięcia w przyszłości.",
+			"creatorDeleted": "Usunięty użytkownik"
+		}
+	},
+	"trash": {
+		"restoreSuccess": "Zadanie zostało przywrócone.",
+		"deleteForeverSuccess": "Zadanie zostało trwale usunięte.",
+		"emptySuccess": "Kosz został opróżniony.",
+		"title": "Kosz",
+		"restore": "Przywróć",
+		"deleteForever": "Usuń trwale",
+		"empty": "Opróżnij kosz",
+		"noTasks": "W koszu nie ma żadnych zadań.",
+		"deletedBy": "Usunięte przez {user} {since}",
+		"deleted": "Usunięte {since}",
+		"daysLeft": "Usunięte trwale dzisiaj|Usunięte trwale za {count} dzień|Usunięte trwale za {count} dni",
+		"deleteForeverModal": {
+			"header": "Usuń to zadanie trwale",
+			"text": "Spowoduje to trwałe usunięcie zadania „{task}” wraz z komentarzami, załącznikami, przypomnieniami i powiązaniami. Jego wpisy czasu pozostaną w projekcie. Tej operacji nie można cofnąć."
+		},
+		"emptyModal": {
+			"text": "Nie ma zadań, które możesz usunąć.|Spowoduje to trwałe usunięcie 1 zadania. Tej operacji nie można cofnąć.|Spowoduje to trwałe usunięcie {count} zadań. Tej operacji nie można cofnąć.",
+			"byOthers": "1 z nich zostało przeniesione do kosza przez kogoś innego.|{count} z nich zostało przeniesionych do kosza przez inne osoby.",
+			"includeOthers": "Usuń także zadania przeniesione do kosza przez inne osoby"
+		},
+		"open": "Otwórz kosz",
+		"taskInTrash": "To zadanie znajduje się w koszu. Zostało usunięte {since}.",
+		"taskInTrashBy": "To zadanie znajduje się w koszu. {user} usunął je {since}.",
+		"taskInTrashTitle": "Zadanie w koszu",
+		"inTrash": "W koszu",
+		"daysLeftShort": "usunięte trwale dzisiaj|usunięte trwale za {count} dzień|usunięte trwale za {count} dni",
+		"deletedByYou": "Usunięte przez Ciebie {since}",
+		"taskInTrashByYou": "To zadanie znajduje się w koszu. Zostało przez Ciebie usunięte {since}.",
+		"tabs": {
+			"label": "Sekcje kosza"
+		},
+		"restoreProjectSuccess": "Projekt został przywrócony.",
+		"restoreParentProject": "Przywróć projekt nadrzędny",
+		"deleteProjectForeverSuccess": "Projekt został trwale usunięty.",
+		"noProjects": "W koszu nie ma żadnych projektów.",
+		"subProjects": "+{count} podprojekt|+{count} podprojektów",
+		"deleteProjectForeverModal": {
+			"header": "Usuń ten projekt trwale",
+			"text": "Spowoduje to trwałe usunięcie projektu „{project}” wraz z podprojektami, zadaniami, widokami i udostępnieniami. Wpisy czasu pozostaną u osób, które je zarejestrowały, bez przypisania do projektu. Tej operacji nie można cofnąć."
+		},
+		"emptyProjectsModal": {
+			"text": "Nie ma projektów, które możesz usunąć.|Spowoduje to trwałe usunięcie 1 projektu wraz z całą jego zawartością. Tej operacji nie można cofnąć.|Spowoduje to trwałe usunięcie {count} projektów wraz z całą ich zawartością. Tej operacji nie można cofnąć.",
+			"byOthers": "1 z nich został przeniesiony do kosza przez kogoś innego.|{count} z nich zostało przeniesionych do kosza przez inne osoby.",
+			"includeOthers": "Usuń także projekty przeniesione do kosza przez inne osoby"
+		},
+		"projectInTrash": "Ten projekt znajduje się w koszu. Został usunięty {since}.",
+		"projectInTrashBy": "Ten projekt znajduje się w koszu. {user} usunął go {since}.",
+		"projectInTrashByYou": "Ten projekt znajduje się w koszu. Został przez Ciebie usunięty {since}."
 	}
 }
