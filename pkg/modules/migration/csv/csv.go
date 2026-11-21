@@ -721,8 +721,9 @@ func (rc *rowConverter) hasProjectMapping() bool {
 	return false
 }
 
+// projectName returns the row's project, or "" when its project cell is empty.
 func (rc *rowConverter) projectName(row []string) string {
-	name := "Tasks"
+	name := ""
 	for _, mapping := range rc.mappings {
 		if mapping.ColumnIndex >= len(row) {
 			break
@@ -750,6 +751,7 @@ func (rc *rowConverter) convert(rows [][]string) ([]*models.ProjectWithTasksAndB
 
 	hasProjectMapping := rc.hasProjectMapping()
 	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
+	anyNamed := false
 
 	for i, row := range rows {
 		task, err := rc.task(row, i)
@@ -768,6 +770,11 @@ func (rc *rowConverter) convert(rows [][]string) ([]*models.ProjectWithTasksAndB
 		}
 
 		projectName := rc.projectName(row)
+		if projectName != "" {
+			anyNamed = true
+		} else {
+			projectName = "Tasks"
+		}
 		if _, exists := projects[projectName]; !exists {
 			items++
 			projects[projectName] = &models.ProjectWithTasksAndBuckets{
@@ -789,10 +796,14 @@ func (rc *rowConverter) convert(rows [][]string) ([]*models.ProjectWithTasksAndB
 		return []*models.ProjectWithTasksAndBuckets{parentProject}, nil
 	}
 
-	// If only one project exists, put all tasks directly in the parent project
+	// If only one project exists, put all tasks directly in the parent project,
+	// named after that project unless every project cell was empty.
 	if len(projects) == 1 {
-		for _, p := range projects {
+		for name, p := range projects {
 			parentProject.Tasks = p.Tasks
+			if anyNamed {
+				parentProject.Title = name
+			}
 		}
 		return []*models.ProjectWithTasksAndBuckets{parentProject}, nil
 	}

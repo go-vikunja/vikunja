@@ -511,6 +511,53 @@ func TestConvertToVikunja(t *testing.T) {
 	assert.Equal(t, 1, tasksProject.numTasks, "Tasks project should have 1 task")
 }
 
+// A mapped project column with a single distinct value names the imported
+// project instead of being dropped (#4455). With every project cell empty, or
+// with no project column at all, the project keeps its default name.
+func TestConvertToVikunjaSingleProject(t *testing.T) {
+	mapping := []ColumnMapping{
+		{ColumnIndex: 0, Attribute: AttrTitle},
+		{ColumnIndex: 1, Attribute: AttrProject},
+	}
+	for _, tc := range []struct {
+		name    string
+		rows    [][]string
+		mapping []ColumnMapping
+		want    string
+	}{
+		{
+			name:    "one named project",
+			rows:    [][]string{{"Task 1", "Work"}, {"Task 2", "Work"}},
+			mapping: mapping,
+			want:    "Work",
+		},
+		{
+			name:    "every project cell empty",
+			rows:    [][]string{{"Task 1", ""}, {"Task 2", " "}},
+			mapping: mapping,
+			want:    "Imported from CSV",
+		},
+		{
+			name:    "no project column",
+			rows:    [][]string{{"Task 1", "Work"}, {"Task 2", "Work"}},
+			mapping: mapping[:1],
+			want:    "Imported from CSV",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			config := ImportConfig{Delimiter: ",", QuoteChar: "\"", Mapping: tc.mapping}
+			rc, err := newRowConverter(&config)
+			require.NoError(t, err)
+			result, err := rc.convert(tc.rows)
+			require.NoError(t, err)
+
+			require.Len(t, result, 1)
+			assert.Equal(t, tc.want, result[0].Title)
+			assert.Len(t, result[0].Tasks, 2)
+		})
+	}
+}
+
 func TestRowToTask(t *testing.T) {
 	row := []string{"My Task", "Task description", "2024-01-15", "high", "work, urgent"}
 
