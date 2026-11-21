@@ -142,6 +142,8 @@ type TaskAttachment struct {
 	TaskID  int64     `json:"task_id"`
 	File    *File     `json:"file,omitempty"`
 	Created time.Time `json:"created,omitempty"`
+	// URL is not on the wire; commands fill it before printing.
+	URL string `json:"url,omitempty"`
 }
 
 // File matches the metadata of pkg/files.File.
