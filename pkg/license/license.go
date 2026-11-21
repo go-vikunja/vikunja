@@ -155,12 +155,30 @@ func Init() {
 		log.Fatalf("Could not initialize license system: %s", err)
 	}
 
+	activate(key)
+
+	// Offline tokens are bound to this ID, so admins need it before they have a license.
+	if !loadState().Licensed {
+		log.Infof("Instance ID: %s", instanceID)
+	}
+}
+
+func activate(key string) {
 	// No license key configured — free mode. Clear any state persisted by a
 	// previous run (e.g. via Redis) so a removed key can't leave stale
 	// Licensed=true entitlements behind.
 	if key == "" {
 		log.Debugf("No license key configured.")
 		degradeToFree("No license key configured.")
+		return
+	}
+
+	if isOfflineToken(key) {
+		expiresAt, ok := applyOfflineToken(key)
+		if ok {
+			stopCh = make(chan struct{})
+			go offlineBackgroundLoop(expiresAt)
+		}
 		return
 	}
 
@@ -219,7 +237,13 @@ func ResetForTests() {
 }
 
 // ReloadFromCache applies the cached license_status row; empty or missing cache degrades to free mode.
+// Offline tokens are re-verified instead, since they never use the cache.
 func ReloadFromCache() error {
+	if key := config.LicenseKey.GetString(); isOfflineToken(key) {
+		applyOfflineToken(key)
+		return nil
+	}
+
 	cached, err := loadCachedStatus()
 	if err != nil {
 		return err
@@ -343,6 +367,11 @@ func saveState(st state) {
 	if err := keyvalue.Put(stateKey, st); err != nil {
 		log.Errorf("Error saving license state to keyvalue: %s", err)
 	}
+}
+
+// InstanceID returns this instance's ID, creating it if missing.
+func InstanceID() (string, error) {
+	return loadOrCreateInstanceID()
 }
 
 func loadOrCreateInstanceID() (string, error) {
