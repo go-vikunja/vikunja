@@ -361,6 +361,24 @@ func TestListUsers(t *testing.T) {
 		}
 		assert.True(t, foundBot, "owner A's bot (id=23) should appear in results when no search is provided and ReturnAllIfNoSearchProvided is true")
 	})
+	t.Run("own bot not returned when excluded by AdditionalCond", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		botOwnerA := &user.User{ID: 21}
+		for _, search := range []string{"", "assistant"} {
+			all, err := user.ListUsers(s, search, botOwnerA, &user.ProjectUserOpts{
+				AdditionalCond:              builder.In("id", []int64{21}),
+				ReturnAllIfNoSearchProvided: true,
+				MatchFuzzily:                true,
+			})
+			require.NoError(t, err)
+			for _, u := range all {
+				assert.NotEqual(t, int64(23), u.ID, "bot without project access must not appear (search %q)", search)
+			}
+		}
+	})
 }
 
 // User 10 is in external teams 14 and 15 and shares team 14 with user 11.
