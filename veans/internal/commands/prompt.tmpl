@@ -39,6 +39,8 @@ Humans skim tasks. Every description and comment must be short:
   `veans list --ready` shows tasks ready to start.
 - While working: check off checklist items with `--description-replace-old`
   / `--description-replace-new` (exact, unique match).
+- Files worth keeping (screenshots, logs): `--attach PATH` on `create` or
+  `update`, repeatable.
 - Sub-work that could be assigned separately: a subtask via `--parent`.
 - Done: `veans update {{ .TaskIDExample }} -s in-review --comment '<ul><li>…</li></ul>'`.
   **Never close tasks yourself** — humans or the merge hook do.
@@ -81,7 +83,8 @@ has `task`, `completed` and `failed`: retry only the failed steps with
 `--fields identifier,url` limits output to those keys. Key fields: `id`
 (internal; use with `--id` or `api` — a bare number means the project index),
 `index`, `url`, `done`, `title`, `description`, `buckets[]`, `assignees[]`,
-`labels[]`. `related_tasks` omit `description`.
+`labels[]`, `attachments[]` (`file.name`, `file.mime`, `file.size`).
+`related_tasks` omit `description`.
 
 # Statuses
 
@@ -93,11 +96,11 @@ has `task`, `completed` and `failed`: retry only the failed steps with
 ```
 veans list [--ready|--mine|--branch|--filter "priority > 3"]
 veans show {{ .TaskIDExample }}
-veans create "title" -s in-progress -d "<p>…</p>" [--label bug --priority 4 --parent {{ .TaskIDExample }} --blocked-by {{ .TaskIDExample }}]
+veans create "title" -s in-progress -d "<p>…</p>" [--label bug --priority 4 --parent {{ .TaskIDExample }} --blocked-by {{ .TaskIDExample }} --attach PATH]
 veans update {{ .TaskIDExample }} [-s STATUS] [--comment HTML] [--description-append HTML]
   [--description-replace-old OLD --description-replace-new NEW]
   [--label-add X --label-remove Y] [--parent ID | --no-parent]
-  [--blocked-by-add ID --blocked-by-remove ID]
+  [--blocked-by-add ID --blocked-by-remove ID] [--attach PATH]
 veans claim {{ .TaskIDExample }}                 # assign yourself + In Progress + branch label
 veans api GET /tasks/...           # raw REST escape hatch
 ```
