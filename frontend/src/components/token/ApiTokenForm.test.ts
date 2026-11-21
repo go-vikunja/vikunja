@@ -96,6 +96,35 @@ describe('ApiTokenForm', () => {
 		expect(wrapper.text()).toContain('The title is required')
 		expect(mounted.errors).toEqual([])
 	})
+
+	it('creates a token with the available Veans permissions', async () => {
+		const mounted = mountForm({
+			initialTitle: 'Veans',
+			routes: {
+				tasks: {update: {}, delete: {}},
+				projects: {tasks_by_index: {}, views_buckets_tasks_update: {}, delete: {}},
+				tasks_attachments: {create: {}, delete: {}},
+				teams: {read_all: {}},
+			},
+		})
+		wrapper = mounted.wrapper
+		const preset = wrapper.findAll('.preset-buttons button').find(button => button.text() === 'Veans')
+		expect(preset).toBeDefined()
+		await preset!.trigger('click')
+		await wrapper.get('form').trigger('submit')
+		await flushPromises()
+		expect(create).toHaveBeenCalledWith(expect.objectContaining({
+			body: expect.objectContaining({
+				permissions: {
+					tasks: ['update'],
+					projects: ['tasks_by_index', 'views_buckets_tasks_update'],
+					tasks_attachments: ['create'],
+				},
+			}),
+		}))
+		expect(mounted.errors).toEqual([])
+	})
+
 	it('uses supplied routes and presets and retains locked scopes through group toggles', async () => {
 		const mounted = mountForm({
 			initialTitle: 'MCP',
