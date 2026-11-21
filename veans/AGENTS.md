@@ -261,7 +261,7 @@ Everything else (`list`, `show`, `create`, `update`, `claim`, `api`,
   (`render.go`): it fills URLs, drops nested related-task descriptions and
   applies `--fields`, which is parsed before any request. Adding new
   top-level keys to `client.Task` is an implicit API change (they also
-  become valid `--fields` names) — bump `prime`'s "useful fields" note
+  become valid `--fields` names) — bump `prime`'s "Key fields" note
   alongside.
 
 ## Things to *not* do
