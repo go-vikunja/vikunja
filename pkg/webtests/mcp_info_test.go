@@ -66,8 +66,9 @@ func TestMCPInfo(t *testing.T) {
 				assert.NotEmpty(t, info.Routes[group], group)
 			}
 			assert.Contains(t, info.Routes["mcp"], "access")
+			assert.NotEmpty(t, info.Routes["projects_shares"])
 			assert.Contains(t, info.Routes["other"], "users")
-			for _, group := range []string{"tokens", "users", "webhooks", "projects_shares", "caldav", "mcp_info"} {
+			for _, group := range []string{"tokens", "users", "webhooks", "caldav", "mcp_info"} {
 				assert.NotContains(t, info.Routes, group)
 			}
 			var typed map[string][]string

@@ -34,9 +34,10 @@ const (
 )
 
 type actionInfo struct {
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	InputSchema *jsonschema.Schema `json:"input_schema,omitempty"`
+	Name        string               `json:"name"`
+	Description string               `json:"description"`
+	InputSchema *jsonschema.Schema   `json:"input_schema,omitempty"`
+	Annotations *mcp.ToolAnnotations `json:"annotations,omitempty"`
 }
 type findActionArgs struct {
 	Action   string `json:"action"`
@@ -115,6 +116,7 @@ func catalogActions(catalog []*tool, action, resource string) []actionInfo {
 		info := actionInfo{
 			Name:        t.name,
 			Description: t.description,
+			Annotations: shareAnnotations(t.op.OperationID),
 		}
 		if action != "" || resource != "" {
 			info.InputSchema = t.spec.schema
