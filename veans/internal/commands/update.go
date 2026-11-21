@@ -48,6 +48,7 @@ type updateFlags struct {
 	noParent         bool
 	addBlockedBy     []string
 	removeBlockedBy  []string
+	attach           []string
 }
 
 func newUpdateCmd() *cobra.Command {
@@ -100,6 +101,7 @@ func newUpdateCmd() *cobra.Command {
 	cmd.MarkFlagsMutuallyExclusive("parent", "no-parent")
 	cmd.Flags().StringSliceVar(&f.addBlockedBy, "blocked-by-add", nil, "task IDs that block this one (repeatable)")
 	cmd.Flags().StringSliceVar(&f.removeBlockedBy, "blocked-by-remove", nil, "task IDs that no longer block this one (repeatable)")
+	addAttachFlag(cmd, &f.attach)
 	cmd.Args = addTaskIDFlag(cmd, &taskIDArg)
 	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
@@ -160,6 +162,9 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 	}
 	removeBlockers, err := resolveRefs(ctx, rt, f.removeBlockedBy)
 	if err != nil {
+		return nil, err
+	}
+	if err := checkAttachPaths(f.attach); err != nil {
 		return nil, err
 	}
 
@@ -304,7 +309,11 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 	}
 	relationsChanged := parentChanged || len(addBlockers) > 0 || len(removeBlockers) > 0
 
-	if len(f.addLabels) > 0 || len(f.removeLabels) > 0 || bucketTransitionTarget != 0 || relationsChanged {
+	if err := attachFiles(ctx, rt, id, f.attach, progress); err != nil {
+		return nil, err
+	}
+
+	if len(f.addLabels) > 0 || len(f.removeLabels) > 0 || bucketTransitionTarget != 0 || relationsChanged || len(f.attach) > 0 {
 		fresh, err := rt.client.GetTask(ctx, id)
 		if err == nil {
 			updated = fresh
