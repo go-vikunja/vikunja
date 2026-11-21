@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -416,5 +417,22 @@ func TestRunUpdate_BlockedByAddRemove(t *testing.T) {
 	}
 	if !reflect.DeepEqual(mutations, want) {
 		t.Fatalf("mutations:\nwant: %#v\ngot:  %#v", want, mutations)
+	}
+}
+
+func TestRunUpdate_MissingAttachmentFailsBeforeMutating(t *testing.T) {
+	srv, calls := startRecordingServer(t)
+	rt := newTestRuntime(srv.URL)
+
+	_, err := runUpdate(context.Background(), rt, 42, &updateFlags{
+		comment: "<p>x</p>",
+		attach:  []string{filepath.Join(t.TempDir(), "missing.png")},
+	})
+	if err == nil {
+		t.Fatal("expected an error for a missing --attach path")
+	}
+	want := []recordedCall{{http.MethodGet, "/api/v2/tasks/42"}}
+	if !reflect.DeepEqual(*calls, want) {
+		t.Fatalf("expected no mutation, got %#v", *calls)
 	}
 }

@@ -94,6 +94,9 @@ oddly, suspect one of these:
   task into it, and moving a done task out un-marks it. So `scrapped` is
   done=false in the Scrapped bucket; `list --ready` treats a scrapped
   blocker as resolved. Create honors `bucket_id` on current servers.
+- **Attachment upload answers 201 even when the file is rejected.** `POST
+  /tasks/{id}/attachments` (multipart, field `files`) reports per-file
+  failures in `errors`; `UploadTaskAttachment` turns those into an error.
 - **Bot user creation is `POST /user/bots`**, not `/bots` — the routes
   are registered under the `/user` subgroup. Same prefix for
   `GET /user/bots`.

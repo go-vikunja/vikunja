@@ -33,6 +33,7 @@ type createFlags struct {
 	labels      []string
 	parent      string
 	blockedBy   []string
+	attach      []string
 }
 
 func newCreateCmd() *cobra.Command {
@@ -65,6 +66,7 @@ func newCreateCmd() *cobra.Command {
 	cmd.Flags().StringSliceVar(&f.labels, "label", nil, "labels to attach (repeatable; veans: prefix added if missing)")
 	cmd.Flags().StringVar(&f.parent, "parent", "", "parent task ID (creates parenttask relation)")
 	cmd.Flags().StringSliceVar(&f.blockedBy, "blocked-by", nil, "task IDs that block this one (repeatable)")
+	addAttachFlag(cmd, &f.attach)
 	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
 }
@@ -88,6 +90,9 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 	}
 	blockerIDs, err := resolveRefs(ctx, rt, f.blockedBy)
 	if err != nil {
+		return nil, err
+	}
+	if err := checkAttachPaths(f.attach); err != nil {
 		return nil, err
 	}
 
@@ -142,6 +147,10 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 			return nil, progress.fail(step, err)
 		}
 		progress.done(step)
+	}
+
+	if err := attachFiles(ctx, rt, created.ID, f.attach, progress); err != nil {
+		return nil, err
 	}
 
 	// Re-fetch so the response reflects the labels and any post-create state.

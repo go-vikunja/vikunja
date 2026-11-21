@@ -19,6 +19,8 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -259,5 +261,45 @@ func TestTaskIDFlag(t *testing.T) {
 	_, errOut, code = h.Run(t, ws, "show", "1", "--id", id)
 	if code == 0 || !strings.Contains(errOut, "VALIDATION_ERROR") {
 		t.Fatalf("ref plus --id should fail validation: exit %d %s", code, errOut)
+	}
+}
+
+func TestAttach_CreateAndUpdate(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	writeFile := func(name, content string) string {
+		p := filepath.Join(t.TempDir(), name)
+		if err := os.WriteFile(p, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+
+	out, errOut, code := h.Run(t, ws, "create", "With attachment", "--attach", writeFile("first.txt", "one"))
+	if code != 0 {
+		t.Fatalf("create exit %d\n%s\n%s", code, out, errOut)
+	}
+	var created client.Task
+	if err := json.Unmarshal([]byte(out), &created); err != nil {
+		t.Fatalf("decode create: %v\n%s", err, out)
+	}
+
+	out, errOut, code = h.Run(t, ws, "update", "--id", strconv.FormatInt(created.ID, 10),
+		"--attach", writeFile("second.log", "two"))
+	if code != 0 {
+		t.Fatalf("update exit %d\n%s\n%s", code, out, errOut)
+	}
+	var updated client.Task
+	if err := json.Unmarshal([]byte(out), &updated); err != nil {
+		t.Fatalf("decode update: %v\n%s", err, out)
+	}
+	var names []string
+	for _, a := range updated.Attachments {
+		if a.File != nil {
+			names = append(names, a.File.Name)
+		}
+	}
+	if strings.Join(names, ",") != "first.txt,second.log" {
+		t.Fatalf("attachments = %v", names)
 	}
 }
