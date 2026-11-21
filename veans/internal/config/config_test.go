@@ -50,6 +50,13 @@ func TestFormatTaskID(t *testing.T) {
 	}
 }
 
+func TestAttachmentURL(t *testing.T) {
+	c := Config{Server: "https://api.example.com/", FrontendURL: "https://vikunja.example.com"}
+	if got, want := c.AttachmentURL(42, 7), "https://api.example.com/api/v2/tasks/42/attachments/7"; got != want {
+		t.Errorf("AttachmentURL = %q, want %q", got, want)
+	}
+}
+
 func TestTaskURL(t *testing.T) {
 	cases := []struct {
 		name string

@@ -75,6 +75,11 @@ func parseFields(raw string) (fieldSet, error) {
 // bloat the output and are one `veans show` away.
 func (r *runtime) prepareTask(t *client.Task) {
 	t.URL = r.cfg.TaskURL(t.ID)
+	for _, a := range t.Attachments {
+		if a != nil {
+			a.URL = r.cfg.AttachmentURL(t.ID, a.ID)
+		}
+	}
 	for _, related := range t.RelatedTasks {
 		for _, rt := range related {
 			if rt == nil {
