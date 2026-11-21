@@ -66,7 +66,6 @@ func TestPrimeTemplate_RendersAnchors(t *testing.T) {
 		"Titles are plaintext",
 		`data-type="taskList"`,
 		`data-checked="false"`,
-		"<h2>",
 		"<pre><code",
 		`<a href="https://vikunja.example.com/tasks/123">https://vikunja.example.com/tasks/123</a>`,
 	}
