@@ -123,6 +123,7 @@ const defaultPresets: ApiTokenPreset[] = [
 	{
 		// Keep in sync with PermissionsForBot in veans/internal/client/routes.go.
 		id: 'veans',
+		label: 'Veans',
 		groups: {
 			tasks: ['read_one', 'read_all', 'create', 'update', 'position', 'read', 'update_bulk'],
 			projects: [

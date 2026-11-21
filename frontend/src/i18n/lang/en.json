@@ -321,7 +321,6 @@
           "readOnly": "Read only",
           "tasks": "Task management",
           "projects": "Project management",
-          "veans": "Veans",
           "fullAccess": "Full access"
         },
         "delete": {
