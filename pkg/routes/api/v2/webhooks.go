@@ -33,6 +33,14 @@ type webhookListBody struct {
 	Body Paginated[*models.Webhook]
 }
 
+type webhookUpdate struct {
+	// Older clients send the complete webhook, including immutable fields.
+	_          struct{} `json:"-" additionalProperties:"true"`
+	TargetURL  string   `json:"target_url" valid:"required,url" doc:"The existing target URL. It cannot be changed."`
+	Events     []string `json:"events" valid:"required" doc:"The webhook events to subscribe to."`
+	IsDisabled *bool    `json:"is_disabled,omitempty" doc:"Omit to preserve the disabled state. Explicitly enabling a disabled webhook transfers it to the acting user."`
+}
+
 // RegisterWebhookRoutes wires the nested project-webhook CRUD onto the Huma API.
 // Project webhooks are gated by the webhooks.enabled config flag; the check runs
 // here (not at init()) because RegisterAll fires after config is loaded. There is
@@ -66,8 +74,8 @@ func RegisterWebhookRoutes(api huma.API) {
 
 	Register(api, huma.Operation{
 		OperationID: "webhooks-update",
-		Summary:     "Update a webhook target's events",
-		Description: "Changes the events a webhook target subscribes to. Only the events list can be changed; target_url, secret and auth are immutable after creation. The webhook must belong to the project in the path, and write access to that project is required.",
+		Summary:     "Update a webhook target",
+		Description: "Changes the subscribed events and optionally is_disabled. Omitting is_disabled preserves its state. Explicitly enabling a disabled webhook transfers it to the acting user. The target URL and credentials remain unchanged. The webhook must belong to the project in the path, and write access to that project is required.",
 		Method:      http.MethodPut,
 		Path:        "/projects/{project}/webhooks/{webhook}",
 		Tags:        tags,
@@ -123,22 +131,23 @@ func webhooksCreate(ctx context.Context, in *struct {
 func webhooksUpdate(ctx context.Context, in *struct {
 	ProjectID int64 `path:"project"`
 	ID        int64 `path:"webhook"`
-	Body      models.Webhook
+	Body      webhookUpdate
 }) (*singleBody[models.Webhook], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	// Only the events list is persisted (Webhook.Update writes Cols("events")),
-	// but the id and parent must be set so the permission check resolves the
-	// right webhook under the right project.
-	in.Body.ID = in.ID
-	in.Body.ProjectID = in.ProjectID
-	in.Body.UserID = 0
-	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
+	webhook := &models.Webhook{
+		ID:          in.ID,
+		ProjectID:   in.ProjectID,
+		TargetURL:   in.Body.TargetURL,
+		Events:      in.Body.Events,
+		SetDisabled: in.Body.IsDisabled,
+	}
+	if err := handler.DoUpdate(ctx, webhook, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &singleBody[models.Webhook]{Body: &in.Body}, nil
+	return &singleBody[models.Webhook]{Body: webhook}, nil
 }
 
 func webhooksDelete(ctx context.Context, in *struct {

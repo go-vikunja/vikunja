@@ -108,7 +108,7 @@
 								danger
 								icon="trash-alt"
 								:aria-label="$t('project.share.userTeam.remove', {type: typeName})"
-								@click="shareToDelete = share"
+								@click="confirmRemoval(share)"
 							/>
 						</td>
 					</tr>
@@ -131,8 +131,14 @@
 				}}</span>
 			</template>
 			<template #text>
-				<p>{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}</p>
-				<ProjectAccessCleanupList :intro="$t('project.share.userTeam.removeCleanupText')" />
+				<p class="tw:text-balance">
+					{{ $t('project.share.userTeam.removeText', {type: typeName, sharable: $t('project.share.userTeam.sharable')}) }}
+				</p>
+				<ProjectAccessCleanupList
+					v-model="cleanup"
+					:intro="cleanupIntro"
+					:perspective="removingOwnShare ? 'self' : 'others'"
+				/>
 			</template>
 		</Modal>
 	</div>
@@ -140,7 +146,9 @@
 
 <script setup lang="ts" generic="Candidate extends Record<string, unknown> & {id?: number}, Share extends {id?: number, permission?: number}">
 import {computed, ref, watch, type Ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {normalizeSharePermission} from '@/client/queries/projectShares'
+import {defaultAccessLossCleanup, type AccessLossCleanup} from '@/client/queries/accessLossCleanup'
 import {PERMISSIONS, type Permission} from '@/constants/permissions'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import Multiselect from '@/components/input/Multiselect.vue'
@@ -162,8 +170,11 @@ const props = defineProps<{
 	shareName: (share: Identified<Share>) => string
 	add: (projectId: number, candidate: Identified<Candidate>) => Promise<unknown>
 	updatePermission: (projectId: number, share: Identified<Share>, permission: Permission) => Promise<unknown>
-	remove: (projectId: number, share: Identified<Share>) => Promise<unknown>
+	remove: (projectId: number, share: Identified<Share>, cleanup: AccessLossCleanup) => Promise<unknown>
+	isOwnShare?: (share: Identified<Share>) => boolean
 }>()
+
+const {t} = useI18n()
 
 const showSearchLoading = useDelayedLoading(() => props.searchLoading)
 
@@ -183,6 +194,14 @@ const unsharedCandidates = computed(() => props.candidates.filter(hasId).filter(
 const selected = ref(null) as Ref<Identified<Candidate> | null>
 const selectedPermission = ref<Record<number, Permission>>({})
 const shareToDelete = ref(null) as Ref<Identified<Share> | null>
+const removingOwnShare = ref(false)
+const cleanup = ref(defaultAccessLossCleanup())
+const cleanupIntro = computed(() => removingOwnShare.value
+	? t('project.share.accessCleanup.self.intro')
+	: t('project.share.userTeam.removeCleanupText'))
+watch(shareToDelete, () => {
+	cleanup.value = defaultAccessLossCleanup()
+})
 
 watch(identifiedShares, shares => {
 	selectedPermission.value = Object.fromEntries(shares.map(share => [share.id, normalizeSharePermission(share.permission)]))
@@ -218,10 +237,15 @@ async function changePermission(share: Identified<Share>) {
 	}
 }
 
+function confirmRemoval(share: Identified<Share>) {
+	removingOwnShare.value = props.isOwnShare?.(share) ?? false
+	shareToDelete.value = share
+}
+
 async function removeShare() {
 	const share = shareToDelete.value
 	if (!share || props.isMutating) return
-	await props.remove(props.projectId, share).catch(() => {})
+	await props.remove(props.projectId, share, cleanup.value).catch(() => {})
 	if (shareToDelete.value === share) shareToDelete.value = null
 }
 </script>

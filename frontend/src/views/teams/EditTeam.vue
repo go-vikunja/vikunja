@@ -137,12 +137,13 @@
 			</template>
 
 			<template #text>
-				<p>
+				<p class="tw:text-balance">
 					{{ $t('team.edit.leave.text1') }}<br>
 					{{ $t('team.edit.leave.text2') }}
 				</p>
 				<ProjectAccessCleanupList
-					:intro="$t('team.edit.leave.cleanupText')"
+					v-model="cleanup"
+					:intro="$t('project.share.accessCleanup.self.intro')"
 					perspective="self"
 				/>
 			</template>
@@ -159,11 +160,14 @@
 			</template>
 
 			<template #text>
-				<p>
+				<p class="tw:text-balance">
 					{{ $t('team.edit.delete.text1') }}<br>
 					{{ $t('team.edit.delete.text2') }}
 				</p>
-				<ProjectAccessCleanupList :intro="$t('team.edit.delete.cleanupText')" />
+				<ProjectAccessCleanupList
+					v-model="cleanup"
+					:intro="$t('team.edit.delete.cleanupText')"
+				/>
 			</template>
 		</Modal>
 
@@ -178,18 +182,21 @@
 			</template>
 
 			<template #text>
-				<p>
+				<p class="tw:text-balance">
 					{{ $t('team.edit.deleteUser.text1') }}<br>
 					{{ $t('team.edit.deleteUser.text2') }}
 				</p>
-				<ProjectAccessCleanupList :intro="$t('team.edit.deleteUser.cleanupText')" />
+				<ProjectAccessCleanupList
+					v-model="cleanup"
+					:intro="$t('team.edit.deleteUser.cleanupText')"
+				/>
 			</template>
 		</Modal>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 import Multiselect from '@/components/input/Multiselect.vue'
@@ -198,6 +205,7 @@ import ProjectAccessCleanupList from '@/components/sharing/ProjectAccessCleanupL
 import EditTeamForm from '@/components/teams/EditTeamForm.vue'
 import {getDisplayName} from '@/helpers/user'
 import {useUpdateTeamMutation, useDeleteTeamMutation, useAddTeamMemberMutation, useRemoveTeamMemberMutation, useLeaveTeamMutation, useToggleTeamMemberAdminMutation} from '@/client/queries/teams'
+import {defaultAccessLossCleanup} from '@/client/queries/accessLossCleanup'
 import {useTeam} from '@/composables/useTeams'
 import {useUserSearch} from '@/composables/useUserSearch'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
@@ -234,6 +242,10 @@ const showDeleteModal = ref(false)
 const showUserDeleteModal = ref(false)
 const showLeaveModal = ref(false)
 const showMustSelectUserError = ref(false)
+const cleanup = ref(defaultAccessLossCleanup())
+watch([showDeleteModal, showUserDeleteModal, showLeaveModal], () => {
+	cleanup.value = defaultAccessLossCleanup()
+})
 const title = computed(() => t('team.edit.title', {team: team.value?.name ?? ''}))
 useTitle(title)
 
@@ -243,7 +255,10 @@ function save(draft: Required<TeamWritable>) {
 
 async function deleteTeam() {
 	try {
-		await deleteMutation.mutateAsync(teamId.value)
+		await deleteMutation.mutateAsync({
+			id: teamId.value,
+			cleanup: cleanup.value,
+		})
 	} catch {
 		return
 	} finally {
@@ -254,7 +269,11 @@ async function deleteTeam() {
 
 function deleteMember() {
 	if (!memberToDelete.value?.username) return
-	removeMemberMutation.mutate({teamId: teamId.value, username: memberToDelete.value.username}, {
+	removeMemberMutation.mutate({
+		teamId: teamId.value,
+		username: memberToDelete.value.username,
+		cleanup: cleanup.value,
+	}, {
 		onSettled: () => {
 			showUserDeleteModal.value = false
 		},
@@ -285,7 +304,11 @@ function findUser(query: string) {
 async function leave() {
 	if (!userInfo.value?.username) return
 	try {
-		await leaveMutation.mutateAsync({teamId: teamId.value, username: userInfo.value.username})
+		await leaveMutation.mutateAsync({
+			teamId: teamId.value,
+			username: userInfo.value.username,
+			cleanup: cleanup.value,
+		})
 	} catch {
 		return
 	} finally {

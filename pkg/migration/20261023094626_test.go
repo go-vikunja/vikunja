@@ -53,9 +53,14 @@ func TestRepairWebhooksTable20261023094626(t *testing.T) {
 
 		require.NoError(t, repairWebhooksTable20261023094626(x))
 
-		_, err := x.Insert(&models.Webhook{TargetURL: "https://example.com", Events: []string{"task.created"}, UserID: 1, CreatedByID: 1})
+		_, err := x.Insert(&webhooks20261023094626{
+			TargetURL:   "https://example.com",
+			Events:      []string{"task.created"},
+			UserID:      1,
+			CreatedByID: 1,
+		})
 		require.NoError(t, err)
-		webhooks := []*models.Webhook{}
+		webhooks := []*webhooks20261023094626{}
 		require.NoError(t, x.Cols("events").Find(&webhooks))
 		require.Len(t, webhooks, 1)
 		require.Equal(t, []string{"task.created"}, webhooks[0].Events)
@@ -63,14 +68,19 @@ func TestRepairWebhooksTable20261023094626(t *testing.T) {
 
 	t.Run("leaves healthy table untouched", func(t *testing.T) {
 		require.NoError(t, x.DropTables("webhooks"))
-		require.NoError(t, x.Sync2(&models.Webhook{}))
-		w := &models.Webhook{TargetURL: "https://example.com", Events: []string{"task.created"}, ProjectID: 1, CreatedByID: 1}
+		require.NoError(t, x.Sync2(&webhooks20261023094626{}))
+		w := &webhooks20261023094626{
+			TargetURL:   "https://example.com",
+			Events:      []string{"task.created"},
+			ProjectID:   1,
+			CreatedByID: 1,
+		}
 		_, err := x.Insert(w)
 		require.NoError(t, err)
 
 		require.NoError(t, repairWebhooksTable20261023094626(x))
 
-		has, err := x.ID(w.ID).Exist(&models.Webhook{})
+		has, err := x.ID(w.ID).Exist(&webhooks20261023094626{})
 		require.NoError(t, err)
 		require.True(t, has)
 	})

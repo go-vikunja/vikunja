@@ -64,6 +64,8 @@ type Team struct {
 	// the v2 list handler takes it as a dedicated query field and sets it here.
 	IncludePublic bool `xorm:"-" query:"include_public" json:"-"`
 
+	AccessLossCleanup AccessLossCleanup `xorm:"-" json:"-"`
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
@@ -88,6 +90,8 @@ type TeamMember struct {
 
 	// A timestamp when this relation was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this member was added to the team. You cannot change this value."`
+
+	AccessLossCleanup AccessLossCleanup `xorm:"-" json:"-"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -389,7 +393,7 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return fmt.Errorf("delete team invite links: %w", err)
 	}
 
-	err = cleanupAfterProjectAccessLossForUsers(s, memberIDs, projectIDs)
+	err = cleanupAfterProjectAccessLossForUsers(s, a, memberIDs, projectIDs, t.AccessLossCleanup)
 	if err != nil {
 		return err
 	}
