@@ -1,5 +1,6 @@
 import type {Task, Bucket} from '../../../src/client/generated'
 import {test, expect} from '../../support/fixtures'
+import {clickTaskAction} from '../../support/taskDetail'
 import {ProjectFactory} from '../../factories/project'
 import {ProjectViewFactory} from '../../factories/project_view'
 import {TaskFactory} from '../../factories/task'
@@ -78,7 +79,7 @@ test('moving a favourite task to another project keeps it in Favorites and drops
 	await expect(card).toBeVisible()
 	await card.click()
 
-	await page.locator('.task-view .action-buttons .button').filter({hasText: /^Move$/}).click()
+	await clickTaskAction(page, 'Move')
 	const projectInput = page.locator('.task-view .content.details .field .multiselect.control .input-wrapper input')
 	await expect(projectInput).toBeVisible({timeout: 5000})
 	await projectInput.click()

@@ -142,6 +142,35 @@ describe('OpenIdAuth login', () => {
 		expect(wrapper.findComponent({name: 'XButton'}).exists()).toBe(false)
 	})
 
+	it.each([
+		['missing', undefined],
+		['bare', null],
+		['empty', ''],
+	])('refuses a %s state while a flow is pending', async (_, state) => {
+		mockRoute.query = {code: 'auth-code'}
+		if (state !== undefined) {
+			mockRoute.query.state = state
+		}
+		const wrapper = mountCallback()
+		await flushPromises()
+
+		expect(authStore.openIdAuth).not.toHaveBeenCalled()
+		expect(wrapper.text()).toContain('State does not match')
+	})
+
+	it('refuses an empty state when an empty one is stored', async () => {
+		localStorage.setItem('state', '')
+		mockRoute.query = {
+			code: 'auth-code',
+			state: '',
+		}
+		const wrapper = mountCallback()
+		await flushPromises()
+
+		expect(authStore.openIdAuth).not.toHaveBeenCalled()
+		expect(wrapper.text()).toContain('State does not match')
+	})
+
 	it('logs in with the code', async () => {
 		mountCallback()
 		await flushPromises()
@@ -152,6 +181,46 @@ describe('OpenIdAuth login', () => {
 			totpPasscode: undefined,
 		})
 		expect(redirectIfSaved).toHaveBeenCalled()
+	})
+
+	it.each([
+		['succeeds', () => authStore.openIdAuth.mockResolvedValue(undefined)],
+		['fails', () => authStore.openIdAuth.mockRejectedValue({code: 1011})],
+	])('consumes the stored state when the login %s', async (_, setup) => {
+		setup()
+		mountCallback()
+		await flushPromises()
+
+		expect(localStorage.getItem('state')).toBeNull()
+
+		authStore.openIdAuth.mockClear()
+		const revisit = mountCallback()
+		await flushPromises()
+
+		expect(authStore.openIdAuth).not.toHaveBeenCalled()
+		expect(revisit.text()).toContain('State does not match')
+	})
+
+	it('consumes the stored state when the provider reports an error', async () => {
+		mockRoute.query = {
+			error: 'access_denied',
+			state: 'expected-state',
+		}
+		mountCallback()
+		await flushPromises()
+
+		expect(localStorage.getItem('state')).toBeNull()
+	})
+
+	it('keeps the pending flow when the state does not match', async () => {
+		mockRoute.query = {
+			code: 'auth-code',
+			state: 'forged',
+		}
+		mountCallback()
+		await flushPromises()
+
+		expect(localStorage.getItem('state')).toBe('expected-state')
 	})
 
 	it('asks for a TOTP passcode when the login requires one', async () => {

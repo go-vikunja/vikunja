@@ -52,6 +52,7 @@
 		"loading": "Vikunja is aan het laden…",
 		"errorOccured": "Er is een fout opgetreden:",
 		"checkApiUrl": "Controleer of de API URL juist is.",
+		"rateLimited": "De server heeft te veel verzoeken ontvangen. Wacht even en laad de pagina opnieuw.",
 		"noApiUrlConfigured": "Er is geen API URL geconfigureerd. Stel er hieronder een in:"
 	},
 	"offline": {
@@ -66,6 +67,7 @@
 			"email": "E-mailadres",
 			"emailPlaceholder": "bv. frederic{'@'}vikunja.io",
 			"password": "Wachtwoord",
+			"passwordPlaceholder": "Je wachtwoord",
 			"forgotPassword": "Wachtwoord vergeten?",
 			"resetPassword": "Je wachtwoord opnieuw instellen",
 			"resetPasswordAction": "Stuur me een wachtwoord reset link",
@@ -315,6 +317,11 @@
 				},
 				"deleteSuccess": "De sessie is ingetrokken. Het kan tot 10 minuten duren voordat de sessie volledig is verlopen.",
 				"noOtherSessions": "Geen andere actieve sessies."
+			},
+			"mcp": {
+				"endpoint": "MCP-eindpunt",
+				"tokens": "MCP-tokens",
+				"manageTokens": "Beheer alle API-tokens"
 			}
 		},
 		"deletion": {
@@ -1031,28 +1038,11 @@
 			"title": "Taakdetails",
 			"markAsDone": "Markeer '{task}' als gereed",
 			"scrollToBottom": "Scroll naar beneden",
-			"organization": "Organisatie",
-			"management": "Beheer",
-			"dateAndTime": "Datum en tijd",
 			"actions": {
-				"assign": "Toewijzen aan gebruiker",
-				"label": "Labels toevoegen",
-				"priority": "Prioriteit instellen",
-				"dueDate": "Vervaldatum instellen",
-				"startDate": "Startdatum instellen",
-				"endDate": "Einddatum instellen",
-				"reminders": "Herinneringen instellen",
-				"repeatAfter": "Herhalingsinterval instellen",
-				"percentDone": "Voortgang instellen",
-				"attachments": "Bijlagen toevoegen",
 				"timeTracking": "Tijd registreren",
-				"relatedTasks": "Relatie toevoegen",
 				"moveProject": "Verplaatsen",
 				"duplicate": "Dupliceer",
-				"color": "Kleur instellen",
-				"delete": "Verwijder",
-				"favorite": "Toevoegen aan favorieten",
-				"unfavorite": "Verwijder uit favorieten"
+				"delete": "Verwijder"
 			}
 		},
 		"attributes": {
@@ -1205,9 +1195,6 @@
 			"dateAndTime": "Datum en tijd"
 		},
 		"repeat": {
-			"everyDay": "Elke dag",
-			"everyWeek": "Elke week",
-			"every30d": "Elke 30 dagen",
 			"mode": "Herhaalmodus",
 			"monthly": "Maandelijks",
 			"fromCurrentDate": "Vanaf voltooiingsdatum",
@@ -1357,10 +1344,6 @@
 			"shrinkTaskRight": "Verklein taak vanaf einddatum"
 		}
 	},
-	"update": {
-		"available": "Er is een update beschikbaar!",
-		"do": "Nu bijwerken"
-	},
 	"menu": {
 		"edit": "Bewerken",
 		"archive": "Archiveren",
@@ -1401,7 +1384,6 @@
 		"notLoggedIn": "Log eerst in op het Vikunja hoofdscherm.",
 		"commands": "Opdrachten",
 		"placeholder": "Typ een opdracht of zoek…",
-		"hint": "Je kunt {project} gebruiken om het zoeken te beperken tot een project. Combineer {project} of {label} (labels) met een zoekopdracht om te zoeken naar een taak met deze labels of op dat project. Gebruik {assignee} om alleen te zoeken naar teams.",
 		"tasks": "Taken",
 		"projects": "Projecten",
 		"teams": "Teams",

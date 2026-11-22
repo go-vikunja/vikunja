@@ -57,7 +57,7 @@ const botBadgeLabel = computed(() => props.user.bot_owner
 <style lang="scss" scoped>
 .user {
 	display: flex;
-	justify-items: center;
+	align-items: center;
 
 	&.is-inline {
 		display: inline-flex;

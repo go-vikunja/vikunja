@@ -7,6 +7,7 @@ import {TaskBucketFactory} from '../../factories/task_buckets'
 import {SavedFilterFactory} from '../../factories/saved_filter'
 import {UserFactory} from '../../factories/user'
 import {UserProjectFactory} from '../../factories/users_project'
+import {TaskPositionFactory} from '../../factories/task_positions'
 
 async function createProjectsWithTasks() {
 	// Create two projects
@@ -69,6 +70,86 @@ async function createProjectsWithTasks() {
 }
 
 test.describe('Drag Task to Project in Sidebar', () => {
+	test.describe('With subprojects included', () => {
+		async function createParentWithSubproject() {
+			const parent = (await ProjectFactory.create(1, {id: 1, title: 'Parent Project'}))[0]
+			const subproject = (await ProjectFactory.create(1, {
+				id: 2,
+				title: 'Subproject',
+				parent_project_id: 1,
+			}, false))[0]
+
+			const parentList = (await ProjectViewFactory.create(1, {id: 1, project_id: 1, view_kind: 0}))[0]
+			const subprojectList = (await ProjectViewFactory.create(1, {id: 2, project_id: 2, view_kind: 0}, false))[0]
+
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				title: 'Task in the subproject',
+				project_id: 2,
+			})
+
+			return {parent, subproject, parentList, subprojectList, task: tasks[0]}
+		}
+
+		test('Keeps a task visible when it is moved from a subproject to the parent', async ({authenticatedPage: page}) => {
+			const {parent, parentList, task} = await createParentWithSubproject()
+
+			await page.goto(`/projects/${parent.id}/${parentList.id}?include_subprojects=true`)
+
+			await expect(page.locator('.tasks')).toContainText(task.title)
+
+			const taskInList = page.locator('.tasks .single-task').filter({hasText: task.title})
+			const parentInSidebar = page.locator('li[data-project-id="' + parent.id + '"]')
+
+			// The parent's <li> wraps the subproject, so the centre would hit the child row.
+			await taskInList.dragTo(parentInSidebar, {targetPosition: {x: 30, y: 12}})
+
+			await expect(page.locator('.global-notification')).toContainText('moved to')
+
+			await expect(page.locator('.tasks')).toContainText(task.title)
+			await page.reload()
+			await expect(page.locator('.tasks')).toContainText(task.title)
+		})
+
+		test('Reorders a subproject task between the parent\'s tasks', async ({authenticatedPage: page, apiContext, userToken}) => {
+			const headers = {Authorization: `Bearer ${userToken}`}
+			const {parent, subproject, parentList, subprojectList, task} = await createParentWithSubproject()
+			const parentTasks = await TaskFactory.create(2, {
+				id: i => i + 1,
+				title: i => i === 1 ? `Parent task 1 ${'with a title that wraps onto several lines '.repeat(20)}` : `Parent task ${i}`,
+				project_id: parent.id,
+			}, false)
+			await TaskPositionFactory.seed(TaskPositionFactory.table, [
+				{task_id: parentTasks[0].id, project_view_id: parentList.id, position: 100},
+				{task_id: parentTasks[1].id, project_view_id: parentList.id, position: 200},
+				{task_id: task.id, project_view_id: subprojectList.id, position: 1000},
+			])
+
+			await page.goto(`/projects/${parent.id}/${parentList.id}?include_subprojects=true`)
+
+			const rows = page.locator('.tasks .single-task')
+			await expect(rows).toHaveText([/Task in the subproject/, /Parent task 1/, /Parent task 2/])
+
+			const positionSaved = page.waitForResponse(r => r.url().includes(`/tasks/${task.id}/position`) && r.request().method() === 'PUT')
+			const parentTask1 = rows.filter({hasText: 'Parent task 1'})
+			const parentTask1Box = (await parentTask1.boundingBox())!
+			await rows.filter({hasText: task.title}).dragTo(parentTask1, {targetPosition: {x: parentTask1Box.width / 2, y: parentTask1Box.height * 0.4}})
+			expect((await positionSaved).ok()).toBe(true)
+
+			await page.reload()
+			await expect(rows).toHaveText([/Parent task 1/, /Task in the subproject/, /Parent task 2/])
+
+			const parentView = await apiContext.get(`/api/v2/projects/${parent.id}/views/${parentList.id}/tasks?include_subprojects=true`, {headers})
+			expect(parentView.ok()).toBeTruthy()
+			const positionInParent = (await parentView.json()).items.find(t => t.id === task.id).position
+			expect(positionInParent).toBe(150)
+
+			const ownView = await apiContext.get(`/api/v2/projects/${subproject.id}/views/${subprojectList.id}/tasks`, {headers})
+			expect(ownView.ok()).toBeTruthy()
+			expect((await ownView.json()).items.find(t => t.id === task.id).position).toBe(1000)
+		})
+	})
+
 	test.describe('From List View', () => {
 		test('Can drag a task to another project in the sidebar', async ({authenticatedPage: page}) => {
 			const {sourceProject, targetProject, sourceListView, tasks} = await createProjectsWithTasks()

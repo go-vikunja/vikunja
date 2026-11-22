@@ -112,3 +112,14 @@ describe('pasting html alongside markdown characters', () => {
 		expect(editor.getHTML()).toContain('<h1>Heading</h1>')
 	})
 })
+
+describe('pasting markdown with tables', () => {
+	it('drops the grid of a table whose spans imply too many cells', () => {
+		const editor = createEditor('<p></p>')
+
+		paste(editor, '# Heading\n\n<table><tr><td colspan="100000000">x</td></tr></table>\n')
+
+		expect(editor.getHTML()).not.toContain('<table')
+		expect(editor.getText()).toContain('x')
+	})
+})

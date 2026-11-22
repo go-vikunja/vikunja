@@ -18,10 +18,12 @@ package csv
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"io"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,16 +38,19 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
-// The config is only set once the import runs in
-// the background - the request carries it as JSON through SetOptions.
+// The converter is only set once the import runs in
+// the background - the request carries its config as JSON through SetOptions.
 type Migrator struct {
-	config *ImportConfig
+	converter *rowConverter
 }
 
 // Name returns the name of this migrator
 func (m *Migrator) Name() string {
 	return "csv"
 }
+
+// MaxLabelsPerTask caps the labels one CSV row can give its task.
+const MaxLabelsPerTask = 100
 
 // SupportedDelimiters contains all supported CSV delimiters
 var SupportedDelimiters = []string{",", ";", "\t", "|"}
@@ -419,6 +424,11 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 
 // PreviewImport generates a preview of the import based on current mapping
 func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*PreviewResult, error) {
+	rc, err := newRowConverter(config)
+	if err != nil {
+		return nil, err
+	}
+
 	data, err := readCSVFile(file, size)
 	if err != nil {
 		return nil, err
@@ -455,20 +465,57 @@ func PreviewImport(file io.ReaderAt, size int64, config *ImportConfig) (*Preview
 
 	previewCount := minInt(5, len(rows))
 	for i := 0; i < previewCount; i++ {
-		task := rowToPreviewTask(rows[i], config)
+		task, err := rc.previewTask(rows[i], i)
+		if err != nil {
+			return nil, err
+		}
 		result.Tasks = append(result.Tasks, task)
 	}
 
 	return result, nil
 }
 
-// rowToPreviewTask converts a CSV row to a preview task
-func rowToPreviewTask(row []string, config *ImportConfig) PreviewTask {
-	task := PreviewTask{}
+type rowConverter struct {
+	config *ImportConfig
+	// Sorted by column without ignored columns, so a row stops at its last cell.
+	mappings []ColumnMapping
+}
 
+func newRowConverter(config *ImportConfig) (*rowConverter, error) {
+	mappings := make([]ColumnMapping, 0, len(config.Mapping))
+	seen := make(map[int]bool, len(config.Mapping))
 	for _, mapping := range config.Mapping {
-		if mapping.ColumnIndex < 0 || mapping.ColumnIndex >= len(row) {
-			continue
+		if seen[mapping.ColumnIndex] {
+			return nil, &migration.ErrCSVDuplicateColumnMapping{Column: mapping.ColumnIndex + 1}
+		}
+		seen[mapping.ColumnIndex] = true
+		if mapping.ColumnIndex >= 0 && mapping.Attribute != AttrIgnore {
+			mappings = append(mappings, mapping)
+		}
+	}
+	slices.SortStableFunc(mappings, func(a, b ColumnMapping) int { return cmp.Compare(a.ColumnIndex, b.ColumnIndex) })
+	return &rowConverter{config: config, mappings: mappings}, nil
+}
+
+// fileRow is the 1-based row in the file of the data row at index, counting the header.
+func (rc *rowConverter) fileRow(index int) int {
+	return max(rc.config.SkipRows, 0) + index + 2
+}
+
+func (rc *rowConverter) checkLabels(labels *labelSet, index int) error {
+	if len(labels.titles) > MaxLabelsPerTask {
+		return &migration.ErrCSVTooManyLabels{Row: rc.fileRow(index), MaxLabels: MaxLabelsPerTask}
+	}
+	return nil
+}
+
+func (rc *rowConverter) previewTask(row []string, index int) (PreviewTask, error) {
+	task := PreviewTask{}
+	labels := &labelSet{}
+
+	for _, mapping := range rc.mappings {
+		if mapping.ColumnIndex >= len(row) {
+			break
 		}
 
 		value := strings.TrimSpace(row[mapping.ColumnIndex])
@@ -492,7 +539,7 @@ func rowToPreviewTask(row []string, config *ImportConfig) PreviewTask {
 		case AttrPriority:
 			task.Priority = parsePriority(value)
 		case AttrLabels:
-			task.Labels = parseLabels(value)
+			labels.add(value)
 		case AttrProject:
 			task.Project = value
 		case AttrReminder:
@@ -502,7 +549,11 @@ func rowToPreviewTask(row []string, config *ImportConfig) PreviewTask {
 		}
 	}
 
-	return task
+	if err := rc.checkLabels(labels, index); err != nil {
+		return PreviewTask{}, err
+	}
+	task.Labels = labels.titles
+	return task, nil
 }
 
 // parseBool parses various boolean representations
@@ -543,17 +594,26 @@ func parsePriority(value string) int {
 	return 0
 }
 
-// parseLabels parses comma-separated labels
-func parseLabels(value string) []string {
-	parts := strings.Split(value, ",")
-	labels := make([]string, 0, len(parts))
-	for _, part := range parts {
+type labelSet struct {
+	titles []string
+	seen   map[string]bool
+}
+
+// Stopping past MaxLabelsPerTask means a huge cell is never split completely.
+func (s *labelSet) add(value string) {
+	for value != "" && len(s.titles) <= MaxLabelsPerTask {
+		var part string
+		part, value, _ = strings.Cut(value, ",")
 		label := strings.TrimSpace(part)
-		if label != "" {
-			labels = append(labels, label)
+		if label == "" || s.seen[label] {
+			continue
 		}
+		if s.seen == nil {
+			s.seen = map[string]bool{}
+		}
+		s.seen[label] = true
+		s.titles = append(s.titles, label)
 	}
-	return labels
 }
 
 // parseDate parses a date string with the given format using the configured timezone
@@ -594,10 +654,14 @@ func parseDate(value, format string) time.Time {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/migrate [put]
 func (m *Migrator) Migrate(u *user.User, file io.ReaderAt, size int64) error {
-	if m.config == nil {
+	if m.converter == nil {
 		return &migration.ErrCSVConfigRequired{}
 	}
-	return MigrateWithConfig(u, file, size, m.config)
+	projects, err := m.converter.projects(file, size)
+	if err != nil {
+		return err
+	}
+	return migration.InsertFromStructure(projects, u)
 }
 
 func (m *Migrator) SetOptions(options []byte) error {
@@ -605,26 +669,21 @@ func (m *Migrator) SetOptions(options []byte) error {
 	if err := json.Unmarshal(options, config); err != nil {
 		return &migration.ErrInvalidCSVImportConfig{Err: err}
 	}
-	m.config = config
-	return nil
-}
-
-// MigrateWithConfig imports CSV data into Vikunja with the provided configuration
-func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *ImportConfig) error {
-	projects, err := projectsFromCSV(file, size, config)
+	rc, err := newRowConverter(config)
 	if err != nil {
 		return err
 	}
-	return migration.InsertFromStructure(projects, u)
+	m.converter = rc
+	return nil
 }
 
-func projectsFromCSV(file io.ReaderAt, size int64, config *ImportConfig) ([]*models.ProjectWithTasksAndBuckets, error) {
+func (rc *rowConverter) projects(file io.ReaderAt, size int64) ([]*models.ProjectWithTasksAndBuckets, error) {
 	data, err := readCSVFile(file, size)
 	if err != nil {
 		return nil, err
 	}
 
-	_, rows, err := parseCSV(data, config.Delimiter)
+	_, rows, err := parseCSV(data, rc.config.Delimiter)
 	if err != nil {
 		var emptyErr *migration.ErrFileIsEmpty
 		if errors.As(err, &emptyErr) {
@@ -638,11 +697,11 @@ func projectsFromCSV(file io.ReaderAt, size int64, config *ImportConfig) ([]*mod
 	}
 
 	// Skip rows if configured
-	if config.SkipRows > 0 {
-		if config.SkipRows >= len(rows) {
+	if rc.config.SkipRows > 0 {
+		if rc.config.SkipRows >= len(rows) {
 			rows = nil
 		} else {
-			rows = rows[config.SkipRows:]
+			rows = rows[rc.config.SkipRows:]
 		}
 	}
 
@@ -650,12 +709,11 @@ func projectsFromCSV(file io.ReaderAt, size int64, config *ImportConfig) ([]*mod
 		return nil, &migration.ErrFileIsEmpty{}
 	}
 
-	return convertToVikunja(rows, config), nil
+	return rc.convert(rows)
 }
 
-// hasProjectMapping returns true if any column is mapped to the project attribute
-func hasProjectMapping(config *ImportConfig) bool {
-	for _, mapping := range config.Mapping {
+func (rc *rowConverter) hasProjectMapping() bool {
+	for _, mapping := range rc.mappings {
 		if mapping.Attribute == AttrProject {
 			return true
 		}
@@ -663,8 +721,24 @@ func hasProjectMapping(config *ImportConfig) bool {
 	return false
 }
 
-// convertToVikunja converts CSV rows to Vikunja project/task structure
-func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWithTasksAndBuckets {
+func (rc *rowConverter) projectName(row []string) string {
+	name := "Tasks"
+	for _, mapping := range rc.mappings {
+		if mapping.ColumnIndex >= len(row) {
+			break
+		}
+		if mapping.Attribute != AttrProject {
+			continue
+		}
+		if pn := strings.TrimSpace(row[mapping.ColumnIndex]); pn != "" {
+			name = pn
+		}
+	}
+	return name
+}
+
+// Counts items while converting so an oversized file fails before everything is built.
+func (rc *rowConverter) convert(rows [][]string) ([]*models.ProjectWithTasksAndBuckets, error) {
 	var pseudoParentID int64 = 1
 	parentProject := &models.ProjectWithTasksAndBuckets{
 		Project: models.Project{
@@ -672,35 +746,30 @@ func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWi
 			Title: "Imported from CSV",
 		},
 	}
+	items := int64(1)
 
-	// If no project column is mapped, put all tasks directly in the parent project
-	if !hasProjectMapping(config) {
-		for i, row := range rows {
-			task := rowToTask(row, config, int64(i+1))
-			parentProject.Tasks = append(parentProject.Tasks, &models.TaskWithComments{Task: task})
-		}
-		return []*models.ProjectWithTasksAndBuckets{parentProject}
-	}
-
-	// Collect tasks by project name
+	hasProjectMapping := rc.hasProjectMapping()
 	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
-	defaultProjectName := "Tasks"
 
 	for i, row := range rows {
-		task := rowToTask(row, config, int64(i+1))
+		task, err := rc.task(row, i)
+		if err != nil {
+			return nil, err
+		}
+		items += 1 + int64(len(task.Labels)) + int64(len(task.Reminders))
 
-		// Determine project name
-		projectName := defaultProjectName
-		for _, mapping := range config.Mapping {
-			if mapping.Attribute == AttrProject && mapping.ColumnIndex >= 0 && mapping.ColumnIndex < len(row) {
-				if pn := strings.TrimSpace(row[mapping.ColumnIndex]); pn != "" {
-					projectName = pn
-				}
+		// If no project column is mapped, put all tasks directly in the parent project
+		if !hasProjectMapping {
+			parentProject.Tasks = append(parentProject.Tasks, &models.TaskWithComments{Task: task})
+			if err := migration.CheckItemCount(items); err != nil {
+				return nil, err
 			}
+			continue
 		}
 
-		// Get or create project
+		projectName := rc.projectName(row)
 		if _, exists := projects[projectName]; !exists {
+			items++
 			projects[projectName] = &models.ProjectWithTasksAndBuckets{
 				Project: models.Project{
 					ID:              int64(len(projects)+2) + pseudoParentID,
@@ -709,9 +778,15 @@ func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWi
 				},
 			}
 		}
-
-		// Add task to project
 		projects[projectName].Tasks = append(projects[projectName].Tasks, &models.TaskWithComments{Task: task})
+
+		if err := migration.CheckItemCount(items); err != nil {
+			return nil, err
+		}
+	}
+
+	if !hasProjectMapping {
+		return []*models.ProjectWithTasksAndBuckets{parentProject}, nil
 	}
 
 	// If only one project exists, put all tasks directly in the parent project
@@ -719,7 +794,7 @@ func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWi
 		for _, p := range projects {
 			parentProject.Tasks = p.Tasks
 		}
-		return []*models.ProjectWithTasksAndBuckets{parentProject}
+		return []*models.ProjectWithTasksAndBuckets{parentProject}, nil
 	}
 
 	// Multiple projects: create sub-projects under the parent
@@ -733,18 +808,18 @@ func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWi
 		return result[i+1].Title < result[j+1].Title
 	})
 
-	return result
+	return result, nil
 }
 
-// rowToTask converts a CSV row to a Vikunja task
-func rowToTask(row []string, config *ImportConfig, taskID int64) models.Task {
+func (rc *rowConverter) task(row []string, index int) (models.Task, error) {
 	task := models.Task{
-		ID: taskID,
+		ID: int64(index + 1),
 	}
+	labels := &labelSet{}
 
-	for _, mapping := range config.Mapping {
-		if mapping.ColumnIndex < 0 || mapping.ColumnIndex >= len(row) {
-			continue
+	for _, mapping := range rc.mappings {
+		if mapping.ColumnIndex >= len(row) {
+			break
 		}
 
 		value := strings.TrimSpace(row[mapping.ColumnIndex])
@@ -758,11 +833,11 @@ func rowToTask(row []string, config *ImportConfig, taskID int64) models.Task {
 		case AttrDescription:
 			task.Description = value
 		case AttrDueDate:
-			task.DueDate = parseDate(value, config.DateFormat)
+			task.DueDate = parseDate(value, rc.config.DateFormat)
 		case AttrStartDate:
-			task.StartDate = parseDate(value, config.DateFormat)
+			task.StartDate = parseDate(value, rc.config.DateFormat)
 		case AttrEndDate:
-			task.EndDate = parseDate(value, config.DateFormat)
+			task.EndDate = parseDate(value, rc.config.DateFormat)
 		case AttrDone:
 			task.Done = parseBool(value)
 			if task.Done {
@@ -771,13 +846,10 @@ func rowToTask(row []string, config *ImportConfig, taskID int64) models.Task {
 		case AttrPriority:
 			task.Priority = int64(parsePriority(value))
 		case AttrLabels:
-			labels := parseLabels(value)
-			for _, labelTitle := range labels {
-				task.Labels = append(task.Labels, &models.Label{Title: labelTitle})
-			}
+			labels.add(value)
 		case AttrReminder:
 			// Parse reminder as duration or date
-			reminderDate := parseDate(value, config.DateFormat)
+			reminderDate := parseDate(value, rc.config.DateFormat)
 			if !reminderDate.IsZero() {
 				task.Reminders = []*models.TaskReminder{
 					{
@@ -792,12 +864,19 @@ func rowToTask(row []string, config *ImportConfig, taskID int64) models.Task {
 		}
 	}
 
+	if err := rc.checkLabels(labels, index); err != nil {
+		return models.Task{}, err
+	}
+	for _, title := range labels.titles {
+		task.Labels = append(task.Labels, &models.Label{Title: title})
+	}
+
 	// Ensure task has a title
 	if task.Title == "" {
 		task.Title = "Untitled Task"
 	}
 
-	return task
+	return task, nil
 }
 
 func minInt(a, b int) int {

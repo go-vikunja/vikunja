@@ -31,6 +31,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"gopkg.in/d4l3k/messagediff.v1"
+	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // To only run a selected tests: ^\QTestTaskCollection_ReadAll\E$/^\QReadAll_Tasks_with_range\E$
@@ -658,11 +660,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 
 	type fields struct {
-		ProjectID     int64
-		ProjectViewID int64
-		Projects      []*Project
-		SortBy        []string // Is a string, since this is the place where a query string comes from the user
-		OrderBy       []string
+		ProjectID          int64
+		ProjectViewID      int64
+		IncludeSubprojects bool
+		Projects           []*Project
+		SortBy             []string // Is a string, since this is the place where a query string comes from the user
+		OrderBy            []string
 
 		FilterIncludeNulls bool
 		Filter             string
@@ -1658,6 +1661,82 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want:    []*Task{},
 			wantErr: false,
 		},
+		{
+			name: "project tasks only by default",
+			fields: fields{
+				ProjectID: 32,
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task21,
+			},
+			wantErr: false,
+		},
+		{
+			// User 1 reaches project 32 through team 1, and project 15 only through project 32.
+			name: "project tasks including subprojects",
+			fields: fields{
+				ProjectID:          32,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task21,
+				task24,
+			},
+			wantErr: false,
+		},
+		{
+			name: "project tasks including subprojects recursively",
+			fields: fields{
+				ProjectID:          12,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task39,
+			},
+			wantErr: false,
+		},
+		{
+			// User 14 cannot access project 32 itself, so the whole request is denied.
+			name: "project tasks including subprojects without access to the requested project",
+			fields: fields{
+				ProjectID:          32,
+				IncludeSubprojects: true,
+			},
+			args: args{
+				a: &user.User{ID: 14},
+			},
+			wantErr: true,
+		},
+		{
+			// Inclusion only walks down, so the parent's task21 must not appear.
+			name: "subproject tasks including subprojects do not leak the parent project's tasks",
+			fields: fields{
+				ProjectID:          15,
+				IncludeSubprojects: true,
+				SortBy:             []string{"id"},
+				OrderBy:            []string{"asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task24,
+			},
+			wantErr: false,
+		},
 		// TODO filter parent project?
 		{
 			name: "filter by index",
@@ -1786,6 +1865,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 		},
 		{
+			name: "saved filter with sort order and include subprojects",
+			fields: fields{
+				ProjectID:          -2,
+				IncludeSubprojects: true,
+				SortBy:             []string{"title", "id"},
+				OrderBy:            []string{"desc", "asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task9,
+				task8,
+				task7,
+				task6,
+				task5,
+				task28,
+			},
+		},
+		{
 			name: "saved filter with sort order asc",
 			fields: fields{
 				ProjectID: -2,
@@ -1875,10 +1974,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			defer s.Close()
 
 			lt := &TaskCollection{
-				ProjectID:     tt.fields.ProjectID,
-				ProjectViewID: tt.fields.ProjectViewID,
-				SortBy:        tt.fields.SortBy,
-				OrderBy:       tt.fields.OrderBy,
+				ProjectID:          tt.fields.ProjectID,
+				ProjectViewID:      tt.fields.ProjectViewID,
+				IncludeSubprojects: tt.fields.IncludeSubprojects,
+				SortBy:             tt.fields.SortBy,
+				OrderBy:            tt.fields.OrderBy,
 
 				FilterIncludeNulls: tt.fields.FilterIncludeNulls,
 
@@ -2613,4 +2713,142 @@ func TestTaskCollection_SavedFilterIncludeNulls(t *testing.T) {
 		ids = append(ids, task.ID)
 	}
 	assert.ElementsMatch(t, []int64{dated.ID, dateless.ID}, ids)
+}
+
+func TestTaskCollection_SavedFilterSearch(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	u := &user.User{ID: 1}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	sf := &SavedFilter{
+		Title: "prio tasks",
+		Filters: &TaskCollection{
+			Filter: "project = 1",
+			Search: "prio",
+		},
+	}
+	require.NoError(t, sf.Create(s, u))
+	require.NoError(t, s.Commit())
+
+	readIDs := func(search string) []int64 {
+		s := db.NewSession()
+		defer s.Close()
+
+		tc := &TaskCollection{ProjectID: getProjectIDFromSavedFilterID(sf.ID)}
+		result, _, _, err := tc.ReadAll(s, u, search, 1, 50)
+		require.NoError(t, err)
+
+		ids := []int64{}
+		for _, task := range result.([]*Task) {
+			ids = append(ids, task.ID)
+		}
+		return ids
+	}
+
+	assert.ElementsMatch(t, []int64{3, 4}, readIDs(""))
+	// Stored search wins over the request, like a view filter's search.
+	assert.ElementsMatch(t, []int64{3, 4}, readIDs("basic"))
+}
+
+// Read permissions are inherited downwards, so only an archived descendant drops out.
+func TestTaskCollection_ReadAll_IncludeSubprojectsPartialAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Project 22 is archived and owned by user 1, project 21 is its archived child.
+	u := &user.User{ID: 1}
+	c := &TaskCollection{
+		ProjectID:          22,
+		IncludeSubprojects: true,
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err, "an unreachable subproject must not fail the whole request")
+
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	returnedIDs := make([]int64, 0, len(tasks))
+	for _, task := range tasks {
+		returnedIDs = append(returnedIDs, task.ID)
+	}
+
+	assert.Contains(t, returnedIDs, int64(36), "tasks of the requested project are returned")
+	assert.NotContains(t, returnedIDs, int64(35), "tasks of the archived subproject 21 are skipped")
+}
+
+// A subproject's task has no bucket in this view, so the flag is dropped for kanban.
+func TestTaskCollection_ReadAll_IncludeSubprojectsIgnoredInKanban(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+	c := &TaskCollection{
+		ProjectID:          32,
+		ProjectViewID:      128, // kanban view of project 32
+		IncludeSubprojects: true,
+	}
+
+	_, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+
+	assert.False(t, c.IncludeSubprojects, "the flag must be cleared for a kanban view")
+}
+
+func TestTaskCollection_ReadAll_IncludeSubprojectsPositions(t *testing.T) {
+	readIDs := func(t *testing.T, s *xorm.Session, c *TaskCollection) []int64 {
+		res, _, _, err := c.ReadAll(s, &user.User{ID: 6}, "", 0, 50)
+		require.NoError(t, err)
+		tasks, ok := res.([]*Task)
+		require.True(t, ok)
+		ids := make([]int64, 0, len(tasks))
+		for _, task := range tasks {
+			ids = append(ids, task.ID)
+		}
+		return ids
+	}
+
+	t.Run("heals a row in the parent's view only", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 24, ProjectViewID: 57, Position: 777})
+		require.NoError(t, err)
+
+		readIDs(t, s, &TaskCollection{ProjectID: 32, ProjectViewID: 125, IncludeSubprojects: true})
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "task_positions", builder.Eq{"task_id": 24, "project_view_id": 125}, 1)
+		db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 24, "project_view_id": 57, "position": 777}, false)
+		db.AssertCount(t, "task_positions", builder.Eq{"task_id": 24, "project_view_id": 58}, 0)
+	})
+
+	t.Run("sorts by the parent view's positions", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert([]*TaskPosition{
+			{TaskID: 21, ProjectViewID: 125, Position: 300},
+			{TaskID: 24, ProjectViewID: 125, Position: 100},
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, []int64{24, 21}, readIDs(t, s, &TaskCollection{
+			ProjectID:          32,
+			ProjectViewID:      125,
+			IncludeSubprojects: true,
+			SortBy:             []string{"position"},
+		}), "explicit position sort")
+		assert.Equal(t, []int64{24, 21}, readIDs(t, s, &TaskCollection{
+			ProjectID:          32,
+			ProjectViewID:      125,
+			IncludeSubprojects: true,
+		}), "default position sort")
+	})
 }

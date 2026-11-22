@@ -77,6 +77,48 @@ func TestCreateBotUser(t *testing.T) {
 		assert.Empty(t, bot.Email)
 		assert.Empty(t, bot.Password)
 	})
+	t.Run("only username and name are taken from the input", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+
+		bot, err := CreateBotUser(s, &User{
+			Username:     "bot-privileged",
+			Name:         "Privileged",
+			IsAdmin:      true,
+			ExportFileID: 1,
+			PendingEmail: "bot@example.com",
+			Subject:      "sub",
+		}, owner)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		assert.Equal(t, "Privileged", bot.Name)
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":             bot.ID,
+			"is_admin":       false,
+			"export_file_id": 0,
+			"pending_email":  "",
+			"subject":        "",
+		}, false)
+	})
+	t.Run("keeps the requested language", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+
+		bot, err := CreateBotUser(s, &User{
+			Username: "bot-polyglot",
+			Language: "de-DE",
+		}, owner)
+		require.NoError(t, err)
+		assert.Equal(t, "de-DE", bot.Language)
+	})
 	t.Run("empty username", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

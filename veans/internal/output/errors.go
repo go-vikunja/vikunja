@@ -45,7 +45,11 @@ const (
 type Error struct {
 	Code    Code   `json:"code"`
 	Message string `json:"error"`
-	Cause   error  `json:"-"`
+	// Set when a multi-step command fails after it already changed a task.
+	Task      string   `json:"task,omitempty"`
+	Completed []string `json:"completed,omitempty"`
+	Failed    string   `json:"failed,omitempty"`
+	Cause     error    `json:"-"`
 }
 
 func (e *Error) Error() string { return e.Message }

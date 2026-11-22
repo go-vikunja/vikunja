@@ -23,6 +23,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/mcp"
+	"code.vikunja.io/api/pkg/user"
+
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 )
@@ -85,4 +90,43 @@ func TestHTTPRequestLoggerOmitsSecrets(t *testing.T) {
 		assert.Contains(t, out, "status=200")
 		assert.NotContains(t, out, "sharehashsecret")
 	})
+}
+
+func TestHTTPRequestLoggerAuthKind(t *testing.T) {
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, nil))
+
+	e := echo.New()
+	e.Use(httpRequestLogger(logger))
+	route := func(path string, set func(c *echo.Context)) {
+		e.GET(path, func(c *echo.Context) error {
+			set(c)
+			return c.NoContent(http.StatusOK)
+		})
+	}
+	route("/session", func(c *echo.Context) {
+		c.Set("user", &jwt.Token{Claims: jwt.MapClaims{"type": float64(user.AuthTypeUser)}})
+	})
+	route("/link-share", func(c *echo.Context) {
+		c.Set("user", &jwt.Token{Claims: jwt.MapClaims{"type": float64(2)}})
+	})
+	route("/token", func(c *echo.Context) { c.Set("api_token", &models.APIToken{}) })
+	route("/caldav", func(c *echo.Context) { c.Set("userBasicAuth", &user.User{}) })
+	route(mcp.RoutePrefix, func(c *echo.Context) { c.Set("api_token", &models.APIToken{}) })
+	route("/none", func(*echo.Context) {})
+
+	for path, want := range map[string]string{
+		"/session":      "session",
+		"/link-share":   "link_share",
+		"/token":        "api_token",
+		"/caldav":       "caldav",
+		mcp.RoutePrefix: "mcp",
+		"/none":         "none",
+	} {
+		t.Run(path, func(t *testing.T) {
+			buf.Reset()
+			e.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, path, nil))
+			assert.Contains(t, buf.String(), "auth="+want+"\n")
+		})
+	}
 }

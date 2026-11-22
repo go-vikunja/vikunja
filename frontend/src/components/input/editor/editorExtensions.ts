@@ -1,13 +1,14 @@
 import {nextTick, toValue, type MaybeRefOrGetter, type Ref} from 'vue'
 
 import StarterKit from '@tiptap/starter-kit'
-import {createNodeFromContent, Extension, mergeAttributes, type Editor, type Extensions} from '@tiptap/core'
+import {Extension, mergeAttributes, type Editor, type Extensions} from '@tiptap/core'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
-import {Fragment} from '@tiptap/pm/model'
+import {DOMParser as ProseMirrorDOMParser, type Node as ProseMirrorNode} from '@tiptap/pm/model'
 import {marked} from 'marked'
 
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import {VueNodeViewRenderer} from '@tiptap/vue-3'
 import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
 import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
@@ -25,7 +26,9 @@ import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import {TaskLink, LINK_HTML_ATTRIBUTES} from './taskLink'
 import {createClipboardParser, fillRequiredContent, repairSliceContent} from './contentRepair'
 import {htmlHasFormatting} from './clipboardHtml'
+import {parseSpan, tableLimitedElementFromString} from './tableBudget'
 import {serializeClipboardText} from './clipboardText'
+import CodeBlockView from './CodeBlockView.vue'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
@@ -88,11 +91,34 @@ function safeCssColor(value: unknown): string | null {
 	return typeof value === 'string' && SAFE_CSS_COLOR.test(value.trim()) ? value.trim() : null
 }
 
+function spanAttribute(name: 'colspan' | 'rowspan') {
+	return {
+		default: 1,
+		parseHTML: (element: HTMLElement) => parseSpan(element, name),
+	}
+}
+
+export function parseEditorHTML(editor: Editor, html: string): ProseMirrorNode {
+	return ProseMirrorDOMParser.fromSchema(editor.schema).parse(tableLimitedElementFromString(html), editor.options.parseOptions)
+}
+
+const CustomTableHeader = TableHeader.extend({
+	addAttributes() {
+		return {
+			...this.parent?.(),
+			colspan: spanAttribute('colspan'),
+			rowspan: spanAttribute('rowspan'),
+		}
+	},
+})
+
 const CustomTableCell = TableCell.extend({
 	addAttributes() {
 		return {
 			// extend the existing attributes …
 			...this.parent?.(),
+			colspan: spanAttribute('colspan'),
+			rowspan: spanAttribute('rowspan'),
 
 			// and add a new one …
 			backgroundColor: {
@@ -274,11 +300,12 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 								return false
 							}
 
-							const parsed = createNodeFromContent(marked.parse(text) as string, this.editor.schema, {
-								parseOptions: {preserveWhitespace: 'full', ...this.editor.options.parseOptions},
-							})
+							const parsed = ProseMirrorDOMParser.fromSchema(this.editor.schema).parseSlice(
+								tableLimitedElementFromString(marked.parse(text) as string),
+								{preserveWhitespace: 'full', ...this.editor.options.parseOptions},
+							)
 
-							this.editor.commands.insertContent(fillRequiredContent(Fragment.from(parsed)))
+							this.editor.commands.insertContent(fillRequiredContent(parsed.content))
 							return true
 						},
 					},
@@ -305,6 +332,10 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 
 		CodeBlockLowlight.configure({
 			lowlight: createLowlight(common),
+		}).extend({
+			addNodeView() {
+				return VueNodeViewRenderer(CodeBlockView)
+			},
 		}),
 		HardBreak.extend({
 			addKeyboardShortcuts() {
@@ -347,7 +378,7 @@ export function createEditorExtensions(deps: EditorExtensionDeps): Extensions {
 			resizable: true,
 		}),
 		TableRow,
-		TableHeader,
+		CustomTableHeader,
 		// Custom TableCell with backgroundColor attribute
 		CustomTableCell,
 

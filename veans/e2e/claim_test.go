@@ -74,4 +74,8 @@ func TestClaim_AssignsBotMovesToInProgressTagsBranch(t *testing.T) {
 	if !taskHasLabelTitle(server, branchLabel) {
 		t.Fatalf("expected label %q on task; got %+v", branchLabel, server.Labels)
 	}
+
+	if _, errOut, code := h.Run(t, ws, "claim", id); code != 0 {
+		t.Fatalf("re-claim exit %d\n%s", code, errOut)
+	}
 }

@@ -83,7 +83,10 @@
 					</RouterLink>
 				</li>
 				<li>
-					<RouterLink :to="{ name: 'trash'}">
+					<RouterLink
+						:to="{ name: 'trash'}"
+						:class="{'router-link-exact-active': $route.name === 'trash.tasks' || $route.name === 'trash.projects'}"
+					>
 						<span class="menu-item-icon icon">
 							<Icon icon="trash-alt" />
 						</span>

@@ -722,26 +722,9 @@
 			"updateSuccess": "Công việc đã được lưu.",
 			"belongsToProject": "Tác vụ này thuộc về dự án '{project}'",
 			"due": "Đến hạn {at}",
-			"organization": "Tổ chức",
-			"management": "Quản lý",
-			"dateAndTime": "Ngày và giờ",
 			"actions": {
-				"assign": "Chỉ định người",
-				"label": "Thêm nhãn",
-				"priority": "Mức độ ưu tiên",
-				"dueDate": "Đặt ngày đến hạn",
-				"startDate": "Chọn ngày bắt đầu",
-				"endDate": "Chọn ngày kết thúc",
-				"reminders": "Thiết lập nhắc nhở",
-				"repeatAfter": "Chọn chu kì lặp",
-				"percentDone": "Đặt tiến trình",
-				"attachments": "Thêm Tệp đính kèm",
-				"relatedTasks": "Thêm Quan hệ",
 				"moveProject": "Di chuyển",
-				"color": "Đặt màu",
-				"delete": "Xóa",
-				"favorite": "Thêm vào mục yêu thích",
-				"unfavorite": "Xóa khỏi mục yêu thích"
+				"delete": "Xóa"
 			}
 		},
 		"attributes": {
@@ -876,9 +859,6 @@
 			"dateAndTime": "Ngày và giờ"
 		},
 		"repeat": {
-			"everyDay": "Mỗi ngày",
-			"everyWeek": "Mỗi tuần",
-			"every30d": "Mỗi 30 ngày",
 			"mode": "Chế độ lặp lại",
 			"monthly": "Hàng tháng",
 			"fromCurrentDate": "Từ ngày hoàn thành",
@@ -1006,10 +986,6 @@
 			"projects": "Điều hướng đến dự án"
 		}
 	},
-	"update": {
-		"available": "Đã có bản cập nhật!",
-		"do": "Cập nhật bây giờ"
-	},
 	"menu": {
 		"edit": "Chỉnh sửa",
 		"archive": "Lưu trữ",
@@ -1046,7 +1022,6 @@
 	"quickActions": {
 		"commands": "Các lệnh",
 		"placeholder": "Gõ một lệnh hoặc tìm kiếm…",
-		"hint": "Bạn có thể sử dụng {project} để hạn chế tìm kiếm một dự án. Kết hợp {project} hoặc {label} (các nhãn) với một truy vấn tìm kiếm để tìm kiếm một tác vụ với các nhãn đó hoặc trong dự án đó. Sử dụng {assignee} để chỉ tìm theo các đội nhóm.",
 		"tasks": "Tác vụ",
 		"projects": "Dự án",
 		"teams": "Team",

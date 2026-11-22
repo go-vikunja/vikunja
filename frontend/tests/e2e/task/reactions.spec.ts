@@ -24,8 +24,8 @@ test('a reaction added in the task detail survives navigating away and back', as
 	await reactions.getByRole('button', {name: 'Add your reaction'}).click()
 	const picker = page.locator('.emoji-picker')
 	await expect(picker).toBeVisible()
-	await picker.locator('input.search').fill('thumbs up')
-	const option = picker.locator('#search-results [role="option"]').first()
+	await picker.getByRole('searchbox', {name: 'Search emoji'}).fill('thumbs up')
+	const option = picker.getByRole('button', {name: 'thumbs up', exact: true})
 	await expect(option).toBeVisible()
 	const added = (await option.textContent())?.trim()
 	expect(added).toBeTruthy()
@@ -78,4 +78,97 @@ test('a reaction added in the task detail survives navigating away and back', as
 	const afterRemoval = await apiContext.get(`tasks/${task.id}/reactions`, {headers})
 	expect(afterRemoval.ok()).toBeTruthy()
 	expect(Object.keys(await afterRemoval.json())).toEqual([SEEDED_REACTION])
+})
+
+test('the native picker supports categories, skin tones, recents and keyboard dismissal', async ({authenticatedPage: page, apiContext, userToken}) => {
+	const [project] = await ProjectFactory.create(1)
+	const [task] = await TaskFactory.create(1, {project_id: project.id})
+	await page.goto(`/tasks/${task.id}`)
+	const trigger = page.locator('.task-view .reactions.details').getByRole('button', {name: 'Add your reaction'})
+	await trigger.click()
+	const picker = page.getByRole('region', {name: 'Emoji picker'})
+	const search = picker.getByRole('searchbox', {name: 'Search emoji'})
+	await expect(search).toBeFocused()
+	await picker.getByRole('button', {
+		name: 'Animals & nature',
+		exact: true,
+	}).click()
+	await expect(picker.getByRole('heading', {name: 'Animals & nature'})).toBeVisible()
+	await picker.getByRole('combobox', {name: 'Skin tone'}).selectOption('3')
+	await search.fill(':wave:')
+	const wave = picker.getByRole('button', {
+		name: 'waving hand',
+		exact: true,
+	})
+	await expect(wave).toHaveText('👋🏽')
+	await search.press('ArrowDown')
+	await expect(wave).toBeFocused()
+	await wave.press('Enter')
+	await expect(picker).toHaveCount(0)
+	await expect(trigger).toBeFocused()
+	await page.reload()
+	await trigger.click()
+	await expect(picker.getByRole('combobox', {name: 'Skin tone'})).toHaveValue('3')
+	await expect(picker.getByRole('heading', {name: 'Recently used'})).toBeVisible()
+	await expect(picker.getByRole('button', {
+		name: 'waving hand',
+		exact: true,
+	})).toHaveText('👋🏽')
+	// Only the emojibase group 2 components (🏻, 🏼) match this query
+	await search.fill('light skin tone')
+	await expect(picker.getByText('No emoji found')).toBeVisible()
+	await search.press('Escape')
+	await expect(picker).toHaveCount(0)
+	await expect(trigger).toBeFocused()
+	const stored = await apiContext.get(`tasks/${task.id}/reactions`, {
+		headers: {Authorization: `Bearer ${userToken}`},
+	})
+	expect(stored.ok()).toBeTruthy()
+	expect(Object.keys(await stored.json())).toEqual(['👋🏽'])
+})
+
+test('the emoji picker retries a failed catalog request and dismisses on outside click', async ({authenticatedPage: page}) => {
+	const [project] = await ProjectFactory.create(1)
+	const [task] = await TaskFactory.create(1, {project_id: project.id})
+	await page.route('**/data*.json', route => route.fulfill({
+		status: 503,
+		body: 'Unavailable',
+	}))
+	await page.goto(`/tasks/${task.id}`)
+	const trigger = page.locator('.task-view .reactions.details').getByRole('button', {name: 'Add your reaction'})
+	await trigger.click()
+	const picker = page.getByRole('region', {name: 'Emoji picker'})
+	await expect(picker.getByText('Could not load emoji.')).toBeVisible()
+	await page.unroute('**/data*.json')
+	await picker.getByRole('button', {name: 'Try again'}).click()
+	await expect(picker.getByRole('button', {
+		name: 'grinning face',
+		exact: true,
+	})).toBeVisible()
+	await page.locator('.task-view h1').click()
+	await expect(picker).toHaveCount(0)
+	await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+	await trigger.click()
+	await expect(picker).toBeVisible()
+	await trigger.click()
+	await expect(picker).toHaveCount(0)
+})
+
+test('typing in the reaction picker search does not trigger task shortcuts', async ({authenticatedPage: page}) => {
+	const [project] = await ProjectFactory.create(1)
+	await createDefaultViews(project.id)
+	const [task] = await TaskFactory.create(1, {
+		id: 1,
+		project_id: project.id,
+		title: 'Shortcut-safe task',
+	})
+
+	await page.goto(`/tasks/${task.id}`)
+	await page.locator('.task-view .reactions.details').getByRole('button', {name: 'Add your reaction'}).click()
+	const picker = page.getByRole('region', {name: 'Emoji picker'})
+	const search = picker.getByRole('searchbox', {name: 'Search emoji'})
+	await expect(search).toBeVisible()
+
+	await search.press('l')
+	await expect(search).toHaveValue('l')
 })

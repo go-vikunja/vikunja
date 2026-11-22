@@ -29,6 +29,8 @@ $transition-duration: 150ms;
 $transition: $transition-duration ease;
 
 $button-height: 34px;
+// 1.8rem font-size × 1.125 line-height, .3rem padding, 1px border
+$task-title-height: calc(1.8rem * 1.125 + .6rem + 2px);
 $switch-view-height: 2.69rem;
 
 $navbar-height: 4rem;

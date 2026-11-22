@@ -54,13 +54,8 @@ func (p *Provider) Search(_ *xorm.Session, _ string, _ int64) (result []*backgro
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/backgrounds/upload [put]
 func (p *Provider) Set(s *xorm.Session, img *background.Image, project *models.Project, _ web.Auth) (err error) {
-	// Remove the old background if one exists
-	if project.BackgroundFileID != 0 {
-		file := files.File{ID: project.BackgroundFileID}
-		err := file.Delete(s)
-		if err != nil && !files.IsErrFileDoesNotExist(err) {
-			return err
-		}
+	if err := project.DeleteBackgroundFileIfExists(s); err != nil {
+		return err
 	}
 
 	file := &files.File{}

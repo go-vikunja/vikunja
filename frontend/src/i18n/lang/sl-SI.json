@@ -717,26 +717,9 @@
 			"updateSuccess": "Naloga je bila uspešno shranjena.",
 			"belongsToProject": "Ta naloga pripada projektu '{project}'",
 			"due": "Rok {at}",
-			"organization": "Organizacija",
-			"management": "Poslovanje",
-			"dateAndTime": "Datum in čas",
 			"actions": {
-				"assign": "Dodeli uporabniku",
-				"label": "Dodaj oznako",
-				"priority": "Nastavi prioriteto",
-				"dueDate": "Nastavi datum zapadlosti",
-				"startDate": "Nastavi začetni datum",
-				"endDate": "Nastavi končni datum",
-				"reminders": "Nastavi opomnike",
-				"repeatAfter": "Nastavi interval ponavljanja",
-				"percentDone": "Nastavi napredek",
-				"attachments": "Dodaj priloge",
-				"relatedTasks": "Dodaj relacijo",
 				"moveProject": "Premakni",
-				"color": "Nastavi barvo",
-				"delete": "Izbriši",
-				"favorite": "Dodaj med priljubljene",
-				"unfavorite": "Odstrani iz priljubljenih"
+				"delete": "Izbriši"
 			}
 		},
 		"attributes": {
@@ -871,9 +854,6 @@
 			"dateAndTime": "Datum in čas"
 		},
 		"repeat": {
-			"everyDay": "Vsak dan",
-			"everyWeek": "Vsak teden",
-			"every30d": "Vsakih 30 dni",
 			"mode": "Način ponavljanja",
 			"monthly": "Mesečno",
 			"fromCurrentDate": "Od datuma dokončanja",
@@ -1001,10 +981,6 @@
 			"projects": "Pomakni se do projektov"
 		}
 	},
-	"update": {
-		"available": "Na voljo je nova posodobitev!",
-		"do": "Posodobi zdaj"
-	},
 	"menu": {
 		"edit": "Uredi",
 		"archive": "Arhiviraj",
@@ -1041,7 +1017,6 @@
 	"quickActions": {
 		"commands": "Ukazi",
 		"placeholder": "Začni tipkati ukaz ali poišči…",
-		"hint": "Za omejitev iskanja na projekt lahko uporabite {project}. Združite {project} ali {label} (oznake) z iskalno poizvedbo, da poiščete nalogo s temi oznakami ali v tem projektu. Uporabite {assignee} samo za iskanje ekip.",
 		"tasks": "Naloge",
 		"projects": "Projekti",
 		"teams": "Ekipe",

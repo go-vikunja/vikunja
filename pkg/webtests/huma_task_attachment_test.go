@@ -34,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/imageutils"
 	"code.vikunja.io/api/pkg/routes"
 
 	"github.com/labstack/echo/v5"
@@ -292,6 +293,13 @@ func brokenPNG(t *testing.T) []byte {
 	return slices.Concat(valid.Bytes()[:40], []byte("not image data"))
 }
 
+func encodedPNG(t *testing.T, width, height int) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	require.NoError(t, png.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, width, height))))
+	return buf.Bytes()
+}
+
 func previewURL(taskID string, attachmentID int64, query string) string {
 	return "/api/v2/tasks/" + taskID + "/attachments/" + strconv.FormatInt(attachmentID, 10) + "/preview" + query
 }
@@ -308,6 +316,10 @@ func TestTaskAttachmentsV2_Preview(t *testing.T) {
 		"undecodable image": {
 			filename: "broken.png",
 			content:  brokenPNG(t),
+		},
+		"image wider than the side limit": {
+			filename: "wide.png",
+			content:  encodedPNG(t, imageutils.MaxSide+1, 1),
 		},
 	}
 	for name, tc := range notPreviewable {

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -543,4 +544,109 @@ func TestZeroDateFilterBoundary(t *testing.T) {
 			assert.False(t, got.Before(time.Time{}), "boundary %s must not predate the zero date, got %s", filter, got)
 		})
 	}
+}
+
+func errWithin(t *testing.T, d time.Duration, fn func() error) error {
+	t.Helper()
+	done := make(chan error, 1)
+	go func() { done <- fn() }()
+	select {
+	case err := <-done:
+		return err
+	case <-time.After(d):
+		t.Fatalf("did not finish within %s", d)
+		return nil
+	}
+}
+
+func TestDatemathBusinessDayLimit(t *testing.T) {
+	tooLarge := []string{
+		"now+999999999999b",
+		"now-999999999999b",
+		"now+10001b",
+		"now+5000b+5001b",
+		"now+99999999999999999999999b",
+		"now+1b+9223372036854775807b",
+	}
+	allowed := []string{
+		"now+10000b",
+		"now-10000b",
+		"now+b",
+		"now+999999d",
+		"now+5000b-4000b",
+	}
+
+	tests := []struct {
+		name       string
+		field      string
+		parse      func(filter string) error
+		limitField func(error) (string, bool)
+	}{
+		{
+			name:  "task filter",
+			field: "due_date",
+			parse: func(filter string) error {
+				_, err := getTaskFiltersFromFilterString(filter, "UTC")
+				return err
+			},
+			limitField: func(err error) (string, bool) {
+				var e ErrInvalidTaskFilterValue
+				ok := errors.As(err, &e)
+				return e.Field, ok
+			},
+		},
+		{
+			name:  "time entry filter",
+			field: "start_time",
+			parse: func(filter string) error {
+				_, err := timeEntryFilterCond(filter, "UTC")
+				return err
+			},
+			limitField: func(err error) (string, bool) {
+				var e ErrInvalidTimeEntryFilterValue
+				ok := errors.As(err, &e)
+				return e.Field, ok
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, value := range tooLarge {
+				t.Run(value, func(t *testing.T) {
+					err := errWithin(t, 5*time.Second, func() error { return tt.parse(tt.field + " > " + value) })
+					require.Error(t, err)
+					field, ok := tt.limitField(err)
+					assert.True(t, ok, "got %v", err)
+					assert.Equal(t, tt.field, field)
+				})
+			}
+			for _, value := range allowed {
+				t.Run(value, func(t *testing.T) {
+					err := errWithin(t, 5*time.Second, func() error { return tt.parse(tt.field + " > " + value) })
+					require.NoError(t, err)
+				})
+			}
+			t.Run("summed across conditions", func(t *testing.T) {
+				err := tt.parse(tt.field + " > now+6000b || " + tt.field + " < now+6000b")
+				require.Error(t, err)
+				field, ok := tt.limitField(err)
+				assert.True(t, ok, "got %v", err)
+				assert.Equal(t, tt.field, field)
+			})
+		})
+	}
+}
+
+func TestDatemathBusinessDayLimitTaskValues(t *testing.T) {
+	t.Run("summed across in list values", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString("due_date in now+6000b, now+6000b", "UTC")
+		var e ErrInvalidTaskFilterValue
+		require.ErrorAs(t, err, &e)
+		assert.Equal(t, "due_date", e.Field)
+	})
+	t.Run("text values are not counted", func(t *testing.T) {
+		_, err := getTaskFiltersFromFilterString(`title like "order-20240101b" && due_date > now+6000b`, "UTC")
+		require.NoError(t, err)
+	})
 }

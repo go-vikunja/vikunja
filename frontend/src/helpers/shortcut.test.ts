@@ -2,7 +2,15 @@ import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 
 import {SHORTCUTS} from '@/constants/shortcuts'
 import * as appleDevice from '@/helpers/isAppleDevice'
-import {parseKey, matchesKey, eventToShortcutString, isFormField, install, uninstall, shortcutBindingToDisplay} from './shortcut'
+import {
+	parseKey,
+	matchesKey,
+	eventToShortcutString,
+	isFormField,
+	install,
+	uninstall,
+	shortcutBindingToDisplay,
+} from './shortcut'
 
 function makeEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
 	const event = new KeyboardEvent('keydown')

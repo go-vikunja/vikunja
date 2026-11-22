@@ -177,6 +177,18 @@ func TestHumaProjectBackgroundUploadImageBounds(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 	})
 
+	t.Run("extremely wide background is rejected", func(t *testing.T) {
+		data := pngBytes(t)
+		binary.BigEndian.PutUint32(data[16:20], uint32(1_000_000))
+		binary.BigEndian.PutUint32(data[20:24], uint32(1))
+		binary.BigEndian.PutUint32(data[29:33], crc32.ChecksumIEEE(data[12:29]))
+
+		body, contentType := multipartFileBody(t, "background", "wide.png", data)
+		rec := uploadBackgroundRequest(t, e, "1", humaTokenFor(t, &testuser1), body, contentType)
+		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, imageutils.ErrCodeImageTooLarge))
+	})
+
 	t.Run("normal background keeps its native size when smaller than the cap", func(t *testing.T) {
 		body, contentType := multipartFileBody(t, "background", "bg.png", pngBytes(t))
 		rec := uploadBackgroundRequest(t, e, "1", humaTokenFor(t, &testuser1), body, contentType)

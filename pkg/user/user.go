@@ -102,7 +102,7 @@ type User struct {
 	IsAdmin bool `xorm:"not null default false" json:"-"`
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
-	AvatarFileID   int64  `xorm:"null" json:"-"`
+	AvatarFileID   int64  `xorm:"null index" json:"-"`
 
 	// Issuer and Subject contain the issuer and subject from the source the user authenticated with.
 	Issuer  string `xorm:"text null" json:"-"`
@@ -130,7 +130,7 @@ type User struct {
 	FrontendSettings   interface{}    `xorm:"json null" json:"-"`
 	ExtraSettingsLinks map[string]any `xorm:"json null" json:"-"`
 
-	ExportFileID int64 `xorm:"bigint null" json:"-"`
+	ExportFileID int64 `xorm:"bigint null index" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this user was created. You cannot change this value."`
@@ -470,7 +470,7 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 
 func finishLoadedUser(u *User) error {
 	if u.OverdueTasksRemindersTime == "" {
-		u.OverdueTasksRemindersTime = "9:00"
+		u.OverdueTasksRemindersTime = "09:00"
 	}
 
 	if u.Status == StatusDisabled {
@@ -751,14 +751,21 @@ func userUpdateColumns(s *xorm.Session, user, theUser *User, forceOverride bool)
 
 	if forceOverride {
 		// forceOverride is set in paths where we should apply the FrontendSettings update.
-		user.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
-		if err != nil {
-			return nil, err
-		}
 		cols = append(cols, "frontend_settings")
 	}
 
 	return cols, nil
+}
+
+// userUpdateRow marshals FrontendSettings into a copy so the caller keeps its decoded value.
+func userUpdateRow(user *User, forceOverride bool) (*User, error) {
+	row := *user
+	if !forceOverride {
+		return &row, nil
+	}
+	var err error
+	row.FrontendSettings, err = premarshalFrontendSettings(user.FrontendSettings)
+	return &row, err
 }
 
 // UpdateUser updates a user
@@ -834,10 +841,15 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		return nil, err
 	}
 
+	row, err := userUpdateRow(user, forceOverride)
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = s.
 		ID(user.ID).
 		Cols(updateCols...).
-		Update(user)
+		Update(row)
 	if err != nil {
 		return &User{}, err
 	}

@@ -168,6 +168,12 @@ export function isFormField(target: EventTarget | null): boolean {
 	return false
 }
 
+export function isTypingTarget(event: Event): boolean {
+	const target = (event as Event & {explicitOriginalTarget?: EventTarget}).explicitOriginalTarget || event.target
+	if (target instanceof Element && target.shadowRoot) return true
+	return isFormField(target)
+}
+
 // --- Install / Uninstall ---
 
 const SEQUENCE_TIMEOUT = 1500
@@ -202,9 +208,7 @@ function globalKeydownHandler(event: KeyboardEvent) {
 	if (event.isComposing) return
 	if (event.repeat) return
 
-	const target = (event as KeyboardEvent & {explicitOriginalTarget?: EventTarget}).explicitOriginalTarget || event.target
-	if (target instanceof Element && target.shadowRoot) return
-	if (isFormField(target)) return
+	if (isTypingTarget(event)) return
 
 	// If sequences are in progress, only advance those — skip single-key shortcuts
 	if (activeSequences.length > 0) {

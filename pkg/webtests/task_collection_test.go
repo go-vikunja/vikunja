@@ -514,6 +514,14 @@ func TestTaskCollection(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `testbucket1`)
 			assert.Contains(t, rec.Body.String(), `task #1`)
 		})
+		t.Run("business day offset above the limit", func(t *testing.T) {
+			_, err := linkShareHandler.testReadAllWithLinkShare(
+				url.Values{"filter": []string{"due_date > now+999999999999b"}},
+				map[string]string{"project": "1", "view": "4"},
+			)
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeInvalidTaskFilterValue)
+		})
 		t.Run("view of another project is not found", func(t *testing.T) {
 			rec, err := linkShareHandler.testReadAllWithLinkShare(nil, map[string]string{"project": "2", "view": "8"})
 			if rec != nil {

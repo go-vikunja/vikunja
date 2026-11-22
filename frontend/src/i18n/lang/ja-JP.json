@@ -977,27 +977,10 @@
 			"title": "タスクの詳細",
 			"markAsDone": "「{task}」を完了にする",
 			"scrollToBottom": "一番下まで移動",
-			"organization": "組織",
-			"management": "管理",
-			"dateAndTime": "日付と時刻",
 			"actions": {
-				"assign": "担当者の割り当て",
-				"label": "ラベルの追加",
-				"priority": "優先度の設定",
-				"dueDate": "期日の設定",
-				"startDate": "開始日の設定",
-				"endDate": "終了日の設定",
-				"reminders": "リマインダーの設定",
-				"repeatAfter": "繰り返し間隔の設定",
-				"percentDone": "進捗状況の設定",
-				"attachments": "添付ファイルの追加",
-				"relatedTasks": "関連タスクの追加",
 				"moveProject": "移動",
 				"duplicate": "複製",
-				"color": "色の設定",
-				"delete": "削除",
-				"favorite": "お気に入りに追加",
-				"unfavorite": "お気に入りから削除"
+				"delete": "削除"
 			}
 		},
 		"attributes": {
@@ -1143,9 +1126,6 @@
 			"dateAndTime": "日付と時刻"
 		},
 		"repeat": {
-			"everyDay": "毎日",
-			"everyWeek": "毎週",
-			"every30d": "30日ごと",
 			"mode": "繰り返しモード",
 			"monthly": "毎月",
 			"fromCurrentDate": "完了からの間隔",
@@ -1295,10 +1275,6 @@
 			"shrinkTaskRight": "タスク終了日を早める"
 		}
 	},
-	"update": {
-		"available": "アップデートがあります！",
-		"do": "アップデート"
-	},
 	"menu": {
 		"edit": "編集",
 		"archive": "アーカイブ",
@@ -1338,7 +1314,6 @@
 		"notLoggedIn": "まずVikunja本体のウィンドウにログインしてください。",
 		"commands": "コマンド",
 		"placeholder": "コマンドまたはキーワードを入力…",
-		"hint": "{project} を使うとプロジェクトを検索対象にできます。{project} または {label} (ラベル) を検索条件と組み合わせて使うとプロジェクト内のタスクやラベルの付いたタスクを検索できます。{assignee} を使うとチームを検索対象にできます。",
 		"tasks": "タスク",
 		"projects": "プロジェクト",
 		"teams": "チーム",

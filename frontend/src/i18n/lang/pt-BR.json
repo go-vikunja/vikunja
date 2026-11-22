@@ -592,26 +592,9 @@
 			"updateSuccess": "A tarefa foi salva com sucesso.",
 			"belongsToProject": "Esta tarefa pertence ao projeto '{project}'",
 			"due": "Vence {at}",
-			"organization": "Organização",
-			"management": "Administração",
-			"dateAndTime": "Data e hora",
 			"actions": {
-				"assign": "Atribuir usuário",
-				"label": "Adicionar etiquetas",
-				"priority": "Definir prioridade",
-				"dueDate": "Definir prazo",
-				"startDate": "Definir data de início",
-				"endDate": "Definir data de término",
-				"reminders": "Definir lembretes",
-				"repeatAfter": "Definir Intervalo para Repetição",
-				"percentDone": "Definir progresso",
-				"attachments": "Adicionar anexos",
-				"relatedTasks": "Adicionar Relação",
 				"moveProject": "Mover",
-				"color": "Definir cor",
-				"delete": "Excluir",
-				"favorite": "Adicionar aos favoritos",
-				"unfavorite": "Remover dos favoritos"
+				"delete": "Excluir"
 			}
 		},
 		"attributes": {
@@ -741,9 +724,6 @@
 			"dateAndTime": "Data e hora"
 		},
 		"repeat": {
-			"everyDay": "Diariamente",
-			"everyWeek": "Toda semana",
-			"every30d": "A cada 30 dias",
 			"mode": "Modo repetição",
 			"monthly": "Mensalmente",
 			"each": "Cada",
@@ -867,10 +847,6 @@
 			"projects": "Navegar para projetos"
 		}
 	},
-	"update": {
-		"available": "Há uma nova atualização disponível!",
-		"do": "Atualizar agora"
-	},
 	"menu": {
 		"edit": "Editar",
 		"archive": "Arquivar",
@@ -903,7 +879,6 @@
 	"quickActions": {
 		"commands": "Comandos",
 		"placeholder": "Digite um comando ou pesquise…",
-		"hint": "Você pode usar {project} para limitar a pesquisa a um projeto. Combine {project} ou {label} (etiquetas) com uma consulta de pesquisa para pesquisar uma tarefa com essas etiquetas ou no projeto. Use {assignee} para procurar equipes.",
 		"tasks": "Tarefas",
 		"projects": "Projetos",
 		"teams": "Equipes",

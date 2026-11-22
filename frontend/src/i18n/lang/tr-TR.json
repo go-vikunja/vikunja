@@ -1144,28 +1144,11 @@
 			"title": "Görev detayı",
 			"markAsDone": "'{task}' görevini tamamlandı işaretle",
 			"scrollToBottom": "En aşağı kaydır",
-			"organization": "Organizasyon",
-			"management": "Yönetim",
-			"dateAndTime": "Tarih ve saat",
 			"actions": {
-				"assign": "Kullanıcıya Ata",
-				"label": "Etiket Ekle",
-				"priority": "Öncelik Belirle",
-				"dueDate": "Bitiş Tarihi Belirle",
-				"startDate": "Başlangıç Tarihi Belirle",
-				"endDate": "Sonlanma Tarihi Belirle",
-				"reminders": "Hatırlatıcı Kur",
-				"repeatAfter": "Tekrarlama Aralığı Ayarla",
-				"percentDone": "İlerleme Durumu",
-				"attachments": "Dosya Ekle",
 				"timeTracking": "Zaman Tut",
-				"relatedTasks": "İlişki Ekle",
 				"moveProject": "Taşı",
 				"duplicate": "Kopyala",
-				"color": "Renk Belirle",
-				"delete": "Sil",
-				"favorite": "Favorilere Ekle",
-				"unfavorite": "Favorilerden Çıkar"
+				"delete": "Sil"
 			}
 		},
 		"attributes": {
@@ -1324,9 +1307,6 @@
 			"dateAndTime": "Tarih ve saat"
 		},
 		"repeat": {
-			"everyDay": "Her Gün",
-			"everyWeek": "Her Hafta",
-			"every30d": "Her 30 Günde Bir",
 			"mode": "Tekrarlama biçimi",
 			"monthly": "Aylık",
 			"fromCurrentDate": "Tamamlanma tarihinden itibaren",
@@ -1479,10 +1459,6 @@
 			"shrinkTaskRight": "Bitiş tarihini öne çekerek daralt"
 		}
 	},
-	"update": {
-		"available": "Yeni bir güncelleme var!",
-		"do": "Hemen Güncelle"
-	},
 	"menu": {
 		"edit": "Düzenle",
 		"archive": "Arşivle",
@@ -1528,7 +1504,6 @@
 		"notLoggedIn": "Lütfen önce ana Vikunja penceresinden giriş yap.",
 		"commands": "Komutlar",
 		"placeholder": "Bir komut yaz veya arama yap…",
-		"hint": "Aramayı belirli bir projeyle sınırlandırmak için {project} yazabilirsin. Belirli etiketleri veya projeleri aramak için {project} veya {label} parametrelerini arama teriminle birleştir. Yalnızca ekipleri aramak için {assignee} kullan.",
 		"tasks": "Görevler",
 		"projects": "Projeler",
 		"teams": "Ekipler",

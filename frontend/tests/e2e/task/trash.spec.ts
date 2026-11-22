@@ -1,4 +1,5 @@
 import {test, expect} from '../../support/fixtures'
+import {clickTaskAction} from '../../support/taskDetail'
 
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
@@ -33,7 +34,7 @@ test.describe('Trash', () => {
 		await page.goto('/tasks/1')
 		await page.clock.install()
 
-		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
+		await clickTaskAction(page, 'Delete')
 		const toast = page.locator('.global-notification').filter({hasText: 'moved to the trash'})
 		const undo = toast.getByRole('button', {name: 'Undo'})
 		await expect(undo).toBeFocused()

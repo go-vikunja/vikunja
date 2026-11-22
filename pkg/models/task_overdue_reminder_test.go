@@ -131,6 +131,41 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, uts, int64(1))
 	})
+	t.Run("user timezone local date differs from service date", func(t *testing.T) {
+		cases := []struct {
+			name          string
+			timezone      string
+			remindersTime string
+			now           string
+		}{
+			// 09:00 on Dec 2 in Sydney, still Dec 1 in UTC
+			{"ahead of service timezone", "Australia/Sydney", "09:00", "2018-12-01T22:00:00Z"},
+			// 23:00 on Dec 1 in New York, already Dec 2 in UTC
+			{"behind service timezone", "America/New_York", "23:00", "2018-12-02T04:00:00Z"},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+
+				_, err := s.ID(1).Cols("timezone", "overdue_tasks_reminders_time").Update(&user.User{
+					Timezone:                  tc.timezone,
+					OverdueTasksRemindersTime: tc.remindersTime,
+				})
+				require.NoError(t, err)
+
+				now, err := time.Parse(time.RFC3339, tc.now)
+				require.NoError(t, err)
+
+				uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+				require.NoError(t, err)
+				require.Contains(t, uts, int64(1))
+				assert.Contains(t, uts[1].followed, int64(5))
+				assert.Contains(t, uts[1].followed, int64(6))
+			})
+		}
+	})
 }
 
 func TestGetTaskUsersForTasksPermissionFiltering(t *testing.T) {
@@ -555,4 +590,36 @@ func TestHasNonWebhookListener(t *testing.T) {
 		events.RegisterListener(name, &testOverdueListener{})
 		assert.True(t, hasNonWebhookListener(name))
 	})
+}
+
+func TestSendOverdueRemindersScopesProjectsPerUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+	events.ClearDispatchedEvents()
+
+	task1 := &Task{ID: 1, ProjectID: 1}
+	task32 := &Task{ID: 32, ProjectID: 3}
+	uts := map[int64]*userWithTasks{
+		1: {user: &user.User{ID: 1}, assigned: map[int64]*Task{}, followed: map[int64]*Task{1: task1}},
+		3: {user: &user.User{ID: 3}, assigned: map[int64]*Task{}, followed: map[int64]*Task{32: task32}},
+	}
+
+	require.NoError(t, sendOverdueReminders(s, uts, false, false, true))
+
+	dispatched := events.GetDispatchedEvents((&TasksOverdueEvent{}).Name())
+	require.Len(t, dispatched, 2)
+	for _, e := range dispatched {
+		ev := e.(*TasksOverdueEvent)
+		switch ev.User.ID {
+		case 1:
+			assert.Len(t, ev.Projects, 1)
+			assert.Contains(t, ev.Projects, int64(1))
+		case 3:
+			assert.Len(t, ev.Projects, 1)
+			assert.Contains(t, ev.Projects, int64(3))
+		default:
+			t.Fatalf("unexpected user %d", ev.User.ID)
+		}
+	}
 }

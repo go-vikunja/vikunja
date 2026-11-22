@@ -97,6 +97,17 @@ func TestHumaMigrationCSV_BadInput(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 	})
 
+	t.Run("a column mapped twice is rejected with 400", func(t *testing.T) {
+		duplicate := `{"delimiter":",","mapping":[{"column_index":0,"attribute":"title"},{"column_index":0,"attribute":"labels"}]}`
+		for _, path := range []string{"/api/v2/migration/csv/preview", "/api/v2/migration/csv/migrate"} {
+			body, contentType := multipartImportBody(t, "import.csv", []byte(csvTestFile), map[string]string{"config": duplicate})
+			rec := migrationUploadRequest(t, e, path, body, contentType, token)
+			assert.Equal(t, http.StatusBadRequest, rec.Code, "%s body: %s", path, rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"code":14041`, "%s body: %s", path, rec.Body.String())
+			assert.Contains(t, rec.Body.String(), `"i18n_params":{"column":"1"}`, "%s body: %s", path, rec.Body.String())
+		}
+	})
+
 	t.Run("empty file is queued and fails in the job", func(t *testing.T) {
 		notifications.Fake()
 		t.Cleanup(notifications.Unfake)

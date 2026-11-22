@@ -3,7 +3,7 @@ import {queryClient} from '@/client/queryClient'
 import {accountKeys} from '@/client/queries/account'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {parseTaskText, PrefixMode} from '.'
+import {cleanupItemText, parseTaskText, PrefixMode} from '.'
 import type {ParsedTaskText} from '.'
 import {parseDate} from './dateParser'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
@@ -193,6 +193,20 @@ describe('Parse Task Text', () => {
 
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.date).toBeNull()
+		})
+		it('should not match a date word inside a longer word', () => {
+			for (const text of ['Plan trip next weekend', 'Read todays news', 'Review tomorrows agenda', 'Budget for next months', 'Fix tonights build']) {
+				const result = parseTaskText(text)
+
+				expect(result.text).toBe(text)
+				expect(result.date).toBeNull()
+			}
+		})
+		it('should still match a date word followed by punctuation', () => {
+			const result = parseTaskText('Call mom today, then gym')
+
+			const now = new Date()
+			expect(result?.date?.getDate()).toBe(now.getDate())
 		})
 		it('should ignore casing', () => {
 			const result = parseTaskText('Lorem Ipsum ToDay')
@@ -941,6 +955,24 @@ describe('Parse Task Text', () => {
 			expect(result.labels).toHaveLength(1)
 			expect(result.labels[0]).toBe('a (a)')
 		})
+		it('should not cut a label that starts with another label out of the text', () => {
+			const result = parseTaskText('Plan *work *workshop')
+
+			expect(result.text).toBe('Plan')
+			expect(result.labels).toEqual(['work', 'workshop'])
+		})
+		it('should not cut a label that starts with another label at the end of the text', () => {
+			const result = parseTaskText('Plan *work tasks *workshop')
+
+			expect(result.text).toBe('Plan tasks')
+			expect(result.labels).toEqual(['work', 'workshop'])
+		})
+	})
+
+	describe('cleanupItemText', () => {
+		it('should not cut an assignee that starts with another assignee out of the text', () => {
+			expect(cleanupItemText('Ask @john @johnny', ['john', 'johnny'], '@').trim()).toBe('Ask')
+		})
 	})
 
 	describe('Project', () => {
@@ -1121,6 +1153,25 @@ describe('Parse Task Text', () => {
 			})
 		}
 
+		const capitalizedCases = {
+			'Weekly': {type: 'weeks', amount: 1},
+			'Daily': {type: 'days', amount: 1},
+			'Every Day': {type: 'days', amount: 1},
+			'every Month': {type: 'months', amount: 1},
+			'Every Two Weeks': {type: 'weeks', amount: 2},
+			'EVERY 3 YEARS': {type: 'years', amount: 3},
+		} as Record<string, IRepeatAfter>
+
+		for (const c of Object.keys(capitalizedCases)) {
+			it(`should parse ${c} regardless of case as every ${capitalizedCases[c].amount} ${capitalizedCases[c].type}`, () => {
+				const result = parseTaskText(`Lorem Ipsum ${c}`)
+
+				expect(result.text).toBe('Lorem Ipsum')
+				expect(result?.repeats?.type).toBe(capitalizedCases[c].type)
+				expect(result?.repeats?.amount).toBe(capitalizedCases[c].amount)
+			})
+		}
+
 		const wordCases = [
 			'annually',
 			'biannually',
@@ -1140,6 +1191,22 @@ describe('Parse Task Text', () => {
 				expect(result.text).toBe(`Lorem Ipsum word${c}notword`)
 				expect(result?.repeats).toBeNull()
 			})
+		})
+
+		it('should remove the matched recurring period, not an earlier word starting with it', () => {
+			const result = parseTaskText('Update weekly-report weekly')
+
+			expect(result.text).toBe('Update weekly-report')
+			expect(result?.repeats?.type).toBe('weeks')
+			expect(result?.repeats?.amount).toBe(1)
+		})
+
+		it('should remove the matched "every" period, not an earlier one inside a word', () => {
+			const result = parseTaskText('Check every day-planner every day')
+
+			expect(result.text).toBe('Check every day-planner')
+			expect(result?.repeats?.type).toBe('days')
+			expect(result?.repeats?.amount).toBe(1)
 		})
 	})
 })

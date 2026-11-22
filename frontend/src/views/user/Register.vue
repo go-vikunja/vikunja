@@ -78,10 +78,10 @@
 					for="password"
 				>{{ $t('user.auth.password') }}</label>
 				<Password
+					v-model="credentials.password"
 					:validate-initially="validatePasswordInitially"
 					autocomplete="new-password"
 					@submit="submit"
-					@update:modelValue="v => credentials.password = v"
 				/>
 				<p
 					v-if="passwordError"

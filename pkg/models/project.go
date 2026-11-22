@@ -60,7 +60,7 @@ type Project struct {
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived" doc:"Whether the project is archived. Archived projects are read-only."`
 
 	// The id of the file this project has set as background
-	BackgroundFileID int64 `xorm:"null" json:"-"`
+	BackgroundFileID int64 `xorm:"null index" json:"-"`
 	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /projects/{projectID}/background
 	BackgroundInformation interface{} `xorm:"-" json:"background_information" readOnly:"true" doc:"Extra information about the background (e.g. attribution). When not null, the background is available at /projects/{projectID}/background."`
 	// Contains a very small version of the project background to use as a blurry preview until the actual background is loaded. Check out https://blurha.sh/ to learn how it works.
@@ -663,7 +663,8 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 	where := builder.And(conds...)
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	query := s.Where(where).OrderBy("position")
+	// Positions tie across sibling groups; id keeps LIMIT/OFFSET pages disjoint.
+	query := s.Where(where).OrderBy("position, id")
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
@@ -1003,6 +1004,8 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 	}
 
 	project.ID = 0
+	project.BackgroundFileID = 0
+	project.BackgroundBlurHash = ""
 	if doer.IsBot() {
 		project.OwnerID = doer.BotOwnerID
 		owner, err := user.GetUserByID(s, doer.BotOwnerID)
@@ -1299,7 +1302,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	// Healing before the write would leave the project at its tiny position and every
 	// further move to the top would trigger another recalculation.
 	if l.Position < 0.1 {
-		err = recalculateProjectPositions(s, l.parentID())
+		err = recalculateProjectPositions(s, auth, l.parentID(), l.ID)
 		if err != nil {
 			return err
 		}
@@ -1315,7 +1318,8 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	return
 }
 
-func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err error) {
+// Positions are global, so siblings the doer can only read keep theirs.
+func recalculateProjectPositions(s *xorm.Session, a web.Auth, parentProjectID, projectID int64) (err error) {
 
 	// Root projects may store their parent as NULL instead of 0 and would never be healed.
 	var parentCond builder.Cond = builder.Eq{"parent_project_id": parentProjectID}
@@ -1323,9 +1327,15 @@ func recalculateProjectPositions(s *xorm.Session, parentProjectID int64) (err er
 		parentCond = builder.Or(parentCond, builder.IsNull{"parent_project_id"})
 	}
 
+	writable, err := projectIDsWithPermissionCond(s, a, "id", PermissionWrite)
+	if err != nil {
+		return err
+	}
+
 	allProjects := []*Project{}
 	err = s.
-		Where(parentCond).
+		// Instance admins pass CanUpdate without any grant on the project.
+		Where(builder.And(parentCond, builder.Or(writable, builder.Eq{"id": projectID}))).
 		OrderBy("position asc, id asc").
 		Find(&allProjects)
 	if err != nil {

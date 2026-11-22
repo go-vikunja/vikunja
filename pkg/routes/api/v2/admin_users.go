@@ -60,6 +60,17 @@ type adminSetPasswordBody struct {
 	NewPassword string `json:"new_password" valid:"bcrypt_password" minLength:"8" maxLength:"72" doc:"The new password. Max 72 bytes (a bcrypt limit), which may be fewer than 72 characters."`
 }
 
+type adminUserSettingsBody struct {
+	models.UserGeneralSettings
+	User *adminSettingsUser `json:"user" valid:"-" readOnly:"true" doc:"The user these settings belong to."`
+}
+
+type adminSettingsUser struct {
+	ID           int64  `json:"id" readOnly:"true" doc:"The numeric ID of the user."`
+	Username     string `json:"username" readOnly:"true" doc:"The user's username."`
+	AuthProvider string `json:"auth_provider,omitempty" readOnly:"true" doc:"Resolved auth provider name (e.g. 'LDAP' or an OIDC provider), empty for local accounts."`
+}
+
 // adminDoerFromCtx resolves the acting admin for audit attribution. The admin
 // gate guarantees the principal is a user, so anything else is a hard error.
 func adminDoerFromCtx(ctx context.Context) (*user.User, error) {
@@ -137,6 +148,24 @@ func RegisterAdminUserRoutes(api huma.API) {
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
 	}, adminUsersPasswordResetEmail)
+
+	Register(api, huma.Operation{
+		OperationID: "admin-users-settings-read",
+		Summary:     "Get a user's general settings (admin)",
+		Description: "Returns the same settings the user edits on PUT /user/settings/general, plus the user they belong to.",
+		Method:      http.MethodGet,
+		Path:        "/admin/users/{id}/settings/general",
+		Tags:        tags,
+	}, adminUsersSettingsRead)
+
+	Register(api, huma.Operation{
+		OperationID: "admin-users-settings-update",
+		Summary:     "Update a user's general settings (admin)",
+		Description: "Replaces a user's general settings with the same rules as the self-service endpoint; the default project must be one the target user can write to. Use PATCH to change only some of them; it merges into frontend_settings key by key.",
+		Method:      http.MethodPut,
+		Path:        "/admin/users/{id}/settings/general",
+		Tags:        tags,
+	}, adminUsersSettingsUpdate)
 
 	Register(api, huma.Operation{
 		OperationID: "admin-users-delete",
@@ -288,6 +317,47 @@ func adminUsersPasswordResetEmail(ctx context.Context, in *struct {
 	return out, nil
 }
 
+func adminUsersSettingsRead(_ context.Context, in *struct {
+	ID int64 `path:"id" doc:"The numeric ID of the user."`
+}) (*singleBody[adminUserSettingsBody], error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	target, err := models.GetUserAsAdmin(s, in.ID)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return newAdminUserSettingsBody(target) //nolint:contextcheck
+}
+
+func adminUsersSettingsUpdate(ctx context.Context, in *struct {
+	ID   int64 `path:"id" doc:"The numeric ID of the user."`
+	Body adminUserSettingsBody
+}) (*singleBody[adminUserSettingsBody], error) {
+	target, err := adminCommitTarget(ctx, func(s *xorm.Session, doer *user.User) (*user.User, error) {
+		return models.UpdateUserSettingsAsAdmin(s, doer, in.ID, &in.Body.UserGeneralSettings)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return newAdminUserSettingsBody(target) //nolint:contextcheck
+}
+
+func newAdminUserSettingsBody(target *user.User) (*singleBody[adminUserSettingsBody], error) {
+	providers, err := openid.GetAllProviders() //nolint:contextcheck // GetAllProviders reads a cached map; it takes no context, like the v1 admin handlers.
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &singleBody[adminUserSettingsBody]{Body: &adminUserSettingsBody{
+		UserGeneralSettings: *models.NewUserGeneralSettings(target),
+		User: &adminSettingsUser{
+			ID:           target.ID,
+			Username:     target.Username,
+			AuthProvider: shared.ResolveAuthProvider(target, providers), //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+		},
+	}}, nil
+}
+
 func adminUsersDelete(ctx context.Context, in *struct {
 	ID   int64  `path:"id" doc:"The numeric ID of the user."`
 	Mode string `query:"mode" doc:"'now' deletes immediately; 'scheduled' (the default) triggers the email-confirmation self-deletion flow."`
@@ -320,10 +390,21 @@ func adminUsersDelete(ctx context.Context, in *struct {
 	return &emptyBody{}, nil
 }
 
-// adminCommitUser runs a user-returning admin action in its own transaction and
-// renders the admin user view. The action does the load/guard/mutate against the
-// session (shared with v1 via the models layer); this owns the commit and response.
 func adminCommitUser(ctx context.Context, action func(s *xorm.Session, doer *user.User) (*user.User, error)) (*adminUserBody, error) {
+	target, err := adminCommitTarget(ctx, action)
+	if err != nil {
+		return nil, err
+	}
+
+	providers, err := openid.GetAllProviders() //nolint:contextcheck // GetAllProviders reads a cached map; it takes no context, like the v1 admin handlers.
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &adminUserBody{Body: shared.NewAdminUser(target, providers)}, nil //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+}
+
+// adminCommitTarget runs a user-returning admin action in its own transaction.
+func adminCommitTarget(ctx context.Context, action func(s *xorm.Session, doer *user.User) (*user.User, error)) (*user.User, error) {
 	doer, err := adminDoerFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -343,10 +424,5 @@ func adminCommitUser(ctx context.Context, action func(s *xorm.Session, doer *use
 		return nil, translateDomainError(err)
 	}
 	events.DispatchPending(ctx, s)
-
-	providers, err := openid.GetAllProviders() //nolint:contextcheck // GetAllProviders reads a cached map; it takes no context, like the v1 admin handlers.
-	if err != nil {
-		return nil, translateDomainError(err)
-	}
-	return &adminUserBody{Body: shared.NewAdminUser(target, providers)}, nil //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
+	return target, nil
 }

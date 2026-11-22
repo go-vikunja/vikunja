@@ -29,8 +29,10 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/richtext"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // labelColors maps Planka label color names (server/api/models/Label.js COLORS) to the hex values
@@ -91,11 +93,37 @@ type converter struct {
 	projectID    int64
 	bucketID     int64
 	attachmentID int64
+	items        int64
 }
 
+// Fails before the whole structure is built.
+func (c *converter) countItems(n int) error {
+	c.items += int64(n)
+	return migration.CheckItemCount(c.items)
+}
+
+// These names are copied into every task or comment referencing them.
+const maxReferenceNameLength = 1024
+
 func convertPlankaToVikunja(data *plankaData, download attachmentDownloader) ([]*models.ProjectWithTasksAndBuckets, error) {
+	for id, u := range data.Users {
+		u.Name = utils.TruncateUTF8(u.Name, maxReferenceNameLength)
+		data.Users[id] = u
+	}
+	for id, g := range data.BaseCustomFieldGroups {
+		g.Name = utils.TruncateUTF8(g.Name, maxReferenceNameLength)
+		data.BaseCustomFieldGroups[id] = g
+	}
+	for id, f := range data.BaseCustomFields {
+		f.Name = utils.TruncateUTF8(f.Name, maxReferenceNameLength)
+		data.BaseCustomFields[id] = f
+	}
+
 	c := &converter{data: data, download: download}
-	root := c.newProject("Migrated from Planka", "", nil)
+	root, err := c.newProject("Migrated from Planka", "", nil)
+	if err != nil {
+		return nil, err
+	}
 	result := []*models.ProjectWithTasksAndBuckets{root}
 
 	for _, p := range data.Projects {
@@ -105,7 +133,10 @@ func convertPlankaToVikunja(data *plankaData, download attachmentDownloader) ([]
 		}
 
 		if len(p.Boards) <= 1 {
-			project := c.newProject(p.Name, description, models.Ptr(root.ID))
+			project, err := c.newProject(p.Name, description, models.Ptr(root.ID))
+			if err != nil {
+				return nil, err
+			}
 			if len(p.Boards) == 1 {
 				if err := c.convertBoard(p.Boards[0], project); err != nil {
 					return nil, err
@@ -115,10 +146,16 @@ func convertPlankaToVikunja(data *plankaData, download attachmentDownloader) ([]
 			continue
 		}
 
-		parent := c.newProject(p.Name, description, models.Ptr(root.ID))
+		parent, err := c.newProject(p.Name, description, models.Ptr(root.ID))
+		if err != nil {
+			return nil, err
+		}
 		result = append(result, parent)
 		for _, b := range p.Boards {
-			child := c.newProject(b.Name, "", models.Ptr(parent.ID))
+			child, err := c.newProject(b.Name, "", models.Ptr(parent.ID))
+			if err != nil {
+				return nil, err
+			}
 			if err := c.convertBoard(b, child); err != nil {
 				return nil, err
 			}
@@ -129,7 +166,10 @@ func convertPlankaToVikunja(data *plankaData, download attachmentDownloader) ([]
 	return result, nil
 }
 
-func (c *converter) newProject(title, description string, parentID *int64) *models.ProjectWithTasksAndBuckets {
+func (c *converter) newProject(title, description string, parentID *int64) (*models.ProjectWithTasksAndBuckets, error) {
+	if err := c.countItems(1); err != nil {
+		return nil, err
+	}
 	c.projectID++
 	return &models.ProjectWithTasksAndBuckets{
 		Project: models.Project{
@@ -138,7 +178,7 @@ func (c *converter) newProject(title, description string, parentID *int64) *mode
 			Title:           title,
 			Description:     description,
 		},
-	}
+	}, nil
 }
 
 func listTypeOrder(t string) int {
@@ -166,8 +206,27 @@ func timeOrZero(t *time.Time) time.Time {
 	return *t
 }
 
+// Lists and cards are looked up by id, so a repeated id would import its whole group once per copy.
+func uniqueByID[T any](items []T, id func(T) string) []T {
+	seen := make(map[string]bool, len(items))
+	unique := make([]T, 0, len(items))
+	for _, item := range items {
+		if seen[id(item)] {
+			continue
+		}
+		seen[id(item)] = true
+		unique = append(unique, item)
+	}
+	return unique
+}
+
 func (c *converter) convertBoard(bd *plankaBoardData, project *models.ProjectWithTasksAndBuckets) error {
 	log.Debugf("[Planka Migration] Converting board %s with %d cards", bd.ID, len(bd.Cards))
+
+	bd.Lists = uniqueByID(bd.Lists, func(l plankaList) string { return l.ID })
+	bd.Cards = uniqueByID(bd.Cards, func(c plankaCard) string { return c.ID })
+	bd.TaskLists = uniqueByID(bd.TaskLists, func(tl plankaTaskList) string { return tl.ID })
+	bd.Attachments = uniqueByID(bd.Attachments, func(a plankaAttachment) string { return a.ID })
 
 	labelsByID := map[string]plankaLabel{}
 	for _, l := range bd.Labels {
@@ -195,11 +254,15 @@ func (c *converter) convertBoard(bd *plankaBoardData, project *models.ProjectWit
 	}
 	groupsByID := map[string]plankaCustomFieldGroup{}
 	for _, g := range bd.CustomFieldGroups {
+		if g.Name != nil {
+			g.Name = models.Ptr(utils.TruncateUTF8(*g.Name, maxReferenceNameLength))
+		}
 		groupsByID[g.ID] = g
 	}
 	fieldsByID := map[string]plankaCustomField{}
 	maps.Copy(fieldsByID, c.data.BaseCustomFields)
 	for _, f := range bd.CustomFields {
+		f.Name = utils.TruncateUTF8(f.Name, maxReferenceNameLength)
 		fieldsByID[f.ID] = f
 	}
 	cardsByList := map[string][]plankaCard{}
@@ -221,6 +284,9 @@ func (c *converter) convertBoard(bd *plankaBoardData, project *models.ProjectWit
 	})
 
 	for _, list := range lists {
+		if err := c.countItems(1); err != nil {
+			return err
+		}
 		c.bucketID++
 		bucket := &models.Bucket{
 			ID:    c.bucketID,
@@ -237,6 +303,9 @@ func (c *converter) convertBoard(bd *plankaBoardData, project *models.ProjectWit
 		})
 
 		for _, card := range cards {
+			if err := c.countItems(1 + len(labelIDsByCard[card.ID]) + len(bd.Comments[card.ID])); err != nil {
+				return err
+			}
 			task := &models.TaskWithComments{
 				Task: models.Task{
 					Title:    card.Name,
@@ -278,6 +347,9 @@ func (c *converter) convertBoard(bd *plankaBoardData, project *models.ProjectWit
 				a := &attachmentsByCard[card.ID][i]
 				if a.Type == attachmentTypeLink {
 					continue
+				}
+				if err := c.countItems(1); err != nil {
+					return err
 				}
 				buf, err := c.download(a)
 				if err != nil {

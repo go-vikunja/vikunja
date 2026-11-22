@@ -43,13 +43,15 @@
 						v-model="newTaskRelation.task"
 						v-focus
 						:placeholder="$t('task.relation.searchPlaceholder')"
-						:loading="taskQuery.isFetching.value"
+						:loading="isSearching"
 						:search-results="mappedFoundTasks"
+						:show-empty="true"
 						label="title"
 						:creatable="true"
 						:create-placeholder="$t('task.relation.createPlaceholder')"
 						@search="findTasks"
 						@create="createAndRelateTask"
+						@focusin="suggestionsRequested = true"
 					>
 						<template #searchResult="{option: task}">
 							<span
@@ -249,6 +251,24 @@ const taskQuery = useTasks(() => ({params: {q: query.value, sort_by: ['done']}})
 const foundTasks = taskQuery.tasks
 function findTasks(value: string) { query.value = value }
 
+const SUGGESTION_COUNT = 10
+const suggestionsRequested = ref(false)
+const suggestionQuery = useTasks(() => ({
+	project: props.projectId,
+	params: {
+		sort_by: ['updated'],
+		order_by: ['desc'],
+		// One extra so dropping the current task still leaves a full list.
+		per_page: SUGGESTION_COUNT + 1,
+	},
+}), {enabled: () => suggestionsRequested.value && query.value === ''})
+const suggestedTasks = computed(() => suggestionQuery.tasks.value
+	.filter(t => t.id !== props.taskId)
+	.slice(0, SUGGESTION_COUNT))
+const isSearching = computed(() => query.value === ''
+	? suggestionQuery.isFetching.value
+	: taskQuery.isFetching.value)
+
 function sortTasksForRelationSearch(tasks: ITask[]) {
 	return [...tasks].sort((a, b) => {
 		if (a.done !== b.done) {
@@ -287,7 +307,9 @@ const mappedRelatedTasks = computed(() => Object.entries(relatedTasks.value).map
 		kind: kind as IRelationKind,
 	}),
 ))
-const mappedFoundTasks = computed(() => sortTasksForRelationSearch(foundTasks.value.filter(t => t.id !== props.taskId)))
+const mappedFoundTasks = computed(() => query.value === ''
+	? suggestedTasks.value
+	: sortTasksForRelationSearch(foundTasks.value.filter(t => t.id !== props.taskId)))
 
 
 const saved = ref(false)

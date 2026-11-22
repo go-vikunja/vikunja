@@ -154,6 +154,11 @@
                     "comment": "If enabled, users will only find other users who are part of an existing team when they are searching for a user by their partial name. The other existing team may be created from openid. It is still possible to add users to teams with their exact email address even when this is enabled."
                 },
                 {
+                    "key": "restrictsearchtoexternalteams",
+                    "default_value": "false",
+                    "comment": "If enabled, users who are a member of at least one external team (e.g. created from the openid `vikunja_groups` claim) will only find users who share one of their external teams when searching by name or username. Users with discoverable_by_email enabled can still be found by their exact email address. Users who are not part of any external team, and listing the users of a project, are not affected. Useful for multi-tenant instances where each external team is a separate organization."
+                },
+                {
                     "key": "ipextractionmethod",
                     "default_value": "direct",
                     "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header, but only honours it when the header value itself falls into a trusted range (loopback, private networks or 'service.trustedproxies') — it does not check who sent the header, so it cannot report public client IPs. Prefer 'xff' behind a reverse proxy. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
@@ -1041,7 +1046,7 @@
                 },
                 {
                     "key": "overdue_tasks_reminders_time",
-                    "default_value": "9:00",
+                    "default_value": "09:00",
                     "comment": "When to send the overdue task reminder email."
                 },
                 {

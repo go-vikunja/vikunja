@@ -195,12 +195,12 @@ async function updatePosition() {
 		placement: props.placement,
 		strategy: 'fixed',
 		// Top padding keeps a flipped popup out from under the fixed app header. When neither side fits
-		// (short window, tall popup) stay on the requested side and let size() cap the popup to what is
-		// left, so it scrolls inside itself instead of overflowing the viewport.
+		// (short window, tall popup), crossAxis shift slides it over the anchor and size() caps it to the
+		// viewport. Capping to the space below the anchor instead hid the confirm button in a tiny box.
 		middleware: [
 			offset(4),
 			flip({padding: VIEWPORT_PADDING, fallbackStrategy: 'initialPlacement'}),
-			shift({padding: VIEWPORT_PADDING}),
+			shift({padding: VIEWPORT_PADDING, crossAxis: true}),
 			size({
 				padding: VIEWPORT_PADDING,
 				apply: ({availableHeight}) => {

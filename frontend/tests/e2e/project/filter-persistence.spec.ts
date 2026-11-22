@@ -9,6 +9,7 @@ async function openFilterPopup(page) {
 
 async function openAndSetFilters(page, filter = 'done = true') {
 	await openFilterPopup(page)
+	await page.getByRole('tab', {name: 'Advanced', exact: true}).click()
 	await page.locator('.filter-popup .filter-input .ProseMirror').fill(filter)
 	await page.locator('.filter-popup button').filter({hasText: 'Show results'}).click()
 }

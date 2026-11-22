@@ -53,6 +53,7 @@ async function mountList() {
 			isLoadingProject: false,
 			projectId: 1,
 			viewId: 10,
+			view: {id: 10, view_kind: 'list'},
 		},
 		global: {
 			plugins: [

@@ -315,4 +315,17 @@ func testProjectDuplicate(t *testing.T, projectID int64, userID int64) {
 	if originalKanbanView != nil && duplicatedKanbanView != nil && originalKanbanView.DefaultBucketID != 0 {
 		assert.NotEqual(t, originalKanbanView.DefaultBucketID, duplicatedKanbanView.DefaultBucketID)
 	}
+
+	original := &Project{}
+	_, err = s.ID(originalProjectID).Get(original)
+	require.NoError(t, err)
+	duplicated := &Project{}
+	_, err = s.ID(duplicatedProjectID).Get(duplicated)
+	require.NoError(t, err)
+	if original.BackgroundFileID != 0 {
+		assert.NotZero(t, duplicated.BackgroundFileID, "background was not copied")
+		assert.NotEqual(t, original.BackgroundFileID, duplicated.BackgroundFileID, "background file must be a copy")
+	} else {
+		assert.Zero(t, duplicated.BackgroundFileID)
+	}
 }

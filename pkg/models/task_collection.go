@@ -18,21 +18,24 @@ package models
 
 import (
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
 // TaskCollection is a struct used to hold filter details and not clutter the Task struct with information not related to actual tasks.
 type TaskCollection struct {
-	ProjectID     int64 `param:"project" json:"-"`
-	ProjectViewID int64 `param:"view" json:"-"`
+	ProjectID          int64 `param:"project" json:"-"`
+	ProjectViewID      int64 `param:"view" json:"-"`
+	IncludeSubprojects bool  `json:"include_subprojects,omitempty" query:"include_subprojects"`
 
-	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
+	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title or description. A plain number also matches a task's number: either the index shown in the UI or the id from the task URL. \"#12\" only matches the index."`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
 	SortBy []string `query:"sort_by" json:"sort_by" doc:"The fields to sort by, for example done or priority. The special value relevance sorts by search relevance (most relevant first, requires s; ignored when the database cannot score the query)."`
@@ -195,9 +198,38 @@ func (tf *TaskCollection) SetForceFlatTasks() {
 	tf.forceFlatTasks = true
 }
 
+// A subproject's task has no bucket in the parent's kanban view, so it would be mis-bucketed.
+func (tf *TaskCollection) normalizeIncludeSubprojects(a web.Auth, view *ProjectView) {
+	tf.IncludeSubprojects = tf.IncludeSubprojects &&
+		tf.ProjectID > 0 &&
+		!tf.isSavedFilter
+
+	if view != nil && view.ViewKind == ProjectViewKindKanban {
+		tf.IncludeSubprojects = false
+	}
+
+	if _, is := a.(*LinkSharing); is {
+		tf.IncludeSubprojects = false
+	}
+}
+
+func ensureDefaultPositionSort(opts *taskSearchOptions, view *ProjectView) {
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyPosition {
+			return
+		}
+	}
+
+	opts.sortby = append(opts.sortby, &sortParam{
+		projectViewID: view.ID,
+		sortBy:        taskPropertyPosition,
+		orderBy:       orderAscending,
+	})
+}
+
 func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket, forceFlatTasks bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
-	if view != nil && GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
-		err = ensureTaskPositionsForSavedFilterView(s, a, projects, view, opts)
+	if view != nil {
+		err = ensureTaskPositionsForView(s, a, projectsToHealInView(projects, view), view, opts)
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -215,6 +247,16 @@ func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, v
 	}
 
 	return getTasksForProjects(s, projects, a, opts, view)
+}
+
+// projectsToHealInView returns the projects whose tasks get no row in view on creation.
+func projectsToHealInView(projects []*Project, view *ProjectView) []*Project {
+	if GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
+		return projects
+	}
+	return slices.DeleteFunc(slices.Clone(projects), func(p *Project) bool {
+		return p.ID == view.ProjectID
+	})
 }
 
 func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskCollection) (projects []*Project, err error) {
@@ -242,7 +284,43 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		}
 	}
 
-	return []*Project{{ID: tf.ProjectID}}, nil
+	if !tf.IncludeSubprojects || tf.ProjectID <= 0 {
+		return []*Project{{ID: tf.ProjectID}}, nil
+	}
+
+	subprojectIDs, err := getAccessibleSubprojectIDs(s, a, tf.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	relevantProjects := make([]*Project, 0, len(subprojectIDs)+1)
+	relevantProjects = append(relevantProjects, &Project{ID: tf.ProjectID})
+	for _, id := range subprojectIDs {
+		relevantProjects = append(relevantProjects, &Project{ID: id})
+	}
+
+	return relevantProjects, nil
+}
+
+// Descendants the auth cannot access are skipped rather than failing the request.
+func getAccessibleSubprojectIDs(s *xorm.Session, a web.Auth, parentProjectID int64) (ids []int64, err error) {
+	accessible, err := accessibleProjectIDsCond(s, a, "projects.id")
+	if err != nil {
+		return nil, err
+	}
+
+	ids = []int64{}
+	err = s.
+		Table(&ProjectAncestor{}).
+		Join("INNER", "projects", "projects.id = project_ancestors.project_id").
+		Where(builder.Eq{"project_ancestors.ancestor_id": parentProjectID}.
+			And(builder.Gt{"project_ancestors.depth": 0}).
+			And(builder.Eq{"projects.is_archived": false}).
+			And(accessible)).
+		Cols("project_ancestors.project_id").
+		Find(&ids)
+
+	return ids, err
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
@@ -279,6 +357,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Produce json
 // @Param id path int true "The project ID."
 // @Param view path int true "The project view ID."
+// @Param include_subprojects query bool false "If true, also returns tasks from all descendant subprojects the user can access. Their position in this view is stored separately from the one in their own project's views."
 // @Param page query int false "The page number. Used for pagination. If not provided, the first page of results is returned."
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search tasks by task text."
@@ -339,6 +418,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 		tc.mergeRequestFilter(tf)
 
+		if sf.Filters.Search != "" {
+			search = sf.Filters.Search
+		}
+
 		return tc.ReadAll(s, a, search, page, perPage)
 	}
 
@@ -370,6 +453,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			if view.Filter.FilterIncludeNulls {
 				tf.FilterIncludeNulls = true
 			}
+
+			if view.Filter.IncludeSubprojects {
+				tf.IncludeSubprojects = true
+			}
 		}
 
 		if strings.Contains(tf.Filter, taskPropertyBucketID) {
@@ -380,6 +467,8 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			}
 		}
 	}
+
+	tf.normalizeIncludeSubprojects(a, view)
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)
 	if err != nil {
@@ -400,20 +489,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	opts.isSavedFilter = tf.isSavedFilter
 
 	if view != nil {
-		var hasOrderByPosition bool
-		for _, param := range opts.sortby {
-			if param.sortBy == taskPropertyPosition {
-				hasOrderByPosition = true
-				break
-			}
-		}
-		if !hasOrderByPosition {
-			opts.sortby = append(opts.sortby, &sortParam{
-				projectViewID: view.ID,
-				sortBy:        taskPropertyPosition,
-				orderBy:       orderAscending,
-			})
-		}
+		ensureDefaultPositionSort(opts, view)
 	}
 
 	shareAuth, is := a.(*LinkSharing)

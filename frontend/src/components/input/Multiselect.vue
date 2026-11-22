@@ -2,16 +2,18 @@
 	<div
 		ref="multiselectRoot"
 		class="multiselect"
-		:class="{'has-search-results': searchResultsVisible, 'is-disabled': disabled}"
+		:class="{'has-search-results': searchResultsVisible, 'is-disabled': disabled, 'opens-upwards': resultsAbove}"
 		tabindex="-1"
 		:aria-disabled="disabled"
 		@focus="focus"
+		@focusout="handleFocusOut"
 	>
 		<div
 			class="control"
 			:class="{'is-loading': showLoading || localLoading}"
 		>
 			<div
+				ref="inputWrapper"
 				class="input-wrapper input"
 				:class="{'has-multiple': hasMultiple, 'has-removal-button': removalAvailable && !disabled}"
 			>
@@ -62,6 +64,7 @@
 					@keyup="search"
 					@keyup.enter.exact.prevent="() => createOrSelectOnEnter()"
 					@keydown="clearKeyupGuard"
+					@keydown.enter.exact="preventFormSubmitWhileOpen"
 					@keydown.down.exact.prevent="() => preSelect(0)"
 					@keydown.esc="handleEscape"
 					@focus="handleFocus"
@@ -81,10 +84,13 @@
 			<div
 				v-if="searchResultsVisible"
 				:id="listboxId"
+				ref="resultsEl"
 				class="search-results"
 				:class="{'search-results-inline': inline}"
+				:style="inline ? undefined : resultsStyle"
 				role="listbox"
 				:aria-label="accessibleName"
+				tabindex="-1"
 			>
 				<BaseButton
 					v-for="(data, index) in filteredSearchResults"
@@ -92,6 +98,7 @@
 					:ref="(el) => setResult(el, index)"
 					class="search-result-button is-fullwidth"
 					role="option"
+					tabindex="-1"
 					@keydown.up.prevent="() => preSelect(index - 1)"
 					@keydown.down.prevent="() => preSelect(index + 1)"
 					@keydown.esc="closeAndRefocus"
@@ -118,6 +125,7 @@
 					:ref="(el) => setResult(el, filteredSearchResults.length)"
 					class="search-result-button is-fullwidth is-create-option"
 					role="option"
+					tabindex="-1"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
 					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
 					@keydown.esc="closeAndRefocus"
@@ -166,7 +174,19 @@
 </template>
 
 <script setup lang="ts" generic="T extends Record<string, unknown>">
-import {computed, onBeforeUnmount, onMounted, ref, toRefs, useId, watch, type ComponentPublicInstance, type Ref} from 'vue'
+import {
+	computed,
+	nextTick,
+	onBeforeUnmount,
+	onMounted,
+	ref,
+	toRefs,
+	useId,
+	watch,
+	type ComponentPublicInstance,
+	type Ref,
+} from 'vue'
+import {autoUpdate, computePosition, flip, size} from '@floating-ui/dom'
 import {useI18n} from 'vue-i18n'
 
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
@@ -193,6 +213,11 @@ const props = withDefaults(defineProps<{
 	name?: string
 	/** If true, will provide an 'add this as a new value' entry which  fires an @create event when clicking on it. */
 	creatable?: boolean
+	/**
+	 * Enter selects a matching result or focuses the create option for confirmation.
+	 * Requires a synchronous search listener, such as local label filtering.
+	 */
+	confirmCreateOnEnter?: boolean
 	/** When set and `creatable` is false, shows a non-interactive hint row explaining why a non-matching query can't be added. */
 	creationDisabledMessage?: string
 	/** The text shown next to the new value option. */
@@ -223,6 +248,7 @@ const props = withDefaults(defineProps<{
 	searchResults: () => [] as T[],
 	label: '',
 	creatable: false,
+	confirmCreateOnEnter: false,
 	creationDisabledMessage: '',
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
 	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
@@ -322,6 +348,54 @@ const searchResultsVisible = computed(() => {
 	)
 })
 
+const inputWrapper = ref<HTMLElement | null>(null)
+const resultsEl = ref<HTMLElement | null>(null)
+const resultsStyle = ref<Record<string, string>>({})
+const resultsAbove = ref(false)
+// 4rem app header ($navbar-height) plus a small margin, same as Popup.
+const VIEWPORT_PADDING = {top: 72, right: 8, bottom: 8, left: 8}
+
+async function updateResultsPosition() {
+	if (!inputWrapper.value || !resultsEl.value) {
+		return
+	}
+	let maxBlockSize = 0
+	let inlineSize = 0
+	const {x, y, placement} = await computePosition(inputWrapper.value, resultsEl.value, {
+		placement: 'bottom-start',
+		strategy: 'fixed',
+		middleware: [
+			flip({padding: VIEWPORT_PADDING, fallbackStrategy: 'initialPlacement'}),
+			size({
+				padding: VIEWPORT_PADDING,
+				apply: ({availableHeight, rects}) => {
+					maxBlockSize = availableHeight
+					inlineSize = rects.reference.width
+				},
+			}),
+		],
+	})
+	resultsAbove.value = placement.startsWith('top')
+	resultsStyle.value = {
+		left: `${x}px`,
+		top: `${y}px`,
+		inlineSize: `${inlineSize}px`,
+		maxBlockSize: `min(50vh, ${Math.max(maxBlockSize, 0)}px)`,
+	}
+}
+
+let stopAutoUpdate: (() => void) | null = null
+watch([searchResultsVisible, resultsEl], ([visible, el]) => {
+	stopAutoUpdate?.()
+	stopAutoUpdate = null
+	if (!visible || !el || !inputWrapper.value || props.inline) {
+		resultsAbove.value = false
+		return
+	}
+	stopAutoUpdate = autoUpdate(inputWrapper.value, el, updateResultsPosition)
+}, {flush: 'post'})
+onBeforeUnmount(() => stopAutoUpdate?.())
+
 const queryHasExactMatch = computed(() => {
 	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value))
 	const hasQueryAlreadyAdded = props.multiple && selectedItems.value.some((elem: T) => elementInResults(elem, props.label, query.value))
@@ -398,6 +472,20 @@ function hideSearchResultsHandler(e: MouseEvent) {
 
 function closeSearchResults() {
 	showSearchResults.value = false
+}
+
+// A null relatedTarget is ignored: iOS Safari doesn't focus a tapped option, so closing here would drop the click.
+function handleFocusOut(e: FocusEvent) {
+	if (e.relatedTarget instanceof Node && !multiselectRoot.value?.contains(e.relatedTarget)) {
+		closeSearchResults()
+	}
+}
+
+// Enter picks a result on keyup; its keydown must not submit a surrounding form first.
+function preventFormSubmitWhileOpen(e: KeyboardEvent) {
+	if (searchResultsVisible.value) {
+		e.preventDefault()
+	}
 }
 
 function handleEscape(e: KeyboardEvent) {
@@ -533,9 +621,22 @@ function create() {
 	refocusInput()
 }
 
-function createOrSelectOnEnter() {
+async function createOrSelectOnEnter() {
 	if (ignoreNextKeyup) {
 		return
+	}
+
+	if (props.confirmCreateOnEnter) {
+		if (searchTimeout.value !== null) {
+			clearTimeout(searchTimeout.value)
+			searchTimeout.value = null
+		}
+
+		// Flush the debounced search; synchronous listeners update the result prop on the next render.
+		emit('search', query.value)
+		localLoading.value = false
+		showSearchResults.value = true
+		await nextTick()
 	}
 
 	if (!creatableAvailable.value && searchResults.value.length === 1) {
@@ -550,6 +651,15 @@ function createOrSelectOnEnter() {
 			select(exactMatch)
 		}
 
+		return
+	}
+
+	if (props.confirmCreateOnEnter) {
+		if (filteredSearchResults.value.length > 0) {
+			select(filteredSearchResults.value[0])
+		} else {
+			preSelect(0)
+		}
 		return
 	}
 
@@ -611,6 +721,7 @@ function focus() {
 		inline-size: 100%;
 		align-items: center;
 		border: none !important;
+		transition: none;
 		background: transparent;
 		block-size: auto;
 
@@ -648,6 +759,15 @@ function focus() {
 	}
 }
 
+.has-search-results.opens-upwards .input-wrapper {
+	border-radius: 0 0 $radius $radius;
+
+	&, &:focus-within {
+		border-block-start-color: var(--grey-200) !important;
+		border-block-end-color: var(--primary) !important;
+	}
+}
+
 .search-results {
 	background: var(--white);
 	border-radius: 0 0 $radius $radius;
@@ -656,12 +776,16 @@ function focus() {
 
 	max-block-size: 50vh;
 	overflow: hidden auto;
-	position: absolute;
+	position: fixed;
 	z-index: 100;
-	inset-inline: 0;
-	inline-size: 100%;
 	box-sizing: border-box;
 	clip-path: inset(0);
+
+	.opens-upwards & {
+		border-radius: $radius $radius 0 0;
+		border-block-start: 1px solid var(--primary);
+		border-block-end: none;
+	}
 }
 
 .search-results-inline {

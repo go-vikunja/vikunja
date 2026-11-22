@@ -794,26 +794,9 @@
 			"back": "Torna al progetto",
 			"due": "Scadenza {at}",
 			"scrollToBottom": "Scorri in fondo",
-			"organization": "Organizza",
-			"management": "Gestisci",
-			"dateAndTime": "Data e ora",
 			"actions": {
-				"assign": "Assegna all'Utente",
-				"label": "Aggiungi Etichette",
-				"priority": "Imposta Priorità",
-				"dueDate": "Imposta data di scadenza",
-				"startDate": "Imposta Data Inizio",
-				"endDate": "Imposta Data Fine",
-				"reminders": "Imposta promemoria",
-				"repeatAfter": "Imposta Intervallo Ripetizione",
-				"percentDone": "Imposta Progresso",
-				"attachments": "Aggiungi Allegati",
-				"relatedTasks": "Aggiungi Relazione",
 				"moveProject": "Sposta",
-				"color": "Imposta Colore",
-				"delete": "Elimina",
-				"favorite": "Aggiungi ai Preferiti",
-				"unfavorite": "Rimuovi dai Preferiti"
+				"delete": "Elimina"
 			}
 		},
 		"attributes": {
@@ -953,9 +936,6 @@
 			"dateAndTime": "Data e ora"
 		},
 		"repeat": {
-			"everyDay": "Ogni Giorno",
-			"everyWeek": "Ogni Settimana",
-			"every30d": "Ogni 30 giorni",
 			"mode": "Modalità ripetizione",
 			"monthly": "Ogni mese",
 			"fromCurrentDate": "Dal completamento",
@@ -1104,10 +1084,6 @@
 			"shrinkTaskRight": "Riduci l'attività dalla data di fine"
 		}
 	},
-	"update": {
-		"available": "È disponibile un aggiornamento!",
-		"do": "Aggiorna Adesso"
-	},
 	"menu": {
 		"edit": "Modifica",
 		"archive": "Archivia",
@@ -1145,7 +1121,6 @@
 	"quickActions": {
 		"commands": "Comandi",
 		"placeholder": "Digita un comando o cerca…",
-		"hint": "Puoi usare {project} per limitare la ricerca a un progetto. Combina {project} o {label} (etichette) con una query di ricerca per cercare un'attività con queste etichette o su quel progetto. Usa {assignee} per cercare solo i gruppi.",
 		"tasks": "Attività",
 		"projects": "Progetti",
 		"teams": "Gruppi",

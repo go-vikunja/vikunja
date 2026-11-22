@@ -18,7 +18,6 @@ package commands
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -38,6 +37,7 @@ type listFlags struct {
 
 func newListCmd() *cobra.Command {
 	f := &listFlags{}
+	var fieldsRaw string
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
@@ -55,6 +55,10 @@ Filters can be combined; they're AND-ed together:
   --status <s>     filter by status (todo|in-progress|in-review|completed|scrapped),
                    may be repeated`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			fields, err := parseFields(fieldsRaw)
+			if err != nil {
+				return err
+			}
 			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
@@ -63,8 +67,7 @@ Filters can be combined; they're AND-ed together:
 			if err != nil {
 				return err
 			}
-			rt.withURLs(tasks...)
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(tasks)
+			return rt.printTasks(cmd.OutOrStdout(), fields, tasks)
 		},
 	}
 	cmd.Flags().BoolVar(&f.ready, "ready", false, "only ready-to-start tasks (Todo bucket, not done)")
@@ -73,6 +76,7 @@ Filters can be combined; they're AND-ed together:
 	cmd.Flags().Lookup("branch").NoOptDefVal = "__auto__"
 	cmd.Flags().StringVar(&f.filter, "filter", "", "raw Vikunja filter expression, applied server-side")
 	cmd.Flags().StringSliceVar(&f.statuses, "status", nil, "filter by status (repeatable)")
+	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
 }
 
@@ -91,10 +95,17 @@ func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, err
 	// Apply client-side filters AND-style. Pre-allocate as an empty
 	// (non-nil) slice so an empty result still encodes as `[]`, not `null` —
 	// the agent contract is "raw array".
+	scrapped := map[int64]bool{}
+	for _, t := range tasks {
+		if t.CurrentBucketID(rt.cfg.ViewID) == rt.cfg.Buckets.Scrapped {
+			scrapped[t.ID] = true
+		}
+	}
+
 	out := make([]*client.Task, 0, len(tasks))
 	for _, t := range tasks {
 		taskBucket := t.CurrentBucketID(rt.cfg.ViewID)
-		if f.ready && !isReady(t, rt.cfg.Buckets.Todo, rt.cfg.ViewID) {
+		if f.ready && !isReady(t, rt.cfg.Buckets.Todo, rt.cfg.ViewID, scrapped) {
 			continue
 		}
 		if f.mine {
@@ -139,14 +150,15 @@ func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, err
 }
 
 // isReady reports whether t is ready to start: in the Todo bucket, not done,
-// and not blocked by any incomplete task. "blocked" is the relation kind on
-// the dependent task — parenttask / subtask have no bearing on readiness.
-func isReady(t *client.Task, todoBucket, viewID int64) bool {
+// and not blocked by any task that is neither done nor scrapped. "blocked" is
+// the relation kind on the dependent task — parenttask / subtask have no
+// bearing on readiness. Related tasks carry no buckets, hence the scrapped set.
+func isReady(t *client.Task, todoBucket, viewID int64, scrapped map[int64]bool) bool {
 	if t.Done || t.CurrentBucketID(viewID) != todoBucket {
 		return false
 	}
 	for _, b := range t.RelatedTasks["blocked"] {
-		if b != nil && !b.Done {
+		if b != nil && !b.Done && !scrapped[b.ID] {
 			return false
 		}
 	}

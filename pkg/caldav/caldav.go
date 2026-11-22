@@ -153,35 +153,36 @@ func getRruleFromInterval(interval int64) (freq string, newInterval int64) {
 }
 
 // ParseTodos returns a caldav vcalendar string with todos.
-func ParseTodos(config *Config, todos []*Todo) (caldavtodos string) {
-	caldavtodos = `BEGIN:VCALENDAR
+func ParseTodos(config *Config, todos []*Todo) string {
+	var b strings.Builder
+	b.WriteString(`BEGIN:VCALENDAR
 VERSION:2.0
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:` + escapeICalText(config.Name) + `
-PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color)
+PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color))
 
 	for _, t := range todos {
 		if t.UID == "" {
 			t.UID = makeCalDavTimeFromTimeStamp(t.Timestamp) + utils.Sha256(t.Summary)
 		}
 
-		caldavtodos += `
+		b.WriteString(`
 BEGIN:VTODO
 UID:` + escapeICalText(t.UID) + `
 DTSTAMP:` + makeCalDavTimeFromTimeStamp(t.Timestamp) + `
-SUMMARY:` + escapeICalText(t.Summary) + getCaldavColor(t.Color)
+SUMMARY:` + escapeICalText(t.Summary) + getCaldavColor(t.Color))
 
 		if t.Start.Unix() > 0 {
-			caldavtodos += `
-DTSTART:` + makeCalDavTimeFromTimeStamp(t.Start)
+			b.WriteString(`
+DTSTART:` + makeCalDavTimeFromTimeStamp(t.Start))
 			if t.Duration != 0 && t.DueDate.Unix() == 0 {
-				caldavtodos += `
-DURATION:PT` + formatDuration(t.Duration)
+				b.WriteString(`
+DURATION:PT` + formatDuration(t.Duration))
 			}
 		}
 		if t.End.Unix() > 0 {
-			caldavtodos += `
-DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
+			b.WriteString(`
+DTEND:` + makeCalDavTimeFromTimeStamp(t.End))
 		}
 		if t.Description != "" {
 			// CalDAV clients show plain text, so emit markdown. On the near-impossible
@@ -193,51 +194,51 @@ DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
 				description = t.Description
 			}
 			if description != "" {
-				caldavtodos += `
-DESCRIPTION:` + escapeICalText(description)
+				b.WriteString(`
+DESCRIPTION:` + escapeICalText(description))
 			}
 		}
 		// Keyed on Done, not Completed: a reopened repeating task keeps its done_at, and reporting
 		// it as completed makes clients echo it back as done, rescheduling it on every sync.
 		if t.Done {
 			if t.Completed.Unix() > 0 {
-				caldavtodos += `
-COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed)
+				b.WriteString(`
+COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed))
 			}
-			caldavtodos += `
-STATUS:COMPLETED`
+			b.WriteString(`
+STATUS:COMPLETED`)
 		} else {
-			caldavtodos += `
-STATUS:NEEDS-ACTION`
+			b.WriteString(`
+STATUS:NEEDS-ACTION`)
 		}
 		if t.Organizer != nil {
-			caldavtodos += `
-ORGANIZER;CN=:` + escapeICalText(t.Organizer.Username)
+			b.WriteString(`
+ORGANIZER;CN=:` + escapeICalText(t.Organizer.Username))
 		}
 
 		if t.DueDate.Unix() > 0 {
-			caldavtodos += `
-DUE:` + makeCalDavTimeFromTimeStamp(t.DueDate)
+			b.WriteString(`
+DUE:` + makeCalDavTimeFromTimeStamp(t.DueDate))
 		}
 
 		if t.Created.Unix() > 0 {
-			caldavtodos += `
-CREATED:` + makeCalDavTimeFromTimeStamp(t.Created)
+			b.WriteString(`
+CREATED:` + makeCalDavTimeFromTimeStamp(t.Created))
 		}
 
 		if t.Priority != 0 {
-			caldavtodos += `
-PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
+			b.WriteString(`
+PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority)))
 		}
 
 		if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
 			if t.RepeatMode == models.TaskRepeatModeMonth {
-				caldavtodos += `
-RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
+				b.WriteString(`
+RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02")) // Day of the month
 			} else {
 				freq, interval := getRruleFromInterval(t.RepeatAfter)
-				caldavtodos += `
-RRULE:FREQ=` + freq + `;INTERVAL=` + strconv.FormatInt(interval, 10)
+				b.WriteString(`
+RRULE:FREQ=` + freq + `;INTERVAL=` + strconv.FormatInt(interval, 10))
 			}
 		}
 
@@ -246,90 +247,81 @@ RRULE:FREQ=` + freq + `;INTERVAL=` + strconv.FormatInt(interval, 10)
 			for i, c := range t.Categories {
 				escapedCategories[i] = escapeICalText(c)
 			}
-			caldavtodos += `
-CATEGORIES:` + strings.Join(escapedCategories, ",")
+			b.WriteString(`
+CATEGORIES:` + strings.Join(escapedCategories, ","))
 		}
 
-		caldavtodos += `
-LAST-MODIFIED:` + makeCalDavTimeFromTimeStamp(t.Updated)
-		caldavtodos += ParseAlarms(t.Alarms, t.Summary)
-		caldavtodos += ParseRelations(t.Relations)
-		caldavtodos += `
-END:VTODO`
+		b.WriteString(`
+LAST-MODIFIED:` + makeCalDavTimeFromTimeStamp(t.Updated))
+		writeAlarms(&b, t.Alarms, t.Summary)
+		writeRelations(&b, t.Relations)
+		b.WriteString(`
+END:VTODO`)
 	}
 
-	caldavtodos += `
-END:VCALENDAR` // Need a line break
+	b.WriteString(`
+END:VCALENDAR`) // Need a line break
 
-	return
+	return b.String()
 }
 
-func ParseAlarms(alarms []Alarm, taskDescription string) (caldavalarms string) {
+func writeAlarms(b *strings.Builder, alarms []Alarm, taskDescription string) {
+	escapedTaskDescription := escapeICalText(taskDescription)
 	for _, a := range alarms {
-		if a.Description == "" {
-			a.Description = taskDescription
+		description := escapedTaskDescription
+		if a.Description != "" {
+			description = escapeICalText(a.Description)
 		}
 
-		caldavalarms += `
-BEGIN:VALARM`
+		b.WriteString(`
+BEGIN:VALARM`)
 		switch a.RelativeTo {
 		case models.ReminderRelationStartDate:
-			caldavalarms += `
-TRIGGER;RELATED=START:` + makeCalDavDuration(a.Duration)
+			b.WriteString(`
+TRIGGER;RELATED=START:` + makeCalDavDuration(a.Duration))
 		case models.ReminderRelationEndDate, models.ReminderRelationDueDate:
-			caldavalarms += `
-TRIGGER;RELATED=END:` + makeCalDavDuration(a.Duration)
+			b.WriteString(`
+TRIGGER;RELATED=END:` + makeCalDavDuration(a.Duration))
 		default:
-			caldavalarms += `
-TRIGGER;VALUE=DATE-TIME:` + makeCalDavTimeFromTimeStamp(a.Time)
+			b.WriteString(`
+TRIGGER;VALUE=DATE-TIME:` + makeCalDavTimeFromTimeStamp(a.Time))
 		}
-		caldavalarms += `
+		b.WriteString(`
 ACTION:DISPLAY
-DESCRIPTION:` + escapeICalText(a.Description) + `
-END:VALARM`
+DESCRIPTION:`)
+		b.WriteString(description)
+		b.WriteString(`
+END:VALARM`)
 	}
-	return caldavalarms
 }
 
-func ParseRelations(relations []Relation) (caldavrelatedtos string) {
-
+func writeRelations(b *strings.Builder, relations []Relation) {
 	for _, r := range relations {
 		switch r.Type {
 		case models.RelationKindParenttask:
-			caldavrelatedtos += `
-RELATED-TO;RELTYPE=PARENT:`
+			b.WriteString(`
+RELATED-TO;RELTYPE=PARENT:`)
 		case models.RelationKindSubtask:
-			caldavrelatedtos += `
-RELATED-TO;RELTYPE=CHILD:`
-		case models.RelationKindUnknown:
-			continue
-		case models.RelationKindRelated:
-			continue
-		case models.RelationKindDuplicateOf:
-			continue
-		case models.RelationKindDuplicates:
-			continue
-		case models.RelationKindBlocking:
-			continue
-		case models.RelationKindBlocked:
-			continue
-		case models.RelationKindPreceeds:
-			continue
-		case models.RelationKindFollows:
-			continue
-		case models.RelationKindCopiedFrom:
-			continue
-		case models.RelationKindCopiedTo:
+			b.WriteString(`
+RELATED-TO;RELTYPE=CHILD:`)
+		case models.RelationKindUnknown,
+			models.RelationKindRelated,
+			models.RelationKindDuplicateOf,
+			models.RelationKindDuplicates,
+			models.RelationKindBlocking,
+			models.RelationKindBlocked,
+			models.RelationKindPreceeds,
+			models.RelationKindFollows,
+			models.RelationKindCopiedFrom,
+			models.RelationKindCopiedTo:
 			continue
 		default:
-			caldavrelatedtos += `
-RELATED-TO:`
+			b.WriteString(`
+RELATED-TO:`)
 		}
 
-		caldavrelatedtos += escapeICalText(r.UID)
+		b.WriteString(escapeICalText(r.UID))
 	}
-
-	return caldavrelatedtos
 }
 
 func makeCalDavTimeFromTimeStamp(ts time.Time) (caldavtime string) {

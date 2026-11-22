@@ -6,32 +6,45 @@
 		:show-close="showClose"
 		@close="$emit('close')"
 	>
-		<FilterInput
+		<FilterEditor
 			ref="filterInputRef"
-			v-model="filterQuery"
+			v-model="params.filter"
+			v-model:search="params.s"
 			:project-id="projectId"
 			class="mbe-2"
-			@update:modelValue="() => change('modelValue')"
-		/>
-		<div 
-			v-if="filterFromView"
-			class="tw:text-sm mbe-2"
+			@change="editorChanged"
+			@update:search="change('always')"
 		>
-			{{ $t('filters.fromView') }}
-			<code>{{ filterFromView }}</code><br>
-			{{ $t('filters.fromViewBoth') }}
-		</div>
+			<template
+				v-if="filterFromView"
+				#hint
+			>
+				<div class="has-text-grey tw:text-sm mbe-3">
+					{{ $t('filters.fromView') }}
+					<code>{{ filterFromView }}</code><br>
+					{{ $t('filters.fromViewBoth') }}
+				</div>
+			</template>
+		</FilterEditor>
 
 		<div class="field is-flex is-flex-direction-column">
 			<FancyCheckbox
 				v-model="params.filter_include_nulls"
-				@change="() => change('always')"
+				@update:modelValue="change('always')"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
+			<FancyCheckbox
+				v-if="showIncludeSubprojectsToggle"
+				v-model="includeSubprojects"
+				v-tooltip="includeSubprojectsFromView
+					? $t('project.views.includeSubprojectsFromView')
+					: $t('project.views.includeSubprojectsHint')"
+				:disabled="includeSubprojectsFromView"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
-
-		<FilterInputDocs />
 
 		<template
 			v-if="hasFooter"
@@ -40,7 +53,7 @@
 			<XButton
 				variant="secondary"
 				class="mie-2"
-				:disabled="filterQuery === ''"
+				:disabled="!hasActiveFilters"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
 				{{ $t('filters.clear') }}
@@ -56,18 +69,14 @@
 </template>
 
 <script setup lang="ts" generic="T extends EditableTaskCollection">
-import {computed, ref, watch} from 'vue'
+import {computed, ref, watch, type DeepReadonly} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
-import {useLabels} from '@/composables/useLabels'
-import {useProjects} from '@/composables/useProjects'
-import {
-	hasFilterQuery,
-	transformFilterStringForApi,
-} from '@/helpers/filters'
-import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
-import FilterInput from '@/components/input/filter/FilterInput.vue'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
+import type {ProjectView} from '@/client/generated'
+import {hasFilterQuery} from '@/helpers/filters'
+import FilterEditor from '@/components/input/filter/FilterEditor.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: T,
@@ -76,12 +85,14 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	view?: ProjectView | DeepReadonly<ProjectView>,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	view: undefined,
 })
 
 const emit = defineEmits<{
@@ -107,22 +118,22 @@ const params = ref<EditableTaskCollection>({
 	s: '',
 })
 
-const filterQuery = ref('')
-watch(
-	() => [params.value.filter, params.value.s],
-	() => {
-		const filter = params.value.filter || ''
-		const s = params.value.s || ''
-		filterQuery.value = filter || s
-	},
-)
+// A subproject's task has no bucket in a kanban view, so the api ignores the flag there.
+const showIncludeSubprojectsToggle = computed(() => (props.view?.project_id ?? 0) > 0 && props.view?.view_kind !== 'kanban')
 
-const {getLabelByExactTitle} = useLabels()
-const projectList = useProjects()
+const {
+	includeSubprojects,
+	fromView: includeSubprojectsFromView,
+	overridesView,
+} = useIncludeSubprojects(() => props.view)
+
+const hasActiveFilters = computed(() => params.value.filter !== ''
+	|| params.value.s !== ''
+	|| params.value.filter_include_nulls
+	|| overridesView.value)
 
 const filterInputRef = ref()
 
-// Using watchDebounced to prevent the filter re-triggering itself.
 watch(
 	() => props.modelValue,
 	(value: T) => {
@@ -134,42 +145,22 @@ watch(
 	},
 )
 
-function change(event: 'blur' | 'modelValue' | 'always') {
-	if (event !== 'always') {
-		// The filter edit setting needs to save immediately, but the filter query edit in project views should 
-		// only change on blur, or it will show the filter replaced for api when the query is not yet complete. 
-		// This is highly confusing UX, hence we want to avoid that.
-		// The approach taken here allows us to either toggle on blur or immediately, depending on the prop
-		// value provided. This probably is a hacky way to do this, but it is also the most effective.
-		if (props.changeImmediately && event === 'blur') {
-			return
-		}
-
-		if (!props.changeImmediately && event === 'modelValue') {
-			return
-		}
+function change(event: 'modelValue' | 'always') {
+	if (event === 'modelValue' && !props.changeImmediately) {
+		return
 	}
 
-	const filter = transformFilterStringForApi(
-		filterQuery.value,
-		labelTitle => getLabelByExactTitle(labelTitle)?.id || null,
-		projectTitle => {
-			const found = projectList.findProjectByExactname(projectTitle)
-			return found?.id || null
-		},
-	)
-
-	let s = ''
-
-	// When the filter does not contain any filter tokens, assume a simple search and redirect the input
-	if (!hasFilterQuery(filter)) {
+	let filter = params.value.filter ?? ''
+	let s = params.value.s ?? ''
+	if (filter !== '' && !hasFilterQuery(filter)) {
 		s = filter
+		filter = ''
 	}
 
 	const newParams = {
 		...props.modelValue,
 		...params.value,
-		filter: s === '' ? filter : '',
+		filter,
 		s,
 	}
 
@@ -180,13 +171,26 @@ function change(event: 'blur' | 'modelValue' | 'always') {
 	emit('update:modelValue', newParams)
 }
 
+// The Advanced input shows `filter || s`, so it owns both.
+function editorChanged(mode: 'simple' | 'advanced') {
+	if (mode === 'advanced') {
+		params.value.s = ''
+	}
+	change(mode === 'simple' ? 'always' : 'modelValue')
+}
+
 function changeAndEmitButton() {
 	change('always')
 	emit('showResults')
 }
 
 function clearFiltersAndEmit() {
-	filterQuery.value = ''
+	params.value.filter = ''
+	params.value.s = ''
+	params.value.filter_include_nulls = false
+	if (overridesView.value) {
+		includeSubprojects.value = false
+	}
 	changeAndEmitButton()
 }
 

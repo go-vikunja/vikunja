@@ -17,36 +17,53 @@
 package db
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"path/filepath"
+	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm/contexts"
 	"xorm.io/xorm/schemas"
 )
 
 var (
-	fixtures *testfixtures.Loader
+	fixtures    *testfixtures.Loader
+	loaderCache = map[string]*testfixtures.Loader{}
 	//go:embed fixtures
 	fixturesFS embed.FS
 )
 
 // InitFixtures initialize test fixtures for a test database
 func InitFixtures(tablenames ...string) (err error) {
+	loadMu.Lock()
+	defer loadMu.Unlock()
+
+	// Building a loader introspects the database, so loaders are reused per table set.
+	cacheKey := strings.Join(tablenames, ",")
+	if l, ok := loaderCache[cacheKey]; ok {
+		fixtures = l
+		return nil
+	}
+
 	var testfiles func(loader *testfixtures.Loader) error
 	dir := "fixtures"
 
 	// If fixture table names are specified, load them
 	// Otherwise, load all fixtures
 	if len(tablenames) > 0 {
+		paths := make([]string, len(tablenames))
 		for i, name := range tablenames {
-			tablenames[i] = filepath.Join(dir, name+".yml")
+			paths[i] = filepath.Join(dir, name+".yml")
 		}
-		testfiles = testfixtures.Files(tablenames...)
+		testfiles = testfixtures.Files(paths...)
 	} else {
 		testfiles = testfixtures.Directory(dir)
 	}
@@ -64,12 +81,57 @@ func InitFixtures(tablenames ...string) (err error) {
 		loaderOptions = append(loaderOptions, testfixtures.SkipResetSequences())
 	}
 
-	fixtures, err = testfixtures.New(loaderOptions...)
-	return err
+	l, err := testfixtures.New(loaderOptions...)
+	if err != nil {
+		return err
+	}
+	loaderCache[cacheKey] = l
+	fixtures = l
+	return nil
 }
 
-// LoadFixtures load fixtures for a test database
+// Bumped at statement time, so rolled-back writes count too.
+var writeGeneration atomic.Uint64
+
+type writeCountingHook struct{}
+
+func (writeCountingHook) BeforeProcess(c *contexts.ContextHook) (context.Context, error) {
+	if isWriteStatement(c.SQL) || advancesSequence(c.SQL) {
+		writeGeneration.Add(1)
+	}
+	return c.Ctx, nil
+}
+
+func (writeCountingHook) AfterProcess(*contexts.ContextHook) error {
+	return nil
+}
+
+// Sequences move without a write verb.
+func advancesSequence(sqlStr string) bool {
+	lower := strings.ToLower(sqlStr)
+	return strings.Contains(lower, "setval") || strings.Contains(lower, "nextval")
+}
+
+// What the last successful load left behind: the loader and the write
+// generation it was taken at. A nil loader means the state is unknown.
+var (
+	loadMu           sync.Mutex
+	loadedFixtures   *testfixtures.Loader
+	loadedWriteCount uint64
+)
+
+// LoadFixtures load fixtures for a test database.
+// It is a no-op when the same fixtures were already loaded and nothing has written since.
 func LoadFixtures() error {
+	loadMu.Lock()
+	defer loadMu.Unlock()
+
+	gen := writeGeneration.Load()
+	if fixtures != nil && loadedFixtures == fixtures && loadedWriteCount == gen {
+		return nil
+	}
+
+	loadedFixtures = nil
 	// Deferred, not at the end: a load that fails partway still truncated tables.
 	defer invalidateAllSessionCaches()
 
@@ -81,7 +143,32 @@ func LoadFixtures() error {
 	// Copied from https://github.com/go-gitea/gitea/blob/master/models/test_fixtures.go#L39
 	// Now if we're running postgres we need to tell it to update the sequences
 	if x.Dialect().URI().DBType == schemas.POSTGRES {
-		results, err := x.QueryString(`SELECT 'SELECT SETVAL(' ||
+		// database/sql handle: xorm's would count our own sequence reset as a write.
+		stmts, err := sequenceResetStatements()
+		if err != nil {
+			fmt.Printf("Failed to generate sequence update: %v\n", err)
+			return err
+		}
+		for _, value := range stmts {
+			if _, err = x.DB().Exec(value); err != nil {
+				fmt.Printf("Failed to update sequence: %s Error: %v\n", value, err)
+				return err
+			}
+		}
+	}
+
+	loadedFixtures, loadedWriteCount = fixtures, gen
+	return nil
+}
+
+// LoadAndAssertFixtures loads all fixtures defined before and asserts they are correctly loaded
+func LoadAndAssertFixtures(t *testing.T) {
+	err := LoadFixtures()
+	require.NoError(t, err)
+}
+
+func sequenceResetStatements() (stmts []string, err error) {
+	rows, err := x.DB().DB.Query(`SELECT 'SELECT SETVAL(' ||
 		quote_literal(quote_ident(PGT.schemaname) || '.' || quote_ident(S.relname)) ||
 		', COALESCE(MAX(' ||quote_ident(C.attname)|| '), 1) ) FROM ' ||
 		quote_ident(PGT.schemaname)|| '.'||quote_ident(T.relname)|| ';'
@@ -97,25 +184,16 @@ func LoadFixtures() error {
 	     AND D.refobjsubid = C.attnum
 	     AND T.relname = PGT.tablename
 	 ORDER BY S.relname;`)
-		if err != nil {
-			fmt.Printf("Failed to generate sequence update: %v\n", err)
-			return err
-		}
-		for _, r := range results {
-			for _, value := range r {
-				_, err = x.Exec(value)
-				if err != nil {
-					fmt.Printf("Failed to update sequence: %s Error: %v\n", value, err)
-					return err
-				}
-			}
-		}
+	if err != nil {
+		return nil, err
 	}
-	return nil
-}
-
-// LoadAndAssertFixtures loads all fixtures defined before and asserts they are correctly loaded
-func LoadAndAssertFixtures(t *testing.T) {
-	err := LoadFixtures()
-	require.NoError(t, err)
+	defer rows.Close()
+	for rows.Next() {
+		var stmt string
+		if err = rows.Scan(&stmt); err != nil {
+			return nil, err
+		}
+		stmts = append(stmts, stmt)
+	}
+	return stmts, rows.Err()
 }

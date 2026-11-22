@@ -55,7 +55,7 @@
 		</div>
 
 		<XButton
-			v-if="!isEmpty"
+			v-if="resettable && !isEmpty"
 			:disabled="isEmpty"
 			class="is-small mis-2"
 			:shadow="false"
@@ -71,6 +71,10 @@
 import {computed, ref, watch} from 'vue'
 import {createRandomID} from '@/helpers/randomId'
 import XButton from '@/components/input/Button.vue'
+
+const {resettable = true} = defineProps<{
+	resettable?: boolean,
+}>()
 
 const model = defineModel<string>({ required: true })
 

@@ -58,6 +58,7 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 	engine.SetLogger(logger)
 	engine.SetTZLocation(config.GetTimeZone())
 	engine.AddHook(writeInvalidationHook{})
+	engine.AddHook(writeCountingHook{})
 	x = engine
 	return
 }

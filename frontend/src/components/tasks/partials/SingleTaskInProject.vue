@@ -1,7 +1,6 @@
 <template>
 	<div
 		:data-task-id="task.id"
-		:data-project-id="task.project_id"
 	>
 		<div
 			ref="taskRoot"
@@ -162,7 +161,7 @@
 			/>
 
 			<RouterLink
-				v-if="showProjectSeparately"
+				v-if="showProjectSeparately && project"
 				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
 				:to="{ name: 'project.index', params: { projectId: task.project_id } }"
 				class="task-project"

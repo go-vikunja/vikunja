@@ -7,6 +7,7 @@ import {
 	adminTeamsQuery,
 	updateAdminUserMutationOptions,
 	deleteAdminUserMutationOptions,
+	updateAdminUserSettingsMutationOptions,
 } from './admin'
 import {accountKeys, currentUserQuery} from './account'
 import {PICKER_PAGE_SIZE} from './pagination'
@@ -17,6 +18,7 @@ const sdk = vi.hoisted(() => ({
 	adminUsersDelete: vi.fn(),
 	adminTeamsList: vi.fn(),
 	userShow: vi.fn(),
+	patchAdminUsersSettingsRead: vi.fn(),
 }))
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({success: vi.fn(), error: vi.fn()}))
@@ -194,4 +196,14 @@ it('does not refetch the acting admin account when another user is updated', asy
 	})).rejects.toThrow('status rejected')
 	expect(sdk.userShow).toHaveBeenCalledTimes(1)
 	unsubscribe()
+})
+it('admin settings update stales the cached settings and account', async () => {
+	const client = new QueryClient()
+	client.setQueryData(adminKeys.userSettings(5), {settings: {}, user: {id: 5}})
+	client.setQueryData(accountKeys.user(5), {id: 5})
+	sdk.patchAdminUsersSettingsRead.mockResolvedValue({data: {}})
+	await client.getMutationCache().build(client, updateAdminUserSettingsMutationOptions())
+		.execute({id: 5, edits: {discoverable_by_name: true}})
+	expect(client.getQueryState(adminKeys.userSettings(5))?.isInvalidated).toBe(true)
+	expect(client.getQueryState(accountKeys.user(5))?.isInvalidated).toBe(true)
 })

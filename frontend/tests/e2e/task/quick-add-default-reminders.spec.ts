@@ -40,7 +40,7 @@ test.describe('Quick add default reminders', () => {
 		await taskLink.click()
 
 		// Reminders section auto-expands when the task already has reminders.
-		const reminderInput = page.locator('.task-view .columns.details .reminder-input').first()
+		const reminderInput = page.locator('.task-view .property-reminders .reminder-input').first()
 		await expect(reminderInput).toBeVisible({timeout: 10000})
 		await expect(reminderInput).toContainText('2 hours before Due Date')
 	})

@@ -341,6 +341,7 @@ async function handleFileUpload() {
 async function updatePreview() {
 	if (!selectedFile.value) return
 
+	error.value = ''
 	try {
 		await preview.mutateAsync({import: selectedFile.value, config: JSON.stringify(config.value)})
 	} catch (e) {

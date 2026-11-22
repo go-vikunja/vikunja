@@ -179,6 +179,32 @@ test.describe('Team', () => {
 		await expect(page.locator('.global-notification')).toContainText('Success')
 	})
 
+	test('Picks a member search result with Enter without submitting the form', async ({authenticatedPage: page}) => {
+		await TeamMemberFactory.create(1, {
+			team_id: 1,
+			admin: true,
+		})
+		await TeamFactory.create(1, {
+			id: 1,
+		})
+		const [user] = await UserFactory.create(1, {id: 100}, false)
+
+		await page.goto('/teams/1/edit')
+		const multiselect = page.locator('.card').filter({hasText: 'Team Members'}).locator('.card-content .multiselect')
+		const input = multiselect.locator('.input-wrapper input')
+
+		await input.click()
+		await input.pressSequentially(user.username, {delay: 10})
+		await expect(multiselect.locator('.search-result-button').filter({hasText: user.username})).toBeVisible({timeout: 5000})
+
+		await input.press('Enter')
+		await expect(input).toHaveValue(user.username)
+		await expect(page.getByText('Please select a user.')).toBeHidden()
+
+		await input.press('Enter')
+		await expect(page.locator('table.table tr').filter({hasText: user.username})).toBeVisible()
+	})
+
 	test('Clears member search results when the search input is cleared', async ({authenticatedPage: page}) => {
 		await TeamMemberFactory.create(1, {
 			team_id: 1,

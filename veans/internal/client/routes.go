@@ -59,12 +59,13 @@ func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 			"views_buckets_delete", "views_buckets_tasks", "views_buckets_tasks_update",
 			"views_buckets_put", "views_buckets_post", "views_buckets_tasks_put",
 		},
-		"projects_views":  {"read_one", "read_all"},
-		"labels":          {"read_one", "read_all", "create", "update", "delete"},
-		"tasks_comments":  {"read_one", "read_all", "create", "update", "delete"},
-		"tasks_relations": {"create", "delete"},
-		"tasks_assignees": {"read_all", "create", "delete", "update_bulk"},
-		"tasks_labels":    {"create", "delete", "read_all", "update_bulk"},
+		"projects_views":    {"read_one", "read_all"},
+		"labels":            {"read_one", "read_all", "create", "update", "delete"},
+		"tasks_comments":    {"read_one", "read_all", "create", "update", "delete"},
+		"tasks_relations":   {"create", "delete"},
+		"tasks_assignees":   {"read_all", "create", "delete", "update_bulk"},
+		"tasks_labels":      {"create", "delete", "read_all", "update_bulk"},
+		"tasks_attachments": {"read_one", "read_all", "create"},
 	}
 	out := map[string][]string{}
 	for group, actions := range wanted {

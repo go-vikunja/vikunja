@@ -7,6 +7,7 @@ import {TimeEntryFactory} from '../../factories/time_entry'
 import {LicenseFactory} from '../../factories/license'
 import {UserFactory} from '../../factories/user'
 import {UserProjectFactory} from '../../factories/users_project'
+import {clickTaskAction} from '../../support/taskDetail'
 
 // Pick a project in the form's project picker. Waits for the project store to
 // hydrate (the sidebar shows it) before searching so the result is there.
@@ -30,7 +31,7 @@ async function selectTask(form: Locator, title: string) {
 // Open the time-tracking section on a task detail page.
 async function openTaskTimeTracking(page: Page, taskId: number): Promise<Locator> {
 	await page.goto(`/tasks/${taskId}`)
-	await page.locator('[data-cy="taskTrackTimeAction"]').click()
+	await clickTaskAction(page, 'Track time')
 	const section = page.locator('.task-time-tracking')
 	await expect(section).toBeVisible()
 	return section

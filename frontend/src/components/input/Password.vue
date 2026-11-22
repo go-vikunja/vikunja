@@ -5,15 +5,15 @@
 			class="input"
 			name="password"
 			:placeholder="placeholder ?? $t('user.auth.passwordPlaceholder')"
-			:value="modelValue"
+			:value="password"
 			:autofocus="autofocus || undefined"
 			required
 			:type="passwordFieldType"
 			:autocomplete="autocomplete"
 			:aria-invalid="isValid !== true ? true : undefined"
 			:aria-describedby="errorId"
-			@keyup.enter="e => $emit('submit', e)"
-			@focusout="() => {validate(); validateAfterFirst = true}"
+			@keyup.enter="handleSubmit"
+			@focusout="e => {handleInput(e); validate(); validateAfterFirst = true}"
 			@keyup="() => {validateAfterFirst ? validate() : null}"
 			@input="handleInput"
 		>
@@ -44,7 +44,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {validatePassword} from '@/helpers/validatePasswort'
 
 const props = withDefaults(defineProps<{
-	modelValue?: string,
 	id?: string,
 	placeholder?: string,
 	autofocus?: boolean,
@@ -53,7 +52,6 @@ const props = withDefaults(defineProps<{
 	validateMinLength?: boolean,
 	autocomplete?: string,
 }>(), {
-	modelValue: '',
 	id: 'password',
 	placeholder: undefined,
 	autofocus: false,
@@ -62,21 +60,28 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'update:modelValue': [value: string],
 	'submit': [event: Event],
 }>()
+const password = defineModel<string>({required: true})
 const {t} = useI18n()
 const passwordFieldType = ref('password')
 const isValid = ref<true | string>(true)
 const validateAfterFirst = ref(false)
 const errorId = computed(() => isValid.value !== true ? `${props.id}-error` : undefined)
 
-const validate = useDebounceFn(() => {
-	const valid = validatePassword(props.modelValue, props.validateMinLength)
+function validateValue(value: string) {
+	const valid = validatePassword(value, props.validateMinLength)
 	isValid.value = valid === true ? true : t(valid)
-}, 100)
+}
 
-watchEffect(() => props.validateInitially && validate())
+const validate = useDebounceFn(() => validateValue(password.value), 100)
+
+watchEffect(() => {
+	if (props.validateInitially) {
+		validateAfterFirst.value = true
+		validate()
+	}
+})
 
 function togglePasswordFieldType() {
 	passwordFieldType.value = passwordFieldType.value === 'password'
@@ -85,7 +90,15 @@ function togglePasswordFieldType() {
 }
 
 function handleInput(e: Event) {
-	emit('update:modelValue', (e.target as HTMLInputElement).value)
+	password.value = (e.target as HTMLInputElement).value
+}
+
+function handleSubmit(e: Event) {
+	// Autofill may not fire an input event.
+	handleInput(e)
+	validateValue((e.target as HTMLInputElement).value)
+	validateAfterFirst.value = true
+	emit('submit', e)
 }
 </script>
 

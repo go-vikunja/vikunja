@@ -17,9 +17,8 @@
 package middleware
 
 import (
-	"unicode/utf8"
-
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/labstack/echo/v5"
 )
@@ -36,22 +35,11 @@ func RequestMeta() echo.MiddlewareFunc {
 			req := c.Request()
 			ctx := events.WithRequestMeta(req.Context(), &events.RequestMeta{
 				IP:        c.RealIP(),
-				UserAgent: truncateUserAgent(req.UserAgent()),
+				UserAgent: utils.TruncateUTF8(req.UserAgent(), maxUserAgentLength),
 				RequestID: c.Response().Header().Get(echo.HeaderXRequestID),
 			})
 			c.SetRequest(req.WithContext(ctx))
 			return next(c)
 		}
 	}
-}
-
-func truncateUserAgent(ua string) string {
-	if len(ua) <= maxUserAgentLength {
-		return ua
-	}
-	end := maxUserAgentLength
-	for end > 0 && !utf8.RuneStart(ua[end]) {
-		end--
-	}
-	return ua[:end]
 }

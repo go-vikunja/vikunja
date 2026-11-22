@@ -273,7 +273,7 @@ func TestTimeEntry_NotNullFilterRendersIsNotNull(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.field, func(t *testing.T) {
-			cond, err := resolveTimeEntryFilter(tt.field, taskFilterComparatorNotEquals, "null", time.UTC)
+			cond, err := resolveTimeEntryFilter(tt.field, taskFilterComparatorNotEquals, "null", time.UTC, new(businessDayBudget))
 			require.NoError(t, err)
 			sql, _, err := builder.ToSQL(cond)
 			require.NoError(t, err)

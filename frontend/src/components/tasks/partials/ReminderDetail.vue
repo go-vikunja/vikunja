@@ -11,74 +11,90 @@
 				<SimpleButton
 					ref="trigger"
 					v-tooltip="reminder.reminder && reminder.relative_to !== '' ? formatDisplayDate(reminder.reminder) : null"
+					:disabled="disabled"
 					@click.prevent.stop="toggle()"
 				>
 					{{ reminderText }}
 				</SimpleButton>
 			</template>
+			<template
+				v-if="activeForm === 'absolute'"
+				#header-action
+			>
+				<BaseButton
+					class="bottom-sheet__header-action"
+					@click.stop="reminderDate = null"
+				>
+					{{ $t('input.datepicker.clear') }}
+				</BaseButton>
+			</template>
 			<template #content="{isOpen, close}">
-				<Card
+				<div
 					class="reminder-options-popup"
 					:class="{'is-open': isOpen}"
-					:padding="false"
 				>
-					<div
-						v-if="activeForm === null"
-						class="options"
+					<template v-if="activeForm === 'absolute'">
+						<DatepickerPanel
+							v-if="isOpen"
+							v-model="reminderDate"
+							:confirm-disabled="reminderDate === null"
+							@confirm="confirmAndClose(close)"
+						/>
+					</template>
+					<Card
+						v-else
+						class="reminder-options"
+						:padding="false"
 					>
-						<SimpleButton
-							v-for="(p, k) in presets"
-							:key="k"
-							class="option-button"
-							:class="{'currently-active': p.relative_period === modelValue?.relative_period
-								&& modelValue?.relative_to === p.relative_to}"
-							@click="setReminderFromPreset(p, close)"
+						<div
+							v-if="activeForm === null"
+							class="options"
 						>
-							{{ formatReminder(p) }}
-						</SimpleButton>
-						<SimpleButton
-							class="option-button"
-							:class="{'currently-active': typeof modelValue !== 'undefined'
-								&& modelValue?.relative_to !== ''
-								&& presets.find(p => p.relative_period === modelValue?.relative_period
-									&& modelValue?.relative_to === p.relative_to) === undefined}"
-							@click="showFormSwitch = 'relative'"
-						>
-							{{ $t('task.reminder.custom') }}
-						</SimpleButton>
-						<SimpleButton
-							v-if="allowAbsolute"
-							class="option-button"
-							:class="{'currently-active': modelValue?.relative_to === ''}"
-							@click="showFormSwitch = 'absolute'"
-						>
-							{{ $t('task.reminder.dateAndTime') }}
-						</SimpleButton>
-					</div>
+							<SimpleButton
+								v-for="(p, k) in presets"
+								:key="k"
+								class="option-button"
+								:class="{'currently-active': p.relative_period === modelValue?.relative_period
+									&& modelValue?.relative_to === p.relative_to}"
+								@click="setReminderFromPreset(p, close)"
+							>
+								{{ formatReminder(p) }}
+							</SimpleButton>
+							<SimpleButton
+								class="option-button"
+								:class="{'currently-active': typeof modelValue !== 'undefined'
+									&& modelValue?.relative_to !== ''
+									&& presets.find(p => p.relative_period === modelValue?.relative_period
+										&& modelValue?.relative_to === p.relative_to) === undefined}"
+								@click="showFormSwitch = 'relative'"
+							>
+								{{ $t('task.reminder.custom') }}
+							</SimpleButton>
+							<SimpleButton
+								v-if="allowAbsolute"
+								class="option-button"
+								:class="{'currently-active': modelValue?.relative_to === ''}"
+								@click="showFormSwitch = 'absolute'"
+							>
+								{{ $t('task.reminder.dateAndTime') }}
+							</SimpleButton>
+						</div>
 
-					<ReminderPeriod
-						v-if="activeForm === 'relative'"
-						v-model="reminder"
-						:lock-relative-to="lockedRelativeTo"
-					/>
-
-					<DatepickerInline
-						v-else-if="activeForm === 'absolute'"
-						v-model="reminderDate"
-						shortcuts-layout="chips"
-						:large="isMobile"
-					/>
-
-					<XButton
-						v-if="activeForm !== null"
-						class="reminder__close-button"
-						:shadow="false"
-						:disabled="activeForm === 'absolute' && reminderDate === null"
-						@click="confirmAndClose(close)"
-					>
-						{{ $t('misc.confirm') }}
-					</XButton>
-				</Card>
+						<template v-if="activeForm === 'relative'">
+							<ReminderPeriod
+								v-model="reminder"
+								:lock-relative-to="lockedRelativeTo"
+							/>
+							<XButton
+								class="reminder__close-button"
+								:shadow="false"
+								@click="confirmAndClose(close)"
+							>
+								{{ $t('misc.confirm') }}
+							</XButton>
+						</template>
+					</Card>
+				</div>
 			</template>
 		</Popup>
 	</div>
@@ -90,14 +106,13 @@ import {SECONDS_A_DAY, SECONDS_A_HOUR} from '@/constants/date'
 import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {useI18n} from 'vue-i18n'
 
-import {useIsMobile} from '@/composables/useIsMobile'
-
 import {type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 import type {TaskReminder as ITaskReminder} from '@/client/generated'
 import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {createReminderDraft} from '@/helpers/task'
 
-import DatepickerInline from '@/components/input/DatepickerInline.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
+import DatepickerPanel from '@/components/input/DatepickerPanel.vue'
 import ReminderPeriod from '@/components/tasks/partials/ReminderPeriod.vue'
 import Popup from '@/components/misc/Popup.vue'
 
@@ -109,11 +124,13 @@ const props = withDefaults(defineProps<{
 	clearAfterUpdate?: boolean,
 	defaultRelativeTo?: IReminderPeriodRelativeTo | null,
 	allowAbsolute?: boolean,
+	disabled?: boolean,
 }>(), {
 	modelValue: () => createReminderDraft(),
 	clearAfterUpdate: false,
 	defaultRelativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 	allowAbsolute: true,
+	disabled: false,
 })
 
 const emit = defineEmits<{
@@ -137,7 +154,6 @@ const presets = computed(() => [
 ] as ITaskReminder[])
 const reminderDate = ref<Date | null>(null)
 
-const isMobile = useIsMobile()
 const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
 
 const activeForm = computed(() => {
@@ -295,7 +311,7 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 	align-items: flex-start;
 }
 
-.reminder-options-popup {
+.reminder-options {
 	inline-size: 310px;
 	z-index: 99;
 

@@ -41,7 +41,7 @@ type Status struct {
 	ErrorMessage string    `xorm:"text null" json:"error_message" readOnly:"true" doc:"The failure detail, only set when error_kind is \"detail\": the migration failed on the user's own data and this is the error itself, in English."`
 	// NULL until the running job's first beat, and for rows predating the heartbeat.
 	HeartbeatAt  *time.Time `xorm:"null" json:"-"`
-	UploadFileID *int64     `xorm:"bigint null" json:"-"`
+	UploadFileID *int64     `xorm:"bigint null index" json:"-"`
 	// ActiveUserID's unique index serializes migrations per account; finished rows use NULL.
 	ActiveUserID *int64 `xorm:"bigint null unique" json:"-"`
 }
@@ -225,7 +225,7 @@ func finishMigration(status *Status, kind ErrorKind, detail string) (err error) 
 
 // GetMigrationStatus returns the migration status for a migration and a user
 func GetMigrationStatus(m MigratorName, u *user.User) (status *Status, err error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
 
 	status = &Status{}
@@ -238,7 +238,7 @@ func GetMigrationStatus(m MigratorName, u *user.User) (status *Status, err error
 
 // GetMigrationStatusByID returns the migration status with the given id.
 func GetMigrationStatusByID(id int64) (status *Status, err error) {
-	s := db.NewSession()
+	s := db.NewReadSession()
 	defer s.Close()
 
 	status = &Status{}

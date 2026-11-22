@@ -1,21 +1,23 @@
 <template>
-	<div class="select">
-		<select
-			v-model.number="percentDone"
-			:disabled="disabled || undefined"
+	<FormSelect
+		v-model.number="percentDone"
+		:disabled="disabled"
+		flat
+		:aria-label="$t('task.attributes.percentDone')"
+	>
+		<option
+			v-for="option in PERCENT_OPTIONS"
+			:key="option"
+			:value="option"
 		>
-			<option
-				v-for="option in PERCENT_OPTIONS"
-				:key="option"
-				:value="option"
-			>
-				{{ option * 100 }}%
-			</option>
-		</select>
-	</div>
+			{{ option * 100 }}%
+		</option>
+	</FormSelect>
 </template>
 
 <script setup lang="ts">
+import FormSelect from '@/components/input/FormSelect.vue'
+
 withDefaults(defineProps<{
 	disabled?: boolean
 }>(), {

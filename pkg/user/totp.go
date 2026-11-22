@@ -23,6 +23,7 @@ import (
 	"image"
 	"image/jpeg"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -171,13 +172,15 @@ func ValidateTOTPPasscode(s *xorm.Session, passcode *TOTPPasscode) (t *TOTP, err
 		return
 	}
 
-	if !totp.Validate(passcode.Passcode, t.Secret) {
+	// totp.Validate trims whitespace, so the replay key must too.
+	code := strings.TrimSpace(passcode.Passcode)
+	if !isTOTPCode(code) || !totp.Validate(code, t.Secret) {
 		return nil, ErrInvalidTOTPPasscode{Passcode: passcode.Passcode}
 	}
 
 	// 90s = 30s TOTP window + clock skew
 	const totpUsedTTL = 90 * time.Second
-	usedKey := fmt.Sprintf("totp_used_%s_%s", strconv.FormatInt(passcode.User.ID, 10), passcode.Passcode)
+	usedKey := fmt.Sprintf("totp_used_%s_%s", strconv.FormatInt(passcode.User.ID, 10), code)
 	_, exists, err := keyvalue.Get(usedKey)
 	if err != nil {
 		return nil, err
@@ -192,6 +195,18 @@ func ValidateTOTPPasscode(s *xorm.Session, passcode *TOTPPasscode) (t *TOTP, err
 	}
 
 	return
+}
+
+func isTOTPCode(code string) bool {
+	if len(code) != otp.DigitsSix.Length() {
+		return false
+	}
+	for _, c := range code {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // GetTOTPQrCodeForUser returns a qrcode for a user's totp setting

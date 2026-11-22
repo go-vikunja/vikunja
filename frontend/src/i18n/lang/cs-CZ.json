@@ -824,27 +824,10 @@
 			"back": "Zpět k projektu",
 			"due": "Termín {at}",
 			"scrollToBottom": "Přejít na konec",
-			"organization": "Organizace",
-			"management": "Management",
-			"dateAndTime": "Datum a čas",
 			"actions": {
-				"assign": "Přiřadit uživateli",
-				"label": "Přidat štítky",
-				"priority": "Nastavit prioritu",
-				"dueDate": "Nastavit termín",
-				"startDate": "Nastavit počáteční datum",
-				"endDate": "Nastavit koncové datum",
-				"reminders": "Nastavit připomenutí",
-				"repeatAfter": "Nastavit interval opakování",
-				"percentDone": "Nastavit průběh",
-				"attachments": "Přidat přílohy",
-				"relatedTasks": "Přidat vztah",
 				"moveProject": "Přesunout",
 				"duplicate": "Duplikovat",
-				"color": "Nastavit barvu",
-				"delete": "Smazat",
-				"favorite": "Přidat do oblíbených",
-				"unfavorite": "Odebrat z oblíbených"
+				"delete": "Smazat"
 			}
 		},
 		"attributes": {
@@ -987,9 +970,6 @@
 			"dateAndTime": "Datum a čas"
 		},
 		"repeat": {
-			"everyDay": "Každý den",
-			"everyWeek": "Každý týden",
-			"every30d": "Každých 30 dní",
 			"mode": "Režim opakování",
 			"monthly": "Měsíčně",
 			"fromCurrentDate": "Od data dokončení",
@@ -1138,10 +1118,6 @@
 			"shrinkTaskRight": "Posuň koncové datum na dříve"
 		}
 	},
-	"update": {
-		"available": "K dispozici je aktualizace!",
-		"do": "Aktualizovat nyní"
-	},
 	"menu": {
 		"edit": "Upravit",
 		"archive": "Archivovat",
@@ -1179,7 +1155,6 @@
 	"quickActions": {
 		"commands": "Příkazy",
 		"placeholder": "Napište příkaz nebo vyhledávání…",
-		"hint": "Můžete použít {project} k omezení vyhledávání na projekt. Kombinujte {project} nebo {label} (štítky) s vyhledávacím dotazem pro hledání úkolu s těmito štítky nebo na tomto projektu. Použijte {assignee} pouze pro hledání týmů.",
 		"tasks": "Úkoly",
 		"projects": "Projekty",
 		"teams": "Týmy",

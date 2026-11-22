@@ -24,11 +24,11 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -81,6 +81,23 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			require.NoError(t, err)
 			db.AssertExists(t, "buckets", map[string]interface{}{
 				"project_view_id": kanbanView.ID,
+			}, false)
+		})
+		t.Run("background cannot be set", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			project := Project{
+				Title:              "with background",
+				BackgroundFileID:   1,
+				BackgroundBlurHash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
+			}
+			require.NoError(t, project.Create(s, usr))
+			require.NoError(t, s.Commit())
+			db.AssertExists(t, "projects", map[string]interface{}{
+				"id":                   project.ID,
+				"background_file_id":   0,
+				"background_blur_hash": "",
 			}, false)
 		})
 		t.Run("pseudo parent project id is rejected", func(t *testing.T) {
@@ -238,7 +255,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"description": project.Description,
 			}, false)
 		})
-		t.Run("tiny position triggers recalculation which includes the project itself", func(t *testing.T) {
+		t.Run("tiny position respreads the writable siblings including the project itself", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			defer s.Close()
@@ -252,21 +269,56 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, s.Commit())
 
-			// Had the lowest position, so it lands in the first slot of the new range.
 			assert.Greater(t, project.Position, 0.1)
+			// 7: write via team, 10: write via user, 11: admin via user. Fixture positions equal their ids.
+			for _, id := range []int64{7, 10, 11} {
+				sibling, err := GetProjectSimpleByID(s, id)
+				require.NoError(t, err)
+				assert.NotEqual(t, float64(id), sibling.Position, "project %d was not respread", id)
+				assert.Greater(t, sibling.Position, project.Position)
+			}
+		})
+		t.Run("tiny position respreads a project an instance admin has no grant on", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+			defer license.ResetForTests()
+			s := db.NewSession()
+			defer s.Close()
 
-			verifySession := db.NewSession()
-			defer verifySession.Close()
-			rootProjects := []*Project{}
-			require.NoError(t, verifySession.
-				Where(builder.Or(builder.Eq{"parent_project_id": 0}, builder.IsNull{"parent_project_id"})).
-				OrderBy("position asc, id asc").
-				Find(&rootProjects))
+			_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
+			require.NoError(t, err)
+			admin := &user.User{ID: 2, IsAdmin: true}
 
-			require.NotEmpty(t, rootProjects)
-			assert.Equal(t, int64(1), rootProjects[0].ID)
-			for _, p := range rootProjects {
-				assert.Greater(t, p.Position, 0.1)
+			project := Project{
+				ID:       1,
+				Title:    "Test1",
+				Position: 0.00001,
+			}
+			require.NoError(t, project.Update(s, admin))
+			require.NoError(t, s.Commit())
+
+			assert.Greater(t, project.Position, 0.1)
+		})
+		t.Run("tiny position leaves projects the user cannot write untouched", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			project := Project{
+				ID:       1,
+				Title:    "Test1",
+				Position: 0.00001,
+			}
+			require.NoError(t, project.Update(s, usr))
+			require.NoError(t, s.Commit())
+
+			for id, position := range map[int64]float64{
+				2: 2, // other user's, no access
+				3: 1, // read-only via user and team share
+				6: 6, // read-only via team share
+				9: 9, // read-only via user share
+			} {
+				db.AssertExists(t, "projects", map[string]interface{}{"id": id, "position": position}, false)
 			}
 		})
 		t.Run("nonexistent", func(t *testing.T) {
@@ -1030,6 +1082,38 @@ func TestProject_ReadAll(t *testing.T) {
 		// Sanity: a non-archived project owned by user 1 is still present in the filtered list.
 		assert.NotNil(t, findByID(withoutArchived, 1),
 			"non-archived project 1 must still be present when getArchived=false")
+	})
+	t.Run("pages are stable when positions tie", func(t *testing.T) {
+		// Sibling groups recalculated to the same size get identical positions.
+		// Without a tie-breaker MySQL and Postgres order tied rows differently
+		// per page, so some projects never show up.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id > 0").Cols("position").Update(&Project{Position: 1})
+		require.NoError(t, err)
+
+		all, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: true})
+		require.NoError(t, err)
+		expected := make([]int64, 0, len(all))
+		for _, p := range all {
+			expected = append(expected, p.ID)
+		}
+
+		paged := []int64{}
+		for page := 1; ; page++ {
+			ps, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: true, page: page, perPage: 3})
+			require.NoError(t, err)
+			if len(ps) == 0 {
+				break
+			}
+			for _, p := range ps {
+				paged = append(paged, p.ID)
+			}
+		}
+
+		assert.ElementsMatch(t, expected, paged)
 	})
 }
 

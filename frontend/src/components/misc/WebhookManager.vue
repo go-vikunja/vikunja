@@ -68,6 +68,27 @@ function validateTargetUrl() {
 	webhookTargetUrlValid.value = isValidHttpUrl(newWebhook.value.target_url)
 }
 
+const eventGroups = computed(() => {
+	const groups: Record<string, string[]> = {}
+	for (const event of availableEvents.value) {
+		const group = event.split('.')[0]
+		groups[group] ??= []
+		groups[group].push(event)
+	}
+	return groups
+})
+
+function allSelected(events: string[]) {
+	return events.length > 0 && events.every(event => newWebhookEvents.value[event])
+}
+
+function setEventsSelected(events: string[], selected: boolean) {
+	for (const event of events) {
+		newWebhookEvents.value[event] = selected
+	}
+	validateSelectedEvents()
+}
+
 function getSelectedEventsArray() {
 	return Object.entries(newWebhookEvents.value)
 		.filter(([, use]) => use)
@@ -197,14 +218,36 @@ function doDelete() {
 				</p>
 				<div class="control">
 					<FancyCheckbox
-						v-for="event in availableEvents"
-						:key="event"
-						v-model="newWebhookEvents[event]"
-						class="available-events-check"
-						@update:modelValue="validateSelectedEvents"
+						:model-value="allSelected(availableEvents)"
+						class="webhook-events-select-all has-text-weight-bold"
+						@update:modelValue="checked => setEventsSelected(availableEvents, checked)"
 					>
-						{{ event }}
+						{{ $t('project.webhooks.selectAllEvents') }}
 					</FancyCheckbox>
+					<div
+						v-for="(events, group) in eventGroups"
+						:key="group"
+						class="webhook-events-group"
+					>
+						<FancyCheckbox
+							:model-value="allSelected(events)"
+							class="webhook-events-group-toggle is-capitalized has-text-weight-bold"
+							@update:modelValue="checked => setEventsSelected(events, checked)"
+						>
+							{{ group }}
+						</FancyCheckbox>
+						<div class="mis-4">
+							<FancyCheckbox
+								v-for="event in events"
+								:key="event"
+								v-model="newWebhookEvents[event]"
+								class="available-events-check"
+								@update:modelValue="validateSelectedEvents"
+							>
+								{{ event }}
+							</FancyCheckbox>
+						</div>
+					</div>
 				</div>
 				<p
 					v-if="!selectedEventsValid"

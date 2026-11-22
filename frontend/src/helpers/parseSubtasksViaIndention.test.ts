@@ -27,6 +27,27 @@ task two`, PrefixMode.Default)
 		expect(tasks[1].parent).to.eq('parent task')
 		expect(tasks[1].title).to.eq('sub task')
 	})
+	it('Should return a parent for tasks indented with tabs', () => {
+		const tasks = parseSubtasksViaIndention('parent task\n\tsub task\n\t\tsub sub task\n\tsub task two', PrefixMode.Default)
+
+		expect(tasks).to.have.length(4)
+		expect(tasks[0].parent).toBeNull()
+		expect(tasks[0].title).to.eq('parent task')
+		expect(tasks[1].title).to.eq('sub task')
+		expect(tasks[1].parent).to.eq('parent task')
+		expect(tasks[2].title).to.eq('sub sub task')
+		expect(tasks[2].parent).to.eq('sub task')
+		expect(tasks[3].title).to.eq('sub task two')
+		expect(tasks[3].parent).to.eq('parent task')
+	})
+	it('Should return a parent for tab-indented tasks with list markers', () => {
+		const tasks = parseSubtasksViaIndention('- parent task\n\t- [ ] sub task', PrefixMode.Default)
+
+		expect(tasks).to.have.length(2)
+		expect(tasks[0].title).to.eq('parent task')
+		expect(tasks[1].title).to.eq('sub task')
+		expect(tasks[1].parent).to.eq('parent task')
+	})
 	it('Should return a parent for multiple subtasks', () => {
 		const tasks = parseSubtasksViaIndention(`parent task
   sub task one

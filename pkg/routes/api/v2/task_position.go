@@ -37,7 +37,7 @@ func RegisterTaskPositionRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "tasks-position-update",
 		Summary:     "Set a task's position in a view",
-		Description: "Sets where a task sorts within one of its project's views. The position is per view, so this only affects the view named by project_view_id. Requires write access to the task. Positions below the minimum spacing make the server recalculate every position in the view, so the returned value may differ from the one sent.",
+		Description: "Sets where a task sorts within one of its project's views, or within a non-kanban view of an ancestor project that lists it through include_subprojects. The position is per view, so this only affects the view named by project_view_id. Requires write access to the task. Positions below the minimum spacing make the server recalculate every position in the view, so the returned value may differ from the one sent.",
 		Method:      http.MethodPut,
 		Path:        "/tasks/{task}/position",
 		Tags:        tags,

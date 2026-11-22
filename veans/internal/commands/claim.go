@@ -17,73 +17,85 @@
 package commands
 
 import (
-	"encoding/json"
-	"errors"
+	"context"
 
 	"github.com/spf13/cobra"
 
-	"code.vikunja.io/veans/internal/output"
+	"code.vikunja.io/veans/internal/client"
 	"code.vikunja.io/veans/internal/status"
 )
 
 func newClaimCmd() *cobra.Command {
+	var (
+		fieldsRaw string
+		taskIDArg int64
+	)
 	cmd := &cobra.Command{
-		Use:   "claim <id>",
+		Use:   "claim <PROJ-NN|#NN|NN> | claim --id <task id>",
 		Short: "Claim a task: assign the bot, move to In Progress, tag with branch",
-		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fields, err := parseFields(fieldsRaw)
+			if err != nil {
+				return err
+			}
 			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
 			}
-			id, err := rt.resolveTaskID(cmd.Context(), args[0])
+			id, err := rt.taskID(cmd.Context(), args, taskIDArg)
 			if err != nil {
 				return err
 			}
-
-			// Move to In Progress. Vikunja's task↔bucket relation lives
-			// in a separate table; POST /tasks doesn't move buckets, so
-			// use the dedicated endpoint.
-			bid, err := status.BucketID(status.InProgress, rt.cfg.Buckets)
+			task, err := runClaim(cmd.Context(), rt, id)
 			if err != nil {
 				return err
 			}
-			if err := rt.client.MoveTaskToBucket(cmd.Context(),
-				rt.cfg.ProjectID, rt.cfg.ViewID, bid, id); err != nil {
-				return err
-			}
-
-			// Assign the bot. Idempotent on repeat — Vikunja returns 409 if
-			// already assigned, which we map to a soft-skip.
-			if err := rt.client.AddAssignee(cmd.Context(), id, rt.cfg.Bot.UserID); err != nil {
-				var oe *output.Error
-				if !errors.As(err, &oe) || oe.Code != output.CodeConflict {
-					return err
-				}
-			}
-
-			// Tag with the current branch label, if there is one.
-			if branch := currentGitBranch(cmd.Context()); branch != "" {
-				labelTitle := branchLabel(branch)
-				l, err := getOrCreateLabelByTitle(cmd.Context(), rt.client, labelTitle)
-				if err != nil {
-					return err
-				}
-				if err := rt.client.AddLabelToTask(cmd.Context(), id, l.ID); err != nil {
-					var oe *output.Error
-					if !errors.As(err, &oe) || oe.Code != output.CodeConflict {
-						return err
-					}
-				}
-			}
-
-			task, err := rt.client.GetTask(cmd.Context(), id)
-			if err != nil {
-				return err
-			}
-			rt.withURLs(task)
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
+			return rt.printTask(cmd.OutOrStdout(), fields, task)
 		},
 	}
+	cmd.Args = addTaskIDFlag(cmd, &taskIDArg)
+	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
+}
+
+func runClaim(ctx context.Context, rt *runtime, id int64) (*client.Task, error) {
+	current, err := rt.client.GetTask(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	progress := &steps{task: rt.cfg.FormatTaskID(current.Index)}
+
+	bid, err := status.BucketID(status.InProgress, rt.cfg.Buckets)
+	if err != nil {
+		return nil, err
+	}
+	if err := rt.client.MoveTaskToBucket(ctx, rt.cfg.ProjectID, rt.cfg.ViewID, bid, id); err != nil {
+		return nil, progress.fail("set bucket", err)
+	}
+	progress.done("set bucket")
+
+	// Checked up front: v2 answers a duplicate assignee with a plain 400.
+	if !taskAssignedTo(current, rt.cfg.Bot.UserID) {
+		if err := rt.client.AddAssignee(ctx, id, rt.cfg.Bot.UserID); err != nil {
+			return nil, progress.fail("assign", err)
+		}
+		progress.done("assign")
+	}
+
+	if branch := currentGitBranch(ctx); branch != "" {
+		title := branchLabel(branch)
+		if !taskHasLabel(current, title) {
+			step := "label " + title
+			l, err := getOrCreateLabelByTitle(ctx, rt.client, title)
+			if err != nil {
+				return nil, progress.fail(step, err)
+			}
+			if err := rt.client.AddLabelToTask(ctx, id, l.ID); err != nil {
+				return nil, progress.fail(step, err)
+			}
+			progress.done(step)
+		}
+	}
+
+	return rt.client.GetTask(ctx, id)
 }

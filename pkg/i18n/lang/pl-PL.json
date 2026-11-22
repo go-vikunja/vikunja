@@ -1,1 +1,203 @@
-{}
+{
+	"notifications": {
+		"greeting": "Cześć %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, potwierdź swój adres e-mail w Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Witaj w Vikunja!",
+			"confirm": "Aby potwierdzić swój adres e-mail, kliknij poniższy link:"
+		},
+		"email_change": {
+			"subject": "Zażądano zmiany adresu e-mail dla Twojego konta Vikunja",
+			"requested": "Ktoś poprosił o zmianę adresu e-mail Twojego konta na %[1]s. Obecny adres pozostanie aktywny do czasu potwierdzenia nowego.",
+			"warning": "Jeśli to nie Ty, natychmiast zmień hasło i anuluj oczekującą zmianę w ustawieniach konta."
+		},
+		"identity": {
+			"linked": {
+				"subject": "Powiązano %[1]s z Twoim kontem Vikunja",
+				"message": "Twoje konto %[1]s zostało powiązane z kontem Vikunja w dniu %[2]s. Możesz teraz logować się nim.",
+				"warning": "Jeśli to nie Ty, natychmiast zmień hasło, a następnie odłącz je w ustawieniach konta."
+			}
+		},
+		"password": {
+			"changed": {
+				"subject": "Twoje hasło w Vikunja zostało zmienione",
+				"success": "Hasło Twojego konta zostało pomyślnie zmienione.",
+				"warning": "Jeśli to nie Ty, może to oznaczać, że ktoś przejął Twoje konto. W takim przypadku skontaktuj się z administratorem serwera."
+			},
+			"reset": {
+				"subject": "Zresetuj hasło w Vikunja",
+				"instructions": "Aby zresetować hasło, kliknij poniższy link:",
+				"valid_duration": "Ten link będzie ważny przez 24 godziny."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Ktoś właśnie próbował zalogować się na Twoje konto Vikunja, ale nie udało się",
+				"message": "Ktoś właśnie próbował zalogować się na Twoje konto, podając prawidłową nazwę użytkownika i hasło, ale nieprawidłowy kod TOTP.",
+				"warning": "**Jeśli to nie Ty, ktoś inny zna Twoje hasło. Natychmiast ustaw nowe!**"
+			},
+			"account_locked": {
+				"subject": "Wyłączyliśmy Twoje konto w Vikunja",
+				"message": "Ktoś próbował zalogować się przy użyciu Twoich danych, ale nie podał prawidłowego kodu TOTP.",
+				"disabled": "Po 10 nieudanych próbach wyłączyliśmy Twoje konto i zresetowaliśmy hasło. Aby ustawić nowe, postępuj zgodnie z instrukcjami w e-mailu resetującym, który właśnie wysłaliśmy.",
+				"reset_instructions": "Jeśli e-mail z instrukcjami resetowania nie dotarł, zawsze możesz poprosić o nowy na [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Ktoś właśnie próbował zalogować się na Twoje konto Vikunja, ale podał nieprawidłowe hasło",
+				"message": "Ktoś właśnie trzy razy z rzędu próbował zalogować się na Twoje konto z nieprawidłowym hasłem.",
+				"warning": "Jeśli to nie Ty, ktoś może próbować włamać się na Twoje konto.",
+				"enhance_security": "Aby zwiększyć bezpieczeństwo konta, ustaw silniejsze hasło lub włącz uwierzytelnianie TOTP w ustawieniach:"
+			},
+			"account_locked": {
+				"message": "Ktoś zbyt wiele razy z rzędu próbował zalogować się na Twoje konto z nieprawidłowym hasłem."
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Potwierdź usunięcie swojego konta Vikunja",
+					"request": "Zażądano usunięcia Twojego konta. Aby to potwierdzić, kliknij poniższy link:",
+					"valid_duration": "Ten link będzie ważny przez 24 godziny.",
+					"schedule_info": "Po potwierdzeniu usunięcia zaplanujemy usunięcie Twojego konta za trzy dni i do tego czasu wyślemy Ci jeszcze jeden e-mail.",
+					"consequences": "Jeśli usuniesz swoje konto, usuniemy wszystkie utworzone przez Ciebie projekty i zadania. Wszystko, co zostało udostępnione innemu użytkownikowi lub zespołowi, przejdzie na ich własność.",
+					"changed_mind": "Jeśli usunięcie konta nie było zamierzone, po prostu zignoruj tego e-maila."
+				},
+				"scheduled": {
+					"subject_days": "Twoje konto Vikunja zostanie usunięte za %[1]s dni",
+					"subject_tomorrow": "Twoje konto Vikunja zostanie usunięte jutro",
+					"request_reminder": "Niedawno poproszono o usunięcie Twojego konta Vikunja.",
+					"deletion_time_days": "Usuniemy Twoje konto za %[1]s dni.",
+					"deletion_time_tomorrow": "Usuniemy Twoje konto jutro.",
+					"changed_mind": "Jeśli chcesz anulować usunięcie, kliknij poniższy link i postępuj zgodnie z instrukcjami:"
+				},
+				"completed": {
+					"subject": "Twoje konto Vikunja zostało usunięte",
+					"confirmation": "Zgodnie z prośbą usunęliśmy Twoje konto Vikunja.",
+					"permanent": "To usunięcie jest trwałe. Jeśli nie utworzono kopii zapasowej, a dane są potrzebne, skontaktuj się z administratorem."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Przypomnienie o „%[1]s” (%[2]s)",
+				"message": "To uprzejme przypomnienie o zadaniu „%[1]s” (%[2]s)."
+			},
+			"comment": {
+				"subject": "Odp.: %[1]s (%[2]s)",
+				"mentioned_subject": "%[1]s wspomniał o Tobie w komentarzu w „%[2]s” (%[3]s)"
+			},
+			"assigned": {
+				"subject_to_assignee": "Przypisano Cię do „%[1]s” (%[2]s)",
+				"message_to_assignee": "%[1]s przypisał Cię do „%[2]s”.",
+				"subject_to_others": "„%[1]s” (%[2]s) przypisano do: %[3]s",
+				"message_to_others": "%[1]s przypisał to zadanie do %[2]s.",
+				"subject_to_others_self": "„%[1]s” (%[2]s) zostało przypisane przez %[3]s do siebie",
+				"message_to_others_self": "%[1]s przypisał to zadanie sobie."
+			},
+			"deleted": {
+				"subject": "„%[1]s” (%[2]s) zostało usunięte",
+				"message": "%[1]s usunął zadanie „%[2]s” (%[3]s)"
+			},
+			"created": {
+				"subject": "„%[1]s” (%[2]s) zostało utworzone",
+				"message": "%[1]s utworzył zadanie „%[2]s” (%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s wspomniał o Tobie w nowym zadaniu „%[2]s” (%[3]s)",
+				"subject": "%[1]s wspomniał o Tobie w zadaniu „%[2]s” (%[3]s)"
+			},
+			"overdue": {
+				"subject": "Zadanie „%[1]s” (%[2]s) jest po terminie",
+				"message": "To uprzejme przypomnienie o zadaniu „%[1]s” (%[2]s), które jest po terminie od %[3]s i nie zostało jeszcze wykonane.",
+				"multiple_subject": "Twoje zadania po terminie",
+				"multiple_message": "Masz zadania po terminie:",
+				"assigned_heading": "Przypisane Tobie",
+				"followed_heading": "Zadania, które obserwujesz",
+				"overdue_since": "od %[1]s",
+				"overdue_now": "teraz",
+				"overdue": "po terminie od %[1]s"
+			}
+		},
+		"project": {
+			"created": "%[1]s utworzył projekt „%[2]s”"
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s dodał Cię do zespołu „%[2]s” w Vikunja",
+				"message": "%[1]s właśnie dodał Cię do zespołu %[2]s w Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "Twój eksport danych Vikunja jest gotowy",
+				"message": "Twój eksport danych Vikunja jest gotowy do pobrania. Kliknij poniższy przycisk, aby go pobrać:",
+				"availability": "Pobranie będzie dostępne przez najbliższe 7 dni."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "Migracja z %[1]s do Vikunja została ukończona",
+				"imported": "Vikunja zaimportowała wszystkie listy/projekty, zadania, notatki, przypomnienia i pliki z %[1]s, do których masz dostęp.",
+				"have_fun": "Dobrej zabawy z Twoimi nowymi (starymi) projektami!"
+			},
+			"failed": {
+				"subject": "Migracja z %[1]s do Vikunja nie powiodła się",
+				"message": "Wygląda na to, że tym razem przenoszenie z %[1]s nie poszło zgodnie z planem.",
+				"retry": "Bez obaw! Spróbuj ponownie, zaczynając w ten sam sposób co wcześniej. Czasami takie problemy wynikają z usterek po stronie %[1]s, ale kolejna próba zwykle pomaga.",
+				"error": "Napotkaliśmy po drodze mały błąd: `%[2]s`.",
+				"report": "Daj nam znać o tym [na forum](https://community.vikunja.io/) lub w innych zwykłych miejscach, abyśmy mogli sprawdzić, dlaczego się nie udało.",
+				"working_on_it": "Mamy ten komunikat o błędzie na uwadze i pracujemy nad jego szybkim rozwiązaniem."
+			}
+		},
+		"api_token": {
+			"expiring": {
+				"week": {
+					"subject": "Twój token API „%[1]s” wkrótce wygaśnie",
+					"message": "Twój token API „%[1]s” wygaśnie %[2]s (za %[3]s). Jeśli nadal go potrzebujesz, utwórz nowy token przed wygaśnięciem."
+				},
+				"day": {
+					"subject": "Twój token API „%[1]s” wygasa jutro",
+					"message": "Twój token API „%[1]s” wygaśnie %[2]s (za %[3]s). Jeśli nadal go potrzebujesz, utwórz nowy token przed wygaśnięciem."
+				},
+				"action": "Zarządzaj tokenami API"
+			}
+		},
+		"common": {
+			"have_nice_day": "Miłego dnia!",
+			"copy_url": "Jeśli powyższy przycisk nie działa, skopiuj poniższy adres URL i wklej go do paska adresu przeglądarki:",
+			"actions": {
+				"open_task": "Otwórz zadanie w Vikunja",
+				"open_vikunja": "Otwórz Vikunja",
+				"open_project": "Otwórz projekt",
+				"open_team": "Otwórz zespół",
+				"download": "Pobierz",
+				"reset_password": "Zresetuj hasło",
+				"go_to_settings": "Przejdź do ustawień",
+				"confirm_email": "Potwierdź adres e-mail",
+				"abort_deletion": "Anuluj usunięcie",
+				"confirm_account_deletion": "Potwierdź usunięcie mojego konta",
+				"change_notification_settings_link": "Ustawienia powiadomień możesz zmienić [tutaj](%[1]s).",
+				"left_comment": "%[1]s dodał komentarz",
+				"mentioned_you_comment": "%[1]s wspomniał o Tobie w komentarzu",
+				"mentioned_you": "%[1]s wspomniał o Tobie",
+				"mentioned_you_new_task": "%[1]s wspomniał o Tobie w nowym zadaniu"
+			}
+		}
+	},
+	"time": {
+		"since_years": "rok|%[1]d r.",
+		"since_weeks": "tydzień|%[1]d tyg.",
+		"since_days": "dzień|%[1]d dni",
+		"since_hours": "godzina|%[1]d godz.",
+		"since_minutes": "minuta|%[1]d min",
+		"list_last_separator": "i"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "Powiadomienia Vikunja dla %[1]s"
+		}
+	}
+}

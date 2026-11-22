@@ -14,6 +14,8 @@ import {
 	adminInviteLinksCreate,
 	adminInviteLinksDelete,
 	adminTeamsList,
+	adminUsersSettingsRead,
+	patchAdminUsersSettingsRead,
 } from '@/client/generated'
 import type {
 	AdminProjectsListData,
@@ -27,7 +29,7 @@ import {contextMutationOptions} from './contextMutation'
 import {useSecretMutation} from './secretMutation'
 import {PICKER_PAGE_SIZE, toPaginated} from './pagination'
 import {projectKeys} from './projects'
-import {accountKeys, type UserInfoResponse} from './account'
+import {accountKeys, normalizeUserSettings, sendSettingsMergePatch, type UserInfoResponse, type UserSettingsEdits} from './account'
 import {i18n} from '@/i18n'
 
 export type DeleteUserMode = 'now' | 'scheduled'
@@ -38,6 +40,7 @@ export const adminKeys = {
 	overview: ['admin', 'overview'] as const,
 	users: ['admin', 'users'] as const,
 	usersPage: (q: string, page: number) => ['admin', 'users', q, page] as const,
+	userSettings: (id: number) => ['admin', 'userSettings', id] as const,
 	userSearches: ['admin', 'userSearch'] as const,
 	userSearch: (q: string) => [...adminKeys.userSearches, q] as const,
 	projects: ['admin', 'projects'] as const,
@@ -68,6 +71,16 @@ export function adminUserSearchQuery(q: string) {
 			query: {page: 1, per_page: PICKER_PAGE_SIZE, q},
 			signal,
 		})).data, 1),
+	})
+}
+
+export function adminUserSettingsQuery(id: number) {
+	return queryOptions({
+		queryKey: adminKeys.userSettings(id),
+		queryFn: async ({signal}) => {
+			const {data} = await adminUsersSettingsRead({path: {id}, signal})
+			return {settings: normalizeUserSettings(data), user: data.user}
+		},
 	})
 }
 
@@ -156,6 +169,20 @@ export function setAdminUserPasswordMutationOptions() {
 	})
 }
 
+export function updateAdminUserSettingsMutationOptions() {
+	return contextMutationOptions({
+		mutationFn: async ({id, edits}: {id: number, edits: UserSettingsEdits}) => {
+			await sendSettingsMergePatch(edits, request => patchAdminUsersSettingsRead({...request, path: {id}}))
+		},
+		onSettled: ({id}, client) => Promise.all([
+			client.invalidateQueries({queryKey: adminKeys.userSettings(id)}),
+			// The admin may be editing their own account.
+			client.invalidateQueries({queryKey: accountKeys.user(id)}),
+		]),
+		successMessage: () => i18n.global.t('user.settings.general.savedSuccess'),
+	})
+}
+
 export function resetAdminUserPasswordMutationOptions() {
 	return contextMutationOptions({
 		mutationFn: async ({id}: {id: number, username?: string}) => (await adminUsersPasswordResetEmail({path: {id}})).data,
@@ -212,6 +239,7 @@ export function deleteAdminInviteMutationOptions() {
 export function useCreateAdminUserMutation() { return useSecretMutation(createAdminUserMutationOptions()) }
 export function useUpdateAdminUserMutation() { return useMutation(updateAdminUserMutationOptions()) }
 export function useSetAdminUserPasswordMutation() { return useSecretMutation(setAdminUserPasswordMutationOptions()) }
+export function useUpdateAdminUserSettingsMutation() { return useMutation(updateAdminUserSettingsMutationOptions()) }
 export function useResetAdminUserPasswordMutation() { return useMutation(resetAdminUserPasswordMutationOptions()) }
 export function useDeleteAdminUserMutation() { return useMutation(deleteAdminUserMutationOptions()) }
 export function useReassignAdminProjectMutation() { return useMutation(reassignAdminProjectMutationOptions()) }

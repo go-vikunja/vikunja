@@ -1,3 +1,6 @@
+import emojiDataUrl from 'emoji-picker-element-data/en/emojibase/data.json?url'
+import {maxSupportedEmojiVersion} from './emojiSupport'
+
 export interface EmojiEntry {
 	emoji: string
 	shortcode: string
@@ -5,28 +8,56 @@ export interface EmojiEntry {
 	tags: string[]
 }
 
-interface RawEmoji {
+export interface EmojiCatalogEntry {
 	shortcodes: string[]
 	annotation: string
 	tags?: string[]
 	emoji: string
+	group: number
+	version: number
+	skins?: {
+		emoji: string
+		tone: number | number[]
+		version: number
+	}[]
 }
 
 const MAX_RESULTS = 15
 
+let catalogCache: Promise<EmojiCatalogEntry[]> | null = null
 let cache: Promise<EmojiEntry[]> | null = null
 
 export function __resetEmojiCacheForTest() {
+	catalogCache = null
 	cache = null
+}
+
+export function loadEmojiCatalog(): Promise<EmojiCatalogEntry[]> {
+	if (catalogCache) return catalogCache
+	catalogCache = fetch(emojiDataUrl)
+		.then(res => {
+			if (!res.ok) throw new Error(`emoji data HTTP ${res.status}`)
+			return res.json() as Promise<EmojiCatalogEntry[]>
+		})
+		.then(entries => {
+			const maxVersion = maxSupportedEmojiVersion()
+			return entries
+				.filter(entry => entry.version <= maxVersion)
+				.map(entry => ({
+					...entry,
+					skins: entry.skins?.filter(skin => skin.version <= maxVersion),
+				}))
+		})
+		.catch(err => {
+			catalogCache = null
+			throw err
+		})
+	return catalogCache
 }
 
 export function loadEmojis(): Promise<EmojiEntry[]> {
 	if (cache) return cache
-	cache = fetch('/emojis.json')
-		.then(res => {
-			if (!res.ok) throw new Error(`emojis.json HTTP ${res.status}`)
-			return res.json() as Promise<RawEmoji[]>
-		})
+	cache = loadEmojiCatalog()
 		.then(raw => {
 			const flat: EmojiEntry[] = []
 			for (const entry of raw) {
@@ -49,7 +80,7 @@ export function loadEmojis(): Promise<EmojiEntry[]> {
 	return cache
 }
 
-export function filterEmojis(index: EmojiEntry[], rawQuery: string): EmojiEntry[] {
+export function filterEmojis(index: EmojiEntry[], rawQuery: string, limit = MAX_RESULTS): EmojiEntry[] {
 	const query = rawQuery.toLowerCase()
 	if (query === '') return []
 
@@ -68,8 +99,8 @@ export function filterEmojis(index: EmojiEntry[], rawQuery: string): EmojiEntry[
 		) {
 			contains.push(entry)
 		}
-		if (starts.length >= MAX_RESULTS) break
+		if (starts.length >= limit) break
 	}
 
-	return [...starts, ...contains].slice(0, MAX_RESULTS)
+	return [...starts, ...contains].slice(0, limit)
 }

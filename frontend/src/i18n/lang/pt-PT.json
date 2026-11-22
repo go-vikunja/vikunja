@@ -794,26 +794,9 @@
 			"back": "Volta ao projeto",
 			"due": "Vence {at}",
 			"scrollToBottom": "Rolar até ao fundo",
-			"organization": "Organização",
-			"management": "Gestão",
-			"dateAndTime": "Data e hora",
 			"actions": {
-				"assign": "Atribuir a Utilizador",
-				"label": "Adicionar Etiquetas",
-				"priority": "Definir Prioridade",
-				"dueDate": "Definir Data de Vencimento",
-				"startDate": "Definir Data de Início",
-				"endDate": "Definir Data de Fim",
-				"reminders": "Definir Lembretes",
-				"repeatAfter": "Definir Intervalo Recorrente",
-				"percentDone": "Definir Progresso",
-				"attachments": "Adicionar Anexos",
-				"relatedTasks": "Adicionar Relação",
 				"moveProject": "Mover",
-				"color": "Definir Cor",
-				"delete": "Eliminar",
-				"favorite": "Adicionar aos Favoritos",
-				"unfavorite": "Remover dos Favoritos"
+				"delete": "Eliminar"
 			}
 		},
 		"attributes": {
@@ -953,9 +936,6 @@
 			"dateAndTime": "Data e hora"
 		},
 		"repeat": {
-			"everyDay": "Todos os Dias",
-			"everyWeek": "Todas as Semanas",
-			"every30d": "A cada 30 Dias",
 			"mode": "Modo de repetição",
 			"monthly": "Mensal",
 			"fromCurrentDate": "Da data de conclusão",
@@ -1104,10 +1084,6 @@
 			"shrinkTaskRight": "Encolher tarefa a partir da data de fim"
 		}
 	},
-	"update": {
-		"available": "Existe uma atualização disponível!",
-		"do": "Atualizar Agora"
-	},
 	"menu": {
 		"edit": "Editar",
 		"archive": "Arquivar",
@@ -1145,7 +1121,6 @@
 	"quickActions": {
 		"commands": "Comandos",
 		"placeholder": "Escreve um comando ou pesquisa…",
-		"hint": "Podes utilizar {project} para limitar a pesquisa a um projeto. Combina {project} ou {label} (etiquetas) com uma pesquisa para procurar uma tarefa com essas etiquetas ou nesse projeto. Utiliza {assignee} para pesquisares apenas por equipas.",
 		"tasks": "Tarefas",
 		"projects": "Projetos",
 		"teams": "Equipas",

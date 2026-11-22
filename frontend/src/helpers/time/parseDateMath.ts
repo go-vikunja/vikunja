@@ -8,6 +8,9 @@ const DATE = /^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?/
 const TIME = /^(\d{2})(?::(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?)?/
 const TIMEZONE = /^(?:Z|([+-])(\d{2}):(\d{2}))/
 
+// Same cap as the API's MaxDatemathBusinessDays.
+const MAX_DATEMATH_BUSINESS_DAYS = 10000
+
 const HOUR = 60 * 60 * 1000
 const MINUTE = 60 * 1000
 const SECOND = 1000
@@ -214,6 +217,7 @@ export function parseDateMath(expression: string, now: Date = new Date()): Date 
 		rest = rest.slice(2)
 	}
 
+	let businessDays = 0
 	while (rest !== '') {
 		const match = rest.match(MATH)
 		if (match === null) {
@@ -221,9 +225,16 @@ export function parseDateMath(expression: string, now: Date = new Date()): Date 
 		}
 
 		const [operation, sign, amount, addUnit, roundUnit] = match
+		const count = amount === '' ? 1 : Number(amount)
+		if (addUnit === 'b') {
+			businessDays += count
+			if (businessDays > MAX_DATEMATH_BUSINESS_DAYS) {
+				return null
+			}
+		}
 		date = roundUnit
 			? roundDown(date, roundUnit)
-			: add(date, (amount === '' ? 1 : Number(amount)) * (sign === '-' ? -1 : 1), addUnit)
+			: add(date, count * (sign === '-' ? -1 : 1), addUnit)
 		if (date === null) {
 			return null
 		}

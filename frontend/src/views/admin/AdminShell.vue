@@ -27,6 +27,7 @@ const navigationItems = computed(() => [
 	{
 		title: t('admin.labels.users'),
 		routeName: 'admin.users',
+		activeRouteNames: ['admin.userSettings'],
 	},
 	{
 		title: t('project.projects'),

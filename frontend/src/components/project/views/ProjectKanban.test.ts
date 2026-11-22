@@ -98,6 +98,7 @@ async function mountKanban(stubs: Record<string, unknown> = {}, projectId = 1) {
 			isLoadingProject: false,
 			projectId,
 			viewId: 10,
+			view: {id: 10, view_kind: 'kanban', bucket_configuration_mode: 'manual'},
 		},
 		global: {
 			plugins: [createPinia(), [VueQueryPlugin, {queryClient}]],

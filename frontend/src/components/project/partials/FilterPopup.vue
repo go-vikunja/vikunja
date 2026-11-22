@@ -21,33 +21,33 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			:view
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
+			@update:modelValue="updateFilters"
 		/>
 	</Modal>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, nextTick} from 'vue'
+import {computed, ref, watch, nextTick, type DeepReadonly} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
 
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 import {type TaskFilterParams} from '@/client/queries/tasks'
-import {useProjects} from '@/composables/useProjects'
+import type {ProjectView} from '@/client/generated'
+import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
-	projectId?: number,
-	viewId?: number,
+	view?: ProjectView | DeepReadonly<ProjectView>,
 }>()
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams]
 }>()
-
-const projectList = useProjects()
 
 const value = ref<EditableTaskCollection>({
 	sort_by: [],
@@ -77,7 +77,8 @@ watch(
 
 const hasFilters = computed(() => {
 	return value.value.filter !== '' ||
-		value.value.s !== ''
+		value.value.s !== '' ||
+		overridesView.value
 })
 
 const modalOpen = ref(false)
@@ -91,24 +92,19 @@ watch(modalOpen, (isOpen) => {
 	}
 })
 
-function showResults() {
+function updateFilters() {
 	const {s, ...rest} = value.value
 	emit('update:modelValue', {...props.modelValue, ...rest, q: s})
+}
+
+function showResults() {
+	updateFilters()
 	modalOpen.value = false
 }
 
-const filterFromView = computed(() => {
-	if (!props.projectId || !props.viewId) {
-		return
-	}
-	
-	const project = projectList.projects[props.projectId]
-	if (!project) {
-		return
-	}
-	const view = project.views.find(v => v.id === props.viewId)
-	return view?.filter?.filter
-})
+const {overridesView} = useIncludeSubprojects(() => props.view)
+
+const filterFromView = computed(() => props.view?.filter?.filter)
 </script>
 
 <style scoped lang="scss">

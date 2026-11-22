@@ -136,6 +136,7 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 	}
 
 	archivedProjects := []int64{}
+	imported := &importedTasks{byOldID: make(map[int64]*models.Task)}
 
 	childRelations := make(map[int64][]int64)          // old id is the key, slice of old children ids
 	projectsByOldID := make(map[int64]*models.Project) // old id is the key
@@ -158,11 +159,16 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 			view.ProjectID = 0
 		}
 
-		err = createProject(s, p, &archivedProjects, labels, user, provider, createdFiles)
+		err = createProject(s, p, &archivedProjects, labels, user, provider, createdFiles, imported)
 		if err != nil {
 			return err
 		}
 		projectsByOldID[oldID] = &str[i].Project
+	}
+
+	err = imported.createRelations(s, user)
+	if err != nil {
+		return err
 	}
 
 	// parent / child relations
@@ -227,8 +233,34 @@ func seedMissingTaskPositions(tasks []*models.TaskWithComments) {
 	}
 }
 
-func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
-	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, user, provider, createdFiles)
+// importedTasks collects the tasks of all projects, so relations can point across projects.
+type importedTasks struct {
+	all     []*models.Task
+	byOldID map[int64]*models.Task
+	// References without a title to tasks of other projects, resolved once every project exists.
+	pending []pendingRelation
+}
+
+type pendingRelation struct {
+	task     *models.Task
+	kind     models.RelationKind
+	oldOther int64
+}
+
+func (imp *importedTasks) createRelations(s *xorm.Session, user *user.User) error {
+	for _, p := range imp.pending {
+		other, has := imp.byOldID[p.oldOther]
+		if !has {
+			log.Debugf("[creating structure] Could not find related task with old id %d", p.oldOther)
+			continue
+		}
+		p.task.RelatedTasks[p.kind] = append(p.task.RelatedTasks[p.kind], other)
+	}
+	return models.CreateTaskRelationsForImport(s, imp.all, user)
+}
+
+func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjectIDs *[]int64, labels map[string]*models.Label, user *user.User, provider FileProvider, createdFiles *[]int64, imported *importedTasks) (err error) {
+	err = createProjectWithEverything(s, project, archivedProjectIDs, labels, user, provider, createdFiles, imported)
 	if err != nil {
 		return err
 	}
@@ -238,7 +270,7 @@ func createProject(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, 
 	return
 }
 
-func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User, provider FileProvider, createdFiles *[]int64) (err error) {
+func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTasksAndBuckets, archivedProjects *[]int64, labels map[string]*models.Label, user *user.User, provider FileProvider, createdFiles *[]int64, imported *importedTasks) (err error) {
 	// The tasks and bucket slices are going to be reset during the creation of the project, so we rescue it here
 	// to be able to still loop over them aftere the project was created.
 	tasks := project.Tasks
@@ -484,6 +516,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			continue
 		}
 		queue(&t.Task, t.Comments)
+		if _, exists := imported.byOldID[t.ID]; t.ID != 0 && !exists {
+			imported.byOldID[t.ID] = &t.Task
+		}
 	}
 	for i := 0; i < len(initialTasks); i++ {
 		for kind, relatedTasks := range initialTasks[i].task.RelatedTasks {
@@ -498,6 +533,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 					continue
 				}
 				if related.Title == "" {
+					if related.ID != 0 {
+						imported.pending = append(imported.pending, pendingRelation{task: initialTasks[i].task, kind: kind, oldOther: related.ID})
+					}
 					continue
 				}
 				queue(related, nil)
@@ -519,10 +557,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		return err
 	}
 
-	err = models.CreateTaskRelationsForImport(s, tasksToCreate, user)
-	if err != nil {
-		return err
-	}
+	imported.all = append(imported.all, tasksToCreate...)
 
 	for _, state := range initialTasks {
 		t := state.task

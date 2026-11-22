@@ -18,6 +18,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"slices"
@@ -25,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -71,6 +73,20 @@ func validateTaskForCreation(t *Task) error {
 	}
 
 	return validateRepeatAfter(t.RepeatAfter)
+}
+
+const MaxTaskTitleLength = 1000
+const MaxRemindersPerTask = 100
+
+// validateTaskLimits only checks what an update changes, so tasks already over a limit stay editable. old is nil on create.
+func validateTaskLimits(t, old *Task) error {
+	if (old == nil || t.Title != old.Title) && utf8.RuneCountInString(t.Title) > MaxTaskTitleLength {
+		return InvalidFieldErrorWithMessage([]string{"title"}, fmt.Sprintf("The task title may be at most %d characters long.", MaxTaskTitleLength))
+	}
+	if (old == nil || len(t.Reminders) > len(old.Reminders)) && len(t.Reminders) > MaxRemindersPerTask {
+		return InvalidFieldErrorWithMessage([]string{"reminders"}, fmt.Sprintf("A task may have at most %d reminders.", MaxRemindersPerTask))
+	}
+	return nil
 }
 
 // Task represents a task in a project
@@ -315,12 +331,30 @@ func getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err err
 	return
 }
 
-func getTaskIndexFromSearchString(s string) (index int64) {
-	re := regexp.MustCompile("#([0-9]+)")
-	in := re.FindString(s)
+var (
+	taskIndexSearchRegex   = regexp.MustCompile(`#([0-9]+)`)
+	plainNumberSearchRegex = regexp.MustCompile(`^\s*([0-9]+)\s*$`)
+)
 
-	stringIndex := strings.ReplaceAll(in, "#", "")
-	index, _ = strconv.ParseInt(stringIndex, 10, 64)
+func getTaskIndexFromSearchString(s string) (index int64) {
+	match := taskIndexSearchRegex.FindStringSubmatch(s)
+	if match == nil {
+		return getTaskIDFromSearchString(s)
+	}
+
+	index, _ = strconv.ParseInt(match[1], 10, 64)
+	return
+}
+
+// A plain number may be the index shown in the UI or the id in the task URL, so it
+// matches both. "#12" is only ever an index.
+func getTaskIDFromSearchString(s string) (id int64) {
+	match := plainNumberSearchRegex.FindStringSubmatch(s)
+	if match == nil {
+		return 0
+	}
+
+	id, _ = strconv.ParseInt(match[1], 10, 64)
 	return
 }
 
@@ -1033,6 +1067,9 @@ func setNewTaskIndexes(s *xorm.Session, projectID int64, tasks []*Task) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
+	if err := validateTaskLimits(t, nil); err != nil {
+		return err
+	}
 	return createTask(s, t, a, true, true)
 }
 
@@ -1485,6 +1522,10 @@ func (t *Task) updateSingleTaskInViews(s *xorm.Session, a web.Auth, fields []str
 		if !fieldSet["reminders"] {
 			t.Reminders = ot.Reminders
 		}
+	}
+
+	if err := validateTaskLimits(t, &ot); err != nil {
+		return err
 	}
 
 	if len(fields) == 0 || fieldSet["assignees"] {
@@ -2236,6 +2277,10 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	// The event reaches every subscriber and webhook, not only the doer.
+	fullTask.RelatedTasks = make(RelatedTaskMap)
+	fullTask.IsFavorite = false
+	fullTask.Subscription = nil
 
 	// Bucket and position rows are removed right away because bucket counts
 	// don't join the tasks table and would leak soft-deleted tasks; Restore
