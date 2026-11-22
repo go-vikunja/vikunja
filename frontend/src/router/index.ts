@@ -564,7 +564,6 @@ export async function getAuthForRoute(to: RouteLocation, authStore: {
 			// Keep the original API error code for translation.
 			error((e as {cause?: unknown})?.cause ?? e)
 		}
-		// Drop the token from the fragment, or the redirect redeems it again forever (#4448).
 		return {name: 'home', hash: ''}
 	}
 
