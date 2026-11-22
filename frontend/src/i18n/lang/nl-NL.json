@@ -52,6 +52,7 @@
 		"loading": "Vikunja is aan het laden…",
 		"errorOccured": "Er is een fout opgetreden:",
 		"checkApiUrl": "Controleer of de API URL juist is.",
+		"rateLimited": "De server heeft te veel verzoeken ontvangen. Wacht even en laad de pagina opnieuw.",
 		"noApiUrlConfigured": "Er is geen API URL geconfigureerd. Stel er hieronder een in:"
 	},
 	"offline": {
@@ -66,6 +67,7 @@
 			"email": "E-mailadres",
 			"emailPlaceholder": "bv. frederic{'@'}vikunja.io",
 			"password": "Wachtwoord",
+			"passwordPlaceholder": "Je wachtwoord",
 			"forgotPassword": "Wachtwoord vergeten?",
 			"resetPassword": "Je wachtwoord opnieuw instellen",
 			"resetPasswordAction": "Stuur me een wachtwoord reset link",
@@ -315,6 +317,11 @@
 				},
 				"deleteSuccess": "De sessie is ingetrokken. Het kan tot 10 minuten duren voordat de sessie volledig is verlopen.",
 				"noOtherSessions": "Geen andere actieve sessies."
+			},
+			"mcp": {
+				"endpoint": "MCP-eindpunt",
+				"tokens": "MCP-tokens",
+				"manageTokens": "Beheer alle API-tokens"
 			}
 		},
 		"deletion": {
