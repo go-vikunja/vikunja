@@ -967,10 +967,6 @@
 			"projects": "Pomakni se do projektov"
 		}
 	},
-	"update": {
-		"available": "Na voljo je nova posodobitev!",
-		"do": "Posodobi zdaj"
-	},
 	"menu": {
 		"edit": "Uredi",
 		"archive": "Arhiviraj",
@@ -1007,7 +1003,6 @@
 	"quickActions": {
 		"commands": "Ukazi",
 		"placeholder": "Začni tipkati ukaz ali poišči…",
-		"hint": "Za omejitev iskanja na projekt lahko uporabite {project}. Združite {project} ali {label} (oznake) z iskalno poizvedbo, da poiščete nalogo s temi oznakami ali v tem projektu. Uporabite {assignee} samo za iskanje ekip.",
 		"tasks": "Naloge",
 		"projects": "Projekti",
 		"teams": "Ekipe",

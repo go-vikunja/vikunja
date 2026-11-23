@@ -31,3 +31,8 @@ func (c *Client) CreateRelation(ctx context.Context, taskID int64, otherTaskID i
 	}
 	return &out, nil
 }
+
+// DeleteRelation removes the relationKind link from taskID to otherTaskID.
+func (c *Client) DeleteRelation(ctx context.Context, taskID int64, otherTaskID int64, relationKind string) error {
+	return c.Do(ctx, "DELETE", fmt.Sprintf("/tasks/%d/relations/%s/%d", taskID, relationKind, otherTaskID), nil, nil, nil)
+}

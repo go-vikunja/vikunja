@@ -156,8 +156,9 @@ func seedAdmin(t *testing.T, apiURL, testingToken string) {
 }
 
 // Workspace creates a per-test git repo in a TempDir with HOME pointed at
-// a TempDir so the credential store writes under the test's own directory
-// rather than touching the developer's keychain.
+// a TempDir and the keychain disabled, so credentials land in the test's own
+// file store. A keychain lookup under a fake HOME makes macOS prompt to reset
+// the login keychain.
 type Workspace struct {
 	Dir          string
 	Home         string
@@ -207,7 +208,8 @@ func (h *Harness) NewWorkspace(t *testing.T) *Workspace {
 		Home:       home,
 		ConfigPath: filepath.Join(dir, ".veans.yml"),
 		envOverrides: map[string]string{
-			"HOME": home,
+			"HOME":             home,
+			"VEANS_NO_KEYRING": "1",
 		},
 	}
 }

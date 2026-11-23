@@ -19,6 +19,9 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -158,4 +161,145 @@ func taskHasLabelTitle(t *client.Task, title string) bool {
 		}
 	}
 	return false
+}
+
+// TestFields_AllCommands pins --fields on every task-printing command and
+// the default stripping of nested related-task descriptions.
+func TestFields_AllCommands(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	out, errOut, code := h.Run(t, ws, "create", "parent", "-d", "<p>parent body</p>")
+	if code != 0 {
+		t.Fatalf("create parent exit %d\n%s", code, errOut)
+	}
+	parent := decodeTask(t, out)
+	parentRef := strconv.FormatInt(parent.Index, 10)
+
+	out, errOut, code = h.Run(t, ws, "create", "child", "--parent", parentRef, "--fields", "identifier,url")
+	if code != 0 {
+		t.Fatalf("create --fields exit %d\n%s", code, errOut)
+	}
+	var created map[string]any
+	if err := json.Unmarshal([]byte(out), &created); err != nil {
+		t.Fatalf("decode %s: %v", out, err)
+	}
+	if len(created) != 2 || created["identifier"] == nil || created["url"] == nil {
+		t.Fatalf("create --fields should print only identifier and url: %s", out)
+	}
+	childRef := strings.TrimPrefix(created["identifier"].(string), loadConfig(t, ws).ProjectIdentifier+"-")
+
+	for _, args := range [][]string{
+		{"show", childRef},
+		{"update", childRef, "--priority", "2"},
+		{"claim", childRef},
+	} {
+		out, errOut, code := h.Run(t, ws, append(args, "--fields", "identifier,url")...)
+		if code != 0 {
+			t.Fatalf("%v exit %d\n%s", args, code, errOut)
+		}
+		if got := strings.TrimSpace(out); !strings.HasPrefix(got, `{"identifier":`) || strings.Count(got, `"url"`) != 1 {
+			t.Fatalf("%v --fields: %s", args, got)
+		}
+	}
+
+	out, errOut, code = h.Run(t, ws, "list", "--fields", "identifier")
+	if code != 0 {
+		t.Fatalf("list --fields exit %d\n%s", code, errOut)
+	}
+	var listed []map[string]any
+	if err := json.Unmarshal([]byte(out), &listed); err != nil {
+		t.Fatal(err)
+	}
+	if len(listed) != 2 || len(listed[0]) != 1 {
+		t.Fatalf("list --fields: %s", out)
+	}
+
+	if _, errOut, code = h.Run(t, ws, "show", childRef, "--fields", "bogus"); code == 0 || !strings.Contains(errOut, "VALIDATION_ERROR") {
+		t.Fatalf("unknown field should fail validation: exit %d %s", code, errOut)
+	}
+
+	// Default output: whole task, nested parent without its description.
+	out, _, _ = h.Run(t, ws, "show", childRef)
+	if strings.Contains(out, "parent body") {
+		t.Fatalf("nested related-task description leaked: %s", out)
+	}
+	if !hasParent(decodeTask(t, out), parent.ID) {
+		t.Fatalf("show lost the relation: %s", out)
+	}
+}
+
+// TestTaskIDFlag pins --id on show/update/claim and the not-found hint
+// when a numeric task id is passed where an index is expected.
+func TestTaskIDFlag(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	out, errOut, code := h.Run(t, ws, "create", "by id")
+	if code != 0 {
+		t.Fatalf("create exit %d\n%s", code, errOut)
+	}
+	created := decodeTask(t, out)
+	id := strconv.FormatInt(created.ID, 10)
+
+	for _, args := range [][]string{
+		{"show", "--id", id},
+		{"update", "--id", id, "--priority", "3"},
+		{"claim", "--id", id},
+	} {
+		out, errOut, code := h.Run(t, ws, append(args, "--fields", "id")...)
+		if code != 0 {
+			t.Fatalf("%v exit %d\n%s", args, code, errOut)
+		}
+		if got := strings.TrimSpace(out); got != `{"id":`+id+`}` {
+			t.Fatalf("%v printed %s", args, got)
+		}
+	}
+
+	_, errOut, code = h.Run(t, ws, "show", "999999")
+	if code == 0 || !strings.Contains(errOut, "NOT_FOUND") || !strings.Contains(errOut, "--id 999999") {
+		t.Fatalf("bare-number not-found should point at --id: exit %d %s", code, errOut)
+	}
+	_, errOut, code = h.Run(t, ws, "show", "1", "--id", id)
+	if code == 0 || !strings.Contains(errOut, "VALIDATION_ERROR") {
+		t.Fatalf("ref plus --id should fail validation: exit %d %s", code, errOut)
+	}
+}
+
+func TestAttach_CreateAndUpdate(t *testing.T) {
+	ws, h := provisionWorkspace(t)
+
+	writeFile := func(name, content string) string {
+		p := filepath.Join(t.TempDir(), name)
+		if err := os.WriteFile(p, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+
+	out, errOut, code := h.Run(t, ws, "create", "With attachment", "--attach", writeFile("first.txt", "one"))
+	if code != 0 {
+		t.Fatalf("create exit %d\n%s\n%s", code, out, errOut)
+	}
+	var created client.Task
+	if err := json.Unmarshal([]byte(out), &created); err != nil {
+		t.Fatalf("decode create: %v\n%s", err, out)
+	}
+
+	out, errOut, code = h.Run(t, ws, "update", "--id", strconv.FormatInt(created.ID, 10),
+		"--attach", writeFile("second.log", "two"))
+	if code != 0 {
+		t.Fatalf("update exit %d\n%s\n%s", code, out, errOut)
+	}
+	var updated client.Task
+	if err := json.Unmarshal([]byte(out), &updated); err != nil {
+		t.Fatalf("decode update: %v\n%s", err, out)
+	}
+	var names []string
+	for _, a := range updated.Attachments {
+		if a.File != nil {
+			names = append(names, a.File.Name)
+		}
+	}
+	if strings.Join(names, ",") != "first.txt,second.log" {
+		t.Fatalf("attachments = %v", names)
+	}
 }

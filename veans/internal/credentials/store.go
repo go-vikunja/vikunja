@@ -119,13 +119,13 @@ func (c *Chain) Set(server, account, token string) error {
 // errReadOnly is sentinel for backends that refuse writes (env).
 var errReadOnly = errors.New("read-only backend")
 
-// Default builds the standard keychain → env → file chain.
+// Default builds the standard keychain → env → file chain. VEANS_NO_KEYRING
+// drops the keychain, e.g. for a HOME without one, where macOS prompts to
+// reset the login keychain on every access.
 func Default() *Chain {
-	return &Chain{
-		Backends: []Store{
-			NewKeyringBackend(),
-			NewEnvBackend(),
-			NewFileBackend(""),
-		},
+	var backends []Store
+	if os.Getenv("VEANS_NO_KEYRING") == "" {
+		backends = append(backends, NewKeyringBackend())
 	}
+	return &Chain{Backends: append(backends, NewEnvBackend(), NewFileBackend(""))}
 }

@@ -1339,6 +1339,25 @@ test.describe('Task', () => {
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
+		test('Shows the whole reminder date picker in a short window', async ({authenticatedPage: page}) => {
+			await page.setViewportSize({width: 1280, height: 650})
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await page.locator('.task-view .property-reminders button').filter({hasText: 'Add a reminder'}).click()
+			await page.locator('.datepicker__quick-select-date').filter({hasText: 'Tomorrow'}).click()
+
+			const popup = page.locator('.popup.is-open')
+			await expect.poll(() => popup.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(1)
+			await expect(popup.locator('button').filter({hasText: 'Confirm'})).toBeInViewport({ratio: 1})
+
+			await popup.locator('button').filter({hasText: 'Confirm'}).click()
+			await expect(page.locator('.global-notification')).toContainText('Success')
+		})
+
 		test('Allows to set a relative reminder when the task already has a due date', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,

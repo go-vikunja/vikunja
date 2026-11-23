@@ -8,9 +8,9 @@
 			"confirm": "Um deine E-Mail-Adresse zu bestätigen, klicke auf den Link unten:"
 		},
 		"email_change": {
-			"subject": "Es wurde eine Änderung der E-Mail-Adresse für dein Vikunja-Konto angefordert",
-			"requested": "Jemand hat beantragt, die E-Mail-Adresse deines Kontos in %[1]s zu ändern. Deine aktuelle Adresse bleibt aktiv, bis die neue bestätigt ist.",
-			"warning": "Wenn Du das nicht warst, ändere sofort dein Passwort und breche die ausstehende Änderung in den Kontoeinstellungen ab."
+			"subject": "Es wurde eine Änderung der E-Mail-Adresse für deinen Vikunja-Account angefordert",
+			"requested": "Jemand hat beantragt, die E-Mail-Adresse deines Accounts in %[1]s zu ändern. Deine aktuelle Adresse bleibt aktiv, bis die neue bestätigt ist.",
+			"warning": "Wenn du das nicht warst, ändere sofort dein Passwort und brich die ausstehende Änderung in deinen Account-Einstellungen ab."
 		},
 		"identity": {
 			"linked": {

@@ -90,6 +90,13 @@ oddly, suspect one of these:
   **`PUT /projects/{p}/views/{v}/buckets/{b}/tasks`** with a `{"task_id":N}`
   body (project/view/bucket all come from the URL). The Update path on the
   server only auto-moves on `done` flips.
+- **`done` is tied to the view's done bucket.** Setting done=true moves the
+  task into it, and moving a done task out un-marks it. So `scrapped` is
+  done=false in the Scrapped bucket; `list --ready` treats a scrapped
+  blocker as resolved. Create honors `bucket_id` on current servers.
+- **Attachment upload answers 201 even when the file is rejected.** `POST
+  /tasks/{id}/attachments` (multipart, field `files`) reports per-file
+  failures in `errors`; `UploadTaskAttachment` turns those into an error.
 - **Bot user creation is `POST /user/bots`**, not `/bots` — the routes
   are registered under the `/user` subgroup. Same prefix for
   `GET /user/bots`.
@@ -126,7 +133,10 @@ oddly, suspect one of these:
   buckets-with-tasks LIST is bare `views_buckets_tasks`; bucket CRUD is
   `views_buckets_{create,update,delete}`. Older servers used `_put`/`_post`
   suffixes (and an order-dependent bare/`_put` collision), so the bot requests
-  both naming schemes.
+  both naming schemes. A token minted by a veans build that predates the
+  rename only holds the bare key, which the renamed server maps to the LIST:
+  every bucket move then 401s (code 11) while reads work. `veans login`
+  re-mints with the current scopes.
 - `client.PermissionsForBot()` calls `GET /routes` at runtime and
   grants only the intersection of what we want and what the server
   exposes. **Don't hard-code permission group names** — they drift
@@ -179,9 +189,9 @@ oddly, suspect one of these:
   is narrowed. Concurrent writers (e.g. two `veans login` runs) are
   serialized via `flock` on `<path>.lock` (Unix only; Windows is a
   no-op stub since the audience is Linux/macOS).
-- E2e tests override `HOME` per test and `filterEnv(..., "VEANS_")`
-  strips any inherited `VEANS_TOKEN` so the developer's keyring
-  stays untouched. Don't bypass the credentials package in tests —
+- E2e tests override `HOME` per test, set `VEANS_NO_KEYRING=1` (a keychain
+  lookup under a fake HOME makes macOS prompt to reset the login keychain),
+  and `filterEnv(..., "VEANS_")` strips any inherited `VEANS_TOKEN`. Don't bypass the credentials package in tests —
   leaks between tests will surface as the wrong bot token.
 
 ## Trust gate
@@ -199,7 +209,9 @@ oddly, suspect one of these:
 
 - Project `Identifier` is `runelength(0|10)`, can be empty. When empty,
   `Config.FormatTaskID` renders `#NN`; otherwise `PROJ-NN`. Both are
-  accepted by `runtime.resolveTaskID` along with bare integers.
+  accepted by `runtime.resolveTaskID` along with bare integers, which are
+  the project **index**, never the numeric task id. Commands that take a
+  task use `addTaskIDFlag` / `runtime.taskID` so `--id <task id>` works too.
 - Bot username must start with `bot-`; the server enforces it. Hyphens,
   digits, lowercase letters allowed; no spaces, no commas, no
   `link-share-N` pattern. `config.SuggestedBotUsername` does the
@@ -232,6 +244,10 @@ Everything else (`list`, `show`, `create`, `update`, `claim`, `api`,
   `RATE_LIMITED`, `BOT_USERS_UNAVAILABLE`, `NOT_CONFIGURED`,
   `UNKNOWN`. Don't add ad-hoc strings — wrap with `output.New` /
   `output.Wrap`.
+- **Multi-step mutations report partial progress.** `create`/`update`
+  track steps with `steps` (`internal/commands/steps.go`); a failure after
+  the task changed adds `task`, `completed` and `failed` to the envelope
+  and keeps the inner code.
 - **No `globals.JSON`, no dual rendering paths.** If you find yourself
   reaching for "if interactive, do X" on an agent-facing command,
   stop — it's not interactive, an agent is on the other end.
@@ -244,9 +260,12 @@ Everything else (`list`, `show`, `create`, `update`, `claim`, `api`,
   update on `update`, so a status transition can't clobber freshly
   attached labels. Comments for `--status scrapped` post **before**
   the bucket move so the audit trail reads in chronological order.
-- Agent-facing commands return the task via `json.NewEncoder(...).Encode(task)`.
-  Adding new top-level keys to `client.Task` is an implicit API
-  change — bump `prime`'s "useful fields" note alongside.
+- Agent-facing commands print through `runtime.printTask` / `printTasks`
+  (`render.go`): it fills URLs, drops nested related-task descriptions and
+  applies `--fields`, which is parsed before any request. Adding new
+  top-level keys to `client.Task` is an implicit API change (they also
+  become valid `--fields` names) — bump `prime`'s "Key fields" note
+  alongside.
 
 ## Things to *not* do
 

@@ -78,10 +78,10 @@ veans init                     OAuth/login → create bot → mint token → wri
 veans prime                    emit system prompt for agents (silent if no .veans.yml)
 veans list                     filtered list (--ready, --mine, --branch, --filter, --status); emits JSON
 veans show <id>                view a task (JSON)
-veans create "title"           --description, --label, --status, --priority, --parent, --blocked-by
+veans create "title"           --description, --label, --status, --priority, --parent, --blocked-by, --attach
 veans update <id>              --status, --title, --priority, --label-add/remove,
                                --description, --description-replace-old/new, --description-append,
-                               --comment, --reason, --if-unchanged-since
+                               --comment, --reason, --if-unchanged-since, --attach
 veans claim <id>               assign the bot, move to In Progress, tag with current branch label
 veans api METHOD PATH          raw REST passthrough — escape hatch for endpoints not wrapped here
 veans login                    re-mint the bot's token (rotation)
@@ -122,6 +122,8 @@ Resolved in order on every command:
 2. **`VEANS_TOKEN`** env var (read-only). Intended for CI / containers.
 3. **`~/.config/veans/credentials.yml`** (mode 0600) — automatic fallback
    when the keychain is unavailable.
+
+Set `VEANS_NO_KEYRING=1` to skip the keychain entirely.
 
 ## Trusted servers
 

@@ -558,13 +558,13 @@ export async function getAuthForRoute(to: RouteLocation, authStore: {
 			await authStore.refreshUserInfo()
 			if (hadPending && !authStore.info?.pending_email) {
 				success({message: i18n.global.t('user.settings.updateEmailConfirmed')})
-				return {name: 'user.settings.email-update'}
+				return {name: 'user.settings.email-update', hash: ''}
 			}
 		} catch (e) {
 			// Keep the original API error code for translation.
 			error((e as {cause?: unknown})?.cause ?? e)
 		}
-		return {name: 'home'}
+		return {name: 'home', hash: ''}
 	}
 
 	if (authStore.authUser || authStore.authLinkShare) {

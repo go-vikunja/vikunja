@@ -1070,10 +1070,6 @@
 			"shrinkTaskRight": "Riduci l'attività dalla data di fine"
 		}
 	},
-	"update": {
-		"available": "È disponibile un aggiornamento!",
-		"do": "Aggiorna Adesso"
-	},
 	"menu": {
 		"edit": "Modifica",
 		"archive": "Archivia",
@@ -1111,7 +1107,6 @@
 	"quickActions": {
 		"commands": "Comandi",
 		"placeholder": "Digita un comando o cerca…",
-		"hint": "Puoi usare {project} per limitare la ricerca a un progetto. Combina {project} o {label} (etichette) con una query di ricerca per cercare un'attività con queste etichette o su quel progetto. Usa {assignee} per cercare solo i gruppi.",
 		"tasks": "Attività",
 		"projects": "Progetti",
 		"teams": "Gruppi",

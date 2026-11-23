@@ -1073,10 +1073,6 @@
 			"shrinkTaskRight": "Krymp uppgiften från slutdatum"
 		}
 	},
-	"update": {
-		"available": "Det finns en uppdatering tillgänglig!",
-		"do": "Uppdatera nu"
-	},
 	"menu": {
 		"edit": "Redigera",
 		"archive": "Arkivera",
@@ -1114,7 +1110,6 @@
 	"quickActions": {
 		"commands": "Kommandon",
 		"placeholder": "Skriv ett kommando eller sök…",
-		"hint": "Du kan använda {project} för att begränsa sökningen till ett projekt. Kombinera {project} eller {label} (etiketter) med en sökfråga för att söka efter en uppgift med dessa etiketter eller på det projektet. Använd {assignee} för att endast söka efter team.",
 		"tasks": "Uppgifter",
 		"projects": "Projekt",
 		"teams": "Team",

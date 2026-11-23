@@ -74,6 +74,17 @@ func TestIsReady(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "blocked by scrapped task -> ready",
+			task: &client.Task{
+				ID:      3,
+				Buckets: []*client.Bucket{{ID: todoBucket, ProjectViewID: viewID}},
+				RelatedTasks: map[string][]*client.Task{
+					"blocked": {{ID: 99, Done: false}},
+				},
+			},
+			want: true,
+		},
+		{
 			name: "done task -> not ready",
 			task: &client.Task{
 				ID:      4,
@@ -104,7 +115,7 @@ func TestIsReady(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := isReady(tc.task, todoBucket, viewID); got != tc.want {
+			if got := isReady(tc.task, todoBucket, viewID, map[int64]bool{99: true}); got != tc.want {
 				t.Fatalf("isReady = %v, want %v", got, tc.want)
 			}
 		})
@@ -137,16 +148,16 @@ func TestIsReady_SubtaskWithBlockedSibling(t *testing.T) {
 		},
 	}
 
-	if !isReady(taskTwo, todoBucket, viewID) {
+	if !isReady(taskTwo, todoBucket, viewID, nil) {
 		t.Fatal("task #2 should be ready (no incomplete blockers)")
 	}
-	if isReady(taskThree, todoBucket, viewID) {
+	if isReady(taskThree, todoBucket, viewID, nil) {
 		t.Fatal("task #3 should not be ready (blocked by incomplete #2)")
 	}
 
 	// Now complete #2 and reflect that in #3's relation snapshot.
 	taskThree.RelatedTasks["blocked"][0].Done = true
-	if !isReady(taskThree, todoBucket, viewID) {
+	if !isReady(taskThree, todoBucket, viewID, nil) {
 		t.Fatal("task #3 should be ready once #2 is done")
 	}
 }

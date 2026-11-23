@@ -734,10 +734,6 @@
 			"projects": "Navegar a proyectos"
 		}
 	},
-	"update": {
-		"available": "¡Hay una actualización disponible!",
-		"do": "Actualizar Ahora"
-	},
 	"menu": {
 		"edit": "Editar",
 		"archive": "Archivar",
@@ -767,7 +763,6 @@
 	"quickActions": {
 		"commands": "Comandos",
 		"placeholder": "Escriba un comando o búsqueda…",
-		"hint": "Puedes usar {project} para limitar la búsqueda a un proyecto. Combina {project} o {label} (etiquetas) con una consulta de búsqueda para buscar una tarea con estas etiquetas o en ese proyecto. Usa {assignee} para buscar sólo equipos.",
 		"tasks": "Tareas",
 		"projects": "Proyectos",
 		"teams": "Equipos",

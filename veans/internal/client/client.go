@@ -103,21 +103,25 @@ func (c *Client) DoMerge(ctx context.Context, method, path string, query url.Val
 }
 
 func (c *Client) do(ctx context.Context, method, path string, query url.Values, body, out any, contentType string) error {
+	if body == nil {
+		return c.send(ctx, method, path, query, nil, "", out)
+	}
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("marshal body: %w", err)
+	}
+	return c.send(ctx, method, path, query, bytes.NewReader(buf), contentType, out)
+}
+
+// send performs a request with a pre-encoded body (nil for none) and decodes
+// a JSON response into out.
+func (c *Client) send(ctx context.Context, method, path string, query url.Values, body io.Reader, contentType string, out any) error {
 	full := c.BaseURL + apiBasePath + path
 	if len(query) > 0 {
 		full += "?" + query.Encode()
 	}
 
-	var bodyReader io.Reader
-	if body != nil {
-		buf, err := json.Marshal(body)
-		if err != nil {
-			return fmt.Errorf("marshal body: %w", err)
-		}
-		bodyReader = bytes.NewReader(buf)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, method, full, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, full, body)
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
 	}
