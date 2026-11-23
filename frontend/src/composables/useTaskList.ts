@@ -147,9 +147,11 @@ export function useTaskList(
 		([viewId, sortValue, filterValue, sValue, pageValue, includeValue]) => {
 			const viewIdChanged = viewId !== syncedViewId.value
 			syncedViewId.value = viewId
+			// Re-entering the open project via its link redirects without changing the view.
+			const enteredViaLink = router.currentRoute.value.redirectedFrom !== undefined
 
 			const urlIsEmpty = !sortValue && !filterValue && !sValue && pageValue === 1 && !includeValue
-			if (viewIdChanged && urlIsEmpty) {
+			if ((viewIdChanged || enteredViaLink) && urlIsEmpty) {
 				const storedQuery = viewFiltersStore.getViewQuery(viewId)
 				if (Object.keys(storedQuery).length > 0) {
 					const restore = router.replace({query: {...router.currentRoute.value.query, ...storedQuery}})
