@@ -1,10 +1,47 @@
 <template>
 	<div class="attachments">
-		<h2 class="task-section-title">
-			<span class="icon is-grey">
-				<Icon icon="paperclip" />
+		<h2 class="task-section-title attachments-heading">
+			<button
+				class="attachments-toggle"
+				:aria-expanded="!collapsed"
+				aria-controls="attachments-body"
+				@click="collapsed = !collapsed"
+			>
+				<span class="icon is-grey">
+					<Icon icon="paperclip" />
+				</span>
+				{{ $t('task.attachment.title') }}
+				<span
+					v-if="attachments.length > 0"
+					class="attachments-count"
+				>
+					{{ attachments.length }}
+				</span>
+				<Icon
+					icon="chevron-down"
+					class="attachments-chevron"
+					:class="{'is-collapsed': collapsed}"
+				/>
+			</button>
+			<span
+				v-if="!collapsed && attachments.length > 0"
+				class="view-mode-switch"
+				role="group"
+				:aria-label="$t('task.attachment.viewMode')"
+			>
+				<BaseButton
+					v-for="mode in VIEW_MODES"
+					:key="mode.value"
+					v-tooltip="$t(mode.label)"
+					:aria-label="$t(mode.label)"
+					:aria-pressed="viewMode === mode.value"
+					class="view-mode-button"
+					:class="{'is-active': viewMode === mode.value}"
+					@click="viewMode = mode.value"
+				>
+					<Icon :icon="mode.icon" />
+				</BaseButton>
 			</span>
-			{{ $t('task.attachment.title') }}
 		</h2>
 
 		<input
@@ -23,115 +60,122 @@
 			is-primary
 		/>
 
-		<div
-			v-if="attachments.length > 0"
-			class="files"
-		>
-			<div
-				v-for="a in attachments"
-				:key="a.id"
-				class="attachment"
-			>
-				<div class="preview-column">
-					<button
-						class="preview-open"
-						tabindex="-1"
-						aria-hidden="true"
-						@click="viewOrDownload(a)"
+		<Expandable :open="!collapsed">
+			<div id="attachments-body">
+				<div
+					v-if="attachments.length > 0"
+					class="files"
+					:class="`is-${viewMode}`"
+				>
+					<div
+						v-for="a in attachments"
+						:key="a.id"
+						class="attachment"
 					>
-						<FilePreview
-							class="attachment-preview"
-							:model-value="a"
-						/>
-					</button>
-				</div>
-				<div class="attachment-info-column">
-					<button
-						v-tooltip="attachmentMetaTooltip(a)"
-						class="attachment-open"
-						@click="viewOrDownload(a)"
-					>
-						<span class="filename">
-							{{ a.file?.name }}
-							<span
-								v-if="task.cover_image_attachment_id === a.id"
-								class="is-task-cover"
+						<button
+							class="preview-open"
+							tabindex="-1"
+							aria-hidden="true"
+							@click="viewOrDownload(a)"
+						>
+							<FilePreview
+								class="attachment-preview"
+								:model-value="a"
+							/>
+						</button>
+						<div class="attachment-info-column">
+							<button
+								v-tooltip="attachmentMetaTooltip(a)"
+								class="attachment-open"
+								@click="viewOrDownload(a)"
 							>
-								{{ $t('task.attachment.usedAsCover') }}
-							</span>
-						</span>
-					</button>
-					<p class="attachment-info-meta">
-						<User
-							:user="a.created_by ?? {}"
-							:avatar-size="20"
-							:show-username="false"
-							:is-inline="true"
-						/>
-						<span>
+								<span class="filename">{{ a.file?.name }}</span>
+								<span
+									v-if="task.cover_image_attachment_id === a.id"
+									class="is-task-cover"
+								>
+									{{ $t('task.attachment.usedAsCover') }}
+								</span>
+							</button>
+							<AudioPreview
+								v-if="viewMode !== 'gallery' && canPreviewAudio(a)"
+								:ref="el => setAudioPlayerRef(a, el)"
+								:attachment="a"
+							/>
+						</div>
+						<span class="attachment-size">
 							{{ getHumanSize(a.file?.size ?? 0) }}
 						</span>
-					</p>
-					<AudioPreview
-						v-if="canPreviewAudio(a)"
-						:ref="el => setAudioPlayerRef(a, el)"
-						:attachment="a"
-					/>
-					<p class="attachment-actions">
-						<BaseButton
-							v-tooltip="$t('task.attachment.downloadTooltip')"
-							:aria-label="$t('task.attachment.downloadTooltip')"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="download(a)"
-						>
-							<Icon icon="download" />
-						</BaseButton>
-						<BaseButton
-							v-tooltip="$t('task.attachment.copyUrlTooltip')"
-							:aria-label="$t('task.attachment.copyUrlTooltip')"
-							class="attachment-info-meta-button"
-							@click.stop="copyUrl(a)"
-						>
-							<Icon icon="copy" />
-						</BaseButton>
-						<BaseButton
-							v-if="editEnabled"
-							v-tooltip="$t('task.attachment.deleteTooltip')"
-							:aria-label="$t('task.attachment.deleteTooltip')"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="setAttachmentToDelete(a)"
-						>
-							<Icon icon="trash-alt" />
-						</BaseButton>
-						<BaseButton
-							v-if="editEnabled && canPreviewImage(a)"
-							v-tooltip="task.cover_image_attachment_id === a.id
-								? $t('task.attachment.unsetAsCover')
-								: $t('task.attachment.setAsCover')"
-							:aria-label="task.cover_image_attachment_id === a.id
-								? $t('task.attachment.unsetAsCover')
-								: $t('task.attachment.setAsCover')"
-							class="attachment-info-meta-button"
-							@click.prevent.stop="setCoverImage(task.cover_image_attachment_id === a.id ? null : a)"
-						>
-							<Icon :icon="task.cover_image_attachment_id === a.id ? 'eye-slash' : 'eye'" />
-						</BaseButton>
-					</p>
+						<span class="attachment-created">
+							<User
+								:user="a.created_by ?? {}"
+								:avatar-size="20"
+								:show-username="false"
+								:is-inline="true"
+							/>
+							<span
+								v-tooltip="formatDateLong(a.created)"
+								class="attachment-date"
+							>
+								{{ formatDisplayDate(a.created) }}
+							</span>
+						</span>
+						<p class="attachment-actions">
+							<BaseButton
+								v-tooltip="$t('task.attachment.downloadTooltip')"
+								:aria-label="$t('task.attachment.downloadTooltip')"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="download(a)"
+							>
+								<Icon icon="download" />
+							</BaseButton>
+							<BaseButton
+								v-tooltip="$t('task.attachment.copyUrlTooltip')"
+								:aria-label="$t('task.attachment.copyUrlTooltip')"
+								class="attachment-info-meta-button"
+								@click.stop="copyUrl(a)"
+							>
+								<Icon icon="copy" />
+							</BaseButton>
+							<BaseButton
+								v-if="editEnabled"
+								v-tooltip="$t('task.attachment.deleteTooltip')"
+								:aria-label="$t('task.attachment.deleteTooltip')"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="setAttachmentToDelete(a)"
+							>
+								<Icon icon="trash-alt" />
+							</BaseButton>
+							<BaseButton
+								v-if="editEnabled && canPreviewImage(a)"
+								v-tooltip="task.cover_image_attachment_id === a.id
+									? $t('task.attachment.unsetAsCover')
+									: $t('task.attachment.setAsCover')"
+								:aria-label="task.cover_image_attachment_id === a.id
+									? $t('task.attachment.unsetAsCover')
+									: $t('task.attachment.setAsCover')"
+								class="attachment-info-meta-button"
+								@click.prevent.stop="setCoverImage(task.cover_image_attachment_id === a.id ? null : a)"
+							>
+								<Icon :icon="task.cover_image_attachment_id === a.id ? 'eye-slash' : 'eye'" />
+							</BaseButton>
+						</p>
+					</div>
 				</div>
-			</div>
-		</div>
 
-		<XButton
-			v-if="editEnabled"
-			:aria-disabled="loading || undefined"
-			class="mbe-4"
-			icon="cloud-upload-alt"
-			variant="secondary"
-			:shadow="false"
-			@click="openFilePicker()"
-		>
-			{{ $t('task.attachment.upload') }}
-		</XButton>
+				<XButton
+					v-if="editEnabled"
+					:aria-disabled="loading || undefined"
+					class="mbe-4"
+					icon="cloud-upload-alt"
+					variant="secondary"
+					:shadow="false"
+					@click="openFilePicker()"
+				>
+					{{ $t('task.attachment.upload') }}
+				</XButton>
+			</div>
+		</Expandable>
 
 		<!-- Dropzone -->
 		<Teleport :to="dropzoneTeleportTarget">
@@ -228,12 +272,13 @@
 
 <script setup lang="ts">
 import {ref, computed, nextTick, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance} from 'vue'
-import {useDropZone} from '@vueuse/core'
+import {useDropZone, useStorage} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Loading from '@/components/misc/Loading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import Expandable from '@/components/base/Expandable.vue'
 
 import {useUploadAttachmentsMutation, useDeleteAttachmentMutation} from '@/client/queries/attachments'
 import {canPreviewAudio, canPreviewImage, previewKind, type PreviewKind} from '@/helpers/attachmentPreview'
@@ -241,7 +286,7 @@ import {getDisplayName} from '@/helpers/user'
 import type {TaskAttachment as IAttachment} from '@/client/generated'
 import type {Task as ITask} from '@/client/generated'
 
-import {formatDateLong} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {downloadAttachment, fetchAttachmentUrl, generateAttachmentUrl, releaseAttachmentUrl} from '@/helpers/attachments'
 import {downloadBlob} from '@/helpers/downloadBlob'
 import {getHumanSize} from '@/helpers/getHumanSize'
@@ -288,6 +333,16 @@ const updateTask = useUpdateTaskMutation()
 const {t} = useI18n({useScope: 'global'})
 
 const attachments = computed(() => props.task.attachments ?? [])
+
+type ViewMode = 'detailed' | 'list' | 'gallery'
+const VIEW_MODES = [
+	{value: 'detailed', icon: 'table-list', label: 'task.attachment.viewDetailed'},
+	{value: 'list', icon: 'list', label: 'task.attachment.viewList'},
+	{value: 'gallery', icon: 'th', label: 'task.attachment.viewGallery'},
+] as const satisfies readonly {value: ViewMode, icon: string, label: string}[]
+
+const collapsed = useStorage('taskAttachmentsCollapsed', false)
+const viewMode = useStorage<ViewMode>('taskAttachmentsViewMode', 'detailed')
 const uploadMutation = useUploadAttachmentsMutation()
 const deleteMutation = useDeleteAttachmentMutation()
 const uploadBatch = ref<{
@@ -429,6 +484,7 @@ function openFilePicker() {
 		return
 	}
 
+	collapsed.value = false
 	filesRef.value?.click()
 }
 
@@ -626,65 +682,304 @@ defineExpose({openFilePicker})
 	}
 }
 
-.files {
-	margin-block-end: 1rem;
-}
-
-.attachment {
-	display: grid;
-	grid-template-columns: 9rem 1fr;
-	align-items: center;
-	inline-size: 100%;
-	
-	padding: .5rem;
-	
-	transition: background-color $transition;
-	background-color: transparent;
-	
-	border: transparent;
-	border-radius: $radius;
-
-	&:hover {
-		background-color: var(--grey-200);
-	}
-}
-
-.attachment-open {
+.attachments-heading {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	inline-size: 100%;
-	min-inline-size: 0;
+	align-items: center;
+	justify-content: space-between;
+	gap: .5rem;
+}
+
+.attachments-toggle {
+	display: flex;
+	align-items: center;
+	gap: .25rem;
 	padding: 0;
 	border: 0;
 	background: transparent;
 	color: inherit;
 	font: inherit;
+	cursor: pointer;
+}
+
+.attachments-count {
+	padding: 0 .4rem;
+	border-radius: $radius;
+	background: var(--grey-200);
+	color: var(--grey-700);
+	font-size: .75rem;
+	font-weight: normal;
+}
+
+.attachments-chevron {
+	font-size: .75rem;
+	color: var(--grey-500);
+	transition: transform $transition;
+
+	&.is-collapsed {
+		transform: rotate(-90deg);
+	}
+}
+
+.view-mode-switch {
+	display: flex;
+	gap: .25rem;
+	font-size: .9rem;
+}
+
+.view-mode-button {
+	padding: .25rem .4rem;
+	border-radius: $radius;
+	color: var(--grey-500);
+
+	&:hover,
+	&.is-active {
+		color: var(--text);
+		background: var(--grey-200);
+	}
+}
+
+.files {
+	margin-block-end: 1rem;
+}
+
+.attachment {
+	border-radius: $radius;
+	transition: background-color $transition;
+
+	&:hover,
+	&:focus-within {
+		background-color: var(--grey-200);
+	}
+}
+
+// Redundant mouse-only click target; the real control is button.attachment-open.
+.preview-open {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	padding: 0;
+	border: 0;
+	border-radius: $radius;
+	background: var(--grey-100);
+	cursor: pointer;
+
+	:deep(img) {
+		block-size: 100%;
+	}
+}
+
+.attachment-info-column {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	min-inline-size: 0;
+}
+
+.attachment-open {
+	display: flex;
+	align-items: center;
+	gap: .25rem;
+	inline-size: 100%;
+	min-inline-size: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	font-weight: bold;
 	text-align: start;
 	cursor: pointer;
 }
 
 .filename {
-	display: flex;
-	align-items: center;
-	font-weight: bold;
-	min-block-size: 2rem;
-	color: var(--text);
-	text-align: start;
-	word-break: break-all;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	min-inline-size: 0;
 }
 
-.attachment-info-meta,
+.attachment-size,
+.attachment-created,
 .attachment-actions {
 	color: var(--grey-500);
-	font-size: .9rem;
+	font-size: .85rem;
+	white-space: nowrap;
+}
+
+.attachment-created {
+	display: flex;
+	align-items: center;
+	gap: .25rem;
+
+	:deep(.avatar-wrapper) {
+		margin-inline-end: 0;
+	}
 }
 
 .attachment-actions {
 	display: flex;
-	margin-block-start: .25rem;
-	margin-block-end: 0;
+	margin: 0;
+}
+
+.attachment-info-meta-button {
+	color: var(--link);
+	padding: .25rem;
+}
+
+.files.is-detailed .attachment {
+	display: grid;
+	grid-template-columns: 9rem auto 1fr;
+	grid-template-rows: auto auto auto 1fr;
+	grid-template-areas:
+		"preview name name"
+		"preview created size"
+		"preview audio audio"
+		"preview actions actions";
+	align-items: center;
+	padding: .5rem;
+
+	.preview-open {
+		grid-area: preview;
+		display: block;
+		overflow: visible;
+		inline-size: 8rem;
+		block-size: 5.2rem;
+		background: transparent;
+	}
+
+	// lets the name and audio player take their own grid areas
+	.attachment-info-column {
+		display: contents;
+	}
+
+	.attachment-open {
+		grid-area: name;
+		min-block-size: 2rem;
+	}
+
+	.filename {
+		white-space: normal;
+		word-break: break-all;
+	}
+
+	.attachment-created,
+	.attachment-size,
+	.attachment-actions {
+		font-size: .9rem;
+	}
+
+	.attachment-created {
+		grid-area: created;
+		padding-inline-end: .25rem;
+	}
+
+	.attachment-date {
+		display: none;
+	}
+
+	.attachment-size {
+		grid-area: size;
+	}
+
+	.audio-player,
+	.audio-play {
+		grid-area: audio;
+		justify-self: start;
+	}
+
+	.attachment-actions {
+		grid-area: actions;
+		align-self: start;
+		margin-block-start: .25rem;
+	}
+}
+
+.files.is-list {
+	display: grid;
+	grid-template-columns: 2.5rem minmax(0, 1fr) auto auto auto;
+	column-gap: .75rem;
+
+	.attachment {
+		display: grid;
+		grid-column: 1 / -1;
+		grid-template-columns: subgrid;
+		align-items: center;
+		padding: .25rem .5rem;
+
+		& + .attachment {
+			border-block-start: 1px solid var(--grey-200);
+		}
+	}
+
+	.preview-open {
+		inline-size: 2.5rem;
+		block-size: 2.5rem;
+
+		:deep(.icon-wrapper svg) {
+			font-size: 1.25rem;
+		}
+	}
+
+	.attachment-size {
+		text-align: end;
+	}
+
+	@media screen and (max-width: $tablet) {
+		grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+
+		.attachment-size,
+		.attachment-created {
+			display: none;
+		}
+	}
+}
+
+.files.is-gallery {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+	gap: .75rem;
+
+	.attachment {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: .25rem;
+		padding: .4rem;
+	}
+
+	.preview-open {
+		inline-size: 100%;
+		aspect-ratio: 4 / 3;
+
+		:deep(.icon-wrapper svg) {
+			font-size: 2.5rem;
+		}
+	}
+
+	.attachment-open {
+		font-size: .85rem;
+	}
+
+	.attachment-created {
+		display: none;
+	}
+
+	.attachment-actions {
+		position: absolute;
+		inset-block-start: .6rem;
+		inset-inline-end: .6rem;
+		border-radius: $radius;
+		background: var(--white);
+		box-shadow: var(--shadow-sm);
+	}
+
+	// touch devices can't hover, so they always see the actions
+	@media (hover: hover) {
+		.attachment:not(:hover, :focus-within) .attachment-actions {
+			opacity: 0;
+		}
+	}
 }
 
 .dropzone {
@@ -732,32 +1027,6 @@ defineExpose({openFilePicker})
 	}
 }
 
-.attachment-info-column {
-	display: flex;
-	flex-flow: column wrap;
-	align-self: start;
-	min-inline-size: 0;
-}
-
-.attachment-info-meta {
-	display: flex;
-	align-items: center;
-	margin-block: 0;
-
-	> span {
-		padding: 0 .25rem;
-	}
-
-	:deep(.avatar-wrapper) {
-		margin-inline-end: 0;
-	}
-}
-
-.attachment-info-meta-button {
-	color: var(--link);
-	padding: 0 .25rem;
-}
-
 @keyframes bounce {
 	0%,
 	20%,
@@ -782,26 +1051,6 @@ defineExpose({openFilePicker})
 	90% {
 		transform: translate3d(0, -4px, 0);
 	}
-}
-
-.preview-column {
-	max-inline-size: 8rem;
-	block-size: 5.2rem;
-}
-
-// Redundant mouse-only click target; the real control is button.attachment-open.
-.preview-open {
-	display: block;
-	inline-size: 100%;
-	block-size: 100%;
-	padding: 0;
-	border: 0;
-	background: transparent;
-	cursor: pointer;
-}
-
-.attachment-preview {
-	block-size: 100%;
 }
 
 .pdf-preview-iframe {
@@ -839,7 +1088,7 @@ defineExpose({openFilePicker})
 .is-task-cover {
 	background: var(--primary);
 	color: var(--white);
-	margin-inline-start: .25rem;
+	flex-shrink: 0;
 	padding: .25rem .35rem;
 	border-radius: 4px;
 	font-size: .75rem;

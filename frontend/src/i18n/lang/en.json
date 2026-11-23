@@ -1285,7 +1285,11 @@
       "usedAsCover": "Cover image",
       "play": "Play",
       "playFile": "Play {file}",
-      "audioError": "Could not play this audio file."
+      "audioError": "Could not play this audio file.",
+      "viewMode": "Attachment view",
+      "viewDetailed": "Show with large previews",
+      "viewList": "Show as list",
+      "viewGallery": "Show as gallery"
     },
     "comment": {
       "title": "Comments",
