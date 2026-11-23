@@ -140,6 +140,7 @@ func TestCallTool_UnknownTool(t *testing.T) {
 	m, ctx := newTestCaller(t)
 	_, err := m.callTool(ctx, "nope", nil)
 	require.ErrorIs(t, err, errToolNotFound)
+	assert.Contains(t, err.Error(), "your tool list")
 }
 func TestCallTool_ClientAddress(t *testing.T) {
 	m, ctx := newTestCaller(t)
