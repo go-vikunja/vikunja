@@ -103,6 +103,38 @@ func getSavedFiltersForUser(s *xorm.Session, auth web.Auth, search string) (filt
 	return
 }
 
+// SavedFilterTaskCount is the number of tasks matching one saved filter.
+type SavedFilterTaskCount struct {
+	FilterID int64 `json:"filter_id" doc:"The id of the saved filter."`
+	Count    int64 `json:"count" doc:"The number of tasks matching the filter, across every project the user can read."`
+}
+
+// GetSavedFilterTaskCounts counts the tasks matching each saved filter of the authenticated user.
+// A saved filter spans every project the user can read and its result changes with any task, so
+// there is no counter to keep up to date: each count is the total of running the filter's own
+// query, exactly what opening the filter shows.
+func GetSavedFilterTaskCounts(s *xorm.Session, a web.Auth) (counts []*SavedFilterTaskCount, err error) {
+	filters, err := getSavedFiltersForUser(s, a, "")
+	if err != nil {
+		return nil, err
+	}
+
+	counts = make([]*SavedFilterTaskCount, 0, len(filters))
+	for _, filter := range filters {
+		// Reading the pseudo-project runs the filter through the same path as opening it, which
+		// also enforces the owner-only permission check. Only the total matters, so ask for one
+		// row.
+		tc := &TaskCollection{ProjectID: getProjectIDFromSavedFilterID(filter.ID)}
+		_, _, total, err := tc.ReadAll(s, a, "", 1, 1)
+		if err != nil {
+			return nil, err
+		}
+		counts = append(counts, &SavedFilterTaskCount{FilterID: filter.ID, Count: total})
+	}
+
+	return counts, nil
+}
+
 func (sf *SavedFilter) ToProject() *Project {
 	return &Project{
 		ID:              getProjectIDFromSavedFilterID(sf.ID),

@@ -468,3 +468,48 @@ func TestStaleFilterTaskIDs(t *testing.T) {
 	assert.ElementsMatch(t, []int64{1, 3}, staleFilterTaskIDs(saved, matching))
 	assert.Empty(t, staleFilterTaskIDs(saved, taskIDSet([]*Task{{ID: 1}, {ID: 2}, {ID: 3}})))
 }
+
+func TestGetSavedFilterTaskCounts(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	counts, err := GetSavedFilterTaskCounts(s, u)
+	require.NoError(t, err)
+	require.Len(t, counts, 1, "fixtures define one saved filter for user 1")
+	assert.Equal(t, int64(1), counts[0].FilterID)
+
+	// A count is the total opening the filter shows, not a filtered subset of it.
+	tc := &TaskCollection{ProjectID: getProjectIDFromSavedFilterID(counts[0].FilterID)}
+	_, _, want, err := tc.ReadAll(s, u, "", 1, 1)
+	require.NoError(t, err)
+	assert.Equal(t, want, counts[0].Count)
+	assert.Positive(t, counts[0].Count)
+
+	t.Run("filter matching nothing counts zero", func(t *testing.T) {
+		sf := &SavedFilter{
+			Title:   "nothing",
+			Filters: &TaskCollection{Filter: "title = 'no task matches this'"},
+		}
+		require.NoError(t, sf.Create(s, u))
+
+		counts, err := GetSavedFilterTaskCounts(s, u)
+		require.NoError(t, err)
+		require.Len(t, counts, 2)
+		for _, count := range counts {
+			if count.FilterID == sf.ID {
+				assert.Zero(t, count.Count)
+				return
+			}
+		}
+		t.Fatalf("filter %d missing from counts", sf.ID)
+	})
+
+	t.Run("other users' filters are not counted", func(t *testing.T) {
+		other, err := GetSavedFilterTaskCounts(s, &user.User{ID: 2})
+		require.NoError(t, err)
+		assert.Empty(t, other)
+	})
+}

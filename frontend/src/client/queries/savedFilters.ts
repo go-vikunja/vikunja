@@ -1,6 +1,7 @@
 import {queryOptions, useMutation, type QueryClient} from '@tanstack/vue-query'
 
 import {
+	filtersCounts,
 	filtersCreate,
 	filtersDelete,
 	filtersRead,
@@ -42,6 +43,27 @@ export type UpdateSavedFilterInput = SavedFilterDraft & Pick<SavedFilterResponse
 
 export const savedFilterKeys = {
 	detail: (id: number) => ['saved-filters', 'detail', id] as const,
+	counts: () => ['saved-filters', 'counts'] as const,
+}
+
+export type SavedFilterCounts = Map<number, number>
+
+// Counts are computed per filter on the server; the sidebar asks once and shares the cache
+// between every saved filter item.
+export function savedFilterCountsQuery() {
+	return queryOptions({
+		queryKey: savedFilterKeys.counts(),
+		queryFn: async (): Promise<SavedFilterCounts> => {
+			const {data} = await filtersCounts()
+			const counts: SavedFilterCounts = new Map()
+			for (const item of data.counts ?? []) {
+				if (typeof item.filter_id === 'number' && typeof item.count === 'number') {
+					counts.set(item.filter_id, item.count)
+				}
+			}
+			return counts
+		},
+	})
 }
 
 export function newSavedFilterDraft(): SavedFilterDraft {
@@ -115,6 +137,7 @@ function updateNavigation(
 function invalidateSavedFilter(client: QueryClient, id?: number) {
 	return Promise.all([
 		client.invalidateQueries({queryKey: projectKeys.list()}),
+		client.invalidateQueries({queryKey: savedFilterKeys.counts()}),
 		...(id === undefined ? [] : [
 			client.invalidateQueries({queryKey: savedFilterKeys.detail(id)}),
 			client.invalidateQueries({queryKey: projectKeys.detail(getProjectIdFromSavedFilterId(id))}),

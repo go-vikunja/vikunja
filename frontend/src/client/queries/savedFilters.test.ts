@@ -7,6 +7,7 @@ import type {SavedFilterResponse, UpdateSavedFilterInput} from './savedFilters'
 import {queryClient} from '@/client/queryClient'
 
 const sdk = vi.hoisted(() => ({
+	filtersCounts: vi.fn(),
 	filtersCreate: vi.fn(),
 	filtersDelete: vi.fn(),
 	filtersRead: vi.fn(),
@@ -36,6 +37,7 @@ import {
 	deleteSavedFilterMutationOptions,
 	newSavedFilterDraft,
 	patchSavedFilterFavoriteMutationOptions,
+	savedFilterCountsQuery,
 	savedFilterKeys,
 	savedFilterQuery,
 	updateSavedFilterMutationOptions,
@@ -128,6 +130,24 @@ describe('saved filter queries', () => {
 			},
 			is_favorite: false,
 		})
+	})
+
+	it('maps saved filter counts by filter id and skips malformed entries', async () => {
+		sdk.filtersCounts.mockResolvedValue({
+			data: {
+				counts: [
+					{filter_id: 3, count: 12},
+					{filter_id: 4, count: 0},
+					{count: 5},
+					{filter_id: 6},
+				],
+			},
+		})
+
+		const result = await queryClient.fetchQuery(savedFilterCountsQuery())
+
+		expect(sdk.filtersCounts).toHaveBeenCalledWith()
+		expect(result).toEqual(new Map([[3, 12], [4, 0]]))
 	})
 
 	it('creates a stable draft', () => {

@@ -51,6 +51,10 @@
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
+				<span
+					v-if="savedFilterCount !== null"
+					class="project-menu-count"
+				>{{ savedFilterCount }}</span>
 			</BaseButton>
 			<BaseButton
 				v-if="canToggleFavorite"
@@ -92,6 +96,7 @@
 
 <script setup lang="ts">
 import {computed, ref, onUnmounted, watch} from 'vue'
+import {useQuery} from '@tanstack/vue-query'
 import {useProjects} from '@/composables/useProjects'
 import {useCurrentProject} from '@/composables/useCurrentProject'
 import {useTaskDragState} from '@/composables/useTaskDragState'
@@ -111,7 +116,7 @@ import {
 	isSavedFilterProject,
 	usePatchProjectFavoriteMutation,
 } from '@/client/queries/projects'
-import {usePatchSavedFilterFavoriteMutation} from '@/client/queries/savedFilters'
+import {savedFilterCountsQuery, usePatchSavedFilterFavoriteMutation} from '@/client/queries/savedFilters'
 
 const props = defineProps<{
 	project: ProjectResponse,
@@ -180,6 +185,20 @@ const projectList = useProjects()
 const projectFavoriteMutation = usePatchProjectFavoriteMutation()
 const savedFilterFavoriteMutation = usePatchSavedFilterFavoriteMutation()
 const {currentProject} = useCurrentProject()
+
+// Todoist-style counter: saved filters show how many tasks they currently match.
+const savedFilterId = computed(() => isSavedFilterProject(props.project)
+	? getSavedFilterIdFromProjectId(props.project.id)
+	: 0)
+const savedFilterCounts = useQuery(computed(() => ({
+	...savedFilterCountsQuery(),
+	enabled: savedFilterId.value > 0,
+})))
+const savedFilterCount = computed(() => {
+	if (savedFilterId.value <= 0) return null
+	const count = savedFilterCounts.data.value?.get(savedFilterId.value)
+	return typeof count === 'number' && count > 0 ? count : null
+})
 
 // Persist open state across browser reloads. Using a separate ref for the state 
 // allows us to use only one entry in local storage instead of one for every project id.
@@ -297,8 +316,18 @@ async function toggleProjectFavorite() {
 }
 
 .project-menu-title {
+	min-inline-size: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.project-menu-count {
+	flex-shrink: 0;
+	margin-inline-start: auto;
+	padding-inline-start: .5rem;
+	color: var(--grey-400);
+	font-size: .8rem;
+	font-variant-numeric: tabular-nums;
 }
 
 .saved-filter-icon {

@@ -11,6 +11,7 @@ import {
 import {kanbanKeys, type BoardData} from './kanban'
 import {totalPagesFor} from './pagination'
 import {getCachedProject} from './projects'
+import {savedFilterKeys} from './savedFilters'
 
 // Applies `update` to every cached copy of task `id` (detail, lists, boards, nested relations),
 // so a mutation response patches all mounted views without refetching them.
@@ -206,6 +207,9 @@ export async function invalidateTaskMembership(
 	await Promise.all([
 		client.invalidateQueries({queryKey: taskKeys.lists, refetchType}),
 		client.invalidateQueries({queryKey: taskKeys.allLists, refetchType}),
+		// Every saved filter spans all projects, so any membership change can move its count.
+		// Always refetch: the sidebar stays mounted, so a stale-marked count would never update.
+		client.invalidateQueries({queryKey: savedFilterKeys.counts(), refetchType: 'active'}),
 		// Refetching a board returns only the first page per bucket, so mutations patch it instead of refetching.
 		client.invalidateQueries({queryKey: kanbanKeys.all, refetchType: 'none'}),
 		...(id === undefined ? [] : [client.invalidateQueries({queryKey: [...taskKeys.details, id], refetchType})]),
