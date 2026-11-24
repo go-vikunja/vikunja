@@ -187,7 +187,7 @@ export type AdminUserSettingsBody = {
         [key: string]: unknown;
     };
     /**
-     * Arbitrary settings used only by the frontend. Any JSON value; stored and returned verbatim.
+     * Arbitrary settings used only by the frontend. A JSON object of at most 32 KiB; stored and returned verbatim.
      */
     frontend_settings?: unknown;
     /**
@@ -3759,7 +3759,7 @@ export type UserGeneralSettings = {
         [key: string]: unknown;
     };
     /**
-     * Arbitrary settings used only by the frontend. Any JSON value; stored and returned verbatim.
+     * Arbitrary settings used only by the frontend. A JSON object of at most 32 KiB; stored and returned verbatim.
      */
     frontend_settings?: unknown;
     /**
@@ -4202,7 +4202,7 @@ export type AdminUserSettingsBodyWritable = {
      */
     email_reminders_enabled?: boolean;
     /**
-     * Arbitrary settings used only by the frontend. Any JSON value; stored and returned verbatim.
+     * Arbitrary settings used only by the frontend. A JSON object of at most 32 KiB; stored and returned verbatim.
      */
     frontend_settings?: unknown;
     /**
@@ -5690,7 +5690,7 @@ export type UserGeneralSettingsWritable = {
      */
     email_reminders_enabled?: boolean;
     /**
-     * Arbitrary settings used only by the frontend. Any JSON value; stored and returned verbatim.
+     * Arbitrary settings used only by the frontend. A JSON object of at most 32 KiB; stored and returned verbatim.
      */
     frontend_settings?: unknown;
     /**

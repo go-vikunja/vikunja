@@ -241,7 +241,8 @@ func restoreDatabaseContents(dbfiles map[string]*zip.File) error {
 	migration.Migrate(nil)
 
 	// Restoring recreates the schema through xormigrate's init schema path, which marks every
-	// migration as applied - the closure table backfill never runs on the restored rows.
+	// migration as applied - the closure table backfill and the frontend settings reset never
+	// run on the restored rows.
 	s := db.NewSession()
 	defer s.Close()
 	if err := models.RebuildProjectAncestors(s); err != nil {
@@ -251,7 +252,21 @@ func restoreDatabaseContents(dbfiles map[string]*zip.File) error {
 		return fmt.Errorf("could not commit project ancestors rebuild (data is restored, run 'vikunja repair projects'): %w", err)
 	}
 
+	// Not fatal: a failure must not stop the file restore.
+	if err := resetInvalidFrontendSettings(); err != nil {
+		log.Errorf("Could not reset invalid frontend settings. Users with such a value cannot save their general settings: %s", err)
+	}
+
 	return nil
+}
+
+func resetInvalidFrontendSettings() error {
+	s := db.NewSession()
+	defer s.Close()
+	if err := models.ResetInvalidFrontendSettings(s); err != nil {
+		return err
+	}
+	return s.Commit()
 }
 
 func restoreFile(id int64, zipFile *zip.File) error {
