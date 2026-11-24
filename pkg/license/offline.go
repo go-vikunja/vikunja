@@ -39,7 +39,9 @@ const (
 	offlineWarnInterval = 24 * time.Hour
 )
 
-var embeddedPublicKeys = []string{}
+var embeddedPublicKeys = []string{
+	"82l81wrQRxRM/t1h7M1lB45y6d5YN3rk9gUuRRbLpZo=",
+}
 
 var offlinePublicKeys = mustDecodePublicKeys(embeddedPublicKeys)
 
