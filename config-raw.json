@@ -1198,7 +1198,7 @@
                 {
                     "key": "key",
                     "default_value": "",
-                    "comment": "The license key for Vikunja. If empty or absent, Vikunja runs in community mode with all non-licensed features available."
+                    "comment": "The license key for Vikunja. If empty or absent, Vikunja runs in community mode with all non-licensed features available. For instances without internet access, this can be an offline license token generated in Console for this instance's ID (shown by `vikunja license instance-id`). Offline tokens are verified locally without contacting the license server."
                 }
             ]
         }
