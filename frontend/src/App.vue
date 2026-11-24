@@ -65,6 +65,7 @@ import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {AUTH_TYPES} from '@/constants/auth'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
+import {applyDockAppOffset} from '@/composables/useDockAppOffset'
 
 import {useConfirmDeletionMutation} from '@/client/queries/accountDeletion'
 import {getSensitiveParam} from '@/helpers/sensitiveQueryParams'
@@ -97,6 +98,7 @@ const showAuthLayout = computed(() => authStore.authUser && typeof route.name ==
 const showNoAuthRoute = computed(() => typeof route.name === 'string' && AUTH_ROUTE_NAMES.has(route.name))
 
 useBodyClass('is-touch', isTouchDevice())
+applyDockAppOffset()
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
 
 const router = useRouter()

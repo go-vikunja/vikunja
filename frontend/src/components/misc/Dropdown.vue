@@ -48,6 +48,7 @@ import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import {appTopInset} from '@/composables/useDockAppOffset'
 
 defineProps({
 	triggerIcon: {type: [String, Array, Object] as PropType<IconProp>, default: 'ellipsis-h'},
@@ -79,11 +80,11 @@ function close() {
 	open.value = false
 }
 
-// Menus in a dialog render in the top layer, above the navbar.
+// Menus in a dialog render in the top layer, above the navbar, but still below a Dock app's toolbar.
 function fixedNavbarBottom(trigger: HTMLElement): number {
 	const navbar = document.querySelector<HTMLElement>('.navbar')
 	if (!navbar || trigger.closest('dialog[open]') || getComputedStyle(navbar).position !== 'fixed') {
-		return 0
+		return appTopInset()
 	}
 	return navbar.getBoundingClientRect().bottom
 }
