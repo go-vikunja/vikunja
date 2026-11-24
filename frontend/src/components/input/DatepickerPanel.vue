@@ -1,12 +1,12 @@
 <template>
 	<div
 		class="datepicker-popup"
-		:class="{'datepicker-popup--no-shortcuts': !showShortcuts}"
+		:class="{'datepicker-popup--no-shortcuts': !showShortcuts, 'datepicker-popup--compact': compact}"
 	>
 		<DatepickerInline
 			:model-value="modelValue"
 			:show-shortcuts="showShortcuts"
-			:shortcuts-layout="isMobile ? 'chips' : 'sidebar'"
+			:shortcuts-layout="isMobile || compact ? 'chips' : 'sidebar'"
 			:large="isMobile"
 			:min-date="minDate"
 			@update:modelValue="value => emit('update:modelValue', value)"
@@ -58,10 +58,12 @@ const props = withDefaults(defineProps<{
 	showShortcuts?: boolean,
 	minDate?: Date | null,
 	confirmDisabled?: boolean,
+	compact?: boolean,
 }>(), {
 	showShortcuts: true,
 	minDate: null,
 	confirmDisabled: false,
+	compact: false,
 })
 
 const emit = defineEmits<{
@@ -94,6 +96,19 @@ function confirm() {
 
 	&--no-shortcuts {
 		inline-size: 380px;
+	}
+
+	&--compact {
+		inline-size: 300px;
+
+		// One row of chips keeps the panel short enough to open beside its field.
+		:deep(.date-shortcuts--chips) {
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			// Chips sit above the calendar, unlike the desktop sidebar. Leave room for
+			// the wrapped time controls and footer in a short window.
+			padding-block: .5rem;
+		}
 	}
 
 	.bottom-sheet & {

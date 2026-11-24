@@ -56,12 +56,15 @@ const props = withDefaults(defineProps<{
 	open?: boolean
 	// Anchors the popup to `anchor` with floating-ui (flips and shifts to stay on screen).
 	placement?: Placement
+	// When neither side fits, open on the side with more room instead of the requested one.
+	preferLargerSide?: boolean
 	anchor?: HTMLElement | null
 	sheetOnMobile?: boolean
 	sheetTitle?: string
 }>(), {
 	open: false,
 	placement: undefined,
+	preferLargerSide: false,
 	anchor: null,
 	sheetOnMobile: false,
 	sheetTitle: '',
@@ -199,7 +202,10 @@ async function updatePosition() {
 		// viewport. Capping to the space below the anchor instead hid the confirm button in a tiny box.
 		middleware: [
 			offset(4),
-			flip({padding: VIEWPORT_PADDING, fallbackStrategy: 'initialPlacement'}),
+			flip({
+				padding: VIEWPORT_PADDING,
+				fallbackStrategy: props.preferLargerSide ? 'bestFit' : 'initialPlacement',
+			}),
 			shift({padding: VIEWPORT_PADDING, crossAxis: true}),
 			size({
 				padding: VIEWPORT_PADDING,
