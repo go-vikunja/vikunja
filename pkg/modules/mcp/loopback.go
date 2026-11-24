@@ -69,6 +69,10 @@ func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMess
 	if err != nil {
 		return nil, fmt.Errorf("mcp: invalid arguments for %s: %w", name, err)
 	}
+	bases, err := takeWebUIBases(args)
+	if err != nil {
+		return nil, err
+	}
 	var fields fieldTree
 	// Without a projection, fields is a body field of the route (e.g. tasks bulk update).
 	if t.spec.projection != noProjection {
@@ -94,7 +98,7 @@ func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMess
 	if err != nil {
 		return nil, err
 	}
-	return t.spec.projection.apply(fields, result), nil
+	return addWebLinks(t.op.OperationID, args, bases, t.spec.projection.apply(fields, result), result), nil
 }
 func (t *tool) newRequest(ctx context.Context, ec *echo.Context, args map[string]json.RawMessage) (*http.Request, error) {
 	caller := ec.Request()

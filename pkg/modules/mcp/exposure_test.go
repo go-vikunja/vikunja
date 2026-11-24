@@ -48,6 +48,10 @@ func TestExposure(t *testing.T) {
 			true,
 		},
 		{
+			"shares-read",
+			false,
+		},
+		{
 			"task-labels-create",
 			false,
 		},
@@ -73,7 +77,6 @@ func TestExposure(t *testing.T) {
 		"auth-login",
 		"user-show",
 		"webhooks-list",
-		"shares-read",
 		"migration-csv-migrate",
 		"task-attachments-download",
 		"admin-users-list",

@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type tool struct {
@@ -125,6 +126,12 @@ func describe(oapi *huma.OpenAPI, op *huma.Operation, spec *toolSpec) string {
 	if op.Method == http.MethodPatch {
 		s += " Only fields present in the arguments are changed."
 	}
+	if linkKindFor(op.OperationID) != "" {
+		s += " Optional web_ui_bases adds labeled URLs to web_links. Bases are supplied by the caller and used only for this call. Without bases, web_links reports missing_base_url."
+	}
+	if strings.HasPrefix(op.OperationID, "shares-") {
+		s += " Requires the corresponding projects_shares token scope and project-admin permission. Returned hashes and share URLs grant access and must be handled as secrets. Creating a share requires an explicit user request."
+	}
 	if spec.hasFormatArg() {
 		s += " " + formatArgHint
 	}
@@ -133,4 +140,18 @@ func describe(oapi *huma.OpenAPI, op *huma.Operation, spec *toolSpec) string {
 
 func (m *Module) authorized(t *tool, token *models.APIToken) bool {
 	return m.authorize(token, t.echoPath, t.op.Method)
+}
+
+func shareAnnotations(operation string) *mcp.ToolAnnotations {
+	if !strings.HasPrefix(operation, "shares-") {
+		return nil
+	}
+	destructive := operation == "shares-delete"
+	openWorld := false
+	return &mcp.ToolAnnotations{
+		ReadOnlyHint:    operation == "shares-list" || operation == "shares-read",
+		DestructiveHint: &destructive,
+		IdempotentHint:  operation != "shares-create",
+		OpenWorldHint:   &openWorld,
+	}
 }
