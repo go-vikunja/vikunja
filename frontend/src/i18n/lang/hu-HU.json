@@ -396,7 +396,7 @@
 		},
 		"deletion": {
 			"title": "Vikunja-fiókod törlése",
-			"text1": "Fiókod törlése végleges, és nem vonható vissza. Töröljük az összes projekted, feladatod és mindent, ami hozzájuk kapcsolódik.",
+			"text1": "Fiókod törlése végleges és nem vonható vissza. Töröljük az összes projekted, feladatod és mindent, ami hozzájuk kapcsolódik.",
 			"text2": "A folytatáshoz add meg jelszavad! Kapni fogsz egy e-mailt a további utasításokkal.",
 			"text3": "A folytatáshoz klikkelj az alábbi gombra! Kapni fogsz egy e-mailt a további utasításokkal.",
 			"confirm": "Fiókom törlése",
@@ -1707,7 +1707,7 @@
 		"6001": "A csapatnév nem lehet üres.",
 		"6002": "A csapat nem létezik.",
 		"6004": "A csapat már hozzáfér ehhez a projekthez.",
-		"6005": "Ez a felhasználó már tagja a csoportnak.",
+		"6005": "Ez a felhasználó már tagja a csapatnak.",
 		"6006": "Az utolsó csapattag nem törölhető.",
 		"6007": "A csapatnak nincs hozzáférése a projekthez a művelet végrehajtásához.",
 		"6008": "Nem található csapat a megadott OpenID Connect ID-vel és kibocsátóval.",
