@@ -1217,7 +1217,7 @@ func TestCaldavProppatch(t *testing.T) {
 		Responses []response `xml:"response"`
 	}
 
-	t.Run("Set properties on a collection returns 207 with a 403 propstat per property", func(t *testing.T) {
+	t.Run("Set properties on a collection returns 207 with a propstat per property", func(t *testing.T) {
 		e, _ := setupTestEnv()
 		rec, err := newCaldavTestRequestWithUser(t, e, "PROPPATCH", caldav.ProjectHandler, &testuser15, setBody, nil, map[string]string{"project": "36"})
 		require.NoError(t, err)
@@ -1231,9 +1231,9 @@ func TestCaldavProppatch(t *testing.T) {
 		require.NoError(t, xml.Unmarshal([]byte(body), &ms))
 		require.Len(t, ms.Responses, 1)
 		require.Len(t, ms.Responses[0].Propstats, 2, "one propstat per submitted property")
-		for _, ps := range ms.Responses[0].Propstats {
-			assert.Contains(t, ps.Status, "403")
-		}
+		// The refused displayname takes the settable calendar-color down with it.
+		assert.Contains(t, ms.Responses[0].Propstats[0].Status, "403")
+		assert.Contains(t, ms.Responses[0].Propstats[1].Status, "424")
 	})
 
 	t.Run("Remove properties on a collection returns 207 with a 403 propstat per property", func(t *testing.T) {
