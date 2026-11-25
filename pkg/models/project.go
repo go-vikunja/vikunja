@@ -663,7 +663,8 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 	where := builder.And(conds...)
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	query := s.Where(where).OrderBy("position")
+	// Positions tie across sibling groups; id keeps LIMIT/OFFSET pages disjoint.
+	query := s.Where(where).OrderBy("position, id")
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

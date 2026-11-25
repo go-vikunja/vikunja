@@ -210,6 +210,28 @@ function settingsMergePatch({frontend_settings: frontend, ...rest}: UserSettings
 	return patch
 }
 
+type SettingsMergePatchRequest = {
+	body: JsonPatchOp[]
+	headers: {'Content-Type': 'application/merge-patch+json'}
+	throwOnError: false
+}
+
+export async function sendSettingsMergePatch(
+	edits: UserSettingsEdits,
+	send: (request: SettingsMergePatchRequest) => Promise<{error?: unknown, response?: Response}>,
+): Promise<UserSettingsEdits> {
+	const patch = settingsMergePatch(edits)
+	const {error, response} = await send({
+		// Typed as JSON Patch only, which cannot add a key below a null frontend_settings.
+		body: patch as unknown as JsonPatchOp[],
+		headers: {'Content-Type': 'application/merge-patch+json'},
+		throwOnError: false,
+	})
+	// A patch that changes nothing gets an empty 304.
+	if (error !== undefined && response?.status !== 304) throw error
+	return patch
+}
+
 async function saveSettingsEdits(
 	{id, type, edits}: AccountIdentity & {edits: UserSettingsEdits},
 	{request}: {request: ClientRequestContext},
@@ -217,16 +239,7 @@ async function saveSettingsEdits(
 	if (request.identity?.id !== id || request.identity.type !== type) {
 		throw new DOMException('Account changed', 'AbortError')
 	}
-	const patch = settingsMergePatch(edits)
-	const {error: patchError, response} = await patchUserSettingsRead({
-		// Typed as JSON Patch only, which cannot add a key below a null frontend_settings.
-		body: patch as unknown as JsonPatchOp[],
-		headers: {'Content-Type': 'application/merge-patch+json'},
-		throwOnError: false,
-	})
-	// A patch that changes nothing gets an empty 304.
-	if (patchError !== undefined && response?.status !== 304) throw patchError
-	return patch
+	return sendSettingsMergePatch(edits, patchUserSettingsRead)
 }
 
 export function updateSettingsMutationOptions() {

@@ -136,7 +136,7 @@ async function setApiUrl() {
 }
 
 .url {
-	border-inline-end: 1px dashed var(--primary);
+	border-block-end: 1px dashed var(--primary);
 }
 
 .api-config__change-button {

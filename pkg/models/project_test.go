@@ -1083,6 +1083,38 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.NotNil(t, findByID(withoutArchived, 1),
 			"non-archived project 1 must still be present when getArchived=false")
 	})
+	t.Run("pages are stable when positions tie", func(t *testing.T) {
+		// Sibling groups recalculated to the same size get identical positions.
+		// Without a tie-breaker MySQL and Postgres order tied rows differently
+		// per page, so some projects never show up.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Where("id > 0").Cols("position").Update(&Project{Position: 1})
+		require.NoError(t, err)
+
+		all, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: true})
+		require.NoError(t, err)
+		expected := make([]int64, 0, len(all))
+		for _, p := range all {
+			expected = append(expected, p.ID)
+		}
+
+		paged := []int64{}
+		for page := 1; ; page++ {
+			ps, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: true, page: page, perPage: 3})
+			require.NoError(t, err)
+			if len(ps) == 0 {
+				break
+			}
+			for _, p := range ps {
+				paged = append(paged, p.ID)
+			}
+		}
+
+		assert.ElementsMatch(t, expected, paged)
+	})
 }
 
 func TestProject_ReadOne(t *testing.T) {

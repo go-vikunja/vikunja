@@ -1104,10 +1104,6 @@
 			"shrinkTaskRight": "Posuň koncové datum na dříve"
 		}
 	},
-	"update": {
-		"available": "K dispozici je aktualizace!",
-		"do": "Aktualizovat nyní"
-	},
 	"menu": {
 		"edit": "Upravit",
 		"archive": "Archivovat",
@@ -1145,7 +1141,6 @@
 	"quickActions": {
 		"commands": "Příkazy",
 		"placeholder": "Napište příkaz nebo vyhledávání…",
-		"hint": "Můžete použít {project} k omezení vyhledávání na projekt. Kombinujte {project} nebo {label} (štítky) s vyhledávacím dotazem pro hledání úkolu s těmito štítky nebo na tomto projektu. Použijte {assignee} pouze pro hledání týmů.",
 		"tasks": "Úkoly",
 		"projects": "Projekty",
 		"teams": "Týmy",

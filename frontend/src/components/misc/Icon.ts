@@ -75,6 +75,7 @@ import {
 	faTags,
 	faTasks,
 	faTh,
+	faTableList,
 	faTimes,
 	faTrashAlt,
 	faUser,
@@ -200,6 +201,7 @@ library.add(faTachometerAlt)
 library.add(faTags)
 library.add(faTasks)
 library.add(faTh)
+library.add(faTableList)
 library.add(faTimes)
 library.add(faTimesCircle)
 library.add(faTrashAlt)

@@ -174,7 +174,18 @@
 </template>
 
 <script setup lang="ts" generic="T extends Record<string, unknown>">
-import {computed, onBeforeUnmount, onMounted, ref, toRefs, useId, watch, type ComponentPublicInstance, type Ref} from 'vue'
+import {
+	computed,
+	nextTick,
+	onBeforeUnmount,
+	onMounted,
+	ref,
+	toRefs,
+	useId,
+	watch,
+	type ComponentPublicInstance,
+	type Ref,
+} from 'vue'
 import {autoUpdate, computePosition, flip, size} from '@floating-ui/dom'
 import {useI18n} from 'vue-i18n'
 
@@ -202,6 +213,11 @@ const props = withDefaults(defineProps<{
 	name?: string
 	/** If true, will provide an 'add this as a new value' entry which  fires an @create event when clicking on it. */
 	creatable?: boolean
+	/**
+	 * Enter selects a matching result or focuses the create option for confirmation.
+	 * Requires a synchronous search listener, such as local label filtering.
+	 */
+	confirmCreateOnEnter?: boolean
 	/** When set and `creatable` is false, shows a non-interactive hint row explaining why a non-matching query can't be added. */
 	creationDisabledMessage?: string
 	/** The text shown next to the new value option. */
@@ -232,6 +248,7 @@ const props = withDefaults(defineProps<{
 	searchResults: () => [] as T[],
 	label: '',
 	creatable: false,
+	confirmCreateOnEnter: false,
 	creationDisabledMessage: '',
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
 	selectPlaceholder: () => useI18n().t('input.multiselect.selectPlaceholder'),
@@ -604,9 +621,22 @@ function create() {
 	refocusInput()
 }
 
-function createOrSelectOnEnter() {
+async function createOrSelectOnEnter() {
 	if (ignoreNextKeyup) {
 		return
+	}
+
+	if (props.confirmCreateOnEnter) {
+		if (searchTimeout.value !== null) {
+			clearTimeout(searchTimeout.value)
+			searchTimeout.value = null
+		}
+
+		// Flush the debounced search; synchronous listeners update the result prop on the next render.
+		emit('search', query.value)
+		localLoading.value = false
+		showSearchResults.value = true
+		await nextTick()
 	}
 
 	if (!creatableAvailable.value && searchResults.value.length === 1) {
@@ -621,6 +651,15 @@ function createOrSelectOnEnter() {
 			select(exactMatch)
 		}
 
+		return
+	}
+
+	if (props.confirmCreateOnEnter) {
+		if (filteredSearchResults.value.length > 0) {
+			select(filteredSearchResults.value[0])
+		} else {
+			preSelect(0)
+		}
 		return
 	}
 
@@ -682,6 +721,7 @@ function focus() {
 		inline-size: 100%;
 		align-items: center;
 		border: none !important;
+		transition: none;
 		background: transparent;
 		block-size: auto;
 

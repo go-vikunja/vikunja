@@ -74,6 +74,7 @@ const (
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
+	ServiceRestrictSearchToExternalTeams  Key = `service.restrictsearchtoexternalteams`
 	ServiceIPExtractionMethod             Key = `service.ipextractionmethod`
 	ServiceTrustedProxies                 Key = `service.trustedproxies`
 
@@ -406,6 +407,7 @@ func initDefaultConfig() {
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
+	ServiceRestrictSearchToExternalTeams.setDefault(false)
 	ServiceIPExtractionMethod.setDefault("direct")
 	ServiceTrustedProxies.setDefault("")
 
@@ -529,7 +531,7 @@ func initDefaultConfig() {
 	// Settings
 	DefaultSettingsAvatarProvider.setDefault("initials")
 	DefaultSettingsOverdueTaskRemindersEnabled.setDefault(true)
-	DefaultSettingsOverdueTaskRemindersTime.setDefault("9:00")
+	DefaultSettingsOverdueTaskRemindersTime.setDefault("09:00")
 	// Webhook
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)
@@ -912,6 +914,11 @@ func InitConfig() {
 	} else if _, err := time.LoadLocation(tz); err != nil {
 		log.Warningf("Configured defaultsettings.timezone %q is invalid (%s), falling back to %s", tz, err, ServiceTimeZone.GetString())
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
+	}
+
+	// Older sample configs shipped "9:00"; the frontend's time input needs HH:MM.
+	if t, err := time.Parse("15:04", DefaultSettingsOverdueTaskRemindersTime.GetString()); err == nil {
+		DefaultSettingsOverdueTaskRemindersTime.Set(t.Format("15:04"))
 	}
 
 	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")

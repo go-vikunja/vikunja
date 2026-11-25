@@ -75,6 +75,17 @@
 								{{ getDisplayName(task.created_by) }}
 							</i18n-t>
 						</div>
+						<div
+							v-if="wasUpdated"
+							class="task-glance-updated"
+						>
+							<i18n-t
+								keypath="task.detail.updated"
+								scope="global"
+							>
+								<span>{{ formatDisplayDate(task.updated) }}</span>
+							</i18n-t>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -126,6 +137,9 @@ let hoverTimeout: ReturnType<typeof setTimeout> | null = null
 let describedElement: HTMLElement | null = null
 
 const taskIdentifier = computed(() => getTaskIdentifier(props.task))
+
+// The server sets updated to created on creation, so equal values mean the task was never changed.
+const wasUpdated = computed(() => +new Date(props.task.created ?? 0) !== +new Date(props.task.updated ?? 0))
 
 const descriptionPreview = computed(() => {
 	if (isEditorContentEmpty((props.task.description ?? ''))) {
@@ -327,7 +341,8 @@ onUnmounted(hide)
 	color: var(--grey-600);
 }
 
-.task-glance-created {
+.task-glance-created,
+.task-glance-updated {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;

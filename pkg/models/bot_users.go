@@ -153,7 +153,7 @@ func (b *BotUser) Delete(s *xorm.Session, a web.Auth) error {
 // getOwnedBot loads a bot in any status, so owners can manage disabled or
 // locked bots. Missing, non-bot and foreign ids are indistinguishable.
 func getOwnedBot(s *xorm.Session, id int64, owner *user.User) (*user.User, error) {
-	bot, err := loadAdminTargetUser(s, id)
+	bot, err := GetUserAsAdmin(s, id)
 	if err != nil {
 		return nil, err
 	}

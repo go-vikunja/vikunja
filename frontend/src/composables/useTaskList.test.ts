@@ -194,6 +194,9 @@ async function mountRoutedTaskList() {
 	const router = createRouter({
 		history: createMemoryHistory(),
 		routes: [{
+			path: '/projects/:projectId',
+			redirect: to => `/projects/${to.params.projectId}/${to.params.projectId}1`,
+		}, {
 			path: '/projects/:projectId/:viewId',
 			component: View,
 			props: route => ({projectId: Number(route.params.projectId), viewId: Number(route.params.viewId)}),
@@ -232,6 +235,32 @@ describe('useTaskList navigation and pagination', () => {
 		expect(router.currentRoute.value.query.sort).toBe('due_date:asc')
 		expect(taskList.sortByParam.value).toEqual({due_date: 'asc'})
 		expect(taskList.currentPage.value).toBe(page)
+	})
+
+	it('keeps the sort when re-opening the already open project via its link', async () => {
+		const {router, taskList} = await mountRoutedTaskList()
+		taskList.sortByParam.value = {due_date: 'asc'}
+		await flushPromises()
+
+		sdk.projectViewTasksList.mockClear()
+		await router.push('/projects/1')
+		await flushPromises()
+		expect(router.currentRoute.value.query.sort).toBe('due_date:asc')
+		expect(taskList.sortByParam.value).toEqual({due_date: 'asc'})
+		expect(listRequests().every(r => (r.query.sort_by as string[])[0] === 'due_date')).toBe(true)
+	})
+
+	it('keeps the default sort once the user picks it', async () => {
+		const {router, taskList} = await mountRoutedTaskList()
+		await router.push('/projects/1')
+		await flushPromises()
+		taskList.sortByParam.value = {due_date: 'asc'}
+		await flushPromises()
+
+		taskList.sortByParam.value = {position: 'asc'}
+		await flushPromises()
+		expect(router.currentRoute.value.query.sort).toBeUndefined()
+		expect(taskList.sortByParam.value).toEqual({position: 'asc'})
 	})
 
 	it('loads a restored saved query once and never with the pre-restore params', async () => {

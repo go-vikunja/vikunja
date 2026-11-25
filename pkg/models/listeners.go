@@ -429,6 +429,14 @@ func registerEventsForAuditLogging() {
 			Target: audit.UserTarget(e.User.ID),
 		}
 	})
+	audit.RegisterEventForAudit(func(e *AdminUserSettingsUpdatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionAdminUserSettingsUpdated,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.UserTarget(e.User.ID),
+			Metadata: map[string]any{"changed_fields": e.ChangedFields},
+		}
+	})
 	audit.RegisterEventForAudit(func(e *AdminUserPasswordResetSentEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionAdminUserPasswordResetSent,

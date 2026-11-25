@@ -3,9 +3,13 @@ import {shallowMount, flushPromises} from '@vue/test-utils'
 import {createPinia, setActivePinia} from 'pinia'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
+import {createI18n} from 'vue-i18n'
+import type {Directive} from 'vue'
 
 import {normalizeTask, type TaskResponse} from '@/client/queries/tasks'
 import {ApiError} from '@/client/problem'
+import {formatDateLong} from '@/helpers/time/formatDate'
+import langEN from '@/i18n/lang/en.json'
 
 const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
@@ -22,6 +26,12 @@ const attachments = vi.hoisted(() => ({
 }))
 
 vi.mock('@/helpers/attachments', () => attachments)
+
+const frontendSettings = vi.hoisted(() => ({show_kanban_card_updated: true}))
+
+vi.mock('@/stores/auth', () => ({
+	useAuthStore: () => ({settings: {frontend_settings: frontendSettings}}),
+}))
 
 import KanbanCard from './KanbanCard.vue'
 
@@ -72,7 +82,28 @@ const taskWithCover = normalizeTask({
 	],
 })
 
+const neverChangedTask = normalizeTask({
+	id: 9,
+	project_id: 1,
+	title: 'Never changed',
+	created: '2024-01-01T10:00:00Z',
+	updated: '2024-01-01T10:00:00Z',
+	created_by: {id: 1, username: 'test', name: 'Test User'},
+})
+
+const changedTask = normalizeTask({
+	...neverChangedTask,
+	updated: '2024-01-05T10:00:00Z',
+})
+
 const errorHandler = vi.fn()
+
+// Keeps the tooltip content readable in the DOM, since the real directive renders it only on hover.
+const tooltip: Directive<HTMLElement, string | {content: string}> = {
+	mounted(el, {value}) {
+		el.dataset.tooltip = typeof value === 'string' ? value : value.content
+	},
+}
 
 function mountCard(task: TaskResponse) {
 	const router = createRouter({
@@ -86,7 +117,13 @@ function mountCard(task: TaskResponse) {
 				createPinia(),
 				router,
 				[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}],
+				createI18n({
+					legacy: false,
+					locale: 'en',
+					messages: {en: langEN},
+				}),
 			],
+			directives: {tooltip},
 			mocks: {$t: (key: string) => key},
 			config: {errorHandler},
 		},
@@ -100,6 +137,7 @@ describe('KanbanCard', () => {
 		attachments.fetchAttachmentUrl.mockReset()
 		attachments.releaseAttachmentUrl.mockReset()
 		errorHandler.mockReset()
+		frontendSettings.show_kanban_card_updated = true
 		FakeIntersectionObserver.instances = []
 		vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver)
 	})
@@ -285,6 +323,35 @@ describe('KanbanCard', () => {
 		await vi.runAllTimersAsync()
 
 		expect(attachments.fetchAttachmentUrl).toHaveBeenCalledOnce()
+	})
+
+	it('hides the last change when the user setting is off', () => {
+		frontendSettings.show_kanban_card_updated = false
+		const wrapper = mountCard(changedTask)
+
+		expect(wrapper.find('.updated').exists()).toBe(false)
+	})
+
+	it('labels a task that was never changed with its creation', () => {
+		const wrapper = mountCard(neverChangedTask)
+		const updated = wrapper.get('.updated')
+
+		expect(updated.get('.is-sr-only').text()).toBe('Created')
+		expect(updated.get('time').attributes('datetime')).toBe('2024-01-01T10:00:00.000Z')
+		expect(updated.attributes('data-tooltip'))
+			.toBe(`Created ${formatDateLong('2024-01-01T10:00:00Z')} by Test User`)
+	})
+
+	it('shows the last change and the creation of a changed task', () => {
+		const wrapper = mountCard(changedTask)
+		const updated = wrapper.get('.updated')
+
+		expect(updated.get('.is-sr-only').text()).toBe('Updated')
+		expect(updated.get('time').attributes('datetime')).toBe('2024-01-05T10:00:00.000Z')
+		expect(updated.attributes('data-tooltip')).toBe([
+			`Updated ${formatDateLong('2024-01-05T10:00:00Z')}`,
+			`Created ${formatDateLong('2024-01-01T10:00:00Z')} by Test User`,
+		].join('\n'))
 	})
 
 	it('stops watching for visibility when it is unmounted', async () => {

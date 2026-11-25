@@ -519,6 +519,12 @@ const router = createRouter({
 					component: () => import('@/views/admin/UsersView.vue'),
 				},
 				{
+					path: 'users/:id(\\d+)/settings',
+					name: 'admin.userSettings',
+					component: () => import('@/views/admin/UserSettingsView.vue'),
+					props: route => ({userId: Number(route.params.id as string)}),
+				},
+				{
 					path: 'projects',
 					name: 'admin.projects',
 					component: () => import('@/views/admin/ProjectsView.vue'),
@@ -560,13 +566,13 @@ export async function getAuthForRoute(to: RouteLocation, authStore: {
 			await authStore.refreshUserInfo()
 			if (hadPending && !authStore.info?.pending_email) {
 				success({message: i18n.global.t('user.settings.updateEmailConfirmed')})
-				return {name: 'user.settings.email-update'}
+				return {name: 'user.settings.email-update', hash: ''}
 			}
 		} catch (e) {
 			// Keep the original API error code for translation.
 			error((e as {cause?: unknown})?.cause ?? e)
 		}
-		return {name: 'home'}
+		return {name: 'home', hash: ''}
 	}
 
 	if (authStore.authUser || authStore.authLinkShare) {

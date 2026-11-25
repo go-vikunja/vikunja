@@ -70,11 +70,12 @@ func TestParseDumpTime(t *testing.T) {
 }
 
 type dumpRestoreTest struct {
-	ID      int64     `xorm:"autoincr not null unique pk"`
-	Title   string    `xorm:"varchar(250)"`
-	Created time.Time `xorm:"not null"`
-	Updated time.Time `xorm:""`
-	Done    bool      `xorm:"bool default false"`
+	ID        int64     `xorm:"autoincr not null unique pk"`
+	Title     string    `xorm:"varchar(250)"`
+	TokenHash string    `xorm:"varchar(250) null unique"`
+	Created   time.Time `xorm:"not null"`
+	Updated   time.Time `xorm:""`
+	Done      bool      `xorm:"bool default false"`
 }
 
 func TestRestore(t *testing.T) {
@@ -139,6 +140,48 @@ func TestRestore(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, has)
 		assert.False(t, notDone.Done)
+	})
+
+	t.Run("empty string in nullable unique column restored as null (#4350)", func(t *testing.T) {
+		err := RestoreAndTruncate("dump_restore_test", []map[string]interface{}{
+			{
+				"id":         int64(6),
+				"title":      "token1",
+				"token_hash": "",
+				"created":    "2026-03-27T11:27:01Z",
+			},
+			{
+				"id":         int64(7),
+				"title":      "token2",
+				"token_hash": "",
+				"created":    "2026-03-27T11:27:01Z",
+			},
+			{
+				"id":         int64(8),
+				"title":      "token3",
+				"token_hash": "populated-hash",
+				"created":    "2026-03-27T11:27:01Z",
+			},
+		})
+		require.NoError(t, err)
+
+		row1 := &dumpRestoreTest{ID: 6}
+		has, err := engine.Get(row1)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Empty(t, row1.TokenHash)
+
+		row2 := &dumpRestoreTest{ID: 7}
+		has, err = engine.Get(row2)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Empty(t, row2.TokenHash)
+
+		row3 := &dumpRestoreTest{ID: 8}
+		has, err = engine.Get(row3)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.Equal(t, "populated-hash", row3.TokenHash)
 	})
 
 	t.Run("invalid time value", func(t *testing.T) {

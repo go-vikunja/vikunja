@@ -97,6 +97,12 @@ func (c *Config) TaskURL(id int64) string {
 	return strings.TrimRight(base, "/") + "/tasks/" + strconv.FormatInt(id, 10)
 }
 
+// AttachmentURL is the image src the web editor recognizes and loads with the
+// viewer's auth; the raw endpoint needs auth, so any other form renders broken.
+func (c *Config) AttachmentURL(taskID, attachmentID int64) string {
+	return fmt.Sprintf("%s/api/v2/tasks/%d/attachments/%d", strings.TrimRight(c.Server, "/"), taskID, attachmentID)
+}
+
 // Find walks upward from cwd looking for .veans.yml. Returns ErrNotFound if
 // none is reachable.
 func Find(start string) (string, error) {

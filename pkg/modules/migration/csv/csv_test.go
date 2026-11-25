@@ -511,6 +511,49 @@ func TestConvertToVikunja(t *testing.T) {
 	assert.Equal(t, 1, tasksProject.numTasks, "Tasks project should have 1 task")
 }
 
+func TestConvertToVikunjaSingleMappedProject(t *testing.T) {
+	config := ImportConfig{
+		Mapping: []ColumnMapping{
+			{ColumnIndex: 0, Attribute: AttrTitle},
+			{ColumnIndex: 1, Attribute: AttrProject},
+		},
+	}
+	rc, err := newRowConverter(&config)
+	require.NoError(t, err)
+
+	t.Run("keeps the mapped project name", func(t *testing.T) {
+		result, err := rc.convert([][]string{
+			{"Task 1", "Groceries"},
+			{"Task 2", "Groceries"},
+		})
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "Groceries", result[0].Title)
+		assert.Len(t, result[0].Tasks, 2)
+	})
+
+	t.Run("falls back when every project cell is empty", func(t *testing.T) {
+		result, err := rc.convert([][]string{
+			{"Task 1", ""},
+			{"Task 2", " "},
+		})
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "Imported from CSV", result[0].Title)
+		assert.Len(t, result[0].Tasks, 2)
+	})
+
+	t.Run("mixed named and empty cells create sub-projects", func(t *testing.T) {
+		result, err := rc.convert([][]string{
+			{"Task 1", "Groceries"},
+			{"Task 2", ""},
+		})
+		require.NoError(t, err)
+		require.Len(t, result, 3)
+		assert.Equal(t, "Imported from CSV", result[0].Title)
+	})
+}
+
 func TestRowToTask(t *testing.T) {
 	row := []string{"My Task", "Task description", "2024-01-15", "high", "work, urgent"}
 

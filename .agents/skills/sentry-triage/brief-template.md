@@ -10,7 +10,7 @@ Resource limits, other agents share this machine: backend tests only via `mage t
 
 ## Sentry: <cluster title>
 
-Org `vikunja`, region `https://us.sentry.io`, project `<project>`. Use `mcp__sentry__get_sentry_resource` on each issue, then via `mcp__sentry__search_sentry_tools` + `mcp__sentry__execute_sentry_tool` use `search_issue_events`, `get_issue_tag_values` (release, browser, url) and replays. Minified frame context is in the events; map it to source by the surrounding identifiers.
+Org `vikunja`, region `https://us.sentry.io`, project `<project>`. Use `mcp__sentry__get_sentry_resource` on each issue, then `mcp__sentry__search_issue_events`, `mcp__sentry__get_issue_tag_values` (release, browser, url) and replays. Minified frame context is in the events; map it to source by the surrounding identifiers.
 
 Issues:
 - <ID> (<n> events, `<route>`, last seen <date>): `<exact message>`

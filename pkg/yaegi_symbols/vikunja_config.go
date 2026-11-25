@@ -193,6 +193,7 @@ func init() {
 		"ServiceMaxItemsPerPage":                     reflect.ValueOf(config.ServiceMaxItemsPerPage),
 		"ServiceMotd":                                reflect.ValueOf(config.ServiceMotd),
 		"ServicePublicURL":                           reflect.ValueOf(config.ServicePublicURL),
+		"ServiceRestrictSearchToExternalTeams":       reflect.ValueOf(config.ServiceRestrictSearchToExternalTeams),
 		"ServiceRootpath":                            reflect.ValueOf(config.ServiceRootpath),
 		"ServiceSecret":                              reflect.ValueOf(config.ServiceSecret),
 		"ServiceTestingtoken":                        reflect.ValueOf(config.ServiceTestingtoken),

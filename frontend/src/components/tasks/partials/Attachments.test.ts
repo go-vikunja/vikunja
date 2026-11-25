@@ -343,3 +343,47 @@ describe('Attachments upload', () => {
 		await flushPromises()
 	})
 })
+
+describe('Attachments layout', () => {
+	afterEach(() => localStorage.clear())
+
+	it('hides the attachments and remembers it when collapsed', async () => {
+		const wrapper = mountAttachments()
+		await flushPromises()
+
+		const toggle = wrapper.find('.attachments-toggle')
+		expect(toggle.attributes('aria-expanded')).toBe('true')
+
+		await toggle.trigger('click')
+		await flushPromises()
+
+		expect(toggle.attributes('aria-expanded')).toBe('false')
+		expect(wrapper.find('.attachment').exists()).toBe(false)
+		expect(localStorage.getItem('taskAttachmentsCollapsed')).toBe('true')
+	})
+
+	it('expands again when the file picker opens', async () => {
+		localStorage.setItem('taskAttachmentsCollapsed', 'true')
+		const wrapper = mountAttachments()
+		await flushPromises()
+		expect(wrapper.find('.attachment').exists()).toBe(false)
+
+		wrapper.findComponent(Attachments).vm.openFilePicker()
+		await flushPromises()
+
+		expect(wrapper.find('.attachment').exists()).toBe(true)
+	})
+
+	it('switches between the detailed, list and gallery views', async () => {
+		const wrapper = mountAttachments()
+		await flushPromises()
+		expect(wrapper.find('.files').classes()).toContain('is-detailed')
+
+		await wrapper.find('[aria-label="task.attachment.viewList"]').trigger('click')
+		expect(wrapper.find('.files').classes()).toContain('is-list')
+
+		await wrapper.find('[aria-label="task.attachment.viewGallery"]').trigger('click')
+		expect(wrapper.find('.files').classes()).toContain('is-gallery')
+		expect(localStorage.getItem('taskAttachmentsViewMode')).toBe('gallery')
+	})
+})

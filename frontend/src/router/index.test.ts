@@ -85,7 +85,7 @@ describe('getAuthForRoute email confirmation', () => {
 
 		expect(authStore.verifyEmail).toHaveBeenCalledWith('token-123')
 		expect(localStorage.getItem('emailConfirmToken')).toBeNull()
-		expect(result).toEqual({name: 'user.settings.email-update'})
+		expect(result).toEqual({name: 'user.settings.email-update', hash: ''})
 		expect(success).toHaveBeenCalledOnce()
 	})
 
@@ -111,7 +111,7 @@ describe('getAuthForRoute email confirmation', () => {
 
 		const result = await getAuthForRoute(route({userEmailConfirm: 'token-123'}), authStore)
 
-		expect(result).toEqual({name: 'home'})
+		expect(result).toEqual({name: 'home', hash: ''})
 		expect(success).not.toHaveBeenCalled()
 	})
 
@@ -123,7 +123,7 @@ describe('getAuthForRoute email confirmation', () => {
 
 		const result = await getAuthForRoute(route({userEmailConfirm: 'token-123'}), authStore)
 
-		expect(result).toEqual({name: 'home'})
+		expect(result).toEqual({name: 'home', hash: ''})
 		expect(error).toHaveBeenCalledWith(cause)
 	})
 
@@ -149,6 +149,21 @@ describe('getAuthForRoute account tokens in the fragment', () => {
 		await getAuthForRoute(route({}, '#userEmailConfirm=token-123'), authStore)
 
 		expect(authStore.verifyEmail).toHaveBeenCalledWith('token-123')
+	})
+
+	it.each([
+		['succeeds', {}],
+		['fails', {verifyEmail: vi.fn().mockRejectedValue(new Error('invalid token'))}],
+	])('does not carry the token into the redirect when redeeming %s', async (_, overrides) => {
+		const authStore = authStoreStub(overrides)
+		const to = route({}, '#userEmailConfirm=token-123')
+
+		const result = await getAuthForRoute(to, authStore) as {name: string, hash?: string}
+		// Mirrors how router.beforeEach builds the redirect (#4448).
+		const next = {hash: to.hash, ...result}
+		await getAuthForRoute(route({}, next.hash, next.name), authStore)
+
+		expect(authStore.verifyEmail).toHaveBeenCalledOnce()
 	})
 
 	it('stores an email confirmation token for the login page', async () => {

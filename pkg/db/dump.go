@@ -78,6 +78,45 @@ func Dump() (data map[string][]byte, err error) {
 	return
 }
 
+// nullableUniqueColumns returns the lowercased column names that are part of a
+// unique index and are nullable. It looks at both the database metadata and the
+// table info from the registered xorm beans because the two can disagree for
+// restores from dumps made on a different engine.
+func addUniqueNullableColumns(cols map[string]bool, t *schemas.Table) {
+	for _, index := range t.Indexes {
+		if index.Type != schemas.UniqueType {
+			continue
+		}
+		for _, colInIndex := range index.Cols {
+			c := t.GetColumn(colInIndex)
+			if c != nil && c.Nullable {
+				cols[strings.ToLower(colInIndex)] = true
+			}
+		}
+	}
+}
+
+func nullableUniqueColumns(table string, meta []*schemas.Table) map[string]bool {
+	cols := make(map[string]bool)
+
+	for _, m := range meta {
+		if m.Name == table {
+			addUniqueNullableColumns(cols, m)
+			break
+		}
+	}
+
+	for _, bean := range registeredTables {
+		tableInfo, err := x.TableInfo(bean)
+		if err == nil && tableInfo.Name == table {
+			addUniqueNullableColumns(cols, tableInfo)
+			break
+		}
+	}
+
+	return cols
+}
+
 // Restore restores a table with all its entries
 func Restore(table string, contents []map[string]interface{}) (err error) {
 	if err := validateTableName(table); err != nil {
@@ -105,6 +144,8 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 		log.Fatalf("Could not find table definition for table %s", table)
 	}
 
+	uniqueNullableCols := nullableUniqueColumns(table, meta)
+
 	for _, content := range contents {
 		for colName, value := range content {
 			col := metaForCurrentTable.GetColumn(colName)
@@ -123,7 +164,19 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 			}
 
 			strVal, is := value.(string)
-			if !is || !col.SQLType.IsTime() {
+			if !is {
+				continue
+			}
+
+			// Empty strings in nullable unique columns were written as "" by dump (or older dumps)
+			// from SQL NULL. Inserting multiple "" into a unique column fails with a UNIQUE constraint
+			// violation. Restore them as nil so they become SQL NULL.
+			if strVal == "" && uniqueNullableCols[strings.ToLower(colName)] {
+				content[colName] = nil
+				continue
+			}
+
+			if !col.SQLType.IsTime() {
 				continue
 			}
 

@@ -18,13 +18,11 @@ package commands
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"code.vikunja.io/veans/internal/client"
-	"code.vikunja.io/veans/internal/output"
 	"code.vikunja.io/veans/internal/status"
 )
 
@@ -35,16 +33,22 @@ type createFlags struct {
 	labels      []string
 	parent      string
 	blockedBy   []string
+	attach      []string
 }
 
 func newCreateCmd() *cobra.Command {
 	f := &createFlags{}
+	var fieldsRaw string
 	cmd := &cobra.Command{
 		Use:     "create <title>",
 		Aliases: []string{"c"},
 		Short:   "Create a new task",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fields, err := parseFields(fieldsRaw)
+			if err != nil {
+				return err
+			}
 			rt, err := loadRuntime(cmd.Context())
 			if err != nil {
 				return err
@@ -53,8 +57,7 @@ func newCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			rt.withURLs(task)
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
+			return rt.printTask(cmd.OutOrStdout(), fields, task)
 		},
 	}
 	cmd.Flags().StringVarP(&f.description, "description", "d", "", "task description (HTML; see `veans prime` for canonical TipTap shapes)")
@@ -63,6 +66,8 @@ func newCreateCmd() *cobra.Command {
 	cmd.Flags().StringSliceVar(&f.labels, "label", nil, "labels to attach (repeatable; veans: prefix added if missing)")
 	cmd.Flags().StringVar(&f.parent, "parent", "", "parent task ID (creates parenttask relation)")
 	cmd.Flags().StringSliceVar(&f.blockedBy, "blocked-by", nil, "task IDs that block this one (repeatable)")
+	addAttachFlag(cmd, &f.attach)
+	addFieldsFlag(cmd, &fieldsRaw)
 	return cmd
 }
 
@@ -73,6 +78,21 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 	}
 	bucketID, err := status.BucketID(st, rt.cfg.Buckets)
 	if err != nil {
+		return nil, err
+	}
+
+	// Resolve refs first so a typo fails before anything is created.
+	var parentID int64
+	if f.parent != "" {
+		if parentID, err = rt.resolveTaskID(ctx, f.parent); err != nil {
+			return nil, err
+		}
+	}
+	blockerIDs, err := resolveRefs(ctx, rt, f.blockedBy)
+	if err != nil {
+		return nil, err
+	}
+	if err := checkAttachPaths(f.attach); err != nil {
 		return nil, err
 	}
 
@@ -88,48 +108,49 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 		return nil, err
 	}
 
-	// Vikunja places newly-created tasks in the view's default bucket
-	// regardless of bucket_id in the create payload — move it explicitly
-	// when the requested status isn't Todo.
+	progress := &steps{task: rt.cfg.FormatTaskID(created.Index), completed: []string{"create"}}
+
+	// Recent servers honor bucket_id on create; older ones put the task in
+	// the default bucket, so move explicitly.
 	if st != status.Todo {
 		if err := rt.client.MoveTaskToBucket(ctx,
 			rt.cfg.ProjectID, rt.cfg.ViewID, bucketID, created.ID); err != nil {
-			return nil, output.Wrap(output.CodeUnknown, err, "set initial bucket: %v", err)
+			return nil, progress.fail("set bucket", err)
 		}
+		progress.done("set bucket")
 	}
 
-	// Attach labels (lazily creating them under veans: namespace).
 	for _, raw := range f.labels {
 		title := normalizeLabelTitle(raw)
+		step := "label " + title
 		l, err := getOrCreateLabelByTitle(ctx, rt.client, title)
 		if err != nil {
-			return nil, output.Wrap(output.CodeUnknown, err, "label %q: %v", title, err)
+			return nil, progress.fail(step, err)
 		}
 		if err := rt.client.AddLabelToTask(ctx, created.ID, l.ID); err != nil {
-			return nil, err
+			return nil, progress.fail(step, err)
 		}
+		progress.done(step)
 	}
 
-	// Parent relation.
 	if f.parent != "" {
-		parentID, err := rt.resolveTaskID(ctx, f.parent)
-		if err != nil {
-			return nil, err
-		}
+		step := "parent " + f.parent
 		if _, err := rt.client.CreateRelation(ctx, created.ID, parentID, "parenttask"); err != nil {
-			return nil, err
+			return nil, progress.fail(step, err)
 		}
+		progress.done(step)
 	}
 
-	// Blocked-by relations.
-	for _, ref := range f.blockedBy {
-		blockerID, err := rt.resolveTaskID(ctx, ref)
-		if err != nil {
-			return nil, err
+	for i, ref := range f.blockedBy {
+		step := "blocked-by " + ref
+		if _, err := rt.client.CreateRelation(ctx, created.ID, blockerIDs[i], "blocked"); err != nil {
+			return nil, progress.fail(step, err)
 		}
-		if _, err := rt.client.CreateRelation(ctx, created.ID, blockerID, "blocked"); err != nil {
-			return nil, err
-		}
+		progress.done(step)
+	}
+
+	if err := attachFiles(ctx, rt, created.ID, f.attach, progress); err != nil {
+		return nil, err
 	}
 
 	// Re-fetch so the response reflects the labels and any post-create state.

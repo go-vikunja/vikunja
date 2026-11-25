@@ -41,7 +41,7 @@ type TaskPosition struct {
 	// The ID of the task this position is for
 	TaskID int64 `xorm:"bigint not null index unique(task_view)" json:"task_id" param:"task" readOnly:"true" doc:"The numeric id of the task this position belongs to. Taken from the URL; ignored in the request body."`
 	// The project view this task is related to
-	ProjectViewID int64 `xorm:"bigint not null index unique(task_view) index(view_position)" json:"project_view_id" doc:"The id of the project view this position applies to. Positions are stored per view, so the same task has an independent position in each of its project's views."`
+	ProjectViewID int64 `xorm:"bigint not null index unique(task_view) index(view_position)" json:"project_view_id" doc:"The id of the project view this position applies to. Positions are stored per view, so the same task has an independent position in each of its project's views. A view of an ancestor project (except kanban) is accepted too, for tasks listed there through include_subprojects."`
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
 	// We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
@@ -109,7 +109,16 @@ func taskFitsView(s *xorm.Session, a web.Auth, view *ProjectView, taskID int64) 
 	if err != nil {
 		return false, err
 	}
-	return view.ProjectID == task.ProjectID, nil
+	if view.ProjectID == task.ProjectID {
+		return true, nil
+	}
+
+	// include_subprojects lists descendants' tasks in the parent's views, except kanban,
+	// where they have no bucket.
+	if view.ViewKind == ProjectViewKindKanban {
+		return false, nil
+	}
+	return s.Exist(&ProjectAncestor{AncestorID: view.ProjectID, ProjectID: task.ProjectID})
 }
 
 // Reuse fetch matching so relative dates use the saved filter owner's timezone.
@@ -435,6 +444,18 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 
 	for _, p := range projects {
 		opts.projectIDs = append(opts.projectIDs, p.ID)
+	}
+
+	if view.ProjectID > 0 && view.ViewKind != ProjectViewKindKanban {
+		// Ignores access so the rows do not depend on who triggers the recalc.
+		descendantIDs, err := subtreeIDs(s, view.ProjectID, builder.And(
+			builder.Gt{"project_ancestors.depth": 0},
+			builder.IsNull{"projects.deleted_at"},
+		))
+		if err != nil {
+			return err
+		}
+		opts.projectIDs = append(opts.projectIDs, descendantIDs...)
 	}
 
 	dbSearcher := &dbTaskSearcher{
@@ -787,11 +808,11 @@ func DeleteOrphanedTaskPositions(s *xorm.Session, dryRun bool) (count int64, err
 	return s.Where(whereClause).Delete(&TaskPosition{})
 }
 
-// ensureTaskPositionsForSavedFilterView creates position rows for all tasks matching a saved
-// filter which don't have one in its view yet. This must run before the fetch query: healing
+// ensureTaskPositionsForView creates position rows in view for all tasks of projects matching
+// the filter which don't have one there yet. This must run before the fetch query: healing
 // afterwards means the query sorts fresh matches last (NULL position) and they jump to the top
 // on the next fetch once the position row exists.
-func ensureTaskPositionsForSavedFilterView(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (err error) {
+func ensureTaskPositionsForView(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions) (err error) {
 	if len(projects) == 0 {
 		return nil
 	}

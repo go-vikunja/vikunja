@@ -1,8 +1,11 @@
 name: Set review turn labels
 
 on:
-  # pull_request_review runs get a read-only token on fork PRs, so maintainer
-  # reviews are picked up by polling.
+  # pull_request_review runs get a read-only token on fork PRs, so reviews
+  # arrive via workflow_run from review-turn-trigger.yml. Cron is the fallback.
+  workflow_run:
+    workflows: [Review turn trigger]
+    types: [completed]
   schedule:
     - cron: '0 * * * *'
   workflow_dispatch:

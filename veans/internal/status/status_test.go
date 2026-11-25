@@ -55,11 +55,11 @@ func TestParse(t *testing.T) {
 }
 
 func TestDoneFlag(t *testing.T) {
-	if !Completed.Done() || !Scrapped.Done() {
-		t.Fatal("Completed/Scrapped should be done")
+	if !Completed.Done() {
+		t.Fatal("Completed should be done")
 	}
-	if Todo.Done() || InProgress.Done() || InReview.Done() {
-		t.Fatal("Todo/InProgress/InReview should not be done")
+	if Todo.Done() || InProgress.Done() || InReview.Done() || Scrapped.Done() {
+		t.Fatal("Todo/InProgress/InReview/Scrapped should not be done")
 	}
 }
 

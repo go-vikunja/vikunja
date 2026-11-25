@@ -1,4 +1,11 @@
 import {test, expect} from '../../support/fixtures'
+import {updateUserSettings} from '../../support/updateUserSettings'
+
+test.beforeEach(async ({apiContext, userToken}) => {
+	await updateUserSettings(apiContext, userToken, {
+		frontend_settings: {filter_editor_mode: 'advanced'},
+	})
+})
 
 test.describe('Filter Date Picker', () => {
 	test('opens on a date value, moves to the next one and closes on an outside click', async ({authenticatedPage: page}) => {

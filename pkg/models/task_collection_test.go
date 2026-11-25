@@ -31,6 +31,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"gopkg.in/d4l3k/messagediff.v1"
+	"xorm.io/builder"
+	"xorm.io/xorm"
 )
 
 // To only run a selected tests: ^\QTestTaskCollection_ReadAll\E$/^\QReadAll_Tasks_with_range\E$
@@ -2795,4 +2797,58 @@ func TestTaskCollection_ReadAll_IncludeSubprojectsIgnoredInKanban(t *testing.T) 
 	require.NoError(t, err)
 
 	assert.False(t, c.IncludeSubprojects, "the flag must be cleared for a kanban view")
+}
+
+func TestTaskCollection_ReadAll_IncludeSubprojectsPositions(t *testing.T) {
+	readIDs := func(t *testing.T, s *xorm.Session, c *TaskCollection) []int64 {
+		res, _, _, err := c.ReadAll(s, &user.User{ID: 6}, "", 0, 50)
+		require.NoError(t, err)
+		tasks, ok := res.([]*Task)
+		require.True(t, ok)
+		ids := make([]int64, 0, len(tasks))
+		for _, task := range tasks {
+			ids = append(ids, task.ID)
+		}
+		return ids
+	}
+
+	t.Run("heals a row in the parent's view only", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TaskPosition{TaskID: 24, ProjectViewID: 57, Position: 777})
+		require.NoError(t, err)
+
+		readIDs(t, s, &TaskCollection{ProjectID: 32, ProjectViewID: 125, IncludeSubprojects: true})
+		require.NoError(t, s.Commit())
+
+		db.AssertCount(t, "task_positions", builder.Eq{"task_id": 24, "project_view_id": 125}, 1)
+		db.AssertExists(t, "task_positions", map[string]interface{}{"task_id": 24, "project_view_id": 57, "position": 777}, false)
+		db.AssertCount(t, "task_positions", builder.Eq{"task_id": 24, "project_view_id": 58}, 0)
+	})
+
+	t.Run("sorts by the parent view's positions", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert([]*TaskPosition{
+			{TaskID: 21, ProjectViewID: 125, Position: 300},
+			{TaskID: 24, ProjectViewID: 125, Position: 100},
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, []int64{24, 21}, readIDs(t, s, &TaskCollection{
+			ProjectID:          32,
+			ProjectViewID:      125,
+			IncludeSubprojects: true,
+			SortBy:             []string{"position"},
+		}), "explicit position sort")
+		assert.Equal(t, []int64{24, 21}, readIDs(t, s, &TaskCollection{
+			ProjectID:          32,
+			ProjectViewID:      125,
+			IncludeSubprojects: true,
+		}), "default position sort")
+	})
 }

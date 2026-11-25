@@ -156,6 +156,7 @@
         "playSoundWhenDone": "Play a sound when marking tasks as done",
         "allowIconChanges": "Show special logos during certain times",
         "alwaysShowBucketTaskCount": "Always show task count on Kanban buckets",
+        "showKanbanCardUpdated": "Show when a task was last changed on Kanban cards",
         "defaultTaskRelationType": "Default task relation type",
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",
@@ -668,6 +669,7 @@
       "bucketConfig": "Bucket configuration",
       "bucketConfigManual": "Manual",
       "filter": "Filter",
+      "bucketFilter": "Filter for {title}",
       "create": "Create view",
       "createSuccess": "The view was created successfully.",
       "titleRequired": "Please provide a title.",
@@ -683,6 +685,22 @@
     }
   },
   "filters": {
+    "modes": {
+      "simple": "Simple",
+      "advanced": "Advanced",
+      "tooAdvanced": "This filter is too advanced for Simple mode.",
+      "clear": "Clear and use Simple"
+    },
+    "simple": {
+      "showDone": "Show completed tasks",
+      "minPriority": "Minimum priority",
+      "search": "Search tasks",
+      "labelPlaceholder": "Filter by label…",
+      "assigneePlaceholder": "Filter by assignee…",
+      "unknownLabel": "Unknown label #{id}",
+      "unknownProject": "Unknown project #{id}",
+      "until": "until {date}"
+    },
     "title": "Filters",
     "clear": "Clear Filters",
     "showResults": "Show results",
@@ -1304,7 +1322,11 @@
       "usedAsCover": "Cover image",
       "play": "Play",
       "playFile": "Play {file}",
-      "audioError": "Could not play this audio file."
+      "audioError": "Could not play this audio file.",
+      "viewMode": "Attachment view",
+      "viewDetailed": "Show with large previews",
+      "viewList": "Show as list",
+      "viewGallery": "Show as gallery"
     },
     "comment": {
       "title": "Comments",
@@ -1571,8 +1593,8 @@
     }
   },
   "update": {
-    "available": "There is an update available!",
-    "do": "Update Now"
+    "available": "A new version of Vikunja is available.",
+    "do": "Refresh"
   },
   "menu": {
     "edit": "Edit",
@@ -1619,7 +1641,7 @@
     "notLoggedIn": "Please log in to the main Vikunja window first.",
     "commands": "Commands",
     "placeholder": "Type a command or search…",
-    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams.",
+    "hint": "You can use {project} to limit the search to a project. Combine {project} or {label} (labels) with a search query to search for a task with these labels or on that project. Use {assignee} to only search for teams. Searching for a number finds the task with that number, either the one shown on the task or the one in its URL.",
     "tasks": "Tasks",
     "projects": "Projects",
     "teams": "Teams",
@@ -1875,6 +1897,10 @@
       "setPasswordSuccess": "The password of {username} was updated.",
       "sendResetEmail": "Send password-reset email",
       "sendResetEmailSuccess": "A password-reset email was sent to {username}.",
+      "editSettings": "Edit settings",
+      "settingsTitle": "Settings of {username}",
+      "settingsEditingOther": "You are editing the settings of {username}, not your own. Changes apply to their account.",
+      "backToUsers": "Back to users",
       "createdSuccess": "User {username} created.",
       "updatedSuccess": "User {username} updated.",
       "deletedSuccess": "User {username} deleted.",

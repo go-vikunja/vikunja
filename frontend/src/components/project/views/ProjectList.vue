@@ -49,8 +49,7 @@
 					<draggable
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
-						:group="{name: 'tasks', put: false}"
-						:sort="canReorderTasks"
+						:group="taskDragGroup"
 						:disabled="!canDragTasks || !isPositionSorting"
 						item-key="id"
 						tag="ul"
@@ -138,6 +137,9 @@ const props = defineProps<{
 
 const draggable = draggableFor<TaskResponse>()
 
+// Must keep its identity: a new group object mid-drag makes Sortable reject the reorder.
+const taskDragGroup = {name: 'tasks', put: false}
+
 const projectId = toRef(props, 'projectId')
 
 defineOptions({name: 'List'})
@@ -181,9 +183,6 @@ const tasks = computed({
 watch([projectId, () => props.viewId], () => { dragTasks.value = null })
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
-
-// A subproject's task has no position in this view, so the api drops the position sort.
-const canReorderTasks = computed(() => isPositionSorting.value && !includeSubprojects.value)
 
 const canWrite = computed(() => {
 	return typeof project.value?.max_permission === 'number' &&
@@ -254,10 +253,6 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 
 		// If dropped outside this list
 		if (e.to !== e.from) {
-			return
-		}
-
-		if (!canReorderTasks.value) {
 			return
 		}
 

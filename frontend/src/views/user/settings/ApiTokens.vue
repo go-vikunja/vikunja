@@ -10,7 +10,6 @@ import {useClampedPage} from '@/composables/useClampedPage'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import type {ApiToken as IApiToken} from '@/client/generated'
@@ -25,12 +24,10 @@ const totalPages = computed(() => data.value?.total_pages ?? 0)
 const deleteMutation = useDeleteApiTokenMutation()
 const apiDocsUrl = `${getApiBaseUrl()}/docs`
 const showCreateForm = ref(false)
-const tokenCreatedSuccessMessage = ref('')
+const createdToken = ref('')
 
 const showDeleteModal = ref<boolean>(false)
 const tokenToDelete = ref<IApiToken>()
-
-const {t} = useI18n()
 
 const route = useRoute()
 
@@ -70,7 +67,7 @@ function formatPermissionTitle(title: string): string {
 }
 
 function onTokenCreated(token: IApiToken) {
-	tokenCreatedSuccessMessage.value = t('user.settings.apiTokens.tokenCreatedSuccess', {token: token.token})
+	createdToken.value = token.token ?? ''
 	showCreateForm.value = false
 }
 </script>
@@ -78,10 +75,17 @@ function onTokenCreated(token: IApiToken) {
 <template>
 	<Card :title="$t('user.settings.apiTokens.title')">
 		<Message
-			v-if="tokenCreatedSuccessMessage !== ''"
+			v-if="createdToken !== ''"
 			class="has-text-centered mbe-4"
 		>
-			{{ tokenCreatedSuccessMessage }}<br>
+			<i18n-t
+				keypath="user.settings.apiTokens.tokenCreatedSuccess"
+				scope="global"
+			>
+				<template #token>
+					<code>{{ createdToken }}</code>
+				</template>
+			</i18n-t><br>
 			{{ $t('user.settings.apiTokens.tokenCreatedNotSeeAgain') }}
 		</Message>
 

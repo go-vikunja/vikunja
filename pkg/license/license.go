@@ -150,10 +150,12 @@ func Init() {
 
 	// Load or generate instance ID
 	var err error
-	instanceID, err = loadOrCreateInstanceID()
+	instanceID, err = InstanceID()
 	if err != nil {
 		log.Fatalf("Could not initialize license system: %s", err)
 	}
+
+	log.Infof("Instance ID: %s", instanceID)
 
 	// No license key configured — free mode. Clear any state persisted by a
 	// previous run (e.g. via Redis) so a removed key can't leave stale
@@ -161,6 +163,11 @@ func Init() {
 	if key == "" {
 		log.Debugf("No license key configured.")
 		degradeToFree("No license key configured.")
+		return
+	}
+
+	if isOfflineToken(key) {
+		initOffline(key)
 		return
 	}
 
@@ -345,7 +352,8 @@ func saveState(st state) {
 	}
 }
 
-func loadOrCreateInstanceID() (string, error) {
+// InstanceID returns this instance's ID, creating it if missing.
+func InstanceID() (string, error) {
 	s := db.NewSession()
 	defer s.Close()
 

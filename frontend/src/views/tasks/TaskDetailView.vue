@@ -1353,10 +1353,6 @@ h2 .button {
 
 .attachments {
 	margin-block-end: 0;
-
-	table tr:last-child td {
-		border-inline-end: none;
-	}
 }
 
 .is-modal .task-sidebar {

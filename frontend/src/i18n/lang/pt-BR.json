@@ -833,10 +833,6 @@
 			"projects": "Navegar para projetos"
 		}
 	},
-	"update": {
-		"available": "Há uma nova atualização disponível!",
-		"do": "Atualizar agora"
-	},
 	"menu": {
 		"edit": "Editar",
 		"archive": "Arquivar",
@@ -869,7 +865,6 @@
 	"quickActions": {
 		"commands": "Comandos",
 		"placeholder": "Digite um comando ou pesquise…",
-		"hint": "Você pode usar {project} para limitar a pesquisa a um projeto. Combine {project} ou {label} (etiquetas) com uma consulta de pesquisa para pesquisar uma tarefa com essas etiquetas ou no projeto. Use {assignee} para procurar equipes.",
 		"tasks": "Tarefas",
 		"projects": "Projetos",
 		"teams": "Equipes",

@@ -12,6 +12,18 @@ in {
   find node_modules/.pnpm/sass-embedded-linux-*/node_modules/sass-embedded-linux-*/dart-sass/src -name dart -print0 | xargs -I {} -0 patchelf --set-interpreter "$(<$NIX_CC/nix-support/dynamic-linker)" {}
   '';
 
+  tasks."factory:setup".exec = ''
+    set -euo pipefail
+    cd "$DEVENV_ROOT"
+
+    for module in . build veans; do
+      go -C "$module" mod download
+    done
+
+    pnpm --dir desktop install --frozen-lockfile --prefer-offline
+    PUPPETEER_SKIP_DOWNLOAD=1 pnpm --dir frontend install --frozen-lockfile --prefer-offline
+  '';
+
 	packages = with pkgs-unstable; [
     # General tools
     git-cliff 
