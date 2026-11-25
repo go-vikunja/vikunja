@@ -94,7 +94,7 @@ func (m *Module) installCatalogTools(srv *mcp.Server, catalog []*tool) {
 	}
 	srv.AddTool(&mcp.Tool{
 		Name:        toolFindAction,
-		Description: "Discover additional Vikunja actions for: " + strings.Join(slices.Sorted(maps.Keys(areas)), ", ") + ". Returns only actions your token authorizes; pass action or resource for full input schemas. Call with no arguments to list all action names. Invoke them with do_action.",
+		Description: "Discover additional Vikunja actions for: " + strings.Join(slices.Sorted(maps.Keys(areas)), ", ") + ". Returns only actions your token authorizes; pass action or resource for full input schemas. Call with no arguments to list all action names; the tools in your tool list are not included. Invoke them with do_action.",
 		InputSchema: findActionSpec.schema,
 	}, findActionHandler(catalog))
 	srv.AddTool(&mcp.Tool{
@@ -140,7 +140,7 @@ func findActionHandler(catalog []*tool) mcp.ToolHandler {
 		result := map[string]any{"actions": actions}
 		// Lets the model tell "wrong name" apart from "not authorized".
 		if len(actions) == 0 {
-			result["hint"] = "No action matched. Call find_action with no arguments to list all action names."
+			result["hint"] = "No action matched. Call find_action with no arguments to list all action names, and check your tool list: find_action does not include those tools."
 		}
 		body, err := json.Marshal(result)
 		if err != nil {

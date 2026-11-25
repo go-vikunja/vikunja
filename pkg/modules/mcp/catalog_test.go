@@ -116,6 +116,7 @@ func TestCatalogTools_EmptyResultHasHint(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, miss.IsError)
 	assert.Contains(t, miss.Content[0].(*sdk.TextContent).Text, `"hint":"No action matched.`)
+	assert.Contains(t, miss.Content[0].(*sdk.TextContent).Text, "check your tool list")
 
 	hit, err := cs.CallTool(ctx, &sdk.CallToolParams{
 		Name:      "find_action",

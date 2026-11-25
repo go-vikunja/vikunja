@@ -54,7 +54,7 @@ func IsLoopback(ctx context.Context) bool {
 func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, error) {
 	t, ok := m.index[name]
 	if !ok {
-		return nil, fmt.Errorf("%w: %s", errToolNotFound, name)
+		return nil, fmt.Errorf("%w: %s — %s", errToolNotFound, name, toolNotFoundHint)
 	}
 	// Read the caller before dispatching: the loopback re-enters the group middleware, which stashes its own echo context.
 	ec := humabridge.EchoContextFrom(ctx)
@@ -256,6 +256,9 @@ func parseResponse(rec *httptest.ResponseRecorder) (any, error) {
 }
 
 const maxErrorTextRunes = 2000
+
+// An agent that finds no name in find_action must not conclude that the token lacks the permission.
+const toolNotFoundHint = "no tool or action has this name; find_action lists only the extra actions, the other tools are in your tool list, and do_action runs both"
 
 const scopeHint = "the API token lacks a scope required by this call (check route and expand scopes)"
 
