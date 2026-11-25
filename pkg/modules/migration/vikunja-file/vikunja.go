@@ -223,7 +223,7 @@ func (p *lazyFileProvider) openZipFile(f *zip.File, countStorage bool) (io.ReadS
 		_ = os.Remove(tmp.Name())
 		return nil, 0, err
 	}
-	return &tempFileReadSeekCloser{f: tmp}, written, nil
+	return migration.RemoveOnClose{File: tmp}, written, nil
 }
 
 func (p *lazyFileProvider) copyCounted(dst io.Writer, src io.Reader) (int64, error) {
@@ -247,20 +247,6 @@ func (p *lazyFileProvider) copyCounted(dst io.Writer, src io.Reader) (int64, err
 			return total, err
 		}
 	}
-}
-
-type tempFileReadSeekCloser struct {
-	f *os.File
-}
-
-func (t *tempFileReadSeekCloser) Read(p []byte) (int, error) { return t.f.Read(p) }
-func (t *tempFileReadSeekCloser) Seek(o int64, whence int) (int64, error) {
-	return t.f.Seek(o, whence)
-}
-func (t *tempFileReadSeekCloser) Close() error {
-	err := t.f.Close()
-	_ = os.Remove(t.f.Name())
-	return err
 }
 
 type FileMigrator struct {
