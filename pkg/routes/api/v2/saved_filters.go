@@ -20,6 +20,7 @@ import (
 	"context"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -67,6 +68,15 @@ func RegisterSavedFilterRoutes(api huma.API) {
 		Path:        "/filters/{filter}",
 		Tags:        tags,
 	}, savedFiltersDelete)
+
+	Register(api, huma.Operation{
+		OperationID: "filters-counts",
+		Summary:     "Count the tasks in each saved filter",
+		Description: "Returns how many tasks each of the authenticated user's saved filters matches, e.g. for a sidebar counter. Every count is what opening that filter would show. Only the owner may see a filter, so only their own filters are counted.",
+		Method:      http.MethodGet,
+		Path:        "/filters/counts",
+		Tags:        tags,
+	}, savedFiltersCounts)
 }
 
 func init() { AddRouteRegistrar(RegisterSavedFilterRoutes) }
@@ -74,6 +84,29 @@ func init() { AddRouteRegistrar(RegisterSavedFilterRoutes) }
 type savedFilterReadBody struct {
 	models.SavedFilter
 	MaxPermission models.Permission `json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this saved filter (0=read, 1=read/write, 2=admin). Filters are owner-only, so this is always 2 for a successful read."`
+}
+
+type savedFilterCounts struct {
+	Counts []*models.SavedFilterTaskCount `json:"counts" doc:"One entry per saved filter, in no particular order."`
+}
+
+type savedFilterCountsBody struct {
+	Body savedFilterCounts
+}
+
+func savedFiltersCounts(ctx context.Context, _ *struct{}) (*savedFilterCountsBody, error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	s := db.NewReadSession()
+	defer s.Close()
+
+	counts, err := models.GetSavedFilterTaskCounts(s, a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &savedFilterCountsBody{Body: savedFilterCounts{Counts: counts}}, nil
 }
 
 func savedFiltersRead(ctx context.Context, in *struct {

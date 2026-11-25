@@ -23,6 +23,8 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -163,6 +165,36 @@ func TestHumaSavedFilter_ETagReturns304(t *testing.T) {
 	rec = httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusNotModified, rec.Code, "body: %s", rec.Body.String())
+}
+
+func TestHumaSavedFilterCounts(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	type countsBody struct {
+		Counts []struct {
+			FilterID int64 `json:"filter_id"`
+			Count    int64 `json:"count"`
+		} `json:"counts"`
+	}
+	readCounts := func(t *testing.T, u *user.User) countsBody {
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/filters/counts", "", humaTokenFor(t, u), "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		var body countsBody
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+		return body
+	}
+
+	t.Run("counts the owner's filters", func(t *testing.T) {
+		body := readCounts(t, &testuser1)
+		require.Len(t, body.Counts, 1, "fixture filter #1 is user1's only saved filter")
+		assert.Equal(t, int64(1), body.Counts[0].FilterID)
+		assert.Positive(t, body.Counts[0].Count)
+	})
+
+	t.Run("other users' filters are not counted", func(t *testing.T) {
+		assert.Empty(t, readCounts(t, &testuser2).Counts)
+	})
 }
 
 func TestHumaSavedFilter_PATCHMergePatch(t *testing.T) {

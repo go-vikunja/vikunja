@@ -2188,6 +2188,17 @@ export type SavedFilter = {
     readonly updated?: string;
 };
 
+export type SavedFilterCounts = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    /**
+     * One entry per saved filter, in no particular order.
+     */
+    counts?: Array<SavedFilterTaskCount> | null;
+};
+
 export type SavedFilterReadBody = {
     /**
      * A URL to the JSON Schema for this object.
@@ -2229,6 +2240,17 @@ export type SavedFilterReadBody = {
      * A timestamp when this filter was last updated. You cannot change this value.
      */
     readonly updated?: string;
+};
+
+export type SavedFilterTaskCount = {
+    /**
+     * The number of tasks matching the filter, across every project the user can read.
+     */
+    count?: number;
+    /**
+     * The id of the saved filter.
+     */
+    filter_id?: number;
 };
 
 export type Session = {
@@ -5158,6 +5180,13 @@ export type SavedFilterWritable = {
     title?: string;
 };
 
+export type SavedFilterCountsWritable = {
+    /**
+     * One entry per saved filter, in no particular order.
+     */
+    counts?: Array<SavedFilterTaskCount> | null;
+};
+
 export type SavedFilterReadBodyWritable = {
     /**
      * The description of the filter.
@@ -6672,6 +6701,31 @@ export type FiltersCreateResponses = {
 };
 
 export type FiltersCreateResponse = FiltersCreateResponses[keyof FiltersCreateResponses];
+
+export type FiltersCountsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/filters/counts';
+};
+
+export type FiltersCountsErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type FiltersCountsError = FiltersCountsErrors[keyof FiltersCountsErrors];
+
+export type FiltersCountsResponses = {
+    /**
+     * OK
+     */
+    200: SavedFilterCounts;
+};
+
+export type FiltersCountsResponse = FiltersCountsResponses[keyof FiltersCountsResponses];
 
 export type FiltersDeleteData = {
     body?: never;
