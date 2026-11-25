@@ -17,7 +17,9 @@
 package migration
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"strconv"
 	"time"
@@ -71,6 +73,31 @@ func (err *ErrUpstreamRequestFailed) HTTPError() web.HTTPError {
 		// The upstream response body may contain anything, don't hand it back over the api.
 		Message: "The service you are migrating from returned an error.",
 	}
+}
+
+// ErrSpoolFailed is a local disk error while spooling an attachment, as opposed to a download error.
+type ErrSpoolFailed struct {
+	Err error
+}
+
+// IsErrSpoolFailed checks if an error is or wraps ErrSpoolFailed
+func IsErrSpoolFailed(err error) bool {
+	var spoolErr *ErrSpoolFailed
+	return errors.As(err, &spoolErr)
+}
+
+func (err *ErrSpoolFailed) Error() string {
+	const msg = "could not store a downloaded attachment on disk"
+	// The path would reach the user's failure mail and status.
+	var pathErr *fs.PathError
+	if errors.As(err.Err, &pathErr) {
+		return msg + ": " + pathErr.Err.Error()
+	}
+	return msg
+}
+
+func (err *ErrSpoolFailed) Unwrap() error {
+	return err.Err
 }
 
 // ErrMigrationAlreadyRunning includes the migrator holding the account-wide claim.
