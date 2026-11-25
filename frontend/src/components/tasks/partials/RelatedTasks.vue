@@ -48,6 +48,7 @@
 						:show-empty="true"
 						label="title"
 						:creatable="true"
+						:create-pinned="true"
 						:create-placeholder="$t('task.relation.createPlaceholder')"
 						@search="findTasks"
 						@create="createAndRelateTask"

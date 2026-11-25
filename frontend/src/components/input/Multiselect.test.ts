@@ -400,3 +400,129 @@ describe('Multiselect.vue — capped results hint', () => {
 		wrapper.unmount()
 	})
 })
+
+describe('Multiselect.vue — createPinned', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+		document.body.innerHTML = ''
+	})
+
+	const duplicates = [{title: 'Alpha'}, {title: 'Alpha'}]
+
+	async function typeQuery(wrapper: VueWrapper, value: string) {
+		const input = wrapper.find('input[role="combobox"]')
+		await input.setValue(value)
+		await input.trigger('keyup')
+		vi.advanceTimersByTime(300)
+		await nextTick()
+		return input
+	}
+
+	it('shows the pinned create option last even when the query matches an existing option exactly', async () => {
+		const wrapper = mountMultiselect({creatable: true, createPinned: true, searchResults: duplicates})
+		await typeQuery(wrapper, 'Alpha')
+
+		const options = wrapper.findAll('[role="option"]')
+		expect(options).toHaveLength(3)
+		expect(options[2].classes()).toContain('is-create-option')
+		expect(options[2].classes()).toContain('is-pinned')
+		expect(wrapper.find('[role="listbox"]').classes()).toContain('has-pinned-create')
+
+		wrapper.unmount()
+	})
+
+	it('hides the create option on an exact match without createPinned', async () => {
+		const wrapper = mountMultiselect({creatable: true, searchResults: duplicates})
+		await typeQuery(wrapper, 'Alpha')
+
+		expect(wrapper.find('.is-create-option').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
+	it('does not pin the create option without createPinned', async () => {
+		const wrapper = mountMultiselect({creatable: true, searchResults: duplicates})
+		await typeQuery(wrapper, 'Alp')
+
+		const options = wrapper.findAll('[role="option"]')
+		expect(options[options.length - 1].classes()).toContain('is-create-option')
+		expect(options[options.length - 1].classes()).not.toContain('is-pinned')
+		expect(wrapper.find('[role="listbox"]').classes()).not.toContain('has-pinned-create')
+
+		wrapper.unmount()
+	})
+
+	it('creates on Enter even when the query matches an existing option exactly', async () => {
+		const wrapper = mountMultiselect({creatable: true, createPinned: true, searchResults: [{title: 'Alpha'}]})
+		const input = await typeQuery(wrapper, 'Alpha')
+
+		await input.trigger('keyup', {key: 'Enter'})
+
+		expect(wrapper.emitted('create')).toEqual([['Alpha']])
+		expect(wrapper.emitted('select')).toBeUndefined()
+
+		wrapper.unmount()
+	})
+
+	it('ArrowDown moves from the input through the results to the create option', async () => {
+		const wrapper = mountMultiselect({creatable: true, createPinned: true, searchResults: duplicates})
+		const input = await typeQuery(wrapper, 'Alpha')
+		const options = wrapper.findAll('[role="option"]')
+
+		await input.trigger('keydown', {key: 'ArrowDown'})
+		expect(document.activeElement).toBe(options[0].element)
+
+		await options[0].trigger('keydown', {key: 'ArrowDown'})
+		expect(document.activeElement).toBe(options[1].element)
+
+		await options[1].trigger('keydown', {key: 'ArrowDown'})
+		expect(document.activeElement).toBe(options[2].element)
+
+		wrapper.unmount()
+	})
+
+	it('ArrowUp from the input jumps to the pinned create option', async () => {
+		const wrapper = mountMultiselect({creatable: true, createPinned: true, searchResults: duplicates})
+		const input = await typeQuery(wrapper, 'Alpha')
+
+		await input.trigger('keydown', {key: 'ArrowUp'})
+		expect(document.activeElement).toBe(wrapper.find('.is-create-option').element)
+
+		await wrapper.find('.is-create-option').trigger('keydown', {key: 'ArrowUp'})
+		expect(document.activeElement).toBe(wrapper.findAll('[role="option"]')[1].element)
+
+		wrapper.unmount()
+	})
+
+	it('ArrowUp from the input keeps its default behavior without createPinned', async () => {
+		const wrapper = mountMultiselect({creatable: true, searchResults: duplicates})
+		const input = await typeQuery(wrapper, 'Alp')
+		;(input.element as HTMLInputElement).focus()
+
+		const event = new KeyboardEvent('keydown', {key: 'ArrowUp', bubbles: true, cancelable: true})
+		input.element.dispatchEvent(event)
+
+		expect(event.defaultPrevented).toBe(false)
+		expect(document.activeElement).toBe(input.element)
+
+		wrapper.unmount()
+	})
+
+	it('closes the list after selecting an existing option', async () => {
+		const wrapper = mountMultiselect({creatable: true, createPinned: true, multiple: false, modelValue: null, searchResults: duplicates})
+		await typeQuery(wrapper, 'Alpha')
+
+		await wrapper.findAll('[role="option"]')[0].trigger('click')
+		vi.advanceTimersByTime(300)
+		await nextTick()
+
+		expect(wrapper.emitted('select')).toEqual([[{title: 'Alpha'}]])
+		expect(wrapper.find('[role="listbox"]').exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+})

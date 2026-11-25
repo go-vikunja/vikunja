@@ -66,6 +66,7 @@
 					@keydown="clearKeyupGuard"
 					@keydown.enter.exact="preventFormSubmitWhileOpen"
 					@keydown.down.exact.prevent="() => preSelect(0)"
+					@keydown.up.exact="preSelectPinnedCreate"
 					@keydown.esc="handleEscape"
 					@focus="handleFocus"
 				>
@@ -86,7 +87,7 @@
 				:id="listboxId"
 				ref="resultsEl"
 				class="search-results"
-				:class="{'search-results-inline': inline}"
+				:class="{'search-results-inline': inline, 'has-pinned-create': createPinned && creatableAvailable}"
 				:style="inline ? undefined : resultsStyle"
 				role="listbox"
 				:aria-label="accessibleName"
@@ -124,6 +125,7 @@
 					v-if="creatableAvailable"
 					:ref="(el) => setResult(el, filteredSearchResults.length)"
 					class="search-result-button is-fullwidth is-create-option"
+					:class="{'is-pinned': createPinned}"
 					role="option"
 					tabindex="-1"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
@@ -213,6 +215,8 @@ const props = withDefaults(defineProps<{
 	name?: string
 	/** If true, will provide an 'add this as a new value' entry which  fires an @create event when clicking on it. */
 	creatable?: boolean
+	/** If true (and `creatable` is true), the create option stays visible at the bottom of the list, is reachable with ArrowUp from the input and is offered even if a result matches the query exactly. Useful where duplicate names are legitimate (e.g. tasks). */
+	createPinned?: boolean
 	/**
 	 * Enter selects a matching result or focuses the create option for confirmation.
 	 * Requires a synchronous search listener, such as local label filtering.
@@ -248,6 +252,7 @@ const props = withDefaults(defineProps<{
 	searchResults: () => [] as T[],
 	label: '',
 	creatable: false,
+	createPinned: false,
 	confirmCreateOnEnter: false,
 	creationDisabledMessage: '',
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
@@ -276,7 +281,7 @@ const emit = defineEmits<{
 	 */
 	'select': [value: T],
 	/**
-	 * If nothing or no exact match was found and `creatable` is true, this event is triggered with the current value of the search query.
+	 * If nothing or no exact match was found (or `createPinned` is set) and `creatable` is true, this event is triggered with the current value of the search query.
 	 */
 	'create': [query: string],
 	/**
@@ -403,7 +408,7 @@ const queryHasExactMatch = computed(() => {
 	return hasResult || hasQueryAlreadyAdded
 })
 
-const creatableAvailable = computed(() => props.creatable && query.value !== '' && !queryHasExactMatch.value)
+const creatableAvailable = computed(() => props.creatable && query.value !== '' && (props.createPinned || !queryHasExactMatch.value))
 
 // Shown in place of the create option when creation is disabled and the query matches nothing, so the field doesn't look dead.
 const creationHintVisible = computed(() => props.creationDisabledMessage !== '' && !props.creatable && query.value !== '' && !queryHasExactMatch.value)
@@ -558,7 +563,7 @@ function select(object: T | null) {
 	}
 
 	emit('select', object)
-	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && !creatableAvailable.value) {
+	if (props.closeAfterSelect && filteredSearchResults.value.length > 0 && (!creatableAvailable.value || props.createPinned)) {
 		closeSearchResults()
 	}
 	refocusInput()
@@ -606,6 +611,15 @@ function preSelect(index: number) {
 	if ('focus' in elems) {
 		(elems as HTMLElement).focus()
 	}
+}
+
+function preSelectPinnedCreate(e: KeyboardEvent) {
+	if (!props.createPinned || !creatableAvailable.value || !searchResultsVisible.value) {
+		return
+	}
+
+	e.preventDefault()
+	preSelect(filteredSearchResults.value.length)
 }
 
 function create() {
@@ -786,6 +800,11 @@ function focus() {
 		border-block-start: 1px solid var(--primary);
 		border-block-end: none;
 	}
+
+	// Keeps keyboard-focused results from scrolling underneath the pinned create option.
+	&.has-pinned-create {
+		scroll-padding-block-end: 3.5rem;
+	}
 }
 
 .search-results-inline {
@@ -816,6 +835,14 @@ function focus() {
 		overflow: hidden;
 		min-inline-size: 0;
 		flex: 1 1 auto;
+	}
+
+	&.is-pinned {
+		position: sticky;
+		inset-block-end: 0;
+		z-index: 1;
+		background: var(--white);
+		border-block-start: 1px solid var(--grey-200);
 	}
 
 	&:focus,
