@@ -167,12 +167,31 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 							Pos:  222,
 						},
 						{
-							Name: "Test Card 7",
-							Pos:  333,
+							Name:              "Test Card 7",
+							Pos:               333,
+							IDAttachmentCover: "8cc71b16f0c7a57bed3c94e9",
+							Attachments: []*trello.Attachment{
+								{
+									ID:       "8cc71b16f0c7a57bed3c94e9",
+									Name:     "empty.jpg",
+									IsUpload: true,
+									MimeType: "image/jpg",
+									URL:      "https://vikunja.io/empty.jpg",
+								},
+							},
 						},
 						{
-							Name: "Test Card 8",
-							Pos:  444,
+							Name:                  "Test Card 8",
+							Pos:                   444,
+							ManualCoverAttachment: true,
+							Cover: &trello.CardCover{
+								Scaled: []*trello.CardCoverScaledVariant{
+									{
+										ID:  "emptycover",
+										URL: "https://vikunja.io/empty.jpg",
+									},
+								},
+							},
 						},
 						{
 							Name:                  "Test Card 9",
@@ -269,13 +288,18 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 	t.Cleanup(func() {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set(prevAllowNonRoutable)
 	})
-	attachmentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	attachmentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/empty.jpg" {
+			return
+		}
 		_, _ = w.Write(exampleFile)
 	}))
 	t.Cleanup(attachmentServer.Close)
 
 	trelloData[0].Prefs.BackgroundImage = attachmentServer.URL + "/testimage.jpg"
 	trelloData[0].Lists[0].Cards[0].Attachments[0].URL = attachmentServer.URL + "/testimage.jpg"
+	trelloData[0].Lists[1].Cards[2].Attachments[0].URL = attachmentServer.URL + "/empty.jpg"
+	trelloData[0].Lists[1].Cards[3].Cover.Scaled[0].URL = attachmentServer.URL + "/empty.jpg"
 	trelloData[0].Lists[1].Cards[4].Cover.Scaled[1].URL = attachmentServer.URL + "/largecover.jpg"
 
 	expectedHierarchyOrg := map[string][]*models.ProjectWithTasksAndBuckets{
@@ -401,6 +425,14 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 						Task: models.Task{
 							Title:    "Test Card 7",
 							BucketID: 2,
+							Attachments: []*models.TaskAttachment{
+								{
+									File: &files.File{
+										Name: "empty.jpg",
+										Mime: "image/jpg",
+									},
+								},
+							},
 						},
 					},
 					{
