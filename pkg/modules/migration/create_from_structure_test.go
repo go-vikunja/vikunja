@@ -788,6 +788,83 @@ func TestInsertFromStructureFileProvider(t *testing.T) {
 	})
 }
 
+type contentAttachmentProvider struct {
+	testFileProvider
+}
+
+func (p *contentAttachmentProvider) OpenAttachment(_ *models.TaskAttachment) (io.ReadSeekCloser, int64, error) {
+	return &trackedReadSeekCloser{Reader: bytes.NewReader([]byte{1, 2, 3, 4})}, 4, nil
+}
+
+func TestInsertFromStructureCoverImage(t *testing.T) {
+	u := &user.User{ID: 1}
+	attachment := func(id int64) []*models.TaskAttachment {
+		return []*models.TaskAttachment{
+			{
+				ID: id,
+				File: &files.File{
+					Name:        "file.png",
+					Size:        4,
+					FileContent: []byte{1, 2, 3, 4},
+				},
+			},
+		}
+	}
+
+	for name, insert := range map[string]func([]*models.ProjectWithTasksAndBuckets) error{
+		"in-memory": func(str []*models.ProjectWithTasksAndBuckets) error {
+			return InsertFromStructure(str, u)
+		},
+		"file provider": func(str []*models.ProjectWithTasksAndBuckets) error {
+			return InsertFromStructureWithFileProvider(str, u, &contentAttachmentProvider{})
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			noCover := &models.TaskWithComments{
+				Task: models.Task{
+					Title:       "without cover",
+					Attachments: attachment(0),
+				},
+			}
+			withCover := &models.TaskWithComments{
+				Task: models.Task{
+					Title:                  "with cover",
+					Attachments:            attachment(42),
+					CoverImageAttachmentID: 42,
+				},
+			}
+			structure := []*models.ProjectWithTasksAndBuckets{
+				{
+					Project: models.Project{Title: "cover import"},
+					Tasks: []*models.TaskWithComments{
+						noCover,
+						withCover,
+					},
+				},
+			}
+
+			require.NoError(t, insert(structure))
+
+			db.AssertExists(t, "task_attachments", map[string]interface{}{
+				"task_id": noCover.ID,
+			}, false)
+			db.AssertExists(t, "tasks", map[string]interface{}{
+				"id":                        noCover.ID,
+				"cover_image_attachment_id": 0,
+			}, false)
+			db.AssertExists(t, "task_attachments", map[string]interface{}{
+				"id":      withCover.Attachments[0].ID,
+				"task_id": withCover.ID,
+			}, false)
+			db.AssertExists(t, "tasks", map[string]interface{}{
+				"id":                        withCover.ID,
+				"cover_image_attachment_id": withCover.Attachments[0].ID,
+			}, false)
+		})
+	}
+}
+
 type panickingAttachmentProvider struct {
 	testFileProvider
 }

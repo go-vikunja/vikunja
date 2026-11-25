@@ -603,7 +603,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				*createdFiles = append(*createdFiles, a.File.ID)
 				log.Debugf("[creating structure] Created new attachment %d", a.ID)
 
-				if t.CoverImageAttachmentID == oldID {
+				if oldID != 0 && t.CoverImageAttachmentID == oldID {
 					t.CoverImageAttachmentID = a.ID
 					err = t.Update(s, user)
 					if err != nil {
@@ -801,7 +801,7 @@ func createAttachmentFromProvider(s *xorm.Session, t *models.Task, a *models.Tas
 	*createdFiles = append(*createdFiles, a.File.ID)
 	log.Debugf("[creating structure] Created new attachment %d", a.ID)
 
-	if t.CoverImageAttachmentID == oldID {
+	if oldID != 0 && t.CoverImageAttachmentID == oldID {
 		t.CoverImageAttachmentID = a.ID
 		err = t.Update(s, user)
 		if err != nil {
