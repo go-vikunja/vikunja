@@ -105,6 +105,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 		}
 		r := data.NewResource(vcls.hrefFor(rpath), &rr)
 		r.Name = vcls.project.Title
+		r.Color = caldav.AppleColor(vcls.project.HexColor)
 
 		// If the request is withChildren (Depth: 1), we need to return all tasks of the project
 		if withChildren {
@@ -164,6 +165,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 		}
 		r := data.NewResource(ProjectBasePath+"/"+strconv.FormatInt(l.ID, 10), &rr)
 		r.Name = l.Title
+		r.Color = caldav.AppleColor(l.HexColor)
 		resources = append(resources, r)
 	}
 
