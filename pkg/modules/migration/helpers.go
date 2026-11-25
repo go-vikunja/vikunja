@@ -64,26 +64,33 @@ func DownloadFile(url string) (*bytes.Buffer, error) {
 
 // Pass a client with a redirect policy when the headers carry credentials: go replays them across hosts.
 func DownloadFileWithHeadersLimited(hc *http.Client, url string, headers http.Header, maxBytes int64) (*bytes.Buffer, error) {
+	buf := &bytes.Buffer{}
+	if _, err := downloadTo(buf, hc, url, headers, maxBytes); err != nil {
+		return nil, err
+	}
+	return buf, nil
+}
+
+func downloadTo(dst io.Writer, hc *http.Client, url string, headers http.Header, maxBytes int64) (int64, error) {
 	resp, err := getFile(hc, url, headers)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("could not download %s: %w", url, NewErrUpstreamRequestFailed("upstream", resp.StatusCode, ""))
+		return 0, fmt.Errorf("could not download %s: %w", url, NewErrUpstreamRequestFailed("upstream", resp.StatusCode, ""))
 	}
 
-	buf := &bytes.Buffer{}
-	read, err := io.Copy(buf, io.LimitReader(resp.Body, maxBytes+1))
+	read, err := io.Copy(dst, io.LimitReader(resp.Body, maxBytes+1))
 	if err != nil {
-		return nil, err
+		return read, err
 	}
 	if read > maxBytes {
-		return nil, files.ErrFileIsTooLarge{Size: uint64(read)} //nolint:gosec // read is never negative
+		return read, files.ErrFileIsTooLarge{Size: uint64(read)} //nolint:gosec // read is never negative
 	}
 
-	return buf, nil
+	return read, nil
 }
 
 func getFile(hc *http.Client, url string, headers http.Header) (*http.Response, error) {
