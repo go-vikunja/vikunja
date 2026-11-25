@@ -141,6 +141,7 @@ const (
 
 	RedisEnabled  Key = `redis.enabled`
 	RedisHost     Key = `redis.host`
+	RedisUser     Key = `redis.user`
 	RedisPassword Key = `redis.password`
 	RedisDB       Key = `redis.db`
 
@@ -464,6 +465,7 @@ func initDefaultConfig() {
 	// Redis
 	RedisEnabled.setDefault(false)
 	RedisHost.setDefault("localhost:6379")
+	RedisUser.setDefault("default")
 	RedisPassword.setDefault("")
 	RedisDB.setDefault(0)
 	// Logger
