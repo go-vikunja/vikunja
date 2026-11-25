@@ -42,6 +42,7 @@ func InitRedis() {
 
 	r = redis.NewClient(&redis.Options{
 		Addr:     config.RedisHost.GetString(),
+		Username: config.RedisUser.GetString(),
 		Password: config.RedisPassword.GetString(),
 		DB:       config.RedisDB.GetInt(),
 	})
