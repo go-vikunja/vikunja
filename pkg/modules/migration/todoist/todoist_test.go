@@ -18,6 +18,7 @@ package todoist
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -27,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -52,9 +54,8 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	require.NoError(t, err)
 
 	// Serve the attachment from a local test server so the test does not depend
-	// on an external host being reachable. The SSRF-safe client used by
-	// migration.DownloadFile rejects non-routable IPs by default, so allow them
-	// for the duration of this test.
+	// on an external host being reachable. The SSRF-safe client rejects
+	// non-routable IPs by default, so allow them for the duration of this test.
 	prevAllowNonRoutable := config.OutgoingRequestsAllowNonRoutableIPs.GetBool()
 	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 	t.Cleanup(func() {
@@ -578,11 +579,8 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 									Name: "file.md",
 									Mime: "text/plain",
 									// Size from content, not API metadata (GHSA-qh78-rvg3-cv54 defense-in-depth).
-									Size:        uint64(len(exampleFile)),
-									Created:     time1,
-									FileContent: exampleFile,
+									Size: uint64(len(exampleFile)),
 								},
-								Created: time1,
 							},
 						},
 					},
@@ -644,13 +642,25 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		},
 	}
 
+	spool, err := migration.NewSpooledFiles()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = spool.Close() })
+
 	doneItems := make(map[string]*doneItem)
-	hierachie, err := convertTodoistToVikunja(testSync, doneItems)
+	hierachie, err := convertTodoistToVikunja(testSync, doneItems, spool)
 	require.NoError(t, err)
 	assert.NotNil(t, hierachie)
 	if diff, equal := messagediff.PrettyDiff(hierachie, expectedHierachie); !equal {
 		t.Errorf("converted todoist data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
 	}
+
+	file, _, err := spool.OpenAttachment(hierachie[2].Tasks[4].Attachments[0])
+	require.NoError(t, err)
+	require.NotNil(t, file)
+	defer file.Close()
+	content, err := io.ReadAll(file)
+	require.NoError(t, err)
+	assert.Equal(t, exampleFile, content)
 }
 
 func TestConvertTodoistToVikunjaWithBrokenAttachment(t *testing.T) {
@@ -685,7 +695,97 @@ func TestConvertTodoistToVikunjaWithBrokenAttachment(t *testing.T) {
 		},
 	}
 
-	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem), nil)
+	require.NoError(t, err)
+	require.Len(t, hierachie, 2)
+	require.Len(t, hierachie[1].Tasks, 1)
+	assert.Empty(t, hierachie[1].Tasks[0].Attachments)
+	assert.Equal(t, "Lorem Ipsum dolor sit amet", hierachie[1].Tasks[0].Description)
+}
+
+func TestConvertTodoistToVikunjaFailsOnSpoolError(t *testing.T) {
+	testSync := &sync{
+		Projects: []*project{
+			{
+				ID:   "396936926",
+				Name: "Project1",
+			},
+		},
+		Items: []*item{
+			{
+				ID:        "400000001",
+				ProjectID: "396936926",
+				Content:   "Task1",
+			},
+		},
+		Notes: []*note{
+			{
+				ID:      "101478",
+				ItemID:  "400000001",
+				Content: "Lorem Ipsum dolor sit amet",
+				FileAttachment: &fileAttachment{
+					FileName:    "file.txt",
+					FileType:    "text/plain",
+					FileURL:     "https://example.com/file.txt",
+					UploadState: "completed",
+				},
+			},
+		},
+	}
+	spool, err := migration.NewSpooledFiles()
+	require.NoError(t, err)
+	require.NoError(t, spool.Close())
+
+	_, err = convertTodoistToVikunja(testSync, make(map[string]*doneItem), spool)
+	assert.True(t, migration.IsErrSpoolFailed(err), "got %v", err)
+}
+
+func TestConvertTodoistToVikunjaSkipsFailedDownload(t *testing.T) {
+	prevAllowNonRoutable := config.OutgoingRequestsAllowNonRoutableIPs.GetBool()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	t.Cleanup(func() {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set(prevAllowNonRoutable)
+	})
+	attachmentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(attachmentServer.Close)
+
+	testSync := &sync{
+		Projects: []*project{
+			{
+				ID:   "396936926",
+				Name: "Project1",
+			},
+		},
+		Items: []*item{
+			{
+				ID:        "400000001",
+				ProjectID: "396936926",
+				Content:   "Task1",
+			},
+		},
+		Notes: []*note{
+			{
+				ID:      "101478",
+				ItemID:  "400000001",
+				Content: "Lorem Ipsum dolor sit amet",
+				FileAttachment: &fileAttachment{
+					FileName:    "file.txt",
+					FileType:    "text/plain",
+					FileURL:     attachmentServer.URL + "/file.txt",
+					UploadState: "completed",
+				},
+			},
+		},
+	}
+	spool, err := migration.NewSpooledFiles()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, spool.Close())
+	})
+
+	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem), spool)
 	require.NoError(t, err)
 	require.Len(t, hierachie, 2)
 	require.Len(t, hierachie[1].Tasks, 1)
@@ -710,7 +810,7 @@ func TestConvertTodoistToVikunjaPreservesDescriptions(t *testing.T) {
 		]
 	}`), testSync))
 
-	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem))
+	hierachie, err := convertTodoistToVikunja(testSync, make(map[string]*doneItem), nil)
 	require.NoError(t, err)
 	require.Len(t, hierachie, 2)
 	require.Len(t, hierachie[1].Tasks, 3)

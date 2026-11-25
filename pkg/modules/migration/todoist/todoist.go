@@ -28,11 +28,11 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 const paginationLimit = 200
@@ -340,7 +340,7 @@ func isDownloadableURL(rawURL string) bool {
 	return (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
 }
 
-func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
+func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem, spool *migration.SpooledFiles) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
 	var pseudoParentID int64 = 1
 
@@ -503,6 +503,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 
 	// Task Notes -> Task Descriptions
 	// FIXME: Should be comments
+	hc := utils.NewSSRFSafeHTTPClient()
 	for _, n := range sync.Notes {
 		if _, exists := tasks[n.ItemID]; !exists {
 			log.Debugf("[Todoist Migration] Could not find task %s for note %s", n.ItemID, n.ID)
@@ -527,27 +528,17 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 				continue
 			}
 
-			// Download the attachment and put it in the file
-			buf, err := migration.DownloadFile(n.FileAttachment.FileURL)
+			attachment, err := spool.DownloadAttachment(hc, n.FileAttachment.FileURL, nil, n.FileAttachment.FileName, n.FileAttachment.FileType)
+			// Skipping would drop every attachment on a full or unwritable disk.
+			if migration.IsErrSpoolFailed(err) {
+				return nil, err
+			}
 			if err != nil {
 				// A single broken attachment must not fail the whole migration
 				log.Errorf("[Todoist Migration] Could not download attachment of note %s from %s, skipping it. Error was: %s", n.ID, n.FileAttachment.FileURL, err)
 				continue
 			}
-
-			tasks[n.ItemID].Attachments = append(tasks[n.ItemID].Attachments, &models.TaskAttachment{
-				File: &files.File{
-					Name:    n.FileAttachment.FileName,
-					Mime:    n.FileAttachment.FileType,
-					Size:    uint64(buf.Len()),
-					Created: n.Posted,
-					// We directly pass the file contents here to have a way to link the attachment to the file later.
-					// Because we don't have an ID for our task at this point of the migration, we cannot just throw all
-					// attachments in a slice and do the work of downloading and properly storing them later.
-					FileContent: buf.Bytes(),
-				},
-				Created: n.Posted,
-			})
+			tasks[n.ItemID].Attachments = append(tasks[n.ItemID].Attachments, attachment)
 		}
 	}
 
@@ -825,7 +816,17 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Todoist Migration] Got all todoist user data for user %d", u.ID)
 	log.Debugf("[Todoist Migration] Start converting data for user %d", u.ID)
 
-	fullVikunjaHierachie, err := convertTodoistToVikunja(syncResponse, doneItems)
+	spool, err := migration.NewSpooledFiles()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if cerr := spool.Close(); cerr != nil {
+			log.Errorf("[Todoist Migration] Could not remove downloaded attachments: %s", cerr)
+		}
+	}()
+
+	fullVikunjaHierachie, err := convertTodoistToVikunja(syncResponse, doneItems, spool)
 	if err != nil {
 		return
 	}
@@ -833,7 +834,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Todoist Migration] Done converting data for user %d", u.ID)
 	log.Debugf("[Todoist Migration] Start inserting data for user %d", u.ID)
 
-	err = migration.InsertFromStructure(fullVikunjaHierachie, u)
+	err = migration.InsertFromStructureWithFileProvider(fullVikunjaHierachie, u, spool)
 	if err != nil {
 		return
 	}
