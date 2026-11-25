@@ -122,7 +122,7 @@ func ProjectHandler(c *echo.Context) error {
 	// root (project.ID == 0) still falls through to that 501, unhandled for now.
 	if c.Request().Method == "PROPPATCH" && storage.project.ID != 0 {
 		log.Debugf("[CALDAV] PROPPATCH for project %d by user %s", storage.project.ID, u.Username)
-		return handlePropPatch(c, string(body), storage.project, u)
+		return handlePropPatch(c, string(body), storage.project, u, propPatchCollection)
 	}
 
 	// caldav-go advertises PUT and DELETE unconditionally; a collection the user cannot
@@ -167,8 +167,8 @@ func ProjectHandler(c *echo.Context) error {
 func TaskHandler(c *echo.Context) error {
 	project, err := getProjectFromParam(c)
 
-	// PROPPATCH on a task resource gets the same 207/403 refusal as on a
-	// collection, rather than caldav-go's blanket 501 (see ProjectHandler).
+	// A task resource has no settable properties; it gets a 207 refusal
+	// rather than caldav-go's blanket 501 (see ProjectHandler).
 	if c.Request().Method == "PROPPATCH" {
 		if err != nil && models.IsErrProjectDoesNotExist(err) {
 			return c.String(http.StatusNotFound, "Project not found")
@@ -188,7 +188,7 @@ func TaskHandler(c *echo.Context) error {
 		}
 		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 
-		return handlePropPatch(c, string(body), project, u)
+		return handlePropPatch(c, string(body), project, u, propPatchTask)
 	}
 
 	if err != nil {
