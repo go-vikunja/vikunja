@@ -383,7 +383,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 							return nil, err
 						}
 
-						if card.IDAttachmentCover != "" && card.IDAttachmentCover == attachment.ID {
+						if card.IDAttachmentCover != "" && card.IDAttachmentCover == attachment.ID && vikunjaAttachment.File.Size > 0 {
 							vikunjaAttachment.ID = 42
 							task.CoverImageAttachmentID = 42
 						}
@@ -410,7 +410,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 						log.Warningf("[Trello Migration] Cover of card %s is too large, skipping it", card.ID)
 					case err != nil:
 						return nil, err
-					default:
+					case coverAttachment.File.Size > 0:
 						coverAttachment.ID = 43
 						task.Attachments = append(task.Attachments, coverAttachment)
 						task.CoverImageAttachmentID = coverAttachment.ID
