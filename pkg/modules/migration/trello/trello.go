@@ -17,7 +17,6 @@
 package trello
 
 import (
-	"bytes"
 	"fmt"
 	"html"
 	"net/http"
@@ -125,7 +124,7 @@ func (m *Migration) AuthURL(state string) string {
 }
 
 // downloadAttachment hands the oauth token only to the url trello returned, not to wherever it redirects.
-func downloadAttachment(url, token string) (*bytes.Buffer, error) {
+func downloadAttachment(spool *migration.SpooledFiles, url, token, name, mime string) (*models.TaskAttachment, error) {
 	hc := utils.NewSSRFSafeHTTPClient()
 	hc.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 10 {
@@ -134,9 +133,10 @@ func downloadAttachment(url, token string) (*bytes.Buffer, error) {
 		req.Header.Del("Authorization")
 		return nil
 	}
-	return migration.DownloadFileWithHeadersLimited(hc, url, http.Header{
+	headers := http.Header{
 		"Authorization": {`OAuth oauth_consumer_key="` + config.MigrationTrelloKey.GetString() + `", oauth_token="` + token + `"`},
-	}, migration.MaxDownloadSize())
+	}
+	return spool.DownloadAttachment(hc, url, headers, name, mime)
 }
 
 func getTrelloBoards(client *trello.Client) (trelloData []*trello.Board, err error) {
@@ -252,7 +252,7 @@ func convertMarkdownToHTML(input string) (output string, err error) {
 
 // Converts all previously obtained data from trello into the vikunja format.
 // `trelloData` should contain all boards with their projects and cards respectively.
-func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Board, client *trello.Client, currentMember *trello.Member) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
+func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Board, client *trello.Client, currentMember *trello.Member, spool *migration.SpooledFiles) (fullVikunjaHierachie []*models.ProjectWithTasksAndBuckets, err error) {
 
 	log.Debugf("[Trello Migration] ")
 
@@ -271,6 +271,7 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 	log.Debugf("[Trello Migration] Converting %d boards to vikunja projects", len(trelloData))
 
 	actionMemberCache := make(map[string]*trello.Member)
+	coverClient := utils.NewSSRFSafeHTTPClient()
 
 	for index, board := range trelloData {
 		project := &models.ProjectWithTasksAndBuckets{
@@ -373,22 +374,13 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 						// Download file and add it as attachment
 						log.Debugf("[Trello Migration] Downloading card attachment %s", attachment.ID)
 
-						buf, err := downloadAttachment(attachment.URL, client.Token)
+						vikunjaAttachment, err := downloadAttachment(spool, attachment.URL, client.Token, attachment.Name, attachment.MimeType)
 						if files.IsErrFileIsTooLarge(err) {
 							log.Warningf("[Trello Migration] Card attachment %s is too large, skipping it", attachment.ID)
 							continue
 						}
 						if err != nil {
 							return nil, err
-						}
-
-						vikunjaAttachment := &models.TaskAttachment{
-							File: &files.File{
-								Name:        attachment.Name,
-								Mime:        attachment.MimeType,
-								Size:        uint64(buf.Len()),
-								FileContent: buf.Bytes(),
-							},
 						}
 
 						if card.IDAttachmentCover != "" && card.IDAttachmentCover == attachment.ID {
@@ -411,23 +403,15 @@ func convertTrelloDataToVikunja(organizationName string, trelloData []*trello.Bo
 
 					cover := card.Cover.Scaled[len(card.Cover.Scaled)-1]
 
-					buf, err := migration.DownloadFile(cover.URL)
+					// Seems to always return jpg
+					coverAttachment, err := spool.DownloadAttachment(coverClient, cover.URL, nil, cover.ID+".jpg", "image/jpg")
 					switch {
 					case files.IsErrFileIsTooLarge(err):
 						log.Warningf("[Trello Migration] Cover of card %s is too large, skipping it", card.ID)
 					case err != nil:
 						return nil, err
 					default:
-						coverAttachment := &models.TaskAttachment{
-							ID: 43,
-							File: &files.File{
-								Name:        cover.ID + ".jpg",
-								Mime:        "image/jpg", // Seems to always return jpg
-								Size:        uint64(buf.Len()),
-								FileContent: buf.Bytes(),
-							},
-						}
-
+						coverAttachment.ID = 43
 						task.Attachments = append(task.Attachments, coverAttachment)
 						task.CoverImageAttachmentID = coverAttachment.ID
 					}
@@ -518,6 +502,16 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 	log.Debugf("[Trello Migration] Got all trello data for user %d", u.ID)
 
+	spool, err := migration.NewSpooledFiles()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if cerr := spool.Close(); cerr != nil {
+			log.Errorf("[Trello Migration] Could not remove downloaded attachments: %s", cerr)
+		}
+	}()
+
 	organizationMap := getTrelloOrganizationsWithBoards(boards)
 	for organizationID, boards := range organizationMap {
 		log.Debugf("[Trello Migration] Getting organization with id %s for user %d", organizationID, u.ID)
@@ -547,7 +541,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		if err != nil {
 			return err
 		}
-		hierarchy, err := convertTrelloDataToVikunja(orgName, boards, client, currentMember)
+		hierarchy, err := convertTrelloDataToVikunja(orgName, boards, client, currentMember, spool)
 		if err != nil {
 			return err
 		}
@@ -555,7 +549,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		log.Debugf("[Trello Migration] Done migrating trello data for user %d for organization %s", u.ID, organizationID)
 		log.Debugf("[Trello Migration] Start inserting trello data for user %d for organization %s", u.ID, organizationID)
 
-		err = migration.InsertFromStructure(hierarchy, u)
+		err = migration.InsertFromStructureWithFileProvider(hierarchy, u, spool)
 		if err != nil {
 			return err
 		}
