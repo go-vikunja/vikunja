@@ -2175,6 +2175,45 @@ func TestTaskCollection_SubtaskWithMultipleParentsNoDuplicates(t *testing.T) {
 	assert.True(t, foundParent2, "Parent task 42 should be present")
 }
 
+// TestTaskCollection_ExpandSubtasksWithoutRelations verifies that expand=subtasks
+// preserves filtering, ordering, pagination, and total count when no relations exist.
+func TestTaskCollection_ExpandSubtasksWithoutRelations(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+	project := &Project{Title: "pagination without relations", OwnerID: u.ID}
+	insertTestProject(t, s, project)
+
+	older := &Task{Title: "older", ProjectID: project.ID, CreatedByID: u.ID, Index: 1, Done: true}
+	newer := &Task{Title: "newer", ProjectID: project.ID, CreatedByID: u.ID, Index: 2, Done: true}
+	unfinished := &Task{Title: "unfinished", ProjectID: project.ID, CreatedByID: u.ID, Index: 3}
+	_, err := s.Insert(older, newer, unfinished)
+	require.NoError(t, err)
+	_, err = s.Where("1 = 1").Delete(&TaskRelation{})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	for _, expand := range [][]TaskCollectionExpandable{nil, {TaskCollectionExpandSubtasks}} {
+		for page, want := range []int64{newer.ID, older.ID} {
+			c := &TaskCollection{
+				ProjectID: project.ID,
+				Filter:    "done = true",
+				SortBy:    []string{"id"},
+				OrderBy:   []string{"desc"},
+				Expand:    expand,
+			}
+			result, count, total, err := c.ReadAll(s, u, "", page+1, 1)
+			require.NoError(t, err)
+			require.Equal(t, 1, count)
+			require.EqualValues(t, 2, total)
+			require.Len(t, result, 1)
+			require.Equal(t, want, result.([]*Task)[0].ID)
+		}
+	}
+}
+
 // TestTaskCollection_ExpandSubtasksPaginatesRoots verifies the maintainer's exact
 // pagination scenario: with expand=subtasks the LIMIT must slice ROOTS (top-level
 // tasks), and subtasks ride along beyond the limit without consuming it. totalCount
