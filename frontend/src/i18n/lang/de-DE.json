@@ -1285,7 +1285,11 @@
 			"usedAsCover": "Titelbild",
 			"play": "Abspielen",
 			"playFile": "{file} abspielen",
-			"audioError": "Diese Audiodatei konnte nicht abgespielt werden."
+			"audioError": "Diese Audiodatei konnte nicht abgespielt werden.",
+			"viewMode": "Anhangansicht",
+			"viewDetailed": "Mit großen Vorschaubildern anzeigen",
+			"viewList": "Als Liste anzeigen",
+			"viewGallery": "Als Galerie anzeigen"
 		},
 		"comment": {
 			"title": "Kommentare",

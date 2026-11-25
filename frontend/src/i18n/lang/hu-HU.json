@@ -1285,7 +1285,11 @@
 			"usedAsCover": "Borítókép",
 			"play": "Lejátszás",
 			"playFile": "{file} lejátszása",
-			"audioError": "Nem sikerült lejátszani az audiofájlt."
+			"audioError": "Nem sikerült lejátszani az audiofájlt.",
+			"viewMode": "Mellékletek nézete",
+			"viewDetailed": "Nagy lista",
+			"viewList": "Kompakt lista",
+			"viewGallery": "Galéria"
 		},
 		"comment": {
 			"title": "Hozzászólások",
