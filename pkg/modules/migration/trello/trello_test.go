@@ -18,6 +18,7 @@ package trello
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -27,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/migration"
 
 	"github.com/adlio/trello"
 	"github.com/d4l3k/messagediff"
@@ -172,6 +174,23 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 							Name: "Test Card 8",
 							Pos:  444,
 						},
+						{
+							Name:                  "Test Card 9",
+							Pos:                   555,
+							ManualCoverAttachment: true,
+							Cover: &trello.CardCover{
+								Scaled: []*trello.CardCoverScaledVariant{
+									{
+										ID:  "smallcover",
+										URL: "https://vikunja.io/smallcover.jpg",
+									},
+									{
+										ID:  "largecover",
+										URL: "https://vikunja.io/largecover.jpg",
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -257,6 +276,7 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 
 	trelloData[0].Prefs.BackgroundImage = attachmentServer.URL + "/testimage.jpg"
 	trelloData[0].Lists[0].Cards[0].Attachments[0].URL = attachmentServer.URL + "/testimage.jpg"
+	trelloData[0].Lists[1].Cards[4].Cover.Scaled[1].URL = attachmentServer.URL + "/largecover.jpg"
 
 	expectedHierarchyOrg := map[string][]*models.ProjectWithTasksAndBuckets{
 		"orgid": {
@@ -305,10 +325,9 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 							Attachments: []*models.TaskAttachment{
 								{
 									File: &files.File{
-										Name:        "Testimage.jpg",
-										Mime:        "image/jpg",
-										Size:        uint64(len(exampleFile)),
-										FileContent: exampleFile,
+										Name: "Testimage.jpg",
+										Mime: "image/jpg",
+										Size: uint64(len(exampleFile)),
 									},
 								},
 							},
@@ -388,6 +407,23 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 						Task: models.Task{
 							Title:    "Test Card 8",
 							BucketID: 2,
+						},
+					},
+					{
+						Task: models.Task{
+							Title:    "Test Card 9",
+							BucketID: 2,
+							Attachments: []*models.TaskAttachment{
+								{
+									ID: 43,
+									File: &files.File{
+										Name: "largecover.jpg",
+										Mime: "image/jpg",
+										Size: uint64(len(exampleFile)),
+									},
+								},
+							},
+							CoverImageAttachmentID: 43,
 						},
 					},
 				},
@@ -477,14 +513,36 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 
 	organizationMap := getTrelloOrganizationsWithBoards(trelloData)
 	for organizationID, boards := range organizationMap {
-		hierarchy, err := convertTrelloDataToVikunja(organizationID, boards, &trello.Client{}, nil)
+		spool, err := migration.NewSpooledFiles()
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = spool.Close() })
+
+		hierarchy, err := convertTrelloDataToVikunja(organizationID, boards, &trello.Client{}, nil, spool)
 
 		require.NoError(t, err)
 		assert.NotNil(t, hierarchy)
 		if diff, equal := messagediff.PrettyDiff(hierarchy, expectedHierarchyOrg[organizationID]); !equal {
 			t.Errorf("converted trello data = %v,\nwant %v,\ndiff: %v", hierarchy, expectedHierarchyOrg[organizationID], diff)
 		}
+
+		if organizationID == "orgid" {
+			assert.Equal(t, exampleFile, readSpooledAttachment(t, spool, hierarchy[1].Tasks[0].Attachments[0]))
+			assert.Equal(t, exampleFile, readSpooledAttachment(t, spool, hierarchy[1].Tasks[8].Attachments[0]))
+		}
 	}
+}
+
+func readSpooledAttachment(t *testing.T, spool *migration.SpooledFiles, attachment *models.TaskAttachment) []byte {
+	t.Helper()
+
+	file, _, err := spool.OpenAttachment(attachment)
+	require.NoError(t, err)
+	require.NotNil(t, file)
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	require.NoError(t, err)
+	return content
 }
 
 func TestCreateOrganizationMap(t *testing.T) {
@@ -526,9 +584,13 @@ func TestDownloadAttachmentDropsTokenOnRedirect(t *testing.T) {
 	}))
 	t.Cleanup(origin.Close)
 
-	buf, err := downloadAttachment(origin.URL, "secret-token")
+	spool, err := migration.NewSpooledFiles()
 	require.NoError(t, err)
-	assert.Equal(t, "file", buf.String())
+	t.Cleanup(func() { _ = spool.Close() })
+
+	attachment, err := downloadAttachment(spool, origin.URL, "secret-token", "file.txt", "text/plain")
+	require.NoError(t, err)
+	assert.Equal(t, "file", string(readSpooledAttachment(t, spool, attachment)))
 	assert.Contains(t, originAuth, "secret-token")
 	assert.Empty(t, redirectedAuth, "the oauth token must not follow a redirect")
 }
