@@ -35,8 +35,7 @@ import (
 
 const metadataPath = "/.well-known/oauth-authorization-server"
 
-// discoveryEnv rebuilds the routes with settings read at registration. Set values
-// outlive InitDefaultConfig, so they are restored after the test.
+// Set values outlive InitDefaultConfig, so discoveryEnv restores them.
 func discoveryEnv(t *testing.T, settings map[config.Key]any) *echo.Echo {
 	t.Helper()
 	_, err := setupTestEnv()

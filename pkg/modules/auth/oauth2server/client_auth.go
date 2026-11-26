@@ -24,9 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 )
 
-// ApplyBasicClientAuth takes the client_id of req from an HTTP Basic Authorization
-// header (RFC 6749 §2.3.1) and reports whether the header was Basic. Call it before
-// ExchangeToken so a rejection doesn't consume the authorization code.
+// ApplyBasicClientAuth reads req's client_id from Basic auth (RFC 6749 §2.3.1); call it before ExchangeToken so a rejection doesn't consume the code.
 func ApplyBasicClientAuth(req *TokenRequest, r *http.Request) (basic bool, err error) {
 	// BasicAuth can't tell a malformed Basic header from a missing one.
 	scheme, _, _ := strings.Cut(r.Header.Get("Authorization"), " ")

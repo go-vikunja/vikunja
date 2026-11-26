@@ -24,8 +24,7 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// RFC 8414 §3.1 inserts the well-known path before the issuer's path, so a subpath
-// deployment's proxy can forward that URL here unchanged.
+// RFC 8414 §3.1 puts the well-known path before the issuer's path, so a subpath proxy can forward it unchanged.
 func registerOAuthDiscoveryRoutes(e *echo.Echo) {
 	paths := []string{oauth2server.MetadataPath}
 	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" {
@@ -36,7 +35,6 @@ func registerOAuthDiscoveryRoutes(e *echo.Echo) {
 	}
 }
 
-// oauthAuthorizationServerMetadata serves the RFC 8414 authorization server metadata.
 func oauthAuthorizationServerMetadata(c *echo.Context) error {
 	metadata, ok := oauth2server.Metadata()
 	if !ok {
