@@ -19,7 +19,9 @@ package webtests
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 
@@ -138,6 +140,145 @@ func TestMCPProtectedResourceMetadata(t *testing.T) {
 				"bearer_methods_supported": ["header"],
 				"resource_name": "Vikunja"
 			}`, rec.Body.String(), path)
+		}
+	})
+}
+
+const (
+	resourceMetadataURL   = "https://localhost" + resourceMetadataPath
+	missingTokenChallenge = `Bearer resource_metadata="` + resourceMetadataURL + `"`
+	invalidTokenChallenge = `Bearer resource_metadata="` + resourceMetadataURL + `", error="invalid_token", ` +
+		`error_description="The access token is expired, revoked or not valid for this resource"`
+)
+
+func postMCP(e *echo.Echo, header http.Header) *httptest.ResponseRecorder {
+	return serveMCPRequest(e, mcpRequest(http.MethodPost, initializeBody), header)
+}
+
+func serveMCPRequest(e *echo.Echo, req *http.Request, header http.Header) *httptest.ResponseRecorder {
+	for k, v := range header {
+		req.Header[k] = v
+	}
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	return rec
+}
+
+func bearer(token string) http.Header {
+	return http.Header{echo.HeaderAuthorization: {"Bearer " + token}}
+}
+
+func TestMCPChallenge(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	sessionJWT := humaTokenFor(t, &testuser1)
+
+	for name, tc := range map[string]struct {
+		header http.Header
+		code   int
+		want   string
+	}{
+		"no credentials": {
+			code: http.StatusUnauthorized,
+			want: missingTokenChallenge,
+		},
+		"unknown api token": {
+			header: bearer("tk_0000000000000000000000000000000000000000"),
+			code:   http.StatusUnauthorized,
+			want:   invalidTokenChallenge,
+		},
+		"expired oauth token": {
+			header: bearer(insertOAuthTokenExpiring(t, mcpResourceURL, projectsReadPermissions(), time.Now().Add(-time.Hour))),
+			code:   http.StatusUnauthorized,
+			want:   invalidTokenChallenge,
+		},
+		"malformed token": {
+			header: bearer("not-a-token"),
+			code:   http.StatusUnauthorized,
+			want:   invalidTokenChallenge,
+		},
+		"basic credentials": {
+			header: http.Header{echo.HeaderAuthorization: {"Basic dXNlcjE6MTIzNDU2NzhUZXN0"}},
+			code:   http.StatusUnauthorized,
+			want:   invalidTokenChallenge,
+		},
+		"session jwt": {
+			header: bearer(sessionJWT),
+			code:   http.StatusUnauthorized,
+			want:   invalidTokenChallenge,
+		},
+		"oauth token for another resource": {
+			header: bearer(insertOAuthToken(t, "https://other.example/api/v2/mcp", projectsReadPermissions())),
+			code:   http.StatusUnauthorized,
+			want:   invalidTokenChallenge,
+		},
+		"api token without mcp access": {
+			header: bearer(noMCPToken),
+			code:   http.StatusForbidden,
+		},
+		"hand-made api token": {
+			header: bearer(mcpProjectsReadToken),
+			code:   http.StatusOK,
+		},
+		"oauth token for this resource": {
+			header: bearer(insertOAuthToken(t, mcpResourceURL, projectsReadPermissions())),
+			code:   http.StatusOK,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			rec := postMCP(e, tc.header)
+			require.Equal(t, tc.code, rec.Code, rec.Body.String())
+			assert.Equal(t, tc.want, rec.Header().Get(echo.HeaderWWWAuthenticate))
+		})
+	}
+
+	t.Run("parses with the MCP SDK", func(t *testing.T) {
+		rec := postMCP(e, bearer(sessionJWT))
+		challenges, err := oauthex.ParseWWWAuthenticate(rec.Header().Values(echo.HeaderWWWAuthenticate))
+		require.NoError(t, err)
+		require.Len(t, challenges, 1)
+		assert.Equal(t, "bearer", challenges[0].Scheme)
+		assert.Equal(t, resourceMetadataURL, challenges[0].Params["resource_metadata"])
+		assert.Equal(t, "invalid_token", challenges[0].Params["error"])
+	})
+
+	t.Run("never takes the token from the query string", func(t *testing.T) {
+		req := mcpRequest(http.MethodPost, initializeBody)
+		req.URL.RawQuery = url.Values{"access_token": {mcpProjectsReadToken}}.Encode()
+		rec := serveMCPRequest(e, req, nil)
+		require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
+		assert.Equal(t, missingTokenChallenge, rec.Header().Get(echo.HeaderWWWAuthenticate))
+	})
+
+	t.Run("is absent without a public URL", func(t *testing.T) {
+		withoutPublicURL(t)
+		for _, header := range []http.Header{nil, bearer(sessionJWT), bearer(noMCPToken)} {
+			rec := postMCP(e, header)
+			assert.Contains(t, []int{http.StatusUnauthorized, http.StatusForbidden}, rec.Code, rec.Body.String())
+			assert.Empty(t, rec.Header().Values(echo.HeaderWWWAuthenticate))
+		}
+	})
+
+	t.Run("leaves other routes' 401s alone", func(t *testing.T) {
+		oauthToken := insertOAuthToken(t, mcpResourceURL, projectsReadPermissions())
+		for _, tc := range []struct {
+			path   string
+			header http.Header
+		}{
+			{path: "/api/v2/projects"},
+			{path: "/api/v1/projects"},
+			{path: "/api/v2/projects", header: bearer("tk_0000000000000000000000000000000000000000")},
+			{path: "/api/v2/projects", header: bearer(oauthToken)},
+			{path: "/api/v1/projects", header: bearer(oauthToken)},
+		} {
+			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
+			for k, v := range tc.header {
+				req.Header[k] = v
+			}
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, req)
+			require.Equal(t, http.StatusUnauthorized, rec.Code, "%s: %s", tc.path, rec.Body.String())
+			assert.Empty(t, rec.Header().Values(echo.HeaderWWWAuthenticate), tc.path)
 		}
 	})
 }

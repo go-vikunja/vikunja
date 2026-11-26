@@ -495,6 +495,8 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc, oauthMetadata *oauth2server.MetadataFetcher) *oauth2server.Server {
+	// First, so it sees every 401 written after it.
+	a.Use(mcpmodule.Challenge)
 	a.Use(rejectFormBodies())
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
