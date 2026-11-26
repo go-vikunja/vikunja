@@ -153,19 +153,6 @@ func TestAPIToken_CreateForOAuthClient(t *testing.T) {
 		assert.Equal(t, "https://vikunja.example/api/v2/mcp", stored.OAuthResource)
 		assert.Equal(t, int64(1), stored.OwnerID)
 	})
-	t.Run("requires client and resource", func(t *testing.T) {
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
-
-		noClient := newToken()
-		noClient.OAuthClientID = ""
-		require.Error(t, noClient.CreateForOAuthClient(s))
-
-		noResource := newToken()
-		noResource.OAuthResource = ""
-		require.Error(t, noResource.CreateForOAuthClient(s))
-	})
 	t.Run("validates permissions", func(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()

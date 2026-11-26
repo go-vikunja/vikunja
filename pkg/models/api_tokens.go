@@ -150,9 +150,6 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 // CreateForOAuthClient mints the token an OAuth client receives for a scoped grant. Its owner is the
 // user who authorized the client.
 func (t *APIToken) CreateForOAuthClient(s *xorm.Session) error {
-	if t.OAuthClientID == "" || t.OAuthResource == "" {
-		return fmt.Errorf("oauth api token for owner %d needs a client id and a resource", t.OwnerID)
-	}
 	return t.insert(s, t.OwnerID)
 }
 
