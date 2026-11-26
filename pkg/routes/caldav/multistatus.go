@@ -56,7 +56,6 @@ func calDAVName(local string) xml.Name {
 	}
 }
 
-// propValue is the content of a property element.
 type propValue interface {
 	writeValue(w *xmlWriter)
 }
@@ -105,7 +104,6 @@ type msResponse interface {
 	writeResponse(w *xmlWriter, minimal bool)
 }
 
-// statusResponse answers a whole resource with one status, e.g. a deleted member in sync-collection.
 type statusResponse struct {
 	href   string
 	status int
@@ -116,7 +114,6 @@ type propstatResponse struct {
 	propstats []propstat
 }
 
-// propResponse is the PROPFIND/REPORT shape: what was found, and what was asked for but is not there.
 func propResponse(href string, found []prop, missing []xml.Name) propstatResponse {
 	r := propstatResponse{href: href}
 	if len(found) > 0 {
@@ -140,7 +137,6 @@ func propResponse(href string, found []prop, missing []xml.Name) propstatRespons
 
 type multistatus struct {
 	responses []msResponse
-	// Empty omits the element.
 	syncToken string
 	// Prefer: return=minimal, see draft-murchison-webdav-prefer.
 	minimal bool
@@ -205,7 +201,6 @@ func writeMultistatus(c *echo.Context, ms multistatus) error {
 	return ms.writeTo(c.Response())
 }
 
-// writeDAVError answers with an RFC 4918 §16 error body naming the failed precondition.
 func writeDAVError(c *echo.Context, status int, precondition xml.Name) error {
 	c.Response().Header().Set("Content-Type", "application/xml; charset=utf-8")
 	c.Response().WriteHeader(status)
@@ -281,8 +276,7 @@ func (w *xmlWriter) status(code int) {
 	w.textElement(davName("status"), "HTTP/1.1 "+strconv.Itoa(code)+" "+http.StatusText(code))
 }
 
-// Namespaces without a fixed prefix become the default namespace of the element itself.
-// Unprefixed elements always declare theirs, so nesting never inherits the wrong one.
+// Unprefixed elements always declare their namespace, so nesting never inherits the wrong one.
 func (w *xmlWriter) startTag(name xml.Name) {
 	_ = w.w.WriteByte('<')
 	w.qualifiedName(name)

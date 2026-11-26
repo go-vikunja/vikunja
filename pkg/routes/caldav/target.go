@@ -28,25 +28,19 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// target is the resource a request addresses, resolved once per request.
 type target interface{ isTarget() }
 
-// entryTarget is /dav/.
 type entryTarget struct{}
 
-// principalTarget is the authenticated user's own principal, or /.well-known/caldav.
 type principalTarget struct{}
 
-// homeSetTarget is /dav/projects.
 type homeSetTarget struct{}
 
-// collectionTarget is /dav/projects/<id>: a project, the Favorites pseudo project or a
-// saved filter. Loaded without a permission check.
+// Loaded without a permission check.
 type collectionTarget struct {
 	project *models.ProjectWithTasksAndBuckets
 }
 
-// taskTarget is /dav/projects/<id>/<uid>.ics. The task itself is not loaded.
 type taskTarget struct {
 	collection collectionTarget
 	uid        string
@@ -96,8 +90,7 @@ func resolveProjects(c *echo.Context, _ *user.User) (target, error) {
 }
 
 func resolveTask(c *echo.Context, _ *user.User) (target, error) {
-	// Pinned: /dav/projects//<uid>.ics routes here with an empty project param, and
-	// the storage then serves the task without checking which collection it is in.
+	// Pinned: /dav/projects//<uid>.ics routes here and serves the task from any collection.
 	project := &models.ProjectWithTasksAndBuckets{}
 	if param := c.Param("project"); param != "" {
 		var err error

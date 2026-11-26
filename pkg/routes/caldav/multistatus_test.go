@@ -37,7 +37,6 @@ func renderMultistatus(t *testing.T, ms multistatus) string {
 	require.NoError(t, ms.writeTo(&sb))
 	out := sb.String()
 
-	// Every output must be well-formed.
 	d := xml.NewDecoder(strings.NewReader(out))
 	for {
 		_, err := d.Token()
