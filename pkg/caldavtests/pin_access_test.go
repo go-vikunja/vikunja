@@ -36,16 +36,33 @@ type accessExpectation struct {
 
 var (
 	readOnlyAccess = accessExpectation{
-		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadOnly,
-		putUpdate: 403, putCreate: 403, del: 403,
+		propfind:  207,
+		get:       200,
+		report:    207,
+		options:   200,
+		allow:     allowReadOnly,
+		putUpdate: 403,
+		putCreate: 403,
+		del:       403,
 	}
 	readWriteAccess = accessExpectation{
-		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadWrite,
-		putUpdate: 201, putCreate: 201, del: 204,
+		propfind:  207,
+		get:       200,
+		report:    207,
+		options:   200,
+		allow:     allowReadWrite,
+		putUpdate: 201,
+		putCreate: 201,
+		del:       204,
 	}
 	noAccess = accessExpectation{
-		propfind: 404, get: 404, report: 404, options: 404,
-		putUpdate: 404, putCreate: 404, del: 404,
+		propfind:  404,
+		get:       404,
+		report:    404,
+		options:   404,
+		putUpdate: 404,
+		putCreate: 404,
+		del:       404,
 	}
 )
 
@@ -67,7 +84,10 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	task := collection + "/" + taskUID + ".ics"
 	as := map[string]string{"Authorization": auth}
 
-	propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{"Authorization": auth, "Depth": "0"})
+	propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{
+		"Authorization": auth,
+		"Depth":         "0",
+	})
 	assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s", collection)
 
 	assert.Equal(t, want.get, caldavRequest(t, e, http.MethodGet, task, "", as).Code, "GET %s", task)
@@ -115,13 +135,41 @@ func TestPinAccessPaths(t *testing.T) {
 		project string
 		access  accessExpectation
 	}{
-		{name: "team read", project: "6", access: readOnlyAccess},
-		{name: "team write", project: "7", access: readWriteAccess},
-		{name: "team admin", project: "8", access: readWriteAccess},
-		{name: "user share read", project: "9", access: readOnlyAccess},
-		{name: "user share write", project: "10", access: readWriteAccess},
-		{name: "user share admin", project: "11", access: readWriteAccess},
-		{name: "read share inherited from parent", project: "12", access: readOnlyAccess},
+		{
+			name:    "team read",
+			project: "6",
+			access:  readOnlyAccess,
+		},
+		{
+			name:    "team write",
+			project: "7",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "team admin",
+			project: "8",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "user share read",
+			project: "9",
+			access:  readOnlyAccess,
+		},
+		{
+			name:    "user share write",
+			project: "10",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "user share admin",
+			project: "11",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "read share inherited from parent",
+			project: "12",
+			access:  readOnlyAccess,
+		},
 	}
 
 	for _, tc := range tests {
@@ -167,11 +215,53 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 		want     collectionExpectation
 	}{
 		// Project 22 is user1's own, archived.
-		{name: "archived own project", project: "22", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadOnly}},
-		{name: "archived project, unrelated user", project: "22", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
+		{
+			name:     "archived own project",
+			project:  "22",
+			username: testuser1.Username,
+			want: collectionExpectation{
+				propfind:  207,
+				report:    207,
+				options:   200,
+				putCreate: 403,
+				allow:     allowReadOnly,
+			},
+		},
+		{
+			name:     "archived project, unrelated user",
+			project:  "22",
+			username: "user13",
+			want: collectionExpectation{
+				propfind:  404,
+				report:    404,
+				options:   404,
+				putCreate: 404,
+			},
+		},
 		// Saved filter 1 (pseudo project -2) belongs to user1.
-		{name: "own saved filter", project: "-2", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadWrite}},
-		{name: "saved filter, unrelated user", project: "-2", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
+		{
+			name:     "own saved filter",
+			project:  "-2",
+			username: testuser1.Username,
+			want: collectionExpectation{
+				propfind:  207,
+				report:    207,
+				options:   200,
+				putCreate: 403,
+				allow:     allowReadWrite,
+			},
+		},
+		{
+			name:     "saved filter, unrelated user",
+			project:  "-2",
+			username: "user13",
+			want: collectionExpectation{
+				propfind:  404,
+				report:    404,
+				options:   404,
+				putCreate: 404,
+			},
+		},
 	}
 
 	// Every write here is denied, so the cases share one fixture load.
@@ -181,7 +271,10 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 			auth := basicAuthHeader(tc.username, fixturePassword)
 			collection := "/dav/projects/" + tc.project
 
-			propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{"Authorization": auth, "Depth": "0"})
+			propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{
+				"Authorization": auth,
+				"Depth":         "0",
+			})
 			assert.Equal(t, tc.want.propfind, propfind.Code, "PROPFIND")
 			report := caldavRequest(t, e, "REPORT", collection, ReportCalendarQuery, map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.report, report.Code, "REPORT")
@@ -209,7 +302,10 @@ func TestPinAccessGETCollection(t *testing.T) {
 func TestPinAccessForeignPrincipal(t *testing.T) {
 	e := setupTestEnv(t)
 
-	for _, path := range []string{"/dav/principals/user1/", "/dav/principals/user15/sub/"} {
+	for _, path := range []string{
+		"/dav/principals/user1/",
+		"/dav/principals/user15/sub/",
+	} {
 		rec := caldavPROPFIND(t, e, path, "0", PropfindDiscoveryProps)
 		assert.Equal(t, http.StatusNotFound, rec.Code, "PROPFIND %s", path)
 	}

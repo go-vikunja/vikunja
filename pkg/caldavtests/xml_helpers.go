@@ -141,10 +141,24 @@ const (
 	nsCS     = "http://calendarserver.org/ns/"
 )
 
-func davName(local string) xml.Name { return xml.Name{Space: nsDAV, Local: local} }
-func calName(local string) xml.Name { return xml.Name{Space: nsCalDAV, Local: local} }
+func davName(local string) xml.Name {
+	return xml.Name{
+		Space: nsDAV,
+		Local: local,
+	}
+}
 
-var csGetCTag = xml.Name{Space: nsCS, Local: "getctag"}
+func calName(local string) xml.Name {
+	return xml.Name{
+		Space: nsCalDAV,
+		Local: local,
+	}
+}
+
+var csGetCTag = xml.Name{
+	Space: nsCS,
+	Local: "getctag",
+}
 
 // xmlNode is a namespace-resolved XML element, independent of the prefixes the server chose.
 type xmlNode struct {
@@ -216,7 +230,10 @@ func parseDAVResponses(t *testing.T, rec *httptest.ResponseRecorder) []davRespon
 	out := make([]davResponse, 0, len(raw.Responses))
 	for _, r := range raw.Responses {
 		require.Len(t, r.Hrefs, 1, "expected exactly one href per response. Body:\n%s", rec.Body.String())
-		resp := davResponse{Href: r.Hrefs[0], Propstats: map[int]map[xml.Name]xmlNode{}}
+		resp := davResponse{
+			Href:      r.Hrefs[0],
+			Propstats: map[int]map[xml.Name]xmlNode{},
+		}
 		if r.Status != "" {
 			resp.Status = parseDAVStatus(t, r.Status)
 		}

@@ -67,8 +67,12 @@ func expectEntry() expectedDAVResponse {
 			davName("getlastmodified"):                  zeroLastMod,
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag,
-			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
+			davName("owner"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
 		},
 	}
 }
@@ -90,8 +94,11 @@ func expectHomeSet(currentUserPrincipal string) expectedDAVResponse {
 			davName("getlastmodified"):                  zeroLastMod,
 		},
 		notFound: []xml.Name{
-			davName("getetag"), csGetCTag,
-			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
 		},
 	}
 }
@@ -113,7 +120,10 @@ func expectCalendar(href, title, currentUserPrincipal string) expectedDAVRespons
 			davName("getlastmodified"):                  anyValue,
 			davName("sync-token"):                       anyValue,
 		},
-		notFound: []xml.Name{davName("getcontentlength"), calName("calendar-description")},
+		notFound: []xml.Name{
+			davName("getcontentlength"),
+			calName("calendar-description"),
+		},
 	}
 }
 
@@ -133,7 +143,11 @@ func expectTask(href, title, currentUserPrincipal string) expectedDAVResponse {
 			davName("getlastmodified"):        anyValue,
 			davName("getcontentlength"):       anyValue,
 		},
-		notFound: []xml.Name{calName("supported-calendar-component-set"), davName("sync-token"), calName("calendar-description")},
+		notFound: []xml.Name{
+			calName("supported-calendar-component-set"),
+			davName("sync-token"),
+			calName("calendar-description"),
+		},
 	}
 }
 
@@ -217,12 +231,19 @@ func TestPinPropfindMatrix(t *testing.T) {
 	// PROPFIND does not write, so all subtests share one fixture load.
 	e := setupTestEnv(t)
 	for _, kind := range kinds {
-		for _, depth := range []string{"0", "1", "infinity"} {
+		for _, depth := range []string{
+			"0",
+			"1",
+			"infinity",
+		} {
 			expected := kind.shallow
 			if depth == "1" {
 				expected = kind.deep
 			}
-			for _, isMinimal := range []bool{false, true} {
+			for _, isMinimal := range []bool{
+				false,
+				true,
+			} {
 				name := kind.name + " Depth " + depth
 				headers := map[string]string{"Depth": depth}
 				want := expected
@@ -318,8 +339,11 @@ func TestPinPropfindUnknownNamespace(t *testing.T) {
 
 	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
 	assertDAVResponses(t, rec, []expectedDAVResponse{{
-		href:     "/dav/projects/36",
-		ok:       map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
-		notFound: []xml.Name{{Space: "", Local: "bogus"}},
+		href: "/dav/projects/36",
+		ok:   map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
+		notFound: []xml.Name{{
+			Space: "",
+			Local: "bogus",
+		}},
 	}})
 }

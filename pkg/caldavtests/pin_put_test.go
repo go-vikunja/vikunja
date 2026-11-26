@@ -53,10 +53,25 @@ func TestPinPUTCreatePreconditions(t *testing.T) {
 		headers map[string]string
 		status  int
 	}{
-		{name: "no headers", status: http.StatusCreated},
-		{name: "If-Match etag", headers: map[string]string{"If-Match": `"x"`}, status: http.StatusPreconditionFailed},
-		{name: "If-Match star", headers: map[string]string{"If-Match": "*"}, status: http.StatusPreconditionFailed},
-		{name: "If-None-Match star", headers: map[string]string{"If-None-Match": "*"}, status: http.StatusCreated},
+		{
+			name:   "no headers",
+			status: http.StatusCreated,
+		},
+		{
+			name:    "If-Match etag",
+			headers: map[string]string{"If-Match": `"x"`},
+			status:  http.StatusPreconditionFailed,
+		},
+		{
+			name:    "If-Match star",
+			headers: map[string]string{"If-Match": "*"},
+			status:  http.StatusPreconditionFailed,
+		},
+		{
+			name:    "If-None-Match star",
+			headers: map[string]string{"If-None-Match": "*"},
+			status:  http.StatusCreated,
+		},
 	}
 
 	for _, tc := range tests {
@@ -139,7 +154,10 @@ func TestPinPUTUpdatePreconditions(t *testing.T) {
 // ProjectHandler parses the body of a PUT on a collection URL as a task and hands it on.
 func TestPinPUTOnCollection(t *testing.T) {
 	t.Run("new UID creates the task", func(t *testing.T) {
-		for _, path := range []string{"/dav/projects/36", "/dav/projects/36/"} {
+		for _, path := range []string{
+			"/dav/projects/36",
+			"/dav/projects/36/",
+		} {
 			t.Run(path, func(t *testing.T) {
 				e := setupTestEnv(t)
 				const uid = "pin-put-on-collection"
