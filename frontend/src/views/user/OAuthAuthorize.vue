@@ -141,7 +141,6 @@ async function loadConsent() {
 }
 
 async function approve(level: AccessLevel) {
-	if (approving.value) return
 	approving.value = true
 	errorMessage.value = ''
 	try {
