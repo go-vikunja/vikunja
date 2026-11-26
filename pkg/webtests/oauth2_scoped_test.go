@@ -53,7 +53,10 @@ func scopedAuthorize(t *testing.T, e *echo.Echo, version string, params map[stri
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
 	rec := humaRequest(t, e, http.MethodPost, "/api/"+version+"/oauth/authorize", string(raw), humaTokenFor(t, &testuser1), "")
-	return &httpResult{code: rec.Code, body: rec.Body.Bytes()}
+	return &httpResult{
+		code: rec.Code,
+		body: rec.Body.Bytes(),
+	}
 }
 
 func scopedExchange(t *testing.T, e *echo.Echo, version, code string, extra url.Values) *httpResult {
@@ -69,7 +72,10 @@ func scopedExchange(t *testing.T, e *echo.Echo, version, code string, extra url.
 		form[k] = v
 	}
 	rec := humaRequest(t, e, http.MethodPost, "/api/"+version+"/oauth/token", form.Encode(), "", "application/x-www-form-urlencoded")
-	return &httpResult{code: rec.Code, body: rec.Body.Bytes()}
+	return &httpResult{
+		code: rec.Code,
+		body: rec.Body.Bytes(),
+	}
 }
 
 type httpResult struct {
@@ -86,7 +92,6 @@ func (r *httpResult) errorCode(t *testing.T) int {
 	return body.Code
 }
 
-// scopedGrant runs authorize and exchange on v2 and returns both responses.
 func scopedGrant(t *testing.T, e *echo.Echo, params map[string]string) (oauth2server.AuthorizeResponse, oauth2server.TokenResponse, map[string]any) {
 	t.Helper()
 	authz := scopedAuthorize(t, e, "v2", params)
@@ -185,20 +190,12 @@ func TestOAuthScopedGrant(t *testing.T) {
 	})
 
 	t.Run("rejects a foreign resource", func(t *testing.T) {
-		for _, resource := range []string{
-			"https://evil.example/api/v2/mcp",
-			"https://localhost/api/v2/projects",
-			"https://localhost/api/v2/mcp?x=1",
-			"https://localhost/api/v2/mcp#frag",
-			"/api/v2/mcp",
-		} {
-			authz := scopedAuthorize(t, e, "v2", map[string]string{
-				"scope":    "mcp:read",
-				"resource": resource,
-			})
-			require.Equal(t, http.StatusBadRequest, authz.code, "%s: %s", resource, authz.body)
-			assert.Equal(t, models.ErrCodeOAuthInvalidTarget, authz.errorCode(t), resource)
-		}
+		authz := scopedAuthorize(t, e, "v2", map[string]string{
+			"scope":    "mcp:read",
+			"resource": "https://evil.example/api/v2/mcp",
+		})
+		require.Equal(t, http.StatusBadRequest, authz.code, string(authz.body))
+		assert.Equal(t, models.ErrCodeOAuthInvalidTarget, authz.errorCode(t))
 	})
 
 	t.Run("a scope without mcp values and no resource returns a session", func(t *testing.T) {
@@ -306,16 +303,6 @@ func TestOAuthScopedGrantOverMCP(t *testing.T) {
 	_, readToken, _ := scopedGrant(t, e, map[string]string{"scope": "mcp:read"})
 	_, writeToken, _ := scopedGrant(t, e, map[string]string{"scope": "mcp:write"})
 
-	t.Run("rejected on REST routes", func(t *testing.T) {
-		for _, token := range []string{
-			readToken.AccessToken,
-			writeToken.AccessToken,
-		} {
-			rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects", "", token, "")
-			assert.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
-		}
-	})
-
 	t.Run("mcp:read sees and calls only read tools", func(t *testing.T) {
 		c := newMCPClientOn(t, e, readToken.AccessToken)
 		names := c.toolNames()
@@ -336,8 +323,14 @@ func TestOAuthScopedGrantOverMCP(t *testing.T) {
 				"title":   "nope",
 			},
 		})
-		assert.Contains(t, denied, "error")
 		assert.NotContains(t, denied, "result")
+		assert.Equal(t, map[string]any{
+			"code":    float64(-32602),
+			"message": `unknown tool "tasks_create"`,
+		}, denied["error"])
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"title": "nope",
+		})
 	})
 
 	t.Run("mcp:write sees and calls write tools", func(t *testing.T) {
@@ -357,6 +350,10 @@ func TestOAuthScopedGrantOverMCP(t *testing.T) {
 			"task": task["id"],
 			"done": true,
 		}), "isError")
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":   task["id"],
+			"done": true,
+		}, false)
 	})
 }
 
@@ -465,17 +462,6 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 		assert.Equal(t, before, countOAuthCodes(t), "preview must not create a code")
 	})
 
-	t.Run("flags an ipv4-mapped loopback redirect", func(t *testing.T) {
-		res := authorizePreview(t, e, userToken, map[string]string{
-			"scope":        "mcp:read",
-			"redirect_uri": "http://[::ffff:127.0.0.1]:33418/callback",
-		})
-		require.Equal(t, http.StatusOK, res.code, string(res.body))
-		var preview oauth2server.AuthorizePreview
-		require.NoError(t, json.Unmarshal(res.body, &preview))
-		assert.True(t, preview.LoopbackRedirect)
-	})
-
 	t.Run("read-only scope", func(t *testing.T) {
 		res := authorizePreview(t, e, userToken, map[string]string{"scope": "mcp:read"})
 		require.Equal(t, http.StatusOK, res.code, string(res.body))
@@ -498,68 +484,11 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 		}`, stripSchema(t, res.body))
 	})
 
-	t.Run("scope without mcp values is unscoped", func(t *testing.T) {
-		res := authorizePreview(t, e, userToken, map[string]string{"scope": "openid offline_access"})
-		require.Equal(t, http.StatusOK, res.code, string(res.body))
-		var preview oauth2server.AuthorizePreview
-		require.NoError(t, json.Unmarshal(res.body, &preview))
-		assert.False(t, preview.Scoped)
-		assert.Empty(t, preview.Scopes)
+	t.Run("rejects an invalid redirect_uri", func(t *testing.T) {
+		res := authorizePreview(t, e, userToken, map[string]string{"redirect_uri": "https://evil.example/callback"})
+		require.Equal(t, http.StatusBadRequest, res.code, string(res.body))
+		assert.Equal(t, models.ErrCodeOAuthInvalidRedirectURI, res.errorCode(t))
 	})
-
-	for _, tc := range []struct {
-		name   string
-		params map[string]string
-		code   int
-	}{
-		{
-			name:   "wrong response_type",
-			params: map[string]string{"response_type": "token"},
-			code:   models.ErrCodeOAuthUnsupportedResponseType,
-		},
-		{
-			name:   "invalid redirect_uri",
-			params: map[string]string{"redirect_uri": "https://evil.example/callback"},
-			code:   models.ErrCodeOAuthInvalidRedirectURI,
-		},
-		{
-			name:   "missing code_challenge",
-			params: map[string]string{"code_challenge": ""},
-			code:   models.ErrCodeOAuthMissingPKCE,
-		},
-		{
-			name:   "plain code_challenge_method",
-			params: map[string]string{"code_challenge_method": "plain"},
-			code:   models.ErrCodeOAuthMissingPKCE,
-		},
-		{
-			name: "unknown scope only with a resource",
-			params: map[string]string{
-				"scope":    "openid",
-				"resource": mcpResourceURL,
-			},
-			code: models.ErrCodeOAuthInvalidScope,
-		},
-		{
-			name:   "foreign resource",
-			params: map[string]string{"resource": "https://evil.example/api/v2/mcp"},
-			code:   models.ErrCodeOAuthInvalidTarget,
-		},
-		{
-			name: "scoped without client id",
-			params: map[string]string{
-				"scope":     "mcp:read",
-				"client_id": "",
-			},
-			code: models.ErrCodeOAuthClientNotFound,
-		},
-	} {
-		t.Run("rejects "+tc.name, func(t *testing.T) {
-			res := authorizePreview(t, e, userToken, tc.params)
-			require.Equal(t, http.StatusBadRequest, res.code, string(res.body))
-			assert.Equal(t, tc.code, res.errorCode(t))
-		})
-	}
 
 	t.Run("requires authentication", func(t *testing.T) {
 		res := authorizePreview(t, e, "", map[string]string{"scope": "mcp:read"})

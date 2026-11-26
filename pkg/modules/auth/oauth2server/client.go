@@ -89,11 +89,9 @@ func (c MetadataClient) describe() AuthorizeClient {
 		Kind: ClientKindMetadataDocument,
 		Name: c.metadata.Name,
 		Host: c.id.host(),
-		URI:  c.metadata.URI,
 	}
 }
 
-// clientID is a syntactically valid client_id: a legacyClientID or a metadataClientID.
 type clientID interface {
 	isClientID()
 }
@@ -127,8 +125,7 @@ func parseClientID(raw string) (clientID, error) {
 	return metadataClientID(raw), nil
 }
 
-// draft-ietf-oauth-client-id-metadata-document §3. The id is compared as a string, so a
-// non-normalized one (uppercase scheme, non-ASCII) is rejected rather than normalized.
+// draft-ietf-oauth-client-id-metadata-document §3; ids compare as strings, so non-normalized ones are rejected.
 func validClientIDURL(raw string) bool {
 	if len(raw) > maxClientIDURLLength || !strings.HasPrefix(raw, "https://") || strings.Contains(raw, "#") {
 		return false
@@ -140,6 +137,10 @@ func validClientIDURL(raw string) bool {
 	}
 	u, err := url.Parse(raw)
 	if err != nil || u.User != nil || u.Hostname() == "" || u.Path == "" || u.Path == "/" {
+		return false
+	}
+	// url.Parse percent-decodes the host, which would let a lookalike Unicode domain reach the consent screen.
+	if !strings.HasPrefix(raw, "https://"+u.Host+"/") {
 		return false
 	}
 	for _, segment := range strings.Split(u.Path, "/") {
@@ -197,12 +198,12 @@ func ValidateRedirectURI(redirectURI string) bool {
 		return true
 	}
 
-	return u.Scheme == "http" && isLoopbackHost(u.Hostname())
+	return isLoopbackRedirect(redirectURI)
 }
 
 func isLoopbackRedirect(redirectURI string) bool {
 	u, err := url.Parse(redirectURI)
-	return err == nil && strings.EqualFold(u.Scheme, "http") && isLoopbackHost(u.Hostname())
+	return err == nil && u.Scheme == "http" && isLoopbackHost(u.Hostname())
 }
 
 func isLoopbackHost(host string) bool {
@@ -234,13 +235,13 @@ func safeMetadataRedirect(redirectURI string) bool {
 	if err != nil || u.Scheme == "" || u.User != nil || strings.Contains(redirectURI, "#") {
 		return false
 	}
-	switch scheme := strings.ToLower(u.Scheme); scheme {
+	switch u.Scheme {
 	case "https":
 		return u.Hostname() != ""
 	case "http":
 		return isLoopbackHost(u.Hostname())
 	default:
-		return !browserSchemes[scheme]
+		return !browserSchemes[u.Scheme]
 	}
 }
 

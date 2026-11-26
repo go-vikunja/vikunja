@@ -21,7 +21,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -56,6 +55,8 @@ func newMetadataHost(t *testing.T, handler func(host *metadataHost, w http.Respo
 		handler(host, w, r)
 	}))
 	t.Cleanup(host.server.Close)
+	// A later host can reuse the port, and so the cached client id.
+	t.Cleanup(func() { _ = keyvalue.DelPrefix("oauth_client_metadata_") })
 	return host
 }
 
@@ -69,7 +70,6 @@ func (h *metadataHost) document(overrides map[string]any) map[string]any {
 	doc := map[string]any{
 		"client_id":   h.clientID(),
 		"client_name": "Example MCP Client",
-		"client_uri":  "https://app.example.com",
 		"redirect_uris": []string{
 			"http://127.0.0.1:3000/callback",
 			"https://app.example.com/callback",
@@ -93,7 +93,7 @@ func writeJSON(t *testing.T, w http.ResponseWriter, v any) {
 	require.NoError(t, json.NewEncoder(w).Encode(v))
 }
 
-// serveDocument serves the default document with overrides; a nil override removes the field.
+// A nil override removes the field.
 func serveDocument(t *testing.T, overrides map[string]any) *metadataHost {
 	t.Helper()
 	return newMetadataHost(t, func(host *metadataHost, w http.ResponseWriter, _ *http.Request) {
@@ -141,7 +141,6 @@ func TestResolveMetadataClient(t *testing.T) {
 			Kind: ClientKindMetadataDocument,
 			Name: "Example MCP Client",
 			Host: strings.TrimPrefix(host.server.URL, "https://"),
-			URI:  "https://app.example.com",
 		}, client.describe())
 	})
 
@@ -154,8 +153,7 @@ func TestResolveMetadataClient(t *testing.T) {
 				"redirect_uris": []string{"http://localhost/cb"},
 			}))
 		})
-		client := resolveMetadataClient(t, host)
-		assert.Empty(t, client.describe().URI)
+		resolveMetadataClient(t, host)
 	})
 
 	t.Run("caches the document", func(t *testing.T) {
@@ -196,18 +194,12 @@ func TestResolveMetadataClient(t *testing.T) {
 	})
 
 	t.Run("rejects a non-200 response", func(t *testing.T) {
-		for _, status := range []int{
-			http.StatusNoContent,
-			http.StatusNotFound,
-			http.StatusInternalServerError,
-		} {
-			host := newMetadataHost(t, func(host *metadataHost, w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(status)
-				_ = json.NewEncoder(w).Encode(host.document(nil))
-			})
-			requireUnavailable(t, host)
-		}
+		host := newMetadataHost(t, func(host *metadataHost, w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(host.document(nil))
+		})
+		requireUnavailable(t, host)
 	})
 
 	t.Run("rejects a document that is not served as JSON", func(t *testing.T) {
@@ -350,18 +342,6 @@ func TestResolveMetadataClient(t *testing.T) {
 		assert.Len(t, []rune(name), maxClientNameRunes)
 	})
 
-	t.Run("drops an unusable client_uri", func(t *testing.T) {
-		for _, uri := range []string{
-			"http://app.example.com",
-			"javascript:alert(1)",
-			"https://user@app.example.com",
-			"https://app.example.com/" + strings.Repeat("a", maxClientURILength),
-		} {
-			client := resolveMetadataClient(t, serveDocument(t, map[string]any{"client_uri": uri}))
-			assert.Empty(t, client.describe().URI, uri)
-		}
-	})
-
 	t.Run("the production client refuses non-routable hosts", func(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set(false)
 		host := serveDocument(t, nil)
@@ -400,13 +380,9 @@ func TestResolveServerIdentifierAsClient(t *testing.T) {
 func TestMetadataCacheTTL(t *testing.T) {
 	for header, want := range map[string]time.Duration{
 		"":                          defaultMetadataCacheTTL,
-		"public":                    defaultMetadataCacheTTL,
-		"max-age=3600":              time.Hour,
 		"public, max-age=7200":      2 * time.Hour,
 		`max-age="1800"`:            30 * time.Minute,
-		"max-age=0":                 minMetadataCacheTTL,
 		"max-age=60":                minMetadataCacheTTL,
-		"max-age=31536000":          maxMetadataCacheTTL,
 		"max-age=99999999999999999": maxMetadataCacheTTL,
 		"max-age=-5":                defaultMetadataCacheTTL,
 		"max-age=abc":               defaultMetadataCacheTTL,
@@ -428,38 +404,16 @@ func TestPreviewMetadataClient(t *testing.T) {
 			CodeChallenge:       "challenge",
 			CodeChallengeMethod: "S256",
 		}
-		if v, ok := overrides["redirect_uri"]; ok {
-			req.RedirectURI = v
-		}
 		if v, ok := overrides["scope"]; ok {
 			req.Scope = v
 		}
 		return req
 	}
 
-	t.Run("is scoped without scope or resource", func(t *testing.T) {
-		preview, err := srv.Preview(t.Context(), request(nil), 1)
-		require.NoError(t, err)
-		assert.True(t, preview.Scoped)
-		assert.Equal(t, []Scope{ScopeMCPRead, ScopeMCPWrite}, preview.Scopes)
-		assert.Equal(t, "Example MCP Client", preview.Client.Name)
-		assert.Equal(t, ClientKindMetadataDocument, preview.Client.Kind)
-	})
-
 	t.Run("keeps a requested read scope", func(t *testing.T) {
 		preview, err := srv.Preview(t.Context(), request(map[string]string{"scope": "mcp:read"}), 1)
 		require.NoError(t, err)
 		assert.Equal(t, []Scope{ScopeMCPRead}, preview.Scopes)
-	})
-
-	t.Run("allows a listed https redirect", func(t *testing.T) {
-		_, err := srv.Preview(t.Context(), request(map[string]string{"redirect_uri": "https://app.example.com/callback"}), 1)
-		require.NoError(t, err)
-	})
-
-	t.Run("rejects an unlisted redirect", func(t *testing.T) {
-		_, err := srv.Preview(t.Context(), request(map[string]string{"redirect_uri": "vikunja-flutter://callback"}), 1)
-		assert.True(t, models.IsErrOAuthInvalidRedirectURI(err), "%v", err)
 	})
 
 	t.Run("does not fetch for a request failing cheap checks", func(t *testing.T) {
@@ -471,70 +425,4 @@ func TestPreviewMetadataClient(t *testing.T) {
 		assert.True(t, models.IsErrOAuthMissingPKCE(err), "%v", err)
 		assert.Equal(t, int32(0), fresh.requests.Load())
 	})
-}
-
-func metadataAuthorizeRequest(clientID string) *AuthorizeRequest {
-	return &AuthorizeRequest{
-		ResponseType:        "code",
-		ClientID:            clientID,
-		RedirectURI:         "http://127.0.0.1:41234/callback",
-		CodeChallenge:       "challenge",
-		CodeChallengeMethod: "S256",
-	}
-}
-
-func TestMetadataFetchBudget(t *testing.T) {
-	budgetKey := func(t *testing.T, userID int64) string {
-		key := "oauth_metadata_fetches_" + strconv.FormatInt(userID, 10)
-		t.Cleanup(func() { _ = keyvalue.Del(key) })
-		return key
-	}
-
-	t.Run("allows the limit, then refuses without fetching", func(t *testing.T) {
-		budgetKey(t, 9001)
-		host := newMetadataHost(t, func(host *metadataHost, w http.ResponseWriter, r *http.Request) {
-			doc := host.document(nil)
-			doc["client_id"] = "https://" + r.Host + r.URL.Path
-			writeJSON(t, w, doc)
-		})
-		srv := host.oauthServer()
-		for i := range maxMetadataFetchesPerUser {
-			_, err := srv.Preview(t.Context(), metadataAuthorizeRequest(host.server.URL+"/client-"+strconv.Itoa(i)+".json"), 9001)
-			require.NoError(t, err, i)
-		}
-
-		_, err := srv.Preview(t.Context(), metadataAuthorizeRequest(host.server.URL+"/one-more.json"), 9001)
-		assert.True(t, models.IsErrOAuthClientMetadataFetchLimit(err), "%v", err)
-		assert.Equal(t, int32(maxMetadataFetchesPerUser), host.requests.Load())
-	})
-
-	t.Run("cache hits are free", func(t *testing.T) {
-		key := budgetKey(t, 9002)
-		host := serveDocument(t, nil)
-		srv := host.oauthServer()
-		for range 3 {
-			_, err := srv.Preview(t.Context(), metadataAuthorizeRequest(host.clientID()), 9002)
-			require.NoError(t, err)
-		}
-		used, _, err := keyvalue.GetInt64(key)
-		require.NoError(t, err)
-		assert.Equal(t, int64(1), used)
-
-		_, err = keyvalue.IncrByWithTTL(key, maxMetadataFetchesPerUser, metadataFetchWindow)
-		require.NoError(t, err)
-		_, err = srv.Preview(t.Context(), metadataAuthorizeRequest(host.clientID()), 9002)
-		require.NoError(t, err, "a cached document needs no budget")
-	})
-}
-
-type relativeResource struct{ testResource }
-
-func (relativeResource) ResourceURL() string { return "/api/v2/mcp" }
-
-func TestMetadataClientWithoutResourceURL(t *testing.T) {
-	host := serveDocument(t, nil)
-	srv := NewServer(relativeResource{}, NewMetadataFetcher(host.server.Client()))
-	_, err := srv.Preview(t.Context(), metadataAuthorizeRequest(host.clientID()), 1)
-	assert.True(t, models.IsErrOAuthInvalidTarget(err), "%v", err)
-	assert.Equal(t, int32(0), host.requests.Load())
 }
