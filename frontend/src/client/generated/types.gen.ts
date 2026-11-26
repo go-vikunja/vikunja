@@ -1744,6 +1744,10 @@ export type Project = {
      */
     is_favorite?: boolean;
     /**
+     * Whether this project or one of its parent projects is shared with other users or teams. Link shares do not count.
+     */
+    readonly is_shared?: boolean;
+    /**
      * The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response.
      */
     readonly max_permission?: number | null;
@@ -1868,6 +1872,10 @@ export type ProjectReadBody = {
      * Whether the project is a favorite of the requesting user. This value is per-user and depends on who makes the call.
      */
     is_favorite?: boolean;
+    /**
+     * Whether this project or one of its parent projects is shared with other users or teams. Link shares do not count.
+     */
+    readonly is_shared?: boolean;
     /**
      * The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response.
      */
@@ -3351,6 +3359,10 @@ export type TrashedProject = {
      * Whether the project is a favorite of the requesting user. This value is per-user and depends on who makes the call.
      */
     is_favorite?: boolean;
+    /**
+     * Whether this project or one of its parent projects is shared with other users or teams. Link shares do not count.
+     */
+    readonly is_shared?: boolean;
     /**
      * The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response.
      */
