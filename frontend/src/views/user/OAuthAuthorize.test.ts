@@ -177,7 +177,7 @@ describe('OAuthAuthorize', () => {
 		expect(sdk.oauthAuthorizePreview).toHaveBeenCalledOnce()
 		expect(sdk.oauthAuthorize).toHaveBeenCalledOnce()
 		expect(sdk.oauthAuthorize.mock.calls[0][0].body.scope).toBeUndefined()
-		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
+		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1&${ISS_PARAM}`)
 	})
 
 	it('asks for consent before authorizing a scoped request', async () => {
