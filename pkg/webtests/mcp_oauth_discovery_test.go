@@ -254,26 +254,10 @@ func TestMCPChallenge(t *testing.T) {
 
 	t.Run("leaves other routes' 401s alone", func(t *testing.T) {
 		oauthToken := insertOAuthToken(t, mcpResourceURL, projectsReadPermissions())
-		for _, tc := range []struct {
-			path   string
-			header http.Header
-		}{
-			{
-				path: "/api/v2/projects",
-			},
-			{
-				path:   "/api/v2/projects",
-				header: bearer(oauthToken),
-			},
-		} {
-			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
-			for k, v := range tc.header {
-				req.Header[k] = v
-			}
-			rec := httptest.NewRecorder()
-			e.ServeHTTP(rec, req)
-			require.Equal(t, http.StatusUnauthorized, rec.Code, "%s: %s", tc.path, rec.Body.String())
-			assert.Empty(t, rec.Header().Values(echo.HeaderWWWAuthenticate), tc.path)
+		for _, header := range []http.Header{nil, bearer(oauthToken)} {
+			rec := serveMCPRequest(e, httptest.NewRequest(http.MethodGet, "/api/v2/projects", nil), header)
+			require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
+			assert.Empty(t, rec.Header().Values(echo.HeaderWWWAuthenticate))
 		}
 	})
 }
