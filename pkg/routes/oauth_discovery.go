@@ -28,7 +28,7 @@ import (
 // deployment's proxy can forward that URL here unchanged.
 func registerOAuthDiscoveryRoutes(e *echo.Echo) {
 	paths := []string{oauth2server.MetadataPath}
-	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" && issuerPath != "/" {
+	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" {
 		paths = append(paths, oauth2server.MetadataPath+issuerPath)
 	}
 	for _, p := range paths {
