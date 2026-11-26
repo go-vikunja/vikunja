@@ -262,9 +262,24 @@ func TestMCPChallenge(t *testing.T) {
 
 	t.Run("is absent without a public URL", func(t *testing.T) {
 		withoutPublicURL(t)
-		for _, header := range []http.Header{nil, bearer(sessionJWT), bearer(noMCPToken)} {
-			rec := postMCP(e, header)
-			assert.Contains(t, []int{http.StatusUnauthorized, http.StatusForbidden}, rec.Code, rec.Body.String())
+		for _, tc := range []struct {
+			header http.Header
+			code   int
+		}{
+			{
+				code: http.StatusUnauthorized,
+			},
+			{
+				header: bearer(sessionJWT),
+				code:   http.StatusUnauthorized,
+			},
+			{
+				header: bearer(noMCPToken),
+				code:   http.StatusForbidden,
+			},
+		} {
+			rec := postMCP(e, tc.header)
+			require.Equal(t, tc.code, rec.Code, rec.Body.String())
 			assert.Empty(t, rec.Header().Values(echo.HeaderWWWAuthenticate))
 		}
 	})
