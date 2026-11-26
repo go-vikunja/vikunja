@@ -120,9 +120,10 @@ async function authorize(scope?: string) {
 	})
 }
 
-async function loadConsent() {
+async function start() {
 	const {data} = await oauthAuthorizePreview({body: authorizeRequest()})
-	// A scope without MCP values, like openid, still gets a session.
+	// First-party apps rely on being approved without a prompt. The server decides which requests
+	// those are: a URL client is scoped even without scope or resource.
 	if (!data.scoped) {
 		await authorize()
 		return
@@ -188,12 +189,7 @@ onMounted(async () => {
 	}
 
 	try {
-		// First-party apps send neither and rely on being approved without a prompt.
-		if (q(route.query.scope) || q(route.query.resource)) {
-			await loadConsent()
-		} else {
-			await authorize()
-		}
+		await start()
 	} catch (e) {
 		fail(e)
 	}

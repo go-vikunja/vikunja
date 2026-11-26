@@ -58,13 +58,16 @@ function mountView() {
 	})
 }
 
-function preview(scopes: string[]) {
+function preview(scopes: string[], client: Record<string, string> = {
+	id: 'mcp-client',
+	kind: 'legacy',
+}) {
 	return {
 		data: {
-			client: {id: 'mcp-client'},
+			client,
 			redirect_uri: REDIRECT_URI,
 			scopes,
-			scoped: true,
+			scoped: scopes.length > 0,
 		},
 	}
 }
@@ -133,10 +136,11 @@ describe('OAuthAuthorize', () => {
 	})
 
 	it('approves an unscoped request without asking', async () => {
+		sdk.oauthAuthorizePreview.mockResolvedValue(preview([]))
 		mountView()
 		await flushPromises()
 
-		expect(sdk.oauthAuthorizePreview).not.toHaveBeenCalled()
+		expect(sdk.oauthAuthorizePreview).toHaveBeenCalledOnce()
 		expect(sdk.oauthAuthorize).toHaveBeenCalledOnce()
 		expect(sdk.oauthAuthorize.mock.calls[0][0].body.scope).toBeUndefined()
 		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
@@ -185,6 +189,33 @@ describe('OAuthAuthorize', () => {
 		expect(wrapper.text()).toContain('127.0.0.1:9999')
 		expect(wrapper.text()).toContain('Alice (alice)')
 		expect(wrapper.get<HTMLInputElement>('input[value="write"]').element.checked).toBe(true)
+	})
+
+	it('asks for consent when the server scopes a request without scope or resource', async () => {
+		const clientID = 'https://app.example.com/oauth/client.json'
+		mockRoute.query = {
+			...BASE_QUERY,
+			client_id: clientID,
+		}
+		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write'], {
+			id: clientID,
+			kind: 'metadata_document',
+			name: 'Example MCP Client',
+			host: 'app.example.com',
+		}))
+		const wrapper = mountView()
+		await flushPromises()
+
+		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
+		expect(window.location.href).toBe('http://localhost/oauth/authorize')
+
+		await button(wrapper, 'Approve').trigger('click')
+		await flushPromises()
+
+		expect(sdk.oauthAuthorize).toHaveBeenCalledWith({body: expect.objectContaining({
+			client_id: clientID,
+			scope: 'mcp:read mcp:write',
+		})})
 	})
 
 	it('sends the requested scope and resource on approve', async () => {
