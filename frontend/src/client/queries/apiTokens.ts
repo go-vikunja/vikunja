@@ -44,7 +44,10 @@ export function apiTokensQuery(page: number) {
 	return queryOptions({
 		queryKey: apiTokenKeys.ownPage(page),
 		queryFn: async ({signal}) => toPaginated((await tokensList({
-			query: {page},
+			query: {
+				page,
+				kind: 'manual',
+			},
 			signal,
 		})).data, page),
 		placeholderData: keepPreviousData,
@@ -69,7 +72,10 @@ export function allApiTokensQuery() {
 	return queryOptions({
 		queryKey: apiTokenKeys.ownAll,
 		queryFn: ({signal}) => fetchAllPages(async page => (await tokensList({
-			query: {page},
+			query: {
+				page,
+				kind: 'manual',
+			},
 			signal,
 		})).data),
 	})

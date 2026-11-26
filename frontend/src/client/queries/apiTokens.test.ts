@@ -34,7 +34,10 @@ it('requests one page of the signed-in user\'s tokens', async () => {
 	sdk.tokensList.mockResolvedValue({data: page([{id: 26}], 2, 26)})
 	expect(await client.fetchQuery(apiTokensQuery(2))).toEqual(page([{id: 26}], 2, 26))
 	expect(sdk.tokensList).toHaveBeenCalledOnce()
-	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({page: 2})
+	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({
+		page: 2,
+		kind: 'manual',
+	})
 	expect(apiTokensQuery(2).queryKey).toEqual(['apiTokens', 'list', 'self', 2])
 })
 it('requests one page of the tokens issued to oauth clients', async () => {
@@ -64,7 +67,10 @@ it('loads every page of the signed-in user\'s tokens for the MCP filter', async 
 		total_pages: 2,
 	}}))
 	expect(await client.fetchQuery(allApiTokensQuery())).toEqual([{id: 1}, {id: 2}])
-	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({page: 2})
+	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({
+		page: 2,
+		kind: 'manual',
+	})
 	expect(allApiTokensQuery().queryKey).toEqual(['apiTokens', 'all'])
 })
 it('never stores a newly created plaintext token in a list cache', async () => {

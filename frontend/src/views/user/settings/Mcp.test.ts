@@ -71,6 +71,10 @@ describe('MCP settings', () => {
 		mountSettings()
 		await flushPromises()
 		expect(sdk.mcpInfo).toHaveBeenCalledOnce()
+		expect(getAll).toHaveBeenCalledWith(expect.objectContaining({query: {
+			page: 1,
+			kind: 'manual',
+		}}))
 		expect(wrapper.text()).toContain('My assistant')
 		expect(wrapper.text()).not.toContain('Private API token')
 		expect(wrapper.findComponent({name: 'McpClientGuide'}).exists()).toBe(false)
