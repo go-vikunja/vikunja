@@ -482,6 +482,15 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 		}`, stripSchema(t, res.body))
 	})
 
+	t.Run("scope without mcp values is unscoped", func(t *testing.T) {
+		res := authorizePreview(t, e, userToken, map[string]string{"scope": "openid offline_access"})
+		require.Equal(t, http.StatusOK, res.code, string(res.body))
+		var preview oauth2server.AuthorizePreview
+		require.NoError(t, json.Unmarshal(res.body, &preview))
+		assert.False(t, preview.Scoped)
+		assert.Empty(t, preview.Scopes)
+	})
+
 	for _, tc := range []struct {
 		name   string
 		params map[string]string
@@ -508,9 +517,12 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 			code:   models.ErrCodeOAuthMissingPKCE,
 		},
 		{
-			name:   "unknown scope only",
-			params: map[string]string{"scope": "openid"},
-			code:   models.ErrCodeOAuthInvalidScope,
+			name: "unknown scope only with a resource",
+			params: map[string]string{
+				"scope":    "openid",
+				"resource": mcpResourceURL,
+			},
+			code: models.ErrCodeOAuthInvalidScope,
 		},
 		{
 			name:   "foreign resource",
