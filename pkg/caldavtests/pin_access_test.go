@@ -77,13 +77,12 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	assert.Equal(t, want.options, options.Code, "OPTIONS %s", collection)
 	assert.Equal(t, want.allow, options.Header().Get("Allow"), "OPTIONS %s Allow", collection)
 
-	putAs := map[string]string{"Authorization": auth, "Content-Type": "text/calendar; charset=utf-8"}
-	update := caldavRequest(t, e, http.MethodPut, task, NewVTodo(taskUID, "Updated by "+username).Build(), putAs)
+	update := caldavPUTWith(t, e, task, NewVTodo(taskUID, "Updated by "+username).Build(), as)
 	assert.Equal(t, want.putUpdate, update.Code, "PUT update %s", task)
 
 	newUID := taskUID + "-new-" + username
 	newTask := collection + "/" + newUID + ".ics"
-	create := caldavRequest(t, e, http.MethodPut, newTask, NewVTodo(newUID, "Created").Build(), putAs)
+	create := caldavPUTWith(t, e, newTask, NewVTodo(newUID, "Created").Build(), as)
 	assert.Equal(t, want.putCreate, create.Code, "PUT create in %s", collection)
 
 	ownerAs := map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)}
@@ -129,9 +128,8 @@ func TestPinAccessPaths(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			e := setupTestEnv(t)
 			uid := "pin-access-" + tc.project
-			created := caldavRequest(t, e, http.MethodPut, "/dav/projects/"+tc.project+"/"+uid+".ics", NewVTodo(uid, "Owned by user6").Build(), map[string]string{
+			created := caldavPUTWith(t, e, "/dav/projects/"+tc.project+"/"+uid+".ics", NewVTodo(uid, "Owned by user6").Build(), map[string]string{
 				"Authorization": basicAuthHeader("user6", fixturePassword),
-				"Content-Type":  "text/calendar; charset=utf-8",
 			})
 			require.Equal(t, http.StatusCreated, created.Code)
 
@@ -190,10 +188,7 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 			options := caldavRequest(t, e, http.MethodOptions, collection, "", map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.options, options.Code, "OPTIONS")
 			assert.Equal(t, tc.want.allow, options.Header().Get("Allow"), "Allow")
-			create := caldavRequest(t, e, http.MethodPut, collection+"/pin-access-create.ics", NewVTodo("pin-access-create", "Created").Build(), map[string]string{
-				"Authorization": auth,
-				"Content-Type":  "text/calendar; charset=utf-8",
-			})
+			create := caldavPUTWith(t, e, collection+"/pin-access-create.ics", NewVTodo("pin-access-create", "Created").Build(), map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.putCreate, create.Code, "PUT create")
 			assert.False(t, taskUIDExists(t, "pin-access-create"), "denied PUT must not create a task")
 		})

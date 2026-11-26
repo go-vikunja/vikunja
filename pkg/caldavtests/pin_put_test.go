@@ -26,15 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func caldavPUTWith(t *testing.T, e *echo.Echo, path, vcalendar string, headers map[string]string) *httptest.ResponseRecorder {
-	t.Helper()
-	all := map[string]string{"Content-Type": "text/calendar; charset=utf-8"}
-	for k, v := range headers {
-		all[k] = v
-	}
-	return caldavRequest(t, e, http.MethodPut, path, vcalendar, all)
-}
-
 func assertETagHeader(t *testing.T, rec *httptest.ResponseRecorder, want bool) {
 	t.Helper()
 	etag, has := rec.Header()["Etag"]
