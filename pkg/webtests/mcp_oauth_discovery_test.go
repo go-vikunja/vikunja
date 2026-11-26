@@ -17,18 +17,25 @@
 package webtests
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 
 	"github.com/labstack/echo/v5"
+	"github.com/modelcontextprotocol/go-sdk/auth"
+	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/modelcontextprotocol/go-sdk/oauthex"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -304,4 +311,107 @@ func withPublicURL(t *testing.T, publicURL string) {
 	previous := config.ServicePublicURL.GetString()
 	config.ServicePublicURL.Set(publicURL)
 	t.Cleanup(func() { config.ServicePublicURL.Set(previous) })
+}
+
+// Walks the discovery chain the way an MCP client does, with the MCP SDK's
+// client-side helpers; the test plays the user on the consent screen.
+func TestMCPOAuthDiscoveryChain(t *testing.T) {
+	e, clientID, _ := metadataClientEnv(t)
+	server := httptest.NewServer(e)
+	t.Cleanup(server.Close)
+	withPublicURL(t, server.URL)
+	endpoint := server.URL + "/api/v2/mcp"
+	client := server.Client()
+	ctx := t.Context()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(initializeBody))
+	require.NoError(t, err)
+	req.Header.Set(echo.HeaderContentType, "application/json")
+	req.Header.Set("Accept", "application/json, text/event-stream")
+	res, err := client.Do(req)
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	challenges, err := oauthex.ParseWWWAuthenticate(res.Header.Values(echo.HeaderWWWAuthenticate))
+	require.NoError(t, err)
+	require.Len(t, challenges, 1)
+	assert.Empty(t, challenges[0].Params["scope"], "clients fall back to scopes_supported")
+
+	prm, err := oauthex.GetProtectedResourceMetadata(ctx, challenges[0].Params["resource_metadata"], endpoint, client)
+	require.NoError(t, err)
+	require.Len(t, prm.AuthorizationServers, 1)
+
+	asm, err := auth.GetAuthServerMetadata(ctx, prm.AuthorizationServers[0], client)
+	require.NoError(t, err)
+	require.NotNil(t, asm)
+	assert.True(t, asm.ClientIDMetadataDocumentSupported)
+	assert.Contains(t, asm.CodeChallengeMethodsSupported, "S256")
+
+	cfg := &oauth2.Config{
+		ClientID:    clientID,
+		RedirectURL: metadataClientRedirect,
+		Scopes:      prm.ScopesSupported,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   asm.AuthorizationEndpoint,
+			TokenURL:  asm.TokenEndpoint,
+			AuthStyle: oauth2.AuthStyleInParams,
+		},
+	}
+	verifier := oauth2.GenerateVerifier()
+	authURL, err := url.Parse(cfg.AuthCodeURL("chain-state",
+		oauth2.S256ChallengeOption(verifier),
+		oauth2.SetAuthURLParam("resource", prm.Resource),
+	))
+	require.NoError(t, err)
+	assert.Equal(t, server.URL+"/oauth/authorize", authURL.Scheme+"://"+authURL.Host+authURL.Path)
+
+	// What the consent screen sends after the user approves.
+	params := map[string]string{}
+	for k := range authURL.Query() {
+		params[k] = authURL.Query().Get(k)
+	}
+	raw, err := json.Marshal(params)
+	require.NoError(t, err)
+	rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/authorize", string(raw), humaTokenFor(t, &testuser1), "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	var authorized oauth2server.AuthorizeResponse
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &authorized))
+	assert.Equal(t, "chain-state", authorized.State)
+	assert.Equal(t, asm.Issuer, authorized.Issuer)
+
+	token, err := cfg.Exchange(context.WithValue(ctx, oauth2.HTTPClient, client), authorized.Code,
+		oauth2.VerifierOption(verifier),
+		oauth2.SetAuthURLParam("resource", prm.Resource),
+	)
+	require.NoError(t, err)
+	stored := storedToken(t, token.AccessToken)
+	assert.Equal(t, clientID, stored.OAuthClientID)
+	assert.Equal(t, endpoint, stored.OAuthResource)
+
+	session, err := sdkmcp.NewClient(&sdkmcp.Implementation{
+		Name:    "discovery-test",
+		Version: "1.0.0",
+	}, nil).Connect(ctx, &sdkmcp.StreamableClientTransport{
+		Endpoint:   endpoint,
+		HTTPClient: oauth2.NewClient(context.WithValue(ctx, oauth2.HTTPClient, client), oauth2.StaticTokenSource(token)),
+		MaxRetries: -1,
+	}, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = session.Close() })
+
+	tools, err := session.ListTools(ctx, nil)
+	require.NoError(t, err)
+	names := map[string]bool{}
+	for _, tool := range tools.Tools {
+		names[tool.Name] = true
+	}
+	assert.True(t, names["projects_list"], "%v", names)
+	assert.True(t, names["projects_create"], "the user approved mcp:write: %v", names)
+
+	result, err := session.CallTool(ctx, &sdkmcp.CallToolParams{
+		Name:      "projects_list",
+		Arguments: map[string]any{},
+	})
+	require.NoError(t, err)
+	assert.False(t, result.IsError, "%v", result.Content)
 }
