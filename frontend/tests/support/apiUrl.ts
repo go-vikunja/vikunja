@@ -6,3 +6,7 @@ export function apiRootUrl(url: string): string {
 export function apiV1Url(): string {
 	return `${apiRootUrl(process.env.API_URL || 'http://localhost:3456')}/api/v1`
 }
+
+export function apiV2Url(): string {
+	return `${apiRootUrl(process.env.API_URL || 'http://localhost:3456')}/api/v2`
+}
