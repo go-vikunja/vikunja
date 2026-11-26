@@ -3349,6 +3349,58 @@ func (err *ErrOAuthClientIDIsServer) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrOAuthMalformedClientCredentials represents an error where the client credentials of a token request are malformed or contradict each other.
+type ErrOAuthMalformedClientCredentials struct {
+	Reason string
+}
+
+// IsErrOAuthMalformedClientCredentials checks if an error is ErrOAuthMalformedClientCredentials.
+func IsErrOAuthMalformedClientCredentials(err error) bool {
+	_, ok := err.(*ErrOAuthMalformedClientCredentials)
+	return ok
+}
+
+func (err *ErrOAuthMalformedClientCredentials) Error() string {
+	return "Malformed client credentials: " + err.Reason
+}
+
+// ErrCodeOAuthMalformedClientCredentials holds the unique world-error code of this error
+const ErrCodeOAuthMalformedClientCredentials = 17015
+
+// HTTPError holds the http error description
+func (err *ErrOAuthMalformedClientCredentials) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthMalformedClientCredentials,
+		Message:  "The client credentials are malformed: " + err.Reason + ".",
+	}
+}
+
+// ErrOAuthClientSecretUnsupported represents an error where a client sent a client secret, which no Vikunja client has.
+type ErrOAuthClientSecretUnsupported struct{}
+
+// IsErrOAuthClientSecretUnsupported checks if an error is ErrOAuthClientSecretUnsupported.
+func IsErrOAuthClientSecretUnsupported(err error) bool {
+	_, ok := err.(*ErrOAuthClientSecretUnsupported)
+	return ok
+}
+
+func (err *ErrOAuthClientSecretUnsupported) Error() string {
+	return "Client secrets are not supported"
+}
+
+// ErrCodeOAuthClientSecretUnsupported holds the unique world-error code of this error
+const ErrCodeOAuthClientSecretUnsupported = 17016
+
+// HTTPError holds the http error description
+func (err *ErrOAuthClientSecretUnsupported) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrCodeOAuthClientSecretUnsupported,
+		Message:  "Vikunja only supports public clients: send the client_id without a client secret.",
+	}
+}
+
 // ====================
 // Time Tracking Errors
 // ====================

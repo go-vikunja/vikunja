@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -275,4 +276,122 @@ func TestOAuthTokenCORS(t *testing.T) {
 	rec = httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 	assert.Empty(t, rec.Header().Get(echo.HeaderAccessControlAllowOrigin))
+}
+
+// RFC 6749 §2.3.1: the client_id may come as the HTTP Basic username, form-urlencoded.
+func TestOAuthTokenBasicClientAuth(t *testing.T) {
+	e, metadataClientID, host := metadataClientEnv(t)
+	require.NotEqual(t, metadataClientID, url.QueryEscape(metadataClientID), "the client id must need form-encoding")
+
+	basic := func(clientID, secret string) string {
+		return "Basic " + base64.StdEncoding.EncodeToString([]byte(url.QueryEscape(clientID)+":"+url.QueryEscape(secret)))
+	}
+	exchange := func(code, authorization string, extra url.Values) *httptest.ResponseRecorder {
+		form := url.Values{
+			"grant_type":    {"authorization_code"},
+			"code":          {code},
+			"redirect_uri":  {scopedRedirectURI},
+			"code_verifier": {scopedVerifier},
+		}
+		for k, v := range extra {
+			form[k] = v
+		}
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/oauth/token", strings.NewReader(form.Encode()))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
+		if authorization != "" {
+			req.Header.Set(echo.HeaderAuthorization, authorization)
+		}
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		return rec
+	}
+	scopedCode := func(clientID string) string {
+		return insertOAuthCode(t, models.OAuthCode{ClientID: clientID, Scope: "mcp:read", Resource: mcpResourceURL}, time.Time{})
+	}
+
+	t.Run("accepted", func(t *testing.T) {
+		for _, tc := range []struct {
+			name          string
+			code          string
+			authorization string
+			form          url.Values
+		}{
+			{"metadata document client in Basic only", scopedCode(metadataClientID), basic(metadataClientID, ""), nil},
+			{"legacy client in Basic only", insertOAuthCode(t, models.OAuthCode{}, time.Time{}), basic(scopedClientID, ""), nil},
+			{"Basic and body agree", scopedCode(metadataClientID), basic(metadataClientID, ""), url.Values{"client_id": {metadataClientID}}},
+			{"no Authorization header", scopedCode(scopedClientID), "", url.Values{"client_id": {scopedClientID}}},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				rec := exchange(tc.code, tc.authorization, tc.form)
+				require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+				var token oauth2server.TokenResponse
+				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &token))
+				assert.NotEmpty(t, token.AccessToken)
+			})
+		}
+	})
+
+	t.Run("rejected without consuming the code", func(t *testing.T) {
+		for _, tc := range []struct {
+			name          string
+			authorization string
+			form          url.Values
+			status        int
+			error         oauth2server.TokenErrorCode
+			vikunja       int
+		}{
+			{
+				name:          "Basic and body disagree",
+				authorization: basic(scopedClientID, ""),
+				form:          url.Values{"client_id": {"another-client"}},
+				status:        http.StatusBadRequest,
+				error:         oauth2server.TokenErrorInvalidRequest,
+				vikunja:       models.ErrCodeOAuthMalformedClientCredentials,
+			},
+			{
+				name:          "malformed Basic credentials",
+				authorization: "Basic not-base64!",
+				status:        http.StatusBadRequest,
+				error:         oauth2server.TokenErrorInvalidRequest,
+				vikunja:       models.ErrCodeOAuthMalformedClientCredentials,
+			},
+			{
+				name:          "client secret",
+				authorization: basic(scopedClientID, "s3cret"),
+				status:        http.StatusUnauthorized,
+				error:         oauth2server.TokenErrorInvalidClient,
+				vikunja:       models.ErrCodeOAuthClientSecretUnsupported,
+			},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				code := scopedCode(scopedClientID)
+				rec := exchange(code, tc.authorization, tc.form)
+				require.Equal(t, tc.status, rec.Code, rec.Body.String())
+				var body struct {
+					Error oauth2server.TokenErrorCode `json:"error"`
+					Code  int                         `json:"code"`
+				}
+				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), rec.Body.String())
+				assert.Equal(t, tc.error, body.Error)
+				assert.Equal(t, tc.vikunja, body.Code)
+				if tc.status == http.StatusUnauthorized {
+					assert.True(t, strings.HasPrefix(rec.Header().Get(echo.HeaderWWWAuthenticate), "Basic "), rec.Header().Get(echo.HeaderWWWAuthenticate))
+				} else {
+					assert.Empty(t, rec.Header().Get(echo.HeaderWWWAuthenticate))
+				}
+
+				retry := exchange(code, basic(scopedClientID, ""), nil)
+				assert.Equal(t, http.StatusOK, retry.Code, retry.Body.String())
+			})
+		}
+	})
+
+	// RFC 6749 §5.2: invalid_client after Basic authentication is a 401 with a Basic challenge.
+	t.Run("invalid client after Basic", func(t *testing.T) {
+		clientID := host.URL + "/missing.json"
+		rec := exchange(scopedCode(clientID), basic(clientID, ""), nil)
+		require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
+		assert.True(t, strings.HasPrefix(rec.Header().Get(echo.HeaderWWWAuthenticate), "Basic "))
+		assert.Contains(t, rec.Body.String(), `"error":"invalid_client"`)
+	})
 }

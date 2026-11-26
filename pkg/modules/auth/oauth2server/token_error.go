@@ -79,6 +79,8 @@ var tokenErrorCodes = []struct {
 	{models.IsErrOAuthClientIDIsServer, TokenErrorInvalidClient},
 	{models.IsErrOAuthClientMetadataUnavailable, TokenErrorInvalidClient},
 	{models.IsErrOAuthInvalidClientMetadata, TokenErrorInvalidClient},
+	{models.IsErrOAuthClientSecretUnsupported, TokenErrorInvalidClient},
+	{models.IsErrOAuthMalformedClientCredentials, TokenErrorInvalidRequest},
 	{models.IsErrOAuthInvalidGrantType, TokenErrorUnsupportedGrantType},
 	{models.IsErrOAuthInvalidScope, TokenErrorInvalidScope},
 	{models.IsErrOAuthInvalidTarget, TokenErrorInvalidTarget},

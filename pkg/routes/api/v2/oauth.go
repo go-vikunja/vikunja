@@ -31,6 +31,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/labstack/echo/v5"
 )
 
 // oauthTokenBody wraps the OAuth 2.0 token response.
@@ -60,7 +61,7 @@ func RegisterOAuthRoutes(api huma.API, srv *oauth2server.Server) {
 	Register(api, huma.Operation{
 		OperationID:   "oauth-token",
 		Summary:       "OAuth 2.0 token endpoint",
-		Description:   "Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. A scoped authorization code yields an MCP-only API token and no refresh token. A rejected request fails with 400 and carries the RFC 6749 error and error_description next to the usual problem fields.",
+		Description:   "Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. The client_id may instead be the username of an HTTP Basic Authorization header with an empty password (RFC 6749 §2.3.1); clients are public, so a password is rejected. A scoped authorization code yields an MCP-only API token and no refresh token. A rejected request fails with 400 (401 for invalid_client after Basic authentication) and carries the RFC 6749 error and error_description next to the usual problem fields.",
 		Method:        http.MethodPost,
 		Path:          "/oauth/token",
 		DefaultStatus: http.StatusOK,
@@ -163,14 +164,22 @@ func (c *jsonBodyContext) Header(name string) string {
 
 func oauthToken(ctx context.Context, srv *oauth2server.Server, req *oauth2server.TokenRequest) (*oauthTokenBody, error) {
 	deviceInfo, ipAddress := requestClientInfo(ctx)
+	var authorization string
+	if ec := humabridge.EchoContextFrom(ctx); ec != nil {
+		authorization = (*ec).Request().Header.Get(echo.HeaderAuthorization)
+	}
+	basic, err := oauth2server.ApplyBasicClientAuth(req, authorization)
+	if err != nil {
+		return nil, oauthTokenError(err, basic)
+	}
 	resp, err := srv.ExchangeToken(ctx, req, deviceInfo, ipAddress)
 	if err != nil {
-		return nil, oauthTokenError(err)
+		return nil, oauthTokenError(err, basic)
 	}
 	return &oauthTokenBody{CacheControl: "no-store", Body: resp}, nil
 }
 
-func oauthTokenError(err error) error {
+func oauthTokenError(err error, basic bool) error {
 	translated := translateDomainError(err)
 	var tokenErr *oauth2server.TokenError
 	problem := &vikunjaErrorModel{}
@@ -178,12 +187,16 @@ func oauthTokenError(err error) error {
 	if !ok || !errors.As(err, &tokenErr) {
 		return translated
 	}
-	// RFC 6749 §5.2 answers every error with 400. invalid_client's 401 is for clients
-	// authenticating with the Authorization header, which public clients never do.
-	problem.Status = http.StatusBadRequest
-	problem.Title = http.StatusText(http.StatusBadRequest)
 	problem.OAuthError = tokenErr.Code
 	problem.ErrorDescription = problem.Detail
+	// RFC 6749 §5.2: 400, except invalid_client for a client that used the Authorization header.
+	if basic && tokenErr.Code == oauth2server.TokenErrorInvalidClient {
+		problem.Status = http.StatusUnauthorized
+		problem.Title = http.StatusText(http.StatusUnauthorized)
+		return huma.ErrorWithHeaders(problem, http.Header{echo.HeaderWWWAuthenticate: {`Basic realm="Vikunja"`}})
+	}
+	problem.Status = http.StatusBadRequest
+	problem.Title = http.StatusText(http.StatusBadRequest)
 	return problem
 }
 
