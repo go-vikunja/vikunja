@@ -87,6 +87,7 @@ import (
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/routes/feeds"
 	vmiddleware "code.vikunja.io/api/pkg/routes/middleware"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
 	ws "code.vikunja.io/api/pkg/websocket"
@@ -215,8 +216,29 @@ func setupSentry(e *echo.Echo) {
 	}))
 }
 
+type routeOptions struct {
+	oauthMetadataHTTPClient *http.Client
+}
+
+// Option customizes RegisterRoutes.
+type Option func(*routeOptions)
+
+// WithOAuthMetadataHTTPClient replaces the SSRF-safe client that fetches OAuth client metadata documents.
+func WithOAuthMetadataHTTPClient(client *http.Client) Option {
+	return func(o *routeOptions) {
+		o.oauthMetadataHTTPClient = client
+	}
+}
+
 // RegisterRoutes registers all routes for the application
-func RegisterRoutes(e *echo.Echo) {
+func RegisterRoutes(e *echo.Echo, opts ...Option) {
+	options := routeOptions{}
+	for _, opt := range opts {
+		opt(&options)
+	}
+	if options.oauthMetadataHTTPClient == nil {
+		options.oauthMetadataHTTPClient = utils.NewSSRFSafeHTTPClient()
+	}
 
 	// One instance keeps every BasicAuth route on the same failure budget.
 	noAuthRateLimit := unauthRateLimit()
@@ -284,7 +306,7 @@ func RegisterRoutes(e *echo.Echo) {
 	a2 := e.Group(apiv2.GroupPrefix)
 	// Share the BasicAuth failure budget with CalDAV and feeds.
 	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
-	oauthServer := registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
+	oauthServer := registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit, oauth2server.NewMetadataFetcher(options.oauthMetadataHTTPClient))
 
 	// API Routes
 	a := e.Group("/api/v1")
@@ -469,7 +491,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) *oauth2server.Server {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc, oauthMetadata *oauth2server.MetadataFetcher) *oauth2server.Server {
 	a.Use(rejectFormBodies())
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
@@ -507,7 +529,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	}
 	m.Register(a)
 	apiv2.RegisterMCPInfo(api, m.ConnectionInfo)
-	oauthServer := oauth2server.NewServer(m)
+	oauthServer := oauth2server.NewServer(m, oauthMetadata)
 	apiv2.RegisterOAuthRoutes(api, oauthServer)
 	return oauthServer
 }

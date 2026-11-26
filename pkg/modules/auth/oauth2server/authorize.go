@@ -17,6 +17,7 @@
 package oauth2server
 
 import (
+	"context"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
@@ -29,12 +30,12 @@ import (
 // AuthorizeRequest represents the body for the authorize endpoint.
 type AuthorizeRequest struct {
 	ResponseType        string `json:"response_type"`
-	ClientID            string `json:"client_id"`
+	ClientID            string `json:"client_id" doc:"A first-party client name, or an https URL serving the client's OAuth Client ID Metadata Document. Redirect URIs of a URL client must be listed in its document."`
 	RedirectURI         string `json:"redirect_uri"`
 	State               string `json:"state"`
 	CodeChallenge       string `json:"code_challenge"`
 	CodeChallengeMethod string `json:"code_challenge_method"`
-	Scope               string `json:"scope,omitempty" doc:"Space-separated scopes. With mcp:read or mcp:write the client receives an API token for the MCP endpoint instead of a session. Unknown values are ignored."`
+	Scope               string `json:"scope,omitempty" doc:"Space-separated scopes. With mcp:read or mcp:write the client receives an API token for the MCP endpoint instead of a session. Unknown values are ignored. A client whose client_id is a URL always receives an API token, for mcp:read mcp:write when scope and resource are omitted."`
 	Resource            string `json:"resource,omitempty" doc:"RFC 8707 resource indicator. Must be this instance's MCP endpoint; implies a scoped grant of mcp:read mcp:write when scope is omitted."`
 }
 
@@ -49,10 +50,14 @@ type AuthorizeResponse struct {
 // Server issues authorization codes and tokens. Scoped grants are API tokens for resource.
 type Server struct {
 	resource Resource
+	metadata *MetadataFetcher
 }
 
-func NewServer(resource Resource) *Server {
-	return &Server{resource: resource}
+func NewServer(resource Resource, metadata *MetadataFetcher) *Server {
+	return &Server{
+		resource: resource,
+		metadata: metadata,
+	}
 }
 
 // HandleAuthorize handles POST /oauth/authorize.
@@ -86,7 +91,7 @@ func (srv *Server) HandleAuthorize(c *echo.Context) error {
 		return err
 	}
 
-	resp, err := srv.Authorize(&req, u.ID)
+	resp, err := srv.Authorize(c.Request().Context(), &req, u.ID)
 	if err != nil {
 		return err
 	}
@@ -96,20 +101,31 @@ func (srv *Server) HandleAuthorize(c *echo.Context) error {
 
 // AuthorizePreview describes a valid authorize request for the consent screen.
 type AuthorizePreview struct {
-	Client      AuthorizeClient `json:"client"`
-	RedirectURI string          `json:"redirect_uri" doc:"The validated redirect URI. Only redirect here, also to report a denial."`
-	Scopes      []Scope         `json:"scopes" enum:"mcp:read,mcp:write" doc:"The scopes the code would grant, normalized. Empty when the client receives a session."`
-	Scoped      bool            `json:"scoped" doc:"Whether the client receives an MCP-only API token instead of a session."`
+	Client           AuthorizeClient `json:"client"`
+	RedirectURI      string          `json:"redirect_uri" doc:"The validated redirect URI. Only redirect here, also to report a denial."`
+	Scopes           []Scope         `json:"scopes" enum:"mcp:read,mcp:write" doc:"The scopes the code would grant, normalized. Empty when the client receives a session."`
+	Scoped           bool            `json:"scoped" doc:"Whether the client receives an MCP-only API token instead of a session."`
+	LoopbackRedirect bool            `json:"loopback_redirect" doc:"Whether redirect_uri is a loopback http address. Any program on the user's device can listen there and receive the code."`
 }
+
+type ClientKind string
+
+const (
+	ClientKindLegacy           ClientKind = "legacy"
+	ClientKindMetadataDocument ClientKind = "metadata_document"
+)
 
 // AuthorizeClient identifies the client asking for authorization.
 type AuthorizeClient struct {
-	ID string `json:"id"`
+	ID   string     `json:"id"`
+	Kind ClientKind `json:"kind" enum:"legacy,metadata_document" doc:"metadata_document: the client_id is an https URL whose metadata document Vikunja fetched and validated. legacy: an unverified first-party client id."`
+	Name string     `json:"name,omitempty" doc:"The client_name of a metadata_document client. Self-declared by the client; only host is verified."`
+	Host string     `json:"host,omitempty" doc:"The host of a metadata_document client's id URL, the part of its identity the client cannot fake."`
 }
 
 // Preview validates an authorize request exactly like Authorize, without creating a code.
-func (srv *Server) Preview(req *AuthorizeRequest) (*AuthorizePreview, error) {
-	scopes, _, err := srv.validate(req)
+func (srv *Server) Preview(ctx context.Context, req *AuthorizeRequest, userID int64) (*AuthorizePreview, error) {
+	client, scopes, _, err := srv.validate(ctx, req, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,18 +133,19 @@ func (srv *Server) Preview(req *AuthorizeRequest) (*AuthorizePreview, error) {
 		scopes = []Scope{}
 	}
 	return &AuthorizePreview{
-		Client:      AuthorizeClient{ID: req.ClientID},
-		RedirectURI: req.RedirectURI,
-		Scopes:      scopes,
-		Scoped:      len(scopes) > 0,
+		Client:           client.describe(),
+		RedirectURI:      req.RedirectURI,
+		Scopes:           scopes,
+		Scoped:           len(scopes) > 0,
+		LoopbackRedirect: isLoopbackRedirect(req.RedirectURI),
 	}, nil
 }
 
 // Authorize validates the OAuth authorization parameters for the given
 // authenticated user and creates a single-use authorization code, independent
 // of the HTTP layer. Callers own request binding and resolving the user.
-func (srv *Server) Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeResponse, error) {
-	scopes, resource, err := srv.validate(req)
+func (srv *Server) Authorize(ctx context.Context, req *AuthorizeRequest, userID int64) (*AuthorizeResponse, error) {
+	_, scopes, resource, err := srv.validate(ctx, req, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -170,32 +187,48 @@ func (srv *Server) Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeRes
 }
 
 // validate holds every rule of an authorize request; Authorize and Preview must not diverge.
-func (srv *Server) validate(req *AuthorizeRequest) (scopes []Scope, resource string, err error) {
+func (srv *Server) validate(ctx context.Context, req *AuthorizeRequest, userID int64) (client Client, scopes []Scope, resource string, err error) {
 	if req.ResponseType != "code" {
-		return nil, "", &models.ErrOAuthUnsupportedResponseType{}
-	}
-
-	if !ValidateRedirectURI(req.RedirectURI) {
-		return nil, "", &models.ErrOAuthInvalidRedirectURI{}
+		return nil, nil, "", &models.ErrOAuthUnsupportedResponseType{}
 	}
 
 	if req.CodeChallenge == "" || req.CodeChallengeMethod != "S256" {
-		return nil, "", &models.ErrOAuthMissingPKCE{}
+		return nil, nil, "", &models.ErrOAuthMissingPKCE{}
 	}
 
-	return srv.scopedGrant(req)
+	// After the cheap checks: resolving may fetch the client's metadata document.
+	client, err = srv.resolveClient(ctx, req.ClientID, userFetchBudget(userID))
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	if !client.allowsRedirect(req.RedirectURI) {
+		return nil, nil, "", &models.ErrOAuthInvalidRedirectURI{}
+	}
+
+	scopes, resource, err = srv.scopedGrant(req, client)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	return client, scopes, resource, nil
+}
+
+// Not ok while service.publicurl is unset: the URL is then relative and no scoped grant can be issued.
+func (srv *Server) resourceURL() (string, bool) {
+	resource := srv.resource.ResourceURL()
+	_, ok := parseResource(resource)
+	return resource, ok
 }
 
 // scopedGrant returns no scopes and an empty resource for a first-party session grant.
-func (srv *Server) scopedGrant(req *AuthorizeRequest) (scopes []Scope, resource string, err error) {
+func (srv *Server) scopedGrant(req *AuthorizeRequest, client Client) (scopes []Scope, resource string, err error) {
 	// Generic OAuth libraries send scopes like openid; without an MCP scope they keep getting a session.
-	if req.Resource == "" && !requestsMCPScope(req.Scope) {
+	if req.Resource == "" && !requestsMCPScope(req.Scope) && !client.scopedOnly() {
 		return nil, "", nil
 	}
 
-	resource = srv.resource.ResourceURL()
-	// Also rejects every scoped grant while service.publicurl is unset and the URL is relative.
-	if _, ok := parseResource(resource); !ok {
+	resource, ok := srv.resourceURL()
+	if !ok {
 		return nil, "", &models.ErrOAuthInvalidTarget{}
 	}
 	if req.Resource != "" && !SameResource(req.Resource, resource) {

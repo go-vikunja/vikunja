@@ -147,8 +147,16 @@ func (srv *Server) exchangeAuthorizationCode(ctx context.Context, req *TokenRequ
 		return nil, &models.ErrOAuthInvalidTarget{}
 	}
 
+	client, err := srv.resolveClient(ctx, oauthCode.ClientID, unmeteredFetch)
+	if err != nil {
+		return nil, err
+	}
 	if oauthCode.Scope != "" {
-		return srv.issueScopedToken(oauthCode)
+		return srv.issueScopedToken(oauthCode, client)
+	}
+	// Authorize never stores an unscoped code for such a client; the session must not depend on that alone.
+	if client.scopedOnly() {
+		return nil, &models.ErrOAuthInvalidScope{}
 	}
 
 	s := db.NewSession()
@@ -192,7 +200,7 @@ func (srv *Server) exchangeAuthorizationCode(ctx context.Context, req *TokenRequ
 	}, nil
 }
 
-func (srv *Server) issueScopedToken(oauthCode *models.OAuthCode) (*TokenResponse, error) {
+func (srv *Server) issueScopedToken(oauthCode *models.OAuthCode, client Client) (*TokenResponse, error) {
 	scopes, err := parseScope(oauthCode.Scope)
 	if err != nil {
 		return nil, err
@@ -217,7 +225,7 @@ func (srv *Server) issueScopedToken(oauthCode *models.OAuthCode) (*TokenResponse
 	}
 
 	token := &models.APIToken{
-		Title:          oauthCode.ClientID,
+		Title:          client.tokenTitle(),
 		APIPermissions: permissions,
 		ExpiresAt:      time.Now().Add(oauthAPITokenTTL),
 		OwnerID:        oauthCode.UserID,

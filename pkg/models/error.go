@@ -3222,6 +3222,108 @@ func (err *ErrOAuthUnsupportedResponseType) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrOAuthInvalidClientID represents an error where a URL client_id is not a valid client ID metadata document URL.
+type ErrOAuthInvalidClientID struct{}
+
+// IsErrOAuthInvalidClientID checks if an error is ErrOAuthInvalidClientID.
+func IsErrOAuthInvalidClientID(err error) bool {
+	_, ok := err.(*ErrOAuthInvalidClientID)
+	return ok
+}
+
+func (err *ErrOAuthInvalidClientID) Error() string {
+	return "Invalid client id URL"
+}
+
+// ErrCodeOAuthInvalidClientID holds the unique world-error code of this error
+const ErrCodeOAuthInvalidClientID = 17011
+
+// HTTPError holds the http error description
+func (err *ErrOAuthInvalidClientID) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthInvalidClientID,
+		Message:  "A client_id URL must be an https URL of at most 255 characters with a path, and without credentials, fragment or dot segments.",
+	}
+}
+
+// ErrOAuthClientMetadataUnavailable represents an error where a client's metadata document could not be fetched.
+type ErrOAuthClientMetadataUnavailable struct{}
+
+// IsErrOAuthClientMetadataUnavailable checks if an error is ErrOAuthClientMetadataUnavailable.
+func IsErrOAuthClientMetadataUnavailable(err error) bool {
+	_, ok := err.(*ErrOAuthClientMetadataUnavailable)
+	return ok
+}
+
+func (err *ErrOAuthClientMetadataUnavailable) Error() string {
+	return "Client metadata document unavailable"
+}
+
+// ErrCodeOAuthClientMetadataUnavailable holds the unique world-error code of this error
+const ErrCodeOAuthClientMetadataUnavailable = 17012
+
+// HTTPError holds the http error description
+func (err *ErrOAuthClientMetadataUnavailable) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadGateway,
+		Code:     ErrCodeOAuthClientMetadataUnavailable,
+		Message:  "The client's metadata document could not be fetched from its client_id URL.",
+	}
+}
+
+// ErrOAuthClientMetadataFetchLimit represents an error where a user started too many metadata document fetches.
+type ErrOAuthClientMetadataFetchLimit struct{}
+
+// IsErrOAuthClientMetadataFetchLimit checks if an error is ErrOAuthClientMetadataFetchLimit.
+func IsErrOAuthClientMetadataFetchLimit(err error) bool {
+	_, ok := err.(*ErrOAuthClientMetadataFetchLimit)
+	return ok
+}
+
+func (err *ErrOAuthClientMetadataFetchLimit) Error() string {
+	return "Too many client metadata document fetches"
+}
+
+// ErrCodeOAuthClientMetadataFetchLimit holds the unique world-error code of this error
+const ErrCodeOAuthClientMetadataFetchLimit = 17017
+
+// HTTPError holds the http error description
+func (err *ErrOAuthClientMetadataFetchLimit) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusTooManyRequests,
+		Code:     ErrCodeOAuthClientMetadataFetchLimit,
+		Message:  "Vikunja looked up too many new apps for your account recently. Try again later.",
+	}
+}
+
+// ErrOAuthInvalidClientMetadata represents an error where a client's metadata document is not acceptable.
+type ErrOAuthInvalidClientMetadata struct {
+	Reason string
+}
+
+// IsErrOAuthInvalidClientMetadata checks if an error is ErrOAuthInvalidClientMetadata.
+func IsErrOAuthInvalidClientMetadata(err error) bool {
+	_, ok := err.(*ErrOAuthInvalidClientMetadata)
+	return ok
+}
+
+func (err *ErrOAuthInvalidClientMetadata) Error() string {
+	return "Invalid client metadata document: " + err.Reason
+}
+
+// ErrCodeOAuthInvalidClientMetadata holds the unique world-error code of this error
+const ErrCodeOAuthInvalidClientMetadata = 17013
+
+// HTTPError holds the http error description
+func (err *ErrOAuthInvalidClientMetadata) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthInvalidClientMetadata,
+		Message:  "The client's metadata document is invalid: " + err.Reason + ".",
+	}
+}
+
 // ====================
 // Time Tracking Errors
 // ====================

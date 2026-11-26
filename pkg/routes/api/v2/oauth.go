@@ -76,7 +76,7 @@ func RegisterOAuthRoutes(api huma.API, srv *oauth2server.Server) {
 	Register(api, huma.Operation{
 		OperationID:   "oauth-authorize",
 		Summary:       "OAuth 2.0 authorize endpoint",
-		Description:   "Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) and a loopback or vikunja- scheme redirect_uri are required. A scope of mcp:read or mcp:write, or a resource, makes the code exchange yield an MCP-only API token instead of a session.",
+		Description:   "Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) is required. A client_id that is an https URL is resolved as an OAuth Client ID Metadata Document: the redirect_uri must be listed in it (loopback ports may differ) and the code always yields an MCP-only API token. Any other client_id needs a loopback or vikunja- scheme redirect_uri. A scope of mcp:read or mcp:write, or a resource, makes the code exchange yield an MCP-only API token instead of a session.",
 		Method:        http.MethodPost,
 		Path:          "/oauth/authorize",
 		DefaultStatus: http.StatusOK,
@@ -175,7 +175,7 @@ func oauthAuthorize(ctx context.Context, srv *oauth2server.Server, req *oauth2se
 	if err != nil {
 		return nil, err
 	}
-	resp, err := srv.Authorize(req, u.ID)
+	resp, err := srv.Authorize(ctx, req, u.ID)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
@@ -183,10 +183,11 @@ func oauthAuthorize(ctx context.Context, srv *oauth2server.Server, req *oauth2se
 }
 
 func oauthAuthorizePreview(ctx context.Context, srv *oauth2server.Server, req *oauth2server.AuthorizeRequest) (*oauthAuthorizePreviewBody, error) {
-	if _, err := oauthAuthorizingUser(ctx); err != nil {
+	u, err := oauthAuthorizingUser(ctx)
+	if err != nil {
 		return nil, err
 	}
-	resp, err := srv.Preview(req)
+	resp, err := srv.Preview(ctx, req, u.ID)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

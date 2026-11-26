@@ -17,9 +17,13 @@
 package oauth2server
 
 import (
+	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidateRedirectURI(t *testing.T) {
@@ -46,6 +50,9 @@ func TestValidateRedirectURI(t *testing.T) {
 	})
 	t.Run("accepts expanded ipv6 loopback", func(t *testing.T) {
 		assert.True(t, ValidateRedirectURI("http://[0:0:0:0:0:0:0:1]:1234/callback"))
+	})
+	t.Run("accepts ipv4-mapped ipv6 loopback", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://[::ffff:127.0.0.1]:3000/callback"))
 	})
 	t.Run("accepts localhost case-insensitively", func(t *testing.T) {
 		assert.True(t, ValidateRedirectURI("http://LocalHost:8080/callback"))
@@ -80,4 +87,88 @@ func TestValidateRedirectURI(t *testing.T) {
 	t.Run("rejects empty URI", func(t *testing.T) {
 		assert.False(t, ValidateRedirectURI(""))
 	})
+}
+
+func TestParseClientID(t *testing.T) {
+	t.Run("plain strings are legacy clients", func(t *testing.T) {
+		id, err := parseClientID("vikunja")
+		require.NoError(t, err)
+		assert.Equal(t, legacyClientID("vikunja"), id)
+	})
+
+	t.Run("https URLs are metadata document clients", func(t *testing.T) {
+		for _, raw := range []string{
+			"https://app.example.com/oauth/client-metadata.json",
+			"https://app.example.com:8443/client",
+			"https://app.example.com/" + strings.Repeat("a", maxClientIDURLLength-len("https://app.example.com/")),
+		} {
+			id, err := parseClientID(raw)
+			require.NoError(t, err, raw)
+			assert.Equal(t, metadataClientID(raw), id, raw)
+		}
+	})
+
+	t.Run("rejects URL-shaped ids that are not valid metadata document URLs", func(t *testing.T) {
+		for _, raw := range []string{
+			"http://app.example.com/client.json",
+			"urn:example:client",
+			"https://app.example.com",
+			"https://app.example.com/",
+			"https:///client.json",
+			"https://user@app.example.com/client.json",
+			"https://app.example.com/client.json#frag",
+			"https://app.example.com/./client.json",
+			"https://app.example.com/oauth/%2e%2e/client.json",
+			"https://app.exämple.com/client.json",
+			"https://%D0%B0pple.com/client.json",
+			"https://App.example.com/client.json",
+			"https://app.example.com/" + strings.Repeat("a", maxClientIDURLLength),
+		} {
+			_, err := parseClientID(raw)
+			assert.True(t, models.IsErrOAuthInvalidClientID(err), "%s: %v", raw, err)
+		}
+	})
+}
+
+func TestMetadataClientAllowsRedirect(t *testing.T) {
+	client := MetadataClient{
+		id: "https://app.example.com/client.json",
+		metadata: ClientMetadata{
+			Name: "App",
+			RedirectURIs: []string{
+				"https://app.example.com/callback",
+				"http://127.0.0.1:3000/callback",
+				"http://localhost/cb",
+				"http://[::1]:1234/cb",
+				"cursor://anysphere.cursor-retrieval/oauth/callback",
+				"javascript:alert(1)//",
+				"data:text/html,hi",
+				"http://evil.example/cb",
+			},
+		},
+	}
+
+	for _, uri := range []string{
+		"https://app.example.com/callback",
+		"http://127.0.0.1:3000/callback",
+		"http://127.0.0.1:54321/callback",
+		"http://127.0.0.1/callback",
+		"http://localhost/cb",
+		"http://localhost:8080/cb",
+		"http://[::1]:9/cb",
+		"cursor://anysphere.cursor-retrieval/oauth/callback",
+	} {
+		assert.True(t, client.allowsRedirect(uri), uri)
+	}
+
+	for _, uri := range []string{
+		"https://app.example.com/callback/",
+		"http://127.0.0.2:3000/callback",
+		"http://user@127.0.0.1:3000/callback",
+		"javascript:alert(1)//",
+		"http://evil.example/cb",
+		"",
+	} {
+		assert.False(t, client.allowsRedirect(uri), uri)
+	}
 }

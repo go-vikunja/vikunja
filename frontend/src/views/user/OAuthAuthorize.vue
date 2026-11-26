@@ -17,6 +17,7 @@
 			v-else-if="phase.kind === 'consent' && authStore.info"
 			:client="phase.preview.client"
 			:redirect-uri="phase.preview.redirectUri"
+			:loopback-redirect="phase.preview.loopbackRedirect"
 			:requested="phase.preview.requested"
 			:user="authStore.info"
 			:pending="approving"
@@ -47,6 +48,7 @@ defineOptions({name: 'OAuthAuthorize'})
 interface ConsentPreview {
 	client: AuthorizeClient
 	redirectUri: string
+	loopbackRedirect: boolean
 	requested: AccessLevel
 }
 
@@ -120,9 +122,9 @@ async function authorize(scope?: string) {
 	})
 }
 
-async function loadConsent() {
+async function start() {
 	const {data} = await oauthAuthorizePreview({body: authorizeRequest()})
-	// A scope without MCP values, like openid, still gets a session.
+	// First-party apps are approved without a prompt; the server decides which requests are unscoped.
 	if (!data.scoped) {
 		await authorize()
 		return
@@ -135,6 +137,7 @@ async function loadConsent() {
 		preview: {
 			client: data.client,
 			redirectUri: data.redirect_uri,
+			loopbackRedirect: data.loopback_redirect ?? false,
 			requested: data.scopes.includes('mcp:write') ? 'write' : 'read',
 		},
 	}
@@ -182,12 +185,7 @@ onMounted(async () => {
 	}
 
 	try {
-		// First-party apps send neither and rely on being approved without a prompt.
-		if (q(route.query.scope) || q(route.query.resource)) {
-			await loadConsent()
-		} else {
-			await authorize()
-		}
+		await start()
 	} catch (e) {
 		fail(e)
 	}
