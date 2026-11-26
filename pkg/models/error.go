@@ -3197,6 +3197,31 @@ func (err *ErrOAuthInvalidTarget) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrOAuthUnsupportedResponseType represents an error where the response_type is not "code".
+type ErrOAuthUnsupportedResponseType struct{}
+
+// IsErrOAuthUnsupportedResponseType checks if an error is ErrOAuthUnsupportedResponseType.
+func IsErrOAuthUnsupportedResponseType(err error) bool {
+	_, ok := err.(*ErrOAuthUnsupportedResponseType)
+	return ok
+}
+
+func (err *ErrOAuthUnsupportedResponseType) Error() string {
+	return "Unsupported response type"
+}
+
+// ErrCodeOAuthUnsupportedResponseType holds the unique world-error code of this error
+const ErrCodeOAuthUnsupportedResponseType = 17010
+
+// HTTPError holds the http error description
+func (err *ErrOAuthUnsupportedResponseType) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthUnsupportedResponseType,
+		Message:  "response_type must be 'code'.",
+	}
+}
+
 // ====================
 // Time Tracking Errors
 // ====================

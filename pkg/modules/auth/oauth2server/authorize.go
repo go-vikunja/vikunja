@@ -142,7 +142,7 @@ func (srv *Server) Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeRes
 // validate holds every rule of an authorize request; Authorize and Preview must not diverge.
 func (srv *Server) validate(req *AuthorizeRequest) (scopes []Scope, resource string, err error) {
 	if req.ResponseType != "code" {
-		return nil, "", echo.NewHTTPError(http.StatusBadRequest, "response_type must be 'code'")
+		return nil, "", &models.ErrOAuthUnsupportedResponseType{}
 	}
 
 	if !ValidateRedirectURI(req.RedirectURI) {

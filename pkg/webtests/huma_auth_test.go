@@ -228,6 +228,13 @@ func TestHumaOAuth(t *testing.T) {
 		assert.NotContains(t, rec.Body.String(), `"code":"`)
 	})
 
+	t.Run("authorize rejects an unsupported response_type", func(t *testing.T) {
+		body := authorizeRequestBody("token", "vikunja", "vikunja-flutter://callback", "abc", "S256", "")
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/authorize", string(body), humaTokenFor(t, &testuser1), "")
+		require.Equal(t, http.StatusBadRequest, rec.Code, rec.Body.String())
+		assert.Equal(t, models.ErrCodeOAuthUnsupportedResponseType, problemCode(t, rec))
+	})
+
 	t.Run("full code flow with PKCE (JSON token request)", func(t *testing.T) {
 		verifier := "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 		challenge := pkceChallenge(verifier)
