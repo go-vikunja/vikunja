@@ -57,6 +57,7 @@ function mountSettings() {
 				Card: {template: '<div><slot /></div>'},
 				ApiTokenForm: true,
 				McpClientGuide: true,
+				ConnectedApps: true,
 				Modal: true,
 				RouterLink: true,
 				Icon: true,
@@ -73,6 +74,7 @@ describe('MCP settings', () => {
 		expect(wrapper.text()).toContain('My assistant')
 		expect(wrapper.text()).not.toContain('Private API token')
 		expect(wrapper.findComponent({name: 'McpClientGuide'}).exists()).toBe(false)
+		expect(wrapper.findComponent({name: 'ConnectedApps'}).exists()).toBe(true)
 		await wrapper.findAll('button').find(b => b.text() === 'Create a token')!.trigger('click')
 		const form = wrapper.findComponent({name: 'ApiTokenForm'})
 		expect(form.attributes('initialscopes')).toBe('tasks:update')

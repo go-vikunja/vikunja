@@ -32,6 +32,8 @@ export const apiTokenKeys = {
 	ownPage: (page: number) => [...apiTokenKeys.ownList, page] as const,
 	list: (ownerId: number) => [...apiTokenKeys.lists, ownerId] as const,
 	page: (ownerId: number, page: number) => [...apiTokenKeys.list(ownerId), page] as const,
+	connectedApps: [...apiTokenKeyRoot, 'list', 'oauth'] as const,
+	connectedAppsPage: (page: number) => [...apiTokenKeys.connectedApps, page] as const,
 	// Unpaged, so the MCP page can filter by permission client-side.
 	ownAll: [...apiTokenKeyRoot, 'all'] as const,
 	routes: [...apiTokenKeyRoot, 'routes'] as const,
@@ -43,6 +45,20 @@ export function apiTokensQuery(page: number) {
 		queryKey: apiTokenKeys.ownPage(page),
 		queryFn: async ({signal}) => toPaginated((await tokensList({
 			query: {page},
+			signal,
+		})).data, page),
+		placeholderData: keepPreviousData,
+	})
+}
+
+export function connectedAppsQuery(page: number) {
+	return queryOptions({
+		queryKey: apiTokenKeys.connectedAppsPage(page),
+		queryFn: async ({signal}) => toPaginated((await tokensList({
+			query: {
+				page,
+				kind: 'oauth',
+			},
 			signal,
 		})).data, page),
 		placeholderData: keepPreviousData,

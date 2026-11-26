@@ -376,6 +376,16 @@
         "chooseClient": "Choose a client",
         "clientHelp": "{client} setup guide",
         "typedPreset": "Typed tools read + write",
+        "connectedApps": {
+          "title": "Connected apps",
+          "description": "Apps you allowed to access your account through OAuth. Each connection expires after 90 days. Revoke it to end access earlier.",
+          "app": "App",
+          "connected": "Connected",
+          "none": "You have not connected any apps yet.",
+          "revoke": "Revoke",
+          "revokeHeader": "Revoke access",
+          "revokeText": "{app} will no longer be able to access your account. To use it again, connect it anew."
+        },
         "clients": {
           "claudeCode": {
             "command": "Run this command in a terminal: {value}",

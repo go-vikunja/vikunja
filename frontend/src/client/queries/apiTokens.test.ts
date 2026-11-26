@@ -5,6 +5,7 @@ import {
 	apiTokensQuery,
 	allApiTokensQuery,
 	botApiTokensQuery,
+	connectedAppsQuery,
 	createApiTokenMutationOptions,
 	deleteApiTokenMutationOptions,
 } from './apiTokens'
@@ -35,6 +36,16 @@ it('requests one page of the signed-in user\'s tokens', async () => {
 	expect(sdk.tokensList).toHaveBeenCalledOnce()
 	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({page: 2})
 	expect(apiTokensQuery(2).queryKey).toEqual(['apiTokens', 'list', 'self', 2])
+})
+it('requests one page of the tokens issued to oauth clients', async () => {
+	const client = new QueryClient()
+	sdk.tokensList.mockResolvedValue({data: page([{id: 40}], 1, 1)})
+	expect(await client.fetchQuery(connectedAppsQuery(1))).toEqual(page([{id: 40}], 1, 1))
+	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({
+		page: 1,
+		kind: 'oauth',
+	})
+	expect(connectedAppsQuery(1).queryKey).toEqual(['apiTokens', 'list', 'oauth', 1])
 })
 it('requests one page of a bot\'s tokens with the owner filter', async () => {
 	const client = new QueryClient()
@@ -98,4 +109,12 @@ it('removes a revoked token and rewrites the totals of every cached page of its 
 	expect(client.getQueryState(apiTokenKeys.ownPage(1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(apiTokenKeys.page(5, 1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(apiTokenKeys.ownAll)?.isInvalidated).toBe(true)
+})
+it('removes a revoked connected app from its cached pages', async () => {
+	const client = new QueryClient()
+	client.setQueryData(apiTokenKeys.connectedAppsPage(1), page([{id: 40}, {id: 41}], 1, 2))
+	sdk.tokensDelete.mockResolvedValue({})
+	await client.getMutationCache().build(client, deleteApiTokenMutationOptions()).execute(40)
+	expect(client.getQueryData(apiTokenKeys.connectedAppsPage(1))).toEqual(page([{id: 41}], 1, 1))
+	expect(client.getQueryState(apiTokenKeys.connectedAppsPage(1))?.isInvalidated).toBe(true)
 })

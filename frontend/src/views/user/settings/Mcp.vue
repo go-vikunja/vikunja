@@ -8,6 +8,7 @@ import type {ApiToken as IApiToken} from '@/client/generated'
 import {isApiTokenExpired, type ApiTokenPreset, type ApiTokenPresetGroups} from '@/helpers/apiToken'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 import McpClientGuide from '@/components/token/McpClientGuide.vue'
+import ConnectedApps from '@/components/token/ConnectedApps.vue'
 import XButton from '@/components/input/Button.vue'
 import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
@@ -211,6 +212,7 @@ async function deleteToken() {
 			</template>
 		</Modal>
 	</Card>
+	<ConnectedApps />
 </template>
 
 <style scoped lang="scss">
