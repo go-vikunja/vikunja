@@ -53,8 +53,8 @@ func Challenge(next echo.HandlerFunc) echo.HandlerFunc {
 			return next(c)
 		}
 		var bearerErr *bearerError
-		// RFC 6750 §3.1: no error code when the request carried no credentials.
-		if c.Request().Header.Get(echo.HeaderAuthorization) != "" {
+		// RFC 6750 §3.1: no error code without credentials or with another auth scheme.
+		if strings.HasPrefix(strings.ToLower(c.Request().Header.Get(echo.HeaderAuthorization)), "bearer ") {
 			bearerErr = errInvalidToken
 		}
 		res.Before(func() {

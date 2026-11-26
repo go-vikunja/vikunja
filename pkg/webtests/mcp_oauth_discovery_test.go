@@ -209,7 +209,7 @@ func TestMCPChallenge(t *testing.T) {
 		"basic credentials": {
 			header: http.Header{echo.HeaderAuthorization: {"Basic dXNlcjE6MTIzNDU2NzhUZXN0"}},
 			code:   http.StatusUnauthorized,
-			want:   invalidTokenChallenge,
+			want:   missingTokenChallenge,
 		},
 		"session jwt": {
 			header: bearer(sessionJWT),
