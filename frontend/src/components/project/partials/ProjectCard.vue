@@ -24,17 +24,19 @@
 			class="project-title"
 			aria-hidden="true"
 		>
-			<span
-				v-if="project.id < -1"
-				class="saved-filter-icon icon"
-			>
-				<Icon icon="filter" />
+			<span class="project-title-text">
+				<span
+					v-if="project.id < -1"
+					class="saved-filter-icon icon"
+				>
+					<Icon icon="filter" />
+				</span>
+				{{ titleParts.head }}<span :class="{'title-tail': project.is_shared}">{{ titleParts.tail }}<span
+					v-if="project.is_shared"
+					v-tooltip="$t('project.sharedWithOthers')"
+					class="shared-icon"
+				><Icon icon="users" /></span></span>
 			</span>
-			{{ titleParts.head }}<span :class="{'title-tail': project.is_shared}">{{ titleParts.tail }}<span
-				v-if="project.is_shared"
-				v-tooltip="$t('project.sharedWithOthers')"
-				class="shared-icon"
-			><Icon icon="users" /></span></span>
 		</div>
 		<BaseButton
 			class="project-button"
@@ -173,9 +175,18 @@ const textOnlyDescription = computed(() => htmlToPreviewText(props.project.descr
 	inline-size: 100%;
 	margin-block-end: 0;
 	max-block-size: calc(100% - (var(--project-card-padding) + 1rem)); // padding & height of the "is archived" badge
+	// The shadow filter stacks the title under .project-button; lift it so the shared icon gets hover.
+	z-index: 1;
+	pointer-events: none;
+}
+
+.project-title-text {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	word-break: break-word;
+	// Room for descenders; more would reveal the clamped 4th line.
+	padding-block-end: .25rem;
+	margin-block-end: -.25rem;
 
 	display: -webkit-box;
 	-webkit-line-clamp: 3;
@@ -186,20 +197,16 @@ const textOnlyDescription = computed(() => htmlToPreviewText(props.project.descr
 	color: var(--grey-100);
 }
 
+// Not text-shadow: the clamp's overflow would clip it.
 .has-background .project-title {
-	text-shadow:
-		0 0 10px var(--black),
-		1px 1px 5px var(--grey-700),
-		-1px -1px 5px var(--grey-700);
+	// Chained drop-shadows compound, hence lighter values.
+	filter:
+		drop-shadow(0 0 2px var(--grey-700))
+		drop-shadow(0 0 6px rgb(0 0 0 / .6));
 	color: var(--white);
 }
 
-// SVGs ignore text-shadow.
 .has-background .shared-icon {
-	filter:
-		drop-shadow(0 0 10px var(--black))
-		drop-shadow(1px 1px 5px var(--grey-700))
-		drop-shadow(-1px -1px 5px var(--grey-700));
 	opacity: .8;
 }
 
@@ -257,9 +264,7 @@ const textOnlyDescription = computed(() => htmlToPreviewText(props.project.descr
 }
 
 .shared-icon {
-	// Above .project-button so the tooltip gets the hover.
-	position: relative;
-	z-index: 1;
+	pointer-events: auto;
 	margin-inline-start: .375rem;
 	font-size: .875rem;
 	opacity: .5;
