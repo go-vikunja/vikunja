@@ -80,6 +80,7 @@ type Project struct {
 
 	Expand        ProjectExpandable `xorm:"-" json:"-" query:"expand"`
 	MaxPermission *Permission       `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin), or null when the permission was not computed for this response."`
+	IsShared      bool              `xorm:"-" json:"is_shared" readOnly:"true" doc:"Whether this project or one of its parent projects is shared with other users or teams. Link shares do not count."`
 
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this project was created. You cannot change this value."`
@@ -800,6 +801,11 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 		return
 	}
 
+	err = addIsSharedToProjects(s, projects, u)
+	if err != nil {
+		return
+	}
+
 	viewMap := make(map[int64][]*ProjectView)
 	for _, v := range views {
 		if _, has := viewMap[v.ProjectID]; !has {
@@ -857,6 +863,53 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	}
 
 	return
+}
+
+// u is nil for link shares.
+func addIsSharedToProjects(s *xorm.Session, projects []*Project, u *user.User) error {
+	projectIDs := make([]int64, 0, len(projects))
+	for _, p := range projects {
+		// Pseudo projects have no share rows.
+		if p.ID <= 0 {
+			continue
+		}
+		// Someone else's project is only visible to the doer through a share.
+		if u != nil && p.OwnerID != u.ID {
+			p.IsShared = true
+			continue
+		}
+		projectIDs = append(projectIDs, p.ID)
+	}
+	if len(projectIDs) == 0 {
+		return nil
+	}
+
+	// The closure table has a depth-0 self row, so direct shares match too.
+	sharedIDs := []int64{}
+	err := s.Table(&ProjectAncestor{}).
+		Where(builder.And(
+			builder.In("project_id", projectIDs),
+			builder.Or(
+				builder.In("ancestor_id", builder.Select("project_id").From("users_projects")),
+				builder.In("ancestor_id", builder.Select("project_id").From("team_projects")),
+			),
+		)).
+		Cols("project_id").
+		Find(&sharedIDs)
+	if err != nil {
+		return err
+	}
+
+	shared := make(map[int64]bool, len(sharedIDs))
+	for _, id := range sharedIDs {
+		shared[id] = true
+	}
+	for _, p := range projects {
+		if shared[p.ID] {
+			p.IsShared = true
+		}
+	}
+	return nil
 }
 
 func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {

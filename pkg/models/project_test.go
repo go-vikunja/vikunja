@@ -1338,3 +1338,51 @@ func TestProject_ForeignDefaultDoesNotBlockOwner(t *testing.T) {
 		db.AssertExists(t, "users", map[string]interface{}{"id": 2, "default_project_id": 0}, false)
 	})
 }
+
+func TestProject_IsShared(t *testing.T) {
+	isShared := func(t *testing.T, projectID int64, doer *user.User) bool {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		p, err := GetProjectSimpleByID(s, projectID)
+		require.NoError(t, err)
+		require.NoError(t, addProjectDetails(s, []*Project{p}, doer))
+		return p.IsShared
+	}
+	u1 := &user.User{ID: 1}
+	u6 := &user.User{ID: 6}
+
+	t.Run("direct user share", func(t *testing.T) {
+		assert.True(t, isShared(t, 9, u6))
+	})
+	t.Run("direct team share", func(t *testing.T) {
+		assert.True(t, isShared(t, 6, u6))
+	})
+	t.Run("inherited from parent", func(t *testing.T) {
+		assert.True(t, isShared(t, 42, u6))
+	})
+	t.Run("link share only", func(t *testing.T) {
+		assert.False(t, isShared(t, 1, u1))
+	})
+	t.Run("no shares", func(t *testing.T) {
+		assert.False(t, isShared(t, 24, u6))
+	})
+	t.Run("owned by someone else", func(t *testing.T) {
+		assert.True(t, isShared(t, 24, u1))
+	})
+	t.Run("batched over many projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		projects := []*Project{}
+		require.NoError(t, s.In("id", []int64{6, 9, 24, 42}).OrderBy("id").Find(&projects))
+		require.NoError(t, addProjectDetails(s, projects, u6))
+		got := map[int64]bool{}
+		for _, p := range projects {
+			got[p.ID] = p.IsShared
+		}
+		assert.Equal(t, map[int64]bool{6: true, 9: true, 24: false, 42: true}, got)
+	})
+}
