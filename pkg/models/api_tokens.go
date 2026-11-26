@@ -275,7 +275,6 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 
 	// Tokens created by hand store '' as their client id, those from before the column NULL.
 	switch t.Kind {
-	case "":
 	case APITokenKindManual:
 		where = builder.And(where, builder.Or(
 			builder.IsNull{"oauth_client_id"},
@@ -283,8 +282,6 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 		))
 	case APITokenKindOAuth:
 		where = builder.And(where, builder.NotNull{"oauth_client_id"}, builder.Neq{"oauth_client_id": ""})
-	default:
-		return nil, 0, 0, fmt.Errorf("unknown api token kind %q", t.Kind)
 	}
 
 	err = s.
