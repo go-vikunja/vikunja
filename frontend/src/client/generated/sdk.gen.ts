@@ -1361,7 +1361,7 @@ export const oauthAuthorizePreview = <ThrowOnError extends boolean = true>(optio
 /**
  * OAuth 2.0 token endpoint
  *
- * Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. A scoped authorization code yields an MCP-only API token and no refresh token.
+ * Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. A scoped authorization code yields an MCP-only API token and no refresh token. A rejected request fails with 400 and carries the RFC 6749 error and error_description next to the usual problem fields.
  */
 export const oauthToken = <ThrowOnError extends boolean = true>(options: Options<OauthTokenData, ThrowOnError>): RequestResult<OauthTokenResponses, OauthTokenErrors, ThrowOnError> => (options.client ?? client).post<OauthTokenResponses, OauthTokenErrors, ThrowOnError>({
     ...urlSearchParamsBodySerializer,

@@ -4041,6 +4041,14 @@ export type VikunjaErrorModel = {
      */
     readonly details?: unknown;
     /**
+     * Only from the OAuth token endpoint: the RFC 6749 error code.
+     */
+    readonly error?: 'invalid_request' | 'invalid_client' | 'invalid_grant' | 'unsupported_grant_type' | 'invalid_scope' | 'invalid_target';
+    /**
+     * Only from the OAuth token endpoint: the RFC 6749 error description, the same text as detail.
+     */
+    readonly error_description?: string;
+    /**
      * Optional list of individual error details
      */
     errors?: Array<ErrorDetail> | null;
