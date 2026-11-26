@@ -71,11 +71,21 @@ type APIToken struct {
 	OAuthClientID string `xorm:"text null 'oauth_client_id'" json:"oauth_client_id,omitempty" readOnly:"true" doc:"The OAuth client this token was issued to. Empty for tokens created by hand. Such tokens only work on the MCP endpoint."`
 	OAuthResource string `xorm:"text null 'oauth_resource'" json:"-"`
 
+	// Kind narrows ReadAll; empty lists every token.
+	Kind APITokenKind `xorm:"-" json:"-"`
+
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
 }
 
 const APITokenPrefix = `tk_`
+
+type APITokenKind string
+
+const (
+	APITokenKindManual APITokenKind = "manual"
+	APITokenKindOAuth  APITokenKind = "oauth"
+)
 
 // APITokenAuthorization returns the first Authorization value carrying an API token.
 func APITokenAuthorization(h http.Header) (string, bool) {
@@ -233,6 +243,20 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 			where,
 			db.ILIKE("api_tokens.title", search),
 		)
+	}
+
+	// Tokens created by hand store '' as their client id, those from before the column NULL.
+	switch t.Kind {
+	case "":
+	case APITokenKindManual:
+		where = builder.And(where, builder.Or(
+			builder.IsNull{"oauth_client_id"},
+			builder.Eq{"oauth_client_id": ""},
+		))
+	case APITokenKindOAuth:
+		where = builder.And(where, builder.NotNull{"oauth_client_id"}, builder.Neq{"oauth_client_id": ""})
+	default:
+		return nil, 0, 0, fmt.Errorf("unknown api token kind %q", t.Kind)
 	}
 
 	err = s.

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -51,6 +52,57 @@ func TestAPIToken_ReadAll(t *testing.T) {
 	assert.Equal(t, int64(10), tokens[3].ID)
 	assert.Equal(t, int64(11), tokens[4].ID)
 	assert.Equal(t, int64(12), tokens[5].ID)
+}
+
+func TestAPIToken_ReadAllKind(t *testing.T) {
+	u := &user.User{ID: 1}
+	s := db.NewSession()
+	defer s.Close()
+	db.LoadAndAssertFixtures(t)
+
+	manual := &APIToken{
+		Title:          "made by hand",
+		APIPermissions: APIPermissions{"mcp": {"access"}},
+		ExpiresAt:      time.Now().Add(time.Hour),
+	}
+	require.NoError(t, manual.Create(s, u))
+	granted := &APIToken{
+		Title:          "client",
+		APIPermissions: APIPermissions{"mcp": {"access"}},
+		ExpiresAt:      time.Now().Add(time.Hour),
+		OwnerID:        1,
+		OAuthClientID:  "client",
+		OAuthResource:  "https://vikunja.example/api/v2/mcp",
+	}
+	require.NoError(t, granted.CreateForOAuthClient(s))
+
+	ids := func(kind APITokenKind) []int64 {
+		result, _, total, err := (&APIToken{Kind: kind}).ReadAll(s, u, "", 1, 50)
+		require.NoError(t, err)
+		tokens, ok := result.([]*APIToken)
+		require.True(t, ok)
+		ids := make([]int64, 0, len(tokens))
+		for _, token := range tokens {
+			ids = append(ids, token.ID)
+		}
+		assert.Equal(t, int64(len(ids)), total)
+		return ids
+	}
+
+	fixtures := []int64{
+		1,
+		2,
+		9,
+		10,
+		11,
+		12,
+	}
+	assert.Equal(t, append(slices.Clone(fixtures), manual.ID), ids(APITokenKindManual))
+	assert.Equal(t, []int64{granted.ID}, ids(APITokenKindOAuth))
+	assert.Equal(t, append(slices.Clone(fixtures), manual.ID, granted.ID), ids(""))
+
+	_, _, _, err := (&APIToken{Kind: "bogus"}).ReadAll(s, u, "", 1, 50)
+	require.Error(t, err)
 }
 
 func TestAPIToken_CanDelete(t *testing.T) {

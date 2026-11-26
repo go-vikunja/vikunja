@@ -75,6 +75,14 @@ func serveWithToken(e *echo.Echo, method, path, token string) *httptest.Response
 	return rec
 }
 
+func initializeMCP(e *echo.Echo, token string) *httptest.ResponseRecorder {
+	req := mcpRequest(http.MethodPost, initializeBody)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token)
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	return rec
+}
+
 func TestMCP_OAuthTokenOnlyWorksForMCP(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -113,11 +121,7 @@ func TestMCP_OAuthTokenAudience(t *testing.T) {
 		"https://other.example/api/v2/mcp": http.StatusUnauthorized,
 		"https://localhost/api/v2/other":   http.StatusUnauthorized,
 	} {
-		token := insertOAuthToken(t, resource, projectsReadPermissions())
-		req := mcpRequest(http.MethodPost, initializeBody)
-		req.Header.Set(echo.HeaderAuthorization, "Bearer "+token)
-		rec := httptest.NewRecorder()
-		e.ServeHTTP(rec, req)
+		rec := initializeMCP(e, insertOAuthToken(t, resource, projectsReadPermissions()))
 		assert.Equal(t, want, rec.Code, "%s: %s", resource, rec.Body.String())
 	}
 }
