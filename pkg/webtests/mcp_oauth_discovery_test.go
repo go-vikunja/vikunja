@@ -47,7 +47,10 @@ func TestMCPProtectedResourceMetadata(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		for _, path := range []string{resourceMetadataPath, resourceMetadataRoot} {
+		for _, path := range []string{
+			resourceMetadataPath,
+			resourceMetadataRoot,
+		} {
 			rec := getMetadata(e, path, nil)
 			require.Equal(t, http.StatusOK, rec.Code, "%s: %s", path, rec.Body.String())
 			assert.Contains(t, rec.Header().Get(echo.HeaderContentType), "application/json", path)
@@ -67,7 +70,10 @@ func TestMCPProtectedResourceMetadata(t *testing.T) {
 		require.NoError(t, err)
 		withoutPublicURL(t)
 
-		for _, path := range []string{resourceMetadataPath, resourceMetadataRoot} {
+		for _, path := range []string{
+			resourceMetadataPath,
+			resourceMetadataRoot,
+		} {
 			rec := getMetadata(e, path, nil)
 			assert.Equal(t, http.StatusNotFound, rec.Code, path)
 			assert.Empty(t, rec.Body.String(), "%s must not fall back to the frontend's index.html", path)
@@ -80,8 +86,14 @@ func TestMCPProtectedResourceMetadata(t *testing.T) {
 			config.CorsOrigins: []string{"https://allowed.example"},
 		})
 
-		for _, path := range []string{resourceMetadataPath, resourceMetadataRoot} {
-			for _, origin := range []string{"https://mcp-client.example", "https://allowed.example"} {
+		for _, path := range []string{
+			resourceMetadataPath,
+			resourceMetadataRoot,
+		} {
+			for _, origin := range []string{
+				"https://mcp-client.example",
+				"https://allowed.example",
+			} {
 				rec := getMetadata(e, path, http.Header{"Origin": {origin}})
 				require.Equal(t, http.StatusOK, rec.Code, "%s %s", path, origin)
 				assert.Equal(t, "*", rec.Header().Get(echo.HeaderAccessControlAllowOrigin), "%s %s", path, origin)
@@ -277,8 +289,17 @@ func TestMCPChallengeIsExposedToAllowedOrigins(t *testing.T) {
 		header http.Header
 		code   int
 	}{
-		{header: origin, code: http.StatusUnauthorized},
-		{header: http.Header{"Origin": origin["Origin"], echo.HeaderAuthorization: {"Bearer " + noMCPToken}}, code: http.StatusForbidden},
+		{
+			header: origin,
+			code:   http.StatusUnauthorized,
+		},
+		{
+			header: http.Header{
+				"Origin":                 origin["Origin"],
+				echo.HeaderAuthorization: {"Bearer " + noMCPToken},
+			},
+			code: http.StatusForbidden,
+		},
 	} {
 		rec := postMCP(e, tc.header)
 		require.Equal(t, tc.code, rec.Code, rec.Body.String())
