@@ -171,6 +171,16 @@ describe('OAuthAuthorize', () => {
 		expect(wrapper.get<HTMLInputElement>('input[value="write"]').element.checked).toBe(true)
 	})
 
+	it('names the scheme of a custom-scheme redirect', async () => {
+		mockRoute.query = {...BASE_QUERY, redirect_uri: 'vikunja-flutter://callback', scope: 'mcp:read'}
+		const p = preview(['mcp:read'])
+		sdk.oauthAuthorizePreview.mockResolvedValue({data: {...p.data, redirect_uri: 'vikunja-flutter://callback'}})
+		const wrapper = mountView()
+		await flushPromises()
+
+		expect(wrapper.get('.host').text()).toBe('vikunja-flutter://callback')
+	})
+
 	it('sends the requested scope and resource on approve', async () => {
 		mockRoute.query = {
 			...BASE_QUERY,
