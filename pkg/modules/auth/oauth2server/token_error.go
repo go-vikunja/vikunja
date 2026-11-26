@@ -47,47 +47,39 @@ func (e *TokenError) Unwrap() error { return e.Err }
 
 // asTokenError leaves errors without an OAuth meaning, internal ones, as they are.
 func asTokenError(err error) error {
-	code, ok := tokenErrorCode(err)
-	if !ok {
+	var tokenErr *TokenError
+	if errors.As(err, &tokenErr) {
 		return err
 	}
-	return &TokenError{Code: code, Err: err}
+	for _, m := range tokenErrorCodes {
+		if m.is(err) {
+			return &TokenError{Code: m.code, Err: err}
+		}
+	}
+	return err
 }
 
 // The meaning is the token endpoint's: a redirect or client mismatch there is a grant issued to someone else.
-func tokenErrorCode(err error) (TokenErrorCode, bool) {
-	{
-		var errCase0 *models.ErrOAuthCodeInvalid
-		var errCase1 *models.ErrOAuthCodeExpired
-		var errCase2 *models.ErrOAuthPKCEVerifyFailed
-		var errCase3 *models.ErrOAuthInvalidRedirectURI
-		var errCase4 *models.ErrOAuthClientNotFound
-		var errCase5 *models.ErrInvalidRefreshToken
-		var errCase6 *models.ErrSessionExpired
-		var errCase7 *models.ErrRefreshTokenAlreadyUsed
-		var errCase8 *models.ErrOAuthInvalidClientID
-		var errCase9 *models.ErrOAuthClientIDIsServer
-		var errCase10 *models.ErrOAuthClientMetadataUnavailable
-		var errCase11 *models.ErrOAuthInvalidClientMetadata
-		var errCase12 *models.ErrOAuthInvalidGrantType
-		var errCase13 *models.ErrOAuthInvalidScope
-		var errCase14 *models.ErrOAuthInvalidTarget
-		switch {
-		case errors.As(err, &errCase0), errors.As(err, &errCase1), errors.As(err, &errCase2), errors.As(err, &errCase3), errors.As(err, &errCase4), errors.As(err, &errCase5), errors.As(err, &errCase6), errors.As(err, &errCase7):
-			return TokenErrorInvalidGrant, true
-		case errors.As(err, &errCase8), errors.As(err, &errCase9), errors.As(err, &errCase10), errors.As(err, &errCase11):
-			return TokenErrorInvalidClient, true
-		case errors.As(err, &errCase12):
-			return TokenErrorUnsupportedGrantType, true
-		case errors.As(err, &errCase13):
-			return TokenErrorInvalidScope, true
-		case errors.As(err, &errCase14):
-			return TokenErrorInvalidTarget, true
-		}
-	}
+var tokenErrorCodes = []struct {
+	is   func(error) bool
+	code TokenErrorCode
+}{
+	{models.IsErrOAuthCodeInvalid, TokenErrorInvalidGrant},
+	{models.IsErrOAuthCodeExpired, TokenErrorInvalidGrant},
+	{models.IsErrOAuthPKCEVerifyFailed, TokenErrorInvalidGrant},
+	{models.IsErrOAuthInvalidRedirectURI, TokenErrorInvalidGrant},
+	{models.IsErrOAuthClientNotFound, TokenErrorInvalidGrant},
+	{models.IsErrInvalidRefreshToken, TokenErrorInvalidGrant},
+	{models.IsErrSessionExpired, TokenErrorInvalidGrant},
+	{models.IsErrRefreshTokenAlreadyUsed, TokenErrorInvalidGrant},
 	// The user the grant was issued to was deleted, disabled or locked since.
-	if user.IsErrUserDoesNotExist(err) || user.IsErrUserCannotAuthenticate(err) {
-		return TokenErrorInvalidGrant, true
-	}
-	return "", false
+	{user.IsErrUserDoesNotExist, TokenErrorInvalidGrant},
+	{user.IsErrUserCannotAuthenticate, TokenErrorInvalidGrant},
+	{models.IsErrOAuthInvalidClientID, TokenErrorInvalidClient},
+	{models.IsErrOAuthClientIDIsServer, TokenErrorInvalidClient},
+	{models.IsErrOAuthClientMetadataUnavailable, TokenErrorInvalidClient},
+	{models.IsErrOAuthInvalidClientMetadata, TokenErrorInvalidClient},
+	{models.IsErrOAuthInvalidGrantType, TokenErrorUnsupportedGrantType},
+	{models.IsErrOAuthInvalidScope, TokenErrorInvalidScope},
+	{models.IsErrOAuthInvalidTarget, TokenErrorInvalidTarget},
 }
