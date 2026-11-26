@@ -170,6 +170,7 @@ func (m *Module) handler(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "invalid token in context")
 	}
 	if !token.HasMCPAccess() {
+		setChallenge(c.Response().Header(), errInsufficientScope)
 		return echo.NewHTTPError(http.StatusForbidden, "token does not have mcp:access scope")
 	}
 	if token.OAuthResource != "" && !oauth2server.SameResource(token.OAuthResource, m.ResourceURL()) {

@@ -149,6 +149,8 @@ const (
 	missingTokenChallenge = `Bearer resource_metadata="` + resourceMetadataURL + `"`
 	invalidTokenChallenge = `Bearer resource_metadata="` + resourceMetadataURL + `", error="invalid_token", ` +
 		`error_description="The access token is expired, revoked or not valid for this resource"`
+	insufficientScopeChallenge = `Bearer resource_metadata="` + resourceMetadataURL + `", error="insufficient_scope", ` +
+		`scope="mcp:read", error_description="The access token does not grant access to the MCP endpoint"`
 )
 
 func postMCP(e *echo.Echo, header http.Header) *httptest.ResponseRecorder {
@@ -215,6 +217,7 @@ func TestMCPChallenge(t *testing.T) {
 		"api token without mcp access": {
 			header: bearer(noMCPToken),
 			code:   http.StatusForbidden,
+			want:   insufficientScopeChallenge,
 		},
 		"hand-made api token": {
 			header: bearer(mcpProjectsReadToken),

@@ -37,6 +37,11 @@ var (
 		code:        "invalid_token",
 		description: "The access token is expired, revoked or not valid for this resource",
 	}
+	errInsufficientScope = &bearerError{
+		code:        "insufficient_scope",
+		description: "The access token does not grant access to the MCP endpoint",
+		scope:       oauth2server.ScopeMCPRead,
+	}
 )
 
 // Challenge adds the RFC 9728 challenge to every 401 of the MCP endpoint written
