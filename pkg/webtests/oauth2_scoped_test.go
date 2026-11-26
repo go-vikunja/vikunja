@@ -335,8 +335,14 @@ func TestOAuthScopedGrantOverMCP(t *testing.T) {
 				"title":   "nope",
 			},
 		})
-		assert.Contains(t, denied, "error")
 		assert.NotContains(t, denied, "result")
+		assert.Equal(t, map[string]any{
+			"code":    float64(-32602),
+			"message": `unknown tool "tasks_create"`,
+		}, denied["error"])
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"title": "nope",
+		})
 	})
 
 	t.Run("mcp:write sees and calls write tools", func(t *testing.T) {
@@ -356,6 +362,10 @@ func TestOAuthScopedGrantOverMCP(t *testing.T) {
 			"task": task["id"],
 			"done": true,
 		}), "isError")
+		db.AssertExists(t, "tasks", map[string]interface{}{
+			"id":   task["id"],
+			"done": true,
+		}, false)
 	})
 }
 
