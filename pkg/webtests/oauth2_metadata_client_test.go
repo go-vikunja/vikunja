@@ -102,7 +102,8 @@ func TestOAuthMetadataDocumentClient(t *testing.T) {
 			"redirect_uri": "`+redirect+`",
 			"scopes": ["mcp:read", "mcp:write"],
 			"scoped": true,
-			"loopback_redirect": true
+			"loopback_redirect": true,
+			"iss": "https://localhost"
 		}`, stripSchema(t, res.body))
 	})
 
