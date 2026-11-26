@@ -30,6 +30,10 @@ const (
 	ScopeMCPWrite Scope = "mcp:write"
 )
 
+func supportedScopes() []Scope {
+	return []Scope{ScopeMCPRead, ScopeMCPWrite}
+}
+
 // Resource is the protected resource scoped grants are issued for.
 type Resource interface {
 	// ResourceURL is the RFC 8707 resource indicator clients name it by.

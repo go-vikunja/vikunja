@@ -265,6 +265,7 @@ func RegisterRoutes(e *echo.Echo, opts ...Option) {
 	f.GET("/notifications.atom", feeds.NotificationsAtomFeed)
 
 	e.GET("/.well-known/change-password", ChangePasswordRedirect)
+	registerOAuthDiscoveryRoutes(e)
 
 	// healthcheck
 	var healthMiddleware []echo.MiddlewareFunc
@@ -296,8 +297,9 @@ func RegisterRoutes(e *echo.Echo, opts ...Option) {
 				// Caldav requires OPTIONS requests to be answered in a specific manner,
 				// not doing this would break the caldav implementation.
 				// Feed readers are server-side and don't need CORS either.
+				// OAuth discovery answers CORS itself: its Allow-Origin * must not meet Allow-Credentials.
 				p := context.Path()
-				return strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/feeds")
+				return strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/feeds") || strings.HasPrefix(p, oauth2server.MetadataPath)
 			},
 		}))
 	}
