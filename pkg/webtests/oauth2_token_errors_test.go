@@ -30,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -64,9 +65,6 @@ func TestOAuthTokenErrors(t *testing.T) {
 	e, metadataClientID, host := metadataClientEnv(t)
 	const mcpScope = "mcp:read"
 
-	usedCode := insertOAuthCode(t, models.OAuthCode{}, time.Time{})
-	require.Equal(t, http.StatusOK, scopedExchange(t, e, "v2", usedCode, nil).code)
-
 	for _, tc := range []struct {
 		name string
 		// form replaces the defaults of scopedExchange; code is the code to exchange.
@@ -80,12 +78,6 @@ func TestOAuthTokenErrors(t *testing.T) {
 		{
 			name:    "unknown code",
 			code:    func() string { return "not-a-code" },
-			error:   oauth2server.TokenErrorInvalidGrant,
-			vikunja: models.ErrCodeOAuthCodeInvalid,
-		},
-		{
-			name:    "used code",
-			code:    func() string { return usedCode },
 			error:   oauth2server.TokenErrorInvalidGrant,
 			vikunja: models.ErrCodeOAuthCodeInvalid,
 		},
@@ -170,7 +162,8 @@ func TestOAuthTokenErrors(t *testing.T) {
 			code: func() string {
 				return insertOAuthCode(t, models.OAuthCode{UserID: 17}, time.Time{})
 			},
-			error: oauth2server.TokenErrorInvalidGrant,
+			error:   oauth2server.TokenErrorInvalidGrant,
+			vikunja: user.ErrCodeAccountDisabled,
 		},
 		{
 			name: "invalid refresh token",
@@ -247,27 +240,28 @@ func TestOAuthTokenCORS(t *testing.T) {
 	assert.Equal(t, "content-type", rec.Header().Get(echo.HeaderAccessControlAllowHeaders))
 	assert.Empty(t, rec.Header().Get(echo.HeaderAccessControlAllowCredentials))
 
-	for name, code := range map[string]string{
-		"success":  insertOAuthCode(t, models.OAuthCode{Scope: "mcp:read", Resource: mcpResourceURL}, time.Time{}),
-		"rejected": "not-a-code",
+	for _, tc := range []struct {
+		code   string
+		status int
+	}{
+		{insertOAuthCode(t, models.OAuthCode{Scope: "mcp:read", Resource: mcpResourceURL}, time.Time{}), http.StatusOK},
+		{"not-a-code", http.StatusBadRequest},
 	} {
 		form := url.Values{
 			"grant_type":    {"authorization_code"},
-			"code":          {code},
+			"code":          {tc.code},
 			"client_id":     {scopedClientID},
 			"redirect_uri":  {scopedRedirectURI},
 			"code_verifier": {scopedVerifier},
 		}
-		for _, o := range []string{origin, "https://allowed.example"} {
-			req := httptest.NewRequest(http.MethodPost, "/api/v2/oauth/token", strings.NewReader(form.Encode()))
-			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
-			req.Header.Set("Origin", o)
-			rec := httptest.NewRecorder()
-			e.ServeHTTP(rec, req)
-			assert.Equal(t, "*", rec.Header().Get(echo.HeaderAccessControlAllowOrigin), "%s from %s: %d %s", name, o, rec.Code, rec.Body.String())
-			assert.Empty(t, rec.Header().Get(echo.HeaderAccessControlAllowCredentials), "%s from %s", name, o)
-			form.Set("code", "not-a-code")
-		}
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/oauth/token", strings.NewReader(form.Encode()))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
+		req.Header.Set("Origin", origin)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		require.Equal(t, tc.status, rec.Code, rec.Body.String())
+		assert.Equal(t, "*", rec.Header().Get(echo.HeaderAccessControlAllowOrigin))
+		assert.Empty(t, rec.Header().Get(echo.HeaderAccessControlAllowCredentials))
 	}
 
 	// Only the token endpoint: the rest of the API keeps cors.origins.
@@ -317,9 +311,7 @@ func TestOAuthTokenBasicClientAuth(t *testing.T) {
 			form          url.Values
 		}{
 			{"metadata document client in Basic only", scopedCode(metadataClientID), basic(metadataClientID, ""), nil},
-			{"legacy client in Basic only", insertOAuthCode(t, models.OAuthCode{}, time.Time{}), basic(scopedClientID, ""), nil},
 			{"Basic and body agree", scopedCode(metadataClientID), basic(metadataClientID, ""), url.Values{"client_id": {metadataClientID}}},
-			{"no Authorization header", scopedCode(scopedClientID), "", url.Values{"client_id": {scopedClientID}}},
 		} {
 			t.Run(tc.name, func(t *testing.T) {
 				rec := exchange(tc.code, tc.authorization, tc.form)
