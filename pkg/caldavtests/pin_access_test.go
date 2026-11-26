@@ -21,6 +21,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,6 +49,15 @@ var (
 	}
 )
 
+func taskUIDExists(t *testing.T, uid string) bool {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	exists, err := s.Where("uid = ?", uid).Exist(&models.Task{})
+	require.NoError(t, err)
+	return exists
+}
+
 // assertAccess runs every verb as username against an existing task, writes last so the
 // reads see the fixture state, and checks that denied writes left the task alone.
 func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerUsername string, want accessExpectation) {
@@ -70,14 +82,23 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	assert.Equal(t, want.putUpdate, update.Code, "PUT update %s", task)
 
 	newUID := taskUID + "-new-" + username
-	create := caldavRequest(t, e, http.MethodPut, collection+"/"+newUID+".ics", NewVTodo(newUID, "Created").Build(), putAs)
+	newTask := collection + "/" + newUID + ".ics"
+	create := caldavRequest(t, e, http.MethodPut, newTask, NewVTodo(newUID, "Created").Build(), putAs)
 	assert.Equal(t, want.putCreate, create.Code, "PUT create in %s", collection)
 
+	ownerAs := map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)}
 	ownerGet := func() *httptest.ResponseRecorder {
-		return caldavRequest(t, e, http.MethodGet, task, "", map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)})
+		return caldavRequest(t, e, http.MethodGet, task, "", ownerAs)
 	}
 	if want.putUpdate != http.StatusCreated {
 		assert.NotContains(t, ownerGet().Body.String(), "Updated by "+username, "denied PUT must not change %s", task)
+	} else {
+		assert.Contains(t, ownerGet().Body.String(), "SUMMARY:Updated by "+username, "PUT must change %s", task)
+	}
+	if want.putCreate == http.StatusCreated {
+		assert.Equal(t, http.StatusOK, caldavRequest(t, e, http.MethodGet, newTask, "", ownerAs).Code, "created %s", newTask)
+	} else {
+		assert.False(t, taskUIDExists(t, newUID), "denied PUT must not create %s", newTask)
 	}
 
 	assert.Equal(t, want.del, caldavRequest(t, e, http.MethodDelete, task, "", as).Code, "DELETE %s", task)
@@ -175,6 +196,7 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 				"Content-Type":  "text/calendar; charset=utf-8",
 			})
 			assert.Equal(t, tc.want.putCreate, create.Code, "PUT create")
+			assert.False(t, taskUIDExists(t, "pin-access-create"), "denied PUT must not create a task")
 		})
 	}
 }
