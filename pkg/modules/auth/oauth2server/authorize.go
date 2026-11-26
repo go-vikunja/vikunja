@@ -45,6 +45,7 @@ type AuthorizeResponse struct {
 	RedirectURI string `json:"redirect_uri"`
 	State       string `json:"state"`
 	Scope       string `json:"scope,omitempty" doc:"The granted scope. Empty when the client receives a session."`
+	Issuer      string `json:"iss,omitempty" doc:"The issuer identifier (RFC 9207). Send it as iss with every redirect to redirect_uri, also with an error. Absent while the instance has no public URL."`
 }
 
 // Server issues authorization codes and tokens. Scoped grants are API tokens for resource.
@@ -106,6 +107,7 @@ type AuthorizePreview struct {
 	Scopes           []Scope         `json:"scopes" enum:"mcp:read,mcp:write" doc:"The scopes the code would grant, normalized. Empty when the client receives a session."`
 	Scoped           bool            `json:"scoped" doc:"Whether the client receives an MCP-only API token instead of a session."`
 	LoopbackRedirect bool            `json:"loopback_redirect" doc:"Whether redirect_uri is a loopback http address. Any program on the user's device can listen there and receive the code."`
+	Issuer           string          `json:"iss,omitempty" doc:"The issuer identifier (RFC 9207). Send it as iss with every redirect to redirect_uri, also with an error. Absent while the instance has no public URL."`
 }
 
 type ClientKind string
@@ -133,12 +135,14 @@ func (srv *Server) Preview(ctx context.Context, req *AuthorizeRequest, userID in
 	if scopes == nil {
 		scopes = []Scope{}
 	}
+	issuer, _ := Issuer()
 	return &AuthorizePreview{
 		Client:           client.describe(),
 		RedirectURI:      req.RedirectURI,
 		Scopes:           scopes,
 		Scoped:           len(scopes) > 0,
 		LoopbackRedirect: isLoopbackRedirect(req.RedirectURI),
+		Issuer:           issuer,
 	}, nil
 }
 
@@ -179,11 +183,13 @@ func (srv *Server) Authorize(ctx context.Context, req *AuthorizeRequest, userID 
 		return nil, err
 	}
 
+	issuer, _ := Issuer()
 	return &AuthorizeResponse{
 		Code:        code,
 		RedirectURI: req.RedirectURI,
 		State:       req.State,
 		Scope:       scope,
+		Issuer:      issuer,
 	}, nil
 }
 
