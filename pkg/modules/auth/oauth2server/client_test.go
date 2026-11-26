@@ -136,6 +136,7 @@ func TestParseClientID(t *testing.T) {
 			"https://app.example.com/oauth/..",
 			"https://app.example.com/client json",
 			"https://app.exämple.com/client.json",
+			"https://%D0%B0pple.com/client.json",
 			"https://app.example.com/" + strings.Repeat("a", maxClientIDURLLength),
 		} {
 			_, err := parseClientID(raw)

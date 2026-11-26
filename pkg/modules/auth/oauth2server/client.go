@@ -142,6 +142,10 @@ func validClientIDURL(raw string) bool {
 	if err != nil || u.User != nil || u.Hostname() == "" || u.Path == "" || u.Path == "/" {
 		return false
 	}
+	// url.Parse percent-decodes the host, which would let a lookalike Unicode domain reach the consent screen.
+	if !strings.HasPrefix(raw, "https://"+u.Host+"/") {
+		return false
+	}
 	for _, segment := range strings.Split(u.Path, "/") {
 		if segment == "." || segment == ".." {
 			return false

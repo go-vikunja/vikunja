@@ -205,6 +205,7 @@ func TestOAuthMetadataDocumentClient(t *testing.T) {
 			strings.Replace(clientID, "https://", "http://", 1),
 			host.URL,
 			clientID + "#frag",
+			"https://%D0%B0pple.com/client.json",
 		} {
 			for _, res := range []*httpResult{
 				authorizePreview(t, e, userToken, map[string]string{
