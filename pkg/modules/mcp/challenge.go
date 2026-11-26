@@ -25,7 +25,6 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// bearerError is an RFC 6750 §3.1 error.
 type bearerError struct {
 	code        string
 	description string
@@ -44,8 +43,7 @@ var (
 	}
 )
 
-// Challenge adds the RFC 9728 challenge to every 401 of the MCP endpoint written
-// after it, whichever middleware or handler writes it.
+// Challenge adds the RFC 9728 challenge to every MCP endpoint 401, whichever middleware or handler writes it.
 func Challenge(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		res, err := echo.UnwrapResponse(c.Response())
@@ -53,8 +51,8 @@ func Challenge(next echo.HandlerFunc) echo.HandlerFunc {
 			return next(c)
 		}
 		var bearerErr *bearerError
-		// RFC 6750 §3.1: no error code when the request carried no credentials.
-		if c.Request().Header.Get(echo.HeaderAuthorization) != "" {
+		// RFC 6750 §3.1: no error code without credentials or with another auth scheme.
+		if strings.HasPrefix(strings.ToLower(c.Request().Header.Get(echo.HeaderAuthorization)), "bearer ") {
 			bearerErr = errInvalidToken
 		}
 		res.Before(func() {
@@ -66,14 +64,12 @@ func Challenge(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// setChallenge does nothing without an issuer: there is no metadata to point at.
 func setChallenge(h http.Header, bearerErr *bearerError) {
 	issuer, ok := oauth2server.Issuer()
 	if !ok {
 		return
 	}
-	// Under the issuer rather than path-inserted at the host root, so a subpath
-	// deployment serves it without proxy rules; RFC 9728 §3.3 allows any URL here.
+	// Under the issuer, not the host root, so subpath deployments need no proxy rule; RFC 9728 §3.3 allows it.
 	params := []string{"resource_metadata=" + quote(issuer+ResourceMetadataPath+RoutePrefix)}
 	if bearerErr != nil {
 		params = append(params, "error="+quote(bearerErr.code))

@@ -22,8 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 )
 
-// Issuer is the authorization server's issuer identifier: service.publicurl without the trailing slash.
-// There is none while service.publicurl is unset.
+// Issuer is service.publicurl without the trailing slash; not ok while it is unset.
 func Issuer() (string, bool) {
 	issuer := strings.TrimRight(config.ServicePublicURL.GetString(), "/")
 	return issuer, issuer != ""

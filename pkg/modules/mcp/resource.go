@@ -25,16 +25,13 @@ import (
 // ResourceMetadataPath is the RFC 9728 well-known path of protected resource metadata.
 const ResourceMetadataPath = "/.well-known/oauth-protected-resource"
 
-// ResourceMetadataPaths are the paths the metadata is served at: the root, where
-// clients probe last, and the MCP endpoint's path inserted after it (RFC 9728 §3.1).
-// A subpath deployment also gets the issuer path inserted, for a proxy that forwards
-// the host's well-known URLs here unchanged.
+// ResourceMetadataPaths include the issuer-path variant so a subpath deployment's proxy can forward unchanged.
 func ResourceMetadataPaths() []string {
 	paths := []string{
 		ResourceMetadataPath,
 		ResourceMetadataPath + RoutePrefix,
 	}
-	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" && issuerPath != "/" {
+	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" {
 		paths = append(paths, ResourceMetadataPath+issuerPath+RoutePrefix)
 	}
 	return paths

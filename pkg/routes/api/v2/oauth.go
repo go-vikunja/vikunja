@@ -164,11 +164,7 @@ func (c *jsonBodyContext) Header(name string) string {
 
 func oauthToken(ctx context.Context, srv *oauth2server.Server, req *oauth2server.TokenRequest) (*oauthTokenBody, error) {
 	deviceInfo, ipAddress := requestClientInfo(ctx)
-	var authorization string
-	if ec := humabridge.EchoContextFrom(ctx); ec != nil {
-		authorization = (*ec).Request().Header.Get(echo.HeaderAuthorization)
-	}
-	basic, err := oauth2server.ApplyBasicClientAuth(req, authorization)
+	basic, err := oauth2server.ApplyBasicClientAuth(req, (*humabridge.EchoContextFrom(ctx)).Request())
 	if err != nil {
 		return nil, oauthTokenError(err, basic)
 	}

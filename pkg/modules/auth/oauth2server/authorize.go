@@ -123,7 +123,6 @@ type AuthorizeClient struct {
 	Kind ClientKind `json:"kind" enum:"legacy,metadata_document" doc:"metadata_document: the client_id is an https URL whose metadata document Vikunja fetched and validated. legacy: an unverified first-party client id."`
 	Name string     `json:"name,omitempty" doc:"The client_name of a metadata_document client. Self-declared by the client; only host is verified."`
 	Host string     `json:"host,omitempty" doc:"The host of a metadata_document client's id URL, the part of its identity the client cannot fake."`
-	URI  string     `json:"uri,omitempty" doc:"The client_uri of a metadata_document client, if it declared a valid https one. Self-declared."`
 }
 
 // Preview validates an authorize request exactly like Authorize, without creating a code.

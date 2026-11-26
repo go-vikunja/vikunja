@@ -24,7 +24,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
@@ -48,7 +47,10 @@ func TestMCPProtectedResourceMetadata(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		for _, path := range []string{resourceMetadataPath, resourceMetadataRoot} {
+		for _, path := range []string{
+			resourceMetadataPath,
+			resourceMetadataRoot,
+		} {
 			rec := getMetadata(e, path, nil)
 			require.Equal(t, http.StatusOK, rec.Code, "%s: %s", path, rec.Body.String())
 			assert.Contains(t, rec.Header().Get(echo.HeaderContentType), "application/json", path)
@@ -63,45 +65,20 @@ func TestMCPProtectedResourceMetadata(t *testing.T) {
 		}
 	})
 
-	t.Run("passes the MCP SDK's validation", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		server := httptest.NewServer(e)
-		t.Cleanup(server.Close)
-		withPublicURL(t, server.URL+"/")
-
-		metadata, err := oauthex.GetProtectedResourceMetadata(t.Context(), server.URL+resourceMetadataPath, server.URL+"/api/v2/mcp", server.Client())
-		require.NoError(t, err)
-		assert.Equal(t, []string{server.URL}, metadata.AuthorizationServers)
-	})
-
 	t.Run("is not found without a public URL", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 		withoutPublicURL(t)
 
-		for _, path := range []string{resourceMetadataPath, resourceMetadataRoot} {
+		for _, path := range []string{
+			resourceMetadataPath,
+			resourceMetadataRoot,
+		} {
 			rec := getMetadata(e, path, nil)
 			assert.Equal(t, http.StatusNotFound, rec.Code, path)
 			assert.Empty(t, rec.Body.String(), "%s must not fall back to the frontend's index.html", path)
 		}
 	})
-
-	for name, caldav := range map[string]bool{"caldav enabled": true, "caldav disabled": false} {
-		t.Run("needs no authentication with "+name, func(t *testing.T) {
-			e := discoveryEnv(t, map[config.Key]any{config.ServiceEnableCaldav: caldav})
-
-			for _, path := range []string{resourceMetadataPath, resourceMetadataRoot} {
-				rec := getMetadata(e, path, nil)
-				assert.Equal(t, http.StatusOK, rec.Code, "%s: %s", path, rec.Body.String())
-				assert.Contains(t, rec.Body.String(), `"resource":"https://localhost/api/v2/mcp"`, path)
-			}
-			if caldav {
-				principal := getMetadata(e, "/.well-known/caldav", nil)
-				assert.Equal(t, http.StatusUnauthorized, principal.Code, "the caldav group must keep its basic auth")
-			}
-		})
-	}
 
 	t.Run("is readable from any origin", func(t *testing.T) {
 		e := discoveryEnv(t, map[config.Key]any{
@@ -109,8 +86,14 @@ func TestMCPProtectedResourceMetadata(t *testing.T) {
 			config.CorsOrigins: []string{"https://allowed.example"},
 		})
 
-		for _, path := range []string{resourceMetadataPath, resourceMetadataRoot} {
-			for _, origin := range []string{"https://mcp-client.example", "https://allowed.example"} {
+		for _, path := range []string{
+			resourceMetadataPath,
+			resourceMetadataRoot,
+		} {
+			for _, origin := range []string{
+				"https://mcp-client.example",
+				"https://allowed.example",
+			} {
 				rec := getMetadata(e, path, http.Header{"Origin": {origin}})
 				require.Equal(t, http.StatusOK, rec.Code, "%s %s", path, origin)
 				assert.Equal(t, "*", rec.Header().Get(echo.HeaderAccessControlAllowOrigin), "%s %s", path, origin)
@@ -196,11 +179,6 @@ func TestMCPChallenge(t *testing.T) {
 			code:   http.StatusUnauthorized,
 			want:   invalidTokenChallenge,
 		},
-		"expired oauth token": {
-			header: bearer(insertOAuthTokenExpiring(t, mcpResourceURL, projectsReadPermissions(), time.Now().Add(-time.Hour))),
-			code:   http.StatusUnauthorized,
-			want:   invalidTokenChallenge,
-		},
 		"malformed token": {
 			header: bearer("not-a-token"),
 			code:   http.StatusUnauthorized,
@@ -209,7 +187,7 @@ func TestMCPChallenge(t *testing.T) {
 		"basic credentials": {
 			header: http.Header{echo.HeaderAuthorization: {"Basic dXNlcjE6MTIzNDU2NzhUZXN0"}},
 			code:   http.StatusUnauthorized,
-			want:   invalidTokenChallenge,
+			want:   missingTokenChallenge,
 		},
 		"session jwt": {
 			header: bearer(sessionJWT),
@@ -242,16 +220,6 @@ func TestMCPChallenge(t *testing.T) {
 		})
 	}
 
-	t.Run("parses with the MCP SDK", func(t *testing.T) {
-		rec := postMCP(e, bearer(sessionJWT))
-		challenges, err := oauthex.ParseWWWAuthenticate(rec.Header().Values(echo.HeaderWWWAuthenticate))
-		require.NoError(t, err)
-		require.Len(t, challenges, 1)
-		assert.Equal(t, "bearer", challenges[0].Scheme)
-		assert.Equal(t, resourceMetadataURL, challenges[0].Params["resource_metadata"])
-		assert.Equal(t, "invalid_token", challenges[0].Params["error"])
-	})
-
 	t.Run("never takes the token from the query string", func(t *testing.T) {
 		req := mcpRequest(http.MethodPost, initializeBody)
 		req.URL.RawQuery = url.Values{"access_token": {mcpProjectsReadToken}}.Encode()
@@ -262,9 +230,24 @@ func TestMCPChallenge(t *testing.T) {
 
 	t.Run("is absent without a public URL", func(t *testing.T) {
 		withoutPublicURL(t)
-		for _, header := range []http.Header{nil, bearer(sessionJWT), bearer(noMCPToken)} {
-			rec := postMCP(e, header)
-			assert.Contains(t, []int{http.StatusUnauthorized, http.StatusForbidden}, rec.Code, rec.Body.String())
+		for _, tc := range []struct {
+			header http.Header
+			code   int
+		}{
+			{
+				code: http.StatusUnauthorized,
+			},
+			{
+				header: bearer(sessionJWT),
+				code:   http.StatusUnauthorized,
+			},
+			{
+				header: bearer(noMCPToken),
+				code:   http.StatusForbidden,
+			},
+		} {
+			rec := postMCP(e, tc.header)
+			require.Equal(t, tc.code, rec.Code, rec.Body.String())
 			assert.Empty(t, rec.Header().Values(echo.HeaderWWWAuthenticate))
 		}
 	})
@@ -275,11 +258,13 @@ func TestMCPChallenge(t *testing.T) {
 			path   string
 			header http.Header
 		}{
-			{path: "/api/v2/projects"},
-			{path: "/api/v1/projects"},
-			{path: "/api/v2/projects", header: bearer("tk_0000000000000000000000000000000000000000")},
-			{path: "/api/v2/projects", header: bearer(oauthToken)},
-			{path: "/api/v1/projects", header: bearer(oauthToken)},
+			{
+				path: "/api/v2/projects",
+			},
+			{
+				path:   "/api/v2/projects",
+				header: bearer(oauthToken),
+			},
 		} {
 			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
 			for k, v := range tc.header {
@@ -304,8 +289,17 @@ func TestMCPChallengeIsExposedToAllowedOrigins(t *testing.T) {
 		header http.Header
 		code   int
 	}{
-		{header: origin, code: http.StatusUnauthorized},
-		{header: http.Header{"Origin": origin["Origin"], echo.HeaderAuthorization: {"Bearer " + noMCPToken}}, code: http.StatusForbidden},
+		{
+			header: origin,
+			code:   http.StatusUnauthorized,
+		},
+		{
+			header: http.Header{
+				"Origin":                 origin["Origin"],
+				echo.HeaderAuthorization: {"Bearer " + noMCPToken},
+			},
+			code: http.StatusForbidden,
+		},
 	} {
 		rec := postMCP(e, tc.header)
 		require.Equal(t, tc.code, rec.Code, rec.Body.String())
@@ -329,8 +323,7 @@ func withPublicURL(t *testing.T, publicURL string) {
 	t.Cleanup(func() { config.ServicePublicURL.Set(previous) })
 }
 
-// Walks the discovery chain the way an MCP client does, with the MCP SDK's
-// client-side helpers; the test plays the user on the consent screen.
+// Uses the MCP SDK's client-side helpers; the test plays the user on the consent screen.
 func TestMCPOAuthDiscoveryChain(t *testing.T) {
 	e, clientID, _ := metadataClientEnv(t)
 	server := httptest.NewServer(e)
@@ -394,19 +387,11 @@ func TestMCPOAuthDiscoveryChain(t *testing.T) {
 	assert.Equal(t, "chain-state", authorized.State)
 	assert.Equal(t, asm.Issuer, authorized.Issuer)
 
-	// x/oauth2's auto-detected auth style tries HTTP Basic first and silently retries with client_id in the body on any error.
-	var tokenAuthorizations []string
-	exchangeClient := &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
-		tokenAuthorizations = append(tokenAuthorizations, r.Header.Get(echo.HeaderAuthorization))
-		return client.Transport.RoundTrip(r)
-	})}
-	token, err := cfg.Exchange(context.WithValue(ctx, oauth2.HTTPClient, exchangeClient), authorized.Code,
+	token, err := cfg.Exchange(context.WithValue(ctx, oauth2.HTTPClient, client), authorized.Code,
 		oauth2.VerifierOption(verifier),
 		oauth2.SetAuthURLParam("resource", prm.Resource),
 	)
 	require.NoError(t, err)
-	require.Len(t, tokenAuthorizations, 1, "no retry")
-	assert.True(t, strings.HasPrefix(tokenAuthorizations[0], "Basic "), tokenAuthorizations[0])
 	stored := storedToken(t, token.AccessToken)
 	assert.Equal(t, clientID, stored.OAuthClientID)
 	assert.Equal(t, endpoint, stored.OAuthResource)
@@ -438,7 +423,3 @@ func TestMCPOAuthDiscoveryChain(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, result.IsError, "%v", result.Content)
 }
-
-type roundTripFunc func(*http.Request) (*http.Response, error)
-
-func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }

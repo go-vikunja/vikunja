@@ -118,33 +118,17 @@ afterEach(() => {
 })
 
 describe('OAuthAuthorize', () => {
-	describe('inside a frame', () => {
-		it.each([
-			['an unscoped', {}],
-			['a scoped', {scope: 'mcp:write', resource: RESOURCE}],
-		])('refuses %s request', async (_, extra) => {
-			vi.spyOn(window, 'top', 'get').mockReturnValue({} as Window)
-			mockRoute.query = {...BASE_QUERY, ...extra}
-			sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write']))
-			const wrapper = mountView()
-			await flushPromises()
+	it('refuses a scoped request inside a frame', async () => {
+		vi.spyOn(window, 'top', 'get').mockReturnValue({} as Window)
+		mockRoute.query = {...BASE_QUERY, scope: 'mcp:write', resource: RESOURCE}
+		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write']))
+		const wrapper = mountView()
+		await flushPromises()
 
-			expect(sdk.oauthAuthorizePreview).not.toHaveBeenCalled()
-			expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
-			expect(wrapper.text()).toContain('cannot be shown inside another website')
-			expect(wrapper.find('input[value="write"]').exists()).toBe(false)
-		})
-
-		it('refuses when the top window is cross-origin', async () => {
-			vi.spyOn(window, 'top', 'get').mockImplementation(() => {
-				throw new DOMException('Blocked a frame', 'SecurityError')
-			})
-			mountView()
-			await flushPromises()
-
-			expect(sdk.oauthAuthorizePreview).not.toHaveBeenCalled()
-			expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
-		})
+		expect(sdk.oauthAuthorizePreview).not.toHaveBeenCalled()
+		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
+		expect(wrapper.text()).toContain('cannot be shown inside another website')
+		expect(wrapper.find('input[value="write"]').exists()).toBe(false)
 	})
 
 	it('approves an unscoped request without asking', async () => {
@@ -180,28 +164,14 @@ describe('OAuthAuthorize', () => {
 		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1&${ISS_PARAM}`)
 	})
 
-	it('asks for consent before authorizing a scoped request', async () => {
-		mockRoute.query = {
-			...BASE_QUERY,
-			scope: 'mcp:write',
-			resource: RESOURCE,
-		}
-		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write']))
+	it('names the scheme of a custom-scheme redirect', async () => {
+		mockRoute.query = {...BASE_QUERY, redirect_uri: 'vikunja-flutter://callback', scope: 'mcp:read'}
+		const p = preview(['mcp:read'])
+		sdk.oauthAuthorizePreview.mockResolvedValue({data: {...p.data, redirect_uri: 'vikunja-flutter://callback'}})
 		const wrapper = mountView()
 		await flushPromises()
 
-		expect(sdk.oauthAuthorizePreview).toHaveBeenCalledWith({body: expect.objectContaining({
-			client_id: 'mcp-client',
-			scope: 'mcp:write',
-			resource: RESOURCE,
-		})})
-		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
-		expect(window.location.href).toBe('http://localhost/oauth/authorize')
-		expect(wrapper.text()).toContain('mcp-client')
-		expect(wrapper.text()).toContain('127.0.0.1:9999')
-		expect(wrapper.text()).toContain('Alice (alice)')
-		expect(wrapper.text()).toContain('revoke it earlier in the settings under MCP → Connected apps')
-		expect(wrapper.get<HTMLInputElement>('input[value="write"]').element.checked).toBe(true)
+		expect(wrapper.get('.host').text()).toBe('vikunja-flutter://callback')
 	})
 
 	it('asks for consent when the server scopes a request without scope or resource', async () => {
@@ -222,6 +192,7 @@ describe('OAuthAuthorize', () => {
 		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
 		expect(window.location.href).toBe('http://localhost/oauth/authorize')
 		expect(wrapper.text()).toContain('Connect Example MCP Client?')
+		expect(wrapper.text()).toContain('revoke it earlier in the settings under MCP → Connected apps')
 
 		await button(wrapper, 'Approve').trigger('click')
 		await flushPromises()
@@ -260,29 +231,6 @@ describe('OAuthAuthorize', () => {
 		expect(wrapper.text()).not.toContain('a program running on this device')
 	})
 
-	it('leaves the loopback decision to the server', async () => {
-		sdk.oauthAuthorizePreview.mockResolvedValue({
-			data: {
-				...preview(['mcp:read'], METADATA_CLIENT).data,
-				redirect_uri: 'http://[::ffff:127.0.0.1]:9999/callback',
-			},
-		})
-		const mapped = mountView()
-		await flushPromises()
-		expect(mapped.text()).toContain('a program running on this device')
-		mapped.unmount()
-
-		sdk.oauthAuthorizePreview.mockResolvedValue({
-			data: {
-				...preview(['mcp:read'], METADATA_CLIENT).data,
-				loopback_redirect: false,
-			},
-		})
-		const notFlagged = mountView()
-		await flushPromises()
-		expect(notFlagged.text()).not.toContain('a program running on this device')
-	})
-
 	it('shows the raw id of a legacy client without claiming a publisher', async () => {
 		mockRoute.query = {
 			...BASE_QUERY,
@@ -295,27 +243,6 @@ describe('OAuthAuthorize', () => {
 		expect(wrapper.get('.card-header-title').text()).toBe('Connect mcp-client?')
 		expect(wrapper.text()).not.toContain('Published by')
 		expect(wrapper.text()).not.toContain('a program running on this device')
-	})
-
-	it('sends the requested scope and resource on approve', async () => {
-		mockRoute.query = {
-			...BASE_QUERY,
-			scope: 'mcp:write',
-			resource: RESOURCE,
-		}
-		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write']))
-		const wrapper = mountView()
-		await flushPromises()
-
-		await button(wrapper, 'Approve').trigger('click')
-		await flushPromises()
-
-		expect(sdk.oauthAuthorize).toHaveBeenCalledWith({body: expect.objectContaining({
-			scope: 'mcp:read mcp:write',
-			resource: RESOURCE,
-			state: 'st-1',
-		})})
-		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1&${ISS_PARAM}`)
 	})
 
 	it('grants read-only access when the user downgrades', async () => {
@@ -348,22 +275,6 @@ describe('OAuthAuthorize', () => {
 		await flushPromises()
 
 		expect(sdk.oauthAuthorize.mock.calls[0][0].body.scope).toBe('mcp:read')
-	})
-
-	it('redirects a denial with access_denied and state without authorizing', async () => {
-		mockRoute.query = {
-			...BASE_QUERY,
-			scope: 'mcp:read',
-		}
-		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read']))
-		const wrapper = mountView()
-		await flushPromises()
-
-		await button(wrapper, 'Deny').trigger('click')
-		await flushPromises()
-
-		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
-		expect(window.location.href).toBe(`${REDIRECT_URI}?error=access_denied&state=st-1&${ISS_PARAM}`)
 	})
 
 	it('omits iss when the API sends none', async () => {

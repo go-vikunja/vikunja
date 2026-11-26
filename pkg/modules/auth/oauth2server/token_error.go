@@ -35,7 +35,7 @@ const (
 	TokenErrorInvalidTarget        TokenErrorCode = "invalid_target"
 )
 
-// TokenError is a rejected token request. Err is the domain error it was rejected with.
+// TokenError is a rejected token request.
 type TokenError struct {
 	Code TokenErrorCode
 	Err  error

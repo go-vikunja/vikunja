@@ -183,12 +183,8 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	return t.insert(s, caller.ID)
 }
 
-// CreateForOAuthClient mints the token an OAuth client receives for a scoped grant. Its owner is the
-// user who authorized the client.
+// CreateForOAuthClient mints a scoped-grant token owned by the user who authorized the client.
 func (t *APIToken) CreateForOAuthClient(s *xorm.Session) error {
-	if t.OAuthClientID == "" || t.OAuthResource == "" {
-		return fmt.Errorf("oauth api token for owner %d needs a client id and a resource", t.OwnerID)
-	}
 	return t.insert(s, t.OwnerID)
 }
 
@@ -351,7 +347,7 @@ func (t *APIToken) HasFeedsAccess() bool  { return t.HasPermission("feeds", "acc
 func (t *APIToken) HasMCPAccess() bool { return t.HasPermission("mcp", "access") }
 
 // IsOAuthGrant reports whether an OAuth client received this token, which then only works for MCP.
-func (t *APIToken) IsOAuthGrant() bool { return t != nil && t.OAuthClientID != "" }
+func (t *APIToken) IsOAuthGrant() bool { return t.OAuthClientID != "" }
 
 // GetTokenFromTokenString returns the full token object from the original token string,
 // backfilling token_sha256 when the token was only found via the legacy pbkdf2 path.

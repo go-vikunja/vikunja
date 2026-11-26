@@ -31,14 +31,16 @@ const (
 )
 
 func SupportedScopes() []Scope {
-	return []Scope{ScopeMCPRead, ScopeMCPWrite}
+	return []Scope{
+		ScopeMCPRead,
+		ScopeMCPWrite,
+	}
 }
 
 // Resource is the protected resource scoped grants are issued for.
 type Resource interface {
 	// ResourceURL is the RFC 8707 resource indicator clients name it by.
 	ResourceURL() string
-	// ScopePermissions returns the API token permissions a scope grants right now.
 	ScopePermissions(scope Scope) models.APIPermissions
 }
 
@@ -55,7 +57,10 @@ func parseScope(raw string) ([]Scope, error) {
 	}
 	switch {
 	case write:
-		return []Scope{ScopeMCPRead, ScopeMCPWrite}, nil
+		return []Scope{
+			ScopeMCPRead,
+			ScopeMCPWrite,
+		}, nil
 	case read:
 		return []Scope{ScopeMCPRead}, nil
 	default:

@@ -50,7 +50,6 @@ func metadataClientEnv(t *testing.T) (e *echo.Echo, clientID string, host *httpt
 		doc := map[string]any{
 			"client_id":   "https://" + r.Host + r.URL.Path,
 			"client_name": metadataClientName,
-			"client_uri":  "https://app.example.com",
 			"redirect_uris": []string{
 				metadataClientRedirect,
 				"https://app.example.com/callback",
@@ -96,8 +95,7 @@ func TestOAuthMetadataDocumentClient(t *testing.T) {
 				"id": "`+clientID+`",
 				"kind": "metadata_document",
 				"name": "Example MCP Client",
-				"host": "`+strings.TrimPrefix(host.URL, "https://")+`",
-				"uri": "https://app.example.com"
+				"host": "`+strings.TrimPrefix(host.URL, "https://")+`"
 			},
 			"redirect_uri": "`+redirect+`",
 			"scopes": ["mcp:read", "mcp:write"],
@@ -206,6 +204,7 @@ func TestOAuthMetadataDocumentClient(t *testing.T) {
 			strings.Replace(clientID, "https://", "http://", 1),
 			host.URL,
 			clientID + "#frag",
+			"https://%D0%B0pple.com/client.json",
 		} {
 			for _, res := range []*httpResult{
 				authorizePreview(t, e, userToken, map[string]string{
