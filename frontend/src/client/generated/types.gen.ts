@@ -3301,6 +3301,7 @@ export type TokenRequest = {
      * RFC 8707 resource indicator. Must match the resource of the authorization request.
      */
     resource?: string;
+    [key: string]: unknown;
 };
 
 export type TokenResponse = {
@@ -5599,6 +5600,7 @@ export type TokenRequestWritable = {
      * RFC 8707 resource indicator. Must match the resource of the authorization request.
      */
     resource?: string;
+    [key: string]: unknown;
 };
 
 export type TokenResponseWritable = {
