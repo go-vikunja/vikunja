@@ -300,7 +300,7 @@ func (t *APIToken) HasFeedsAccess() bool  { return t.HasPermission("feeds", "acc
 func (t *APIToken) HasMCPAccess() bool { return t.HasPermission("mcp", "access") }
 
 // IsOAuthGrant reports whether an OAuth client received this token, which then only works for MCP.
-func (t *APIToken) IsOAuthGrant() bool { return t != nil && t.OAuthClientID != "" }
+func (t *APIToken) IsOAuthGrant() bool { return t.OAuthClientID != "" }
 
 // GetTokenFromTokenString returns the full token object from the original token string,
 // backfilling token_sha256 when the token was only found via the legacy pbkdf2 path.
