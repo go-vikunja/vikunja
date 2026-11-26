@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
+	"code.vikunja.io/api/pkg/modules/mcp"
 
 	"github.com/labstack/echo/v5"
 )
@@ -32,7 +33,9 @@ const oauthTokenPathV2 = "/api/v2/oauth/token" //nolint:gosec // a route path, n
 // skipsInstanceCORS: these paths answer CORS themselves. Their Allow-Origin * must
 // not meet the instance middleware's Allow-Credentials.
 func skipsInstanceCORS(path string) bool {
-	return path == oauthTokenPathV2 || strings.HasPrefix(path, oauth2server.MetadataPath)
+	return path == oauthTokenPathV2 ||
+		strings.HasPrefix(path, oauth2server.MetadataPath) ||
+		strings.HasPrefix(path, mcp.ResourceMetadataPath)
 }
 
 func allowAnyOrigin(c *echo.Context) {

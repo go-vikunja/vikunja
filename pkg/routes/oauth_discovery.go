@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
+	"code.vikunja.io/api/pkg/modules/mcp"
 
 	"github.com/labstack/echo/v5"
 )
@@ -31,20 +32,23 @@ func registerOAuthDiscoveryRoutes(e *echo.Echo) {
 	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" && issuerPath != "/" {
 		paths = append(paths, oauth2server.MetadataPath+issuerPath)
 	}
-	for _, p := range paths {
-		e.GET(p, oauthAuthorizationServerMetadata)
-		e.OPTIONS(p, anyOriginPreflight(http.MethodGet))
-	}
+	registerDiscoveryDocument(e, paths, oauth2server.Metadata)
+	registerDiscoveryDocument(e, mcp.ResourceMetadataPaths(), mcp.ResourceMetadata)
 }
 
-// oauthAuthorizationServerMetadata serves the RFC 8414 authorization server metadata.
-func oauthAuthorizationServerMetadata(c *echo.Context) error {
-	allowAnyOrigin(c)
-	metadata, ok := oauth2server.Metadata()
-	if !ok {
-		// Written rather than returned: the static file handler answers a returned 404 with index.html.
-		return c.NoContent(http.StatusNotFound)
+func registerDiscoveryDocument[T any](e *echo.Echo, paths []string, document func() (T, bool)) {
+	handler := func(c *echo.Context) error {
+		allowAnyOrigin(c)
+		doc, ok := document()
+		if !ok {
+			// Written rather than returned: the static file handler answers a returned 404 with index.html.
+			return c.NoContent(http.StatusNotFound)
+		}
+		c.Response().Header().Set(echo.HeaderCacheControl, "public, max-age=3600")
+		return c.JSON(http.StatusOK, doc)
 	}
-	c.Response().Header().Set(echo.HeaderCacheControl, "public, max-age=3600")
-	return c.JSON(http.StatusOK, metadata)
+	for _, p := range paths {
+		e.GET(p, handler)
+		e.OPTIONS(p, anyOriginPreflight(http.MethodGet))
+	}
 }

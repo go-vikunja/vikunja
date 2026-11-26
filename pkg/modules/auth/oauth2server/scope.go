@@ -30,7 +30,7 @@ const (
 	ScopeMCPWrite Scope = "mcp:write"
 )
 
-func supportedScopes() []Scope {
+func SupportedScopes() []Scope {
 	return []Scope{ScopeMCPRead, ScopeMCPWrite}
 }
 

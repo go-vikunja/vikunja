@@ -64,7 +64,7 @@ func Metadata() (*AuthorizationServerMetadata, bool) {
 		GrantTypesSupported:                        []string{"authorization_code"},
 		CodeChallengeMethodsSupported:              []string{"S256"},
 		TokenEndpointAuthMethodsSupported:          []string{"none"},
-		ScopesSupported:                            supportedScopes(),
+		ScopesSupported:                            SupportedScopes(),
 		ClientIDMetadataDocumentSupported:          true,
 		AuthorizationResponseIssParameterSupported: true,
 	}, true
