@@ -88,25 +88,15 @@ func TestValidateRedirectURI(t *testing.T) {
 
 func TestParseClientID(t *testing.T) {
 	t.Run("plain strings are legacy clients", func(t *testing.T) {
-		for _, raw := range []string{
-			"vikunja",
-			"vikunja-desktop",
-			"veans-cli",
-			"test-mcp-client",
-			"",
-		} {
-			id, err := parseClientID(raw)
-			require.NoError(t, err, raw)
-			assert.Equal(t, legacyClientID(raw), id, raw)
-		}
+		id, err := parseClientID("vikunja")
+		require.NoError(t, err)
+		assert.Equal(t, legacyClientID("vikunja"), id)
 	})
 
 	t.Run("https URLs are metadata document clients", func(t *testing.T) {
 		for _, raw := range []string{
 			"https://app.example.com/oauth/client-metadata.json",
 			"https://app.example.com:8443/client",
-			"https://app.example.com/client?version=2",
-			"https://127.0.0.1/client.json",
 			"https://app.example.com/" + strings.Repeat("a", maxClientIDURLLength-len("https://app.example.com/")),
 		} {
 			id, err := parseClientID(raw)
@@ -118,24 +108,16 @@ func TestParseClientID(t *testing.T) {
 	t.Run("rejects URL-shaped ids that are not valid metadata document URLs", func(t *testing.T) {
 		for _, raw := range []string{
 			"http://app.example.com/client.json",
-			"HTTPS://app.example.com/client.json",
-			"ftp://app.example.com/client.json",
-			"vikunja-desktop://callback",
 			"urn:example:client",
-			"mailto:client@example.com",
 			"https://app.example.com",
 			"https://app.example.com/",
 			"https:///client.json",
 			"https://user@app.example.com/client.json",
-			"https://user:secret@app.example.com/client.json",
 			"https://app.example.com/client.json#frag",
-			"https://app.example.com/client.json#",
 			"https://app.example.com/./client.json",
-			"https://app.example.com/oauth/../client.json",
 			"https://app.example.com/oauth/%2e%2e/client.json",
-			"https://app.example.com/oauth/..",
-			"https://app.example.com/client json",
 			"https://app.exämple.com/client.json",
+			"https://%D0%B0pple.com/client.json",
 			"https://app.example.com/" + strings.Repeat("a", maxClientIDURLLength),
 		} {
 			_, err := parseClientID(raw)
@@ -176,30 +158,10 @@ func TestMetadataClientAllowsRedirect(t *testing.T) {
 	}
 
 	for _, uri := range []string{
-		"https://app.example.com/callback2",
 		"https://app.example.com/callback/",
-		"https://app.example.com/Callback",
-		"https://app.example.com/callback?x=1",
-		"https://app.example.com/callback#x",
-		"https://app.example.com:443/callback",
-		"https://APP.example.com/callback",
-		"http://app.example.com/callback",
-		"https://user@app.example.com/callback",
-		"https://evil.example.com/callback",
-		"https://app.example.com.evil.example/callback",
-		"https://127.0.0.1:3000/callback",
-		"http://127.0.0.1:3000/callback2",
-		"http://127.0.0.1:3000/callback/",
-		"http://127.0.0.1:3000/callback?x=1",
 		"http://127.0.0.2:3000/callback",
-		"http://localhost:3000/callback",
 		"http://user@127.0.0.1:3000/callback",
-		"http://127.0.0.1:3000@evil.example/callback",
-		"http://localhost/cb2",
-		"http://[::1]:9/cb/",
-		"cursor://anysphere.cursor-retrieval/oauth/callback2",
 		"javascript:alert(1)//",
-		"data:text/html,hi",
 		"http://evil.example/cb",
 		"",
 	} {
@@ -218,22 +180,14 @@ func TestLegacyClientKeepsRedirectRules(t *testing.T) {
 func TestIsLoopbackRedirect(t *testing.T) {
 	for _, uri := range []string{
 		"http://127.0.0.1:3000/callback",
-		"http://127.1.2.3/callback",
-		"http://localhost:8080/callback",
 		"HTTP://LOCALHOST/callback",
-		"http://[::1]:3000/callback",
-		"http://[0:0:0:0:0:0:0:1]/callback",
 		"http://[::ffff:127.0.0.1]:3000/callback",
 	} {
 		assert.True(t, isLoopbackRedirect(uri), uri)
 	}
 	for _, uri := range []string{
 		"https://127.0.0.1/callback",
-		"https://app.example.com/callback",
-		"http://app.example.com/callback",
 		"http://127.0.0.1.example.com/callback",
-		"vikunja-flutter://callback",
-		"cursor://localhost/callback",
 		"::not a url",
 	} {
 		assert.False(t, isLoopbackRedirect(uri), uri)

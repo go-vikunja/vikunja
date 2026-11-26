@@ -31,7 +31,7 @@ func ResourceMetadataPaths() []string {
 		ResourceMetadataPath,
 		ResourceMetadataPath + RoutePrefix,
 	}
-	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" && issuerPath != "/" {
+	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" {
 		paths = append(paths, ResourceMetadataPath+issuerPath+RoutePrefix)
 	}
 	return paths

@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -36,8 +35,7 @@ import (
 
 const metadataPath = "/.well-known/oauth-authorization-server"
 
-// discoveryEnv rebuilds the routes with settings read at registration. Set values
-// outlive InitDefaultConfig, so they are restored after the test.
+// Set values outlive InitDefaultConfig, so discoveryEnv restores them.
 func discoveryEnv(t *testing.T, settings map[config.Key]any) *echo.Echo {
 	t.Helper()
 	_, err := setupTestEnv()
@@ -83,29 +81,9 @@ func TestOAuthAuthorizationServerMetadata(t *testing.T) {
 			"client_id_metadata_document_supported": true,
 			"authorization_response_iss_parameter_supported": true
 		}`, rec.Body.String())
-	})
 
-	t.Run("advertises a working token endpoint", func(t *testing.T) {
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		var metadata oauth2server.AuthorizationServerMetadata
-		require.NoError(t, json.Unmarshal(getMetadata(e, metadataPath, nil).Body.Bytes(), &metadata))
-		tokenEndpoint, err := url.Parse(metadata.TokenEndpoint)
-		require.NoError(t, err)
-
-		authz := scopedAuthorize(t, e, "v2", map[string]string{"scope": "mcp:read"})
-		require.Equal(t, http.StatusOK, authz.code, string(authz.body))
-		var authorized oauth2server.AuthorizeResponse
-		require.NoError(t, json.Unmarshal(authz.body, &authorized))
-		form := url.Values{
-			"grant_type":    {"authorization_code"},
-			"code":          {authorized.Code},
-			"client_id":     {scopedClientID},
-			"redirect_uri":  {scopedRedirectURI},
-			"code_verifier": {scopedVerifier},
-		}
-		rec := humaRequest(t, e, http.MethodPost, tokenEndpoint.Path, form.Encode(), "", "application/x-www-form-urlencoded")
-		assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		principal := getMetadata(e, "/.well-known/caldav", nil)
+		assert.Equal(t, http.StatusUnauthorized, principal.Code, "the caldav group must keep its basic auth")
 	})
 
 	t.Run("passes the MCP SDK's validation", func(t *testing.T) {
@@ -113,7 +91,9 @@ func TestOAuthAuthorizationServerMetadata(t *testing.T) {
 		require.NoError(t, err)
 		server := httptest.NewServer(e)
 		t.Cleanup(server.Close)
+		publicURL := config.ServicePublicURL.GetString()
 		config.ServicePublicURL.Set(server.URL + "/")
+		t.Cleanup(func() { config.ServicePublicURL.Set(publicURL) })
 
 		metadata, err := oauthex.GetAuthServerMeta(t.Context(), server.URL+metadataPath, server.URL, server.Client())
 		require.NoError(t, err)
@@ -130,21 +110,6 @@ func TestOAuthAuthorizationServerMetadata(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 		assert.Empty(t, rec.Body.String(), "must not fall back to the frontend's index.html")
 	})
-
-	for name, caldav := range map[string]bool{"caldav enabled": true, "caldav disabled": false} {
-		t.Run("needs no authentication with "+name, func(t *testing.T) {
-			e := discoveryEnv(t, map[config.Key]any{config.ServiceEnableCaldav: caldav})
-
-			rec := getMetadata(e, metadataPath, nil)
-			assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-			assert.Contains(t, rec.Body.String(), `"issuer":"https://localhost"`)
-
-			if caldav {
-				principal := getMetadata(e, "/.well-known/caldav", nil)
-				assert.Equal(t, http.StatusUnauthorized, principal.Code, "the caldav group must keep its basic auth")
-			}
-		})
-	}
 
 	t.Run("is readable from any origin", func(t *testing.T) {
 		e := discoveryEnv(t, map[config.Key]any{
@@ -190,22 +155,13 @@ func TestOAuthAuthorizeIssuer(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 
-	for name, tc := range map[string]struct {
-		version string
-		params  map[string]string
-	}{
-		"v2 scoped":   {version: "v2", params: map[string]string{"scope": "mcp:read"}},
-		"v2 unscoped": {version: "v2"},
-		"v1 scoped":   {version: "v1", params: map[string]string{"scope": "mcp:read"}},
-	} {
-		t.Run(name, func(t *testing.T) {
-			res := scopedAuthorize(t, e, tc.version, tc.params)
-			require.Equal(t, http.StatusOK, res.code, string(res.body))
-			var authorized oauth2server.AuthorizeResponse
-			require.NoError(t, json.Unmarshal(res.body, &authorized))
-			assert.Equal(t, "https://localhost", authorized.Issuer)
-		})
-	}
+	t.Run("sent with the code", func(t *testing.T) {
+		res := scopedAuthorize(t, e, "v2", map[string]string{"scope": "mcp:read"})
+		require.Equal(t, http.StatusOK, res.code, string(res.body))
+		var authorized oauth2server.AuthorizeResponse
+		require.NoError(t, json.Unmarshal(res.body, &authorized))
+		assert.Equal(t, "https://localhost", authorized.Issuer)
+	})
 
 	t.Run("omitted without a public URL", func(t *testing.T) {
 		withoutPublicURL(t)

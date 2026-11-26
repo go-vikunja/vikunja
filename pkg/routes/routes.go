@@ -303,12 +303,12 @@ func RegisterRoutes(e *echo.Echo, opts ...Option) {
 		}))
 	}
 
+	e.Use(anyOriginCORS)
+
 	// /api/v2 — Huma-backed API. Registered first: v1's OAuth endpoints need the MCP module it builds.
 	a2 := e.Group(apiv2.GroupPrefix)
 	// Share the BasicAuth failure budget with CalDAV and feeds.
 	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
-	a2.Use(pathScoped(func(p string) bool { return p == oauthTokenPathV2 }, allowAnyOriginMiddleware))
-	e.OPTIONS(oauthTokenPathV2, anyOriginPreflight(http.MethodPost))
 	oauthServer := registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit, oauth2server.NewMetadataFetcher(options.oauthMetadataHTTPClient))
 
 	// API Routes

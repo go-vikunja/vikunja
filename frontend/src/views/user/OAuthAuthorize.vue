@@ -126,8 +126,7 @@ async function authorize(scope?: string) {
 
 async function start() {
 	const {data} = await oauthAuthorizePreview({body: authorizeRequest()})
-	// First-party apps rely on being approved without a prompt. The server decides which requests
-	// those are: a URL client is scoped even without scope or resource.
+	// First-party apps are approved without a prompt; the server decides which requests are unscoped.
 	if (!data.scoped) {
 		await authorize()
 		return
@@ -148,7 +147,6 @@ async function start() {
 }
 
 async function approve(level: AccessLevel) {
-	if (approving.value) return
 	approving.value = true
 	errorMessage.value = ''
 	try {
@@ -172,12 +170,7 @@ function deny() {
 }
 
 function isFramed() {
-	try {
-		return window.self !== window.top
-	} catch {
-		// Reading a cross-origin top can throw.
-		return true
-	}
+	return window.self !== window.top
 }
 
 onMounted(async () => {

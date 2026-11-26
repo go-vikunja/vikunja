@@ -25,11 +25,10 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// RFC 8414 §3.1 inserts the well-known path before the issuer's path, so a subpath
-// deployment's proxy can forward that URL here unchanged.
+// RFC 8414 §3.1 puts the well-known path before the issuer's path, so a subpath proxy can forward it unchanged.
 func registerOAuthDiscoveryRoutes(e *echo.Echo) {
 	paths := []string{oauth2server.MetadataPath}
-	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" && issuerPath != "/" {
+	if issuerPath := oauth2server.IssuerPath(); issuerPath != "" {
 		paths = append(paths, oauth2server.MetadataPath+issuerPath)
 	}
 	registerDiscoveryDocument(e, paths, oauth2server.Metadata)
@@ -38,7 +37,6 @@ func registerOAuthDiscoveryRoutes(e *echo.Echo) {
 
 func registerDiscoveryDocument[T any](e *echo.Echo, paths []string, document func() (T, bool)) {
 	handler := func(c *echo.Context) error {
-		allowAnyOrigin(c)
 		doc, ok := document()
 		if !ok {
 			// Written rather than returned: the static file handler answers a returned 404 with index.html.
@@ -49,6 +47,5 @@ func registerDiscoveryDocument[T any](e *echo.Echo, paths []string, document fun
 	}
 	for _, p := range paths {
 		e.GET(p, handler)
-		e.OPTIONS(p, anyOriginPreflight(http.MethodGet))
 	}
 }
