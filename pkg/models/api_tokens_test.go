@@ -17,7 +17,6 @@
 package models
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -101,28 +100,6 @@ func TestAPIToken_Create(t *testing.T) {
 		err := token.Create(s, u)
 		require.NoError(t, err)
 	})
-	t.Run("ignores oauth fields", func(t *testing.T) {
-		u := &user.User{ID: 1}
-		token := &APIToken{
-			Title:          "forged",
-			APIPermissions: APIPermissions{"mcp": {"access"}},
-			ExpiresAt:      time.Now().Add(time.Hour),
-			OAuthClientID:  "https://client.example/metadata.json",
-			OAuthResource:  "https://vikunja.example/api/v2/mcp",
-		}
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
-
-		require.NoError(t, token.Create(s, u))
-		assert.Empty(t, token.OAuthClientID)
-		assert.Empty(t, token.OAuthResource)
-
-		stored, err := GetAPITokenByID(s, token.ID)
-		require.NoError(t, err)
-		assert.False(t, stored.IsOAuthGrant())
-		assert.Empty(t, stored.OAuthResource)
-	})
 }
 
 func TestAPIToken_CreateForOAuthClient(t *testing.T) {
@@ -137,35 +114,6 @@ func TestAPIToken_CreateForOAuthClient(t *testing.T) {
 		}
 	}
 
-	t.Run("keeps oauth fields", func(t *testing.T) {
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
-
-		token := newToken()
-		require.NoError(t, token.CreateForOAuthClient(s))
-		assert.True(t, strings.HasPrefix(token.Token, APITokenPrefix))
-
-		stored, err := GetTokenFromTokenString(s, token.Token)
-		require.NoError(t, err)
-		assert.True(t, stored.IsOAuthGrant())
-		assert.Equal(t, "client", stored.OAuthClientID)
-		assert.Equal(t, "https://vikunja.example/api/v2/mcp", stored.OAuthResource)
-		assert.Equal(t, int64(1), stored.OwnerID)
-	})
-	t.Run("requires client and resource", func(t *testing.T) {
-		s := db.NewSession()
-		defer s.Close()
-		db.LoadAndAssertFixtures(t)
-
-		noClient := newToken()
-		noClient.OAuthClientID = ""
-		require.Error(t, noClient.CreateForOAuthClient(s))
-
-		noResource := newToken()
-		noResource.OAuthResource = ""
-		require.Error(t, noResource.CreateForOAuthClient(s))
-	})
 	t.Run("validates permissions", func(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()

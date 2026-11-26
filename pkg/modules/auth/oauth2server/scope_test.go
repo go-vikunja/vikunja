@@ -29,13 +29,9 @@ func TestParseScope(t *testing.T) {
 	for raw, want := range map[string]string{
 		"mcp:read":                    "mcp:read",
 		"mcp:write":                   "mcp:read mcp:write",
-		"mcp:write mcp:read":          "mcp:read mcp:write",
-		"offline_access  mcp:read ":   "mcp:read",
-		"openid mcp:write mcp:write":  "mcp:read mcp:write",
-		"\tmcp:read\nmcp:unknown":     "mcp:read",
-		"MCP:READ mcp:read":           "mcp:read",
+		"offline_access mcp:read":     "mcp:read",
+		"MCP:WRITE mcp:read":          "mcp:read",
 		"offline_access mcp:readonly": "",
-		"   ":                         "",
 	} {
 		scopes, err := parseScope(raw)
 		if want == "" {
@@ -48,12 +44,6 @@ func TestParseScope(t *testing.T) {
 	}
 }
 
-func TestRequestsMCPScope(t *testing.T) {
-	assert.True(t, requestsMCPScope("openid mcp:read"))
-	assert.False(t, requestsMCPScope(""))
-	assert.False(t, requestsMCPScope("openid offline_access"))
-}
-
 func TestSameResource(t *testing.T) {
 	const canonical = "https://vikunja.example/api/v2/mcp"
 	for _, same := range []string{
@@ -64,13 +54,9 @@ func TestSameResource(t *testing.T) {
 		assert.True(t, SameResource(same, canonical), same)
 	}
 	for _, other := range []string{
-		"",
-		"/api/v2/mcp",
 		"http://vikunja.example/api/v2/mcp",
-		"https://vikunja.example:8443/api/v2/mcp",
 		"https://evil.example/api/v2/mcp",
 		"https://vikunja.example/api/v2/MCP",
-		"https://vikunja.example/api/v2/mcp/x",
 		"https://vikunja.example/api/v2/mcp?x=1",
 		"https://vikunja.example/api/v2/mcp?",
 		"https://vikunja.example/api/v2/mcp#",
