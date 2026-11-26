@@ -279,6 +279,12 @@ async function toggleProjectFavorite() {
 		margin: 0 !important;
 		padding: 0 !important;
 	}
+
+	// Line up with the icons of the top menu, which start left of the color bubbles
+	.saved-filter-icon {
+		inline-size: 1rem;
+		inset-inline-start: -.25rem;
+	}
 }
 
 .drag-handle {
