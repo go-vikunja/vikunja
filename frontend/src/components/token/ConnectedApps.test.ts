@@ -7,7 +7,7 @@ import {createPinia, setActivePinia} from 'pinia'
 import ConnectedApps from './ConnectedApps.vue'
 import Modal from '@/components/misc/Modal.vue'
 import en from '@/i18n/lang/en.json'
-import {formatDisplayDate} from '@/helpers/time/formatDate'
+import {formatDateShort, formatDisplayDate} from '@/helpers/time/formatDate'
 import type {ApiToken} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
@@ -117,7 +117,7 @@ describe('ConnectedApps', () => {
 		expect(metadata[0]).toContain('Claude Code')
 		expect(metadata[0]).toContain('Published by claude.ai')
 		expect(metadata[1]).toBe('Read & write')
-		expect(metadata[2]).toBe(formatDisplayDate(metadataApp.created))
+		expect(metadata[2]).toBe(formatDateShort(metadataApp.created))
 		expect(metadata[3]).toBe(formatDisplayDate(metadataApp.expires_at))
 		expect(legacy[0]).toBe('vikunja-desktop')
 		expect(legacy[1]).toBe('Read only')

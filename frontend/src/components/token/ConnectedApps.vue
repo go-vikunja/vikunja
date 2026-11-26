@@ -9,7 +9,7 @@ import {normalizePageNumber} from '@/client/queries/pagination'
 import type {ApiToken} from '@/client/generated'
 import {useClampedPage} from '@/composables/useClampedPage'
 import {isApiTokenExpired, oauthClientHost} from '@/helpers/apiToken'
-import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
+import {formatDateShort, formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
 import ErrorMessage from '@/components/misc/Error.vue'
 import Pagination from '@/components/misc/Pagination.vue'
@@ -86,7 +86,9 @@ async function revoke() {
 							</span>
 						</td>
 						<td>{{ app.token.oauth_access ? t(ACCESS_LABELS[app.token.oauth_access]) : '' }}</td>
-						<td>{{ formatDisplayDate(app.token.created) }}</td>
+						<td :title="formatDateSince(app.token.created)">
+							{{ formatDateShort(app.token.created) }}
+						</td>
 						<td>
 							{{ formatDisplayDate(app.token.expires_at) }}
 							<p
