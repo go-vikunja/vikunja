@@ -289,6 +289,30 @@ export type AuthUrl = {
     readonly url?: string;
 };
 
+export type AuthorizeClient = {
+    id?: string;
+};
+
+export type AuthorizePreview = {
+    /**
+     * A URL to the JSON Schema for this object.
+     */
+    readonly $schema?: string;
+    client?: AuthorizeClient;
+    /**
+     * The validated redirect URI. Only redirect here, also to report a denial.
+     */
+    redirect_uri?: string;
+    /**
+     * Whether the client receives an MCP-only API token instead of a session.
+     */
+    scoped?: boolean;
+    /**
+     * The scopes the code would grant, normalized. Empty when the client receives a session.
+     */
+    scopes?: Array<'mcp:read' | 'mcp:write'> | null;
+};
+
 export type AuthorizeRequest = {
     /**
      * A URL to the JSON Schema for this object.
@@ -4276,6 +4300,22 @@ export type AuthLinkShareRequestWritable = {
     password?: string;
 };
 
+export type AuthorizePreviewWritable = {
+    client?: AuthorizeClient;
+    /**
+     * The validated redirect URI. Only redirect here, also to report a denial.
+     */
+    redirect_uri?: string;
+    /**
+     * Whether the client receives an MCP-only API token instead of a session.
+     */
+    scoped?: boolean;
+    /**
+     * The scopes the code would grant, normalized. Empty when the client receives a session.
+     */
+    scopes?: Array<'mcp:read' | 'mcp:write'> | null;
+};
+
 export type AuthorizeRequestWritable = {
     client_id?: string;
     code_challenge?: string;
@@ -7944,6 +7984,31 @@ export type OauthAuthorizeResponses = {
 };
 
 export type OauthAuthorizeResponse = OauthAuthorizeResponses[keyof OauthAuthorizeResponses];
+
+export type OauthAuthorizePreviewData = {
+    body: AuthorizeRequestWritable;
+    path?: never;
+    query?: never;
+    url: '/oauth/authorize/preview';
+};
+
+export type OauthAuthorizePreviewErrors = {
+    /**
+     * Error
+     */
+    default: VikunjaErrorModel;
+};
+
+export type OauthAuthorizePreviewError = OauthAuthorizePreviewErrors[keyof OauthAuthorizePreviewErrors];
+
+export type OauthAuthorizePreviewResponses = {
+    /**
+     * OK
+     */
+    200: AuthorizePreview;
+};
+
+export type OauthAuthorizePreviewResponse = OauthAuthorizePreviewResponses[keyof OauthAuthorizePreviewResponses];
 
 export type OauthTokenData = {
     body: TokenRequestWritable;
