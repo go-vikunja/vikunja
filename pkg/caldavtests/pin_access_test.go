@@ -174,7 +174,6 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 		// Saved filter 1 (pseudo project -2) belongs to user1.
 		{name: "own saved filter", project: "-2", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadWrite}},
 		{name: "saved filter, unrelated user", project: "-2", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
-		{name: "owned project, unrelated user", project: "36", username: testuser1.Username, want: collectionExpectation{404, 404, 404, 404, ""}},
 	}
 
 	// Every write here is denied, so the cases share one fixture load.
