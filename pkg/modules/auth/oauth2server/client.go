@@ -143,6 +143,10 @@ func validClientIDURL(raw string) bool {
 	if !strings.HasPrefix(raw, "https://"+u.Host+"/") {
 		return false
 	}
+	// DNS ignores case, so the consent screen must show the host as it is fetched.
+	if u.Host != strings.ToLower(u.Host) {
+		return false
+	}
 	for _, segment := range strings.Split(u.Path, "/") {
 		if segment == "." || segment == ".." {
 			return false
