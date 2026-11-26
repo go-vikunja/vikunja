@@ -55,6 +55,8 @@ func newMetadataHost(t *testing.T, handler func(host *metadataHost, w http.Respo
 		handler(host, w, r)
 	}))
 	t.Cleanup(host.server.Close)
+	// A later host can reuse the port, and so the cached client id.
+	t.Cleanup(func() { _ = keyvalue.DelPrefix("oauth_client_metadata_") })
 	return host
 }
 
