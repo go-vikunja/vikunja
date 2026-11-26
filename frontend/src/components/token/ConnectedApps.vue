@@ -38,11 +38,9 @@ const now = useNow({interval: 60_000})
 
 async function revoke() {
 	const app = appToRevoke.value
-	if (!app?.token.id || deleteMutation.isPending.value) return
-	try {
-		await deleteMutation.mutateAsync(app.token.id)
-	} catch { return }
-	if (appToRevoke.value === app) appToRevoke.value = undefined
+	if (!app?.token.id) return
+	appToRevoke.value = undefined
+	try { await deleteMutation.mutateAsync(app.token.id) } catch { /* Mutation reports the error. */ }
 }
 </script>
 
