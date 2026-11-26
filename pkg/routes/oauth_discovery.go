@@ -33,13 +33,11 @@ func registerOAuthDiscoveryRoutes(e *echo.Echo) {
 	}
 	for _, p := range paths {
 		e.GET(p, oauthAuthorizationServerMetadata)
-		e.OPTIONS(p, anyOriginPreflight(http.MethodGet))
 	}
 }
 
 // oauthAuthorizationServerMetadata serves the RFC 8414 authorization server metadata.
 func oauthAuthorizationServerMetadata(c *echo.Context) error {
-	allowAnyOrigin(c)
 	metadata, ok := oauth2server.Metadata()
 	if !ok {
 		// Written rather than returned: the static file handler answers a returned 404 with index.html.

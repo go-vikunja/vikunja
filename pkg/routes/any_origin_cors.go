@@ -17,45 +17,24 @@
 package routes
 
 import (
-	"net/http"
 	"strings"
 
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 
-	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 )
 
 // oauthTokenPathV2 takes no cookies: its credentials are in the body, so reading
 // its responses from any origin exposes nothing a server-side client can't get.
 const oauthTokenPathV2 = "/api/v2/oauth/token" //nolint:gosec // a route path, not a credential
 
-// skipsInstanceCORS: these paths answer CORS themselves. Their Allow-Origin * must
+// skipsInstanceCORS: these paths get anyOriginCORS instead. Their Allow-Origin * must
 // not meet the instance middleware's Allow-Credentials.
 func skipsInstanceCORS(path string) bool {
 	return path == oauthTokenPathV2 || strings.HasPrefix(path, oauth2server.MetadataPath)
 }
 
-func allowAnyOrigin(c *echo.Context) {
-	c.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
-}
-
-func allowAnyOriginMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c *echo.Context) error {
-		allowAnyOrigin(c)
-		return next(c)
-	}
-}
-
-func anyOriginPreflight(method string) echo.HandlerFunc {
-	return func(c *echo.Context) error {
-		allowAnyOrigin(c)
-		h := c.Response().Header()
-		h.Set(echo.HeaderAccessControlAllowMethods, method+", OPTIONS")
-		if requested := c.Request().Header.Get(echo.HeaderAccessControlRequestHeaders); requested != "" {
-			h.Set(echo.HeaderAccessControlAllowHeaders, requested)
-			h.Add(echo.HeaderVary, echo.HeaderAccessControlRequestHeaders)
-		}
-		h.Set(echo.HeaderAccessControlMaxAge, "86400")
-		return c.NoContent(http.StatusNoContent)
-	}
-}
+var anyOriginCORS = pathScoped(skipsInstanceCORS, middleware.CORSWithConfig(middleware.CORSConfig{
+	AllowOrigins: []string{"*"},
+	MaxAge:       86400,
+}))
