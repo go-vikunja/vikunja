@@ -33,7 +33,7 @@ func registerOAuthDiscoveryRoutes(e *echo.Echo) {
 	}
 	for _, p := range paths {
 		e.GET(p, oauthAuthorizationServerMetadata)
-		e.OPTIONS(p, publicCORSPreflight)
+		e.OPTIONS(p, anyOriginPreflight(http.MethodGet))
 	}
 }
 
@@ -47,21 +47,4 @@ func oauthAuthorizationServerMetadata(c *echo.Context) error {
 	}
 	c.Response().Header().Set(echo.HeaderCacheControl, "public, max-age=3600")
 	return c.JSON(http.StatusOK, metadata)
-}
-
-// Public, non-credentialed data: any origin may read it, whatever cors.origins says.
-func allowAnyOrigin(c *echo.Context) {
-	c.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
-}
-
-func publicCORSPreflight(c *echo.Context) error {
-	allowAnyOrigin(c)
-	h := c.Response().Header()
-	h.Set(echo.HeaderAccessControlAllowMethods, "GET, OPTIONS")
-	if requested := c.Request().Header.Get(echo.HeaderAccessControlRequestHeaders); requested != "" {
-		h.Set(echo.HeaderAccessControlAllowHeaders, requested)
-		h.Add(echo.HeaderVary, echo.HeaderAccessControlRequestHeaders)
-	}
-	h.Set(echo.HeaderAccessControlMaxAge, "86400")
-	return c.NoContent(http.StatusNoContent)
 }

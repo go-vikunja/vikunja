@@ -19,14 +19,18 @@ package webtests
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -221,4 +225,54 @@ func TestOAuthTokenIgnoresUnknownParameters(t *testing.T) {
 	code := insertOAuthCode(t, models.OAuthCode{Scope: "mcp:read", Resource: mcpResourceURL}, time.Time{})
 	res := scopedExchange(t, e, "v2", code, url.Values{"scope": {"mcp:read"}, "state": {"xyz"}})
 	assert.Equal(t, http.StatusOK, res.code, string(res.body))
+}
+
+func TestOAuthTokenCORS(t *testing.T) {
+	e := discoveryEnv(t, func() {
+		config.CorsEnable.Set(true)
+		config.CorsOrigins.Set([]string{"https://allowed.example"})
+	})
+	const origin = "https://mcp-client.example"
+
+	req := httptest.NewRequest(http.MethodOptions, "/api/v2/oauth/token", nil)
+	req.Header.Set("Origin", origin)
+	req.Header.Set(echo.HeaderAccessControlRequestMethod, http.MethodPost)
+	req.Header.Set(echo.HeaderAccessControlRequestHeaders, "content-type")
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
+	assert.Equal(t, "*", rec.Header().Get(echo.HeaderAccessControlAllowOrigin))
+	assert.Contains(t, rec.Header().Get(echo.HeaderAccessControlAllowMethods), http.MethodPost)
+	assert.Equal(t, "content-type", rec.Header().Get(echo.HeaderAccessControlAllowHeaders))
+	assert.Empty(t, rec.Header().Get(echo.HeaderAccessControlAllowCredentials))
+
+	for name, code := range map[string]string{
+		"success":  insertOAuthCode(t, models.OAuthCode{Scope: "mcp:read", Resource: mcpResourceURL}, time.Time{}),
+		"rejected": "not-a-code",
+	} {
+		form := url.Values{
+			"grant_type":    {"authorization_code"},
+			"code":          {code},
+			"client_id":     {scopedClientID},
+			"redirect_uri":  {scopedRedirectURI},
+			"code_verifier": {scopedVerifier},
+		}
+		for _, o := range []string{origin, "https://allowed.example"} {
+			req := httptest.NewRequest(http.MethodPost, "/api/v2/oauth/token", strings.NewReader(form.Encode()))
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationForm)
+			req.Header.Set("Origin", o)
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, req)
+			assert.Equal(t, "*", rec.Header().Get(echo.HeaderAccessControlAllowOrigin), "%s from %s: %d %s", name, o, rec.Code, rec.Body.String())
+			assert.Empty(t, rec.Header().Get(echo.HeaderAccessControlAllowCredentials), "%s from %s", name, o)
+			form.Set("code", "not-a-code")
+		}
+	}
+
+	// Only the token endpoint: the rest of the API keeps cors.origins.
+	req = httptest.NewRequest(http.MethodGet, "/api/v2/info", nil)
+	req.Header.Set("Origin", origin)
+	rec = httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	assert.Empty(t, rec.Header().Get(echo.HeaderAccessControlAllowOrigin))
 }

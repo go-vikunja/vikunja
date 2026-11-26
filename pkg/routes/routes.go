@@ -297,9 +297,8 @@ func RegisterRoutes(e *echo.Echo, opts ...Option) {
 				// Caldav requires OPTIONS requests to be answered in a specific manner,
 				// not doing this would break the caldav implementation.
 				// Feed readers are server-side and don't need CORS either.
-				// OAuth discovery answers CORS itself: its Allow-Origin * must not meet Allow-Credentials.
 				p := context.Path()
-				return strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/feeds") || strings.HasPrefix(p, oauth2server.MetadataPath)
+				return strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/feeds") || skipsInstanceCORS(p)
 			},
 		}))
 	}
@@ -308,6 +307,8 @@ func RegisterRoutes(e *echo.Echo, opts ...Option) {
 	a2 := e.Group(apiv2.GroupPrefix)
 	// Share the BasicAuth failure budget with CalDAV and feeds.
 	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
+	a2.Use(pathScoped(func(p string) bool { return p == oauthTokenPathV2 }, allowAnyOriginMiddleware))
+	e.OPTIONS(oauthTokenPathV2, anyOriginPreflight(http.MethodPost))
 	oauthServer := registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit, oauth2server.NewMetadataFetcher(options.oauthMetadataHTTPClient))
 
 	// API Routes
