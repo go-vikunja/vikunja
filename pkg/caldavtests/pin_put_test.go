@@ -97,8 +97,7 @@ func TestPinPUTUpdatePreconditions(t *testing.T) {
 	const path = "/dav/projects/36/" + uid + ".ics"
 
 	tests := []struct {
-		name string
-		// headers gets the ETag of the existing resource.
+		name    string
 		headers func(etag string) map[string]string
 		status  int
 	}{

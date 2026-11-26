@@ -77,8 +77,7 @@ func expectEntry() expectedDAVResponse {
 	}
 }
 
-// The principal URL and the home set both answer with the home-set resource; only
-// current-user-principal differs, because ProjectHandler passes the home set as the user.
+// ProjectHandler passes the home set as the user, so the principal URL answers with the home-set resource.
 func expectHomeSet(currentUserPrincipal string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: "/dav/projects",
@@ -181,8 +180,7 @@ func TestPinPropfindMatrix(t *testing.T) {
 		homeChildren = append(homeChildren, expectCalendar(href, title, "/dav/projects/"))
 	}
 
-	// A task URL answers with the whole project collection under the task's href, and
-	// Depth: 1 then lists every task of the project, repeating the requested href.
+	// A task URL answers as its whole project; Depth 1 lists every task, repeating the requested href.
 	taskURLAsCollection := expectCalendar(pinTaskHref, "Project 36 for Caldav tests", user15Principal)
 
 	kinds := []resourceKind{
@@ -228,7 +226,6 @@ func TestPinPropfindMatrix(t *testing.T) {
 		},
 	}
 
-	// PROPFIND does not write, so all subtests share one fixture load.
 	e := setupTestEnv(t)
 	for _, kind := range kinds {
 		for _, depth := range []string{

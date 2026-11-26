@@ -75,8 +75,7 @@ func taskUIDExists(t *testing.T, uid string) bool {
 	return exists
 }
 
-// assertAccess runs every verb as username against an existing task, writes last so the
-// reads see the fixture state, and checks that denied writes left the task alone.
+// Writes run last so the reads see the fixture state.
 func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerUsername string, want accessExpectation) {
 	t.Helper()
 	auth := basicAuthHeader(username, fixturePassword)
@@ -214,7 +213,6 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 		username string
 		want     collectionExpectation
 	}{
-		// Project 22 is user1's own, archived.
 		{
 			name:     "archived own project",
 			project:  "22",
@@ -238,7 +236,6 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 				putCreate: 404,
 			},
 		},
-		// Saved filter 1 (pseudo project -2) belongs to user1.
 		{
 			name:     "own saved filter",
 			project:  "-2",
@@ -264,7 +261,6 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 		},
 	}
 
-	// Every write here is denied, so the cases share one fixture load.
 	e := setupTestEnv(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
