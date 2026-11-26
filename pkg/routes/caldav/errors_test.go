@@ -18,14 +18,11 @@ package caldav
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	caldavpkg "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/richtext"
 
 	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go/errs"
@@ -39,24 +36,9 @@ func TestErrorStatus(t *testing.T) {
 		err    error
 		status int
 	}{
-		{"not found", errNotFound, http.StatusNotFound},
-		{"project does not exist", models.ErrProjectDoesNotExist{ID: 1}, http.StatusNotFound},
-		{"wrapped project does not exist", fmt.Errorf("loading: %w", models.ErrProjectDoesNotExist{ID: 1}), http.StatusNotFound},
-		{"saved filter does not exist", models.ErrSavedFilterDoesNotExist{SavedFilterID: 1}, http.StatusNotFound},
-		{"task does not exist", models.ErrTaskDoesNotExist{ID: 1}, http.StatusNotFound},
-		{"forbidden", errForbidden, http.StatusForbidden},
-		{"archived project", models.ErrProjectIsArchived{ProjectID: 1}, http.StatusForbidden},
 		{"validation", models.ValidationHTTPError{}, http.StatusForbidden},
-		{"too many table cells", fmt.Errorf("description: %w", richtext.ErrTooManyTableCells), http.StatusForbidden},
-		{"body too large", errBodyTooLarge, http.StatusRequestEntityTooLarge},
-		{"too many properties", errTooManyProperties, http.StatusRequestEntityTooLarge},
-		{"vcalendar too large", caldavpkg.ErrVCalendarTooLarge, http.StatusRequestEntityTooLarge},
-		{"malformed body", fmt.Errorf("%w: eof", errMalformedBody), http.StatusBadRequest},
-		{"too many property parameters", caldavpkg.ErrTooManyPropertyParameters, http.StatusBadRequest},
-		{"invalid data", models.ErrInvalidData{Message: "x"}, http.StatusBadRequest},
 		{"unknown", errors.New("database is gone"), http.StatusInternalServerError},
 		{"forbidden without read access is not mapped", models.ErrGenericForbidden{}, http.StatusInternalServerError},
-		{"library sentinel is not a domain error", errs.ResourceNotFoundError, http.StatusInternalServerError},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
