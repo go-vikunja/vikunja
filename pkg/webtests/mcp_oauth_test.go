@@ -97,3 +97,22 @@ func TestMCP_HandMadeTokenStillWorksOnREST(t *testing.T) {
 	rec := serveWithToken(e, http.MethodGet, "/api/v2/projects", mcpProjectsReadToken)
 	assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 }
+
+func TestMCP_OAuthTokenAudience(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	for resource, want := range map[string]int{
+		mcpResourceURL:                     http.StatusOK,
+		"HTTPS://LOCALHOST/api/v2/mcp/":    http.StatusOK,
+		"https://other.example/api/v2/mcp": http.StatusUnauthorized,
+		"https://localhost/api/v2/other":   http.StatusUnauthorized,
+	} {
+		token := insertOAuthToken(t, resource, projectsReadPermissions())
+		req := mcpRequest(http.MethodPost, initializeBody)
+		req.Header.Set(echo.HeaderAuthorization, "Bearer "+token)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		assert.Equal(t, want, rec.Code, "%s: %s", resource, rec.Body.String())
+	}
+}
