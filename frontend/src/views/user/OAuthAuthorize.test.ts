@@ -42,6 +42,13 @@ const BASE_QUERY = {
 	code_challenge_method: 'S256',
 }
 
+const METADATA_CLIENT = {
+	id: 'https://app.example.com/oauth/client.json',
+	kind: 'metadata_document',
+	name: 'Example MCP Client',
+	host: 'app.example.com',
+}
+
 const originalLocation = window.location
 
 function mountView() {
@@ -208,6 +215,7 @@ describe('OAuthAuthorize', () => {
 
 		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
 		expect(window.location.href).toBe('http://localhost/oauth/authorize')
+		expect(wrapper.text()).toContain('Connect Example MCP Client?')
 
 		await button(wrapper, 'Approve').trigger('click')
 		await flushPromises()
@@ -216,6 +224,47 @@ describe('OAuthAuthorize', () => {
 			client_id: clientID,
 			scope: 'mcp:read mcp:write',
 		})})
+	})
+
+	it('shows the verified domain next to the name of a metadata document client', async () => {
+		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read'], METADATA_CLIENT))
+		const wrapper = mountView()
+		await flushPromises()
+
+		expect(wrapper.get('.card-header-title').text()).toBe('Connect Example MCP Client?')
+		expect(wrapper.text()).toContain('Published by')
+		expect(wrapper.get('.publisher').text()).toBe('app.example.com')
+		expect(wrapper.text()).not.toContain(METADATA_CLIENT.id)
+		expect(wrapper.text()).toContain('127.0.0.1:9999')
+		expect(wrapper.text()).toContain('a program running on this device')
+	})
+
+	it('warns about loopback redirects only', async () => {
+		sdk.oauthAuthorizePreview.mockResolvedValue({
+			data: {
+				...preview(['mcp:read'], METADATA_CLIENT).data,
+				redirect_uri: 'https://app.example.com/callback',
+			},
+		})
+		const wrapper = mountView()
+		await flushPromises()
+
+		expect(wrapper.get('.publisher').text()).toBe('app.example.com')
+		expect(wrapper.text()).not.toContain('a program running on this device')
+	})
+
+	it('shows the raw id of a legacy client without claiming a publisher', async () => {
+		mockRoute.query = {
+			...BASE_QUERY,
+			scope: 'mcp:read',
+		}
+		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read']))
+		const wrapper = mountView()
+		await flushPromises()
+
+		expect(wrapper.get('.card-header-title').text()).toBe('Connect mcp-client?')
+		expect(wrapper.text()).not.toContain('Published by')
+		expect(wrapper.text()).not.toContain('a program running on this device')
 	})
 
 	it('sends the requested scope and resource on approve', async () => {

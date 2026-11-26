@@ -14,6 +14,19 @@
 			</i18n-t>
 		</p>
 
+		<div
+			v-if="publisher"
+			class="publisher-info"
+		>
+			<div class="account">
+				<span class="account-label">{{ $t('user.auth.oauthConsent.publisher') }}</span>
+				<strong class="host publisher">{{ publisher }}</strong>
+			</div>
+			<p class="details">
+				{{ $t('user.auth.oauthConsent.publisherHint') }}
+			</p>
+		</div>
+
 		<div class="account">
 			<span class="account-label">{{ $t('user.auth.oauthConsent.account') }}</span>
 			<strong>{{ userLabel }}</strong>
@@ -52,6 +65,14 @@
 			<span class="access-description">{{ $t('user.auth.oauthConsent.readDescription') }}</span>
 		</div>
 
+		<Message
+			v-if="publisher && loopbackRedirect"
+			variant="warning"
+			class="mbe-4"
+		>
+			{{ $t('user.auth.oauthConsent.loopbackWarning', {client: clientLabel}) }}
+		</Message>
+
 		<p class="details">
 			{{ $t('user.auth.oauthConsent.duration') }}
 			<i18n-t
@@ -85,6 +106,7 @@
 import {computed, ref} from 'vue'
 
 import Card from '@/components/misc/Card.vue'
+import Message from '@/components/misc/Message.vue'
 import {getDisplayName} from '@/helpers/user'
 import type {
 	AuthorizeClient,
@@ -122,12 +144,21 @@ const ACCESS_OPTIONS = [
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const level = ref<AccessLevel>(props.requested)
 
-const clientLabel = computed(() => props.client.id ?? '')
+// Only the host is verified; the name is whatever the metadata document claims.
+const publisher = computed(() => props.client.kind === 'metadata_document' && props.client.name
+	? props.client.host
+	: undefined)
+const clientLabel = computed(() => (publisher.value ? props.client.name : props.client.id) ?? '')
 const userLabel = computed(() => {
 	const name = getDisplayName(props.user)
 	return name === props.user.username ? name : `${name} (${props.user.username})`
 })
 const redirectHost = computed(() => new URL(props.redirectUri).host)
+// Any program on this device can listen on a loopback port and claim to be the client.
+const loopbackRedirect = computed(() => {
+	const {protocol, hostname} = new URL(props.redirectUri)
+	return protocol === 'http:' && (hostname === 'localhost' || hostname === '[::1]' || hostname.startsWith('127.'))
+})
 
 function approve() {
 	if (props.pending) return
@@ -157,6 +188,14 @@ function deny() {
 	align-items: center;
 	gap: .25rem;
 	margin-block: 1rem;
+}
+
+.publisher-info {
+	margin-block: 1rem;
+
+	.account {
+		margin-block: 0 .25rem;
+	}
 }
 
 .account-label {
