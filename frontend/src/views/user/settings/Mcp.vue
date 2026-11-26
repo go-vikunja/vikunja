@@ -226,7 +226,7 @@ async function deleteToken() {
 			</template>
 		</Modal>
 	</Card>
-	<ConnectedApps />
+	<ConnectedApps v-if="oauthAvailable" />
 </template>
 
 <style scoped lang="scss">

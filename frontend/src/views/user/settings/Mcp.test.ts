@@ -90,6 +90,7 @@ describe('MCP settings', () => {
 		await flushPromises()
 		expect(guides()).toEqual([])
 		expect(wrapper.text()).not.toContain('OAuth')
+		expect(wrapper.findComponent({name: 'ConnectedApps'}).exists()).toBe(false)
 		await wrapper.findAll('button').find(b => b.text() === 'Create a token')!.trigger('click')
 		wrapper.findComponent({name: 'ApiTokenForm'}).vm.$emit('created', {id: 3, token: 'tk_secret'})
 		await flushPromises()
