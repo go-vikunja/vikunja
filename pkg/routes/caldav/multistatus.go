@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
-	"unicode/utf8"
 
 	"github.com/labstack/echo/v5"
 )
@@ -287,49 +286,6 @@ func (w *xmlWriter) qualifiedName(name xml.Name) {
 	_, _ = w.w.WriteString(name.Local)
 }
 
-// text escapes like xml.EscapeText, without converting s to a []byte first:
-// calendar-data can be megabytes.
 func (w *xmlWriter) text(s string) {
-	last := 0
-	for i := 0; i < len(s); {
-		r, width := utf8.DecodeRuneInString(s[i:])
-		var esc string
-		switch r {
-		case '"':
-			esc = "&#34;"
-		case '\'':
-			esc = "&#39;"
-		case '&':
-			esc = "&amp;"
-		case '<':
-			esc = "&lt;"
-		case '>':
-			esc = "&gt;"
-		case '\t':
-			esc = "&#x9;"
-		case '\n':
-			esc = "&#xA;"
-		case '\r':
-			esc = "&#xD;"
-		default:
-			if !isXMLChar(r) || (r == utf8.RuneError && width == 1) {
-				esc = "�"
-			}
-		}
-		if esc != "" {
-			_, _ = w.w.WriteString(s[last:i])
-			_, _ = w.w.WriteString(esc)
-			last = i + width
-		}
-		i += width
-	}
-	_, _ = w.w.WriteString(s[last:])
-}
-
-// XML 1.0 §2.2 Char production.
-func isXMLChar(r rune) bool {
-	return r == 0x09 || r == 0x0A || r == 0x0D ||
-		r >= 0x20 && r <= 0xD7FF ||
-		r >= 0xE000 && r <= 0xFFFD ||
-		r >= 0x10000 && r <= 0x10FFFF
+	_ = xml.EscapeText(w.w, []byte(s))
 }

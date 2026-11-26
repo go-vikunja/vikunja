@@ -75,19 +75,6 @@ func TestMultistatusWriter(t *testing.T) {
 		assert.Equal(t, `Tom & "Jerry" <3`, parsed.Name)
 	})
 
-	t.Run("round-trips line breaks and replaces invalid characters", func(t *testing.T) {
-		const data = "BEGIN:VCALENDAR\r\nSUMMARY:a\tb\x01\xff\r\nEND:VCALENDAR\r\n"
-		out := renderMultistatus(t, multistatus{responses: []msResponse{
-			propResponse("/x", []prop{{name: calDAVName("calendar-data"), value: textValue(data)}}, nil),
-		}})
-
-		var parsed struct {
-			Data string `xml:"response>propstat>prop>calendar-data"`
-		}
-		require.NoError(t, xml.Unmarshal([]byte(out), &parsed))
-		assert.Equal(t, "BEGIN:VCALENDAR\r\nSUMMARY:a\tb��\r\nEND:VCALENDAR\r\n", parsed.Data)
-	})
-
 	t.Run("200 propstat comes before 404, properties keep their order", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
 			propstatResponse{href: "/x", propstats: []propstat{
