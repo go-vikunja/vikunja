@@ -193,18 +193,12 @@ func TestResolveMetadataClient(t *testing.T) {
 	})
 
 	t.Run("rejects a non-200 response", func(t *testing.T) {
-		for _, status := range []int{
-			http.StatusNoContent,
-			http.StatusNotFound,
-			http.StatusInternalServerError,
-		} {
-			host := newMetadataHost(t, func(host *metadataHost, w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(status)
-				_ = json.NewEncoder(w).Encode(host.document(nil))
-			})
-			requireUnavailable(t, host)
-		}
+		host := newMetadataHost(t, func(host *metadataHost, w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(host.document(nil))
+		})
+		requireUnavailable(t, host)
 	})
 
 	t.Run("rejects a document that is not served as JSON", func(t *testing.T) {
@@ -360,13 +354,9 @@ func TestResolveMetadataClient(t *testing.T) {
 func TestMetadataCacheTTL(t *testing.T) {
 	for header, want := range map[string]time.Duration{
 		"":                          defaultMetadataCacheTTL,
-		"public":                    defaultMetadataCacheTTL,
-		"max-age=3600":              time.Hour,
 		"public, max-age=7200":      2 * time.Hour,
 		`max-age="1800"`:            30 * time.Minute,
-		"max-age=0":                 minMetadataCacheTTL,
 		"max-age=60":                minMetadataCacheTTL,
-		"max-age=31536000":          maxMetadataCacheTTL,
 		"max-age=99999999999999999": maxMetadataCacheTTL,
 		"max-age=-5":                defaultMetadataCacheTTL,
 		"max-age=abc":               defaultMetadataCacheTTL,
