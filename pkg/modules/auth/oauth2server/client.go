@@ -89,7 +89,6 @@ func (c MetadataClient) describe() AuthorizeClient {
 		Kind: ClientKindMetadataDocument,
 		Name: c.metadata.Name,
 		Host: c.id.host(),
-		URI:  c.metadata.URI,
 	}
 }
 

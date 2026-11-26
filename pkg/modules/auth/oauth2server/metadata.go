@@ -22,7 +22,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -39,7 +38,6 @@ import (
 // ClientMetadata is what Vikunja keeps of a validated Client ID Metadata Document.
 type ClientMetadata struct {
 	Name         string
-	URI          string
 	RedirectURIs []string
 }
 
@@ -52,7 +50,6 @@ const (
 	defaultMetadataCacheTTL = time.Hour
 	maxMetadataCacheTTL     = 24 * time.Hour
 	maxClientNameRunes      = 100
-	maxClientURILength      = 2048
 	// The window matches maxMetadataCacheTTL, so a user also keeps at most about twice this many entries cached.
 	maxMetadataFetchesPerUser = 50
 	metadataFetchWindow       = 24 * time.Hour
@@ -185,7 +182,6 @@ func metadataCacheTTL(cacheControl string) time.Duration {
 type metadataDocument struct {
 	ClientID                          string          `json:"client_id"`
 	ClientName                        string          `json:"client_name"`
-	ClientURI                         string          `json:"client_uri"`
 	RedirectURIs                      []string        `json:"redirect_uris"`
 	GrantTypes                        []string        `json:"grant_types"`
 	ResponseTypes                     []string        `json:"response_types"`
@@ -236,7 +232,6 @@ func parseClientMetadata(id metadataClientID, body []byte) (ClientMetadata, erro
 
 	return ClientMetadata{
 		Name:         name,
-		URI:          informativeURI(doc.ClientURI),
 		RedirectURIs: doc.RedirectURIs,
 	}, nil
 }
@@ -267,16 +262,4 @@ func cleanClientName(raw string) string {
 		name = strings.TrimSpace(string(runes[:maxClientNameRunes]))
 	}
 	return name
-}
-
-// An unusable client_uri is dropped, not fatal: it is informative only.
-func informativeURI(raw string) string {
-	if len(raw) > maxClientURILength || !strings.HasPrefix(raw, "https://") {
-		return ""
-	}
-	u, err := url.Parse(raw)
-	if err != nil || u.User != nil || u.Hostname() == "" {
-		return ""
-	}
-	return raw
 }

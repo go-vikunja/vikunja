@@ -70,7 +70,6 @@ func (h *metadataHost) document(overrides map[string]any) map[string]any {
 	doc := map[string]any{
 		"client_id":   h.clientID(),
 		"client_name": "Example MCP Client",
-		"client_uri":  "https://app.example.com",
 		"redirect_uris": []string{
 			"http://127.0.0.1:3000/callback",
 			"https://app.example.com/callback",
@@ -142,7 +141,6 @@ func TestResolveMetadataClient(t *testing.T) {
 			Kind: ClientKindMetadataDocument,
 			Name: "Example MCP Client",
 			Host: strings.TrimPrefix(host.server.URL, "https://"),
-			URI:  "https://app.example.com",
 		}, client.describe())
 	})
 
@@ -155,8 +153,7 @@ func TestResolveMetadataClient(t *testing.T) {
 				"redirect_uris": []string{"http://localhost/cb"},
 			}))
 		})
-		client := resolveMetadataClient(t, host)
-		assert.Empty(t, client.describe().URI)
+		resolveMetadataClient(t, host)
 	})
 
 	t.Run("caches the document", func(t *testing.T) {
@@ -349,18 +346,6 @@ func TestResolveMetadataClient(t *testing.T) {
 		assert.NotContains(t, name, "\n")
 		assert.True(t, strings.HasPrefix(name, "Evil moc.elgoog é"), name)
 		assert.Len(t, []rune(name), maxClientNameRunes)
-	})
-
-	t.Run("drops an unusable client_uri", func(t *testing.T) {
-		for _, uri := range []string{
-			"http://app.example.com",
-			"javascript:alert(1)",
-			"https://user@app.example.com",
-			"https://app.example.com/" + strings.Repeat("a", maxClientURILength),
-		} {
-			client := resolveMetadataClient(t, serveDocument(t, map[string]any{"client_uri": uri}))
-			assert.Empty(t, client.describe().URI, uri)
-		}
 	})
 
 	t.Run("the production client refuses non-routable hosts", func(t *testing.T) {

@@ -303,10 +303,6 @@ export type AuthorizeClient = {
      * The client_name of a metadata_document client. Self-declared by the client; only host is verified.
      */
     name?: string;
-    /**
-     * The client_uri of a metadata_document client, if it declared a valid https one. Self-declared.
-     */
-    uri?: string;
 };
 
 export type AuthorizePreview = {
