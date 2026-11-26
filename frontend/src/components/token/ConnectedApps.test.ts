@@ -76,7 +76,11 @@ async function mountList() {
 	wrapper = mount(ConnectedApps, {
 		global: {
 			plugins: [
-				createI18n({legacy: false, locale: 'en', messages: {en}}),
+				createI18n({
+					legacy: false,
+					locale: 'en',
+					messages: {en},
+				}),
 				router,
 				[VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}],
 			],

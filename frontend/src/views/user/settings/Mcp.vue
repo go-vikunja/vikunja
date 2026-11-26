@@ -7,7 +7,7 @@ import {allApiTokensQuery, mcpInfoQuery, useDeleteApiTokenMutation} from '@/clie
 import type {ApiToken as IApiToken} from '@/client/generated'
 import {isApiTokenExpired, type ApiTokenPreset, type ApiTokenPresetGroups} from '@/helpers/apiToken'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
-import McpClientGuide from '@/components/token/McpClientGuide.vue'
+import McpClientGuide, {type McpGuideAccess} from '@/components/token/McpClientGuide.vue'
 import ConnectedApps from '@/components/token/ConnectedApps.vue'
 import XButton from '@/components/input/Button.vue'
 import FormField from '@/components/input/FormField.vue'
@@ -56,6 +56,12 @@ const presets = computed<ApiTokenPreset[]>(() => info.value ? [
 const initialScopes = computed(() => Object.entries(info.value?.presets?.typed ?? {})
 	.flatMap(([group, permissions]) => (permissions ?? []).map(permission => `${group}:${permission}`))
 	.join(','))
+
+const tokenAccess = computed<McpGuideAccess>(() => ({
+	kind: 'token',
+	token: newToken.value,
+	oauthAvailable: oauthAvailable.value,
+}))
 
 function onTokenCreated(token: IApiToken) {
 	newToken.value = token.token ?? ''
@@ -116,7 +122,7 @@ async function deleteToken() {
 				</Message>
 				<McpClientGuide
 					:endpoint="endpoint"
-					:access="{kind: 'token', token: newToken, oauthAvailable}"
+					:access="tokenAccess"
 				/>
 				<XButton
 					class="mbs-4"

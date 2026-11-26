@@ -8,7 +8,11 @@ import {MCP_HELP} from '@/urls'
 
 export type McpGuideAccess =
 	| {kind: 'oauth'}
-	| {kind: 'token', token: string, oauthAvailable: boolean}
+	| {
+		kind: 'token',
+		token: string,
+		oauthAvailable: boolean,
+	}
 
 const props = defineProps<{endpoint: string, access: McpGuideAccess}>()
 const {t} = useI18n({useScope: 'global'})

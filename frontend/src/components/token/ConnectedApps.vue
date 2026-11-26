@@ -33,7 +33,10 @@ const apps = computed(() => (query.data.value?.items ?? []).map(token => {
 }))
 const totalPages = computed(() => query.data.value?.total_pages ?? 0)
 const deleteMutation = useDeleteApiTokenMutation()
-const appToRevoke = ref<{token: ApiToken, name?: string}>()
+const appToRevoke = ref<{
+	token: ApiToken,
+	name?: string,
+}>()
 const now = useNow({interval: 60_000})
 
 async function revoke() {
