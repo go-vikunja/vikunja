@@ -1,0 +1,214 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+package webtests
+
+import (
+	"encoding/json"
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// insertOAuthCode stores a code like Authorize would, for states Authorize never creates.
+func insertOAuthCode(t *testing.T, c models.OAuthCode, expiresAt time.Time) string {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	if c.UserID == 0 {
+		c.UserID = testuser1.ID
+	}
+	if c.ClientID == "" {
+		c.ClientID = scopedClientID
+	}
+	c.RedirectURI = scopedRedirectURI
+	c.CodeChallenge = pkceChallenge(scopedVerifier)
+	c.CodeChallengeMethod = "S256"
+	code, err := models.CreateOAuthCode(s, &c)
+	require.NoError(t, err)
+	if !expiresAt.IsZero() {
+		_, err = s.Where("code = ?", models.HashSessionToken(code)).Cols("expires_at").Update(&models.OAuthCode{ExpiresAt: expiresAt})
+		require.NoError(t, err)
+	}
+	require.NoError(t, s.Commit())
+	return code
+}
+
+func TestOAuthTokenErrors(t *testing.T) {
+	e, metadataClientID, host := metadataClientEnv(t)
+	const mcpScope = "mcp:read"
+
+	usedCode := insertOAuthCode(t, models.OAuthCode{}, time.Time{})
+	require.Equal(t, http.StatusOK, scopedExchange(t, e, "v2", usedCode, nil).code)
+
+	for _, tc := range []struct {
+		name string
+		// form replaces the defaults of scopedExchange; code is the code to exchange.
+		code      func() string
+		form      url.Values
+		error     oauth2server.TokenErrorCode
+		vikunja   int
+		v1Status  int
+		v1Vikunja int
+	}{
+		{
+			name:    "unknown code",
+			code:    func() string { return "not-a-code" },
+			error:   oauth2server.TokenErrorInvalidGrant,
+			vikunja: models.ErrCodeOAuthCodeInvalid,
+		},
+		{
+			name:    "used code",
+			code:    func() string { return usedCode },
+			error:   oauth2server.TokenErrorInvalidGrant,
+			vikunja: models.ErrCodeOAuthCodeInvalid,
+		},
+		{
+			name: "expired code",
+			code: func() string {
+				return insertOAuthCode(t, models.OAuthCode{}, time.Now().Add(-time.Minute))
+			},
+			error:   oauth2server.TokenErrorInvalidGrant,
+			vikunja: models.ErrCodeOAuthCodeExpired,
+		},
+		{
+			name:    "PKCE mismatch",
+			form:    url.Values{"code_verifier": {"another-verifier-0123456789abcdef0123456789"}},
+			error:   oauth2server.TokenErrorInvalidGrant,
+			vikunja: models.ErrCodeOAuthPKCEVerifyFailed,
+		},
+		{
+			name:    "redirect mismatch",
+			form:    url.Values{"redirect_uri": {"http://127.0.0.1:1/other"}},
+			error:   oauth2server.TokenErrorInvalidGrant,
+			vikunja: models.ErrCodeOAuthInvalidRedirectURI,
+		},
+		{
+			name:    "client mismatch",
+			form:    url.Values{"client_id": {"another-client"}},
+			error:   oauth2server.TokenErrorInvalidGrant,
+			vikunja: models.ErrCodeOAuthClientNotFound,
+		},
+		{
+			name:    "unsupported grant type",
+			form:    url.Values{"grant_type": {"password"}},
+			error:   oauth2server.TokenErrorUnsupportedGrantType,
+			vikunja: models.ErrCodeOAuthInvalidGrantType,
+		},
+		{
+			name:    "missing grant type",
+			form:    url.Values{"grant_type": {""}},
+			error:   oauth2server.TokenErrorInvalidRequest,
+			vikunja: models.ErrCodeOAuthInvalidGrantType,
+		},
+		{
+			name: "foreign resource",
+			code: func() string {
+				return insertOAuthCode(t, models.OAuthCode{Scope: mcpScope, Resource: mcpResourceURL}, time.Time{})
+			},
+			form:    url.Values{"resource": {"https://evil.example/api/v2/mcp"}},
+			error:   oauth2server.TokenErrorInvalidTarget,
+			vikunja: models.ErrCodeOAuthInvalidTarget,
+		},
+		{
+			name: "unscoped code of a metadata document client",
+			code: func() string {
+				return insertOAuthCode(t, models.OAuthCode{ClientID: metadataClientID}, time.Time{})
+			},
+			form:    url.Values{"client_id": {metadataClientID}},
+			error:   oauth2server.TokenErrorInvalidScope,
+			vikunja: models.ErrCodeOAuthInvalidScope,
+		},
+		{
+			name: "unreachable metadata document",
+			code: func() string {
+				return insertOAuthCode(t, models.OAuthCode{ClientID: host.URL + "/missing.json", Scope: mcpScope, Resource: mcpResourceURL}, time.Time{})
+			},
+			form:      url.Values{"client_id": {host.URL + "/missing.json"}},
+			error:     oauth2server.TokenErrorInvalidClient,
+			vikunja:   models.ErrCodeOAuthClientMetadataUnavailable,
+			v1Status:  http.StatusBadGateway,
+			v1Vikunja: models.ErrCodeOAuthClientMetadataUnavailable,
+		},
+		{
+			name: "invalid metadata document",
+			code: func() string {
+				return insertOAuthCode(t, models.OAuthCode{ClientID: host.URL + "/broken.json", Scope: mcpScope, Resource: mcpResourceURL}, time.Time{})
+			},
+			form:    url.Values{"client_id": {host.URL + "/broken.json"}},
+			error:   oauth2server.TokenErrorInvalidClient,
+			vikunja: models.ErrCodeOAuthInvalidClientMetadata,
+		},
+		{
+			name: "disabled user",
+			code: func() string {
+				return insertOAuthCode(t, models.OAuthCode{UserID: 17}, time.Time{})
+			},
+			error: oauth2server.TokenErrorInvalidGrant,
+		},
+		{
+			name: "invalid refresh token",
+			form: url.Values{
+				"grant_type":    {"refresh_token"},
+				"refresh_token": {"not-a-refresh-token"},
+			},
+			error:     oauth2server.TokenErrorInvalidGrant,
+			vikunja:   models.ErrCodeInvalidRefreshToken,
+			v1Status:  http.StatusUnauthorized,
+			v1Vikunja: models.ErrCodeInvalidRefreshToken,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			code := func() string {
+				if tc.code != nil {
+					return tc.code()
+				}
+				return insertOAuthCode(t, models.OAuthCode{}, time.Time{})
+			}
+
+			res := scopedExchange(t, e, "v2", code(), tc.form)
+			require.Equal(t, http.StatusBadRequest, res.code, string(res.body))
+			var body struct {
+				Error            oauth2server.TokenErrorCode `json:"error"`
+				ErrorDescription string                      `json:"error_description"`
+				Detail           string                      `json:"detail"`
+				Code             int                         `json:"code"`
+			}
+			require.NoError(t, json.Unmarshal(res.body, &body), string(res.body))
+			assert.Equal(t, tc.error, body.Error)
+			assert.NotEmpty(t, body.ErrorDescription)
+			assert.Equal(t, body.Detail, body.ErrorDescription)
+			if tc.vikunja != 0 {
+				assert.Equal(t, tc.vikunja, body.Code)
+			}
+
+			if tc.v1Status != 0 {
+				v1 := scopedExchange(t, e, "v1", code(), tc.form)
+				assert.Equal(t, tc.v1Status, v1.code, string(v1.body))
+				assert.Equal(t, tc.v1Vikunja, v1.errorCode(t))
+				assert.NotContains(t, string(v1.body), `"error"`, "v1 is frozen")
+			}
+		})
+	}
+}

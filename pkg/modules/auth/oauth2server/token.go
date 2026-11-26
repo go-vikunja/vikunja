@@ -88,13 +88,24 @@ func (srv *Server) HandleToken(c *echo.Context) error {
 // ExchangeToken runs the grant-type dispatch and token issuance for the OAuth
 // token endpoint, independent of the HTTP layer. Callers own request binding and
 // the Cache-Control: no-store response header. deviceInfo/ipAddress are recorded
-// on the session created for the authorization_code grant.
+// on the session created for the authorization_code grant. Rejections are
+// *TokenError; any other error is internal.
 func (srv *Server) ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+	resp, err := srv.exchangeToken(ctx, req, deviceInfo, ipAddress)
+	if err != nil {
+		return nil, asTokenError(err)
+	}
+	return resp, nil
+}
+
+func (srv *Server) exchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	switch req.GrantType {
 	case "authorization_code":
 		return srv.exchangeAuthorizationCode(ctx, req, deviceInfo, ipAddress)
 	case "refresh_token":
 		return exchangeRefreshToken(req)
+	case "":
+		return nil, &TokenError{Code: TokenErrorInvalidRequest, Err: &models.ErrOAuthInvalidGrantType{}}
 	default:
 		return nil, &models.ErrOAuthInvalidGrantType{}
 	}

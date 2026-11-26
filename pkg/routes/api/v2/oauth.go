@@ -60,7 +60,7 @@ func RegisterOAuthRoutes(api huma.API, srv *oauth2server.Server) {
 	Register(api, huma.Operation{
 		OperationID:   "oauth-token",
 		Summary:       "OAuth 2.0 token endpoint",
-		Description:   "Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. A scoped authorization code yields an MCP-only API token and no refresh token.",
+		Description:   "Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. A scoped authorization code yields an MCP-only API token and no refresh token. A rejected request fails with 400 and carries the RFC 6749 error and error_description next to the usual problem fields.",
 		Method:        http.MethodPost,
 		Path:          "/oauth/token",
 		DefaultStatus: http.StatusOK,
@@ -165,9 +165,26 @@ func oauthToken(ctx context.Context, srv *oauth2server.Server, req *oauth2server
 	deviceInfo, ipAddress := requestClientInfo(ctx)
 	resp, err := srv.ExchangeToken(ctx, req, deviceInfo, ipAddress)
 	if err != nil {
-		return nil, translateDomainError(err)
+		return nil, oauthTokenError(err)
 	}
 	return &oauthTokenBody{CacheControl: "no-store", Body: resp}, nil
+}
+
+func oauthTokenError(err error) error {
+	translated := translateDomainError(err)
+	var tokenErr *oauth2server.TokenError
+	problem := &vikunjaErrorModel{}
+	ok := errors.As(translated, &problem)
+	if !ok || !errors.As(err, &tokenErr) {
+		return translated
+	}
+	// RFC 6749 §5.2 answers every error with 400. invalid_client's 401 is for clients
+	// authenticating with the Authorization header, which public clients never do.
+	problem.Status = http.StatusBadRequest
+	problem.Title = http.StatusText(http.StatusBadRequest)
+	problem.OAuthError = tokenErr.Code
+	problem.ErrorDescription = problem.Detail
+	return problem
 }
 
 func oauthAuthorize(ctx context.Context, srv *oauth2server.Server, req *oauth2server.AuthorizeRequest) (*oauthAuthorizeBody, error) {
