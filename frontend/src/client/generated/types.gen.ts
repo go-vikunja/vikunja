@@ -316,6 +316,10 @@ export type AuthorizePreview = {
     readonly $schema?: string;
     client?: AuthorizeClient;
     /**
+     * Whether redirect_uri is a loopback http address. Any program on the user's device can listen there and receive the code.
+     */
+    loopback_redirect?: boolean;
+    /**
      * The validated redirect URI. Only redirect here, also to report a denial.
      */
     redirect_uri?: string;
@@ -4321,6 +4325,10 @@ export type AuthLinkShareRequestWritable = {
 
 export type AuthorizePreviewWritable = {
     client?: AuthorizeClient;
+    /**
+     * Whether redirect_uri is a loopback http address. Any program on the user's device can listen there and receive the code.
+     */
+    loopback_redirect?: boolean;
     /**
      * The validated redirect URI. Only redirect here, also to report a denial.
      */
