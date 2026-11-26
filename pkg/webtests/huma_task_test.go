@@ -270,6 +270,11 @@ func TestHumaTask_ReadByIndex(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeProjectDoesNotExist))
 	})
+	t.Run("Identifier of an inaccessible project looks like an unknown one", func(t *testing.T) {
+		rec := get("TEST2", "1")
+		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeProjectDoesNotExist))
+	})
 	t.Run("Nonexistent index returns 404", func(t *testing.T) {
 		rec := get("1", "99999")
 		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())

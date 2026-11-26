@@ -19,18 +19,18 @@ package routes
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	auth2 "code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v5"
 )
 
 // ResolveProjectIdentifier accepts either a numeric project id or a project
 // identifier (e.g. "PROJ") in the :project path param and rewrites it to the
-// numeric id so downstream handlers can bind it as an int64. Pure-digit values
-// are always treated as ids, which means identifiers consisting solely of
+// numeric id so downstream handlers can bind it as an int64. Identifiers are
+// resolved among the projects the caller can read. Pure-digit values are always treated as ids, which means identifiers consisting solely of
 // digits are unreachable via this route.
 func ResolveProjectIdentifier() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -43,15 +43,19 @@ func ResolveProjectIdentifier() echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			s := db.NewSession()
-			project := &models.Project{}
-			has, err := s.Where("identifier = ?", strings.ToUpper(raw)).Get(project)
-			_ = s.Close()
+			a, err := auth2.GetAuthFromClaims(c)
 			if err != nil {
 				return err
 			}
-			if !has {
+
+			s := db.NewSession()
+			project, err := models.GetProjectSimpleByIdentifier(s, a, raw)
+			_ = s.Close()
+			if models.IsErrProjectDoesNotExist(err) {
 				return echo.NewHTTPError(http.StatusNotFound, "Project not found")
+			}
+			if err != nil {
+				return err
 			}
 
 			values := c.PathValues()

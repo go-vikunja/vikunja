@@ -1386,3 +1386,64 @@ func TestProject_IsShared(t *testing.T) {
 		assert.Equal(t, map[int64]bool{6: true, 9: true, 24: false, 42: true}, got)
 	})
 }
+
+func TestGetProjectSimpleByIdentifier(t *testing.T) {
+	usr := &user.User{ID: 1}
+
+	t.Run("own project, case-insensitive", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project, err := GetProjectSimpleByIdentifier(s, usr, "test1")
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), project.ID)
+	})
+	t.Run("shared project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		project, err := GetProjectSimpleByIdentifier(s, usr, "TEST3")
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), project.ID)
+	})
+	t.Run("skips an inaccessible project with the same identifier", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Table("projects").Where("id = ?", 21).Update(map[string]any{"identifier": "TEST2"})
+		require.NoError(t, err)
+
+		project, err := GetProjectSimpleByIdentifier(s, usr, "TEST2")
+		require.NoError(t, err)
+		assert.Equal(t, int64(21), project.ID)
+	})
+	t.Run("own project wins over a shared one", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 21 is user 1's own, project 3 is shared and has the lower id
+		_, err := s.Table("projects").Where("id = ?", 21).Update(map[string]any{"identifier": "TEST3"})
+		require.NoError(t, err)
+
+		project, err := GetProjectSimpleByIdentifier(s, usr, "TEST3")
+		require.NoError(t, err)
+		assert.Equal(t, int64(21), project.ID)
+	})
+	t.Run("oldest wins among shared ones", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Projects 3 and 9 are both shared with user 1
+		_, err := s.Table("projects").Where("id = ?", 9).Update(map[string]any{"identifier": "TEST3"})
+		require.NoError(t, err)
+
+		project, err := GetProjectSimpleByIdentifier(s, usr, "TEST3")
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), project.ID)
+	})
+}
