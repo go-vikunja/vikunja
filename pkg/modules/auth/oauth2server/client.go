@@ -160,10 +160,12 @@ func (srv *Server) resolveClient(ctx context.Context, raw string, budget fetchBu
 		return LegacyClient{id: string(id)}, nil
 	case metadataClientID:
 		// Such a client only ever gets a scoped grant; don't fetch when none can be issued.
-		if _, ok := srv.resourceURL(); !ok {
+		resource, ok := srv.resourceURL()
+		if !ok {
 			return nil, &models.ErrOAuthInvalidTarget{}
 		}
-		if srv.isServerIdentifier(string(id)) {
+		// draft-ietf-oauth-client-id-metadata-document §10.1: simple string comparison.
+		if issuer, _ := Issuer(); string(id) == issuer || string(id) == resource {
 			return nil, &models.ErrOAuthClientIDIsServer{}
 		}
 		metadata, err := srv.metadata.get(ctx, id, budget)
@@ -176,13 +178,6 @@ func (srv *Server) resolveClient(ctx context.Context, raw string, budget fetchBu
 		}, nil
 	}
 	return nil, fmt.Errorf("unknown client id type %T", id)
-}
-
-// draft-ietf-oauth-client-id-metadata-document §10.1: simple string comparison against the
-// identifiers of this authorization server and of the resource server it issues tokens for.
-func (srv *Server) isServerIdentifier(id string) bool {
-	issuer, ok := Issuer()
-	return ok && id == issuer || id == srv.resource.ResourceURL()
 }
 
 // ValidateRedirectURI checks that the redirect_uri is either a Vikunja native
