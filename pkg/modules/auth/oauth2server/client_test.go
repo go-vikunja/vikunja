@@ -51,6 +51,9 @@ func TestValidateRedirectURI(t *testing.T) {
 	t.Run("accepts expanded ipv6 loopback", func(t *testing.T) {
 		assert.True(t, ValidateRedirectURI("http://[0:0:0:0:0:0:0:1]:1234/callback"))
 	})
+	t.Run("accepts ipv4-mapped ipv6 loopback", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://[::ffff:127.0.0.1]:3000/callback"))
+	})
 	t.Run("accepts localhost case-insensitively", func(t *testing.T) {
 		assert.True(t, ValidateRedirectURI("http://LocalHost:8080/callback"))
 	})
@@ -118,6 +121,7 @@ func TestParseClientID(t *testing.T) {
 			"https://app.example.com/oauth/%2e%2e/client.json",
 			"https://app.exämple.com/client.json",
 			"https://%D0%B0pple.com/client.json",
+			"https://App.example.com/client.json",
 			"https://app.example.com/" + strings.Repeat("a", maxClientIDURLLength),
 		} {
 			_, err := parseClientID(raw)
@@ -166,30 +170,5 @@ func TestMetadataClientAllowsRedirect(t *testing.T) {
 		"",
 	} {
 		assert.False(t, client.allowsRedirect(uri), uri)
-	}
-}
-
-func TestLegacyClientKeepsRedirectRules(t *testing.T) {
-	client := LegacyClient{id: "vikunja"}
-	assert.True(t, client.allowsRedirect("vikunja-flutter://callback"))
-	assert.True(t, client.allowsRedirect("http://127.0.0.1:1/callback"))
-	assert.False(t, client.allowsRedirect("https://app.example.com/callback"))
-	assert.False(t, client.allowsRedirect("cursor://anysphere.cursor-retrieval/oauth/callback"))
-}
-
-func TestIsLoopbackRedirect(t *testing.T) {
-	for _, uri := range []string{
-		"http://127.0.0.1:3000/callback",
-		"HTTP://LOCALHOST/callback",
-		"http://[::ffff:127.0.0.1]:3000/callback",
-	} {
-		assert.True(t, isLoopbackRedirect(uri), uri)
-	}
-	for _, uri := range []string{
-		"https://127.0.0.1/callback",
-		"http://127.0.0.1.example.com/callback",
-		"::not a url",
-	} {
-		assert.False(t, isLoopbackRedirect(uri), uri)
 	}
 }

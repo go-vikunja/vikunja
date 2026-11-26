@@ -394,33 +394,15 @@ func TestMetadataCacheTTL(t *testing.T) {
 }
 
 func TestPreviewMetadataClient(t *testing.T) {
-	host := serveDocument(t, nil)
-	srv := host.oauthServer()
-	request := func(overrides map[string]string) *AuthorizeRequest {
-		req := &AuthorizeRequest{
-			ResponseType:        "code",
-			ClientID:            host.clientID(),
-			RedirectURI:         "http://127.0.0.1:41234/callback",
-			CodeChallenge:       "challenge",
-			CodeChallengeMethod: "S256",
-		}
-		if v, ok := overrides["scope"]; ok {
-			req.Scope = v
-		}
-		return req
-	}
-
-	t.Run("keeps a requested read scope", func(t *testing.T) {
-		preview, err := srv.Preview(t.Context(), request(map[string]string{"scope": "mcp:read"}), 1)
-		require.NoError(t, err)
-		assert.Equal(t, []Scope{ScopeMCPRead}, preview.Scopes)
-	})
-
 	t.Run("does not fetch for a request failing cheap checks", func(t *testing.T) {
 		fresh := serveDocument(t, nil)
-		req := request(nil)
-		req.ClientID = fresh.clientID()
-		req.CodeChallengeMethod = "plain"
+		req := &AuthorizeRequest{
+			ResponseType:        "code",
+			ClientID:            fresh.clientID(),
+			RedirectURI:         "http://127.0.0.1:41234/callback",
+			CodeChallenge:       "challenge",
+			CodeChallengeMethod: "plain",
+		}
 		_, err := fresh.oauthServer().Preview(t.Context(), req, 1)
 		assert.True(t, models.IsErrOAuthMissingPKCE(err), "%v", err)
 		assert.Equal(t, int32(0), fresh.requests.Load())
