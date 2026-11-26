@@ -56,7 +56,7 @@ func RegisterOAuthRoutes(api huma.API, srv *oauth2server.Server) {
 	Register(api, huma.Operation{
 		OperationID:   "oauth-token",
 		Summary:       "OAuth 2.0 token endpoint",
-		Description:   "Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON.",
+		Description:   "Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. A scoped authorization code yields an MCP-only API token and no refresh token.",
 		Method:        http.MethodPost,
 		Path:          "/oauth/token",
 		DefaultStatus: http.StatusOK,
@@ -72,7 +72,7 @@ func RegisterOAuthRoutes(api huma.API, srv *oauth2server.Server) {
 	Register(api, huma.Operation{
 		OperationID:   "oauth-authorize",
 		Summary:       "OAuth 2.0 authorize endpoint",
-		Description:   "Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) and a loopback or vikunja- scheme redirect_uri are required.",
+		Description:   "Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) and a loopback or vikunja- scheme redirect_uri are required. A scope of mcp:read or mcp:write, or a resource, makes the code exchange yield an MCP-only API token instead of a session.",
 		Method:        http.MethodPost,
 		Path:          "/oauth/authorize",
 		DefaultStatus: http.StatusOK,

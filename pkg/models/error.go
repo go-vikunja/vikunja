@@ -3147,6 +3147,56 @@ func (err *ErrOAuthInvalidGrantType) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrOAuthInvalidScope represents an error where a scope was requested but none of its values is known.
+type ErrOAuthInvalidScope struct{}
+
+// IsErrOAuthInvalidScope checks if an error is ErrOAuthInvalidScope.
+func IsErrOAuthInvalidScope(err error) bool {
+	_, ok := err.(*ErrOAuthInvalidScope)
+	return ok
+}
+
+func (err *ErrOAuthInvalidScope) Error() string {
+	return "Invalid scope"
+}
+
+// ErrCodeOAuthInvalidScope holds the unique world-error code of this error
+const ErrCodeOAuthInvalidScope = 17008
+
+// HTTPError holds the http error description
+func (err *ErrOAuthInvalidScope) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthInvalidScope,
+		Message:  "The scope contains no supported value. Use 'mcp:read' or 'mcp:write'.",
+	}
+}
+
+// ErrOAuthInvalidTarget represents an error where the requested resource is not one this instance issues tokens for.
+type ErrOAuthInvalidTarget struct{}
+
+// IsErrOAuthInvalidTarget checks if an error is ErrOAuthInvalidTarget.
+func IsErrOAuthInvalidTarget(err error) bool {
+	_, ok := err.(*ErrOAuthInvalidTarget)
+	return ok
+}
+
+func (err *ErrOAuthInvalidTarget) Error() string {
+	return "Invalid target resource"
+}
+
+// ErrCodeOAuthInvalidTarget holds the unique world-error code of this error
+const ErrCodeOAuthInvalidTarget = 17009
+
+// HTTPError holds the http error description
+func (err *ErrOAuthInvalidTarget) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthInvalidTarget,
+		Message:  "The resource must be this instance's MCP endpoint, the configured public URL followed by /api/v2/mcp.",
+	}
+}
+
 // ====================
 // Time Tracking Errors
 // ====================

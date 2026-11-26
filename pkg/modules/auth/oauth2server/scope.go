@@ -17,6 +17,9 @@
 package oauth2server
 
 import (
+	"net/url"
+	"strings"
+
 	"code.vikunja.io/api/pkg/models"
 )
 
@@ -33,4 +36,57 @@ type Resource interface {
 	ResourceURL() string
 	// ScopePermissions returns the API token permissions a scope grants right now.
 	ScopePermissions(scope Scope) models.APIPermissions
+}
+
+// parseScope ignores unknown values: clients routinely add ones like offline_access.
+func parseScope(raw string) ([]Scope, error) {
+	read, write := false, false
+	for _, value := range strings.Fields(raw) {
+		switch Scope(value) {
+		case ScopeMCPRead:
+			read = true
+		case ScopeMCPWrite:
+			write = true
+		}
+	}
+	switch {
+	case write:
+		return []Scope{ScopeMCPRead, ScopeMCPWrite}, nil
+	case read:
+		return []Scope{ScopeMCPRead}, nil
+	default:
+		return nil, &models.ErrOAuthInvalidScope{}
+	}
+}
+
+func formatScope(scopes []Scope) string {
+	values := make([]string, 0, len(scopes))
+	for _, s := range scopes {
+		values = append(values, string(s))
+	}
+	return strings.Join(values, " ")
+}
+
+// SameResource compares two resource indicators, ignoring the case of scheme and host and a trailing slash.
+func SameResource(a, b string) bool {
+	ua, ok := parseResource(a)
+	if !ok {
+		return false
+	}
+	ub, ok := parseResource(b)
+	if !ok {
+		return false
+	}
+	return strings.EqualFold(ua.Scheme, ub.Scheme) &&
+		strings.EqualFold(ua.Host, ub.Host) &&
+		strings.TrimRight(ua.Path, "/") == strings.TrimRight(ub.Path, "/")
+}
+
+// RFC 8707 §2: an absolute URI without a fragment. A query never names this instance's endpoint.
+func parseResource(raw string) (*url.URL, bool) {
+	u, err := url.Parse(raw)
+	if err != nil || !u.IsAbs() || u.Host == "" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || strings.Contains(raw, "#") {
+		return nil, false
+	}
+	return u, true
 }
