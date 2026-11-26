@@ -212,3 +212,13 @@ func TestOAuthTokenErrors(t *testing.T) {
 		})
 	}
 }
+
+// RFC 6749 §3.2: the token endpoint MUST ignore unrecognized request parameters.
+func TestOAuthTokenIgnoresUnknownParameters(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	code := insertOAuthCode(t, models.OAuthCode{Scope: "mcp:read", Resource: mcpResourceURL}, time.Time{})
+	res := scopedExchange(t, e, "v2", code, url.Values{"scope": {"mcp:read"}, "state": {"xyz"}})
+	assert.Equal(t, http.StatusOK, res.code, string(res.body))
+}
