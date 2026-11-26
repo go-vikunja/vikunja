@@ -289,8 +289,12 @@ func RegisterRoutes(e *echo.Echo, opts ...Option) {
 				return matchCORSOrigin(origin, allowedOrigins)
 			},
 			AllowCredentials: true,
-			ExposeHeaders:    []string{echo.HeaderRetryAfter},
-			MaxAge:           config.CorsMaxAge.GetInt(),
+			ExposeHeaders: []string{
+				echo.HeaderRetryAfter,
+				// Browser-based MCP clients discover OAuth through the MCP endpoint's challenge.
+				echo.HeaderWWWAuthenticate,
+			},
+			MaxAge: config.CorsMaxAge.GetInt(),
 			Skipper: func(context *echo.Context) bool {
 				// Since it is not possible to register this middleware just for the api group,
 				// we just disable it when for caldav requests.

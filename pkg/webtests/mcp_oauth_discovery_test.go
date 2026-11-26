@@ -286,6 +286,19 @@ func TestMCPChallenge(t *testing.T) {
 	})
 }
 
+func TestMCPChallengeIsExposedToAllowedOrigins(t *testing.T) {
+	e := discoveryEnv(t, map[config.Key]any{
+		config.CorsEnable:  true,
+		config.CorsOrigins: []string{"https://allowed.example"},
+	})
+
+	rec := postMCP(e, http.Header{"Origin": {"https://allowed.example"}})
+	require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
+	assert.Equal(t, missingTokenChallenge, rec.Header().Get(echo.HeaderWWWAuthenticate))
+	assert.Equal(t, "https://allowed.example", rec.Header().Get(echo.HeaderAccessControlAllowOrigin))
+	assert.Contains(t, rec.Header().Get(echo.HeaderAccessControlExposeHeaders), echo.HeaderWWWAuthenticate)
+}
+
 func withPublicURL(t *testing.T, publicURL string) {
 	t.Helper()
 	previous := config.ServicePublicURL.GetString()
