@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -54,7 +53,7 @@ func NewCanonicalAPI() (huma.API, error) {
 	RegisterAll(api)
 	// The live handler is wired to the MCP module in routes.go; the document only needs the schema.
 	RegisterMCPInfo(api, func() ConnectionSettings { return ConnectionSettings{} })
-	RegisterOAuthRoutes(api, oauth2server.NewServer(specOnlyResource{}, oauth2server.NewMetadataFetcher(utils.NewSSRFSafeHTTPClient())))
+	RegisterOAuthRoutes(api, oauth2server.NewServer(nil, oauth2server.NewMetadataFetcher(utils.NewSSRFSafeHTTPClient())))
 	document := api.OpenAPI()
 	document.Servers = []*huma.Server{{URL: GroupPrefix}}
 
@@ -70,9 +69,3 @@ func NewCanonicalAPI() (huma.API, error) {
 
 	return api, nil
 }
-
-type specOnlyResource struct{}
-
-func (specOnlyResource) ResourceURL() string { return "" }
-
-func (specOnlyResource) ScopePermissions(oauth2server.Scope) models.APIPermissions { return nil }

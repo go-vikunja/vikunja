@@ -144,7 +144,6 @@ async function start() {
 }
 
 async function approve(level: AccessLevel) {
-	if (approving.value) return
 	approving.value = true
 	errorMessage.value = ''
 	try {
@@ -167,12 +166,7 @@ function deny() {
 }
 
 function isFramed() {
-	try {
-		return window.self !== window.top
-	} catch {
-		// Reading a cross-origin top can throw.
-		return true
-	}
+	return window.self !== window.top
 }
 
 onMounted(async () => {

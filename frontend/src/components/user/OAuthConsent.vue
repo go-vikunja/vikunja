@@ -155,7 +155,11 @@ const userLabel = computed(() => {
 	const name = getDisplayName(props.user)
 	return name === props.user.username ? name : `${name} (${props.user.username})`
 })
-const redirectHost = computed(() => new URL(props.redirectUri).host)
+const redirectHost = computed(() => {
+	const u = new URL(props.redirectUri)
+	// For app schemes the scheme, not the host, names the receiving app.
+	return u.protocol === 'http:' || u.protocol === 'https:' ? u.host : `${u.protocol}//${u.host}`
+})
 
 function approve() {
 	if (props.pending) return
