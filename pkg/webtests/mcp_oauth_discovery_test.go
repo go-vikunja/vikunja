@@ -298,12 +298,28 @@ func TestMCPChallengeIsExposedToAllowedOrigins(t *testing.T) {
 		config.CorsEnable:  true,
 		config.CorsOrigins: []string{"https://allowed.example"},
 	})
+	origin := http.Header{"Origin": {"https://allowed.example"}}
 
-	rec := postMCP(e, http.Header{"Origin": {"https://allowed.example"}})
-	require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
-	assert.Equal(t, missingTokenChallenge, rec.Header().Get(echo.HeaderWWWAuthenticate))
-	assert.Equal(t, "https://allowed.example", rec.Header().Get(echo.HeaderAccessControlAllowOrigin))
-	assert.Contains(t, rec.Header().Get(echo.HeaderAccessControlExposeHeaders), echo.HeaderWWWAuthenticate)
+	for _, tc := range []struct {
+		header http.Header
+		code   int
+	}{
+		{header: origin, code: http.StatusUnauthorized},
+		{header: http.Header{"Origin": origin["Origin"], echo.HeaderAuthorization: {"Bearer " + noMCPToken}}, code: http.StatusForbidden},
+	} {
+		rec := postMCP(e, tc.header)
+		require.Equal(t, tc.code, rec.Code, rec.Body.String())
+		assert.NotEmpty(t, rec.Header().Get(echo.HeaderWWWAuthenticate))
+		assert.Equal(t, "https://allowed.example", rec.Header().Get(echo.HeaderAccessControlAllowOrigin))
+		assert.Contains(t, rec.Header().Values(echo.HeaderAccessControlExposeHeaders), echo.HeaderWWWAuthenticate)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v2/projects", nil)
+	req.Header.Set("Origin", "https://allowed.example")
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusUnauthorized, rec.Code)
+	assert.Equal(t, []string{echo.HeaderRetryAfter}, rec.Header().Values(echo.HeaderAccessControlExposeHeaders), "other routes keep their CORS headers")
 }
 
 func withPublicURL(t *testing.T, publicURL string) {

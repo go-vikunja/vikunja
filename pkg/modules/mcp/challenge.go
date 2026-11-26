@@ -83,6 +83,10 @@ func setChallenge(h http.Header, bearerErr *bearerError) {
 		params = append(params, "error_description="+quote(bearerErr.description))
 	}
 	h.Set(echo.HeaderWWWAuthenticate, "Bearer "+strings.Join(params, ", "))
+	// Browser-based clients on an origin the instance CORS policy allows must be able to read it.
+	if h.Get(echo.HeaderAccessControlAllowOrigin) != "" {
+		h.Add(echo.HeaderAccessControlExposeHeaders, echo.HeaderWWWAuthenticate)
+	}
 }
 
 func quote(s string) string {
