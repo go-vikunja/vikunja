@@ -51,7 +51,10 @@ func parseScope(raw string) ([]Scope, error) {
 	}
 	switch {
 	case write:
-		return []Scope{ScopeMCPRead, ScopeMCPWrite}, nil
+		return []Scope{
+			ScopeMCPRead,
+			ScopeMCPWrite,
+		}, nil
 	case read:
 		return []Scope{ScopeMCPRead}, nil
 	default:

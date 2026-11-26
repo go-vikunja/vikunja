@@ -52,7 +52,10 @@ func scopedAuthorize(t *testing.T, e *echo.Echo, version string, params map[stri
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
 	rec := humaRequest(t, e, http.MethodPost, "/api/"+version+"/oauth/authorize", string(raw), humaTokenFor(t, &testuser1), "")
-	return &httpResult{code: rec.Code, body: rec.Body.Bytes()}
+	return &httpResult{
+		code: rec.Code,
+		body: rec.Body.Bytes(),
+	}
 }
 
 func scopedExchange(t *testing.T, e *echo.Echo, version, code string, extra url.Values) *httpResult {
@@ -68,7 +71,10 @@ func scopedExchange(t *testing.T, e *echo.Echo, version, code string, extra url.
 		form[k] = v
 	}
 	rec := humaRequest(t, e, http.MethodPost, "/api/"+version+"/oauth/token", form.Encode(), "", "application/x-www-form-urlencoded")
-	return &httpResult{code: rec.Code, body: rec.Body.Bytes()}
+	return &httpResult{
+		code: rec.Code,
+		body: rec.Body.Bytes(),
+	}
 }
 
 type httpResult struct {

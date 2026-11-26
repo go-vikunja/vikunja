@@ -169,7 +169,10 @@ func (srv *Server) scopedGrant(req *AuthorizeRequest) (scope, resource string, e
 		return "", "", &models.ErrOAuthInvalidTarget{}
 	}
 
-	scopes := []Scope{ScopeMCPRead, ScopeMCPWrite}
+	scopes := []Scope{
+		ScopeMCPRead,
+		ScopeMCPWrite,
+	}
 	if req.Scope != "" {
 		scopes, err = parseScope(req.Scope)
 		if err != nil {
