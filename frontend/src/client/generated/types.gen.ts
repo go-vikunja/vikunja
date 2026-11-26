@@ -316,6 +316,10 @@ export type AuthorizePreview = {
     readonly $schema?: string;
     client?: AuthorizeClient;
     /**
+     * The issuer identifier (RFC 9207). Send it as iss with every redirect to redirect_uri, also with an error. Absent while the instance has no public URL.
+     */
+    iss?: string;
+    /**
      * Whether redirect_uri is a loopback http address. Any program on the user's device can listen there and receive the code.
      */
     loopback_redirect?: boolean;
@@ -363,6 +367,10 @@ export type AuthorizeResponse = {
      */
     readonly $schema?: string;
     code?: string;
+    /**
+     * The issuer identifier (RFC 9207). Send it as iss with every redirect to redirect_uri, also with an error. Absent while the instance has no public URL.
+     */
+    iss?: string;
     redirect_uri?: string;
     /**
      * The granted scope. Empty when the client receives a session.
@@ -4326,6 +4334,10 @@ export type AuthLinkShareRequestWritable = {
 export type AuthorizePreviewWritable = {
     client?: AuthorizeClient;
     /**
+     * The issuer identifier (RFC 9207). Send it as iss with every redirect to redirect_uri, also with an error. Absent while the instance has no public URL.
+     */
+    iss?: string;
+    /**
      * Whether redirect_uri is a loopback http address. Any program on the user's device can listen there and receive the code.
      */
     loopback_redirect?: boolean;
@@ -4365,6 +4377,10 @@ export type AuthorizeRequestWritable = {
 
 export type AuthorizeResponseWritable = {
     code?: string;
+    /**
+     * The issuer identifier (RFC 9207). Send it as iss with every redirect to redirect_uri, also with an error. Absent while the instance has no public URL.
+     */
+    iss?: string;
     redirect_uri?: string;
     /**
      * The granted scope. Empty when the client receives a session.
