@@ -124,8 +124,7 @@ async function authorize(scope?: string) {
 
 async function start() {
 	const {data} = await oauthAuthorizePreview({body: authorizeRequest()})
-	// First-party apps rely on being approved without a prompt. The server decides which requests
-	// those are: a URL client is scoped even without scope or resource.
+	// First-party apps are approved without a prompt; the server decides which requests are unscoped.
 	if (!data.scoped) {
 		await authorize()
 		return

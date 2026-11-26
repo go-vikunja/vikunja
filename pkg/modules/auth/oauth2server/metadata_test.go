@@ -92,7 +92,7 @@ func writeJSON(t *testing.T, w http.ResponseWriter, v any) {
 	require.NoError(t, json.NewEncoder(w).Encode(v))
 }
 
-// serveDocument serves the default document with overrides; a nil override removes the field.
+// A nil override removes the field.
 func serveDocument(t *testing.T, overrides map[string]any) *metadataHost {
 	t.Helper()
 	return newMetadataHost(t, func(host *metadataHost, w http.ResponseWriter, _ *http.Request) {

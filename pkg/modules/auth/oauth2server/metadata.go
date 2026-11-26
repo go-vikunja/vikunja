@@ -80,8 +80,7 @@ type MetadataFetcher struct {
 	client *http.Client
 }
 
-// NewMetadataFetcher fetches with a copy of client that does not follow redirects.
-// Production passes utils.NewSSRFSafeHTTPClient().
+// NewMetadataFetcher uses a non-redirecting copy of client (production: utils.NewSSRFSafeHTTPClient()).
 func NewMetadataFetcher(client *http.Client) *MetadataFetcher {
 	c := *client
 	c.CheckRedirect = func(*http.Request, []*http.Request) error {

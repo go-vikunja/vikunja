@@ -92,7 +92,6 @@ func (c MetadataClient) describe() AuthorizeClient {
 	}
 }
 
-// clientID is a syntactically valid client_id: a legacyClientID or a metadataClientID.
 type clientID interface {
 	isClientID()
 }
@@ -126,8 +125,7 @@ func parseClientID(raw string) (clientID, error) {
 	return metadataClientID(raw), nil
 }
 
-// draft-ietf-oauth-client-id-metadata-document §3. The id is compared as a string, so a
-// non-normalized one (uppercase scheme, non-ASCII) is rejected rather than normalized.
+// draft-ietf-oauth-client-id-metadata-document §3; ids compare as strings, so non-normalized ones are rejected.
 func validClientIDURL(raw string) bool {
 	if len(raw) > maxClientIDURLLength || !strings.HasPrefix(raw, "https://") || strings.Contains(raw, "#") {
 		return false
