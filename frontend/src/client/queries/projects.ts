@@ -227,6 +227,12 @@ export function getProjectIdFromSavedFilterId(savedFilterId: number): number {
 	return savedFilterId > 0 ? savedFilterId * -1 - 1 : 0
 }
 
+export const FAVORITES_PSEUDO_PROJECT_ID = -1
+
+export function isFavoritesPseudoProject(project: Pick<Project, 'id'> | null | undefined): boolean {
+	return project?.id === FAVORITES_PSEUDO_PROJECT_ID
+}
+
 export function isSavedFilterProject(project: Pick<Project, 'id'> | null | undefined): boolean {
 	return getSavedFilterIdFromProjectId(project?.id ?? 0) > 0
 }

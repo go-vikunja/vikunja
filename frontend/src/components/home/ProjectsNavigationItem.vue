@@ -41,6 +41,12 @@
 						<Icon icon="filter" />
 					</span>
 					<span
+						v-else-if="isFavoritesPseudoProject(project)"
+						class="saved-filter-icon icon menu-item-icon"
+					>
+						<Icon icon="star" />
+					</span>
+					<span
 						v-if="canEditOrder && project.id > 0 && typeof project.max_permission === 'number' && project.max_permission > PERMISSIONS.READ"
 						class="icon menu-item-icon handle drag-handle"
 						@mousedown.stop
@@ -108,6 +114,7 @@ import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {PERMISSIONS} from '@/constants/permissions'
 import {
 	getSavedFilterIdFromProjectId,
+	isFavoritesPseudoProject,
 	isSavedFilterProject,
 	usePatchProjectFavoriteMutation,
 } from '@/client/queries/projects'
@@ -203,7 +210,7 @@ const canToggleFavorite = computed(() => {
 	// Allow favorite toggle for:
 	// 1. Regular projects (id > 0) with write permission
 	// 2. Saved filters (id < -1) - user owns their own filters
-	if (props.project.id === -1) return false  // Favorites pseudo-project
+	if (isFavoritesPseudoProject(props.project)) return false
 	if (props.project.id > 0) {
 		return typeof props.project.max_permission === 'number' &&
 			props.project.max_permission > PERMISSIONS.READ
