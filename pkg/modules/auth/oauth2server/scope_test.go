@@ -48,6 +48,12 @@ func TestParseScope(t *testing.T) {
 	}
 }
 
+func TestRequestsMCPScope(t *testing.T) {
+	assert.True(t, requestsMCPScope("openid mcp:read"))
+	assert.False(t, requestsMCPScope(""))
+	assert.False(t, requestsMCPScope("openid offline_access"))
+}
+
 func TestSameResource(t *testing.T) {
 	const canonical = "https://vikunja.example/api/v2/mcp"
 	for _, same := range []string{

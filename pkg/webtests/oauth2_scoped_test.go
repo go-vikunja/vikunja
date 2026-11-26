@@ -200,9 +200,27 @@ func TestOAuthScopedGrant(t *testing.T) {
 		}
 	})
 
-	t.Run("rejects a scope without known values", func(t *testing.T) {
+	t.Run("a scope without mcp values and no resource returns a session", func(t *testing.T) {
 		authz := scopedAuthorize(t, e, "v2", map[string]string{
 			"scope": "offline_access openid",
+		})
+		require.Equal(t, http.StatusOK, authz.code, string(authz.body))
+		var authorized oauth2server.AuthorizeResponse
+		require.NoError(t, json.Unmarshal(authz.body, &authorized))
+		assert.Empty(t, authorized.Scope)
+
+		tok := scopedExchange(t, e, "v2", authorized.Code, nil)
+		require.Equal(t, http.StatusOK, tok.code, string(tok.body))
+		var raw map[string]any
+		require.NoError(t, json.Unmarshal(tok.body, &raw))
+		assert.NotEmpty(t, raw["refresh_token"])
+		assert.NotRegexp(t, `^tk_`, raw["access_token"])
+	})
+
+	t.Run("rejects a resource with a scope without mcp values", func(t *testing.T) {
+		authz := scopedAuthorize(t, e, "v2", map[string]string{
+			"scope":    "offline_access openid",
+			"resource": mcpResourceURL,
 		})
 		require.Equal(t, http.StatusBadRequest, authz.code, string(authz.body))
 		assert.Equal(t, models.ErrCodeOAuthInvalidScope, authz.errorCode(t))

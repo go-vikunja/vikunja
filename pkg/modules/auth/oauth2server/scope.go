@@ -59,6 +59,11 @@ func parseScope(raw string) ([]Scope, error) {
 	}
 }
 
+func requestsMCPScope(raw string) bool {
+	_, err := parseScope(raw)
+	return err == nil
+}
+
 func formatScope(scopes []Scope) string {
 	values := make([]string, 0, len(scopes))
 	for _, s := range scopes {

@@ -155,7 +155,8 @@ func (srv *Server) Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeRes
 
 // scopedGrant returns an empty scope and resource for a first-party session grant.
 func (srv *Server) scopedGrant(req *AuthorizeRequest) (scope, resource string, err error) {
-	if req.Scope == "" && req.Resource == "" {
+	// Generic OAuth libraries send scopes like openid; without an MCP scope they keep getting a session.
+	if req.Resource == "" && !requestsMCPScope(req.Scope) {
 		return "", "", nil
 	}
 
