@@ -195,12 +195,12 @@ func ValidateRedirectURI(redirectURI string) bool {
 		return true
 	}
 
-	return u.Scheme == "http" && isLoopbackHost(u.Hostname())
+	return isLoopbackRedirect(redirectURI)
 }
 
 func isLoopbackRedirect(redirectURI string) bool {
 	u, err := url.Parse(redirectURI)
-	return err == nil && strings.EqualFold(u.Scheme, "http") && isLoopbackHost(u.Hostname())
+	return err == nil && u.Scheme == "http" && isLoopbackHost(u.Hostname())
 }
 
 func isLoopbackHost(host string) bool {
@@ -232,13 +232,13 @@ func safeMetadataRedirect(redirectURI string) bool {
 	if err != nil || u.Scheme == "" || u.User != nil || strings.Contains(redirectURI, "#") {
 		return false
 	}
-	switch scheme := strings.ToLower(u.Scheme); scheme {
+	switch u.Scheme {
 	case "https":
 		return u.Hostname() != ""
 	case "http":
 		return isLoopbackHost(u.Hostname())
 	default:
-		return !browserSchemes[scheme]
+		return !browserSchemes[u.Scheme]
 	}
 }
 
