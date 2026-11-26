@@ -140,7 +140,8 @@ async function revoke() {
 .app-name,
 .app-host {
 	display: block;
-	overflow-wrap: anywhere;
+	min-inline-size: 10rem;
+	overflow-wrap: break-word;
 }
 
 .app-host {
