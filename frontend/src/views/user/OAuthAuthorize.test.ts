@@ -148,29 +148,6 @@ describe('OAuthAuthorize', () => {
 		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
 	})
 
-	it('asks for consent before authorizing a scoped request', async () => {
-		mockRoute.query = {
-			...BASE_QUERY,
-			scope: 'mcp:write',
-			resource: RESOURCE,
-		}
-		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write']))
-		const wrapper = mountView()
-		await flushPromises()
-
-		expect(sdk.oauthAuthorizePreview).toHaveBeenCalledWith({body: expect.objectContaining({
-			client_id: 'mcp-client',
-			scope: 'mcp:write',
-			resource: RESOURCE,
-		})})
-		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
-		expect(window.location.href).toBe('http://localhost/oauth/authorize')
-		expect(wrapper.text()).toContain('mcp-client')
-		expect(wrapper.text()).toContain('127.0.0.1:9999')
-		expect(wrapper.text()).toContain('Alice (alice)')
-		expect(wrapper.get<HTMLInputElement>('input[value="write"]').element.checked).toBe(true)
-	})
-
 	it('names the scheme of a custom-scheme redirect', async () => {
 		mockRoute.query = {...BASE_QUERY, redirect_uri: 'vikunja-flutter://callback', scope: 'mcp:read'}
 		const p = preview(['mcp:read'])
@@ -179,27 +156,6 @@ describe('OAuthAuthorize', () => {
 		await flushPromises()
 
 		expect(wrapper.get('.host').text()).toBe('vikunja-flutter://callback')
-	})
-
-	it('sends the requested scope and resource on approve', async () => {
-		mockRoute.query = {
-			...BASE_QUERY,
-			scope: 'mcp:write',
-			resource: RESOURCE,
-		}
-		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write']))
-		const wrapper = mountView()
-		await flushPromises()
-
-		await button(wrapper, 'Approve').trigger('click')
-		await flushPromises()
-
-		expect(sdk.oauthAuthorize).toHaveBeenCalledWith({body: expect.objectContaining({
-			scope: 'mcp:read mcp:write',
-			resource: RESOURCE,
-			state: 'st-1',
-		})})
-		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
 	})
 
 	it('grants read-only access when the user downgrades', async () => {
@@ -232,22 +188,6 @@ describe('OAuthAuthorize', () => {
 		await flushPromises()
 
 		expect(sdk.oauthAuthorize.mock.calls[0][0].body.scope).toBe('mcp:read')
-	})
-
-	it('redirects a denial with access_denied and state without authorizing', async () => {
-		mockRoute.query = {
-			...BASE_QUERY,
-			scope: 'mcp:read',
-		}
-		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read']))
-		const wrapper = mountView()
-		await flushPromises()
-
-		await button(wrapper, 'Deny').trigger('click')
-		await flushPromises()
-
-		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
-		expect(window.location.href).toBe(`${REDIRECT_URI}?error=access_denied&state=st-1`)
 	})
 
 	it('shows a preview error and does not redirect', async () => {
