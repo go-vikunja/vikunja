@@ -43,6 +43,15 @@ type AuthorizeResponse struct {
 	State       string `json:"state"`
 }
 
+// Server issues authorization codes and tokens. Scoped grants are API tokens for resource.
+type Server struct {
+	resource Resource
+}
+
+func NewServer(resource Resource) *Server {
+	return &Server{resource: resource}
+}
+
 // HandleAuthorize handles POST /oauth/authorize.
 // It validates the OAuth parameters, creates an authorization code, and
 // returns it as JSON. Authentication is handled by the token middleware.
@@ -58,7 +67,7 @@ type AuthorizeResponse struct {
 // @Failure 403 {object} models.Message "An API token was used to authorize an OAuth client."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /oauth/authorize [post]
-func HandleAuthorize(c *echo.Context) error {
+func (srv *Server) HandleAuthorize(c *echo.Context) error {
 	if c.Get("api_token") != nil {
 		return echo.NewHTTPError(http.StatusForbidden, "API tokens cannot be used to authorize OAuth clients")
 	}
@@ -74,7 +83,7 @@ func HandleAuthorize(c *echo.Context) error {
 		return err
 	}
 
-	resp, err := Authorize(&req, u.ID)
+	resp, err := srv.Authorize(&req, u.ID)
 	if err != nil {
 		return err
 	}
@@ -85,7 +94,7 @@ func HandleAuthorize(c *echo.Context) error {
 // Authorize validates the OAuth authorization parameters for the given
 // authenticated user and creates a single-use authorization code, independent
 // of the HTTP layer. Callers own request binding and resolving the user.
-func Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeResponse, error) {
+func (srv *Server) Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeResponse, error) {
 	// Validate response_type
 	if req.ResponseType != "code" {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "response_type must be 'code'")

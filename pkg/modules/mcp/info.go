@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 )
 
@@ -56,7 +57,7 @@ func (m *Module) ConnectionInfo() apiv2.ConnectionSettings {
 		sort.Strings(permissions)
 	}
 	return apiv2.ConnectionSettings{
-		Endpoint: strings.TrimRight(config.ServicePublicURL.GetString(), "/") + RoutePrefix,
+		Endpoint: m.ResourceURL(),
 		Routes:   routes,
 		Presets: apiv2.TokenPresets{
 			ReadOnly: map[string][]string{"*": {"read_one", "read_all"}},
@@ -64,4 +65,30 @@ func (m *Module) ConnectionInfo() apiv2.ConnectionSettings {
 			Full:     map[string]string{"*": "*"},
 		},
 	}
+}
+
+// ResourceURL is the endpoint's absolute URL, the resource indicator OAuth clients request tokens for.
+func (m *Module) ResourceURL() string {
+	return strings.TrimRight(config.ServicePublicURL.GetString(), "/") + RoutePrefix
+}
+
+// ScopePermissions expands an OAuth scope the way the frontend expands the read-only and full presets.
+func (m *Module) ScopePermissions(scope oauth2server.Scope) models.APIPermissions {
+	readOnly := scope == oauth2server.ScopeMCPRead
+	if !readOnly && scope != oauth2server.ScopeMCPWrite {
+		return nil
+	}
+	permissions := models.APIPermissions{}
+	for group, routes := range m.ConnectionInfo().Routes {
+		for permission := range routes {
+			if readOnly && group != "mcp" && permission != "read_one" && permission != "read_all" {
+				continue
+			}
+			permissions[group] = append(permissions[group], permission)
+		}
+	}
+	for _, granted := range permissions {
+		sort.Strings(granted)
+	}
+	return permissions
 }

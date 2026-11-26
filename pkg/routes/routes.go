@@ -280,16 +280,16 @@ func RegisterRoutes(e *echo.Echo) {
 		}))
 	}
 
-	// API Routes
-	a := e.Group("/api/v1")
-	registerAPIRoutes(a, noAuthRateLimit, refreshRateLimit)
-	setupPprof(e)
-
-	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
+	// /api/v2 — Huma-backed API. Registered first: v1's OAuth endpoints need the MCP module it builds.
 	a2 := e.Group(apiv2.GroupPrefix)
 	// Share the BasicAuth failure budget with CalDAV and feeds.
 	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
-	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
+	oauthServer := registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
+
+	// API Routes
+	a := e.Group("/api/v1")
+	registerAPIRoutes(a, noAuthRateLimit, refreshRateLimit, oauthServer)
+	setupPprof(e)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
@@ -469,7 +469,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) *oauth2server.Server {
 	a.Use(rejectFormBodies())
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
@@ -507,9 +507,12 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 	}
 	m.Register(a)
 	apiv2.RegisterMCPInfo(api, m.ConnectionInfo)
+	oauthServer := oauth2server.NewServer(m)
+	apiv2.RegisterOAuthRoutes(api, oauthServer)
+	return oauthServer
 }
 
-func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc, oauthServer *oauth2server.Server) {
 
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
@@ -562,7 +565,7 @@ func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.Mid
 
 	// OAuth 2.0 token endpoint — unauthenticated because it validates
 	// credentials (authorization code or refresh token) itself.
-	tr.POST("/oauth/token", oauth2server.HandleToken)
+	tr.POST("/oauth/token", oauthServer.HandleToken)
 
 	// Testing
 	if config.ServiceTestingtoken.GetString() != "" {
@@ -592,7 +595,7 @@ func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.Mid
 	a.GET("/routes", models.GetAvailableAPIRoutesForToken)
 
 	// OAuth 2.0 authorize endpoint — requires authentication.
-	a.POST("/oauth/authorize", oauth2server.HandleAuthorize)
+	a.POST("/oauth/authorize", oauthServer.HandleAuthorize)
 
 	// Avatar endpoint
 	a.GET("/avatar/:username", apiv1.GetAvatar)

@@ -180,7 +180,7 @@ func TestOAuth2AuthorizeEndpoint(t *testing.T) {
 		c := e.NewContext(req, httptest.NewRecorder())
 		c.Set("api_token", &models.APIToken{ID: 1})
 
-		err = oauth2server.HandleAuthorize(c)
+		err = oauth2server.NewServer(nil).HandleAuthorize(c)
 		var httpErr *echo.HTTPError
 		require.ErrorAs(t, err, &httpErr)
 		assert.Equal(t, http.StatusForbidden, httpErr.Code)

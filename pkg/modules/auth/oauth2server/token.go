@@ -65,13 +65,13 @@ type TokenRequest struct {
 // @Failure 401 {object} web.HTTPError "Invalid or expired refresh token."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /oauth/token [post]
-func HandleToken(c *echo.Context) error {
+func (srv *Server) HandleToken(c *echo.Context) error {
 	var req TokenRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
-	resp, err := ExchangeToken(c.Request().Context(), &req, c.Request().UserAgent(), c.RealIP())
+	resp, err := srv.ExchangeToken(c.Request().Context(), &req, c.Request().UserAgent(), c.RealIP())
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func HandleToken(c *echo.Context) error {
 // token endpoint, independent of the HTTP layer. Callers own request binding and
 // the Cache-Control: no-store response header. deviceInfo/ipAddress are recorded
 // on the session created for the authorization_code grant.
-func ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+func (srv *Server) ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	switch req.GrantType {
 	case "authorization_code":
 		return exchangeAuthorizationCode(ctx, req, deviceInfo, ipAddress)
