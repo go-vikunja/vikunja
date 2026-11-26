@@ -32,7 +32,6 @@ import (
 
 const mcpResourceURL = "https://localhost/api/v2/mcp"
 
-// insertOAuthToken mints an OAuth-issued token for user 1 and returns its cleartext.
 func insertOAuthToken(t *testing.T, resource string, permissions models.APIPermissions) string {
 	t.Helper()
 	token := &models.APIToken{

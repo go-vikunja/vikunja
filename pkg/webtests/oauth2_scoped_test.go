@@ -91,7 +91,6 @@ func (r *httpResult) errorCode(t *testing.T) int {
 	return body.Code
 }
 
-// scopedGrant runs authorize and exchange on v2 and returns both responses.
 func scopedGrant(t *testing.T, e *echo.Echo, params map[string]string) (oauth2server.AuthorizeResponse, oauth2server.TokenResponse, map[string]any) {
 	t.Helper()
 	authz := scopedAuthorize(t, e, "v2", params)
