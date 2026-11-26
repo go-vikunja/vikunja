@@ -75,6 +75,7 @@ function preview(scopes: string[], client: Record<string, string> = {
 			redirect_uri: REDIRECT_URI,
 			scopes,
 			scoped: scopes.length > 0,
+			loopback_redirect: true,
 		},
 	}
 }
@@ -244,6 +245,7 @@ describe('OAuthAuthorize', () => {
 			data: {
 				...preview(['mcp:read'], METADATA_CLIENT).data,
 				redirect_uri: 'https://app.example.com/callback',
+				loopback_redirect: false,
 			},
 		})
 		const wrapper = mountView()
@@ -251,6 +253,29 @@ describe('OAuthAuthorize', () => {
 
 		expect(wrapper.get('.publisher').text()).toBe('app.example.com')
 		expect(wrapper.text()).not.toContain('a program running on this device')
+	})
+
+	it('leaves the loopback decision to the server', async () => {
+		sdk.oauthAuthorizePreview.mockResolvedValue({
+			data: {
+				...preview(['mcp:read'], METADATA_CLIENT).data,
+				redirect_uri: 'http://[::ffff:127.0.0.1]:9999/callback',
+			},
+		})
+		const mapped = mountView()
+		await flushPromises()
+		expect(mapped.text()).toContain('a program running on this device')
+		mapped.unmount()
+
+		sdk.oauthAuthorizePreview.mockResolvedValue({
+			data: {
+				...preview(['mcp:read'], METADATA_CLIENT).data,
+				loopback_redirect: false,
+			},
+		})
+		const notFlagged = mountView()
+		await flushPromises()
+		expect(notFlagged.text()).not.toContain('a program running on this device')
 	})
 
 	it('shows the raw id of a legacy client without claiming a publisher', async () => {

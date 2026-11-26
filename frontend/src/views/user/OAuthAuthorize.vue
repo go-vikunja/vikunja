@@ -17,6 +17,7 @@
 			v-else-if="phase.kind === 'consent' && authStore.info"
 			:client="phase.preview.client"
 			:redirect-uri="phase.preview.redirectUri"
+			:loopback-redirect="phase.preview.loopbackRedirect"
 			:requested="phase.preview.requested"
 			:user="authStore.info"
 			:pending="approving"
@@ -47,6 +48,7 @@ defineOptions({name: 'OAuthAuthorize'})
 interface ConsentPreview {
 	client: AuthorizeClient
 	redirectUri: string
+	loopbackRedirect: boolean
 	requested: AccessLevel
 }
 
@@ -136,6 +138,7 @@ async function start() {
 		preview: {
 			client: data.client,
 			redirectUri: data.redirect_uri,
+			loopbackRedirect: data.loopback_redirect ?? false,
 			requested: data.scopes.includes('mcp:write') ? 'write' : 'read',
 		},
 	}

@@ -118,6 +118,8 @@ export type AccessLevel = 'read' | 'write'
 const props = defineProps<{
 	client: AuthorizeClient,
 	redirectUri: string,
+	// Any program on this device can listen on a loopback port and claim to be the client.
+	loopbackRedirect: boolean,
 	requested: AccessLevel,
 	user: IUser,
 	pending: boolean,
@@ -154,11 +156,6 @@ const userLabel = computed(() => {
 	return name === props.user.username ? name : `${name} (${props.user.username})`
 })
 const redirectHost = computed(() => new URL(props.redirectUri).host)
-// Any program on this device can listen on a loopback port and claim to be the client.
-const loopbackRedirect = computed(() => {
-	const {protocol, hostname} = new URL(props.redirectUri)
-	return protocol === 'http:' && (hostname === 'localhost' || hostname === '[::1]' || hostname.startsWith('127.'))
-})
 
 function approve() {
 	if (props.pending) return
