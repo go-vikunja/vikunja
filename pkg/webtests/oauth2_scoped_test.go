@@ -409,3 +409,105 @@ func TestAPITokenListExposesOAuthClientID(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), `"oauth_client_id":"test-client"`)
 	assert.NotContains(t, rec.Body.String(), "oauth_resource")
 }
+
+func authorizePreview(t *testing.T, e *echo.Echo, token string, params map[string]string) *httpResult {
+	t.Helper()
+	body := map[string]string{
+		"response_type":         "code",
+		"client_id":             scopedClientID,
+		"redirect_uri":          scopedRedirectURI,
+		"state":                 "preview-state",
+		"code_challenge":        pkceChallenge(scopedVerifier),
+		"code_challenge_method": "S256",
+	}
+	for k, v := range params {
+		body[k] = v
+	}
+	raw, err := json.Marshal(body)
+	require.NoError(t, err)
+	rec := humaRequest(t, e, http.MethodPost, "/api/v2/oauth/authorize/preview", string(raw), token, "")
+	return &httpResult{code: rec.Code, body: rec.Body.Bytes()}
+}
+
+func countOAuthCodes(t *testing.T) int64 {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	n, err := s.Count(&models.OAuthCode{})
+	require.NoError(t, err)
+	return n
+}
+
+func TestOAuthAuthorizePreview(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	userToken := humaTokenFor(t, &testuser1)
+
+	t.Run("scoped request", func(t *testing.T) {
+		before := countOAuthCodes(t)
+		res := authorizePreview(t, e, userToken, map[string]string{
+			"scope":    "mcp:write offline_access",
+			"resource": mcpResourceURL,
+		})
+		require.Equal(t, http.StatusOK, res.code, string(res.body))
+		assert.JSONEq(t, `{
+			"client": {"id": "test-mcp-client"},
+			"redirect_uri": "http://127.0.0.1:33418/callback",
+			"scopes": ["mcp:read", "mcp:write"],
+			"scoped": true
+		}`, stripSchema(t, res.body))
+		assert.Equal(t, before, countOAuthCodes(t), "preview must not create a code")
+	})
+
+	t.Run("read-only scope", func(t *testing.T) {
+		res := authorizePreview(t, e, userToken, map[string]string{"scope": "mcp:read"})
+		require.Equal(t, http.StatusOK, res.code, string(res.body))
+		var preview oauth2server.AuthorizePreview
+		require.NoError(t, json.Unmarshal(res.body, &preview))
+		assert.Equal(t, []oauth2server.Scope{oauth2server.ScopeMCPRead}, preview.Scopes)
+		assert.True(t, preview.Scoped)
+	})
+
+	t.Run("unscoped request", func(t *testing.T) {
+		res := authorizePreview(t, e, userToken, nil)
+		require.Equal(t, http.StatusOK, res.code, string(res.body))
+		assert.JSONEq(t, `{
+			"client": {"id": "test-mcp-client"},
+			"redirect_uri": "http://127.0.0.1:33418/callback",
+			"scopes": [],
+			"scoped": false
+		}`, stripSchema(t, res.body))
+	})
+
+	t.Run("rejects an invalid redirect_uri", func(t *testing.T) {
+		res := authorizePreview(t, e, userToken, map[string]string{"redirect_uri": "https://evil.example/callback"})
+		require.Equal(t, http.StatusBadRequest, res.code, string(res.body))
+		assert.Equal(t, models.ErrCodeOAuthInvalidRedirectURI, res.errorCode(t))
+	})
+
+	t.Run("requires authentication", func(t *testing.T) {
+		res := authorizePreview(t, e, "", map[string]string{"scope": "mcp:read"})
+		assert.Equal(t, http.StatusUnauthorized, res.code, string(res.body))
+	})
+
+	t.Run("rejects API tokens", func(t *testing.T) {
+		for name, token := range map[string]string{
+			"legacy oauth token": insertLegacyOAuthScopedToken(t),
+			"mcp oauth token":    insertOAuthToken(t, mcpResourceURL, projectsReadPermissions()),
+		} {
+			res := authorizePreview(t, e, token, map[string]string{"scope": "mcp:read"})
+			assert.Equal(t, http.StatusUnauthorized, res.code, "%s: %s", name, res.body)
+			assert.NotContains(t, string(res.body), `"client"`, name)
+		}
+	})
+}
+
+func stripSchema(t *testing.T, body []byte) string {
+	t.Helper()
+	var m map[string]any
+	require.NoError(t, json.Unmarshal(body, &m))
+	delete(m, "$schema")
+	out, err := json.Marshal(m)
+	require.NoError(t, err)
+	return string(out)
+}

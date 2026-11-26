@@ -1,4 +1,5 @@
 import {createHash, randomBytes} from 'crypto'
+import type {Page} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {setupApiUrl} from '../../support/authenticateUser'
@@ -152,5 +153,67 @@ test.describe('OAuth 2.0 Authorization Flow', () => {
 		expect(tokenBody.refresh_token).toBeTruthy()
 		expect(tokenBody.token_type).toBe('bearer')
 		expect(tokenBody.expires_in).toBeGreaterThan(0)
+	})
+
+	test.describe('Consent for a scoped client', () => {
+		const redirectUri = 'http://127.0.0.1:33418/callback'
+		const codeVerifier = randomBytes(32).toString('base64url')
+		const state = randomBytes(16).toString('base64url')
+
+		async function openConsent(page: Page) {
+			await page.route(url => url.href.startsWith(redirectUri), route => route.fulfill({body: 'ok'}))
+			const params = new URLSearchParams({
+				response_type: 'code',
+				client_id: 'mcp-client',
+				redirect_uri: redirectUri,
+				code_challenge: createHash('sha256').update(codeVerifier).digest('base64url'),
+				code_challenge_method: 'S256',
+				state,
+				scope: 'mcp:read mcp:write',
+			})
+			await page.goto(`/oauth/authorize?${params}`)
+			await expect(page.getByText('Connect mcp-client?')).toBeVisible()
+		}
+
+		async function redirectedTo(page: Page) {
+			await page.waitForURL(url => url.href.startsWith(redirectUri))
+			return new URL(page.url())
+		}
+
+		test('approving read only grants mcp:read without a refresh token', async ({authenticatedPage: page, apiContext}) => {
+			await openConsent(page)
+			await page.getByLabel('Read only').check()
+			await page.getByRole('button', {name: 'Approve'}).click()
+
+			const redirect = await redirectedTo(page)
+			const code = redirect.searchParams.get('code')
+			expect(code).toBeTruthy()
+			expect(redirect.searchParams.get('state')).toBe(state)
+
+			const tokenResponse = await apiContext.post('oauth/token', {
+				data: {
+					grant_type: 'authorization_code',
+					code,
+					client_id: 'mcp-client',
+					redirect_uri: redirectUri,
+					code_verifier: codeVerifier,
+				},
+			})
+			expect(tokenResponse.ok()).toBe(true)
+			const tokenBody = await tokenResponse.json()
+			expect(tokenBody.scope).toBe('mcp:read')
+			expect(tokenBody.refresh_token).toBeUndefined()
+		})
+
+		test('denying redirects with access_denied and the state', async ({authenticatedPage: page}) => {
+			await openConsent(page)
+			await page.getByRole('button', {name: 'Deny'}).click()
+
+			const redirect = await redirectedTo(page)
+			expect([...redirect.searchParams]).toEqual([
+				['error', 'access_denied'],
+				['state', state],
+			])
+		})
 	})
 })

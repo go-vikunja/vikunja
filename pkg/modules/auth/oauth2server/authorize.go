@@ -94,29 +94,45 @@ func (srv *Server) HandleAuthorize(c *echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+// AuthorizePreview describes a valid authorize request for the consent screen.
+type AuthorizePreview struct {
+	Client      AuthorizeClient `json:"client"`
+	RedirectURI string          `json:"redirect_uri" doc:"The validated redirect URI. Only redirect here, also to report a denial."`
+	Scopes      []Scope         `json:"scopes" enum:"mcp:read,mcp:write" doc:"The scopes the code would grant, normalized. Empty when the client receives a session."`
+	Scoped      bool            `json:"scoped" doc:"Whether the client receives an MCP-only API token instead of a session."`
+}
+
+// AuthorizeClient identifies the client asking for authorization.
+type AuthorizeClient struct {
+	ID string `json:"id"`
+}
+
+// Preview validates an authorize request exactly like Authorize, without creating a code.
+func (srv *Server) Preview(req *AuthorizeRequest) (*AuthorizePreview, error) {
+	scopes, _, err := srv.validate(req)
+	if err != nil {
+		return nil, err
+	}
+	if scopes == nil {
+		scopes = []Scope{}
+	}
+	return &AuthorizePreview{
+		Client:      AuthorizeClient{ID: req.ClientID},
+		RedirectURI: req.RedirectURI,
+		Scopes:      scopes,
+		Scoped:      len(scopes) > 0,
+	}, nil
+}
+
 // Authorize validates the OAuth authorization parameters for the given
 // authenticated user and creates a single-use authorization code, independent
 // of the HTTP layer. Callers own request binding and resolving the user.
 func (srv *Server) Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeResponse, error) {
-	// Validate response_type
-	if req.ResponseType != "code" {
-		return nil, echo.NewHTTPError(http.StatusBadRequest, "response_type must be 'code'")
-	}
-
-	// Validate redirect_uri
-	if !ValidateRedirectURI(req.RedirectURI) {
-		return nil, &models.ErrOAuthInvalidRedirectURI{}
-	}
-
-	// Validate PKCE (required)
-	if req.CodeChallenge == "" || req.CodeChallengeMethod != "S256" {
-		return nil, &models.ErrOAuthMissingPKCE{}
-	}
-
-	scope, resource, err := srv.scopedGrant(req)
+	scopes, resource, err := srv.validate(req)
 	if err != nil {
 		return nil, err
 	}
+	scope := formatScope(scopes)
 
 	s := db.NewSession()
 	defer s.Close()
@@ -153,37 +169,54 @@ func (srv *Server) Authorize(req *AuthorizeRequest, userID int64) (*AuthorizeRes
 	}, nil
 }
 
-// scopedGrant returns an empty scope and resource for a first-party session grant.
-func (srv *Server) scopedGrant(req *AuthorizeRequest) (scope, resource string, err error) {
+// validate holds every rule of an authorize request; Authorize and Preview must not diverge.
+func (srv *Server) validate(req *AuthorizeRequest) (scopes []Scope, resource string, err error) {
+	if req.ResponseType != "code" {
+		return nil, "", &models.ErrOAuthUnsupportedResponseType{}
+	}
+
+	if !ValidateRedirectURI(req.RedirectURI) {
+		return nil, "", &models.ErrOAuthInvalidRedirectURI{}
+	}
+
+	if req.CodeChallenge == "" || req.CodeChallengeMethod != "S256" {
+		return nil, "", &models.ErrOAuthMissingPKCE{}
+	}
+
+	return srv.scopedGrant(req)
+}
+
+// scopedGrant returns no scopes and an empty resource for a first-party session grant.
+func (srv *Server) scopedGrant(req *AuthorizeRequest) (scopes []Scope, resource string, err error) {
 	// Generic OAuth libraries send scopes like openid; without an MCP scope they keep getting a session.
 	if req.Resource == "" && !requestsMCPScope(req.Scope) {
-		return "", "", nil
+		return nil, "", nil
 	}
 
 	resource = srv.resource.ResourceURL()
 	// Also rejects every scoped grant while service.publicurl is unset and the URL is relative.
 	if _, ok := parseResource(resource); !ok {
-		return "", "", &models.ErrOAuthInvalidTarget{}
+		return nil, "", &models.ErrOAuthInvalidTarget{}
 	}
 	if req.Resource != "" && !SameResource(req.Resource, resource) {
-		return "", "", &models.ErrOAuthInvalidTarget{}
+		return nil, "", &models.ErrOAuthInvalidTarget{}
 	}
 
-	scopes := []Scope{
+	scopes = []Scope{
 		ScopeMCPRead,
 		ScopeMCPWrite,
 	}
 	if req.Scope != "" {
 		scopes, err = parseScope(req.Scope)
 		if err != nil {
-			return "", "", err
+			return nil, "", err
 		}
 	}
 
 	// The client id names the token the user later revokes.
 	if req.ClientID == "" {
-		return "", "", &models.ErrOAuthClientNotFound{}
+		return nil, "", &models.ErrOAuthClientNotFound{}
 	}
 
-	return formatScope(scopes), resource, nil
+	return scopes, resource, nil
 }

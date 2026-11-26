@@ -47,6 +47,10 @@ type oauthAuthorizeBody struct {
 	Body *oauth2server.AuthorizeResponse
 }
 
+type oauthAuthorizePreviewBody struct {
+	Body *oauth2server.AuthorizePreview
+}
+
 // RegisterOAuthRoutes wires the OAuth 2.0 token and authorize endpoints. The
 // token endpoint is public (it authenticates the request itself); authorize
 // inherits the global JWT auth. Called explicitly like RegisterMCPInfo: srv needs the MCP module.
@@ -79,6 +83,18 @@ func RegisterOAuthRoutes(api huma.API, srv *oauth2server.Server) {
 		Tags:          tags,
 	}, func(ctx context.Context, in *struct{ Body oauth2server.AuthorizeRequest }) (*oauthAuthorizeBody, error) {
 		return oauthAuthorize(ctx, srv, &in.Body)
+	})
+
+	Register(api, huma.Operation{
+		OperationID:   "oauth-authorize-preview",
+		Summary:       "Preview an OAuth 2.0 authorization",
+		Description:   "Validates an authorize request exactly like the authorize endpoint, without creating a code, and returns what the user is asked to consent to. Fails with the same errors as the authorize endpoint.",
+		Method:        http.MethodPost,
+		Path:          "/oauth/authorize/preview",
+		DefaultStatus: http.StatusOK,
+		Tags:          tags,
+	}, func(ctx context.Context, in *struct{ Body oauth2server.AuthorizeRequest }) (*oauthAuthorizePreviewBody, error) {
+		return oauthAuthorizePreview(ctx, srv, &in.Body)
 	})
 }
 
@@ -155,6 +171,29 @@ func oauthToken(ctx context.Context, srv *oauth2server.Server, req *oauth2server
 }
 
 func oauthAuthorize(ctx context.Context, srv *oauth2server.Server, req *oauth2server.AuthorizeRequest) (*oauthAuthorizeBody, error) {
+	u, err := oauthAuthorizingUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := srv.Authorize(req, u.ID)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &oauthAuthorizeBody{Body: resp}, nil
+}
+
+func oauthAuthorizePreview(ctx context.Context, srv *oauth2server.Server, req *oauth2server.AuthorizeRequest) (*oauthAuthorizePreviewBody, error) {
+	if _, err := oauthAuthorizingUser(ctx); err != nil {
+		return nil, err
+	}
+	resp, err := srv.Preview(req)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &oauthAuthorizePreviewBody{Body: resp}, nil
+}
+
+func oauthAuthorizingUser(ctx context.Context) (*user.User, error) {
 	if ec := humabridge.EchoContextFrom(ctx); ec != nil && (*ec).Get("api_token") != nil {
 		return nil, huma.Error403Forbidden("API tokens cannot be used to authorize OAuth clients")
 	}
@@ -167,12 +206,7 @@ func oauthAuthorize(ctx context.Context, srv *oauth2server.Server, req *oauth2se
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-
-	resp, err := srv.Authorize(req, u.ID)
-	if err != nil {
-		return nil, translateDomainError(err)
-	}
-	return &oauthAuthorizeBody{Body: resp}, nil
+	return u, nil
 }
 
 // requestClientInfo pulls the user agent and client IP off the underlying Echo
