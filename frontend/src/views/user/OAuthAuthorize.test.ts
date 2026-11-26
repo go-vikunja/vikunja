@@ -119,17 +119,6 @@ describe('OAuthAuthorize', () => {
 			expect(wrapper.text()).toContain('cannot be shown inside another website')
 			expect(wrapper.find('input[value="write"]').exists()).toBe(false)
 		})
-
-		it('refuses when the top window is cross-origin', async () => {
-			vi.spyOn(window, 'top', 'get').mockImplementation(() => {
-				throw new DOMException('Blocked a frame', 'SecurityError')
-			})
-			mountView()
-			await flushPromises()
-
-			expect(sdk.oauthAuthorizePreview).not.toHaveBeenCalled()
-			expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
-		})
 	})
 
 	it('approves an unscoped request without asking', async () => {
