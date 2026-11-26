@@ -124,8 +124,8 @@ type AuthorizeClient struct {
 }
 
 // Preview validates an authorize request exactly like Authorize, without creating a code.
-func (srv *Server) Preview(ctx context.Context, req *AuthorizeRequest) (*AuthorizePreview, error) {
-	client, scopes, _, err := srv.validate(ctx, req)
+func (srv *Server) Preview(ctx context.Context, req *AuthorizeRequest, userID int64) (*AuthorizePreview, error) {
+	client, scopes, _, err := srv.validate(ctx, req, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (srv *Server) Preview(ctx context.Context, req *AuthorizeRequest) (*Authori
 // authenticated user and creates a single-use authorization code, independent
 // of the HTTP layer. Callers own request binding and resolving the user.
 func (srv *Server) Authorize(ctx context.Context, req *AuthorizeRequest, userID int64) (*AuthorizeResponse, error) {
-	_, scopes, resource, err := srv.validate(ctx, req)
+	_, scopes, resource, err := srv.validate(ctx, req, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +186,7 @@ func (srv *Server) Authorize(ctx context.Context, req *AuthorizeRequest, userID 
 }
 
 // validate holds every rule of an authorize request; Authorize and Preview must not diverge.
-func (srv *Server) validate(ctx context.Context, req *AuthorizeRequest) (client Client, scopes []Scope, resource string, err error) {
+func (srv *Server) validate(ctx context.Context, req *AuthorizeRequest, userID int64) (client Client, scopes []Scope, resource string, err error) {
 	if req.ResponseType != "code" {
 		return nil, nil, "", &models.ErrOAuthUnsupportedResponseType{}
 	}
@@ -196,7 +196,7 @@ func (srv *Server) validate(ctx context.Context, req *AuthorizeRequest) (client 
 	}
 
 	// After the cheap checks: resolving may fetch the client's metadata document.
-	client, err = srv.resolveClient(ctx, req.ClientID)
+	client, err = srv.resolveClient(ctx, req.ClientID, userFetchBudget(userID))
 	if err != nil {
 		return nil, nil, "", err
 	}

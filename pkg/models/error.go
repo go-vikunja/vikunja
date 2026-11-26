@@ -3272,6 +3272,31 @@ func (err *ErrOAuthClientMetadataUnavailable) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrOAuthClientMetadataFetchLimit represents an error where a user started too many metadata document fetches.
+type ErrOAuthClientMetadataFetchLimit struct{}
+
+// IsErrOAuthClientMetadataFetchLimit checks if an error is ErrOAuthClientMetadataFetchLimit.
+func IsErrOAuthClientMetadataFetchLimit(err error) bool {
+	_, ok := err.(*ErrOAuthClientMetadataFetchLimit)
+	return ok
+}
+
+func (err *ErrOAuthClientMetadataFetchLimit) Error() string {
+	return "Too many client metadata document fetches"
+}
+
+// ErrCodeOAuthClientMetadataFetchLimit holds the unique world-error code of this error
+const ErrCodeOAuthClientMetadataFetchLimit = 17017
+
+// HTTPError holds the http error description
+func (err *ErrOAuthClientMetadataFetchLimit) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusTooManyRequests,
+		Code:     ErrCodeOAuthClientMetadataFetchLimit,
+		Message:  "Vikunja looked up too many new apps for your account recently. Try again later.",
+	}
+}
+
 // ErrOAuthInvalidClientMetadata represents an error where a client's metadata document is not acceptable.
 type ErrOAuthInvalidClientMetadata struct {
 	Reason string

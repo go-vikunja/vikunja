@@ -183,10 +183,11 @@ func oauthAuthorize(ctx context.Context, srv *oauth2server.Server, req *oauth2se
 }
 
 func oauthAuthorizePreview(ctx context.Context, srv *oauth2server.Server, req *oauth2server.AuthorizeRequest) (*oauthAuthorizePreviewBody, error) {
-	if _, err := oauthAuthorizingUser(ctx); err != nil {
+	u, err := oauthAuthorizingUser(ctx)
+	if err != nil {
 		return nil, err
 	}
-	resp, err := srv.Preview(ctx, req)
+	resp, err := srv.Preview(ctx, req, u.ID)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

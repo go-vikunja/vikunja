@@ -53,7 +53,30 @@ const (
 	maxMetadataCacheTTL     = 24 * time.Hour
 	maxClientNameRunes      = 100
 	maxClientURILength      = 2048
+	// The window matches maxMetadataCacheTTL, so a user also keeps at most about twice this many entries cached.
+	maxMetadataFetchesPerUser = 50
+	metadataFetchWindow       = 24 * time.Hour
 )
+
+// fetchBudget is charged before fetching a document that is not cached.
+type fetchBudget func() error
+
+// The token exchange re-resolves a client only after consuming a valid code, which a fetch already paid for.
+func unmeteredFetch() error { return nil }
+
+func userFetchBudget(userID int64) fetchBudget {
+	return func() error {
+		// Reserved before fetching so concurrent requests cannot overshoot.
+		fetches, err := keyvalue.IncrByWithTTL("oauth_metadata_fetches_"+strconv.FormatInt(userID, 10), 1, metadataFetchWindow)
+		if err != nil {
+			return err
+		}
+		if fetches > maxMetadataFetchesPerUser {
+			return &models.ErrOAuthClientMetadataFetchLimit{}
+		}
+		return nil
+	}
+}
 
 // MetadataFetcher loads and caches Client ID Metadata Documents.
 type MetadataFetcher struct {
@@ -70,7 +93,7 @@ func NewMetadataFetcher(client *http.Client) *MetadataFetcher {
 	return &MetadataFetcher{client: &c}
 }
 
-func (f *MetadataFetcher) get(ctx context.Context, id metadataClientID) (ClientMetadata, error) {
+func (f *MetadataFetcher) get(ctx context.Context, id metadataClientID, budget fetchBudget) (ClientMetadata, error) {
 	key := "oauth_client_metadata_" + utils.Sha256Hex(string(id))
 	var cached ClientMetadata
 	exists, err := keyvalue.GetWithValue(key, &cached)
@@ -81,6 +104,9 @@ func (f *MetadataFetcher) get(ctx context.Context, id metadataClientID) (ClientM
 		return cached, nil
 	}
 
+	if err := budget(); err != nil {
+		return ClientMetadata{}, err
+	}
 	body, ttl, err := f.fetch(ctx, id)
 	if err != nil {
 		return ClientMetadata{}, err

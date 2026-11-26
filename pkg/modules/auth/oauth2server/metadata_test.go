@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -27,6 +28,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/stretchr/testify/assert"
@@ -100,7 +102,7 @@ func serveDocument(t *testing.T, overrides map[string]any) *metadataHost {
 
 func resolveMetadataClient(t *testing.T, host *metadataHost) MetadataClient {
 	t.Helper()
-	client, err := host.oauthServer().resolveClient(t.Context(), host.clientID())
+	client, err := host.oauthServer().resolveClient(t.Context(), host.clientID(), unmeteredFetch)
 	require.NoError(t, err)
 	metadataClient, ok := client.(MetadataClient)
 	require.True(t, ok, "%T", client)
@@ -109,7 +111,7 @@ func resolveMetadataClient(t *testing.T, host *metadataHost) MetadataClient {
 
 func requireInvalidMetadata(t *testing.T, host *metadataHost, reason string) {
 	t.Helper()
-	_, err := host.oauthServer().resolveClient(t.Context(), host.clientID())
+	_, err := host.oauthServer().resolveClient(t.Context(), host.clientID(), unmeteredFetch)
 	var invalid *models.ErrOAuthInvalidClientMetadata
 	require.ErrorAs(t, err, &invalid)
 	assert.Contains(t, invalid.Reason, reason)
@@ -117,7 +119,7 @@ func requireInvalidMetadata(t *testing.T, host *metadataHost, reason string) {
 
 func requireUnavailable(t *testing.T, host *metadataHost) {
 	t.Helper()
-	_, err := host.oauthServer().resolveClient(t.Context(), host.clientID())
+	_, err := host.oauthServer().resolveClient(t.Context(), host.clientID(), unmeteredFetch)
 	assert.True(t, models.IsErrOAuthClientMetadataUnavailable(err), "%v", err)
 }
 
@@ -159,7 +161,7 @@ func TestResolveMetadataClient(t *testing.T) {
 		host := serveDocument(t, nil)
 		srv := host.oauthServer()
 		for range 3 {
-			_, err := srv.resolveClient(t.Context(), host.clientID())
+			_, err := srv.resolveClient(t.Context(), host.clientID(), unmeteredFetch)
 			require.NoError(t, err)
 		}
 		assert.Equal(t, int32(1), host.requests.Load())
@@ -278,7 +280,7 @@ func TestResolveMetadataClient(t *testing.T) {
 			"redirect_uris is empty":   {"redirect_uris": []string{}},
 		} {
 			host := serveDocument(t, overrides)
-			_, err := host.oauthServer().resolveClient(t.Context(), host.clientID())
+			_, err := host.oauthServer().resolveClient(t.Context(), host.clientID(), unmeteredFetch)
 			assert.True(t, models.IsErrOAuthInvalidClientMetadata(err), "%s: %v", name, err)
 		}
 	})
@@ -303,7 +305,7 @@ func TestResolveMetadataClient(t *testing.T) {
 			},
 		} {
 			host := serveDocument(t, overrides)
-			_, err := host.oauthServer().resolveClient(t.Context(), host.clientID())
+			_, err := host.oauthServer().resolveClient(t.Context(), host.clientID(), unmeteredFetch)
 			assert.True(t, models.IsErrOAuthInvalidClientMetadata(err), "%s: %v", name, err)
 		}
 	})
@@ -363,7 +365,7 @@ func TestResolveMetadataClient(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set(false)
 		host := serveDocument(t, nil)
 		srv := NewServer(testResource{}, NewMetadataFetcher(utils.NewSSRFSafeHTTPClient()))
-		_, err := srv.resolveClient(t.Context(), host.clientID())
+		_, err := srv.resolveClient(t.Context(), host.clientID(), unmeteredFetch)
 		assert.True(t, models.IsErrOAuthClientMetadataUnavailable(err), "%v", err)
 		assert.Equal(t, int32(0), host.requests.Load())
 	})
@@ -410,7 +412,7 @@ func TestPreviewMetadataClient(t *testing.T) {
 	}
 
 	t.Run("is scoped without scope or resource", func(t *testing.T) {
-		preview, err := srv.Preview(t.Context(), request(nil))
+		preview, err := srv.Preview(t.Context(), request(nil), 1)
 		require.NoError(t, err)
 		assert.True(t, preview.Scoped)
 		assert.Equal(t, []Scope{ScopeMCPRead, ScopeMCPWrite}, preview.Scopes)
@@ -419,18 +421,18 @@ func TestPreviewMetadataClient(t *testing.T) {
 	})
 
 	t.Run("keeps a requested read scope", func(t *testing.T) {
-		preview, err := srv.Preview(t.Context(), request(map[string]string{"scope": "mcp:read"}))
+		preview, err := srv.Preview(t.Context(), request(map[string]string{"scope": "mcp:read"}), 1)
 		require.NoError(t, err)
 		assert.Equal(t, []Scope{ScopeMCPRead}, preview.Scopes)
 	})
 
 	t.Run("allows a listed https redirect", func(t *testing.T) {
-		_, err := srv.Preview(t.Context(), request(map[string]string{"redirect_uri": "https://app.example.com/callback"}))
+		_, err := srv.Preview(t.Context(), request(map[string]string{"redirect_uri": "https://app.example.com/callback"}), 1)
 		require.NoError(t, err)
 	})
 
 	t.Run("rejects an unlisted redirect", func(t *testing.T) {
-		_, err := srv.Preview(t.Context(), request(map[string]string{"redirect_uri": "vikunja-flutter://callback"}))
+		_, err := srv.Preview(t.Context(), request(map[string]string{"redirect_uri": "vikunja-flutter://callback"}), 1)
 		assert.True(t, models.IsErrOAuthInvalidRedirectURI(err), "%v", err)
 	})
 
@@ -439,9 +441,63 @@ func TestPreviewMetadataClient(t *testing.T) {
 		req := request(nil)
 		req.ClientID = fresh.clientID()
 		req.CodeChallengeMethod = "plain"
-		_, err := fresh.oauthServer().Preview(t.Context(), req)
+		_, err := fresh.oauthServer().Preview(t.Context(), req, 1)
 		assert.True(t, models.IsErrOAuthMissingPKCE(err), "%v", err)
 		assert.Equal(t, int32(0), fresh.requests.Load())
+	})
+}
+
+func metadataAuthorizeRequest(clientID string) *AuthorizeRequest {
+	return &AuthorizeRequest{
+		ResponseType:        "code",
+		ClientID:            clientID,
+		RedirectURI:         "http://127.0.0.1:41234/callback",
+		CodeChallenge:       "challenge",
+		CodeChallengeMethod: "S256",
+	}
+}
+
+func TestMetadataFetchBudget(t *testing.T) {
+	budgetKey := func(t *testing.T, userID int64) string {
+		key := "oauth_metadata_fetches_" + strconv.FormatInt(userID, 10)
+		t.Cleanup(func() { _ = keyvalue.Del(key) })
+		return key
+	}
+
+	t.Run("allows the limit, then refuses without fetching", func(t *testing.T) {
+		budgetKey(t, 9001)
+		host := newMetadataHost(t, func(host *metadataHost, w http.ResponseWriter, r *http.Request) {
+			doc := host.document(nil)
+			doc["client_id"] = "https://" + r.Host + r.URL.Path
+			writeJSON(t, w, doc)
+		})
+		srv := host.oauthServer()
+		for i := range maxMetadataFetchesPerUser {
+			_, err := srv.Preview(t.Context(), metadataAuthorizeRequest(host.server.URL+"/client-"+strconv.Itoa(i)+".json"), 9001)
+			require.NoError(t, err, i)
+		}
+
+		_, err := srv.Preview(t.Context(), metadataAuthorizeRequest(host.server.URL+"/one-more.json"), 9001)
+		assert.True(t, models.IsErrOAuthClientMetadataFetchLimit(err), "%v", err)
+		assert.Equal(t, int32(maxMetadataFetchesPerUser), host.requests.Load())
+	})
+
+	t.Run("cache hits are free", func(t *testing.T) {
+		key := budgetKey(t, 9002)
+		host := serveDocument(t, nil)
+		srv := host.oauthServer()
+		for range 3 {
+			_, err := srv.Preview(t.Context(), metadataAuthorizeRequest(host.clientID()), 9002)
+			require.NoError(t, err)
+		}
+		used, _, err := keyvalue.GetInt64(key)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), used)
+
+		_, err = keyvalue.IncrByWithTTL(key, maxMetadataFetchesPerUser, metadataFetchWindow)
+		require.NoError(t, err)
+		_, err = srv.Preview(t.Context(), metadataAuthorizeRequest(host.clientID()), 9002)
+		require.NoError(t, err, "a cached document needs no budget")
 	})
 }
 
@@ -452,13 +508,7 @@ func (relativeResource) ResourceURL() string { return "/api/v2/mcp" }
 func TestMetadataClientWithoutResourceURL(t *testing.T) {
 	host := serveDocument(t, nil)
 	srv := NewServer(relativeResource{}, NewMetadataFetcher(host.server.Client()))
-	_, err := srv.Preview(t.Context(), &AuthorizeRequest{
-		ResponseType:        "code",
-		ClientID:            host.clientID(),
-		RedirectURI:         "http://127.0.0.1:41234/callback",
-		CodeChallenge:       "challenge",
-		CodeChallengeMethod: "S256",
-	})
+	_, err := srv.Preview(t.Context(), metadataAuthorizeRequest(host.clientID()), 1)
 	assert.True(t, models.IsErrOAuthInvalidTarget(err), "%v", err)
 	assert.Equal(t, int32(0), host.requests.Load())
 }

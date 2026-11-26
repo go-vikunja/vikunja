@@ -150,7 +150,7 @@ func validClientIDURL(raw string) bool {
 	return true
 }
 
-func (srv *Server) resolveClient(ctx context.Context, raw string) (Client, error) {
+func (srv *Server) resolveClient(ctx context.Context, raw string, budget fetchBudget) (Client, error) {
 	id, err := parseClientID(raw)
 	if err != nil {
 		return nil, err
@@ -163,7 +163,7 @@ func (srv *Server) resolveClient(ctx context.Context, raw string) (Client, error
 		if _, ok := srv.resourceURL(); !ok {
 			return nil, &models.ErrOAuthInvalidTarget{}
 		}
-		metadata, err := srv.metadata.get(ctx, id)
+		metadata, err := srv.metadata.get(ctx, id, budget)
 		if err != nil {
 			return nil, err
 		}

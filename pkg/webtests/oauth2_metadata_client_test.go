@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -29,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/routes"
 
 	"github.com/labstack/echo/v5"
@@ -271,6 +273,66 @@ func countingMetadataEnv(t *testing.T) (*echo.Echo, *httptest.Server, *atomic.In
 	e, err := setupTestEnv(routes.WithOAuthMetadataHTTPClient(host.Client()))
 	require.NoError(t, err)
 	return e, host, requests
+}
+
+func TestOAuthMetadataDocumentFetchBudget(t *testing.T) {
+	e, host, requests := countingMetadataEnv(t)
+	userToken := humaTokenFor(t, &testuser1)
+	clientID := host.URL + "/client.json"
+	params := func(id string) map[string]string {
+		return map[string]string{
+			"client_id":    id,
+			"redirect_uri": metadataClientRedirect,
+		}
+	}
+
+	authz := scopedAuthorize(t, e, "v2", params(clientID))
+	require.Equal(t, http.StatusOK, authz.code, string(authz.body))
+	var authorized oauth2server.AuthorizeResponse
+	require.NoError(t, json.Unmarshal(authz.body, &authorized))
+
+	var limited *httpResult
+	for i := 0; i < 1000 && limited == nil; i++ {
+		res := authorizePreview(t, e, userToken, params(host.URL+"/client-"+strconv.Itoa(i)+".json"))
+		if res.code != http.StatusOK {
+			limited = res
+		}
+	}
+	require.NotNil(t, limited, "the fetch budget never ran out")
+
+	t.Run("exhausted budget answers 429 without fetching", func(t *testing.T) {
+		before := requests.Load()
+		for _, res := range []*httpResult{
+			limited,
+			authorizePreview(t, e, userToken, params(host.URL+"/one-more.json")),
+			scopedAuthorize(t, e, "v2", params(host.URL+"/one-more.json")),
+		} {
+			require.Equal(t, http.StatusTooManyRequests, res.code, string(res.body))
+			assert.Equal(t, models.ErrCodeOAuthClientMetadataFetchLimit, res.errorCode(t))
+		}
+		assert.Equal(t, before, requests.Load())
+	})
+
+	t.Run("cached clients still work", func(t *testing.T) {
+		res := authorizePreview(t, e, userToken, params(clientID))
+		assert.Equal(t, http.StatusOK, res.code, string(res.body))
+	})
+
+	t.Run("budget is per user", func(t *testing.T) {
+		res := authorizePreview(t, e, humaTokenFor(t, &testuser2), params(host.URL+"/one-more.json"))
+		assert.Equal(t, http.StatusOK, res.code, string(res.body))
+	})
+
+	t.Run("the token exchange still re-resolves the client", func(t *testing.T) {
+		require.NoError(t, keyvalue.DelPrefix("oauth_client_metadata_"))
+		before := requests.Load()
+		tok := scopedExchange(t, e, "v2", authorized.Code, url.Values{
+			"client_id":    {clientID},
+			"redirect_uri": {metadataClientRedirect},
+		})
+		require.Equal(t, http.StatusOK, tok.code, string(tok.body))
+		assert.Equal(t, before+1, requests.Load())
+	})
 }
 
 func TestOAuthMetadataDocumentWithoutPublicURL(t *testing.T) {

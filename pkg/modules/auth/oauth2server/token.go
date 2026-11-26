@@ -147,7 +147,7 @@ func (srv *Server) exchangeAuthorizationCode(ctx context.Context, req *TokenRequ
 		return nil, &models.ErrOAuthInvalidTarget{}
 	}
 
-	client, err := srv.resolveClient(ctx, oauthCode.ClientID)
+	client, err := srv.resolveClient(ctx, oauthCode.ClientID, unmeteredFetch)
 	if err != nil {
 		return nil, err
 	}
