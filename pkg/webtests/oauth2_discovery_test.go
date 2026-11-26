@@ -36,12 +36,17 @@ import (
 
 const metadataPath = "/.well-known/oauth-authorization-server"
 
-// discoveryEnv rebuilds the routes after configure, for settings read at registration.
-func discoveryEnv(t *testing.T, configure func()) *echo.Echo {
+// discoveryEnv rebuilds the routes with settings read at registration. Set values
+// outlive InitDefaultConfig, so they are restored after the test.
+func discoveryEnv(t *testing.T, settings map[config.Key]any) *echo.Echo {
 	t.Helper()
 	_, err := setupTestEnv()
 	require.NoError(t, err)
-	configure()
+	for key, value := range settings {
+		previous := key.Get()
+		key.Set(value)
+		t.Cleanup(func() { key.Set(previous) })
+	}
 	e := routes.NewEcho()
 	routes.RegisterRoutes(e)
 	return e
@@ -128,7 +133,7 @@ func TestOAuthAuthorizationServerMetadata(t *testing.T) {
 
 	for name, caldav := range map[string]bool{"caldav enabled": true, "caldav disabled": false} {
 		t.Run("needs no authentication with "+name, func(t *testing.T) {
-			e := discoveryEnv(t, func() { config.ServiceEnableCaldav.Set(caldav) })
+			e := discoveryEnv(t, map[config.Key]any{config.ServiceEnableCaldav: caldav})
 
 			rec := getMetadata(e, metadataPath, nil)
 			assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
@@ -142,9 +147,9 @@ func TestOAuthAuthorizationServerMetadata(t *testing.T) {
 	}
 
 	t.Run("is readable from any origin", func(t *testing.T) {
-		e := discoveryEnv(t, func() {
-			config.CorsEnable.Set(true)
-			config.CorsOrigins.Set([]string{"https://allowed.example"})
+		e := discoveryEnv(t, map[config.Key]any{
+			config.CorsEnable:  true,
+			config.CorsOrigins: []string{"https://allowed.example"},
 		})
 
 		for _, origin := range []string{"https://mcp-client.example", "https://allowed.example"} {
@@ -168,7 +173,7 @@ func TestOAuthAuthorizationServerMetadata(t *testing.T) {
 	})
 
 	t.Run("is served below the issuer path of a subpath deployment", func(t *testing.T) {
-		e := discoveryEnv(t, func() { config.ServicePublicURL.Set("https://example.com/vikunja/") })
+		e := discoveryEnv(t, map[config.Key]any{config.ServicePublicURL: "https://example.com/vikunja/"})
 
 		for _, path := range []string{metadataPath + "/vikunja", metadataPath} {
 			rec := getMetadata(e, path, nil)
@@ -211,7 +216,7 @@ func TestOAuthAuthorizeIssuer(t *testing.T) {
 }
 
 func TestOAuthRejectsServerIdentifierAsClientID(t *testing.T) {
-	e := discoveryEnv(t, func() { config.ServicePublicURL.Set("https://localhost/vikunja/") })
+	e := discoveryEnv(t, map[config.Key]any{config.ServicePublicURL: "https://localhost/vikunja/"})
 
 	for _, clientID := range []string{"https://localhost/vikunja", "https://localhost/vikunja/api/v2/mcp"} {
 		res := authorizePreview(t, e, humaTokenFor(t, &testuser1), map[string]string{"client_id": clientID})

@@ -228,9 +228,9 @@ func TestOAuthTokenIgnoresUnknownParameters(t *testing.T) {
 }
 
 func TestOAuthTokenCORS(t *testing.T) {
-	e := discoveryEnv(t, func() {
-		config.CorsEnable.Set(true)
-		config.CorsOrigins.Set([]string{"https://allowed.example"})
+	e := discoveryEnv(t, map[config.Key]any{
+		config.CorsEnable:  true,
+		config.CorsOrigins: []string{"https://allowed.example"},
 	})
 	const origin = "https://mcp-client.example"
 
