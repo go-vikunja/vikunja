@@ -368,9 +368,8 @@ func TestMCPOAuthDiscoveryChain(t *testing.T) {
 		RedirectURL: metadataClientRedirect,
 		Scopes:      prm.ScopesSupported,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:   asm.AuthorizationEndpoint,
-			TokenURL:  asm.TokenEndpoint,
-			AuthStyle: oauth2.AuthStyleInParams,
+			AuthURL:  asm.AuthorizationEndpoint,
+			TokenURL: asm.TokenEndpoint,
 		},
 	}
 	verifier := oauth2.GenerateVerifier()
@@ -395,11 +394,19 @@ func TestMCPOAuthDiscoveryChain(t *testing.T) {
 	assert.Equal(t, "chain-state", authorized.State)
 	assert.Equal(t, asm.Issuer, authorized.Issuer)
 
-	token, err := cfg.Exchange(context.WithValue(ctx, oauth2.HTTPClient, client), authorized.Code,
+	// x/oauth2's auto-detected auth style tries HTTP Basic first and silently retries with client_id in the body on any error.
+	var tokenAuthorizations []string
+	exchangeClient := &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		tokenAuthorizations = append(tokenAuthorizations, r.Header.Get(echo.HeaderAuthorization))
+		return client.Transport.RoundTrip(r)
+	})}
+	token, err := cfg.Exchange(context.WithValue(ctx, oauth2.HTTPClient, exchangeClient), authorized.Code,
 		oauth2.VerifierOption(verifier),
 		oauth2.SetAuthURLParam("resource", prm.Resource),
 	)
 	require.NoError(t, err)
+	require.Len(t, tokenAuthorizations, 1, "no retry")
+	assert.True(t, strings.HasPrefix(tokenAuthorizations[0], "Basic "), tokenAuthorizations[0])
 	stored := storedToken(t, token.AccessToken)
 	assert.Equal(t, clientID, stored.OAuthClientID)
 	assert.Equal(t, endpoint, stored.OAuthResource)
@@ -431,3 +438,7 @@ func TestMCPOAuthDiscoveryChain(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, result.IsError, "%v", result.Content)
 }
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
