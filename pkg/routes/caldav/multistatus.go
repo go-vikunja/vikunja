@@ -18,7 +18,6 @@ package caldav
 
 import (
 	"bufio"
-	"cmp"
 	"encoding/xml"
 	"io"
 	"net/http"
@@ -146,7 +145,6 @@ func (r propstatResponse) writeResponse(w *xmlWriter, minimal bool) {
 	if len(propstats) == 0 {
 		propstats = []propstat{{status: http.StatusOK}}
 	}
-	slices.SortStableFunc(propstats, func(a, b propstat) int { return cmp.Compare(a.status, b.status) })
 
 	w.open(davName("response"))
 	w.textElement(davName("href"), r.href)

@@ -75,23 +75,6 @@ func TestMultistatusWriter(t *testing.T) {
 		assert.Equal(t, `Tom & "Jerry" <3`, parsed.Name)
 	})
 
-	t.Run("200 propstat comes before 404, properties keep their order", func(t *testing.T) {
-		out := renderMultistatus(t, multistatus{responses: []msResponse{
-			propstatResponse{href: "/x", propstats: []propstat{
-				{status: http.StatusNotFound, props: []prop{{name: davName("b")}, {name: davName("a")}}},
-				{status: http.StatusOK, props: []prop{
-					{name: davName("z"), value: textValue("1")},
-					{name: davName("y"), value: textValue("2")},
-				}},
-			}},
-		}})
-
-		assert.Equal(t, msHead+`<D:response><D:href>/x</D:href>`+
-			`<D:propstat><D:prop><D:z>1</D:z><D:y>2</D:y></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat>`+
-			`<D:propstat><D:prop><D:b/><D:a/></D:prop><D:status>HTTP/1.1 404 Not Found</D:status></D:propstat>`+
-			`</D:response></D:multistatus>`, out)
-	})
-
 	t.Run("propstats with the same status stay separate and in order", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
 			propstatResponse{href: "/x", propstats: []propstat{
