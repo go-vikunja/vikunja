@@ -18,6 +18,7 @@ package oauth2server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -349,6 +350,31 @@ func TestResolveMetadataClient(t *testing.T) {
 		assert.True(t, models.IsErrOAuthClientMetadataUnavailable(err), "%v", err)
 		assert.Equal(t, int32(0), host.requests.Load())
 	})
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func TestResolveServerIdentifierAsClient(t *testing.T) {
+	publicURL := config.ServicePublicURL.GetString()
+	config.ServicePublicURL.Set("https://vikunja.example/sub/")
+	t.Cleanup(func() { config.ServicePublicURL.Set(publicURL) })
+
+	var fetched []string
+	srv := NewServer(testResource{}, NewMetadataFetcher(&http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		fetched = append(fetched, r.URL.String())
+		return nil, errors.New("offline")
+	})}))
+
+	_, err := srv.resolveClient(t.Context(), "https://vikunja.example/sub", unmeteredFetch)
+	assert.True(t, models.IsErrOAuthClientIDIsServer(err), "%v", err)
+	assert.Empty(t, fetched)
+
+	// Simple string comparison: anything else is an ordinary client id URL.
+	_, err = srv.resolveClient(t.Context(), "https://vikunja.example/sub/", unmeteredFetch)
+	assert.True(t, models.IsErrOAuthClientMetadataUnavailable(err), "%v", err)
+	assert.Equal(t, []string{"https://vikunja.example/sub/"}, fetched)
 }
 
 func TestMetadataCacheTTL(t *testing.T) {

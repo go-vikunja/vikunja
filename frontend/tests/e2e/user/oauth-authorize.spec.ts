@@ -213,6 +213,7 @@ test.describe('OAuth 2.0 Authorization Flow', () => {
 			expect([...redirect.searchParams]).toEqual([
 				['error', 'access_denied'],
 				['state', state],
+				['iss', expect.any(String)],
 			])
 		})
 	})

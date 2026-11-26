@@ -50,6 +50,7 @@ interface ConsentPreview {
 	redirectUri: string
 	loopbackRedirect: boolean
 	requested: AccessLevel
+	issuer?: string
 }
 
 type Phase =
@@ -114,11 +115,12 @@ async function authorize(scope?: string) {
 		...authorizeRequest(),
 		scope,
 	}})
-	const {code, redirect_uri, state} = response.data
+	const {code, redirect_uri, state, iss} = response.data
 	if (!redirect_uri || !code) throw new Error('Authorization response is incomplete')
 	redirectTo(redirect_uri, {
 		code,
 		state,
+		iss,
 	})
 }
 
@@ -139,6 +141,7 @@ async function start() {
 			redirectUri: data.redirect_uri,
 			loopbackRedirect: data.loopback_redirect ?? false,
 			requested: data.scopes.includes('mcp:write') ? 'write' : 'read',
+			issuer: data.iss,
 		},
 	}
 }
@@ -162,6 +165,7 @@ function deny() {
 	redirectTo(phase.value.preview.redirectUri, {
 		error: 'access_denied',
 		state: q(route.query.state),
+		iss: phase.value.preview.issuer,
 	})
 }
 

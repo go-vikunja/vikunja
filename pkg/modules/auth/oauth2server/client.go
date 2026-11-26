@@ -165,8 +165,13 @@ func (srv *Server) resolveClient(ctx context.Context, raw string, budget fetchBu
 		return LegacyClient{id: string(id)}, nil
 	case metadataClientID:
 		// Such a client only ever gets a scoped grant; don't fetch when none can be issued.
-		if _, ok := srv.resourceURL(); !ok {
+		resource, ok := srv.resourceURL()
+		if !ok {
 			return nil, &models.ErrOAuthInvalidTarget{}
+		}
+		// draft-ietf-oauth-client-id-metadata-document §10.1: simple string comparison.
+		if issuer, _ := Issuer(); string(id) == issuer || string(id) == resource {
+			return nil, &models.ErrOAuthClientIDIsServer{}
 		}
 		metadata, err := srv.metadata.get(ctx, id, budget)
 		if err != nil {

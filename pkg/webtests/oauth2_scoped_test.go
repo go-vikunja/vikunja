@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
@@ -455,7 +456,8 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 			"redirect_uri": "http://127.0.0.1:33418/callback",
 			"scopes": ["mcp:read", "mcp:write"],
 			"scoped": true,
-			"loopback_redirect": true
+			"loopback_redirect": true,
+			"iss": "https://localhost"
 		}`, stripSchema(t, res.body))
 		assert.Equal(t, before, countOAuthCodes(t), "preview must not create a code")
 	})
@@ -477,7 +479,8 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 			"redirect_uri": "http://127.0.0.1:33418/callback",
 			"scopes": [],
 			"scoped": false,
-			"loopback_redirect": true
+			"loopback_redirect": true,
+			"iss": "https://localhost"
 		}`, stripSchema(t, res.body))
 	})
 
@@ -502,6 +505,13 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 			assert.NotContains(t, string(res.body), `"client"`, name)
 		}
 	})
+}
+
+func withoutPublicURL(t *testing.T) {
+	t.Helper()
+	publicURL := config.ServicePublicURL.GetString()
+	config.ServicePublicURL.Set("")
+	t.Cleanup(func() { config.ServicePublicURL.Set(publicURL) })
 }
 
 func stripSchema(t *testing.T, body []byte) string {

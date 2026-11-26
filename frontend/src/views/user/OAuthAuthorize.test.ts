@@ -32,6 +32,8 @@ const i18n = createI18n({
 })
 
 const REDIRECT_URI = 'http://127.0.0.1:9999/callback'
+const ISSUER = 'https://vikunja.example'
+const ISS_PARAM = `iss=${encodeURIComponent(ISSUER)}`
 const RESOURCE = 'https://vikunja.example/api/v2/mcp'
 const BASE_QUERY = {
 	response_type: 'code',
@@ -76,6 +78,7 @@ function preview(scopes: string[], client: Record<string, string> = {
 			scopes,
 			scoped: scopes.length > 0,
 			loopback_redirect: true,
+			iss: ISSUER,
 		},
 	}
 }
@@ -101,6 +104,7 @@ beforeEach(() => {
 			code: 'the-code',
 			redirect_uri: REDIRECT_URI,
 			state: 'st-1',
+			iss: ISSUER,
 		},
 	})
 })
@@ -135,7 +139,7 @@ describe('OAuthAuthorize', () => {
 		expect(sdk.oauthAuthorizePreview).toHaveBeenCalledOnce()
 		expect(sdk.oauthAuthorize).toHaveBeenCalledOnce()
 		expect(sdk.oauthAuthorize.mock.calls[0][0].body.scope).toBeUndefined()
-		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
+		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1&${ISS_PARAM}`)
 	})
 
 	it('approves a request without mcp scopes without asking', async () => {
@@ -157,7 +161,7 @@ describe('OAuthAuthorize', () => {
 		expect(sdk.oauthAuthorizePreview).toHaveBeenCalledOnce()
 		expect(sdk.oauthAuthorize).toHaveBeenCalledOnce()
 		expect(sdk.oauthAuthorize.mock.calls[0][0].body.scope).toBeUndefined()
-		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
+		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1&${ISS_PARAM}`)
 	})
 
 	it('names the scheme of a custom-scheme redirect', async () => {
@@ -270,6 +274,21 @@ describe('OAuthAuthorize', () => {
 		await flushPromises()
 
 		expect(sdk.oauthAuthorize.mock.calls[0][0].body.scope).toBe('mcp:read')
+	})
+
+	it('omits iss when the API sends none', async () => {
+		sdk.oauthAuthorizePreview.mockResolvedValue({data: {...preview([]).data, iss: undefined}})
+		sdk.oauthAuthorize.mockResolvedValue({
+			data: {
+				code: 'the-code',
+				redirect_uri: REDIRECT_URI,
+				state: 'st-1',
+			},
+		})
+		mountView()
+		await flushPromises()
+
+		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
 	})
 
 	it('shows a preview error and does not redirect', async () => {

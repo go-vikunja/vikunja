@@ -265,6 +265,7 @@ func RegisterRoutes(e *echo.Echo, opts ...Option) {
 	f.GET("/notifications.atom", feeds.NotificationsAtomFeed)
 
 	e.GET("/.well-known/change-password", ChangePasswordRedirect)
+	registerOAuthDiscoveryRoutes(e)
 
 	// healthcheck
 	var healthMiddleware []echo.MiddlewareFunc
@@ -297,10 +298,12 @@ func RegisterRoutes(e *echo.Echo, opts ...Option) {
 				// not doing this would break the caldav implementation.
 				// Feed readers are server-side and don't need CORS either.
 				p := context.Path()
-				return strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/feeds")
+				return strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/feeds") || skipsInstanceCORS(p)
 			},
 		}))
 	}
+
+	e.Use(anyOriginCORS)
 
 	// /api/v2 — Huma-backed API. Registered first: v1's OAuth endpoints need the MCP module it builds.
 	a2 := e.Group(apiv2.GroupPrefix)

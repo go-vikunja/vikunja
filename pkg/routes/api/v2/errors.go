@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -118,6 +119,9 @@ type vikunjaErrorModel struct {
 	Code       int               `json:"code,omitempty" readOnly:"true" doc:"Vikunja numeric error code; see https://vikunja.io/docs/errors/"`
 	I18nParams map[string]string `json:"i18n_params,omitempty" readOnly:"true" doc:"Dynamic values referenced by the error message, keyed by translation placeholder name, for client-side localisation."`
 	Details    any               `json:"details,omitempty" readOnly:"true" doc:"Error-specific data; its shape depends on code."`
+	// Field name avoids the Error() method of the embedded ErrorModel.
+	OAuthError       oauth2server.TokenErrorCode `json:"error,omitempty" enum:"invalid_request,invalid_client,invalid_grant,unsupported_grant_type,invalid_scope,invalid_target" readOnly:"true" doc:"Only from the OAuth token endpoint: the RFC 6749 error code."`
+	ErrorDescription string                      `json:"error_description,omitempty" readOnly:"true" doc:"Only from the OAuth token endpoint: the RFC 6749 error description, the same text as detail."`
 }
 
 // Huma skips its default error response once an operation declares any response; declaring 307 would drop the error schema.

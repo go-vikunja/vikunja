@@ -48,13 +48,15 @@ const oauthAPITokenTTL = 90 * 24 * time.Hour
 // from JSON; v2 accepts spec-compliant application/x-www-form-urlencoded as well
 // (form tags mirror the json names).
 type TokenRequest struct {
-	GrantType    string `json:"grant_type" form:"grant_type"`
-	Code         string `json:"code" form:"code"`
-	ClientID     string `json:"client_id" form:"client_id"`
-	RedirectURI  string `json:"redirect_uri" form:"redirect_uri"`
-	CodeVerifier string `json:"code_verifier" form:"code_verifier"`
-	RefreshToken string `json:"refresh_token" form:"refresh_token"`
-	Resource     string `json:"resource,omitempty" form:"resource" doc:"RFC 8707 resource indicator. Must match the resource of the authorization request."`
+	// RFC 6749 §3.2: unrecognized parameters are ignored, not rejected.
+	_            struct{} `json:"-" additionalProperties:"true"`
+	GrantType    string   `json:"grant_type" form:"grant_type"`
+	Code         string   `json:"code" form:"code"`
+	ClientID     string   `json:"client_id" form:"client_id"`
+	RedirectURI  string   `json:"redirect_uri" form:"redirect_uri"`
+	CodeVerifier string   `json:"code_verifier" form:"code_verifier"`
+	RefreshToken string   `json:"refresh_token" form:"refresh_token"`
+	Resource     string   `json:"resource,omitempty" form:"resource" doc:"RFC 8707 resource indicator. Must match the resource of the authorization request."`
 }
 
 // HandleToken handles POST /oauth/token.
@@ -88,13 +90,24 @@ func (srv *Server) HandleToken(c *echo.Context) error {
 // ExchangeToken runs the grant-type dispatch and token issuance for the OAuth
 // token endpoint, independent of the HTTP layer. Callers own request binding and
 // the Cache-Control: no-store response header. deviceInfo/ipAddress are recorded
-// on the session created for the authorization_code grant.
+// on the session created for the authorization_code grant. Rejections are
+// *TokenError; any other error is internal.
 func (srv *Server) ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+	resp, err := srv.exchangeToken(ctx, req, deviceInfo, ipAddress)
+	if err != nil {
+		return nil, asTokenError(err)
+	}
+	return resp, nil
+}
+
+func (srv *Server) exchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	switch req.GrantType {
 	case "authorization_code":
 		return srv.exchangeAuthorizationCode(ctx, req, deviceInfo, ipAddress)
 	case "refresh_token":
 		return exchangeRefreshToken(req)
+	case "":
+		return nil, &TokenError{Code: TokenErrorInvalidRequest, Err: &models.ErrOAuthInvalidGrantType{}}
 	default:
 		return nil, &models.ErrOAuthInvalidGrantType{}
 	}

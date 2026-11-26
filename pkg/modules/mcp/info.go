@@ -19,9 +19,7 @@ package mcp
 import (
 	"slices"
 	"sort"
-	"strings"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
@@ -69,7 +67,8 @@ func (m *Module) ConnectionInfo() apiv2.ConnectionSettings {
 
 // ResourceURL is the endpoint's absolute URL, the resource indicator OAuth clients request tokens for.
 func (m *Module) ResourceURL() string {
-	return strings.TrimRight(config.ServicePublicURL.GetString(), "/") + RoutePrefix
+	issuer, _ := oauth2server.Issuer()
+	return issuer + RoutePrefix
 }
 
 // ScopePermissions expands an OAuth scope the way the frontend expands the read-only and full presets.
