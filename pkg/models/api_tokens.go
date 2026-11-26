@@ -68,14 +68,50 @@ type APIToken struct {
 	OwnerID int64 `xorm:"bigint not null" json:"owner_id,omitempty" query:"owner_id" doc:"The user ID of the token owner. When creating a token for a bot user, set this to the bot's ID; the bot must be owned by the authenticated user. If omitted, defaults to the authenticated user."`
 
 	// Set only by the OAuth token endpoint; Create clears both.
-	OAuthClientID string `xorm:"text null 'oauth_client_id'" json:"oauth_client_id,omitempty" readOnly:"true" doc:"The OAuth client this token was issued to. Empty for tokens created by hand. Such tokens only work on the MCP endpoint."`
-	OAuthResource string `xorm:"text null 'oauth_resource'" json:"-"`
+	OAuthClientID string      `xorm:"text null 'oauth_client_id'" json:"oauth_client_id,omitempty" readOnly:"true" doc:"The OAuth client this token was issued to. Empty for tokens created by hand. Such tokens only work on the MCP endpoint."`
+	OAuthResource string      `xorm:"text null 'oauth_resource'" json:"-"`
+	OAuthAccess   OAuthAccess `xorm:"-" json:"oauth_access,omitempty" readOnly:"true" enum:"read,write" doc:"What the user granted the OAuth client: read only, or read and write. Empty for tokens created by hand."`
+
+	Kind APITokenKind `xorm:"-" json:"-"`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
 }
 
 const APITokenPrefix = `tk_`
+
+type APITokenKind string
+
+const (
+	APITokenKindManual APITokenKind = "manual"
+	APITokenKindOAuth  APITokenKind = "oauth"
+)
+
+type OAuthAccess string
+
+const (
+	OAuthAccessRead  OAuthAccess = "read"
+	OAuthAccessWrite OAuthAccess = "write"
+)
+
+// IsReadAPIPermission reports whether a permission only reads data, i.e. what mcp:read grants.
+func IsReadAPIPermission(group, permission string) bool {
+	return permission == "read_one" || permission == "read_all" || group == "mcp" && permission == "access"
+}
+
+func (t *APIToken) oauthAccess() OAuthAccess {
+	if !t.IsOAuthGrant() {
+		return ""
+	}
+	for group, permissions := range t.APIPermissions {
+		for _, permission := range permissions {
+			if !IsReadAPIPermission(group, permission) {
+				return OAuthAccessWrite
+			}
+		}
+	}
+	return OAuthAccessRead
+}
 
 // APITokenAuthorization returns the first Authorization value carrying an API token.
 func APITokenAuthorization(h http.Header) (string, bool) {
@@ -231,6 +267,17 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 		)
 	}
 
+	// Tokens created by hand store '' as their client id, those from before the column NULL.
+	switch t.Kind {
+	case APITokenKindManual:
+		where = builder.And(where, builder.Or(
+			builder.IsNull{"oauth_client_id"},
+			builder.Eq{"oauth_client_id": ""},
+		))
+	case APITokenKindOAuth:
+		where = builder.And(where, builder.NotNull{"oauth_client_id"}, builder.Neq{"oauth_client_id": ""})
+	}
+
 	err = s.
 		Where(where).
 		OrderBy("id ASC").
@@ -238,6 +285,10 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 		Find(&tokens)
 	if err != nil {
 		return nil, 0, 0, err
+	}
+
+	for _, token := range tokens {
+		token.OAuthAccess = token.oauthAccess()
 	}
 
 	totalCount, err := s.Where(where).Count(&APIToken{})

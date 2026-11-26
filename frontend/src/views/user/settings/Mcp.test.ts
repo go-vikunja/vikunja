@@ -40,6 +40,7 @@ beforeEach(() => {
 	sdk.mcpInfo.mockReset()
 	sdk.mcpInfo.mockResolvedValue({data: {
 		endpoint: 'https://example.com/api/v2/mcp',
+		oauth_available: true,
 		routes: {},
 		presets: {read_only: {}, typed: {tasks: ['update']}, full: {'*': '*'}},
 	} satisfies ConnectionSettings})
@@ -57,6 +58,7 @@ function mountSettings() {
 				Card: {template: '<div><slot /></div>'},
 				ApiTokenForm: true,
 				McpClientGuide: true,
+				ConnectedApps: true,
 				Modal: true,
 				RouterLink: true,
 				Icon: true,
@@ -65,24 +67,65 @@ function mountSettings() {
 	})
 }
 
+function guides() {
+	return wrapper.findAllComponents({name: 'McpClientGuide'}).map(guide => guide.props('access'))
+}
+
 describe('MCP settings', () => {
+	it('offers the oauth guide before the token path when oauth is available', async () => {
+		mountSettings()
+		await flushPromises()
+		expect(guides()).toEqual([{kind: 'oauth'}])
+		const text = wrapper.text()
+		expect(text.indexOf('Connect with OAuth')).toBeLessThan(text.indexOf('MCP tokens'))
+		expect(text).toContain('For clients and automation without OAuth, create an MCP token instead.')
+	})
+
+	it('only offers tokens when oauth is unavailable', async () => {
+		sdk.mcpInfo.mockResolvedValueOnce({data: {
+			endpoint: 'https://example.com/api/v2/mcp',
+			oauth_available: false,
+		} satisfies ConnectionSettings})
+		mountSettings()
+		await flushPromises()
+		expect(guides()).toEqual([])
+		expect(wrapper.text()).not.toContain('OAuth')
+		expect(wrapper.findComponent({name: 'ConnectedApps'}).exists()).toBe(false)
+		await wrapper.findAll('button').find(b => b.text() === 'Create a token')!.trigger('click')
+		wrapper.findComponent({name: 'ApiTokenForm'}).vm.$emit('created', {id: 3, token: 'tk_secret'})
+		await flushPromises()
+		expect(guides()).toEqual([{
+			kind: 'token',
+			token: 'tk_secret',
+			oauthAvailable: false,
+		}])
+	})
+
 	it('only shows the client guide after creation and forgets the secret on Done', async () => {
 		mountSettings()
 		await flushPromises()
 		expect(sdk.mcpInfo).toHaveBeenCalledOnce()
+		expect(getAll).toHaveBeenCalledWith(expect.objectContaining({query: {
+			page: 1,
+			kind: 'manual',
+		}}))
 		expect(wrapper.text()).toContain('My assistant')
 		expect(wrapper.text()).not.toContain('Private API token')
-		expect(wrapper.findComponent({name: 'McpClientGuide'}).exists()).toBe(false)
+		expect(wrapper.findComponent({name: 'ConnectedApps'}).exists()).toBe(true)
 		await wrapper.findAll('button').find(b => b.text() === 'Create a token')!.trigger('click')
 		const form = wrapper.findComponent({name: 'ApiTokenForm'})
 		expect(form.attributes('initialscopes')).toBe('tasks:update')
 		expect(form.props('presets')).toContainEqual({id: 'fullAccess', groups: {'*': '*'}})
 		form.vm.$emit('created', {id: 3, token: 'tk_secret'})
 		await flushPromises()
-		expect(wrapper.findComponent({name: 'McpClientGuide'}).attributes('token')).toBe('tk_secret')
+		expect(guides()).toEqual([{
+			kind: 'token',
+			token: 'tk_secret',
+			oauthAvailable: true,
+		}])
 		await wrapper.findAll('button').find(b => b.text() === 'Done')!.trigger('click')
 		await flushPromises()
-		expect(wrapper.findComponent({name: 'McpClientGuide'}).exists()).toBe(false)
+		expect(guides()).toEqual([{kind: 'oauth'}])
 		expect(wrapper.html()).not.toContain('tk_secret')
 		expect(getAll).toHaveBeenCalledTimes(1)
 	})

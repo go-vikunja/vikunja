@@ -22,6 +22,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
@@ -56,12 +57,14 @@ func TestMCPInfo(t *testing.T) {
 				return
 			}
 			var info struct {
-				Endpoint string                     `json:"endpoint"`
-				Routes   map[string]map[string]any  `json:"routes"`
-				Presets  map[string]json.RawMessage `json:"presets"`
+				Endpoint       string                     `json:"endpoint"`
+				OAuthAvailable bool                       `json:"oauth_available"`
+				Routes         map[string]map[string]any  `json:"routes"`
+				Presets        map[string]json.RawMessage `json:"presets"`
 			}
 			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &info))
 			assert.Contains(t, info.Endpoint, "/api/v2/mcp")
+			assert.True(t, info.OAuthAvailable)
 			for _, group := range []string{"mcp", "tasks", "projects", "labels", "tasks_assignees", "tasks_comments"} {
 				assert.NotEmpty(t, info.Routes[group], group)
 			}
@@ -85,4 +88,16 @@ func TestMCPInfo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMCPInfoWithoutPublicURL(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	publicURL := config.ServicePublicURL.GetString()
+	config.ServicePublicURL.Set("")
+	t.Cleanup(func() { config.ServicePublicURL.Set(publicURL) })
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/mcp/info", "", humaTokenFor(t, &testuser1), "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"oauth_available":false`)
 }

@@ -66,13 +66,17 @@ func init() { AddRouteRegistrar(RegisterAPITokenRoutes) }
 
 func apiTokensList(ctx context.Context, in *struct {
 	ListParams
-	OwnerID int64 `query:"owner_id" doc:"List tokens of this owner instead of the caller. Must be a bot owned by the authenticated user."`
+	OwnerID int64               `query:"owner_id" doc:"List tokens of this owner instead of the caller. Must be a bot owned by the authenticated user."`
+	Kind    models.APITokenKind `query:"kind" enum:"manual,oauth" doc:"manual lists only tokens created by hand, oauth only those issued to OAuth clients. Omit to list both."`
 }) (*apiTokenListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	result, _, total, err := handler.DoReadAll(ctx, &models.APIToken{OwnerID: in.OwnerID}, a, in.Q, in.Page, in.PerPage)
+	result, _, total, err := handler.DoReadAll(ctx, &models.APIToken{
+		OwnerID: in.OwnerID,
+		Kind:    in.Kind,
+	}, a, in.Q, in.Page, in.PerPage)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

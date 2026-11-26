@@ -190,7 +190,10 @@ describe('ApiTokens settings page', () => {
 		await flushPromises()
 
 		expect(mounted.router.currentRoute.value.query.page).toBe('1')
-		expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({query: {page: 1}}))
+		expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({query: {
+			page: 1,
+			kind: 'manual',
+		}}))
 		expect(wrapper.findAll('tbody tr')).toHaveLength(tokens.length)
 		expect(runtimeErrorMessages(mounted.errors)).toEqual([])
 	})
@@ -212,7 +215,10 @@ describe('ApiTokens settings page', () => {
 		const mounted = await mountPage('/user/settings/api-tokens?page=2')
 		wrapper = mounted.wrapper
 
-		expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({query: {page: 2}}))
+		expect(getAll).toHaveBeenLastCalledWith(expect.objectContaining({query: {
+			page: 2,
+			kind: 'manual',
+		}}))
 		expect(wrapper.findAll('tbody tr')).toHaveLength(1)
 		expect(wrapper.find('nav.pagination').exists()).toBe(true)
 

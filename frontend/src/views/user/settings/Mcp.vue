@@ -7,7 +7,8 @@ import {allApiTokensQuery, mcpInfoQuery, useDeleteApiTokenMutation} from '@/clie
 import type {ApiToken as IApiToken} from '@/client/generated'
 import {isApiTokenExpired, type ApiTokenPreset, type ApiTokenPresetGroups} from '@/helpers/apiToken'
 import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
-import McpClientGuide from '@/components/token/McpClientGuide.vue'
+import McpClientGuide, {type McpGuideAccess} from '@/components/token/McpClientGuide.vue'
+import ConnectedApps from '@/components/token/ConnectedApps.vue'
 import XButton from '@/components/input/Button.vue'
 import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
@@ -29,6 +30,7 @@ const {
 } = useQuery(allApiTokensQuery())
 const deleteMutation = useDeleteApiTokenMutation()
 const endpoint = computed(() => info.value?.endpoint ?? '')
+const oauthAvailable = computed(() => info.value?.oauth_available ?? false)
 const tokens = computed(() => (allTokens.value ?? []).filter(token => token.permissions?.mcp?.includes('access')))
 const loading = computed(() => infoPending.value || tokensPending.value)
 const loadFailed = computed(() => infoError.value || tokensError.value)
@@ -54,6 +56,12 @@ const presets = computed<ApiTokenPreset[]>(() => info.value ? [
 const initialScopes = computed(() => Object.entries(info.value?.presets?.typed ?? {})
 	.flatMap(([group, permissions]) => (permissions ?? []).map(permission => `${group}:${permission}`))
 	.join(','))
+
+const tokenAccess = computed<McpGuideAccess>(() => ({
+	kind: 'token',
+	token: newToken.value,
+	oauthAvailable: oauthAvailable.value,
+}))
 
 function onTokenCreated(token: IApiToken) {
 	newToken.value = token.token ?? ''
@@ -114,7 +122,7 @@ async function deleteToken() {
 				</Message>
 				<McpClientGuide
 					:endpoint="endpoint"
-					:token="newToken"
+					:access="tokenAccess"
 				/>
 				<XButton
 					class="mbs-4"
@@ -124,9 +132,22 @@ async function deleteToken() {
 				</XButton>
 			</template>
 			<template v-else>
+				<template v-if="oauthAvailable">
+					<h5 class="mbs-5 mbe-4 has-text-weight-bold">
+						{{ t('user.settings.mcp.oauthTitle') }}
+					</h5>
+					<p>{{ t('user.settings.mcp.oauthIntro') }}</p>
+					<McpClientGuide
+						:endpoint="endpoint"
+						:access="{kind: 'oauth'}"
+					/>
+				</template>
 				<h5 class="mbs-5 mbe-4 has-text-weight-bold">
 					{{ t('user.settings.mcp.tokens') }}
 				</h5>
+				<p v-if="oauthAvailable">
+					{{ t('user.settings.mcp.tokenIntro') }}
+				</p>
 				<div
 					v-if="tokens.length"
 					class="has-horizontal-overflow"
@@ -211,6 +232,7 @@ async function deleteToken() {
 			</template>
 		</Modal>
 	</Card>
+	<ConnectedApps v-if="oauthAvailable" />
 </template>
 
 <style scoped lang="scss">

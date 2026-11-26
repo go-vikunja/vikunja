@@ -192,6 +192,7 @@ describe('OAuthAuthorize', () => {
 		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
 		expect(window.location.href).toBe('http://localhost/oauth/authorize')
 		expect(wrapper.text()).toContain('Connect Example MCP Client?')
+		expect(wrapper.text()).toContain('revoke it earlier in the settings under MCP → Connected apps')
 
 		await button(wrapper, 'Approve').trigger('click')
 		await flushPromises()

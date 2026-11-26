@@ -33,7 +33,10 @@ it('requests one page of the signed-in user\'s tokens', async () => {
 	sdk.tokensList.mockResolvedValue({data: page([{id: 26}], 2, 26)})
 	expect(await client.fetchQuery(apiTokensQuery(2))).toEqual(page([{id: 26}], 2, 26))
 	expect(sdk.tokensList).toHaveBeenCalledOnce()
-	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({page: 2})
+	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({
+		page: 2,
+		kind: 'manual',
+	})
 	expect(apiTokensQuery(2).queryKey).toEqual(['apiTokens', 'list', 'self', 2])
 })
 it('requests one page of a bot\'s tokens with the owner filter', async () => {
@@ -53,7 +56,10 @@ it('loads every page of the signed-in user\'s tokens for the MCP filter', async 
 		total_pages: 2,
 	}}))
 	expect(await client.fetchQuery(allApiTokensQuery())).toEqual([{id: 1}, {id: 2}])
-	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({page: 2})
+	expect(sdk.tokensList.mock.lastCall?.[0].query).toEqual({
+		page: 2,
+		kind: 'manual',
+	})
 	expect(allApiTokensQuery().queryKey).toEqual(['apiTokens', 'all'])
 })
 it('never stores a newly created plaintext token in a list cache', async () => {
@@ -98,4 +104,12 @@ it('removes a revoked token and rewrites the totals of every cached page of its 
 	expect(client.getQueryState(apiTokenKeys.ownPage(1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(apiTokenKeys.page(5, 1))?.isInvalidated).toBe(true)
 	expect(client.getQueryState(apiTokenKeys.ownAll)?.isInvalidated).toBe(true)
+})
+it('removes a revoked connected app from its cached pages', async () => {
+	const client = new QueryClient()
+	client.setQueryData(apiTokenKeys.connectedAppsPage(1), page([{id: 40}, {id: 41}], 1, 2))
+	sdk.tokensDelete.mockResolvedValue({})
+	await client.getMutationCache().build(client, deleteApiTokenMutationOptions()).execute(40)
+	expect(client.getQueryData(apiTokenKeys.connectedAppsPage(1))).toEqual(page([{id: 41}], 1, 1))
+	expect(client.getQueryState(apiTokenKeys.connectedAppsPage(1))?.isInvalidated).toBe(true)
 })

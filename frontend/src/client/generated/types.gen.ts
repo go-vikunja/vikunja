@@ -22,6 +22,10 @@ export type ApiToken = {
      */
     readonly id?: number;
     /**
+     * What the user granted the OAuth client: read only, or read and write. Empty for tokens created by hand.
+     */
+    readonly oauth_access?: 'read' | 'write';
+    /**
      * The OAuth client this token was issued to. Empty for tokens created by hand. Such tokens only work on the MCP endpoint.
      */
     readonly oauth_client_id?: string;
@@ -618,6 +622,10 @@ export type ConnectionSettings = {
      * Absolute URL of the streamable HTTP endpoint.
      */
     endpoint?: string;
+    /**
+     * Whether clients can connect with just the endpoint by signing in through OAuth. False while service.publicurl is unset.
+     */
+    oauth_available?: boolean;
     presets?: TokenPresets;
     /**
      * Token permissions usable by exposed MCP tools, including mcp.access.
@@ -4513,6 +4521,10 @@ export type ConnectionSettingsWritable = {
      * Absolute URL of the streamable HTTP endpoint.
      */
     endpoint?: string;
+    /**
+     * Whether clients can connect with just the endpoint by signing in through OAuth. False while service.publicurl is unset.
+     */
+    oauth_available?: boolean;
     presets?: TokenPresets;
     /**
      * Token permissions usable by exposed MCP tools, including mcp.access.
@@ -11918,6 +11930,10 @@ export type TokensListData = {
          * List tokens of this owner instead of the caller. Must be a bot owned by the authenticated user.
          */
         owner_id?: number;
+        /**
+         * manual lists only tokens created by hand, oauth only those issued to OAuth clients. Omit to list both.
+         */
+        kind?: 'manual' | 'oauth';
     };
     url: '/tokens';
 };
