@@ -163,6 +163,9 @@ func (srv *Server) resolveClient(ctx context.Context, raw string, budget fetchBu
 		if _, ok := srv.resourceURL(); !ok {
 			return nil, &models.ErrOAuthInvalidTarget{}
 		}
+		if srv.isServerIdentifier(string(id)) {
+			return nil, &models.ErrOAuthClientIDIsServer{}
+		}
 		metadata, err := srv.metadata.get(ctx, id, budget)
 		if err != nil {
 			return nil, err
@@ -173,6 +176,13 @@ func (srv *Server) resolveClient(ctx context.Context, raw string, budget fetchBu
 		}, nil
 	}
 	return nil, fmt.Errorf("unknown client id type %T", id)
+}
+
+// draft-ietf-oauth-client-id-metadata-document §10.1: simple string comparison against the
+// identifiers of this authorization server and of the resource server it issues tokens for.
+func (srv *Server) isServerIdentifier(id string) bool {
+	issuer, ok := Issuer()
+	return ok && id == issuer || id == srv.resource.ResourceURL()
 }
 
 // ValidateRedirectURI checks that the redirect_uri is either a Vikunja native

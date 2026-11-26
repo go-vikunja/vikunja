@@ -3324,6 +3324,31 @@ func (err *ErrOAuthInvalidClientMetadata) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrOAuthClientIDIsServer represents an error where a client_id names this server instead of a client.
+type ErrOAuthClientIDIsServer struct{}
+
+// IsErrOAuthClientIDIsServer checks if an error is ErrOAuthClientIDIsServer.
+func IsErrOAuthClientIDIsServer(err error) bool {
+	_, ok := err.(*ErrOAuthClientIDIsServer)
+	return ok
+}
+
+func (err *ErrOAuthClientIDIsServer) Error() string {
+	return "Client id is this server's identifier"
+}
+
+// ErrCodeOAuthClientIDIsServer holds the unique world-error code of this error
+const ErrCodeOAuthClientIDIsServer = 17014
+
+// HTTPError holds the http error description
+func (err *ErrOAuthClientIDIsServer) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthClientIDIsServer,
+		Message:  "The client_id must not be this instance's issuer or MCP endpoint URL.",
+	}
+}
+
 // ====================
 // Time Tracking Errors
 // ====================

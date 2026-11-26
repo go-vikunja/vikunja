@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/routes"
 
@@ -207,4 +208,14 @@ func TestOAuthAuthorizeIssuer(t *testing.T) {
 		require.Equal(t, http.StatusOK, res.code, string(res.body))
 		assert.NotContains(t, string(res.body), `"iss"`)
 	})
+}
+
+func TestOAuthRejectsServerIdentifierAsClientID(t *testing.T) {
+	e := discoveryEnv(t, func() { config.ServicePublicURL.Set("https://localhost/vikunja/") })
+
+	for _, clientID := range []string{"https://localhost/vikunja", "https://localhost/vikunja/api/v2/mcp"} {
+		res := authorizePreview(t, e, humaTokenFor(t, &testuser1), map[string]string{"client_id": clientID})
+		require.Equal(t, http.StatusBadRequest, res.code, "%s: %s", clientID, res.body)
+		assert.Equal(t, models.ErrCodeOAuthClientIDIsServer, res.errorCode(t), clientID)
+	}
 }
