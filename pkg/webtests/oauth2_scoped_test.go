@@ -457,9 +457,21 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 			"client": {"id": "test-mcp-client", "kind": "legacy"},
 			"redirect_uri": "http://127.0.0.1:33418/callback",
 			"scopes": ["mcp:read", "mcp:write"],
-			"scoped": true
+			"scoped": true,
+			"loopback_redirect": true
 		}`, stripSchema(t, res.body))
 		assert.Equal(t, before, countOAuthCodes(t), "preview must not create a code")
+	})
+
+	t.Run("flags an ipv4-mapped loopback redirect", func(t *testing.T) {
+		res := authorizePreview(t, e, userToken, map[string]string{
+			"scope":        "mcp:read",
+			"redirect_uri": "http://[::ffff:127.0.0.1]:33418/callback",
+		})
+		require.Equal(t, http.StatusOK, res.code, string(res.body))
+		var preview oauth2server.AuthorizePreview
+		require.NoError(t, json.Unmarshal(res.body, &preview))
+		assert.True(t, preview.LoopbackRedirect)
 	})
 
 	t.Run("read-only scope", func(t *testing.T) {
@@ -478,7 +490,8 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 			"client": {"id": "test-mcp-client", "kind": "legacy"},
 			"redirect_uri": "http://127.0.0.1:33418/callback",
 			"scopes": [],
-			"scoped": false
+			"scoped": false,
+			"loopback_redirect": true
 		}`, stripSchema(t, res.body))
 	})
 

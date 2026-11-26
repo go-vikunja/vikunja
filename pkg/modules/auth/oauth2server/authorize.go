@@ -101,10 +101,11 @@ func (srv *Server) HandleAuthorize(c *echo.Context) error {
 
 // AuthorizePreview describes a valid authorize request for the consent screen.
 type AuthorizePreview struct {
-	Client      AuthorizeClient `json:"client"`
-	RedirectURI string          `json:"redirect_uri" doc:"The validated redirect URI. Only redirect here, also to report a denial."`
-	Scopes      []Scope         `json:"scopes" enum:"mcp:read,mcp:write" doc:"The scopes the code would grant, normalized. Empty when the client receives a session."`
-	Scoped      bool            `json:"scoped" doc:"Whether the client receives an MCP-only API token instead of a session."`
+	Client           AuthorizeClient `json:"client"`
+	RedirectURI      string          `json:"redirect_uri" doc:"The validated redirect URI. Only redirect here, also to report a denial."`
+	Scopes           []Scope         `json:"scopes" enum:"mcp:read,mcp:write" doc:"The scopes the code would grant, normalized. Empty when the client receives a session."`
+	Scoped           bool            `json:"scoped" doc:"Whether the client receives an MCP-only API token instead of a session."`
+	LoopbackRedirect bool            `json:"loopback_redirect" doc:"Whether redirect_uri is a loopback http address. Any program on the user's device can listen there and receive the code."`
 }
 
 type ClientKind string
@@ -133,10 +134,11 @@ func (srv *Server) Preview(ctx context.Context, req *AuthorizeRequest, userID in
 		scopes = []Scope{}
 	}
 	return &AuthorizePreview{
-		Client:      client.describe(),
-		RedirectURI: req.RedirectURI,
-		Scopes:      scopes,
-		Scoped:      len(scopes) > 0,
+		Client:           client.describe(),
+		RedirectURI:      req.RedirectURI,
+		Scopes:           scopes,
+		Scoped:           len(scopes) > 0,
+		LoopbackRedirect: isLoopbackRedirect(req.RedirectURI),
 	}, nil
 }
 

@@ -214,3 +214,28 @@ func TestLegacyClientKeepsRedirectRules(t *testing.T) {
 	assert.False(t, client.allowsRedirect("https://app.example.com/callback"))
 	assert.False(t, client.allowsRedirect("cursor://anysphere.cursor-retrieval/oauth/callback"))
 }
+
+func TestIsLoopbackRedirect(t *testing.T) {
+	for _, uri := range []string{
+		"http://127.0.0.1:3000/callback",
+		"http://127.1.2.3/callback",
+		"http://localhost:8080/callback",
+		"HTTP://LOCALHOST/callback",
+		"http://[::1]:3000/callback",
+		"http://[0:0:0:0:0:0:0:1]/callback",
+		"http://[::ffff:127.0.0.1]:3000/callback",
+	} {
+		assert.True(t, isLoopbackRedirect(uri), uri)
+	}
+	for _, uri := range []string{
+		"https://127.0.0.1/callback",
+		"https://app.example.com/callback",
+		"http://app.example.com/callback",
+		"http://127.0.0.1.example.com/callback",
+		"vikunja-flutter://callback",
+		"cursor://localhost/callback",
+		"::not a url",
+	} {
+		assert.False(t, isLoopbackRedirect(uri), uri)
+	}
+}

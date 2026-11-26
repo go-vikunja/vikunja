@@ -195,6 +195,11 @@ func ValidateRedirectURI(redirectURI string) bool {
 	return u.Scheme == "http" && isLoopbackHost(u.Hostname())
 }
 
+func isLoopbackRedirect(redirectURI string) bool {
+	u, err := url.Parse(redirectURI)
+	return err == nil && strings.EqualFold(u.Scheme, "http") && isLoopbackHost(u.Hostname())
+}
+
 func isLoopbackHost(host string) bool {
 	if strings.EqualFold(host, "localhost") {
 		return true

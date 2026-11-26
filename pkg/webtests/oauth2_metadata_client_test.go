@@ -101,7 +101,8 @@ func TestOAuthMetadataDocumentClient(t *testing.T) {
 			},
 			"redirect_uri": "`+redirect+`",
 			"scopes": ["mcp:read", "mcp:write"],
-			"scoped": true
+			"scoped": true,
+			"loopback_redirect": true
 		}`, stripSchema(t, res.body))
 	})
 
@@ -173,7 +174,10 @@ func TestOAuthMetadataDocumentClient(t *testing.T) {
 			"client_id":    clientID,
 			"redirect_uri": "https://app.example.com/callback",
 		})
-		assert.Equal(t, http.StatusOK, res.code, string(res.body))
+		require.Equal(t, http.StatusOK, res.code, string(res.body))
+		var preview oauth2server.AuthorizePreview
+		require.NoError(t, json.Unmarshal(res.body, &preview))
+		assert.False(t, preview.LoopbackRedirect)
 	})
 
 	t.Run("rejects an unlisted redirect URI", func(t *testing.T) {
