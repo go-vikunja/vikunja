@@ -24,8 +24,23 @@ import (
 )
 
 func TestPinUnsupportedMethods(t *testing.T) {
-	methods := []string{"MKCALENDAR", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK", http.MethodPost, http.MethodPatch}
-	paths := []string{"/dav/", "/dav/principals/user15/", "/dav/projects", "/dav/projects/36", pinTaskHref}
+	methods := []string{
+		"MKCALENDAR",
+		"MKCOL",
+		"COPY",
+		"MOVE",
+		"LOCK",
+		"UNLOCK",
+		http.MethodPost,
+		http.MethodPatch,
+	}
+	paths := []string{
+		"/dav/",
+		"/dav/principals/user15/",
+		"/dav/projects",
+		"/dav/projects/36",
+		pinTaskHref,
+	}
 
 	e := setupTestEnv(t)
 	for _, path := range paths {

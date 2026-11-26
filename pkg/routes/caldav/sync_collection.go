@@ -237,7 +237,10 @@ func writeSyncResponse(
 	}
 
 	for _, d := range deletions {
-		ms.responses = append(ms.responses, statusResponse{href: taskURL(rr.project.ID, d), status: http.StatusNotFound})
+		ms.responses = append(ms.responses, statusResponse{
+			href:   taskURL(rr.project.ID, d),
+			status: http.StatusNotFound,
+		})
 	}
 
 	return writeMultistatus(c, ms)

@@ -18,7 +18,6 @@ package caldav
 
 import (
 	"fmt"
-	"net/http"
 	"slices"
 	"strconv"
 	"strings"
@@ -31,7 +30,7 @@ import (
 
 // Project.CanWrite reports archival through its error return; collapse that into a plain denial.
 func denyArchived(can bool, err error) (bool, error) {
-	if err != nil && errorStatus(err) == http.StatusForbidden {
+	if isError[models.ErrProjectIsArchived](err) {
 		return false, nil
 	}
 	return can, err

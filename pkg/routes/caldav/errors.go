@@ -40,7 +40,6 @@ func isError[T error](err error) bool {
 	return errors.As(err, &target)
 }
 
-// errorStatus is the only place that decides which status an error answers with.
 func errorStatus(err error) int {
 	switch {
 	case errors.Is(err, errNotFound),

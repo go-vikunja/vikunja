@@ -42,7 +42,10 @@ func calendarQueryWithTodoFilter(todoFilter string) string {
 func etagOnly(hrefs ...string) []expectedDAVResponse {
 	out := make([]expectedDAVResponse, 0, len(hrefs))
 	for _, href := range hrefs {
-		out = append(out, expectedDAVResponse{href: href, ok: map[xml.Name]string{davName("getetag"): anyValue}})
+		out = append(out, expectedDAVResponse{
+			href: href,
+			ok:   map[xml.Name]string{davName("getetag"): anyValue},
+		})
 	}
 	return out
 }
@@ -75,7 +78,10 @@ func TestPinReportCalendarMultiget(t *testing.T) {
 				calName("calendar-data"): anyValue,
 			},
 		},
-		{href: missing, status: http.StatusNotFound},
+		{
+			href:   missing,
+			status: http.StatusNotFound,
+		},
 	})
 }
 
@@ -97,7 +103,10 @@ func TestPinReportCalendarQuery(t *testing.T) {
 		filter string
 		hrefs  []string
 	}{
-		{name: "VTODO comp-filter only", hrefs: project36TaskHrefs()},
+		{
+			name:  "VTODO comp-filter only",
+			hrefs: project36TaskHrefs(),
+		},
 		{
 			// No fixture task falls into this range; time-range is not evaluated for VTODOs.
 			name:   "time-range",

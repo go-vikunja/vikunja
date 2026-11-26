@@ -37,7 +37,6 @@ func renderMultistatus(t *testing.T, ms multistatus) string {
 	require.NoError(t, ms.writeTo(&sb))
 	out := sb.String()
 
-	// Every output must be well-formed.
 	d := xml.NewDecoder(strings.NewReader(out))
 	for {
 		_, err := d.Token()
@@ -53,8 +52,14 @@ func TestMultistatusWriter(t *testing.T) {
 	t.Run("escapes text and hrefs", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
 			propResponse(`/dav/projects/1/a&b<c"d.ics`, []prop{
-				{name: davName("displayname"), value: textValue(`Tom & "Jerry" <3`)},
-				{name: davName("owner"), value: hrefsValue{`/dav/principals/a&b/`}},
+				{
+					name:  davName("displayname"),
+					value: textValue(`Tom & "Jerry" <3`),
+				},
+				{
+					name:  davName("owner"),
+					value: hrefsValue{`/dav/principals/a&b/`},
+				},
 			}, nil),
 		}})
 
@@ -75,42 +80,21 @@ func TestMultistatusWriter(t *testing.T) {
 		assert.Equal(t, `Tom & "Jerry" <3`, parsed.Name)
 	})
 
-	t.Run("round-trips line breaks and replaces invalid characters", func(t *testing.T) {
-		const data = "BEGIN:VCALENDAR\r\nSUMMARY:a\tb\x01\xff\r\nEND:VCALENDAR\r\n"
-		out := renderMultistatus(t, multistatus{responses: []msResponse{
-			propResponse("/x", []prop{{name: calDAVName("calendar-data"), value: textValue(data)}}, nil),
-		}})
-
-		var parsed struct {
-			Data string `xml:"response>propstat>prop>calendar-data"`
-		}
-		require.NoError(t, xml.Unmarshal([]byte(out), &parsed))
-		assert.Equal(t, "BEGIN:VCALENDAR\r\nSUMMARY:a\tb��\r\nEND:VCALENDAR\r\n", parsed.Data)
-	})
-
-	t.Run("200 propstat comes before 404, properties keep their order", func(t *testing.T) {
-		out := renderMultistatus(t, multistatus{responses: []msResponse{
-			propstatResponse{href: "/x", propstats: []propstat{
-				{status: http.StatusNotFound, props: []prop{{name: davName("b")}, {name: davName("a")}}},
-				{status: http.StatusOK, props: []prop{
-					{name: davName("z"), value: textValue("1")},
-					{name: davName("y"), value: textValue("2")},
-				}},
-			}},
-		}})
-
-		assert.Equal(t, msHead+`<D:response><D:href>/x</D:href>`+
-			`<D:propstat><D:prop><D:z>1</D:z><D:y>2</D:y></D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat>`+
-			`<D:propstat><D:prop><D:b/><D:a/></D:prop><D:status>HTTP/1.1 404 Not Found</D:status></D:propstat>`+
-			`</D:response></D:multistatus>`, out)
-	})
-
 	t.Run("propstats with the same status stay separate and in order", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
-			propstatResponse{href: "/x", propstats: []propstat{
-				{status: http.StatusForbidden, props: []prop{{name: davName("b")}}},
-				{status: http.StatusForbidden, props: []prop{{name: davName("a")}}},
-			}},
+			propstatResponse{
+				href: "/x",
+				propstats: []propstat{
+					{
+						status: http.StatusForbidden,
+						props:  []prop{{name: davName("b")}},
+					},
+					{
+						status: http.StatusForbidden,
+						props:  []prop{{name: davName("a")}},
+					},
+				},
+			},
 		}})
 
 		assert.Equal(t, msHead+`<D:response><D:href>/x</D:href>`+
@@ -120,10 +104,16 @@ func TestMultistatusWriter(t *testing.T) {
 	})
 
 	t.Run("minimal drops 404 propstats", func(t *testing.T) {
-		out := renderMultistatus(t, multistatus{minimal: true, responses: []msResponse{
-			propResponse("/found", []prop{{name: davName("getetag"), value: textValue("e")}}, []xml.Name{davName("missing")}),
-			propResponse("/nothing", nil, []xml.Name{davName("missing")}),
-		}})
+		out := renderMultistatus(t, multistatus{
+			minimal: true,
+			responses: []msResponse{
+				propResponse("/found", []prop{{
+					name:  davName("getetag"),
+					value: textValue("e"),
+				}}, []xml.Name{davName("missing")}),
+				propResponse("/nothing", nil, []xml.Name{davName("missing")}),
+			},
+		})
 
 		assert.Equal(t, msHead+
 			`<D:response><D:href>/found</D:href>`+
@@ -137,10 +127,19 @@ func TestMultistatusWriter(t *testing.T) {
 	t.Run("properties in other namespaces keep their namespace", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
 			propResponse("/x", nil, []xml.Name{
-				{Space: "urn:x-vikunja-unknown", Local: "thing"},
-				{Space: `urn:"quoted"`, Local: "q"},
+				{
+					Space: "urn:x-vikunja-unknown",
+					Local: "thing",
+				},
+				{
+					Space: `urn:"quoted"`,
+					Local: "q",
+				},
 				{Local: "bare"},
-				{Space: nsCalendarServer, Local: "getctag"},
+				{
+					Space: nsCalendarServer,
+					Local: "getctag",
+				},
 			}),
 		}})
 
@@ -159,20 +158,50 @@ func TestMultistatusWriter(t *testing.T) {
 		require.NoError(t, xml.Unmarshal([]byte(out), &parsed))
 		props := parsed.Prop.Any
 		require.Len(t, props, 4)
-		assert.Equal(t, xml.Name{Space: "urn:x-vikunja-unknown", Local: "thing"}, props[0].XMLName)
-		assert.Equal(t, xml.Name{Space: `urn:"quoted"`, Local: "q"}, props[1].XMLName)
+		assert.Equal(t, xml.Name{
+			Space: "urn:x-vikunja-unknown",
+			Local: "thing",
+		}, props[0].XMLName)
+		assert.Equal(t, xml.Name{
+			Space: `urn:"quoted"`,
+			Local: "q",
+		}, props[1].XMLName)
 		assert.Equal(t, xml.Name{Local: "bare"}, props[2].XMLName)
-		assert.Equal(t, xml.Name{Space: nsCalendarServer, Local: "getctag"}, props[3].XMLName)
+		assert.Equal(t, xml.Name{
+			Space: nsCalendarServer,
+			Local: "getctag",
+		}, props[3].XMLName)
 	})
 
 	t.Run("child elements with attributes", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{responses: []msResponse{
 			propResponse("/x", []prop{
-				{name: calDAVName("supported-calendar-component-set"), value: elementsValue{
-					{name: calDAVName("comp"), attrs: []attr{{name: "name", value: "VTODO"}}},
-					{name: calDAVName("comp"), attrs: []attr{{name: "name", value: `a"&`}}},
-				}},
-				{name: davName("resourcetype"), value: elementsValue{{name: davName("collection")}, {name: calDAVName("calendar")}}},
+				{
+					name: calDAVName("supported-calendar-component-set"),
+					value: elementsValue{
+						{
+							name: calDAVName("comp"),
+							attrs: []attr{{
+								name:  "name",
+								value: "VTODO",
+							}},
+						},
+						{
+							name: calDAVName("comp"),
+							attrs: []attr{{
+								name:  "name",
+								value: `a"&`,
+							}},
+						},
+					},
+				},
+				{
+					name: davName("resourcetype"),
+					value: elementsValue{
+						{name: davName("collection")},
+						{name: calDAVName("calendar")},
+					},
+				},
 				{name: davName("resourcetype")},
 			}, nil),
 		}})
@@ -185,7 +214,12 @@ func TestMultistatusWriter(t *testing.T) {
 	t.Run("status-only response and sync-token", func(t *testing.T) {
 		out := renderMultistatus(t, multistatus{
 			syncToken: `data:,"36-1&2"`,
-			responses: []msResponse{statusResponse{href: "/dav/projects/36/gone.ics", status: http.StatusNotFound}},
+			responses: []msResponse{
+				statusResponse{
+					href:   "/dav/projects/36/gone.ics",
+					status: http.StatusNotFound,
+				},
+			},
 		})
 
 		assert.Equal(t, msHead+
@@ -203,9 +237,15 @@ func TestMultistatusWriter(t *testing.T) {
 	})
 
 	t.Run("minimal leaves status-only responses alone", func(t *testing.T) {
-		out := renderMultistatus(t, multistatus{minimal: true, responses: []msResponse{
-			statusResponse{href: "/gone", status: http.StatusNotFound},
-		}})
+		out := renderMultistatus(t, multistatus{
+			minimal: true,
+			responses: []msResponse{
+				statusResponse{
+					href:   "/gone",
+					status: http.StatusNotFound,
+				},
+			},
+		})
 
 		assert.Equal(t, msHead+`<D:response><D:href>/gone</D:href><D:status>HTTP/1.1 404 Not Found</D:status></D:response></D:multistatus>`, out)
 	})

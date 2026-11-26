@@ -133,6 +133,15 @@ func caldavPUT(t *testing.T, e *echo.Echo, path, vcalendar string) *httptest.Res
 	})
 }
 
+func caldavPUTWith(t *testing.T, e *echo.Echo, path, vcalendar string, headers map[string]string) *httptest.ResponseRecorder {
+	t.Helper()
+	all := map[string]string{"Content-Type": "text/calendar; charset=utf-8"}
+	for k, v := range headers {
+		all[k] = v
+	}
+	return caldavRequest(t, e, http.MethodPut, path, vcalendar, all)
+}
+
 // caldavDELETE sends a DELETE request.
 func caldavDELETE(t *testing.T, e *echo.Echo, path string) *httptest.ResponseRecorder {
 	t.Helper()
