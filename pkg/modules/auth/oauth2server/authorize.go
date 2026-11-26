@@ -212,6 +212,13 @@ func (srv *Server) validate(ctx context.Context, req *AuthorizeRequest) (client 
 	return client, scopes, resource, nil
 }
 
+// Not ok while service.publicurl is unset: the URL is then relative and no scoped grant can be issued.
+func (srv *Server) resourceURL() (string, bool) {
+	resource := srv.resource.ResourceURL()
+	_, ok := parseResource(resource)
+	return resource, ok
+}
+
 // scopedGrant returns no scopes and an empty resource for a first-party session grant.
 func (srv *Server) scopedGrant(req *AuthorizeRequest, client Client) (scopes []Scope, resource string, err error) {
 	// Generic OAuth libraries send scopes like openid; without an MCP scope they keep getting a session.
@@ -219,9 +226,8 @@ func (srv *Server) scopedGrant(req *AuthorizeRequest, client Client) (scopes []S
 		return nil, "", nil
 	}
 
-	resource = srv.resource.ResourceURL()
-	// Also rejects every scoped grant while service.publicurl is unset and the URL is relative.
-	if _, ok := parseResource(resource); !ok {
+	resource, ok := srv.resourceURL()
+	if !ok {
 		return nil, "", &models.ErrOAuthInvalidTarget{}
 	}
 	if req.Resource != "" && !SameResource(req.Resource, resource) {

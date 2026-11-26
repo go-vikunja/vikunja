@@ -159,6 +159,10 @@ func (srv *Server) resolveClient(ctx context.Context, raw string) (Client, error
 	case legacyClientID:
 		return LegacyClient{id: string(id)}, nil
 	case metadataClientID:
+		// Such a client only ever gets a scoped grant; don't fetch when none can be issued.
+		if _, ok := srv.resourceURL(); !ok {
+			return nil, &models.ErrOAuthInvalidTarget{}
+		}
 		metadata, err := srv.metadata.get(ctx, id)
 		if err != nil {
 			return nil, err

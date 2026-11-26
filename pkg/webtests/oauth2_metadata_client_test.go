@@ -22,8 +22,10 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
@@ -250,4 +252,38 @@ func TestOAuthMetadataDocumentClient(t *testing.T) {
 		require.Equal(t, http.StatusOK, tok.code, string(tok.body))
 		assert.Contains(t, string(tok.body), "refresh_token")
 	})
+}
+
+// countingMetadataEnv serves a valid document at every path and counts the fetches.
+func countingMetadataEnv(t *testing.T) (*echo.Echo, *httptest.Server, *atomic.Int32) {
+	t.Helper()
+	requests := &atomic.Int32{}
+	host := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"client_id":     "https://" + r.Host + r.URL.Path,
+			"client_name":   metadataClientName,
+			"redirect_uris": []string{metadataClientRedirect},
+		})
+	}))
+	t.Cleanup(host.Close)
+	e, err := setupTestEnv(routes.WithOAuthMetadataHTTPClient(host.Client()))
+	require.NoError(t, err)
+	return e, host, requests
+}
+
+func TestOAuthMetadataDocumentWithoutPublicURL(t *testing.T) {
+	e, host, requests := countingMetadataEnv(t)
+	previous := config.ServicePublicURL.GetString()
+	config.ServicePublicURL.Set("")
+	t.Cleanup(func() { config.ServicePublicURL.Set(previous) })
+
+	res := authorizePreview(t, e, humaTokenFor(t, &testuser1), map[string]string{
+		"client_id":    host.URL + "/client.json",
+		"redirect_uri": metadataClientRedirect,
+	})
+	require.Equal(t, http.StatusBadRequest, res.code, string(res.body))
+	assert.Equal(t, models.ErrCodeOAuthInvalidTarget, res.errorCode(t))
+	assert.Equal(t, int32(0), requests.Load())
 }

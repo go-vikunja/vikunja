@@ -444,3 +444,21 @@ func TestPreviewMetadataClient(t *testing.T) {
 		assert.Equal(t, int32(0), fresh.requests.Load())
 	})
 }
+
+type relativeResource struct{ testResource }
+
+func (relativeResource) ResourceURL() string { return "/api/v2/mcp" }
+
+func TestMetadataClientWithoutResourceURL(t *testing.T) {
+	host := serveDocument(t, nil)
+	srv := NewServer(relativeResource{}, NewMetadataFetcher(host.server.Client()))
+	_, err := srv.Preview(t.Context(), &AuthorizeRequest{
+		ResponseType:        "code",
+		ClientID:            host.clientID(),
+		RedirectURI:         "http://127.0.0.1:41234/callback",
+		CodeChallenge:       "challenge",
+		CodeChallengeMethod: "S256",
+	})
+	assert.True(t, models.IsErrOAuthInvalidTarget(err), "%v", err)
+	assert.Equal(t, int32(0), host.requests.Load())
+}
