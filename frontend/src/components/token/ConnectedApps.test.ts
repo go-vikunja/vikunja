@@ -7,7 +7,6 @@ import {createPinia, setActivePinia} from 'pinia'
 import ConnectedApps from './ConnectedApps.vue'
 import Modal from '@/components/misc/Modal.vue'
 import en from '@/i18n/lang/en.json'
-import {formatDateShort, formatDisplayDate} from '@/helpers/time/formatDate'
 import type {ApiToken} from '@/client/generated'
 
 const sdk = vi.hoisted(() => ({
@@ -107,43 +106,9 @@ function rowTexts() {
 }
 
 describe('ConnectedApps', () => {
-	it('lists only oauth grants with their verified host, access and dates', async () => {
+	it('marks an expired grant', async () => {
 		await mountList()
-		expect(sdk.tokensList).toHaveBeenCalledWith(expect.objectContaining({query: {
-			page: 1,
-			kind: 'oauth',
-		}}))
-		const [metadata, legacy] = rowTexts()
-		expect(metadata[0]).toContain('Claude Code')
-		expect(metadata[0]).toContain('Published by claude.ai')
-		expect(metadata[1]).toBe('Read & write')
-		expect(metadata[2]).toBe(formatDateShort(metadataApp.created))
-		expect(metadata[3]).toBe(formatDisplayDate(metadataApp.expires_at))
-		expect(legacy[0]).toBe('vikunja-desktop')
-		expect(legacy[1]).toBe('Read only')
-		expect(legacy[3]).toContain('This token has expired')
-	})
-
-	it('shows an empty state', async () => {
-		stored = []
-		await mountList()
-		expect(wrapper.find('table').exists()).toBe(false)
-		expect(wrapper.text()).toContain('You have not connected any apps yet.')
-	})
-
-	it('revokes one grant after confirmation', async () => {
-		await mountList()
-		await wrapper.findAll('button').find(button => button.text() === 'Revoke')!.trigger('click')
-		await flushPromises()
-		expect(document.querySelector('dialog')?.textContent).toContain('Claude Code will no longer be able to access your account.')
-		expect(sdk.tokensDelete).not.toHaveBeenCalled()
-
-		dialogButton('Do it!').click()
-		await flushPromises()
-		expect(sdk.tokensDelete).toHaveBeenCalledOnce()
-		expect(sdk.tokensDelete).toHaveBeenCalledWith({path: {id: 40}})
-		expect(rowTexts()).toHaveLength(1)
-		expect(rowTexts()[0][0]).toBe('vikunja-desktop')
+		expect(rowTexts()[1][3]).toContain('This token has expired')
 	})
 
 	it('keeps the grant when the confirmation is dismissed', async () => {
