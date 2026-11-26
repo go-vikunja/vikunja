@@ -42,8 +42,19 @@ var nsPrefixes = map[string]string{
 
 const rootNamespaces = ` xmlns:D="` + nsDAV + `" xmlns:C="` + nsCalDAV + `" xmlns:CS="` + nsCalendarServer + `"`
 
-func davName(local string) xml.Name    { return xml.Name{Space: nsDAV, Local: local} }
-func calDAVName(local string) xml.Name { return xml.Name{Space: nsCalDAV, Local: local} }
+func davName(local string) xml.Name {
+	return xml.Name{
+		Space: nsDAV,
+		Local: local,
+	}
+}
+
+func calDAVName(local string) xml.Name {
+	return xml.Name{
+		Space: nsCalDAV,
+		Local: local,
+	}
+}
 
 // propValue is the content of a property element.
 type propValue interface {
@@ -109,14 +120,20 @@ type propstatResponse struct {
 func propResponse(href string, found []prop, missing []xml.Name) propstatResponse {
 	r := propstatResponse{href: href}
 	if len(found) > 0 {
-		r.propstats = append(r.propstats, propstat{status: http.StatusOK, props: found})
+		r.propstats = append(r.propstats, propstat{
+			status: http.StatusOK,
+			props:  found,
+		})
 	}
 	if len(missing) > 0 {
 		props := make([]prop, len(missing))
 		for i, name := range missing {
 			props[i] = prop{name: name}
 		}
-		r.propstats = append(r.propstats, propstat{status: http.StatusNotFound, props: props})
+		r.propstats = append(r.propstats, propstat{
+			status: http.StatusNotFound,
+			props:  props,
+		})
 	}
 	return r
 }

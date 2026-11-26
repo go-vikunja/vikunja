@@ -116,7 +116,10 @@ func resolveTask(c *echo.Context, _ *user.User) (target, error) {
 		return nil, errNotFound
 	}
 
-	return taskTarget{collection: collectionTarget{project: project}, uid: uid}, nil
+	return taskTarget{
+		collection: collectionTarget{project: project},
+		uid:        uid,
+	}, nil
 }
 
 func loadCollection(param string) (*models.ProjectWithTasksAndBuckets, error) {

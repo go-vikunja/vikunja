@@ -36,9 +36,21 @@ func TestErrorStatus(t *testing.T) {
 		err    error
 		status int
 	}{
-		{"validation", models.ValidationHTTPError{}, http.StatusForbidden},
-		{"unknown", errors.New("database is gone"), http.StatusInternalServerError},
-		{"forbidden without read access is not mapped", models.ErrGenericForbidden{}, http.StatusInternalServerError},
+		{
+			name:   "validation",
+			err:    models.ValidationHTTPError{},
+			status: http.StatusForbidden,
+		},
+		{
+			name:   "unknown",
+			err:    errors.New("database is gone"),
+			status: http.StatusInternalServerError,
+		},
+		{
+			name:   "forbidden without read access is not mapped",
+			err:    models.ErrGenericForbidden{},
+			status: http.StatusInternalServerError,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

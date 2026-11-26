@@ -54,7 +54,13 @@ func TestResolveTarget(t *testing.T) {
 	})
 
 	t.Run("foreign or nested principal", func(t *testing.T) {
-		for _, path := range []string{"/dav/principals/user1/", "/dav/principals/does-not-exist/", "/dav/principals/user15/projects", "/dav/principals/", "/dav/principals/user15x"} {
+		for _, path := range []string{
+			"/dav/principals/user1/",
+			"/dav/principals/does-not-exist/",
+			"/dav/principals/user15/projects",
+			"/dav/principals/",
+			"/dav/principals/user15x",
+		} {
 			_, err := resolveFor(t, resolvePrincipal, path, nil)
 			requireNotFound(t, err)
 		}
@@ -90,12 +96,21 @@ func TestResolveTarget(t *testing.T) {
 	t.Run("bad collection ids", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		for _, id := range []string{"abc", "-999"} {
-			params := echo.PathValues{{Name: "project", Value: id}}
+		for _, id := range []string{
+			"abc",
+			"-999",
+		} {
+			params := echo.PathValues{{
+				Name:  "project",
+				Value: id,
+			}}
 			_, err := resolveFor(t, resolveProjects, "/dav/projects/"+id, params)
 			requireNotFound(t, err)
 
-			_, err = resolveFor(t, resolveTask, "/dav/projects/"+id+"/uid.ics", append(params, echo.PathValue{Name: "task", Value: "uid.ics"}))
+			_, err = resolveFor(t, resolveTask, "/dav/projects/"+id+"/uid.ics", append(params, echo.PathValue{
+				Name:  "task",
+				Value: "uid.ics",
+			}))
 			requireNotFound(t, err)
 		}
 	})
