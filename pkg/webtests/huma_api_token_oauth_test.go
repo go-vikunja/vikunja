@@ -136,9 +136,9 @@ func TestHumaAPITokenRevokeOAuthGrant(t *testing.T) {
 
 	rec := humaRequest(t, e, http.MethodDelete, path, "", humaTokenFor(t, &testuser2), "")
 	assert.Equal(t, http.StatusForbidden, rec.Code, rec.Body.String())
-	assert.Equal(t, http.StatusOK, initializeMCP(e, cleartext).Code, "a denied revoke must leave the grant working")
+	assert.Equal(t, http.StatusOK, postMCP(e, bearer(cleartext)).Code, "a denied revoke must leave the grant working")
 
 	rec = humaRequest(t, e, http.MethodDelete, path, "", humaTokenFor(t, &testuser1), "")
 	require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
-	assert.Equal(t, http.StatusUnauthorized, initializeMCP(e, cleartext).Code)
+	assert.Equal(t, http.StatusUnauthorized, postMCP(e, bearer(cleartext)).Code)
 }
