@@ -16,13 +16,17 @@ export function colorIsDark(color: string | undefined) {
 	const g = (rgb >> 8) & 0xff  // extract green
 	const b = (rgb >> 0) & 0xff  // extract blue
 
+	return relativeLuminance(r, g, b) > DARK_TEXT_MIN_LUMINANCE
+}
+
+// sqrt(1.05 * 0.05) - 0.05: the luminance where contrast against #000 equals contrast against #fff,
+// guaranteeing >= 4.58:1 for whichever of black/white gets picked
+export const DARK_TEXT_MIN_LUMINANCE = 0.1791
+
+export function relativeLuminance(r: number, g: number, b: number) {
 	const toLinear = (c: number) => {
 		const v = c / 255
 		return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
 	}
-	const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
-
-	// sqrt(1.05 * 0.05) - 0.05: the luminance where contrast against #000 equals contrast against #fff,
-	// guaranteeing >= 4.58:1 for whichever of black/white gets picked
-	return luminance > 0.1791
+	return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
 }
