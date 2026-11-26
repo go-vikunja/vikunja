@@ -96,7 +96,7 @@
         "access": "Access",
         "readDescription": "View your tasks, projects, labels, teams and other data you have access to.",
         "writeDescription": "View, create, change and delete your tasks, projects, labels and other data, share projects with other people and teams, and manage your teams and their members.",
-        "duration": "Access expires after 90 days. You can revoke it earlier in the settings under API Tokens.",
+        "duration": "Access expires after 90 days. You can revoke it earlier in the settings under MCP → Connected apps.",
         "redirect": "After you approve or deny, you will be sent back to {host}.",
         "approve": "Approve",
         "deny": "Deny"

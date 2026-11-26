@@ -200,6 +200,7 @@ describe('OAuthAuthorize', () => {
 		expect(wrapper.text()).toContain('mcp-client')
 		expect(wrapper.text()).toContain('127.0.0.1:9999')
 		expect(wrapper.text()).toContain('Alice (alice)')
+		expect(wrapper.text()).toContain('revoke it earlier in the settings under MCP → Connected apps')
 		expect(wrapper.get<HTMLInputElement>('input[value="write"]').element.checked).toBe(true)
 	})
 
