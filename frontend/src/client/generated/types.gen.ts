@@ -290,7 +290,23 @@ export type AuthUrl = {
 };
 
 export type AuthorizeClient = {
+    /**
+     * The host of a metadata_document client's id URL, the part of its identity the client cannot fake.
+     */
+    host?: string;
     id?: string;
+    /**
+     * metadata_document: the client_id is an https URL whose metadata document Vikunja fetched and validated. legacy: an unverified first-party client id.
+     */
+    kind?: 'legacy' | 'metadata_document';
+    /**
+     * The client_name of a metadata_document client. Self-declared by the client; only host is verified.
+     */
+    name?: string;
+    /**
+     * The client_uri of a metadata_document client, if it declared a valid https one. Self-declared.
+     */
+    uri?: string;
 };
 
 export type AuthorizePreview = {
@@ -318,6 +334,9 @@ export type AuthorizeRequest = {
      * A URL to the JSON Schema for this object.
      */
     readonly $schema?: string;
+    /**
+     * A first-party client name, or an https URL serving the client's OAuth Client ID Metadata Document. Redirect URIs of a URL client must be listed in its document.
+     */
     client_id?: string;
     code_challenge?: string;
     code_challenge_method?: string;
@@ -328,7 +347,7 @@ export type AuthorizeRequest = {
     resource?: string;
     response_type?: string;
     /**
-     * Space-separated scopes. With mcp:read or mcp:write the client receives an API token for the MCP endpoint instead of a session. Unknown values are ignored.
+     * Space-separated scopes. With mcp:read or mcp:write the client receives an API token for the MCP endpoint instead of a session. Unknown values are ignored. A client whose client_id is a URL always receives an API token, for mcp:read mcp:write when scope and resource are omitted.
      */
     scope?: string;
     state?: string;
@@ -4317,6 +4336,9 @@ export type AuthorizePreviewWritable = {
 };
 
 export type AuthorizeRequestWritable = {
+    /**
+     * A first-party client name, or an https URL serving the client's OAuth Client ID Metadata Document. Redirect URIs of a URL client must be listed in its document.
+     */
     client_id?: string;
     code_challenge?: string;
     code_challenge_method?: string;
@@ -4327,7 +4349,7 @@ export type AuthorizeRequestWritable = {
     resource?: string;
     response_type?: string;
     /**
-     * Space-separated scopes. With mcp:read or mcp:write the client receives an API token for the MCP endpoint instead of a session. Unknown values are ignored.
+     * Space-separated scopes. With mcp:read or mcp:write the client receives an API token for the MCP endpoint instead of a session. Unknown values are ignored. A client whose client_id is a URL always receives an API token, for mcp:read mcp:write when scope and resource are omitted.
      */
     scope?: string;
     state?: string;

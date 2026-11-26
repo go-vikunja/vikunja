@@ -1315,7 +1315,7 @@ export const notificationsMarkRead = <ThrowOnError extends boolean = true>(optio
 /**
  * OAuth 2.0 authorize endpoint
  *
- * Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) and a loopback or vikunja- scheme redirect_uri are required. A scope of mcp:read or mcp:write, or a resource, makes the code exchange yield an MCP-only API token instead of a session.
+ * Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) is required. A client_id that is an https URL is resolved as an OAuth Client ID Metadata Document: the redirect_uri must be listed in it (loopback ports may differ) and the code always yields an MCP-only API token. Any other client_id needs a loopback or vikunja- scheme redirect_uri. A scope of mcp:read or mcp:write, or a resource, makes the code exchange yield an MCP-only API token instead of a session.
  */
 export const oauthAuthorize = <ThrowOnError extends boolean = true>(options: Options<OauthAuthorizeData, ThrowOnError>): RequestResult<OauthAuthorizeResponses, OauthAuthorizeErrors, ThrowOnError> => (options.client ?? client).post<OauthAuthorizeResponses, OauthAuthorizeErrors, ThrowOnError>({
     security: [{
