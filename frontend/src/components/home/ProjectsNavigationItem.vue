@@ -57,6 +57,14 @@
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
+				<span
+					v-if="project.is_shared"
+					v-tooltip="$t('project.sharedWithOthers')"
+					class="shared-icon"
+				>
+					<Icon icon="users" />
+					<span class="is-sr-only">{{ $t('project.sharedWithOthers') }}</span>
+				</span>
 			</BaseButton>
 			<BaseButton
 				v-if="canToggleFavorite"
@@ -312,6 +320,13 @@ async function toggleProjectFavorite() {
 .project-menu-title {
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.shared-icon {
+	flex-shrink: 0;
+	margin-inline-start: .375rem;
+	color: var(--grey-400);
+	font-size: .75rem;
 }
 
 @media (pointer: coarse) {

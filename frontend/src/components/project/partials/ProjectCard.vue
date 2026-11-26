@@ -30,11 +30,15 @@
 			>
 				<Icon icon="filter" />
 			</span>
-			{{ getProjectTitle(project) }}
+			{{ titleParts.head }}<span :class="{'title-tail': project.is_shared}">{{ titleParts.tail }}<span
+				v-if="project.is_shared"
+				v-tooltip="$t('project.sharedWithOthers')"
+				class="shared-icon"
+			><Icon icon="users" /></span></span>
 		</div>
 		<BaseButton
 			class="project-button"
-			:aria-label="project.title"
+			:aria-label="buttonLabel"
 			:title="textOnlyDescription"
 			:to="{
 				name: 'project.index',
@@ -62,6 +66,7 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {usePatchProjectFavoriteMutation, type ProjectResponse} from '@/client/queries/projects'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -86,6 +91,19 @@ async function toggleProjectFavorite() {
 	}
 	await favoriteMutation.mutateAsync({id: props.project.id, isFavorite: !props.project.is_favorite})
 }
+
+const {t} = useI18n()
+// The title is aria-hidden, so the shared state has to be in the link label.
+const buttonLabel = computed(() => props.project.is_shared
+	? `${props.project.title}, ${t('project.sharedWithOthers')}`
+	: props.project.title)
+
+// Keeps the icon on the same line as the last word.
+const titleParts = computed(() => {
+	const title = getProjectTitle(props.project)
+	const split = title.lastIndexOf(' ') + 1
+	return {head: title.slice(0, split), tail: title.slice(split)}
+})
 
 const textOnlyDescription = computed(() => htmlToPreviewText(props.project.description ?? ''))
 </script>
@@ -176,6 +194,15 @@ const textOnlyDescription = computed(() => htmlToPreviewText(props.project.descr
 	color: var(--white);
 }
 
+// SVGs ignore text-shadow.
+.has-background .shared-icon {
+	filter:
+		drop-shadow(0 0 10px var(--black))
+		drop-shadow(1px 1px 5px var(--grey-700))
+		drop-shadow(-1px -1px 5px var(--grey-700));
+	opacity: .8;
+}
+
 .project-actions {
 	position: absolute;
 	inset-block-start: var(--project-card-padding);
@@ -223,6 +250,19 @@ const textOnlyDescription = computed(() => htmlToPreviewText(props.project.descr
   &.is-visible {
     opacity: 1;
   }
+}
+
+.title-tail {
+	white-space: nowrap;
+}
+
+.shared-icon {
+	// Above .project-button so the tooltip gets the hover.
+	position: relative;
+	z-index: 1;
+	margin-inline-start: .375rem;
+	font-size: .875rem;
+	opacity: .5;
 }
 
 .saved-filter-icon {
