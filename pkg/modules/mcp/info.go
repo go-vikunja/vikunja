@@ -54,9 +54,11 @@ func (m *Module) ConnectionInfo() apiv2.ConnectionSettings {
 	for _, permissions := range typed {
 		sort.Strings(permissions)
 	}
+	_, oauth := oauth2server.Issuer()
 	return apiv2.ConnectionSettings{
-		Endpoint: m.ResourceURL(),
-		Routes:   routes,
+		Endpoint:       m.ResourceURL(),
+		OAuthAvailable: oauth,
+		Routes:         routes,
 		Presets: apiv2.TokenPresets{
 			ReadOnly: map[string][]string{"*": {"read_one", "read_all"}},
 			Typed:    typed,

@@ -29,9 +29,10 @@ import (
 
 // ConnectionSettings lives here and not in the mcp module because that module imports this package.
 type ConnectionSettings struct {
-	Endpoint string                          `json:"endpoint" doc:"Absolute URL of the streamable HTTP endpoint."`
-	Routes   map[string]models.APITokenRoute `json:"routes" doc:"Token permissions usable by exposed MCP tools, including mcp.access."`
-	Presets  TokenPresets                    `json:"presets"`
+	Endpoint       string                          `json:"endpoint" doc:"Absolute URL of the streamable HTTP endpoint."`
+	OAuthAvailable bool                            `json:"oauth_available" doc:"Whether clients can connect with just the endpoint by signing in through OAuth. False while service.publicurl is unset."`
+	Routes         map[string]models.APITokenRoute `json:"routes" doc:"Token permissions usable by exposed MCP tools, including mcp.access."`
+	Presets        TokenPresets                    `json:"presets"`
 }
 
 type TokenPresets struct {
