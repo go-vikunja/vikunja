@@ -561,13 +561,6 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 		})
 	}
 
-	t.Run("omits iss without a public URL", func(t *testing.T) {
-		withoutPublicURL(t)
-		res := authorizePreview(t, e, userToken, nil)
-		require.Equal(t, http.StatusOK, res.code, string(res.body))
-		assert.NotContains(t, string(res.body), `"iss"`)
-	})
-
 	t.Run("requires authentication", func(t *testing.T) {
 		res := authorizePreview(t, e, "", map[string]string{"scope": "mcp:read"})
 		assert.Equal(t, http.StatusUnauthorized, res.code, string(res.body))

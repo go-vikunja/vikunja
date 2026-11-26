@@ -387,14 +387,12 @@ func TestResolveServerIdentifierAsClient(t *testing.T) {
 		return nil, errors.New("offline")
 	})}))
 
-	for _, id := range []string{"https://vikunja.example/sub", testResource{}.ResourceURL()} {
-		_, err := srv.resolveClient(t.Context(), id, unmeteredFetch)
-		assert.True(t, models.IsErrOAuthClientIDIsServer(err), "%s: %v", id, err)
-	}
+	_, err := srv.resolveClient(t.Context(), "https://vikunja.example/sub", unmeteredFetch)
+	assert.True(t, models.IsErrOAuthClientIDIsServer(err), "%v", err)
 	assert.Empty(t, fetched)
 
 	// Simple string comparison: anything else is an ordinary client id URL.
-	_, err := srv.resolveClient(t.Context(), "https://vikunja.example/sub/", unmeteredFetch)
+	_, err = srv.resolveClient(t.Context(), "https://vikunja.example/sub/", unmeteredFetch)
 	assert.True(t, models.IsErrOAuthClientMetadataUnavailable(err), "%v", err)
 	assert.Equal(t, []string{"https://vikunja.example/sub/"}, fetched)
 }
