@@ -30,6 +30,7 @@ const {
 } = useQuery(allApiTokensQuery())
 const deleteMutation = useDeleteApiTokenMutation()
 const endpoint = computed(() => info.value?.endpoint ?? '')
+const oauthAvailable = computed(() => info.value?.oauth_available ?? false)
 const tokens = computed(() => (allTokens.value ?? []).filter(token => token.permissions?.mcp?.includes('access')))
 const loading = computed(() => infoPending.value || tokensPending.value)
 const loadFailed = computed(() => infoError.value || tokensError.value)
@@ -115,7 +116,7 @@ async function deleteToken() {
 				</Message>
 				<McpClientGuide
 					:endpoint="endpoint"
-					:token="newToken"
+					:access="{kind: 'token', token: newToken, oauthAvailable}"
 				/>
 				<XButton
 					class="mbs-4"
@@ -125,9 +126,22 @@ async function deleteToken() {
 				</XButton>
 			</template>
 			<template v-else>
+				<template v-if="oauthAvailable">
+					<h5 class="mbs-5 mbe-4 has-text-weight-bold">
+						{{ t('user.settings.mcp.oauthTitle') }}
+					</h5>
+					<p>{{ t('user.settings.mcp.oauthIntro') }}</p>
+					<McpClientGuide
+						:endpoint="endpoint"
+						:access="{kind: 'oauth'}"
+					/>
+				</template>
 				<h5 class="mbs-5 mbe-4 has-text-weight-bold">
 					{{ t('user.settings.mcp.tokens') }}
 				</h5>
+				<p v-if="oauthAvailable">
+					{{ t('user.settings.mcp.tokenIntro') }}
+				</p>
 				<div
 					v-if="tokens.length"
 					class="has-horizontal-overflow"

@@ -6,7 +6,11 @@ import XButton from '@/components/input/Button.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {MCP_HELP} from '@/urls'
 
-const props = defineProps<{endpoint: string, token: string}>()
+export type McpGuideAccess =
+	| {kind: 'oauth'}
+	| {kind: 'token', token: string, oauthAvailable: boolean}
+
+const props = defineProps<{endpoint: string, access: McpGuideAccess}>()
 const {t} = useI18n({useScope: 'global'})
 const copy = useCopyToClipboard()
 const client = useLocalStorage('mcp-client', '')
@@ -24,34 +28,78 @@ function shellQuote(value: string) {
 	return `'${value.replaceAll('\'', '\'\\\'\'')}'`
 }
 
-const instructions = computed<Record<string, {key: string, value?: string}[]>>(() => ({
-	claudeCode: [
-		{key: 'command', value: `claude mcp add --transport http vikunja ${shellQuote(props.endpoint)} --header ${shellQuote(`Authorization: Bearer ${props.token}`)}`},
-		{key: 'verify'},
-	],
-	codex: [
-		{key: 'environment', value: `export VIKUNJA_MCP_TOKEN=${shellQuote(props.token)}`},
-		{key: 'command', value: `codex mcp add vikunja --url ${shellQuote(props.endpoint)} --bearer-token-env-var VIKUNJA_MCP_TOKEN`},
-		{key: 'config', value: `[mcp_servers.vikunja]\nurl = ${JSON.stringify(props.endpoint)}\nbearer_token_env_var = "VIKUNJA_MCP_TOKEN"`},
-		{key: 'note'},
-	],
-	claudeDesktop: [
-		{key: 'open'},
-		{key: 'url', value: props.endpoint},
-		{key: 'auth'},
-		{key: 'header', value: `Bearer ${props.token}`},
-		{key: 'beta'},
-	],
-	mistral: [
-		{key: 'open'},
-		{key: 'url', value: props.endpoint},
-		{key: 'token', value: props.token},
-	],
-	other: [
-		{key: 'url', value: props.endpoint},
-		{key: 'header', value: `Authorization: Bearer ${props.token}`},
-	],
-}))
+type Step = {key: string, value?: string}
+
+function oauthInstructions(endpoint: string): Record<string, Step[]> {
+	return {
+		claudeCode: [
+			{key: 'command', value: `claude mcp add --transport http vikunja ${shellQuote(endpoint)}`},
+			{key: 'signIn'},
+		],
+		codex: [
+			{key: 'command', value: `codex mcp add vikunja --url ${shellQuote(endpoint)}`},
+			{key: 'login', value: 'codex mcp login vikunja'},
+		],
+		claudeDesktop: [
+			{key: 'open'},
+			{key: 'url', value: endpoint},
+			{key: 'connect'},
+		],
+		chatgpt: [
+			{key: 'open'},
+			{key: 'url', value: endpoint},
+			{key: 'connect'},
+		],
+		other: [
+			{key: 'url', value: endpoint},
+			{key: 'oauth'},
+		],
+	}
+}
+
+function tokenInstructions(endpoint: string, token: string): Record<string, Step[]> {
+	return {
+		claudeCode: [
+			{key: 'command', value: `claude mcp add --transport http vikunja ${shellQuote(endpoint)} --header ${shellQuote(`Authorization: Bearer ${token}`)}`},
+			{key: 'verify'},
+		],
+		codex: [
+			{key: 'environment', value: `export VIKUNJA_MCP_TOKEN=${shellQuote(token)}`},
+			{key: 'command', value: `codex mcp add vikunja --url ${shellQuote(endpoint)} --bearer-token-env-var VIKUNJA_MCP_TOKEN`},
+			{key: 'config', value: `[mcp_servers.vikunja]\nurl = ${JSON.stringify(endpoint)}\nbearer_token_env_var = "VIKUNJA_MCP_TOKEN"`},
+			{key: 'note'},
+		],
+		claudeDesktop: [
+			{key: 'open'},
+			{key: 'url', value: endpoint},
+			{key: 'auth'},
+			{key: 'header', value: `Bearer ${token}`},
+			{key: 'beta'},
+		],
+		mistral: [
+			{key: 'open'},
+			{key: 'url', value: endpoint},
+			{key: 'token', value: token},
+		],
+		other: [
+			{key: 'url', value: endpoint},
+			{key: 'header', value: `Authorization: Bearer ${token}`},
+		],
+	}
+}
+
+const instructions = computed(() => props.access.kind === 'oauth'
+	? oauthInstructions(props.endpoint)
+	: tokenInstructions(props.endpoint, props.access.token))
+const unsupported = computed(() => {
+	if (props.access.kind === 'oauth') {
+		return client.value === 'mistral' ? 'user.settings.mcp.clients.mistral.oauthUnavailable' : undefined
+	}
+	if (client.value !== 'chatgpt') return undefined
+	return props.access.oauthAvailable
+		? 'user.settings.mcp.clients.chatgpt.tokenUnsupported'
+		: 'user.settings.mcp.clients.chatgpt.unavailable'
+})
 const steps = computed(() => instructions.value[client.value] ?? [])
 </script>
 
@@ -83,9 +131,9 @@ const steps = computed(() => instructions.value[client.value] ?? [])
 				</select>
 			</div>
 		</div>
-		<template v-if="client === 'chatgpt'">
-			<p>{{ t('user.settings.mcp.clients.chatgpt.unavailable') }}</p>
-		</template>
+		<p v-if="unsupported">
+			{{ t(unsupported) }}
+		</p>
 		<ol
 			v-else-if="steps.length"
 			class="mcp-steps"
