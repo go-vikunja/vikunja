@@ -112,6 +112,28 @@ describe('OAuthAuthorize', () => {
 		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
 	})
 
+	it('approves a request without mcp scopes without asking', async () => {
+		mockRoute.query = {
+			...BASE_QUERY,
+			scope: 'openid offline_access',
+		}
+		sdk.oauthAuthorizePreview.mockResolvedValue({
+			data: {
+				client: {id: 'mcp-client'},
+				redirect_uri: REDIRECT_URI,
+				scopes: [],
+				scoped: false,
+			},
+		})
+		mountView()
+		await flushPromises()
+
+		expect(sdk.oauthAuthorizePreview).toHaveBeenCalledOnce()
+		expect(sdk.oauthAuthorize).toHaveBeenCalledOnce()
+		expect(sdk.oauthAuthorize.mock.calls[0][0].body.scope).toBeUndefined()
+		expect(window.location.href).toBe(`${REDIRECT_URI}?code=the-code&state=st-1`)
+	})
+
 	it('asks for consent before authorizing a scoped request', async () => {
 		mockRoute.query = {
 			...BASE_QUERY,

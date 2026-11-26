@@ -122,7 +122,12 @@ async function authorize(scope?: string) {
 
 async function loadConsent() {
 	const {data} = await oauthAuthorizePreview({body: authorizeRequest()})
-	if (!data.scoped || !data.client || !data.redirect_uri || !data.scopes?.length) {
+	// A scope without MCP values, like openid, still gets a session.
+	if (!data.scoped) {
+		await authorize()
+		return
+	}
+	if (!data.client || !data.redirect_uri || !data.scopes?.length) {
 		throw new Error('Authorization preview is incomplete')
 	}
 	phase.value = {
