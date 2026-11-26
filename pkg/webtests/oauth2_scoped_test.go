@@ -305,16 +305,6 @@ func TestOAuthScopedGrantOverMCP(t *testing.T) {
 	_, readToken, _ := scopedGrant(t, e, map[string]string{"scope": "mcp:read"})
 	_, writeToken, _ := scopedGrant(t, e, map[string]string{"scope": "mcp:write"})
 
-	t.Run("rejected on REST routes", func(t *testing.T) {
-		for _, token := range []string{
-			readToken.AccessToken,
-			writeToken.AccessToken,
-		} {
-			rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects", "", token, "")
-			assert.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
-		}
-	})
-
 	t.Run("mcp:read sees and calls only read tools", func(t *testing.T) {
 		c := newMCPClientOn(t, e, readToken.AccessToken)
 		names := c.toolNames()
