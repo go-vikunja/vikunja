@@ -67,6 +67,10 @@ type APIToken struct {
 	// to the bot's ID. If omitted, defaults to the authenticated user.
 	OwnerID int64 `xorm:"bigint not null" json:"owner_id,omitempty" query:"owner_id" doc:"The user ID of the token owner. When creating a token for a bot user, set this to the bot's ID; the bot must be owned by the authenticated user. If omitted, defaults to the authenticated user."`
 
+	// Set only by the OAuth token endpoint; Create clears both.
+	OAuthClientID string `xorm:"text null 'oauth_client_id'" json:"oauth_client_id,omitempty" readOnly:"true" doc:"The OAuth client this token was issued to. Empty for tokens created by hand. Such tokens only work on the MCP endpoint."`
+	OAuthResource string `xorm:"text null 'oauth_resource'" json:"-"`
+
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
 }
@@ -129,14 +133,8 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	t.ID = 0
-
-	token, err := utils.CryptoRandomBytes(20)
-	if err != nil {
-		return err
-	}
-	t.Token = APITokenPrefix + hex.EncodeToString(token)
-	t.TokenSha256 = HashAPIToken(t.Token)
+	t.OAuthClientID = ""
+	t.OAuthResource = ""
 
 	if t.OwnerID == 0 {
 		t.OwnerID = caller.ID
@@ -145,6 +143,28 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 			return err
 		}
 	}
+
+	return t.insert(s, caller.ID)
+}
+
+// CreateForOAuthClient mints the token an OAuth client receives for a scoped grant. Its owner is the
+// user who authorized the client.
+func (t *APIToken) CreateForOAuthClient(s *xorm.Session) error {
+	if t.OAuthClientID == "" || t.OAuthResource == "" {
+		return fmt.Errorf("oauth api token for owner %d needs a client id and a resource", t.OwnerID)
+	}
+	return t.insert(s, t.OwnerID)
+}
+
+func (t *APIToken) insert(s *xorm.Session, doerID int64) error {
+	t.ID = 0
+
+	token, err := utils.CryptoRandomBytes(20)
+	if err != nil {
+		return err
+	}
+	t.Token = APITokenPrefix + hex.EncodeToString(token)
+	t.TokenSha256 = HashAPIToken(t.Token)
 
 	if err := PermissionsAreValid(t.APIPermissions); err != nil {
 		return err
@@ -158,7 +178,7 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	events.DispatchOnCommit(s, &APITokenIssuedEvent{
 		TokenID: t.ID,
-		DoerID:  caller.ID,
+		DoerID:  doerID,
 		OwnerID: t.OwnerID,
 	})
 
@@ -278,6 +298,9 @@ func (t *APIToken) HasFeedsAccess() bool  { return t.HasPermission("feeds", "acc
 
 // MCP's transport scope is checked in its handler, independently of the HTTP method.
 func (t *APIToken) HasMCPAccess() bool { return t.HasPermission("mcp", "access") }
+
+// IsOAuthGrant reports whether an OAuth client received this token, which then only works for MCP.
+func (t *APIToken) IsOAuthGrant() bool { return t != nil && t.OAuthClientID != "" }
 
 // GetTokenFromTokenString returns the full token object from the original token string,
 // backfilling token_sha256 when the token was only found via the legacy pbkdf2 path.
