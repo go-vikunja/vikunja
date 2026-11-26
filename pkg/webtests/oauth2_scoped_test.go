@@ -454,7 +454,7 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 		})
 		require.Equal(t, http.StatusOK, res.code, string(res.body))
 		assert.JSONEq(t, `{
-			"client": {"id": "test-mcp-client"},
+			"client": {"id": "test-mcp-client", "kind": "legacy"},
 			"redirect_uri": "http://127.0.0.1:33418/callback",
 			"scopes": ["mcp:read", "mcp:write"],
 			"scoped": true
@@ -475,7 +475,7 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 		res := authorizePreview(t, e, userToken, nil)
 		require.Equal(t, http.StatusOK, res.code, string(res.body))
 		assert.JSONEq(t, `{
-			"client": {"id": "test-mcp-client"},
+			"client": {"id": "test-mcp-client", "kind": "legacy"},
 			"redirect_uri": "http://127.0.0.1:33418/callback",
 			"scopes": [],
 			"scoped": false

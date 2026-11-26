@@ -85,7 +85,7 @@ var (
 	}
 )
 
-func setupTestEnv() (e *echo.Echo, err error) {
+func setupTestEnv(opts ...routes.Option) (e *echo.Echo, err error) {
 	config.InitDefaultConfig()
 	config.ServicePublicURL.Set("https://localhost")
 
@@ -105,7 +105,7 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	}
 
 	e = routes.NewEcho()
-	routes.RegisterRoutes(e)
+	routes.RegisterRoutes(e, opts...)
 	return
 }
 
