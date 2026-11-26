@@ -22,6 +22,10 @@ export type ApiToken = {
      */
     readonly id?: number;
     /**
+     * The OAuth client this token was issued to. Empty for tokens created by hand. Such tokens only work on the MCP endpoint.
+     */
+    readonly oauth_client_id?: string;
+    /**
      * The user ID of the token owner. When creating a token for a bot user, set this to the bot's ID; the bot must be owned by the authenticated user. If omitted, defaults to the authenticated user.
      */
     owner_id?: number;
