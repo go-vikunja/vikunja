@@ -301,11 +301,6 @@ async function toggleProjectFavorite() {
 	text-overflow: ellipsis;
 }
 
-.saved-filter-icon {
-	color: var(--grey-300) !important;
-	font-size: .75rem;
-}
-
 @media (pointer: coarse) {
 	.drag-handle {
 		display: none !important;
