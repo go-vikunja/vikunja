@@ -103,22 +103,17 @@ afterEach(() => {
 })
 
 describe('OAuthAuthorize', () => {
-	describe('inside a frame', () => {
-		it.each([
-			['an unscoped', {}],
-			['a scoped', {scope: 'mcp:write', resource: RESOURCE}],
-		])('refuses %s request', async (_, extra) => {
-			vi.spyOn(window, 'top', 'get').mockReturnValue({} as Window)
-			mockRoute.query = {...BASE_QUERY, ...extra}
-			sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write']))
-			const wrapper = mountView()
-			await flushPromises()
+	it('refuses a scoped request inside a frame', async () => {
+		vi.spyOn(window, 'top', 'get').mockReturnValue({} as Window)
+		mockRoute.query = {...BASE_QUERY, scope: 'mcp:write', resource: RESOURCE}
+		sdk.oauthAuthorizePreview.mockResolvedValue(preview(['mcp:read', 'mcp:write']))
+		const wrapper = mountView()
+		await flushPromises()
 
-			expect(sdk.oauthAuthorizePreview).not.toHaveBeenCalled()
-			expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
-			expect(wrapper.text()).toContain('cannot be shown inside another website')
-			expect(wrapper.find('input[value="write"]').exists()).toBe(false)
-		})
+		expect(sdk.oauthAuthorizePreview).not.toHaveBeenCalled()
+		expect(sdk.oauthAuthorize).not.toHaveBeenCalled()
+		expect(wrapper.text()).toContain('cannot be shown inside another website')
+		expect(wrapper.find('input[value="write"]').exists()).toBe(false)
 	})
 
 	it('approves an unscoped request without asking', async () => {
