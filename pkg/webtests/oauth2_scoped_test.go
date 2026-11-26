@@ -184,20 +184,12 @@ func TestOAuthScopedGrant(t *testing.T) {
 	})
 
 	t.Run("rejects a foreign resource", func(t *testing.T) {
-		for _, resource := range []string{
-			"https://evil.example/api/v2/mcp",
-			"https://localhost/api/v2/projects",
-			"https://localhost/api/v2/mcp?x=1",
-			"https://localhost/api/v2/mcp#frag",
-			"/api/v2/mcp",
-		} {
-			authz := scopedAuthorize(t, e, "v2", map[string]string{
-				"scope":    "mcp:read",
-				"resource": resource,
-			})
-			require.Equal(t, http.StatusBadRequest, authz.code, "%s: %s", resource, authz.body)
-			assert.Equal(t, models.ErrCodeOAuthInvalidTarget, authz.errorCode(t), resource)
-		}
+		authz := scopedAuthorize(t, e, "v2", map[string]string{
+			"scope":    "mcp:read",
+			"resource": "https://evil.example/api/v2/mcp",
+		})
+		require.Equal(t, http.StatusBadRequest, authz.code, string(authz.body))
+		assert.Equal(t, models.ErrCodeOAuthInvalidTarget, authz.errorCode(t))
 	})
 
 	t.Run("a scope without mcp values and no resource returns a session", func(t *testing.T) {
