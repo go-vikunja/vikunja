@@ -136,6 +136,23 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				"permission": PermissionAdmin,
 			}, false)
 		})
+		t.Run("bot identifier collides with a project only its owner can access", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			// Drop the bot's share so project 44 is reachable by owner 21 alone.
+			_, err := s.Table("users_projects").Where("user_id = ? AND project_id = ?", 23, 44).Delete()
+			require.NoError(t, err)
+			_, err = s.Table("projects").Where("id = ?", 44).Update(map[string]any{"identifier": "BOTOWN"})
+			require.NoError(t, err)
+
+			bot := &user.User{ID: 23, Username: "bot-owner-a-assistant", BotOwnerID: 21}
+			project := Project{Title: "bot-collision", Identifier: "BOTOWN"}
+			err = project.Create(s, bot)
+			require.Error(t, err)
+			assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
+		})
 		t.Run("kanban view creates To-Do, doing, done buckets", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
@@ -201,7 +218,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			require.Error(t, err)
 			assert.True(t, user.IsErrUserDoesNotExist(err))
 		})
-		t.Run("existing identifier", func(t *testing.T) {
+		t.Run("identifier of an own project", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			defer s.Close()
@@ -213,6 +230,34 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			err := project.Create(s, usr)
 			require.Error(t, err)
 			assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
+		})
+		t.Run("identifier of a shared project", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			// Project 3 belongs to user 3 and is shared read-only with user 1
+			project := Project{
+				Title:      "test",
+				Identifier: "test3",
+			}
+			err := project.Create(s, usr)
+			require.Error(t, err)
+			assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
+		})
+		t.Run("identifier of a project the user cannot access", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			project := Project{
+				Title:      "test",
+				Identifier: "test2",
+			}
+			require.NoError(t, project.Create(s, usr))
+			require.NoError(t, s.Commit())
+			db.AssertExists(t, "projects", map[string]interface{}{
+				"id":         project.ID,
+				"identifier": "TEST2",
+			}, false)
 		})
 		t.Run("non ascii characters", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -333,18 +378,66 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			require.Error(t, err)
 			assert.True(t, IsErrProjectDoesNotExist(err))
 		})
-		t.Run("existing identifier", func(t *testing.T) {
+		t.Run("identifier of another accessible project", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
 			defer s.Close()
 			project := Project{
-				Title:       "test",
-				Description: "Lorem Ipsum",
-				Identifier:  "test1",
+				ID:         1,
+				Title:      "Test1",
+				Identifier: "test3",
 			}
-			err := project.Create(s, usr)
+			err := project.Update(s, usr)
 			require.Error(t, err)
 			assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
+		})
+		t.Run("identifier of a project the user cannot access", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			project := Project{
+				ID:         1,
+				Title:      "Test1",
+				Identifier: "test2",
+			}
+			require.NoError(t, project.Update(s, usr))
+			require.NoError(t, s.Commit())
+			db.AssertExists(t, "projects", map[string]interface{}{
+				"id":         1,
+				"identifier": "TEST2",
+			}, false)
+		})
+		t.Run("identifier only the owner can see elsewhere", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			// User 1 is admin on project 11; its owner (user 6) also owns project 41, which user 1 cannot see
+			_, err := GetProjectSimpleByIdentifier(s, usr, "HIER1")
+			require.True(t, IsErrProjectDoesNotExist(err))
+
+			project := Project{
+				ID:         11,
+				Title:      "Test11",
+				Identifier: "hier1",
+			}
+			err = project.Update(s, usr)
+			require.Error(t, err)
+			assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
+		})
+		t.Run("unchanged identifier that already collides", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+			// A later share can make two reachable projects collide; that must not lock the project
+			_, err := s.Table("projects").Where("id = ?", 1).Update(map[string]any{"identifier": "TEST3"})
+			require.NoError(t, err)
+
+			project := Project{
+				ID:         1,
+				Title:      "renamed",
+				Identifier: "TEST3",
+			}
+			require.NoError(t, project.Update(s, usr))
 		})
 		t.Run("change parent project", func(t *testing.T) {
 			t.Run("own", func(t *testing.T) {

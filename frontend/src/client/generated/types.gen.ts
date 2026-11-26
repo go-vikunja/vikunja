@@ -1732,7 +1732,7 @@ export type Project = {
      */
     readonly id?: number;
     /**
-     * The unique project short identifier. Used to build task identifiers (e.g. PROJ-123).
+     * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
     /**
@@ -1861,7 +1861,7 @@ export type ProjectReadBody = {
      */
     readonly id?: number;
     /**
-     * The unique project short identifier. Used to build task identifiers (e.g. PROJ-123).
+     * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
     /**
@@ -3348,7 +3348,7 @@ export type TrashedProject = {
      */
     readonly id?: number;
     /**
-     * The unique project short identifier. Used to build task identifiers (e.g. PROJ-123).
+     * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
     /**
@@ -4944,7 +4944,7 @@ export type ProjectWritable = {
      */
     hex_color?: string;
     /**
-     * The unique project short identifier. Used to build task identifiers (e.g. PROJ-123).
+     * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
     /**
@@ -5009,7 +5009,7 @@ export type ProjectReadBodyWritable = {
      */
     hex_color?: string;
     /**
-     * The unique project short identifier. Used to build task identifiers (e.g. PROJ-123).
+     * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
     /**
@@ -5522,7 +5522,7 @@ export type TrashedProjectWritable = {
      */
     hex_color?: string;
     /**
-     * The unique project short identifier. Used to build task identifiers (e.g. PROJ-123).
+     * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
     /**
