@@ -532,18 +532,33 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 	return p.memoCopy(), nil
 }
 
-// GetProjectSimpleByIdentifier gets a project by its textual identifier (e.g. "PROJ").
-// Identifiers are stored uppercase, so the lookup normalizes the input.
-func GetProjectSimpleByIdentifier(s *xorm.Session, identifier string) (project *Project, err error) {
-	project, exists, err := getProjectSimple(s, builder.Eq{"identifier": strings.ToUpper(identifier)})
+// GetProjectSimpleByIdentifier resolves a textual identifier (e.g. "PROJ") among the projects a can read.
+// A share can make an identifier ambiguous for a user: their own project wins, then the oldest.
+func GetProjectSimpleByIdentifier(s *xorm.Session, a web.Auth, identifier string) (*Project, error) {
+	accessible, err := accessibleProjectIDsCond(s, a, "id")
 	if err != nil {
 		return nil, err
 	}
-	if !exists {
+
+	matches := []*Project{}
+	err = s.
+		Where(builder.And(builder.Eq{"identifier": strings.ToUpper(identifier)}, accessible)).
+		OrderBy("id").
+		Find(&matches)
+	if err != nil {
+		return nil, err
+	}
+	if len(matches) == 0 {
 		return nil, ErrProjectDoesNotExist{}
 	}
 
-	return
+	for _, project := range matches {
+		if project.OwnerID == a.GetID() {
+			return project, nil
+		}
+	}
+
+	return matches[0], nil
 }
 
 func getProjectSimple(s *xorm.Session, cond builder.Cond) (project *Project, exists bool, err error) {

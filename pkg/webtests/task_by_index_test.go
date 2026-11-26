@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v5"
@@ -35,7 +36,7 @@ func TestTaskByProjectIndex(t *testing.T) {
 	token, err := auth.NewUserJWTAuthtoken(&testuser1, testSessionID(&testuser1))
 	require.NoError(t, err)
 
-	do := func(path string) *httptest.ResponseRecorder {
+	doWith := func(token, path string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		req.Header.Set("Authorization", "Bearer "+token)
@@ -43,6 +44,7 @@ func TestTaskByProjectIndex(t *testing.T) {
 		e.ServeHTTP(rec, req)
 		return rec
 	}
+	do := func(path string) *httptest.ResponseRecorder { return doWith(token, path) }
 
 	t.Run("by numeric project id", func(t *testing.T) {
 		rec := do("/api/v1/projects/1/tasks/by-index/1")
@@ -68,10 +70,31 @@ func TestTaskByProjectIndex(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
+	t.Run("identifier of an inaccessible project returns 404", func(t *testing.T) {
+		// Project 2 ("TEST2") is not shared with user1; same answer as an unknown identifier.
+		rec := do("/api/v1/projects/TEST2/tasks/by-index/1")
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+	})
+
 	t.Run("numeric-only value always treated as id", func(t *testing.T) {
 		// Even if a project had the identifier "999999", a pure-digit value
 		// is parsed as an id; the task lookup then fails.
 		rec := do("/api/v1/projects/999999/tasks/by-index/1")
 		assert.NotEqual(t, http.StatusOK, rec.Code)
+	})
+
+	t.Run("link share resolves only its own project's identifier", func(t *testing.T) {
+		shareToken, err := auth.NewLinkShareJWTAuthtoken(&models.LinkSharing{
+			ID:         1,
+			Hash:       "test",
+			ProjectID:  1,
+			Permission: models.PermissionRead,
+		})
+		require.NoError(t, err)
+
+		rec := doWith(shareToken, "/api/v1/projects/TEST1/tasks/by-index/1")
+		assert.Equal(t, http.StatusOK, rec.Code)
+		rec = doWith(shareToken, "/api/v1/projects/TEST2/tasks/by-index/1")
+		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 }
