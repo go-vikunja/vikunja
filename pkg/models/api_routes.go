@@ -262,7 +262,7 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
-		routeGroupName == "oauth_authorize" ||
+		strings.HasPrefix(routeGroupName, "oauth_authorize") ||
 		routeGroupName == "mcp" ||
 		strings.HasPrefix(routeGroupName, "mcp_") ||
 		strings.HasPrefix(routeGroupName, "user_") {

@@ -94,6 +94,36 @@ func (srv *Server) HandleAuthorize(c *echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+// AuthorizePreview describes a valid authorize request for the consent screen.
+type AuthorizePreview struct {
+	Client      AuthorizeClient `json:"client"`
+	RedirectURI string          `json:"redirect_uri" doc:"The validated redirect URI. Only redirect here, also to report a denial."`
+	Scopes      []Scope         `json:"scopes" enum:"mcp:read,mcp:write" doc:"The scopes the code would grant, normalized. Empty when the client receives a session."`
+	Scoped      bool            `json:"scoped" doc:"Whether the client receives an MCP-only API token instead of a session."`
+}
+
+// AuthorizeClient identifies the client asking for authorization.
+type AuthorizeClient struct {
+	ID string `json:"id"`
+}
+
+// Preview validates an authorize request exactly like Authorize, without creating a code.
+func (srv *Server) Preview(req *AuthorizeRequest) (*AuthorizePreview, error) {
+	scopes, _, err := srv.validate(req)
+	if err != nil {
+		return nil, err
+	}
+	if scopes == nil {
+		scopes = []Scope{}
+	}
+	return &AuthorizePreview{
+		Client:      AuthorizeClient{ID: req.ClientID},
+		RedirectURI: req.RedirectURI,
+		Scopes:      scopes,
+		Scoped:      len(scopes) > 0,
+	}, nil
+}
+
 // Authorize validates the OAuth authorization parameters for the given
 // authenticated user and creates a single-use authorization code, independent
 // of the HTTP layer. Callers own request binding and resolving the user.
