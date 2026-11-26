@@ -163,7 +163,23 @@ function deny() {
 	})
 }
 
+function isFramed() {
+	try {
+		return window.self !== window.top
+	} catch {
+		// Reading a cross-origin top can throw.
+		return true
+	}
+}
+
 onMounted(async () => {
+	// Clickjacking: a framing site could overlay the approve button.
+	if (isFramed()) {
+		errorMessage.value = t('user.auth.oauthFramed')
+		phase.value = {kind: 'failed'}
+		return
+	}
+
 	const missing = requiredParams.filter(p => !route.query[p])
 	if (missing.length > 0) {
 		errorMessage.value = t('user.auth.oauthMissingParams', {params: missing.join(', ')})
