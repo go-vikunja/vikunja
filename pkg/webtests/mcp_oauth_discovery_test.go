@@ -323,8 +323,7 @@ func withPublicURL(t *testing.T, publicURL string) {
 	t.Cleanup(func() { config.ServicePublicURL.Set(previous) })
 }
 
-// Walks the discovery chain the way an MCP client does, with the MCP SDK's
-// client-side helpers; the test plays the user on the consent screen.
+// Uses the MCP SDK's client-side helpers; the test plays the user on the consent screen.
 func TestMCPOAuthDiscoveryChain(t *testing.T) {
 	e, clientID, _ := metadataClientEnv(t)
 	server := httptest.NewServer(e)
