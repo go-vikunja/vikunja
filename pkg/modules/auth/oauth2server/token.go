@@ -18,8 +18,9 @@ package oauth2server
 
 import (
 	"context"
-
 	"net/http"
+	"slices"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -37,8 +38,11 @@ type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int64  `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token,omitempty" doc:"Absent for scoped grants: their API token is not refreshable."`
+	Scope        string `json:"scope,omitempty" doc:"The granted scope of a scoped grant."`
 }
+
+const oauthAPITokenTTL = 90 * 24 * time.Hour
 
 // TokenRequest holds the parameters of a POST /oauth/token request. v1 binds it
 // from JSON; v2 accepts spec-compliant application/x-www-form-urlencoded as well
@@ -50,28 +54,29 @@ type TokenRequest struct {
 	RedirectURI  string `json:"redirect_uri" form:"redirect_uri"`
 	CodeVerifier string `json:"code_verifier" form:"code_verifier"`
 	RefreshToken string `json:"refresh_token" form:"refresh_token"`
+	Resource     string `json:"resource,omitempty" form:"resource" doc:"RFC 8707 resource indicator. Must match the resource of the authorization request."`
 }
 
 // HandleToken handles POST /oauth/token.
 // Supports grant_type=authorization_code and grant_type=refresh_token.
 // @Summary OAuth 2.0 token endpoint
-// @Description Exchanges an authorization code for an access token, or a refresh token for a new one. Part of the OAuth 2.0 Authorization Code flow with PKCE. Needs no authentication: the grant itself is the credential.
+// @Description Exchanges an authorization code for an access token, or a refresh token for a new one. Part of the OAuth 2.0 Authorization Code flow with PKCE. Needs no authentication: the grant itself is the credential. A scoped authorization code yields an MCP-only API token and no refresh token.
 // @tags auth
 // @Accept json
 // @Produce json
 // @Param grant body TokenRequest true "The token request"
 // @Success 200 {object} TokenResponse "The access token, its type, lifetime and refresh token."
-// @Failure 400 {object} web.HTTPError "Unsupported grant type, or an invalid, expired or already-used authorization code."
+// @Failure 400 {object} web.HTTPError "Unsupported grant type, an invalid, expired or already-used authorization code, or a resource that does not match the authorization request."
 // @Failure 401 {object} web.HTTPError "Invalid or expired refresh token."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /oauth/token [post]
-func HandleToken(c *echo.Context) error {
+func (srv *Server) HandleToken(c *echo.Context) error {
 	var req TokenRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
-	resp, err := ExchangeToken(c.Request().Context(), &req, c.Request().UserAgent(), c.RealIP())
+	resp, err := srv.ExchangeToken(c.Request().Context(), &req, c.Request().UserAgent(), c.RealIP())
 	if err != nil {
 		return err
 	}
@@ -84,10 +89,10 @@ func HandleToken(c *echo.Context) error {
 // token endpoint, independent of the HTTP layer. Callers own request binding and
 // the Cache-Control: no-store response header. deviceInfo/ipAddress are recorded
 // on the session created for the authorization_code grant.
-func ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+func (srv *Server) ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	switch req.GrantType {
 	case "authorization_code":
-		return exchangeAuthorizationCode(ctx, req, deviceInfo, ipAddress)
+		return srv.exchangeAuthorizationCode(ctx, req, deviceInfo, ipAddress)
 	case "refresh_token":
 		return exchangeRefreshToken(req)
 	default:
@@ -117,7 +122,7 @@ func consumeAuthorizationCode(code string) (*models.OAuthCode, error) {
 	return oauthCode, nil
 }
 
-func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+func (srv *Server) exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	oauthCode, err := consumeAuthorizationCode(req.Code)
 	if err != nil {
 		return nil, err
@@ -136,6 +141,14 @@ func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInf
 	// Verify PKCE
 	if !VerifyPKCE(req.CodeVerifier, oauthCode.CodeChallenge, oauthCode.CodeChallengeMethod) {
 		return nil, &models.ErrOAuthPKCEVerifyFailed{}
+	}
+
+	if req.Resource != "" && !SameResource(req.Resource, oauthCode.Resource) {
+		return nil, &models.ErrOAuthInvalidTarget{}
+	}
+
+	if oauthCode.Scope != "" {
+		return srv.issueScopedToken(oauthCode)
 	}
 
 	s := db.NewSession()
@@ -176,6 +189,55 @@ func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInf
 		TokenType:    "bearer",
 		ExpiresIn:    config.ServiceJWTTTLShort.GetInt64(),
 		RefreshToken: session.RefreshToken,
+	}, nil
+}
+
+func (srv *Server) issueScopedToken(oauthCode *models.OAuthCode) (*TokenResponse, error) {
+	scopes, err := parseScope(oauthCode.Scope)
+	if err != nil {
+		return nil, err
+	}
+	permissions := models.APIPermissions{}
+	for _, scope := range scopes {
+		for group, granted := range srv.resource.ScopePermissions(scope) {
+			for _, permission := range granted {
+				if !slices.Contains(permissions[group], permission) {
+					permissions[group] = append(permissions[group], permission)
+				}
+			}
+		}
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	if _, err := user.GetUserByIDForAuth(s, oauthCode.UserID); err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	token := &models.APIToken{
+		Title:          oauthCode.ClientID,
+		APIPermissions: permissions,
+		ExpiresAt:      time.Now().Add(oauthAPITokenTTL),
+		OwnerID:        oauthCode.UserID,
+		OAuthClientID:  oauthCode.ClientID,
+		OAuthResource:  oauthCode.Resource,
+	}
+	if err := token.CreateForOAuthClient(s); err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	if err := s.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &TokenResponse{
+		AccessToken: token.Token,
+		TokenType:   "bearer",
+		ExpiresIn:   int64(oauthAPITokenTTL.Seconds()),
+		Scope:       oauthCode.Scope,
 	}, nil
 }
 

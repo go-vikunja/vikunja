@@ -129,6 +129,11 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, sk
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
+	if token.IsOAuthGrant() && c.Path() != mcp.RoutePrefix && !mcp.IsLoopback(c.Request().Context()) {
+		log.Debugf("[auth] OAuth-issued token %d tried to use non-MCP route %s", token.ID, c.Path())
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
 	if !skipRouteCheck && !models.CanDoAPIRoute(c, token) {
 		log.Debugf("[auth] Tried authenticating with token %d but it does not have permission to do this route", token.ID)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")

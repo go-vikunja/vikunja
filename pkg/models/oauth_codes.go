@@ -34,6 +34,8 @@ type OAuthCode struct {
 	RedirectURI         string    `xorm:"text not null" json:"-"`
 	CodeChallenge       string    `xorm:"varchar(128) not null" json:"-"`
 	CodeChallengeMethod string    `xorm:"varchar(10) not null" json:"-"`
+	Scope               string    `xorm:"varchar(255) null" json:"-"`
+	Resource            string    `xorm:"text null" json:"-"`
 	Created             time.Time `xorm:"created not null" json:"created"`
 }
 
@@ -42,24 +44,18 @@ func (*OAuthCode) TableName() string {
 }
 
 // CreateOAuthCode generates a cryptographically random authorization code,
-// stores it, and returns the code string.
-func CreateOAuthCode(s *xorm.Session, userID int64, clientID, redirectURI, codeChallenge, codeChallengeMethod string) (code string, err error) {
+// stores it with the grant described by c, and returns the code string.
+func CreateOAuthCode(s *xorm.Session, c *OAuthCode) (code string, err error) {
 	rawCode, err := utils.CryptoRandomString(64)
 	if err != nil {
 		return "", err
 	}
 
-	oauthCode := &OAuthCode{
-		UserID:              userID,
-		Code:                HashSessionToken(rawCode),
-		ExpiresAt:           time.Now().Add(10 * time.Minute),
-		ClientID:            clientID,
-		RedirectURI:         redirectURI,
-		CodeChallenge:       codeChallenge,
-		CodeChallengeMethod: codeChallengeMethod,
-	}
+	c.ID = 0
+	c.Code = HashSessionToken(rawCode)
+	c.ExpiresAt = time.Now().Add(10 * time.Minute)
 
-	_, err = s.Insert(oauthCode)
+	_, err = s.Insert(c)
 	if err != nil {
 		return "", err
 	}

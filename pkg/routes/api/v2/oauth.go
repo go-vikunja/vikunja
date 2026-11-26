@@ -47,35 +47,39 @@ type oauthAuthorizeBody struct {
 	Body *oauth2server.AuthorizeResponse
 }
 
-func init() { AddRouteRegistrar(RegisterOAuthRoutes) }
-
 // RegisterOAuthRoutes wires the OAuth 2.0 token and authorize endpoints. The
 // token endpoint is public (it authenticates the request itself); authorize
-// inherits the global JWT auth.
-func RegisterOAuthRoutes(api huma.API) {
+// inherits the global JWT auth. Called explicitly like RegisterMCPInfo: srv needs the MCP module.
+func RegisterOAuthRoutes(api huma.API, srv *oauth2server.Server) {
 	tags := []string{"auth"}
 
 	Register(api, huma.Operation{
 		OperationID:   "oauth-token",
 		Summary:       "OAuth 2.0 token endpoint",
-		Description:   "Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON.",
+		Description:   "Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. A scoped authorization code yields an MCP-only API token and no refresh token.",
 		Method:        http.MethodPost,
 		Path:          "/oauth/token",
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
 		Security:      publicSecurity,
 		Middlewares:   huma.Middlewares{formBodyAsJSON(api)},
-	}, oauthToken)
+	}, func(ctx context.Context, in *struct {
+		Body oauth2server.TokenRequest `contentType:"application/x-www-form-urlencoded"`
+	}) (*oauthTokenBody, error) {
+		return oauthToken(ctx, srv, &in.Body)
+	})
 
 	Register(api, huma.Operation{
 		OperationID:   "oauth-authorize",
 		Summary:       "OAuth 2.0 authorize endpoint",
-		Description:   "Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) and a loopback or vikunja- scheme redirect_uri are required.",
+		Description:   "Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) and a loopback or vikunja- scheme redirect_uri are required. A scope of mcp:read or mcp:write, or a resource, makes the code exchange yield an MCP-only API token instead of a session.",
 		Method:        http.MethodPost,
 		Path:          "/oauth/authorize",
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
-	}, oauthAuthorize)
+	}, func(ctx context.Context, in *struct{ Body oauth2server.AuthorizeRequest }) (*oauthAuthorizeBody, error) {
+		return oauthAuthorize(ctx, srv, &in.Body)
+	})
 }
 
 // Per operation: an API-wide form format would let a cross-site <form> drive every endpoint (GHSA-frf4-3prf-3vch).
@@ -141,18 +145,16 @@ func (c *jsonBodyContext) Header(name string) string {
 	return c.humaContext.Header(name)
 }
 
-func oauthToken(ctx context.Context, in *struct {
-	Body oauth2server.TokenRequest `contentType:"application/x-www-form-urlencoded"`
-}) (*oauthTokenBody, error) {
+func oauthToken(ctx context.Context, srv *oauth2server.Server, req *oauth2server.TokenRequest) (*oauthTokenBody, error) {
 	deviceInfo, ipAddress := requestClientInfo(ctx)
-	resp, err := oauth2server.ExchangeToken(ctx, &in.Body, deviceInfo, ipAddress)
+	resp, err := srv.ExchangeToken(ctx, req, deviceInfo, ipAddress)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
 	return &oauthTokenBody{CacheControl: "no-store", Body: resp}, nil
 }
 
-func oauthAuthorize(ctx context.Context, in *struct{ Body oauth2server.AuthorizeRequest }) (*oauthAuthorizeBody, error) {
+func oauthAuthorize(ctx context.Context, srv *oauth2server.Server, req *oauth2server.AuthorizeRequest) (*oauthAuthorizeBody, error) {
 	if ec := humabridge.EchoContextFrom(ctx); ec != nil && (*ec).Get("api_token") != nil {
 		return nil, huma.Error403Forbidden("API tokens cannot be used to authorize OAuth clients")
 	}
@@ -166,7 +168,7 @@ func oauthAuthorize(ctx context.Context, in *struct{ Body oauth2server.Authorize
 		return nil, translateDomainError(err)
 	}
 
-	resp, err := oauth2server.Authorize(&in.Body, u.ID)
+	resp, err := srv.Authorize(req, u.ID)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

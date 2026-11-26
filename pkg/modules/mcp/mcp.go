@@ -28,6 +28,7 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/humabridge"
 	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/version"
@@ -170,6 +171,9 @@ func (m *Module) handler(c *echo.Context) error {
 	}
 	if !token.HasMCPAccess() {
 		return echo.NewHTTPError(http.StatusForbidden, "token does not have mcp:access scope")
+	}
+	if token.OAuthResource != "" && !oauth2server.SameResource(token.OAuthResource, m.ResourceURL()) {
+		return echo.NewHTTPError(http.StatusUnauthorized, "token was issued for a different resource")
 	}
 	if proceed, err := limitRequestBody(c, req); !proceed {
 		return err

@@ -1315,7 +1315,7 @@ export const notificationsMarkRead = <ThrowOnError extends boolean = true>(optio
 /**
  * OAuth 2.0 authorize endpoint
  *
- * Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) and a loopback or vikunja- scheme redirect_uri are required.
+ * Creates a single-use authorization code for the authenticated user. PKCE (code_challenge with method S256) and a loopback or vikunja- scheme redirect_uri are required. A scope of mcp:read or mcp:write, or a resource, makes the code exchange yield an MCP-only API token instead of a session.
  */
 export const oauthAuthorize = <ThrowOnError extends boolean = true>(options: Options<OauthAuthorizeData, ThrowOnError>): RequestResult<OauthAuthorizeResponses, OauthAuthorizeErrors, ThrowOnError> => (options.client ?? client).post<OauthAuthorizeResponses, OauthAuthorizeErrors, ThrowOnError>({
     security: [{
@@ -1338,7 +1338,7 @@ export const oauthAuthorize = <ThrowOnError extends boolean = true>(options: Opt
 /**
  * OAuth 2.0 token endpoint
  *
- * Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON.
+ * Exchanges an authorization code (grant_type=authorization_code) or a refresh token (grant_type=refresh_token) for an access token. Accepts application/x-www-form-urlencoded per RFC 6749 as well as JSON. A scoped authorization code yields an MCP-only API token and no refresh token.
  */
 export const oauthToken = <ThrowOnError extends boolean = true>(options: Options<OauthTokenData, ThrowOnError>): RequestResult<OauthTokenResponses, OauthTokenErrors, ThrowOnError> => (options.client ?? client).post<OauthTokenResponses, OauthTokenErrors, ThrowOnError>({
     ...urlSearchParamsBodySerializer,

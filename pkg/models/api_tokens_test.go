@@ -102,6 +102,31 @@ func TestAPIToken_Create(t *testing.T) {
 	})
 }
 
+func TestAPIToken_CreateForOAuthClient(t *testing.T) {
+	newToken := func() *APIToken {
+		return &APIToken{
+			Title:          "client",
+			APIPermissions: APIPermissions{"mcp": {"access"}},
+			ExpiresAt:      time.Now().Add(time.Hour),
+			OwnerID:        1,
+			OAuthClientID:  "client",
+			OAuthResource:  "https://vikunja.example/api/v2/mcp",
+		}
+	}
+
+	t.Run("validates permissions", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		db.LoadAndAssertFixtures(t)
+
+		token := newToken()
+		token.APIPermissions = APIPermissions{"oauth": {"authorize"}}
+		err := token.CreateForOAuthClient(s)
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidAPITokenPermission(err))
+	})
+}
+
 // nonUserAuth is a web.Auth that is neither *user.User nor *models.LinkSharing.
 // It proves the API-token guard rejects by principal type, not by matching the
 // concrete link-share struct (GHSA-vvcv-vpph-h844).

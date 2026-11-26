@@ -22,6 +22,10 @@ export type ApiToken = {
      */
     readonly id?: number;
     /**
+     * The OAuth client this token was issued to. Empty for tokens created by hand. Such tokens only work on the MCP endpoint.
+     */
+    readonly oauth_client_id?: string;
+    /**
      * The user ID of the token owner. When creating a token for a bot user, set this to the bot's ID; the bot must be owned by the authenticated user. If omitted, defaults to the authenticated user.
      */
     owner_id?: number;
@@ -294,7 +298,15 @@ export type AuthorizeRequest = {
     code_challenge?: string;
     code_challenge_method?: string;
     redirect_uri?: string;
+    /**
+     * RFC 8707 resource indicator. Must be this instance's MCP endpoint; implies a scoped grant of mcp:read mcp:write when scope is omitted.
+     */
+    resource?: string;
     response_type?: string;
+    /**
+     * Space-separated scopes. With mcp:read or mcp:write the client receives an API token for the MCP endpoint instead of a session. Unknown values are ignored.
+     */
+    scope?: string;
     state?: string;
 };
 
@@ -305,6 +317,10 @@ export type AuthorizeResponse = {
     readonly $schema?: string;
     code?: string;
     redirect_uri?: string;
+    /**
+     * The granted scope. Empty when the client receives a session.
+     */
+    scope?: string;
     state?: string;
 };
 
@@ -3226,6 +3242,10 @@ export type TokenRequest = {
     grant_type?: string;
     redirect_uri?: string;
     refresh_token?: string;
+    /**
+     * RFC 8707 resource indicator. Must match the resource of the authorization request.
+     */
+    resource?: string;
 };
 
 export type TokenResponse = {
@@ -3235,7 +3255,14 @@ export type TokenResponse = {
     readonly $schema?: string;
     access_token?: string;
     expires_in?: number;
+    /**
+     * Absent for scoped grants: their API token is not refreshable.
+     */
     refresh_token?: string;
+    /**
+     * The granted scope of a scoped grant.
+     */
+    scope?: string;
     token_type?: string;
 };
 
@@ -4254,13 +4281,25 @@ export type AuthorizeRequestWritable = {
     code_challenge?: string;
     code_challenge_method?: string;
     redirect_uri?: string;
+    /**
+     * RFC 8707 resource indicator. Must be this instance's MCP endpoint; implies a scoped grant of mcp:read mcp:write when scope is omitted.
+     */
+    resource?: string;
     response_type?: string;
+    /**
+     * Space-separated scopes. With mcp:read or mcp:write the client receives an API token for the MCP endpoint instead of a session. Unknown values are ignored.
+     */
+    scope?: string;
     state?: string;
 };
 
 export type AuthorizeResponseWritable = {
     code?: string;
     redirect_uri?: string;
+    /**
+     * The granted scope. Empty when the client receives a session.
+     */
+    scope?: string;
     state?: string;
 };
 
@@ -5462,12 +5501,23 @@ export type TokenRequestWritable = {
     grant_type?: string;
     redirect_uri?: string;
     refresh_token?: string;
+    /**
+     * RFC 8707 resource indicator. Must match the resource of the authorization request.
+     */
+    resource?: string;
 };
 
 export type TokenResponseWritable = {
     access_token?: string;
     expires_in?: number;
+    /**
+     * Absent for scoped grants: their API token is not refreshable.
+     */
     refresh_token?: string;
+    /**
+     * The granted scope of a scoped grant.
+     */
+    scope?: string;
     token_type?: string;
 };
 
