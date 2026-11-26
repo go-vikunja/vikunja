@@ -241,7 +241,7 @@ func (srv *Server) scopedGrant(req *AuthorizeRequest, client Client) (scopes []S
 		return nil, "", &models.ErrOAuthInvalidTarget{}
 	}
 
-	scopes = supportedScopes()
+	scopes = SupportedScopes()
 	if req.Scope != "" {
 		scopes, err = parseScope(req.Scope)
 		if err != nil {
