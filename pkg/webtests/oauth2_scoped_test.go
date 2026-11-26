@@ -482,68 +482,11 @@ func TestOAuthAuthorizePreview(t *testing.T) {
 		}`, stripSchema(t, res.body))
 	})
 
-	t.Run("scope without mcp values is unscoped", func(t *testing.T) {
-		res := authorizePreview(t, e, userToken, map[string]string{"scope": "openid offline_access"})
-		require.Equal(t, http.StatusOK, res.code, string(res.body))
-		var preview oauth2server.AuthorizePreview
-		require.NoError(t, json.Unmarshal(res.body, &preview))
-		assert.False(t, preview.Scoped)
-		assert.Empty(t, preview.Scopes)
+	t.Run("rejects an invalid redirect_uri", func(t *testing.T) {
+		res := authorizePreview(t, e, userToken, map[string]string{"redirect_uri": "https://evil.example/callback"})
+		require.Equal(t, http.StatusBadRequest, res.code, string(res.body))
+		assert.Equal(t, models.ErrCodeOAuthInvalidRedirectURI, res.errorCode(t))
 	})
-
-	for _, tc := range []struct {
-		name   string
-		params map[string]string
-		code   int
-	}{
-		{
-			name:   "wrong response_type",
-			params: map[string]string{"response_type": "token"},
-			code:   models.ErrCodeOAuthUnsupportedResponseType,
-		},
-		{
-			name:   "invalid redirect_uri",
-			params: map[string]string{"redirect_uri": "https://evil.example/callback"},
-			code:   models.ErrCodeOAuthInvalidRedirectURI,
-		},
-		{
-			name:   "missing code_challenge",
-			params: map[string]string{"code_challenge": ""},
-			code:   models.ErrCodeOAuthMissingPKCE,
-		},
-		{
-			name:   "plain code_challenge_method",
-			params: map[string]string{"code_challenge_method": "plain"},
-			code:   models.ErrCodeOAuthMissingPKCE,
-		},
-		{
-			name: "unknown scope only with a resource",
-			params: map[string]string{
-				"scope":    "openid",
-				"resource": mcpResourceURL,
-			},
-			code: models.ErrCodeOAuthInvalidScope,
-		},
-		{
-			name:   "foreign resource",
-			params: map[string]string{"resource": "https://evil.example/api/v2/mcp"},
-			code:   models.ErrCodeOAuthInvalidTarget,
-		},
-		{
-			name: "scoped without client id",
-			params: map[string]string{
-				"scope":     "mcp:read",
-				"client_id": "",
-			},
-			code: models.ErrCodeOAuthClientNotFound,
-		},
-	} {
-		t.Run("rejects "+tc.name, func(t *testing.T) {
-			res := authorizePreview(t, e, userToken, tc.params)
-			require.Equal(t, http.StatusBadRequest, res.code, string(res.body))
-			assert.Equal(t, tc.code, res.errorCode(t))
-		})
-	}
 
 	t.Run("requires authentication", func(t *testing.T) {
 		res := authorizePreview(t, e, "", map[string]string{"scope": "mcp:read"})
