@@ -21,6 +21,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,21 +36,46 @@ type accessExpectation struct {
 
 var (
 	readOnlyAccess = accessExpectation{
-		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadOnly,
-		putUpdate: 403, putCreate: 403, del: 403,
+		propfind:  207,
+		get:       200,
+		report:    207,
+		options:   200,
+		allow:     allowReadOnly,
+		putUpdate: 403,
+		putCreate: 403,
+		del:       403,
 	}
 	readWriteAccess = accessExpectation{
-		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadWrite,
-		putUpdate: 201, putCreate: 201, del: 204,
+		propfind:  207,
+		get:       200,
+		report:    207,
+		options:   200,
+		allow:     allowReadWrite,
+		putUpdate: 201,
+		putCreate: 201,
+		del:       204,
 	}
 	noAccess = accessExpectation{
-		propfind: 404, get: 404, report: 404, options: 404,
-		putUpdate: 404, putCreate: 404, del: 404,
+		propfind:  404,
+		get:       404,
+		report:    404,
+		options:   404,
+		putUpdate: 404,
+		putCreate: 404,
+		del:       404,
 	}
 )
 
-// assertAccess runs every verb as username against an existing task, writes last so the
-// reads see the fixture state, and checks that denied writes left the task alone.
+func taskUIDExists(t *testing.T, uid string) bool {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	exists, err := s.Where("uid = ?", uid).Exist(&models.Task{})
+	require.NoError(t, err)
+	return exists
+}
+
+// Writes run last so the reads see the fixture state.
 func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerUsername string, want accessExpectation) {
 	t.Helper()
 	auth := basicAuthHeader(username, fixturePassword)
@@ -55,7 +83,10 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	task := collection + "/" + taskUID + ".ics"
 	as := map[string]string{"Authorization": auth}
 
-	propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{"Authorization": auth, "Depth": "0"})
+	propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{
+		"Authorization": auth,
+		"Depth":         "0",
+	})
 	assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s", collection)
 
 	assert.Equal(t, want.get, caldavRequest(t, e, http.MethodGet, task, "", as).Code, "GET %s", task)
@@ -65,19 +96,27 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	assert.Equal(t, want.options, options.Code, "OPTIONS %s", collection)
 	assert.Equal(t, want.allow, options.Header().Get("Allow"), "OPTIONS %s Allow", collection)
 
-	putAs := map[string]string{"Authorization": auth, "Content-Type": "text/calendar; charset=utf-8"}
-	update := caldavRequest(t, e, http.MethodPut, task, NewVTodo(taskUID, "Updated by "+username).Build(), putAs)
+	update := caldavPUTWith(t, e, task, NewVTodo(taskUID, "Updated by "+username).Build(), as)
 	assert.Equal(t, want.putUpdate, update.Code, "PUT update %s", task)
 
 	newUID := taskUID + "-new-" + username
-	create := caldavRequest(t, e, http.MethodPut, collection+"/"+newUID+".ics", NewVTodo(newUID, "Created").Build(), putAs)
+	newTask := collection + "/" + newUID + ".ics"
+	create := caldavPUTWith(t, e, newTask, NewVTodo(newUID, "Created").Build(), as)
 	assert.Equal(t, want.putCreate, create.Code, "PUT create in %s", collection)
 
+	ownerAs := map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)}
 	ownerGet := func() *httptest.ResponseRecorder {
-		return caldavRequest(t, e, http.MethodGet, task, "", map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)})
+		return caldavRequest(t, e, http.MethodGet, task, "", ownerAs)
 	}
 	if want.putUpdate != http.StatusCreated {
 		assert.NotContains(t, ownerGet().Body.String(), "Updated by "+username, "denied PUT must not change %s", task)
+	} else {
+		assert.Contains(t, ownerGet().Body.String(), "SUMMARY:Updated by "+username, "PUT must change %s", task)
+	}
+	if want.putCreate == http.StatusCreated {
+		assert.Equal(t, http.StatusOK, caldavRequest(t, e, http.MethodGet, newTask, "", ownerAs).Code, "created %s", newTask)
+	} else {
+		assert.False(t, taskUIDExists(t, newUID), "denied PUT must not create %s", newTask)
 	}
 
 	assert.Equal(t, want.del, caldavRequest(t, e, http.MethodDelete, task, "", as).Code, "DELETE %s", task)
@@ -95,22 +134,49 @@ func TestPinAccessPaths(t *testing.T) {
 		project string
 		access  accessExpectation
 	}{
-		{name: "team read", project: "6", access: readOnlyAccess},
-		{name: "team write", project: "7", access: readWriteAccess},
-		{name: "team admin", project: "8", access: readWriteAccess},
-		{name: "user share read", project: "9", access: readOnlyAccess},
-		{name: "user share write", project: "10", access: readWriteAccess},
-		{name: "user share admin", project: "11", access: readWriteAccess},
-		{name: "read share inherited from parent", project: "12", access: readOnlyAccess},
+		{
+			name:    "team read",
+			project: "6",
+			access:  readOnlyAccess,
+		},
+		{
+			name:    "team write",
+			project: "7",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "team admin",
+			project: "8",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "user share read",
+			project: "9",
+			access:  readOnlyAccess,
+		},
+		{
+			name:    "user share write",
+			project: "10",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "user share admin",
+			project: "11",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "read share inherited from parent",
+			project: "12",
+			access:  readOnlyAccess,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			e := setupTestEnv(t)
 			uid := "pin-access-" + tc.project
-			created := caldavRequest(t, e, http.MethodPut, "/dav/projects/"+tc.project+"/"+uid+".ics", NewVTodo(uid, "Owned by user6").Build(), map[string]string{
+			created := caldavPUTWith(t, e, "/dav/projects/"+tc.project+"/"+uid+".ics", NewVTodo(uid, "Owned by user6").Build(), map[string]string{
 				"Authorization": basicAuthHeader("user6", fixturePassword),
-				"Content-Type":  "text/calendar; charset=utf-8",
 			})
 			require.Equal(t, http.StatusCreated, created.Code)
 
@@ -147,34 +213,73 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 		username string
 		want     collectionExpectation
 	}{
-		// Project 22 is user1's own, archived.
-		{name: "archived own project", project: "22", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadOnly}},
-		{name: "archived project, unrelated user", project: "22", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
-		// Saved filter 1 (pseudo project -2) belongs to user1.
-		{name: "own saved filter", project: "-2", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadWrite}},
-		{name: "saved filter, unrelated user", project: "-2", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
-		{name: "owned project, unrelated user", project: "36", username: testuser1.Username, want: collectionExpectation{404, 404, 404, 404, ""}},
+		{
+			name:     "archived own project",
+			project:  "22",
+			username: testuser1.Username,
+			want: collectionExpectation{
+				propfind:  207,
+				report:    207,
+				options:   200,
+				putCreate: 403,
+				allow:     allowReadOnly,
+			},
+		},
+		{
+			name:     "archived project, unrelated user",
+			project:  "22",
+			username: "user13",
+			want: collectionExpectation{
+				propfind:  404,
+				report:    404,
+				options:   404,
+				putCreate: 404,
+			},
+		},
+		{
+			name:     "own saved filter",
+			project:  "-2",
+			username: testuser1.Username,
+			want: collectionExpectation{
+				propfind:  207,
+				report:    207,
+				options:   200,
+				putCreate: 403,
+				allow:     allowReadWrite,
+			},
+		},
+		{
+			name:     "saved filter, unrelated user",
+			project:  "-2",
+			username: "user13",
+			want: collectionExpectation{
+				propfind:  404,
+				report:    404,
+				options:   404,
+				putCreate: 404,
+			},
+		},
 	}
 
-	// Every write here is denied, so the cases share one fixture load.
 	e := setupTestEnv(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			auth := basicAuthHeader(tc.username, fixturePassword)
 			collection := "/dav/projects/" + tc.project
 
-			propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{"Authorization": auth, "Depth": "0"})
+			propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{
+				"Authorization": auth,
+				"Depth":         "0",
+			})
 			assert.Equal(t, tc.want.propfind, propfind.Code, "PROPFIND")
 			report := caldavRequest(t, e, "REPORT", collection, ReportCalendarQuery, map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.report, report.Code, "REPORT")
 			options := caldavRequest(t, e, http.MethodOptions, collection, "", map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.options, options.Code, "OPTIONS")
 			assert.Equal(t, tc.want.allow, options.Header().Get("Allow"), "Allow")
-			create := caldavRequest(t, e, http.MethodPut, collection+"/pin-access-create.ics", NewVTodo("pin-access-create", "Created").Build(), map[string]string{
-				"Authorization": auth,
-				"Content-Type":  "text/calendar; charset=utf-8",
-			})
+			create := caldavPUTWith(t, e, collection+"/pin-access-create.ics", NewVTodo("pin-access-create", "Created").Build(), map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.putCreate, create.Code, "PUT create")
+			assert.False(t, taskUIDExists(t, "pin-access-create"), "denied PUT must not create a task")
 		})
 	}
 }
@@ -193,7 +298,10 @@ func TestPinAccessGETCollection(t *testing.T) {
 func TestPinAccessForeignPrincipal(t *testing.T) {
 	e := setupTestEnv(t)
 
-	for _, path := range []string{"/dav/principals/user1/", "/dav/principals/user15/sub/"} {
+	for _, path := range []string{
+		"/dav/principals/user1/",
+		"/dav/principals/user15/sub/",
+	} {
 		rec := caldavPROPFIND(t, e, path, "0", PropfindDiscoveryProps)
 		assert.Equal(t, http.StatusNotFound, rec.Code, "PROPFIND %s", path)
 	}

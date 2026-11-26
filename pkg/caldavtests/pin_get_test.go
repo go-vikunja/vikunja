@@ -49,7 +49,11 @@ func TestPinGETAndHEADTask(t *testing.T) {
 	assertLastModified(t, get)
 	assert.Equal(t, 1, strings.Count(get.Body.String(), "BEGIN:VTODO"))
 
-	for _, h := range []string{"Content-Type", "ETag", "Last-Modified"} {
+	for _, h := range []string{
+		"Content-Type",
+		"ETag",
+		"Last-Modified",
+	} {
 		assert.Equal(t, get.Header().Get(h), head.Header().Get(h), h)
 	}
 	assert.Empty(t, head.Body.String())
@@ -91,7 +95,10 @@ func TestPinGETNonCalendarResources(t *testing.T) {
 	})
 
 	// An empty calendar body with an empty ETag and a zero Last-Modified.
-	for _, path := range []string{"/dav/", "/dav/principals/user15/"} {
+	for _, path := range []string{
+		"/dav/",
+		"/dav/principals/user15/",
+	} {
 		t.Run(path, func(t *testing.T) {
 			e := setupTestEnv(t)
 
