@@ -80,7 +80,7 @@ func (m *Module) ScopePermissions(scope oauth2server.Scope) models.APIPermission
 	permissions := models.APIPermissions{}
 	for group, routes := range m.ConnectionInfo().Routes {
 		for permission := range routes {
-			if readOnly && group != "mcp" && permission != "read_one" && permission != "read_all" {
+			if readOnly && !models.IsReadAPIPermission(group, permission) {
 				continue
 			}
 			permissions[group] = append(permissions[group], permission)

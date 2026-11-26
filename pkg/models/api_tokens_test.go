@@ -105,6 +105,59 @@ func TestAPIToken_ReadAllKind(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestAPIToken_OAuthAccess(t *testing.T) {
+	for name, tc := range map[string]struct {
+		clientID    string
+		permissions APIPermissions
+		want        OAuthAccess
+	}{
+		"reads only": {
+			clientID: "client",
+			permissions: APIPermissions{
+				"mcp": {"access"},
+				"projects": {
+					"read_one",
+					"read_all",
+				},
+			},
+			want: OAuthAccessRead,
+		},
+		"any other permission writes": {
+			clientID: "client",
+			permissions: APIPermissions{
+				"mcp":      {"access"},
+				"projects": {"read_all"},
+				"tasks": {
+					"read_all",
+					"update",
+				},
+			},
+			want: OAuthAccessWrite,
+		},
+		"access of another group writes": {
+			clientID: "client",
+			permissions: APIPermissions{
+				"mcp":    {"access"},
+				"caldav": {"access"},
+			},
+			want: OAuthAccessWrite,
+		},
+		"made by hand": {
+			permissions: APIPermissions{
+				"projects": {"read_all"},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			token := &APIToken{
+				APIPermissions: tc.permissions,
+				OAuthClientID:  tc.clientID,
+			}
+			assert.Equal(t, tc.want, token.oauthAccess())
+		})
+	}
+}
+
 func TestAPIToken_CanDelete(t *testing.T) {
 	t.Run("own token", func(t *testing.T) {
 		u := &user.User{ID: 1}

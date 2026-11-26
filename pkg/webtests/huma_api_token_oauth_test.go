@@ -100,6 +100,34 @@ func TestHumaAPITokenListKind(t *testing.T) {
 	})
 }
 
+func TestHumaAPITokenOAuthAccess(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	_, read, _ := scopedGrant(t, e, map[string]string{"scope": "mcp:read"})
+	_, write, _ := scopedGrant(t, e, map[string]string{"scope": "mcp:write"})
+	want := map[int64]string{
+		storedToken(t, read.AccessToken).ID:  "read",
+		storedToken(t, write.AccessToken).ID: "write",
+	}
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/tokens?per_page=100", "", humaTokenFor(t, &testuser1), "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	var list struct {
+		Items []struct {
+			ID          int64   `json:"id"`
+			OAuthAccess *string `json:"oauth_access"`
+		} `json:"items"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &list))
+	got := map[int64]string{}
+	for _, item := range list.Items {
+		if item.OAuthAccess != nil {
+			got[item.ID] = *item.OAuthAccess
+		}
+	}
+	assert.Equal(t, want, got, "only oauth grants carry oauth_access: %s", rec.Body.String())
+}
+
 func TestHumaAPITokenRevokeOAuthGrant(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
