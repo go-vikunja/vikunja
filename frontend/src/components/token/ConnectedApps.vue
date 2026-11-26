@@ -99,6 +99,7 @@ async function revoke() {
 						<td class="has-text-end">
 							<XButton
 								variant="secondary"
+								:aria-label="t('user.settings.mcp.connectedApps.revokeApp', {app: app.name})"
 								@click="appToRevoke = app"
 							>
 								{{ t('user.settings.mcp.connectedApps.revoke') }}

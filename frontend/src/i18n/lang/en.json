@@ -386,6 +386,7 @@
           "connected": "Connected",
           "none": "You have not connected any apps yet.",
           "revoke": "Revoke",
+          "revokeApp": "Revoke {app}",
           "revokeHeader": "Revoke access",
           "revokeText": "{app} will no longer be able to access your account. To use it again, connect it anew."
         },
