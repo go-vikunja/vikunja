@@ -72,7 +72,6 @@ type APIToken struct {
 	OAuthResource string      `xorm:"text null 'oauth_resource'" json:"-"`
 	OAuthAccess   OAuthAccess `xorm:"-" json:"oauth_access,omitempty" readOnly:"true" enum:"read,write" doc:"What the user granted the OAuth client: read only, or read and write. Empty for tokens created by hand."`
 
-	// Kind narrows ReadAll; empty lists every token.
 	Kind APITokenKind `xorm:"-" json:"-"`
 
 	web.Permissions `xorm:"-" json:"-"`
@@ -95,8 +94,7 @@ const (
 	OAuthAccessWrite OAuthAccess = "write"
 )
 
-// IsReadAPIPermission reports whether a permission only reads data. The read-only preset
-// and the mcp:read scope grant exactly these, so it also tells which scope a grant got.
+// IsReadAPIPermission reports whether a permission only reads data, i.e. what mcp:read grants.
 func IsReadAPIPermission(group, permission string) bool {
 	return permission == "read_one" || permission == "read_all" || group == "mcp" && permission == "access"
 }
