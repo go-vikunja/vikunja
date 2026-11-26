@@ -2,8 +2,8 @@
 	<div
 		class="project-card"
 		:class="{
-			'has-light-text': Boolean(background),
-			'has-background': Boolean(blurHashUrl || background)
+			'has-background': Boolean(blurHashUrl || background),
+			'is-light-background': backgroundIsLight,
 		}"
 		:style="{
 			'border-inline-start': project.hex_color ? `0.25rem solid ${project.hex_color}` : undefined,
@@ -78,12 +78,14 @@ import {PERMISSIONS} from '@/constants/permissions'
 import {useProjectBackground} from '@/composables/useProjectBackground'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {htmlToPreviewText} from '@/helpers/htmlToPreviewText'
+import {blurHashIsLight} from '@/helpers/color/blurHashIsLight'
 
 const props = defineProps<{
 	project: ProjectResponse,
 }>()
 
 const {background, blurHashUrl} = useProjectBackground(() => props.project)
+const backgroundIsLight = computed(() => blurHashIsLight(props.project.background_blur_hash ?? ''))
 
 const favoriteMutation = usePatchProjectFavoriteMutation()
 
@@ -193,17 +195,29 @@ const textOnlyDescription = computed(() => htmlToPreviewText(props.project.descr
 	-webkit-box-orient: vertical;
 }
 
-.has-light-text .project-title {
-	color: var(--grey-100);
+// Fixed colours, not theme variables: the image looks the same in both themes.
+.has-background {
+	--on-image-text: hsl(0 0% 100%);
+	// Chained drop-shadows compound, hence the light values.
+	--on-image-shadow:
+		drop-shadow(0 0 2px hsl(216.9 19.1% 26.7%))
+		drop-shadow(0 0 6px rgb(0 0 0 / .6));
+
+	&.is-light-background {
+		--on-image-text: hsl(220.9 39.3% 11%);
+		--on-image-shadow:
+			drop-shadow(0 0 2px hsl(0 0% 100%))
+			drop-shadow(0 0 6px rgb(255 255 255 / .7));
+	}
 }
 
 // Not text-shadow: the clamp's overflow would clip it.
-.has-background .project-title {
-	// Chained drop-shadows compound, hence lighter values.
-	filter:
-		drop-shadow(0 0 2px var(--grey-700))
-		drop-shadow(0 0 6px rgb(0 0 0 / .6));
-	color: var(--white);
+.has-background .project-title,
+.has-background .is-archived,
+.has-background .favorite,
+.has-background :deep(.dropdown-trigger) {
+	filter: var(--on-image-shadow);
+	color: var(--on-image-text);
 }
 
 .has-background .shared-icon {
