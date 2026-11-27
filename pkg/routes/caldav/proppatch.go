@@ -105,13 +105,6 @@ func parsePropertyUpdate(body string) ([]*propPatchInstruction, error) {
 	}
 }
 
-type propPatchTarget int
-
-const (
-	propPatchCollection propPatchTarget = iota
-	propPatchTask
-)
-
 type propPatchResult struct {
 	name   xml.Name
 	status int
@@ -139,7 +132,7 @@ func servePropPatch(c *echo.Context, u *user.User, t target) error {
 		return writeError(c, err)
 	}
 
-	results, err := applyPropPatch(s, instructions, res.project, u, res.kind)
+	results, err := applyPropPatch(s, instructions, res.project, u, res.colorSettable)
 	if err != nil {
 		_ = s.Rollback()
 		return writeError(c, err)
@@ -153,13 +146,13 @@ func servePropPatch(c *echo.Context, u *user.User, t target) error {
 
 // applyPropPatch is all-or-nothing as RFC 4918 §9.2 demands: one refused
 // property turns every acceptable one into a 424.
-func applyPropPatch(s *xorm.Session, instructions []*propPatchInstruction, project *models.Project, u *user.User, target propPatchTarget) ([]propPatchResult, error) {
+func applyPropPatch(s *xorm.Session, instructions []*propPatchInstruction, project *models.Project, u *user.User, colorSettable bool) ([]propPatchResult, error) {
 	results := make([]propPatchResult, 0, len(instructions))
 	var color *string
 	refused := false
 	for _, in := range instructions {
 		status := http.StatusForbidden
-		if in.name == calendarColorProp && target == propPatchCollection {
+		if in.name == calendarColorProp && colorSettable {
 			hex, ok := "", true
 			if !in.remove {
 				hex, ok = normalizeCalendarColor(in.value)
@@ -236,9 +229,9 @@ func writePropPatchResponse(c *echo.Context, href string, results []propPatchRes
 }
 
 type propPatchResource struct {
-	href    string
-	project *models.Project
-	kind    propPatchTarget
+	href          string
+	project       *models.Project
+	colorSettable bool
 }
 
 // resolvePropPatch checks access to t and returns the href it answers under.
@@ -248,13 +241,20 @@ func resolvePropPatch(s *xorm.Session, u *user.User, t target) (propPatchResourc
 		if _, err := t.checkRead(s, u); err != nil {
 			return propPatchResource{}, err
 		}
-		return propPatchResource{collectionHref(t.project.ID), &t.project.Project, propPatchCollection}, nil
+		return propPatchResource{
+			href:          collectionHref(t.project.ID),
+			project:       &t.project.Project,
+			colorSettable: true,
+		}, nil
 	case taskTarget:
 		_, task, err := t.read(s, u)
 		if err != nil {
 			return propPatchResource{}, err
 		}
-		return propPatchResource{taskURL(t.collection.project.ID, task), &t.collection.project.Project, propPatchTask}, nil
+		return propPatchResource{
+			href:    taskURL(t.collection.project.ID, task),
+			project: &t.collection.project.Project,
+		}, nil
 	}
 	return propPatchResource{}, fmt.Errorf("unhandled caldav target %T", t)
 }
