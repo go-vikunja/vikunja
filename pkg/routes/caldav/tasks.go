@@ -33,8 +33,6 @@ import (
 	"xorm.io/xorm"
 )
 
-// findTask resolves uid through c. Tasks the user cannot read or that are not in c are a
-// miss, which is (nil, nil).
 func findTask(s *xorm.Session, u *user.User, c collectionTarget, uid string) (*models.Task, error) {
 	tasks, err := models.GetTasksByUIDs(s, []string{uid}, u)
 	if err != nil {
@@ -48,8 +46,7 @@ func findTask(s *xorm.Session, u *user.User, c collectionTarget, uid string) (*m
 	}
 
 	if !c.isPseudo() {
-		// The URL project must match the task's real project (GHSA-48ch-p4gq-x46x). tasks.uid
-		// has no unique index, so a same-UID task in another project must not shadow it.
+		// GHSA-48ch-p4gq-x46x; tasks.uid is not unique, so match the URL's project.
 		for _, task := range tasks {
 			if task.ProjectID == c.project.ID {
 				return task, nil
@@ -70,7 +67,6 @@ func findTask(s *xorm.Session, u *user.User, c collectionTarget, uid string) (*m
 	return nil, nil
 }
 
-// readCollectionTasks loads c.project and its tasks.
 func readCollectionTasks(s *xorm.Session, u *user.User, c readableCollection) ([]*models.TaskWithComments, error) {
 	if err := c.project.ReadOne(s, u); err != nil {
 		return nil, err
@@ -98,7 +94,6 @@ func readCollectionTasks(s *xorm.Session, u *user.User, c readableCollection) ([
 	return projectTasks, nil
 }
 
-// writeTransaction commits fn's writes and dispatches their events, or drops both.
 func writeTransaction(fn func(s *xorm.Session) error) error {
 	s := db.NewSession()
 	defer s.Close()
@@ -129,10 +124,7 @@ func parseTaskBody(content string) (*models.Task, caldav.ParsedVTODOProperties, 
 func createTask(s *xorm.Session, u *user.User, c readableCollection, vTask *models.Task) error {
 	vTask.ProjectID = c.project.ID
 
-	// A client PUTting a UID that already exists is syncing a stale href - typically after
-	// the task moved to another project or out of this collection. Creating a second task
-	// would silently fork it (#3482), and answering 403 would strand the client on a
-	// permanent denial, so 404 and let it resync to the real collection.
+	// Existing UID means a stale href (#3482): 404 so the client resyncs instead of forking the task.
 	if vTask.UID != "" {
 		existing, err := models.GetTasksByUIDs(s, []string{vTask.UID}, u)
 		if err != nil {
@@ -154,7 +146,6 @@ func createTask(s *xorm.Session, u *user.User, c readableCollection, vTask *mode
 		return errForbidden
 	}
 
-	// Inbound CalDAV descriptions are markdown; store them as canonical HTML.
 	if err := applyDescriptionFromMarkdown(s, u, vTask, ""); err != nil {
 		log.Errorf("[CALDAV] Failed to convert description in createTask: %v", err)
 		return err
@@ -166,7 +157,10 @@ func createTask(s *xorm.Session, u *user.User, c readableCollection, vTask *mode
 	}
 
 	// Without labels of its own: UpdateTaskLabels diffs the new labels against them.
-	created := &models.Task{ID: vTask.ID, ProjectID: vTask.ProjectID}
+	created := &models.Task{
+		ID:        vTask.ID,
+		ProjectID: vTask.ProjectID,
+	}
 	if err := persistLabels(s, u, created, vTask.Labels); err != nil {
 		log.Errorf("[CALDAV] Failed to persist labels in createTask: %v, labels: %+v", err, vTask.Labels)
 		return err
@@ -210,7 +204,6 @@ func updateTask(s *xorm.Session, u *user.User, c readableCollection, stored, vTa
 		return nil, errNotFound
 	}
 
-	// Inbound markdown → canonical HTML, kept verbatim when unchanged.
 	if err := applyDescriptionFromMarkdown(s, u, vTask, stored.Description); err != nil {
 		log.Errorf("[CALDAV] Failed to convert description in updateTask: %v", err)
 		return nil, err

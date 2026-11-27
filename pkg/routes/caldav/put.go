@@ -43,7 +43,7 @@ func servePut(c *echo.Context, u *user.User, t target) error {
 		if err != nil {
 			return writeError(c, err)
 		}
-		return put(c, u, t.collection, body, taskPut{uid: t.uid})
+		return put(c, u, t.collection, body, t.uid)
 	}
 	return writeError(c, fmt.Errorf("unhandled caldav target %T", t))
 }
@@ -57,8 +57,7 @@ func readPutBody(c *echo.Context) (string, error) {
 	return string(body), nil
 }
 
-// Deliberate legacy support: a VCALENDAR PUT onto a collection URL creates or updates the
-// task its UID names.
+// Deliberate legacy support: a VCALENDAR PUT onto a collection writes the task its UID names.
 func putOnCollection(c *echo.Context, u *user.User, collection collectionTarget) error {
 	body, err := readPutBody(c)
 	if err != nil {
@@ -74,37 +73,10 @@ func putOnCollection(c *echo.Context, u *user.User, collection collectionTarget)
 		return c.NoContent(http.StatusPreconditionFailed)
 	}
 
-	return put(c, u, collection, body, collectionPut{})
+	return put(c, u, collection, body, "")
 }
 
-// putAddressing is how a PUT names its task: by the URL, or by the body's UID on a collection.
-type putAddressing interface {
-	parse(body string) (*models.Task, caldav2.ParsedVTODOProperties, error)
-	taskUID(parsed *models.Task) string
-}
-
-type taskPut struct{ uid string }
-
-func (taskPut) parse(body string) (*models.Task, caldav2.ParsedVTODOProperties, error) {
-	return parseTaskBody(body)
-}
-
-func (p taskPut) taskUID(*models.Task) string { return p.uid }
-
-type collectionPut struct{}
-
-func (collectionPut) parse(body string) (*models.Task, caldav2.ParsedVTODOProperties, error) {
-	vTask, props, err := caldav2.ParseTaskFromVTODO(body)
-	if err != nil {
-		log.Warningf("[CALDAV] Failed to parse task: %v", err)
-		return nil, props, models.ErrInvalidData{Message: "Invalid task"}
-	}
-	return vTask, props, nil
-}
-
-func (collectionPut) taskUID(parsed *models.Task) string { return parsed.UID }
-
-func put(c *echo.Context, u *user.User, collection collectionTarget, body string, addressing putAddressing) error {
+func put(c *echo.Context, u *user.User, collection collectionTarget, body, urlUID string) error {
 	conditions := preconditionsOf(c.Request().Header)
 	status := http.StatusPreconditionFailed
 	var etag string
@@ -117,14 +89,26 @@ func put(c *echo.Context, u *user.User, collection collectionTarget, body string
 		if err := caldav2.CheckVCalendarLimits(body); err != nil {
 			return err
 		}
-		vTask, props, err := addressing.parse(body)
-		if err != nil {
-			return err
+		var vTask *models.Task
+		var props caldav2.ParsedVTODOProperties
+		uid := urlUID
+		if uid != "" {
+			vTask, props, err = parseTaskBody(body)
+			if err != nil {
+				return err
+			}
+		} else {
+			vTask, props, err = caldav2.ParseTaskFromVTODO(body)
+			if err != nil {
+				log.Warningf("[CALDAV] Failed to parse task: %v", err)
+				return models.ErrInvalidData{Message: "Invalid task"}
+			}
+			uid = vTask.UID
 		}
 
 		// A body without UID names no stored task; creating it gives it one.
 		var stored *models.Task
-		if uid := addressing.taskUID(vTask); uid != "" {
+		if uid != "" {
 			stored, err = findTask(s, u, collection, uid)
 			if err != nil {
 				return err

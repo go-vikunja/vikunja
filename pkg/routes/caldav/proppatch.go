@@ -31,7 +31,6 @@ import (
 )
 
 const (
-	// Bounds PROPFIND bodies too.
 	maxPropRequestBodySize     = 64 * 1024
 	maxPropPatchProperties     = 100
 	maxPropPatchNamespaceBytes = 256
@@ -222,9 +221,15 @@ func canSetCalendarColor(s *xorm.Session, project *models.Project, u *user.User)
 }
 
 func writePropPatchResponse(c *echo.Context, href string, results []propPatchResult) error {
-	r := propstatResponse{href: href, propstats: make([]propstat, len(results))}
+	r := propstatResponse{
+		href:      href,
+		propstats: make([]propstat, len(results)),
+	}
 	for i, res := range results {
-		r.propstats[i] = propstat{status: res.status, props: []prop{{name: res.name}}}
+		r.propstats[i] = propstat{
+			status: res.status,
+			props:  []prop{{name: res.name}},
+		}
 	}
 	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
 }

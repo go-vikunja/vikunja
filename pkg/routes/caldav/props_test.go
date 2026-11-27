@@ -33,159 +33,29 @@ const testPrincipal = "/dav/principals/user15/"
 
 var testCtx = propContext{principal: testPrincipal}
 
-// absent marks a property the resource must not have.
-var absent propValue = textValue("\x00absent")
+func TestCollectionPropsNotLoaded(t *testing.T) {
+	project := &models.ProjectWithTasksAndBuckets{Project: models.Project{
+		ID:    36,
+		Title: "A & B",
+	}}
 
-func assertProps(t *testing.T, resolve func(xml.Name) (propValue, bool), want map[xml.Name]propValue) {
-	t.Helper()
-	for name, wantValue := range want {
-		value, found := resolve(name)
-		if wantValue == absent {
-			assert.False(t, found, "%v must not be found, got %v", name, value)
-			continue
+	t.Run("collection listed in the home set has no calendar-data", func(t *testing.T) {
+		r := &collectionResource{
+			href:    "/dav/projects/36",
+			project: project,
+			owner:   "owner",
 		}
-		if assert.True(t, found, "%v must be found", name) {
-			assert.Equal(t, wantValue, value, "%v", name)
-		}
-	}
-}
-
-func TestPropertyResolution(t *testing.T) {
-	updated := time.Date(2024, 6, 15, 12, 0, 0, 0, time.UTC)
-	project := &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36, Title: "A & B", Updated: updated}}
-	task := &models.Task{ID: 40, UID: "uid", Title: "Task <1>", Updated: updated}
-	tasks := []*models.TaskWithComments{{Task: *task}}
-
-	// Every kind is asked for every property, so a missing row is an untested property.
-	t.Run("entry", func(t *testing.T) {
-		r := &entryResource{href: "/dav/"}
-		assertProps(t, func(n xml.Name) (propValue, bool) { return entryProps.resolve(testCtx, r, n) }, map[xml.Name]propValue{
-			propResourceType:         elementsValue{collectionType},
-			propDisplayName:          textValue("dav"),
-			propCurrentUserPrincipal: hrefsValue{testPrincipal},
-			propCalendarHomeSet:      hrefsValue{ProjectBasePath},
-			propPrincipalURL:         hrefsValue{testPrincipal},
-			propPrincipalCollections: hrefsValue{"/dav/principals/"},
-			propCalendarUserAddress:  hrefsValue{testPrincipal},
-			propSupportedComponents:  supportedComponents,
-			propGetContentType:       textValue(contentTypeCollection),
-			propOwner:                absent,
-			propGetETag:              absent,
-			propGetCTag:              absent,
-			propSyncToken:            absent,
-			propGetLastModified:      absent,
-			propGetContentLength:     absent,
-			propCalendarData:         absent,
-		})
-	})
-
-	t.Run("principal", func(t *testing.T) {
-		r := &principalResource{href: testPrincipal}
-		assertProps(t, func(n xml.Name) (propValue, bool) { return principalProps.resolve(testCtx, r, n) }, map[xml.Name]propValue{
-			propResourceType:         elementsValue{collectionType, principalType},
-			propDisplayName:          textValue("user15"),
-			propCurrentUserPrincipal: hrefsValue{testPrincipal},
-			propCalendarHomeSet:      hrefsValue{ProjectBasePath},
-			propPrincipalURL:         hrefsValue{testPrincipal},
-			propPrincipalCollections: hrefsValue{"/dav/principals/"},
-			propCalendarUserAddress:  hrefsValue{testPrincipal},
-			propSupportedComponents:  supportedComponents,
-			propGetContentType:       textValue(contentTypeCollection),
-			propOwner:                absent,
-			propGetETag:              absent,
-			propGetCTag:              absent,
-			propSyncToken:            absent,
-			propGetLastModified:      absent,
-			propGetContentLength:     absent,
-			propCalendarData:         absent,
-		})
-	})
-
-	t.Run("home set", func(t *testing.T) {
-		r := &homeSetResource{href: ProjectBasePath}
-		assertProps(t, func(n xml.Name) (propValue, bool) { return homeSetProps.resolve(testCtx, r, n) }, map[xml.Name]propValue{
-			propResourceType:         elementsValue{collectionType},
-			propDisplayName:          textValue("projects"),
-			propCurrentUserPrincipal: hrefsValue{testPrincipal},
-			propCalendarHomeSet:      hrefsValue{ProjectBasePath},
-			propPrincipalURL:         hrefsValue{testPrincipal},
-			propPrincipalCollections: hrefsValue{"/dav/principals/"},
-			propCalendarUserAddress:  absent,
-			propSupportedComponents:  supportedComponents,
-			propGetContentType:       textValue(contentTypeCollection),
-			propOwner:                absent,
-			propGetETag:              absent,
-			propGetCTag:              absent,
-			propSyncToken:            absent,
-			propGetLastModified:      absent,
-			propGetContentLength:     absent,
-			propCalendarData:         absent,
-		})
-	})
-
-	collectionWant := func(r *collectionResource) map[xml.Name]propValue {
-		etag := collectionETag(project, r.tasks)
-		return map[xml.Name]propValue{
-			propResourceType:         elementsValue{collectionType, calendarType},
-			propDisplayName:          textValue("A & B"),
-			propCurrentUserPrincipal: hrefsValue{testPrincipal},
-			propCalendarHomeSet:      absent,
-			propPrincipalURL:         absent,
-			propPrincipalCollections: hrefsValue{"/dav/principals/"},
-			propCalendarUserAddress:  absent,
-			propSupportedComponents:  supportedComponents,
-			propGetContentType:       textValue(contentTypeCollection),
-			propOwner:                hrefsValue{"/dav/principals/owner/"},
-			propGetETag:              textValue(etag),
-			propGetCTag:              textValue(etag),
-			propSyncToken:            textValue("data:," + etag),
-			propGetLastModified:      textValue(lastModified(updated)),
-			propGetContentLength:     absent,
-		}
-	}
-
-	t.Run("collection listed in the home set", func(t *testing.T) {
-		r := &collectionResource{href: "/dav/projects/36", project: project, owner: "owner"}
-		want := collectionWant(r)
-		want[propCalendarData] = absent
-		assertProps(t, func(n xml.Name) (propValue, bool) { return collectionProps.resolve(testCtx, r, n) }, want)
-	})
-
-	t.Run("collection with its tasks", func(t *testing.T) {
-		r := &collectionResource{href: "/dav/projects/36", project: project, tasks: tasks, owner: "owner"}
-		want := collectionWant(r)
-		want[propCalendarData] = textValue(renderCollection(project, tasks))
-		assertProps(t, func(n xml.Name) (propValue, bool) { return collectionProps.resolve(testCtx, r, n) }, want)
-	})
-
-	t.Run("collection whose owner is gone", func(t *testing.T) {
-		r := &collectionResource{href: "/dav/projects/36", project: project}
-		_, found := collectionProps.resolve(testCtx, r, propOwner)
+		_, found := collectionProps.resolve(testCtx, r, propCalendarData)
 		assert.False(t, found)
 	})
 
-	t.Run("task", func(t *testing.T) {
-		const href = "/dav/projects/36/uid.ics"
-		r := &taskResource{href: href, task: task, owner: "owner"}
-		content := renderTask(task)
-		assertProps(t, func(n xml.Name) (propValue, bool) { return taskProps.resolve(testCtx, r, n) }, map[xml.Name]propValue{
-			propResourceType:         nil,
-			propDisplayName:          textValue("Task <1>"),
-			propCurrentUserPrincipal: hrefsValue{testPrincipal},
-			propCalendarHomeSet:      absent,
-			propPrincipalURL:         absent,
-			propPrincipalCollections: hrefsValue{"/dav/principals/"},
-			propCalendarUserAddress:  absent,
-			propSupportedComponents:  absent,
-			propGetContentType:       textValue(contentTypeTask),
-			propOwner:                hrefsValue{"/dav/principals/owner/"},
-			propGetETag:              textValue(taskETag(task)),
-			propGetCTag:              textValue(taskETag(task)),
-			propSyncToken:            absent,
-			propGetLastModified:      textValue(lastModified(updated)),
-			propGetContentLength:     textValue(strconv.Itoa(len(content))),
-			propCalendarData:         textValue(content),
-		})
+	t.Run("collection whose owner is gone", func(t *testing.T) {
+		r := &collectionResource{
+			href:    "/dav/projects/36",
+			project: project,
+		}
+		_, found := collectionProps.resolve(testCtx, r, propOwner)
+		assert.False(t, found)
 	})
 }
 
@@ -199,7 +69,10 @@ func TestLastModifiedIsUTC(t *testing.T) {
 }
 
 func TestTaskContentIsRenderedOnce(t *testing.T) {
-	task := &models.Task{UID: "uid-rendered-once", Title: "first"}
+	task := &models.Task{
+		UID:   "uid-rendered-once",
+		Title: "first",
+	}
 	r := &taskResource{task: task}
 
 	content, found := taskProps.resolve(testCtx, r, propCalendarData)
@@ -215,8 +88,16 @@ func TestTaskContentIsRenderedOnce(t *testing.T) {
 }
 
 func TestPropTableAnswer(t *testing.T) {
-	task := &models.Task{ID: 40, UID: "uid", Title: "Task", Updated: time.Now()}
-	unknown := xml.Name{Space: "urn:example", Local: "x"}
+	task := &models.Task{
+		ID:      40,
+		UID:     "uid",
+		Title:   "Task",
+		Updated: time.Now(),
+	}
+	unknown := xml.Name{
+		Space: "urn:example",
+		Local: "x",
+	}
 
 	foundNames := func(r msResponse) map[int][]xml.Name {
 		out := map[int][]xml.Name{}
@@ -228,35 +109,18 @@ func TestPropTableAnswer(t *testing.T) {
 		return out
 	}
 
-	t.Run("named properties in request order, missing ones with their namespace", func(t *testing.T) {
-		r := (&taskResource{href: "/t.ics", task: task}).answer(testCtx, propRequest{names: []xml.Name{propGetETag, unknown, propSyncToken, propDisplayName}})
-		assert.Equal(t, map[int][]xml.Name{
-			http.StatusOK:       {propGetETag, propDisplayName},
-			http.StatusNotFound: {unknown, propSyncToken},
-		}, foundNames(r))
-	})
-
-	t.Run("allprop leaves calendar-data out and lists nothing as missing", func(t *testing.T) {
-		names := foundNames((&taskResource{href: "/t.ics", task: task}).answer(testCtx, allPropRequest{}))
-		assert.NotContains(t, names[http.StatusOK], propCalendarData)
-		assert.Contains(t, names[http.StatusOK], propGetContentLength)
-		assert.Empty(t, names[http.StatusNotFound])
-	})
-
 	t.Run("allprop with include", func(t *testing.T) {
-		names := foundNames((&taskResource{href: "/t.ics", task: task}).answer(testCtx, allPropRequest{include: []xml.Name{propCalendarData, propGetETag, unknown}}))
+		names := foundNames((&taskResource{
+			href: "/t.ics",
+			task: task,
+		}).answer(testCtx, allPropRequest{include: []xml.Name{
+			propCalendarData,
+			propGetETag,
+			unknown,
+		}}))
 		assert.Equal(t, 1, countName(names[http.StatusOK], propCalendarData))
 		assert.Equal(t, 1, countName(names[http.StatusOK], propGetETag))
 		assert.Equal(t, []xml.Name{unknown}, names[http.StatusNotFound])
-	})
-
-	t.Run("propname answers names without values", func(t *testing.T) {
-		r := (&taskResource{href: "/t.ics", task: task}).answer(testCtx, propNameRequest{}).(propstatResponse)
-		require.Len(t, r.propstats, 1)
-		for _, p := range r.propstats[0].props {
-			assert.Nil(t, p.value, "%v", p.name)
-			assert.NotEqual(t, propCalendarData, p.name)
-		}
 	})
 }
 

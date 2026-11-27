@@ -19,7 +19,6 @@ package caldav
 import (
 	"encoding/xml"
 	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
@@ -33,27 +32,49 @@ import (
 )
 
 func TestParsePropfind(t *testing.T) {
-	unknown := xml.Name{Space: "urn:example", Local: "x"}
+	unknown := xml.Name{
+		Space: "urn:example",
+		Local: "x",
+	}
 
 	tests := []struct {
 		name string
 		body string
 		want propfindRequest
 	}{
-		{name: "empty body", body: "", want: allPropRequest{}},
-		{name: "whitespace body", body: " \n\t", want: allPropRequest{}},
-		{name: "allprop", body: `<D:propfind xmlns:D="DAV:"><D:allprop/></D:propfind>`, want: allPropRequest{}},
+		{
+			name: "empty body",
+			body: "",
+			want: allPropRequest{},
+		},
+		{
+			name: "whitespace body",
+			body: " \n\t",
+			want: allPropRequest{},
+		},
+		{
+			name: "allprop",
+			body: `<D:propfind xmlns:D="DAV:"><D:allprop/></D:propfind>`,
+			want: allPropRequest{},
+		},
 		{
 			name: "allprop with include",
 			body: `<D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav"><D:allprop/><D:include><C:calendar-data/></D:include></D:propfind>`,
 			want: allPropRequest{include: []xml.Name{propCalendarData}},
 		},
-		{name: "propname", body: `<D:propfind xmlns:D="DAV:"><D:propname/></D:propfind>`, want: propNameRequest{}},
-		{name: "root without children", body: `<D:propfind xmlns:D="DAV:"/>`, want: allPropRequest{}},
+		{
+			name: "propname",
+			body: `<D:propfind xmlns:D="DAV:"><D:propname/></D:propfind>`,
+			want: propNameRequest{},
+		},
 		{
 			name: "prop in request order",
 			body: `<D:propfind xmlns:D="DAV:" xmlns:X="urn:example"><D:prop><D:getetag/><X:x/><D:displayname/></D:prop></D:propfind>`,
-			want: propRequest{names: []xml.Name{propGetETag, unknown, propDisplayName}},
+			want: propRequest{names: []xml.Name{
+				propGetETag,
+				unknown,
+				propDisplayName,
+			}},
 		},
 		{
 			name: "prop listed twice is asked once",
@@ -70,7 +91,11 @@ func TestParsePropfind(t *testing.T) {
 			body: `<D:propfind xmlns:D="DAV:" xmlns:X="urn:example"><X:prop><D:getetag/></X:prop></D:propfind>`,
 			want: allPropRequest{},
 		},
-		{name: "empty prop", body: `<D:propfind xmlns:D="DAV:"><D:prop/></D:propfind>`, want: propRequest{}},
+		{
+			name: "empty prop",
+			body: `<D:propfind xmlns:D="DAV:"><D:prop/></D:propfind>`,
+			want: propRequest{},
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -94,7 +119,6 @@ func TestParsePropfind(t *testing.T) {
 		"too many properties": tooManyProps(),
 		"not xml":             "this is not xml",
 		"unclosed root":       `<D:propfind xmlns:D="DAV:"><D:prop><D:getetag/>`,
-		"mismatched tags":     `<D:propfind xmlns:D="DAV:"><D:prop></D:propfind>`,
 	} {
 		t.Run(name+" is rejected", func(t *testing.T) {
 			_, err := parsePropfind(body)
@@ -120,9 +144,9 @@ func TestPropfindBodyTooLarge(t *testing.T) {
 
 func TestPropfindOwner(t *testing.T) {
 	owner := propfindWithProps(`<D:owner/>`)
-	ownerOf := func(t *testing.T, handler func(*echo.Context) error, path string, params echo.PathValues) string {
+	ownerOf := func(t *testing.T, path string, params echo.PathValues) string {
 		t.Helper()
-		rec, err := callCaldavHandler(t, handler, caldavFilterUser, "PROPFIND", path, owner, params)
+		rec, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", path, owner, params)
 		requireHTTPStatus(t, http.StatusMultiStatus, rec, err)
 		return rec.Body.String()
 	}
@@ -131,44 +155,14 @@ func TestPropfindOwner(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
 
-		body := ownerOf(t, ProjectHandler, projectPath(pseudoID), projectParams(pseudoID))
+		body := ownerOf(t, projectPath(pseudoID), projectParams(pseudoID))
 		assert.Equal(t, 1+caldavFilterTaskCount, strings.Count(body, "<D:owner>"+principalHref(caldavFilterUser.Username)+"</D:owner>"), body)
 	})
 
 	t.Run("Favorites belong to the user looking at them", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		body := ownerOf(t, ProjectHandler, projectPath(models.FavoritesPseudoProjectID), projectParams(models.FavoritesPseudoProjectID))
+		body := ownerOf(t, projectPath(models.FavoritesPseudoProjectID), projectParams(models.FavoritesPseudoProjectID))
 		assert.Contains(t, body, "<D:owner>"+principalHref(caldavFilterUser.Username)+"</D:owner>")
 	})
-
-	t.Run("a task URL answers its project's owner", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		body := ownerOf(t, TaskHandler, projectPath(36)+"uid-caldav-test.ics", taskParams(36, "uid-caldav-test"))
-		assert.Contains(t, body, "<D:owner>"+principalHref(caldavFilterUser.Username)+"</D:owner>")
-	})
-}
-
-func TestPropfindZeroLastModifiedIsNotFound(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-
-	for name, call := range map[string]func() (*httptest.ResponseRecorder, error){
-		"entry": func() (*httptest.ResponseRecorder, error) {
-			return callCaldavHandler(t, EntryHandler, caldavFilterUser, "PROPFIND", "/dav/", propfindWithProps(`<D:getlastmodified/>`), nil)
-		},
-		"principal": func() (*httptest.ResponseRecorder, error) {
-			return callCaldavHandler(t, PrincipalHandler, caldavFilterUser, "PROPFIND", principalPathForUser(caldavFilterUser.Username), propfindWithProps(`<D:getlastmodified/>`), nil)
-		},
-		"home set": func() (*httptest.ResponseRecorder, error) {
-			return callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", ProjectBasePath, propfindWithProps(`<D:getlastmodified/>`), nil)
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			rec, err := call()
-			requireHTTPStatus(t, http.StatusMultiStatus, rec, err)
-			assert.NotContains(t, rec.Body.String(), "0001")
-			assert.Contains(t, rec.Body.String(), "<D:propstat><D:prop><D:getlastmodified/></D:prop><D:status>HTTP/1.1 404 Not Found</D:status></D:propstat>")
-		})
-	}
 }

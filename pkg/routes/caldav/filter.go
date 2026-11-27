@@ -35,27 +35,42 @@ const (
 
 // RFC 4791 §9.7.2: only these properties take a time-range.
 var dateTimeProperties = map[string]bool{
-	"DTSTART": true, "DTEND": true, "DUE": true, "COMPLETED": true,
-	"CREATED": true, "DTSTAMP": true, "LAST-MODIFIED": true, "RECURRENCE-ID": true,
+	"DTSTART":       true,
+	"DTEND":         true,
+	"DUE":           true,
+	"COMPLETED":     true,
+	"CREATED":       true,
+	"DTSTAMP":       true,
+	"LAST-MODIFIED": true,
+	"RECURRENCE-ID": true,
 }
 
 // Top-level components cannot nest (RFC 4791 §7.8, CALDAV:valid-filter).
 var topLevelComponents = map[string]bool{
-	"VCALENDAR": true, "VEVENT": true, "VTODO": true, "VJOURNAL": true, "VFREEBUSY": true, "VTIMEZONE": true,
+	"VCALENDAR": true,
+	"VEVENT":    true,
+	"VTODO":     true,
+	"VJOURNAL":  true,
+	"VFREEBUSY": true,
+	"VTIMEZONE": true,
 }
 
 func invalidFilter(format string, args ...any) error {
-	return preconditionError{precondition: calDAVName("valid-filter"), reason: fmt.Sprintf(format, args...)}
+	return preconditionError{
+		precondition: calDAVName("valid-filter"),
+		reason:       fmt.Sprintf(format, args...),
+	}
 }
 
 func unsupportedFilter(format string, args ...any) error {
-	return preconditionError{precondition: calDAVName("supported-filter"), reason: fmt.Sprintf(format, args...)}
+	return preconditionError{
+		precondition: calDAVName("supported-filter"),
+		reason:       fmt.Sprintf(format, args...),
+	}
 }
 
-// calendarFilter is a CALDAV:filter (RFC 4791 §9.7) that passed validation: whatever it
-// holds can be evaluated.
+// Passed validation: whatever it holds can be evaluated.
 type calendarFilter struct {
-	// Always named VCALENDAR.
 	calendar compFilter
 }
 
@@ -67,10 +82,8 @@ type compFilter struct {
 
 type compTest interface{ isCompTest() }
 
-// isNotDefined is CALDAV:is-not-defined.
 type isNotDefined struct{}
 
-// compMatch requires the component and all of its tests; without tests it only has to exist.
 type compMatch struct {
 	timeRange *timeRange
 	props     []propFilter
@@ -84,13 +97,11 @@ type propFilter struct {
 
 type propTest interface{ isPropTest() }
 
-// propMatch requires the property, its value to match value (if set) and all params.
 type propMatch struct {
 	value  valueTest
 	params []paramFilter
 }
 
-// valueTest is a time-range or a text-match.
 type valueTest interface{ matchesValue(v string) bool }
 
 type paramFilter struct {
@@ -100,7 +111,6 @@ type paramFilter struct {
 
 type paramTest interface{ isParamTest() }
 
-// paramMatch requires the parameter, and a value matching text if set.
 type paramMatch struct{ text *textMatch }
 
 type textMatch struct {
@@ -109,7 +119,7 @@ type textMatch struct {
 	negate   bool
 }
 
-// timeRange is half-open, [start, end); a missing bound is the earliest or latest time.
+// [start, end); a missing bound is the earliest or latest time.
 type timeRange struct{ start, end time.Time }
 
 func (isNotDefined) isCompTest()  {}
@@ -119,11 +129,10 @@ func (propMatch) isPropTest()     {}
 func (isNotDefined) isParamTest() {}
 func (paramMatch) isParamTest()   {}
 
-// xmlElement is a parsed XML element the filter is read from.
 type xmlElement struct {
 	name     xml.Name
 	attrs    []xml.Attr
-	text     string
+	text     strings.Builder
 	children []*xmlElement
 }
 
@@ -221,12 +230,18 @@ func parseCompFilter(el *xmlElement, level int) (compFilter, error) {
 	}
 
 	if !notDefined {
-		return compFilter{name: name, test: match}, nil
+		return compFilter{
+			name: name,
+			test: match,
+		}, nil
 	}
 	if match.timeRange != nil || len(match.props) > 0 || len(match.comps) > 0 {
 		return compFilter{}, invalidFilter("is-not-defined in %s with other tests", name)
 	}
-	return compFilter{name: name, test: isNotDefined{}}, nil
+	return compFilter{
+		name: name,
+		test: isNotDefined{},
+	}, nil
 }
 
 func parsePropFilter(el *xmlElement) (propFilter, error) {
@@ -268,12 +283,18 @@ func parsePropFilter(el *xmlElement) (propFilter, error) {
 	}
 
 	if !notDefined {
-		return propFilter{name: name, test: match}, nil
+		return propFilter{
+			name: name,
+			test: match,
+		}, nil
 	}
 	if match.value != nil || len(match.params) > 0 {
 		return propFilter{}, invalidFilter("is-not-defined in %s with other tests", name)
 	}
-	return propFilter{name: name, test: isNotDefined{}}, nil
+	return propFilter{
+		name: name,
+		test: isNotDefined{},
+	}, nil
 }
 
 func parseParamFilter(el *xmlElement) (paramFilter, error) {
@@ -300,18 +321,24 @@ func parseParamFilter(el *xmlElement) (paramFilter, error) {
 	}
 
 	if !notDefined {
-		return paramFilter{name: name, test: match}, nil
+		return paramFilter{
+			name: name,
+			test: match,
+		}, nil
 	}
 	if match.text != nil {
 		return paramFilter{}, invalidFilter("is-not-defined in %s with a text-match", name)
 	}
-	return paramFilter{name: name, test: isNotDefined{}}, nil
+	return paramFilter{
+		name: name,
+		test: isNotDefined{},
+	}, nil
 }
 
 func parseTextMatch(el *xmlElement) (textMatch, error) {
 	match := textMatch{
 		// Pretty-printed bodies indent the text.
-		value:    strings.TrimSpace(el.text),
+		value:    strings.TrimSpace(el.text.String()),
 		foldCase: true,
 	}
 
@@ -321,7 +348,13 @@ func parseTextMatch(el *xmlElement) (textMatch, error) {
 	case "i;octet":
 		match.foldCase = false
 	default:
-		return textMatch{}, preconditionError{precondition: calDAVName("supported-collation"), reason: collation}
+		return textMatch{}, preconditionError{
+			precondition: calDAVName("supported-collation"),
+			reason:       collation,
+		}
+	}
+	if match.foldCase {
+		match.value = asciiUpper(match.value)
 	}
 
 	switch negate, _ := el.attr("negate-condition"); negate {
@@ -374,11 +407,10 @@ func (r timeRange) matchesValue(v string) bool {
 }
 
 func (m textMatch) matchesValue(v string) bool {
-	needle := m.value
 	if m.foldCase {
-		v, needle = asciiUpper(v), asciiUpper(needle)
+		v = asciiUpper(v)
 	}
-	return strings.Contains(v, needle) != m.negate
+	return strings.Contains(v, m.value) != m.negate
 }
 
 // i;ascii-casemap (RFC 4790 §9.2) folds ASCII letters only.
@@ -394,9 +426,12 @@ func asciiUpper(s string) string {
 // overlapsTodo is the VTODO table of RFC 4791 §9.9, read from the fields the VTODO is
 // rendered from: DTSTART is the start date, DUE the due date, COMPLETED the done date of a
 // done task and CREATED the creation date, each only if rendered. The table's DURATION is
-// the end date, if it lies after the start and there is no due date; Vikunja stores the
-// next occurrence of a repeating task only, so that is the instance that counts.
+// the end date, if it lies after the start and there is no due date.
 func (r timeRange) overlapsTodo(t *models.Task) bool {
+	if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
+		// Endless series: any range ending after the first instance starts contains an instance.
+		r.start = time.Time{}
+	}
 	rendered := func(at time.Time) bool { return at.Unix() > 0 }
 	hasStart := rendered(t.StartDate)
 	hasDue := rendered(t.DueDate)
@@ -406,7 +441,6 @@ func (r timeRange) overlapsTodo(t *models.Task) bool {
 
 	start, due, end := t.StartDate, t.DueDate, t.EndDate
 	completed, created := t.DoneAt, t.Created
-	// a <= b
 	atMost := func(a, b time.Time) bool { return !a.After(b) }
 
 	switch {
@@ -428,8 +462,6 @@ func (r timeRange) overlapsTodo(t *models.Task) bool {
 	return true
 }
 
-// queryCandidate is a task a calendar-query looks at. Its rendering is only parsed if the
-// filter looks at properties.
 type queryCandidate struct {
 	resource *taskResource
 	parsed   bool
@@ -437,7 +469,6 @@ type queryCandidate struct {
 	calendar *icalComponent
 }
 
-// icalComponent is a rendered component, as far as a filter can look into it.
 type icalComponent struct {
 	name  string
 	props []ics.BaseProperty

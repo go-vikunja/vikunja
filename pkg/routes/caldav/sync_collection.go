@@ -76,8 +76,9 @@ func parseSyncToken(token string) (projectID int64, ts time.Time, purgeGeneratio
 }
 
 // RFC 6578 §3.6: tells the client to full-resync with an empty token.
-func writeForbiddenValidSyncToken(c *echo.Context) error {
-	return writeDAVError(c, http.StatusForbidden, davName("valid-sync-token"))
+var errInvalidSyncToken = preconditionError{
+	precondition: davName("valid-sync-token"),
+	reason:       "invalid sync-token",
 }
 
 // handleSyncCollectionReport answers a sync-collection REPORT (RFC 6578) on a collection
@@ -97,7 +98,7 @@ func handleSyncCollectionReport(c *echo.Context, s *xorm.Session, u *user.User, 
 	// before loading the collection because clients poll this path forever.
 	if rawToken != "" && collection.isPseudo() {
 		log.Debugf("[CALDAV sync-collection] project=%d is a pseudo project → 403 valid-sync-token to force a full resync", projectID)
-		return writeForbiddenValidSyncToken(c)
+		return writeError(c, errInvalidSyncToken)
 	}
 
 	tasks, err := readCollectionTasks(s, u, collection)
@@ -116,12 +117,12 @@ func handleSyncCollectionReport(c *echo.Context, s *xorm.Session, u *user.User, 
 	tokenProjectID, tokenTS, tokenPurgeGeneration, ok := parseSyncToken(rawToken)
 	if !ok {
 		log.Warningf("[CALDAV sync-collection] project=%d could not parse token %q → 403 valid-sync-token", projectID, rawToken)
-		return writeForbiddenValidSyncToken(c)
+		return writeError(c, errInvalidSyncToken)
 	}
 
 	if tokenProjectID != projectID {
 		log.Warningf("[CALDAV sync-collection] token project %d != request project %d → 403 valid-sync-token", tokenProjectID, projectID)
-		return writeForbiddenValidSyncToken(c)
+		return writeError(c, errInvalidSyncToken)
 	}
 
 	purgeGeneration := int64(0)
@@ -129,7 +130,7 @@ func handleSyncCollectionReport(c *echo.Context, s *xorm.Session, u *user.User, 
 		purgeGeneration = collection.project.LastPurgedAt.Unix()
 	}
 	if tokenPurgeGeneration != purgeGeneration {
-		return writeForbiddenValidSyncToken(c)
+		return writeError(c, errInvalidSyncToken)
 	}
 
 	// Tokens older than the soft-delete retention window cannot see deletions
@@ -137,7 +138,7 @@ func handleSyncCollectionReport(c *echo.Context, s *xorm.Session, u *user.User, 
 	// silently serving an incomplete delta.
 	if time.Since(tokenTS) > models.TrashRetention {
 		log.Debugf("[CALDAV sync-collection] project=%d token %q older than retention → 403 valid-sync-token", projectID, rawToken)
-		return writeForbiddenValidSyncToken(c)
+		return writeError(c, errInvalidSyncToken)
 	}
 
 	// Inclusive comparison: tokens have second granularity, so strict After
@@ -187,12 +188,19 @@ func writeSyncResponse(
 	owner := ownerName(u, &collection.project.Project)
 	props := syncProps(req.props)
 	for _, t := range tasks {
-		resource := &taskResource{href: taskURL(collection.project.ID, &t.Task), task: &t.Task, owner: owner}
+		resource := &taskResource{
+			href:  taskURL(collection.project.ID, &t.Task),
+			task:  &t.Task,
+			owner: owner,
+		}
 		ms.responses = append(ms.responses, resource.answer(ctx, props))
 	}
 
 	for _, d := range deletions {
-		ms.responses = append(ms.responses, statusResponse{href: taskURL(collection.project.ID, d), status: http.StatusNotFound})
+		ms.responses = append(ms.responses, statusResponse{
+			href:   taskURL(collection.project.ID, d),
+			status: http.StatusNotFound,
+		})
 	}
 
 	return writeMultistatus(c, ms)

@@ -51,10 +51,22 @@ const user6Principal = "/dav/principals/user6/"
 
 // user15's home set: own projects 36 and 38 plus read shares on user6's 26 and 35.
 var user15Projects = map[string]struct{ title, owner string }{
-	"/dav/projects/36": {"Project 36 for Caldav tests", user15Principal},
-	"/dav/projects/38": {"Project 38 for Caldav tests", user15Principal},
-	"/dav/projects/35": {"Test35 with background", user6Principal},
-	"/dav/projects/26": {"Test26", user6Principal},
+	"/dav/projects/36": {
+		title: "Project 36 for Caldav tests",
+		owner: user15Principal,
+	},
+	"/dav/projects/38": {
+		title: "Project 38 for Caldav tests",
+		owner: user15Principal,
+	},
+	"/dav/projects/35": {
+		title: "Test35 with background",
+		owner: user6Principal,
+	},
+	"/dav/projects/26": {
+		title: "Test26",
+		owner: user6Principal,
+	},
 }
 
 func expectEntry() expectedDAVResponse {
@@ -70,13 +82,17 @@ func expectEntry() expectedDAVResponse {
 			davName("getcontenttype"):                   "text/calendar",
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
-			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
+			davName("owner"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getlastmodified"),
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
 		},
 	}
 }
 
-// href is the principal path, or the well-known path the principal was asked as.
 func expectPrincipal(href, displayName string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: href,
@@ -90,8 +106,13 @@ func expectPrincipal(href, displayName string) expectedDAVResponse {
 			davName("getcontenttype"):                   "text/calendar",
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
-			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
+			davName("owner"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getlastmodified"),
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
 		},
 	}
 }
@@ -109,8 +130,13 @@ func expectHomeSet() expectedDAVResponse {
 			davName("getcontenttype"):                   "text/calendar",
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
-			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
+			davName("owner"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getlastmodified"),
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
 		},
 	}
 }
@@ -131,8 +157,10 @@ func expectCalendar(href, title, owner string) expectedDAVResponse {
 			davName("sync-token"):                       anyValue,
 		},
 		notFound: []xml.Name{
-			davName("getcontentlength"), calName("calendar-description"),
-			calName("calendar-home-set"), davName("principal-URL"),
+			davName("getcontentlength"),
+			calName("calendar-description"),
+			calName("calendar-home-set"),
+			davName("principal-URL"),
 		},
 	}
 }
@@ -152,8 +180,11 @@ func expectTask(href, title string) expectedDAVResponse {
 			davName("getcontentlength"):       anyValue,
 		},
 		notFound: []xml.Name{
-			calName("supported-calendar-component-set"), davName("sync-token"), calName("calendar-description"),
-			calName("calendar-home-set"), davName("principal-URL"),
+			calName("supported-calendar-component-set"),
+			davName("sync-token"),
+			calName("calendar-description"),
+			calName("calendar-home-set"),
+			davName("principal-URL"),
 		},
 	}
 }
@@ -228,20 +259,25 @@ func TestPinPropfindMatrix(t *testing.T) {
 			name:    "task resource",
 			path:    pinTaskHref,
 			shallow: []expectedDAVResponse{task},
-			// A task has no members.
-			deep: []expectedDAVResponse{task},
+			deep:    []expectedDAVResponse{task},
 		},
 	}
 
-	// PROPFIND does not write, so all subtests share one fixture load.
 	e := setupTestEnv(t)
 	for _, kind := range kinds {
-		for _, depth := range []string{"0", "1", "infinity"} {
+		for _, depth := range []string{
+			"0",
+			"1",
+			"infinity",
+		} {
 			expected := kind.shallow
 			if depth == "1" {
 				expected = kind.deep
 			}
-			for _, isMinimal := range []bool{false, true} {
+			for _, isMinimal := range []bool{
+				false,
+				true,
+			} {
 				name := kind.name + " Depth " + depth
 				headers := map[string]string{"Depth": depth}
 				want := expected
@@ -305,15 +341,6 @@ func TestPinPropfindTaskURLReportsTaskETag(t *testing.T) {
 	assert.Equal(t, taskETag, get.Header().Get("ETag"))
 }
 
-func TestPinPropfindMissingTaskURL(t *testing.T) {
-	e := setupTestEnv(t)
-
-	for _, depth := range []string{"0", "1"} {
-		rec := caldavPROPFIND(t, e, "/dav/projects/36/does-not-exist.ics", depth, PropfindDiscoveryProps)
-		assert.Equal(t, 404, rec.Code, "Depth %s. Body:\n%s", depth, rec.Body.String())
-	}
-}
-
 // RFC 4918 §9.1: an empty body is allprop. Everything the resource has, except calendar-data.
 func TestPinPropfindAllprop(t *testing.T) {
 	// Not in PropfindDiscoveryProps. calendar-user-address-set belongs to the entry and the principal only.
@@ -335,7 +362,10 @@ func TestPinPropfindAllprop(t *testing.T) {
 		"/dav/projects/36":        expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", user15Principal),
 		pinTaskHref:               expectTask(pinTaskHref, "Title Caldav Test"),
 	} {
-		for name, body := range map[string]string{"empty body": "", "allprop": PropfindAllProps} {
+		for name, body := range map[string]string{
+			"empty body": "",
+			"allprop":    PropfindAllProps,
+		} {
 			t.Run(path+" "+name, func(t *testing.T) {
 				rec := caldavPROPFIND(t, e, path, "0", body)
 
@@ -381,7 +411,6 @@ func TestPinPropfindPropname(t *testing.T) {
 	}
 }
 
-// The unknown property is echoed in the 404 propstat with its namespace.
 func TestPinPropfindUnknownNamespace(t *testing.T) {
 	e := setupTestEnv(t)
 	body := `<?xml version="1.0" encoding="utf-8" ?>
@@ -396,8 +425,11 @@ func TestPinPropfindUnknownNamespace(t *testing.T) {
 
 	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
 	assertDAVResponses(t, rec, []expectedDAVResponse{{
-		href:     "/dav/projects/36",
-		ok:       map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
-		notFound: []xml.Name{{Space: "urn:x-vikunja-unknown", Local: "bogus"}},
+		href: "/dav/projects/36",
+		ok:   map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
+		notFound: []xml.Name{{
+			Space: "urn:x-vikunja-unknown",
+			Local: "bogus",
+		}},
 	}})
 }

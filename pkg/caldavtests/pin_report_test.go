@@ -44,7 +44,10 @@ func calendarQueryWithTodoFilter(todoFilter string) string {
 func etagOnly(hrefs ...string) []expectedDAVResponse {
 	out := make([]expectedDAVResponse, 0, len(hrefs))
 	for _, href := range hrefs {
-		out = append(out, expectedDAVResponse{href: href, ok: map[xml.Name]string{davName("getetag"): anyValue}})
+		out = append(out, expectedDAVResponse{
+			href: href,
+			ok:   map[xml.Name]string{davName("getetag"): anyValue},
+		})
 	}
 	return out
 }
@@ -74,8 +77,14 @@ func TestPinReportCalendarMultiget(t *testing.T) {
 				calName("calendar-data"): anyValue,
 			},
 		},
-		{href: missing, status: http.StatusNotFound},
-		{href: outside, status: http.StatusNotFound},
+		{
+			href:   missing,
+			status: http.StatusNotFound,
+		},
+		{
+			href:   outside,
+			status: http.StatusNotFound,
+		},
 	})
 }
 
@@ -106,7 +115,11 @@ func assertSupportedReport(t *testing.T, rec *httptest.ResponseRecorder) {
 func TestPinReportMalformedBody(t *testing.T) {
 	e := setupTestEnv(t)
 
-	for name, body := range map[string]string{"empty": "", "not XML": "<<<", "truncated": `<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">`} {
+	for name, body := range map[string]string{
+		"empty":     "",
+		"not XML":   "<<<",
+		"truncated": `<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">`,
+	} {
 		t.Run(name, func(t *testing.T) {
 			rec := caldavREPORT(t, e, "/dav/projects/36", body)
 			assert.Equal(t, http.StatusBadRequest, rec.Code, "Body:\n%s", rec.Body.String())
@@ -124,7 +137,10 @@ func TestPinReportCalendarQuery(t *testing.T) {
 		filter string
 		hrefs  []string
 	}{
-		{name: "VTODO comp-filter only", hrefs: project36TaskHrefs()},
+		{
+			name:  "VTODO comp-filter only",
+			hrefs: project36TaskHrefs(),
+		},
 		{
 			// Every fixture task is due 2023-03-01 15:00 UTC.
 			name:   "time-range after the due dates",
@@ -176,12 +192,47 @@ const (
 )
 
 func TestPinReportTargets(t *testing.T) {
+	e := setupTestEnv(t)
+
+	// They hold no calendar data, so they take no REPORT at all, whatever the body.
+	for _, tc := range []struct {
+		name, path, allow string
+	}{
+		{
+			name:  "entry",
+			path:  "/dav/",
+			allow: allowEntry,
+		},
+		{
+			name:  "principal",
+			path:  user15Principal,
+			allow: allowEntry,
+		},
+		{
+			name:  "well-known",
+			path:  "/.well-known/caldav",
+			allow: allowEntry,
+		},
+		{
+			name:  "home set",
+			path:  "/dav/projects",
+			allow: allowHomeSet,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := caldavREPORT(t, e, tc.path, ReportCalendarQuery)
+			require.Equal(t, http.StatusMethodNotAllowed, rec.Code, "Body:\n%s", rec.Body.String())
+			assert.Equal(t, tc.allow, rec.Header().Get("Allow"))
+		})
+	}
+
 	task := []expectedDAVResponse{{
 		href: pinTaskHref,
-		ok:   map[xml.Name]string{davName("getetag"): anyValue, calName("calendar-data"): anyValue},
+		ok: map[xml.Name]string{
+			davName("getetag"):       anyValue,
+			calName("calendar-data"): anyValue,
+		},
 	}}
-	// They hold no calendar data, so they take no REPORT at all.
-	const noReports = http.StatusMethodNotAllowed
 
 	tests := []struct {
 		name string
@@ -190,43 +241,28 @@ func TestPinReportTargets(t *testing.T) {
 		query, multiget             []expectedDAVResponse
 		queryStatus, multigetStatus int
 		syncStatus, unknownStatus   int
-		// The Allow header of a 405.
-		allow string
 	}{
 		{
-			name: "entry", path: "/dav/", allow: allowEntry,
-			queryStatus: noReports, multigetStatus: noReports,
-			syncStatus: noReports, unknownStatus: noReports,
-		},
-		{
-			name: "principal", path: user15Principal, allow: allowEntry,
-			queryStatus: noReports, multigetStatus: noReports,
-			syncStatus: noReports, unknownStatus: noReports,
-		},
-		{
-			name: "well-known", path: "/.well-known/caldav", allow: allowEntry,
-			queryStatus: noReports, multigetStatus: noReports,
-			syncStatus: noReports, unknownStatus: noReports,
-		},
-		{
-			name: "home set", path: "/dav/projects", allow: allowHomeSet,
-			queryStatus: noReports, multigetStatus: noReports,
-			syncStatus: noReports, unknownStatus: noReports,
-		},
-		{
 			// The filter and the hrefs are ignored, the task answers for itself.
-			name: "task", path: pinTaskHref,
-			query: task, multiget: task, queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
+			name:           "task",
+			path:           pinTaskHref,
+			query:          task,
+			multiget:       task,
+			queryStatus:    207,
+			multigetStatus: 207,
+			syncStatus:     http.StatusForbidden,
+			unknownStatus:  http.StatusForbidden,
 		},
 		{
-			name: "missing task", path: "/dav/projects/36/nonexistent-uid.ics",
-			queryStatus: http.StatusNotFound, multigetStatus: http.StatusNotFound,
-			syncStatus: http.StatusNotFound, unknownStatus: http.StatusNotFound,
+			name:           "missing task",
+			path:           "/dav/projects/36/nonexistent-uid.ics",
+			queryStatus:    http.StatusNotFound,
+			multigetStatus: http.StatusNotFound,
+			syncStatus:     http.StatusNotFound,
+			unknownStatus:  http.StatusNotFound,
 		},
 	}
 
-	e := setupTestEnv(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			check := func(t *testing.T, body string, status int, want []expectedDAVResponse) {
@@ -237,9 +273,6 @@ func TestPinReportTargets(t *testing.T) {
 					return
 				}
 				require.Equal(t, status, rec.Code, "Body:\n%s", rec.Body.String())
-				if status == http.StatusMethodNotAllowed {
-					assert.Equal(t, tc.allow, rec.Header().Get("Allow"))
-				}
 				if want == nil {
 					return
 				}

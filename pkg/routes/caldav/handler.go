@@ -35,16 +35,12 @@ func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 	return u, nil
 }
 
-// EntryHandler serves /dav/.
 func EntryHandler(c *echo.Context) error { return handle(c, resolveEntry, serveMethod) }
 
-// PrincipalHandler serves /dav/principals/<user>/ and /.well-known/caldav.
 func PrincipalHandler(c *echo.Context) error { return handle(c, resolvePrincipal, serveMethod) }
 
-// ProjectHandler serves the home set /dav/projects and the collections below it.
 func ProjectHandler(c *echo.Context) error { return handle(c, resolveProjects, serveMethod) }
 
-// TaskHandler serves a single task below a collection.
 func TaskHandler(c *echo.Context) error { return handle(c, resolveTask, serveMethod) }
 
 // EntryMethodNotAllowed answers the methods EntryHandler is not routed for.

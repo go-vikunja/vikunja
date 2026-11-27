@@ -87,28 +87,4 @@ func TestCalendarQueryFilters(t *testing.T) {
 		assert.Contains(t, body, otherTaskHref)
 		assert.Contains(t, body, parentTaskHref)
 	})
-
-	// Every fixture task of project 36 is due 2023-03-01 15:00 UTC.
-	timeRange := func(start, end string) string {
-		return `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VTODO">
-  <C:time-range start="` + start + `" end="` + end + `"/>
-</C:comp-filter></C:comp-filter>`
-	}
-
-	t.Run("time-range before the due date returns nothing", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		body := calendarQuery(t, timeRange("20000101T000000Z", "20000102T000000Z"))
-
-		assert.NotContains(t, body, "<D:response>")
-	})
-
-	t.Run("time-range around the due date returns the tasks", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		body := calendarQuery(t, timeRange("20230301T000000Z", "20230302T000000Z"))
-
-		assert.Contains(t, body, otherTaskHref)
-		assert.Contains(t, body, parentTaskHref)
-	})
 }

@@ -33,8 +33,7 @@ const (
 	allowCollectionReadWrite = "GET, HEAD, PUT, OPTIONS, PROPFIND, REPORT"
 	allowReadOnly            = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
 	// Entry and principal hold no calendar data, so no report applies to them.
-	allowEntry = "GET, HEAD, OPTIONS, PROPFIND"
-	// The home set only lists the collections in it.
+	allowEntry   = "GET, HEAD, OPTIONS, PROPFIND"
 	allowHomeSet = "OPTIONS, PROPFIND"
 )
 
@@ -49,8 +48,7 @@ func serveOptions(c *echo.Context, u *user.User, t target) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// Advertising PUT and DELETE on a collection the user cannot write to would make clients
-// retry the 403 forever.
+// Advertising writes the user may not make has clients retry the 403 forever.
 func collectionAllow(u *user.User, collection collectionTarget, readWrite string) (string, error) {
 	s := db.NewSession()
 	defer s.Close()
@@ -63,21 +61,18 @@ func collectionAllow(u *user.User, collection collectionTarget, readWrite string
 		return readWrite, nil
 	}
 
-	// The collection was loaded without a permission check, so answering here would
-	// leak which project and filter ids exist.
+	// Loaded unchecked: answering without this leaks which project and filter ids exist.
 	if _, err := collection.checkRead(s, u); err != nil {
 		return "", err
 	}
 
-	// A pseudo collection cannot be written to as a collection, but PUT and DELETE
-	// of the tasks it aggregates go through to their real projects.
+	// Writes to a pseudo collection's tasks go through to their real projects.
 	if collection.isPseudo() {
 		return readWrite, nil
 	}
 	return allowReadOnly, nil
 }
 
-// allowed is what t answers to, for the Allow header.
 func allowed(u *user.User, t target) (string, error) {
 	switch t := t.(type) {
 	case entryTarget, principalTarget:

@@ -141,12 +141,25 @@ const (
 	nsCS     = "http://calendarserver.org/ns/"
 )
 
-func davName(local string) xml.Name { return xml.Name{Space: nsDAV, Local: local} }
-func calName(local string) xml.Name { return xml.Name{Space: nsCalDAV, Local: local} }
+func davName(local string) xml.Name {
+	return xml.Name{
+		Space: nsDAV,
+		Local: local,
+	}
+}
 
-var csGetCTag = xml.Name{Space: nsCS, Local: "getctag"}
+func calName(local string) xml.Name {
+	return xml.Name{
+		Space: nsCalDAV,
+		Local: local,
+	}
+}
 
-// xmlNode is a namespace-resolved XML element, independent of the prefixes the server chose.
+var csGetCTag = xml.Name{
+	Space: nsCS,
+	Local: "getctag",
+}
+
 type xmlNode struct {
 	XMLName  xml.Name
 	Attrs    []xml.Attr `xml:",any,attr"`
@@ -154,8 +167,7 @@ type xmlNode struct {
 	Children []xmlNode  `xml:",any"`
 }
 
-// canonical renders a property value so it can be compared regardless of prefixes,
-// whitespace and child order: leaf text, DAV:href text, or "{ns}local[name=x]" per child.
+// Ignores prefixes, whitespace and child order.
 func (n xmlNode) canonical() string {
 	if len(n.Children) == 0 {
 		return strings.TrimSpace(n.Text)
@@ -178,10 +190,9 @@ func (n xmlNode) canonical() string {
 	return strings.Join(parts, " ")
 }
 
-// davResponse is one multistatus <response>, with properties grouped by propstat status.
 type davResponse struct {
 	Href string
-	// Status is the response-level status, set when the response has no propstat (e.g. a missing multiget href).
+	// Set only for a response without propstat, e.g. a missing multiget href.
 	Status    int
 	Propstats map[int]map[xml.Name]xmlNode
 }
@@ -195,7 +206,6 @@ func parseDAVStatus(t *testing.T, line string) int {
 	return code
 }
 
-// parseDAVResponses parses a multistatus body structurally, preserving response order and duplicates.
 func parseDAVResponses(t *testing.T, rec *httptest.ResponseRecorder) []davResponse {
 	t.Helper()
 	var raw struct {
@@ -216,7 +226,10 @@ func parseDAVResponses(t *testing.T, rec *httptest.ResponseRecorder) []davRespon
 	out := make([]davResponse, 0, len(raw.Responses))
 	for _, r := range raw.Responses {
 		require.Len(t, r.Hrefs, 1, "expected exactly one href per response. Body:\n%s", rec.Body.String())
-		resp := davResponse{Href: r.Hrefs[0], Propstats: map[int]map[xml.Name]xmlNode{}}
+		resp := davResponse{
+			Href:      r.Hrefs[0],
+			Propstats: map[int]map[xml.Name]xmlNode{},
+		}
 		if r.Status != "" {
 			resp.Status = parseDAVStatus(t, r.Status)
 		}
@@ -235,11 +248,8 @@ func parseDAVResponses(t *testing.T, rec *httptest.ResponseRecorder) []davRespon
 	return out
 }
 
-// anyValue marks an expected property whose value is not pinned, only its presence.
 const anyValue = "\x00any"
 
-// expectedDAVResponse pins one <response>: the 200 properties with their canonical values
-// (or anyValue) and the names that must land in the 404 propstat.
 type expectedDAVResponse struct {
 	href     string
 	status   int
@@ -306,8 +316,7 @@ func propNames(props map[xml.Name]xmlNode) []xml.Name {
 	return names
 }
 
-// assertDAVResponses matches expected against actual responses as a multiset: order is
-// not pinned, but every response (including duplicate hrefs) must be accounted for.
+// Order is not pinned, but every response, duplicate hrefs included, must be matched.
 func assertDAVResponses(t *testing.T, rec *httptest.ResponseRecorder, expected []expectedDAVResponse) {
 	t.Helper()
 	actual := parseDAVResponses(t, rec)

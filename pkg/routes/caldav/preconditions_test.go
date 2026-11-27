@@ -31,18 +31,61 @@ func TestPreconditions(t *testing.T) {
 		header              http.Header
 		create, update, del bool
 	}{
-		{name: "no headers", header: http.Header{}, create: true, update: true, del: true},
-		{name: "If-Match matching", header: http.Header{"If-Match": {etag}}, update: true, del: true},
-		{name: "If-Match star", header: http.Header{"If-Match": {"*"}}, update: true, del: true},
-		{name: "If-Match stale", header: http.Header{"If-Match": {`"stale"`}}},
-		{name: "If-Match unquoted", header: http.Header{"If-Match": {"40-1700000000"}}},
-		{name: "If-Match list containing the etag", header: http.Header{"If-Match": {`"stale", ` + etag}}},
-		{name: "If-Match only first value counts", header: http.Header{"If-Match": {`"stale"`, etag}}},
-		{name: "If-Match first value matches", header: http.Header{"If-Match": {etag, `"stale"`}}, update: true, del: true},
-		{name: "If-None-Match star", header: http.Header{"If-None-Match": {"*"}}, create: true, del: true},
-		{name: "If-None-Match star twice", header: http.Header{"If-None-Match": {"*", "*"}}, create: true, update: true, del: true},
-		{name: "If-None-Match matching etag", header: http.Header{"If-None-Match": {etag}}, create: true, update: true, del: true},
-		{name: "If-Match matching and If-None-Match star", header: http.Header{"If-Match": {etag}, "If-None-Match": {"*"}}, del: true},
+		{
+			name:   "If-Match unquoted",
+			header: http.Header{"If-Match": {"40-1700000000"}},
+		},
+		{
+			name:   "If-Match list containing the etag",
+			header: http.Header{"If-Match": {`"stale", ` + etag}},
+		},
+		{
+			name: "If-Match only first value counts",
+			header: http.Header{
+				"If-Match": {
+					`"stale"`,
+					etag,
+				},
+			},
+		},
+		{
+			name: "If-Match first value matches",
+			header: http.Header{
+				"If-Match": {
+					etag,
+					`"stale"`,
+				},
+			},
+			update: true,
+			del:    true,
+		},
+		{
+			name: "If-None-Match star twice",
+			header: http.Header{
+				"If-None-Match": {
+					"*",
+					"*",
+				},
+			},
+			create: true,
+			update: true,
+			del:    true,
+		},
+		{
+			name:   "If-None-Match matching etag",
+			header: http.Header{"If-None-Match": {etag}},
+			create: true,
+			update: true,
+			del:    true,
+		},
+		{
+			name: "If-Match matching and If-None-Match star",
+			header: http.Header{
+				"If-Match":      {etag},
+				"If-None-Match": {"*"},
+			},
+			del: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -64,14 +107,46 @@ func TestPreconditionsNotModified(t *testing.T) {
 		want        bool
 	}{
 		{name: "absent"},
-		{name: "matching", ifNoneMatch: []string{etag}, want: true},
-		{name: "star", ifNoneMatch: []string{"*"}, want: true},
-		{name: "stale", ifNoneMatch: []string{`"stale"`}},
-		{name: "unquoted", ifNoneMatch: []string{"40-1700000000"}},
-		{name: "weak", ifNoneMatch: []string{"W/" + etag}, want: true},
-		{name: "in a list", ifNoneMatch: []string{`"stale", ` + etag}, want: true},
-		{name: "in a second header", ifNoneMatch: []string{`"stale"`, etag}, want: true},
-		{name: "prefix of the etag", ifNoneMatch: []string{`"40-17"`}},
+		{
+			name:        "matching",
+			ifNoneMatch: []string{etag},
+			want:        true,
+		},
+		{
+			name:        "star",
+			ifNoneMatch: []string{"*"},
+			want:        true,
+		},
+		{
+			name:        "stale",
+			ifNoneMatch: []string{`"stale"`},
+		},
+		{
+			name:        "unquoted",
+			ifNoneMatch: []string{"40-1700000000"},
+		},
+		{
+			name:        "weak",
+			ifNoneMatch: []string{"W/" + etag},
+			want:        true,
+		},
+		{
+			name:        "in a list",
+			ifNoneMatch: []string{`"stale", ` + etag},
+			want:        true,
+		},
+		{
+			name: "in a second header",
+			ifNoneMatch: []string{
+				`"stale"`,
+				etag,
+			},
+			want: true,
+		},
+		{
+			name:        "prefix of the etag",
+			ifNoneMatch: []string{`"40-17"`},
+		},
 	}
 
 	for _, tc := range tests {

@@ -31,13 +31,33 @@ func day(d int) time.Time { return time.Date(2026, time.March, d, 12, 0, 0, 0, t
 func TestTimeRangeOverlapsTodo(t *testing.T) {
 	// Ranges relative to a task living on days 10 to 12.
 	var (
-		before    = timeRange{start: day(1), end: day(5)}
-		after     = timeRange{start: day(20), end: day(25)}
-		around    = timeRange{start: day(9), end: day(13)}
-		inside    = timeRange{start: day(11), end: time.Date(2026, time.March, 11, 18, 0, 0, 0, time.UTC)}
-		untilDay  = func(d int) timeRange { return timeRange{end: day(d)} }
-		fromDay   = func(d int) timeRange { return timeRange{start: day(d), end: latest} }
-		exactly10 = timeRange{start: day(10), end: day(10).Add(time.Second)}
+		before = timeRange{
+			start: day(1),
+			end:   day(5),
+		}
+		after = timeRange{
+			start: day(20),
+			end:   day(25),
+		}
+		around = timeRange{
+			start: day(9),
+			end:   day(13),
+		}
+		inside = timeRange{
+			start: day(11),
+			end:   time.Date(2026, time.March, 11, 18, 0, 0, 0, time.UTC),
+		}
+		untilDay = func(d int) timeRange { return timeRange{end: day(d)} }
+		fromDay  = func(d int) timeRange {
+			return timeRange{
+				start: day(d),
+				end:   latest,
+			}
+		}
+		exactly10 = timeRange{
+			start: day(10),
+			end:   day(10).Add(time.Second),
+		}
 	)
 
 	tests := []struct {
@@ -49,85 +69,213 @@ func TestTimeRangeOverlapsTodo(t *testing.T) {
 		{
 			// DTSTART + DURATION: start <= DTSTART+DURATION and (end > DTSTART or end >= DTSTART+DURATION).
 			name: "start and end",
-			task: models.Task{StartDate: day(10), EndDate: day(12)},
-			in:   []timeRange{around, inside, untilDay(11), fromDay(11), fromDay(12), exactly10},
-			out:  []timeRange{before, after, untilDay(10), fromDay(13)},
+			task: models.Task{
+				StartDate: day(10),
+				EndDate:   day(12),
+			},
+			in: []timeRange{
+				around,
+				inside,
+				untilDay(11),
+				fromDay(11),
+				fromDay(12),
+				exactly10,
+			},
+			out: []timeRange{
+				before,
+				after,
+				untilDay(10),
+				fromDay(13),
+			},
 		},
 		{
 			// DTSTART + DUE: (start < DUE or start <= DTSTART) and (end > DTSTART or end >= DUE).
 			name: "start and due",
-			task: models.Task{StartDate: day(10), DueDate: day(12)},
-			in:   []timeRange{around, inside, untilDay(11), fromDay(11), exactly10},
-			out:  []timeRange{before, after, untilDay(10), fromDay(12)},
+			task: models.Task{
+				StartDate: day(10),
+				DueDate:   day(12),
+			},
+			in: []timeRange{
+				around,
+				inside,
+				untilDay(11),
+				fromDay(11),
+				exactly10,
+			},
+			out: []timeRange{
+				before,
+				after,
+				untilDay(10),
+				fromDay(12),
+			},
 		},
 		{
 			// The due date takes the place of the end date, like in the rendered VTODO.
 			name: "start, due and end",
-			task: models.Task{StartDate: day(10), DueDate: day(12), EndDate: day(20)},
-			in:   []timeRange{around, fromDay(11)},
-			out:  []timeRange{fromDay(12), after},
+			task: models.Task{
+				StartDate: day(10),
+				DueDate:   day(12),
+				EndDate:   day(20),
+			},
+			in: []timeRange{
+				around,
+				fromDay(11),
+			},
+			out: []timeRange{
+				fromDay(12),
+				after,
+			},
 		},
 		{
 			// DTSTART only: start <= DTSTART and end > DTSTART.
 			name: "start only",
 			task: models.Task{StartDate: day(10)},
-			in:   []timeRange{around, untilDay(11), fromDay(10), exactly10},
-			out:  []timeRange{before, after, inside, untilDay(10), fromDay(11)},
+			in: []timeRange{
+				around,
+				untilDay(11),
+				fromDay(10),
+				exactly10,
+			},
+			out: []timeRange{
+				before,
+				after,
+				inside,
+				untilDay(10),
+				fromDay(11),
+			},
 		},
 		{
 			// An end before the start renders no usable DURATION, so it counts as start only.
 			name: "end before start",
-			task: models.Task{StartDate: day(10), EndDate: day(5)},
-			in:   []timeRange{fromDay(10)},
-			out:  []timeRange{inside, fromDay(11)},
+			task: models.Task{
+				StartDate: day(10),
+				EndDate:   day(5),
+			},
+			in: []timeRange{fromDay(10)},
+			out: []timeRange{
+				inside,
+				fromDay(11),
+			},
 		},
 		{
 			// DUE only: start < DUE and end >= DUE.
 			name: "due only",
 			task: models.Task{DueDate: day(12)},
-			in:   []timeRange{around, untilDay(12), fromDay(11)},
-			out:  []timeRange{before, after, inside, untilDay(11), fromDay(12)},
+			in: []timeRange{
+				around,
+				untilDay(12),
+				fromDay(11),
+			},
+			out: []timeRange{
+				before,
+				after,
+				inside,
+				untilDay(11),
+				fromDay(12),
+			},
+		},
+		{
+			name: "repeating, due only",
+			task: models.Task{
+				DueDate:     day(12),
+				RepeatAfter: 7 * 24 * 3600,
+			},
+			in:  []timeRange{after},
+			out: []timeRange{before},
 		},
 		{
 			// An end without a start renders neither DTSTART nor DURATION.
 			name: "end only",
-			task: models.Task{EndDate: day(12), Created: day(10)},
-			in:   []timeRange{fromDay(1), untilDay(11)},
-			out:  []timeRange{untilDay(10), before},
+			task: models.Task{
+				EndDate: day(12),
+				Created: day(10),
+			},
+			in: []timeRange{
+				fromDay(1),
+				untilDay(11),
+			},
+			out: []timeRange{
+				untilDay(10),
+				before,
+			},
 		},
 		{
 			// COMPLETED + CREATED: (start <= CREATED or start <= COMPLETED) and (end >= CREATED or end >= COMPLETED).
 			name: "completed and created",
-			task: models.Task{Done: true, DoneAt: day(12), Created: day(10)},
-			in:   []timeRange{around, inside, untilDay(10), fromDay(12)},
-			out:  []timeRange{before, after, untilDay(9), fromDay(13)},
+			task: models.Task{
+				Done:    true,
+				DoneAt:  day(12),
+				Created: day(10),
+			},
+			in: []timeRange{
+				around,
+				inside,
+				untilDay(10),
+				fromDay(12),
+			},
+			out: []timeRange{
+				before,
+				after,
+				untilDay(9),
+				fromDay(13),
+			},
 		},
 		{
 			// COMPLETED only: start <= COMPLETED and end >= COMPLETED.
 			name: "completed only",
-			task: models.Task{Done: true, DoneAt: day(12)},
-			in:   []timeRange{around, untilDay(12), fromDay(12)},
-			out:  []timeRange{before, after, inside, untilDay(11), fromDay(13)},
+			task: models.Task{
+				Done:   true,
+				DoneAt: day(12),
+			},
+			in: []timeRange{
+				around,
+				untilDay(12),
+				fromDay(12),
+			},
+			out: []timeRange{
+				before,
+				after,
+				inside,
+				untilDay(11),
+				fromDay(13),
+			},
 		},
 		{
 			// CREATED only: end > CREATED.
 			name: "created only",
 			task: models.Task{Created: day(10)},
-			in:   []timeRange{around, after, untilDay(11), fromDay(1)},
-			out:  []timeRange{before, untilDay(10)},
+			in: []timeRange{
+				around,
+				after,
+				untilDay(11),
+				fromDay(1),
+			},
+			out: []timeRange{
+				before,
+				untilDay(10),
+			},
 		},
 		{
 			// A reopened task keeps its done date, but renders no COMPLETED.
 			name: "done date of an open task",
-			task: models.Task{DoneAt: day(12), Created: day(10)},
-			in:   []timeRange{after},
-			out:  []timeRange{before},
+			task: models.Task{
+				DoneAt:  day(12),
+				Created: day(10),
+			},
+			in:  []timeRange{after},
+			out: []timeRange{before},
 		},
 		{
 			// Neither of them: always.
 			name: "nothing",
 			task: models.Task{},
-			in:   []timeRange{before, after, around, untilDay(1), fromDay(30)},
+			in: []timeRange{
+				before,
+				after,
+				around,
+				untilDay(1),
+				fromDay(30),
+			},
 		},
 	}
 
@@ -167,29 +315,121 @@ func TestParseFilterRejects(t *testing.T) {
 		filter       string
 		precondition string
 	}{
-		{"no comp-filter", ``, "valid-filter"},
-		{"two comp-filters", `<C:comp-filter name="VCALENDAR"/><C:comp-filter name="VCALENDAR"/>`, "valid-filter"},
-		{"outermost component is no calendar", `<C:comp-filter name="VTODO"/>`, "valid-filter"},
-		{"comp-filter without name", `<C:comp-filter name="VCALENDAR"><C:comp-filter/></C:comp-filter>`, "valid-filter"},
-		{"nested calendar", `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VCALENDAR"/></C:comp-filter>`, "valid-filter"},
-		{"event in a todo", todoFilter(`<C:comp-filter name="VEVENT"/>`), "valid-filter"},
-		{"component in an alarm", todoFilter(`<C:comp-filter name="VALARM"><C:comp-filter name="X-FOO"/></C:comp-filter>`), "valid-filter"},
-		{"time-range on the calendar", `<C:comp-filter name="VCALENDAR"><C:time-range start="20260101T000000Z"/></C:comp-filter>`, "valid-filter"},
-		{"time-range on an alarm", todoFilter(`<C:comp-filter name="VALARM"><C:time-range start="20260101T000000Z"/></C:comp-filter>`), "supported-filter"},
-		{"two time-ranges", todoFilter(`<C:time-range start="20260101T000000Z"/><C:time-range end="20260101T000000Z"/>`), "valid-filter"},
-		{"time-range without bounds", todoFilter(`<C:time-range/>`), "valid-filter"},
-		{"time-range not in UTC", todoFilter(`<C:time-range start="20260101T000000"/>`), "valid-filter"},
-		{"time-range as a date", todoFilter(`<C:time-range start="20260101"/>`), "valid-filter"},
-		{"time-range ending before it starts", todoFilter(`<C:time-range start="20260102T000000Z" end="20260101T000000Z"/>`), "valid-filter"},
-		{"time-range on a text property", todoFilter(`<C:prop-filter name="SUMMARY"><C:time-range start="20260101T000000Z"/></C:prop-filter>`), "valid-filter"},
-		{"is-not-defined with tests", todoFilter(`<C:is-not-defined/><C:time-range start="20260101T000000Z"/>`), "valid-filter"},
-		{"prop is-not-defined with text-match", todoFilter(`<C:prop-filter name="SUMMARY"><C:is-not-defined/><C:text-match>x</C:text-match></C:prop-filter>`), "valid-filter"},
-		{"text-match and time-range", todoFilter(`<C:prop-filter name="DUE"><C:text-match>x</C:text-match><C:time-range start="20260101T000000Z"/></C:prop-filter>`), "valid-filter"},
-		{"prop-filter without name", todoFilter(`<C:prop-filter><C:is-not-defined/></C:prop-filter>`), "valid-filter"},
-		{"unknown collation", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;unicode-casemap">x</C:text-match></C:prop-filter>`), "supported-collation"},
-		{"bad negate-condition", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match negate-condition="maybe">x</C:text-match></C:prop-filter>`), "valid-filter"},
-		{"two text-matches in a param-filter", todoFilter(`<C:prop-filter name="X"><C:param-filter name="Y"><C:text-match>a</C:text-match><C:text-match>b</C:text-match></C:param-filter></C:prop-filter>`), "valid-filter"},
-		{"unknown CalDAV element", todoFilter(`<C:whatever/>`), "valid-filter"},
+		{
+			name:         "no comp-filter",
+			filter:       ``,
+			precondition: "valid-filter",
+		},
+		{
+			name:         "two comp-filters",
+			filter:       `<C:comp-filter name="VCALENDAR"/><C:comp-filter name="VCALENDAR"/>`,
+			precondition: "valid-filter",
+		},
+		{
+			name:         "outermost component is no calendar",
+			filter:       `<C:comp-filter name="VTODO"/>`,
+			precondition: "valid-filter",
+		},
+		{
+			name:         "comp-filter without name",
+			filter:       `<C:comp-filter name="VCALENDAR"><C:comp-filter/></C:comp-filter>`,
+			precondition: "valid-filter",
+		},
+		{
+			name:         "nested calendar",
+			filter:       `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VCALENDAR"/></C:comp-filter>`,
+			precondition: "valid-filter",
+		},
+		{
+			name:         "event in a todo",
+			filter:       todoFilter(`<C:comp-filter name="VEVENT"/>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "component in an alarm",
+			filter:       todoFilter(`<C:comp-filter name="VALARM"><C:comp-filter name="X-FOO"/></C:comp-filter>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "time-range on the calendar",
+			filter:       `<C:comp-filter name="VCALENDAR"><C:time-range start="20260101T000000Z"/></C:comp-filter>`,
+			precondition: "valid-filter",
+		},
+		{
+			name:         "time-range on an alarm",
+			filter:       todoFilter(`<C:comp-filter name="VALARM"><C:time-range start="20260101T000000Z"/></C:comp-filter>`),
+			precondition: "supported-filter",
+		},
+		{
+			name:         "two time-ranges",
+			filter:       todoFilter(`<C:time-range start="20260101T000000Z"/><C:time-range end="20260101T000000Z"/>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "time-range without bounds",
+			filter:       todoFilter(`<C:time-range/>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "time-range not in UTC",
+			filter:       todoFilter(`<C:time-range start="20260101T000000"/>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "time-range as a date",
+			filter:       todoFilter(`<C:time-range start="20260101"/>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "time-range ending before it starts",
+			filter:       todoFilter(`<C:time-range start="20260102T000000Z" end="20260101T000000Z"/>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "time-range on a text property",
+			filter:       todoFilter(`<C:prop-filter name="SUMMARY"><C:time-range start="20260101T000000Z"/></C:prop-filter>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "is-not-defined with tests",
+			filter:       todoFilter(`<C:is-not-defined/><C:time-range start="20260101T000000Z"/>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "prop is-not-defined with text-match",
+			filter:       todoFilter(`<C:prop-filter name="SUMMARY"><C:is-not-defined/><C:text-match>x</C:text-match></C:prop-filter>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "text-match and time-range",
+			filter:       todoFilter(`<C:prop-filter name="DUE"><C:text-match>x</C:text-match><C:time-range start="20260101T000000Z"/></C:prop-filter>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "prop-filter without name",
+			filter:       todoFilter(`<C:prop-filter><C:is-not-defined/></C:prop-filter>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "unknown collation",
+			filter:       todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;unicode-casemap">x</C:text-match></C:prop-filter>`),
+			precondition: "supported-collation",
+		},
+		{
+			name:         "bad negate-condition",
+			filter:       todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match negate-condition="maybe">x</C:text-match></C:prop-filter>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "two text-matches in a param-filter",
+			filter:       todoFilter(`<C:prop-filter name="X"><C:param-filter name="Y"><C:text-match>a</C:text-match><C:text-match>b</C:text-match></C:param-filter></C:prop-filter>`),
+			precondition: "valid-filter",
+		},
+		{
+			name:         "unknown CalDAV element",
+			filter:       todoFilter(`<C:whatever/>`),
+			precondition: "valid-filter",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -232,34 +472,151 @@ func TestFilterMatches(t *testing.T) {
 		filter  string
 		matches bool
 	}{
-		{"calendar only", `<C:comp-filter name="VCALENDAR"/>`, true},
-		{"todo", todoFilter(``), true},
-		{"event", `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VEVENT"/></C:comp-filter>`, false},
-		{"no event", `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VEVENT"><C:is-not-defined/></C:comp-filter></C:comp-filter>`, true},
-		{"no todo", `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VTODO"><C:is-not-defined/></C:comp-filter></C:comp-filter>`, false},
-		{"component names are case-insensitive", `<C:comp-filter name="vcalendar"><C:comp-filter name="vtodo"/></C:comp-filter>`, true},
-		{"calendar property", `<C:comp-filter name="VCALENDAR"><C:prop-filter name="VERSION"><C:text-match>2.0</C:text-match></C:prop-filter></C:comp-filter>`, true},
-		{"defined property", todoFilter(`<C:prop-filter name="DUE"/>`), true},
-		{"undefined property", todoFilter(`<C:prop-filter name="DTSTART"/>`), false},
-		{"is-not-defined of an undefined property", todoFilter(`<C:prop-filter name="COMPLETED"><C:is-not-defined/></C:prop-filter>`), true},
-		{"is-not-defined of a defined property", todoFilter(`<C:prop-filter name="SUMMARY"><C:is-not-defined/></C:prop-filter>`), false},
-		{"text-match folds ASCII case by default", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match>buy milk</C:text-match></C:prop-filter>`), true},
-		{"text-match octet keeps case", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;octet">buy milk</C:text-match></C:prop-filter>`), false},
-		{"text-match octet", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;octet">Milk</C:text-match></C:prop-filter>`), true},
-		{"negated text-match", todoFilter(`<C:prop-filter name="STATUS"><C:text-match negate-condition="yes">COMPLETED</C:text-match></C:prop-filter>`), true},
-		{"negated text-match that matches", todoFilter(`<C:prop-filter name="STATUS"><C:text-match negate-condition="yes">NEEDS-ACTION</C:text-match></C:prop-filter>`), false},
-		{"negated text-match of an undefined property", todoFilter(`<C:prop-filter name="DESCRIPTION"><C:text-match negate-condition="yes">x</C:text-match></C:prop-filter>`), false},
-		{"text-match on categories", todoFilter(`<C:prop-filter name="CATEGORIES"><C:text-match>grocer</C:text-match></C:prop-filter>`), true},
-		{"time-range on a property", todoFilter(`<C:prop-filter name="DUE"><C:time-range start="20260312T000000Z" end="20260313T000000Z"/></C:prop-filter>`), true},
-		{"time-range on a property, outside", todoFilter(`<C:prop-filter name="DUE"><C:time-range start="20260313T000000Z"/></C:prop-filter>`), false},
-		{"time-range on the todo", todoFilter(`<C:time-range start="20260311T000000Z" end="20260313T000000Z"/>`), true},
-		{"time-range on the todo, outside", todoFilter(`<C:time-range end="20260311T000000Z"/>`), false},
-		{"defined parameter", todoFilter(`<C:comp-filter name="VALARM"><C:prop-filter name="TRIGGER"><C:param-filter name="VALUE"/></C:prop-filter></C:comp-filter>`), true},
-		{"parameter text-match", todoFilter(`<C:comp-filter name="VALARM"><C:prop-filter name="TRIGGER"><C:param-filter name="VALUE"><C:text-match>date-time</C:text-match></C:param-filter></C:prop-filter></C:comp-filter>`), true},
-		{"undefined parameter", todoFilter(`<C:prop-filter name="SUMMARY"><C:param-filter name="LANGUAGE"><C:is-not-defined/></C:param-filter></C:prop-filter>`), true},
-		{"alarm", todoFilter(`<C:comp-filter name="VALARM"/>`), true},
-		{"all tests must match", todoFilter(`<C:prop-filter name="DUE"/><C:prop-filter name="DTSTART"/>`), false},
-		{"extension elements are ignored", todoFilter(`<X:anything><C:whatever/></X:anything>`), true},
+		{
+			name:    "calendar only",
+			filter:  `<C:comp-filter name="VCALENDAR"/>`,
+			matches: true,
+		},
+		{
+			name:    "todo",
+			filter:  todoFilter(``),
+			matches: true,
+		},
+		{
+			name:    "event",
+			filter:  `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VEVENT"/></C:comp-filter>`,
+			matches: false,
+		},
+		{
+			name:    "no event",
+			filter:  `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VEVENT"><C:is-not-defined/></C:comp-filter></C:comp-filter>`,
+			matches: true,
+		},
+		{
+			name:    "no todo",
+			filter:  `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VTODO"><C:is-not-defined/></C:comp-filter></C:comp-filter>`,
+			matches: false,
+		},
+		{
+			name:    "component names are case-insensitive",
+			filter:  `<C:comp-filter name="vcalendar"><C:comp-filter name="vtodo"/></C:comp-filter>`,
+			matches: true,
+		},
+		{
+			name:    "calendar property",
+			filter:  `<C:comp-filter name="VCALENDAR"><C:prop-filter name="VERSION"><C:text-match>2.0</C:text-match></C:prop-filter></C:comp-filter>`,
+			matches: true,
+		},
+		{
+			name:    "defined property",
+			filter:  todoFilter(`<C:prop-filter name="DUE"/>`),
+			matches: true,
+		},
+		{
+			name:    "undefined property",
+			filter:  todoFilter(`<C:prop-filter name="DTSTART"/>`),
+			matches: false,
+		},
+		{
+			name:    "is-not-defined of an undefined property",
+			filter:  todoFilter(`<C:prop-filter name="COMPLETED"><C:is-not-defined/></C:prop-filter>`),
+			matches: true,
+		},
+		{
+			name:    "is-not-defined of a defined property",
+			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:is-not-defined/></C:prop-filter>`),
+			matches: false,
+		},
+		{
+			name:    "text-match folds ASCII case by default",
+			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match>buy milk</C:text-match></C:prop-filter>`),
+			matches: true,
+		},
+		{
+			name:    "text-match octet keeps case",
+			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;octet">buy milk</C:text-match></C:prop-filter>`),
+			matches: false,
+		},
+		{
+			name:    "text-match octet",
+			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;octet">Milk</C:text-match></C:prop-filter>`),
+			matches: true,
+		},
+		{
+			name:    "text-match split by a comment",
+			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match>Buy<!-- --> Milk</C:text-match></C:prop-filter>`),
+			matches: true,
+		},
+		{
+			name:    "negated text-match",
+			filter:  todoFilter(`<C:prop-filter name="STATUS"><C:text-match negate-condition="yes">COMPLETED</C:text-match></C:prop-filter>`),
+			matches: true,
+		},
+		{
+			name:    "negated text-match that matches",
+			filter:  todoFilter(`<C:prop-filter name="STATUS"><C:text-match negate-condition="yes">NEEDS-ACTION</C:text-match></C:prop-filter>`),
+			matches: false,
+		},
+		{
+			name:    "negated text-match of an undefined property",
+			filter:  todoFilter(`<C:prop-filter name="DESCRIPTION"><C:text-match negate-condition="yes">x</C:text-match></C:prop-filter>`),
+			matches: false,
+		},
+		{
+			name:    "text-match on categories",
+			filter:  todoFilter(`<C:prop-filter name="CATEGORIES"><C:text-match>grocer</C:text-match></C:prop-filter>`),
+			matches: true,
+		},
+		{
+			name:    "time-range on a property",
+			filter:  todoFilter(`<C:prop-filter name="DUE"><C:time-range start="20260312T000000Z" end="20260313T000000Z"/></C:prop-filter>`),
+			matches: true,
+		},
+		{
+			name:    "time-range on a property, outside",
+			filter:  todoFilter(`<C:prop-filter name="DUE"><C:time-range start="20260313T000000Z"/></C:prop-filter>`),
+			matches: false,
+		},
+		{
+			name:    "time-range on the todo",
+			filter:  todoFilter(`<C:time-range start="20260311T000000Z" end="20260313T000000Z"/>`),
+			matches: true,
+		},
+		{
+			name:    "time-range on the todo, outside",
+			filter:  todoFilter(`<C:time-range end="20260311T000000Z"/>`),
+			matches: false,
+		},
+		{
+			name:    "defined parameter",
+			filter:  todoFilter(`<C:comp-filter name="VALARM"><C:prop-filter name="TRIGGER"><C:param-filter name="VALUE"/></C:prop-filter></C:comp-filter>`),
+			matches: true,
+		},
+		{
+			name:    "parameter text-match",
+			filter:  todoFilter(`<C:comp-filter name="VALARM"><C:prop-filter name="TRIGGER"><C:param-filter name="VALUE"><C:text-match>date-time</C:text-match></C:param-filter></C:prop-filter></C:comp-filter>`),
+			matches: true,
+		},
+		{
+			name:    "undefined parameter",
+			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:param-filter name="LANGUAGE"><C:is-not-defined/></C:param-filter></C:prop-filter>`),
+			matches: true,
+		},
+		{
+			name:    "alarm",
+			filter:  todoFilter(`<C:comp-filter name="VALARM"/>`),
+			matches: true,
+		},
+		{
+			name:    "all tests must match",
+			filter:  todoFilter(`<C:prop-filter name="DUE"/><C:prop-filter name="DTSTART"/>`),
+			matches: false,
+		},
+		{
+			name:    "extension elements are ignored",
+			filter:  todoFilter(`<X:anything><C:whatever/></X:anything>`),
+			matches: true,
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

@@ -41,25 +41,24 @@ const (
 	maxReportDepth    = 16
 )
 
-var errUnsupportedReport = preconditionError{precondition: davName("supported-report"), reason: "unsupported report"}
+var errUnsupportedReport = preconditionError{
+	precondition: davName("supported-report"),
+	reason:       "unsupported report",
+}
 
-// reportRequest is what a REPORT body asks for.
 type reportRequest interface{ isReportRequest() }
 
-// multigetRequest is a calendar-multiget (RFC 4791 §7.9).
 type multigetRequest struct {
 	props propfindRequest
 	// Without duplicates, in request order.
 	hrefs []string
 }
 
-// calendarQueryRequest is a calendar-query (RFC 4791 §7.8).
 type calendarQueryRequest struct {
 	props  propfindRequest
 	filter calendarFilter
 }
 
-// syncCollectionRequest is a sync-collection (RFC 6578 §3.2).
 type syncCollectionRequest struct {
 	props propfindRequest
 	token string
@@ -79,7 +78,10 @@ func parseReport(body string) (reportRequest, error) {
 	case xml.Name{}:
 		return nil, fmt.Errorf("%w: empty body", errMalformedBody)
 	case calDAVName("calendar-multiget"):
-		return multigetRequest{props: p.props.request(), hrefs: p.hrefs}, nil
+		return multigetRequest{
+			props: p.props.request(),
+			hrefs: p.hrefs,
+		}, nil
 	case calDAVName("calendar-query"):
 		// RFC 4791 §9.5: the filter is required.
 		if p.filter == nil {
@@ -89,14 +91,19 @@ func parseReport(body string) (reportRequest, error) {
 		if err != nil {
 			return nil, err
 		}
-		return calendarQueryRequest{props: p.props.request(), filter: filter}, nil
+		return calendarQueryRequest{
+			props:  p.props.request(),
+			filter: filter,
+		}, nil
 	case davName("sync-collection"):
-		return syncCollectionRequest{props: p.props.request(), token: p.token}, nil
+		return syncCollectionRequest{
+			props: p.props.request(),
+			token: p.token,
+		}, nil
 	}
 	return nil, errUnsupportedReport
 }
 
-// reportParser collects the parts of a REPORT body any report type may have.
 type reportParser struct {
 	root     xml.Name
 	props    propCollector
@@ -104,8 +111,7 @@ type reportParser struct {
 	seenHref map[string]bool
 	token    string
 	elements int
-	// The href or sync-token being read.
-	text *strings.Builder
+	text     *strings.Builder
 	// The filter element, and the open elements in it.
 	filter         *xmlElement
 	filterStack    []*xmlElement
@@ -118,7 +124,7 @@ func (p *reportParser) visit(path []xml.Name, tok xml.Token) error {
 		return p.start(path, t)
 	case xml.CharData:
 		if len(p.filterStack) > 0 {
-			p.filterStack[len(p.filterStack)-1].text += string(t)
+			p.filterStack[len(p.filterStack)-1].text.Write(t)
 		}
 		if len(path) == 2 && p.text != nil {
 			p.text.Write(t)
@@ -180,7 +186,10 @@ func (p *reportParser) openFilterElement(t xml.StartElement) error {
 	if p.filterElements > maxFilterElements {
 		return fmt.Errorf("%w: more than %d filter elements", errBodyTooLarge, maxFilterElements)
 	}
-	el := &xmlElement{name: t.Name, attrs: t.Copy().Attr}
+	el := &xmlElement{
+		name:  t.Name,
+		attrs: t.Copy().Attr,
+	}
 	if len(p.filterStack) == 0 {
 		if p.filter != nil {
 			return invalidFilter("more than one filter")
@@ -194,7 +203,6 @@ func (p *reportParser) openFilterElement(t xml.StartElement) error {
 	return nil
 }
 
-// reportAnswer answers a parsed REPORT on a resource the user was granted access to.
 type reportAnswer func(c *echo.Context, s *xorm.Session, req reportRequest) error
 
 func serveReport(c *echo.Context, u *user.User, t target) error {
@@ -203,18 +211,19 @@ func serveReport(c *echo.Context, u *user.User, t target) error {
 		return methodNotAllowed(c, u, t)
 	}
 
+	// Before the session: a trickled body must not pin a DB connection.
+	body, bodyErr := readBody(c, maxReportBodySize)
+
 	s := db.NewSession()
 	defer s.Close()
 
-	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
 	answer, err := authorizeReport(s, u, t)
 	if err != nil {
 		return writeError(c, err)
 	}
-
-	body, err := readBody(c, maxReportBodySize)
-	if err != nil {
-		return writeError(c, err)
+	// After the access check: a bad body must not tell an unreadable collection from a missing one.
+	if bodyErr != nil {
+		return writeError(c, bodyErr)
 	}
 
 	req, err := parseReport(string(body))
@@ -250,7 +259,10 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			if err := s.Commit(); err != nil {
 				return writeError(c, err)
 			}
-			return writeMultistatus(c, multistatus{responses: responses, minimal: prefersMinimal(c.Request().Header)})
+			return writeMultistatus(c, multistatus{
+				responses: responses,
+				minimal:   prefersMinimal(c.Request().Header),
+			})
 		}, nil
 	case taskTarget:
 		if _, err := t.collection.checkRead(s, u); err != nil {
@@ -267,7 +279,11 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 		if err != nil {
 			return nil, err
 		}
-		resource := &taskResource{href: taskURL(t.collection.project.ID, task), task: task, owner: owner}
+		resource := &taskResource{
+			href:  taskURL(t.collection.project.ID, task),
+			task:  task,
+			owner: owner,
+		}
 		// Pinned: a query or multiget on a task answers the task, whatever the filter or hrefs.
 		return func(c *echo.Context, s *xorm.Session, req reportRequest) error {
 			var props propfindRequest
@@ -314,22 +330,25 @@ func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req mul
 	for _, href := range req.hrefs {
 		task, found := tasks[href]
 		if !found {
-			responses = append(responses, statusResponse{href: href, status: http.StatusNotFound})
+			responses = append(responses, statusResponse{
+				href:   href,
+				status: http.StatusNotFound,
+			})
 			continue
 		}
-		responses = append(responses, (&taskResource{href: href, task: task, owner: owner}).answer(ctx, req.props))
+		resource := &taskResource{
+			href:  href,
+			task:  task,
+			owner: owner,
+		}
+		responses = append(responses, resource.answer(ctx, req.props))
 	}
 	return responses, nil
 }
 
-// multigetTasks resolves hrefs to the tasks they name in c, keyed by the task's href. An href
-// that is malformed, names a task the user cannot read, or one c does not hold is missing.
 func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []string) (map[string]*models.Task, error) {
 	found := map[string]*models.Task{}
 
-	// Path format: /dav/projects/{projectID}/{uid}.ics.
-	// Remember the href's project ID per uid so the consistency check below
-	// can drop tasks requested via the wrong project (GHSA-48ch-p4gq-x46x).
 	var uids []string
 	uidURLProjects := map[string]int64{}
 	for _, href := range hrefs {
@@ -337,9 +356,6 @@ func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []
 		if len(parts) < 5 {
 			continue
 		}
-		// Skip malformed hrefs: without these guards an empty/non-numeric
-		// project would bypass the consistency check, and an empty UID
-		// would query for tasks with empty/NULL uids.
 		if !strings.HasSuffix(parts[4], ".ics") {
 			continue
 		}
@@ -364,8 +380,7 @@ func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []
 		return nil, err
 	}
 
-	// A task reached through a pseudo collection lives in another project; membership
-	// stands in for the project check. One lookup for all of them.
+	// Via a pseudo collection a task lives in another project; membership stands in for the project check.
 	viaPseudo := func(urlProjectID int64) bool {
 		return models.IsPseudoProjectID(urlProjectID) && urlProjectID == c.project.ID
 	}
@@ -386,7 +401,7 @@ func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []
 		if !ok {
 			continue
 		}
-		// Closes the URL-path leak for calendar-multiget REPORTs (GHSA-48ch-p4gq-x46x).
+		// GHSA-48ch-p4gq-x46x: drop tasks requested via the wrong project.
 		if urlProjectID != t.ProjectID && (!viaPseudo(urlProjectID) || !members[t.ID]) {
 			continue
 		}
@@ -399,7 +414,7 @@ func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []
 	return found, nil
 }
 
-// One bind variable per uid, so chunked like the membership lookup.
+// Chunked: one bind variable per uid.
 func tasksByUIDs(s *xorm.Session, u *user.User, uids []string) ([]*models.Task, error) {
 	var tasks []*models.Task
 	for chunk := range slices.Chunk(uids, membershipQueryChunkSize) {
@@ -422,7 +437,11 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 
 	if tasks == nil {
 		// Pinned: a query on a collection without tasks answers the collection itself.
-		collection := &collectionResource{href: collectionHref(c.project.ID), project: c.project, owner: owner}
+		collection := &collectionResource{
+			href:    collectionHref(c.project.ID),
+			project: c.project,
+			owner:   owner,
+		}
 		return []msResponse{collection.answer(ctx, props)}, nil
 	}
 
@@ -430,7 +449,11 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 	for _, t := range tasks {
 		href := taskURL(c.project.ID, &t.Task)
 		// Pinned: two tasks with the same UID answer under the same href.
-		candidate := &queryCandidate{resource: &taskResource{href: href, task: &t.Task, owner: owner}}
+		candidate := &queryCandidate{resource: &taskResource{
+			href:  href,
+			task:  &t.Task,
+			owner: owner,
+		}}
 		if req.filter.matches(candidate) {
 			responses = append(responses, candidate.resource.answer(ctx, props))
 		}

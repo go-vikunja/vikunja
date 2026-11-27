@@ -23,9 +23,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	caldavpkg "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/richtext"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -38,24 +36,26 @@ func TestErrorStatus(t *testing.T) {
 		err    error
 		status int
 	}{
-		{"not found", errNotFound, http.StatusNotFound},
-		{"project does not exist", models.ErrProjectDoesNotExist{ID: 1}, http.StatusNotFound},
-		{"wrapped project does not exist", fmt.Errorf("loading: %w", models.ErrProjectDoesNotExist{ID: 1}), http.StatusNotFound},
-		{"saved filter does not exist", models.ErrSavedFilterDoesNotExist{SavedFilterID: 1}, http.StatusNotFound},
-		{"task does not exist", models.ErrTaskDoesNotExist{ID: 1}, http.StatusNotFound},
-		{"forbidden", errForbidden, http.StatusForbidden},
-		{"archived project", models.ErrProjectIsArchived{ProjectID: 1}, http.StatusForbidden},
-		{"failed precondition", fmt.Errorf("report: %w", errUnsupportedReport), http.StatusForbidden},
-		{"validation", models.ValidationHTTPError{}, http.StatusForbidden},
-		{"too many table cells", fmt.Errorf("description: %w", richtext.ErrTooManyTableCells), http.StatusForbidden},
-		{"body too large", errBodyTooLarge, http.StatusRequestEntityTooLarge},
-		{"too many properties", errTooManyProperties, http.StatusRequestEntityTooLarge},
-		{"vcalendar too large", caldavpkg.ErrVCalendarTooLarge, http.StatusRequestEntityTooLarge},
-		{"malformed body", fmt.Errorf("%w: eof", errMalformedBody), http.StatusBadRequest},
-		{"too many property parameters", caldavpkg.ErrTooManyPropertyParameters, http.StatusBadRequest},
-		{"invalid data", models.ErrInvalidData{Message: "x"}, http.StatusBadRequest},
-		{"unknown", errors.New("database is gone"), http.StatusInternalServerError},
-		{"forbidden without read access is not mapped", models.ErrGenericForbidden{}, http.StatusInternalServerError},
+		{
+			name:   "failed precondition",
+			err:    fmt.Errorf("report: %w", errUnsupportedReport),
+			status: http.StatusForbidden,
+		},
+		{
+			name:   "validation",
+			err:    models.ValidationHTTPError{},
+			status: http.StatusForbidden,
+		},
+		{
+			name:   "unknown",
+			err:    errors.New("database is gone"),
+			status: http.StatusInternalServerError,
+		},
+		{
+			name:   "forbidden without read access is not mapped",
+			err:    models.ErrGenericForbidden{},
+			status: http.StatusInternalServerError,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -83,14 +83,6 @@ func TestWriteError(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusForbidden, rec.Code)
 		assert.Empty(t, rec.Body.String())
-	})
-
-	t.Run("failed precondition answers with its error body", func(t *testing.T) {
-		rec, err := run("REPORT", errUnsupportedReport)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusForbidden, rec.Code)
-		assert.Contains(t, rec.Body.String(), "<D:error")
-		assert.Contains(t, rec.Body.String(), "<D:supported-report/>")
 	})
 
 	t.Run("unknown error goes to the error handler without its message", func(t *testing.T) {

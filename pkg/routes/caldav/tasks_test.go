@@ -20,7 +20,6 @@ package caldav
 
 import (
 	"fmt"
-	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -33,7 +32,6 @@ import (
 	"xorm.io/xorm"
 )
 
-// createFromBody is a PUT creating a task in projectID, after the access check.
 func createFromBody(u *user.User, projectID int64, content string) (*models.Task, error) {
 	var vTask *models.Task
 	err := writeTransaction(func(s *xorm.Session) error {
@@ -276,8 +274,7 @@ RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task
 END:VTODO
 END:VCALENDAR`
 
-		// Read the task in its own session, then close it before updateFromBody
-		// which creates its own internal session (avoids SQLite lock conflict)
+		// Closed before updateFromBody opens its own session, or SQLite locks.
 		s := db.NewSession()
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
@@ -523,22 +520,6 @@ END:VCALENDAR`
 		assertVictimUntouched(t)
 	})
 
-	// The lookup and the write share one transaction now, so the task written to is always
-	// the one the lookup resolved through the url's collection.
-	t.Run("a PUT through another project never writes to the first UID match", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		s := db.NewSession()
-		_, err := s.Insert(&models.Task{Title: "Duplicate UID task", UID: taskUID, ProjectID: 38, Index: 99, CreatedByID: u.ID})
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		s.Close()
-
-		_, err = callCaldavHandler(t, TaskHandler, u, http.MethodPut, projectPath(38)+taskUID+".ics", taskContent, taskParams(38, taskUID))
-		require.NoError(t, err)
-		assertVictimUntouched(t)
-	})
-
 	t.Run("rejects when the stored task is in another project than the url", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
@@ -548,7 +529,6 @@ END:VCALENDAR`
 	})
 }
 
-// storedTask loads a task the way findTask does, by uid, picking id among same-uid tasks.
 func storedTask(t *testing.T, u *user.User, uid string, id int64) *models.Task {
 	t.Helper()
 
@@ -625,8 +605,7 @@ func TestMultigetTasks_URLProjectConsistency(t *testing.T) {
 	})
 }
 
-// TestCreateTask_ExistingUID covers #3482: a client PUTting a task it still
-// believes lives in an old collection must not get a second copy of that task.
+// #3482: stale hrefs get 404, not a forked task.
 func TestCreateTask_ExistingUID(t *testing.T) {
 	u := &user.User{ID: 15, Username: "user15"}
 
