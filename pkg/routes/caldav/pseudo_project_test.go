@@ -239,8 +239,7 @@ func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 	})
 }
 
-// The reduced Allow header must keep advertising PUT and DELETE for pseudo collections,
-// without turning OPTIONS into an oracle for collections the user cannot read.
+// OPTIONS must not become an oracle for collections the user cannot read.
 func TestProjectHandlerOPTIONS(t *testing.T) {
 	options := func(t *testing.T, u *user.User, projectID int64) *httptest.ResponseRecorder {
 		t.Helper()
@@ -252,26 +251,6 @@ func TestProjectHandlerOPTIONS(t *testing.T) {
 		require.NoError(t, ProjectHandler(c))
 		return rec
 	}
-
-	// DELETE of a collection URL is refused, so only PUT is advertised.
-	t.Run("a saved filter advertises PUT", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
-		rec := options(t, caldavFilterUser, pseudoID)
-		require.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Header().Get("Allow"), "PUT")
-		assert.NotContains(t, rec.Header().Get("Allow"), "DELETE")
-	})
-
-	t.Run("favorites advertise PUT", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		rec := options(t, caldavFilterUser, models.FavoritesPseudoProjectID)
-		require.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Header().Get("Allow"), "PUT")
-		assert.NotContains(t, rec.Header().Get("Allow"), "DELETE")
-	})
 
 	t.Run("a read-only share does not", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

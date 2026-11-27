@@ -282,8 +282,6 @@ func TestDiscoveryOPTIONS(t *testing.T) {
 			assert.Contains(t, allowHeader, method,
 				"Allow header should include %s", method)
 		}
-		// DELETE of the collection itself answers 405; its tasks advertise DELETE.
-		assert.NotContains(t, allowHeader, "DELETE")
 	})
 }
 

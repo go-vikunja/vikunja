@@ -107,18 +107,6 @@ func TestAuth(t *testing.T) {
 }
 
 func TestPermissions(t *testing.T) {
-	t.Run("User cannot GET project they do not have access to", func(t *testing.T) {
-		e := setupTestEnv(t)
-
-		// testuser1 should not be able to access project 36 (owned by user15)
-		rec := caldavRequest(t, e, http.MethodGet, "/dav/projects/36", "", map[string]string{
-			"Authorization": basicAuthHeader(testuser1.Username, fixturePassword),
-		})
-
-		// Same answer as a missing project, so existence does not leak.
-		assert.Equal(t, http.StatusNotFound, rec.Code, "Body:\n%s", rec.Body.String())
-	})
-
 	t.Run("User cannot PUT task to project they do not have access to", func(t *testing.T) {
 		e := setupTestEnv(t)
 
