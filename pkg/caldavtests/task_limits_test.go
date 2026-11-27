@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/richtext"
 
@@ -80,5 +81,5 @@ func TestPUTRejectsEmptySummary(t *testing.T) {
 
 	rec := caldavPUT(t, e, "/dav/projects/36/empty-summary.ics", NewVTodo("empty-summary", "").Build())
 	assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
-	assert.False(t, taskUIDExists(t, "empty-summary"))
+	db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "empty-summary"})
 }
