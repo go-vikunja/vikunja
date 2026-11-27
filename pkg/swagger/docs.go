@@ -9860,7 +9860,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "identifier": {
-                    "description": "The unique project short identifier. Used to build task identifiers.",
+                    "description": "The project short identifier, unique among the projects its creator can access. Used to build task identifiers.",
                     "type": "string",
                     "maxLength": 10,
                     "minLength": 0
