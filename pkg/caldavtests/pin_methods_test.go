@@ -24,8 +24,23 @@ import (
 )
 
 func TestPinUnsupportedMethods(t *testing.T) {
-	methods := []string{"MKCALENDAR", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK", http.MethodPost, http.MethodPatch}
-	paths := []string{"/dav/", "/dav/principals/user15/", "/dav/projects", "/dav/projects/36", pinTaskHref}
+	methods := []string{
+		"MKCALENDAR",
+		"MKCOL",
+		"COPY",
+		"MOVE",
+		"LOCK",
+		"UNLOCK",
+		http.MethodPost,
+		http.MethodPatch,
+	}
+	paths := []string{
+		"/dav/",
+		"/dav/principals/user15/",
+		"/dav/projects",
+		"/dav/projects/36",
+		pinTaskHref,
+	}
 
 	e := setupTestEnv(t)
 	for _, path := range paths {
@@ -43,9 +58,19 @@ func TestPinUnsupportedMethods(t *testing.T) {
 func TestPinWritesOnEntryAndPrincipal(t *testing.T) {
 	e := setupTestEnv(t)
 
-	for _, path := range []string{"/dav/", "/.well-known/caldav", user15Principal} {
-		for _, headers := range []map[string]string{nil, {"If-Match": `"stale"`}} {
-			for _, method := range []string{http.MethodPut, http.MethodDelete} {
+	for _, path := range []string{
+		"/dav/",
+		"/.well-known/caldav",
+		user15Principal,
+	} {
+		for _, headers := range []map[string]string{
+			nil,
+			{"If-Match": `"stale"`},
+		} {
+			for _, method := range []string{
+				http.MethodPut,
+				http.MethodDelete,
+			} {
 				t.Run(method+" "+path, func(t *testing.T) {
 					rec := caldavRequest(t, e, method, path, NewVTodo("pin-entry-write", "Entry").Build(), headers)
 

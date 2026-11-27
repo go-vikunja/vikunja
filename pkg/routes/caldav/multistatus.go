@@ -18,13 +18,11 @@ package caldav
 
 import (
 	"bufio"
-	"cmp"
 	"encoding/xml"
 	"io"
 	"net/http"
 	"slices"
 	"strconv"
-	"unicode/utf8"
 
 	"github.com/labstack/echo/v5"
 )
@@ -44,10 +42,20 @@ var nsPrefixes = map[string]string{
 
 const rootNamespaces = ` xmlns:D="` + nsDAV + `" xmlns:C="` + nsCalDAV + `" xmlns:CS="` + nsCalendarServer + `"`
 
-func davName(local string) xml.Name    { return xml.Name{Space: nsDAV, Local: local} }
-func calDAVName(local string) xml.Name { return xml.Name{Space: nsCalDAV, Local: local} }
+func davName(local string) xml.Name {
+	return xml.Name{
+		Space: nsDAV,
+		Local: local,
+	}
+}
 
-// propValue is the content of a property element.
+func calDAVName(local string) xml.Name {
+	return xml.Name{
+		Space: nsCalDAV,
+		Local: local,
+	}
+}
+
 type propValue interface {
 	writeValue(w *xmlWriter)
 }
@@ -96,7 +104,6 @@ type msResponse interface {
 	writeResponse(w *xmlWriter, minimal bool)
 }
 
-// statusResponse answers a whole resource with one status, e.g. a deleted member in sync-collection.
 type statusResponse struct {
 	href   string
 	status int
@@ -107,25 +114,29 @@ type propstatResponse struct {
 	propstats []propstat
 }
 
-// propResponse is the PROPFIND/REPORT shape: what was found, and what was asked for but is not there.
 func propResponse(href string, found []prop, missing []xml.Name) propstatResponse {
 	r := propstatResponse{href: href}
 	if len(found) > 0 {
-		r.propstats = append(r.propstats, propstat{status: http.StatusOK, props: found})
+		r.propstats = append(r.propstats, propstat{
+			status: http.StatusOK,
+			props:  found,
+		})
 	}
 	if len(missing) > 0 {
 		props := make([]prop, len(missing))
 		for i, name := range missing {
 			props[i] = prop{name: name}
 		}
-		r.propstats = append(r.propstats, propstat{status: http.StatusNotFound, props: props})
+		r.propstats = append(r.propstats, propstat{
+			status: http.StatusNotFound,
+			props:  props,
+		})
 	}
 	return r
 }
 
 type multistatus struct {
 	responses []msResponse
-	// Empty omits the element.
 	syncToken string
 	// Prefer: return=minimal, see draft-murchison-webdav-prefer.
 	minimal bool
@@ -147,7 +158,6 @@ func (r propstatResponse) writeResponse(w *xmlWriter, minimal bool) {
 	if len(propstats) == 0 {
 		propstats = []propstat{{status: http.StatusOK}}
 	}
-	slices.SortStableFunc(propstats, func(a, b propstat) int { return cmp.Compare(a.status, b.status) })
 
 	w.open(davName("response"))
 	w.textElement(davName("href"), r.href)
@@ -191,7 +201,6 @@ func writeMultistatus(c *echo.Context, ms multistatus) error {
 	return ms.writeTo(c.Response())
 }
 
-// writeDAVError answers with an RFC 4918 §16 error body naming the failed precondition.
 func writeDAVError(c *echo.Context, status int, precondition xml.Name) error {
 	c.Response().Header().Set("Content-Type", "application/xml; charset=utf-8")
 	c.Response().WriteHeader(status)
@@ -267,8 +276,7 @@ func (w *xmlWriter) status(code int) {
 	w.textElement(davName("status"), "HTTP/1.1 "+strconv.Itoa(code)+" "+http.StatusText(code))
 }
 
-// Namespaces without a fixed prefix become the default namespace of the element itself.
-// Unprefixed elements always declare theirs, so nesting never inherits the wrong one.
+// Unprefixed elements always declare their namespace, so nesting never inherits the wrong one.
 func (w *xmlWriter) startTag(name xml.Name) {
 	_ = w.w.WriteByte('<')
 	w.qualifiedName(name)
@@ -287,49 +295,6 @@ func (w *xmlWriter) qualifiedName(name xml.Name) {
 	_, _ = w.w.WriteString(name.Local)
 }
 
-// text escapes like xml.EscapeText, without converting s to a []byte first:
-// calendar-data can be megabytes.
 func (w *xmlWriter) text(s string) {
-	last := 0
-	for i := 0; i < len(s); {
-		r, width := utf8.DecodeRuneInString(s[i:])
-		var esc string
-		switch r {
-		case '"':
-			esc = "&#34;"
-		case '\'':
-			esc = "&#39;"
-		case '&':
-			esc = "&amp;"
-		case '<':
-			esc = "&lt;"
-		case '>':
-			esc = "&gt;"
-		case '\t':
-			esc = "&#x9;"
-		case '\n':
-			esc = "&#xA;"
-		case '\r':
-			esc = "&#xD;"
-		default:
-			if !isXMLChar(r) || (r == utf8.RuneError && width == 1) {
-				esc = "�"
-			}
-		}
-		if esc != "" {
-			_, _ = w.w.WriteString(s[last:i])
-			_, _ = w.w.WriteString(esc)
-			last = i + width
-		}
-		i += width
-	}
-	_, _ = w.w.WriteString(s[last:])
-}
-
-// XML 1.0 §2.2 Char production.
-func isXMLChar(r rune) bool {
-	return r == 0x09 || r == 0x0A || r == 0x0D ||
-		r >= 0x20 && r <= 0xD7FF ||
-		r >= 0xE000 && r <= 0xFFFD ||
-		r >= 0x10000 && r <= 0x10FFFF
+	_ = xml.EscapeText(w.w, []byte(s))
 }

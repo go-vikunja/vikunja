@@ -70,8 +70,13 @@ func expectEntry() expectedDAVResponse {
 			davName("getcontenttype"):                   "text/calendar",
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
-			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
+			davName("owner"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getlastmodified"),
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
 		},
 	}
 }
@@ -90,8 +95,13 @@ func expectPrincipal(href, displayName string) expectedDAVResponse {
 			davName("getcontenttype"):                   "text/calendar",
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
-			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
+			davName("owner"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getlastmodified"),
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
 		},
 	}
 }
@@ -107,9 +117,15 @@ func expectHomeSet() expectedDAVResponse {
 			davName("getcontenttype"):                   "text/calendar",
 		},
 		notFound: []xml.Name{
-			davName("owner"), davName("getetag"), csGetCTag, davName("getlastmodified"),
-			davName("getcontentlength"), davName("sync-token"), calName("calendar-description"),
-			calName("calendar-home-set"), davName("principal-URL"),
+			davName("owner"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getlastmodified"),
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
+			calName("calendar-home-set"),
+			davName("principal-URL"),
 		},
 	}
 }
@@ -130,8 +146,10 @@ func expectCalendar(href, title, owner string) expectedDAVResponse {
 			davName("sync-token"):                       anyValue,
 		},
 		notFound: []xml.Name{
-			davName("getcontentlength"), calName("calendar-description"),
-			calName("calendar-home-set"), davName("principal-URL"),
+			davName("getcontentlength"),
+			calName("calendar-description"),
+			calName("calendar-home-set"),
+			davName("principal-URL"),
 		},
 	}
 }
@@ -151,8 +169,11 @@ func expectTask(href, title string) expectedDAVResponse {
 			davName("getcontentlength"):       anyValue,
 		},
 		notFound: []xml.Name{
-			calName("supported-calendar-component-set"), davName("sync-token"), calName("calendar-description"),
-			calName("calendar-home-set"), davName("principal-URL"),
+			calName("supported-calendar-component-set"),
+			davName("sync-token"),
+			calName("calendar-description"),
+			calName("calendar-home-set"),
+			davName("principal-URL"),
 		},
 	}
 }
@@ -232,15 +253,21 @@ func TestPinPropfindMatrix(t *testing.T) {
 		},
 	}
 
-	// PROPFIND does not write, so all subtests share one fixture load.
 	e := setupTestEnv(t)
 	for _, kind := range kinds {
-		for _, depth := range []string{"0", "1", "infinity"} {
+		for _, depth := range []string{
+			"0",
+			"1",
+			"infinity",
+		} {
 			expected := kind.shallow
 			if depth == "1" {
 				expected = kind.deep
 			}
-			for _, isMinimal := range []bool{false, true} {
+			for _, isMinimal := range []bool{
+				false,
+				true,
+			} {
 				name := kind.name + " Depth " + depth
 				headers := map[string]string{"Depth": depth}
 				want := expected
@@ -377,8 +404,11 @@ func TestPinPropfindUnknownNamespace(t *testing.T) {
 
 	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
 	assertDAVResponses(t, rec, []expectedDAVResponse{{
-		href:     "/dav/projects/36",
-		ok:       map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
-		notFound: []xml.Name{{Space: "urn:x-vikunja-unknown", Local: "bogus"}},
+		href: "/dav/projects/36",
+		ok:   map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
+		notFound: []xml.Name{{
+			Space: "urn:x-vikunja-unknown",
+			Local: "bogus",
+		}},
 	}})
 }

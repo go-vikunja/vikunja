@@ -25,13 +25,11 @@ import (
 	"code.vikunja.io/api/pkg/models"
 )
 
-// Strong and quoted; the ETag header and the getetag property both come from here.
 func taskETag(t *models.Task) string {
 	return `"` + strconv.FormatInt(t.ID, 10) + `-` + strconv.FormatInt(t.Updated.Unix(), 10) + `"`
 }
 
-// The latest task change moves the collection ETag (and the ctag and sync-token derived
-// from it) whenever a task is added, modified or deleted; a purge moves it too.
+// The ctag and sync-token derive from this, so a purge must move it too.
 func collectionETag(p *models.ProjectWithTasksAndBuckets, tasks []*models.TaskWithComments) string {
 	latest := p.Updated
 	for _, t := range tasks {

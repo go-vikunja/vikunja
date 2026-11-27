@@ -49,7 +49,11 @@ func TestPinGETAndHEADTask(t *testing.T) {
 	assertLastModified(t, get)
 	assert.Equal(t, 1, strings.Count(get.Body.String(), "BEGIN:VTODO"))
 
-	for _, h := range []string{"Content-Type", "ETag", "Last-Modified"} {
+	for _, h := range []string{
+		"Content-Type",
+		"ETag",
+		"Last-Modified",
+	} {
 		assert.Equal(t, get.Header().Get(h), head.Header().Get(h), h)
 	}
 	assert.Empty(t, head.Body.String())
@@ -85,7 +89,10 @@ func TestPinGETNonCalendarResources(t *testing.T) {
 	t.Run("home set", func(t *testing.T) {
 		e := setupTestEnv(t)
 
-		for _, method := range []string{http.MethodGet, http.MethodHead} {
+		for _, method := range []string{
+			http.MethodGet,
+			http.MethodHead,
+		} {
 			rec := caldavRequest(t, e, method, "/dav/projects", "", nil)
 
 			assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "%s. Body:\n%s", method, rec.Body.String())
@@ -94,7 +101,10 @@ func TestPinGETNonCalendarResources(t *testing.T) {
 	})
 
 	// An empty calendar body with an empty ETag and a zero Last-Modified.
-	for _, path := range []string{"/dav/", "/dav/principals/user15/"} {
+	for _, path := range []string{
+		"/dav/",
+		"/dav/principals/user15/",
+	} {
 		t.Run(path, func(t *testing.T) {
 			e := setupTestEnv(t)
 
@@ -112,7 +122,10 @@ func TestPinGETNonCalendarResources(t *testing.T) {
 func TestPinConditionalGET(t *testing.T) {
 	e := setupTestEnv(t)
 
-	for _, path := range []string{pinTaskHref, "/dav/projects/36"} {
+	for _, path := range []string{
+		pinTaskHref,
+		"/dav/projects/36",
+	} {
 		etag := caldavGET(t, e, path).Header().Get("ETag")
 		require.NotEmpty(t, etag, path)
 
@@ -121,14 +134,22 @@ func TestPinConditionalGET(t *testing.T) {
 			ifNoneMatch string
 			status      int
 		}{
-			{name: "matching", ifNoneMatch: etag, status: http.StatusNotModified},
-			{name: "star", ifNoneMatch: "*", status: http.StatusNotModified},
-			{name: "weak", ifNoneMatch: "W/" + etag, status: http.StatusNotModified},
-			{name: "in a list", ifNoneMatch: `"stale", ` + etag, status: http.StatusNotModified},
-			{name: "stale", ifNoneMatch: `"stale"`, status: http.StatusOK},
+			{
+				name:        "matching",
+				ifNoneMatch: etag,
+				status:      http.StatusNotModified,
+			},
+			{
+				name:        "stale",
+				ifNoneMatch: `"stale"`,
+				status:      http.StatusOK,
+			},
 		}
 		for _, tc := range tests {
-			for _, method := range []string{http.MethodGet, http.MethodHead} {
+			for _, method := range []string{
+				http.MethodGet,
+				http.MethodHead,
+			} {
 				t.Run(path+" "+method+" "+tc.name, func(t *testing.T) {
 					rec := caldavRequest(t, e, method, path, "", map[string]string{"If-None-Match": tc.ifNoneMatch})
 

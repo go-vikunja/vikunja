@@ -224,9 +224,15 @@ func canSetCalendarColor(s *xorm.Session, project *models.Project, u *user.User)
 }
 
 func writePropPatchResponse(c *echo.Context, results []propPatchResult) error {
-	r := propstatResponse{href: c.Request().URL.Path, propstats: make([]propstat, len(results))}
+	r := propstatResponse{
+		href:      c.Request().URL.Path,
+		propstats: make([]propstat, len(results)),
+	}
 	for i, res := range results {
-		r.propstats[i] = propstat{status: res.status, props: []prop{{name: res.name}}}
+		r.propstats[i] = propstat{
+			status: res.status,
+			props:  []prop{{name: res.name}},
+		}
 	}
 	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
 }

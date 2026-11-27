@@ -75,7 +75,6 @@ const PropfindCurrentUserPrivilegeSet = `<?xml version="1.0" encoding="utf-8" ?>
   </D:prop>
 </D:propfind>`
 
-// PropfindDiscoveryProps requests every property the characterization tests pin.
 const PropfindDiscoveryProps = `<?xml version="1.0" encoding="utf-8" ?>
 <D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:CS="http://calendarserver.org/ns/">
   <D:prop>
