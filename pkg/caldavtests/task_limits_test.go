@@ -75,3 +75,11 @@ func TestPUTRejectsRelationsFailingValidation(t *testing.T) {
 	rec = caldavRequest(t, e, http.MethodGet, "/dav/projects/36/overlong-relation.ics", "", nil)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
+
+func TestPUTRejectsEmptySummary(t *testing.T) {
+	e := setupTestEnv(t)
+
+	rec := caldavPUT(t, e, "/dav/projects/36/empty-summary.ics", NewVTodo("empty-summary", "").Build())
+	assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	assert.False(t, taskUIDExists(t, "empty-summary"))
+}
