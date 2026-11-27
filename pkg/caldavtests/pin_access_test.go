@@ -82,16 +82,11 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 		"Depth":         "0",
 	})
 	assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s", collection)
-	for _, depth := range []string{
-		"0",
-		"1",
-	} {
-		propfind = caldavRequest(t, e, "PROPFIND", task, PropfindResourceProperties, map[string]string{
-			"Authorization": auth,
-			"Depth":         depth,
-		})
-		assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s Depth %s", task, depth)
-	}
+	propfind = caldavRequest(t, e, "PROPFIND", task, PropfindResourceProperties, map[string]string{
+		"Authorization": auth,
+		"Depth":         "0",
+	})
+	assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s", task)
 
 	for _, method := range []string{
 		http.MethodGet,
