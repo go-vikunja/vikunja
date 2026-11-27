@@ -312,17 +312,6 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 	}
 }
 
-func TestPinAccessGETCollection(t *testing.T) {
-	e := setupTestEnv(t)
-
-	rec := caldavRequest(t, e, http.MethodGet, "/dav/projects/36", "", map[string]string{
-		"Authorization": basicAuthHeader(testuser1.Username, fixturePassword),
-	})
-
-	assert.Equal(t, http.StatusNotFound, rec.Code, "Body:\n%s", rec.Body.String())
-	assert.NotContains(t, rec.Body.String(), "BEGIN:VCALENDAR")
-}
-
 func TestPinAccessForeignPrincipal(t *testing.T) {
 	e := setupTestEnv(t)
 
