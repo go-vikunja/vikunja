@@ -16,7 +16,8 @@ const getChromiumPath = () => {
 
 export default defineConfig({
 	testDir: './tests/e2e',
-	fullyParallel: false,
+	// Lets CI shards split a spec file; tests still run one at a time (workers: 1)
+	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
 	workers: 1, // No parallelization initially
