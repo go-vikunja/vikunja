@@ -237,22 +237,4 @@ func TestConditionalRequests(t *testing.T) {
 			"PUT with non-matching If-Match should return 412 Precondition Failed. Got %d.\n"+
 				"If this fails, the server doesn't support conditional PUT — a common CalDAV bug.", rec.Code)
 	})
-
-	t.Run("GET with matching If-None-Match returns 304", func(t *testing.T) {
-		e := setupTestEnv(t)
-
-		// Get the task and its ETag
-		rec1 := caldavGET(t, e, "/dav/projects/36/uid-caldav-test.ics")
-		etag := rec1.Header().Get("ETag")
-		require.NotEmpty(t, etag, "Need an ETag for this test")
-
-		// Request again with If-None-Match
-		rec2 := caldavRequest(t, e, http.MethodGet, "/dav/projects/36/uid-caldav-test.ics", "", map[string]string{
-			"If-None-Match": etag,
-		})
-
-		assert.Equal(t, http.StatusNotModified, rec2.Code,
-			"GET with matching If-None-Match should return 304 Not Modified. Got %d.\n"+
-				"If this fails, the server doesn't support conditional GET — clients re-download unnecessarily.", rec2.Code)
-	})
 }

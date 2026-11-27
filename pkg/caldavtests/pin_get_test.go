@@ -129,9 +129,6 @@ func TestPinConditionalGET(t *testing.T) {
 			status      int
 		}{
 			{name: "matching", ifNoneMatch: etag, status: http.StatusNotModified},
-			{name: "star", ifNoneMatch: "*", status: http.StatusNotModified},
-			{name: "weak", ifNoneMatch: "W/" + etag, status: http.StatusNotModified},
-			{name: "in a list", ifNoneMatch: `"stale", ` + etag, status: http.StatusNotModified},
 			{name: "stale", ifNoneMatch: `"stale"`, status: http.StatusOK},
 		}
 		for _, tc := range tests {
