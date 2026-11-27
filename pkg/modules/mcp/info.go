@@ -35,7 +35,7 @@ func (m *Module) ConnectionInfo() apiv2.ConnectionSettings {
 	for group, permissions := range models.GetAPITokenRoutes() {
 		for permission := range permissions {
 			token := &models.APIToken{APIPermissions: models.APIPermissions{group: {permission}}}
-			for _, t := range m.order {
+			for _, t := range m.tools().order {
 				if !token.CanUseRoute(t.echoPath, t.op.Method) {
 					continue
 				}

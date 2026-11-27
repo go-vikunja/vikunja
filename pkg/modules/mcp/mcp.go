@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -47,10 +48,14 @@ const (
 	maxMessagesPerRequest = 20
 )
 
+type toolset struct {
+	index map[string]*tool
+	order []*tool
+}
+
 type Module struct {
 	api       huma.API
-	index     map[string]*tool
-	order     []*tool
+	tools     func() *toolset
 	authorize func(token *models.APIToken, path, method string) bool
 
 	streamable  http.Handler
@@ -58,23 +63,24 @@ type Module struct {
 	allowOrigin func(origin string) bool
 }
 
-// Tools come from api's operations, so apiv2.RegisterAll must have run — AutoPatch adds its PATCH ops there.
+// Tools are built on first use from api's operations, so apiv2.RegisterAll must have run by then — AutoPatch adds its PATCH ops there.
 // allowOrigin (nil trusts none) admits the wildcard-port origins Vikunja's CORS config allows and the stdlib check does not.
-func New(api huma.API, allowOrigin func(origin string) bool) (*Module, error) {
-	index, order, err := buildTools(api.OpenAPI(), apiv2.GroupPrefix)
-	if err != nil {
-		return nil, err
-	}
+func New(api huma.API, allowOrigin func(origin string) bool) *Module {
 	m := &Module{
-		api:         api,
-		index:       index,
-		order:       order,
+		api: api,
+		tools: sync.OnceValue(func() *toolset {
+			index, order, err := buildTools(api.OpenAPI(), apiv2.GroupPrefix)
+			if err != nil {
+				panic(err)
+			}
+			return &toolset{index: index, order: order}
+		}),
 		authorize:   (*models.APIToken).CanUseRoute,
 		origin:      http.NewCrossOriginProtection(),
 		allowOrigin: allowOrigin,
 	}
 	m.streamable = m.newStreamableHandler()
-	return m, nil
+	return m
 }
 
 func (m *Module) Register(group *echo.Group) {
@@ -101,7 +107,7 @@ func tokenFrom(ec *echo.Context) *models.APIToken {
 func (m *Module) addToolsAuthorizedBy(srv *mcp.Server, token *models.APIToken) {
 	var catalog []*tool
 	takesFilter := false
-	for _, t := range m.order {
+	for _, t := range m.tools().order {
 		if !m.authorized(t, token) {
 			continue
 		}

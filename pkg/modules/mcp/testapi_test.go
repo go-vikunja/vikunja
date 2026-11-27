@@ -26,14 +26,11 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/autopatch"
 	"github.com/danielgtaylor/huma/v2/humatest"
-	"github.com/stretchr/testify/require"
 )
 
 func newTestModule(t *testing.T) *Module {
 	t.Helper()
-	m, err := New(newTestAPI(t), nil)
-	require.NoError(t, err)
-	return m
+	return New(newTestAPI(t), nil)
 }
 
 type testThing struct {

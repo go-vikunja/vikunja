@@ -29,7 +29,7 @@ func TestCatalogActions(t *testing.T) {
 	m := newTestModule(t)
 	m.authorize = func(_ *models.APIToken, path, _ string) bool { return path == "/api/v2/things/:id" }
 	var catalog []*tool
-	for _, tl := range m.order {
+	for _, tl := range m.tools().order {
 		if !tl.typed && m.authorized(tl, nil) {
 			catalog = append(catalog, tl)
 		}
@@ -58,7 +58,7 @@ func TestCatalogTools_RejectsUnknownArguments(t *testing.T) {
 		Version: "1",
 	}, nil)
 	var catalog []*tool
-	for _, tl := range m.order {
+	for _, tl := range m.tools().order {
 		if !tl.typed {
 			catalog = append(catalog, tl)
 		}
@@ -91,7 +91,7 @@ func TestCatalogTools_EmptyResultHasHint(t *testing.T) {
 		Version: "1",
 	}, nil)
 	var catalog []*tool
-	for _, tl := range m.order {
+	for _, tl := range m.tools().order {
 		if !tl.typed {
 			catalog = append(catalog, tl)
 		}

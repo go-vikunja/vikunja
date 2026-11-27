@@ -42,11 +42,13 @@ func TestMCPConnectionInfo(t *testing.T) {
 		models.CollectRoutesForAPITokenUsage(route, true)
 	}
 	config.ServicePublicURL.Set("https://example.com/")
-	m := &Module{order: []*tool{
-		{echoPath: "/api/v2/tasks/:id", op: &huma.Operation{Method: http.MethodPatch}, typed: true},
-		{echoPath: "/api/v2/tasks/:id", op: &huma.Operation{Method: http.MethodGet}, typed: true},
-		{echoPath: "/api/v2/projects/:project/labels", op: &huma.Operation{Method: http.MethodGet}},
-		{echoPath: "/api/v2/labels/:id", op: &huma.Operation{Method: http.MethodGet}, typed: true},
+	m := &Module{tools: func() *toolset {
+		return &toolset{order: []*tool{
+			{echoPath: "/api/v2/tasks/:id", op: &huma.Operation{Method: http.MethodPatch}, typed: true},
+			{echoPath: "/api/v2/tasks/:id", op: &huma.Operation{Method: http.MethodGet}, typed: true},
+			{echoPath: "/api/v2/projects/:project/labels", op: &huma.Operation{Method: http.MethodGet}},
+			{echoPath: "/api/v2/labels/:id", op: &huma.Operation{Method: http.MethodGet}, typed: true},
+		}}
 	}}
 	info := m.ConnectionInfo()
 	for _, tc := range []struct {
@@ -86,8 +88,7 @@ func TestMCPConnectionInfoAllowlist(t *testing.T) {
 		}, true)
 	}
 	require.Contains(t, models.GetAPITokenRoutes()["filters"], "read_all")
-	m, err := New(api, nil)
-	require.NoError(t, err)
+	m := New(api, nil)
 
 	info := m.ConnectionInfo()
 	assert.Contains(t, info.Routes["mcp"], "access")
