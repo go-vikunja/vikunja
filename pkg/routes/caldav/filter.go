@@ -69,10 +69,8 @@ func unsupportedFilter(format string, args ...any) error {
 	}
 }
 
-// calendarFilter is a CALDAV:filter (RFC 4791 §9.7) that passed validation: whatever it
-// holds can be evaluated.
+// Passed validation: whatever it holds can be evaluated.
 type calendarFilter struct {
-	// Always named VCALENDAR.
 	calendar compFilter
 }
 
@@ -84,10 +82,8 @@ type compFilter struct {
 
 type compTest interface{ isCompTest() }
 
-// isNotDefined is CALDAV:is-not-defined.
 type isNotDefined struct{}
 
-// compMatch requires the component and all of its tests; without tests it only has to exist.
 type compMatch struct {
 	timeRange *timeRange
 	props     []propFilter
@@ -101,13 +97,11 @@ type propFilter struct {
 
 type propTest interface{ isPropTest() }
 
-// propMatch requires the property, its value to match value (if set) and all params.
 type propMatch struct {
 	value  valueTest
 	params []paramFilter
 }
 
-// valueTest is a time-range or a text-match.
 type valueTest interface{ matchesValue(v string) bool }
 
 type paramFilter struct {
@@ -117,7 +111,6 @@ type paramFilter struct {
 
 type paramTest interface{ isParamTest() }
 
-// paramMatch requires the parameter, and a value matching text if set.
 type paramMatch struct{ text *textMatch }
 
 type textMatch struct {
@@ -126,7 +119,7 @@ type textMatch struct {
 	negate   bool
 }
 
-// timeRange is half-open, [start, end); a missing bound is the earliest or latest time.
+// [start, end); a missing bound is the earliest or latest time.
 type timeRange struct{ start, end time.Time }
 
 func (isNotDefined) isCompTest()  {}
@@ -136,7 +129,6 @@ func (propMatch) isPropTest()     {}
 func (isNotDefined) isParamTest() {}
 func (paramMatch) isParamTest()   {}
 
-// xmlElement is a parsed XML element the filter is read from.
 type xmlElement struct {
 	name     xml.Name
 	attrs    []xml.Attr
@@ -449,7 +441,6 @@ func (r timeRange) overlapsTodo(t *models.Task) bool {
 
 	start, due, end := t.StartDate, t.DueDate, t.EndDate
 	completed, created := t.DoneAt, t.Created
-	// a <= b
 	atMost := func(a, b time.Time) bool { return !a.After(b) }
 
 	switch {
@@ -471,8 +462,6 @@ func (r timeRange) overlapsTodo(t *models.Task) bool {
 	return true
 }
 
-// queryCandidate is a task a calendar-query looks at. Its rendering is only parsed if the
-// filter looks at properties.
 type queryCandidate struct {
 	resource *taskResource
 	parsed   bool
@@ -480,7 +469,6 @@ type queryCandidate struct {
 	calendar *icalComponent
 }
 
-// icalComponent is a rendered component, as far as a filter can look into it.
 type icalComponent struct {
 	name  string
 	props []ics.BaseProperty

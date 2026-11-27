@@ -198,8 +198,7 @@ func selfReferencing[R hrefed]() propTable[R] {
 	}
 }
 
-// RFC 4791 §6.2.1 and RFC 3744 §4.2: these belong to the principal. /dav/ and the home set
-// answer them too: clients start discovery there, Apple Reminders at /dav/projects/ (#2417).
+// RFC 4791 §6.2.1, RFC 3744 §4.2: on /dav/ and the home set too, where clients start discovery (#2417).
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
 		// Without the trailing slash, as clients knew it before the rewrite.

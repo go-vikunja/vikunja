@@ -401,8 +401,7 @@ func TestFindTask_PseudoCollectionMembership(t *testing.T) {
 	})
 }
 
-// resolveHrefs runs multigetTasks without its read check: an unreadable collection must
-// still resolve to nothing rather than fail.
+// Skips the read check: an unreadable collection must still resolve to nothing rather than fail.
 func resolveHrefs(t *testing.T, u *user.User, projectID int64, hrefs ...string) map[string]*models.Task {
 	t.Helper()
 	s := db.NewSession()

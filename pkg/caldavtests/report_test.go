@@ -253,9 +253,7 @@ func TestReportCalendarMultiget(t *testing.T) {
 }
 
 func TestReportCalendarQueryTimeRange(t *testing.T) {
-	// RFC 4791 §9.9: which VTODOs a time-range matches depends on DTSTART, DUE (or
-	// DURATION), COMPLETED and CREATED. The fixture tasks in project 36 are only due,
-	// on 2023-03-01 15:00 UTC.
+	// The fixture tasks in project 36 are only due, on 2023-03-01 15:00 UTC.
 	e := setupTestEnv(t)
 
 	const (

@@ -47,23 +47,19 @@ var errUnsupportedReport = preconditionError{
 	reason:       "unsupported report",
 }
 
-// reportRequest is what a REPORT body asks for.
 type reportRequest interface{ isReportRequest() }
 
-// multigetRequest is a calendar-multiget (RFC 4791 §7.9).
 type multigetRequest struct {
 	props propfindRequest
 	// Without duplicates, in request order.
 	hrefs []string
 }
 
-// calendarQueryRequest is a calendar-query (RFC 4791 §7.8).
 type calendarQueryRequest struct {
 	props  propfindRequest
 	filter calendarFilter
 }
 
-// syncCollectionRequest is a sync-collection (RFC 6578 §3.2).
 type syncCollectionRequest struct {
 	props propfindRequest
 	token string
@@ -109,7 +105,6 @@ func parseReport(body string) (reportRequest, error) {
 	return nil, errUnsupportedReport
 }
 
-// reportParser collects the parts of a REPORT body any report type may have.
 type reportParser struct {
 	root     xml.Name
 	props    propCollector
@@ -117,8 +112,7 @@ type reportParser struct {
 	seenHref map[string]bool
 	token    string
 	elements int
-	// The href or sync-token being read.
-	text *strings.Builder
+	text     *strings.Builder
 	// The filter element, and the open elements in it.
 	filter         *xmlElement
 	filterStack    []*xmlElement
@@ -210,7 +204,6 @@ func (p *reportParser) openFilterElement(t xml.StartElement) error {
 	return nil
 }
 
-// reportAnswer answers a parsed REPORT on a resource the user was granted access to.
 type reportAnswer func(c *echo.Context, s *xorm.Session, req reportRequest) error
 
 func serveReport(c *echo.Context, u *user.User, t target) error {
@@ -374,14 +367,9 @@ func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req mul
 	return responses, nil
 }
 
-// multigetTasks resolves hrefs to the tasks they name in c, keyed by the task's href. An href
-// that is malformed, names a task the user cannot read, or one c does not hold is missing.
 func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []string) (map[string]*models.Task, error) {
 	found := map[string]*models.Task{}
 
-	// Path format: /dav/projects/{projectID}/{uid}.ics.
-	// Remember the href's project ID per uid so the consistency check below
-	// can drop tasks requested via the wrong project (GHSA-48ch-p4gq-x46x).
 	var uids []string
 	uidURLProjects := map[string]int64{}
 	for _, href := range hrefs {
@@ -389,9 +377,6 @@ func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []
 		if len(parts) < 5 {
 			continue
 		}
-		// Skip malformed hrefs: without these guards an empty/non-numeric
-		// project would bypass the consistency check, and an empty UID
-		// would query for tasks with empty/NULL uids.
 		if !strings.HasSuffix(parts[4], ".ics") {
 			continue
 		}
@@ -416,8 +401,7 @@ func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []
 		return nil, err
 	}
 
-	// A task reached through a pseudo collection lives in another project; membership
-	// stands in for the project check. One lookup for all of them.
+	// Via a pseudo collection a task lives in another project; membership stands in for the project check.
 	viaPseudo := func(urlProjectID int64) bool {
 		return models.IsPseudoProjectID(urlProjectID) && urlProjectID == c.project.ID
 	}
@@ -438,7 +422,7 @@ func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []
 		if !ok {
 			continue
 		}
-		// Closes the URL-path leak for calendar-multiget REPORTs (GHSA-48ch-p4gq-x46x).
+		// GHSA-48ch-p4gq-x46x: drop tasks requested via the wrong project.
 		if urlProjectID != t.ProjectID && (!viaPseudo(urlProjectID) || !members[t.ID]) {
 			continue
 		}
@@ -451,7 +435,7 @@ func multigetTasks(s *xorm.Session, u *user.User, c readableCollection, hrefs []
 	return found, nil
 }
 
-// One bind variable per uid, so chunked like the membership lookup.
+// Chunked: one bind variable per uid.
 func tasksByUIDs(s *xorm.Session, u *user.User, uids []string) ([]*models.Task, error) {
 	var tasks []*models.Task
 	for chunk := range slices.Chunk(uids, membershipQueryChunkSize) {
