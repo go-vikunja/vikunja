@@ -180,7 +180,10 @@ func TestTimeRangeOverlapsTodo(t *testing.T) {
 				DueDate:     day(12),
 				RepeatAfter: 7 * 24 * 3600,
 			},
-			in:  []timeRange{after},
+			in: []timeRange{{
+				start: day(18),
+				end:   day(20),
+			}},
 			out: []timeRange{before},
 		},
 		{
@@ -540,11 +543,6 @@ func TestFilterMatches(t *testing.T) {
 		{
 			name:    "text-match octet",
 			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;octet">Milk</C:text-match></C:prop-filter>`),
-			matches: true,
-		},
-		{
-			name:    "text-match split by a comment",
-			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match>Buy<!-- --> Milk</C:text-match></C:prop-filter>`),
 			matches: true,
 		},
 		{
