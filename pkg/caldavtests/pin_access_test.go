@@ -387,8 +387,7 @@ func TestPinMalformedTaskURLs(t *testing.T) {
 	assert.NotContains(t, caldavGET(t, e, pinTaskHref).Body.String(), "Overwritten")
 }
 
-// tasks.uid has no unique index: the same UID in another readable project must not hide
-// the task living in the project the URL names.
+// tasks.uid is not unique: a same-UID task in another project must not hide this one.
 func TestPinSameUIDInAnotherProject(t *testing.T) {
 	e := setupTestEnv(t)
 

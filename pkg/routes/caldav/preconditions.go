@@ -21,9 +21,7 @@ import (
 	"strings"
 )
 
-// preconditions are a request's If-Match and If-None-Match headers. Pinned: like caldav-go,
-// writes compare only the first If-Match value, as an exact string, and only check
-// If-None-Match for "*".
+// Pinned: writes compare only the first If-Match, exactly, and check If-None-Match only for "*".
 type preconditions struct {
 	ifMatch     []string
 	ifNoneMatch []string
@@ -40,12 +38,10 @@ func (p preconditions) ifMatches(etag string) bool {
 	return len(p.ifMatch) == 0 || p.ifMatch[0] == "*" || p.ifMatch[0] == etag
 }
 
-// allowCreate is for a PUT onto a resource that does not exist yet.
 func (p preconditions) allowCreate() bool {
 	return len(p.ifMatch) == 0
 }
 
-// allowUpdate is for a PUT onto an existing resource.
 func (p preconditions) allowUpdate(etag string) bool {
 	return p.ifMatches(etag) && (len(p.ifNoneMatch) != 1 || p.ifNoneMatch[0] != "*")
 }
@@ -54,8 +50,7 @@ func (p preconditions) allowDelete(etag string) bool {
 	return p.ifMatches(etag)
 }
 
-// notModified is If-None-Match on GET and HEAD: the weak comparison over the whole list
-// of RFC 9110 §13.1.2.
+// RFC 9110 §13.1.2: weak comparison over the whole list.
 func (p preconditions) notModified(etag string) bool {
 	for _, value := range p.ifNoneMatch {
 		for _, candidate := range strings.Split(value, ",") {

@@ -63,8 +63,7 @@ func TestPUTRejectsTooManyTableCells(t *testing.T) {
 	})
 }
 
-// The placeholder for an unknown RELATED-TO uid is titled after it, so an overlong uid
-// fails the placeholder's title validation.
+// An unknown RELATED-TO uid becomes a placeholder titled after it.
 func TestPUTRejectsRelationsFailingValidation(t *testing.T) {
 	e := setupTestEnv(t)
 	parent := strings.Repeat("p", models.MaxTaskTitleLength)

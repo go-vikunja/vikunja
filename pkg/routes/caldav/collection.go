@@ -50,8 +50,7 @@ func (c collectionTarget) canWrite(s *xorm.Session, u *user.User) (bool, error) 
 	return denyArchived(c.project.CanWrite(s, u))
 }
 
-// GHSA-48ch-p4gq-x46x: a task addressed through a collection must belong to it. A pseudo
-// collection has no project_id to compare against, so membership stands in.
+// GHSA-48ch-p4gq-x46x
 func (c collectionTarget) holds(s *xorm.Session, u *user.User, task *models.Task) (bool, error) {
 	if c.isPseudo() {
 		return c.contains(s, u, task.ID)
@@ -59,8 +58,7 @@ func (c collectionTarget) holds(s *xorm.Session, u *user.User, task *models.Task
 	return task.ProjectID == c.project.ID, nil
 }
 
-// A pseudo collection has no permissions of its own, so it cannot gate anything: membership
-// takes the place of the collection gate and the task's own project decides the rest.
+// A pseudo collection has no permissions: membership gates, the task's project decides.
 func (c collectionTarget) checkWrite(s *xorm.Session, u *user.User, task *models.Task) error {
 	if !c.isPseudo() {
 		canWrite, err := c.canWrite(s, u)
@@ -86,13 +84,10 @@ func (c collectionTarget) checkWrite(s *xorm.Session, u *user.User, task *models
 	return nil
 }
 
-// One bind variable per candidate would exceed SQLite's limit of 999 once a multiget
-// REPORT names that many hrefs. A var only so tests can lower it.
+// SQLite bind-variable limit is 999.
 var membershipQueryChunkSize = 500
 
-// Callers must have access-gated the candidates first (via models.GetTasksByUIDs): the
-// favorites arm of TaskCollection.ReadAll is not project-scoped, so membership alone
-// does not prove the user may still read the task.
+// Candidates must be access-gated first: the favorites arm of ReadAll is not project-scoped.
 func (c collectionTarget) containsAll(s *xorm.Session, u *user.User, taskIDs []int64) (map[int64]bool, error) {
 	members := make(map[int64]bool, len(taskIDs))
 	if len(taskIDs) == 0 {
@@ -109,12 +104,9 @@ func (c collectionTarget) containsAll(s *xorm.Session, u *user.User, taskIDs []i
 			ProjectID: c.project.ID,
 			Filter:    "id in " + strings.Join(ids, ","),
 		}
-		// No paging - the filter already bounds the result to the candidates.
 		result, _, _, err := tc.ReadAll(s, u, "", 0, -1)
 		if err != nil {
-			// A stale href naming an unreadable saved filter is a miss: a 500 here would leak
-			// filter ids and abort the whole multiget REPORT. Unreadable applies to the whole
-			// collection, so drop earlier chunks instead of reporting a truncated membership.
+			// Unreadable filter: a miss for the whole collection, not a 500 aborting the REPORT.
 			if models.IsErrGenericForbidden(err) || models.IsErrSavedFilterDoesNotExist(err) {
 				return map[int64]bool{}, nil
 			}

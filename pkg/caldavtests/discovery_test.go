@@ -264,7 +264,6 @@ func TestDiscoveryOPTIONS(t *testing.T) {
 			assert.Contains(t, allowHeader, method,
 				"Allow header should include %s", method)
 		}
-		// Nothing can be written to the entry itself.
 		for _, method := range []string{
 			"PUT",
 			"DELETE",

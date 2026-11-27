@@ -57,8 +57,7 @@ func readPutBody(c *echo.Context) (string, error) {
 	return string(body), nil
 }
 
-// Deliberate legacy support: a VCALENDAR PUT onto a collection URL creates or updates the
-// task its UID names.
+// Deliberate legacy support: a VCALENDAR PUT onto a collection writes the task its UID names.
 func putOnCollection(c *echo.Context, u *user.User, collection collectionTarget) error {
 	body, err := readPutBody(c)
 	if err != nil {

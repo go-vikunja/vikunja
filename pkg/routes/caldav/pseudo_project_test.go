@@ -134,7 +134,6 @@ STATUS:COMPLETED
 END:VTODO
 END:VCALENDAR`
 
-	// The PUT and DELETE handlers resolve the task through the collection before writing.
 	findAndWrite := func(t *testing.T, projectID int64, write func(s *xorm.Session, c readableCollection, stored *models.Task) error) error {
 		t.Helper()
 
@@ -221,8 +220,6 @@ END:VCALENDAR`
 	})
 }
 
-// canRead used to have to tolerate ErrProjectDoesNotExist because CanRead
-// errored out for instance admins on a pseudo id; d5332ac3b fixed that in the model.
 func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})

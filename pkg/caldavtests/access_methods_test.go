@@ -28,8 +28,7 @@ import (
 	"xorm.io/builder"
 )
 
-// A pseudo collection has no permissions of its own: reads and writes of a task it holds
-// are decided by the task's project, creating in it is refused.
+// A pseudo collection has no permissions: the task's project decides, creating is refused.
 func TestAccessPerMethodFavorites(t *testing.T) {
 	const favorites = "/dav/projects/-1"
 	const task = favorites + "/uid-caldav-test.ics"
