@@ -100,6 +100,7 @@ func recreateMissingIndexes20260720120000(tx *xorm.Engine) error {
 // fails on data the later migration would have fixed (#3882).
 var createdByLaterMigration20260720120000 = map[string]bool{
 	"UQE_subscriptions_entity_user": true, // 20260829190000 removes duplicates first
+	"IDX_task_relations_task_kind":  true, // 20261124192627 checks index column order and definition
 }
 
 type dbSchema20260720120000Result struct {
