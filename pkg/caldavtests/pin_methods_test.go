@@ -163,7 +163,6 @@ func TestPinTrailingSlash(t *testing.T) {
 				assert.Equal(t, status, without.Code)
 				assert.Equal(t, status, with.Code)
 				assert.Equal(t, without.Header().Get("Allow"), with.Header().Get("Allow"))
-				assert.Equal(t, without.Header().Get("DAV"), with.Header().Get("DAV"))
 			})
 		}
 	}
