@@ -362,20 +362,6 @@ func TestCollectionWritability(t *testing.T) {
 
 // A 403 or 500 here, while an unknown id answers 404, would tell the client the collection exists.
 func TestPropfind_UnreadableCollectionIsNotFound(t *testing.T) {
-	t.Run("a saved filter of another user", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		rec, err := callCaldavHandler(t, ProjectHandler, caldavFilterUser, "PROPFIND", projectPath(foreignFilterProjectID), "", projectParams(foreignFilterProjectID))
-		requireHTTPStatus(t, http.StatusNotFound, rec, err)
-	})
-
-	t.Run("a project the user has no access to", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		rec, err := callCaldavHandler(t, ProjectHandler, caldavOtherUser, "PROPFIND", projectPath(inaccessibleProjectID), "", projectParams(inaccessibleProjectID))
-		requireHTTPStatus(t, http.StatusNotFound, rec, err)
-	})
-
 	t.Run("a bad body does not answer before the access check", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 

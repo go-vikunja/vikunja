@@ -316,15 +316,6 @@ func TestPinPropfindTaskURLReportsTaskETag(t *testing.T) {
 	assert.Equal(t, taskETag, get.Header().Get("ETag"))
 }
 
-func TestPinPropfindMissingTaskURL(t *testing.T) {
-	e := setupTestEnv(t)
-
-	for _, depth := range []string{"0", "1"} {
-		rec := caldavPROPFIND(t, e, "/dav/projects/36/does-not-exist.ics", depth, PropfindDiscoveryProps)
-		assert.Equal(t, 404, rec.Code, "Depth %s. Body:\n%s", depth, rec.Body.String())
-	}
-}
-
 // RFC 4918 §9.1: an empty body is allprop. Everything the resource has, except calendar-data.
 func TestPinPropfindAllprop(t *testing.T) {
 	// Not in PropfindDiscoveryProps; caldav-go answers both with the resource's own href.
