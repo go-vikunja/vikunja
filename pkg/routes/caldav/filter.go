@@ -429,7 +429,7 @@ func asciiUpper(s string) string {
 // the end date, if it lies after the start and there is no due date.
 func (r timeRange) overlapsTodo(t *models.Task) bool {
 	if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
-		// Endless series: any range ending after the first instance starts contains an instance.
+		// Not expanded: a series matches every range ending after its first instance, a superset the client narrows down.
 		r.start = time.Time{}
 	}
 	rendered := func(at time.Time) bool { return at.Unix() > 0 }

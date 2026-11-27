@@ -180,7 +180,10 @@ func TestTimeRangeOverlapsTodo(t *testing.T) {
 				DueDate:     day(12),
 				RepeatAfter: 7 * 24 * 3600,
 			},
-			in:  []timeRange{after},
+			in: []timeRange{{
+				start: day(18),
+				end:   day(20),
+			}},
 			out: []timeRange{before},
 		},
 		{
