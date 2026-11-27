@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go"
@@ -82,18 +83,19 @@ func handle(c *echo.Context, resolve targetResolver) error {
 		return servePut(c, u, t)
 	case "PROPFIND":
 		return servePropfind(c, u, t)
+	case "REPORT":
+		return serveReport(c, u, t)
+	case "PROPPATCH":
+		switch t := t.(type) {
+		case collectionTarget:
+			return servePropPatch(c, u, t.project, propPatchCollection)
+		case taskTarget:
+			return servePropPatch(c, u, t.collection.project, propPatchTask)
+		}
 	}
 
-	switch t := t.(type) {
-	case entryTarget, principalTarget:
-		readAndLogBody(c)
-		return serveLibrary(c, newStorage(u, t), principalPathForUser(u.Username))
-	case homeSetTarget, collectionTarget:
-		return serveProjects(c, u, t)
-	case taskTarget:
-		return serveTask(c, u, t)
-	}
-	return writeError(c, fmt.Errorf("unhandled caldav target %T", t))
+	readAndLogBody(c)
+	return serveLibrary(c, newStorage(u, t), principalPathForUser(u.Username))
 }
 
 func serveLibrary(c *echo.Context, storage *VikunjaCaldavProjectStorage, principalPath string) error {
@@ -109,49 +111,15 @@ func readAndLogBody(c *echo.Context) []byte {
 	return body
 }
 
-func serveProjects(c *echo.Context, u *user.User, t target) error {
-	storage := newStorage(u, t)
-	body := readAndLogBody(c)
-
-	// RFC 6578: intercept sync-collection REPORT before caldav-go sees it.
-	// caldav-go returns 412 (empty body) for unknown REPORT types, which causes
-	// iOS to silently stop syncing after the initial account add.
-	if c.Request().Method == "REPORT" && strings.Contains(string(body), "sync-collection") {
-		log.Debugf("[CALDAV] sync-collection REPORT for project %d by user %s", storage.project.ID, u.Username)
-		return handleSyncCollectionReport(c, string(body), storage)
+// Only a collection's calendar-color is settable; everything else is refused,
+// rather than caldav-go's blanket 501.
+func servePropPatch(c *echo.Context, u *user.User, project *models.ProjectWithTasksAndBuckets, target propPatchTarget) error {
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
 	}
-
-	collection, isCollection := t.(collectionTarget)
-	if !isCollection {
-		// Pinned: no PROPPATCH special case for the home set.
-		return serveLibrary(c, storage, ProjectHomeSetPath)
-	}
-
-	// caldav-go has no PROPPATCH dispatch case and falls back to a blanket 501;
-	// intercept it here, same as the sync-collection REPORT above.
-	if c.Request().Method == "PROPPATCH" {
-		log.Debugf("[CALDAV] PROPPATCH for project %d by user %s", collection.project.ID, u.Username)
-		return handlePropPatch(c, string(body), collection.project, u, propPatchCollection)
-	}
-
-	return serveLibrary(c, storage, ProjectHomeSetPath)
-}
-
-func serveTask(c *echo.Context, u *user.User, t taskTarget) error {
-	// A task resource has no settable properties; it gets a 207 refusal
-	// rather than caldav-go's blanket 501.
-	if c.Request().Method == "PROPPATCH" {
-		body, err := io.ReadAll(c.Request().Body)
-		if err != nil {
-			return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
-		}
-		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-
-		return handlePropPatch(c, string(body), t.collection.project, u, propPatchTask)
-	}
-
-	storage := newStorage(u, t)
-	return serveLibrary(c, storage, principalPathForUser(u.Username))
+	logRequest(c.Request().Header, body)
+	return handlePropPatch(c, string(body), project, u, target)
 }
 
 const maxLoggedBodySize = 4096

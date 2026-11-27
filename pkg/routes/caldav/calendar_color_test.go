@@ -61,7 +61,7 @@ func TestPropfindCalendarColor(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		proppatch(t, caldavFilterUser, 36, iosSetColor)
-		_, values := propfind(t, ProjectHomeSetPath, nil)
+		_, values := propfind(t, ProjectBasePath+"/", nil)
 		assert.Equal(t, "#007AFFFF", values[appleCalendarColor])
 	})
 }

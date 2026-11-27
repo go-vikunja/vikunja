@@ -30,7 +30,9 @@ const (
 	davCompliance  = "1, 3, calendar-access"
 	allowReadWrite = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
 	allowReadOnly  = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
-	allowHomeSet   = "OPTIONS, PROPFIND, REPORT"
+	// Entry and principal hold no calendar data, so no report applies to them.
+	allowEntry   = "GET, HEAD, OPTIONS, PROPFIND"
+	allowHomeSet = "OPTIONS, PROPFIND"
 )
 
 func serveOptions(c *echo.Context, u *user.User, t target) error {
@@ -72,7 +74,7 @@ func collectionAllow(u *user.User, collection collectionTarget) (string, error) 
 func allowed(u *user.User, t target) (string, error) {
 	switch t := t.(type) {
 	case entryTarget, principalTarget:
-		return allowReadOnly, nil
+		return allowEntry, nil
 	case homeSetTarget:
 		return allowHomeSet, nil
 	case collectionTarget:

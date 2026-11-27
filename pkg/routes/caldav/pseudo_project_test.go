@@ -33,7 +33,6 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/builder"
@@ -74,19 +73,8 @@ func createSavedFilter(t *testing.T, u *user.User, filter string) int64 {
 	return pseudoID
 }
 
-func storageFor(u *user.User, projectID int64) *VikunjaCaldavProjectStorage {
-	return &VikunjaCaldavProjectStorage{
-		project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: projectID}},
-		user:    u,
-	}
-}
-
 func collectionFor(projectID int64) collectionTarget {
 	return collectionTarget{project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: projectID}}}
-}
-
-func filterStorage(pseudoProjectID int64) *VikunjaCaldavProjectStorage {
-	return storageFor(caldavFilterUser, pseudoProjectID)
 }
 
 func projectPath(projectID int64) string {
@@ -374,73 +362,70 @@ func TestPropfind_UnreadableCollectionIsNotFound(t *testing.T) {
 	}
 }
 
-func TestGetResource_PseudoCollectionMembership(t *testing.T) {
+func TestFindTask_PseudoCollectionMembership(t *testing.T) {
+	find := func(t *testing.T, u *user.User, projectID int64) *models.Task {
+		t.Helper()
+		s := db.NewSession()
+		defer s.Close()
+		task, err := findTask(s, u, collectionFor(projectID), "uid-caldav-test")
+		require.NoError(t, err)
+		return task
+	}
+
 	t.Run("serves a task the filter contains", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
-		storage := filterStorage(pseudoID)
-		storage.task = &models.Task{UID: "uid-caldav-test"}
-
-		_, found, err := storage.GetResource(projectPath(pseudoID) + "uid-caldav-test.ics")
-		require.NoError(t, err)
-		assert.True(t, found)
+		assert.NotNil(t, find(t, caldavFilterUser, pseudoID))
 	})
 
 	t.Run("hides a task the filter does not contain", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingNothing)
-		storage := filterStorage(pseudoID)
-		storage.task = &models.Task{UID: "uid-caldav-test"}
-
-		_, _, err := storage.GetResource(projectPath(pseudoID) + "uid-caldav-test.ics")
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assert.Nil(t, find(t, caldavFilterUser, pseudoID))
 	})
 
 	t.Run("still rejects a mismatching real project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		storage := filterStorage(38)
-		storage.task = &models.Task{UID: "uid-caldav-test"}
-
-		_, _, err := storage.GetResource("/dav/projects/38/uid-caldav-test.ics")
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assert.Nil(t, find(t, caldavFilterUser, 38))
 	})
 
 	t.Run("a filter of another user is a miss, not an error", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		storage := filterStorage(foreignFilterProjectID)
-		storage.task = &models.Task{UID: "uid-caldav-test"}
-
-		_, _, err := storage.GetResource(projectPath(foreignFilterProjectID) + "uid-caldav-test.ics")
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assert.Nil(t, find(t, caldavFilterUser, foreignFilterProjectID))
 	})
 
 	t.Run("a task in an inaccessible project is a miss", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavOtherUser, caldavFilterMatchingTasks)
-		storage := storageFor(caldavOtherUser, pseudoID)
-		storage.task = &models.Task{UID: "uid-caldav-test"}
-
-		_, _, err := storage.GetResource(projectPath(pseudoID) + "uid-caldav-test.ics")
-		require.ErrorIs(t, err, errs.ResourceNotFoundError)
+		assert.Nil(t, find(t, caldavOtherUser, pseudoID))
 	})
 }
 
-func TestGetResourcesByList_PseudoCollection(t *testing.T) {
+// Skips the read check: an unreadable collection must still resolve to nothing rather than fail.
+func resolveHrefs(t *testing.T, u *user.User, projectID int64, hrefs ...string) map[string]*models.Task {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	tasks, err := multigetTasks(s, u, readableCollection{collectionFor(projectID)}, hrefs)
+	require.NoError(t, err)
+	return tasks
+}
+
+func TestMultigetTasks_PseudoCollection(t *testing.T) {
 	t.Run("returns tasks of the filter under the filter path", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
 		href := projectPath(pseudoID) + "uid-caldav-test.ics"
 
-		resources, err := filterStorage(pseudoID).GetResourcesByList([]string{href})
-		require.NoError(t, err)
-		require.Len(t, resources, 1)
-		assert.Equal(t, href, resources[0].Path)
+		tasks := resolveHrefs(t, caldavFilterUser, pseudoID, href)
+		require.Len(t, tasks, 1)
+		assert.Contains(t, tasks, href)
 	})
 
 	t.Run("drops tasks the filter does not contain", func(t *testing.T) {
@@ -448,11 +433,7 @@ func TestGetResourcesByList_PseudoCollection(t *testing.T) {
 
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingNothing)
 
-		resources, err := filterStorage(pseudoID).GetResourcesByList([]string{
-			projectPath(pseudoID) + "uid-caldav-test.ics",
-		})
-		require.NoError(t, err)
-		assert.Empty(t, resources)
+		assert.Empty(t, resolveHrefs(t, caldavFilterUser, pseudoID, projectPath(pseudoID)+"uid-caldav-test.ics"))
 	})
 
 	t.Run("drops hrefs of a foreign pseudo collection", func(t *testing.T) {
@@ -461,21 +442,13 @@ func TestGetResourcesByList_PseudoCollection(t *testing.T) {
 		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
 		otherPseudoID := pseudoID - 1
 
-		resources, err := filterStorage(pseudoID).GetResourcesByList([]string{
-			projectPath(otherPseudoID) + "uid-caldav-test.ics",
-		})
-		require.NoError(t, err)
-		assert.Empty(t, resources)
+		assert.Empty(t, resolveHrefs(t, caldavFilterUser, pseudoID, projectPath(otherPseudoID)+"uid-caldav-test.ics"))
 	})
 
 	t.Run("a filter of another user drops out without aborting the report", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		resources, err := filterStorage(foreignFilterProjectID).GetResourcesByList([]string{
-			projectPath(foreignFilterProjectID) + "uid-caldav-test.ics",
-		})
-		require.NoError(t, err)
-		assert.Empty(t, resources)
+		assert.Empty(t, resolveHrefs(t, caldavFilterUser, foreignFilterProjectID, projectPath(foreignFilterProjectID)+"uid-caldav-test.ics"))
 	})
 
 	t.Run("drops a task in an inaccessible project", func(t *testing.T) {
@@ -483,11 +456,7 @@ func TestGetResourcesByList_PseudoCollection(t *testing.T) {
 
 		pseudoID := createSavedFilter(t, caldavOtherUser, caldavFilterMatchingTasks)
 
-		resources, err := storageFor(caldavOtherUser, pseudoID).GetResourcesByList([]string{
-			projectPath(pseudoID) + "uid-caldav-test.ics",
-		})
-		require.NoError(t, err)
-		assert.Empty(t, resources)
+		assert.Empty(t, resolveHrefs(t, caldavOtherUser, pseudoID, projectPath(pseudoID)+"uid-caldav-test.ics"))
 	})
 }
 

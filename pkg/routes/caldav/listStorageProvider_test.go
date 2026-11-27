@@ -573,8 +573,8 @@ END:VCALENDAR`
 	})
 }
 
-// TestGetResourcesByList_URLProjectConsistency covers GHSA-48ch-p4gq-x46x.
-func TestGetResourcesByList_URLProjectConsistency(t *testing.T) {
+// TestMultigetTasks_URLProjectConsistency covers GHSA-48ch-p4gq-x46x.
+func TestMultigetTasks_URLProjectConsistency(t *testing.T) {
 	u := &user.User{
 		ID:       15,
 		Username: "user15",
@@ -583,26 +583,16 @@ func TestGetResourcesByList_URLProjectConsistency(t *testing.T) {
 	t.Run("drops task when href project does not match task project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		storage := &VikunjaCaldavProjectStorage{user: u}
-
 		// uid-caldav-test lives in project 36 (fixtures/tasks.yml id 40).
-		resources, err := storage.GetResourcesByList([]string{
-			"/dav/projects/38/uid-caldav-test.ics",
-		})
-		require.NoError(t, err)
-		assert.Empty(t, resources, "task must not be returned when href project mismatches")
+		tasks := resolveHrefs(t, u, 38, "/dav/projects/38/uid-caldav-test.ics")
+		assert.Empty(t, tasks, "task must not be returned when href project mismatches")
 	})
 
 	t.Run("returns task when href project matches task project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
-		storage := &VikunjaCaldavProjectStorage{user: u}
-
-		resources, err := storage.GetResourcesByList([]string{
-			"/dav/projects/36/uid-caldav-test.ics",
-		})
-		require.NoError(t, err)
-		require.Len(t, resources, 1)
+		tasks := resolveHrefs(t, u, 36, "/dav/projects/36/uid-caldav-test.ics")
+		require.Len(t, tasks, 1)
 	})
 
 	t.Run("drops task for unauthorized user", func(t *testing.T) {
@@ -610,13 +600,8 @@ func TestGetResourcesByList_URLProjectConsistency(t *testing.T) {
 
 		// user 6 has no access to project 36
 		outsider := &user.User{ID: 6, Username: "user6"}
-		storage := &VikunjaCaldavProjectStorage{user: outsider}
-
-		resources, err := storage.GetResourcesByList([]string{
-			"/dav/projects/36/uid-caldav-test.ics",
-		})
-		require.NoError(t, err)
-		assert.Empty(t, resources, "unauthorized user must not receive any tasks")
+		tasks := resolveHrefs(t, outsider, 36, "/dav/projects/36/uid-caldav-test.ics")
+		assert.Empty(t, tasks, "unauthorized user must not receive any tasks")
 	})
 }
 

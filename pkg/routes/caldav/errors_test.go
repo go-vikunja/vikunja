@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,7 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/labstack/echo/v5"
-	"github.com/samedi/caldav-go/errs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,6 +36,11 @@ func TestErrorStatus(t *testing.T) {
 		err    error
 		status int
 	}{
+		{
+			name:   "failed precondition",
+			err:    fmt.Errorf("report: %w", errUnsupportedReport),
+			status: http.StatusForbidden,
+		},
 		{
 			name:   "validation",
 			err:    models.ValidationHTTPError{},
@@ -89,12 +94,4 @@ func TestWriteError(t *testing.T) {
 		assert.Equal(t, "internal server error", he.Message)
 		assert.ErrorIs(t, err, cause)
 	})
-}
-
-func TestLibraryErrors(t *testing.T) {
-	unknown := errors.New("database is gone")
-
-	assert.Equal(t, errNotFound, fromLibraryError(errs.ResourceNotFoundError))
-	assert.Equal(t, errForbidden, fromLibraryError(errs.ForbiddenError))
-	assert.Equal(t, unknown, fromLibraryError(unknown))
 }

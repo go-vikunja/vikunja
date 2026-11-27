@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"encoding/xml"
 	"errors"
 	"net/http"
 
@@ -35,6 +36,17 @@ var (
 	errBodyTooLarge  = errors.New("caldav: request body too large")
 )
 
+// preconditionError is a failed DAV or CalDAV precondition, answered with an RFC 4918 §16
+// error body that names it.
+type preconditionError struct {
+	precondition xml.Name
+	reason       string
+}
+
+func (e preconditionError) Error() string {
+	return "caldav: " + e.precondition.Local + ": " + e.reason
+}
+
 func isError[T error](err error) bool {
 	var target T
 	return errors.As(err, &target)
@@ -48,6 +60,7 @@ func errorStatus(err error) int {
 		isError[models.ErrTaskDoesNotExist](err):
 		return http.StatusNotFound
 	case errors.Is(err, errForbidden),
+		isError[preconditionError](err),
 		isError[models.ErrProjectIsArchived](err),
 		// Pinned: caldav-go could not answer 400.
 		isError[models.ValidationHTTPError](err),
@@ -73,6 +86,11 @@ func writeError(c *echo.Context, err error) error {
 	}
 	if c.Request().Method == http.MethodHead {
 		return c.NoContent(status)
+	}
+	var failed preconditionError
+	if errors.As(err, &failed) {
+		log.Debugf("[CALDAV] %s %s: %v", c.Request().Method, c.Request().URL.Path, err)
+		return writeDAVError(c, status, failed.precondition)
 	}
 	return c.String(status, http.StatusText(status))
 }

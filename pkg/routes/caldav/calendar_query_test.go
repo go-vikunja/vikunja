@@ -87,15 +87,4 @@ func TestCalendarQueryFilters(t *testing.T) {
 		assert.Contains(t, body, otherTaskHref)
 		assert.Contains(t, body, parentTaskHref)
 	})
-
-	t.Run("time-range is not applied to VTODOs", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		body := calendarQuery(t, `<C:comp-filter name="VCALENDAR"><C:comp-filter name="VTODO">
-  <C:time-range start="20000101T000000Z" end="20000102T000000Z"/>
-</C:comp-filter></C:comp-filter>`)
-
-		assert.Contains(t, body, otherTaskHref)
-		assert.Contains(t, body, parentTaskHref)
-	})
 }

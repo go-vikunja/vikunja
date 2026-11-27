@@ -27,7 +27,8 @@ const (
 	davComplianceHeader = "1, 3, calendar-access"
 	allowReadWrite      = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
 	allowReadOnly       = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
-	allowHomeSet        = "OPTIONS, PROPFIND, REPORT"
+	allowEntry          = "GET, HEAD, OPTIONS, PROPFIND"
+	allowHomeSet        = "OPTIONS, PROPFIND"
 )
 
 func TestPinOPTIONS(t *testing.T) {
@@ -41,19 +42,19 @@ func TestPinOPTIONS(t *testing.T) {
 			name:   "entry",
 			path:   "/dav/",
 			status: http.StatusOK,
-			allow:  allowReadOnly,
+			allow:  allowEntry,
 		},
 		{
 			name:   "well-known",
 			path:   "/.well-known/caldav",
 			status: http.StatusOK,
-			allow:  allowReadOnly,
+			allow:  allowEntry,
 		},
 		{
 			name:   "principal",
 			path:   "/dav/principals/user15/",
 			status: http.StatusOK,
-			allow:  allowReadOnly,
+			allow:  allowEntry,
 		},
 		{
 			name:   "home set",

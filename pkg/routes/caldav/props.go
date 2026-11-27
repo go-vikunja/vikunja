@@ -198,12 +198,13 @@ func selfReferencing[R hrefed]() propTable[R] {
 	}
 }
 
-// RFC 4791 §6.2.1, RFC 3744 §4.2: principal properties; /dav/ has them too because discovery starts there.
+// RFC 4791 §6.2.1, RFC 3744 §4.2: on /dav/ and the home set too, where clients start discovery (#2417).
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
+		// Without the trailing slash, as clients knew it before the rewrite.
 		{
 			name:    propCalendarHomeSet,
-			resolve: always[R](hrefsValue{ProjectHomeSetPath}),
+			resolve: always[R](hrefsValue{ProjectBasePath}),
 		},
 		{
 			name:    propPrincipalURL,
@@ -308,7 +309,7 @@ var homeSetProps = append(propTable[*homeSetResource]{
 		name:    propGetContentType,
 		resolve: always[*homeSetResource](textValue(contentTypeCollection)),
 	},
-}, selfReferencing[*homeSetResource]()...)
+}, slices.Concat(principalDiscovery[*homeSetResource](), selfReferencing[*homeSetResource]())...)
 
 func (r *homeSetResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return homeSetProps.answer(ctx, r, r.href, req)

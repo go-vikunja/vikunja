@@ -259,14 +259,15 @@ func TestDiscoveryOPTIONS(t *testing.T) {
 			"OPTIONS",
 			"GET",
 			"PROPFIND",
-			"REPORT",
 		} {
 			assert.Contains(t, allowHeader, method,
 				"Allow header should include %s", method)
 		}
+		// Nothing can be written to the entry itself, and it holds no calendar data to report on.
 		for _, method := range []string{
 			"PUT",
 			"DELETE",
+			"REPORT",
 		} {
 			assert.NotContains(t, allowHeader, method,
 				"Allow header should not include %s", method)

@@ -75,7 +75,7 @@ func TestPinWritesOnEntryAndPrincipal(t *testing.T) {
 					rec := caldavRequest(t, e, method, path, NewVTodo("pin-entry-write", "Entry").Build(), headers)
 
 					assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "Body:\n%s", rec.Body.String())
-					assert.Equal(t, allowReadOnly, rec.Header().Get("Allow"))
+					assert.Equal(t, allowEntry, rec.Header().Get("Allow"))
 				})
 			}
 		}

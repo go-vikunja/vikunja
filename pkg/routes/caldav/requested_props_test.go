@@ -23,25 +23,11 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/models"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestResourceContentIsRenderedOnce(t *testing.T) {
-	task := &models.Task{UID: "uid-rendered-once", Title: "first"}
-	rr := &VikunjaProjectResourceAdapter{task: task}
-
-	content := rr.GetContent()
-	require.Contains(t, content, "SUMMARY:first")
-
-	// A second render would pick up the new title.
-	task.Title = "second"
-	assert.Equal(t, content, rr.GetContent())
-	assert.Equal(t, int64(len(content)), rr.GetContentSize())
-}
 
 func propfindWithProps(props ...string) string {
 	return `<?xml version="1.0" encoding="utf-8" ?>
