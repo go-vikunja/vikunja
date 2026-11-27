@@ -89,6 +89,7 @@ func writeError(c *echo.Context, err error) error {
 	}
 	var failed preconditionError
 	if errors.As(err, &failed) {
+		log.Debugf("[CALDAV] %s %s: %v", c.Request().Method, c.Request().URL.Path, err)
 		return writeDAVError(c, status, failed.precondition)
 	}
 	return c.String(status, http.StatusText(status))
