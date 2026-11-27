@@ -1,0 +1,63 @@
+{
+  "url": "http://127.0.0.1:4188/projects/1/1",
+  "displayUrl": "Vikunja · Local demo",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "initialWait": 500,
+  "tail": 1200,
+  "steps": [
+    {
+      "action": "type",
+      "selector": "textarea.add-task-textarea",
+      "value": "Draft launch announcement",
+      "pause": 300,
+      "zoom": false,
+      "caption": "Add a release task"
+    },
+    {
+      "action": "click",
+      "role": "button",
+      "name": "Add",
+      "pause": 500,
+      "zoom": false
+    },
+    {
+      "action": "waitFor",
+      "text": "Draft launch announcement"
+    },
+    {
+      "action": "click",
+      "role": "link",
+      "name": "Kanban",
+      "pause": 700,
+      "zoom": false,
+      "caption": "See the task on your board"
+    },
+    {
+      "action": "drag",
+      "selector": ".kanban-card:has-text(\"Draft launch announcement\")",
+      "dx": 316,
+      "dy": 0,
+      "steps": 36,
+      "pause": 700,
+      "zoom": false,
+      "caption": "Move the task into Doing"
+    },
+    {
+      "action": "waitFor",
+      "selector": ".bucket:has(h2:text-is(\"Doing\")) .kanban-card:has-text(\"Draft launch announcement\")"
+    },
+    {
+      "action": "focus",
+      "selector": ".bucket:has(h2:text-is(\"Doing\")) .kanban-card:has-text(\"Draft launch announcement\")",
+      "pause": 1400,
+      "caption": "Keep the next action visible"
+    },
+    {
+      "action": "screenshot",
+      "file": "result.png"
+    }
+  ]
+}
