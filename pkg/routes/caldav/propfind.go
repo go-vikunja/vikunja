@@ -116,21 +116,24 @@ tokens:
 type propfindLoader func(s *xorm.Session, deep bool) ([]davResource, error)
 
 func servePropfind(c *echo.Context, u *user.User, t target) error {
+	// Before the session: a trickled body must not pin a DB connection.
+	body, bodyErr := io.ReadAll(io.LimitReader(c.Request().Body, maxPropRequestBodySize+1))
+	if bodyErr != nil {
+		bodyErr = fmt.Errorf("%w: %w", errMalformedBody, bodyErr)
+	} else if len(body) > maxPropRequestBodySize {
+		bodyErr = errBodyTooLarge
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
 	load, ctx, err := authorizePropfind(s, u, t)
 	if err != nil {
 		return writeError(c, err)
 	}
-
-	body, err := io.ReadAll(io.LimitReader(c.Request().Body, maxPropRequestBodySize+1))
-	if err != nil {
-		return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
-	}
-	if len(body) > maxPropRequestBodySize {
-		return writeError(c, errBodyTooLarge)
+	// After the access check: a bad body must not tell an unreadable collection from a missing one.
+	if bodyErr != nil {
+		return writeError(c, bodyErr)
 	}
 	logRequest(c.Request().Header, body)
 	req, err := parsePropfind(string(body))
