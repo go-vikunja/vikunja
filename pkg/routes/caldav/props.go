@@ -27,9 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 )
 
-// propContext is what all resources of one request share.
 type propContext struct {
-	// The requesting user's principal.
 	principal string
 }
 
@@ -108,8 +106,7 @@ func (t propTable[R]) resolveAll(ctx propContext, r R, names []xml.Name) (found 
 	return found, missing
 }
 
-// RFC 4791 §9.6 defines calendar-data for REPORT, not as a property allprop owes
-// (RFC 4918 §9.1); answering it would send every task body on an allprop Depth: 1.
+// Not owed to allprop (RFC 4918 §9.1, RFC 4791 §9.6); it would send every task body on Depth: 1.
 var explicitOnly = map[xml.Name]bool{propCalendarData: true}
 
 var (
@@ -187,7 +184,6 @@ func ownerPrincipal(username string) (propValue, bool) {
 	return hrefsValue{principalPathForUser(username)}, true
 }
 
-// hrefed is any resource that answers some properties with its own href.
 type hrefed interface{ ownHref() string }
 
 func ownHref[R hrefed](_ propContext, r R) (propValue, bool) {
@@ -202,8 +198,7 @@ func selfReferencing[R hrefed]() propTable[R] {
 	}
 }
 
-// RFC 4791 §6.2.1 and RFC 3744 §4.2: these belong to the principal; /dav/ answers them too
-// because clients start discovery there.
+// RFC 4791 §6.2.1, RFC 3744 §4.2: principal properties; /dav/ has them too because discovery starts there.
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
 		{
@@ -253,7 +248,6 @@ func (r *entryResource) answer(ctx propContext, req propfindRequest) msResponse 
 	return entryProps.answer(ctx, r, r.href, req)
 }
 
-// principalResource is the requesting user's principal.
 type principalResource struct{ href string }
 
 func (r *principalResource) ownHref() string { return r.href }
@@ -405,9 +399,8 @@ func (r *collectionResource) answer(ctx propContext, req propfindRequest) msResp
 
 // taskResource is a task as a member of the collection its href names.
 type taskResource struct {
-	href string
-	task *models.Task
-	// The collection's owner.
+	href  string
+	task  *models.Task
 	owner string
 	// Rendering costs as much as a GET, so it happens at most once per resource.
 	rendered *string

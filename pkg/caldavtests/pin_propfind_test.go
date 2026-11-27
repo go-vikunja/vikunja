@@ -93,7 +93,6 @@ func expectEntry() expectedDAVResponse {
 	}
 }
 
-// href is the principal path, or the well-known path the principal was asked as.
 func expectPrincipal(href, displayName string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: href,
@@ -260,8 +259,7 @@ func TestPinPropfindMatrix(t *testing.T) {
 			name:    "task resource",
 			path:    pinTaskHref,
 			shallow: []expectedDAVResponse{task},
-			// A task has no members.
-			deep: []expectedDAVResponse{task},
+			deep:    []expectedDAVResponse{task},
 		},
 	}
 
@@ -395,7 +393,6 @@ func TestPinPropfindPropname(t *testing.T) {
 	}
 }
 
-// The unknown property is echoed in the 404 propstat with its namespace.
 func TestPinPropfindUnknownNamespace(t *testing.T) {
 	e := setupTestEnv(t)
 	body := `<?xml version="1.0" encoding="utf-8" ?>

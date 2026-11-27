@@ -107,7 +107,6 @@ func TestSavedFilterCollection_ChildHrefs(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resources, caldavFilterTaskCount+1)
 
-	// resources[0] is the collection itself.
 	for _, r := range resources[1:] {
 		href := r.(*taskResource).href
 		assert.True(t, strings.HasPrefix(href, rpath),

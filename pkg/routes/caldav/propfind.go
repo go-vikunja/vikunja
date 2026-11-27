@@ -33,7 +33,6 @@ import (
 	"xorm.io/xorm"
 )
 
-// Same cap caldav-go had.
 const maxPropfindProperties = 200
 
 // propfindRequest is what a PROPFIND body asks for (RFC 4918 §9.1).
@@ -45,7 +44,6 @@ type propRequest struct{ names []xml.Name }
 // allPropRequest is <allprop/> or an empty body; include names properties allprop leaves out.
 type allPropRequest struct{ include []xml.Name }
 
-// propNameRequest asks for the names of all properties, without values.
 type propNameRequest struct{}
 
 func (propRequest) isPropfindRequest()     {}
@@ -215,7 +213,6 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 }
 
 func loadHomeSet(s *xorm.Session, u *user.User) ([]davResource, error) {
-	// Page 0: everything, no paging.
 	result, _, _, err := (&models.Project{}).ReadAll(s, u, "", 0, 0)
 	if err != nil {
 		return nil, err
@@ -231,8 +228,7 @@ func loadHomeSet(s *xorm.Session, u *user.User) ([]davResource, error) {
 		resources = append(resources, &collectionResource{
 			href:    collectionHref(p.ID),
 			project: &models.ProjectWithTasksAndBuckets{Project: *p},
-			// ReadAll loaded all owners at once.
-			owner: ownerName(u, p),
+			owner:   ownerName(u, p),
 		})
 	}
 	return resources, nil
@@ -244,7 +240,6 @@ func loadCollectionResources(s *xorm.Session, u *user.User, c readableCollection
 		return nil, err
 	}
 
-	// readCollectionTasks loaded the owner.
 	owner := ownerName(u, &c.project.Project)
 	resources := []davResource{&collectionResource{
 		href:    href,

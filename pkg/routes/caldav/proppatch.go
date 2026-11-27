@@ -31,7 +31,6 @@ import (
 )
 
 const (
-	// Bounds PROPFIND bodies too.
 	maxPropRequestBodySize     = 64 * 1024
 	maxPropPatchProperties     = 100
 	maxPropPatchNamespaceBytes = 256

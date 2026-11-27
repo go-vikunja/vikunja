@@ -33,7 +33,6 @@ type target interface{ isTarget() }
 type entryTarget struct{}
 
 type principalTarget struct {
-	// What the principal answers as: the canonical principal path, or the well-known path asked for.
 	href string
 }
 
