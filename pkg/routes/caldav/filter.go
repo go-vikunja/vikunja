@@ -323,6 +323,9 @@ func parseTextMatch(el *xmlElement) (textMatch, error) {
 	default:
 		return textMatch{}, preconditionError{precondition: calDAVName("supported-collation"), reason: collation}
 	}
+	if match.foldCase {
+		match.value = asciiUpper(match.value)
+	}
 
 	switch negate, _ := el.attr("negate-condition"); negate {
 	case "", "no":
@@ -374,11 +377,10 @@ func (r timeRange) matchesValue(v string) bool {
 }
 
 func (m textMatch) matchesValue(v string) bool {
-	needle := m.value
 	if m.foldCase {
-		v, needle = asciiUpper(v), asciiUpper(needle)
+		v = asciiUpper(v)
 	}
-	return strings.Contains(v, needle) != m.negate
+	return strings.Contains(v, m.value) != m.negate
 }
 
 // i;ascii-casemap (RFC 4790 §9.2) folds ASCII letters only.
