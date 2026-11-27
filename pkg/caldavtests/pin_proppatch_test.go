@@ -62,8 +62,15 @@ func TestPinPropPatchAccess(t *testing.T) {
 
 	t.Run("unreadable looks missing, before the body is looked at", func(t *testing.T) {
 		// user1 cannot read project 36; 999999 does not exist.
-		for _, body := range []string{proppatchDisplayName, "not xml", strings.Repeat(" ", 65*1024)} {
-			for _, path := range []string{"/dav/projects/36", "/dav/projects/999999"} {
+		for _, body := range []string{
+			proppatchDisplayName,
+			"not xml",
+			strings.Repeat(" ", 65*1024),
+		} {
+			for _, path := range []string{
+				"/dav/projects/36",
+				"/dav/projects/999999",
+			} {
 				rec := caldavRequest(t, e, "PROPPATCH", path, body, asUser1)
 				assert.Equal(t, http.StatusNotFound, rec.Code, "PROPPATCH %s with a %d byte body", path, len(body))
 			}
@@ -93,7 +100,10 @@ func TestPinPropPatchTarget(t *testing.T) {
 
 	t.Run("a task that is not in the collection is missing", func(t *testing.T) {
 		// uid-caldav-test lives in project 36; user15 can read 38 too.
-		for _, path := range []string{"/dav/projects/36/does-not-exist.ics", "/dav/projects/38/uid-caldav-test.ics"} {
+		for _, path := range []string{
+			"/dav/projects/36/does-not-exist.ics",
+			"/dav/projects/38/uid-caldav-test.ics",
+		} {
 			rec := caldavRequest(t, e, "PROPPATCH", path, proppatchDisplayName, nil)
 			assert.Equal(t, http.StatusNotFound, rec.Code, "PROPPATCH %s", path)
 		}

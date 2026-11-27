@@ -278,7 +278,13 @@ func TestDiscoveryOPTIONS(t *testing.T) {
 		e := setupTestEnv(t)
 
 		allowHeader := caldavOPTIONS(t, e, "/dav/projects/36").Header().Get("Allow")
-		for _, method := range []string{"OPTIONS", "GET", "PUT", "PROPFIND", "REPORT"} {
+		for _, method := range []string{
+			"OPTIONS",
+			"GET",
+			"PUT",
+			"PROPFIND",
+			"REPORT",
+		} {
 			assert.Contains(t, allowHeader, method,
 				"Allow header should include %s", method)
 		}

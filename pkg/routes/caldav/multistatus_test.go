@@ -295,13 +295,44 @@ func TestPrefersMinimal(t *testing.T) {
 		lines []string
 		want  bool
 	}{
-		{"alone", []string{"return=minimal"}, true},
-		{"one of several", []string{"respond-async, return=minimal"}, true},
-		{"on its own header line", []string{"respond-async", "return=minimal"}, true},
-		{"with a parameter", []string{"return=minimal; foo=bar"}, true},
-		{"quoted, other case", []string{`Return="Minimal"`}, true},
-		{"absent", nil, false},
-		{"lookalike token", []string{"return-minimal"}, false},
+		{
+			name:  "alone",
+			lines: []string{"return=minimal"},
+			want:  true,
+		},
+		{
+			name:  "one of several",
+			lines: []string{"respond-async, return=minimal"},
+			want:  true,
+		},
+		{
+			name: "on its own header line",
+			lines: []string{
+				"respond-async",
+				"return=minimal",
+			},
+			want: true,
+		},
+		{
+			name:  "with a parameter",
+			lines: []string{"return=minimal; foo=bar"},
+			want:  true,
+		},
+		{
+			name:  "quoted, other case",
+			lines: []string{`Return="Minimal"`},
+			want:  true,
+		},
+		{
+			name:  "absent",
+			lines: nil,
+			want:  false,
+		},
+		{
+			name:  "lookalike token",
+			lines: []string{"return-minimal"},
+			want:  false,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

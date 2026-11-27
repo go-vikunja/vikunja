@@ -1076,11 +1076,25 @@ func registerMigrations(m *echo.Group) {
 }
 
 var (
-	caldavReadOnlyMethods = []string{http.MethodOptions, http.MethodGet, http.MethodHead, echo.PROPFIND}
-	caldavHomeSetMethods  = []string{http.MethodOptions, echo.PROPFIND}
+	caldavReadOnlyMethods = []string{
+		http.MethodOptions,
+		http.MethodGet,
+		http.MethodHead,
+		echo.PROPFIND,
+	}
+	caldavHomeSetMethods = []string{
+		http.MethodOptions,
+		echo.PROPFIND,
+	}
 	caldavCalendarMethods = []string{
-		http.MethodOptions, http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete,
-		echo.PROPFIND, echo.REPORT, "PROPPATCH",
+		http.MethodOptions,
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodPut,
+		http.MethodDelete,
+		echo.PROPFIND,
+		echo.REPORT,
+		"PROPPATCH",
 	}
 )
 
@@ -1100,7 +1114,10 @@ func registerCalDavRoutes(c *echo.Group) {
 // Every other method goes to notAllowed, a group route so it still passes BasicAuth first; the
 // router's own 405 would skip group middleware.
 func registerCalDavRoute(g *echo.Group, path string, handler, notAllowed echo.HandlerFunc, methods []string) {
-	for _, p := range []string{path, path + "/"} {
+	for _, p := range []string{
+		path,
+		path + "/",
+	} {
 		g.Match(methods, p, handler)
 		g.Any(p, notAllowed)
 	}

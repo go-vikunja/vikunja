@@ -310,7 +310,10 @@ func TestPinPreferMinimalInList(t *testing.T) {
 	e := setupTestEnv(t)
 	prefer := "respond-async, return=minimal"
 
-	propfind := caldavRequest(t, e, "PROPFIND", "/dav/projects/36", PropfindDiscoveryProps, map[string]string{"Depth": "0", "Prefer": prefer})
+	propfind := caldavRequest(t, e, "PROPFIND", "/dav/projects/36", PropfindDiscoveryProps, map[string]string{
+		"Depth":  "0",
+		"Prefer": prefer,
+	})
 	require.Equal(t, 207, propfind.Code, "Body:\n%s", propfind.Body.String())
 	assert.Equal(t, "return=minimal", propfind.Header().Get("Preference-Applied"))
 	assert.NotContains(t, propfind.Body.String(), "404 Not Found")
