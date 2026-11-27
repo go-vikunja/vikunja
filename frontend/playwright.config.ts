@@ -1,5 +1,6 @@
 import {defineConfig, devices} from '@playwright/test'
 import {execSync} from 'child_process'
+import {apiRootUrls} from './tests/support/apiUrl'
 
 // Find system chromium - for UI mode, set PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var
 const getChromiumPath = () => {
@@ -16,11 +17,12 @@ const getChromiumPath = () => {
 
 export default defineConfig({
 	testDir: './tests/e2e',
-	// Lets CI shards split a spec file; tests still run one at a time (workers: 1)
+	// Tests within a spec file may run on different workers, each with its own API
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
-	workers: 1, // No parallelization initially
+	// One API per worker: every test truncates and reseeds its database
+	workers: apiRootUrls().length,
 	reporter: process.env.CI ? [['html'], ['list']] : 'html',
 	use: {
 		baseURL: process.env.BASE_URL || 'http://127.0.0.1:4173',

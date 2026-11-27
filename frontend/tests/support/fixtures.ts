@@ -1,7 +1,7 @@
 import {test as base, type APIRequestContext, type Page} from '@playwright/test'
 import {Factory} from './factory'
-import {login, createFakeUser} from './authenticateUser'
-import {apiV1Url} from './apiUrl'
+import {login, createFakeUser, apiUrlInitScript} from './authenticateUser'
+import {apiV1Url, workerApiRootUrl} from './apiUrl'
 
 export const test = base.extend<{
 	apiContext: APIRequestContext;
@@ -9,6 +9,12 @@ export const test = base.extend<{
 	currentUser: any;
 	userToken: string;
 }>({
+	// Without this a page that forgets setupApiUrl would hit another worker's API.
+	context: async ({context}, use) => {
+		await context.addInitScript(apiUrlInitScript, {apiUrl: workerApiRootUrl()})
+		await use(context)
+	},
+
 	apiContext: [async ({playwright}, use) => {
 		const baseURL = `${apiV1Url()}/`
 		const apiContext = await playwright.request.newContext({
