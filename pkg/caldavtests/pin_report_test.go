@@ -20,6 +20,7 @@ import (
 	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -114,17 +115,33 @@ func assertSupportedReport(t *testing.T, rec *httptest.ResponseRecorder) {
 func TestPinReportMalformedBody(t *testing.T) {
 	e := setupTestEnv(t)
 
-	for name, body := range map[string]string{
-		"empty":     "",
-		"not XML":   "<<<",
-		"truncated": `<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">`,
+	for name, tc := range map[string]struct {
+		body   string
+		status int
+	}{
+		"empty": {
+			body:   "",
+			status: http.StatusBadRequest,
+		},
+		"not XML": {
+			body:   "<<<",
+			status: http.StatusBadRequest,
+		},
+		"truncated": {
+			body:   `<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">`,
+			status: http.StatusBadRequest,
+		},
+		"oversized": {
+			body:   strings.Repeat("a", 1<<20+1),
+			status: http.StatusRequestEntityTooLarge,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			rec := caldavREPORT(t, e, "/dav/projects/36", body)
-			assert.Equal(t, http.StatusBadRequest, rec.Code, "Body:\n%s", rec.Body.String())
+			rec := caldavREPORT(t, e, "/dav/projects/36", tc.body)
+			assert.Equal(t, tc.status, rec.Code, "Body:\n%s", rec.Body.String())
 
 			// The body is only looked at once access is granted.
-			rec = caldavRequest(t, e, "REPORT", "/dav/projects/36", body, map[string]string{"Authorization": basicAuthHeader(testuser1.Username, fixturePassword)})
+			rec = caldavRequest(t, e, "REPORT", "/dav/projects/36", tc.body, map[string]string{"Authorization": basicAuthHeader(testuser1.Username, fixturePassword)})
 			assert.Equal(t, http.StatusNotFound, rec.Code, "Body:\n%s", rec.Body.String())
 		})
 	}
