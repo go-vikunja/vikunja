@@ -193,8 +193,7 @@ func (ms multistatus) writeTo(out io.Writer) error {
 	return w.flush()
 }
 
-// prefersMinimal reports whether return=minimal is among the request's preferences
-// (RFC 7240 §2: a comma-separated list, possibly over several header lines).
+// RFC 7240 §2: Prefer is a comma-separated list, possibly over several header lines.
 func prefersMinimal(h http.Header) bool {
 	for _, line := range h.Values("Prefer") {
 		for _, pref := range strings.Split(line, ",") {

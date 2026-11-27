@@ -112,12 +112,12 @@ func proppatch(t *testing.T, u *user.User, projectID int64, body string) map[xml
 	return statuses
 }
 
-func storedProject(t *testing.T, projectID int64) *models.Project {
+func storedProject(t *testing.T) *models.Project {
 	t.Helper()
 
 	s := db.NewSession()
 	defer s.Close()
-	p, err := models.GetProjectSimpleByID(s, projectID)
+	p, err := models.GetProjectSimpleByID(s, 36)
 	require.NoError(t, err)
 	return p
 }
@@ -158,7 +158,7 @@ func TestPropPatchCalendarColor(t *testing.T) {
 
 		statuses := proppatch(t, caldavFilterUser, 36, iosSetColor)
 		assert.Equal(t, map[xml.Name]string{appleCalendarColor: ok}, statuses)
-		assert.Equal(t, "007AFF", storedProject(t, 36).HexColor)
+		assert.Equal(t, "007AFF", storedProject(t).HexColor)
 	})
 
 	t.Run("remove clears the color", func(t *testing.T) {
@@ -167,17 +167,17 @@ func TestPropPatchCalendarColor(t *testing.T) {
 
 		statuses := proppatch(t, caldavFilterUser, 36, removeColor)
 		assert.Equal(t, map[xml.Name]string{appleCalendarColor: ok}, statuses)
-		assert.Empty(t, storedProject(t, 36).HexColor)
+		assert.Empty(t, storedProject(t).HexColor)
 	})
 
 	t.Run("an unchanged color is not written again", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		setStoredColor(t, "007AFF")
-		before := storedProject(t, 36).Updated
+		before := storedProject(t).Updated
 
 		statuses := proppatch(t, caldavFilterUser, 36, iosSetColor)
 		assert.Equal(t, map[xml.Name]string{appleCalendarColor: ok}, statuses)
-		after := storedProject(t, 36).Updated
+		after := storedProject(t).Updated
 		assert.True(t, before.Equal(after), "updated changed from %v to %v", before, after)
 	})
 
@@ -187,7 +187,7 @@ func TestPropPatchCalendarColor(t *testing.T) {
 
 		statuses := proppatch(t, caldavFilterUser, 36, iosSetColor)
 		assert.Equal(t, map[xml.Name]string{appleCalendarColor: ok}, statuses)
-		assert.Equal(t, "007AFF", storedProject(t, 36).HexColor)
+		assert.Equal(t, "007AFF", storedProject(t).HexColor)
 	})
 
 	t.Run("the last instruction for a property wins", func(t *testing.T) {
@@ -200,7 +200,7 @@ func TestPropPatchCalendarColor(t *testing.T) {
 			`</A:propertyupdate>`
 		statuses := proppatch(t, caldavFilterUser, 36, body)
 		assert.Equal(t, map[xml.Name]string{appleCalendarColor: ok}, statuses)
-		assert.Equal(t, "007AFF", storedProject(t, 36).HexColor)
+		assert.Equal(t, "007AFF", storedProject(t).HexColor)
 	})
 
 	t.Run("an invalid color is refused", func(t *testing.T) {
@@ -209,7 +209,7 @@ func TestPropPatchCalendarColor(t *testing.T) {
 
 		statuses := proppatch(t, caldavFilterUser, 36, setColorBody("not a color"))
 		assert.Equal(t, map[xml.Name]string{appleCalendarColor: forbidden}, statuses)
-		assert.Equal(t, "112233", storedProject(t, 36).HexColor)
+		assert.Equal(t, "112233", storedProject(t).HexColor)
 	})
 
 	t.Run("nothing but the color changes", func(t *testing.T) {
@@ -218,7 +218,7 @@ func TestPropPatchCalendarColor(t *testing.T) {
 		s := db.NewSession()
 		fav := &models.Project{ID: 36}
 		require.NoError(t, fav.ReadOne(s, caldavFilterUser))
-		before := storedProject(t, 36)
+		before := storedProject(t)
 		fav.Title, fav.Description, fav.Identifier, fav.Position = before.Title, before.Description, before.Identifier, before.Position
 		fav.IsFavorite = true
 		require.NoError(t, fav.Update(s, caldavFilterUser))
@@ -227,7 +227,7 @@ func TestPropPatchCalendarColor(t *testing.T) {
 
 		proppatch(t, caldavFilterUser, 36, iosSetColor)
 
-		after := storedProject(t, 36)
+		after := storedProject(t)
 		assert.Equal(t, "007AFF", after.HexColor)
 		assert.Equal(t, before.Title, after.Title)
 		assert.Equal(t, before.Description, after.Description)
@@ -250,7 +250,7 @@ func TestPropPatchCalendarColor(t *testing.T) {
 
 		statuses := proppatch(t, caldavFilterUser, 36, iosSetColor)
 		assert.Equal(t, map[xml.Name]string{appleCalendarColor: forbidden}, statuses)
-		stored := storedProject(t, 36)
+		stored := storedProject(t)
 		assert.Equal(t, "112233", stored.HexColor)
 		assert.True(t, stored.IsArchived)
 	})
@@ -267,7 +267,7 @@ func TestPropPatchCalendarColor(t *testing.T) {
 			appleCalendarColor: failedDependency,
 			appleCalendarOrder: forbidden,
 		}, statuses)
-		assert.Empty(t, storedProject(t, 36).HexColor)
+		assert.Empty(t, storedProject(t).HexColor)
 	})
 
 	t.Run("a saved filter is not writable", func(t *testing.T) {
@@ -292,6 +292,6 @@ func TestPropPatchCalendarColor(t *testing.T) {
 		requireHTTPStatus(t, http.StatusMultiStatus, rec, err)
 		statuses, _ := parseMultistatus(t, rec).props(t, path)
 		assert.Equal(t, map[xml.Name]string{appleCalendarColor: forbidden}, statuses)
-		assert.Empty(t, storedProject(t, 36).HexColor)
+		assert.Empty(t, storedProject(t).HexColor)
 	})
 }

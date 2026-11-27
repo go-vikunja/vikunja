@@ -204,8 +204,7 @@ func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, han
 	return
 }
 
-// createRequest sets path values out of band, but the caldav handlers read the resource
-// off the request path, so the fixture has to carry a real one.
+// The caldav handlers read the resource off the request path, not the path values createRequest sets.
 func setCaldavRequestPath(c *echo.Context, urlParams map[string]string) {
 	project, has := urlParams["project"]
 	if !has {

@@ -183,7 +183,6 @@ func ownerPrincipal(username string) (propValue, bool) {
 	return hrefsValue{principalPathForUser(username)}, true
 }
 
-// hrefed is a resource whose displayname is the last segment of its href.
 type hrefed interface{ ownHref() string }
 
 func principalCollections[R any]() propDef[R] {

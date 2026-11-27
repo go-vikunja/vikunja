@@ -184,7 +184,6 @@ func writeSyncResponse(
 		minimal:   prefersMinimal(c.Request().Header),
 	}
 
-	// readCollectionTasks loaded the owner.
 	owner := ownerName(u, &collection.project.Project)
 	props := syncProps(req.props)
 	for _, t := range tasks {

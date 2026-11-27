@@ -212,7 +212,7 @@ END:VCALENDAR`
 	})
 }
 
-// CanRead on a pseudo id must not error for instance admins (fixed in the model, d5332ac3b).
+// CanRead on a pseudo id must not error for instance admins.
 func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})

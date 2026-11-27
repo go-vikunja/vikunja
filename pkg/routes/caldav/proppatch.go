@@ -110,8 +110,7 @@ type propPatchResult struct {
 	status int
 }
 
-// Only a collection's calendar-color is settable; everything else gets
-// sabre/dav's 403 "polite refusal", which clients tolerate where a 501 would make them abort.
+// Unsettable properties get sabre/dav's 403 "polite refusal": clients abort on a 501.
 func servePropPatch(c *echo.Context, u *user.User, t target) error {
 	// Before the session: a trickled body must not pin a DB connection.
 	body, bodyErr := readBody(c, maxPropRequestBodySize)
@@ -234,7 +233,6 @@ type propPatchResource struct {
 	colorSettable bool
 }
 
-// resolvePropPatch checks access to t and returns the href it answers under.
 func resolvePropPatch(s *xorm.Session, u *user.User, t target) (propPatchResource, error) {
 	switch t := t.(type) {
 	case collectionTarget:

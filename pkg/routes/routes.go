@@ -1110,9 +1110,7 @@ func registerCalDavRoutes(c *echo.Group) {
 	c.Any("/projects/:project/:task", caldav.TaskMethodNotAllowed)
 }
 
-// registerCalDavRoute registers path with and without a trailing slash: Apple clients append one.
-// Every other method goes to notAllowed, a group route so it still passes BasicAuth first; the
-// router's own 405 would skip group middleware.
+// Apple clients append a trailing slash. notAllowed is a group route: the router's own 405 would skip BasicAuth.
 func registerCalDavRoute(g *echo.Group, path string, handler, notAllowed echo.HandlerFunc, methods []string) {
 	for _, p := range []string{
 		path,

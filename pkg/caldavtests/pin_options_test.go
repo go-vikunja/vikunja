@@ -24,9 +24,8 @@ import (
 )
 
 const (
-	davComplianceHeader = "1, 3, calendar-access"
-	allowReadWrite      = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
-	// DELETE of a collection answers 405, so it is not advertised there.
+	davComplianceHeader      = "1, 3, calendar-access"
+	allowReadWrite           = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
 	allowCollectionReadWrite = "GET, HEAD, PUT, OPTIONS, PROPFIND, REPORT"
 	allowReadOnly            = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
 	allowEntry               = "GET, HEAD, OPTIONS, PROPFIND"

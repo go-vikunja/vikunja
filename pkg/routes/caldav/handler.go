@@ -43,22 +43,18 @@ func ProjectHandler(c *echo.Context) error { return handle(c, resolveProjects, s
 
 func TaskHandler(c *echo.Context) error { return handle(c, resolveTask, serveMethod) }
 
-// EntryMethodNotAllowed answers the methods EntryHandler is not routed for.
 func EntryMethodNotAllowed(c *echo.Context) error {
 	return handle(c, resolveEntry, methodNotAllowed)
 }
 
-// PrincipalMethodNotAllowed answers the methods PrincipalHandler is not routed for.
 func PrincipalMethodNotAllowed(c *echo.Context) error {
 	return handle(c, resolvePrincipal, methodNotAllowed)
 }
 
-// ProjectMethodNotAllowed answers the methods ProjectHandler is not routed for.
 func ProjectMethodNotAllowed(c *echo.Context) error {
 	return handle(c, resolveProjects, methodNotAllowed)
 }
 
-// TaskMethodNotAllowed answers the methods TaskHandler is not routed for.
 func TaskMethodNotAllowed(c *echo.Context) error {
 	return handle(c, resolveTask, methodNotAllowed)
 }
@@ -99,7 +95,6 @@ func serveMethod(c *echo.Context, u *user.User, t target) error {
 	return methodNotAllowed(c, u, t)
 }
 
-// readBody reads the request body, refusing more than limit bytes.
 func readBody(c *echo.Context, limit int) ([]byte, error) {
 	body, err := io.ReadAll(io.LimitReader(c.Request().Body, int64(limit)+1))
 	if err != nil {

@@ -24,13 +24,10 @@ import (
 	"code.vikunja.io/api/pkg/models"
 )
 
-// DavBasePath is the base url path
 const DavBasePath = `/dav`
 
-// ProjectBasePath is the base path for all projects resources
 const ProjectBasePath = DavBasePath + `/projects`
 
-// PrincipalBasePath is the base path for all principal resources
 const PrincipalBasePath = DavBasePath + `/principals`
 
 func principalPathForUser(username string) string {

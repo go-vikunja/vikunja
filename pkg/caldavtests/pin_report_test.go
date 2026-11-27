@@ -313,7 +313,7 @@ func TestPinReportCalendarQueryOnEmptyCollection(t *testing.T) {
 	}})
 }
 
-// allprop and propname in a REPORT answer like they do in a PROPFIND (calendar-data stays explicit-only).
+// As in a PROPFIND, calendar-data stays explicit-only.
 func TestPinReportAllpropAndPropname(t *testing.T) {
 	propname := func(r expectedDAVResponse) expectedDAVResponse {
 		r = withPrincipalSets(r)
