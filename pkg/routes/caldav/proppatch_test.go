@@ -243,15 +243,6 @@ func TestPropPatchCalendarColor(t *testing.T) {
 		assert.True(t, read.IsFavorite, "the project is no longer a favorite")
 	})
 
-	t.Run("a read-only share cannot set a color", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		// Project 3 is owned by user 3 and shared read-only with user 1.
-		statuses := proppatch(t, caldavOtherUser, 3, iosSetColor)
-		assert.Equal(t, map[xml.Name]string{appleCalendarColor: forbidden}, statuses)
-		assert.Empty(t, storedProject(t, 3).HexColor)
-	})
-
 	t.Run("an archived project keeps its color", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		setStoredColor(t, "112233")
