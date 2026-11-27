@@ -395,3 +395,21 @@ func TestPinSameUIDInAnotherProject(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, caldavGET(t, e, duplicate).Code)
 	assert.Equal(t, http.StatusOK, caldavGET(t, e, pinTaskHref).Code)
 }
+
+// GHSA-48ch-p4gq-x46x: user1 writes project 7 but only reads project 6.
+func TestPinWriteThroughAnotherProject(t *testing.T) {
+	e := setupTestEnv(t)
+	owner := map[string]string{"Authorization": basicAuthHeader("user6", fixturePassword)}
+	user1 := map[string]string{"Authorization": basicAuthHeader(testuser1.Username, fixturePassword)}
+	const victim = "/dav/projects/6/cross-project.ics"
+	const viaWritable = "/dav/projects/7/cross-project.ics"
+
+	require.Equal(t, http.StatusCreated, caldavPUTWith(t, e, victim, NewVTodo("cross-project", "Read-only task").Build(), owner).Code)
+
+	assert.Equal(t, http.StatusNotFound, caldavRequest(t, e, http.MethodDelete, viaWritable, "", user1).Code, "DELETE")
+	assert.Equal(t, http.StatusNotFound, caldavPUTWith(t, e, viaWritable, NewVTodo("cross-project", "Overwritten").Build(), user1).Code, "PUT")
+
+	rec := caldavRequest(t, e, http.MethodGet, victim, "", owner)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Body.String(), "SUMMARY:Read-only task")
+}
