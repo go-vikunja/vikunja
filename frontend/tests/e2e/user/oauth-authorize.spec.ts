@@ -1,7 +1,6 @@
 import {createHash, randomBytes} from 'crypto'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
-import {setupApiUrl} from '../../support/authenticateUser'
 import {TEST_PASSWORD} from '../../support/constants'
 
 test.describe('OAuth 2.0 Authorization Flow', () => {
@@ -13,7 +12,6 @@ test.describe('OAuth 2.0 Authorization Flow', () => {
 	})
 
 	test('Full browser authorization code flow with PKCE', async ({page, apiContext}) => {
-		await setupApiUrl(page)
 
 		// Generate PKCE code_verifier and code_challenge (S256)
 		const codeVerifier = randomBytes(32).toString('base64url')

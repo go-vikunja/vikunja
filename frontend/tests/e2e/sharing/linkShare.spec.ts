@@ -81,14 +81,6 @@ test.describe('Link shares', () => {
 		await expect(panel.getByRole('row').filter({hasText: 'Second link'})).toBeVisible()
 	})
 
-	// The anonymous link share tests below don't use the `authenticatedPage`
-	// fixture (which wires up the API URL via `login()`), so they'd otherwise
-	// hit the default same-origin `window.API_URL = ''` baked into
-	// index.html and never reach the API running on a different port.
-	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
-	})
-
 	test('Can view a link share', async ({page, apiContext}) => {
 		const {share, project, tasks} = await prepareLinkShare()
 
@@ -185,10 +177,6 @@ test.describe('Link shares', () => {
 })
 
 test.describe('Link share: label picker', () => {
-	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
-	})
-
 	test('explains that new labels cannot be created when typing an unknown label', async ({page}) => {
 		await UserFactory.create(1)
 		const projects = await createProjects()
@@ -218,10 +206,6 @@ test.describe('Link share: label picker', () => {
 })
 
 test.describe('Link share: password protection', () => {
-	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
-	})
-
 	test('password-protected share rejects wrong password', async ({page}) => {
 		await UserFactory.create(1)
 		const projects = await createProjects()
@@ -284,10 +268,6 @@ test.describe('Link share: password protection', () => {
 })
 
 test.describe('Link share: permission tiers', () => {
-	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
-	})
-
 	test('READ link share hides add-task', async ({page}) => {
 		await UserFactory.create(1)
 		const projects = await createProjects()
@@ -330,10 +310,6 @@ test.describe('Link share: permission tiers', () => {
 })
 
 test.describe('Link share: quick add magic labels', () => {
-	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
-	})
-
 	test('creates the task and shows an error when a label cannot be created', async ({page}) => {
 		await UserFactory.create(1)
 		const projects = await createProjects()
@@ -364,10 +340,6 @@ test.describe('Link share: quick add magic labels', () => {
 // `.content ul ul` and `.content li + li` leaked margins that the logged-in
 // view (rendered without `.content`) never had.
 test.describe('Link share: Kanban margins', () => {
-	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
-	})
-
 	test('does not leak Bulma .content list margins into the Kanban board', async ({page}) => {
 		await UserFactory.create(1)
 		const projects = await createProjects()

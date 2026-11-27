@@ -2,7 +2,7 @@ import type {Page} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
 import {TaskFactory} from '../../factories/task'
 import {createProjects} from '../project/prepareProjects'
-import {apiRootUrl} from '../../support/apiUrl'
+import {workerApiRootUrl} from '../../support/apiUrl'
 
 async function pressLayoutKey(page: Page, init: KeyboardEventInit) {
 	// Playwright's keyboard uses a US layout; supply the actual layout's key/code pair.
@@ -84,7 +84,7 @@ test.describe('Keyboard layouts', () => {
 		expect((await saved).ok()).toBe(true)
 		await page.reload()
 		await expect(doneButton).not.toHaveClass(/is-pending/)
-		const response = await apiContext.get(`${apiRootUrl(process.env.API_URL || 'http://localhost:3456')}/api/v2/tasks/${task.id}`, {
+		const response = await apiContext.get(`${workerApiRootUrl()}/api/v2/tasks/${task.id}`, {
 			headers: {Authorization: `Bearer ${userToken}`},
 		})
 		expect(response.ok()).toBe(true)

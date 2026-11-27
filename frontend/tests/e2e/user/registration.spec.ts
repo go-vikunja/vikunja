@@ -1,12 +1,10 @@
 import {randomBytes} from 'node:crypto'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
-import {setupApiUrl} from '../../support/authenticateUser'
 import {apiRootUrl} from '../../support/apiUrl'
 
 test.describe('Registration', () => {
 	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
 		await UserFactory.create(1, {
 			username: 'test',
 		})

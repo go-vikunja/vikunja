@@ -1,11 +1,8 @@
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
-import {setupApiUrl} from '../../support/authenticateUser'
 import {TEST_PASSWORD} from '../../support/constants'
 
 async function loginViaBrowser(page, username: string) {
-	await setupApiUrl(page)
-
 	await page.goto('/login')
 	await page.locator('input[id=username]').fill(username)
 	await page.locator('input[id=password]').fill(TEST_PASSWORD)
