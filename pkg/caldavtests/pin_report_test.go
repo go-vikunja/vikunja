@@ -20,7 +20,6 @@ import (
 	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -316,30 +315,54 @@ func TestPinReportCalendarQueryOnEmptyCollection(t *testing.T) {
 
 // allprop and propname in a REPORT answer like they do in a PROPFIND (calendar-data stays explicit-only).
 func TestPinReportAllpropAndPropname(t *testing.T) {
-	e := setupTestEnv(t)
-	responseFor := func(t *testing.T, rec *httptest.ResponseRecorder) string {
-		t.Helper()
-		require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
-		body := rec.Body.String()
-		start := strings.Index(body, "<D:response><D:href>"+pinTaskHref+"</D:href>")
-		require.GreaterOrEqual(t, start, 0, "Body:\n%s", body)
-		end := start + strings.Index(body[start:], "</D:response>") + len("</D:response>")
-		return body[start:end]
+	propname := func(r expectedDAVResponse) expectedDAVResponse {
+		r = withPrincipalSets(r)
+		for name := range r.ok {
+			r.ok[name] = ""
+		}
+		return r
 	}
 
-	for name, selector := range map[string]string{"allprop": "<D:allprop/>", "propname": "<D:propname/>"} {
-		t.Run(name, func(t *testing.T) {
-			want := responseFor(t, caldavPROPFIND(t, e, pinTaskHref, "0", `<D:propfind xmlns:D="DAV:">`+selector+`</D:propfind>`))
-			assert.NotContains(t, want, "calendar-data")
+	e := setupTestEnv(t)
+	for name, tc := range map[string]struct {
+		selector string
+		expect   func(expectedDAVResponse) expectedDAVResponse
+	}{
+		"allprop": {
+			selector: "<D:allprop/>",
+			expect:   withPrincipalSets,
+		},
+		"propname": {
+			selector: "<D:propname/>",
+			expect:   propname,
+		},
+	} {
+		task := tc.expect(expectTask(pinTaskHref, "Title Caldav Test"))
+		multiget := `<C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + tc.selector +
+			`<D:href>` + pinTaskHref + `</D:href></C:calendar-multiget>`
+		query := `<C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + tc.selector +
+			`<C:filter><C:comp-filter name="VCALENDAR"><C:comp-filter name="VTODO"/></C:comp-filter></C:filter></C:calendar-query>`
 
-			multiget := `<C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + selector +
-				`<D:href>` + pinTaskHref + `</D:href></C:calendar-multiget>`
-			assert.Equal(t, want, responseFor(t, caldavREPORT(t, e, "/dav/projects/36", multiget)), "multiget")
+		t.Run(name+" multiget", func(t *testing.T) {
+			rec := caldavREPORT(t, e, "/dav/projects/36", multiget)
+			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+			assertDAVResponses(t, rec, []expectedDAVResponse{task})
+		})
 
-			query := `<C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + selector +
-				`<C:filter><C:comp-filter name="VCALENDAR"><C:comp-filter name="VTODO"/></C:comp-filter></C:filter></C:calendar-query>`
-			assert.Equal(t, want, responseFor(t, caldavREPORT(t, e, "/dav/projects/36", query)), "calendar-query")
-			assert.Equal(t, want, responseFor(t, caldavREPORT(t, e, pinTaskHref, query)), "calendar-query on the task")
+		t.Run(name+" calendar-query", func(t *testing.T) {
+			want := project36Tasks()
+			for i, r := range want {
+				want[i] = tc.expect(r)
+			}
+			rec := caldavREPORT(t, e, "/dav/projects/36", query)
+			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+			assertDAVResponses(t, rec, want)
+		})
+
+		t.Run(name+" calendar-query on the task", func(t *testing.T) {
+			rec := caldavREPORT(t, e, pinTaskHref, query)
+			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+			assertDAVResponses(t, rec, []expectedDAVResponse{task})
 		})
 	}
 }

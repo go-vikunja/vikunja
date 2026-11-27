@@ -341,18 +341,18 @@ func TestPinPropfindTaskURLReportsTaskETag(t *testing.T) {
 	assert.Equal(t, taskETag, get.Header().Get("ETag"))
 }
 
+// Not in the expect* sets; calendar-user-address-set belongs to the entry and the principal only.
+func withPrincipalSets(r expectedDAVResponse) expectedDAVResponse {
+	r.ok[davName("principal-collection-set")] = "/dav/principals/"
+	if r.href == "/dav/" || r.href == user15Principal || r.href == "/.well-known/caldav" {
+		r.ok[calName("calendar-user-address-set")] = user15Principal
+	}
+	r.notFound = nil
+	return r
+}
+
 // RFC 4918 §9.1: an empty body is allprop. Everything the resource has, except calendar-data.
 func TestPinPropfindAllprop(t *testing.T) {
-	// Not in PropfindDiscoveryProps. calendar-user-address-set belongs to the entry and the principal only.
-	withPrincipalSets := func(r expectedDAVResponse) expectedDAVResponse {
-		r.ok[davName("principal-collection-set")] = "/dav/principals/"
-		if r.href == "/dav/" || r.href == user15Principal || r.href == "/.well-known/caldav" {
-			r.ok[calName("calendar-user-address-set")] = user15Principal
-		}
-		r.notFound = nil
-		return r
-	}
-
 	e := setupTestEnv(t)
 	for path, want := range map[string]expectedDAVResponse{
 		"/dav/":                   expectEntry(),
