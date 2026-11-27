@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	caldav2 "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
@@ -35,7 +36,7 @@ const (
 func serveGet(c *echo.Context, u *user.User, t target) error {
 	switch t := t.(type) {
 	case entryTarget, principalTarget:
-		// Pinned: caldav-go answers these as an empty calendar object.
+		// Pinned: an empty 200 with an empty ETag and a year-0001 Last-Modified.
 		return writeCalendar(c, contentTypeTask, "", time.Time{}, "")
 	case homeSetTarget:
 		return methodNotAllowed(c, u, t)
@@ -66,7 +67,7 @@ func getCollection(c *echo.Context, u *user.User, collection collectionTarget) e
 	// Pinned: a collection without tasks answers an empty body, not an empty calendar.
 	var body string
 	if tasks != nil {
-		body = renderCollection(collection.project, tasks)
+		body = caldav2.GetCaldavTodosForTasks(collection.project, tasks)
 	}
 	return writeCalendar(c, contentTypeCollection, collectionETag(collection.project, tasks), collection.project.Updated, body)
 }

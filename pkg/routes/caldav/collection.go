@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
@@ -43,6 +44,37 @@ func (c collectionTarget) isPseudo() bool {
 func (c collectionTarget) canRead(s *xorm.Session, u *user.User) (bool, error) {
 	can, _, err := c.project.CanRead(s, u)
 	return can, err
+}
+
+type readableCollection struct {
+	collectionTarget
+}
+
+func (c collectionTarget) checkRead(s *xorm.Session, u *user.User) (readableCollection, error) {
+	can, err := c.canRead(s, u)
+	if err != nil {
+		return readableCollection{}, err
+	}
+	if !can {
+		log.Debugf("User %v tried to access a caldav resource (Project %v) which they are not allowed to access", u.Username, c.project.ID)
+		return readableCollection{}, errNotFound
+	}
+	return readableCollection{c}, nil
+}
+
+func (t taskTarget) read(s *xorm.Session, u *user.User) (readableCollection, *models.Task, error) {
+	collection, err := t.collection.checkRead(s, u)
+	if err != nil {
+		return readableCollection{}, nil, err
+	}
+	task, err := findTask(s, u, t.collection, t.uid)
+	if err != nil {
+		return readableCollection{}, nil, err
+	}
+	if task == nil {
+		return readableCollection{}, nil, errNotFound
+	}
+	return collection, task, nil
 }
 
 // Read-only shares and pseudo collections are both the model's call, not the route's.

@@ -329,3 +329,57 @@ func TestPinReportCalendarQueryOnEmptyCollection(t *testing.T) {
 		notFound: []xml.Name{calName("calendar-data")},
 	}})
 }
+
+// As in a PROPFIND, calendar-data stays explicit-only.
+func TestPinReportAllpropAndPropname(t *testing.T) {
+	propname := func(r expectedDAVResponse) expectedDAVResponse {
+		r = withPrincipalSets(r)
+		for name := range r.ok {
+			r.ok[name] = ""
+		}
+		return r
+	}
+
+	e := setupTestEnv(t)
+	for name, tc := range map[string]struct {
+		selector string
+		expect   func(expectedDAVResponse) expectedDAVResponse
+	}{
+		"allprop": {
+			selector: "<D:allprop/>",
+			expect:   withPrincipalSets,
+		},
+		"propname": {
+			selector: "<D:propname/>",
+			expect:   propname,
+		},
+	} {
+		task := tc.expect(expectTask(pinTaskHref, "Title Caldav Test"))
+		multiget := `<C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + tc.selector +
+			`<D:href>` + pinTaskHref + `</D:href></C:calendar-multiget>`
+		query := `<C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">` + tc.selector +
+			`<C:filter><C:comp-filter name="VCALENDAR"><C:comp-filter name="VTODO"/></C:comp-filter></C:filter></C:calendar-query>`
+
+		t.Run(name+" multiget", func(t *testing.T) {
+			rec := caldavREPORT(t, e, "/dav/projects/36", multiget)
+			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+			assertDAVResponses(t, rec, []expectedDAVResponse{task})
+		})
+
+		t.Run(name+" calendar-query", func(t *testing.T) {
+			want := project36Tasks()
+			for i, r := range want {
+				want[i] = tc.expect(r)
+			}
+			rec := caldavREPORT(t, e, "/dav/projects/36", query)
+			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+			assertDAVResponses(t, rec, want)
+		})
+
+		t.Run(name+" calendar-query on the task", func(t *testing.T) {
+			rec := caldavREPORT(t, e, pinTaskHref, query)
+			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+			assertDAVResponses(t, rec, []expectedDAVResponse{task})
+		})
+	}
+}

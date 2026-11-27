@@ -315,19 +315,20 @@ func TestCRUDDelete(t *testing.T) {
 	})
 
 	t.Run("DELETE task removes it from project listing", func(t *testing.T) {
-		t.Skip("Known bug: DeleteResource relies on GetResource being called first to populate task ID — delete silently fails")
 		e := setupTestEnv(t)
 
-		// First verify task exists in project listing
+		// Other UIDs in the project share this one as a prefix.
+		uidLine := `(?m)^UID:uid-caldav-test\r?$`
+
 		rec := caldavGET(t, e, "/dav/projects/36")
-		assert.Contains(t, rec.Body.String(), "uid-caldav-test")
+		assert.Regexp(t, uidLine, rec.Body.String())
 
 		// Delete it
-		caldavDELETE(t, e, "/dav/projects/36/uid-caldav-test.ics")
+		del := caldavDELETE(t, e, "/dav/projects/36/uid-caldav-test.ics")
+		assert.Equal(t, http.StatusNoContent, del.Code)
 
-		// Verify it's gone from the listing
 		rec2 := caldavGET(t, e, "/dav/projects/36")
-		assert.NotContains(t, rec2.Body.String(), "uid-caldav-test")
+		assert.NotRegexp(t, uidLine, rec2.Body.String())
 	})
 
 	t.Run("Full lifecycle: PUT create -> GET read -> PUT update -> DELETE", func(t *testing.T) {

@@ -54,7 +54,3 @@ func renderTask(t *models.Task) string {
 	project := models.ProjectWithTasksAndBuckets{Tasks: []*models.TaskWithComments{{Task: *t}}}
 	return caldav.GetCaldavTodosForTasks(&project, project.Tasks)
 }
-
-func renderCollection(p *models.ProjectWithTasksAndBuckets, tasks []*models.TaskWithComments) string {
-	return caldav.GetCaldavTodosForTasks(p, tasks)
-}

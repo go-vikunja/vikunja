@@ -144,18 +144,3 @@ func loadCollection(param string) (*models.ProjectWithTasksAndBuckets, error) {
 	}
 	return &models.ProjectWithTasksAndBuckets{Project: *p}, nil
 }
-
-// newStorage is the only way the caldav-go storage gets built.
-func newStorage(u *user.User, t target) *VikunjaCaldavProjectStorage {
-	storage := &VikunjaCaldavProjectStorage{user: u}
-	switch t := t.(type) {
-	case homeSetTarget:
-		storage.project = &models.ProjectWithTasksAndBuckets{}
-	case collectionTarget:
-		storage.project = t.project
-	case taskTarget:
-		storage.project = t.collection.project
-		storage.task = &models.Task{UID: t.uid}
-	}
-	return storage
-}

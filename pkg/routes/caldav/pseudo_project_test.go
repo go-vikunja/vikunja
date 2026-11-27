@@ -212,6 +212,7 @@ END:VCALENDAR`
 	})
 }
 
+// CanRead on a pseudo id must not error for instance admins.
 func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
@@ -238,8 +239,7 @@ func TestCanReadCollection_InstanceAdmin(t *testing.T) {
 	})
 }
 
-// The reduced Allow header must keep advertising PUT and DELETE for pseudo collections,
-// without turning OPTIONS into an oracle for collections the user cannot read.
+// OPTIONS must not become an oracle for collections the user cannot read.
 func TestProjectHandlerOPTIONS(t *testing.T) {
 	options := func(t *testing.T, u *user.User, projectID int64) *httptest.ResponseRecorder {
 		t.Helper()
@@ -251,25 +251,6 @@ func TestProjectHandlerOPTIONS(t *testing.T) {
 		require.NoError(t, ProjectHandler(c))
 		return rec
 	}
-
-	t.Run("a saved filter advertises PUT and DELETE", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingTasks)
-		rec := options(t, caldavFilterUser, pseudoID)
-		require.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Header().Get("Allow"), "PUT")
-		assert.Contains(t, rec.Header().Get("Allow"), "DELETE")
-	})
-
-	t.Run("favorites advertise PUT and DELETE", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		rec := options(t, caldavFilterUser, models.FavoritesPseudoProjectID)
-		require.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Header().Get("Allow"), "PUT")
-		assert.Contains(t, rec.Header().Get("Allow"), "DELETE")
-	})
 
 	t.Run("a read-only share does not", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -304,8 +285,7 @@ func TestProjectHandlerOPTIONS(t *testing.T) {
 	})
 }
 
-// ProjectHandler answers OPTIONS with a reduced Allow header whenever this call denies for
-// a real project, because caldav-go would otherwise advertise PUT and DELETE unconditionally.
+// OPTIONS drops PUT and DELETE from the Allow header whenever this call denies for a real project.
 func TestCollectionWritability(t *testing.T) {
 	canWrite := func(t *testing.T, u *user.User, projectID int64) bool {
 		t.Helper()
@@ -561,8 +541,7 @@ func favoriteTask(t *testing.T, taskID int64, u *user.User) {
 	require.NoError(t, s.Commit())
 }
 
-// Project.CanWrite returns ErrProjectIsArchived as its error; propagating it made
-// caldav-go answer 500 instead of 403.
+// Project.CanWrite returns ErrProjectIsArchived as its error; it must answer 403, not 500.
 func TestArchivedProject_WritesAreForbidden(t *testing.T) {
 	const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0

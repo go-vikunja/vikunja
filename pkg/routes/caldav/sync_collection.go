@@ -29,10 +29,8 @@ import (
 	"xorm.io/xorm"
 )
 
-const (
-	// Token scheme prefix, matching what caldav-go generates.
-	syncTokenPrefix = "data:,"
-)
+// Clients hold tokens with this prefix.
+const syncTokenPrefix = "data:,"
 
 func parseSyncToken(token string) (projectID int64, ts time.Time, purgeGeneration int64, ok bool) {
 	// Quotes may sit outside or inside the data:, prefix.
@@ -183,12 +181,11 @@ func writeSyncResponse(
 	ms := multistatus{
 		syncToken: newToken,
 		responses: make([]msResponse, 0, len(tasks)+len(deletions)),
-		minimal:   prefersMinimal(c),
+		minimal:   prefersMinimal(c.Request().Header),
 	}
 
-	// readCollectionTasks loaded the owner.
 	owner := ownerName(u, &collection.project.Project)
-	props := reportProps(req.props)
+	props := syncProps(req.props)
 	for _, t := range tasks {
 		resource := &taskResource{
 			href:  taskURL(collection.project.ID, &t.Task),
@@ -206,4 +203,12 @@ func writeSyncResponse(
 	}
 
 	return writeMultistatus(c, ms)
+}
+
+// Pinned: allprop and propname in a sync-collection answer no properties at all.
+func syncProps(req propfindRequest) propfindRequest {
+	if named, ok := req.(propRequest); ok {
+		return named
+	}
+	return propRequest{}
 }

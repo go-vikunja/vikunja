@@ -305,6 +305,24 @@ func TestPinPropfindMatrix(t *testing.T) {
 	}
 }
 
+// RFC 7240: Prefer is a list, so return=minimal counts next to other preferences.
+func TestPinPreferMinimalInList(t *testing.T) {
+	e := setupTestEnv(t)
+	prefer := "respond-async, return=minimal"
+
+	propfind := caldavRequest(t, e, "PROPFIND", "/dav/projects/36", PropfindDiscoveryProps, map[string]string{
+		"Depth":  "0",
+		"Prefer": prefer,
+	})
+	require.Equal(t, 207, propfind.Code, "Body:\n%s", propfind.Body.String())
+	assert.Equal(t, "return=minimal", propfind.Header().Get("Preference-Applied"))
+	assert.NotContains(t, propfind.Body.String(), "404 Not Found")
+
+	report := caldavRequest(t, e, "REPORT", "/dav/projects/36", ReportCalendarQuery, map[string]string{"Prefer": prefer})
+	require.Equal(t, 207, report.Code, "Body:\n%s", report.Body.String())
+	assert.Equal(t, "return=minimal", report.Header().Get("Preference-Applied"))
+}
+
 func TestPinPropfindTaskURLReportsTaskETag(t *testing.T) {
 	e := setupTestEnv(t)
 
@@ -326,20 +344,23 @@ func TestPinPropfindTaskURLReportsTaskETag(t *testing.T) {
 	assert.Equal(t, taskETag, get.Header().Get("ETag"))
 }
 
+// Not in the expect* sets; calendar-user-address-set belongs to the entry and the principal only.
+func withPrincipalSets(r expectedDAVResponse) expectedDAVResponse {
+	r.ok[davName("principal-collection-set")] = "/dav/principals/"
+	if r.href == "/dav/" || r.href == user15Principal || r.href == "/.well-known/caldav" {
+		r.ok[calName("calendar-user-address-set")] = user15Principal
+	}
+	r.notFound = nil
+	return r
+}
+
 // RFC 4918 §9.1: an empty body is allprop. Everything the resource has, except calendar-data.
 func TestPinPropfindAllprop(t *testing.T) {
-	// Not in PropfindDiscoveryProps; caldav-go answers both with the resource's own href.
-	withSelfReferences := func(r expectedDAVResponse) expectedDAVResponse {
-		r.ok[davName("principal-collection-set")] = r.href
-		r.ok[calName("calendar-user-address-set")] = r.href
-		r.notFound = nil
-		return r
-	}
-
 	e := setupTestEnv(t)
 	for path, want := range map[string]expectedDAVResponse{
 		"/dav/":                   expectEntry(),
 		"/dav/principals/user15/": expectPrincipal(user15Principal, "user15"),
+		"/.well-known/caldav":     expectPrincipal("/.well-known/caldav", "caldav"),
 		"/dav/projects":           expectHomeSet(),
 		"/dav/projects/36":        expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", user15Principal),
 		pinTaskHref:               expectTask(pinTaskHref, "Title Caldav Test"),
@@ -352,7 +373,7 @@ func TestPinPropfindAllprop(t *testing.T) {
 				rec := caldavPROPFIND(t, e, path, "0", body)
 
 				require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
-				assertDAVResponses(t, rec, []expectedDAVResponse{withSelfReferences(want)})
+				assertDAVResponses(t, rec, []expectedDAVResponse{withPrincipalSets(want)})
 			})
 		}
 	}
@@ -365,7 +386,7 @@ func TestPinPropfindAllprop(t *testing.T) {
 </D:propfind>`)
 
 		require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
-		want := withSelfReferences(expectTask(pinTaskHref, "Title Caldav Test"))
+		want := withPrincipalSets(expectTask(pinTaskHref, "Title Caldav Test"))
 		want.ok[calName("calendar-data")] = anyValue
 		assertDAVResponses(t, rec, []expectedDAVResponse{want})
 	})

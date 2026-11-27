@@ -288,3 +288,64 @@ func TestWriteMultistatusMinimal(t *testing.T) {
 
 	assert.Equal(t, "return=minimal", rec.Header().Get("Preference-Applied"))
 }
+
+func TestPrefersMinimal(t *testing.T) {
+	cases := []struct {
+		name  string
+		lines []string
+		want  bool
+	}{
+		{
+			name:  "alone",
+			lines: []string{"return=minimal"},
+			want:  true,
+		},
+		{
+			name:  "one of several",
+			lines: []string{"respond-async, return=minimal"},
+			want:  true,
+		},
+		{
+			name: "on its own header line",
+			lines: []string{
+				"respond-async",
+				"return=minimal",
+			},
+			want: true,
+		},
+		{
+			name:  "with a parameter",
+			lines: []string{"return=minimal; foo=bar"},
+			want:  true,
+		},
+		{
+			name:  "quoted, other case",
+			lines: []string{`Return="Minimal"`},
+			want:  true,
+		},
+		{
+			name:  "absent",
+			lines: nil,
+			want:  false,
+		},
+		{
+			name:  "lookalike token",
+			lines: []string{"return-minimal"},
+			want:  false,
+		},
+		{
+			name:  "representation",
+			lines: []string{"return=representation"},
+			want:  false,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h := http.Header{}
+			for _, line := range tc.lines {
+				h.Add("Prefer", line)
+			}
+			assert.Equal(t, tc.want, prefersMinimal(h))
+		})
+	}
+}

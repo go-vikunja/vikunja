@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
@@ -158,12 +157,7 @@ type propfindLoader func(s *xorm.Session, deep bool) ([]davResource, error)
 
 func servePropfind(c *echo.Context, u *user.User, t target) error {
 	// Before the session: a trickled body must not pin a DB connection.
-	body, bodyErr := io.ReadAll(io.LimitReader(c.Request().Body, maxPropRequestBodySize+1))
-	if bodyErr != nil {
-		bodyErr = fmt.Errorf("%w: %w", errMalformedBody, bodyErr)
-	} else if len(body) > maxPropRequestBodySize {
-		bodyErr = errBodyTooLarge
-	}
+	body, bodyErr := readBody(c, maxPropRequestBodySize)
 
 	s := db.NewSession()
 	defer s.Close()
@@ -176,7 +170,6 @@ func servePropfind(c *echo.Context, u *user.User, t target) error {
 	if bodyErr != nil {
 		return writeError(c, bodyErr)
 	}
-	logRequest(c.Request().Header, body)
 	req, err := parsePropfind(string(body))
 	if err != nil {
 		return writeError(c, err)
@@ -193,7 +186,7 @@ func servePropfind(c *echo.Context, u *user.User, t target) error {
 
 	ms := multistatus{
 		responses: make([]msResponse, len(resources)),
-		minimal:   c.Request().Header.Get("Prefer") == "return=minimal",
+		minimal:   prefersMinimal(c.Request().Header),
 	}
 	for i, r := range resources {
 		ms.responses[i] = r.answer(ctx, req)
@@ -331,8 +324,4 @@ func loadOwner(s *xorm.Session, u *user.User, p *models.Project) (string, error)
 		p.Owner = owner
 	}
 	return ownerName(u, p), nil
-}
-
-func collectionHref(projectID int64) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(projectID, 10)
 }

@@ -24,11 +24,12 @@ import (
 )
 
 const (
-	davComplianceHeader = "1, 3, calendar-access"
-	allowReadWrite      = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
-	allowReadOnly       = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
-	allowEntry          = "GET, HEAD, OPTIONS, PROPFIND"
-	allowHomeSet        = "OPTIONS, PROPFIND"
+	davComplianceHeader      = "1, 3, calendar-access"
+	allowReadWrite           = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
+	allowCollectionReadWrite = "GET, HEAD, PUT, OPTIONS, PROPFIND, REPORT"
+	allowReadOnly            = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
+	allowEntry               = "GET, HEAD, OPTIONS, PROPFIND"
+	allowHomeSet             = "OPTIONS, PROPFIND"
 )
 
 func TestPinOPTIONS(t *testing.T) {
@@ -66,7 +67,13 @@ func TestPinOPTIONS(t *testing.T) {
 			name:   "own project",
 			path:   "/dav/projects/36",
 			status: http.StatusOK,
-			allow:  allowReadWrite,
+			allow:  allowCollectionReadWrite,
+		},
+		{
+			name:   "favorites",
+			path:   "/dav/projects/-1",
+			status: http.StatusOK,
+			allow:  allowCollectionReadWrite,
 		},
 		{
 			name:   "task in own project",

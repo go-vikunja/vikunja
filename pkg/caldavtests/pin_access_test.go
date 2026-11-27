@@ -31,31 +31,33 @@ import (
 
 type accessExpectation struct {
 	propfind, get, report, options, putUpdate, putCreate, del, delCollection int
-	allow                                                                    string
+	allowTask, allowCollection                                               string
 }
 
 var (
 	readOnlyAccess = accessExpectation{
-		propfind:      207,
-		get:           200,
-		report:        207,
-		options:       200,
-		allow:         allowReadOnly,
-		putUpdate:     403,
-		putCreate:     403,
-		del:           403,
-		delCollection: 405,
+		propfind:        207,
+		get:             200,
+		report:          207,
+		options:         200,
+		allowTask:       allowReadOnly,
+		allowCollection: allowReadOnly,
+		putUpdate:       403,
+		putCreate:       403,
+		del:             403,
+		delCollection:   405,
 	}
 	readWriteAccess = accessExpectation{
-		propfind:      207,
-		get:           200,
-		report:        207,
-		options:       200,
-		allow:         allowReadWrite,
-		putUpdate:     204,
-		putCreate:     201,
-		del:           204,
-		delCollection: 405,
+		propfind:        207,
+		get:             200,
+		report:          207,
+		options:         200,
+		allowTask:       allowReadWrite,
+		allowCollection: allowCollectionReadWrite,
+		putUpdate:       204,
+		putCreate:       201,
+		del:             204,
+		delCollection:   405,
 	}
 	noAccess = accessExpectation{
 		propfind:      404,
@@ -97,16 +99,18 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	}
 	assert.Equal(t, want.report, caldavRequest(t, e, "REPORT", collection, ReportCalendarQuery, as).Code, "REPORT %s", collection)
 
-	for _, path := range []string{
-		task,
-		collection,
+	for path, allow := range map[string]string{
+		task:       want.allowTask,
+		collection: want.allowCollection,
 	} {
 		options := caldavRequest(t, e, http.MethodOptions, path, "", as)
 		assert.Equal(t, want.options, options.Code, "OPTIONS %s", path)
-		assert.Equal(t, want.allow, options.Header().Get("Allow"), "OPTIONS %s Allow", path)
+		assert.Equal(t, allow, options.Header().Get("Allow"), "OPTIONS %s Allow", path)
 	}
 
-	assert.Equal(t, want.delCollection, caldavRequest(t, e, http.MethodDelete, collection, "", as).Code, "DELETE %s", collection)
+	delCollection := caldavRequest(t, e, http.MethodDelete, collection, "", as)
+	assert.Equal(t, want.delCollection, delCollection.Code, "DELETE %s", collection)
+	assert.Equal(t, want.allowCollection, delCollection.Header().Get("Allow"), "DELETE %s Allow", collection)
 
 	ownerAs := map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)}
 	ownerGet := func() *httptest.ResponseRecorder {
@@ -278,7 +282,7 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 				report:    207,
 				options:   200,
 				putCreate: 403,
-				allow:     allowReadWrite,
+				allow:     allowCollectionReadWrite,
 			},
 		},
 		{

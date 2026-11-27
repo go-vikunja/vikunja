@@ -28,5 +28,6 @@ func TestLastModified(t *testing.T) {
 
 	assert.Equal(t, "Mon, 06 May 2024 05:08:09 GMT", lastModified(time.Date(2024, 5, 6, 7, 8, 9, 0, berlin)))
 	assert.Equal(t, "Mon, 06 May 2024 07:08:09 GMT", lastModified(time.Date(2024, 5, 6, 7, 8, 9, 0, time.UTC)))
+	// Pinned: GET on the entry and principal sends this Last-Modified.
 	assert.Equal(t, "Mon, 01 Jan 0001 00:00:00 GMT", lastModified(time.Time{}))
 }

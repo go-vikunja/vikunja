@@ -107,20 +107,6 @@ func TestAuth(t *testing.T) {
 }
 
 func TestPermissions(t *testing.T) {
-	t.Run("User cannot GET project they do not have access to", func(t *testing.T) {
-		t.Skip("Known bug: CalDAV returns 500 instead of 403/404 — ErrUserDoesNotHaveAccessToProject is not recognized by caldav-go")
-		e := setupTestEnv(t)
-
-		// testuser1 should not be able to access project 36 (owned by user15)
-		rec := caldavRequest(t, e, http.MethodGet, "/dav/projects/36", "", map[string]string{
-			"Authorization": basicAuthHeader(testuser1.Username, fixturePassword),
-		})
-
-		// Should be 403 Forbidden or 404 Not Found (both are acceptable for access denial)
-		assert.True(t, rec.Code == http.StatusForbidden || rec.Code == http.StatusNotFound,
-			"Unauthorized user should get 403 or 404, got %d. Body:\n%s", rec.Code, rec.Body.String())
-	})
-
 	t.Run("User cannot PUT task to project they do not have access to", func(t *testing.T) {
 		e := setupTestEnv(t)
 

@@ -27,9 +27,11 @@ import (
 )
 
 const (
-	davCompliance  = "1, 3, calendar-access"
-	allowReadWrite = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
-	allowReadOnly  = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
+	davCompliance      = "1, 3, calendar-access"
+	allowTaskReadWrite = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
+	// A collection cannot be deleted over CalDAV.
+	allowCollectionReadWrite = "GET, HEAD, PUT, OPTIONS, PROPFIND, REPORT"
+	allowReadOnly            = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
 	// Entry and principal hold no calendar data, so no report applies to them.
 	allowEntry   = "GET, HEAD, OPTIONS, PROPFIND"
 	allowHomeSet = "OPTIONS, PROPFIND"
@@ -47,7 +49,7 @@ func serveOptions(c *echo.Context, u *user.User, t target) error {
 }
 
 // Advertising writes the user may not make has clients retry the 403 forever.
-func collectionAllow(u *user.User, collection collectionTarget) (string, error) {
+func collectionAllow(u *user.User, collection collectionTarget, readWrite string) (string, error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -56,7 +58,7 @@ func collectionAllow(u *user.User, collection collectionTarget) (string, error) 
 		return "", err
 	}
 	if canWrite {
-		return allowReadWrite, nil
+		return readWrite, nil
 	}
 
 	// Loaded unchecked: answering without this leaks which project and filter ids exist.
@@ -66,7 +68,7 @@ func collectionAllow(u *user.User, collection collectionTarget) (string, error) 
 
 	// Writes to a pseudo collection's tasks go through to their real projects.
 	if collection.isPseudo() {
-		return allowReadWrite, nil
+		return readWrite, nil
 	}
 	return allowReadOnly, nil
 }
@@ -78,9 +80,9 @@ func allowed(u *user.User, t target) (string, error) {
 	case homeSetTarget:
 		return allowHomeSet, nil
 	case collectionTarget:
-		return collectionAllow(u, t)
+		return collectionAllow(u, t, allowCollectionReadWrite)
 	case taskTarget:
-		return collectionAllow(u, t.collection)
+		return collectionAllow(u, t.collection, allowTaskReadWrite)
 	}
 	return "", fmt.Errorf("unhandled caldav target %T", t)
 }

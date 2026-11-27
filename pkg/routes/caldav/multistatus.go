@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v5"
 )
@@ -190,6 +191,21 @@ func (ms multistatus) writeTo(out io.Writer) error {
 	}
 	w.close(davName("multistatus"))
 	return w.flush()
+}
+
+// RFC 7240 §2: Prefer is a comma-separated list, possibly over several header lines.
+func prefersMinimal(h http.Header) bool {
+	for _, line := range h.Values("Prefer") {
+		for _, pref := range strings.Split(line, ",") {
+			pref, _, _ = strings.Cut(pref, ";")
+			name, value, _ := strings.Cut(pref, "=")
+			if strings.EqualFold(strings.TrimSpace(name), "return") &&
+				strings.EqualFold(strings.Trim(strings.TrimSpace(value), `"`), "minimal") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func writeMultistatus(c *echo.Context, ms multistatus) error {

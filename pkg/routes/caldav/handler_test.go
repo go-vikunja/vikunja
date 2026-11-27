@@ -83,8 +83,7 @@ func principalHref(username string) string {
 	return "<D:href>" + principalPathForUser(username) + "</D:href>"
 }
 
-// The caldav-go setup used to live in package-level globals, so a request could be answered
-// from another concurrent request's storage. Run with -race.
+// No request may be answered with another concurrent request's user or data. Run with -race.
 func TestConcurrentRequestsDoNotShareState(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 

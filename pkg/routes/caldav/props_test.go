@@ -87,6 +87,15 @@ func TestTaskContentIsRenderedOnce(t *testing.T) {
 	assert.Equal(t, textValue(strconv.Itoa(len(content.(textValue)))), length)
 }
 
+func TestPrincipalDisplayNameIsDecoded(t *testing.T) {
+	href := principalPathForUser("jö#rg")
+	require.Equal(t, "/dav/principals/j%C3%B6%23rg/", href)
+
+	value, found := principalProps.resolve(testCtx, &principalResource{href: href}, propDisplayName)
+	assert.True(t, found)
+	assert.Equal(t, textValue("jö#rg"), value)
+}
+
 func TestPropTableAnswer(t *testing.T) {
 	task := &models.Task{
 		ID:      40,

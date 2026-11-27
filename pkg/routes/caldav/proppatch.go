@@ -105,42 +105,33 @@ func parsePropertyUpdate(body string) ([]*propPatchInstruction, error) {
 	}
 }
 
-type propPatchTarget int
-
-const (
-	propPatchCollection propPatchTarget = iota
-	propPatchTask
-)
-
 type propPatchResult struct {
 	name   xml.Name
 	status int
 }
 
-// Only a collection's calendar-color is settable; everything else gets
-// sabre/dav's 403 "polite refusal", which clients tolerate unlike caldav-go's 501.
-func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User, target propPatchTarget) error {
-	if len(body) > maxPropRequestBodySize {
-		return writeError(c, errBodyTooLarge)
-	}
+// Unsettable properties get sabre/dav's 403 "polite refusal": clients abort on a 501.
+func servePropPatch(c *echo.Context, u *user.User, t target) error {
+	// Before the session: a trickled body must not pin a DB connection.
+	body, bodyErr := readBody(c, maxPropRequestBodySize)
 
 	s := db.NewSession()
 	defer s.Close()
 
-	can, _, err := project.CanRead(s, u)
+	res, err := resolvePropPatch(s, u, t)
 	if err != nil {
 		return writeError(c, err)
 	}
-	if !can {
-		return writeError(c, errForbidden)
+	// After the access check: a bad body must not tell an unreadable collection from a missing one.
+	if bodyErr != nil {
+		return writeError(c, bodyErr)
 	}
-
-	instructions, err := parsePropertyUpdate(body)
+	instructions, err := parsePropertyUpdate(string(body))
 	if err != nil {
 		return writeError(c, err)
 	}
 
-	results, err := applyPropPatch(s, instructions, &project.Project, u, target)
+	results, err := applyPropPatch(s, instructions, res.project, u, res.colorSettable)
 	if err != nil {
 		_ = s.Rollback()
 		return writeError(c, err)
@@ -149,18 +140,18 @@ func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTa
 		return writeError(c, err)
 	}
 
-	return writePropPatchResponse(c, results)
+	return writePropPatchResponse(c, res.href, results)
 }
 
 // applyPropPatch is all-or-nothing as RFC 4918 §9.2 demands: one refused
 // property turns every acceptable one into a 424.
-func applyPropPatch(s *xorm.Session, instructions []*propPatchInstruction, project *models.Project, u *user.User, target propPatchTarget) ([]propPatchResult, error) {
+func applyPropPatch(s *xorm.Session, instructions []*propPatchInstruction, project *models.Project, u *user.User, colorSettable bool) ([]propPatchResult, error) {
 	results := make([]propPatchResult, 0, len(instructions))
 	var color *string
 	refused := false
 	for _, in := range instructions {
 		status := http.StatusForbidden
-		if in.name == calendarColorProp && target == propPatchCollection {
+		if in.name == calendarColorProp && colorSettable {
 			hex, ok := "", true
 			if !in.remove {
 				hex, ok = normalizeCalendarColor(in.value)
@@ -222,9 +213,9 @@ func canSetCalendarColor(s *xorm.Session, project *models.Project, u *user.User)
 	return denyArchived(project.CanUpdate(s, u))
 }
 
-func writePropPatchResponse(c *echo.Context, results []propPatchResult) error {
+func writePropPatchResponse(c *echo.Context, href string, results []propPatchResult) error {
 	r := propstatResponse{
-		href:      c.Request().URL.Path,
+		href:      href,
 		propstats: make([]propstat, len(results)),
 	}
 	for i, res := range results {
@@ -234,4 +225,34 @@ func writePropPatchResponse(c *echo.Context, results []propPatchResult) error {
 		}
 	}
 	return writeMultistatus(c, multistatus{responses: []msResponse{r}})
+}
+
+type propPatchResource struct {
+	href          string
+	project       *models.Project
+	colorSettable bool
+}
+
+func resolvePropPatch(s *xorm.Session, u *user.User, t target) (propPatchResource, error) {
+	switch t := t.(type) {
+	case collectionTarget:
+		if _, err := t.checkRead(s, u); err != nil {
+			return propPatchResource{}, err
+		}
+		return propPatchResource{
+			href:          collectionHref(t.project.ID),
+			project:       &t.project.Project,
+			colorSettable: true,
+		}, nil
+	case taskTarget:
+		_, task, err := t.read(s, u)
+		if err != nil {
+			return propPatchResource{}, err
+		}
+		return propPatchResource{
+			href:    taskURL(t.collection.project.ID, task),
+			project: &t.collection.project.Project,
+		}, nil
+	}
+	return propPatchResource{}, fmt.Errorf("unhandled caldav target %T", t)
 }

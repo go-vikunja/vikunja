@@ -19,7 +19,6 @@ package caldav
 import (
 	"encoding/xml"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"slices"
@@ -213,12 +212,7 @@ func serveReport(c *echo.Context, u *user.User, t target) error {
 	}
 
 	// Before the session: a trickled body must not pin a DB connection.
-	body, bodyErr := io.ReadAll(io.LimitReader(c.Request().Body, maxReportBodySize+1))
-	if bodyErr != nil {
-		bodyErr = fmt.Errorf("%w: %w", errMalformedBody, bodyErr)
-	} else if len(body) > maxReportBodySize {
-		bodyErr = errBodyTooLarge
-	}
+	body, bodyErr := readBody(c, maxReportBodySize)
 
 	s := db.NewSession()
 	defer s.Close()
@@ -231,7 +225,6 @@ func serveReport(c *echo.Context, u *user.User, t target) error {
 	if bodyErr != nil {
 		return writeError(c, bodyErr)
 	}
-	logRequest(c.Request().Header, body)
 
 	req, err := parseReport(string(body))
 	if err != nil {
@@ -268,19 +261,13 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			}
 			return writeMultistatus(c, multistatus{
 				responses: responses,
-				minimal:   prefersMinimal(c),
+				minimal:   prefersMinimal(c.Request().Header),
 			})
 		}, nil
 	case taskTarget:
-		if _, err := t.collection.checkRead(s, u); err != nil {
-			return nil, err
-		}
-		task, err := findTask(s, u, t.collection, t.uid)
+		_, task, err := t.read(s, u)
 		if err != nil {
 			return nil, err
-		}
-		if task == nil {
-			return nil, errNotFound
 		}
 		owner, err := loadOwner(s, u, &t.collection.project.Project)
 		if err != nil {
@@ -291,8 +278,7 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			task:  task,
 			owner: owner,
 		}
-		// Pinned: caldav-go answered a query or multiget on a task with the task, whatever
-		// the filter or the hrefs.
+		// Pinned: a query or multiget on a task answers the task, whatever the filter or hrefs.
 		return func(c *echo.Context, s *xorm.Session, req reportRequest) error {
 			var props propfindRequest
 			switch req := req.(type) {
@@ -307,24 +293,12 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 				return writeError(c, err)
 			}
 			return writeMultistatus(c, multistatus{
-				responses: []msResponse{resource.answer(ctx, reportProps(props))},
-				minimal:   prefersMinimal(c),
+				responses: []msResponse{resource.answer(ctx, props)},
+				minimal:   prefersMinimal(c.Request().Header),
 			})
 		}, nil
 	}
 	return nil, fmt.Errorf("unhandled caldav target %T", t)
-}
-
-// Pinned: caldav-go answered allprop and propname in a REPORT with no properties at all.
-func reportProps(req propfindRequest) propfindRequest {
-	if named, ok := req.(propRequest); ok {
-		return named
-	}
-	return propRequest{}
-}
-
-func prefersMinimal(c *echo.Context) bool {
-	return c.Request().Header.Get("Prefer") == "return=minimal"
 }
 
 func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req multigetRequest, ctx propContext) ([]msResponse, error) {
@@ -346,7 +320,6 @@ func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req mul
 		return nil, err
 	}
 
-	props := reportProps(req.props)
 	responses := make([]msResponse, 0, len(req.hrefs))
 	for _, href := range req.hrefs {
 		task, found := tasks[href]
@@ -362,7 +335,7 @@ func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req mul
 			task:  task,
 			owner: owner,
 		}
-		responses = append(responses, resource.answer(ctx, props))
+		responses = append(responses, resource.answer(ctx, req.props))
 	}
 	return responses, nil
 }
@@ -454,10 +427,10 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 		return nil, err
 	}
 	owner := ownerName(u, &c.project.Project)
-	props := reportProps(req.props)
+	props := req.props
 
 	if tasks == nil {
-		// Pinned: caldav-go answered a query on a collection without tasks with the collection.
+		// Pinned: a query on a collection without tasks answers the collection itself.
 		collection := &collectionResource{
 			href:    collectionHref(c.project.ID),
 			project: c.project,
