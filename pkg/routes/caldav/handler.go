@@ -24,11 +24,7 @@ import (
 	"reflect"
 	"strings"
 
-	"code.vikunja.io/api/pkg/db"
-
-	caldav2 "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go"
@@ -75,6 +71,17 @@ func handle(c *echo.Context, resolve targetResolver) error {
 		return writeError(c, err)
 	}
 
+	switch c.Request().Method {
+	case http.MethodOptions:
+		return serveOptions(c, u, t)
+	case http.MethodGet, http.MethodHead:
+		return serveGet(c, u, t)
+	case http.MethodDelete:
+		return serveDelete(c, u, t)
+	case http.MethodPut:
+		return servePut(c, u, t)
+	}
+
 	switch t := t.(type) {
 	case entryTarget, principalTarget:
 		readAndLogBody(c)
@@ -104,28 +111,6 @@ func serveProjects(c *echo.Context, u *user.User, t target) error {
 	storage := newStorage(u, t)
 	body := readAndLogBody(c)
 
-	if c.Request().Method == http.MethodPut && strings.HasPrefix(string(body), `BEGIN:VCALENDAR`) {
-		s := db.NewSession()
-		canRead, err := storage.canReadCollection(s)
-		s.Close()
-		if err != nil {
-			return writeError(c, err)
-		}
-		if !canRead {
-			return writeError(c, errNotFound)
-		}
-
-		if err := caldav2.CheckVCalendarLimits(string(body)); err != nil {
-			return writeError(c, err)
-		}
-
-		storage.task, _, err = caldav2.ParseTaskFromVTODO(string(body))
-		if err != nil {
-			log.Warningf("[CALDAV] Failed to parse task: %v", err)
-			return writeError(c, models.ErrInvalidData{Message: "Invalid task"})
-		}
-	}
-
 	// RFC 6578: intercept sync-collection REPORT before caldav-go sees it.
 	// caldav-go returns 412 (empty body) for unknown REPORT types, which causes
 	// iOS to silently stop syncing after the initial account add.
@@ -136,7 +121,7 @@ func serveProjects(c *echo.Context, u *user.User, t target) error {
 
 	collection, isCollection := t.(collectionTarget)
 	if !isCollection {
-		// Pinned: no PROPPATCH or OPTIONS special case for the home set.
+		// Pinned: no PROPPATCH special case for the home set.
 		return serveLibrary(c, storage, ProjectHomeSetPath)
 	}
 
@@ -145,39 +130,6 @@ func serveProjects(c *echo.Context, u *user.User, t target) error {
 	if c.Request().Method == "PROPPATCH" {
 		log.Debugf("[CALDAV] PROPPATCH for project %d by user %s", collection.project.ID, u.Username)
 		return handlePropPatch(c, string(body), collection.project, u, propPatchCollection)
-	}
-
-	// caldav-go advertises PUT and DELETE unconditionally; a collection the user cannot
-	// write to always answers those with 403, so clients would retry forever.
-	if c.Request().Method == http.MethodOptions {
-		s := db.NewSession()
-		defer s.Close()
-
-		canWrite, err := denyArchived(collection.project.CanWrite(s, u))
-		if err != nil {
-			return writeError(c, err)
-		}
-
-		if !canWrite {
-			// The collection was loaded without a permission check, so answering 200 here
-			// would leak which project and filter ids exist.
-			can, err := storage.canReadCollection(s)
-			if err != nil {
-				return writeError(c, err)
-			}
-			if !can {
-				return writeError(c, errNotFound)
-			}
-
-			// A pseudo collection cannot be written to as a collection, but PUT and DELETE
-			// of the tasks it aggregates go through to their real projects.
-			if !models.IsPseudoProjectID(collection.project.ID) {
-				log.Debugf("[CALDAV] OPTIONS for read-only project %d by user %s", collection.project.ID, u.Username)
-				c.Response().Header().Set("DAV", "1, 3, calendar-access")
-				c.Response().Header().Set("Allow", "GET, HEAD, OPTIONS, PROPFIND, REPORT")
-				return c.NoContent(http.StatusOK)
-			}
-		}
 	}
 
 	return serveLibrary(c, storage, ProjectHomeSetPath)
@@ -197,17 +149,6 @@ func serveTask(c *echo.Context, u *user.User, t taskTarget) error {
 	}
 
 	storage := newStorage(u, t)
-	if c.Request().Method == http.MethodPut {
-		body, err := io.ReadAll(io.LimitReader(c.Request().Body, caldav2.MaxVCalendarSize+1))
-		if err != nil {
-			return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
-		}
-		if err := caldav2.CheckVCalendarLimits(string(body)); err != nil {
-			return writeError(c, storage.rejectBody(err))
-		}
-		c.Request().Body = io.NopCloser(bytes.NewBuffer(body))
-	}
-
 	return serveLibrary(c, storage, principalPathForUser(u.Username))
 }
 
@@ -219,23 +160,4 @@ func logRequest(header http.Header, body []byte) {
 	}
 	log.Debugf("[CALDAV] Request Body: %s", body)
 	log.Debugf("[CALDAV] Request Headers: %v", log.SafeHeaders(header))
-}
-
-// Body checks precede caldav-go's access checks, so an unreadable collection must answer like a missing one.
-func (vcls *VikunjaCaldavProjectStorage) rejectBody(checkErr error) error {
-	// The empty project of /dav/projects//<uid>.ics, see resolveTask.
-	if vcls.project.ID == 0 {
-		return checkErr
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-	canRead, err := vcls.canReadCollection(s)
-	if err != nil {
-		return err
-	}
-	if !canRead {
-		return errNotFound
-	}
-	return checkErr
 }

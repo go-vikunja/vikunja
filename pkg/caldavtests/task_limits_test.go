@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/richtext"
 
@@ -61,4 +62,24 @@ func TestPUTRejectsTooManyTableCells(t *testing.T) {
 		rec = caldavPUT(t, e, path, NewVTodo("too-many-cells-update", "Too many cells").Description(table).Build())
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
+}
+
+// An unknown RELATED-TO uid becomes a placeholder titled after it.
+func TestPUTRejectsRelationsFailingValidation(t *testing.T) {
+	e := setupTestEnv(t)
+	parent := strings.Repeat("p", models.MaxTaskTitleLength)
+
+	rec := caldavPUT(t, e, "/dav/projects/36/overlong-relation.ics", NewVTodo("overlong-relation", "Overlong relation").RelatedToParent(parent).Build())
+	assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+
+	rec = caldavRequest(t, e, http.MethodGet, "/dav/projects/36/overlong-relation.ics", "", nil)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestPUTRejectsEmptySummary(t *testing.T) {
+	e := setupTestEnv(t)
+
+	rec := caldavPUT(t, e, "/dav/projects/36/empty-summary.ics", NewVTodo("empty-summary", "").Build())
+	assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "empty-summary"})
 }

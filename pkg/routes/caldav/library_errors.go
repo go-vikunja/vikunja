@@ -18,22 +18,11 @@ package caldav
 
 import (
 	"errors"
-	"net/http"
 
 	"github.com/samedi/caldav-go/errs"
 )
 
-// caldav-go answers 500 for anything but its own sentinels; both go with the library.
-func toLibraryError(err error) error {
-	switch errorStatus(err) {
-	case http.StatusNotFound:
-		return errs.ResourceNotFoundError
-	case http.StatusForbidden:
-		return errs.ForbiddenError
-	}
-	return err
-}
-
+// The storage answers caldav-go with its sentinels; this goes with the library.
 func fromLibraryError(err error) error {
 	switch {
 	case errors.Is(err, errs.ResourceNotFoundError):

@@ -89,9 +89,15 @@ func TestPinGETNonCalendarResources(t *testing.T) {
 	t.Run("home set", func(t *testing.T) {
 		e := setupTestEnv(t)
 
-		rec := caldavGET(t, e, "/dav/projects")
+		for _, method := range []string{
+			http.MethodGet,
+			http.MethodHead,
+		} {
+			rec := caldavRequest(t, e, method, "/dav/projects", "", nil)
 
-		assert.Equal(t, http.StatusInternalServerError, rec.Code, "Body:\n%s", rec.Body.String())
+			assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "%s. Body:\n%s", method, rec.Body.String())
+			assert.Equal(t, allowHomeSet, rec.Header().Get("Allow"), method)
+		}
 	})
 
 	// An empty calendar body with an empty ETag and a zero Last-Modified.
@@ -111,4 +117,62 @@ func TestPinGETNonCalendarResources(t *testing.T) {
 			assert.Empty(t, rec.Body.String())
 		})
 	}
+}
+
+func TestPinConditionalGET(t *testing.T) {
+	e := setupTestEnv(t)
+
+	for _, path := range []string{
+		pinTaskHref,
+		"/dav/projects/36",
+	} {
+		etag := caldavGET(t, e, path).Header().Get("ETag")
+		require.NotEmpty(t, etag, path)
+
+		tests := []struct {
+			name        string
+			ifNoneMatch string
+			status      int
+		}{
+			{
+				name:        "matching",
+				ifNoneMatch: etag,
+				status:      http.StatusNotModified,
+			},
+			{
+				name:        "stale",
+				ifNoneMatch: `"stale"`,
+				status:      http.StatusOK,
+			},
+		}
+		for _, tc := range tests {
+			for _, method := range []string{
+				http.MethodGet,
+				http.MethodHead,
+			} {
+				t.Run(path+" "+method+" "+tc.name, func(t *testing.T) {
+					rec := caldavRequest(t, e, method, path, "", map[string]string{"If-None-Match": tc.ifNoneMatch})
+
+					assert.Equal(t, tc.status, rec.Code)
+					assert.Equal(t, etag, rec.Header().Get("ETag"))
+					if tc.status == http.StatusNotModified {
+						assert.Empty(t, rec.Body.String())
+					}
+				})
+			}
+		}
+	}
+
+	t.Run("missing task", func(t *testing.T) {
+		rec := caldavRequest(t, e, http.MethodGet, "/dav/projects/36/nonexistent-uid.ics", "", map[string]string{"If-None-Match": "*"})
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+	})
+
+	t.Run("task the user cannot read", func(t *testing.T) {
+		rec := caldavRequest(t, e, http.MethodGet, pinTaskHref, "", map[string]string{
+			"If-None-Match": "*",
+			"Authorization": basicAuthHeader(testuser1.Username, fixturePassword),
+		})
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+	})
 }

@@ -130,7 +130,7 @@ func handleSyncCollectionReport(c *echo.Context, body string, storage *VikunjaCa
 		defer s.Close()
 
 		// Without this the 403 would leak which saved filter ids exist.
-		can, err := storage.canReadCollection(s)
+		can, err := storage.collection().canRead(s, storage.user)
 		if err != nil {
 			return writeError(c, err)
 		}

@@ -27,6 +27,7 @@ const (
 	davComplianceHeader = "1, 3, calendar-access"
 	allowReadWrite      = "GET, HEAD, PUT, DELETE, OPTIONS, PROPFIND, REPORT"
 	allowReadOnly       = "GET, HEAD, OPTIONS, PROPFIND, REPORT"
+	allowHomeSet        = "OPTIONS, PROPFIND, REPORT"
 )
 
 func TestPinOPTIONS(t *testing.T) {
@@ -40,25 +41,25 @@ func TestPinOPTIONS(t *testing.T) {
 			name:   "entry",
 			path:   "/dav/",
 			status: http.StatusOK,
-			allow:  allowReadWrite,
+			allow:  allowReadOnly,
 		},
 		{
 			name:   "well-known",
 			path:   "/.well-known/caldav",
 			status: http.StatusOK,
-			allow:  allowReadWrite,
+			allow:  allowReadOnly,
 		},
 		{
 			name:   "principal",
 			path:   "/dav/principals/user15/",
 			status: http.StatusOK,
-			allow:  allowReadWrite,
+			allow:  allowReadOnly,
 		},
 		{
 			name:   "home set",
 			path:   "/dav/projects",
 			status: http.StatusOK,
-			allow:  allowReadWrite,
+			allow:  allowHomeSet,
 		},
 		{
 			name:   "own project",
@@ -88,16 +89,20 @@ func TestPinOPTIONS(t *testing.T) {
 			path:   "/dav/projects/99999",
 			status: http.StatusNotFound,
 		},
-		// TaskHandler has no OPTIONS special case, so the collection's restrictions do not apply.
 		{
 			name:   "task in read-only shared project",
 			path:   "/dav/projects/26/any.ics",
 			status: http.StatusOK,
-			allow:  allowReadWrite,
+			allow:  allowReadOnly,
 		},
 		{
 			name:   "task in project the user cannot see",
 			path:   "/dav/projects/1/any.ics",
+			status: http.StatusNotFound,
+		},
+		{
+			name:   "task in favorites",
+			path:   "/dav/projects/-1/any.ics",
 			status: http.StatusOK,
 			allow:  allowReadWrite,
 		},

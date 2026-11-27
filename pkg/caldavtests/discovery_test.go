@@ -255,7 +255,28 @@ func TestDiscoveryOPTIONS(t *testing.T) {
 		rec := caldavOPTIONS(t, e, "/dav/")
 
 		allowHeader := rec.Header().Get("Allow")
-		// A CalDAV server should advertise at least these methods
+		for _, method := range []string{
+			"OPTIONS",
+			"GET",
+			"PROPFIND",
+			"REPORT",
+		} {
+			assert.Contains(t, allowHeader, method,
+				"Allow header should include %s", method)
+		}
+		for _, method := range []string{
+			"PUT",
+			"DELETE",
+		} {
+			assert.NotContains(t, allowHeader, method,
+				"Allow header should not include %s", method)
+		}
+	})
+
+	t.Run("OPTIONS on a writable collection advertises writes", func(t *testing.T) {
+		e := setupTestEnv(t)
+
+		allowHeader := caldavOPTIONS(t, e, "/dav/projects/36").Header().Get("Allow")
 		for _, method := range []string{"OPTIONS", "GET", "PUT", "DELETE", "PROPFIND", "REPORT"} {
 			assert.Contains(t, allowHeader, method,
 				"Allow header should include %s", method)

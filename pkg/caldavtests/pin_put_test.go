@@ -20,6 +20,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -104,18 +108,17 @@ func TestPinPUTUpdatePreconditions(t *testing.T) {
 		{
 			name:    "no headers",
 			headers: func(string) map[string]string { return nil },
-			// 201 rather than 200/204 for an update.
-			status: http.StatusCreated,
+			status:  http.StatusNoContent,
 		},
 		{
 			name:    "matching If-Match",
 			headers: func(etag string) map[string]string { return map[string]string{"If-Match": etag} },
-			status:  http.StatusCreated,
+			status:  http.StatusNoContent,
 		},
 		{
 			name:    "If-Match star",
 			headers: func(string) map[string]string { return map[string]string{"If-Match": "*"} },
-			status:  http.StatusCreated,
+			status:  http.StatusNoContent,
 		},
 		{
 			name:    "stale If-Match",
@@ -139,7 +142,7 @@ func TestPinPUTUpdatePreconditions(t *testing.T) {
 			rec := caldavPUTWith(t, e, path, NewVTodo(uid, "Updated").Build(), tc.headers(etag))
 
 			require.Equal(t, tc.status, rec.Code, "Body:\n%s", rec.Body.String())
-			updated := tc.status == http.StatusCreated
+			updated := tc.status == http.StatusNoContent
 			assertETagHeader(t, rec, updated)
 			if updated {
 				assertSummary(t, e, path, "Updated")
@@ -175,9 +178,55 @@ func TestPinPUTOnCollection(t *testing.T) {
 
 		rec := caldavPUT(t, e, "/dav/projects/36", NewVTodo("uid-caldav-test", "Overwritten via collection").Build())
 
-		require.Equal(t, http.StatusCreated, rec.Code, "Body:\n%s", rec.Body.String())
+		require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
 		assertETagHeader(t, rec, true)
 		assertSummary(t, e, pinTaskHref, "Overwritten via collection")
+	})
+
+	t.Run("existing UID with the stored ETag in If-Match", func(t *testing.T) {
+		e := setupTestEnv(t)
+		etag := caldavGET(t, e, pinTaskHref).Header().Get("ETag")
+		require.NotEmpty(t, etag)
+
+		// The body's DTSTAMP has nothing to do with the stored task's ETag.
+		body := NewVTodo("uid-caldav-test", "Matched via collection").DtStamp(time.Date(2024, 5, 6, 7, 8, 9, 0, time.UTC)).Build()
+		rec := caldavPUTWith(t, e, "/dav/projects/36", body, map[string]string{"If-Match": etag})
+
+		require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
+		assertSummary(t, e, pinTaskHref, "Matched via collection")
+	})
+
+	t.Run("body without UID creates a task", func(t *testing.T) {
+		e := setupTestEnv(t)
+
+		s := db.NewSession()
+		uidless := &models.Task{
+			Title:       "Task without uid",
+			ProjectID:   36,
+			Index:       999,
+			CreatedByID: testuser15.ID,
+		}
+		_, err := s.Insert(uidless)
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
+
+		body := "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VTODO\r\nSUMMARY:Created without uid\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
+		rec := caldavPUT(t, e, "/dav/projects/36", body)
+
+		require.Equal(t, http.StatusCreated, rec.Code, "Body:\n%s", rec.Body.String())
+		assertETagHeader(t, rec, true)
+
+		s = db.NewSession()
+		defer s.Close()
+		stored, err := models.GetTaskByIDSimple(s, uidless.ID)
+		require.NoError(t, err)
+		assert.Equal(t, "Task without uid", stored.Title)
+		created := &models.Task{}
+		has, err := s.Where("title = ? AND project_id = ?", "Created without uid", 36).Get(created)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.NotEmpty(t, created.UID)
 	})
 
 	t.Run("home set", func(t *testing.T) {
@@ -185,7 +234,8 @@ func TestPinPUTOnCollection(t *testing.T) {
 
 		rec := caldavPUT(t, e, "/dav/projects", NewVTodo("pin-put-on-home", "Via home").Build())
 
-		assert.Equal(t, http.StatusNotFound, rec.Code, "Body:\n%s", rec.Body.String())
+		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "Body:\n%s", rec.Body.String())
+		assert.Equal(t, allowHomeSet, rec.Header().Get("Allow"))
 		assertETagHeader(t, rec, false)
 	})
 }

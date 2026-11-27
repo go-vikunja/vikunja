@@ -97,7 +97,7 @@ func TestRelationsReverseOrder(t *testing.T) {
 		// Step 2: Parent arrives later (no RELATED-TO)
 		parent := NewVTodo("rev-parent-late", "Parent Late").Build()
 		rec = caldavPUT(t, e, "/dav/projects/36/rev-parent-late.ics", parent)
-		require.Equal(t, 201, rec.Code)
+		require.Equal(t, 204, rec.Code)
 
 		// Step 3: Verify parent has correct title (not DUMMY-UID)
 		rec = caldavGET(t, e, "/dav/projects/36/rev-parent-late.ics")

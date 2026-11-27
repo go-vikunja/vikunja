@@ -51,6 +51,7 @@ func errorStatus(err error) int {
 		isError[models.ErrProjectIsArchived](err),
 		// Pinned: caldav-go could not answer 400.
 		isError[models.ValidationHTTPError](err),
+		isError[models.ErrTaskCannotBeEmpty](err),
 		errors.Is(err, richtext.ErrTooManyTableCells):
 		return http.StatusForbidden
 	case errors.Is(err, errBodyTooLarge),
