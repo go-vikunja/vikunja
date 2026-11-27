@@ -471,7 +471,21 @@ jobs:
         timeout-minutes: 20
         working-directory: frontend
         run: |
-          pnpm run preview:vikunja &
+          # One API per worker: every test truncates and reseeds its database
+          API_URLS=""
+          WAIT_ON=()
+          for i in $(seq 0 $((E2E_WORKERS - 1))); do
+            port=$((3460 + i))
+            api_root=$(mktemp -d)
+            mkdir -p "$api_root/files"
+            VIKUNJA_SERVICE_INTERFACE="127.0.0.1:$port" \
+            VIKUNJA_SERVICE_PUBLICURL="http://127.0.0.1:$port" \
+            VIKUNJA_SERVICE_ROOTPATH="$api_root" \
+            VIKUNJA_FILES_BASEPATH="$api_root/files" \
+            pnpm run preview:vikunja > "/tmp/vikunja-api-$i.log" 2>&1 &
+            API_URLS="${API_URLS:+$API_URLS,}http://127.0.0.1:$port"
+            WAIT_ON+=("http-get://127.0.0.1:$port/api/v1/info")
+          done
           pnpm run preview &
 
           MAILER_API_ROOT=$(mktemp -d)
@@ -488,10 +502,11 @@ jobs:
           pnpm run preview:vikunja > /tmp/vikunja-mailer.log 2>&1 &
 
           # Wait for services to be ready (using GET method)
-          pnpx wait-on http-get://127.0.0.1:4173 http-get://127.0.0.1:3456/api/v1/info http-get://127.0.0.1:3457/api/v1/info http-get://mailpit:8025/readyz --timeout 60000
+          pnpx wait-on http-get://127.0.0.1:4173 "${WAIT_ON[@]}" http-get://127.0.0.1:3457/api/v1/info http-get://mailpit:8025/readyz --timeout 60000
 
-          pnpm run test:e2e --shard=${{ matrix.shard }}/${{ matrix.total-shards }}
+          API_URL="$API_URLS" pnpm run test:e2e --shard=${{ matrix.shard }}/${{ matrix.total-shards }}
         env:
+          E2E_WORKERS: 3
           MAILER_API_URL: http://127.0.0.1:3457/api/v1
           MAILPIT_URL: http://mailpit:8025
           PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: 1
@@ -524,4 +539,5 @@ jobs:
           path: |
             frontend/test-results/
             /tmp/vikunja-mailer.log
+            /tmp/vikunja-api-*.log
           retention-days: 30
