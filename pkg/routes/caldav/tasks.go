@@ -154,7 +154,6 @@ func createTask(s *xorm.Session, u *user.User, c readableCollection, vTask *mode
 
 	canCreate, err := denyArchived(vTask.CanCreate(s, u))
 	if err != nil {
-		log.Errorf("[CALDAV] Permission check failed in createTask for user %s, project %d: %v", u.Username, c.project.ID, err)
 		return err
 	}
 	if !canCreate {
@@ -163,12 +162,10 @@ func createTask(s *xorm.Session, u *user.User, c readableCollection, vTask *mode
 	}
 
 	if err := applyDescriptionFromMarkdown(s, u, vTask, ""); err != nil {
-		log.Errorf("[CALDAV] Failed to convert description in createTask: %v", err)
 		return err
 	}
 
 	if err := vTask.Create(s, u); err != nil {
-		log.Errorf("[CALDAV] Failed to create task in createTask: %v, task: %+v", err, vTask)
 		return err
 	}
 
@@ -178,11 +175,9 @@ func createTask(s *xorm.Session, u *user.User, c readableCollection, vTask *mode
 		ProjectID: vTask.ProjectID,
 	}
 	if err := persistLabels(s, u, created, vTask.Labels); err != nil {
-		log.Errorf("[CALDAV] Failed to persist labels in createTask: %v, labels: %+v", err, vTask.Labels)
 		return err
 	}
 	if err := persistRelations(s, u, created, vTask.RelatedTasks); err != nil {
-		log.Errorf("[CALDAV] Failed to persist relations in createTask: %v, relations: %+v", err, vTask.RelatedTasks)
 		return err
 	}
 	return nil
@@ -203,7 +198,6 @@ func updateTask(s *xorm.Session, u *user.User, c readableCollection, stored, vTa
 
 	canUpdate, err := denyArchived(vTask.CanUpdate(s, u))
 	if err != nil {
-		log.Errorf("[CALDAV] Permission check failed in updateTask for user %s, task %d: %v", u.Username, stored.ID, err)
 		return nil, err
 	}
 	if !canUpdate {
@@ -221,7 +215,6 @@ func updateTask(s *xorm.Session, u *user.User, c readableCollection, stored, vTa
 	}
 
 	if err := applyDescriptionFromMarkdown(s, u, vTask, stored.Description); err != nil {
-		log.Errorf("[CALDAV] Failed to convert description in updateTask: %v", err)
 		return nil, err
 	}
 
@@ -257,14 +250,12 @@ func updateTask(s *xorm.Session, u *user.User, c readableCollection, stored, vTa
 	}
 
 	if err := base.Update(s, u); err != nil {
-		log.Errorf("[CALDAV] Failed to update task in updateTask: %v, task: %+v", err, base)
 		return nil, err
 	}
 
 	// nil = CATEGORIES absent, leave labels alone; non-nil (even empty) = explicit set.
 	if vTask.Labels != nil {
 		if err := persistLabels(s, u, &base, vTask.Labels); err != nil {
-			log.Errorf("[CALDAV] Failed to persist labels in updateTask: %v, labels: %+v", err, vTask.Labels)
 			return nil, err
 		}
 		base.Labels = vTask.Labels
@@ -273,7 +264,6 @@ func updateTask(s *xorm.Session, u *user.User, c readableCollection, stored, vTa
 	// RELATED-TO has no explicit-clear form, so relations can be added or replaced via CalDAV, never removed.
 	if len(vTask.RelatedTasks) > 0 {
 		if err := persistRelations(s, u, &base, vTask.RelatedTasks); err != nil {
-			log.Errorf("[CALDAV] Failed to persist relations in updateTask: %v, relations: %+v", err, vTask.RelatedTasks)
 			return nil, err
 		}
 		base.RelatedTasks = vTask.RelatedTasks
