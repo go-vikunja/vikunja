@@ -361,12 +361,17 @@ func TestCollectionWritability(t *testing.T) {
 
 // A 403 or 500 here, while an unknown id answers 404, would tell the client the collection exists.
 func TestPropfind_UnreadableCollectionIsNotFound(t *testing.T) {
-	t.Run("a bad body does not answer before the access check", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
+	db.LoadAndAssertFixtures(t)
 
-		rec, err := callCaldavHandler(t, ProjectHandler, caldavOtherUser, "PROPFIND", projectPath(inaccessibleProjectID), tooManyProps(), projectParams(inaccessibleProjectID))
-		requireHTTPStatus(t, http.StatusNotFound, rec, err)
-	})
+	for name, body := range map[string]string{
+		"unparsable body": tooManyProps(),
+		"oversized body":  propfindWithProps(`<D:getetag/>`) + strings.Repeat(" ", maxPropRequestBodySize),
+	} {
+		t.Run(name+" does not answer before the access check", func(t *testing.T) {
+			rec, err := callCaldavHandler(t, ProjectHandler, caldavOtherUser, "PROPFIND", projectPath(inaccessibleProjectID), body, projectParams(inaccessibleProjectID))
+			requireHTTPStatus(t, http.StatusNotFound, rec, err)
+		})
+	}
 }
 
 func TestGetResource_PseudoCollectionMembership(t *testing.T) {
