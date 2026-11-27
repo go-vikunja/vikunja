@@ -250,15 +250,9 @@ func resolvePropPatch(s *xorm.Session, u *user.User, t target) (propPatchResourc
 		}
 		return propPatchResource{collectionHref(t.project.ID), &t.project.Project, propPatchCollection}, nil
 	case taskTarget:
-		if _, err := t.collection.checkRead(s, u); err != nil {
-			return propPatchResource{}, err
-		}
-		task, err := findTask(s, u, t.collection, t.uid)
+		_, task, err := t.read(s, u)
 		if err != nil {
 			return propPatchResource{}, err
-		}
-		if task == nil {
-			return propPatchResource{}, errNotFound
 		}
 		return propPatchResource{taskURL(t.collection.project.ID, task), &t.collection.project.Project, propPatchTask}, nil
 	}

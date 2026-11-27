@@ -41,16 +41,9 @@ func serveDelete(c *echo.Context, u *user.User, t target) error {
 func deleteTaskTarget(c *echo.Context, u *user.User, t taskTarget) error {
 	preconditionFailed := false
 	err := writeTransaction(func(s *xorm.Session) error {
-		collection, err := t.collection.checkRead(s, u)
+		collection, task, err := t.read(s, u)
 		if err != nil {
 			return err
-		}
-		task, err := findTask(s, u, t.collection, t.uid)
-		if err != nil {
-			return err
-		}
-		if task == nil {
-			return errNotFound
 		}
 		if !preconditionsOf(c.Request().Header).allowDelete(taskETag(task)) {
 			preconditionFailed = true

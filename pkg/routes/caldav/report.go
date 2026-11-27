@@ -265,15 +265,9 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			})
 		}, nil
 	case taskTarget:
-		if _, err := t.collection.checkRead(s, u); err != nil {
-			return nil, err
-		}
-		task, err := findTask(s, u, t.collection, t.uid)
+		_, task, err := t.read(s, u)
 		if err != nil {
 			return nil, err
-		}
-		if task == nil {
-			return nil, errNotFound
 		}
 		owner, err := loadOwner(s, u, &t.collection.project.Project)
 		if err != nil {

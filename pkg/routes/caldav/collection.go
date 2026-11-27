@@ -62,6 +62,21 @@ func (c collectionTarget) checkRead(s *xorm.Session, u *user.User) (readableColl
 	return readableCollection{c}, nil
 }
 
+func (t taskTarget) read(s *xorm.Session, u *user.User) (readableCollection, *models.Task, error) {
+	collection, err := t.collection.checkRead(s, u)
+	if err != nil {
+		return readableCollection{}, nil, err
+	}
+	task, err := findTask(s, u, t.collection, t.uid)
+	if err != nil {
+		return readableCollection{}, nil, err
+	}
+	if task == nil {
+		return readableCollection{}, nil, errNotFound
+	}
+	return collection, task, nil
+}
+
 // Read-only shares and pseudo collections are both the model's call, not the route's.
 func (c collectionTarget) canWrite(s *xorm.Session, u *user.User) (bool, error) {
 	return denyArchived(c.project.CanWrite(s, u))
