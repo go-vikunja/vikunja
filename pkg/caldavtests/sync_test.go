@@ -84,26 +84,6 @@ func TestETagBehavior(t *testing.T) {
 		}
 	})
 
-	t.Run("PROPFIND ETag matches GET ETag", func(t *testing.T) {
-		t.Skip("Known bug: caldav-go formats ETags differently in HTTP headers vs XML properties")
-		e := setupTestEnv(t)
-
-		// Get ETag via GET
-		getResp := caldavGET(t, e, "/dav/projects/36/uid-caldav-test.ics")
-		getETag := getResp.Header().Get("ETag")
-
-		// Get ETag via PROPFIND
-		propfindResp := caldavPROPFIND(t, e, "/dav/projects/36/uid-caldav-test.ics", "0", PropfindResourceProperties)
-		ms := parseMultistatus(t, propfindResp)
-		require.Len(t, ms.Responses, 1)
-		propfindETag := getSuccessfulProp(t, ms.Responses[0]).GetETag
-
-		if getETag != "" && propfindETag != "" {
-			assert.Equal(t, getETag, propfindETag,
-				"ETag from GET and PROPFIND should match")
-		}
-	})
-
 	t.Run("Different tasks have different ETags", func(t *testing.T) {
 		e := setupTestEnv(t)
 

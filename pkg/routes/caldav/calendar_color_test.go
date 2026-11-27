@@ -19,7 +19,6 @@ package caldav
 import (
 	"encoding/xml"
 	"net/http"
-	"strconv"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -29,11 +28,6 @@ import (
 )
 
 const colorProp = `<I:calendar-color xmlns:I="http://apple.com/ns/ical/"/>`
-
-// caldav-go cleans the trailing slash off collection hrefs.
-func collectionHref(projectID int64) string {
-	return ProjectBasePath + "/" + strconv.FormatInt(projectID, 10)
-}
 
 func TestPropfindCalendarColor(t *testing.T) {
 	const ok = "HTTP/1.1 200 OK"

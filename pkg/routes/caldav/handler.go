@@ -80,6 +80,8 @@ func handle(c *echo.Context, resolve targetResolver) error {
 		return serveDelete(c, u, t)
 	case http.MethodPut:
 		return servePut(c, u, t)
+	case "PROPFIND":
+		return servePropfind(c, u, t)
 	}
 
 	switch t := t.(type) {

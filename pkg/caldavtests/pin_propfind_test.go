@@ -29,12 +29,14 @@ import (
 const (
 	pinTaskHref     = "/dav/projects/36/uid-caldav-test.ics"
 	user15Principal = "/dav/principals/user15/"
+	homeSetHref     = "/dav/projects/"
 	zeroLastMod     = "Mon, 01 Jan 0001 00:00:00 GMT"
 
-	resourceTypeHome     = "{DAV:}collection"
-	resourceTypeEntry    = "{DAV:}collection {DAV:}principal"
-	resourceTypeCalendar = "{DAV:}collection {urn:ietf:params:xml:ns:caldav}calendar"
-	supportedComps       = "{urn:ietf:params:xml:ns:caldav}comp[name=VCALENDAR] {urn:ietf:params:xml:ns:caldav}comp[name=VTODO]"
+	resourceTypeHome      = "{DAV:}collection"
+	resourceTypeEntry     = "{DAV:}collection"
+	resourceTypePrincipal = "{DAV:}collection {DAV:}principal"
+	resourceTypeCalendar  = "{DAV:}collection {urn:ietf:params:xml:ns:caldav}calendar"
+	supportedComps        = "{urn:ietf:params:xml:ns:caldav}comp[name=VCALENDAR] {urn:ietf:params:xml:ns:caldav}comp[name=VTODO]"
 )
 
 var project36TaskTitles = map[string]string{
@@ -45,31 +47,45 @@ var project36TaskTitles = map[string]string{
 	"/dav/projects/36/uid-caldav-test-parent-task-another-list.ics": "Parent task for Caldav Test",
 }
 
-// user15's home set: own projects 36 and 38 plus read shares on 26 and 35.
-var user15Projects = map[string]string{
-	"/dav/projects/36": "Project 36 for Caldav tests",
-	"/dav/projects/38": "Project 38 for Caldav tests",
-	"/dav/projects/35": "Test35 with background",
-	"/dav/projects/26": "Test26",
+const user6Principal = "/dav/principals/user6/"
+
+// user15's home set: own projects 36 and 38 plus read shares on user6's 26 and 35.
+var user15Projects = map[string]struct{ title, owner string }{
+	"/dav/projects/36": {
+		title: "Project 36 for Caldav tests",
+		owner: user15Principal,
+	},
+	"/dav/projects/38": {
+		title: "Project 38 for Caldav tests",
+		owner: user15Principal,
+	},
+	"/dav/projects/35": {
+		title: "Test35 with background",
+		owner: user6Principal,
+	},
+	"/dav/projects/26": {
+		title: "Test26",
+		owner: user6Principal,
+	},
 }
 
 func expectEntry() expectedDAVResponse {
 	return expectedDAVResponse{
-		href: "/dav",
+		href: "/dav/",
 		ok: map[xml.Name]string{
 			davName("resourcetype"):                     resourceTypeEntry,
 			davName("displayname"):                      "dav",
 			davName("current-user-principal"):           user15Principal,
-			calName("calendar-home-set"):                "/dav",
-			davName("principal-URL"):                    "/dav",
+			calName("calendar-home-set"):                homeSetHref,
+			davName("principal-URL"):                    user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
-			davName("getlastmodified"):                  zeroLastMod,
 		},
 		notFound: []xml.Name{
 			davName("owner"),
 			davName("getetag"),
 			csGetCTag,
+			davName("getlastmodified"),
 			davName("getcontentlength"),
 			davName("sync-token"),
 			calName("calendar-description"),
@@ -77,43 +93,64 @@ func expectEntry() expectedDAVResponse {
 	}
 }
 
-// ProjectHandler passes the home set as the user, so the principal URL answers with the home-set resource.
-func expectHomeSet(currentUserPrincipal string) expectedDAVResponse {
+func expectPrincipal(href, displayName string) expectedDAVResponse {
+	return expectedDAVResponse{
+		href: href,
+		ok: map[xml.Name]string{
+			davName("resourcetype"):                     resourceTypePrincipal,
+			davName("displayname"):                      displayName,
+			davName("current-user-principal"):           user15Principal,
+			calName("calendar-home-set"):                homeSetHref,
+			davName("principal-URL"):                    user15Principal,
+			calName("supported-calendar-component-set"): supportedComps,
+			davName("getcontenttype"):                   "text/calendar",
+		},
+		notFound: []xml.Name{
+			davName("owner"),
+			davName("getetag"),
+			csGetCTag,
+			davName("getlastmodified"),
+			davName("getcontentlength"),
+			davName("sync-token"),
+			calName("calendar-description"),
+		},
+	}
+}
+
+func expectHomeSet() expectedDAVResponse {
 	return expectedDAVResponse{
 		href: "/dav/projects",
 		ok: map[xml.Name]string{
 			davName("resourcetype"):                     resourceTypeHome,
 			davName("displayname"):                      "projects",
-			davName("current-user-principal"):           currentUserPrincipal,
-			calName("calendar-home-set"):                "/dav/projects",
-			davName("principal-URL"):                    "/dav/projects",
+			davName("current-user-principal"):           user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
-			davName("owner"):                            "/dav/",
-			davName("getlastmodified"):                  zeroLastMod,
 		},
 		notFound: []xml.Name{
+			davName("owner"),
 			davName("getetag"),
 			csGetCTag,
+			davName("getlastmodified"),
 			davName("getcontentlength"),
 			davName("sync-token"),
 			calName("calendar-description"),
+			calName("calendar-home-set"),
+			davName("principal-URL"),
 		},
 	}
 }
 
-func expectCalendar(href, title, currentUserPrincipal string) expectedDAVResponse {
+func expectCalendar(href, title, owner string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: href,
 		ok: map[xml.Name]string{
 			davName("resourcetype"):                     resourceTypeCalendar,
 			davName("displayname"):                      title,
-			davName("current-user-principal"):           currentUserPrincipal,
-			calName("calendar-home-set"):                href,
-			davName("principal-URL"):                    href,
+			davName("current-user-principal"):           user15Principal,
 			calName("supported-calendar-component-set"): supportedComps,
 			davName("getcontenttype"):                   "text/calendar",
-			davName("owner"):                            "/dav/",
+			davName("owner"):                            owner,
 			davName("getetag"):                          anyValue,
 			csGetCTag:                                   anyValue,
 			davName("getlastmodified"):                  anyValue,
@@ -122,21 +159,21 @@ func expectCalendar(href, title, currentUserPrincipal string) expectedDAVRespons
 		notFound: []xml.Name{
 			davName("getcontentlength"),
 			calName("calendar-description"),
+			calName("calendar-home-set"),
+			davName("principal-URL"),
 		},
 	}
 }
 
-func expectTask(href, title, currentUserPrincipal string) expectedDAVResponse {
+func expectTask(href, title string) expectedDAVResponse {
 	return expectedDAVResponse{
 		href: href,
 		ok: map[xml.Name]string{
 			davName("resourcetype"):           "",
 			davName("displayname"):            title,
-			davName("current-user-principal"): currentUserPrincipal,
-			calName("calendar-home-set"):      href,
-			davName("principal-URL"):          href,
+			davName("current-user-principal"): user15Principal,
 			davName("getcontenttype"):         "text/calendar; component=vcalendar",
-			davName("owner"):                  "/dav/",
+			davName("owner"):                  user15Principal,
 			davName("getetag"):                anyValue,
 			csGetCTag:                         anyValue,
 			davName("getlastmodified"):        anyValue,
@@ -146,14 +183,16 @@ func expectTask(href, title, currentUserPrincipal string) expectedDAVResponse {
 			calName("supported-calendar-component-set"),
 			davName("sync-token"),
 			calName("calendar-description"),
+			calName("calendar-home-set"),
+			davName("principal-URL"),
 		},
 	}
 }
 
-func project36Tasks(currentUserPrincipal string) []expectedDAVResponse {
+func project36Tasks() []expectedDAVResponse {
 	out := make([]expectedDAVResponse, 0, len(project36TaskTitles))
 	for href, title := range project36TaskTitles {
-		out = append(out, expectTask(href, title, currentUserPrincipal))
+		out = append(out, expectTask(href, title))
 	}
 	return out
 }
@@ -175,13 +214,12 @@ func TestPinPropfindMatrix(t *testing.T) {
 		deep    []expectedDAVResponse
 	}
 
-	homeChildren := make([]expectedDAVResponse, 0, len(user15Projects))
-	for href, title := range user15Projects {
-		homeChildren = append(homeChildren, expectCalendar(href, title, "/dav/projects/"))
+	homeDeep := []expectedDAVResponse{expectHomeSet()}
+	for href, p := range user15Projects {
+		homeDeep = append(homeDeep, expectCalendar(href, p.title, p.owner))
 	}
 
-	// A task URL answers as its whole project; Depth 1 lists every task, repeating the requested href.
-	taskURLAsCollection := expectCalendar(pinTaskHref, "Project 36 for Caldav tests", user15Principal)
+	task := expectTask(pinTaskHref, "Title Caldav Test")
 
 	kinds := []resourceKind{
 		{
@@ -193,36 +231,35 @@ func TestPinPropfindMatrix(t *testing.T) {
 		{
 			name:    "principal",
 			path:    "/dav/principals/user15/",
-			shallow: []expectedDAVResponse{expectHomeSet(user15Principal)},
-			deep:    []expectedDAVResponse{expectHomeSet(user15Principal)},
+			shallow: []expectedDAVResponse{expectPrincipal(user15Principal, "user15")},
+			deep:    []expectedDAVResponse{expectPrincipal(user15Principal, "user15")},
 		},
 		{
 			name:    "well-known",
 			path:    "/.well-known/caldav",
-			shallow: []expectedDAVResponse{expectHomeSet(user15Principal)},
-			deep:    []expectedDAVResponse{expectHomeSet(user15Principal)},
+			shallow: []expectedDAVResponse{expectPrincipal("/.well-known/caldav", "caldav")},
+			deep:    []expectedDAVResponse{expectPrincipal("/.well-known/caldav", "caldav")},
 		},
 		{
 			name:    "home set",
 			path:    "/dav/projects",
-			shallow: []expectedDAVResponse{expectHomeSet("/dav/projects/")},
-			// No response for the home set itself.
-			deep: homeChildren,
+			shallow: []expectedDAVResponse{expectHomeSet()},
+			deep:    homeDeep,
 		},
 		{
 			name:    "project collection",
 			path:    "/dav/projects/36",
-			shallow: []expectedDAVResponse{expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", "/dav/projects/")},
+			shallow: []expectedDAVResponse{expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", user15Principal)},
 			deep: append(
-				[]expectedDAVResponse{expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", "/dav/projects/")},
-				project36Tasks("/dav/projects/")...,
+				[]expectedDAVResponse{expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", user15Principal)},
+				project36Tasks()...,
 			),
 		},
 		{
 			name:    "task resource",
 			path:    pinTaskHref,
-			shallow: []expectedDAVResponse{taskURLAsCollection},
-			deep:    append([]expectedDAVResponse{taskURLAsCollection}, project36Tasks(user15Principal)...),
+			shallow: []expectedDAVResponse{task},
+			deep:    []expectedDAVResponse{task},
 		},
 	}
 
@@ -268,7 +305,7 @@ func TestPinPropfindMatrix(t *testing.T) {
 	}
 }
 
-func TestPinPropfindTaskURLReportsProjectETag(t *testing.T) {
+func TestPinPropfindTaskURLReportsTaskETag(t *testing.T) {
 	e := setupTestEnv(t)
 
 	etagOf := func(path string) string {
@@ -281,47 +318,81 @@ func TestPinPropfindTaskURLReportsProjectETag(t *testing.T) {
 		return etag
 	}
 
-	projectETag := etagOf("/dav/projects/36")
-	assert.Equal(t, projectETag, etagOf(pinTaskHref))
+	taskETag := etagOf(pinTaskHref)
+	assert.NotEqual(t, etagOf("/dav/projects/36"), taskETag)
 
 	get := caldavGET(t, e, pinTaskHref)
 	require.Equal(t, 200, get.Code)
-	assert.NotEqual(t, projectETag, get.Header().Get("ETag"), "GET answers with the task's own ETag")
+	assert.Equal(t, taskETag, get.Header().Get("ETag"))
 }
 
-// The task URL is not looked up at all: a UID that does not exist still answers with the project.
-func TestPinPropfindMissingTaskURL(t *testing.T) {
+// RFC 4918 §9.1: an empty body is allprop. Everything the resource has, except calendar-data.
+func TestPinPropfindAllprop(t *testing.T) {
+	// Not in PropfindDiscoveryProps; caldav-go answers both with the resource's own href.
+	withSelfReferences := func(r expectedDAVResponse) expectedDAVResponse {
+		r.ok[davName("principal-collection-set")] = r.href
+		r.ok[calName("calendar-user-address-set")] = r.href
+		r.notFound = nil
+		return r
+	}
+
 	e := setupTestEnv(t)
-	const href = "/dav/projects/36/does-not-exist.ics"
+	for path, want := range map[string]expectedDAVResponse{
+		"/dav/":                   expectEntry(),
+		"/dav/principals/user15/": expectPrincipal(user15Principal, "user15"),
+		"/dav/projects":           expectHomeSet(),
+		"/dav/projects/36":        expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", user15Principal),
+		pinTaskHref:               expectTask(pinTaskHref, "Title Caldav Test"),
+	} {
+		for name, body := range map[string]string{
+			"empty body": "",
+			"allprop":    PropfindAllProps,
+		} {
+			t.Run(path+" "+name, func(t *testing.T) {
+				rec := caldavPROPFIND(t, e, path, "0", body)
 
-	rec := caldavPROPFIND(t, e, href, "0", PropfindDiscoveryProps)
+				require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+				assertDAVResponses(t, rec, []expectedDAVResponse{withSelfReferences(want)})
+			})
+		}
+	}
 
-	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
-	assertDAVResponses(t, rec, []expectedDAVResponse{
-		expectCalendar(href, "Project 36 for Caldav tests", user15Principal),
+	t.Run("include adds calendar-data", func(t *testing.T) {
+		rec := caldavPROPFIND(t, e, pinTaskHref, "0", `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <D:allprop/>
+  <D:include><C:calendar-data/></D:include>
+</D:propfind>`)
+
+		require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+		want := withSelfReferences(expectTask(pinTaskHref, "Title Caldav Test"))
+		want.ok[calName("calendar-data")] = anyValue
+		assertDAVResponses(t, rec, []expectedDAVResponse{want})
 	})
 }
 
-// RFC 4918 treats an empty PROPFIND body as allprop; today it yields bare hrefs.
-func TestPinPropfindEmptyBody(t *testing.T) {
+// RFC 4918 §9.1: propname answers the names allprop would, without values.
+func TestPinPropfindPropname(t *testing.T) {
 	e := setupTestEnv(t)
-	for path, href := range map[string]string{
-		"/dav/":                   "/dav",
-		"/dav/principals/user15/": "/dav/projects",
-		"/dav/projects":           "/dav/projects",
-		"/dav/projects/36":        "/dav/projects/36",
-		pinTaskHref:               pinTaskHref,
-	} {
-		t.Run(path, func(t *testing.T) {
-			rec := caldavPROPFIND(t, e, path, "0", "")
+	allprop := parseDAVResponses(t, caldavPROPFIND(t, e, "/dav/projects/36", "1", PropfindAllProps))
 
-			require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
-			assertDAVResponses(t, rec, []expectedDAVResponse{{href: href}})
-		})
+	rec := caldavPROPFIND(t, e, "/dav/projects/36", "1", `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:"><D:propname/></D:propfind>`)
+	require.Equal(t, 207, rec.Code, "Body:\n%s", rec.Body.String())
+
+	names := parseDAVResponses(t, rec)
+	require.Len(t, names, len(allprop))
+	for i, r := range names {
+		assert.Equal(t, allprop[i].Href, r.Href)
+		require.Len(t, r.Propstats, 1, r.Href)
+		assert.ElementsMatch(t, propNames(allprop[i].Propstats[200]), propNames(r.Propstats[200]), r.Href)
+		for name, value := range r.Propstats[200] {
+			assert.Empty(t, value.canonical(), "%s %v", r.Href, name)
+			assert.Empty(t, value.Children, "%s %v", r.Href, name)
+		}
 	}
 }
 
-// The unknown property is echoed in the 404 propstat without its namespace.
 func TestPinPropfindUnknownNamespace(t *testing.T) {
 	e := setupTestEnv(t)
 	body := `<?xml version="1.0" encoding="utf-8" ?>
@@ -339,7 +410,7 @@ func TestPinPropfindUnknownNamespace(t *testing.T) {
 		href: "/dav/projects/36",
 		ok:   map[xml.Name]string{davName("displayname"): "Project 36 for Caldav tests"},
 		notFound: []xml.Name{{
-			Space: "",
+			Space: "urn:x-vikunja-unknown",
 			Local: "bogus",
 		}},
 	}})

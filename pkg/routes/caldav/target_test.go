@@ -46,10 +46,15 @@ func requireNotFound(t *testing.T, err error) {
 
 func TestResolveTarget(t *testing.T) {
 	t.Run("own principal", func(t *testing.T) {
-		for _, path := range []string{"/dav/principals/user15", "/dav/principals/user15/", "/.well-known/caldav", "/.well-known/caldav/"} {
+		for path, href := range map[string]string{
+			"/dav/principals/user15":  "/dav/principals/user15/",
+			"/dav/principals/user15/": "/dav/principals/user15/",
+			"/.well-known/caldav":     "/.well-known/caldav",
+			"/.well-known/caldav/":    "/.well-known/caldav/",
+		} {
 			got, err := resolveFor(t, resolvePrincipal, path, nil)
 			require.NoError(t, err, path)
-			assert.Equal(t, principalTarget{}, got, path)
+			assert.Equal(t, principalTarget{href: href}, got, path)
 		}
 	})
 
@@ -144,7 +149,7 @@ func TestNewStorage(t *testing.T) {
 
 	principal := newStorage(caldavFilterUser, principalTarget{})
 	assert.Nil(t, principal.project)
-	assert.Equal(t, principalTarget{}, principal.target)
+	assert.Nil(t, principal.task)
 
 	homeSet := newStorage(caldavFilterUser, homeSetTarget{})
 	require.NotNil(t, homeSet.project)

@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	maxPropPatchBodySize       = 64 * 1024
+	maxPropRequestBodySize     = 64 * 1024
 	maxPropPatchProperties     = 100
 	maxPropPatchNamespaceBytes = 256
 )
@@ -120,7 +120,7 @@ type propPatchResult struct {
 // Only a collection's calendar-color is settable; everything else gets
 // sabre/dav's 403 "polite refusal", which clients tolerate unlike caldav-go's 501.
 func handlePropPatch(c *echo.Context, body string, project *models.ProjectWithTasksAndBuckets, u *user.User, target propPatchTarget) error {
-	if len(body) > maxPropPatchBodySize {
+	if len(body) > maxPropRequestBodySize {
 		return writeError(c, errBodyTooLarge)
 	}
 

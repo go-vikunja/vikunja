@@ -51,7 +51,11 @@ func getCollection(c *echo.Context, u *user.User, collection collectionTarget) e
 	s := db.NewSession()
 	defer s.Close()
 
-	tasks, err := readCollectionTasks(s, u, collection)
+	readable, err := collection.checkRead(s, u)
+	if err != nil {
+		return writeError(c, err)
+	}
+	tasks, err := readCollectionTasks(s, u, readable)
 	if err != nil {
 		return writeError(c, err)
 	}

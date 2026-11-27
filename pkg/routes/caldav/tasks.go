@@ -67,10 +67,7 @@ func findTask(s *xorm.Session, u *user.User, c collectionTarget, uid string) (*m
 	return nil, nil
 }
 
-func readCollectionTasks(s *xorm.Session, u *user.User, c collectionTarget) ([]*models.TaskWithComments, error) {
-	if _, err := c.checkRead(s, u); err != nil {
-		return nil, err
-	}
+func readCollectionTasks(s *xorm.Session, u *user.User, c readableCollection) ([]*models.TaskWithComments, error) {
 	if err := c.project.ReadOne(s, u); err != nil {
 		return nil, err
 	}

@@ -32,7 +32,9 @@ type target interface{ isTarget() }
 
 type entryTarget struct{}
 
-type principalTarget struct{}
+type principalTarget struct {
+	href string
+}
 
 type homeSetTarget struct{}
 
@@ -59,20 +61,24 @@ func resolveEntry(*echo.Context, *user.User) (target, error) {
 }
 
 func resolvePrincipal(c *echo.Context, u *user.User) (target, error) {
-	if !isOwnPrincipalPath(c.Request().URL.Path, u.Username) {
+	path := c.Request().URL.Path
+	if isWellKnownPath(path) {
+		return principalTarget{href: path}, nil
+	}
+	if !isOwnPrincipalPath(path, u.Username) {
 		return nil, errNotFound
 	}
-	return principalTarget{}, nil
+	return principalTarget{href: principalPathForUser(u.Username)}, nil
+}
+
+func isWellKnownPath(path string) bool {
+	return strings.TrimSuffix(path, "/") == "/.well-known/caldav"
 }
 
 // Sub-paths and foreign usernames must 404 (RFC 4918) instead of falling
 // through to the merged principal pseudo-resource, which would silently serve
 // the authenticated user's data and act as a username enumeration oracle.
-// /.well-known/caldav also routes here (RFC 6764 bootstrap).
 func isOwnPrincipalPath(path, username string) bool {
-	if strings.TrimSuffix(path, "/") == "/.well-known/caldav" {
-		return true
-	}
 	rest := strings.TrimPrefix(strings.TrimPrefix(path, PrincipalBasePath), "/")
 	return strings.TrimSuffix(rest, "/") == username
 }
@@ -141,7 +147,7 @@ func loadCollection(param string) (*models.ProjectWithTasksAndBuckets, error) {
 
 // newStorage is the only way the caldav-go storage gets built.
 func newStorage(u *user.User, t target) *VikunjaCaldavProjectStorage {
-	storage := &VikunjaCaldavProjectStorage{user: u, target: t}
+	storage := &VikunjaCaldavProjectStorage{user: u}
 	switch t := t.(type) {
 	case homeSetTarget:
 		storage.project = &models.ProjectWithTasksAndBuckets{}
