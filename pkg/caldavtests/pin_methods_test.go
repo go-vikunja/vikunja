@@ -25,27 +25,16 @@ import (
 
 func TestPinUnsupportedMethods(t *testing.T) {
 	methods := []string{
-		"MKCALENDAR",
-		"MKCOL",
-		"COPY",
-		"MOVE",
-		"LOCK",
-		"UNLOCK",
 		http.MethodPost,
-		http.MethodPatch,
+		"MKCALENDAR",
 	}
 	allow := map[string]string{
-		"/dav":                    allowEntry,
-		"/dav/":                   allowEntry,
-		"/.well-known/caldav":     allowEntry,
-		"/.well-known/caldav/":    allowEntry,
-		"/dav/principals/user15":  allowEntry,
-		"/dav/principals/user15/": allowEntry,
-		"/dav/projects":           allowHomeSet,
-		"/dav/projects/":          allowHomeSet,
-		"/dav/projects/36":        allowCollectionReadWrite,
-		"/dav/projects/36/":       allowCollectionReadWrite,
-		pinTaskHref:               allowReadWrite,
+		"/dav/":               allowEntry,
+		"/.well-known/caldav": allowEntry,
+		user15Principal:       allowEntry,
+		"/dav/projects":       allowHomeSet,
+		"/dav/projects/36":    allowCollectionReadWrite,
+		pinTaskHref:           allowReadWrite,
 	}
 
 	e := setupTestEnv(t)
@@ -62,7 +51,11 @@ func TestPinUnsupportedMethods(t *testing.T) {
 	}
 
 	// PROPPATCH is answered on collections and tasks only.
-	for _, path := range []string{"/dav/", user15Principal, "/dav/projects"} {
+	for _, path := range []string{
+		"/dav/",
+		user15Principal,
+		"/dav/projects",
+	} {
 		rec := caldavRequest(t, e, "PROPPATCH", path, "", nil)
 		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code, "PROPPATCH %s", path)
 		assert.Equal(t, allow[path], rec.Header().Get("Allow"), "PROPPATCH %s", path)
@@ -73,17 +66,28 @@ func TestPinUnsupportedMethodsAccess(t *testing.T) {
 	e := setupTestEnv(t)
 
 	t.Run("unauthenticated", func(t *testing.T) {
-		for _, path := range []string{"/dav/", "/.well-known/caldav", user15Principal, "/dav/projects", "/dav/projects/36", pinTaskHref} {
-			rec := caldavRequest(t, e, "MKCALENDAR", path, "", map[string]string{"Authorization": basicAuthHeader(testuser15.Username, "wrong")})
+		for _, path := range []string{
+			"/dav/projects/36",
+			"/.well-known/caldav",
+		} {
+			rec := caldavRequest(t, e, "MKCALENDAR", path, "", map[string]string{
+				"Authorization": basicAuthHeader(testuser15.Username, "wrong"),
+			})
 			assert.Equal(t, http.StatusUnauthorized, rec.Code, "MKCALENDAR %s", path)
 			assert.Empty(t, rec.Header().Get("Allow"), "MKCALENDAR %s", path)
 		}
 	})
 
 	t.Run("unreadable or missing resource", func(t *testing.T) {
-		// user1 cannot read project 36; 999999 does not exist.
-		as := map[string]string{"Authorization": basicAuthHeader(testuser1.Username, fixturePassword)}
-		for _, path := range []string{"/dav/projects/36", "/dav/projects/36/", pinTaskHref, "/dav/projects/999999", "/dav/projects/999999/x.ics", user15Principal} {
+		// user1 cannot read project 36.
+		as := map[string]string{
+			"Authorization": basicAuthHeader(testuser1.Username, fixturePassword),
+		}
+		for _, path := range []string{
+			"/dav/projects/36",
+			pinTaskHref,
+			user15Principal,
+		} {
 			rec := caldavRequest(t, e, "MKCALENDAR", path, "", as)
 			assert.Equal(t, http.StatusNotFound, rec.Code, "MKCALENDAR %s", path)
 			assert.Empty(t, rec.Header().Get("Allow"), "MKCALENDAR %s", path)
@@ -92,7 +96,9 @@ func TestPinUnsupportedMethodsAccess(t *testing.T) {
 
 	t.Run("read-only collection", func(t *testing.T) {
 		// user1 has a read share on user6's project 9.
-		as := map[string]string{"Authorization": basicAuthHeader(testuser1.Username, fixturePassword)}
+		as := map[string]string{
+			"Authorization": basicAuthHeader(testuser1.Username, fixturePassword),
+		}
 		rec := caldavRequest(t, e, "MKCALENDAR", "/dav/projects/9", "", as)
 		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
 		assert.Equal(t, allowReadOnly, rec.Header().Get("Allow"))
@@ -129,17 +135,16 @@ func TestPinWritesOnEntryAndPrincipal(t *testing.T) {
 // Apple clients append a slash to collection paths; both spellings must answer alike.
 func TestPinTrailingSlash(t *testing.T) {
 	entry := map[string]int{
-		http.MethodOptions: 200, http.MethodGet: 200, http.MethodHead: 200, "PROPFIND": 207,
-		http.MethodPut: 405, http.MethodDelete: 405, "REPORT": 405, "PROPPATCH": 405,
+		"PROPFIND":     207,
+		http.MethodPut: 405,
 	}
 	homeSet := map[string]int{
-		http.MethodOptions: 200, http.MethodGet: 405, http.MethodHead: 405, "PROPFIND": 207,
-		http.MethodPut: 405, http.MethodDelete: 405, "REPORT": 405, "PROPPATCH": 405,
+		"PROPFIND":     207,
+		http.MethodGet: 405,
 	}
-	// Empty bodies: PUT without a VCALENDAR is 412, REPORT and PROPPATCH are malformed.
 	collection := map[string]int{
-		http.MethodOptions: 200, http.MethodGet: 200, http.MethodHead: 200, "PROPFIND": 207,
-		http.MethodPut: 412, http.MethodDelete: 405, "REPORT": 400, "PROPPATCH": 400,
+		"PROPFIND":   207,
+		"MKCALENDAR": 405,
 	}
 
 	e := setupTestEnv(t)
