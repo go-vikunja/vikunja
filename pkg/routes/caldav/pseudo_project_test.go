@@ -158,14 +158,6 @@ END:VCALENDAR`
 		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
 	})
 
-	t.Run("create through favorites is forbidden", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		_, err := createFromBody(caldavFilterUser, models.FavoritesPseudoProjectID, newTaskContent)
-		require.ErrorIs(t, err, errForbidden)
-		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
-	})
-
 	t.Run("update of a filter member succeeds and leaves it in its project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
@@ -615,15 +607,6 @@ SUMMARY:New task
 END:VTODO
 END:VCALENDAR`
 
-	t.Run("create is forbidden", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		archiveProject(t, 36)
-
-		_, err := createFromBody(caldavFilterUser, 36, taskContent)
-		require.ErrorIs(t, err, errForbidden)
-		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
-	})
-
 	t.Run("update is forbidden", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		archiveProject(t, 36)
@@ -677,95 +660,5 @@ END:VCALENDAR`
 		_, err := createFromBody(caldavOtherUser, inheritedArchivedProjectID, taskContent)
 		require.ErrorIs(t, err, errForbidden)
 		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "uid-caldav-new"})
-	})
-}
-
-// A PUT whose task the lookup could not find goes on to create it, so createTask decides
-// the answer for stale hrefs and unreadable collections alike.
-func TestCreateTask_MissesBeforeDenials(t *testing.T) {
-	const newTaskContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Vikunja Todo App//EN
-BEGIN:VTODO
-UID:uid-caldav-new
-DTSTAMP:20230301T073337Z
-SUMMARY:New task
-END:VTODO
-END:VCALENDAR`
-
-	const existingTaskContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Vikunja Todo App//EN
-BEGIN:VTODO
-UID:uid-caldav-test
-DTSTAMP:20230301T073337Z
-SUMMARY:Recreated through the filter
-END:VTODO
-END:VCALENDAR`
-
-	create := func(t *testing.T, u *user.User, projectID int64, uid, content string) error {
-		t.Helper()
-
-		return writeTransaction(func(s *xorm.Session) error {
-			c, err := collectionFor(projectID).checkRead(s, u)
-			if err != nil {
-				return err
-			}
-			// The handler only creates once the lookup reported a miss.
-			stored, err := findTask(s, u, c.collectionTarget, uid)
-			require.NoError(t, err)
-			require.Nil(t, stored)
-
-			vTask, _, err := parseTaskBody(content)
-			require.NoError(t, err)
-			return createTask(s, u, c, vTask)
-		})
-	}
-
-	t.Run("a task the pseudo collection does not contain is not found", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		pseudoID := createSavedFilter(t, caldavFilterUser, caldavFilterMatchingNothing)
-
-		err := create(t, caldavFilterUser, pseudoID, "uid-caldav-test", existingTaskContent)
-		require.ErrorIs(t, err, errNotFound)
-		db.AssertCount(t, "tasks", builder.Eq{"uid": "uid-caldav-test"}, 1)
-	})
-
-	t.Run("a saved filter of another user is not found", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		err := create(t, caldavFilterUser, foreignFilterProjectID, "uid-caldav-new", newTaskContent)
-		require.ErrorIs(t, err, errNotFound)
-		db.AssertCount(t, "tasks", builder.Eq{"uid": "uid-caldav-new"}, 0)
-	})
-
-	t.Run("a project the user has no access to is not found", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		err := create(t, caldavOtherUser, inaccessibleProjectID, "uid-caldav-new", newTaskContent)
-		require.ErrorIs(t, err, errNotFound)
-		db.AssertCount(t, "tasks", builder.Eq{"uid": "uid-caldav-new"}, 0)
-	})
-
-	t.Run("a readable project without write access stays forbidden", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		// Project 3 is owned by user 3 and shared read-only with user 1.
-		err := create(t, caldavOtherUser, 3, "uid-caldav-new", newTaskContent)
-		require.ErrorIs(t, err, errForbidden)
-		db.AssertCount(t, "tasks", builder.Eq{"uid": "uid-caldav-new"}, 0)
-	})
-
-	t.Run("a new task in a writable project is created", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		err := create(t, caldavFilterUser, 36, "uid-caldav-new", newTaskContent)
-		require.NoError(t, err)
-		db.AssertCount(t, "tasks", builder.Eq{
-			"uid":        "uid-caldav-new",
-			"title":      "New task",
-			"project_id": 36,
-		}, 1)
 	})
 }

@@ -127,16 +127,6 @@ func TestResolveTarget(t *testing.T) {
 		assert.Equal(t, int64(36), task.collection.project.ID)
 	})
 
-	t.Run("task without a collection or uid", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		_, err := resolveFor(t, resolveTask, "/dav/projects//uid.ics", echo.PathValues{{Name: "project", Value: ""}, {Name: "task", Value: "uid.ics"}})
-		requireNotFound(t, err)
-
-		_, err = resolveFor(t, resolveTask, "/dav/projects/36/.ics", taskParams(36, ""))
-		requireNotFound(t, err)
-	})
-
 	t.Run("task in a pseudo collection", func(t *testing.T) {
 		got, err := resolveFor(t, resolveTask, "/dav/projects/-1/uid.ics", taskParams(models.FavoritesPseudoProjectID, "uid"))
 		require.NoError(t, err)

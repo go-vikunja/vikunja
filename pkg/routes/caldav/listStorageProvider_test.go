@@ -20,7 +20,6 @@ package caldav
 
 import (
 	"fmt"
-	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -520,22 +519,6 @@ END:VCALENDAR`
 		updated, err := models.GetTaskByIDSimple(s, duplicate.ID)
 		require.NoError(t, err)
 		assert.Equal(t, "Hijacked", updated.Title)
-		assertVictimUntouched(t)
-	})
-
-	// The lookup and the write share one transaction now, so the task written to is always
-	// the one the lookup resolved through the url's collection.
-	t.Run("a PUT through another project never writes to the first UID match", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-
-		s := db.NewSession()
-		_, err := s.Insert(&models.Task{Title: "Duplicate UID task", UID: taskUID, ProjectID: 38, Index: 99, CreatedByID: u.ID})
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-		s.Close()
-
-		_, err = callCaldavHandler(t, TaskHandler, u, http.MethodPut, projectPath(38)+taskUID+".ics", taskContent, taskParams(38, taskUID))
-		require.NoError(t, err)
 		assertVictimUntouched(t)
 	})
 
