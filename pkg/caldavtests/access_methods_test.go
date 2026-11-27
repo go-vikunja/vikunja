@@ -39,7 +39,11 @@ func TestAccessPerMethodFavorites(t *testing.T) {
 		t.Helper()
 		s := db.NewSession()
 		defer s.Close()
-		_, err := s.Insert(&models.Favorite{EntityID: 40, UserID: testuser15.ID, Kind: models.FavoriteKindTask})
+		_, err := s.Insert(&models.Favorite{
+			EntityID: 40,
+			UserID:   testuser15.ID,
+			Kind:     models.FavoriteKindTask,
+		})
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 	}

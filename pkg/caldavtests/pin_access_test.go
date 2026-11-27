@@ -92,13 +92,19 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	})
 	assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s", collection)
 
-	for _, method := range []string{http.MethodGet, http.MethodHead} {
+	for _, method := range []string{
+		http.MethodGet,
+		http.MethodHead,
+	} {
 		assert.Equal(t, want.get, caldavRequest(t, e, method, task, "", as).Code, "%s %s", method, task)
 		assert.Equal(t, want.get, caldavRequest(t, e, method, collection, "", as).Code, "%s %s", method, collection)
 	}
 	assert.Equal(t, want.report, caldavRequest(t, e, "REPORT", collection, ReportCalendarQuery, as).Code, "REPORT %s", collection)
 
-	for _, path := range []string{task, collection} {
+	for _, path := range []string{
+		task,
+		collection,
+	} {
 		options := caldavRequest(t, e, http.MethodOptions, path, "", as)
 		assert.Equal(t, want.options, options.Code, "OPTIONS %s", path)
 		assert.Equal(t, want.allow, options.Header().Get("Allow"), "OPTIONS %s Allow", path)
@@ -344,14 +350,27 @@ func TestPinMalformedTaskURLs(t *testing.T) {
 
 	// Without it a lookup of the empty UID finds nothing and the empty-UID case passes by accident.
 	s := db.NewSession()
-	_, err := s.Insert(&models.Task{Title: "Task without uid", ProjectID: 36, Index: 999, CreatedByID: testuser15.ID})
+	_, err := s.Insert(&models.Task{
+		Title:       "Task without uid",
+		ProjectID:   36,
+		Index:       999,
+		CreatedByID: testuser15.ID,
+	})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	s.Close()
 
-	for _, path := range []string{"/dav/projects//uid-caldav-test.ics", "/dav/projects/36/.ics"} {
+	for _, path := range []string{
+		"/dav/projects//uid-caldav-test.ics",
+		"/dav/projects/36/.ics",
+	} {
 		t.Run(path, func(t *testing.T) {
-			for _, method := range []string{http.MethodGet, http.MethodHead, http.MethodDelete, http.MethodOptions} {
+			for _, method := range []string{
+				http.MethodGet,
+				http.MethodHead,
+				http.MethodDelete,
+				http.MethodOptions,
+			} {
 				rec := caldavRequest(t, e, method, path, "", nil)
 				assert.Equal(t, http.StatusNotFound, rec.Code, "%s. Body:\n%s", method, rec.Body.String())
 			}
@@ -374,7 +393,13 @@ func TestPinSameUIDInAnotherProject(t *testing.T) {
 	e := setupTestEnv(t)
 
 	s := db.NewSession()
-	_, err := s.Insert(&models.Task{Title: "Duplicate UID task", UID: "uid-caldav-test", ProjectID: 38, Index: 999, CreatedByID: testuser15.ID})
+	_, err := s.Insert(&models.Task{
+		Title:       "Duplicate UID task",
+		UID:         "uid-caldav-test",
+		ProjectID:   38,
+		Index:       999,
+		CreatedByID: testuser15.ID,
+	})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	s.Close()

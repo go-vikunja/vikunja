@@ -186,7 +186,10 @@ func createTask(s *xorm.Session, u *user.User, c readableCollection, vTask *mode
 	}
 
 	// Without labels of its own: UpdateTaskLabels diffs the new labels against them.
-	created := &models.Task{ID: vTask.ID, ProjectID: vTask.ProjectID}
+	created := &models.Task{
+		ID:        vTask.ID,
+		ProjectID: vTask.ProjectID,
+	}
 	if err := persistLabels(s, u, created, vTask.Labels); err != nil {
 		log.Errorf("[CALDAV] Failed to persist labels in createTask: %v, labels: %+v", err, vTask.Labels)
 		return err

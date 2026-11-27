@@ -255,12 +255,20 @@ func TestDiscoveryOPTIONS(t *testing.T) {
 		rec := caldavOPTIONS(t, e, "/dav/")
 
 		allowHeader := rec.Header().Get("Allow")
-		for _, method := range []string{"OPTIONS", "GET", "PROPFIND", "REPORT"} {
+		for _, method := range []string{
+			"OPTIONS",
+			"GET",
+			"PROPFIND",
+			"REPORT",
+		} {
 			assert.Contains(t, allowHeader, method,
 				"Allow header should include %s", method)
 		}
 		// Nothing can be written to the entry itself.
-		for _, method := range []string{"PUT", "DELETE"} {
+		for _, method := range []string{
+			"PUT",
+			"DELETE",
+		} {
 			assert.NotContains(t, allowHeader, method,
 				"Allow header should not include %s", method)
 		}

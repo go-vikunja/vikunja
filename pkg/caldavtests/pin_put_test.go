@@ -200,7 +200,12 @@ func TestPinPUTOnCollection(t *testing.T) {
 		e := setupTestEnv(t)
 
 		s := db.NewSession()
-		uidless := &models.Task{Title: "Task without uid", ProjectID: 36, Index: 999, CreatedByID: testuser15.ID}
+		uidless := &models.Task{
+			Title:       "Task without uid",
+			ProjectID:   36,
+			Index:       999,
+			CreatedByID: testuser15.ID,
+		}
 		_, err := s.Insert(uidless)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())

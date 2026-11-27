@@ -30,7 +30,10 @@ type preconditions struct {
 }
 
 func preconditionsOf(h http.Header) preconditions {
-	return preconditions{ifMatch: h.Values("If-Match"), ifNoneMatch: h.Values("If-None-Match")}
+	return preconditions{
+		ifMatch:     h.Values("If-Match"),
+		ifNoneMatch: h.Values("If-None-Match"),
+	}
 }
 
 func (p preconditions) ifMatches(etag string) bool {
