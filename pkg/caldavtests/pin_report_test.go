@@ -114,7 +114,11 @@ func assertSupportedReport(t *testing.T, rec *httptest.ResponseRecorder) {
 func TestPinReportMalformedBody(t *testing.T) {
 	e := setupTestEnv(t)
 
-	for name, body := range map[string]string{"empty": "", "not XML": "<<<", "truncated": `<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">`} {
+	for name, body := range map[string]string{
+		"empty":     "",
+		"not XML":   "<<<",
+		"truncated": `<C:calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">`,
+	} {
 		t.Run(name, func(t *testing.T) {
 			rec := caldavREPORT(t, e, "/dav/projects/36", body)
 			assert.Equal(t, http.StatusBadRequest, rec.Code, "Body:\n%s", rec.Body.String())
@@ -223,7 +227,10 @@ func TestPinReportTargets(t *testing.T) {
 
 	task := []expectedDAVResponse{{
 		href: pinTaskHref,
-		ok:   map[xml.Name]string{davName("getetag"): anyValue, calName("calendar-data"): anyValue},
+		ok: map[xml.Name]string{
+			davName("getetag"):       anyValue,
+			calName("calendar-data"): anyValue,
+		},
 	}}
 
 	tests := []struct {
@@ -236,14 +243,22 @@ func TestPinReportTargets(t *testing.T) {
 	}{
 		{
 			// The filter and the hrefs are ignored, the task answers for itself.
-			name: "task", path: pinTaskHref,
-			query: task, multiget: task, queryStatus: 207, multigetStatus: 207,
-			syncStatus: http.StatusForbidden, unknownStatus: http.StatusForbidden,
+			name:           "task",
+			path:           pinTaskHref,
+			query:          task,
+			multiget:       task,
+			queryStatus:    207,
+			multigetStatus: 207,
+			syncStatus:     http.StatusForbidden,
+			unknownStatus:  http.StatusForbidden,
 		},
 		{
-			name: "missing task", path: "/dav/projects/36/nonexistent-uid.ics",
-			queryStatus: http.StatusNotFound, multigetStatus: http.StatusNotFound,
-			syncStatus: http.StatusNotFound, unknownStatus: http.StatusNotFound,
+			name:           "missing task",
+			path:           "/dav/projects/36/nonexistent-uid.ics",
+			queryStatus:    http.StatusNotFound,
+			multigetStatus: http.StatusNotFound,
+			syncStatus:     http.StatusNotFound,
+			unknownStatus:  http.StatusNotFound,
 		},
 	}
 

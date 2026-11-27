@@ -42,7 +42,10 @@ const (
 	maxReportDepth    = 16
 )
 
-var errUnsupportedReport = preconditionError{precondition: davName("supported-report"), reason: "unsupported report"}
+var errUnsupportedReport = preconditionError{
+	precondition: davName("supported-report"),
+	reason:       "unsupported report",
+}
 
 // reportRequest is what a REPORT body asks for.
 type reportRequest interface{ isReportRequest() }
@@ -80,7 +83,10 @@ func parseReport(body string) (reportRequest, error) {
 	case xml.Name{}:
 		return nil, fmt.Errorf("%w: empty body", errMalformedBody)
 	case calDAVName("calendar-multiget"):
-		return multigetRequest{props: p.props.request(), hrefs: p.hrefs}, nil
+		return multigetRequest{
+			props: p.props.request(),
+			hrefs: p.hrefs,
+		}, nil
 	case calDAVName("calendar-query"):
 		// RFC 4791 §9.5: the filter is required.
 		if p.filter == nil {
@@ -90,9 +96,15 @@ func parseReport(body string) (reportRequest, error) {
 		if err != nil {
 			return nil, err
 		}
-		return calendarQueryRequest{props: p.props.request(), filter: filter}, nil
+		return calendarQueryRequest{
+			props:  p.props.request(),
+			filter: filter,
+		}, nil
 	case davName("sync-collection"):
-		return syncCollectionRequest{props: p.props.request(), token: p.token}, nil
+		return syncCollectionRequest{
+			props: p.props.request(),
+			token: p.token,
+		}, nil
 	}
 	return nil, errUnsupportedReport
 }
@@ -181,7 +193,10 @@ func (p *reportParser) openFilterElement(t xml.StartElement) error {
 	if p.filterElements > maxFilterElements {
 		return fmt.Errorf("%w: more than %d filter elements", errBodyTooLarge, maxFilterElements)
 	}
-	el := &xmlElement{name: t.Name, attrs: t.Copy().Attr}
+	el := &xmlElement{
+		name:  t.Name,
+		attrs: t.Copy().Attr,
+	}
 	if len(p.filterStack) == 0 {
 		if p.filter != nil {
 			return invalidFilter("more than one filter")
@@ -258,7 +273,10 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 			if err := s.Commit(); err != nil {
 				return writeError(c, err)
 			}
-			return writeMultistatus(c, multistatus{responses: responses, minimal: prefersMinimal(c)})
+			return writeMultistatus(c, multistatus{
+				responses: responses,
+				minimal:   prefersMinimal(c),
+			})
 		}, nil
 	case taskTarget:
 		if _, err := t.collection.checkRead(s, u); err != nil {
@@ -275,7 +293,11 @@ func authorizeReport(s *xorm.Session, u *user.User, t target) (reportAnswer, err
 		if err != nil {
 			return nil, err
 		}
-		resource := &taskResource{href: taskURL(t.collection.project.ID, task), task: task, owner: owner}
+		resource := &taskResource{
+			href:  taskURL(t.collection.project.ID, task),
+			task:  task,
+			owner: owner,
+		}
 		// Pinned: caldav-go answered a query or multiget on a task with the task, whatever
 		// the filter or the hrefs.
 		return func(c *echo.Context, s *xorm.Session, req reportRequest) error {
@@ -336,10 +358,18 @@ func answerMultiget(s *xorm.Session, u *user.User, c readableCollection, req mul
 	for _, href := range req.hrefs {
 		task, found := tasks[href]
 		if !found {
-			responses = append(responses, statusResponse{href: href, status: http.StatusNotFound})
+			responses = append(responses, statusResponse{
+				href:   href,
+				status: http.StatusNotFound,
+			})
 			continue
 		}
-		responses = append(responses, (&taskResource{href: href, task: task, owner: owner}).answer(ctx, props))
+		resource := &taskResource{
+			href:  href,
+			task:  task,
+			owner: owner,
+		}
+		responses = append(responses, resource.answer(ctx, props))
 	}
 	return responses, nil
 }
@@ -444,7 +474,11 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 
 	if tasks == nil {
 		// Pinned: caldav-go answered a query on a collection without tasks with the collection.
-		collection := &collectionResource{href: collectionHref(c.project.ID), project: c.project, owner: owner}
+		collection := &collectionResource{
+			href:    collectionHref(c.project.ID),
+			project: c.project,
+			owner:   owner,
+		}
 		return []msResponse{collection.answer(ctx, props)}, nil
 	}
 
@@ -452,7 +486,11 @@ func answerCalendarQuery(s *xorm.Session, u *user.User, c readableCollection, re
 	for _, t := range tasks {
 		href := taskURL(c.project.ID, &t.Task)
 		// Pinned: two tasks with the same UID answer under the same href.
-		candidate := &queryCandidate{resource: &taskResource{href: href, task: &t.Task, owner: owner}}
+		candidate := &queryCandidate{resource: &taskResource{
+			href:  href,
+			task:  &t.Task,
+			owner: owner,
+		}}
 		if req.filter.matches(candidate) {
 			responses = append(responses, candidate.resource.answer(ctx, props))
 		}

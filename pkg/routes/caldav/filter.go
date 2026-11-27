@@ -35,21 +35,38 @@ const (
 
 // RFC 4791 §9.7.2: only these properties take a time-range.
 var dateTimeProperties = map[string]bool{
-	"DTSTART": true, "DTEND": true, "DUE": true, "COMPLETED": true,
-	"CREATED": true, "DTSTAMP": true, "LAST-MODIFIED": true, "RECURRENCE-ID": true,
+	"DTSTART":       true,
+	"DTEND":         true,
+	"DUE":           true,
+	"COMPLETED":     true,
+	"CREATED":       true,
+	"DTSTAMP":       true,
+	"LAST-MODIFIED": true,
+	"RECURRENCE-ID": true,
 }
 
 // Top-level components cannot nest (RFC 4791 §7.8, CALDAV:valid-filter).
 var topLevelComponents = map[string]bool{
-	"VCALENDAR": true, "VEVENT": true, "VTODO": true, "VJOURNAL": true, "VFREEBUSY": true, "VTIMEZONE": true,
+	"VCALENDAR": true,
+	"VEVENT":    true,
+	"VTODO":     true,
+	"VJOURNAL":  true,
+	"VFREEBUSY": true,
+	"VTIMEZONE": true,
 }
 
 func invalidFilter(format string, args ...any) error {
-	return preconditionError{precondition: calDAVName("valid-filter"), reason: fmt.Sprintf(format, args...)}
+	return preconditionError{
+		precondition: calDAVName("valid-filter"),
+		reason:       fmt.Sprintf(format, args...),
+	}
 }
 
 func unsupportedFilter(format string, args ...any) error {
-	return preconditionError{precondition: calDAVName("supported-filter"), reason: fmt.Sprintf(format, args...)}
+	return preconditionError{
+		precondition: calDAVName("supported-filter"),
+		reason:       fmt.Sprintf(format, args...),
+	}
 }
 
 // calendarFilter is a CALDAV:filter (RFC 4791 §9.7) that passed validation: whatever it
@@ -221,12 +238,18 @@ func parseCompFilter(el *xmlElement, level int) (compFilter, error) {
 	}
 
 	if !notDefined {
-		return compFilter{name: name, test: match}, nil
+		return compFilter{
+			name: name,
+			test: match,
+		}, nil
 	}
 	if match.timeRange != nil || len(match.props) > 0 || len(match.comps) > 0 {
 		return compFilter{}, invalidFilter("is-not-defined in %s with other tests", name)
 	}
-	return compFilter{name: name, test: isNotDefined{}}, nil
+	return compFilter{
+		name: name,
+		test: isNotDefined{},
+	}, nil
 }
 
 func parsePropFilter(el *xmlElement) (propFilter, error) {
@@ -268,12 +291,18 @@ func parsePropFilter(el *xmlElement) (propFilter, error) {
 	}
 
 	if !notDefined {
-		return propFilter{name: name, test: match}, nil
+		return propFilter{
+			name: name,
+			test: match,
+		}, nil
 	}
 	if match.value != nil || len(match.params) > 0 {
 		return propFilter{}, invalidFilter("is-not-defined in %s with other tests", name)
 	}
-	return propFilter{name: name, test: isNotDefined{}}, nil
+	return propFilter{
+		name: name,
+		test: isNotDefined{},
+	}, nil
 }
 
 func parseParamFilter(el *xmlElement) (paramFilter, error) {
@@ -300,12 +329,18 @@ func parseParamFilter(el *xmlElement) (paramFilter, error) {
 	}
 
 	if !notDefined {
-		return paramFilter{name: name, test: match}, nil
+		return paramFilter{
+			name: name,
+			test: match,
+		}, nil
 	}
 	if match.text != nil {
 		return paramFilter{}, invalidFilter("is-not-defined in %s with a text-match", name)
 	}
-	return paramFilter{name: name, test: isNotDefined{}}, nil
+	return paramFilter{
+		name: name,
+		test: isNotDefined{},
+	}, nil
 }
 
 func parseTextMatch(el *xmlElement) (textMatch, error) {
@@ -321,7 +356,10 @@ func parseTextMatch(el *xmlElement) (textMatch, error) {
 	case "i;octet":
 		match.foldCase = false
 	default:
-		return textMatch{}, preconditionError{precondition: calDAVName("supported-collation"), reason: collation}
+		return textMatch{}, preconditionError{
+			precondition: calDAVName("supported-collation"),
+			reason:       collation,
+		}
 	}
 	if match.foldCase {
 		match.value = asciiUpper(match.value)

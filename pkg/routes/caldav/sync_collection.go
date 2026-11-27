@@ -190,7 +190,11 @@ func writeSyncResponse(
 	owner := ownerName(u, &collection.project.Project)
 	props := reportProps(req.props)
 	for _, t := range tasks {
-		resource := &taskResource{href: taskURL(collection.project.ID, &t.Task), task: &t.Task, owner: owner}
+		resource := &taskResource{
+			href:  taskURL(collection.project.ID, &t.Task),
+			task:  &t.Task,
+			owner: owner,
+		}
 		ms.responses = append(ms.responses, resource.answer(ctx, props))
 	}
 

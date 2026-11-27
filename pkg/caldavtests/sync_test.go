@@ -244,9 +244,15 @@ func TestSyncCollectionMemberProperties(t *testing.T) {
 	require.Len(t, fetched, 1)
 
 	// The same task looks the same, whichever report fetched it.
-	for _, name := range []xml.Name{davName("getetag"), calName("calendar-data")} {
+	for _, name := range []xml.Name{
+		davName("getetag"),
+		calName("calendar-data"),
+	} {
 		assert.Equal(t, fetched[0].Propstats[200][name].canonical(), synced.Propstats[200][name].canonical(), "%v", name)
 	}
 	assert.Equal(t, "Title Caldav Test", synced.Propstats[200][davName("displayname")].canonical())
-	assert.Contains(t, synced.Propstats[404], xml.Name{Space: "urn:example", Local: "unknown"})
+	assert.Contains(t, synced.Propstats[404], xml.Name{
+		Space: "urn:example",
+		Local: "unknown",
+	})
 }

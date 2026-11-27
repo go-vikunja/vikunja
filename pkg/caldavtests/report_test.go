@@ -277,11 +277,30 @@ func TestReportCalendarQueryTimeRange(t *testing.T) {
 		timeRange string
 		hrefs     []string
 	}{
-		{name: "between start and due", timeRange: `start="20310602T000000Z" end="20310602T120000Z"`, hrefs: []string{startAndDue}},
-		{name: "around a start", timeRange: `start="20310605T000000Z" end="20310611T000000Z"`, hrefs: []string{startOnly}},
-		{name: "after everything", timeRange: `start="20320101T000000Z" end="20320102T000000Z"`},
-		{name: "open start", timeRange: `end="20230302T000000Z"`, hrefs: project36TaskHrefs()},
-		{name: "open end", timeRange: `start="20310604T000000Z"`, hrefs: []string{startOnly}},
+		{
+			name:      "between start and due",
+			timeRange: `start="20310602T000000Z" end="20310602T120000Z"`,
+			hrefs:     []string{startAndDue},
+		},
+		{
+			name:      "around a start",
+			timeRange: `start="20310605T000000Z" end="20310611T000000Z"`,
+			hrefs:     []string{startOnly},
+		},
+		{
+			name:      "after everything",
+			timeRange: `start="20320101T000000Z" end="20320102T000000Z"`,
+		},
+		{
+			name:      "open start",
+			timeRange: `end="20230302T000000Z"`,
+			hrefs:     project36TaskHrefs(),
+		},
+		{
+			name:      "open end",
+			timeRange: `start="20310604T000000Z"`,
+			hrefs:     []string{startOnly},
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
