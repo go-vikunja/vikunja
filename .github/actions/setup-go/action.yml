@@ -1,19 +1,13 @@
 name: setup-go
 description: |
-  Set up Go with an explicit build and module cache.
-  Only one job on main or a PR saves it (save-cache), so the cache always
-  comes from the job that compiles the most. Other jobs only restore it.
-  Saves are limited to main and pull_request runs: other refs (merge queue,
-  tags) are throwaway scopes that nothing could restore from.
+  Set up Go with a build and module cache that a single job saves, so it
+  always holds the output of the job that compiles the most.
+  Merge queue and tag runs never save: nothing could restore from their refs.
 inputs:
   save-cache:
     description: 'Save the cache in the post step (only effective on main and pull requests)'
     required: false
     default: 'false'
-outputs:
-  go-version:
-    description: 'Resolved Go version'
-    value: ${{ steps.go.outputs.go-version }}
 runs:
   using: "composite"
   steps:

@@ -52,8 +52,6 @@ jobs:
           go-version: stable
           cache-dependency-path: veans/go.sum
       - name: Install mage
-        # The cached mage-static artifact has the parent magefile compiled
-        # in — we need a generic mage binary to pick up veans/magefile.go.
         run: go install github.com/magefile/mage@v1.17.2
       - name: Run unit tests
         # `mage test` is the Aliases entry for Test.All which passes
@@ -378,8 +376,6 @@ jobs:
           go-version: stable
           cache-dependency-path: veans/go.sum
       - name: Install mage
-        # The cached mage-static artifact has the parent magefile compiled
-        # in — we need a generic mage binary to pick up veans/magefile.go.
         run: go install github.com/magefile/mage@v1.17.2
       - run: chmod +x ./vikunja
       - name: Run veans e2e against ephemeral Vikunja
