@@ -56,7 +56,8 @@ const formatArgHint = "Pass format=markdown to exchange rich-text fields as Mark
 
 const serverInstructions = `Rich-text fields (task and project descriptions, comments) are HTML by default. Pass format: "markdown" on read, list and update tools to exchange them as GFM Markdown.
 Read and list tools return every field by default; pass fields to get only the ones you need.
-Filter queries combine conditions with && and ||, not "and"/"or". Call ` + toolFilterSyntax + ` for the full filter syntax.`
+Filter queries combine conditions with && and ||, not "and"/"or". Call ` + toolFilterSyntax + ` for the full filter syntax.
+Not every action has its own tool. Task relations, task labels, kanban buckets, bulk task changes and sharing are reached through ` + toolFindAction + ` and ` + toolDoAction + `, when your token allows them. Check ` + toolFindAction + ` before concluding an action is unavailable.`
 
 func buildToolSpec(oapi *huma.OpenAPI, op *huma.Operation) (*toolSpec, error) {
 	props := map[string]*jsonschema.Schema{}
