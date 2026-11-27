@@ -147,7 +147,7 @@ var webCmd = &cobra.Command{
 
 		// Start the webserver
 		e := routes.NewEcho()
-		routes.RegisterRoutes(e)
+		routes.RegisterRoutes(e).MustBuildTools()
 
 		// Create HTTP server with Echo as handler
 		server := &http.Server{

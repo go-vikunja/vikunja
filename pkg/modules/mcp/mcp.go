@@ -83,6 +83,11 @@ func New(api huma.API, allowOrigin func(origin string) bool) *Module {
 	return m
 }
 
+// MustBuildTools makes a broken tool spec fail at startup instead of on the first MCP request.
+func (m *Module) MustBuildTools() {
+	m.tools()
+}
+
 func (m *Module) Register(group *echo.Group) {
 	group.POST(routeSuffix, m.handler)
 }
