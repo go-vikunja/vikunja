@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/models"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -66,15 +65,6 @@ var (
 	}
 )
 
-func taskUIDExists(t *testing.T, uid string) bool {
-	t.Helper()
-	s := db.NewSession()
-	defer s.Close()
-	exists, err := s.Where("uid = ?", uid).Exist(&models.Task{})
-	require.NoError(t, err)
-	return exists
-}
-
 // Writes run last so the reads see the fixture state.
 func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerUsername string, want accessExpectation) {
 	t.Helper()
@@ -116,7 +106,7 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	if want.putCreate == http.StatusCreated {
 		assert.Equal(t, http.StatusOK, caldavRequest(t, e, http.MethodGet, newTask, "", ownerAs).Code, "created %s", newTask)
 	} else {
-		assert.False(t, taskUIDExists(t, newUID), "denied PUT must not create %s", newTask)
+		db.AssertMissing(t, "tasks", map[string]interface{}{"uid": newUID})
 	}
 
 	assert.Equal(t, want.del, caldavRequest(t, e, http.MethodDelete, task, "", as).Code, "DELETE %s", task)
@@ -279,7 +269,7 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 			assert.Equal(t, tc.want.allow, options.Header().Get("Allow"), "Allow")
 			create := caldavPUTWith(t, e, collection+"/pin-access-create.ics", NewVTodo("pin-access-create", "Created").Build(), map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.putCreate, create.Code, "PUT create")
-			assert.False(t, taskUIDExists(t, "pin-access-create"), "denied PUT must not create a task")
+			db.AssertMissing(t, "tasks", map[string]interface{}{"uid": "pin-access-create"})
 		})
 	}
 }
