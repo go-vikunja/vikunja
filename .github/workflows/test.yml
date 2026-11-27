@@ -437,8 +437,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        total-shards: [10]
+        shard: [1, 2, 3, 4, 5, 6]
+        total-shards: [6]
     services:
       dex:
         image: ghcr.io/go-vikunja/dex-testing:main@sha256:d401c06a9f8fd36ece446a07499b827232af7f21eb36872a76c9eac4d0c77bab
