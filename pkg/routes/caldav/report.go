@@ -119,7 +119,7 @@ func (p *reportParser) visit(path []xml.Name, tok xml.Token) error {
 		return p.start(path, t)
 	case xml.CharData:
 		if len(p.filterStack) > 0 {
-			p.filterStack[len(p.filterStack)-1].text += string(t)
+			p.filterStack[len(p.filterStack)-1].text.Write(t)
 		}
 		if len(path) == 2 && p.text != nil {
 			p.text.Write(t)

@@ -246,6 +246,7 @@ func TestFilterMatches(t *testing.T) {
 		{"text-match folds ASCII case by default", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match>buy milk</C:text-match></C:prop-filter>`), true},
 		{"text-match octet keeps case", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;octet">buy milk</C:text-match></C:prop-filter>`), false},
 		{"text-match octet", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match collation="i;octet">Milk</C:text-match></C:prop-filter>`), true},
+		{"text-match split by a comment", todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match>Buy<!-- --> Milk</C:text-match></C:prop-filter>`), true},
 		{"negated text-match", todoFilter(`<C:prop-filter name="STATUS"><C:text-match negate-condition="yes">COMPLETED</C:text-match></C:prop-filter>`), true},
 		{"negated text-match that matches", todoFilter(`<C:prop-filter name="STATUS"><C:text-match negate-condition="yes">NEEDS-ACTION</C:text-match></C:prop-filter>`), false},
 		{"negated text-match of an undefined property", todoFilter(`<C:prop-filter name="DESCRIPTION"><C:text-match negate-condition="yes">x</C:text-match></C:prop-filter>`), false},

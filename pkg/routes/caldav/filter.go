@@ -123,7 +123,7 @@ func (paramMatch) isParamTest()   {}
 type xmlElement struct {
 	name     xml.Name
 	attrs    []xml.Attr
-	text     string
+	text     strings.Builder
 	children []*xmlElement
 }
 
@@ -311,7 +311,7 @@ func parseParamFilter(el *xmlElement) (paramFilter, error) {
 func parseTextMatch(el *xmlElement) (textMatch, error) {
 	match := textMatch{
 		// caldav-go trimmed it too: pretty-printed bodies indent the text.
-		value:    strings.TrimSpace(el.text),
+		value:    strings.TrimSpace(el.text.String()),
 		foldCase: true,
 	}
 
