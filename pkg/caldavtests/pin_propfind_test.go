@@ -51,10 +51,22 @@ const user6Principal = "/dav/principals/user6/"
 
 // user15's home set: own projects 36 and 38 plus read shares on user6's 26 and 35.
 var user15Projects = map[string]struct{ title, owner string }{
-	"/dav/projects/36": {"Project 36 for Caldav tests", user15Principal},
-	"/dav/projects/38": {"Project 38 for Caldav tests", user15Principal},
-	"/dav/projects/35": {"Test35 with background", user6Principal},
-	"/dav/projects/26": {"Test26", user6Principal},
+	"/dav/projects/36": {
+		title: "Project 36 for Caldav tests",
+		owner: user15Principal,
+	},
+	"/dav/projects/38": {
+		title: "Project 38 for Caldav tests",
+		owner: user15Principal,
+	},
+	"/dav/projects/35": {
+		title: "Test35 with background",
+		owner: user6Principal,
+	},
+	"/dav/projects/26": {
+		title: "Test26",
+		owner: user6Principal,
+	},
 }
 
 func expectEntry() expectedDAVResponse {
@@ -334,7 +346,10 @@ func TestPinPropfindAllprop(t *testing.T) {
 		"/dav/projects/36":        expectCalendar("/dav/projects/36", "Project 36 for Caldav tests", user15Principal),
 		pinTaskHref:               expectTask(pinTaskHref, "Title Caldav Test"),
 	} {
-		for name, body := range map[string]string{"empty body": "", "allprop": PropfindAllProps} {
+		for name, body := range map[string]string{
+			"empty body": "",
+			"allprop":    PropfindAllProps,
+		} {
 			t.Run(path+" "+name, func(t *testing.T) {
 				rec := caldavPROPFIND(t, e, path, "0", body)
 

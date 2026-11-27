@@ -32,26 +32,49 @@ import (
 )
 
 func TestParsePropfind(t *testing.T) {
-	unknown := xml.Name{Space: "urn:example", Local: "x"}
+	unknown := xml.Name{
+		Space: "urn:example",
+		Local: "x",
+	}
 
 	tests := []struct {
 		name string
 		body string
 		want propfindRequest
 	}{
-		{name: "empty body", body: "", want: allPropRequest{}},
-		{name: "whitespace body", body: " \n\t", want: allPropRequest{}},
-		{name: "allprop", body: `<D:propfind xmlns:D="DAV:"><D:allprop/></D:propfind>`, want: allPropRequest{}},
+		{
+			name: "empty body",
+			body: "",
+			want: allPropRequest{},
+		},
+		{
+			name: "whitespace body",
+			body: " \n\t",
+			want: allPropRequest{},
+		},
+		{
+			name: "allprop",
+			body: `<D:propfind xmlns:D="DAV:"><D:allprop/></D:propfind>`,
+			want: allPropRequest{},
+		},
 		{
 			name: "allprop with include",
 			body: `<D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav"><D:allprop/><D:include><C:calendar-data/></D:include></D:propfind>`,
 			want: allPropRequest{include: []xml.Name{propCalendarData}},
 		},
-		{name: "propname", body: `<D:propfind xmlns:D="DAV:"><D:propname/></D:propfind>`, want: propNameRequest{}},
+		{
+			name: "propname",
+			body: `<D:propfind xmlns:D="DAV:"><D:propname/></D:propfind>`,
+			want: propNameRequest{},
+		},
 		{
 			name: "prop in request order",
 			body: `<D:propfind xmlns:D="DAV:" xmlns:X="urn:example"><D:prop><D:getetag/><X:x/><D:displayname/></D:prop></D:propfind>`,
-			want: propRequest{names: []xml.Name{propGetETag, unknown, propDisplayName}},
+			want: propRequest{names: []xml.Name{
+				propGetETag,
+				unknown,
+				propDisplayName,
+			}},
 		},
 		{
 			name: "prop listed twice is asked once",
@@ -68,7 +91,11 @@ func TestParsePropfind(t *testing.T) {
 			body: `<D:propfind xmlns:D="DAV:" xmlns:X="urn:example"><X:prop><D:getetag/></X:prop></D:propfind>`,
 			want: allPropRequest{},
 		},
-		{name: "empty prop", body: `<D:propfind xmlns:D="DAV:"><D:prop/></D:propfind>`, want: propRequest{}},
+		{
+			name: "empty prop",
+			body: `<D:propfind xmlns:D="DAV:"><D:prop/></D:propfind>`,
+			want: propRequest{},
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

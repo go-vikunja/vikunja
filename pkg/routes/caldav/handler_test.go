@@ -94,8 +94,26 @@ func TestConcurrentRequestsDoNotShareState(t *testing.T) {
 		mine      string
 		theirs    []string
 	}{
-		{caldavFilterUser, 36, "Title Caldav Test", []string{"task #1", ProjectBasePath + "/1/", principalHref(caldavOtherUser.Username)}},
-		{caldavOtherUser, 1, "task #1", []string{"Title Caldav Test", ProjectBasePath + "/36/", principalHref(caldavFilterUser.Username)}},
+		{
+			user:      caldavFilterUser,
+			projectID: 36,
+			mine:      "Title Caldav Test",
+			theirs: []string{
+				"task #1",
+				ProjectBasePath + "/1/",
+				principalHref(caldavOtherUser.Username),
+			},
+		},
+		{
+			user:      caldavOtherUser,
+			projectID: 1,
+			mine:      "task #1",
+			theirs: []string{
+				"Title Caldav Test",
+				ProjectBasePath + "/36/",
+				principalHref(caldavFilterUser.Username),
+			},
+		},
 	}
 
 	// A single pair of requests only rarely interleaves inside the setup-then-handle window,

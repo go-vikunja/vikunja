@@ -34,16 +34,26 @@ const testPrincipal = "/dav/principals/user15/"
 var testCtx = propContext{principal: testPrincipal}
 
 func TestCollectionPropsNotLoaded(t *testing.T) {
-	project := &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36, Title: "A & B"}}
+	project := &models.ProjectWithTasksAndBuckets{Project: models.Project{
+		ID:    36,
+		Title: "A & B",
+	}}
 
 	t.Run("collection listed in the home set has no calendar-data", func(t *testing.T) {
-		r := &collectionResource{href: "/dav/projects/36", project: project, owner: "owner"}
+		r := &collectionResource{
+			href:    "/dav/projects/36",
+			project: project,
+			owner:   "owner",
+		}
 		_, found := collectionProps.resolve(testCtx, r, propCalendarData)
 		assert.False(t, found)
 	})
 
 	t.Run("collection whose owner is gone", func(t *testing.T) {
-		r := &collectionResource{href: "/dav/projects/36", project: project}
+		r := &collectionResource{
+			href:    "/dav/projects/36",
+			project: project,
+		}
 		_, found := collectionProps.resolve(testCtx, r, propOwner)
 		assert.False(t, found)
 	})
@@ -59,7 +69,10 @@ func TestLastModifiedIsUTC(t *testing.T) {
 }
 
 func TestTaskContentIsRenderedOnce(t *testing.T) {
-	task := &models.Task{UID: "uid-rendered-once", Title: "first"}
+	task := &models.Task{
+		UID:   "uid-rendered-once",
+		Title: "first",
+	}
 	r := &taskResource{task: task}
 
 	content, found := taskProps.resolve(testCtx, r, propCalendarData)
@@ -75,8 +88,16 @@ func TestTaskContentIsRenderedOnce(t *testing.T) {
 }
 
 func TestPropTableAnswer(t *testing.T) {
-	task := &models.Task{ID: 40, UID: "uid", Title: "Task", Updated: time.Now()}
-	unknown := xml.Name{Space: "urn:example", Local: "x"}
+	task := &models.Task{
+		ID:      40,
+		UID:     "uid",
+		Title:   "Task",
+		Updated: time.Now(),
+	}
+	unknown := xml.Name{
+		Space: "urn:example",
+		Local: "x",
+	}
 
 	foundNames := func(r msResponse) map[int][]xml.Name {
 		out := map[int][]xml.Name{}
@@ -89,7 +110,14 @@ func TestPropTableAnswer(t *testing.T) {
 	}
 
 	t.Run("allprop with include", func(t *testing.T) {
-		names := foundNames((&taskResource{href: "/t.ics", task: task}).answer(testCtx, allPropRequest{include: []xml.Name{propCalendarData, propGetETag, unknown}}))
+		names := foundNames((&taskResource{
+			href: "/t.ics",
+			task: task,
+		}).answer(testCtx, allPropRequest{include: []xml.Name{
+			propCalendarData,
+			propGetETag,
+			unknown,
+		}}))
 		assert.Equal(t, 1, countName(names[http.StatusOK], propCalendarData))
 		assert.Equal(t, 1, countName(names[http.StatusOK], propGetETag))
 		assert.Equal(t, []xml.Name{unknown}, names[http.StatusNotFound])

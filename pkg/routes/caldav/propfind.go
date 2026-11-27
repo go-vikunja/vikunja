@@ -204,7 +204,11 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 			if err != nil {
 				return nil, err
 			}
-			return []davResource{&taskResource{href: taskURL(t.collection.project.ID, task), task: task, owner: owner}}, nil
+			return []davResource{&taskResource{
+				href:  taskURL(t.collection.project.ID, task),
+				task:  task,
+				owner: owner,
+			}}, nil
 		}, ctx, nil
 	}
 	return nil, propContext{}, fmt.Errorf("unhandled caldav target %T", t)
@@ -242,7 +246,12 @@ func loadCollectionResources(s *xorm.Session, u *user.User, c readableCollection
 
 	// readCollectionTasks loaded the owner.
 	owner := ownerName(u, &c.project.Project)
-	resources := []davResource{&collectionResource{href: href, project: c.project, tasks: tasks, owner: owner}}
+	resources := []davResource{&collectionResource{
+		href:    href,
+		project: c.project,
+		tasks:   tasks,
+		owner:   owner,
+	}}
 	if !deep {
 		return resources, nil
 	}
@@ -255,7 +264,11 @@ func loadCollectionResources(s *xorm.Session, u *user.User, c readableCollection
 			continue
 		}
 		emitted[href] = true
-		resources = append(resources, &taskResource{href: href, task: &t.Task, owner: owner})
+		resources = append(resources, &taskResource{
+			href:  href,
+			task:  &t.Task,
+			owner: owner,
+		})
 	}
 	return resources, nil
 }
