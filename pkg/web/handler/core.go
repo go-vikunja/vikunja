@@ -70,6 +70,7 @@ func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 // header in the Echo wrapper; Huma wrapper may ignore it.
 func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int, err error) {
 	s := db.NewReadSession()
+	db.SetSessionContext(ctx, s)
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
@@ -110,6 +111,7 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 // nil-slice normalization remain the caller's responsibility.
 func DoReadAll(ctx context.Context, obj CObject, a web.Auth, search string, page, perPage int) (result any, resultCount int, total int64, err error) {
 	s := db.NewReadSession()
+	db.SetSessionContext(ctx, s)
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
