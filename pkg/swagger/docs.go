@@ -9873,6 +9873,9 @@ const docTemplate = `{
                     "description": "True if a project is a favorite. Favorite projects show up in a separate parent project. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
+                "is_shared": {
+                    "type": "boolean"
+                },
                 "max_permission": {
                     "$ref": "#/definitions/models.Permission"
                 },
