@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	caldav2 "code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
@@ -66,7 +67,7 @@ func getCollection(c *echo.Context, u *user.User, collection collectionTarget) e
 	// Pinned: a collection without tasks answers an empty body, not an empty calendar.
 	var body string
 	if tasks != nil {
-		body = renderCollection(collection.project, tasks)
+		body = caldav2.GetCaldavTodosForTasks(collection.project, tasks)
 	}
 	return writeCalendar(c, contentTypeCollection, collectionETag(collection.project, tasks), collection.project.Updated, body)
 }

@@ -398,7 +398,7 @@ var collectionProps = propTable[*collectionResource]{
 			if r.tasks == nil {
 				return nil, false
 			}
-			return textIfSet(renderCollection(r.project, r.tasks))
+			return textIfSet(caldav2.GetCaldavTodosForTasks(r.project, r.tasks))
 		},
 	},
 	principalCollections[*collectionResource](),
