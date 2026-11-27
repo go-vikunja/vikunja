@@ -170,6 +170,13 @@
 				{{ project.title }}
 			</RouterLink>
 
+			<TaskLabelPicker
+				v-if="task.id && canEditLabels"
+				:task-id="task.id"
+				:assigned-labels="task.labels ?? []"
+				@updated="emit('taskUpdated', task)"
+			/>
+
 			<BaseButton
 				:class="{'is-favorite': task.is_favorite}"
 				class="favorite"
@@ -196,6 +203,7 @@
 						:key="subtask.id"
 						:the-task="getTaskById(subtask.id)!"
 						:disabled="disabled"
+						:is-archived="isArchived"
 						:can-mark-as-done="canMarkAsDone"
 						:all-tasks="allTasks"
 						class="subtask-nested"
@@ -223,6 +231,7 @@ import type {Task as ITask} from '@/client/generated'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
+import TaskLabelPicker from '@/components/tasks/partials/TaskLabelPicker.vue'
 import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 import DeferTask from '@/components/tasks/partials/DeferTask.vue'
 import OverdueIndicator from '@/components/tasks/partials/OverdueIndicator.vue'
@@ -249,6 +258,7 @@ import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {useGlobalNow} from '@/composables/useGlobalNow'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
+import {PERMISSIONS} from '@/constants/permissions'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -317,6 +327,12 @@ const showProjectSeparately = computed(() => !props.showProject
 	&& project.value)
 
 const {currentProject} = useCurrentProject()
+
+const canEditLabels = computed(() => {
+	const taskProject = currentProject.value?.id === task.value.project_id ? currentProject.value : project.value
+	return !props.disabled && !props.isArchived && !taskProject?.is_archived
+		&& (taskProject?.max_permission ?? PERMISSIONS.READ) > PERMISSIONS.READ
+})
 
 const taskDetailRoute = computed(() => ({
 	name: 'task.detail',
@@ -556,16 +572,20 @@ defineExpose({
 	}
 
 	@media(hover: hover) and (pointer: fine) {
-		& .favorite {
+		& .favorite,
+		& :deep(.label-trigger) {
 			opacity: 0;
 		}
 
-		&:hover .favorite {
+		&:hover .favorite,
+		&:hover :deep(.label-trigger),
+		& :deep(.label-trigger[aria-expanded='true']) {
 			opacity: 1;
 		}
 	}
 
-	.favorite:focus {
+	.favorite:focus,
+	:deep(.label-trigger:focus) {
 		opacity: 1;
 	}
 

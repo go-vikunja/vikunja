@@ -1331,6 +1331,8 @@
     },
     "label": {
       "placeholder": "Type to add a label…",
+      "edit": "Edit task labels",
+      "loadError": "Could not load labels.",
       "createPlaceholder": "Add this as new label",
       "linkShareCannotCreate": "New labels can't be created from a shared link. Only labels already used in this project can be added.",
       "removeLabel": "Remove label {label}",

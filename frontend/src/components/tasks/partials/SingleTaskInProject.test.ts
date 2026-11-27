@@ -5,15 +5,21 @@ import {createRouter, createMemoryHistory} from 'vue-router'
 import {QueryClient, VueQueryPlugin} from '@tanstack/vue-query'
 
 import type {Task as ITask} from '@/client/generated'
+import {labelKeys} from '@/client/queries/labels'
+import {normalizeTask, taskKeys, type TaskResponse} from '@/client/queries/tasks'
 
 const sdk = vi.hoisted(() => ({
 	patchTasksRead: vi.fn(),
+	taskLabelsCreate: vi.fn(),
+	taskLabelsDelete: vi.fn(),
 }))
 
 vi.mock('@/client/generated', () => sdk)
 vi.mock('@/message', () => ({error: vi.fn(), success: vi.fn()}))
 vi.mock('@/helpers/playPop', () => ({playPopSound: vi.fn()}))
-vi.mock('@/composables/useProjects', () => ({useProjects: () => ({projects: {}})}))
+vi.mock('@/composables/useProjects', () => ({
+	useProjects: () => ({projects: {2: {id: 2, max_permission: 1}}}),
+}))
 vi.mock('@/composables/useCurrentProject', () => ({useCurrentProject: () => ({currentProject: {value: null}})}))
 vi.mock('vue-i18n', async importOriginal => ({
 	...(await importOriginal<typeof import('vue-i18n')>()),
@@ -40,9 +46,9 @@ function createTestRouter() {
 	})
 }
 
-function globalOptions() {
+function globalOptions(queryClient = new QueryClient({defaultOptions: {queries: {retry: false}}})) {
 	return {
-		plugins: [createPinia(), createTestRouter(), [VueQueryPlugin, {queryClient: new QueryClient({defaultOptions: {queries: {retry: false}}})}]] as never[],
+		plugins: [createPinia(), createTestRouter(), [VueQueryPlugin, {queryClient}]] as never[],
 		directives: {tooltip: {}},
 		mocks: {$t: (key: string) => key},
 		stubs: {TaskGlanceTooltip: true, CommentCount: true, ChecklistSummary: true, FancyCheckbox: true},
@@ -96,6 +102,44 @@ describe('SingleTaskInProject', () => {
 		await flushPromises()
 
 		expect(wrapper.get('.task').classes()).not.toContain('is-loading')
+	})
+
+	it('toggles existing labels from the row and updates the cached task', async () => {
+		const queryClient = new QueryClient()
+		const picked = {id: 1, title: 'PICKED'}
+		const other = {id: 2, title: 'Other'}
+		const task = normalizeTask({...theTask, project_id: 2, labels: [other]})
+		queryClient.setQueryData(labelKeys.all, [picked, other])
+		queryClient.setQueryData(taskKeys.allLists, [task])
+		sdk.taskLabelsCreate.mockResolvedValue({data: {}})
+		sdk.taskLabelsDelete.mockResolvedValue({})
+
+		const wrapper = mount(SingleTaskInProject, {
+			props: {theTask: task},
+			global: globalOptions(queryClient),
+		})
+		await wrapper.get('.label-trigger').trigger('click')
+		const pickedButton = () => wrapper.get('.label-option:last-child')
+		expect(pickedButton().text()).toBe('PICKED')
+		expect(pickedButton().attributes('aria-pressed')).toBe('false')
+		expect(wrapper.get('.label-option:first-of-type').attributes('aria-pressed')).toBe('true')
+
+		await pickedButton().trigger('click')
+		await vi.waitFor(() => expect(wrapper.emitted('taskUpdated')).toHaveLength(1))
+		expect(sdk.taskLabelsCreate).toHaveBeenCalledWith({
+			path: {task: task.id},
+			body: {label_id: picked.id},
+		})
+		const cachedTasks = () => queryClient.getQueryData<TaskResponse[]>(taskKeys.allLists)!
+		expect(cachedTasks()[0].labels).toEqual([other, picked])
+
+		await wrapper.setProps({theTask: cachedTasks()[0]})
+		expect(pickedButton().attributes('aria-pressed')).toBe('true')
+		await pickedButton().trigger('click')
+		await vi.waitFor(() => expect(wrapper.emitted('taskUpdated')).toHaveLength(2))
+		expect(sdk.taskLabelsDelete).toHaveBeenCalledWith({path: {task: task.id, label: picked.id}})
+		expect(cachedTasks()[0].labels).toEqual([other])
+		wrapper.unmount()
 	})
 
 	describe('subtask rendering', () => {
