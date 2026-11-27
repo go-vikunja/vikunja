@@ -72,10 +72,6 @@ func readCollectionTasks(s *xorm.Session, u *user.User, c readableCollection) ([
 		return nil, err
 	}
 
-	if c.project.Tasks != nil {
-		return c.project.Tasks, nil
-	}
-
 	tk := models.TaskCollection{ProjectID: c.project.ID}
 	iface, _, _, err := tk.ReadAll(s, u, "", 0, -1)
 	if err != nil {
@@ -90,7 +86,6 @@ func readCollectionTasks(s *xorm.Session, u *user.User, c readableCollection) ([
 	for _, t := range tasks {
 		projectTasks = append(projectTasks, &models.TaskWithComments{Task: *t})
 	}
-	c.project.Tasks = projectTasks
 	return projectTasks, nil
 }
 
