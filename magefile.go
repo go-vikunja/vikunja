@@ -521,17 +521,33 @@ func (Test) E2EApi(ctx context.Context) error {
 //	mage test:e2e "--headed tests/e2e/misc/menu.spec.ts" # combine flags
 //
 // Environment variable overrides:
-//   - VIKUNJA_E2E_API_PORT: API port (default: random)
+//   - VIKUNJA_E2E_WORKERS: Playwright workers, each with its own API instance (default: 1)
+//   - VIKUNJA_E2E_API_PORT: API port (default: random; only valid with a single worker)
 //   - VIKUNJA_E2E_FRONTEND_PORT: Frontend port (default: random)
 //   - VIKUNJA_E2E_TESTING_TOKEN: Testing token for seed endpoints (default: random)
 //   - VIKUNJA_E2E_SKIP_BUILD: Set to "true" to skip rebuilding the API binary (default: false)
 func (Test) E2E(ctx context.Context, args string) error {
 	mg.Deps(initVars)
 
-	// Determine ports
-	apiPort, err := getE2EPort(ctx, "VIKUNJA_E2E_API_PORT")
-	if err != nil {
-		return fmt.Errorf("could not get API port: %w", err)
+	workers := 1
+	if v := os.Getenv("VIKUNJA_E2E_WORKERS"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 1 {
+			return fmt.Errorf("VIKUNJA_E2E_WORKERS must be a positive integer, got %q", v)
+		}
+		workers = n
+	}
+	if workers > 1 && os.Getenv("VIKUNJA_E2E_API_PORT") != "" {
+		return errors.New("VIKUNJA_E2E_API_PORT cannot be combined with VIKUNJA_E2E_WORKERS > 1")
+	}
+
+	apiPorts := make([]int, workers)
+	for i := range apiPorts {
+		port, err := getE2EPort(ctx, "VIKUNJA_E2E_API_PORT")
+		if err != nil {
+			return fmt.Errorf("could not get API port: %w", err)
+		}
+		apiPorts[i] = port
 	}
 	frontendPort, err := getE2EPort(ctx, "VIKUNJA_E2E_FRONTEND_PORT")
 	if err != nil {
@@ -545,7 +561,7 @@ func (Test) E2E(ctx context.Context, args string) error {
 	}
 
 	fmt.Printf("E2E test configuration:\n")
-	fmt.Printf("  API port:      %d\n", apiPort)
+	fmt.Printf("  API ports:     %v\n", apiPorts)
 	fmt.Printf("  Frontend port: %d\n", frontendPort)
 	fmt.Printf("  Testing token: %s\n", testingToken)
 
@@ -567,48 +583,16 @@ func (Test) E2E(ctx context.Context, args string) error {
 		os.RemoveAll(tmpDir)
 	}()
 
-	if err := os.MkdirAll(filepath.Join(tmpDir, "files"), 0o755); err != nil {
-		return fmt.Errorf("failed to create files dir: %w", err)
-	}
-
-	// Start the API server — all config via env vars, no config file
-	// Uses in-memory SQLite (no DB file on disk)
-	fmt.Println("\n--- Starting API server ---")
-	apiCmd := exec.CommandContext(ctx, "./vikunja", "web")
-	apiCmd.Env = append(os.Environ(),
-		fmt.Sprintf("VIKUNJA_SERVICE_INTERFACE=:%d", apiPort),
-		fmt.Sprintf("VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:%d/", apiPort),
-		fmt.Sprintf("VIKUNJA_SERVICE_TESTINGTOKEN=%s", testingToken),
-		fmt.Sprintf("VIKUNJA_SERVICE_ROOTPATH=%s", tmpDir),
-		"VIKUNJA_SERVICE_JWTSECRET=e2e-test-jwt-secret-do-not-use-in-production",
-		"VIKUNJA_DATABASE_TYPE=sqlite",
-		"VIKUNJA_DATABASE_PATH=memory",
-		fmt.Sprintf("VIKUNJA_FILES_BASEPATH=%s", filepath.Join(tmpDir, "files")),
-		"VIKUNJA_LOG_LEVEL=WARNING",
-		"VIKUNJA_MAILER_ENABLED=false",
-		"VIKUNJA_REDIS_ENABLED=false",
-		"VIKUNJA_RATELIMIT_NOAUTHLIMIT=1000",
-	)
-	apiCmd.Stdout = os.Stdout
-	apiCmd.Stderr = os.Stderr
-	setProcessGroup(apiCmd)
-	if err := apiCmd.Start(); err != nil {
-		return fmt.Errorf("failed to start API: %w", err)
-	}
-	defer func() {
-		fmt.Println("\n--- Stopping API server ---")
-		if err := killProcessGroup(apiCmd); err != nil {
-			fmt.Println("Failed to stop API server:", err)
+	fmt.Println("\n--- Starting API servers ---")
+	apiURLs := make([]string, 0, workers)
+	for i, port := range apiPorts {
+		stop, apiBase, err := startE2EAPI(ctx, port, filepath.Join(tmpDir, strconv.Itoa(i)), testingToken)
+		if err != nil {
+			return err
 		}
-	}()
-
-	// Wait for API to be ready
-	apiBase := fmt.Sprintf("http://127.0.0.1:%d/api/v1", apiPort)
-	fmt.Printf("Waiting for API at %s ...\n", apiBase)
-	if err := waitForHTTP(ctx, apiBase+"/info", 30*time.Second); err != nil {
-		return fmt.Errorf("API failed to start: %w", err)
+		defer stop()
+		apiURLs = append(apiURLs, apiBase+"/")
 	}
-	printSuccess("API is ready!")
 
 	// Build the frontend
 	fmt.Println("\n--- Building frontend ---")
@@ -655,7 +639,7 @@ func (Test) E2E(ctx context.Context, args string) error {
 	playwrightCmd := exec.CommandContext(ctx, "pnpm", playwrightArgs...)
 	playwrightCmd.Dir = "frontend"
 	playwrightCmd.Env = append(os.Environ(),
-		fmt.Sprintf("API_URL=%s/", apiBase),
+		"API_URL="+strings.Join(apiURLs, ","),
 		fmt.Sprintf("BASE_URL=%s", frontendBase),
 		fmt.Sprintf("VIKUNJA_SERVICE_TESTINGTOKEN=%s", testingToken),
 		fmt.Sprintf("TEST_SECRET=%s", testingToken),
@@ -671,6 +655,52 @@ func (Test) E2E(ctx context.Context, args string) error {
 
 	printSuccess("All e2e tests passed!")
 	return nil
+}
+
+// startE2EAPI starts one API with an in-memory database and waits until it answers.
+// rootDir holds its uploads, so instances never share files.
+func startE2EAPI(ctx context.Context, port int, rootDir, testingToken string) (stop func(), apiBase string, err error) {
+	filesDir := filepath.Join(rootDir, "files")
+	if err := os.MkdirAll(filesDir, 0o755); err != nil {
+		return nil, "", fmt.Errorf("failed to create files dir: %w", err)
+	}
+
+	cmd := exec.CommandContext(ctx, "./vikunja", "web")
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("VIKUNJA_SERVICE_INTERFACE=:%d", port),
+		fmt.Sprintf("VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:%d/", port),
+		fmt.Sprintf("VIKUNJA_SERVICE_TESTINGTOKEN=%s", testingToken),
+		fmt.Sprintf("VIKUNJA_SERVICE_ROOTPATH=%s", rootDir),
+		"VIKUNJA_SERVICE_JWTSECRET=e2e-test-jwt-secret-do-not-use-in-production",
+		"VIKUNJA_DATABASE_TYPE=sqlite",
+		"VIKUNJA_DATABASE_PATH=memory",
+		fmt.Sprintf("VIKUNJA_FILES_BASEPATH=%s", filesDir),
+		"VIKUNJA_LOG_LEVEL=WARNING",
+		"VIKUNJA_MAILER_ENABLED=false",
+		"VIKUNJA_REDIS_ENABLED=false",
+		"VIKUNJA_RATELIMIT_NOAUTHLIMIT=1000",
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	setProcessGroup(cmd)
+	if err := cmd.Start(); err != nil {
+		return nil, "", fmt.Errorf("failed to start API: %w", err)
+	}
+	stop = func() {
+		fmt.Printf("\n--- Stopping API server on port %d ---\n", port)
+		if err := killProcessGroup(cmd); err != nil {
+			fmt.Println("Failed to stop API server:", err)
+		}
+	}
+
+	apiBase = fmt.Sprintf("http://127.0.0.1:%d/api/v1", port)
+	fmt.Printf("Waiting for API at %s ...\n", apiBase)
+	if err := waitForHTTP(ctx, apiBase+"/info", 30*time.Second); err != nil {
+		stop()
+		return nil, "", fmt.Errorf("API failed to start: %w", err)
+	}
+	printSuccess("API is ready!")
+	return stop, apiBase, nil
 }
 
 type Check mg.Namespace
