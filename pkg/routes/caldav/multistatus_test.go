@@ -333,6 +333,11 @@ func TestPrefersMinimal(t *testing.T) {
 			lines: []string{"return-minimal"},
 			want:  false,
 		},
+		{
+			name:  "representation",
+			lines: []string{"return=representation"},
+			want:  false,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
