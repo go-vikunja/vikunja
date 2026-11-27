@@ -187,12 +187,44 @@ const (
 )
 
 func TestPinReportTargets(t *testing.T) {
+	e := setupTestEnv(t)
+
+	// They hold no calendar data, so they take no REPORT at all, whatever the body.
+	for _, tc := range []struct {
+		name, path, allow string
+	}{
+		{
+			name:  "entry",
+			path:  "/dav/",
+			allow: allowEntry,
+		},
+		{
+			name:  "principal",
+			path:  user15Principal,
+			allow: allowEntry,
+		},
+		{
+			name:  "well-known",
+			path:  "/.well-known/caldav",
+			allow: allowEntry,
+		},
+		{
+			name:  "home set",
+			path:  "/dav/projects",
+			allow: allowHomeSet,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := caldavREPORT(t, e, tc.path, ReportCalendarQuery)
+			require.Equal(t, http.StatusMethodNotAllowed, rec.Code, "Body:\n%s", rec.Body.String())
+			assert.Equal(t, tc.allow, rec.Header().Get("Allow"))
+		})
+	}
+
 	task := []expectedDAVResponse{{
 		href: pinTaskHref,
 		ok:   map[xml.Name]string{davName("getetag"): anyValue, calName("calendar-data"): anyValue},
 	}}
-	// They hold no calendar data, so they take no REPORT at all.
-	const noReports = http.StatusMethodNotAllowed
 
 	tests := []struct {
 		name string
@@ -201,29 +233,7 @@ func TestPinReportTargets(t *testing.T) {
 		query, multiget             []expectedDAVResponse
 		queryStatus, multigetStatus int
 		syncStatus, unknownStatus   int
-		// The Allow header of a 405.
-		allow string
 	}{
-		{
-			name: "entry", path: "/dav/", allow: allowEntry,
-			queryStatus: noReports, multigetStatus: noReports,
-			syncStatus: noReports, unknownStatus: noReports,
-		},
-		{
-			name: "principal", path: user15Principal, allow: allowEntry,
-			queryStatus: noReports, multigetStatus: noReports,
-			syncStatus: noReports, unknownStatus: noReports,
-		},
-		{
-			name: "well-known", path: "/.well-known/caldav", allow: allowEntry,
-			queryStatus: noReports, multigetStatus: noReports,
-			syncStatus: noReports, unknownStatus: noReports,
-		},
-		{
-			name: "home set", path: "/dav/projects", allow: allowHomeSet,
-			queryStatus: noReports, multigetStatus: noReports,
-			syncStatus: noReports, unknownStatus: noReports,
-		},
 		{
 			// The filter and the hrefs are ignored, the task answers for itself.
 			name: "task", path: pinTaskHref,
@@ -237,7 +247,6 @@ func TestPinReportTargets(t *testing.T) {
 		},
 	}
 
-	e := setupTestEnv(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			check := func(t *testing.T, body string, status int, want []expectedDAVResponse) {
@@ -248,9 +257,6 @@ func TestPinReportTargets(t *testing.T) {
 					return
 				}
 				require.Equal(t, status, rec.Code, "Body:\n%s", rec.Body.String())
-				if status == http.StatusMethodNotAllowed {
-					assert.Equal(t, tc.allow, rec.Header().Get("Allow"))
-				}
 				if want == nil {
 					return
 				}

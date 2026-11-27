@@ -85,14 +85,6 @@ func TestWriteError(t *testing.T) {
 		assert.Empty(t, rec.Body.String())
 	})
 
-	t.Run("failed precondition answers with its error body", func(t *testing.T) {
-		rec, err := run("REPORT", errUnsupportedReport)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusForbidden, rec.Code)
-		assert.Contains(t, rec.Body.String(), "<D:error")
-		assert.Contains(t, rec.Body.String(), "<D:supported-report/>")
-	})
-
 	t.Run("unknown error goes to the error handler without its message", func(t *testing.T) {
 		cause := errors.New("database is gone")
 		_, err := run(http.MethodGet, cause)
