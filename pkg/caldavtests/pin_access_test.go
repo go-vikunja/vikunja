@@ -91,6 +91,13 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 		"Depth":         "0",
 	})
 	assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s", collection)
+	for _, depth := range []string{"0", "1"} {
+		propfind = caldavRequest(t, e, "PROPFIND", task, PropfindResourceProperties, map[string]string{
+			"Authorization": auth,
+			"Depth":         depth,
+		})
+		assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s Depth %s", task, depth)
+	}
 
 	for _, method := range []string{
 		http.MethodGet,
@@ -407,6 +414,10 @@ func TestPinSameUIDInAnotherProject(t *testing.T) {
 	rec := caldavGET(t, e, duplicate)
 	require.Equal(t, http.StatusOK, rec.Code, "Body:\n%s", rec.Body.String())
 	assert.Contains(t, rec.Body.String(), "SUMMARY:Duplicate UID task")
+
+	rec = caldavPROPFIND(t, e, duplicate, "0", PropfindDiscoveryProps)
+	require.Equal(t, http.StatusMultiStatus, rec.Code, "Body:\n%s", rec.Body.String())
+	assertDAVResponses(t, rec, []expectedDAVResponse{expectTask(duplicate, "Duplicate UID task")})
 
 	rec = caldavPUT(t, e, duplicate, NewVTodo("uid-caldav-test", "Duplicate updated").Build())
 	require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
