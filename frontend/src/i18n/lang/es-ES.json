@@ -274,6 +274,20 @@
 			"favorites": {
 				"title": "Favoritos"
 			}
+		},
+		"calendar": {
+			"title": "Calendario",
+			"loading": "Cargando…",
+			"count": "Tareas: {count}",
+			"deadline": "Fecha límite",
+			"create": "Crear una tarea",
+			"chooseProject": "Selecciona un proyecto y una fecha para la nueva tarea.",
+			"cancel": "Cancelar",
+			"retry": "Reintentar",
+			"hint": "Abre una tarea para ver los detalles. Arrástrala para reprogramarla; cambia su tamaño para modificar la fecha de finalización.",
+			"date": "Fecha",
+			"loadError": "No se pudieron cargar las tareas. Inténtalo de nuevo.",
+			"saveError": "No se pudieron guardar las fechas. Se ha deshecho el movimiento."
 		}
 	},
 	"filters": {

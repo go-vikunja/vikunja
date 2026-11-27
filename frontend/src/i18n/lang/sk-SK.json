@@ -1,1 +1,18 @@
-{}
+{
+  "project": {
+    "calendar": {
+      "title": "Kalendár",
+      "loading": "Načítava sa…",
+      "count": "Úlohy: {count}",
+      "deadline": "Termín",
+      "create": "Vytvoriť úlohu",
+      "chooseProject": "Vyberte projekt a dátum pre novú úlohu.",
+      "cancel": "Zrušiť",
+      "retry": "Skúsiť znova",
+      "hint": "Otvorte úlohu pre podrobnosti. Potiahnutím zmeníte termín; zmenou veľkosti upravíte dátum ukončenia.",
+      "date": "Dátum",
+      "loadError": "Úlohy sa nepodarilo načítať. Skúste to znova.",
+      "saveError": "Dátumy sa nepodarilo uložiť. Presun bol vrátený späť."
+    }
+  }
+}

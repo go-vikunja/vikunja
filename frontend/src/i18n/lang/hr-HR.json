@@ -317,6 +317,20 @@
 			"delete": "Izbriši ovaj prikaz",
 			"deleteText": "Jeste li sigurni da želite ukloniti ovaj prikaz? Više ga neće biti moguće koristiti za pregled zadataka u ovom projektu. Ova radnja neće izbrisati nijedan zadatak. To se ne može poništiti!",
 			"onlyAdminsCanEdit": "Samo administratori projekta mogu uređivati ​​prikaze."
+		},
+		"calendar": {
+			"title": "Kalendar",
+			"loading": "Učitavanje…",
+			"count": "Zadaci: {count}",
+			"deadline": "Rok",
+			"create": "Stvori zadatak",
+			"chooseProject": "Odaberite projekt i datum za novi zadatak.",
+			"cancel": "Otkaži",
+			"retry": "Pokušaj ponovno",
+			"hint": "Otvorite zadatak za detalje. Povucite ga za promjenu termina; promijenite veličinu za promjenu datuma završetka.",
+			"date": "Datum",
+			"loadError": "Nije moguće učitati zadatke. Pokušajte ponovno.",
+			"saveError": "Nije moguće spremiti datume. Premještanje je poništeno."
 		}
 	},
 	"filters": {

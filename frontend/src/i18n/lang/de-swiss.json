@@ -682,6 +682,20 @@
 			"includeSubprojects": "Aufgaben aus Unterprojekten ebenfalls anzeigen",
 			"includeSubprojectsHint": "Aufgaben aus allen Unterprojekten dieses Projekts anzeigen.",
 			"includeSubprojectsFromView": "In den Einstellungen dieser Ansicht aktiviert. Ändere es dort, um es auszuschalten."
+		},
+		"calendar": {
+			"title": "Kaländer",
+			"loading": "Ladä…",
+			"count": "Ufgabe: {count}",
+			"deadline": "Frist",
+			"create": "Aufgabe erstellen",
+			"chooseProject": "Wähl es Projekt und es Datum für die neu Ufgab.",
+			"cancel": "Abbreche",
+			"retry": "Nomol versueche",
+			"hint": "Öffne e Ufgab für Details. Zieh si zum Verschiebe; ändere d Grössi, zum s Enddatum aazpasse.",
+			"date": "Datum",
+			"loadError": "D Ufgabe händ nöd chöne glade werde. Versuech es nomol.",
+			"saveError": "D Date händ nöd chöne gspeicheret werde. D Verschiebig isch rückgängig gmacht worde."
 		}
 	},
 	"filters": {

@@ -465,6 +465,20 @@
 			"deleteSuccess": "Pohled byl úspěšně odstraněn.",
 			"onlyAdminsCanEdit": "Pohledy mohou upravovat pouze správci projektu.",
 			"updateSuccess": "Pohled byl úspěšně upraven."
+		},
+		"calendar": {
+			"title": "Kalendář",
+			"loading": "Načítání…",
+			"count": "Úkoly: {count}",
+			"deadline": "Termín",
+			"create": "Vytvořit úkol",
+			"chooseProject": "Vyberte projekt a datum pro nový úkol.",
+			"cancel": "Zrušit",
+			"retry": "Zkusit znovu",
+			"hint": "Otevřete úkol pro podrobnosti. Přetažením změníte termín; změnou velikosti upravíte datum ukončení.",
+			"date": "Datum",
+			"loadError": "Úkoly se nepodařilo načíst. Zkuste to znovu.",
+			"saveError": "Data se nepodařilo uložit. Přesun byl vrácen zpět."
 		}
 	},
 	"filters": {

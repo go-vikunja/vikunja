@@ -373,6 +373,20 @@
 			"deleteSuccess": "Pogled je bil uspešno izbrisan.",
 			"onlyAdminsCanEdit": "Samo skrbniki projekta lahko urejajo poglede.",
 			"updateSuccess": "Pogled je bil uspešno posodobljen."
+		},
+		"calendar": {
+			"title": "Koledar",
+			"loading": "Nalaganje…",
+			"count": "Opravila: {count}",
+			"deadline": "Rok",
+			"create": "Ustvari opravilo",
+			"chooseProject": "Izberite projekt in datum za novo opravilo.",
+			"cancel": "Prekliči",
+			"retry": "Poskusi znova",
+			"hint": "Odprite opravilo za podrobnosti. Povlecite ga za spremembo termina; spremenite velikost za spremembo končnega datuma.",
+			"date": "Datum",
+			"loadError": "Opravil ni bilo mogoče naložiti. Poskusite znova.",
+			"saveError": "Datumov ni bilo mogoče shraniti. Premik je bil razveljavljen."
 		}
 	},
 	"filters": {

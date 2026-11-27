@@ -378,6 +378,20 @@
 			"deleteSuccess": "Chế độ xem được xóa thành công.",
 			"onlyAdminsCanEdit": "Chỉ các quản trị viên của dự án có thể chỉnh sửa chế độ xem.",
 			"updateSuccess": "Chế độ xem được cập nhật thành công."
+		},
+		"calendar": {
+			"title": "Lịch",
+			"loading": "Đang tải…",
+			"count": "Tác vụ: {count}",
+			"deadline": "Hạn chót",
+			"create": "Tạo một tác vụ",
+			"chooseProject": "Chọn dự án và ngày cho tác vụ mới.",
+			"cancel": "Hủy",
+			"retry": "Thử lại",
+			"hint": "Mở tác vụ để xem chi tiết. Kéo để đổi lịch; thay đổi kích thước để đổi ngày kết thúc.",
+			"date": "Ngày",
+			"loadError": "Không thể tải tác vụ. Vui lòng thử lại.",
+			"saveError": "Không thể lưu ngày. Đã hoàn tác việc di chuyển."
 		}
 	},
 	"filters": {

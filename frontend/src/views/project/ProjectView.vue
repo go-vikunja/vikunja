@@ -14,6 +14,7 @@ import ProjectList from '@/components/project/views/ProjectList.vue'
 import ProjectGantt from '@/components/project/views/ProjectGantt.vue'
 import ProjectTable from '@/components/project/views/ProjectTable.vue'
 import ProjectKanban from '@/components/project/views/ProjectKanban.vue'
+import ProjectCalendar from '@/components/project/views/ProjectCalendar.vue'
 import ProjectInTrashNotice from '@/components/project/ProjectInTrashNotice.vue'
 
 import {saveProjectToHistory} from '@/modules/projectHistory'
@@ -132,4 +133,5 @@ watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
 		:view-id
 		:view="currentView"
 	/>
+	<ProjectCalendar v-if="currentView?.view_kind === 'calendar'" :project-id="projectId" :view-id="viewId" :is-loading-project="isLoadingProject" />
 </template>

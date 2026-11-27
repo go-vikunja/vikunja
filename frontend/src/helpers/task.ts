@@ -164,7 +164,7 @@ export function buildQuickAddTask(
 		? cleanupItemText(parsed.text, assignees.map(user => user.match), prefixes.assignee)
 		: parsed.text
 	// Without a due date, a repeating task never becomes due.
-	const dueDate = (parsed.date ?? (parsed.repeats ? getDateWithTime(new Date()) : null))?.toISOString()
+	const dueDate = parsed.date?.toISOString() ?? input.due_date ?? (parsed.repeats ? getDateWithTime(new Date()).toISOString() : undefined)
 	return createTaskDraft({
 		...input,
 		title,

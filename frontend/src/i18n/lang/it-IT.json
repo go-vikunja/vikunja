@@ -436,6 +436,20 @@
 			"deleteSuccess": "Vista eliminata correttamente.",
 			"onlyAdminsCanEdit": "Solo gli amministratori del progetto possono modificare le viste.",
 			"updateSuccess": "Vista aggiornata correttamente."
+		},
+		"calendar": {
+			"title": "Calendario",
+			"loading": "Caricamento…",
+			"count": "Attività: {count}",
+			"deadline": "Scadenza",
+			"create": "Crea un'attività",
+			"chooseProject": "Seleziona un progetto e una data per la nuova attività.",
+			"cancel": "Annulla",
+			"retry": "Riprova",
+			"hint": "Apri un'attività per i dettagli. Trascinala per riprogrammarla; ridimensionala per modificarne la data di fine.",
+			"date": "Data",
+			"loadError": "Impossibile caricare le attività. Riprova.",
+			"saveError": "Impossibile salvare le date. Lo spostamento è stato annullato."
 		}
 	},
 	"filters": {
