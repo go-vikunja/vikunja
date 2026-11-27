@@ -120,18 +120,19 @@ type propPatchResult struct {
 // Only a collection's calendar-color is settable; everything else gets
 // sabre/dav's 403 "polite refusal", which clients tolerate where a 501 would make them abort.
 func servePropPatch(c *echo.Context, u *user.User, t target) error {
+	// Before the session: a trickled body must not pin a DB connection.
+	body, bodyErr := readBody(c, maxPropRequestBodySize)
+
 	s := db.NewSession()
 	defer s.Close()
 
-	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
 	res, err := resolvePropPatch(s, u, t)
 	if err != nil {
 		return writeError(c, err)
 	}
-
-	body, err := readBody(c, maxPropRequestBodySize)
-	if err != nil {
-		return writeError(c, err)
+	// After the access check: a bad body must not tell an unreadable collection from a missing one.
+	if bodyErr != nil {
+		return writeError(c, bodyErr)
 	}
 	instructions, err := parsePropertyUpdate(string(body))
 	if err != nil {
