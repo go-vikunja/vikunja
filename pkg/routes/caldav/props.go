@@ -65,7 +65,8 @@ func (t propTable[R]) answer(ctx propContext, r R, href string, req propfindRequ
 		var found []prop
 		answered := map[xml.Name]bool{}
 		for _, def := range t {
-			if explicitOnly[def.name] {
+			// Not owed to allprop (RFC 4918 §9.1, RFC 4791 §9.6); it would send every task body on Depth: 1.
+			if def.name == propCalendarData {
 				continue
 			}
 			if value, has := def.resolve(ctx, r); has {
@@ -81,7 +82,7 @@ func (t propTable[R]) answer(ctx propContext, r R, href string, req propfindRequ
 	case propNameRequest:
 		var names []prop
 		for _, def := range t {
-			if explicitOnly[def.name] {
+			if def.name == propCalendarData {
 				continue
 			}
 			if _, has := def.resolve(ctx, r); has {
@@ -106,9 +107,6 @@ func (t propTable[R]) resolveAll(ctx propContext, r R, names []xml.Name) (found 
 	}
 	return found, missing
 }
-
-// Not owed to allprop (RFC 4918 §9.1, RFC 4791 §9.6); it would send every task body on Depth: 1.
-var explicitOnly = map[xml.Name]bool{propCalendarData: true}
 
 var (
 	propResourceType         = davName("resourcetype")
