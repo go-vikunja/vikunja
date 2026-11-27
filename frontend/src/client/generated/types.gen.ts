@@ -1736,6 +1736,10 @@ export type Project = {
      */
     identifier?: string;
     /**
+     * Whether the list, table and gantt views of this project also show the tasks of its subprojects, as if each view had include_subprojects set. New projects get the server's service.defaultincludesubprojects.
+     */
+    include_subprojects?: boolean;
+    /**
      * Whether the project is archived. Archived projects are read-only.
      */
     is_archived?: boolean;
@@ -1864,6 +1868,10 @@ export type ProjectReadBody = {
      * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
+    /**
+     * Whether the list, table and gantt views of this project also show the tasks of its subprojects, as if each view had include_subprojects set. New projects get the server's service.defaultincludesubprojects.
+     */
+    include_subprojects?: boolean;
     /**
      * Whether the project is archived. Archived projects are read-only.
      */
@@ -3351,6 +3359,10 @@ export type TrashedProject = {
      * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
+    /**
+     * Whether the list, table and gantt views of this project also show the tasks of its subprojects, as if each view had include_subprojects set. New projects get the server's service.defaultincludesubprojects.
+     */
+    include_subprojects?: boolean;
     /**
      * Whether the project is archived. Archived projects are read-only.
      */
@@ -4948,6 +4960,10 @@ export type ProjectWritable = {
      */
     identifier?: string;
     /**
+     * Whether the list, table and gantt views of this project also show the tasks of its subprojects, as if each view had include_subprojects set. New projects get the server's service.defaultincludesubprojects.
+     */
+    include_subprojects?: boolean;
+    /**
      * Whether the project is archived. Archived projects are read-only.
      */
     is_archived?: boolean;
@@ -5012,6 +5028,10 @@ export type ProjectReadBodyWritable = {
      * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
+    /**
+     * Whether the list, table and gantt views of this project also show the tasks of its subprojects, as if each view had include_subprojects set. New projects get the server's service.defaultincludesubprojects.
+     */
+    include_subprojects?: boolean;
     /**
      * Whether the project is archived. Archived projects are read-only.
      */
@@ -5525,6 +5545,10 @@ export type TrashedProjectWritable = {
      * The project short identifier, unique among the projects its creator can access. Used to build task identifiers (e.g. PROJ-123).
      */
     identifier?: string;
+    /**
+     * Whether the list, table and gantt views of this project also show the tasks of its subprojects, as if each view had include_subprojects set. New projects get the server's service.defaultincludesubprojects.
+     */
+    include_subprojects?: boolean;
     /**
      * Whether the project is archived. Archived projects are read-only.
      */
