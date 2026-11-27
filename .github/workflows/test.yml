@@ -473,7 +473,7 @@ jobs:
         run: |
           # One API per worker: every test truncates and reseeds its database
           API_URLS=""
-          WAIT_ON=()
+          WAIT_ON=""
           for i in $(seq 0 $((E2E_WORKERS - 1))); do
             port=$((3460 + i))
             api_root=$(mktemp -d)
@@ -484,7 +484,7 @@ jobs:
             VIKUNJA_FILES_BASEPATH="$api_root/files" \
             pnpm run preview:vikunja > "/tmp/vikunja-api-$i.log" 2>&1 &
             API_URLS="${API_URLS:+$API_URLS,}http://127.0.0.1:$port"
-            WAIT_ON+=("http-get://127.0.0.1:$port/api/v1/info")
+            WAIT_ON="$WAIT_ON http-get://127.0.0.1:$port/api/v1/info"
           done
           pnpm run preview &
 
@@ -502,7 +502,8 @@ jobs:
           pnpm run preview:vikunja > /tmp/vikunja-mailer.log 2>&1 &
 
           # Wait for services to be ready (using GET method)
-          pnpx wait-on http-get://127.0.0.1:4173 "${WAIT_ON[@]}" http-get://127.0.0.1:3457/api/v1/info http-get://mailpit:8025/readyz --timeout 60000
+          # shellcheck disable=SC2086 # WAIT_ON is a word list; this container runs sh, which has no arrays
+          pnpx wait-on http-get://127.0.0.1:4173 $WAIT_ON http-get://127.0.0.1:3457/api/v1/info http-get://mailpit:8025/readyz --timeout 60000
 
           API_URL="$API_URLS" pnpm run test:e2e --shard=${{ matrix.shard }}/${{ matrix.total-shards }}
         env:
