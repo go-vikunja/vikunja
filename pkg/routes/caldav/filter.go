@@ -396,9 +396,12 @@ func asciiUpper(s string) string {
 // overlapsTodo is the VTODO table of RFC 4791 §9.9, read from the fields the VTODO is
 // rendered from: DTSTART is the start date, DUE the due date, COMPLETED the done date of a
 // done task and CREATED the creation date, each only if rendered. The table's DURATION is
-// the end date, if it lies after the start and there is no due date; Vikunja stores the
-// next occurrence of a repeating task only, so that is the instance that counts.
+// the end date, if it lies after the start and there is no due date.
 func (r timeRange) overlapsTodo(t *models.Task) bool {
+	if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
+		// Endless series: any range ending after the first instance starts contains an instance.
+		r.start = time.Time{}
+	}
 	rendered := func(at time.Time) bool { return at.Unix() > 0 }
 	hasStart := rendered(t.StartDate)
 	hasDue := rendered(t.DueDate)

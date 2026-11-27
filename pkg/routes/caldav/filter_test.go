@@ -89,6 +89,12 @@ func TestTimeRangeOverlapsTodo(t *testing.T) {
 			out:  []timeRange{before, after, inside, untilDay(11), fromDay(12)},
 		},
 		{
+			name: "repeating, due only",
+			task: models.Task{DueDate: day(12), RepeatAfter: 7 * 24 * 3600},
+			in:   []timeRange{after},
+			out:  []timeRange{before},
+		},
+		{
 			// An end without a start renders neither DTSTART nor DURATION.
 			name: "end only",
 			task: models.Task{EndDate: day(12), Created: day(10)},
