@@ -18,6 +18,7 @@ package caldav
 
 import (
 	"encoding/xml"
+	"net/url"
 	"path"
 	"slices"
 	"strconv"
@@ -218,7 +219,8 @@ func principalDiscovery[R any]() propTable[R] {
 }
 
 func lastSegment[R hrefed](_ propContext, r R) (propValue, bool) {
-	return textValue(path.Base(r.ownHref())), true
+	name, err := url.PathUnescape(path.Base(r.ownHref()))
+	return textValue(name), err == nil
 }
 
 // entryResource is /dav/.
