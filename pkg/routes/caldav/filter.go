@@ -397,7 +397,7 @@ func parseTimeRange(el *xmlElement) (timeRange, error) {
 	return tr, nil
 }
 
-// matchesValue is RFC 4791 §9.9 for a DATE-TIME property.
+// RFC 4791 §9.9.
 func (r timeRange) matchesValue(v string) bool {
 	t, err := time.Parse(timeRangeFormat, v)
 	if err != nil {

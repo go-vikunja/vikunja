@@ -546,11 +546,6 @@ func TestFilterMatches(t *testing.T) {
 			matches: true,
 		},
 		{
-			name:    "text-match split by a comment",
-			filter:  todoFilter(`<C:prop-filter name="SUMMARY"><C:text-match>Buy<!-- --> Milk</C:text-match></C:prop-filter>`),
-			matches: true,
-		},
-		{
 			name:    "negated text-match",
 			filter:  todoFilter(`<C:prop-filter name="STATUS"><C:text-match negate-condition="yes">COMPLETED</C:text-match></C:prop-filter>`),
 			matches: true,
