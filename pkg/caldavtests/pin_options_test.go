@@ -38,18 +38,75 @@ func TestPinOPTIONS(t *testing.T) {
 		status int
 		allow  string
 	}{
-		{name: "entry", path: "/dav/", status: http.StatusOK, allow: allowEntry},
-		{name: "well-known", path: "/.well-known/caldav", status: http.StatusOK, allow: allowEntry},
-		{name: "principal", path: "/dav/principals/user15/", status: http.StatusOK, allow: allowEntry},
-		{name: "home set", path: "/dav/projects", status: http.StatusOK, allow: allowHomeSet},
-		{name: "own project", path: "/dav/projects/36", status: http.StatusOK, allow: allowReadWrite},
-		{name: "task in own project", path: pinTaskHref, status: http.StatusOK, allow: allowReadWrite},
-		{name: "read-only shared project", path: "/dav/projects/26", status: http.StatusOK, allow: allowReadOnly},
-		{name: "project the user cannot see", path: "/dav/projects/1", status: http.StatusNotFound},
-		{name: "missing project", path: "/dav/projects/99999", status: http.StatusNotFound},
-		{name: "task in read-only shared project", path: "/dav/projects/26/any.ics", status: http.StatusOK, allow: allowReadOnly},
-		{name: "task in project the user cannot see", path: "/dav/projects/1/any.ics", status: http.StatusNotFound},
-		{name: "task in favorites", path: "/dav/projects/-1/any.ics", status: http.StatusOK, allow: allowReadWrite},
+		{
+			name:   "entry",
+			path:   "/dav/",
+			status: http.StatusOK,
+			allow:  allowEntry,
+		},
+		{
+			name:   "well-known",
+			path:   "/.well-known/caldav",
+			status: http.StatusOK,
+			allow:  allowEntry,
+		},
+		{
+			name:   "principal",
+			path:   "/dav/principals/user15/",
+			status: http.StatusOK,
+			allow:  allowEntry,
+		},
+		{
+			name:   "home set",
+			path:   "/dav/projects",
+			status: http.StatusOK,
+			allow:  allowHomeSet,
+		},
+		{
+			name:   "own project",
+			path:   "/dav/projects/36",
+			status: http.StatusOK,
+			allow:  allowReadWrite,
+		},
+		{
+			name:   "task in own project",
+			path:   pinTaskHref,
+			status: http.StatusOK,
+			allow:  allowReadWrite,
+		},
+		{
+			name:   "read-only shared project",
+			path:   "/dav/projects/26",
+			status: http.StatusOK,
+			allow:  allowReadOnly,
+		},
+		{
+			name:   "project the user cannot see",
+			path:   "/dav/projects/1",
+			status: http.StatusNotFound,
+		},
+		{
+			name:   "missing project",
+			path:   "/dav/projects/99999",
+			status: http.StatusNotFound,
+		},
+		{
+			name:   "task in read-only shared project",
+			path:   "/dav/projects/26/any.ics",
+			status: http.StatusOK,
+			allow:  allowReadOnly,
+		},
+		{
+			name:   "task in project the user cannot see",
+			path:   "/dav/projects/1/any.ics",
+			status: http.StatusNotFound,
+		},
+		{
+			name:   "task in favorites",
+			path:   "/dav/projects/-1/any.ics",
+			status: http.StatusOK,
+			allow:  allowReadWrite,
+		},
 	}
 
 	e := setupTestEnv(t)

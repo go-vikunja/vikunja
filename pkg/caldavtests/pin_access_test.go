@@ -30,27 +30,55 @@ import (
 )
 
 type accessExpectation struct {
-	propfind, get, report, options, putUpdate, putCreate, del int
-	allow                                                     string
+	propfind, get, report, options, putUpdate, putCreate, del, delCollection int
+	allow                                                                    string
 }
 
 var (
 	readOnlyAccess = accessExpectation{
-		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadOnly,
-		putUpdate: 403, putCreate: 403, del: 403,
+		propfind:      207,
+		get:           200,
+		report:        207,
+		options:       200,
+		allow:         allowReadOnly,
+		putUpdate:     403,
+		putCreate:     403,
+		del:           403,
+		delCollection: 405,
 	}
 	readWriteAccess = accessExpectation{
-		propfind: 207, get: 200, report: 207, options: 200, allow: allowReadWrite,
-		putUpdate: 204, putCreate: 201, del: 204,
+		propfind:      207,
+		get:           200,
+		report:        207,
+		options:       200,
+		allow:         allowReadWrite,
+		putUpdate:     204,
+		putCreate:     201,
+		del:           204,
+		delCollection: 405,
 	}
 	noAccess = accessExpectation{
-		propfind: 404, get: 404, report: 404, options: 404,
-		putUpdate: 404, putCreate: 404, del: 404,
+		propfind:      404,
+		get:           404,
+		report:        404,
+		options:       404,
+		putUpdate:     404,
+		putCreate:     404,
+		del:           404,
+		delCollection: 404,
 	}
 )
 
-// assertAccess runs every verb as username against an existing task, writes last so the
-// reads see the fixture state, and checks that denied writes left the task alone.
+func taskUIDExists(t *testing.T, uid string) bool {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+	exists, err := s.Where("uid = ?", uid).Exist(&models.Task{})
+	require.NoError(t, err)
+	return exists
+}
+
+// Writes run last so the reads see the fixture state.
 func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerUsername string, want accessExpectation) {
 	t.Helper()
 	auth := basicAuthHeader(username, fixturePassword)
@@ -58,29 +86,78 @@ func assertAccess(t *testing.T, e *echo.Echo, username, project, taskUID, ownerU
 	task := collection + "/" + taskUID + ".ics"
 	as := map[string]string{"Authorization": auth}
 
-	propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{"Authorization": auth, "Depth": "0"})
+	propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{
+		"Authorization": auth,
+		"Depth":         "0",
+	})
 	assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s", collection)
+	for _, depth := range []string{
+		"0",
+		"1",
+	} {
+		propfind = caldavRequest(t, e, "PROPFIND", task, PropfindResourceProperties, map[string]string{
+			"Authorization": auth,
+			"Depth":         depth,
+		})
+		assert.Equal(t, want.propfind, propfind.Code, "PROPFIND %s Depth %s", task, depth)
+	}
 
-	assert.Equal(t, want.get, caldavRequest(t, e, http.MethodGet, task, "", as).Code, "GET %s", task)
+	for _, method := range []string{
+		http.MethodGet,
+		http.MethodHead,
+	} {
+		assert.Equal(t, want.get, caldavRequest(t, e, method, task, "", as).Code, "%s %s", method, task)
+		assert.Equal(t, want.get, caldavRequest(t, e, method, collection, "", as).Code, "%s %s", method, collection)
+	}
 	assert.Equal(t, want.report, caldavRequest(t, e, "REPORT", collection, ReportCalendarQuery, as).Code, "REPORT %s", collection)
 
-	options := caldavRequest(t, e, http.MethodOptions, collection, "", as)
-	assert.Equal(t, want.options, options.Code, "OPTIONS %s", collection)
-	assert.Equal(t, want.allow, options.Header().Get("Allow"), "OPTIONS %s Allow", collection)
+	for _, path := range []string{
+		task,
+		collection,
+	} {
+		options := caldavRequest(t, e, http.MethodOptions, path, "", as)
+		assert.Equal(t, want.options, options.Code, "OPTIONS %s", path)
+		assert.Equal(t, want.allow, options.Header().Get("Allow"), "OPTIONS %s Allow", path)
+	}
 
-	putAs := map[string]string{"Authorization": auth, "Content-Type": "text/calendar; charset=utf-8"}
-	update := caldavRequest(t, e, http.MethodPut, task, NewVTodo(taskUID, "Updated by "+username).Build(), putAs)
+	assert.Equal(t, want.delCollection, caldavRequest(t, e, http.MethodDelete, collection, "", as).Code, "DELETE %s", collection)
+
+	ownerAs := map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)}
+	ownerGet := func() *httptest.ResponseRecorder {
+		return caldavRequest(t, e, http.MethodGet, task, "", ownerAs)
+	}
+
+	updated := "Updated by " + username
+	update := caldavPUTWith(t, e, task, NewVTodo(taskUID, updated).Build(), as)
 	assert.Equal(t, want.putUpdate, update.Code, "PUT update %s", task)
+	if want.putUpdate == http.StatusNoContent {
+		assert.Contains(t, ownerGet().Body.String(), "SUMMARY:"+updated, "PUT must change %s", task)
+	}
+	viaCollection := "Updated via collection by " + username
+	update = caldavPUTWith(t, e, collection, NewVTodo(taskUID, viaCollection).Build(), as)
+	assert.Equal(t, want.putUpdate, update.Code, "PUT update via %s", collection)
+	if want.putUpdate == http.StatusNoContent {
+		assert.Contains(t, ownerGet().Body.String(), "SUMMARY:"+viaCollection, "PUT via %s must change %s", collection, task)
+	} else {
+		body := ownerGet().Body.String()
+		assert.NotContains(t, body, updated, "denied PUT must not change %s", task)
+		assert.NotContains(t, body, viaCollection, "denied PUT must not change %s", task)
+	}
 
 	newUID := taskUID + "-new-" + username
-	create := caldavRequest(t, e, http.MethodPut, collection+"/"+newUID+".ics", NewVTodo(newUID, "Created").Build(), putAs)
+	newTask := collection + "/" + newUID + ".ics"
+	create := caldavPUTWith(t, e, newTask, NewVTodo(newUID, "Created").Build(), as)
 	assert.Equal(t, want.putCreate, create.Code, "PUT create in %s", collection)
-
-	ownerGet := func() *httptest.ResponseRecorder {
-		return caldavRequest(t, e, http.MethodGet, task, "", map[string]string{"Authorization": basicAuthHeader(ownerUsername, fixturePassword)})
-	}
-	if want.putUpdate != http.StatusNoContent {
-		assert.NotContains(t, ownerGet().Body.String(), "Updated by "+username, "denied PUT must not change %s", task)
+	newViaCollectionUID := newUID + "-c"
+	newViaCollection := collection + "/" + newViaCollectionUID + ".ics"
+	create = caldavPUTWith(t, e, collection, NewVTodo(newViaCollectionUID, "Created").Build(), as)
+	assert.Equal(t, want.putCreate, create.Code, "PUT create via %s", collection)
+	if want.putCreate == http.StatusCreated {
+		assert.Equal(t, http.StatusOK, caldavRequest(t, e, http.MethodGet, newTask, "", ownerAs).Code, "created %s", newTask)
+		assert.Equal(t, http.StatusOK, caldavRequest(t, e, http.MethodGet, newViaCollection, "", ownerAs).Code, "created %s", newViaCollection)
+	} else {
+		assert.False(t, taskUIDExists(t, newUID), "denied PUT must not create %s", newTask)
+		assert.False(t, taskUIDExists(t, newViaCollectionUID), "denied PUT must not create %s", newViaCollection)
 	}
 
 	assert.Equal(t, want.del, caldavRequest(t, e, http.MethodDelete, task, "", as).Code, "DELETE %s", task)
@@ -98,22 +175,49 @@ func TestPinAccessPaths(t *testing.T) {
 		project string
 		access  accessExpectation
 	}{
-		{name: "team read", project: "6", access: readOnlyAccess},
-		{name: "team write", project: "7", access: readWriteAccess},
-		{name: "team admin", project: "8", access: readWriteAccess},
-		{name: "user share read", project: "9", access: readOnlyAccess},
-		{name: "user share write", project: "10", access: readWriteAccess},
-		{name: "user share admin", project: "11", access: readWriteAccess},
-		{name: "read share inherited from parent", project: "12", access: readOnlyAccess},
+		{
+			name:    "team read",
+			project: "6",
+			access:  readOnlyAccess,
+		},
+		{
+			name:    "team write",
+			project: "7",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "team admin",
+			project: "8",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "user share read",
+			project: "9",
+			access:  readOnlyAccess,
+		},
+		{
+			name:    "user share write",
+			project: "10",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "user share admin",
+			project: "11",
+			access:  readWriteAccess,
+		},
+		{
+			name:    "read share inherited from parent",
+			project: "12",
+			access:  readOnlyAccess,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			e := setupTestEnv(t)
 			uid := "pin-access-" + tc.project
-			created := caldavRequest(t, e, http.MethodPut, "/dav/projects/"+tc.project+"/"+uid+".ics", NewVTodo(uid, "Owned by user6").Build(), map[string]string{
+			created := caldavPUTWith(t, e, "/dav/projects/"+tc.project+"/"+uid+".ics", NewVTodo(uid, "Owned by user6").Build(), map[string]string{
 				"Authorization": basicAuthHeader("user6", fixturePassword),
-				"Content-Type":  "text/calendar; charset=utf-8",
 			})
 			require.Equal(t, http.StatusCreated, created.Code)
 
@@ -136,6 +240,12 @@ func TestPinAccessPaths(t *testing.T) {
 			assertAccess(t, e, testuser15.Username, "36", "uid-caldav-test", testuser15.Username, readWriteAccess)
 		})
 	})
+
+	t.Run("archived own project", func(t *testing.T) {
+		e := setupTestEnv(t)
+		archive(t, 36)
+		assertAccess(t, e, testuser15.Username, "36", "uid-caldav-test", testuser15.Username, readOnlyAccess)
+	})
 }
 
 func TestPinAccessCollectionOnly(t *testing.T) {
@@ -150,34 +260,73 @@ func TestPinAccessCollectionOnly(t *testing.T) {
 		username string
 		want     collectionExpectation
 	}{
-		// Project 22 is user1's own, archived.
-		{name: "archived own project", project: "22", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadOnly}},
-		{name: "archived project, unrelated user", project: "22", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
-		// Saved filter 1 (pseudo project -2) belongs to user1.
-		{name: "own saved filter", project: "-2", username: testuser1.Username, want: collectionExpectation{207, 207, 200, 403, allowReadWrite}},
-		{name: "saved filter, unrelated user", project: "-2", username: "user13", want: collectionExpectation{404, 404, 404, 404, ""}},
-		{name: "owned project, unrelated user", project: "36", username: testuser1.Username, want: collectionExpectation{404, 404, 404, 404, ""}},
+		{
+			name:     "archived own project",
+			project:  "22",
+			username: testuser1.Username,
+			want: collectionExpectation{
+				propfind:  207,
+				report:    207,
+				options:   200,
+				putCreate: 403,
+				allow:     allowReadOnly,
+			},
+		},
+		{
+			name:     "archived project, unrelated user",
+			project:  "22",
+			username: "user13",
+			want: collectionExpectation{
+				propfind:  404,
+				report:    404,
+				options:   404,
+				putCreate: 404,
+			},
+		},
+		{
+			name:     "own saved filter",
+			project:  "-2",
+			username: testuser1.Username,
+			want: collectionExpectation{
+				propfind:  207,
+				report:    207,
+				options:   200,
+				putCreate: 403,
+				allow:     allowReadWrite,
+			},
+		},
+		{
+			name:     "saved filter, unrelated user",
+			project:  "-2",
+			username: "user13",
+			want: collectionExpectation{
+				propfind:  404,
+				report:    404,
+				options:   404,
+				putCreate: 404,
+			},
+		},
 	}
 
-	// Every write here is denied, so the cases share one fixture load.
 	e := setupTestEnv(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			auth := basicAuthHeader(tc.username, fixturePassword)
 			collection := "/dav/projects/" + tc.project
 
-			propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{"Authorization": auth, "Depth": "0"})
+			propfind := caldavRequest(t, e, "PROPFIND", collection, PropfindCalendarCollectionProperties, map[string]string{
+				"Authorization": auth,
+				"Depth":         "0",
+			})
 			assert.Equal(t, tc.want.propfind, propfind.Code, "PROPFIND")
 			report := caldavRequest(t, e, "REPORT", collection, ReportCalendarQuery, map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.report, report.Code, "REPORT")
 			options := caldavRequest(t, e, http.MethodOptions, collection, "", map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.options, options.Code, "OPTIONS")
 			assert.Equal(t, tc.want.allow, options.Header().Get("Allow"), "Allow")
-			create := caldavRequest(t, e, http.MethodPut, collection+"/pin-access-create.ics", NewVTodo("pin-access-create", "Created").Build(), map[string]string{
-				"Authorization": auth,
-				"Content-Type":  "text/calendar; charset=utf-8",
-			})
+			create := caldavPUTWith(t, e, collection+"/pin-access-create.ics", NewVTodo("pin-access-create", "Created").Build(), map[string]string{"Authorization": auth})
 			assert.Equal(t, tc.want.putCreate, create.Code, "PUT create")
+			assert.False(t, taskUIDExists(t, "pin-access-create"), "denied PUT must not create a task")
 		})
 	}
 }
@@ -196,7 +345,10 @@ func TestPinAccessGETCollection(t *testing.T) {
 func TestPinAccessForeignPrincipal(t *testing.T) {
 	e := setupTestEnv(t)
 
-	for _, path := range []string{"/dav/principals/user1/", "/dav/principals/user15/sub/"} {
+	for _, path := range []string{
+		"/dav/principals/user1/",
+		"/dav/principals/user15/sub/",
+	} {
 		rec := caldavPROPFIND(t, e, path, "0", PropfindDiscoveryProps)
 		assert.Equal(t, http.StatusNotFound, rec.Code, "PROPFIND %s", path)
 	}
@@ -208,15 +360,27 @@ func TestPinMalformedTaskURLs(t *testing.T) {
 
 	// Without it a lookup of the empty UID finds nothing and the empty-UID case passes by accident.
 	s := db.NewSession()
-	_, err := s.Insert(&models.Task{Title: "Task without uid", ProjectID: 36, Index: 999, CreatedByID: testuser15.ID})
+	_, err := s.Insert(&models.Task{
+		Title:       "Task without uid",
+		ProjectID:   36,
+		Index:       999,
+		CreatedByID: testuser15.ID,
+	})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	s.Close()
 
-	putAs := map[string]string{"Content-Type": "text/calendar; charset=utf-8"}
-	for _, path := range []string{"/dav/projects//uid-caldav-test.ics", "/dav/projects/36/.ics"} {
+	for _, path := range []string{
+		"/dav/projects//uid-caldav-test.ics",
+		"/dav/projects/36/.ics",
+	} {
 		t.Run(path, func(t *testing.T) {
-			for _, method := range []string{http.MethodGet, http.MethodHead, http.MethodDelete, http.MethodOptions} {
+			for _, method := range []string{
+				http.MethodGet,
+				http.MethodHead,
+				http.MethodDelete,
+				http.MethodOptions,
+			} {
 				rec := caldavRequest(t, e, method, path, "", nil)
 				assert.Equal(t, http.StatusNotFound, rec.Code, "%s. Body:\n%s", method, rec.Body.String())
 			}
@@ -224,7 +388,7 @@ func TestPinMalformedTaskURLs(t *testing.T) {
 			rec := caldavPROPFIND(t, e, path, "0", PropfindResourceProperties)
 			assert.Equal(t, http.StatusNotFound, rec.Code, "PROPFIND. Body:\n%s", rec.Body.String())
 
-			rec = caldavRequest(t, e, http.MethodPut, path, NewVTodo("uid-caldav-test", "Overwritten").Build(), putAs)
+			rec = caldavPUT(t, e, path, NewVTodo("uid-caldav-test", "Overwritten").Build())
 			assert.Equal(t, http.StatusNotFound, rec.Code, "PUT. Body:\n%s", rec.Body.String())
 		})
 	}
@@ -233,13 +397,18 @@ func TestPinMalformedTaskURLs(t *testing.T) {
 	assert.NotContains(t, caldavGET(t, e, pinTaskHref).Body.String(), "Overwritten")
 }
 
-// tasks.uid has no unique index: the same UID in another readable project must not hide
-// the task living in the project the URL names.
+// tasks.uid is not unique: a same-UID task in another project must not hide this one.
 func TestPinSameUIDInAnotherProject(t *testing.T) {
 	e := setupTestEnv(t)
 
 	s := db.NewSession()
-	_, err := s.Insert(&models.Task{Title: "Duplicate UID task", UID: "uid-caldav-test", ProjectID: 38, Index: 999, CreatedByID: testuser15.ID})
+	_, err := s.Insert(&models.Task{
+		Title:       "Duplicate UID task",
+		UID:         "uid-caldav-test",
+		ProjectID:   38,
+		Index:       999,
+		CreatedByID: testuser15.ID,
+	})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	s.Close()
@@ -248,6 +417,10 @@ func TestPinSameUIDInAnotherProject(t *testing.T) {
 	rec := caldavGET(t, e, duplicate)
 	require.Equal(t, http.StatusOK, rec.Code, "Body:\n%s", rec.Body.String())
 	assert.Contains(t, rec.Body.String(), "SUMMARY:Duplicate UID task")
+
+	rec = caldavPROPFIND(t, e, duplicate, "0", PropfindDiscoveryProps)
+	require.Equal(t, http.StatusMultiStatus, rec.Code, "Body:\n%s", rec.Body.String())
+	assertDAVResponses(t, rec, []expectedDAVResponse{expectTask(duplicate, "Duplicate UID task")})
 
 	rec = caldavPUT(t, e, duplicate, NewVTodo("uid-caldav-test", "Duplicate updated").Build())
 	require.Equal(t, http.StatusNoContent, rec.Code, "Body:\n%s", rec.Body.String())
@@ -259,4 +432,22 @@ func TestPinSameUIDInAnotherProject(t *testing.T) {
 	require.Equal(t, http.StatusNoContent, caldavDELETE(t, e, duplicate).Code)
 	assert.Equal(t, http.StatusNotFound, caldavGET(t, e, duplicate).Code)
 	assert.Equal(t, http.StatusOK, caldavGET(t, e, pinTaskHref).Code)
+}
+
+// GHSA-48ch-p4gq-x46x: user1 writes project 7 but only reads project 6.
+func TestPinWriteThroughAnotherProject(t *testing.T) {
+	e := setupTestEnv(t)
+	owner := map[string]string{"Authorization": basicAuthHeader("user6", fixturePassword)}
+	user1 := map[string]string{"Authorization": basicAuthHeader(testuser1.Username, fixturePassword)}
+	const victim = "/dav/projects/6/cross-project.ics"
+	const viaWritable = "/dav/projects/7/cross-project.ics"
+
+	require.Equal(t, http.StatusCreated, caldavPUTWith(t, e, victim, NewVTodo("cross-project", "Read-only task").Build(), owner).Code)
+
+	assert.Equal(t, http.StatusNotFound, caldavRequest(t, e, http.MethodDelete, viaWritable, "", user1).Code, "DELETE")
+	assert.Equal(t, http.StatusNotFound, caldavPUTWith(t, e, viaWritable, NewVTodo("cross-project", "Overwritten").Build(), user1).Code, "PUT")
+
+	rec := caldavRequest(t, e, http.MethodGet, victim, "", owner)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Body.String(), "SUMMARY:Read-only task")
 }

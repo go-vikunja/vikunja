@@ -27,9 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 )
 
-// propContext is what all resources of one request share.
 type propContext struct {
-	// The requesting user's principal.
 	principal string
 }
 
@@ -70,7 +68,10 @@ func (t propTable[R]) answer(ctx propContext, r R, href string, req propfindRequ
 				continue
 			}
 			if value, has := def.resolve(ctx, r); has {
-				found = append(found, prop{name: def.name, value: value})
+				found = append(found, prop{
+					name:  def.name,
+					value: value,
+				})
 				answered[def.name] = true
 			}
 		}
@@ -94,7 +95,10 @@ func (t propTable[R]) answer(ctx propContext, r R, href string, req propfindRequ
 func (t propTable[R]) resolveAll(ctx propContext, r R, names []xml.Name) (found []prop, missing []xml.Name) {
 	for _, name := range names {
 		if value, has := t.resolve(ctx, r, name); has {
-			found = append(found, prop{name: name, value: value})
+			found = append(found, prop{
+				name:  name,
+				value: value,
+			})
 			continue
 		}
 		missing = append(missing, name)
@@ -102,8 +106,7 @@ func (t propTable[R]) resolveAll(ctx propContext, r R, names []xml.Name) (found 
 	return found, missing
 }
 
-// RFC 4791 §9.6 defines calendar-data for REPORT, not as a property allprop owes
-// (RFC 4918 §9.1); answering it would send every task body on an allprop Depth: 1.
+// Not owed to allprop (RFC 4918 §9.1, RFC 4791 §9.6); it would send every task body on Depth: 1.
 var explicitOnly = map[xml.Name]bool{propCalendarData: true}
 
 var (
@@ -118,11 +121,14 @@ var (
 	propGetETag              = davName("getetag")
 	propGetLastModified      = davName("getlastmodified")
 	propSyncToken            = davName("sync-token")
-	propGetCTag              = xml.Name{Space: nsCalendarServer, Local: "getctag"}
-	propCalendarHomeSet      = calDAVName("calendar-home-set")
-	propCalendarUserAddress  = calDAVName("calendar-user-address-set")
-	propSupportedComponents  = calDAVName("supported-calendar-component-set")
-	propCalendarData         = calDAVName("calendar-data")
+	propGetCTag              = xml.Name{
+		Space: nsCalendarServer,
+		Local: "getctag",
+	}
+	propCalendarHomeSet     = calDAVName("calendar-home-set")
+	propCalendarUserAddress = calDAVName("calendar-user-address-set")
+	propSupportedComponents = calDAVName("supported-calendar-component-set")
+	propCalendarData        = calDAVName("calendar-data")
 )
 
 var (
@@ -131,8 +137,24 @@ var (
 	calendarType   = element{name: calDAVName("calendar")}
 
 	supportedComponents = elementsValue{
-		{name: calDAVName("comp"), attrs: []attr{{name: "name", value: "VCALENDAR"}}},
-		{name: calDAVName("comp"), attrs: []attr{{name: "name", value: "VTODO"}}},
+		{
+			name: calDAVName("comp"),
+			attrs: []attr{
+				{
+					name:  "name",
+					value: "VCALENDAR",
+				},
+			},
+		},
+		{
+			name: calDAVName("comp"),
+			attrs: []attr{
+				{
+					name:  "name",
+					value: "VTODO",
+				},
+			},
+		},
 	}
 )
 
@@ -162,7 +184,6 @@ func ownerPrincipal(username string) (propValue, bool) {
 	return hrefsValue{principalPathForUser(username)}, true
 }
 
-// hrefed is any resource that answers some properties with its own href.
 type hrefed interface{ ownHref() string }
 
 func ownHref[R hrefed](_ propContext, r R) (propValue, bool) {
@@ -182,8 +203,14 @@ func selfReferencing[R hrefed]() propTable[R] {
 func principalDiscovery[R any]() propTable[R] {
 	return propTable[R]{
 		// Without the trailing slash, as clients knew it before the rewrite.
-		{propCalendarHomeSet, always[R](hrefsValue{ProjectBasePath})},
-		{propPrincipalURL, func(ctx propContext, _ R) (propValue, bool) { return hrefsValue{ctx.principal}, true }},
+		{
+			name:    propCalendarHomeSet,
+			resolve: always[R](hrefsValue{ProjectBasePath}),
+		},
+		{
+			name:    propPrincipalURL,
+			resolve: func(ctx propContext, _ R) (propValue, bool) { return hrefsValue{ctx.principal}, true },
+		},
 	}
 }
 
@@ -197,28 +224,60 @@ type entryResource struct{ href string }
 func (r *entryResource) ownHref() string { return r.href }
 
 var entryProps = append(propTable[*entryResource]{
-	{propResourceType, always[*entryResource](elementsValue{collectionType})},
-	{propDisplayName, lastSegment[*entryResource]},
-	{propCurrentUserPrincipal, currentUserPrincipal[*entryResource]},
-	{propSupportedComponents, always[*entryResource](supportedComponents)},
-	{propGetContentType, always[*entryResource](textValue(contentTypeCollection))},
+	{
+		name:    propResourceType,
+		resolve: always[*entryResource](elementsValue{collectionType}),
+	},
+	{
+		name:    propDisplayName,
+		resolve: lastSegment[*entryResource],
+	},
+	{
+		name:    propCurrentUserPrincipal,
+		resolve: currentUserPrincipal[*entryResource],
+	},
+	{
+		name:    propSupportedComponents,
+		resolve: always[*entryResource](supportedComponents),
+	},
+	{
+		name:    propGetContentType,
+		resolve: always[*entryResource](textValue(contentTypeCollection)),
+	},
 }, slices.Concat(principalDiscovery[*entryResource](), selfReferencing[*entryResource]())...)
 
 func (r *entryResource) answer(ctx propContext, req propfindRequest) msResponse {
 	return entryProps.answer(ctx, r, r.href, req)
 }
 
-// principalResource is the requesting user's principal.
 type principalResource struct{ href string }
 
 func (r *principalResource) ownHref() string { return r.href }
 
 var principalProps = append(propTable[*principalResource]{
-	{propResourceType, always[*principalResource](elementsValue{collectionType, principalType})},
-	{propDisplayName, lastSegment[*principalResource]},
-	{propCurrentUserPrincipal, currentUserPrincipal[*principalResource]},
-	{propSupportedComponents, always[*principalResource](supportedComponents)},
-	{propGetContentType, always[*principalResource](textValue(contentTypeCollection))},
+	{
+		name: propResourceType,
+		resolve: always[*principalResource](elementsValue{
+			collectionType,
+			principalType,
+		}),
+	},
+	{
+		name:    propDisplayName,
+		resolve: lastSegment[*principalResource],
+	},
+	{
+		name:    propCurrentUserPrincipal,
+		resolve: currentUserPrincipal[*principalResource],
+	},
+	{
+		name:    propSupportedComponents,
+		resolve: always[*principalResource](supportedComponents),
+	},
+	{
+		name:    propGetContentType,
+		resolve: always[*principalResource](textValue(contentTypeCollection)),
+	},
 }, slices.Concat(principalDiscovery[*principalResource](), selfReferencing[*principalResource]())...)
 
 func (r *principalResource) answer(ctx propContext, req propfindRequest) msResponse {
@@ -231,11 +290,26 @@ type homeSetResource struct{ href string }
 func (r *homeSetResource) ownHref() string { return r.href }
 
 var homeSetProps = append(propTable[*homeSetResource]{
-	{propResourceType, always[*homeSetResource](elementsValue{collectionType})},
-	{propDisplayName, lastSegment[*homeSetResource]},
-	{propCurrentUserPrincipal, currentUserPrincipal[*homeSetResource]},
-	{propSupportedComponents, always[*homeSetResource](supportedComponents)},
-	{propGetContentType, always[*homeSetResource](textValue(contentTypeCollection))},
+	{
+		name:    propResourceType,
+		resolve: always[*homeSetResource](elementsValue{collectionType}),
+	},
+	{
+		name:    propDisplayName,
+		resolve: lastSegment[*homeSetResource],
+	},
+	{
+		name:    propCurrentUserPrincipal,
+		resolve: currentUserPrincipal[*homeSetResource],
+	},
+	{
+		name:    propSupportedComponents,
+		resolve: always[*homeSetResource](supportedComponents),
+	},
+	{
+		name:    propGetContentType,
+		resolve: always[*homeSetResource](textValue(contentTypeCollection)),
+	},
 }, slices.Concat(principalDiscovery[*homeSetResource](), selfReferencing[*homeSetResource]())...)
 
 func (r *homeSetResource) answer(ctx propContext, req propfindRequest) msResponse {
@@ -257,29 +331,68 @@ func (r *collectionResource) ownHref() string { return r.href }
 func (r *collectionResource) etag() string { return collectionETag(r.project, r.tasks) }
 
 var collectionProps = append(propTable[*collectionResource]{
-	{propResourceType, always[*collectionResource](elementsValue{collectionType, calendarType})},
-	{propDisplayName, func(_ propContext, r *collectionResource) (propValue, bool) {
-		return textValue(r.project.Title), true
-	}},
-	{calendarColorProp, func(_ propContext, r *collectionResource) (propValue, bool) {
-		return textIfSet(caldav2.AppleColor(r.project.HexColor))
-	}},
-	{propCurrentUserPrincipal, currentUserPrincipal[*collectionResource]},
-	{propSupportedComponents, always[*collectionResource](supportedComponents)},
-	{propGetContentType, always[*collectionResource](textValue(contentTypeCollection))},
-	{propOwner, func(_ propContext, r *collectionResource) (propValue, bool) { return ownerPrincipal(r.owner) }},
-	{propGetETag, func(_ propContext, r *collectionResource) (propValue, bool) { return textValue(r.etag()), true }},
-	{propGetCTag, func(_ propContext, r *collectionResource) (propValue, bool) { return textValue(r.etag()), true }},
-	{propSyncToken, func(_ propContext, r *collectionResource) (propValue, bool) {
-		return textValue(syncTokenPrefix + r.etag()), true
-	}},
-	{propGetLastModified, func(_ propContext, r *collectionResource) (propValue, bool) { return modTime(r.project.Updated) }},
-	{propCalendarData, func(_ propContext, r *collectionResource) (propValue, bool) {
-		if r.tasks == nil {
-			return nil, false
-		}
-		return textIfSet(renderCollection(r.project, r.tasks))
-	}},
+	{
+		name: propResourceType,
+		resolve: always[*collectionResource](elementsValue{
+			collectionType,
+			calendarType,
+		}),
+	},
+	{
+		name: propDisplayName,
+		resolve: func(_ propContext, r *collectionResource) (propValue, bool) {
+			return textValue(r.project.Title), true
+		},
+	},
+	{
+		name: calendarColorProp,
+		resolve: func(_ propContext, r *collectionResource) (propValue, bool) {
+			return textIfSet(caldav2.AppleColor(r.project.HexColor))
+		},
+	},
+	{
+		name:    propCurrentUserPrincipal,
+		resolve: currentUserPrincipal[*collectionResource],
+	},
+	{
+		name:    propSupportedComponents,
+		resolve: always[*collectionResource](supportedComponents),
+	},
+	{
+		name:    propGetContentType,
+		resolve: always[*collectionResource](textValue(contentTypeCollection)),
+	},
+	{
+		name:    propOwner,
+		resolve: func(_ propContext, r *collectionResource) (propValue, bool) { return ownerPrincipal(r.owner) },
+	},
+	{
+		name:    propGetETag,
+		resolve: func(_ propContext, r *collectionResource) (propValue, bool) { return textValue(r.etag()), true },
+	},
+	{
+		name:    propGetCTag,
+		resolve: func(_ propContext, r *collectionResource) (propValue, bool) { return textValue(r.etag()), true },
+	},
+	{
+		name: propSyncToken,
+		resolve: func(_ propContext, r *collectionResource) (propValue, bool) {
+			return textValue(syncTokenPrefix + r.etag()), true
+		},
+	},
+	{
+		name:    propGetLastModified,
+		resolve: func(_ propContext, r *collectionResource) (propValue, bool) { return modTime(r.project.Updated) },
+	},
+	{
+		name: propCalendarData,
+		resolve: func(_ propContext, r *collectionResource) (propValue, bool) {
+			if r.tasks == nil {
+				return nil, false
+			}
+			return textIfSet(renderCollection(r.project, r.tasks))
+		},
+	},
 }, selfReferencing[*collectionResource]()...)
 
 func (r *collectionResource) answer(ctx propContext, req propfindRequest) msResponse {
@@ -288,9 +401,8 @@ func (r *collectionResource) answer(ctx propContext, req propfindRequest) msResp
 
 // taskResource is a task as a member of the collection its href names.
 type taskResource struct {
-	href string
-	task *models.Task
-	// The collection's owner.
+	href  string
+	task  *models.Task
 	owner string
 	// Rendering costs as much as a GET, so it happens at most once per resource.
 	rendered *string
@@ -307,18 +419,48 @@ func (r *taskResource) content() string {
 }
 
 var taskProps = append(propTable[*taskResource]{
-	{propResourceType, always[*taskResource](nil)},
-	{propDisplayName, func(_ propContext, r *taskResource) (propValue, bool) { return textValue(r.task.Title), true }},
-	{propCurrentUserPrincipal, currentUserPrincipal[*taskResource]},
-	{propGetContentType, always[*taskResource](textValue(contentTypeTask))},
-	{propOwner, func(_ propContext, r *taskResource) (propValue, bool) { return ownerPrincipal(r.owner) }},
-	{propGetETag, func(_ propContext, r *taskResource) (propValue, bool) { return textValue(taskETag(r.task)), true }},
-	{propGetCTag, func(_ propContext, r *taskResource) (propValue, bool) { return textValue(taskETag(r.task)), true }},
-	{propGetLastModified, func(_ propContext, r *taskResource) (propValue, bool) { return modTime(r.task.Updated) }},
-	{propGetContentLength, func(_ propContext, r *taskResource) (propValue, bool) {
-		return textValue(strconv.Itoa(len(r.content()))), true
-	}},
-	{propCalendarData, func(_ propContext, r *taskResource) (propValue, bool) { return textIfSet(r.content()) }},
+	{
+		name:    propResourceType,
+		resolve: always[*taskResource](nil),
+	},
+	{
+		name:    propDisplayName,
+		resolve: func(_ propContext, r *taskResource) (propValue, bool) { return textValue(r.task.Title), true },
+	},
+	{
+		name:    propCurrentUserPrincipal,
+		resolve: currentUserPrincipal[*taskResource],
+	},
+	{
+		name:    propGetContentType,
+		resolve: always[*taskResource](textValue(contentTypeTask)),
+	},
+	{
+		name:    propOwner,
+		resolve: func(_ propContext, r *taskResource) (propValue, bool) { return ownerPrincipal(r.owner) },
+	},
+	{
+		name:    propGetETag,
+		resolve: func(_ propContext, r *taskResource) (propValue, bool) { return textValue(taskETag(r.task)), true },
+	},
+	{
+		name:    propGetCTag,
+		resolve: func(_ propContext, r *taskResource) (propValue, bool) { return textValue(taskETag(r.task)), true },
+	},
+	{
+		name:    propGetLastModified,
+		resolve: func(_ propContext, r *taskResource) (propValue, bool) { return modTime(r.task.Updated) },
+	},
+	{
+		name: propGetContentLength,
+		resolve: func(_ propContext, r *taskResource) (propValue, bool) {
+			return textValue(strconv.Itoa(len(r.content()))), true
+		},
+	},
+	{
+		name:    propCalendarData,
+		resolve: func(_ propContext, r *taskResource) (propValue, bool) { return textIfSet(r.content()) },
+	},
 }, selfReferencing[*taskResource]()...)
 
 func (r *taskResource) answer(ctx propContext, req propfindRequest) msResponse {

@@ -30,15 +30,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func caldavPUTWith(t *testing.T, e *echo.Echo, path, vcalendar string, headers map[string]string) *httptest.ResponseRecorder {
-	t.Helper()
-	all := map[string]string{"Content-Type": "text/calendar; charset=utf-8"}
-	for k, v := range headers {
-		all[k] = v
-	}
-	return caldavRequest(t, e, http.MethodPut, path, vcalendar, all)
-}
-
 func assertETagHeader(t *testing.T, rec *httptest.ResponseRecorder, want bool) {
 	t.Helper()
 	etag, has := rec.Header()["Etag"]
@@ -66,10 +57,25 @@ func TestPinPUTCreatePreconditions(t *testing.T) {
 		headers map[string]string
 		status  int
 	}{
-		{name: "no headers", status: http.StatusCreated},
-		{name: "If-Match etag", headers: map[string]string{"If-Match": `"x"`}, status: http.StatusPreconditionFailed},
-		{name: "If-Match star", headers: map[string]string{"If-Match": "*"}, status: http.StatusPreconditionFailed},
-		{name: "If-None-Match star", headers: map[string]string{"If-None-Match": "*"}, status: http.StatusCreated},
+		{
+			name:   "no headers",
+			status: http.StatusCreated,
+		},
+		{
+			name:    "If-Match etag",
+			headers: map[string]string{"If-Match": `"x"`},
+			status:  http.StatusPreconditionFailed,
+		},
+		{
+			name:    "If-Match star",
+			headers: map[string]string{"If-Match": "*"},
+			status:  http.StatusPreconditionFailed,
+		},
+		{
+			name:    "If-None-Match star",
+			headers: map[string]string{"If-None-Match": "*"},
+			status:  http.StatusCreated,
+		},
 	}
 
 	for _, tc := range tests {
@@ -95,8 +101,7 @@ func TestPinPUTUpdatePreconditions(t *testing.T) {
 	const path = "/dav/projects/36/" + uid + ".ics"
 
 	tests := []struct {
-		name string
-		// headers gets the ETag of the existing resource.
+		name    string
 		headers func(etag string) map[string]string
 		status  int
 	}{
@@ -151,7 +156,10 @@ func TestPinPUTUpdatePreconditions(t *testing.T) {
 // ProjectHandler parses the body of a PUT on a collection URL as a task and hands it on.
 func TestPinPUTOnCollection(t *testing.T) {
 	t.Run("new UID creates the task", func(t *testing.T) {
-		for _, path := range []string{"/dav/projects/36", "/dav/projects/36/"} {
+		for _, path := range []string{
+			"/dav/projects/36",
+			"/dav/projects/36/",
+		} {
 			t.Run(path, func(t *testing.T) {
 				e := setupTestEnv(t)
 				const uid = "pin-put-on-collection"
@@ -192,7 +200,12 @@ func TestPinPUTOnCollection(t *testing.T) {
 		e := setupTestEnv(t)
 
 		s := db.NewSession()
-		uidless := &models.Task{Title: "Task without uid", ProjectID: 36, Index: 999, CreatedByID: testuser15.ID}
+		uidless := &models.Task{
+			Title:       "Task without uid",
+			ProjectID:   36,
+			Index:       999,
+			CreatedByID: testuser15.ID,
+		}
 		_, err := s.Insert(uidless)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())

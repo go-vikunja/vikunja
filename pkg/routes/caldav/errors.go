@@ -52,7 +52,6 @@ func isError[T error](err error) bool {
 	return errors.As(err, &target)
 }
 
-// errorStatus is the only place that decides which status an error answers with.
 func errorStatus(err error) int {
 	switch {
 	case errors.Is(err, errNotFound),
@@ -65,6 +64,7 @@ func errorStatus(err error) int {
 		isError[models.ErrProjectIsArchived](err),
 		// Pinned: caldav-go could not answer 400.
 		isError[models.ValidationHTTPError](err),
+		isError[models.ErrTaskCannotBeEmpty](err),
 		errors.Is(err, richtext.ErrTooManyTableCells):
 		return http.StatusForbidden
 	case errors.Is(err, errBodyTooLarge),

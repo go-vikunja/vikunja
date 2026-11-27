@@ -33,7 +33,6 @@ import (
 	"xorm.io/xorm"
 )
 
-// Same cap caldav-go had.
 const maxPropfindProperties = 200
 
 // propfindRequest is what a PROPFIND body asks for (RFC 4918 §9.1).
@@ -45,7 +44,6 @@ type propRequest struct{ names []xml.Name }
 // allPropRequest is <allprop/> or an empty body; include names properties allprop leaves out.
 type allPropRequest struct{ include []xml.Name }
 
-// propNameRequest asks for the names of all properties, without values.
 type propNameRequest struct{}
 
 func (propRequest) isPropfindRequest()     {}
@@ -159,21 +157,24 @@ func (p *propCollector) request() propfindRequest {
 type propfindLoader func(s *xorm.Session, deep bool) ([]davResource, error)
 
 func servePropfind(c *echo.Context, u *user.User, t target) error {
+	// Before the session: a trickled body must not pin a DB connection.
+	body, bodyErr := io.ReadAll(io.LimitReader(c.Request().Body, maxPropRequestBodySize+1))
+	if bodyErr != nil {
+		bodyErr = fmt.Errorf("%w: %w", errMalformedBody, bodyErr)
+	} else if len(body) > maxPropRequestBodySize {
+		bodyErr = errBodyTooLarge
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 
-	// Before the body is looked at: a bad body must not tell an unreadable collection from a missing one.
 	load, ctx, err := authorizePropfind(s, u, t)
 	if err != nil {
 		return writeError(c, err)
 	}
-
-	body, err := io.ReadAll(io.LimitReader(c.Request().Body, maxPropRequestBodySize+1))
-	if err != nil {
-		return writeError(c, fmt.Errorf("%w: %w", errMalformedBody, err))
-	}
-	if len(body) > maxPropRequestBodySize {
-		return writeError(c, errBodyTooLarge)
+	// After the access check: a bad body must not tell an unreadable collection from a missing one.
+	if bodyErr != nil {
+		return writeError(c, bodyErr)
 	}
 	logRequest(c.Request().Header, body)
 	req, err := parsePropfind(string(body))
@@ -244,14 +245,17 @@ func authorizePropfind(s *xorm.Session, u *user.User, t target) (propfindLoader,
 			if err != nil {
 				return nil, err
 			}
-			return []davResource{&taskResource{href: taskURL(t.collection.project.ID, task), task: task, owner: owner}}, nil
+			return []davResource{&taskResource{
+				href:  taskURL(t.collection.project.ID, task),
+				task:  task,
+				owner: owner,
+			}}, nil
 		}, ctx, nil
 	}
 	return nil, propContext{}, fmt.Errorf("unhandled caldav target %T", t)
 }
 
 func loadHomeSet(s *xorm.Session, u *user.User) ([]davResource, error) {
-	// Page 0: everything, no paging.
 	result, _, _, err := (&models.Project{}).ReadAll(s, u, "", 0, 0)
 	if err != nil {
 		return nil, err
@@ -267,8 +271,7 @@ func loadHomeSet(s *xorm.Session, u *user.User) ([]davResource, error) {
 		resources = append(resources, &collectionResource{
 			href:    collectionHref(p.ID),
 			project: &models.ProjectWithTasksAndBuckets{Project: *p},
-			// ReadAll loaded all owners at once.
-			owner: ownerName(u, p),
+			owner:   ownerName(u, p),
 		})
 	}
 	return resources, nil
@@ -280,9 +283,13 @@ func loadCollectionResources(s *xorm.Session, u *user.User, c readableCollection
 		return nil, err
 	}
 
-	// readCollectionTasks loaded the owner.
 	owner := ownerName(u, &c.project.Project)
-	resources := []davResource{&collectionResource{href: href, project: c.project, tasks: tasks, owner: owner}}
+	resources := []davResource{&collectionResource{
+		href:    href,
+		project: c.project,
+		tasks:   tasks,
+		owner:   owner,
+	}}
 	if !deep {
 		return resources, nil
 	}
@@ -295,7 +302,11 @@ func loadCollectionResources(s *xorm.Session, u *user.User, c readableCollection
 			continue
 		}
 		emitted[href] = true
-		resources = append(resources, &taskResource{href: href, task: &t.Task, owner: owner})
+		resources = append(resources, &taskResource{
+			href:  href,
+			task:  &t.Task,
+			owner: owner,
+		})
 	}
 	return resources, nil
 }

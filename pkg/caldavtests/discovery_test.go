@@ -255,12 +255,20 @@ func TestDiscoveryOPTIONS(t *testing.T) {
 		rec := caldavOPTIONS(t, e, "/dav/")
 
 		allowHeader := rec.Header().Get("Allow")
-		for _, method := range []string{"OPTIONS", "GET", "PROPFIND"} {
+		for _, method := range []string{
+			"OPTIONS",
+			"GET",
+			"PROPFIND",
+		} {
 			assert.Contains(t, allowHeader, method,
 				"Allow header should include %s", method)
 		}
 		// Nothing can be written to the entry itself, and it holds no calendar data to report on.
-		for _, method := range []string{"PUT", "DELETE", "REPORT"} {
+		for _, method := range []string{
+			"PUT",
+			"DELETE",
+			"REPORT",
+		} {
 			assert.NotContains(t, allowHeader, method,
 				"Allow header should not include %s", method)
 		}

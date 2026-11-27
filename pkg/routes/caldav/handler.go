@@ -53,16 +53,12 @@ func caldavConfig(storage data.Storage, principalPath string) caldav.Config {
 	}
 }
 
-// EntryHandler serves /dav/.
 func EntryHandler(c *echo.Context) error { return handle(c, resolveEntry) }
 
-// PrincipalHandler serves /dav/principals/<user>/ and /.well-known/caldav.
 func PrincipalHandler(c *echo.Context) error { return handle(c, resolvePrincipal) }
 
-// ProjectHandler serves the home set /dav/projects and the collections below it.
 func ProjectHandler(c *echo.Context) error { return handle(c, resolveProjects) }
 
-// TaskHandler serves a single task below a collection.
 func TaskHandler(c *echo.Context) error { return handle(c, resolveTask) }
 
 func handle(c *echo.Context, resolve targetResolver) error {
