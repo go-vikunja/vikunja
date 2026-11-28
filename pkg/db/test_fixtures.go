@@ -32,6 +32,7 @@ import (
 
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/stretchr/testify/require"
+	"xorm.io/builder"
 	"xorm.io/xorm/contexts"
 	"xorm.io/xorm/schemas"
 )
@@ -86,7 +87,10 @@ func InitFixtures(tablenames ...string) (err error) {
 		testfixtures.Files(paths...),
 	}
 
-	if GetDialect() == "postgres" {
+	// testfixtures would reset every table's counter after each load, one ALTER TABLE per
+	// table on MySQL. Postgres gets its sequences reset in LoadFixtures; MySQL moves its
+	// counter past explicitly inserted ids on its own.
+	if GetDialect() != builder.SQLITE {
 		loaderOptions = append(loaderOptions, testfixtures.SkipResetSequences())
 	}
 
