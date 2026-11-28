@@ -8,6 +8,10 @@ const getChromiumPath = () => {
 	if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
 		return process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
 	}
+	// CI runners ship their own Chromium; use the build Playwright installs instead
+	if (process.env.CI) {
+		return undefined
+	}
 	try {
 		return execSync('which chromium', {encoding: 'utf-8'}).trim()
 	} catch {
