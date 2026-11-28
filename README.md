@@ -18,6 +18,10 @@ If you or your company needs admin panel, audit logs or time tracking, check out
 > For the development of Vikunja, we're using LLM-Assisted coding tools in various parts of the codebase.
 > Most contributions made @tink-bot are built that way.
 
+![Vikunja in action: create a task and drag it into Doing](.github/vikunja-demo.gif)
+
+*Creating a task and dragging it into Doing on the Kanban board.*
+
 ## Table of contents
 
 - [Security Reports](#security-reports)
