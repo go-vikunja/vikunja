@@ -41,8 +41,6 @@ import (
 	"syscall"
 	"time"
 
-	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
-
 	"github.com/iancoleman/strcase"
 	"github.com/magefile/mage/mg"
 )
@@ -414,14 +412,15 @@ func goTestPackagesExcept(ctx context.Context, exclude ...string) ([]string, err
 
 // Test binaries must not run concurrently: the packages share one test database.
 func runGoTest(ctx context.Context, args ...string) error {
-	full := []string{"test", goDetectVerboseFlag()}
+	// Same tags as the release build, so both share one build cache.
+	full := []string{"test", goDetectVerboseFlag(), "-tags", Tags}
 	lockFile := filepath.Join(os.TempDir(), "vikunja-go-test.lock")
 	if _, err := exec.LookPath("flock"); err == nil && !strings.Contains(lockFile, " ") {
 		// Unlike -p 1 this still compiles and links on all cores, but go test never caches results with -exec.
 		full = append(full, "-exec", "flock "+lockFile)
 	} else {
 		// -p 1 also serialises compilation, so build the non-test packages on all cores first.
-		if err := runAndStreamOutput(ctx, "go", "build", "./..."); err != nil {
+		if err := runAndStreamOutput(ctx, "go", "build", "-tags", Tags, "./..."); err != nil {
 			return err
 		}
 		full = append(full, "-p", "1")
@@ -1569,11 +1568,6 @@ type Generate mg.Namespace
 const DefaultConfigYAMLSamplePath = "config.yml.sample"
 
 func (Generate) FrontendClient(ctx context.Context) error {
-	api, err := apiv2.NewCanonicalAPI()
-	if err != nil {
-		return err
-	}
-
 	spec, err := os.CreateTemp("", "vikunja-openapi-*.json")
 	if err != nil {
 		return fmt.Errorf("create temporary OpenAPI document: %w", err)
@@ -1581,7 +1575,11 @@ func (Generate) FrontendClient(ctx context.Context) error {
 	specPath := spec.Name()
 	defer func() { _ = os.Remove(specPath) }()
 
-	if err := json.NewEncoder(spec).Encode(api.OpenAPI()); err != nil {
+	// go run, not an import: importing the API would make every mage call compile it.
+	dump := exec.CommandContext(ctx, "go", "run", "./pkg/routes/api/v2/cmd/openapi")
+	dump.Stdout = spec
+	dump.Stderr = os.Stderr
+	if err := dump.Run(); err != nil {
 		_ = spec.Close()
 		return fmt.Errorf("write temporary OpenAPI document: %w", err)
 	}
