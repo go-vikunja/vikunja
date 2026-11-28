@@ -410,22 +410,10 @@ func goTestPackagesExcept(ctx context.Context, exclude ...string) ([]string, err
 	return packages, nil
 }
 
-// Test binaries must not run concurrently: the packages share one test database.
 func runGoTest(ctx context.Context, args ...string) error {
 	// Same tags as the release build, so both share one build cache.
-	full := []string{"test", goDetectVerboseFlag(), "-tags", Tags}
-	lockFile := filepath.Join(os.TempDir(), "vikunja-go-test.lock")
-	if _, err := exec.LookPath("flock"); err == nil && !strings.Contains(lockFile, " ") {
-		// Unlike -p 1 this still compiles and links on all cores, but go test never caches results with -exec.
-		full = append(full, "-exec", "flock "+lockFile)
-	} else {
-		// -p 1 also serialises compilation, so build the non-test packages on all cores first.
-		if err := runAndStreamOutput(ctx, "go", "build", "-tags", Tags, "./..."); err != nil {
-			return err
-		}
-		full = append(full, "-p", "1")
-	}
-	return runAndStreamOutput(ctx, "go", append(full, args...)...)
+	full := append([]string{"test", goDetectVerboseFlag(), "-tags", Tags}, args...)
+	return runAndStreamOutput(ctx, "go", full...)
 }
 
 func featureTestArgs(extra ...string) []string {
