@@ -20,6 +20,8 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"io/fs"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -53,28 +55,35 @@ func InitFixtures(tablenames ...string) (err error) {
 		return nil
 	}
 
-	var testfiles func(loader *testfixtures.Loader) error
 	dir := "fixtures"
 
-	// If fixture table names are specified, load them
-	// Otherwise, load all fixtures
-	if len(tablenames) > 0 {
-		paths := make([]string, len(tablenames))
-		for i, name := range tablenames {
-			paths[i] = filepath.Join(dir, name+".yml")
+	// Without table names, load all fixtures
+	if len(tablenames) == 0 {
+		entries, err := fixturesFS.ReadDir(dir)
+		if err != nil {
+			return err
 		}
-		testfiles = testfixtures.Files(paths...)
-	} else {
-		testfiles = testfixtures.Directory(dir)
+		for _, entry := range entries {
+			tablenames = append(tablenames, strings.TrimSuffix(entry.Name(), ".yml"))
+		}
+	}
+
+	files := schemaQualifiedFS{FS: fixturesFS}
+	if GetDialect() == "postgres" {
+		files.prefix = config.DatabaseSchema.GetString() + "."
+	}
+	paths := make([]string, len(tablenames))
+	for i, name := range tablenames {
+		paths[i] = filepath.Join(dir, files.prefix+name+".yml")
 	}
 
 	loaderOptions := []func(loader *testfixtures.Loader) error{
-		testfixtures.FS(fixturesFS),
+		testfixtures.FS(files),
 		testfixtures.Database(x.DB().DB),
 		testfixtures.Dialect(GetDialect()),
 		testfixtures.DangerousSkipTestDatabaseCheck(),
 		testfixtures.Location(config.GetTimeZone()),
-		testfiles,
+		testfixtures.Files(paths...),
 	}
 
 	if GetDialect() == "postgres" {
@@ -88,6 +97,19 @@ func InitFixtures(tablenames ...string) (err error) {
 	loaderCache[cacheKey] = l
 	fixtures = l
 	return nil
+}
+
+// testfixtures only reloads tables whose checksum changed, but on Postgres it keys
+// the checksums by schema.table. Fixtures named after the bare table never match
+// and every table is reloaded on every load, so they are served schema-qualified.
+type schemaQualifiedFS struct {
+	fs.FS
+	prefix string
+}
+
+func (f schemaQualifiedFS) Open(name string) (fs.File, error) {
+	dir, file := path.Split(name)
+	return f.FS.Open(dir + strings.TrimPrefix(file, f.prefix))
 }
 
 // Bumped at statement time, so rolled-back writes count too.
