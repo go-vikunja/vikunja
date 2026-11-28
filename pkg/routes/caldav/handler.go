@@ -102,7 +102,7 @@ func ProjectHandler(c *echo.Context) error {
 			return err
 		}
 
-		storage.task, _, err = caldav2.ParseTaskFromVTODO(string(body))
+		storage.task, _, err = caldav2.ParseTaskFromVTODO(string(body), storage.timeZone())
 		if err != nil {
 			log.Warningf("[CALDAV] Failed to parse task: %v", err)
 			return models.ErrInvalidData{Message: "Invalid task"}
