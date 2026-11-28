@@ -314,7 +314,6 @@ import {
 import {computed, nextTick, ref, watch, toRef} from 'vue'
 import {useQuery, useQueryClient} from '@tanstack/vue-query'
 import {useRouter} from 'vue-router'
-import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
 import {draggableFor} from '@/components/base/Draggable'
 import type {SortableEvent} from 'sortablejs'
@@ -324,6 +323,7 @@ import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {useQuickAddTask} from '@/composables/useQuickAddTask'
 import {useDelayedLoading} from '@/composables/useDelayedLoading'
 import {useTaskDragState} from '@/composables/useTaskDragState'
+import {useBackdropRouteQuery} from '@/composables/useBackdropRouteQuery'
 import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -412,8 +412,8 @@ const collapsedBuckets = ref<CollapsedBuckets>({})
 const dragExpandedBuckets = ref(new Set<number>())
 
 // URL-synchronized filter parameters
-const filter = useRouteQuery('filter')
-const s = useRouteQuery('s')
+const filter = useBackdropRouteQuery('filter')
+const s = useBackdropRouteQuery('s')
 
 const params = ref<TaskFilterParams>({
 	sort_by: [],
