@@ -406,6 +406,22 @@ describe('Parse Task Text', () => {
 		})
 
 
+		describe('Numbers after "at" that are not a time', () => {
+			const cases = ['at 25', 'at 9:75', 'at 13pm', 'at 0am', 'at 1230']
+			for (const c of cases) {
+				it(`should keep "${c}" in the title and not set it as the time`, () => {
+					const now = new Date()
+					const result = parseTaskText(`Lorem Ipsum ${c} tomorrow`)
+
+					const tomorrow = new Date(now)
+					tomorrow.setDate(tomorrow.getDate() + 1)
+					expect(result.text).toBe(`Lorem Ipsum ${c}`)
+					expect(result?.date?.getDate()).toBe(tomorrow.getDate())
+					expect(result?.date?.getMonth()).toBe(tomorrow.getMonth())
+				})
+			}
+		})
+
 		it('should recognize weekdays with time', () => {
 			const result = parseTaskText('Lorem Ipsum thu at 14:00')
 
