@@ -117,8 +117,7 @@ func TestCallTool_FieldsKeepsThePageEnvelope(t *testing.T) {
 		out.Body = apiv2.NewPaginated([]testThing{{ID: 1, Title: "a"}, {ID: 2, Title: "b"}}, 2, 1, 50)
 		return out, nil
 	})
-	mod, err := New(api, nil)
-	require.NoError(t, err)
+	mod := New(api, nil)
 	m, ctx := newTestCallerFor(t, mod)
 	res, err := m.callTool(ctx, "things_page", json.RawMessage(`{"fields":["title"]}`))
 	require.NoError(t, err)
@@ -144,8 +143,7 @@ func TestCallTool_FieldsBodyArgumentIsForwardedOnWrites(t *testing.T) {
 	}, func(_ context.Context, in *struct{ Body bulk }) (*struct{ Body bulk }, error) {
 		return &struct{ Body bulk }{Body: in.Body}, nil
 	})
-	mod, err := New(api, nil)
-	require.NoError(t, err)
+	mod := New(api, nil)
 	m, ctx := newTestCallerFor(t, mod)
 	res, err := m.callTool(ctx, "things_bulk", json.RawMessage(`{"fields":["priority"]}`))
 	require.NoError(t, err)

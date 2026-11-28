@@ -1,0 +1,40 @@
+name: setup-go
+description: |
+  Set up Go with a build and module cache that a single job saves, so it
+  always holds the output of the job that compiles the most.
+  Merge queue and tag runs never save: nothing could restore from their refs.
+inputs:
+  save-cache:
+    description: 'Save the cache in the post step (only effective on main and pull requests)'
+    required: false
+    default: 'false'
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      id: go
+      with:
+        go-version: stable
+        cache: false
+    - name: Restore and save Go cache
+      if: ${{ inputs.save-cache == 'true' && (github.ref == 'refs/heads/main' || github.event_name == 'pull_request') }}
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: go-build-${{ runner.os }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
+        restore-keys: |
+          go-build-${{ runner.os }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('go.sum') }}-
+          go-build-${{ runner.os }}-${{ steps.go.outputs.go-version }}-
+    - name: Restore Go cache
+      if: ${{ !(inputs.save-cache == 'true' && (github.ref == 'refs/heads/main' || github.event_name == 'pull_request')) }}
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: go-build-${{ runner.os }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
+        restore-keys: |
+          go-build-${{ runner.os }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('go.sum') }}-
+          go-build-${{ runner.os }}-${{ steps.go.outputs.go-version }}-

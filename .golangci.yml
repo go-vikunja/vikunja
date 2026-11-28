@@ -192,6 +192,12 @@ linters:
           - contextcheck
         text: attachSessionCache # db.NewSession takes no context; the session context it builds only carries the session-scoped memo
       - linters:
+          - contextcheck
+        text: lockSharedTestDatabase # the lock lives for the whole process, so no caller context applies
+      - linters:
+          - noctx
+        path: pkg/db/test_fixtures.go # test-only helper without a caller context
+      - linters:
           - revive
         text: 'var-naming: avoid package names that conflict with Go standard library package names'
       - linters:

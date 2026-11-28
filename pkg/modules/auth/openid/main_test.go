@@ -19,18 +19,22 @@ package openid
 import (
 	"os"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // TestMain is the main test function used to bootstrap the test env
 func TestMain(m *testing.M) {
 	// Initialize logger for tests
 	log.InitLogger()
+
+	utils.RetryBaseDelay = time.Millisecond
 
 	user.InitTests()
 	files.InitTests()

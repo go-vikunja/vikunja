@@ -215,8 +215,9 @@ func setupSentry(e *echo.Echo) {
 	}))
 }
 
-// RegisterRoutes registers all routes for the application
-func RegisterRoutes(e *echo.Echo) {
+// RegisterRoutes registers all routes for the application.
+// The MCP module is returned with its tools unbuilt: building them costs too much for tests, which register routes per request.
+func RegisterRoutes(e *echo.Echo) *mcpmodule.Module {
 
 	// One instance keeps every BasicAuth route on the same failure budget.
 	noAuthRateLimit := unauthRateLimit()
@@ -289,11 +290,12 @@ func RegisterRoutes(e *echo.Echo) {
 	a2 := e.Group(apiv2.GroupPrefix)
 	// Share the BasicAuth failure budget with CalDAV and feeds.
 	a2.Use(pathScoped(func(p string) bool { return p == "/api/v2/notifications.atom" }, basicAuthRateLimit))
-	registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
+	mcp := registerAPIRoutesV2(e, a2, noAuthRateLimit, refreshRateLimit)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
 	collectRoutesForAPITokens(e)
+	return mcp
 }
 
 // unauthenticatedAPIPaths contains paths that don't require JWT authentication
@@ -469,7 +471,7 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
-func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) *mcpmodule.Module {
 	a.Use(rejectFormBodies())
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
@@ -501,12 +503,10 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group, noAuthRateLimit, refreshRa
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
-	m, err := mcpmodule.New(api, corsOriginAllowed)
-	if err != nil {
-		panic(err)
-	}
+	m := mcpmodule.New(api, corsOriginAllowed)
 	m.Register(a)
 	apiv2.RegisterMCPInfo(api, m.ConnectionInfo)
+	return m
 }
 
 func registerAPIRoutes(a *echo.Group, noAuthRateLimit, refreshRateLimit echo.MiddlewareFunc) {

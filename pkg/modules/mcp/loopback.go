@@ -52,7 +52,7 @@ func IsLoopback(ctx context.Context) bool {
 }
 
 func (m *Module) callTool(ctx context.Context, name string, rawArgs json.RawMessage) (any, error) {
-	t, ok := m.index[name]
+	t, ok := m.tools().index[name]
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", errToolNotFound, name)
 	}

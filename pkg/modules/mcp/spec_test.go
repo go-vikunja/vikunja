@@ -207,7 +207,7 @@ func TestBuildToolSpec_ParamBodyCollision(t *testing.T) {
 func TestInit_BuildsToolIndex(t *testing.T) {
 	m := newTestModule(t)
 	var names []string
-	for _, tl := range m.order {
+	for _, tl := range m.tools().order {
 		names = append(names, tl.name)
 	}
 	assert.ElementsMatch(t, []string{
@@ -217,18 +217,18 @@ func TestInit_BuildsToolIndex(t *testing.T) {
 		"things_update",
 		"things_delete",
 	}, names)
-	update, ok := m.index["things_update"]
+	update, ok := m.tools().index["things_update"]
 	require.True(t, ok)
 	assert.Equal(t, http.MethodPatch, update.op.Method)
 	assert.Equal(t, "application/merge-patch+json", update.contentType)
 	assert.Equal(t, "/api/v2/things/:id", update.echoPath)
 	assert.Contains(t, update.description, "Only fields present")
-	assert.False(t, m.index["things_read"].typed)
-	_, denied := m.index["tokens_create"]
+	assert.False(t, m.tools().index["things_read"].typed)
+	_, denied := m.tools().index["tokens_create"]
 	assert.False(t, denied)
 }
 func TestInit_UpdateDescriptionComesFromThePut(t *testing.T) {
-	update, ok := newTestModule(t).index["things_update"]
+	update, ok := newTestModule(t).tools().index["things_update"]
 	require.True(t, ok)
 	assert.Equal(t, "Update a thing. Moving a thing needs write access to the target. Only fields present in the arguments are changed.", update.description)
 	assert.NotContains(t, update.description, "JSON Patch")

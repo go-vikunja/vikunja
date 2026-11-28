@@ -19,6 +19,7 @@ package planka
 import (
 	"os"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
@@ -26,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 func TestMain(m *testing.M) {
@@ -33,6 +35,8 @@ func TestMain(m *testing.M) {
 	config.InitDefaultConfig()
 	// httptest servers listen on 127.0.0.1
 	config.OutgoingRequestsAllowNonRoutableIPs.Set(true)
+
+	utils.RetryBaseDelay = time.Millisecond
 
 	files.InitTests()
 	user.InitTests()

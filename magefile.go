@@ -41,8 +41,6 @@ import (
 	"syscall"
 	"time"
 
-	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
-
 	"github.com/iancoleman/strcase"
 	"github.com/magefile/mage/mg"
 )
@@ -412,26 +410,35 @@ func goTestPackagesExcept(ctx context.Context, exclude ...string) ([]string, err
 	return packages, nil
 }
 
+func runGoTest(ctx context.Context, args ...string) error {
+	// Same tags as the release build, so both share one build cache.
+	full := append([]string{"test", goDetectVerboseFlag(), "-tags", Tags}, args...)
+	return runAndStreamOutput(ctx, "go", full...)
+}
+
+func featureTestArgs(extra ...string) []string {
+	return append(extra, "-timeout", "45m", "-short", "./...")
+}
+
 // Feature runs the feature tests
 func (Test) Feature(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m", "-short", "./...")
+	return runGoTest(ctx, featureTestArgs()...)
 }
 
 // Coverage runs the tests and builds the coverage html file from coverage output
 func (Test) Coverage(ctx context.Context) error {
-	mg.Deps(initVars)
-	mg.Deps(Test.Feature)
+	mg.Deps(initVars, ensureFrontendDistExists)
+	if err := runGoTest(ctx, featureTestArgs("-coverprofile", "cover.out")...); err != nil {
+		return err
+	}
 	return runAndStreamOutput(ctx, "go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
 // Web runs the web tests
 func (Test) Web(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := []string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/webtests"}
-	return runAndStreamOutput(ctx, "go", args...)
+	return runGoTest(ctx, "-timeout", "45m", "./pkg/webtests")
 }
 
 // Filter runs every test matching the given `go test -run` filter.
@@ -448,13 +455,12 @@ func (Test) Filter(ctx context.Context, filter string) error {
 		return err
 	}
 
-	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, "-short"}, packages...)
-	if err := runAndStreamOutput(ctx, "go", args...); err != nil {
+	args := append([]string{"-timeout", "45m", "-run", filter, "-short"}, packages...)
+	if err := runGoTest(ctx, args...); err != nil {
 		return err
 	}
 
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, webtestsPackage)
+	return runGoTest(ctx, "-timeout", "45m", "-run", filter, webtestsPackage)
 }
 
 func (Test) All() {
@@ -466,7 +472,7 @@ func (Test) All() {
 // These tests exercise the full HTTP router with WebDAV/CalDAV requests.
 func (Test) Caldav(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/caldavtests")
+	return runGoTest(ctx, "-timeout", "45m", "./pkg/caldavtests")
 }
 
 // E2EApi runs the end-to-end API tests in pkg/e2etests.
@@ -474,7 +480,7 @@ func (Test) Caldav(ctx context.Context) error {
 // the full async pipeline: web handler → DB → event dispatch → watermill → listener.
 func (Test) E2EApi(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/e2etests")
+	return runGoTest(ctx, "-timeout", "45m", "./pkg/e2etests")
 }
 
 // E2E builds the API, starts it with an in-memory database and the frontend dev server,
@@ -1520,11 +1526,6 @@ type Generate mg.Namespace
 const DefaultConfigYAMLSamplePath = "config.yml.sample"
 
 func (Generate) FrontendClient(ctx context.Context) error {
-	api, err := apiv2.NewCanonicalAPI()
-	if err != nil {
-		return err
-	}
-
 	spec, err := os.CreateTemp("", "vikunja-openapi-*.json")
 	if err != nil {
 		return fmt.Errorf("create temporary OpenAPI document: %w", err)
@@ -1532,7 +1533,11 @@ func (Generate) FrontendClient(ctx context.Context) error {
 	specPath := spec.Name()
 	defer func() { _ = os.Remove(specPath) }()
 
-	if err := json.NewEncoder(spec).Encode(api.OpenAPI()); err != nil {
+	// go run, not an import: importing the API would make every mage call compile it.
+	dump := exec.CommandContext(ctx, "go", "run", "./pkg/routes/api/v2/cmd/openapi")
+	dump.Stdout = spec
+	dump.Stderr = os.Stderr
+	if err := dump.Run(); err != nil {
 		_ = spec.Close()
 		return fmt.Errorf("write temporary OpenAPI document: %w", err)
 	}
