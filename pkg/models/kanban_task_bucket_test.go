@@ -21,9 +21,11 @@ import (
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
+	"github.com/kentonium3/rrule-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
@@ -236,7 +238,7 @@ func TestTaskBucket_Update(t *testing.T) {
 		err = updatedTask.ReadOne(s, u)
 		require.NoError(t, err)
 		updatedTask.Done = true
-		updateDone(oldTask, updatedTask) // updatedTask now contains the updated dates
+		updateDone(oldTask, updatedTask, config.GetTimeZone()) // updatedTask now contains the updated dates
 
 		err = tb.Update(s, u)
 		require.NoError(t, err)
@@ -258,6 +260,120 @@ func TestTaskBucket_Update(t *testing.T) {
 		assert.Equal(t, updatedTask.StartDate.Unix(), tb.Task.StartDate.Unix())
 		assert.Equal(t, updatedTask.EndDate.Unix(), tb.Task.EndDate.Unix())
 	})
+	for _, tc := range []struct {
+		name      string
+		rule      string
+		noDefault bool
+		done      bool
+		cleared   bool
+		count     int
+		readOnly  bool
+	}{
+		{name: "exhausted COUNT with default bucket", rule: "FREQ=DAILY;INTERVAL=1;COUNT=1", done: true, cleared: true},
+		{name: "exhausted COUNT without default bucket", rule: "FREQ=DAILY;INTERVAL=1;COUNT=1", noDefault: true, done: true, cleared: true},
+		{name: "exhausted UNTIL keeps rule and dates", rule: "FREQ=DAILY;INTERVAL=1;UNTIL=20260101T120000Z", done: true},
+		{name: "COUNT=2 returns advanced repeat", rule: "FREQ=DAILY;INTERVAL=1;COUNT=2", count: 1},
+		{name: "unbounded rule reopens", rule: "FREQ=DAILY;INTERVAL=1"},
+		{name: "read_only rule returns stored projection", rule: "FREQ=YEARLY;BYEASTER=0", readOnly: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			now := time.Date(2025, time.December, 31, 12, 0, 0, 0, time.UTC)
+			originalNow := timeNow
+			timeNow = func() time.Time { return now }
+			t.Cleanup(func() { timeNow = originalNow })
+			due := time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)
+			start, end := due.Add(-time.Hour), due.Add(time.Hour)
+			_, err := s.ID(28).Cols("repeats", "due_date", "start_date", "end_date", "done", "done_at").Update(&Task{
+				Repeats: tc.rule, DueDate: due, StartDate: start, EndDate: end,
+			})
+			require.NoError(t, err)
+			if tc.noDefault {
+				_, err = s.ID(4).Cols("default_bucket_id").Update(&ProjectView{})
+				require.NoError(t, err)
+			}
+
+			secondView := &ProjectView{
+				Title: "Second Kanban", ProjectID: 1, ViewKind: ProjectViewKindKanban,
+				BucketConfigurationMode: BucketConfigurationModeManual,
+			}
+			require.NoError(t, secondView.Create(s, u))
+			require.NotZero(t, secondView.DoneBucketID)
+			secondBefore := &TaskBucket{}
+			has, err := s.Where("task_id = ? AND project_view_id = ?", 28, secondView.ID).Get(secondBefore)
+			require.NoError(t, err)
+			require.True(t, has)
+			require.NotEqual(t, secondView.DoneBucketID, secondBefore.BucketID)
+			doneCount, err := s.Where("bucket_id = ?", 3).Count(&TaskBucket{})
+			require.NoError(t, err)
+
+			tb := &TaskBucket{TaskID: 28, BucketID: 3, ProjectViewID: 4, ProjectID: 1}
+			require.NoError(t, tb.Update(s, u))
+			require.NoError(t, s.Commit())
+
+			stored := &Task{}
+			has, err = s.ID(28).Get(stored)
+			require.NoError(t, err)
+			require.True(t, has)
+			require.NotNil(t, tb.Task)
+			assert.Equal(t, tc.done, stored.Done)
+			assert.Equal(t, tc.done, tb.Task.Done)
+			assert.Equal(t, !tc.done, stored.DoneAt.IsZero())
+			assert.Equal(t, !tc.done, tb.Task.DoneAt.IsZero())
+			assert.Equal(t, stored.DoneAt.Unix(), tb.Task.DoneAt.Unix())
+
+			wantBucket, wantSecondBucket := int64(1), secondBefore.BucketID
+			if tc.done {
+				wantBucket, wantSecondBucket = 3, secondView.DoneBucketID
+				doneCount++
+			}
+			assert.Equal(t, wantBucket, tb.BucketID)
+			require.NotNil(t, tb.Bucket)
+			// Reopened moves retain the requested Done bucket/count in the response.
+			assert.Equal(t, int64(3), tb.Bucket.ID)
+			assert.Equal(t, doneCount, tb.Bucket.Count)
+			for viewID, bucketID := range map[int64]int64{4: wantBucket, secondView.ID: wantSecondBucket} {
+				rows := []*TaskBucket{}
+				require.NoError(t, s.Where("task_id = ? AND project_view_id = ?", 28, viewID).Find(&rows))
+				require.Len(t, rows, 1)
+				assert.Equal(t, bucketID, rows[0].BucketID, "membership in view %d", viewID)
+			}
+
+			assert.Equal(t, stored.Repeats, tb.Task.Repeats)
+			assert.Equal(t, taskRepeatFromRRule(stored.Repeats), tb.Task.Repeat)
+			if tc.cleared {
+				assert.Empty(t, stored.Repeats)
+				assert.Nil(t, tb.Task.Repeat)
+			} else {
+				require.NotNil(t, tb.Task.Repeat)
+				assert.Equal(t, tc.count, tb.Task.Repeat.Count)
+				assert.Equal(t, tc.readOnly, tb.Task.Repeat.ReadOnly)
+				if tc.count > 0 {
+					opt, parseErr := rrule.StrToROption(stored.Repeats)
+					require.NoError(t, parseErr)
+					assert.Equal(t, tc.count, opt.Count)
+				} else {
+					assert.Equal(t, tc.rule, stored.Repeats)
+				}
+			}
+			wantDue := due
+			if !tc.done {
+				wantDue = due.AddDate(0, 0, 1)
+				if tc.readOnly {
+					wantDue = time.Date(2026, time.April, 5, 12, 0, 0, 0, time.UTC)
+				}
+			}
+			assert.Equal(t, wantDue.Unix(), stored.DueDate.Unix())
+			assert.Equal(t, wantDue.Add(-time.Hour).Unix(), stored.StartDate.Unix())
+			assert.Equal(t, wantDue.Add(time.Hour).Unix(), stored.EndDate.Unix())
+			assert.Equal(t, stored.DueDate.Unix(), tb.Task.DueDate.Unix())
+			assert.Equal(t, stored.StartDate.Unix(), tb.Task.StartDate.Unix())
+			assert.Equal(t, stored.EndDate.Unix(), tb.Task.EndDate.Unix())
+		})
+	}
 	t.Run("moving a repeating task from a non-default bucket to the done bucket moves it to the default bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

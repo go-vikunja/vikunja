@@ -21,6 +21,7 @@ package caldav
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -936,4 +937,54 @@ func TestPersistRelations_BoundsPlaceholders(t *testing.T) {
 
 		db.AssertCount(t, "task_relations", builder.And(builder.Eq{"task_id": taskA.ID, "relation_kind": models.RelationKindSubtask}, builder.In("other_task_id", existingIDs)), int64(len(existingIDs)))
 	})
+}
+
+func TestUpdateResource_CompletionBuckets(t *testing.T) {
+	for _, rule := range []string{"FREQ=DAILY;INTERVAL=1;COUNT=1", "FREQ=DAILY;INTERVAL=1;UNTIL=20260101T120000Z"} {
+		t.Run(rule, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			u := &user.User{ID: 1}
+			due := time.Date(2026, time.January, 1, 12, 0, 0, 0, time.UTC)
+			_, err := s.ID(28).Cols("repeats", "due_date", "done", "uid").Update(&models.Task{
+				Repeats: rule, DueDate: due, UID: "exhausted-update",
+			})
+			require.NoError(t, err)
+			secondView := &models.ProjectView{
+				Title: "Second Kanban", ProjectID: 1, ViewKind: models.ProjectViewKindKanban,
+				BucketConfigurationMode: models.BucketConfigurationModeManual,
+			}
+			require.NoError(t, secondView.Create(s, u))
+			task, err := models.GetTaskSimple(s, &models.Task{ID: 28})
+			require.NoError(t, err)
+			require.NoError(t, s.Commit())
+			s.Close()
+
+			storage := &VikunjaCaldavProjectStorage{
+				project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 1}},
+				task:    &task, user: u,
+			}
+			content := "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VTODO\nUID:exhausted-update\nSTATUS:COMPLETED\nRRULE:" + rule + "\nEND:VTODO\nEND:VCALENDAR"
+			_, err = storage.UpdateResource(task.UID, content)
+			require.NoError(t, err)
+
+			s = db.NewSession()
+			defer s.Close()
+			stored, err := models.GetTaskSimple(s, &models.Task{ID: 28})
+			require.NoError(t, err)
+			assert.True(t, stored.Done)
+			assert.Equal(t, due.Unix(), stored.DueDate.Unix())
+			wantRule := rule
+			if rule == "FREQ=DAILY;INTERVAL=1;COUNT=1" {
+				wantRule = ""
+			}
+			assert.Equal(t, wantRule, stored.Repeats)
+			for viewID, doneID := range map[int64]int64{4: 3, secondView.ID: secondView.DoneBucketID} {
+				rows := []*models.TaskBucket{}
+				require.NoError(t, s.Where("task_id = ? AND project_view_id = ?", 28, viewID).Find(&rows))
+				require.Len(t, rows, 1)
+				assert.Equal(t, doneID, rows[0].BucketID, "membership in view %d", viewID)
+			}
+		})
+	}
 }

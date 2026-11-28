@@ -33,6 +33,7 @@
 			'is-open': openValue,
 		}"
 		:style="floatingStyle"
+		@beforetoggle="onBeforeToggle"
 		@toggle="onToggle"
 	>
 		<slot
@@ -51,6 +52,7 @@ import {autoUpdate, computePosition, flip, offset, shift, size, type Placement} 
 
 import Modal from '@/components/misc/Modal.vue'
 import {useIsMobile} from '@/composables/useIsMobile'
+import {useInputModality} from '@/helpers/inputModality'
 
 const props = withDefaults(defineProps<{
 	open?: boolean
@@ -99,9 +101,18 @@ function close() {
 	emit('update:open', false)
 }
 
-// A light dismiss closes the popup on pointerup, so a trigger click that is still to come would
-// reopen what the same interaction closed.
+// A light dismiss by a pointer closes the popup on pointerup, so a trigger click that is still to come
+// would reopen what the same interaction closed. Escape has no click to follow it.
 let closedByLightDismiss = false
+
+function ignoreTrailingClick() {
+	closedByLightDismiss = true
+	setTimeout(() => {
+		closedByLightDismiss = false
+	})
+}
+
+const {lastInputWasPointer} = useInputModality()
 
 function toggle() {
 	if (closedByLightDismiss) {
@@ -112,6 +123,18 @@ function toggle() {
 	emit('update:open', openValue.value)
 	return openValue.value
 }
+
+// Opens from Popup's own state, as toggle() does: a parent setting `open` again changes nothing while the
+// browser's toggle event for a light dismiss is still on its way and the parent still thinks it is open.
+function openPopup() {
+	if (openValue.value) {
+		return
+	}
+	openValue.value = true
+	emit('update:open', true)
+}
+
+defineExpose({openPopup})
 
 const popup = ref<HTMLElement | null>(null)
 
@@ -126,7 +149,14 @@ function hasPopoverApi(el: HTMLElement) {
 
 let popoverShown = false
 
-function onToggle(event: Event) {
+// Set while the browser is still hiding a popover it light-dismissed; the parent hears of the close
+// only once that is done.
+let dismissPending = false
+
+// beforetoggle, not toggle, updates our own state: the browser fires it while the state changes,
+// whereas toggle is a queued task that input already waiting can overtake, so a key press right after
+// Escape would otherwise "close" a popup the browser had already closed.
+function onBeforeToggle(event: Event) {
 	const newState = (event as ToggleEvent).newState
 	popoverShown = newState === 'open'
 
@@ -135,11 +165,24 @@ function onToggle(event: Event) {
 	}
 
 	// Outside click or Escape: the browser closed the popover, so mirror it into our state.
-	closedByLightDismiss = true
-	setTimeout(() => {
-		closedByLightDismiss = false
-	})
-	close()
+	if (lastInputWasPointer()) {
+		ignoreTrailingClick()
+	}
+	openValue.value = false
+	dismissPending = true
+}
+
+// The parent is told on toggle, when hiding has finished: a parent that shows a popover again at once
+// (RepeatAfter keeps its editor open while a save runs) would otherwise show it mid-hide, which the
+// browser refuses. If the trigger or openPopup() reopened the popup in between, there is no close to report.
+function onToggle() {
+	if (!dismissPending) {
+		return
+	}
+	dismissPending = false
+	if (!openValue.value) {
+		emit('update:open', false)
+	}
 }
 
 // An effect, not a watch on openValue: a light dismiss followed by a reopen in the same tick leaves
@@ -167,20 +210,19 @@ watchEffect(() => {
 }, {flush: 'post'})
 
 // Stands in for the light dismiss and the Escape handling a native popover gets from the browser.
-function dismissWithoutPopoverApi() {
+function dismissWithoutPopoverApi(byPointer: boolean) {
 	if (!openValue.value || asSheet.value || !popup.value || hasPopoverApi(popup.value)) {
 		return
 	}
 
-	closedByLightDismiss = true
-	setTimeout(() => {
-		closedByLightDismiss = false
-	})
+	if (byPointer) {
+		ignoreTrailingClick()
+	}
 	close()
 }
 
-onClickOutside(popup, dismissWithoutPopoverApi)
-onKeyStroke('Escape', dismissWithoutPopoverApi)
+onClickOutside(popup, () => dismissWithoutPopoverApi(true))
+onKeyStroke('Escape', () => dismissWithoutPopoverApi(false))
 
 const floatingStyle = ref<Record<string, string>>({})
 // 4rem app header ($navbar-height) plus a small margin.

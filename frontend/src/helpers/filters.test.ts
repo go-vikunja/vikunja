@@ -615,6 +615,7 @@ describe('hasFilterQuery', () => {
 		'labels in 1, 2',
 		'labels not in 1',
 		'title like foo',
+		"repeats != ''",
 		'(done = false) && (priority > 2)',
 	])('treats "%s" as a filter', filter => {
 		expect(hasFilterQuery(filter)).toBe(true)

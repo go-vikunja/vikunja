@@ -883,6 +883,53 @@ END:VCALENDAR`,
 			},
 			wantProps: ParsedVTODOProperties{Title: true},
 		},
+		{
+			name: "with RRULE",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Recurring Task
+RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Recurring Task",
+				UID:     "randomuid",
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Repeats: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR",
+			},
+			wantProps: ParsedVTODOProperties{Title: true, Repeats: true},
+		},
+		{
+			// A parseable but policy-rejected rule must drop only the recurrence,
+			// not fail the whole task sync.
+			name: "with policy-rejected RRULE",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Recurring Task
+RRULE:FREQ=HOURLY;BYHOUR=9
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Recurring Task",
+				UID:     "randomuid",
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+			},
+			wantProps: ParsedVTODOProperties{Title: true},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -933,7 +980,7 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
 							Done:        true,
 							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
-							RepeatAfter: 86400,
+							Repeats:     "FREQ=DAILY;INTERVAL=1",
 							Labels: []*models.Label{
 								{
 									ID:    1,
@@ -1002,14 +1049,14 @@ END:VCALENDAR`,
 				tasks: []*models.TaskWithComments{
 					{
 						Task: models.Task{
-							Title:       "Task 1",
-							UID:         "randomuid",
-							Done:        false,
-							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
-							Created:     time.Unix(1543626721, 0).In(config.GetTimeZone()),
-							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
-							DueDate:     time.Unix(1543626722, 0).In(config.GetTimeZone()),
-							RepeatAfter: 86400,
+							Title:   "Task 1",
+							UID:     "randomuid",
+							Done:    false,
+							DoneAt:  time.Unix(1543626726, 0).In(config.GetTimeZone()),
+							Created: time.Unix(1543626721, 0).In(config.GetTimeZone()),
+							Updated: time.Unix(1543626725, 0).In(config.GetTimeZone()),
+							DueDate: time.Unix(1543626722, 0).In(config.GetTimeZone()),
+							Repeats: "FREQ=DAILY;INTERVAL=1",
 						},
 					},
 				},

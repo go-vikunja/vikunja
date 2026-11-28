@@ -1,4 +1,4 @@
-import {useMutation, type QueryClient} from '@tanstack/vue-query'
+import {useMutation, type QueryClient, type QueryKey} from '@tanstack/vue-query'
 import {
 	tasksCreate,
 	patchTasksRead,
@@ -15,7 +15,10 @@ import {
 	tasksPositionUpdate,
 	taskBucketUpdate,
 	type Task,
-	type TaskWritable,
+	type TaskRepeat,
+	type TaskCreateBodyWritable,
+	type TaskReadOneBodyWritable,
+	type TaskWriteBody,
 	type User,
 	type Label,
 	type TaskRelationWritable,
@@ -54,17 +57,31 @@ const writableFields = [
 	'priority',
 	'hex_color',
 	'percent_done',
-	'repeat_after',
-	'repeat_mode',
+	'repeat',
+	'repeats_from_current_date',
 	'is_favorite',
 	'bucket_id',
 	'project_id',
 	'reminders',
 	'cover_image_attachment_id',
-] as const satisfies readonly (keyof TaskWritable)[]
+] as const satisfies readonly (keyof TaskCreateBodyWritable & keyof TaskReadOneBodyWritable)[]
 
-export function taskWriteBody(task: Task): TaskWritable {
-	const body: TaskWritable = Object.fromEntries(
+// A null repeat clears the rule; an absent one leaves it as stored.
+export type TaskInput = Omit<Task, 'repeat'> & {repeat?: TaskRepeat | null}
+type TaskMergeBody = Omit<Pick<TaskReadOneBodyWritable, typeof writableFields[number]>, 'repeat'>
+	& {repeat?: TaskReadOneBodyWritable['repeat'] | null}
+
+export type UpdateTaskInput = TaskInput & Required<Pick<Task, 'id'>> & {initialDueTime?: string}
+
+export type WriteOutcome = {
+	dueDateSource?: 'explicit' | 'generated'
+	reason?: string
+	// The server answered an empty 304: nothing changed and there is no task to merge.
+	unchanged?: true
+}
+
+export function taskWriteBody(task: TaskInput): TaskMergeBody {
+	const body: TaskMergeBody = Object.fromEntries(
 		writableFields
 			.filter(field => task[field] !== undefined)
 			.map(field => [field, task[field]]),
@@ -78,11 +95,63 @@ export function taskWriteBody(task: Task): TaskWritable {
 		...reminder,
 		reminder: reminder.reminder === '' ? API_ZERO_DATE : reminder.reminder,
 	}))
+	if (task.repeat) {
+		const {read_only: _readOnly, ...repeat} = task.repeat
+		body.repeat = repeat
+	}
 	return body
 }
 
-function taskPatchBody(task: Task): JsonPatchOp[] {
-	return Object.entries(taskWriteBody(task)).map(([field, value]) => ({op: 'add', path: `/${field}`, value}))
+// A new task has no rule to clear.
+function taskCreateBody(task: TaskInput): TaskCreateBodyWritable {
+	const {repeat, ...body} = taskWriteBody(task)
+	return repeat === null ? body : {...body, repeat}
+}
+
+function isUndated(dueDate: string | undefined) {
+	return !dueDate || dueDate === API_ZERO_DATE
+}
+
+// The add of a null value must stay: AutoPatch only clears a rule on an explicit null.
+function taskPatchBody(task: TaskInput, {initialDueTime}: {initialDueTime?: string} = {}): JsonPatchOp[] {
+	const ops: JsonPatchOp[] = Object.entries(taskWriteBody(task))
+		.map(([field, value]) => ({op: 'add', path: `/${field}`, value}))
+	if (!initialDueTime || !isUndated(task.due_date) || task.done || !task.repeat) return ops
+	// The server only chooses a due date for a task that has none, so a seeding patch leaves the date to it.
+	return [
+		...ops.filter(op => op.path !== '/due_date'),
+		{op: 'add', path: '/initial_due_time', value: initialDueTime},
+	]
+}
+
+export function splitWriteOutcome(response: TaskWriteBody): {task: Task, outcome: WriteOutcome} {
+	const {due_date_source: dueDateSource, reason, ...task} = response
+	return {task, outcome: {dueDateSource, reason}}
+}
+
+function withoutWriteOutcome(response: TaskWriteBody): Task {
+	return splitWriteOutcome(response).task
+}
+
+// Callers keep receiving a plain task; the write's own facts stay beside it, out of every cache.
+const writeOutcomes = new WeakMap<Task, WriteOutcome>()
+
+export function writeOutcomeOf(task: Task): WriteOutcome {
+	return writeOutcomes.get(task) ?? {}
+}
+
+async function patchTask({initialDueTime, ...input}: UpdateTaskInput): Promise<Task> {
+	const {data, error, response} = await patchTasksRead({
+		path: {task: input.id},
+		body: taskPatchBody(input, {initialDueTime}),
+		throwOnError: false,
+	})
+	if (error !== undefined && response?.status !== 304) throw error
+	const {task, outcome} = data
+		? splitWriteOutcome(data)
+		: {task: {...input, repeat: input.repeat ?? undefined}, outcome: {unchanged: true} as const}
+	writeOutcomes.set(task, outcome)
+	return task
 }
 
 function reconcileDoneBuckets(client: QueryClient, task: TaskResponse) {
@@ -148,10 +217,10 @@ function cachedViewBuckets(client: QueryClient, project: number, view: number) {
 
 export function createTaskMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (task: Task & Required<Pick<Task, 'project_id'>>) => (await tasksCreate({
+		mutationFn: async (task: TaskInput & Required<Pick<Task, 'project_id'>>) => withoutWriteOutcome((await tasksCreate({
 			path: {project: task.project_id},
-			body: taskWriteBody(task),
-		})).data,
+			body: taskCreateBody(task),
+		})).data),
 		onSuccess: (task, _input, client) => insertTaskIntoBoards(client, task),
 		onSettled: (_task, client) => invalidateTaskMembership(client, undefined, 'active'),
 	})
@@ -159,15 +228,23 @@ export function createTaskMutationOptions() {
 
 export function updateTaskMutationOptions(optimistic = false) {
 	return contextMutationOptions({
-		mutationFn: async (task: Task & Required<Pick<Task, 'id'>>) => (await patchTasksRead({
-			path: {task: task.id},
-			body: taskPatchBody(task),
-		})).data,
+		mutationFn: patchTask,
 		optimistic: optimistic ? {
 			queryKeys: ({id}, client) => taskQueryKeys(client, id),
-			update: (task, client) => replaceTaskEverywhere(client, task),
+			update: ({initialDueTime: _initialDueTime, ...task}, client): [QueryKey, unknown][] | undefined => {
+				const previous = taskQueryKeys(client, task.id).flatMap(queryKey => client.getQueriesData({queryKey}))
+				replaceTaskEverywhere(client, {...task, repeat: task.repeat ?? undefined})
+				return previous
+			},
 		} : undefined,
-		onSuccess: (task, input, client) => {
+		onSuccess: (task, input, client, previous) => {
+			if (writeOutcomeOf(task).unchanged) {
+				// Nothing was written, so the optimistic guess (an untrimmed title, say) must not outlive it.
+				for (const [queryKey, data] of previous ?? []) {
+					if (data !== undefined) client.setQueryData(queryKey, data)
+				}
+				return
+			}
 			replaceTaskEverywhere(client, task)
 			reconcileDoneBuckets(client, normalizeTask({...task, id: input.id}))
 		},
@@ -185,11 +262,11 @@ export function deleteTaskMutationOptions() {
 
 export function bulkCreateTasksMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (input: Task[]) => {
+		mutationFn: async (input: TaskInput[]) => {
 			const context = captureClientRequestContext()
 			const tasks: (Task | null)[] = Array(input.length).fill(null)
 			let error: unknown = null
-			const groups = new Map<number, {task: Task, index: number}[]>()
+			const groups = new Map<number, {task: TaskInput, index: number}[]>()
 			input.forEach((task, index) => {
 				const project = task.project_id ?? 0
 				groups.set(project, [...(groups.get(project) ?? []), {task, index}])
@@ -203,10 +280,10 @@ export function bulkCreateTasksMutationOptions() {
 					try {
 						const {data} = await tasksBulkCreate({
 							path: {project},
-							body: {tasks: batch.map(({task}) => taskWriteBody(task))},
+							body: {tasks: batch.map(({task}) => taskCreateBody(task))},
 						})
 						if (data.tasks?.length !== batch.length) throw translatedError('task.bulkCreateUnexpectedResponse')
-						data.tasks!.forEach((task, index) => { tasks[batch[index].index] = task })
+						data.tasks!.forEach((task, index) => { tasks[batch[index].index] = withoutWriteOutcome(task) })
 					} catch (cause) {
 						error ??= cause
 						break
@@ -225,7 +302,7 @@ export function bulkCreateTasksMutationOptions() {
 
 export function duplicateTaskMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (id: number) => (await tasksDuplicate({path: {task: id}})).data.duplicated_task!,
+		mutationFn: async (id: number) => withoutWriteOutcome((await tasksDuplicate({path: {task: id}})).data.duplicated_task!),
 		onSuccess: (task, _id, client) => insertTaskIntoBoards(client, task),
 		onSettled: (_id, client) => invalidateTaskMembership(client, undefined, 'active'),
 	})
@@ -233,10 +310,10 @@ export function duplicateTaskMutationOptions() {
 
 export function favoriteTaskMutationOptions() {
 	return contextMutationOptions({
-		mutationFn: async (task: Task & Required<Pick<Task, 'id'>>) => (await patchTasksRead({
+		mutationFn: async (task: Task & Required<Pick<Task, 'id'>>) => withoutWriteOutcome((await patchTasksRead({
 			path: {task: task.id},
 			body: taskPatchBody({is_favorite: !task.is_favorite}),
-		})).data,
+		})).data),
 		optimistic: {
 			queryKeys: ({id}, client) => taskQueryKeys(client, id),
 			update: (task, client) => mapTaskEverywhere(client, task.id, current => ({
@@ -397,7 +474,10 @@ export function moveTaskMutationOptions() {
 			view: number,
 			bucket: number,
 			task: Task,
-		}) => (await taskBucketUpdate({path: {project, view, bucket}, body: {task_id: task.id}})).data,
+		}) => {
+			const {data} = await taskBucketUpdate({path: {project, view, bucket}, body: {task_id: task.id}})
+			return {...data, task: data.task && withoutWriteOutcome(data.task)}
+		},
 		optimistic: {
 			queryKeys: ({project, view}) => [kanbanKeys.view(project, view)],
 			update: ({project, view, bucket, task}, client) => client.setQueriesData<BoardData>(
