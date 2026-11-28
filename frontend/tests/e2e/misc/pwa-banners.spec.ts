@@ -3,7 +3,6 @@ import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {TaskFactory} from '../../factories/task'
 import {createProjects} from '../project/prepareProjects'
-import {setupApiUrl} from '../../support/authenticateUser'
 import {TEST_PASSWORD} from '../../support/constants'
 
 // The add to home screen banner is hidden from tablet width up
@@ -16,7 +15,6 @@ test.describe('PWA banners', () => {
 	test.use({viewport: iPhone8})
 
 	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
 		await page.goto('/login')
 		await expect(page.locator('input[id=username]')).toBeVisible()
 		// Service workers are blocked in e2e, so fake the event registerServiceWorker.ts dispatches
@@ -59,7 +57,6 @@ test.describe('PWA banners on desktop', () => {
 	test.use({viewport: {width: 1280, height: 800}})
 
 	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
 		await page.goto('/login')
 		await expect(page.locator('input[id=username]')).toBeVisible()
 	})

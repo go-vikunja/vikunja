@@ -27,6 +27,8 @@ cat /tmp/e2e-output.log | tail -20
 
 Set `VIKUNJA_E2E_SKIP_BUILD=true` to skip rebuilding the API binary when iterating on frontend-only changes.
 
+Set `VIKUNJA_E2E_WORKERS=N` to run N Playwright workers, each against its own API instance (default 1; incompatible with `VIKUNJA_E2E_API_PORT`).
+
 A full-suite run can fail late for reasons unrelated to the change (login rate limiting after hundreds of logins, license test setup). Re-run the failing specs alone, and on `main`, before attributing a failure to the PR.
 
 ## Writing specs

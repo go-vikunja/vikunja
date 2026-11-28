@@ -4,7 +4,7 @@ import {TeamMemberFactory} from '../../factories/team_member'
 import {TeamProjectFactory} from '../../factories/team_project'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
-import {login, setupApiUrl} from '../../support/authenticateUser'
+import {login} from '../../support/authenticateUser'
 import {serverPageSize} from '../../support/pagination'
 
 test.describe('Team', () => {
@@ -234,9 +234,7 @@ test.describe('Team', () => {
 test.describe('Team permission tiers on shared projects', () => {
 	// These tests log in as the second user (the team member), so we can't use
 	// the `authenticatedPage` fixture which auto-logs in as user 1.
-	test.beforeEach(async ({page}) => {
-		await setupApiUrl(page)
-	})
+
 
 	test('READ: team member cannot add tasks on a shared project', async ({page, apiContext}) => {
 		const [, member] = await UserFactory.create(2)

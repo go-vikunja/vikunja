@@ -3,7 +3,7 @@ import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
 import {UserFactory} from '../../factories/user'
 import {createDefaultViews} from '../project/prepareProjects'
-import {login, setupApiUrl} from '../../support/authenticateUser'
+import {login} from '../../support/authenticateUser'
 import {TEST_PASSWORD} from '../../support/constants'
 
 async function seedUser() {
@@ -114,7 +114,6 @@ test.describe('Quick add prefill', () => {
 
 	test('Keeps the prefill through login', async ({page}) => {
 		const {user} = await seedUser()
-		await setupApiUrl(page)
 
 		await page.goto(prefillUrl({title: 'Shared page', url: 'https://example.com/shared'}))
 		await expect(page).toHaveURL(/\/login/)

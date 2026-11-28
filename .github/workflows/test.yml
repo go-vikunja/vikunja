@@ -446,18 +446,31 @@ jobs:
           - 5556:5556
       mailpit:
         image: axllent/mailpit:v1.31.6@sha256:23fe39e81bde596a918000b3135c0f85dc8bb4c9ea6be274b051143f3e300387
-    container:
-      image: mcr.microsoft.com/playwright:v1.63.0-jammy@sha256:167d0506cfbe3c294fb214b2d11737326eeee028aa611fa1ba538e5057675847
-      options: --user 1001
+        ports:
+          - 1025:1025
+          - 8025:8025
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Resolve service names
+        # The job runs on the runner itself: pulling the Playwright image took ~30s per shard.
+        run: echo "127.0.0.1 dex mailpit" | sudo tee -a /etc/hosts
       - name: Download Vikunja Binary
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: vikunja_bin
       - uses: ./.github/actions/setup-frontend
+      - name: Cache Chromium
+        id: chromium
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          install-e2e-binaries: false # Playwright browsers already in container
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+      - name: Install Chromium
+        if: steps.chromium.outputs.cache-hit != 'true'
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 0 # setup-frontend turns the download off
+        run: pnpm exec playwright install chromium
       - name: Download Frontend
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -471,7 +484,21 @@ jobs:
         timeout-minutes: 20
         working-directory: frontend
         run: |
-          pnpm run preview:vikunja &
+          # One API per worker: every test truncates and reseeds its database
+          API_URLS=""
+          WAIT_ON=""
+          for i in $(seq 0 $((E2E_WORKERS - 1))); do
+            port=$((3460 + i))
+            api_root=$(mktemp -d)
+            mkdir -p "$api_root/files"
+            VIKUNJA_SERVICE_INTERFACE="127.0.0.1:$port" \
+            VIKUNJA_SERVICE_PUBLICURL="http://127.0.0.1:$port" \
+            VIKUNJA_SERVICE_ROOTPATH="$api_root" \
+            VIKUNJA_FILES_BASEPATH="$api_root/files" \
+            pnpm run preview:vikunja > "/tmp/vikunja-api-$i.log" 2>&1 &
+            API_URLS="${API_URLS:+$API_URLS,}http://127.0.0.1:$port"
+            WAIT_ON="$WAIT_ON http-get://127.0.0.1:$port/api/v1/info"
+          done
           pnpm run preview &
 
           MAILER_API_ROOT=$(mktemp -d)
@@ -488,10 +515,12 @@ jobs:
           pnpm run preview:vikunja > /tmp/vikunja-mailer.log 2>&1 &
 
           # Wait for services to be ready (using GET method)
-          pnpx wait-on http-get://127.0.0.1:4173 http-get://127.0.0.1:3456/api/v1/info http-get://127.0.0.1:3457/api/v1/info http-get://mailpit:8025/readyz --timeout 60000
+          # shellcheck disable=SC2086 # WAIT_ON is a word list; this container runs sh, which has no arrays
+          pnpx wait-on http-get://127.0.0.1:4173 $WAIT_ON http-get://127.0.0.1:3457/api/v1/info http-get://mailpit:8025/readyz --timeout 60000
 
-          pnpm run test:e2e --shard=${{ matrix.shard }}/${{ matrix.total-shards }}
+          API_URL="$API_URLS" pnpm run test:e2e --shard=${{ matrix.shard }}/${{ matrix.total-shards }}
         env:
+          E2E_WORKERS: 3
           MAILER_API_URL: http://127.0.0.1:3457/api/v1
           MAILPIT_URL: http://mailpit:8025
           PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: 1
@@ -524,4 +553,5 @@ jobs:
           path: |
             frontend/test-results/
             /tmp/vikunja-mailer.log
+            /tmp/vikunja-api-*.log
           retention-days: 30

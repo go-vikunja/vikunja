@@ -1,5 +1,4 @@
 import {test, expect} from '../../support/fixtures'
-import {setupApiUrl} from '../../support/authenticateUser'
 import {TEST_PASSWORD} from '../../support/constants'
 
 // Issue #4006: the access token lives 10 minutes, so a browser clock more than that
@@ -13,7 +12,6 @@ test.describe('Login with a skewed browser clock', () => {
 	] as const) {
 		test(`stays logged in with the clock 20 minutes ${label}`, async ({page, currentUser}) => {
 			const {username} = currentUser
-			await setupApiUrl(page)
 			await page.clock.install({time: new Date(Date.now() + skewMs)})
 
 			await page.goto('/login')

@@ -1,4 +1,3 @@
-import {setupApiUrl} from '../../support/authenticateUser'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {TokenFactory} from '../../factories/token'
@@ -9,7 +8,6 @@ test.describe('Email Confirmation', () => {
 	let confirmationToken
 
 	test.beforeEach(async ({page, apiContext}) => {
-		await setupApiUrl(page)
 		// Create a user with status = 1 (StatusEmailConfirmationRequired)
 		const users = await UserFactory.create(1, {
 			username: 'unconfirmeduser',

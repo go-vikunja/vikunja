@@ -1,4 +1,4 @@
-import {login, setupApiUrl} from '../../../support/authenticateUser'
+import {login} from '../../../support/authenticateUser'
 import type {APIRequestContext} from '@playwright/test'
 import {test, expect} from '../../../support/fixtures'
 import {gotoUserSettings} from '../../../support/userSettings'
@@ -124,7 +124,6 @@ test.describe('Linked accounts', () => {
 	})
 	test('logs a local user with a linked Dex identity into their own account', async ({page, apiContext, currentUser}) => {
 		// Not authenticatedPage: its init script would restore the old token after logout.
-		await setupApiUrl(page)
 		await page.goto('/login')
 		await page.locator('input[id=username]').fill(currentUser.username)
 		await page.locator('input[id=password]').fill(TEST_PASSWORD)
