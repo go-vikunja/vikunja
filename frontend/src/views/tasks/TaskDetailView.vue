@@ -604,7 +604,7 @@ const props = defineProps<{
 	backdropView?: RouteLocation['fullPath'],
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
 	'close': [],
 }>()
 
@@ -1098,28 +1098,40 @@ useTaskDetailShortcuts({
 async function deleteTask() {
 	const id = task.value.id!
 	const projectId = task.value.project_id
+
 	let viewId: number | undefined
 	try {
-		const destinationProject = await projectList.loadProject(projectId)
-		const view = destinationProject.views.find(view => view.id === getProjectViewId(projectId))
-			?? getDefaultProjectView(destinationProject.views, authStore.settings.frontend_settings.default_view)
-		viewId = view?.id
+		if (!isModal.value) {
+			const destinationProject = await projectList.loadProject(projectId)
+			const view = destinationProject.views.find(view => view.id === getProjectViewId(projectId))
+				?? getDefaultProjectView(destinationProject.views, authStore.settings.frontend_settings.default_view)
+			viewId = view?.id
+		}
 		await deleteTaskMutation.mutateAsync(id)
 	} catch {
 		return
 	}
-	await router.push(viewId
-		? {
-			name: 'project.view',
-			params: {
-				projectId,
-				viewId,
-			},
-		}
-		: {
-			name: 'project.index',
-			params: {projectId},
-		})
+
+	// Opened as an overlay (kanban/gantt/planner/related tasks): defer to the
+	// modal's close handler so we return to the originating view instead of the
+	// task's project list — which is wrong for the cross-project planner.
+	if (isModal.value) {
+		emit('close')
+	} else {
+		await router.push(viewId
+			? {
+				name: 'project.view',
+				params: {
+					projectId,
+					viewId,
+				},
+			}
+			: {
+				name: 'project.index',
+				params: {projectId},
+			})
+	}
+
 	success({message: t('task.detail.deleteSuccess')}, [{
 		title: t('task.undo'),
 		callback: () => restoreTaskMutation.mutate(id),

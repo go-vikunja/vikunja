@@ -43,6 +43,11 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 				...shortcutBindingToDisplay(SHORTCUTS.navigation.upcoming),
 			},
 			{
+				title: 'keyboardShortcuts.navigation.planner',
+				keys: ['g', 'c'],
+				combination: 'then',
+			},
+			{
 				title: 'keyboardShortcuts.navigation.projects',
 				...shortcutBindingToDisplay(SHORTCUTS.navigation.projects),
 			},

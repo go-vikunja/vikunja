@@ -9,6 +9,9 @@ export async function updateUserSettings(apiContext: APIRequestContext, token: s
 			'Authorization': `Bearer ${token}`,
 		},
 	})
+	if (!userResponse.ok()) {
+		throw new Error(`updateUserSettings: GET ${apiUrl}/user failed with ${userResponse.status()}`)
+	}
 
 	const userData = await userResponse.json()
 	// GET /user returns { settings: { frontend_settings: ... }, ... }
@@ -28,10 +31,14 @@ export async function updateUserSettings(apiContext: APIRequestContext, token: s
 		}
 	}
 
-	await apiContext.post(`${apiUrl}/user/settings/general`, {
+	const updateResponse = await apiContext.post(`${apiUrl}/user/settings/general`, {
 		headers: {
 			'Authorization': `Bearer ${token}`,
 		},
 		data: mergedSettings,
 	})
+	// Silence here means callers assert against settings that never changed.
+	if (!updateResponse.ok()) {
+		throw new Error(`updateUserSettings: POST failed with ${updateResponse.status()}: ${await updateResponse.text()}`)
+	}
 }

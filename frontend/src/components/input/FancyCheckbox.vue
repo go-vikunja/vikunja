@@ -61,6 +61,7 @@ const emit = defineEmits<{
 .fancy-checkbox__icon:deep() {
 	position: relative;
 	z-index: 1;
+	flex-shrink: 0;
 	stroke: var(--stroke-color, #c8ccd4);
 	transform: translate3d(0, 0, 0);
 	transition: all 0.2s ease;

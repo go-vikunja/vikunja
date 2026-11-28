@@ -21,6 +21,7 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			:show-saved-filters="showSavedFilters"
 			:view
 			show-close
 			@close="modalOpen = false"
@@ -43,6 +44,9 @@ import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
 const props = defineProps<{
 	modelValue: TaskFilterParams,
 	view?: ProjectView | DeepReadonly<ProjectView>,
+	// Cross-project saved filters only make sense in cross-project contexts
+	// (e.g. the planner), so single-project views keep them hidden.
+	showSavedFilters?: boolean,
 }>()
 
 const emit = defineEmits<{

@@ -27,6 +27,27 @@
 			</template>
 		</FilterEditor>
 
+		<div
+			v-if="showSavedFilters && savedFilters.length > 0"
+			class="mbe-2"
+		>
+			<p class="tw:text-sm mbe-1">
+				{{ $t('filters.savedFilters') }}
+			</p>
+			<XButton
+				v-for="savedFilter in savedFilters"
+				:key="savedFilter.id"
+				variant="secondary"
+				class="mie-2 mbe-1"
+				icon="filter"
+				:loading="loadingSavedFilterProjectId === savedFilter.id"
+				:disabled="loadingSavedFilterProjectId !== 0"
+				@click.prevent.stop="selectSavedFilter(savedFilter)"
+			>
+				{{ savedFilter.title }}
+			</XButton>
+		</div>
+
 		<div class="field is-flex is-flex-direction-column">
 			<FancyCheckbox
 				v-model="params.filter_include_nulls"
@@ -70,10 +91,14 @@
 
 <script setup lang="ts" generic="T extends EditableTaskCollection">
 import {computed, ref, watch, type DeepReadonly} from 'vue'
+import {useQueryClient} from '@tanstack/vue-query'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {useRoute} from 'vue-router'
 import type {EditableTaskCollection} from '@/types/EditableTaskCollection'
 import {useIncludeSubprojects} from '@/composables/useIncludeSubprojects'
+import {useProjects} from '@/composables/useProjects'
+import {getSavedFilterIdFromProjectId, type ProjectResponse} from '@/client/queries/projects'
+import {savedFilterQuery} from '@/client/queries/savedFilters'
 import type {ProjectView} from '@/client/generated'
 import {hasFilterQuery} from '@/helpers/filters'
 import FilterEditor from '@/components/input/filter/FilterEditor.vue'
@@ -86,6 +111,9 @@ const props = withDefaults(defineProps<{
 	filterFromView?: string,
 	showClose?: boolean,
 	view?: ProjectView | DeepReadonly<ProjectView>,
+	// Cross-project saved filters only make sense in cross-project contexts
+	// (e.g. the planner), so single-project views keep them hidden.
+	showSavedFilters?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
@@ -93,6 +121,7 @@ const props = withDefaults(defineProps<{
 	filterFromView: undefined,
 	showClose: false,
 	view: undefined,
+	showSavedFilters: false,
 })
 
 const emit = defineEmits<{
@@ -132,7 +161,31 @@ const hasActiveFilters = computed(() => params.value.filter !== ''
 	|| params.value.filter_include_nulls
 	|| overridesView.value)
 
+const projectList = useProjects()
+
 const filterInputRef = ref()
+
+const queryClient = useQueryClient()
+
+const savedFilters = computed(() => projectList.savedFilterProjects)
+const loadingSavedFilterProjectId = ref(0)
+
+async function selectSavedFilter(project: ProjectResponse) {
+	loadingSavedFilterProjectId.value = project.id
+	try {
+		const savedFilter = await queryClient.ensureQueryData(
+			savedFilterQuery(getSavedFilterIdFromProjectId(project.id)),
+		)
+		// params.filter holds the api form, which is how saved filters are stored,
+		// so it needs no transform. change() moves a plain search over to `s`.
+		params.value.filter = savedFilter.filters.filter || savedFilter.filters.s || ''
+		params.value.s = ''
+		params.value.filter_include_nulls = !!savedFilter.filters.filter_include_nulls
+		change('always')
+	} finally {
+		loadingSavedFilterProjectId.value = 0
+	}
+}
 
 watch(
 	() => props.modelValue,

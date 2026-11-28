@@ -1,6 +1,6 @@
 import type {ParsedTaskText, Prefixes} from './types'
 
-const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+export const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 export const cleanupItemText = (text: string, items: string[], prefix: string): string => {
 	items.forEach(l => {

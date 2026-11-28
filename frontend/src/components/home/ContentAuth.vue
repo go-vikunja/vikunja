@@ -129,6 +129,7 @@ watch(() => route.name as string, (routeName) => {
 				'labels.index',
 				'migrate.start',
 				'projects.index',
+				'planner.index',
 			].includes(routeName) ||
 			routeName.startsWith('user.settings')
 		)
