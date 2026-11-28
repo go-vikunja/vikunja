@@ -43,7 +43,10 @@ const (
 )
 
 // Holds the lock's connection for the life of the process: returning it to the pool would release the lock.
-var testLockConn *sql.Conn
+var (
+	testLockConn *sql.Conn
+	testLockCtx  = context.Background()
+)
 
 // CreateTestEngine creates an instance of the db engine which lives in memory
 func CreateTestEngine() (engine *xorm.Engine, err error) {
@@ -82,32 +85,28 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 // lockSharedTestDatabase makes test packages that share one server database run one at a time,
 // which lets go test run them in parallel and still cache results. The lock dies with the process.
 func lockSharedTestDatabase(engine *xorm.Engine) error {
-	var query string
-	switch engine.Dialect().URI().DBType {
-	case schemas.POSTGRES:
-		query = fmt.Sprintf("SELECT pg_advisory_lock(%d)", testLockKey)
-	case schemas.MYSQL:
-		query = fmt.Sprintf("SELECT GET_LOCK('%s', %d)", testLockName, testLockTimeoutSeconds)
-	default:
+	dbType := engine.Dialect().URI().DBType
+	if testLockConn != nil || (dbType != schemas.POSTGRES && dbType != schemas.MYSQL) {
 		return nil // sqlite files are per package directory
 	}
 
-	ctx := context.Background()
-	conn, err := engine.DB().DB.Conn(ctx)
+	conn, err := engine.DB().Conn(testLockCtx)
 	if err != nil {
 		return fmt.Errorf("could not take test database lock: %w", err)
 	}
 
-	if engine.Dialect().URI().DBType == schemas.MYSQL {
+	if dbType == schemas.POSTGRES {
+		_, err = conn.ExecContext(testLockCtx, fmt.Sprintf("SELECT pg_advisory_lock(%d)", testLockKey))
+	} else {
 		// NULL means error and 0 means timeout.
 		var acquired sql.NullInt64
-		if err := conn.QueryRowContext(ctx, query).Scan(&acquired); err != nil {
-			return fmt.Errorf("could not take test database lock: %w", err)
+		err = conn.QueryRowContext(testLockCtx, fmt.Sprintf("SELECT GET_LOCK('%s', %d)", testLockName, testLockTimeoutSeconds)).Scan(&acquired)
+		if err == nil && (!acquired.Valid || acquired.Int64 != 1) {
+			err = fmt.Errorf("GET_LOCK returned %v", acquired)
 		}
-		if !acquired.Valid || acquired.Int64 != 1 {
-			return fmt.Errorf("could not take test database lock: GET_LOCK returned %v", acquired)
-		}
-	} else if _, err := conn.ExecContext(ctx, query); err != nil {
+	}
+	if err != nil {
+		_ = conn.Close()
 		return fmt.Errorf("could not take test database lock: %w", err)
 	}
 
