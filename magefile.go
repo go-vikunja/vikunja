@@ -41,8 +41,6 @@ import (
 	"syscall"
 	"time"
 
-	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
-
 	"github.com/iancoleman/strcase"
 	"github.com/magefile/mage/mg"
 )
@@ -1540,11 +1538,6 @@ type Generate mg.Namespace
 const DefaultConfigYAMLSamplePath = "config.yml.sample"
 
 func (Generate) FrontendClient(ctx context.Context) error {
-	api, err := apiv2.NewCanonicalAPI()
-	if err != nil {
-		return err
-	}
-
 	spec, err := os.CreateTemp("", "vikunja-openapi-*.json")
 	if err != nil {
 		return fmt.Errorf("create temporary OpenAPI document: %w", err)
@@ -1552,7 +1545,11 @@ func (Generate) FrontendClient(ctx context.Context) error {
 	specPath := spec.Name()
 	defer func() { _ = os.Remove(specPath) }()
 
-	if err := json.NewEncoder(spec).Encode(api.OpenAPI()); err != nil {
+	// go run, not an import: importing the API would make every mage call compile it.
+	dump := exec.CommandContext(ctx, "go", "run", "./pkg/routes/api/v2/cmd/openapi")
+	dump.Stdout = spec
+	dump.Stderr = os.Stderr
+	if err := dump.Run(); err != nil {
 		_ = spec.Close()
 		return fmt.Errorf("write temporary OpenAPI document: %w", err)
 	}
