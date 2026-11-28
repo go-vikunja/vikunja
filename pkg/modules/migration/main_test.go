@@ -19,6 +19,7 @@ package migration
 import (
 	"os"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/events"
 
@@ -28,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // TestMain is the main test function used to bootstrap the test env
@@ -39,6 +41,8 @@ func TestMain(m *testing.M) {
 	config.InitDefaultConfig()
 	// Allow non-routable IPs in tests so httptest.NewServer (127.0.0.1) works
 	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+
+	utils.RetryBaseDelay = time.Millisecond
 
 	// Some tests use the file engine, so we'll need to initialize that
 	files.InitTests()

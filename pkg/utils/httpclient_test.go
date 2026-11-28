@@ -87,8 +87,12 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		defer config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
 		defer config.OutgoingRequestsTimeoutSeconds.Set("30")
 
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			time.Sleep(3 * time.Second)
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Returns once the client gives up, so Close doesn't wait out a fixed sleep.
+			select {
+			case <-r.Context().Done():
+			case <-time.After(3 * time.Second):
+			}
 			w.WriteHeader(http.StatusOK)
 		}))
 		defer server.Close()

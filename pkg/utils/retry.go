@@ -26,13 +26,15 @@ import (
 // ErrDoNotRetry marks an error as permanent: RetryWithBackoff returns it after the first attempt.
 var ErrDoNotRetry = errors.New("permanent error, not retrying")
 
+// RetryBaseDelay is the first delay of RetryWithBackoff. Tests shorten it.
+var RetryBaseDelay = 1 * time.Second
+
 // RetryWithBackoff executes the given function up to 3 times with exponential backoff.
 // Delays between retries are 1s, 2s, 4s (total max wait: 7s).
 // The name parameter is used for logging to identify what operation is being retried.
 // Returns nil on success, or the last error after all retries are exhausted.
 func RetryWithBackoff(name string, fn func() error) error {
 	const maxRetries = 3
-	baseDelay := 1 * time.Second
 
 	var err error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
@@ -45,7 +47,7 @@ func RetryWithBackoff(name string, fn func() error) error {
 		}
 
 		if attempt < maxRetries {
-			delay := baseDelay * time.Duration(1<<(attempt-1)) // exponential: 1s, 2s, 4s
+			delay := RetryBaseDelay * time.Duration(1<<(attempt-1)) // exponential: 1s, 2s, 4s
 			log.Warningf("%s not available (attempt %d/%d), retrying in %v: %s",
 				name, attempt, maxRetries, delay, err)
 			time.Sleep(delay)
