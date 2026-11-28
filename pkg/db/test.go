@@ -17,6 +17,8 @@
 package db
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -30,6 +32,20 @@ import (
 	"xorm.io/builder"
 	"xorm.io/xorm"
 	"xorm.io/xorm/names"
+	"xorm.io/xorm/schemas"
+)
+
+const (
+	testLockKey  = int64(0x56494b554e4a41) // "VIKUNJA"
+	testLockName = "vikunja-tests"
+	// Longer than the 45m go test timeout, and no reliance on how each server treats a negative timeout.
+	testLockTimeoutSeconds = 3 * 60 * 60
+)
+
+// Holds the lock's connection for the life of the process: returning it to the pool would release the lock.
+var (
+	testLockConn *sql.Conn
+	testLockCtx  = context.Background()
 )
 
 // CreateTestEngine creates an instance of the db engine which lives in memory
@@ -43,6 +59,9 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 		config.InitConfig()
 		engine, err = CreateDBEngine()
 		if err != nil {
+			return nil, err
+		}
+		if err = lockSharedTestDatabase(engine); err != nil {
 			return nil, err
 		}
 	} else {
@@ -61,6 +80,38 @@ func CreateTestEngine() (engine *xorm.Engine, err error) {
 	engine.AddHook(writeCountingHook{})
 	x = engine
 	return
+}
+
+// lockSharedTestDatabase makes test packages that share one server database run one at a time,
+// which lets go test run them in parallel and still cache results. The lock dies with the process.
+func lockSharedTestDatabase(engine *xorm.Engine) error {
+	dbType := engine.Dialect().URI().DBType
+	if testLockConn != nil || (dbType != schemas.POSTGRES && dbType != schemas.MYSQL) {
+		return nil // sqlite files are per package directory
+	}
+
+	conn, err := engine.DB().Conn(testLockCtx)
+	if err != nil {
+		return fmt.Errorf("could not take test database lock: %w", err)
+	}
+
+	if dbType == schemas.POSTGRES {
+		_, err = conn.ExecContext(testLockCtx, fmt.Sprintf("SELECT pg_advisory_lock(%d)", testLockKey))
+	} else {
+		// NULL means error and 0 means timeout.
+		var acquired sql.NullInt64
+		err = conn.QueryRowContext(testLockCtx, fmt.Sprintf("SELECT GET_LOCK('%s', %d)", testLockName, testLockTimeoutSeconds)).Scan(&acquired)
+		if err == nil && (!acquired.Valid || acquired.Int64 != 1) {
+			err = fmt.Errorf("GET_LOCK returned %v", acquired)
+		}
+	}
+	if err != nil {
+		_ = conn.Close()
+		return fmt.Errorf("could not take test database lock: %w", err)
+	}
+
+	testLockConn = conn
+	return nil
 }
 
 // InitTestFixtures populates the db with all fixtures from the fixtures folder
