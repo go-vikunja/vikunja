@@ -424,6 +424,7 @@
 	"project": {
 		"archivedMessage": "Ez a projekt archiválva van. Nem lehet hozzá új feladatokat létrehozni, vagy szerkeszteni.",
 		"archived": "Archivált",
+		"sharedWithOthers": "Másokkal megosztva",
 		"showArchived": "Archív megjelenítése",
 		"title": "Projektek",
 		"color": "Szín",

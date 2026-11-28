@@ -424,6 +424,7 @@
 	"project": {
 		"archivedMessage": "Dieses Projekt ist archiviert. Es ist nicht möglich, neue Aufgaben zu erstellen oder es zu bearbeiten.",
 		"archived": "Archiviert",
+		"sharedWithOthers": "Mit anderen geteilt",
 		"showArchived": "Archivierte anzeigen",
 		"title": "Titel",
 		"color": "Farbe",
