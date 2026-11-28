@@ -412,34 +412,37 @@ func goTestPackagesExcept(ctx context.Context, exclude ...string) ([]string, err
 	return packages, nil
 }
 
-// prebuild compiles all non-test packages on all cores; `-p 1` below would serialise that.
-func prebuild(ctx context.Context) error {
-	return runAndStreamOutput(ctx, "go", "build", "./...")
+// Test binaries must not run concurrently: the packages share one test database.
+func runGoTest(ctx context.Context, args ...string) error {
+	full := []string{"test", goDetectVerboseFlag()}
+	lockFile := filepath.Join(os.TempDir(), "vikunja-go-test.lock")
+	if _, err := exec.LookPath("flock"); err == nil && !strings.Contains(lockFile, " ") {
+		// Unlike -p 1 this still compiles and links on all cores, but go test never caches results with -exec.
+		full = append(full, "-exec", "flock "+lockFile)
+	} else {
+		// -p 1 also serialises compilation, so build the non-test packages on all cores first.
+		if err := runAndStreamOutput(ctx, "go", "build", "./..."); err != nil {
+			return err
+		}
+		full = append(full, "-p", "1")
+	}
+	return runAndStreamOutput(ctx, "go", append(full, args...)...)
 }
 
 func featureTestArgs(extra ...string) []string {
-	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := []string{"test", goDetectVerboseFlag(), "-p", "1"}
-	args = append(args, extra...)
-	return append(args, "-timeout", "45m", "-short", "./...")
+	return append(extra, "-timeout", "45m", "-short", "./...")
 }
 
 // Feature runs the feature tests
 func (Test) Feature(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	if err := prebuild(ctx); err != nil {
-		return err
-	}
-	return runAndStreamOutput(ctx, "go", featureTestArgs()...)
+	return runGoTest(ctx, featureTestArgs()...)
 }
 
 // Coverage runs the tests and builds the coverage html file from coverage output
 func (Test) Coverage(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	if err := prebuild(ctx); err != nil {
-		return err
-	}
-	if err := runAndStreamOutput(ctx, "go", featureTestArgs("-coverprofile", "cover.out")...); err != nil {
+	if err := runGoTest(ctx, featureTestArgs("-coverprofile", "cover.out")...); err != nil {
 		return err
 	}
 	return runAndStreamOutput(ctx, "go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
@@ -448,12 +451,7 @@ func (Test) Coverage(ctx context.Context) error {
 // Web runs the web tests
 func (Test) Web(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	if err := prebuild(ctx); err != nil {
-		return err
-	}
-	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := []string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/webtests"}
-	return runAndStreamOutput(ctx, "go", args...)
+	return runGoTest(ctx, "-timeout", "45m", "./pkg/webtests")
 }
 
 // Filter runs every test matching the given `go test -run` filter.
@@ -464,22 +462,18 @@ func (Test) Web(ctx context.Context) error {
 // a no-op when the filter matches nothing there.
 func (Test) Filter(ctx context.Context, filter string) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	if err := prebuild(ctx); err != nil {
-		return err
-	}
 
 	packages, err := goTestPackagesExcept(ctx, webtestsPackage)
 	if err != nil {
 		return err
 	}
 
-	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, "-short"}, packages...)
-	if err := runAndStreamOutput(ctx, "go", args...); err != nil {
+	args := append([]string{"-timeout", "45m", "-run", filter, "-short"}, packages...)
+	if err := runGoTest(ctx, args...); err != nil {
 		return err
 	}
 
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, webtestsPackage)
+	return runGoTest(ctx, "-timeout", "45m", "-run", filter, webtestsPackage)
 }
 
 func (Test) All() {
@@ -491,10 +485,7 @@ func (Test) All() {
 // These tests exercise the full HTTP router with WebDAV/CalDAV requests.
 func (Test) Caldav(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	if err := prebuild(ctx); err != nil {
-		return err
-	}
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/caldavtests")
+	return runGoTest(ctx, "-timeout", "45m", "./pkg/caldavtests")
 }
 
 // E2EApi runs the end-to-end API tests in pkg/e2etests.
@@ -502,10 +493,7 @@ func (Test) Caldav(ctx context.Context) error {
 // the full async pipeline: web handler → DB → event dispatch → watermill → listener.
 func (Test) E2EApi(ctx context.Context) error {
 	mg.Deps(initVars, ensureFrontendDistExists)
-	if err := prebuild(ctx); err != nil {
-		return err
-	}
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/e2etests")
+	return runGoTest(ctx, "-timeout", "45m", "./pkg/e2etests")
 }
 
 // E2E builds the API, starts it with an in-memory database and the frontend dev server,
